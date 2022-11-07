@@ -77,8 +77,7 @@ void *hpx_thread_buffer::get_extra_space() const noexcept {
   if (m_extra_space == 0) {
     Kokkos::abort(
         "Kokkos::Impl::hpx_thread_buffer: trying to access extra space when "
-        "none "
-        "was allocated\n");
+        "none was allocated\n");
   }
 #endif
   if (m_data == nullptr) {
@@ -125,20 +124,12 @@ void HPX::impl_instance_fence(const std::string &name) const {
       Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{
           impl_instance_id()},
       [&]() {
-        auto sen = hpx::execution::experimental::unique_any_sender<>(
+        auto &s = impl_get_sender();
+
+        std::unique_lock<hpx::spinlock> l(impl_get_sender_mutex());
+        hpx::this_thread::experimental::sync_wait(std::move(s));
+        s = hpx::execution::experimental::unique_any_sender(
             hpx::execution::experimental::just());
-
-        // Swap a new, immediately ready sender into the instance's sender.
-        {
-          std::lock_guard<hpx::spinlock> l(impl_get_sender_mutex());
-          std::swap(impl_get_sender(), sen);
-        }
-
-        // The old sender from the instance was swapped into the local sender.
-        // If new work has been scheduled in the meantime it will not be waited
-        // for here. Only work scheduled until the impl_get_sender_mutex is
-        // taken is waited for here.
-        hpx::this_thread::experimental::sync_wait(std::move(sen));
       });
 }
 
@@ -149,14 +140,9 @@ void HPX::impl_static_fence(const std::string &name) {
       Kokkos::Tools::Experimental::SpecialSynchronizationCases::
           GlobalDeviceSynchronization,
       [&]() {
-        auto sen = hpx::execution::experimental::unique_any_sender<>(
-            hpx::execution::experimental::just());
+        auto &s = HPX().impl_get_sender();
 
-        // Swap a new, immediately ready sender into the instance's sender.
-        {
-          std::lock_guard<hpx::spinlock> l(HPX().impl_get_sender_mutex());
-          std::swap(HPX().impl_get_sender(), sen);
-        }
+        std::unique_lock<hpx::spinlock> l(HPX().impl_get_sender_mutex());
 
         // This is a loose fence. Any work scheduled before this will be waited
         // for, but work scheduled while waiting may also be waited for.
@@ -167,11 +153,9 @@ void HPX::impl_static_fence(const std::string &name) {
               l_count, [&]() { return m_active_parallel_region_count == 0; });
         }
 
-        // The old sender from the instance was swapped into the local sender.
-        // If new work has been scheduled in the meantime it will not be waited
-        // for here. Only work scheduled until the impl_get_sender_mutex is
-        // taken is waited for here.
-        hpx::this_thread::experimental::sync_wait(std::move(sen));
+        hpx::this_thread::experimental::sync_wait(std::move(s));
+        s = hpx::execution::experimental::unique_any_sender(
+            hpx::execution::experimental::just());
       });
 }
 
@@ -264,38 +248,38 @@ int HPX::impl_thread_pool_size(int depth) {
 }
 
 template void HPX::impl_bulk_plain_erased<int>(
-    bool, std::function<void(int)> &&, int const,
+    bool, bool, std::function<void(int)> &&, int const,
     hpx::threads::thread_stacksize stacksize) const;
 
 template void HPX::impl_bulk_plain_erased<unsigned int>(
-    bool, std::function<void(unsigned int)> &&, unsigned int const,
+    bool, bool, std::function<void(unsigned int)> &&, unsigned int const,
     hpx::threads::thread_stacksize stacksize) const;
 
 template void HPX::impl_bulk_plain_erased<long>(
-    bool, std::function<void(long)> &&, long const,
+    bool, bool, std::function<void(long)> &&, long const,
     hpx::threads::thread_stacksize stacksize) const;
 
 template void HPX::impl_bulk_plain_erased<std::size_t>(
-    bool, std::function<void(std::size_t)> &&, std::size_t const,
+    bool, bool, std::function<void(std::size_t)> &&, std::size_t const,
     hpx::threads::thread_stacksize stacksize) const;
 
 template void HPX::impl_bulk_setup_finalize_erased<int>(
-    bool, std::function<void(int)> &&, std::function<void()> &&,
+    bool, bool, std::function<void(int)> &&, std::function<void()> &&,
     std::function<void()> &&, int const,
     hpx::threads::thread_stacksize stacksize) const;
 
 template void HPX::impl_bulk_setup_finalize_erased<unsigned int>(
-    bool, std::function<void(unsigned int)> &&, std::function<void()> &&,
+    bool, bool, std::function<void(unsigned int)> &&, std::function<void()> &&,
     std::function<void()> &&, unsigned int const,
     hpx::threads::thread_stacksize stacksize) const;
 
 template void HPX::impl_bulk_setup_finalize_erased<long>(
-    bool, std::function<void(long)> &&, std::function<void()> &&,
+    bool, bool, std::function<void(long)> &&, std::function<void()> &&,
     std::function<void()> &&, long const,
     hpx::threads::thread_stacksize stacksize) const;
 
 template void HPX::impl_bulk_setup_finalize_erased<std::size_t>(
-    bool, std::function<void(std::size_t)> &&, std::function<void()> &&,
+    bool, bool, std::function<void(std::size_t)> &&, std::function<void()> &&,
     std::function<void()> &&, std::size_t const,
     hpx::threads::thread_stacksize stacksize) const;
 }  // namespace Experimental

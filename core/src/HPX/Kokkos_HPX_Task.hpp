@@ -98,7 +98,7 @@ class TaskQueueSpecialization<
     task_queue.scheduler         = &scheduler;
     const int num_worker_threads = Kokkos::Experimental::HPX::concurrency();
     Kokkos::Experimental::HPX().impl_bulk_setup_finalize(
-        true, task_queue, num_worker_threads,
+        true, false, task_queue, num_worker_threads,
         hpx::threads::thread_stacksize::nostack);
   }
 
@@ -231,7 +231,7 @@ class TaskQueueSpecializationConstrained<
     task_queue.scheduler         = &scheduler;
     const int num_worker_threads = Kokkos::Experimental::HPX::concurrency();
     Kokkos::Experimental::HPX().impl_bulk_setup_finalize(
-        true, task_queue, num_worker_threads,
+        true, false, task_queue, num_worker_threads,
         hpx::threads::thread_stacksize::nostack);
   }
 
