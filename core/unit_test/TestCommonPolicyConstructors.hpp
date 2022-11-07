@@ -162,16 +162,16 @@ void test_prefer_desired_occupancy() {
   // assert that base class has size 1. We are only
   // concerned with calling this if the PolicyType
   // template is DummyPolicy. In all other cases,
-  // "not std::is_same_v<Policy, DummyPolicy<Args...>>=true"
+  // "!std::is_same_v<Policy, DummyPolicy<Args...>>=true"
   // and the test automatically passes.
-  static_assert(not std::is_same_v<Policy, DummyPolicy<>> or
+  static_assert(!std::is_same_v<Policy, DummyPolicy<>> ||
                 sizeof(decltype(policy)) == 1);
 
   // assert that size of the policy with
   // experimental proceedure is the size
   // of the procedure struct. Again,
   // only tested for DummyPolicy.
-  static_assert(not std::is_same_v<Policy, DummyPolicy<>> or
+  static_assert(!std::is_same_v<Policy, DummyPolicy<>> ||
                 sizeof(decltype(policy_with_occ)) == sizeof(DesiredOccupancy));
 #endif
 }
