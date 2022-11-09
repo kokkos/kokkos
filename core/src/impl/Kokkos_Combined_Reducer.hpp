@@ -51,7 +51,6 @@
 #include <Kokkos_Parallel_Reduce.hpp>
 #include <Kokkos_ExecPolicy.hpp>
 #include <Kokkos_AnonymousSpace.hpp>
-#include <impl/Kokkos_Utilities.hpp>  // comma operator fold emulation
 
 #include <utility>
 
@@ -152,15 +151,11 @@ struct CombinedReducerStorageImpl {
   // model Reducer
 
   KOKKOS_INLINE_FUNCTION
-  constexpr _fold_comma_emulation_return _init(value_type& val) const {
-    m_reducer.init(val);
-    return _fold_comma_emulation_return{};
-  }
+  constexpr void _init(value_type& val) const { m_reducer.init(val); }
 
-  KOKKOS_INLINE_FUNCTION constexpr _fold_comma_emulation_return _join(
-      value_type& dest, value_type const& src) const {
+  KOKKOS_INLINE_FUNCTION constexpr void _join(value_type& dest,
+                                              value_type const& src) const {
     m_reducer.join(dest, src);
-    return _fold_comma_emulation_return{};
   }
 };
 
@@ -231,16 +226,16 @@ struct CombinedReducerImpl<std::integer_sequence<size_t, Idxs...>, Space,
 
   KOKKOS_FUNCTION constexpr void join(value_type& dest,
                                       value_type const& src) const noexcept {
-    emulate_fold_comma_operator(
-        this->CombinedReducerStorageImpl<Idxs, Reducers>::_join(
-            dest.template get<Idxs, typename Reducers::value_type>(),
-            src.template get<Idxs, typename Reducers::value_type>())...);
+    (this->CombinedReducerStorageImpl<Idxs, Reducers>::_join(
+         dest.template get<Idxs, typename Reducers::value_type>(),
+         src.template get<Idxs, typename Reducers::value_type>()),
+     ...);
   }
 
   KOKKOS_FUNCTION constexpr void init(value_type& dest) const noexcept {
-    emulate_fold_comma_operator(
-        this->CombinedReducerStorageImpl<Idxs, Reducers>::_init(
-            dest.template get<Idxs, typename Reducers::value_type>())...);
+    (this->CombinedReducerStorageImpl<Idxs, Reducers>::_init(
+         dest.template get<Idxs, typename Reducers::value_type>()),
+     ...);
   }
 
   // TODO figure out if we also need to call through to final
@@ -274,11 +269,11 @@ struct CombinedReducerImpl<std::integer_sequence<size_t, Idxs...>, Space,
   static void write_value_back_to_original_references(
       const ExecutionSpace& exec_space, value_type const& value,
       Reducers const&... reducers_that_reference_original_values) noexcept {
-    emulate_fold_comma_operator(
-        (write_one_value_back<ExecutionSpace, Idxs>(
-             exec_space, reducers_that_reference_original_values.view(),
-             value.template get<Idxs, typename Reducers::value_type>()),
-         0)...);
+    (write_one_value_back<ExecutionSpace, Idxs>(
+         exec_space, reducers_that_reference_original_values.view(),
+         value.template get<Idxs, typename Reducers::value_type>()),
+
+     ...);
   }
 };
 

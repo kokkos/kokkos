@@ -69,22 +69,4 @@ void test_is_specialization_of() {
                 "");
 }
 
-template <std::size_t... Idxs, class... Args>
-std::size_t do_comma_emulation_test(std::integer_sequence<std::size_t, Idxs...>,
-                                    Args... args) {
-  // Count the bugs, since ASSERT_EQ is a statement and not an expression
-  std::size_t bugs = 0;
-  // Ensure in-order evaluation
-  std::size_t i = 0;
-  KOKKOS_IMPL_FOLD_COMMA_OPERATOR(bugs += std::size_t(Idxs != i++) /*, ...*/);
-  // Ensure expansion of multiple packs works
-  KOKKOS_IMPL_FOLD_COMMA_OPERATOR(bugs += std::size_t(Idxs != args) /*, ...*/);
-  return bugs;
-}
-
-TEST(utilities, comma_operator_emulation) {
-  ASSERT_EQ(0u, do_comma_emulation_test(std::make_index_sequence<5>{}, 0, 1, 2,
-                                        3, 4));
-}
-
 }  // namespace Test
