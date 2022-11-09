@@ -48,19 +48,47 @@
 
 namespace {
 
-template <class T>
-void more_md_range_policy_construction_test() {
+template <class IndexType>
+void construct_range_policy_variable_type() {
   (void)Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>{
-      Kokkos::Array<T, 2>{}, Kokkos::Array<T, 2>{}};
+      Kokkos::Array<IndexType, 2>{}, Kokkos::Array<IndexType, 2>{}};
 
-  (void)Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>{{{T(0), T(0)}},
-                                                               {{T(2), T(2)}}};
+  (void)Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>{
+      {{IndexType(0), IndexType(0)}}, {{IndexType(2), IndexType(2)}}};
 
-  (void)Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>{{T(0), T(0)},
-                                                               {T(2), T(2)}};
+  (void)Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>{
+      {IndexType(0), IndexType(0)}, {IndexType(2), IndexType(2)}};
 }
 
 TEST(TEST_CATEGORY, md_range_policy_construction_from_arrays) {
+  {
+    // Check that construction from Kokkos::Array of the specified index type
+    // works.
+    using IndexType = unsigned long long;
+    Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>,
+                          Kokkos::IndexType<IndexType>>
+        p1(Kokkos::Array<IndexType, 2>{{0, 1}},
+           Kokkos::Array<IndexType, 2>{{2, 3}});
+    Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>,
+                          Kokkos::IndexType<IndexType>>
+        p2(Kokkos::Array<IndexType, 2>{{0, 1}},
+           Kokkos::Array<IndexType, 2>{{2, 3}});
+    Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>,
+                          Kokkos::IndexType<IndexType>>
+        p3(Kokkos::Array<IndexType, 2>{{0, 1}},
+           Kokkos::Array<IndexType, 2>{{2, 3}},
+           Kokkos::Array<IndexType, 1>{{4}});
+  }
+  {
+    // Check that construction from double-braced initliazer list
+    // works.
+    using index_type = unsigned long long;
+    Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>> p1({{0, 1}},
+                                                              {{2, 3}});
+    Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>,
+                          Kokkos::IndexType<index_type>>
+        p2({{0, 1}}, {{2, 3}});
+  }
   {
     // Check that construction from Kokkos::Array of long compiles for backwards
     // compability.  This was broken in
@@ -73,39 +101,12 @@ TEST(TEST_CATEGORY, md_range_policy_construction_from_arrays) {
         Kokkos::Array<long, 2>{{0, 1}}, Kokkos::Array<long, 2>{{2, 3}},
         Kokkos::Array<long, 1>{{4}});
   }
-  {
-    // Check that construction from Kokkos::Array of the specified index type
-    // works.
-    using index_type = unsigned long long;
-    Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>,
-                          Kokkos::IndexType<index_type>>
-        p1(Kokkos::Array<index_type, 2>{{0, 1}},
-           Kokkos::Array<index_type, 2>{{2, 3}});
-    Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>,
-                          Kokkos::IndexType<index_type>>
-        p2(Kokkos::Array<index_type, 2>{{0, 1}},
-           Kokkos::Array<index_type, 2>{{2, 3}});
-    Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>,
-                          Kokkos::IndexType<index_type>>
-        p3(Kokkos::Array<index_type, 2>{{0, 1}},
-           Kokkos::Array<index_type, 2>{{2, 3}},
-           Kokkos::Array<index_type, 1>{{4}});
-  }
-  {
-    // Check that construction from double-braced initliazer list
-    // works.
-    using index_type = unsigned long long;
-    Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>> p1({{0, 1}},
-                                                              {{2, 3}});
-    Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>,
-                          Kokkos::IndexType<index_type>>
-        p2({{0, 1}}, {{2, 3}});
-  }
 
-  more_md_range_policy_construction_test<char>();
-  more_md_range_policy_construction_test<int>();
-  more_md_range_policy_construction_test<unsigned long>();
-  more_md_range_policy_construction_test<std::int64_t>();
+  // Check that construction from various index types works.
+  construct_range_policy_variable_type<char>();
+  construct_range_policy_variable_type<int>();
+  construct_range_policy_variable_type<unsigned long>();
+  construct_range_policy_variable_type<std::int64_t>();
 }
 
 #ifndef KOKKOS_COMPILER_NVHPC       // FIXME_NVHPC
