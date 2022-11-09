@@ -209,11 +209,9 @@ inline void create_Cuda_instances(std::vector<Cuda>& instances) {
 
 template <class... Args>
 std::vector<Cuda> partition_space(const Cuda&, Args...) {
-#ifdef __cpp_fold_expressions
   static_assert(
       (... && std::is_arithmetic_v<Args>),
       "Kokkos Error: partitioning arguments must be integers or floats");
-#endif
   std::vector<Cuda> instances(sizeof...(Args));
   Impl::create_Cuda_instances(instances);
   return instances;

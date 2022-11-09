@@ -181,11 +181,9 @@ inline void create_HIP_instances(std::vector<HIP> &instances) {
 
 template <class... Args>
 std::vector<HIP> partition_space(const HIP &, Args...) {
-#ifdef __cpp_fold_expressions
   static_assert(
       (... && std::is_arithmetic_v<Args>),
       "Kokkos Error: partitioning arguments must be integers or floats");
-#endif
 
   std::vector<HIP> instances(sizeof...(Args));
   Impl::create_HIP_instances(instances);
