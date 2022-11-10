@@ -60,7 +60,7 @@ using OpenACCMDRangeBegin = decltype(MDRangePolicy<OpenACC, Rank<N>>::m_lower);
 template <int N>
 using OpenACCMDRangeEnd = decltype(MDRangePolicy<OpenACC, Rank<N>>::m_upper);
 
-// primary template: catch-all non-implemented custom reducers
+// primary template: catch-all unimplemented custom reducers
 template <class Functor, class Reducer, class Policy,
           bool = std::is_arithmetic_v<typename Reducer::value_type>>
 struct OpenACCParallelReduceMDRangeHelper {
@@ -68,7 +68,7 @@ struct OpenACCParallelReduceMDRangeHelper {
                                      Policy const&) {
     static_assert(
         !Kokkos::Impl::always_true<Functor>::value,
-        "Kokkos Error: not implemented reducer type for the OpenACC backend");
+        "Kokkos Error: unimplemented reducer type for the OpenACC backend");
   }
 };
 
