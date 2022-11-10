@@ -20,12 +20,12 @@ namespace Test {
 
 BENCHMARK(ViewFill_Rank6<Kokkos::LayoutLeft>)
     ->ArgName("N")
-    ->Arg(10)
+    ->Arg(N)
     ->UseManualTime();
 
 BENCHMARK(ViewFill_Rank6<Kokkos::LayoutRight>)
     ->ArgName("N")
-    ->Arg(10)
+    ->Arg(N)
     ->UseManualTime();
 
 }  // namespace Test

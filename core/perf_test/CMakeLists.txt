@@ -205,6 +205,7 @@ SET(
   PerfTest_ViewFill_6.cpp
   PerfTest_ViewFill_7.cpp
   PerfTest_ViewFill_8.cpp
+  PerfTest_ViewFill_Raw.cpp
   PerfTest_ViewResize_123.cpp
   PerfTest_ViewResize_45.cpp
   PerfTest_ViewResize_6.cpp

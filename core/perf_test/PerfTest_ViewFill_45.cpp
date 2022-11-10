@@ -20,22 +20,22 @@ namespace Test {
 
 BENCHMARK(ViewFill_Rank4<Kokkos::LayoutLeft>)
     ->ArgName("N")
-    ->Arg(10)
+    ->Arg(N)
     ->UseManualTime();
 
 BENCHMARK(ViewFill_Rank4<Kokkos::LayoutRight>)
     ->ArgName("N")
-    ->Arg(10)
+    ->Arg(N)
     ->UseManualTime();
 
 BENCHMARK(ViewFill_Rank5<Kokkos::LayoutLeft>)
     ->ArgName("N")
-    ->Arg(10)
+    ->Arg(N)
     ->UseManualTime();
 
 BENCHMARK(ViewFill_Rank5<Kokkos::LayoutRight>)
     ->ArgName("N")
-    ->Arg(10)
+    ->Arg(N)
     ->UseManualTime();
 
 }  // namespace Test

@@ -20,24 +20,12 @@ namespace Test {
 
 BENCHMARK(ViewFill_Rank8<Kokkos::LayoutLeft>)
     ->ArgName("N")
-    ->Arg(10)
+    ->Arg(N)
     ->UseManualTime();
 
 BENCHMARK(ViewFill_Rank8<Kokkos::LayoutRight>)
     ->ArgName("N")
-    ->Arg(10)
+    ->Arg(N)
     ->UseManualTime();
-
-#if defined(KOKKOS_ENABLE_CUDA_LAMBDA) || !defined(KOKKOS_ENABLE_CUDA)
-BENCHMARK(ViewFill_Raw<Kokkos::LayoutLeft>)
-    ->ArgName("N")
-    ->Arg(10)
-    ->UseManualTime();
-
-BENCHMARK(ViewFill_Raw<Kokkos::LayoutRight>)
-    ->ArgName("N")
-    ->Arg(10)
-    ->UseManualTime();
-#endif
 
 }  // namespace Test

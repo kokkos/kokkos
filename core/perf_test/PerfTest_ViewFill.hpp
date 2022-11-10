@@ -20,6 +20,8 @@
 
 namespace Test {
 
+static constexpr int N = 10;
+
 template <class ViewType>
 void fill_view(ViewType& a, typename ViewType::const_value_type& val,
                benchmark::State& state) {
