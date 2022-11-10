@@ -213,11 +213,11 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
  private:
   /** \brief finalize chunk_size if it was set to AUTO*/
   inline void set_auto_chunk_size() {
-    // chunk_size <=1 lets the compiler choose the workgroup size when launching
-    // kernels
 #ifdef KOKKOS_ENABLE_SYCL
     if (std::is_same_v<typename traits::execution_space,
                        Kokkos::Experimental::SYCL>) {
+      // chunk_size <=1 lets the compiler choose the workgroup size when
+      // launching kernels
       m_granularity      = 1;
       m_granularity_mask = 0;
       return;
