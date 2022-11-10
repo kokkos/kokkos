@@ -101,7 +101,7 @@ class Kokkos::Impl::ParallelReduce<Functor, Kokkos::MDRangePolicy<Traits...>,
   template <class ViewType>
   ParallelReduce(
       const Functor& functor, const Policy& policy, const ViewType& result,
-      std::enable_if_t<Kokkos::is_view<ViewType>::value, void*> = nullptr)
+      std::enable_if_t<Kokkos::is_view_v<ViewType>>* = nullptr)
       : m_functor(functor),
         m_policy(policy),
         m_reducer(InvalidType()),
