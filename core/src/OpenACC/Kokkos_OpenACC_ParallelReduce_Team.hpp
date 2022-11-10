@@ -97,10 +97,9 @@ class Kokkos::Impl::ParallelReduce<FunctorType,
   }
 
   template <class ViewType>
-  ParallelReduce(
-      const FunctorType& arg_functor, const Policy& arg_policy,
-      const ViewType& arg_result_view,
-      std::enable_if_t<Kokkos::is_view<ViewType>::value, void*> = nullptr)
+  ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
+                 const ViewType& arg_result_view,
+                 std::enable_if_t<Kokkos::is_view_v<ViewType>>* = nullptr)
       : m_functor(arg_functor),
         m_policy(arg_policy),
         m_reducer(InvalidType()),
@@ -267,10 +266,9 @@ class Kokkos::Impl::ParallelReduce<FunctorType,
   }
 
   template <class ViewType>
-  ParallelReduce(
-      const FunctorType& arg_functor, const Policy& arg_policy,
-      const ViewType& arg_result_view,
-      std::enable_if_t<Kokkos::is_view_v<ViewType>::value>* = nullptr)
+  ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
+                 const ViewType& arg_result_view,
+                 std::enable_if_t<Kokkos::is_view_v<ViewType>>* = nullptr)
       : m_functor(arg_functor),
         m_policy(arg_policy),
         m_reducer(InvalidType()),
