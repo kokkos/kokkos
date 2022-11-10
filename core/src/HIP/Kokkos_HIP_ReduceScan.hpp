@@ -304,6 +304,7 @@ __device__ void hip_intra_block_reduce_scan(
   };
 
   // Intra-warp reduction:
+  int bit_shift = 0;
   {
     const unsigned mapped_idx =
         threadIdx.y + (is_full_warp ? 0
@@ -313,12 +314,9 @@ __device__ void hip_intra_block_reduce_scan(
     const pointer_type warp_start =
         base_data + value_count * ((threadIdx.y >> HIPTraits::WarpIndexShift)
                                    << HIPTraits::WarpIndexShift);
-    block_reduce_step(mapped_idx, tdata_intra, 0, warp_start, 0);
-    block_reduce_step(mapped_idx, tdata_intra, 1, warp_start, 0);
-    block_reduce_step(mapped_idx, tdata_intra, 2, warp_start, 0);
-    block_reduce_step(mapped_idx, tdata_intra, 3, warp_start, 0);
-    block_reduce_step(mapped_idx, tdata_intra, 4, warp_start, 0);
-    block_reduce_step(mapped_idx, tdata_intra, 5, warp_start, 0);
+    for (; (1 << bit_shift) < HIPTraits::WarpSize; ++bit_shift) {
+      block_reduce_step(mapped_idx, tdata_intra, bit_shift, warp_start, 0);
+    }
   }
 
   __syncthreads();  // Wait for all warps to reduce
@@ -347,20 +345,9 @@ __device__ void hip_intra_block_reduce_scan(
       const int rtid_inter = (threadIdx.y << HIPTraits::WarpIndexShift) +
                              (HIPTraits::WarpSize - 1) - index_shift;
 
-      if ((1 << 6) < BlockSizeMask) {
-        block_reduce_step(rtid_inter, tdata_inter, 6, base_data, index_shift);
-      }
-      if ((1 << 7) < BlockSizeMask) {
-        block_reduce_step(rtid_inter, tdata_inter, 7, base_data, index_shift);
-      }
-      if ((1 << 8) < BlockSizeMask) {
-        block_reduce_step(rtid_inter, tdata_inter, 8, base_data, index_shift);
-      }
-      if ((1 << 9) < BlockSizeMask) {
-        block_reduce_step(rtid_inter, tdata_inter, 9, base_data, index_shift);
-      }
-      if ((1 << 10) < BlockSizeMask) {
-        block_reduce_step(rtid_inter, tdata_inter, 10, base_data, index_shift);
+      for (; (1 << bit_shift) < BlockSizeMask; ++bit_shift) {
+        block_reduce_step(rtid_inter, tdata_inter, bit_shift, base_data,
+                          index_shift);
       }
     }
   }
