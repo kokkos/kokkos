@@ -210,6 +210,7 @@ SET(
   PerfTest_ViewResize_6.cpp
   PerfTest_ViewResize_7.cpp
   PerfTest_ViewResize_8.cpp
+  PerfTest_ViewResize_Raw.cpp
 )
 
 KOKKOS_ADD_BENCHMARK(

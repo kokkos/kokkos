@@ -18,36 +18,34 @@
 
 namespace Test {
 
-static constexpr int R = 10;
-
 // FIXME_SYCL Avoid running out of resources on the CUDA GPU used in the CI
 #ifdef KOKKOS_ENABLE_SYCL
-static constexpr int N = 9;
+static constexpr int N_8 = N - 1;
 #else
-static constexpr int N = 10;
+static constexpr int N_8 = N;
 #endif
 
 BENCHMARK(ViewResize_Rank8<Kokkos::LayoutLeft>)
     ->ArgName("N")
-    ->Arg(N)
+    ->Arg(N_8)
     ->UseManualTime()
     ->Iterations(R);
 
 BENCHMARK(ViewResize_Rank8<Kokkos::LayoutRight>)
     ->ArgName("N")
-    ->Arg(N)
+    ->Arg(N_8)
     ->UseManualTime()
     ->Iterations(R);
 
 BENCHMARK(ViewResize_NoInit_Rank8<Kokkos::LayoutLeft>)
     ->ArgName("N")
-    ->Arg(10)
+    ->Arg(N_8)
     ->UseManualTime()
     ->Iterations(R);
 
 BENCHMARK(ViewResize_NoInit_Rank8<Kokkos::LayoutRight>)
     ->ArgName("N")
-    ->Arg(10)
+    ->Arg(N_8)
     ->UseManualTime()
     ->Iterations(R);
 

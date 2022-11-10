@@ -18,9 +18,6 @@
 
 namespace Test {
 
-static constexpr int R = 10;
-static constexpr int N = 10;
-
 BENCHMARK(ViewResize_Rank4<Kokkos::LayoutLeft>)
     ->ArgName("N")
     ->Arg(N)
@@ -47,25 +44,25 @@ BENCHMARK(ViewResize_Rank5<Kokkos::LayoutRight>)
 
 BENCHMARK(ViewResize_NoInit_Rank4<Kokkos::LayoutLeft>)
     ->ArgName("N")
-    ->Arg(10)
+    ->Arg(N)
     ->UseManualTime()
     ->Iterations(R);
 
 BENCHMARK(ViewResize_NoInit_Rank4<Kokkos::LayoutRight>)
     ->ArgName("N")
-    ->Arg(10)
+    ->Arg(N)
     ->UseManualTime()
     ->Iterations(R);
 
 BENCHMARK(ViewResize_NoInit_Rank5<Kokkos::LayoutLeft>)
     ->ArgName("N")
-    ->Arg(10)
+    ->Arg(N)
     ->UseManualTime()
     ->Iterations(R);
 
 BENCHMARK(ViewResize_NoInit_Rank5<Kokkos::LayoutRight>)
     ->ArgName("N")
-    ->Arg(10)
+    ->Arg(N)
     ->UseManualTime()
     ->Iterations(R);
 

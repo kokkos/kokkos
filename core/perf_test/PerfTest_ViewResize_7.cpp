@@ -18,9 +18,6 @@
 
 namespace Test {
 
-static constexpr int R = 10;
-static constexpr int N = 10;
-
 BENCHMARK(ViewResize_Rank7<Kokkos::LayoutLeft>)
     ->ArgName("N")
     ->Arg(N)

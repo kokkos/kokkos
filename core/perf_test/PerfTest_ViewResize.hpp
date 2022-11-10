@@ -21,6 +21,9 @@
 
 namespace Test {
 
+static constexpr int R = 10;
+static constexpr int N = 10;
+
 template <class Layout>
 static void ViewResize_Rank1(benchmark::State& state) {
   const int N8 = std::pow(state.range(0), 8);
