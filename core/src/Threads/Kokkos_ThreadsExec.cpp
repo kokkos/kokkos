@@ -780,11 +780,8 @@ void ThreadsExec::initialize(int thread_count_arg) {
   }
 
   // Check for over-subscription
-  auto const mpi_local_size = []() {
-    auto ranks = mpi_ranks_per_node();
-    if (ranks < 0) return 1;
-    return ranks;
-  }();
+  auto const reported_ranks = mpi_ranks_per_node();
+  auto const mpi_local_size = reported_ranks < 0 ? 1 : reported_ranks;
   if (Kokkos::show_warnings() &&
       (mpi_local_size * long(thread_count) > Impl::processors_per_node())) {
     std::cerr << "Kokkos::Threads::initialize WARNING: You are likely "
