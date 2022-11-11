@@ -46,6 +46,8 @@
 #define KOKKOS_IMPL_PUBLIC_INCLUDE
 #endif
 
+#include <impl/Kokkos_CPUDiscovery.hpp>
+
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -55,16 +57,11 @@
 #else
 #include <unistd.h>
 #endif
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <cerrno>
+
+#include <cstdlib>  // getenv
 #include <string>
 
-namespace Kokkos {
-namespace Impl {
-
-int processors_per_node() {
+int Kokkos::Impl::processors_per_node() {
 #ifdef _SC_NPROCESSORS_ONLN
   int const num_procs     = sysconf(_SC_NPROCESSORS_ONLN);
   int const num_procs_max = sysconf(_SC_NPROCESSORS_CONF);
@@ -87,7 +84,7 @@ int processors_per_node() {
 #endif
 }
 
-int mpi_ranks_per_node() {
+int Kokkos::Impl::mpi_ranks_per_node() {
   char *str;
   int ppn = 1;
   // if ((str = getenv("SLURM_TASKS_PER_NODE"))) {
@@ -105,7 +102,7 @@ int mpi_ranks_per_node() {
   return ppn;
 }
 
-int mpi_local_rank_on_node() {
+int Kokkos::Impl::mpi_local_rank_on_node() {
   char *str;
   int local_rank = 0;
   // if ((str = getenv("SLURM_LOCALID"))) {
@@ -119,6 +116,3 @@ int mpi_local_rank_on_node() {
   }
   return local_rank;
 }
-
-}  // namespace Impl
-}  // namespace Kokkos
