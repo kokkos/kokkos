@@ -52,6 +52,7 @@
 #include <impl/Kokkos_ParseCommandLineArgumentsAndEnvironmentVariables.hpp>
 #include <impl/Kokkos_DeviceManagement.hpp>
 #include <impl/Kokkos_ExecSpaceManager.hpp>
+#include <impl/Kokkos_CPUDiscovery.hpp>
 
 #include <algorithm>
 #include <cctype>
@@ -428,20 +429,10 @@ int Kokkos::Impl::get_gpu(const InitializationSettings& settings) {
     Kokkos::abort("implementation bug");
   }
 
-  char const* local_rank_str = nullptr;
-  for (char const* env_var : {
-           "OMPI_COMM_WORLD_LOCAL_RANK",  // OpenMPI
-           "MV2_COMM_WORLD_LOCAL_RANK",   // MVAPICH2
-           "MPI_LOCALRANKID",             // MPICH
-           "SLURM_LOCALID",               // SLURM
-           "PMI_LOCAL_RANK"               // PMI
-       }) {
-    local_rank_str = std::getenv(env_var);
-    if (local_rank_str) break;
-  }
+  int const mpi_local_rank = mpi_local_rank_on_node();
 
   // use first GPU available for execution if unable to detect local MPI rank
-  if (!local_rank_str) {
+  if (mpi_local_rank < 0) {
     if (settings.has_map_device_id_by()) {
       std::cerr << "Warning: unable to detect local MPI rank."
                 << " Falling back to the first GPU available for execution."
@@ -453,10 +444,10 @@ int Kokkos::Impl::get_gpu(const InitializationSettings& settings) {
   // use device assigned by CTest when resource allocation is activated
   if (std::getenv("CTEST_KOKKOS_DEVICE_TYPE") &&
       std::getenv("CTEST_RESOURCE_GROUP_COUNT")) {
-    return get_ctest_gpu(std::stoi(local_rank_str));
+    return get_ctest_gpu(mpi_local_rank);
   }
 
-  return visible_devices[std::stoi(local_rank_str) % visible_devices.size()];
+  return visible_devices[mpi_local_rank % visible_devices.size()];
 }
 
 namespace {
