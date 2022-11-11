@@ -206,7 +206,7 @@ Kokkos::HIP::runtime WARNING: Kokkos did not find an environment variable 'HSA_X
           std::cerr
               << "Kokkos::HIP::runtime WARNING: Kokkos detected the "
                  "environement variable "
-              << "'HSA_XNACK=" << hsa_xnack << "\n"
+              << "'HSA_XNACK'=" << hsa_xnack << "\n"
               << "Kokkos advises to set it to '1' to enable it per process."
               << std::endl;
       } while (false);
