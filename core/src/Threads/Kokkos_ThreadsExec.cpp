@@ -780,17 +780,20 @@ void ThreadsExec::initialize(int thread_count_arg) {
   }
 
   // Check for over-subscription
+  auto const mpi_local_size = []() {
+    auto ranks = mpi_ranks_per_node();
+    if (ranks < 0) return 1;
+    return ranks;
+  }();
   if (Kokkos::show_warnings() &&
-      (Impl::mpi_ranks_per_node() * long(thread_count) >
-       Impl::processors_per_node())) {
+      (mpi_local_size * long(thread_count) > Impl::processors_per_node())) {
     std::cerr << "Kokkos::Threads::initialize WARNING: You are likely "
                  "oversubscribing your CPU cores."
               << std::endl;
     std::cerr << "                                    Detected: "
               << Impl::processors_per_node() << " cores per node." << std::endl;
     std::cerr << "                                    Detected: "
-              << Impl::mpi_ranks_per_node() << " MPI_ranks per node."
-              << std::endl;
+              << mpi_local_size << " MPI_ranks per node." << std::endl;
     std::cerr << "                                    Requested: "
               << thread_count << " threads per process." << std::endl;
   }
