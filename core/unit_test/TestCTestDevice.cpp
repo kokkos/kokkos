@@ -1,12 +1,6 @@
 #include <gtest/gtest.h>
 
-namespace Kokkos {
-namespace Impl {
-
-int get_ctest_gpu(const char *local_rank_str);
-
-}  // namespace Impl
-}  // namespace Kokkos
+#include <impl/Kokkos_DeviceManagement.hpp>  // get_ctest_gpu
 
 #ifdef _WIN32
 int setenv(const char *name, const char *value, int overwrite) {
