@@ -36,10 +36,10 @@ static_assert(datatype_matches_extent<
 
 // Both dynamic and static
 static_assert(datatype_matches_extent<
-              double** [3][2][8],
+              double* * [3][2][8],
               std::experimental::extents<
                   std::size_t, std::experimental::dynamic_extent,
-                  std::experimental::dynamic_extent, std::size_t { 3 },
+                  std::experimental::dynamic_extent, std::size_t{3},
                   std::size_t{2}, std::size_t{8}>>);
 
 // Conversion from extents to DataType
@@ -63,7 +63,7 @@ static_assert(
 
 // both dynamic and static
 static_assert(
-    extent_matches_datatype<double*** [20][45], double,
+    extent_matches_datatype<double** * [20][45], double,
                             std::experimental::extents<
                                 std::size_t, std::experimental::dynamic_extent,
                                 std::experimental::dynamic_extent,

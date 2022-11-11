@@ -74,7 +74,6 @@ struct ViewDataType;
 
 namespace Kokkos::Experimental::Impl {
 
-
 // A few things to note --
 // - mdspan allows for 0-rank extents similarly to View, so we don't need
 // special handling of this case
