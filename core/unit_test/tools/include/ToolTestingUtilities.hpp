@@ -131,7 +131,7 @@ struct function_traits<R (*)(A...)> {
   constexpr static int num_arguments = sizeof...(A);
   template <class Call, class... Args>
   static auto invoke_as(const Call& call, Args&&... args) {
-    if ((... && !std::dynamic_pointer_cast<A>(std::forward<Args>(args)))) {
+    if ((!std::dynamic_pointer_cast<A>(std::forward<Args>(args)) && ...)) {
       return MatchDiagnostic{false, {"Types didn't match on arguments"}};
     }
     return call(*std::dynamic_pointer_cast<A>(std::forward<Args>(args))...);
@@ -155,7 +155,7 @@ struct function_traits<R (C::*)(A...)> {
   constexpr static int num_arguments = sizeof...(A);
   template <class Call, class... Args>
   static auto invoke_as(const Call& call, Args&&... args) {
-    if ((... && !std::dynamic_pointer_cast<A>(std::forward<Args>(args)))) {
+    if ((!std::dynamic_pointer_cast<A>(std::forward<Args>(args)) && ...)) {
       return MatchDiagnostic{false, {"Types didn't match on arguments"}};
     }
     return call(*std::dynamic_pointer_cast<A>(std::forward<Args>(args))...);
@@ -180,7 +180,7 @@ struct function_traits<R (C::*)(A...) const>  // const
   constexpr static int num_arguments = sizeof...(A);
   template <class Call, class... Args>
   static auto invoke_as(const Call& call, Args&&... args) {
-    if ((... && !std::dynamic_pointer_cast<A>(std::forward<Args>(args)))) {
+    if ((!std::dynamic_pointer_cast<A>(std::forward<Args>(args)) && ...)) {
       return MatchDiagnostic{false, {"Types didn't match on arguments"}};
     }
     return call(*std::dynamic_pointer_cast<A>(std::forward<Args>(args))...);
