@@ -231,7 +231,7 @@ void Kokkos::Impl::ExecSpaceManager::print_configuration(std::ostream& os,
   }
 }
 
-int Kokkos::Impl::get_ctest_gpu(const char* local_rank_str) {
+int Kokkos::Impl::get_ctest_gpu(int local_rank) {
   auto const* ctest_kokkos_device_type =
       std::getenv("CTEST_KOKKOS_DEVICE_TYPE");
   if (!ctest_kokkos_device_type) {
@@ -246,7 +246,7 @@ int Kokkos::Impl::get_ctest_gpu(const char* local_rank_str) {
 
   // Make sure rank is within bounds of resource groups specified by CTest
   auto resource_group_count = std::stoi(ctest_resource_group_count_str);
-  auto local_rank           = std::stoi(local_rank_str);
+  assert(local_rank >= 0);
   if (local_rank >= resource_group_count) {
     std::ostringstream ss;
     ss << "Error: local rank " << local_rank
@@ -453,7 +453,7 @@ int Kokkos::Impl::get_gpu(const InitializationSettings& settings) {
   // use device assigned by CTest when resource allocation is activated
   if (std::getenv("CTEST_KOKKOS_DEVICE_TYPE") &&
       std::getenv("CTEST_RESOURCE_GROUP_COUNT")) {
-    return get_ctest_gpu(local_rank_str);
+    return get_ctest_gpu(std::stoi(local_rank_str));
   }
 
   return visible_devices[std::stoi(local_rank_str) % visible_devices.size()];

@@ -52,7 +52,7 @@ class InitializationSettings;
 namespace Impl {
 int get_gpu(const Kokkos::InitializationSettings& settings);
 // This declaration is provided for testing purposes only
-int get_ctest_gpu(const char* local_rank_str);
+int get_ctest_gpu(int local_rank);
 // ditto
 std::vector<int> get_visible_devices(
     Kokkos::InitializationSettings const& settings, int device_count);
