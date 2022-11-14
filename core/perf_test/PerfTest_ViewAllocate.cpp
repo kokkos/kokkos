@@ -125,13 +125,13 @@ static void ViewAllocate_Raw(benchmark::State& state) {
     Kokkos::parallel_for(
         N8, KOKKOS_LAMBDA(const int& i) { a_ptr[i] = 0.0; });
     Kokkos::fence();
+    const auto time = timer.seconds();
     Kokkos::kokkos_free(a_ptr);
 
-    state.SetIterationTime(timer.seconds());
+    state.SetIterationTime(time);
     // data processed in megabytes
     const double data_processed = 1 * N8 * sizeof(double) / 1'000'000;
-
-    state.counters["MB"] = benchmark::Counter(data_processed);
+    state.counters["MB"]        = benchmark::Counter(data_processed);
     state.counters[KokkosBenchmark::benchmark_fom("GB/s")] = benchmark::Counter(
         data_processed / 1'000, benchmark::Counter::kIsIterationInvariantRate);
   }
