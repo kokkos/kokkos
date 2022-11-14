@@ -32,13 +32,13 @@ BENCHMARK(ViewResize_Rank6<Kokkos::LayoutRight>)
 
 BENCHMARK(ViewResize_NoInit_Rank6<Kokkos::LayoutLeft>)
     ->ArgName("N")
-    ->Arg(10)
+    ->Arg(N)
     ->UseManualTime()
     ->Iterations(R);
 
 BENCHMARK(ViewResize_NoInit_Rank6<Kokkos::LayoutRight>)
     ->ArgName("N")
-    ->Arg(10)
+    ->Arg(N)
     ->UseManualTime()
     ->Iterations(R);
 
