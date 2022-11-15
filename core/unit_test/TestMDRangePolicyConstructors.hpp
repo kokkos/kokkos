@@ -49,7 +49,7 @@
 namespace {
 
 template <class IndexType>
-void construct_range_policy_variable_type() {
+void construct_mdrange_policy_variable_type() {
   (void)Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>{
       Kokkos::Array<IndexType, 2>{}, Kokkos::Array<IndexType, 2>{}};
 
@@ -103,10 +103,10 @@ TEST(TEST_CATEGORY, md_range_policy_construction_from_arrays) {
   }
 
   // Check that construction from various index types works.
-  construct_range_policy_variable_type<char>();
-  construct_range_policy_variable_type<int>();
-  construct_range_policy_variable_type<unsigned long>();
-  construct_range_policy_variable_type<std::int64_t>();
+  construct_mdrange_policy_variable_type<char>();
+  construct_mdrange_policy_variable_type<int>();
+  construct_mdrange_policy_variable_type<unsigned long>();
+  construct_mdrange_policy_variable_type<std::int64_t>();
 }
 
 #ifndef KOKKOS_COMPILER_NVHPC       // FIXME_NVHPC
