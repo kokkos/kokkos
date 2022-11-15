@@ -51,7 +51,6 @@
 #include <string>
 
 namespace Kokkos {
-
 namespace Env {
 
 extern std::string GIT_BRANCH;
@@ -60,7 +59,7 @@ extern std::string GIT_CLEAN_STATUS;
 extern std::string GIT_COMMIT_DESCRIPTION;
 extern std::string GIT_COMMIT_DATE;
 
-}
-}
+}  // namespace Env
+}  // namespace Kokkos
 
 #endif

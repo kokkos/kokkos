@@ -44,11 +44,7 @@
 
 #include "impl/Kokkos_Environment_Info.hpp"
 
-//----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
-
 namespace Kokkos {
-
 namespace Env {
 
 std::string GIT_BRANCH             = "@GIT_BRANCH@";
