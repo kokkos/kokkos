@@ -28,8 +28,8 @@ namespace Experimental {
 // overload set accepting execution space
 //
 template <class ExecutionSpace, class InputIterator, class OutputIterator>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                  OutputIterator>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                 OutputIterator>
 rotate_copy(const ExecutionSpace& ex, InputIterator first,
             InputIterator n_first, InputIterator last, OutputIterator d_first) {
   return Impl::rotate_copy_exespace_impl(
@@ -38,8 +38,8 @@ rotate_copy(const ExecutionSpace& ex, InputIterator first,
 }
 
 template <class ExecutionSpace, class InputIterator, class OutputIterator>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                  OutputIterator>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                 OutputIterator>
 rotate_copy(const std::string& label, const ExecutionSpace& ex,
             InputIterator first, InputIterator n_first, InputIterator last,
             OutputIterator d_first) {
@@ -49,8 +49,8 @@ rotate_copy(const std::string& label, const ExecutionSpace& ex,
 
 template <class ExecutionSpace, class DataType1, class... Properties1,
           class DataType2, class... Properties2,
-          std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                            int> = 0>
+          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                           int> = 0>
 auto rotate_copy(const ExecutionSpace& ex,
                  const ::Kokkos::View<DataType1, Properties1...>& source,
                  std::size_t n_location,
@@ -65,8 +65,8 @@ auto rotate_copy(const ExecutionSpace& ex,
 
 template <class ExecutionSpace, class DataType1, class... Properties1,
           class DataType2, class... Properties2,
-          std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                            int> = 0>
+          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                           int> = 0>
 auto rotate_copy(const std::string& label, const ExecutionSpace& ex,
                  const ::Kokkos::View<DataType1, Properties1...>& source,
                  std::size_t n_location,
@@ -85,8 +85,8 @@ auto rotate_copy(const std::string& label, const ExecutionSpace& ex,
 // since they cause issues on device because of the string allocation.
 //
 template <class TeamHandleType, class InputIterator, class OutputIterator>
-KOKKOS_FUNCTION std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value,
-                                 OutputIterator>
+KOKKOS_FUNCTION std::enable_if_t<
+    ::Kokkos::is_team_handle<TeamHandleType>::value, OutputIterator>
 rotate_copy(const TeamHandleType& teamHandle, InputIterator first,
             InputIterator n_first, InputIterator last, OutputIterator d_first) {
   return Impl::rotate_copy_team_impl(teamHandle, first, n_first, last, d_first);
@@ -95,7 +95,7 @@ rotate_copy(const TeamHandleType& teamHandle, InputIterator first,
 template <
     class TeamHandleType, class DataType1, class... Properties1,
     class DataType2, class... Properties2,
-    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, int> = 0>
+    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, int> = 0>
 KOKKOS_FUNCTION auto rotate_copy(
     const TeamHandleType& teamHandle,
     const ::Kokkos::View<DataType1, Properties1...>& source,

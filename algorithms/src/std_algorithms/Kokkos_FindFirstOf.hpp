@@ -29,8 +29,8 @@ namespace Experimental {
 
 // overload set 1: no binary predicate passed
 template <class ExecutionSpace, class IteratorType1, class IteratorType2>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                  IteratorType1>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                 IteratorType1>
 find_first_of(const ExecutionSpace& ex, IteratorType1 first, IteratorType1 last,
               IteratorType2 s_first, IteratorType2 s_last) {
   return Impl::find_first_of_exespace_impl(
@@ -39,8 +39,8 @@ find_first_of(const ExecutionSpace& ex, IteratorType1 first, IteratorType1 last,
 }
 
 template <class ExecutionSpace, class IteratorType1, class IteratorType2>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                  IteratorType1>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                 IteratorType1>
 find_first_of(const std::string& label, const ExecutionSpace& ex,
               IteratorType1 first, IteratorType1 last, IteratorType2 s_first,
               IteratorType2 s_last) {
@@ -50,8 +50,8 @@ find_first_of(const std::string& label, const ExecutionSpace& ex,
 
 template <class ExecutionSpace, class DataType1, class... Properties1,
           class DataType2, class... Properties2,
-          std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                            int> = 0>
+          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                           int> = 0>
 auto find_first_of(const ExecutionSpace& ex,
                    const ::Kokkos::View<DataType1, Properties1...>& view,
                    const ::Kokkos::View<DataType2, Properties2...>& s_view) {
@@ -66,8 +66,8 @@ auto find_first_of(const ExecutionSpace& ex,
 
 template <class ExecutionSpace, class DataType1, class... Properties1,
           class DataType2, class... Properties2,
-          std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                            int> = 0>
+          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                           int> = 0>
 auto find_first_of(const std::string& label, const ExecutionSpace& ex,
                    const ::Kokkos::View<DataType1, Properties1...>& view,
                    const ::Kokkos::View<DataType2, Properties2...>& s_view) {
@@ -83,8 +83,8 @@ auto find_first_of(const std::string& label, const ExecutionSpace& ex,
 // overload set 2: binary predicate passed
 template <class ExecutionSpace, class IteratorType1, class IteratorType2,
           class BinaryPredicateType>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                  IteratorType1>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                 IteratorType1>
 find_first_of(const ExecutionSpace& ex, IteratorType1 first, IteratorType1 last,
               IteratorType2 s_first, IteratorType2 s_last,
               const BinaryPredicateType& pred) {
@@ -95,8 +95,8 @@ find_first_of(const ExecutionSpace& ex, IteratorType1 first, IteratorType1 last,
 
 template <class ExecutionSpace, class IteratorType1, class IteratorType2,
           class BinaryPredicateType>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                  IteratorType1>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                 IteratorType1>
 find_first_of(const std::string& label, const ExecutionSpace& ex,
               IteratorType1 first, IteratorType1 last, IteratorType2 s_first,
               IteratorType2 s_last, const BinaryPredicateType& pred) {
@@ -106,8 +106,8 @@ find_first_of(const std::string& label, const ExecutionSpace& ex,
 
 template <class ExecutionSpace, class DataType1, class... Properties1,
           class DataType2, class... Properties2, class BinaryPredicateType,
-          std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                            int> = 0>
+          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                           int> = 0>
 auto find_first_of(const ExecutionSpace& ex,
                    const ::Kokkos::View<DataType1, Properties1...>& view,
                    const ::Kokkos::View<DataType2, Properties2...>& s_view,
@@ -123,8 +123,8 @@ auto find_first_of(const ExecutionSpace& ex,
 
 template <class ExecutionSpace, class DataType1, class... Properties1,
           class DataType2, class... Properties2, class BinaryPredicateType,
-          std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                            int> = 0>
+          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                           int> = 0>
 auto find_first_of(const std::string& label, const ExecutionSpace& ex,
                    const ::Kokkos::View<DataType1, Properties1...>& view,
                    const ::Kokkos::View<DataType2, Properties2...>& s_view,
@@ -146,11 +146,10 @@ auto find_first_of(const std::string& label, const ExecutionSpace& ex,
 
 // overload set 1: no binary predicate passed
 template <class TeamHandleType, class IteratorType1, class IteratorType2>
-KOKKOS_FUNCTION
-    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, IteratorType1>
-    find_first_of(const TeamHandleType& teamHandle, IteratorType1 first,
-                  IteratorType1 last, IteratorType2 s_first,
-                  IteratorType2 s_last) {
+KOKKOS_FUNCTION std::enable_if_t<
+    ::Kokkos::is_team_handle<TeamHandleType>::value, IteratorType1>
+find_first_of(const TeamHandleType& teamHandle, IteratorType1 first,
+              IteratorType1 last, IteratorType2 s_first, IteratorType2 s_last) {
   return Impl::find_first_of_team_impl(teamHandle, first, last, s_first,
                                        s_last);
 }
@@ -158,7 +157,7 @@ KOKKOS_FUNCTION
 template <
     class TeamHandleType, class DataType1, class... Properties1,
     class DataType2, class... Properties2,
-    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, int> = 0>
+    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, int> = 0>
 KOKKOS_FUNCTION auto find_first_of(
     const TeamHandleType& teamHandle,
     const ::Kokkos::View<DataType1, Properties1...>& view,
@@ -175,11 +174,11 @@ KOKKOS_FUNCTION auto find_first_of(
 // overload set 2: binary predicate passed
 template <class TeamHandleType, class IteratorType1, class IteratorType2,
           class BinaryPredicateType>
-KOKKOS_FUNCTION
-    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, IteratorType1>
-    find_first_of(const TeamHandleType& teamHandle, IteratorType1 first,
-                  IteratorType1 last, IteratorType2 s_first,
-                  IteratorType2 s_last, const BinaryPredicateType& pred) {
+KOKKOS_FUNCTION std::enable_if_t<
+    ::Kokkos::is_team_handle<TeamHandleType>::value, IteratorType1>
+find_first_of(const TeamHandleType& teamHandle, IteratorType1 first,
+              IteratorType1 last, IteratorType2 s_first, IteratorType2 s_last,
+              const BinaryPredicateType& pred) {
   return Impl::find_first_of_team_impl(teamHandle, first, last, s_first, s_last,
                                        pred);
 }
@@ -187,7 +186,7 @@ KOKKOS_FUNCTION
 template <
     class TeamHandleType, class DataType1, class... Properties1,
     class DataType2, class... Properties2, class BinaryPredicateType,
-    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, int> = 0>
+    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, int> = 0>
 KOKKOS_FUNCTION auto find_first_of(
     const TeamHandleType& teamHandle,
     const ::Kokkos::View<DataType1, Properties1...>& view,

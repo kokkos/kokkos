@@ -47,8 +47,8 @@ unique(const std::string& label, const ExecutionSpace& ex, IteratorType first,
 }
 
 template <class ExecutionSpace, class DataType, class... Properties,
-          std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                            int> = 0>
+          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                           int> = 0>
 auto unique(const ExecutionSpace& ex,
             const ::Kokkos::View<DataType, Properties...>& view) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
@@ -57,8 +57,8 @@ auto unique(const ExecutionSpace& ex,
 }
 
 template <class ExecutionSpace, class DataType, class... Properties,
-          std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                            int> = 0>
+          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                           int> = 0>
 auto unique(const std::string& label, const ExecutionSpace& ex,
             const ::Kokkos::View<DataType, Properties...>& view) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
@@ -69,8 +69,8 @@ auto unique(const std::string& label, const ExecutionSpace& ex,
 // overload set2: custom predicate, accepting execution space
 //
 template <class ExecutionSpace, class IteratorType, class BinaryPredicate>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                  IteratorType>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                 IteratorType>
 unique(const ExecutionSpace& ex, IteratorType first, IteratorType last,
        BinaryPredicate pred) {
   return Impl::unique_exespace_impl("Kokkos::unique_iterator_api_default", ex,
@@ -78,8 +78,8 @@ unique(const ExecutionSpace& ex, IteratorType first, IteratorType last,
 }
 
 template <class ExecutionSpace, class IteratorType, class BinaryPredicate>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                  IteratorType>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                 IteratorType>
 unique(const std::string& label, const ExecutionSpace& ex, IteratorType first,
        IteratorType last, BinaryPredicate pred) {
   return Impl::unique_exespace_impl(label, ex, first, last, pred);
@@ -87,8 +87,8 @@ unique(const std::string& label, const ExecutionSpace& ex, IteratorType first,
 
 template <class ExecutionSpace, class DataType, class... Properties,
           class BinaryPredicate,
-          std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                            int> = 0>
+          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                           int> = 0>
 auto unique(const ExecutionSpace& ex,
             const ::Kokkos::View<DataType, Properties...>& view,
             BinaryPredicate pred) {
@@ -99,8 +99,8 @@ auto unique(const ExecutionSpace& ex,
 
 template <class ExecutionSpace, class DataType, class... Properties,
           class BinaryPredicate,
-          std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                            int> = 0>
+          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                           int> = 0>
 auto unique(const std::string& label, const ExecutionSpace& ex,
             const ::Kokkos::View<DataType, Properties...>& view,
             BinaryPredicate pred) {
@@ -116,8 +116,8 @@ auto unique(const std::string& label, const ExecutionSpace& ex,
 //
 template <class TeamHandleType, class IteratorType>
 KOKKOS_FUNCTION
-    std::enable_if_t<Impl::is_random_access_iterator_v<IteratorType> &&
-                         Impl::is_team_handle<TeamHandleType>::value,
+    std::enable_if_t<Impl::is_random_access_iterator_v<IteratorType>&& ::
+                         Kokkos::is_team_handle<TeamHandleType>::value,
                      IteratorType>
     unique(const TeamHandleType& teamHandle, IteratorType first,
            IteratorType last) {
@@ -126,7 +126,7 @@ KOKKOS_FUNCTION
 
 template <
     class TeamHandleType, class DataType, class... Properties,
-    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, int> = 0>
+    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, int> = 0>
 KOKKOS_FUNCTION auto unique(
     const TeamHandleType& teamHandle,
     const ::Kokkos::View<DataType, Properties...>& view) {
@@ -139,17 +139,17 @@ KOKKOS_FUNCTION auto unique(
 // since they cause issues on device because of the string allocation.
 //
 template <class TeamHandleType, class IteratorType, class BinaryPredicate>
-KOKKOS_FUNCTION
-    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, IteratorType>
-    unique(const TeamHandleType& teamHandle, IteratorType first,
-           IteratorType last, BinaryPredicate pred) {
+KOKKOS_FUNCTION std::enable_if_t<
+    ::Kokkos::is_team_handle<TeamHandleType>::value, IteratorType>
+unique(const TeamHandleType& teamHandle, IteratorType first, IteratorType last,
+       BinaryPredicate pred) {
   return Impl::unique_team_impl(teamHandle, first, last, std::move(pred));
 }
 
 template <
     class TeamHandleType, class DataType, class... Properties,
     class BinaryPredicate,
-    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, int> = 0>
+    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, int> = 0>
 KOKKOS_FUNCTION auto unique(const TeamHandleType& teamHandle,
                             const ::Kokkos::View<DataType, Properties...>& view,
                             BinaryPredicate pred) {

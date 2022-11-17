@@ -28,8 +28,8 @@ namespace Experimental {
 // overload set accepting execution space
 //
 template <class ExecutionSpace, class IteratorType, class Size, class Generator>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                  IteratorType>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                 IteratorType>
 generate_n(const ExecutionSpace& ex, IteratorType first, Size count,
            Generator g) {
   return Impl::generate_n_exespace_impl(
@@ -38,8 +38,8 @@ generate_n(const ExecutionSpace& ex, IteratorType first, Size count,
 }
 
 template <class ExecutionSpace, class IteratorType, class Size, class Generator>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                  IteratorType>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                 IteratorType>
 generate_n(const std::string& label, const ExecutionSpace& ex,
            IteratorType first, Size count, Generator g) {
   return Impl::generate_n_exespace_impl(label, ex, first, count, std::move(g));
@@ -47,8 +47,8 @@ generate_n(const std::string& label, const ExecutionSpace& ex,
 
 template <class ExecutionSpace, class DataType, class... Properties, class Size,
           class Generator,
-          std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                            int> = 0>
+          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                           int> = 0>
 auto generate_n(const ExecutionSpace& ex,
                 const ::Kokkos::View<DataType, Properties...>& view, Size count,
                 Generator g) {
@@ -60,8 +60,8 @@ auto generate_n(const ExecutionSpace& ex,
 
 template <class ExecutionSpace, class DataType, class... Properties, class Size,
           class Generator,
-          std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                            int> = 0>
+          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                           int> = 0>
 auto generate_n(const std::string& label, const ExecutionSpace& ex,
                 const ::Kokkos::View<DataType, Properties...>& view, Size count,
                 Generator g) {
@@ -77,17 +77,17 @@ auto generate_n(const std::string& label, const ExecutionSpace& ex,
 // since they cause issues on device because of the string allocation.
 //
 template <class TeamHandleType, class IteratorType, class Size, class Generator>
-KOKKOS_FUNCTION
-    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, IteratorType>
-    generate_n(const TeamHandleType& teamHandle, IteratorType first, Size count,
-               Generator g) {
+KOKKOS_FUNCTION std::enable_if_t<
+    ::Kokkos::is_team_handle<TeamHandleType>::value, IteratorType>
+generate_n(const TeamHandleType& teamHandle, IteratorType first, Size count,
+           Generator g) {
   return Impl::generate_n_team_impl(teamHandle, first, count, std::move(g));
 }
 
 template <
     class TeamHandleType, class DataType, class... Properties, class Size,
     class Generator,
-    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, int> = 0>
+    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, int> = 0>
 KOKKOS_FUNCTION auto generate_n(
     const TeamHandleType& teamHandle,
     const ::Kokkos::View<DataType, Properties...>& view, Size count,

@@ -28,21 +28,21 @@ namespace Experimental {
 // overload set accepting execution space
 //
 template <class ExecutionSpace, class InputIterator>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value> reverse(
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value> reverse(
     const ExecutionSpace& ex, InputIterator first, InputIterator last) {
   return Impl::reverse_exespace_impl("Kokkos::reverse_iterator_api_default", ex,
                                      first, last);
 }
 
 template <class ExecutionSpace, class InputIterator>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value> reverse(
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value> reverse(
     const std::string& label, const ExecutionSpace& ex, InputIterator first,
     InputIterator last) {
   return Impl::reverse_exespace_impl(label, ex, first, last);
 }
 
 template <class ExecutionSpace, class DataType, class... Properties>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value> reverse(
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value> reverse(
     const ExecutionSpace& ex,
     const ::Kokkos::View<DataType, Properties...>& view) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
@@ -52,7 +52,7 @@ std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value> reverse(
 }
 
 template <class ExecutionSpace, class DataType, class... Properties>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value> reverse(
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value> reverse(
     const std::string& label, const ExecutionSpace& ex,
     const ::Kokkos::View<DataType, Properties...>& view) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
@@ -66,16 +66,18 @@ std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value> reverse(
 // since they cause issues on device because of the string allocation.
 //
 template <class TeamHandleType, class InputIterator>
-KOKKOS_FUNCTION std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value>
-reverse(const TeamHandleType& teamHandle, InputIterator first,
-        InputIterator last) {
+KOKKOS_FUNCTION
+    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value>
+    reverse(const TeamHandleType& teamHandle, InputIterator first,
+            InputIterator last) {
   return Impl::reverse_team_impl(teamHandle, first, last);
 }
 
 template <class TeamHandleType, class DataType, class... Properties>
-KOKKOS_FUNCTION std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value>
-reverse(const TeamHandleType& teamHandle,
-        const ::Kokkos::View<DataType, Properties...>& view) {
+KOKKOS_FUNCTION
+    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value>
+    reverse(const TeamHandleType& teamHandle,
+            const ::Kokkos::View<DataType, Properties...>& view) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
   namespace KE = ::Kokkos::Experimental;
   return Impl::reverse_team_impl(teamHandle, KE::begin(view), KE::end(view));

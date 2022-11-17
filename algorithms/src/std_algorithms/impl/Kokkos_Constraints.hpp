@@ -160,7 +160,7 @@ static_assert_random_access_and_accessible(const ExecutionSpace& /* ex */,
 */
 template <class TeamHandleType, class... IteratorTypes>
 KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<
-    is_team_handle<TeamHandleType>::value>
+    ::Kokkos::is_team_handle<TeamHandleType>::value>
 static_assert_random_access_and_accessible(const TeamHandleType& /* th */,
                                            IteratorTypes... /* iterators */) {
   static_assert(
@@ -242,7 +242,7 @@ static_assert_is_not_openmptarget(const ExecutionSpace&) {
 // we need this for the same reason as the random_access_and_accessible
 template <class TeamHandleType>
 KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<
-    is_team_handle<TeamHandleType>::value>
+    ::Kokkos::is_team_handle<TeamHandleType>::value>
 static_assert_is_not_openmptarget(const TeamHandleType&) {
   static_assert(
       not_openmptarget<typename TeamHandleType::execution_space>::value,

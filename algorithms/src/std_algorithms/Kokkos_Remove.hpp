@@ -28,7 +28,7 @@ namespace Experimental {
 // overload set accepting execution space
 //
 template <class ExecutionSpace, class Iterator, class ValueType>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value, Iterator>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, Iterator>
 remove(const ExecutionSpace& ex, Iterator first, Iterator last,
        const ValueType& value) {
   return Impl::remove_exespace_impl("Kokkos::remove_iterator_api_default", ex,
@@ -36,16 +36,16 @@ remove(const ExecutionSpace& ex, Iterator first, Iterator last,
 }
 
 template <class ExecutionSpace, class Iterator, class ValueType>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value, Iterator>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, Iterator>
 remove(const std::string& label, const ExecutionSpace& ex, Iterator first,
        Iterator last, const ValueType& value) {
   return Impl::remove_exespace_impl(label, ex, first, last, value);
 }
 
-template <class ExecutionSpace, class DataType, class... Properties,
-          class ValueType,
-          std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                            int> = 0>
+template <
+    class ExecutionSpace, class DataType, class... Properties, class ValueType,
+    std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, int> =
+        0>
 auto remove(const ExecutionSpace& ex,
             const ::Kokkos::View<DataType, Properties...>& view,
             const ValueType& value) {
@@ -55,10 +55,10 @@ auto remove(const ExecutionSpace& ex,
                                     ::Kokkos::Experimental::end(view), value);
 }
 
-template <class ExecutionSpace, class DataType, class... Properties,
-          class ValueType,
-          std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                            int> = 0>
+template <
+    class ExecutionSpace, class DataType, class... Properties, class ValueType,
+    std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, int> =
+        0>
 auto remove(const std::string& label, const ExecutionSpace& ex,
             const ::Kokkos::View<DataType, Properties...>& view,
             const ValueType& value) {
@@ -75,7 +75,7 @@ auto remove(const std::string& label, const ExecutionSpace& ex,
 //
 template <class TeamHandleType, class Iterator, class ValueType>
 KOKKOS_FUNCTION
-    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, Iterator>
+    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, Iterator>
     remove(const TeamHandleType& teamHandle, Iterator first, Iterator last,
            const ValueType& value) {
   return Impl::remove_team_impl(teamHandle, first, last, value);
@@ -83,7 +83,7 @@ KOKKOS_FUNCTION
 
 template <
     class TeamHandleType, class DataType, class... Properties, class ValueType,
-    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, int> = 0>
+    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, int> = 0>
 KOKKOS_FUNCTION auto remove(const TeamHandleType& teamHandle,
                             const ::Kokkos::View<DataType, Properties...>& view,
                             const ValueType& value) {

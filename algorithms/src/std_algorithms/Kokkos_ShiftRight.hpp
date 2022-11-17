@@ -28,8 +28,8 @@ namespace Experimental {
 // overload set accepting execution space
 //
 template <class ExecutionSpace, class IteratorType>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                  IteratorType>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                 IteratorType>
 shift_right(const ExecutionSpace& ex, IteratorType first, IteratorType last,
             typename IteratorType::difference_type n) {
   return Impl::shift_right_exespace_impl(
@@ -37,8 +37,8 @@ shift_right(const ExecutionSpace& ex, IteratorType first, IteratorType last,
 }
 
 template <class ExecutionSpace, class IteratorType>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                  IteratorType>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                 IteratorType>
 shift_right(const std::string& label, const ExecutionSpace& ex,
             IteratorType first, IteratorType last,
             typename IteratorType::difference_type n) {
@@ -46,8 +46,8 @@ shift_right(const std::string& label, const ExecutionSpace& ex,
 }
 
 template <class ExecutionSpace, class DataType, class... Properties,
-          std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                            int> = 0>
+          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                           int> = 0>
 auto shift_right(const ExecutionSpace& ex,
                  const ::Kokkos::View<DataType, Properties...>& view,
                  typename decltype(begin(view))::difference_type n) {
@@ -57,8 +57,8 @@ auto shift_right(const ExecutionSpace& ex,
 }
 
 template <class ExecutionSpace, class DataType, class... Properties,
-          std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                            int> = 0>
+          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                           int> = 0>
 auto shift_right(const std::string& label, const ExecutionSpace& ex,
                  const ::Kokkos::View<DataType, Properties...>& view,
                  typename decltype(begin(view))::difference_type n) {
@@ -72,16 +72,16 @@ auto shift_right(const std::string& label, const ExecutionSpace& ex,
 // since they cause issues on device because of the string allocation.
 //
 template <class TeamHandleType, class IteratorType>
-KOKKOS_FUNCTION
-    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, IteratorType>
-    shift_right(const TeamHandleType& teamHandle, IteratorType first,
-                IteratorType last, typename IteratorType::difference_type n) {
+KOKKOS_FUNCTION std::enable_if_t<
+    ::Kokkos::is_team_handle<TeamHandleType>::value, IteratorType>
+shift_right(const TeamHandleType& teamHandle, IteratorType first,
+            IteratorType last, typename IteratorType::difference_type n) {
   return Impl::shift_right_team_impl(teamHandle, first, last, n);
 }
 
 template <
     class TeamHandleType, class DataType, class... Properties,
-    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, int> = 0>
+    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, int> = 0>
 KOKKOS_FUNCTION auto shift_right(
     const TeamHandleType& teamHandle,
     const ::Kokkos::View<DataType, Properties...>& view,

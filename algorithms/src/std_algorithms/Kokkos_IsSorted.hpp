@@ -28,21 +28,21 @@ namespace Experimental {
 // overload set accepting execution space
 //
 template <class ExecutionSpace, class IteratorType>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value, bool>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, bool>
 is_sorted(const ExecutionSpace& ex, IteratorType first, IteratorType last) {
   return Impl::is_sorted_exespace_impl("Kokkos::is_sorted_iterator_api_default",
                                        ex, first, last);
 }
 
 template <class ExecutionSpace, class IteratorType>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value, bool>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, bool>
 is_sorted(const std::string& label, const ExecutionSpace& ex,
           IteratorType first, IteratorType last) {
   return Impl::is_sorted_exespace_impl(label, ex, first, last);
 }
 
 template <class ExecutionSpace, class DataType, class... Properties>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value, bool>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, bool>
 is_sorted(const ExecutionSpace& ex,
           const ::Kokkos::View<DataType, Properties...>& view) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
@@ -53,7 +53,7 @@ is_sorted(const ExecutionSpace& ex,
 }
 
 template <class ExecutionSpace, class DataType, class... Properties>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value, bool>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, bool>
 is_sorted(const std::string& label, const ExecutionSpace& ex,
           const ::Kokkos::View<DataType, Properties...>& view) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
@@ -64,7 +64,7 @@ is_sorted(const std::string& label, const ExecutionSpace& ex,
 }
 
 template <class ExecutionSpace, class IteratorType, class ComparatorType>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value, bool>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, bool>
 is_sorted(const ExecutionSpace& ex, IteratorType first, IteratorType last,
           ComparatorType comp) {
   Impl::static_assert_is_not_openmptarget(ex);
@@ -73,7 +73,7 @@ is_sorted(const ExecutionSpace& ex, IteratorType first, IteratorType last,
 }
 
 template <class ExecutionSpace, class IteratorType, class ComparatorType>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value, bool>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, bool>
 is_sorted(const std::string& label, const ExecutionSpace& ex,
           IteratorType first, IteratorType last, ComparatorType comp) {
   Impl::static_assert_is_not_openmptarget(ex);
@@ -82,7 +82,7 @@ is_sorted(const std::string& label, const ExecutionSpace& ex,
 
 template <class ExecutionSpace, class DataType, class... Properties,
           class ComparatorType>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value, bool>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, bool>
 is_sorted(const ExecutionSpace& ex,
           const ::Kokkos::View<DataType, Properties...>& view,
           ComparatorType comp) {
@@ -97,7 +97,7 @@ is_sorted(const ExecutionSpace& ex,
 
 template <class ExecutionSpace, class DataType, class... Properties,
           class ComparatorType>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value, bool>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, bool>
 is_sorted(const std::string& label, const ExecutionSpace& ex,
           const ::Kokkos::View<DataType, Properties...>& view,
           ComparatorType comp) {
@@ -116,7 +116,7 @@ is_sorted(const std::string& label, const ExecutionSpace& ex,
 //
 template <class TeamHandleType, class IteratorType>
 KOKKOS_FUNCTION
-    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, bool>
+    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, bool>
     is_sorted(const TeamHandleType& teamHandle, IteratorType first,
               IteratorType last) {
   return Impl::is_sorted_team_impl(teamHandle, first, last);
@@ -124,7 +124,7 @@ KOKKOS_FUNCTION
 
 template <class TeamHandleType, class DataType, class... Properties>
 KOKKOS_FUNCTION
-    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, bool>
+    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, bool>
     is_sorted(const TeamHandleType& teamHandle,
               const ::Kokkos::View<DataType, Properties...>& view) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
@@ -136,7 +136,7 @@ KOKKOS_FUNCTION
 
 template <class TeamHandleType, class IteratorType, class ComparatorType>
 KOKKOS_FUNCTION
-    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, bool>
+    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, bool>
     is_sorted(const TeamHandleType& teamHandle, IteratorType first,
               IteratorType last, ComparatorType comp) {
   Impl::static_assert_is_not_openmptarget(teamHandle);
@@ -146,7 +146,7 @@ KOKKOS_FUNCTION
 template <class TeamHandleType, class DataType, class... Properties,
           class ComparatorType>
 KOKKOS_FUNCTION
-    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, bool>
+    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, bool>
     is_sorted(const TeamHandleType& teamHandle,
               const ::Kokkos::View<DataType, Properties...>& view,
               ComparatorType comp) {

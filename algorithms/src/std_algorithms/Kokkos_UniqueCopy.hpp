@@ -139,8 +139,8 @@ auto unique_copy(const std::string& label, const ExecutionSpace& ex,
 //
 template <class TeamHandleType, class InputIterator, class OutputIterator>
 KOKKOS_FUNCTION
-    std::enable_if_t<Impl::is_random_access_iterator_v<InputIterator> &&
-                         Impl::is_team_handle<TeamHandleType>::value,
+    std::enable_if_t<Impl::is_random_access_iterator_v<InputIterator>&& ::
+                         Kokkos::is_team_handle<TeamHandleType>::value,
                      OutputIterator>
     unique_copy(const TeamHandleType& teamHandle, InputIterator first,
                 InputIterator last, OutputIterator d_first) {
@@ -150,7 +150,7 @@ KOKKOS_FUNCTION
 template <
     class TeamHandleType, class DataType1, class... Properties1,
     class DataType2, class... Properties2,
-    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, int> = 0>
+    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, int> = 0>
 KOKKOS_FUNCTION auto unique_copy(
     const TeamHandleType& teamHandle,
     const ::Kokkos::View<DataType1, Properties1...>& source,
@@ -169,8 +169,8 @@ KOKKOS_FUNCTION auto unique_copy(
 //
 template <class TeamHandleType, class InputIterator, class OutputIterator,
           class BinaryPredicate>
-KOKKOS_FUNCTION std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value,
-                                 OutputIterator>
+KOKKOS_FUNCTION std::enable_if_t<
+    ::Kokkos::is_team_handle<TeamHandleType>::value, OutputIterator>
 unique_copy(const TeamHandleType& teamHandle, InputIterator first,
             InputIterator last, OutputIterator d_first, BinaryPredicate pred) {
   return Impl::unique_copy_team_impl(teamHandle, first, last, d_first, pred);
@@ -179,7 +179,7 @@ unique_copy(const TeamHandleType& teamHandle, InputIterator first,
 template <
     class TeamHandleType, class DataType1, class... Properties1,
     class DataType2, class... Properties2, class BinaryPredicate,
-    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, int> = 0>
+    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, int> = 0>
 KOKKOS_FUNCTION auto unique_copy(
     const TeamHandleType& teamHandle,
     const ::Kokkos::View<DataType1, Properties1...>& source,

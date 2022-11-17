@@ -29,8 +29,8 @@ namespace Experimental {
 //
 template <class ExecutionSpace, class InputIterator, class OutputIterator,
           class ValueType>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                  OutputIterator>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                 OutputIterator>
 replace_copy(const ExecutionSpace& ex, InputIterator first_from,
              InputIterator last_from, OutputIterator first_dest,
              const ValueType& old_value, const ValueType& new_value) {
@@ -41,8 +41,8 @@ replace_copy(const ExecutionSpace& ex, InputIterator first_from,
 
 template <class ExecutionSpace, class InputIterator, class OutputIterator,
           class ValueType>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                  OutputIterator>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                 OutputIterator>
 replace_copy(const std::string& label, const ExecutionSpace& ex,
              InputIterator first_from, InputIterator last_from,
              OutputIterator first_dest, const ValueType& old_value,
@@ -53,8 +53,8 @@ replace_copy(const std::string& label, const ExecutionSpace& ex,
 
 template <class ExecutionSpace, class DataType1, class... Properties1,
           class DataType2, class... Properties2, class ValueType,
-          std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                            int> = 0>
+          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                           int> = 0>
 auto replace_copy(const ExecutionSpace& ex,
                   const ::Kokkos::View<DataType1, Properties1...>& view_from,
                   const ::Kokkos::View<DataType2, Properties2...>& view_dest,
@@ -69,8 +69,8 @@ auto replace_copy(const ExecutionSpace& ex,
 
 template <class ExecutionSpace, class DataType1, class... Properties1,
           class DataType2, class... Properties2, class ValueType,
-          std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                            int> = 0>
+          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                           int> = 0>
 auto replace_copy(const std::string& label, const ExecutionSpace& ex,
                   const ::Kokkos::View<DataType1, Properties1...>& view_from,
                   const ::Kokkos::View<DataType2, Properties2...>& view_dest,
@@ -90,8 +90,8 @@ auto replace_copy(const std::string& label, const ExecutionSpace& ex,
 //
 template <class TeamHandleType, class InputIterator, class OutputIterator,
           class ValueType>
-KOKKOS_FUNCTION std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value,
-                                 OutputIterator>
+KOKKOS_FUNCTION std::enable_if_t<
+    ::Kokkos::is_team_handle<TeamHandleType>::value, OutputIterator>
 replace_copy(const TeamHandleType& teamHandle, InputIterator first_from,
              InputIterator last_from, OutputIterator first_dest,
              const ValueType& old_value, const ValueType& new_value) {
@@ -102,7 +102,7 @@ replace_copy(const TeamHandleType& teamHandle, InputIterator first_from,
 template <
     class TeamHandleType, class DataType1, class... Properties1,
     class DataType2, class... Properties2, class ValueType,
-    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, int> = 0>
+    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, int> = 0>
 KOKKOS_FUNCTION auto replace_copy(
     const TeamHandleType& teamHandle,
     const ::Kokkos::View<DataType1, Properties1...>& view_from,

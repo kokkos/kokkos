@@ -34,8 +34,7 @@ namespace Experimental {
 // ----------------------------
 template <class ExecutionSpace, class IteratorType1, class IteratorType2,
           class ValueType>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                  ValueType>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, ValueType>
 transform_reduce(const ExecutionSpace& ex, IteratorType1 first1,
                  IteratorType1 last1, IteratorType2 first2,
                  ValueType init_reduction_value) {
@@ -46,8 +45,7 @@ transform_reduce(const ExecutionSpace& ex, IteratorType1 first1,
 
 template <class ExecutionSpace, class IteratorType1, class IteratorType2,
           class ValueType>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                  ValueType>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, ValueType>
 transform_reduce(const std::string& label, const ExecutionSpace& ex,
                  IteratorType1 first1, IteratorType1 last1,
                  IteratorType2 first2, ValueType init_reduction_value) {
@@ -58,8 +56,7 @@ transform_reduce(const std::string& label, const ExecutionSpace& ex,
 // overload1 accepting views
 template <class ExecutionSpace, class DataType1, class... Properties1,
           class DataType2, class... Properties2, class ValueType>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                  ValueType>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, ValueType>
 transform_reduce(const ExecutionSpace& ex,
                  const ::Kokkos::View<DataType1, Properties1...>& first_view,
                  const ::Kokkos::View<DataType2, Properties2...>& second_view,
@@ -76,8 +73,7 @@ transform_reduce(const ExecutionSpace& ex,
 
 template <class ExecutionSpace, class DataType1, class... Properties1,
           class DataType2, class... Properties2, class ValueType>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                  ValueType>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, ValueType>
 transform_reduce(const std::string& label, const ExecutionSpace& ex,
                  const ::Kokkos::View<DataType1, Properties1...>& first_view,
                  const ::Kokkos::View<DataType2, Properties2...>& second_view,
@@ -106,8 +102,7 @@ transform_reduce(const std::string& label, const ExecutionSpace& ex,
 // api accepting iterators
 template <class ExecutionSpace, class IteratorType1, class IteratorType2,
           class ValueType, class BinaryJoinerType, class BinaryTransform>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                  ValueType>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, ValueType>
 transform_reduce(const ExecutionSpace& ex, IteratorType1 first1,
                  IteratorType1 last1, IteratorType2 first2,
                  ValueType init_reduction_value, BinaryJoinerType joiner,
@@ -123,8 +118,7 @@ transform_reduce(const ExecutionSpace& ex, IteratorType1 first1,
 
 template <class ExecutionSpace, class IteratorType1, class IteratorType2,
           class ValueType, class BinaryJoinerType, class BinaryTransform>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                  ValueType>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, ValueType>
 transform_reduce(const std::string& label, const ExecutionSpace& ex,
                  IteratorType1 first1, IteratorType1 last1,
                  IteratorType2 first2, ValueType init_reduction_value,
@@ -141,8 +135,7 @@ transform_reduce(const std::string& label, const ExecutionSpace& ex,
 template <class ExecutionSpace, class DataType1, class... Properties1,
           class DataType2, class... Properties2, class ValueType,
           class BinaryJoinerType, class BinaryTransform>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                  ValueType>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, ValueType>
 transform_reduce(const ExecutionSpace& ex,
                  const ::Kokkos::View<DataType1, Properties1...>& first_view,
                  const ::Kokkos::View<DataType2, Properties2...>& second_view,
@@ -165,8 +158,7 @@ transform_reduce(const ExecutionSpace& ex,
 template <class ExecutionSpace, class DataType1, class... Properties1,
           class DataType2, class... Properties2, class ValueType,
           class BinaryJoinerType, class BinaryTransform>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                  ValueType>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, ValueType>
 transform_reduce(const std::string& label, const ExecutionSpace& ex,
                  const ::Kokkos::View<DataType1, Properties1...>& first_view,
                  const ::Kokkos::View<DataType2, Properties2...>& second_view,
@@ -230,8 +222,7 @@ transform_reduce(const std::string& label, const ExecutionSpace& ex,
 // accepting views
 template <class ExecutionSpace, class DataType, class... Properties,
           class ValueType, class BinaryJoinerType, class UnaryTransform>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                  ValueType>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, ValueType>
 transform_reduce(const ExecutionSpace& ex,
                  const ::Kokkos::View<DataType, Properties...>& view,
                  ValueType init_reduction_value, BinaryJoinerType joiner,
@@ -250,8 +241,7 @@ transform_reduce(const ExecutionSpace& ex,
 
 template <class ExecutionSpace, class DataType, class... Properties,
           class ValueType, class BinaryJoinerType, class UnaryTransform>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                  ValueType>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, ValueType>
 transform_reduce(const std::string& label, const ExecutionSpace& ex,
                  const ::Kokkos::View<DataType, Properties...>& view,
                  ValueType init_reduction_value, BinaryJoinerType joiner,
@@ -282,7 +272,7 @@ transform_reduce(const std::string& label, const ExecutionSpace& ex,
 template <class TeamHandleType, class IteratorType1, class IteratorType2,
           class ValueType>
 KOKKOS_FUNCTION
-    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, ValueType>
+    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, ValueType>
     transform_reduce(const TeamHandleType& teamHandle, IteratorType1 first1,
                      IteratorType1 last1, IteratorType2 first2,
                      ValueType init_reduction_value) {
@@ -293,12 +283,13 @@ KOKKOS_FUNCTION
 // overload1 accepting views
 template <class TeamHandleType, class DataType1, class... Properties1,
           class DataType2, class... Properties2, class ValueType>
-KOKKOS_FUNCTION std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value,
-                                 ValueType>
-transform_reduce(const TeamHandleType& teamHandle,
-                 const ::Kokkos::View<DataType1, Properties1...>& first_view,
-                 const ::Kokkos::View<DataType2, Properties2...>& second_view,
-                 ValueType init_reduction_value) {
+KOKKOS_FUNCTION
+    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, ValueType>
+    transform_reduce(
+        const TeamHandleType& teamHandle,
+        const ::Kokkos::View<DataType1, Properties1...>& first_view,
+        const ::Kokkos::View<DataType2, Properties2...>& second_view,
+        ValueType init_reduction_value) {
   namespace KE = ::Kokkos::Experimental;
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(first_view);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(second_view);
@@ -324,7 +315,7 @@ transform_reduce(const TeamHandleType& teamHandle,
 template <class TeamHandleType, class IteratorType1, class IteratorType2,
           class ValueType, class BinaryJoinerType, class BinaryTransform>
 KOKKOS_FUNCTION
-    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, ValueType>
+    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, ValueType>
     transform_reduce(const TeamHandleType& teamHandle, IteratorType1 first1,
                      IteratorType1 last1, IteratorType2 first2,
                      ValueType init_reduction_value, BinaryJoinerType joiner,
@@ -341,13 +332,14 @@ KOKKOS_FUNCTION
 template <class TeamHandleType, class DataType1, class... Properties1,
           class DataType2, class... Properties2, class ValueType,
           class BinaryJoinerType, class BinaryTransform>
-KOKKOS_FUNCTION std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value,
-                                 ValueType>
-transform_reduce(const TeamHandleType& teamHandle,
-                 const ::Kokkos::View<DataType1, Properties1...>& first_view,
-                 const ::Kokkos::View<DataType2, Properties2...>& second_view,
-                 ValueType init_reduction_value, BinaryJoinerType joiner,
-                 BinaryTransform transformer) {
+KOKKOS_FUNCTION
+    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, ValueType>
+    transform_reduce(
+        const TeamHandleType& teamHandle,
+        const ::Kokkos::View<DataType1, Properties1...>& first_view,
+        const ::Kokkos::View<DataType2, Properties2...>& second_view,
+        ValueType init_reduction_value, BinaryJoinerType joiner,
+        BinaryTransform transformer) {
   namespace KE = ::Kokkos::Experimental;
   static_assert(std::is_move_constructible<ValueType>::value,
                 "ValueType must be move constructible.");
@@ -369,8 +361,8 @@ template <class TeamHandleType, class IteratorType, class ValueType,
           class BinaryJoinerType, class UnaryTransform>
 // need this to avoid ambiguous call
 KOKKOS_FUNCTION std::enable_if_t<
-    ::Kokkos::Experimental::Impl::are_iterators<IteratorType>::value &&
-        Impl::is_team_handle<TeamHandleType>::value,
+    ::Kokkos::Experimental::Impl::are_iterators<
+        IteratorType>::value&& ::Kokkos::is_team_handle<TeamHandleType>::value,
     ValueType>
 transform_reduce(const TeamHandleType& teamHandle, IteratorType first1,
                  IteratorType last1, ValueType init_reduction_value,
@@ -387,7 +379,7 @@ transform_reduce(const TeamHandleType& teamHandle, IteratorType first1,
 template <class TeamHandleType, class DataType, class... Properties,
           class ValueType, class BinaryJoinerType, class UnaryTransform>
 KOKKOS_FUNCTION
-    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, ValueType>
+    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, ValueType>
     transform_reduce(const TeamHandleType& teamHandle,
                      const ::Kokkos::View<DataType, Properties...>& view,
                      ValueType init_reduction_value, BinaryJoinerType joiner,

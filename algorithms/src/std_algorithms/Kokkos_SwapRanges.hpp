@@ -28,8 +28,8 @@ namespace Experimental {
 // overload set accepting execution space
 //
 template <class ExecutionSpace, class IteratorType1, class IteratorType2>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                  IteratorType2>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                 IteratorType2>
 swap_ranges(const ExecutionSpace& ex, IteratorType1 first1, IteratorType1 last1,
             IteratorType2 first2) {
   return Impl::swap_ranges_exespace_impl(
@@ -38,8 +38,8 @@ swap_ranges(const ExecutionSpace& ex, IteratorType1 first1, IteratorType1 last1,
 
 template <class ExecutionSpace, class DataType1, class... Properties1,
           class DataType2, class... Properties2,
-          std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                            int> = 0>
+          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                           int> = 0>
 auto swap_ranges(const ExecutionSpace& ex,
                  const ::Kokkos::View<DataType1, Properties1...>& source,
                  ::Kokkos::View<DataType2, Properties2...>& dest) {
@@ -53,8 +53,8 @@ auto swap_ranges(const ExecutionSpace& ex,
 }
 
 template <class ExecutionSpace, class IteratorType1, class IteratorType2>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                  IteratorType2>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                 IteratorType2>
 swap_ranges(const std::string& label, const ExecutionSpace& ex,
             IteratorType1 first1, IteratorType1 last1, IteratorType2 first2) {
   return Impl::swap_ranges_exespace_impl(label, ex, first1, last1, first2);
@@ -62,8 +62,8 @@ swap_ranges(const std::string& label, const ExecutionSpace& ex,
 
 template <class ExecutionSpace, class DataType1, class... Properties1,
           class DataType2, class... Properties2,
-          std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                            int> = 0>
+          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                           int> = 0>
 auto swap_ranges(const std::string& label, const ExecutionSpace& ex,
                  const ::Kokkos::View<DataType1, Properties1...>& source,
                  ::Kokkos::View<DataType2, Properties2...>& dest) {
@@ -81,17 +81,17 @@ auto swap_ranges(const std::string& label, const ExecutionSpace& ex,
 // since they cause issues on device because of the string allocation.
 //
 template <class TeamHandleType, class IteratorType1, class IteratorType2>
-KOKKOS_FUNCTION
-    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, IteratorType2>
-    swap_ranges(const TeamHandleType& teamHandle, IteratorType1 first1,
-                IteratorType1 last1, IteratorType2 first2) {
+KOKKOS_FUNCTION std::enable_if_t<
+    ::Kokkos::is_team_handle<TeamHandleType>::value, IteratorType2>
+swap_ranges(const TeamHandleType& teamHandle, IteratorType1 first1,
+            IteratorType1 last1, IteratorType2 first2) {
   return Impl::swap_ranges_team_impl(teamHandle, first1, last1, first2);
 }
 
 template <
     class TeamHandleType, class DataType1, class... Properties1,
     class DataType2, class... Properties2,
-    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, int> = 0>
+    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, int> = 0>
 KOKKOS_FUNCTION auto swap_ranges(
     const TeamHandleType& teamHandle,
     const ::Kokkos::View<DataType1, Properties1...>& source,

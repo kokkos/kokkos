@@ -29,24 +29,24 @@ namespace Experimental {
 
 // overload set1
 template <class ExecutionSpace, class IteratorType>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                  IteratorType>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                 IteratorType>
 adjacent_find(const ExecutionSpace& ex, IteratorType first, IteratorType last) {
   return Impl::adjacent_find_exespace_impl(
       "Kokkos::adjacent_find_iterator_api_default", ex, first, last);
 }
 
 template <class ExecutionSpace, class IteratorType>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                  IteratorType>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                 IteratorType>
 adjacent_find(const std::string& label, const ExecutionSpace& ex,
               IteratorType first, IteratorType last) {
   return Impl::adjacent_find_exespace_impl(label, ex, first, last);
 }
 
 template <class ExecutionSpace, class DataType, class... Properties,
-          std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                            int> = 0>
+          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                           int> = 0>
 auto adjacent_find(const ExecutionSpace& ex,
                    const ::Kokkos::View<DataType, Properties...>& v) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
@@ -56,8 +56,8 @@ auto adjacent_find(const ExecutionSpace& ex,
 }
 
 template <class ExecutionSpace, class DataType, class... Properties,
-          std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                            int> = 0>
+          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                           int> = 0>
 auto adjacent_find(const std::string& label, const ExecutionSpace& ex,
                    const ::Kokkos::View<DataType, Properties...>& v) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
@@ -67,8 +67,8 @@ auto adjacent_find(const std::string& label, const ExecutionSpace& ex,
 
 // overload set2
 template <class ExecutionSpace, class IteratorType, class BinaryPredicateType>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                  IteratorType>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                 IteratorType>
 adjacent_find(const ExecutionSpace& ex, IteratorType first, IteratorType last,
               BinaryPredicateType pred) {
   return Impl::adjacent_find_exespace_impl(
@@ -76,8 +76,8 @@ adjacent_find(const ExecutionSpace& ex, IteratorType first, IteratorType last,
 }
 
 template <class ExecutionSpace, class IteratorType, class BinaryPredicateType>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                  IteratorType>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                 IteratorType>
 adjacent_find(const std::string& label, const ExecutionSpace& ex,
               IteratorType first, IteratorType last, BinaryPredicateType pred) {
   return Impl::adjacent_find_exespace_impl(label, ex, first, last, pred);
@@ -85,8 +85,8 @@ adjacent_find(const std::string& label, const ExecutionSpace& ex,
 
 template <class ExecutionSpace, class DataType, class... Properties,
           class BinaryPredicateType,
-          std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                            int> = 0>
+          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                           int> = 0>
 auto adjacent_find(const ExecutionSpace& ex,
                    const ::Kokkos::View<DataType, Properties...>& v,
                    BinaryPredicateType pred) {
@@ -99,8 +99,8 @@ auto adjacent_find(const ExecutionSpace& ex,
 
 template <class ExecutionSpace, class DataType, class... Properties,
           class BinaryPredicateType,
-          std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                            int> = 0>
+          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                           int> = 0>
 auto adjacent_find(const std::string& label, const ExecutionSpace& ex,
                    const ::Kokkos::View<DataType, Properties...>& v,
                    BinaryPredicateType pred) {
@@ -118,16 +118,16 @@ auto adjacent_find(const std::string& label, const ExecutionSpace& ex,
 
 // overload set1
 template <class TeamHandleType, class IteratorType>
-KOKKOS_FUNCTION
-    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, IteratorType>
-    adjacent_find(const TeamHandleType& teamHandle, IteratorType first,
-                  IteratorType last) {
+KOKKOS_FUNCTION std::enable_if_t<
+    ::Kokkos::is_team_handle<TeamHandleType>::value, IteratorType>
+adjacent_find(const TeamHandleType& teamHandle, IteratorType first,
+              IteratorType last) {
   return Impl::adjacent_find_team_impl(teamHandle, first, last);
 }
 
 template <
     class TeamHandleType, class DataType, class... Properties,
-    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, int> = 0>
+    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, int> = 0>
 KOKKOS_FUNCTION auto adjacent_find(
     const TeamHandleType& teamHandle,
     const ::Kokkos::View<DataType, Properties...>& v) {
@@ -138,17 +138,17 @@ KOKKOS_FUNCTION auto adjacent_find(
 
 // overload set2
 template <class TeamHandleType, class IteratorType, class BinaryPredicateType>
-KOKKOS_FUNCTION
-    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, IteratorType>
-    adjacent_find(const TeamHandleType& teamHandle, IteratorType first,
-                  IteratorType last, BinaryPredicateType pred) {
+KOKKOS_FUNCTION std::enable_if_t<
+    ::Kokkos::is_team_handle<TeamHandleType>::value, IteratorType>
+adjacent_find(const TeamHandleType& teamHandle, IteratorType first,
+              IteratorType last, BinaryPredicateType pred) {
   return Impl::adjacent_find_team_impl(teamHandle, first, last, pred);
 }
 
 template <
     class TeamHandleType, class DataType, class... Properties,
     class BinaryPredicateType,
-    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, int> = 0>
+    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, int> = 0>
 KOKKOS_FUNCTION auto adjacent_find(
     const TeamHandleType& teamHandle,
     const ::Kokkos::View<DataType, Properties...>& v,

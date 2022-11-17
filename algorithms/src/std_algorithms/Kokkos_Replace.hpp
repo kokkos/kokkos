@@ -28,7 +28,7 @@ namespace Experimental {
 // overload set accepting execution space
 //
 template <class ExecutionSpace, class Iterator, class ValueType>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value> replace(
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value> replace(
     const ExecutionSpace& ex, Iterator first, Iterator last,
     const ValueType& old_value, const ValueType& new_value) {
   Impl::replace_exespace_impl("Kokkos::replace_iterator_api", ex, first, last,
@@ -36,7 +36,7 @@ std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value> replace(
 }
 
 template <class ExecutionSpace, class Iterator, class ValueType>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value> replace(
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value> replace(
     const std::string& label, const ExecutionSpace& ex, Iterator first,
     Iterator last, const ValueType& old_value, const ValueType& new_value) {
   Impl::replace_exespace_impl(label, ex, first, last, old_value, new_value);
@@ -44,7 +44,7 @@ std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value> replace(
 
 template <class ExecutionSpace, class DataType1, class... Properties1,
           class ValueType>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value> replace(
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value> replace(
     const ExecutionSpace& ex,
     const ::Kokkos::View<DataType1, Properties1...>& view,
     const ValueType& old_value, const ValueType& new_value) {
@@ -56,7 +56,7 @@ std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value> replace(
 
 template <class ExecutionSpace, class DataType1, class... Properties1,
           class ValueType>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value> replace(
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value> replace(
     const std::string& label, const ExecutionSpace& ex,
     const ::Kokkos::View<DataType1, Properties1...>& view,
     const ValueType& old_value, const ValueType& new_value) {
@@ -72,18 +72,20 @@ std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value> replace(
 // since they cause issues on device because of the string allocation.
 //
 template <class TeamHandleType, class Iterator, class ValueType>
-KOKKOS_FUNCTION std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value>
-replace(const TeamHandleType& teamHandle, Iterator first, Iterator last,
-        const ValueType& old_value, const ValueType& new_value) {
+KOKKOS_FUNCTION
+    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value>
+    replace(const TeamHandleType& teamHandle, Iterator first, Iterator last,
+            const ValueType& old_value, const ValueType& new_value) {
   Impl::replace_team_impl(teamHandle, first, last, old_value, new_value);
 }
 
 template <class TeamHandleType, class DataType1, class... Properties1,
           class ValueType>
-KOKKOS_FUNCTION std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value>
-replace(const TeamHandleType& teamHandle,
-        const ::Kokkos::View<DataType1, Properties1...>& view,
-        const ValueType& old_value, const ValueType& new_value) {
+KOKKOS_FUNCTION
+    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value>
+    replace(const TeamHandleType& teamHandle,
+            const ::Kokkos::View<DataType1, Properties1...>& view,
+            const ValueType& old_value, const ValueType& new_value) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
   namespace KE = ::Kokkos::Experimental;
   Impl::replace_team_impl(teamHandle, KE::begin(view), KE::end(view), old_value,

@@ -29,8 +29,8 @@ namespace Experimental {
 //
 template <class ExecutionSpace, class InputIterator, class Size,
           class OutputIterator>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                  OutputIterator>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                 OutputIterator>
 copy_n(const ExecutionSpace& ex, InputIterator first, Size count,
        OutputIterator result) {
   return Impl::copy_n_exespace_impl("Kokkos::copy_n_iterator_api_default", ex,
@@ -39,8 +39,8 @@ copy_n(const ExecutionSpace& ex, InputIterator first, Size count,
 
 template <class ExecutionSpace, class InputIterator, class Size,
           class OutputIterator>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                  OutputIterator>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                 OutputIterator>
 copy_n(const std::string& label, const ExecutionSpace& ex, InputIterator first,
        Size count, OutputIterator result) {
   return Impl::copy_n_exespace_impl(label, ex, first, count, result);
@@ -48,8 +48,8 @@ copy_n(const std::string& label, const ExecutionSpace& ex, InputIterator first,
 
 template <class ExecutionSpace, class DataType1, class... Properties1,
           class Size, class DataType2, class... Properties2,
-          std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                            int> = 0>
+          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                           int> = 0>
 auto copy_n(const ExecutionSpace& ex,
             const ::Kokkos::View<DataType1, Properties1...>& source, Size count,
             ::Kokkos::View<DataType2, Properties2...>& dest) {
@@ -63,8 +63,8 @@ auto copy_n(const ExecutionSpace& ex,
 
 template <class ExecutionSpace, class DataType1, class... Properties1,
           class Size, class DataType2, class... Properties2,
-          std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                            int> = 0>
+          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                           int> = 0>
 auto copy_n(const std::string& label, const ExecutionSpace& ex,
             const ::Kokkos::View<DataType1, Properties1...>& source, Size count,
             ::Kokkos::View<DataType2, Properties2...>& dest) {
@@ -81,8 +81,8 @@ auto copy_n(const std::string& label, const ExecutionSpace& ex,
 //
 template <class TeamHandleType, class InputIterator, class Size,
           class OutputIterator>
-KOKKOS_FUNCTION std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value,
-                                 OutputIterator>
+KOKKOS_FUNCTION std::enable_if_t<
+    ::Kokkos::is_team_handle<TeamHandleType>::value, OutputIterator>
 copy_n(const TeamHandleType& teamHandle, InputIterator first, Size count,
        OutputIterator result) {
   return Impl::copy_n_team_impl(teamHandle, first, count, result);
@@ -91,7 +91,7 @@ copy_n(const TeamHandleType& teamHandle, InputIterator first, Size count,
 template <
     class TeamHandleType, class DataType1, class... Properties1, class Size,
     class DataType2, class... Properties2,
-    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, int> = 0>
+    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, int> = 0>
 KOKKOS_FUNCTION auto copy_n(
     const TeamHandleType& teamHandle,
     const ::Kokkos::View<DataType1, Properties1...>& source, Size count,

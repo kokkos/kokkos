@@ -47,24 +47,26 @@
 
 #include <Kokkos_Core.hpp>
 #include <Kokkos_DetectionIdiom.hpp>
+#include <Kokkos_Concepts.hpp>
 
 namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
 // this is just a draft to get started and finish later
-template <class T, class = void>
-struct is_team_handle : std::false_type {};
+// template <class T, class = void>
+// struct is_team_handle : std::false_type {};
 
-template <class T>
-struct is_team_handle<
-    T,
-    std::enable_if_t<
-        std::is_same<decltype(std::declval<T>().team_rank()), int>::value &&
-        std::is_same<decltype(std::declval<T>().team_size()), int>::value &&
-        std::is_same<decltype(std::declval<T>().league_rank()), int>::value &&
-        std::is_same<decltype(std::declval<T>().league_size()), int>::value> >
-    : std::true_type {};
+// template <class T>
+// struct is_team_handle<
+//     T,
+//     std::enable_if_t<
+//         std::is_same<decltype(std::declval<T>().team_rank()), int>::value &&
+//         std::is_same<decltype(std::declval<T>().team_size()), int>::value &&
+//         std::is_same<decltype(std::declval<T>().league_rank()), int>::value
+//         && std::is_same<decltype(std::declval<T>().league_size()),
+//         int>::value> >
+//     : std::true_type {};
 
 }  // namespace Impl
 }  // namespace Experimental

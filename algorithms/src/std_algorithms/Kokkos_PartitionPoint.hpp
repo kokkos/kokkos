@@ -28,8 +28,8 @@ namespace Experimental {
 // overload set accepting execution space
 //
 template <class ExecutionSpace, class IteratorType, class UnaryPredicate>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                  IteratorType>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                 IteratorType>
 partition_point(const ExecutionSpace& ex, IteratorType first, IteratorType last,
                 UnaryPredicate p) {
   return Impl::partition_point_exespace_impl(
@@ -38,8 +38,8 @@ partition_point(const ExecutionSpace& ex, IteratorType first, IteratorType last,
 }
 
 template <class ExecutionSpace, class IteratorType, class UnaryPredicate>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                  IteratorType>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                 IteratorType>
 partition_point(const std::string& label, const ExecutionSpace& ex,
                 IteratorType first, IteratorType last, UnaryPredicate p) {
   return Impl::partition_point_exespace_impl(label, ex, first, last,
@@ -48,8 +48,8 @@ partition_point(const std::string& label, const ExecutionSpace& ex,
 
 template <class ExecutionSpace, class UnaryPredicate, class DataType,
           class... Properties,
-          std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                            int> = 0>
+          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                           int> = 0>
 auto partition_point(const std::string& label, const ExecutionSpace& ex,
                      const ::Kokkos::View<DataType, Properties...>& v,
                      UnaryPredicate p) {
@@ -60,8 +60,8 @@ auto partition_point(const std::string& label, const ExecutionSpace& ex,
 
 template <class ExecutionSpace, class UnaryPredicate, class DataType,
           class... Properties,
-          std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                            int> = 0>
+          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                           int> = 0>
 auto partition_point(const ExecutionSpace& ex,
                      const ::Kokkos::View<DataType, Properties...>& v,
                      UnaryPredicate p) {
@@ -77,17 +77,17 @@ auto partition_point(const ExecutionSpace& ex,
 // since they cause issues on device because of the string allocation.
 //
 template <class TeamHandleType, class IteratorType, class UnaryPredicate>
-KOKKOS_FUNCTION
-    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, IteratorType>
-    partition_point(const TeamHandleType& teamHandle, IteratorType first,
-                    IteratorType last, UnaryPredicate p) {
+KOKKOS_FUNCTION std::enable_if_t<
+    ::Kokkos::is_team_handle<TeamHandleType>::value, IteratorType>
+partition_point(const TeamHandleType& teamHandle, IteratorType first,
+                IteratorType last, UnaryPredicate p) {
   return Impl::partition_point_team_impl(teamHandle, first, last, std::move(p));
 }
 
 template <
     class TeamHandleType, class UnaryPredicate, class DataType,
     class... Properties,
-    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, int> = 0>
+    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, int> = 0>
 KOKKOS_FUNCTION auto partition_point(
     const TeamHandleType& teamHandle,
     const ::Kokkos::View<DataType, Properties...>& v, UnaryPredicate p) {

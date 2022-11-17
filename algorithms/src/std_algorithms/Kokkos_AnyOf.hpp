@@ -27,7 +27,7 @@ namespace Experimental {
 // overload set accepting execution space
 //
 template <class ExecutionSpace, class InputIterator, class Predicate>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value, bool>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, bool>
 any_of(const ExecutionSpace& ex, InputIterator first, InputIterator last,
        Predicate predicate) {
   return Impl::any_of_exespace_impl("Kokkos::any_of_view_api_default", ex,
@@ -35,7 +35,7 @@ any_of(const ExecutionSpace& ex, InputIterator first, InputIterator last,
 }
 
 template <class ExecutionSpace, class InputIterator, class Predicate>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value, bool>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, bool>
 any_of(const std::string& label, const ExecutionSpace& ex, InputIterator first,
        InputIterator last, Predicate predicate) {
   return Impl::any_of_exespace_impl(label, ex, first, last, predicate);
@@ -43,7 +43,7 @@ any_of(const std::string& label, const ExecutionSpace& ex, InputIterator first,
 
 template <class ExecutionSpace, class DataType, class... Properties,
           class Predicate>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value, bool>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, bool>
 any_of(const ExecutionSpace& ex,
        const ::Kokkos::View<DataType, Properties...>& v, Predicate predicate) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
@@ -56,7 +56,7 @@ any_of(const ExecutionSpace& ex,
 
 template <class ExecutionSpace, class DataType, class... Properties,
           class Predicate>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value, bool>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, bool>
 any_of(const std::string& label, const ExecutionSpace& ex,
        const ::Kokkos::View<DataType, Properties...>& v, Predicate predicate) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
@@ -73,7 +73,7 @@ any_of(const std::string& label, const ExecutionSpace& ex,
 //
 template <class TeamHandleType, class InputIterator, class Predicate>
 KOKKOS_FUNCTION
-    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, bool>
+    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, bool>
     any_of(const TeamHandleType& teamHandle, InputIterator first,
            InputIterator last, Predicate predicate) {
   return Impl::any_of_team_impl(teamHandle, first, last, predicate);
@@ -82,7 +82,7 @@ KOKKOS_FUNCTION
 template <class TeamHandleType, class DataType, class... Properties,
           class Predicate>
 KOKKOS_FUNCTION
-    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, bool>
+    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, bool>
     any_of(const TeamHandleType& teamHandle,
            const ::Kokkos::View<DataType, Properties...>& v,
            Predicate predicate) {

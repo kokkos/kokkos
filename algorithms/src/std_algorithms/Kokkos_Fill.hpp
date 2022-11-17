@@ -28,7 +28,7 @@ namespace Experimental {
 // overload set accepting execution space
 //
 template <class ExecutionSpace, class IteratorType, class T>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value> fill(
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value> fill(
     const ExecutionSpace& ex, IteratorType first, IteratorType last,
     const T& value) {
   Impl::fill_exespace_impl("Kokkos::fill_iterator_api_default", ex, first, last,
@@ -36,14 +36,14 @@ std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value> fill(
 }
 
 template <class ExecutionSpace, class IteratorType, class T>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value> fill(
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value> fill(
     const std::string& label, const ExecutionSpace& ex, IteratorType first,
     IteratorType last, const T& value) {
   Impl::fill_exespace_impl(label, ex, first, last, value);
 }
 
 template <class ExecutionSpace, class DataType, class... Properties, class T>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value> fill(
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value> fill(
     const ExecutionSpace& ex,
     const ::Kokkos::View<DataType, Properties...>& view, const T& value) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
@@ -52,7 +52,7 @@ std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value> fill(
 }
 
 template <class ExecutionSpace, class DataType, class... Properties, class T>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value> fill(
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value> fill(
     const std::string& label, const ExecutionSpace& ex,
     const ::Kokkos::View<DataType, Properties...>& view, const T& value) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
@@ -65,16 +65,18 @@ std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value> fill(
 // since they cause issues on device because of the string allocation.
 //
 template <class TeamHandleType, class IteratorType, class T>
-KOKKOS_FUNCTION std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value>
-fill(const TeamHandleType& th, IteratorType first, IteratorType last,
-     const T& value) {
+KOKKOS_FUNCTION
+    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value>
+    fill(const TeamHandleType& th, IteratorType first, IteratorType last,
+         const T& value) {
   Impl::fill_team_impl(th, first, last, value);
 }
 
 template <class TeamHandleType, class DataType, class... Properties, class T>
-KOKKOS_FUNCTION std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value>
-fill(const TeamHandleType& th,
-     const ::Kokkos::View<DataType, Properties...>& view, const T& value) {
+KOKKOS_FUNCTION
+    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value>
+    fill(const TeamHandleType& th,
+         const ::Kokkos::View<DataType, Properties...>& view, const T& value) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
   Impl::fill_team_impl(th, begin(view), end(view), value);
 }

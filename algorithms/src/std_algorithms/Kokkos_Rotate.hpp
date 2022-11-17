@@ -28,8 +28,8 @@ namespace Experimental {
 // overload set accepting execution space
 //
 template <class ExecutionSpace, class IteratorType>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                  IteratorType>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                 IteratorType>
 rotate(const ExecutionSpace& ex, IteratorType first, IteratorType n_first,
        IteratorType last) {
   return Impl::rotate_exespace_impl("Kokkos::rotate_iterator_api_default", ex,
@@ -37,16 +37,16 @@ rotate(const ExecutionSpace& ex, IteratorType first, IteratorType n_first,
 }
 
 template <class ExecutionSpace, class IteratorType>
-std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                  IteratorType>
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                 IteratorType>
 rotate(const std::string& label, const ExecutionSpace& ex, IteratorType first,
        IteratorType n_first, IteratorType last) {
   return Impl::rotate_exespace_impl(label, ex, first, n_first, last);
 }
 
 template <class ExecutionSpace, class DataType, class... Properties,
-          std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                            int> = 0>
+          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                           int> = 0>
 auto rotate(const ExecutionSpace& ex,
             const ::Kokkos::View<DataType, Properties...>& view,
             std::size_t n_location) {
@@ -57,8 +57,8 @@ auto rotate(const ExecutionSpace& ex,
 }
 
 template <class ExecutionSpace, class DataType, class... Properties,
-          std::enable_if_t< ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                            int> = 0>
+          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                           int> = 0>
 auto rotate(const std::string& label, const ExecutionSpace& ex,
             const ::Kokkos::View<DataType, Properties...>& view,
             std::size_t n_location) {
@@ -73,16 +73,16 @@ auto rotate(const std::string& label, const ExecutionSpace& ex,
 // since they cause issues on device because of the string allocation.
 //
 template <class TeamHandleType, class IteratorType>
-KOKKOS_FUNCTION
-    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, IteratorType>
-    rotate(const TeamHandleType& teamHandle, IteratorType first,
-           IteratorType n_first, IteratorType last) {
+KOKKOS_FUNCTION std::enable_if_t<
+    ::Kokkos::is_team_handle<TeamHandleType>::value, IteratorType>
+rotate(const TeamHandleType& teamHandle, IteratorType first,
+       IteratorType n_first, IteratorType last) {
   return Impl::rotate_team_impl(teamHandle, first, n_first, last);
 }
 
 template <
     class TeamHandleType, class DataType, class... Properties,
-    std::enable_if_t<Impl::is_team_handle<TeamHandleType>::value, int> = 0>
+    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, int> = 0>
 KOKKOS_FUNCTION auto rotate(const TeamHandleType& teamHandle,
                             const ::Kokkos::View<DataType, Properties...>& view,
                             std::size_t n_location) {
