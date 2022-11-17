@@ -139,7 +139,7 @@ KOKKOS_FUNCTION OutputIterator unique_copy_team_impl(
     d_first[0] = first[0];
     return d_first + 1;
   } else {
-    // parallel_scan is what we used for the execution space impl,
+    // FIXME: parallel_scan is what we used for the execution space impl,
     // but parallel_scan does not support TeamThreadRange, so for the
     // team-level impl we do this serially for now and later figure out
     // if this can be done in parallel
@@ -157,6 +157,7 @@ KOKKOS_FUNCTION OutputIterator unique_copy_team_impl(
       // we need to copy the last element always
       d_first[count++] = first[num_elements - 1];
     }
+
     teamHandle.team_broadcast(count, 0);
 
     // return the correct iterator: we need +1 here because we need to

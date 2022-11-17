@@ -167,29 +167,11 @@ partition_copy_team_impl(const TeamHandleType& teamHandle,
     return {to_first_true, to_first_false};
   }
 
-  // FIXME: some backends do not have parallel_scan with TeamThreadRange,
-  // so for now only use it for cuda to ensure things are ok
-  // but later on we have to revise all this to guard only
-  // what really needs to be guarded
-
   const std::size_t num_elements =
       Kokkos::Experimental::distance(from_first, from_last);
 
-#if defined(KOKKOS_ENABLE_CUDA)
-  using func_type =
-      StdPartitionCopyFunctor<InputIteratorType, OutputIteratorTrueType,
-                              OutputIteratorFalseType, PredicateType>;
-
-  typename func_type::value_type counts{0, 0};
-  ::Kokkos::parallel_scan(
-      RangePolicy<TeamHandleType>(teamHandle, 0, num_elements),
-      StdPartitionCopyFunctor(from_first, to_first_true, to_first_false, pred),
-      counts);
-  teamHandle.team_barrier();
-
-  return {to_first_true + counts.true_count_,
-          to_first_false + counts.false_count_};
-#else
+  // FIXME: there is no parallel_scan overload that accepts TeamThreadRange and
+  // return_value, so temporarily serial implementation is used
 
   ::Kokkos::pair<std::size_t, std::size_t> counts{0, 0};
   if (teamHandle.team_rank() == 0) {
@@ -202,10 +184,11 @@ partition_copy_team_impl(const TeamHandleType& teamHandle,
       }
     }
   }
+
   // no need for barrier because calling broadcast implicitly blocks
   teamHandle.team_broadcast(counts, 0);
+
   return {to_first_true + counts.first, to_first_false + counts.second};
-#endif
 }
 
 }  // namespace Impl

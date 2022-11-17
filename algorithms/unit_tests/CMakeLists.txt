@@ -283,9 +283,7 @@ endforeach()
 #     )
 # endforeach()
 
-# Temporarily disable A and B group
-# foreach(ID A;B;C;D)
-foreach(ID C;D)
+foreach(ID A;B;C;D)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_StdSet_Team_${ID}
     SOURCES
