@@ -288,24 +288,6 @@ BENCHMARK(Atomic_ContentiousMinReplacements<int>)
     ->UseManualTime()
     ->Iterations(10);
 
-// FIXME: duplicated
-namespace Test {
-int command_line_num_args(int n) {
-  static int n_args = 0;
-  if (n > 0) n_args = n;
-  return n_args;
-}
-
-const char* command_line_arg(int k, char** input_args) {
-  static char** args;
-  if (input_args != nullptr) args = input_args;
-  if (command_line_num_args() > k)
-    return args[k];
-  else
-    return nullptr;
-}
-}  // namespace Test
-
 int main(int argc, char* argv[]) {
   Kokkos::initialize(argc, argv);
   benchmark::Initialize(&argc, argv);
