@@ -51,15 +51,6 @@
 #define DV Kokkos::DualView
 #define DRV Kokkos::DynRankView
 
-#define RANK_0 0
-#define RANK_1 1
-#define RANK_2 2
-#define RANK_3 3
-#define RANK_4 4
-#define RANK_5 5
-#define RANK_6 6
-#define RANK_7 7
-
 #define PARAM_0
 #define PARAM_1 50
 #define PARAM_2 50, 1
@@ -103,10 +94,11 @@ using pod = DType;
       (view.stride(6) == drv.stride_6() || rank < 7) && \
       (view.stride(7) == drv.stride_7() || rank < 8)
 
-template <typename view_t, typename dt, typename l, typename... Vals>
-std::enable_if_t<std::is_same<view_t, DV<dt, l>>::value, bool>
-padding_assignment_and_copy(int rank, Vals... params) {
-  bool result = true;
+template <typename view_t, typename dt, typename layout, typename... Vals>
+std::enable_if_t<std::is_same<view_t, DV<dt, layout>>::value, bool>
+padding_assignment_and_copy(Vals... params) {
+  constexpr int rank = sizeof...(params);
+  bool result        = true;
   auto alloc_prop =
       Kokkos::view_alloc("vDim" + std::to_string(rank), Kokkos::AllowPadding);
   view_t dv(alloc_prop, params...);
@@ -116,18 +108,19 @@ padding_assignment_and_copy(int rank, Vals... params) {
   return result;
 }
 
-template <typename view_t, typename dt, typename l, typename... Vals>
-std::enable_if_t<std::is_same<view_t, DRV<pod, l>>::value &&
+template <typename view_t, typename dt, typename layout, typename... Vals>
+std::enable_if_t<std::is_same<view_t, DRV<pod, layout>>::value &&
                      ((std::is_same<dt, DType_0>::value ||
                        std::is_same<dt, DType_1>::value) ||
-                      (std::is_same<l, Kokkos::LayoutRight>::value &&
+                      (std::is_same<layout, Kokkos::LayoutRight>::value &&
                        std::is_same<dt, DType_2>::value)),
                  bool>
-padding_assignment_and_copy(int rank, Vals... params) {
-  bool result = true;
+padding_assignment_and_copy(Vals... params) {
+  constexpr int rank = sizeof...(params);
+  bool result        = true;
   auto alloc_prop =
       Kokkos::view_alloc("vDim" + std::to_string(rank), Kokkos::AllowPadding);
-  Kokkos::View<dt, l> v(alloc_prop, params...);
+  Kokkos::View<dt, layout> v(alloc_prop, params...);
   view_t drv(v);
   // We do not propagate padding to DynRankView and we do not
   // pad for this data type so strides should match
@@ -135,18 +128,19 @@ padding_assignment_and_copy(int rank, Vals... params) {
   return result;
 }
 
-template <typename view_t, typename dt, typename l, typename... Vals>
-std::enable_if_t<std::is_same<view_t, DRV<pod, l>>::value &&
+template <typename view_t, typename dt, typename layout, typename... Vals>
+std::enable_if_t<std::is_same<view_t, DRV<pod, layout>>::value &&
                      (!(std::is_same<dt, DType_0>::value ||
                         std::is_same<dt, DType_1>::value) &&
-                      !(std::is_same<l, Kokkos::LayoutRight>::value &&
+                      !(std::is_same<layout, Kokkos::LayoutRight>::value &&
                         std::is_same<dt, DType_2>::value)),
                  bool>
-padding_assignment_and_copy(int rank, Vals... params) {
-  bool result = true;
+padding_assignment_and_copy(Vals... params) {
+  constexpr int rank = sizeof...(params);
+  bool result        = true;
   auto alloc_prop =
       Kokkos::view_alloc("vDim" + std::to_string(rank), Kokkos::AllowPadding);
-  Kokkos::View<dt, l> v(alloc_prop, params...);
+  Kokkos::View<dt, layout> v(alloc_prop, params...);
   view_t drv(v);
   // We do not propagate padding to DynRankView
   // so strides should not match
@@ -154,92 +148,54 @@ padding_assignment_and_copy(int rank, Vals... params) {
   return result;
 }
 
+template <typename layout>
+bool padding_assignment_and_copy_helper() {
+  auto result = true;
+  result &= padding_assignment_and_copy<DV<DType_0, layout>, DType_0, layout>(
+      PARAM_0);
+  result &= padding_assignment_and_copy<DV<DType_1, layout>, DType_1, layout>(
+      PARAM_1);
+  result &= padding_assignment_and_copy<DV<DType_2, layout>, DType_2, layout>(
+      PARAM_2);
+  result &= padding_assignment_and_copy<DV<DType_3, layout>, DType_3, layout>(
+      PARAM_3);
+  result &= padding_assignment_and_copy<DV<DType_4, layout>, DType_4, layout>(
+      PARAM_4);
+  result &= padding_assignment_and_copy<DV<DType_5, layout>, DType_5, layout>(
+      PARAM_5);
+  result &= padding_assignment_and_copy<DV<DType_6, layout>, DType_6, layout>(
+      PARAM_6);
+  result &= padding_assignment_and_copy<DV<DType_7, layout>, DType_7, layout>(
+      PARAM_7);
+  result &=
+      padding_assignment_and_copy<DRV<pod, layout>, DType_0, layout>(PARAM_0);
+  result &=
+      padding_assignment_and_copy<DRV<pod, layout>, DType_1, layout>(PARAM_1);
+  result &=
+      padding_assignment_and_copy<DRV<pod, layout>, DType_2, layout>(PARAM_2);
+  result &=
+      padding_assignment_and_copy<DRV<pod, layout>, DType_3, layout>(PARAM_3);
+  result &=
+      padding_assignment_and_copy<DRV<pod, layout>, DType_4, layout>(PARAM_4);
+  result &=
+      padding_assignment_and_copy<DRV<pod, layout>, DType_5, layout>(PARAM_5);
+  result &=
+      padding_assignment_and_copy<DRV<pod, layout>, DType_6, layout>(PARAM_6);
+  result &=
+      padding_assignment_and_copy<DRV<pod, layout>, DType_7, layout>(PARAM_7);
+  return result;
+}
+
 TEST(TEST_CATEGORY, container_padding_propagation) {
   /*Test correct propagation in view assignements*/
   auto result = true;
-  using ll    = Kokkos::LayoutLeft;
-  using lr    = Kokkos::LayoutRight;
-  result &= padding_assignment_and_copy<DV<DType_0, ll>, DType_0, ll>(
-      RANK_0 /*, PARAM_0*/);
-  result &= padding_assignment_and_copy<DV<DType_1, ll>, DType_1, ll>(RANK_1,
-                                                                      PARAM_1);
-  result &= padding_assignment_and_copy<DV<DType_2, ll>, DType_2, ll>(RANK_2,
-                                                                      PARAM_2);
-  result &= padding_assignment_and_copy<DV<DType_3, ll>, DType_3, ll>(RANK_3,
-                                                                      PARAM_3);
-  result &= padding_assignment_and_copy<DV<DType_4, ll>, DType_4, ll>(RANK_4,
-                                                                      PARAM_4);
-  result &= padding_assignment_and_copy<DV<DType_5, ll>, DType_5, ll>(RANK_5,
-                                                                      PARAM_5);
-  result &= padding_assignment_and_copy<DV<DType_6, ll>, DType_6, ll>(RANK_6,
-                                                                      PARAM_6);
-  result &= padding_assignment_and_copy<DV<DType_7, ll>, DType_7, ll>(RANK_7,
-                                                                      PARAM_7);
-  ASSERT_TRUE(result);
-  result &= padding_assignment_and_copy<DV<DType_0, lr>, DType_0, lr>(
-      RANK_0 /*, PARAM_0*/);
-  result &= padding_assignment_and_copy<DV<DType_1, lr>, DType_1, lr>(RANK_1,
-                                                                      PARAM_1);
-  result &= padding_assignment_and_copy<DV<DType_2, lr>, DType_2, lr>(RANK_2,
-                                                                      PARAM_2);
-  result &= padding_assignment_and_copy<DV<DType_3, lr>, DType_3, lr>(RANK_3,
-                                                                      PARAM_3);
-  result &= padding_assignment_and_copy<DV<DType_4, lr>, DType_4, lr>(RANK_4,
-                                                                      PARAM_4);
-  result &= padding_assignment_and_copy<DV<DType_5, lr>, DType_5, lr>(RANK_5,
-                                                                      PARAM_5);
-  result &= padding_assignment_and_copy<DV<DType_6, lr>, DType_6, lr>(RANK_6,
-                                                                      PARAM_6);
-  result &= padding_assignment_and_copy<DV<DType_7, lr>, DType_7, lr>(RANK_7,
-                                                                      PARAM_7);
-  ASSERT_TRUE(result);
-  result &= padding_assignment_and_copy<DRV<pod, ll>, DType_0, ll>(
-      RANK_0 /*, PARAM_0*/);
-  result &=
-      padding_assignment_and_copy<DRV<pod, ll>, DType_1, ll>(RANK_1, PARAM_1);
-  result &=
-      padding_assignment_and_copy<DRV<pod, ll>, DType_2, ll>(RANK_2, PARAM_2);
-  result &=
-      padding_assignment_and_copy<DRV<pod, ll>, DType_3, ll>(RANK_3, PARAM_3);
-  result &=
-      padding_assignment_and_copy<DRV<pod, ll>, DType_4, ll>(RANK_4, PARAM_4);
-  result &=
-      padding_assignment_and_copy<DRV<pod, ll>, DType_5, ll>(RANK_5, PARAM_5);
-  result &=
-      padding_assignment_and_copy<DRV<pod, ll>, DType_6, ll>(RANK_6, PARAM_6);
-  result &=
-      padding_assignment_and_copy<DRV<pod, ll>, DType_7, ll>(RANK_7, PARAM_7);
-  ASSERT_TRUE(result);
-  result &= padding_assignment_and_copy<DRV<pod, lr>, DType_0, lr>(
-      RANK_0 /*, PARAM_0*/);
-  result &=
-      padding_assignment_and_copy<DRV<pod, lr>, DType_1, lr>(RANK_1, PARAM_1);
-  result &=
-      padding_assignment_and_copy<DRV<pod, lr>, DType_2, lr>(RANK_2, PARAM_2);
-  result &=
-      padding_assignment_and_copy<DRV<pod, lr>, DType_3, lr>(RANK_3, PARAM_3);
-  result &=
-      padding_assignment_and_copy<DRV<pod, lr>, DType_4, lr>(RANK_4, PARAM_4);
-  result &=
-      padding_assignment_and_copy<DRV<pod, lr>, DType_5, lr>(RANK_5, PARAM_5);
-  result &=
-      padding_assignment_and_copy<DRV<pod, lr>, DType_6, lr>(RANK_6, PARAM_6);
-  result &=
-      padding_assignment_and_copy<DRV<pod, lr>, DType_7, lr>(RANK_7, PARAM_7);
+  result &= padding_assignment_and_copy_helper<Kokkos::LayoutLeft>();
+  result &= padding_assignment_and_copy_helper<Kokkos::LayoutRight>();
   ASSERT_TRUE(result);
 
   // Padding is not allowed for LayoutStride
   // using ls = Kokkos::LayoutStride;
 }
-
-#undef RANK_0
-#undef RANK_1
-#undef RANK_2
-#undef RANK_3
-#undef RANK_4
-#undef RANK_5
-#undef RANK_6
-#undef RANK_7
 
 #undef PARAM_0
 #undef PARAM_1
