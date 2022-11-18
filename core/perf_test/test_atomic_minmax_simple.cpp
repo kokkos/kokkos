@@ -29,7 +29,7 @@
 
 using exec_space = Kokkos::DefaultExecutionSpace;
 
-constexpr int LENGTH = 1000000;
+constexpr int LENGTH = 1'000'000;
 
 template <typename T>
 Kokkos::View<T*, exec_space> prepare_input(const int length, const T value) {
@@ -252,6 +252,7 @@ static void Atomic_ContentiousMinReplacements(benchmark::State& state) {
   }
 }
 
+// int
 BENCHMARK(Atomic_MinReplacements<int>)
     ->ArgName("Length")
     ->Arg(LENGTH)
@@ -287,6 +288,273 @@ BENCHMARK(Atomic_ContentiousMinReplacements<int>)
     ->Arg(LENGTH / 5)
     ->UseManualTime()
     ->Iterations(10);
+///////////////////////////////////////////////////////////////////////
+
+// long
+BENCHMARK(Atomic_MinReplacements<long>)
+    ->ArgName("Length")
+    ->Arg(LENGTH)
+    ->UseManualTime()
+    ->Iterations(10);
+
+BENCHMARK(Atomic_MaxReplacements<long>)
+    ->ArgName("Length")
+    ->Arg(LENGTH)
+    ->UseManualTime()
+    ->Iterations(10);
+
+BENCHMARK(Atomic_MaxEarlyExits<long>)
+    ->ArgName("Length")
+    ->Arg(LENGTH)
+    ->UseManualTime()
+    ->Iterations(10);
+
+BENCHMARK(Atomic_MinEarlyExits<long>)
+    ->ArgName("Length")
+    ->Arg(LENGTH)
+    ->UseManualTime()
+    ->Iterations(10);
+
+BENCHMARK(Atomic_ContentiousMaxReplacements<long>)
+    ->ArgName("Length")
+    ->Arg(LENGTH / 5)
+    ->UseManualTime()
+    ->Iterations(10);
+
+BENCHMARK(Atomic_ContentiousMinReplacements<long>)
+    ->ArgName("Length")
+    ->Arg(LENGTH / 5)
+    ->UseManualTime()
+    ->Iterations(10);
+///////////////////////////////////////////////////////////////////////
+
+// long long
+BENCHMARK(Atomic_MinReplacements<long long>)
+    ->ArgName("Length")
+    ->Arg(LENGTH)
+    ->UseManualTime()
+    ->Iterations(10);
+
+BENCHMARK(Atomic_MaxReplacements<long long>)
+    ->ArgName("Length")
+    ->Arg(LENGTH)
+    ->UseManualTime()
+    ->Iterations(10);
+
+BENCHMARK(Atomic_MaxEarlyExits<long long>)
+    ->ArgName("Length")
+    ->Arg(LENGTH)
+    ->UseManualTime()
+    ->Iterations(10);
+
+BENCHMARK(Atomic_MinEarlyExits<long long>)
+    ->ArgName("Length")
+    ->Arg(LENGTH)
+    ->UseManualTime()
+    ->Iterations(10);
+
+BENCHMARK(Atomic_ContentiousMaxReplacements<long long>)
+    ->ArgName("Length")
+    ->Arg(LENGTH / 5)
+    ->UseManualTime()
+    ->Iterations(10);
+
+BENCHMARK(Atomic_ContentiousMinReplacements<long long>)
+    ->ArgName("Length")
+    ->Arg(LENGTH / 5)
+    ->UseManualTime()
+    ->Iterations(10);
+///////////////////////////////////////////////////////////////////////
+
+// unsigned int
+BENCHMARK(Atomic_MinReplacements<unsigned int>)
+    ->ArgName("Length")
+    ->Arg(LENGTH)
+    ->UseManualTime()
+    ->Iterations(10);
+
+BENCHMARK(Atomic_MaxReplacements<unsigned int>)
+    ->ArgName("Length")
+    ->Arg(LENGTH)
+    ->UseManualTime()
+    ->Iterations(10);
+
+BENCHMARK(Atomic_MaxEarlyExits<unsigned int>)
+    ->ArgName("Length")
+    ->Arg(LENGTH)
+    ->UseManualTime()
+    ->Iterations(10);
+
+BENCHMARK(Atomic_MinEarlyExits<unsigned int>)
+    ->ArgName("Length")
+    ->Arg(LENGTH)
+    ->UseManualTime()
+    ->Iterations(10);
+
+BENCHMARK(Atomic_ContentiousMaxReplacements<unsigned int>)
+    ->ArgName("Length")
+    ->Arg(LENGTH / 5)
+    ->UseManualTime()
+    ->Iterations(10);
+
+BENCHMARK(Atomic_ContentiousMinReplacements<unsigned int>)
+    ->ArgName("Length")
+    ->Arg(LENGTH / 5)
+    ->UseManualTime()
+    ->Iterations(10);
+///////////////////////////////////////////////////////////////////////
+
+// unsigned long
+BENCHMARK(Atomic_MinReplacements<unsigned long>)
+    ->ArgName("Length")
+    ->Arg(LENGTH)
+    ->UseManualTime()
+    ->Iterations(10);
+
+BENCHMARK(Atomic_MaxReplacements<unsigned long>)
+    ->ArgName("Length")
+    ->Arg(LENGTH)
+    ->UseManualTime()
+    ->Iterations(10);
+
+BENCHMARK(Atomic_MaxEarlyExits<unsigned long>)
+    ->ArgName("Length")
+    ->Arg(LENGTH)
+    ->UseManualTime()
+    ->Iterations(10);
+
+BENCHMARK(Atomic_MinEarlyExits<unsigned long>)
+    ->ArgName("Length")
+    ->Arg(LENGTH)
+    ->UseManualTime()
+    ->Iterations(10);
+
+BENCHMARK(Atomic_ContentiousMaxReplacements<unsigned long>)
+    ->ArgName("Length")
+    ->Arg(LENGTH / 5)
+    ->UseManualTime()
+    ->Iterations(10);
+
+BENCHMARK(Atomic_ContentiousMinReplacements<unsigned long>)
+    ->ArgName("Length")
+    ->Arg(LENGTH / 5)
+    ->UseManualTime()
+    ->Iterations(10);
+///////////////////////////////////////////////////////////////////////
+
+// unsigned long long
+BENCHMARK(Atomic_MinReplacements<unsigned long long>)
+    ->ArgName("Length")
+    ->Arg(LENGTH)
+    ->UseManualTime()
+    ->Iterations(10);
+
+BENCHMARK(Atomic_MaxReplacements<unsigned long long>)
+    ->ArgName("Length")
+    ->Arg(LENGTH)
+    ->UseManualTime()
+    ->Iterations(10);
+
+BENCHMARK(Atomic_MaxEarlyExits<unsigned long long>)
+    ->ArgName("Length")
+    ->Arg(LENGTH)
+    ->UseManualTime()
+    ->Iterations(10);
+
+BENCHMARK(Atomic_MinEarlyExits<unsigned long long>)
+    ->ArgName("Length")
+    ->Arg(LENGTH)
+    ->UseManualTime()
+    ->Iterations(10);
+
+BENCHMARK(Atomic_ContentiousMaxReplacements<unsigned long long>)
+    ->ArgName("Length")
+    ->Arg(LENGTH / 5)
+    ->UseManualTime()
+    ->Iterations(10);
+
+BENCHMARK(Atomic_ContentiousMinReplacements<unsigned long long>)
+    ->ArgName("Length")
+    ->Arg(LENGTH / 5)
+    ->UseManualTime()
+    ->Iterations(10);
+///////////////////////////////////////////////////////////////////////
+
+// float
+BENCHMARK(Atomic_MinReplacements<float>)
+    ->ArgName("Length")
+    ->Arg(LENGTH)
+    ->UseManualTime()
+    ->Iterations(10);
+
+BENCHMARK(Atomic_MaxReplacements<float>)
+    ->ArgName("Length")
+    ->Arg(LENGTH)
+    ->UseManualTime()
+    ->Iterations(10);
+
+BENCHMARK(Atomic_MaxEarlyExits<float>)
+    ->ArgName("Length")
+    ->Arg(LENGTH)
+    ->UseManualTime()
+    ->Iterations(10);
+
+BENCHMARK(Atomic_MinEarlyExits<float>)
+    ->ArgName("Length")
+    ->Arg(LENGTH)
+    ->UseManualTime()
+    ->Iterations(10);
+
+BENCHMARK(Atomic_ContentiousMaxReplacements<float>)
+    ->ArgName("Length")
+    ->Arg(LENGTH / 5)
+    ->UseManualTime()
+    ->Iterations(10);
+
+BENCHMARK(Atomic_ContentiousMinReplacements<float>)
+    ->ArgName("Length")
+    ->Arg(LENGTH / 5)
+    ->UseManualTime()
+    ->Iterations(10);
+///////////////////////////////////////////////////////////////////////
+
+// double
+BENCHMARK(Atomic_MinReplacements<double>)
+    ->ArgName("Length")
+    ->Arg(LENGTH)
+    ->UseManualTime()
+    ->Iterations(10);
+
+BENCHMARK(Atomic_MaxReplacements<double>)
+    ->ArgName("Length")
+    ->Arg(LENGTH)
+    ->UseManualTime()
+    ->Iterations(10);
+
+BENCHMARK(Atomic_MaxEarlyExits<double>)
+    ->ArgName("Length")
+    ->Arg(LENGTH)
+    ->UseManualTime()
+    ->Iterations(10);
+
+BENCHMARK(Atomic_MinEarlyExits<double>)
+    ->ArgName("Length")
+    ->Arg(LENGTH)
+    ->UseManualTime()
+    ->Iterations(10);
+
+BENCHMARK(Atomic_ContentiousMaxReplacements<double>)
+    ->ArgName("Length")
+    ->Arg(LENGTH / 5)
+    ->UseManualTime()
+    ->Iterations(10);
+
+BENCHMARK(Atomic_ContentiousMinReplacements<double>)
+    ->ArgName("Length")
+    ->Arg(LENGTH / 5)
+    ->UseManualTime()
+    ->Iterations(10);
+///////////////////////////////////////////////////////////////////////
 
 int main(int argc, char* argv[]) {
   Kokkos::initialize(argc, argv);
@@ -298,26 +566,6 @@ int main(int argc, char* argv[]) {
   (void)Test::command_line_arg(0, argv);
 
   benchmark::RunSpecifiedBenchmarks();
-
-  //   std::cout << "================ int" << std::endl;
-  //   test<int>(length);
-  //   std::cout << "================ long" << std::endl;
-  //   test<long>(length);
-  //   std::cout << "================ long long" << std::endl;
-  //   test<long long>(length);
-
-  //   std::cout << "================ unsigned int" << std::endl;
-  //   test<unsigned int>(length);
-  //   std::cout << "================ unsigned long" << std::endl;
-  //   test<unsigned long>(length);
-  //   std::cout << "================ unsigned long long" << std::endl;
-  //   test<unsigned long long>(length);
-
-  //   std::cout << "================ float" << std::endl;
-  //   test<float>(length);
-  //   std::cout << "================ double" << std::endl;
-  //   test<double>(length);
-  // }
 
   benchmark::Shutdown();
   Kokkos::finalize();
