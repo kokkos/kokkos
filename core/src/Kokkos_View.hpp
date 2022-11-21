@@ -63,6 +63,10 @@ static_assert(false,
 
 #include <impl/Kokkos_Tools.hpp>
 
+#ifdef KOKKOS_ENABLE_IMPL_MDSPAN
+#include <View/MDSpan/Kokkos_MDSpan_Extents.hpp>
+#endif
+
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
