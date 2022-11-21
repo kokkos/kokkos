@@ -48,32 +48,6 @@
 
 namespace Test {
 
-#define ZERO \
-  0  // Use Zero to make ViewOffset's
-     // Dimension::rank_dynamic > 0
-#define ARG_0
-#define ARG_1 ZERO
-#define ARG_2 50, ZERO
-#define ARG_3 50, ZERO, 50
-#define ARG_4 50, 1, ZERO, 50
-#define ARG_5 50, 1, ZERO, 1, 50
-#define ARG_6 50, 1, ZERO, 1, 1, 50
-#define ARG_7 50, 1, ZERO, 1, 1, 1, 50
-
-// Use non-zero sizes for Views
-#define PARAM_0
-#define PARAM_1 50
-#define PARAM_2 50, 50
-#define PARAM_3 50, 1, 50
-#define PARAM_4 50, 1, 1, 50
-#define PARAM_5 50, 1, 1, 1, 50
-#define PARAM_6 50, 1, 1, 1, 1, 50
-#define PARAM_7 50, 1, 1, 1, 1, 1, 50
-
-#define SUBRANGE_DIM 20, 30
-
-#define VIEW_T Kokkos::View
-
 using DType   = int;
 using DType_0 = DType;
 using DType_1 = DType *;
@@ -83,69 +57,41 @@ using DType_4 = DType ****;
 using DType_5 = DType *****;
 using DType_6 = DType ******;
 using DType_7 = DType *******;
+using DType_8 = DType ********;
 
 using pair_t = Kokkos::pair<int, int>;
 
-#define TEST_VIEW_OFFSET_STRIDES(view, offset, rank)       \
-  (view.stride(0) == offset.stride_0() || rank < 1) &&     \
-      (view.stride(1) == offset.stride_1() || rank < 2) && \
-      (view.stride(2) == offset.stride_2() || rank < 3) && \
-      (view.stride(3) == offset.stride_3() || rank < 4) && \
-      (view.stride(4) == offset.stride_4() || rank < 5) && \
-      (view.stride(5) == offset.stride_5() || rank < 6) && \
-      (view.stride(6) == offset.stride_6() || rank < 7) && \
-      (view.stride(7) == offset.stride_7() || rank < 8)
+template <typename View, typename Offset>
+bool test_view_offset_strides(View &view, Offset &offset, int rank) {
+  return (view.stride(0) == offset.stride_0() || rank < 1) &&
+         (view.stride(1) == offset.stride_1() || rank < 2) &&
+         (view.stride(2) == offset.stride_2() || rank < 3) &&
+         (view.stride(3) == offset.stride_3() || rank < 4) &&
+         (view.stride(4) == offset.stride_4() || rank < 5) &&
+         (view.stride(5) == offset.stride_5() || rank < 6) &&
+         (view.stride(6) == offset.stride_6() || rank < 7) &&
+         (view.stride(7) == offset.stride_7() || rank < 8);
+}
 
-#define TEST_VIEW_STRIDES(view1, view2, rank)             \
-  (view1.stride(0) == view2.stride(0) || rank < 1) &&     \
-      (view1.stride(1) == view2.stride(1) || rank < 2) && \
-      (view1.stride(2) == view2.stride(2) || rank < 3) && \
-      (view1.stride(3) == view2.stride(3) || rank < 4) && \
-      (view1.stride(4) == view2.stride(4) || rank < 5) && \
-      (view1.stride(5) == view2.stride(5) || rank < 6) && \
-      (view1.stride(6) == view2.stride(6) || rank < 7) && \
-      (view1.stride(7) == view2.stride(7) || rank < 8)
-
-template <typename viewDim, typename layout, typename... Vals>
-std::enable_if_t<
-    std::is_same<viewDim, Kokkos::Impl::ViewDimension<ARG_0>>::value ||
-        std::is_same<viewDim, Kokkos::Impl::ViewDimension<ARG_1>>::value,
-    bool>
-padding_has_effect(Vals... params) {
-  using allow_padding = std::true_type;
-
-  using offset_t    = Kokkos::Impl::ViewOffset<viewDim, layout, void>;
-  using use_padding = std::bool_constant<
-      allow_padding() &&
-      !std::is_same<layout, typename Kokkos::LayoutStride>::value>;
-
-  using padding =
-      std::integral_constant<unsigned int,
-                             use_padding::value ? sizeof(DType) : 0>;
-  using no_padding =
-      std::integral_constant<unsigned int,
-                             !use_padding::value ? sizeof(DType) : 0>;
-
-  auto offset_wPadding = offset_t(padding(), layout(params...));
-  auto offset          = offset_t(no_padding(), layout(params...));
-
-  /* We never pad for rank 0 and rank 1 */
-  return offset.span_is_contiguous() == offset_wPadding.span_is_contiguous();
+template <typename View1, typename View2>
+bool test_view_strides(View1 &view1, View2 &view2, int rank) {
+  return (view1.stride(0) == view2.stride(0) || rank < 1) &&
+         (view1.stride(1) == view2.stride(1) || rank < 2) &&
+         (view1.stride(2) == view2.stride(2) || rank < 3) &&
+         (view1.stride(3) == view2.stride(3) || rank < 4) &&
+         (view1.stride(4) == view2.stride(4) || rank < 5) &&
+         (view1.stride(5) == view2.stride(5) || rank < 6) &&
+         (view1.stride(6) == view2.stride(6) || rank < 7) &&
+         (view1.stride(7) == view2.stride(7) || rank < 8);
 }
 
 template <typename viewDim, typename layout, typename... Vals>
-std::enable_if_t<
-    !std::is_same<viewDim, Kokkos::Impl::ViewDimension<ARG_0>>::value &&
-        !std::is_same<viewDim, Kokkos::Impl::ViewDimension<ARG_1>>::value,
-    bool>
-padding_has_effect(Vals... params) {
+bool padding_has_effect(Vals... params) {
   using allow_padding = std::true_type;
-
-  using offset_t    = Kokkos::Impl::ViewOffset<viewDim, layout, void>;
-  using use_padding = std::bool_constant<
+  using offset_t      = Kokkos::Impl::ViewOffset<viewDim, layout, void>;
+  using use_padding   = std::bool_constant<
       allow_padding() &&
       !std::is_same<layout, typename Kokkos::LayoutStride>::value>;
-
   using padding =
       std::integral_constant<unsigned int,
                              use_padding::value ? sizeof(DType) : 0>;
@@ -156,88 +102,74 @@ padding_has_effect(Vals... params) {
   auto offset_wPadding = offset_t(padding(), layout(params...));
   auto offset          = offset_t(no_padding(), layout(params...));
 
-  /* if we pad, the span becomes non-contiguous*/
-  return offset.span_is_contiguous() != offset_wPadding.span_is_contiguous();
+  if constexpr (std::is_same<viewDim, Kokkos::Impl::ViewDimension<>>::value ||
+                std::is_same<viewDim, Kokkos::Impl::ViewDimension<0>>::value) {
+    /* We never pad for rank 0 and rank 1 */
+    return offset.span_is_contiguous() == offset_wPadding.span_is_contiguous();
+  } else {
+    /* if we pad, the span becomes non-contiguous*/
+    return offset.span_is_contiguous() != offset_wPadding.span_is_contiguous();
+  }
 }
 
 template <typename layout>
 bool padding_has_effect_helper() {
   auto result = true;
-  result &= padding_has_effect<Kokkos::Impl::ViewDimension<ARG_0>, layout>();
-  result &=
-      padding_has_effect<Kokkos::Impl::ViewDimension<ARG_1>, layout>(PARAM_1);
-  result &=
-      padding_has_effect<Kokkos::Impl::ViewDimension<ARG_2>, layout>(PARAM_2);
-  result &=
-      padding_has_effect<Kokkos::Impl::ViewDimension<ARG_3>, layout>(PARAM_3);
-  result &=
-      padding_has_effect<Kokkos::Impl::ViewDimension<ARG_4>, layout>(PARAM_4);
-  result &=
-      padding_has_effect<Kokkos::Impl::ViewDimension<ARG_5>, layout>(PARAM_5);
-  result &=
-      padding_has_effect<Kokkos::Impl::ViewDimension<ARG_6>, layout>(PARAM_6);
-  result &=
-      padding_has_effect<Kokkos::Impl::ViewDimension<ARG_7>, layout>(PARAM_7);
+  // clang-format off
+  result &= padding_has_effect<Kokkos::Impl::ViewDimension<>,                         layout>();
+  result &= padding_has_effect<Kokkos::Impl::ViewDimension<0>,                        layout>(50);
+  result &= padding_has_effect<Kokkos::Impl::ViewDimension<50, 0>,                    layout>(50, 50);
+  result &= padding_has_effect<Kokkos::Impl::ViewDimension<50, 0, 50>,                layout>(50, 1, 50);
+  result &= padding_has_effect<Kokkos::Impl::ViewDimension<50, 1, 0, 50>,             layout>(50, 1, 1, 50);
+  result &= padding_has_effect<Kokkos::Impl::ViewDimension<50, 1, 0, 1, 50>,          layout>(50, 1, 1, 1, 50);
+  result &= padding_has_effect<Kokkos::Impl::ViewDimension<50, 1, 0, 1, 1, 50>,       layout>(50, 1, 1, 1, 1, 50);
+  result &= padding_has_effect<Kokkos::Impl::ViewDimension<50, 1, 0, 1, 1, 1, 50>,    layout>(50, 1, 1, 1, 1, 1, 50);
+  result &= padding_has_effect<Kokkos::Impl::ViewDimension<50, 1, 0, 1, 1, 1, 1, 50>, layout>(50, 1, 1, 1, 1, 1, 1, 50);
+  // clang-format on
   return result;
 }
 
 template <typename dim_t, typename viewDim, typename layout,
           typename allow_padding, typename... Vals>
-std::enable_if_t<std::is_same<allow_padding, std::true_type>::value, bool>
-padding_construction(Vals... params) {
+bool padding_construction(Vals... params) {
   constexpr int rank = sizeof...(params);
   using view_t       = Kokkos::View<dim_t, layout>;
   using offset_t     = Kokkos::Impl::ViewOffset<viewDim, layout, void>;
-  using use_padding  = std::bool_constant<
+
+  using use_padding = std::bool_constant<
       allow_padding() &&
       !std::is_same<layout, typename Kokkos::LayoutStride>::value>;
   using padding =
       std::integral_constant<unsigned int,
                              use_padding::value ? sizeof(DType) : 0>;
   offset_t offset = offset_t(padding(), layout(params...));
-  auto alloc_prop =
-      Kokkos::view_alloc("vDim" + std::to_string(rank), Kokkos::AllowPadding);
 
-  view_t v(alloc_prop, params...);
-  return TEST_VIEW_OFFSET_STRIDES(v, offset, rank) ? true : false;
-}
-
-template <typename dim_t, typename viewDim, typename layout,
-          typename allow_padding, typename... Vals>
-std::enable_if_t<std::is_same<allow_padding, std::false_type>::value, bool>
-padding_construction(Vals... params) {
-  constexpr int rank = sizeof...(params);
-  using view_t       = Kokkos::View<dim_t, layout>;
-  using offset_t     = Kokkos::Impl::ViewOffset<viewDim, layout, void>;
-  using use_padding  = allow_padding;
-  using padding =
-      std::integral_constant<unsigned int,
-                             use_padding::value ? sizeof(DType) : 0>;
-  offset_t offset = offset_t(padding(), layout(params...));
-  auto alloc_prop = Kokkos::view_alloc("vDim" + std::to_string(rank));
-  view_t v(alloc_prop, params...);
-  return TEST_VIEW_OFFSET_STRIDES(v, offset, rank);
+  if constexpr (std::is_same_v<allow_padding, std::true_type>) {
+    auto alloc_prop =
+        Kokkos::view_alloc("vDim" + std::to_string(rank), Kokkos::AllowPadding);
+    view_t v(alloc_prop, params...);
+    return test_view_offset_strides(v, offset, rank);
+  } else {
+    auto alloc_prop = Kokkos::view_alloc("vDim" + std::to_string(rank));
+    view_t v(alloc_prop, params...);
+    return test_view_offset_strides(v, offset, rank);
+  }
 }
 
 template <typename layout, typename allow_padding>
 bool padding_construction_helper() {
   auto result = true;
-  result &= padding_construction<DType_0, Kokkos::Impl::ViewDimension<ARG_0>,
-                                 layout, allow_padding>(PARAM_0);
-  result &= padding_construction<DType_1, Kokkos::Impl::ViewDimension<ARG_1>,
-                                 layout, allow_padding>(PARAM_1);
-  result &= padding_construction<DType_2, Kokkos::Impl::ViewDimension<ARG_2>,
-                                 layout, allow_padding>(PARAM_2);
-  result &= padding_construction<DType_3, Kokkos::Impl::ViewDimension<ARG_3>,
-                                 layout, allow_padding>(PARAM_3);
-  result &= padding_construction<DType_4, Kokkos::Impl::ViewDimension<ARG_4>,
-                                 layout, allow_padding>(PARAM_4);
-  result &= padding_construction<DType_5, Kokkos::Impl::ViewDimension<ARG_5>,
-                                 layout, allow_padding>(PARAM_5);
-  result &= padding_construction<DType_6, Kokkos::Impl::ViewDimension<ARG_6>,
-                                 layout, allow_padding>(PARAM_6);
-  result &= padding_construction<DType_7, Kokkos::Impl::ViewDimension<ARG_7>,
-                                 layout, allow_padding>(PARAM_7);
+  // clang-format off
+  result &= padding_construction<DType_0, Kokkos::Impl::ViewDimension<>,                         layout, allow_padding>();
+  result &= padding_construction<DType_1, Kokkos::Impl::ViewDimension<0>,                        layout, allow_padding>(50);
+  result &= padding_construction<DType_2, Kokkos::Impl::ViewDimension<50, 0>,                    layout, allow_padding>(50, 50);
+  result &= padding_construction<DType_3, Kokkos::Impl::ViewDimension<50, 0, 50>,                layout, allow_padding>(50, 1, 50);
+  result &= padding_construction<DType_4, Kokkos::Impl::ViewDimension<50, 1, 0, 50>,             layout, allow_padding>(50, 1, 1, 50);
+  result &= padding_construction<DType_5, Kokkos::Impl::ViewDimension<50, 1, 0, 1, 50>,          layout, allow_padding>(50, 1, 1, 1, 50);
+  result &= padding_construction<DType_6, Kokkos::Impl::ViewDimension<50, 1, 0, 1, 1, 50>,       layout, allow_padding>(50, 1, 1, 1, 1, 50);
+  result &= padding_construction<DType_7, Kokkos::Impl::ViewDimension<50, 1, 0, 1, 1, 1, 50>,    layout, allow_padding>(50, 1, 1, 1, 1, 1, 50);
+  result &= padding_construction<DType_8, Kokkos::Impl::ViewDimension<50, 1, 0, 1, 1, 1, 1, 50>, layout, allow_padding>(50, 1, 1, 1, 1, 1, 1, 50);
+  // clang-format on
   return result;
 }
 
@@ -250,7 +182,7 @@ bool padding_assignment_and_copy(Vals... params) {
   view_t v(alloc_prop, params...);
   deep_copy(v, 1);
   auto v_mirror = Kokkos::create_mirror_view(v);
-  result &= TEST_VIEW_STRIDES(v_mirror, v, rank);
+  result &= test_view_strides(v_mirror, v, rank);
 
   /*deep_copy should support strided views if stride from padding*/
   Kokkos::deep_copy(v_mirror, v);
@@ -260,243 +192,114 @@ bool padding_assignment_and_copy(Vals... params) {
 template <typename layout>
 bool padding_assignment_and_copy_helper() {
   auto result = true;
-  result &= padding_assignment_and_copy<VIEW_T<DType_0, layout>>(PARAM_0);
-  result &= padding_assignment_and_copy<VIEW_T<DType_1, layout>>(PARAM_1);
-  result &= padding_assignment_and_copy<VIEW_T<DType_2, layout>>(PARAM_2);
-  result &= padding_assignment_and_copy<VIEW_T<DType_3, layout>>(PARAM_3);
-  result &= padding_assignment_and_copy<VIEW_T<DType_4, layout>>(PARAM_4);
-  result &= padding_assignment_and_copy<VIEW_T<DType_5, layout>>(PARAM_5);
-  result &= padding_assignment_and_copy<VIEW_T<DType_6, layout>>(PARAM_6);
-  result &= padding_assignment_and_copy<VIEW_T<DType_7, layout>>(PARAM_7);
+  // clang-format off
+  result &= padding_assignment_and_copy<Kokkos::View<DType_0, layout>>();
+  result &= padding_assignment_and_copy<Kokkos::View<DType_1, layout>>(50);
+  result &= padding_assignment_and_copy<Kokkos::View<DType_2, layout>>(50, 50);
+  result &= padding_assignment_and_copy<Kokkos::View<DType_3, layout>>(50, 1, 50);
+  result &= padding_assignment_and_copy<Kokkos::View<DType_4, layout>>(50, 1, 1, 50);
+  result &= padding_assignment_and_copy<Kokkos::View<DType_5, layout>>(50, 1, 1,1, 50);
+  result &= padding_assignment_and_copy<Kokkos::View<DType_6, layout>>(50, 1, 1, 1, 1, 50);
+  result &= padding_assignment_and_copy<Kokkos::View<DType_7, layout>>(50, 1, 1, 1, 1, 1, 50);
+  result &= padding_assignment_and_copy<Kokkos::View<DType_8, layout>>(50, 1, 1, 1, 1, 1, 1, 50);
+  // clang-format off
   return result;
 }
 
-template <typename dim_t, typename layout, typename viewDim>
-auto get_subview(
-    Kokkos::View<dim_t, layout> &view,
-    [[maybe_unused]] typename std::enable_if_t<
-        std::is_same<viewDim, Kokkos::Impl::ViewDimension<ARG_0>>::value, void>
-        *ptr = nullptr) {
-  return Kokkos::subview(view, 0);
+template <typename dim_t, typename layout, typename... all_types>
+auto get_subview_helper(Kokkos::View<dim_t, layout> &view,
+                        std::tuple<all_types...>) {
+  auto pair = pair_t(20, 30);
+  return Kokkos::subview(view, pair, all_types{}...);
 }
+
+template <int Rank>
+struct SubViewArgumentTuple {
+  using type =
+      decltype(std::tuple_cat(typename SubViewArgumentTuple<Rank - 1>::type{},
+                              std::tuple<Kokkos::Impl::ALL_t>{}));
+};
+
+template <>
+struct SubViewArgumentTuple<1> {
+  using type = std::tuple<>;
+};
 
 template <typename dim_t, typename layout, typename viewDim>
-auto get_subview(
-    Kokkos::View<dim_t, layout> &view,
-    [[maybe_unused]] typename std::enable_if_t<
-        std::is_same<viewDim, Kokkos::Impl::ViewDimension<ARG_1>>::value, void>
-        *ptr = nullptr) {
-  auto pair = pair_t(SUBRANGE_DIM);
-  return Kokkos::subview(view, pair);
-}
-
-template <typename dim_t, typename layout, typename viewDim>
-auto get_subview(
-    Kokkos::View<dim_t, layout> &view,
-    [[maybe_unused]] typename std::enable_if_t<
-        std::is_same<viewDim, Kokkos::Impl::ViewDimension<ARG_2>>::value, void>
-        *ptr = nullptr) {
-  auto pair = pair_t(SUBRANGE_DIM);
-  return Kokkos::subview(view, pair, Kokkos::ALL);
-}
-
-template <typename dim_t, typename layout, typename viewDim>
-auto get_subview(
-    Kokkos::View<dim_t, layout> &view,
-    [[maybe_unused]] typename std::enable_if_t<
-        std::is_same<viewDim, Kokkos::Impl::ViewDimension<ARG_3>>::value, void>
-        *ptr = nullptr) {
-  auto pair = pair_t(SUBRANGE_DIM);
-  return Kokkos::subview(view, pair, Kokkos::ALL, Kokkos::ALL);
-}
-
-template <typename dim_t, typename layout, typename viewDim>
-auto get_subview(
-    Kokkos::View<dim_t, layout> &view,
-    [[maybe_unused]] typename std::enable_if_t<
-        std::is_same<viewDim, Kokkos::Impl::ViewDimension<ARG_4>>::value, void>
-        *ptr = nullptr) {
-  auto pair = pair_t(SUBRANGE_DIM);
-  return Kokkos::subview(view, pair, Kokkos::ALL, Kokkos::ALL, Kokkos::ALL);
-}
-
-template <typename dim_t, typename layout, typename viewDim>
-auto get_subview(
-    Kokkos::View<dim_t, layout> &view,
-    [[maybe_unused]] typename std::enable_if_t<
-        std::is_same<viewDim, Kokkos::Impl::ViewDimension<ARG_5>>::value, void>
-        *ptr = nullptr) {
-  auto pair = pair_t(SUBRANGE_DIM);
-  return Kokkos::subview(view, pair, Kokkos::ALL, Kokkos::ALL, Kokkos::ALL,
-                         Kokkos::ALL);
-}
-
-template <typename dim_t, typename layout, typename viewDim>
-auto get_subview(
-    Kokkos::View<dim_t, layout> &view,
-    [[maybe_unused]] typename std::enable_if_t<
-        std::is_same<viewDim, Kokkos::Impl::ViewDimension<ARG_6>>::value, void>
-        *ptr = nullptr) {
-  auto pair = pair_t(SUBRANGE_DIM);
-  return Kokkos::subview(view, pair, Kokkos::ALL, Kokkos::ALL, Kokkos::ALL,
-                         Kokkos::ALL, Kokkos::ALL);
-}
-
-template <typename dim_t, typename layout, typename viewDim>
-auto get_subview(
-    Kokkos::View<dim_t, layout> &view,
-    [[maybe_unused]] typename std::enable_if_t<
-        std::is_same<viewDim, Kokkos::Impl::ViewDimension<ARG_7>>::value, void>
-        *ptr = nullptr) {
-  auto pair = pair_t(SUBRANGE_DIM);
-  return Kokkos::subview(view, pair, Kokkos::ALL, Kokkos::ALL, Kokkos::ALL,
-                         Kokkos::ALL, Kokkos::ALL, Kokkos::ALL);
-}
-
-template <typename dim_t, typename viewDim, typename layout, typename... Vals>
-typename std::enable_if_t<
-    std::is_same<viewDim, Kokkos::Impl::ViewDimension<ARG_0>>::value ||
-        std::is_same<viewDim, Kokkos::Impl::ViewDimension<ARG_1>>::value,
-    bool>
-padding_subview_and_copy(Vals... params) {
-  constexpr int rank = sizeof...(params);
-  bool result        = true;
-  using view_t       = Kokkos::View<dim_t, layout>;
-  auto alloc_prop =
-      Kokkos::view_alloc("vDim" + std::to_string(rank), Kokkos::AllowPadding);
-  view_t v(alloc_prop, params...);
-  auto v_sub        = get_subview<dim_t, layout, viewDim>(v);
-  auto v_sub_mirror = Kokkos::create_mirror_view(v_sub);
-  result &= TEST_VIEW_STRIDES(v, v_sub, rank);
-  /* We never pad for rank 0 and rank 1 and for LR && dyn_rank > 1 */
-  result &= TEST_VIEW_STRIDES(v_sub, v_sub_mirror, rank);
-  return result;
-}
-
-template <typename dim_t, typename viewDim, typename layout, typename... Vals>
-std::enable_if_t<
-    !std::is_same<viewDim, Kokkos::Impl::ViewDimension<ARG_0>>::value &&
-        !std::is_same<viewDim, Kokkos::Impl::ViewDimension<ARG_1>>::value,
-    bool>
-padding_subview_and_copy(Vals... params) {
-  constexpr int rank = sizeof...(params);
-  bool result        = true;
-  using view_t       = Kokkos::View<dim_t, layout>;
-  auto alloc_prop =
-      Kokkos::view_alloc("vDim" + std::to_string(rank), Kokkos::AllowPadding);
-  view_t v(alloc_prop, params...);
-  auto v_sub        = get_subview<dim_t, layout, viewDim>(v);
-  auto v_sub_mirror = Kokkos::create_mirror_view(v_sub);
-  result &= TEST_VIEW_STRIDES(v, v_sub, rank);
-  if (v_sub_mirror.span_is_contiguous())
-    result &= !(TEST_VIEW_STRIDES(v_sub, v_sub_mirror, rank));
+auto get_subview(Kokkos::View<dim_t, layout> &view) {
+  if constexpr (std::is_same_v<viewDim, Kokkos::Impl::ViewDimension<>>)
+    return Kokkos::subview(view, 0);
   else
-    result &= TEST_VIEW_STRIDES(v_sub, v_sub_mirror, rank);
+    return get_subview_helper(
+        view, typename SubViewArgumentTuple<viewDim::rank>::type{});
+}
+
+template <typename dim_t, typename viewDim, typename layout, typename... Vals>
+bool padding_subview_and_copy(Vals... params) {
+  constexpr int rank = sizeof...(params);
+  bool result        = true;
+  using view_t       = Kokkos::View<dim_t, layout>;
+  auto alloc_prop =
+      Kokkos::view_alloc("vDim" + std::to_string(rank), Kokkos::AllowPadding);
+  view_t v(alloc_prop, params...);
+  auto v_sub        = get_subview<dim_t, layout, viewDim>(v);
+  auto v_sub_mirror = Kokkos::create_mirror_view(v_sub);
+  result &= test_view_strides(v, v_sub, rank);
+
+  /* We never pad for rank 0 and rank 1 and for LR && dyn_rank > 1 */
+  if constexpr (std::is_same_v<viewDim, Kokkos::Impl::ViewDimension<>> ||
+                std::is_same_v<viewDim, Kokkos::Impl::ViewDimension<0>>)
+    result &= test_view_strides(v_sub, v_sub_mirror, rank);
+  else {
+    if (v_sub_mirror.span_is_contiguous())
+      result &= !(test_view_strides(v_sub, v_sub_mirror, rank));
+    else
+      result &= test_view_strides(v_sub, v_sub_mirror, rank);
+  }
   return result;
 }
 
 template <typename layout>
 bool padding_subview_and_copy_helper() {
   auto result = true;
-
-  result &=
-      padding_subview_and_copy<DType_1, Kokkos::Impl::ViewDimension<ARG_1>,
-                               layout>(PARAM_1);
-  result &=
-      padding_subview_and_copy<DType_2, Kokkos::Impl::ViewDimension<ARG_2>,
-                               layout>(PARAM_2);
-  result &=
-      padding_subview_and_copy<DType_3, Kokkos::Impl::ViewDimension<ARG_3>,
-                               layout>(PARAM_3);
-  result &=
-      padding_subview_and_copy<DType_4, Kokkos::Impl::ViewDimension<ARG_4>,
-                               layout>(PARAM_4);
-  result &=
-      padding_subview_and_copy<DType_5, Kokkos::Impl::ViewDimension<ARG_5>,
-                               layout>(PARAM_5);
-  result &=
-      padding_subview_and_copy<DType_6, Kokkos::Impl::ViewDimension<ARG_6>,
-                               layout>(PARAM_6);
-  result &=
-      padding_subview_and_copy<DType_7, Kokkos::Impl::ViewDimension<ARG_7>,
-                               layout>(PARAM_7);
+  // clang-format off
+  result &= padding_subview_and_copy<DType_1, Kokkos::Impl::ViewDimension<0>,                        layout>(50);
+  result &= padding_subview_and_copy<DType_2, Kokkos::Impl::ViewDimension<50, 0>,                    layout>(50, 50);
+  result &= padding_subview_and_copy<DType_3, Kokkos::Impl::ViewDimension<50, 0, 50>,                layout>(50, 1, 50);
+  result &= padding_subview_and_copy<DType_4, Kokkos::Impl::ViewDimension<50, 1, 0, 50>,             layout>(50, 1, 1, 50);
+  result &= padding_subview_and_copy<DType_5, Kokkos::Impl::ViewDimension<50, 1, 0, 1, 50>,          layout>(50, 1, 1, 1, 50);
+  result &= padding_subview_and_copy<DType_6, Kokkos::Impl::ViewDimension<50, 1, 0, 1, 1, 50>,       layout>(50, 1, 1, 1, 1, 50);
+  result &= padding_subview_and_copy<DType_7, Kokkos::Impl::ViewDimension<50, 1, 0, 1, 1, 1, 50>,    layout>(50, 1, 1, 1, 1, 1, 50);
+  result &= padding_subview_and_copy<DType_8, Kokkos::Impl::ViewDimension<50, 1, 0, 1, 1, 1, 1, 50>, layout>(50, 1, 1, 1, 1, 1, 1, 50);
+  // clang-format on
   return result;
 }
 
 TEST(TEST_CATEGORY, padding_has_effect) {
-  auto result = true;
-  result &= padding_has_effect_helper<Kokkos::LayoutLeft>();
-  ASSERT_TRUE(result);
-  result &= padding_has_effect_helper<Kokkos::LayoutRight>();
-  ASSERT_TRUE(result);
+  ASSERT_TRUE(padding_has_effect_helper<Kokkos::LayoutLeft>());
+  ASSERT_TRUE(padding_has_effect_helper<Kokkos::LayoutRight>());
 }
 
 TEST(TEST_CATEGORY, view_with_padding_construction) {
   /*Test correct propagation of Padding through View construction*/
-  auto result  = true;
   using pad    = std::true_type;
   using no_pad = std::false_type;
-  result &= padding_construction_helper<Kokkos::LayoutLeft, pad>();
-  ASSERT_TRUE(result);
-  result &= padding_construction_helper<Kokkos::LayoutLeft, no_pad>();
-  ASSERT_TRUE(result);
-  result &= padding_construction_helper<Kokkos::LayoutRight, pad>();
-  ASSERT_TRUE(result);
-  result &= padding_construction_helper<Kokkos::LayoutRight, no_pad>();
-  ASSERT_TRUE(result);
-
-  // Padding is not allowed for LayoutStride
-  // using ls = Kokkos::LayoutStride;
+  ASSERT_TRUE((padding_construction_helper<Kokkos::LayoutLeft, pad>()));
+  ASSERT_TRUE((padding_construction_helper<Kokkos::LayoutLeft, no_pad>()));
+  ASSERT_TRUE((padding_construction_helper<Kokkos::LayoutRight, pad>()));
+  ASSERT_TRUE((padding_construction_helper<Kokkos::LayoutRight, no_pad>()));
 }
 
 TEST(TEST_CATEGORY, view_with_padding_assignements) {
   /*Test correct propagation in view assignements*/
-  auto result = true;
-  result &= padding_assignment_and_copy_helper<Kokkos::LayoutLeft>();
-  ASSERT_TRUE(result);
-  result &= padding_assignment_and_copy_helper<Kokkos::LayoutRight>();
-  ASSERT_TRUE(result);
-
-  // Padding is not allowed for LayoutStride
-  // using ls = Kokkos::LayoutStride;
+  ASSERT_TRUE(padding_assignment_and_copy_helper<Kokkos::LayoutLeft>());
+  ASSERT_TRUE(padding_assignment_and_copy_helper<Kokkos::LayoutRight>());
 }
 
 TEST(TEST_CATEGORY, view_with_padding_copying) {
   /*Test correct copy semantic when copying padded views*/
-  auto result = true;
-  result &= padding_subview_and_copy_helper<Kokkos::LayoutLeft>();
-  ASSERT_TRUE(result);
-  result &= padding_subview_and_copy_helper<Kokkos::LayoutRight>();
-  ASSERT_TRUE(result);
-
-  // Padding is not allowed for LayoutStride
-  // using ls = Kokkos::LayoutStride;
+  ASSERT_TRUE(padding_subview_and_copy_helper<Kokkos::LayoutLeft>());
+  ASSERT_TRUE(padding_subview_and_copy_helper<Kokkos::LayoutRight>());
 }
-
-#undef SUBRANGE_DIM
-#undef ZERO
-
-#undef ARG_0
-#undef ARG_1
-#undef ARG_2
-#undef ARG_3
-#undef ARG_4
-#undef ARG_5
-#undef ARG_6
-#undef ARG_7
-
-#undef PARAM_0
-#undef PARAM_1
-#undef PARAM_2
-#undef PARAM_3
-#undef PARAM_4
-#undef PARAM_5
-#undef PARAM_6
-#undef PARAM_7
-
-#undef TEST_VIEW_OFFSET_STRIDES
-#undef TEST_VIEW_STRIDES
-
-#undef VIEW_T
 
 }  // namespace Test
