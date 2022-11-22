@@ -79,6 +79,7 @@ SET(COMPILE_ONLY_SOURCES
   TestStringManipulation.cpp
   TestViewTypeTraits.cpp
   TestTypeList.cpp
+  view/TestExtentsDatatypeConversion.cpp
 )
 
 #testing if windows.h and Kokkos_Core.hpp can be included

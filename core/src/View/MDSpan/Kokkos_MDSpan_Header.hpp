@@ -42,52 +42,21 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_UNITTEST_MDSPAN_HPP
-#define KOKKOS_UNITTEST_MDSPAN_HPP
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+static_assert(false,
+              "Including non-public Kokkos header files is not allowed.");
+#endif
 
-#include <Kokkos_Core.hpp>
-#include <gtest/gtest.h>
+#ifndef KOKKOS_EXPERIMENTAL_MDSPAN_HPP
+#define KOKKOS_EXPERIMENTAL_MDSPAN_HPP
 
-#ifdef KOKKOS_ENABLE_IMPL_MDSPAN
-
-namespace {
-void test_mdspan_minimal_functional() {
-  int N = 100;
-  Kokkos::View<int*, TEST_EXECSPACE> a("A", N);
-  Kokkos::parallel_for(
-      "FillSequence", Kokkos::RangePolicy<TEST_EXECSPACE>(0, N),
-      KOKKOS_LAMBDA(int i) { a(i) = i; });
-
-  mdspan_ns::mdspan<int, mdspan_ns::dextents<int, 1>> a_mds(a.data(), N);
-  int errors;
-  Kokkos::parallel_reduce(
-      "CheckMinimalMDSpan", Kokkos::RangePolicy<TEST_EXECSPACE>(0, N),
-      KOKKOS_LAMBDA(int i, int& err) {
-        mdspan_ns::mdspan<int, mdspan_ns::dextents<int, 1>> b_mds(a.data(), N);
-#ifdef KOKKOS_ENABLE_CXX23
-        if (a_mds[i] != i) err++;
-        if (b_mds[i] != i) err++;
+// Look for the right mdspan
+#if __has_include(<mdspan>)
+#include <mdspan>
+namespace mdspan_ns = std;
 #else
-        if (a_mds(i) != i) err++;
-        if (b_mds(i) != i) err++;
-#endif
-      },
-      errors);
-  ASSERT_EQ(errors, 0);
-}
-}  // namespace
+#include <experimental/mdspan>
+namespace mdspan_ns = std::experimental;
 #endif
 
-namespace {
-
-TEST(TEST_CATEGORY, mdspan_minimal_functional) {
-#ifndef KOKKOS_ENABLE_IMPL_MDSPAN
-  GTEST_SKIP() << "mdspan not enabled";
-#else
-  test_mdspan_minimal_functional();
-#endif
-}
-
-}  // namespace
-
-#endif
+#endif  // KOKKOS_EXPERIMENTAL_MDSPAN_HPP
