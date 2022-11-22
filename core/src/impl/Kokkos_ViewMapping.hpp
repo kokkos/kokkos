@@ -2924,8 +2924,8 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
         n(arg_n),
         name(std::move(arg_name)),
         default_exec_space(false) {
-          functor_instantiate_workaround();
-        }
+    functor_instantiate_workaround();
+  }
 
   ViewValueFunctor(ValueType* const arg_ptr, size_t const arg_n,
                    std::string arg_name)
@@ -2934,8 +2934,8 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
         n(arg_n),
         name(std::move(arg_name)),
         default_exec_space(true) {
-          functor_instantiate_workaround();
-        }
+    functor_instantiate_workaround();
+  }
 
   template <typename Dummy = ValueType>
   std::enable_if_t<std::is_trivial<Dummy>::value &&
