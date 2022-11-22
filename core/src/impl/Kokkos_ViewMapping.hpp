@@ -2976,13 +2976,6 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
   std::enable_if_t<!(std::is_trivial<Dummy>::value &&
                      std::is_trivially_copy_assignable<ValueType>::value)>
   construct_dispatch() {
-    if (false) {
-      // To ensure that the functor with this tag is instantiated
-      // This is to avoid "cudaErrorInvalidDeviceFunction" error later
-      // when this function is queried with cudaFuncGetAttributes
-      parallel_for_implementation<DestroyTag>();
-    }
-
     parallel_for_implementation<ConstructTag>();
   }
 
@@ -3022,7 +3015,15 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
     }
   }
 
-  void construct_shared_allocation() { construct_dispatch(); }
+  void construct_shared_allocation() {
+    if (false) {
+      // To ensure that the functor with this tag is instantiated
+      // This is to avoid "cudaErrorInvalidDeviceFunction" error later
+      // when this function is queried with cudaFuncGetAttributes
+      parallel_for_implementation<DestroyTag>();
+    }
+    construct_dispatch();
+  }
 
   void destroy_shared_allocation() {
     parallel_for_implementation<DestroyTag>();
