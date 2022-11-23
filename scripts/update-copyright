@@ -9,6 +9,8 @@ for file in $files; do
   if [ "$count" -eq "0" ]; then
     echo $file >> clean_files
     cat header_diff >> clean_files
+    { head -n 15 ${HOME}/Kokkos/kokkos/LICENSE_FILE_HEADER; tail -n +44 $file; } > tmp
+    cp tmp $file
   else
     echo $file >> diff_files
     #cat header_diff >> diff_files
