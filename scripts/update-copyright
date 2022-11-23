@@ -1,22 +1,27 @@
-files=`find . -path './tpls' -prune -o -name '*.cpp' -o -name '*.pc.in' -o -name '*.hpp' -o -name 'LICENSE' -o -name 'Copyright.txt' -o -name '*.cc'`
+files=`find . -path './tpls' -prune -o -name '*.cpp' -o -name '*.pc.in' -o -name '*.hpp' -o -name '*.cc'`
 echo "" &> diff_files
 echo "" &> clean_files
+echo "" &> updated_files
 for file in $files; do
-  head -n +43 $file > header
-  diff header ${HOME}/Kokkos/kokkos/scripts/old_header &> header_diff
-  count=`cat header_diff | wc -l`
+  head -n +43 $file &> header
+  diff header ${HOME}/Kokkos/kokkos/scripts/old_header &> old_header_diff
+  count=`cat old_header_diff | wc -l`
   #echo $file " " COUNT " " $count >> diff_headers
   if [ "$count" -eq "0" ]; then
     echo $file >> clean_files
-    cat header_diff >> clean_files
-    { head -n 15 ${HOME}/Kokkos/kokkos/LICENSE_FILE_HEADER; tail -n +44 $file; } > tmp
+    cat old_header_diff >> clean_files
+    { head -n 15 ${HOME}/Kokkos/kokkos/scripts/new_header; tail -n +44 $file; } > tmp
     cp tmp $file
   else
-    echo $file >> diff_files
-    #cat header_diff >> diff_files
-    tr -d '\n' < diff_files  | sed 's|\.\/| |g' &> modify_files
+    head -n +15 $file &> header
+    diff header ${HOME}/Kokkos/kokkos/scripts/new_header &> new_header_diff  
+    count=`cat new_header_diff | wc -l`
+    if [ "$count" -eq "0" ]; then  
+      echo $file >> updated_files
+    else
+      echo $file >> diff_files
+      #cat header_diff >> diff_files
+      tr -d '\n' < diff_files  | sed 's|\.\/| |g' &> modify_files
+    fi
   fi
-  #diff header ${HOME}/Kokkos/kokkos/scripts/old_header >> diff_headers
-  #{ head -n 15 ${HOME}/Kokkos/kokkos/LICENSE_FILE_HEADER; tail -n +44 $file; } > tmp
-  #cp tmp $file
 done
