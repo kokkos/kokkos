@@ -2,8 +2,8 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 3.5
-//       Copyright (2022) National Technology & Engineering
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
 //               Solutions of Sandia, LLC (NTESS).
 //
 // Under the terms of Contract DE-NA0003525 with NTESS,

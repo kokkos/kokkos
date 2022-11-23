@@ -3,7 +3,7 @@
 // ************************************************************************
 //
 //                        Kokkos v. 3.0
-//       Copyright (12/8/20) National Technology & Engineering
+//       Copyright (2020) National Technology & Engineering
 //               Solutions of Sandia, LLC (NTESS).
 //
 // Under the terms of Contract DE-NA0003525 with NTESS,

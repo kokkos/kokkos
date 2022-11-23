@@ -1,3 +1,4 @@
+/*
 //@HEADER
 // ************************************************************************
 //
@@ -39,6 +40,7 @@
 //
 // ************************************************************************
 //@HEADER
+*/
 
 #ifndef KOKKOS_TEST_UNORDERED_MAP_PERFORMANCE_HPP
 #define KOKKOS_TEST_UNORDERED_MAP_PERFORMANCE_HPP
