@@ -1,0 +1,11 @@
+files=`find . -path './tpls' -prune -o -name '*.cpp' -o -name '*.pc.in' -o -name '*.hpp' -o -name '*.cc'`
+echo "" &> scripts/diff_files
+for file in $files; do
+  head -n +15 $file &> header
+  diff header ${HOME}/Kokkos/kokkos/LICENSE_FILE_HEADER &> header_diff
+  count=`cat header_diff | wc -l`
+  #echo $file " " COUNT " " $count >> diff_headers
+  if [ "$count" -ne "0" ]; then
+    echo $file >> scripts/diff_files
+  fi
+done
