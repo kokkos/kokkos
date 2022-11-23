@@ -2,19 +2,24 @@ files=`find . -path './tpls' -prune -o -name '*.cpp' -o -name '*.pc.in' -o -name
 echo "" &> diff_files
 echo "" &> clean_files
 echo "" &> updated_files
+tmp=`cat scripts/new_header | wc -l`
+NNEW=$(($tmp))
+tmp=`cat scripts/old_header | wc -l`
+NOLD=$(($tmp))
+NOLD1=$(($NOLD+1))
 for file in $files; do
-  head -n +43 $file &> header
-  diff header ${HOME}/Kokkos/kokkos/scripts/old_header &> old_header_diff
+  head -n +$NOLD $file &> header
+  diff header scripts/old_header &> old_header_diff
   count=`cat old_header_diff | wc -l`
   #echo $file " " COUNT " " $count >> diff_headers
   if [ "$count" -eq "0" ]; then
     echo $file >> clean_files
     cat old_header_diff >> clean_files
-    { head -n 15 ${HOME}/Kokkos/kokkos/scripts/new_header; tail -n +44 $file; } > tmp
+    { head -n +$NNEW scripts/new_header; tail -n +$NOLD1 $file; } > tmp
     cp tmp $file
   else
-    head -n +15 $file &> header
-    diff header ${HOME}/Kokkos/kokkos/scripts/new_header &> new_header_diff  
+    head -n +$NNEW $file &> header
+    diff header scripts/new_header &> new_header_diff  
     count=`cat new_header_diff | wc -l`
     if [ "$count" -eq "0" ]; then  
       echo $file >> updated_files
