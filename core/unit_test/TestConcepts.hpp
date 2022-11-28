@@ -297,6 +297,15 @@ struct InvalidTeamMember15 {
   a1() a2() m1() m2() m3() m4() m5() m6() m7() m8() m9() m10() m11() m12()
 };
 
+/*
+  disabling as follows:
+
+  - OpenMPTARGET: due to this
+    https://github.com/kokkos/kokkos/blob/2d6cbad7e079eb45ae69ac6a59929d9fcf10409a/core/src/OpenMPTarget/Kokkos_OpenMPTarget_Exec.hpp#L860
+
+    - OpenACC: not supporting teams yet
+   */
+#if not defined KOKKOS_ENABLE_OPENMPTARGET && not defined KOKKOS_ENABLE_OPENMACC
 using space_t  = TEST_EXECSPACE;
 using policy_t = Kokkos::TeamPolicy<space_t>;
 using member_t = typename policy_t::member_type;
@@ -320,6 +329,7 @@ static_assert(!is_team_handle_complete_trait_check_v<member_t const &>);
 static_assert(!is_team_handle_complete_trait_check_v<member_t *>);
 static_assert(!is_team_handle_complete_trait_check_v<member_t const *>);
 static_assert(!is_team_handle_complete_trait_check_v<member_t *const>);
+#endif
 
 // the following use a custom struct defined above
 static_assert(Kokkos::is_team_handle_v<ValidTeamMember>);
