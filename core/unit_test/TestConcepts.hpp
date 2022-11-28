@@ -305,7 +305,7 @@ struct InvalidTeamMember15 {
 
     - OpenACC: not supporting teams yet
    */
-#if not defined KOKKOS_ENABLE_OPENMPTARGET && not defined KOKKOS_ENABLE_OPENMACC
+#if not defined KOKKOS_ENABLE_OPENMPTARGET && not defined KOKKOS_ENABLE_OPENACC
 using space_t  = TEST_EXECSPACE;
 using policy_t = Kokkos::TeamPolicy<space_t>;
 using member_t = typename policy_t::member_type;
