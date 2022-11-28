@@ -35,6 +35,7 @@ class SYCLTeamMember {
  public:
   using execution_space      = Kokkos::Experimental::SYCL;
   using scratch_memory_space = execution_space::scratch_memory_space;
+  using team_handle          = SYCLTeamMember;
 
  private:
   mutable sycl::local_ptr<void> m_team_reduce;

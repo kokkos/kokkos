@@ -392,6 +392,7 @@ class HostThreadTeamMember {
   using execution_space         = HostExecSpace;
   using thread_team_member      = HostThreadTeamMember;
   using host_thread_team_member = HostThreadTeamMember;
+  using team_handle             = HostThreadTeamMember;
 
  private:
   scratch_memory_space m_scratch;

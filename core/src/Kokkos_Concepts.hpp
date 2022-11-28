@@ -151,117 +151,11 @@ KOKKOS_IMPL_IS_CONCEPT(execution_space)
 KOKKOS_IMPL_IS_CONCEPT(execution_policy)
 KOKKOS_IMPL_IS_CONCEPT(array_layout)
 KOKKOS_IMPL_IS_CONCEPT(reducer)
+KOKKOS_IMPL_IS_CONCEPT(team_handle)
 namespace Experimental {
 KOKKOS_IMPL_IS_CONCEPT(work_item_property)
 KOKKOS_IMPL_IS_CONCEPT(hooks_policy)
 }  // namespace Experimental
-
-//
-// is_team_handle
-// - based on
-// https://kokkos.github.io/kokkos-core-wiki/API/core/policies/TeamHandleConcept.html
-//
-template <typename T>
-struct is_team_handle {
- private:
-  struct TrivialFunctor {
-    void operator()(double &) {}
-  };
-  using test_value_type = double;
-  test_value_type lvalueForMethodsNeedingIt_;
-  test_value_type *ptrForMethodsNeedingIt_;
-  // we use Sum here but any other reducer can be used
-  // since we just want something that meets the ReducerConcept
-  using reduction_to_test_t = ::Kokkos::Sum<test_value_type>;
-
-  // nested aliases
-  template <class U>
-  using ExecutionSpaceArchetypeAlias = typename U::execution_space;
-  template <class U>
-  using ScratchMemorySpaceArchetypeAlias = typename U::scratch_memory_space;
-
-  // "indices" methods
-  template <class U>
-  using TeamRankArchetypeExpr = decltype(std::declval<U const &>().team_rank());
-
-  template <class U>
-  using TeamSizeArchetypeExpr = decltype(std::declval<U const &>().team_size());
-
-  template <class U>
-  using LeagueRankArchetypeExpr =
-      decltype(std::declval<U const &>().league_rank());
-
-  template <class U>
-  using LeagueSizeArchetypeExpr =
-      decltype(std::declval<U const &>().league_size());
-
-  // scratch space
-  template <class U>
-  using TeamShmemArchetypeExpr =
-      decltype(std::declval<U const &>().team_shmem());
-
-  template <class U>
-  using TeamScratchArchetypeExpr =
-      decltype(std::declval<U const &>().team_scratch(int{}));
-
-  template <class U>
-  using ThreadScracthArchetypeExpr =
-      decltype(std::declval<U const &>().thread_scratch(int{}));
-
-  // collectives
-  template <class U>
-  using TeamBarrierArchetypeExpr =
-      decltype(std::declval<U const &>().team_barrier());
-
-  template <class U>
-  using TeamBroadcastArchetypeExpr =
-      decltype(std::declval<U const &>().team_broadcast(
-          lvalueForMethodsNeedingIt_, int{}));
-
-  template <class U>
-  using TeamBroadcastAcceptClosureArchetypeExpr =
-      decltype(std::declval<U const &>().team_broadcast(
-          TrivialFunctor{}, lvalueForMethodsNeedingIt_, int{}));
-
-  template <class U>
-  using TeamReducedArchetypeExpr =
-      decltype(std::declval<U const &>().team_reduce(
-          std::declval<reduction_to_test_t>()));
-
-  template <class U>
-  using TeamScanArchetypeExpr = decltype(std::declval<U const &>().team_scan(
-      lvalueForMethodsNeedingIt_, ptrForMethodsNeedingIt_));
-
- public:
-  static constexpr bool value =
-      is_detected_v<ExecutionSpaceArchetypeAlias, T> &&
-      is_detected_v<ScratchMemorySpaceArchetypeAlias, T> &&
-      //
-      is_detected_exact_v<int, TeamRankArchetypeExpr, T> &&
-      is_detected_exact_v<int, TeamSizeArchetypeExpr, T> &&
-      is_detected_exact_v<int, LeagueRankArchetypeExpr, T> &&
-      is_detected_exact_v<int, LeagueSizeArchetypeExpr, T> &&
-      //
-      is_detected_exact_v<
-          detected_t<ScratchMemorySpaceArchetypeAlias, T> const &,
-          TeamShmemArchetypeExpr, T> &&
-      is_detected_exact_v<
-          detected_t<ScratchMemorySpaceArchetypeAlias, T> const &,
-          TeamScratchArchetypeExpr, T> &&
-      is_detected_exact_v<
-          detected_t<ScratchMemorySpaceArchetypeAlias, T> const &,
-          ThreadScracthArchetypeExpr, T> &&
-      //
-      is_detected_exact_v<void, TeamBarrierArchetypeExpr, T> &&
-      is_detected_exact_v<void, TeamBroadcastArchetypeExpr, T> &&
-      is_detected_exact_v<void, TeamBroadcastAcceptClosureArchetypeExpr, T> &&
-      is_detected_exact_v<void, TeamReducedArchetypeExpr, T> &&
-      is_detected_exact_v<test_value_type, TeamScanArchetypeExpr, T>;
-  constexpr operator bool() const noexcept { return value; }
-};
-
-template <class T>
-inline constexpr bool is_team_handle_v = is_team_handle<T>::value;
 
 namespace Impl {
 

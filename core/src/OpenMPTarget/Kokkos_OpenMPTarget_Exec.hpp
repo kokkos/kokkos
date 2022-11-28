@@ -761,6 +761,7 @@ class OpenMPTargetExecTeamMember {
 
   using execution_space      = Kokkos::Experimental::OpenMPTarget;
   using scratch_memory_space = execution_space::scratch_memory_space;
+  using team_handle          = OpenMPTargetExecTeamMember;
 
   scratch_memory_space m_team_shared;
   size_t m_team_scratch_size[2];
