@@ -402,6 +402,23 @@ KOKKOS_IMPL_MATH_UNARY_FUNCTION(log1p)
 // Power functions
 KOKKOS_IMPL_MATH_BINARY_FUNCTION(pow)
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(sqrt)
+KOKKOS_INLINE_FUNCTION float rsqrt(float val) {
+#if defined(KOKKOS_ENABLE_CUDA)
+  return rsqrtf(val);
+#else
+  return 1.0f / Kokkos::sqrt(val);
+#endif
+}
+KOKKOS_INLINE_FUNCTION double rsqrt(double val) {
+#if defined(KOKKOS_ENABLE_CUDA)
+  return rsqrt(val);
+#else
+  return 1.0 / Kokkos::sqrt(val);
+#endif
+}
+inline long double rsqrt(long double val) {
+  return 1L / Kokkos::sqrt(val);
+}
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(cbrt)
 KOKKOS_IMPL_MATH_BINARY_FUNCTION(hypot)
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \

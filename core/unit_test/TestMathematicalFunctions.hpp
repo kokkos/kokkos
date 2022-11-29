@@ -320,6 +320,31 @@ struct math_function_name;
   };                                                                  \
   constexpr char math_function_name<MathUnaryFunction_##FUNC>::name[]
 
+#define DEFINE_UNARY_FUNCTION_EVAL_CUSTOM(FUNC, ULP_FACTOR, REF_FUNC) \
+  struct MathUnaryFunction_##FUNC {                                   \
+    template <typename T>                                             \
+    static KOKKOS_FUNCTION auto eval(T x) {                           \
+      static_assert(                                                  \
+          std::is_same<decltype(Kokkos::FUNC((T)0)),                  \
+                       math_unary_function_return_type_t<T>>::value); \
+      return Kokkos::FUNC(x);                                         \
+    }                                                                 \
+    template <typename T>                                             \
+    static auto eval_std(T x) {                                       \
+      static_assert(                                                  \
+          std::is_same<decltype(REF_FUNC),                            \
+                       math_unary_function_return_type_t<T>>::value); \
+      return REF_FUNC;                                                \
+    }                                                                 \
+    static KOKKOS_FUNCTION double ulp_factor() { return ULP_FACTOR; } \
+  };                                                                  \
+  using kk_##FUNC = MathUnaryFunction_##FUNC;                         \
+  template <>                                                         \
+  struct math_function_name<MathUnaryFunction_##FUNC> {               \
+    static constexpr char name[] = #FUNC;                             \
+  };                                                                  \
+  constexpr char math_function_name<MathUnaryFunction_##FUNC>::name[]
+
 #ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_1
 // Generally the expected ULP error should come from here:
 // https://www.gnu.org/software/libc/manual/html_node/Errors-in-Math-Functions.html
@@ -338,6 +363,7 @@ DEFINE_UNARY_FUNCTION_EVAL(log2, 2);
 DEFINE_UNARY_FUNCTION_EVAL(log1p, 2);
 
 DEFINE_UNARY_FUNCTION_EVAL(sqrt, 2);
+DEFINE_UNARY_FUNCTION_EVAL_CUSTOM(rsqrt, 2, 1 / std::sqrt(x));
 DEFINE_UNARY_FUNCTION_EVAL(cbrt, 2);
 
 DEFINE_UNARY_FUNCTION_EVAL(sin, 2);
@@ -680,6 +706,12 @@ TEST(TEST_CATEGORY, mathematical_functions_power_functions) {
   TEST_MATH_FUNCTION(sqrt)({11.1, 22.2, 33.3, 44.4});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
   TEST_MATH_FUNCTION(sqrt)({10.l, 20.l, 30.l, 40.l});
+#endif
+
+  TEST_MATH_FUNCTION(rsqrt)({10.f, 20.f, 30.f, 40.f});
+  TEST_MATH_FUNCTION(rsqrt)({11.1, 22.2, 33.3, 44.4});
+#ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
+  TEST_MATH_FUNCTION(rsqrt)({10.l, 20.l, 30.l, 40.l});
 #endif
 
   TEST_MATH_FUNCTION(cbrt)({-5, -3, -1, 2, 4, 6});
