@@ -2923,7 +2923,9 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
         ptr(arg_ptr),
         n(arg_n),
         name(std::move(arg_name)),
-        default_exec_space(false) {}
+        default_exec_space(false) {
+    functor_instantiate_workaround();
+  }
 
   ViewValueFunctor(ValueType* const arg_ptr, size_t const arg_n,
                    std::string arg_name)
@@ -2931,7 +2933,9 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
         ptr(arg_ptr),
         n(arg_n),
         name(std::move(arg_name)),
-        default_exec_space(true) {}
+        default_exec_space(true) {
+    functor_instantiate_workaround();
+  }
 
   template <typename Dummy = ValueType>
   std::enable_if_t<std::is_trivial<Dummy>::value &&
@@ -3019,6 +3023,18 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
 
   void destroy_shared_allocation() {
     parallel_for_implementation<DestroyTag>();
+  }
+
+  // This function is to ensure that the functor with DestroyTag is instantiated
+  // This is a workaround to avoid "cudaErrorInvalidDeviceFunction" error later
+  // when the function is queried with cudaFuncGetAttributes
+  void functor_instantiate_workaround() {
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
+    defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENMPTARGET)
+    if (false) {
+      parallel_for_implementation<DestroyTag>();
+    }
+#endif
   }
 };
 
@@ -3459,15 +3475,6 @@ class ViewMapping<
                            m_impl_offset.span(), alloc_name)
             : functor_type((value_type*)m_impl_handle, m_impl_offset.span(),
                            alloc_name);
-
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
-    defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENMPTARGET)
-    if (false) {
-      // Make sure the destroy functor gets instantiated.
-      // This avoids "cudaErrorInvalidDeviceFunction"-type errors.
-      functor.destroy_shared_allocation();
-    }
-#endif
 
     //  Only initialize if the allocation is non-zero.
     //  May be zero if one of the dimensions is zero.
