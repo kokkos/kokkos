@@ -1,4 +1,4 @@
-files=`find . -path './tpls' -prune -o -name '*.cpp' -o -name '*.pc.in' -o -name '*.hpp' -o -name '*.cc'`
+files=`find . \( -path './tpls' -o -path './build' \) -prune -o -name '*.cpp' -o -name '*.pc.in' -o -name '*.hpp' -o -name '*.cc'`
 echo "" &> scripts/diff_files
 tmp=`cat LICENSE_FILE_HEADER | wc -l`
 NNEW=$(($tmp))
@@ -11,3 +11,5 @@ for file in $files; do
     echo $file >> scripts/diff_files
   fi
 done
+cat scripts/diff_files | sort &> tmp
+cp tmp scripts/diff_files
