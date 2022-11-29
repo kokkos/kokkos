@@ -58,8 +58,6 @@
 // GraphAccess needs to be defined, not just declared
 #include <impl/Kokkos_GraphImpl.hpp>
 
-#include <impl/Kokkos_Utilities.hpp>  // fold emulation
-
 #include <functional>
 #include <memory>
 
@@ -145,8 +143,7 @@ auto when_all(PredecessorRefs&&... arg_pred_refs) {
           .lock();
   auto node_ptr_impl = graph_ptr_impl->create_aggregate_ptr(arg_pred_refs...);
   graph_ptr_impl->add_node(node_ptr_impl);
-  KOKKOS_IMPL_FOLD_COMMA_OPERATOR(
-      graph_ptr_impl->add_predecessor(node_ptr_impl, arg_pred_refs) /* ... */);
+  (graph_ptr_impl->add_predecessor(node_ptr_impl, arg_pred_refs), ...);
   return Kokkos::Impl::GraphAccess::make_graph_node_ref(
       std::move(graph_ptr_impl), std::move(node_ptr_impl));
 }

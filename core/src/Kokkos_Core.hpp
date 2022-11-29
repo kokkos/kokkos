@@ -288,11 +288,9 @@ std::vector<ExecSpace> partition_space(ExecSpace space, Args...) {
   static_assert(is_execution_space<ExecSpace>::value,
                 "Kokkos Error: partition_space expects an Execution Space as "
                 "first argument");
-#ifdef __cpp_fold_expressions
   static_assert(
       (... && std::is_arithmetic_v<Args>),
       "Kokkos Error: partitioning arguments must be integers or floats");
-#endif
   std::vector<ExecSpace> instances(sizeof...(Args));
   for (int s = 0; s < int(sizeof...(Args)); s++) instances[s] = space;
   return instances;
