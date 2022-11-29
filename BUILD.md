@@ -148,6 +148,7 @@ Options can be enabled by specifying `-DKokkos_ENABLE_X`.
     * Whether to activate experimental lambda features
     * BOOL Default: OFF
 * Kokkos_ENABLE_CUDA_LDG_INTRINSIC
+    * Deprecated since 4.0, LDG intrinsics are always enabled.
     * Whether to use CUDA LDG intrinsics
     * BOOL Default: OFF
 * Kokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE

@@ -596,6 +596,10 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 #define KOKKOS_ENABLE_TASKDAG
 #endif
 
+#if defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_ENABLE_DEPRECATED_CODE_4)
+#define KOKKOS_ENABLE_CUDA_LDG_INTRINSIC
+#endif
+
 #define KOKKOS_INVALID_INDEX (~std::size_t(0))
 
 #define KOKKOS_IMPL_CTOR_DEFAULT_ARG KOKKOS_INVALID_INDEX
@@ -623,13 +627,6 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 #else
 #define KOKKOS_IMPL_DO_PRAGMA(x) _Pragma(#x)
 #define KOKKOS_IMPL_WARNING(desc) KOKKOS_IMPL_DO_PRAGMA(message(#desc))
-#endif
-
-// DJS 05/28/2019: Bugfix: Issue 2155
-// Use KOKKOS_ENABLE_CUDA_LDG_INTRINSIC to avoid memory leak in RandomAccess
-// View
-#if defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_CUDA_LDG_INTRINSIC)
-#define KOKKOS_ENABLE_CUDA_LDG_INTRINSIC
 #endif
 
 #define KOKKOS_ATTRIBUTE_NODISCARD [[nodiscard]]

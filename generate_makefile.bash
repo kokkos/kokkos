@@ -70,8 +70,6 @@ get_kokkos_cuda_option_list() {
         CUDA_OPT_NAME=CUDA_RELOCATABLE_DEVICE_CODE
      elif  [ "${CUDA_}" == "force_uvm" ]; then
         CUDA_OPT_NAME=CUDA_UVM
-     elif  [ "${CUDA_}" == "use_ldg" ]; then
-        CUDA_OPT_NAME=CUDA_LDG_INTRINSIC
      else
         echo "${CUDA_} is not a valid cuda options..."
      fi
