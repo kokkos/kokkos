@@ -155,6 +155,7 @@ Options can be enabled by specifying `-DKokkos_ENABLE_X`.
     * Whether to enable relocatable device code (RDC) for CUDA
     * BOOL Default: OFF
 * Kokkos_ENABLE_CUDA_UVM
+    * Deprecated since 4.0
     * Whether to use unified memory (UM) by default for CUDA
     * BOOL Default: OFF
 * Kokkos_ENABLE_DEBUG
