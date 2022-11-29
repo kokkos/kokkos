@@ -46,6 +46,8 @@
 #define KOKKOS_IMPL_PUBLIC_INCLUDE
 #endif
 
+#include <impl/Kokkos_CPUDiscovery.hpp>
+
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -55,16 +57,11 @@
 #else
 #include <unistd.h>
 #endif
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <cerrno>
+
+#include <cstdlib>  // getenv
 #include <string>
 
-namespace Kokkos {
-namespace Impl {
-
-int processors_per_node() {
+int Kokkos::Impl::processors_per_node() {
 #ifdef _SC_NPROCESSORS_ONLN
   int const num_procs     = sysconf(_SC_NPROCESSORS_ONLN);
   int const num_procs_max = sysconf(_SC_NPROCESSORS_CONF);
@@ -87,38 +84,34 @@ int processors_per_node() {
 #endif
 }
 
-int mpi_ranks_per_node() {
-  char *str;
-  int ppn = 1;
-  // if ((str = getenv("SLURM_TASKS_PER_NODE"))) {
-  //  ppn = std::stoi(str);
-  //  if(ppn<=0) ppn = 1;
-  //}
-  if ((str = getenv("MV2_COMM_WORLD_LOCAL_SIZE"))) {
-    ppn = std::stoi(str);
-    if (ppn <= 0) ppn = 1;
+int Kokkos::Impl::mpi_ranks_per_node() {
+  for (char const* env_var : {
+           "OMPI_COMM_WORLD_LOCAL_SIZE",  // OpenMPI
+           "MV2_COMM_WORLD_LOCAL_SIZE",   // MVAPICH2
+           "MPI_LOCALNRANKS",             // MPICH
+                                          // SLURM???
+           "PMI_LOCAL_SIZE",              // PMI
+       }) {
+    char const* str = std::getenv(env_var);
+    if (str) {
+      return std::stoi(str);
+    }
   }
-  if ((str = getenv("OMPI_COMM_WORLD_LOCAL_SIZE"))) {
-    ppn = std::stoi(str);
-    if (ppn <= 0) ppn = 1;
-  }
-  return ppn;
+  return -1;
 }
 
-int mpi_local_rank_on_node() {
-  char *str;
-  int local_rank = 0;
-  // if ((str = getenv("SLURM_LOCALID"))) {
-  //  local_rank = std::stoi(str);
-  //}
-  if ((str = getenv("MV2_COMM_WORLD_LOCAL_RANK"))) {
-    local_rank = std::stoi(str);
+int Kokkos::Impl::mpi_local_rank_on_node() {
+  for (char const* env_var : {
+           "OMPI_COMM_WORLD_LOCAL_RANK",  // OpenMPI
+           "MV2_COMM_WORLD_LOCAL_RANK",   // MVAPICH2
+           "MPI_LOCALRANKID",             // MPICH
+           "SLURM_LOCALID",               // SLURM
+           "PMI_LOCAL_RANK",              // PMI
+       }) {
+    char const* str = std::getenv(env_var);
+    if (str) {
+      return std::stoi(str);
+    }
   }
-  if ((str = getenv("OMPI_COMM_WORLD_LOCAL_RANK"))) {
-    local_rank = std::stoi(str);
-  }
-  return local_rank;
+  return -1;
 }
-
-}  // namespace Impl
-}  // namespace Kokkos
