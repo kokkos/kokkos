@@ -532,7 +532,7 @@ KOKKOS_INLINE_FUNCTION double rsqrt(double val) {
   return 1.0 / Kokkos::sqrt(val);
 #endif
 }
-inline long double rsqrt(long double val) { return 1l / Kokkos::sqrt(val); }
+inline long double rsqrt(long double val) { return 1.0l / Kokkos::sqrt(val); }
 KOKKOS_INLINE_FUNCTION float rsqrtf(float x) { return Kokkos::rsqrt(x); }
 inline long double rsqrtl(long double x) { return Kokkos::rsqrt(x); }
 template <class T>
