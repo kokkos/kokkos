@@ -81,6 +81,7 @@ struct CudaDispatchProperties {
 };
 }  // namespace Experimental
 }  // namespace Impl
+
 /// \class Cuda
 /// \brief Kokkos Execution Space that uses CUDA to run on GPUs.
 ///
