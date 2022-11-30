@@ -269,7 +269,7 @@ auto with_properties_if_unset(const ViewCtorProp<P...> &view_ctor_prop) {
 
 template <typename... P, typename Property, typename... Properties>
 auto with_properties_if_unset(const ViewCtorProp<P...> &view_ctor_prop,
-                              const Property &property,
+                              [[maybe_unused]] const Property &property,
                               const Properties &... properties) {
   if constexpr ((is_execution_space<Property>::value &&
                  !ViewCtorProp<P...>::has_execution_space) ||
