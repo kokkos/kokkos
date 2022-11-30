@@ -13,7 +13,7 @@ KOKKOS_DEVICES ?= "Threads"
 # NVIDIA:   Kepler,Kepler30,Kepler32,Kepler35,Kepler37,Maxwell,Maxwell50,Maxwell52,Maxwell53,Pascal60,Pascal61,Volta70,Volta72,Turing75,Ampere80,Ampere86,Hopper90
 # ARM:      ARMv80,ARMv81,ARMv8-ThunderX,ARMv8-TX2,A64FX
 # IBM:      BGQ,Power7,Power8,Power9
-# AMD-GPUS: Vega906,Vega908,Vega90A,NAVI1030
+# AMD-GPUS: Vega906,Vega908,Vega90A,Navi1030
 # AMD-CPUS: AMDAVX,Zen,Zen2,Zen3
 # Intel-GPUs: Gen9,Gen11,Gen12LP,DG1,XeHP,PVC
 KOKKOS_ARCH ?= ""
@@ -402,7 +402,7 @@ endif
 KOKKOS_INTERNAL_USE_ARCH_VEGA906 := $(call kokkos_has_string,$(KOKKOS_ARCH),Vega906)
 KOKKOS_INTERNAL_USE_ARCH_VEGA908 := $(call kokkos_has_string,$(KOKKOS_ARCH),Vega908)
 KOKKOS_INTERNAL_USE_ARCH_VEGA90A := $(call kokkos_has_string,$(KOKKOS_ARCH),Vega90A)
-KOKKOS_INTERNAL_USE_ARCH_NAVI1030 := $(call kokkos_has_string,$(KOKKOS_ARCH),NAVI1030)
+KOKKOS_INTERNAL_USE_ARCH_NAVI1030 := $(call kokkos_has_string,$(KOKKOS_ARCH),Navi1030)
 
 # Any AVX?
 KOKKOS_INTERNAL_USE_ARCH_SSE42      := $(shell expr $(KOKKOS_INTERNAL_USE_ARCH_WSM))
