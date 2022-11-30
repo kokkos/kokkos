@@ -708,12 +708,6 @@ TEST(TEST_CATEGORY, mathematical_functions_power_functions) {
   TEST_MATH_FUNCTION(sqrt)({10.l, 20.l, 30.l, 40.l});
 #endif
 
-  TEST_MATH_FUNCTION(rsqrt)({10.f, 20.f, 30.f, 40.f});
-  TEST_MATH_FUNCTION(rsqrt)({11.1, 22.2, 33.3, 44.4});
-#ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
-  TEST_MATH_FUNCTION(rsqrt)({10.l, 20.l, 30.l, 40.l});
-#endif
-
   TEST_MATH_FUNCTION(cbrt)({-5, -3, -1, 2, 4, 6});
   TEST_MATH_FUNCTION(cbrt)({-5l, -3l, -1l, 2l, 4l, 6l});
   TEST_MATH_FUNCTION(cbrt)({-5ll, -3ll, -1ll, 2ll, 4ll, 6ll});
@@ -923,6 +917,20 @@ TEST(TEST_CATEGORY, mathematical_functions_hyperbolic_functions) {
   TEST_MATH_FUNCTION(atanh)({-.97, .86, -.53, .42, -.1, 0.});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
   TEST_MATH_FUNCTION(atanh)({-.97l, .86l, -.53l, .42l, -.1l, 0.l});
+#endif
+}
+
+TEST(TEST_CATEGORY, mathematical_functions_non_standard) {
+  TEST_MATH_FUNCTION(rsqrt)({0, 1, 2, 3, 5, 7, 11});
+  TEST_MATH_FUNCTION(rsqrt)({0l, 1l, 2l, 3l, 5l, 7l, 11l});
+  TEST_MATH_FUNCTION(rsqrt)({0ll, 1ll, 2ll, 3ll, 5ll, 7ll, 11ll});
+  TEST_MATH_FUNCTION(rsqrt)({0u, 1u, 2u, 3u, 5u, 7u});
+  TEST_MATH_FUNCTION(rsqrt)({0ul, 1ul, 2ul, 3ul, 5ul, 7ul});
+  TEST_MATH_FUNCTION(rsqrt)({0ull, 1ull, 2ull, 3ull, 5ull, 7ull});
+  TEST_MATH_FUNCTION(rsqrt)({10.f, 20.f, 30.f, 40.f});
+  TEST_MATH_FUNCTION(rsqrt)({11.1, 22.2, 33.3, 44.4});
+#ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
+  TEST_MATH_FUNCTION(rsqrt)({10.l, 20.l, 30.l, 40.l});
 #endif
 }
 #endif
