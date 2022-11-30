@@ -215,6 +215,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
       ViewOfClass
       ViewResize
       View_64bit
+      ViewSubviewCreation
       WorkGraph
       WithoutInitializing
       )
