@@ -57,6 +57,7 @@
 #include <iomanip>
 #include <iostream>
 #include <sstream>
+#include <thread>
 
 namespace Kokkos {
 namespace Impl {
@@ -340,13 +341,14 @@ void OpenMPInternal::initialize(int thread_count) {
   // Check for over-subscription
   auto const reported_ranks = mpi_ranks_per_node();
   auto const mpi_local_size = reported_ranks < 0 ? 1 : reported_ranks;
+  int const procs_per_node  = std::thread::hardware_concurrency();
   if (Kokkos::show_warnings() &&
-      (mpi_local_size * long(thread_count) > Impl::processors_per_node())) {
+      (mpi_local_size * long(thread_count) > procs_per_node)) {
     std::cerr << "Kokkos::OpenMP::initialize WARNING: You are likely "
                  "oversubscribing your CPU cores."
               << std::endl;
     std::cerr << "                                    Detected: "
-              << Impl::processors_per_node() << " cores per node." << std::endl;
+              << procs_per_node << " cores per node." << std::endl;
     std::cerr << "                                    Detected: "
               << mpi_local_size << " MPI_ranks per node." << std::endl;
     std::cerr << "                                    Requested: "
