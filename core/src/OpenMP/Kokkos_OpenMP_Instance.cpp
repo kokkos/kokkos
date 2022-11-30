@@ -182,10 +182,7 @@ void OpenMPInternal::resize_thread_data(size_t pool_reduce_bytes,
       m_pool[rank]->scratch_assign(((char *)ptr) + member_bytes, alloc_bytes,
                                    pool_reduce_bytes, team_reduce_bytes,
                                    team_shared_bytes, thread_local_bytes);
-
-      memory_fence();
     }
-    /* END #pragma omp parallel */
 
     HostThreadTeamData::organize_pool(m_pool, m_pool_size);
   }

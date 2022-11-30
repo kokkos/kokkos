@@ -44,7 +44,7 @@
 namespace Kokkos {
 namespace Impl {
 
-inline bool in_serial() {
+inline bool execute_in_serial() {
   return (OpenMP::in_parallel() &&
           !(omp_get_nested() && (omp_get_level() == 1)));
 }
@@ -111,7 +111,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::OpenMP> {
 
  public:
   inline void execute() const {
-    if (in_serial()) {
+    if (execute_in_serial()) {
       exec_range(m_functor, m_policy.begin(), m_policy.end());
       return;
     }
@@ -214,7 +214,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
  public:
   inline void execute() const {
-    if (in_serial()) {
+    if (execute_in_serial()) {
       ParallelFor::exec_range(m_mdr_policy, m_functor, m_policy.begin(),
                               m_policy.end());
       return;
@@ -365,7 +365,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                                    0  // thread_local_bytes
     );
 
-    if (in_serial()) {
+    if (execute_in_serial()) {
       const pointer_type ptr =
           m_result_ptr
               ? m_result_ptr
@@ -540,7 +540,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     typename Analysis::Reducer final_reducer(
         &ReducerConditional::select(m_functor, m_reducer));
 
-    if (in_serial()) {
+    if (execute_in_serial()) {
       const pointer_type ptr =
           m_result_ptr
               ? m_result_ptr
@@ -730,7 +730,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
                                    0  // thread_local_bytes
     );
 
-    if (in_serial()) {
+    if (execute_in_serial()) {
       typename Analysis::Reducer final_reducer(&m_functor);
 
       reference_type update = final_reducer.init(
@@ -858,7 +858,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
                                    0  // thread_local_bytes
     );
 
-    if (in_serial()) {
+    if (execute_in_serial()) {
       typename Analysis::Reducer final_reducer(&m_functor);
 
       reference_type update = final_reducer.init(
@@ -1024,7 +1024,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     m_instance->resize_thread_data(pool_reduce_size, team_reduce_size,
                                    team_shared_size, thread_local_size);
 
-    if (in_serial()) {
+    if (execute_in_serial()) {
       ParallelFor::template exec_team<WorkTag>(
           m_functor, *(m_instance->get_thread_data()), 0,
           m_policy.league_size(), m_policy.league_size());
@@ -1185,7 +1185,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     m_instance->resize_thread_data(pool_reduce_size, team_reduce_size,
                                    team_shared_size, thread_local_size);
 
-    if (in_serial()) {
+    if (execute_in_serial()) {
       HostThreadTeamData& data = *(m_instance->get_thread_data());
       pointer_type ptr =
           m_result_ptr ? m_result_ptr : pointer_type(data.pool_reduce_local());
