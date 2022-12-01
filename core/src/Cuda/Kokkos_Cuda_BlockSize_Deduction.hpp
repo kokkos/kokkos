@@ -243,34 +243,6 @@ inline size_t get_shmem_per_sm_prefer_l1(cudaDeviceProp const& properties) {
   }() * 1024;
 }
 
-// Assuming cudaFuncSetCacheConfig(MyKernel, cudaFuncCachePreferEqual) this
-// routine lists the approximate size for 50% cache size based on Cuda occupance
-// calculator spreadsheet.
-inline size_t get_shmem_per_sm_prefer_equal(cudaDeviceProp const& properties) {
-  int const compute_capability = properties.major * 10 + properties.minor;
-  return [compute_capability]() {
-    switch (compute_capability) {
-      case 30:
-      case 32:
-      case 35:
-      case 37:
-      case 50:
-      case 53:
-      case 60:
-      case 62:
-      case 52:
-      case 61: return 0;
-      case 70:
-      case 80: return 64;
-      case 86: return 96;
-      case 75: return 32;
-      default:
-        Kokkos::Impl::throw_runtime_exception(
-            "Unknown device in cuda block size deduction");
-    }
-    return 0;
-  }() * 1024;
-}
 }  // namespace Impl
 }  // namespace Kokkos
 

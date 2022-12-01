@@ -144,6 +144,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
         QuadPrecisionMath
         ExecSpacePartitioning
         MathematicalSpecialFunctions
+        CudaCacheConfig
         )
       set(file ${dir}/Test${Tag}_${Name}.cpp)
       # Write to a temporary intermediate file and call configure_file to avoid

@@ -196,7 +196,7 @@ inline void configure_shmem_preference(KernelFuncPtr const& func,
 template <class Policy>
 std::enable_if_t<Policy::experimental_contains_desired_occupancy>
 modify_launch_configuration_if_desired_occupancy_is_specified(
-    Policy const& policy, cudaDeviceProp const& properties,
+    dim3 const& grid, Policy const& policy, cudaDeviceProp const& properties,
     cudaFuncAttributes const& attributes, dim3 const& block, int& shmem,
     CachePreference& prefer_shmem) {
   int const block_size        = block.x * block.y * block.z;
@@ -222,13 +222,14 @@ modify_launch_configuration_if_desired_occupancy_is_specified(
 template <class Policy>
 std::enable_if_t<!Policy::experimental_contains_desired_occupancy>
 modify_launch_configuration_if_desired_occupancy_is_specified(
-    Policy const&, cudaDeviceProp const& properties,
+    dim3 const& grid, Policy const& policy, cudaDeviceProp const& properties,
     cudaFuncAttributes const& attributes, dim3 const& block, int& shmem,
     CachePreference& prefer_shmem) {
   // Calculate maximum number of blocks that can simultaneously run on a SM
   // based on the block size requested.
   int const block_size   = block.x * block.y * block.z;
   int max_blocks_threads = properties.maxThreadsPerMultiProcessor / block_size;
+  int const league_size  = grid.x * grid.y * grid.z;
 
   // Calculate the maximum number of blocks that can simultaneously run based on
   // the number of registers.
@@ -236,25 +237,24 @@ modify_launch_configuration_if_desired_occupancy_is_specified(
   int const regs_per_thread = attributes.numRegs;
   int const max_blocks_regs = regs_per_sm / (regs_per_thread * block_size);
 
-  size_t const static_shmem   = attributes.sharedSizeBytes;
-  int const max_active_blocks = std::max(max_blocks_threads, max_blocks_regs);
-  size_t const max_shmem_mem  = max_active_blocks * (shmem + static_shmem);
+  size_t const static_shmem = attributes.sharedSizeBytes;
+  int const max_active_blocks =
+      std::min(league_size, std::min(max_blocks_threads, max_blocks_regs));
+  size_t const max_shmem_mem = max_active_blocks * (shmem + static_shmem);
 
-  // Returns approximately half of the configurable cache size.
-  size_t const shmem_per_sm_prefer_equal =
-      get_shmem_per_sm_prefer_equal(properties);
-  size_t const shmem_per_sm_prefer_l1 = get_shmem_per_sm_prefer_l1(properties);
+  size_t const max_shmem_per_sm = properties.sharedMemPerMultiprocessor;
 
   // If the addition of the requested shared memory and static shmem is smaller
-  // than the preferred L1, set cudaFuncCachePreferL1. If it is smaller than the
-  // preferred equal set cudaFuncCachePreferEqual else set
-  // cudaFuncCacchePreferShared.
-  if (shmem_per_sm_prefer_l1 > max_shmem_mem)
+  // than the quarter of the allocatable shared memory, set the cache carveout
+  // to be 25% If the same is less than half, then set the cache carveout to be
+  // 50%.
+  if (max_shmem_mem < max_shmem_per_sm / 4) {
     prefer_shmem = CachePreference::PreferL1;
-  else if (shmem_per_sm_prefer_equal > max_shmem_mem) {
+  } else if (max_shmem_mem < max_shmem_per_sm / 2) {
     prefer_shmem = CachePreference::PreferEqual;
-  } else
+  } else {
     prefer_shmem = CachePreference::PreferShared;
+  }
 }
 
 // </editor-fold> end Some helper functions for launch code readability }}}1
@@ -665,7 +665,7 @@ struct CudaParallelLaunchImpl<
       // shared memory computed is actually smaller than `shmem` we overwrite
       // `shmem` and set `prefer_shmem` to `false`.
       modify_launch_configuration_if_desired_occupancy_is_specified(
-          driver.get_policy(), cuda_instance->m_deviceProp,
+          grid, driver.get_policy(), cuda_instance->m_deviceProp,
           get_cuda_func_attributes(), block, shmem, prefer_shmem);
 
       Impl::configure_shmem_preference<
