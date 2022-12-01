@@ -415,11 +415,11 @@ struct TestReduceCombinatoricalInstantiation {
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
     CallParallelReduce(args...,
                        Test::ReduceCombinatorical::AddPlus<double>(value));
-    if ((Kokkos::DefaultExecutionSpace::concurrency() > 1) &&
-        (ExecSpace::concurrency() > 1) && (expected_result > 0)) {
+    if ((Kokkos::DefaultExecutionSpace().concurrency() > 1) &&
+        (ExecSpace().concurrency() > 1) && (expected_result > 0)) {
       ASSERT_LT(expected_result, value);
-    } else if (((Kokkos::DefaultExecutionSpace::concurrency() > 1) ||
-                (ExecSpace::concurrency() > 1)) &&
+    } else if (((Kokkos::DefaultExecutionSpace().concurrency() > 1) ||
+                (ExecSpace().concurrency() > 1)) &&
                (expected_result > 0)) {
       ASSERT_LE(expected_result, value);
     } else {
@@ -429,11 +429,11 @@ struct TestReduceCombinatoricalInstantiation {
     value = 99;
     Test::ReduceCombinatorical::AddPlus<double> add(value);
     CallParallelReduce(args..., add);
-    if ((Kokkos::DefaultExecutionSpace::concurrency() > 1) &&
-        (ExecSpace::concurrency() > 1) && (expected_result > 0)) {
+    if ((Kokkos::DefaultExecutionSpace().concurrency() > 1) &&
+        (ExecSpace().concurrency() > 1) && (expected_result > 0)) {
       ASSERT_LT(expected_result, value);
-    } else if (((Kokkos::DefaultExecutionSpace::concurrency() > 1) ||
-                (ExecSpace::concurrency() > 1)) &&
+    } else if (((Kokkos::DefaultExecutionSpace().concurrency() > 1) ||
+                (ExecSpace().concurrency() > 1)) &&
                (expected_result > 0)) {
       ASSERT_LE(expected_result, value);
     } else {

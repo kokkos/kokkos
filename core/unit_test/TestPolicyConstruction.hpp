@@ -565,9 +565,8 @@ class TestTeamPolicyConstruction {
   template <class policy_t>
   void test_run_time_parameters_type() {
     int league_size = 131;
-    int team_size   = 4 < policy_t::execution_space::concurrency()
-                        ? 4
-                        : policy_t::execution_space::concurrency();
+    int concurrency = typename policy_t::execution_space().concurrency();
+    int team_size   = 4 < concurrency ? 4 : concurrency;
 #ifdef KOKKOS_ENABLE_HPX
     team_size = 1;
 #endif
