@@ -645,12 +645,6 @@ struct HPXTeamMember {
 template <class... Properties>
 class TeamPolicyInternal<Kokkos::Experimental::HPX, Properties...>
     : public PolicyTraits<Properties...> {
-  int m_league_size;
-  int m_team_size;
-  std::size_t m_team_scratch_size[2];
-  std::size_t m_thread_scratch_size[2];
-  int m_chunk_size;
-
  public:
   using traits = PolicyTraits<Properties...>;
 
@@ -662,6 +656,15 @@ class TeamPolicyInternal<Kokkos::Experimental::HPX, Properties...>
   //! Execution space of this execution policy:
   using execution_space = Kokkos::Experimental::HPX;
 
+ private:
+  typename traits::execution_space m_space{};
+  int m_league_size;
+  int m_team_size;
+  std::size_t m_team_scratch_size[2];
+  std::size_t m_thread_scratch_size[2];
+  int m_chunk_size;
+
+ public:
   // NOTE: Max size is 1 for simplicity. In most cases more than 1 is not
   // necessary on CPU. Implement later if there is a need.
   template <class FunctorType>
@@ -771,14 +774,12 @@ class TeamPolicyInternal<Kokkos::Experimental::HPX, Properties...>
   template <class ExecSpace, class... OtherProperties>
   friend class TeamPolicyInternal;
 
-  const typename traits::execution_space &space() const {
-    static typename traits::execution_space m_space;
-    return m_space;
-  }
+  const typename traits::execution_space &space() const { return m_space; }
 
   template <class... OtherProperties>
   TeamPolicyInternal(const TeamPolicyInternal<Kokkos::Experimental::HPX,
                                               OtherProperties...> &p) {
+    m_space                  = p.m_space;
     m_league_size            = p.m_league_size;
     m_team_size              = p.m_team_size;
     m_team_scratch_size[0]   = p.m_team_scratch_size[0];
@@ -788,39 +789,43 @@ class TeamPolicyInternal<Kokkos::Experimental::HPX, Properties...>
     m_chunk_size             = p.m_chunk_size;
   }
 
-  TeamPolicyInternal(const typename traits::execution_space &,
+  TeamPolicyInternal(const typename traits::execution_space &space,
                      int league_size_request, int team_size_request,
                      int /* vector_length_request */ = 1)
-      : m_team_scratch_size{0, 0},
+      : m_space{space},
+        m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
         m_chunk_size(0) {
     init(league_size_request, team_size_request);
   }
 
-  TeamPolicyInternal(const typename traits::execution_space &,
+  TeamPolicyInternal(const typename traits::execution_space &space,
                      int league_size_request, const Kokkos::AUTO_t &,
                      int /* vector_length_request */ = 1)
-      : m_team_scratch_size{0, 0},
+      : m_space{space},
+        m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
         m_chunk_size(0) {
     init(league_size_request, 1);
   }
 
-  TeamPolicyInternal(const typename traits::execution_space &,
+  TeamPolicyInternal(const typename traits::execution_space &space,
                      int league_size_request,
                      const Kokkos::AUTO_t &, /* team_size_request */
                      const Kokkos::AUTO_t & /* vector_length_request */)
-      : m_team_scratch_size{0, 0},
+      : m_space{space},
+        m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
         m_chunk_size(0) {
     init(league_size_request, 1);
   }
 
-  TeamPolicyInternal(const typename traits::execution_space &,
+  TeamPolicyInternal(const typename traits::execution_space &space,
                      int league_size_request, int team_size_request,
                      const Kokkos::AUTO_t & /* vector_length_request */
                      )
-      : m_team_scratch_size{0, 0},
+      : m_space{space},
+        m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
         m_chunk_size(0) {
     init(league_size_request, team_size_request);
