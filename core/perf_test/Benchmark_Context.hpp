@@ -63,16 +63,16 @@ void add_kokkos_configuration(bool verbose) {
 
 /// \brief Add all data related to git to benchmark context
 void add_git_info() {
-  if (!Kokkos::Env::GIT_BRANCH.empty()) {
-    benchmark::AddCustomContext("GIT_BRANCH", Kokkos::Env::GIT_BRANCH);
+  if (!Kokkos::Impl::GIT_BRANCH.empty()) {
+    benchmark::AddCustomContext("GIT_BRANCH", Kokkos::Impl::GIT_BRANCH);
     benchmark::AddCustomContext("GIT_COMMIT_HASH",
-                                Kokkos::Env::GIT_COMMIT_HASH);
+                                Kokkos::Impl::GIT_COMMIT_HASH);
     benchmark::AddCustomContext("GIT_CLEAN_STATUS",
-                                Kokkos::Env::GIT_CLEAN_STATUS);
+                                Kokkos::Impl::GIT_CLEAN_STATUS);
     benchmark::AddCustomContext("GIT_COMMIT_DESCRIPTION",
-                                Kokkos::Env::GIT_COMMIT_DESCRIPTION);
+                                Kokkos::Impl::GIT_COMMIT_DESCRIPTION);
     benchmark::AddCustomContext("GIT_COMMIT_DATE",
-                                Kokkos::Env::GIT_COMMIT_DATE);
+                                Kokkos::Impl::GIT_COMMIT_DATE);
   }
 }
 
