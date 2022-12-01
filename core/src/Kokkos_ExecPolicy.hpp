@@ -520,9 +520,9 @@ void team_policy_check_valid_storage_level_argument(int level);
  *    default of LaunchBounds<0,0> indicates no launch bounds specified.
  */
 
- /*
+/*
  * Implementation notes:
- * 
+ *
  * Some compilers ICE when generating implicit deduction guides for types whose
  * primary template has a parameter pack.
  *
@@ -567,8 +567,8 @@ void team_policy_check_valid_storage_level_argument(int level);
  * TeamPolicy, as we are now requiring at least one template parameter.  This
  * should not impact many folks, and the fix is fairly simple.
  *
- * Important:  Both TeamPolicy<P> and TeamPolicy<P1, P2, Properties...> should be
- * kept in sync when doing maintenance.
+ * Important:  Both TeamPolicy<P> and TeamPolicy<P1, P2, Properties...> should
+ * be kept in sync when doing maintenance.
  *
  */
 
