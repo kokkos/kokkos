@@ -196,7 +196,7 @@ inline void configure_shmem_preference(KernelFuncPtr const& func,
 template <class Policy>
 std::enable_if_t<Policy::experimental_contains_desired_occupancy>
 modify_launch_configuration_if_desired_occupancy_is_specified(
-    dim3 const& grid, Policy const& policy, cudaDeviceProp const& properties,
+    dim3 const&, Policy const& policy, cudaDeviceProp const& properties,
     cudaFuncAttributes const& attributes, dim3 const& block, int& shmem,
     CachePreference& prefer_shmem) {
   int const block_size        = block.x * block.y * block.z;
@@ -222,7 +222,7 @@ modify_launch_configuration_if_desired_occupancy_is_specified(
 template <class Policy>
 std::enable_if_t<!Policy::experimental_contains_desired_occupancy>
 modify_launch_configuration_if_desired_occupancy_is_specified(
-    dim3 const& grid, Policy const& policy, cudaDeviceProp const& properties,
+    dim3 const& grid, Policy const&, cudaDeviceProp const& properties,
     cudaFuncAttributes const& attributes, dim3 const& block, int& shmem,
     CachePreference& prefer_shmem) {
   // Calculate maximum number of blocks that can simultaneously run on a SM

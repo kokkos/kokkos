@@ -46,9 +46,11 @@
 #include <Kokkos_Core.hpp>
 #include <iostream>
 
+// The following unit test is only valid for the CUDA backend.
+#if defined(KOKKOS_ENABLE_CUDA)
 namespace Test {
-using CachePreference = Kokkos::Impl::CachePreference;
 TEST(TEST_CATEGORY, cuda_cache_config) {
+  using CachePreference = Kokkos::Impl::CachePreference;
   CachePreference cache_config;
   cudaFuncAttributes attributes;
   cudaDeviceProp prop;
@@ -96,12 +98,9 @@ TEST(TEST_CATEGORY, cuda_cache_config) {
     ASSERT_EQ(cache_config, CachePreference::PreferEqual);
   }
   {
-    cudaFuncAttributes attributes;
     attributes.numRegs         = 32;
     attributes.sharedSizeBytes = 16;
-    cudaDeviceProp prop;
-    cudaGetDeviceProperties(&prop, 0);
-    shmem = 63000;
+    shmem                      = 63000;
 
     modify_launch_configuration_if_desired_occupancy_is_specified(
         grid, policy_t, prop, attributes, block, shmem, cache_config);
@@ -111,3 +110,5 @@ TEST(TEST_CATEGORY, cuda_cache_config) {
 }
 
 }  // namespace Test
+
+#endif
