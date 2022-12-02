@@ -20,6 +20,7 @@
 - Remove listing of undefined TPL dependencies [\#5573](https://github.com/kokkos/kokkos/pull/5573)
 - ClockTic changed to 64 bit to fix overflow on Power [\#5592](https://github.com/kokkos/kokkos/pull/5592)
 - Fix incorrect offset in CUDA and HIP parallel scan for < 4 byte types [\#5607](https://github.com/kokkos/kokkos/pull/5607)
+- Fix initialization of Cuda lock arrays [\#5622](https://github.com/kokkos/kokkos/pull/5622)
 
 ## [3.7.00](https://github.com/kokkos/kokkos/tree/3.7.00) (2022-08-22)
 [Full Changelog](https://github.com/kokkos/kokkos/compare/3.6.01...3.7.00)
