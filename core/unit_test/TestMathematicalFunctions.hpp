@@ -531,6 +531,13 @@ template <class Space, class... Func, class Arg, std::size_t N>
 void do_test_math_unary_function(const Arg (&x)[N]) {
   (void)std::initializer_list<int>{
       (TestMathUnaryFunction<Space, Func, Arg, N>(x), 0)...};
+
+  // test if potentially device specific math functions also work on host
+  if constexpr (!std::is_same_v<Space, Kokkos::DefaultHostExecutionSpace>)
+    (void)std::initializer_list<int>{
+        (TestMathUnaryFunction<Kokkos::DefaultHostExecutionSpace, Func, Arg, N>(
+             x),
+         0)...};
 }
 
 #define TEST_MATH_FUNCTION(FUNC) \
