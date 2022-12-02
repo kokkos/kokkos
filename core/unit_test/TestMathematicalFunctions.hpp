@@ -363,7 +363,6 @@ DEFINE_UNARY_FUNCTION_EVAL(log2, 2);
 DEFINE_UNARY_FUNCTION_EVAL(log1p, 2);
 
 DEFINE_UNARY_FUNCTION_EVAL(sqrt, 2);
-DEFINE_UNARY_FUNCTION_EVAL_CUSTOM(rsqrt, 2, 1 / std::sqrt(x));
 DEFINE_UNARY_FUNCTION_EVAL(cbrt, 2);
 
 DEFINE_UNARY_FUNCTION_EVAL(sin, 2);
@@ -379,6 +378,10 @@ DEFINE_UNARY_FUNCTION_EVAL(tanh, 2);
 DEFINE_UNARY_FUNCTION_EVAL(asinh, 4);
 DEFINE_UNARY_FUNCTION_EVAL(acosh, 2);
 DEFINE_UNARY_FUNCTION_EVAL(atanh, 2);
+
+// non-standard math functions
+DEFINE_UNARY_FUNCTION_EVAL_CUSTOM(rsqrt, 2,
+                                  decltype(std::sqrt(x))(1) / std::sqrt(x));
 #endif
 
 #ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_2
