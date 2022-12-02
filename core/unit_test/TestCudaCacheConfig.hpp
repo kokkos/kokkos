@@ -46,65 +46,68 @@
 #include <Kokkos_Core.hpp>
 #include <iostream>
 
-namespace Test{
-    using CachePreference = Kokkos::Impl::CachePreference;
+namespace Test {
+using CachePreference = Kokkos::Impl::CachePreference;
 TEST(TEST_CATEGORY, cuda_cache_config) {
-        CachePreference cache_config;
-        cudaFuncAttributes attributes;
-        cudaDeviceProp prop;
-        cudaGetDeviceProperties(&prop, 0);
-        Kokkos::TeamPolicy<TEST_EXECSPACE> policy_t;
-        dim3 grid{14, 1, 1};
-        dim3 block{64, 10, 1};
+  CachePreference cache_config;
+  cudaFuncAttributes attributes;
+  cudaDeviceProp prop;
+  cudaGetDeviceProperties(&prop, 0);
+  Kokkos::TeamPolicy<TEST_EXECSPACE> policy_t;
+  dim3 grid{14, 1, 1};
+  dim3 block{64, 10, 1};
 
-        int shmem = 0;
+  int shmem = 0;
 
-        {
-            attributes.numRegs = 32;
-            attributes.sharedSizeBytes = 16;
+  {
+    attributes.numRegs         = 32;
+    attributes.sharedSizeBytes = 16;
 #if defined(KOKKOS_ARCH_VOLTA70)
-            shmem = 1000;
+    shmem = 1000;
 #elif defined(KOKKOS_ARCH_AMPERE80)
-            shmem = 10000;
+    shmem = 10000;
 #else
-            printf("The unit test is only defined for Volta70 and Ampere80 architectures.\n");
+    printf(
+        "The unit test is only defined for Volta70 and Ampere80 "
+        "architectures.\n");
 #endif
 
-            modify_launch_configuration_if_desired_occupancy_is_specified(
-                grid, policy_t, prop, attributes, block, shmem, cache_config);
+    modify_launch_configuration_if_desired_occupancy_is_specified(
+        grid, policy_t, prop, attributes, block, shmem, cache_config);
 
-            ASSERT_EQ(cache_config, CachePreference::PreferL1);
-        }
-        {
-            attributes.numRegs = 64;
-            attributes.sharedSizeBytes = 32;
+    ASSERT_EQ(cache_config, CachePreference::PreferL1);
+  }
+  {
+    attributes.numRegs         = 64;
+    attributes.sharedSizeBytes = 32;
 #if defined(KOKKOS_ARCH_VOLTA70)
-            shmem = 45000;
+    shmem = 45000;
 #elif defined(KOKKOS_ARCH_AMPERE80)
-            shmem = 55000;
+    shmem = 55000;
 #else
-            printf("The unit test is only defined for Volta70 and Ampere80 architectures.\n");
+    printf(
+        "The unit test is only defined for Volta70 and Ampere80 "
+        "architectures.\n");
 #endif
 
-            modify_launch_configuration_if_desired_occupancy_is_specified(
-                grid, policy_t, prop, attributes, block, shmem, cache_config);
+    modify_launch_configuration_if_desired_occupancy_is_specified(
+        grid, policy_t, prop, attributes, block, shmem, cache_config);
 
-            ASSERT_EQ(cache_config, CachePreference::PreferEqual);
-        }
-        {
-            cudaFuncAttributes attributes;
-            attributes.numRegs = 32;
-            attributes.sharedSizeBytes = 16;
-            cudaDeviceProp prop;
-            cudaGetDeviceProperties(&prop, 0);
-            shmem = 63000;
+    ASSERT_EQ(cache_config, CachePreference::PreferEqual);
+  }
+  {
+    cudaFuncAttributes attributes;
+    attributes.numRegs         = 32;
+    attributes.sharedSizeBytes = 16;
+    cudaDeviceProp prop;
+    cudaGetDeviceProperties(&prop, 0);
+    shmem = 63000;
 
-            modify_launch_configuration_if_desired_occupancy_is_specified(
-                grid, policy_t, prop, attributes, block, shmem, cache_config);
+    modify_launch_configuration_if_desired_occupancy_is_specified(
+        grid, policy_t, prop, attributes, block, shmem, cache_config);
 
-            ASSERT_EQ(cache_config, CachePreference::PreferShared);
-        }
-
+    ASSERT_EQ(cache_config, CachePreference::PreferShared);
+  }
 }
 
-} // namespace test
+}  // namespace Test
