@@ -111,7 +111,8 @@
 #cmakedefine KOKKOS_ARCH_AMD_ZEN2
 #cmakedefine KOKKOS_ARCH_AMD_ZEN3
 #cmakedefine KOKKOS_ARCH_VEGA
-#cmakedefine KOKKOS_ARCH_VEGA900
 #cmakedefine KOKKOS_ARCH_VEGA906
 #cmakedefine KOKKOS_ARCH_VEGA908
 #cmakedefine KOKKOS_ARCH_VEGA90A
+#cmakedefine KOKKOS_ARCH_NAVI
+#cmakedefine KOKKOS_ARCH_NAVI1030

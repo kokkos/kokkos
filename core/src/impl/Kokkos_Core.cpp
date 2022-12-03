@@ -782,6 +782,9 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
   declare_configuration_metadata("architecture", "GPU architecture", "VEGA908");
 #elif defined(KOKKOS_ARCH_VEGA90A)
   declare_configuration_metadata("architecture", "GPU architecture", "VEGA90A");
+#elif defined(KOKKOS_ARCH_NAVI1030)
+  declare_configuration_metadata("architecture", "GPU architecture",
+                                 "NAVI1030");
 
 #else
   declare_configuration_metadata("architecture", "GPU architecture", "none");
