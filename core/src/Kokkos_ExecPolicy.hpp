@@ -223,8 +223,7 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
       return;
     }
 #endif
-    int64_t concurrency =
-        static_cast<int64_t>(traits::execution_space::concurrency());
+    auto concurrency = static_cast<int64_t>(m_space.concurrency());
     if (concurrency == 0) concurrency = 1;
 
     if (m_granularity > 0) {

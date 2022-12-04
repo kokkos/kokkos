@@ -443,8 +443,8 @@ bool Test(int test) {
 #else
   int team_size = 33;
 #endif
-  if (team_size > int(ExecutionSpace::concurrency()))
-    team_size = int(ExecutionSpace::concurrency());
+  int const concurrency = ExecutionSpace().concurrency();
+  if (team_size > concurrency) team_size = concurrency;
   passed = passed && test_scalar<int, ExecutionSpace>(317, team_size, test);
   passed = passed &&
            test_scalar<long long int, ExecutionSpace>(317, team_size, test);

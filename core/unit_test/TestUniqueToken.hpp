@@ -221,7 +221,7 @@ class TestAcquireTeamUniqueToken {
   }
 
   TestAcquireTeamUniqueToken(int team_size)
-      : tokens(execution_space::concurrency() / team_size, execution_space()),
+      : tokens(execution_space().concurrency() / team_size, execution_space()),
         verify("TestAcquireTeamUniqueTokenVerify", tokens.size()),
         counts("TestAcquireTeamUniqueTokenCounts", tokens.size()),
         errors("TestAcquireTeamUniqueTokenErrors", 1) {}

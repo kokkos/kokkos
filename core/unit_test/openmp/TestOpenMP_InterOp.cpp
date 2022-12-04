@@ -71,7 +71,7 @@ TEST(openmp, raw_openmp_interop) {
     count++;
   }
 
-  concurrency = Kokkos::OpenMP::concurrency();
+  concurrency = Kokkos::OpenMP().concurrency();
   ASSERT_EQ(count, concurrency);
 
   Kokkos::finalize();

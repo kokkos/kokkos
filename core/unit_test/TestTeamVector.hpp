@@ -729,8 +729,8 @@ bool Test(int test) {
 #else
   int team_size = 33;
 #endif
-  if (team_size > int(ExecutionSpace::concurrency()))
-    team_size = int(ExecutionSpace::concurrency());
+  int const concurrency = ExecutionSpace().concurrency();
+  if (team_size > concurrency) team_size = concurrency;
   passed = passed && test_scalar<int, ExecutionSpace>(317, team_size, test);
   passed = passed &&
            test_scalar<long long int, ExecutionSpace>(317, team_size, test);
@@ -770,8 +770,9 @@ class TestTripleNestedReduce {
 
   void run_test(const size_type &nrows, const size_type &ncols,
                 size_type team_size, const size_type &vector_length) {
-    if (team_size > size_type(DeviceType::execution_space::concurrency()))
-      team_size = size_type(DeviceType::execution_space::concurrency());
+    auto const concurrency =
+        static_cast<size_type>(execution_space().concurrency());
+    if (team_size > concurrency) team_size = concurrency;
 
 #ifdef KOKKOS_ENABLE_HPX
     team_size = 1;

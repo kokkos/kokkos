@@ -58,8 +58,8 @@ void custom_reduction_test(int N, int R, int num_trials) {
   Scalar max;
 
   int team_size = 32;
-  if (team_size > Kokkos::DefaultExecutionSpace::concurrency())
-    team_size = Kokkos::DefaultExecutionSpace::concurrency();
+  if (team_size > Kokkos::DefaultExecutionSpace().concurrency())
+    team_size = Kokkos::DefaultExecutionSpace().concurrency();
   // Warm up
   Kokkos::parallel_reduce(
       Kokkos::TeamPolicy<>(N / 1024, team_size),

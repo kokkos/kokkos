@@ -58,7 +58,8 @@ struct HierarchicalBasics {
   using team_t   = typename policy_t::member_type;
 
   void run(const int nP, int nT) {
-    if (nT > ExecSpace::concurrency()) nT = ExecSpace::concurrency();
+    int const concurrency = ExecSpace().concurrency();
+    if (nT > concurrency) nT = concurrency;
 
     policy_t pol(nP, nT);
 

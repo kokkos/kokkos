@@ -85,6 +85,10 @@ using fence_t = std::enable_if_t<
     std::is_void_v<decltype(T::impl_static_fence("name"))>>;
 
 template <class T>
+using concurrency_t = std::enable_if_t<
+    std::is_same_v<int, decltype(std::declval<T const&>().concurrency())>>;
+
+template <class T>
 constexpr bool check_is_semiregular() {
   static_assert(std::is_default_constructible_v<T>);
   static_assert(std::is_copy_constructible_v<T>);
@@ -125,6 +129,7 @@ constexpr bool check_valid_execution_space() {
   static_assert(is_detected_v<print_configuration_t, ExecutionSpace>);
   static_assert(is_detected_v<initialize_finalize_t, ExecutionSpace>);
   static_assert(is_detected_v<fence_t, ExecutionSpace>);
+  static_assert(is_detected_v<concurrency_t, ExecutionSpace>);
 #ifndef KOKKOS_ENABLE_HPX  // FIXME_HPX
   static_assert(sizeof(ExecutionSpace) <= 2 * sizeof(void*));
 #endif

@@ -90,7 +90,7 @@ class UniqueToken {
 };
 
 /// \brief Instance scope UniqueToken allows for a max size other than
-/// execution_space::concurrency()
+/// execution_space().concurrency()
 ///
 /// This object should behave like a ref-counted object, so that when the last
 /// instance is destroyed, resources are free if needed
@@ -107,9 +107,9 @@ class UniqueToken<ExecutionSpace, UniqueTokenScope::Instance>
   /// threads that will attempt to acquire the UniqueToken. This constructor is
   /// most commonly useful when you:
   ///   1) Have a loop bound that may be smaller than
-  ///   execution_space::concurrency().
+  ///   execution_space().concurrency().
   ///   2) Want a per-team unique token in the range [0,
-  ///   execution_space::concurrency() / team_size)
+  ///   execution_space().concurrency() / team_size)
   UniqueToken(size_type max_size, execution_space const& = execution_space());
 };
 

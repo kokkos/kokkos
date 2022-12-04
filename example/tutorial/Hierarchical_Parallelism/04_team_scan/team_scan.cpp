@@ -127,9 +127,9 @@ int main(int narg, char* args[]) {
 
     Kokkos::Timer timer;
     // threads/team is automatically limited to maximum supported by the device.
-    int team_size = TEAM_SIZE;
-    if (team_size > Device::execution_space::concurrency())
-      team_size = Device::execution_space::concurrency();
+    int const concurrency = Device::execution_space().concurrency();
+    int team_size         = TEAM_SIZE;
+    if (team_size > concurrency) team_size = concurrency;
     Kokkos::parallel_for(team_policy(nchunks, team_size),
                          find_2_tuples(chunk_size, data, histogram));
     Kokkos::fence();

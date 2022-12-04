@@ -1025,8 +1025,8 @@ struct ClassNoShmemSizeFunction {
 #else
     int team_size      = 8;
 #endif
-    if (team_size > ExecSpace::concurrency())
-      team_size = ExecSpace::concurrency();
+    int const concurrency = ExecSpace().concurrency();
+    if (team_size > concurrency) team_size = concurrency;
     {
       Kokkos::TeamPolicy<TagFor, ExecSpace, ScheduleType> policy(10, team_size,
                                                                  16);
@@ -1098,8 +1098,9 @@ struct ClassWithShmemSizeFunction {
                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>::shmem_size(1600);
 
     int team_size = 8;
-    if (team_size > ExecSpace::concurrency())
-      team_size = ExecSpace::concurrency();
+
+    int const concurrency = ExecSpace().concurrency();
+    if (team_size > concurrency) team_size = concurrency;
 
     {
       Kokkos::TeamPolicy<TagFor, ExecSpace, ScheduleType> policy(10, team_size,
@@ -1173,8 +1174,8 @@ void test_team_mulit_level_scratch_test_lambda() {
 #else
   int team_size = 8;
 #endif
-  if (team_size > ExecSpace::concurrency())
-    team_size = ExecSpace::concurrency();
+  int const concurrency = ExecSpace().concurrency();
+  if (team_size > concurrency) team_size = concurrency;
 
   Kokkos::TeamPolicy<ExecSpace, ScheduleType> policy(10, team_size, 16);
 

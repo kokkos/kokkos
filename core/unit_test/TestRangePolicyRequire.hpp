@@ -277,10 +277,11 @@ struct TestRangeRequire {
     auto const N_no_implicit_capture = N;
     using policy_t =
         Kokkos::RangePolicy<ExecSpace, Kokkos::Schedule<Kokkos::Dynamic> >;
+    int const concurrency = ExecSpace().concurrency();
 
     {
       Kokkos::View<size_t *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Atomic> >
-          count("Count", ExecSpace::concurrency());
+          count("Count", concurrency);
       Kokkos::View<int *, ExecSpace> a("A", N);
 
       Kokkos::parallel_for(
@@ -301,17 +302,16 @@ struct TestRangeRequire {
           error);
       ASSERT_EQ(error, 0);
 
-      if ((ExecSpace::concurrency() > (int)1) &&
-          (N > static_cast<int>(4 * ExecSpace::concurrency()))) {
+      if ((concurrency > 1) && (N > 4 * concurrency)) {
         size_t min = N;
         size_t max = 0;
-        for (int t = 0; t < ExecSpace::concurrency(); t++) {
+        for (int t = 0; t < concurrency; t++) {
           if (count(t) < min) min = count(t);
           if (count(t) > max) max = count(t);
         }
         ASSERT_LT(min, max);
 
-        // if ( ExecSpace::concurrency() > 2 ) {
+        // if ( concurrency > 2 ) {
         //  ASSERT_LT( 2 * min, max );
         //}
       }
@@ -319,7 +319,7 @@ struct TestRangeRequire {
 
     {
       Kokkos::View<size_t *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Atomic> >
-          count("Count", ExecSpace::concurrency());
+          count("Count", concurrency);
       Kokkos::View<int *, ExecSpace> a("A", N);
 
       int sum = 0;
@@ -345,17 +345,16 @@ struct TestRangeRequire {
           error);
       ASSERT_EQ(error, 0);
 
-      if ((ExecSpace::concurrency() > (int)1) &&
-          (N > static_cast<int>(4 * ExecSpace::concurrency()))) {
+      if ((concurrency > 1) && (N > 4 * concurrency)) {
         size_t min = N;
         size_t max = 0;
-        for (int t = 0; t < ExecSpace::concurrency(); t++) {
+        for (int t = 0; t < concurrency; t++) {
           if (count(t) < min) min = count(t);
           if (count(t) > max) max = count(t);
         }
         ASSERT_LT(min, max);
 
-        // if ( ExecSpace::concurrency() > 2 ) {
+        // if ( concurrency > 2 ) {
         //  ASSERT_LT( 2 * min, max );
         //}
       }
