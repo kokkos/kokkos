@@ -1,4 +1,4 @@
-files=`find . \( -path './tpls' -o -path './build' \) -prune -o -name '*.cpp' -o -name '*.pc.in' -o -name '*.hpp' -o -name '*.cc'`
+files=`git ls-files | grep -e '.*\.\(cc\|cpp\|hpp\)' | grep -v 'tpls/'`
 echo "" &> scripts/diff_files
 tmp=`cat LICENSE_FILE_HEADER | wc -l`
 NNEW=$(($tmp))

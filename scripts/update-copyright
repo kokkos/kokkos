@@ -1,4 +1,4 @@
-files=`find . -path './tpls' -prune -o -name '*.cpp' -o -name '*.hpp' -o -name '*.cc'`
+files=`git ls-files | grep -e '.*\.\(cc\|cpp\|hpp\)' | grep -v 'tpls/'`
 echo "" &> diff_files
 echo "" &> clean_files
 echo "" &> updated_files
