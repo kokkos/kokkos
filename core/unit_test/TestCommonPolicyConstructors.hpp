@@ -22,9 +22,6 @@ namespace {
 template <class... Args>
 struct DummyPolicy : Kokkos::Impl::PolicyTraits<Args...> {
   using execution_policy = DummyPolicy;
-
-  using base_t = Kokkos::Impl::PolicyTraits<Args...>;
-  using base_t::base_t;
 };
 
 // Asserts that a policy constructor is semiregular.
