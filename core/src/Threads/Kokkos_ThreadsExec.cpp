@@ -832,7 +832,12 @@ void ThreadsExec::finalize() {
 
 namespace Kokkos {
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 int Threads::concurrency() { return impl_thread_pool_size(0); }
+#else
+int Threads::concurrency() const { return impl_thread_pool_size(0); }
+#endif
+
 void Threads::fence(const std::string &name) const {
   Impl::ThreadsExec::internal_fence(name, Impl::fence_is_static::no);
 }
