@@ -49,84 +49,84 @@ void test_run_time_parameters() {
   ASSERT_EQ(p1.league_size(), league_size);
   ASSERT_EQ(p1.team_size(), team_size);
   ASSERT_GT(p1.chunk_size(), 0);
-  ASSERT_EQ(size_t(p1.scratch_size(0)), 0u);
+  ASSERT_EQ(p1.scratch_size(0), 0u);
 
   Policy p2 = p1.set_chunk_size(chunk_size);
   ASSERT_EQ(p1.league_size(), league_size);
   ASSERT_EQ(p1.team_size(), team_size);
   ASSERT_EQ(p1.chunk_size(), chunk_size);
-  ASSERT_EQ(size_t(p1.scratch_size(0)), 0u);
+  ASSERT_EQ(p1.scratch_size(0), 0u);
 
   ASSERT_EQ(p2.league_size(), league_size);
   ASSERT_EQ(p2.team_size(), team_size);
   ASSERT_EQ(p2.chunk_size(), chunk_size);
-  ASSERT_EQ(size_t(p2.scratch_size(0)), 0u);
+  ASSERT_EQ(p2.scratch_size(0), 0u);
 
   Policy p3 = p2.set_scratch_size(0, Kokkos::PerTeam(per_team_scratch));
   ASSERT_EQ(p2.league_size(), league_size);
   ASSERT_EQ(p2.team_size(), team_size);
   ASSERT_EQ(p2.chunk_size(), chunk_size);
-  ASSERT_EQ(size_t(p2.scratch_size(0)), size_t(per_team_scratch));
+  ASSERT_EQ(p2.scratch_size(0), size_t(per_team_scratch));
   ASSERT_EQ(p3.league_size(), league_size);
   ASSERT_EQ(p3.team_size(), team_size);
   ASSERT_EQ(p3.chunk_size(), chunk_size);
-  ASSERT_EQ(size_t(p3.scratch_size(0)), size_t(per_team_scratch));
+  ASSERT_EQ(p3.scratch_size(0), size_t(per_team_scratch));
 
   Policy p4 = p2.set_scratch_size(0, Kokkos::PerThread(per_thread_scratch));
   ASSERT_EQ(p2.league_size(), league_size);
   ASSERT_EQ(p2.team_size(), team_size);
   ASSERT_EQ(p2.chunk_size(), chunk_size);
-  ASSERT_EQ(size_t(p2.scratch_size(0)), size_t(scratch_size));
+  ASSERT_EQ(p2.scratch_size(0), size_t(scratch_size));
   ASSERT_EQ(p4.league_size(), league_size);
   ASSERT_EQ(p4.team_size(), team_size);
   ASSERT_EQ(p4.chunk_size(), chunk_size);
-  ASSERT_EQ(size_t(p4.scratch_size(0)), size_t(scratch_size));
+  ASSERT_EQ(p4.scratch_size(0), size_t(scratch_size));
 
   Policy p5 = p2.set_scratch_size(0, Kokkos::PerThread(per_thread_scratch),
                                   Kokkos::PerTeam(per_team_scratch));
   ASSERT_EQ(p2.league_size(), league_size);
   ASSERT_EQ(p2.team_size(), team_size);
   ASSERT_EQ(p2.chunk_size(), chunk_size);
-  ASSERT_EQ(size_t(p2.scratch_size(0)), size_t(scratch_size));
+  ASSERT_EQ(p2.scratch_size(0), size_t(scratch_size));
   ASSERT_EQ(p5.league_size(), league_size);
   ASSERT_EQ(p5.team_size(), team_size);
   ASSERT_EQ(p5.chunk_size(), chunk_size);
-  ASSERT_EQ(size_t(p5.scratch_size(0)), size_t(scratch_size));
+  ASSERT_EQ(p5.scratch_size(0), size_t(scratch_size));
 
   Policy p6 = p2.set_scratch_size(0, Kokkos::PerTeam(per_team_scratch),
                                   Kokkos::PerThread(per_thread_scratch));
   ASSERT_EQ(p2.league_size(), league_size);
   ASSERT_EQ(p2.team_size(), team_size);
   ASSERT_EQ(p2.chunk_size(), chunk_size);
-  ASSERT_EQ(size_t(p2.scratch_size(0)), size_t(scratch_size));
+  ASSERT_EQ(p2.scratch_size(0), size_t(scratch_size));
   ASSERT_EQ(p6.league_size(), league_size);
   ASSERT_EQ(p6.team_size(), team_size);
   ASSERT_EQ(p6.chunk_size(), chunk_size);
-  ASSERT_EQ(size_t(p6.scratch_size(0)), size_t(scratch_size));
+  ASSERT_EQ(p6.scratch_size(0), size_t(scratch_size));
 
   Policy p7 = p3.set_scratch_size(0, Kokkos::PerTeam(per_team_scratch),
                                   Kokkos::PerThread(per_thread_scratch));
   ASSERT_EQ(p3.league_size(), league_size);
   ASSERT_EQ(p3.team_size(), team_size);
   ASSERT_EQ(p3.chunk_size(), chunk_size);
-  ASSERT_EQ(size_t(p3.scratch_size(0)), size_t(scratch_size));
+  ASSERT_EQ(p3.scratch_size(0), size_t(scratch_size));
   ASSERT_EQ(p7.league_size(), league_size);
   ASSERT_EQ(p7.team_size(), team_size);
   ASSERT_EQ(p7.chunk_size(), chunk_size);
-  ASSERT_EQ(size_t(p7.scratch_size(0)), size_t(scratch_size));
+  ASSERT_EQ(p7.scratch_size(0), size_t(scratch_size));
 
   Policy p8;  // default constructed
   ASSERT_EQ(p8.league_size(), 0);
-  ASSERT_EQ(size_t(p8.scratch_size(0)), 0u);
+  ASSERT_EQ(p8.scratch_size(0), 0u);
   p8 = p3;  // call assignment operator
   ASSERT_EQ(p3.league_size(), league_size);
   ASSERT_EQ(p3.team_size(), team_size);
   ASSERT_EQ(p3.chunk_size(), chunk_size);
-  ASSERT_EQ(size_t(p3.scratch_size(0)), size_t(scratch_size));
+  ASSERT_EQ(p3.scratch_size(0), size_t(scratch_size));
   ASSERT_EQ(p8.league_size(), league_size);
   ASSERT_EQ(p8.team_size(), team_size);
   ASSERT_EQ(p8.chunk_size(), chunk_size);
-  ASSERT_EQ(size_t(p8.scratch_size(0)), size_t(scratch_size));
+  ASSERT_EQ(p8.scratch_size(0), size_t(scratch_size));
 }
 
 TEST(TEST_CATEGORY, team_policy_runtime_parameters) {
