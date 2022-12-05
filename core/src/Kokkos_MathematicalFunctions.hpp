@@ -516,7 +516,7 @@ KOKKOS_IMPL_MATH_UNARY_PREDICATE(signbit)
 // non-standard math functions provided by CUDA/HIP/SYCL
 KOKKOS_INLINE_FUNCTION float rsqrt(float val) {
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
-  return rsqrtf(val);
+  return ::rsqrtf(val);
 #elif defined(KOKKOS_ENABLE_SYCL)
   return sycl::rsqrt(val);
 #else
@@ -525,7 +525,7 @@ KOKKOS_INLINE_FUNCTION float rsqrt(float val) {
 }
 KOKKOS_INLINE_FUNCTION double rsqrt(double val) {
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
-  return rsqrt(val);
+  return ::rsqrt(val);
 #elif defined(KOKKOS_ENABLE_SYCL)
   return sycl::rsqrt(val);
 #else
