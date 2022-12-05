@@ -515,22 +515,28 @@ KOKKOS_IMPL_MATH_UNARY_PREDICATE(signbit)
 
 // non-standard math functions provided by CUDA/HIP/SYCL
 KOKKOS_INLINE_FUNCTION float rsqrt(float val) {
+  KOKKOS_IF_ON_DEVICE(
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
-  return ::rsqrtf(val);
+      return ::rsqrtf(val);
 #elif defined(KOKKOS_ENABLE_SYCL)
-  return sycl::rsqrt(val);
+      return sycl::rsqrt(val);
 #else
-  return 1.0f / Kokkos::sqrt(val);
+      return 1.0f / Kokkos::sqrt(val);
 #endif
+  )
+  KOKKOS_IF_ON_HOST(return 1.0f / Kokkos::sqrt(val);)
 }
 KOKKOS_INLINE_FUNCTION double rsqrt(double val) {
+  KOKKOS_IF_ON_DEVICE(
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
-  return ::rsqrt(val);
+      return ::rsqrt(val);
 #elif defined(KOKKOS_ENABLE_SYCL)
-  return sycl::rsqrt(val);
+      return sycl::rsqrt(val);
 #else
-  return 1.0 / Kokkos::sqrt(val);
+      return 1.0 / Kokkos::sqrt(val);
 #endif
+  )
+  KOKKOS_IF_ON_HOST(return 1.0 / Kokkos::sqrt(val);)
 }
 inline long double rsqrt(long double val) { return 1.0l / Kokkos::sqrt(val); }
 KOKKOS_INLINE_FUNCTION float rsqrtf(float x) { return Kokkos::rsqrt(x); }
