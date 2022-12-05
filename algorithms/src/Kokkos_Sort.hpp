@@ -66,8 +66,35 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wshadow"
 
+#if defined(KOKKOS_COMPILER_CLANG)
+// Some versions of Clang fail to compile Thrust, failing with errors like
+// this:
+//    <snip>/thrust/system/cuda/detail/core/agent_launcher.h:557:11:
+//    error: use of undeclared identifier 'va_printf'
+// The exact combination of versions for Clang and Thrust (or CUDA) for this
+// failure was not investigated, however even very recent version combination
+// (Clang 10.0.0 and Cuda 10.0) demonstrated failure.
+//
+// Defining _CubLog here allows us to avoid that code path, however disabling
+// some debugging diagnostics
+//
+// If _CubLog is already defined, we save it into KOKKKOS_CubLog_save, and
+// restore it at the end
+#ifdef _CubLog
+#define KOKKKOS_CubLog_save _CubLog
+#endif
+#define _CubLog
 #include <thrust/device_ptr.h>
 #include <thrust/sort.h>
+#undef _CubLog
+#ifdef KOKKKOS_CubLog_save
+#define _CubLog KOKKKOS_CubLog_save
+#undef KOKKKOS_CubLog_save
+#endif
+#else
+#include <thrust/device_ptr.h>
+#include <thrust/sort.h>
+#endif
 
 #pragma GCC diagnostic pop
 
