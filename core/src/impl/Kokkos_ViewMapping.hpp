@@ -3406,7 +3406,9 @@ class ViewMapping<
 
     using execution_space = typename alloc_prop::execution_space;
     using memory_space    = typename Traits::memory_space;
-    using value_type      = typename Traits::value_type;
+    static_assert(
+        SpaceAccessibility<execution_space, memory_space>::accessible);
+    using value_type = typename Traits::value_type;
     using functor_type =
         ViewValueFunctor<Kokkos::Device<execution_space, memory_space>,
                          value_type>;

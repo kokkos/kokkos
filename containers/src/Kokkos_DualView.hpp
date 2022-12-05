@@ -993,10 +993,11 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
     if (modified_flags.data() == nullptr) {
       modified_flags = t_modified_flags("DualView::modified_flags");
     }
-    if (modified_flags(1) >= modified_flags(0)) {
+
+    [[maybe_unused]] auto resize_on_device = [&](const auto& properties) {
       /* Resize on Device */
       if (sizeMismatch) {
-        ::Kokkos::resize(arg_prop, d_view, n0, n1, n2, n3, n4, n5, n6, n7);
+        ::Kokkos::resize(properties, d_view, n0, n1, n2, n3, n4, n5, n6, n7);
         if (alloc_prop_input::initialize) {
           h_view = create_mirror_view(typename t_host::memory_space(), d_view);
         } else {
@@ -1007,10 +1008,12 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
         /* Mark Device copy as modified */
         ++modified_flags(1);
       }
-    } else {
+    };
+
+    [[maybe_unused]] auto resize_on_host = [&](const auto& properties) {
       /* Resize on Host */
       if (sizeMismatch) {
-        ::Kokkos::resize(arg_prop, h_view, n0, n1, n2, n3, n4, n5, n6, n7);
+        ::Kokkos::resize(properties, h_view, n0, n1, n2, n3, n4, n5, n6, n7);
         if (alloc_prop_input::initialize) {
           d_view = create_mirror_view(typename t_dev::memory_space(), h_view);
 
@@ -1021,6 +1024,37 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
 
         /* Mark Host copy as modified */
         ++modified_flags(0);
+      }
+    };
+
+    constexpr bool has_execution_space = alloc_prop_input::has_execution_space;
+
+    if constexpr (has_execution_space) {
+      using ExecSpace = typename alloc_prop_input::execution_space;
+      const auto& exec_space =
+          Impl::get_property<Impl::ExecutionSpaceTag>(arg_prop);
+      constexpr bool exec_space_can_access_device =
+          SpaceAccessibility<ExecSpace,
+                             typename t_dev::memory_space>::accessible;
+      constexpr bool exec_space_can_access_host =
+          SpaceAccessibility<ExecSpace,
+                             typename t_host::memory_space>::accessible;
+      static_assert(exec_space_can_access_device || exec_space_can_access_host);
+      if constexpr (exec_space_can_access_device) {
+        sync<typename t_dev::memory_space>(exec_space);
+        resize_on_device(arg_prop);
+        return;
+      }
+      if constexpr (exec_space_can_access_host) {
+        sync<typename t_host::memory_space>(exec_space);
+        resize_on_host(arg_prop);
+        return;
+      }
+    } else {
+      if (modified_flags(1) >= modified_flags(0)) {
+        resize_on_device(arg_prop);
+      } else {
+        resize_on_host(arg_prop);
       }
     }
   }
