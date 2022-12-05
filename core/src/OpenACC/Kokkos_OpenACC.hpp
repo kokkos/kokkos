@@ -83,7 +83,11 @@ class OpenACC {
   static void impl_static_fence(std::string const& name);
 
   static char const* name() { return "OpenACC"; }
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   static int concurrency() { return 256000; }  // FIXME_OPENACC
+#else
+  int concurrency() const { return 256000; }  // FIXME_OPENACC
+#endif
   static bool in_parallel() { return acc_on_device(acc_device_not_host); }
   uint32_t impl_instance_id() const noexcept;
   Impl::OpenACCInternal* impl_internal_space_instance() const {

@@ -140,7 +140,11 @@ class Serial {
   }
 
   /** \brief  Return the maximum amount of concurrency.  */
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   static int concurrency() { return 1; }
+#else
+  int concurrency() const { return 1; }
+#endif
 
   //! Print configuration information to the given output stream.
   void print_configuration(std::ostream& os, bool verbose = false) const;
