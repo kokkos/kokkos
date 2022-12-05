@@ -27,14 +27,16 @@ namespace {
 template <typename Policy>
 void test_run_time_parameters() {
   int league_size = 131;
-  int team_size   = 4 < Policy::execution_space::concurrency()
+
+  using execution_space = typename Policy::execution_space;
+  int team_size   = 4 < execution_space().concurrency()
                       ? 4
-                      : Policy::execution_space::concurrency();
+			: execution_space().concurrency();
 #ifdef KOKKOS_ENABLE_HPX
   team_size = 1;
 #endif
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
-  if (std::is_same<typename Policy::execution_space,
+  if (std::is_same<execution_space,
                    Kokkos::Experimental::OpenMPTarget>::value)
     team_size = 32;
 #endif
