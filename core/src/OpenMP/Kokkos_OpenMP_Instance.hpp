@@ -303,6 +303,8 @@ class UniqueToken<OpenMP, UniqueTokenScope::Global> {
   }
 
   /// \brief acquire value such that 0 <= value < size()
+  // FIXME this is wrong when using nested parallelism. In that case multiple
+  // threads have the same thread ID.
   KOKKOS_INLINE_FUNCTION
   int acquire() const noexcept {
     KOKKOS_IF_ON_HOST((return omp_get_thread_num();))
