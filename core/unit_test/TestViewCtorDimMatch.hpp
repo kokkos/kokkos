@@ -51,9 +51,10 @@ template <int rank, int dynrank, class RankType, std::size_t... Is>
 void test_matching_arguments_rank_helper(std::index_sequence<Is...>) {
   constexpr int nargs = sizeof...(Is);
   using view_type     = Kokkos::View<RankType>;
-  if (nargs == rank || nargs == dynrank)
+  if (nargs == rank || nargs == dynrank) {
     EXPECT_NO_THROW({ view_type v("v", ((Is * 0) + 1)...); });
-  else
+    EXPECT_NO_THROW({ view_type v(nullptr, ((Is * 0) + 1)...); });
+  } else {
     ASSERT_DEATH(
         { view_type v("v", ((Is * 0) + 1)...); },
         "Constructor for Kokkos::View 'v' has mismatched number of arguments. "
@@ -61,6 +62,15 @@ void test_matching_arguments_rank_helper(std::index_sequence<Is...>) {
             std::to_string(nargs) +
             " neither matches the dynamic rank = " + std::to_string(dynrank) +
             " nor the total rank = " + std::to_string(rank));
+    ASSERT_DEATH(
+        { view_type v(nullptr, ((Is * 0) + 1)...); },
+        "Constructor for Kokkos::View 'UNMANAGED' has mismatched number of "
+        "arguments. "
+        "The number of arguments = " +
+            std::to_string(nargs) +
+            " neither matches the dynamic rank = " + std::to_string(dynrank) +
+            " nor the total rank = " + std::to_string(rank));
+  }
 }
 
 template <int rank, int dynrank, template <int> class RankType>
@@ -172,6 +182,13 @@ TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_mix) {
                "match the compile-time extent in dimension 0. The given "     \
                "extent is 2 but should be 1.")
 
+#define CHECK_DEATH_UNMANAGED(EXPR)                                          \
+  ASSERT_DEATH(                                                              \
+      EXPR,                                                                  \
+      "The specified run-time extent for Kokkos::View 'UNMANAGED' does not " \
+      "match the compile-time extent in dimension 0. The given "             \
+      "extent is 2 but should be 1.")
+
 TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_static_extents) {
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 
@@ -184,6 +201,15 @@ TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_static_extents) {
   CHECK_DEATH({ Kokkos::View<int[1][1][1][1][1][1]>       v("v", 2, 1, 1, 1, 1, 1); });
   CHECK_DEATH({ Kokkos::View<int[1][1][1][1][1][1][1]>    v("v", 2, 1, 1, 1, 1, 1, 1); });
   CHECK_DEATH({ Kokkos::View<int[1][1][1][1][1][1][1][1]> v("v", 2, 1, 1, 1, 1, 1, 1, 1); });
+
+  CHECK_DEATH_UNMANAGED({ Kokkos::View<int[1]>                      v(nullptr, 2); });
+  CHECK_DEATH_UNMANAGED({ Kokkos::View<int[1][1]>                   v(nullptr, 2, 1); });
+  CHECK_DEATH_UNMANAGED({ Kokkos::View<int[1][1][1]>                v(nullptr, 2, 1, 1); });
+  CHECK_DEATH_UNMANAGED({ Kokkos::View<int[1][1][1][1]>             v(nullptr, 2, 1, 1, 1); });
+  CHECK_DEATH_UNMANAGED({ Kokkos::View<int[1][1][1][1][1]>          v(nullptr, 2, 1, 1, 1, 1); });
+  CHECK_DEATH_UNMANAGED({ Kokkos::View<int[1][1][1][1][1][1]>       v(nullptr, 2, 1, 1, 1, 1, 1); });
+  CHECK_DEATH_UNMANAGED({ Kokkos::View<int[1][1][1][1][1][1][1]>    v(nullptr, 2, 1, 1, 1, 1, 1, 1); });
+  CHECK_DEATH_UNMANAGED({ Kokkos::View<int[1][1][1][1][1][1][1][1]> v(nullptr, 2, 1, 1, 1, 1, 1, 1, 1); });
   // clang-format on
 }
 

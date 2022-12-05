@@ -1446,21 +1446,29 @@ class View : public ViewTraits<DataType, Properties...> {
           "execution space");
     }
 
-    size_t i0 = arg_layout.dimension[0];
-    size_t i1 = arg_layout.dimension[1];
-    size_t i2 = arg_layout.dimension[2];
-    size_t i3 = arg_layout.dimension[3];
-    size_t i4 = arg_layout.dimension[4];
-    size_t i5 = arg_layout.dimension[5];
-    size_t i6 = arg_layout.dimension[6];
-    size_t i7 = arg_layout.dimension[7];
+    if constexpr (std::is_same_v<typename traits::array_layout,
+                                 Kokkos::LayoutLeft> ||
+                  std::is_same_v<typename traits::array_layout,
+                                 Kokkos::LayoutRight> ||
+                  std::is_same_v<typename traits::array_layout,
+                                 Kokkos::LayoutStride> ||
+                  is_layouttiled<typename traits::array_layout>::value) {
+      size_t i0 = arg_layout.dimension[0];
+      size_t i1 = arg_layout.dimension[1];
+      size_t i2 = arg_layout.dimension[2];
+      size_t i3 = arg_layout.dimension[3];
+      size_t i4 = arg_layout.dimension[4];
+      size_t i5 = arg_layout.dimension[5];
+      size_t i6 = arg_layout.dimension[6];
+      size_t i7 = arg_layout.dimension[7];
 
-    const std::string& alloc_name =
-        Impl::get_property<Impl::LabelTag>(prop_copy);
-    Impl::runtime_check_rank(
-        *this, traits::rank, traits::rank_dynamic,
-        std::is_same<typename traits::specialize, void>::value, i0, i1, i2, i3,
-        i4, i5, i6, i7, alloc_name);
+      const std::string& alloc_name =
+          Impl::get_property<Impl::LabelTag>(prop_copy);
+      Impl::runtime_check_rank(
+          *this, traits::rank, traits::rank_dynamic,
+          std::is_same<typename traits::specialize, void>::value, i0, i1, i2,
+          i3, i4, i5, i6, i7, alloc_name);
+    }
 
 //------------------------------------------------------------
 #if defined(KOKKOS_ENABLE_CUDA)
@@ -1514,6 +1522,28 @@ class View : public ViewTraits<DataType, Properties...> {
                      typename Impl::ViewCtorProp<P...>::pointer_type>::value,
         "Constructing View to wrap user memory must supply matching pointer "
         "type");
+
+    if constexpr (std::is_same_v<typename traits::array_layout,
+                                 Kokkos::LayoutLeft> ||
+                  std::is_same_v<typename traits::array_layout,
+                                 Kokkos::LayoutRight> ||
+                  std::is_same_v<typename traits::array_layout,
+                                 Kokkos::LayoutStride> ||
+                  is_layouttiled<typename traits::array_layout>::value) {
+      size_t i0 = arg_layout.dimension[0];
+      size_t i1 = arg_layout.dimension[1];
+      size_t i2 = arg_layout.dimension[2];
+      size_t i3 = arg_layout.dimension[3];
+      size_t i4 = arg_layout.dimension[4];
+      size_t i5 = arg_layout.dimension[5];
+      size_t i6 = arg_layout.dimension[6];
+      size_t i7 = arg_layout.dimension[7];
+
+      Impl::runtime_check_rank(
+          *this, traits::rank, traits::rank_dynamic,
+          std::is_same<typename traits::specialize, void>::value, i0, i1, i2,
+          i3, i4, i5, i6, i7, "UNMANAGED");
+    }
   }
 
   // Simple dimension-only layout
