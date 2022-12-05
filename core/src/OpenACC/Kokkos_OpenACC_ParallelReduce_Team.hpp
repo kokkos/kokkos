@@ -186,7 +186,7 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
 }
 }  // namespace Kokkos
 
-#else
+#else  // KOKKOS_ENABLE_OPENACC_COLLAPSE_HIERARCHICAL_CONSTRUCTS
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
