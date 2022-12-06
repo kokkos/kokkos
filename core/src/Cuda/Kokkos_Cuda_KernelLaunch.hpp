@@ -196,7 +196,7 @@ inline void configure_shmem_preference(KernelFuncPtr const& func,
 template <class Policy>
 std::enable_if_t<Policy::experimental_contains_desired_occupancy>
 modify_launch_configuration_if_desired_occupancy_is_specified(
-    dim3 const&, Policy const& policy, cudaDeviceProp const& properties,
+    Policy const& policy, cudaDeviceProp const& properties,
     cudaFuncAttributes const& attributes, dim3 const& block, int& shmem,
     CachePreference& prefer_shmem) {
   int const block_size        = block.x * block.y * block.z;
@@ -222,27 +222,18 @@ modify_launch_configuration_if_desired_occupancy_is_specified(
 template <class Policy>
 std::enable_if_t<!Policy::experimental_contains_desired_occupancy>
 modify_launch_configuration_if_desired_occupancy_is_specified(
-    dim3 const& grid, Policy const&, cudaDeviceProp const& properties,
+    Policy const&, cudaDeviceProp const& properties,
     cudaFuncAttributes const& attributes, dim3 const& block, int& shmem,
     CachePreference& prefer_shmem) {
-  // Calculate maximum number of blocks that can simultaneously run on a SM
-  // based on the block size requested.
-  int const block_size   = block.x * block.y * block.z;
-  int max_blocks_threads = properties.maxThreadsPerMultiProcessor / block_size;
-  int const league_size  = grid.x * grid.y * grid.z;
-
-  // Calculate the maximum number of blocks that can simultaneously run based on
-  // the number of registers.
-  int const regs_per_sm     = properties.regsPerMultiprocessor;
-  int const regs_per_thread = attributes.numRegs;
-  int const max_blocks_regs = regs_per_sm / (regs_per_thread * block_size);
-
-  size_t const static_shmem = attributes.sharedSizeBytes;
-  int const max_active_blocks =
-      std::min(league_size, std::min(max_blocks_threads, max_blocks_regs));
-  size_t const max_shmem_mem = max_active_blocks * (shmem + static_shmem);
-
+  int const block_size          = block.x * block.y * block.z;
   size_t const max_shmem_per_sm = properties.sharedMemPerMultiprocessor;
+
+  // The cuda_max_active_blocks_per_sm is defined in BlockDeduction.hpp.
+  int const max_active_blocks =
+      cuda_max_active_blocks_per_sm(properties, attributes, block_size, shmem);
+
+  size_t const static_shmem  = attributes.sharedSizeBytes;
+  size_t const max_shmem_mem = max_active_blocks * (shmem + static_shmem);
 
   // If the addition of the requested shared memory and static shmem is smaller
   // than the quarter of the allocatable shared memory, set the cache carveout
@@ -665,7 +656,7 @@ struct CudaParallelLaunchImpl<
       // shared memory computed is actually smaller than `shmem` we overwrite
       // `shmem` and set `prefer_shmem` to `false`.
       modify_launch_configuration_if_desired_occupancy_is_specified(
-          grid, driver.get_policy(), cuda_instance->m_deviceProp,
+          driver.get_policy(), cuda_instance->m_deviceProp,
           get_cuda_func_attributes(), block, shmem, prefer_shmem);
 
       Impl::configure_shmem_preference<

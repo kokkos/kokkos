@@ -47,6 +47,9 @@
 #include <iostream>
 
 // The following unit test is only valid for the CUDA backend.
+// We are only testing for the Volta70 and Ampere80 architectures.
+// The unit test checks whether the right cache configuration options are
+// selected based on the NVIDIA device properties and the kernel attributes.
 #if defined(KOKKOS_ENABLE_CUDA)
 namespace Test {
 TEST(TEST_CATEGORY, cuda_cache_config) {
@@ -57,17 +60,21 @@ TEST(TEST_CATEGORY, cuda_cache_config) {
   cudaGetDeviceProperties(&prop, 0);
   Kokkos::TeamPolicy<TEST_EXECSPACE> policy_t;
   dim3 grid{14, 1, 1};
-  dim3 block{64, 10, 1};
+
+  attributes.maxDynamicSharedSizeBytes =
+      prop.sharedMemPerBlock * grid.x * grid.y * grid.z;
 
   int shmem = 0;
 
+  // The following block of code checks for L1 cache preference.
   {
+    dim3 block{64, 10, 1};
     attributes.numRegs         = 32;
     attributes.sharedSizeBytes = 16;
 #if defined(KOKKOS_ARCH_VOLTA70)
     shmem = 1000;
 #elif defined(KOKKOS_ARCH_AMPERE80)
-    shmem = 10000;
+    shmem = 12288;
 #else
     printf(
         "The unit test is only defined for Volta70 and Ampere80 "
@@ -75,17 +82,20 @@ TEST(TEST_CATEGORY, cuda_cache_config) {
 #endif
 
     modify_launch_configuration_if_desired_occupancy_is_specified(
-        grid, policy_t, prop, attributes, block, shmem, cache_config);
+        policy_t, prop, attributes, block, shmem, cache_config);
 
     ASSERT_EQ(cache_config, CachePreference::PreferL1);
   }
+
+  // The following block of code checks if the cache preference is set to equal.
   {
+    dim3 block{64, 2, 1};
     attributes.numRegs         = 64;
     attributes.sharedSizeBytes = 32;
 #if defined(KOKKOS_ARCH_VOLTA70)
-    shmem = 45000;
+    shmem = 4096;
 #elif defined(KOKKOS_ARCH_AMPERE80)
-    shmem = 55000;
+    shmem = 6144;
 #else
     printf(
         "The unit test is only defined for Volta70 and Ampere80 "
@@ -93,17 +103,21 @@ TEST(TEST_CATEGORY, cuda_cache_config) {
 #endif
 
     modify_launch_configuration_if_desired_occupancy_is_specified(
-        grid, policy_t, prop, attributes, block, shmem, cache_config);
+        policy_t, prop, attributes, block, shmem, cache_config);
 
     ASSERT_EQ(cache_config, CachePreference::PreferEqual);
   }
+
+  // The following block of code checks if the cache preference is set to
+  // Shared.
   {
+    dim3 block{32, 1, 1};
     attributes.numRegs         = 32;
     attributes.sharedSizeBytes = 16;
-    shmem                      = 63000;
+    shmem                      = 48128;
 
     modify_launch_configuration_if_desired_occupancy_is_specified(
-        grid, policy_t, prop, attributes, block, shmem, cache_config);
+        policy_t, prop, attributes, block, shmem, cache_config);
 
     ASSERT_EQ(cache_config, CachePreference::PreferShared);
   }
