@@ -82,6 +82,7 @@
 // restore it at the end
 #ifdef _CubLog
 #define KOKKKOS_CubLog_save _CubLog
+#undef _CubLog
 #endif
 #define _CubLog
 #include <thrust/device_ptr.h>
