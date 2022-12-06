@@ -65,7 +65,13 @@ void OpenMPTargetInternal::fence(const std::string& name,
         [&]() {});
   }
 }
-int OpenMPTargetInternal::concurrency() { return 128000; }
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+int OpenMPTargetInternal::concurrency() {
+#else
+int OpenMPTargetInternal::concurrency() const {
+#endif
+  return 128000;  // FIXME_OPENMPTARGET
+}
 const char* OpenMPTargetInternal::name() { return "OpenMPTarget"; }
 void OpenMPTargetInternal::print_configuration(std::ostream& os,
                                                bool /*verbose*/) const {
