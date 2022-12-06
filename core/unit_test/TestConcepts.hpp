@@ -173,9 +173,19 @@ inline constexpr bool is_team_handle_complete_trait_check_v =
     is_team_handle_complete_trait_check<T>::value;
 
 // actual test begins here
-// FIXME_OPENMPTARGET
-// https://github.com/kokkos/kokkos/blob/2d6cbad7e079eb45ae69ac6a59929d9fcf10409a/core/src/OpenMPTarget/Kokkos_OpenMPTarget_Exec.hpp#L860-L864
-#if !defined(KOKKOS_ENABLE_OPENMPTARGET)
+
+/*
+  FIXME_OPENMPTARGET
+  https://github.com/kokkos/kokkos/blob/2d6cbad7e079eb45ae69ac6a59929d9fcf10409a/core/src/OpenMPTarget/Kokkos_OpenMPTarget_Exec.hpp#L860-L864
+
+  FIXME_OPENACC
+  OpenACCTeamMember is missing the following method:
+    template <typename ReducerType>
+    KOKKOS_INLINE_FUNCTION std::enable_if_t<is_reducer<ReducerType>::value>
+    team_reduce(ReducerType const& reducer) const noexcept;
+*/
+
+#if !defined(KOKKOS_ENABLE_OPENMPTARGET) && !defined(KOKKOS_ENABLE_OPENACC)
 using space_t  = TEST_EXECSPACE;
 using policy_t = Kokkos::TeamPolicy<space_t>;
 using member_t = typename policy_t::member_type;
