@@ -62,22 +62,11 @@ static_assert(std::is_same<float, Kokkos::Impl::remove_cvref_t<float>>{}, "");
 /*-------------------------------------------------
   begin test for team_handle concept
 
-  Read before moving on to the test below:
-  The implementation inside Kokkos/core of the team_handle concept follows
-  that of execution space, memory space, etc as shown here:
-
+  Here we also provide a complete trait that follows the full concept specified
+  in:
     https://github.com/kokkos/kokkos/blob/61d7db55fceac3318c987a291f77b844fd94c165/core/src/Kokkos_Concepts.hpp#L160
-
-  which has a key aspect: for performance reasons, it does *not* check the
-  complete trait. So below we also provide a complete team handle concept trait
-  based on this
-
-    https://kokkos.github.io/kokkos-core-wiki/API/core/policies/TeamHandleConcept.html
-
-  which completely checks the trait and we use to validate things.
-  This complete trait was originally used as implementation but was moved
-  here as discussed in this PR: https://github.com/kokkos/kokkos/pull/5375
-
+  but this is not used as implementation for performance reasons as discussed
+  in: https://github.com/kokkos/kokkos/pull/5375
   ------------------------------------------------- */
 
 template <typename T>
@@ -133,14 +122,13 @@ struct is_team_handle_complete_trait_check {
       decltype(std::declval<U const &>().team_barrier());
 
   template <class U>
-  using TeamBroadcastArchetypeExpr =
-      decltype(std::declval<U const &>().team_broadcast(
-          lvalueForMethodsNeedingIt_, int{}));
+  using TeamBroadcastArchetypeExpr = decltype(
+      std::declval<U const &>().team_broadcast(lvalueForMethodsNeedingIt_, 0));
 
   template <class U>
   using TeamBroadcastAcceptClosureArchetypeExpr =
       decltype(std::declval<U const &>().team_broadcast(
-          TrivialFunctor{}, lvalueForMethodsNeedingIt_, int{}));
+          TrivialFunctor{}, lvalueForMethodsNeedingIt_, 0));
 
   template <class U>
   using TeamReducedArchetypeExpr =
