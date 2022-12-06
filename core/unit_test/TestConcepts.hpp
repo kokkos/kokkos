@@ -122,11 +122,11 @@ struct is_team_handle_complete_trait_check {
 
   template <class U>
   using TeamScratchArchetypeExpr =
-      decltype(std::declval<U const &>().team_scratch(int{}));
+      decltype(std::declval<U const &>().team_scratch(0));
 
   template <class U>
   using ThreadScracthArchetypeExpr =
-      decltype(std::declval<U const &>().thread_scratch(int{}));
+      decltype(std::declval<U const &>().thread_scratch(0));
 
   // collectives
   template <class U>
@@ -186,16 +186,9 @@ inline constexpr bool is_team_handle_complete_trait_check_v =
     is_team_handle_complete_trait_check<T>::value;
 
 // actual test begins here
-
-/*
-  disabling as follows:
-
-  - OpenMPTARGET: due to this
-    https://github.com/kokkos/kokkos/blob/2d6cbad7e079eb45ae69ac6a59929d9fcf10409a/core/src/OpenMPTarget/Kokkos_OpenMPTarget_Exec.hpp#L860
-
-    - OpenACC: not supporting teams yet
-   */
-#if not defined KOKKOS_ENABLE_OPENMPTARGET && not defined KOKKOS_ENABLE_OPENACC
+// FIXME_OPENMPTARGET
+// https://github.com/kokkos/kokkos/blob/2d6cbad7e079eb45ae69ac6a59929d9fcf10409a/core/src/OpenMPTarget/Kokkos_OpenMPTarget_Exec.hpp#L860-L864
+#if !defined(KOKKOS_ENABLE_OPENMPTARGET)
 using space_t  = TEST_EXECSPACE;
 using policy_t = Kokkos::TeamPolicy<space_t>;
 using member_t = typename policy_t::member_type;
@@ -222,8 +215,5 @@ static_assert(!is_team_handle_complete_trait_check_v<member_t *const>);
 #endif
 
 }  // end namespace TestIsTeamHandle
-/*-------------------------------------------------
-  end test for team_handle concept
-  -------------------------------------------------*/
 
 }  // namespace TestConcept
