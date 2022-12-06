@@ -79,7 +79,6 @@ static_assert(std::is_same<float, Kokkos::Impl::remove_cvref_t<float>>{}, "");
   here as discussed in this PR: https://github.com/kokkos/kokkos/pull/5375
 
   ------------------------------------------------- */
-namespace TestIsTeamHandle {
 
 template <typename T>
 struct is_team_handle_complete_trait_check {
@@ -213,7 +212,5 @@ static_assert(!is_team_handle_complete_trait_check_v<member_t *>);
 static_assert(!is_team_handle_complete_trait_check_v<member_t const *>);
 static_assert(!is_team_handle_complete_trait_check_v<member_t *const>);
 #endif
-
-}  // end namespace TestIsTeamHandle
 
 }  // namespace TestConcept
