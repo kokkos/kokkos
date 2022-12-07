@@ -267,6 +267,12 @@ const CudaInternalDevices &CudaInternalDevices::singleton() {
 
 //----------------------------------------------------------------------------
 
+int Impl::CudaInternal::concurrency() {
+  static int const concurrency = m_deviceProp.maxThreadsPerMultiProcessor *
+                                 m_deviceProp.multiProcessorCount;
+  return concurrency;
+}
+
 void CudaInternal::print_configuration(std::ostream &s) const {
   const CudaInternalDevices &dev_info = CudaInternalDevices::singleton();
 
@@ -417,9 +423,9 @@ Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
   }
 
   KOKKOS_IMPL_CUDA_SAFE_CALL(
-      cudaMalloc(&m_scratch_locks, sizeof(int32_t) * m_maxConcurrency));
+      cudaMalloc(&m_scratch_locks, sizeof(int32_t) * concurrency()));
   KOKKOS_IMPL_CUDA_SAFE_CALL(
-      cudaMemset(m_scratch_locks, 0, sizeof(int32_t) * m_maxConcurrency));
+      cudaMemset(m_scratch_locks, 0, sizeof(int32_t) * concurrency()));
 }
 
 //----------------------------------------------------------------------------
@@ -674,7 +680,7 @@ Cuda::size_type Cuda::detect_device_count() {
 }
 
 int Cuda::concurrency() {
-  return Impl::CudaInternal::singleton().m_maxConcurrency;
+  return Impl::CudaInternal::concurrency();
 }
 
 int Cuda::impl_is_initialized() {
@@ -781,8 +787,6 @@ void Cuda::impl_initialize(InitializationSettings const &settings) {
                 << " does not support unified virtual address space"
                 << std::endl;
     }
-    Impl::CudaInternal::m_maxConcurrency =
-        Impl::CudaInternal::m_maxThreadsPerSM * cudaProp.multiProcessorCount;
   } else {
     std::ostringstream msg;
     msg << "Kokkos::Cuda::initialize(" << cuda_device_id << ") FAILED: Device ";
