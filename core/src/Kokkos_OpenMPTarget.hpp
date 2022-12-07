@@ -73,7 +73,11 @@ class OpenMPTarget {
   static void impl_static_fence(const std::string& name);
 
   /** \brief  Return the maximum amount of concurrency.  */
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   static int concurrency();
+#else
+  int concurrency() const;
+#endif
 
   //! Print configuration information to the given output stream.
   void print_configuration(std::ostream& os, bool verbose = false) const;
