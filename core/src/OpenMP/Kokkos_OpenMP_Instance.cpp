@@ -34,6 +34,21 @@
 namespace Kokkos {
 namespace Impl {
 
+void OpenMPInternal::acquire_lock() {
+  int lock = desul::atomic_compare_exchange(&m_pool_mutex, 0, 1,
+                                            desul::MemoryOrderAcquire(),
+                                            desul::MemoryScopeDevice());
+  while (lock == 1)
+    lock = desul::atomic_compare_exchange(&m_pool_mutex, 0, 1,
+                                          desul::MemoryOrderAcquire(),
+                                          desul::MemoryScopeDevice());
+}
+
+void OpenMPInternal::release_lock() {
+  desul::atomic_store(&m_pool_mutex, 0, desul::MemoryOrderRelease(),
+                      desul::MemoryScopeDevice());
+}
+
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
 void OpenMPInternal::validate_partition_impl(const int nthreads,
                                              int &num_partitions,

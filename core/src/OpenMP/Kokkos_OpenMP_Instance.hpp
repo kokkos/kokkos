@@ -74,7 +74,7 @@ class OpenMPInternal {
  public:
   friend class Kokkos::OpenMP;
 
-  std::mutex m_pool_mutex;
+  int m_pool_mutex = 0;
 
   static OpenMPInternal& singleton();
 
@@ -85,6 +85,10 @@ class OpenMPInternal {
   void clear_thread_data();
 
   int thread_pool_size() const { return m_pool_size; }
+
+  void acquire_lock();
+
+  void release_lock();
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
   static void validate_partition_impl(const int nthreads, int& num_partitions,

@@ -72,7 +72,7 @@ class TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::OpenMP, QueueType>> {
         execution_space().impl_internal_space_instance();
     const int pool_size = get_max_team_count(scheduler.get_execution_space());
 
-    std::lock_guard<std::mutex> lock(instance->m_pool_mutex);
+    instance->acquire_lock();
 
     // TODO @tasking @new_feature DSH allow team sizes other than 1
     const int team_size = 1;                      // Threads per core
@@ -151,6 +151,8 @@ class TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::OpenMP, QueueType>> {
       }
       self.disband_team();
     }  // end pragma omp parallel
+
+    instance->release_lock();
   }
 
   static uint32_t get_max_team_count(execution_space const& espace) {
@@ -234,7 +236,7 @@ class TaskQueueSpecializationConstrained<
         execution_space().impl_internal_space_instance();
     const int pool_size = instance->thread_pool_size();
 
-    std::lock_guard<std::mutex> lock(instance->m_pool_mutex);
+    instance->acquire_lock();
 
     const int team_size = 1;       // Threads per core
     instance->resize_thread_data(0 /* global reduce buffer */
@@ -337,6 +339,8 @@ class TaskQueueSpecializationConstrained<
       }
       self.disband_team();
     }  // end pragma omp parallel
+
+    instance->release_lock();
   }
 
   template <typename TaskType>
