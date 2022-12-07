@@ -80,18 +80,14 @@
 //
 // If _CubLog is already defined, we save it into KOKKKOS_CubLog_save, and
 // restore it at the end
+#pragma push_macro("_CubLog")
 #ifdef _CubLog
-#define KOKKKOS_CubLog_save _CubLog
 #undef _CubLog
 #endif
 #define _CubLog
 #include <thrust/device_ptr.h>
 #include <thrust/sort.h>
-#undef _CubLog
-#ifdef KOKKKOS_CubLog_save
-#define _CubLog KOKKKOS_CubLog_save
-#undef KOKKKOS_CubLog_save
-#endif
+#pragma pop_macro("_CubLog")
 #else
 #include <thrust/device_ptr.h>
 #include <thrust/sort.h>
