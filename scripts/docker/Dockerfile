@@ -1,0 +1,67 @@
+ARG BASE=nvidia/cuda:11.0.3-devel-ubuntu18.04
+FROM $BASE
+
+ARG NPROCS=4
+
+RUN if test ${NV_CUDA_LIB_VERSION}; then apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/3bf863cc.pub; fi
+
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -yq \
+        build-essential \
+        bc \
+        curl \
+        git \
+        wget \
+        jq \
+        vim \
+        lcov \
+        ccache \
+        gdb \
+        ninja-build \
+        libbz2-dev \
+        libicu-dev \
+        python-dev \
+        autotools-dev \
+        && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN KEYDUMP_URL=https://cloud.cees.ornl.gov/download && \
+    KEYDUMP_FILE=keydump && \
+    wget --quiet ${KEYDUMP_URL}/${KEYDUMP_FILE} && \
+    wget --quiet ${KEYDUMP_URL}/${KEYDUMP_FILE}.sig && \
+    gpg --import ${KEYDUMP_FILE} && \
+    gpg --verify ${KEYDUMP_FILE}.sig ${KEYDUMP_FILE} && \
+    rm ${KEYDUMP_FILE}*
+
+# Install CMake
+ENV CMAKE_DIR=/opt/cmake
+RUN CMAKE_VERSION=3.16.9 && \
+    CMAKE_KEY=2D2CEF1034921684 && \
+    CMAKE_URL=https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION} && \
+    CMAKE_SCRIPT=cmake-${CMAKE_VERSION}-Linux-x86_64.sh && \
+    CMAKE_SHA256=cmake-${CMAKE_VERSION}-SHA-256.txt && \
+    wget --quiet ${CMAKE_URL}/${CMAKE_SHA256} && \
+    wget --quiet ${CMAKE_URL}/${CMAKE_SHA256}.asc && \
+    wget --quiet ${CMAKE_URL}/${CMAKE_SCRIPT} && \
+    gpg --verify ${CMAKE_SHA256}.asc ${CMAKE_SHA256} && \
+    grep -i ${CMAKE_SCRIPT} ${CMAKE_SHA256} | sed -e s/linux/Linux/ | sha256sum --check && \
+    mkdir -p ${CMAKE_DIR} && \
+    sh ${CMAKE_SCRIPT} --skip-license --prefix=${CMAKE_DIR} && \
+    rm cmake*
+ENV PATH=${CMAKE_DIR}/bin:$PATH
+
+# Install Clang/LLVM
+ENV LLVM_DIR=/opt/llvm
+RUN LLVM_VERSION=14.0.0 && \
+    LLVM_KEY="86419D8A 345AD05D" && \
+    LLVM_URL=https://github.com/llvm/llvm-project/releases/download/llvmorg-${LLVM_VERSION}/clang+llvm-${LLVM_VERSION}-x86_64-linux-gnu-ubuntu-18.04.tar.xz && \
+    LLVM_ARCHIVE=llvm-${LLVM_VERSION}.tar.xz && \
+    SCRATCH_DIR=/scratch && mkdir -p ${SCRATCH_DIR} && cd ${SCRATCH_DIR} && \
+    wget --quiet ${LLVM_URL} --output-document=${LLVM_ARCHIVE} && \
+    wget --quiet ${LLVM_URL}.sig --output-document=${LLVM_ARCHIVE}.sig && \
+    gpg --verify ${LLVM_ARCHIVE}.sig ${LLVM_ARCHIVE} && \
+    mkdir -p ${LLVM_DIR} && \
+    tar -xvf ${LLVM_ARCHIVE} -C ${LLVM_DIR} --strip-components=1 && \
+    echo "${LLVM_DIR}/lib" > /etc/ld.so.conf.d/llvm.conf && ldconfig && \
+    rm -rf ${SCRATCH_DIR}
+ENV PATH=${LLVM_DIR}/bin:$PATH
