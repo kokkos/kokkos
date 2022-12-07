@@ -50,8 +50,8 @@ class Kokkos::Impl::ParallelReduce<Functor, Kokkos::MDRangePolicy<Traits...>,
   using Policy = MDRangePolicy<Traits...>;
 
   using ReducerConditional =
-      Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
-                         Functor, ReducerType>;
+      Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value, Functor,
+                         ReducerType>;
   using ReducerTypeFwd = typename ReducerConditional::type;
   using Analysis =
       FunctorAnalysis<FunctorPatternInterface::REDUCE, Policy, ReducerTypeFwd>;
