@@ -53,8 +53,6 @@
 
 namespace Kokkos::Experimental::Impl {
 
-using OpenACCIterateLeft  = std::integral_constant<Iterate, Iterate::Left>;
-using OpenACCIterateRight = std::integral_constant<Iterate, Iterate::Right>;
 template <int N>
 using OpenACCMDRangeBegin = decltype(MDRangePolicy<OpenACC, Rank<N>>::m_lower);
 template <int N>
