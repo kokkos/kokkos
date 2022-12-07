@@ -68,13 +68,12 @@ class OpenMPInternal {
 
   int m_pool_size;
   int m_level;
+  int m_pool_mutex = 0;
 
   HostThreadTeamData* m_pool[OpenMPTraits::MAX_THREAD_COUNT];
 
  public:
   friend class Kokkos::OpenMP;
-
-  int m_pool_mutex = 0;
 
   static OpenMPInternal& singleton();
 
@@ -86,8 +85,10 @@ class OpenMPInternal {
 
   int thread_pool_size() const { return m_pool_size; }
 
+  // Acquire lock used to protect access to m_pool
   void acquire_lock();
 
+  // Release lock used to protect access to m_pool
   void release_lock();
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3

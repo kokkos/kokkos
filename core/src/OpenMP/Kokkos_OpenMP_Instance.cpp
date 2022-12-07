@@ -35,13 +35,11 @@ namespace Kokkos {
 namespace Impl {
 
 void OpenMPInternal::acquire_lock() {
-  int lock = desul::atomic_compare_exchange(&m_pool_mutex, 0, 1,
-                                            desul::MemoryOrderAcquire(),
-                                            desul::MemoryScopeDevice());
-  while (lock == 1)
-    lock = desul::atomic_compare_exchange(&m_pool_mutex, 0, 1,
-                                          desul::MemoryOrderAcquire(),
-                                          desul::MemoryScopeDevice());
+  while (1 == desul::atomic_compare_exchange(&m_pool_mutex, 0, 1,
+                                             desul::MemoryOrderAcquire(),
+                                             desul::MemoryScopeDevice())) {
+    // do nothing
+  }
 }
 
 void OpenMPInternal::release_lock() {
