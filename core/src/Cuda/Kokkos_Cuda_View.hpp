@@ -31,7 +31,7 @@ struct CudaLDGFetch {
   const ValueType* m_ptr;
 
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION ValueType operator[](const iType& i) const {
+  KOKKOS_FUNCTION ValueType operator[](const iType& i) const {
 #if defined(KOKKOS_ARCH_KEPLER30) || defined(KOKKOS_ARCH_KEPLER32)
     return m_ptr[i];
 #else
@@ -42,16 +42,16 @@ struct CudaLDGFetch {
 #endif
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   operator const ValueType*() const { return m_ptr; }
 
   KOKKOS_DEFAULTED_FUNCTION
   CudaLDGFetch() = default;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   explicit CudaLDGFetch(const ValueType* const arg_ptr) : m_ptr(arg_ptr) {}
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   CudaLDGFetch(CudaLDGFetch const rhs, size_t offset)
       : m_ptr(rhs.m_ptr + offset) {}
 };
