@@ -14,10 +14,6 @@
 //
 //@HEADER
 
-#include <cstdio>
-#include <sstream>
-#include <iostream>
-
 #include <gtest/gtest.h>
 
 #include <Kokkos_Core.hpp>
@@ -28,14 +24,14 @@ template <typename Policy>
 void test_run_time_parameters() {
   int league_size = 131;
 
-  using execution_space = typename Policy::execution_space;
+  using ExecutionSpace = typename Policy::execution_space;
   int team_size =
-      4 < execution_space().concurrency() ? 4 : execution_space().concurrency();
+      4 < ExecutionSpace().concurrency() ? 4 : ExecutionSpace().concurrency();
 #ifdef KOKKOS_ENABLE_HPX
   team_size = 1;
 #endif
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
-  if (std::is_same<execution_space, Kokkos::Experimental::OpenMPTarget>::value)
+  if (std::is_same<ExecutionSpace, Kokkos::Experimental::OpenMPTarget>::value)
     team_size = 32;
 #endif
   int chunk_size         = 4;

@@ -51,26 +51,25 @@ void test_prefer_desired_occupancy() {
 
   using Kokkos::Experimental::DesiredOccupancy;
   using Kokkos::Experimental::MaximizeOccupancy;
+  using Kokkos::Experimental::prefer;
   using Kokkos::Experimental::WorkItemProperty;
 
   static_assert(!Policy::experimental_contains_desired_occupancy);
 
   // MaximizeOccupancy -> MaximizeOccupancy
-  auto const policy_still_no_occ =
-      Kokkos::Experimental::prefer(policy, MaximizeOccupancy{});
+  auto const policy_still_no_occ = prefer(policy, MaximizeOccupancy{});
   static_assert(
       !decltype(policy_still_no_occ)::experimental_contains_desired_occupancy);
 
   // MaximizeOccupancy -> DesiredOccupancy
   auto const policy_with_occ =
-      Kokkos::Experimental::prefer(policy_still_no_occ, DesiredOccupancy{33});
+      prefer(policy_still_no_occ, DesiredOccupancy{33});
   static_assert(
       decltype(policy_with_occ)::experimental_contains_desired_occupancy);
   EXPECT_EQ(policy_with_occ.impl_get_desired_occupancy().value(), 33);
 
   // DesiredOccupancy -> DesiredOccupancy
-  auto const policy_change_occ =
-      Kokkos::Experimental::prefer(policy_with_occ, DesiredOccupancy{24});
+  auto const policy_change_occ = prefer(policy_with_occ, DesiredOccupancy{24});
   static_assert(
       decltype(policy_change_occ)::experimental_contains_desired_occupancy);
   EXPECT_EQ(policy_change_occ.impl_get_desired_occupancy().value(), 24);
@@ -82,33 +81,10 @@ void test_prefer_desired_occupancy() {
   EXPECT_EQ(policy_with_occ_and_hint.impl_get_desired_occupancy().value(), 24);
 
   // DesiredOccupancy -> MaximizeOccupancy
-  auto const policy_drop_occ = Kokkos::Experimental::prefer(
-      policy_with_occ_and_hint, MaximizeOccupancy{});
+  auto const policy_drop_occ =
+      prefer(policy_with_occ_and_hint, MaximizeOccupancy{});
   static_assert(
       !decltype(policy_drop_occ)::experimental_contains_desired_occupancy);
-
-  // The following demonstrates that the size of a policy
-  // does not increase if the user decides not to use
-  // experimental procedures.
-  // We must disable in some case since an EBO failure with
-  // VS 16.11.3 and CUDA 11.4.2 will effect the
-  // DummyPolicy instantiation.
-#if !(defined(_WIN32) && defined(KOKKOS_ENABLE_CUDA))
-  // assert that base class has size 1. We are only
-  // concerned with calling this if the PolicyType
-  // template is DummyPolicy. In all other cases,
-  // "!std::is_same_v<Policy, DummyPolicy<Args...>>=true"
-  // and the test automatically passes.
-  static_assert(!std::is_same_v<Policy, DummyPolicy<>> ||
-                sizeof(decltype(policy)) == 1);
-
-  // assert that size of the policy with
-  // experimental proceedure is the size
-  // of the procedure struct. Again,
-  // only tested for DummyPolicy.
-  static_assert(!std::is_same_v<Policy, DummyPolicy<>> ||
-                sizeof(decltype(policy_with_occ)) == sizeof(DesiredOccupancy));
-#endif
 }
 
 TEST(TEST_CATEGORY, execution_policy_occupancy_and_hint) {
@@ -117,5 +93,21 @@ TEST(TEST_CATEGORY, execution_policy_occupancy_and_hint) {
   test_prefer_desired_occupancy<Kokkos::TeamPolicy<>>();
   test_prefer_desired_occupancy<Kokkos::MDRangePolicy<Kokkos::Rank<2>>>();
 }
+
+// Check that the policy size does not increase if the user does not specify the
+// occupancy (only pay for what you use).
+// Disabling since EBO was not working with VS 16.11.3 and CUDA 11.4.2
+#if !(defined(_WIN32) && defined(KOKKOS_ENABLE_CUDA))
+constexpr bool test_empty_base_optimization() {
+  DummyPolicy<> policy;
+  static_assert(sizeof(decltype(policy)) == 1);
+  using Kokkos::Experimental::DesiredOccupancy;
+  using Kokkos::Experimental::prefer;
+  static_assert(sizeof(decltype(prefer(policy, DesiredOccupancy{33}))) ==
+                sizeof(DesiredOccupancy));
+  return true;
+}
+static_assert(test_empty_base_optimization());
+#endif
 
 }  // namespace

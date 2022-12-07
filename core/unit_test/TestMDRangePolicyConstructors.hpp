@@ -52,7 +52,7 @@ TEST(TEST_CATEGORY, md_range_policy_construction_from_arrays) {
            Kokkos::Array<IndexType, 1>{{4}});
   }
   {
-    // Check that construction from double-braced initliazer list
+    // Check that construction from double-braced initializer list
     // works.
     using index_type = unsigned long long;
     Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>> p1({{0, 1}},
