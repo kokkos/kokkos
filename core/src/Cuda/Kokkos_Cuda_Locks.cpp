@@ -59,7 +59,7 @@ void initialize_host_cuda_lock_arrays() {
                  sizeof(int) * (CUDA_SPACE_ATOMIC_MASK + 1)));
   Impl::cuda_device_synchronize(
       "Kokkos::Impl::initialize_host_cuda_lock_arrays: Pre Init Lock Arrays");
-  g_host_cuda_lock_arrays.n = Cuda::concurrency();
+  g_host_cuda_lock_arrays.n = CudaInternal::concurrency();
   copy_cuda_lock_arrays_to_device();
   init_lock_array_kernel_atomic<<<(CUDA_SPACE_ATOMIC_MASK + 1 + 255) / 256,
                                   256>>>();
