@@ -48,27 +48,6 @@ struct CudaLDGFetch {
   KOKKOS_INLINE_FUNCTION
   CudaLDGFetch() : m_ptr() {}
 
-  KOKKOS_DEFAULTED_FUNCTION
-  ~CudaLDGFetch() = default;
-
-  KOKKOS_INLINE_FUNCTION
-  CudaLDGFetch(const CudaLDGFetch& rhs) : m_ptr(rhs.m_ptr) {}
-
-  KOKKOS_INLINE_FUNCTION
-  CudaLDGFetch(CudaLDGFetch&& rhs) : m_ptr(rhs.m_ptr) {}
-
-  KOKKOS_INLINE_FUNCTION
-  CudaLDGFetch& operator=(const CudaLDGFetch& rhs) {
-    m_ptr = rhs.m_ptr;
-    return *this;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  CudaLDGFetch& operator=(CudaLDGFetch&& rhs) {
-    m_ptr = rhs.m_ptr;
-    return *this;
-  }
-
   KOKKOS_INLINE_FUNCTION
   explicit CudaLDGFetch(const ValueType* const arg_ptr) : m_ptr(arg_ptr) {}
 
