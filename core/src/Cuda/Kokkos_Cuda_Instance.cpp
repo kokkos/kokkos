@@ -679,7 +679,11 @@ Cuda::size_type Cuda::detect_device_count() {
   return Impl::CudaInternalDevices::singleton().m_cudaDevCount;
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 int Cuda::concurrency() {
+#else
+int Cuda::concurrency() const {
+#endif
   return Impl::CudaInternal::concurrency();
 }
 

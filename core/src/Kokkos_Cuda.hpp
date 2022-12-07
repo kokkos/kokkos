@@ -166,7 +166,11 @@ class Cuda {
                  "Kokkos::Cuda::fence(): Unnamed Instance Fence") const;
 
   /** \brief  Return the maximum amount of concurrency.  */
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   static int concurrency();
+#else
+  int concurrency() const;
+#endif
 
   //! Print configuration information to the given output stream.
   void print_configuration(std::ostream& os, bool verbose = false) const;
