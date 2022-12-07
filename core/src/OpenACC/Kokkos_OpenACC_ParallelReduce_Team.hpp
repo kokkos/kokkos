@@ -186,8 +186,13 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
 }
 }  // namespace Kokkos
 
-#else  // KOKKOS_ENABLE_OPENACC_COLLAPSE_HIERARCHICAL_CONSTRUCTS
+#else /* #ifdef KOKKOS_ENABLE_OPENACC_COLLAPSE_HIERARCHICAL_CONSTRUCTS */
 
+// FIXME_OPENACC: below implementation conforms to the OpenACC standard, but
+// the NVHPC compiler (V22.11) fails due to the lack of support for lambda
+// expressions containing parallel loops.
+// Disabled for the time being.
+#if 0
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 // Hierarchical Parallelism -> Team level implementation
@@ -355,6 +360,7 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
   result = tmp;
 }
 }  // namespace Kokkos
+#endif /* #if 0 */
 
 #endif /* #ifdef KOKKOS_ENABLE_OPENACC_COLLAPSE_HIERARCHICAL_CONSTRUCTS */
 
