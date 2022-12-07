@@ -347,4 +347,74 @@ TEST(cuda, impl_view_texture) {
   TestViewCudaTexture<Kokkos::CudaUVMSpace>::run();
 }
 
+// couldn't create a random-access subview of a view of const T in Kokkos::Cuda
+namespace issue_5594 {
+
+template <typename View>
+struct InitFunctor {
+  InitFunctor(const View &view) : view_(view) {}
+  KOKKOS_INLINE_FUNCTION
+  void operator()(int i) const { view_(i) = i; }
+  View view_;
+};
+
+template <typename V1, typename V2>
+struct Issue5594Functor {
+  Issue5594Functor(const V1 &v1) : v1_(v1) {}
+  KOKKOS_INLINE_FUNCTION
+  void operator()(int i, int &lerr) const {
+    V2 v2(&v1_(0),
+          v1_.size());  // failure here -- create subview in execution space
+    lerr += v1_(i) != v2(i);  // check that subview is correct
+  }
+  V1 v1_;
+};
+
+template <typename View>
+View create_view() {
+  using execution_space = typename View::execution_space;
+  View view("", 10);
+  InitFunctor iota(view);
+  Kokkos::parallel_for("test_view_subview_const_randomaccess",
+                       Kokkos::RangePolicy<execution_space>(0, view.extent(0)),
+                       iota);
+  return view;
+}
+
+// creating a RandomAccess subview of a view of const T in Kokkos::Cuda
+template <typename Exec, typename Mem>
+void test_view_subview_const_randomaccess() {
+  using view_t         = Kokkos::View<int *, Mem>;
+  using view_const_t   = Kokkos::View<const int *, Mem>;
+  using u_view_const_t = Kokkos::View<
+      const int *, Mem,
+      Kokkos::MemoryTraits<Kokkos::Unmanaged | Kokkos::RandomAccess>>;
+
+  // create non-const view with known values
+  view_t nonConst = create_view<view_t>();
+  // get a const version of the values
+  view_const_t view(nonConst);
+
+  // create a subview in the execution space and check that it worked
+  Issue5594Functor<view_const_t, u_view_const_t> checker(view);
+  int errCount;
+  Kokkos::parallel_reduce("test_view_subview_const_randomaccess",
+                          Kokkos::RangePolicy<Exec>(0, view.extent(0)), checker,
+                          errCount);
+  EXPECT_TRUE(0 == errCount);
+}
+}  // namespace issue_5594
+
+TEST(cuda, view_subview_const_randomaccess) {
+#if defined(KOKKOS_ENABLE_CUDA) && \
+    defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC (similar failure to
+                                    // TestViewCudaTexture?)
+  GTEST_SKIP() << "RandomAccess view not working on NVHPC?";
+#endif
+  issue_5594::test_view_subview_const_randomaccess<Kokkos::Cuda,
+                                                   Kokkos::CudaSpace>();
+  issue_5594::test_view_subview_const_randomaccess<Kokkos::Cuda,
+                                                   Kokkos::CudaUVMSpace>();
+}
+
 }  // namespace Test
