@@ -171,19 +171,11 @@ class Serial {
   static const char* name();
 
   Impl::SerialInternal* impl_internal_space_instance() const {
-#ifdef KOKKOS_IMPL_WORKAROUND_ICE_IN_TRILINOS_WITH_OLD_INTEL_COMPILERS
-    return m_space_instance;
-#else
     return m_space_instance.get();
-#endif
   }
 
  private:
-#ifdef KOKKOS_IMPL_WORKAROUND_ICE_IN_TRILINOS_WITH_OLD_INTEL_COMPILERS
-  Impl::SerialInternal* m_space_instance;
-#else
   Kokkos::Impl::HostSharedPtr<Impl::SerialInternal> m_space_instance;
-#endif
   friend bool operator==(Serial const& lhs, Serial const& rhs) {
     return lhs.impl_internal_space_instance() ==
            rhs.impl_internal_space_instance();
