@@ -75,11 +75,8 @@
 // failure was not investigated, however even very recent version combination
 // (Clang 10.0.0 and Cuda 10.0) demonstrated failure.
 //
-// Defining _CubLog here allows us to avoid that code path, however disabling
-// some debugging diagnostics
-//
-// If _CubLog is already defined, we save it into KOKKKOS_CubLog_save, and
-// restore it at the end
+// Defining _CubLog here locally allows us to avoid that code path, however
+// disabling some debugging diagnostics
 #pragma push_macro("_CubLog")
 #ifdef _CubLog
 #undef _CubLog
