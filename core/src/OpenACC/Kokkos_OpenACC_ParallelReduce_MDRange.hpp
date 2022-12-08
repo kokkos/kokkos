@@ -85,7 +85,8 @@ class Kokkos::Impl::ParallelReduce<Functor, Kokkos::MDRangePolicy<Traits...>,
     static_assert(Policy::rank < 7 && Policy::rank > 1,
                   "OpenACC Backend MDRangePolicy Error: Unsupported rank...");
     ValueType val;
-    typename Analysis::Reducer final_reducer(&m_functor);
+    typename Analysis::Reducer final_reducer(
+        &ReducerConditional::select(m_functor, m_reducer));
     final_reducer.init(&val);
 
     Kokkos::Experimental::Impl::OpenACCParallelReduceMDRangeHelper(
@@ -100,1429 +101,352 @@ class Kokkos::Impl::ParallelReduce<Functor, Kokkos::MDRangePolicy<Traits...>,
 
 namespace Kokkos::Experimental::Impl {
 
-template <class ValueType, class Functor>
-void OpenACCParallelReduceSum(OpenACCMDRangeBegin<2> const& begin,
-                              OpenACCMDRangeEnd<2> const& end, ValueType& val,
-                              Functor const& functor, int const async_arg) {
-  auto const begin1 = begin[1];
-  auto const end1   = end[1];
-  auto const begin0 = begin[0];
-  auto const end0   = end[0];
+#define KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL2_HEAD(     \
+    REDUCER)                                                                \
+  template <class ValueType, class Functor>                                 \
+  void OpenACCParallelReduce##REDUCER(                                      \
+      OpenACCMDRangeBegin<2> const& begin, OpenACCMDRangeEnd<2> const& end, \
+      ValueType& val, Functor const& functor, int const async_arg) {        \
+    auto const begin1 = begin[1];                                           \
+    auto const end1   = end[1];                                             \
+    auto const begin0 = begin[0];                                           \
+    auto const end0   = end[0];                                             \
+                                                                            \
+    if ((end0 <= begin0) || (end1 <= begin1)) {                             \
+      return;                                                               \
+    }                                                                       \
+                                                                            \
+    auto const a_functor(functor);                                          \
+    auto l_val = val;
 
-  if ((end0 <= begin0) || (end1 <= begin1)) {
-    return;
+#define KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL2_TAIL \
+  for (auto i1 = begin1; i1 < end1; i1++) {                            \
+    for (auto i0 = begin0; i0 < end0; i0++) {                          \
+      a_functor(i0, i1, l_val);                                        \
+    }                                                                  \
+  }                                                                    \
+  val = l_val;                                                         \
   }
 
-  auto const a_functor(functor);
-  auto l_val = val;
+#define KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL3_HEAD(     \
+    REDUCER)                                                                \
+  template <class ValueType, class Functor>                                 \
+  void OpenACCParallelReduce##REDUCER(                                      \
+      OpenACCMDRangeBegin<3> const& begin, OpenACCMDRangeEnd<3> const& end, \
+      ValueType& val, Functor const& functor, int const async_arg) {        \
+    auto const begin2 = begin[2];                                           \
+    auto const end2   = end[2];                                             \
+    auto const begin1 = begin[1];                                           \
+    auto const end1   = end[1];                                             \
+    auto const begin0 = begin[0];                                           \
+    auto const end0   = end[0];                                             \
+                                                                            \
+    if ((end0 <= begin0) || (end1 <= begin1) || (end2 <= begin2)) {         \
+      return;                                                               \
+    }                                                                       \
+                                                                            \
+    auto const a_functor(functor);                                          \
+    auto l_val = val;
+
+#define KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL3_TAIL \
+  for (auto i2 = begin2; i2 < end2; i2++) {                            \
+    for (auto i1 = begin1; i1 < end1; i1++) {                          \
+      for (auto i0 = begin0; i0 < end0; i0++) {                        \
+        a_functor(i0, i1, i2, l_val);                                  \
+      }                                                                \
+    }                                                                  \
+  }                                                                    \
+  val = l_val;                                                         \
+  }
+
+#define KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL4_HEAD(     \
+    REDUCER)                                                                \
+  template <class ValueType, class Functor>                                 \
+  void OpenACCParallelReduce##REDUCER(                                      \
+      OpenACCMDRangeBegin<4> const& begin, OpenACCMDRangeEnd<4> const& end, \
+      ValueType& val, Functor const& functor, int const async_arg) {        \
+    auto const begin3 = begin[3];                                           \
+    auto const end3   = end[3];                                             \
+    auto const begin2 = begin[2];                                           \
+    auto const end2   = end[2];                                             \
+    auto const begin1 = begin[1];                                           \
+    auto const end1   = end[1];                                             \
+    auto const begin0 = begin[0];                                           \
+    auto const end0   = end[0];                                             \
+                                                                            \
+    if ((end0 <= begin0) || (end1 <= begin1) || (end2 <= begin2) ||         \
+        (end3 <= begin3)) {                                                 \
+      return;                                                               \
+    }                                                                       \
+                                                                            \
+    auto const a_functor(functor);                                          \
+    auto l_val = val;
+
+#define KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL4_TAIL \
+  for (auto i3 = begin3; i3 < end3; i3++) {                            \
+    for (auto i2 = begin2; i2 < end2; i2++) {                          \
+      for (auto i1 = begin1; i1 < end1; i1++) {                        \
+        for (auto i0 = begin0; i0 < end0; i0++) {                      \
+          a_functor(i0, i1, i2, i3, l_val);                            \
+        }                                                              \
+      }                                                                \
+    }                                                                  \
+  }                                                                    \
+  val = l_val;                                                         \
+  }
+
+#define KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL5_HEAD(     \
+    REDUCER)                                                                \
+  template <class ValueType, class Functor>                                 \
+  void OpenACCParallelReduce##REDUCER(                                      \
+      OpenACCMDRangeBegin<5> const& begin, OpenACCMDRangeEnd<5> const& end, \
+      ValueType& val, Functor const& functor, int const async_arg) {        \
+    auto const begin4 = begin[4];                                           \
+    auto const end4   = end[4];                                             \
+    auto const begin3 = begin[3];                                           \
+    auto const end3   = end[3];                                             \
+    auto const begin2 = begin[2];                                           \
+    auto const end2   = end[2];                                             \
+    auto const begin1 = begin[1];                                           \
+    auto const end1   = end[1];                                             \
+    auto const begin0 = begin[0];                                           \
+    auto const end0   = end[0];                                             \
+                                                                            \
+    if ((end0 <= begin0) || (end1 <= begin1) || (end2 <= begin2) ||         \
+        (end3 <= begin3) || (end4 <= begin4)) {                             \
+      return;                                                               \
+    }                                                                       \
+                                                                            \
+    auto const a_functor(functor);                                          \
+    auto l_val = val;
+
+#define KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL5_TAIL \
+  for (auto i4 = begin4; i4 < end4; i4++) {                            \
+    for (auto i3 = begin3; i3 < end3; i3++) {                          \
+      for (auto i2 = begin2; i2 < end2; i2++) {                        \
+        for (auto i1 = begin1; i1 < end1; i1++) {                      \
+          for (auto i0 = begin0; i0 < end0; i0++) {                    \
+            a_functor(i0, i1, i2, i3, i4, l_val);                      \
+          }                                                            \
+        }                                                              \
+      }                                                                \
+    }                                                                  \
+  }                                                                    \
+  val = l_val;                                                         \
+  }
+
+#define KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL6_HEAD(     \
+    REDUCER)                                                                \
+  template <class ValueType, class Functor>                                 \
+  void OpenACCParallelReduce##REDUCER(                                      \
+      OpenACCMDRangeBegin<6> const& begin, OpenACCMDRangeEnd<6> const& end, \
+      ValueType& val, Functor const& functor, int const async_arg) {        \
+    auto const begin5 = begin[5];                                           \
+    auto const end5   = end[5];                                             \
+    auto const begin4 = begin[4];                                           \
+    auto const end4   = end[4];                                             \
+    auto const begin3 = begin[3];                                           \
+    auto const end3   = end[3];                                             \
+    auto const begin2 = begin[2];                                           \
+    auto const end2   = end[2];                                             \
+    auto const begin1 = begin[1];                                           \
+    auto const end1   = end[1];                                             \
+    auto const begin0 = begin[0];                                           \
+    auto const end0   = end[0];                                             \
+                                                                            \
+    if ((end0 <= begin0) || (end1 <= begin1) || (end2 <= begin2) ||         \
+        (end3 <= begin3) || (end4 <= begin4) || (end5 <= begin5)) {         \
+      return;                                                               \
+    }                                                                       \
+                                                                            \
+    auto const a_functor(functor);                                          \
+    auto l_val = val;
+
+#define KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL6_TAIL \
+  for (auto i5 = begin5; i5 < end5; i5++) {                            \
+    for (auto i4 = begin4; i4 < end4; i4++) {                          \
+      for (auto i3 = begin3; i3 < end3; i3++) {                        \
+        for (auto i2 = begin2; i2 < end2; i2++) {                      \
+          for (auto i1 = begin1; i1 < end1; i1++) {                    \
+            for (auto i0 = begin0; i0 < end0; i0++) {                  \
+              a_functor(i0, i1, i2, i3, i4, i5, l_val);                \
+            }                                                          \
+          }                                                            \
+        }                                                              \
+      }                                                                \
+    }                                                                  \
+  }                                                                    \
+  val = l_val;                                                         \
+  }
 
 // clang-format off
-#pragma acc parallel loop gang vector collapse(2) reduction(+ : l_val) copyin(a_functor) async(async_arg)
-  // clang-format on
-  for (auto i1 = begin1; i1 < end1; i1++) {
-    for (auto i0 = begin0; i0 < end0; i0++) {
-      a_functor(i0, i1, l_val);
-    }
-  }
-  val = l_val;
-}
-
-template <class ValueType, class Functor>
-void OpenACCParallelReduceSum(OpenACCMDRangeBegin<3> const& begin,
-                              OpenACCMDRangeEnd<3> const& end, ValueType& val,
-                              Functor const& functor, int const async_arg) {
-  auto const begin2 = begin[2];
-  auto const end2   = end[2];
-  auto const begin1 = begin[1];
-  auto const end1   = end[1];
-  auto const begin0 = begin[0];
-  auto const end0   = end[0];
-
-  if ((end0 <= begin0) || (end1 <= begin1) || (end2 <= begin2)) {
-    return;
-  }
-
-  auto const a_functor(functor);
-  auto l_val = val;
-
-// clang-format off
-#pragma acc parallel loop gang vector collapse(3) reduction(+ : l_val) copyin(a_functor) async(async_arg)
-  // clang-format on
-  for (auto i2 = begin2; i2 < end2; i2++) {
-    for (auto i1 = begin1; i1 < end1; i1++) {
-      for (auto i0 = begin0; i0 < end0; i0++) {
-        a_functor(i0, i1, i2, l_val);
-      }
-    }
-  }
-  val = l_val;
-}
-
-template <class ValueType, class Functor>
-void OpenACCParallelReduceSum(OpenACCMDRangeBegin<4> const& begin,
-                              OpenACCMDRangeEnd<4> const& end, ValueType& val,
-                              Functor const& functor, int const async_arg) {
-  auto const begin3 = begin[3];
-  auto const end3   = end[3];
-  auto const begin2 = begin[2];
-  auto const end2   = end[2];
-  auto const begin1 = begin[1];
-  auto const end1   = end[1];
-  auto const begin0 = begin[0];
-  auto const end0   = end[0];
-
-  if ((end0 <= begin0) || (end1 <= begin1) || (end2 <= begin2) ||
-      (end3 <= begin3)) {
-    return;
-  }
-
-  auto const a_functor(functor);
-  auto l_val = val;
-
-// clang-format off
-#pragma acc parallel loop gang vector collapse(4) reduction(+ : l_val) copyin(a_functor) async(async_arg)
-  // clang-format on
-  for (auto i3 = begin3; i3 < end3; i3++) {
-    for (auto i2 = begin2; i2 < end2; i2++) {
-      for (auto i1 = begin1; i1 < end1; i1++) {
-        for (auto i0 = begin0; i0 < end0; i0++) {
-          a_functor(i0, i1, i2, i3, l_val);
-        }
-      }
-    }
-  }
-  val = l_val;
-}
-
-template <class ValueType, class Functor>
-void OpenACCParallelReduceSum(OpenACCMDRangeBegin<5> const& begin,
-                              OpenACCMDRangeEnd<5> const& end, ValueType& val,
-                              Functor const& functor, int const async_arg) {
-  auto const begin4 = begin[4];
-  auto const end4   = end[4];
-  auto const begin3 = begin[3];
-  auto const end3   = end[3];
-  auto const begin2 = begin[2];
-  auto const end2   = end[2];
-  auto const begin1 = begin[1];
-  auto const end1   = end[1];
-  auto const begin0 = begin[0];
-  auto const end0   = end[0];
-
-  if ((end0 <= begin0) || (end1 <= begin1) || (end2 <= begin2) ||
-      (end3 <= begin3) || (end4 <= begin4)) {
-    return;
-  }
-
-  auto const a_functor(functor);
-  auto l_val = val;
-
-// clang-format off
-#pragma acc parallel loop gang vector collapse(5) reduction(+ : l_val) copyin(a_functor) async(async_arg)
-  // clang-format on
-  for (auto i4 = begin4; i4 < end4; i4++) {
-    for (auto i3 = begin3; i3 < end3; i3++) {
-      for (auto i2 = begin2; i2 < end2; i2++) {
-        for (auto i1 = begin1; i1 < end1; i1++) {
-          for (auto i0 = begin0; i0 < end0; i0++) {
-            a_functor(i0, i1, i2, i3, i4, l_val);
-          }
-        }
-      }
-    }
-  }
-  val = l_val;
-}
-
-template <class ValueType, class Functor>
-void OpenACCParallelReduceSum(OpenACCMDRangeBegin<6> const& begin,
-                              OpenACCMDRangeEnd<6> const& end, ValueType& val,
-                              Functor const& functor, int const async_arg) {
-  auto const begin5 = begin[5];
-  auto const end5   = end[5];
-  auto const begin4 = begin[4];
-  auto const end4   = end[4];
-  auto const begin3 = begin[3];
-  auto const end3   = end[3];
-  auto const begin2 = begin[2];
-  auto const end2   = end[2];
-  auto const begin1 = begin[1];
-  auto const end1   = end[1];
-  auto const begin0 = begin[0];
-  auto const end0   = end[0];
-
-  if ((end0 <= begin0) || (end1 <= begin1) || (end2 <= begin2) ||
-      (end3 <= begin3) || (end4 <= begin4) || (end5 <= begin5)) {
-    return;
-  }
-
-  auto const a_functor(functor);
-  auto l_val = val;
-
-// clang-format off
-#pragma acc parallel loop gang vector collapse(6) reduction(+ : l_val) copyin(a_functor) async(async_arg)
-  // clang-format on
-  for (auto i5 = begin5; i5 < end5; i5++) {
-    for (auto i4 = begin4; i4 < end4; i4++) {
-      for (auto i3 = begin3; i3 < end3; i3++) {
-        for (auto i2 = begin2; i2 < end2; i2++) {
-          for (auto i1 = begin1; i1 < end1; i1++) {
-            for (auto i0 = begin0; i0 < end0; i0++) {
-              a_functor(i0, i1, i2, i3, i4, i5, l_val);
-            }
-          }
-        }
-      }
-    }
-  }
-  val = l_val;
-}
-
-template <class ValueType, class Functor>
-void OpenACCParallelReduceProd(OpenACCMDRangeBegin<2> const& begin,
-                               OpenACCMDRangeEnd<2> const& end, ValueType& val,
-                               Functor const& functor, int const async_arg) {
-  auto const begin1 = begin[1];
-  auto const end1   = end[1];
-  auto const begin0 = begin[0];
-  auto const end0   = end[0];
-
-  if ((end0 <= begin0) || (end1 <= begin1)) {
-    return;
-  }
-
-  auto const a_functor(functor);
-  auto l_val = val;
-
-// clang-format off
-#pragma acc parallel loop gang vector collapse(2) reduction(* : l_val) copyin(a_functor) async(async_arg)
-  // clang-format on
-  for (auto i1 = begin1; i1 < end1; i1++) {
-    for (auto i0 = begin0; i0 < end0; i0++) {
-      a_functor(i0, i1, l_val);
-    }
-  }
-  val = l_val;
-}
-
-template <class ValueType, class Functor>
-void OpenACCParallelReduceProd(OpenACCMDRangeBegin<3> const& begin,
-                               OpenACCMDRangeEnd<3> const& end, ValueType& val,
-                               Functor const& functor, int const async_arg) {
-  auto const begin2 = begin[2];
-  auto const end2   = end[2];
-  auto const begin1 = begin[1];
-  auto const end1   = end[1];
-  auto const begin0 = begin[0];
-  auto const end0   = end[0];
-
-  if ((end0 <= begin0) || (end1 <= begin1) || (end2 <= begin2)) {
-    return;
-  }
-
-  auto const a_functor(functor);
-  auto l_val = val;
-
-// clang-format off
-#pragma acc parallel loop gang vector collapse(3) reduction(* : l_val) copyin(a_functor) async(async_arg)
-  // clang-format on
-  for (auto i2 = begin2; i2 < end2; i2++) {
-    for (auto i1 = begin1; i1 < end1; i1++) {
-      for (auto i0 = begin0; i0 < end0; i0++) {
-        a_functor(i0, i1, i2, l_val);
-      }
-    }
-  }
-  val = l_val;
-}
-
-template <class ValueType, class Functor>
-void OpenACCParallelReduceProd(OpenACCMDRangeBegin<4> const& begin,
-                               OpenACCMDRangeEnd<4> const& end, ValueType& val,
-                               Functor const& functor, int const async_arg) {
-  auto const begin3 = begin[3];
-  auto const end3   = end[3];
-  auto const begin2 = begin[2];
-  auto const end2   = end[2];
-  auto const begin1 = begin[1];
-  auto const end1   = end[1];
-  auto const begin0 = begin[0];
-  auto const end0   = end[0];
-
-  if ((end0 <= begin0) || (end1 <= begin1) || (end2 <= begin2) ||
-      (end3 <= begin3)) {
-    return;
-  }
-
-  auto const a_functor(functor);
-  auto l_val = val;
-
-// clang-format off
-#pragma acc parallel loop gang vector collapse(4) reduction(* : l_val) copyin(a_functor) async(async_arg)
-  // clang-format on
-  for (auto i3 = begin3; i3 < end3; i3++) {
-    for (auto i2 = begin2; i2 < end2; i2++) {
-      for (auto i1 = begin1; i1 < end1; i1++) {
-        for (auto i0 = begin0; i0 < end0; i0++) {
-          a_functor(i0, i1, i2, i3, l_val);
-        }
-      }
-    }
-  }
-  val = l_val;
-}
-
-template <class ValueType, class Functor>
-void OpenACCParallelReduceProd(OpenACCMDRangeBegin<5> const& begin,
-                               OpenACCMDRangeEnd<5> const& end, ValueType& val,
-                               Functor const& functor, int const async_arg) {
-  auto const begin4 = begin[4];
-  auto const end4   = end[4];
-  auto const begin3 = begin[3];
-  auto const end3   = end[3];
-  auto const begin2 = begin[2];
-  auto const end2   = end[2];
-  auto const begin1 = begin[1];
-  auto const end1   = end[1];
-  auto const begin0 = begin[0];
-  auto const end0   = end[0];
-
-  if ((end0 <= begin0) || (end1 <= begin1) || (end2 <= begin2) ||
-      (end3 <= begin3) || (end4 <= begin4)) {
-    return;
-  }
-
-  auto const a_functor(functor);
-  auto l_val = val;
-
-// clang-format off
-#pragma acc parallel loop gang vector collapse(5) reduction(* : l_val) copyin(a_functor) async(async_arg)
-  // clang-format on
-  for (auto i4 = begin4; i4 < end4; i4++) {
-    for (auto i3 = begin3; i3 < end3; i3++) {
-      for (auto i2 = begin2; i2 < end2; i2++) {
-        for (auto i1 = begin1; i1 < end1; i1++) {
-          for (auto i0 = begin0; i0 < end0; i0++) {
-            a_functor(i0, i1, i2, i3, i4, l_val);
-          }
-        }
-      }
-    }
-  }
-  val = l_val;
-}
-
-template <class ValueType, class Functor>
-void OpenACCParallelReduceProd(OpenACCMDRangeBegin<6> const& begin,
-                               OpenACCMDRangeEnd<6> const& end, ValueType& val,
-                               Functor const& functor, int const async_arg) {
-  auto const begin5 = begin[5];
-  auto const end5   = end[5];
-  auto const begin4 = begin[4];
-  auto const end4   = end[4];
-  auto const begin3 = begin[3];
-  auto const end3   = end[3];
-  auto const begin2 = begin[2];
-  auto const end2   = end[2];
-  auto const begin1 = begin[1];
-  auto const end1   = end[1];
-  auto const begin0 = begin[0];
-  auto const end0   = end[0];
-
-  if ((end0 <= begin0) || (end1 <= begin1) || (end2 <= begin2) ||
-      (end3 <= begin3) || (end4 <= begin4) || (end5 <= begin5)) {
-    return;
-  }
-
-  auto const a_functor(functor);
-  auto l_val = val;
-
-// clang-format off
-#pragma acc parallel loop gang vector collapse(6) reduction(* : l_val) copyin(a_functor) async(async_arg)
-  // clang-format on
-  for (auto i5 = begin5; i5 < end5; i5++) {
-    for (auto i4 = begin4; i4 < end4; i4++) {
-      for (auto i3 = begin3; i3 < end3; i3++) {
-        for (auto i2 = begin2; i2 < end2; i2++) {
-          for (auto i1 = begin1; i1 < end1; i1++) {
-            for (auto i0 = begin0; i0 < end0; i0++) {
-              a_functor(i0, i1, i2, i3, i4, i5, l_val);
-            }
-          }
-        }
-      }
-    }
-  }
-  val = l_val;
-}
-
-template <class ValueType, class Functor>
-void OpenACCParallelReduceMin(OpenACCMDRangeBegin<2> const& begin,
-                              OpenACCMDRangeEnd<2> const& end, ValueType& val,
-                              Functor const& functor, int const async_arg) {
-  auto const begin1 = begin[1];
-  auto const end1   = end[1];
-  auto const begin0 = begin[0];
-  auto const end0   = end[0];
-
-  if ((end0 <= begin0) || (end1 <= begin1)) {
-    return;
-  }
-
-  auto const a_functor(functor);
-  auto l_val = val;
-
-// clang-format off
-#pragma acc parallel loop gang vector collapse(2) reduction(min : l_val) copyin(a_functor) async(async_arg)
-  // clang-format on
-  for (auto i1 = begin1; i1 < end1; i1++) {
-    for (auto i0 = begin0; i0 < end0; i0++) {
-      a_functor(i0, i1, l_val);
-    }
-  }
-  val = l_val;
-}
-
-template <class ValueType, class Functor>
-void OpenACCParallelReduceMin(OpenACCMDRangeBegin<3> const& begin,
-                              OpenACCMDRangeEnd<3> const& end, ValueType& val,
-                              Functor const& functor, int const async_arg) {
-  auto const begin2 = begin[2];
-  auto const end2   = end[2];
-  auto const begin1 = begin[1];
-  auto const end1   = end[1];
-  auto const begin0 = begin[0];
-  auto const end0   = end[0];
-
-  if ((end0 <= begin0) || (end1 <= begin1) || (end2 <= begin2)) {
-    return;
-  }
-
-  auto const a_functor(functor);
-  auto l_val = val;
-
-// clang-format off
-#pragma acc parallel loop gang vector collapse(3) reduction(min : l_val) copyin(a_functor) async(async_arg)
-  // clang-format on
-  for (auto i2 = begin2; i2 < end2; i2++) {
-    for (auto i1 = begin1; i1 < end1; i1++) {
-      for (auto i0 = begin0; i0 < end0; i0++) {
-        a_functor(i0, i1, i2, l_val);
-      }
-    }
-  }
-  val = l_val;
-}
-
-template <class ValueType, class Functor>
-void OpenACCParallelReduceMin(OpenACCMDRangeBegin<4> const& begin,
-                              OpenACCMDRangeEnd<4> const& end, ValueType& val,
-                              Functor const& functor, int const async_arg) {
-  auto const begin3 = begin[3];
-  auto const end3   = end[3];
-  auto const begin2 = begin[2];
-  auto const end2   = end[2];
-  auto const begin1 = begin[1];
-  auto const end1   = end[1];
-  auto const begin0 = begin[0];
-  auto const end0   = end[0];
-
-  if ((end0 <= begin0) || (end1 <= begin1) || (end2 <= begin2) ||
-      (end3 <= begin3)) {
-    return;
-  }
-
-  auto const a_functor(functor);
-  auto l_val = val;
-
-// clang-format off
-#pragma acc parallel loop gang vector collapse(4) reduction(min : l_val) copyin(a_functor) async(async_arg)
-  // clang-format on
-  for (auto i3 = begin3; i3 < end3; i3++) {
-    for (auto i2 = begin2; i2 < end2; i2++) {
-      for (auto i1 = begin1; i1 < end1; i1++) {
-        for (auto i0 = begin0; i0 < end0; i0++) {
-          a_functor(i0, i1, i2, i3, l_val);
-        }
-      }
-    }
-  }
-  val = l_val;
-}
-
-template <class ValueType, class Functor>
-void OpenACCParallelReduceMin(OpenACCMDRangeBegin<5> const& begin,
-                              OpenACCMDRangeEnd<5> const& end, ValueType& val,
-                              Functor const& functor, int const async_arg) {
-  auto const begin4 = begin[4];
-  auto const end4   = end[4];
-  auto const begin3 = begin[3];
-  auto const end3   = end[3];
-  auto const begin2 = begin[2];
-  auto const end2   = end[2];
-  auto const begin1 = begin[1];
-  auto const end1   = end[1];
-  auto const begin0 = begin[0];
-  auto const end0   = end[0];
-
-  if ((end0 <= begin0) || (end1 <= begin1) || (end2 <= begin2) ||
-      (end3 <= begin3) || (end4 <= begin4)) {
-    return;
-  }
-
-  auto const a_functor(functor);
-  auto l_val = val;
-
-// clang-format off
-#pragma acc parallel loop gang vector collapse(5) reduction(min : l_val) copyin(a_functor) async(async_arg)
-  // clang-format on
-  for (auto i4 = begin4; i4 < end4; i4++) {
-    for (auto i3 = begin3; i3 < end3; i3++) {
-      for (auto i2 = begin2; i2 < end2; i2++) {
-        for (auto i1 = begin1; i1 < end1; i1++) {
-          for (auto i0 = begin0; i0 < end0; i0++) {
-            a_functor(i0, i1, i2, i3, i4, l_val);
-          }
-        }
-      }
-    }
-  }
-  val = l_val;
-}
-
-template <class ValueType, class Functor>
-void OpenACCParallelReduceMin(OpenACCMDRangeBegin<6> const& begin,
-                              OpenACCMDRangeEnd<6> const& end, ValueType& val,
-                              Functor const& functor, int const async_arg) {
-  auto const begin5 = begin[5];
-  auto const end5   = end[5];
-  auto const begin4 = begin[4];
-  auto const end4   = end[4];
-  auto const begin3 = begin[3];
-  auto const end3   = end[3];
-  auto const begin2 = begin[2];
-  auto const end2   = end[2];
-  auto const begin1 = begin[1];
-  auto const end1   = end[1];
-  auto const begin0 = begin[0];
-  auto const end0   = end[0];
-
-  if ((end0 <= begin0) || (end1 <= begin1) || (end2 <= begin2) ||
-      (end3 <= begin3) || (end4 <= begin4) || || (end5 <= begin5)) {
-    return;
-  }
-
-  auto const a_functor(functor);
-  auto l_val = val;
-
-// clang-format off
-#pragma acc parallel loop gang vector collapse(6) reduction(min : l_val) copyin(a_functor) async(async_arg)
-  // clang-format on
-  for (auto i5 = begin5; i5 < end5; i5++) {
-    for (auto i4 = begin4; i4 < end4; i4++) {
-      for (auto i3 = begin3; i3 < end3; i3++) {
-        for (auto i2 = begin2; i2 < end2; i2++) {
-          for (auto i1 = begin1; i1 < end1; i1++) {
-            for (auto i0 = begin0; i0 < end0; i0++) {
-              a_functor(i0, i1, i2, i3, i4, i5, l_val);
-            }
-          }
-        }
-      }
-    }
-  }
-  val = l_val;
-}
-
-template <class ValueType, class Functor>
-void OpenACCParallelReduceMax(OpenACCMDRangeBegin<2> const& begin,
-                              OpenACCMDRangeEnd<2> const& end, ValueType& val,
-                              Functor const& functor, int const async_arg) {
-  auto const begin1 = begin[1];
-  auto const end1   = end[1];
-  auto const begin0 = begin[0];
-  auto const end0   = end[0];
-
-  if ((end0 <= begin0) || (end1 <= begin1)) {
-    return;
-  }
-
-  auto const a_functor(functor);
-  auto l_val = val;
-
-// clang-format off
-#pragma acc parallel loop gang vector collapse(2) reduction(max : l_val) copyin(a_functor) async(async_arg)
-  // clang-format on
-  for (auto i1 = begin1; i1 < end1; i1++) {
-    for (auto i0 = begin0; i0 < end0; i0++) {
-      a_functor(i0, i1, l_val);
-    }
-  }
-  val = l_val;
-}
-
-template <class ValueType, class Functor>
-void OpenACCParallelReduceMax(OpenACCMDRangeBegin<3> const& begin,
-                              OpenACCMDRangeEnd<3> const& end, ValueType& val,
-                              Functor const& functor, int const async_arg) {
-  auto const begin2 = begin[2];
-  auto const end2   = end[2];
-  auto const begin1 = begin[1];
-  auto const end1   = end[1];
-  auto const begin0 = begin[0];
-  auto const end0   = end[0];
-
-  if ((end0 <= begin0) || (end1 <= begin1) || (end2 <= begin2)) {
-    return;
-  }
-
-  auto const a_functor(functor);
-  auto l_val = val;
-
-// clang-format off
-#pragma acc parallel loop gang vector collapse(3) reduction(max : l_val) copyin(a_functor) async(async_arg)
-  // clang-format on
-  for (auto i2 = begin2; i2 < end2; i2++) {
-    for (auto i1 = begin1; i1 < end1; i1++) {
-      for (auto i0 = begin0; i0 < end0; i0++) {
-        a_functor(i0, i1, i2, l_val);
-      }
-    }
-  }
-  val = l_val;
-}
-
-template <class ValueType, class Functor>
-void OpenACCParallelReduceMax(OpenACCMDRangeBegin<4> const& begin,
-                              OpenACCMDRangeEnd<4> const& end, ValueType& val,
-                              Functor const& functor, int const async_arg) {
-  auto const begin3 = begin[3];
-  auto const end3   = end[3];
-  auto const begin2 = begin[2];
-  auto const end2   = end[2];
-  auto const begin1 = begin[1];
-  auto const end1   = end[1];
-  auto const begin0 = begin[0];
-  auto const end0   = end[0];
-
-  if ((end0 <= begin0) || (end1 <= begin1) || (end2 <= begin2) ||
-      (end3 <= begin3)) {
-    return;
-  }
-
-  auto const a_functor(functor);
-  auto l_val = val;
-
-// clang-format off
-#pragma acc parallel loop gang vector collapse(4) reduction(max : l_val) copyin(a_functor) async(async_arg)
-  // clang-format on
-  for (auto i3 = begin3; i3 < end3; i3++) {
-    for (auto i2 = begin2; i2 < end2; i2++) {
-      for (auto i1 = begin1; i1 < end1; i1++) {
-        for (auto i0 = begin0; i0 < end0; i0++) {
-          a_functor(i0, i1, i2, i3, l_val);
-        }
-      }
-    }
-  }
-  val = l_val;
-}
-
-template <class ValueType, class Functor>
-void OpenACCParallelReduceMax(OpenACCMDRangeBegin<5> const& begin,
-                              OpenACCMDRangeEnd<5> const& end, ValueType& val,
-                              Functor const& functor, int const async_arg) {
-  auto const begin4 = begin[4];
-  auto const end4   = end[4];
-  auto const begin3 = begin[3];
-  auto const end3   = end[3];
-  auto const begin2 = begin[2];
-  auto const end2   = end[2];
-  auto const begin1 = begin[1];
-  auto const end1   = end[1];
-  auto const begin0 = begin[0];
-  auto const end0   = end[0];
-
-  if ((end0 <= begin0) || (end1 <= begin1) || (end2 <= begin2) ||
-      (end3 <= begin3) || (end4 <= begin4)) {
-    return;
-  }
-
-  auto const a_functor(functor);
-  auto l_val = val;
-
-// clang-format off
-#pragma acc parallel loop gang vector collapse(5) reduction(max : l_val) copyin(a_functor) async(async_arg)
-  // clang-format on
-  for (auto i4 = begin4; i4 < end4; i4++) {
-    for (auto i3 = begin3; i3 < end3; i3++) {
-      for (auto i2 = begin2; i2 < end2; i2++) {
-        for (auto i1 = begin1; i1 < end1; i1++) {
-          for (auto i0 = begin0; i0 < end0; i0++) {
-            a_functor(i0, i1, i2, i3, i4, l_val);
-          }
-        }
-      }
-    }
-  }
-  val = l_val;
-}
-
-template <class ValueType, class Functor>
-void OpenACCParallelReduceMax(OpenACCMDRangeBegin<6> const& begin,
-                              OpenACCMDRangeEnd<6> const& end, ValueType& val,
-                              Functor const& functor, int const async_arg) {
-  auto const begin5 = begin[5];
-  auto const end5   = end[5];
-  auto const begin4 = begin[4];
-  auto const end4   = end[4];
-  auto const begin3 = begin[3];
-  auto const end3   = end[3];
-  auto const begin2 = begin[2];
-  auto const end2   = end[2];
-  auto const begin1 = begin[1];
-  auto const end1   = end[1];
-  auto const begin0 = begin[0];
-  auto const end0   = end[0];
-
-  if ((end0 <= begin0) || (end1 <= begin1) || (end2 <= begin2) ||
-      (end3 <= begin3) || (end4 <= begin4) || (end5 <= begin5)) {
-    return;
-  }
-
-  auto const a_functor(functor);
-  auto l_val = val;
-
-// clang-format off
-#pragma acc parallel loop gang vector collapse(6) reduction(max : l_val) copyin(a_functor) async(async_arg)
-  // clang-format on
-  for (auto i5 = begin5; i5 < end5; i5++) {
-    for (auto i4 = begin4; i4 < end4; i4++) {
-      for (auto i3 = begin3; i3 < end3; i3++) {
-        for (auto i2 = begin2; i2 < end2; i2++) {
-          for (auto i1 = begin1; i1 < end1; i1++) {
-            for (auto i0 = begin0; i0 < end0; i0++) {
-              a_functor(i0, i1, i2, i3, i4, i5, l_val);
-            }
-          }
-        }
-      }
-    }
-  }
-  val = l_val;
-}
-
-template <class ValueType, class Functor>
-void OpenACCParallelReduceLAnd(OpenACCMDRangeBegin<2> const& begin,
-                               OpenACCMDRangeEnd<2> const& end, ValueType& val,
-                               Functor const& functor, int const async_arg) {
-  auto const begin1 = begin[1];
-  auto const end1   = end[1];
-  auto const begin0 = begin[0];
-  auto const end0   = end[0];
-
-  if ((end0 <= begin0) || (end1 <= begin1)) {
-    return;
-  }
-
-  auto const a_functor(functor);
-  auto l_val = val;
-
-// clang-format off
-#pragma acc parallel loop gang vector collapse(2) reduction(&& : l_val) copyin(a_functor) async(async_arg)
-  // clang-format on
-  for (auto i1 = begin1; i1 < end1; i1++) {
-    for (auto i0 = begin0; i0 < end0; i0++) {
-      a_functor(i0, i1, l_val);
-    }
-  }
-  val = l_val;
-}
-
-template <class ValueType, class Functor>
-void OpenACCParallelReduceLAnd(OpenACCMDRangeBegin<3> const& begin,
-                               OpenACCMDRangeEnd<3> const& end, ValueType& val,
-                               Functor const& functor, int const async_arg) {
-  auto const begin2 = begin[2];
-  auto const end2   = end[2];
-  auto const begin1 = begin[1];
-  auto const end1   = end[1];
-  auto const begin0 = begin[0];
-  auto const end0   = end[0];
-
-  if ((end0 <= begin0) || (end1 <= begin1) || (end2 <= begin2)) {
-    return;
-  }
-
-  auto const a_functor(functor);
-  auto l_val = val;
-
-// clang-format off
-#pragma acc parallel loop gang vector collapse(3) reduction(&& : l_val) copyin(a_functor) async(async_arg)
-  // clang-format on
-  for (auto i2 = begin2; i2 < end2; i2++) {
-    for (auto i1 = begin1; i1 < end1; i1++) {
-      for (auto i0 = begin0; i0 < end0; i0++) {
-        a_functor(i0, i1, i2, l_val);
-      }
-    }
-  }
-  val = l_val;
-}
-
-template <class ValueType, class Functor>
-void OpenACCParallelReduceLAnd(OpenACCMDRangeBegin<4> const& begin,
-                               OpenACCMDRangeEnd<4> const& end, ValueType& val,
-                               Functor const& functor, int const async_arg) {
-  auto const begin3 = begin[3];
-  auto const end3   = end[3];
-  auto const begin2 = begin[2];
-  auto const end2   = end[2];
-  auto const begin1 = begin[1];
-  auto const end1   = end[1];
-  auto const begin0 = begin[0];
-  auto const end0   = end[0];
-
-  if ((end0 <= begin0) || (end1 <= begin1) || (end2 <= begin2) ||
-      (end3 <= begin3)) {
-    return;
-  }
-
-  auto const a_functor(functor);
-  auto l_val = val;
-
-// clang-format off
-#pragma acc parallel loop gang vector collapse(4) reduction(&& : l_val) copyin(a_functor) async(async_arg)
-  // clang-format on
-  for (auto i3 = begin3; i3 < end3; i3++) {
-    for (auto i2 = begin2; i2 < end2; i2++) {
-      for (auto i1 = begin1; i1 < end1; i1++) {
-        for (auto i0 = begin0; i0 < end0; i0++) {
-          a_functor(i0, i1, i2, i3, l_val);
-        }
-      }
-    }
-  }
-  val = l_val;
-}
-
-template <class ValueType, class Functor>
-void OpenACCParallelReduceLAnd(OpenACCMDRangeBegin<5> const& begin,
-                               OpenACCMDRangeEnd<5> const& end, ValueType& val,
-                               Functor const& functor, int const async_arg) {
-  auto const begin4 = begin[4];
-  auto const end4   = end[4];
-  auto const begin3 = begin[3];
-  auto const end3   = end[3];
-  auto const begin2 = begin[2];
-  auto const end2   = end[2];
-  auto const begin1 = begin[1];
-  auto const end1   = end[1];
-  auto const begin0 = begin[0];
-  auto const end0   = end[0];
-
-  if ((end0 <= begin0) || (end1 <= begin1) || (end2 <= begin2) ||
-      (end3 <= begin3) || (end4 <= begin4)) {
-    return;
-  }
-
-  auto const a_functor(functor);
-  auto l_val = val;
-
-// clang-format off
-#pragma acc parallel loop gang vector collapse(5) reduction(&& : l_val) copyin(a_functor) async(async_arg)
-  // clang-format on
-  for (auto i4 = begin4; i4 < end4; i4++) {
-    for (auto i3 = begin3; i3 < end3; i3++) {
-      for (auto i2 = begin2; i2 < end2; i2++) {
-        for (auto i1 = begin1; i1 < end1; i1++) {
-          for (auto i0 = begin0; i0 < end0; i0++) {
-            a_functor(i0, i1, i2, i3, i4, l_val);
-          }
-        }
-      }
-    }
-  }
-  val = l_val;
-}
-
-template <class ValueType, class Functor>
-void OpenACCParallelReduceLAnd(OpenACCMDRangeBegin<6> const& begin,
-                               OpenACCMDRangeEnd<6> const& end, ValueType& val,
-                               Functor const& functor, int const async_arg) {
-  auto const begin5 = begin[5];
-  auto const end5   = end[5];
-  auto const begin4 = begin[4];
-  auto const end4   = end[4];
-  auto const begin3 = begin[3];
-  auto const end3   = end[3];
-  auto const begin2 = begin[2];
-  auto const end2   = end[2];
-  auto const begin1 = begin[1];
-  auto const end1   = end[1];
-  auto const begin0 = begin[0];
-  auto const end0   = end[0];
-
-  if ((end0 <= begin0) || (end1 <= begin1) || (end2 <= begin2) ||
-      (end3 <= begin3) || (end4 <= begin4) || (end5 <= begin5)) {
-    return;
-  }
-
-  auto const a_functor(functor);
-  auto l_val = val;
-
-// clang-format off
-#pragma acc parallel loop gang vector collapse(6) reduction(&& : l_val) copyin(a_functor) async(async_arg)
-  // clang-format on
-  for (auto i5 = begin5; i5 < end5; i5++) {
-    for (auto i4 = begin4; i4 < end4; i4++) {
-      for (auto i3 = begin3; i3 < end3; i3++) {
-        for (auto i2 = begin2; i2 < end2; i2++) {
-          for (auto i1 = begin1; i1 < end1; i1++) {
-            for (auto i0 = begin0; i0 < end0; i0++) {
-              a_functor(i0, i1, i2, i3, i4, i5, l_val);
-            }
-          }
-        }
-      }
-    }
-  }
-  val = l_val;
-}
-
-template <class ValueType, class Functor>
-void OpenACCParallelReduceLOr(OpenACCMDRangeBegin<2> const& begin,
-                              OpenACCMDRangeEnd<2> const& end, ValueType& val,
-                              Functor const& functor, int const async_arg) {
-  auto const begin1 = begin[1];
-  auto const end1   = end[1];
-  auto const begin0 = begin[0];
-  auto const end0   = end[0];
-
-  if ((end0 <= begin0) || (end1 <= begin1)) {
-    return;
-  }
-
-  auto const a_functor(functor);
-  auto l_val = val;
-
-// clang-format off
-#pragma acc parallel loop gang vector collapse(2) reduction(|| : l_val) copyin(a_functor) async(async_arg)
-  // clang-format on
-  for (auto i1 = begin1; i1 < end1; i1++) {
-    for (auto i0 = begin0; i0 < end0; i0++) {
-      a_functor(i0, i1, l_val);
-    }
-  }
-  val = l_val;
-}
-
-template <class ValueType, class Functor>
-void OpenACCParallelReduceLOr(OpenACCMDRangeBegin<3> const& begin,
-                              OpenACCMDRangeEnd<3> const& end, ValueType& val,
-                              Functor const& functor, int const async_arg) {
-  auto const begin2 = begin[2];
-  auto const end2   = end[2];
-  auto const begin1 = begin[1];
-  auto const end1   = end[1];
-  auto const begin0 = begin[0];
-  auto const end0   = end[0];
-
-  if ((end0 <= begin0) || (end1 <= begin1) || (end2 <= begin2)) {
-    return;
-  }
-
-  auto const a_functor(functor);
-  auto l_val = val;
-
-// clang-format off
-#pragma acc parallel loop gang vector collapse(3) reduction(|| : l_val) copyin(a_functor) async(async_arg)
-  // clang-format on
-  for (auto i2 = begin2; i2 < end2; i2++) {
-    for (auto i1 = begin1; i1 < end1; i1++) {
-      for (auto i0 = begin0; i0 < end0; i0++) {
-        a_functor(i0, i1, i2, l_val);
-      }
-    }
-  }
-  val = l_val;
-}
-
-template <class ValueType, class Functor>
-void OpenACCParallelReduceLOr(OpenACCMDRangeBegin<4> const& begin,
-                              OpenACCMDRangeEnd<4> const& end, ValueType& val,
-                              Functor const& functor, int const async_arg) {
-  auto const begin3 = begin[3];
-  auto const end3   = end[3];
-  auto const begin2 = begin[2];
-  auto const end2   = end[2];
-  auto const begin1 = begin[1];
-  auto const end1   = end[1];
-  auto const begin0 = begin[0];
-  auto const end0   = end[0];
-
-  if ((end0 <= begin0) || (end1 <= begin1) || (end2 <= begin2) ||
-      (end3 <= begin3)) {
-    return;
-  }
-
-  auto const a_functor(functor);
-  auto l_val = val;
-
-// clang-format off
-#pragma acc parallel loop gang vector collapse(4) reduction(|| : l_val) copyin(a_functor) async(async_arg)
-  // clang-format on
-  for (auto i3 = begin3; i3 < end3; i3++) {
-    for (auto i2 = begin2; i2 < end2; i2++) {
-      for (auto i1 = begin1; i1 < end1; i1++) {
-        for (auto i0 = begin0; i0 < end0; i0++) {
-          a_functor(i0, i1, i2, i3, l_val);
-        }
-      }
-    }
-  }
-  val = l_val;
-}
-
-template <class ValueType, class Functor>
-void OpenACCParallelReduceLOr(OpenACCMDRangeBegin<5> const& begin,
-                              OpenACCMDRangeEnd<5> const& end, ValueType& val,
-                              Functor const& functor, int const async_arg) {
-  auto const begin4 = begin[4];
-  auto const end4   = end[4];
-  auto const begin3 = begin[3];
-  auto const end3   = end[3];
-  auto const begin2 = begin[2];
-  auto const end2   = end[2];
-  auto const begin1 = begin[1];
-  auto const end1   = end[1];
-  auto const begin0 = begin[0];
-  auto const end0   = end[0];
-
-  if ((end0 <= begin0) || (end1 <= begin1) || (end2 <= begin2) ||
-      (end3 <= begin3) || (end4 <= begin4)) {
-    return;
-  }
-
-  auto const a_functor(functor);
-  auto l_val = val;
-
-// clang-format off
-#pragma acc parallel loop gang vector collapse(5) reduction(|| : l_val) copyin(a_functor) async(async_arg)
-  // clang-format on
-  for (auto i4 = begin4; i4 < end4; i4++) {
-    for (auto i3 = begin3; i3 < end3; i3++) {
-      for (auto i2 = begin2; i2 < end2; i2++) {
-        for (auto i1 = begin1; i1 < end1; i1++) {
-          for (auto i0 = begin0; i0 < end0; i0++) {
-            a_functor(i0, i1, i2, i3, i4, l_val);
-          }
-        }
-      }
-    }
-  }
-  val = l_val;
-}
-
-template <class ValueType, class Functor>
-void OpenACCParallelReduceLOr(OpenACCMDRangeBegin<6> const& begin,
-                              OpenACCMDRangeEnd<6> const& end, ValueType& val,
-                              Functor const& functor, int const async_arg) {
-  auto const begin5 = begin[5];
-  auto const end5   = end[5];
-  auto const begin4 = begin[4];
-  auto const end4   = end[4];
-  auto const begin3 = begin[3];
-  auto const end3   = end[3];
-  auto const begin2 = begin[2];
-  auto const end2   = end[2];
-  auto const begin1 = begin[1];
-  auto const end1   = end[1];
-  auto const begin0 = begin[0];
-  auto const end0   = end[0];
-
-  if ((end0 <= begin0) || (end1 <= begin1) || (end2 <= begin2) ||
-      (end3 <= begin3) || (end4 <= begin4) || (end5 <= begin5)) {
-    return;
-  }
-
-  auto const a_functor(functor);
-  auto l_val = val;
-
-// clang-format off
-#pragma acc parallel loop gang vector collapse(6) reduction(|| : l_val) copyin(a_functor) async(async_arg)
-  // clang-format on
-  for (auto i5 = begin5; i5 < end5; i5++) {
-    for (auto i4 = begin4; i4 < end4; i4++) {
-      for (auto i3 = begin3; i3 < end3; i3++) {
-        for (auto i2 = begin2; i2 < end2; i2++) {
-          for (auto i1 = begin1; i1 < end1; i1++) {
-            for (auto i0 = begin0; i0 < end0; i0++) {
-              a_functor(i0, i1, i2, i3, i4, i5, l_val);
-            }
-          }
-        }
-      }
-    }
-  }
-  val = l_val;
-}
-
-template <class ValueType, class Functor>
-void OpenACCParallelReduceBAnd(OpenACCMDRangeBegin<2> const& begin,
-                               OpenACCMDRangeEnd<2> const& end, ValueType& val,
-                               Functor const& functor, int const async_arg) {
-  auto const begin1 = begin[1];
-  auto const end1   = end[1];
-  auto const begin0 = begin[0];
-  auto const end0   = end[0];
-
-  if ((end0 <= begin0) || (end1 <= begin1)) {
-    return;
-  }
-
-  auto const a_functor(functor);
-  auto l_val = val;
-
-// clang-format off
-#pragma acc parallel loop gang vector collapse(2) reduction(& : l_val) copyin(a_functor) async(async_arg)
-  // clang-format on
-  for (auto i1 = begin1; i1 < end1; i1++) {
-    for (auto i0 = begin0; i0 < end0; i0++) {
-      a_functor(i0, i1, l_val);
-    }
-  }
-  val = l_val;
-}
-
-template <class ValueType, class Functor>
-void OpenACCParallelReduceBAnd(OpenACCMDRangeBegin<3> const& begin,
-                               OpenACCMDRangeEnd<3> const& end, ValueType& val,
-                               Functor const& functor, int const async_arg) {
-  auto const begin2 = begin[2];
-  auto const end2   = end[2];
-  auto const begin1 = begin[1];
-  auto const end1   = end[1];
-  auto const begin0 = begin[0];
-  auto const end0   = end[0];
-
-  if ((end0 <= begin0) || (end1 <= begin1) || (end2 <= begin2)) {
-    return;
-  }
-
-  auto const a_functor(functor);
-  auto l_val = val;
-
-// clang-format off
-#pragma acc parallel loop gang vector collapse(3) reduction(& : l_val) copyin(a_functor) async(async_arg)
-  // clang-format on
-  for (auto i2 = begin2; i2 < end2; i2++) {
-    for (auto i1 = begin1; i1 < end1; i1++) {
-      for (auto i0 = begin0; i0 < end0; i0++) {
-        a_functor(i0, i1, i2, l_val);
-      }
-    }
-  }
-  val = l_val;
-}
-
-template <class ValueType, class Functor>
-void OpenACCParallelReduceBAnd(OpenACCMDRangeBegin<4> const& begin,
-                               OpenACCMDRangeEnd<4> const& end, ValueType& val,
-                               Functor const& functor, int const async_arg) {
-  auto const begin3 = begin[3];
-  auto const end3   = end[3];
-  auto const begin2 = begin[2];
-  auto const end2   = end[2];
-  auto const begin1 = begin[1];
-  auto const end1   = end[1];
-  auto const begin0 = begin[0];
-  auto const end0   = end[0];
-
-  if ((end0 <= begin0) || (end1 <= begin1) || (end2 <= begin2) ||
-      (end3 <= begin3)) {
-    return;
-  }
-
-  auto const a_functor(functor);
-  auto l_val = val;
-
-// clang-format off
-#pragma acc parallel loop gang vector collapse(4) reduction(& : l_val) copyin(a_functor) async(async_arg)
-  // clang-format on
-  for (auto i3 = begin3; i3 < end3; i3++) {
-    for (auto i2 = begin2; i2 < end2; i2++) {
-      for (auto i1 = begin1; i1 < end1; i1++) {
-        for (auto i0 = begin0; i0 < end0; i0++) {
-          a_functor(i0, i1, i2, i3, l_val);
-        }
-      }
-    }
-  }
-  val = l_val;
-}
-
-template <class ValueType, class Functor>
-void OpenACCParallelReduceBAnd(OpenACCMDRangeBegin<5> const& begin,
-                               OpenACCMDRangeEnd<5> const& end, ValueType& val,
-                               Functor const& functor, int const async_arg) {
-  auto const begin4 = begin[4];
-  auto const end4   = end[4];
-  auto const begin3 = begin[3];
-  auto const end3   = end[3];
-  auto const begin2 = begin[2];
-  auto const end2   = end[2];
-  auto const begin1 = begin[1];
-  auto const end1   = end[1];
-  auto const begin0 = begin[0];
-  auto const end0   = end[0];
-
-  if ((end0 <= begin0) || (end1 <= begin1) || (end2 <= begin2) ||
-      (end3 <= begin3) || (end4 <= begin4)) {
-    return;
-  }
-
-  auto const a_functor(functor);
-  auto l_val = val;
-
-// clang-format off
-#pragma acc parallel loop gang vector collapse(5) reduction(& : l_val) copyin(a_functor) async(async_arg)
-  // clang-format on
-  for (auto i4 = begin4; i4 < end4; i4++) {
-    for (auto i3 = begin3; i3 < end3; i3++) {
-      for (auto i2 = begin2; i2 < end2; i2++) {
-        for (auto i1 = begin1; i1 < end1; i1++) {
-          for (auto i0 = begin0; i0 < end0; i0++) {
-            a_functor(i0, i1, i2, i3, i4, l_val);
-          }
-        }
-      }
-    }
-  }
-  val = l_val;
-}
-
-template <class ValueType, class Functor>
-void OpenACCParallelReduceBAnd(OpenACCMDRangeBegin<6> const& begin,
-                               OpenACCMDRangeEnd<6> const& end, ValueType& val,
-                               Functor const& functor, int const async_arg) {
-  auto const begin5 = begin[5];
-  auto const end5   = end[5];
-  auto const begin4 = begin[4];
-  auto const end4   = end[4];
-  auto const begin3 = begin[3];
-  auto const end3   = end[3];
-  auto const begin2 = begin[2];
-  auto const end2   = end[2];
-  auto const begin1 = begin[1];
-  auto const end1   = end[1];
-  auto const begin0 = begin[0];
-  auto const end0   = end[0];
-
-  if ((end0 <= begin0) || (end1 <= begin1) || (end2 <= begin2) ||
-      (end3 <= begin3) || (end4 <= begin4) || (end5 <= begin5)) {
-    return;
-  }
-
-  auto const a_functor(functor);
-  auto l_val = val;
-
-// clang-format off
-#pragma acc parallel loop gang vector collapse(6) reduction(& : l_val) copyin(a_functor) async(async_arg)
-  // clang-format on
-  for (auto i5 = begin5; i5 < end5; i5++) {
-    for (auto i4 = begin4; i4 < end4; i4++) {
-      for (auto i3 = begin3; i3 < end3; i3++) {
-        for (auto i2 = begin2; i2 < end2; i2++) {
-          for (auto i1 = begin1; i1 < end1; i1++) {
-            for (auto i0 = begin0; i0 < end0; i0++) {
-              a_functor(i0, i1, i2, i3, i4, i5, l_val);
-            }
-          }
-        }
-      }
-    }
-  }
-  val = l_val;
-}
-
-template <class ValueType, class Functor>
-void OpenACCParallelReduceBOr(OpenACCMDRangeBegin<2> const& begin,
-                              OpenACCMDRangeEnd<2> const& end, ValueType& val,
-                              Functor const& functor, int const async_arg) {
-  auto const begin1 = begin[1];
-  auto const end1   = end[1];
-  auto const begin0 = begin[0];
-  auto const end0   = end[0];
-
-  if ((end0 <= begin0) || (end1 <= begin1)) {
-    return;
-  }
-
-  auto const a_functor(functor);
-  auto l_val = val;
-
-// clang-format off
-#pragma acc parallel loop gang vector collapse(2) reduction(| : l_val) copyin(a_functor) async(async_arg)
-  // clang-format on
-  for (auto i1 = begin1; i1 < end1; i1++) {
-    for (auto i0 = begin0; i0 < end0; i0++) {
-      a_functor(i0, i1, l_val);
-    }
-  }
-  val = l_val;
-}
-
-template <class ValueType, class Functor>
-void OpenACCParallelReduceBOr(OpenACCMDRangeBegin<3> const& begin,
-                              OpenACCMDRangeEnd<3> const& end, ValueType& val,
-                              Functor const& functor, int const async_arg) {
-  auto const begin2 = begin[2];
-  auto const end2   = end[2];
-  auto const begin1 = begin[1];
-  auto const end1   = end[1];
-  auto const begin0 = begin[0];
-  auto const end0   = end[0];
-
-  if ((end0 <= begin0) || (end1 <= begin1) || (end2 <= begin2)) {
-    return;
-  }
-
-  auto const a_functor(functor);
-  auto l_val = val;
-
-// clang-format off
-#pragma acc parallel loop gang vector collapse(3) reduction(| : l_val) copyin(a_functor) async(async_arg)
-  // clang-format on
-  for (auto i2 = begin2; i2 < end2; i2++) {
-    for (auto i1 = begin1; i1 < end1; i1++) {
-      for (auto i0 = begin0; i0 < end0; i0++) {
-        a_functor(i0, i1, i2, l_val);
-      }
-    }
-  }
-  val = l_val;
-}
-
-template <class ValueType, class Functor>
-void OpenACCParallelReduceBOr(OpenACCMDRangeBegin<4> const& begin,
-                              OpenACCMDRangeEnd<4> const& end, ValueType& val,
-                              Functor const& functor, int const async_arg) {
-  auto const begin3 = begin[3];
-  auto const end3   = end[3];
-  auto const begin2 = begin[2];
-  auto const end2   = end[2];
-  auto const begin1 = begin[1];
-  auto const end1   = end[1];
-  auto const begin0 = begin[0];
-  auto const end0   = end[0];
-
-  if ((end0 <= begin0) || (end1 <= begin1) || (end2 <= begin2) ||
-      (end3 <= begin3)) {
-    return;
-  }
-
-  auto const a_functor(functor);
-  auto l_val = val;
-
-// clang-format off
-#pragma acc parallel loop gang vector collapse(4) reduction(| : l_val) copyin(a_functor) async(async_arg)
-  // clang-format on
-  for (auto i3 = begin3; i3 < end3; i3++) {
-    for (auto i2 = begin2; i2 < end2; i2++) {
-      for (auto i1 = begin1; i1 < end1; i1++) {
-        for (auto i0 = begin0; i0 < end0; i0++) {
-          a_functor(i0, i1, i2, i3, l_val);
-        }
-      }
-    }
-  }
-  val = l_val;
-}
-
-template <class ValueType, class Functor>
-void OpenACCParallelReduceBOr(OpenACCMDRangeBegin<5> const& begin,
-                              OpenACCMDRangeEnd<5> const& end, ValueType& val,
-                              Functor const& functor, int const async_arg) {
-  auto const begin4 = begin[4];
-  auto const end4   = end[4];
-  auto const begin3 = begin[3];
-  auto const end3   = end[3];
-  auto const begin2 = begin[2];
-  auto const end2   = end[2];
-  auto const begin1 = begin[1];
-  auto const end1   = end[1];
-  auto const begin0 = begin[0];
-  auto const end0   = end[0];
-
-  if ((end0 <= begin0) || (end1 <= begin1) || (end2 <= begin2) ||
-      (end3 <= begin3) || (end4 <= begin4)) {
-    return;
-  }
-
-  auto const a_functor(functor);
-  auto l_val = val;
-
-// clang-format off
-#pragma acc parallel loop gang vector collapse(5) reduction(| : l_val) copyin(a_functor) async(async_arg)
-  // clang-format on
-  for (auto i4 = begin4; i4 < end4; i4++) {
-    for (auto i3 = begin3; i3 < end3; i3++) {
-      for (auto i2 = begin2; i2 < end2; i2++) {
-        for (auto i1 = begin1; i1 < end1; i1++) {
-          for (auto i0 = begin0; i0 < end0; i0++) {
-            a_functor(i0, i1, i2, i3, i4, l_val);
-          }
-        }
-      }
-    }
-  }
-  val = l_val;
-}
-
-template <class ValueType, class Functor>
-void OpenACCParallelReduceBOr(OpenACCMDRangeBegin<6> const& begin,
-                              OpenACCMDRangeEnd<6> const& end, ValueType& val,
-                              Functor const& functor, int const async_arg) {
-  auto const begin5 = begin[5];
-  auto const end5   = end[5];
-  auto const begin4 = begin[4];
-  auto const end4   = end[4];
-  auto const begin3 = begin[3];
-  auto const end3   = end[3];
-  auto const begin2 = begin[2];
-  auto const end2   = end[2];
-  auto const begin1 = begin[1];
-  auto const end1   = end[1];
-  auto const begin0 = begin[0];
-  auto const end0   = end[0];
-
-  if ((end0 <= begin0) || (end1 <= begin1) || (end2 <= begin2) ||
-      (end3 <= begin3) || (end4 <= begin4) || (end5 <= begin5)) {
-    return;
-  }
-
-  auto const a_functor(functor);
-  auto l_val = val;
-
-// clang-format off
-#pragma acc parallel loop gang vector collapse(6) reduction(| : l_val) copyin(a_functor) async(async_arg)
-  // clang-format on
-  for (auto i5 = begin5; i5 < end5; i5++) {
-    for (auto i4 = begin4; i4 < end4; i4++) {
-      for (auto i3 = begin3; i3 < end3; i3++) {
-        for (auto i2 = begin2; i2 < end2; i2++) {
-          for (auto i1 = begin1; i1 < end1; i1++) {
-            for (auto i0 = begin0; i0 < end0; i0++) {
-              a_functor(i0, i1, i2, i3, i4, i5, l_val);
-            }
-          }
-        }
-      }
-    }
-  }
-  val = l_val;
-}
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL2_HEAD(Sum)
+    _Pragma("acc parallel loop gang vector collapse(2) reduction(+ : l_val) copyin(a_functor) async(async_arg)")
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL2_TAIL;
+
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL3_HEAD(Sum)
+    _Pragma("acc parallel loop gang vector collapse(3) reduction(+ : l_val) copyin(a_functor) async(async_arg)")
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL3_TAIL;
+
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL4_HEAD(Sum)
+    _Pragma("acc parallel loop gang vector collapse(4) reduction(+ : l_val) copyin(a_functor) async(async_arg)")
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL4_TAIL;
+
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL5_HEAD(Sum)
+    _Pragma("acc parallel loop gang vector collapse(5) reduction(+ : l_val) copyin(a_functor) async(async_arg)")
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL5_TAIL;
+
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL6_HEAD(Sum)
+    _Pragma("acc parallel loop gang vector collapse(6) reduction(+ : l_val) copyin(a_functor) async(async_arg)")
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL6_TAIL;
+
+
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL2_HEAD(Prod)
+    _Pragma("acc parallel loop gang vector collapse(2) reduction(* : l_val) copyin(a_functor) async(async_arg)")
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL2_TAIL;
+
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL3_HEAD(Prod)
+    _Pragma("acc parallel loop gang vector collapse(3) reduction(* : l_val) copyin(a_functor) async(async_arg)")
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL3_TAIL;
+
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL4_HEAD(Prod)
+    _Pragma("acc parallel loop gang vector collapse(4) reduction(* : l_val) copyin(a_functor) async(async_arg)")
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL4_TAIL;
+
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL5_HEAD(Prod)
+    _Pragma("acc parallel loop gang vector collapse(5) reduction(* : l_val) copyin(a_functor) async(async_arg)")
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL5_TAIL;
+
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL6_HEAD(Prod)
+    _Pragma("acc parallel loop gang vector collapse(6) reduction(* : l_val) copyin(a_functor) async(async_arg)")
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL6_TAIL;
+
+
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL2_HEAD(Min)
+    _Pragma("acc parallel loop gang vector collapse(2) reduction(min : l_val) copyin(a_functor) async(async_arg)")
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL2_TAIL;
+
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL3_HEAD(Min)
+    _Pragma("acc parallel loop gang vector collapse(3) reduction(min : l_val) copyin(a_functor) async(async_arg)")
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL3_TAIL;
+
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL4_HEAD(Min)
+    _Pragma("acc parallel loop gang vector collapse(4) reduction(min : l_val) copyin(a_functor) async(async_arg)")
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL4_TAIL;
+
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL5_HEAD(Min)
+    _Pragma("acc parallel loop gang vector collapse(5) reduction(min : l_val) copyin(a_functor) async(async_arg)")
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL5_TAIL;
+
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL6_HEAD(Min)
+    _Pragma("acc parallel loop gang vector collapse(6) reduction(min : l_val) copyin(a_functor) async(async_arg)")
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL6_TAIL;
+
+
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL2_HEAD(Max)
+    _Pragma("acc parallel loop gang vector collapse(2) reduction(max : l_val) copyin(a_functor) async(async_arg)")
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL2_TAIL;
+
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL3_HEAD(Max)
+    _Pragma("acc parallel loop gang vector collapse(3) reduction(max : l_val) copyin(a_functor) async(async_arg)")
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL3_TAIL;
+
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL4_HEAD(Max)
+    _Pragma("acc parallel loop gang vector collapse(4) reduction(max : l_val) copyin(a_functor) async(async_arg)")
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL4_TAIL;
+
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL5_HEAD(Max)
+    _Pragma("acc parallel loop gang vector collapse(5) reduction(max : l_val) copyin(a_functor) async(async_arg)")
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL5_TAIL;
+
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL6_HEAD(Max)
+    _Pragma("acc parallel loop gang vector collapse(6) reduction(max : l_val) copyin(a_functor) async(async_arg)")
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL6_TAIL;
+
+
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL2_HEAD(LAnd)
+    _Pragma("acc parallel loop gang vector collapse(2) reduction(&& : l_val) copyin(a_functor) async(async_arg)")
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL2_TAIL;
+
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL3_HEAD(LAnd)
+    _Pragma("acc parallel loop gang vector collapse(3) reduction(&& : l_val) copyin(a_functor) async(async_arg)")
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL3_TAIL;
+
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL4_HEAD(LAnd)
+    _Pragma("acc parallel loop gang vector collapse(4) reduction(&& : l_val) copyin(a_functor) async(async_arg)")
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL4_TAIL;
+
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL5_HEAD(LAnd)
+    _Pragma("acc parallel loop gang vector collapse(5) reduction(&& : l_val) copyin(a_functor) async(async_arg)")
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL5_TAIL;
+
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL6_HEAD(LAnd)
+    _Pragma("acc parallel loop gang vector collapse(6) reduction(&& : l_val) copyin(a_functor) async(async_arg)")
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL6_TAIL;
+
+
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL2_HEAD(LOr)
+    _Pragma("acc parallel loop gang vector collapse(2) reduction(|| : l_val) copyin(a_functor) async(async_arg)")
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL2_TAIL;
+
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL3_HEAD(LOr)
+    _Pragma("acc parallel loop gang vector collapse(3) reduction(|| : l_val) copyin(a_functor) async(async_arg)")
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL3_TAIL;
+
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL4_HEAD(LOr)
+    _Pragma("acc parallel loop gang vector collapse(4) reduction(|| : l_val) copyin(a_functor) async(async_arg)")
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL4_TAIL;
+
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL5_HEAD(LOr)
+    _Pragma("acc parallel loop gang vector collapse(5) reduction(|| : l_val) copyin(a_functor) async(async_arg)")
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL5_TAIL;
+
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL6_HEAD(LOr)
+    _Pragma("acc parallel loop gang vector collapse(6) reduction(|| : l_val) copyin(a_functor) async(async_arg)")
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL6_TAIL;
+
+
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL2_HEAD(BAnd)
+    _Pragma("acc parallel loop gang vector collapse(2) reduction(& : l_val) copyin(a_functor) async(async_arg)")
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL2_TAIL;
+
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL3_HEAD(BAnd)
+    _Pragma("acc parallel loop gang vector collapse(3) reduction(& : l_val) copyin(a_functor) async(async_arg)")
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL3_TAIL;
+
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL4_HEAD(BAnd)
+    _Pragma("acc parallel loop gang vector collapse(4) reduction(& : l_val) copyin(a_functor) async(async_arg)")
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL4_TAIL;
+
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL5_HEAD(BAnd)
+    _Pragma("acc parallel loop gang vector collapse(5) reduction(& : l_val) copyin(a_functor) async(async_arg)")
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL5_TAIL;
+
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL6_HEAD(BAnd)
+    _Pragma("acc parallel loop gang vector collapse(6) reduction(& : l_val) copyin(a_functor) async(async_arg)")
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL6_TAIL;
+
+
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL2_HEAD(BOr)
+    _Pragma("acc parallel loop gang vector collapse(2) reduction(| : l_val) copyin(a_functor) async(async_arg)")
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL2_TAIL;
+
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL3_HEAD(BOr)
+    _Pragma("acc parallel loop gang vector collapse(3) reduction(| : l_val) copyin(a_functor) async(async_arg)")
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL3_TAIL;
+
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL4_HEAD(BOr)
+    _Pragma("acc parallel loop gang vector collapse(4) reduction(| : l_val) copyin(a_functor) async(async_arg)")
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL4_TAIL;
+
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL5_HEAD(BOr)
+    _Pragma("acc parallel loop gang vector collapse(5) reduction(| : l_val) copyin(a_functor) async(async_arg)")
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL5_TAIL;
+
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL6_HEAD(BOr)
+    _Pragma("acc parallel loop gang vector collapse(6) reduction(| : l_val) copyin(a_functor) async(async_arg)")
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL6_TAIL;
+// clang-format on
 
 }  // namespace Kokkos::Experimental::Impl
 
@@ -1560,5 +484,15 @@ KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_HELPER(BAnd);
 KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_HELPER(BOr);
 
 #undef KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_HELPER
+#undef KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL2_HEAD
+#undef KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL2_TAIL
+#undef KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL3_HEAD
+#undef KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL3_TAIL
+#undef KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL4_HEAD
+#undef KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL4_TAIL
+#undef KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL5_HEAD
+#undef KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL5_TAIL
+#undef KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL6_HEAD
+#undef KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER_LEVEL6_TAIL
 
 #endif

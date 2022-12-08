@@ -83,7 +83,8 @@ class Kokkos::Impl::ParallelReduce<Functor, Kokkos::RangePolicy<Traits...>,
     }
 
     ValueType val;
-    typename Analysis::Reducer final_reducer(&m_functor);
+    typename Analysis::Reducer final_reducer(
+        &ReducerConditional::select(m_functor, m_reducer));
     final_reducer.init(&val);
 
     Kokkos::Experimental::Impl::OpenACCParallelReduceHelper(
