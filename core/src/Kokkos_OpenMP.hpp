@@ -75,6 +75,8 @@ class OpenMP {
 
   OpenMP();
 
+  OpenMP(int pool_size);
+
   /// \brief Print configuration information to the given output stream.
   void print_configuration(std::ostream& os, bool verbose = false) const;
 
@@ -107,8 +109,7 @@ class OpenMP {
       int requested_partition_size = 0);
 #endif
 
-  // use UniqueToken
-  static int concurrency();
+  static int concurrency(OpenMP const& = OpenMP());
 
   static void impl_initialize(InitializationSettings const&);
 
@@ -119,13 +120,12 @@ class OpenMP {
   /// \brief Free any resources being consumed by the default execution space
   static void impl_finalize();
 
-  inline static int impl_thread_pool_size() noexcept;
+  inline static int impl_thread_pool_size(OpenMP const& = OpenMP()) noexcept;
 
   /** \brief  The rank of the executing thread in this thread pool */
-  KOKKOS_INLINE_FUNCTION
-  static int impl_thread_pool_rank() noexcept;
+  inline static int impl_thread_pool_rank() noexcept;
 
-  inline static int impl_thread_pool_size(int depth);
+  inline static int impl_thread_pool_size(int depth, OpenMP const& = OpenMP());
 
   // use UniqueToken
   inline static int impl_max_hardware_threads() noexcept;

@@ -17,6 +17,7 @@
 #include <cstdio>
 #include <sstream>
 #include <iostream>
+#include <thread>
 
 #include <Kokkos_Core.hpp>
 
@@ -47,23 +48,60 @@ void check_distinctive(Kokkos::Experimental::SYCL exec1,
             *exec2.impl_internal_space_instance()->m_queue);
 }
 #endif
+#ifdef KOKKOS_ENABLE_OPENMP
+void check_distinctive(Kokkos::OpenMP exec1, Kokkos::OpenMP exec2) {
+  ASSERT_NE(exec1, exec2);
+}
+#endif
 }  // namespace
+
+#ifdef KOKKOS_ENABLE_OPENMP
+template <class Lambda1, class Lambda2>
+void run_threaded_test(const Lambda1 l1, const Lambda2 l2) {
+#pragma omp parallel num_threads(2)
+  {
+    if (omp_get_thread_num() == 0) l1();
+    if (omp_get_thread_num() == 1) l2();
+  }
+}
+// We cannot run the multithreaded test when threads or HPX is enabled because
+// we cannot launch a thread from inside another thread
+#elif !defined(KOKKOS_ENABLE_THREADS) && !defined(KOKKOS_ENABLE_HPX)
+template <class Lambda1, class Lambda2>
+void run_threaded_test(const Lambda1 l1, const Lambda2 l2) {
+  std::thread t1(std::move(l1));
+  std::thread t2(std::move(l2));
+  t1.join();
+  t2.join();
+}
+#else
+template <class Lambda1, class Lambda2>
+void run_threaded_test(const Lambda1 l1, const Lambda2 l2) {
+  l1();
+  l2();
+}
+#endif
 
 void test_partitioning(std::vector<TEST_EXECSPACE>& instances) {
   check_distinctive(instances[0], instances[1]);
   int sum1, sum2;
   int N = 3910;
-  Kokkos::parallel_reduce(
-      Kokkos::RangePolicy<TEST_EXECSPACE>(instances[0], 0, N), SumFunctor(),
-      sum1);
-  Kokkos::parallel_reduce(
-      Kokkos::RangePolicy<TEST_EXECSPACE>(instances[1], 0, N), SumFunctor(),
-      sum2);
+  run_threaded_test(
+      [&]() {
+        Kokkos::parallel_reduce(
+            Kokkos::RangePolicy<TEST_EXECSPACE>(instances[0], 0, N),
+            SumFunctor(), sum1);
+      },
+      [&]() {
+        Kokkos::parallel_reduce(
+            Kokkos::RangePolicy<TEST_EXECSPACE>(instances[1], 0, N),
+            SumFunctor(), sum2);
+      });
   ASSERT_EQ(sum1, sum2);
   ASSERT_EQ(sum1, N * (N - 1) / 2);
 
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
-    defined(KOKKOS_ENABLE_SYCL)
+    defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENMP)
   // Eliminate unused function warning
   // (i.e. when compiling for Serial and CUDA, during Serial compilation the
   // Cuda overload is unused ...)
@@ -78,13 +116,16 @@ void test_partitioning(std::vector<TEST_EXECSPACE>& instances) {
     check_distinctive(Kokkos::Experimental::SYCL(),
                       Kokkos::Experimental::SYCL());
 #endif
+#ifdef KOKKOS_ENABLE_OPENMP
+    check_distinctive(Kokkos::OpenMP(), Kokkos::OpenMP());
+#endif
   }
 #endif
 }
 
 TEST(TEST_CATEGORY, partitioning_by_args) {
   auto instances =
-      Kokkos::Experimental::partition_space(TEST_EXECSPACE(), 1, 1.);
+      Kokkos::Experimental::partition_space(TEST_EXECSPACE(), 1, 1);
   ASSERT_EQ(int(instances.size()), 2);
   test_partitioning(instances);
 }

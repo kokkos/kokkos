@@ -34,6 +34,19 @@
 namespace Kokkos {
 namespace Impl {
 
+void OpenMPInternal::acquire_lock() {
+  while (1 == desul::atomic_compare_exchange(&m_pool_mutex, 0, 1,
+                                             desul::MemoryOrderAcquire(),
+                                             desul::MemoryScopeDevice())) {
+    // do nothing
+  }
+}
+
+void OpenMPInternal::release_lock() {
+  desul::atomic_store(&m_pool_mutex, 0, desul::MemoryOrderRelease(),
+                      desul::MemoryScopeDevice());
+}
+
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
 void OpenMPInternal::validate_partition_impl(const int nthreads,
                                              int &num_partitions,
@@ -161,10 +174,7 @@ void OpenMPInternal::resize_thread_data(size_t pool_reduce_bytes,
 
     memory_fence();
 
-#pragma omp parallel num_threads(m_pool_size)
-    {
-      const int rank = omp_get_thread_num();
-
+    for (int rank = 0; rank < m_pool_size; ++rank) {
       if (nullptr != m_pool[rank]) {
         m_pool[rank]->disband_pool();
 
@@ -185,10 +195,7 @@ void OpenMPInternal::resize_thread_data(size_t pool_reduce_bytes,
       m_pool[rank]->scratch_assign(((char *)ptr) + member_bytes, alloc_bytes,
                                    pool_reduce_bytes, team_reduce_bytes,
                                    team_shared_bytes, thread_local_bytes);
-
-      memory_fence();
     }
-    /* END #pragma omp parallel */
 
     HostThreadTeamData::organize_pool(m_pool, m_pool_size);
   }
@@ -284,10 +291,7 @@ void OpenMPInternal::initialize(int thread_count) {
 
 // setup thread local
 #pragma omp parallel num_threads(Impl::g_openmp_hardware_max_threads)
-    {
-      Impl::t_openmp_hardware_id = omp_get_thread_num();
-      Impl::SharedAllocationRecord<void, void>::tracking_enable();
-    }
+    { Impl::SharedAllocationRecord<void, void>::tracking_enable(); }
 
     auto &instance       = OpenMPInternal::singleton();
     instance.m_pool_size = Impl::g_openmp_hardware_max_threads;
@@ -320,7 +324,7 @@ void OpenMPInternal::initialize(int thread_count) {
     std::cerr << "                                    Requested: "
               << thread_count << " threads per process." << std::endl;
   }
-  // Init the array for used for arbitrarily sized atomics
+  // Init the array used for arbitrarily sized atomics
   init_lock_array_host_space();
 
   m_initialized = true;
@@ -344,10 +348,7 @@ void OpenMPInternal::finalize() {
     (void)nthreads;
 
 #pragma omp parallel num_threads(nthreads)
-    {
-      Impl::t_openmp_hardware_id = 0;
-      Impl::SharedAllocationRecord<void, void>::tracking_disable();
-    }
+    { Impl::SharedAllocationRecord<void, void>::tracking_disable(); }
 
     // allow main thread to track
     Impl::SharedAllocationRecord<void, void>::tracking_enable();
@@ -393,6 +394,16 @@ OpenMP::OpenMP()
       "OpenMP instance constructor");
 }
 
+OpenMP::OpenMP(int pool_size)
+    : m_space_instance(new Impl::OpenMPInternal(pool_size),
+                       [](Impl::OpenMPInternal *ptr) {
+                         ptr->finalize();
+                         delete ptr;
+                       }) {
+  Impl::OpenMPInternal::singleton().verify_is_initialized(
+      "OpenMP instance constructor");
+}
+
 int OpenMP::impl_get_current_max_threads() noexcept {
   return Impl::OpenMPInternal::get_current_max_threads();
 }
@@ -421,7 +432,9 @@ void OpenMP::print_configuration(std::ostream &os, bool /*verbose*/) const {
   m_space_instance->print_configuration(os);
 }
 
-int OpenMP::concurrency() { return Impl::g_openmp_hardware_max_threads; }
+int OpenMP::concurrency(OpenMP const &instance) {
+  return impl_thread_pool_size(instance);
+}
 
 void OpenMP::fence(const std::string &name) const {
   Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::OpenMP>(
