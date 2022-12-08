@@ -29,7 +29,13 @@
 
 namespace Kokkos {
 
-int HIP::concurrency() { return Impl::HIPInternal::concurrency(); }
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+int HIP::concurrency() {
+#else
+int HIP::concurrency() const {
+#endif
+  return Impl::HIPInternal::concurrency();
+}
 
 int HIP::impl_is_initialized() {
   return Impl::HIPInternal::singleton().is_initialized();
