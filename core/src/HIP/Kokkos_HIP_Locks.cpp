@@ -23,6 +23,7 @@
 #include <HIP/Kokkos_HIP_Locks.hpp>
 #include <HIP/Kokkos_HIP_Error.hpp>
 #include <HIP/Kokkos_HIP.hpp>
+#include <HIP/Kokkos_HIP_Instance.hpp>
 
 #include <hip/hip_runtime.h>
 
