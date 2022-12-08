@@ -239,6 +239,7 @@ IF (KOKKOS_ARCH_ARMV80)
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
     Cray    NO-VALUE-SPECIFIED
+    MSVC    NO-VALUE-SPECIFIED
     NVHPC   NO-VALUE-SPECIFIED
     DEFAULT -march=armv8-a
   )
@@ -248,6 +249,7 @@ IF (KOKKOS_ARCH_ARMV81)
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
     Cray    NO-VALUE-SPECIFIED
+    MSVC    NO-VALUE-SPECIFIED
     NVHPC   NO-VALUE-SPECIFIED
     DEFAULT -march=armv8.1-a
   )
@@ -258,6 +260,7 @@ IF (KOKKOS_ARCH_ARMV8_THUNDERX)
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
     Cray    NO-VALUE-SPECIFIED
+    MSVC    NO-VALUE-SPECIFIED
     NVHPC   NO-VALUE-SPECIFIED
     DEFAULT -march=armv8-a -mtune=thunderx
   )
@@ -268,6 +271,7 @@ IF (KOKKOS_ARCH_ARMV8_THUNDERX2)
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
     Cray    NO-VALUE-SPECIFIED
+    MSVC    NO-VALUE-SPECIFIED
     NVHPC   NO-VALUE-SPECIFIED
     DEFAULT -mcpu=thunderx2t99 -mtune=thunderx2t99
   )
@@ -276,10 +280,11 @@ ENDIF()
 IF (KOKKOS_ARCH_A64FX)
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
-    NVHPC   NO-VALUE-SPECIFIED
-    DEFAULT -march=armv8.2-a+sve
     Clang   -march=armv8.2-a+sve -msve-vector-bits=512
     GNU     -march=armv8.2-a+sve -msve-vector-bits=512
+    MSVC    NO-VALUE-SPECIFIED
+    NVHPC   NO-VALUE-SPECIFIED
+    DEFAULT -march=armv8.2-a+sve
   )
 ENDIF()
 
@@ -287,6 +292,7 @@ IF (KOKKOS_ARCH_ZEN)
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
     Intel   -mavx2
+    MSVC    /arch:AVX2
     NVHPC   -tp=zen
     DEFAULT -march=znver1 -mtune=znver1
   )
@@ -298,6 +304,7 @@ IF (KOKKOS_ARCH_ZEN2)
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
     Intel   -mavx2
+    MSVC    /arch:AVX2
     NVHPC   -tp=zen2
     DEFAULT -march=znver2 -mtune=znver2
   )
@@ -309,6 +316,7 @@ IF (KOKKOS_ARCH_ZEN3)
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
     Intel   -mavx2
+    MSVC    /arch:AVX2
     NVHPC   -tp=zen2
     DEFAULT -march=znver3 -mtune=znver3
   )
@@ -319,9 +327,10 @@ ENDIF()
 IF (KOKKOS_ARCH_WSM)
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
-    Intel   -xSSE4.2
-    NVHPC   -tp=px
     Cray    NO-VALUE-SPECIFIED
+    Intel   -xSSE4.2
+    MSVC    NO-VALUE-SPECIFIED
+    NVHPC   -tp=px
     DEFAULT -msse4.2
   )
   SET(KOKKOS_ARCH_SSE42 ON)
@@ -331,9 +340,10 @@ IF (KOKKOS_ARCH_SNB OR KOKKOS_ARCH_AMDAVX)
   SET(KOKKOS_ARCH_AVX ON)
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
-    Intel   -mavx
-    NVHPC   -tp=sandybridge
     Cray    NO-VALUE-SPECIFIED
+    Intel   -mavx
+    MSVC    /arch:AVX
+    NVHPC   -tp=sandybridge
     DEFAULT -mavx
   )
 ENDIF()
@@ -342,9 +352,10 @@ IF (KOKKOS_ARCH_HSW)
   SET(KOKKOS_ARCH_AVX2 ON)
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
-    Intel   -xCORE-AVX2
-    NVHPC   -tp=haswell
     Cray    NO-VALUE-SPECIFIED
+    Intel   -xCORE-AVX2
+    MSVC    /arch:AVX2
+    NVHPC   -tp=haswell
     DEFAULT -march=core-avx2 -mtune=core-avx2
   )
 ENDIF()
@@ -353,9 +364,10 @@ IF (KOKKOS_ARCH_BDW)
   SET(KOKKOS_ARCH_AVX2 ON)
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
-    Intel   -xCORE-AVX2
-    NVHPC   -tp=haswell
     Cray    NO-VALUE-SPECIFIED
+    Intel   -xCORE-AVX2
+    MSVC    /arch:AVX2
+    NVHPC   -tp=haswell
     DEFAULT -march=core-avx2 -mtune=core-avx2 -mrtm
   )
 ENDIF()
@@ -365,9 +377,10 @@ IF (KOKKOS_ARCH_KNL)
   SET(KOKKOS_ARCH_AVX512MIC ON) #not a cache variable
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
-    Intel   -xMIC-AVX512
-    NVHPC   -tp=knl
     Cray    NO-VALUE-SPECIFIED
+    Intel   -xMIC-AVX512
+    MSVC    /arch:AVX512
+    NVHPC   -tp=knl
     DEFAULT -march=knl -mtune=knl
   )
 ENDIF()
@@ -375,6 +388,7 @@ ENDIF()
 IF (KOKKOS_ARCH_KNC)
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
+    MSVC    NO-VALUE-SPECIFIED
     DEFAULT -mmic
   )
 ENDIF()
@@ -382,9 +396,10 @@ ENDIF()
 IF (KOKKOS_ARCH_SKL)
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
-    Intel   -xSKYLAKE
-    NVHPC   -tp=skylake
     Cray    NO-VALUE-SPECIFIED
+    Intel   -xSKYLAKE
+    MSVC    /arch:AVX2
+    NVHPC   -tp=skylake
     DEFAULT -march=skylake -mtune=skylake
   )
 ENDIF()
@@ -394,9 +409,10 @@ IF (KOKKOS_ARCH_SKX)
   SET(KOKKOS_ARCH_AVX512XEON ON)
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
-    Intel   -xCORE-AVX512
-    NVHPC   -tp=skylake
     Cray    NO-VALUE-SPECIFIED
+    Intel   -xCORE-AVX512
+    MSVC    /arch:AVX512
+    NVHPC   -tp=skylake
     DEFAULT -march=skylake-avx512 -mtune=skylake-avx512
   )
 ENDIF()
@@ -405,6 +421,7 @@ IF (KOKKOS_ARCH_ICL)
   SET(KOKKOS_ARCH_AVX512XEON ON)
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
+    MSVC    /arch:AVX512
     DEFAULT -march=icelake-client -mtune=icelake-client
   )
 ENDIF()
@@ -413,6 +430,7 @@ IF (KOKKOS_ARCH_ICX)
   SET(KOKKOS_ARCH_AVX512XEON ON)
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
+    MSVC    /arch:AVX512
     DEFAULT -march=icelake-server -mtune=icelake-server
   )
 ENDIF()
@@ -421,6 +439,7 @@ IF (KOKKOS_ARCH_SPR)
   SET(KOKKOS_ARCH_AVX512XEON ON)
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
+    MSVC    /arch:AVX512
     DEFAULT -march=sapphirerapids -mtune=sapphirerapids
   )
 ENDIF()
@@ -428,6 +447,7 @@ ENDIF()
 IF (KOKKOS_ARCH_POWER7)
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
+    MSVC    NO-VALUE-SPECIFIED
     NVHPC   NO-VALUE-SPECIFIED
     DEFAULT -mcpu=power7 -mtune=power7
   )
@@ -436,6 +456,7 @@ ENDIF()
 IF (KOKKOS_ARCH_POWER8)
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
+    MSVC    NO-VALUE-SPECIFIED
     NVHPC   -tp=pwr8
     DEFAULT -mcpu=power8 -mtune=power8
   )
@@ -444,6 +465,7 @@ ENDIF()
 IF (KOKKOS_ARCH_POWER9)
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
+    MSVC    NO-VALUE-SPECIFIED
     NVHPC   -tp=pwr9
     DEFAULT -mcpu=power9 -mtune=power9
   )
