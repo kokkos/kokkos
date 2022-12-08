@@ -206,6 +206,7 @@ class HPX {
   static void impl_decrement_active_parallel_region_count();
   static void impl_increment_active_parallel_region_count();
 
+  void impl_instance_fence_locked(const std::string &name) const;
   void impl_instance_fence(const std::string &name =
                                "Kokkos::Experimental::HPX::impl_instance_fence:"
                                " Unnamed Instance Fence") const;
@@ -290,10 +291,10 @@ class HPX {
     auto &sen = impl_get_sender();
     auto &mut = impl_get_sender_mutex();
 
-    {
-      std::unique_lock<hpx::spinlock> l(mut);
-      hpx::util::ignore_lock(&mut);
+    std::lock_guard<hpx::spinlock> l(mut);
+    hpx::util::ignore_lock(&mut);
 
+    {
       if (n == 1 && is_light_weight_policy &&
           (hpx::threads::get_self_ptr() != nullptr)) {
         sen = std::move(sen) | ex::then(hpx::bind_front(std::move(f), 0)) |
@@ -315,7 +316,8 @@ class HPX {
     if (force_synchronous)
 #endif
     {
-      fence("Kokkos::Experimental::HPX: fence due to forced synchronizations");
+      impl_instance_fence_locked(
+          "Kokkos::Experimental::HPX: fence due to forced synchronizations");
     }
   }
 
@@ -341,15 +343,15 @@ class HPX {
     namespace ex = hpx::execution::experimental;
     using hpx::threads::thread_stacksize;
 
-    {
-      auto &sen = impl_get_sender();
-      auto &mut = impl_get_sender_mutex();
+    auto &sen = impl_get_sender();
+    auto &mut = impl_get_sender_mutex();
 
+    std::lock_guard<hpx::spinlock> l(mut);
+    hpx::util::ignore_lock(&mut);
+
+    {
       if (n == 1 && is_light_weight_policy &&
           (hpx::threads::get_self_ptr() != nullptr)) {
-        std::unique_lock<hpx::spinlock> l(mut);
-        hpx::util::ignore_lock(&mut);
-
         sen = std::move(sen) | ex::then(std::move(f_setup)) |
               ex::then(hpx::bind_front(std::move(f), 0)) |
               ex::then(std::move(f_finalize)) |
@@ -357,9 +359,6 @@ class HPX {
                            impl_decrement_active_parallel_region_count) |
               ex::ensure_started();
       } else {
-        std::unique_lock<hpx::spinlock> l(mut);
-        hpx::util::ignore_lock(&mut);
-
         sen = std::move(sen) |
               ex::transfer(
                   ex::with_stacksize(ex::thread_pool_scheduler{}, stacksize)) |
@@ -375,7 +374,8 @@ class HPX {
     if (force_synchronous)
 #endif
     {
-      fence("Kokkos::Experimental::HPX: fence due to forced syncronizations");
+      impl_instance_fence_locked(
+          "Kokkos::Experimental::HPX: fence due to forced syncronizations");
     }
   }
 

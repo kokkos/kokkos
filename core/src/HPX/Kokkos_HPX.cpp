@@ -117,7 +117,7 @@ void HPX::impl_increment_active_parallel_region_count() {
   ++m_active_parallel_region_count;
 }
 
-void HPX::impl_instance_fence(const std::string &name) const {
+void HPX::impl_instance_fence_locked(const std::string &name) const {
   Kokkos::Tools::Experimental::Impl::profile_fence_event<
       Kokkos::Experimental::HPX>(
       name,
@@ -126,11 +126,15 @@ void HPX::impl_instance_fence(const std::string &name) const {
       [&]() {
         auto &s = impl_get_sender();
 
-        std::unique_lock<hpx::spinlock> l(impl_get_sender_mutex());
         hpx::this_thread::experimental::sync_wait(std::move(s));
         s = hpx::execution::experimental::unique_any_sender(
             hpx::execution::experimental::just());
       });
+}
+
+void HPX::impl_instance_fence(const std::string &name) const {
+  std::lock_guard<hpx::spinlock> l(impl_get_sender_mutex());
+  impl_instance_fence_locked(name);
 }
 
 void HPX::impl_static_fence(const std::string &name) {
