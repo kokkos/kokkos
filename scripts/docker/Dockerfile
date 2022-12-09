@@ -12,6 +12,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -yq \
         git \
         wget \
         jq \
+        libc6-dev \
         vim \
         lcov \
         ccache \
