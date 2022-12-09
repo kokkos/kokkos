@@ -80,6 +80,8 @@ class HIPInternal {
 
   inline static hipDeviceProp_t m_deviceProp;
 
+  static int concurrency();
+
   // Scratch Spaces for Reductions
   std::size_t m_scratchSpaceCount = 0;
   std::size_t m_scratchFlagsCount = 0;

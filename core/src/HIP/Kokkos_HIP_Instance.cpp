@@ -51,7 +51,7 @@ Kokkos::View<uint32_t *, HIPSpace> hip_global_unique_token_locks(
       Kokkos::View<uint32_t *, HIPSpace>();
   if (!deallocate && locks.extent(0) == 0)
     locks = Kokkos::View<uint32_t *, HIPSpace>(
-        "Kokkos::UniqueToken<HIP>::m_locks", HIP().concurrency());
+        "Kokkos::UniqueToken<HIP>::m_locks", HIPInternal::concurrency());
   if (deallocate) locks = Kokkos::View<uint32_t *, HIPSpace>();
   return locks;
 }
@@ -63,6 +63,12 @@ namespace Kokkos {
 namespace Impl {
 
 //----------------------------------------------------------------------------
+
+int HIPInternal::concurrency() {
+  static int const concurrency = m_deviceProp.maxThreadsPerMultiProcessor *
+                                 m_deviceProp.multiProcessorCount;
+  return concurrency;
+}
 
 void HIPInternal::print_configuration(std::ostream &s) const {
   s << "macro  KOKKOS_ENABLE_HIP : defined" << '\n';
@@ -175,9 +181,9 @@ void HIPInternal::initialize(hipStream_t stream, bool manage_stream) {
   }
 
   KOKKOS_IMPL_HIP_SAFE_CALL(
-      hipMalloc(&m_scratch_locks, sizeof(int32_t) * HIP::concurrency()));
+      hipMalloc(&m_scratch_locks, sizeof(int32_t) * concurrency()));
   KOKKOS_IMPL_HIP_SAFE_CALL(
-      hipMemset(m_scratch_locks, 0, sizeof(int32_t) * HIP::concurrency()));
+      hipMemset(m_scratch_locks, 0, sizeof(int32_t) * concurrency()));
 }
 
 //----------------------------------------------------------------------------

@@ -23,6 +23,7 @@
 #include <HIP/Kokkos_HIP_Locks.hpp>
 #include <HIP/Kokkos_HIP_Error.hpp>
 #include <HIP/Kokkos_HIP.hpp>
+#include <HIP/Kokkos_HIP_Instance.hpp>
 
 #include <hip/hip_runtime.h>
 
@@ -63,7 +64,7 @@ void initialize_host_hip_lock_arrays() {
       &g_host_hip_lock_arrays.atomic,
       sizeof(std::int32_t) * (KOKKOS_IMPL_HIP_SPACE_ATOMIC_MASK + 1)));
 
-  g_host_hip_lock_arrays.n = HIP::concurrency();
+  g_host_hip_lock_arrays.n = HIPInternal::concurrency();
 
   KOKKOS_COPY_HIP_LOCK_ARRAYS_TO_DEVICE();
   init_lock_array_kernel_atomic<<<

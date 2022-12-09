@@ -109,12 +109,12 @@ class CudaInternal {
   inline static unsigned m_maxWarpCount             = 0;
   inline static std::array<size_type, 3> m_maxBlock = {0, 0, 0};
   inline static unsigned m_maxSharedWords           = 0;
-  inline static uint32_t m_maxConcurrency           = 0;
   inline static int m_shmemPerSM                    = 0;
   inline static int m_maxShmemPerBlock              = 0;
   inline static int m_maxBlocksPerSM                = 0;
   inline static int m_maxThreadsPerSM               = 0;
   inline static int m_maxThreadsPerBlock            = 0;
+  static int concurrency();
 
   inline static cudaDeviceProp m_deviceProp;
 
