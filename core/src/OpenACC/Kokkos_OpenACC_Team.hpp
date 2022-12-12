@@ -38,6 +38,7 @@ class OpenACCTeamMember {
 
   using execution_space      = Kokkos::Experimental::OpenACC;
   using scratch_memory_space = execution_space::scratch_memory_space;
+  using team_handle          = OpenACCTeamMember;
 
   scratch_memory_space m_team_shared;
   int m_team_scratch_size[2];

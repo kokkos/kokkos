@@ -621,6 +621,7 @@ struct HPXTeamMember {
   using execution_space = Kokkos::Experimental::HPX;
   using scratch_memory_space =
       Kokkos::ScratchMemorySpace<Kokkos::Experimental::HPX>;
+  using team_handle = HPXTeamMember;
 
  private:
   scratch_memory_space m_team_shared;
