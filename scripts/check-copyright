@@ -11,6 +11,6 @@ for file in $files; do
     echo $file >> scripts/diff_files
   fi
 done
-tmpfile=$(mktemp -t kokkos_diff_files)
+tmpfile=$(mktemp -t kokkos_diff_files.XXXX)
 cat scripts/diff_files | sort &> $tmpfile
 mv $tmpfile scripts/diff_files
