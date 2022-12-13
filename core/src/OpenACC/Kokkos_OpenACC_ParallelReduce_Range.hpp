@@ -73,7 +73,7 @@ class Kokkos::Impl::ParallelReduce<Functor, Kokkos::RangePolicy<Traits...>,
         m_reducer(InvalidType()),
         m_result_ptr(result.data()) {}
 
-  void execute() {
+  void execute() const {
     auto const begin = m_policy.begin();
     auto const end   = m_policy.end();
 
