@@ -108,9 +108,9 @@ FUNCTION(check_git_setup)
     -P ${CURRENT_LIST_DIR}/build_env_info.cmake
     BYPRODUCTS ${post_configure_file})
 
-  add_library(git_version ${CMAKE_BINARY_DIR}/generated/Kokkos_Version_Info.cpp)
-  target_include_directories(git_version PUBLIC ${CMAKE_BINARY_DIR}/generated)
-  add_dependencies(git_version AlwaysCheckGit)
+  add_library(impl_git_version ${CMAKE_BINARY_DIR}/generated/Kokkos_Version_Info.cpp)
+  target_include_directories(impl_git_version PUBLIC ${CMAKE_BINARY_DIR}/generated)
+  add_dependencies(impl_git_version AlwaysCheckGit)
 
   check_git_version()
 ENDFUNCTION()
