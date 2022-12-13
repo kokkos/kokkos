@@ -627,7 +627,7 @@ void initialize(const std::string& profileLibrary) {
 
   char* envProfileLibrary = const_cast<char*>(profileLibrary.c_str());
 
-  auto envProfileCopySize = strlen(envProfileLibrary) + 1;
+  auto envProfileCopySize   = strlen(envProfileLibrary) + 1;
   const auto envProfileCopy = std::make_unique<char[]>(envProfileCopySize);
   snprintf(envProfileCopy.get(), envProfileCopySize, "%s", envProfileLibrary);
 
