@@ -164,7 +164,7 @@ FUNCTION(KOKKOS_ADD_BENCHMARK NAME)
   )
   TARGET_LINK_LIBRARIES(
     ${BENCHMARK_NAME}
-    PRIVATE benchmark::benchmark Kokkos::kokkos
+    PRIVATE benchmark::benchmark Kokkos::kokkos impl_git_version
   )
   FOREACH(SOURCE_FILE ${BENCHMARK_SOURCES})
     SET_SOURCE_FILES_PROPERTIES(

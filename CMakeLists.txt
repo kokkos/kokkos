@@ -196,6 +196,10 @@ INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_tribits.cmake)
 # to allow platform-specific checks
 INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_check_env.cmake)
 
+# Gather information about the runtime environment
+INCLUDE(${KOKKOS_SRC_PATH}/cmake/build_env_info.cmake)
+check_git_setup()
+
 # The build environment setup goes in the following steps
 # 1) Check all the enable options. This includes checking Kokkos_DEVICES
 # 2) Check the compiler ID (type and version)
