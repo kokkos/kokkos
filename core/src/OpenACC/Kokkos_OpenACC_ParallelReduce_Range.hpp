@@ -43,10 +43,11 @@ class Kokkos::Impl::ParallelReduce<Functor, Kokkos::RangePolicy<Traits...>,
                                    ReducerType, Kokkos::Experimental::OpenACC> {
   using Policy = RangePolicy<Traits...>;
 
-  using Analysis = FunctorAnalysis<
-      FunctorPatternInterface::REDUCE, Policy,
-      std::conditional_t<std::is_same_v<InvalidType, ReducerType>, Functor,
-                         ReducerType>>;
+  using ReducerConditional =
+      if_c<std::is_same_v<InvalidType, ReducerType>, Functor, ReducerType>;
+  using ReducerTypeFwd = typename ReducerConditional::type;
+  using Analysis =
+      FunctorAnalysis<FunctorPatternInterface::REDUCE, Policy, ReducerTypeFwd>;
 
   using Pointer   = typename Analysis::pointer_type;
   using ValueType = typename Analysis::value_type;
@@ -82,7 +83,8 @@ class Kokkos::Impl::ParallelReduce<Functor, Kokkos::RangePolicy<Traits...>,
     }
 
     ValueType val;
-    typename Analysis::Reducer final_reducer(&m_functor);
+    typename Analysis::Reducer final_reducer(
+        &ReducerConditional::select(m_functor, m_reducer));
     final_reducer.init(&val);
 
     Kokkos::Experimental::Impl::OpenACCParallelReduceHelper(
