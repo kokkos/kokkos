@@ -66,3 +66,6 @@ RUN LLVM_VERSION=14.0.0 && \
     echo "${LLVM_DIR}/lib" > /etc/ld.so.conf.d/llvm.conf && ldconfig && \
     rm -rf ${SCRATCH_DIR}
 ENV PATH=${LLVM_DIR}/bin:$PATH
+
+# Workaround for Kokkos to find libcudart
+ENV LD_LIBRARY_PATH=/usr/local/cuda/targets/x86_64-linux/lib:${LD_LIBRARY_PATH}
