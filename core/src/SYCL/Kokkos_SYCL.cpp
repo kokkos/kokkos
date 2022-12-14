@@ -70,9 +70,7 @@ int SYCL::concurrency() {
   return Impl::SYCLInternal::singleton().m_maxConcurrency;
 }
 #else
-int SYCL::concurrency() const {
-  return Impl::SYCLInternal::singleton().m_maxConcurrency;
-}
+int SYCL::concurrency() const { return m_space_instance->m_maxConcurrency; }
 #endif
 
 const char* SYCL::name() { return "SYCL"; }
