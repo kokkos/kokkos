@@ -273,6 +273,11 @@ void run_all_scenarios() {
 }
 
 TEST(std_algorithms_mod_seq_ops, unique) {
+#if defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC
+  if constexpr (std::is_same_v<exespace, Kokkos::Cuda>) {
+    GTEST_SKIP() << "FIXME wrong result yields allocation error";
+  }
+#endif
   run_all_scenarios<DynamicTag, int>();
   run_all_scenarios<StridedThreeTag, int>();
 }
