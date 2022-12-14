@@ -17,8 +17,10 @@
 #include <Kokkos_Core.hpp>
 #include <gtest/gtest.h>
 
-#ifndef KOKKOS_ENABLE_OPENACC  // FIXME_OPENACC - temporarily disabled due to
-                               // unimplemented reduction features
+// FIXME_NVHPC
+// FIXME_OPENACC - temporarily disabled due to unimplemented reduction features
+#if !defined(KOKKOS_ENABLE_OPENACC) && \
+    !(defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_COMPILER_NVHPC))
 namespace {
 
 enum MyErrorCode {
@@ -130,10 +132,6 @@ void test_join_backward_compatibility() {
 }
 
 TEST(TEST_CATEGORY, join_backward_compatibility) {
-#if defined(KOKKOS_ENABLE_CUDA) && \
-    defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC
-  GTEST_SKIP() << "FIXME wrong result";
-#endif
   test_join_backward_compatibility();
 }
 
