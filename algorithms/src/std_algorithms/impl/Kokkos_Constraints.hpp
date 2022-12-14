@@ -123,7 +123,7 @@ static_assert_random_access_and_accessible(
       are_random_access_iterators<IteratorTypes...>::value,
       "Currently, Kokkos standard algorithms require random access iterators.");
   static_assert(iterators_are_accessible_from<
-                    typename ExecutionSpaceOrTeamHandleType::executon_space,
+                    typename ExecutionSpaceOrTeamHandleType::execution_space,
                     IteratorTypes...>::value,
                 "Incompatible view/iterator and execution space");
 }
