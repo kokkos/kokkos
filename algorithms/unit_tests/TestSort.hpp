@@ -1,43 +1,17 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 3.0
-//       Copyright (2020) National Technology & Engineering
+//                        Kokkos v. 4.0
+//       Copyright (2022) National Technology & Engineering
 //               Solutions of Sandia, LLC (NTESS).
 //
 // Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
+// See https://kokkos.org/LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-//
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-//
-// ************************************************************************
 //@HEADER
 
 #ifndef KOKKOS_ALGORITHMS_UNITTESTS_TESTSORT_HPP
@@ -130,14 +104,14 @@ struct sum3D {
 };
 
 template <class ExecutionSpace, typename KeyType>
-void test_1D_sort_impl(unsigned int n, bool force_kokkos) {
+void test_1D_sort_impl(unsigned int n) {
   using KeyViewType = Kokkos::View<KeyType*, ExecutionSpace>;
   KeyViewType keys("Keys", n);
 
   // Test sorting array with all numbers equal
   ExecutionSpace exec;
   Kokkos::deep_copy(exec, keys, KeyType(1));
-  Kokkos::sort(exec, keys, force_kokkos);
+  Kokkos::sort(exec, keys);
 
   Kokkos::Random_XorShift64_Pool<ExecutionSpace> g(1931);
   Kokkos::fill_random(keys, g,
@@ -151,7 +125,7 @@ void test_1D_sort_impl(unsigned int n, bool force_kokkos) {
   Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecutionSpace>(exec, 0, n),
                           sum<ExecutionSpace, KeyType>(keys), sum_before);
 
-  Kokkos::sort(exec, keys, force_kokkos);
+  Kokkos::sort(exec, keys);
 
   Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecutionSpace>(exec, 0, n),
                           sum<ExecutionSpace, KeyType>(keys), sum_after);
@@ -353,12 +327,60 @@ void test_issue_1160_impl() {
   }
 }
 
+template <class ExecutionSpace>
+void test_issue_4978_impl() {
+  Kokkos::View<long long*, ExecutionSpace> element_("element", 9);
+
+  auto h_element = Kokkos::create_mirror_view(element_);
+
+  h_element(0) = LLONG_MIN;
+  h_element(1) = 0;
+  h_element(2) = 3;
+  h_element(3) = 2;
+  h_element(4) = 1;
+  h_element(5) = 3;
+  h_element(6) = 6;
+  h_element(7) = 4;
+  h_element(8) = 3;
+
+  ExecutionSpace exec;
+  Kokkos::deep_copy(exec, element_, h_element);
+
+  Kokkos::sort(exec, element_);
+
+  Kokkos::deep_copy(exec, h_element, element_);
+  exec.fence();
+
+  ASSERT_EQ(h_element(0), LLONG_MIN);
+  ASSERT_EQ(h_element(1), 0);
+  ASSERT_EQ(h_element(2), 1);
+  ASSERT_EQ(h_element(3), 2);
+  ASSERT_EQ(h_element(4), 3);
+  ASSERT_EQ(h_element(5), 3);
+  ASSERT_EQ(h_element(6), 3);
+  ASSERT_EQ(h_element(7), 4);
+  ASSERT_EQ(h_element(8), 6);
+}
+
+template <class ExecutionSpace, class T>
+void test_sort_integer_overflow() {
+  // array with two extrema in reverse order to expose integer overflow bug in
+  // bin calculation
+  T a[2]  = {Kokkos::Experimental::finite_max<T>::value,
+            Kokkos::Experimental::finite_min<T>::value};
+  auto vd = Kokkos::create_mirror_view_and_copy(
+      ExecutionSpace(), Kokkos::View<T[2], Kokkos::HostSpace>(a));
+  Kokkos::sort(vd);
+  auto vh = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), vd);
+  EXPECT_TRUE(std::is_sorted(vh.data(), vh.data() + 2))
+      << "view (" << vh[0] << ", " << vh[1] << ") is not sorted";
+}
+
 //----------------------------------------------------------------------------
 
 template <class ExecutionSpace, typename KeyType>
 void test_1D_sort(unsigned int N) {
-  test_1D_sort_impl<ExecutionSpace, KeyType>(N * N * N, true);
-  test_1D_sort_impl<ExecutionSpace, KeyType>(N * N * N, false);
+  test_1D_sort_impl<ExecutionSpace, KeyType>(N * N * N);
 }
 
 template <class ExecutionSpace, typename KeyType>
@@ -376,15 +398,32 @@ void test_issue_1160_sort() {
   test_issue_1160_impl<ExecutionSpace>();
 }
 
+template <class ExecutionSpace>
+void test_issue_4978_sort() {
+  test_issue_4978_impl<ExecutionSpace>();
+}
+
 template <class ExecutionSpace, typename KeyType>
 void test_sort(unsigned int N) {
   test_1D_sort<ExecutionSpace, KeyType>(N);
-  test_3D_sort<ExecutionSpace, KeyType>(N);
+#if defined(KOKKOS_ENABLE_CUDA) && \
+    defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC
+  if (!std::is_same_v<ExecutionSpace, Kokkos::Cuda>)
+#endif
+    test_3D_sort<ExecutionSpace, KeyType>(N);
 // FIXME_OPENMPTARGET: OpenMPTarget doesn't support DynamicView yet.
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
   test_dynamic_view_sort<ExecutionSpace, KeyType>(N);
 #endif
-  test_issue_1160_sort<ExecutionSpace>();
+#if defined(KOKKOS_ENABLE_CUDA) && \
+    defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC
+  if (!std::is_same_v<ExecutionSpace, Kokkos::Cuda>)
+#endif
+    test_issue_1160_sort<ExecutionSpace>();
+  test_issue_4978_sort<ExecutionSpace>();
+  test_sort_integer_overflow<ExecutionSpace, long long>();
+  test_sort_integer_overflow<ExecutionSpace, unsigned long long>();
+  test_sort_integer_overflow<ExecutionSpace, int>();
 }
 }  // namespace Impl
 }  // namespace Test

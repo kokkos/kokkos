@@ -1,46 +1,18 @@
-/*
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 3.0
-//       Copyright (2020) National Technology & Engineering
+//                        Kokkos v. 4.0
+//       Copyright (2022) National Technology & Engineering
 //               Solutions of Sandia, LLC (NTESS).
 //
 // Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
+// See https://kokkos.org/LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-//
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-//
-// ************************************************************************
 //@HEADER
-*/
 
 #ifndef KOKKOS_HOST_EXP_ITERATE_TILE_HPP
 #define KOKKOS_HOST_EXP_ITERATE_TILE_HPP
@@ -1366,9 +1338,8 @@ struct Tile_Loop_Type<8, IsLeft, IType, void, void> {
 // tagged versions
 
 template <bool IsLeft, typename IType, typename Tagged>
-struct Tile_Loop_Type<
-    1, IsLeft, IType, Tagged,
-    typename std::enable_if<!std::is_same<Tagged, void>::value>::type> {
+struct Tile_Loop_Type<1, IsLeft, IType, Tagged,
+                      std::enable_if_t<!std::is_void<Tagged>::value>> {
   template <typename Func, typename Offset, typename ExtentA, typename ExtentB>
   static void apply(Func const& func, bool cond, Offset const& offset,
                     ExtentA const& a, ExtentB const& b) {
@@ -1385,9 +1356,8 @@ struct Tile_Loop_Type<
 };
 
 template <bool IsLeft, typename IType, typename Tagged>
-struct Tile_Loop_Type<
-    2, IsLeft, IType, Tagged,
-    typename std::enable_if<!std::is_same<Tagged, void>::value>::type> {
+struct Tile_Loop_Type<2, IsLeft, IType, Tagged,
+                      std::enable_if_t<!std::is_void<Tagged>::value>> {
   template <typename Func, typename Offset, typename ExtentA, typename ExtentB>
   static void apply(Func const& func, bool cond, Offset const& offset,
                     ExtentA const& a, ExtentB const& b) {
@@ -1404,9 +1374,8 @@ struct Tile_Loop_Type<
 };
 
 template <bool IsLeft, typename IType, typename Tagged>
-struct Tile_Loop_Type<
-    3, IsLeft, IType, Tagged,
-    typename std::enable_if<!std::is_same<Tagged, void>::value>::type> {
+struct Tile_Loop_Type<3, IsLeft, IType, Tagged,
+                      std::enable_if_t<!std::is_void<Tagged>::value>> {
   template <typename Func, typename Offset, typename ExtentA, typename ExtentB>
   static void apply(Func const& func, bool cond, Offset const& offset,
                     ExtentA const& a, ExtentB const& b) {
@@ -1423,9 +1392,8 @@ struct Tile_Loop_Type<
 };
 
 template <bool IsLeft, typename IType, typename Tagged>
-struct Tile_Loop_Type<
-    4, IsLeft, IType, Tagged,
-    typename std::enable_if<!std::is_same<Tagged, void>::value>::type> {
+struct Tile_Loop_Type<4, IsLeft, IType, Tagged,
+                      std::enable_if_t<!std::is_void<Tagged>::value>> {
   template <typename Func, typename Offset, typename ExtentA, typename ExtentB>
   static void apply(Func const& func, bool cond, Offset const& offset,
                     ExtentA const& a, ExtentB const& b) {
@@ -1442,9 +1410,8 @@ struct Tile_Loop_Type<
 };
 
 template <bool IsLeft, typename IType, typename Tagged>
-struct Tile_Loop_Type<
-    5, IsLeft, IType, Tagged,
-    typename std::enable_if<!std::is_same<Tagged, void>::value>::type> {
+struct Tile_Loop_Type<5, IsLeft, IType, Tagged,
+                      std::enable_if_t<!std::is_void<Tagged>::value>> {
   template <typename Func, typename Offset, typename ExtentA, typename ExtentB>
   static void apply(Func const& func, bool cond, Offset const& offset,
                     ExtentA const& a, ExtentB const& b) {
@@ -1461,9 +1428,8 @@ struct Tile_Loop_Type<
 };
 
 template <bool IsLeft, typename IType, typename Tagged>
-struct Tile_Loop_Type<
-    6, IsLeft, IType, Tagged,
-    typename std::enable_if<!std::is_same<Tagged, void>::value>::type> {
+struct Tile_Loop_Type<6, IsLeft, IType, Tagged,
+                      std::enable_if_t<!std::is_void<Tagged>::value>> {
   template <typename Func, typename Offset, typename ExtentA, typename ExtentB>
   static void apply(Func const& func, bool cond, Offset const& offset,
                     ExtentA const& a, ExtentB const& b) {
@@ -1480,9 +1446,8 @@ struct Tile_Loop_Type<
 };
 
 template <bool IsLeft, typename IType, typename Tagged>
-struct Tile_Loop_Type<
-    7, IsLeft, IType, Tagged,
-    typename std::enable_if<!std::is_same<Tagged, void>::value>::type> {
+struct Tile_Loop_Type<7, IsLeft, IType, Tagged,
+                      std::enable_if_t<!std::is_void<Tagged>::value>> {
   template <typename Func, typename Offset, typename ExtentA, typename ExtentB>
   static void apply(Func const& func, bool cond, Offset const& offset,
                     ExtentA const& a, ExtentB const& b) {
@@ -1499,9 +1464,8 @@ struct Tile_Loop_Type<
 };
 
 template <bool IsLeft, typename IType, typename Tagged>
-struct Tile_Loop_Type<
-    8, IsLeft, IType, Tagged,
-    typename std::enable_if<!std::is_same<Tagged, void>::value>::type> {
+struct Tile_Loop_Type<8, IsLeft, IType, Tagged,
+                      std::enable_if_t<!std::is_void<Tagged>::value>> {
   template <typename Func, typename Offset, typename ExtentA, typename ExtentB>
   static void apply(Func const& func, bool cond, Offset const& offset,
                     ExtentA const& a, ExtentB const& b) {
@@ -1909,25 +1873,22 @@ struct HostIterateTile<RP, Functor, Tag, ValueType,
 #endif
 
   template <typename... Args>
-  typename std::enable_if<(sizeof...(Args) == RP::rank &&
-                           std::is_same<Tag, void>::value),
-                          void>::type
+  std::enable_if_t<(sizeof...(Args) == RP::rank && std::is_void<Tag>::value),
+                   void>
   apply(Args&&... args) const {
     m_func(args...);
   }
 
   template <typename... Args>
-  typename std::enable_if<(sizeof...(Args) == RP::rank &&
-                           !std::is_same<Tag, void>::value),
-                          void>::type
+  std::enable_if_t<(sizeof...(Args) == RP::rank && !std::is_void<Tag>::value),
+                   void>
   apply(Args&&... args) const {
     m_func(m_tag, args...);
   }
 
   RP const& m_rp;
   Functor const& m_func;
-  typename std::conditional<std::is_same<Tag, void>::value, int, Tag>::type
-      m_tag;
+  std::conditional_t<std::is_void<Tag>::value, int, Tag> m_tag;
 };
 
 // For ParallelReduce
@@ -2329,17 +2290,15 @@ struct HostIterateTile<RP, Functor, Tag, ValueType,
 #endif
 
   template <typename... Args>
-  typename std::enable_if<(sizeof...(Args) == RP::rank &&
-                           std::is_same<Tag, void>::value),
-                          void>::type
+  std::enable_if_t<(sizeof...(Args) == RP::rank && std::is_void<Tag>::value),
+                   void>
   apply(Args&&... args) const {
     m_func(args..., m_v);
   }
 
   template <typename... Args>
-  typename std::enable_if<(sizeof...(Args) == RP::rank &&
-                           !std::is_same<Tag, void>::value),
-                          void>::type
+  std::enable_if_t<(sizeof...(Args) == RP::rank && !std::is_void<Tag>::value),
+                   void>
   apply(Args&&... args) const {
     m_func(m_tag, args..., m_v);
   }
@@ -2347,8 +2306,7 @@ struct HostIterateTile<RP, Functor, Tag, ValueType,
   RP const& m_rp;
   Functor const& m_func;
   value_type& m_v;
-  typename std::conditional<std::is_same<Tag, void>::value, int, Tag>::type
-      m_tag;
+  std::conditional_t<std::is_void<Tag>::value, int, Tag> m_tag;
 };
 
 // For ParallelReduce
@@ -2751,17 +2709,15 @@ struct HostIterateTile<RP, Functor, Tag, ValueType,
 #endif
 
   template <typename... Args>
-  typename std::enable_if<(sizeof...(Args) == RP::rank &&
-                           std::is_same<Tag, void>::value),
-                          void>::type
+  std::enable_if_t<(sizeof...(Args) == RP::rank && std::is_void<Tag>::value),
+                   void>
   apply(Args&&... args) const {
     m_func(args..., m_v);
   }
 
   template <typename... Args>
-  typename std::enable_if<(sizeof...(Args) == RP::rank &&
-                           !std::is_same<Tag, void>::value),
-                          void>::type
+  std::enable_if_t<(sizeof...(Args) == RP::rank && !std::is_void<Tag>::value),
+                   void>
   apply(Args&&... args) const {
     m_func(m_tag, args..., m_v);
   }
@@ -2769,8 +2725,7 @@ struct HostIterateTile<RP, Functor, Tag, ValueType,
   RP const& m_rp;
   Functor const& m_func;
   value_type* m_v;
-  typename std::conditional<std::is_same<Tag, void>::value, int, Tag>::type
-      m_tag;
+  std::conditional_t<std::is_void<Tag>::value, int, Tag> m_tag;
 };
 
 // ------------------------------------------------------------------ //

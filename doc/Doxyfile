@@ -99,7 +99,7 @@ EXPAND_AS_DEFINED      =
 TAGFILES               = ../../common/tag_files/teuchos.tag=../../../teuchos/doc/html ../../common/tag_files/epetra.tag=../../../epetra/doc/html \
                          ../../common/tag_files/belos.tag=../../../belos/doc/html ../../common/tag_files/anasazi.tag=../../../anasazi/doc/html \
                          ../../common/tag_files/kokkos.tag=../../../kokkos/doc/html 
-GENERATE_TAGFILE       = ../../common/tag_files/tpetra.tag
+GENERATE_TAGFILE       = ../../common/tag_files/kokkos.tag
 ALLEXTERNALS           = NO
 EXTERNAL_GROUPS        = NO
 #

@@ -1,5 +1,7 @@
 FROM nvidia/cuda:10.1-devel
 
+RUN apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/3bf863cc.pub
+
 RUN apt-get update && apt-get install -y \
         bc \
         git \
@@ -8,6 +10,15 @@ RUN apt-get update && apt-get install -y \
         python3 \
         python3-distutils \
         && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# unbuntu18.04-based images have libstdc++ that is lacking filesystem support
+RUN apt-get update && \
+    apt-get install -y software-properties-common && \
+    add-apt-repository ppa:ubuntu-toolchain-r/test -y && \
+    apt-get update && \
+    apt-get install -y g++-9 && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 

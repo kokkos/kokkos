@@ -1,46 +1,22 @@
-/*
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 3.0
-//       Copyright (2020) National Technology & Engineering
+//                        Kokkos v. 4.0
+//       Copyright (2022) National Technology & Engineering
 //               Solutions of Sandia, LLC (NTESS).
 //
 // Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
+// See https://kokkos.org/LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-//
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-//
-// ************************************************************************
 //@HEADER
-*/
+
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
+#endif
 
 #include <Kokkos_Macros.hpp>
 
@@ -50,39 +26,11 @@
 
 /*--------------------------------------------------------------------------*/
 
-#if defined(__INTEL_COMPILER) && !defined(KOKKOS_ENABLE_CUDA)
+#if defined(KOKKOS_COMPILER_INTEL) && !defined(KOKKOS_ENABLE_CUDA)
 
 // Intel specialized allocator does not interoperate with CUDA memory allocation
 
 #define KOKKOS_ENABLE_INTEL_MM_ALLOC
-
-#endif
-
-/*--------------------------------------------------------------------------*/
-
-#if defined(KOKKOS_ENABLE_POSIX_MEMALIGN)
-
-#include <unistd.h>
-#include <sys/mman.h>
-
-/* mmap flags for private anonymous memory allocation */
-
-#if defined(MAP_ANONYMOUS) && defined(MAP_PRIVATE)
-#define KOKKOS_IMPL_POSIX_MMAP_FLAGS (MAP_PRIVATE | MAP_ANONYMOUS)
-#elif defined(MAP_ANON) && defined(MAP_PRIVATE)
-#define KOKKOS_IMPL_POSIX_MMAP_FLAGS (MAP_PRIVATE | MAP_ANON)
-#endif
-
-// mmap flags for huge page tables
-// the Cuda driver does not interoperate with MAP_HUGETLB
-#if defined(KOKKOS_IMPL_POSIX_MMAP_FLAGS)
-#if defined(MAP_HUGETLB) && !defined(KOKKOS_ENABLE_CUDA)
-#define KOKKOS_IMPL_POSIX_MMAP_FLAGS_HUGE \
-  (KOKKOS_IMPL_POSIX_MMAP_FLAGS | MAP_HUGETLB)
-#else
-#define KOKKOS_IMPL_POSIX_MMAP_FLAGS_HUGE KOKKOS_IMPL_POSIX_MMAP_FLAGS
-#endif
-#endif
 
 #endif
 
@@ -101,11 +49,6 @@
 #include <impl/Kokkos_Error.hpp>
 #include <Kokkos_Atomic.hpp>
 
-#if (defined(KOKKOS_ENABLE_ASM) || defined(KOKKOS_ENABLE_TM)) && \
-    defined(KOKKOS_ENABLE_ISA_X86_64) && !defined(KOKKOS_COMPILER_PGI)
-#include <immintrin.h>
-#endif
-
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
@@ -116,10 +59,6 @@ HostSpace::HostSpace()
     : m_alloc_mech(
 #if defined(KOKKOS_ENABLE_INTEL_MM_ALLOC)
           HostSpace::INTEL_MM_ALLOC
-#elif defined(KOKKOS_IMPL_POSIX_MMAP_FLAGS)
-          HostSpace::POSIX_MMAP
-#elif defined(KOKKOS_ENABLE_POSIX_MEMALIGN)
-          HostSpace::POSIX_MEMALIGN
 #else
           HostSpace::STD_MALLOC
 #endif
@@ -136,23 +75,12 @@ HostSpace::HostSpace(const HostSpace::AllocationMechanism &arg_alloc_mech)
   else if (arg_alloc_mech == HostSpace::INTEL_MM_ALLOC) {
     m_alloc_mech = HostSpace::INTEL_MM_ALLOC;
   }
-#elif defined(KOKKOS_ENABLE_POSIX_MEMALIGN)
-  else if (arg_alloc_mech == HostSpace::POSIX_MEMALIGN) {
-    m_alloc_mech = HostSpace::POSIX_MEMALIGN;
-  }
-#elif defined(KOKKOS_IMPL_POSIX_MMAP_FLAGS)
-  else if (arg_alloc_mech == HostSpace::POSIX_MMAP) {
-    m_alloc_mech = HostSpace::POSIX_MMAP;
-  }
 #endif
   else {
     const char *const mech =
         (arg_alloc_mech == HostSpace::INTEL_MM_ALLOC)
             ? "INTEL_MM_ALLOC"
-            : ((arg_alloc_mech == HostSpace::POSIX_MEMALIGN)
-                   ? "POSIX_MEMALIGN"
-                   : ((arg_alloc_mech == HostSpace::POSIX_MMAP) ? "POSIX_MMAP"
-                                                                : ""));
+            : ((arg_alloc_mech == HostSpace::POSIX_MMAP) ? "POSIX_MMAP" : "");
 
     std::string msg;
     msg.append("Kokkos::HostSpace ");
@@ -213,42 +141,6 @@ void *HostSpace::impl_allocate(
 #if defined(KOKKOS_ENABLE_INTEL_MM_ALLOC)
     else if (m_alloc_mech == INTEL_MM_ALLOC) {
       ptr = _mm_malloc(arg_alloc_size, alignment);
-    }
-#endif
-
-#if defined(KOKKOS_ENABLE_POSIX_MEMALIGN)
-    else if (m_alloc_mech == POSIX_MEMALIGN) {
-      posix_memalign(&ptr, alignment, arg_alloc_size);
-    }
-#endif
-
-#if defined(KOKKOS_IMPL_POSIX_MMAP_FLAGS)
-    else if (m_alloc_mech == POSIX_MMAP) {
-      constexpr size_t use_huge_pages = (1u << 27);
-      constexpr int prot              = PROT_READ | PROT_WRITE;
-      const int flags                 = arg_alloc_size < use_huge_pages
-                            ? KOKKOS_IMPL_POSIX_MMAP_FLAGS
-                            : KOKKOS_IMPL_POSIX_MMAP_FLAGS_HUGE;
-
-      // read write access to private memory
-
-      ptr =
-          mmap(nullptr /* address hint, if nullptr OS kernel chooses address */
-               ,
-               arg_alloc_size /* size in bytes */
-               ,
-               prot /* memory protection */
-               ,
-               flags /* visibility of updates */
-               ,
-               -1 /* file descriptor */
-               ,
-               0 /* offset */
-          );
-
-      /* Associated reallocation:
-             ptr = mremap( old_ptr , old_size , new_size , MREMAP_MAYMOVE );
-      */
     }
 #endif
   }
@@ -324,18 +216,6 @@ void HostSpace::impl_deallocate(
       _mm_free(arg_alloc_ptr);
     }
 #endif
-
-#if defined(KOKKOS_ENABLE_POSIX_MEMALIGN)
-    else if (m_alloc_mech == POSIX_MEMALIGN) {
-      free(arg_alloc_ptr);
-    }
-#endif
-
-#if defined(KOKKOS_IMPL_POSIX_MMAP_FLAGS)
-    else if (m_alloc_mech == POSIX_MMAP) {
-      munmap(arg_alloc_ptr, arg_alloc_size);
-    }
-#endif
   }
 }
 
@@ -352,12 +232,7 @@ SharedAllocationRecord<void, void>
     SharedAllocationRecord<Kokkos::HostSpace, void>::s_root_record;
 #endif
 
-SharedAllocationRecord<Kokkos::HostSpace, void>::~SharedAllocationRecord()
-#if defined( \
-    KOKKOS_IMPL_INTEL_WORKAROUND_NOEXCEPT_SPECIFICATION_VIRTUAL_FUNCTION)
-    noexcept
-#endif
-{
+SharedAllocationRecord<Kokkos::HostSpace, void>::~SharedAllocationRecord() {
   m_space.deallocate(m_label.c_str(),
                      SharedAllocationRecord<void, void>::m_alloc_ptr,
                      SharedAllocationRecord<void, void>::m_alloc_size,
@@ -428,56 +303,18 @@ void init_lock_array_host_space() {
 }
 
 bool lock_address_host_space(void *ptr) {
-#if defined(KOKKOS_ENABLE_ISA_X86_64) && defined(KOKKOS_ENABLE_TM) && \
-    !defined(KOKKOS_COMPILER_PGI)
-  const unsigned status = _xbegin();
-
-  if (_XBEGIN_STARTED == status) {
-    const int val =
-        HOST_SPACE_ATOMIC_LOCKS[((size_t(ptr) >> 2) & HOST_SPACE_ATOMIC_MASK) ^
-                                HOST_SPACE_ATOMIC_XOR_MASK];
-
-    if (0 == val) {
-      HOST_SPACE_ATOMIC_LOCKS[((size_t(ptr) >> 2) & HOST_SPACE_ATOMIC_MASK) ^
-                              HOST_SPACE_ATOMIC_XOR_MASK] = 1;
-    } else {
-      _xabort(1);
-    }
-
-    _xend();
-
-    return 1;
-  } else {
-#endif
-    return 0 == atomic_compare_exchange(
-                    &HOST_SPACE_ATOMIC_LOCKS[((size_t(ptr) >> 2) &
-                                              HOST_SPACE_ATOMIC_MASK) ^
-                                             HOST_SPACE_ATOMIC_XOR_MASK],
-                    0, 1);
-#if defined(KOKKOS_ENABLE_ISA_X86_64) && defined(KOKKOS_ENABLE_TM) && \
-    !defined(KOKKOS_COMPILER_PGI)
-  }
-#endif
+  return 0 == atomic_compare_exchange(
+                  &HOST_SPACE_ATOMIC_LOCKS[((size_t(ptr) >> 2) &
+                                            HOST_SPACE_ATOMIC_MASK) ^
+                                           HOST_SPACE_ATOMIC_XOR_MASK],
+                  0, 1);
 }
 
 void unlock_address_host_space(void *ptr) {
-#if defined(KOKKOS_ENABLE_ISA_X86_64) && defined(KOKKOS_ENABLE_TM) && \
-    !defined(KOKKOS_COMPILER_PGI)
-  const unsigned status = _xbegin();
-
-  if (_XBEGIN_STARTED == status) {
-    HOST_SPACE_ATOMIC_LOCKS[((size_t(ptr) >> 2) & HOST_SPACE_ATOMIC_MASK) ^
-                            HOST_SPACE_ATOMIC_XOR_MASK] = 0;
-  } else {
-#endif
-    atomic_exchange(
-        &HOST_SPACE_ATOMIC_LOCKS[((size_t(ptr) >> 2) & HOST_SPACE_ATOMIC_MASK) ^
-                                 HOST_SPACE_ATOMIC_XOR_MASK],
-        0);
-#if defined(KOKKOS_ENABLE_ISA_X86_64) && defined(KOKKOS_ENABLE_TM) && \
-    !defined(KOKKOS_COMPILER_PGI)
-  }
-#endif
+  atomic_exchange(
+      &HOST_SPACE_ATOMIC_LOCKS[((size_t(ptr) >> 2) & HOST_SPACE_ATOMIC_MASK) ^
+                               HOST_SPACE_ATOMIC_XOR_MASK],
+      0);
 }
 
 }  // namespace Impl

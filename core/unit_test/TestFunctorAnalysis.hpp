@@ -1,46 +1,18 @@
-/*
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 3.0
-//       Copyright (2020) National Technology & Engineering
+//                        Kokkos v. 4.0
+//       Copyright (2022) National Technology & Engineering
 //               Solutions of Sandia, LLC (NTESS).
 //
 // Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
+// See https://kokkos.org/LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-//
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-//
-// ************************************************************************
 //@HEADER
-*/
 
 #ifndef TEST_FUNCTOR_ANALYSIS_HPP
 #define TEST_FUNCTOR_ANALYSIS_HPP
@@ -61,7 +33,7 @@ struct TestFunctorAnalysis_03 {
   void operator()(int, value_type&) const {}
 
   KOKKOS_INLINE_FUNCTION
-  void join(value_type volatile&, value_type const volatile&) const {}
+  void join(value_type&, value_type const&) const {}
 
   KOKKOS_INLINE_FUNCTION static void init(value_type&) {}
 };
@@ -75,11 +47,11 @@ void test_functor_analysis() {
                                     Kokkos::RangePolicy<ExecSpace>,
                                     decltype(c01)>;
 
-  using R01 = typename A01::template Reducer<typename ExecSpace::memory_space>;
+  using R01 = typename A01::Reducer;
 
-  static_assert(std::is_same<typename A01::value_type, void>::value, "");
-  static_assert(std::is_same<typename A01::pointer_type, void>::value, "");
-  static_assert(std::is_same<typename A01::reference_type, void>::value, "");
+  static_assert(std::is_void<typename A01::value_type>::value, "");
+  static_assert(std::is_void<typename A01::pointer_type>::value, "");
+  static_assert(std::is_void<typename A01::reference_type>::value, "");
   static_assert(std::is_same<typename R01::functor_type, decltype(c01)>::value,
                 "");
 
@@ -94,7 +66,7 @@ void test_functor_analysis() {
   using A02 = Kokkos::Impl::FunctorAnalysis<
       Kokkos::Impl::FunctorPatternInterface::REDUCE,
       Kokkos::RangePolicy<ExecSpace>, decltype(c02)>;
-  using R02 = typename A02::template Reducer<typename ExecSpace::memory_space>;
+  using R02 = typename A02::Reducer;
 
   static_assert(std::is_same<typename A02::value_type, double>::value, "");
   static_assert(std::is_same<typename A02::pointer_type, double*>::value, "");
@@ -114,7 +86,7 @@ void test_functor_analysis() {
   using A03 = Kokkos::Impl::FunctorAnalysis<
       Kokkos::Impl::FunctorPatternInterface::REDUCE,
       Kokkos::RangePolicy<ExecSpace>, TestFunctorAnalysis_03>;
-  using R03 = typename A03::template Reducer<typename ExecSpace::memory_space>;
+  using R03 = typename A03::Reducer;
 
   static_assert(std::is_same<typename A03::value_type,
                              TestFunctorAnalysis_03::value_type>::value,

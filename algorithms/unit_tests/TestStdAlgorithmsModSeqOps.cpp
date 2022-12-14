@@ -1,50 +1,20 @@
-/*
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 3.0
-//       Copyright (2020) National Technology & Engineering
+//                        Kokkos v. 4.0
+//       Copyright (2022) National Technology & Engineering
 //               Solutions of Sandia, LLC (NTESS).
 //
 // Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
+// See https://kokkos.org/LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-//
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-//
-// ************************************************************************
 //@HEADER
-*/
 
 #include <TestStdAlgorithmsCommon.hpp>
-#include <std_algorithms/Kokkos_ModifyingSequenceOperations.hpp>
-#include "std_algorithms/Kokkos_BeginEnd.hpp"
 
 namespace KE = Kokkos::Experimental;
 
@@ -390,16 +360,16 @@ void test_swap_ranges(ViewType view) {
   parallel_for(ext, cp_func_a_t(view, checkViewA));
   auto cvA_h =
       Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), checkViewA);
-  EXPECT_TRUE(cvA_h(0) == 0);
-  EXPECT_TRUE(cvA_h(1) == 1);
-  EXPECT_TRUE(cvA_h(2) == 99);
-  EXPECT_TRUE(cvA_h(3) == 98);
-  EXPECT_TRUE(cvA_h(4) == 97);
-  EXPECT_TRUE(cvA_h(5) == 96);
-  EXPECT_TRUE(cvA_h(6) == 6);
-  EXPECT_TRUE(cvA_h(7) == 7);
-  EXPECT_TRUE(cvA_h(8) == 8);
-  EXPECT_TRUE(cvA_h(9) == 9);
+  EXPECT_EQ(cvA_h(0), 0);
+  EXPECT_EQ(cvA_h(1), 1);
+  EXPECT_EQ(cvA_h(2), 99);
+  EXPECT_EQ(cvA_h(3), 98);
+  EXPECT_EQ(cvA_h(4), 97);
+  EXPECT_EQ(cvA_h(5), 96);
+  EXPECT_EQ(cvA_h(6), 6);
+  EXPECT_EQ(cvA_h(7), 7);
+  EXPECT_EQ(cvA_h(8), 8);
+  EXPECT_EQ(cvA_h(9), 9);
 
   /* check viewB */
   static_view_type checkViewB("tmpB");
@@ -407,16 +377,16 @@ void test_swap_ranges(ViewType view) {
   Kokkos::parallel_for(ext, cp_func_b_t(viewB, checkViewB));
   auto cvB_h =
       Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), checkViewB);
-  EXPECT_TRUE(cvB_h(0) == 100);
-  EXPECT_TRUE(cvB_h(1) == 2);
-  EXPECT_TRUE(cvB_h(2) == 3);
-  EXPECT_TRUE(cvB_h(3) == 4);
-  EXPECT_TRUE(cvB_h(4) == 5);
-  EXPECT_TRUE(cvB_h(5) == 95);
-  EXPECT_TRUE(cvB_h(6) == 94);
-  EXPECT_TRUE(cvB_h(7) == 93);
-  EXPECT_TRUE(cvB_h(8) == 92);
-  EXPECT_TRUE(cvB_h(9) == 91);
+  EXPECT_EQ(cvB_h(0), 100);
+  EXPECT_EQ(cvB_h(1), 2);
+  EXPECT_EQ(cvB_h(2), 3);
+  EXPECT_EQ(cvB_h(3), 4);
+  EXPECT_EQ(cvB_h(4), 5);
+  EXPECT_EQ(cvB_h(5), 95);
+  EXPECT_EQ(cvB_h(6), 94);
+  EXPECT_EQ(cvB_h(7), 93);
+  EXPECT_EQ(cvB_h(8), 92);
+  EXPECT_EQ(cvB_h(9), 91);
 }
 
 TEST_F(std_algorithms_mod_seq_ops_test, swap_ranges) {

@@ -1,46 +1,18 @@
-/*
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 3.0
-//       Copyright (2020) National Technology & Engineering
+//                        Kokkos v. 4.0
+//       Copyright (2022) National Technology & Engineering
 //               Solutions of Sandia, LLC (NTESS).
 //
 // Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
+// See https://kokkos.org/LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-//
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-//
-// ************************************************************************
 //@HEADER
-*/
 
 #ifndef KOKKOS_COMBINED_REDUCER_HPP
 #define KOKKOS_COMBINED_REDUCER_HPP
@@ -51,7 +23,6 @@
 #include <Kokkos_Parallel_Reduce.hpp>
 #include <Kokkos_ExecPolicy.hpp>
 #include <Kokkos_AnonymousSpace.hpp>
-#include <impl/Kokkos_Utilities.hpp>  // comma operator fold emulation
 
 #include <utility>
 
@@ -89,10 +60,6 @@ struct CombinedReducerValueItemImpl {
   constexpr value_type& ref() & noexcept { return m_value; }
   KOKKOS_FORCEINLINE_FUNCTION
   constexpr value_type const& ref() const& noexcept { return m_value; }
-  KOKKOS_FORCEINLINE_FUNCTION
-  value_type volatile& ref() volatile& noexcept { return m_value; }
-  KOKKOS_FORCEINLINE_FUNCTION
-  value_type const volatile& ref() const volatile& noexcept { return m_value; }
 };
 
 //==============================================================================
@@ -133,15 +100,6 @@ struct CombinedReducerValueImpl<std::integer_sequence<size_t, Idxs...>,
   KOKKOS_INLINE_FUNCTION ValueType const& get() const& noexcept {
     return this->CombinedReducerValueItemImpl<Idx, ValueType>::ref();
   }
-  template <size_t Idx, class ValueType>
-  KOKKOS_INLINE_FUNCTION ValueType volatile& get() volatile& noexcept {
-    return this->CombinedReducerValueItemImpl<Idx, ValueType>::ref();
-  }
-  template <size_t Idx, class ValueType>
-  KOKKOS_INLINE_FUNCTION ValueType const volatile& get() const
-      volatile& noexcept {
-    return this->CombinedReducerValueItemImpl<Idx, ValueType>::ref();
-  }
 };
 
 //==============================================================================
@@ -165,21 +123,11 @@ struct CombinedReducerStorageImpl {
   // model Reducer
 
   KOKKOS_INLINE_FUNCTION
-  constexpr _fold_comma_emulation_return _init(value_type& val) const {
-    m_reducer.init(val);
-    return _fold_comma_emulation_return{};
-  }
+  constexpr void _init(value_type& val) const { m_reducer.init(val); }
 
-  KOKKOS_INLINE_FUNCTION constexpr _fold_comma_emulation_return _join(
-      value_type& dest, value_type const& src) const {
+  KOKKOS_INLINE_FUNCTION constexpr void _join(value_type& dest,
+                                              value_type const& src) const {
     m_reducer.join(dest, src);
-    return _fold_comma_emulation_return{};
-  }
-
-  KOKKOS_INLINE_FUNCTION constexpr _fold_comma_emulation_return _join(
-      value_type volatile& dest, value_type const volatile& src) const {
-    m_reducer.join(dest, src);
-    return _fold_comma_emulation_return{};
   }
 };
 
@@ -193,28 +141,20 @@ struct _construct_combined_reducer_from_args_tag {};
 
 template <class T>
 KOKKOS_INLINE_FUNCTION auto _get_value_from_combined_reducer_ctor_arg(
-    T&& arg) noexcept ->
-    typename std::enable_if<
-        !is_view<typename std::decay<T>::type>::value &&
-            !is_reducer<typename std::decay<T>::type>::value,
-        typename std::decay<T>::type>::type {
+    T&& arg) noexcept
+    -> std::enable_if_t<!is_view<std::decay_t<T>>::value &&
+                            !is_reducer<std::decay_t<T>>::value,
+                        std::decay_t<T>> {
   return arg;
 }
 
 template <class T>
 KOKKOS_INLINE_FUNCTION auto _get_value_from_combined_reducer_ctor_arg(
-    T&& arg) noexcept ->
-    typename std::enable_if<is_view<typename std::decay<T>::type>::value,
-                            typename std::decay<T>::type>::type::value_type {
-  return arg();
-}
-
-template <class T>
-KOKKOS_INLINE_FUNCTION auto _get_value_from_combined_reducer_ctor_arg(
-    T&& arg) noexcept ->
-    typename std::enable_if<is_reducer<typename std::decay<T>::type>::value,
-                            typename std::decay<T>::type>::type::value_type {
-  return arg.reference();
+    T&&) noexcept ->
+    typename std::enable_if_t<is_view<std::decay_t<T>>::value ||
+                                  is_reducer<std::decay_t<T>>::value,
+                              std::decay_t<T>>::value_type {
+  return typename std::decay_t<T>::value_type{};
 }
 
 template <class IdxSeq, class Space, class...>
@@ -258,24 +198,16 @@ struct CombinedReducerImpl<std::integer_sequence<size_t, Idxs...>, Space,
 
   KOKKOS_FUNCTION constexpr void join(value_type& dest,
                                       value_type const& src) const noexcept {
-    emulate_fold_comma_operator(
-        this->CombinedReducerStorageImpl<Idxs, Reducers>::_join(
-            dest.template get<Idxs, typename Reducers::value_type>(),
-            src.template get<Idxs, typename Reducers::value_type>())...);
-  }
-
-  KOKKOS_FUNCTION void join(value_type volatile& dest,
-                            value_type const volatile& src) const noexcept {
-    emulate_fold_comma_operator(
-        this->CombinedReducerStorageImpl<Idxs, Reducers>::_join(
-            dest.template get<Idxs, typename Reducers::value_type>(),
-            src.template get<Idxs, typename Reducers::value_type>())...);
+    (this->CombinedReducerStorageImpl<Idxs, Reducers>::_join(
+         dest.template get<Idxs, typename Reducers::value_type>(),
+         src.template get<Idxs, typename Reducers::value_type>()),
+     ...);
   }
 
   KOKKOS_FUNCTION constexpr void init(value_type& dest) const noexcept {
-    emulate_fold_comma_operator(
-        this->CombinedReducerStorageImpl<Idxs, Reducers>::_init(
-            dest.template get<Idxs, typename Reducers::value_type>())...);
+    (this->CombinedReducerStorageImpl<Idxs, Reducers>::_init(
+         dest.template get<Idxs, typename Reducers::value_type>()),
+     ...);
   }
 
   // TODO figure out if we also need to call through to final
@@ -294,13 +226,26 @@ struct CombinedReducerImpl<std::integer_sequence<size_t, Idxs...>, Space,
     return m_value_view;
   }
 
-  KOKKOS_FUNCTION
-  constexpr static void write_value_back_to_original_references(
-      value_type const& value,
+  template <class ExecutionSpace, int Idx, class View>
+  static void write_one_value_back(
+      const ExecutionSpace& exec_space, View const& view,
+      typename View::const_value_type& value) noexcept {
+    if (Kokkos::SpaceAccessibility<typename View::memory_space,
+                                   Space>::assignable)
+      view() = value;
+    else
+      Kokkos::deep_copy(exec_space, view, value);
+  }
+
+  template <class ExecutionSpace>
+  static void write_value_back_to_original_references(
+      const ExecutionSpace& exec_space, value_type const& value,
       Reducers const&... reducers_that_reference_original_values) noexcept {
-    emulate_fold_comma_operator(
-        (reducers_that_reference_original_values.view()() =
-             value.template get<Idxs, typename Reducers::value_type>())...);
+    (write_one_value_back<ExecutionSpace, Idxs>(
+         exec_space, reducers_that_reference_original_values.view(),
+         value.template get<Idxs, typename Reducers::value_type>()),
+
+     ...);
   }
 };
 
@@ -441,9 +386,8 @@ struct CombinedReductionFunctorWrapper
 // <editor-fold desc="_make_reducer_from_arg"> {{{2
 
 template <class Space, class Reducer>
-KOKKOS_INLINE_FUNCTION constexpr typename std::enable_if<
-    Kokkos::is_reducer<typename std::decay<Reducer>::type>::value,
-    typename std::decay<Reducer>::type>::type
+KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<
+    Kokkos::is_reducer<std::decay_t<Reducer>>::value, std::decay_t<Reducer>>
 _make_reducer_from_arg(Reducer&& arg_reducer) noexcept {
   return arg_reducer;
 }
@@ -456,21 +400,20 @@ struct _wrap_with_kokkos_sum {
 };
 
 template <class Space, class T>
-struct _wrap_with_kokkos_sum<
-    Space, T, typename std::enable_if<Kokkos::is_view<T>::value>::type> {
-  using type = Kokkos::Sum<typename T::value_type, Space>;
+struct _wrap_with_kokkos_sum<Space, T,
+                             std::enable_if_t<Kokkos::is_view<T>::value>> {
+  using type = Kokkos::Sum<typename T::value_type, typename T::memory_space>;
 };
 
 // TODO better error message for the case when a const& to a scalar is passed in
 //      (this is needed in general, though)
 template <class Space, class T>
-KOKKOS_INLINE_FUNCTION constexpr typename std::enable_if<
-    !Kokkos::is_reducer<typename std::decay<T>::type>::value,
-    _wrap_with_kokkos_sum<Space, typename std::decay<T>::type>>::type::type
+KOKKOS_INLINE_FUNCTION constexpr typename std::enable_if_t<
+    !Kokkos::is_reducer<std::decay_t<T>>::value,
+    _wrap_with_kokkos_sum<Space, std::decay_t<T>>>::type
 _make_reducer_from_arg(T&& arg_scalar) noexcept {
   return
-      typename _wrap_with_kokkos_sum<Space, typename std::decay<T>::type>::type{
-          arg_scalar};
+      typename _wrap_with_kokkos_sum<Space, std::decay_t<T>>::type{arg_scalar};
 }
 
 // This can't be an alias template because GCC doesn't know how to mangle
@@ -533,6 +476,8 @@ KOKKOS_INLINE_FUNCTION constexpr auto make_wrapped_combined_functor(
   //----------------------------------------
 }
 
+template <typename FunctorType>
+using functor_has_value_t = typename FunctorType::value_type;
 }  // end namespace Impl
 
 //==============================================================================
@@ -546,9 +491,8 @@ template <class PolicyType, class Functor, class ReturnType1, class ReturnType2,
 auto parallel_reduce(std::string const& label, PolicyType const& policy,
                      Functor const& functor, ReturnType1&& returnType1,
                      ReturnType2&& returnType2,
-                     ReturnTypes&&... returnTypes) noexcept ->
-    typename std::enable_if<
-        Kokkos::is_execution_policy<PolicyType>::value>::type {
+                     ReturnTypes&&... returnTypes) noexcept
+    -> std::enable_if_t<Kokkos::is_execution_policy<PolicyType>::value> {
   //----------------------------------------
   // Since we don't support asynchronous combined reducers yet for various
   // reasons, we actually just want to work with the pointers and references
@@ -570,7 +514,7 @@ auto parallel_reduce(std::string const& label, PolicyType const& policy,
 
   using combined_functor_type = decltype(combined_functor);
   static_assert(
-      Impl::FunctorDeclaresValueType<combined_functor_type, void>::value,
+      is_detected<Impl::functor_has_value_t, combined_functor_type>::value,
       "value_type not properly detected");
   using reduce_adaptor_t =
       Impl::ParallelReduceAdaptor<PolicyType, combined_functor_type,
@@ -584,9 +528,12 @@ auto parallel_reduce(std::string const& label, PolicyType const& policy,
           "Kokkos::parallel_reduce: fence due to result being value, not view",
           combined_reducer);
   combined_reducer.write_value_back_to_original_references(
-      value, Impl::_make_reducer_from_arg<space_type>(returnType1),
+      policy.space(), value,
+      Impl::_make_reducer_from_arg<space_type>(returnType1),
       Impl::_make_reducer_from_arg<space_type>(returnType2),
       Impl::_make_reducer_from_arg<space_type>(returnTypes)...);
+  policy.space().fence(
+      "Kokkos::parallel_reduce: fence after copying values back");
   //----------------------------------------
 }
 
@@ -594,9 +541,8 @@ template <class PolicyType, class Functor, class ReturnType1, class ReturnType2,
           class... ReturnTypes>
 auto parallel_reduce(PolicyType const& policy, Functor const& functor,
                      ReturnType1&& returnType1, ReturnType2&& returnType2,
-                     ReturnTypes&&... returnTypes) noexcept ->
-    typename std::enable_if<
-        Kokkos::is_execution_policy<PolicyType>::value>::type {
+                     ReturnTypes&&... returnTypes) noexcept
+    -> std::enable_if_t<Kokkos::is_execution_policy<PolicyType>::value> {
   //----------------------------------------
   Kokkos::parallel_reduce("", policy, functor,
                           std::forward<ReturnType1>(returnType1),

@@ -1,46 +1,18 @@
-/*
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 3.0
-//       Copyright (2020) National Technology & Engineering
+//                        Kokkos v. 4.0
+//       Copyright (2022) National Technology & Engineering
 //               Solutions of Sandia, LLC (NTESS).
 //
 // Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
+// See https://kokkos.org/LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-//
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-//
-// ************************************************************************
 //@HEADER
-*/
 
 #ifndef KOKKOS_HIP_ATOMIC_HPP
 #define KOKKOS_HIP_ATOMIC_HPP
@@ -80,9 +52,9 @@ __inline__ __device__ float atomic_exchange(volatile float *const dest,
 }
 
 template <typename T>
-__inline__ __device__ T atomic_exchange(
-    volatile T *const dest,
-    typename std::enable_if<sizeof(T) == sizeof(int), const T &>::type val) {
+__inline__ __device__ T
+atomic_exchange(volatile T *const dest,
+                std::enable_if_t<sizeof(T) == sizeof(int), const T &> val) {
   int tmp = atomicExch(reinterpret_cast<int *>(const_cast<T *>(dest)),
                        *reinterpret_cast<int *>(const_cast<T *>(&val)));
   return reinterpret_cast<T &>(tmp);
@@ -91,9 +63,10 @@ __inline__ __device__ T atomic_exchange(
 template <typename T>
 __inline__ __device__ T atomic_exchange(
     volatile T *const dest,
-    typename std::enable_if<sizeof(T) != sizeof(int) &&
-                                sizeof(T) == sizeof(unsigned long long int),
-                            const T &>::type val) {
+    std::enable_if_t<sizeof(T) != sizeof(int) &&
+                         sizeof(T) == sizeof(unsigned long long int),
+                     const T &>
+        val) {
   using type = unsigned long long int;
 
   type tmp = atomicExch(reinterpret_cast<type *>(const_cast<T *>(dest)),
@@ -102,11 +75,10 @@ __inline__ __device__ T atomic_exchange(
 }
 
 template <typename T>
-__inline__ __device__ T
-atomic_exchange(volatile T *const dest,
-                typename std::enable_if<sizeof(T) != sizeof(int) &&
-                                            sizeof(T) != sizeof(long long),
-                                        const T>::type &val) {
+__inline__ __device__ T atomic_exchange(
+    volatile T *const dest,
+    std::enable_if_t<sizeof(T) != sizeof(int) && sizeof(T) != sizeof(long long),
+                     const T> &val) {
   T return_val;
   int done                 = 0;
   unsigned int active      = __ballot(1);
@@ -130,7 +102,7 @@ atomic_exchange(volatile T *const dest,
 template <typename T>
 __inline__ __device__ void atomic_assign(
     volatile T *const dest,
-    typename std::enable_if<sizeof(T) == sizeof(int), const T &>::type val) {
+    std::enable_if_t<sizeof(T) == sizeof(int), const T &> val) {
   atomicExch(reinterpret_cast<int *>(const_cast<T *>(dest)),
              *reinterpret_cast<int *>(const_cast<T *>(&val)));
 }
@@ -138,9 +110,10 @@ __inline__ __device__ void atomic_assign(
 template <typename T>
 __inline__ __device__ void atomic_assign(
     volatile T *const dest,
-    typename std::enable_if<sizeof(T) != sizeof(int) &&
-                                sizeof(T) == sizeof(unsigned long long int),
-                            const T &>::type val) {
+    std::enable_if_t<sizeof(T) != sizeof(int) &&
+                         sizeof(T) == sizeof(unsigned long long int),
+                     const T &>
+        val) {
   using type = unsigned long long int;
   atomicExch(reinterpret_cast<type *>(const_cast<T *>(dest)),
              *reinterpret_cast<type *>(const_cast<T *>(&val)));
@@ -149,9 +122,10 @@ __inline__ __device__ void atomic_assign(
 template <typename T>
 __inline__ __device__ void atomic_assign(
     volatile T *const dest,
-    typename std::enable_if<sizeof(T) != sizeof(int) &&
-                                sizeof(T) != sizeof(unsigned long long int),
-                            const T &>::type val) {
+    std::enable_if_t<sizeof(T) != sizeof(int) &&
+                         sizeof(T) != sizeof(unsigned long long int),
+                     const T &>
+        val) {
   atomic_exchange(dest, val);
 }
 
@@ -177,7 +151,7 @@ inline __device__ unsigned long long int atomic_compare_exchange(
 template <class T>
 __inline__ __device__ T atomic_compare_exchange(
     volatile T *dest, T compare,
-    typename std::enable_if<sizeof(T) == sizeof(int), const T &>::type val) {
+    std::enable_if_t<sizeof(T) == sizeof(int), const T &> val) {
   // FIXME_HIP UB
   union U {
     int i;
@@ -194,8 +168,8 @@ __inline__ __device__ T atomic_compare_exchange(
 template <class T>
 __inline__ __device__ T atomic_compare_exchange(
     volatile T *dest, T compare,
-    typename std::enable_if<sizeof(T) == sizeof(unsigned long long int),
-                            const T &>::type val) {
+    std::enable_if_t<sizeof(T) == sizeof(unsigned long long int), const T &>
+        val) {
   // FIXME_HIP UB
   union U {
     unsigned long long int i;
@@ -213,9 +187,8 @@ __inline__ __device__ T atomic_compare_exchange(
 template <typename T>
 __inline__ __device__ T atomic_compare_exchange(
     volatile T *const dest, const T &compare,
-    typename std::enable_if<sizeof(T) != sizeof(int) &&
-                                sizeof(T) != sizeof(long long),
-                            const T>::type &val) {
+    std::enable_if_t<sizeof(T) != sizeof(int) && sizeof(T) != sizeof(long long),
+                     const T> &val) {
   T return_val;
   int done                 = 0;
   unsigned int active      = __ballot(1);
@@ -256,9 +229,9 @@ inline __device__ float atomic_fetch_add(volatile float *dest,
 }
 
 template <typename T>
-inline __device__ T atomic_fetch_add(
-    volatile T *const dest,
-    typename std::enable_if<sizeof(T) == sizeof(int), const T>::type val) {
+inline __device__ T
+atomic_fetch_add(volatile T *const dest,
+                 std::enable_if_t<sizeof(T) == sizeof(int), const T> val) {
   // FIXME_HIP UB
   union U {
     int i;
@@ -281,8 +254,7 @@ inline __device__ T atomic_fetch_add(
 template <typename T>
 inline __device__ T atomic_fetch_add(
     volatile T *const dest,
-    typename std::enable_if<sizeof(T) == sizeof(long long), const T>::type
-        val) {
+    std::enable_if_t<sizeof(T) == sizeof(long long), const T> val) {
   // FIXME_HIP UB
   union U {
     unsigned long long i;
@@ -343,11 +315,11 @@ __inline__ __device__ long long atomic_fetch_add(volatile long long *dest,
 }
 
 template <class T>
-__inline__ __device__ T
-atomic_fetch_add(volatile T *dest,
-                 typename std::enable_if<sizeof(T) != sizeof(int) &&
-                                             sizeof(T) != sizeof(long long),
-                                         const T &>::type val) {
+__inline__ __device__ T atomic_fetch_add(
+    volatile T *dest,
+    std::enable_if_t<sizeof(T) != sizeof(int) && sizeof(T) != sizeof(long long),
+                     const T &>
+        val) {
   T return_val;
   int done                 = 0;
   unsigned int active      = __ballot(1);
@@ -424,8 +396,7 @@ __inline__ __device__ long long atomic_fetch_sub(volatile long long *dest,
 
 template <class T>
 __inline__ __device__ T atomic_fetch_sub(
-    volatile T *dest,
-    typename std::enable_if<sizeof(T) == sizeof(int), T>::type val) {
+    volatile T *dest, std::enable_if_t<sizeof(T) == sizeof(int), T> val) {
   // FIXME_HIP UB
   union U {
     int i;
@@ -448,8 +419,7 @@ __inline__ __device__ T atomic_fetch_sub(
 template <typename T>
 inline __device__ T atomic_fetch_sub(
     volatile T *const dest,
-    typename std::enable_if<sizeof(T) == sizeof(long long), const T>::type
-        val) {
+    std::enable_if_t<sizeof(T) == sizeof(long long), const T> val) {
   // FIXME_HIP UB
   union U {
     unsigned long long i;
@@ -472,8 +442,7 @@ inline __device__ T atomic_fetch_sub(
 
 template <class T>
 __inline__ __device__ T atomic_fetch_sub(
-    volatile T *dest,
-    typename std::enable_if<sizeof(T) == sizeof(char), T>::type val) {
+    volatile T *dest, std::enable_if_t<sizeof(T) == sizeof(char), T> val) {
   unsigned int oldval, newval, assume;
   oldval = *reinterpret_cast<volatile unsigned int *>(dest);
 
@@ -488,8 +457,7 @@ __inline__ __device__ T atomic_fetch_sub(
 
 template <class T>
 __inline__ __device__ T atomic_fetch_sub(
-    volatile T *dest,
-    typename std::enable_if<sizeof(T) == sizeof(short), T>::type val) {
+    volatile T *dest, std::enable_if_t<sizeof(T) == sizeof(short), T> val) {
   unsigned int oldval, newval, assume;
   oldval = *reinterpret_cast<int *>(dest);
 
@@ -503,11 +471,10 @@ __inline__ __device__ T atomic_fetch_sub(
 }
 
 template <typename T>
-__inline__ __device__ T
-atomic_fetch_sub(volatile T *const dest,
-                 typename std::enable_if<sizeof(T) != sizeof(int) &&
-                                             sizeof(T) != sizeof(long long),
-                                         const T>::type &val) {
+__inline__ __device__ T atomic_fetch_sub(
+    volatile T *const dest,
+    std::enable_if_t<sizeof(T) != sizeof(int) && sizeof(T) != sizeof(long long),
+                     const T> &val) {
   T return_val;
   int done                 = 0;
   unsigned int active      = __ballot(1);

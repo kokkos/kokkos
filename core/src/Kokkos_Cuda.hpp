@@ -1,47 +1,24 @@
-/*
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 3.0
-//       Copyright (2020) National Technology & Engineering
+//                        Kokkos v. 4.0
+//       Copyright (2022) National Technology & Engineering
 //               Solutions of Sandia, LLC (NTESS).
 //
 // Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
+// See https://kokkos.org/LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-//
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-//
-// ************************************************************************
 //@HEADER
-*/
 
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#include <Kokkos_Macros.hpp>
+static_assert(false,
+              "Including non-public Kokkos header files is not allowed.");
+#endif
 #ifndef KOKKOS_CUDA_HPP
 #define KOKKOS_CUDA_HPP
 
@@ -62,8 +39,8 @@
 #include <Kokkos_Layout.hpp>
 #include <Kokkos_ScratchSpace.hpp>
 #include <Kokkos_MemoryTraits.hpp>
-#include <impl/Kokkos_ExecSpaceInitializer.hpp>
 #include <impl/Kokkos_HostSharedPtr.hpp>
+#include <impl/Kokkos_InitializationSettings.hpp>
 
 /*--------------------------------------------------------------------------*/
 
@@ -183,17 +160,20 @@ class Cuda {
   /// return asynchronously, before the functor completes.  This
   /// method does not return until all dispatched functors on this
   /// device have completed.
-  static void impl_static_fence();
-  static void impl_static_fence(const std::string&);
+  static void impl_static_fence(const std::string& name);
 
-  void fence() const;
-  void fence(const std::string&) const;
+  void fence(const std::string& name =
+                 "Kokkos::Cuda::fence(): Unnamed Instance Fence") const;
 
   /** \brief  Return the maximum amount of concurrency.  */
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   static int concurrency();
+#else
+  int concurrency() const;
+#endif
 
   //! Print configuration information to the given output stream.
-  static void print_configuration(std::ostream&, const bool detail = false);
+  void print_configuration(std::ostream& os, bool verbose = false) const;
 
   //@}
   //--------------------------------------------------
@@ -204,15 +184,6 @@ class Cuda {
   Cuda(cudaStream_t stream, bool manage_stream = false);
 
   //--------------------------------------------------------------------------
-  //! \name Device-specific functions
-  //@{
-
-  struct SelectDevice {
-    int cuda_device_id;
-    SelectDevice() : cuda_device_id(0) {}
-    explicit SelectDevice(int id) : cuda_device_id(id) {}
-  };
-
   //! Free any resources being consumed by the device.
   static void impl_finalize();
 
@@ -220,8 +191,7 @@ class Cuda {
   static int impl_is_initialized();
 
   //! Initialize, telling the CUDA run-time library which device to use.
-  static void impl_initialize(const SelectDevice         = SelectDevice(),
-                              const size_t num_instances = 1);
+  static void impl_initialize(InitializationSettings const&);
 
   /// \brief Cuda device architecture of the selected device.
   ///
@@ -251,6 +221,13 @@ class Cuda {
   uint32_t impl_instance_id() const noexcept;
 
  private:
+  friend bool operator==(Cuda const& lhs, Cuda const& rhs) {
+    return lhs.impl_internal_space_instance() ==
+           rhs.impl_internal_space_instance();
+  }
+  friend bool operator!=(Cuda const& lhs, Cuda const& rhs) {
+    return !(lhs == rhs);
+  }
   Kokkos::Impl::HostSharedPtr<Impl::CudaInternal> m_space_instance;
 };
 
@@ -260,22 +237,12 @@ template <>
 struct DeviceTypeTraits<Cuda> {
   /// \brief An ID to differentiate (for example) Serial from OpenMP in Tooling
   static constexpr DeviceType id = DeviceType::Cuda;
+  static int device_id(const Cuda& exec) { return exec.cuda_device(); }
 };
 }  // namespace Experimental
 }  // namespace Tools
 
 namespace Impl {
-
-class CudaSpaceInitializer : public ExecSpaceInitializerBase {
- public:
-  CudaSpaceInitializer()  = default;
-  ~CudaSpaceInitializer() = default;
-  void initialize(const InitArguments& args) final;
-  void finalize(const bool all_spaces) final;
-  void fence() final;
-  void fence(const std::string&) final;
-  void print_configuration(std::ostream& msg, const bool detail) final;
-};
 
 template <class DT, class... DP>
 struct ZeroMemset<Kokkos::Cuda, DT, DP...> {

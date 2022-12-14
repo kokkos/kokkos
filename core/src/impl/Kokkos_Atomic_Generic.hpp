@@ -1,46 +1,18 @@
-/*
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 3.0
-//       Copyright (2020) National Technology & Engineering
+//                        Kokkos v. 4.0
+//       Copyright (2022) National Technology & Engineering
 //               Solutions of Sandia, LLC (NTESS).
 //
 // Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
+// See https://kokkos.org/LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-//
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-//
-// ************************************************************************
 //@HEADER
-*/
 
 #include <Kokkos_Macros.hpp>
 #if defined(KOKKOS_ATOMIC_HPP) && !defined(KOKKOS_ATOMIC_GENERIC_HPP)
@@ -188,102 +160,103 @@ struct RShiftOper {
 template <class Oper, typename T>
 KOKKOS_INLINE_FUNCTION T atomic_fetch_oper(
     const Oper& op, volatile T* const dest,
-    typename std::enable_if<sizeof(T) != sizeof(int) &&
-                                sizeof(T) == sizeof(unsigned long long int),
-                            const T>::type val) {
-  union U {
-    unsigned long long int i;
-    T t;
-    KOKKOS_INLINE_FUNCTION U() {}
-  } oldval, assume, newval;
-
-  oldval.t = *dest;
-
-  do {
-    if (check_early_exit(op, oldval.t, val)) return oldval.t;
-    assume.i = oldval.i;
-    newval.t = op.apply(assume.t, val);
-    oldval.i = Kokkos::atomic_compare_exchange((unsigned long long int*)dest,
-                                               assume.i, newval.i);
-  } while (assume.i != oldval.i);
-
-  return oldval.t;
-}
-
-template <class Oper, typename T>
-KOKKOS_INLINE_FUNCTION T atomic_oper_fetch(
-    const Oper& op, volatile T* const dest,
-    typename std::enable_if<sizeof(T) != sizeof(int) &&
-                                sizeof(T) == sizeof(unsigned long long int),
-                            const T>::type val) {
-  union U {
-    unsigned long long int i;
-    T t;
-    KOKKOS_INLINE_FUNCTION U() {}
-  } oldval, assume, newval;
-
-  oldval.t = *dest;
-
-  do {
-    if (check_early_exit(op, oldval.t, val)) return oldval.t;
-    assume.i = oldval.i;
-    newval.t = op.apply(assume.t, val);
-    oldval.i = Kokkos::atomic_compare_exchange((unsigned long long int*)dest,
-                                               assume.i, newval.i);
-  } while (assume.i != oldval.i);
-
-  return newval.t;
-}
-
-template <class Oper, typename T>
-KOKKOS_INLINE_FUNCTION T atomic_fetch_oper(
-    const Oper& op, volatile T* const dest,
-    typename std::enable_if<sizeof(T) == sizeof(int), const T>::type val) {
-  union U {
-    int i;
-    T t;
-    KOKKOS_INLINE_FUNCTION U() {}
-  } oldval, assume, newval;
-
-  oldval.t = *dest;
-
-  do {
-    if (check_early_exit(op, oldval.t, val)) return oldval.t;
-    assume.i = oldval.i;
-    newval.t = op.apply(assume.t, val);
-    oldval.i = Kokkos::atomic_compare_exchange((int*)dest, assume.i, newval.i);
-  } while (assume.i != oldval.i);
-
-  return oldval.t;
-}
-
-template <class Oper, typename T>
-KOKKOS_INLINE_FUNCTION T atomic_oper_fetch(
-    const Oper& op, volatile T* const dest,
-    typename std::enable_if<sizeof(T) == sizeof(int), const T>::type val) {
-  union U {
-    int i;
-    T t;
-    KOKKOS_INLINE_FUNCTION U() {}
-  } oldval, assume, newval;
-
-  oldval.t = *dest;
-
-  do {
-    if (check_early_exit(op, oldval.t, val)) return oldval.t;
-    assume.i = oldval.i;
-    newval.t = op.apply(assume.t, val);
-    oldval.i = Kokkos::atomic_compare_exchange((int*)dest, assume.i, newval.i);
-  } while (assume.i != oldval.i);
-
-  return newval.t;
-}
-
-template <class Oper, typename T>
-KOKKOS_INLINE_FUNCTION T atomic_fetch_oper(
-    const Oper& op, volatile T* const dest,
-    typename std::enable_if<(sizeof(T) != 4) && (sizeof(T) != 8), const T>::type
+    std::enable_if_t<sizeof(T) != sizeof(int) &&
+                         sizeof(T) == sizeof(unsigned long long int),
+                     const T>
         val) {
+  union U {
+    unsigned long long int i;
+    T t;
+    KOKKOS_INLINE_FUNCTION U() {}
+  } oldval, assume, newval;
+
+  oldval.t = *dest;
+
+  do {
+    if (check_early_exit(op, oldval.t, val)) return oldval.t;
+    assume.i = oldval.i;
+    newval.t = op.apply(assume.t, val);
+    oldval.i = Kokkos::atomic_compare_exchange((unsigned long long int*)dest,
+                                               assume.i, newval.i);
+  } while (assume.i != oldval.i);
+
+  return oldval.t;
+}
+
+template <class Oper, typename T>
+KOKKOS_INLINE_FUNCTION T atomic_oper_fetch(
+    const Oper& op, volatile T* const dest,
+    std::enable_if_t<sizeof(T) != sizeof(int) &&
+                         sizeof(T) == sizeof(unsigned long long int),
+                     const T>
+        val) {
+  union U {
+    unsigned long long int i;
+    T t;
+    KOKKOS_INLINE_FUNCTION U() {}
+  } oldval, assume, newval;
+
+  oldval.t = *dest;
+
+  do {
+    if (check_early_exit(op, oldval.t, val)) return oldval.t;
+    assume.i = oldval.i;
+    newval.t = op.apply(assume.t, val);
+    oldval.i = Kokkos::atomic_compare_exchange((unsigned long long int*)dest,
+                                               assume.i, newval.i);
+  } while (assume.i != oldval.i);
+
+  return newval.t;
+}
+
+template <class Oper, typename T>
+KOKKOS_INLINE_FUNCTION T
+atomic_fetch_oper(const Oper& op, volatile T* const dest,
+                  std::enable_if_t<sizeof(T) == sizeof(int), const T> val) {
+  union U {
+    int i;
+    T t;
+    KOKKOS_INLINE_FUNCTION U() {}
+  } oldval, assume, newval;
+
+  oldval.t = *dest;
+
+  do {
+    if (check_early_exit(op, oldval.t, val)) return oldval.t;
+    assume.i = oldval.i;
+    newval.t = op.apply(assume.t, val);
+    oldval.i = Kokkos::atomic_compare_exchange((int*)dest, assume.i, newval.i);
+  } while (assume.i != oldval.i);
+
+  return oldval.t;
+}
+
+template <class Oper, typename T>
+KOKKOS_INLINE_FUNCTION T
+atomic_oper_fetch(const Oper& op, volatile T* const dest,
+                  std::enable_if_t<sizeof(T) == sizeof(int), const T> val) {
+  union U {
+    int i;
+    T t;
+    KOKKOS_INLINE_FUNCTION U() {}
+  } oldval, assume, newval;
+
+  oldval.t = *dest;
+
+  do {
+    if (check_early_exit(op, oldval.t, val)) return oldval.t;
+    assume.i = oldval.i;
+    newval.t = op.apply(assume.t, val);
+    oldval.i = Kokkos::atomic_compare_exchange((int*)dest, assume.i, newval.i);
+  } while (assume.i != oldval.i);
+
+  return newval.t;
+}
+
+template <class Oper, typename T>
+KOKKOS_INLINE_FUNCTION T atomic_fetch_oper(
+    const Oper& op, volatile T* const dest,
+    std::enable_if_t<(sizeof(T) != 4) && (sizeof(T) != 8), const T> val) {
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
   while (!Impl::lock_address_host_space((void*)dest))
     ;
@@ -344,13 +317,13 @@ KOKKOS_INLINE_FUNCTION T atomic_fetch_oper(
 template <class Oper, typename T>
 KOKKOS_INLINE_FUNCTION T
 atomic_oper_fetch(const Oper& op, volatile T* const dest,
-                  typename std::enable_if<(sizeof(T) != 4) && (sizeof(T) != 8)
+                  std::enable_if_t<(sizeof(T) != 4) && (sizeof(T) != 8)
 #if defined(KOKKOS_ENABLE_ASM) && \
     defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-                                              && (sizeof(T) != 16)
+                                       && (sizeof(T) != 16)
 #endif
-                                              ,
-                                          const T>::type& val) {
+                                       ,
+                                   const T>& val) {
 
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
   while (!Impl::lock_address_host_space((void*)dest))

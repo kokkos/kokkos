@@ -1,47 +1,24 @@
-/*
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 3.0
-//       Copyright (2020) National Technology & Engineering
+//                        Kokkos v. 4.0
+//       Copyright (2022) National Technology & Engineering
 //               Solutions of Sandia, LLC (NTESS).
 //
 // Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
+// See https://kokkos.org/LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-//
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-//
-// ************************************************************************
 //@HEADER
-*/
 
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#include <Kokkos_Macros.hpp>
+static_assert(false,
+              "Including non-public Kokkos header files is not allowed.");
+#endif
 #ifndef KOKKOS_THREADS_HPP
 #define KOKKOS_THREADS_HPP
 
@@ -57,7 +34,7 @@
 #include <Kokkos_Layout.hpp>
 #include <Kokkos_MemoryTraits.hpp>
 #include <impl/Kokkos_Profiling_Interface.hpp>
-#include <impl/Kokkos_ExecSpaceInitializer.hpp>
+#include <impl/Kokkos_InitializationSettings.hpp>
 
 /*--------------------------------------------------------------------------*/
 
@@ -99,7 +76,7 @@ class Threads {
   static int in_parallel();
 
   /// \brief Print configuration information to the given output stream.
-  static void print_configuration(std::ostream&, const bool detail = false);
+  void print_configuration(std::ostream& os, bool verbose = false) const;
 
   /// \brief Wait until all dispatched functors complete.
   ///
@@ -107,14 +84,17 @@ class Threads {
   /// return asynchronously, before the functor completes.  This
   /// method does not return until all dispatched functors on this
   /// device have completed.
-  static void impl_static_fence();
   static void impl_static_fence(const std::string& name);
 
-  void fence() const;
-  void fence(const std::string&) const;
+  void fence(const std::string& name =
+                 "Kokkos::Threads::fence: Unnamed Instance Fence") const;
 
   /** \brief  Return the maximum amount of concurrency.  */
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   static int concurrency();
+#else
+  int concurrency() const;
+#endif
 
   /// \brief Free any resources being consumed by the device.
   ///
@@ -127,18 +107,7 @@ class Threads {
   //! \name Space-specific functions
   //@{
 
-  /**
-   *  Teams of threads are distributed as evenly as possible across
-   *  the requested number of numa regions and cores per numa region.
-   *  A team will not be split across a numa region.
-   *
-   *  If the 'use_' arguments are not supplied, the hwloc is queried
-   *  to use all available cores.
-   */
-  static void impl_initialize(unsigned threads_count             = 0,
-                              unsigned use_numa_count            = 0,
-                              unsigned use_cores_per_numa        = 0,
-                              bool allow_asynchronous_threadpool = false);
+  static void impl_initialize(InitializationSettings const&);
 
   static int impl_is_initialized();
 
@@ -168,6 +137,9 @@ class Threads {
   static const char* name();
   //@}
   //----------------------------------------
+ private:
+  friend bool operator==(Threads const&, Threads const&) { return true; }
+  friend bool operator!=(Threads const&, Threads const&) { return false; }
 };
 
 namespace Tools {
@@ -175,24 +147,10 @@ namespace Experimental {
 template <>
 struct DeviceTypeTraits<Threads> {
   static constexpr DeviceType id = DeviceType::Threads;
+  static int device_id(const Threads&) { return 0; }
 };
 }  // namespace Experimental
 }  // namespace Tools
-
-namespace Impl {
-
-class ThreadsSpaceInitializer : public ExecSpaceInitializerBase {
- public:
-  ThreadsSpaceInitializer()  = default;
-  ~ThreadsSpaceInitializer() = default;
-  void initialize(const InitArguments& args) final;
-  void finalize(const bool) final;
-  void fence() final;
-  void fence(const std::string&) final;
-  void print_configuration(std::ostream& msg, const bool detail) final;
-};
-
-}  // namespace Impl
 }  // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/
@@ -217,7 +175,10 @@ struct MemorySpaceAccess<Kokkos::Threads::memory_space,
 #include <Kokkos_Parallel.hpp>
 #include <Threads/Kokkos_ThreadsExec.hpp>
 #include <Threads/Kokkos_ThreadsTeam.hpp>
-#include <Threads/Kokkos_Threads_Parallel.hpp>
+#include <Threads/Kokkos_Threads_Parallel_Range.hpp>
+#include <Threads/Kokkos_Threads_Parallel_MDRange.hpp>
+#include <Threads/Kokkos_Threads_Parallel_Team.hpp>
+#include <Threads/Kokkos_Threads_UniqueToken.hpp>
 
 #include <KokkosExp_MDRangePolicy.hpp>
 

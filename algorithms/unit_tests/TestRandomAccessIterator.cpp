@@ -1,51 +1,20 @@
-/*
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 3.0
-//       Copyright (2020) National Technology & Engineering
+//                        Kokkos v. 4.0
+//       Copyright (2022) National Technology & Engineering
 //               Solutions of Sandia, LLC (NTESS).
 //
 // Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
+// See https://kokkos.org/LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-//
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-//
-// ************************************************************************
 //@HEADER
-*/
 
 #include <TestStdAlgorithmsCommon.hpp>
-#include <std_algorithms/Kokkos_BeginEnd.hpp>
-#include <std_algorithms/Kokkos_RandomAccessIterator.hpp>
-#include <std_algorithms/Kokkos_Distance.hpp>
 
 namespace KE = Kokkos::Experimental;
 
@@ -206,28 +175,28 @@ TEST_F(random_access_iterator_test, operatorsSet4) {
   auto it4 = KE::Impl::RandomAccessIterator<static_view_t>(m_static_view, 4);
   auto it5 = KE::Impl::RandomAccessIterator<dyn_view_t>(m_dynamic_view, 4);
   auto it6 = KE::Impl::RandomAccessIterator<strided_view_t>(m_strided_view, 4);
-  EXPECT_TRUE(it1 != it4);
-  EXPECT_TRUE(it2 != it5);
-  EXPECT_TRUE(it3 != it6);
-  EXPECT_TRUE(it1 < it4);
-  EXPECT_TRUE(it2 < it5);
-  EXPECT_TRUE(it3 < it6);
-  EXPECT_TRUE(it1 <= it4);
-  EXPECT_TRUE(it2 <= it5);
-  EXPECT_TRUE(it3 <= it6);
+  EXPECT_NE(it1, it4);
+  EXPECT_NE(it2, it5);
+  EXPECT_NE(it3, it6);
+  EXPECT_LT(it1, it4);
+  EXPECT_LT(it2, it5);
+  EXPECT_LT(it3, it6);
+  EXPECT_LE(it1, it4);
+  EXPECT_LE(it2, it5);
+  EXPECT_LE(it3, it6);
 
   auto it7 = KE::Impl::RandomAccessIterator<static_view_t>(m_static_view, 3);
   auto it8 = KE::Impl::RandomAccessIterator<dyn_view_t>(m_dynamic_view, 3);
   auto it9 = KE::Impl::RandomAccessIterator<strided_view_t>(m_strided_view, 3);
-  EXPECT_TRUE(it1 == it7);
-  EXPECT_TRUE(it2 == it8);
-  EXPECT_TRUE(it3 == it9);
-  EXPECT_TRUE(it1 >= it7);
-  EXPECT_TRUE(it2 >= it8);
-  EXPECT_TRUE(it3 >= it9);
-  EXPECT_TRUE(it4 > it7);
-  EXPECT_TRUE(it5 > it8);
-  EXPECT_TRUE(it6 > it9);
+  EXPECT_EQ(it1, it7);
+  EXPECT_EQ(it2, it8);
+  EXPECT_EQ(it3, it9);
+  EXPECT_GE(it1, it7);
+  EXPECT_GE(it2, it8);
+  EXPECT_GE(it3, it9);
+  EXPECT_GT(it4, it7);
+  EXPECT_GT(it5, it8);
+  EXPECT_GT(it6, it9);
 }
 
 TEST_F(random_access_iterator_test, assignment_operator) {

@@ -1,46 +1,18 @@
-/*
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 3.0
-//       Copyright (2020) National Technology & Engineering
+//                        Kokkos v. 4.0
+//       Copyright (2022) National Technology & Engineering
 //               Solutions of Sandia, LLC (NTESS).
 //
 // Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
+// See https://kokkos.org/LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-//
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-//
-// ************************************************************************
 //@HEADER
-*/
 
 #ifndef KOKKO_SYCL_PARALLEL_SCAN_HPP
 #define KOKKO_SYCL_PARALLEL_SCAN_HPP
@@ -57,9 +29,8 @@ namespace Impl {
 // At the end of this function, the subgroup scans are stored in the local array
 // such that the last value (at position n_active_subgroups-1) contains the
 // total sum.
-template <class ValueJoin, class ValueInit, int dim, typename ValueType,
-          typename FunctorType>
-void workgroup_scan(sycl::nd_item<dim> item, const FunctorType& functor,
+template <int dim, typename ValueType, typename FunctorType>
+void workgroup_scan(sycl::nd_item<dim> item, const FunctorType& final_reducer,
                     sycl::local_ptr<ValueType> local_mem,
                     ValueType& local_value, unsigned int global_range) {
   // subgroup scans
@@ -68,7 +39,7 @@ void workgroup_scan(sycl::nd_item<dim> item, const FunctorType& functor,
   const auto id_in_sg    = sg.get_local_id()[0];
   for (unsigned int stride = 1; stride < global_range; stride <<= 1) {
     auto tmp = sg.shuffle_up(local_value, stride);
-    if (id_in_sg >= stride) ValueJoin::join(functor, &local_value, &tmp);
+    if (id_in_sg >= stride) final_reducer.join(&local_value, &tmp);
   }
 
   const auto max_subgroup_size = sg.get_max_local_range()[0];
@@ -79,7 +50,7 @@ void workgroup_scan(sycl::nd_item<dim> item, const FunctorType& functor,
   if (id_in_sg == local_range - 1 && sg_group_id < n_active_subgroups)
     local_mem[sg_group_id] = local_value;
   local_value = sg.shuffle_up(local_value, 1);
-  if (id_in_sg == 0) ValueInit::init(functor, &local_value);
+  if (id_in_sg == 0) final_reducer.init(&local_value);
   sycl::group_barrier(item.get_group());
 
   // scan subgroup results using the first subgroup
@@ -96,7 +67,7 @@ void workgroup_scan(sycl::nd_item<dim> item, const FunctorType& functor,
           auto tmp = sg.shuffle_up(local_sg_value, stride);
           if (id_in_sg >= stride) {
             if (idx < n_active_subgroups)
-              ValueJoin::join(functor, &local_sg_value, &tmp);
+              final_reducer.join(&local_sg_value, &tmp);
             else
               local_sg_value = tmp;
           }
@@ -104,8 +75,8 @@ void workgroup_scan(sycl::nd_item<dim> item, const FunctorType& functor,
         if (idx < n_active_subgroups) {
           local_mem[idx] = local_sg_value;
           if (round > 0)
-            ValueJoin::join(functor, &local_mem[idx],
-                            &local_mem[round * local_range - 1]);
+            final_reducer.join(&local_mem[idx],
+                               &local_mem[round * local_range - 1]);
         }
         if (round + 1 < n_rounds) sycl::group_barrier(sg);
       }
@@ -115,7 +86,7 @@ void workgroup_scan(sycl::nd_item<dim> item, const FunctorType& functor,
 
   // add results to all subgroups
   if (sg_group_id > 0)
-    ValueJoin::join(functor, &local_value, &local_mem[sg_group_id - 1]);
+    final_reducer.join(&local_value, &local_mem[sg_group_id - 1]);
 }
 
 template <class FunctorType, class... Traits>
@@ -129,14 +100,12 @@ class ParallelScanSYCLBase {
   using WorkRange    = typename Policy::WorkRange;
   using LaunchBounds = typename Policy::launch_bounds;
 
-  using ValueTraits = Kokkos::Impl::FunctorValueTraits<FunctorType, WorkTag>;
-  using ValueInit   = Kokkos::Impl::FunctorValueInit<FunctorType, WorkTag>;
-  using ValueJoin   = Kokkos::Impl::FunctorValueJoin<FunctorType, WorkTag>;
-
  public:
-  using pointer_type   = typename ValueTraits::pointer_type;
-  using value_type     = typename ValueTraits::value_type;
-  using reference_type = typename ValueTraits::reference_type;
+  using Analysis =
+      FunctorAnalysis<FunctorPatternInterface::SCAN, Policy, FunctorType>;
+  using pointer_type   = typename Analysis::pointer_type;
+  using value_type     = typename Analysis::value_type;
+  using reference_type = typename Analysis::reference_type;
   using functor_type   = FunctorType;
   using size_type      = Kokkos::Experimental::SYCL::size_type;
   using index_type     = typename Policy::index_type;
@@ -145,6 +114,8 @@ class ParallelScanSYCLBase {
   const FunctorType m_functor;
   const Policy m_policy;
   pointer_type m_scratch_space = nullptr;
+  const pointer_type m_result_ptr;
+  const bool m_result_ptr_device_accessible;
 
   // Only let one Parallel/Scan modify the shared memory. The
   // constructor acquires the mutex which is released in the destructor.
@@ -174,6 +145,9 @@ class ParallelScanSYCLBase {
       cgh.parallel_for(
           sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
           [=](sycl::nd_item<1> item) {
+            const FunctorType& functor = functor_wrapper.get_functor();
+            typename Analysis::Reducer final_reducer(&functor);
+
             const auto local_id  = item.get_local_linear_id();
             const auto global_id = item.get_global_linear_id();
 
@@ -182,11 +156,10 @@ class ParallelScanSYCLBase {
             if (global_id < size)
               local_value = global_mem[global_id];
             else
-              ValueInit::init(functor_wrapper.get_functor(), &local_value);
+              final_reducer.init(&local_value);
 
-            workgroup_scan<ValueJoin, ValueInit>(
-                item, functor_wrapper.get_functor(), local_mem.get_pointer(),
-                local_value, wgroup_size);
+            workgroup_scan<>(item, final_reducer, local_mem.get_pointer(),
+                             local_value, wgroup_size);
 
             if (n_wgroups > 1 && local_id == wgroup_size - 1)
               group_results[item.get_group_linear_id()] =
@@ -204,11 +177,12 @@ class ParallelScanSYCLBase {
         cgh.parallel_for(
             sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
             [=](sycl::nd_item<1> item) {
-              const auto global_id = item.get_global_linear_id();
+              const auto global_id       = item.get_global_linear_id();
+              const FunctorType& functor = functor_wrapper.get_functor();
+              typename Analysis::Reducer final_reducer(&functor);
               if (global_id < size)
-                ValueJoin::join(functor_wrapper.get_functor(),
-                                &global_mem[global_id],
-                                &group_results[item.get_group_linear_id()]);
+                final_reducer.join(&global_mem[global_id],
+                                   &group_results[item.get_group_linear_id()]);
             });
       });
       q.ext_oneapi_submit_barrier(
@@ -221,9 +195,7 @@ class ParallelScanSYCLBase {
                                  sycl::event memcpy_event) const {
     // Convenience references
     const Kokkos::Experimental::SYCL& space = m_policy.space();
-    Kokkos::Experimental::Impl::SYCLInternal& instance =
-        *space.impl_internal_space_instance();
-    sycl::queue& q = *instance.m_queue;
+    sycl::queue& q                          = space.sycl_queue();
 
     const std::size_t len = m_policy.end() - m_policy.begin();
 
@@ -236,9 +208,12 @@ class ParallelScanSYCLBase {
       cgh.parallel_for(sycl::range<1>(len), [=](sycl::item<1> item) {
         const typename Policy::index_type id =
             static_cast<typename Policy::index_type>(item.get_id()) + begin;
+        const FunctorType& functor = functor_wrapper.get_functor();
+        typename Analysis::Reducer final_reducer(&functor);
+
         value_type update{};
-        ValueInit::init(functor_wrapper.get_functor(), &update);
-        if constexpr (std::is_same<WorkTag, void>::value)
+        final_reducer.init(&update);
+        if constexpr (std::is_void<WorkTag>::value)
           functor_wrapper.get_functor()(id, update, false);
         else
           functor_wrapper.get_functor()(WorkTag(), id, update, false);
@@ -253,16 +228,22 @@ class ParallelScanSYCLBase {
 
     // Write results to global memory
     auto update_global_results = q.submit([&](sycl::handler& cgh) {
-      auto global_mem = m_scratch_space;
+      auto global_mem                   = m_scratch_space;
+      auto result_ptr_device_accessible = m_result_ptr_device_accessible;
+      // The compiler failed with CL_INVALID_ARG_VALUE if using m_result_ptr
+      // directly.
+      auto result_ptr = m_result_ptr_device_accessible ? m_result_ptr : nullptr;
       cgh.parallel_for(sycl::range<1>(len), [=](sycl::item<1> item) {
         auto global_id = item.get_id(0);
 
         value_type update = global_mem[global_id];
-        if constexpr (std::is_same<WorkTag, void>::value)
+        if constexpr (std::is_void<WorkTag>::value)
           functor_wrapper.get_functor()(global_id, update, true);
         else
           functor_wrapper.get_functor()(WorkTag(), global_id, update, true);
         global_mem[global_id] = update;
+        if (global_id == len - 1 && result_ptr_device_accessible)
+          *result_ptr = update;
       });
     });
     q.ext_oneapi_submit_barrier(
@@ -297,8 +278,8 @@ class ParallelScanSYCLBase {
 
     // FIXME_SYCL consider only storing one value per block and recreate initial
     // results in the end before doing the final pass
-    m_scratch_space =
-        static_cast<pointer_type>(instance.scratch_space(total_memory));
+    m_scratch_space = static_cast<sycl::device_ptr<value_type>>(
+        instance.scratch_space(total_memory));
 
     Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem&
         indirectKernelMem = instance.get_indirect_kernel_mem();
@@ -312,9 +293,13 @@ class ParallelScanSYCLBase {
     post_functor();
   }
 
-  ParallelScanSYCLBase(const FunctorType& arg_functor, const Policy& arg_policy)
+  ParallelScanSYCLBase(const FunctorType& arg_functor, const Policy& arg_policy,
+                       pointer_type arg_result_ptr,
+                       bool arg_result_ptr_device_accessible)
       : m_functor(arg_functor),
         m_policy(arg_policy),
+        m_result_ptr(arg_result_ptr),
+        m_result_ptr_device_accessible(arg_result_ptr_device_accessible),
         m_shared_memory_lock(m_policy.space()
                                  .impl_internal_space_instance()
                                  ->m_mutexScratchSpace) {}
@@ -333,7 +318,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
 
   ParallelScan(const FunctorType& arg_functor,
                const typename Base::Policy& arg_policy)
-      : Base(arg_functor, arg_policy) {}
+      : Base(arg_functor, arg_policy, nullptr, false) {}
 };
 
 //----------------------------------------------------------------------------
@@ -341,27 +326,33 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
 template <class FunctorType, class ReturnType, class... Traits>
 class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
                             ReturnType, Kokkos::Experimental::SYCL>
-    : private ParallelScanSYCLBase<FunctorType, Traits...> {
+    : public ParallelScanSYCLBase<FunctorType, Traits...> {
  public:
   using Base = ParallelScanSYCLBase<FunctorType, Traits...>;
 
-  ReturnType& m_returnvalue;
+  const Kokkos::Experimental::SYCL& m_exec;
 
   inline void execute() {
     Base::impl_execute([&]() {
       const long long nwork = Base::m_policy.end() - Base::m_policy.begin();
-      if (nwork > 0) {
-        const int size = Base::ValueTraits::value_size(Base::m_functor);
-        DeepCopy<HostSpace, Kokkos::Experimental::SYCLDeviceUSMSpace>(
-            &m_returnvalue, Base::m_scratch_space + nwork - 1, size);
+      if (nwork > 0 && !Base::m_result_ptr_device_accessible) {
+        const int size = Base::Analysis::value_size(Base::m_functor);
+        DeepCopy<HostSpace, Kokkos::Experimental::SYCLDeviceUSMSpace,
+                 Kokkos::Experimental::SYCL>(m_exec, Base::m_result_ptr,
+                                             Base::m_scratch_space + nwork - 1,
+                                             size);
       }
     });
   }
 
+  template <class ViewType>
   ParallelScanWithTotal(const FunctorType& arg_functor,
                         const typename Base::Policy& arg_policy,
-                        ReturnType& arg_returnvalue)
-      : Base(arg_functor, arg_policy), m_returnvalue(arg_returnvalue) {}
+                        const ViewType& arg_result_view)
+      : Base(arg_functor, arg_policy, arg_result_view.data(),
+             MemorySpaceAccess<Experimental::SYCLDeviceUSMSpace,
+                               typename ViewType::memory_space>::accessible),
+        m_exec(arg_policy.space()) {}
 };
 
 }  // namespace Impl

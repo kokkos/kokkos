@@ -1,46 +1,22 @@
-/*
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 3.0
-//       Copyright (2020) National Technology & Engineering
+//                        Kokkos v. 4.0
+//       Copyright (2022) National Technology & Engineering
 //               Solutions of Sandia, LLC (NTESS).
 //
 // Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
+// See https://kokkos.org/LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-//
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-//
-// ************************************************************************
 //@HEADER
-*/
+
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
+#endif
 
 #include <Kokkos_Concepts.hpp>
 #include <SYCL/Kokkos_SYCL_Instance.hpp>
@@ -49,6 +25,8 @@
 #include <Kokkos_Serial.hpp>
 #include <Kokkos_Core.hpp>
 #include <impl/Kokkos_Error.hpp>
+#include <impl/Kokkos_DeviceManagement.hpp>
+#include <impl/Kokkos_ExecSpaceManager.hpp>
 
 namespace {
 template <typename C>
@@ -69,12 +47,6 @@ struct Container {
 }  // namespace
 
 namespace Kokkos {
-
-namespace Impl {
-// forward-declaration
-int get_gpu(const InitArguments& args);
-}  // namespace Impl
-
 namespace Experimental {
 SYCL::SYCL()
     : m_space_instance(&Impl::SYCLInternal::singleton(),
@@ -105,24 +77,22 @@ bool SYCL::impl_is_initialized() {
 
 void SYCL::impl_finalize() { Impl::SYCLInternal::singleton().finalize(); }
 
-void SYCL::print_configuration(std::ostream& s, const bool detailed) {
-  s << "macro  KOKKOS_ENABLE_SYCL : defined" << '\n';
-  if (detailed)
-    SYCL::impl_sycl_info(s, m_space_instance->m_queue->get_device());
+void SYCL::print_configuration(std::ostream& os, bool verbose) const {
+  os << "Devices:\n";
+  os << "  KOKKOS_ENABLE_SYCL: yes\n";
+
+  os << "\nRuntime Configuration:\n";
+
+  os << "macro  KOKKOS_ENABLE_SYCL : defined\n";
+  if (verbose)
+    SYCL::impl_sycl_info(os, m_space_instance->m_queue->get_device());
 }
 
-void SYCL::fence() const {
-  fence("Kokkos::Experimental::SYCL::fence: Unnamed Instance Fence");
-}
 void SYCL::fence(const std::string& name) const {
   Impl::SYCLInternal::fence(*m_space_instance->m_queue, name,
                             impl_instance_id());
 }
 
-void SYCL::impl_static_fence() {
-  impl_static_fence(
-      "Kokkos::Experimental::SYCL::fence: Unnamed Instance Fence");
-}
 void SYCL::impl_static_fence(const std::string& name) {
   Kokkos::Tools::Experimental::Impl::profile_fence_event<
       Kokkos::Experimental::SYCL>(
@@ -144,31 +114,25 @@ void SYCL::impl_static_fence(const std::string& name) {
       });
 }
 
-int SYCL::sycl_device() const {
-  return impl_internal_space_instance()->m_syclDev;
-}
-
-SYCL::SYCLDevice::SYCLDevice(sycl::device d) : m_device(std::move(d)) {}
-
-SYCL::SYCLDevice::SYCLDevice(const sycl::device_selector& selector)
-    : m_device(selector.select_device()) {}
-
-SYCL::SYCLDevice::SYCLDevice(size_t id) {
+void SYCL::impl_initialize(InitializationSettings const& settings) {
   std::vector<sycl::device> gpu_devices =
       sycl::device::get_devices(sycl::info::device_type::gpu);
-  if (id >= gpu_devices.size()) {
-    std::stringstream error_message;
-    error_message << "Requested GPU with id " << id << " but only "
-                  << gpu_devices.size() << " GPU(s) available!\n";
-    Kokkos::Impl::throw_runtime_exception(error_message.str());
+  // If the device id is not specified and there are no GPUs, sidestep Kokkos
+  // device selection and use whatever is available (if no GPU architecture is
+  // specified).
+#if !defined(KOKKOS_ARCH_INTEL_GPU) && !defined(KOKKOS_ARCH_KEPLER) && \
+    !defined(KOKKOS_ARCH_MAXWELL) && !defined(KOKKOS_ARCH_PASCAL) &&   \
+    !defined(KOKKOS_ARCH_VOLTA) && !defined(KOKKOS_ARCH_TURING75) &&   \
+    !defined(KOKKOS_ARCH_AMPERE) && !defined(KOKKOS_ARCH_HOPPER)
+  if (!settings.has_device_id() && gpu_devices.empty()) {
+    Impl::SYCLInternal::singleton().initialize(sycl::device());
+    Impl::SYCLInternal::m_syclDev = 0;
+    return;
   }
-  m_device = gpu_devices[id];
-}
-
-sycl::device SYCL::SYCLDevice::get_device() const { return m_device; }
-
-void SYCL::impl_initialize(SYCL::SYCLDevice d) {
-  Impl::SYCLInternal::singleton().initialize(d.get_device());
+#endif
+  const auto id = ::Kokkos::Impl::get_gpu(settings);
+  Impl::SYCLInternal::singleton().initialize(gpu_devices[id]);
+  Impl::SYCLInternal::m_syclDev = id;
 }
 
 std::ostream& SYCL::impl_sycl_info(std::ostream& os,
@@ -262,9 +226,6 @@ std::ostream& SYCL::impl_sycl_info(std::ostream& os,
             << device.get_info<device::is_linker_available>()
             << "\nQueue Profiling: "
             << device.get_info<device::queue_profiling>()
-            << "\nBuilt In Kernels: "
-            << Container<std::vector<std::string>>(
-                   device.get_info<device::built_in_kernels>())
             << "\nVendor: " << device.get_info<device::vendor>()
             << "\nProfile: " << device.get_info<device::profile>()
             << "\nVersion: " << device.get_info<device::version>()
@@ -281,54 +242,8 @@ std::ostream& SYCL::impl_sycl_info(std::ostream& os,
 namespace Impl {
 
 int g_sycl_space_factory_initialized =
-    Kokkos::Impl::initialize_space_factory<SYCLSpaceInitializer>("170_SYCL");
+    Kokkos::Impl::initialize_space_factory<SYCL>("170_SYCL");
 
-void SYCLSpaceInitializer::initialize(const InitArguments& args) {
-  // If there are no GPUs return whatever else we can run on if no specific GPU
-  // is requested.
-  const auto num_gpus =
-      sycl::device::get_devices(sycl::info::device_type::gpu).size();
-  int use_gpu = num_gpus == 0 ? args.device_id : Kokkos::Impl::get_gpu(args);
-
-  if (std::is_same<Kokkos::Experimental::SYCL,
-                   Kokkos::DefaultExecutionSpace>::value ||
-      0 < use_gpu) {
-    if (use_gpu > -1) {
-      Kokkos::Experimental::SYCL::impl_initialize(
-          Kokkos::Experimental::SYCL::SYCLDevice(use_gpu));
-    } else {
-      Kokkos::Experimental::SYCL::impl_initialize(
-          Kokkos::Experimental::SYCL::SYCLDevice(sycl::default_selector()));
-    }
-  }
 }
-
-void SYCLSpaceInitializer::finalize(const bool all_spaces) {
-  if (std::is_same<Kokkos::Experimental::SYCL,
-                   Kokkos::DefaultExecutionSpace>::value ||
-      all_spaces) {
-    if (Kokkos::Experimental::SYCL::impl_is_initialized())
-      Kokkos::Experimental::SYCL::impl_finalize();
-  }
-}
-
-void SYCLSpaceInitializer::fence() {
-  Kokkos::Experimental::SYCL::impl_static_fence();
-}
-void SYCLSpaceInitializer::fence(const std::string& name) {
-  Kokkos::Experimental::SYCL::impl_static_fence(name);
-}
-
-void SYCLSpaceInitializer::print_configuration(std::ostream& msg,
-                                               const bool detail) {
-  msg << "Devices:" << std::endl;
-  msg << "  KOKKOS_ENABLE_SYCL: ";
-  msg << "yes" << std::endl;
-
-  msg << "\nRuntime Configuration:" << std::endl;
-  Experimental::SYCL{}.print_configuration(msg, detail);
-}
-
-}  // namespace Impl
 }  // namespace Experimental
 }  // namespace Kokkos

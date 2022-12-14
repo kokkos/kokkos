@@ -3,8 +3,6 @@
 INCLUDE(CMakeParseArguments)
 INCLUDE(CTest)
 
-cmake_policy(SET CMP0054 NEW)
-
 FUNCTION(ASSERT_DEFINED VARS)
   FOREACH(VAR ${VARS})
     IF(NOT DEFINED ${VAR})
@@ -119,7 +117,7 @@ FUNCTION(KOKKOS_ADD_TEST)
       if(TEST_TOOL)
         add_dependencies(${EXE} ${TEST_TOOL}) #make sure the exe has to build the tool
         foreach(TEST_ADDED ${ALL_TESTS_ADDED})
-          set_property(TEST ${TEST_ADDED} APPEND PROPERTY ENVIRONMENT "KOKKOS_PROFILE_LIBRARY=$<TARGET_FILE:${TEST_TOOL}>")
+          set_property(TEST ${TEST_ADDED} APPEND PROPERTY ENVIRONMENT "KOKKOS_TOOLS_LIBS=$<TARGET_FILE:${TEST_TOOL}>")
         endforeach()
       endif()
     endif()

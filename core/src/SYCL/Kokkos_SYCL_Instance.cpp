@@ -1,46 +1,22 @@
-/*
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 3.0
-//       Copyright (2020) National Technology & Engineering
+//                        Kokkos v. 4.0
+//       Copyright (2022) National Technology & Engineering
 //               Solutions of Sandia, LLC (NTESS).
 //
 // Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
+// See https://kokkos.org/LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-//
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-//
-// ************************************************************************
 //@HEADER
-*/
+
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
+#endif
 
 #include <Kokkos_Core.hpp>  //kokkos_malloc
 
@@ -51,9 +27,19 @@ namespace Impl {
 std::vector<std::optional<sycl::queue>*> SYCLInternal::all_queues;
 std::mutex SYCLInternal::mutex;
 
+Kokkos::View<uint32_t*, SYCLDeviceUSMSpace> sycl_global_unique_token_locks(
+    bool deallocate) {
+  static Kokkos::View<uint32_t*, SYCLDeviceUSMSpace> locks =
+      Kokkos::View<uint32_t*, SYCLDeviceUSMSpace>();
+  if (!deallocate && locks.extent(0) == 0)
+    locks = Kokkos::View<uint32_t*, SYCLDeviceUSMSpace>(
+        "Kokkos::UniqueToken<SYCL>::m_locks", SYCL().concurrency());
+  if (deallocate) locks = Kokkos::View<uint32_t*, SYCLDeviceUSMSpace>();
+  return locks;
+}
+
 SYCLInternal::~SYCLInternal() {
-  if (!was_finalized || m_scratchSpace || m_scratchFlags ||
-      m_scratchConcurrentBitset) {
+  if (!was_finalized || m_scratchSpace || m_scratchFlags) {
     std::cerr << "Kokkos::Experimental::SYCL ERROR: Failed to call "
                  "Kokkos::Experimental::SYCL::finalize()"
               << std::endl;
@@ -63,8 +49,9 @@ SYCLInternal::~SYCLInternal() {
 
 int SYCLInternal::verify_is_initialized(const char* const label) const {
   if (!is_initialized()) {
-    std::cerr << "Kokkos::Experimental::SYCL::" << label
-              << " : ERROR device not initialized" << std::endl;
+    Kokkos::abort((std::string("Kokkos::Experimental::SYCL::") + label +
+                   " : ERROR device not initialized\n")
+                      .c_str());
   }
   return is_initialized();
 }
@@ -88,11 +75,7 @@ void SYCLInternal::initialize(const sycl::device& d) {
       Kokkos::Impl::throw_runtime_exception(
           "There was an asynchronous SYCL error!\n");
   };
-  // FIXME_SYCL using an in-order queue here should not be necessary since we
-  // are using submit_barrier for managing kernel dependencies but this seems to
-  // be required as a hot fix for now.
-  initialize(
-      sycl::queue{d, exception_handler, sycl::property::queue::in_order()});
+  initialize(sycl::queue{d, exception_handler});
 }
 
 // FIXME_SYCL
@@ -127,27 +110,6 @@ void SYCLInternal::initialize(const sycl::queue& q) {
         m_maxWorkgroupSize * 2 *
         d.template get_info<sycl::info::device::max_compute_units>();
 
-    // Setup concurent bitset for obtaining unique tokens from within an
-    // executing kernel.
-    {
-      const int32_t buffer_bound =
-          Kokkos::Impl::concurrent_bitset::buffer_bound(m_maxConcurrency);
-      using Record = Kokkos::Impl::SharedAllocationRecord<
-          Kokkos::Experimental::SYCLDeviceUSMSpace, void>;
-      Record* const r =
-          Record::allocate(Kokkos::Experimental::SYCLDeviceUSMSpace(*m_queue),
-                           "Kokkos::Experimental::SYCL::InternalScratchBitset",
-                           sizeof(uint32_t) * buffer_bound);
-      Record::increment(r);
-      m_scratchConcurrentBitset = reinterpret_cast<uint32_t*>(r->data());
-      auto event                = m_queue->memset(m_scratchConcurrentBitset, 0,
-                                   sizeof(uint32_t) * buffer_bound);
-      fence(event,
-            "Kokkos::Experimental::SYCLInternal::initialize: fence after "
-            "initializing m_scratchConcurrentBitset",
-            m_instance_id);
-    }
-
     m_maxShmemPerBlock =
         d.template get_info<sycl::info::device::local_mem_size>();
 
@@ -169,8 +131,8 @@ void SYCLInternal::initialize(const sycl::queue& q) {
   m_team_scratch_ptr          = nullptr;
 }
 
-void* SYCLInternal::resize_team_scratch_space(std::int64_t bytes,
-                                              bool force_shrink) {
+sycl::device_ptr<void> SYCLInternal::resize_team_scratch_space(
+    std::int64_t bytes, bool force_shrink) {
   if (m_team_scratch_current_size == 0) {
     m_team_scratch_current_size = bytes;
     m_team_scratch_ptr =
@@ -196,6 +158,10 @@ void SYCLInternal::finalize() {
                       m_instance_id);
   was_finalized = true;
 
+  // The global_unique_token_locks array is static and should only be
+  // deallocated once by the defualt instance
+  if (this == &singleton()) Impl::sycl_global_unique_token_locks(true);
+
   using RecordSYCL = Kokkos::Impl::SharedAllocationRecord<SYCLDeviceUSMSpace>;
   if (nullptr != m_scratchSpace)
     RecordSYCL::decrement(RecordSYCL::get_record(m_scratchSpace));
@@ -206,9 +172,6 @@ void SYCLInternal::finalize() {
   m_scratchSpace      = nullptr;
   m_scratchFlagsCount = 0;
   m_scratchFlags      = nullptr;
-
-  RecordSYCL::decrement(RecordSYCL::get_record(m_scratchConcurrentBitset));
-  m_scratchConcurrentBitset = nullptr;
 
   if (m_team_scratch_current_size > 0)
     Kokkos::kokkos_free<Kokkos::Experimental::SYCLDeviceUSMSpace>(
@@ -225,7 +188,7 @@ void SYCLInternal::finalize() {
   m_queue.reset();
 }
 
-void* SYCLInternal::scratch_space(const std::size_t size) {
+sycl::device_ptr<void> SYCLInternal::scratch_space(const std::size_t size) {
   const size_type sizeScratchGrain =
       sizeof(Kokkos::Experimental::SYCL::size_type);
   if (verify_is_initialized("scratch_space") &&
@@ -251,7 +214,7 @@ void* SYCLInternal::scratch_space(const std::size_t size) {
   return m_scratchSpace;
 }
 
-void* SYCLInternal::scratch_flags(const std::size_t size) {
+sycl::device_ptr<void> SYCLInternal::scratch_flags(const std::size_t size) {
   const size_type sizeScratchGrain =
       sizeof(Kokkos::Experimental::SYCL::size_type);
   if (verify_is_initialized("scratch_flags") &&
@@ -350,6 +313,8 @@ void SYCLInternal::USMObjectMem<Kind>::reset() {
   }
   m_q.reset();
 }
+
+int SYCLInternal::m_syclDev;
 
 template class SYCLInternal::USMObjectMem<sycl::usm::alloc::shared>;
 template class SYCLInternal::USMObjectMem<sycl::usm::alloc::device>;

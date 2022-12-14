@@ -13,36 +13,52 @@ jobs:
         distro: ['fedora:latest', 'fedora:rawhide', 'ubuntu:latest']
         cxx: ['g++', 'clang++']
         cmake_build_type: ['Release', 'Debug']
-        openmp: ['ON']
+        backend: ['OPENMP']
+        clang-tidy: ['']
         sycl: ['OFF']
-        cxxstandard: ['14']
-        deprecated_code: ['ON']
         include:
           - distro: 'fedora:intel'
             cxx: 'icpc'
             cmake_build_type: 'Release'
-            openmp: 'ON'
+            backend: 'OPENMP'
+            clang-tidy: ''
           - distro: 'fedora:intel'
             cxx: 'icpc'
             cmake_build_type: 'Debug'
-            openmp: 'ON'
+            backend: 'OPENMP'
+            clang-tidy: ''
           - distro: 'fedora:intel'
             cxx: 'icpx'
             cmake_build_type: 'Release'
-            openmp: 'ON'
+            backend: 'OPENMP'
+            clang-tidy: ''
           - distro: 'fedora:intel'
             cxx: 'icpx'
             cmake_build_type: 'Debug'
-            openmp: 'ON'
+            backend: 'OPENMP'
+            clang-tidy: ''
             sycl: 'ON'
-            cxxstandard: '17'
-            deprecated_code: 'OFF'
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/kokkos/ci-containers/${{ matrix.distro }}
       # see https://github.com/actions/virtual-environments/issues/3812
       options: --security-opt seccomp=unconfined
     steps:
+      - name: Checkout desul
+        uses: actions/checkout@v2.2.0
+        with:
+          repository: desul/desul
+          ref: 477da9c8f40f8db369c28dd3f93a67e376d8511b
+          path: desul
+      - name: Install desul
+        working-directory: desul
+        run: |
+          git submodule init
+          git submodule update
+          mkdir build
+          cd build
+          cmake -DDESUL_ENABLE_TESTS=OFF -DCMAKE_INSTALL_PREFIX=/usr/desul-install ..
+          sudo cmake --build . --target install --parallel 2
       - name: Checkout code
         uses: actions/checkout@v2.2.0
       - uses: actions/cache@v2
@@ -56,20 +72,34 @@ jobs:
       - name: maybe_disable_death_tests
         if: ${{ matrix.distro == 'fedora:rawhide' }}
         run: echo "GTEST_FILTER=-*DeathTest*" >> $GITHUB_ENV
+# Re-enable when latest is F37+
+#      - name: maybe_use_flang
+#        if: ${{ matrix.cxx == 'clang++' && startsWith(matrix.distro,'fedora:') }}
+#        run: echo "FC=flang" >> $GITHUB_ENV
+      - name: maybe_use_flang_new
+        if: ${{ matrix.cxx == 'clang++' && startsWith(matrix.distro,'fedora:rawhide') }}
+        run: echo "FC=flang-new" >> $GITHUB_ENV
       - name: maybe_use_external_gtest
         if: ${{ matrix.distro == 'ubuntu:latest' }}
         run: sudo apt-get update && sudo apt-get install -y libgtest-dev
-      - name: CMake
+      - name: maybe_install_clang_tidy
+        if: ${{ matrix.clang-tidy != '' }}
+        run: sudo apt-get update && sudo apt-get install -y clang-tidy
+      - name: Configure Kokkos
         run: |
           cmake -B builddir \
             -DCMAKE_INSTALL_PREFIX=/usr \
-            -DKokkos_CXX_STANDARD=${{ matrix.cxxstandard }} \
-            -DKokkos_ENABLE_DEPRECATED_CODE_3=${{ matrix.deprecated_code }} \
+            ${{ matrix.clang-tidy }} \
+            -Ddesul_ROOT=/usr/desul-install/ \
+            -DKokkos_ARCH_NATIVE=ON \
+            -DKokkos_ENABLE_DESUL_ATOMICS_EXTERNAL=ON \
             -DKokkos_ENABLE_HWLOC=ON \
-            -DKokkos_ENABLE_OPENMP=${{ matrix.openmp }} \
+            -DKokkos_ENABLE_${{ matrix.backend }}=ON \
             -DKokkos_ENABLE_SYCL=${{ matrix.sycl }} \
             -DKokkos_ENABLE_TESTS=ON \
+            -DKokkos_ENABLE_BENCHMARKS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
+            -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
             -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
             -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} \
             -DCMAKE_BUILD_TYPE=${{ matrix.cmake_build_type }}

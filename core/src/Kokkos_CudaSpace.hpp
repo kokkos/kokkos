@@ -1,47 +1,24 @@
-/*
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 3.0
-//       Copyright (2020) National Technology & Engineering
+//                        Kokkos v. 4.0
+//       Copyright (2022) National Technology & Engineering
 //               Solutions of Sandia, LLC (NTESS).
 //
 // Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
+// See https://kokkos.org/LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-//
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-//
-// ************************************************************************
 //@HEADER
-*/
 
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#include <Kokkos_Macros.hpp>
+static_assert(false,
+              "Including non-public Kokkos header files is not allowed.");
+#endif
 #ifndef KOKKOS_CUDASPACE_HPP
 #define KOKKOS_CUDASPACE_HPP
 
@@ -98,6 +75,10 @@ class CudaSpace {
   ~CudaSpace()                               = default;
 
   /**\brief  Allocate untracked memory in the cuda space */
+  void* allocate(const Cuda& exec_space, const size_t arg_alloc_size) const;
+  void* allocate(const Cuda& exec_space, const char* arg_label,
+                 const size_t arg_alloc_size,
+                 const size_t arg_logical_size = 0) const;
   void* allocate(const size_t arg_alloc_size) const;
   void* allocate(const char* arg_label, const size_t arg_alloc_size,
                  const size_t arg_logical_size = 0) const;
@@ -111,6 +92,11 @@ class CudaSpace {
  private:
   template <class, class, class, class>
   friend class Kokkos::Experimental::LogicalMemorySpace;
+  void* impl_allocate(const Cuda& exec_space, const char* arg_label,
+                      const size_t arg_alloc_size,
+                      const size_t arg_logical_size = 0,
+                      const Kokkos::Tools::SpaceHandle =
+                          Kokkos::Tools::make_space_handle(name())) const;
   void* impl_allocate(const char* arg_label, const size_t arg_alloc_size,
                       const size_t arg_logical_size = 0,
                       const Kokkos::Tools::SpaceHandle =
@@ -124,13 +110,6 @@ class CudaSpace {
  public:
   /**\brief Return Name of the MemorySpace */
   static constexpr const char* name() { return m_name; }
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-  /*--------------------------------*/
-  /** \brief  Error reporting for HostSpace attempt to access CudaSpace */
-  KOKKOS_DEPRECATED static void access_error();
-  KOKKOS_DEPRECATED static void access_error(const void* const);
-#endif
 
  private:
   int m_device;  ///< Which Cuda device
@@ -160,13 +139,9 @@ class CudaUVMSpace {
   using device_type     = Kokkos::Device<execution_space, memory_space>;
   using size_type       = unsigned int;
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   /** \brief  If UVM capability is available */
-  static bool available();
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-  /*--------------------------------*/
-  /** \brief  CudaUVMSpace specific routine */
-  KOKKOS_DEPRECATED static int number_of_allocations();
+  KOKKOS_DEPRECATED static bool available();
 #endif
 
   /*--------------------------------*/
@@ -574,10 +549,49 @@ class SharedAllocationRecord<Kokkos::CudaSpace, void>
   ~SharedAllocationRecord();
   SharedAllocationRecord() = default;
 
+  // This constructor does not forward to the one without exec_space arg
+  // in order to work around https://github.com/kokkos/kokkos/issues/5258
+  // This constructor is templated so I can't just put it into the cpp file
+  // like the other constructor.
+  template <typename ExecutionSpace>
+  SharedAllocationRecord(
+      const ExecutionSpace& /*exec_space*/, const Kokkos::CudaSpace& arg_space,
+      const std::string& arg_label, const size_t arg_alloc_size,
+      const RecordBase::function_type arg_dealloc = &base_t::deallocate)
+      : base_t(
+#ifdef KOKKOS_ENABLE_DEBUG
+            &SharedAllocationRecord<Kokkos::CudaSpace, void>::s_root_record,
+#endif
+            Impl::checked_allocation_with_header(arg_space, arg_label,
+                                                 arg_alloc_size),
+            sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc,
+            arg_label),
+        m_tex_obj(0),
+        m_space(arg_space) {
+
+    SharedAllocationHeader header;
+
+    this->base_t::_fill_host_accessible_header_info(header, arg_label);
+
+    // Copy to device memory
+    // workaround for issue with NVCC and MSVC
+    // https://github.com/kokkos/kokkos/issues/5258
+    deep_copy_header_no_exec(RecordBase::m_alloc_ptr, &header);
+  }
+
+  SharedAllocationRecord(
+      const Kokkos::Cuda& exec_space, const Kokkos::CudaSpace& arg_space,
+      const std::string& arg_label, const size_t arg_alloc_size,
+      const RecordBase::function_type arg_dealloc = &base_t::deallocate);
+
   SharedAllocationRecord(
       const Kokkos::CudaSpace& arg_space, const std::string& arg_label,
       const size_t arg_alloc_size,
       const RecordBase::function_type arg_dealloc = &base_t::deallocate);
+
+  // helper function to work around MSVC+NVCC issue
+  // https://github.com/kokkos/kokkos/issues/5258
+  static void deep_copy_header_no_exec(void*, const void*);
 
  public:
   template <typename AliasType>
@@ -624,6 +638,30 @@ class SharedAllocationRecord<Kokkos::CudaUVMSpace, void>
  protected:
   ~SharedAllocationRecord();
   SharedAllocationRecord() = default;
+
+  // This constructor does not forward to the one without exec_space arg
+  // in order to work around https://github.com/kokkos/kokkos/issues/5258
+  // This constructor is templated so I can't just put it into the cpp file
+  // like the other constructor.
+  template <typename ExecutionSpace>
+  SharedAllocationRecord(
+      const ExecutionSpace& /*exec_space*/,
+      const Kokkos::CudaUVMSpace& arg_space, const std::string& arg_label,
+      const size_t arg_alloc_size,
+      const RecordBase::function_type arg_dealloc = &base_t::deallocate)
+      : base_t(
+#ifdef KOKKOS_ENABLE_DEBUG
+            &SharedAllocationRecord<Kokkos::CudaUVMSpace, void>::s_root_record,
+#endif
+            Impl::checked_allocation_with_header(arg_space, arg_label,
+                                                 arg_alloc_size),
+            sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc,
+            arg_label),
+        m_tex_obj(0),
+        m_space(arg_space) {
+    this->base_t::_fill_host_accessible_header_info(*base_t::m_alloc_ptr,
+                                                    arg_label);
+  }
 
   SharedAllocationRecord(
       const Kokkos::CudaUVMSpace& arg_space, const std::string& arg_label,
@@ -676,10 +714,34 @@ class SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>
   ~SharedAllocationRecord();
   SharedAllocationRecord() = default;
 
+  // This constructor does not forward to the one without exec_space arg
+  // in order to work around https://github.com/kokkos/kokkos/issues/5258
+  // This constructor is templated so I can't just put it into the cpp file
+  // like the other constructor.
+  template <typename ExecutionSpace>
+  SharedAllocationRecord(
+      const ExecutionSpace& /*exec_space*/,
+      const Kokkos::CudaHostPinnedSpace& arg_space,
+      const std::string& arg_label, const size_t arg_alloc_size,
+      const RecordBase::function_type arg_dealloc = &base_t::deallocate)
+      : base_t(
+#ifdef KOKKOS_ENABLE_DEBUG
+            &SharedAllocationRecord<Kokkos::CudaHostPinnedSpace,
+                                    void>::s_root_record,
+#endif
+            Impl::checked_allocation_with_header(arg_space, arg_label,
+                                                 arg_alloc_size),
+            sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc,
+            arg_label),
+        m_space(arg_space) {
+    this->base_t::_fill_host_accessible_header_info(*base_t::m_alloc_ptr,
+                                                    arg_label);
+  }
+
   SharedAllocationRecord(
       const Kokkos::CudaHostPinnedSpace& arg_space,
       const std::string& arg_label, const size_t arg_alloc_size,
-      const RecordBase::function_type arg_dealloc = &deallocate);
+      const RecordBase::function_type arg_dealloc = &base_t::deallocate);
 };
 
 }  // namespace Impl

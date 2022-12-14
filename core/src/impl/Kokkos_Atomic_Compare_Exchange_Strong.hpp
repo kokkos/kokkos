@@ -1,46 +1,18 @@
-/*
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 3.0
-//       Copyright (2020) National Technology & Engineering
+//                        Kokkos v. 4.0
+//       Copyright (2022) National Technology & Engineering
 //               Solutions of Sandia, LLC (NTESS).
 //
 // Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
+// See https://kokkos.org/LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-//
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-//
-// ************************************************************************
 //@HEADER
-*/
 
 #if defined(KOKKOS_ENABLE_RFO_PREFETCH)
 #include <xmmintrin.h>
@@ -88,7 +60,7 @@ __inline__ __device__ unsigned long long int atomic_compare_exchange(
 template <typename T>
 __inline__ __device__ T atomic_compare_exchange(
     volatile T* const dest, const T& compare,
-    typename std::enable_if<sizeof(T) == sizeof(int), const T&>::type val) {
+    std::enable_if_t<sizeof(T) == sizeof(int), const T&> val) {
   const int tmp = atomicCAS((int*)dest, *((int*)&compare), *((int*)&val));
   return *((T*)&tmp);
 }
@@ -96,9 +68,10 @@ __inline__ __device__ T atomic_compare_exchange(
 template <typename T>
 __inline__ __device__ T atomic_compare_exchange(
     volatile T* const dest, const T& compare,
-    typename std::enable_if<sizeof(T) != sizeof(int) &&
-                                sizeof(T) == sizeof(unsigned long long int),
-                            const T&>::type val) {
+    std::enable_if_t<sizeof(T) != sizeof(int) &&
+                         sizeof(T) == sizeof(unsigned long long int),
+                     const T&>
+        val) {
   using type     = unsigned long long int;
   const type tmp = atomicCAS((type*)dest, *((type*)&compare), *((type*)&val));
   return *((T*)&tmp);
@@ -107,8 +80,7 @@ __inline__ __device__ T atomic_compare_exchange(
 template <typename T>
 __inline__ __device__ T atomic_compare_exchange(
     volatile T* const dest, const T& compare,
-    typename std::enable_if<(sizeof(T) != 4) && (sizeof(T) != 8),
-                            const T>::type& val) {
+    std::enable_if_t<(sizeof(T) != 4) && (sizeof(T) != 8), const T>& val) {
   T return_val;
   // This is a way to (hopefully) avoid dead lock in a warp
   int done                 = 0;
@@ -184,7 +156,7 @@ inline unsigned long long atomic_compare_exchange(
 template <typename T>
 inline T atomic_compare_exchange(
     volatile T* const dest, const T& compare,
-    typename std::enable_if<sizeof(T) == sizeof(int), const T&>::type val) {
+    std::enable_if_t<sizeof(T) == sizeof(int), const T&> val) {
   union U {
     int i;
     T t;
@@ -203,9 +175,9 @@ inline T atomic_compare_exchange(
 template <typename T>
 inline T atomic_compare_exchange(
     volatile T* const dest, const T& compare,
-    typename std::enable_if<sizeof(T) != sizeof(int) &&
-                                sizeof(T) == sizeof(long),
-                            const T&>::type val) {
+    std::enable_if_t<sizeof(T) != sizeof(int) && sizeof(T) == sizeof(long),
+                     const T&>
+        val) {
   union U {
     long i;
     T t;
@@ -225,10 +197,10 @@ inline T atomic_compare_exchange(
 template <typename T>
 inline T atomic_compare_exchange(
     volatile T* const dest, const T& compare,
-    typename std::enable_if<sizeof(T) != sizeof(int) &&
-                                sizeof(T) != sizeof(long) &&
-                                sizeof(T) == sizeof(Impl::cas128_t),
-                            const T&>::type val) {
+    std::enable_if_t<sizeof(T) != sizeof(int) && sizeof(T) != sizeof(long) &&
+                         sizeof(T) == sizeof(Impl::cas128_t),
+                     const T&>
+        val) {
   union U {
     Impl::cas128_t i;
     T t;
@@ -248,12 +220,12 @@ inline T atomic_compare_exchange(
 template <typename T>
 inline T atomic_compare_exchange(
     volatile T* const dest, const T compare,
-    typename std::enable_if<(sizeof(T) != 4) && (sizeof(T) != 8)
+    std::enable_if_t<(sizeof(T) != 4) && (sizeof(T) != 8)
 #if defined(KOKKOS_ENABLE_ASM) && defined(KOKKOS_ENABLE_ISA_X86_64)
-                                && (sizeof(T) != 16)
+                         && (sizeof(T) != 16)
 #endif
-                                ,
-                            const T>::type& val) {
+                         ,
+                     const T>& val) {
 #if defined(KOKKOS_ENABLE_RFO_PREFETCH)
   _mm_prefetch((const char*)dest, _MM_HINT_ET0);
 #endif
@@ -315,9 +287,9 @@ KOKKOS_INLINE_FUNCTION T atomic_compare_exchange(volatile T* const dest_v,
 // dummy for non-CUDA Kokkos headers being processed by NVCC
 #if defined(__CUDA_ARCH__) && !defined(KOKKOS_ENABLE_CUDA)
 template <typename T>
-__inline__ __device__ T
-atomic_compare_exchange(volatile T* const, const Kokkos::Impl::identity_t<T>,
-                        const Kokkos::Impl::identity_t<T>) {
+__inline__ __device__ T atomic_compare_exchange(
+    volatile T* const, const Kokkos::Impl::type_identity_t<T>,
+    const Kokkos::Impl::type_identity_t<T>) {
   return T();
 }
 #endif
@@ -375,16 +347,14 @@ KOKKOS_INLINE_FUNCTION bool _atomic_compare_exchange_strong_fallback(
 template <class T, class MemoryOrderSuccess, class MemoryOrderFailure>
 KOKKOS_INTERNAL_INLINE_DEVICE_IF_CUDA_ARCH bool _atomic_compare_exchange_strong(
     T* dest, T compare, T val, MemoryOrderSuccess, MemoryOrderFailure,
-    typename std::enable_if<
+    std::enable_if_t<
         (sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4 || sizeof(T) == 8 ||
          sizeof(T) == 16) &&
-            std::is_same<
-                typename MemoryOrderSuccess::memory_order,
-                typename std::remove_cv<MemoryOrderSuccess>::type>::value &&
-            std::is_same<
-                typename MemoryOrderFailure::memory_order,
-                typename std::remove_cv<MemoryOrderFailure>::type>::value,
-        void const**>::type = nullptr) {
+            std::is_same<typename MemoryOrderSuccess::memory_order,
+                         std::remove_cv_t<MemoryOrderSuccess>>::value &&
+            std::is_same<typename MemoryOrderFailure::memory_order,
+                         std::remove_cv_t<MemoryOrderFailure>>::value,
+        void const**> = nullptr) {
   return __atomic_compare_exchange_n(dest, &compare, val, /* weak = */ false,
                                      MemoryOrderSuccess::gnu_constant,
                                      MemoryOrderFailure::gnu_constant);
@@ -394,16 +364,14 @@ template <class T, class MemoryOrderSuccess, class MemoryOrderFailure>
 KOKKOS_INTERNAL_INLINE_DEVICE_IF_CUDA_ARCH bool _atomic_compare_exchange_strong(
     T* dest, T compare, T val, MemoryOrderSuccess order_success,
     MemoryOrderFailure order_failure,
-    typename std::enable_if<
+    std::enable_if_t<
         !(sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4 ||
           sizeof(T) == 8 || sizeof(T) == 16) &&
-            std::is_same<
-                typename MemoryOrderSuccess::memory_order,
-                typename std::remove_cv<MemoryOrderSuccess>::type>::value &&
-            std::is_same<
-                typename MemoryOrderFailure::memory_order,
-                typename std::remove_cv<MemoryOrderFailure>::type>::value,
-        void const**>::type = nullptr) {
+            std::is_same<typename MemoryOrderSuccess::memory_order,
+                         std::remove_cv_t<MemoryOrderSuccess>>::value &&
+            std::is_same<typename MemoryOrderFailure::memory_order,
+                         std::remove_cv_t<MemoryOrderFailure>>::value,
+        void const**> = nullptr) {
   return _atomic_compare_exchange_fallback(dest, compare, val, order_success,
                                            order_failure);
 }
