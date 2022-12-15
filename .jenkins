@@ -70,7 +70,7 @@ pipeline {
                         OMP_MAX_ACTIVE_LEVELS = 1
                         OMP_PLACES = 'threads'
                         OMP_PROC_BIND = 'spread'
-                        CUDA_HOME = '/opt/nvidia/hpc_sdk/Linux_x86_64/22.9/cuda/11.7'
+                        NVHPC_CUDA_HOME = '/opt/nvidia/hpc_sdk/Linux_x86_64/22.9/cuda/11.7'
                     }
                     steps {
                         sh '''rm -rf build && mkdir -p build && cd build && \
