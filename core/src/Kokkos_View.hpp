@@ -38,6 +38,7 @@ static_assert(false,
 #ifdef KOKKOS_ENABLE_IMPL_MDSPAN
 #include <View/MDSpan/Kokkos_MDSpan_Extents.hpp>
 #endif
+#include <Kokkos_MinMaxClamp.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -1638,7 +1639,11 @@ class View : public ViewTraits<DataType, Properties...> {
   static KOKKOS_INLINE_FUNCTION size_t
   shmem_size(typename traits::array_layout const& arg_layout) {
     return map_type::memory_span(arg_layout) +
-           sizeof(typename traits::value_type);
+           // Want to be able to align to minmum alignment or size of elements
+           ::Kokkos::max(
+               sizeof(typename traits::value_type),
+               static_cast<size_t>(
+                   traits::execution_space::scratch_memory_space::ALIGN));
   }
 
   explicit KOKKOS_INLINE_FUNCTION View(
@@ -1647,7 +1652,11 @@ class View : public ViewTraits<DataType, Properties...> {
       : View(Impl::ViewCtorProp<pointer_type>(
                  reinterpret_cast<pointer_type>(arg_space.get_shmem_aligned(
                      map_type::memory_span(arg_layout),
-                     sizeof(typename traits::value_type)))),
+                     // Want to align to minmum alignment or size of elements
+                     ::Kokkos::max(sizeof(typename traits::value_type),
+                                   static_cast<size_t>(
+                                       traits::execution_space::
+                                           scratch_memory_space::ALIGN))))),
              arg_layout) {}
 
   explicit KOKKOS_INLINE_FUNCTION View(
@@ -1665,7 +1674,11 @@ class View : public ViewTraits<DataType, Properties...> {
                      map_type::memory_span(typename traits::array_layout(
                          arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6,
                          arg_N7)),
-                     sizeof(typename traits::value_type)))),
+                     // Want to align to minmum alignment or size of elements
+                     ::Kokkos::max(sizeof(typename traits::value_type),
+                                   static_cast<size_t>(
+                                       traits::execution_space::
+                                           scratch_memory_space::ALIGN))))),
              typename traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3,
                                            arg_N4, arg_N5, arg_N6, arg_N7)) {
     static_assert(traits::array_layout::is_extent_constructible,
