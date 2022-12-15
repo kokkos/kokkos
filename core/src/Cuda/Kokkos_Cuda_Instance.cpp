@@ -400,7 +400,10 @@ Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
   }
 #endif
 
+#ifdef KOKKOS_ARCH_KEPLER
+  // Performance is worse with this as a global default for all later architectures
   cudaDeviceSetCacheConfig(cudaFuncCachePreferShared);
+#endif
 
   // Init the array for used for arbitrarily sized atomics
   if (this == &singleton()) Impl::initialize_host_cuda_lock_arrays();
