@@ -41,9 +41,8 @@ class ScratchMemorySpace {
       "Instantiating ScratchMemorySpace on non-execution-space type.");
 
  public:
-  // Alignment of memory chunks returned by 'get'
-  // must be a power of two
-  enum { ALIGN = 8 };
+  // Minimal overalignment used by view scratch allocations
+  constexpr static int ALIGN = 8;
 
  private:
   mutable char* m_iter_L0 = nullptr;
@@ -55,7 +54,7 @@ class ScratchMemorySpace {
   mutable int m_offset        = 0;
   mutable int m_default_level = 0;
 
-  enum { MASK = ALIGN - 1 };  // Alignment used by View::shmem_size
+  constexpr static int DEFAULT_ALIGNMENT_MASK = ALIGN - 1;
 
  public:
   //! Tag this class as a memory space
@@ -69,10 +68,13 @@ class ScratchMemorySpace {
 
   static constexpr const char* name() { return "ScratchMemorySpace"; }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  // This function is unused
   template <typename IntType>
-  KOKKOS_INLINE_FUNCTION static IntType align(const IntType& size) {
-    return (size + MASK) & ~MASK;
+  KOKKOS_INLINE_FUNCTION static constexpr IntType align(const IntType& size) {
+    return (size + DEFAULT_ALIGNMENT_MASK) & ~DEFAULT_ALIGNMENT_MASK;
   }
+#endif
 
   template <typename IntType>
   KOKKOS_INLINE_FUNCTION void* get_shmem(const IntType& size,
@@ -93,15 +95,29 @@ class ScratchMemorySpace {
                                                 const ptrdiff_t alignment,
                                                 int level = -1) const {
     if (level == -1) level = m_default_level;
-    auto& m_iter              = (level == 0) ? m_iter_L0 : m_iter_L1;
-    auto& m_end               = (level == 0) ? m_end_L0 : m_end_L1;
-    char* previous            = m_iter;
-    const ptrdiff_t missalign = size_t(m_iter) % alignment;
-    if (missalign) m_iter += alignment - missalign;
+    auto& m_iter = (level == 0) ? m_iter_L0 : m_iter_L1;
+    auto& m_end  = (level == 0) ? m_end_L0 : m_end_L1;
+    if constexpr (aligned) {
+      const ptrdiff_t missalign = size_t(m_iter) % alignment;
+      if (missalign) m_iter += alignment - missalign;
+    }
 
-    void* tmp = m_iter + m_offset * (aligned ? size : align(size));
-    if (m_end < (m_iter += (aligned ? size : align(size)) * m_multiplier)) {
-      m_iter = previous;  // put it back like it was
+    // This is each threads start pointer for their allocation
+    // Note: for team scratch m_offset is 0, since every
+    // thread will get back the same shared pointer
+    void* tmp           = m_iter + m_offset * size;
+    ptrdiff_t increment = size * m_multiplier;
+
+    // increment m_iter first and decrement it again if not
+    // enough memory was available. In the non-failing path
+    // this will safe instructions.
+    m_iter += increment;
+
+    if (m_end < m_iter) {
+      // Request did overflow: reset the base team ptr, and
+      // return nullptr
+      m_iter -= increment;
+      tmp = nullptr;
 #ifdef KOKKOS_ENABLE_DEBUG
       // mfh 23 Jun 2015: printf call consumes 25 registers
       // in a CUDA build, so only print in debug mode.  The
@@ -111,7 +127,6 @@ class ScratchMemorySpace {
           "%ld byte(s); remaining capacity is %ld byte(s)\n",
           long(size), long(m_end - m_iter));
 #endif  // KOKKOS_ENABLE_DEBUG
-      tmp = nullptr;
     }
     return tmp;
   }
