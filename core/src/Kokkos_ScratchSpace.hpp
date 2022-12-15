@@ -54,7 +54,9 @@ class ScratchMemorySpace {
   mutable int m_offset        = 0;
   mutable int m_default_level = 0;
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   constexpr static int DEFAULT_ALIGNMENT_MASK = ALIGN - 1;
+#endif
 
  public:
   //! Tag this class as a memory space
@@ -71,7 +73,8 @@ class ScratchMemorySpace {
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   // This function is unused
   template <typename IntType>
-  KOKKOS_INLINE_FUNCTION static constexpr IntType align(const IntType& size) {
+  KOKKOS_DEPRECATED KOKKOS_INLINE_FUNCTION static constexpr IntType align(
+      const IntType& size) {
     return (size + DEFAULT_ALIGNMENT_MASK) & ~DEFAULT_ALIGNMENT_MASK;
   }
 #endif
@@ -79,30 +82,31 @@ class ScratchMemorySpace {
   template <typename IntType>
   KOKKOS_INLINE_FUNCTION void* get_shmem(const IntType& size,
                                          int level = -1) const {
-    return get_shmem_common</*aligned*/ false>(size, 1, level);
+    return get_shmem_common</*alignment_requested*/ false>(size, 1, level);
   }
 
   template <typename IntType>
   KOKKOS_INLINE_FUNCTION void* get_shmem_aligned(const IntType& size,
                                                  const ptrdiff_t alignment,
                                                  int level = -1) const {
-    return get_shmem_common</*aligned*/ true>(size, alignment, level);
+    return get_shmem_common</*alignment_requested*/ true>(size, alignment,
+                                                          level);
   }
 
  private:
-  template <bool aligned, typename IntType>
+  template <bool alignment_requested, typename IntType>
   KOKKOS_INLINE_FUNCTION void* get_shmem_common(const IntType& size,
                                                 const ptrdiff_t alignment,
                                                 int level = -1) const {
     if (level == -1) level = m_default_level;
     auto& m_iter = (level == 0) ? m_iter_L0 : m_iter_L1;
     auto& m_end  = (level == 0) ? m_end_L0 : m_end_L1;
-    if constexpr (aligned) {
+    if constexpr (alignment_requested) {
       const ptrdiff_t missalign = size_t(m_iter) % alignment;
       if (missalign) m_iter += alignment - missalign;
     }
 
-    // This is each threads start pointer for their allocation
+    // This is each thread's start pointer for its allocation
     // Note: for team scratch m_offset is 0, since every
     // thread will get back the same shared pointer
     void* tmp           = m_iter + m_offset * size;
@@ -110,7 +114,7 @@ class ScratchMemorySpace {
 
     // increment m_iter first and decrement it again if not
     // enough memory was available. In the non-failing path
-    // this will safe instructions.
+    // this will save instructions.
     m_iter += increment;
 
     if (m_end < m_iter) {
