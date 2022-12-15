@@ -109,7 +109,12 @@ class SYCL {
 
   static bool impl_is_initialized();
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   static int concurrency();
+#else
+  int concurrency() const;
+#endif
+
   static const char* name();
 
   inline Impl::SYCLInternal* impl_internal_space_instance() const {
