@@ -86,7 +86,9 @@ class ScratchMemorySpace {
   mutable int m_offset        = 0;
   mutable int m_default_level = 0;
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   constexpr static int DEFAULT_ALIGNMENT_MASK = ALIGN - 1;
+#endif
 
  public:
   //! Tag this class as a memory space
@@ -103,7 +105,8 @@ class ScratchMemorySpace {
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   // This function is unused
   template <typename IntType>
-  KOKKOS_INLINE_FUNCTION static constexpr IntType align(const IntType& size) {
+  KOKKOS_DEPRECATED KOKKOS_INLINE_FUNCTION static constexpr IntType align(
+      const IntType& size) {
     return (size + DEFAULT_ALIGNMENT_MASK) & ~DEFAULT_ALIGNMENT_MASK;
   }
 #endif
@@ -118,7 +121,8 @@ class ScratchMemorySpace {
   KOKKOS_INLINE_FUNCTION void* get_shmem_aligned(const IntType& size,
                                                  const ptrdiff_t alignment,
                                                  int level = -1) const {
-    return get_shmem_common</*alignment_requested*/ true>(size, alignment, level);
+    return get_shmem_common</*alignment_requested*/ true>(size, alignment,
+                                                          level);
   }
 
  private:
@@ -135,7 +139,7 @@ class ScratchMemorySpace {
       if (missalign) m_iter += alignment - missalign;
     }
 
-    // This is each threads start pointer for their allocation
+    // This is each thread's start pointer for its allocation
     // Note: for team scratch m_offset is 0, since every
     // thread will get back the same shared pointer
     void* tmp           = m_iter + m_offset * size;
@@ -143,7 +147,7 @@ class ScratchMemorySpace {
 
     // increment m_iter first and decrement it again if not
     // enough memory was available. In the non-failing path
-    // this will safe instructions.
+    // this will save instructions.
     m_iter += increment;
 
     if (m_end < m_iter) {
