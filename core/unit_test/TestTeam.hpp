@@ -1628,7 +1628,7 @@ struct TestScratchAlignment {
           if ((int(scratch_ptr2 - scratch_ptr1) != 7) &&
               (int(scratch_ptr2 - scratch_ptr1) != 4))
             flag() = 1;
-          if (int(scratch_ptr3 - scratch_ptr2) != 8) flag() == 1;
+          if (int(scratch_ptr3 - scratch_ptr2) != 8) flag() = 1;
           if ((int(size_t(scratch_ptr1) % 4) != 0) ||
               (int(size_t(scratch_ptr2) % 8) != 0) ||
               (int(size_t(scratch_ptr3) % 4) != 0))
