@@ -1703,8 +1703,17 @@ KOKKOS_FUNCTION auto as_view_of_rank_n(
         Kokkos::abort("Converting DynRankView to a View of mis-matched rank!");)
   }
 
-  return View<typename RankDataType<T, N>::type, Args...>(
-      v.data(), v.impl_map().layout());
+  auto layout = v.impl_map().layout();
+
+  if constexpr (std::is_same_v<decltype(layout), Kokkos::LayoutLeft> ||
+                std::is_same_v<decltype(layout), Kokkos::LayoutRight> ||
+                std::is_same_v<decltype(layout), Kokkos::LayoutStride> ||
+                is_layouttiled<decltype(layout)>::value) {
+    for (int i = N; i < 7; ++i)
+      layout.dimension[i] = KOKKOS_IMPL_CTOR_DEFAULT_ARG;
+  }
+
+  return View<typename RankDataType<T, N>::type, Args...>(v.data(), layout);
 }
 
 template <typename Function, typename... Args>
