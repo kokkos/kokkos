@@ -82,16 +82,16 @@ __global__ __launch_bounds__(
 
 template <typename DriverType>
 __global__ static void hip_parallel_launch_global_memory(
-    const DriverType *driver) {
-  driver->operator()();
+    const DriverType driver) {
+  driver();
 }
 
 template <typename DriverType, unsigned int maxTperB, unsigned int minBperSM>
 __global__ __launch_bounds__(
     maxTperB,
     minBperSM) static void hip_parallel_launch_global_memory(const DriverType
-                                                                 *driver) {
-  driver->operator()();
+                                                                 driver) {
+  driver();
 }
 
 enum class HIPLaunchMechanism : unsigned {
