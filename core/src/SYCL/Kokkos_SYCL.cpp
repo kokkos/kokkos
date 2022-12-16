@@ -125,7 +125,8 @@ void SYCL::impl_initialize(InitializationSettings const& settings) {
     !defined(KOKKOS_ARCH_VOLTA) && !defined(KOKKOS_ARCH_TURING75) &&   \
     !defined(KOKKOS_ARCH_AMPERE) && !defined(KOKKOS_ARCH_HOPPER)
   if (!settings.has_device_id() && gpu_devices.empty()) {
-    Impl::SYCLInternal::singleton().initialize(sycl::device());
+    Impl::SYCLInternal::singleton().initialize(
+        sycl::device(sycl::cpu_selector()));
     Impl::SYCLInternal::m_syclDev = 0;
     return;
   }
