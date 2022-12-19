@@ -363,6 +363,7 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
 }
 
 // Hierarchical Parallelism -> Team vector level implementation
+#pragma acc routine seq
 template <typename iType, class Lambda, typename ValueType>
 KOKKOS_INLINE_FUNCTION void parallel_reduce(
     const Impl::TeamVectorRangeBoundariesStruct<iType, Impl::OpenACCTeamMember>&
