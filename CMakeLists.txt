@@ -196,9 +196,13 @@ INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_tribits.cmake)
 # to allow platform-specific checks
 INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_check_env.cmake)
 
-# Gather information about the runtime environment
-INCLUDE(${KOKKOS_SRC_PATH}/cmake/build_env_info.cmake)
-check_git_setup()
+IF(NOT KOKKOS_HAS_TRILINOS)
+  # This does not work in Trilinos and we simply don't care
+  # to fix it for Trilinos
+  # Gather information about the runtime environment
+  INCLUDE(${KOKKOS_SRC_PATH}/cmake/build_env_info.cmake)
+  check_git_setup()
+ENDIF()
 
 # The build environment setup goes in the following steps
 # 1) Check all the enable options. This includes checking Kokkos_DEVICES
