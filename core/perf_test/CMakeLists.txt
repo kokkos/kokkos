@@ -15,102 +15,97 @@ IF ((KOKKOS_ENABLE_OPENMPTARGET OR KOKKOS_ENABLE_OPENACC) AND KOKKOS_CXX_COMPILE
   RETURN()
 ENDIF()
 
+IF(KOKKOS_ENABLE_TESTS)
 
-SET(SOURCES
-  PerfTestMain.cpp
-  PerfTestGramSchmidt.cpp
-  PerfTestHexGrad.cpp
-  PerfTest_CustomReduction.cpp
-  PerfTest_ExecSpacePartitioning.cpp
-  PerfTest_ViewAllocate.cpp
-  PerfTest_ViewFill_123.cpp
-  PerfTest_ViewFill_45.cpp
-  PerfTest_ViewFill_6.cpp
-  PerfTest_ViewFill_7.cpp
-  PerfTest_ViewFill_8.cpp
-  PerfTest_ViewResize_123.cpp
-  PerfTest_ViewResize_45.cpp
-  PerfTest_ViewResize_6.cpp
-  PerfTest_ViewResize_7.cpp
-  PerfTest_ViewResize_8.cpp
-  )
-
-IF(Kokkos_ENABLE_OPENMPTARGET)
-# FIXME OPENMPTARGET requires TeamPolicy Reductions and Custom Reduction
-  LIST(REMOVE_ITEM SOURCES
+  SET(SOURCES
+    PerfTestMain.cpp
     PerfTestGramSchmidt.cpp
+    PerfTestHexGrad.cpp
     PerfTest_CustomReduction.cpp
     PerfTest_ExecSpacePartitioning.cpp
-  )
-ENDIF()
+    PerfTest_ViewAllocate.cpp
+    PerfTest_ViewFill_123.cpp
+    PerfTest_ViewFill_45.cpp
+    PerfTest_ViewFill_6.cpp
+    PerfTest_ViewFill_7.cpp
+    PerfTest_ViewFill_8.cpp
+    PerfTest_ViewResize_123.cpp
+    PerfTest_ViewResize_45.cpp
+    PerfTest_ViewResize_6.cpp
+    PerfTest_ViewResize_7.cpp
+    PerfTest_ViewResize_8.cpp
+    )
 
-IF(KOKKOS_ENABLE_CUDA OR KOKKOS_ENABLE_HIP OR KOKKOS_ENABLE_SYCL)
-  KOKKOS_ADD_EXECUTABLE (
-    PerformanceTest_SharedSpace
-    SOURCES test_sharedSpace.cpp
-  )
-ENDIF()
+  IF(Kokkos_ENABLE_OPENMPTARGET)
+  # FIXME OPENMPTARGET requires TeamPolicy Reductions and Custom Reduction
+    LIST(REMOVE_ITEM SOURCES
+      PerfTestGramSchmidt.cpp
+      PerfTest_CustomReduction.cpp
+      PerfTest_ExecSpacePartitioning.cpp
+    )
+  ENDIF()
 
-# Per #374, we always want to build this test, but we only want to run
-# it as a PERFORMANCE test.  That's why we separate building the test
-# from running the test.
+  IF(KOKKOS_ENABLE_CUDA OR KOKKOS_ENABLE_HIP OR KOKKOS_ENABLE_SYCL)
+    KOKKOS_ADD_EXECUTABLE (
+      PerformanceTest_SharedSpace
+      SOURCES test_sharedSpace.cpp
+    )
+  ENDIF()
 
-#leave these as basic includes for now
-#I don't need anything transitive
-KOKKOS_INCLUDE_DIRECTORIES("${CMAKE_CURRENT_SOURCE_DIR}/../../algorithms/src")
-KOKKOS_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
-KOKKOS_INCLUDE_DIRECTORIES(REQUIRED_DURING_INSTALLATION_TESTING ${CMAKE_CURRENT_SOURCE_DIR})
+  # Per #374, we always want to build this test, but we only want to run
+  # it as a PERFORMANCE test.  That's why we separate building the test
+  # from running the test.
 
-# This test currently times out for MSVC
-IF(NOT KOKKOS_CXX_COMPILER_ID STREQUAL "MSVC")
+  #leave these as basic includes for now
+  #I don't need anything transitive
+  KOKKOS_INCLUDE_DIRECTORIES("${CMAKE_CURRENT_SOURCE_DIR}/../../algorithms/src")
+  KOKKOS_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
+  KOKKOS_INCLUDE_DIRECTORIES(REQUIRED_DURING_INSTALLATION_TESTING ${CMAKE_CURRENT_SOURCE_DIR})
+
+  # This test currently times out for MSVC
+  IF(NOT KOKKOS_CXX_COMPILER_ID STREQUAL "MSVC")
+    KOKKOS_ADD_EXECUTABLE_AND_TEST(
+      PerfTestExec
+      SOURCES ${SOURCES}
+      CATEGORIES PERFORMANCE
+    )
+  ENDIF()
+
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    PerfTestExec
-    SOURCES ${SOURCES}
+    PerformanceTest_Atomic
+    SOURCES test_atomic.cpp
     CATEGORIES PERFORMANCE
   )
-ENDIF()
 
-KOKKOS_ADD_EXECUTABLE_AND_TEST(
-  PerformanceTest_Atomic
-  SOURCES test_atomic.cpp
-  CATEGORIES PERFORMANCE
-)
+  IF(NOT KOKKOS_ENABLE_CUDA OR KOKKOS_ENABLE_CUDA_LAMBDA)
+    KOKKOS_ADD_EXECUTABLE_AND_TEST(
+      PerformanceTest_Atomic_MinMax
+      SOURCES test_atomic_minmax_simple.cpp
+      CATEGORIES PERFORMANCE
+    )
+  ENDIF()
 
-IF(NOT KOKKOS_ENABLE_CUDA OR KOKKOS_ENABLE_CUDA_LAMBDA)
+  # FIXME_NVHPC
+  IF(NOT KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    PerformanceTest_Atomic_MinMax
-    SOURCES test_atomic_minmax_simple.cpp
+    PerformanceTest_Mempool
+    SOURCES test_mempool.cpp
     CATEGORIES PERFORMANCE
   )
+  ENDIF()
+
+  IF(NOT Kokkos_ENABLE_OPENMPTARGET)
+  # FIXME OPENMPTARGET needs tasking
+    KOKKOS_ADD_EXECUTABLE_AND_TEST(
+      PerformanceTest_TaskDag
+      SOURCES test_taskdag.cpp
+      CATEGORIES PERFORMANCE
+    )
+  ENDIF()
+
 ENDIF()
 
-# FIXME_NVHPC
-IF(NOT KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
-KOKKOS_ADD_EXECUTABLE_AND_TEST(
-  PerformanceTest_Mempool
-  SOURCES test_mempool.cpp
-  CATEGORIES PERFORMANCE
-)
-ENDIF()
-
-IF(NOT Kokkos_ENABLE_OPENMPTARGET)
-# FIXME OPENMPTARGET needs tasking
-  KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    PerformanceTest_TaskDag
-    SOURCES test_taskdag.cpp
-    CATEGORIES PERFORMANCE
-  )
-ENDIF()
-
-
-IF(NOT Kokkos_ENABLE_BENCHMARKS)
-  RETURN()
-ENDIF()
-
-IF (KOKKOS_HAS_TRILINOS)
-  message(FATAL_ERROR "Benchmarks are not supported when building as part of Trilinos")
-ENDIF()
-
+# Find or download google/benchmark library
 find_package(benchmark QUIET)
 IF(benchmark_FOUND)
   MESSAGE(STATUS "Using google benchmark found in ${benchmark_DIR}")
