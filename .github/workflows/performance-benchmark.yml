@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - develop
-      - performance-results-visualization
+  pull_request:
 
 jobs:
   CI:
@@ -51,6 +51,7 @@ jobs:
           mkdir ${{ env.BUILD_ID }}
           find builddir/core/perf_test/ -name "*.json" -exec mv {} ${{ env.BUILD_ID }}/  \;
       - name: Push benchmark results
+        if: ${{ github.ref == 'refs/heads/develop' }}
         uses: dmnemec/copy_file_to_another_repo_action@main
         env:
           API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
