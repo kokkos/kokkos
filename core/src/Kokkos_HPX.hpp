@@ -49,11 +49,9 @@ static_assert(false,
 
 #include <KokkosExp_MDRangePolicy.hpp>
 
-#include <hpx/local/algorithm.hpp>
 #include <hpx/local/barrier.hpp>
 #include <hpx/local/condition_variable.hpp>
 #include <hpx/local/execution.hpp>
-#include <hpx/local/functional.hpp>
 #include <hpx/local/future.hpp>
 #include <hpx/local/mutex.hpp>
 #include <hpx/local/thread.hpp>
@@ -61,6 +59,7 @@ static_assert(false,
 #include <Kokkos_UniqueToken.hpp>
 
 #include <iosfwd>
+#include <functional>
 #include <memory>
 #include <type_traits>
 #include <vector>
