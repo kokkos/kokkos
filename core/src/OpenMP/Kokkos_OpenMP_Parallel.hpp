@@ -150,11 +150,15 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::OpenMP> {
 
   inline ParallelFor(const FunctorType& arg_functor, Policy arg_policy)
       : m_instance(nullptr), m_functor(arg_functor), m_policy(arg_policy) {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
     if (t_openmp_instance) {
       m_instance = t_openmp_instance;
     } else {
       m_instance = arg_policy.space().impl_internal_space_instance();
     }
+#else
+    m_instance = arg_policy.space().impl_internal_space_instance();
+#endif
   }
 };
 
@@ -254,11 +258,15 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
   inline ParallelFor(const FunctorType& arg_functor, MDRangePolicy arg_policy)
       : m_instance(nullptr), m_functor(arg_functor), m_mdr_policy(arg_policy) {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
     if (t_openmp_instance) {
       m_instance = t_openmp_instance;
     } else {
       m_instance = arg_policy.space().impl_internal_space_instance();
     }
+#else
+    m_instance = arg_policy.space().impl_internal_space_instance();
+#endif
   }
   template <typename Policy, typename Functor>
   static int max_tile_size_product(const Policy&, const Functor&) {
@@ -442,11 +450,15 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
         m_policy(arg_policy),
         m_reducer(InvalidType()),
         m_result_ptr(arg_view.data()) {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
     if (t_openmp_instance) {
       m_instance = t_openmp_instance;
     } else {
       m_instance = arg_policy.space().impl_internal_space_instance();
     }
+#else
+    m_instance = arg_policy.space().impl_internal_space_instance();
+#endif
     /*static_assert( std::is_same< typename ViewType::memory_space
                                     , Kokkos::HostSpace >::value
       , "Reduction result on Kokkos::OpenMP must be a Kokkos::View in HostSpace"
@@ -460,11 +472,15 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
         m_policy(arg_policy),
         m_reducer(reducer),
         m_result_ptr(reducer.view().data()) {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
     if (t_openmp_instance) {
       m_instance = t_openmp_instance;
     } else {
       m_instance = arg_policy.space().impl_internal_space_instance();
     }
+#else
+    m_instance = arg_policy.space().impl_internal_space_instance();
+#endif
     /*static_assert( std::is_same< typename ViewType::memory_space
                                     , Kokkos::HostSpace >::value
       , "Reduction result on Kokkos::OpenMP must be a Kokkos::View in HostSpace"
@@ -625,11 +641,15 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
         m_mdr_policy(arg_policy),
         m_reducer(InvalidType()),
         m_result_ptr(arg_view.data()) {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
     if (t_openmp_instance) {
       m_instance = t_openmp_instance;
     } else {
       m_instance = arg_policy.space().impl_internal_space_instance();
     }
+#else
+    m_instance = arg_policy.space().impl_internal_space_instance();
+#endif
     /*static_assert( std::is_same< typename ViewType::memory_space
                                     , Kokkos::HostSpace >::value
       , "Reduction result on Kokkos::OpenMP must be a Kokkos::View in HostSpace"
@@ -643,11 +663,15 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
         m_mdr_policy(arg_policy),
         m_reducer(reducer),
         m_result_ptr(reducer.view().data()) {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
     if (t_openmp_instance) {
       m_instance = t_openmp_instance;
     } else {
       m_instance = arg_policy.space().impl_internal_space_instance();
     }
+#else
+    m_instance = arg_policy.space().impl_internal_space_instance();
+#endif
     /*static_assert( std::is_same< typename ViewType::memory_space
                                     , Kokkos::HostSpace >::value
       , "Reduction result on Kokkos::OpenMP must be a Kokkos::View in HostSpace"
@@ -787,11 +811,15 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
 
   inline ParallelScan(const FunctorType& arg_functor, const Policy& arg_policy)
       : m_instance(nullptr), m_functor(arg_functor), m_policy(arg_policy) {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
     if (t_openmp_instance) {
       m_instance = t_openmp_instance;
     } else {
       m_instance = arg_policy.space().impl_internal_space_instance();
     }
+#else
+    m_instance = arg_policy.space().impl_internal_space_instance();
+#endif
   }
 
   //----------------------------------------
@@ -934,11 +962,15 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
         Kokkos::Impl::MemorySpaceAccess<typename ViewType::memory_space,
                                         Kokkos::HostSpace>::accessible,
         "Kokkos::OpenMP parallel_scan result must be host-accessible!");
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
     if (t_openmp_instance) {
       m_instance = t_openmp_instance;
     } else {
       m_instance = arg_policy.space().impl_internal_space_instance();
     }
+#else
+    m_instance = arg_policy.space().impl_internal_space_instance();
+#endif
   }
 
   //----------------------------------------
@@ -1078,11 +1110,15 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
         m_shmem_size(arg_policy.scratch_size(0) + arg_policy.scratch_size(1) +
                      FunctorTeamShmemSize<FunctorType>::value(
                          arg_functor, arg_policy.team_size())) {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
     if (t_openmp_instance) {
       m_instance = t_openmp_instance;
     } else {
       m_instance = arg_policy.space().impl_internal_space_instance();
     }
+#else
+    m_instance = arg_policy.space().impl_internal_space_instance();
+#endif
   }
 };
 
@@ -1301,11 +1337,15 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         m_shmem_size(arg_policy.scratch_size(0) + arg_policy.scratch_size(1) +
                      FunctorTeamShmemSize<FunctorType>::value(
                          arg_functor, arg_policy.team_size())) {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
     if (t_openmp_instance) {
       m_instance = t_openmp_instance;
     } else {
       m_instance = arg_policy.space().impl_internal_space_instance();
     }
+#else
+    m_instance = arg_policy.space().impl_internal_space_instance();
+#endif
   }
 
   inline ParallelReduce(const FunctorType& arg_functor, Policy arg_policy,
@@ -1318,11 +1358,15 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         m_shmem_size(arg_policy.scratch_size(0) + arg_policy.scratch_size(1) +
                      FunctorTeamShmemSize<FunctorType>::value(
                          arg_functor, arg_policy.team_size())) {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
     if (t_openmp_instance) {
       m_instance = t_openmp_instance;
     } else {
       m_instance = arg_policy.space().impl_internal_space_instance();
     }
+#else
+    m_instance = arg_policy.space().impl_internal_space_instance();
+#endif
     /*static_assert( std::is_same< typename ViewType::memory_space
                             , Kokkos::HostSpace >::value
     , "Reduction result on Kokkos::OpenMP must be a Kokkos::View in HostSpace"
