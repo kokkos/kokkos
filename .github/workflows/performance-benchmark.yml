@@ -16,8 +16,6 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/kokkos/ci-containers/${{ matrix.distro }}
-      # see https://github.com/actions/virtual-environments/issues/3812
-      options: --security-opt seccomp=unconfined
     env:
       BUILD_ID: ${{ matrix.distro }}-${{ matrix.cxx }}-${{ matrix.backend }}
     steps:
