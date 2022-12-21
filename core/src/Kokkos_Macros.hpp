@@ -601,7 +601,9 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 #if (defined(KOKKOS_COMPILER_GNU) || defined(KOKKOS_COMPILER_CLANG) ||  \
      defined(KOKKOS_COMPILER_INTEL) || defined(KOKKOS_COMPILER_PGI)) && \
     !defined(_WIN32) && !defined(__ANDROID__)
+#if __has_include(<execinfo.h>)
 #define KOKKOS_IMPL_ENABLE_STACKTRACE
+#endif
 #define KOKKOS_IMPL_ENABLE_CXXABI
 #endif
 

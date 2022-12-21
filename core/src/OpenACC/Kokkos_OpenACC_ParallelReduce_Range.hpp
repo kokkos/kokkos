@@ -18,6 +18,7 @@
 #define KOKKOS_OPENACC_PARALLEL_REDUCE_RANGE_HPP
 
 #include <OpenACC/Kokkos_OpenACC.hpp>
+#include <OpenACC/Kokkos_OpenACC_Macros.hpp>
 #include <OpenACC/Kokkos_OpenACC_FunctorAdapter.hpp>
 #include <OpenACC/Kokkos_OpenACC_ScheduleType.hpp>
 #include <Kokkos_Parallel.hpp>
@@ -42,10 +43,11 @@ class Kokkos::Impl::ParallelReduce<Functor, Kokkos::RangePolicy<Traits...>,
                                    ReducerType, Kokkos::Experimental::OpenACC> {
   using Policy = RangePolicy<Traits...>;
 
-  using Analysis = FunctorAnalysis<
-      FunctorPatternInterface::REDUCE, Policy,
-      std::conditional_t<std::is_same_v<InvalidType, ReducerType>, Functor,
-                         ReducerType>>;
+  using ReducerConditional =
+      if_c<std::is_same_v<InvalidType, ReducerType>, Functor, ReducerType>;
+  using ReducerTypeFwd = typename ReducerConditional::type;
+  using Analysis =
+      FunctorAnalysis<FunctorPatternInterface::REDUCE, Policy, ReducerTypeFwd>;
 
   using Pointer   = typename Analysis::pointer_type;
   using ValueType = typename Analysis::value_type;
@@ -72,7 +74,7 @@ class Kokkos::Impl::ParallelReduce<Functor, Kokkos::RangePolicy<Traits...>,
         m_reducer(InvalidType()),
         m_result_ptr(result.data()) {}
 
-  void execute() {
+  void execute() const {
     auto const begin = m_policy.begin();
     auto const end   = m_policy.end();
 
@@ -81,7 +83,8 @@ class Kokkos::Impl::ParallelReduce<Functor, Kokkos::RangePolicy<Traits...>,
     }
 
     ValueType val;
-    typename Analysis::Reducer final_reducer(&m_functor);
+    typename Analysis::Reducer final_reducer(
+        &ReducerConditional::select(m_functor, m_reducer));
     final_reducer.init(&val);
 
     Kokkos::Experimental::Impl::OpenACCParallelReduceHelper(
@@ -94,411 +97,70 @@ class Kokkos::Impl::ParallelReduce<Functor, Kokkos::RangePolicy<Traits...>,
   }
 };
 
-namespace Kokkos::Experimental::Impl {
+#define KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_DISPATCH_SCHEDULE(REDUCER,    \
+                                                              OPERATOR)   \
+  namespace Kokkos::Experimental::Impl {                                  \
+  template <class IndexType, class ValueType, class Functor>              \
+  void OpenACCParallelReduce##REDUCER(Schedule<Static>, int chunk_size,   \
+                                      IndexType begin, IndexType end,     \
+                                      ValueType& aval,                    \
+                                      Functor const& afunctor,            \
+                                      int async_arg) {                    \
+    /* FIXME_OPENACC FIXME_NVHPC workaround compiler bug (incorrect scope \
+       analysis)                                                          \
+       NVC++-S-1067-Cannot determine bounds for array - functor */        \
+    auto const functor(afunctor);                                         \
+    auto val = aval;                                                      \
+    if (chunk_size >= 1) {                                                \
+      /* clang-format off */ \
+      KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang(static:chunk_size) vector reduction(OPERATOR:val) copyin(functor) async(async_arg))                                            \
+      /* clang-format on */                                               \
+      for (auto i = begin; i < end; i++) {                                \
+        functor(i, val);                                                  \
+      }                                                                   \
+    } else {                                                              \
+      /* clang-format off */ \
+      KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang(static:*) vector reduction(OPERATOR:val) copyin(functor) async(async_arg))                                            \
+      /* clang-format on */                                               \
+      for (auto i = begin; i < end; i++) {                                \
+        functor(i, val);                                                  \
+      }                                                                   \
+    }                                                                     \
+    aval = val;                                                           \
+  }                                                                       \
+                                                                          \
+  template <class IndexType, class ValueType, class Functor>              \
+  void OpenACCParallelReduce##REDUCER(Schedule<Dynamic>, int chunk_size,  \
+                                      IndexType begin, IndexType end,     \
+                                      ValueType& aval,                    \
+                                      Functor const& afunctor,            \
+                                      int async_arg) {                    \
+    /* FIXME_OPENACC FIXME_NVHPC workaround compiler bug (incorrect scope \
+       analysis)                                                          \
+       NVC++-S-1067-Cannot determine bounds for array - functor */        \
+    auto const functor(afunctor);                                         \
+    auto val = aval;                                                      \
+    if (chunk_size >= 1) {                                                \
+      /* clang-format off */ \
+      KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang(static:chunk_size) vector reduction(OPERATOR:val) copyin(functor) async(async_arg))                                            \
+      /* clang-format on */                                               \
+      for (auto i = begin; i < end; i++) {                                \
+        functor(i, val);                                                  \
+      }                                                                   \
+    } else {                                                              \
+      /* clang-format off */ \
+      KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang vector reduction(OPERATOR:val) copyin(functor) async(async_arg))                                            \
+      /* clang-format on */                                               \
+      for (auto i = begin; i < end; i++) {                                \
+        functor(i, val);                                                  \
+      }                                                                   \
+    }                                                                     \
+    aval = val;                                                           \
+  }                                                                       \
+  }  // namespace Kokkos::Experimental::Impl
 
-template <class IndexType, class ValueType, class Functor>
-void OpenACCParallelReduceSum(Schedule<Static>, int chunk_size, IndexType begin,
-                              IndexType end, ValueType& val,
-                              Functor const& afunctor, int async_arg) {
-  // FIXME_OPENACC FIXME_NVHPC workaround compiler bug (incorrect scope
-  // analysis)
-  // NVC++-S-1067-Cannot determine bounds for array - functor
-  auto const functor(afunctor);
-  if (chunk_size >= 1) {
-// clang-format off
-#pragma acc parallel loop gang(static:chunk_size) vector reduction(+:val) copyin(functor) async(async_arg)
-    // clang-format on
-    for (auto i = begin; i < end; i++) {
-      functor(i, val);
-    }
-  } else {
-// clang-format off
-#pragma acc parallel loop gang(static:*) vector reduction(+:val) copyin(functor) async(async_arg)
-    // clang-format on
-    for (auto i = begin; i < end; i++) {
-      functor(i, val);
-    }
-  }
-}
-
-template <class IndexType, class ValueType, class Functor>
-void OpenACCParallelReduceSum(Schedule<Dynamic>, int chunk_size,
-                              IndexType begin, IndexType end, ValueType& val,
-                              Functor const& afunctor, int async_arg) {
-  // FIXME_OPENACC FIXME_NVHPC workaround compiler bug (incorrect scope
-  // analysis)
-  // NVC++-S-1067-Cannot determine bounds for array - functor
-  auto const functor(afunctor);
-  if (chunk_size >= 1) {
-// clang-format off
-#pragma acc parallel loop gang(static:chunk_size) vector reduction(+:val) copyin(functor) async(async_arg)
-    // clang-format on
-    for (auto i = begin; i < end; i++) {
-      functor(i, val);
-    }
-  } else {
-// clang-format off
-#pragma acc parallel loop gang vector reduction(+:val) copyin(functor) async(async_arg)
-    // clang-format on
-    for (auto i = begin; i < end; i++) {
-      functor(i, val);
-    }
-  }
-}
-
-template <class IndexType, class ValueType, class Functor>
-void OpenACCParallelReduceProd(Schedule<Static>, int chunk_size,
-                               IndexType begin, IndexType end, ValueType& val,
-                               Functor const& afunctor, int async_arg) {
-  // FIXME_OPENACC FIXME_NVHPC workaround compiler bug (incorrect scope
-  // analysis)
-  // NVC++-S-1067-Cannot determine bounds for array - functor
-  auto const functor(afunctor);
-  if (chunk_size >= 1) {
-// clang-format off
-#pragma acc parallel loop gang(static:chunk_size) vector reduction(*:val) copyin(functor) async(async_arg)
-    // clang-format on
-    for (auto i = begin; i < end; i++) {
-      functor(i, val);
-    }
-  } else {
-// clang-format off
-#pragma acc parallel loop gang(static:*) vector reduction(*:val) copyin(functor) async(async_arg)
-    // clang-format on
-    for (auto i = begin; i < end; i++) {
-      functor(i, val);
-    }
-  }
-}
-
-template <class IndexType, class ValueType, class Functor>
-void OpenACCParallelReduceProd(Schedule<Dynamic>, int chunk_size,
-                               IndexType begin, IndexType end, ValueType& val,
-                               Functor const& afunctor, int async_arg) {
-  // FIXME_OPENACC FIXME_NVHPC workaround compiler bug (incorrect scope
-  // analysis)
-  // NVC++-S-1067-Cannot determine bounds for array - functor
-  auto const functor(afunctor);
-  if (chunk_size >= 1) {
-// clang-format off
-#pragma acc parallel loop gang(static:chunk_size) vector reduction(*:val) copyin(functor) async(async_arg)
-    // clang-format on
-    for (auto i = begin; i < end; i++) {
-      functor(i, val);
-    }
-  } else {
-// clang-format off
-#pragma acc parallel loop gang vector reduction(*:val) copyin(functor) async(async_arg)
-    // clang-format on
-    for (auto i = begin; i < end; i++) {
-      functor(i, val);
-    }
-  }
-}
-
-template <class IndexType, class ValueType, class Functor>
-void OpenACCParallelReduceMin(Schedule<Static>, int chunk_size, IndexType begin,
-                              IndexType end, ValueType& val,
-                              Functor const& afunctor, int async_arg) {
-  // FIXME_OPENACC FIXME_NVHPC workaround compiler bug (incorrect scope
-  // analysis)
-  // NVC++-S-1067-Cannot determine bounds for array - functor
-  auto const functor(afunctor);
-  if (chunk_size >= 1) {
-// clang-format off
-#pragma acc parallel loop gang(static:chunk_size) vector reduction(min:val) copyin(functor) async(async_arg)
-    // clang-format on
-    for (auto i = begin; i < end; i++) {
-      functor(i, val);
-    }
-  } else {
-// clang-format off
-#pragma acc parallel loop gang(static:*) vector reduction(min:val) copyin(functor) async(async_arg)
-    // clang-format on
-    for (auto i = begin; i < end; i++) {
-      functor(i, val);
-    }
-  }
-}
-
-template <class IndexType, class ValueType, class Functor>
-void OpenACCParallelReduceMin(Schedule<Dynamic>, int chunk_size,
-                              IndexType begin, IndexType end, ValueType& val,
-                              Functor const& afunctor, int async_arg) {
-  // FIXME_OPENACC FIXME_NVHPC workaround compiler bug (incorrect scope
-  // analysis)
-  // NVC++-S-1067-Cannot determine bounds for array - functor
-  auto const functor(afunctor);
-  if (chunk_size >= 1) {
-// clang-format off
-#pragma acc parallel loop gang(static:chunk_size) vector reduction(min:val) copyin(functor) async(async_arg)
-    // clang-format on
-    for (auto i = begin; i < end; i++) {
-      functor(i, val);
-    }
-  } else {
-// clang-format off
-#pragma acc parallel loop gang vector reduction(min:val) copyin(functor) async(async_arg)
-    // clang-format on
-    for (auto i = begin; i < end; i++) {
-      functor(i, val);
-    }
-  }
-}
-
-template <class IndexType, class ValueType, class Functor>
-void OpenACCParallelReduceMax(Schedule<Static>, int chunk_size, IndexType begin,
-                              IndexType end, ValueType& val,
-                              Functor const& afunctor, int async_arg) {
-  // FIXME_OPENACC FIXME_NVHPC workaround compiler bug (incorrect scope
-  // analysis)
-  // NVC++-S-1067-Cannot determine bounds for array - functor
-  auto const functor(afunctor);
-  if (chunk_size >= 1) {
-// clang-format off
-#pragma acc parallel loop gang(static:chunk_size) vector reduction(max:val) copyin(functor) async(async_arg)
-    // clang-format on
-    for (auto i = begin; i < end; i++) {
-      functor(i, val);
-    }
-  } else {
-// clang-format off
-#pragma acc parallel loop gang(static:*) vector reduction(max:val) copyin(functor) async(async_arg)
-    // clang-format on
-    for (auto i = begin; i < end; i++) {
-      functor(i, val);
-    }
-  }
-}
-
-template <class IndexType, class ValueType, class Functor>
-void OpenACCParallelReduceMax(Schedule<Dynamic>, int chunk_size,
-                              IndexType begin, IndexType end, ValueType& val,
-                              Functor const& afunctor, int async_arg) {
-  // FIXME_OPENACC FIXME_NVHPC workaround compiler bug (incorrect scope
-  // analysis)
-  // NVC++-S-1067-Cannot determine bounds for array - functor
-  auto const functor(afunctor);
-  if (chunk_size >= 1) {
-// clang-format off
-#pragma acc parallel loop gang(static:chunk_size) vector reduction(max:val) copyin(functor) async(async_arg)
-    // clang-format on
-    for (auto i = begin; i < end; i++) {
-      functor(i, val);
-    }
-  } else {
-// clang-format off
-#pragma acc parallel loop gang vector reduction(max:val) copyin(functor) async(async_arg)
-    // clang-format on
-    for (auto i = begin; i < end; i++) {
-      functor(i, val);
-    }
-  }
-}
-
-template <class IndexType, class ValueType, class Functor>
-void OpenACCParallelReduceLAnd(Schedule<Static>, int chunk_size,
-                               IndexType begin, IndexType end, ValueType& val,
-                               Functor const& afunctor, int async_arg) {
-  // FIXME_OPENACC FIXME_NVHPC workaround compiler bug (incorrect scope
-  // analysis)
-  // NVC++-S-1067-Cannot determine bounds for array - functor
-  auto const functor(afunctor);
-  if (chunk_size >= 1) {
-// clang-format off
-#pragma acc parallel loop gang(static:chunk_size) vector reduction(&&:val) copyin(functor) async(async_arg)
-    // clang-format on
-    for (auto i = begin; i < end; i++) {
-      functor(i, val);
-    }
-  } else {
-// clang-format off
-#pragma acc parallel loop gang(static:*) vector reduction(&&:val) copyin(functor) async(async_arg)
-    // clang-format on
-    for (auto i = begin; i < end; i++) {
-      functor(i, val);
-    }
-  }
-}
-
-template <class IndexType, class ValueType, class Functor>
-void OpenACCParallelReduceLAnd(Schedule<Dynamic>, int chunk_size,
-                               IndexType begin, IndexType end, ValueType& val,
-                               Functor const& afunctor, int async_arg) {
-  // FIXME_OPENACC FIXME_NVHPC workaround compiler bug (incorrect scope
-  // analysis)
-  // NVC++-S-1067-Cannot determine bounds for array - functor
-  auto const functor(afunctor);
-  if (chunk_size >= 1) {
-// clang-format off
-#pragma acc parallel loop gang(static:chunk_size) vector reduction(&&:val) copyin(functor) async(async_arg)
-    // clang-format on
-    for (auto i = begin; i < end; i++) {
-      functor(i, val);
-    }
-  } else {
-// clang-format off
-#pragma acc parallel loop gang vector reduction(&&:val) copyin(functor) async(async_arg)
-    // clang-format on
-    for (auto i = begin; i < end; i++) {
-      functor(i, val);
-    }
-  }
-}
-
-template <class IndexType, class ValueType, class Functor>
-void OpenACCParallelReduceLOr(Schedule<Static>, int chunk_size, IndexType begin,
-                              IndexType end, ValueType& val,
-                              Functor const& afunctor, int async_arg) {
-  // FIXME_OPENACC FIXME_NVHPC workaround compiler bug (incorrect scope
-  // analysis)
-  // NVC++-S-1067-Cannot determine bounds for array - functor
-  auto const functor(afunctor);
-  if (chunk_size >= 1) {
-// clang-format off
-#pragma acc parallel loop gang(static:chunk_size) vector reduction(||:val) copyin(functor) async(async_arg)
-    // clang-format on
-    for (auto i = begin; i < end; i++) {
-      functor(i, val);
-    }
-  } else {
-// clang-format off
-#pragma acc parallel loop gang(static:*) vector reduction(||:val) copyin(functor) async(async_arg)
-    // clang-format on
-    for (auto i = begin; i < end; i++) {
-      functor(i, val);
-    }
-  }
-}
-
-template <class IndexType, class ValueType, class Functor>
-void OpenACCParallelReduceLOr(Schedule<Dynamic>, int chunk_size,
-                              IndexType begin, IndexType end, ValueType& val,
-                              Functor const& afunctor, int async_arg) {
-  // FIXME_OPENACC FIXME_NVHPC workaround compiler bug (incorrect scope
-  // analysis)
-  // NVC++-S-1067-Cannot determine bounds for array - functor
-  auto const functor(afunctor);
-  if (chunk_size >= 1) {
-// clang-format off
-#pragma acc parallel loop gang(static:chunk_size) vector reduction(||:val) copyin(functor) async(async_arg)
-    // clang-format on
-    for (auto i = begin; i < end; i++) {
-      functor(i, val);
-    }
-  } else {
-// clang-format off
-#pragma acc parallel loop gang vector reduction(||:val) copyin(functor) async(async_arg)
-    // clang-format on
-    for (auto i = begin; i < end; i++) {
-      functor(i, val);
-    }
-  }
-}
-
-template <class IndexType, class ValueType, class Functor>
-void OpenACCParallelReduceBAnd(Schedule<Static>, int chunk_size,
-                               IndexType begin, IndexType end, ValueType& val,
-                               Functor const& afunctor, int async_arg) {
-  // FIXME_OPENACC FIXME_NVHPC workaround compiler bug (incorrect scope
-  // analysis)
-  // NVC++-S-1067-Cannot determine bounds for array - functor
-  auto const functor(afunctor);
-  if (chunk_size >= 1) {
-// clang-format off
-#pragma acc parallel loop gang(static:chunk_size) vector reduction(&&:val) copyin(functor) async(async_arg)
-    // clang-format on
-    for (auto i = begin; i < end; i++) {
-      functor(i, val);
-    }
-  } else {
-// clang-format off
-#pragma acc parallel loop gang(static:*) vector reduction(&&:val) copyin(functor) async(async_arg)
-    // clang-format on
-    for (auto i = begin; i < end; i++) {
-      functor(i, val);
-    }
-  }
-}
-
-template <class IndexType, class ValueType, class Functor>
-void OpenACCParallelReduceBAnd(Schedule<Dynamic>, int chunk_size,
-                               IndexType begin, IndexType end, ValueType& val,
-                               Functor const& afunctor, int async_arg) {
-  // FIXME_OPENACC FIXME_NVHPC workaround compiler bug (incorrect scope
-  // analysis)
-  // NVC++-S-1067-Cannot determine bounds for array - functor
-  auto const functor(afunctor);
-  if (chunk_size >= 1) {
-// clang-format off
-#pragma acc parallel loop gang(static:chunk_size) vector reduction(&&:val) copyin(functor) async(async_arg)
-    // clang-format on
-    for (auto i = begin; i < end; i++) {
-      functor(i, val);
-    }
-  } else {
-// clang-format off
-#pragma acc parallel loop gang vector reduction(&&:val) copyin(functor) async(async_arg)
-    // clang-format on
-    for (auto i = begin; i < end; i++) {
-      functor(i, val);
-    }
-  }
-}
-
-template <class IndexType, class ValueType, class Functor>
-void OpenACCParallelReduceBOr(Schedule<Static>, int chunk_size, IndexType begin,
-                              IndexType end, ValueType& val,
-                              Functor const& afunctor, int async_arg) {
-  // FIXME_OPENACC FIXME_NVHPC workaround compiler bug (incorrect scope
-  // analysis)
-  // NVC++-S-1067-Cannot determine bounds for array - functor
-  auto const functor(afunctor);
-  if (chunk_size >= 1) {
-// clang-format off
-#pragma acc parallel loop gang(static:chunk_size) vector reduction(|:val) copyin(functor) async(async_arg)
-    // clang-format on
-    for (auto i = begin; i < end; i++) {
-      functor(i, val);
-    }
-  } else {
-// clang-format off
-#pragma acc parallel loop gang(static:*) vector reduction(|:val) copyin(functor) async(async_arg)
-    // clang-format on
-    for (auto i = begin; i < end; i++) {
-      functor(i, val);
-    }
-  }
-}
-
-template <class IndexType, class ValueType, class Functor>
-void OpenACCParallelReduceBOr(Schedule<Dynamic>, int chunk_size,
-                              IndexType begin, IndexType end, ValueType& val,
-                              Functor const& afunctor, int async_arg) {
-  // FIXME_OPENACC FIXME_NVHPC workaround compiler bug (incorrect scope
-  // analysis)
-  // NVC++-S-1067-Cannot determine bounds for array - functor
-  auto const functor(afunctor);
-  if (chunk_size >= 1) {
-// clang-format off
-#pragma acc parallel loop gang(static:chunk_size) vector reduction(|:val) copyin(functor) async(async_arg)
-    // clang-format on
-    for (auto i = begin; i < end; i++) {
-      functor(i, val);
-    }
-  } else {
-// clang-format off
-#pragma acc parallel loop gang vector reduction(|:val) copyin(functor) async(async_arg)
-    // clang-format on
-    for (auto i = begin; i < end; i++) {
-      functor(i, val);
-    }
-  }
-}
-
-}  // namespace Kokkos::Experimental::Impl
-
-#define KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_HELPER(REDUCER)                    \
+#define KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_HELPER(REDUCER, OPERATOR)          \
+  KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_DISPATCH_SCHEDULE(REDUCER, OPERATOR)     \
   template <class Functor, class Scalar, class Space, class... Traits>         \
   struct Kokkos::Experimental::Impl::OpenACCParallelReduceHelper<              \
       Functor, Kokkos::REDUCER<Scalar, Space>, Kokkos::RangePolicy<Traits...>, \
@@ -532,15 +194,16 @@ void OpenACCParallelReduceBOr(Schedule<Dynamic>, int chunk_size,
     }                                                                          \
   }
 
-KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_HELPER(Sum);
-KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_HELPER(Prod);
-KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_HELPER(Min);
-KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_HELPER(Max);
-KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_HELPER(LAnd);
-KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_HELPER(LOr);
-KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_HELPER(BAnd);
-KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_HELPER(BOr);
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_HELPER(Sum, +);
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_HELPER(Prod, *);
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_HELPER(Min, min);
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_HELPER(Max, max);
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_HELPER(LAnd, &&);
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_HELPER(LOr, ||);
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_HELPER(BAnd, &);
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_HELPER(BOr, |);
 
 #undef KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_HELPER
+#undef KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_DISPATCH_SCHEDULE
 
 #endif
