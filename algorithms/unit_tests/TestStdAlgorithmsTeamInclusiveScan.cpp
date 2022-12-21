@@ -219,8 +219,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
     const auto last  = KE::cend(srcRow);
 
     auto destRow         = Kokkos::subview(stdDestView, i, Kokkos::ALL());
-    const auto firstDest = KE::begin(destRow);
-
+    auto firstDest       = KE::begin(destRow);
     const auto initValue = initValuesView_h(i);
 
 #if defined(__GNUC__) && __GNUC__ == 8

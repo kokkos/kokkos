@@ -186,7 +186,6 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   for (std::size_t i = 0; i < sourceView.extent(0); ++i) {
     auto rowFrom = Kokkos::subview(sourceViewBeforeOp_h, i, Kokkos::ALL());
     auto rowDest = Kokkos::subview(stdDestView, i, Kokkos::ALL());
-
     const auto initValue = initValuesView_h(i);
 
 #if defined(__GNUC__) && __GNUC__ == 8

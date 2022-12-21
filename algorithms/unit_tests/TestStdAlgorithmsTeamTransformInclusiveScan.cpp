@@ -210,10 +210,8 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
     auto srcRow      = Kokkos::subview(sourceViewBeforeOp_h, i, Kokkos::ALL());
     const auto first = KE::cbegin(srcRow);
     const auto last  = KE::cend(srcRow);
-
-    auto destRow   = Kokkos::subview(stdDestView, i, Kokkos::ALL());
-    auto firstDest = KE::begin(destRow);
-
+    auto destRow     = Kokkos::subview(stdDestView, i, Kokkos::ALL());
+    auto firstDest   = KE::begin(destRow);
     const auto initValue = initValuesView_h(i);
 
 #if defined(__GNUC__) && __GNUC__ == 8
@@ -244,6 +242,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
       }
     }
   }
+#undef transform_inclusive_scan
 
   auto dataViewAfterOp_h = create_host_space_copy(destView);
   expect_equal_host_views(stdDestView, dataViewAfterOp_h);
