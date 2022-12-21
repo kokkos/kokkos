@@ -6,11 +6,31 @@ IF (KOKKOS_COMPILER_HAS_ONEDPL_EXECUTION_HEADER AND KOKKOS_COMPILER_HAS_ONEDPL_A
   KOKKOS_CREATE_IMPORTED_TPL(ONEDPL INTERFACE)
 ELSE()
   FIND_PACKAGE(oneDPL REQUIRED)
-  KOKKOS_CREATE_IMPORTED_TPL(
-    ONEDPL INTERFACE
-    LINK_LIBRARIES oneDPL
-    # FIXME_SYCL is there a better way of fixing the problem with compatibility of oneTBB vs legacy TBB?
-    # https://stackoverflow.com/questions/67923287/how-to-resolve-no-member-named-task-in-namespace-tbb-error-when-using-oned/
-    COMPILE_DEFINITIONS PSTL_USE_PARALLEL_POLICIES=0 _GLIBCXX_USE_TBB_PAR_BACKEND=0
-  )
+
+  INCLUDE(CheckCXXSourceCompiles)
+  CHECK_CXX_SOURCE_COMPILES("
+    #include <iostream>
+
+    int main()
+    {
+      #if defined(_GLIBCXX_RELEASE) && (_GLIBCXX_RELEASE == 9 || _GLIBCXX_RELEASE == 10)
+        static_assert(false);
+      #endif
+      return 0;
+    }"
+    KOKKOS_NO_TBB_CONFLICT)
+
+  IF(KOKKOS_NO_TBB_CONFLICT)
+    KOKKOS_CREATE_IMPORTED_TPL(
+      ONEDPL INTERFACE
+      LINK_LIBRARIES oneDPL
+    )
+  ELSE()
+    KOKKOS_CREATE_IMPORTED_TPL(
+      ONEDPL INTERFACE
+      LINK_LIBRARIES oneDPL
+      # https://stackoverflow.com/questions/67923287/how-to-resolve-no-member-named-task-in-namespace-tbb-error-when-using-oned/
+      COMPILE_DEFINITIONS PSTL_USE_PARALLEL_POLICIES=0 _GLIBCXX_USE_TBB_PAR_BACKEND=0
+    )
+  ENDIF()
 ENDIF()
