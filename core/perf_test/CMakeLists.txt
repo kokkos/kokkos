@@ -15,6 +15,8 @@ IF ((KOKKOS_ENABLE_OPENMPTARGET OR KOKKOS_ENABLE_OPENACC) AND KOKKOS_CXX_COMPILE
   RETURN()
 ENDIF()
 
+# all PerformanceTest_* executables are part of regular tests
+# TODO: finish converting these into benchmarks (in progress)
 IF(KOKKOS_ENABLE_TESTS)
 
   SET(SOURCES
