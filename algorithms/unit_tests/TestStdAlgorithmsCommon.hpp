@@ -190,7 +190,10 @@ auto make_bounds(const ValueType1& lower, const ValueType2 upper) {
 
 template <class InputIterator, class ValueType, class BinaryOp>
 ValueType testing_reduce(InputIterator first, InputIterator last,
-                         ValueType init, BinaryOp binOp) {
+                         ValueType initIn, BinaryOp binOp) {
+  using value_type = std::remove_const_t<ValueType>;
+  value_type init  = initIn;
+
   while (last - first >= 4) {
     ValueType v1 = binOp(first[0], first[1]);
     ValueType v2 = binOp(first[2], first[3]);
@@ -225,9 +228,12 @@ auto testing_reduce(InputIterator first, InputIterator last) {
 template <class InputIterator1, class InputIterator2, class ValueType,
           class BinaryJoiner, class BinaryTransform>
 ValueType testing_transform_reduce(InputIterator1 first1, InputIterator1 last1,
-                                   InputIterator2 first2, ValueType init,
+                                   InputIterator2 first2, ValueType initIn,
                                    BinaryJoiner binJoiner,
                                    BinaryTransform binTransform) {
+  using value_type = std::remove_const_t<ValueType>;
+  value_type init  = initIn;
+
   while (last1 - first1 >= 4) {
     ValueType v1 = binJoiner(binTransform(first1[0], first2[0]),
                              binTransform(first1[1], first2[1]));
@@ -261,8 +267,11 @@ ValueType testing_transform_reduce(InputIterator1 first1, InputIterator1 last1,
 template <class InputIterator, class ValueType, class BinaryJoiner,
           class UnaryTransform>
 ValueType testing_transform_reduce(InputIterator first, InputIterator last,
-                                   ValueType init, BinaryJoiner binJoiner,
+                                   ValueType initIn, BinaryJoiner binJoiner,
                                    UnaryTransform unaryTransform) {
+  using value_type = std::remove_const_t<ValueType>;
+  value_type init  = initIn;
+
   while (last - first >= 4) {
     ValueType v1 =
         binJoiner(unaryTransform(first[0]), unaryTransform(first[1]));
@@ -280,44 +289,86 @@ ValueType testing_transform_reduce(InputIterator first, InputIterator last,
   return init;
 }
 
-// template <class InputIterator, class OutputIterator, class ValueType,
-//           class BinaryOp>
-// OutputIterator testing_exclusive_scan(InputIterator first, InputIterator
-// last,
-//                                       OutputIterator result, ValueType init,
-//                                       BinaryOp binOp) {
-//   while (first != last) {
-//     auto v = init;
-//     init   = binOp(init, *first);
-//     ++first;
-//     *result++ = v;
-//   }
+template <class InputIterator, class OutputIterator, class ValueType,
+          class BinaryOp>
+OutputIterator testing_exclusive_scan(InputIterator first, InputIterator last,
+                                      OutputIterator result, ValueType initIn,
+                                      BinaryOp binOp) {
+  using value_type = std::remove_const_t<ValueType>;
+  value_type init  = initIn;
 
-//   return result;
-// }
+  while (first != last) {
+    auto v = init;
+    init   = binOp(init, *first);
+    ++first;
+    *result++ = v;
+  }
 
-// template <class InputIterator, class OutputIterator, class ValueType>
-// OutputIterator testing_exclusive_scan(InputIterator first, InputIterator
-// last,
-//                                       OutputIterator result, ValueType init)
-//                                       {
-//   return testing_exclusive_scan(
-//       first, last, result, init,
-//       [](const ValueType& lhs, const ValueType& rhs) { return lhs + rhs; });
-// }
+  return result;
+}
+
+template <class InputIterator, class OutputIterator, class ValueType>
+OutputIterator testing_exclusive_scan(InputIterator first, InputIterator last,
+                                      OutputIterator result, ValueType init) {
+  return testing_exclusive_scan(
+      first, last, result, init,
+      [](const ValueType& lhs, const ValueType& rhs) { return lhs + rhs; });
+}
+
+template <class InputIterator, class OutputIterator, class BinaryOp,
+          class ValueType>
+OutputIterator testing_inclusive_scan(InputIterator first, InputIterator last,
+                                      OutputIterator result, BinaryOp binOp,
+                                      ValueType initIn) {
+  using value_type = std::remove_const_t<ValueType>;
+  value_type init  = initIn;
+
+  for (; first != last; ++first) {
+    init      = binOp(init, *first);
+    *result++ = init;
+  }
+
+  return result;
+}
 
 template <class InputIterator, class OutputIterator, class ValueType,
           class BinaryOp, class UnaryOp>
-OutputIterator testing_transform_exclusive_scan(InputIterator first,
-                                                InputIterator last,
-                                                OutputIterator result,
-                                                ValueType init, BinaryOp binOp,
-                                                UnaryOp unaryOp) {
+OutputIterator testing_transform_exclusive_scan(
+    InputIterator first, InputIterator last, OutputIterator result,
+    ValueType initIn, BinaryOp binOp, UnaryOp unaryOp) {
+  using value_type = std::remove_const_t<ValueType>;
+  value_type init  = initIn;
+
   while (first != last) {
     auto v = init;
     init   = binOp(init, unaryOp(*first));
     ++first;
     *result++ = v;
+  }
+
+  return result;
+}
+
+template <class InputIterator, class OutputIterator>
+OutputIterator testing_inclusive_scan(InputIterator first, InputIterator last,
+                                      OutputIterator result) {
+  using ValueType = typename InputIterator::value_type;
+  return testing_inclusive_scan(
+      first, last, result,
+      [](const ValueType& lhs, const ValueType& rhs) { return lhs + rhs; });
+}
+
+template <class InputIterator, class OutputIterator, class BinaryOp>
+OutputIterator testing_inclusive_scan(InputIterator first, InputIterator last,
+                                      OutputIterator result, BinaryOp binOp) {
+  if (first != last) {
+    auto init = *first;
+    *result++ = init;
+    ++first;
+
+    if (first != last) {
+      result = testing_inclusive_scan(first, last, result, binOp, init);
+    }
   }
 
   return result;
@@ -329,7 +380,10 @@ OutputIterator testing_transform_inclusive_scan(InputIterator first,
                                                 InputIterator last,
                                                 OutputIterator result,
                                                 BinaryOp binOp, UnaryOp unaryOp,
-                                                ValueType init) {
+                                                ValueType initIn) {
+  using value_type = std::remove_const_t<ValueType>;
+  value_type init  = initIn;
+
   for (; first != last; ++first) {
     init      = binOp(init, unaryOp(*first));
     *result++ = init;

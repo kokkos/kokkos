@@ -51,53 +51,6 @@ namespace TeamInclusiveScan {
 
 namespace KE = Kokkos::Experimental;
 
-// template <class InputIterator, class OutputIterator>
-// OutputIterator testing_inclusive_scan(InputIterator first,
-// 				      InputIterator last,
-//                                       OutputIterator result)
-// {
-//   using ValueType = typename InputIterator::value_type;
-//   return testing_inclusive_scan(
-//       first, last, result,
-//       [](const ValueType& lhs, const ValueType& rhs) { return lhs + rhs; });
-// }
-
-// template <class InputIterator, class OutputIterator, class BinaryOp>
-// OutputIterator testing_inclusive_scan(InputIterator first, InputIterator
-// last,
-//                                       OutputIterator result, BinaryOp binOp)
-// {
-//   if (first != last) {
-//     auto init = *first;
-//     *result++ = init;
-//     ++first;
-
-//     if (first != last) {
-//       result = testing_inclusive_scan(first, last, result, binOp, init);
-//     }
-//   }
-
-//   return result;
-// }
-
-// template <
-//   class InputIterator, class OutputIterator,
-//   class BinaryOp, class ValueType>
-// OutputIterator testing_inclusive_scan(InputIterator first, InputIterator
-// last,
-//                                       OutputIterator result, BinaryOp binOp,
-//                                       ValueType init)
-// {
-//   for (; first != last; ++first) {
-//     init      = binOp(init, *first);
-//     *result++ = init;
-//   }
-
-//   return result;
-// }
-
-//----------------------------------------------------------------------
-
 template <class ValueType>
 struct PlusFunctor {
   KOKKOS_INLINE_FUNCTION constexpr ValueType operator()(
@@ -270,16 +223,16 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
 
     const auto initValue = initValuesView_h(i);
 
-    //#if defined(__GNUC__) && __GNUC__ == 8
-    //#define inclusive_scan testing_inclusive_scan
-    // #else
-    // #define inclusive_scan std::inclusive_scan
-    // #endif
+#if defined(__GNUC__) && __GNUC__ == 8
+#define inclusive_scan testing_inclusive_scan
+#else
+#define inclusive_scan std::inclusive_scan
+#endif
 
     switch (apiId) {
       case 0:
       case 1: {
-        auto it = std::inclusive_scan(first, last, firstDest);
+        auto it                       = inclusive_scan(first, last, firstDest);
         const std::size_t stdDistance = KE::distance(firstDest, it);
         EXPECT_EQ(stdDistance, distancesView_h(i));
 
@@ -288,7 +241,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
 
       case 2:
       case 3: {
-        auto it = std::inclusive_scan(first, last, firstDest, binaryOp);
+        auto it = inclusive_scan(first, last, firstDest, binaryOp);
         const std::size_t stdDistance = KE::distance(firstDest, it);
         EXPECT_EQ(stdDistance, distancesView_h(i));
 
@@ -297,8 +250,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
 
       case 4:
       case 5: {
-        auto it =
-            std::inclusive_scan(first, last, firstDest, binaryOp, initValue);
+        auto it = inclusive_scan(first, last, firstDest, binaryOp, initValue);
         const std::size_t stdDistance = KE::distance(firstDest, it);
         EXPECT_EQ(stdDistance, distancesView_h(i));
 
@@ -306,7 +258,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
       }
     }
 
-    //#undef inclusive_scan
+#undef inclusive_scan
   }
 
   auto dataViewAfterOp_h = create_host_space_copy(destView);
