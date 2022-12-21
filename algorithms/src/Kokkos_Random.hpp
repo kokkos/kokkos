@@ -886,16 +886,27 @@ class Random_XorShift64_Pool {
  public:
   using generator_type = Random_XorShift64<DeviceType>;
 
-  KOKKOS_INLINE_FUNCTION
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  KOKKOS_FUNCTION
   Random_XorShift64_Pool() {
-    num_states_ = 0;
-    padding_    = 0;
+    KOKKOS_IF_ON_DEVICE((
+        /* nonsensical initialization in the name of backward compatibility */
+        num_states_ = 0; padding_ = 0;))
+    KOKKOS_IF_ON_HOST(init(0, execution_space().concurrency());)
   }
+
   Random_XorShift64_Pool(uint64_t seed) {
     num_states_ = 0;
 
     init(seed, execution_space().concurrency());
   }
+#else
+  Random_XorShift64_Pool(uint64_t seed = 0) {
+    num_states_ = 0;
+
+    init(seed, execution_space().concurrency());
+  }
+#endif
 
   void init(uint64_t seed, int num_states) {
     if (seed == 0) seed = uint64_t(1318319);
@@ -1126,14 +1137,27 @@ class Random_XorShift1024_Pool {
  public:
   using generator_type = Random_XorShift1024<DeviceType>;
 
-  KOKKOS_INLINE_FUNCTION
-  Random_XorShift1024_Pool() { num_states_ = 0; }
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  KOKKOS_FUNCTION
+  Random_XorShift1024_Pool() {
+    KOKKOS_IF_ON_DEVICE(
+        /* nonsensical initialization in the name of backward compatibility */
+        num_states_ = 0;)
+    KOKKOS_IF_ON_HOST(init(0, execution_space().concurrency());)
+  }
 
   Random_XorShift1024_Pool(uint64_t seed) {
     num_states_ = 0;
 
     init(seed, execution_space().concurrency());
   }
+#else
+  Random_XorShift1024_Pool(uint64_t seed = 0) {
+    num_states_ = 0;
+
+    init(seed, execution_space().concurrency());
+  }
+#endif
 
   void init(uint64_t seed, int num_states) {
     if (seed == 0) seed = uint64_t(1318319);
