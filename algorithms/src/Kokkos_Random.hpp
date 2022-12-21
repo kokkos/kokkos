@@ -878,41 +878,32 @@ class Random_XorShift64_Pool {
   using execution_space = typename device_type::execution_space;
   using locks_type      = View<int**, device_type>;
   using state_data_type = View<uint64_t**, device_type>;
-  locks_type locks_;
-  state_data_type state_;
-  int num_states_;
-  int padding_;
+
+  locks_type locks_      = {};
+  state_data_type state_ = {};
+  int num_states_        = {};
+  int padding_           = {};
 
  public:
   using generator_type = Random_XorShift64<DeviceType>;
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   KOKKOS_FUNCTION
-  Random_XorShift64_Pool() {
-    KOKKOS_IF_ON_DEVICE((
-        /* nonsensical initialization in the name of backward compatibility */
-        num_states_ = 0; padding_ = 0;))
-    KOKKOS_IF_ON_HOST(init(0, execution_space().concurrency());)
-  }
+  Random_XorShift64_Pool() = default;
 
   KOKKOS_DEFAULTED_FUNCTION Random_XorShift64_Pool(
       Random_XorShift64_Pool const&) = default;
 
   KOKKOS_DEFAULTED_FUNCTION Random_XorShift64_Pool& operator=(
       Random_XorShift64_Pool const&) = default;
-
+#else
+  Random_XorShift64_Pool()   = default;
+#endif
   Random_XorShift64_Pool(uint64_t seed) {
     num_states_ = 0;
 
     init(seed, execution_space().concurrency());
   }
-#else
-  Random_XorShift64_Pool(uint64_t seed = 0) {
-    num_states_ = 0;
-
-    init(seed, execution_space().concurrency());
-  }
-#endif
 
   void init(uint64_t seed, int num_states) {
     if (seed == 0) seed = uint64_t(1318319);
@@ -1132,11 +1123,11 @@ class Random_XorShift1024_Pool {
   using int_view_type   = View<int**, device_type>;
   using state_data_type = View<uint64_t * [16], device_type>;
 
-  locks_type locks_;
-  state_data_type state_;
-  int_view_type p_;
-  int num_states_;
-  int padding_;
+  locks_type locks_      = {};
+  state_data_type state_ = {};
+  int_view_type p_       = {};
+  int num_states_        = {};
+  int padding_           = {};
   friend class Random_XorShift1024<DeviceType>;
 
  public:
@@ -1144,31 +1135,22 @@ class Random_XorShift1024_Pool {
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   KOKKOS_FUNCTION
-  Random_XorShift1024_Pool() {
-    KOKKOS_IF_ON_DEVICE(
-        /* nonsensical initialization in the name of backward compatibility */
-        num_states_ = 0;)
-    KOKKOS_IF_ON_HOST(init(0, execution_space().concurrency());)
-  }
+  Random_XorShift1024_Pool() = default;
 
   KOKKOS_DEFAULTED_FUNCTION Random_XorShift1024_Pool(
       Random_XorShift1024_Pool const&) = default;
 
   KOKKOS_DEFAULTED_FUNCTION Random_XorShift1024_Pool& operator=(
       Random_XorShift1024_Pool const&) = default;
+#else
+  Random_XorShift1024_Pool() = default;
+#endif
 
   Random_XorShift1024_Pool(uint64_t seed) {
     num_states_ = 0;
 
     init(seed, execution_space().concurrency());
   }
-#else
-  Random_XorShift1024_Pool(uint64_t seed = 0) {
-    num_states_ = 0;
-
-    init(seed, execution_space().concurrency());
-  }
-#endif
 
   void init(uint64_t seed, int num_states) {
     if (seed == 0) seed = uint64_t(1318319);
