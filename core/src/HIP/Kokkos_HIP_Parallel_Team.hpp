@@ -30,14 +30,6 @@
 namespace Kokkos {
 namespace Impl {
 
-// HIP Teams use (team_size + 2)*sizeof(double) shared memory for team
-// reductions. They also use one int64_t in static shared memory for a shared
-// ID. Furthermore, they use additional scratch memory in some reduction
-// scenarios, which depend on the size of the value_type and is NOT captured
-// here.
-constexpr size_t hip_team_max_reserved_shared_mem =
-    (1024 + 2) * sizeof(double) + sizeof(int64_t);
-
 template <typename... Properties>
 class TeamPolicyInternal<HIP, Properties...>
     : public PolicyTraits<Properties...> {
@@ -167,6 +159,14 @@ class TeamPolicyInternal<HIP, Properties...>
   }
 
   inline static int scratch_size_max(int level) {
+    // HIP Teams use (team_size + 2)*sizeof(double) shared memory for team
+    // reductions. They also use one int64_t in static shared memory for a
+    // shared ID. Furthermore, they use additional scratch memory in some
+    // reduction scenarios, which depend on the size of the value_type and is
+    // NOT captured here.
+    constexpr size_t hip_team_max_reserved_shared_mem =
+        (1024 + 2) * sizeof(double) + sizeof(int64_t);
+
     size_t max_shmem = HIP().hip_device_prop().sharedMemPerBlock;
     return (
         level == 0 ? max_shmem - hip_team_max_reserved_shared_mem :

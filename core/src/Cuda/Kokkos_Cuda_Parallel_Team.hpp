@@ -47,14 +47,6 @@ extern bool show_warnings() noexcept;
 
 namespace Impl {
 
-// Cuda Teams use (team_size + 2)*sizeof(double) shared memory for team
-// reductions. They also use one int64_t in static shared memory for a shared
-// ID. Furthermore, they use additional scratch memory in some reduction
-// scenarios, which depend on the size of the value_type and is NOT captured
-// here.
-constexpr size_t cuda_team_max_reserved_shared_mem =
-    (1024 + 2) * sizeof(double) + sizeof(int64_t);
-
 template <class... Properties>
 class TeamPolicyInternal<Kokkos::Cuda, Properties...>
     : public PolicyTraits<Properties...> {
@@ -206,6 +198,14 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
   }
 
   inline static int scratch_size_max(int level) {
+    // Cuda Teams use (team_size + 2)*sizeof(double) shared memory for team
+    // reductions. They also use one int64_t in static shared memory for a
+    // shared ID. Furthermore, they use additional scratch memory in some
+    // reduction scenarios, which depend on the size of the value_type and is
+    // NOT captured here.
+    constexpr size_t cuda_team_max_reserved_shared_mem =
+        (1024 + 2) * sizeof(double) + sizeof(int64_t);
+
     size_t max_shmem = Cuda().cuda_device_prop().sharedMemPerBlock;
     return (level == 0
                 ? max_shmem - cuda_team_max_reserved_shared_mem
