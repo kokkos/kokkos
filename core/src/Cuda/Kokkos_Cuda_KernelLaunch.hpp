@@ -126,21 +126,19 @@ inline void check_shmem_request(CudaInternal const* cuda_instance, int shmem) {
   }
 }
 
-// These functions needs to be template on DriverType and LaunchBounds
+// These functions need to be templated on DriverType and LaunchBounds
 // so that the static bool is unique for each type combo
 // KernelFuncPtr does not necessarily contain that type information.
 
 template <class DriverType, class LaunchBounds, class KernelFuncPtr>
 const cudaFuncAttributes& get_cuda_kernel_func_attributes(
     const KernelFuncPtr& func) {
-  // Race condition inside of cudaFuncGetAttributes if the same address is
-  // given requires using a local variable as input instead of a static Rely
-  // on static variable initialization to make sure only one thread executes
-  // the code and the result is visible.
-  auto wrap_get_attributes = [func]() -> cudaFuncAttributes {
-    cudaFuncAttributes attr_tmp;
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFuncGetAttributes(&attr_tmp, func));
-    return attr_tmp;
+  // Only call cudaFuncGetAttributes once for each unique kernel
+  // by leveraging static variable initialization rules
+  auto wrap_get_attributes = [&]() -> cudaFuncAttributes {
+    cudaFuncAttributes attr;
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFuncGetAttributes(&attr, func));
+    return attr;
   };
   static cudaFuncAttributes func_attr = wrap_get_attributes();
   return func_attr;
@@ -156,7 +154,7 @@ inline void configure_shmem_preference(const KernelFuncPtr& func,
   const auto& func_attr =
       get_cuda_kernel_func_attributes<DriverType, LaunchBounds>(func);
 
-  // Compute limits for number of blocks due do registers/SM
+  // Compute limits for number of blocks due to registers/SM
   const size_t regs_per_sm     = device_props.regsPerMultiprocessor;
   const size_t regs_per_thread = func_attr.numRegs;
   // The granularity of register allocation is chunks of 256 registers per warp
@@ -166,42 +164,45 @@ inline void configure_shmem_preference(const KernelFuncPtr& func,
       regs_per_sm / (allocated_regs_per_thread * block_size);
 
   // Compute how many threads per sm we actually want
-  const size_t maxthreads_per_sm = device_props.maxThreadsPerMultiProcessor;
+  const size_t max_threads_per_sm = device_props.maxThreadsPerMultiProcessor;
   // only allocate multiples of warp size
-  const size_t numthreads_desired =
-      ((maxthreads_per_sm * occupancy / 100 + 31) / 32) * 32;
+  const size_t num_threads_desired =
+      ((max_threads_per_sm * occupancy / 100 + 31) / 32) * 32;
   // Get close to the desired occupancy,
   // don't undershoot by much but also don't allocate a whole new block just
   // because one is a few threads over otherwise.
-  size_t numblocks_desired =
-      (numthreads_desired + block_size * 0.8) / block_size;
-  numblocks_desired = ::std::min(max_blocks_regs, numblocks_desired);
-  if (numblocks_desired == 0) numblocks_desired = 1;
+  size_t num_blocks_desired =
+      (num_threads_desired + block_size * 0.8) / block_size;
+  num_blocks_desired = ::std::min(max_blocks_regs, num_blocks_desired);
+  if (num_blocks_desired == 0) num_blocks_desired = 1;
 
   // Calculate how much shared memory we need per block
   size_t shmem_per_block = shmem + func_attr.sharedSizeBytes;
-  // The minimum shared memory allocation we can have in total per SM is 8kB
-  // if we want to lower occupancy we have to make sure we at least request that
+
+  // The minimum shared memory allocation we can have in total per SM is 8kB.
+  // If we want to lower occupancy we have to make sure we request at least that
   // much in aggregate over all blocks, so that shared memory actually becomes a
   // limiting factor for occupancy
   constexpr size_t min_shmem_size_per_sm = 8192;
   if ((occupancy < 100) &&
-      (shmem_per_block * numblocks_desired < min_shmem_size_per_sm)) {
-    shmem_per_block = min_shmem_size_per_sm / numblocks_desired;
-    shmem           = shmem_per_block - func_attr.sharedSizeBytes;
+      (shmem_per_block * num_blocks_desired < min_shmem_size_per_sm)) {
+    shmem_per_block = min_shmem_size_per_sm / num_blocks_desired;
+    // Need to set the caller's shmem variable so that the
+    // kernel launch uses the correct dynamic shared memory request
+    shmem = shmem_per_block - func_attr.sharedSizeBytes;
   }
 
   // Compute the carveout fraction we need based on occupancy
   // Use multiples of 8kB
-  const size_t maxshmem_per_sm = device_props.sharedMemPerMultiprocessor;
-  size_t carveout              = shmem_per_block == 0
+  const size_t max_shmem_per_sm = device_props.sharedMemPerMultiprocessor;
+  size_t carveout               = shmem_per_block == 0
                         ? 0
                         : 100 *
-                              (((numblocks_desired * shmem_per_block +
+                              (((num_blocks_desired * shmem_per_block +
                                  min_shmem_size_per_sm - 1) /
                                 min_shmem_size_per_sm) *
                                min_shmem_size_per_sm) /
-                              maxshmem_per_sm;
+                              max_shmem_per_sm;
   if (carveout > 100) carveout = 100;
 
   // Set the carveout, but only call it once per kernel or when it changes
@@ -211,7 +212,7 @@ inline void configure_shmem_preference(const KernelFuncPtr& func,
     return carveout;
   };
   // Store the value in a static variable so we only reset if needed
-  static int cache_config_preference_cached = set_cache_config();
+  static size_t cache_config_preference_cached = set_cache_config();
   if (cache_config_preference_cached != carveout) {
     cache_config_preference_cached = set_cache_config();
   }
