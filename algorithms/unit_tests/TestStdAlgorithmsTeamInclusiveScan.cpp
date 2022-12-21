@@ -215,8 +215,8 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
 
   for (std::size_t i = 0; i < sourceView.extent(0); ++i) {
     auto srcRow    = Kokkos::subview(sourceViewBeforeOp_h, i, Kokkos::ALL());
-    auto first     = KE::cbegin(srcRow);
-    auto last      = KE::cend(srcRow);
+    auto first     = KE::begin(srcRow);
+    auto last      = KE::end(srcRow);
     auto destRow   = Kokkos::subview(stdDestView, i, Kokkos::ALL());
     auto firstDest = KE::begin(destRow);
     auto initValue = initValuesView_h(i);
