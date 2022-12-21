@@ -945,8 +945,7 @@ class Random_XorShift64_Pool {
     deep_copy(locks_, h_lock);
   }
 
-  KOKKOS_INLINE_FUNCTION
-  Random_XorShift64<DeviceType> get_state() const {
+  KOKKOS_INLINE_FUNCTION Random_XorShift64<DeviceType> get_state() const {
     const int i = Impl::Random_UniqueIndex<device_type>::get_state_idx(locks_);
     return Random_XorShift64<DeviceType>(state_(i, 0), i);
   }
