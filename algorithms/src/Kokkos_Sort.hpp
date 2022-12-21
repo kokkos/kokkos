@@ -68,6 +68,7 @@
 
 #if defined(KOKKOS_ENABLE_ONEDPL)
 #include <oneapi/dpl/execution>
+#include <oneapi/dpl/algorithm>
 #endif
 
 namespace Kokkos {
