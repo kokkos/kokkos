@@ -24,6 +24,7 @@
 #include <Kokkos_Core.hpp>
 #include <Kokkos_NestedSort.hpp>
 #include <std_algorithms/Kokkos_BeginEnd.hpp>
+#include <algorithm>
 
 #if defined(KOKKOS_ENABLE_CUDA)
 
@@ -67,10 +68,7 @@
 
 #if defined(KOKKOS_ENABLE_ONEDPL)
 #include <oneapi/dpl/execution>
-#include <oneapi/dpl/algorithm>
 #endif
-
-#include <algorithm>
 
 namespace Kokkos {
 
@@ -645,11 +643,6 @@ template <class DataType, class... Properties>
 void sort(const Experimental::SYCL& space,
           const Kokkos::View<DataType, Properties...>& view) {
   using ViewType = Kokkos::View<DataType, Properties...>;
-  static_assert(
-      ViewType::rank == 1 &&
-          (std::is_same<typename ViewType::array_layout, LayoutRight>::value ||
-           std::is_same<typename ViewType::array_layout, LayoutLeft>::value),
-      "SYCL sort only supports contiguous 1D Views.");
 
   static_assert(SpaceAccessibility<Experimental::SYCL,
                                    typename ViewType::memory_space>::accessible,
@@ -658,8 +651,7 @@ void sort(const Experimental::SYCL& space,
 
   auto queue  = space.impl_internal_space_instance()->m_queue.value();
   auto policy = oneapi::dpl::execution::make_device_policy(queue);
-  const int n = view.extent(0);
-  oneapi::dpl::sort(policy, view.data(), view.data() + n);
+  oneapi::dpl::sort(policy, Experimental::begin(view), Experimental::end(view));
 }
 #endif
 
