@@ -1,14 +1,3 @@
-
-#INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
-#INCLUDE_DIRECTORIES(REQUIRED_DURING_INSTALLATION_TESTING ${CMAKE_CURRENT_SOURCE_DIR})
-
-
-# warning: PerfTest_CustomReduction.cpp uses
-# ../../algorithms/src/Kokkos_Random.hpp
-# we'll just allow it to be included, but note
-# that in TriBITS KokkosAlgorithms can be disabled...
-#INCLUDE_DIRECTORIES("${CMAKE_CURRENT_SOURCE_DIR}/../../algorithms/src")
-
 # FIXME_OPENMPTARGET - the NVIDIA HPC compiler nvc++ in the OpenMPTarget backend does not pass the perf_tests.
 # FIXME_OPENACC - temporarily disabled due to unimplemented features
 IF ((KOKKOS_ENABLE_OPENMPTARGET OR KOKKOS_ENABLE_OPENACC) AND KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
@@ -60,6 +49,10 @@ IF(KOKKOS_ENABLE_TESTS)
 
   #leave these as basic includes for now
   #I don't need anything transitive
+  # warning: PerfTest_CustomReduction.cpp uses
+  # ../../algorithms/src/Kokkos_Random.hpp
+  # we'll just allow it to be included, but note
+  # that in TriBITS KokkosAlgorithms can be disabled...
   KOKKOS_INCLUDE_DIRECTORIES("${CMAKE_CURRENT_SOURCE_DIR}/../../algorithms/src")
   KOKKOS_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
   KOKKOS_INCLUDE_DIRECTORIES(REQUIRED_DURING_INSTALLATION_TESTING ${CMAKE_CURRENT_SOURCE_DIR})
