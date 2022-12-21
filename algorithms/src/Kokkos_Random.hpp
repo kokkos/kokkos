@@ -895,6 +895,12 @@ class Random_XorShift64_Pool {
     KOKKOS_IF_ON_HOST(init(0, execution_space().concurrency());)
   }
 
+  KOKKOS_DEFAULTED_FUNCTION Random_XorShift64_Pool(
+      Random_XorShift64_Pool const&) = default;
+
+  KOKKOS_DEFAULTED_FUNCTION Random_XorShift64_Pool& operator=(
+      Random_XorShift64_Pool const&) = default;
+
   Random_XorShift64_Pool(uint64_t seed) {
     num_states_ = 0;
 
@@ -1144,6 +1150,12 @@ class Random_XorShift1024_Pool {
         num_states_ = 0;)
     KOKKOS_IF_ON_HOST(init(0, execution_space().concurrency());)
   }
+
+  KOKKOS_DEFAULTED_FUNCTION Random_XorShift1024_Pool(
+      Random_XorShift1024_Pool const&) = default;
+
+  KOKKOS_DEFAULTED_FUNCTION Random_XorShift1024_Pool& operator=(
+      Random_XorShift1024_Pool const&) = default;
 
   Random_XorShift1024_Pool(uint64_t seed) {
     num_states_ = 0;
