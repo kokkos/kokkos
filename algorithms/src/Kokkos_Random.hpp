@@ -1129,13 +1129,13 @@ class Random_XorShift1024_Pool {
   KOKKOS_INLINE_FUNCTION
   Random_XorShift1024_Pool() { num_states_ = 0; }
 
-  inline Random_XorShift1024_Pool(uint64_t seed) {
+  Random_XorShift1024_Pool(uint64_t seed) {
     num_states_ = 0;
 
     init(seed, execution_space().concurrency());
   }
 
-  inline void init(uint64_t seed, int num_states) {
+  void init(uint64_t seed, int num_states) {
     if (seed == 0) seed = uint64_t(1318319);
     // I only want to pad on CPU like archs (less than 1000 threads). 64 is a
     // magic number, or random number I just wanted something not too large and
