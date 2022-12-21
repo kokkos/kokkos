@@ -30,6 +30,11 @@ namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
+template <typename ValueType>
+using ex_scan_has_reduction_identity_sum_t =
+    decltype(Kokkos::reduction_identity<ValueType>::sum());
+
+
 template <class ExeSpace, class IndexType, class ValueType, class FirstFrom,
           class FirstDest>
 struct ExclusiveScanDefaultFunctorForKnownNeutralElement {
@@ -137,10 +142,6 @@ OutputIteratorType exclusive_scan_custom_op_exespace_impl(
   // return
   return first_dest + num_elements;
 }
-
-template <typename ValueType>
-using ex_scan_has_reduction_identity_sum_t =
-    decltype(Kokkos::reduction_identity<ValueType>::sum());
 
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType, class ValueType>
@@ -255,10 +256,6 @@ KOKKOS_FUNCTION OutputIteratorType exclusive_scan_custom_op_team_impl(
 
   // #endif
 }
-
-template <typename ValueType>
-using ex_scan_has_reduction_identity_sum_t =
-    decltype(Kokkos::reduction_identity<ValueType>::sum());
 
 template <class TeamHandleType, class InputIteratorType,
           class OutputIteratorType, class ValueType>
