@@ -48,9 +48,10 @@ extern bool show_warnings() noexcept;
 namespace Impl {
 
 // Cuda Teams use (team_size + 2)*sizeof(double) shared memory for team
-// reductions they also use one int64_t static shared memory for a shared ID
-// Furthermore, they use additional scratch memory in some reduction scenarios,
-// which depend on the size of the value_type and is NOT captured here.
+// reductions. They also use one int64_t in static shared memory for a shared
+// ID. Furthermore, they use additional scratch memory in some reduction
+// scenarios, which depend on the size of the value_type and is NOT captured
+// here.
 constexpr size_t cuda_team_max_reserved_shared_mem =
     (1024 + 2) * sizeof(double) + sizeof(int64_t);
 
