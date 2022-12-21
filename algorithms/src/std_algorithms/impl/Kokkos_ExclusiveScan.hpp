@@ -34,7 +34,6 @@ template <typename ValueType>
 using ex_scan_has_reduction_identity_sum_t =
     decltype(Kokkos::reduction_identity<ValueType>::sum());
 
-
 template <class ExeSpace, class IndexType, class ValueType, class FirstFrom,
           class FirstDest>
 struct ExclusiveScanDefaultFunctorForKnownNeutralElement {
