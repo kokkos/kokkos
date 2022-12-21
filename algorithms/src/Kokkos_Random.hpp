@@ -897,19 +897,6 @@ class Random_XorShift64_Pool {
     init(seed, execution_space().concurrency());
   }
 
-  KOKKOS_INLINE_FUNCTION
-  Random_XorShift64_Pool(const Random_XorShift64_Pool& src)
-      : locks_(src.locks_), state_(src.state_), num_states_(src.num_states_) {}
-
-  KOKKOS_INLINE_FUNCTION
-  Random_XorShift64_Pool operator=(const Random_XorShift64_Pool& src) {
-    locks_      = src.locks_;
-    state_      = src.state_;
-    num_states_ = src.num_states_;
-    padding_    = src.padding_;
-    return *this;
-  }
-
   void init(uint64_t seed, int num_states) {
     if (seed == 0) seed = uint64_t(1318319);
     // I only want to pad on CPU like archs (less than 1000 threads). 64 is a
@@ -1146,23 +1133,6 @@ class Random_XorShift1024_Pool {
     num_states_ = 0;
 
     init(seed, execution_space().concurrency());
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  Random_XorShift1024_Pool(const Random_XorShift1024_Pool& src)
-      : locks_(src.locks_),
-        state_(src.state_),
-        p_(src.p_),
-        num_states_(src.num_states_) {}
-
-  KOKKOS_INLINE_FUNCTION
-  Random_XorShift1024_Pool operator=(const Random_XorShift1024_Pool& src) {
-    locks_      = src.locks_;
-    state_      = src.state_;
-    p_          = src.p_;
-    num_states_ = src.num_states_;
-    padding_    = src.padding_;
-    return *this;
   }
 
   inline void init(uint64_t seed, int num_states) {
