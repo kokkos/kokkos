@@ -650,7 +650,7 @@ void sort(const Experimental::SYCL& space,
                 "SYCL execution space is not able to access the memory space "
                 "of the View argument!");
 
-  auto queue  = space.impl_internal_space_instance()->m_queue.value();
+  auto queue  = space.sycl_queue();
   auto policy = oneapi::dpl::execution::make_device_policy(queue);
   oneapi::dpl::sort(policy, Experimental::begin(view), Experimental::end(view));
 }
