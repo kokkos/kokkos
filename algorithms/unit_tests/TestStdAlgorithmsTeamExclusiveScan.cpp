@@ -202,17 +202,17 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
 
     const auto initValue = initValuesView_h(i);
 
-#if defined(__GNUC__) && __GNUC__ == 8
-#define exclusive_scan testing_exclusive_scan
-#else
-#define exclusive_scan std::exclusive_scan
-#endif
+    // #if defined(__GNUC__) && __GNUC__ == 8
+    // #define exclusive_scan testing_exclusive_scan
+    // #else
+    // #define exclusive_scan std::exclusive_scan
+    // #endif
 
     switch (apiId) {
       case 0:
       case 1: {
-        auto it = exclusive_scan(KE::cbegin(rowFrom), KE::cend(rowFrom),
-                                 KE::begin(rowDest), initValue);
+        auto it = std::exclusive_scan(KE::cbegin(rowFrom), KE::cend(rowFrom),
+                                      KE::begin(rowDest), initValue);
         const std::size_t stdDistance = KE::distance(KE::begin(rowDest), it);
         EXPECT_EQ(stdDistance, distancesView_h(i));
         break;
@@ -221,8 +221,8 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
 #if not defined KOKKOS_ENABLE_OPENMPTARGET
       case 2:
       case 3: {
-        auto it = exclusive_scan(KE::cbegin(rowFrom), KE::cend(rowFrom),
-                                 KE::begin(rowDest), initValue, binaryOp);
+        auto it = std::exclusive_scan(KE::cbegin(rowFrom), KE::cend(rowFrom),
+                                      KE::begin(rowDest), initValue, binaryOp);
         const std::size_t stdDistance = KE::distance(KE::begin(rowDest), it);
         EXPECT_EQ(stdDistance, distancesView_h(i));
 
@@ -231,7 +231,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
 #endif
     }
 
-#undef exclusive_scan
+    //#undef exclusive_scan
   }
 
   auto dataViewAfterOp_h = create_host_space_copy(destView);

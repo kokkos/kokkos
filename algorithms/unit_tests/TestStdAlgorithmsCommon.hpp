@@ -280,66 +280,31 @@ ValueType testing_transform_reduce(InputIterator first, InputIterator last,
   return init;
 }
 
-template <class InputIterator, class OutputIterator, class ValueType,
-          class BinaryOp>
-OutputIterator testing_exclusive_scan(InputIterator first, InputIterator last,
-                                      OutputIterator result, ValueType init,
-                                      BinaryOp binOp) {
-  while (first != last) {
-    auto v = init;
-    init   = binOp(init, *first);
-    ++first;
-    *result++ = v;
-  }
+// template <class InputIterator, class OutputIterator, class ValueType,
+//           class BinaryOp>
+// OutputIterator testing_exclusive_scan(InputIterator first, InputIterator
+// last,
+//                                       OutputIterator result, ValueType init,
+//                                       BinaryOp binOp) {
+//   while (first != last) {
+//     auto v = init;
+//     init   = binOp(init, *first);
+//     ++first;
+//     *result++ = v;
+//   }
 
-  return result;
-}
+//   return result;
+// }
 
-template <class InputIterator, class OutputIterator, class ValueType>
-OutputIterator testing_exclusive_scan(InputIterator first, InputIterator last,
-                                      OutputIterator result, ValueType init) {
-  return testing_exclusive_scan(
-      first, last, result, init,
-      [](const ValueType& lhs, const ValueType& rhs) { return lhs + rhs; });
-}
-
-template <class InputIterator, class OutputIterator, class BinaryOp,
-          class ValueType>
-OutputIterator testing_inclusive_scan(InputIterator first, InputIterator last,
-                                      OutputIterator result, BinaryOp binOp,
-                                      ValueType init) {
-  for (; first != last; ++first) {
-    init      = binOp(init, *first);
-    *result++ = init;
-  }
-
-  return result;
-}
-
-template <class InputIterator, class OutputIterator, class BinaryOp>
-OutputIterator testing_inclusive_scan(InputIterator first, InputIterator last,
-                                      OutputIterator result, BinaryOp binOp) {
-  if (first != last) {
-    auto init = *first;
-    *result++ = init;
-    ++first;
-
-    if (first != last) {
-      result = testing_inclusive_scan(first, last, result, binOp, init);
-    }
-  }
-
-  return result;
-}
-
-template <class InputIterator, class OutputIterator>
-OutputIterator testing_inclusive_scan(InputIterator first, InputIterator last,
-                                      OutputIterator result) {
-  using ValueType = typename InputIterator::value_type;
-  return testing_inclusive_scan(
-      first, last, result,
-      [](const ValueType& lhs, const ValueType& rhs) { return lhs + rhs; });
-}
+// template <class InputIterator, class OutputIterator, class ValueType>
+// OutputIterator testing_exclusive_scan(InputIterator first, InputIterator
+// last,
+//                                       OutputIterator result, ValueType init)
+//                                       {
+//   return testing_exclusive_scan(
+//       first, last, result, init,
+//       [](const ValueType& lhs, const ValueType& rhs) { return lhs + rhs; });
+// }
 
 template <class InputIterator, class OutputIterator, class ValueType,
           class BinaryOp, class UnaryOp>
