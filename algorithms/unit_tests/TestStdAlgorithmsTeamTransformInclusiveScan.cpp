@@ -207,12 +207,12 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
                                                            numTeams, numCols);
 
   for (std::size_t i = 0; i < sourceView.extent(0); ++i) {
-    auto srcRow      = Kokkos::subview(sourceViewBeforeOp_h, i, Kokkos::ALL());
-    const auto first = KE::cbegin(srcRow);
-    const auto last  = KE::cend(srcRow);
-    auto destRow     = Kokkos::subview(stdDestView, i, Kokkos::ALL());
-    auto firstDest   = KE::begin(destRow);
-    const auto initValue = initValuesView_h(i);
+    auto srcRow    = Kokkos::subview(sourceViewBeforeOp_h, i, Kokkos::ALL());
+    auto first     = KE::cbegin(srcRow);
+    auto last      = KE::cend(srcRow);
+    auto destRow   = Kokkos::subview(stdDestView, i, Kokkos::ALL());
+    auto firstDest = KE::begin(destRow);
+    auto initValue = initValuesView_h(i);
 
 #if defined(__GNUC__) && __GNUC__ == 8
 #define transform_inclusive_scan testing_transform_inclusive_scan
