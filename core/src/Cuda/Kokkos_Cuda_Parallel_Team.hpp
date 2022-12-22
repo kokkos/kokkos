@@ -203,16 +203,16 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
     // shared ID. Furthermore, they use additional scratch memory in some
     // reduction scenarios, which depend on the size of the value_type and is
     // NOT captured here.
-    constexpr size_t cuda_team_max_reserved_shared_mem =
-        (1024 + 2) * sizeof(double) + sizeof(int64_t);
+    constexpr size_t max_possible_team_size = 1024;
+    constexpr size_t max_reserved_shared_mem_per_team =
+        (max_possible_team_size + 2) * sizeof(double) + sizeof(int64_t);
+    // arbitrarily setting level 1 scratch limit to 20MB, for a
+    // Volta V100 that would give us about 3.2GB for 2 teams per SM
+    constexpr size_t max_l1_scratch_size = 20 * 1024 * 1024;
 
     size_t max_shmem = Cuda().cuda_device_prop().sharedMemPerBlock;
-    return (level == 0
-                ? max_shmem - cuda_team_max_reserved_shared_mem
-                :
-                // arbitrarily setting level 1 scratch limit to 20MB, for a
-                // Volta V100 that would give us about 3.2GB for 2 teams per SM
-                20 * 1024 * 1024);
+    return (level == 0 ? max_shmem - max_reserved_shared_mem_per_team
+                       : max_l1_scratch_size);
   }
 
   //----------------------------------------
