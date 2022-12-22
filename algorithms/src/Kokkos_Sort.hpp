@@ -652,7 +652,16 @@ void sort(const Experimental::SYCL& space,
 
   auto queue  = space.sycl_queue();
   auto policy = oneapi::dpl::execution::make_device_policy(queue);
-  oneapi::dpl::sort(policy, Experimental::begin(view), Experimental::end(view));
+
+  // Can't use Experimental::begin/end here since the oneDPL then assumes that
+  // the data is on the host.
+  static_assert(
+      ViewType::rank == 1 &&
+          (std::is_same<typename ViewType::array_layout, LayoutRight>::value ||
+           std::is_same<typename ViewType::array_layout, LayoutLeft>::value),
+      "SYCL sort only supports contiguous 1D Views.");
+  const int n = view.extent(0);
+  oneapi::dpl::sort(policy, view.data(), view.data() + n);
 }
 #endif
 
