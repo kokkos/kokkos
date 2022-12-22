@@ -8,20 +8,6 @@ ENDIF()
 # TODO: finish converting these into benchmarks (in progress)
 IF(KOKKOS_ENABLE_TESTS)
 
-  SET(SOURCES
-    PerfTestMain.cpp
-    PerfTest_ExecSpacePartitioning.cpp
-  )
-
-  IF(Kokkos_ENABLE_OPENMPTARGET)
-  # FIXME OPENMPTARGET requires TeamPolicy Reductions and Custom Reduction
-    LIST(REMOVE_ITEM SOURCES
-      PerfTestGramSchmidt.cpp
-      PerfTest_CustomReduction.cpp
-      PerfTest_ExecSpacePartitioning.cpp
-    )
-  ENDIF()
-
   IF(KOKKOS_ENABLE_CUDA OR KOKKOS_ENABLE_HIP OR KOKKOS_ENABLE_SYCL)
     KOKKOS_ADD_EXECUTABLE (
       PerformanceTest_SharedSpace
@@ -57,14 +43,6 @@ IF(KOKKOS_ENABLE_TESTS)
     SOURCES test_atomic.cpp
     CATEGORIES PERFORMANCE
   )
-
-  IF(NOT KOKKOS_ENABLE_CUDA OR KOKKOS_ENABLE_CUDA_LAMBDA)
-    KOKKOS_ADD_EXECUTABLE_AND_TEST(
-      PerformanceTest_Atomic_MinMax
-      SOURCES test_atomic_minmax_simple.cpp
-      CATEGORIES PERFORMANCE
-    )
-  ENDIF()
 
   # FIXME_NVHPC
   IF(NOT KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
@@ -176,6 +154,7 @@ SET(
   Benchmark_Context.cpp
   PerfTestGramSchmidt.cpp
   PerfTest_CustomReduction.cpp
+  PerfTest_ExecSpacePartitioning.cpp
   PerfTestHexGrad.cpp
   PerfTest_ViewAllocate.cpp
   PerfTest_ViewCopy_a123.cpp
