@@ -10,10 +10,8 @@ IF(KOKKOS_ENABLE_TESTS)
 
   SET(SOURCES
     PerfTestMain.cpp
-    PerfTestGramSchmidt.cpp
     PerfTest_ExecSpacePartitioning.cpp
   )
-
 
   IF(Kokkos_ENABLE_OPENMPTARGET)
   # FIXME OPENMPTARGET requires TeamPolicy Reductions and Custom Reduction
@@ -176,6 +174,7 @@ SET(
   BENCHMARK_SOURCES
   BenchmarkMain.cpp
   Benchmark_Context.cpp
+  PerfTestGramSchmidt.cpp
   PerfTest_CustomReduction.cpp
   PerfTestHexGrad.cpp
   PerfTest_ViewAllocate.cpp
