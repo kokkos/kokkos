@@ -236,6 +236,28 @@ Kokkos::HIP::size_type *HIPInternal::scratch_flags(const std::size_t size) {
   return m_scratchFlags;
 }
 
+Kokkos::HIP::size_type *HIPInternal::scratch_functor(
+    const std::size_t size) const {
+  if (verify_is_initialized("scratch_functor") && m_scratchFunctorSize < size) {
+    m_scratchFunctorSize = size;
+
+    using Record = Kokkos::Impl::SharedAllocationRecord<Kokkos::HIPSpace, void>;
+
+    if (m_scratchFunctor)
+      Record::decrement(Record::get_record(m_scratchFunctor));
+
+    Record *const r =
+        Record::allocate(Kokkos::HIPSpace(), "Kokkos::InternalScratchFunctor",
+                         m_scratchFunctorSize);
+
+    Record::increment(r);
+
+    m_scratchFunctor = reinterpret_cast<size_type *>(r->data());
+  }
+
+  return m_scratchFunctor;
+}
+
 int HIPInternal::acquire_team_scratch_space() {
   int current_team_scratch = 0;
   int zero                 = 0;
@@ -296,14 +318,17 @@ void HIPInternal::finalize() {
     RecordHIP::decrement(RecordHIP::get_record(m_scratchFlags));
     RecordHIP::decrement(RecordHIP::get_record(m_scratchSpace));
 
-    for (int i = 0; i < m_n_team_scratch; ++i) {
-      if (m_team_scratch_current_size[i] > 0)
-        Kokkos::kokkos_free<Kokkos::HIPSpace>(m_team_scratch_ptr[i]);
-    }
-
-    if (m_manage_stream && m_stream != nullptr)
-      KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamDestroy(m_stream));
+    if (m_scratchFunctorSize > 0)
+      RecordHIP::decrement(RecordHIP::get_record(m_scratchFunctor));
   }
+
+  for (int i = 0; i < m_n_team_scratch; ++i) {
+    if (m_team_scratch_current_size[i] > 0)
+      Kokkos::kokkos_free<Kokkos::HIPSpace>(m_team_scratch_ptr[i]);
+  }
+
+  if (m_manage_stream && m_stream != nullptr)
+    KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamDestroy(m_stream));
 
   m_scratchSpaceCount = 0;
   m_scratchFlagsCount = 0;

@@ -377,8 +377,14 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
   static void invoke_kernel(DriverType const &driver, dim3 const &grid,
                             dim3 const &block, int shmem,
                             HIPInternal const *hip_instance) {
+    DriverType *driver_ptr = reinterpret_cast<DriverType *>(
+        hip_instance->scratch_functor(sizeof(DriverType)));
+
+    hipMemcpyAsync(driver_ptr, &driver, sizeof(DriverType), hipMemcpyDefault,
+                   hip_instance->m_stream);
+
     (base_t::get_kernel_func())<<<grid, block, shmem, hip_instance->m_stream>>>(
-        driver);
+        driver_ptr);
   }
 };
 
