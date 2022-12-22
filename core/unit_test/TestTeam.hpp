@@ -627,8 +627,9 @@ struct TestLambdaSharedTeam {
 
     Kokkos::TeamPolicy<ScheduleType, ExecSpace> team_exec(8192 / team_size,
                                                           team_size);
-    team_exec = team_exec.set_scratch_size(
-        0, Kokkos::PerTeam(SHARED_COUNT * 2 * sizeof(int)));
+
+    int scratch_size = shared_int_array_type::shmem_size(SHARED_COUNT) * 2;
+    team_exec = team_exec.set_scratch_size(0, Kokkos::PerTeam(scratch_size));
 
     typename Functor::value_type error_count = 0;
 
@@ -1582,28 +1583,35 @@ struct TestScratchAlignment {
     Kokkos::parallel_for(
         policy.set_scratch_size(0, Kokkos::PerTeam(1024)),
         KOKKOS_LAMBDA(const member_type &team) {
-          intptr_t scratch_ptr1 = intptr_t(team.team_shmem().get_shmem(24));
-          intptr_t scratch_ptr2 = intptr_t(team.team_shmem().get_shmem(32));
-          intptr_t scratch_ptr3 = intptr_t(team.team_shmem().get_shmem(12));
+          auto scratch_ptr1 =
+              reinterpret_cast<intptr_t>(team.team_shmem().get_shmem(24));
+          auto scratch_ptr2 =
+              reinterpret_cast<intptr_t>(team.team_shmem().get_shmem(32));
+          auto scratch_ptr3 =
+              reinterpret_cast<intptr_t>(team.team_shmem().get_shmem(12));
 
           if (((scratch_ptr2 - scratch_ptr1) != 24) ||
               ((scratch_ptr3 - scratch_ptr2) != 32))
             flag() = 1;
 
           if ((scratch_ptr3 + 12) % 8 == 4)
-            scratch_ptr1 = intptr_t(team.team_shmem().get_shmem_aligned(24, 4));
+            scratch_ptr1 = reinterpret_cast<intptr_t>(
+                team.team_shmem().get_shmem_aligned(24, 4));
           else {
-            scratch_ptr1 = intptr_t(team.team_shmem().get_shmem_aligned(12, 4));
+            scratch_ptr1 = reinterpret_cast<intptr_t>(
+                team.team_shmem().get_shmem_aligned(12, 4));
           }
-          scratch_ptr2 = intptr_t(team.team_shmem().get_shmem_aligned(32, 8));
-          scratch_ptr3 = intptr_t(team.team_shmem().get_shmem_aligned(8, 4));
+          scratch_ptr2 = reinterpret_cast<intptr_t>(
+              team.team_shmem().get_shmem_aligned(32, 8));
+          scratch_ptr3 = reinterpret_cast<intptr_t>(
+              team.team_shmem().get_shmem_aligned(8, 4));
 
-          if ((int(scratch_ptr2 - scratch_ptr1) != 28) &&
-              (int(scratch_ptr2 - scratch_ptr1) != 16))
+          if (((scratch_ptr2 - scratch_ptr1) != 28) &&
+              ((scratch_ptr2 - scratch_ptr1) != 16))
             flag() = 1;
-          if (int(scratch_ptr3 - scratch_ptr2) != 32) flag() = 1;
-          if ((int(scratch_ptr1 % 4) != 0) || (int(scratch_ptr2 % 8) != 0) ||
-              (int(scratch_ptr3 % 4) != 0))
+          if ((scratch_ptr3 - scratch_ptr2) != 32) flag() = 1;
+          if (((scratch_ptr1 % 4) != 0) || ((scratch_ptr2 % 8) != 0) ||
+              ((scratch_ptr3 % 4) != 0))
             flag() = 1;
         });
     Kokkos::fence();
