@@ -1640,10 +1640,10 @@ class View : public ViewTraits<DataType, Properties...> {
   // Want to be able to align to minimum scratch alignment or sizeof or alignof
   // elements
   static constexpr size_t scratch_value_alignment =
-      ::Kokkos::max(::Kokkos::max(sizeof(typename traits::value_type),
-                                  alignof(typename traits::value_type)),
-                    static_cast<size_t>(
-                        traits::execution_space::scratch_memory_space::ALIGN));
+      max({sizeof(typename traits::value_type),
+           alignof(typename traits::value_type),
+           static_cast<size_t>(
+               traits::execution_space::scratch_memory_space::ALIGN)});
 
  public:
   static KOKKOS_INLINE_FUNCTION size_t
