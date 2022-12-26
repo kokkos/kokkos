@@ -22,6 +22,11 @@
 #include <Kokkos_OpenMPTargetSpace.hpp>
 #include <OpenMPTarget/Kokkos_OpenMPTarget_MDRangePolicy.hpp>
 #include <OpenMPTarget/Kokkos_OpenMPTarget_UniqueToken.hpp>
+#include <OpenMPTarget/Kokkos_OpenMPTarget_ParallelFor_Range.hpp>
+#include <OpenMPTarget/Kokkos_OpenMPTarget_ParallelFor_Team.hpp>
+#include <OpenMPTarget/Kokkos_OpenMPTarget_ParallelReduce_Range.hpp>
+#include <OpenMPTarget/Kokkos_OpenMPTarget_ParallelReduce_Team.hpp>
+#include <OpenMPTarget/Kokkos_OpenMPTarget_ParallelScan_Range.hpp>
 #endif
 
 #endif

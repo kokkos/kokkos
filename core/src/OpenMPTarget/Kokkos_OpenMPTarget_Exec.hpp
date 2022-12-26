@@ -1349,20 +1349,6 @@ Impl::VectorSingleStruct<Impl::OpenMPTargetExecTeamMember> PerThread(
 
 namespace Kokkos {
 
-/** \brief  Inter-thread parallel_for. Executes lambda(iType i) for each
- * i=0..N-1.
- *
- * The range i=0..N-1 is mapped to all threads of the the calling thread team.
- */
-template <typename iType, class Lambda>
-KOKKOS_INLINE_FUNCTION void parallel_for(
-    const Impl::TeamThreadRangeBoundariesStruct<
-        iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
-    const Lambda& lambda) {
-#pragma omp for nowait schedule(static, 1)
-  for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) lambda(i);
-}
-
 /** \brief  Inter-thread vector parallel_reduce. Executes lambda(iType i,
  * ValueType & val) for each i=0..N-1.
  *
@@ -1606,19 +1592,6 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
 }  // namespace Kokkos
 
 namespace Kokkos {
-/** \brief  Intra-thread vector parallel_for. Executes lambda(iType i) for each
- * i=0..N-1.
- *
- * The range i=0..N-1 is mapped to all vector lanes of the the calling thread.
- */
-template <typename iType, class Lambda>
-KOKKOS_INLINE_FUNCTION void parallel_for(
-    const Impl::ThreadVectorRangeBoundariesStruct<
-        iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
-    const Lambda& lambda) {
-#pragma omp simd
-  for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) lambda(i);
-}
 
 /** \brief  Intra-thread vector parallel_reduce. Executes lambda(iType i,
  * ValueType & val) for each i=0..N-1.
@@ -1743,19 +1716,6 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
 #endif
 
 namespace Kokkos {
-/** \brief  Intra-team vector parallel_for. Executes lambda(iType i) for each
- * i=0..N-1.
- *
- * The range i=0..N-1 is mapped to all vector lanes of the the calling team.
- */
-template <typename iType, class Lambda>
-KOKKOS_INLINE_FUNCTION void parallel_for(
-    const Impl::TeamVectorRangeBoundariesStruct<
-        iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
-    const Lambda& lambda) {
-#pragma omp for simd nowait schedule(static, 1)
-  for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) lambda(i);
-}
 
 /** \brief  Intra-team vector parallel_reduce. Executes lambda(iType i,
  * ValueType & val) for each i=0..N-1.

@@ -437,7 +437,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   const Policy m_policy;
   const ReducerType m_reducer;
 
-  using ParReduceCommon = ParallelReduceCommon<pointer_type>;
+  using ParReduceCopy = ParallelReduceCopy<pointer_type>;
 
   bool m_result_ptr_on_device;
 
@@ -518,8 +518,8 @@ reduction(+:result)
       }
     }
 
-    ParReduceCommon::memcpy_result(ptr, &result, sizeof(ValueType),
-                                   m_result_ptr_on_device);
+    ParReduceCopy::memcpy_result(ptr, &result, sizeof(ValueType),
+                                 m_result_ptr_on_device);
   }
 
   template <int Rank, class ValueType>
@@ -573,8 +573,8 @@ reduction(+:result)
       }
     }
 
-    ParReduceCommon::memcpy_result(ptr, &result, sizeof(ValueType),
-                                   m_result_ptr_on_device);
+    ParReduceCopy::memcpy_result(ptr, &result, sizeof(ValueType),
+                                 m_result_ptr_on_device);
   }
 
   template <int Rank, class ValueType>
@@ -636,8 +636,8 @@ reduction(+:result)
       }
     }
 
-    ParReduceCommon::memcpy_result(ptr, &result, sizeof(ValueType),
-                                   m_result_ptr_on_device);
+    ParReduceCopy::memcpy_result(ptr, &result, sizeof(ValueType),
+                                 m_result_ptr_on_device);
   }
 
   template <int Rank, class ValueType>
@@ -707,8 +707,8 @@ reduction(+:result)
       }
     }
 
-    ParReduceCommon::memcpy_result(ptr, &result, sizeof(ValueType),
-                                   m_result_ptr_on_device);
+    ParReduceCopy::memcpy_result(ptr, &result, sizeof(ValueType),
+                                 m_result_ptr_on_device);
   }
 
   template <int Rank, class ValueType>
@@ -784,8 +784,8 @@ reduction(+:result)
       }
     }
 
-    ParReduceCommon::memcpy_result(ptr, &result, sizeof(ValueType),
-                                   m_result_ptr_on_device);
+    ParReduceCopy::memcpy_result(ptr, &result, sizeof(ValueType),
+                                 m_result_ptr_on_device);
   }
 
   template <typename Policy, typename Functor>
