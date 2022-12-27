@@ -20,6 +20,7 @@
 #include <omp.h>
 #include <Kokkos_Parallel.hpp>
 #include <OpenMPTarget/Kokkos_OpenMPTarget_Exec.hpp>
+#include <OpenMPTarget/Kokkos_OpenMPTarget_Parallel_Common.hpp>
 
 // WORKAROUND OPENMPTARGET: sometimes tile sizes don't make it correctly,
 // this was tracked down to a bug in clang with regards of mapping structs
