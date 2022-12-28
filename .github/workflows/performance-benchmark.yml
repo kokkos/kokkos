@@ -29,6 +29,7 @@ jobs:
       - name: Configure Kokkos
         run: |
           cmake -B builddir \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
             -DKokkos_ARCH_NATIVE=ON \
             -DKokkos_ENABLE_HWLOC=ON \
             -DKokkos_ENABLE_${{ matrix.backend }}=ON \
