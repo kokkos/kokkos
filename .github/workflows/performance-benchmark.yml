@@ -41,7 +41,8 @@ jobs:
       - name: Build
         run: |
           ccache -z
-          cmake --build builddir --parallel 2
+          NUM_CPU=$(grep -c processor /proc/cpuinfo)
+          cmake --build builddir --parallel ${NUM_CPU}
           ccache -s
       - name: Tests
         working-directory: builddir
