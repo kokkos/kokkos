@@ -93,6 +93,7 @@ jobs:
         run: |
           cmake -B builddir \
             -DCMAKE_INSTALL_PREFIX=/usr \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
             ${{ matrix.clang-tidy }} \
             -Ddesul_ROOT=/usr/desul-install/ \
             -DKokkos_ARCH_NATIVE=ON \
