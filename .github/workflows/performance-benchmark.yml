@@ -54,7 +54,7 @@ jobs:
         if: ${{ github.ref == 'refs/heads/develop' }}
         uses: dmnemec/copy_file_to_another_repo_action@main
         env:
-          API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
+          API_TOKEN_GITHUB: ${{ secrets.DALG24_PUSH_BENCHMARK_RESULTS }}
         with:
           source_file: ${{ env.BUILD_ID }}
           destination_repo: 'kokkos/kokkos-benchmark-results'
