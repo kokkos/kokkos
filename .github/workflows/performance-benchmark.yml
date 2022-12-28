@@ -58,6 +58,6 @@ jobs:
         with:
           source_file: ${{ env.BUILD_ID }}
           destination_repo: 'kokkos/kokkos-benchmark-results'
-          destination_branch: 'master'
+          destination_branch: 'main'
           user_email: 'kokkos@users.noreply.github.com'
           user_name: 'Kokkos Developers'
