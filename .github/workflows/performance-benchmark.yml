@@ -29,13 +29,10 @@ jobs:
       - name: Configure Kokkos
         run: |
           cmake -B builddir \
-            -DCMAKE_INSTALL_PREFIX=/usr \
             -DKokkos_ARCH_NATIVE=ON \
             -DKokkos_ENABLE_HWLOC=ON \
             -DKokkos_ENABLE_${{ matrix.backend }}=ON \
             -DKokkos_ENABLE_BENCHMARKS=ON \
-            -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
-            -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
             -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} \
             -DCMAKE_BUILD_TYPE=Release
       - name: Build
