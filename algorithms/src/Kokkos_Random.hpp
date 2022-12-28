@@ -888,8 +888,7 @@ class Random_XorShift64_Pool {
   using generator_type = Random_XorShift64<DeviceType>;
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  KOKKOS_FUNCTION
-  Random_XorShift64_Pool() = default;
+  KOKKOS_DEFAULTED_FUNCTION Random_XorShift64_Pool() = default;
 
   KOKKOS_DEFAULTED_FUNCTION Random_XorShift64_Pool(
       Random_XorShift64_Pool const&) = default;
@@ -1135,8 +1134,7 @@ class Random_XorShift1024_Pool {
   using generator_type = Random_XorShift1024<DeviceType>;
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  KOKKOS_FUNCTION
-  Random_XorShift1024_Pool() = default;
+  KOKKOS_DEFAULTED_FUNCTION Random_XorShift1024_Pool() = default;
 
   KOKKOS_DEFAULTED_FUNCTION Random_XorShift1024_Pool(
       Random_XorShift1024_Pool const&) = default;
