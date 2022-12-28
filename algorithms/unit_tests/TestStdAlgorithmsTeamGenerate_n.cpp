@@ -109,7 +109,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, std::size_t count,
   auto [dataView, cloneOfDataViewBeforeOp_h] =
       create_random_view_and_host_clone(
           LayoutTag{}, numTeams, numCols,
-          Kokkos::pair{ValueType(105), ValueType(523)}, "dataView");
+          Kokkos::pair<ValueType, ValueType>{105, 523}, "dataView");
 
   // -----------------------------------------------
   // launch kokkos kernel

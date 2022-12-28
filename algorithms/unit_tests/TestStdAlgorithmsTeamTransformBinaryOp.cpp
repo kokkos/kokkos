@@ -125,12 +125,12 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   auto [sourceView1, cloneOfSourceView1BeforeOp_h] =
       create_random_view_and_host_clone(
           LayoutTag{}, numTeams, numCols,
-          Kokkos::pair{ValueType(0), ValueType(523)}, "sourceView1",
+          Kokkos::pair<ValueType, ValueType>{0, 523}, "sourceView1",
           317539 /*random seed*/);
   auto [sourceView2, cloneOfSourceView2BeforeOp_h] =
       create_random_view_and_host_clone(
           LayoutTag{}, numTeams, numCols,
-          Kokkos::pair{ValueType(0), ValueType(523)}, "sourceView2",
+          Kokkos::pair<ValueType, ValueType>{0, 523}, "sourceView2",
           957313 /*random seed*/);
 
   // -----------------------------------------------

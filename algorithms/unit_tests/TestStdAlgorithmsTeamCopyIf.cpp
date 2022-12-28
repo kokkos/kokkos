@@ -126,7 +126,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // values from an arbitrary range.
   auto [sourceView, sourceViewBeforeOp_h] = create_random_view_and_host_clone(
       LayoutTag{}, numTeams, numCols,
-      Kokkos::pair{ValueType(5), ValueType(523)}, "sourceView");
+      Kokkos::pair<ValueType, ValueType>{5, 523}, "sourceView");
 
   // -----------------------------------------------
   // launch kokkos kernel
