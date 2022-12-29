@@ -29,29 +29,11 @@ IF(KOKKOS_ENABLE_TESTS)
   KOKKOS_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
   KOKKOS_INCLUDE_DIRECTORIES(REQUIRED_DURING_INSTALLATION_TESTING ${CMAKE_CURRENT_SOURCE_DIR})
 
-  # This test currently times out for MSVC
-  IF(NOT KOKKOS_CXX_COMPILER_ID STREQUAL "MSVC")
-    KOKKOS_ADD_EXECUTABLE_AND_TEST(
-      PerfTestExec
-      SOURCES ${SOURCES}
-      CATEGORIES PERFORMANCE
-    )
-  ENDIF()
-
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     PerformanceTest_Atomic
     SOURCES test_atomic.cpp
     CATEGORIES PERFORMANCE
   )
-
-  # FIXME_NVHPC
-  IF(NOT KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
-  KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    PerformanceTest_Mempool
-    SOURCES test_mempool.cpp
-    CATEGORIES PERFORMANCE
-  )
-  ENDIF()
 
   IF(NOT Kokkos_ENABLE_OPENMPTARGET)
   # FIXME OPENMPTARGET needs tasking
@@ -213,5 +195,16 @@ IF(NOT KOKKOS_ENABLE_CUDA OR KOKKOS_ENABLE_CUDA_LAMBDA)
       BenchmarkMain.cpp
       Benchmark_Context.cpp
       test_atomic_minmax_simple.cpp
+  )
+ENDIF()
+
+# FIXME_NVHPC
+IF(NOT KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
+  KOKKOS_ADD_BENCHMARK(
+    PerformanceTest_Mempool
+    SOURCES
+      BenchmarkMain.cpp
+      Benchmark_Context.cpp
+      test_mempool.cpp
   )
 ENDIF()
