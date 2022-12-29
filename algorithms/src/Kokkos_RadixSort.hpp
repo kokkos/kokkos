@@ -29,11 +29,67 @@ namespace Experimental {
 // Roughly based on the algorithm described at
 // https://developer.nvidia.com/gpugems/gpugems3/part-vi-gpu-computing/chapter-39-parallel-prefix-sum-scan-cuda
 
+namespace Impl {
+template <typename SubjectType>
+struct equivalent_size_integral_type {
+  using type = std::make_unsigned_t<SubjectType>;
+};
+
+#if KOKKOS_HAS_8_BIT_FLOAT
+template <>
+struct equivalent_size_integral_type<quarter_t> {
+  using type = uint8_t;
+};
+#endif
+
+#if KOKKOS_HAS_16_BIT_HALF_FLOAT
+template <>
+struct equivalent_size_integral_type<half_t> {
+  using type = uint16_t;
+};
+#endif
+
+template <>
+struct equivalent_size_integral_type<float> {
+  using type = uint32_t;
+};
+
+template <>
+struct equivalent_size_integral_type<double> {
+  using type = uint64_t;
+};
+
+// long double will be trouble, because we'll need to account for 8
+// vs 10 vs 16 byte representations and storage
+
+}  // namespace Impl
+
+template <typename FloatingPointType>
+using equivalent_size_integral_type =
+    typename Impl::equivalent_size_integral_type<FloatingPointType>::type;
+
+/// Gets key values from elements of a View. Can limit consideration
+/// and hence sorting effort to just the least-significant BitWidth
+/// bits of each element. Such a limitation is non-sensical for
+/// floating-point numbers.
 template <int BitWidth, typename KeyView>
 struct KeyFromView {
-  using key_value_type          = typename KeyView::value_type;
   static constexpr int num_bits = BitWidth;
 
+  using key_value_type = typename KeyView::value_type;
+
+  // Always load and operate on unsigned integer types to avoid
+  // - Logic overhead in loading as floating point and then reinterpreting as
+  // integral
+  // - Potential UB issues in shifting signed-integer sign bits
+  using key_integral_type = equivalent_size_integral_type<key_value_type>;
+
+  static_assert(std::is_integral_v<key_integral_type>,
+                "Only integral or integral-interpretable FP key types are "
+                "presently supported");
+
+  // Keep a reference to the View passed, even if we're using an
+  // integral alias, to ensure correct lifetime behavior
   KeyView const& keys;
 
   KeyFromView(KeyView const& k) : keys(k) {}
@@ -43,15 +99,30 @@ struct KeyFromView {
   // i: index of the key to get
   // bit: which bit, with 0 indicating the least-significant
   auto operator()(int i, int bit) const {
-    auto h = keys(i) >> bit;
+    // I'd rather use a fully aliasing view here ...
+    auto key = *reinterpret_cast<key_integral_type*>(&keys(i));
+    auto h   = key >> bit;
 
     // Handle the sign bit of signed 2's-complement indicating low values
-    if constexpr (std::is_signed_v<key_value_type>) {
+    if constexpr (std::is_integral_v<key_value_type> &&
+                  std::is_signed_v<key_value_type>) {
       if (bit == 8 * sizeof(key_value_type) - 1) {
-        h = ~h;
+        return h & 0b1u;
       }
     }
-    return ~h & 0x1;
+
+    // Handle the sign-magnitude representation of FP
+    if constexpr (std::is_floating_point_v<key_value_type>) {
+      auto sign_bit_pos = 8 * sizeof(key_value_type) - 1;
+      auto sign_bit     = key >> sign_bit_pos;
+      if (bit == sign_bit_pos) {
+        return h & 0b1u;
+      } else {
+        return ~(h ^ sign_bit) & 0b1u;
+      }
+    }
+
+    return ~h & 0b1u;
   }
 
   int getNumBits() { return num_bits; }
@@ -68,8 +139,6 @@ KeyFromView(KeyView const&, std::integral_constant<int, BitWidth>)
 template <typename T, typename IndexType = ::std::uint32_t>
 class RadixSorter {
  public:
-  static_assert(std::is_integral_v<T>, "Keys must be integral for now");
-
   RadixSorter() = default;
   explicit RadixSorter(std::size_t n)
       : m_key_scratch("radix_sort_key_scratch", n),
