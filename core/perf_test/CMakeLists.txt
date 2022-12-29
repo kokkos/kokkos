@@ -210,6 +210,7 @@ IF(NOT KOKKOS_ENABLE_CUDA OR KOKKOS_ENABLE_CUDA_LAMBDA)
   KOKKOS_ADD_BENCHMARK(
     Benchmark_Atomic_MinMax
     SOURCES
+      BenchmarkMain.cpp
       Benchmark_Context.cpp
       test_atomic_minmax_simple.cpp
   )
