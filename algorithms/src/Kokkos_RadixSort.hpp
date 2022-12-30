@@ -172,7 +172,7 @@ class RadixSorter {
 
   // Generate and store the permutation induced by the keys, without
   // modifying their initial order
-  template <class ExecutionSpace>
+  template <typename ExecutionSpace>
   void create_indirection_vector(ExecutionSpace const& exec, View<T*> keys) {
     auto key_functor = KeyFromView{keys};
     const auto n     = keys.extent(0);
@@ -180,7 +180,7 @@ class RadixSorter {
     create_indirection_vector(exec, key_functor, n);
   }
 
-  template <class ExecutionSpace, class KeyFunctor>
+  template <typename ExecutionSpace, typename KeyFunctor>
   void create_indirection_vector(ExecutionSpace const& exec,
                                  KeyFunctor key_functor, size_t n) {
     RangePolicy<ExecutionSpace> policy(exec, 0, n);
@@ -198,7 +198,7 @@ class RadixSorter {
   }
 
   // Directly re-arrange the entries of keys, optionally storing the permutation
-  template <bool store_permutation = false, class ExecutionSpace>
+  template <bool store_permutation = false, typename ExecutionSpace>
   void sort(ExecutionSpace const& exec, View<T*> keys) {
     // Almost identical to create_indirection_array, except actually permute the
     // input
@@ -231,7 +231,7 @@ class RadixSorter {
   }
 
   // Directly re-arrange the entries of keys, optionally storing the permutation
-  template <bool store_permutation = false, class U, class ExecutionSpace>
+  template <bool store_permutation = false, typename U, typename ExecutionSpace>
   void sortByKeys(ExecutionSpace const& exec, View<T*> keys, View<U*> values) {
     // Almost identical to create_indirection_array, except actually permute the
     // input
@@ -271,7 +271,7 @@ class RadixSorter {
     }
   }
 
-  template <class ExecutionSpace>
+  template <typename ExecutionSpace>
   void apply_permutation(ExecutionSpace const& exec, View<T*> v) {
     parallel_for(
         RangePolicy<ExecutionSpace>(exec, 0, v.extent(0)),
@@ -280,7 +280,7 @@ class RadixSorter {
   }
 
  private:
-  template <class... U, class Policy>
+  template <typename... U, typename Policy>
   void permute_by_scan(Policy policy,
                        Kokkos::pair<View<U*>&, View<U*>&>... views) {
     parallel_for(
@@ -297,7 +297,7 @@ class RadixSorter {
         (swap(views.first, views.second), 0)...};
   }
 
-  template <class Policy, class KeyFunctor, class Permutation>
+  template <typename Policy, typename KeyFunctor, typename Permutation>
   void step(Policy policy, KeyFunctor getKeyBit, std::uint32_t shift,
             const Permutation& permutation) {
     parallel_for(
