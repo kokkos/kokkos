@@ -111,12 +111,15 @@ struct KeyFromView {
   // integral alias, to ensure correct lifetime behavior
   KeyView const& keys;
 
+  KOKKOS_FUNCTION
   KeyFromView(KeyView const& k) : keys(k) {}
+  KOKKOS_FUNCTION
   KeyFromView(KeyView const& k, std::integral_constant<int, BitWidth>)
       : keys(k) {}
 
   // i: index of the key to get
   // bit: which bit, with 0 indicating the least-significant
+  KOKKOS_INLINE_FUNCTION
   auto operator()(int i, int bit) const {
     // I'd rather use a fully aliasing view here ...
     auto key = *reinterpret_cast<key_integral_type*>(&keys(i));
@@ -144,6 +147,7 @@ struct KeyFromView {
     return ~h & 0b1u;
   }
 
+  KOKKOS_FUNCTION
   int getNumBits() { return num_bits; }
 };
 
