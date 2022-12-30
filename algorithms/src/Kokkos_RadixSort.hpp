@@ -109,7 +109,7 @@ struct KeyFromView {
 
   // Keep a reference to the View passed, even if we're using an
   // integral alias, to ensure correct lifetime behavior
-  KeyView const& keys;
+  KeyView const keys;
 
   KOKKOS_FUNCTION
   KeyFromView(KeyView const& k) : keys(k) {}
