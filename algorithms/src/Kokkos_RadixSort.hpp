@@ -23,6 +23,10 @@
 
 #include <Kokkos_Core.hpp>
 
+#ifdef KOKKOS_IMPL_HALF_TYPE_DEFINED
+#include <Kokkos_Half.hpp>
+#endif
+
 namespace Kokkos {
 namespace Experimental {
 
@@ -42,9 +46,24 @@ struct equivalent_size_integral_type<quarter_t> {
 };
 #endif
 
-#if KOKKOS_HAS_16_BIT_HALF_FLOAT
+#if !KOKKOS_HALF_T_IS_FLOAT
 template <>
-struct equivalent_size_integral_type<half_t> {
+struct equivalent_size_integral_type<::Kokkos::Experimental::half_t> {
+  using type = uint16_t;
+};
+template <>
+struct equivalent_size_integral_type<::Kokkos::Impl::half_impl_t::type> {
+  using type = uint16_t;
+};
+#endif
+
+#if !KOKKOS_BHALF_T_IS_FLOAT
+template <>
+struct equivalent_size_integral_type<::Kokkos::Experimental::bhalf_t> {
+  using type = uint16_t;
+};
+template <>
+struct equivalent_size_integral_type<::Kokkos::Impl::bhalf_impl_t::type> {
   using type = uint16_t;
 };
 #endif
