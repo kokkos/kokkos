@@ -187,14 +187,14 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;OpenMPTarget)
     set(STDALGO_TEAM_SOURCES_B)
     foreach(Name
 	StdAlgorithmsCommon
-	#StdAlgorithmsTeamMinElement
-	#StdAlgorithmsTeamMaxElement
-	# StdAlgorithmsTeamMinMaxElement
-	# StdAlgorithmsTeamIsSorted
-	# StdAlgorithmsTeamIsSortedUntil
+	StdAlgorithmsTeamMinElement
+	StdAlgorithmsTeamMaxElement
+	StdAlgorithmsTeamMinMaxElement
+	StdAlgorithmsTeamIsSorted
+	StdAlgorithmsTeamIsSortedUntil
 	StdAlgorithmsTeamIsPartitioned
-	#StdAlgorithmsTeamPartitionCopy
-	#StdAlgorithmsTeamPartitionPoint
+	StdAlgorithmsTeamPartitionCopy
+	StdAlgorithmsTeamPartitionPoint
 	)
       list(APPEND STDALGO_TEAM_SOURCES_B Test${Name}.cpp)
     endforeach()
@@ -283,7 +283,7 @@ endforeach()
 #     )
 # endforeach()
 
-foreach(ID B) #A;B;C;D)
+foreach(ID A;B;C;D)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_StdSet_Team_${ID}
     SOURCES
