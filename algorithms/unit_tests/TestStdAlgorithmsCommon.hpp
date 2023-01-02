@@ -447,7 +447,7 @@ auto create_random_view_and_host_clone(
   CopyFunctorRank2 F1(dataView_dc, dataView);
   Kokkos::parallel_for("copy", dataView.extent(0) * dataView.extent(1), F1);
 
-  return std::make_tuple(dataView, dataView_dc_h);
+  return std::make_pair(dataView, dataView_dc_h);
 }
 
 template <class ViewType>
