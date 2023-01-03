@@ -131,4 +131,3 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 }  // namespace Kokkos
 
 #endif
-

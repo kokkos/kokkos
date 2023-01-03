@@ -14,7 +14,6 @@
 //
 //@HEADER
 
-
 #ifndef KOKKOS_OPENMPTARGET_PARALLEL_COMMON_HPP
 #define KOKKOS_OPENMPTARGET_PARALLEL_COMMON_HPP
 
@@ -42,9 +41,8 @@ struct ParallelReduceCopy {
   }
 };
 
-
-//template <class FunctorType, class PolicyType, class ReducerType,
-          //class PointerType, class ValueType>
+// template <class FunctorType, class PolicyType, class ReducerType,
+// class PointerType, class ValueType>
 template <class FunctorType, class ReducerType, class PointerType,
           class ValueType, class PolicyType>
 struct ParallelReduceSpecialize {
@@ -94,7 +92,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
     // reduction.
     if (end <= begin) {
       ParReduceCopy::memcpy_result(result_ptr, &result, sizeof(ValueType),
-                                     ptr_on_device);
+                                   ptr_on_device);
       return;
     }
 
@@ -115,7 +113,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
     }
 
     ParReduceCopy::memcpy_result(result_ptr, &result, sizeof(ValueType),
-                                   ptr_on_device);
+                                 ptr_on_device);
   }
 
   template <class TagType, int NumReductions>
@@ -136,7 +134,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
       // reduction.
       if (end <= begin) {
         ParReduceCopy::memcpy_result(result_ptr, &result, sizeof(ValueType),
-                                       ptr_on_device);
+                                     ptr_on_device);
         return;
       }
       // Case where reduction is on a native data type.
@@ -165,7 +163,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
       }
 
       ParReduceCopy::memcpy_result(result_ptr, &result, sizeof(ValueType),
-                                     ptr_on_device);
+                                   ptr_on_device);
     } else {
       ValueType result[NumReductions] = {};
 
@@ -173,8 +171,8 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
       // reduction.
       if (end <= begin) {
         ParReduceCopy::memcpy_result(result_ptr, result,
-                                       NumReductions * sizeof(ValueType),
-                                       ptr_on_device);
+                                     NumReductions * sizeof(ValueType),
+                                     ptr_on_device);
         return;
       }
 #pragma omp target teams distribute parallel for map(to:f) reduction(+:result[:NumReductions])
@@ -409,7 +407,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
 
     // Copy results back to device if `parallel_reduce` is on a device view.
     ParReduceCopy::memcpy_result(result_ptr, &result, sizeof(ValueType),
-                                   ptr_on_device);
+                                 ptr_on_device);
   }
 
   template <int NumReductions>
@@ -498,7 +496,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
 
       // Copy results back to device if `parallel_reduce` is on a device view.
       ParReduceCopy::memcpy_result(result_ptr, &result, sizeof(ValueType),
-                                     ptr_on_device);
+                                   ptr_on_device);
     } else {
       ValueType result[NumReductions] = {};
       // Case where the reduction is on an array.
@@ -670,7 +668,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
   }
 };
 
-} // Impl
-} // Kokkos
+}  // namespace Impl
+}  // namespace Kokkos
 
 #endif

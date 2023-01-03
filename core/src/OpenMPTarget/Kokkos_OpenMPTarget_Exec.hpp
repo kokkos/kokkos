@@ -1332,7 +1332,6 @@ Impl::VectorSingleStruct<Impl::OpenMPTargetExecTeamMember> PerThread(
 }
 }  // namespace Kokkos
 
-
 namespace Kokkos {
 
 template <class FunctorType>

@@ -77,9 +77,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
     idx_type team_size        = 128;
 
     FunctorType a_functor(m_functor);
-#pragma omp target teams distribute map(to                             \
-                                        : a_functor) num_teams(nteams) \
-    thread_limit(team_size)
+#pragma omp target teams distribute map(to : a_functor) num_teams(nteams)
     for (idx_type team_id = 0; team_id < n_chunks; ++team_id) {
       typename Analysis::Reducer final_reducer(&a_functor);
 #pragma omp parallel num_threads(team_size)

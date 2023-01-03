@@ -24,7 +24,6 @@
 #include <OpenMPTarget/Kokkos_OpenMPTarget_Exec.hpp>
 #include <OpenMPTarget/Kokkos_OpenMPTarget_Parallel.hpp>
 
-
 namespace Kokkos {
 
 /** \brief  Inter-thread parallel_for. Executes lambda(iType i) for each
@@ -167,7 +166,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
                          arg_functor, arg_policy.team_size())) {}
 };
 
-} // Impl
-} // Kokkos
+}  // namespace Impl
+}  // namespace Kokkos
 
 #endif
