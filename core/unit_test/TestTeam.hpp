@@ -1536,6 +1536,7 @@ struct TestScratchAlignment {
       Kokkos::View<int *, typename ExecSpace::scratch_memory_space>;
   void test_view(bool allocate_small) {
     int shmem_size = ScratchView::shmem_size(11);
+    // FIXME_OPENMPTARGET temporary restriction for team size to be at least 32
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
     int team_size =
         std::is_same<ExecSpace, Kokkos::Experimental::OpenMPTarget>::value ? 32
@@ -1559,7 +1560,15 @@ struct TestScratchAlignment {
 
   void test_minimal() {
     using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
-    Kokkos::TeamPolicy<ExecSpace> policy(1, 1);
+    // FIXME_OPENMPTARGET temporary restriction for team size to be at least 32
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+    int team_size =
+        std::is_same<ExecSpace, Kokkos::Experimental::OpenMPTarget>::value ? 32
+                                                                           : 1;
+#else
+    int team_size      = 1;
+#endif
+    Kokkos::TeamPolicy<ExecSpace> policy(1, team_size);
     size_t scratch_size = sizeof(int);
     Kokkos::View<int, ExecSpace> flag("Flag");
 
