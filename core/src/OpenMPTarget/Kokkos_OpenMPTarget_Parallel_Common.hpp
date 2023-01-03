@@ -20,6 +20,7 @@
 #include <omp.h>
 #include <sstream>
 #include <Kokkos_Parallel.hpp>
+#include <OpenMPTarget/Kokkos_OpenMPTarget_Reducer.hpp>
 
 namespace Kokkos {
 namespace Impl {

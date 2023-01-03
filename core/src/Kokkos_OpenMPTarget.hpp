@@ -141,7 +141,6 @@ struct DeviceTypeTraits<::Kokkos::Experimental::OpenMPTarget> {
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
 
-#include <OpenMPTarget/Kokkos_OpenMPTarget_Exec.hpp>
 #include <OpenMPTarget/Kokkos_OpenMPTarget_Parallel.hpp>
 #include <OpenMPTarget/Kokkos_OpenMPTarget_Parallel_MDRange.hpp>
 #include <OpenMPTarget/Kokkos_OpenMPTarget_Task.hpp>

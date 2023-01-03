@@ -21,7 +21,6 @@
 #include <omp.h>
 #include <sstream>
 #include <Kokkos_Parallel.hpp>
-#include <OpenMPTarget/Kokkos_OpenMPTarget_Exec.hpp>
 #include <OpenMPTarget/Kokkos_OpenMPTarget_Parallel.hpp>
 
 namespace Kokkos {

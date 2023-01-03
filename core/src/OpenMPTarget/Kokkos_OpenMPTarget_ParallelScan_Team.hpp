@@ -20,7 +20,7 @@
 #include <omp.h>
 #include <sstream>
 #include <Kokkos_Parallel.hpp>
-#include <OpenMPTarget/Kokkos_OpenMPTarget_Exec.hpp>
+#include <OpenMPTarget/Kokkos_OpenMPTarget_Parallel.hpp>
 
 // FIXME_OPENMPTARGET - Using this macro to implement a workaround for
 // hierarchical scan. It avoids hitting the code path which we wanted to
