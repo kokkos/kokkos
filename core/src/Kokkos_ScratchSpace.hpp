@@ -112,12 +112,7 @@ class ScratchMemorySpace {
     void* tmp           = m_iter + m_offset * size;
     ptrdiff_t increment = size * m_multiplier;
 
-    // increment m_iter first and decrement it again if not
-    // enough memory was available. In the non-failing path
-    // this will save instructions.
-    m_iter += increment;
-
-    if (m_end < m_iter) {
+    if (increment > m_end - m_iter) {
       // Request did overflow: reset the base team ptr, and
       // return nullptr
       m_iter -= increment;
@@ -131,6 +126,8 @@ class ScratchMemorySpace {
           "%ld byte(s); remaining capacity is %ld byte(s)\n",
           long(size), long(m_end - m_iter));
 #endif  // KOKKOS_ENABLE_DEBUG
+    } else {
+      m_iter += increment;
     }
     return tmp;
   }
