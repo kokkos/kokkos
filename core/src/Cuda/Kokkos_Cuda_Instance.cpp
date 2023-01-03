@@ -400,8 +400,6 @@ Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
   }
 #endif
 
-  cudaDeviceSetCacheConfig(cudaFuncCachePreferShared);
-
   // Init the array for used for arbitrarily sized atomics
   if (this == &singleton()) Impl::initialize_host_cuda_lock_arrays();
 
