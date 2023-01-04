@@ -87,7 +87,7 @@ if(WIN32)
   LIST(APPEND COMPILE_ONLY_SOURCES TestWindowsInclude.cpp)
 endif()
 
-# TestInterOp has a dependency on containers
+#TestInterOp has a dependency on containers
 IF(KOKKOS_HAS_TRILINOS)
   LIST(REMOVE_ITEM COMPILE_ONLY_SOURCES TestInterOp.cpp)
 ENDIF()
@@ -177,6 +177,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
         Reducers_c
         Reducers_d
         Reducers_e
+        ReducerCTADs
         Reductions_DeviceView
         Scan
         SharedAlloc

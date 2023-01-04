@@ -71,6 +71,10 @@ struct Sum {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Scalar, typename... Properties>
+Sum(View<Scalar, Properties...> const&)
+    ->Sum<Scalar, typename View<Scalar, Properties...>::memory_space>;
+
 template <class Scalar, class Space>
 struct Prod {
  public:
@@ -110,6 +114,10 @@ struct Prod {
   KOKKOS_INLINE_FUNCTION
   bool references_scalar() const { return references_scalar_v; }
 };
+
+template <typename Scalar, typename... Properties>
+Prod(View<Scalar, Properties...> const&)
+    ->Prod<Scalar, typename View<Scalar, Properties...>::memory_space>;
 
 template <class Scalar, class Space>
 struct Min {
@@ -152,6 +160,10 @@ struct Min {
   KOKKOS_INLINE_FUNCTION
   bool references_scalar() const { return references_scalar_v; }
 };
+
+template <typename Scalar, typename... Properties>
+Min(View<Scalar, Properties...> const&)
+    ->Min<Scalar, typename View<Scalar, Properties...>::memory_space>;
 
 template <class Scalar, class Space>
 struct Max {
@@ -196,6 +208,10 @@ struct Max {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Scalar, typename... Properties>
+Max(View<Scalar, Properties...> const&)
+    ->Max<Scalar, typename View<Scalar, Properties...>::memory_space>;
+
 template <class Scalar, class Space>
 struct LAnd {
  public:
@@ -236,6 +252,10 @@ struct LAnd {
   KOKKOS_INLINE_FUNCTION
   bool references_scalar() const { return references_scalar_v; }
 };
+
+template <typename Scalar, typename... Properties>
+LAnd(View<Scalar, Properties...> const&)
+    ->LAnd<Scalar, typename View<Scalar, Properties...>::memory_space>;
 
 template <class Scalar, class Space>
 struct LOr {
@@ -279,6 +299,10 @@ struct LOr {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Scalar, typename... Properties>
+LOr(View<Scalar, Properties...> const&)
+    ->LOr<Scalar, typename View<Scalar, Properties...>::memory_space>;
+
 template <class Scalar, class Space>
 struct BAnd {
  public:
@@ -321,6 +345,10 @@ struct BAnd {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Scalar, typename... Properties>
+BAnd(View<Scalar, Properties...> const&)
+    ->BAnd<Scalar, typename View<Scalar, Properties...>::memory_space>;
+
 template <class Scalar, class Space>
 struct BOr {
  public:
@@ -362,6 +390,10 @@ struct BOr {
   KOKKOS_INLINE_FUNCTION
   bool references_scalar() const { return references_scalar_v; }
 };
+
+template <typename Scalar, typename... Properties>
+BOr(View<Scalar, Properties...> const&)
+    ->BOr<Scalar, typename View<Scalar, Properties...>::memory_space>;
 
 template <class Scalar, class Index>
 struct ValLocScalar {
@@ -422,6 +454,12 @@ struct MinLoc {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Scalar, typename Index, typename... Properties>
+MinLoc(View<ValLocScalar<Scalar, Index>, Properties...> const&)
+    ->MinLoc<Scalar, Index,
+             typename View<ValLocScalar<Scalar, Index>,
+                           Properties...>::memory_space>;
+
 template <class Scalar, class Index, class Space>
 struct MaxLoc {
  private:
@@ -468,6 +506,12 @@ struct MaxLoc {
   KOKKOS_INLINE_FUNCTION
   bool references_scalar() const { return references_scalar_v; }
 };
+
+template <typename Scalar, typename Index, typename... Properties>
+MaxLoc(View<ValLocScalar<Scalar, Index>, Properties...> const&)
+    ->MaxLoc<Scalar, Index,
+             typename View<ValLocScalar<Scalar, Index>,
+                           Properties...>::memory_space>;
 
 template <class Scalar>
 struct MinMaxScalar {
@@ -530,6 +574,11 @@ struct MinMax {
   KOKKOS_INLINE_FUNCTION
   bool references_scalar() const { return references_scalar_v; }
 };
+
+template <typename Scalar, typename... Properties>
+MinMax(View<MinMaxScalar<Scalar>, Properties...> const&)
+    ->MinMax<Scalar,
+             typename View<MinMaxScalar<Scalar>, Properties...>::memory_space>;
 
 template <class Scalar, class Index>
 struct MinMaxLocScalar {
@@ -601,6 +650,12 @@ struct MinMaxLoc {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Scalar, typename Index, typename... Properties>
+MinMaxLoc(View<MinMaxLocScalar<Scalar, Index>, Properties...> const&)
+    ->MinMaxLoc<Scalar, Index,
+                typename View<MinMaxLocScalar<Scalar, Index>,
+                              Properties...>::memory_space>;
+
 // --------------------------------------------------
 // reducers added to support std algorithms
 // --------------------------------------------------
@@ -658,6 +713,12 @@ struct MaxFirstLoc {
   KOKKOS_INLINE_FUNCTION
   bool references_scalar() const { return references_scalar_v; }
 };
+
+template <typename Scalar, typename Index, typename... Properties>
+MaxFirstLoc(View<ValLocScalar<Scalar, Index>, Properties...> const&)
+    ->MaxFirstLoc<Scalar, Index,
+                  typename View<ValLocScalar<Scalar, Index>,
+                                Properties...>::memory_space>;
 
 //
 // MaxFirstLocCustomComparator
@@ -718,6 +779,14 @@ struct MaxFirstLocCustomComparator {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Scalar, typename Index, typename ComparatorType,
+          typename... Properties>
+MaxFirstLocCustomComparator(
+    View<ValLocScalar<Scalar, Index>, Properties...> const&, ComparatorType)
+    ->MaxFirstLocCustomComparator<Scalar, Index, ComparatorType,
+                                  typename View<ValLocScalar<Scalar, Index>,
+                                                Properties...>::memory_space>;
+
 //
 // MinFirstLoc
 //
@@ -771,6 +840,12 @@ struct MinFirstLoc {
   KOKKOS_INLINE_FUNCTION
   bool references_scalar() const { return references_scalar_v; }
 };
+
+template <typename Scalar, typename Index, typename... Properties>
+MinFirstLoc(View<ValLocScalar<Scalar, Index>, Properties...> const&)
+    ->MinFirstLoc<Scalar, Index,
+                  typename View<ValLocScalar<Scalar, Index>,
+                                Properties...>::memory_space>;
 
 //
 // MinFirstLocCustomComparator
@@ -830,6 +905,14 @@ struct MinFirstLocCustomComparator {
   KOKKOS_INLINE_FUNCTION
   bool references_scalar() const { return references_scalar_v; }
 };
+
+template <typename Scalar, typename Index, typename ComparatorType,
+          typename... Properties>
+MinFirstLocCustomComparator(
+    View<ValLocScalar<Scalar, Index>, Properties...> const&, ComparatorType)
+    ->MinFirstLocCustomComparator<Scalar, Index, ComparatorType,
+                                  typename View<ValLocScalar<Scalar, Index>,
+                                                Properties...>::memory_space>;
 
 //
 // MinMaxFirstLastLoc
@@ -895,6 +978,12 @@ struct MinMaxFirstLastLoc {
   KOKKOS_INLINE_FUNCTION
   bool references_scalar() const { return references_scalar_v; }
 };
+
+template <typename Scalar, typename Index, typename... Properties>
+MinMaxFirstLastLoc(View<MinMaxLocScalar<Scalar, Index>, Properties...> const&)
+    ->MinMaxFirstLastLoc<Scalar, Index,
+                         typename View<MinMaxLocScalar<Scalar, Index>,
+                                       Properties...>::memory_space>;
 
 //
 // MinMaxFirstLastLocCustomComparator
@@ -965,6 +1054,15 @@ struct MinMaxFirstLastLocCustomComparator {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Scalar, typename Index, typename ComparatorType,
+          typename... Properties>
+MinMaxFirstLastLocCustomComparator(
+    View<MinMaxLocScalar<Scalar, Index>, Properties...> const&, ComparatorType)
+    ->MinMaxFirstLastLocCustomComparator<
+        Scalar, Index, ComparatorType,
+        typename View<MinMaxLocScalar<Scalar, Index>,
+                      Properties...>::memory_space>;
+
 //
 // FirstLoc
 //
@@ -1023,6 +1121,11 @@ struct FirstLoc {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Index, typename... Properties>
+FirstLoc(View<FirstLocScalar<Index>, Properties...> const&)
+    ->FirstLoc<Index, typename View<FirstLocScalar<Index>,
+                                    Properties...>::memory_space>;
+
 //
 // LastLoc
 //
@@ -1080,6 +1183,11 @@ struct LastLoc {
   KOKKOS_INLINE_FUNCTION
   bool references_scalar() const { return references_scalar_v; }
 };
+
+template <typename Index, typename... Properties>
+LastLoc(View<LastLocScalar<Index>, Properties...> const&)
+    ->LastLoc<Index,
+              typename View<LastLocScalar<Index>, Properties...>::memory_space>;
 
 template <class Index>
 struct StdIsPartScalar {
@@ -1148,6 +1256,11 @@ struct StdIsPartitioned {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Index, typename... Properties>
+StdIsPartitioned(View<StdIsPartScalar<Index>, Properties...> const&)
+    ->StdIsPartitioned<Index, typename View<StdIsPartScalar<Index>,
+                                            Properties...>::memory_space>;
+
 template <class Index>
 struct StdPartPointScalar {
   Index min_loc_false;
@@ -1208,6 +1321,11 @@ struct StdPartitionPoint {
   KOKKOS_INLINE_FUNCTION
   bool references_scalar() const { return references_scalar_v; }
 };
+
+template <typename Index, typename... Properties>
+StdPartitionPoint(View<StdPartPointScalar<Index>, Properties...> const&)
+    ->StdPartitionPoint<Index, typename View<StdPartPointScalar<Index>,
+                                             Properties...>::memory_space>;
 
 }  // namespace Kokkos
 namespace Kokkos {
