@@ -101,6 +101,7 @@ class ScratchMemorySpace {
     if (level == -1) level = m_default_level;
     auto& m_iter = (level == 0) ? m_iter_L0 : m_iter_L1;
     auto& m_end  = (level == 0) ? m_end_L0 : m_end_L1;
+    auto m_iter_old = m_iter;
     if constexpr (alignment_requested) {
       const ptrdiff_t missalign = size_t(m_iter) % alignment;
       if (missalign) m_iter += alignment - missalign;
@@ -113,7 +114,8 @@ class ScratchMemorySpace {
     ptrdiff_t increment = size * m_multiplier;
 
     if (increment > m_end - m_iter) {
-      // Request did overflow: return nullptr
+      // Request did overflow: return nullptr and reset m_iter
+      m_iter = m_iter_old;
       tmp = nullptr;
 #ifdef KOKKOS_ENABLE_DEBUG
       // mfh 23 Jun 2015: printf call consumes 25 registers
