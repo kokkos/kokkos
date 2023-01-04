@@ -23,7 +23,7 @@
 #include <Kokkos_TaskScheduler_fwd.hpp>
 
 #include <impl/Kokkos_HostThreadTeam.hpp>
-#include <Kokkos_OpenMP.hpp>
+#include <OpenMP/Kokkos_OpenMP.hpp>
 
 #include <type_traits>
 #include <cassert>

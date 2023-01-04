@@ -24,7 +24,7 @@
     "You enabled Kokkos OpenMP support without enabling OpenMP in the compiler!"
 #endif
 
-#include <Kokkos_OpenMP.hpp>
+#include <OpenMP/Kokkos_OpenMP.hpp>
 
 #include <impl/Kokkos_Traits.hpp>
 #include <impl/Kokkos_HostThreadTeam.hpp>
