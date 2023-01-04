@@ -113,9 +113,7 @@ class ScratchMemorySpace {
     ptrdiff_t increment = size * m_multiplier;
 
     if (increment > m_end - m_iter) {
-      // Request did overflow: reset the base team ptr, and
-      // return nullptr
-      m_iter -= increment;
+      // Request did overflow: return nullptr
       tmp = nullptr;
 #ifdef KOKKOS_ENABLE_DEBUG
       // mfh 23 Jun 2015: printf call consumes 25 registers
