@@ -1558,6 +1558,7 @@ struct TestScratchAlignment {
     Kokkos::fence();
   }
 
+  // test really small size of scratch space, produced error before
   void test_minimal() {
     using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
     // FIXME_OPENMPTARGET temporary restriction for team size to be at least 32
@@ -1584,14 +1585,24 @@ struct TestScratchAlignment {
     ASSERT_TRUE(minimal_scratch_allocation_failed == 0);
   }
 
+  // test alignment of successive allocations
   void test_raw() {
     using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
-    Kokkos::TeamPolicy<ExecSpace> policy(1, 1);
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+    int team_size =
+        std::is_same<ExecSpace, Kokkos::Experimental::OpenMPTarget>::value ? 32
+                                                                           : 1;
+#else
+    int team_size      = 1;
+#endif
+    Kokkos::TeamPolicy<ExecSpace> policy(1, team_size);
     Kokkos::View<int, ExecSpace> flag("Flag");
 
     Kokkos::parallel_for(
         policy.set_scratch_size(0, Kokkos::PerTeam(1024)),
         KOKKOS_LAMBDA(const member_type &team) {
+          // first get some unaligned allocations, should give back
+          // exactly the requested number of bytes
           auto scratch_ptr1 =
               reinterpret_cast<intptr_t>(team.team_shmem().get_shmem(24));
           auto scratch_ptr2 =
@@ -1603,6 +1614,11 @@ struct TestScratchAlignment {
               ((scratch_ptr3 - scratch_ptr2) != 32))
             flag() = 1;
 
+          // Now request aligned memory such that the allocation after
+          // for scratch_ptr2 would be unaligned if it doesn't pad
+          // correct.
+          // Depending on whether scratch_ptr3 is 4 or 8 byte aligned
+          // we need to request different amount of memory.
           if ((scratch_ptr3 + 12) % 8 == 4)
             scratch_ptr1 = reinterpret_cast<intptr_t>(
                 team.team_shmem().get_shmem_aligned(24, 4));
@@ -1615,10 +1631,18 @@ struct TestScratchAlignment {
           scratch_ptr3 = reinterpret_cast<intptr_t>(
               team.team_shmem().get_shmem_aligned(8, 4));
 
+          // note the difference between scratch_ptr2 and scratch_ptr1
+          // is 4 bytes larger than what we requested in either of the
+          // two cases.
           if (((scratch_ptr2 - scratch_ptr1) != 28) &&
               ((scratch_ptr2 - scratch_ptr1) != 16))
             flag() = 1;
+          // check that there wasn't unnneccessary padding happening
+          // i.e. scratch_ptr2 was allocated with a 32 byte request
+          // and since scratch_ptr3 is then already aligned it difference
+          // should match that
           if ((scratch_ptr3 - scratch_ptr2) != 32) flag() = 1;
+          // check actually alignment of ptrs is as requested
           if (((scratch_ptr1 % 4) != 0) || ((scratch_ptr2 % 8) != 0) ||
               ((scratch_ptr3 % 4) != 0))
             flag() = 1;
