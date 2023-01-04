@@ -20,6 +20,7 @@
 #if defined(KOKKOS_ENABLE_OPENMP)
 #include <OpenMP/Kokkos_OpenMP.hpp>
 #include <OpenMP/Kokkos_OpenMP_MDRangePolicy.hpp>
+#include <OpenMP/Kokkos_OpenMP_UniqueToken.hpp>
 #endif
 
 #endif
