@@ -79,6 +79,39 @@ void OpenMP::fence(const std::string &name) const {
       name, Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{1}, []() {});
 }
 
+bool OpenMP::impl_is_initialized() noexcept {
+  return Impl::OpenMPInternal::singleton().is_initialized();
+}
+
+bool OpenMP::in_parallel(OpenMP const &exec_space) noexcept {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
+  return (
+      (exec_space.impl_internal_space_instance()->m_level < omp_get_level()) &&
+      (!Impl::t_openmp_instance ||
+       Impl::t_openmp_instance->m_level < omp_get_level()));
+#else
+  return exec_space.impl_internal_space_instance()->m_level < omp_get_level();
+#endif
+}
+
+int OpenMP::impl_thread_pool_size(OpenMP const &exec_space) noexcept {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
+  return OpenMP::in_parallel(exec_space)
+             ? omp_get_num_threads()
+             : (Impl::t_openmp_instance
+                    ? Impl::t_openmp_instance->m_pool_size
+                    : exec_space.impl_internal_space_instance()->m_pool_size);
+#else
+  return OpenMP::in_parallel(exec_space)
+             ? omp_get_num_threads()
+             : exec_space.impl_internal_space_instance()->m_pool_size;
+#endif
+}
+
+int OpenMP::impl_max_hardware_threads() noexcept {
+  return Impl::g_openmp_hardware_max_threads;
+}
+
 namespace Impl {
 
 int g_openmp_space_factory_initialized =
