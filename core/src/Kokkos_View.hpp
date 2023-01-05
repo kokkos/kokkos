@@ -38,6 +38,7 @@ static_assert(false,
 #ifdef KOKKOS_ENABLE_IMPL_MDSPAN
 #include <View/MDSpan/Kokkos_MDSpan_Extents.hpp>
 #endif
+#include <Kokkos_MinMaxClamp.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -1635,19 +1636,27 @@ class View : public ViewTraits<DataType, Properties...> {
         arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7));
   }
 
+ private:
+  // Want to be able to align to minimum scratch alignment or sizeof or alignof
+  // elements
+  static constexpr size_t scratch_value_alignment =
+      max({sizeof(typename traits::value_type),
+           alignof(typename traits::value_type),
+           static_cast<size_t>(
+               traits::execution_space::scratch_memory_space::ALIGN)});
+
+ public:
   static KOKKOS_INLINE_FUNCTION size_t
   shmem_size(typename traits::array_layout const& arg_layout) {
-    return map_type::memory_span(arg_layout) +
-           sizeof(typename traits::value_type);
+    return map_type::memory_span(arg_layout) + scratch_value_alignment;
   }
 
   explicit KOKKOS_INLINE_FUNCTION View(
       const typename traits::execution_space::scratch_memory_space& arg_space,
       const typename traits::array_layout& arg_layout)
-      : View(Impl::ViewCtorProp<pointer_type>(
-                 reinterpret_cast<pointer_type>(arg_space.get_shmem_aligned(
-                     map_type::memory_span(arg_layout),
-                     sizeof(typename traits::value_type)))),
+      : View(Impl::ViewCtorProp<pointer_type>(reinterpret_cast<pointer_type>(
+                 arg_space.get_shmem_aligned(map_type::memory_span(arg_layout),
+                                             scratch_value_alignment))),
              arg_layout) {}
 
   explicit KOKKOS_INLINE_FUNCTION View(
@@ -1665,7 +1674,7 @@ class View : public ViewTraits<DataType, Properties...> {
                      map_type::memory_span(typename traits::array_layout(
                          arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6,
                          arg_N7)),
-                     sizeof(typename traits::value_type)))),
+                     scratch_value_alignment))),
              typename traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3,
                                            arg_N4, arg_N5, arg_N6, arg_N7)) {
     static_assert(traits::array_layout::is_extent_constructible,
