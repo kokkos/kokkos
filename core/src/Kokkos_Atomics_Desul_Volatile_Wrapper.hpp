@@ -45,26 +45,6 @@ void atomic_store(volatile T* const dest, desul::Impl::dont_deduce_this_paramete
 template<class T> KOKKOS_INLINE_FUNCTION
 T atomic_fetch_add (volatile T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) { return desul::atomic_fetch_add (const_cast<T*>(dest), val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
 
-#ifdef DESUL_IMPL_ATOMIC_CUDA_USE_DOUBLE_ATOMICADD
-KOKKOS_INLINE_FUNCTION
-double atomic_fetch_add(volatile double* const dest, double val) {
-  #ifdef __CUDA_ARCH__
-  return atomicAdd(const_cast<double*>(dest),val);
-  #else
-  return desul::atomic_fetch_add (const_cast<double*>(dest), val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE);
-  #endif
-};
-
-KOKKOS_INLINE_FUNCTION
-double atomic_fetch_sub(volatile double* const dest, double val) {
-  #ifdef __CUDA_ARCH__
-  return atomicAdd(const_cast<double*>(dest),-val);
-  #else
-  return desul::atomic_fetch_sub (const_cast<double*>(dest), val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE);
-  #endif
-};
-#endif
-
 template<class T> KOKKOS_INLINE_FUNCTION
 T atomic_fetch_sub (volatile T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) { return desul::atomic_fetch_sub (const_cast<T*>(dest), val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
 
