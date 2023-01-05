@@ -1,4 +1,0 @@
-
-core/src/Cuda/Kokkos_Cuda_Atomic_Intrinsics.hpp
-core/src/OpenMPTarget/Kokkos_OpenMPTarget_ParallelFor_Range.hpp
-core/src/OpenMPTarget/Kokkos_OpenMPTarget_ParallelFor_Team.hpp
