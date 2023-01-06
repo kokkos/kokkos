@@ -52,6 +52,10 @@ There are numerous device backends, options, and architecture-specific optimizat
 ````
 which activates the OpenMP backend. All of the options controlling device backends, options, architectures, and third-party libraries (TPLs) are given below.
 
+Kokkos requires as a minimum C++17, however C++20 and C++23 are supported depending on the compiler.
+
+The latest minimum compiler versions can be found in `cmake/kokkos_compiler_id.cmake`.
+
 ## Known Issues<a name="KnownIssues"></a>
 
 ### Cray
@@ -186,10 +190,6 @@ Options can be enabled by specifying `-DKokkos_ENABLE_X`.
     * Whether to enable test suite
     * BOOL Default: OFF
 
-## Other Options
-* Kokkos_CXX_STANDARD
-    * The C++ standard for Kokkos to use: c++14, c++17, c++20, or c++23. This should be given in CMake style as 14, 17, 20, or 23.
-    * STRING Default: 14
 
 ## Third-party Libraries (TPLs)
 The following options control enabling TPLs:
