@@ -224,21 +224,24 @@ struct TestDynamicView {
       device_view_type device_view("on-device View", arg_total_size);
       host_view_type   host_view("on-host View", arg_total_size);
 
+      unsigned da_size = arg_total_size / 8;
+      device_dynamic_view.resize_serial(da_size);
+
       // Use parallel_for to populate device_dynamic_view and verify values
 #if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
       Kokkos::parallel_for(
-          Kokkos::RangePolicy<execution_space>(0, arg_total_size),
+          Kokkos::RangePolicy<execution_space>(0, da_size),
           KOKKOS_LAMBDA(const int i) { device_dynamic_view(i) = Scalar(i); });
 
       value_type result_sum = 0.0;
       Kokkos::parallel_reduce(
-          Kokkos::RangePolicy<execution_space>(0, arg_total_size),
+          Kokkos::RangePolicy<execution_space>(0, da_size),
           KOKKOS_LAMBDA(const int i, value_type& partial_sum) {
             partial_sum += (value_type)device_dynamic_view(i);
           },
           result_sum);
 
-      ASSERT_EQ(result_sum, (value_type)(arg_total_size * (arg_total_size - 1) / 2));
+      ASSERT_EQ(result_sum, (value_type)(da_size * (da_size - 1) / 2));
 #endif
 
       // Use an on-device View as intermediate to deep_copy the
@@ -249,20 +252,20 @@ struct TestDynamicView {
       Kokkos::deep_copy(device_view, host_view);
 #if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
       Kokkos::parallel_for(
-          Kokkos::RangePolicy<execution_space>(0, arg_total_size),
+          Kokkos::RangePolicy<execution_space>(0, da_size),
           KOKKOS_LAMBDA(const int i) { device_dynamic_view(i) = Scalar(0); });
 #endif
       Kokkos::deep_copy(device_dynamic_view, device_view);
 #if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
       value_type new_result_sum = 0.0;
       Kokkos::parallel_reduce(
-          Kokkos::RangePolicy<execution_space>(0, arg_total_size),
+          Kokkos::RangePolicy<execution_space>(0, da_size),
           KOKKOS_LAMBDA(const int i, value_type& partial_sum) {
             partial_sum += (value_type)device_dynamic_view(i);
           },
           new_result_sum);
 
-      ASSERT_EQ(new_result_sum, (value_type)(arg_total_size * (arg_total_size - 1) / 2));
+      ASSERT_EQ(new_result_sum, (value_type)(da_size * (da_size - 1) / 2));
 #endif
 
       // Try to deep_copy device_dynamic_view directly to/from host.
