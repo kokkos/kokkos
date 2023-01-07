@@ -95,9 +95,9 @@ class ScratchMemorySpace {
 
  private:
   template <bool alignment_requested, typename IntType>
-  KOKKOS_INLINE_FUNCTION void* get_shmem_common(const IntType& size,
-                                                const ptrdiff_t alignment,
-                                                int level = -1) const {
+  KOKKOS_INLINE_FUNCTION void* get_shmem_common(
+      const IntType& size, [[maybe_unused]] const ptrdiff_t alignment,
+      int level = -1) const {
     if (level == -1) level = m_default_level;
     auto& m_iter    = (level == 0) ? m_iter_L0 : m_iter_L1;
     auto& m_end     = (level == 0) ? m_end_L0 : m_end_L1;
