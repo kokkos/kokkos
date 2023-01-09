@@ -1182,7 +1182,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     pointer_type final_value_ptr =
         reinterpret_cast<pointer_type>(buffer.get(0));
 
-    final_reducer.final(reinterpret_cast<pointer_type>(buffer.get(0)));
+    final_reducer.final(final_value_ptr);
 
     if (m_result_ptr != nullptr) {
       const int n = Analysis::value_count(
