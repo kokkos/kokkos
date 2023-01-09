@@ -220,9 +220,10 @@ struct TestDynamicView {
       using device_view_type = Kokkos::View<Scalar*, Space>;
       using host_view_type = typename Kokkos::View<Scalar*, Space>::HostMirror;
 
-      view_type        device_dynamic_view("on-device DynamicView", 1024, arg_total_size);
+      view_type device_dynamic_view("on-device DynamicView", 1024,
+                                    arg_total_size);
       device_view_type device_view("on-device View", arg_total_size);
-      host_view_type   host_view("on-host View", arg_total_size);
+      host_view_type host_view("on-host View", arg_total_size);
 
       unsigned da_size = arg_total_size / 8;
       device_dynamic_view.resize_serial(da_size);
@@ -275,15 +276,17 @@ struct TestDynamicView {
       // destination execution space cannot access the source memory space.
       try {
         Kokkos::deep_copy(host_view, device_dynamic_view);
-      } catch (std::runtime_error const &error) {
+      } catch (std::runtime_error const& error) {
         std::string msg = error.what();
-        std::cerr << "Copy from on-device DynamicView to on-host View failed:\n" << msg << std::endl;
+        std::cerr << "Copy from on-device DynamicView to on-host View failed:\n"
+                  << msg << std::endl;
       }
       try {
         Kokkos::deep_copy(device_dynamic_view, host_view);
-      } catch (std::runtime_error const &error) {
+      } catch (std::runtime_error const& error) {
         std::string msg = error.what();
-        std::cerr << "Copy from on-host View to on-device DynamicView failed:\n" << msg << std::endl;
+        std::cerr << "Copy from on-host View to on-device DynamicView failed:\n"
+                  << msg << std::endl;
       }
     }
   }
