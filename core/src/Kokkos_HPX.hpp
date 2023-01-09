@@ -170,7 +170,6 @@ class HPX {
   using scratch_memory_space = ScratchMemorySpace<HPX>;
 
   HPX()
-  noexcept
       : m_instance_data(std::shared_ptr<instance_data>(
             &m_default_instance_data, default_instance_deleter)) {}
   HPX(instance_mode mode)
@@ -191,6 +190,7 @@ class HPX {
 
   void print_configuration(std::ostream &os, bool /*verbose*/ = false) const;
   instance_data &impl_get_instance_data() const noexcept {
+    KOKKOS_ASSERT(m_instance_data.get());
     return *m_instance_data.get();
   }
   uint32_t impl_instance_id() const noexcept {
