@@ -63,9 +63,19 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
     auto const& prop = pol.space().cuda_device_prop();
     // Limits due to registers/SM, MDRange doesn't have
     // shared memory constraints
-    int const regs_per_sm        = prop.regsPerMultiprocessor;
-    int const regs_per_thread    = attr.numRegs;
-    int const max_threads_per_sm = regs_per_sm / regs_per_thread;
+    auto const block_size_to_zero_shmem = [&] (int block_size) {
+      return 0;
+    };
+    int const optimal_block_size = Kokkos::Impl::cuda_deduce_block_size(false, prop, attr, block_size_to_zero_shmem, LaunchBounds{});
+
+    // Compute how many blocks of this size we can launch, based on warp constraints
+    int const max_warps_per_sm_registers = Kokkos::Impl::cuda_max_warps_per_sm_registers(prop, attr);
+    int const max_num_threads_from_warps = max_warps_per_sm_registers * prop.warpSize;
+    int const max_num_blocks = max_num_threads_from_warps / optimal_block_size;
+
+    // Compute the total number of threads
+    int const max_threads_per_sm = optimal_block_size * max_num_blocks;
+
     return std::min(
         max_threads_per_sm,
         static_cast<int>(Kokkos::Impl::CudaTraits::MaxHierarchicalParallelism));
@@ -234,10 +244,20 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
         CudaParallelLaunch<ParallelReduce,
                            LaunchBounds>::get_cuda_func_attributes();
     auto const& prop = pol.space().cuda_device_prop();
-    // Limits due do registers/SM
-    int const regs_per_sm        = prop.regsPerMultiprocessor;
-    int const regs_per_thread    = attr.numRegs;
-    int const max_threads_per_sm = regs_per_sm / regs_per_thread;
+    // Limits due to registers/SM
+    auto const block_size_to_zero_shmem = [&] (int block_size) {
+      return 0;
+    };
+    int const optimal_block_size = Kokkos::Impl::cuda_deduce_block_size(false, prop, attr, block_size_to_zero_shmem, LaunchBounds{});
+
+    // Compute how many blocks of this size we can launch, based on warp constraints
+    int const max_warps_per_sm_registers = Kokkos::Impl::cuda_max_warps_per_sm_registers(prop, attr);
+    int const max_num_threads_from_warps = max_warps_per_sm_registers * prop.warpSize;
+    int const max_num_blocks = max_num_threads_from_warps / optimal_block_size;
+
+    // Compute the total number of threads
+    int const max_threads_per_sm = optimal_block_size * max_num_blocks;
+
     return std::min(
         max_threads_per_sm,
         static_cast<int>(Kokkos::Impl::CudaTraits::MaxHierarchicalParallelism));

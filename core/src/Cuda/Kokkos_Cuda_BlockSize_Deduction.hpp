@@ -25,17 +25,50 @@
 namespace Kokkos {
 namespace Impl {
 
+inline int cuda_warp_per_sm_allocation_granularity(cudaDeviceProp const& properties) {
+  // Allocation granularity of warps in each sm
+  switch (properties.major) {
+    case 3:
+    case 5:
+    case 7:
+    case 8:
+    case 9: return 4;
+    case 6: return (properties.minor == 0 ? 2 : 4);
+    default:
+      throw_runtime_exception("Unknown device in cuda warp per sm allocation granularity");
+      return 0;
+  }
+}
+
+inline int cuda_max_warps_per_sm_registers(cudaDeviceProp const& properties,
+                                           cudaFuncAttributes const& attributes) {
+  // Maximum number of warps per sm as a function of register counts,
+  // subject to the constraint that warps are allocated with a fixed granularity
+  int const max_regs_per_block = properties.regsPerBlock;
+  int const regs_per_warp = attributes.numRegs * properties.warpSize;
+  int const warp_granularity = cuda_warp_per_sm_allocation_granularity(properties);
+  // The granularity of register allocation is chunks of 256 registers per warp
+  int const allocated_regs_per_warp = (regs_per_warp + 256 - 1) / 256;
+
+  int const max_warps_per_sm = warp_granularity * (max_regs_per_block / (allocated_regs_per_warp * warp_granularity));
+
+  return max_warps_per_sm;
+}
+
 inline int cuda_max_active_blocks_per_sm(cudaDeviceProp const& properties,
                                          cudaFuncAttributes const& attributes,
-                                         int block_size, size_t dynamic_shmem) {
+                                         int max_warps_per_sm_registers, int block_size, size_t dynamic_shmem) {
   // Limits due do registers/SM
   int const regs_per_sm     = properties.regsPerMultiprocessor;
   int const regs_per_thread = attributes.numRegs;
   // The granularity of register allocation is chunks of 256 registers per warp
   // -> 8 registers per thread
   int const allocated_regs_per_thread = 8 * ((regs_per_thread + 8 - 1) / 8);
-  int const max_blocks_regs =
-      regs_per_sm / (allocated_regs_per_thread * block_size);
+  int max_blocks_regs = regs_per_sm / (allocated_regs_per_thread * block_size);
+
+  // Constrain the number of blocks to respect the maximum number of warps per sm
+  while ((max_blocks_regs * block_size / properties.warpSize) > max_warps_per_sm_registers)
+    max_blocks_regs--;
 
   // Limits due to shared memory/SM
   size_t const shmem_per_sm            = properties.sharedMemPerMultiprocessor;
@@ -90,6 +123,8 @@ inline int cuda_deduce_block_size(bool early_termination,
                attributes.maxThreadsPerBlock);
   int const min_blocks_per_sm =
       LaunchBounds::minBperSM == 0 ? 1 : LaunchBounds::minBperSM;
+  // The maximum number of warps per SM depends on the device and the number of registers per function
+  int const max_warps_per_sm_registers = cuda_max_warps_per_sm_registers(properties, attributes);
 
   // Recorded maximum
   int opt_block_size     = 0;
@@ -100,7 +135,7 @@ inline int cuda_deduce_block_size(bool early_termination,
     size_t const dynamic_shmem = block_size_to_dynamic_shmem(block_size);
 
     int blocks_per_sm = cuda_max_active_blocks_per_sm(
-        properties, attributes, block_size, dynamic_shmem);
+        properties, attributes, max_warps_per_sm_registers, block_size, dynamic_shmem);
 
     int threads_per_sm = blocks_per_sm * block_size;
 
