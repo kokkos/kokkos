@@ -21,9 +21,9 @@
 
 namespace Test {
 
-struct TEST_CATEGORY_FIXTURE(team_combined_reducer) : public ::testing::Test {
+struct TeamTeamCombinedReducer {
  public:
-  void test_team_thread_range_only_scalars(const unsigned n) {
+  void test_team_thread_range_only_scalars(const int n) {
     auto policy = Kokkos::TeamPolicy<TEST_EXECSPACE>(1, Kokkos::AUTO);
     using team_member_type = decltype(policy)::member_type;
 
@@ -66,7 +66,7 @@ struct TEST_CATEGORY_FIXTURE(team_combined_reducer) : public ::testing::Test {
     EXPECT_EQ(n * n, hostView(3));
   }
 
-  void test_team_thread_range_only_builtin(const unsigned n) {
+  void test_team_thread_range_only_builtin(const int n) {
     auto policy = Kokkos::TeamPolicy<TEST_EXECSPACE>(1, Kokkos::AUTO);
     using team_member_type = decltype(policy)::member_type;
 
@@ -110,7 +110,7 @@ struct TEST_CATEGORY_FIXTURE(team_combined_reducer) : public ::testing::Test {
     EXPECT_EQ(n, hostView(3));
   }
 
-  void test_team_thread_range_combined_reducers(const unsigned n) {
+  void test_team_thread_range_combined_reducers(const int n) {
     auto policy = Kokkos::TeamPolicy<TEST_EXECSPACE>(1, Kokkos::AUTO);
     using team_member_type = decltype(policy)::member_type;
 
@@ -154,7 +154,7 @@ struct TEST_CATEGORY_FIXTURE(team_combined_reducer) : public ::testing::Test {
     EXPECT_EQ(n * n, hostView(3));
   }
 
-  void test_thread_vector_range_only_scalars(const unsigned n) {
+  void test_thread_vector_range_only_scalars(const int n) {
     auto policy = Kokkos::TeamPolicy<TEST_EXECSPACE>(1, Kokkos::AUTO);
     using team_member_type = decltype(policy)::member_type;
 
@@ -198,7 +198,7 @@ struct TEST_CATEGORY_FIXTURE(team_combined_reducer) : public ::testing::Test {
     EXPECT_EQ(n * n, hostView(3));
   }
 
-  void test_thread_vector_range_only_builtin(const unsigned n) {
+  void test_thread_vector_range_only_builtin(const int n) {
     auto policy = Kokkos::TeamPolicy<TEST_EXECSPACE>(1, Kokkos::AUTO);
     using team_member_type = decltype(policy)::member_type;
 
@@ -243,7 +243,7 @@ struct TEST_CATEGORY_FIXTURE(team_combined_reducer) : public ::testing::Test {
     EXPECT_EQ(n, hostView(3));
   }
 
-  void test_thread_vector_range_combined_reducers(const unsigned n) {
+  void test_thread_vector_range_combined_reducers(const int n) {
     auto policy = Kokkos::TeamPolicy<TEST_EXECSPACE>(1, Kokkos::AUTO);
     using team_member_type = decltype(policy)::member_type;
 
@@ -288,7 +288,7 @@ struct TEST_CATEGORY_FIXTURE(team_combined_reducer) : public ::testing::Test {
     EXPECT_EQ(n * n, hostView(3));
   }
 
-  void test_team_vector_range_only_scalars(const unsigned n) {
+  void test_team_vector_range_only_scalars(const int n) {
     auto policy = Kokkos::TeamPolicy<TEST_EXECSPACE>(1, Kokkos::AUTO);
     using team_member_type = decltype(policy)::member_type;
 
@@ -331,7 +331,7 @@ struct TEST_CATEGORY_FIXTURE(team_combined_reducer) : public ::testing::Test {
     EXPECT_EQ(n * n, hostView(3));
   }
 
-  void test_team_vector_range_only_builtin(const unsigned n) {
+  void test_team_vector_range_only_builtin(const int n) {
     auto policy = Kokkos::TeamPolicy<TEST_EXECSPACE>(1, Kokkos::AUTO);
     using team_member_type = decltype(policy)::member_type;
 
@@ -375,7 +375,7 @@ struct TEST_CATEGORY_FIXTURE(team_combined_reducer) : public ::testing::Test {
     EXPECT_EQ(n, hostView(3));
   }
 
-  void test_team_vector_range_combined_reducers(const unsigned n) {
+  void test_team_vector_range_combined_reducers(const int n) {
     auto policy = Kokkos::TeamPolicy<TEST_EXECSPACE>(1, Kokkos::AUTO);
     using team_member_type = decltype(policy)::member_type;
 
@@ -420,25 +420,25 @@ struct TEST_CATEGORY_FIXTURE(team_combined_reducer) : public ::testing::Test {
   }
 };
 
-TEST_F(TEST_CATEGORY_FIXTURE(team_combined_reducer),
-       team_thread_range_combined_reducers) {
-  test_team_thread_range_only_scalars(5);
-  test_team_thread_range_only_builtin(7);
-  test_team_thread_range_combined_reducers(9);
+TEST(TEST_CATEGORY, team_thread_range_combined_reducers) {
+  TeamTeamCombinedReducer tester;
+  tester.test_team_thread_range_only_scalars(5);
+  tester.test_team_thread_range_only_builtin(7);
+  tester.test_team_thread_range_combined_reducers(9);
 }
 
-TEST_F(TEST_CATEGORY_FIXTURE(team_combined_reducer),
-       thread_vector_range_combined_reducers) {
-  test_thread_vector_range_only_scalars(5);
-  test_thread_vector_range_only_builtin(7);
-  test_thread_vector_range_combined_reducers(9);
+TEST(TEST_CATEGORY, thread_vector_range_combined_reducers) {
+  TeamTeamCombinedReducer tester;
+  tester.test_thread_vector_range_only_scalars(5);
+  tester.test_thread_vector_range_only_builtin(7);
+  tester.test_thread_vector_range_combined_reducers(9);
 }
 
-TEST_F(TEST_CATEGORY_FIXTURE(team_combined_reducer),
-       team_vector_range_combined_reducers) {
-  test_team_vector_range_only_scalars(5);
-  test_team_vector_range_only_builtin(7);
-  test_team_vector_range_combined_reducers(9);
+TEST(TEST_CATEGORY, team_vector_range_combined_reducers) {
+  TeamTeamCombinedReducer tester;
+  tester.test_team_vector_range_only_scalars(5);
+  tester.test_team_vector_range_only_builtin(7);
+  tester.test_team_vector_range_combined_reducers(9);
 }
 
 }  // namespace Test
