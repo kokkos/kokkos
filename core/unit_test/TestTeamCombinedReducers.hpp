@@ -433,7 +433,10 @@ TEST(TEST_CATEGORY, team_thread_range_combined_reducers) {
   TeamTeamCombinedReducer tester;
   tester.test_team_thread_range_only_scalars(5);
   tester.test_team_thread_range_only_builtin(7);
+<<<<<<< HEAD
   tester.test_team_thread_range_combined_reducers(0);
+=======
+>>>>>>> e25327412 (fixed warnings from unit tests)
   tester.test_team_thread_range_combined_reducers(9);
 }
 
@@ -441,7 +444,10 @@ TEST(TEST_CATEGORY, thread_vector_range_combined_reducers) {
   TeamTeamCombinedReducer tester;
   tester.test_thread_vector_range_only_scalars(5);
   tester.test_thread_vector_range_only_builtin(7);
+<<<<<<< HEAD
   tester.test_thread_vector_range_combined_reducers(0);
+=======
+>>>>>>> e25327412 (fixed warnings from unit tests)
   tester.test_thread_vector_range_combined_reducers(9);
 }
 
@@ -449,7 +455,10 @@ TEST(TEST_CATEGORY, team_vector_range_combined_reducers) {
   TeamTeamCombinedReducer tester;
   tester.test_team_vector_range_only_scalars(5);
   tester.test_team_vector_range_only_builtin(7);
+<<<<<<< HEAD
   tester.test_team_vector_range_combined_reducers(0);
+=======
+>>>>>>> e25327412 (fixed warnings from unit tests)
   tester.test_team_vector_range_combined_reducers(9);
 }
 
