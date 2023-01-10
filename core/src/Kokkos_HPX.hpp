@@ -43,6 +43,7 @@ static_assert(false,
 #include <Kokkos_TaskScheduler.hpp>
 #include <impl/Kokkos_ConcurrentBitset.hpp>
 #include <impl/Kokkos_FunctorAnalysis.hpp>
+#include <impl/Kokkos_HostSharedPtr.hpp>
 #include <impl/Kokkos_Tools.hpp>
 #include <impl/Kokkos_TaskQueue.hpp>
 #include <impl/Kokkos_InitializationSettings.hpp>
@@ -159,7 +160,7 @@ class HPX {
 
   static void default_instance_deleter(instance_data *) {}
   static instance_data m_default_instance_data;
-  std::shared_ptr<instance_data> m_instance_data;
+  Kokkos::Impl::HostSharedPtr<instance_data> m_instance_data;
 
  public:
   using execution_space      = HPX;
@@ -170,17 +171,18 @@ class HPX {
   using scratch_memory_space = ScratchMemorySpace<HPX>;
 
   HPX()
-      : m_instance_data(std::shared_ptr<instance_data>(
-            &m_default_instance_data, default_instance_deleter)) {}
+      : m_instance_data(Kokkos::Impl::HostSharedPtr<instance_data>(
+            &m_default_instance_data, &default_instance_deleter)) {}
   HPX(instance_mode mode)
       : m_instance_data(
             mode == instance_mode::independent
-                ? (std::make_shared<instance_data>(m_next_instance_id++))
-                : std::shared_ptr<instance_data>(&m_default_instance_data,
-                                                 default_instance_deleter)) {}
+                ? (Kokkos::Impl::HostSharedPtr<instance_data>(
+                      new instance_data(m_next_instance_id++)))
+                : Kokkos::Impl::HostSharedPtr<instance_data>(
+                      &m_default_instance_data, &default_instance_deleter)) {}
   HPX(hpx::execution::experimental::unique_any_sender<> &&sender)
-      : m_instance_data(std::make_shared<instance_data>(m_next_instance_id++,
-                                                        std::move(sender))) {}
+      : m_instance_data(Kokkos::Impl::HostSharedPtr<instance_data>(
+            new instance_data(m_next_instance_id++, std::move(sender)))) {}
 
   HPX(HPX &&other)      = default;
   HPX(const HPX &other) = default;
