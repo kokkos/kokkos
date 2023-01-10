@@ -27,8 +27,7 @@ struct TeamTeamCombinedReducer {
     auto policy = Kokkos::TeamPolicy<TEST_EXECSPACE>(1, Kokkos::AUTO);
     using team_member_type = decltype(policy)::member_type;
 
-    Kokkos::View<int*> teamView =
-        Kokkos::View<int*, TEST_EXECSPACE::memory_space>("view", 4);
+    auto teamView = Kokkos::View<int*, TEST_EXECSPACE::memory_space>("view", 4);
 
     Kokkos::parallel_for(
         policy, KOKKOS_LAMBDA(team_member_type const& team) {
@@ -70,8 +69,7 @@ struct TeamTeamCombinedReducer {
     auto policy = Kokkos::TeamPolicy<TEST_EXECSPACE>(1, Kokkos::AUTO);
     using team_member_type = decltype(policy)::member_type;
 
-    Kokkos::View<int*> teamView =
-        Kokkos::View<int*, TEST_EXECSPACE::memory_space>("view", 4);
+    auto teamView = Kokkos::View<int*, TEST_EXECSPACE::memory_space>("view", 4);
 
     Kokkos::parallel_for(
         policy, KOKKOS_LAMBDA(team_member_type const& team) {
@@ -114,8 +112,7 @@ struct TeamTeamCombinedReducer {
     auto policy = Kokkos::TeamPolicy<TEST_EXECSPACE>(1, Kokkos::AUTO);
     using team_member_type = decltype(policy)::member_type;
 
-    Kokkos::View<int*> teamView =
-        Kokkos::View<int*, TEST_EXECSPACE::memory_space>("view", 4);
+    auto teamView = Kokkos::View<int*, TEST_EXECSPACE::memory_space>("view", 4);
 
     Kokkos::parallel_for(
         policy, KOKKOS_LAMBDA(team_member_type const& team) {
@@ -158,8 +155,7 @@ struct TeamTeamCombinedReducer {
     auto policy = Kokkos::TeamPolicy<TEST_EXECSPACE>(1, Kokkos::AUTO);
     using team_member_type = decltype(policy)::member_type;
 
-    Kokkos::View<int*> teamView =
-        Kokkos::View<int*, TEST_EXECSPACE::memory_space>("view", 4);
+    auto teamView = Kokkos::View<int*, TEST_EXECSPACE::memory_space>("view", 4);
 
     Kokkos::parallel_for(
         policy, KOKKOS_LAMBDA(team_member_type const& team) {
@@ -202,8 +198,7 @@ struct TeamTeamCombinedReducer {
     auto policy = Kokkos::TeamPolicy<TEST_EXECSPACE>(1, Kokkos::AUTO);
     using team_member_type = decltype(policy)::member_type;
 
-    Kokkos::View<int*> teamView =
-        Kokkos::View<int*, TEST_EXECSPACE::memory_space>("view", 4);
+    auto teamView = Kokkos::View<int*, TEST_EXECSPACE::memory_space>("view", 4);
 
     Kokkos::parallel_for(
         policy, KOKKOS_LAMBDA(team_member_type const& team) {
@@ -247,8 +242,7 @@ struct TeamTeamCombinedReducer {
     auto policy = Kokkos::TeamPolicy<TEST_EXECSPACE>(1, Kokkos::AUTO);
     using team_member_type = decltype(policy)::member_type;
 
-    Kokkos::View<int*> teamView =
-        Kokkos::View<int*, TEST_EXECSPACE::memory_space>("view", 4);
+    auto teamView = Kokkos::View<int*, TEST_EXECSPACE::memory_space>("view", 4);
 
     Kokkos::parallel_for(
         policy, KOKKOS_LAMBDA(team_member_type const& team) {
@@ -292,8 +286,7 @@ struct TeamTeamCombinedReducer {
     auto policy = Kokkos::TeamPolicy<TEST_EXECSPACE>(1, Kokkos::AUTO);
     using team_member_type = decltype(policy)::member_type;
 
-    Kokkos::View<int*> teamView =
-        Kokkos::View<int*, TEST_EXECSPACE::memory_space>("view", 4);
+    auto teamView = Kokkos::View<int*, TEST_EXECSPACE::memory_space>("view", 4);
 
     Kokkos::parallel_for(
         policy, KOKKOS_LAMBDA(team_member_type const& team) {
@@ -335,8 +328,7 @@ struct TeamTeamCombinedReducer {
     auto policy = Kokkos::TeamPolicy<TEST_EXECSPACE>(1, Kokkos::AUTO);
     using team_member_type = decltype(policy)::member_type;
 
-    Kokkos::View<int*> teamView =
-        Kokkos::View<int*, TEST_EXECSPACE::memory_space>("view", 4);
+    auto teamView = Kokkos::View<int*, TEST_EXECSPACE::memory_space>("view", 4);
 
     Kokkos::parallel_for(
         policy, KOKKOS_LAMBDA(team_member_type const& team) {
@@ -379,8 +371,7 @@ struct TeamTeamCombinedReducer {
     auto policy = Kokkos::TeamPolicy<TEST_EXECSPACE>(1, Kokkos::AUTO);
     using team_member_type = decltype(policy)::member_type;
 
-    Kokkos::View<int*> teamView =
-        Kokkos::View<int*, TEST_EXECSPACE::memory_space>("view", 4);
+    auto teamView = Kokkos::View<int*, TEST_EXECSPACE::memory_space>("view", 4);
 
     Kokkos::parallel_for(
         policy, KOKKOS_LAMBDA(team_member_type const& team) {
