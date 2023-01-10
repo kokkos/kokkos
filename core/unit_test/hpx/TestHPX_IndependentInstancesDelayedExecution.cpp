@@ -39,7 +39,7 @@ TEST(hpx, independent_instances_delayed_execution) {
       KOKKOS_LAMBDA(int) { ran() = true; });
 
 #if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
-  ASSERT_TRUE(!ran());
+  ASSERT_FALSE(ran());
 #else
   ASSERT_TRUE(ran());
 #endif
