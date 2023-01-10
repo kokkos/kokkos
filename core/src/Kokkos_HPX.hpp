@@ -190,7 +190,7 @@ class HPX {
 
   void print_configuration(std::ostream &os, bool /*verbose*/ = false) const;
   instance_data &impl_get_instance_data() const noexcept {
-    KOKKOS_ASSERT(m_instance_data.get());
+    KOKKOS_EXPECTS(m_instance_data.get());
     return *m_instance_data.get();
   }
   uint32_t impl_instance_id() const noexcept {

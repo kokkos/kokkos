@@ -73,8 +73,8 @@ class TaskQueueSpecialization<
       current_task = queue.pop_ready_task(team_scheduler.team_scheduler_info());
 
       if (current_task) {
-        KOKKOS_ASSERT(current_task->is_single_runnable() ||
-                      current_task->is_team_runnable());
+        KOKKOS_EXPECTS(current_task->is_single_runnable() ||
+                       current_task->is_team_runnable());
         current_task->as_runnable_task().run(single_exec);
         queue.complete((*std::move(current_task)).as_runnable_task(),
                        team_scheduler.team_scheduler_info());

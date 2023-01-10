@@ -59,7 +59,7 @@ void hpx_thread_buffer::resize(const std::size_t num_threads,
 }
 
 void *hpx_thread_buffer::get(std::size_t thread_num) const noexcept {
-  KOKKOS_ASSERT(thread_num < m_num_threads);
+  KOKKOS_EXPECTS(thread_num < m_num_threads);
   if (m_data == nullptr) {
     return nullptr;
   }
@@ -67,7 +67,7 @@ void *hpx_thread_buffer::get(std::size_t thread_num) const noexcept {
 }
 
 void *hpx_thread_buffer::get_extra_space() const noexcept {
-  KOKKOS_ASSERT(m_extra_space > 0);
+  KOKKOS_EXPECTS(m_extra_space > 0);
   if (m_data == nullptr) {
     return nullptr;
   }
