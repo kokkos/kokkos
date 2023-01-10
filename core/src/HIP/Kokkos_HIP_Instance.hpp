@@ -90,6 +90,7 @@ class HIPInternal {
   size_type *m_scratchSpace           = nullptr;
   size_type *m_scratchFlags           = nullptr;
   mutable size_type *m_scratchFunctor = nullptr;
+  mutable size_type *m_scratchFunctorHost = nullptr;
 
   hipStream_t m_stream = nullptr;
   uint32_t m_instance_id =
@@ -136,6 +137,7 @@ class HIPInternal {
   size_type *scratch_space(const std::size_t size);
   size_type *scratch_flags(const std::size_t size);
   size_type *scratch_functor(const std::size_t size) const;
+  size_type *scratch_functor_host(const std::size_t size) const;
   uint32_t impl_get_instance_id() const noexcept;
   int acquire_team_scratch_space();
   // Resizing of team level 1 scratch

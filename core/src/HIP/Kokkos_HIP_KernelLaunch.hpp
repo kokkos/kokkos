@@ -379,10 +379,12 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
                             HIPInternal const *hip_instance) {
     DriverType *driver_ptr = reinterpret_cast<DriverType *>(
         hip_instance->scratch_functor(sizeof(DriverType)));
-
-    hipMemcpyAsync(driver_ptr, &driver, sizeof(DriverType), hipMemcpyDefault,
-                   hip_instance->m_stream);
-
+    DriverType *driver_ptr_host = reinterpret_cast<DriverType *>(
+        hip_instance->scratch_functor_host(sizeof(DriverType)));
+    KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamSynchronize(hip_instance->m_stream));
+    std::memcpy(driver_ptr_host,&driver,sizeof(DriverType));
+    KOKKOS_IMPL_HIP_SAFE_CALL(hipMemcpyAsync(driver_ptr, driver_ptr_host, sizeof(DriverType), hipMemcpyDefault,
+                   hip_instance->m_stream));
     (base_t::get_kernel_func())<<<grid, block, shmem, hip_instance->m_stream>>>(
         driver_ptr);
   }

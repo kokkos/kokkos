@@ -258,6 +258,28 @@ Kokkos::HIP::size_type *HIPInternal::scratch_functor(
   return m_scratchFunctor;
 }
 
+Kokkos::HIP::size_type *HIPInternal::scratch_functor_host(
+    const std::size_t size) const {
+  if (verify_is_initialized("scratch_functor_host") && m_scratchFunctorSize < size) {
+    m_scratchFunctorSize = size;
+
+    using Record = Kokkos::Impl::SharedAllocationRecord<Kokkos::HIPHostPinnedSpace, void>;
+
+    if (m_scratchFunctorHost)
+      Record::decrement(Record::get_record(m_scratchFunctorHost));
+
+    Record *const r =
+        Record::allocate(Kokkos::HIPHostPinnedSpace(), "Kokkos::InternalScratchFunctorHost",
+                         m_scratchFunctorSize);
+
+    Record::increment(r);
+
+    m_scratchFunctorHost = reinterpret_cast<size_type *>(r->data());
+  }
+
+  return m_scratchFunctor;
+}
+
 int HIPInternal::acquire_team_scratch_space() {
   int current_team_scratch = 0;
   int zero                 = 0;
