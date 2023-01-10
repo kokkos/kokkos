@@ -208,15 +208,14 @@ class HPX {
   static void impl_increment_active_parallel_region_count();
 
   void impl_instance_fence_locked(const std::string &name) const;
-  void impl_instance_fence(const std::string &name =
-                               "Kokkos::Experimental::HPX::impl_instance_fence:"
-                               " Unnamed Instance Fence") const;
-  static void impl_static_fence(const std::string &name =
-                                    "Kokkos::Experimental::HPX::impl_fence_"
-                                    "global: Unnamed Global Fence");
+  void impl_instance_fence(const std::string &name) const;
+  static void impl_static_fence(const std::string &name);
 
-  void fence() const { impl_instance_fence(); }
-  void fence(const std::string &name) const { impl_instance_fence(name); }
+  void fence(
+      const std::string &name =
+          "Kokkos::Experimental::HPX::fence: Unnamed Instance Fence") const {
+    impl_instance_fence(name);
+  }
 
   static bool is_asynchronous(HPX const & = HPX()) noexcept {
 #if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
