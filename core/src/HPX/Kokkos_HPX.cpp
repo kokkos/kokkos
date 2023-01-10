@@ -49,7 +49,8 @@ void hpx_thread_buffer::resize(const std::size_t num_threads,
 
   pad_to_cache_line(m_size_per_thread);
 
-  std::size_t size_total_new = m_num_threads * m_size_per_thread + extra_space;
+  std::size_t size_total_new =
+      m_num_threads * m_size_per_thread + m_extra_space;
 
   if (m_size_total < size_total_new) {
     delete[] m_data;
