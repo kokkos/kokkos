@@ -59,13 +59,7 @@ void hpx_thread_buffer::resize(const std::size_t num_threads,
 }
 
 void *hpx_thread_buffer::get(std::size_t thread_num) const noexcept {
-#if defined(KOKKOS_ENABLE_DEBUG)
-  if (thread_num >= m_num_threads) {
-    Kokkos::abort(
-        "Kokkos::Impl::hpx_thread_buffer: trying to access thread buffer for "
-        "index >= number of threads\n");
-  }
-#endif
+  KOKKOS_ASSERT(thread_num < m_num_threads);
   if (m_data == nullptr) {
     return nullptr;
   }
@@ -73,13 +67,7 @@ void *hpx_thread_buffer::get(std::size_t thread_num) const noexcept {
 }
 
 void *hpx_thread_buffer::get_extra_space() const noexcept {
-#if defined(KOKKOS_ENABLE_DEBUG)
-  if (m_extra_space == 0) {
-    Kokkos::abort(
-        "Kokkos::Impl::hpx_thread_buffer: trying to access extra space when "
-        "none was allocated\n");
-  }
-#endif
+  KOKKOS_ASSERT(m_extra_space > 0);
   if (m_data == nullptr) {
     return nullptr;
   }
