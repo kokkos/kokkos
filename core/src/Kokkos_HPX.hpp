@@ -69,11 +69,11 @@ namespace Impl {
 class hpx_thread_buffer {
   static constexpr std::size_t m_cache_line_size = 64;
 
-  std::size_t m_num_threads     = 0;
-  std::size_t m_size_per_thread = 0;
-  std::size_t m_extra_space     = 0;
-  std::size_t m_size_total      = 0;
-  char *m_data                  = nullptr;
+  std::size_t m_num_threads      = 0;
+  std::size_t m_size_per_thread  = 0;
+  std::size_t m_extra_space      = 0;
+  std::size_t m_size_total       = 0;
+  std::unique_ptr<char[]> m_data = nullptr;
 
   static constexpr void pad_to_cache_line(std::size_t &size) {
     size = ((size + m_cache_line_size - 1) / m_cache_line_size) *
@@ -82,7 +82,7 @@ class hpx_thread_buffer {
 
  public:
   hpx_thread_buffer() = default;
-  ~hpx_thread_buffer() { delete[] m_data; }
+  ~hpx_thread_buffer() = default;
   hpx_thread_buffer(const hpx_thread_buffer &) = delete;
   hpx_thread_buffer(hpx_thread_buffer &&)      = delete;
   hpx_thread_buffer &operator=(const hpx_thread_buffer &) = delete;

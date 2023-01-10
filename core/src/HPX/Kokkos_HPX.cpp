@@ -53,15 +53,14 @@ void hpx_thread_buffer::resize(const std::size_t num_threads,
       m_num_threads * m_size_per_thread + m_extra_space;
 
   if (m_size_total < size_total_new) {
-    delete[] m_data;
-    m_data       = new char[size_total_new];
+    m_data       = std::make_unique<char[]>(size_total_new);
     m_size_total = size_total_new;
   }
 }
 
 void *hpx_thread_buffer::get(std::size_t thread_num) const noexcept {
   KOKKOS_EXPECTS(thread_num < m_num_threads);
-  if (m_data == nullptr) {
+  if (!m_data) {
     return nullptr;
   }
   return &m_data[thread_num * m_size_per_thread];
@@ -69,7 +68,7 @@ void *hpx_thread_buffer::get(std::size_t thread_num) const noexcept {
 
 void *hpx_thread_buffer::get_extra_space() const noexcept {
   KOKKOS_EXPECTS(m_extra_space > 0);
-  if (m_data == nullptr) {
+  if (!m_data) {
     return nullptr;
   }
   return &m_data[m_num_threads * m_size_per_thread];
