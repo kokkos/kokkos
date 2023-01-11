@@ -24,7 +24,7 @@
 #include <impl/Kokkos_Default_Graph_fwd.hpp>
 
 #include <Kokkos_Serial.hpp>
-#include <Kokkos_OpenMP.hpp>
+#include <OpenMP/Kokkos_OpenMP.hpp>
 // FIXME @graph other backends?
 
 #include <impl/Kokkos_OptionalRef.hpp>
