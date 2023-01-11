@@ -130,6 +130,12 @@ void cuda_device_synchronize(const std::string &name) {
       Kokkos::Tools::Experimental::SpecialSynchronizationCases::
           GlobalDeviceSynchronization,
       []() {  // TODO: correct device ID
+        // Ensure all subsequent CUDA API calls happen on correct GPU
+        // Note we call this on only the device of the default execution space
+        // instance if we ever support multiple gpus, we need to somehow loop
+        // over all devices active in Kokkos::fence(), maybe at this point this
+        // function should take a device id??
+        KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(CudaInternal::m_cudaDev));
         KOKKOS_IMPL_CUDA_SAFE_CALL(cudaDeviceSynchronize());
       });
 }
@@ -141,6 +147,8 @@ void cuda_stream_synchronize(const cudaStream_t stream, const CudaInternal *ptr,
       Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{
           ptr->impl_get_instance_id()},
       [&]() {  // TODO: correct device ID
+        // Ensure all subsequent CUDA API calls happen on correct GPU
+        KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(ptr->m_cudaDev));
         KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamSynchronize(stream));
       });
 }
@@ -151,6 +159,11 @@ void cuda_stream_synchronize(
     const std::string &name) {
   Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Cuda>(
       name, reason, [&]() {  // TODO: correct device ID
+        // Ensure all subsequent CUDA API calls happen on correct GPU
+        // Note we call this on the device of the default execution space
+        // instance if we ever support multiple gpus, we need to get the correct
+        // GPU ID in this call
+        KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(CudaInternal::m_cudaDev));
         KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamSynchronize(stream));
       });
 }
@@ -343,6 +356,9 @@ void CudaInternal::initialize(cudaStream_t stream, bool manage_stream) {
   was_initialized = true;
   if (is_initialized()) return;
 
+  // Ensure all subsequent CUDA API calls happen on correct GPU
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
+
 #ifndef KOKKOS_IMPL_TURN_OFF_CUDA_HOST_INIT_CHECK
   if (!HostSpace::execution_space::impl_is_initialized()) {
     const std::string msg(
@@ -434,6 +450,9 @@ enum { sizeScratchGrain = sizeof(ScratchGrain) };
 Cuda::size_type *CudaInternal::scratch_flags(const std::size_t size) const {
   if (verify_is_initialized("scratch_flags") &&
       m_scratchFlagsCount * sizeScratchGrain < size) {
+    // Ensure all subsequent CUDA API calls happen on correct GPU
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
+
     m_scratchFlagsCount = (size + sizeScratchGrain - 1) / sizeScratchGrain;
 
     using Record =
@@ -459,6 +478,9 @@ Cuda::size_type *CudaInternal::scratch_flags(const std::size_t size) const {
 Cuda::size_type *CudaInternal::scratch_space(const std::size_t size) const {
   if (verify_is_initialized("scratch_space") &&
       m_scratchSpaceCount * sizeScratchGrain < size) {
+    // Ensure all subsequent CUDA API calls happen on correct GPU
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
+
     m_scratchSpaceCount = (size + sizeScratchGrain - 1) / sizeScratchGrain;
 
     using Record =
@@ -570,6 +592,9 @@ void CudaInternal::finalize() {
   if (was_finalized) return;
 
   was_finalized = true;
+
+  // Ensure all subsequent CUDA API calls happen on correct GPU
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
 
   // Only finalize this if we're the singleton
   if (this == &singleton()) {

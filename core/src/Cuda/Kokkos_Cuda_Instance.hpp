@@ -214,7 +214,11 @@ namespace Experimental {
 //   Default behavior is to return the passed in instance
 
 namespace Impl {
-inline void create_Cuda_instances(std::vector<Cuda>& instances) {
+inline void create_Cuda_instances(std::vector<Cuda>& instances,
+                                  const int device) {
+  // Ensure all subsequent CUDA API calls happen on correct GPU
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(device));
+
   for (int s = 0; s < int(instances.size()); s++) {
     cudaStream_t stream;
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamCreate(&stream));
@@ -224,23 +228,23 @@ inline void create_Cuda_instances(std::vector<Cuda>& instances) {
 }  // namespace Impl
 
 template <class... Args>
-std::vector<Cuda> partition_space(const Cuda&, Args...) {
+std::vector<Cuda> partition_space(const Cuda& exec, Args...) {
   static_assert(
       (... && std::is_arithmetic_v<Args>),
       "Kokkos Error: partitioning arguments must be integers or floats");
   std::vector<Cuda> instances(sizeof...(Args));
-  Impl::create_Cuda_instances(instances);
+  Impl::create_Cuda_instances(instances, exec.cuda_device());
   return instances;
 }
 
 template <class T>
-std::vector<Cuda> partition_space(const Cuda&, std::vector<T>& weights) {
+std::vector<Cuda> partition_space(const Cuda& exec, std::vector<T>& weights) {
   static_assert(
       std::is_arithmetic<T>::value,
       "Kokkos Error: partitioning arguments must be integers or floats");
 
   std::vector<Cuda> instances(weights.size());
-  Impl::create_Cuda_instances(instances);
+  Impl::create_Cuda_instances(instances, exec.cuda_device());
   return instances;
 }
 }  // namespace Experimental

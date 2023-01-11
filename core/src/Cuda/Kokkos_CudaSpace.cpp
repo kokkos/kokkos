@@ -40,6 +40,7 @@
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
 
+// Don't need to call cudaSetDevice, since its called at every call site
 cudaStream_t Kokkos::Impl::cuda_get_deep_copy_stream() {
   static cudaStream_t s = nullptr;
   if (s == nullptr) {
@@ -66,16 +67,27 @@ static std::atomic<int> num_uvm_allocations(0);
 }  // namespace
 
 void DeepCopyCuda(void *dst, const void *src, size_t n) {
+  // Ensure all subsequent CUDA API calls happen on correct GPU
+  KOKKOS_IMPL_CUDA_SAFE_CALL(
+      cudaSetDevice(Kokkos::Impl::CudaInternal::m_cudaDev));
+
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMemcpy(dst, src, n, cudaMemcpyDefault));
 }
 
 void DeepCopyAsyncCuda(const Cuda &instance, void *dst, const void *src,
                        size_t n) {
+  // Ensure all subsequent CUDA API calls happen on correct GPU
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(instance.cuda_device()));
+
   KOKKOS_IMPL_CUDA_SAFE_CALL(
       cudaMemcpyAsync(dst, src, n, cudaMemcpyDefault, instance.cuda_stream()));
 }
 
 void DeepCopyAsyncCuda(void *dst, const void *src, size_t n) {
+  // Ensure all subsequent CUDA API calls happen on correct GPU
+  KOKKOS_IMPL_CUDA_SAFE_CALL(
+      cudaSetDevice(Kokkos::Impl::CudaInternal::m_cudaDev));
+
   cudaStream_t s = cuda_get_deep_copy_stream();
   KOKKOS_IMPL_CUDA_SAFE_CALL(
       cudaMemcpyAsync(dst, src, n, cudaMemcpyDefault, s));
@@ -164,6 +176,9 @@ void *impl_allocate_common(const Cuda &exec_space, const char *arg_label,
                            bool exec_space_provided) {
   void *ptr = nullptr;
 
+  // Ensure all subsequent CUDA API calls happen on correct GPU
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(exec_space.cuda_device()));
+
 #ifndef CUDART_VERSION
 #error CUDART_VERSION undefined!
 #elif (defined(KOKKOS_ENABLE_IMPL_CUDA_MALLOC_ASYNC) && CUDART_VERSION >= 11020)
@@ -233,6 +248,11 @@ void *CudaUVMSpace::impl_allocate(
     const Kokkos::Tools::SpaceHandle arg_handle) const {
   void *ptr = nullptr;
 
+  // Ensure all subsequent CUDA API calls happen on correct GPU
+  KOKKOS_IMPL_CUDA_SAFE_CALL(
+      cudaSetDevice(Kokkos::Impl::CudaInternal::m_cudaDev));
+
+  // this call includes cudaSetDevice, so don't need to call it again
   Cuda::impl_static_fence(
       "Kokkos::CudaUVMSpace::impl_allocate: Pre UVM Allocation");
   if (arg_alloc_size > 0) {
@@ -280,6 +300,9 @@ void *CudaHostPinnedSpace::impl_allocate(
     const Kokkos::Tools::SpaceHandle arg_handle) const {
   void *ptr = nullptr;
 
+  // Ensure all subsequent CUDA API calls happen on correct GPU
+  KOKKOS_IMPL_CUDA_SAFE_CALL(
+      cudaSetDevice(Kokkos::Impl::CudaInternal::m_cudaDev));
   auto error_code = cudaHostAlloc(&ptr, arg_alloc_size, cudaHostAllocDefault);
   if (error_code != cudaSuccess) {  // TODO tag as unlikely branch
     cudaGetLastError();  // This is the only way to clear the last error, which
@@ -612,6 +635,10 @@ SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>::
 void cuda_prefetch_pointer(const Cuda &space, const void *ptr, size_t bytes,
                            bool to_device) {
   if ((ptr == nullptr) || (bytes == 0)) return;
+
+  // Ensure all subsequent CUDA API calls happen on correct GPU
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(space.cuda_device()));
+
   cudaPointerAttributes attr;
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaPointerGetAttributes(&attr, ptr));
   // I measured this and it turns out prefetching towards the host slows

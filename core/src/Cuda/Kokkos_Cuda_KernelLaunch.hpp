@@ -350,6 +350,8 @@ struct CudaParallelLaunchKernelInvoker<
   static void invoke_kernel(DriverType const& driver, dim3 const& grid,
                             dim3 const& block, int shmem,
                             CudaInternal const* cuda_instance) {
+    // Ensure all subsequent CUDA API calls happen on correct GPU
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(cuda_instance->m_cudaDev));
     (base_t::
          get_kernel_func())<<<grid, block, shmem, cuda_instance->m_stream>>>(
         driver);
@@ -444,6 +446,9 @@ struct CudaParallelLaunchKernelInvoker<
   static void invoke_kernel(DriverType const& driver, dim3 const& grid,
                             dim3 const& block, int shmem,
                             CudaInternal const* cuda_instance) {
+    // Ensure all subsequent CUDA API calls happen on correct GPU
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(cuda_instance->m_cudaDev));
+
     DriverType* driver_ptr = reinterpret_cast<DriverType*>(
         cuda_instance->scratch_functor(sizeof(DriverType)));
 
@@ -457,6 +462,9 @@ struct CudaParallelLaunchKernelInvoker<
   inline static void create_parallel_launch_graph_node(
       DriverType const& driver, dim3 const& grid, dim3 const& block, int shmem,
       CudaInternal const* cuda_instance) {
+    // Ensure all subsequent CUDA API calls happen on correct GPU
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(cuda_instance->m_cudaDev));
+
     //----------------------------------------
     auto const& graph = Impl::get_cuda_graph_from_kernel(driver);
     KOKKOS_EXPECTS(bool(graph));
@@ -561,6 +569,10 @@ struct CudaParallelLaunchKernelInvoker<
                             CudaInternal const* cuda_instance) {
     // Wait until the previous kernel that uses the constant buffer is done
     std::lock_guard<std::mutex> lock(CudaInternal::constantMemMutex);
+
+    // Ensure all subsequent CUDA API calls happen on correct GPU
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(cuda_instance->m_cudaDev));
+
     KOKKOS_IMPL_CUDA_SAFE_CALL(
         cudaEventSynchronize(CudaInternal::constantMemReusable));
 
@@ -633,6 +645,9 @@ struct CudaParallelLaunchImpl<
                                    const dim3& block, int shmem,
                                    const CudaInternal* cuda_instance) {
     if (!Impl::is_empty_launch(grid, block)) {
+      // Ensure all subsequent CUDA API calls happen on correct GPU
+      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(cuda_instance->m_cudaDev));
+
       // Prevent multiple threads to simultaneously set the cache configuration
       // preference and launch the same kernel
       static std::mutex mutex;

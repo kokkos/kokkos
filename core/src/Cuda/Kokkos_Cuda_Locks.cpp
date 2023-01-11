@@ -48,6 +48,8 @@ namespace Impl {
 
 CudaLockArrays g_host_cuda_lock_arrays = {nullptr, 0};
 
+// Only ever called from the CudaInternal::initialize
+// So don't need to call cudaSetDevice here
 void initialize_host_cuda_lock_arrays() {
 #ifdef KOKKOS_ENABLE_IMPL_DESUL_ATOMICS
   desul::Impl::init_lock_arrays();
