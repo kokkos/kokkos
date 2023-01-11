@@ -97,8 +97,8 @@ class hpx_thread_buffer {
 
 template <typename T>
 struct hpx_range {
-  const T begin;
-  const T end;
+  T begin;
+  T end;
 };
 
 template <typename T>
