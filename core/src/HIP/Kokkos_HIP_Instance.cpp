@@ -279,7 +279,7 @@ Kokkos::HIP::size_type *HIPInternal::scratch_functor_host(
     m_scratchFunctorHost = reinterpret_cast<size_type *>(r->data());
   }
 
-  return m_scratchFunctor;
+  return m_scratchFunctorHost;
 }
 
 int HIPInternal::acquire_team_scratch_space() {
