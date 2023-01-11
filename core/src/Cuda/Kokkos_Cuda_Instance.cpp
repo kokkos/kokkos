@@ -132,8 +132,8 @@ void cuda_device_synchronize(const std::string &name) {
       []() {  // TODO: correct device ID
         // Ensure all subsequent CUDA API calls happen on correct GPU
         // Note we call this on only the device of the default execution space
-        // instance if we ever support multiple gpus, we need to somehow loop
-        // over all devices active in Kokkos::fence(), maybe at this point this
+        // instance. If we ever support multiple GPUs, we need to somehow loop
+        // over all active devices in Kokkos::fence(), maybe at this point this
         // function should take a device id??
         KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(CudaInternal::m_cudaDev));
         KOKKOS_IMPL_CUDA_SAFE_CALL(cudaDeviceSynchronize());

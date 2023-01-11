@@ -40,7 +40,7 @@
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
 
-// Don't need to call cudaSetDevice, since its called at every call site
+// Don't need to call cudaSetDevice here, since that's called at every call site
 cudaStream_t Kokkos::Impl::cuda_get_deep_copy_stream() {
   static cudaStream_t s = nullptr;
   if (s == nullptr) {
