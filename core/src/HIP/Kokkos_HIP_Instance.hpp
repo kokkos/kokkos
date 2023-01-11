@@ -87,9 +87,9 @@ class HIPInternal {
   std::size_t m_scratchFlagsCount          = 0;
   mutable std::size_t m_scratchFunctorSize = 0;
 
-  size_type *m_scratchSpace           = nullptr;
-  size_type *m_scratchFlags           = nullptr;
-  mutable size_type *m_scratchFunctor = nullptr;
+  size_type *m_scratchSpace               = nullptr;
+  size_type *m_scratchFlags               = nullptr;
+  mutable size_type *m_scratchFunctor     = nullptr;
   mutable size_type *m_scratchFunctorHost = nullptr;
 
   hipStream_t m_stream = nullptr;
