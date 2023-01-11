@@ -262,7 +262,7 @@ class ParallelReduce<CombinedFunctorReducerType,
       // Number of blocks is bounded so that the reduction can be limited to two
       // passes. Each thread block is given an approximately equal amount of
       // work to perform. Accumulate the values for this block. The accumulation
-      // ordering does not match the final pass, but is arithmatically
+      // ordering does not match the final pass, but is arithmetically
       // equivalent.
 
       this->exec_range(value);
