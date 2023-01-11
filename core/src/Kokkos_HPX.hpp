@@ -140,7 +140,8 @@ class HPX {
   static hpx::condition_variable_any m_active_parallel_region_count_cond;
 
   struct instance_data {
-    instance_data() = default;
+    instance_data()  = default;
+    ~instance_data() = default;
     instance_data(uint32_t instance_id) : m_instance_id(instance_id) {}
     instance_data(uint32_t instance_id,
                   hpx::execution::experimental::unique_any_sender<> &&sender)
@@ -173,6 +174,7 @@ class HPX {
   HPX()
       : m_instance_data(Kokkos::Impl::HostSharedPtr<instance_data>(
             &m_default_instance_data, &default_instance_deleter)) {}
+  ~HPX() = default;
   HPX(instance_mode mode)
       : m_instance_data(
             mode == instance_mode::independent
