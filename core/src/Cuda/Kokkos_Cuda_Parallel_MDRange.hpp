@@ -63,10 +63,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
     auto const& prop = pol.space().cuda_device_prop();
     // Limits due to registers/SM, MDRange doesn't have
     // shared memory constraints
-    auto const block_size_to_zero_shmem = [&] (int block_size) {
-      return 0;
-    };
-    int const optimal_block_size = Kokkos::Impl::cuda_deduce_block_size(false, prop, attr, block_size_to_zero_shmem, LaunchBounds{});
+    int const optimal_block_size = Kokkos::Impl::cuda_get_opt_block_size_no_shmem(attr, LaunchBounds{});
 
     // Compute how many blocks of this size we can launch, based on warp constraints
     int const max_warps_per_sm_registers = Kokkos::Impl::cuda_max_warps_per_sm_registers(prop, attr);
@@ -244,11 +241,9 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
         CudaParallelLaunch<ParallelReduce,
                            LaunchBounds>::get_cuda_func_attributes();
     auto const& prop = pol.space().cuda_device_prop();
-    // Limits due to registers/SM
-    auto const block_size_to_zero_shmem = [&] (int block_size) {
-      return 0;
-    };
-    int const optimal_block_size = Kokkos::Impl::cuda_deduce_block_size(false, prop, attr, block_size_to_zero_shmem, LaunchBounds{});
+    // Limits due to registers/SM, MDRange doesn't have
+    // shared memory constraints
+    int const optimal_block_size = Kokkos::Impl::cuda_get_opt_block_size_no_shmem(attr, LaunchBounds{});
 
     // Compute how many blocks of this size we can launch, based on warp constraints
     int const max_warps_per_sm_registers = Kokkos::Impl::cuda_max_warps_per_sm_registers(prop, attr);
