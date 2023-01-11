@@ -377,14 +377,20 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
   static void invoke_kernel(DriverType const &driver, dim3 const &grid,
                             dim3 const &block, int shmem,
                             HIPInternal const *hip_instance) {
+    // When using HSA_XNACK=1, it is necessary to copy the driver to the host to
+    // ensure that the driver is not destroyed before the computation is done.
+    // Without this fix, all the atomic tests fail. It is not obvious that this
+    // problem is limited to HSA_XNACK=1 even if all the tests pass when
+    // HSA_XNACK=0. That's why we always copy the driver.
     DriverType *driver_ptr = reinterpret_cast<DriverType *>(
         hip_instance->scratch_functor(sizeof(DriverType)));
     DriverType *driver_ptr_host = reinterpret_cast<DriverType *>(
         hip_instance->scratch_functor_host(sizeof(DriverType)));
     KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamSynchronize(hip_instance->m_stream));
-    std::memcpy(driver_ptr_host,&driver,sizeof(DriverType));
-    KOKKOS_IMPL_HIP_SAFE_CALL(hipMemcpyAsync(driver_ptr, driver_ptr_host, sizeof(DriverType), hipMemcpyDefault,
-                   hip_instance->m_stream));
+    std::memcpy(driver_ptr_host, &driver, sizeof(DriverType));
+    KOKKOS_IMPL_HIP_SAFE_CALL(
+        hipMemcpyAsync(driver_ptr, driver_ptr_host, sizeof(DriverType),
+                       hipMemcpyDefault, hip_instance->m_stream));
     (base_t::get_kernel_func())<<<grid, block, shmem, hip_instance->m_stream>>>(
         driver_ptr);
   }
