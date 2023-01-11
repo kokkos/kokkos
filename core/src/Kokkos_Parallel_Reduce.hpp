@@ -37,6 +37,7 @@ struct Sum {
   // Required
   using reducer    = Sum<Scalar, Space>;
   using value_type = std::remove_cv_t<Scalar>;
+  static_assert(!std::is_pointer_v<value_type> && !std::is_array_v<value_type>);
 
   using result_view_type = Kokkos::View<value_type, Space>;
 
@@ -81,6 +82,7 @@ struct Prod {
   // Required
   using reducer    = Prod<Scalar, Space>;
   using value_type = std::remove_cv_t<Scalar>;
+  static_assert(!std::is_pointer_v<value_type> && !std::is_array_v<value_type>);
 
   using result_view_type = Kokkos::View<value_type, Space>;
 
@@ -125,6 +127,7 @@ struct Min {
   // Required
   using reducer    = Min<Scalar, Space>;
   using value_type = std::remove_cv_t<Scalar>;
+  static_assert(!std::is_pointer_v<value_type> && !std::is_array_v<value_type>);
 
   using result_view_type = Kokkos::View<value_type, Space>;
 
@@ -171,6 +174,7 @@ struct Max {
   // Required
   using reducer    = Max<Scalar, Space>;
   using value_type = std::remove_cv_t<Scalar>;
+  static_assert(!std::is_pointer_v<value_type> && !std::is_array_v<value_type>);
 
   using result_view_type = Kokkos::View<value_type, Space>;
 
@@ -218,6 +222,7 @@ struct LAnd {
   // Required
   using reducer    = LAnd<Scalar, Space>;
   using value_type = std::remove_cv_t<Scalar>;
+  static_assert(!std::is_pointer_v<value_type> && !std::is_array_v<value_type>);
 
   using result_view_type = Kokkos::View<value_type, Space>;
 
@@ -263,6 +268,7 @@ struct LOr {
   // Required
   using reducer    = LOr<Scalar, Space>;
   using value_type = std::remove_cv_t<Scalar>;
+  static_assert(!std::is_pointer_v<value_type> && !std::is_array_v<value_type>);
 
   using result_view_type = Kokkos::View<value_type, Space>;
 
@@ -309,6 +315,7 @@ struct BAnd {
   // Required
   using reducer    = BAnd<Scalar, Space>;
   using value_type = std::remove_cv_t<Scalar>;
+  static_assert(!std::is_pointer_v<value_type> && !std::is_array_v<value_type>);
 
   using result_view_type = Kokkos::View<value_type, Space>;
 
@@ -355,6 +362,7 @@ struct BOr {
   // Required
   using reducer    = BOr<Scalar, Space>;
   using value_type = std::remove_cv_t<Scalar>;
+  static_assert(!std::is_pointer_v<value_type> && !std::is_array_v<value_type>);
 
   using result_view_type = Kokkos::View<value_type, Space>;
 
@@ -412,6 +420,9 @@ struct MinLoc {
  private:
   using scalar_type = std::remove_cv_t<Scalar>;
   using index_type  = std::remove_cv_t<Index>;
+  static_assert(!std::is_pointer_v<scalar_type> &&
+                !std::is_array_v<scalar_type>);
+  static_assert(std::is_integral_v<index_type>);
 
  public:
   // Required
@@ -465,6 +476,9 @@ struct MaxLoc {
  private:
   using scalar_type = std::remove_cv_t<Scalar>;
   using index_type  = std::remove_cv_t<Index>;
+  static_assert(!std::is_pointer_v<scalar_type> &&
+                !std::is_array_v<scalar_type>);
+  static_assert(std::is_integral_v<index_type>);
 
  public:
   // Required
@@ -528,6 +542,8 @@ template <class Scalar, class Space>
 struct MinMax {
  private:
   using scalar_type = std::remove_cv_t<Scalar>;
+  static_assert(!std::is_pointer_v<scalar_type> &&
+                !std::is_array_v<scalar_type>);
 
  public:
   // Required
@@ -599,6 +615,9 @@ struct MinMaxLoc {
  private:
   using scalar_type = std::remove_cv_t<Scalar>;
   using index_type  = std::remove_cv_t<Index>;
+  static_assert(!std::is_pointer_v<scalar_type> &&
+                !std::is_array_v<scalar_type>);
+  static_assert(std::is_integral_v<index_type>);
 
  public:
   // Required
@@ -668,6 +687,9 @@ struct MaxFirstLoc {
  private:
   using scalar_type = std::remove_cv_t<Scalar>;
   using index_type  = std::remove_cv_t<Index>;
+  static_assert(!std::is_pointer_v<scalar_type> &&
+                !std::is_array_v<scalar_type>);
+  static_assert(std::is_integral_v<index_type>);
 
  public:
   // Required
@@ -729,6 +751,9 @@ struct MaxFirstLocCustomComparator {
  private:
   using scalar_type = std::remove_cv_t<Scalar>;
   using index_type  = std::remove_cv_t<Index>;
+  static_assert(!std::is_pointer_v<scalar_type> &&
+                !std::is_array_v<scalar_type>);
+  static_assert(std::is_integral_v<index_type>);
 
  public:
   // Required
@@ -795,6 +820,9 @@ struct MinFirstLoc {
  private:
   using scalar_type = std::remove_cv_t<Scalar>;
   using index_type  = std::remove_cv_t<Index>;
+  static_assert(!std::is_pointer_v<scalar_type> &&
+                !std::is_array_v<scalar_type>);
+  static_assert(std::is_integral_v<index_type>);
 
  public:
   // Required
@@ -856,6 +884,9 @@ struct MinFirstLocCustomComparator {
  private:
   using scalar_type = std::remove_cv_t<Scalar>;
   using index_type  = std::remove_cv_t<Index>;
+  static_assert(!std::is_pointer_v<scalar_type> &&
+                !std::is_array_v<scalar_type>);
+  static_assert(std::is_integral_v<index_type>);
 
  public:
   // Required
@@ -922,6 +953,9 @@ struct MinMaxFirstLastLoc {
  private:
   using scalar_type = std::remove_cv_t<Scalar>;
   using index_type  = std::remove_cv_t<Index>;
+  static_assert(!std::is_pointer_v<scalar_type> &&
+                !std::is_array_v<scalar_type>);
+  static_assert(std::is_integral_v<index_type>);
 
  public:
   // Required
@@ -994,6 +1028,9 @@ struct MinMaxFirstLastLocCustomComparator {
  private:
   using scalar_type = std::remove_cv_t<Scalar>;
   using index_type  = std::remove_cv_t<Index>;
+  static_assert(!std::is_pointer_v<scalar_type> &&
+                !std::is_array_v<scalar_type>);
+  static_assert(std::is_integral_v<index_type>);
 
  public:
   // Required
@@ -1078,6 +1115,7 @@ template <class Index, class Space>
 struct FirstLoc {
  private:
   using index_type = std::remove_cv_t<Index>;
+  static_assert(std::is_integral_v<index_type>);
 
  public:
   // Required
@@ -1141,6 +1179,7 @@ template <class Index, class Space>
 struct LastLoc {
  private:
   using index_type = std::remove_cv_t<Index>;
+  static_assert(std::is_integral_v<index_type>);
 
  public:
   // Required
@@ -1207,6 +1246,7 @@ template <class Index, class Space>
 struct StdIsPartitioned {
  private:
   using index_type = std::remove_cv_t<Index>;
+  static_assert(std::is_integral_v<index_type>);
 
  public:
   // Required
@@ -1278,6 +1318,7 @@ template <class Index, class Space>
 struct StdPartitionPoint {
  private:
   using index_type = std::remove_cv_t<Index>;
+  static_assert(std::is_integral_v<index_type>);
 
  public:
   // Required
