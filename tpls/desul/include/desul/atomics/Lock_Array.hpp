@@ -67,7 +67,7 @@ inline void ensure_lock_arrays_on_device() {
 #endif
 
 #ifdef DESUL_HAVE_HIP_ATOMICS
-  DESUL_ENSURE_HIP_LOCK_ARRAYS_ON_DEVICE();
+  ensure_hip_lock_arrays_on_device();
 #endif
 }
 
