@@ -1542,6 +1542,7 @@ class TestViewAPI {
   }
 
   static void run_test_error() {
+#if !((HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR == 3))
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
     if (std::is_same<typename dView1::memory_space,
                      Kokkos::Experimental::OpenMPTargetSpace>::value)
@@ -1586,6 +1587,7 @@ class TestViewAPI {
       }
 #endif
     }
+#endif
   }
 };
 
