@@ -53,7 +53,9 @@ void hpx_thread_buffer::resize(const std::size_t num_threads,
       m_num_threads * m_size_per_thread + m_extra_space;
 
   if (m_size_total < size_total_new) {
-    m_data       = std::make_unique<char[]>(size_total_new);
+    // Don't use make_unique here as it value-initializes the elements of the
+    // array, which we have no use for, and can be very slow for large arrays.
+    m_data       = std::unique_ptr<char[]>(new char[size_total_new]);
     m_size_total = size_total_new;
   }
 }
