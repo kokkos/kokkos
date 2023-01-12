@@ -19,6 +19,7 @@
 #ifndef KOKKOS_HIP_INSTANCE_HPP
 #define KOKKOS_HIP_INSTANCE_HPP
 
+#include <HIP/Kokkos_HIP_SharedAllocationRecord.hpp>
 #include <HIP/Kokkos_HIP_Space.hpp>
 #include <HIP/Kokkos_HIP_Error.hpp>
 
@@ -136,8 +137,8 @@ class HIPInternal {
   // Resizing of reduction related scratch spaces
   size_type *scratch_space(const std::size_t size);
   size_type *scratch_flags(const std::size_t size);
-  size_type *scratch_functor(const std::size_t size) const;
-  size_type *scratch_functor_host(const std::size_t size) const;
+  template <typename DriverType>
+  size_type *scratch_functor(DriverType const &driver) const;
   uint32_t impl_get_instance_id() const noexcept;
   int acquire_team_scratch_space();
   // Resizing of team level 1 scratch
@@ -145,6 +146,50 @@ class HIPInternal {
                                   bool force_shrink = false);
   void release_team_scratch_space(int scratch_pool_id);
 };
+
+template <typename DriverType>
+Kokkos::HIP::size_type *HIPInternal::scratch_functor(
+    DriverType const &driver) const {
+  std::size_t size = sizeof(DriverType);
+  if (verify_is_initialized("scratch_functor") && m_scratchFunctorSize < size) {
+    m_scratchFunctorSize = size;
+
+    using Record = Kokkos::Impl::SharedAllocationRecord<Kokkos::HIPSpace, void>;
+    using RecordHost =
+        Kokkos::Impl::SharedAllocationRecord<Kokkos::HIPHostPinnedSpace, void>;
+
+    if (m_scratchFunctor) {
+      Record::decrement(Record::get_record(m_scratchFunctor));
+      RecordHost::decrement(RecordHost::get_record(m_scratchFunctorHost));
+    }
+
+    Record *const r =
+        Record::allocate(Kokkos::HIPSpace(), "Kokkos::InternalScratchFunctor",
+                         m_scratchFunctorSize);
+    RecordHost *const r_host = RecordHost::allocate(
+        Kokkos::HIPHostPinnedSpace(), "Kokkos::InternalScratchFunctorHost",
+        m_scratchFunctorSize);
+
+    Record::increment(r);
+    RecordHost::increment(r_host);
+
+    m_scratchFunctor     = reinterpret_cast<size_type *>(r->data());
+    m_scratchFunctorHost = reinterpret_cast<size_type *>(r_host->data());
+  }
+
+  // When using HSA_XNACK=1, it is necessary to copy the driver to the host to
+  // ensure that the driver is not destroyed before the computation is done.
+  // Without this fix, all the atomic tests fail. It is not obvious that this
+  // problem is limited to HSA_XNACK=1 even if all the tests pass when
+  // HSA_XNACK=0. That's why we always copy the driver.
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamSynchronize(m_stream));
+  std::memcpy(m_scratchFunctorHost, &driver, size);
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipMemcpyAsync(m_scratchFunctor,
+                                           m_scratchFunctorHost, size,
+                                           hipMemcpyDefault, m_stream));
+
+  return m_scratchFunctor;
+}
 
 }  // namespace Impl
 
