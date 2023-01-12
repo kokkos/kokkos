@@ -696,7 +696,7 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_HPX), 1)
   ifeq ($(KOKKOS_INTERNAL_HPX_ENABLE_ASYNC_DISPATCH), 1)
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_HPX_ASYNC_DISPATCH")
+    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_IMPL_HPX_ASYNC_DISPATCH")
   endif
 endif
 

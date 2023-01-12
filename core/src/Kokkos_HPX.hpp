@@ -220,7 +220,7 @@ class HPX {
   }
 
   static bool is_asynchronous(HPX const & = HPX()) noexcept {
-#if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
+#if defined(KOKKOS_ENABLE_IMPL_HPX_ASYNC_DISPATCH)
     return true;
 #else
     return false;
@@ -314,7 +314,7 @@ class HPX {
       }
     }
 
-#if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
+#if defined(KOKKOS_ENABLE_IMPL_HPX_ASYNC_DISPATCH)
     if (force_synchronous)
 #endif
     {
@@ -372,7 +372,7 @@ class HPX {
       }
     }
 
-#if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
+#if defined(KOKKOS_ENABLE_IMPL_HPX_ASYNC_DISPATCH)
     if (force_synchronous)
 #endif
     {

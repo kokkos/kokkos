@@ -394,7 +394,7 @@ TEST(kokkosp, parallel_scan_no_fence) {
   if (std::is_same<Kokkos::DefaultExecutionSpace, Kokkos::Threads>::value)
     GTEST_SKIP() << "skipping since the Thread backend always fences";
 #endif
-#if defined(KOKKOS_ENABLE_HPX) && !defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
+#if defined(KOKKOS_ENABLE_HPX) && !defined(KOKKOS_ENABLE_IMPL_HPX_ASYNC_DISPATCH)
   if (std::is_same<Kokkos::DefaultExecutionSpace,
                    Kokkos::Experimental::HPX>::value)
     GTEST_SKIP() << "skipping since the HPX backend always fences with async "
@@ -434,7 +434,7 @@ TEST(kokkosp, parallel_scan_no_fence_view) {
   if (std::is_same<Kokkos::DefaultExecutionSpace, Kokkos::Threads>::value)
     GTEST_SKIP() << "skipping since the Thread backend always fences";
 #endif
-#if defined(KOKKOS_ENABLE_HPX) && !defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
+#if defined(KOKKOS_ENABLE_HPX) && !defined(KOKKOS_ENABLE_IMPL_HPX_ASYNC_DISPATCH)
   if (std::is_same<Kokkos::DefaultExecutionSpace,
                    Kokkos::Experimental::HPX>::value)
     GTEST_SKIP() << "skipping since the HPX backend always fences with async "

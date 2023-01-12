@@ -38,7 +38,7 @@ TEST(hpx, independent_instances_delayed_execution) {
           Kokkos::Experimental::WorkItemProperty::HintLightWeight),
       KOKKOS_LAMBDA(int) { ran() = true; });
 
-#if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
+#if defined(KOKKOS_ENABLE_IMPL_HPX_ASYNC_DISPATCH)
   ASSERT_FALSE(ran());
 #else
   ASSERT_TRUE(ran());
