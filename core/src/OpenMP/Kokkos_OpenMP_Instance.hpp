@@ -47,11 +47,6 @@ class OpenMPInternal;
 
 inline int g_openmp_hardware_max_threads = 1;
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-// FIXME_OPENMP we can remove this after we remove partition_master
-inline thread_local OpenMPInternal* t_openmp_instance = nullptr;
-#endif
-
 struct OpenMPTraits {
   static int constexpr MAX_THREAD_COUNT = 512;
 };
@@ -195,6 +190,50 @@ std::vector<OpenMP> partition_space(OpenMP const& main_instance,
   return Impl::create_OpenMP_instances(main_instance, weights);
 }
 }  // namespace Experimental
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
+template <typename F>
+KOKKOS_DEPRECATED void OpenMP::partition_master(F const& f, int num_partitions,
+                                                int partition_size) {
+#if _OPENMP >= 201511
+  if (omp_get_max_active_levels() > 1) {
+#else
+  if (omp_get_nested()) {
+#endif
+    using Exec = Impl::OpenMPInternal;
+
+    Exec* prev_instance = &Impl::OpenMPInternal::singleton();
+
+    Exec::validate_partition_impl(prev_instance->m_pool_size, num_partitions,
+                                  partition_size);
+
+    OpenMP::memory_space space;
+
+#pragma omp parallel num_threads(num_partitions)
+    {
+      Exec thread_local_instance(partition_size);
+      Impl::t_openmp_instance = &thread_local_instance;
+
+      size_t pool_reduce_bytes  = 32 * partition_size;
+      size_t team_reduce_bytes  = 32 * partition_size;
+      size_t team_shared_bytes  = 1024 * partition_size;
+      size_t thread_local_bytes = 1024;
+
+      thread_local_instance.resize_thread_data(
+          pool_reduce_bytes, team_reduce_bytes, team_shared_bytes,
+          thread_local_bytes);
+
+      omp_set_num_threads(partition_size);
+      f(omp_get_thread_num(), omp_get_num_threads());
+      Impl::t_openmp_instance = nullptr;
+    }
+  } else {
+    // nested openmp not enabled
+    f(0, 1);
+  }
+}
+#endif
+
 }  // namespace Kokkos
 
 #endif
