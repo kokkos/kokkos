@@ -100,7 +100,6 @@ class ScratchMemorySpace {
       int level = -1) const {
     if (level == -1) level = m_default_level;
     auto& m_iter    = (level == 0) ? m_iter_L0 : m_iter_L1;
-    auto& m_end     = (level == 0) ? m_end_L0 : m_end_L1;
     auto m_iter_old = m_iter;
     if constexpr (alignment_requested) {
       const ptrdiff_t missalign = size_t(m_iter) % alignment;
@@ -113,7 +112,13 @@ class ScratchMemorySpace {
     void* tmp           = m_iter + m_offset * size;
     ptrdiff_t increment = size * m_multiplier;
 
-    if (increment > m_end - m_iter) {
+    // Cast to uintptr_t to avoid problems with pointer arithmetic using SYCL
+    const auto end_iter =
+        reinterpret_cast<uintptr_t>((level == 0) ? m_end_L0 : m_end_L1);
+    auto current_iter = reinterpret_cast<uintptr_t>(m_iter);
+    auto capacity     = end_iter - current_iter;
+
+    if (increment > capacity) {
       // Request did overflow: return nullptr and reset m_iter
       m_iter = m_iter_old;
       tmp    = nullptr;
@@ -124,7 +129,7 @@ class ScratchMemorySpace {
       KOKKOS_IMPL_DO_NOT_USE_PRINTF(
           "ScratchMemorySpace<...>::get_shmem: Failed to allocate "
           "%ld byte(s); remaining capacity is %ld byte(s)\n",
-          long(size), long(m_end - m_iter));
+          long(size), long(capacity));
 #endif  // KOKKOS_ENABLE_DEBUG
     } else {
       m_iter += increment;
