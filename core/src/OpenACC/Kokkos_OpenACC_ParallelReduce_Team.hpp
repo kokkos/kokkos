@@ -19,6 +19,7 @@
 
 #include <OpenACC/Kokkos_OpenACC_Team.hpp>
 #include <OpenACC/Kokkos_OpenACC_FunctorAdapter.hpp>
+#include <OpenACC/Kokkos_OpenACC_Macros.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -98,171 +99,36 @@ class Kokkos::Impl::ParallelReduce<FunctorType,
         m_result_ptr(reducer.view().data()) {}
 };
 
+namespace Kokkos {
+
+// Hierarchical Parallelism -> Team thread level implementation
+// FIXME_OPENACC: custom reduction is not implemented.
+template <typename iType, class Lambda, typename ValueType, class JoinType>
+KOKKOS_INLINE_FUNCTION void parallel_reduce(
+    const Impl::TeamThreadRangeBoundariesStruct<iType, Impl::OpenACCTeamMember>&
+        loop_boundaries,
+    const Lambda& lambda, const JoinType& join, ValueType& init_result) {
+  static_assert(!Kokkos::Impl::always_true<Lambda>::value,
+                "custom reduction is not implemented");
+}
+
+// Hierarchical Parallelism -> Thread vector level implementation
+// FIXME_OPENACC: custom reduction is not implemented.
+template <typename iType, class Lambda, typename ValueType, class JoinType>
+KOKKOS_INLINE_FUNCTION void parallel_reduce(
+    const Impl::ThreadVectorRangeBoundariesStruct<
+        iType, Impl::OpenACCTeamMember>& loop_boundaries,
+    const Lambda& lambda, const JoinType& join, ValueType& init_result) {
+  static_assert(!Kokkos::Impl::always_true<Lambda>::value,
+                "custom reduction is not implemented");
+}
+
+}  // namespace Kokkos
+
 #ifdef KOKKOS_ENABLE_OPENACC_COLLAPSE_HIERARCHICAL_CONSTRUCTS
 
-namespace Kokkos::Experimental::Impl {
-
-template <class Policy, class ValueType, class Functor>
-void OpenACCParallelReduceTeamSum(Policy const policy, ValueType& aval,
-                                  Functor const& afunctor, int async_arg) {
-  auto const functor       = afunctor;
-  auto val                 = aval;
-  auto const league_size   = policy.league_size();
-  auto const team_size     = policy.team_size();
-  auto const vector_length = policy.impl_vector_length();
-// clang-format off
-#pragma acc parallel loop gang vector num_gangs(league_size) vector_length(team_size*vector_length) reduction(+ : val) copyin(functor) async(async_arg)
-  // clang-format on
-  for (int i = 0; i < league_size * team_size * vector_length; i++) {
-    int league_id = i / (team_size * vector_length);
-    typename Policy::member_type team(league_id, league_size, team_size,
-                                      vector_length);
-    functor(team, val);
-  }
-  aval = val;
-}
-
-template <class Policy, class ValueType, class Functor>
-void OpenACCParallelReduceTeamProd(Policy const policy, ValueType& aval,
-                                   Functor const& afunctor, int async_arg) {
-  auto const functor       = afunctor;
-  auto val                 = aval;
-  auto const league_size   = policy.league_size();
-  auto const team_size     = policy.team_size();
-  auto const vector_length = policy.impl_vector_length();
-// clang-format off
-#pragma acc parallel loop gang vector num_gangs(league_size) vector_length(team_size*vector_length) reduction(* : val) copyin(functor) async(async_arg)
-  // clang-format on
-  for (int i = 0; i < league_size * team_size * vector_length; i++) {
-    int league_id = i / (team_size * vector_length);
-    typename Policy::member_type team(league_id, league_size, team_size,
-                                      vector_length);
-    functor(team, val);
-  }
-  aval = val;
-}
-
-template <class Policy, class ValueType, class Functor>
-void OpenACCParallelReduceTeamMin(Policy const policy, ValueType& aval,
-                                  Functor const& afunctor, int async_arg) {
-  auto const functor       = afunctor;
-  auto val                 = aval;
-  auto const league_size   = policy.league_size();
-  auto const team_size     = policy.team_size();
-  auto const vector_length = policy.impl_vector_length();
-// clang-format off
-#pragma acc parallel loop gang vector num_gangs(league_size) vector_length(team_size*vector_length) reduction(min : val) copyin(functor) async(async_arg)
-  // clang-format on
-  for (int i = 0; i < league_size * team_size * vector_length; i++) {
-    int league_id = i / (team_size * vector_length);
-    typename Policy::member_type team(league_id, league_size, team_size,
-                                      vector_length);
-    functor(team, val);
-  }
-  aval = val;
-}
-
-template <class Policy, class ValueType, class Functor>
-void OpenACCParallelReduceTeamMax(Policy const policy, ValueType& aval,
-                                  Functor const& afunctor, int async_arg) {
-  auto const functor       = afunctor;
-  auto val                 = aval;
-  auto const league_size   = policy.league_size();
-  auto const team_size     = policy.team_size();
-  auto const vector_length = policy.impl_vector_length();
-// clang-format off
-#pragma acc parallel loop gang vector num_gangs(league_size) vector_length(team_size*vector_length) reduction(max : val) copyin(functor) async(async_arg)
-  // clang-format on
-  for (int i = 0; i < league_size * team_size * vector_length; i++) {
-    int league_id = i / (team_size * vector_length);
-    typename Policy::member_type team(league_id, league_size, team_size,
-                                      vector_length);
-    functor(team, val);
-  }
-  aval = val;
-}
-
-template <class Policy, class ValueType, class Functor>
-void OpenACCParallelReduceTeamLAnd(Policy const policy, ValueType& aval,
-                                   Functor const& afunctor, int async_arg) {
-  auto const functor       = afunctor;
-  auto val                 = aval;
-  auto const league_size   = policy.league_size();
-  auto const team_size     = policy.team_size();
-  auto const vector_length = policy.impl_vector_length();
-// clang-format off
-#pragma acc parallel loop gang vector num_gangs(league_size) vector_length(team_size*vector_length) reduction(&& : val) copyin(functor) async(async_arg)
-  // clang-format on
-  for (int i = 0; i < league_size * team_size * vector_length; i++) {
-    int league_id = i / (team_size * vector_length);
-    typename Policy::member_type team(league_id, league_size, team_size,
-                                      vector_length);
-    functor(team, val);
-  }
-  aval = val;
-}
-
-template <class Policy, class ValueType, class Functor>
-void OpenACCParallelReduceTeamLOr(Policy const policy, ValueType& aval,
-                                  Functor const& afunctor, int async_arg) {
-  auto const functor       = afunctor;
-  auto val                 = aval;
-  auto const league_size   = policy.league_size();
-  auto const team_size     = policy.team_size();
-  auto const vector_length = policy.impl_vector_length();
-// clang-format off
-#pragma acc parallel loop gang vector num_gangs(league_size) vector_length(team_size*vector_length) reduction(|| : val) copyin(functor) async(async_arg)
-  // clang-format on
-  for (int i = 0; i < league_size * team_size * vector_length; i++) {
-    int league_id = i / (team_size * vector_length);
-    typename Policy::member_type team(league_id, league_size, team_size,
-                                      vector_length);
-    functor(team, val);
-  }
-  aval = val;
-}
-
-template <class Policy, class ValueType, class Functor>
-void OpenACCParallelReduceTeamBAnd(Policy const policy, ValueType& aval,
-                                   Functor const& afunctor, int async_arg) {
-  auto const functor       = afunctor;
-  auto val                 = aval;
-  auto const league_size   = policy.league_size();
-  auto const team_size     = policy.team_size();
-  auto const vector_length = policy.impl_vector_length();
-// clang-format off
-#pragma acc parallel loop gang vector num_gangs(league_size) vector_length(team_size*vector_length) reduction(& : val) copyin(functor) async(async_arg)
-  // clang-format on
-  for (int i = 0; i < league_size * team_size * vector_length; i++) {
-    int league_id = i / (team_size * vector_length);
-    typename Policy::member_type team(league_id, league_size, team_size,
-                                      vector_length);
-    functor(team, val);
-  }
-  aval = val;
-}
-
-template <class Policy, class ValueType, class Functor>
-void OpenACCParallelReduceTeamBOr(Policy const policy, ValueType& aval,
-                                  Functor const& afunctor, int async_arg) {
-  auto const functor       = afunctor;
-  auto val                 = aval;
-  auto const league_size   = policy.league_size();
-  auto const team_size     = policy.team_size();
-  auto const vector_length = policy.impl_vector_length();
-// clang-format off
-#pragma acc parallel loop gang vector num_gangs(league_size) vector_length(team_size*vector_length) reduction(| : val) copyin(functor) async(async_arg)
-  // clang-format on
-  for (int i = 0; i < league_size * team_size * vector_length; i++) {
-    int league_id = i / (team_size * vector_length);
-    typename Policy::member_type team(league_id, league_size, team_size,
-                                      vector_length);
-    functor(team, val);
-  }
-  aval = val;
-}
-
-}  // namespace Kokkos::Experimental::Impl
+#define KOKKOS_IMPL_ACC_REDUCE_TEAM_PRAGMA \
+  vector vector_length(team_size* vector_length)
 
 namespace Kokkos {
 
@@ -303,16 +169,6 @@ parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
   }
 }
 
-// FIXME_OPENACC: custom reduction is not implemented.
-template <typename iType, class Lambda, typename ValueType, class JoinType>
-KOKKOS_INLINE_FUNCTION void parallel_reduce(
-    const Impl::TeamThreadRangeBoundariesStruct<iType, Impl::OpenACCTeamMember>&
-        loop_boundaries,
-    const Lambda& lambda, const JoinType& join, ValueType& init_result) {
-  static_assert(!Kokkos::Impl::always_true<Lambda>::value,
-                "custom reduction is not implemented");
-}
-
 // Hierarchical Parallelism -> Thread vector level implementation
 #pragma acc routine seq
 template <typename iType, class Lambda, typename ValueType>
@@ -350,16 +206,6 @@ parallel_reduce(const Impl::ThreadVectorRangeBoundariesStruct<
     }
     reducer.reference() = tmp;
   }
-}
-
-// FIXME_OPENACC: custom reduction is not implemented.
-template <typename iType, class Lambda, typename ValueType, class JoinType>
-KOKKOS_INLINE_FUNCTION void parallel_reduce(
-    const Impl::ThreadVectorRangeBoundariesStruct<
-        iType, Impl::OpenACCTeamMember>& loop_boundaries,
-    const Lambda& lambda, const JoinType& join, ValueType& init_result) {
-  static_assert(!Kokkos::Impl::always_true<Lambda>::value,
-                "custom reduction is not implemented");
 }
 
 // Hierarchical Parallelism -> Team vector level implementation
@@ -385,175 +231,12 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
 
 #else /* #ifdef KOKKOS_ENABLE_OPENACC_COLLAPSE_HIERARCHICAL_CONSTRUCTS */
 
+#define KOKKOS_IMPL_ACC_REDUCE_TEAM_PRAGMA \
+  num_workers(team_size) vector_length(vector_length)
+
 // FIXME_OPENACC: below implementation conforms to the OpenACC standard, but
 // the NVHPC compiler (V22.11) fails due to the lack of support for lambda
 // expressions containing parallel loops.
-// Disabled for the time being.
-#if 0
-
-namespace Kokkos::Experimental::Impl {
-
-template <class Policy, class ValueType, class Functor>
-void OpenACCParallelReduceTeamSum(Policy const policy, ValueType& aval,
-                                  Functor const& afunctor, int async_arg) {
-  auto const functor       = afunctor;
-  auto val                 = aval;
-  auto const league_size   = policy.league_size();
-  auto const team_size     = policy.team_size();
-  auto const vector_length = policy.impl_vector_length();
-// clang-format off
-#pragma acc parallel loop gang num_gangs(league_size) num_workers(team_size) vector_length(vector_length) reduction(+ : val) copyin(functor) async(async_arg)
-  // clang-format on
-  for (int i = 0; i < league_size; i++) {
-    int league_id = i;
-    typename Policy::member_type team(league_id, league_size, team_size,
-                                      vector_length);
-    functor(team, val);
-  }
-  aval = val;
-}
-
-template <class Policy, class ValueType, class Functor>
-void OpenACCParallelReduceTeamProd(Policy const policy, ValueType& aval,
-                                   Functor const& afunctor, int async_arg) {
-  auto const functor       = afunctor;
-  auto val                 = aval;
-  auto const league_size   = policy.league_size();
-  auto const team_size     = policy.team_size();
-  auto const vector_length = policy.impl_vector_length();
-// clang-format off
-#pragma acc parallel loop gang num_gangs(league_size) num_workers(team_size) vector_length(vector_length) reduction(* : val) copyin(functor) async(async_arg)
-  // clang-format on
-  for (int i = 0; i < league_size; i++) {
-    int league_id = i;
-    typename Policy::member_type team(league_id, league_size, team_size,
-                                      vector_length);
-    functor(team, val);
-  }
-  aval = val;
-}
-
-template <class Policy, class ValueType, class Functor>
-void OpenACCParallelReduceTeamMin(Policy const policy, ValueType& aval,
-                                  Functor const& afunctor, int async_arg) {
-  auto const functor       = afunctor;
-  auto val                 = aval;
-  auto const league_size   = policy.league_size();
-  auto const team_size     = policy.team_size();
-  auto const vector_length = policy.impl_vector_length();
-// clang-format off
-#pragma acc parallel loop gang num_gangs(league_size) num_workers(team_size) vector_length(vector_length) reduction(min : val) copyin(functor) async(async_arg)
-  // clang-format on
-  for (int i = 0; i < league_size; i++) {
-    int league_id = i;
-    typename Policy::member_type team(league_id, league_size, team_size,
-                                      vector_length);
-    functor(team, val);
-  }
-  aval = val;
-}
-
-template <class Policy, class ValueType, class Functor>
-void OpenACCParallelReduceTeamMax(Policy const policy, ValueType& aval,
-                                  Functor const& afunctor, int async_arg) {
-  auto const functor       = afunctor;
-  auto val                 = aval;
-  auto const league_size   = policy.league_size();
-  auto const team_size     = policy.team_size();
-  auto const vector_length = policy.impl_vector_length();
-// clang-format off
-#pragma acc parallel loop gang num_gangs(league_size) num_workers(team_size) vector_length(vector_length) reduction(max : val) copyin(functor) async(async_arg)
-  // clang-format on
-  for (int i = 0; i < league_size; i++) {
-    int league_id = i;
-    typename Policy::member_type team(league_id, league_size, team_size,
-                                      vector_length);
-    functor(team, val);
-  }
-  aval = val;
-}
-
-template <class Policy, class ValueType, class Functor>
-void OpenACCParallelReduceTeamLAnd(Policy const policy, ValueType& aval,
-                                   Functor const& afunctor, int async_arg) {
-  auto const functor       = afunctor;
-  auto val                 = aval;
-  auto const league_size   = policy.league_size();
-  auto const team_size     = policy.team_size();
-  auto const vector_length = policy.impl_vector_length();
-// clang-format off
-#pragma acc parallel loop gang num_gangs(league_size) num_workers(team_size) vector_length(vector_length) reduction(&& : val) copyin(functor) async(async_arg)
-  // clang-format on
-  for (int i = 0; i < league_size; i++) {
-    int league_id = i;
-    typename Policy::member_type team(league_id, league_size, team_size,
-                                      vector_length);
-    functor(team, val);
-  }
-  aval = val;
-}
-
-template <class Policy, class ValueType, class Functor>
-void OpenACCParallelReduceTeamLOr(Policy const policy, ValueType& aval,
-                                  Functor const& afunctor, int async_arg) {
-  auto const functor       = afunctor;
-  auto val                 = aval;
-  auto const league_size   = policy.league_size();
-  auto const team_size     = policy.team_size();
-  auto const vector_length = policy.impl_vector_length();
-// clang-format off
-#pragma acc parallel loop gang num_gangs(league_size) num_workers(team_size) vector_length(vector_length) reduction(|| : val) copyin(functor) async(async_arg)
-  // clang-format on
-  for (int i = 0; i < league_size; i++) {
-    int league_id = i;
-    typename Policy::member_type team(league_id, league_size, team_size,
-                                      vector_length);
-    functor(team, val);
-  }
-  aval = val;
-}
-
-template <class Policy, class ValueType, class Functor>
-void OpenACCParallelReduceTeamBAnd(Policy const policy, ValueType& aval,
-                                   Functor const& afunctor, int async_arg) {
-  auto const functor       = afunctor;
-  auto val                 = aval;
-  auto const league_size   = policy.league_size();
-  auto const team_size     = policy.team_size();
-  auto const vector_length = policy.impl_vector_length();
-// clang-format off
-#pragma acc parallel loop gang vector num_gangs(league_size) num_workers(team_size) vector_length(vector_length) reduction(& : val) copyin(functor) async(async_arg)
-  // clang-format on
-  for (int i = 0; i < league_size; i++) {
-    int league_id = i;
-    typename Policy::member_type team(league_id, league_size, team_size,
-                                      vector_length);
-    functor(team, val);
-  }
-  aval = val;
-}
-
-template <class Policy, class ValueType, class Functor>
-void OpenACCParallelReduceTeamBOr(Policy const policy, ValueType& aval,
-                                  Functor const& afunctor, int async_arg) {
-  auto const functor       = afunctor;
-  auto val                 = aval;
-  auto const league_size   = policy.league_size();
-  auto const team_size     = policy.team_size();
-  auto const vector_length = policy.impl_vector_length();
-// clang-format off
-#pragma acc parallel loop gang vector num_gangs(league_size) num_workers(team_size) vector_length(vector_length) reduction(| : val) copyin(functor) async(async_arg)
-  // clang-format on
-  for (int i = 0; i < league_size; i++) {
-    int league_id = i;
-    typename Policy::member_type team(league_id, league_size, team_size,
-                                      vector_length);
-    functor(team, val);
-  }
-  aval = val;
-}
-
-}  // namespace Kokkos::Experimental::Impl
 
 namespace Kokkos {
 
@@ -571,38 +254,40 @@ parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
   result = tmp;
 }
 
-#pragma acc routine worker
-template <typename iType, class Lambda, typename ReducerType>
-KOKKOS_INLINE_FUNCTION std::enable_if_t<Kokkos::is_reducer_v<ReducerType>>
-parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
-                    iType, Impl::OpenACCTeamMember>& loop_boundaries,
-                const Lambda& lambda, const ReducerType& reducer) {
-  using ValueType = typename ReducerType::value_type;
-  ValueType tmp = ValueType();
-  reducer.init(tmp);
-#pragma acc loop worker reduction(+ : tmp)
-  for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++)
-    lambda(i, tmp);
-  reducer.reference() = tmp;
-}
+#define KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_TEAM_THREAD(REDUCER, OPERATOR)   \
+  KOKKOS_IMPL_ACC_PRAGMA(routine worker)                                     \
+  template <typename iType, class Lambda, class Scalar, class Space>         \
+  KOKKOS_INLINE_FUNCTION                                                     \
+      std::enable_if_t<Kokkos::is_reducer_v<Kokkos::REDUCER<Scalar, Space>>> \
+      parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<           \
+                          iType, Impl::OpenACCTeamMember>& loop_boundaries,  \
+                      const Lambda& lambda,                                  \
+                      const Kokkos::REDUCER<Scalar, Space>& reducer) {       \
+    using ValueType = typename Kokkos::REDUCER<Scalar, Space>::value_type;   \
+    ValueType tmp   = ValueType();                                           \
+    reducer.init(tmp);                                                       \
+    KOKKOS_IMPL_ACC_PRAGMA(loop worker reduction(OPERATOR : tmp))            \
+    for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++)      \
+      lambda(i, tmp);                                                        \
+    reducer.reference() = tmp;                                               \
+  }
 
-// FIXME_OPENACC: custom reduction is not implemented.
-template <typename iType, class Lambda, typename ValueType, class JoinType>
-KOKKOS_INLINE_FUNCTION void parallel_reduce(
-    const Impl::TeamThreadRangeBoundariesStruct<iType, Impl::OpenACCTeamMember>&
-        loop_boundaries,
-    const Lambda& lambda, const JoinType& join, ValueType& init_result) {
-  static_assert(!Kokkos::Impl::always_true<Lambda>::value,
-                "custom reduction is not implemented");
-}
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_TEAM_THREAD(Sum, +);
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_TEAM_THREAD(Prod, *);
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_TEAM_THREAD(Min, min);
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_TEAM_THREAD(Max, max);
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_TEAM_THREAD(LAnd, &&);
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_TEAM_THREAD(LOr, ||);
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_TEAM_THREAD(BAnd, &);
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_TEAM_THREAD(BOr, |);
 
 // Hierarchical Parallelism -> Thread vector level implementation
 #pragma acc routine vector
 template <typename iType, class Lambda, typename ValueType>
-KOKKOS_INLINE_FUNCTION void parallel_reduce(
-    const Impl::ThreadVectorRangeBoundariesStruct<
-        iType, Impl::OpenACCTeamMember>& loop_boundaries,
-    const Lambda& lambda, ValueType& result) {
+KOKKOS_INLINE_FUNCTION std::enable_if_t<!Kokkos::is_reducer_v<ValueType>>
+parallel_reduce(const Impl::ThreadVectorRangeBoundariesStruct<
+                    iType, Impl::OpenACCTeamMember>& loop_boundaries,
+                const Lambda& lambda, ValueType& result) {
   ValueType tmp = ValueType();
 #pragma acc loop vector reduction(+ : tmp)
   for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
@@ -611,31 +296,33 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
   result = tmp;
 }
 
-#pragma acc routine vector
-template <typename iType, class Lambda, typename ReducerType>
-KOKKOS_INLINE_FUNCTION std::enable_if_t<Kokkos::is_reducer_v<ReducerType>>
-parallel_reduce(const Impl::ThreadVectorRangeBoundariesStruct<
-                    iType, Impl::OpenACCTeamMember>& loop_boundaries,
-                const Lambda& lambda, const ReducerType & reducer) {
-  using ValueType = typename ReducerType::value_type;
-  ValueType tmp;
-  reducer.init(tmp);
-#pragma acc loop vector reduction(+ : tmp)
-  for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
-    lambda(i, tmp);
+#define KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_THREAD_VECTOR(REDUCER, OPERATOR) \
+  KOKKOS_IMPL_ACC_PRAGMA(routine vector)                                     \
+  template <typename iType, class Lambda, class Scalar, class Space>         \
+  KOKKOS_INLINE_FUNCTION                                                     \
+      std::enable_if_t<Kokkos::is_reducer_v<Kokkos::REDUCER<Scalar, Space>>> \
+      parallel_reduce(const Impl::ThreadVectorRangeBoundariesStruct<         \
+                          iType, Impl::OpenACCTeamMember>& loop_boundaries,  \
+                      const Lambda& lambda,                                  \
+                      const Kokkos::REDUCER<Scalar, Space>& reducer) {       \
+    using ValueType = typename Kokkos::REDUCER<Scalar, Space>::value_type;   \
+    ValueType tmp;                                                           \
+    reducer.init(tmp);                                                       \
+    KOKKOS_IMPL_ACC_PRAGMA(loop vector reduction(OPERATOR : tmp))            \
+    for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {    \
+      lambda(i, tmp);                                                        \
+    }                                                                        \
+    reducer.reference() = tmp;                                               \
   }
-  reducer.reference() = tmp;
-}
 
-// FIXME_OPENACC: custom reduction is not implemented.
-template <typename iType, class Lambda, typename ValueType, class JoinType>
-KOKKOS_INLINE_FUNCTION void parallel_reduce(
-    const Impl::ThreadVectorRangeBoundariesStruct<
-        iType, Impl::OpenACCTeamMember>& loop_boundaries,
-    const Lambda& lambda, const JoinType& join, ValueType& init_result) {
-  static_assert(!Kokkos::Impl::always_true<Lambda>::value,
-                "custom reduction is not implemented");
-}
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_THREAD_VECTOR(Sum, +);
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_THREAD_VECTOR(Prod, *);
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_THREAD_VECTOR(Min, min);
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_THREAD_VECTOR(Max, max);
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_THREAD_VECTOR(LAnd, &&);
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_THREAD_VECTOR(LOr, ||);
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_THREAD_VECTOR(BAnd, &);
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_THREAD_VECTOR(BOr, |);
 
 // Hierarchical Parallelism -> Team vector level implementation
 #pragma acc routine vector
@@ -651,12 +338,43 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
   }
   result = tmp;
 }
+
 }  // namespace Kokkos
-#endif /* #if 0 */
+
+#undef KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_TEAM_THREAD
+#undef KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_THREAD_VECTOR
 
 #endif /* #ifdef KOKKOS_ENABLE_OPENACC_COLLAPSE_HIERARCHICAL_CONSTRUCTS */
 
-#define KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_TEAM_HELPER(REDUCER)           \
+#define KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_DISPATCH_SCHEDULE(REDUCER,     \
+                                                              OPERATOR)    \
+  namespace Kokkos::Experimental::Impl {                                   \
+  template <class Policy, class ValueType, class Functor>                  \
+  void OpenACCParallelReduceTeam##REDUCER(Policy const policy,             \
+                                          ValueType& aval,                 \
+                                          Functor const& afunctor,         \
+                                          int async_arg) {                 \
+    auto const functor       = afunctor;                                   \
+    auto val                 = aval;                                       \
+    auto const league_size   = policy.league_size();                       \
+    auto const team_size     = policy.team_size();                         \
+    auto const vector_length = policy.impl_vector_length();                \
+    /* clang-format off */ \
+    KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang num_gangs(league_size) KOKKOS_IMPL_ACC_REDUCE_TEAM_PRAGMA reduction(OPERATOR : val) copyin(functor) async(async_arg))                                               \
+    /* clang-format on */                                                  \
+    for (int i = 0; i < league_size * team_size * vector_length; i++) {    \
+      int league_id = i / (team_size * vector_length);                     \
+      typename Policy::member_type team(league_id, league_size, team_size, \
+                                        vector_length);                    \
+      functor(team, val);                                                  \
+    }                                                                      \
+    aval = val;                                                            \
+  }                                                                        \
+  }  // namespace Kokkos::Experimental::Impl
+
+#define KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_TEAM_HELPER(REDUCER, OPERATOR) \
+  KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_DISPATCH_SCHEDULE(REDUCER, OPERATOR) \
+                                                                           \
   template <class Functor, class Scalar, class Space, class... Traits>     \
   struct Kokkos::Experimental::Impl::OpenACCParallelReduceTeamHelper<      \
       Functor, Kokkos::REDUCER<Scalar, Space>,                             \
@@ -687,15 +405,17 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
     }                                                                      \
   }
 
-KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_TEAM_HELPER(Sum);
-KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_TEAM_HELPER(Prod);
-KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_TEAM_HELPER(Min);
-KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_TEAM_HELPER(Max);
-KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_TEAM_HELPER(LAnd);
-KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_TEAM_HELPER(LOr);
-KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_TEAM_HELPER(BAnd);
-KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_TEAM_HELPER(BOr);
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_TEAM_HELPER(Sum, +);
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_TEAM_HELPER(Prod, *);
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_TEAM_HELPER(Min, min);
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_TEAM_HELPER(Max, max);
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_TEAM_HELPER(LAnd, &&);
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_TEAM_HELPER(LOr, ||);
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_TEAM_HELPER(BAnd, &);
+KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_TEAM_HELPER(BOr, |);
 
 #undef KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_TEAM_HELPER
+#undef KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_DISPATCH_SCHEDULE
+#undef KOKKOS_IMPL_ACC_REDUCE_TEAM_PRAGMA
 
 #endif /* #ifndef KOKKOS_OPENACC_PARALLEL_REDUCE_TEAM_HPP */
