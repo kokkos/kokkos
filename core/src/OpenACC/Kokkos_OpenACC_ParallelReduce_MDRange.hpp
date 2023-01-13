@@ -138,7 +138,7 @@ class Kokkos::Impl::ParallelReduce<Functor, Kokkos::MDRangePolicy<Traits...>,
     int begin1 = begin[1];                                                    \
     int end1   = end[1];                                                      \
     /* clang-format off */ \
-    KOKKOS_IMPL_ACC_PGRAMA(parallel loop gang vector collapse(2) reduction(OPERATOR:val) copyin(functor) async(async_arg))                                                  \
+    KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang vector collapse(2) reduction(OPERATOR:val) copyin(functor) async(async_arg))                                                  \
     /* clang-format on */                                                     \
     for (auto i0 = begin0; i0 < end0; ++i0) {                                 \
       for (auto i1 = begin1; i1 < end1; ++i1) {                               \
@@ -192,7 +192,7 @@ class Kokkos::Impl::ParallelReduce<Functor, Kokkos::MDRangePolicy<Traits...>,
     int begin2 = begin[2];                                                    \
     int end2   = end[2];                                                      \
     /* clang-format off */                                                  \
-    KOKKOS_IMPL_ACC_PGRAMA(parallel loop gang vector collapse(3) reduction( \
+    KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang vector collapse(3) reduction( \
         OPERATOR                                                            \
         : val) copyin(functor) async(async_arg)) \
     /* clang-format on */                                                     \
@@ -254,7 +254,7 @@ class Kokkos::Impl::ParallelReduce<Functor, Kokkos::MDRangePolicy<Traits...>,
     int begin3 = begin[3];                                                    \
     int end3   = end[3];                                                      \
     /* clang-format off */ \
-    KOKKOS_IMPL_ACC_PGRAMA(parallel loop gang vector collapse(4) reduction(OPERATOR:val) copyin(functor) async(async_arg))                                                  \
+    KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang vector collapse(4) reduction(OPERATOR:val) copyin(functor) async(async_arg))                                                  \
     /* clang-format on */                                                     \
     for (auto i0 = begin0; i0 < end0; ++i0) {                                 \
       for (auto i1 = begin1; i1 < end1; ++i1) {                               \
@@ -322,7 +322,7 @@ class Kokkos::Impl::ParallelReduce<Functor, Kokkos::MDRangePolicy<Traits...>,
     int begin4 = begin[4];                                                    \
     int end4   = end[4];                                                      \
     /* clang-format off */ \
-    KOKKOS_IMPL_ACC_PGRAMA(parallel loop gang vector collapse(5) reduction(OPERATOR:val) copyin(functor) async(async_arg))                                                  \
+    KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang vector collapse(5) reduction(OPERATOR:val) copyin(functor) async(async_arg))                                                  \
     /* clang-format on */                                                     \
     for (auto i0 = begin0; i0 < end0; ++i0) {                                 \
       for (auto i1 = begin1; i1 < end1; ++i1) {                               \
@@ -398,7 +398,7 @@ class Kokkos::Impl::ParallelReduce<Functor, Kokkos::MDRangePolicy<Traits...>,
     int begin5 = begin[5];                                                    \
     int end5   = end[5];                                                      \
     /* clang-format off */ \
-    KOKKOS_IMPL_ACC_PGRAMA(parallel loop gang vector collapse(6) reduction(OPERATOR:val) copyin(functor) async(async_arg))                                                  \
+    KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang vector collapse(6) reduction(OPERATOR:val) copyin(functor) async(async_arg))                                                  \
     /* clang-format on */                                                     \
     for (auto i0 = begin0; i0 < end0; ++i0) {                                 \
       for (auto i1 = begin1; i1 < end1; ++i1) {                               \
