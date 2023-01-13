@@ -4,6 +4,22 @@ KOKKOS_INCLUDE_DIRECTORIES(
   ${KOKKOS_TOP_BUILD_DIR}
 )
 IF (Kokkos_ENABLE_IMPL_DESUL_ATOMICS AND NOT desul_FOUND)
+  IF(KOKKOS_ENABLE_CUDA)
+    SET(DESUL_ATOMICS_ENABLE_CUDA ON)
+  ENDIF()
+  IF(KOKKOS_ENABLE_HIP)
+    SET(DESUL_ATOMICS_ENABLE_HIP ON)
+  ENDIF()
+  IF(KOKKOS_ENABLE_SYCL)
+    SET(DESUL_ATOMICS_ENABLE_SYCL ON)
+  ENDIF()
+  IF(KOKKOS_ENABLE_OPENMPTARGET)
+    SET(DESUL_ATOMICS_ENABLE_OPENMP ON) # not a typo Kokkos OpenMPTarget -> Desul OpenMP
+  ENDIF()
+  CONFIGURE_FILE(
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/desul/Config.hpp.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/desul/atomics/Config.hpp
+  )
   KOKKOS_INCLUDE_DIRECTORIES(
     ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/desul/include
   )
@@ -78,15 +94,18 @@ IF (Kokkos_ENABLE_IMPL_DESUL_ATOMICS AND NOT desul_FOUND)
   APPEND_GLOB(KOKKOS_CORE_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/desul/include/desul/*/*.hpp)
   APPEND_GLOB(KOKKOS_CORE_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/desul/include/desul/*/*/*.hpp)
   APPEND_GLOB(KOKKOS_CORE_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/desul/include/*/*/*.inc*)
+  APPEND_GLOB(KOKKOS_CORE_HEADERS ${CMAKE_CURRENT_BINARY_DIR}/desul/*.hpp)
 
   INSTALL (DIRECTORY
     "${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/desul/include/desul"
+    "${CMAKE_CURRENT_BINARY_DIR}/desul"
     DESTINATION ${KOKKOS_HEADER_DIR}
     FILES_MATCHING
     PATTERN "*.inc"
     PATTERN "*.inc_*"
     PATTERN "*.hpp"
   )
+
   MESSAGE(STATUS "Using internal desul_atomics copy")
 ELSE()
   MESSAGE(STATUS "Using external desul_atomics install found at:")
