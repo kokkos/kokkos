@@ -2177,7 +2177,8 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
  * The range i=0..N-1 is mapped to all threads of the the calling thread team
  * and a summation of val is performed and put into result.
  */
-template <typename iType, class Lambda, typename ValueType>
+template <typename iType, class Lambda, typename ValueType,
+          typename = std::enable_if_t<!Kokkos::is_reducer<ValueType>::value>>
 KOKKOS_INLINE_FUNCTION void parallel_reduce(
     const Impl::TeamThreadRangeBoundariesStruct<iType, Impl::HPXTeamMember>
         &loop_boundaries,
@@ -2214,7 +2215,8 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
  * The range i=0..N-1 is mapped to all vector lanes of the the calling thread
  * and a summation of val is performed and put into result.
  */
-template <typename iType, class Lambda, typename ValueType>
+template <typename iType, class Lambda, typename ValueType,
+          typename = std::enable_if_t<!Kokkos::is_reducer<ValueType>::value>>
 KOKKOS_INLINE_FUNCTION void parallel_reduce(
     const Impl::ThreadVectorRangeBoundariesStruct<iType, Impl::HPXTeamMember>
         &loop_boundaries,
@@ -2229,7 +2231,8 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
   }
 }
 
-template <typename iType, class Lambda, typename ReducerType>
+template <typename iType, class Lambda, typename ReducerType,
+          typename = std::enable_if_t<Kokkos::is_reducer<ReducerType>::value>>
 KOKKOS_INLINE_FUNCTION void parallel_reduce(
     const Impl::TeamThreadRangeBoundariesStruct<iType, Impl::HPXTeamMember>
         &loop_boundaries,
@@ -2241,7 +2244,8 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
   }
 }
 
-template <typename iType, class Lambda, typename ReducerType>
+template <typename iType, class Lambda, typename ReducerType,
+          typename = std::enable_if_t<Kokkos::is_reducer<ReducerType>::value>>
 KOKKOS_INLINE_FUNCTION void parallel_reduce(
     const Impl::ThreadVectorRangeBoundariesStruct<iType, Impl::HPXTeamMember>
         &loop_boundaries,
