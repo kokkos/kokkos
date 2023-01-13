@@ -99,318 +99,322 @@ class Kokkos::Impl::ParallelReduce<Functor, Kokkos::MDRangePolicy<Traits...>,
   }
 };
 
-#define KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_DISPATCH_ITERATE(REDUCER,       \
-                                                             OPERATOR)      \
-  namespace Kokkos::Experimental::Impl {                                    \
-  template <class ValueType, class Functor>                                 \
-  void OpenACCParallelReduce##REDUCER(OpenACCIterateLeft, ValueType& aval,  \
-                                      Functor const& afunctor,              \
-                                      OpenACCMDRangeBegin<2> const& begin,  \
-                                      OpenACCMDRangeEnd<2> const& end,      \
-                                      int async_arg) {                      \
-    auto val = aval;                                                        \
-    auto const functor(afunctor);                                           \
-    int begin1 = begin[1];                                                  \
-    int end1   = end[1];                                                    \
-    int begin0 = begin[0];                                                  \
-    int end0   = end[0];                                                    \
+#define KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_DISPATCH_ITERATE(REDUCER,         \
+                                                             OPERATOR)        \
+  namespace Kokkos::Experimental::Impl {                                      \
+  template <class ValueType, class Functor>                                   \
+  void OpenACCParallelReduce##REDUCER(OpenACCIterateLeft, ValueType& aval,    \
+                                      Functor const& afunctor,                \
+                                      OpenACCMDRangeBegin<2> const& begin,    \
+                                      OpenACCMDRangeEnd<2> const& end,        \
+                                      int async_arg) {                        \
+    auto val = aval;                                                          \
+    auto const functor(afunctor);                                             \
+    int begin1 = begin[1];                                                    \
+    int end1   = end[1];                                                      \
+    int begin0 = begin[0];                                                    \
+    int end0   = end[0];                                                      \
     /* clang-format off */ \
-    KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang vector collapse(2) reduction(OPERATOR:val) copyin(functor) async(async_arg))                                                \
-    /* clang-format on */                                                   \
-    for (auto i1 = begin1; i1 < end1; ++i1) {                               \
-      for (auto i0 = begin0; i0 < end0; ++i0) {                             \
-        functor(i0, i1, val);                                               \
-      }                                                                     \
-    }                                                                       \
-    aval = val;                                                             \
-  }                                                                         \
-                                                                            \
-  template <class ValueType, class Functor>                                 \
-  void OpenACCParallelReduce##REDUCER(OpenACCIterateRight, ValueType& aval, \
-                                      Functor const& afunctor,              \
-                                      OpenACCMDRangeBegin<2> const& begin,  \
-                                      OpenACCMDRangeEnd<2> const& end,      \
-                                      int async_arg) {                      \
-    auto val = aval;                                                        \
-    auto const functor(afunctor);                                           \
-    int begin0 = begin[0];                                                  \
-    int end0   = end[0];                                                    \
-    int begin1 = begin[1];                                                  \
-    int end1   = end[1];                                                    \
+    KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang vector collapse(2) reduction(OPERATOR:val) copyin(functor) async(async_arg))                                                  \
+    /* clang-format on */                                                     \
+    for (auto i1 = begin1; i1 < end1; ++i1) {                                 \
+      for (auto i0 = begin0; i0 < end0; ++i0) {                               \
+        functor(i0, i1, val);                                                 \
+      }                                                                       \
+    }                                                                         \
+    aval = val;                                                               \
+  }                                                                           \
+                                                                              \
+  template <class ValueType, class Functor>                                   \
+  void OpenACCParallelReduce##REDUCER(OpenACCIterateRight, ValueType& aval,   \
+                                      Functor const& afunctor,                \
+                                      OpenACCMDRangeBegin<2> const& begin,    \
+                                      OpenACCMDRangeEnd<2> const& end,        \
+                                      int async_arg) {                        \
+    auto val = aval;                                                          \
+    auto const functor(afunctor);                                             \
+    int begin0 = begin[0];                                                    \
+    int end0   = end[0];                                                      \
+    int begin1 = begin[1];                                                    \
+    int end1   = end[1];                                                      \
     /* clang-format off */ \
-    KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang vector collapse(2) reduction(OPERATOR:val) copyin(functor) async(async_arg))                                                \
-    /* clang-format on */                                                   \
-    for (auto i0 = begin0; i0 < end0; ++i0) {                               \
-      for (auto i1 = begin1; i1 < end1; ++i1) {                             \
-        functor(i0, i1, val);                                               \
-      }                                                                     \
-    }                                                                       \
-    aval = val;                                                             \
-  }                                                                         \
-                                                                            \
-  template <class ValueType, class Functor>                                 \
-  void OpenACCParallelReduce##REDUCER(OpenACCIterateLeft, ValueType& aval,  \
-                                      Functor const& afunctor,              \
-                                      OpenACCMDRangeBegin<3> const& begin,  \
-                                      OpenACCMDRangeEnd<3> const& end,      \
-                                      int async_arg) {                      \
-    auto val = aval;                                                        \
-    auto const functor(afunctor);                                           \
-    int begin2 = begin[2];                                                  \
-    int end2   = end[2];                                                    \
-    int begin1 = begin[1];                                                  \
-    int end1   = end[1];                                                    \
-    int begin0 = begin[0];                                                  \
-    int end0   = end[0];                                                    \
+    KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang vector collapse(2) reduction(OPERATOR:val) copyin(functor) async(async_arg))                                                  \
+    /* clang-format on */                                                     \
+    for (auto i0 = begin0; i0 < end0; ++i0) {                                 \
+      for (auto i1 = begin1; i1 < end1; ++i1) {                               \
+        functor(i0, i1, val);                                                 \
+      }                                                                       \
+    }                                                                         \
+    aval = val;                                                               \
+  }                                                                           \
+                                                                              \
+  template <class ValueType, class Functor>                                   \
+  void OpenACCParallelReduce##REDUCER(OpenACCIterateLeft, ValueType& aval,    \
+                                      Functor const& afunctor,                \
+                                      OpenACCMDRangeBegin<3> const& begin,    \
+                                      OpenACCMDRangeEnd<3> const& end,        \
+                                      int async_arg) {                        \
+    auto val = aval;                                                          \
+    auto const functor(afunctor);                                             \
+    int begin2 = begin[2];                                                    \
+    int end2   = end[2];                                                      \
+    int begin1 = begin[1];                                                    \
+    int end1   = end[1];                                                      \
+    int begin0 = begin[0];                                                    \
+    int end0   = end[0];                                                      \
+    /* clang-format off */                                                  \
+    KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang vector collapse(3) reduction( \
+        OPERATOR                                                            \
+        : val) copyin(functor) async(async_arg)) \
+    /* clang-format on */                                                     \
+    for (auto i2 = begin2; i2 < end2; ++i2) {                                 \
+      for (auto i1 = begin1; i1 < end1; ++i1) {                               \
+        for (auto i0 = begin0; i0 < end0; ++i0) {                             \
+          functor(i0, i1, i2, val);                                           \
+        }                                                                     \
+      }                                                                       \
+    }                                                                         \
+    aval = val;                                                               \
+  }                                                                           \
+                                                                              \
+  template <class ValueType, class Functor>                                   \
+  void OpenACCParallelReduce##REDUCER(OpenACCIterateRight, ValueType& aval,   \
+                                      Functor const& afunctor,                \
+                                      OpenACCMDRangeBegin<3> const& begin,    \
+                                      OpenACCMDRangeEnd<3> const& end,        \
+                                      int async_arg) {                        \
+    auto val = aval;                                                          \
+    auto const functor(afunctor);                                             \
+    int begin0 = begin[0];                                                    \
+    int end0   = end[0];                                                      \
+    int begin1 = begin[1];                                                    \
+    int end1   = end[1];                                                      \
+    int begin2 = begin[2];                                                    \
+    int end2   = end[2];                                                      \
+    /* clang-format off */                                                  \
+    KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang vector collapse(3) reduction( \
+        OPERATOR                                                            \
+        : val) copyin(functor) async(async_arg)) \
+    /* clang-format on */                                                     \
+    for (auto i0 = begin0; i0 < end0; ++i0) {                                 \
+      for (auto i1 = begin1; i1 < end1; ++i1) {                               \
+        for (auto i2 = begin2; i2 < end2; ++i2) {                             \
+          functor(i0, i1, i2, val);                                           \
+        }                                                                     \
+      }                                                                       \
+    }                                                                         \
+    aval = val;                                                               \
+  }                                                                           \
+                                                                              \
+  template <class ValueType, class Functor>                                   \
+  void OpenACCParallelReduce##REDUCER(OpenACCIterateLeft, ValueType& aval,    \
+                                      Functor const& afunctor,                \
+                                      OpenACCMDRangeBegin<4> const& begin,    \
+                                      OpenACCMDRangeEnd<4> const& end,        \
+                                      int async_arg) {                        \
+    auto val = aval;                                                          \
+    auto const functor(afunctor);                                             \
+    int begin3 = begin[3];                                                    \
+    int end3   = end[3];                                                      \
+    int begin2 = begin[2];                                                    \
+    int end2   = end[2];                                                      \
+    int begin1 = begin[1];                                                    \
+    int end1   = end[1];                                                      \
+    int begin0 = begin[0];                                                    \
+    int end0   = end[0];                                                      \
     /* clang-format off */ \
-    KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang vector collapse(3) reduction(OPERATOR:val) copyin(functor) async(async_arg))                                                \
-    /* clang-format on */                                                   \
-    for (auto i2 = begin2; i2 < end2; ++i2) {                               \
-      for (auto i1 = begin1; i1 < end1; ++i1) {                             \
-        for (auto i0 = begin0; i0 < end0; ++i0) {                           \
-          functor(i0, i1, i2, val);                                         \
-        }                                                                   \
-      }                                                                     \
-    }                                                                       \
-    aval = val;                                                             \
-  }                                                                         \
-                                                                            \
-  template <class ValueType, class Functor>                                 \
-  void OpenACCParallelReduce##REDUCER(OpenACCIterateRight, ValueType& aval, \
-                                      Functor const& afunctor,              \
-                                      OpenACCMDRangeBegin<3> const& begin,  \
-                                      OpenACCMDRangeEnd<3> const& end,      \
-                                      int async_arg) {                      \
-    auto val = aval;                                                        \
-    auto const functor(afunctor);                                           \
-    int begin0 = begin[0];                                                  \
-    int end0   = end[0];                                                    \
-    int begin1 = begin[1];                                                  \
-    int end1   = end[1];                                                    \
-    int begin2 = begin[2];                                                  \
-    int end2   = end[2];                                                    \
+    KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang vector collapse(4) reduction(OPERATOR:val) copyin(functor) async(async_arg))                                                  \
+    /* clang-format on */                                                     \
+    for (auto i3 = begin3; i3 < end3; ++i3) {                                 \
+      for (auto i2 = begin2; i2 < end2; ++i2) {                               \
+        for (auto i1 = begin1; i1 < end1; ++i1) {                             \
+          for (auto i0 = begin0; i0 < end0; ++i0) {                           \
+            functor(i0, i1, i2, i3, val);                                     \
+          }                                                                   \
+        }                                                                     \
+      }                                                                       \
+    }                                                                         \
+    aval = val;                                                               \
+  }                                                                           \
+                                                                              \
+  template <class ValueType, class Functor>                                   \
+  void OpenACCParallelReduce##REDUCER(OpenACCIterateRight, ValueType& aval,   \
+                                      Functor const& afunctor,                \
+                                      OpenACCMDRangeBegin<4> const& begin,    \
+                                      OpenACCMDRangeEnd<4> const& end,        \
+                                      int async_arg) {                        \
+    auto val = aval;                                                          \
+    auto const functor(afunctor);                                             \
+    int begin0 = begin[0];                                                    \
+    int end0   = end[0];                                                      \
+    int begin1 = begin[1];                                                    \
+    int end1   = end[1];                                                      \
+    int begin2 = begin[2];                                                    \
+    int end2   = end[2];                                                      \
+    int begin3 = begin[3];                                                    \
+    int end3   = end[3];                                                      \
     /* clang-format off */ \
-    KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang vector collapse(3) reduction(OPERATOR:val) copyin(functor) async(async_arg))                                                \
-    /* clang-format on */                                                   \
-    for (auto i0 = begin0; i0 < end0; ++i0) {                               \
-      for (auto i1 = begin1; i1 < end1; ++i1) {                             \
-        for (auto i2 = begin2; i2 < end2; ++i2) {                           \
-          functor(i0, i1, i2, val);                                         \
-        }                                                                   \
-      }                                                                     \
-    }                                                                       \
-    aval = val;                                                             \
-  }                                                                         \
-                                                                            \
-  template <class ValueType, class Functor>                                 \
-  void OpenACCParallelReduce##REDUCER(OpenACCIterateLeft, ValueType& aval,  \
-                                      Functor const& afunctor,              \
-                                      OpenACCMDRangeBegin<4> const& begin,  \
-                                      OpenACCMDRangeEnd<4> const& end,      \
-                                      int async_arg) {                      \
-    auto val = aval;                                                        \
-    auto const functor(afunctor);                                           \
-    int begin3 = begin[3];                                                  \
-    int end3   = end[3];                                                    \
-    int begin2 = begin[2];                                                  \
-    int end2   = end[2];                                                    \
-    int begin1 = begin[1];                                                  \
-    int end1   = end[1];                                                    \
-    int begin0 = begin[0];                                                  \
-    int end0   = end[0];                                                    \
+    KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang vector collapse(4) reduction(OPERATOR:val) copyin(functor) async(async_arg))                                                  \
+    /* clang-format on */                                                     \
+    for (auto i0 = begin0; i0 < end0; ++i0) {                                 \
+      for (auto i1 = begin1; i1 < end1; ++i1) {                               \
+        for (auto i2 = begin2; i2 < end2; ++i2) {                             \
+          for (auto i3 = begin3; i3 < end3; ++i3) {                           \
+            functor(i0, i1, i2, i3, val);                                     \
+          }                                                                   \
+        }                                                                     \
+      }                                                                       \
+    }                                                                         \
+    aval = val;                                                               \
+  }                                                                           \
+                                                                              \
+  template <class ValueType, class Functor>                                   \
+  void OpenACCParallelReduce##REDUCER(OpenACCIterateLeft, ValueType& aval,    \
+                                      Functor const& afunctor,                \
+                                      OpenACCMDRangeBegin<5> const& begin,    \
+                                      OpenACCMDRangeEnd<5> const& end,        \
+                                      int async_arg) {                        \
+    auto val = aval;                                                          \
+    auto const functor(afunctor);                                             \
+    int begin4 = begin[4];                                                    \
+    int end4   = end[4];                                                      \
+    int begin3 = begin[3];                                                    \
+    int end3   = end[3];                                                      \
+    int begin2 = begin[2];                                                    \
+    int end2   = end[2];                                                      \
+    int begin1 = begin[1];                                                    \
+    int end1   = end[1];                                                      \
+    int begin0 = begin[0];                                                    \
+    int end0   = end[0];                                                      \
     /* clang-format off */ \
-    KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang vector collapse(4) reduction(OPERATOR:val) copyin(functor) async(async_arg))                                                \
-    /* clang-format on */                                                   \
-    for (auto i3 = begin3; i3 < end3; ++i3) {                               \
-      for (auto i2 = begin2; i2 < end2; ++i2) {                             \
-        for (auto i1 = begin1; i1 < end1; ++i1) {                           \
-          for (auto i0 = begin0; i0 < end0; ++i0) {                         \
-            functor(i0, i1, i2, i3, val);                                   \
-          }                                                                 \
-        }                                                                   \
-      }                                                                     \
-    }                                                                       \
-    aval = val;                                                             \
-  }                                                                         \
-                                                                            \
-  template <class ValueType, class Functor>                                 \
-  void OpenACCParallelReduce##REDUCER(OpenACCIterateRight, ValueType& aval, \
-                                      Functor const& afunctor,              \
-                                      OpenACCMDRangeBegin<4> const& begin,  \
-                                      OpenACCMDRangeEnd<4> const& end,      \
-                                      int async_arg) {                      \
-    auto val = aval;                                                        \
-    auto const functor(afunctor);                                           \
-    int begin0 = begin[0];                                                  \
-    int end0   = end[0];                                                    \
-    int begin1 = begin[1];                                                  \
-    int end1   = end[1];                                                    \
-    int begin2 = begin[2];                                                  \
-    int end2   = end[2];                                                    \
-    int begin3 = begin[3];                                                  \
-    int end3   = end[3];                                                    \
+    KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang vector collapse(5) reduction(OPERATOR:val) copyin(functor) async(async_arg))                                                  \
+    /* clang-format on */                                                     \
+    for (auto i4 = begin4; i4 < end4; ++i4) {                                 \
+      for (auto i3 = begin3; i3 < end3; ++i3) {                               \
+        for (auto i2 = begin2; i2 < end2; ++i2) {                             \
+          for (auto i1 = begin1; i1 < end1; ++i1) {                           \
+            for (auto i0 = begin0; i0 < end0; ++i0) {                         \
+              functor(i0, i1, i2, i3, i4, val);                               \
+            }                                                                 \
+          }                                                                   \
+        }                                                                     \
+      }                                                                       \
+    }                                                                         \
+    aval = val;                                                               \
+  }                                                                           \
+                                                                              \
+  template <class ValueType, class Functor>                                   \
+  void OpenACCParallelReduce##REDUCER(OpenACCIterateRight, ValueType& aval,   \
+                                      Functor const& afunctor,                \
+                                      OpenACCMDRangeBegin<5> const& begin,    \
+                                      OpenACCMDRangeEnd<5> const& end,        \
+                                      int async_arg) {                        \
+    auto val = aval;                                                          \
+    auto const functor(afunctor);                                             \
+    int begin0 = begin[0];                                                    \
+    int end0   = end[0];                                                      \
+    int begin1 = begin[1];                                                    \
+    int end1   = end[1];                                                      \
+    int begin2 = begin[2];                                                    \
+    int end2   = end[2];                                                      \
+    int begin3 = begin[3];                                                    \
+    int end3   = end[3];                                                      \
+    int begin4 = begin[4];                                                    \
+    int end4   = end[4];                                                      \
     /* clang-format off */ \
-    KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang vector collapse(4) reduction(OPERATOR:val) copyin(functor) async(async_arg))                                                \
-    /* clang-format on */                                                   \
-    for (auto i0 = begin0; i0 < end0; ++i0) {                               \
-      for (auto i1 = begin1; i1 < end1; ++i1) {                             \
-        for (auto i2 = begin2; i2 < end2; ++i2) {                           \
-          for (auto i3 = begin3; i3 < end3; ++i3) {                         \
-            functor(i0, i1, i2, i3, val);                                   \
-          }                                                                 \
-        }                                                                   \
-      }                                                                     \
-    }                                                                       \
-    aval = val;                                                             \
-  }                                                                         \
-                                                                            \
-  template <class ValueType, class Functor>                                 \
-  void OpenACCParallelReduce##REDUCER(OpenACCIterateLeft, ValueType& aval,  \
-                                      Functor const& afunctor,              \
-                                      OpenACCMDRangeBegin<5> const& begin,  \
-                                      OpenACCMDRangeEnd<5> const& end,      \
-                                      int async_arg) {                      \
-    auto val = aval;                                                        \
-    auto const functor(afunctor);                                           \
-    int begin4 = begin[4];                                                  \
-    int end4   = end[4];                                                    \
-    int begin3 = begin[3];                                                  \
-    int end3   = end[3];                                                    \
-    int begin2 = begin[2];                                                  \
-    int end2   = end[2];                                                    \
-    int begin1 = begin[1];                                                  \
-    int end1   = end[1];                                                    \
-    int begin0 = begin[0];                                                  \
-    int end0   = end[0];                                                    \
+    KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang vector collapse(5) reduction(OPERATOR:val) copyin(functor) async(async_arg))                                                  \
+    /* clang-format on */                                                     \
+    for (auto i0 = begin0; i0 < end0; ++i0) {                                 \
+      for (auto i1 = begin1; i1 < end1; ++i1) {                               \
+        for (auto i2 = begin2; i2 < end2; ++i2) {                             \
+          for (auto i3 = begin3; i3 < end3; ++i3) {                           \
+            for (auto i4 = begin4; i4 < end4; ++i4) {                         \
+              functor(i0, i1, i2, i3, i4, val);                               \
+            }                                                                 \
+          }                                                                   \
+        }                                                                     \
+      }                                                                       \
+    }                                                                         \
+    aval = val;                                                               \
+  }                                                                           \
+                                                                              \
+  template <class ValueType, class Functor>                                   \
+  void OpenACCParallelReduce##REDUCER(OpenACCIterateLeft, ValueType& aval,    \
+                                      Functor const& afunctor,                \
+                                      OpenACCMDRangeBegin<6> const& begin,    \
+                                      OpenACCMDRangeEnd<6> const& end,        \
+                                      int async_arg) {                        \
+    auto val = aval;                                                          \
+    auto const functor(afunctor);                                             \
+    int begin5 = begin[5];                                                    \
+    int end5   = end[5];                                                      \
+    int begin4 = begin[4];                                                    \
+    int end4   = end[4];                                                      \
+    int begin3 = begin[3];                                                    \
+    int end3   = end[3];                                                      \
+    int begin2 = begin[2];                                                    \
+    int end2   = end[2];                                                      \
+    int begin1 = begin[1];                                                    \
+    int end1   = end[1];                                                      \
+    int begin0 = begin[0];                                                    \
+    int end0   = end[0];                                                      \
     /* clang-format off */ \
-    KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang vector collapse(5) reduction(OPERATOR:val) copyin(functor) async(async_arg))                                                \
-    /* clang-format on */                                                   \
-    for (auto i4 = begin4; i4 < end4; ++i4) {                               \
-      for (auto i3 = begin3; i3 < end3; ++i3) {                             \
-        for (auto i2 = begin2; i2 < end2; ++i2) {                           \
-          for (auto i1 = begin1; i1 < end1; ++i1) {                         \
-            for (auto i0 = begin0; i0 < end0; ++i0) {                       \
-              functor(i0, i1, i2, i3, i4, val);                             \
-            }                                                               \
-          }                                                                 \
-        }                                                                   \
-      }                                                                     \
-    }                                                                       \
-    aval = val;                                                             \
-  }                                                                         \
-                                                                            \
-  template <class ValueType, class Functor>                                 \
-  void OpenACCParallelReduce##REDUCER(OpenACCIterateRight, ValueType& aval, \
-                                      Functor const& afunctor,              \
-                                      OpenACCMDRangeBegin<5> const& begin,  \
-                                      OpenACCMDRangeEnd<5> const& end,      \
-                                      int async_arg) {                      \
-    auto val = aval;                                                        \
-    auto const functor(afunctor);                                           \
-    int begin0 = begin[0];                                                  \
-    int end0   = end[0];                                                    \
-    int begin1 = begin[1];                                                  \
-    int end1   = end[1];                                                    \
-    int begin2 = begin[2];                                                  \
-    int end2   = end[2];                                                    \
-    int begin3 = begin[3];                                                  \
-    int end3   = end[3];                                                    \
-    int begin4 = begin[4];                                                  \
-    int end4   = end[4];                                                    \
+    KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang vector collapse(6) reduction(OPERATOR:val) copyin(functor) async(async_arg))                                                  \
+    /* clang-format on */                                                     \
+    for (auto i5 = begin5; i5 < end5; ++i5) {                                 \
+      for (auto i4 = begin4; i4 < end4; ++i4) {                               \
+        for (auto i3 = begin3; i3 < end3; ++i3) {                             \
+          for (auto i2 = begin2; i2 < end2; ++i2) {                           \
+            for (auto i1 = begin1; i1 < end1; ++i1) {                         \
+              for (auto i0 = begin0; i0 < end0; ++i0) {                       \
+                functor(i0, i1, i2, i3, i4, i5, val);                         \
+              }                                                               \
+            }                                                                 \
+          }                                                                   \
+        }                                                                     \
+      }                                                                       \
+    }                                                                         \
+    aval = val;                                                               \
+  }                                                                           \
+                                                                              \
+  template <class ValueType, class Functor>                                   \
+  void OpenACCParallelReduce##REDUCER(OpenACCIterateRight, ValueType& aval,   \
+                                      Functor const& afunctor,                \
+                                      OpenACCMDRangeBegin<6> const& begin,    \
+                                      OpenACCMDRangeEnd<6> const& end,        \
+                                      int async_arg) {                        \
+    auto val = aval;                                                          \
+    auto const functor(afunctor);                                             \
+    int begin0 = begin[0];                                                    \
+    int end0   = end[0];                                                      \
+    int begin1 = begin[1];                                                    \
+    int end1   = end[1];                                                      \
+    int begin2 = begin[2];                                                    \
+    int end2   = end[2];                                                      \
+    int begin3 = begin[3];                                                    \
+    int end3   = end[3];                                                      \
+    int begin4 = begin[4];                                                    \
+    int end4   = end[4];                                                      \
+    int begin5 = begin[5];                                                    \
+    int end5   = end[5];                                                      \
     /* clang-format off */ \
-    KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang vector collapse(5) reduction(OPERATOR:val) copyin(functor) async(async_arg))                                                \
-    /* clang-format on */                                                   \
-    for (auto i0 = begin0; i0 < end0; ++i0) {                               \
-      for (auto i1 = begin1; i1 < end1; ++i1) {                             \
-        for (auto i2 = begin2; i2 < end2; ++i2) {                           \
-          for (auto i3 = begin3; i3 < end3; ++i3) {                         \
-            for (auto i4 = begin4; i4 < end4; ++i4) {                       \
-              functor(i0, i1, i2, i3, i4, val);                             \
-            }                                                               \
-          }                                                                 \
-        }                                                                   \
-      }                                                                     \
-    }                                                                       \
-    aval = val;                                                             \
-  }                                                                         \
-                                                                            \
-  template <class ValueType, class Functor>                                 \
-  void OpenACCParallelReduce##REDUCER(OpenACCIterateLeft, ValueType& aval,  \
-                                      Functor const& afunctor,              \
-                                      OpenACCMDRangeBegin<6> const& begin,  \
-                                      OpenACCMDRangeEnd<6> const& end,      \
-                                      int async_arg) {                      \
-    auto val = aval;                                                        \
-    auto const functor(afunctor);                                           \
-    int begin5 = begin[5];                                                  \
-    int end5   = end[5];                                                    \
-    int begin4 = begin[4];                                                  \
-    int end4   = end[4];                                                    \
-    int begin3 = begin[3];                                                  \
-    int end3   = end[3];                                                    \
-    int begin2 = begin[2];                                                  \
-    int end2   = end[2];                                                    \
-    int begin1 = begin[1];                                                  \
-    int end1   = end[1];                                                    \
-    int begin0 = begin[0];                                                  \
-    int end0   = end[0];                                                    \
-    /* clang-format off */ \
-    KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang vector collapse(6) reduction(OPERATOR:val) copyin(functor) async(async_arg))                                                \
-    /* clang-format on */                                                   \
-    for (auto i5 = begin5; i5 < end5; ++i5) {                               \
-      for (auto i4 = begin4; i4 < end4; ++i4) {                             \
-        for (auto i3 = begin3; i3 < end3; ++i3) {                           \
-          for (auto i2 = begin2; i2 < end2; ++i2) {                         \
-            for (auto i1 = begin1; i1 < end1; ++i1) {                       \
-              for (auto i0 = begin0; i0 < end0; ++i0) {                     \
-                functor(i0, i1, i2, i3, i4, i5, val);                       \
-              }                                                             \
-            }                                                               \
-          }                                                                 \
-        }                                                                   \
-      }                                                                     \
-    }                                                                       \
-    aval = val;                                                             \
-  }                                                                         \
-                                                                            \
-  template <class ValueType, class Functor>                                 \
-  void OpenACCParallelReduce##REDUCER(OpenACCIterateRight, ValueType& aval, \
-                                      Functor const& afunctor,              \
-                                      OpenACCMDRangeBegin<6> const& begin,  \
-                                      OpenACCMDRangeEnd<6> const& end,      \
-                                      int async_arg) {                      \
-    auto val = aval;                                                        \
-    auto const functor(afunctor);                                           \
-    int begin0 = begin[0];                                                  \
-    int end0   = end[0];                                                    \
-    int begin1 = begin[1];                                                  \
-    int end1   = end[1];                                                    \
-    int begin2 = begin[2];                                                  \
-    int end2   = end[2];                                                    \
-    int begin3 = begin[3];                                                  \
-    int end3   = end[3];                                                    \
-    int begin4 = begin[4];                                                  \
-    int end4   = end[4];                                                    \
-    int begin5 = begin[5];                                                  \
-    int end5   = end[5];                                                    \
-    /* clang-format off */ \
-    KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang vector collapse(6) reduction(OPERATOR:val) copyin(functor) async(async_arg))                                                \
-    /* clang-format on */                                                   \
-    for (auto i0 = begin0; i0 < end0; ++i0) {                               \
-      for (auto i1 = begin1; i1 < end1; ++i1) {                             \
-        for (auto i2 = begin2; i2 < end2; ++i2) {                           \
-          for (auto i3 = begin3; i3 < end3; ++i3) {                         \
-            for (auto i4 = begin4; i4 < end4; ++i4) {                       \
-              for (auto i5 = begin5; i5 < end5; ++i5) {                     \
-                functor(i0, i1, i2, i3, i4, i5, val);                       \
-              }                                                             \
-            }                                                               \
-          }                                                                 \
-        }                                                                   \
-      }                                                                     \
-    }                                                                       \
-    aval = val;                                                             \
-  }                                                                         \
+    KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang vector collapse(6) reduction(OPERATOR:val) copyin(functor) async(async_arg))                                                  \
+    /* clang-format on */                                                     \
+    for (auto i0 = begin0; i0 < end0; ++i0) {                                 \
+      for (auto i1 = begin1; i1 < end1; ++i1) {                               \
+        for (auto i2 = begin2; i2 < end2; ++i2) {                             \
+          for (auto i3 = begin3; i3 < end3; ++i3) {                           \
+            for (auto i4 = begin4; i4 < end4; ++i4) {                         \
+              for (auto i5 = begin5; i5 < end5; ++i5) {                       \
+                functor(i0, i1, i2, i3, i4, i5, val);                         \
+              }                                                               \
+            }                                                                 \
+          }                                                                   \
+        }                                                                     \
+      }                                                                       \
+    }                                                                         \
+    aval = val;                                                               \
+  }                                                                           \
   }  // namespace Kokkos::Experimental::Impl
 
 #define KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_MDRANGE_HELPER(REDUCER, OPERATOR) \
