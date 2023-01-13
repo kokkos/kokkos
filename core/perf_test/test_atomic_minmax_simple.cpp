@@ -23,8 +23,8 @@
 
 #include <benchmark/benchmark.h>
 
-#include <Benchmark_Context.hpp>
-#include <PerfTest_Category.hpp>
+#include "Benchmark_Context.hpp"
+#include "PerfTest_Category.hpp"
 #include <Kokkos_Core.hpp>
 
 using exec_space = Kokkos::DefaultExecutionSpace;

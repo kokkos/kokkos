@@ -14,7 +14,7 @@
 //
 //@HEADER
 
-#include <PerfTest_ViewResize.hpp>
+#include "PerfTest_ViewResize.hpp"
 
 namespace Test {
 

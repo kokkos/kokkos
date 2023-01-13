@@ -14,7 +14,7 @@
 //
 //@HEADER
 
-#include <Benchmark_Context.hpp>
+#include "Benchmark_Context.hpp"
 
 #include <cmath>
 

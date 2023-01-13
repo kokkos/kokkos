@@ -16,8 +16,8 @@
 
 #include <Kokkos_Core.hpp>
 #include <benchmark/benchmark.h>
-#include <Benchmark_Context.hpp>
-#include <PerfTest_Category.hpp>
+#include "Benchmark_Context.hpp"
+#include "PerfTest_Category.hpp"
 
 namespace Test {
 

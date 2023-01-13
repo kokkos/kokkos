@@ -17,7 +17,7 @@
 #include <Kokkos_Core.hpp>
 #include <benchmark/benchmark.h>
 #include "Benchmark_Context.hpp"
-#include <PerfTest_Category.hpp>
+#include "PerfTest_Category.hpp"
 #include <Kokkos_Random.hpp>
 #include <utility>
 

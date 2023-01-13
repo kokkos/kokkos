@@ -16,7 +16,7 @@
 
 #include <Kokkos_Core.hpp>
 #include <benchmark/benchmark.h>
-#include <Benchmark_Context.hpp>
+#include "Benchmark_Context.hpp"
 
 namespace Test {
 

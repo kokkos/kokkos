@@ -14,7 +14,7 @@
 //
 //@HEADER
 
-#include <PerfTest_ViewFill.hpp>
+#include "PerfTest_ViewFill.hpp"
 
 namespace Test {
 

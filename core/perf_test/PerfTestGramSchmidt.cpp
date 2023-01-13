@@ -16,10 +16,10 @@
 
 #include <Kokkos_Core.hpp>
 #include <benchmark/benchmark.h>
-#include <PerfTest_Category.hpp>
+#include "PerfTest_Category.hpp"
 
 #include <cmath>
-#include <PerfTestBlasKernels.hpp>
+#include "PerfTestBlasKernels.hpp"
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
