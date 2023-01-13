@@ -25,7 +25,8 @@
 namespace Kokkos {
 namespace Impl {
 
-inline int cuda_warp_per_sm_allocation_granularity(cudaDeviceProp const& properties) {
+inline int cuda_warp_per_sm_allocation_granularity(
+    cudaDeviceProp const& properties) {
   // Allocation granularity of warps in each sm
   switch (properties.major) {
     case 3:
@@ -35,26 +36,30 @@ inline int cuda_warp_per_sm_allocation_granularity(cudaDeviceProp const& propert
     case 9: return 4;
     case 6: return (properties.minor == 0 ? 2 : 4);
     default:
-      throw_runtime_exception("Unknown device in cuda warp per sm allocation granularity");
+      throw_runtime_exception(
+          "Unknown device in cuda warp per sm allocation granularity");
       return 0;
   }
 }
 
-inline int cuda_max_warps_per_sm_registers(cudaDeviceProp const& properties,
-                                           cudaFuncAttributes const& attributes) {
+inline int cuda_max_warps_per_sm_registers(
+    cudaDeviceProp const& properties, cudaFuncAttributes const& attributes) {
   // Maximum number of warps per sm as a function of register counts,
   // subject to the constraint that warps are allocated with a fixed granularity
   int const max_regs_per_block = properties.regsPerBlock;
-  int const regs_per_warp = attributes.numRegs * properties.warpSize;
-  int const warp_granularity = cuda_warp_per_sm_allocation_granularity(properties);
+  int const regs_per_warp      = attributes.numRegs * properties.warpSize;
+  int const warp_granularity =
+      cuda_warp_per_sm_allocation_granularity(properties);
   // The granularity of register allocation is chunks of 256 registers per warp,
   // which implies a need to over-allocate, so we round up
   int const allocated_regs_per_warp = (regs_per_warp + 256 - 1) / 256;
 
-  // The maximum number of warps per SM is constrained from above by register allocation.
-  // To satisfy the constraint that warps per SM is allocated at a finite granularity,
-  // we need to round down.
-  int const max_warps_per_sm = warp_granularity * (max_regs_per_block / (allocated_regs_per_warp * warp_granularity));
+  // The maximum number of warps per SM is constrained from above by register
+  // allocation. To satisfy the constraint that warps per SM is allocated at a
+  // finite granularity, we need to round down.
+  int const max_warps_per_sm =
+      warp_granularity *
+      (max_regs_per_block / (allocated_regs_per_warp * warp_granularity));
 
   return max_warps_per_sm;
 }
@@ -70,14 +75,18 @@ inline int cuda_max_active_blocks_per_sm(cudaDeviceProp const& properties,
   int const allocated_regs_per_thread = 8 * ((regs_per_thread + 8 - 1) / 8);
   int max_blocks_regs = regs_per_sm / (allocated_regs_per_thread * block_size);
 
-  // Compute the maximum number of warps as a function of the number of registers
-  int const max_warps_per_sm_registers = cuda_max_warps_per_sm_registers(properties, attributes);
+  // Compute the maximum number of warps as a function of the number of
+  // registers
+  int const max_warps_per_sm_registers =
+      cuda_max_warps_per_sm_registers(properties, attributes);
 
-  // Constrain the number of blocks to respect the maximum number of warps per SM
-  // On face value this should be an equality, but due to the warp granularity
-  // constraints noted in `cuda_max_warps_per_sm_registers` the left-hand-side of this
-  // comparison can overshoot what the hardware allows based on register counts alone
-  while ((max_blocks_regs * block_size / properties.warpSize) > max_warps_per_sm_registers)
+  // Constrain the number of blocks to respect the maximum number of warps per
+  // SM On face value this should be an equality, but due to the warp
+  // granularity constraints noted in `cuda_max_warps_per_sm_registers` the
+  // left-hand-side of this comparison can overshoot what the hardware allows
+  // based on register counts alone
+  while ((max_blocks_regs * block_size / properties.warpSize) >
+         max_warps_per_sm_registers)
     max_blocks_regs--;
 
   // Limits due to shared memory/SM
@@ -223,13 +232,13 @@ int cuda_get_opt_block_size(const CudaInternal* cuda_instance,
 }
 
 template <class LaunchBounds>
-int cuda_get_opt_block_size_no_shmem(const cudaFuncAttributes& attr, LaunchBounds) {
+int cuda_get_opt_block_size_no_shmem(const cudaFuncAttributes& attr,
+                                     LaunchBounds) {
   auto const& prop = Kokkos::Cuda().cuda_device_prop();
 
-  // Thin version of cuda_get_opt_block_size for cases where there is no shared memory
-  auto const block_size_to_no_shmem = [&](int /*block_size*/) {
-    return 0;
-  };
+  // Thin version of cuda_get_opt_block_size for cases where there is no shared
+  // memory
+  auto const block_size_to_no_shmem = [&](int /*block_size*/) { return 0; };
 
   return cuda_deduce_block_size(false, prop, attr, block_size_to_no_shmem,
                                 LaunchBounds{});

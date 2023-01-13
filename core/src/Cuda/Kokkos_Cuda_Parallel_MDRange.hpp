@@ -43,16 +43,20 @@ template <typename ParallelType, typename Policy, typename LaunchBounds>
 int max_tile_size_product_helper(const Policy& pol, const LaunchBounds&) {
   cudaFuncAttributes attr =
       CudaParallelLaunch<ParallelType,
-                           LaunchBounds>::get_cuda_func_attributes();
+                         LaunchBounds>::get_cuda_func_attributes();
   auto const& prop = pol.space().cuda_device_prop();
 
   // Limits due to registers/SM, MDRange doesn't have
   // shared memory constraints
-  int const optimal_block_size = Kokkos::Impl::cuda_get_opt_block_size_no_shmem(attr, LaunchBounds{});
+  int const optimal_block_size =
+      Kokkos::Impl::cuda_get_opt_block_size_no_shmem(attr, LaunchBounds{});
 
-  // Compute how many blocks of this size we can launch, based on warp constraints
-  int const max_warps_per_sm_registers = Kokkos::Impl::cuda_max_warps_per_sm_registers(prop, attr);
-  int const max_num_threads_from_warps = max_warps_per_sm_registers * prop.warpSize;
+  // Compute how many blocks of this size we can launch, based on warp
+  // constraints
+  int const max_warps_per_sm_registers =
+      Kokkos::Impl::cuda_max_warps_per_sm_registers(prop, attr);
+  int const max_num_threads_from_warps =
+      max_warps_per_sm_registers * prop.warpSize;
   int const max_num_blocks = max_num_threads_from_warps / optimal_block_size;
 
   // Compute the total number of threads
