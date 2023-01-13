@@ -39,6 +39,30 @@
 namespace Kokkos {
 namespace Impl {
 
+template <typename ParallelType, typename Policy, typename LaunchBounds>
+int max_tile_size_product_helper(const Policy& pol, const LaunchBounds&) {
+  cudaFuncAttributes attr =
+      CudaParallelLaunch<ParallelType,
+                           LaunchBounds>::get_cuda_func_attributes();
+  auto const& prop = pol.space().cuda_device_prop();
+
+  // Limits due to registers/SM, MDRange doesn't have
+  // shared memory constraints
+  int const optimal_block_size = Kokkos::Impl::cuda_get_opt_block_size_no_shmem(attr, LaunchBounds{});
+
+  // Compute how many blocks of this size we can launch, based on warp constraints
+  int const max_warps_per_sm_registers = Kokkos::Impl::cuda_max_warps_per_sm_registers(prop, attr);
+  int const max_num_threads_from_warps = max_warps_per_sm_registers * prop.warpSize;
+  int const max_num_blocks = max_num_threads_from_warps / optimal_block_size;
+
+  // Compute the total number of threads
+  int const max_threads_per_sm = optimal_block_size * max_num_blocks;
+
+  return std::min(
+      max_threads_per_sm,
+      static_cast<int>(Kokkos::Impl::CudaTraits::MaxHierarchicalParallelism));
+}
+
 template <class FunctorType, class... Traits>
 class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
  public:
@@ -57,7 +81,8 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
  public:
   template <typename Policy, typename Functor>
   static int max_tile_size_product(const Policy& pol, const Functor&) {
-    cudaFuncAttributes attr =
+    return max_tile_size_product_helper<ParallelFor>(pol, LaunchBounds{});
+    /*cudaFuncAttributes attr =
         CudaParallelLaunch<ParallelFor,
                            LaunchBounds>::get_cuda_func_attributes();
     auto const& prop = pol.space().cuda_device_prop();
@@ -76,6 +101,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
     return std::min(
         max_threads_per_sm,
         static_cast<int>(Kokkos::Impl::CudaTraits::MaxHierarchicalParallelism));
+    */
   }
   Policy const& get_policy() const { return m_rp; }
   inline __device__ void operator()() const {
@@ -237,7 +263,8 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
  public:
   template <typename Policy, typename Functor>
   static int max_tile_size_product(const Policy& pol, const Functor&) {
-    cudaFuncAttributes attr =
+    return max_tile_size_product_helper<ParallelReduce>(pol, LaunchBounds{});
+    /*cudaFuncAttributes attr =
         CudaParallelLaunch<ParallelReduce,
                            LaunchBounds>::get_cuda_func_attributes();
     auto const& prop = pol.space().cuda_device_prop();
@@ -255,7 +282,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
 
     return std::min(
         max_threads_per_sm,
-        static_cast<int>(Kokkos::Impl::CudaTraits::MaxHierarchicalParallelism));
+        static_cast<int>(Kokkos::Impl::CudaTraits::MaxHierarchicalParallelism));*/
   }
   Policy const& get_policy() const { return m_policy; }
   inline __device__ void exec_range(reference_type update) const {
