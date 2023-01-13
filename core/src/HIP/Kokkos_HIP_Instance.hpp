@@ -91,6 +91,7 @@ class HIPInternal {
   size_type *m_scratchFlags               = nullptr;
   mutable size_type *m_scratchFunctor     = nullptr;
   mutable size_type *m_scratchFunctorHost = nullptr;
+  inline static std::mutex scratchFunctorMutex;
 
   hipStream_t m_stream = nullptr;
   uint32_t m_instance_id =
