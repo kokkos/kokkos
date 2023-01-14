@@ -129,6 +129,9 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
 
 #define KOKKOS_IMPL_ACC_REDUCE_TEAM_PRAGMA \
   vector vector_length(team_size* vector_length)
+#define KOKKOS_IMPL_ACC_REDUCE_TEAM_ITRS league_size* team_size* vector_length
+#define KOKKOS_IMPL_ACC_REDUCE_TEAM_LEAGUE_ID_INIT \
+  i / (team_size * vector_length)
 
 namespace Kokkos {
 
@@ -233,6 +236,8 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
 
 #define KOKKOS_IMPL_ACC_REDUCE_TEAM_PRAGMA \
   num_workers(team_size) vector_length(vector_length)
+#define KOKKOS_IMPL_ACC_REDUCE_TEAM_ITRS league_size
+#define KOKKOS_IMPL_ACC_REDUCE_TEAM_LEAGUE_ID_INIT i
 
 // FIXME_OPENACC: below implementation conforms to the OpenACC standard, but
 // the NVHPC compiler (V22.11) fails due to the lack of support for lambda
@@ -362,8 +367,8 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
     /* clang-format off */ \
     KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang num_gangs(league_size) KOKKOS_IMPL_ACC_REDUCE_TEAM_PRAGMA reduction(OPERATOR : val) copyin(functor) async(async_arg))                                               \
     /* clang-format on */                                                  \
-    for (int i = 0; i < league_size * team_size * vector_length; i++) {    \
-      int league_id = i / (team_size * vector_length);                     \
+    for (int i = 0; i < KOKKOS_IMPL_ACC_REDUCE_TEAM_ITRS; i++) {           \
+      int league_id = KOKKOS_IMPL_ACC_REDUCE_TEAM_LEAGUE_ID_INIT;          \
       typename Policy::member_type team(league_id, league_size, team_size, \
                                         vector_length);                    \
       functor(team, val);                                                  \
@@ -417,5 +422,7 @@ KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_TEAM_HELPER(BOr, |);
 #undef KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_TEAM_HELPER
 #undef KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_DISPATCH_SCHEDULE
 #undef KOKKOS_IMPL_ACC_REDUCE_TEAM_PRAGMA
+#undef KOKKOS_IMPL_ACC_REDUCE_TEAM_ITRS
+#undef KOKKOS_IMPL_ACC_REDUCE_TEAM_LEAGUE_ID_INIT
 
 #endif /* #ifndef KOKKOS_OPENACC_PARALLEL_REDUCE_TEAM_HPP */
