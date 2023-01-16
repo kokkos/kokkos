@@ -82,8 +82,8 @@ class hpx_thread_buffer {
   }
 
  public:
-  hpx_thread_buffer() = default;
-  ~hpx_thread_buffer() = default;
+  hpx_thread_buffer()                          = default;
+  ~hpx_thread_buffer()                         = default;
   hpx_thread_buffer(const hpx_thread_buffer &) = delete;
   hpx_thread_buffer(hpx_thread_buffer &&)      = delete;
   hpx_thread_buffer &operator=(const hpx_thread_buffer &) = delete;
