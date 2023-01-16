@@ -983,8 +983,8 @@ class const_where_expression<
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   void copy_to(std::int32_t* mem, element_aligned_tag) const {
-    _mm_maskstore_epi32(mem, static_cast<__m128i>(m_mask),
-                        static_cast<__m128i>(m_value));
+    if (m_mask[0]) mem[0] = m_value[0];
+    if (m_mask[1]) mem[1] = m_value[1];
   }
 };
 
@@ -1001,7 +1001,8 @@ class where_expression<simd_mask<std::int32_t, simd_abi::neon_fixed_size<2>>,
       : const_where_expression(mask_arg, value_arg) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   void copy_from(std::int32_t const* mem, element_aligned_tag) {
-    m_value = value_type(_mm_maskload_epi32(mem, static_cast<__m128i>(m_mask)));
+    if (m_mask[0]) m_value[0] = mem[0];
+    if (m_mask[1]) m_value[1] = mem[1];
   }
 };
 
