@@ -49,10 +49,6 @@ extern "C" void kokkos_impl_cuda_set_pin_uvm_to_host(bool);
 namespace Kokkos {
 namespace Impl {
 
-//! Allow Kokkos Resilience to specialize DeepCopy on this trait
-template <typename T>
-struct is_cuda_type_ex_space : public std::false_type {};
-
 template <typename T>
 struct is_cuda_type_space : public std::false_type {};
 
@@ -124,10 +120,6 @@ class CudaSpace {
 
 template <>
 struct Impl::is_cuda_type_space<CudaSpace> : public std::true_type {};
-
-template <>
-struct Impl::is_cuda_type_ex_space<Cuda> : public std::true_type {};
-
 }  // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/
@@ -413,6 +405,15 @@ struct MemorySpaceAccess<Kokkos::CudaHostPinnedSpace, Kokkos::CudaUVMSpace> {
 namespace Kokkos {
 namespace Impl {
 
+template <class ExecutionSpace, class Enabled >
+struct ExecutionSpaceAlias;
+
+}
+}
+
+namespace Kokkos {
+namespace Impl {
+
 void DeepCopyCuda(void* dst, const void* src, size_t n);
 void DeepCopyAsyncCuda(const Cuda& instance, void* dst, const void* src,
                        size_t n);
@@ -451,7 +452,7 @@ struct DeepCopy<
     MemSpace1, MemSpace2, ExecutionSpace,
     std::enable_if_t<is_cuda_type_space<MemSpace1>::value &&
                      is_cuda_type_space<MemSpace2>::value &&
-                     !Impl::is_cuda_type_ex_space<ExecutionSpace>::value>> {
+                     !std::is_same_v<typename ExecutionSpaceAlias<ExecutionSpace>::type, Cuda> >> {
   inline DeepCopy(void* dst, const void* src, size_t n) {
     DeepCopyCuda(dst, src, n);
   }
@@ -476,7 +477,7 @@ template <class MemSpace, class ExecutionSpace>
 struct DeepCopy<
     MemSpace, HostSpace, ExecutionSpace,
     std::enable_if_t<is_cuda_type_space<MemSpace>::value &&
-                     !Impl::is_cuda_type_ex_space<ExecutionSpace>::value>> {
+	     !std::is_same_v<typename ExecutionSpaceAlias<ExecutionSpace>::type, Cuda> >> {
   inline DeepCopy(void* dst, const void* src, size_t n) {
     DeepCopyCuda(dst, src, n);
   }
@@ -500,7 +501,7 @@ template <class MemSpace, class ExecutionSpace>
 struct DeepCopy<
     HostSpace, MemSpace, ExecutionSpace,
     std::enable_if_t<is_cuda_type_space<MemSpace>::value &&
-                     !Impl::is_cuda_type_ex_space<ExecutionSpace>::value>> {
+                     !std::is_same_v<typename ExecutionSpaceAlias<ExecutionSpace>::type, Cuda> >> {
   inline DeepCopy(void* dst, const void* src, size_t n) {
     DeepCopyCuda(dst, src, n);
   }

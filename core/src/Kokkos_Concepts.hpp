@@ -447,6 +447,20 @@ struct SpaceAccessibility {
 
 }  // namespace Kokkos
 
+namespace Kokkos {
+namespace Impl{
+
+//! Grant Kokkos Resilience permission to specialize this trait to control the behavior of deep_copy
+template <class ExecutionSpace, class Enabled = void >
+struct ExecutionSpaceAlias{
+
+  using type = ExecutionSpace;
+
+};
+
+}
+}
+
 //----------------------------------------------------------------------------
 
 #endif  // KOKKOS_CORE_CONCEPTS_HPP
