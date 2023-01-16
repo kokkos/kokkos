@@ -142,6 +142,18 @@ template <class T, class Abi>
 
 template <class T, class U, class Abi>
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd<T, Abi> operator>>(
+    simd<T, Abi> const& lhs, unsigned int rhs) {
+  return simd<T, Abi>([&](std::size_t i) { return lhs[i] >> rhs; });
+}
+
+template <class T, class U, class Abi>
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd<T, Abi> operator<<(
+    simd<T, Abi> const& lhs, unsigned int rhs) {
+  return simd<T, Abi>([&](std::size_t i) { return lhs[i] << rhs; });
+}
+
+template <class T, class U, class Abi>
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd<T, Abi> operator>>(
     simd<T, Abi> const& lhs, simd<U, Abi> const& rhs) {
   return simd<T, Abi>([&](std::size_t i) { return lhs[i] >> rhs[i]; });
 }
