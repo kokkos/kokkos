@@ -756,9 +756,9 @@ class simd<std::int64_t, simd_abi::neon_fixed_size<2>> {
   }
   template <class U, std::enable_if_t<std::is_convertible_v<U, value_type>,
                                       bool> = false>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd(U&& value) {
-    m_value = vsetq_lane_s64(value_type(value), m_value, 0);
-    m_value = vsetq_lane_s64(value_type(value), m_value, 1);
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd(U&& value)
+  : m_value(vmovq_n_s64(value_type(value)))
+  {
   }
   template <class G,
             std::enable_if_t<
@@ -885,9 +885,9 @@ class simd<std::uint64_t, simd_abi::neon_fixed_size<2>> {
   }
   template <class U, std::enable_if_t<std::is_convertible_v<U, value_type>,
                                       bool> = false>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd(U&& value) {
-    m_value = vsetq_lane_u64(value_type(value), m_value, 0);
-    m_value = vsetq_lane_u64(value_type(value), m_value, 1);
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd(U&& value)
+  : m_value(vmovq_n_u64(value_type(value)))
+  {
   }
   template <class G,
             std::enable_if_t<
@@ -898,9 +898,13 @@ class simd<std::uint64_t, simd_abi::neon_fixed_size<2>> {
     m_value = vsetq_lane_u64(gen(std::integral_constant<std::size_t, 0>()), m_value, 0);
     m_value = vsetq_lane_u64(gen(std::integral_constant<std::size_t, 1>()), m_value, 1);
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr simd(
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(
       uint64x2_t const& value_in)
       : m_value(value_in) {}
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit simd(simd<std::int32_t, abi_type> const& other)
+    :m_value(vreinterpretq_u64_s64(vmovl_s32(static_cast<int32x2_t>(other))))
+  {
+  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference operator[](std::size_t i) {
     return reference(m_value, int(i));
   }
@@ -910,11 +914,11 @@ class simd<std::uint64_t, simd_abi::neon_fixed_size<2>> {
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd
   operator&(simd const& other) const {
-    return vandq_u64(m_value, other.m_value);
+    return simd(vandq_u64(m_value, other.m_value));
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd
   operator|(simd const& other) const {
-    return vorrq_u64(m_value, other.m_value);
+    return simd(vorrq_u64(m_value, other.m_value));
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit operator uint64x2_t()
       const {
