@@ -917,6 +917,14 @@ class simd<std::uint64_t, simd_abi::neon_fixed_size<2>> {
       const {
     return m_value;
   }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd operator<<(unsigned int rhs) const
+  {
+    return simd(vshlq_u64(m_value, vdupq_n_s64(std::int64_t(rhs))));
+  }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd operator>>(unsigned int rhs) const
+  {
+    return simd(vshlq_u64(m_value, vdupq_n_s64(-std::int64_t(rhs))));
+  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
   operator==(simd const& other) const {
     return mask_type(vceqq_u64(m_value, other.m_value));
