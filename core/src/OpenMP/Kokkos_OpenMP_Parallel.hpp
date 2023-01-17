@@ -101,8 +101,15 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::OpenMP> {
   std::enable_if_t<!std::is_same<typename Policy::schedule_type::type,
                                  Kokkos::Dynamic>::value>
   execute_parallel() const {
+// Specifying an chunksize with GCC compiler leads to performance regression
+// with static schedule.
+#ifdef KOKKOS_COMPILER_GNU
+#pragma omp parallel for schedule(static) \
+    num_threads(m_instance->thread_pool_size())
+#else
 #pragma omp parallel for schedule(static KOKKOS_OPENMP_OPTIONAL_CHUNK_SIZE) \
     num_threads(m_instance->thread_pool_size())
+#endif
     KOKKOS_PRAGMA_IVDEP_IF_ENABLED
     for (auto iwork = m_policy.begin(); iwork < m_policy.end(); ++iwork) {
       exec_work(m_functor, iwork);
