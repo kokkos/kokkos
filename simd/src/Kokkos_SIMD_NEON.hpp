@@ -161,14 +161,17 @@ class simd_mask<std::int32_t, simd_abi::neon_fixed_size<2>> {
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd_mask() = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit simd_mask(value_type value)
       : m_value(vdup_n_u32(value ? 0xFFFFFFFFU : 0)) {}
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd_mask(
-      simd_mask<std::int32_t, simd_abi::neon_fixed_size<2>> const& i32_mask);
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION static constexpr std::size_t size() {
     return 2;
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd_mask(
       uint32x2_t const& value_in)
       : m_value(value_in) {}
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd_mask(
+      simd_mask<double, simd_abi::neon_fixed_size<2>> const& other)
+    : m_value(vqmovn_u64(static_cast<uint64x2_t>(other)))
+  {
+  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit operator uint32x2_t()
       const {
     return m_value;

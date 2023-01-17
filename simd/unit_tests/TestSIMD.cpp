@@ -300,9 +300,16 @@ inline void host_check_mask_ops() {
 
 template <class Abi>
 inline void host_check_conversions() {
+  {
   auto a = Kokkos::Experimental::simd<std::uint64_t, Abi>(1);
   auto b = Kokkos::Experimental::simd<std::int64_t, Abi>(a);
   EXPECT_TRUE(all_of(b == decltype(b)(1)));
+  }
+  {
+  auto a = Kokkos::Experimental::simd_mask<double, Abi>(true);
+  auto b = Kokkos::Experimental::simd_mask<std::int32_t, Abi>(a);
+  EXPECT_TRUE(b == decltype(b)(true));
+  }
 }
 
 template <class Abi>
@@ -338,9 +345,16 @@ KOKKOS_INLINE_FUNCTION void device_check_mask_ops() {
 template <class Abi>
 KOKKOS_INLINE_FUNCTION void device_check_conversions() {
   kokkos_checker checker;
+  {
   auto a = Kokkos::Experimental::simd<std::uint64_t, Abi>(1);
   auto b = Kokkos::Experimental::simd<std::int64_t, Abi>(a);
   checker.truth(all_of(b == decltype(b)(1)));
+  }
+  {
+  auto a = Kokkos::Experimental::simd_mask<double, Abi>(true);
+  auto b = Kokkos::Experimental::simd_mask<std::int32_t, Abi>(a);
+  checker.truth(b == decltype(b)(true));
+  }
 }
 
 template <class Abi>
