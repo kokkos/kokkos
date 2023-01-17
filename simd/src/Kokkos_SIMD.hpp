@@ -140,7 +140,7 @@ class abi_set {};
 using host_abi_set = abi_set<simd_abi::scalar, simd_abi::avx512_fixed_size<8>>;
 #elif defined(KOKKOS_ARCH_AVX2)
 using host_abi_set = abi_set<simd_abi::scalar, simd_abi::avx2_fixed_size<4>>;
-#elif defined(KOKKOS_ARCH_NEON)
+#elif defined(__ARM_NEON)
 using host_abi_set = abi_set<simd_abi::scalar, simd_abi::neon_fixed_size<2>>;
 #else
 using host_abi_set = abi_set<simd_abi::scalar>;
