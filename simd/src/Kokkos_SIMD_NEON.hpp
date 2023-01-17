@@ -431,8 +431,8 @@ class simd<double, simd_abi::neon_fixed_size<2>> {
                                       std::integral_constant<std::size_t, 0>>,
                 bool> = false>
   KOKKOS_FORCEINLINE_FUNCTION simd(G&& gen) {
-    vsetq_lane_f64(gen(std::integral_constant<std::size_t, 0>()), m_value, 0);
-    vsetq_lane_f64(gen(std::integral_constant<std::size_t, 1>()), m_value, 1);
+    m_value = vsetq_lane_f64(gen(std::integral_constant<std::size_t, 0>()), m_value, 0);
+    m_value = vsetq_lane_f64(gen(std::integral_constant<std::size_t, 1>()), m_value, 1);
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(
       float64x2_t const& value_in)
@@ -632,8 +632,8 @@ class simd<std::int32_t, simd_abi::neon_fixed_size<2>> {
                                       std::integral_constant<std::size_t, 0>>,
                 bool> = false>
   KOKKOS_FORCEINLINE_FUNCTION simd(G&& gen) {
-    vset_lane_s32(gen(std::integral_constant<std::size_t, 0>()), m_value, 0);
-    vset_lane_s32(gen(std::integral_constant<std::size_t, 1>()), m_value, 1);
+    m_value = vset_lane_s32(gen(std::integral_constant<std::size_t, 0>()), m_value, 0);
+    m_value = vset_lane_s32(gen(std::integral_constant<std::size_t, 1>()), m_value, 1);
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(
       int32x2_t const& value_in)
@@ -754,8 +754,8 @@ class simd<std::int64_t, simd_abi::neon_fixed_size<2>> {
   template <class U, std::enable_if_t<std::is_convertible_v<U, value_type>,
                                       bool> = false>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd(U&& value) {
-    vsetq_lane_s64(value_type(value), m_value, 0);
-    vsetq_lane_s64(value_type(value), m_value, 1);
+    m_value = vsetq_lane_s64(value_type(value), m_value, 0);
+    m_value = vsetq_lane_s64(value_type(value), m_value, 1);
   }
   template <class G,
             std::enable_if_t<
@@ -763,12 +763,13 @@ class simd<std::int64_t, simd_abi::neon_fixed_size<2>> {
                                       std::integral_constant<std::size_t, 0>>,
                 bool> = false>
   KOKKOS_FORCEINLINE_FUNCTION simd(G&& gen) {
-    vsetq_lane_s64(gen(std::integral_constant<std::size_t, 0>()), m_value, 0);
-    vsetq_lane_s64(gen(std::integral_constant<std::size_t, 1>()), m_value, 1);
+    m_value = vsetq_lane_s64(gen(std::integral_constant<std::size_t, 0>()), m_value, 0);
+    m_value = vsetq_lane_s64(gen(std::integral_constant<std::size_t, 1>()), m_value, 1);
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(
       int64x2_t const& value_in)
       : m_value(value_in) {}
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit simd(simd<std::uint64_t, abi_type> const&);
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference operator[](std::size_t i) {
     return reference(m_value, int(i));
   }
@@ -882,8 +883,8 @@ class simd<std::uint64_t, simd_abi::neon_fixed_size<2>> {
   template <class U, std::enable_if_t<std::is_convertible_v<U, value_type>,
                                       bool> = false>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd(U&& value) {
-    vsetq_lane_u64(value_type(value), m_value, 0);
-    vsetq_lane_u64(value_type(value), m_value, 1);
+    m_value = vsetq_lane_u64(value_type(value), m_value, 0);
+    m_value = vsetq_lane_u64(value_type(value), m_value, 1);
   }
   template <class G,
             std::enable_if_t<
@@ -891,8 +892,8 @@ class simd<std::uint64_t, simd_abi::neon_fixed_size<2>> {
                                       std::integral_constant<std::size_t, 0>>,
                 bool> = false>
   KOKKOS_FORCEINLINE_FUNCTION simd(G&& gen) {
-    vsetq_lane_u64(gen(std::integral_constant<std::size_t, 0>()), m_value, 0);
-    vsetq_lane_u64(gen(std::integral_constant<std::size_t, 1>()), m_value, 1);
+    m_value = vsetq_lane_u64(gen(std::integral_constant<std::size_t, 0>()), m_value, 0);
+    m_value = vsetq_lane_u64(gen(std::integral_constant<std::size_t, 1>()), m_value, 1);
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr simd(
       uint64x2_t const& value_in)
@@ -925,6 +926,13 @@ class simd<std::uint64_t, simd_abi::neon_fixed_size<2>> {
     return !((*this) == other);
   }
 };
+
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+simd<std::int64_t, simd_abi::neon_fixed_size<2>>::simd(
+    simd<std::uint64_t, simd_abi::neon_fixed_size<2>> const& other)
+  :m_value(vreinterpretq_s64_u64(static_cast<uint64x2_t>(other)))
+{
+}
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 simd<std::uint64_t, simd_abi::neon_fixed_size<2>> condition(
