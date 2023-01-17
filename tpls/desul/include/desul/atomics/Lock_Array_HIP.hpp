@@ -143,11 +143,11 @@ inline static
     copy_hip_lock_arrays_to_device() {
   if (lock_array_copied == 0) {
     (void)hipMemcpyToSymbol(HIP_SYMBOL(HIP_SPACE_ATOMIC_LOCKS_DEVICE),
-                       &HIP_SPACE_ATOMIC_LOCKS_DEVICE_h,
-                       sizeof(int32_t*));
+                            &HIP_SPACE_ATOMIC_LOCKS_DEVICE_h,
+                            sizeof(int32_t*));
     (void)hipMemcpyToSymbol(HIP_SYMBOL(HIP_SPACE_ATOMIC_LOCKS_NODE),
-                       &HIP_SPACE_ATOMIC_LOCKS_NODE_h,
-                       sizeof(int32_t*));
+                            &HIP_SPACE_ATOMIC_LOCKS_NODE_h,
+                            sizeof(int32_t*));
   }
   lock_array_copied = 1;
 }
