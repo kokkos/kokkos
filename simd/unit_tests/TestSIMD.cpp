@@ -311,6 +311,11 @@ inline void host_check_conversions() {
   EXPECT_TRUE(all_of(b == decltype(b)(1)));
   }
   {
+  auto a = Kokkos::Experimental::simd<std::uint64_t, Abi>(1);
+  auto b = Kokkos::Experimental::simd<std::int32_t, Abi>(a);
+  EXPECT_TRUE(all_of(b == decltype(b)(1)));
+  }
+  {
   auto a = Kokkos::Experimental::simd_mask<double, Abi>(true);
   auto b = Kokkos::Experimental::simd_mask<std::int32_t, Abi>(a);
   EXPECT_TRUE(b == decltype(b)(true));
@@ -358,6 +363,11 @@ KOKKOS_INLINE_FUNCTION void device_check_conversions() {
   {
   auto a = Kokkos::Experimental::simd<std::int32_t, Abi>(1);
   auto b = Kokkos::Experimental::simd<std::uint64_t, Abi>(a);
+  checker.truth(all_of(b == decltype(b)(1)));
+  }
+  {
+  auto a = Kokkos::Experimental::simd<std::uint64_t, Abi>(1);
+  auto b = Kokkos::Experimental::simd<std::int32_t, Abi>(a);
   checker.truth(all_of(b == decltype(b)(1)));
   }
   {
