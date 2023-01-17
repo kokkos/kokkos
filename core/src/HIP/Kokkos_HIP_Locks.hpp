@@ -122,9 +122,9 @@ inline static
     void
     copy_hip_lock_arrays_to_device() {
   if (lock_array_copied == 0) {
-    KOKKOS_IMPL_HIP_SAFE_CALL(hipMemcpyToSymbol(g_device_hip_lock_arrays,
-                                                &g_host_hip_lock_arrays,
-                                                sizeof(HIPLockArrays)));
+    KOKKOS_IMPL_HIP_SAFE_CALL(
+        hipMemcpyToSymbol(HIP_SYMBOL(g_device_hip_lock_arrays),
+                          &g_host_hip_lock_arrays, sizeof(HIPLockArrays)));
   }
   lock_array_copied = 1;
 }
