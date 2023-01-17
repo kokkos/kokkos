@@ -226,11 +226,24 @@ class simd_mask<std::int64_t, simd_abi::neon_fixed_size<2>> {
         : m_mask(mask_arg), m_lane(lane_arg) {}
     KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference
     operator=(bool value) const {
-      m_mask = vsetq_lane_u64(value ? 0xFFFFFFFFFFFFFFFFULL : 0, m_mask, m_lane);
+      switch (m_lane) {
+        case 0:
+          m_mask = vsetq_lane_u64(value ? 0xFFFFFFFFFFFFFFFFULL : 0, m_mask, 0);
+          break;
+        case 1:
+          m_mask = vsetq_lane_u64(value ? 0xFFFFFFFFFFFFFFFFULL : 0, m_mask, 1);
+          break;
+      }
       return *this;
     }
     KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION operator bool() const {
-      return vgetq_lane_u64(m_mask, m_lane) != 0;
+      switch (m_lane) {
+        case 0:
+          return vgetq_lane_u64(m_mask, 0) != 0;
+        case 1:
+          return vgetq_lane_u64(m_mask, 1) != 0;
+      }
+      return false;
     }
   };
   using value_type = bool;
@@ -301,11 +314,24 @@ class simd_mask<std::uint64_t, simd_abi::neon_fixed_size<2>> {
         : m_mask(mask_arg), m_lane(lane_arg) {}
     KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference
     operator=(bool value) const {
-      m_mask = vsetq_lane_u64(value ? 0xFFFFFFFFFFFFFFFFULL : 0, m_mask, m_lane);
+      switch (m_lane) {
+        case 0:
+          m_mask = vsetq_lane_u64(value ? 0xFFFFFFFFFFFFFFFFULL : 0, m_mask, 0);
+          break;
+        case 1:
+          m_mask = vsetq_lane_u64(value ? 0xFFFFFFFFFFFFFFFFULL : 0, m_mask, 1);
+          break;
+      }
       return *this;
     }
     KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION operator bool() const {
-      return vgetq_lane_u64(m_mask, m_lane) != 0;
+      switch (m_lane) {
+        case 0:
+          return vgetq_lane_u64(m_mask, 0) != 0;
+        case 1:
+          return vgetq_lane_u64(m_mask, 1) != 0;
+      }
+      return false;
     }
   };
   using value_type = bool;
@@ -379,11 +405,24 @@ class simd<double, simd_abi::neon_fixed_size<2>> {
         : m_value(mask_arg), m_lane(lane_arg) {}
     KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference
     operator=(double value) const {
-      m_value = vsetq_lane_f64(value, m_mask, m_lane);
+      switch (m_lane) {
+        case 0:
+          m_value = vsetq_lane_f64(value, m_value, 0);
+          break;
+        case 1:
+          m_value = vsetq_lane_f64(value, m_value, 1);
+          break;
+      }
       return *this;
     }
     KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION operator double() const {
-      return vgetq_lane_f64(m_mask, m_lane);
+      switch (m_lane) {
+        case 0:
+          return vgetq_lane_f64(m_value, 0);
+        case 1:
+          return vgetq_lane_f64(m_value, 1);
+      }
+      return 0;
     }
   };
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd()            = default;
@@ -418,7 +457,7 @@ class simd<double, simd_abi::neon_fixed_size<2>> {
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
   operator[](std::size_t i) const {
-    return vgetq_lane(m_value, int(i));
+    return reference(const_cast<simd*>(this)->m_value, int(i));
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
                                                        element_aligned_tag) {
