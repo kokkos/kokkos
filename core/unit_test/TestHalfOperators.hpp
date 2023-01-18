@@ -17,8 +17,6 @@
 #ifndef TESTHALFOPERATOR_HPP_
 #define TESTHALFOPERATOR_HPP_
 namespace Test {
-#define FP16_EPSILON 0.0009765625F  // 1/2^10
-#define BF16_EPSILON 0.0078125F     // 1/2^7
 using namespace Kokkos::Experimental;
 using ExecutionSpace = TEST_EXECSPACE;
 using ScalarType     = double;
@@ -910,12 +908,7 @@ struct Functor_TestHalfOperators {
 
 template <class half_type>
 void __test_half_operators(half_type h_lhs, half_type h_rhs) {
-  double epsilon = FLT_EPSILON;
-
-  if (std::is_same<half_type, Kokkos::Experimental::half_t>::value)
-    epsilon = FP16_EPSILON;
-  if (std::is_same<half_type, Kokkos::Experimental::bhalf_t>::value)
-    epsilon = BF16_EPSILON;
+  double epsilon = Kokkos::Experimental::epsilon<half_type>::value;
 
   Functor_TestHalfOperators<ViewType, half_type> f_device(h_lhs, h_rhs);
   Functor_TestHalfOperators<ViewTypeHost, half_type> f_host(h_lhs, h_rhs);

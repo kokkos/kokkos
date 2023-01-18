@@ -21,8 +21,10 @@
 #define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_HALF
 #endif
 
-#include <type_traits>
 #include <Kokkos_Macros.hpp>
+#include <Kokkos_NumericTraits.hpp>
+
+#include <type_traits>
 #include <iosfwd>  // istream & ostream for extraction and insertion ops
 #include <string>
 
@@ -1005,6 +1007,163 @@ cast_from_bhalf(bhalf_t val) {
 #else
 #define KOKKOS_BHALF_T_IS_FLOAT false
 #endif  // KOKKOS_IMPL_BHALF_TYPE_DEFINED
+////////////// BEGIN HALF_T (binary16) limits //////////////
+// bits [10,14] set
+// #define KOKKOS_IMPL_HALF_T_HUGE_VALH 0x7c00 0x7c00
+#if defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
+// Minimum normalized number
+template <>
+struct Kokkos::Experimental::Impl::finite_min_helper<
+    Kokkos::Experimental::half_t> {
+  static constexpr float value = -65504.0F;
+};
+// Maximum normalized number
+template <>
+struct Kokkos::Experimental::Impl::finite_max_helper<
+    Kokkos::Experimental::half_t> {
+  static constexpr float value = 65504.0F;
+};
+// 1/2^10
+template <>
+struct Kokkos::Experimental::Impl::epsilon_helper<
+    Kokkos::Experimental::half_t> {
+  static constexpr float value = 0.0009765625F;
+};
+template <>
+struct Kokkos::Experimental::Impl::round_error_helper<
+    Kokkos::Experimental::half_t> {
+  static constexpr float value = 0.5F;
+};
+// Minimum normalized positive half precision number
+template <>
+struct Kokkos::Experimental::Impl::norm_min_helper<
+    Kokkos::Experimental::half_t> {
+  static constexpr int value = 0.000000059604645F;
+};
+// Quiet not a half precisioin number
+template <>
+struct Kokkos::Experimental::Impl::quiet_NaN_helper<
+    Kokkos::Experimental::half_t> {
+  static constexpr float value = 0xfc000;
+};
+// Signaling not a half precision number
+template <>
+struct Kokkos::Experimental::Impl::signaling_NaN_helper<
+    Kokkos::Experimental::half_t> {
+  static constexpr float value = 0xfe000;
+};
+// Number of digits in the matissa that can be represented
+// without losing precision.
+template <>
+struct Kokkos::Experimental::Impl::digits_helper<Kokkos::Experimental::half_t> {
+  static constexpr int value = 15;
+};
+// 10 - 1 * log10(2)
+template <>
+struct Kokkos::Experimental::Impl::digits10_helper<
+    Kokkos::Experimental::half_t> {
+  static constexpr int value = 2;
+};
+// Value of the base of the exponent representation.
+template <>
+struct Kokkos::Experimental::Impl::radix_helper<Kokkos::Experimental::half_t> {
+  static constexpr int value = 2;
+};
+// This is the smallest possible exponent value
+// with a bias of one (C11 5.2.4.2.2).
+template <>
+struct Kokkos::Experimental::Impl::min_exponent_helper<
+    Kokkos::Experimental::half_t> {
+  static constexpr int value = -13;
+};
+// This is the largest possible exponent value
+// with a bias of one (C11 5.2.4.2.2).
+template <>
+struct Kokkos::Experimental::Impl::max_exponent_helper<
+    Kokkos::Experimental::half_t> {
+  static constexpr int value = 16;
+};
+#endif
+////////////// END HALF_T (binary16) limits //////////////
+
+////////////// BEGIN BHALF_T (bfloat16) limits //////////////
+#if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
+// Minimum normalized number
+template <>
+struct Kokkos::Experimental::Impl::finite_min_helper<
+    Kokkos::Experimental::bhalf_t> {
+  static constexpr float value = -3.38953139e38;
+};
+// Maximum normalized number
+template <>
+struct Kokkos::Experimental::Impl::finite_max_helper<
+    Kokkos::Experimental::bhalf_t> {
+  static constexpr float value = 3.38953139e38;
+};
+// 1/2^7
+template <>
+struct Kokkos::Experimental::Impl::epsilon_helper<
+    Kokkos::Experimental::bhalf_t> {
+  static constexpr float value = 0.0078125F;
+};
+template <>
+struct Kokkos::Experimental::Impl::round_error_helper<
+    Kokkos::Experimental::bhalf_t> {
+  static constexpr float value = 0.5F;
+};
+// Minimum normalized positive bhalf number
+template <>
+struct Kokkos::Experimental::Impl::norm_min_helper<
+    Kokkos::Experimental::bhalf_t> {
+  static constexpr int value = 1.1754494351e-38;
+};
+// Quiet not a bhalf number
+template <>
+struct Kokkos::Experimental::Impl::quiet_NaN_helper<
+    Kokkos::Experimental::bhalf_t> {
+  static constexpr float value = 0x7fc000;
+};
+// Signaling not a bhalf number
+template <>
+struct Kokkos::Experimental::Impl::signaling_NaN_helper<
+    Kokkos::Experimental::bhalf_t> {
+  static constexpr float value = 0x7fe000;
+};
+// Number of digits in the matissa that can be represented
+// without losing precision.
+template <>
+struct Kokkos::Experimental::Impl::digits_helper<
+    Kokkos::Experimental::bhalf_t> {
+  static constexpr int value = 2;
+};
+// 7 - 1 * log10(2)
+template <>
+struct Kokkos::Experimental::Impl::digits10_helper<
+    Kokkos::Experimental::bhalf_t> {
+  static constexpr int value = 1;
+};
+// Value of the base of the exponent representation.
+template <>
+struct Kokkos::Experimental::Impl::radix_helper<Kokkos::Experimental::bhalf_t> {
+  static constexpr int value = 2;
+};
+// This is the smallest possible exponent value
+// with a bias of one (C11 5.2.4.2.2).
+template <>
+struct Kokkos::Experimental::Impl::min_exponent_helper<
+    Kokkos::Experimental::bhalf_t> {
+  static constexpr int value = -125;
+};
+// This is the largest possible exponent value
+// with a bias of one (C11 5.2.4.2.2).
+template <>
+struct Kokkos::Experimental::Impl::max_exponent_helper<
+    Kokkos::Experimental::bhalf_t> {
+  static constexpr int value = 128;
+};
+#endif
+////////////// END BHALF_T (bfloat16) limits //////////////
+
 #ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_HALF
 #undef KOKKOS_IMPL_PUBLIC_INCLUDE
 #undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_HALF
