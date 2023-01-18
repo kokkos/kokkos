@@ -320,6 +320,21 @@ inline void host_check_conversions() {
   auto b = Kokkos::Experimental::simd_mask<std::int32_t, Abi>(a);
   EXPECT_TRUE(b == decltype(b)(true));
   }
+  {
+  auto a = Kokkos::Experimental::simd_mask<std::int32_t, Abi>(true);
+  auto b = Kokkos::Experimental::simd_mask<std::uint64_t, Abi>(a);
+  EXPECT_TRUE(b == decltype(b)(true));
+  }
+  {
+  auto a = Kokkos::Experimental::simd_mask<std::int32_t, Abi>(true);
+  auto b = Kokkos::Experimental::simd_mask<std::int64_t, Abi>(a);
+  EXPECT_TRUE(b == decltype(b)(true));
+  }
+  {
+  auto a = Kokkos::Experimental::simd_mask<std::int32_t, Abi>(true);
+  auto b = Kokkos::Experimental::simd_mask<double, Abi>(a);
+  EXPECT_TRUE(b == decltype(b)(true));
+  }
 }
 
 template <class Abi>
@@ -327,6 +342,15 @@ inline void host_check_shifts() {
   auto a = Kokkos::Experimental::simd<std::uint64_t, Abi>(8);
   auto b = a >> 1;
   EXPECT_TRUE(all_of(b == decltype(b)(4)));
+}
+
+template <class Abi>
+inline void host_check_condition() {
+  auto a = Kokkos::Experimental::condition(
+      Kokkos::Experimental::simd<std::int32_t, Abi>(1) > 0,
+      Kokkos::Experimental::simd<std::uint64_t, Abi>(16),
+      Kokkos::Experimental::simd<std::uint64_t, Abi>(20));
+  EXPECT_TRUE(all_of(a == decltype(a)(16)));
 }
 
 template <class Abi>
@@ -375,6 +399,21 @@ KOKKOS_INLINE_FUNCTION void device_check_conversions() {
   auto b = Kokkos::Experimental::simd_mask<std::int32_t, Abi>(a);
   checker.truth(b == decltype(b)(true));
   }
+  {
+  auto a = Kokkos::Experimental::simd_mask<std::int32_t, Abi>(true);
+  auto b = Kokkos::Experimental::simd_mask<std::uint64_t, Abi>(a);
+  checker.truth(b == decltype(b)(true));
+  }
+  {
+  auto a = Kokkos::Experimental::simd_mask<std::int32_t, Abi>(true);
+  auto b = Kokkos::Experimental::simd_mask<std::int64_t, Abi>(a);
+  checker.truth(b == decltype(b)(true));
+  }
+  {
+  auto a = Kokkos::Experimental::simd_mask<std::int32_t, Abi>(true);
+  auto b = Kokkos::Experimental::simd_mask<double, Abi>(a);
+  checker.truth(b == decltype(b)(true));
+  }
 }
 
 template <class Abi>
@@ -386,11 +425,22 @@ KOKKOS_INLINE_FUNCTION void device_check_shifts() {
 }
 
 template <class Abi>
+KOKKOS_INLINE_FUNCTION void device_check_condition() {
+  kokkos_checker checker;
+  auto a = Kokkos::Experimental::condition(
+      Kokkos::Experimental::simd<std::int32_t, Abi>(1) > 0,
+      Kokkos::Experimental::simd<std::uint64_t, Abi>(16),
+      Kokkos::Experimental::simd<std::uint64_t, Abi>(20));
+  checker.truth(all_of(a == decltype(a)(16)));
+}
+
+template <class Abi>
 inline void host_check_abi() {
   host_check_math_ops<Abi>();
   host_check_mask_ops<Abi>();
   host_check_conversions<Abi>();
   host_check_shifts<Abi>();
+  host_check_condition<Abi>();
 }
 
 template <class Abi>
@@ -399,6 +449,7 @@ KOKKOS_INLINE_FUNCTION void device_check_abi() {
   device_check_mask_ops<Abi>();
   device_check_conversions<Abi>();
   device_check_shifts<Abi>();
+  device_check_condition<Abi>();
 }
 
 inline void host_check_abis(Kokkos::Experimental::Impl::abi_set<>) {}

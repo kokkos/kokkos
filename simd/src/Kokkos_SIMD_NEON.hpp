@@ -75,8 +75,13 @@ class simd_mask<double, simd_abi::neon_fixed_size<2>> {
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd_mask() = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit simd_mask(value_type value)
       : m_value(vdupq_n_u64(value ? 0xFFFFFFFFFFFFFFFFULL : 0)) {}
+  template <class U>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd_mask(
-      simd_mask<std::int32_t, simd_abi::neon_fixed_size<2>> const& i32_mask);
+      simd_mask<U, simd_abi::neon_fixed_size<2>> const& other)
+  {
+    operator[](0) = bool(other[0]);
+    operator[](1) = bool(other[1]);
+  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION static constexpr std::size_t size() {
     return 2;
   }
@@ -248,8 +253,13 @@ class simd_mask<std::int64_t, simd_abi::neon_fixed_size<2>> {
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd_mask() = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit simd_mask(value_type value)
       : m_value(vdupq_n_u64(value ? 0xFFFFFFFFFFFFFFFFULL : 0)) {}
+  template <class U>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd_mask(
-      simd_mask<std::int32_t, simd_abi::neon_fixed_size<2>> const& i32_mask);
+      simd_mask<U, simd_abi::neon_fixed_size<2>> const& other)
+  {
+    operator[](0) = bool(other[0]);
+    operator[](1) = bool(other[1]);
+  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION static constexpr std::size_t size() {
     return 2;
   }
@@ -334,8 +344,13 @@ class simd_mask<std::uint64_t, simd_abi::neon_fixed_size<2>> {
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd_mask() = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit simd_mask(value_type value)
       : m_value(vdupq_n_u64(value ? 0xFFFFFFFFFFFFFFFFULL : 0)) {}
+  template <class U>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd_mask(
-      simd_mask<std::int32_t, simd_abi::neon_fixed_size<2>> const& i32_mask);
+      simd_mask<U, simd_abi::neon_fixed_size<2>> const& other)
+  {
+    operator[](0) = bool(other[0]);
+    operator[](1) = bool(other[1]);
+  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION static constexpr std::size_t size() {
     return 2;
   }
