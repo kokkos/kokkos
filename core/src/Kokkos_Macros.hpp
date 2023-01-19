@@ -129,6 +129,8 @@
 
 #if defined(__INTEL_COMPILER)
 #define KOKKOS_COMPILER_INTEL __INTEL_COMPILER
+// Work around Intel classic ICE
+#define KOKKOS_INTERNAL_DISABLE_NATIVE_OPENMP
 #elif defined(__INTEL_LLVM_COMPILER)
 #define KOKKOS_COMPILER_INTEL __INTEL_LLVM_COMPILER
 #elif defined(__ICC)
