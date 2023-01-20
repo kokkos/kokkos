@@ -405,11 +405,11 @@ struct MemorySpaceAccess<Kokkos::CudaHostPinnedSpace, Kokkos::CudaUVMSpace> {
 namespace Kokkos {
 namespace Impl {
 
-template <class ExecutionSpace, class Enabled >
+template <class ExecutionSpace, class Enabled>
 struct ExecutionSpaceAlias;
 
-}
-}
+}  // namespace Impl
+}  // namespace Kokkos
 
 namespace Kokkos {
 namespace Impl {
@@ -450,9 +450,11 @@ struct DeepCopy<MemSpace1, MemSpace2, Cuda,
 template <class MemSpace1, class MemSpace2, class ExecutionSpace>
 struct DeepCopy<
     MemSpace1, MemSpace2, ExecutionSpace,
-    std::enable_if_t<is_cuda_type_space<MemSpace1>::value &&
-                     is_cuda_type_space<MemSpace2>::value &&
-                     !std::is_same_v<typename ExecutionSpaceAlias<ExecutionSpace>::type, Cuda> >> {
+    std::enable_if_t<
+        is_cuda_type_space<MemSpace1>::value &&
+        is_cuda_type_space<MemSpace2>::value &&
+        !std::is_same_v<typename ExecutionSpaceAlias<ExecutionSpace>::type,
+                        Cuda>>> {
   inline DeepCopy(void* dst, const void* src, size_t n) {
     DeepCopyCuda(dst, src, n);
   }
@@ -476,8 +478,10 @@ struct DeepCopy<
 template <class MemSpace, class ExecutionSpace>
 struct DeepCopy<
     MemSpace, HostSpace, ExecutionSpace,
-    std::enable_if_t<is_cuda_type_space<MemSpace>::value &&
-	     !std::is_same_v<typename ExecutionSpaceAlias<ExecutionSpace>::type, Cuda> >> {
+    std::enable_if_t<
+        is_cuda_type_space<MemSpace>::value &&
+        !std::is_same_v<typename ExecutionSpaceAlias<ExecutionSpace>::type,
+                        Cuda>>> {
   inline DeepCopy(void* dst, const void* src, size_t n) {
     DeepCopyCuda(dst, src, n);
   }
@@ -500,8 +504,10 @@ struct DeepCopy<
 template <class MemSpace, class ExecutionSpace>
 struct DeepCopy<
     HostSpace, MemSpace, ExecutionSpace,
-    std::enable_if_t<is_cuda_type_space<MemSpace>::value &&
-                     !std::is_same_v<typename ExecutionSpaceAlias<ExecutionSpace>::type, Cuda> >> {
+    std::enable_if_t<
+        is_cuda_type_space<MemSpace>::value &&
+        !std::is_same_v<typename ExecutionSpaceAlias<ExecutionSpace>::type,
+                        Cuda>>> {
   inline DeepCopy(void* dst, const void* src, size_t n) {
     DeepCopyCuda(dst, src, n);
   }
