@@ -377,12 +377,11 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
   static void invoke_kernel(DriverType const &driver, dim3 const &grid,
                             dim3 const &block, int shmem,
                             HIPInternal const *hip_instance) {
+    // Wait until the previous kernel that uses m_scratchFuntor is done
+    std::lock_guard<std::mutex> lock(HIPInternal::scratchFunctorMutex);
     DriverType *driver_ptr = reinterpret_cast<DriverType *>(
-        hip_instance->scratch_functor(sizeof(DriverType)));
-
-    hipMemcpyAsync(driver_ptr, &driver, sizeof(DriverType), hipMemcpyDefault,
-                   hip_instance->m_stream);
-
+        hip_instance->stage_functor_for_execution(
+            reinterpret_cast<void const *>(&driver), sizeof(DriverType)));
     (base_t::get_kernel_func())<<<grid, block, shmem, hip_instance->m_stream>>>(
         driver_ptr);
   }
