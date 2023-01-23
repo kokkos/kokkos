@@ -506,7 +506,8 @@ struct TestComplexBesselJ0Y0Function {
 
     // Call Bessel functions
 #if (HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR == 4)
-    using Property = Kokkos::Experimental::WorkItemProperty::ImplForceGlobal_t;
+    using Property =
+        Kokkos::Experimental::WorkItemProperty::ImplForceGlobalLaunchLaunch_t;
 #else
     using Property = Kokkos::Experimental::WorkItemProperty::None_t;
 #endif
@@ -801,7 +802,8 @@ struct TestComplexBesselJ1Y1Function {
 
     // Call Bessel functions
 #if (HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR == 4)
-    using Property = Kokkos::Experimental::WorkItemProperty::ImplForceGlobal_t;
+    using Property =
+        Kokkos::Experimental::WorkItemProperty::ImplForceGlobalLaunch_t;
 #else
     using Property = Kokkos::Experimental::WorkItemProperty::None_t;
 #endif
@@ -1094,7 +1096,8 @@ struct TestComplexBesselI0K0Function {
 
     // Call Bessel functions
 #if (HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR == 4)
-    using Property = Kokkos::Experimental::WorkItemProperty::ImplForceGlobal_t;
+    using Property =
+        Kokkos::Experimental::WorkItemProperty::ImplForceGlobalLaunch_t;
 #else
     using Property = Kokkos::Experimental::WorkItemProperty::None_t;
 #endif
@@ -1334,7 +1337,8 @@ struct TestComplexBesselI1K1Function {
 
     // Call Bessel functions
 #if (HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR == 4)
-    using Property = Kokkos::Experimental::WorkItemProperty::ImplForceGlobal_t;
+    using Property =
+        Kokkos::Experimental::WorkItemProperty::ImplForceGlobalLaunch_t;
 #else
     using Property = Kokkos::Experimental::WorkItemProperty::None_t;
 #endif
@@ -1570,7 +1574,8 @@ struct TestComplexBesselH1Function {
 
     // Call Hankel functions
 #if (HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR == 4)
-    using Property = Kokkos::Experimental::WorkItemProperty::ImplForceGlobal_t;
+    using Property =
+        Kokkos::Experimental::WorkItemProperty::ImplForceGlobalLaunch_t;
 #else
     using Property = Kokkos::Experimental::WorkItemProperty::None_t;
 #endif
