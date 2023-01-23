@@ -66,6 +66,13 @@
 
 #endif
 
+#if defined(KOKKOS_ENABLE_ROCTHRUST)
+
+#include <thrust/device_ptr.h>
+#include <thrust/sort.h>
+
+#endif
+
 namespace Kokkos {
 
 namespace Impl {
@@ -650,6 +657,17 @@ template <class DataType, class... Properties>
 void sort(const Cuda& space,
           const Kokkos::View<DataType, Properties...>& view) {
   const auto exec = thrust::cuda::par.on(space.cuda_stream());
+  auto first      = Experimental::begin(view);
+  auto last       = Experimental::end(view);
+  thrust::sort(exec, first, last);
+}
+#endif
+
+#if defined(KOKKOS_ENABLE_ROCTHRUST)
+template <class DataType, class... Properties>
+void sort(const Experimental::HIP& space,
+          const Kokkos::View<DataType, Properties...>& view) {
+  const auto exec = thrust::hip::par.on(space.hip_stream());
   auto first      = Experimental::begin(view);
   auto last       = Experimental::end(view);
   thrust::sort(exec, first, last);
