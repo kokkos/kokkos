@@ -33,6 +33,7 @@ static_assert(false,
 #include <memory>
 
 #include <Kokkos_HostSpace.hpp>
+#include <Kokkos_Concepts.hpp>
 #include <impl/Kokkos_SharedAlloc.hpp>
 
 #include <impl/Kokkos_Profiling_Interface.hpp>
@@ -120,6 +121,7 @@ class CudaSpace {
 
 template <>
 struct Impl::is_cuda_type_space<CudaSpace> : public std::true_type {};
+
 }  // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/
@@ -401,15 +403,6 @@ struct MemorySpaceAccess<Kokkos::CudaHostPinnedSpace, Kokkos::CudaUVMSpace> {
 
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
-
-namespace Kokkos {
-namespace Impl {
-
-template <class ExecutionSpace, class Enabled>
-struct ExecutionSpaceAlias;
-
-}  // namespace Impl
-}  // namespace Kokkos
 
 namespace Kokkos {
 namespace Impl {
