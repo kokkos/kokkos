@@ -54,6 +54,30 @@ Kokkos::reduction_identity for custom land reduction type"); return T(); }
 };*/
 
 template <>
+struct reduction_identity<char> {
+  KOKKOS_FORCEINLINE_FUNCTION constexpr static char sum() {
+    return static_cast<char>(0);
+  }
+  KOKKOS_FORCEINLINE_FUNCTION constexpr static char prod() {
+    return static_cast<char>(1);
+  }
+  KOKKOS_FORCEINLINE_FUNCTION constexpr static char max() { return CHAR_MIN; }
+  KOKKOS_FORCEINLINE_FUNCTION constexpr static char min() { return CHAR_MAX; }
+  KOKKOS_FORCEINLINE_FUNCTION constexpr static char bor() {
+    return static_cast<char>(0x0);
+  }
+  KOKKOS_FORCEINLINE_FUNCTION constexpr static char band() {
+    return ~static_cast<char>(0x0);
+  }
+  KOKKOS_FORCEINLINE_FUNCTION constexpr static char lor() {
+    return static_cast<char>(0);
+  }
+  KOKKOS_FORCEINLINE_FUNCTION constexpr static char land() {
+    return static_cast<char>(1);
+  }
+};
+
+template <>
 struct reduction_identity<signed char> {
   KOKKOS_FORCEINLINE_FUNCTION constexpr static signed char sum() {
     return static_cast<signed char>(0);
