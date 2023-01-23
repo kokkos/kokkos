@@ -111,6 +111,16 @@ using sycl_atomic_ref = sycl::atomic_ref<T,
                                          sycl::access::address_space::generic_space>;
 #endif
 
+// FIXME_SYCL Use SYCL_EXT_ONEAPI_DEVICE_GLOBAL when available instead
+#ifdef DESUL_SYCL_DEVICE_GLOBAL_SUPPORTED
+// FIXME_SYCL The compiler forces us to use device_image_scope. Drop this when possible.
+template <class T>
+using sycl_device_global = sycl::ext::oneapi::experimental::device_global<
+    T,
+    decltype(sycl::ext::oneapi::experimental::properties(
+        sycl::ext::oneapi::experimental::device_image_scope))>;
+#endif
+
 }  // namespace Impl
 }  // namespace desul
 
