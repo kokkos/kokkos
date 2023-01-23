@@ -343,7 +343,7 @@ pipeline {
                                 --with-cuda \
                                 --with-cuda-options=enable_lambda \
                                 --arch=Volta70 \
-                              .. && \
+                              && \
                               make test -j8'''
                     }
                     post {
