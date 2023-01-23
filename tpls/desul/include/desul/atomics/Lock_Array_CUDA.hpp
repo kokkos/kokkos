@@ -128,7 +128,6 @@ namespace desul {
 namespace Impl {
 namespace {
 static int lock_array_copied = 0;
-inline int eliminate_warning_for_lock_array() { return lock_array_copied; }
 }  // namespace
 
 #ifdef __CUDACC_RDC__
