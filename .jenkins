@@ -45,6 +45,7 @@ pipeline {
                         OMP_PLACES = 'threads'
                         OMP_PROC_BIND = 'spread'
                         NVCC_WRAPPER_DEFAULT_COMPILER = 'nvc++'
+                        NVHPC_CUDA_HOME = '/opt/nvidia/hpc_sdk/Linux_x86_64/22.9/cuda/11.7'
                     }
                     steps {
                         sh '''which nvcc && \
