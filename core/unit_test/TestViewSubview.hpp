@@ -152,7 +152,8 @@ void test_auto_1d() {
 
   fill_2D<mv_type, Space> f1(X, ONE);
 #if (HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR == 3)
-  using Property = Kokkos::Experimental::WorkItemProperty::ImplForceGlobal_t;
+  using Property =
+      Kokkos::Experimental::WorkItemProperty::ImplForceGlobalLaunch_t;
 #else
   using Property = Kokkos::Experimental::WorkItemProperty::None_t;
 #endif
