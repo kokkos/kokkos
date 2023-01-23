@@ -27,11 +27,12 @@ pipeline {
         }
         stage('Build') {
             parallel {
-                stage('CUDA-11.6-NVHPC') {
+                stage('CUDA-11.7-NVHPC') {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.nvhpc'
                             dir 'scripts/docker'
+                            additionalBuildArgs '--build-arg BASE=nvcr.io/nvidia/nvhpc:22.9-devel-cuda11.7-ubuntu20.04'
                             label 'nvidia-docker && large_images'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
                         }
