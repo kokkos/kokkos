@@ -474,8 +474,8 @@ void test_left_1(bool use_constr) {
       for (int i1 = 0; i1 < (int)sx4.extent(1); ++i1)
         for (int i2 = 0; i2 < (int)sx4.extent(2); ++i2)
           for (int i3 = 0; i3 < (int)sx4.extent(3); ++i3) {
-            ASSERT_TRUE(&sx4(i0, i1, i2, i3) ==
-                        &x8(0, 0 + i0, 1, 1 + i1, 1, 0 + i2, 2, 2 + i3));
+            ASSERT_EQ(&sx4(i0, i1, i2, i3),
+                      &x8(0, 0 + i0, 1, 1 + i1, 1, 0 + i2, 2, 2 + i3));
           }
   }
 }
@@ -546,8 +546,8 @@ void test_left_2() {
       for (int i1 = 0; i1 < (int)sx4.extent(1); ++i1)
         for (int i2 = 0; i2 < (int)sx4.extent(2); ++i2)
           for (int i3 = 0; i3 < (int)sx4.extent(3); ++i3) {
-            ASSERT_TRUE(&sx4(i0, i1, i2, i3) ==
-                        &x4(1 + i0, 1 + i1, 0 + i2, 2 + i3));
+            ASSERT_EQ(&sx4(i0, i1, i2, i3),
+                      &x4(1 + i0, 1 + i1, 0 + i2, 2 + i3));
           }
   }
 }
@@ -756,8 +756,8 @@ void test_right_1(bool use_constr) {
       for (int i1 = 0; i1 < (int)sx4.extent(1); ++i1)
         for (int i2 = 0; i2 < (int)sx4.extent(2); ++i2)
           for (int i3 = 0; i3 < (int)sx4.extent(3); ++i3) {
-            ASSERT_TRUE(&sx4(i0, i1, i2, i3) ==
-                        &x8(0, 0 + i0, 1, 1 + i1, 1, 0 + i2, 2, 2 + i3));
+            ASSERT_EQ(&sx4(i0, i1, i2, i3),
+                      &x8(0, 0 + i0, 1, 1 + i1, 1, 0 + i2, 2, 2 + i3));
           }
   }
 }
