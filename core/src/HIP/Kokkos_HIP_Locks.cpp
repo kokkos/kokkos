@@ -67,8 +67,6 @@ void initialize_host_hip_lock_arrays() {
   copy_hip_lock_arrays_to_device();
   init_lock_array_kernel_atomic<<<
       (KOKKOS_IMPL_HIP_SPACE_ATOMIC_MASK + 1 + 255) / 256, 256, 0, nullptr>>>();
-  HIP::impl_static_fence(
-      "Kokkos::Impl::initialize_host_hip_lock_arrays: Post Init Lock Arrays");
 }
 
 void finalize_host_hip_lock_arrays() {
