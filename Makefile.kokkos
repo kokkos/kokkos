@@ -1178,7 +1178,6 @@ endif
 ifeq ($(KOKKOS_INTERNAL_ENABLE_DESUL_ATOMICS), 1)
   $(warning enable_desul_atomics option has been removed. Desul atomics are always enabled.)
 endif
-tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_IMPL_DESUL_ATOMICS  // deprecated")
 KOKKOS_CPPFLAGS+=-I$(KOKKOS_PATH)/tpls/desul/include
 
 ifeq ($(KOKKOS_INTERNAL_DISABLE_BUNDLED_MDSPAN), 0)
