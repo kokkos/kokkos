@@ -80,7 +80,7 @@ class neon_mask<Derived, 64> {
   using implementation_type = uint64x2_t;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION neon_mask() = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit neon_mask(value_type value)
-      : m_value(vdupq_n_u64(value ? 0xFFFFFFFFFFFFFFFFULL : 0)) {}
+      : m_value(vmovq_n_u64(value ? 0xFFFFFFFFFFFFFFFFULL : 0)) {}
   template <class U>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION neon_mask(
       neon_mask<U, 32> const& other) {
@@ -174,7 +174,7 @@ class neon_mask<Derived, 32> {
   using implementation_type = uint32x2_t;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION neon_mask() = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit neon_mask(value_type value)
-      : m_value(vdup_n_u32(value ? 0xFFFFFFFFU : 0)) {}
+      : m_value(vmov_n_u32(value ? 0xFFFFFFFFU : 0)) {}
   template <class U>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION neon_mask(neon_mask<U, 64> const& other)
       : m_value(vqmovn_u64(static_cast<uint64x2_t>(other))) {}
@@ -291,7 +291,7 @@ class simd<double, simd_abi::neon_fixed_size<2>> {
   template <class U, std::enable_if_t<std::is_convertible_v<U, value_type>,
                                       bool> = false>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd(U&& value)
-      : m_value(vdupq_n_f64(value_type(value))) {}
+      : m_value(vmovq_n_f64(value_type(value))) {}
   template <class G,
             std::enable_if_t<
                 // basically, can you do { value_type r =
@@ -403,7 +403,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 simd<double, simd_abi::neon_fixed_size<2>> copysign(
     simd<double, simd_abi::neon_fixed_size<2>> const& a,
     simd<double, simd_abi::neon_fixed_size<2>> const& b) {
-  uint64x2_t const sign_mask = vreinterpretq_u64_f64(vdupq_n_f64(-0.0));
+  uint64x2_t const sign_mask = vreinterpretq_u64_f64(vmovq_n_f64(-0.0));
   return simd<double, simd_abi::neon_fixed_size<2>>(vreinterpretq_f64_u64(
       vorrq_u64(vreinterpretq_u64_f64(static_cast<float64x2_t>(abs(a))),
                 vandq_u64(sign_mask, vreinterpretq_u64_f64(
@@ -496,7 +496,7 @@ class simd<std::int32_t, simd_abi::neon_fixed_size<2>> {
   template <class U, std::enable_if_t<std::is_convertible_v<U, value_type>,
                                       bool> = false>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd(U&& value)
-      : m_value(vdup_n_s32(value_type(value))) {}
+      : m_value(vmov_n_s32(value_type(value))) {}
   template <class G,
             std::enable_if_t<
                 std::is_invocable_r_v<value_type, G,
@@ -812,11 +812,11 @@ class simd<std::uint64_t, simd_abi::neon_fixed_size<2>> {
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd
   operator<<(unsigned int rhs) const {
-    return simd(vshlq_u64(m_value, vdupq_n_s64(std::int64_t(rhs))));
+    return simd(vshlq_u64(m_value, vmovq_n_s64(std::int64_t(rhs))));
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd
   operator>>(unsigned int rhs) const {
-    return simd(vshlq_u64(m_value, vdupq_n_s64(-std::int64_t(rhs))));
+    return simd(vshlq_u64(m_value, vmovq_n_s64(-std::int64_t(rhs))));
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
   operator==(simd const& other) const {
