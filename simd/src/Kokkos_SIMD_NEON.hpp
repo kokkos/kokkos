@@ -828,6 +828,22 @@ class simd<std::uint64_t, simd_abi::neon_fixed_size<2>> {
   }
 };
 
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+    simd<std::uint64_t, simd_abi::neon_fixed_size<2>>
+    operator-(simd<std::uint64_t, simd_abi::neon_fixed_size<2>> const& lhs,
+              simd<std::uint64_t, simd_abi::neon_fixed_size<2>> const& rhs) {
+  return simd<std::uint64_t, simd_abi::neon_fixed_size<2>>(
+      vsubq_u64(static_cast<uint64x2_t>(lhs), static_cast<uint64x2_t>(rhs)));
+}
+
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+    simd<std::uint64_t, simd_abi::neon_fixed_size<2>>
+    operator+(simd<std::uint64_t, simd_abi::neon_fixed_size<2>> const& lhs,
+              simd<std::uint64_t, simd_abi::neon_fixed_size<2>> const& rhs) {
+  return simd<std::uint64_t, simd_abi::neon_fixed_size<2>>(
+      vaddq_u64(static_cast<uint64x2_t>(lhs), static_cast<uint64x2_t>(rhs)));
+}
+
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 simd<std::int32_t, simd_abi::neon_fixed_size<2>>::simd(
     simd<std::uint64_t, simd_abi::neon_fixed_size<2>> const& other)
