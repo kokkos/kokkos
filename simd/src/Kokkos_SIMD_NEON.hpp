@@ -175,18 +175,18 @@ class neon_mask<Derived, 32> {
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION neon_mask() = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit neon_mask(value_type value)
       : m_value(vdup_n_u32(value ? 0xFFFFFFFFU : 0)) {}
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION static constexpr std::size_t size() {
-    return 2;
-  }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit neon_mask(
-      uint32x2_t const& value_in)
-      : m_value(value_in) {}
   template <class U>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION neon_mask(neon_mask<U, 64> const& other)
       : m_value(vqmovn_u64(static_cast<uint64x2_t>(other))) {}
   template <class U>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION neon_mask(neon_mask<U, 32> const& other)
       : m_value(static_cast<uint32x2_t>(other)) {}
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION static constexpr std::size_t size() {
+    return 2;
+  }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit neon_mask(
+      uint32x2_t const& value_in)
+      : m_value(value_in) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit operator uint32x2_t()
       const {
     return m_value;
