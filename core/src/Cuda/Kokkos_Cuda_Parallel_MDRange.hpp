@@ -49,7 +49,7 @@ int max_tile_size_product_helper(const Policy& pol, const LaunchBounds&) {
   // Limits due to registers/SM, MDRange doesn't have
   // shared memory constraints
   int const optimal_block_size =
-      Kokkos::Impl::cuda_get_opt_block_size_no_shmem(attr, LaunchBounds{});
+      cuda_get_opt_block_size_no_shmem(prop, attr, LaunchBounds{});
 
   // Compute how many blocks of this size we can launch, based on warp
   // constraints
