@@ -443,7 +443,7 @@ simd<double, simd_abi::neon_fixed_size<2>> min(
       vminq_f64(static_cast<float64x2_t>(a), static_cast<float64x2_t>(b)));
 }
 
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 simd<double, simd_abi::neon_fixed_size<2>> condition(
     simd_mask<double, simd_abi::neon_fixed_size<2>> const& a,
     simd<double, simd_abi::neon_fixed_size<2>> const& b,
@@ -839,7 +839,7 @@ simd<std::int64_t, simd_abi::neon_fixed_size<2>>::simd(
     simd<std::uint64_t, simd_abi::neon_fixed_size<2>> const& other)
     : m_value(vreinterpretq_s64_u64(static_cast<uint64x2_t>(other))) {}
 
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 simd<std::uint64_t, simd_abi::neon_fixed_size<2>> condition(
     simd_mask<std::uint64_t, simd_abi::neon_fixed_size<2>> const& a,
     simd<std::uint64_t, simd_abi::neon_fixed_size<2>> const& b,
