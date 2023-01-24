@@ -447,56 +447,58 @@ void test_radix_sort() {
   {
     Kokkos::View<int*, ExecutionSpace> i1("ints", 9);
     auto pol = Kokkos::RangePolicy<ExecutionSpace>(exec, 0, 9);
-    Kokkos::parallel_for(pol, KOKKOS_LAMBDA(int i) {
-        i1(i) = i - 4;
-      });
+    Kokkos::parallel_for(
+        pol, KOKKOS_LAMBDA(int i) { i1(i) = i - 4; });
     Kokkos::Experimental::RadixSorter<int> sorter(i1.extent(0));
     sorter.sort(exec, i1);
     auto h_i1 = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, i1);
     for (int i = 0; i < 9; ++i) {
-      //std::cout << h_i1(i) << std::endl;
+      // std::cout << h_i1(i) << std::endl;
     }
   }
   {
     Kokkos::View<int*, ExecutionSpace> i1("ints", 9);
     auto pol = Kokkos::RangePolicy<ExecutionSpace>(exec, 0, 9);
-    Kokkos::parallel_for(pol, KOKKOS_LAMBDA(int i) {
-        if (i == 0) {
-          i1(i) = std::numeric_limits<int>::max();
-        } else if (i == 1) {
-          i1(i) = std::numeric_limits<int>::min();
-        } else {
-          i1(i) = i - 4;
-        }
-      });
+    Kokkos::parallel_for(
+        pol, KOKKOS_LAMBDA(int i) {
+          if (i == 0) {
+            i1(i) = std::numeric_limits<int>::max();
+          } else if (i == 1) {
+            i1(i) = std::numeric_limits<int>::min();
+          } else {
+            i1(i) = i - 4;
+          }
+        });
     Kokkos::Experimental::RadixSorter<int> sorter(i1.extent(0));
-    sorter.create_indirection_vector(exec, Kokkos::Experimental::KeyFromView(i1), i1.extent(0));
+    sorter.create_indirection_vector(
+        exec, Kokkos::Experimental::KeyFromView(i1), i1.extent(0));
     sorter.apply_permutation(exec, i1);
     auto h_i1 = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, i1);
     for (int i = 0; i < i1.extent(0) - 1; ++i) {
       std::cout << h_i1(i) << std::endl;
-      EXPECT_LE(h_i1(i), h_i1(i+1));
+      EXPECT_LE(h_i1(i), h_i1(i + 1));
     }
-    std::cout << h_i1(i1.extent(0)-1) << std::endl;
+    std::cout << h_i1(i1.extent(0) - 1) << std::endl;
   }
   {
     Kokkos::View<double*, ExecutionSpace> fp1("fp", 9);
     auto pol = Kokkos::RangePolicy<ExecutionSpace>(exec, 0, 9);
-    Kokkos::parallel_for(pol, KOKKOS_LAMBDA(int i) {
-        if (i == 0) {
-          fp1(i) = std::numeric_limits<double>::infinity();
-        } else if (i == 1){
-          fp1(i) = -0.0;
-        } else {
-          fp1(i) = (9-i) - 4.0;
-        }
-      });
+    Kokkos::parallel_for(
+        pol, KOKKOS_LAMBDA(int i) {
+          if (i == 0) {
+            fp1(i) = std::numeric_limits<double>::infinity();
+          } else if (i == 1) {
+            fp1(i) = -0.0;
+          } else {
+            fp1(i) = (9 - i) - 4.0;
+          }
+        });
     Kokkos::Experimental::RadixSorter<double> sorter(fp1.extent(0));
     sorter.sort(exec, fp1);
     auto h_fp = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, fp1);
     for (int i = 0; i < 9; ++i) {
       std::cout << h_fp(i) << std::endl;
-      //EXPECT_EQ(h_fp(i), i - 4.5);
+      // EXPECT_EQ(h_fp(i), i - 4.5);
     }
   }
 }

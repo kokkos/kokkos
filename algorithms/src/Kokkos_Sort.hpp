@@ -736,7 +736,7 @@ void sortByKey(ExecutionSpace const& exec_space, KeyFunctorType key_functor,
 }
 }
 #endif
-  
+
 }  // namespace Kokkos
 
 #ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_SORT
