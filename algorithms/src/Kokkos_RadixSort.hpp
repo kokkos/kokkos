@@ -185,12 +185,12 @@ class RadixSorter {
   template <typename ExecutionSpace, typename KeyFunctor>
   void create_indirection_vector(ExecutionSpace const& exec,
                                  KeyFunctor key_functor, size_t n) {
-    RangePolicy<ExecutionSpace> policy(exec, 0, n);
+    RangePolicy<ExecutionSpace, Kokkos::IndexType<IndexType>> policy(exec, 0, n);
 
     // Initialize m_index_old, since it will be read from in the first
     // iteration's call to step()
     Kokkos::parallel_for(
-        policy, KOKKOS_LAMBDA(int i) { m_index_old(i) = i; });
+        policy, KOKKOS_LAMBDA(IndexType i) { m_index_old(i) = i; });
 
     int num_bits = key_functor.getNumBits();
     for (int i = 0; i < num_bits; ++i) {
@@ -205,11 +205,11 @@ class RadixSorter {
     // Almost identical to create_indirection_array, except actually permute the
     // input
     const auto n = keys.extent(0);
-    RangePolicy<ExecutionSpace> policy(exec, 0, n);
+    RangePolicy<ExecutionSpace, Kokkos::IndexType<IndexType>> policy(exec, 0, n);
 
     if constexpr (store_permutation) {
       Kokkos::parallel_for(
-          policy, KOKKOS_LAMBDA(int i) { m_index_old(i) = i; });
+          policy, KOKKOS_LAMBDA(IndexType i) { m_index_old(i) = i; });
     }
 
     using KeyFunctor = decltype(KeyFromView{keys});
@@ -238,11 +238,11 @@ class RadixSorter {
     // Almost identical to create_indirection_array, except actually permute the
     // input
     const auto n = keys.extent(0);
-    RangePolicy<ExecutionSpace> policy(exec, 0, n);
+    RangePolicy<ExecutionSpace, Kokkos::IndexType<IndexType>> policy(exec, 0, n);
 
     if constexpr (store_permutation) {
       Kokkos::parallel_for(
-          policy, KOKKOS_LAMBDA(int i) { m_index_old(i) = i; });
+          policy, KOKKOS_LAMBDA(IndexType i) { m_index_old(i) = i; });
     }
 
     auto values_scratch =
@@ -276,8 +276,8 @@ class RadixSorter {
   template <typename ExecutionSpace>
   void apply_permutation(ExecutionSpace const& exec, View<KeyType*> v) {
     parallel_for(
-        RangePolicy<ExecutionSpace>(exec, 0, v.extent(0)),
-        KOKKOS_LAMBDA(int i) { m_key_scratch(i) = v(m_index_old(i)); });
+        RangePolicy<ExecutionSpace, Kokkos::IndexType<IndexType>>(exec, 0, v.extent(0)),
+        KOKKOS_LAMBDA(IndexType i) { m_key_scratch(i) = v(m_index_old(i)); });
     deep_copy(exec, v, m_key_scratch);
   }
 
@@ -286,7 +286,7 @@ class RadixSorter {
   void permute_by_scan(Policy policy,
                        Kokkos::pair<View<U*>&, View<U*>&>... views) {
     parallel_for(
-        policy, KOKKOS_LAMBDA(int i) {
+        policy, KOKKOS_LAMBDA(IndexType i) {
           auto n           = m_scan.extent(0);
           const auto total = m_scan(n - 1) + m_bits(n - 1);
           auto t           = i - m_scan(i) + total;
@@ -303,7 +303,7 @@ class RadixSorter {
   void step(Policy policy, KeyFunctor getKeyBit, std::uint32_t shift,
             const Permutation& permutation) {
     parallel_for(
-        policy, KOKKOS_LAMBDA(int i) {
+        policy, KOKKOS_LAMBDA(IndexType i) {
           auto key_bit = getKeyBit(permutation(i), shift);
 
           m_bits(i) = key_bit;
@@ -311,7 +311,7 @@ class RadixSorter {
         });
 
     parallel_scan(
-        policy, KOKKOS_LAMBDA(const int& i, KeyType& _x, const bool& _final) {
+        policy, KOKKOS_LAMBDA(IndexType i, size_t& _x, bool _final) {
           auto val = m_scan(i);
 
           if (_final) m_scan(i) = _x;
