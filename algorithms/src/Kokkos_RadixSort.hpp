@@ -87,10 +87,12 @@ template <typename FloatingPointType>
 using equivalent_size_integral_type =
     typename Impl::equivalent_size_integral_type<FloatingPointType>::type;
 
-/// Gets key values from elements of a View. Can limit consideration
-/// and hence sorting effort to just the least-significant BitWidth
-/// bits of each element. Such a limitation is non-sensical for
-/// floating-point numbers.
+/// Gets key values from elements of a View. Handles any integral type
+/// and floating point types of 16-64 bits.
+///
+/// Can limit consideration and hence sorting effort to just the
+/// least-significant BitWidth bits of each element. Such a limitation
+/// is non-sensical for floating-point numbers.
 template <int BitWidth, typename KeyView>
 struct KeyFromView {
   static constexpr int num_bits = BitWidth;
