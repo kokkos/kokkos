@@ -127,7 +127,7 @@ void SYCLInternal::initialize(const sycl::queue& q) {
     Kokkos::Impl::throw_runtime_exception(msg.str());
   }
 
-#ifdef KOKKOS_SYCL_DEVICE_GLOBAL_SUPPORTED
+#ifdef KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED
   // Init the array for used for arbitrarily sized atomics
   if (this == &singleton()) {
     desul::Impl::init_lock_arrays();
@@ -170,7 +170,7 @@ void SYCLInternal::finalize() {
   // deallocated once by the defualt instance
   if (this == &singleton()) {
     Impl::sycl_global_unique_token_locks(true);
-#ifdef KOKKOS_SYCL_DEVICE_GLOBAL_SUPPORTED
+#ifdef KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED
     desul::Impl::finalize_lock_arrays();
     desul::Impl::finalize_lock_arrays_sycl(*m_queue);
 #endif

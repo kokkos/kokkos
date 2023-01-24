@@ -18,7 +18,8 @@
 
 namespace Test {
 TEST(TEST_CATEGORY, atomic_operations_complexdouble) {
-#if defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_SYCL_DEVICE_GLOBAL_SUPPORTED)
+#if defined(KOKKOS_ENABLE_SYCL) && \
+    !defined(KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED)
   if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::SYCL>)
     GTEST_SKIP() << "skipping since device_global variables are not available";
 #endif

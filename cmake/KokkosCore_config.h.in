@@ -26,7 +26,7 @@
 #cmakedefine KOKKOS_ENABLE_MEMKIND
 #cmakedefine KOKKOS_ENABLE_LIBRT
 #cmakedefine KOKKOS_ENABLE_SYCL
-#cmakedefine KOKKOS_SYCL_DEVICE_GLOBAL_SUPPORTED
+#cmakedefine KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED
 
 /* General Settings */
 #cmakedefine KOKKOS_ENABLE_CXX17
