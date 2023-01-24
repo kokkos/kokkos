@@ -75,8 +75,8 @@ class neon_mask<Derived, 64> {
       return false;
     }
   };
-  using value_type = bool;
-  using abi_type   = simd_abi::neon_fixed_size<2>;
+  using value_type          = bool;
+  using abi_type            = simd_abi::neon_fixed_size<2>;
   using implementation_type = uint64x2_t;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION neon_mask() = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit neon_mask(value_type value)
@@ -88,11 +88,8 @@ class neon_mask<Derived, 64> {
     operator[](1) = bool(other[1]);
   }
   template <class U>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION neon_mask(
-      neon_mask<U, 64> const& other)
-    :neon_mask(static_cast<uint64x2_t>(other))
-  {
-  }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION neon_mask(neon_mask<U, 64> const& other)
+      : neon_mask(static_cast<uint64x2_t>(other)) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION static constexpr std::size_t size() {
     return 2;
   }
@@ -172,8 +169,8 @@ class neon_mask<Derived, 32> {
       return false;
     }
   };
-  using value_type = bool;
-  using abi_type   = simd_abi::neon_fixed_size<2>;
+  using value_type          = bool;
+  using abi_type            = simd_abi::neon_fixed_size<2>;
   using implementation_type = uint32x2_t;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION neon_mask() = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit neon_mask(value_type value)
@@ -185,15 +182,11 @@ class neon_mask<Derived, 32> {
       uint32x2_t const& value_in)
       : m_value(value_in) {}
   template <class U>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION neon_mask(
-      neon_mask<U, 64> const& other)
-    : m_value(vqmovn_u64(static_cast<uint64x2_t>(other)))
-  {}
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION neon_mask(neon_mask<U, 64> const& other)
+      : m_value(vqmovn_u64(static_cast<uint64x2_t>(other))) {}
   template <class U>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION neon_mask(
-      neon_mask<U, 32> const& other)
-    : m_value(static_cast<uint32x2_t>(other))
-  {}
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION neon_mask(neon_mask<U, 32> const& other)
+      : m_value(static_cast<uint32x2_t>(other)) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit operator uint32x2_t()
       const {
     return m_value;
@@ -232,30 +225,27 @@ class neon_mask<Derived, 32> {
   }
 };
 
-}
+}  // namespace Impl
 
 template <class T>
 class simd_mask<T, simd_abi::neon_fixed_size<2>>
-  : public Impl::neon_mask<simd_mask<T, simd_abi::neon_fixed_size<2>>, sizeof(T) * 8>
-{
-  using base_type = Impl::neon_mask<simd_mask<T, simd_abi::neon_fixed_size<2>>, sizeof(T) * 8>;
+    : public Impl::neon_mask<simd_mask<T, simd_abi::neon_fixed_size<2>>,
+                             sizeof(T) * 8> {
+  using base_type = Impl::neon_mask<simd_mask<T, simd_abi::neon_fixed_size<2>>,
+                                    sizeof(T) * 8>;
+
  public:
   using implementation_type = typename base_type::implementation_type;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd_mask() = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit simd_mask(bool value)
-    :base_type(value)
-  {}
+      : base_type(value) {}
   template <class U>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd_mask(
       simd_mask<U, simd_abi::neon_fixed_size<2>> const& other)
-    :base_type(other)
-  {
-  }
+      : base_type(other) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd_mask(
       implementation_type const& value)
-    :base_type(value)
-  {
-  }
+      : base_type(value) {}
 };
 
 template <>
