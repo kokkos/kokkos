@@ -305,7 +305,7 @@ namespace Impl {
 
 template <class T>
 struct is_integral_extent_type {
-  enum : bool { value = std::is_same<T, Kokkos::Impl::ALL_t>::value ? 1 : 0 };
+  enum : bool { value = std::is_same<T, ALL_t>::value ? 1 : 0 };
 };
 
 template <class iType>
@@ -354,8 +354,7 @@ struct SubviewLegalArgsCompileTime<Kokkos::LayoutLeft, Kokkos::LayoutLeft,
     value = (((CurrentArg == RankDest - 1) &&
               (Kokkos::Impl::is_integral_extent_type<Arg>::value)) ||
              ((CurrentArg >= RankDest) && (std::is_integral<Arg>::value)) ||
-             ((CurrentArg < RankDest) &&
-              (std::is_same<Arg, Kokkos::Impl::ALL_t>::value)) ||
+             ((CurrentArg < RankDest) && (std::is_same<Arg, ALL_t>::value)) ||
              ((CurrentArg == 0) &&
               (Kokkos::Impl::is_integral_extent_type<Arg>::value))) &&
             (SubviewLegalArgsCompileTime<Kokkos::LayoutLeft, Kokkos::LayoutLeft,
@@ -386,7 +385,7 @@ struct SubviewLegalArgsCompileTime<Kokkos::LayoutRight, Kokkos::LayoutRight,
              ((CurrentArg < RankSrc - RankDest) &&
               (std::is_integral<Arg>::value)) ||
              ((CurrentArg >= RankSrc - RankDest) &&
-              (std::is_same<Arg, Kokkos::Impl::ALL_t>::value))) &&
+              (std::is_same<Arg, ALL_t>::value))) &&
             (SubviewLegalArgsCompileTime<Kokkos::LayoutRight,
                                          Kokkos::LayoutRight, RankDest, RankSrc,
                                          CurrentArg + 1, SubViewArgs...>::value)
@@ -397,8 +396,7 @@ template <int RankDest, int RankSrc, int CurrentArg, class Arg>
 struct SubviewLegalArgsCompileTime<Kokkos::LayoutRight, Kokkos::LayoutRight,
                                    RankDest, RankSrc, CurrentArg, Arg> {
   enum {
-    value = ((CurrentArg == RankSrc - 1) &&
-             (std::is_same<Arg, Kokkos::Impl::ALL_t>::value))
+    value = ((CurrentArg == RankSrc - 1) && (std::is_same<Arg, ALL_t>::value))
   };
 };
 
@@ -464,8 +462,7 @@ struct SubviewExtents {
   KOKKOS_FORCEINLINE_FUNCTION bool set(unsigned domain_rank,
                                        unsigned range_rank,
                                        const ViewDimension<DimArgs...>& dim,
-                                       const Kokkos::Impl::ALL_t,
-                                       Args... args) {
+                                       const ALL_t, Args... args) {
     m_begin[domain_rank] = 0;
     m_length[range_rank] = dim.extent(domain_rank);
     m_index[range_rank]  = domain_rank;
@@ -560,7 +557,7 @@ struct SubviewExtents {
   // std::pair range
   template <size_t... DimArgs, class... Args>
   void error(char* buf, int buf_len, unsigned domain_rank, unsigned range_rank,
-             const ViewDimension<DimArgs...>& dim, const Kokkos::Impl::ALL_t,
+             const ViewDimension<DimArgs...>& dim, const ALL_t,
              Args... args) const {
     const int n = std::min(buf_len, snprintf(buf, buf_len, " Kokkos::ALL %c",
                                              int(sizeof...(Args) ? ',' : ')')));

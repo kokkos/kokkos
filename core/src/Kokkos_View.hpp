@@ -496,7 +496,7 @@ namespace Kokkos {
 
 namespace {
 
-constexpr Kokkos::Impl::ALL_t ALL = Kokkos::Impl::ALL_t();
+constexpr Kokkos::ALL_t ALL = Kokkos::ALL_t();
 
 constexpr Kokkos::Impl::WithoutInitializing_t WithoutInitializing =
     Kokkos::Impl::WithoutInitializing_t();
