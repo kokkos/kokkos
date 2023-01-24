@@ -295,9 +295,11 @@ struct ALL_t {
   constexpr bool operator==(const ALL_t&) const { return true; }
 };
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 namespace Impl {
 using Kokkos::ALL_t;
 }  // namespace Impl
+#endif
 }  // namespace Kokkos
 
 namespace Kokkos {
