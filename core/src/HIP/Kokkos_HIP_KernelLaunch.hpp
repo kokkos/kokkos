@@ -127,6 +127,9 @@ struct DeduceHIPLaunchMechanism {
       light_weight = Kokkos::Experimental::WorkItemProperty::HintLightWeight;
   static constexpr Kokkos::Experimental::WorkItemProperty::HintHeavyWeight_t
       heavy_weight = Kokkos::Experimental::WorkItemProperty::HintHeavyWeight;
+  static constexpr Kokkos::Experimental::WorkItemProperty::
+      ImplForceGlobalLaunch_t force_global_launch =
+          Kokkos::Experimental::WorkItemProperty::ImplForceGlobalLaunch;
   static constexpr typename DriverType::Policy::work_item_property property =
       typename DriverType::Policy::work_item_property();
 
@@ -160,15 +163,17 @@ struct DeduceHIPLaunchMechanism {
   // Kal<F<CMU     CG  LCG C  C        CG  LG C  G    CG  CG C  C
   // CMU<F          G  LCG G  G         G  LG G  G     G  CG G  G
   static constexpr HIPLaunchMechanism launch_mechanism =
-      ((property & light_weight) == light_weight)
-          ? (sizeof(DriverType) < HIPTraits::KernelArgumentLimit
-                 ? HIPLaunchMechanism::LocalMemory
-                 : HIPLaunchMechanism::GlobalMemory)
-          : (((property & heavy_weight) == heavy_weight)
-                 ? (sizeof(DriverType) < HIPTraits::ConstantMemoryUsage
-                        ? HIPLaunchMechanism::ConstantMemory
-                        : HIPLaunchMechanism::GlobalMemory)
-                 : (default_launch_mechanism));
+      ((property & force_global_launch) == force_global_launch)
+          ? HIPLaunchMechanism::GlobalMemory
+          : ((property & light_weight) == light_weight)
+                ? (sizeof(DriverType) < HIPTraits::KernelArgumentLimit
+                       ? HIPLaunchMechanism::LocalMemory
+                       : HIPLaunchMechanism::GlobalMemory)
+                : (((property & heavy_weight) == heavy_weight)
+                       ? (sizeof(DriverType) < HIPTraits::ConstantMemoryUsage
+                              ? HIPLaunchMechanism::ConstantMemory
+                              : HIPLaunchMechanism::GlobalMemory)
+                       : (default_launch_mechanism));
 };
 
 template <typename DriverType, typename LaunchBounds,
