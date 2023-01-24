@@ -231,17 +231,13 @@ int cuda_get_opt_block_size(const CudaInternal* cuda_instance,
                                 LaunchBounds{});
 }
 
+// Thin version of cuda_get_opt_block_size for cases where there is no shared
+// memory
 template <class LaunchBounds>
-int cuda_get_opt_block_size_no_shmem(const cudaFuncAttributes& attr,
-                                     LaunchBounds) {
-  auto const& prop = Kokkos::Cuda().cuda_device_prop();
-
-  // Thin version of cuda_get_opt_block_size for cases where there is no shared
-  // memory
-  auto const block_size_to_no_shmem = [&](int /*block_size*/) { return 0; };
-
-  return cuda_deduce_block_size(false, prop, attr, block_size_to_no_shmem,
-                                LaunchBounds{});
+int cuda_get_opt_block_size_no_shmem(
+    const cudaDeviceProp& pro const cudaFuncAttributes& attr, LaunchBounds) {
+  return cuda_deduce_block_size(
+      false, prop, attr, [](int /*block_size*/) { return 0; }, LaunchBounds{});
 }
 
 }  // namespace Impl
