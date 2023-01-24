@@ -114,7 +114,7 @@ class simd_mask<T, simd_abi::avx512_fixed_size<8>> {
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
   operator[](std::size_t i) const {
-    return static_cast<value_type>(reference(m_value, int(i)));
+    return reference(const_cast<simd_mask*>(this)->m_value, int(i));
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd_mask
   operator||(simd_mask const& other) const {
