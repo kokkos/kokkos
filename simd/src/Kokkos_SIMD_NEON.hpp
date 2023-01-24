@@ -704,7 +704,7 @@ class simd<std::int64_t, simd_abi::neon_fixed_size<2>> {
       vnegq_s64(static_cast<int64x2_t>(a)));
 }
 
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 simd<std::int64_t, simd_abi::neon_fixed_size<2>> condition(
     simd_mask<std::int64_t, simd_abi::neon_fixed_size<2>> const& a,
     simd<std::int64_t, simd_abi::neon_fixed_size<2>> const& b,
