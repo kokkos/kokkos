@@ -132,6 +132,7 @@ inline void ensure_hip_lock_arrays_on_device() {}
 #else
 inline static void ensure_hip_lock_arrays_on_device() {
   copy_hip_lock_arrays_to_device();
+  desul::ensure_hip_lock_arrays_on_device();
 }
 #endif
 
