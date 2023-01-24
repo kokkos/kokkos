@@ -138,7 +138,6 @@ __device__ std::enable_if_t<sizeof(T) == 4 || sizeof(T) == 8, T> device_atomic_e
 
 // SeqCst is not directly supported by PTX, need the additional fences:
 
-#if defined(__CUDA_ARCH__) || !defined(__NVCC__)
 namespace desul {
 namespace Impl {
 template <class T, class MemoryScope>
@@ -240,6 +239,5 @@ device_atomic_exchange(T* const dest, T value, MemoryOrder, MemoryScope scope) {
 }
 }  // namespace Impl
 }  // namespace desul
-#endif
 
 #endif

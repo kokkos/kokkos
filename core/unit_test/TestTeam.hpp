@@ -1582,7 +1582,7 @@ struct TestScratchAlignment {
     Kokkos::fence();
     int minimal_scratch_allocation_failed = 0;
     Kokkos::deep_copy(minimal_scratch_allocation_failed, flag);
-    ASSERT_TRUE(minimal_scratch_allocation_failed == 0);
+    ASSERT_EQ(minimal_scratch_allocation_failed, 0);
   }
 
   // test alignment of successive allocations
@@ -1650,7 +1650,7 @@ struct TestScratchAlignment {
     Kokkos::fence();
     int raw_get_shmem_alignment_failed = 0;
     Kokkos::deep_copy(raw_get_shmem_alignment_failed, flag);
-    ASSERT_TRUE(raw_get_shmem_alignment_failed == 0);
+    ASSERT_EQ(raw_get_shmem_alignment_failed, 0);
   }
 };
 
