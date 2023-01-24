@@ -23,7 +23,6 @@ static_assert(false,
 #define KOKKOS_DESUL_ATOMICS_WRAPPER_HPP_
 #include <Kokkos_Macros.hpp>
 
-#ifdef KOKKOS_ENABLE_IMPL_DESUL_ATOMICS
 #include <Kokkos_Atomics_Desul_Config.hpp>
 #include <desul/atomics.hpp>
 
@@ -278,5 +277,4 @@ namespace Impl {
 #undef KOKKOS_DESUL_MEM_SCOPE
 
 // clang-format on
-#endif  // KOKKOS_ENABLE_IMPL_DESUL_ATOMICS
 #endif

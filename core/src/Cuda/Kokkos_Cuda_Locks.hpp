@@ -25,9 +25,8 @@
 
 #include <Cuda/Kokkos_Cuda_Error.hpp>
 
-#ifdef KOKKOS_ENABLE_IMPL_DESUL_ATOMICS
+// FIXME do not include private headers
 #include <desul/atomics/Lock_Array_CUDA.hpp>
-#endif
 
 namespace Kokkos {
 namespace Impl {
@@ -136,18 +135,6 @@ inline static
   lock_array_copied = 1;
 }
 
-#ifndef KOKKOS_ENABLE_IMPL_DESUL_ATOMICS
-
-#ifdef KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE
-inline void ensure_cuda_lock_arrays_on_device() {}
-#else
-inline static void ensure_cuda_lock_arrays_on_device() {
-  copy_cuda_lock_arrays_to_device();
-}
-#endif
-
-#else
-
 #ifdef KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE
 inline void ensure_cuda_lock_arrays_on_device() {}
 #else
@@ -157,8 +144,6 @@ inline static void ensure_cuda_lock_arrays_on_device() {
   desul::ensure_cuda_lock_arrays_on_device();
 }
 #endif
-
-#endif /* defined( KOKKOS_ENABLE_IMPL_DESUL_ATOMICS ) */
 
 }  // namespace Impl
 }  // namespace Kokkos
