@@ -35,8 +35,13 @@ class neon_fixed_size {};
 
 }  // namespace simd_abi
 
-template <>
-class simd_mask<double, simd_abi::neon_fixed_size<2>> {
+namespace Impl {
+
+template <class Derived, int Bits>
+class neon_mask;
+
+template <class Derived>
+class neon_mask<Derived, 64> {
   uint64x2_t m_value;
 
  public:
@@ -72,19 +77,26 @@ class simd_mask<double, simd_abi::neon_fixed_size<2>> {
   };
   using value_type = bool;
   using abi_type   = simd_abi::neon_fixed_size<2>;
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd_mask() = default;
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit simd_mask(value_type value)
+  using implementation_type = uint64x2_t;
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION neon_mask() = default;
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit neon_mask(value_type value)
       : m_value(vdupq_n_u64(value ? 0xFFFFFFFFFFFFFFFFULL : 0)) {}
   template <class U>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd_mask(
-      simd_mask<U, simd_abi::neon_fixed_size<2>> const& other) {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION neon_mask(
+      neon_mask<U, 32> const& other) {
     operator[](0) = bool(other[0]);
     operator[](1) = bool(other[1]);
+  }
+  template <class U>
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION neon_mask(
+      neon_mask<U, 64> const& other)
+    :neon_mask(static_cast<uint64x2_t>(other))
+  {
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION static constexpr std::size_t size() {
     return 2;
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd_mask(
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit neon_mask(
       uint64x2_t const& value_in)
       : m_value(value_in) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit operator uint64x2_t()
@@ -99,20 +111,20 @@ class simd_mask<double, simd_abi::neon_fixed_size<2>> {
     return static_cast<value_type>(
         reference(const_cast<uint64x2_t&>(m_value), int(i)));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd_mask
-  operator||(simd_mask const& other) const {
-    return simd_mask(vorrq_u64(m_value, other.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Derived
+  operator||(neon_mask const& other) const {
+    return Derived(vorrq_u64(m_value, other.m_value));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd_mask
-  operator&&(simd_mask const& other) const {
-    return simd_mask(vandq_u64(m_value, other.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Derived
+  operator&&(neon_mask const& other) const {
+    return Derived(vandq_u64(m_value, other.m_value));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd_mask operator!() const {
-    auto const true_value = static_cast<uint64x2_t>(simd_mask(true));
-    return simd_mask(veorq_u64(m_value, true_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Derived operator!() const {
+    auto const true_value = static_cast<uint64x2_t>(neon_mask(true));
+    return Derived(veorq_u64(m_value, true_value));
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool operator==(
-      simd_mask const& other) const {
+      neon_mask const& other) const {
     uint64x2_t const elementwise_equality = vceqq_u64(m_value, other.m_value);
     uint32x2_t const narrow_elementwise_equality =
         vqmovn_u64(elementwise_equality);
@@ -122,13 +134,13 @@ class simd_mask<double, simd_abi::neon_fixed_size<2>> {
     return overall_equality == 0xFFFFFFFFFFFFFFFFULL;
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool operator!=(
-      simd_mask const& other) const {
+      neon_mask const& other) const {
     return !operator==(other);
   }
 };
 
-template <>
-class simd_mask<std::int32_t, simd_abi::neon_fixed_size<2>> {
+template <class Derived>
+class neon_mask<Derived, 32> {
   uint32x2_t m_value;
 
  public:
@@ -162,18 +174,26 @@ class simd_mask<std::int32_t, simd_abi::neon_fixed_size<2>> {
   };
   using value_type = bool;
   using abi_type   = simd_abi::neon_fixed_size<2>;
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd_mask() = default;
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit simd_mask(value_type value)
+  using implementation_type = uint32x2_t;
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION neon_mask() = default;
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit neon_mask(value_type value)
       : m_value(vdup_n_u32(value ? 0xFFFFFFFFU : 0)) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION static constexpr std::size_t size() {
     return 2;
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd_mask(
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit neon_mask(
       uint32x2_t const& value_in)
       : m_value(value_in) {}
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd_mask(
-      simd_mask<double, simd_abi::neon_fixed_size<2>> const& other)
-      : m_value(vqmovn_u64(static_cast<uint64x2_t>(other))) {}
+  template <class U>
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION neon_mask(
+      neon_mask<U, 64> const& other)
+    : m_value(vqmovn_u64(static_cast<uint64x2_t>(other)))
+  {}
+  template <class U>
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION neon_mask(
+      neon_mask<U, 32> const& other)
+    : m_value(static_cast<uint32x2_t>(other))
+  {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit operator uint32x2_t()
       const {
     return m_value;
@@ -186,20 +206,20 @@ class simd_mask<std::int32_t, simd_abi::neon_fixed_size<2>> {
     return static_cast<value_type>(
         reference(const_cast<uint32x2_t&>(m_value), int(i)));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd_mask
-  operator||(simd_mask const& other) const {
-    return simd_mask(vorr_u32(m_value, other.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Derived
+  operator||(neon_mask const& other) const {
+    return Derived(vorr_u32(m_value, other.m_value));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd_mask
-  operator&&(simd_mask const& other) const {
-    return simd_mask(vand_u32(m_value, other.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Derived
+  operator&&(neon_mask const& other) const {
+    return Derived(vand_u32(m_value, other.m_value));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd_mask operator!() const {
-    auto const true_value = static_cast<uint32x2_t>(simd_mask(true));
-    return simd_mask(veor_u32(m_value, true_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Derived operator!() const {
+    auto const true_value = static_cast<uint32x2_t>(neon_mask(true));
+    return Derived(veor_u32(m_value, true_value));
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool operator==(
-      simd_mask const& other) const {
+      neon_mask const& other) const {
     uint32x2_t const elementwise_equality = vceq_u32(m_value, other.m_value);
     uint64x1_t const overall_equality_neon =
         vreinterpret_u64_u32(elementwise_equality);
@@ -207,188 +227,34 @@ class simd_mask<std::int32_t, simd_abi::neon_fixed_size<2>> {
     return overall_equality == 0xFFFFFFFFFFFFFFFFULL;
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool operator!=(
-      simd_mask const& other) const {
+      neon_mask const& other) const {
     return !operator==(other);
   }
 };
 
-template <>
-class simd_mask<std::int64_t, simd_abi::neon_fixed_size<2>> {
-  uint64x2_t m_value;
+}
 
+template <class T>
+class simd_mask<T, simd_abi::neon_fixed_size<2>>
+  : public Impl::neon_mask<simd_mask<T, simd_abi::neon_fixed_size<2>>, sizeof(T) * 8>
+{
+  using base_type = Impl::neon_mask<simd_mask<T, simd_abi::neon_fixed_size<2>>, sizeof(T) * 8>;
  public:
-  class reference {
-    uint64x2_t& m_mask;
-    int m_lane;
-
-   public:
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference(uint64x2_t& mask_arg,
-                                                    int lane_arg)
-        : m_mask(mask_arg), m_lane(lane_arg) {}
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference
-    operator=(bool value) const {
-      switch (m_lane) {
-        case 0:
-          m_mask = vsetq_lane_u64(value ? 0xFFFFFFFFFFFFFFFFULL : 0, m_mask, 0);
-          break;
-        case 1:
-          m_mask = vsetq_lane_u64(value ? 0xFFFFFFFFFFFFFFFFULL : 0, m_mask, 1);
-          break;
-      }
-      return *this;
-    }
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION operator bool() const {
-      switch (m_lane) {
-        case 0: return vgetq_lane_u64(m_mask, 0) != 0;
-        case 1: return vgetq_lane_u64(m_mask, 1) != 0;
-      }
-      return false;
-    }
-  };
-  using value_type = bool;
-  using abi_type   = simd_abi::neon_fixed_size<2>;
+  using implementation_type = typename base_type::implementation_type;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd_mask() = default;
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit simd_mask(value_type value)
-      : m_value(vdupq_n_u64(value ? 0xFFFFFFFFFFFFFFFFULL : 0)) {}
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit simd_mask(bool value)
+    :base_type(value)
+  {}
   template <class U>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd_mask(
-      simd_mask<U, simd_abi::neon_fixed_size<2>> const& other) {
-    operator[](0) = bool(other[0]);
-    operator[](1) = bool(other[1]);
-  }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION static constexpr std::size_t size() {
-    return 2;
+      simd_mask<U, simd_abi::neon_fixed_size<2>> const& other)
+    :base_type(other)
+  {
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd_mask(
-      uint64x2_t const& value_in)
-      : m_value(value_in) {}
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit operator uint64x2_t()
-      const {
-    return m_value;
-  }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference operator[](std::size_t i) {
-    return reference(m_value, int(i));
-  }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
-  operator[](std::size_t i) const {
-    return static_cast<value_type>(
-        reference(const_cast<uint64x2_t&>(m_value), int(i)));
-  }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd_mask
-  operator||(simd_mask const& other) const {
-    return simd_mask(vorrq_u64(m_value, other.m_value));
-  }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd_mask
-  operator&&(simd_mask const& other) const {
-    return simd_mask(vandq_u64(m_value, other.m_value));
-  }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd_mask operator!() const {
-    auto const true_value = static_cast<uint64x2_t>(simd_mask(true));
-    return simd_mask(veorq_u64(m_value, true_value));
-  }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool operator==(
-      simd_mask const& other) const {
-    uint64x2_t const elementwise_equality = vceqq_u64(m_value, other.m_value);
-    uint32x2_t const narrow_elementwise_equality =
-        vqmovn_u64(elementwise_equality);
-    uint64x1_t const overall_equality_neon =
-        vreinterpret_u64_u32(narrow_elementwise_equality);
-    uint64_t const overall_equality = vget_lane_u64(overall_equality_neon, 0);
-    return overall_equality == 0xFFFFFFFFFFFFFFFFULL;
-  }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool operator!=(
-      simd_mask const& other) const {
-    return !operator==(other);
-  }
-};
-
-template <>
-class simd_mask<std::uint64_t, simd_abi::neon_fixed_size<2>> {
-  uint64x2_t m_value;
-
- public:
-  class reference {
-    uint64x2_t& m_mask;
-    int m_lane;
-
-   public:
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference(uint64x2_t& mask_arg,
-                                                    int lane_arg)
-        : m_mask(mask_arg), m_lane(lane_arg) {}
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference
-    operator=(bool value) const {
-      switch (m_lane) {
-        case 0:
-          m_mask = vsetq_lane_u64(value ? 0xFFFFFFFFFFFFFFFFULL : 0, m_mask, 0);
-          break;
-        case 1:
-          m_mask = vsetq_lane_u64(value ? 0xFFFFFFFFFFFFFFFFULL : 0, m_mask, 1);
-          break;
-      }
-      return *this;
-    }
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION operator bool() const {
-      switch (m_lane) {
-        case 0: return vgetq_lane_u64(m_mask, 0) != 0;
-        case 1: return vgetq_lane_u64(m_mask, 1) != 0;
-      }
-      return false;
-    }
-  };
-  using value_type = bool;
-  using abi_type   = simd_abi::neon_fixed_size<2>;
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd_mask() = default;
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit simd_mask(value_type value)
-      : m_value(vdupq_n_u64(value ? 0xFFFFFFFFFFFFFFFFULL : 0)) {}
-  template <class U>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd_mask(
-      simd_mask<U, simd_abi::neon_fixed_size<2>> const& other) {
-    operator[](0) = bool(other[0]);
-    operator[](1) = bool(other[1]);
-  }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION static constexpr std::size_t size() {
-    return 2;
-  }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd_mask(
-      uint64x2_t const& value_in)
-      : m_value(value_in) {}
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit operator uint64x2_t()
-      const {
-    return m_value;
-  }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference operator[](std::size_t i) {
-    return reference(m_value, int(i));
-  }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
-  operator[](std::size_t i) const {
-    return static_cast<value_type>(
-        reference(const_cast<uint64x2_t&>(m_value), int(i)));
-  }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd_mask
-  operator||(simd_mask const& other) const {
-    return simd_mask(vorrq_u64(m_value, other.m_value));
-  }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd_mask
-  operator&&(simd_mask const& other) const {
-    return simd_mask(vandq_u64(m_value, other.m_value));
-  }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd_mask operator!() const {
-    auto const true_value = static_cast<uint64x2_t>(simd_mask(true));
-    return simd_mask(veorq_u64(m_value, true_value));
-  }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool operator==(
-      simd_mask const& other) const {
-    uint64x2_t const elementwise_equality = vceqq_u64(m_value, other.m_value);
-    uint32x2_t const narrow_elementwise_equality =
-        vqmovn_u64(elementwise_equality);
-    uint64x1_t const overall_equality_neon =
-        vreinterpret_u64_u32(narrow_elementwise_equality);
-    uint64_t const overall_equality = vget_lane_u64(overall_equality_neon, 0);
-    return overall_equality == 0xFFFFFFFFFFFFFFFFULL;
-  }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool operator!=(
-      simd_mask const& other) const {
-    return !operator==(other);
+      implementation_type const& value)
+    :base_type(value)
+  {
   }
 };
 
