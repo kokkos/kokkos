@@ -698,6 +698,13 @@ class simd<std::int64_t, simd_abi::neon_fixed_size<2>> {
 
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     simd<std::int64_t, simd_abi::neon_fixed_size<2>>
+    operator-(simd<std::int64_t, simd_abi::neon_fixed_size<2>> const& a) {
+  return simd<std::int64_t, simd_abi::neon_fixed_size<2>>(
+      vnegq_s64(static_cast<int64x2_t>(a)));
+}
+
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+    simd<std::int64_t, simd_abi::neon_fixed_size<2>>
     operator-(simd<std::int64_t, simd_abi::neon_fixed_size<2>> const& lhs,
               simd<std::int64_t, simd_abi::neon_fixed_size<2>> const& rhs) {
   return simd<std::int64_t, simd_abi::neon_fixed_size<2>>(
@@ -706,9 +713,10 @@ class simd<std::int64_t, simd_abi::neon_fixed_size<2>> {
 
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     simd<std::int64_t, simd_abi::neon_fixed_size<2>>
-    operator-(simd<std::int64_t, simd_abi::neon_fixed_size<2>> const& a) {
+    operator+(simd<std::int64_t, simd_abi::neon_fixed_size<2>> const& lhs,
+              simd<std::int64_t, simd_abi::neon_fixed_size<2>> const& rhs) {
   return simd<std::int64_t, simd_abi::neon_fixed_size<2>>(
-      vnegq_s64(static_cast<int64x2_t>(a)));
+      vaddq_s64(static_cast<int64x2_t>(lhs), static_cast<int64x2_t>(rhs)));
 }
 
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
