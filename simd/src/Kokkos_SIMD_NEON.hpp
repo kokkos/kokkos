@@ -560,6 +560,13 @@ class simd<std::int32_t, simd_abi::neon_fixed_size<2>> {
 
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     simd<std::int32_t, simd_abi::neon_fixed_size<2>>
+    operator-(simd<std::int32_t, simd_abi::neon_fixed_size<2>> const& a) {
+  return simd<std::int32_t, simd_abi::neon_fixed_size<2>>(
+      vneg_s32(static_cast<int32x2_t>(a)));
+}
+
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+    simd<std::int32_t, simd_abi::neon_fixed_size<2>>
     operator-(simd<std::int32_t, simd_abi::neon_fixed_size<2>> const& lhs,
               simd<std::int32_t, simd_abi::neon_fixed_size<2>> const& rhs) {
   return simd<std::int32_t, simd_abi::neon_fixed_size<2>>(
