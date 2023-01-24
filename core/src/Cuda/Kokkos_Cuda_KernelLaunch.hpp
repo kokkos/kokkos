@@ -168,11 +168,9 @@ inline void configure_shmem_preference(const KernelFuncPtr& func,
   const size_t max_warps_per_sm_registers =
       cuda_max_warps_per_sm_registers(device_props, func_attr);
 
-  // Constrain the number of blocks to respect the maximum number of warps per
-  // SM On face value this should be an equality, but due to the warp
-  // granularity constraints noted in `cuda_max_warps_per_sm_registers` the
-  // left-hand-side of this comparison can overshoot what the hardware allows
-  // based on register counts alone
+  // Correct the number of blocks to respect the maximum number of warps per
+  // SM, which is constrained to be a multiple of the warp allocation granularity
+  // defined in `cuda_warp_per_sm_allocation_granularity`.
   while ((max_blocks_regs * block_size / device_props.warpSize) >
          max_warps_per_sm_registers)
     max_blocks_regs--;

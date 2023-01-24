@@ -80,11 +80,9 @@ inline int cuda_max_active_blocks_per_sm(cudaDeviceProp const& properties,
   int const max_warps_per_sm_registers =
       cuda_max_warps_per_sm_registers(properties, attributes);
 
-  // Constrain the number of blocks to respect the maximum number of warps per
-  // SM On face value this should be an equality, but due to the warp
-  // granularity constraints noted in `cuda_max_warps_per_sm_registers` the
-  // left-hand-side of this comparison can overshoot what the hardware allows
-  // based on register counts alone
+  // Correct the number of blocks to respect the maximum number of warps per
+  // SM, which is constrained to be a multiple of the warp allocation granularity
+  // defined in `cuda_warp_per_sm_allocation_granularity`.
   while ((max_blocks_regs * block_size / properties.warpSize) >
          max_warps_per_sm_registers)
     max_blocks_regs--;
@@ -235,7 +233,7 @@ int cuda_get_opt_block_size(const CudaInternal* cuda_instance,
 // memory
 template <class LaunchBounds>
 int cuda_get_opt_block_size_no_shmem(
-    const cudaDeviceProp& pro const cudaFuncAttributes& attr, LaunchBounds) {
+    const cudaDeviceProp& prop, const cudaFuncAttributes& attr, LaunchBounds) {
   return cuda_deduce_block_size(
       false, prop, attr, [](int /*block_size*/) { return 0; }, LaunchBounds{});
 }
