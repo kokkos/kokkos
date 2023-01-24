@@ -286,7 +286,6 @@ struct ViewDimensionAssignable<ViewDimension<DstArgs...>,
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
-namespace Impl {
 
 struct ALL_t {
   KOKKOS_INLINE_FUNCTION
@@ -296,6 +295,8 @@ struct ALL_t {
   constexpr bool operator==(const ALL_t&) const { return true; }
 };
 
+namespace Impl {
+using Kokkos::ALL_t;
 }  // namespace Impl
 }  // namespace Kokkos
 
