@@ -55,8 +55,7 @@ HIPLockArrays g_host_hip_lock_arrays = {nullptr, 0};
 void initialize_host_hip_lock_arrays() {
 #ifdef KOKKOS_ENABLE_IMPL_DESUL_ATOMICS
   desul::Impl::init_lock_arrays();
-
-  DESUL_ENSURE_HIP_LOCK_ARRAYS_ON_DEVICE();
+  desul::ensure_hip_lock_arrays_on_device();
 #endif
 
   if (g_host_hip_lock_arrays.atomic != nullptr) return;
@@ -65,8 +64,7 @@ void initialize_host_hip_lock_arrays() {
       sizeof(std::int32_t) * (KOKKOS_IMPL_HIP_SPACE_ATOMIC_MASK + 1)));
 
   g_host_hip_lock_arrays.n = HIPInternal::concurrency();
-
-  KOKKOS_COPY_HIP_LOCK_ARRAYS_TO_DEVICE();
+  copy_hip_lock_arrays_to_device();
   init_lock_array_kernel_atomic<<<
       (KOKKOS_IMPL_HIP_SPACE_ATOMIC_MASK + 1 + 255) / 256, 256, 0, nullptr>>>();
 }
@@ -81,7 +79,7 @@ void finalize_host_hip_lock_arrays() {
   g_host_hip_lock_arrays.atomic = nullptr;
   g_host_hip_lock_arrays.n      = 0;
 #ifdef KOKKOS_ENABLE_HIP_RELOCATABLE_DEVICE_CODE
-  KOKKOS_COPY_HIP_LOCK_ARRAYS_TO_DEVICE();
+  copy_hip_lock_arrays_to_device();
 #endif
 }
 

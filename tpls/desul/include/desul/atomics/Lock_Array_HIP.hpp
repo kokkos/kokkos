@@ -35,7 +35,7 @@ extern int32_t* HIP_SPACE_ATOMIC_LOCKS_NODE_h;
 template <typename /*AlwaysInt*/ = int>
 void init_lock_arrays_hip();
 
-/// \brief After this call, the g_host_cuda_lock_arrays variable has
+/// \brief After this call, the g_host_hip_lock_arrays variable has
 ///        all null pointers, and all array memory has been freed.
 ///
 /// This call is idempotent.
@@ -64,10 +64,10 @@ namespace Impl {
  * be created in every translation unit that sees this header file (we make this
  * clear by marking it static, meaning no other translation unit can link to
  * it). Since the Kokkos_HIP_Locks.cpp translation unit cannot initialize the
- * instances in other translation units, we must update this CUDA global
+ * instances in other translation units, we must update this HIP global
  * variable based on the Host global variable prior to running any kernels that
  * will use it.  That is the purpose of the
- * KOKKOS_ENSURE_HIP_LOCK_ARRAYS_ON_DEVICE macro.
+ * ensure_hip_lock_arrays_on_device function.
  */
 __device__
 #ifdef DESUL_HIP_RDC
@@ -132,31 +132,34 @@ namespace Impl {
 namespace {
 static int lock_array_copied = 0;
 }  // namespace
-}  // namespace Impl
-}  // namespace desul
 
-/* It is critical that this code be a macro, so that it will
-   capture the right address for g_device_hip_lock_arrays!
-   putting this in an inline function will NOT do the right thing! */
-#define DESUL_IMPL_COPY_HIP_LOCK_ARRAYS_TO_DEVICE()                                   \
-  {                                                                                   \
-    if (::desul::Impl::lock_array_copied == 0) {                                      \
-      (void)hipMemcpyToSymbol(                                                        \
-          HIP_SYMBOL(::desul::Impl::HIP_SPACE_ATOMIC_LOCKS_DEVICE),                   \
-          &::desul::Impl::HIP_SPACE_ATOMIC_LOCKS_DEVICE_h,                            \
-          sizeof(int32_t*));                                                          \
-      (void)hipMemcpyToSymbol(HIP_SYMBOL(::desul::Impl::HIP_SPACE_ATOMIC_LOCKS_NODE), \
-                              &::desul::Impl::HIP_SPACE_ATOMIC_LOCKS_NODE_h,          \
-                              sizeof(int32_t*));                                      \
-    }                                                                                 \
-    ::desul::Impl::lock_array_copied = 1;                                             \
+#ifdef DESUL_HIP_RDC
+inline
+#else
+inline static
+#endif
+    void
+    copy_hip_lock_arrays_to_device() {
+  if (lock_array_copied == 0) {
+    (void)hipMemcpyToSymbol(HIP_SYMBOL(HIP_SPACE_ATOMIC_LOCKS_DEVICE),
+                            &HIP_SPACE_ATOMIC_LOCKS_DEVICE_h,
+                            sizeof(int32_t*));
+    (void)hipMemcpyToSymbol(HIP_SYMBOL(HIP_SPACE_ATOMIC_LOCKS_NODE),
+                            &HIP_SPACE_ATOMIC_LOCKS_NODE_h,
+                            sizeof(int32_t*));
   }
+  lock_array_copied = 1;
+}
+}  // namespace Impl
 
 #if defined(DESUL_HIP_RDC) || (!defined(__HIPCC__))
-#define DESUL_ENSURE_HIP_LOCK_ARRAYS_ON_DEVICE()
+inline void ensure_hip_lock_arrays_on_device() {}
 #else
-#define DESUL_ENSURE_HIP_LOCK_ARRAYS_ON_DEVICE() \
-  DESUL_IMPL_COPY_HIP_LOCK_ARRAYS_TO_DEVICE()
+static inline void ensure_hip_lock_arrays_on_device() {
+  Impl::copy_hip_lock_arrays_to_device();
+}
 #endif
+
+}  // namespace desul
 
 #endif
