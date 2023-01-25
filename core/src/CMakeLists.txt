@@ -3,7 +3,7 @@ KOKKOS_INCLUDE_DIRECTORIES(
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${KOKKOS_TOP_BUILD_DIR}
 )
-IF (Kokkos_ENABLE_IMPL_DESUL_ATOMICS AND NOT desul_FOUND)
+IF (NOT desul_FOUND)
   IF(KOKKOS_ENABLE_CUDA)
     SET(DESUL_ATOMICS_ENABLE_CUDA ON)
   ENDIF()
@@ -88,7 +88,7 @@ IF (KOKKOS_ENABLE_SYCL)
   APPEND_GLOB(KOKKOS_CORE_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/SYCL/*.hpp)
 ENDIF()
 
-IF (Kokkos_ENABLE_IMPL_DESUL_ATOMICS AND NOT desul_FOUND)
+IF (NOT desul_FOUND)
   APPEND_GLOB(KOKKOS_CORE_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/desul/src/*.cpp)
   APPEND_GLOB(KOKKOS_CORE_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/desul/include/desul/*.hpp)
   APPEND_GLOB(KOKKOS_CORE_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/desul/include/desul/*/*.hpp)
@@ -125,7 +125,7 @@ KOKKOS_LIB_INCLUDE_DIRECTORIES(kokkoscore
   ${CMAKE_CURRENT_BINARY_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}
 )
-IF (Kokkos_ENABLE_IMPL_DESUL_ATOMICS AND NOT desul_FOUND)
+IF (NOT desul_FOUND)
   KOKKOS_LIB_INCLUDE_DIRECTORIES(kokkoscore
     ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/desul/include
   )
@@ -187,11 +187,11 @@ ENDIF()
 #        libatomic
 # Most compilers only require libatomic for 128-bit CAS
 # I (CT) had removed 128bit CAS from desul to not need libatomic.
-IF (Kokkos_ENABLE_IMPL_DESUL_ATOMICS AND KOKKOS_ENABLE_OPENMPTARGET)
+IF (KOKKOS_ENABLE_OPENMPTARGET)
   target_link_libraries(kokkoscore PUBLIC atomic)
 ENDIF()
 
-IF (Kokkos_ENABLE_IMPL_DESUL_ATOMICS AND desul_FOUND)
+IF (desul_FOUND)
   target_link_libraries(kokkoscore PUBLIC desul_atomics)
 ENDIF()
 
