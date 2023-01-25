@@ -47,7 +47,7 @@ RUN CMAKE_URL=https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSIO
 ENV PATH=${CMAKE_DIR}/bin:$PATH
 
 ENV SYCL_DIR=/opt/sycl
-RUN SYCL_VERSION=20220112 && \
+RUN SYCL_VERSION=20221201 && \
     SYCL_URL=https://github.com/intel/llvm/archive/sycl-nightly && \
     SYCL_ARCHIVE=${SYCL_VERSION}.tar.gz && \
     SCRATCH_DIR=/scratch && mkdir -p ${SCRATCH_DIR} && cd ${SCRATCH_DIR} && \
@@ -55,10 +55,37 @@ RUN SYCL_VERSION=20220112 && \
     mkdir llvm && \
     tar -xf ${SYCL_ARCHIVE} -C llvm --strip-components=1 && \
     cd llvm && \
-    python3 buildbot/configure.py --cuda && \
-    python3 buildbot/compile.py && \
-    mkdir -p ${SYCL_DIR} && \
-    mv ${SCRATCH_DIR}/llvm/build/install/* ${SYCL_DIR} && \
+    mkdir build && \
+    cd build && \
+    cmake -G Ninja \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DLLVM_ENABLE_ASSERTIONS=ON \
+      -DLLVM_TARGETS_TO_BUILD="X86;NVPTX" \
+      -DLLVM_EXTERNAL_PROJECTS="sycl;llvm-spirv;opencl;xpti;xptifw;libdevice" \
+      -DLLVM_EXTERNAL_SYCL_SOURCE_DIR=/scratch/llvm/sycl \
+      -DLLVM_EXTERNAL_LLVM_SPIRV_SOURCE_DIR=/scratch/llvm/llvm-spirv \
+      -DLLVM_EXTERNAL_XPTI_SOURCE_DIR=/scratch/llvm/xpti \
+      -DXPTI_SOURCE_DIR=/scratch/llvm/xpti \
+      -DLLVM_EXTERNAL_XPTIFW_SOURCE_DIR=/scratch/llvm/xptifw \
+      -DLLVM_EXTERNAL_LIBDEVICE_SOURCE_DIR=/scratch/llvm/libdevice \
+      -DLLVM_ENABLE_PROJECTS="clang;sycl;llvm-spirv;opencl;xpti;xptifw;libdevice;libclc" \
+      -DLIBCLC_TARGETS_TO_BUILD=";nvptx64--;nvptx64--nvidiacl" \
+      -DLIBCLC_GENERATE_REMANGLED_VARIANTS=ON \
+      -DLLVM_BUILD_TOOLS=OFF \
+      -DSYCL_ENABLE_WERROR=OFF \
+      -DCMAKE_INSTALL_PREFIX=${SYCL_DIR} \
+      -DSYCL_INCLUDE_TESTS=OFF \
+      -DLLVM_ENABLE_DOXYGEN=OFF \
+      -DLLVM_ENABLE_SPHINX=OFF \
+      -DBUILD_SHARED_LIBS=OFF \
+      -DSYCL_ENABLE_XPTI_TRACING=ON \
+      -DLLVM_ENABLE_LLD=OFF \
+      -DXPTI_ENABLE_WERROR=OFF \
+      -DSYCL_ENABLE_PLUGINS="opencl;cuda" \
+      /scratch/llvm/llvm && \
+    ninja -j8 deploy-sycl-toolchain && \
+    ninja -j8 install && \
+    cp bin/* ${SYCL_DIR}/bin && \
     echo "${SYCL_DIR}/lib" > /etc/ld.so.conf.d/sycl.conf && ldconfig && \
     rm -rf ${SCRATCH_DIR}
 ENV PATH=${SYCL_DIR}/bin:$PATH
