@@ -31,7 +31,7 @@ static_assert(false,
 #else
 #include <CL/sycl.hpp>
 #endif
-#include <Kokkos_SYCL_Space.hpp>
+#include <SYCL/Kokkos_SYCL_Space.hpp>
 #include <Kokkos_Layout.hpp>
 #include <Kokkos_ScratchSpace.hpp>
 #include <impl/Kokkos_Profiling_Interface.hpp>

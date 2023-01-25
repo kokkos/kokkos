@@ -18,7 +18,7 @@
 #define KOKKOS_SYCL_UNIQUE_TOKEN_HPP
 
 #include <impl/Kokkos_ConcurrentBitset.hpp>
-#include <Kokkos_SYCL_Space.hpp>
+#include <SYCL/Kokkos_SYCL_Space.hpp>
 #include <Kokkos_UniqueToken.hpp>
 
 namespace Kokkos {

@@ -20,7 +20,7 @@
 
 #include <Kokkos_Concepts.hpp>
 #include <SYCL/Kokkos_SYCL_Instance.hpp>
-#include <Kokkos_SYCL.hpp>
+#include <SYCL/Kokkos_SYCL.hpp>
 #include <Kokkos_HostSpace.hpp>
 #include <Kokkos_Serial.hpp>
 #include <Kokkos_Core.hpp>
