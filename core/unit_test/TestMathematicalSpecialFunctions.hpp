@@ -507,7 +507,7 @@ struct TestComplexBesselJ0Y0Function {
     // Call Bessel functions
 #if (HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR == 4)
     using Property =
-        Kokkos::Experimental::WorkItemProperty::ImplForceGlobalLaunchLaunch_t;
+        Kokkos::Experimental::WorkItemProperty::ImplForceGlobalLaunch_t;
 #else
     using Property = Kokkos::Experimental::WorkItemProperty::None_t;
 #endif
