@@ -444,10 +444,10 @@ simd<double, simd_abi::neon_fixed_size<2>> min(
 }
 
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-simd<double, simd_abi::neon_fixed_size<2>> condition(
-    simd_mask<double, simd_abi::neon_fixed_size<2>> const& a,
-    simd<double, simd_abi::neon_fixed_size<2>> const& b,
-    simd<double, simd_abi::neon_fixed_size<2>> const& c) {
+    simd<double, simd_abi::neon_fixed_size<2>>
+    condition(simd_mask<double, simd_abi::neon_fixed_size<2>> const& a,
+              simd<double, simd_abi::neon_fixed_size<2>> const& b,
+              simd<double, simd_abi::neon_fixed_size<2>> const& c) {
   return simd<double, simd_abi::neon_fixed_size<2>>(
       vbslq_f64(static_cast<uint64x2_t>(a), static_cast<float64x2_t>(b),
                 static_cast<float64x2_t>(c)));
@@ -720,10 +720,10 @@ class simd<std::int64_t, simd_abi::neon_fixed_size<2>> {
 }
 
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-simd<std::int64_t, simd_abi::neon_fixed_size<2>> condition(
-    simd_mask<std::int64_t, simd_abi::neon_fixed_size<2>> const& a,
-    simd<std::int64_t, simd_abi::neon_fixed_size<2>> const& b,
-    simd<std::int64_t, simd_abi::neon_fixed_size<2>> const& c) {
+    simd<std::int64_t, simd_abi::neon_fixed_size<2>>
+    condition(simd_mask<std::int64_t, simd_abi::neon_fixed_size<2>> const& a,
+              simd<std::int64_t, simd_abi::neon_fixed_size<2>> const& b,
+              simd<std::int64_t, simd_abi::neon_fixed_size<2>> const& c) {
   return simd<std::int64_t, simd_abi::neon_fixed_size<2>>(
       vbslq_s64(static_cast<uint64x2_t>(a), static_cast<int64x2_t>(b),
                 static_cast<int64x2_t>(c)));
@@ -856,10 +856,10 @@ simd<std::int64_t, simd_abi::neon_fixed_size<2>>::simd(
     : m_value(vreinterpretq_s64_u64(static_cast<uint64x2_t>(other))) {}
 
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-simd<std::uint64_t, simd_abi::neon_fixed_size<2>> condition(
-    simd_mask<std::uint64_t, simd_abi::neon_fixed_size<2>> const& a,
-    simd<std::uint64_t, simd_abi::neon_fixed_size<2>> const& b,
-    simd<std::uint64_t, simd_abi::neon_fixed_size<2>> const& c) {
+    simd<std::uint64_t, simd_abi::neon_fixed_size<2>>
+    condition(simd_mask<std::uint64_t, simd_abi::neon_fixed_size<2>> const& a,
+              simd<std::uint64_t, simd_abi::neon_fixed_size<2>> const& b,
+              simd<std::uint64_t, simd_abi::neon_fixed_size<2>> const& c) {
   return simd<std::uint64_t, simd_abi::neon_fixed_size<2>>(
       vbslq_u64(static_cast<uint64x2_t>(a), static_cast<uint64x2_t>(b),
                 static_cast<uint64x2_t>(c)));
