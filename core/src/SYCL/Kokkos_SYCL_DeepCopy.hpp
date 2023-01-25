@@ -18,7 +18,7 @@
 #define KOKKOS_SYCLDEEPCOPY_HPP
 
 #include <Kokkos_Core_fwd.hpp>
-#include <Kokkos_SYCL.hpp>
+#include <SYCL/Kokkos_SYCL.hpp>
 
 #include <vector>
 
