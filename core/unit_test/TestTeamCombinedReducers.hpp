@@ -430,6 +430,13 @@ struct TeamTeamCombinedReducer {
 };
 
 TEST(TEST_CATEGORY, team_thread_range_combined_reducers) {
+#if defined(KOKKOS_ENABLE_OPENMPTARGET) || defined(KOKKOS_ENABLE_OPENACC)
+  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenMPTarget> ||
+      std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenACC>) {
+    GTEST_SKIP() << "team_reduce with a generic reducer is not implemented for "
+                 << TEST_EXECSPACE.name()
+  }
+#endif
   TeamTeamCombinedReducer tester;
   tester.test_team_thread_range_only_scalars(5);
   tester.test_team_thread_range_only_builtin(7);
@@ -441,6 +448,13 @@ TEST(TEST_CATEGORY, team_thread_range_combined_reducers) {
 }
 
 TEST(TEST_CATEGORY, thread_vector_range_combined_reducers) {
+#if defined(KOKKOS_ENABLE_OPENMPTARGET) || defined(KOKKOS_ENABLE_OPENACC)
+  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenMPTarget> ||
+      std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenACC>) {
+    GTEST_SKIP() << "team_reduce with a generic reducer is not implemented for "
+                 << TEST_EXECSPACE.name()
+  }
+#endif
   TeamTeamCombinedReducer tester;
   tester.test_thread_vector_range_only_scalars(5);
   tester.test_thread_vector_range_only_builtin(7);
@@ -452,6 +466,13 @@ TEST(TEST_CATEGORY, thread_vector_range_combined_reducers) {
 }
 
 TEST(TEST_CATEGORY, team_vector_range_combined_reducers) {
+#if defined(KOKKOS_ENABLE_OPENMPTARGET) || defined(KOKKOS_ENABLE_OPENACC)
+  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenMPTarget> ||
+      std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenACC>) {
+    GTEST_SKIP() << "team_reduce with a generic reducer is not implemented for "
+                 << TEST_EXECSPACE.name()
+  }
+#endif
   TeamTeamCombinedReducer tester;
   tester.test_team_vector_range_only_scalars(5);
   tester.test_team_vector_range_only_builtin(7);
