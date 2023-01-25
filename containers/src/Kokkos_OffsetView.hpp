@@ -1251,8 +1251,7 @@ shift_input(const T arg, const int64_t offset) {
 }
 
 KOKKOS_INLINE_FUNCTION
-Kokkos::Impl::ALL_t shift_input(const Kokkos::Impl::ALL_t arg,
-                                const int64_t /*offset*/) {
+Kokkos::ALL_t shift_input(const Kokkos::ALL_t arg, const int64_t /*offset*/) {
   return arg;
 }
 
