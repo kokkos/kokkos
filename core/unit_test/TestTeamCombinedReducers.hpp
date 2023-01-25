@@ -434,7 +434,7 @@ TEST(TEST_CATEGORY, team_thread_range_combined_reducers) {
   if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenMPTarget> ||
       std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenACC>) {
     GTEST_SKIP() << "team_reduce with a generic reducer is not implemented for "
-                 << TEST_EXECSPACE.name()
+                 << TEST_EXECSPACE::name()
   }
 #endif
   TeamTeamCombinedReducer tester;
@@ -452,7 +452,7 @@ TEST(TEST_CATEGORY, thread_vector_range_combined_reducers) {
   if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenMPTarget> ||
       std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenACC>) {
     GTEST_SKIP() << "team_reduce with a generic reducer is not implemented for "
-                 << TEST_EXECSPACE.name()
+                 << TEST_EXECSPACE::name()
   }
 #endif
   TeamTeamCombinedReducer tester;
@@ -470,7 +470,7 @@ TEST(TEST_CATEGORY, team_vector_range_combined_reducers) {
   if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenMPTarget> ||
       std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenACC>) {
     GTEST_SKIP() << "team_reduce with a generic reducer is not implemented for "
-                 << TEST_EXECSPACE.name()
+                 << TEST_EXECSPACE::name()
   }
 #endif
   TeamTeamCombinedReducer tester;
