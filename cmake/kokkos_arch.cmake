@@ -231,7 +231,8 @@ IF(KOKKOS_ARCH_NATIVE)
 
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
-    DEFAULT -march=native -mtune=native
+    ARMClang -mcpu=native
+    DEFAULT  -march=native -mtune=native
   )
 ENDIF()
 
