@@ -1642,9 +1642,12 @@ struct TestScratchAlignment {
           // and since scratch_ptr3 is then already aligned it difference
           // should match that
           if ((scratch_ptr3 - scratch_ptr2) != 32) flag() = 1;
+
           // check actually alignment of ptrs is as requested
-          if (((scratch_ptr1 % 4) != 0) || ((scratch_ptr2 % 8) != 0) ||
-              ((scratch_ptr3 % 4) != 0))
+          // cast to int here to avoid failure with icpx in mixed integer type
+          // comparison
+          if ((int(scratch_ptr1 % 4) != 0) || (int(scratch_ptr2 % 8) != 0) ||
+              (int(scratch_ptr3 % 4) != 0))
             flag() = 1;
         });
     Kokkos::fence();
