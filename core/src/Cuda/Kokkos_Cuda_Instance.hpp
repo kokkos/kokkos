@@ -138,7 +138,8 @@ class CudaInternal {
   mutable int64_t m_team_scratch_current_size[10];
   mutable void* m_team_scratch_ptr[10];
   mutable std::atomic_int m_team_scratch_pool[10];
-  std::int32_t* m_scratch_locks;
+  int32_t* m_scratch_locks;
+  size_t m_num_scratch_locks;
 
   bool was_initialized = false;
   bool was_finalized   = false;
