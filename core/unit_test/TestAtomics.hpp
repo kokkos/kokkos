@@ -567,10 +567,9 @@ struct TpetraUseCase {
     Kokkos::atomic_max(reinterpret_cast<WrapScalarAndCompareAbsMax<T>*>(&d_()),
                        WrapScalarAndCompareAbsMax<T>{v_i});
   }
-  TpetraUseCase() {
-    Kokkos::deep_copy(d_, Kokkos::Experimental::finite_min_v<T>);
-    Kokkos::parallel_for(10, *this);
-  }
+
+  TpetraUseCase() { Kokkos::parallel_for(10, *this); }
+
   void check() {
     T v;
     Kokkos::deep_copy(v, d_);
