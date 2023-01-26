@@ -30,7 +30,7 @@ static_assert(false,
 
 #include <cstddef>
 #include <iosfwd>
-#include <Kokkos_OpenMPTargetSpace.hpp>
+#include <OpenMPTarget/Kokkos_OpenMPTargetSpace.hpp>
 #include <Kokkos_ScratchSpace.hpp>
 #include <Kokkos_Parallel.hpp>
 #include <Kokkos_TaskScheduler.hpp>

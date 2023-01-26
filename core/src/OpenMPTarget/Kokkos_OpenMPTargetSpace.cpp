@@ -34,7 +34,7 @@
 #include <cstring>
 
 #include <Kokkos_OpenMPTarget.hpp>
-#include <Kokkos_OpenMPTargetSpace.hpp>
+#include <OpenMPTarget/Kokkos_OpenMPTargetSpace.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <Kokkos_Atomic.hpp>
 #include <impl/Kokkos_MemorySpace.hpp>
