@@ -214,10 +214,12 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
  public:
   inline void execute() const {
+#ifndef KOKKOS_COMPILER_INTEL
     if (execute_in_serial(m_iter.m_rp.space())) {
       exec_range(0, m_iter.m_rp.m_num_tiles);
       return;
     }
+#endif
 
 #ifndef KOKKOS_INTERNAL_DISABLE_NATIVE_OPENMP
     execute_parallel<Policy>();
@@ -543,6 +545,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     typename Analysis::Reducer final_reducer(
         &ReducerConditional::select(m_iter.m_func, m_reducer));
 
+#ifndef KOKKOS_COMPILER_INTEL
     if (execute_in_serial(m_iter.m_rp.space())) {
       const pointer_type ptr =
           m_result_ptr
@@ -560,6 +563,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
 
       return;
     }
+#endif
 
     enum {
       is_dynamic = std::is_same<typename Policy::schedule_type::type,
