@@ -88,6 +88,11 @@ void SYCL::print_configuration(std::ostream& os, bool verbose) const {
   os << "\nRuntime Configuration:\n";
 
   os << "macro  KOKKOS_ENABLE_SYCL : defined\n";
+#ifdef KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED
+  os << "macro  KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED : defined\n";
+#else
+  os << "macro  KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED : undefined\n";
+#endif
   if (verbose)
     SYCL::impl_sycl_info(os, m_space_instance->m_queue->get_device());
 }
