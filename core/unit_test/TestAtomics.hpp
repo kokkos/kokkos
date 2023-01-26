@@ -539,4 +539,45 @@ TEST(TEST_CATEGORY, atomics) {
 #endif
 }
 
+// see https://github.com/trilinos/Trilinos/pull/11506
+struct TpetraUseCase {
+  template <class Scalar>
+  struct WrapScalarAndCompareAbsMax {
+    Scalar value;
+
+   private:
+    friend KOKKOS_FUNCTION bool operator<(
+        WrapScalarAndCompareAbsMax const& lhs,
+        WrapScalarAndCompareAbsMax const& rhs) {
+      return Kokkos::abs(lhs.value) < Kokkos::abs(rhs.value);
+    }
+    friend KOKKOS_FUNCTION bool operator>(
+        WrapScalarAndCompareAbsMax const& lhs,
+        WrapScalarAndCompareAbsMax const& rhs) {
+      return Kokkos::abs(lhs.value) > Kokkos::abs(rhs.value);
+    }
+  };
+
+  using T = int;
+  Kokkos::View<T> d_{"lbl"};
+  KOKKOS_FUNCTION void operator()(int i) const {
+    // 0, -1, 2, -3, ...
+    auto v_i = static_cast<T>(i);
+    if (i % 2 == 1) v_i = -v_i;
+    Kokkos::atomic_max(reinterpret_cast<WrapScalarAndCompareAbsMax<T>*>(&d_()),
+                       WrapScalarAndCompareAbsMax<T>{v_i});
+  }
+  TpetraUseCase() {
+    Kokkos::deep_copy(d_, Kokkos::Experimental::finite_min_v<T>);
+    Kokkos::parallel_for(10, *this);
+  }
+  void check() {
+    T v;
+    Kokkos::deep_copy(v, d_);
+    ASSERT_EQ(v, -9);
+  }
+};
+
+TEST(TEST_CATEGORY, atomics_tpetra_max_abs) { TpetraUseCase().check(); }
+
 }  // namespace Test
