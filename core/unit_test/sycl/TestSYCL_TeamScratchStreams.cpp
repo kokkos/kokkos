@@ -76,13 +76,12 @@ void sycl_queue_scratch_test(
   Kokkos::Experimental::SYCL default_space;
   sycl::context default_context = default_space.sycl_queue().get_context();
 
-  sycl::default_selector device_selector;
-  sycl::queue queue(default_context, device_selector);
+  sycl::queue queue(default_context, sycl::default_selector_v);
 
   std::array<Kokkos::Experimental::SYCL, K> sycl;
   for (int i = 0; i < K; i++) {
     sycl[i] = Kokkos::Experimental::SYCL(
-        sycl::queue(default_context, device_selector));
+        sycl::queue(default_context, sycl::default_selector_v));
   }
 
   // Test that growing scratch size in subsequent calls doesn't crash things
@@ -111,6 +110,9 @@ void sycl_queue_scratch_test(
 }  // namespace Impl
 
 TEST(sycl, team_scratch_1_queues) {
+#if defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ARCH_INTEL_GPU)
+  GTEST_SKIP() << "skipping for SYCL+Cuda";
+#endif
   int N      = 1000000;
   int T      = 10;
   int M_base = 150;
