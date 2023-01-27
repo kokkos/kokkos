@@ -732,10 +732,7 @@ ENDIF()
 IF (KOKKOS_ENABLE_SYCL)
   IF(CUDA_ARCH_ALREADY_SPECIFIED)
     IF(KOKKOS_ENABLE_UNSUPPORTED_ARCHS)
-      COMPILER_SPECIFIC_OPTIONS(
-        DEFAULT -fsycl-targets=nvptx64-nvidia-cuda
-      )
-      COMPILER_SPECIFIC_LINK_OPTIONS(
+      COMPILER_SPECIFIC_FLAGS(
         DEFAULT -fsycl-targets=nvptx64-nvidia-cuda -Xsycl-target-backend=nvptx64-nvidia-cuda --cuda-gpu-arch=${KOKKOS_CUDA_ARCH_FLAG}
       )
     ELSE()
