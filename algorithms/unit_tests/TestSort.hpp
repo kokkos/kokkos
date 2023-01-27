@@ -384,7 +384,7 @@ void test_radix_sort() {
   ExecutionSpace exec;
 
   constexpr int num_bits_full = 8 * sizeof(long long);
-  constexpr int num_bits_half = num_bits_full / 2;
+  //constexpr int num_bits_half = num_bits_full / 2;
 
   Kokkos::Experimental::RadixSorter<long long> radix(element_.extent(0));
 
