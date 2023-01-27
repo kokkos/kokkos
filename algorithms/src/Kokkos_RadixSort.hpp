@@ -121,8 +121,9 @@ struct KeyFromView {
 
   // i: index of the key to get
   // bit: which bit, with 0 indicating the least-significant
+  template <typename IndexType>
   KOKKOS_INLINE_FUNCTION
-  auto operator()(int i, int bit) const {
+  auto operator()(IndexType i, std::uint32_t bit) const {
     // I'd rather use a fully aliasing view here ...
     auto key = *reinterpret_cast<key_integral_type*>(&keys(i));
     auto h   = key >> bit;
