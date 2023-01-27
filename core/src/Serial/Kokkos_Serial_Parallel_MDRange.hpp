@@ -33,13 +33,12 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   using iterate_type = typename Kokkos::Impl::HostIterateTile<
       MDRangePolicy, FunctorType, typename MDRangePolicy::work_tag, void>;
 
-  const FunctorType m_functor;
-  const MDRangePolicy m_mdr_policy;
+  const iterate_type m_iter;
 
   void exec() const {
-    const typename Policy::member_type e = m_mdr_policy.m_num_tiles;
+    const typename Policy::member_type e = m_iter.m_rp.m_num_tiles;
     for (typename Policy::member_type i = 0; i < e; ++i) {
-      iterate_type(m_mdr_policy, m_functor)(i);
+      m_iter(i);
     }
   }
 
@@ -56,7 +55,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   }
   inline ParallelFor(const FunctorType& arg_functor,
                      const MDRangePolicy& arg_policy)
-      : m_functor(arg_functor), m_mdr_policy(arg_policy) {}
+      : m_iter(arg_policy, arg_functor) {}
 };
 
 template <class FunctorType, class ReducerType, class... Traits>
@@ -86,16 +85,14 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   using iterate_type =
       typename Kokkos::Impl::HostIterateTile<MDRangePolicy, FunctorType,
                                              WorkTag, reference_type>;
-
-  const FunctorType m_functor;
-  const MDRangePolicy m_mdr_policy;
+  const iterate_type m_iter;
   const ReducerType m_reducer;
   const pointer_type m_result_ptr;
 
   inline void exec(reference_type update) const {
-    const typename Policy::member_type e = m_mdr_policy.m_num_tiles;
+    const typename Policy::member_type e = m_iter.m_rp.m_num_tiles;
     for (typename Policy::member_type i = 0; i < e; ++i) {
-      iterate_type(m_mdr_policy, m_functor, update)(i);
+      m_iter(i, update);
     }
   }
 
@@ -110,14 +107,14 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     return 1024;
   }
   inline void execute() const {
-    const size_t pool_reduce_size =
-        Analysis::value_size(ReducerConditional::select(m_functor, m_reducer));
+    const size_t pool_reduce_size = Analysis::value_size(
+        ReducerConditional::select(m_iter.m_func, m_reducer));
     const size_t team_reduce_size  = 0;  // Never shrinks
     const size_t team_shared_size  = 0;  // Never shrinks
     const size_t thread_local_size = 0;  // Never shrinks
 
     auto* internal_instance =
-        m_mdr_policy.space().impl_internal_space_instance();
+        m_iter.m_rp.space().impl_internal_space_instance();
     // Need to lock resize_thread_team_data
     std::lock_guard<std::mutex> lock(
         internal_instance->m_thread_team_data_mutex);
@@ -132,7 +129,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                   internal_instance->m_thread_team_data.pool_reduce_local());
 
     typename Analysis::Reducer final_reducer(
-        &ReducerConditional::select(m_functor, m_reducer));
+        &ReducerConditional::select(m_iter.m_func, m_reducer));
 
     reference_type update = final_reducer.init(ptr);
 
@@ -148,8 +145,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                  std::enable_if_t<Kokkos::is_view<HostViewType>::value &&
                                       !Kokkos::is_reducer<ReducerType>::value,
                                   void*> = nullptr)
-      : m_functor(arg_functor),
-        m_mdr_policy(arg_policy),
+      : m_iter(arg_policy, arg_functor),
         m_reducer(InvalidType()),
         m_result_ptr(arg_result_view.data()) {
     static_assert(Kokkos::is_view<HostViewType>::value,
@@ -163,8 +159,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
 
   inline ParallelReduce(const FunctorType& arg_functor,
                         MDRangePolicy arg_policy, const ReducerType& reducer)
-      : m_functor(arg_functor),
-        m_mdr_policy(arg_policy),
+      : m_iter(arg_policy, arg_functor),
         m_reducer(reducer),
         m_result_ptr(reducer.view().data()) {
     /*static_assert( std::is_same< typename ViewType::memory_space
