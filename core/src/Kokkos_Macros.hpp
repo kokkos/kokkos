@@ -451,7 +451,7 @@
 
 //----------------------------------------------------------------------------
 // Determine for what space the code is being compiled:
-#if defined(KOKKOS_ENABLE_DEPRECARED_CODE_4)
+#if defined(KOKKOS_ENABLE_DEPRECARED_CODE_3)
 
 #if defined(__CUDACC__) && defined(__CUDA_ARCH__) && defined(KOKKOS_ENABLE_CUDA)
 #define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA
