@@ -55,10 +55,10 @@ void OpenACCParallelScanRangePolicy(IndexType begin, IndexType end,
                                     Functor afunctor, ValueType init_value,
                                     int async_arg) {
   auto const functor(afunctor);
-  const IndexType N                  = end - begin;
-  constexpr IndexType chunk_size     = 128;
-  const IndexType n_chunks           = (N + chunk_size - 1) / chunk_size;
-  const IndexType nteams             = n_chunks > 512 ? 512 : n_chunks;
+  const IndexType N              = end - begin;
+  constexpr IndexType chunk_size = 128;
+  const IndexType n_chunks       = (N + chunk_size - 1) / chunk_size;
+  const IndexType nteams         = n_chunks > 512 ? 512 : n_chunks;
   Kokkos::View<ValueType*, Kokkos::Experimental::OpenACC> chunk_values(
       "chunk_values", n_chunks);
   Kokkos::View<ValueType*, Kokkos::Experimental::OpenACC> offset_values(
@@ -83,7 +83,7 @@ void OpenACCParallelScanRangePolicy(IndexType begin, IndexType end,
     IndexType current_step = 0;
     IndexType next_step    = 1;
     IndexType temp;
-    for (IndexType step_size = 1; step_size < chunk_size; step_size*=2) {
+    for (IndexType step_size = 1; step_size < chunk_size; step_size *= 2) {
 #pragma acc loop vector
       for (IndexType thread_id = 0; thread_id < chunk_size; ++thread_id) {
         if (thread_id < step_size) {
