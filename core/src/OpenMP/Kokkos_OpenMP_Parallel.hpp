@@ -44,8 +44,8 @@
 namespace Kokkos {
 namespace Impl {
 
-inline bool execute_in_serial() {
-  return (OpenMP::in_parallel() &&
+inline bool execute_in_serial(OpenMP const& space = OpenMP()) {
+  return (OpenMP::in_parallel(space) &&
           !(omp_get_nested() && (omp_get_level() == 1)));
 }
 
@@ -111,7 +111,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::OpenMP> {
 
  public:
   inline void execute() const {
-    if (execute_in_serial()) {
+    if (execute_in_serial(m_policy.space())) {
       exec_range(m_functor, m_policy.begin(), m_policy.end());
       return;
     }
@@ -179,15 +179,12 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
       MDRangePolicy, FunctorType, typename MDRangePolicy::work_tag, void>;
 
   OpenMPInternal* m_instance;
-  const FunctorType m_functor;
-  const MDRangePolicy m_mdr_policy;
+  const iterate_type m_iter;
 
-  inline static void exec_range(const MDRangePolicy& mdr_policy,
-                                const FunctorType& functor, const Member ibeg,
-                                const Member iend) {
+  inline void exec_range(const Member ibeg, const Member iend) const {
     KOKKOS_PRAGMA_IVDEP_IF_ENABLED
     for (Member iwork = ibeg; iwork < iend; ++iwork) {
-      iterate_type(mdr_policy, functor)(iwork);
+      m_iter(iwork);
     }
   }
 
@@ -198,8 +195,8 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 #pragma omp parallel for schedule(dynamic, 1) \
     num_threads(m_instance->thread_pool_size())
     KOKKOS_PRAGMA_IVDEP_IF_ENABLED
-    for (index_type iwork = 0; iwork < m_mdr_policy.m_num_tiles; ++iwork) {
-      iterate_type(m_mdr_policy, m_functor)(iwork);
+    for (index_type iwork = 0; iwork < m_iter.m_rp.m_num_tiles; ++iwork) {
+      m_iter(iwork);
     }
   }
 
@@ -210,18 +207,19 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 #pragma omp parallel for schedule(static, 1) \
     num_threads(m_instance->thread_pool_size())
     KOKKOS_PRAGMA_IVDEP_IF_ENABLED
-    for (index_type iwork = 0; iwork < m_mdr_policy.m_num_tiles; ++iwork) {
-      iterate_type(m_mdr_policy, m_functor)(iwork);
+    for (index_type iwork = 0; iwork < m_iter.m_rp.m_num_tiles; ++iwork) {
+      m_iter(iwork);
     }
   }
 
  public:
   inline void execute() const {
-    if (execute_in_serial()) {
-      ParallelFor::exec_range(m_mdr_policy, m_functor, 0,
-                              m_mdr_policy.m_num_tiles);
+#ifndef KOKKOS_COMPILER_INTEL
+    if (execute_in_serial(m_iter.m_rp.space())) {
+      exec_range(0, m_iter.m_rp.m_num_tiles);
       return;
     }
+#endif
 
 #ifndef KOKKOS_INTERNAL_DISABLE_NATIVE_OPENMP
     execute_parallel<Policy>();
@@ -234,7 +232,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     {
       HostThreadTeamData& data = *(m_instance->get_thread_data());
 
-      data.set_work_partition(m_mdr_policy.m_num_tiles, 1);
+      data.set_work_partition(m_iter.m_rp.m_num_tiles, 1);
 
       if (is_dynamic) {
         // Make sure work partition is set before stealing
@@ -247,8 +245,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
         range = is_dynamic ? data.get_work_stealing_chunk()
                            : data.get_work_partition();
 
-        ParallelFor::exec_range(m_mdr_policy, m_functor, range.first,
-                                range.second);
+        exec_range(range.first, range.second);
 
       } while (is_dynamic && 0 <= range.first);
     }
@@ -257,7 +254,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   }
 
   inline ParallelFor(const FunctorType& arg_functor, MDRangePolicy arg_policy)
-      : m_instance(nullptr), m_functor(arg_functor), m_mdr_policy(arg_policy) {
+      : m_instance(nullptr), m_iter(arg_policy, arg_functor) {
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
     if (t_openmp_instance) {
       m_instance = t_openmp_instance;
@@ -367,7 +364,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                                    0  // thread_local_bytes
     );
 
-    if (execute_in_serial()) {
+    if (execute_in_serial(m_policy.space())) {
       const pointer_type ptr =
           m_result_ptr
               ? m_result_ptr
@@ -520,23 +517,21 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                                              WorkTag, reference_type>;
 
   OpenMPInternal* m_instance;
-  const FunctorType m_functor;
-  const MDRangePolicy m_mdr_policy;
+  const iterate_type m_iter;
   const ReducerType m_reducer;
   const pointer_type m_result_ptr;
 
-  inline static void exec_range(const MDRangePolicy& mdr_policy,
-                                const FunctorType& functor, const Member ibeg,
-                                const Member iend, reference_type update) {
+  inline void exec_range(const Member ibeg, const Member iend,
+                         reference_type update) const {
     for (Member iwork = ibeg; iwork < iend; ++iwork) {
-      iterate_type(mdr_policy, functor, update)(iwork);
+      m_iter(iwork, update);
     }
   }
 
  public:
   inline void execute() const {
-    const size_t pool_reduce_bytes =
-        Analysis::value_size(ReducerConditional::select(m_functor, m_reducer));
+    const size_t pool_reduce_bytes = Analysis::value_size(
+        ReducerConditional::select(m_iter.m_func, m_reducer));
 
     m_instance->acquire_lock();
 
@@ -548,9 +543,10 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     );
 
     typename Analysis::Reducer final_reducer(
-        &ReducerConditional::select(m_functor, m_reducer));
+        &ReducerConditional::select(m_iter.m_func, m_reducer));
 
-    if (execute_in_serial()) {
+#ifndef KOKKOS_COMPILER_INTEL
+    if (execute_in_serial(m_iter.m_rp.space())) {
       const pointer_type ptr =
           m_result_ptr
               ? m_result_ptr
@@ -559,8 +555,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
 
       reference_type update = final_reducer.init(ptr);
 
-      ParallelReduce::exec_range(m_mdr_policy, m_functor, 0,
-                                 m_mdr_policy.m_num_tiles, update);
+      ParallelReduce::exec_range(0, m_iter.m_rp.m_num_tiles, update);
 
       final_reducer.final(ptr);
 
@@ -568,6 +563,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
 
       return;
     }
+#endif
 
     enum {
       is_dynamic = std::is_same<typename Policy::schedule_type::type,
@@ -579,7 +575,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     {
       HostThreadTeamData& data = *(m_instance->get_thread_data());
 
-      data.set_work_partition(m_mdr_policy.m_num_tiles, 1);
+      data.set_work_partition(m_iter.m_rp.m_num_tiles, 1);
 
       if (is_dynamic) {
         // Make sure work partition is set before stealing
@@ -595,8 +591,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
         range = is_dynamic ? data.get_work_stealing_chunk()
                            : data.get_work_partition();
 
-        ParallelReduce::exec_range(m_mdr_policy, m_functor, range.first,
-                                   range.second, update);
+        ParallelReduce::exec_range(range.first, range.second, update);
 
       } while (is_dynamic && 0 <= range.first);
     }
@@ -617,7 +612,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
 
     if (m_result_ptr) {
       const int n = Analysis::value_count(
-          ReducerConditional::select(m_functor, m_reducer));
+          ReducerConditional::select(m_iter.m_func, m_reducer));
 
       for (int j = 0; j < n; ++j) {
         m_result_ptr[j] = ptr[j];
@@ -637,8 +632,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                            !Kokkos::is_reducer<ReducerType>::value,
                        void*> = nullptr)
       : m_instance(nullptr),
-        m_functor(arg_functor),
-        m_mdr_policy(arg_policy),
+        m_iter(arg_policy, arg_functor),
         m_reducer(InvalidType()),
         m_result_ptr(arg_view.data()) {
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
@@ -659,8 +653,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   inline ParallelReduce(const FunctorType& arg_functor,
                         MDRangePolicy arg_policy, const ReducerType& reducer)
       : m_instance(nullptr),
-        m_functor(arg_functor),
-        m_mdr_policy(arg_policy),
+        m_iter(arg_policy, arg_functor),
         m_reducer(reducer),
         m_result_ptr(reducer.view().data()) {
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
@@ -748,7 +741,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
                                    0  // thread_local_bytes
     );
 
-    if (execute_in_serial()) {
+    if (execute_in_serial(m_policy.space())) {
       typename Analysis::Reducer final_reducer(&m_functor);
 
       reference_type update = final_reducer.init(
@@ -880,7 +873,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
                                    0  // thread_local_bytes
     );
 
-    if (execute_in_serial()) {
+    if (execute_in_serial(m_policy.space())) {
       typename Analysis::Reducer final_reducer(&m_functor);
 
       reference_type update = final_reducer.init(
@@ -1054,7 +1047,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     m_instance->resize_thread_data(pool_reduce_size, team_reduce_size,
                                    team_shared_size, thread_local_size);
 
-    if (execute_in_serial()) {
+    if (execute_in_serial(m_policy.space())) {
       ParallelFor::template exec_team<WorkTag>(
           m_functor, *(m_instance->get_thread_data()), 0,
           m_policy.league_size(), m_policy.league_size());
@@ -1224,7 +1217,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     m_instance->resize_thread_data(pool_reduce_size, team_reduce_size,
                                    team_shared_size, thread_local_size);
 
-    if (execute_in_serial()) {
+    if (execute_in_serial(m_policy.space())) {
       HostThreadTeamData& data = *(m_instance->get_thread_data());
       pointer_type ptr =
           m_result_ptr ? m_result_ptr : pointer_type(data.pool_reduce_local());
