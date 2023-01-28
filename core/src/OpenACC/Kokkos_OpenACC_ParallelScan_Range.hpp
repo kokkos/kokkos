@@ -57,7 +57,6 @@ void OpenACCParallelScanRangePolicy(IndexType begin, IndexType end,
   auto const functor(afunctor);
   const IndexType N                  = end - begin;
   constexpr IndexType chunk_size     = 128;
-  constexpr IndexType log_chunk_size = 7;
   const IndexType n_chunks           = (N + chunk_size - 1) / chunk_size;
   const IndexType nteams             = n_chunks > 512 ? 512 : n_chunks;
   Kokkos::View<ValueType*, Kokkos::Experimental::OpenACC> chunk_values(
@@ -81,16 +80,10 @@ void OpenACCParallelScanRangePolicy(IndexType begin, IndexType end,
       if ((idx > 0) && (idx < N)) functor(idx - 1, update, false);
       element_values[0][thread_id] = update;
     }
-    IndexType step_size    = 1;
     IndexType current_step = 0;
     IndexType next_step    = 1;
     IndexType temp;
-    for (IndexType i = 0; i < log_chunk_size; ++i) {
-      if (i == 0) {
-        step_size = 1;
-      } else {
-        step_size *= 2;
-      }
+    for (IndexType step_size = 1; step_size < chunk_size; step_size*=2) {
 #pragma acc loop vector
       for (IndexType thread_id = 0; thread_id < chunk_size; ++thread_id) {
         if (thread_id < step_size) {
@@ -136,16 +129,10 @@ void OpenACCParallelScanRangePolicy(IndexType begin, IndexType end,
       if ((idx > 0) && (idx < N)) functor(idx - 1, update, false);
       element_values[0][thread_id] = update;
     }
-    IndexType step_size    = 1;
     IndexType current_step = 0;
     IndexType next_step    = 1;
     IndexType temp;
-    for (IndexType i = 0; i < log_chunk_size; ++i) {
-      if (i == 0) {
-        step_size = 1;
-      } else {
-        step_size *= 2;
-      }
+    for (IndexType step_size = 1; step_size < chunk_size; step_size *= 2) {
 #pragma acc loop vector
       for (IndexType thread_id = 0; thread_id < chunk_size; ++thread_id) {
         if (thread_id < step_size) {
