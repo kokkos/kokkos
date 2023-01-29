@@ -542,19 +542,20 @@ TEST(TEST_CATEGORY, atomics) {
 // see https://github.com/trilinos/Trilinos/pull/11506
 struct TpetraUseCase {
   template <class Scalar>
-  struct WrapScalarAndCompareAbsMax {
+  struct AbsMaxHelper {
     Scalar value;
 
-   private:
-    friend KOKKOS_FUNCTION bool operator<(
-        WrapScalarAndCompareAbsMax const& lhs,
-        WrapScalarAndCompareAbsMax const& rhs) {
-      return Kokkos::abs(lhs.value) < Kokkos::abs(rhs.value);
+    KOKKOS_FUNCTION AbsMaxHelper& operator+=(AbsMaxHelper const& rhs) {
+      Scalar lhs_abs_value = Kokkos::abs(value);
+      Scalar rhs_abs_value = Kokkos::abs(rhs.value);
+      value = lhs_abs_value > rhs_abs_value ? lhs_abs_value : rhs_abs_value;
+      return *this;
     }
-    friend KOKKOS_FUNCTION bool operator>(
-        WrapScalarAndCompareAbsMax const& lhs,
-        WrapScalarAndCompareAbsMax const& rhs) {
-      return Kokkos::abs(lhs.value) > Kokkos::abs(rhs.value);
+
+    KOKKOS_FUNCTION AbsMaxHelper operator+(AbsMaxHelper const& rhs) const {
+      AbsMaxHelper ret = *this;
+      ret += rhs;
+      return ret;
     }
   };
 
@@ -564,8 +565,8 @@ struct TpetraUseCase {
     // 0, -1, 2, -3, ...
     auto v_i = static_cast<T>(i);
     if (i % 2 == 1) v_i = -v_i;
-    Kokkos::atomic_max(reinterpret_cast<WrapScalarAndCompareAbsMax<T>*>(&d_()),
-                       WrapScalarAndCompareAbsMax<T>{v_i});
+    Kokkos::atomic_add(reinterpret_cast<AbsMaxHelper<T>*>(&d_()),
+                       AbsMaxHelper<T>{v_i});
   }
 
   TpetraUseCase() { Kokkos::parallel_for(10, *this); }
@@ -573,7 +574,7 @@ struct TpetraUseCase {
   void check() {
     T v;
     Kokkos::deep_copy(v, d_);
-    ASSERT_EQ(v, -9);
+    ASSERT_EQ(v, 9);
   }
 };
 
