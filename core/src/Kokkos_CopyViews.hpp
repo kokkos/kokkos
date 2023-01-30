@@ -874,7 +874,7 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 2> {
       } else {
         p_type ext1(0, std::min(dst.extent(1), src.extent(1)));
         using sv_adapter_type =
-            CommonSubview<DstType, SrcType, 2, ALL_t, p_type>;
+            CommonSubview<DstType, SrcType, 2, Kokkos::ALL_t, p_type>;
         sv_adapter_type common_subview(dst, src, Kokkos::ALL, ext1);
         view_copy(exec_space..., common_subview.dst_sub,
                   common_subview.src_sub);
@@ -883,7 +883,7 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 2> {
       if (dst.extent(1) == src.extent(1)) {
         p_type ext0(0, std::min(dst.extent(0), src.extent(0)));
         using sv_adapter_type =
-            CommonSubview<DstType, SrcType, 2, p_type, ALL_t>;
+            CommonSubview<DstType, SrcType, 2, p_type, Kokkos::ALL_t>;
         sv_adapter_type common_subview(dst, src, ext0, Kokkos::ALL);
         view_copy(exec_space..., common_subview.dst_sub,
                   common_subview.src_sub);
@@ -915,7 +915,8 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 3> {
       if (dst.extent(2) == src.extent(2)) {
         p_type ext1(0, std::min(dst.extent(1), src.extent(1)));
         using sv_adapter_type =
-            CommonSubview<DstType, SrcType, 3, ALL_t, p_type, ALL_t>;
+            CommonSubview<DstType, SrcType, 3, Kokkos::ALL_t, p_type,
+                          Kokkos::ALL_t>;
         sv_adapter_type common_subview(dst, src, Kokkos::ALL, ext1,
                                        Kokkos::ALL);
         view_copy(exec_space..., common_subview.dst_sub,
@@ -924,7 +925,7 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 3> {
         p_type ext1(0, std::min(dst.extent(1), src.extent(1)));
         p_type ext2(0, std::min(dst.extent(2), src.extent(2)));
         using sv_adapter_type =
-            CommonSubview<DstType, SrcType, 3, ALL_t, p_type, p_type>;
+            CommonSubview<DstType, SrcType, 3, Kokkos::ALL_t, p_type, p_type>;
         sv_adapter_type common_subview(dst, src, Kokkos::ALL, ext1, ext2);
         view_copy(exec_space..., common_subview.dst_sub,
                   common_subview.src_sub);
@@ -934,7 +935,7 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 3> {
         p_type ext0(0, std::min(dst.extent(0), src.extent(0)));
         p_type ext1(0, std::min(dst.extent(1), src.extent(1)));
         using sv_adapter_type =
-            CommonSubview<DstType, SrcType, 3, p_type, p_type, ALL_t>;
+            CommonSubview<DstType, SrcType, 3, p_type, p_type, Kokkos::ALL_t>;
         sv_adapter_type common_subview(dst, src, ext0, ext1, Kokkos::ALL);
         view_copy(exec_space..., common_subview.dst_sub,
                   common_subview.src_sub);
@@ -968,7 +969,8 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 4> {
         p_type ext1(0, std::min(dst.extent(1), src.extent(1)));
         p_type ext2(0, std::min(dst.extent(2), src.extent(2)));
         using sv_adapter_type =
-            CommonSubview<DstType, SrcType, 4, ALL_t, p_type, p_type, ALL_t>;
+            CommonSubview<DstType, SrcType, 4, Kokkos::ALL_t, p_type, p_type,
+                          Kokkos::ALL_t>;
         sv_adapter_type common_subview(dst, src, Kokkos::ALL, ext1, ext2,
                                        Kokkos::ALL);
         view_copy(exec_space..., common_subview.dst_sub,
@@ -978,7 +980,8 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 4> {
         p_type ext2(0, std::min(dst.extent(2), src.extent(2)));
         p_type ext3(0, std::min(dst.extent(3), src.extent(3)));
         using sv_adapter_type =
-            CommonSubview<DstType, SrcType, 4, ALL_t, p_type, p_type, p_type>;
+            CommonSubview<DstType, SrcType, 4, Kokkos::ALL_t, p_type, p_type,
+                          p_type>;
         sv_adapter_type common_subview(dst, src, Kokkos::ALL, ext1, ext2, ext3);
         view_copy(exec_space..., common_subview.dst_sub,
                   common_subview.src_sub);
@@ -988,8 +991,8 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 4> {
         p_type ext0(0, std::min(dst.extent(0), src.extent(0)));
         p_type ext1(0, std::min(dst.extent(1), src.extent(1)));
         p_type ext2(0, std::min(dst.extent(2), src.extent(2)));
-        using sv_adapter_type =
-            CommonSubview<DstType, SrcType, 4, p_type, p_type, p_type, ALL_t>;
+        using sv_adapter_type = CommonSubview<DstType, SrcType, 4, p_type,
+                                              p_type, p_type, Kokkos::ALL_t>;
         sv_adapter_type common_subview(dst, src, ext0, ext1, ext2, Kokkos::ALL);
         view_copy(exec_space..., common_subview.dst_sub,
                   common_subview.src_sub);
@@ -1024,8 +1027,9 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 5> {
         p_type ext1(0, std::min(dst.extent(1), src.extent(1)));
         p_type ext2(0, std::min(dst.extent(2), src.extent(2)));
         p_type ext3(0, std::min(dst.extent(3), src.extent(3)));
-        using sv_adapter_type = CommonSubview<DstType, SrcType, 5, ALL_t,
-                                              p_type, p_type, p_type, ALL_t>;
+        using sv_adapter_type =
+            CommonSubview<DstType, SrcType, 5, Kokkos::ALL_t, p_type, p_type,
+                          p_type, Kokkos::ALL_t>;
         sv_adapter_type common_subview(dst, src, Kokkos::ALL, ext1, ext2, ext3,
                                        Kokkos::ALL);
         view_copy(exec_space..., common_subview.dst_sub,
@@ -1035,8 +1039,9 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 5> {
         p_type ext2(0, std::min(dst.extent(2), src.extent(2)));
         p_type ext3(0, std::min(dst.extent(3), src.extent(3)));
         p_type ext4(0, std::min(dst.extent(4), src.extent(4)));
-        using sv_adapter_type = CommonSubview<DstType, SrcType, 5, ALL_t,
-                                              p_type, p_type, p_type, p_type>;
+        using sv_adapter_type =
+            CommonSubview<DstType, SrcType, 5, Kokkos::ALL_t, p_type, p_type,
+                          p_type, p_type>;
         sv_adapter_type common_subview(dst, src, Kokkos::ALL, ext1, ext2, ext3,
                                        ext4);
         view_copy(exec_space..., common_subview.dst_sub,
@@ -1048,8 +1053,9 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 5> {
         p_type ext1(0, std::min(dst.extent(1), src.extent(1)));
         p_type ext2(0, std::min(dst.extent(2), src.extent(2)));
         p_type ext3(0, std::min(dst.extent(3), src.extent(3)));
-        using sv_adapter_type = CommonSubview<DstType, SrcType, 5, p_type,
-                                              p_type, p_type, p_type, ALL_t>;
+        using sv_adapter_type =
+            CommonSubview<DstType, SrcType, 5, p_type, p_type, p_type, p_type,
+                          Kokkos::ALL_t>;
         sv_adapter_type common_subview(dst, src, ext0, ext1, ext2, ext3,
                                        Kokkos::ALL);
         view_copy(exec_space..., common_subview.dst_sub,
@@ -1087,8 +1093,8 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 6> {
         p_type ext3(0, std::min(dst.extent(3), src.extent(3)));
         p_type ext4(0, std::min(dst.extent(4), src.extent(4)));
         using sv_adapter_type =
-            CommonSubview<DstType, SrcType, 6, ALL_t, p_type, p_type, p_type,
-                          p_type, ALL_t>;
+            CommonSubview<DstType, SrcType, 6, Kokkos::ALL_t, p_type, p_type,
+                          p_type, p_type, Kokkos::ALL_t>;
         sv_adapter_type common_subview(dst, src, Kokkos::ALL, ext1, ext2, ext3,
                                        ext4, Kokkos::ALL);
         view_copy(exec_space..., common_subview.dst_sub,
@@ -1100,8 +1106,8 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 6> {
         p_type ext4(0, std::min(dst.extent(4), src.extent(4)));
         p_type ext5(0, std::min(dst.extent(5), src.extent(5)));
         using sv_adapter_type =
-            CommonSubview<DstType, SrcType, 6, ALL_t, p_type, p_type, p_type,
-                          p_type, p_type>;
+            CommonSubview<DstType, SrcType, 6, Kokkos::ALL_t, p_type, p_type,
+                          p_type, p_type, p_type>;
         sv_adapter_type common_subview(dst, src, Kokkos::ALL, ext1, ext2, ext3,
                                        ext4, ext5);
         view_copy(exec_space..., common_subview.dst_sub,
@@ -1117,7 +1123,7 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 6> {
 
         using sv_adapter_type =
             CommonSubview<DstType, SrcType, 6, p_type, p_type, p_type, p_type,
-                          p_type, ALL_t>;
+                          p_type, Kokkos::ALL_t>;
         sv_adapter_type common_subview(dst, src, ext0, ext1, ext2, ext3, ext4,
                                        Kokkos::ALL);
         view_copy(exec_space..., common_subview.dst_sub,
@@ -1161,8 +1167,8 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 7> {
         p_type ext4(0, std::min(dst.extent(4), src.extent(4)));
         p_type ext5(0, std::min(dst.extent(5), src.extent(5)));
         using sv_adapter_type =
-            CommonSubview<DstType, SrcType, 7, ALL_t, p_type, p_type, p_type,
-                          p_type, p_type, ALL_t>;
+            CommonSubview<DstType, SrcType, 7, Kokkos::ALL_t, p_type, p_type,
+                          p_type, p_type, p_type, Kokkos::ALL_t>;
         sv_adapter_type common_subview(dst, src, Kokkos::ALL, ext1, ext2, ext3,
                                        ext4, ext5, Kokkos::ALL);
         view_copy(exec_space..., common_subview.dst_sub,
@@ -1175,8 +1181,8 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 7> {
         p_type ext5(0, std::min(dst.extent(5), src.extent(5)));
         p_type ext6(0, std::min(dst.extent(6), src.extent(6)));
         using sv_adapter_type =
-            CommonSubview<DstType, SrcType, 7, ALL_t, p_type, p_type, p_type,
-                          p_type, p_type, p_type>;
+            CommonSubview<DstType, SrcType, 7, Kokkos::ALL_t, p_type, p_type,
+                          p_type, p_type, p_type, p_type>;
         sv_adapter_type common_subview(dst, src, Kokkos::ALL, ext1, ext2, ext3,
                                        ext4, ext5, ext6);
         view_copy(exec_space..., common_subview.dst_sub,
@@ -1192,7 +1198,7 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 7> {
         p_type ext5(0, std::min(dst.extent(5), src.extent(5)));
         using sv_adapter_type =
             CommonSubview<DstType, SrcType, 7, p_type, p_type, p_type, p_type,
-                          p_type, p_type, ALL_t>;
+                          p_type, p_type, Kokkos::ALL_t>;
         sv_adapter_type common_subview(dst, src, ext0, ext1, ext2, ext3, ext4,
                                        ext5, Kokkos::ALL);
         view_copy(exec_space..., common_subview.dst_sub,
@@ -1237,8 +1243,8 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 8> {
         p_type ext5(0, std::min(dst.extent(5), src.extent(5)));
         p_type ext6(0, std::min(dst.extent(6), src.extent(6)));
         using sv_adapter_type =
-            CommonSubview<DstType, SrcType, 8, ALL_t, p_type, p_type, p_type,
-                          p_type, p_type, p_type, ALL_t>;
+            CommonSubview<DstType, SrcType, 8, Kokkos::ALL_t, p_type, p_type,
+                          p_type, p_type, p_type, p_type, Kokkos::ALL_t>;
         sv_adapter_type common_subview(dst, src, Kokkos::ALL, ext1, ext2, ext3,
                                        ext4, ext5, ext6, Kokkos::ALL);
         view_copy(exec_space..., common_subview.dst_sub,
@@ -1252,8 +1258,8 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 8> {
         p_type ext6(0, std::min(dst.extent(6), src.extent(6)));
         p_type ext7(0, std::min(dst.extent(7), src.extent(7)));
         using sv_adapter_type =
-            CommonSubview<DstType, SrcType, 8, ALL_t, p_type, p_type, p_type,
-                          p_type, p_type, p_type, p_type>;
+            CommonSubview<DstType, SrcType, 8, Kokkos::ALL_t, p_type, p_type,
+                          p_type, p_type, p_type, p_type, p_type>;
         sv_adapter_type common_subview(dst, src, Kokkos::ALL, ext1, ext2, ext3,
                                        ext4, ext5, ext6, ext7);
         view_copy(exec_space..., common_subview.dst_sub,
@@ -1270,7 +1276,7 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 8> {
         p_type ext6(0, std::min(dst.extent(6), src.extent(6)));
         using sv_adapter_type =
             CommonSubview<DstType, SrcType, 8, p_type, p_type, p_type, p_type,
-                          p_type, p_type, p_type, ALL_t>;
+                          p_type, p_type, p_type, Kokkos::ALL_t>;
         sv_adapter_type common_subview(dst, src, ext0, ext1, ext2, ext3, ext4,
                                        ext5, ext6, Kokkos::ALL);
         view_copy(exec_space..., common_subview.dst_sub,
