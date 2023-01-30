@@ -297,6 +297,9 @@ struct ALL_t {
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 namespace Impl {
+// TODO This alias declaration forces us to fully qualify ALL_t inside the
+// Kokkos::Impl namespace to avoid deprecation warnings. Replace the
+// fully-qualified name when we remove Kokkos::Impl::ALL_t.
 using ALL_t KOKKOS_DEPRECATED_WITH_COMMENT("Use Kokkos::ALL_t instead!") =
     Kokkos::ALL_t;
 }  // namespace Impl
