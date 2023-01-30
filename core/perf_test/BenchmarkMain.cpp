@@ -14,9 +14,17 @@
 //
 //@HEADER
 
+// Avoid deprecation warning for ICC
+#ifdef __INTEL_COMPILER
+#pragma warning(push)
+#pragma warning(disable : 1786)
 #include <benchmark/benchmark.h>
+#pragma warning(pop)
+#else
+#include <benchmark/benchmark.h>
+#endif
 
-#include <Benchmark_Context.hpp>
+#include "Benchmark_Context.hpp"
 #include <Kokkos_Core.hpp>
 
 int main(int argc, char** argv) {

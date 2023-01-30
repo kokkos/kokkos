@@ -31,7 +31,6 @@
 #include <Cuda/Kokkos_Cuda_KernelLaunch.hpp>
 #include <Cuda/Kokkos_Cuda_ReduceScan.hpp>
 #include <Cuda/Kokkos_Cuda_BlockSize_Deduction.hpp>
-#include <Cuda/Kokkos_Cuda_Locks.hpp>
 #include <Cuda/Kokkos_Cuda_Team.hpp>
 #include <Kokkos_MinMaxClamp.hpp>
 #include <Kokkos_Vectorization.hpp>
@@ -198,12 +197,21 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
   }
 
   inline static int scratch_size_max(int level) {
-    return (
-        level == 0 ? 1024 * 40 :  // 48kB is the max for CUDA, but we need some
-                                  // for team_member.reduce etc.
-            20 * 1024 *
-                1024);  // arbitrarily setting this to 20MB, for a Volta V100
-                        // that would give us about 3.2GB for 2 teams per SM
+    // Cuda Teams use (team_size + 2)*sizeof(double) shared memory for team
+    // reductions. They also use one int64_t in static shared memory for a
+    // shared ID. Furthermore, they use additional scratch memory in some
+    // reduction scenarios, which depend on the size of the value_type and is
+    // NOT captured here.
+    constexpr size_t max_possible_team_size = 1024;
+    constexpr size_t max_reserved_shared_mem_per_team =
+        (max_possible_team_size + 2) * sizeof(double) + sizeof(int64_t);
+    // arbitrarily setting level 1 scratch limit to 20MB, for a
+    // Volta V100 that would give us about 3.2GB for 2 teams per SM
+    constexpr size_t max_l1_scratch_size = 20 * 1024 * 1024;
+
+    size_t max_shmem = Cuda().cuda_device_prop().sharedMemPerBlock;
+    return (level == 0 ? max_shmem - max_reserved_shared_mem_per_team
+                       : max_l1_scratch_size);
   }
 
   //----------------------------------------
@@ -399,14 +407,15 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
 };
 
 __device__ inline int64_t cuda_get_scratch_index(Cuda::size_type league_size,
-                                                 int32_t* scratch_locks) {
+                                                 int32_t* scratch_locks,
+                                                 size_t num_scratch_locks) {
   int64_t threadid = 0;
   __shared__ int64_t base_thread_id;
   if (threadIdx.x == 0 && threadIdx.y == 0) {
     int64_t const wraparound_len = Kokkos::max(
-        int64_t(1), Kokkos::min(int64_t(league_size),
-                                (int64_t(g_device_cuda_lock_arrays.n)) /
-                                    (blockDim.x * blockDim.y)));
+        int64_t(1),
+        Kokkos::min(int64_t(league_size),
+                    int64_t(num_scratch_locks) / (blockDim.x * blockDim.y)));
     threadid = (blockIdx.x * blockDim.z + threadIdx.z) % wraparound_len;
     threadid *= blockDim.x * blockDim.y;
     int done = 0;
@@ -468,6 +477,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   size_t m_scratch_size[2];
   int m_scratch_pool_id = -1;
   int32_t* m_scratch_locks;
+  size_t m_num_scratch_locks;
 
   template <class TagType>
   __device__ inline std::enable_if_t<std::is_void<TagType>::value> exec_team(
@@ -488,7 +498,8 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     // Iterate this block through the league
     int64_t threadid = 0;
     if (m_scratch_size[1] > 0) {
-      threadid = cuda_get_scratch_index(m_league_size, m_scratch_locks);
+      threadid = cuda_get_scratch_index(m_league_size, m_scratch_locks,
+                                        m_num_scratch_locks);
     }
 
     const int int_league_size = (int)m_league_size;
@@ -519,8 +530,8 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     CudaParallelLaunch<ParallelFor, LaunchBounds>(
         *this, grid, block, shmem_size_total,
-        m_policy.space().impl_internal_space_instance(),
-        true);  // copy to device and execute
+        m_policy.space()
+            .impl_internal_space_instance());  // copy to device and execute
   }
 
   ParallelFor(const FunctorType& arg_functor, const Policy& arg_policy)
@@ -659,6 +670,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   size_t m_scratch_size[2];
   int m_scratch_pool_id = -1;
   int32_t* m_scratch_locks;
+  size_t m_num_scratch_locks;
   const size_type m_league_size;
   int m_team_size;
   const size_type m_vector_size;
@@ -681,7 +693,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   __device__ inline void operator()() const {
     int64_t threadid = 0;
     if (m_scratch_size[1] > 0) {
-      threadid = cuda_get_scratch_index(m_league_size, m_scratch_locks);
+      threadid = cuda_get_scratch_index(m_league_size, m_scratch_locks,
+                                        m_num_scratch_locks);
     }
 
     using ReductionTag = std::conditional_t<UseShflReduction, ShflReductionTag,
@@ -838,8 +851,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
       CudaParallelLaunch<ParallelReduce, LaunchBounds>(
           *this, grid, block, shmem_size_total,
-          m_policy.space().impl_internal_space_instance(),
-          true);  // copy to device and execute
+          m_policy.space()
+              .impl_internal_space_instance());  // copy to device and execute
 
       if (!m_result_ptr_device_accessible) {
         m_policy.space().fence(
@@ -917,9 +930,10 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     m_shmem_size =
         m_policy.scratch_size(0, m_team_size) +
         FunctorTeamShmemSize<FunctorType>::value(arg_functor, m_team_size);
-    m_scratch_size[0] = m_shmem_size;
-    m_scratch_size[1] = m_policy.scratch_size(1, m_team_size);
-    m_scratch_locks   = internal_space_instance->m_scratch_locks;
+    m_scratch_size[0]   = m_shmem_size;
+    m_scratch_size[1]   = m_policy.scratch_size(1, m_team_size);
+    m_scratch_locks     = internal_space_instance->m_scratch_locks;
+    m_num_scratch_locks = internal_space_instance->m_num_scratch_locks;
     if (m_team_size <= 0) {
       m_scratch_ptr[1] = nullptr;
     } else {
@@ -1022,9 +1036,10 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     m_shmem_size =
         m_policy.scratch_size(0, m_team_size) +
         FunctorTeamShmemSize<FunctorType>::value(arg_functor, m_team_size);
-    m_scratch_size[0] = m_shmem_size;
-    m_scratch_size[1] = m_policy.scratch_size(1, m_team_size);
-    m_scratch_locks   = internal_space_instance->m_scratch_locks;
+    m_scratch_size[0]   = m_shmem_size;
+    m_scratch_size[1]   = m_policy.scratch_size(1, m_team_size);
+    m_scratch_locks     = internal_space_instance->m_scratch_locks;
+    m_num_scratch_locks = internal_space_instance->m_num_scratch_locks;
     if (m_team_size <= 0) {
       m_scratch_ptr[1] = nullptr;
     } else {

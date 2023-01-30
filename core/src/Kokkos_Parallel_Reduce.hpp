@@ -37,6 +37,7 @@ struct Sum {
   // Required
   using reducer    = Sum<Scalar, Space>;
   using value_type = std::remove_cv_t<Scalar>;
+  static_assert(!std::is_pointer_v<value_type> && !std::is_array_v<value_type>);
 
   using result_view_type = Kokkos::View<value_type, Space>;
 
@@ -71,12 +72,17 @@ struct Sum {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Scalar, typename... Properties>
+Sum(View<Scalar, Properties...> const&)
+    ->Sum<Scalar, typename View<Scalar, Properties...>::memory_space>;
+
 template <class Scalar, class Space>
 struct Prod {
  public:
   // Required
   using reducer    = Prod<Scalar, Space>;
   using value_type = std::remove_cv_t<Scalar>;
+  static_assert(!std::is_pointer_v<value_type> && !std::is_array_v<value_type>);
 
   using result_view_type = Kokkos::View<value_type, Space>;
 
@@ -111,12 +117,17 @@ struct Prod {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Scalar, typename... Properties>
+Prod(View<Scalar, Properties...> const&)
+    ->Prod<Scalar, typename View<Scalar, Properties...>::memory_space>;
+
 template <class Scalar, class Space>
 struct Min {
  public:
   // Required
   using reducer    = Min<Scalar, Space>;
   using value_type = std::remove_cv_t<Scalar>;
+  static_assert(!std::is_pointer_v<value_type> && !std::is_array_v<value_type>);
 
   using result_view_type = Kokkos::View<value_type, Space>;
 
@@ -153,12 +164,17 @@ struct Min {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Scalar, typename... Properties>
+Min(View<Scalar, Properties...> const&)
+    ->Min<Scalar, typename View<Scalar, Properties...>::memory_space>;
+
 template <class Scalar, class Space>
 struct Max {
  public:
   // Required
   using reducer    = Max<Scalar, Space>;
   using value_type = std::remove_cv_t<Scalar>;
+  static_assert(!std::is_pointer_v<value_type> && !std::is_array_v<value_type>);
 
   using result_view_type = Kokkos::View<value_type, Space>;
 
@@ -196,12 +212,17 @@ struct Max {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Scalar, typename... Properties>
+Max(View<Scalar, Properties...> const&)
+    ->Max<Scalar, typename View<Scalar, Properties...>::memory_space>;
+
 template <class Scalar, class Space>
 struct LAnd {
  public:
   // Required
   using reducer    = LAnd<Scalar, Space>;
   using value_type = std::remove_cv_t<Scalar>;
+  static_assert(!std::is_pointer_v<value_type> && !std::is_array_v<value_type>);
 
   using result_view_type = Kokkos::View<value_type, Space>;
 
@@ -237,12 +258,17 @@ struct LAnd {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Scalar, typename... Properties>
+LAnd(View<Scalar, Properties...> const&)
+    ->LAnd<Scalar, typename View<Scalar, Properties...>::memory_space>;
+
 template <class Scalar, class Space>
 struct LOr {
  public:
   // Required
   using reducer    = LOr<Scalar, Space>;
   using value_type = std::remove_cv_t<Scalar>;
+  static_assert(!std::is_pointer_v<value_type> && !std::is_array_v<value_type>);
 
   using result_view_type = Kokkos::View<value_type, Space>;
 
@@ -279,12 +305,17 @@ struct LOr {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Scalar, typename... Properties>
+LOr(View<Scalar, Properties...> const&)
+    ->LOr<Scalar, typename View<Scalar, Properties...>::memory_space>;
+
 template <class Scalar, class Space>
 struct BAnd {
  public:
   // Required
   using reducer    = BAnd<Scalar, Space>;
   using value_type = std::remove_cv_t<Scalar>;
+  static_assert(!std::is_pointer_v<value_type> && !std::is_array_v<value_type>);
 
   using result_view_type = Kokkos::View<value_type, Space>;
 
@@ -321,12 +352,17 @@ struct BAnd {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Scalar, typename... Properties>
+BAnd(View<Scalar, Properties...> const&)
+    ->BAnd<Scalar, typename View<Scalar, Properties...>::memory_space>;
+
 template <class Scalar, class Space>
 struct BOr {
  public:
   // Required
   using reducer    = BOr<Scalar, Space>;
   using value_type = std::remove_cv_t<Scalar>;
+  static_assert(!std::is_pointer_v<value_type> && !std::is_array_v<value_type>);
 
   using result_view_type = Kokkos::View<value_type, Space>;
 
@@ -363,6 +399,10 @@ struct BOr {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Scalar, typename... Properties>
+BOr(View<Scalar, Properties...> const&)
+    ->BOr<Scalar, typename View<Scalar, Properties...>::memory_space>;
+
 template <class Scalar, class Index>
 struct ValLocScalar {
   Scalar val;
@@ -380,6 +420,9 @@ struct MinLoc {
  private:
   using scalar_type = std::remove_cv_t<Scalar>;
   using index_type  = std::remove_cv_t<Index>;
+  static_assert(!std::is_pointer_v<scalar_type> &&
+                !std::is_array_v<scalar_type>);
+  static_assert(std::is_integral_v<index_type>);
 
  public:
   // Required
@@ -422,11 +465,20 @@ struct MinLoc {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Scalar, typename Index, typename... Properties>
+MinLoc(View<ValLocScalar<Scalar, Index>, Properties...> const&)
+    ->MinLoc<Scalar, Index,
+             typename View<ValLocScalar<Scalar, Index>,
+                           Properties...>::memory_space>;
+
 template <class Scalar, class Index, class Space>
 struct MaxLoc {
  private:
   using scalar_type = std::remove_cv_t<Scalar>;
   using index_type  = std::remove_cv_t<Index>;
+  static_assert(!std::is_pointer_v<scalar_type> &&
+                !std::is_array_v<scalar_type>);
+  static_assert(std::is_integral_v<index_type>);
 
  public:
   // Required
@@ -469,6 +521,12 @@ struct MaxLoc {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Scalar, typename Index, typename... Properties>
+MaxLoc(View<ValLocScalar<Scalar, Index>, Properties...> const&)
+    ->MaxLoc<Scalar, Index,
+             typename View<ValLocScalar<Scalar, Index>,
+                           Properties...>::memory_space>;
+
 template <class Scalar>
 struct MinMaxScalar {
   Scalar min_val, max_val;
@@ -484,6 +542,8 @@ template <class Scalar, class Space>
 struct MinMax {
  private:
   using scalar_type = std::remove_cv_t<Scalar>;
+  static_assert(!std::is_pointer_v<scalar_type> &&
+                !std::is_array_v<scalar_type>);
 
  public:
   // Required
@@ -531,6 +591,11 @@ struct MinMax {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Scalar, typename... Properties>
+MinMax(View<MinMaxScalar<Scalar>, Properties...> const&)
+    ->MinMax<Scalar,
+             typename View<MinMaxScalar<Scalar>, Properties...>::memory_space>;
+
 template <class Scalar, class Index>
 struct MinMaxLocScalar {
   Scalar min_val, max_val;
@@ -550,6 +615,9 @@ struct MinMaxLoc {
  private:
   using scalar_type = std::remove_cv_t<Scalar>;
   using index_type  = std::remove_cv_t<Index>;
+  static_assert(!std::is_pointer_v<scalar_type> &&
+                !std::is_array_v<scalar_type>);
+  static_assert(std::is_integral_v<index_type>);
 
  public:
   // Required
@@ -601,6 +669,12 @@ struct MinMaxLoc {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Scalar, typename Index, typename... Properties>
+MinMaxLoc(View<MinMaxLocScalar<Scalar, Index>, Properties...> const&)
+    ->MinMaxLoc<Scalar, Index,
+                typename View<MinMaxLocScalar<Scalar, Index>,
+                              Properties...>::memory_space>;
+
 // --------------------------------------------------
 // reducers added to support std algorithms
 // --------------------------------------------------
@@ -613,6 +687,9 @@ struct MaxFirstLoc {
  private:
   using scalar_type = std::remove_cv_t<Scalar>;
   using index_type  = std::remove_cv_t<Index>;
+  static_assert(!std::is_pointer_v<scalar_type> &&
+                !std::is_array_v<scalar_type>);
+  static_assert(std::is_integral_v<index_type>);
 
  public:
   // Required
@@ -659,6 +736,12 @@ struct MaxFirstLoc {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Scalar, typename Index, typename... Properties>
+MaxFirstLoc(View<ValLocScalar<Scalar, Index>, Properties...> const&)
+    ->MaxFirstLoc<Scalar, Index,
+                  typename View<ValLocScalar<Scalar, Index>,
+                                Properties...>::memory_space>;
+
 //
 // MaxFirstLocCustomComparator
 // recall that comp(a,b) returns true is a < b
@@ -668,6 +751,9 @@ struct MaxFirstLocCustomComparator {
  private:
   using scalar_type = std::remove_cv_t<Scalar>;
   using index_type  = std::remove_cv_t<Index>;
+  static_assert(!std::is_pointer_v<scalar_type> &&
+                !std::is_array_v<scalar_type>);
+  static_assert(std::is_integral_v<index_type>);
 
  public:
   // Required
@@ -718,6 +804,14 @@ struct MaxFirstLocCustomComparator {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Scalar, typename Index, typename ComparatorType,
+          typename... Properties>
+MaxFirstLocCustomComparator(
+    View<ValLocScalar<Scalar, Index>, Properties...> const&, ComparatorType)
+    ->MaxFirstLocCustomComparator<Scalar, Index, ComparatorType,
+                                  typename View<ValLocScalar<Scalar, Index>,
+                                                Properties...>::memory_space>;
+
 //
 // MinFirstLoc
 //
@@ -726,6 +820,9 @@ struct MinFirstLoc {
  private:
   using scalar_type = std::remove_cv_t<Scalar>;
   using index_type  = std::remove_cv_t<Index>;
+  static_assert(!std::is_pointer_v<scalar_type> &&
+                !std::is_array_v<scalar_type>);
+  static_assert(std::is_integral_v<index_type>);
 
  public:
   // Required
@@ -772,6 +869,12 @@ struct MinFirstLoc {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Scalar, typename Index, typename... Properties>
+MinFirstLoc(View<ValLocScalar<Scalar, Index>, Properties...> const&)
+    ->MinFirstLoc<Scalar, Index,
+                  typename View<ValLocScalar<Scalar, Index>,
+                                Properties...>::memory_space>;
+
 //
 // MinFirstLocCustomComparator
 // recall that comp(a,b) returns true is a < b
@@ -781,6 +884,9 @@ struct MinFirstLocCustomComparator {
  private:
   using scalar_type = std::remove_cv_t<Scalar>;
   using index_type  = std::remove_cv_t<Index>;
+  static_assert(!std::is_pointer_v<scalar_type> &&
+                !std::is_array_v<scalar_type>);
+  static_assert(std::is_integral_v<index_type>);
 
  public:
   // Required
@@ -831,6 +937,14 @@ struct MinFirstLocCustomComparator {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Scalar, typename Index, typename ComparatorType,
+          typename... Properties>
+MinFirstLocCustomComparator(
+    View<ValLocScalar<Scalar, Index>, Properties...> const&, ComparatorType)
+    ->MinFirstLocCustomComparator<Scalar, Index, ComparatorType,
+                                  typename View<ValLocScalar<Scalar, Index>,
+                                                Properties...>::memory_space>;
+
 //
 // MinMaxFirstLastLoc
 //
@@ -839,6 +953,9 @@ struct MinMaxFirstLastLoc {
  private:
   using scalar_type = std::remove_cv_t<Scalar>;
   using index_type  = std::remove_cv_t<Index>;
+  static_assert(!std::is_pointer_v<scalar_type> &&
+                !std::is_array_v<scalar_type>);
+  static_assert(std::is_integral_v<index_type>);
 
  public:
   // Required
@@ -896,6 +1013,12 @@ struct MinMaxFirstLastLoc {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Scalar, typename Index, typename... Properties>
+MinMaxFirstLastLoc(View<MinMaxLocScalar<Scalar, Index>, Properties...> const&)
+    ->MinMaxFirstLastLoc<Scalar, Index,
+                         typename View<MinMaxLocScalar<Scalar, Index>,
+                                       Properties...>::memory_space>;
+
 //
 // MinMaxFirstLastLocCustomComparator
 // recall that comp(a,b) returns true is a < b
@@ -905,6 +1028,9 @@ struct MinMaxFirstLastLocCustomComparator {
  private:
   using scalar_type = std::remove_cv_t<Scalar>;
   using index_type  = std::remove_cv_t<Index>;
+  static_assert(!std::is_pointer_v<scalar_type> &&
+                !std::is_array_v<scalar_type>);
+  static_assert(std::is_integral_v<index_type>);
 
  public:
   // Required
@@ -965,6 +1091,15 @@ struct MinMaxFirstLastLocCustomComparator {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Scalar, typename Index, typename ComparatorType,
+          typename... Properties>
+MinMaxFirstLastLocCustomComparator(
+    View<MinMaxLocScalar<Scalar, Index>, Properties...> const&, ComparatorType)
+    ->MinMaxFirstLastLocCustomComparator<
+        Scalar, Index, ComparatorType,
+        typename View<MinMaxLocScalar<Scalar, Index>,
+                      Properties...>::memory_space>;
+
 //
 // FirstLoc
 //
@@ -980,6 +1115,7 @@ template <class Index, class Space>
 struct FirstLoc {
  private:
   using index_type = std::remove_cv_t<Index>;
+  static_assert(std::is_integral_v<index_type>);
 
  public:
   // Required
@@ -1023,6 +1159,11 @@ struct FirstLoc {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Index, typename... Properties>
+FirstLoc(View<FirstLocScalar<Index>, Properties...> const&)
+    ->FirstLoc<Index, typename View<FirstLocScalar<Index>,
+                                    Properties...>::memory_space>;
+
 //
 // LastLoc
 //
@@ -1038,6 +1179,7 @@ template <class Index, class Space>
 struct LastLoc {
  private:
   using index_type = std::remove_cv_t<Index>;
+  static_assert(std::is_integral_v<index_type>);
 
  public:
   // Required
@@ -1081,6 +1223,11 @@ struct LastLoc {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Index, typename... Properties>
+LastLoc(View<LastLocScalar<Index>, Properties...> const&)
+    ->LastLoc<Index,
+              typename View<LastLocScalar<Index>, Properties...>::memory_space>;
+
 template <class Index>
 struct StdIsPartScalar {
   Index max_loc_true, min_loc_false;
@@ -1099,6 +1246,7 @@ template <class Index, class Space>
 struct StdIsPartitioned {
  private:
   using index_type = std::remove_cv_t<Index>;
+  static_assert(std::is_integral_v<index_type>);
 
  public:
   // Required
@@ -1148,6 +1296,11 @@ struct StdIsPartitioned {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Index, typename... Properties>
+StdIsPartitioned(View<StdIsPartScalar<Index>, Properties...> const&)
+    ->StdIsPartitioned<Index, typename View<StdIsPartScalar<Index>,
+                                            Properties...>::memory_space>;
+
 template <class Index>
 struct StdPartPointScalar {
   Index min_loc_false;
@@ -1165,6 +1318,7 @@ template <class Index, class Space>
 struct StdPartitionPoint {
  private:
   using index_type = std::remove_cv_t<Index>;
+  static_assert(std::is_integral_v<index_type>);
 
  public:
   // Required
@@ -1208,6 +1362,11 @@ struct StdPartitionPoint {
   KOKKOS_INLINE_FUNCTION
   bool references_scalar() const { return references_scalar_v; }
 };
+
+template <typename Index, typename... Properties>
+StdPartitionPoint(View<StdPartPointScalar<Index>, Properties...> const&)
+    ->StdPartitionPoint<Index, typename View<StdPartPointScalar<Index>,
+                                             Properties...>::memory_space>;
 
 }  // namespace Kokkos
 namespace Kokkos {

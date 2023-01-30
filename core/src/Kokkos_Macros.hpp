@@ -183,8 +183,8 @@
 // Intel compiler macros
 
 #if defined(KOKKOS_COMPILER_INTEL)
-// FIXME_SYCL
-#if !defined(KOKKOS_ENABLE_SYCL)
+// FIXME_ICPX
+#if !defined(__INTEL_LLVM_COMPILER)
 #define KOKKOS_ENABLE_PRAGMA_UNROLL 1
 #define KOKKOS_ENABLE_PRAGMA_LOOPCOUNT 1
 #define KOKKOS_ENABLE_PRAGMA_VECTOR 1
@@ -451,6 +451,7 @@
 
 //----------------------------------------------------------------------------
 // Determine for what space the code is being compiled:
+#if defined(KOKKOS_ENABLE_DEPRECARED_CODE_3)
 
 #if defined(__CUDACC__) && defined(__CUDA_ARCH__) && defined(KOKKOS_ENABLE_CUDA)
 #define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA
@@ -463,6 +464,7 @@
 #define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
 #endif
 
+#endif
 //----------------------------------------------------------------------------
 
 // Remove surrounding parentheses if present
@@ -522,6 +524,7 @@ static constexpr bool kokkos_omp_on_host() { return false; }
     KOKKOS_IMPL_STRIP_PARENS(CODE)   \
   }
 #else
+#include <openacc.h>
 // FIXME_OPENACC acc_on_device is a non-constexpr function
 #define KOKKOS_IF_ON_DEVICE(CODE)                     \
   if constexpr (acc_on_device(acc_device_not_host)) { \
