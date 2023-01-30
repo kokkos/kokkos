@@ -101,12 +101,13 @@ pipeline {
                     }
                     steps {
                         sh 'ccache --zero-stats'
-                        sh '''rm -rf build && mkdir -p build && cd build && \
+                        sh '''. /opt/intel/oneapi/setvars.sh --include-intel-llvm && \
+                              rm -rf build && mkdir -p build && cd build && \
                               cmake \
                                 -DCMAKE_BUILD_TYPE=Release \
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-                                -DCMAKE_CXX_COMPILER=clang++ \
-                                -DCMAKE_CXX_FLAGS="-fsycl-device-code-split=per_kernel -Werror -Wno-gnu-zero-variadic-macro-arguments -Wno-linker-warnings" \
+                                -DCMAKE_CXX_COMPILER=/opt/intel/oneapi/compiler/2023.0.0/linux/bin-llvm/clang++ \
+                                -DCMAKE_CXX_FLAGS="-fsycl-device-code-split=per_kernel -Werror -Wno-gnu-zero-variadic-macro-arguments -Wno-unknown-cuda-version -Wno-sycl-target" \
                                 -DKOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED=0 \
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ARCH_VOLTA70=ON \

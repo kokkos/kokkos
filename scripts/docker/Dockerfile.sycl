@@ -1,4 +1,4 @@
-ARG BASE=nvidia/cuda:10.2-devel
+ARG BASE=nvidia/cuda:11.7.0-devel-ubuntu22.04
 FROM $BASE
 
 RUN apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/3bf863cc.pub
@@ -9,19 +9,7 @@ RUN apt-get update && apt-get install -y \
         ccache \
         ninja-build \
         python3 \
-        git \
-        && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
-
-# unbuntu18.04-based images have libstdc++ that is lacking filesystem support
-RUN apt-get update && \
-    apt-get install -y software-properties-common && \
-    add-apt-repository ppa:ubuntu-toolchain-r/test -y && \
-    apt-get update && \
-    apt-get install -y g++-9 && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+        git
 
 RUN KEYDUMP_URL=https://cloud.cees.ornl.gov/download && \
     KEYDUMP_FILE=keydump && \
@@ -46,46 +34,15 @@ RUN CMAKE_URL=https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSIO
     rm cmake*
 ENV PATH=${CMAKE_DIR}/bin:$PATH
 
-ENV SYCL_DIR=/opt/sycl
-RUN SYCL_VERSION=20221201 && \
-    SYCL_URL=https://github.com/intel/llvm/archive/sycl-nightly && \
-    SYCL_ARCHIVE=${SYCL_VERSION}.tar.gz && \
-    SCRATCH_DIR=/scratch && mkdir -p ${SCRATCH_DIR} && cd ${SCRATCH_DIR} && \
-    wget --quiet ${SYCL_URL}/${SYCL_ARCHIVE} && \
-    mkdir llvm && \
-    tar -xf ${SYCL_ARCHIVE} -C llvm --strip-components=1 && \
-    cd llvm && \
-    mkdir build && \
-    cd build && \
-    cmake -G Ninja \
-      -DCMAKE_BUILD_TYPE=Release \
-      -DLLVM_ENABLE_ASSERTIONS=ON \
-      -DLLVM_TARGETS_TO_BUILD="X86;NVPTX" \
-      -DLLVM_EXTERNAL_PROJECTS="sycl;llvm-spirv;opencl;xpti;xptifw;libdevice" \
-      -DLLVM_EXTERNAL_SYCL_SOURCE_DIR=/scratch/llvm/sycl \
-      -DLLVM_EXTERNAL_LLVM_SPIRV_SOURCE_DIR=/scratch/llvm/llvm-spirv \
-      -DLLVM_EXTERNAL_XPTI_SOURCE_DIR=/scratch/llvm/xpti \
-      -DXPTI_SOURCE_DIR=/scratch/llvm/xpti \
-      -DLLVM_EXTERNAL_XPTIFW_SOURCE_DIR=/scratch/llvm/xptifw \
-      -DLLVM_EXTERNAL_LIBDEVICE_SOURCE_DIR=/scratch/llvm/libdevice \
-      -DLLVM_ENABLE_PROJECTS="clang;sycl;llvm-spirv;opencl;xpti;xptifw;libdevice;libclc" \
-      -DLIBCLC_TARGETS_TO_BUILD=";nvptx64--;nvptx64--nvidiacl" \
-      -DLIBCLC_GENERATE_REMANGLED_VARIANTS=ON \
-      -DLLVM_BUILD_TOOLS=OFF \
-      -DSYCL_ENABLE_WERROR=OFF \
-      -DCMAKE_INSTALL_PREFIX=${SYCL_DIR} \
-      -DSYCL_INCLUDE_TESTS=OFF \
-      -DLLVM_ENABLE_DOXYGEN=OFF \
-      -DLLVM_ENABLE_SPHINX=OFF \
-      -DBUILD_SHARED_LIBS=OFF \
-      -DSYCL_ENABLE_XPTI_TRACING=ON \
-      -DLLVM_ENABLE_LLD=OFF \
-      -DXPTI_ENABLE_WERROR=OFF \
-      -DSYCL_ENABLE_PLUGINS="opencl;cuda" \
-      /scratch/llvm/llvm && \
-    ninja -j8 deploy-sycl-toolchain && \
-    ninja -j8 install && \
-    cp bin/* ${SYCL_DIR}/bin && \
-    echo "${SYCL_DIR}/lib" > /etc/ld.so.conf.d/sycl.conf && ldconfig && \
-    rm -rf ${SCRATCH_DIR}
-ENV PATH=${SYCL_DIR}/bin:$PATH
+RUN wget https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB && \
+    apt-key add GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB && \
+    echo "deb https://apt.repos.intel.com/oneapi all main" | tee /etc/apt/sources.list.d/oneAPI.list && \
+    apt-get update -o Dir::Etc::sourcelist="sources.list.d/oneAPI.list" -o APT::Get::List-Cleanup="0" && \
+    apt-get install -y intel-oneapi-compiler-dpcpp-cpp-and-cpp-classic-2023.0.0 && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN wget https://cloud.cees.ornl.gov/download/oneapi-for-nvidia-gpus-2023.0.0-linux.sh && \
+    chmod +x oneapi-for-nvidia-gpus-2023.0.0-linux.sh && \
+    ./oneapi-for-nvidia-gpus-2023.0.0-linux.sh -y && \
+    rm oneapi-for-nvidia-gpus-2023.0.0-linux.sh
