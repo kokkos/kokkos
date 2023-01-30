@@ -160,8 +160,20 @@ inline void configure_shmem_preference(const KernelFuncPtr& func,
   // The granularity of register allocation is chunks of 256 registers per warp
   // -> 8 registers per thread
   const size_t allocated_regs_per_thread = 8 * ((regs_per_thread + 8 - 1) / 8);
-  const size_t max_blocks_regs =
+  size_t max_blocks_regs =
       regs_per_sm / (allocated_regs_per_thread * block_size);
+
+  // Compute the maximum number of warps as a function of the number of
+  // registers
+  const size_t max_warps_per_sm_registers =
+      cuda_max_warps_per_sm_registers(device_props, func_attr);
+
+  // Correct the number of blocks to respect the maximum number of warps per
+  // SM, which is constrained to be a multiple of the warp allocation
+  // granularity defined in `cuda_warp_per_sm_allocation_granularity`.
+  while ((max_blocks_regs * block_size / device_props.warpSize) >
+         max_warps_per_sm_registers)
+    max_blocks_regs--;
 
   // Compute how many threads per sm we actually want
   const size_t max_threads_per_sm = device_props.maxThreadsPerMultiProcessor;
