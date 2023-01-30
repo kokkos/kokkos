@@ -391,13 +391,12 @@ void test_radix_sort() {
   {
     Kokkos::deep_copy(exec, element_, h_element_init);
 
-    radix.create_indirection_vector(exec, element_);
+    //radix.create_indirection_vector(exec, Kokkos::ExperimentalKeyFromView{element_});
 
     radix.create_indirection_vector(
         exec,
         Kokkos::Experimental::KeyFromView(
-            element_, std::integral_constant<int, num_bits_full>()),
-        element_.extent(0));
+            element_, std::integral_constant<int, num_bits_full>()));
 
     radix.apply_permutation(exec, element_);
     Kokkos::deep_copy(h_element, element_);
@@ -471,7 +470,7 @@ void test_radix_sort() {
         });
     Kokkos::Experimental::RadixSorter<int> sorter(i1.extent(0));
     sorter.create_indirection_vector(
-        exec, Kokkos::Experimental::KeyFromView(i1), i1.extent(0));
+        exec, Kokkos::Experimental::KeyFromView(i1));
     sorter.apply_permutation(exec, i1);
     auto h_i1 = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, i1);
     for (int i = 0; i < i1.extent(0) - 1; ++i) {

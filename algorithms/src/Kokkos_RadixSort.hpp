@@ -152,6 +152,9 @@ struct KeyFromView {
 
   KOKKOS_FUNCTION
   int getNumBits() { return num_bits; }
+
+  KOKKOS_FUNCTION
+  size_t extent() { return keys.extent(0); }
 };
 
 template <typename KeyView>
@@ -175,20 +178,11 @@ class RadixSorter {
 
   // Generate and store the permutation induced by the keys, without
   // modifying their initial order
-  template <typename ExecutionSpace>
-  void create_indirection_vector(ExecutionSpace const& exec,
-                                 View<KeyType*> keys) {
-    auto key_functor = KeyFromView{keys};
-    const auto n     = keys.extent(0);
-
-    create_indirection_vector(exec, key_functor, n);
-  }
-
   template <typename ExecutionSpace, typename KeyFunctor>
   void create_indirection_vector(ExecutionSpace const& exec,
-                                 KeyFunctor key_functor, size_t n) {
+                                 KeyFunctor key_functor) {
     RangePolicy<ExecutionSpace, Kokkos::IndexType<IndexType>> policy(exec, 0,
-                                                                     n);
+                                                                     key_functor.extent());
 
     // Initialize m_index_old, since it will be read from in the first
     // iteration's call to step()
