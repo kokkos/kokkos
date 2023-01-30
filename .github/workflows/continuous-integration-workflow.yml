@@ -19,26 +19,24 @@ jobs:
         include:
           - distro: 'fedora:intel'
             cxx: 'icpc'
+            cxx_extra_flags: '-diag-disable=177,10441'
             cmake_build_type: 'Release'
             backend: 'OPENMP'
-            clang-tidy: ''
           - distro: 'fedora:intel'
             cxx: 'icpc'
+            cxx_extra_flags: '-diag-disable=177,10441'
             cmake_build_type: 'Debug'
             backend: 'OPENMP'
-            clang-tidy: ''
           - distro: 'fedora:intel'
             cxx: 'icpx'
             cxx_extra_flags: '-fp-model=precise'
             cmake_build_type: 'Release'
             backend: 'OPENMP'
-            clang-tidy: ''
           - distro: 'fedora:intel'
             cxx: 'icpx'
             cxx_extra_flags: '-fp-model=precise'
             cmake_build_type: 'Debug'
             backend: 'OPENMP'
-            clang-tidy: ''
           - distro: 'ubuntu:latest'
             cxx: 'clang++'
             cmake_build_type: 'RelWithDebInfo'
@@ -101,7 +99,8 @@ jobs:
             -DKokkos_ENABLE_EXAMPLES=ON \
             -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
             -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
-            -DCMAKE_CXX_FLAGS="${{ matrix.cxx_extra_flags }}" \
+            -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+            -DCMAKE_CXX_FLAGS="-Werror ${{ matrix.cxx_extra_flags }}" \
             -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
             -DCMAKE_BUILD_TYPE=${{ matrix.cmake_build_type }}

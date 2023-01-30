@@ -523,6 +523,35 @@ IF (KOKKOS_ENABLE_SYCL)
   )
 ENDIF()
 
+# Check support for device_global variables
+# FIXME_SYCL Once the feature test macro SYCL_EXT_ONEAPI_DEVICE_GLOBAL is
+#            available, use that instead.
+IF(KOKKOS_ENABLE_SYCL)
+  INCLUDE(CheckCXXSourceCompiles)
+  STRING(REPLACE ";" " " CMAKE_REQUIRED_FLAGS "${KOKKOS_COMPILE_OPTIONS}")
+  CHECK_CXX_SOURCE_COMPILES("
+    #include <sycl/sycl.hpp>
+    using namespace sycl::ext::oneapi::experimental;
+    using namespace sycl;
+
+    SYCL_EXTERNAL device_global<int, decltype(properties(device_image_scope))> Foo;
+
+    void bar(queue q) {
+      q.single_task([=] {
+      Foo = 42;
+    });
+    }
+
+    int main(){ return 0; }
+    "
+    KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED)
+
+  IF(KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED)
+    COMPILER_SPECIFIC_FLAGS(
+      DEFAULT -fsycl-device-code-split=off -DDESUL_SYCL_DEVICE_GLOBAL_SUPPORTED
+    )
+  ENDIF()
+ENDIF()
 
 SET(CUDA_ARCH_ALREADY_SPECIFIED "")
 FUNCTION(CHECK_CUDA_ARCH ARCH FLAG)
@@ -704,7 +733,7 @@ IF (KOKKOS_ENABLE_SYCL)
   IF(CUDA_ARCH_ALREADY_SPECIFIED)
     IF(KOKKOS_ENABLE_UNSUPPORTED_ARCHS)
       COMPILER_SPECIFIC_FLAGS(
-        DEFAULT -fsycl-targets=nvptx64-nvidia-cuda -Xsycl-target-backend "${CUDA_ARCH_FLAG}=${KOKKOS_CUDA_ARCH_FLAG}"
+        DEFAULT -fsycl-targets=nvptx64-nvidia-cuda -Xsycl-target-backend=nvptx64-nvidia-cuda --cuda-gpu-arch=${KOKKOS_CUDA_ARCH_FLAG}
       )
     ELSE()
       MESSAGE(SEND_ERROR "Setting a CUDA architecture for SYCL is only allowed with Kokkos_ENABLE_UNSUPPORTED_ARCHS=ON!")

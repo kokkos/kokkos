@@ -180,10 +180,11 @@ void HIPInternal::initialize(hipStream_t stream, bool manage_stream) {
     Kokkos::Impl::throw_runtime_exception(msg.str());
   }
 
+  m_num_scratch_locks = concurrency();
   KOKKOS_IMPL_HIP_SAFE_CALL(
-      hipMalloc(&m_scratch_locks, sizeof(int32_t) * concurrency()));
+      hipMalloc(&m_scratch_locks, sizeof(int32_t) * m_num_scratch_locks));
   KOKKOS_IMPL_HIP_SAFE_CALL(
-      hipMemset(m_scratch_locks, 0, sizeof(int32_t) * concurrency()));
+      hipMemset(m_scratch_locks, 0, sizeof(int32_t) * m_num_scratch_locks));
 }
 
 //----------------------------------------------------------------------------
@@ -363,7 +364,8 @@ void HIPInternal::finalize() {
   }
 
   KOKKOS_IMPL_HIP_SAFE_CALL(hipFree(m_scratch_locks));
-  m_scratch_locks = nullptr;
+  m_scratch_locks     = nullptr;
+  m_num_scratch_locks = 0;
 }
 
 //----------------------------------------------------------------------------

@@ -510,8 +510,12 @@ TEST(TEST_CATEGORY, atomics) {
   ASSERT_TRUE(
       (TestAtomic::Loop<Kokkos::complex<float>, TEST_EXECSPACE>(100, 3)));
 
-// FIXME_SYCL atomics for large types to be implemented
-#ifndef KOKKOS_ENABLE_SYCL
+// FIXME_SYCL Replace macro by SYCL_EXT_ONEAPI_DEVICE_GLOBAL or remove
+// condition alltogether when possible.
+#if defined(KOKKOS_ENABLE_SYCL) && \
+    !defined(KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED)
+  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::SYCL>) return;
+#endif
   ASSERT_TRUE(
       (TestAtomic::Loop<Kokkos::complex<double>, TEST_EXECSPACE>(1, 1)));
   ASSERT_TRUE(
@@ -534,7 +538,6 @@ TEST(TEST_CATEGORY, atomics) {
       (TestAtomic::Loop<TestAtomic::SuperScalar<4>, TEST_EXECSPACE>(100, 2)));
   ASSERT_TRUE(
       (TestAtomic::Loop<TestAtomic::SuperScalar<4>, TEST_EXECSPACE>(100, 3)));
-#endif
 #endif
 #endif
 }
