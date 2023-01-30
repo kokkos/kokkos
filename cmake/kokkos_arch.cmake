@@ -742,30 +742,35 @@ IF (KOKKOS_ENABLE_SYCL)
     COMPILER_SPECIFIC_FLAGS(
       DEFAULT -fsycl-targets=spir64
     )
-  ELSEIF(KOKKOS_ARCH_INTEL_GEN9)
-    COMPILER_SPECIFIC_FLAGS(
-      DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device gen9"
+  ELSE()
+    COMPILER_SPECIFIC_OPTIONS(
+      DEFAULT -fsycl-targets=spir64_gen
     )
-  ELSEIF(KOKKOS_ARCH_INTEL_GEN11)
-    COMPILER_SPECIFIC_FLAGS(
-      DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device gen11"
-    )
-  ELSEIF(KOKKOS_ARCH_INTEL_GEN12LP)
-    COMPILER_SPECIFIC_FLAGS(
-      DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device gen12lp"
-    )
-  ELSEIF(KOKKOS_ARCH_INTEL_DG1)
-    COMPILER_SPECIFIC_FLAGS(
-      DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device dg1"
-    )
-  ELSEIF(KOKKOS_ARCH_INTEL_XEHP)
-    COMPILER_SPECIFIC_FLAGS(
-      DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device 12.50.4"
-    )
-  ELSEIF(KOKKOS_ARCH_INTEL_PVC)
-    COMPILER_SPECIFIC_FLAGS(
-      DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device 12.60.7"
-    )
+    IF(KOKKOS_ARCH_INTEL_GEN9)
+      COMPILER_SPECIFIC_LINK_OPTIONS(
+        DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device gen9"
+      )
+    ELSEIF(KOKKOS_ARCH_INTEL_GEN11)
+      COMPILER_SPECIFIC_LINK_OPTIONS(
+        DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device gen11"
+      )
+    ELSEIF(KOKKOS_ARCH_INTEL_GEN12LP)
+      COMPILER_SPECIFIC_LINK_OPTIONS(
+        DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device gen12lp"
+      )
+    ELSEIF(KOKKOS_ARCH_INTEL_DG1)
+      COMPILER_SPECIFIC_LINK_OPTIONS(
+        DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device dg1"
+      )
+    ELSEIF(KOKKOS_ARCH_INTEL_XEHP)
+      COMPILER_SPECIFIC_LINK_OPTIONS(
+        DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device 12.50.4"
+      )
+    ELSEIF(KOKKOS_ARCH_INTEL_PVC)
+      COMPILER_SPECIFIC_LINK_OPTIONS(
+        DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device 12.60.7"
+      )
+    ENDIF()
   ENDIF()
 ENDIF()
 
