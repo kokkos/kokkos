@@ -29,6 +29,10 @@
 #include <Kokkos_SIMD_AVX512.hpp>
 #endif
 
+#ifdef __ARM_NEON
+#include <Kokkos_SIMD_NEON.hpp>
+#endif
+
 namespace Kokkos {
 namespace Experimental {
 
@@ -40,6 +44,8 @@ namespace Impl {
 using host_native = avx512_fixed_size<8>;
 #elif defined(KOKKOS_ARCH_AVX2)
 using host_native  = avx2_fixed_size<4>;
+#elif defined(__ARM_NEON)
+using host_native  = neon_fixed_size<2>;
 #else
 using host_native  = scalar;
 #endif
@@ -134,6 +140,8 @@ class abi_set {};
 using host_abi_set = abi_set<simd_abi::scalar, simd_abi::avx512_fixed_size<8>>;
 #elif defined(KOKKOS_ARCH_AVX2)
 using host_abi_set = abi_set<simd_abi::scalar, simd_abi::avx2_fixed_size<4>>;
+#elif defined(__ARM_NEON)
+using host_abi_set = abi_set<simd_abi::scalar, simd_abi::neon_fixed_size<2>>;
 #else
 using host_abi_set = abi_set<simd_abi::scalar>;
 #endif
