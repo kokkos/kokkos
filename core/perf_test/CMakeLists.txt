@@ -123,7 +123,7 @@ ELSE()
   FetchContent_Declare(
     googlebenchmark
     URL https://github.com/google/benchmark/archive/refs/tags/v1.6.2.tar.gz
-    URL_HASH MD5=14d14849e075af116143a161bc3b927b
+    URL_HASH MD5=9926f9d4180f8a2eda28e623270d2ba1
   )
   FetchContent_MakeAvailable(googlebenchmark)
   list(POP_BACK CMAKE_MESSAGE_INDENT)
