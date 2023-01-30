@@ -69,17 +69,15 @@ namespace Impl {
 /// variable based on the Host global variable prior to running any kernels
 /// that will use it.
 /// That is the purpose of the ensure_cuda_lock_arrays_on_device function.
-__device__
 #ifdef __CUDACC_RDC__
-    __constant__ extern
+extern
 #endif
-    int32_t* CUDA_SPACE_ATOMIC_LOCKS_DEVICE;
+    __device__ __constant__ int32_t* CUDA_SPACE_ATOMIC_LOCKS_DEVICE;
 
-__device__
 #ifdef __CUDACC_RDC__
-    __constant__ extern
+extern
 #endif
-    int32_t* CUDA_SPACE_ATOMIC_LOCKS_NODE;
+    __device__ __constant__ int32_t* CUDA_SPACE_ATOMIC_LOCKS_NODE;
 
 #define CUDA_SPACE_ATOMIC_MASK 0x1FFFF
 
