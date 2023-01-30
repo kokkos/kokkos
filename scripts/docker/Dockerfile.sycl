@@ -9,7 +9,10 @@ RUN apt-get update && apt-get install -y \
         ccache \
         ninja-build \
         python3 \
-        git
+        git \
+        && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 RUN KEYDUMP_URL=https://cloud.cees.ornl.gov/download && \
     KEYDUMP_FILE=keydump && \
