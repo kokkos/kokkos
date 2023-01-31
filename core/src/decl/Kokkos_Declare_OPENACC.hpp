@@ -28,6 +28,7 @@
 #include <OpenACC/Kokkos_OpenACC_ParallelFor_MDRange.hpp>
 #include <OpenACC/Kokkos_OpenACC_ParallelReduce_MDRange.hpp>
 #include <OpenACC/Kokkos_OpenACC_ParallelFor_Team.hpp>
+#include <OpenACC/Kokkos_OpenACC_ParallelReduce_Team.hpp>
 #endif
 
 #endif
