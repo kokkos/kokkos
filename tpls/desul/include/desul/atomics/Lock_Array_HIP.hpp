@@ -69,17 +69,15 @@ namespace Impl {
  * will use it.  That is the purpose of the
  * ensure_hip_lock_arrays_on_device function.
  */
-__device__
 #ifdef DESUL_HIP_RDC
-    __constant__ extern
+extern
 #endif
-    int32_t* HIP_SPACE_ATOMIC_LOCKS_DEVICE;
+    __device__ __constant__ int32_t* HIP_SPACE_ATOMIC_LOCKS_DEVICE;
 
-__device__
 #ifdef DESUL_HIP_RDC
-    __constant__ extern
+extern
 #endif
-    int32_t* HIP_SPACE_ATOMIC_LOCKS_NODE;
+    __device__ __constant__ int32_t* HIP_SPACE_ATOMIC_LOCKS_NODE;
 
 #define HIP_SPACE_ATOMIC_MASK 0x1FFFF
 
