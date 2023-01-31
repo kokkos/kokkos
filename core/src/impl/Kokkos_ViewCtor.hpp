@@ -1,46 +1,18 @@
-/*
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 3.0
-//       Copyright (2020) National Technology & Engineering
+//                        Kokkos v. 4.0
+//       Copyright (2022) National Technology & Engineering
 //               Solutions of Sandia, LLC (NTESS).
 //
 // Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
+// See https://kokkos.org/LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-//
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-//
-// ************************************************************************
 //@HEADER
-*/
 
 #ifndef KOKKOS_EXPERIMENTAL_IMPL_VIEW_CTOR_PROP_HPP
 #define KOKKOS_EXPERIMENTAL_IMPL_VIEW_CTOR_PROP_HPP
@@ -267,24 +239,9 @@ auto with_properties_if_unset(const ViewCtorProp<P...> &view_ctor_prop) {
   return view_ctor_prop;
 }
 
-// Suppress faulty warning from NVCC see:
-// https://github.com/kokkos/kokkos/issues/5426
-#if defined(KOKKOS_COMPILER_NVCC) && (KOKKOS_COMPILER_NVCC < 1150)
-// pragma pop is getting a warning from the underlying GCC
-// for unknown pragma if -pedantic is used
-#ifdef __CUDA_ARCH__
-#pragma push
-#pragma diag_suppress implicit_return_from_non_void_function
-#endif
-#endif
-#if defined(KOKKOS_COMPILER_INTEL) && (KOKKOS_COMPILER_INTEL <= 2100)
-#define KOKKOS_IMPL_INTEL_BOGUS_MISSING_RETURN_STATEMENT_AT_END_OF_NON_VOID_FUNCTION
-#pragma warning(push)
-#pragma warning(disable : 1011)
-#endif
 template <typename... P, typename Property, typename... Properties>
 auto with_properties_if_unset(const ViewCtorProp<P...> &view_ctor_prop,
-                              const Property &property,
+                              [[maybe_unused]] const Property &property,
                               const Properties &... properties) {
   if constexpr ((is_execution_space<Property>::value &&
                  !ViewCtorProp<P...>::has_execution_space) ||
@@ -301,6 +258,21 @@ auto with_properties_if_unset(const ViewCtorProp<P...> &view_ctor_prop,
     return with_properties_if_unset(new_view_ctor_prop, properties...);
   } else
     return with_properties_if_unset(view_ctor_prop, properties...);
+
+// A workaround placed to prevent spurious "missing return statement at the
+// end of non-void function" warnings from CUDA builds (issue #5470). Because
+// KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK removes [[noreturn]] attribute from
+// cuda_abort(), an unreachable while(true); is placed as a fallback method
+#if (defined(KOKKOS_COMPILER_NVCC) && (KOKKOS_COMPILER_NVCC < 1150)) || \
+    (defined(KOKKOS_COMPILER_INTEL) && (KOKKOS_COMPILER_INTEL <= 2100))
+  Kokkos::abort(
+      "Prevents an incorrect warning: missing return statement at end of "
+      "non-void function");
+#ifdef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
+  while (true)
+    ;
+#endif
+#endif
 }
 
 struct ExecutionSpaceTag {};
@@ -336,6 +308,21 @@ KOKKOS_FUNCTION const auto &get_property(
     static_assert(std::is_same_v<Tag, void>, "Invalid property tag!");
     return view_ctor_prop;
   }
+
+// A workaround placed to prevent spurious "missing return statement at the
+// end of non-void function" warnings from CUDA builds (issue #5470). Because
+// KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK removes [[noreturn]] attribute from
+// cuda_abort(), an unreachable while(true); is placed as a fallback method
+#if (defined(KOKKOS_COMPILER_NVCC) && (KOKKOS_COMPILER_NVCC < 1150)) || \
+    (defined(KOKKOS_COMPILER_INTEL) && (KOKKOS_COMPILER_INTEL <= 2100))
+  Kokkos::abort(
+      "Prevents an incorrect warning: missing return statement at end of "
+      "non-void function");
+#ifdef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
+  while (true)
+    ;
+#endif
+#endif
 }
 #if defined(KOKKOS_COMPILER_NVCC) && (KOKKOS_COMPILER_NVCC < 1150)
 // pragma pop is getting a warning from the underlying GCC

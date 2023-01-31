@@ -1,46 +1,18 @@
-/*
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 3.0
-//       Copyright (2020) National Technology & Engineering
+//                        Kokkos v. 4.0
+//       Copyright (2022) National Technology & Engineering
 //               Solutions of Sandia, LLC (NTESS).
 //
 // Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
+// See https://kokkos.org/LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-//
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-//
-// ************************************************************************
 //@HEADER
-*/
 
 #include <gtest/gtest.h>
 
@@ -56,12 +28,6 @@
     defined(KOKKOS_ENABLE_OPENACC)
 #else
 #define MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
-#endif
-
-// WORKAROUND icpx changing default FP model when optimization level is >= 1
-// using -fp-model=precise works too
-#if defined(__INTEL_LLVM_COMPILER)
-#define KOKKOS_IMPL_WORKAROUND_INTEL_LLVM_DEFAULT_FLOATING_POINT_MODEL
 #endif
 
 // clang-format off
@@ -1088,11 +1054,7 @@ struct TestAbsoluteValueFunction {
     // special values
     using Kokkos::isinf;
     using Kokkos::isnan;
-    if (abs(-0.) != 0.
-#ifndef KOKKOS_IMPL_WORKAROUND_INTEL_LLVM_DEFAULT_FLOATING_POINT_MODEL
-        || !isinf(abs(-INFINITY)) || !isnan(abs(-NAN))
-#endif
-    ) {
+    if (abs(-0.) != 0. || !isinf(abs(-INFINITY)) || !isnan(abs(-NAN))) {
       ++e;
       KOKKOS_IMPL_DO_NOT_USE_PRINTF(
           "failed abs(floating_point) special values\n");
@@ -1129,18 +1091,15 @@ struct TestIsNaN {
       ++e;
       KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed isnan(integral)\n");
     }
-    if (isnan(2.f)
-#ifndef KOKKOS_IMPL_WORKAROUND_INTEL_LLVM_DEFAULT_FLOATING_POINT_MODEL
-        || !isnan(quiet_NaN<float>::value) ||
+    if (isnan(2.f) || !isnan(quiet_NaN<float>::value) ||
         !isnan(signaling_NaN<float>::value)
-#endif
 
     ) {
       ++e;
       KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed isnan(float)\n");
     }
     if (isnan(3.)
-#ifndef KOKKOS_IMPL_WORKAROUND_INTEL_LLVM_DEFAULT_FLOATING_POINT_MODEL
+#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC
         || !isnan(quiet_NaN<double>::value) ||
         !isnan(signaling_NaN<double>::value)
 #endif
@@ -1149,22 +1108,14 @@ struct TestIsNaN {
       KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed isnan(double)\n");
     }
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
-    if (isnan(4.l)
-#ifndef KOKKOS_IMPL_WORKAROUND_INTEL_LLVM_DEFAULT_FLOATING_POINT_MODEL
-        || !isnan(quiet_NaN<long double>::value) ||
-        !isnan(signaling_NaN<long double>::value)
-#endif
-    ) {
+    if (isnan(4.l) || !isnan(quiet_NaN<long double>::value) ||
+        !isnan(signaling_NaN<long double>::value)) {
       ++e;
       KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed isnan(long double)\n");
     }
 #endif
     // special values
-    if (isnan(INFINITY)
-#ifndef KOKKOS_IMPL_WORKAROUND_INTEL_LLVM_DEFAULT_FLOATING_POINT_MODEL
-        || !isnan(NAN)
-#endif
-    ) {
+    if (isnan(INFINITY) || !isnan(NAN)) {
       ++e;
       KOKKOS_IMPL_DO_NOT_USE_PRINTF(
           "failed isnan(floating_point) special values\n");

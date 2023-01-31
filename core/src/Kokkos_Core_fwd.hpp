@@ -1,46 +1,18 @@
-/*
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 3.0
-//       Copyright (2020) National Technology & Engineering
+//                        Kokkos v. 4.0
+//       Copyright (2022) National Technology & Engineering
 //               Solutions of Sandia, LLC (NTESS).
 //
 // Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
+// See https://kokkos.org/LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-//
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-//
-// ************************************************************************
 //@HEADER
-*/
 
 #ifndef KOKKOS_CORE_FWD_HPP
 #define KOKKOS_CORE_FWD_HPP
@@ -187,17 +159,17 @@ using DefaultHostExecutionSpace KOKKOS_IMPL_DEFAULT_HOST_EXEC_SPACE_ANNOTATION =
 // check for devices that support sharedSpace
 #if defined(KOKKOS_ENABLE_CUDA)
 using SharedSpace = CudaUVMSpace;
-#define KOKKOS_HAS_SHARED_SPACE 1
+#define KOKKOS_HAS_SHARED_SPACE
 #elif defined(KOKKOS_ENABLE_HIP)
 using SharedSpace = HIPManagedSpace;
-#define KOKKOS_HAS_SHARED_SPACE 1
+#define KOKKOS_HAS_SHARED_SPACE
 #elif defined(KOKKOS_ENABLE_SYCL)
 using SharedSpace = Experimental::SYCLSharedUSMSpace;
-#define KOKKOS_HAS_SHARED_SPACE 1
+#define KOKKOS_HAS_SHARED_SPACE
 // if only host compile point to HostSpace
 #elif !defined(KOKKOS_ENABLE_OPENACC) && !defined(KOKKOS_ENABLE_OPENMPTARGET)
 using SharedSpace               = HostSpace;
-#define KOKKOS_HAS_SHARED_SPACE 1
+#define KOKKOS_HAS_SHARED_SPACE
 #endif
 
 inline constexpr bool has_shared_space =
@@ -209,16 +181,16 @@ inline constexpr bool has_shared_space =
 
 #if defined(KOKKOS_ENABLE_CUDA)
 using SharedHostPinnedSpace = CudaHostPinnedSpace;
-#define KOKKOS_HAS_SHARED_HOST_PINNED_SPACE 1
+#define KOKKOS_HAS_SHARED_HOST_PINNED_SPACE
 #elif defined(KOKKOS_ENABLE_HIP)
 using SharedHostPinnedSpace = HIPHostPinnedSpace;
-#define KOKKOS_HAS_SHARED_HOST_PINNED_SPACE 1
+#define KOKKOS_HAS_SHARED_HOST_PINNED_SPACE
 #elif defined(KOKKOS_ENABLE_SYCL)
     using SharedHostPinnedSpace = Experimental::SYCLHostUSMSpace;
-#define KOKKOS_HAS_SHARED_HOST_PINNED_SPACE 1
+#define KOKKOS_HAS_SHARED_HOST_PINNED_SPACE
 #elif !defined(KOKKOS_ENABLE_OPENACC) && !defined(KOKKOS_ENABLE_OPENMPTARGET)
     using SharedHostPinnedSpace = HostSpace;
-#define KOKKOS_HAS_SHARED_HOST_PINNED_SPACE 1
+#define KOKKOS_HAS_SHARED_HOST_PINNED_SPACE
 #endif
 
 inline constexpr bool has_shared_host_pinned_space =

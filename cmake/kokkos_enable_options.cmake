@@ -26,9 +26,6 @@ KOKKOS_CFG_DEPENDS(OPTIONS COMPILER_ID)
 # Put a check in just in case people are using this option
 KOKKOS_DEPRECATED_LIST(OPTIONS ENABLE)
 
-# Set the Default for Desul Atomics usage.
-set(_DESUL_ATOMICS_DEFAULT ON)
-
 KOKKOS_ENABLE_OPTION(CUDA_RELOCATABLE_DEVICE_CODE  OFF "Whether to enable relocatable device code (RDC) for CUDA")
 KOKKOS_ENABLE_OPTION(CUDA_UVM             OFF "Whether to use unified memory (UM) for CUDA by default")
 KOKKOS_ENABLE_OPTION(CUDA_LDG_INTRINSIC   OFF "Whether to use CUDA LDG intrinsics")
@@ -62,7 +59,6 @@ KOKKOS_ENABLE_OPTION(COMPILE_AS_CMAKE_LANGUAGE OFF "Whether to use native cmake 
 KOKKOS_ENABLE_OPTION(HIP_MULTIPLE_KERNEL_INSTANTIATIONS OFF "Whether multiple kernels are instantiated at compile time - improve performance but increase compile time")
 
 # This option will go away eventually, but allows fallback to old implementation when needed.
-KOKKOS_ENABLE_OPTION(IMPL_DESUL_ATOMICS   ON  "Whether to use desul based atomics - option only during beta")
 KOKKOS_ENABLE_OPTION(DESUL_ATOMICS_EXTERNAL OFF "Whether to use an external desul installation")
 
 KOKKOS_ENABLE_OPTION(IMPL_MDSPAN OFF "Whether to enable experimental mdspan support")
@@ -74,7 +70,7 @@ mark_as_advanced(Kokkos_ENABLE_IMPL_SKIP_COMPILER_MDSPAN)
 
 IF (Trilinos_ENABLE_Kokkos AND TPL_ENABLE_CUDA)
   SET(CUDA_LAMBDA_DEFAULT ON)
-ELSEIF (KOKKOS_ENABLE_CUDA AND (KOKKOS_CXX_COMPILER_ID STREQUAL Clang))
+ELSEIF (KOKKOS_ENABLE_CUDA)
   SET(CUDA_LAMBDA_DEFAULT ON)
 ELSE()
   SET(CUDA_LAMBDA_DEFAULT OFF)
@@ -130,6 +126,23 @@ IF (KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION)
   SET(KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION ON)
 ENDIF()
 
+# Force consistency of KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE
+# and CMAKE_CUDA_SEPARABLE_COMPILATION when we are compiling
+# using the CMake CUDA language support.
+# Either one being on will turn the other one on.
+IF (KOKKOS_COMPILE_LANGUAGE STREQUAL CUDA)
+  IF (KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE)
+    IF (NOT CMAKE_CUDA_SEPARABLE_COMPILATION)
+      MESSAGE(STATUS "Setting CMAKE_CUDA_SEPARABLE_COMPILATION=ON since Kokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE is true. When compiling Kokkos with CMake language CUDA, please use CMAKE_CUDA_SEPARABLE_COMPILATION to control RDC support")
+      SET(CMAKE_CUDA_SEPARABLE_COMPILATION ON)
+    ENDIF()
+  ELSE()
+    IF (CMAKE_CUDA_SEPARABLE_COMPILATION)
+      SET(KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE ON)
+    ENDIF()
+  ENDIF()
+ENDIF()
+
 # This is known to occur with Clang 9. We would need to use nvcc as the linker
 # http://lists.llvm.org/pipermail/cfe-dev/2018-June/058296.html
 # TODO: Through great effort we can use a different linker by hacking
@@ -140,4 +153,16 @@ ENDIF()
 
 IF (KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE AND BUILD_SHARED_LIBS)
   MESSAGE(FATAL_ERROR "Relocatable device code requires static libraries.")
+ENDIF()
+
+IF(Kokkos_ENABLE_CUDA_LDG_INTRINSIC)
+  IF(KOKKOS_ENABLE_DEPRECATED_CODE_4)
+    MESSAGE(DEPRECATION "Setting Kokkos_ENABLE_CUDA_LDG_INTRINSIC is deprecated. LDG intrinsics are always enabled.")
+  ELSE()
+    MESSAGE(FATAL_ERROR "Kokkos_ENABLE_CUDA_LDG_INTRINSIC has been removed. LDG intrinsics are always enabled.")
+  ENDIF()
+ENDIF()
+
+IF(DEFINED Kokkos_ENABLE_IMPL_DESUL_ATOMICS)
+  MESSAGE(WARNING "Kokkos_ENABLE_IMPL_DESUL_ATOMICS option has been removed. Desul atomics cannot be disabled.")
 ENDIF()

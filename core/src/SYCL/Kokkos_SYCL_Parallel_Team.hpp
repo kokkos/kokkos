@@ -1,46 +1,18 @@
-/*
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 3.0
-//       Copyright (2020) National Technology & Engineering
+//                        Kokkos v. 4.0
+//       Copyright (2022) National Technology & Engineering
 //               Solutions of Sandia, LLC (NTESS).
 //
 // Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
+// See https://kokkos.org/LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-//
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-//
-// ************************************************************************
 //@HEADER
-*/
 
 #ifndef KOKKOS_SYCL_PARALLEL_TEAM_HPP
 #define KOKKOS_SYCL_PARALLEL_TEAM_HPP
@@ -332,9 +304,10 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
     return std::min({
              int(m_space.impl_internal_space_instance()->m_maxWorkgroupSize),
       // FIXME_SYCL Avoid requesting to many registers on NVIDIA GPUs.
-#if defined(KOKKOS_ARCH_KEPLER) || defined(KOKKOS_ARCH_MAXWELL) || \
-    defined(KOKKOS_ARCH_PASCAL) || defined(KOKKOS_ARCH_VOLTA) ||   \
-    defined(KOKKOS_ARCH_TURING75) || defined(KOKKOS_ARCH_AMPERE)
+#if defined(KOKKOS_ARCH_KEPLER) || defined(KOKKOS_ARCH_MAXWELL) ||  \
+    defined(KOKKOS_ARCH_PASCAL) || defined(KOKKOS_ARCH_VOLTA) ||    \
+    defined(KOKKOS_ARCH_TURING75) || defined(KOKKOS_ARCH_AMPERE) || \
+    defined(KOKKOS_ARCH_HOPPER)
                  256,
 #endif
                  max_threads_for_memory
@@ -364,9 +337,10 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
     return std::min<int>({
              int(m_space.impl_internal_space_instance()->m_maxWorkgroupSize),
       // FIXME_SYCL Avoid requesting to many registers on NVIDIA GPUs.
-#if defined(KOKKOS_ARCH_KEPLER) || defined(KOKKOS_ARCH_MAXWELL) || \
-    defined(KOKKOS_ARCH_PASCAL) || defined(KOKKOS_ARCH_VOLTA) ||   \
-    defined(KOKKOS_ARCH_TURING75) || defined(KOKKOS_ARCH_AMPERE)
+#if defined(KOKKOS_ARCH_KEPLER) || defined(KOKKOS_ARCH_MAXWELL) ||  \
+    defined(KOKKOS_ARCH_PASCAL) || defined(KOKKOS_ARCH_VOLTA) ||    \
+    defined(KOKKOS_ARCH_TURING75) || defined(KOKKOS_ARCH_AMPERE) || \
+    defined(KOKKOS_ARCH_HOPPER)
                  256,
 #endif
                  max_threads_for_memory
@@ -424,12 +398,10 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     auto parallel_for_event = q.submit([&](sycl::handler& cgh) {
       // FIXME_SYCL accessors seem to need a size greater than zero at least for
       // host queues
-      sycl::accessor<char, 1, sycl::access::mode::read_write,
-                     sycl::access::target::local>
-          team_scratch_memory_L0(
-              sycl::range<1>(
-                  std::max(m_scratch_size[0] + m_shmem_begin, size_t(1))),
-              cgh);
+      sycl::local_accessor<char, 1> team_scratch_memory_L0(
+          sycl::range<1>(
+              std::max(m_scratch_size[0] + m_shmem_begin, size_t(1))),
+          cgh);
 
       // Avoid capturing *this since it might not be trivially copyable
       const auto shmem_begin       = m_shmem_begin;
@@ -458,8 +430,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
       auto max_sg_size =
           kernel
               .get_info<sycl::info::kernel_device_specific::max_sub_group_size>(
-                  q.get_device(),
-                  sycl::range<3>(m_team_size, m_vector_size, 1));
+                  q.get_device());
       auto final_vector_size = std::min<int>(m_vector_size, max_sg_size);
       // FIXME_SYCL For some reason, explicitly enforcing the kernel bundle to
       // be used gives a runtime error.
@@ -618,12 +589,10 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
       auto parallel_reduce_event = q.submit([&](sycl::handler& cgh) {
         // FIXME_SYCL accessors seem to need a size greater than zero at least
         // for host queues
-        sycl::accessor<char, 1, sycl::access::mode::read_write,
-                       sycl::access::target::local>
-            team_scratch_memory_L0(
-                sycl::range<1>(
-                    std::max(m_scratch_size[0] + m_shmem_begin, size_t(1))),
-                cgh);
+        sycl::local_accessor<char, 1> team_scratch_memory_L0(
+            sycl::range<1>(
+                std::max(m_scratch_size[0] + m_shmem_begin, size_t(1))),
+            cgh);
 
         // Avoid capturing *this since it might not be trivially copyable
         const auto shmem_begin       = m_shmem_begin;
@@ -671,12 +640,10 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
         // FIXME_SYCL accessors seem to need a size greater than zero at least
         // for host queues
-        sycl::accessor<char, 1, sycl::access::mode::read_write,
-                       sycl::access::target::local>
-            team_scratch_memory_L0(
-                sycl::range<1>(
-                    std::max(m_scratch_size[0] + m_shmem_begin, size_t(1))),
-                cgh);
+        sycl::local_accessor<char, 1> team_scratch_memory_L0(
+            sycl::range<1>(
+                std::max(m_scratch_size[0] + m_shmem_begin, size_t(1))),
+            cgh);
 
         // Avoid capturing *this since it might not be trivially copyable
         const auto shmem_begin       = m_shmem_begin;
@@ -684,9 +651,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         sycl::device_ptr<char> const global_scratch_ptr = m_global_scratch_ptr;
 
         auto team_reduction_factory =
-            [&](sycl::accessor<value_type, 1, sycl::access::mode::read_write,
-                               sycl::access::target::local>
-                    local_mem,
+            [&](sycl::local_accessor<value_type, 1> local_mem,
                 sycl::device_ptr<value_type> results_ptr) {
               sycl::global_ptr<value_type> device_accessible_result_ptr =
                   m_result_ptr_device_accessible ? m_result_ptr : nullptr;
@@ -819,7 +784,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         }();
         auto max_sg_size = kernel.get_info<
             sycl::info::kernel_device_specific::max_sub_group_size>(
-            q.get_device(), sycl::range<3>(m_team_size, m_vector_size, 1));
+            q.get_device());
         auto final_vector_size = std::min<int>(m_vector_size, max_sg_size);
         // FIXME_SYCL For some reason, explicitly enforcing the kernel bundle to
         // be used gives a runtime error.
@@ -828,12 +793,11 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
         auto wgroup_size = m_team_size * final_vector_size;
         std::size_t size = std::size_t(m_league_size) * wgroup_size;
-        sycl::accessor<value_type, 1, sycl::access::mode::read_write,
-                       sycl::access::target::local>
-            local_mem(sycl::range<1>(wgroup_size) * std::max(value_count, 1u) +
-                          (sizeof(unsigned int) + sizeof(value_type) - 1) /
-                              sizeof(value_type),
-                      cgh);
+        sycl::local_accessor<value_type, 1> local_mem(
+            sycl::range<1>(wgroup_size) * std::max(value_count, 1u) +
+                (sizeof(unsigned int) + sizeof(value_type) - 1) /
+                    sizeof(value_type),
+            cgh);
 
         const auto init_size =
             std::max<std::size_t>((size + wgroup_size - 1) / wgroup_size, 1);

@@ -1,46 +1,18 @@
-/*
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 3.0
-//       Copyright (2020) National Technology & Engineering
+//                        Kokkos v. 4.0
+//       Copyright (2022) National Technology & Engineering
 //               Solutions of Sandia, LLC (NTESS).
 //
 // Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
+// See https://kokkos.org/LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-//
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-//
-// ************************************************************************
 //@HEADER
-*/
 
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #define KOKKOS_IMPL_PUBLIC_INCLUDE
@@ -48,7 +20,7 @@
 
 #include <Kokkos_Concepts.hpp>
 #include <SYCL/Kokkos_SYCL_Instance.hpp>
-#include <Kokkos_SYCL.hpp>
+#include <SYCL/Kokkos_SYCL.hpp>
 #include <Kokkos_HostSpace.hpp>
 #include <Kokkos_Serial.hpp>
 #include <Kokkos_Core.hpp>
@@ -93,9 +65,13 @@ SYCL::SYCL(const sycl::queue& stream)
   m_space_instance->initialize(stream);
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 int SYCL::concurrency() {
   return Impl::SYCLInternal::singleton().m_maxConcurrency;
 }
+#else
+int SYCL::concurrency() const { return m_space_instance->m_maxConcurrency; }
+#endif
 
 const char* SYCL::name() { return "SYCL"; }
 
@@ -112,6 +88,11 @@ void SYCL::print_configuration(std::ostream& os, bool verbose) const {
   os << "\nRuntime Configuration:\n";
 
   os << "macro  KOKKOS_ENABLE_SYCL : defined\n";
+#ifdef KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED
+  os << "macro  KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED : defined\n";
+#else
+  os << "macro  KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED : undefined\n";
+#endif
   if (verbose)
     SYCL::impl_sycl_info(os, m_space_instance->m_queue->get_device());
 }
@@ -151,7 +132,7 @@ void SYCL::impl_initialize(InitializationSettings const& settings) {
 #if !defined(KOKKOS_ARCH_INTEL_GPU) && !defined(KOKKOS_ARCH_KEPLER) && \
     !defined(KOKKOS_ARCH_MAXWELL) && !defined(KOKKOS_ARCH_PASCAL) &&   \
     !defined(KOKKOS_ARCH_VOLTA) && !defined(KOKKOS_ARCH_TURING75) &&   \
-    !defined(KOKKOS_ARCH_AMPERE)
+    !defined(KOKKOS_ARCH_AMPERE) && !defined(KOKKOS_ARCH_HOPPER)
   if (!settings.has_device_id() && gpu_devices.empty()) {
     Impl::SYCLInternal::singleton().initialize(sycl::device());
     Impl::SYCLInternal::m_syclDev = 0;
@@ -168,7 +149,6 @@ std::ostream& SYCL::impl_sycl_info(std::ostream& os,
   using namespace sycl::info;
   return os << "Name: " << device.get_info<device::name>()
             << "\nDriver Version: " << device.get_info<device::driver_version>()
-            << "\nIs Host: " << device.is_host()
             << "\nIs CPU: " << device.is_cpu()
             << "\nIs GPU: " << device.is_gpu()
             << "\nIs Accelerator: " << device.is_accelerator()
@@ -208,7 +188,6 @@ std::ostream& SYCL::impl_sycl_info(std::ostream& os,
             << "\nNative Vector Width Half: "
             << device.get_info<device::native_vector_width_half>()
             << "\nAddress Bits: " << device.get_info<device::address_bits>()
-            << "\nImage Support: " << device.get_info<device::image_support>()
             << "\nMax Mem Alloc Size: "
             << device.get_info<device::max_mem_alloc_size>()
             << "\nMax Read Image Args: "
@@ -241,26 +220,11 @@ std::ostream& SYCL::impl_sycl_info(std::ostream& os,
             << "\nLocal Mem Size: " << device.get_info<device::local_mem_size>()
             << "\nError Correction Support: "
             << device.get_info<device::error_correction_support>()
-            << "\nHost Unified Memory: "
-            << device.get_info<device::host_unified_memory>()
             << "\nProfiling Timer Resolution: "
             << device.get_info<device::profiling_timer_resolution>()
-            << "\nIs Endian Little: "
-            << device.get_info<device::is_endian_little>()
             << "\nIs Available: " << device.get_info<device::is_available>()
-            << "\nIs Compiler Available: "
-            << device.get_info<device::is_compiler_available>()
-            << "\nIs Linker Available: "
-            << device.get_info<device::is_linker_available>()
-            << "\nQueue Profiling: "
-            << device.get_info<device::queue_profiling>()
             << "\nVendor: " << device.get_info<device::vendor>()
-            << "\nProfile: " << device.get_info<device::profile>()
             << "\nVersion: " << device.get_info<device::version>()
-            << "\nPrintf Buffer Size: "
-            << device.get_info<device::printf_buffer_size>()
-            << "\nPreferred Interop User Sync: "
-            << device.get_info<device::preferred_interop_user_sync>()
             << "\nPartition Max Sub Devices: "
             << device.get_info<device::partition_max_sub_devices>()
             << "\nReference Count: "

@@ -1,55 +1,36 @@
-/*
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 3.0
-//       Copyright (2020) National Technology & Engineering
+//                        Kokkos v. 4.0
+//       Copyright (2022) National Technology & Engineering
 //               Solutions of Sandia, LLC (NTESS).
 //
 // Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
+// See https://kokkos.org/LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-//
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-//
-// ************************************************************************
 //@HEADER
-*/
 
 #ifndef KOKKOS_CORE_PERFTEST_BENCHMARK_CONTEXT_HPP
 #define KOKKOS_CORE_PERFTEST_BENCHMARK_CONTEXT_HPP
 
 #include <string>
 
+// Avoid deprecation warning for ICC
+#ifdef __INTEL_COMPILER
+#pragma warning(push)
+#pragma warning(disable : 1786)
 #include <benchmark/benchmark.h>
+#pragma warning(pop)
+#else
+#include <benchmark/benchmark.h>
+#endif
 
 #include <Kokkos_Core.hpp>
+#include <Kokkos_Version_Info.hpp>
 
 namespace KokkosBenchmark {
 
@@ -88,10 +69,27 @@ void add_kokkos_configuration(bool verbose) {
   }
 }
 
+/// \brief Add all data related to git to benchmark context
+void add_git_info() {
+  if (!Kokkos::Impl::GIT_BRANCH.empty()) {
+    benchmark::AddCustomContext("GIT_BRANCH", Kokkos::Impl::GIT_BRANCH);
+    benchmark::AddCustomContext("GIT_COMMIT_HASH",
+                                Kokkos::Impl::GIT_COMMIT_HASH);
+    benchmark::AddCustomContext("GIT_CLEAN_STATUS",
+                                Kokkos::Impl::GIT_CLEAN_STATUS);
+    benchmark::AddCustomContext("GIT_COMMIT_DESCRIPTION",
+                                Kokkos::Impl::GIT_COMMIT_DESCRIPTION);
+    benchmark::AddCustomContext("GIT_COMMIT_DATE",
+                                Kokkos::Impl::GIT_COMMIT_DATE);
+  }
+}
+
 /// \brief Gather all context information and add it to benchmark context data
 void add_benchmark_context(bool verbose = false) {
   // Add Kokkos configuration to benchmark context data
   add_kokkos_configuration(verbose);
+  // Add git information to benchmark context data
+  add_git_info();
 }
 
 }  // namespace KokkosBenchmark

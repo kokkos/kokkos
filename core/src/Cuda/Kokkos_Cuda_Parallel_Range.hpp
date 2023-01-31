@@ -1,46 +1,18 @@
-/*
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 3.0
-//       Copyright (2020) National Technology & Engineering
+//                        Kokkos v. 4.0
+//       Copyright (2022) National Technology & Engineering
 //               Solutions of Sandia, LLC (NTESS).
 //
 // Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
+// See https://kokkos.org/LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-//
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-//
-// ************************************************************************
 //@HEADER
-*/
 
 #ifndef KOKKOS_CUDA_PARALLEL_RANGE_HPP
 #define KOKKOS_CUDA_PARALLEL_RANGE_HPP
@@ -135,8 +107,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
 #endif
 
     CudaParallelLaunch<ParallelFor, LaunchBounds>(
-        *this, grid, block, 0, m_policy.space().impl_internal_space_instance(),
-        false);
+        *this, grid, block, 0, m_policy.space().impl_internal_space_instance());
   }
 
   ParallelFor(const FunctorType& arg_functor, const Policy& arg_policy)
@@ -373,8 +344,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
       CudaParallelLaunch<ParallelReduce, LaunchBounds>(
           *this, grid, block, shmem,
-          m_policy.space().impl_internal_space_instance(),
-          false);  // copy to device and execute
+          m_policy.space()
+              .impl_internal_space_instance());  // copy to device and execute
 
       if (!m_result_ptr_device_accessible) {
         if (m_result_ptr) {
@@ -463,8 +434,24 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
  public:
   using pointer_type   = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
+  using value_type     = typename Analysis::value_type;
   using functor_type   = FunctorType;
   using size_type      = Cuda::size_type;
+  // Conditionally set word_size_type to int16_t or int8_t if value_type is
+  // smaller than int32_t (Kokkos::Cuda::size_type)
+  // word_size_type is used to determine the word count, shared memory buffer
+  // size, and global memory buffer size before the scan is performed.
+  // Within the scan, the word count is recomputed based on word_size_type
+  // and when calculating indexes into the shared/global memory buffers for
+  // performing the scan, word_size_type is used again.
+  // For scalars > 4 bytes in size, indexing into shared/global memory relies
+  // on the block and grid dimensions to ensure that we index at the correct
+  // offset rather than at every 4 byte word; such that, when the join is
+  // performed, we have the correct data that was copied over in chunks of 4
+  // bytes.
+  using word_size_type = std::conditional_t<
+      sizeof(value_type) < sizeof(size_type),
+      std::conditional_t<sizeof(value_type) == 2, int16_t, int8_t>, size_type>;
 
  private:
   // Algorithmic constraints:
@@ -475,7 +462,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
 
   const FunctorType m_functor;
   const Policy m_policy;
-  size_type* m_scratch_space;
+  word_size_type* m_scratch_space;
   size_type* m_scratch_flags;
   size_type m_final;
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
@@ -499,12 +486,12 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
   __device__ inline void initial() const {
     typename Analysis::Reducer final_reducer(&m_functor);
 
-    const integral_nonzero_constant<size_type, Analysis::StaticValueSize /
-                                                   sizeof(size_type)>
-        word_count(Analysis::value_size(m_functor) / sizeof(size_type));
+    const integral_nonzero_constant<word_size_type, Analysis::StaticValueSize /
+                                                        sizeof(word_size_type)>
+        word_count(Analysis::value_size(m_functor) / sizeof(word_size_type));
 
-    size_type* const shared_value =
-        kokkos_impl_cuda_shared_memory<size_type>() +
+    word_size_type* const shared_value =
+        kokkos_impl_cuda_shared_memory<word_size_type>() +
         word_count.value * threadIdx.y;
 
     final_reducer.init(reinterpret_cast<pointer_type>(shared_value));
@@ -530,7 +517,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
     // gridDim.x
     cuda_single_inter_block_reduce_scan<true>(
         final_reducer, blockIdx.x, gridDim.x,
-        kokkos_impl_cuda_shared_memory<size_type>(), m_scratch_space,
+        kokkos_impl_cuda_shared_memory<word_size_type>(), m_scratch_space,
         m_scratch_flags);
   }
 
@@ -539,21 +526,22 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
   __device__ inline void final() const {
     typename Analysis::Reducer final_reducer(&m_functor);
 
-    const integral_nonzero_constant<size_type, Analysis::StaticValueSize /
-                                                   sizeof(size_type)>
-        word_count(Analysis::value_size(m_functor) / sizeof(size_type));
+    const integral_nonzero_constant<word_size_type, Analysis::StaticValueSize /
+                                                        sizeof(word_size_type)>
+        word_count(Analysis::value_size(m_functor) / sizeof(word_size_type));
 
     // Use shared memory as an exclusive scan: { 0 , value[0] , value[1] ,
     // value[2] , ... }
-    size_type* const shared_data = kokkos_impl_cuda_shared_memory<size_type>();
-    size_type* const shared_prefix =
+    word_size_type* const shared_data =
+        kokkos_impl_cuda_shared_memory<word_size_type>();
+    word_size_type* const shared_prefix =
         shared_data + word_count.value * threadIdx.y;
-    size_type* const shared_accum =
+    word_size_type* const shared_accum =
         shared_data + word_count.value * (blockDim.y + 1);
 
     // Starting value for this thread block is the previous block's total.
     if (blockIdx.x) {
-      size_type* const block_total =
+      word_size_type* const block_total =
           m_scratch_space + word_count.value * (blockIdx.x - 1);
       for (unsigned i = threadIdx.y; i < word_count.value; ++i) {
         shared_accum[i] = block_total[i];
@@ -600,7 +588,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
           typename Analysis::pointer_type(shared_data + word_count.value));
 
       {
-        size_type* const block_total =
+        word_size_type* const block_total =
             shared_data + word_count.value * blockDim.y;
         for (unsigned i = threadIdx.y; i < word_count.value; ++i) {
           shared_accum[i] = block_total[i];
@@ -688,8 +676,9 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
       // How many block are really needed for this much work:
       const int grid_x = (nwork + work_per_block - 1) / work_per_block;
 
-      m_scratch_space = cuda_internal_scratch_space(
-          m_policy.space(), Analysis::value_size(m_functor) * grid_x);
+      m_scratch_space =
+          reinterpret_cast<word_size_type*>(cuda_internal_scratch_space(
+              m_policy.space(), Analysis::value_size(m_functor) * grid_x));
       m_scratch_flags =
           cuda_internal_scratch_flags(m_policy.space(), sizeof(size_type) * 1);
 
@@ -706,16 +695,16 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
         m_final = false;
         CudaParallelLaunch<ParallelScan, LaunchBounds>(
             *this, grid, block, shmem,
-            m_policy.space().impl_internal_space_instance(),
-            false);  // copy to device and execute
+            m_policy.space()
+                .impl_internal_space_instance());  // copy to device and execute
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
       }
 #endif
       m_final = true;
       CudaParallelLaunch<ParallelScan, LaunchBounds>(
           *this, grid, block, shmem,
-          m_policy.space().impl_internal_space_instance(),
-          false);  // copy to device and execute
+          m_policy.space()
+              .impl_internal_space_instance());  // copy to device and execute
     }
   }
 
@@ -755,6 +744,21 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   using reference_type = typename Analysis::reference_type;
   using functor_type   = FunctorType;
   using size_type      = Cuda::size_type;
+  // Conditionally set word_size_type to int16_t or int8_t if value_type is
+  // smaller than int32_t (Kokkos::Cuda::size_type)
+  // word_size_type is used to determine the word count, shared memory buffer
+  // size, and global memory buffer size before the scan is performed.
+  // Within the scan, the word count is recomputed based on word_size_type
+  // and when calculating indexes into the shared/global memory buffers for
+  // performing the scan, word_size_type is used again.
+  // For scalars > 4 bytes in size, indexing into shared/global memory relies
+  // on the block and grid dimensions to ensure that we index at the correct
+  // offset rather than at every 4 byte word; such that, when the join is
+  // performed, we have the correct data that was copied over in chunks of 4
+  // bytes.
+  using word_size_type = std::conditional_t<
+      sizeof(value_type) < sizeof(size_type),
+      std::conditional_t<sizeof(value_type) == 2, int16_t, int8_t>, size_type>;
 
  private:
   // Algorithmic constraints:
@@ -765,7 +769,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
 
   const FunctorType m_functor;
   const Policy m_policy;
-  size_type* m_scratch_space;
+  word_size_type* m_scratch_space;
   size_type* m_scratch_flags;
   size_type m_final;
   const pointer_type m_result_ptr;
@@ -792,12 +796,12 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   __device__ inline void initial() const {
     typename Analysis::Reducer final_reducer(&m_functor);
 
-    const integral_nonzero_constant<size_type, Analysis::StaticValueSize /
-                                                   sizeof(size_type)>
-        word_count(Analysis::value_size(m_functor) / sizeof(size_type));
+    const integral_nonzero_constant<word_size_type, Analysis::StaticValueSize /
+                                                        sizeof(word_size_type)>
+        word_count(Analysis::value_size(m_functor) / sizeof(word_size_type));
 
-    size_type* const shared_value =
-        kokkos_impl_cuda_shared_memory<size_type>() +
+    word_size_type* const shared_value =
+        kokkos_impl_cuda_shared_memory<word_size_type>() +
         word_count.value * threadIdx.y;
 
     final_reducer.init(reinterpret_cast<pointer_type>(shared_value));
@@ -823,7 +827,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
     // gridDim.x
     cuda_single_inter_block_reduce_scan<true>(
         final_reducer, blockIdx.x, gridDim.x,
-        kokkos_impl_cuda_shared_memory<size_type>(), m_scratch_space,
+        kokkos_impl_cuda_shared_memory<word_size_type>(), m_scratch_space,
         m_scratch_flags);
   }
 
@@ -832,21 +836,22 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   __device__ inline void final() const {
     typename Analysis::Reducer final_reducer(&m_functor);
 
-    const integral_nonzero_constant<size_type, Analysis::StaticValueSize /
-                                                   sizeof(size_type)>
-        word_count(Analysis::value_size(m_functor) / sizeof(size_type));
+    const integral_nonzero_constant<word_size_type, Analysis::StaticValueSize /
+                                                        sizeof(word_size_type)>
+        word_count(Analysis::value_size(m_functor) / sizeof(word_size_type));
 
     // Use shared memory as an exclusive scan: { 0 , value[0] , value[1] ,
     // value[2] , ... }
-    size_type* const shared_data = kokkos_impl_cuda_shared_memory<size_type>();
-    size_type* const shared_prefix =
+    word_size_type* const shared_data =
+        kokkos_impl_cuda_shared_memory<word_size_type>();
+    word_size_type* const shared_prefix =
         shared_data + word_count.value * threadIdx.y;
-    size_type* const shared_accum =
+    word_size_type* const shared_accum =
         shared_data + word_count.value * (blockDim.y + 1);
 
     // Starting value for this thread block is the previous block's total.
     if (blockIdx.x) {
-      size_type* const block_total =
+      word_size_type* const block_total =
           m_scratch_space + word_count.value * (blockIdx.x - 1);
       for (unsigned i = threadIdx.y; i < word_count.value; ++i) {
         shared_accum[i] = block_total[i];
@@ -895,7 +900,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
           typename Analysis::pointer_type(shared_data + word_count.value));
 
       {
-        size_type* const block_total =
+        word_size_type* const block_total =
             shared_data + word_count.value * blockDim.y;
         for (unsigned i = threadIdx.y; i < word_count.value; ++i) {
           shared_accum[i] = block_total[i];
@@ -987,8 +992,9 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
       // How many block are really needed for this much work:
       const int grid_x = (nwork + work_per_block - 1) / work_per_block;
 
-      m_scratch_space = cuda_internal_scratch_space(
-          m_policy.space(), Analysis::value_size(m_functor) * grid_x);
+      m_scratch_space =
+          reinterpret_cast<word_size_type*>(cuda_internal_scratch_space(
+              m_policy.space(), Analysis::value_size(m_functor) * grid_x));
       m_scratch_flags =
           cuda_internal_scratch_flags(m_policy.space(), sizeof(size_type) * 1);
 
@@ -1006,14 +1012,14 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
         m_final = false;
         CudaParallelLaunch<ParallelScanWithTotal, LaunchBounds>(
             *this, grid, block, shmem,
-            m_policy.space().impl_internal_space_instance(),
-            false);  // copy to device and execute
+            m_policy.space()
+                .impl_internal_space_instance());  // copy to device and execute
       }
       m_final = true;
       CudaParallelLaunch<ParallelScanWithTotal, LaunchBounds>(
           *this, grid, block, shmem,
-          m_policy.space().impl_internal_space_instance(),
-          false);  // copy to device and execute
+          m_policy.space()
+              .impl_internal_space_instance());  // copy to device and execute
 
       const int size = Analysis::value_size(m_functor);
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
@@ -1026,7 +1032,8 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
         if (!m_result_ptr_device_accessible)
           DeepCopy<HostSpace, CudaSpace, Cuda>(
               m_policy.space(), m_result_ptr,
-              m_scratch_space + (grid_x - 1) * size / sizeof(int), size);
+              m_scratch_space + (grid_x - 1) * size / sizeof(word_size_type),
+              size);
       }
     }
   }

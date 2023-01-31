@@ -1,3 +1,19 @@
+//@HEADER
+// ************************************************************************
+//
+//                        Kokkos v. 4.0
+//       Copyright (2022) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
+//
+// Under the terms of Contract DE-NA0003525 with NTESS,
+// the U.S. Government retains certain rights in this software.
+//
+// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
+// See https://kokkos.org/LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+//
+//@HEADER
+
 #ifndef KOKKOS_CUDA_INSTANCE_HPP_
 #define KOKKOS_CUDA_INSTANCE_HPP_
 
@@ -93,12 +109,12 @@ class CudaInternal {
   inline static unsigned m_maxWarpCount             = 0;
   inline static std::array<size_type, 3> m_maxBlock = {0, 0, 0};
   inline static unsigned m_maxSharedWords           = 0;
-  inline static uint32_t m_maxConcurrency           = 0;
   inline static int m_shmemPerSM                    = 0;
   inline static int m_maxShmemPerBlock              = 0;
   inline static int m_maxBlocksPerSM                = 0;
   inline static int m_maxThreadsPerSM               = 0;
   inline static int m_maxThreadsPerBlock            = 0;
+  static int concurrency();
 
   inline static cudaDeviceProp m_deviceProp;
 
@@ -122,7 +138,8 @@ class CudaInternal {
   mutable int64_t m_team_scratch_current_size[10];
   mutable void* m_team_scratch_ptr[10];
   mutable std::atomic_int m_team_scratch_pool[10];
-  std::int32_t* m_scratch_locks;
+  int32_t* m_scratch_locks;
+  size_t m_num_scratch_locks;
 
   bool was_initialized = false;
   bool was_finalized   = false;
@@ -209,11 +226,9 @@ inline void create_Cuda_instances(std::vector<Cuda>& instances) {
 
 template <class... Args>
 std::vector<Cuda> partition_space(const Cuda&, Args...) {
-#ifdef __cpp_fold_expressions
   static_assert(
       (... && std::is_arithmetic_v<Args>),
       "Kokkos Error: partitioning arguments must be integers or floats");
-#endif
   std::vector<Cuda> instances(sizeof...(Args));
   Impl::create_Cuda_instances(instances);
   return instances;

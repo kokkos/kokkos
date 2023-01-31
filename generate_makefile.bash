@@ -70,8 +70,6 @@ get_kokkos_cuda_option_list() {
         CUDA_OPT_NAME=CUDA_RELOCATABLE_DEVICE_CODE
      elif  [ "${CUDA_}" == "force_uvm" ]; then
         CUDA_OPT_NAME=CUDA_UVM
-     elif  [ "${CUDA_}" == "use_ldg" ]; then
-        CUDA_OPT_NAME=CUDA_LDG_INTRINSIC
      else
         echo "${CUDA_} is not a valid cuda options..."
      fi
@@ -159,10 +157,10 @@ display_help_text() {
       echo "                 ZEN2            = AMD Zen2-Core CPU"
       echo "                 ZEN3            = AMD Zen3-Core CPU"
       echo "               [AMD: GPU]"
-      echo "                 VEGA900         = AMD GPU MI25 GFX900"
       echo "                 VEGA906         = AMD GPU MI50/MI60 GFX906"
       echo "                 VEGA908         = AMD GPU MI100 GFX908"
       echo "                 VEGA90A         = AMD GPU MI200 GFX90A"
+      echo "                 NAVI1030        = AMD GPU V620/W6800 GFX1030"
       echo "               [ARM]"
       echo "                 ARMV80          = ARMv8.0 Compatible CPU"
       echo "                 ARMV81          = ARMv8.1 Compatible CPU"
@@ -217,7 +215,7 @@ display_help_text() {
       echo "                                flags via KOKKOS_CXXFLAGS (such as -fopenmp,"
       echo "                                -std=c++17, etc.)."
       echo "--cxxstandard=[FLAGS]         Set CMAKE_CXX_STANDARD for library build and test"
-      echo "                                c++17 (default), c++1z, c++20, c++2a, c++23, c++2b"
+      echo "                                17 (default), 1z, 20, 2a, 23, 2b"
       echo "--ldflags=[FLAGS]             Overwrite LDFLAGS for library build and test"
       echo "                                build. This will still set certain required"
       echo "                                flags via KOKKOS_LDFLAGS (such as -fopenmp,"

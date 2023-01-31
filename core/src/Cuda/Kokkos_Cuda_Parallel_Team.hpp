@@ -1,46 +1,18 @@
-/*
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 3.0
-//       Copyright (2020) National Technology & Engineering
+//                        Kokkos v. 4.0
+//       Copyright (2022) National Technology & Engineering
 //               Solutions of Sandia, LLC (NTESS).
 //
 // Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
+// See https://kokkos.org/LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-//
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-//
-// ************************************************************************
 //@HEADER
-*/
 
 #ifndef KOKKOS_CUDA_PARALLEL_TEAM_HPP
 #define KOKKOS_CUDA_PARALLEL_TEAM_HPP
@@ -59,7 +31,6 @@
 #include <Cuda/Kokkos_Cuda_KernelLaunch.hpp>
 #include <Cuda/Kokkos_Cuda_ReduceScan.hpp>
 #include <Cuda/Kokkos_Cuda_BlockSize_Deduction.hpp>
-#include <Cuda/Kokkos_Cuda_Locks.hpp>
 #include <Cuda/Kokkos_Cuda_Team.hpp>
 #include <Kokkos_MinMaxClamp.hpp>
 #include <Kokkos_Vectorization.hpp>
@@ -226,12 +197,21 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
   }
 
   inline static int scratch_size_max(int level) {
-    return (
-        level == 0 ? 1024 * 40 :  // 48kB is the max for CUDA, but we need some
-                                  // for team_member.reduce etc.
-            20 * 1024 *
-                1024);  // arbitrarily setting this to 20MB, for a Volta V100
-                        // that would give us about 3.2GB for 2 teams per SM
+    // Cuda Teams use (team_size + 2)*sizeof(double) shared memory for team
+    // reductions. They also use one int64_t in static shared memory for a
+    // shared ID. Furthermore, they use additional scratch memory in some
+    // reduction scenarios, which depend on the size of the value_type and is
+    // NOT captured here.
+    constexpr size_t max_possible_team_size = 1024;
+    constexpr size_t max_reserved_shared_mem_per_team =
+        (max_possible_team_size + 2) * sizeof(double) + sizeof(int64_t);
+    // arbitrarily setting level 1 scratch limit to 20MB, for a
+    // Volta V100 that would give us about 3.2GB for 2 teams per SM
+    constexpr size_t max_l1_scratch_size = 20 * 1024 * 1024;
+
+    size_t max_shmem = Cuda().cuda_device_prop().sharedMemPerBlock;
+    return (level == 0 ? max_shmem - max_reserved_shared_mem_per_team
+                       : max_l1_scratch_size);
   }
 
   //----------------------------------------
@@ -427,14 +407,15 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
 };
 
 __device__ inline int64_t cuda_get_scratch_index(Cuda::size_type league_size,
-                                                 int32_t* scratch_locks) {
+                                                 int32_t* scratch_locks,
+                                                 size_t num_scratch_locks) {
   int64_t threadid = 0;
   __shared__ int64_t base_thread_id;
   if (threadIdx.x == 0 && threadIdx.y == 0) {
     int64_t const wraparound_len = Kokkos::max(
-        int64_t(1), Kokkos::min(int64_t(league_size),
-                                (int64_t(g_device_cuda_lock_arrays.n)) /
-                                    (blockDim.x * blockDim.y)));
+        int64_t(1),
+        Kokkos::min(int64_t(league_size),
+                    int64_t(num_scratch_locks) / (blockDim.x * blockDim.y)));
     threadid = (blockIdx.x * blockDim.z + threadIdx.z) % wraparound_len;
     threadid *= blockDim.x * blockDim.y;
     int done = 0;
@@ -496,6 +477,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   size_t m_scratch_size[2];
   int m_scratch_pool_id = -1;
   int32_t* m_scratch_locks;
+  size_t m_num_scratch_locks;
 
   template <class TagType>
   __device__ inline std::enable_if_t<std::is_void<TagType>::value> exec_team(
@@ -516,7 +498,8 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     // Iterate this block through the league
     int64_t threadid = 0;
     if (m_scratch_size[1] > 0) {
-      threadid = cuda_get_scratch_index(m_league_size, m_scratch_locks);
+      threadid = cuda_get_scratch_index(m_league_size, m_scratch_locks,
+                                        m_num_scratch_locks);
     }
 
     const int int_league_size = (int)m_league_size;
@@ -547,8 +530,8 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     CudaParallelLaunch<ParallelFor, LaunchBounds>(
         *this, grid, block, shmem_size_total,
-        m_policy.space().impl_internal_space_instance(),
-        true);  // copy to device and execute
+        m_policy.space()
+            .impl_internal_space_instance());  // copy to device and execute
   }
 
   ParallelFor(const FunctorType& arg_functor, const Policy& arg_policy)
@@ -590,7 +573,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
           m_scratch_pool_id,
           static_cast<std::int64_t>(m_scratch_size[1]) *
               (std::min(
-                  static_cast<std::int64_t>(Cuda::concurrency() /
+                  static_cast<std::int64_t>(Cuda().concurrency() /
                                             (m_team_size * m_vector_size)),
                   static_cast<std::int64_t>(m_league_size))));
     }
@@ -687,6 +670,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   size_t m_scratch_size[2];
   int m_scratch_pool_id = -1;
   int32_t* m_scratch_locks;
+  size_t m_num_scratch_locks;
   const size_type m_league_size;
   int m_team_size;
   const size_type m_vector_size;
@@ -709,7 +693,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   __device__ inline void operator()() const {
     int64_t threadid = 0;
     if (m_scratch_size[1] > 0) {
-      threadid = cuda_get_scratch_index(m_league_size, m_scratch_locks);
+      threadid = cuda_get_scratch_index(m_league_size, m_scratch_locks,
+                                        m_num_scratch_locks);
     }
 
     using ReductionTag = std::conditional_t<UseShflReduction, ShflReductionTag,
@@ -866,8 +851,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
       CudaParallelLaunch<ParallelReduce, LaunchBounds>(
           *this, grid, block, shmem_size_total,
-          m_policy.space().impl_internal_space_instance(),
-          true);  // copy to device and execute
+          m_policy.space()
+              .impl_internal_space_instance());  // copy to device and execute
 
       if (!m_result_ptr_device_accessible) {
         m_policy.space().fence(
@@ -945,9 +930,10 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     m_shmem_size =
         m_policy.scratch_size(0, m_team_size) +
         FunctorTeamShmemSize<FunctorType>::value(arg_functor, m_team_size);
-    m_scratch_size[0] = m_shmem_size;
-    m_scratch_size[1] = m_policy.scratch_size(1, m_team_size);
-    m_scratch_locks   = internal_space_instance->m_scratch_locks;
+    m_scratch_size[0]   = m_shmem_size;
+    m_scratch_size[1]   = m_policy.scratch_size(1, m_team_size);
+    m_scratch_locks     = internal_space_instance->m_scratch_locks;
+    m_num_scratch_locks = internal_space_instance->m_num_scratch_locks;
     if (m_team_size <= 0) {
       m_scratch_ptr[1] = nullptr;
     } else {
@@ -956,7 +942,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
           m_scratch_pool_id,
           static_cast<std::int64_t>(m_scratch_size[1]) *
               (std::min(
-                  static_cast<std::int64_t>(Cuda::concurrency() /
+                  static_cast<std::int64_t>(Cuda().concurrency() /
                                             (m_team_size * m_vector_size)),
                   static_cast<std::int64_t>(m_league_size))));
     }
@@ -1050,9 +1036,10 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     m_shmem_size =
         m_policy.scratch_size(0, m_team_size) +
         FunctorTeamShmemSize<FunctorType>::value(arg_functor, m_team_size);
-    m_scratch_size[0] = m_shmem_size;
-    m_scratch_size[1] = m_policy.scratch_size(1, m_team_size);
-    m_scratch_locks   = internal_space_instance->m_scratch_locks;
+    m_scratch_size[0]   = m_shmem_size;
+    m_scratch_size[1]   = m_policy.scratch_size(1, m_team_size);
+    m_scratch_locks     = internal_space_instance->m_scratch_locks;
+    m_num_scratch_locks = internal_space_instance->m_num_scratch_locks;
     if (m_team_size <= 0) {
       m_scratch_ptr[1] = nullptr;
     } else {
@@ -1061,7 +1048,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
           m_scratch_pool_id,
           static_cast<std::int64_t>(m_scratch_size[1]) *
               (std::min(
-                  static_cast<std::int64_t>(Cuda::concurrency() /
+                  static_cast<std::int64_t>(Cuda().concurrency() /
                                             (m_team_size * m_vector_size)),
                   static_cast<std::int64_t>(m_league_size))));
     }

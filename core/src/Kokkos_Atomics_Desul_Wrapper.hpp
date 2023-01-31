@@ -1,3 +1,18 @@
+//@HEADER
+// ************************************************************************
+//
+//                        Kokkos v. 4.0
+//       Copyright (2022) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
+//
+// Under the terms of Contract DE-NA0003525 with NTESS,
+// the U.S. Government retains certain rights in this software.
+//
+// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
+// See https://kokkos.org/LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+//
+//@HEADER
 
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #include <Kokkos_Macros.hpp>
@@ -8,7 +23,6 @@ static_assert(false,
 #define KOKKOS_DESUL_ATOMICS_WRAPPER_HPP_
 #include <Kokkos_Macros.hpp>
 
-#ifdef KOKKOS_ENABLE_IMPL_DESUL_ATOMICS
 #include <Kokkos_Atomics_Desul_Config.hpp>
 #include <desul/atomics.hpp>
 
@@ -65,26 +79,6 @@ void store_fence() { return desul::atomic_thread_fence(desul::MemoryOrderRelease
 // atomic_fetch_op
 template<class T> KOKKOS_INLINE_FUNCTION
 T atomic_fetch_add (T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) { return desul::atomic_fetch_add (dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
-
-#ifdef DESUL_IMPL_ATOMIC_CUDA_USE_DOUBLE_ATOMICADD
-KOKKOS_INLINE_FUNCTION
-double atomic_fetch_add(double* const dest, double val) {
-  #ifdef __CUDA_ARCH__
-  return atomicAdd(dest,val);
-  #else
-  return desul::atomic_fetch_add (dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE);
-  #endif
-};
-
-KOKKOS_INLINE_FUNCTION
-double atomic_fetch_sub(double* const dest, double val) {
-  #ifdef __CUDA_ARCH__
-  return atomicAdd(dest,-val);
-  #else
-  return desul::atomic_fetch_sub (dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE);
-  #endif
-};
-#endif
 
 template<class T> KOKKOS_INLINE_FUNCTION
 T atomic_fetch_sub (T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) { return desul::atomic_fetch_sub (dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
@@ -283,5 +277,4 @@ namespace Impl {
 #undef KOKKOS_DESUL_MEM_SCOPE
 
 // clang-format on
-#endif  // KOKKOS_ENABLE_IMPL_DESUL_ATOMICS
 #endif

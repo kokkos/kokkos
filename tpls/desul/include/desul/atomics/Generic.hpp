@@ -10,9 +10,7 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #define DESUL_ATOMICS_GENERIC_HPP_
 #include <desul/atomics/Common.hpp>
 #include <desul/atomics/Compare_Exchange.hpp>
-#include <desul/atomics/Fetch_Op.hpp>  // must include before Generic_{Host,Device}.hpp header
-#include <desul/atomics/Generic_Device.hpp>
-#include <desul/atomics/Generic_Host.hpp>
+#include <desul/atomics/Fetch_Op.hpp>
 #include <desul/atomics/Lock_Array.hpp>
 #include <desul/atomics/Macros.hpp>
 #include <desul/atomics/Thread_Fence.hpp>

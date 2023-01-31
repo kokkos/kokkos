@@ -1,46 +1,18 @@
-/*
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 3.0
-//       Copyright (2020) National Technology & Engineering
+//                        Kokkos v. 4.0
+//       Copyright (2022) National Technology & Engineering
 //               Solutions of Sandia, LLC (NTESS).
 //
 // Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
+// See https://kokkos.org/LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-//
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-//
-// ************************************************************************
 //@HEADER
-*/
 
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #include <Kokkos_Macros.hpp>
@@ -902,7 +874,7 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 2> {
       } else {
         p_type ext1(0, std::min(dst.extent(1), src.extent(1)));
         using sv_adapter_type =
-            CommonSubview<DstType, SrcType, 2, Kokkos::Impl::ALL_t, p_type>;
+            CommonSubview<DstType, SrcType, 2, Kokkos::ALL_t, p_type>;
         sv_adapter_type common_subview(dst, src, Kokkos::ALL, ext1);
         view_copy(exec_space..., common_subview.dst_sub,
                   common_subview.src_sub);
@@ -911,7 +883,7 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 2> {
       if (dst.extent(1) == src.extent(1)) {
         p_type ext0(0, std::min(dst.extent(0), src.extent(0)));
         using sv_adapter_type =
-            CommonSubview<DstType, SrcType, 2, p_type, Kokkos::Impl::ALL_t>;
+            CommonSubview<DstType, SrcType, 2, p_type, Kokkos::ALL_t>;
         sv_adapter_type common_subview(dst, src, ext0, Kokkos::ALL);
         view_copy(exec_space..., common_subview.dst_sub,
                   common_subview.src_sub);
@@ -943,8 +915,8 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 3> {
       if (dst.extent(2) == src.extent(2)) {
         p_type ext1(0, std::min(dst.extent(1), src.extent(1)));
         using sv_adapter_type =
-            CommonSubview<DstType, SrcType, 3, Kokkos::Impl::ALL_t, p_type,
-                          Kokkos::Impl::ALL_t>;
+            CommonSubview<DstType, SrcType, 3, Kokkos::ALL_t, p_type,
+                          Kokkos::ALL_t>;
         sv_adapter_type common_subview(dst, src, Kokkos::ALL, ext1,
                                        Kokkos::ALL);
         view_copy(exec_space..., common_subview.dst_sub,
@@ -953,8 +925,7 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 3> {
         p_type ext1(0, std::min(dst.extent(1), src.extent(1)));
         p_type ext2(0, std::min(dst.extent(2), src.extent(2)));
         using sv_adapter_type =
-            CommonSubview<DstType, SrcType, 3, Kokkos::Impl::ALL_t, p_type,
-                          p_type>;
+            CommonSubview<DstType, SrcType, 3, Kokkos::ALL_t, p_type, p_type>;
         sv_adapter_type common_subview(dst, src, Kokkos::ALL, ext1, ext2);
         view_copy(exec_space..., common_subview.dst_sub,
                   common_subview.src_sub);
@@ -963,8 +934,8 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 3> {
       if (dst.extent(2) == src.extent(2)) {
         p_type ext0(0, std::min(dst.extent(0), src.extent(0)));
         p_type ext1(0, std::min(dst.extent(1), src.extent(1)));
-        using sv_adapter_type = CommonSubview<DstType, SrcType, 3, p_type,
-                                              p_type, Kokkos::Impl::ALL_t>;
+        using sv_adapter_type =
+            CommonSubview<DstType, SrcType, 3, p_type, p_type, Kokkos::ALL_t>;
         sv_adapter_type common_subview(dst, src, ext0, ext1, Kokkos::ALL);
         view_copy(exec_space..., common_subview.dst_sub,
                   common_subview.src_sub);
@@ -998,8 +969,8 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 4> {
         p_type ext1(0, std::min(dst.extent(1), src.extent(1)));
         p_type ext2(0, std::min(dst.extent(2), src.extent(2)));
         using sv_adapter_type =
-            CommonSubview<DstType, SrcType, 4, Kokkos::Impl::ALL_t, p_type,
-                          p_type, Kokkos::Impl::ALL_t>;
+            CommonSubview<DstType, SrcType, 4, Kokkos::ALL_t, p_type, p_type,
+                          Kokkos::ALL_t>;
         sv_adapter_type common_subview(dst, src, Kokkos::ALL, ext1, ext2,
                                        Kokkos::ALL);
         view_copy(exec_space..., common_subview.dst_sub,
@@ -1009,8 +980,8 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 4> {
         p_type ext2(0, std::min(dst.extent(2), src.extent(2)));
         p_type ext3(0, std::min(dst.extent(3), src.extent(3)));
         using sv_adapter_type =
-            CommonSubview<DstType, SrcType, 4, Kokkos::Impl::ALL_t, p_type,
-                          p_type, p_type>;
+            CommonSubview<DstType, SrcType, 4, Kokkos::ALL_t, p_type, p_type,
+                          p_type>;
         sv_adapter_type common_subview(dst, src, Kokkos::ALL, ext1, ext2, ext3);
         view_copy(exec_space..., common_subview.dst_sub,
                   common_subview.src_sub);
@@ -1020,9 +991,8 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 4> {
         p_type ext0(0, std::min(dst.extent(0), src.extent(0)));
         p_type ext1(0, std::min(dst.extent(1), src.extent(1)));
         p_type ext2(0, std::min(dst.extent(2), src.extent(2)));
-        using sv_adapter_type =
-            CommonSubview<DstType, SrcType, 4, p_type, p_type, p_type,
-                          Kokkos::Impl::ALL_t>;
+        using sv_adapter_type = CommonSubview<DstType, SrcType, 4, p_type,
+                                              p_type, p_type, Kokkos::ALL_t>;
         sv_adapter_type common_subview(dst, src, ext0, ext1, ext2, Kokkos::ALL);
         view_copy(exec_space..., common_subview.dst_sub,
                   common_subview.src_sub);
@@ -1058,8 +1028,8 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 5> {
         p_type ext2(0, std::min(dst.extent(2), src.extent(2)));
         p_type ext3(0, std::min(dst.extent(3), src.extent(3)));
         using sv_adapter_type =
-            CommonSubview<DstType, SrcType, 5, Kokkos::Impl::ALL_t, p_type,
-                          p_type, p_type, Kokkos::Impl::ALL_t>;
+            CommonSubview<DstType, SrcType, 5, Kokkos::ALL_t, p_type, p_type,
+                          p_type, Kokkos::ALL_t>;
         sv_adapter_type common_subview(dst, src, Kokkos::ALL, ext1, ext2, ext3,
                                        Kokkos::ALL);
         view_copy(exec_space..., common_subview.dst_sub,
@@ -1070,8 +1040,8 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 5> {
         p_type ext3(0, std::min(dst.extent(3), src.extent(3)));
         p_type ext4(0, std::min(dst.extent(4), src.extent(4)));
         using sv_adapter_type =
-            CommonSubview<DstType, SrcType, 5, Kokkos::Impl::ALL_t, p_type,
-                          p_type, p_type, p_type>;
+            CommonSubview<DstType, SrcType, 5, Kokkos::ALL_t, p_type, p_type,
+                          p_type, p_type>;
         sv_adapter_type common_subview(dst, src, Kokkos::ALL, ext1, ext2, ext3,
                                        ext4);
         view_copy(exec_space..., common_subview.dst_sub,
@@ -1085,7 +1055,7 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 5> {
         p_type ext3(0, std::min(dst.extent(3), src.extent(3)));
         using sv_adapter_type =
             CommonSubview<DstType, SrcType, 5, p_type, p_type, p_type, p_type,
-                          Kokkos::Impl::ALL_t>;
+                          Kokkos::ALL_t>;
         sv_adapter_type common_subview(dst, src, ext0, ext1, ext2, ext3,
                                        Kokkos::ALL);
         view_copy(exec_space..., common_subview.dst_sub,
@@ -1123,8 +1093,8 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 6> {
         p_type ext3(0, std::min(dst.extent(3), src.extent(3)));
         p_type ext4(0, std::min(dst.extent(4), src.extent(4)));
         using sv_adapter_type =
-            CommonSubview<DstType, SrcType, 6, Kokkos::Impl::ALL_t, p_type,
-                          p_type, p_type, p_type, Kokkos::Impl::ALL_t>;
+            CommonSubview<DstType, SrcType, 6, Kokkos::ALL_t, p_type, p_type,
+                          p_type, p_type, Kokkos::ALL_t>;
         sv_adapter_type common_subview(dst, src, Kokkos::ALL, ext1, ext2, ext3,
                                        ext4, Kokkos::ALL);
         view_copy(exec_space..., common_subview.dst_sub,
@@ -1136,8 +1106,8 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 6> {
         p_type ext4(0, std::min(dst.extent(4), src.extent(4)));
         p_type ext5(0, std::min(dst.extent(5), src.extent(5)));
         using sv_adapter_type =
-            CommonSubview<DstType, SrcType, 6, Kokkos::Impl::ALL_t, p_type,
-                          p_type, p_type, p_type, p_type>;
+            CommonSubview<DstType, SrcType, 6, Kokkos::ALL_t, p_type, p_type,
+                          p_type, p_type, p_type>;
         sv_adapter_type common_subview(dst, src, Kokkos::ALL, ext1, ext2, ext3,
                                        ext4, ext5);
         view_copy(exec_space..., common_subview.dst_sub,
@@ -1153,7 +1123,7 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 6> {
 
         using sv_adapter_type =
             CommonSubview<DstType, SrcType, 6, p_type, p_type, p_type, p_type,
-                          p_type, Kokkos::Impl::ALL_t>;
+                          p_type, Kokkos::ALL_t>;
         sv_adapter_type common_subview(dst, src, ext0, ext1, ext2, ext3, ext4,
                                        Kokkos::ALL);
         view_copy(exec_space..., common_subview.dst_sub,
@@ -1197,8 +1167,8 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 7> {
         p_type ext4(0, std::min(dst.extent(4), src.extent(4)));
         p_type ext5(0, std::min(dst.extent(5), src.extent(5)));
         using sv_adapter_type =
-            CommonSubview<DstType, SrcType, 7, Kokkos::Impl::ALL_t, p_type,
-                          p_type, p_type, p_type, p_type, Kokkos::Impl::ALL_t>;
+            CommonSubview<DstType, SrcType, 7, Kokkos::ALL_t, p_type, p_type,
+                          p_type, p_type, p_type, Kokkos::ALL_t>;
         sv_adapter_type common_subview(dst, src, Kokkos::ALL, ext1, ext2, ext3,
                                        ext4, ext5, Kokkos::ALL);
         view_copy(exec_space..., common_subview.dst_sub,
@@ -1211,8 +1181,8 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 7> {
         p_type ext5(0, std::min(dst.extent(5), src.extent(5)));
         p_type ext6(0, std::min(dst.extent(6), src.extent(6)));
         using sv_adapter_type =
-            CommonSubview<DstType, SrcType, 7, Kokkos::Impl::ALL_t, p_type,
-                          p_type, p_type, p_type, p_type, p_type>;
+            CommonSubview<DstType, SrcType, 7, Kokkos::ALL_t, p_type, p_type,
+                          p_type, p_type, p_type, p_type>;
         sv_adapter_type common_subview(dst, src, Kokkos::ALL, ext1, ext2, ext3,
                                        ext4, ext5, ext6);
         view_copy(exec_space..., common_subview.dst_sub,
@@ -1228,7 +1198,7 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 7> {
         p_type ext5(0, std::min(dst.extent(5), src.extent(5)));
         using sv_adapter_type =
             CommonSubview<DstType, SrcType, 7, p_type, p_type, p_type, p_type,
-                          p_type, p_type, Kokkos::Impl::ALL_t>;
+                          p_type, p_type, Kokkos::ALL_t>;
         sv_adapter_type common_subview(dst, src, ext0, ext1, ext2, ext3, ext4,
                                        ext5, Kokkos::ALL);
         view_copy(exec_space..., common_subview.dst_sub,
@@ -1273,9 +1243,8 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 8> {
         p_type ext5(0, std::min(dst.extent(5), src.extent(5)));
         p_type ext6(0, std::min(dst.extent(6), src.extent(6)));
         using sv_adapter_type =
-            CommonSubview<DstType, SrcType, 8, Kokkos::Impl::ALL_t, p_type,
-                          p_type, p_type, p_type, p_type, p_type,
-                          Kokkos::Impl::ALL_t>;
+            CommonSubview<DstType, SrcType, 8, Kokkos::ALL_t, p_type, p_type,
+                          p_type, p_type, p_type, p_type, Kokkos::ALL_t>;
         sv_adapter_type common_subview(dst, src, Kokkos::ALL, ext1, ext2, ext3,
                                        ext4, ext5, ext6, Kokkos::ALL);
         view_copy(exec_space..., common_subview.dst_sub,
@@ -1289,8 +1258,8 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 8> {
         p_type ext6(0, std::min(dst.extent(6), src.extent(6)));
         p_type ext7(0, std::min(dst.extent(7), src.extent(7)));
         using sv_adapter_type =
-            CommonSubview<DstType, SrcType, 8, Kokkos::Impl::ALL_t, p_type,
-                          p_type, p_type, p_type, p_type, p_type, p_type>;
+            CommonSubview<DstType, SrcType, 8, Kokkos::ALL_t, p_type, p_type,
+                          p_type, p_type, p_type, p_type, p_type>;
         sv_adapter_type common_subview(dst, src, Kokkos::ALL, ext1, ext2, ext3,
                                        ext4, ext5, ext6, ext7);
         view_copy(exec_space..., common_subview.dst_sub,
@@ -1307,7 +1276,7 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 8> {
         p_type ext6(0, std::min(dst.extent(6), src.extent(6)));
         using sv_adapter_type =
             CommonSubview<DstType, SrcType, 8, p_type, p_type, p_type, p_type,
-                          p_type, p_type, p_type, Kokkos::Impl::ALL_t>;
+                          p_type, p_type, p_type, Kokkos::ALL_t>;
         sv_adapter_type common_subview(dst, src, ext0, ext1, ext2, ext3, ext4,
                                        ext5, ext6, Kokkos::ALL);
         view_copy(exec_space..., common_subview.dst_sub,
@@ -3468,11 +3437,8 @@ struct MirrorType {
 };
 
 template <class T, class... P, class... ViewCtorArgs>
-inline std::enable_if_t<
-    !std::is_same<typename Kokkos::ViewTraits<T, P...>::array_layout,
-                  Kokkos::LayoutStride>::value &&
-        !Impl::ViewCtorProp<ViewCtorArgs...>::has_memory_space,
-    typename Kokkos::View<T, P...>::HostMirror>
+inline std::enable_if_t<!Impl::ViewCtorProp<ViewCtorArgs...>::has_memory_space,
+                        typename Kokkos::View<T, P...>::HostMirror>
 create_mirror(const Kokkos::View<T, P...>& src,
               const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
   using src_type         = View<T, P...>;
@@ -3495,67 +3461,7 @@ create_mirror(const Kokkos::View<T, P...>& src,
   auto prop_copy = Impl::with_properties_if_unset(
       arg_prop, std::string(src.label()).append("_mirror"));
 
-  return dst_type(
-      prop_copy,
-      src.rank_dynamic > 0 ? src.extent(0) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-      src.rank_dynamic > 1 ? src.extent(1) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-      src.rank_dynamic > 2 ? src.extent(2) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-      src.rank_dynamic > 3 ? src.extent(3) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-      src.rank_dynamic > 4 ? src.extent(4) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-      src.rank_dynamic > 5 ? src.extent(5) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-      src.rank_dynamic > 6 ? src.extent(6) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-      src.rank_dynamic > 7 ? src.extent(7) : KOKKOS_IMPL_CTOR_DEFAULT_ARG);
-}
-
-template <class T, class... P, class... ViewCtorArgs>
-inline std::enable_if_t<
-    std::is_same<typename Kokkos::ViewTraits<T, P...>::array_layout,
-                 Kokkos::LayoutStride>::value &&
-        !Impl::ViewCtorProp<ViewCtorArgs...>::has_memory_space,
-    typename Kokkos::View<T, P...>::HostMirror>
-create_mirror(const Kokkos::View<T, P...>& src,
-              const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
-  using src_type         = View<T, P...>;
-  using dst_type         = typename src_type::HostMirror;
-  using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
-
-  static_assert(
-      !alloc_prop_input::has_label,
-      "The view constructor arguments passed to Kokkos::create_mirror "
-      "must not include a label!");
-  static_assert(
-      !alloc_prop_input::has_pointer,
-      "The view constructor arguments passed to Kokkos::create_mirror must "
-      "not include a pointer!");
-  static_assert(
-      !alloc_prop_input::allow_padding,
-      "The view constructor arguments passed to Kokkos::create_mirror must "
-      "not explicitly allow padding!");
-
-  Kokkos::LayoutStride layout;
-
-  layout.dimension[0] = src.extent(0);
-  layout.dimension[1] = src.extent(1);
-  layout.dimension[2] = src.extent(2);
-  layout.dimension[3] = src.extent(3);
-  layout.dimension[4] = src.extent(4);
-  layout.dimension[5] = src.extent(5);
-  layout.dimension[6] = src.extent(6);
-  layout.dimension[7] = src.extent(7);
-
-  layout.stride[0] = src.stride_0();
-  layout.stride[1] = src.stride_1();
-  layout.stride[2] = src.stride_2();
-  layout.stride[3] = src.stride_3();
-  layout.stride[4] = src.stride_4();
-  layout.stride[5] = src.stride_5();
-  layout.stride[6] = src.stride_6();
-  layout.stride[7] = src.stride_7();
-
-  auto prop_copy = Impl::with_properties_if_unset(
-      arg_prop, std::string(src.label()).append("_mirror"));
-
-  return dst_type(prop_copy, layout);
+  return dst_type(prop_copy, src.layout());
 }
 
 // Create a mirror in a new space (specialization for different space)

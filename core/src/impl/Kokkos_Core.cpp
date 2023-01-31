@@ -1,46 +1,18 @@
-/*
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 3.0
-//       Copyright (2020) National Technology & Engineering
+//                        Kokkos v. 4.0
+//       Copyright (2022) National Technology & Engineering
 //               Solutions of Sandia, LLC (NTESS).
 //
 // Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
+// See https://kokkos.org/LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-//
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-//
-// ************************************************************************
 //@HEADER
-*/
 
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #define KOKKOS_IMPL_PUBLIC_INCLUDE
@@ -52,6 +24,7 @@
 #include <impl/Kokkos_ParseCommandLineArgumentsAndEnvironmentVariables.hpp>
 #include <impl/Kokkos_DeviceManagement.hpp>
 #include <impl/Kokkos_ExecSpaceManager.hpp>
+#include <impl/Kokkos_CPUDiscovery.hpp>
 
 #include <algorithm>
 #include <cctype>
@@ -231,7 +204,7 @@ void Kokkos::Impl::ExecSpaceManager::print_configuration(std::ostream& os,
   }
 }
 
-int Kokkos::Impl::get_ctest_gpu(const char* local_rank_str) {
+int Kokkos::Impl::get_ctest_gpu(int local_rank) {
   auto const* ctest_kokkos_device_type =
       std::getenv("CTEST_KOKKOS_DEVICE_TYPE");
   if (!ctest_kokkos_device_type) {
@@ -246,7 +219,7 @@ int Kokkos::Impl::get_ctest_gpu(const char* local_rank_str) {
 
   // Make sure rank is within bounds of resource groups specified by CTest
   auto resource_group_count = std::stoi(ctest_resource_group_count_str);
-  auto local_rank           = std::stoi(local_rank_str);
+  assert(local_rank >= 0);
   if (local_rank >= resource_group_count) {
     std::ostringstream ss;
     ss << "Error: local rank " << local_rank
@@ -428,14 +401,10 @@ int Kokkos::Impl::get_gpu(const InitializationSettings& settings) {
     Kokkos::abort("implementation bug");
   }
 
-  auto const* local_rank_str =
-      std::getenv("OMPI_COMM_WORLD_LOCAL_RANK");  // OpenMPI
-  if (!local_rank_str)
-    local_rank_str = std::getenv("MV2_COMM_WORLD_LOCAL_RANK");  // MVAPICH2
-  if (!local_rank_str) local_rank_str = std::getenv("SLURM_LOCALID");  // SLURM
+  int const mpi_local_rank = mpi_local_rank_on_node();
 
   // use first GPU available for execution if unable to detect local MPI rank
-  if (!local_rank_str) {
+  if (mpi_local_rank < 0) {
     if (settings.has_map_device_id_by()) {
       std::cerr << "Warning: unable to detect local MPI rank."
                 << " Falling back to the first GPU available for execution."
@@ -447,10 +416,10 @@ int Kokkos::Impl::get_gpu(const InitializationSettings& settings) {
   // use device assigned by CTest when resource allocation is activated
   if (std::getenv("CTEST_KOKKOS_DEVICE_TYPE") &&
       std::getenv("CTEST_RESOURCE_GROUP_COUNT")) {
-    return get_ctest_gpu(local_rank_str);
+    return get_ctest_gpu(mpi_local_rank);
   }
 
-  return visible_devices[std::stoi(local_rank_str) % visible_devices.size()];
+  return visible_devices[mpi_local_rank % visible_devices.size()];
 }
 
 namespace {
@@ -774,7 +743,9 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
 #elif defined(KOKKOS_ARCH_AMPERE86)
   declare_configuration_metadata("architecture", "GPU architecture",
                                  "AMPERE86");
-
+#elif defined(KOKKOS_ARCH_HOPPER90)
+  declare_configuration_metadata("architecture", "GPU architecture",
+                                 "HOPPER90");
 #elif defined(KOKKOS_ARCH_VEGA900)
   declare_configuration_metadata("architecture", "GPU architecture", "VEGA900");
 #elif defined(KOKKOS_ARCH_VEGA906)
@@ -783,6 +754,9 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
   declare_configuration_metadata("architecture", "GPU architecture", "VEGA908");
 #elif defined(KOKKOS_ARCH_VEGA90A)
   declare_configuration_metadata("architecture", "GPU architecture", "VEGA90A");
+#elif defined(KOKKOS_ARCH_NAVI1030)
+  declare_configuration_metadata("architecture", "GPU architecture",
+                                 "NAVI1030");
 
 #else
   declare_configuration_metadata("architecture", "GPU architecture", "none");

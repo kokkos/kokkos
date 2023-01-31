@@ -1,57 +1,22 @@
-/*
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 3.0
-//       Copyright (2020) National Technology & Engineering
+//                        Kokkos v. 4.0
+//       Copyright (2022) National Technology & Engineering
 //               Solutions of Sandia, LLC (NTESS).
 //
 // Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
+// See https://kokkos.org/LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-//
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-//
-// ************************************************************************
 //@HEADER
-*/
 #include <gtest/gtest.h>
 #include <Kokkos_Core.hpp>
 
 #if defined(_WIN32)
-// FIXME_Windows : Even though Kokkos_Core does include windows.h it is not
-// visible here. Furthermore, the char max() in Kokkos_NumericTraits seems to
-// conflict with definitions in windows.h and raises a bunch of interpretation
-// errors
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
 #include <windows.h>
 unsigned getBytesPerPage() {
   SYSTEM_INFO si;
@@ -70,7 +35,7 @@ unsigned getBytesPerPage() { return sysconf(_SC_PAGESIZE); }
 
 namespace {
 void printTimings(std::ostream& out, std::vector<uint64_t> const& tr,
-                  uint64_t threshold = std::numeric_limits<uint64_t>::max()) {
+                  uint64_t threshold = (std::numeric_limits<uint64_t>::max)()) {
   out << "TimingResult contains " << tr.size() << " results:\n";
   for (auto it = tr.begin(); it != tr.end(); ++it) {
     out << "Duration of loop " << it - tr.begin() << " is " << *it
@@ -133,15 +98,14 @@ std::vector<uint64_t> incrementInLoop(ViewType& view,
 }
 
 TEST(defaultdevicetype, shared_space) {
-  ASSERT_TRUE(KOKKOS_HAS_SHARED_SPACE);
   ASSERT_TRUE(Kokkos::has_shared_space);
 
   if constexpr (std::is_same_v<Kokkos::DefaultExecutionSpace,
                                Kokkos::DefaultHostExecutionSpace>)
     GTEST_SKIP() << "Skipping as host and device are the same space";
 
-#if defined(KOKKOS_ARCH_VEGA900) || defined(KOKKOS_ARCH_VEGA906) || \
-    defined(KOKKOS_ARCH_VEGA908)
+#if defined(KOKKOS_ARCH_VEGA906) || defined(KOKKOS_ARCH_VEGA908) || \
+    defined(KOKKOS_ARCH_NAVI)
   GTEST_SKIP()
       << "skipping because specified arch does not support page migration";
 #endif
@@ -156,62 +120,57 @@ TEST(defaultdevicetype, shared_space) {
   unsigned int numPages                  = 100;
   size_t numBytes                        = numPages * getBytesPerPage();
 
-  // we rely on this to allocate the right amount of memory in the ALLOCATION
-  ASSERT_TRUE(numBytes % sizeof(int) == 0);
+  using DeviceExecutionSpace = Kokkos::DefaultExecutionSpace;
+  using HostExecutionSpace   = Kokkos::DefaultHostExecutionSpace;
 
   // ALLOCATION
   Kokkos::View<int*, Kokkos::SharedSpace> sharedData("sharedData",
                                                      numBytes / sizeof(int));
-  Kokkos::View<int*, Kokkos::DefaultExecutionSpace::memory_space>
-      defaultExecData("defaultExecData", numBytes / sizeof(int));
-  Kokkos::View<int*, Kokkos::DefaultHostExecutionSpace::memory_space>
-      defaultHostExecData("defaultHostExecData", numBytes / sizeof(int));
+  Kokkos::View<int*, DeviceExecutionSpace::memory_space> deviceData(
+      "deviceData", numBytes / sizeof(int));
+  Kokkos::View<int*, HostExecutionSpace::memory_space> hostData(
+      "hostData", numBytes / sizeof(int));
   Kokkos::fence();
 
   // GET DEFAULT EXECSPACE LOCAL TIMINGS
-  auto defaultExecLocalTimings = incrementInLoop<Kokkos::DefaultExecutionSpace>(
-      defaultExecData, numRepetitions);
+  auto deviceLocalTimings =
+      incrementInLoop<DeviceExecutionSpace>(deviceData, numRepetitions);
 
   // GET DEFAULT HOSTEXECSPACE LOCAL TIMINGS
-  auto defaultHostExecLocalTimings =
-      incrementInLoop<Kokkos::DefaultHostExecutionSpace>(defaultHostExecData,
-                                                         numRepetitions);
+  auto hostLocalTimings =
+      incrementInLoop<HostExecutionSpace>(hostData, numRepetitions);
 
   // GET PAGE MIGRATING TIMINGS DATA
-  std::vector<decltype(defaultExecLocalTimings)> defaultExecSharedTimings{};
-  std::vector<decltype(defaultExecLocalTimings)> defaultHostExecSharedTimings{};
+  std::vector<decltype(deviceLocalTimings)> deviceSharedTimings{};
+  std::vector<decltype(hostLocalTimings)> hostSharedTimings{};
   for (unsigned i = 0; i < numDeviceHostCycles; ++i) {
     // GET RESULTS DEVICE
-    defaultExecSharedTimings.push_back(
-        incrementInLoop<Kokkos::DefaultExecutionSpace>(sharedData,
-                                                       numRepetitions));
+    deviceSharedTimings.push_back(
+        incrementInLoop<DeviceExecutionSpace>(sharedData, numRepetitions));
 
     // GET RESULTS HOST
-    defaultHostExecSharedTimings.push_back(
-        incrementInLoop<Kokkos::DefaultHostExecutionSpace>(sharedData,
-                                                           numRepetitions));
+    hostSharedTimings.push_back(
+        incrementInLoop<HostExecutionSpace>(sharedData, numRepetitions));
   }
 
   // COMPUTE STATISTICS OF HOST AND DEVICE LOCAL KERNELS
-  auto defaultExecLocalMean     = computeMean(defaultExecLocalTimings);
-  auto defaultHostExecLocalMean = computeMean(defaultHostExecLocalTimings);
+  auto deviceLocalMean = computeMean(deviceLocalTimings);
+  auto hostLocalMean   = computeMean(hostLocalTimings);
 
   // ASSESS RESULTS
   bool fastAsLocalOnRepeatedAccess = true;
 
   for (unsigned cycle = 0; cycle < numDeviceHostCycles; ++cycle) {
-    std::for_each(std::next(defaultExecSharedTimings[cycle].begin()),
-                  defaultExecSharedTimings[cycle].end(),
-                  [&](const uint64_t timing) {
-                    (timing < threshold * defaultExecLocalMean)
+    std::for_each(std::next(deviceSharedTimings[cycle].begin()),
+                  deviceSharedTimings[cycle].end(), [&](const uint64_t timing) {
+                    (timing < threshold * deviceLocalMean)
                         ? fastAsLocalOnRepeatedAccess &= true
                         : fastAsLocalOnRepeatedAccess &= false;
                   });
 
-    std::for_each(std::next(defaultHostExecSharedTimings[cycle].begin()),
-                  defaultHostExecSharedTimings[cycle].end(),
-                  [&](const uint64_t timing) {
-                    (timing < threshold * defaultExecLocalMean)
+    std::for_each(std::next(hostSharedTimings[cycle].begin()),
+                  hostSharedTimings[cycle].end(), [&](const uint64_t timing) {
+                    (timing < threshold * hostLocalMean)
                         ? fastAsLocalOnRepeatedAccess &= true
                         : fastAsLocalOnRepeatedAccess &= false;
                   });
@@ -243,17 +202,16 @@ TEST(defaultdevicetype, shared_space) {
 
     std::cout << "################SHARED SPACE####################\n";
     for (unsigned cycle = 0; cycle < numDeviceHostCycles; ++cycle) {
-      std::cout << "DefaultExectionSpace timings of run " << cycle << ":\n";
-      printTimings(std::cout, defaultExecSharedTimings[cycle],
-                   threshold * defaultExecLocalMean);
-      std::cout << "DefaultHostExecutionSpace timings of run " << cycle
-                << ":\n";
-      printTimings(std::cout, defaultHostExecSharedTimings[cycle],
-                   threshold * defaultHostExecLocalMean);
+      std::cout << "DeviceExecutionSpace timings of run " << cycle << ":\n";
+      printTimings(std::cout, deviceSharedTimings[cycle],
+                   threshold * deviceLocalMean);
+      std::cout << "HostExecutionSpace timings of run " << cycle << ":\n";
+      printTimings(std::cout, hostSharedTimings[cycle],
+                   threshold * hostLocalMean);
     }
     std::cout << "################LOCAL SPACE####################\n";
-    printTimings(std::cout, defaultExecLocalTimings);
-    printTimings(std::cout, defaultHostExecLocalTimings);
+    printTimings(std::cout, deviceLocalTimings);
+    printTimings(std::cout, hostLocalTimings);
   }
   ASSERT_TRUE(passed);
 }

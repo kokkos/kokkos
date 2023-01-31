@@ -27,4 +27,9 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #include <desul/atomics/Fetch_Op_SYCL.hpp>
 #endif
 
+#include <desul/atomics/Fetch_Op_ScopeCaller.hpp>
+
+// Must come last
+#include <desul/atomics/Fetch_Op_Generic.hpp>
+
 #endif

@@ -1,52 +1,40 @@
-/*
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 3.0
-//       Copyright (2020) National Technology & Engineering
+//                        Kokkos v. 4.0
+//       Copyright (2022) National Technology & Engineering
 //               Solutions of Sandia, LLC (NTESS).
 //
 // Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
+// See https://kokkos.org/LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-//
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-//
-// ************************************************************************
 //@HEADER
-*/
 
 #ifndef KOKKOS_CORE_HPP
 #define KOKKOS_CORE_HPP
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #define KOKKOS_IMPL_PUBLIC_INCLUDE
 #define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_CORE
+#endif
+
+//----------------------------------------------------------------------------
+// In the case windows.h is included before Kokkos_Core.hpp there might be
+// errors due to the potentially defined macros with name "min" and "max" in
+// windows.h. These collide with the use of "min" and "max" in names inside
+// Kokkos. The macros will be redefined at the end of Kokkos_Core.hpp
+#if defined(min)
+#pragma push_macro("min")
+#undef min
+#define KOKKOS_IMPL_PUSH_MACRO_MIN
+#endif
+#if defined(max)
+#pragma push_macro("max")
+#undef max
+#define KOKKOS_IMPL_PUSH_MACRO_MAX
 #endif
 
 //----------------------------------------------------------------------------
@@ -76,6 +64,7 @@
 #include <Kokkos_TaskScheduler.hpp>
 #include <Kokkos_Complex.hpp>
 #include <Kokkos_CopyViews.hpp>
+#include <impl/Kokkos_TeamMDPolicy.hpp>
 #include <impl/Kokkos_InitializationSettings.hpp>
 #include <functional>
 #include <iosfwd>
@@ -267,22 +256,20 @@ namespace Experimental {
 //   Customization point for backends
 //   Default behavior is to return the passed in instance
 template <class ExecSpace, class... Args>
-std::vector<ExecSpace> partition_space(ExecSpace space, Args...) {
+std::vector<ExecSpace> partition_space(ExecSpace const& space, Args...) {
   static_assert(is_execution_space<ExecSpace>::value,
                 "Kokkos Error: partition_space expects an Execution Space as "
                 "first argument");
-#ifdef __cpp_fold_expressions
   static_assert(
       (... && std::is_arithmetic_v<Args>),
       "Kokkos Error: partitioning arguments must be integers or floats");
-#endif
   std::vector<ExecSpace> instances(sizeof...(Args));
   for (int s = 0; s < int(sizeof...(Args)); s++) instances[s] = space;
   return instances;
 }
 
 template <class ExecSpace, class T>
-std::vector<ExecSpace> partition_space(ExecSpace space,
+std::vector<ExecSpace> partition_space(ExecSpace const& space,
                                        std::vector<T>& weights) {
   static_assert(is_execution_space<ExecSpace>::value,
                 "Kokkos Error: partition_space expects an Execution Space as "
@@ -311,6 +298,18 @@ std::vector<ExecSpace> partition_space(ExecSpace space,
 
 // Specializations required after core definitions
 #include <KokkosCore_Config_PostInclude.hpp>
+
+//----------------------------------------------------------------------------
+// Redefinition of the macros min and max if we pushed them at entry of
+// Kokkos_Core.hpp
+#if defined(KOKKOS_IMPL_PUSH_MACRO_MIN)
+#pragma pop_macro("min")
+#undef KOKKOS_IMPL_PUSH_MACRO_MIN
+#endif
+#if defined(KOKKOS_IMPL_PUSH_MACRO_MAX)
+#pragma pop_macro("max")
+#undef KOKKOS_IMPL_PUSH_MACRO_MAX
+#endif
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

@@ -40,4 +40,4 @@ find ${TRACKED_FILES} \
   xargs -n 1 -P 10 -I {} bash -c "sed -i -e 's/\s\+$//g' {} && rm -f '{}-e'"
 
 # Check that we do not introduce any file with the old copyright
-./scripts/update-copyright
+./scripts/check-copyright
