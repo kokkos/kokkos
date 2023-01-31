@@ -526,7 +526,7 @@ ENDIF()
 # Check support for device_global variables
 # FIXME_SYCL Once the feature test macro SYCL_EXT_ONEAPI_DEVICE_GLOBAL is
 #            available, use that instead.
-IF(KOKKOS_ENABLE_SYCL)
+IF(KOKKOS_ENABLE_SYCL AND NOT BUILD_SHARED_LIBS)
   INCLUDE(CheckCXXSourceCompiles)
   STRING(REPLACE ";" " " CMAKE_REQUIRED_FLAGS "${KOKKOS_COMPILE_OPTIONS}")
   CHECK_CXX_SOURCE_COMPILES("
