@@ -63,8 +63,8 @@ __device__ inline void cuda_inter_warp_reduction(
     ValueType& value, const ReducerType& reducer,
     const int max_active_thread = blockDim.y) {
   constexpr int step_width = 4;
-  // Depending on the ValueType _shared__ memory must be aligned up to 8byte
-  // boundaries The reason not to use ValueType directly is that for types with
+  // Depending on the ValueType, __shared__ memory must be aligned up to 8byte
+  // boundaries. The reason not to use ValueType directly is that for types with
   // constructors it could lead to race conditions
   alignas(alignof(ValueType) > alignof(double) ? alignof(ValueType)
                                                : alignof(double))
