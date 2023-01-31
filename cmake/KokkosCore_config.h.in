@@ -113,6 +113,7 @@
 #cmakedefine KOKKOS_ARCH_AMD_GFX906
 #cmakedefine KOKKOS_ARCH_AMD_GFX908
 #cmakedefine KOKKOS_ARCH_AMD_GFX90A
+#cmakedefine KOKKOS_ARCH_AMD_GFX942
 #cmakedefine KOKKOS_ARCH_AMD_GFX1030
 #cmakedefine KOKKOS_ARCH_AMD_GFX1100
 #cmakedefine KOKKOS_ARCH_AMD_GPU
@@ -120,6 +121,7 @@
 #cmakedefine KOKKOS_ARCH_VEGA906 // deprecated
 #cmakedefine KOKKOS_ARCH_VEGA908 // deprecated
 #cmakedefine KOKKOS_ARCH_VEGA90A // deprecated
+#cmakedefine KOKKOS_ARCH_VEGA942 // deprecated
 #cmakedefine KOKKOS_ARCH_NAVI // deprecated
 #cmakedefine KOKKOS_ARCH_NAVI1030 // deprecated
 #cmakedefine KOKKOS_ARCH_NAVI1100 // deprecated
