@@ -19,7 +19,8 @@
 
 #include <omp.h>
 #include <Kokkos_Parallel.hpp>
-#include <OpenMPTarget/Kokkos_OpenMPTarget_Exec.hpp>
+#include <OpenMPTarget/Kokkos_OpenMPTarget_Parallel.hpp>
+#include <OpenMPTarget/Kokkos_OpenMPTarget_Parallel_Common.hpp>
 
 // WORKAROUND OPENMPTARGET: sometimes tile sizes don't make it correctly,
 // this was tracked down to a bug in clang with regards of mapping structs
@@ -437,7 +438,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   const Policy m_policy;
   const ReducerType m_reducer;
 
-  using ParReduceCommon = ParallelReduceCommon<pointer_type>;
+  using ParReduceCopy = ParallelReduceCopy<pointer_type>;
 
   bool m_result_ptr_on_device;
 
@@ -518,8 +519,8 @@ reduction(+:result)
       }
     }
 
-    ParReduceCommon::memcpy_result(ptr, &result, sizeof(ValueType),
-                                   m_result_ptr_on_device);
+    ParReduceCopy::memcpy_result(ptr, &result, sizeof(ValueType),
+                                 m_result_ptr_on_device);
   }
 
   template <int Rank, class ValueType>
@@ -573,8 +574,8 @@ reduction(+:result)
       }
     }
 
-    ParReduceCommon::memcpy_result(ptr, &result, sizeof(ValueType),
-                                   m_result_ptr_on_device);
+    ParReduceCopy::memcpy_result(ptr, &result, sizeof(ValueType),
+                                 m_result_ptr_on_device);
   }
 
   template <int Rank, class ValueType>
@@ -636,8 +637,8 @@ reduction(+:result)
       }
     }
 
-    ParReduceCommon::memcpy_result(ptr, &result, sizeof(ValueType),
-                                   m_result_ptr_on_device);
+    ParReduceCopy::memcpy_result(ptr, &result, sizeof(ValueType),
+                                 m_result_ptr_on_device);
   }
 
   template <int Rank, class ValueType>
@@ -707,8 +708,8 @@ reduction(+:result)
       }
     }
 
-    ParReduceCommon::memcpy_result(ptr, &result, sizeof(ValueType),
-                                   m_result_ptr_on_device);
+    ParReduceCopy::memcpy_result(ptr, &result, sizeof(ValueType),
+                                 m_result_ptr_on_device);
   }
 
   template <int Rank, class ValueType>
@@ -784,8 +785,8 @@ reduction(+:result)
       }
     }
 
-    ParReduceCommon::memcpy_result(ptr, &result, sizeof(ValueType),
-                                   m_result_ptr_on_device);
+    ParReduceCopy::memcpy_result(ptr, &result, sizeof(ValueType),
+                                 m_result_ptr_on_device);
   }
 
   template <typename Policy, typename Functor>
