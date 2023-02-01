@@ -21,7 +21,7 @@
 #include <OpenACC/Kokkos_OpenACC_FunctorAdapter.hpp>
 #include <Kokkos_Parallel.hpp>
 
-#define DEFAULT_SCAN_CHUNK_SIZE 128
+#define KOKKOS_IMPL_DEFAULT_SCAN_CHUNK_SIZE 128
 
 namespace Kokkos::Experimental::Impl {
 template <class IndexType, class Functor, class ValueType>
@@ -165,7 +165,7 @@ class Kokkos::Impl::ParallelScan<Functor, Kokkos::RangePolicy<Traits...>,
             "RangePolicy blocking granularity must be power of two to be used "
             "for parallel_scan()");
     } else {
-      chunk_size = DEFAULT_SCAN_CHUNK_SIZE;
+      chunk_size = KOKKOS_IMPL_DEFAULT_SCAN_CHUNK_SIZE;
     }
 
     int const async_arg = m_policy.space().acc_async_queue();
@@ -179,5 +179,7 @@ class Kokkos::Impl::ParallelScan<Functor, Kokkos::RangePolicy<Traits...>,
         init_value, async_arg);
   }
 };
+
+#undef KOKKOS_IMPL_DEFAULT_SCAN_CHUNK_SIZE
 
 #endif
