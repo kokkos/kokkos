@@ -48,7 +48,7 @@ pipeline {
                         NVHPC_CUDA_HOME = '/opt/nvidia/hpc_sdk/Linux_x86_64/22.9/cuda/11.7'
                     }
                     steps {
-                        sh '''$WORKSPACE/bin/nvcc_wrapper --version && nvcc --version && \
+                        sh '''which nvcc && nvcc --version && $WORKSPACE/bin/nvcc_wrapper --show && \
                               rm -rf build && mkdir -p build && cd build && \
                               /opt/cmake/bin/cmake \
                                 -DCMAKE_BUILD_TYPE=RelWithDebInfo \
