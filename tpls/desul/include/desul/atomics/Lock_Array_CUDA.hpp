@@ -9,12 +9,10 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #ifndef DESUL_ATOMICS_LOCK_ARRAY_CUDA_HPP_
 #define DESUL_ATOMICS_LOCK_ARRAY_CUDA_HPP_
 
+#include <cstdint>
+
 #include "desul/atomics/Common.hpp"
 #include "desul/atomics/Macros.hpp"
-
-#ifdef DESUL_HAVE_CUDA_ATOMICS
-
-#include <cstdint>
 
 namespace desul {
 namespace Impl {
@@ -41,14 +39,6 @@ void init_lock_arrays_cuda();
 ///   snapshotted version while also linking against pure Desul
 template <typename /*AlwaysInt*/ = int>
 void finalize_lock_arrays_cuda();
-
-}  // namespace Impl
-}  // namespace desul
-
-#if defined(__CUDACC__)
-
-namespace desul {
-namespace Impl {
 
 /// \brief This global variable in CUDA space is what kernels use
 ///        to get access to the lock arrays.
@@ -118,12 +108,7 @@ __device__ inline void unlock_address_cuda(void* ptr, desul::MemoryScopeNode) {
   atomicExch(&desul::Impl::CUDA_SPACE_ATOMIC_LOCKS_NODE[offset], 0);
 }
 
-}  // namespace Impl
-}  // namespace desul
-
 // Make lock_array_copied an explicit translation unit scope thingy
-namespace desul {
-namespace Impl {
 namespace {
 static int lock_array_copied = 0;
 }  // namespace
@@ -149,13 +134,9 @@ inline static
 }  // namespace Impl
 }  // namespace desul
 
-#endif /* defined( __CUDACC__ ) */
-
-#endif /* defined( DESUL_HAVE_CUDA_ATOMICS ) */
-
 namespace desul {
 
-#if defined(__CUDACC_RDC__) || (!defined(__CUDACC__))
+#if defined(__CUDACC_RDC__)
 inline void ensure_cuda_lock_arrays_on_device() {}
 #else
 static inline void ensure_cuda_lock_arrays_on_device() {
