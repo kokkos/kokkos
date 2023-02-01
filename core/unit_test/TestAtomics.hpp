@@ -578,6 +578,12 @@ struct TpetraUseCase {
   }
 };
 
-TEST(TEST_CATEGORY, atomics_tpetra_max_abs) { TpetraUseCase().check(); }
+TEST(TEST_CATEGORY, atomics_tpetra_max_abs) {
+#ifdef KOKKOS_COMPILER_NVHPC
+  GTEST_SKIP() << "FIXME_NVHPC (?)";
+#endif
+
+  TpetraUseCase().check();
+}
 
 }  // namespace Test
