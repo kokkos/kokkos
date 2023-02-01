@@ -131,12 +131,12 @@ class OpenMP {
   /// \brief Free any resources being consumed by the default execution space
   static void impl_finalize();
 
-  static int impl_thread_pool_size(OpenMP const& = OpenMP()) noexcept;
+  int impl_thread_pool_size() const noexcept;
+
+  inline int impl_thread_pool_size(int depth) const;
 
   /** \brief  The rank of the executing thread in this thread pool */
   inline static int impl_thread_pool_rank() noexcept;
-
-  inline static int impl_thread_pool_size(int depth, OpenMP const& = OpenMP());
 
   // use UniqueToken
   static int impl_max_hardware_threads() noexcept;
@@ -190,8 +190,8 @@ inline bool OpenMP::is_asynchronous(OpenMP const& /*instance*/) noexcept {
   return false;
 }
 
-inline int OpenMP::impl_thread_pool_size(int depth, OpenMP const& exec_space) {
-  return depth < 2 ? impl_thread_pool_size(exec_space) : 1;
+inline int OpenMP::impl_thread_pool_size(int depth) const {
+  return depth < 2 ? impl_thread_pool_size() : 1;
 }
 
 KOKKOS_INLINE_FUNCTION
