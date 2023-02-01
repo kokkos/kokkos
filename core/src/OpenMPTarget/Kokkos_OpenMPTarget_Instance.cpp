@@ -27,7 +27,7 @@
 // constructor. undef'ed at the end
 #define KOKKOS_IMPL_OPENMPTARGET_WORKAROUND
 
-#include <Kokkos_OpenMPTarget.hpp>
+#include <OpenMPTarget/Kokkos_OpenMPTarget.hpp>
 #include <OpenMPTarget/Kokkos_OpenMPTarget_UniqueToken.hpp>
 #include <OpenMPTarget/Kokkos_OpenMPTarget_Instance.hpp>
 #include <impl/Kokkos_ExecSpaceManager.hpp>
