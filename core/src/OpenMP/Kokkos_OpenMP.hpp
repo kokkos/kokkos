@@ -133,7 +133,7 @@ class OpenMP {
 
   int impl_thread_pool_size() const noexcept;
 
-  inline int impl_thread_pool_size(int depth) const;
+  int impl_thread_pool_size(int depth) const;
 
   /** \brief  The rank of the executing thread in this thread pool */
   inline static int impl_thread_pool_rank() noexcept;
