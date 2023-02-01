@@ -39,12 +39,6 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #define DESUL_HAVE_MSVC_ATOMICS
 #endif
 
-#if (defined(DESUL_ATOMICS_ENABLE_CUDA) && defined(__CUDA_ARCH__)) ||         \
-    (defined(DESUL_ATOMICS_ENABLE_HIP) && defined(__HIP_DEVICE_COMPILE__)) || \
-    (defined(DESUL_ATOMICS_ENABLE_SYCL) && defined(__SYCL_DEVICE_ONLY__))
-#define DESUL_HAVE_GPU_LIKE_PROGRESS
-#endif
-
 #if defined(DESUL_HAVE_CUDA_ATOMICS) || defined(DESUL_HAVE_HIP_ATOMICS)
 #define DESUL_FORCEINLINE_FUNCTION inline __host__ __device__
 #define DESUL_INLINE_FUNCTION inline __host__ __device__
@@ -57,10 +51,6 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #define DESUL_FUNCTION
 #define DESUL_IMPL_HOST_FUNCTION
 #define DESUL_IMPL_DEVICE_FUNCTION
-#endif
-
-#if !defined(DESUL_HAVE_GPU_LIKE_PROGRESS)
-#define DESUL_HAVE_FORWARD_PROGRESS
 #endif
 
 #define DESUL_IMPL_STRIP_PARENS(X) DESUL_IMPL_ESC(DESUL_IMPL_ISH X)
