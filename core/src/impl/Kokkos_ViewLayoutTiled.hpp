@@ -156,7 +156,7 @@ struct ViewOffset<
 
   //----------------------------------------
 
-#define DEBUG_OUTPUT_CHECK 0
+#define KOKKOS_IMPL_DEBUG_OUTPUT_CHECK 0
 
   // Rank 2
   template <typename I0, typename I1>
@@ -173,7 +173,7 @@ struct ViewOffset<
                             : (((i0 & MASK_0) << SHIFT_1) + (i1 & MASK_1));
     //                     ( tile_dim[1] * li0         +  li1 )
 
-#if DEBUG_OUTPUT_CHECK
+#if KOKKOS_IMPL_DEBUG_OUTPUT_CHECK
     std::cout << "Am I Outer Left? "
               << (outer_pattern == (Kokkos::Iterate::Left)) << std::endl;
     std::cout << "Am I Inner Left? "
@@ -207,7 +207,7 @@ struct ViewOffset<
                             : (((i0 & MASK_0) << (SHIFT_2 + SHIFT_1)) +
                                ((i1 & MASK_1) << (SHIFT_2)) + (i2 & MASK_2));
 
-#if DEBUG_OUTPUT_CHECK
+#if KOKKOS_IMPL_DEBUG_OUTPUT_CHECK
     std::cout << "Am I Outer Left? "
               << (outer_pattern == (Kokkos::Iterate::Left)) << std::endl;
     std::cout << "Am I Inner Left? "

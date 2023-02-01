@@ -182,9 +182,9 @@ UniqueToken<Kokkos::Experimental::OpenMPTarget,
         Kokkos::kokkos_malloc<Kokkos::Experimental::OpenMPTargetSpace>(
             "Kokkos::OpenMPTarget::m_uniquetoken_ptr", size));
     std::vector<uint32_t> h_buf(count, 0);
-    OMPT_SAFE_CALL(omp_target_memcpy(ptr, h_buf.data(), size, 0, 0,
-                                     omp_get_default_device(),
-                                     omp_get_initial_device()));
+    KOKKOS_IMPL_OMPT_SAFE_CALL(omp_target_memcpy(ptr, h_buf.data(), size, 0, 0,
+                                                 omp_get_default_device(),
+                                                 omp_get_initial_device()));
 
     Kokkos::Impl::OpenMPTargetExec::m_uniquetoken_ptr = ptr;
   }

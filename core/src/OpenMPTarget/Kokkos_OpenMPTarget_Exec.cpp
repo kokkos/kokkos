@@ -131,9 +131,9 @@ int* OpenMPTargetExec::get_lock_array(int num_teams) {
 
     for (int i = 0; i < lock_array_elem; ++i) h_lock_array[i] = 0;
 
-    OMPT_SAFE_CALL(omp_target_memcpy(m_lock_array, h_lock_array, m_lock_size, 0,
-                                     0, omp_get_default_device(),
-                                     omp_get_initial_device()));
+    KOKKOS_IMPL_OMPT_SAFE_CALL(
+        omp_target_memcpy(m_lock_array, h_lock_array, m_lock_size, 0, 0,
+                          omp_get_default_device(), omp_get_initial_device()));
 
     omp_target_free(h_lock_array, omp_get_initial_device());
   }
