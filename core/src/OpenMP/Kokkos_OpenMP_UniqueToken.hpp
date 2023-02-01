@@ -28,7 +28,7 @@ class UniqueToken<OpenMP, UniqueTokenScope::Instance> {
 
  private:
   using buffer_type = Kokkos::View<uint32_t*, Kokkos::HostSpace>;
-  execution_space const& m_exec;
+  execution_space m_exec;
   size_type m_count;
   buffer_type m_buffer_view;
   uint32_t volatile* m_buffer;
