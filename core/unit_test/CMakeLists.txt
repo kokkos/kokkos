@@ -823,6 +823,7 @@ endif()
 SET(DEFAULT_DEVICE_SOURCES
   UnitTestMainInit.cpp
   TestInitializationSettings.cpp
+  TestQueryInitializationSettings.cpp
   TestParseCmdLineArgsAndEnvVars.cpp
   TestSharedSpace.cpp
   TestSharedHostPinnedSpace.cpp
