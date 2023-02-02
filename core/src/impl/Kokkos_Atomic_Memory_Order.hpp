@@ -54,13 +54,13 @@ struct memory_order_relaxed_t {
 
 // FIXME_OPENMPTARGET - The `declare target` is needed for the Intel GPUs with
 // the OpenMPTarget backend
-#if defined(KOKKOS_ENABLE_OPENMPTARGET) && defined(KOKKOS_ARCH_INTEL_PVC)
+#if defined(KOKKOS_ENABLE_OPENMPTARGET) && defined(KOKKOS_ARCH_INTEL)
 #pragma omp declare target
 #endif
 
 constexpr memory_order_relaxed_t memory_order_relaxed = {};
 
-#if defined(KOKKOS_ENABLE_OPENMPTARGET) && defined(KOKKOS_ARCH_INTEL_PVC)
+#if defined(KOKKOS_ENABLE_OPENMPTARGET) && defined(KOKKOS_ARCH_INTEL)
 #pragma omp end declare target
 #endif
 

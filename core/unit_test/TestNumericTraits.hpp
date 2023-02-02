@@ -484,7 +484,7 @@ CHECK_SAME_AS_NUMERIC_LIMITS_MEMBER_FUNCTION(double, denorm_min);
 
 // FIXME_OPENMPTARGET - The static_assert causes issues on Intel GPUs with the
 // OpenMPTarget backend.
-#if !defined(KOKKOS_ENABLE_OPENMPTARGET) && !defined(KOKKOS_ARCH_INTEL_PVC)
+#if !defined(KOKKOS_ENABLE_OPENMPTARGET) && !defined(KOKKOS_ARCH_INTEL)
 CHECK_SAME_AS_NUMERIC_LIMITS_MEMBER_FUNCTION(long double, denorm_min);
 #endif
 
