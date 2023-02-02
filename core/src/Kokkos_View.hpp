@@ -97,6 +97,8 @@ constexpr KOKKOS_INLINE_FUNCTION std::size_t count_valid_integers(
          (i6 != KOKKOS_INVALID_INDEX) + (i7 != KOKKOS_INVALID_INDEX);
 }
 
+// FIXME Ideally, we would not instantiate this function for every possible View
+// type. We should be able to only pass "extent" when we use mdspan.
 template <typename View>
 KOKKOS_INLINE_FUNCTION void runtime_check_rank(
     const View&, const size_t rank, const size_t dyn_rank,
