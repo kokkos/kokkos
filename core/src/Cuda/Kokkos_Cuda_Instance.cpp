@@ -128,9 +128,17 @@ void cuda_device_synchronize(const std::string &name) {
       name,
       Kokkos::Tools::Experimental::SpecialSynchronizationCases::
           GlobalDeviceSynchronization,
+#if defined(KOKKOS_COMPILER_CLANG)
+      // annotate with __host__ silence a clang warning about using
+      // cudaDeviceSynchronize in device code
+      [] __host__() {  // TODO: correct device ID
+        KOKKOS_IMPL_CUDA_SAFE_CALL(cudaDeviceSynchronize());
+      });
+#else
       []() {  // TODO: correct device ID
         KOKKOS_IMPL_CUDA_SAFE_CALL(cudaDeviceSynchronize());
       });
+#endif
 }
 
 void cuda_stream_synchronize(const cudaStream_t stream, const CudaInternal *ptr,
