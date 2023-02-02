@@ -532,7 +532,7 @@ void args_to_array(size_t* array, int pos, T dim0, Dims... dims) {
    subview where the index specified is the largest-stride one. */
 template <typename Layout, int rank, typename V, typename... Args>
 struct Slice {
-  using next       = Slice<Layout, rank - 1, V, Kokkos::Impl::ALL_t, Args...>;
+  using next       = Slice<Layout, rank - 1, V, Kokkos::ALL_t, Args...>;
   using value_type = typename next::value_type;
 
   static value_type get(V const& src, const size_t i, Args... args) {

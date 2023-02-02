@@ -27,7 +27,7 @@
 // constructor. undef'ed at the end
 #define KOKKOS_IMPL_OPENMPTARGET_WORKAROUND
 
-#include <Kokkos_OpenMPTarget.hpp>
+#include <OpenMPTarget/Kokkos_OpenMPTarget.hpp>
 #include <OpenMPTarget/Kokkos_OpenMPTarget_UniqueToken.hpp>
 #include <OpenMPTarget/Kokkos_OpenMPTarget_Instance.hpp>
 #include <impl/Kokkos_ExecSpaceManager.hpp>
@@ -65,7 +65,13 @@ void OpenMPTargetInternal::fence(const std::string& name,
         [&]() {});
   }
 }
-int OpenMPTargetInternal::concurrency() { return 128000; }
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+int OpenMPTargetInternal::concurrency() {
+#else
+int OpenMPTargetInternal::concurrency() const {
+#endif
+  return 128000;  // FIXME_OPENMPTARGET
+}
 const char* OpenMPTargetInternal::name() { return "OpenMPTarget"; }
 void OpenMPTargetInternal::print_configuration(std::ostream& os,
                                                bool /*verbose*/) const {
@@ -176,9 +182,9 @@ UniqueToken<Kokkos::Experimental::OpenMPTarget,
         Kokkos::kokkos_malloc<Kokkos::Experimental::OpenMPTargetSpace>(
             "Kokkos::OpenMPTarget::m_uniquetoken_ptr", size));
     std::vector<uint32_t> h_buf(count, 0);
-    OMPT_SAFE_CALL(omp_target_memcpy(ptr, h_buf.data(), size, 0, 0,
-                                     omp_get_default_device(),
-                                     omp_get_initial_device()));
+    KOKKOS_IMPL_OMPT_SAFE_CALL(omp_target_memcpy(ptr, h_buf.data(), size, 0, 0,
+                                                 omp_get_default_device(),
+                                                 omp_get_initial_device()));
 
     Kokkos::Impl::OpenMPTargetExec::m_uniquetoken_ptr = ptr;
   }

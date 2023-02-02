@@ -23,9 +23,8 @@
 
 #include <HIP/Kokkos_HIP_Error.hpp>
 
-#ifdef KOKKOS_ENABLE_IMPL_DESUL_ATOMICS
+// FIXME do not include private headers
 #include <desul/atomics/Lock_Array_HIP.hpp>
-#endif
 
 namespace Kokkos {
 namespace Impl {
@@ -60,7 +59,7 @@ void finalize_host_hip_lock_arrays();
 /// instance of this global variable for the entire executable,
 /// whose definition will be in Kokkos_HIP_Locks.cpp (and whose declaration
 /// here must then be extern).
-/// This one instance will be initialized by initialize_host_HIP_lock_arrays
+/// This one instance will be initialized by initialize_host_hip_lock_arrays
 /// and need not be modified afterwards.
 ///
 /// When relocatable device code is disabled, an instance of this variable
@@ -69,7 +68,7 @@ void finalize_host_hip_lock_arrays();
 /// instances in other translation units, we must update this HIP global
 /// variable based on the Host global variable prior to running any kernels
 /// that will use it.
-/// That is the purpose of the KOKKOS_ENSURE_HIP_LOCK_ARRAYS_ON_DEVICE macro.
+/// That is the purpose of the ensure_hip_lock_arrays_on_device function.
 __device__
 #ifdef KOKKOS_ENABLE_HIP_RELOCATABLE_DEVICE_CODE
     __constant__ extern
@@ -94,7 +93,7 @@ __device__ inline bool lock_address_hip_space(void* ptr) {
 ///
 /// This function releases the lock for the hash value derived
 /// from the provided ptr. This function should only be called
-/// after previously successfully aquiring a lock with
+/// after previously successfully acquiring a lock with
 /// lock_address.
 __device__ inline void unlock_address_hip_space(void* ptr) {
   auto offset = reinterpret_cast<size_t>(ptr);
@@ -111,46 +110,34 @@ namespace Kokkos {
 namespace Impl {
 namespace {
 static int lock_array_copied = 0;
-inline int eliminate_warning_for_lock_array() { return lock_array_copied; }
 }  // namespace
+
+#ifdef KOKKOS_ENABLE_HIP_RELOCATABLE_DEVICE_CODE
+inline
+#else
+inline static
+#endif
+    void
+    copy_hip_lock_arrays_to_device() {
+  if (lock_array_copied == 0) {
+    KOKKOS_IMPL_HIP_SAFE_CALL(
+        hipMemcpyToSymbol(HIP_SYMBOL(g_device_hip_lock_arrays),
+                          &g_host_hip_lock_arrays, sizeof(HIPLockArrays)));
+  }
+  lock_array_copied = 1;
+}
+
+#ifdef KOKKOS_ENABLE_HIP_RELOCATABLE_DEVICE_CODE
+inline void ensure_hip_lock_arrays_on_device() {}
+#else
+inline static void ensure_hip_lock_arrays_on_device() {
+  copy_hip_lock_arrays_to_device();
+  desul::ensure_hip_lock_arrays_on_device();
+}
+#endif
+
 }  // namespace Impl
 }  // namespace Kokkos
-
-/* Dan Ibanez: it is critical that this code be a macro, so that it will
-   capture the right address for g_device_hip_lock_arrays!
-   putting this in an inline function will NOT do the right thing! */
-#define KOKKOS_COPY_HIP_LOCK_ARRAYS_TO_DEVICE()                 \
-  {                                                             \
-    if (::Kokkos::Impl::lock_array_copied == 0) {               \
-      KOKKOS_IMPL_HIP_SAFE_CALL(hipMemcpyToSymbol(              \
-          HIP_SYMBOL(::Kokkos::Impl::g_device_hip_lock_arrays), \
-          &::Kokkos::Impl::g_host_hip_lock_arrays,              \
-          sizeof(::Kokkos::Impl::HIPLockArrays)));              \
-    }                                                           \
-    ::Kokkos::Impl::lock_array_copied = 1;                      \
-  }
-
-#ifndef KOKKOS_ENABLE_IMPL_DESUL_ATOMICS
-
-#ifdef KOKKOS_ENABLE_HIP_RELOCATABLE_DEVICE_CODE
-#define KOKKOS_ENSURE_HIP_LOCK_ARRAYS_ON_DEVICE()
-#else
-#define KOKKOS_ENSURE_HIP_LOCK_ARRAYS_ON_DEVICE() \
-  KOKKOS_COPY_HIP_LOCK_ARRAYS_TO_DEVICE()
-#endif
-
-#else
-
-#ifdef KOKKOS_ENABLE_HIP_RELOCATABLE_DEVICE_CODE
-#define KOKKOS_ENSURE_HIP_LOCK_ARRAYS_ON_DEVICE()
-#else
-// Still Need COPY_CUDA_LOCK_ARRAYS for team scratch etc.
-#define KOKKOS_ENSURE_HIP_LOCK_ARRAYS_ON_DEVICE() \
-  KOKKOS_COPY_HIP_LOCK_ARRAYS_TO_DEVICE()         \
-  DESUL_ENSURE_HIP_LOCK_ARRAYS_ON_DEVICE()
-#endif
-
-#endif /* defined( KOKKOS_ENABLE_IMPL_DESUL_ATOMICS ) */
 
 #endif /* defined( __HIPCC__ ) */
 

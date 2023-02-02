@@ -38,25 +38,25 @@ struct Run<Scalar, UNROLL, STRIDE> {
                     Scalar a1      = A(n, i, 0);
                     const Scalar b = B(n, i, 0);
 #if (UNROLL > 1)
-                    Scalar a2 = a1 * 1.3;
+                    Scalar a2 = a1 * static_cast<Scalar>(1.3);
 #endif
 #if (UNROLL > 2)
-                    Scalar a3 = a2 * 1.1;
+                    Scalar a3 = a2 * static_cast<Scalar>(1.1);
 #endif
 #if (UNROLL > 3)
-                    Scalar a4 = a3 * 1.1;
+                    Scalar a4 = a3 * static_cast<Scalar>(1.1);
 #endif
 #if (UNROLL > 4)
-                    Scalar a5 = a4 * 1.3;
+                    Scalar a5 = a4 * static_cast<Scalar>(1.3);
 #endif
 #if (UNROLL > 5)
-                    Scalar a6 = a5 * 1.1;
+                    Scalar a6 = a5 * static_cast<Scalar>(1.1);
 #endif
 #if (UNROLL > 6)
-                    Scalar a7 = a6 * 1.1;
+                    Scalar a7 = a6 * static_cast<Scalar>(1.1);
 #endif
 #if (UNROLL > 7)
-                    Scalar a8 = a7 * 1.1;
+                    Scalar a8 = a7 * static_cast<Scalar>(1.1);
 #endif
 
                     for (int f = 0; f < F; f++) {

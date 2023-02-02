@@ -20,7 +20,7 @@
 
 #include <Kokkos_Concepts.hpp>
 #include <SYCL/Kokkos_SYCL_Instance.hpp>
-#include <Kokkos_SYCL.hpp>
+#include <SYCL/Kokkos_SYCL.hpp>
 #include <Kokkos_HostSpace.hpp>
 #include <Kokkos_Serial.hpp>
 #include <Kokkos_Core.hpp>
@@ -65,9 +65,13 @@ SYCL::SYCL(const sycl::queue& stream)
   m_space_instance->initialize(stream);
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 int SYCL::concurrency() {
   return Impl::SYCLInternal::singleton().m_maxConcurrency;
 }
+#else
+int SYCL::concurrency() const { return m_space_instance->m_maxConcurrency; }
+#endif
 
 const char* SYCL::name() { return "SYCL"; }
 
@@ -84,6 +88,11 @@ void SYCL::print_configuration(std::ostream& os, bool verbose) const {
   os << "\nRuntime Configuration:\n";
 
   os << "macro  KOKKOS_ENABLE_SYCL : defined\n";
+#ifdef KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED
+  os << "macro  KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED : defined\n";
+#else
+  os << "macro  KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED : undefined\n";
+#endif
   if (verbose)
     SYCL::impl_sycl_info(os, m_space_instance->m_queue->get_device());
 }
@@ -140,7 +149,6 @@ std::ostream& SYCL::impl_sycl_info(std::ostream& os,
   using namespace sycl::info;
   return os << "Name: " << device.get_info<device::name>()
             << "\nDriver Version: " << device.get_info<device::driver_version>()
-            << "\nIs Host: " << device.is_host()
             << "\nIs CPU: " << device.is_cpu()
             << "\nIs GPU: " << device.is_gpu()
             << "\nIs Accelerator: " << device.is_accelerator()
@@ -180,7 +188,6 @@ std::ostream& SYCL::impl_sycl_info(std::ostream& os,
             << "\nNative Vector Width Half: "
             << device.get_info<device::native_vector_width_half>()
             << "\nAddress Bits: " << device.get_info<device::address_bits>()
-            << "\nImage Support: " << device.get_info<device::image_support>()
             << "\nMax Mem Alloc Size: "
             << device.get_info<device::max_mem_alloc_size>()
             << "\nMax Read Image Args: "
@@ -213,26 +220,11 @@ std::ostream& SYCL::impl_sycl_info(std::ostream& os,
             << "\nLocal Mem Size: " << device.get_info<device::local_mem_size>()
             << "\nError Correction Support: "
             << device.get_info<device::error_correction_support>()
-            << "\nHost Unified Memory: "
-            << device.get_info<device::host_unified_memory>()
             << "\nProfiling Timer Resolution: "
             << device.get_info<device::profiling_timer_resolution>()
-            << "\nIs Endian Little: "
-            << device.get_info<device::is_endian_little>()
             << "\nIs Available: " << device.get_info<device::is_available>()
-            << "\nIs Compiler Available: "
-            << device.get_info<device::is_compiler_available>()
-            << "\nIs Linker Available: "
-            << device.get_info<device::is_linker_available>()
-            << "\nQueue Profiling: "
-            << device.get_info<device::queue_profiling>()
             << "\nVendor: " << device.get_info<device::vendor>()
-            << "\nProfile: " << device.get_info<device::profile>()
             << "\nVersion: " << device.get_info<device::version>()
-            << "\nPrintf Buffer Size: "
-            << device.get_info<device::printf_buffer_size>()
-            << "\nPreferred Interop User Sync: "
-            << device.get_info<device::preferred_interop_user_sync>()
             << "\nPartition Max Sub Devices: "
             << device.get_info<device::partition_max_sub_devices>()
             << "\nReference Count: "

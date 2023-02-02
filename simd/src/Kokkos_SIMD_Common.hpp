@@ -126,6 +126,44 @@ template <class T>
   return const_where_expression(mask, value);
 }
 
+// fallback simd multiplication using generator constructor
+// At the time of this writing, this fallback is only used
+// to multiply vectors of 64-bit signed integers for the AVX2 backend
+
+template <class T, class Abi>
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd<T, Abi> operator*(
+    simd<T, Abi> const& lhs, simd<T, Abi> const& rhs) {
+  return simd<T, Abi>([&](std::size_t i) { return lhs[i] * rhs[i]; });
+}
+
+// fallback simd shift using generator constructor
+// At the time of this writing, these fallbacks are only used
+// to shift vectors of 64-bit unsigned integers for the NEON backend
+
+template <class T, class U, class Abi>
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd<T, Abi> operator>>(
+    simd<T, Abi> const& lhs, unsigned int rhs) {
+  return simd<T, Abi>([&](std::size_t i) { return lhs[i] >> rhs; });
+}
+
+template <class T, class U, class Abi>
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd<T, Abi> operator<<(
+    simd<T, Abi> const& lhs, unsigned int rhs) {
+  return simd<T, Abi>([&](std::size_t i) { return lhs[i] << rhs; });
+}
+
+template <class T, class U, class Abi>
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd<T, Abi> operator>>(
+    simd<T, Abi> const& lhs, simd<U, Abi> const& rhs) {
+  return simd<T, Abi>([&](std::size_t i) { return lhs[i] >> rhs[i]; });
+}
+
+template <class T, class U, class Abi>
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd<T, Abi> operator<<(
+    simd<T, Abi> const& lhs, simd<U, Abi> const& rhs) {
+  return simd<T, Abi>([&](std::size_t i) { return lhs[i] << rhs[i]; });
+}
+
 // The code below provides:
 // operator@(simd<T, Abi>, Arithmetic)
 // operator@(Arithmetic, simd<T, Abi>)
@@ -293,6 +331,43 @@ template <class T, class Abi>
 [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION bool none_of(
     simd_mask<T, Abi> const& a) {
   return a == simd_mask<T, Abi>(false);
+}
+
+template <class T, class Abi>
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
+hmin(const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> const& x) {
+  auto const& v = x.value();
+  auto const& m = x.mask();
+  auto result   = Kokkos::reduction_identity<T>::min();
+  for (std::size_t i = 0; i < v.size(); ++i) {
+    if (m[i]) result = Kokkos::min(result, v[i]);
+  }
+  return result;
+}
+
+template <class T, class Abi>
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
+hmax(const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> const& x) {
+  auto const& v = x.value();
+  auto const& m = x.mask();
+  auto result   = Kokkos::reduction_identity<T>::max();
+  for (std::size_t i = 0; i < v.size(); ++i) {
+    if (m[i]) result = Kokkos::max(result, v[i]);
+  }
+  return result;
+}
+
+template <class T, class Abi>
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
+reduce(const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> const& x, T,
+       std::plus<>) {
+  auto const& v = x.value();
+  auto const& m = x.mask();
+  auto result   = Kokkos::reduction_identity<T>::sum();
+  for (std::size_t i = 0; i < v.size(); ++i) {
+    if (m[i]) result += v[i];
+  }
+  return result;
 }
 
 }  // namespace Experimental

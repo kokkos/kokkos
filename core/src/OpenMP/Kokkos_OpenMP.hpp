@@ -43,6 +43,8 @@ static_assert(false,
 #include <impl/Kokkos_Profiling_Interface.hpp>
 #include <impl/Kokkos_InitializationSettings.hpp>
 
+#include <omp.h>
+
 #include <vector>
 
 /*--------------------------------------------------------------------------*/
@@ -51,7 +53,12 @@ namespace Kokkos {
 
 namespace Impl {
 class OpenMPInternal;
-}
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
+// FIXME_OPENMP we can remove this after we remove partition_master
+inline thread_local OpenMPInternal* t_openmp_instance = nullptr;
+#endif
+}  // namespace Impl
 
 /// \class OpenMP
 /// \brief Kokkos device for multicore processors in the host memory space.
@@ -75,11 +82,13 @@ class OpenMP {
 
   OpenMP();
 
+  OpenMP(int pool_size);
+
   /// \brief Print configuration information to the given output stream.
   void print_configuration(std::ostream& os, bool verbose = false) const;
 
   /// \brief is the instance running a parallel algorithm
-  inline static bool in_parallel(OpenMP const& = OpenMP()) noexcept;
+  static bool in_parallel(OpenMP const& = OpenMP()) noexcept;
 
   /// \brief Wait until all dispatched functors complete on the given instance
   ///
@@ -107,8 +116,7 @@ class OpenMP {
       int requested_partition_size = 0);
 #endif
 
-  // use UniqueToken
-  static int concurrency();
+  static int concurrency(OpenMP const& = OpenMP());
 
   static void impl_initialize(InitializationSettings const&);
 
@@ -119,16 +127,15 @@ class OpenMP {
   /// \brief Free any resources being consumed by the default execution space
   static void impl_finalize();
 
-  inline static int impl_thread_pool_size() noexcept;
+  static int impl_thread_pool_size(OpenMP const& = OpenMP()) noexcept;
 
   /** \brief  The rank of the executing thread in this thread pool */
-  KOKKOS_INLINE_FUNCTION
-  static int impl_thread_pool_rank() noexcept;
+  inline static int impl_thread_pool_rank() noexcept;
 
-  inline static int impl_thread_pool_size(int depth);
+  inline static int impl_thread_pool_size(int depth, OpenMP const& = OpenMP());
 
   // use UniqueToken
-  inline static int impl_max_hardware_threads() noexcept;
+  static int impl_max_hardware_threads() noexcept;
 
   // use UniqueToken
   KOKKOS_INLINE_FUNCTION
@@ -153,6 +160,42 @@ class OpenMP {
   }
   Kokkos::Impl::HostSharedPtr<Impl::OpenMPInternal> m_space_instance;
 };
+
+inline int OpenMP::impl_thread_pool_rank() noexcept {
+  // FIXME_OPENMP Can we remove this when removing partition_master? It's only
+  // used in one partition_master test
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
+  KOKKOS_IF_ON_HOST(
+      (return Impl::t_openmp_instance ? 0 : omp_get_thread_num();))
+#else
+  KOKKOS_IF_ON_HOST((return omp_get_thread_num();))
+#endif
+
+  KOKKOS_IF_ON_DEVICE((return -1;))
+}
+
+inline void OpenMP::impl_static_fence(std::string const& name) {
+  Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::OpenMP>(
+      name,
+      Kokkos::Tools::Experimental::SpecialSynchronizationCases::
+          GlobalDeviceSynchronization,
+      []() {});
+}
+
+inline bool OpenMP::is_asynchronous(OpenMP const& /*instance*/) noexcept {
+  return false;
+}
+
+inline int OpenMP::impl_thread_pool_size(int depth, OpenMP const& exec_space) {
+  return depth < 2 ? impl_thread_pool_size(exec_space) : 1;
+}
+
+KOKKOS_INLINE_FUNCTION
+int OpenMP::impl_hardware_thread_id() noexcept {
+  KOKKOS_IF_ON_HOST((return omp_get_thread_num();))
+
+  KOKKOS_IF_ON_DEVICE((return -1;))
+}
 
 namespace Tools {
 namespace Experimental {

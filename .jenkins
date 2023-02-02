@@ -36,6 +36,9 @@ pipeline {
                             args '--env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
                         }
                     }
+                    environment {
+                        CUDA_HOME = '/opt/nvidia/hpc_sdk/Linux_x86_64/22.3/cuda/11.6'
+                    }
                     steps {
                         sh '''rm -rf build && mkdir -p build && cd build && \
                               /opt/cmake/bin/cmake \
@@ -67,6 +70,7 @@ pipeline {
                         OMP_MAX_ACTIVE_LEVELS = 1
                         OMP_PLACES = 'threads'
                         OMP_PROC_BIND = 'spread'
+                        NVHPC_CUDA_HOME = '/opt/nvidia/hpc_sdk/Linux_x86_64/22.9/cuda/11.7'
                     }
                     steps {
                         sh '''rm -rf build && mkdir -p build && cd build && \
@@ -74,7 +78,7 @@ pipeline {
                                 -DCMAKE_BUILD_TYPE=RelWithDebInfo \
                                 -DCMAKE_CXX_COMPILER=nvc++ \
                                 -DCMAKE_CXX_STANDARD=17 \
-                                -DCMAKE_CXX_FLAGS="--diag_suppress=implicit_return_from_non_void_function" \
+                                -DCMAKE_CXX_FLAGS="--diag_suppress=implicit_return_from_non_void_function,no_device_stack" \
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
@@ -97,12 +101,14 @@ pipeline {
                     }
                     steps {
                         sh 'ccache --zero-stats'
-                        sh '''rm -rf build && mkdir -p build && cd build && \
+                        sh '''. /opt/intel/oneapi/setvars.sh --include-intel-llvm && \
+                              rm -rf build && mkdir -p build && cd build && \
                               cmake \
                                 -DCMAKE_BUILD_TYPE=Release \
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-                                -DCMAKE_CXX_COMPILER=clang++ \
-                                -DCMAKE_CXX_FLAGS="-fsycl-device-code-split=per_kernel -Werror -Wno-gnu-zero-variadic-macro-arguments -Wno-linker-warnings" \
+                                -DCMAKE_CXX_COMPILER=/opt/intel/oneapi/compiler/2023.0.0/linux/bin-llvm/clang++ \
+                                -DCMAKE_CXX_FLAGS="-fsycl-device-code-split=per_kernel -Werror -Wno-gnu-zero-variadic-macro-arguments -Wno-unknown-cuda-version -Wno-sycl-target" \
+                                -DKOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED=0 \
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ARCH_VOLTA70=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
@@ -339,7 +345,7 @@ pipeline {
                                 --with-cuda \
                                 --with-cuda-options=enable_lambda \
                                 --arch=Volta70 \
-                              .. && \
+                              && \
                               make test -j8'''
                     }
                     post {

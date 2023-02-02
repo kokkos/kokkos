@@ -183,16 +183,11 @@
 // Intel compiler macros
 
 #if defined(KOKKOS_COMPILER_INTEL)
-// FIXME_SYCL
-#if !defined(KOKKOS_ENABLE_SYCL)
+// FIXME_ICPX
+#if !defined(__INTEL_LLVM_COMPILER)
 #define KOKKOS_ENABLE_PRAGMA_UNROLL 1
 #define KOKKOS_ENABLE_PRAGMA_LOOPCOUNT 1
 #define KOKKOS_ENABLE_PRAGMA_VECTOR 1
-#endif
-
-// FIXME Workaround for ICE with intel <=21 in Trilinos
-#if (KOKKOS_COMPILER_INTEL <= 2100)
-#define KOKKOS_IMPL_WORKAROUND_ICE_IN_TRILINOS_WITH_OLD_INTEL_COMPILERS
 #endif
 
 // FIXME_SYCL
@@ -456,6 +451,7 @@
 
 //----------------------------------------------------------------------------
 // Determine for what space the code is being compiled:
+#if defined(KOKKOS_ENABLE_DEPRECATED_CODE_3)
 
 #if defined(__CUDACC__) && defined(__CUDA_ARCH__) && defined(KOKKOS_ENABLE_CUDA)
 #define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA
@@ -468,6 +464,7 @@
 #define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
 #endif
 
+#endif
 //----------------------------------------------------------------------------
 
 // Remove surrounding parentheses if present
@@ -527,6 +524,7 @@ static constexpr bool kokkos_omp_on_host() { return false; }
     KOKKOS_IMPL_STRIP_PARENS(CODE)   \
   }
 #else
+#include <openacc.h>
 // FIXME_OPENACC acc_on_device is a non-constexpr function
 #define KOKKOS_IF_ON_DEVICE(CODE)                     \
   if constexpr (acc_on_device(acc_device_not_host)) { \
@@ -606,7 +604,9 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 #if (defined(KOKKOS_COMPILER_GNU) || defined(KOKKOS_COMPILER_CLANG) ||  \
      defined(KOKKOS_COMPILER_INTEL) || defined(KOKKOS_COMPILER_PGI)) && \
     !defined(_WIN32) && !defined(__ANDROID__)
+#if __has_include(<execinfo.h>)
 #define KOKKOS_IMPL_ENABLE_STACKTRACE
+#endif
 #define KOKKOS_IMPL_ENABLE_CXXABI
 #endif
 

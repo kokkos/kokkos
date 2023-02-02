@@ -73,6 +73,7 @@ class CudaTeamMember {
  public:
   using execution_space      = Kokkos::Cuda;
   using scratch_memory_space = execution_space::scratch_memory_space;
+  using team_handle          = CudaTeamMember;
 
  private:
   mutable void* m_team_reduce;

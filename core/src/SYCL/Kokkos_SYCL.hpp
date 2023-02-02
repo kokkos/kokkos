@@ -31,7 +31,7 @@ static_assert(false,
 #else
 #include <CL/sycl.hpp>
 #endif
-#include <Kokkos_SYCL_Space.hpp>
+#include <SYCL/Kokkos_SYCL_Space.hpp>
 #include <Kokkos_Layout.hpp>
 #include <Kokkos_ScratchSpace.hpp>
 #include <impl/Kokkos_Profiling_Interface.hpp>
@@ -109,7 +109,12 @@ class SYCL {
 
   static bool impl_is_initialized();
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   static int concurrency();
+#else
+  int concurrency() const;
+#endif
+
   static const char* name();
 
   inline Impl::SYCLInternal* impl_internal_space_instance() const {

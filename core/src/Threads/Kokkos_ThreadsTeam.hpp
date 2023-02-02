@@ -46,6 +46,7 @@ class ThreadsExecTeamMember {
  public:
   using execution_space      = Kokkos::Threads;
   using scratch_memory_space = execution_space::scratch_memory_space;
+  using team_handle          = ThreadsExecTeamMember;
 
  private:
   using space = execution_space::scratch_memory_space;
@@ -754,7 +755,7 @@ class TeamPolicyInternal<Kokkos::Threads, Properties...>
  private:
   /** \brief finalize chunk_size if it was set to AUTO*/
   inline void set_auto_chunk_size() {
-    int64_t concurrency = traits::execution_space::concurrency() / m_team_alloc;
+    int64_t concurrency = space().concurrency() / m_team_alloc;
     if (concurrency == 0) concurrency = 1;
 
     if (m_chunk_size > 0) {

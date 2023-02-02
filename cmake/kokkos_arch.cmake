@@ -229,9 +229,16 @@ IF(KOKKOS_ARCH_NATIVE)
     MESSAGE(FATAL_ERROR "MSVC doesn't support ARCH_NATIVE!")
   ENDIF()
 
+  STRING(TOUPPER "${CMAKE_SYSTEM_PROCESSOR}" KOKKOS_UC_SYSTEM_PROCESSOR)
+  IF(KOKKOS_UC_SYSTEM_PROCESSOR MATCHES "(X86)|(AMD64)")
+    SET(KOKKOS_NATIVE_FLAGS "-march=native;-mtune=native")
+  ELSE()
+    SET(KOKKOS_NATIVE_FLAGS "-mcpu=native")
+  ENDIF()
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
-    DEFAULT -march=native -mtune=native
+    NVHPC   -tp=native
+    DEFAULT ${KOKKOS_NATIVE_FLAGS}
   )
 ENDIF()
 
@@ -239,6 +246,7 @@ IF (KOKKOS_ARCH_ARMV80)
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
     Cray    NO-VALUE-SPECIFIED
+    MSVC    /arch:armv8.0
     NVHPC   NO-VALUE-SPECIFIED
     DEFAULT -march=armv8-a
   )
@@ -248,6 +256,7 @@ IF (KOKKOS_ARCH_ARMV81)
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
     Cray    NO-VALUE-SPECIFIED
+    MSVC    /arch:armv8.1
     NVHPC   NO-VALUE-SPECIFIED
     DEFAULT -march=armv8.1-a
   )
@@ -258,6 +267,7 @@ IF (KOKKOS_ARCH_ARMV8_THUNDERX)
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
     Cray    NO-VALUE-SPECIFIED
+    MSVC    /arch:armv8.0
     NVHPC   NO-VALUE-SPECIFIED
     DEFAULT -march=armv8-a -mtune=thunderx
   )
@@ -268,6 +278,7 @@ IF (KOKKOS_ARCH_ARMV8_THUNDERX2)
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
     Cray    NO-VALUE-SPECIFIED
+    MSVC    /arch:armv8.1
     NVHPC   NO-VALUE-SPECIFIED
     DEFAULT -mcpu=thunderx2t99 -mtune=thunderx2t99
   )
@@ -276,10 +287,11 @@ ENDIF()
 IF (KOKKOS_ARCH_A64FX)
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
-    NVHPC   NO-VALUE-SPECIFIED
-    DEFAULT -march=armv8.2-a+sve
     Clang   -march=armv8.2-a+sve -msve-vector-bits=512
     GNU     -march=armv8.2-a+sve -msve-vector-bits=512
+    MSVC    NO-VALUE-SPECIFIED
+    NVHPC   NO-VALUE-SPECIFIED
+    DEFAULT -march=armv8.2-a+sve
   )
 ENDIF()
 
@@ -287,6 +299,7 @@ IF (KOKKOS_ARCH_ZEN)
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
     Intel   -mavx2
+    MSVC    /arch:AVX2
     NVHPC   -tp=zen
     DEFAULT -march=znver1 -mtune=znver1
   )
@@ -298,6 +311,7 @@ IF (KOKKOS_ARCH_ZEN2)
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
     Intel   -mavx2
+    MSVC    /arch:AVX2
     NVHPC   -tp=zen2
     DEFAULT -march=znver2 -mtune=znver2
   )
@@ -309,6 +323,7 @@ IF (KOKKOS_ARCH_ZEN3)
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
     Intel   -mavx2
+    MSVC    /arch:AVX2
     NVHPC   -tp=zen2
     DEFAULT -march=znver3 -mtune=znver3
   )
@@ -319,9 +334,10 @@ ENDIF()
 IF (KOKKOS_ARCH_WSM)
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
-    Intel   -xSSE4.2
-    NVHPC   -tp=px
     Cray    NO-VALUE-SPECIFIED
+    Intel   -xSSE4.2
+    MSVC    NO-VALUE-SPECIFIED
+    NVHPC   -tp=px
     DEFAULT -msse4.2
   )
   SET(KOKKOS_ARCH_SSE42 ON)
@@ -331,9 +347,10 @@ IF (KOKKOS_ARCH_SNB OR KOKKOS_ARCH_AMDAVX)
   SET(KOKKOS_ARCH_AVX ON)
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
-    Intel   -mavx
-    NVHPC   -tp=sandybridge
     Cray    NO-VALUE-SPECIFIED
+    Intel   -mavx
+    MSVC    /arch:AVX
+    NVHPC   -tp=sandybridge
     DEFAULT -mavx
   )
 ENDIF()
@@ -342,9 +359,10 @@ IF (KOKKOS_ARCH_HSW)
   SET(KOKKOS_ARCH_AVX2 ON)
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
-    Intel   -xCORE-AVX2
-    NVHPC   -tp=haswell
     Cray    NO-VALUE-SPECIFIED
+    Intel   -xCORE-AVX2
+    MSVC    /arch:AVX2
+    NVHPC   -tp=haswell
     DEFAULT -march=core-avx2 -mtune=core-avx2
   )
 ENDIF()
@@ -353,9 +371,10 @@ IF (KOKKOS_ARCH_BDW)
   SET(KOKKOS_ARCH_AVX2 ON)
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
-    Intel   -xCORE-AVX2
-    NVHPC   -tp=haswell
     Cray    NO-VALUE-SPECIFIED
+    Intel   -xCORE-AVX2
+    MSVC    /arch:AVX2
+    NVHPC   -tp=haswell
     DEFAULT -march=core-avx2 -mtune=core-avx2 -mrtm
   )
 ENDIF()
@@ -365,9 +384,10 @@ IF (KOKKOS_ARCH_KNL)
   SET(KOKKOS_ARCH_AVX512MIC ON) #not a cache variable
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
-    Intel   -xMIC-AVX512
-    NVHPC   -tp=knl
     Cray    NO-VALUE-SPECIFIED
+    Intel   -xMIC-AVX512
+    MSVC    /arch:AVX512
+    NVHPC   -tp=knl
     DEFAULT -march=knl -mtune=knl
   )
 ENDIF()
@@ -375,6 +395,7 @@ ENDIF()
 IF (KOKKOS_ARCH_KNC)
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
+    MSVC    NO-VALUE-SPECIFIED
     DEFAULT -mmic
   )
 ENDIF()
@@ -382,9 +403,10 @@ ENDIF()
 IF (KOKKOS_ARCH_SKL)
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
-    Intel   -xSKYLAKE
-    NVHPC   -tp=skylake
     Cray    NO-VALUE-SPECIFIED
+    Intel   -xSKYLAKE
+    MSVC    /arch:AVX2
+    NVHPC   -tp=skylake
     DEFAULT -march=skylake -mtune=skylake
   )
 ENDIF()
@@ -394,9 +416,10 @@ IF (KOKKOS_ARCH_SKX)
   SET(KOKKOS_ARCH_AVX512XEON ON)
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
-    Intel   -xCORE-AVX512
-    NVHPC   -tp=skylake
     Cray    NO-VALUE-SPECIFIED
+    Intel   -xCORE-AVX512
+    MSVC    /arch:AVX512
+    NVHPC   -tp=skylake
     DEFAULT -march=skylake-avx512 -mtune=skylake-avx512
   )
 ENDIF()
@@ -405,6 +428,7 @@ IF (KOKKOS_ARCH_ICL)
   SET(KOKKOS_ARCH_AVX512XEON ON)
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
+    MSVC    /arch:AVX512
     DEFAULT -march=icelake-client -mtune=icelake-client
   )
 ENDIF()
@@ -413,6 +437,7 @@ IF (KOKKOS_ARCH_ICX)
   SET(KOKKOS_ARCH_AVX512XEON ON)
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
+    MSVC    /arch:AVX512
     DEFAULT -march=icelake-server -mtune=icelake-server
   )
 ENDIF()
@@ -421,6 +446,7 @@ IF (KOKKOS_ARCH_SPR)
   SET(KOKKOS_ARCH_AVX512XEON ON)
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
+    MSVC    /arch:AVX512
     DEFAULT -march=sapphirerapids -mtune=sapphirerapids
   )
 ENDIF()
@@ -428,6 +454,7 @@ ENDIF()
 IF (KOKKOS_ARCH_POWER7)
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
+    MSVC    NO-VALUE-SPECIFIED
     NVHPC   NO-VALUE-SPECIFIED
     DEFAULT -mcpu=power7 -mtune=power7
   )
@@ -436,6 +463,7 @@ ENDIF()
 IF (KOKKOS_ARCH_POWER8)
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
+    MSVC    NO-VALUE-SPECIFIED
     NVHPC   -tp=pwr8
     DEFAULT -mcpu=power8 -mtune=power8
   )
@@ -444,6 +472,7 @@ ENDIF()
 IF (KOKKOS_ARCH_POWER9)
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
+    MSVC    NO-VALUE-SPECIFIED
     NVHPC   -tp=pwr9
     DEFAULT -mcpu=power9 -mtune=power9
   )
@@ -501,6 +530,35 @@ IF (KOKKOS_ENABLE_SYCL)
   )
 ENDIF()
 
+# Check support for device_global variables
+# FIXME_SYCL Once the feature test macro SYCL_EXT_ONEAPI_DEVICE_GLOBAL is
+#            available, use that instead.
+IF(KOKKOS_ENABLE_SYCL AND NOT BUILD_SHARED_LIBS)
+  INCLUDE(CheckCXXSourceCompiles)
+  STRING(REPLACE ";" " " CMAKE_REQUIRED_FLAGS "${KOKKOS_COMPILE_OPTIONS}")
+  CHECK_CXX_SOURCE_COMPILES("
+    #include <sycl/sycl.hpp>
+    using namespace sycl::ext::oneapi::experimental;
+    using namespace sycl;
+
+    SYCL_EXTERNAL device_global<int, decltype(properties(device_image_scope))> Foo;
+
+    void bar(queue q) {
+      q.single_task([=] {
+      Foo = 42;
+    });
+    }
+
+    int main(){ return 0; }
+    "
+    KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED)
+
+  IF(KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED)
+    COMPILER_SPECIFIC_FLAGS(
+      DEFAULT -fsycl-device-code-split=off -DDESUL_SYCL_DEVICE_GLOBAL_SUPPORTED
+    )
+  ENDIF()
+ENDIF()
 
 SET(CUDA_ARCH_ALREADY_SPECIFIED "")
 FUNCTION(CHECK_CUDA_ARCH ARCH FLAG)
@@ -682,7 +740,7 @@ IF (KOKKOS_ENABLE_SYCL)
   IF(CUDA_ARCH_ALREADY_SPECIFIED)
     IF(KOKKOS_ENABLE_UNSUPPORTED_ARCHS)
       COMPILER_SPECIFIC_FLAGS(
-        DEFAULT -fsycl-targets=nvptx64-nvidia-cuda -Xsycl-target-backend "${CUDA_ARCH_FLAG}=${KOKKOS_CUDA_ARCH_FLAG}"
+        DEFAULT -fsycl-targets=nvptx64-nvidia-cuda -Xsycl-target-backend=nvptx64-nvidia-cuda --cuda-gpu-arch=${KOKKOS_CUDA_ARCH_FLAG}
       )
     ELSE()
       MESSAGE(SEND_ERROR "Setting a CUDA architecture for SYCL is only allowed with Kokkos_ENABLE_UNSUPPORTED_ARCHS=ON!")
@@ -691,30 +749,35 @@ IF (KOKKOS_ENABLE_SYCL)
     COMPILER_SPECIFIC_FLAGS(
       DEFAULT -fsycl-targets=spir64
     )
-  ELSEIF(KOKKOS_ARCH_INTEL_GEN9)
-    COMPILER_SPECIFIC_FLAGS(
-      DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device gen9"
+  ELSE()
+    COMPILER_SPECIFIC_OPTIONS(
+      DEFAULT -fsycl-targets=spir64_gen
     )
-  ELSEIF(KOKKOS_ARCH_INTEL_GEN11)
-    COMPILER_SPECIFIC_FLAGS(
-      DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device gen11"
-    )
-  ELSEIF(KOKKOS_ARCH_INTEL_GEN12LP)
-    COMPILER_SPECIFIC_FLAGS(
-      DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device gen12lp"
-    )
-  ELSEIF(KOKKOS_ARCH_INTEL_DG1)
-    COMPILER_SPECIFIC_FLAGS(
-      DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device dg1"
-    )
-  ELSEIF(KOKKOS_ARCH_INTEL_XEHP)
-    COMPILER_SPECIFIC_FLAGS(
-      DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device 12.50.4"
-    )
-  ELSEIF(KOKKOS_ARCH_INTEL_PVC)
-    COMPILER_SPECIFIC_FLAGS(
-      DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device 12.60.7"
-    )
+    IF(KOKKOS_ARCH_INTEL_GEN9)
+      COMPILER_SPECIFIC_LINK_OPTIONS(
+        DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device gen9"
+      )
+    ELSEIF(KOKKOS_ARCH_INTEL_GEN11)
+      COMPILER_SPECIFIC_LINK_OPTIONS(
+        DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device gen11"
+      )
+    ELSEIF(KOKKOS_ARCH_INTEL_GEN12LP)
+      COMPILER_SPECIFIC_LINK_OPTIONS(
+        DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device gen12lp"
+      )
+    ELSEIF(KOKKOS_ARCH_INTEL_DG1)
+      COMPILER_SPECIFIC_LINK_OPTIONS(
+        DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device dg1"
+      )
+    ELSEIF(KOKKOS_ARCH_INTEL_XEHP)
+      COMPILER_SPECIFIC_LINK_OPTIONS(
+        DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device 12.50.4"
+      )
+    ELSEIF(KOKKOS_ARCH_INTEL_PVC)
+      COMPILER_SPECIFIC_LINK_OPTIONS(
+        DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device 12.60.7"
+      )
+    ENDIF()
   ENDIF()
 ENDIF()
 

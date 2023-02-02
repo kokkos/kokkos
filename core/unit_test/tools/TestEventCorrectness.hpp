@@ -197,7 +197,7 @@ TEST(kokkosp, test_multiple_default_instances) {
       ex1.fence("named_instance_fence_one");
       ex2.fence("named_instance_fence_two");
     });
-    ASSERT_TRUE(found_payloads[0].dev_id == found_payloads[1].dev_id);
+    ASSERT_EQ(found_payloads[0].dev_id, found_payloads[1].dev_id);
   });
 }
 
@@ -730,7 +730,7 @@ TEST(kokkosp, get_events) {
   });
   for (const auto& ptr : event_vector) {
     auto ptr_as_begin = std::dynamic_pointer_cast<BeginParallelForEvent>(ptr);
-    ASSERT_TRUE(ptr_as_begin == nullptr);
+    ASSERT_EQ(ptr_as_begin, nullptr);
   }
 }
 }  // namespace Test

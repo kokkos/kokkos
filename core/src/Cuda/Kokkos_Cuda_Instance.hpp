@@ -109,12 +109,12 @@ class CudaInternal {
   inline static unsigned m_maxWarpCount             = 0;
   inline static std::array<size_type, 3> m_maxBlock = {0, 0, 0};
   inline static unsigned m_maxSharedWords           = 0;
-  inline static uint32_t m_maxConcurrency           = 0;
   inline static int m_shmemPerSM                    = 0;
   inline static int m_maxShmemPerBlock              = 0;
   inline static int m_maxBlocksPerSM                = 0;
   inline static int m_maxThreadsPerSM               = 0;
   inline static int m_maxThreadsPerBlock            = 0;
+  static int concurrency();
 
   inline static cudaDeviceProp m_deviceProp;
 
@@ -138,7 +138,8 @@ class CudaInternal {
   mutable int64_t m_team_scratch_current_size[10];
   mutable void* m_team_scratch_ptr[10];
   mutable std::atomic_int m_team_scratch_pool[10];
-  std::int32_t* m_scratch_locks;
+  int32_t* m_scratch_locks;
+  size_t m_num_scratch_locks;
 
   bool was_initialized = false;
   bool was_finalized   = false;

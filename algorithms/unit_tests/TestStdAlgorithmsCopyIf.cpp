@@ -270,6 +270,9 @@ void run_all_scenarios() {
 }
 
 TEST(std_algorithms_mod_seq_ops, copy_if) {
+#if defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ARCH_INTEL_GPU)
+  GTEST_SKIP() << "skipping for SYCL+Cuda";
+#endif
   run_all_scenarios<DynamicTag, int>();
   run_all_scenarios<StridedThreeTag, int>();
 }

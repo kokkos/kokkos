@@ -286,7 +286,6 @@ struct ViewDimensionAssignable<ViewDimension<DstArgs...>,
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
-namespace Impl {
 
 struct ALL_t {
   KOKKOS_INLINE_FUNCTION
@@ -296,7 +295,15 @@ struct ALL_t {
   constexpr bool operator==(const ALL_t&) const { return true; }
 };
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+namespace Impl {
+// TODO This alias declaration forces us to fully qualify ALL_t inside the
+// Kokkos::Impl namespace to avoid deprecation warnings. Replace the
+// fully-qualified name when we remove Kokkos::Impl::ALL_t.
+using ALL_t KOKKOS_DEPRECATED_WITH_COMMENT("Use Kokkos::ALL_t instead!") =
+    Kokkos::ALL_t;
 }  // namespace Impl
+#endif
 }  // namespace Kokkos
 
 namespace Kokkos {
@@ -304,7 +311,7 @@ namespace Impl {
 
 template <class T>
 struct is_integral_extent_type {
-  enum : bool { value = std::is_same<T, Kokkos::Impl::ALL_t>::value ? 1 : 0 };
+  enum : bool { value = std::is_same<T, Kokkos::ALL_t>::value ? 1 : 0 };
 };
 
 template <class iType>
@@ -354,7 +361,7 @@ struct SubviewLegalArgsCompileTime<Kokkos::LayoutLeft, Kokkos::LayoutLeft,
               (Kokkos::Impl::is_integral_extent_type<Arg>::value)) ||
              ((CurrentArg >= RankDest) && (std::is_integral<Arg>::value)) ||
              ((CurrentArg < RankDest) &&
-              (std::is_same<Arg, Kokkos::Impl::ALL_t>::value)) ||
+              (std::is_same<Arg, Kokkos::ALL_t>::value)) ||
              ((CurrentArg == 0) &&
               (Kokkos::Impl::is_integral_extent_type<Arg>::value))) &&
             (SubviewLegalArgsCompileTime<Kokkos::LayoutLeft, Kokkos::LayoutLeft,
@@ -385,7 +392,7 @@ struct SubviewLegalArgsCompileTime<Kokkos::LayoutRight, Kokkos::LayoutRight,
              ((CurrentArg < RankSrc - RankDest) &&
               (std::is_integral<Arg>::value)) ||
              ((CurrentArg >= RankSrc - RankDest) &&
-              (std::is_same<Arg, Kokkos::Impl::ALL_t>::value))) &&
+              (std::is_same<Arg, Kokkos::ALL_t>::value))) &&
             (SubviewLegalArgsCompileTime<Kokkos::LayoutRight,
                                          Kokkos::LayoutRight, RankDest, RankSrc,
                                          CurrentArg + 1, SubViewArgs...>::value)
@@ -397,7 +404,7 @@ struct SubviewLegalArgsCompileTime<Kokkos::LayoutRight, Kokkos::LayoutRight,
                                    RankDest, RankSrc, CurrentArg, Arg> {
   enum {
     value = ((CurrentArg == RankSrc - 1) &&
-             (std::is_same<Arg, Kokkos::Impl::ALL_t>::value))
+             (std::is_same<Arg, Kokkos::ALL_t>::value))
   };
 };
 
@@ -463,8 +470,7 @@ struct SubviewExtents {
   KOKKOS_FORCEINLINE_FUNCTION bool set(unsigned domain_rank,
                                        unsigned range_rank,
                                        const ViewDimension<DimArgs...>& dim,
-                                       const Kokkos::Impl::ALL_t,
-                                       Args... args) {
+                                       Kokkos::ALL_t, Args... args) {
     m_begin[domain_rank] = 0;
     m_length[range_rank] = dim.extent(domain_rank);
     m_index[range_rank]  = domain_rank;
@@ -559,8 +565,7 @@ struct SubviewExtents {
   // std::pair range
   template <size_t... DimArgs, class... Args>
   void error(char* buf, int buf_len, unsigned domain_rank, unsigned range_rank,
-             const ViewDimension<DimArgs...>& dim, const Kokkos::Impl::ALL_t,
-             Args... args) const {
+             const ViewDimension<DimArgs...>& dim, ALL_t, Args... args) const {
     const int n = std::min(buf_len, snprintf(buf, buf_len, " Kokkos::ALL %c",
                                              int(sizeof...(Args) ? ',' : ')')));
 

@@ -294,11 +294,11 @@ class where_expression<simd_mask<T, simd_abi::scalar>,
   }
 };
 
-template <class T, class BinaryOp>
+template <class T>
 [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION T
 reduce(const_where_expression<simd_mask<T, simd_abi::scalar>,
                               simd<T, simd_abi::scalar>> const& x,
-       T identity_element, BinaryOp) {
+       T identity_element, std::plus<>) {
   return static_cast<bool>(x.mask()) ? static_cast<T>(x.value())
                                      : identity_element;
 }

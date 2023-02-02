@@ -49,17 +49,16 @@ namespace Impl {
 CudaLockArrays g_host_cuda_lock_arrays = {nullptr, 0};
 
 void initialize_host_cuda_lock_arrays() {
-#ifdef KOKKOS_ENABLE_IMPL_DESUL_ATOMICS
   desul::Impl::init_lock_arrays();
   desul::ensure_cuda_lock_arrays_on_device();
-#endif
+
   if (g_host_cuda_lock_arrays.atomic != nullptr) return;
   KOKKOS_IMPL_CUDA_SAFE_CALL(
       cudaMalloc(&g_host_cuda_lock_arrays.atomic,
                  sizeof(int) * (CUDA_SPACE_ATOMIC_MASK + 1)));
   Impl::cuda_device_synchronize(
       "Kokkos::Impl::initialize_host_cuda_lock_arrays: Pre Init Lock Arrays");
-  g_host_cuda_lock_arrays.n = Cuda::concurrency();
+  g_host_cuda_lock_arrays.n = CudaInternal::concurrency();
   copy_cuda_lock_arrays_to_device();
   init_lock_array_kernel_atomic<<<(CUDA_SPACE_ATOMIC_MASK + 1 + 255) / 256,
                                   256>>>();
@@ -68,9 +67,7 @@ void initialize_host_cuda_lock_arrays() {
 }
 
 void finalize_host_cuda_lock_arrays() {
-#ifdef KOKKOS_ENABLE_IMPL_DESUL_ATOMICS
   desul::Impl::finalize_lock_arrays();
-#endif
 
   if (g_host_cuda_lock_arrays.atomic == nullptr) return;
   cudaFree(g_host_cuda_lock_arrays.atomic);

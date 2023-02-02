@@ -140,7 +140,11 @@ class Serial {
   }
 
   /** \brief  Return the maximum amount of concurrency.  */
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   static int concurrency() { return 1; }
+#else
+  int concurrency() const { return 1; }
+#endif
 
   //! Print configuration information to the given output stream.
   void print_configuration(std::ostream& os, bool verbose = false) const;
@@ -171,19 +175,11 @@ class Serial {
   static const char* name();
 
   Impl::SerialInternal* impl_internal_space_instance() const {
-#ifdef KOKKOS_IMPL_WORKAROUND_ICE_IN_TRILINOS_WITH_OLD_INTEL_COMPILERS
-    return m_space_instance;
-#else
     return m_space_instance.get();
-#endif
   }
 
  private:
-#ifdef KOKKOS_IMPL_WORKAROUND_ICE_IN_TRILINOS_WITH_OLD_INTEL_COMPILERS
-  Impl::SerialInternal* m_space_instance;
-#else
   Kokkos::Impl::HostSharedPtr<Impl::SerialInternal> m_space_instance;
-#endif
   friend bool operator==(Serial const& lhs, Serial const& rhs) {
     return lhs.impl_internal_space_instance() ==
            rhs.impl_internal_space_instance();

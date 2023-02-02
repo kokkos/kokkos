@@ -30,7 +30,7 @@ static_assert(false,
 
 #include <cstddef>
 #include <iosfwd>
-#include <Kokkos_OpenMPTargetSpace.hpp>
+#include <OpenMPTarget/Kokkos_OpenMPTargetSpace.hpp>
 #include <Kokkos_ScratchSpace.hpp>
 #include <Kokkos_Parallel.hpp>
 #include <Kokkos_TaskScheduler.hpp>
@@ -73,7 +73,11 @@ class OpenMPTarget {
   static void impl_static_fence(const std::string& name);
 
   /** \brief  Return the maximum amount of concurrency.  */
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   static int concurrency();
+#else
+  int concurrency() const;
+#endif
 
   //! Print configuration information to the given output stream.
   void print_configuration(std::ostream& os, bool verbose = false) const;
@@ -137,7 +141,6 @@ struct DeviceTypeTraits<::Kokkos::Experimental::OpenMPTarget> {
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
 
-#include <OpenMPTarget/Kokkos_OpenMPTarget_Exec.hpp>
 #include <OpenMPTarget/Kokkos_OpenMPTarget_Parallel.hpp>
 #include <OpenMPTarget/Kokkos_OpenMPTarget_Parallel_MDRange.hpp>
 #include <OpenMPTarget/Kokkos_OpenMPTarget_Task.hpp>

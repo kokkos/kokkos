@@ -26,9 +26,6 @@ KOKKOS_CFG_DEPENDS(OPTIONS COMPILER_ID)
 # Put a check in just in case people are using this option
 KOKKOS_DEPRECATED_LIST(OPTIONS ENABLE)
 
-# Set the Default for Desul Atomics usage.
-set(_DESUL_ATOMICS_DEFAULT ON)
-
 KOKKOS_ENABLE_OPTION(CUDA_RELOCATABLE_DEVICE_CODE  OFF "Whether to enable relocatable device code (RDC) for CUDA")
 KOKKOS_ENABLE_OPTION(CUDA_UVM             OFF "Whether to use unified memory (UM) for CUDA by default")
 KOKKOS_ENABLE_OPTION(CUDA_LDG_INTRINSIC   OFF "Whether to use CUDA LDG intrinsics")
@@ -62,7 +59,6 @@ KOKKOS_ENABLE_OPTION(COMPILE_AS_CMAKE_LANGUAGE OFF "Whether to use native cmake 
 KOKKOS_ENABLE_OPTION(HIP_MULTIPLE_KERNEL_INSTANTIATIONS OFF "Whether multiple kernels are instantiated at compile time - improve performance but increase compile time")
 
 # This option will go away eventually, but allows fallback to old implementation when needed.
-KOKKOS_ENABLE_OPTION(IMPL_DESUL_ATOMICS   ON  "Whether to use desul based atomics - option only during beta")
 KOKKOS_ENABLE_OPTION(DESUL_ATOMICS_EXTERNAL OFF "Whether to use an external desul installation")
 
 KOKKOS_ENABLE_OPTION(IMPL_MDSPAN OFF "Whether to enable experimental mdspan support")
@@ -165,4 +161,8 @@ IF(Kokkos_ENABLE_CUDA_LDG_INTRINSIC)
   ELSE()
     MESSAGE(FATAL_ERROR "Kokkos_ENABLE_CUDA_LDG_INTRINSIC has been removed. LDG intrinsics are always enabled.")
   ENDIF()
+ENDIF()
+
+IF(DEFINED Kokkos_ENABLE_IMPL_DESUL_ATOMICS)
+  MESSAGE(WARNING "Kokkos_ENABLE_IMPL_DESUL_ATOMICS option has been removed. Desul atomics cannot be disabled.")
 ENDIF()
