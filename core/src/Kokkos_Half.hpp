@@ -1038,7 +1038,7 @@ struct Kokkos::Experimental::Impl::round_error_helper<
 template <>
 struct Kokkos::Experimental::Impl::norm_min_helper<
     Kokkos::Experimental::half_t> {
-  static constexpr int value = 0.000000059604645F;
+  static constexpr float value = 0.000000059604645F;
 };
 // Quiet not a half precisioin number
 template <>
@@ -1115,7 +1115,7 @@ struct Kokkos::Experimental::Impl::round_error_helper<
 template <>
 struct Kokkos::Experimental::Impl::norm_min_helper<
     Kokkos::Experimental::bhalf_t> {
-  static constexpr int value = 1.1754494351e-38;
+  static constexpr float value = 1.1754494351e-38;
 };
 // Quiet not a bhalf number
 template <>
