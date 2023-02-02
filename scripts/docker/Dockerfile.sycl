@@ -63,6 +63,6 @@ RUN ONE_DPL_VERSION=oneDPL-2021.7.1-release && \
     tar -xf ${ONE_DPL_ARCHIVE} -C onedpl --strip-components=1 && cd onedpl && \
     mkdir build && cd build && \
     . /opt/intel/oneapi/setvars.sh --include-intel-llvm && \
-    cmake -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CXX_FLAGS="-w" -DCMAKE_INSTALL_PREFIX=${ONE_DPL_DIR} -DCMAKE_SKIP_INSTALL_ALL_DEPENDENCY=TRUE -DONEDPL_BACKEND="dpcpp_only" .. && \
+    cmake -DCMAKE_CXX_COMPILER=/opt/intel/oneapi/compiler/2023.0.0/linux/bin-llvm/clang++ -DCMAKE_CXX_FLAGS="-w" -DCMAKE_INSTALL_PREFIX=${ONE_DPL_DIR} -DCMAKE_SKIP_INSTALL_ALL_DEPENDENCY=TRUE -DONEDPL_BACKEND="dpcpp_only" .. && \
     make -j${NPROC} install && \
     rm -rf ${SCRATCH_DIR}
