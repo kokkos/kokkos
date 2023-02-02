@@ -373,6 +373,13 @@ TEST(TEST_CATEGORY, realloc_exec_space_scatterview) {
   if (std::is_same<typename TEST_EXECSPACE, Kokkos::Threads>::value)
     GTEST_SKIP() << "skipping since the Threads backend isn't asynchronous";
 #endif
+#if defined(KOKKOS_ENABLE_HPX) && \
+    !defined(KOKKOS_ENABLE_IMPL_HPX_ASYNC_DISPATCH)
+  if (std::is_same<Kokkos::DefaultExecutionSpace,
+                   Kokkos::Experimental::HPX>::value)
+    GTEST_SKIP() << "skipping since the HPX backend always fences with async "
+                    "dispatch disabled";
+#endif
 
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableFences());
