@@ -33,7 +33,9 @@ void OpenACCParallelScanRangePolicy(IndexType begin, IndexType end,
       "Kokkos::OpenACCParallelScan::chunk_values", n_chunks);
   Kokkos::View<ValueType*, Kokkos::Experimental::OpenACC> offset_values(
       "Kokkos::OpenACCParallelScan::offset_values", n_chunks);
-  ValueType* element_values = new ValueType[2 * chunk_size];
+  std::unique_ptr<ValueType[]> element_values_owner(
+      new ValueType[2 * chunk_size]);
+  ValueType* element_values = element_values_owner.get();
 
 #pragma acc enter data copyin(functor) copyin(chunk_values, offset_values) \
     async(async_arg)
@@ -128,7 +130,6 @@ void OpenACCParallelScanRangePolicy(IndexType begin, IndexType end,
 
 #pragma acc exit data delete (functor, chunk_values, \
                               offset_values)async(async_arg)
-  delete[] element_values;
 }
 }  // namespace Kokkos::Experimental::Impl
 
