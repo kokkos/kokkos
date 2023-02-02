@@ -70,9 +70,13 @@ void OpenMP::print_configuration(std::ostream &os, bool /*verbose*/) const {
   m_space_instance->print_configuration(os);
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 int OpenMP::concurrency(OpenMP const &instance) {
-  return impl_thread_pool_size(instance);
+  return instance.impl_thread_pool_size();
 }
+#else
+int OpenMP::concurrency() const { return impl_thread_pool_size(); }
+#endif
 
 void OpenMP::fence(const std::string &name) const {
   Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::OpenMP>(
@@ -94,17 +98,16 @@ bool OpenMP::in_parallel(OpenMP const &exec_space) noexcept {
 #endif
 }
 
-int OpenMP::impl_thread_pool_size(OpenMP const &exec_space) noexcept {
+int OpenMP::impl_thread_pool_size() const noexcept {
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
   return OpenMP::in_parallel(exec_space)
              ? omp_get_num_threads()
              : (Impl::t_openmp_instance
                     ? Impl::t_openmp_instance->m_pool_size
-                    : exec_space.impl_internal_space_instance()->m_pool_size);
+                    : impl_internal_space_instance()->m_pool_size);
 #else
-  return OpenMP::in_parallel(exec_space)
-             ? omp_get_num_threads()
-             : exec_space.impl_internal_space_instance()->m_pool_size;
+  return OpenMP::in_parallel() ? omp_get_num_threads()
+                               : impl_internal_space_instance()->m_pool_size;
 #endif
 }
 

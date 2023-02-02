@@ -49,7 +49,8 @@ class ParallelFor<FunctorType, Kokkos::WorkGraphPolicy<Traits...>,
     // We need to introduce pool_size to work around NVHPC 22.5 ICE
     // We need to use [[maybe_unused]] to work around an unused-variable warning
     // from HIP
-    [[maybe_unused]] int pool_size = OpenMP::impl_thread_pool_size();
+    OpenMP exec;
+    [[maybe_unused]] int pool_size = exec.impl_thread_pool_size();
 #pragma omp parallel num_threads(pool_size)
     {
       // Spin until COMPLETED_TOKEN.
