@@ -30,9 +30,9 @@ void OpenACCParallelScanRangePolicy(IndexType begin, IndexType end,
   const IndexType N        = end - begin;
   const IndexType n_chunks = (N + chunk_size - 1) / chunk_size;
   Kokkos::View<ValueType*, Kokkos::Experimental::OpenACC> chunk_values(
-      "chunk_values", n_chunks);
+      "Kokkos::OpenACCParallelScan::chunk_values", n_chunks);
   Kokkos::View<ValueType*, Kokkos::Experimental::OpenACC> offset_values(
-      "offset_values", n_chunks);
+      "Kokkos::OpenACCParallelScan::offset_values", n_chunks);
   ValueType* element_values = new ValueType[2 * chunk_size];
 
 #pragma acc enter data copyin(functor) copyin(chunk_values, offset_values) \
@@ -163,7 +163,7 @@ class Kokkos::Impl::ParallelScan<Functor, Kokkos::RangePolicy<Traits...>,
       if (!Impl::is_integral_power_of_two(chunk_size))
         Kokkos::abort(
             "RangePolicy blocking granularity must be power of two to be used "
-            "for parallel_scan()");
+            "with OpenACC parallel_scan()");
     } else {
       chunk_size = default_scan_chunk_size;
     }
