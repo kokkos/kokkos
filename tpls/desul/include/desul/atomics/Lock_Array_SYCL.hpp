@@ -127,15 +127,16 @@ inline void unlock_address_sycl(void* ptr, MemoryScopeNode) {
       lock_node_ref(SYCL_SPACE_ATOMIC_LOCKS_NODE[offset]);
   lock_node_ref.exchange(0);
 }
-#else
+
+#else  // not supported
 
 template <typename /*AlwaysInt*/ = int>
-void init_lock_arrays_sycl(sycl::queue q) {
+void init_lock_arrays_sycl(sycl::queue) {
   assert(false);
 }
 
 template <typename /*AlwaysInt*/ = int>
-void finalize_lock_arrays_sycl(sycl::queue q) {
+void finalize_lock_arrays_sycl(sycl::queue) {
   assert(false);
 }
 
