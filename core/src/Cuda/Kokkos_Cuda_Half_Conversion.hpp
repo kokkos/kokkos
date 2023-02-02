@@ -39,7 +39,7 @@ half_t cast_to_half(half_t val) { return val; }
 #if (CUDA_VERSION < 11010)
 
 KOKKOS_INLINE_FUNCTION
-constexpr half_t cast_to_half(float val) { return half_t(__float2half(val)); }
+half_t cast_to_half(float val) { return half_t(__float2half(val)); }
 
 KOKKOS_INLINE_FUNCTION
 half_t cast_to_half(bool val) { return cast_to_half(static_cast<float>(val)); }
@@ -179,7 +179,7 @@ KOKKOS_INLINE_FUNCTION
 #else  // CUDA 11.1 versions follow
 
 KOKKOS_INLINE_FUNCTION
-constexpr half_t cast_to_half(float val) { return __float2half(val); }
+half_t cast_to_half(float val) { return __float2half(val); }
 KOKKOS_INLINE_FUNCTION
 half_t cast_to_half(double val) { return __double2half(val); }
 KOKKOS_INLINE_FUNCTION

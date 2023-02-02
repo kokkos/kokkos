@@ -31,7 +31,7 @@
 #ifdef KOKKOS_IMPL_HALF_TYPE_DEFINED
 
 // KOKKOS_HALF_IS_FULL_TYPE_ON_ARCH: A macro to select which
-// floating_point_wrapper operator paths should be used. For CUDA, let the
+// floating_pointer_wrapper operator paths should be used. For CUDA, let the
 // compiler conditionally select when device ops are used For SYCL, we have a
 // full half type on both host and device
 #if defined(__CUDA_ARCH__) || defined(KOKKOS_ENABLE_SYCL)
@@ -50,7 +50,7 @@ class floating_point_wrapper;
 using half_t = Kokkos::Experimental::Impl::floating_point_wrapper<
     Kokkos::Impl::half_impl_t ::type>;
 KOKKOS_INLINE_FUNCTION
-constexpr half_t cast_to_half(float val);
+half_t cast_to_half(float val);
 KOKKOS_INLINE_FUNCTION
 half_t cast_to_half(bool val);
 KOKKOS_INLINE_FUNCTION
@@ -180,8 +180,8 @@ KOKKOS_INLINE_FUNCTION
 #endif  // KOKKOS_IMPL_BHALF_TYPE_DEFINED
 
 template <class T>
-static constexpr KOKKOS_INLINE_FUNCTION Kokkos::Experimental::half_t
-cast_to_wrapper(T x, const volatile Kokkos::Impl::half_impl_t::type&);
+static KOKKOS_INLINE_FUNCTION Kokkos::Experimental::half_t cast_to_wrapper(
+    T x, const volatile Kokkos::Impl::half_impl_t::type&);
 
 #ifdef KOKKOS_IMPL_BHALF_TYPE_DEFINED
 template <class T>
@@ -245,12 +245,6 @@ class alignas(FloatType) floating_point_wrapper {
 #endif  // KOKKOS_HALF_IS_FULL_TYPE_ON_ARCH
   }
 
-  /*   KOKKOS_INLINE_FUNCTION
-    constexpr
-    floating_point_wrapper(float rhs) {
-      val = cast_from_wrapper<float>(rhs);
-    } */
-
   // Don't support implicit conversion back to impl_type.
   // impl_type is a storage only type on host.
   KOKKOS_FUNCTION
@@ -305,8 +299,7 @@ class alignas(FloatType) floating_point_wrapper {
   KOKKOS_FUNCTION
   constexpr floating_point_wrapper(impl_type rhs) : val(rhs) {}
   KOKKOS_FUNCTION
-  constexpr floating_point_wrapper(float rhs)
-      : val(cast_to_wrapper(rhs, val).val) {}
+  floating_point_wrapper(float rhs) : val(cast_to_wrapper(rhs, val).val) {}
   KOKKOS_FUNCTION
   floating_point_wrapper(double rhs) : val(cast_to_wrapper(rhs, val).val) {}
   KOKKOS_FUNCTION
@@ -321,9 +314,8 @@ class alignas(FloatType) floating_point_wrapper {
   KOKKOS_FUNCTION
   floating_point_wrapper(long long rhs) : val(cast_to_wrapper(rhs, val).val) {}
   KOKKOS_FUNCTION
-  constexpr floating_point_wrapper(unsigned short rhs) {
-    reinterpret_cast<unsigned short>(val) = rhs;
-  }
+  floating_point_wrapper(unsigned short rhs)
+      : val(cast_to_wrapper(rhs, val).val) {}
   KOKKOS_FUNCTION
   floating_point_wrapper(unsigned int rhs)
       : val(cast_to_wrapper(rhs, val).val) {}
@@ -863,8 +855,8 @@ class alignas(FloatType) floating_point_wrapper {
 
 // Declare wrapper overloads now that floating_point_wrapper is declared
 template <class T>
-static KOKKOS_INLINE_FUNCTION constexpr Kokkos::Experimental::half_t
-cast_to_wrapper(T x, const volatile Kokkos::Impl::half_impl_t::type&) {
+static KOKKOS_INLINE_FUNCTION Kokkos::Experimental::half_t cast_to_wrapper(
+    T x, const volatile Kokkos::Impl::half_impl_t::type&) {
   return Kokkos::Experimental::cast_to_half(x);
 }
 
@@ -1023,7 +1015,7 @@ cast_from_bhalf(bhalf_t val) {
 template <>
 struct Kokkos::Experimental::Impl::finite_min_helper<
     Kokkos::Experimental::half_t> {
-  static constexpr Kokkos::Experimental::half_t value = -65504.0F;
+  static constexpr float value = -65504.0F;
 };
 // Maximum normalized number
 template <>
