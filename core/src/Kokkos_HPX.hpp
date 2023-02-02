@@ -82,12 +82,12 @@ class hpx_thread_buffer {
   }
 
  public:
-  hpx_thread_buffer()                                     = default;
-  ~hpx_thread_buffer()                                    = default;
-  hpx_thread_buffer(const hpx_thread_buffer &)            = delete;
-  hpx_thread_buffer(hpx_thread_buffer &&)                 = delete;
+  hpx_thread_buffer()                          = default;
+  ~hpx_thread_buffer()                         = default;
+  hpx_thread_buffer(const hpx_thread_buffer &) = delete;
+  hpx_thread_buffer(hpx_thread_buffer &&)      = delete;
   hpx_thread_buffer &operator=(const hpx_thread_buffer &) = delete;
-  hpx_thread_buffer &operator=(hpx_thread_buffer)         = delete;
+  hpx_thread_buffer &operator=(hpx_thread_buffer) = delete;
 
   void resize(const std::size_t num_threads, const std::size_t size_per_thread,
               const std::size_t extra_space = 0) noexcept;
@@ -147,10 +147,10 @@ class HPX {
                   hpx::execution::experimental::unique_any_sender<> &&sender)
         : m_instance_id(instance_id), m_sender{std::move(sender)} {}
 
-    instance_data(const instance_data &)            = delete;
-    instance_data(instance_data &&)                 = delete;
+    instance_data(const instance_data &) = delete;
+    instance_data(instance_data &&)      = delete;
     instance_data &operator=(const instance_data &) = delete;
-    instance_data &operator=(instance_data)         = delete;
+    instance_data &operator=(instance_data) = delete;
 
     uint32_t m_instance_id{HPX::impl_default_instance_id()};
     hpx::execution::experimental::unique_any_sender<> m_sender{
@@ -189,7 +189,7 @@ class HPX {
   HPX(HPX &&other)      = default;
   HPX(const HPX &other) = default;
 
-  HPX &operator=(HPX &&)      = default;
+  HPX &operator=(HPX &&) = default;
   HPX &operator=(const HPX &) = default;
 
   void print_configuration(std::ostream &os, bool /*verbose*/ = false) const;
@@ -259,8 +259,8 @@ class HPX {
     return impl_get_instance_data().m_buffer;
   }
 
-  hpx::execution::experimental::unique_any_sender<> &impl_get_sender()
-      const noexcept {
+  hpx::execution::experimental::unique_any_sender<> &impl_get_sender() const
+      noexcept {
     return impl_get_instance_data().m_sender;
   }
 
@@ -1565,7 +1565,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     std::size_t t = Kokkos::Experimental::HPX::impl_hardware_thread_id();
     hpx_thread_buffer &buffer = m_policy.space().impl_get_buffer();
     reference_type update     = Analysis::Reducer::reference(
-            reinterpret_cast<pointer_type>(buffer.get(t)));
+        reinterpret_cast<pointer_type>(buffer.get(t)));
     const auto r =
         get_chunk_range(i, 0, m_policy.chunk_size(), m_policy.league_size());
     char *local_buffer = static_cast<char *>(buffer.get(t)) + value_size;
