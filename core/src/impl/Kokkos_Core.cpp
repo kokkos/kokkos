@@ -50,6 +50,9 @@ bool g_is_initialized = false;
 bool g_is_finalized   = false;
 bool g_show_warnings  = true;
 bool g_tune_internals = false;
+
+Kokkos::InitializationSettings g_initialization_settings = {};
+
 // When compiling with clang/LLVM and using the GNU (GCC) C++ Standard Library
 // (any recent version between GCC 7.3 and GCC 9.2), std::deque SEGV's during
 // the unwinding of the atexit(3C) handlers at program termination.  However,
@@ -767,7 +770,8 @@ void post_initialize_internal(const Kokkos::InitializationSettings& settings) {
   Kokkos::Tools::InitArguments tools_init_arguments;
   combine(tools_init_arguments, settings);
   initialize_profiling(tools_init_arguments);
-  g_is_initialized = true;
+  g_is_initialized          = true;
+  g_initialization_settings = settings;
   if (settings.has_print_configuration() &&
       settings.get_print_configuration()) {
     ::Kokkos::print_configuration(std::cout);
@@ -1264,6 +1268,21 @@ void Kokkos::print_configuration(std::ostream& os, bool verbose) {
 }
 
 [[nodiscard]] bool Kokkos::is_finalized() noexcept { return g_is_finalized; }
+
+[[nodiscard]] Kokkos::InitializationSettings
+Kokkos::initialization_settings() noexcept {
+  if (!kokkos_initialize_was_called()) {
+    Kokkos::abort(
+        "Error: Kokkos was not initialized."
+        " Raised by Kokkos::initialization_settings().");
+  }
+  if (kokkos_finalize_was_called()) {
+    Kokkos::abort(
+        "Error: Kokkos was finalized."
+        " Raised by Kokkos::initialization_settings().");
+  }
+  return g_initialization_settings;
+}
 
 bool Kokkos::show_warnings() noexcept { return g_show_warnings; }
 

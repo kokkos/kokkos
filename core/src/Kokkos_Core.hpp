@@ -99,6 +99,8 @@ void declare_configuration_metadata(const std::string& category,
 [[nodiscard]] bool is_initialized() noexcept;
 [[nodiscard]] bool is_finalized() noexcept;
 
+[[nodiscard]] InitializationSettings initialization_settings() noexcept;
+
 bool show_warnings() noexcept;
 bool tune_internals() noexcept;
 
