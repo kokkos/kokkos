@@ -43,12 +43,6 @@ void init_lock_arrays_hip();
 ///   snapshotted version while also linking against pure Desul
 template <typename /*AlwaysInt*/ = int>
 void finalize_lock_arrays_hip();
-}  // namespace Impl
-}  // namespace desul
-
-#ifdef __HIPCC__
-namespace desul {
-namespace Impl {
 
 /**
  * \brief This global variable in HIP space is what kernels use to get access
@@ -120,13 +114,8 @@ __device__ inline void unlock_address_hip(void* ptr, desul::MemoryScopeNode) {
   offset = offset & HIP_SPACE_ATOMIC_MASK;
   atomicExch(&desul::Impl::HIP_SPACE_ATOMIC_LOCKS_NODE[offset], 0);
 }
-#endif
-}  // namespace Impl
-}  // namespace desul
 
 // Make lock_array_copied an explicit translation unit scope thing
-namespace desul {
-namespace Impl {
 namespace {
 static int lock_array_copied = 0;
 }  // namespace
@@ -150,7 +139,7 @@ inline static
 }
 }  // namespace Impl
 
-#if defined(DESUL_HIP_RDC) || (!defined(__HIPCC__))
+#if defined(DESUL_HIP_RDC)
 inline void ensure_hip_lock_arrays_on_device() {}
 #else
 static inline void ensure_hip_lock_arrays_on_device() {

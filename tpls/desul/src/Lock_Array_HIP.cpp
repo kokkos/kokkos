@@ -11,7 +11,6 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #include <sstream>
 #include <string>
 
-#ifdef DESUL_HAVE_HIP_ATOMICS
 #ifdef DESUL_HIP_RDC
 namespace desul {
 namespace Impl {
@@ -99,4 +98,3 @@ template void finalize_lock_arrays_hip<int>();
 }  // namespace Impl
 
 }  // namespace desul
-#endif

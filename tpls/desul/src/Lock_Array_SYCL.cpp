@@ -12,23 +12,18 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #include <cinttypes>
 #include <desul/atomics/Lock_Array_SYCL.hpp>
 
-namespace desul {
-namespace Impl {
+namespace desul::Impl {
+
 SYCL_EXTERNAL
 sycl_device_global<int32_t*> SYCL_SPACE_ATOMIC_LOCKS_DEVICE;
 SYCL_EXTERNAL
 sycl_device_global<int32_t*> SYCL_SPACE_ATOMIC_LOCKS_NODE;
-}  // namespace Impl
-}  // namespace desul
-
-namespace desul {
-namespace Impl {
 
 int32_t* SYCL_SPACE_ATOMIC_LOCKS_DEVICE_h = nullptr;
 int32_t* SYCL_SPACE_ATOMIC_LOCKS_NODE_h = nullptr;
 
-template <typename T>
-void init_lock_arrays_sycl(sycl::queue q) {
+template <>
+void init_lock_arrays_sycl<int>(sycl::queue q) {
   if (SYCL_SPACE_ATOMIC_LOCKS_DEVICE_h != nullptr) return;
 
   SYCL_SPACE_ATOMIC_LOCKS_DEVICE_h =
@@ -60,8 +55,8 @@ void init_lock_arrays_sycl(sycl::queue q) {
   q.wait_and_throw();
 }
 
-template <typename T>
-void finalize_lock_arrays_sycl(sycl::queue q) {
+template <>
+void finalize_lock_arrays_sycl<int>(sycl::queue q) {
   if (SYCL_SPACE_ATOMIC_LOCKS_DEVICE_h == nullptr) return;
 
   sycl::free(SYCL_SPACE_ATOMIC_LOCKS_DEVICE_h, q);
@@ -70,9 +65,5 @@ void finalize_lock_arrays_sycl(sycl::queue q) {
   SYCL_SPACE_ATOMIC_LOCKS_NODE_h = nullptr;
 }
 
-template void init_lock_arrays_sycl<int>(sycl::queue);
-template void finalize_lock_arrays_sycl<int>(sycl::queue);
-
-}  // namespace Impl
-}  // namespace desul
+} // namespace desul::Impl
 #endif
