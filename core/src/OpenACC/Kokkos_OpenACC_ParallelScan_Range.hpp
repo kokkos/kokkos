@@ -128,6 +128,7 @@ void OpenACCParallelScanRangePolicy(IndexType begin, IndexType end,
 
 #pragma acc exit data delete (functor, chunk_values, \
                               offset_values)async(async_arg)
+  delete[] element_values;
 }
 }  // namespace Kokkos::Experimental::Impl
 
