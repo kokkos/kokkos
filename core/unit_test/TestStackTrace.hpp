@@ -60,8 +60,7 @@ void test_stacktrace(bool bTerminate, bool bCustom = true) {
     if (bDynamic) {
       std::string foutput = sstream.str();
       printf("demangled test_f1: %s \n", foutput.c_str());
-      ASSERT_TRUE(std::string::npos !=
-                  foutput.find("Test::stacktrace_test_f1"));
+      ASSERT_NE(std::string::npos, foutput.find("Test::stacktrace_test_f1"));
       for (auto x : {"stacktrace_test_f0", "stacktrace_test_f2",
                      "stacktrace_test_f3", "stacktrace_test_f4"}) {
         ASSERT_EQ(std::string::npos, foutput.find(x));

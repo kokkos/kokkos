@@ -1038,10 +1038,7 @@ void test_view_mapping() {
     ASSERT_EQ(a.use_count(), 1);
     ASSERT_EQ(b.use_count(), 0);
 
-// TODO: a.use_count() and x.use_count() are 0 with the asynchronous HPX
-// backend. Why?
-#if !defined(KOKKOS_ENABLE_CUDA_LAMBDA) && \
-    !(defined(KOKKOS_ENABLE_HPX) && defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH))
+#if !defined(KOKKOS_ENABLE_CUDA) || !defined(KOKKOS_ENABLE_CUDA_LAMBDA)
     // Cannot launch host lambda when CUDA lambda is enabled.
 
     using host_exec_space =

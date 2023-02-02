@@ -137,8 +137,8 @@ ELSEIF (NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
 ENDIF()
 
 
-set(Kokkos_VERSION_MAJOR 3)
-set(Kokkos_VERSION_MINOR 7)
+set(Kokkos_VERSION_MAJOR 4)
+set(Kokkos_VERSION_MINOR 0)
 set(Kokkos_VERSION_PATCH 99)
 set(Kokkos_VERSION "${Kokkos_VERSION_MAJOR}.${Kokkos_VERSION_MINOR}.${Kokkos_VERSION_PATCH}")
 math(EXPR KOKKOS_VERSION "${Kokkos_VERSION_MAJOR} * 10000 + ${Kokkos_VERSION_MINOR} * 100 + ${Kokkos_VERSION_PATCH}")
@@ -196,9 +196,13 @@ INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_tribits.cmake)
 # to allow platform-specific checks
 INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_check_env.cmake)
 
-# Gather information about the runtime environment
-INCLUDE(${KOKKOS_SRC_PATH}/cmake/build_env_info.cmake)
-check_git_setup()
+IF(NOT KOKKOS_HAS_TRILINOS)
+  # This does not work in Trilinos and we simply don't care
+  # to fix it for Trilinos
+  # Gather information about the runtime environment
+  INCLUDE(${KOKKOS_SRC_PATH}/cmake/build_env_info.cmake)
+  check_git_setup()
+ENDIF()
 
 # The build environment setup goes in the following steps
 # 1) Check all the enable options. This includes checking Kokkos_DEVICES

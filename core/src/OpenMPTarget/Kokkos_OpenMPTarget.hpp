@@ -30,7 +30,7 @@ static_assert(false,
 
 #include <cstddef>
 #include <iosfwd>
-#include <Kokkos_OpenMPTargetSpace.hpp>
+#include <OpenMPTarget/Kokkos_OpenMPTargetSpace.hpp>
 #include <Kokkos_ScratchSpace.hpp>
 #include <Kokkos_Parallel.hpp>
 #include <Kokkos_TaskScheduler.hpp>
@@ -141,7 +141,6 @@ struct DeviceTypeTraits<::Kokkos::Experimental::OpenMPTarget> {
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
 
-#include <OpenMPTarget/Kokkos_OpenMPTarget_Exec.hpp>
 #include <OpenMPTarget/Kokkos_OpenMPTarget_Parallel.hpp>
 #include <OpenMPTarget/Kokkos_OpenMPTarget_Parallel_MDRange.hpp>
 #include <OpenMPTarget/Kokkos_OpenMPTarget_Task.hpp>

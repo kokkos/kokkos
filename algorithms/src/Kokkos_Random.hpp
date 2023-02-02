@@ -878,36 +878,30 @@ class Random_XorShift64_Pool {
   using execution_space = typename device_type::execution_space;
   using locks_type      = View<int**, device_type>;
   using state_data_type = View<uint64_t**, device_type>;
-  locks_type locks_;
-  state_data_type state_;
-  int num_states_;
-  int padding_;
+
+  locks_type locks_      = {};
+  state_data_type state_ = {};
+  int num_states_        = {};
+  int padding_           = {};
 
  public:
   using generator_type = Random_XorShift64<DeviceType>;
 
-  KOKKOS_INLINE_FUNCTION
-  Random_XorShift64_Pool() {
-    num_states_ = 0;
-    padding_    = 0;
-  }
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  KOKKOS_DEFAULTED_FUNCTION Random_XorShift64_Pool() = default;
+
+  KOKKOS_DEFAULTED_FUNCTION Random_XorShift64_Pool(
+      Random_XorShift64_Pool const&) = default;
+
+  KOKKOS_DEFAULTED_FUNCTION Random_XorShift64_Pool& operator=(
+      Random_XorShift64_Pool const&) = default;
+#else
+  Random_XorShift64_Pool()   = default;
+#endif
   Random_XorShift64_Pool(uint64_t seed) {
     num_states_ = 0;
 
     init(seed, execution_space().concurrency());
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  Random_XorShift64_Pool(const Random_XorShift64_Pool& src)
-      : locks_(src.locks_), state_(src.state_), num_states_(src.num_states_) {}
-
-  KOKKOS_INLINE_FUNCTION
-  Random_XorShift64_Pool operator=(const Random_XorShift64_Pool& src) {
-    locks_      = src.locks_;
-    state_      = src.state_;
-    num_states_ = src.num_states_;
-    padding_    = src.padding_;
-    return *this;
   }
 
   void init(uint64_t seed, int num_states) {
@@ -947,8 +941,8 @@ class Random_XorShift64_Pool {
     deep_copy(locks_, h_lock);
   }
 
-  KOKKOS_INLINE_FUNCTION
-  Random_XorShift64<DeviceType> get_state() const {
+  KOKKOS_INLINE_FUNCTION Random_XorShift64<DeviceType> get_state() const {
+    KOKKOS_EXPECTS(num_states_ > 0);
     const int i = Impl::Random_UniqueIndex<device_type>::get_state_idx(locks_);
     return Random_XorShift64<DeviceType>(state_(i, 0), i);
   }
@@ -1129,43 +1123,35 @@ class Random_XorShift1024_Pool {
   using int_view_type   = View<int**, device_type>;
   using state_data_type = View<uint64_t * [16], device_type>;
 
-  locks_type locks_;
-  state_data_type state_;
-  int_view_type p_;
-  int num_states_;
-  int padding_;
+  locks_type locks_      = {};
+  state_data_type state_ = {};
+  int_view_type p_       = {};
+  int num_states_        = {};
+  int padding_           = {};
   friend class Random_XorShift1024<DeviceType>;
 
  public:
   using generator_type = Random_XorShift1024<DeviceType>;
 
-  KOKKOS_INLINE_FUNCTION
-  Random_XorShift1024_Pool() { num_states_ = 0; }
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  KOKKOS_DEFAULTED_FUNCTION Random_XorShift1024_Pool() = default;
 
-  inline Random_XorShift1024_Pool(uint64_t seed) {
+  KOKKOS_DEFAULTED_FUNCTION Random_XorShift1024_Pool(
+      Random_XorShift1024_Pool const&) = default;
+
+  KOKKOS_DEFAULTED_FUNCTION Random_XorShift1024_Pool& operator=(
+      Random_XorShift1024_Pool const&) = default;
+#else
+  Random_XorShift1024_Pool() = default;
+#endif
+
+  Random_XorShift1024_Pool(uint64_t seed) {
     num_states_ = 0;
 
     init(seed, execution_space().concurrency());
   }
 
-  KOKKOS_INLINE_FUNCTION
-  Random_XorShift1024_Pool(const Random_XorShift1024_Pool& src)
-      : locks_(src.locks_),
-        state_(src.state_),
-        p_(src.p_),
-        num_states_(src.num_states_) {}
-
-  KOKKOS_INLINE_FUNCTION
-  Random_XorShift1024_Pool operator=(const Random_XorShift1024_Pool& src) {
-    locks_      = src.locks_;
-    state_      = src.state_;
-    p_          = src.p_;
-    num_states_ = src.num_states_;
-    padding_    = src.padding_;
-    return *this;
-  }
-
-  inline void init(uint64_t seed, int num_states) {
+  void init(uint64_t seed, int num_states) {
     if (seed == 0) seed = uint64_t(1318319);
     // I only want to pad on CPU like archs (less than 1000 threads). 64 is a
     // magic number, or random number I just wanted something not too large and
@@ -1208,6 +1194,7 @@ class Random_XorShift1024_Pool {
 
   KOKKOS_INLINE_FUNCTION
   Random_XorShift1024<DeviceType> get_state() const {
+    KOKKOS_EXPECTS(num_states_ > 0);
     const int i = Impl::Random_UniqueIndex<device_type>::get_state_idx(locks_);
     return Random_XorShift1024<DeviceType>(state_, p_(i, 0), i);
   };

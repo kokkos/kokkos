@@ -17,7 +17,6 @@
 #ifndef KOKKOS_OPENACC_PARALLEL_FOR_TEAM_HPP
 #define KOKKOS_OPENACC_PARALLEL_FOR_TEAM_HPP
 
-#include <openacc.h>
 #include <OpenACC/Kokkos_OpenACC_Team.hpp>
 #include <OpenACC/Kokkos_OpenACC_FunctorAdapter.hpp>
 

@@ -127,6 +127,14 @@ void SYCLInternal::initialize(const sycl::queue& q) {
     Kokkos::Impl::throw_runtime_exception(msg.str());
   }
 
+#ifdef KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED
+  // Init the array for used for arbitrarily sized atomics
+  if (this == &singleton()) {
+    desul::Impl::init_lock_arrays();
+    desul::Impl::init_lock_arrays_sycl(*m_queue);
+  }
+#endif
+
   m_team_scratch_current_size = 0;
   m_team_scratch_ptr          = nullptr;
 }
@@ -160,7 +168,13 @@ void SYCLInternal::finalize() {
 
   // The global_unique_token_locks array is static and should only be
   // deallocated once by the defualt instance
-  if (this == &singleton()) Impl::sycl_global_unique_token_locks(true);
+  if (this == &singleton()) {
+    Impl::sycl_global_unique_token_locks(true);
+#ifdef KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED
+    desul::Impl::finalize_lock_arrays();
+    desul::Impl::finalize_lock_arrays_sycl(*m_queue);
+#endif
+  }
 
   using RecordSYCL = Kokkos::Impl::SharedAllocationRecord<SYCLDeviceUSMSpace>;
   if (nullptr != m_scratchSpace)

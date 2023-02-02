@@ -127,6 +127,9 @@ struct DeduceHIPLaunchMechanism {
       light_weight = Kokkos::Experimental::WorkItemProperty::HintLightWeight;
   static constexpr Kokkos::Experimental::WorkItemProperty::HintHeavyWeight_t
       heavy_weight = Kokkos::Experimental::WorkItemProperty::HintHeavyWeight;
+  static constexpr Kokkos::Experimental::WorkItemProperty::
+      ImplForceGlobalLaunch_t force_global_launch =
+          Kokkos::Experimental::WorkItemProperty::ImplForceGlobalLaunch;
   static constexpr typename DriverType::Policy::work_item_property property =
       typename DriverType::Policy::work_item_property();
 
@@ -160,15 +163,17 @@ struct DeduceHIPLaunchMechanism {
   // Kal<F<CMU     CG  LCG C  C        CG  LG C  G    CG  CG C  C
   // CMU<F          G  LCG G  G         G  LG G  G     G  CG G  G
   static constexpr HIPLaunchMechanism launch_mechanism =
-      ((property & light_weight) == light_weight)
-          ? (sizeof(DriverType) < HIPTraits::KernelArgumentLimit
-                 ? HIPLaunchMechanism::LocalMemory
-                 : HIPLaunchMechanism::GlobalMemory)
-          : (((property & heavy_weight) == heavy_weight)
-                 ? (sizeof(DriverType) < HIPTraits::ConstantMemoryUsage
-                        ? HIPLaunchMechanism::ConstantMemory
-                        : HIPLaunchMechanism::GlobalMemory)
-                 : (default_launch_mechanism));
+      ((property & force_global_launch) == force_global_launch)
+          ? HIPLaunchMechanism::GlobalMemory
+          : ((property & light_weight) == light_weight)
+                ? (sizeof(DriverType) < HIPTraits::KernelArgumentLimit
+                       ? HIPLaunchMechanism::LocalMemory
+                       : HIPLaunchMechanism::GlobalMemory)
+                : (((property & heavy_weight) == heavy_weight)
+                       ? (sizeof(DriverType) < HIPTraits::ConstantMemoryUsage
+                              ? HIPLaunchMechanism::ConstantMemory
+                              : HIPLaunchMechanism::GlobalMemory)
+                       : (default_launch_mechanism));
 };
 
 template <typename DriverType, typename LaunchBounds,
@@ -377,8 +382,13 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
   static void invoke_kernel(DriverType const &driver, dim3 const &grid,
                             dim3 const &block, int shmem,
                             HIPInternal const *hip_instance) {
+    // Wait until the previous kernel that uses m_scratchFuntor is done
+    std::lock_guard<std::mutex> lock(HIPInternal::scratchFunctorMutex);
+    DriverType *driver_ptr = reinterpret_cast<DriverType *>(
+        hip_instance->stage_functor_for_execution(
+            reinterpret_cast<void const *>(&driver), sizeof(DriverType)));
     (base_t::get_kernel_func())<<<grid, block, shmem, hip_instance->m_stream>>>(
-        driver);
+        driver_ptr);
   }
 };
 
@@ -452,7 +462,7 @@ struct HIPParallelLaunch<
             "HIPParallelLaunch FAILED: shared memory request is too large");
       }
 
-      KOKKOS_ENSURE_HIP_LOCK_ARRAYS_ON_DEVICE();
+      ensure_hip_lock_arrays_on_device();
 
       // Invoke the driver function on the device
       base_t::invoke_kernel(driver, grid, block, shmem, hip_instance);

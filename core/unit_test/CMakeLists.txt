@@ -58,7 +58,7 @@ SET(KOKKOS_SYCL_FEATURE_LEVEL 999)
 SET(KOKKOS_SYCL_NAME Experimental::SYCL)
 SET(KOKKOS_THREADS_FEATURE_LEVEL 999)
 SET(KOKKOS_THREADS_NAME Threads)
-SET(KOKKOS_OPENACC_FEATURE_LEVEL 11)
+SET(KOKKOS_OPENACC_FEATURE_LEVEL 14)
 SET(KOKKOS_OPENACC_NAME Experimental::OpenACC)
 
 
@@ -87,7 +87,7 @@ if(WIN32)
   LIST(APPEND COMPILE_ONLY_SOURCES TestWindowsInclude.cpp)
 endif()
 
-# TestInterOp has a dependency on containers
+#TestInterOp has a dependency on containers
 IF(KOKKOS_HAS_TRILINOS)
   LIST(REMOVE_ITEM COMPILE_ONLY_SOURCES TestInterOp.cpp)
 ENDIF()
@@ -177,6 +177,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
         Reducers_c
         Reducers_d
         Reducers_e
+        ReducerCTADs
         Reductions_DeviceView
         Scan
         SharedAlloc
@@ -637,6 +638,7 @@ if(Kokkos_ENABLE_HPX)
       hpx/TestHPX_IndependentInstancesDelayedExecution.cpp
       hpx/TestHPX_IndependentInstancesInstanceIds.cpp
       hpx/TestHPX_IndependentInstancesRefCounting.cpp
+      hpx/TestHPX_IndependentInstancesSynchronization.cpp
   )
 endif()
 
@@ -741,11 +743,6 @@ if(Kokkos_ENABLE_HIP)
 endif()
 
 if(Kokkos_ENABLE_SYCL)
-  list(REMOVE_ITEM SYCL_SOURCES1A
-       # FIXME_SYCL atomic_fetch_oper for large types to be implemented
-       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_AtomicOperations_complexdouble.cpp
-  )
-
   list(REMOVE_ITEM SYCL_SOURCES2A
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_WorkGraph.cpp
   )
