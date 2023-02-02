@@ -129,7 +129,9 @@ void cuda_device_synchronize(const std::string &name) {
       name,
       Kokkos::Tools::Experimental::SpecialSynchronizationCases::
           GlobalDeviceSynchronization,
-      []() {  // TODO: correct device ID
+      // annotate with __host__ silence a clang warning about using
+      // cudaDeviceSynchronize in device code
+      [] __host__() {  // TODO: correct device ID
         KOKKOS_IMPL_CUDA_SAFE_CALL(cudaDeviceSynchronize());
       });
 }
