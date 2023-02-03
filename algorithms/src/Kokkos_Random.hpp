@@ -491,6 +491,11 @@ struct rand<Generator, double> {
   static double draw(Generator& gen, const double& start, const double& end) {
     return gen.drand(start, end);
   }
+  KOKKOS_INLINE_FUNCTION
+  static double draw_normal(Generator& gen,
+                            const double& mean, const double& std_dev) {
+    return gen.normal(mean, std_dev);
+  }
 };
 
 template <class Generator>
@@ -547,6 +552,14 @@ struct rand<Generator, Kokkos::complex<double>> {
                                       const Kokkos::complex<double>& end) {
     const double re = gen.drand(real(start), real(end));
     const double im = gen.drand(imag(start), imag(end));
+    return Kokkos::complex<double>(re, im);
+  }
+  KOKKOS_INLINE_FUNCTION
+  static Kokkos::complex<double> draw_normal(Generator& gen,
+                                             const Kokkos::complex<double>& mean,
+                                             const Kokkos::complex<double>& std_dev) {
+    const double re = gen.normal(real(mean), real(std_dev)/std::sqrt(2.0));
+    const double im = gen.normal(imag(mean), real(std_dev)/std::sqrt(2.0));
     return Kokkos::complex<double>(re, im);
   }
 };
@@ -1518,6 +1531,54 @@ void fill_random(const ExecutionSpace& exec, ViewType a, RandomPool g,
             a, g, begin, end));
 }
 
+template <class ViewType, class RandomPool, int loops, int rank,
+          class IndexType>
+struct fill_random_functor_normal;
+
+template <class ViewType, class RandomPool, int loops, class IndexType>
+struct fill_random_functor_normal<ViewType, RandomPool, loops, 2,
+                                  IndexType> {
+  ViewType a;
+  RandomPool rand_pool;
+  typename ViewType::const_value_type mean, std_dev;
+
+  using Rand = rand<typename RandomPool::generator_type,
+                    typename ViewType::non_const_value_type>;
+
+  fill_random_functor_normal(ViewType a_, RandomPool rand_pool_,
+                            typename ViewType::const_value_type mean_,
+                            typename ViewType::const_value_type std_dev_)
+      : a(a_), rand_pool(rand_pool_), mean(mean_), std_dev(std_dev_) {}
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(IndexType i) const {
+    typename RandomPool::generator_type gen = rand_pool.get_state();
+    for (IndexType j = 0; j < loops; j++) {
+      const IndexType idx = i * loops + j;
+      if (idx < static_cast<IndexType>(a.extent(0))) {
+        for (IndexType k = 0; k < static_cast<IndexType>(a.extent(1)); k++)
+          a(idx, k) = Rand::draw_normal(gen, mean, std_dev);
+      }
+    }
+    rand_pool.free_state(gen);
+  }
+};
+
+template <class ExecutionSpace, class ViewType, class RandomPool,
+          class IndexType = int64_t>
+void fill_random_normal(const ExecutionSpace& exec, ViewType a, RandomPool g,
+                        typename ViewType::const_value_type mean,
+                        typename ViewType::const_value_type std_dev) {
+  int64_t LDA = a.extent(0);
+  if (LDA > 0)
+    parallel_for(
+        "Kokkos::fill_random",
+        Kokkos::RangePolicy<ExecutionSpace>(exec, 0, (LDA + 127) / 128),
+        Impl::fill_random_functor_normal<ViewType, RandomPool, 128,
+                                         ViewType::Rank, IndexType>(
+            a, g, mean, std_dev));
+}
+
 }  // namespace Impl
 
 template <class ExecutionSpace, class ViewType, class RandomPool,
@@ -1548,6 +1609,23 @@ template <class ViewType, class RandomPool, class IndexType = int64_t>
 void fill_random(ViewType a, RandomPool g,
                  typename ViewType::const_value_type range) {
   fill_random(typename ViewType::execution_space{}, a, g, 0, range);
+}
+
+template <class ExecutionSpace, class ViewType, class RandomPool,
+          class IndexType = int64_t>
+void fill_random_normal(const ExecutionSpace& exec, ViewType a, RandomPool g,
+                        typename ViewType::const_value_type mean,
+                        typename ViewType::const_value_type std_dev) {
+  Impl::apply_to_view_of_static_rank(
+      [&](auto dst) { Kokkos::Impl::fill_random_normal(exec, dst, g, mean, std_dev); },
+      a);
+}
+
+template <class ViewType, class RandomPool, class IndexType = int64_t>
+void fill_random_normal(ViewType a, RandomPool g,
+                        typename ViewType::const_value_type mean,
+                        typename ViewType::const_value_type std_dev) {
+  fill_random_normal(typename ViewType::execution_space{}, a, g, mean, std_dev);
 }
 
 }  // namespace Kokkos
