@@ -20,7 +20,7 @@
 
 #include <Kokkos_Core.hpp>
 
-#include <Kokkos_Serial.hpp>
+#include <Serial/Kokkos_Serial.hpp>
 #include <impl/Kokkos_Traits.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_ExecSpaceManager.hpp>

@@ -18,7 +18,7 @@
 #define KOKKOS_DECLARE_SERIAL_HPP
 
 #if defined(KOKKOS_ENABLE_SERIAL)
-#include <Kokkos_Serial.hpp>
+#include <Serial/Kokkos_Serial.hpp>
 #include <Serial/Kokkos_Serial_MDRangePolicy.hpp>
 #endif
 
