@@ -21,6 +21,10 @@
 
 namespace Test {
 
+// Extended lambdas in parallel_for and parallel_reduce will not compile if
+// KOKKOS_ENABLE_CUDA_LAMBDA is off
+#if !defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_CUDA_LAMBDA)
+
 struct TeamTeamCombinedReducer {
  public:
   void test_team_thread_range_only_scalars(const int n) {
@@ -497,5 +501,7 @@ TEST(TEST_CATEGORY, team_vector_range_combined_reducers) {
 >>>>>>> e25327412 (fixed warnings from unit tests)
   tester.test_team_vector_range_combined_reducers(9);
 }
+
+#endif
 
 }  // namespace Test
