@@ -66,6 +66,11 @@
 
 #endif
 
+#if defined(KOKKOS_ENABLE_ONEDPL)
+#include <oneapi/dpl/execution>
+#include <oneapi/dpl/algorithm>
+#endif
+
 namespace Kokkos {
 
 namespace Impl {
@@ -633,6 +638,32 @@ sort(const ExecutionSpace& exec,
   bin_sort.create_permute_vector(exec);
   bin_sort.sort(exec, view);
 }
+
+#if defined(KOKKOS_ENABLE_ONEDPL)
+template <class DataType, class... Properties>
+void sort(const Experimental::SYCL& space,
+          const Kokkos::View<DataType, Properties...>& view) {
+  using ViewType = Kokkos::View<DataType, Properties...>;
+
+  static_assert(SpaceAccessibility<Experimental::SYCL,
+                                   typename ViewType::memory_space>::accessible,
+                "SYCL execution space is not able to access the memory space "
+                "of the View argument!");
+
+  auto queue  = space.sycl_queue();
+  auto policy = oneapi::dpl::execution::make_device_policy(queue);
+
+  // Can't use Experimental::begin/end here since the oneDPL then assumes that
+  // the data is on the host.
+  static_assert(
+      ViewType::rank == 1 &&
+          (std::is_same<typename ViewType::array_layout, LayoutRight>::value ||
+           std::is_same<typename ViewType::array_layout, LayoutLeft>::value),
+      "SYCL sort only supports contiguous 1D Views.");
+  const int n = view.extent(0);
+  oneapi::dpl::sort(policy, view.data(), view.data() + n);
+}
+#endif
 
 template <class ExecutionSpace, class DataType, class... Properties>
 std::enable_if_t<(Kokkos::is_execution_space<ExecutionSpace>::value) &&
