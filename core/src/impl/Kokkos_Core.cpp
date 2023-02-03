@@ -165,6 +165,26 @@ bool is_valid_map_device_id_by(std::string const& x) {
 
 }  // namespace
 
+[[nodiscard]] int Kokkos::device_id() noexcept {
+#if defined(KOKKOS_ENABLE_CUDA)
+  return Cuda().cuda_device();
+#elif defined(KOKKOS_ENABLE_HIP)
+  return HIP().hip_device();
+#elif defined(KOKKOS_ENABLE_OPENACC)
+  return Experimental::OpenACC().acc_device_number();
+#elif defined(KOKKOS_ENABLE_OPENMPTARGET)
+  return omp_get_default_device();  // FIXME_OPENMPTARGET
+#elif defined(KOKKOS_ENABLE_SYCL)
+  return Experimental::Impl::SYCLInternal::m_syclDev;
+#else
+  return -1;
+#endif
+}
+
+[[nodiscard]] int Kokkos::num_threads() noexcept {
+  return DefaultHostExecutionSpace().concurrency();
+}
+
 Kokkos::Impl::ExecSpaceManager& Kokkos::Impl::ExecSpaceManager::get_instance() {
   static ExecSpaceManager space_initializer = {};
   return space_initializer;
