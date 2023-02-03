@@ -542,4 +542,51 @@ TEST(TEST_CATEGORY, atomics) {
 #endif
 }
 
+// see https://github.com/trilinos/Trilinos/pull/11506
+struct TpetraUseCase {
+  template <class Scalar>
+  struct AbsMaxHelper {
+    Scalar value;
+
+    KOKKOS_FUNCTION AbsMaxHelper& operator+=(AbsMaxHelper const& rhs) {
+      Scalar lhs_abs_value = Kokkos::abs(value);
+      Scalar rhs_abs_value = Kokkos::abs(rhs.value);
+      value = lhs_abs_value > rhs_abs_value ? lhs_abs_value : rhs_abs_value;
+      return *this;
+    }
+
+    KOKKOS_FUNCTION AbsMaxHelper operator+(AbsMaxHelper const& rhs) const {
+      AbsMaxHelper ret = *this;
+      ret += rhs;
+      return ret;
+    }
+  };
+
+  using T = int;
+  Kokkos::View<T> d_{"lbl"};
+  KOKKOS_FUNCTION void operator()(int i) const {
+    // 0, -1, 2, -3, ...
+    auto v_i = static_cast<T>(i);
+    if (i % 2 == 1) v_i = -v_i;
+    Kokkos::atomic_add(reinterpret_cast<AbsMaxHelper<T>*>(&d_()),
+                       AbsMaxHelper<T>{v_i});
+  }
+
+  TpetraUseCase() { Kokkos::parallel_for(10, *this); }
+
+  void check() {
+    T v;
+    Kokkos::deep_copy(v, d_);
+    ASSERT_EQ(v, 9);
+  }
+};
+
+TEST(TEST_CATEGORY, atomics_tpetra_max_abs) {
+#ifdef KOKKOS_COMPILER_NVHPC
+  GTEST_SKIP() << "FIXME_NVHPC (?)";
+#endif
+
+  TpetraUseCase().check();
+}
+
 }  // namespace Test
