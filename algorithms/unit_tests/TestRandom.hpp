@@ -469,6 +469,92 @@ struct TestDynRankView {
     ASSERT_LE(val.max_val, max);
   }
 };
+
+template <class ExecutionSpace, class Pool>
+struct TestDynRankView1D_Normal {
+  Kokkos::DynRankView<double, ExecutionSpace> A;
+  const int n;
+  const double mean;
+  const double stddev;
+
+  TestDynRankView1D_Normal(int n_, double mean_, double stddev_)
+    : A("a", n_), n(n_),
+      mean(mean_),
+      stddev(stddev_) {}
+
+  KOKKOS_FUNCTION void operator()(int i, RandomProperties& prop) const {
+    prop.mean += A(i);
+    prop.variance += (A(i) - mean) * (A(i) - mean);
+  }
+
+  void run() {
+    uint64_t ticks =
+      std::chrono::high_resolution_clock::now().time_since_epoch().count();
+
+    Pool random(ticks);
+    ExecutionSpace exec;
+    Kokkos::fill_random_normal(A, random, mean, stddev);
+
+    RandomProperties val;
+    Kokkos::parallel_reduce(
+        Kokkos::RangePolicy<ExecutionSpace>(exec, 0, n), *this,
+        val);
+
+    exec.fence();
+
+    double mean_eps = std::abs(mean - val.mean/A.size());
+    double variance_eps = std::abs((stddev*stddev)/(val.variance/(A.size()-1)) - 1.0);
+    EXPECT_LE(mean_eps, 1e-3);
+    EXPECT_LE(variance_eps, 1e-3);
+    std::cout << "TestDynRankView1D_Normal: mean_eps " << mean_eps << ", variance_eps " << variance_eps
+              << ", mean_expect " <<  mean << ", variance_expect " << stddev*stddev
+              << ", mean " <<  val.mean/A.size() << ", variance " << val.variance/(A.size()-1) << std::endl;
+  }
+};
+
+template <class ExecutionSpace, class Pool>
+struct TestDynRankView2D_Normal {
+  Kokkos::DynRankView<double, ExecutionSpace> A;
+  const int n;
+  const double mean;
+  const double stddev;
+
+  TestDynRankView2D_Normal(int n_, double mean_, double stddev_)
+    : A("a", n_, 10), n(n_),
+      mean(mean_),
+      stddev(stddev_) {}
+
+  KOKKOS_FUNCTION void operator()(int i, RandomProperties& prop) const {
+    for (int k = 0; k < static_cast<int>(A.extent(1)); k++) {
+      prop.mean += A(i,k);
+      prop.variance += (A(i,k) - mean) * (A(i,k) - mean);
+    }
+  }
+
+  void run() {
+    uint64_t ticks =
+      std::chrono::high_resolution_clock::now().time_since_epoch().count();
+
+    Pool random(ticks);
+    ExecutionSpace exec;
+    Kokkos::fill_random_normal(A, random, mean, stddev);
+
+    RandomProperties val;
+    Kokkos::parallel_reduce(
+        Kokkos::RangePolicy<ExecutionSpace>(exec, 0, n), *this,
+        val);
+
+    exec.fence();
+
+    double mean_eps = std::abs(mean - val.mean/A.size());
+    double variance_eps = std::abs((stddev*stddev)/(val.variance/(A.size()-1)) - 1.0);
+    EXPECT_LE(mean_eps, 1e-3);
+    EXPECT_LE(variance_eps, 1e-3);
+    std::cout << "TestDynRankView2D_Normal: mean_eps " << mean_eps << ", variance_eps " << variance_eps
+              << ", mean_expect " <<  mean << ", variance_expect " << stddev*stddev
+              << ", mean " <<  val.mean/A.size() << ", variance " << val.variance/(A.size()-1) << std::endl;
+  }
+};
 }  // namespace Impl
 
 template <typename ExecutionSpace>
@@ -485,6 +571,18 @@ void test_random_xorshift64() {
       num_draws);
   Impl::TestDynRankView<ExecutionSpace,
                         Kokkos::Random_XorShift64_Pool<ExecutionSpace>>(10000)
+      .run();
+  Impl::TestDynRankView1D_Normal<ExecutionSpace,
+                        Kokkos::Random_XorShift64_Pool<ExecutionSpace>>(num_draws*10,0.0,1.0)
+      .run();
+  Impl::TestDynRankView1D_Normal<ExecutionSpace,
+                        Kokkos::Random_XorShift64_Pool<ExecutionSpace>>(num_draws*10,1.1,2.1)
+      .run();
+  Impl::TestDynRankView2D_Normal<ExecutionSpace,
+                        Kokkos::Random_XorShift64_Pool<ExecutionSpace>>(num_draws,0.0,1.0)
+      .run();
+  Impl::TestDynRankView2D_Normal<ExecutionSpace,
+                        Kokkos::Random_XorShift64_Pool<ExecutionSpace>>(num_draws,1.1,2.1)
       .run();
 }
 
@@ -503,6 +601,18 @@ void test_random_xorshift1024() {
       num_draws);
   Impl::TestDynRankView<ExecutionSpace,
                         Kokkos::Random_XorShift1024_Pool<ExecutionSpace>>(10000)
+      .run();
+  Impl::TestDynRankView1D_Normal<ExecutionSpace,
+                        Kokkos::Random_XorShift1024_Pool<ExecutionSpace>>(num_draws*10,0.0,1.0)
+      .run();
+  Impl::TestDynRankView1D_Normal<ExecutionSpace,
+                        Kokkos::Random_XorShift1024_Pool<ExecutionSpace>>(num_draws*10,1.1,2.1)
+      .run();
+  Impl::TestDynRankView2D_Normal<ExecutionSpace,
+                        Kokkos::Random_XorShift1024_Pool<ExecutionSpace>>(num_draws,0.0,1.0)
+      .run();
+  Impl::TestDynRankView2D_Normal<ExecutionSpace,
+                        Kokkos::Random_XorShift1024_Pool<ExecutionSpace>>(num_draws,1.1,2.1)
       .run();
 }
 }  // namespace Test
