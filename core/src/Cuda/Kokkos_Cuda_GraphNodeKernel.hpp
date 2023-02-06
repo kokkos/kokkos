@@ -30,7 +30,7 @@
 #include <Kokkos_Parallel_Reduce.hpp>
 #include <Kokkos_PointerOwnership.hpp>
 
-#include <Kokkos_Cuda.hpp>
+#include <Cuda/Kokkos_Cuda.hpp>
 #include <cuda_runtime_api.h>
 
 namespace Kokkos {

@@ -22,8 +22,8 @@
 #ifdef KOKKOS_ENABLE_CUDA
 
 #include <Kokkos_Core.hpp>
-#include <Kokkos_Cuda.hpp>
-#include <Kokkos_CudaSpace.hpp>
+#include <Cuda/Kokkos_Cuda.hpp>
+#include <Cuda/Kokkos_CudaSpace.hpp>
 
 #include <cstdlib>
 #include <iostream>

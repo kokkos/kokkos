@@ -100,14 +100,15 @@ bool OpenMP::in_parallel(OpenMP const &exec_space) noexcept {
 
 int OpenMP::impl_thread_pool_size() const noexcept {
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-  return OpenMP::in_parallel(exec_space)
+  return OpenMP::in_parallel(*this)
              ? omp_get_num_threads()
              : (Impl::t_openmp_instance
                     ? Impl::t_openmp_instance->m_pool_size
                     : impl_internal_space_instance()->m_pool_size);
 #else
-  return OpenMP::in_parallel() ? omp_get_num_threads()
-                               : impl_internal_space_instance()->m_pool_size;
+  return OpenMP::in_parallel(*this)
+             ? omp_get_num_threads()
+             : impl_internal_space_instance()->m_pool_size;
 #endif
 }
 

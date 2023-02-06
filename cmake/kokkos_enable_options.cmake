@@ -35,7 +35,6 @@ KOKKOS_ENABLE_OPTION(DEPRECATED_CODE_3    OFF "Whether code deprecated in major 
 KOKKOS_ENABLE_OPTION(DEPRECATED_CODE_4    ON "Whether code deprecated in major release 4 is available" )
 KOKKOS_ENABLE_OPTION(DEPRECATION_WARNINGS ON "Whether to emit deprecation warnings" )
 KOKKOS_ENABLE_OPTION(HIP_RELOCATABLE_DEVICE_CODE  OFF "Whether to enable relocatable device code (RDC) for HIP")
-KOKKOS_ENABLE_OPTION(IMPL_HPX_ASYNC_DISPATCH ON "Whether HPX supports asynchronous dispatch")
 KOKKOS_ENABLE_OPTION(TESTS         OFF  "Whether to build the unit tests")
 KOKKOS_ENABLE_OPTION(BENCHMARKS    OFF  "Whether to build the benchmarks")
 KOKKOS_ENABLE_OPTION(EXAMPLES      OFF  "Whether to build the examples")
@@ -99,6 +98,13 @@ ELSE()
   SET(CUDA_CONSTEXPR_DEFAULT OFF)
 ENDIF()
 KOKKOS_ENABLE_OPTION(CUDA_CONSTEXPR ${CUDA_CONSTEXPR_DEFAULT} "Whether to activate experimental relaxed constexpr functions")
+
+IF (KOKKOS_ENABLE_HPX)
+  SET(HPX_ASYNC_DISPATCH_DEFAULT ON)
+ELSE()
+  SET(HPX_ASYNC_DISPATCH_DEFAULT OFF)
+ENDIF()
+KOKKOS_ENABLE_OPTION(IMPL_HPX_ASYNC_DISPATCH ${HPX_ASYNC_DISPATCH_DEFAULT} "Whether HPX supports asynchronous dispatch")
 
 Kokkos_ENABLE_OPTION(UNSUPPORTED_ARCHS OFF "Whether to allow architectures in backends Kokkos doesn't optimize for")
 

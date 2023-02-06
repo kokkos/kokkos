@@ -22,7 +22,6 @@
 #include <SYCL/Kokkos_SYCL_Instance.hpp>
 #include <SYCL/Kokkos_SYCL.hpp>
 #include <Kokkos_HostSpace.hpp>
-#include <Kokkos_Serial.hpp>
 #include <Kokkos_Core.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_DeviceManagement.hpp>

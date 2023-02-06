@@ -187,6 +187,7 @@ IF (NOT WIN32)
 ENDIF()
 IF (NOT KOKKOS_ENABLE_COMPILE_AS_CMAKE_LANGUAGE)
   KOKKOS_LINK_TPL(kokkoscore PUBLIC ROCM)
+  KOKKOS_LINK_TPL(kokkoscore PUBLIC ONEDPL)
 ENDIF()
 
 # FIXME: We need a proper solution to figure out whether to enable

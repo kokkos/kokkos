@@ -20,7 +20,7 @@
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_CUDA
 
-#include <Kokkos_CudaSpace.hpp>
+#include <Cuda/Kokkos_CudaSpace.hpp>
 #include <Kokkos_UniqueToken.hpp>
 #include <impl/Kokkos_SharedAlloc.hpp>
 
