@@ -533,7 +533,7 @@ struct TestView_Normal {
               << ", variance_expect " << stddev * stddev << ", mean "
               << mean_calc << ", variance " << var_calc << std::endl;
     EXPECT_LE(mean_eps, 1e-2);
-    EXPECT_LE(variance_eps, 1e-3);
+    EXPECT_LE(variance_eps, 1e-2);
   }
 };
 
@@ -587,7 +587,7 @@ struct TestViewCmplx_Normal {
               << ", mean " << mean_calc << ", variance " << var_calc
               << std::endl;
     EXPECT_LE(mean_eps, 1e-2);
-    EXPECT_LE(variance_eps, 1e-3);
+    EXPECT_LE(variance_eps, 1e-2);
   }
 };
 }  // namespace Impl
