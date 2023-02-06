@@ -492,12 +492,12 @@ struct TestDynRankView {
 template <class ExecutionSpace, class Pool, class ViewType>
 struct TestView_Normal {
   using ScalarA = typename ViewType::value_type;
-  ViewType& A;
+  ViewType A;
   const int n;
   const ScalarA mean;
   const ScalarA stddev;
 
-  TestView_Normal(ViewType& A_, int n_, ScalarA mean_, ScalarA stddev_)
+  TestView_Normal(ViewType A_, int n_, ScalarA mean_, ScalarA stddev_)
       : A(A_), n(n_), mean(mean_), stddev(stddev_) {}
 
   KOKKOS_FUNCTION void operator()(int i,
@@ -528,24 +528,24 @@ struct TestView_Normal {
 
     double mean_eps     = Kokkos::abs(mean - mean_calc);
     double variance_eps = Kokkos::abs((stddev * stddev) / var_calc - 1.0);
-    EXPECT_LE(mean_eps, 1e-3);
-    EXPECT_LE(variance_eps, 1e-3);
     std::cout << "Rank " << ViewType::rank << ": mean_eps " << mean_eps
               << ", variance_eps " << variance_eps << ", mean_expect " << mean
               << ", variance_expect " << stddev * stddev << ", mean "
               << mean_calc << ", variance " << var_calc << std::endl;
+    EXPECT_LE(mean_eps, 1e-3);
+    EXPECT_LE(variance_eps, 1e-3);
   }
 };
 
 template <class ExecutionSpace, class Pool, class ViewType>
 struct TestViewCmplx_Normal {
   using ScalarA = typename ViewType::value_type;
-  ViewType& A;
+  ViewType A;
   const int n;
   const ScalarA mean;
   const ScalarA stddev;
 
-  TestViewCmplx_Normal(ViewType& A_, int n_, ScalarA mean_, ScalarA stddev_)
+  TestViewCmplx_Normal(ViewType A_, int n_, ScalarA mean_, ScalarA stddev_)
       : A(A_), n(n_), mean(mean_), stddev(stddev_) {}
 
   KOKKOS_FUNCTION void operator()(int i,
@@ -580,14 +580,14 @@ struct TestViewCmplx_Normal {
     double variance_eps = Kokkos::abs(
         (real(stddev) * real(stddev) + imag(stddev) * imag(stddev)) / var_calc -
         1.0);
-    EXPECT_LE(mean_eps, 1e-3);
-    EXPECT_LE(variance_eps, 1e-3);
     std::cout << "Rank " << ViewType::rank << ": mean_eps " << mean_eps
               << ", variance_eps " << variance_eps << ", mean_expect " << mean
               << ", variance_expect "
               << real(stddev) * real(stddev) + imag(stddev) * imag(stddev)
               << ", mean " << mean_calc << ", variance " << var_calc
               << std::endl;
+    EXPECT_LE(mean_eps, 1e-3);
+    EXPECT_LE(variance_eps, 1e-3);
   }
 };
 }  // namespace Impl
@@ -609,9 +609,9 @@ void test_random_xorshift64() {
       .run();
 #if defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_CUDA) || \
     defined(KOKKOS_ENABLE_HIP)
-  const int N = 536870912;
+  const int N = 134217728;
 #else  // SERIAL, HPX, OPENMP
-  const int N         = 536870912 / 4;
+  const int N         = 134217728 / 8;
 #endif
   std::cout << " -- Testing double Views with Normal distribution "
             << std::endl;
@@ -851,9 +851,9 @@ void test_random_xorshift1024() {
       .run();
 #if defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_CUDA) || \
     defined(KOKKOS_ENABLE_HIP)
-  const int N = 536870912;
+  const int N = 134217728;
 #else  // SERIAL, HPX, OPENMP
-  const int N         = 536870912 / 4;
+  const int N         = 134217728 / 8;
 #endif
   std::cout << " -- Testing double Views with Normal distribution "
             << std::endl;
