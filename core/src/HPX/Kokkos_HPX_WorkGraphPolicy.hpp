@@ -17,7 +17,7 @@
 #ifndef KOKKOS_HPX_WORKGRAPHPOLICY_HPP
 #define KOKKOS_HPX_WORKGRAPHPOLICY_HPP
 
-#include <Kokkos_HPX.hpp>
+#include <HPX/Kokkos_HPX.hpp>
 
 #include <hpx/local/algorithm.hpp>
 #include <hpx/local/execution.hpp>

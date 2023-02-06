@@ -21,7 +21,7 @@
 #include <Kokkos_Core.hpp>
 
 #ifdef KOKKOS_ENABLE_HPX
-#include <Kokkos_HPX.hpp>
+#include <HPX/Kokkos_HPX.hpp>
 
 #include <impl/Kokkos_ExecSpaceManager.hpp>
 
