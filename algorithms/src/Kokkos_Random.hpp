@@ -492,8 +492,8 @@ struct rand<Generator, double> {
     return gen.drand(start, end);
   }
   KOKKOS_INLINE_FUNCTION
-  static double draw_normal(Generator& gen,
-                            const double& mean, const double& std_dev) {
+  static double draw_normal(Generator& gen, const double& mean,
+                            const double& std_dev) {
     return gen.normal(mean, std_dev);
   }
 };
@@ -555,9 +555,9 @@ struct rand<Generator, Kokkos::complex<double>> {
     return Kokkos::complex<double>(re, im);
   }
   KOKKOS_INLINE_FUNCTION
-  static Kokkos::complex<double> draw_normal(Generator& gen,
-                                             const Kokkos::complex<double>& mean,
-                                             const Kokkos::complex<double>& std_dev) {
+  static Kokkos::complex<double> draw_normal(
+      Generator& gen, const Kokkos::complex<double>& mean,
+      const Kokkos::complex<double>& std_dev) {
     const double re = gen.normal(real(mean), real(std_dev));
     const double im = gen.normal(imag(mean), imag(std_dev));
     return Kokkos::complex<double>(re, im);
@@ -1134,7 +1134,7 @@ class Random_XorShift1024_Pool {
   using execution_space = typename device_type::execution_space;
   using locks_type      = View<int**, device_type>;
   using int_view_type   = View<int**, device_type>;
-  using state_data_type = View<uint64_t * [16], device_type>;
+  using state_data_type = View<uint64_t* [16], device_type>;
 
   locks_type locks_      = {};
   state_data_type state_ = {};
@@ -1536,8 +1536,7 @@ template <class ViewType, class RandomPool, int loops, int rank,
 struct fill_random_functor_normal;
 
 template <class ViewType, class RandomPool, int loops, class IndexType>
-struct fill_random_functor_normal<ViewType, RandomPool, loops, 0,
-                                  IndexType> {
+struct fill_random_functor_normal<ViewType, RandomPool, loops, 0, IndexType> {
   ViewType a;
   RandomPool rand_pool;
   typename ViewType::const_value_type mean, std_dev;
@@ -1553,14 +1552,13 @@ struct fill_random_functor_normal<ViewType, RandomPool, loops, 0,
   KOKKOS_INLINE_FUNCTION
   void operator()(IndexType) const {
     typename RandomPool::generator_type gen = rand_pool.get_state();
-    a()                                     = Rand::draw_normal(gen, mean, std_dev);
+    a() = Rand::draw_normal(gen, mean, std_dev);
     rand_pool.free_state(gen);
   }
 };
 
 template <class ViewType, class RandomPool, int loops, class IndexType>
-struct fill_random_functor_normal<ViewType, RandomPool, loops, 1,
-                                  IndexType> {
+struct fill_random_functor_normal<ViewType, RandomPool, loops, 1, IndexType> {
   ViewType a;
   RandomPool rand_pool;
   typename ViewType::const_value_type mean, std_dev;
@@ -1586,8 +1584,7 @@ struct fill_random_functor_normal<ViewType, RandomPool, loops, 1,
 };
 
 template <class ViewType, class RandomPool, int loops, class IndexType>
-struct fill_random_functor_normal<ViewType, RandomPool, loops, 2,
-                                  IndexType> {
+struct fill_random_functor_normal<ViewType, RandomPool, loops, 2, IndexType> {
   ViewType a;
   RandomPool rand_pool;
   typename ViewType::const_value_type mean, std_dev;
@@ -1615,8 +1612,7 @@ struct fill_random_functor_normal<ViewType, RandomPool, loops, 2,
 };
 
 template <class ViewType, class RandomPool, int loops, class IndexType>
-struct fill_random_functor_normal<ViewType, RandomPool, loops, 3,
-                                  IndexType> {
+struct fill_random_functor_normal<ViewType, RandomPool, loops, 3, IndexType> {
   ViewType a;
   RandomPool rand_pool;
   typename ViewType::const_value_type mean, std_dev;
@@ -1645,8 +1641,7 @@ struct fill_random_functor_normal<ViewType, RandomPool, loops, 3,
 };
 
 template <class ViewType, class RandomPool, int loops, class IndexType>
-struct fill_random_functor_normal<ViewType, RandomPool, loops, 4,
-                                  IndexType> {
+struct fill_random_functor_normal<ViewType, RandomPool, loops, 4, IndexType> {
   ViewType a;
   RandomPool rand_pool;
   typename ViewType::const_value_type mean, std_dev;
@@ -1676,8 +1671,7 @@ struct fill_random_functor_normal<ViewType, RandomPool, loops, 4,
 };
 
 template <class ViewType, class RandomPool, int loops, class IndexType>
-struct fill_random_functor_normal<ViewType, RandomPool, loops, 5,
-                                  IndexType> {
+struct fill_random_functor_normal<ViewType, RandomPool, loops, 5, IndexType> {
   ViewType a;
   RandomPool rand_pool;
   typename ViewType::const_value_type mean, std_dev;
@@ -1709,8 +1703,7 @@ struct fill_random_functor_normal<ViewType, RandomPool, loops, 5,
 };
 
 template <class ViewType, class RandomPool, int loops, class IndexType>
-struct fill_random_functor_normal<ViewType, RandomPool, loops, 6,
-                                  IndexType> {
+struct fill_random_functor_normal<ViewType, RandomPool, loops, 6, IndexType> {
   ViewType a;
   RandomPool rand_pool;
   typename ViewType::const_value_type mean, std_dev;
@@ -1744,8 +1737,7 @@ struct fill_random_functor_normal<ViewType, RandomPool, loops, 6,
 };
 
 template <class ViewType, class RandomPool, int loops, class IndexType>
-struct fill_random_functor_normal<ViewType, RandomPool, loops, 7,
-                                  IndexType> {
+struct fill_random_functor_normal<ViewType, RandomPool, loops, 7, IndexType> {
   ViewType a;
   RandomPool rand_pool;
   typename ViewType::const_value_type mean, std_dev;
@@ -1773,7 +1765,8 @@ struct fill_random_functor_normal<ViewType, RandomPool, loops, 7,
                      o++)
                   for (IndexType p = 0; p < static_cast<IndexType>(a.extent(6));
                        p++)
-                    a(idx, k, l, m, n, o, p) = Rand::draw_normal(gen, mean, std_dev);
+                    a(idx, k, l, m, n, o, p) =
+                        Rand::draw_normal(gen, mean, std_dev);
       }
     }
     rand_pool.free_state(gen);
@@ -1781,8 +1774,7 @@ struct fill_random_functor_normal<ViewType, RandomPool, loops, 7,
 };
 
 template <class ViewType, class RandomPool, int loops, class IndexType>
-struct fill_random_functor_normal<ViewType, RandomPool, loops, 8,
-                                  IndexType> {
+struct fill_random_functor_normal<ViewType, RandomPool, loops, 8, IndexType> {
   ViewType a;
   RandomPool rand_pool;
   typename ViewType::const_value_type mean, std_dev;
@@ -1812,7 +1804,8 @@ struct fill_random_functor_normal<ViewType, RandomPool, loops, 8,
                        p++)
                     for (IndexType q = 0;
                          q < static_cast<IndexType>(a.extent(7)); q++)
-                      a(idx, k, l, m, n, o, p, q) = Rand::draw_normal(gen, mean, std_dev);
+                      a(idx, k, l, m, n, o, p, q) =
+                          Rand::draw_normal(gen, mean, std_dev);
       }
     }
     rand_pool.free_state(gen);
@@ -1830,8 +1823,8 @@ void fill_random_normal(const ExecutionSpace& exec, ViewType a, RandomPool g,
         "Kokkos::fill_random",
         Kokkos::RangePolicy<ExecutionSpace>(exec, 0, (LDA + 127) / 128),
         Impl::fill_random_functor_normal<ViewType, RandomPool, 128,
-                                         ViewType::Rank, IndexType>(
-            a, g, mean, std_dev));
+                                         ViewType::Rank, IndexType>(a, g, mean,
+                                                                    std_dev));
 }
 
 }  // namespace Impl
@@ -1872,7 +1865,9 @@ void fill_random_normal(const ExecutionSpace& exec, ViewType a, RandomPool g,
                         typename ViewType::const_value_type mean,
                         typename ViewType::const_value_type std_dev) {
   Impl::apply_to_view_of_static_rank(
-      [&](auto dst) { Kokkos::Impl::fill_random_normal(exec, dst, g, mean, std_dev); },
+      [&](auto dst) {
+        Kokkos::Impl::fill_random_normal(exec, dst, g, mean, std_dev);
+      },
       a);
 }
 
