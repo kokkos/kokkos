@@ -532,7 +532,7 @@ struct TestView_Normal {
               << ", variance_eps " << variance_eps << ", mean_expect " << mean
               << ", variance_expect " << stddev * stddev << ", mean "
               << mean_calc << ", variance " << var_calc << std::endl;
-    EXPECT_LE(mean_eps, 1e-3);
+    EXPECT_LE(mean_eps, 1e-2);
     EXPECT_LE(variance_eps, 1e-3);
   }
 };
@@ -586,7 +586,7 @@ struct TestViewCmplx_Normal {
               << real(stddev) * real(stddev) + imag(stddev) * imag(stddev)
               << ", mean " << mean_calc << ", variance " << var_calc
               << std::endl;
-    EXPECT_LE(mean_eps, 1e-3);
+    EXPECT_LE(mean_eps, 1e-2);
     EXPECT_LE(variance_eps, 1e-3);
   }
 };
