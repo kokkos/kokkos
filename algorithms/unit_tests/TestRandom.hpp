@@ -84,6 +84,25 @@ RandomProperties operator+(const RandomProperties& org,
   return val;
 }
 
+template <class Scalar>
+struct NormalRandomProperties {
+  Scalar mean;
+  Scalar variance;
+
+  KOKKOS_INLINE_FUNCTION
+  NormalRandomProperties() {
+    mean     = 0.0;
+    variance = 0.0;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  NormalRandomProperties& operator+=(const NormalRandomProperties& add) {
+    mean += add.mean;
+    variance += add.variance;
+    return *this;
+  }
+};
+
 template <class GeneratorPool, class Scalar>
 struct test_random_functor {
   using rnd_type = typename GeneratorPool::generator_type;
@@ -481,7 +500,7 @@ struct TestView_Normal {
   TestView_Normal(ViewType& A_, int n_, ScalarA mean_, ScalarA stddev_)
     : A(A_), n(n_), mean(mean_), stddev(stddev_) {}
 
-  KOKKOS_FUNCTION void operator()(int i, RandomProperties& prop) const {
+  KOKKOS_FUNCTION void operator()(int i, NormalRandomProperties<ScalarA>& prop) const {
     for (int k = 0; k < static_cast<int>(A.size()); k+=n) {
       ScalarA tmp = *(A.data()+i+k);
       prop.mean += tmp;
@@ -497,20 +516,71 @@ struct TestView_Normal {
     ExecutionSpace exec;
     Kokkos::fill_random_normal(A, random, mean, stddev);
 
-    RandomProperties val;
+    NormalRandomProperties<ScalarA> val;
     Kokkos::parallel_reduce(
         Kokkos::RangePolicy<ExecutionSpace>(exec, 0, n), *this,
         val);
 
     exec.fence();
 
-    double mean_eps = std::abs(mean - val.mean/A.size());
-    double variance_eps = std::abs((stddev*stddev)/(val.variance/(A.size()-1)) - 1.0);
+    ScalarA mean_calc = val.mean/A.size();
+    ScalarA var_calc  = val.variance/(A.size()-1);
+
+    double mean_eps = Kokkos::abs(mean - mean_calc);
+    double variance_eps = Kokkos::abs((stddev*stddev)/var_calc - 1.0);
     EXPECT_LE(mean_eps, 1e-3);
     EXPECT_LE(variance_eps, 1e-3);
     std::cout << "Rank " << ViewType::rank << ": mean_eps " << mean_eps << ", variance_eps " << variance_eps
               << ", mean_expect " <<  mean << ", variance_expect " << stddev*stddev
-              << ", mean " <<  val.mean/A.size() << ", variance " << val.variance/(A.size()-1) << std::endl;
+              << ", mean " <<  mean_calc << ", variance " << var_calc << std::endl;
+  }
+};
+
+template <class ExecutionSpace, class Pool, class ViewType>
+struct TestViewCmplx_Normal {
+  using ScalarA = typename ViewType::value_type;
+  ViewType& A;
+  const int n;
+  const ScalarA mean;
+  const ScalarA stddev;
+
+  TestViewCmplx_Normal(ViewType& A_, int n_, ScalarA mean_, ScalarA stddev_)
+    : A(A_), n(n_), mean(mean_), stddev(stddev_) {}
+
+  KOKKOS_FUNCTION void operator()(int i, NormalRandomProperties<ScalarA>& prop) const {
+    for (int k = 0; k < static_cast<int>(A.size()); k+=n) {
+      ScalarA tmp = *(A.data()+i+k);
+      prop.mean += tmp;
+      prop.variance.real() += real(tmp - mean) * real(tmp - mean);
+      prop.variance.imag() += imag(tmp - mean) * imag(tmp - mean);
+    }
+  }
+
+  void run() {
+    uint64_t ticks =
+      std::chrono::high_resolution_clock::now().time_since_epoch().count();
+
+    Pool random(ticks);
+    ExecutionSpace exec;
+    Kokkos::fill_random_normal(A, random, mean, stddev);
+
+    NormalRandomProperties<ScalarA> val;
+    Kokkos::parallel_reduce(
+        Kokkos::RangePolicy<ExecutionSpace>(exec, 0, n), *this,
+        val);
+
+    exec.fence();
+
+    ScalarA mean_calc = val.mean/A.size();
+    double var_calc = (real(val.variance)+imag(val.variance))/(A.size()-1);
+
+    double mean_eps = Kokkos::abs(mean - mean_calc);
+    double variance_eps = Kokkos::abs((real(stddev)*real(stddev)+imag(stddev)*imag(stddev))/var_calc - 1.0);
+    EXPECT_LE(mean_eps, 1e-3);
+    EXPECT_LE(variance_eps, 1e-3);
+    std::cout << "Rank " << ViewType::rank << ": mean_eps " << mean_eps << ", variance_eps " << variance_eps
+              << ", mean_expect " <<  mean << ", variance_expect " << real(stddev)*real(stddev)+imag(stddev)*imag(stddev)
+              << ", mean " <<  mean_calc << ", variance " << var_calc << std::endl;
   }
 };
 }  // namespace Impl
@@ -593,6 +663,55 @@ void test_random_xorshift64() {
     Impl::TestView_Normal<ExecutionSpace, Kokkos::Random_XorShift64_Pool<ExecutionSpace>, ViewType>(A, n, 0.0, 1.0).run();
     Impl::TestView_Normal<ExecutionSpace, Kokkos::Random_XorShift64_Pool<ExecutionSpace>, ViewType>(A, n, 1.1, 2.1).run();
   }
+  std::cout << " -- Testing complex double Views with Normal distribution " << std::endl;
+  {
+    int n = N;
+    using ViewType = Kokkos::View<Kokkos::complex<double>*, Kokkos::LayoutLeft, typename ExecutionSpace::memory_space>;
+    ViewType A("a", n);
+    Impl::TestViewCmplx_Normal<ExecutionSpace, Kokkos::Random_XorShift64_Pool<ExecutionSpace>, ViewType>(A, n, Kokkos::complex<double>(0.0,1.0), Kokkos::complex<double>(1.0/sqrt(2.0),1.0/sqrt(2.0))).run();
+  }
+  {
+    int n = N/4;
+    using ViewType = Kokkos::View<Kokkos::complex<double>**, Kokkos::LayoutLeft, typename ExecutionSpace::memory_space>;
+    ViewType A("a", n, 4);
+    Impl::TestViewCmplx_Normal<ExecutionSpace, Kokkos::Random_XorShift64_Pool<ExecutionSpace>, ViewType>(A, n, Kokkos::complex<double>(0.0,1.0), Kokkos::complex<double>(1.0/sqrt(2.0),1.0/sqrt(2.0))).run();
+  }
+  {
+    int n = N/(4*4);
+    using ViewType = Kokkos::View<Kokkos::complex<double>***, Kokkos::LayoutLeft, typename ExecutionSpace::memory_space>;
+    ViewType A("a", n, 4, 4);
+    Impl::TestViewCmplx_Normal<ExecutionSpace, Kokkos::Random_XorShift64_Pool<ExecutionSpace>, ViewType>(A, n, Kokkos::complex<double>(0.0,1.0), Kokkos::complex<double>(1.0/sqrt(2.0),1.0/sqrt(2.0))).run();
+  }
+  {
+    int n = N/(4*4*4);
+    using ViewType = Kokkos::View<Kokkos::complex<double>****, Kokkos::LayoutLeft, typename ExecutionSpace::memory_space>;
+    ViewType A("a", n, 4, 4, 4);
+    Impl::TestViewCmplx_Normal<ExecutionSpace, Kokkos::Random_XorShift64_Pool<ExecutionSpace>, ViewType>(A, n, Kokkos::complex<double>(0.0,1.0), Kokkos::complex<double>(1.0/sqrt(2.0),1.0/sqrt(2.0))).run();
+  }
+  {
+    int n = N/(4*4*4*4);
+    using ViewType = Kokkos::View<Kokkos::complex<double>*****, Kokkos::LayoutLeft, typename ExecutionSpace::memory_space>;
+    ViewType A("a", n, 4, 4, 4, 4);
+    Impl::TestViewCmplx_Normal<ExecutionSpace, Kokkos::Random_XorShift64_Pool<ExecutionSpace>, ViewType>(A, n, Kokkos::complex<double>(0.0,1.0), Kokkos::complex<double>(1.0/sqrt(2.0),1.0/sqrt(2.0))).run();
+  }
+{
+    int n = N/(4*4*4*4*4);
+    using ViewType = Kokkos::View<Kokkos::complex<double>******, Kokkos::LayoutLeft, typename ExecutionSpace::memory_space>;
+    ViewType A("a", n, 4, 4, 4, 4, 4);
+    Impl::TestViewCmplx_Normal<ExecutionSpace, Kokkos::Random_XorShift64_Pool<ExecutionSpace>, ViewType>(A, n, Kokkos::complex<double>(0.0,1.0), Kokkos::complex<double>(1.0/sqrt(2.0),1.0/sqrt(2.0))).run();
+  }
+  {
+    int n = N/(4*4*4*4*4*4);
+    using ViewType = Kokkos::View<Kokkos::complex<double>*******, Kokkos::LayoutLeft, typename ExecutionSpace::memory_space>;
+    ViewType A("a", n, 4, 4, 4, 4, 4, 4);
+    Impl::TestViewCmplx_Normal<ExecutionSpace, Kokkos::Random_XorShift64_Pool<ExecutionSpace>, ViewType>(A, n, Kokkos::complex<double>(0.0,1.0), Kokkos::complex<double>(1.0/sqrt(2.0),1.0/sqrt(2.0))).run();
+  }
+  {
+    int n = N/(4*4*4*4*4*4*4);
+    using ViewType = Kokkos::View<Kokkos::complex<double>********, Kokkos::LayoutLeft, typename ExecutionSpace::memory_space>;
+    ViewType A("a", n, 4, 4, 4, 4, 4, 4, 4);
+    Impl::TestViewCmplx_Normal<ExecutionSpace, Kokkos::Random_XorShift64_Pool<ExecutionSpace>, ViewType>(A, n, Kokkos::complex<double>(0.0,1.0), Kokkos::complex<double>(1.0/sqrt(2.0),1.0/sqrt(2.0))).run();
+  }
 }
 
 template <typename ExecutionSpace>
@@ -673,6 +792,55 @@ void test_random_xorshift1024() {
     ViewType A("a", n, 4, 4, 4, 4, 4, 4, 4);
     Impl::TestView_Normal<ExecutionSpace, Kokkos::Random_XorShift1024_Pool<ExecutionSpace>, ViewType>(A, n, 0.0, 1.0).run();
     Impl::TestView_Normal<ExecutionSpace, Kokkos::Random_XorShift1024_Pool<ExecutionSpace>, ViewType>(A, n, 1.1, 2.1).run();
+  }
+  std::cout << " -- Testing complex double Views with Normal distribution " << std::endl;
+  {
+    int n = N;
+    using ViewType = Kokkos::View<Kokkos::complex<double>*, Kokkos::LayoutLeft, typename ExecutionSpace::memory_space>;
+    ViewType A("a", n);
+    Impl::TestViewCmplx_Normal<ExecutionSpace, Kokkos::Random_XorShift1024_Pool<ExecutionSpace>, ViewType>(A, n, Kokkos::complex<double>(0.0,1.0), Kokkos::complex<double>(1.0/sqrt(2.0),1.0/sqrt(2.0))).run();
+  }
+  {
+    int n = N/4;
+    using ViewType = Kokkos::View<Kokkos::complex<double>**, Kokkos::LayoutLeft, typename ExecutionSpace::memory_space>;
+    ViewType A("a", n, 4);
+    Impl::TestViewCmplx_Normal<ExecutionSpace, Kokkos::Random_XorShift1024_Pool<ExecutionSpace>, ViewType>(A, n, Kokkos::complex<double>(0.0,1.0), Kokkos::complex<double>(1.0/sqrt(2.0),1.0/sqrt(2.0))).run();
+  }
+  {
+    int n = N/(4*4);
+    using ViewType = Kokkos::View<Kokkos::complex<double>***, Kokkos::LayoutLeft, typename ExecutionSpace::memory_space>;
+    ViewType A("a", n, 4, 4);
+    Impl::TestViewCmplx_Normal<ExecutionSpace, Kokkos::Random_XorShift1024_Pool<ExecutionSpace>, ViewType>(A, n, Kokkos::complex<double>(0.0,1.0), Kokkos::complex<double>(1.0/sqrt(2.0),1.0/sqrt(2.0))).run();
+  }
+  {
+    int n = N/(4*4*4);
+    using ViewType = Kokkos::View<Kokkos::complex<double>****, Kokkos::LayoutLeft, typename ExecutionSpace::memory_space>;
+    ViewType A("a", n, 4, 4, 4);
+    Impl::TestViewCmplx_Normal<ExecutionSpace, Kokkos::Random_XorShift1024_Pool<ExecutionSpace>, ViewType>(A, n, Kokkos::complex<double>(0.0,1.0), Kokkos::complex<double>(1.0/sqrt(2.0),1.0/sqrt(2.0))).run();
+  }
+  {
+    int n = N/(4*4*4*4);
+    using ViewType = Kokkos::View<Kokkos::complex<double>*****, Kokkos::LayoutLeft, typename ExecutionSpace::memory_space>;
+    ViewType A("a", n, 4, 4, 4, 4);
+    Impl::TestViewCmplx_Normal<ExecutionSpace, Kokkos::Random_XorShift1024_Pool<ExecutionSpace>, ViewType>(A, n, Kokkos::complex<double>(0.0,1.0), Kokkos::complex<double>(1.0/sqrt(2.0),1.0/sqrt(2.0))).run();
+  }
+{
+    int n = N/(4*4*4*4*4);
+    using ViewType = Kokkos::View<Kokkos::complex<double>******, Kokkos::LayoutLeft, typename ExecutionSpace::memory_space>;
+    ViewType A("a", n, 4, 4, 4, 4, 4);
+    Impl::TestViewCmplx_Normal<ExecutionSpace, Kokkos::Random_XorShift1024_Pool<ExecutionSpace>, ViewType>(A, n, Kokkos::complex<double>(0.0,1.0), Kokkos::complex<double>(1.0/sqrt(2.0),1.0/sqrt(2.0))).run();
+  }
+  {
+    int n = N/(4*4*4*4*4*4);
+    using ViewType = Kokkos::View<Kokkos::complex<double>*******, Kokkos::LayoutLeft, typename ExecutionSpace::memory_space>;
+    ViewType A("a", n, 4, 4, 4, 4, 4, 4);
+    Impl::TestViewCmplx_Normal<ExecutionSpace, Kokkos::Random_XorShift1024_Pool<ExecutionSpace>, ViewType>(A, n, Kokkos::complex<double>(0.0,1.0), Kokkos::complex<double>(1.0/sqrt(2.0),1.0/sqrt(2.0))).run();
+  }
+  {
+    int n = N/(4*4*4*4*4*4*4);
+    using ViewType = Kokkos::View<Kokkos::complex<double>********, Kokkos::LayoutLeft, typename ExecutionSpace::memory_space>;
+    ViewType A("a", n, 4, 4, 4, 4, 4, 4, 4);
+    Impl::TestViewCmplx_Normal<ExecutionSpace, Kokkos::Random_XorShift1024_Pool<ExecutionSpace>, ViewType>(A, n, Kokkos::complex<double>(0.0,1.0), Kokkos::complex<double>(1.0/sqrt(2.0),1.0/sqrt(2.0))).run();
   }
 }
 }  // namespace Test

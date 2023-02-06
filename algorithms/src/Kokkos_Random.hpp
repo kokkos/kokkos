@@ -558,8 +558,8 @@ struct rand<Generator, Kokkos::complex<double>> {
   static Kokkos::complex<double> draw_normal(Generator& gen,
                                              const Kokkos::complex<double>& mean,
                                              const Kokkos::complex<double>& std_dev) {
-    const double re = gen.normal(real(mean), real(std_dev)/std::sqrt(2.0));
-    const double im = gen.normal(imag(mean), real(std_dev)/std::sqrt(2.0));
+    const double re = gen.normal(real(mean), real(std_dev));
+    const double im = gen.normal(imag(mean), imag(std_dev));
     return Kokkos::complex<double>(re, im);
   }
 };
