@@ -40,7 +40,7 @@ class TaskQueueSpecialization<
     SimpleTaskScheduler<Kokkos::Experimental::HPX, QueueType>> {
  public:
   void setup() const {
-    const int num_worker_threads = Kokkos::Experimental::HPX::concurrency();
+    const int num_worker_threads = Kokkos::Experimental::HPX().concurrency();
 
     hpx_thread_buffer &buffer = Kokkos::Experimental::HPX().impl_get_buffer();
     buffer.resize(num_worker_threads, 512);
@@ -50,7 +50,7 @@ class TaskQueueSpecialization<
     // NOTE: This implementation has been simplified based on the
     // assumption that team_size = 1. The HPX backend currently only
     // supports a team size of 1.
-    const int num_worker_threads = Kokkos::Experimental::HPX::concurrency();
+    const int num_worker_threads = Kokkos::Experimental::HPX().concurrency();
 
     hpx_thread_buffer &buffer = Kokkos::Experimental::HPX().impl_get_buffer();
 
@@ -96,7 +96,7 @@ class TaskQueueSpecialization<
     // This is not necessarily the most efficient, but can be improved later.
     TaskQueueSpecialization<scheduler_type> task_queue;
     task_queue.scheduler         = &scheduler;
-    const int num_worker_threads = Kokkos::Experimental::HPX::concurrency();
+    const int num_worker_threads = Kokkos::Experimental::HPX().concurrency();
     Kokkos::Experimental::HPX().impl_bulk_setup_finalize(
         true, false, task_queue, num_worker_threads,
         hpx::threads::thread_stacksize::nostack);
@@ -124,7 +124,7 @@ class TaskQueueSpecializationConstrained<
                                   Kokkos::Experimental::HPX>::value>> {
  public:
   void setup() const {
-    const int num_worker_threads = Kokkos::Experimental::HPX::concurrency();
+    const int num_worker_threads = Kokkos::Experimental::HPX().concurrency();
 
     hpx_thread_buffer &buffer = Kokkos::Experimental::HPX().impl_get_buffer();
     buffer.resize(num_worker_threads, 512);
@@ -137,7 +137,7 @@ class TaskQueueSpecializationConstrained<
     // NOTE: This implementation has been simplified based on the
     // assumption that team_size = 1. The HPX backend currently only
     // supports a team size of 1.
-    const int num_worker_threads = Kokkos::Experimental::HPX::concurrency();
+    const int num_worker_threads = Kokkos::Experimental::HPX().concurrency();
 
     hpx_thread_buffer &buffer = Kokkos::Experimental::HPX().impl_get_buffer();
 
@@ -194,7 +194,7 @@ class TaskQueueSpecializationConstrained<
     using task_base_type = typename scheduler_type::task_base;
     using queue_type     = typename scheduler_type::queue_type;
 
-    if (1 == Kokkos::Experimental::HPX::concurrency()) {
+    if (1 == Kokkos::Experimental::HPX().concurrency()) {
       task_base_type *const end = (task_base_type *)task_base_type::EndTag;
       task_base_type *task      = end;
 
@@ -229,7 +229,7 @@ class TaskQueueSpecializationConstrained<
     // This is not necessarily the most efficient, but can be improved later.
     TaskQueueSpecializationConstrained<scheduler_type> task_queue;
     task_queue.scheduler         = &scheduler;
-    const int num_worker_threads = Kokkos::Experimental::HPX::concurrency();
+    const int num_worker_threads = Kokkos::Experimental::HPX().concurrency();
     Kokkos::Experimental::HPX().impl_bulk_setup_finalize(
         true, false, task_queue, num_worker_threads,
         hpx::threads::thread_stacksize::nostack);

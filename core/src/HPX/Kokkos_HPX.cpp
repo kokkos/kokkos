@@ -153,7 +153,11 @@ void HPX::impl_static_fence(const std::string &name) {
       });
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 int HPX::concurrency() {
+#else
+int HPX::concurrency() const {
+#endif
   hpx::runtime *rt = hpx::get_runtime_ptr();
   if (rt == nullptr) {
     return hpx::threads::hardware_concurrency();
