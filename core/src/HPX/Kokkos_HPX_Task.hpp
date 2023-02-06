@@ -22,7 +22,7 @@
 
 #include <Kokkos_TaskScheduler_fwd.hpp>
 
-#include <Kokkos_HPX.hpp>
+#include <HPX/Kokkos_HPX.hpp>
 
 #include <hpx/local/execution.hpp>
 #include <hpx/local/future.hpp>
