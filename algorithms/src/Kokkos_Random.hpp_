@@ -1134,7 +1134,7 @@ class Random_XorShift1024_Pool {
   using execution_space = typename device_type::execution_space;
   using locks_type      = View<int**, device_type>;
   using int_view_type   = View<int**, device_type>;
-  using state_data_type = View<uint64_t * [16], device_type>;
+  using state_data_type = View<uint64_t* [16], device_type>;
 
   locks_type locks_      = {};
   state_data_type state_ = {};
