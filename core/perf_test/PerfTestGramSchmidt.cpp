@@ -161,8 +161,6 @@ struct ModifiedGramSchmidt {
 
 template <class Scalar>
 static void GramSchmidt(benchmark::State& state) {
-  std::string label_gramschmidt;
-
   const int parallel_work_length = state.range(0);
 
   for (auto _ : state) {
