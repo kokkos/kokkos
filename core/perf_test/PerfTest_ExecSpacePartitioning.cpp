@@ -54,7 +54,7 @@ bool is_overlapping<Kokkos::HIP>(const Kokkos::HIP&) {
 }
 #endif
 
-#ifdef KOKKOS_ENABLE_SYCL
+#if defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_ARCH_INTEL_GPU)
 template <>
 bool is_overlapping<Kokkos::Experimental::SYCL>(
     const Kokkos::Experimental::SYCL&) {
@@ -154,6 +154,8 @@ struct FunctorTeamReduce {
   }
 };
 
+// skip for SYCL+Cuda
+#if !(defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ARCH_INTEL_GPU))
 static void OverlapRangePolicy(benchmark::State& state) {
   int N = state.range(0);
   int M = state.range(1);
@@ -323,12 +325,9 @@ static void OverlapRangePolicy(benchmark::State& state) {
   }
 }
 
-// skip for SYCL+Cuda
-#if !defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ARCH_INTEL_GPU)
 BENCHMARK(OverlapRangePolicy)
     ->ArgNames({"N", "M", "R"})
     ->Args({2'000, 10'000, 10});
-#endif
 
 static void OverlapMDRangePolicy(benchmark::State& state) {
   int N = state.range(0);
@@ -518,12 +517,9 @@ static void OverlapMDRangePolicy(benchmark::State& state) {
   }
 }
 
-// skip for SYCL+Cuda
-#if !defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ARCH_INTEL_GPU)
 BENCHMARK(OverlapMDRangePolicy)
     ->ArgNames({"N", "M", "R"})
     ->Args({200, 10'000, 10});
-#endif
 
 static void OverlapTeamPolicy(benchmark::State& state) {
   int N = state.range(0);
@@ -698,11 +694,9 @@ static void OverlapTeamPolicy(benchmark::State& state) {
   }
 }
 
-// skip for SYCL+Cuda
-#if !defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ARCH_INTEL_GPU)
 BENCHMARK(OverlapTeamPolicy)
     ->ArgNames({"N", "M", "R"})
     ->Args({20, 1'000'000, 10});
-#endif
+#endif  // skip for SYCL+Cuda
 
 }  // namespace Test
