@@ -29,12 +29,6 @@ TARGETS =
 
 #
 
-OBJ_ATOMICS = test_atomic.o
-TARGETS += KokkosCore_PerformanceTest_Atomics
-TEST_TARGETS += test-atomic
-
-#
-
 OBJ_TASKDAG = test_taskdag.o
 TARGETS += KokkosCore_PerformanceTest_TaskDAG
 TEST_TARGETS += test-taskdag
