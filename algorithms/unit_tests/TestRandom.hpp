@@ -536,8 +536,7 @@ struct TestView_Normal {
     if (std::is_same<ScalarA, double>::value) {
       EXPECT_LE(mean_eps, 1e-2);
       EXPECT_LE(variance_eps, 1e-2);
-    }
-    else {
+    } else {
       EXPECT_LE(mean_eps, 1e-1);
       EXPECT_LE(variance_eps, 1e-1);
     }
@@ -594,11 +593,10 @@ struct TestViewCmplx_Normal {
               << real(stddev) * real(stddev) + imag(stddev) * imag(stddev)
               << ", mean " << mean_calc << ", variance " << var_calc
               << std::endl;
-    if (std::is_same<ScalarA, Kokkos::complex<double>::value) {
+    if (std::is_same < ScalarA, Kokkos::complex<double>::value) {
       EXPECT_LE(mean_eps, 1e-2);
       EXPECT_LE(variance_eps, 1e-2);
-    }
-    else {
+    } else {
       EXPECT_LE(mean_eps, 1e-1);
       EXPECT_LE(variance_eps, 1e-1);
     }
