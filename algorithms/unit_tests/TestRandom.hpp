@@ -492,7 +492,7 @@ struct TestDynRankView {
 template <class Pool, class ViewType>
 struct TestView_Normal {
   using ExecutionSpace = typename Pool::device_type::execution_space;
-  using ScalarA = typename ViewType::value_type;
+  using ScalarA        = typename ViewType::value_type;
   ViewType A;
   const int n;
   const ScalarA mean;
@@ -541,7 +541,7 @@ struct TestView_Normal {
 template <class Pool, class ViewType>
 struct TestViewCmplx_Normal {
   using ExecutionSpace = typename Pool::device_type::execution_space;
-  using ScalarA = typename ViewType::value_type;
+  using ScalarA        = typename ViewType::value_type;
   ViewType A;
   const int n;
   const ScalarA mean;
@@ -575,7 +575,8 @@ struct TestViewCmplx_Normal {
     exec.fence();
 
     ScalarA mean_calc = val.mean / A.size();
-    typename ScalarA::value_type var_calc = (real(val.variance) + imag(val.variance)) / (A.size() - 1);
+    typename ScalarA::value_type var_calc =
+        (real(val.variance) + imag(val.variance)) / (A.size() - 1);
 
     typename ScalarA::value_type mean_eps     = Kokkos::abs(mean - mean_calc);
     typename ScalarA::value_type variance_eps = Kokkos::abs(
@@ -624,29 +625,33 @@ void test_random_normal_scalar(int N) {
     TestView_Normal<RandomGenerator, ViewType>(A, n, 1.1, 2.1).run();
   }
   {
-    int n          = N / (4 * 4 * 4 * 4);
-    using ViewType = Kokkos::View<Scalar*****, Kokkos::LayoutLeft, memory_space>;
+    int n = N / (4 * 4 * 4 * 4);
+    using ViewType =
+        Kokkos::View<Scalar*****, Kokkos::LayoutLeft, memory_space>;
     ViewType A("a", n, 4, 4, 4, 4);
     TestView_Normal<RandomGenerator, ViewType>(A, n, 0.0, 1.0).run();
     TestView_Normal<RandomGenerator, ViewType>(A, n, 1.1, 2.1).run();
   }
   {
-    int n          = N / (4 * 4 * 4 * 4 * 4);
-    using ViewType = Kokkos::View<Scalar******, Kokkos::LayoutLeft, memory_space>;
+    int n = N / (4 * 4 * 4 * 4 * 4);
+    using ViewType =
+        Kokkos::View<Scalar******, Kokkos::LayoutLeft, memory_space>;
     ViewType A("a", n, 4, 4, 4, 4, 4);
     TestView_Normal<RandomGenerator, ViewType>(A, n, 0.0, 1.0).run();
     TestView_Normal<RandomGenerator, ViewType>(A, n, 1.1, 2.1).run();
   }
   {
-    int n          = N / (4 * 4 * 4 * 4 * 4 * 4);
-    using ViewType = Kokkos::View<Scalar*******, Kokkos::LayoutLeft, memory_space>;
+    int n = N / (4 * 4 * 4 * 4 * 4 * 4);
+    using ViewType =
+        Kokkos::View<Scalar*******, Kokkos::LayoutLeft, memory_space>;
     ViewType A("a", n, 4, 4, 4, 4, 4, 4);
     TestView_Normal<RandomGenerator, ViewType>(A, n, 0.0, 1.0).run();
     TestView_Normal<RandomGenerator, ViewType>(A, n, 1.1, 2.1).run();
   }
   {
-    int n          = N / (4 * 4 * 4 * 4 * 4 * 4 * 4);
-    using ViewType = Kokkos::View<Scalar********, Kokkos::LayoutLeft, memory_space>;
+    int n = N / (4 * 4 * 4 * 4 * 4 * 4 * 4);
+    using ViewType =
+        Kokkos::View<Scalar********, Kokkos::LayoutLeft, memory_space>;
     ViewType A("a", n, 4, 4, 4, 4, 4, 4, 4);
     TestView_Normal<RandomGenerator, ViewType>(A, n, 0.0, 1.0).run();
     TestView_Normal<RandomGenerator, ViewType>(A, n, 1.1, 2.1).run();
@@ -660,49 +665,69 @@ void test_random_normal_cmplx(int N) {
     int n          = N;
     using ViewType = Kokkos::View<Scalar*, Kokkos::LayoutLeft, memory_space>;
     ViewType A("a", n);
-    TestViewCmplx_Normal<RandomGenerator, ViewType>(A, n, Scalar(0.0, 1.0), Scalar(1.0 / sqrt(2.0), 1.0 / sqrt(2.0))).run();
+    TestViewCmplx_Normal<RandomGenerator, ViewType>(
+        A, n, Scalar(0.0, 1.0), Scalar(1.0 / sqrt(2.0), 1.0 / sqrt(2.0)))
+        .run();
   }
   {
     int n          = N / 4;
     using ViewType = Kokkos::View<Scalar**, Kokkos::LayoutLeft, memory_space>;
     ViewType A("a", n, 4);
-    TestViewCmplx_Normal<RandomGenerator, ViewType>(A, n, Scalar(0.0, 1.0), Scalar(1.0 / sqrt(2.0), 1.0 / sqrt(2.0))).run();
+    TestViewCmplx_Normal<RandomGenerator, ViewType>(
+        A, n, Scalar(0.0, 1.0), Scalar(1.0 / sqrt(2.0), 1.0 / sqrt(2.0)))
+        .run();
   }
   {
-    int n = N / (4 * 4);
+    int n          = N / (4 * 4);
     using ViewType = Kokkos::View<Scalar***, Kokkos::LayoutLeft, memory_space>;
     ViewType A("a", n, 4, 4);
-    TestViewCmplx_Normal<RandomGenerator, ViewType>(A, n, Scalar(0.0, 1.0), Scalar(1.0 / sqrt(2.0), 1.0 / sqrt(2.0))).run();
+    TestViewCmplx_Normal<RandomGenerator, ViewType>(
+        A, n, Scalar(0.0, 1.0), Scalar(1.0 / sqrt(2.0), 1.0 / sqrt(2.0)))
+        .run();
   }
   {
-    int n = N / (4 * 4 * 4);
+    int n          = N / (4 * 4 * 4);
     using ViewType = Kokkos::View<Scalar****, Kokkos::LayoutLeft, memory_space>;
     ViewType A("a", n, 4, 4, 4);
-    TestViewCmplx_Normal<RandomGenerator, ViewType>(A, n, Scalar(0.0, 1.0), Scalar(1.0 / sqrt(2.0), 1.0 / sqrt(2.0))).run();
+    TestViewCmplx_Normal<RandomGenerator, ViewType>(
+        A, n, Scalar(0.0, 1.0), Scalar(1.0 / sqrt(2.0), 1.0 / sqrt(2.0)))
+        .run();
   }
   {
     int n = N / (4 * 4 * 4 * 4);
-    using ViewType = Kokkos::View<Scalar*****, Kokkos::LayoutLeft, memory_space>;
+    using ViewType =
+        Kokkos::View<Scalar*****, Kokkos::LayoutLeft, memory_space>;
     ViewType A("a", n, 4, 4, 4, 4);
-    TestViewCmplx_Normal<RandomGenerator, ViewType>(A, n, Scalar(0.0, 1.0), Scalar(1.0 / sqrt(2.0), 1.0 / sqrt(2.0))).run();
+    TestViewCmplx_Normal<RandomGenerator, ViewType>(
+        A, n, Scalar(0.0, 1.0), Scalar(1.0 / sqrt(2.0), 1.0 / sqrt(2.0)))
+        .run();
   }
   {
     int n = N / (4 * 4 * 4 * 4 * 4);
-    using ViewType = Kokkos::View<Scalar******, Kokkos::LayoutLeft, memory_space>;
+    using ViewType =
+        Kokkos::View<Scalar******, Kokkos::LayoutLeft, memory_space>;
     ViewType A("a", n, 4, 4, 4, 4, 4);
-    TestViewCmplx_Normal<RandomGenerator, ViewType>(A, n, Scalar(0.0, 1.0), Scalar(1.0 / sqrt(2.0), 1.0 / sqrt(2.0))).run();
+    TestViewCmplx_Normal<RandomGenerator, ViewType>(
+        A, n, Scalar(0.0, 1.0), Scalar(1.0 / sqrt(2.0), 1.0 / sqrt(2.0)))
+        .run();
   }
   {
     int n = N / (4 * 4 * 4 * 4 * 4 * 4);
-    using ViewType = Kokkos::View<Scalar*******, Kokkos::LayoutLeft, memory_space>;
+    using ViewType =
+        Kokkos::View<Scalar*******, Kokkos::LayoutLeft, memory_space>;
     ViewType A("a", n, 4, 4, 4, 4, 4, 4);
-    TestViewCmplx_Normal<RandomGenerator, ViewType>(A, n, Scalar(0.0, 1.0), Scalar(1.0 / sqrt(2.0), 1.0 / sqrt(2.0))).run();
+    TestViewCmplx_Normal<RandomGenerator, ViewType>(
+        A, n, Scalar(0.0, 1.0), Scalar(1.0 / sqrt(2.0), 1.0 / sqrt(2.0)))
+        .run();
   }
   {
     int n = N / (4 * 4 * 4 * 4 * 4 * 4 * 4);
-    using ViewType = Kokkos::View<Scalar********, Kokkos::LayoutLeft, memory_space>;
+    using ViewType =
+        Kokkos::View<Scalar********, Kokkos::LayoutLeft, memory_space>;
     ViewType A("a", n, 4, 4, 4, 4, 4, 4, 4);
-    TestViewCmplx_Normal<RandomGenerator, ViewType>(A, n, Scalar(0.0, 1.0), Scalar(1.0 / sqrt(2.0), 1.0 / sqrt(2.0))).run();
+    TestViewCmplx_Normal<RandomGenerator, ViewType>(
+        A, n, Scalar(0.0, 1.0), Scalar(1.0 / sqrt(2.0), 1.0 / sqrt(2.0)))
+        .run();
   }
 }
 
@@ -744,7 +769,7 @@ void test_random_xorshift64() {
     defined(KOKKOS_ENABLE_HIP)
   const int N = 134217728;
 #else  // SERIAL, HPX, OPENMP
-  const int N = 134217728 / 8;
+  const int N         = 134217728 / 8;
 #endif
   Impl::test_random_normal<Kokkos::Random_XorShift64_Pool<ExecutionSpace>>(N);
 }
@@ -769,7 +794,7 @@ void test_random_xorshift1024() {
     defined(KOKKOS_ENABLE_HIP)
   const int N = 134217728;
 #else  // SERIAL, HPX, OPENMP
-  const int N = 134217728 / 8;
+  const int N         = 134217728 / 8;
 #endif
   Impl::test_random_normal<Kokkos::Random_XorShift1024_Pool<ExecutionSpace>>(N);
 }

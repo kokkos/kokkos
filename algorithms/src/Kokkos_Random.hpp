@@ -596,7 +596,8 @@ struct normal_rand<Generator, double> {
   KOKKOS_INLINE_FUNCTION
   static double draw(Generator& gen) { return gen.normal(); }
   KOKKOS_INLINE_FUNCTION
-  static double draw(Generator& gen, const double& mean, const double& std_dev) {
+  static double draw(Generator& gen, const double& mean,
+                     const double& std_dev) {
     return gen.normal(mean, std_dev);
   }
 };
@@ -610,7 +611,9 @@ struct normal_rand<Generator, Kokkos::complex<float>> {
     return Kokkos::complex<float>(re, im);
   }
   KOKKOS_INLINE_FUNCTION
-  static Kokkos::complex<float> draw(Generator& gen, const Kokkos::complex<float>& mean, const Kokkos::complex<float>& std_dev) {
+  static Kokkos::complex<float> draw(Generator& gen,
+                                     const Kokkos::complex<float>& mean,
+                                     const Kokkos::complex<float>& std_dev) {
     const float re = gen.fnormal(real(mean), real(std_dev));
     const float im = gen.fnormal(imag(mean), imag(std_dev));
     return Kokkos::complex<float>(re, im);
@@ -626,7 +629,9 @@ struct normal_rand<Generator, Kokkos::complex<double>> {
     return Kokkos::complex<double>(re, im);
   }
   KOKKOS_INLINE_FUNCTION
-  static Kokkos::complex<double> draw(Generator& gen, const Kokkos::complex<double>& mean, const Kokkos::complex<double>& std_dev) {
+  static Kokkos::complex<double> draw(Generator& gen,
+                                      const Kokkos::complex<double>& mean,
+                                      const Kokkos::complex<double>& std_dev) {
     const double re = gen.normal(real(mean), real(std_dev));
     const double im = gen.normal(imag(mean), imag(std_dev));
     return Kokkos::complex<double>(re, im);
@@ -957,7 +962,7 @@ class Random_XorShift64 {
     while (S >= 1.0) {
       U             = 2.0 * frand() - 1.0;
       const float V = 2.0 * frand() - 1.0;
-      S              = U * U + V * V;
+      S             = U * U + V * V;
     }
     return U * std::sqrt(-2.0 * std::log(S) / S);
   }
@@ -1217,7 +1222,7 @@ class Random_XorShift1024 {
     while (S >= 1.0) {
       U             = 2.0 * frand() - 1.0;
       const float V = 2.0 * frand() - 1.0;
-      S              = U * U + V * V;
+      S             = U * U + V * V;
     }
     return U * std::sqrt(-2.0 * std::log(S) / S);
   }
@@ -1655,7 +1660,7 @@ struct fill_random_functor_normal<ViewType, RandomPool, loops, 0, IndexType> {
   KOKKOS_INLINE_FUNCTION
   void operator()(IndexType) const {
     typename RandomPool::generator_type gen = rand_pool.get_state();
-    a() = Randn::draw(gen, mean, std_dev);
+    a()                                     = Randn::draw(gen, mean, std_dev);
     rand_pool.free_state(gen);
   }
 };
@@ -1868,8 +1873,7 @@ struct fill_random_functor_normal<ViewType, RandomPool, loops, 7, IndexType> {
                      o++)
                   for (IndexType p = 0; p < static_cast<IndexType>(a.extent(6));
                        p++)
-                    a(idx, k, l, m, n, o, p) =
-                        Randn::draw(gen, mean, std_dev);
+                    a(idx, k, l, m, n, o, p) = Randn::draw(gen, mean, std_dev);
       }
     }
     rand_pool.free_state(gen);
