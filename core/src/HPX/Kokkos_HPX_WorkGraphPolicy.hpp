@@ -17,7 +17,7 @@
 #ifndef KOKKOS_HPX_WORKGRAPHPOLICY_HPP
 #define KOKKOS_HPX_WORKGRAPHPOLICY_HPP
 
-#include <Kokkos_HPX.hpp>
+#include <HPX/Kokkos_HPX.hpp>
 
 #include <hpx/local/algorithm.hpp>
 #include <hpx/local/execution.hpp>
@@ -53,7 +53,7 @@ class ParallelFor<FunctorType, Kokkos::WorkGraphPolicy<Traits...>,
   }
 
   void execute() const {
-    const int num_worker_threads = Kokkos::Experimental::HPX::concurrency();
+    const int num_worker_threads = Kokkos::Experimental::HPX().concurrency();
     Kokkos::Experimental::HPX().impl_bulk_plain(
         true, is_light_weight_policy<Policy>(), *this, num_worker_threads,
         hpx::threads::thread_stacksize::nostack);

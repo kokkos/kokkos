@@ -75,25 +75,6 @@ struct is_specialization_of<Template<Args...>, Template> : std::true_type {};
 //==============================================================================
 
 //==============================================================================
-// destruct_delete is a unique_ptr deleter for objects
-// created by placement new into already allocated memory
-// by only calling the destructor on the object.
-//
-// Because unique_ptr never calls its deleter with a nullptr value,
-// no need to check if p == nullptr.
-//
-// Note:  This differs in interface from std::default_delete in that the
-// function call operator is templated instead of the class, to make
-// it easier to use and disallow specialization.
-struct destruct_delete {
-  template <typename T>
-  KOKKOS_INLINE_FUNCTION constexpr void operator()(T* p) const noexcept {
-    p->~T();
-  }
-};
-//==============================================================================
-
-//==============================================================================
 // <editor-fold desc="type_list"> {{{1
 
 // An intentionally uninstantiateable type_list for metaprogramming purposes
