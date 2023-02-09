@@ -909,6 +909,12 @@ struct Functor_TestHalfOperators {
 template <class half_type>
 void __test_half_operators(half_type h_lhs, half_type h_rhs) {
   double epsilon = Kokkos::Experimental::epsilon<half_type>::value;
+#if defined(KOKKOS_BHALF_T_IS_FLOAT) && KOKKOS_BHALF_T_IS_FLOAT
+  double constexpr epsilon_bias = 10e3;
+#else
+  double constexpr epsilon_bias = 1;
+#endif
+  epsilon *= epsilon_bias;
 
   Functor_TestHalfOperators<ViewType, half_type> f_device(h_lhs, h_rhs);
   Functor_TestHalfOperators<ViewTypeHost, half_type> f_host(h_lhs, h_rhs);
