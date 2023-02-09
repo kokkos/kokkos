@@ -119,6 +119,28 @@ class UnorderedMapInsertResult {
   uint32_t m_status;
 };
 
+/// \class UnorderedMapInsertOpTypes
+/// \brief Operations applied to the values array upon subsequent insertions.
+/// The default behavior when a k,v pair already exists in the UnorderedMap is
+/// to perform no operation. Alternatively, the caller may selected to
+/// instantiate the UnorderedMap with the AtomicAdd insert operator such that
+/// duplicate keys accumulate values into the given values array entry.
+template <class ValueTypeView = int, class ValuesIdxType = uint32_t,
+          class ValueType = int>
+struct UnorderedMapInsertOpTypes {
+  struct NoOp {
+    KOKKOS_INLINE_FUNCTION
+    void op(ValueTypeView, ValuesIdxType, const ValueType *) const {}
+  };
+  struct AtomicAdd {
+    KOKKOS_INLINE_FUNCTION
+    void op(ValueTypeView values, ValuesIdxType values_idx,
+            const ValueType *v) const {
+      Kokkos::atomic_add(values.data() + values_idx, *v);
+    }
+  };
+};
+
 /// \class UnorderedMap
 /// \brief Thread-safe, performance-portable lookup table.
 ///
@@ -175,9 +197,16 @@ class UnorderedMapInsertResult {
 ///   <tt>Key</tt>.  The default will do a bitwise equality comparison.
 ///
 template <typename Key, typename Value,
-          typename Device  = Kokkos::DefaultExecutionSpace,
-          typename Hasher  = pod_hash<std::remove_const_t<Key>>,
-          typename EqualTo = pod_equal_to<std::remove_const_t<Key>>>
+          typename Device   = Kokkos::DefaultExecutionSpace,
+          typename Hasher   = pod_hash<std::remove_const_t<Key>>,
+          typename EqualTo  = pod_equal_to<std::remove_const_t<Key>>,
+          typename InsertOp = typename UnorderedMapInsertOpTypes<
+              Kokkos::View<std::remove_const_t<std::conditional_t<
+                               std::is_void_v<Value>, int, Value>> *,
+                           Device>,
+              uint32_t,
+              std::remove_const_t<
+                  std::conditional_t<std::is_void_v<Value>, int, Value>>>::NoOp>
 class UnorderedMap {
  private:
   using host_mirror_space =
@@ -201,19 +230,22 @@ class UnorderedMap {
   using execution_space = typename Device::execution_space;
   using hasher_type     = Hasher;
   using equal_to_type   = EqualTo;
+  using insert_op_type  = InsertOp;
   using size_type       = uint32_t;
 
   // map_types
   using declared_map_type =
       UnorderedMap<declared_key_type, declared_value_type, device_type,
-                   hasher_type, equal_to_type>;
-  using insertable_map_type = UnorderedMap<key_type, value_type, device_type,
-                                           hasher_type, equal_to_type>;
+                   hasher_type, equal_to_type, insert_op_type>;
+  using insertable_map_type =
+      UnorderedMap<key_type, value_type, device_type, hasher_type,
+                   equal_to_type, insert_op_type>;
   using modifiable_map_type =
       UnorderedMap<const_key_type, value_type, device_type, hasher_type,
-                   equal_to_type>;
-  using const_map_type = UnorderedMap<const_key_type, const_value_type,
-                                      device_type, hasher_type, equal_to_type>;
+                   equal_to_type, insert_op_type>;
+  using const_map_type =
+      UnorderedMap<const_key_type, const_value_type, device_type, hasher_type,
+                   equal_to_type, insert_op_type>;
 
   static const bool is_set = std::is_void<value_type>::value;
   static const bool has_const_key =
@@ -228,11 +260,10 @@ class UnorderedMap {
 
   using insert_result = UnorderedMapInsertResult;
 
-  using HostMirror =
-      UnorderedMap<Key, Value, host_mirror_space, Hasher, EqualTo>;
+  using HostMirror = UnorderedMap<Key, Value, host_mirror_space, Hasher,
+                                  EqualTo, insert_op_type>;
 
   using histogram_type = Impl::UnorderedMapHistogram<const_map_type>;
-
   //@}
 
  private:
@@ -264,18 +295,24 @@ class UnorderedMap {
   //! \name Public member functions
   //@{
 
+  // clang-format off
   /// \brief Constructor
   ///
   /// \param capacity_hint [in] Initial guess of how many unique keys will be
-  /// inserted into the map \param hash [in] Hasher function for \c Key
-  /// instances.  The
-  ///   default value usually suffices.
+  /// inserted into the map
+  /// \param hash [in] Hasher function for \c Key instances.
+  /// \param equal_to [in] The operator used for determining if two keys are equal.
+  /// \param insert_op [in] The operator used for combining values if a value already exists. 
+  /// The default value usually suffices.
+  // clang-format on
   UnorderedMap(size_type capacity_hint = 0, hasher_type hasher = hasher_type(),
-               equal_to_type equal_to = equal_to_type())
+               equal_to_type equal_to   = equal_to_type(),
+               insert_op_type insert_op = insert_op_type())
       : m_bounded_insert(true),
         m_hasher(hasher),
         m_equal_to(equal_to),
         m_size(std::make_shared<size_type>()),
+        m_insert_op(insert_op),
         m_available_indexes(calculate_capacity(capacity_hint)),
         m_hash_lists(view_alloc(WithoutInitializing, "UnorderedMap hash list"),
                      Impl::find_hash_size(capacity())),
@@ -345,7 +382,8 @@ class UnorderedMap {
     requested_capacity =
         (requested_capacity < curr_size) ? curr_size : requested_capacity;
 
-    insertable_map_type tmp(requested_capacity, m_hasher, m_equal_to);
+    insertable_map_type tmp(requested_capacity, m_hasher, m_equal_to,
+                            m_insert_op);
 
     if (curr_size) {
       tmp.m_bounded_insert = false;
@@ -532,6 +570,7 @@ class UnorderedMap {
         }
 
         result.set_existing(curr, free_existing);
+        if (!is_set) m_insert_op.op(m_values, curr, &v);
         not_done = false;
       }
       //------------------------------------------------------------
@@ -679,14 +718,16 @@ class UnorderedMap {
 
   template <typename SKey, typename SValue>
   UnorderedMap(
-      UnorderedMap<SKey, SValue, Device, Hasher, EqualTo> const &src,
+      UnorderedMap<SKey, SValue, Device, Hasher, EqualTo, InsertOp> const &src,
       std::enable_if_t<
           Impl::UnorderedMapCanAssign<declared_key_type, declared_value_type,
                                       SKey, SValue>::value,
-          int> = 0)
+          int>                 = 0,
+      insert_op_type insert_op = insert_op_type())
       : m_bounded_insert(src.m_bounded_insert),
         m_hasher(src.m_hasher),
         m_equal_to(src.m_equal_to),
+        m_insert_op(src.m_insert_op),
         m_size(src.m_size),
         m_available_indexes(src.m_available_indexes),
         m_hash_lists(src.m_hash_lists),
@@ -700,10 +741,12 @@ class UnorderedMap {
       Impl::UnorderedMapCanAssign<declared_key_type, declared_value_type, SKey,
                                   SValue>::value,
       declared_map_type &>
-  operator=(UnorderedMap<SKey, SValue, Device, Hasher, EqualTo> const &src) {
+  operator=(UnorderedMap<SKey, SValue, Device, Hasher, EqualTo, InsertOp> const
+                &src) {
     m_bounded_insert    = src.m_bounded_insert;
     m_hasher            = src.m_hasher;
     m_equal_to          = src.m_equal_to;
+    m_insert_op         = src.m_insert_op;
     m_size              = src.m_size;
     m_available_indexes = src.m_available_indexes;
     m_hash_lists        = src.m_hash_lists;
@@ -717,8 +760,8 @@ class UnorderedMap {
   template <typename SKey, typename SValue, typename SDevice>
   std::enable_if_t<std::is_same<std::remove_const_t<SKey>, key_type>::value &&
                    std::is_same<std::remove_const_t<SValue>, value_type>::value>
-  create_copy_view(
-      UnorderedMap<SKey, SValue, SDevice, Hasher, EqualTo> const &src) {
+  create_copy_view(UnorderedMap<SKey, SValue, SDevice, Hasher, EqualTo,
+                                InsertOp> const &src) {
     if (m_hash_lists.data() != src.m_hash_lists.data()) {
       insertable_map_type tmp;
 
@@ -765,6 +808,32 @@ class UnorderedMap {
 
       *this = tmp;
     }
+  }
+
+  KOKKOS_FORCEINLINE_FUNCTION
+  bool is_op_noop() const {
+    return std::is_base_of_v<
+        insert_op_type,
+        typename UnorderedMapInsertOpTypes<
+            Kokkos::View<std::remove_const_t<std::conditional_t<
+                             std::is_void_v<Value>, int, Value>> *,
+                         Device>,
+            uint32_t,
+            std::remove_const_t<
+                std::conditional_t<std::is_void_v<Value>, int, Value>>>::NoOp>;
+  }
+
+  KOKKOS_FORCEINLINE_FUNCTION
+  bool is_op_add() const {
+    return std::is_base_of_v<
+        insert_op_type,
+        typename UnorderedMapInsertOpTypes<
+            Kokkos::View<std::remove_const_t<std::conditional_t<
+                             std::is_void_v<Value>, int, Value>> *,
+                         Device>,
+            uint32_t,
+            std::remove_const_t<std::conditional_t<std::is_void_v<Value>, int,
+                                                   Value>>>::AtomicAdd>;
   }
 
   //@}
@@ -819,6 +888,7 @@ class UnorderedMap {
   hasher_type m_hasher;
   equal_to_type m_equal_to;
   std::shared_ptr<size_type> m_size;
+  insert_op_type m_insert_op;
   bitset_type m_available_indexes;
   size_type_view m_hash_lists;
   size_type_view m_next_index;
@@ -827,7 +897,7 @@ class UnorderedMap {
   scalars_view m_scalars;
 
   template <typename KKey, typename VValue, typename DDevice, typename HHash,
-            typename EEqualTo>
+            typename EEqualTo, typename IInsertOp>
   friend class UnorderedMap;
 
   template <typename UMap>
@@ -842,10 +912,11 @@ class UnorderedMap {
 
 // Specialization of deep_copy for two UnorderedMap objects.
 template <typename DKey, typename DT, typename DDevice, typename SKey,
-          typename ST, typename SDevice, typename Hasher, typename EqualTo>
+          typename ST, typename SDevice, typename Hasher, typename EqualTo,
+          typename InsertOp>
 inline void deep_copy(
-    UnorderedMap<DKey, DT, DDevice, Hasher, EqualTo> &dst,
-    const UnorderedMap<SKey, ST, SDevice, Hasher, EqualTo> &src) {
+    UnorderedMap<DKey, DT, DDevice, Hasher, EqualTo, InsertOp> &dst,
+    const UnorderedMap<SKey, ST, SDevice, Hasher, EqualTo, InsertOp> &src) {
   dst.create_copy_view(src);
 }
 

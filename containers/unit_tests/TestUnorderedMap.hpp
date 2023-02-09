@@ -31,12 +31,20 @@ struct TestInsert {
   using execution_space = typename map_type::execution_space;
   using value_type      = uint32_t;
 
+  struct ExpectedValues {
+    typename map_type::value_type v;
+  };
+  using expected_values_type = Kokkos::View<ExpectedValues *, execution_space>;
+  expected_values_type expected_values;
+
   map_type map;
   uint32_t inserts;
   uint32_t collisions;
 
   TestInsert(map_type arg_map, uint32_t arg_inserts, uint32_t arg_collisions)
-      : map(arg_map), inserts(arg_inserts), collisions(arg_collisions) {}
+      : map(arg_map), inserts(arg_inserts), collisions(arg_collisions) {
+    expected_values = expected_values_type("ExpectedValues", map.capacity());
+  }
 
   void testit(bool rehash_on_fail = true) {
     execution_space().fence();
@@ -60,6 +68,12 @@ struct TestInsert {
     Kokkos::deep_copy(map_h, map);
     execution_space().fence();
     ASSERT_EQ(map_h.size(), map.size());
+
+    if (!rehash_on_fail) {
+      for (unsigned i = 0; i < map.size(); i++) {
+        ASSERT_EQ(expected_values(i).v, map.value_at(i));
+      }
+    }
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -73,7 +87,20 @@ struct TestInsert {
   KOKKOS_INLINE_FUNCTION
   void operator()(uint32_t i, value_type &failed_count) const {
     const uint32_t key = Near ? i / collisions : i % (inserts / collisions);
-    if (map.insert(key, i).failed()) ++failed_count;
+    auto ret           = map.insert(key, i);
+    if (ret.failed())
+      ++failed_count;
+    else {
+      auto idx = map.find(key);
+      auto ptr = expected_values.data();
+      if (map.is_op_add()) {
+        // Kokkos::abort("adding");
+        Kokkos::atomic_add(&((ptr + idx)[0].v), i);
+      } else if (ret.success() && map.is_op_noop()) {
+        // Kokkos::abort("noop");
+        Kokkos::atomic_store(&((ptr + idx)[0].v), i);
+      }
+    }
   }
 };
 
@@ -154,17 +181,17 @@ struct TestFind {
 // MSVC reports a syntax error for this test.
 // WORKAROUND MSVC
 #ifndef _WIN32
-template <typename Device>
+template <typename Device, class map_type, class const_map_type>
 void test_insert(uint32_t num_nodes, uint32_t num_inserts,
                  uint32_t num_duplicates, bool near) {
-  using map_type = Kokkos::UnorderedMap<uint32_t, uint32_t, Device>;
-  using const_map_type =
-      Kokkos::UnorderedMap<const uint32_t, const uint32_t, Device>;
-
   const uint32_t expected_inserts =
       (num_inserts + num_duplicates - 1u) / num_duplicates;
+  typename map_type::size_type arg_capacity_hint = 0;
+  typename map_type::hasher_type arg_hasher;
+  typename map_type::equal_to_type arg_equal_to;
+  typename map_type::insert_op_type arg_insert_op;
 
-  map_type map;
+  map_type map(arg_capacity_hint, arg_hasher, arg_equal_to, arg_insert_op);
   map.rehash(num_nodes, false);
 
   if (near) {
@@ -191,8 +218,7 @@ void test_insert(uint32_t num_nodes, uint32_t num_inserts,
 
     {
       uint32_t find_errors = 0;
-      Impl::TestFind<const_map_type> test_find(map, num_inserts,
-                                               num_duplicates);
+      Impl::TestFind<map_type> test_find(map, num_inserts, num_duplicates);
       test_find.testit(find_errors);
       EXPECT_EQ(0u, find_errors);
     }
@@ -204,6 +230,54 @@ void test_insert(uint32_t num_nodes, uint32_t num_inserts,
     map.end_erase();
     EXPECT_EQ(0u, map.size());
   }
+
+  // Check the values from the insert operation
+  {
+    Impl::TestInsert<map_type, true> test_insert(map, num_inserts,
+                                                 num_duplicates);
+    test_insert.testit(false);
+  }
+}
+
+template <typename Device>
+void test_all_insert_ops(uint32_t num_nodes, uint32_t num_inserts,
+                         uint32_t num_duplicates, bool near) {
+  using key_type              = uint32_t;
+  using value_type            = uint32_t;
+  using value_view_type       = Kokkos::View<value_type *, Device>;
+  using const_value_view_type = Kokkos::View<value_type *, Device>;
+  using size_type             = uint32_t;
+  using hasher_type           = typename Kokkos::pod_hash<key_type>;
+  using equal_to_type         = typename Kokkos::pod_equal_to<key_type>;
+
+  using map_op_type =
+      Kokkos::UnorderedMapInsertOpTypes<value_view_type, size_type, value_type>;
+  using const_map_op_type =
+      Kokkos::UnorderedMapInsertOpTypes<const_value_view_type, size_type,
+                                        value_type>;
+  using noop_type             = typename map_op_type::NoOp;
+  using atomic_add_type       = typename map_op_type::AtomicAdd;
+  using const_noop_type       = typename const_map_op_type::NoOp;
+  using const_atomic_add_type = typename const_map_op_type::AtomicAdd;
+
+  using map_type_noop =
+      Kokkos::UnorderedMap<key_type, value_type, Device, hasher_type,
+                           equal_to_type, noop_type>;
+  using const_map_type_noop =
+      Kokkos::UnorderedMap<const key_type, const value_type, Device,
+                           hasher_type, equal_to_type, const_noop_type>;
+
+  using map_type_atomic_add =
+      Kokkos::UnorderedMap<key_type, value_type, Device, hasher_type,
+                           equal_to_type, atomic_add_type>;
+  using const_map_type_atomic_add =
+      Kokkos::UnorderedMap<const key_type, const value_type, Device,
+                           hasher_type, equal_to_type, const_atomic_add_type>;
+
+  test_insert<Device, map_type_noop, const_map_type_noop>(
+      num_nodes, num_inserts, num_duplicates, near);
+  test_insert<Device, map_type_atomic_add, const_map_type_atomic_add>(
+      num_nodes, num_inserts, num_duplicates, near);
 }
 #endif
 
@@ -279,8 +353,8 @@ TEST(TEST_CATEGORY, UnorderedMap_insert) {
   }
 #endif
   for (int i = 0; i < 500; ++i) {
-    test_insert<TEST_EXECSPACE>(100000, 90000, 100, true);
-    test_insert<TEST_EXECSPACE>(100000, 90000, 100, false);
+    test_all_insert_ops<TEST_EXECSPACE>(100000, 90000, 100, true);
+    test_all_insert_ops<TEST_EXECSPACE>(100000, 90000, 100, false);
   }
 }
 #endif
