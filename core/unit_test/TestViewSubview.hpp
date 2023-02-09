@@ -865,7 +865,7 @@ struct FillView_3D {
   using exec_t = typename Space::execution_space;
   using view_t = Kokkos::View<int***, Layout, Space>;
   using rank_t = Kokkos::Rank<
-      view_t::Rank,
+      view_t::rank,
       std::is_same<Layout, Kokkos::LayoutLeft>::value ? Kokkos::Iterate::Left
                                                       : Kokkos::Iterate::Right,
       std::is_same<Layout, Kokkos::LayoutLeft>::value ? Kokkos::Iterate::Left
@@ -893,7 +893,7 @@ struct FillView_4D {
   using exec_t = typename Space::execution_space;
   using view_t = Kokkos::View<int****, Layout, Space>;
   using rank_t = Kokkos::Rank<
-      view_t::Rank,
+      view_t::rank,
       std::is_same<Layout, Kokkos::LayoutLeft>::value ? Kokkos::Iterate::Left
                                                       : Kokkos::Iterate::Right,
       std::is_same<Layout, Kokkos::LayoutLeft>::value ? Kokkos::Iterate::Left
@@ -922,7 +922,7 @@ struct FillView_5D {
   using exec_t = typename Space::execution_space;
   using view_t = Kokkos::View<int*****, Layout, Space>;
   using rank_t = Kokkos::Rank<
-      view_t::Rank,
+      view_t::rank,
       std::is_same<Layout, Kokkos::LayoutLeft>::value ? Kokkos::Iterate::Left
                                                       : Kokkos::Iterate::Right,
       std::is_same<Layout, Kokkos::LayoutLeft>::value ? Kokkos::Iterate::Left
