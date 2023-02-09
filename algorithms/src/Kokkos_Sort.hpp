@@ -75,7 +75,7 @@ namespace Kokkos {
 
 namespace Impl {
 
-template <class DstViewType, class SrcViewType, int Rank = DstViewType::Rank>
+template <class DstViewType, class SrcViewType, int Rank = DstViewType::rank>
 struct CopyOp;
 
 template <class DstViewType, class SrcViewType>

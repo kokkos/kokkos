@@ -1019,7 +1019,7 @@ class ScatterView<DataType, Kokkos::LayoutRight, DeviceType, Op,
                                              internal_view_type>::value_type
   subview() const {
     return Kokkos::Impl::Experimental::Slice<
-        Kokkos::LayoutRight, internal_view_type::Rank,
+        Kokkos::LayoutRight, internal_view_type::rank,
         internal_view_type>::get(internal_view, 0);
   }
 
