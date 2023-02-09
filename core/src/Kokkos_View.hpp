@@ -644,7 +644,10 @@ class View : public ViewTraits<DataType, Properties...> {
   //----------------------------------------
   // Domain rank and extents
 
-  enum { Rank = map_type::Rank };
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  enum {Rank KOKKOS_DEPRECATED_WITH_COMMENT("Use rank instead.") =
+            map_type::Rank};
+#endif
 
   /** \brief rank() to be implemented
    */
