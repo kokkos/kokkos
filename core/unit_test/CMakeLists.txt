@@ -77,6 +77,7 @@ SET(COMPILE_ONLY_SOURCES
   TestDetectionIdiom.cpp
   TestInterOp.cpp
   TestStringManipulation.cpp
+  TestVersionMacros.cpp
   TestViewTypeTraits.cpp
   TestTypeList.cpp
   view/TestExtentsDatatypeConversion.cpp
