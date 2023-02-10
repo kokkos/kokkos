@@ -1447,7 +1447,7 @@ class ParallelReduceWrapper {
                 select(combined_functor_reducer.get_reducer().get_functor(),
                        return_value)) {}
 
-  void execute() const { m_parallel_reduce.execute(); }
+  void execute() { m_parallel_reduce.execute(); }
 };
 
 template <typename CombinedFunctorReducerType, typename PolicyType,
@@ -1467,7 +1467,7 @@ class ParallelReduceWrapper<
       const PolicyType& policy, const ReturnValue& return_value)
       : m_parallel_reduce(combined_functor_reducer, policy, return_value) {}
 
-  void execute() const { m_parallel_reduce.execute(); }
+  void execute() { m_parallel_reduce.execute(); }
 };
 
 template <class T, class ReturnType, class ValueTraits>
