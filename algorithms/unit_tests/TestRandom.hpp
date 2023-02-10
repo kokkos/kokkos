@@ -489,6 +489,9 @@ struct TestDynRankView {
   }
 };
 
+struct NormalMeanTag {};
+struct NormalVarTag {};
+
 template <class Pool, class ViewType>
 struct TestView_Normal {
   using ExecutionSpace = typename Pool::device_type::execution_space;
@@ -497,16 +500,25 @@ struct TestView_Normal {
   const int n;
   const ScalarA mean;
   const ScalarA stddev;
+  ScalarA mean_s;
+  ScalarA var_s;
 
   TestView_Normal(ViewType A_, int n_, ScalarA mean_, ScalarA stddev_)
       : A(A_), n(n_), mean(mean_), stddev(stddev_) {}
 
-  KOKKOS_FUNCTION void operator()(int i,
+  KOKKOS_FUNCTION void operator()(const NormalMeanTag&, int i,
                                   NormalRandomProperties<ScalarA>& prop) const {
     for (int k = 0; k < static_cast<int>(A.size()); k += n) {
       ScalarA tmp = *(A.data() + i + k);
       prop.mean += tmp;
-      prop.variance += (tmp - mean) * (tmp - mean);
+    }
+  }
+
+  KOKKOS_FUNCTION void operator()(const NormalVarTag&, int i,
+                                  NormalRandomProperties<ScalarA>& prop) const {
+    for (int k = 0; k < static_cast<int>(A.size()); k += n) {
+      ScalarA tmp = *(A.data() + i + k);
+      prop.variance += (tmp - mean_s) * (tmp - mean_s);
     }
   }
 
@@ -516,23 +528,25 @@ struct TestView_Normal {
 
     Pool random(ticks);
     ExecutionSpace exec;
-    Kokkos::fill_random_normal(A, random, mean, stddev);
-
     NormalRandomProperties<ScalarA> val;
-    Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecutionSpace>(exec, 0, n),
-                            *this, val);
 
+    Kokkos::fill_random_normal(A, random, mean, stddev);
     exec.fence();
 
-    ScalarA mean_calc = val.mean / A.size();
-    ScalarA var_calc  = val.variance / (A.size() - 1);
+    Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecutionSpace, NormalMeanTag>(exec, 0, n), *this, val);
+    exec.fence();
+    mean_s = val.mean / A.size();;
 
-    ScalarA mean_eps     = Kokkos::abs(mean - mean_calc);
-    ScalarA variance_eps = Kokkos::abs((stddev * stddev) / var_calc - 1.0);
+    Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecutionSpace, NormalVarTag>(exec, 0, n), *this, val);
+    exec.fence();
+    var_s  = val.variance / (A.size() - 1);
+
+    ScalarA mean_eps     = Kokkos::abs(mean - mean_s);
+    ScalarA variance_eps = Kokkos::abs((stddev * stddev) / var_s - 1.0);
     std::cout << "Rank " << ViewType::rank << ": mean_eps " << mean_eps
               << ", variance_eps " << variance_eps << ", mean_expect " << mean
               << ", variance_expect " << stddev * stddev << ", mean "
-              << mean_calc << ", variance " << var_calc << std::endl;
+              << mean_s << ", variance " << var_s << std::endl;
     if (std::is_same<ScalarA, double>::value) {
       EXPECT_LE(mean_eps, 1e-2);
       EXPECT_LE(variance_eps, 1e-2);
@@ -551,17 +565,26 @@ struct TestViewCmplx_Normal {
   const int n;
   const ScalarA mean;
   const ScalarA stddev;
+  ScalarA mean_s;
+  typename ScalarA::value_type var_s;
 
   TestViewCmplx_Normal(ViewType A_, int n_, ScalarA mean_, ScalarA stddev_)
       : A(A_), n(n_), mean(mean_), stddev(stddev_) {}
 
-  KOKKOS_FUNCTION void operator()(int i,
+  KOKKOS_FUNCTION void operator()(const NormalMeanTag&, int i,
                                   NormalRandomProperties<ScalarA>& prop) const {
     for (int k = 0; k < static_cast<int>(A.size()); k += n) {
       ScalarA tmp = *(A.data() + i + k);
       prop.mean += tmp;
-      prop.variance.real() += real(tmp - mean) * real(tmp - mean);
-      prop.variance.imag() += imag(tmp - mean) * imag(tmp - mean);
+    }
+  }
+
+  KOKKOS_FUNCTION void operator()(const NormalVarTag&, int i,
+                                  NormalRandomProperties<ScalarA>& prop) const {
+    for (int k = 0; k < static_cast<int>(A.size()); k += n) {
+      ScalarA tmp = *(A.data() + i + k);
+      prop.variance.real() += real(tmp - mean_s) * real(tmp - mean_s);
+      prop.variance.imag() += imag(tmp - mean_s) * imag(tmp - mean_s);
     }
   }
 
@@ -571,28 +594,28 @@ struct TestViewCmplx_Normal {
 
     Pool random(ticks);
     ExecutionSpace exec;
-    Kokkos::fill_random_normal(A, random, mean, stddev);
-
     NormalRandomProperties<ScalarA> val;
-    Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecutionSpace>(exec, 0, n),
-                            *this, val);
 
+    Kokkos::fill_random_normal(A, random, mean, stddev);
     exec.fence();
 
-    ScalarA mean_calc = val.mean / A.size();
-    typename ScalarA::value_type var_calc =
-        (real(val.variance) + imag(val.variance)) / (A.size() - 1);
+    Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecutionSpace, NormalMeanTag>(exec, 0, n), *this, val);
+    exec.fence();
+    mean_s = val.mean / A.size();;
 
-    typename ScalarA::value_type mean_eps     = Kokkos::abs(mean - mean_calc);
+    Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecutionSpace, NormalVarTag>(exec, 0, n), *this, val);
+    exec.fence();
+    var_s  = (real(val.variance) + imag(val.variance)) / (A.size() - 1);
+
+    typename ScalarA::value_type mean_eps     = Kokkos::abs(mean - mean_s);
     typename ScalarA::value_type variance_eps = Kokkos::abs(
-        (real(stddev) * real(stddev) + imag(stddev) * imag(stddev)) / var_calc -
+        (real(stddev) * real(stddev) + imag(stddev) * imag(stddev)) / var_s -
         1.0);
     std::cout << "Rank " << ViewType::rank << ": mean_eps " << mean_eps
               << ", variance_eps " << variance_eps << ", mean_expect " << mean
               << ", variance_expect "
               << real(stddev) * real(stddev) + imag(stddev) * imag(stddev)
-              << ", mean " << mean_calc << ", variance " << var_calc
-              << std::endl;
+              << ", mean " << mean_s << ", variance " << var_s << std::endl;
     if (std::is_same<ScalarA, Kokkos::complex<double>>::value) {
       EXPECT_LE(mean_eps, 1e-2);
       EXPECT_LE(variance_eps, 1e-2);

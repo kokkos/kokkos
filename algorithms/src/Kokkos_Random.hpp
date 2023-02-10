@@ -957,14 +957,7 @@ class Random_XorShift64 {
 
   KOKKOS_INLINE_FUNCTION
   float fnormal() {
-    float S = 2.0;
-    float U;
-    while (S >= 1.0) {
-      U             = 2.0 * frand() - 1.0;
-      const float V = 2.0 * frand() - 1.0;
-      S             = U * U + V * V;
-    }
-    return U * std::sqrt(-2.0 * std::log(S) / S);
+    return static_cast<float>(normal());
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -1217,14 +1210,7 @@ class Random_XorShift1024 {
 
   KOKKOS_INLINE_FUNCTION
   float fnormal() {
-    float S = 2.0;
-    float U;
-    while (S >= 1.0) {
-      U             = 2.0 * frand() - 1.0;
-      const float V = 2.0 * frand() - 1.0;
-      S             = U * U + V * V;
-    }
-    return U * std::sqrt(-2.0 * std::log(S) / S);
+    return static_cast<float>(normal());
   }
 
   KOKKOS_INLINE_FUNCTION
