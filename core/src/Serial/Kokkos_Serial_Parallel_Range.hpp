@@ -128,7 +128,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                   internal_instance->m_thread_team_data.pool_reduce_local());
 
     typename Analysis::Reducer final_reducer(
-        &ReducerConditional::select(m_functor, m_reducer));
+        ReducerConditional::select(m_functor, m_reducer));
 
     reference_type update = final_reducer.init(ptr);
 
@@ -221,7 +221,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
         pool_reduce_size, team_reduce_size, team_shared_size,
         thread_local_size);
 
-    typename Analysis::Reducer final_reducer(&m_functor);
+    typename Analysis::Reducer final_reducer(m_functor);
 
     reference_type update = final_reducer.init(pointer_type(
         internal_instance->m_thread_team_data.pool_reduce_local()));
@@ -286,7 +286,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
         pool_reduce_size, team_reduce_size, team_shared_size,
         thread_local_size);
 
-    typename Analysis::Reducer final_reducer(&m_functor);
+    typename Analysis::Reducer final_reducer(m_functor);
 
     reference_type update = final_reducer.init(pointer_type(
         internal_instance->m_thread_team_data.pool_reduce_local()));

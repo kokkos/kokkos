@@ -200,7 +200,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
   __device__ inline void operator()() const {
     typename Analysis::Reducer final_reducer(
-        &ReducerConditional::select(m_functor, m_reducer));
+        ReducerConditional::select(m_functor, m_reducer));
 
     const integral_nonzero_constant<word_size_type, Analysis::StaticValueSize /
                                                         sizeof(word_size_type)>
@@ -291,7 +291,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
   inline void execute() {
     typename Analysis::Reducer final_reducer(
-        &ReducerConditional::select(m_functor, m_reducer));
+        ReducerConditional::select(m_functor, m_reducer));
 
     const index_type nwork     = m_policy.end() - m_policy.begin();
     const bool need_device_set = Analysis::has_init_member_function ||
@@ -484,7 +484,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
   //----------------------------------------
 
   __device__ inline void initial() const {
-    typename Analysis::Reducer final_reducer(&m_functor);
+    typename Analysis::Reducer final_reducer(m_functor);
 
     const integral_nonzero_constant<word_size_type, Analysis::StaticValueSize /
                                                         sizeof(word_size_type)>
@@ -524,7 +524,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
   //----------------------------------------
 
   __device__ inline void final() const {
-    typename Analysis::Reducer final_reducer(&m_functor);
+    typename Analysis::Reducer final_reducer(m_functor);
 
     const integral_nonzero_constant<word_size_type, Analysis::StaticValueSize /
                                                         sizeof(word_size_type)>
@@ -794,7 +794,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   //----------------------------------------
 
   __device__ inline void initial() const {
-    typename Analysis::Reducer final_reducer(&m_functor);
+    typename Analysis::Reducer final_reducer(m_functor);
 
     const integral_nonzero_constant<word_size_type, Analysis::StaticValueSize /
                                                         sizeof(word_size_type)>
@@ -834,7 +834,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   //----------------------------------------
 
   __device__ inline void final() const {
-    typename Analysis::Reducer final_reducer(&m_functor);
+    typename Analysis::Reducer final_reducer(m_functor);
 
     const integral_nonzero_constant<word_size_type, Analysis::StaticValueSize /
                                                         sizeof(word_size_type)>

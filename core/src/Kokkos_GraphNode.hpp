@@ -376,15 +376,38 @@ class GraphNodeRef {
     auto policy = Experimental::require((Policy &&) arg_policy,
                                         Kokkos::Impl::KernelInGraphProperty{});
 
-    using next_policy_t = decltype(policy);
-    using next_kernel_t = Kokkos::Impl::GraphNodeKernelImpl<
-        ExecutionSpace, next_policy_t, functor_type, Kokkos::ParallelReduceTag,
-        typename return_value_adapter::reducer_type>;
+    using passed_reducer_type = typename return_value_adapter::reducer_type;
+    using reducer_type =
+        std::conditional_t<std::is_same_v<InvalidType, passed_reducer_type>,
+                           functor_type, passed_reducer_type>;
+    using analysis = Kokkos::Impl::FunctorAnalysis<
+        Kokkos::Impl::FunctorPatternInterface::REDUCE, Policy, reducer_type>;
 
-    return this->_then_kernel(next_kernel_t{
-        std::move(arg_name), graph_impl_ptr->get_execution_space(),
-        (Functor &&) functor, (Policy &&) policy,
-        return_value_adapter::return_value(return_value, functor)});
+    using combined_functor_reducer_type =
+        Kokkos::Impl::CombinedFunctorReducer<functor_type,
+                                             typename analysis::Reducer>;
+
+    using next_policy_t = decltype(policy);
+    using next_kernel_t =
+        Kokkos::Impl::GraphNodeKernelImpl<ExecutionSpace, next_policy_t,
+                                          combined_functor_reducer_type,
+                                          Kokkos::ParallelReduceTag>;
+
+    if constexpr (std::is_same_v<InvalidType, passed_reducer_type>) {
+      combined_functor_reducer_type functor_reducer(functor);
+      return this->_then_kernel(next_kernel_t{
+          std::move(arg_name), graph_impl_ptr->get_execution_space(),
+          functor_reducer, (Policy &&) policy,
+          return_value_adapter::return_value(return_value, functor)});
+    } else {
+      auto reducer = return_value_adapter::return_value(return_value, functor);
+      combined_functor_reducer_type functor_reducer(
+          functor, typename analysis::Reducer(reducer));
+
+      return this->_then_kernel(next_kernel_t{
+          std::move(arg_name), graph_impl_ptr->get_execution_space(),
+          functor_reducer, (Policy &&) policy, reducer.view()});
+    }
   }
 
   template <

@@ -1372,6 +1372,99 @@ StdPartitionPoint(View<StdPartPointScalar<Index>, Properties...> const&)
 namespace Kokkos {
 namespace Impl {
 
+template <typename FunctorType, typename FunctorAnalysisReducerType,
+          typename Enable = void>
+class CombinedFunctorReducer {
+ public:
+  using functor_type = FunctorType;
+  using reducer_type = FunctorAnalysisReducerType;
+  CombinedFunctorReducer(const FunctorType& functor,
+                         const FunctorAnalysisReducerType& reducer)
+      : m_functor(functor), m_reducer(reducer) {}
+  KOKKOS_FUNCTION const FunctorType& get_functor() const { return m_functor; }
+  KOKKOS_FUNCTION const FunctorAnalysisReducerType& get_reducer() const {
+    return m_reducer;
+  }
+
+ private:
+  FunctorType m_functor;
+  FunctorAnalysisReducerType m_reducer;
+};
+template <typename FunctorType, typename FunctorAnalysisReducerType>
+class CombinedFunctorReducer<
+    FunctorType, FunctorAnalysisReducerType,
+    std::enable_if_t<std::is_same_v<
+        FunctorType, typename FunctorAnalysisReducerType::functor_type>>> {
+ public:
+  using functor_type = FunctorType;
+  using reducer_type = FunctorAnalysisReducerType;
+  CombinedFunctorReducer(const FunctorType& functor) : m_reducer(functor) {}
+  KOKKOS_FUNCTION const FunctorType& get_functor() const {
+    return m_reducer.get_functor();
+  }
+  KOKKOS_FUNCTION const FunctorAnalysisReducerType& get_reducer() const {
+    return m_reducer;
+  }
+
+ private:
+  FunctorAnalysisReducerType m_reducer;
+};
+
+// FIXME Remove once all backends implement the new interface
+template <typename ExecutionSpace>
+struct implements_new_reduce_interface : std::false_type {};
+
+template <typename CombinedFunctorReducerType, typename PolicyType,
+          typename ExecutionSpaceType, typename Enable>
+class ParallelReduceWrapper {
+  using functor_type = typename CombinedFunctorReducerType::functor_type;
+  using helper_reducer_type =
+      typename CombinedFunctorReducerType::reducer_type::functor_type;
+
+  static constexpr bool has_reducer =
+      !std::is_same_v<functor_type, helper_reducer_type>;
+
+  using reducer_type =
+      std::conditional_t<has_reducer, helper_reducer_type, InvalidType>;
+
+  Impl::ParallelReduce<functor_type, PolicyType, reducer_type,
+                       ExecutionSpaceType>
+      m_parallel_reduce;
+
+ public:
+  template <typename ReturnValue>
+  ParallelReduceWrapper(
+      const CombinedFunctorReducerType& combined_functor_reducer,
+      const PolicyType& policy, const ReturnValue& return_value)
+      : m_parallel_reduce(
+            combined_functor_reducer.get_functor(), policy,
+            Kokkos::Impl::if_c<has_reducer, helper_reducer_type, ReturnValue>::
+                select(combined_functor_reducer.get_reducer().get_functor(),
+                       return_value)) {}
+
+  void execute() const { m_parallel_reduce.execute(); }
+};
+
+template <typename CombinedFunctorReducerType, typename PolicyType,
+          typename ExecutionSpaceType>
+class ParallelReduceWrapper<
+    CombinedFunctorReducerType, PolicyType, ExecutionSpaceType,
+    std::enable_if_t<
+        implements_new_reduce_interface<ExecutionSpaceType>::value>> {
+  Impl::ParallelReduce<CombinedFunctorReducerType, PolicyType,
+                       ExecutionSpaceType>
+      m_parallel_reduce;
+
+ public:
+  template <typename ReturnValue>
+  ParallelReduceWrapper(
+      const CombinedFunctorReducerType& combined_functor_reducer,
+      const PolicyType& policy, const ReturnValue& return_value)
+      : m_parallel_reduce(combined_functor_reducer, policy, return_value) {}
+
+  void execute() const { m_parallel_reduce.execute(); }
+};
+
 template <class T, class ReturnType, class ValueTraits>
 struct ParallelReduceReturnValue;
 
@@ -1490,24 +1583,48 @@ struct ParallelReduceAdaptor {
                                   const PolicyType& policy,
                                   const FunctorType& functor,
                                   ReturnType& return_value) {
-    uint64_t kpID = 0;
+    using PassedReducerType = typename return_value_adapter::reducer_type;
+    uint64_t kpID           = 0;
 
     PolicyType inner_policy = policy;
-    Kokkos::Tools::Impl::begin_parallel_reduce<
-        typename return_value_adapter::reducer_type>(inner_policy, functor,
-                                                     label, kpID);
+    Kokkos::Tools::Impl::begin_parallel_reduce<PassedReducerType>(
+        inner_policy, functor, label, kpID);
 
-    Kokkos::Impl::shared_allocation_tracking_disable();
-    Impl::ParallelReduce<FunctorType, PolicyType,
-                         typename return_value_adapter::reducer_type>
-        closure(functor, inner_policy,
-                return_value_adapter::return_value(return_value, functor));
-    Kokkos::Impl::shared_allocation_tracking_enable();
-    closure.execute();
+    using ReducerType =
+        std::conditional_t<std::is_same_v<InvalidType, PassedReducerType>,
+                           FunctorType, PassedReducerType>;
+    using Analysis = FunctorAnalysis<FunctorPatternInterface::REDUCE,
+                                     PolicyType, ReducerType>;
 
-    Kokkos::Tools::Impl::end_parallel_reduce<
-        typename return_value_adapter::reducer_type>(inner_policy, functor,
-                                                     label, kpID);
+    using CombinedFunctorReducerType =
+        CombinedFunctorReducer<FunctorType, typename Analysis::Reducer>;
+
+    // FIXME Remove "Wrapper" once all backends implement the new interface
+    using ParallelReduceType = Impl::ParallelReduceWrapper<
+        CombinedFunctorReducerType, PolicyType,
+        typename Impl::FunctorPolicyExecutionSpace<
+            FunctorType, PolicyType>::execution_space>;
+
+    if constexpr (std::is_same_v<InvalidType, PassedReducerType>) {
+      Kokkos::Impl::shared_allocation_tracking_disable();
+      CombinedFunctorReducerType functor_reducer(functor);
+      ParallelReduceType closure(
+          functor_reducer, inner_policy,
+          return_value_adapter::return_value(return_value, functor));
+      Kokkos::Impl::shared_allocation_tracking_enable();
+      closure.execute();
+    } else {
+      Kokkos::Impl::shared_allocation_tracking_disable();
+      auto reducer = return_value_adapter::return_value(return_value, functor);
+      CombinedFunctorReducerType functor_reducer(
+          functor, typename Analysis::Reducer(reducer));
+      ParallelReduceType closure(functor_reducer, inner_policy, reducer.view());
+      Kokkos::Impl::shared_allocation_tracking_enable();
+      closure.execute();
+    }
+
+    Kokkos::Tools::Impl::end_parallel_reduce<PassedReducerType>(
+        inner_policy, functor, label, kpID);
   }
 
   static constexpr bool is_array_reduction =

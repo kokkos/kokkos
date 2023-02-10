@@ -342,7 +342,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                   internal_instance->m_thread_team_data.pool_reduce_local());
 
     typename Analysis::Reducer final_reducer(
-        &ReducerConditional::select(m_functor, m_reducer));
+        ReducerConditional::select(m_functor, m_reducer));
 
     reference_type update = final_reducer.init(ptr);
 

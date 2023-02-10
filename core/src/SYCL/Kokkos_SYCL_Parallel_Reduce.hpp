@@ -265,7 +265,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
           const auto& selected_reducer = ReducerConditional::select(
               static_cast<const FunctorType&>(functor),
               static_cast<const ReducerType&>(reducer_wrapper.get_functor()));
-          typename Analysis::Reducer final_reducer(&selected_reducer);
+          typename Analysis::Reducer final_reducer(selected_reducer);
           reference_type update = final_reducer.init(results_ptr);
           if (size == 1) {
             if constexpr (std::is_void<WorkTag>::value)
@@ -311,7 +311,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                   static_cast<const FunctorType&>(functor),
                   static_cast<const ReducerType&>(
                       reducer_wrapper.get_functor()));
-              typename Analysis::Reducer final_reducer(&selected_reducer);
+              typename Analysis::Reducer final_reducer(selected_reducer);
 
               using index_type       = typename Policy::index_type;
               const auto upper_bound = std::min<index_type>(
@@ -629,7 +629,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
           const auto& selected_reducer = ReducerConditional::select(
               static_cast<const FunctorType&>(functor),
               static_cast<const ReducerType&>(reducer_wrapper.get_functor()));
-          typename Analysis::Reducer final_reducer(&selected_reducer);
+          typename Analysis::Reducer final_reducer(selected_reducer);
 
           reference_type update = final_reducer.init(results_ptr);
           if (size == 1) {
@@ -671,7 +671,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
           const auto& selected_reducer = ReducerConditional::select(
               static_cast<const FunctorType&>(functor),
               static_cast<const ReducerType&>(reducer_wrapper.get_functor()));
-          typename Analysis::Reducer final_reducer(&selected_reducer);
+          typename Analysis::Reducer final_reducer(selected_reducer);
 
           // In the first iteration, we call functor to initialize the local
           // memory. Otherwise, the local memory is initialized with the

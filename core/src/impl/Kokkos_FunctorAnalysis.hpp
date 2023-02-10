@@ -903,7 +903,7 @@ struct FunctorAnalysis {
 
   struct Reducer {
    private:
-    Functor const* const m_functor;
+    Functor const m_functor;
 
     template <bool IsArray>
     KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<IsArray, int> len() const
@@ -923,6 +923,10 @@ struct FunctorAnalysis {
     using pointer_type   = value_type*;
     using reference_type = FunctorAnalysis::reference_type;
     using functor_type   = Functor;  // Adapts a functor
+
+    KOKKOS_FUNCTION unsigned value_size() const {
+      return FunctorAnalysis::value_size(m_functor);
+    }
 
     template <bool is_array = candidate_is_array>
     KOKKOS_INLINE_FUNCTION static std::enable_if_t<is_array, reference_type>
@@ -948,19 +952,22 @@ struct FunctorAnalysis {
 
     KOKKOS_INLINE_FUNCTION
     void join(ValueType* dst, ValueType const* src) const noexcept {
-      DeduceJoin<>::join(m_functor, dst, src);
+      DeduceJoin<>::join(&m_functor, dst, src);
     }
 
     KOKKOS_INLINE_FUNCTION reference_type init(ValueType* const dst) const
         noexcept {
-      DeduceInit<>::init(m_functor, dst);
+      DeduceInit<>::init(&m_functor, dst);
       return reference(dst);
     }
 
     KOKKOS_INLINE_FUNCTION
     void final(ValueType* dst) const noexcept {
-      DeduceFinal<>::final(m_functor, dst);
+      DeduceFinal<>::final(&m_functor, dst);
     }
+
+    KOKKOS_INLINE_FUNCTION
+    const Functor& get_functor() const { return m_functor; }
 
     Reducer(Reducer const&) = default;
     Reducer(Reducer&&)      = default;
@@ -969,7 +976,7 @@ struct FunctorAnalysis {
     ~Reducer()                    = default;
 
     KOKKOS_INLINE_FUNCTION explicit constexpr Reducer(
-        Functor const* arg_functor) noexcept
+        Functor const& arg_functor) noexcept
         : m_functor(arg_functor) {}
   };
 };

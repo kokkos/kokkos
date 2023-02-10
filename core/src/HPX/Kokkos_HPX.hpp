@@ -1026,7 +1026,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     buffer.resize(num_worker_threads, value_size);
 
     typename Analysis::Reducer final_reducer(
-        &ReducerConditional::select(m_functor, m_reducer));
+        ReducerConditional::select(m_functor, m_reducer));
 
     for (int t = 0; t < num_worker_threads; ++t) {
       final_reducer.init(reinterpret_cast<pointer_type>(buffer.get(t)));
@@ -1052,7 +1052,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   void finalize() const {
     hpx_thread_buffer &buffer = m_policy.space().impl_get_buffer();
     typename Analysis::Reducer final_reducer(
-        &ReducerConditional::select(m_functor, m_reducer));
+        ReducerConditional::select(m_functor, m_reducer));
     const int num_worker_threads = m_policy.space().concurrency();
     for (int i = 1; i < num_worker_threads; ++i) {
       final_reducer.join(reinterpret_cast<pointer_type>(buffer.get(0)),
@@ -1078,7 +1078,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     if (m_policy.end() <= m_policy.begin()) {
       if (m_result_ptr) {
         typename Analysis::Reducer final_reducer(
-            &ReducerConditional::select(m_functor, m_reducer));
+            ReducerConditional::select(m_functor, m_reducer));
 
         final_reducer.init(m_result_ptr);
         final_reducer.final(m_result_ptr);
@@ -1151,7 +1151,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     const int num_worker_threads = m_policy.space().concurrency();
 
     typename Analysis::Reducer final_reducer(
-        &ReducerConditional::select(m_iter.m_func, m_reducer));
+        ReducerConditional::select(m_iter.m_func, m_reducer));
     hpx_thread_buffer &buffer = m_iter.m_rp.space().impl_get_buffer();
     buffer.resize(num_worker_threads, value_size);
 
@@ -1175,7 +1175,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   void finalize() const {
     hpx_thread_buffer &buffer = m_iter.m_rp.space().impl_get_buffer();
     typename Analysis::Reducer final_reducer(
-        &ReducerConditional::select(m_iter.m_func, m_reducer));
+        ReducerConditional::select(m_iter.m_func, m_reducer));
     const int num_worker_threads = m_policy.space().concurrency();
     for (int i = 1; i < num_worker_threads; ++i) {
       final_reducer.join(reinterpret_cast<pointer_type>(buffer.get(0)),
@@ -1287,7 +1287,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
     const std::size_t value_size = Analysis::value_size(m_functor);
 
     hpx_thread_buffer &buffer = m_policy.space().impl_get_buffer();
-    typename Analysis::Reducer final_reducer(&m_functor);
+    typename Analysis::Reducer final_reducer(m_functor);
     barrier_type &barrier =
         *static_cast<barrier_type *>(buffer.get_extra_space());
     reference_type update_sum =
@@ -1390,7 +1390,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
     const std::size_t value_size = Analysis::value_size(m_functor);
 
     hpx_thread_buffer &buffer = m_policy.space().impl_get_buffer();
-    typename Analysis::Reducer final_reducer(&m_functor);
+    typename Analysis::Reducer final_reducer(m_functor);
     barrier_type &barrier =
         *static_cast<barrier_type *>(buffer.get_extra_space());
     reference_type update_sum =
@@ -1554,7 +1554,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     hpx_thread_buffer &buffer = m_policy.space().impl_get_buffer();
     buffer.resize(num_worker_threads, value_size + m_shared);
     typename Analysis::Reducer final_reducer(
-        &ReducerConditional::select(m_functor, m_reducer));
+        ReducerConditional::select(m_functor, m_reducer));
 
     for (int t = 0; t < num_worker_threads; ++t) {
       final_reducer.init(reinterpret_cast<pointer_type>(buffer.get(t)));
@@ -1586,7 +1586,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   void finalize() const {
     hpx_thread_buffer &buffer = m_policy.space().impl_get_buffer();
     typename Analysis::Reducer final_reducer(
-        &ReducerConditional::select(m_functor, m_reducer));
+        ReducerConditional::select(m_functor, m_reducer));
     const int num_worker_threads = m_policy.space().concurrency();
     const pointer_type ptr = reinterpret_cast<pointer_type>(buffer.get(0));
     for (int t = 1; t < num_worker_threads; ++t) {
@@ -1609,7 +1609,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     if (m_policy.league_size() * m_policy.team_size() == 0) {
       if (m_result_ptr) {
         typename Analysis::Reducer final_reducer(
-            &ReducerConditional::select(m_functor, m_reducer));
+            ReducerConditional::select(m_functor, m_reducer));
         final_reducer.init(m_result_ptr);
         final_reducer.final(m_result_ptr);
       }

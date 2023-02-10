@@ -129,7 +129,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                   internal_instance->m_thread_team_data.pool_reduce_local());
 
     typename Analysis::Reducer final_reducer(
-        &ReducerConditional::select(m_iter.m_func, m_reducer));
+        ReducerConditional::select(m_iter.m_func, m_reducer));
 
     reference_type update = final_reducer.init(ptr);
 
