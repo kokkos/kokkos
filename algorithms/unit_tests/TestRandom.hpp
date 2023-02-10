@@ -533,20 +533,24 @@ struct TestView_Normal {
     Kokkos::fill_random_normal(A, random, mean, stddev);
     exec.fence();
 
-    Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecutionSpace, NormalMeanTag>(exec, 0, n), *this, val);
+    Kokkos::parallel_reduce(
+        Kokkos::RangePolicy<ExecutionSpace, NormalMeanTag>(exec, 0, n), *this,
+        val);
     exec.fence();
-    mean_s = val.mean / A.size();;
+    mean_s = val.mean / A.size();
 
-    Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecutionSpace, NormalVarTag>(exec, 0, n), *this, val);
+    Kokkos::parallel_reduce(
+        Kokkos::RangePolicy<ExecutionSpace, NormalVarTag>(exec, 0, n), *this,
+        val);
     exec.fence();
-    var_s  = val.variance / (A.size() - 1);
+    var_s = val.variance / (A.size() - 1);
 
     ScalarA mean_eps     = Kokkos::abs(mean - mean_s);
     ScalarA variance_eps = Kokkos::abs((stddev * stddev) / var_s - 1.0);
     std::cout << "Rank " << ViewType::rank << ": mean_eps " << mean_eps
               << ", variance_eps " << variance_eps << ", mean_expect " << mean
-              << ", variance_expect " << stddev * stddev << ", mean "
-              << mean_s << ", variance " << var_s << std::endl;
+              << ", variance_expect " << stddev * stddev << ", mean " << mean_s
+              << ", variance " << var_s << std::endl;
     if (std::is_same<ScalarA, double>::value) {
       EXPECT_LE(mean_eps, 1e-2);
       EXPECT_LE(variance_eps, 1e-2);
@@ -599,13 +603,17 @@ struct TestViewCmplx_Normal {
     Kokkos::fill_random_normal(A, random, mean, stddev);
     exec.fence();
 
-    Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecutionSpace, NormalMeanTag>(exec, 0, n), *this, val);
+    Kokkos::parallel_reduce(
+        Kokkos::RangePolicy<ExecutionSpace, NormalMeanTag>(exec, 0, n), *this,
+        val);
     exec.fence();
-    mean_s = val.mean / A.size();;
+    mean_s = val.mean / A.size();
 
-    Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecutionSpace, NormalVarTag>(exec, 0, n), *this, val);
+    Kokkos::parallel_reduce(
+        Kokkos::RangePolicy<ExecutionSpace, NormalVarTag>(exec, 0, n), *this,
+        val);
     exec.fence();
-    var_s  = (real(val.variance) + imag(val.variance)) / (A.size() - 1);
+    var_s = (real(val.variance) + imag(val.variance)) / (A.size() - 1);
 
     typename ScalarA::value_type mean_eps     = Kokkos::abs(mean - mean_s);
     typename ScalarA::value_type variance_eps = Kokkos::abs(
