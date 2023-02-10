@@ -1414,6 +1414,11 @@ class CombinedFunctorReducer<
 template <typename ExecutionSpace>
 struct implements_new_reduce_interface : std::false_type {};
 
+#ifdef KOKKOS_ENABLE_SERIAL
+template <>
+struct implements_new_reduce_interface<Kokkos::Serial> : std::true_type {};
+#endif
+
 template <typename CombinedFunctorReducerType, typename PolicyType,
           typename ExecutionSpaceType, typename Enable>
 class ParallelReduceWrapper {
