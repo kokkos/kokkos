@@ -331,6 +331,11 @@ template <class FunctorType, class ExecPolicy, class ReducerType = InvalidType,
 class ParallelReduce;
 
 // FIXME Remove once all backends implement the new interface
+template <typename FunctorType, typename FunctorAnalysisReducerType,
+          typename Enable = void>
+class CombinedFunctorReducer;
+
+// FIXME Remove once all backends implement the new interface
 template <typename CombinedFunctorReducerType, typename PolicyType,
           typename ExecutionSpaceType, typename Enable = void>
 class ParallelReduceWrapper;

@@ -1373,7 +1373,7 @@ namespace Kokkos {
 namespace Impl {
 
 template <typename FunctorType, typename FunctorAnalysisReducerType,
-          typename Enable = void>
+          typename Enable>
 class CombinedFunctorReducer {
  public:
   using functor_type = FunctorType;
@@ -1432,9 +1432,12 @@ class ParallelReduceWrapper {
   using reducer_type =
       std::conditional_t<has_reducer, helper_reducer_type, InvalidType>;
 
-  Impl::ParallelReduce<functor_type, PolicyType, reducer_type,
-                       ExecutionSpaceType>
-      m_parallel_reduce;
+ public:
+  using wrapped_type = Impl::ParallelReduce<functor_type, PolicyType,
+                                            reducer_type, ExecutionSpaceType>;
+
+ private:
+  wrapped_type m_parallel_reduce;
 
  public:
   template <typename ReturnValue>
@@ -1456,9 +1459,12 @@ class ParallelReduceWrapper<
     CombinedFunctorReducerType, PolicyType, ExecutionSpaceType,
     std::enable_if_t<
         implements_new_reduce_interface<ExecutionSpaceType>::value>> {
-  Impl::ParallelReduce<CombinedFunctorReducerType, PolicyType,
-                       ExecutionSpaceType>
-      m_parallel_reduce;
+ public:
+  using wrapped_type = Impl::ParallelReduce<CombinedFunctorReducerType,
+                                            PolicyType, ExecutionSpaceType>;
+
+ private:
+  wrapped_type m_parallel_reduce;
 
  public:
   template <typename ReturnValue>

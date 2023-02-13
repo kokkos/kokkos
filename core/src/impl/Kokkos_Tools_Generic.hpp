@@ -18,6 +18,7 @@
 #define KOKKOS_IMPL_KOKKOS_TOOLS_GENERIC_HPP
 
 #include <impl/Kokkos_Profiling.hpp>
+#include <impl/Kokkos_FunctorAnalysis.hpp>
 
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_ExecPolicy.hpp>
@@ -99,9 +100,12 @@ struct SimpleTeamSizeCalculator {
                                         const Functor& functor,
                                         const Kokkos::ParallelReduceTag&) {
     using exec_space = typename Policy::execution_space;
-    using driver =
-        Kokkos::Impl::ParallelReduce<Functor, Policy, Kokkos::InvalidType,
-                                     exec_space>;
+    using analysis   = Kokkos::Impl::FunctorAnalysis<
+        Kokkos::Impl::FunctorPatternInterface::REDUCE, Policy, Functor>;
+    using driver = typename Kokkos::Impl::ParallelReduceWrapper<
+        Kokkos::Impl::CombinedFunctorReducer<Functor,
+                                             typename analysis::Reducer>,
+        Policy, exec_space>::wrapped_type;
     return driver::max_tile_size_product(policy, functor);
   }
 };
@@ -135,8 +139,12 @@ struct ComplexReducerSizeCalculator {
                                         const Functor& functor,
                                         const Kokkos::ParallelReduceTag&) {
     using exec_space = typename Policy::execution_space;
-    using driver =
-        Kokkos::Impl::ParallelReduce<Functor, Policy, ReducerType, exec_space>;
+    using analysis   = Kokkos::Impl::FunctorAnalysis<
+        Kokkos::Impl::FunctorPatternInterface::REDUCE, Policy, Functor>;
+    using driver = typename Kokkos::Impl::ParallelReduceWrapper<
+        Kokkos::Impl::CombinedFunctorReducer<Functor,
+                                             typename analysis::Reducer>,
+        Policy, exec_space>::wrapped_type;
     return driver::max_tile_size_product(policy, functor);
   }
 };
