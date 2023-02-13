@@ -1419,6 +1419,11 @@ template <>
 struct implements_new_reduce_interface<Kokkos::Serial> : std::true_type {};
 #endif
 
+#ifdef KOKKOS_ENABLE_CUDA
+template <>
+struct implements_new_reduce_interface<Kokkos::Cuda> : std::true_type {};
+#endif
+
 template <typename CombinedFunctorReducerType, typename PolicyType,
           typename ExecutionSpaceType, typename Enable>
 class ParallelReduceWrapper {

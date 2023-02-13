@@ -924,8 +924,26 @@ struct FunctorAnalysis {
     using reference_type = FunctorAnalysis::reference_type;
     using functor_type   = Functor;  // Adapts a functor
 
+    static constexpr bool has_join_member_function() {
+      return DeduceJoin<>::value;
+    }
+    static constexpr bool has_init_member_function() {
+      return DeduceInit<>::value;
+    }
+    static constexpr bool has_final_member_function() {
+      return DeduceFinal<>::value;
+    }
+
     KOKKOS_FUNCTION unsigned value_size() const {
       return FunctorAnalysis::value_size(m_functor);
+    }
+
+    KOKKOS_FUNCTION unsigned value_count() const {
+      return FunctorAnalysis::value_count(m_functor);
+    }
+
+    KOKKOS_FUNCTION static constexpr unsigned int static_value_size() {
+      return StaticValueSize;
     }
 
     template <bool is_array = candidate_is_array>
