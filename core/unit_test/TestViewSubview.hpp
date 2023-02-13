@@ -2120,6 +2120,13 @@ struct TestSubviewMemoryTraitsConstruction {
     std::pair<int, int> range(3, 5);
     auto sv = Kokkos::subview<memory_traits_type>(v, range);
 
+    if constexpr (memory_traits_type::is_aligned)
+      static_assert(decltype(sv)::memory_traits::value + Kokkos::Aligned ==
+                    memory_traits_type::value);
+    else
+      static_assert(decltype(sv)::memory_traits::value ==
+                    memory_traits_type::value);
+
     ASSERT_EQ(2u, sv.size());
     EXPECT_EQ(3., sv[0]);
     EXPECT_EQ(4., sv[1]);
@@ -2132,6 +2139,7 @@ inline void test_subview_memory_traits_construction() {
   // RandomAccess (2)
   // Atomic (4)
   // Restricted (8)
+  // Aligned (16)
   TestSubviewMemoryTraitsConstruction<0>()();
   TestSubviewMemoryTraitsConstruction<1>()();
   TestSubviewMemoryTraitsConstruction<2>()();
@@ -2148,6 +2156,22 @@ inline void test_subview_memory_traits_construction() {
   TestSubviewMemoryTraitsConstruction<13>()();
   TestSubviewMemoryTraitsConstruction<14>()();
   TestSubviewMemoryTraitsConstruction<15>()();
+  TestSubviewMemoryTraitsConstruction<16>()();
+  TestSubviewMemoryTraitsConstruction<17>()();
+  TestSubviewMemoryTraitsConstruction<18>()();
+  TestSubviewMemoryTraitsConstruction<19>()();
+  TestSubviewMemoryTraitsConstruction<20>()();
+  TestSubviewMemoryTraitsConstruction<21>()();
+  TestSubviewMemoryTraitsConstruction<22>()();
+  TestSubviewMemoryTraitsConstruction<23>()();
+  TestSubviewMemoryTraitsConstruction<24>()();
+  TestSubviewMemoryTraitsConstruction<25>()();
+  TestSubviewMemoryTraitsConstruction<26>()();
+  TestSubviewMemoryTraitsConstruction<27>()();
+  TestSubviewMemoryTraitsConstruction<28>()();
+  TestSubviewMemoryTraitsConstruction<29>()();
+  TestSubviewMemoryTraitsConstruction<30>()();
+  TestSubviewMemoryTraitsConstruction<31>()();
 }
 
 //----------------------------------------------------------------------------

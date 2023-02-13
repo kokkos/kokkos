@@ -2712,14 +2712,8 @@ struct ViewDataHandle<
     Traits,
     std::enable_if_t<(std::is_void<typename Traits::specialize>::value &&
                       (!Traits::memory_traits::is_aligned) &&
-                      Traits::memory_traits::is_restrict
-#ifdef KOKKOS_ENABLE_CUDA
-                      && (!(std::is_same<typename Traits::memory_space,
-                                         Kokkos::CudaSpace>::value ||
-                            std::is_same<typename Traits::memory_space,
-                                         Kokkos::CudaUVMSpace>::value))
-#endif
-                      && (!Traits::memory_traits::is_atomic))>> {
+                      Traits::memory_traits::is_restrict &&
+                      (!Traits::memory_traits::is_atomic))>> {
   using value_type  = typename Traits::value_type;
   using handle_type = typename Traits::value_type* KOKKOS_RESTRICT;
   using return_type = typename Traits::value_type& KOKKOS_RESTRICT;
@@ -2742,14 +2736,8 @@ struct ViewDataHandle<
     Traits,
     std::enable_if_t<(std::is_void<typename Traits::specialize>::value &&
                       Traits::memory_traits::is_aligned &&
-                      (!Traits::memory_traits::is_restrict)
-#ifdef KOKKOS_ENABLE_CUDA
-                      && (!(std::is_same<typename Traits::memory_space,
-                                         Kokkos::CudaSpace>::value ||
-                            std::is_same<typename Traits::memory_space,
-                                         Kokkos::CudaUVMSpace>::value))
-#endif
-                      && (!Traits::memory_traits::is_atomic))>> {
+                      (!Traits::memory_traits::is_restrict) &&
+                      (!Traits::memory_traits::is_atomic))>> {
   using value_type = typename Traits::value_type;
   // typedef work-around for intel compilers error #3186: expected typedef
   // declaration
@@ -2787,14 +2775,8 @@ struct ViewDataHandle<
     Traits,
     std::enable_if_t<(std::is_void<typename Traits::specialize>::value &&
                       Traits::memory_traits::is_aligned &&
-                      Traits::memory_traits::is_restrict
-#ifdef KOKKOS_ENABLE_CUDA
-                      && (!(std::is_same<typename Traits::memory_space,
-                                         Kokkos::CudaSpace>::value ||
-                            std::is_same<typename Traits::memory_space,
-                                         Kokkos::CudaUVMSpace>::value))
-#endif
-                      && (!Traits::memory_traits::is_atomic))>> {
+                      Traits::memory_traits::is_restrict &&
+                      (!Traits::memory_traits::is_atomic))>> {
   using value_type = typename Traits::value_type;
   // typedef work-around for intel compilers error #3186: expected typedef
   // declaration

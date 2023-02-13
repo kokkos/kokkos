@@ -34,6 +34,7 @@ static_assert(false,
 #include <View/Hooks/Kokkos_ViewHooks.hpp>
 
 #include <impl/Kokkos_Tools.hpp>
+#include <impl/Kokkos_Utilities.hpp>
 
 #ifdef KOKKOS_ENABLE_IMPL_MDSPAN
 #include <View/MDSpan/Kokkos_MDSpan_Extents.hpp>
@@ -1745,44 +1746,63 @@ void apply_to_view_of_static_rank(Function&& f, View<Args...> a) {
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-template <class V, class... Args>
-using Subview =
-    typename Kokkos::Impl::ViewMapping<void /* deduce subview type from source
-                                               view traits */
-                                       ,
-                                       typename V::traits, Args...>::type;
+namespace Impl {
+template <class ValueType, class TypeList>
+struct TypeListToViewTraits;
+
+template <class ValueType, class... Properties>
+struct TypeListToViewTraits<ValueType, Kokkos::Impl::type_list<Properties...>> {
+  using type = ViewTraits<ValueType, Properties...>;
+};
+
+// It is not safe to assume that subviews of views with the Aligned memory trait
+// are also aligned. Hence, just remove that attribute for subviews.
+template <class D, class... P>
+struct RemoveAlignedMemoryTrait {
+ private:
+  using type_list_in  = Kokkos::Impl::type_list<P...>;
+  using memory_traits = typename ViewTraits<D, P...>::memory_traits;
+  using type_list_in_wo_memory_traits =
+      typename Kokkos::Impl::type_list_remove_first<memory_traits,
+                                                    type_list_in>::type;
+  using new_memory_traits =
+      Kokkos::MemoryTraits<memory_traits::value & ~Kokkos::Aligned>;
+  using new_type_list = typename Kokkos::Impl::concat_type_list<
+      type_list_in_wo_memory_traits,
+      Kokkos::Impl::type_list<new_memory_traits>>::type;
+
+ public:
+  using type = typename TypeListToViewTraits<D, new_type_list>::type;
+};
+}  // namespace Impl
 
 template <class D, class... P, class... Args>
-KOKKOS_INLINE_FUNCTION
-    typename Kokkos::Impl::ViewMapping<void /* deduce subview type from source
-                                               view traits */
-                                       ,
-                                       ViewTraits<D, P...>, Args...>::type
-    subview(const View<D, P...>& src, Args... args) {
+KOKKOS_INLINE_FUNCTION auto subview(const View<D, P...>& src, Args... args) {
   static_assert(View<D, P...>::rank == sizeof...(Args),
                 "subview requires one argument for each source View rank");
 
   return typename Kokkos::Impl::ViewMapping<
       void /* deduce subview type from source view traits */
       ,
-      ViewTraits<D, P...>, Args...>::type(src, args...);
+      typename Impl::RemoveAlignedMemoryTrait<D, P...>::type,
+      Args...>::type(src, args...);
 }
 
 template <class MemoryTraits, class D, class... P, class... Args>
-KOKKOS_INLINE_FUNCTION typename Kokkos::Impl::ViewMapping<
-    void /* deduce subview type from source view traits */
-    ,
-    ViewTraits<D, P...>, Args...>::template apply<MemoryTraits>::type
-subview(const View<D, P...>& src, Args... args) {
+KOKKOS_INLINE_FUNCTION auto subview(const View<D, P...>& src, Args... args) {
   static_assert(View<D, P...>::rank == sizeof...(Args),
                 "subview requires one argument for each source View rank");
+  static_assert(Kokkos::is_memory_traits<MemoryTraits>::value);
 
   return typename Kokkos::Impl::ViewMapping<
       void /* deduce subview type from source view traits */
       ,
-      ViewTraits<D, P...>,
-      Args...>::template apply<MemoryTraits>::type(src, args...);
+      typename Impl::RemoveAlignedMemoryTrait<D, P..., MemoryTraits>::type,
+      Args...>::type(src, args...);
 }
+
+template <class V, class... Args>
+using Subview = decltype(subview(std::declval<V>(), std::declval<Args>()...));
 
 } /* namespace Kokkos */
 
