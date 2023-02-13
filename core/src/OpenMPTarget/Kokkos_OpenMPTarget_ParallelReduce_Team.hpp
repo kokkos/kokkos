@@ -525,7 +525,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                      FunctorTeamShmemSize<FunctorType>::value(
                          arg_functor, arg_policy.team_size())) {}
 
-  ParallelReduce(const FunctorType& arg_functor, Policy& arg_policy,
+  ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
                  const ReducerType& reducer)
       : m_result_ptr_on_device(
             MemorySpaceAccess<Kokkos::Experimental::OpenMPTargetSpace,
