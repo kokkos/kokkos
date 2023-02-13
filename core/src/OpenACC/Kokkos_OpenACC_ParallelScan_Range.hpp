@@ -24,6 +24,7 @@
 template <class Functor, class... Traits>
 class Kokkos::Impl::ParallelScan<Functor, Kokkos::RangePolicy<Traits...>,
                                  Kokkos::Experimental::OpenACC> {
+ protected:
   using Policy = Kokkos::RangePolicy<Traits...>;
   using Analysis =
       Kokkos::Impl::FunctorAnalysis<Kokkos::Impl::FunctorPatternInterface::SCAN,
@@ -34,24 +35,41 @@ class Kokkos::Impl::ParallelScan<Functor, Kokkos::RangePolicy<Traits...>,
   using IndexType   = typename Policy::index_type;
   Functor m_functor;
   Policy m_policy;
-  PointerType m_result_ptr;
+  ValueType* m_result_ptr;
+  const bool m_result_ptr_device_accessible;
   static constexpr MemberType default_scan_chunk_size = 128;
 
  public:
-  ParallelScan(Functor const& functor, Policy const& policy)
-      : m_functor(functor), m_policy(policy) {}
+  ParallelScan(Functor const& arg_functor, Policy const& arg_policy,
+               ValueType* arg_result_ptr             = nullptr,
+               bool arg_result_ptr_device_accessible = false)
+      : m_functor(arg_functor),
+        m_policy(arg_policy),
+        m_result_ptr(arg_result_ptr),
+        m_result_ptr_device_accessible(arg_result_ptr_device_accessible) {}
 
   void OpenACCParallelScanRangePolicy(const IndexType begin,
                                       const IndexType end, IndexType chunk_size,
-                                      const int async_arg) const {
+                                      const int async_arg,
+                                      bool getTotal = false) const {
+    if (chunk_size > 1) {
+      if (!Impl::is_integral_power_of_two(chunk_size))
+        Kokkos::abort(
+            "RangePolicy blocking granularity must be power of two to be used "
+            "with OpenACC parallel_scan()");
+    } else {
+      chunk_size = default_scan_chunk_size;
+    }
     const Kokkos::Experimental::Impl::FunctorAdapter<Functor, Policy> functor(
         m_functor);
     const IndexType N        = end - begin;
     const IndexType n_chunks = (N + chunk_size - 1) / chunk_size;
-    Kokkos::View<ValueType*, Kokkos::Experimental::OpenACC> chunk_values(
+    Kokkos::View<ValueType*, Kokkos::Experimental::OpenACCSpace> chunk_values(
         "Kokkos::OpenACCParallelScan::chunk_values", n_chunks);
-    Kokkos::View<ValueType*, Kokkos::Experimental::OpenACC> offset_values(
+    Kokkos::View<ValueType*, Kokkos::Experimental::OpenACCSpace> offset_values(
         "Kokkos::OpenACCParallelScan::offset_values", n_chunks);
+    Kokkos::View<ValueType, Kokkos::Experimental::OpenACCSpace> m_result_total(
+        "Kokkos::OpenACCParallelScan::m_result_total");
     std::unique_ptr<ValueType[]> element_values_owner(
         new ValueType[2 * chunk_size]);
     ValueType* element_values = element_values_owner.get();
@@ -62,8 +80,11 @@ class Kokkos::Impl::ParallelScan<Functor, Kokkos::RangePolicy<Traits...>,
 
 #pragma acc parallel loop gang vector_length(chunk_size) private( \
     element_values [0:2 * chunk_size])                            \
-    present(functor, chunk_values, final_reducer)
+    present(functor, chunk_values, final_reducer) async(async_arg)
     for (IndexType team_id = 0; team_id < n_chunks; ++team_id) {
+      IndexType current_step = 0;
+      IndexType next_step    = 1;
+      IndexType temp;
 #pragma acc loop vector
       for (IndexType thread_id = 0; thread_id < chunk_size; ++thread_id) {
         const IndexType local_offset = team_id * chunk_size;
@@ -73,9 +94,6 @@ class Kokkos::Impl::ParallelScan<Functor, Kokkos::RangePolicy<Traits...>,
         if ((idx > 0) && (idx < N)) functor(idx - 1, update, false);
         element_values[thread_id] = update;
       }
-      IndexType current_step = 0;
-      IndexType next_step    = 1;
-      IndexType temp;
       for (IndexType step_size = 1; step_size < chunk_size; step_size *= 2) {
 #pragma acc loop vector
         for (IndexType thread_id = 0; thread_id < chunk_size; ++thread_id) {
@@ -83,12 +101,12 @@ class Kokkos::Impl::ParallelScan<Functor, Kokkos::RangePolicy<Traits...>,
             element_values[next_step * chunk_size + thread_id] =
                 element_values[current_step * chunk_size + thread_id];
           } else {
-            final_reducer.join(
-                &element_values[current_step * chunk_size + thread_id],
-                &element_values[current_step * chunk_size + thread_id -
-                                step_size]);
-            element_values[next_step * chunk_size + thread_id] =
+            ValueType localValue =
                 element_values[current_step * chunk_size + thread_id];
+            final_reducer.join(&localValue,
+                               &element_values[current_step * chunk_size +
+                                               thread_id - step_size]);
+            element_values[next_step * chunk_size + thread_id] = localValue;
           }
         }
         temp         = current_step;
@@ -100,7 +118,8 @@ class Kokkos::Impl::ParallelScan<Functor, Kokkos::RangePolicy<Traits...>,
     }
 
     ValueType tempValue;
-#pragma acc serial loop present(chunk_values, offset_values, final_reducer)
+#pragma acc serial loop present(chunk_values, offset_values, final_reducer) \
+    async(async_arg)
     for (IndexType team_id = 0; team_id < n_chunks; ++team_id) {
       if (team_id == 0) {
         final_reducer.init(&offset_values(0));
@@ -111,10 +130,14 @@ class Kokkos::Impl::ParallelScan<Functor, Kokkos::RangePolicy<Traits...>,
       }
     }
 
-#pragma acc parallel loop gang vector_length(chunk_size) private( \
-    element_values [0:2 * chunk_size])                            \
-    present(functor, offset_values, final_reducer)
+#pragma acc parallel loop gang vector_length(chunk_size) private(         \
+    element_values [0:2 * chunk_size])                                    \
+    present(functor, offset_values, final_reducer) copyin(m_result_total) \
+        async(async_arg)
     for (IndexType team_id = 0; team_id < n_chunks; ++team_id) {
+      IndexType current_step = 0;
+      IndexType next_step    = 1;
+      IndexType temp;
 #pragma acc loop vector
       for (IndexType thread_id = 0; thread_id < chunk_size; ++thread_id) {
         const IndexType local_offset = team_id * chunk_size;
@@ -127,9 +150,6 @@ class Kokkos::Impl::ParallelScan<Functor, Kokkos::RangePolicy<Traits...>,
         if ((idx > 0) && (idx < N)) functor(idx - 1, update, false);
         element_values[thread_id] = update;
       }
-      IndexType current_step = 0;
-      IndexType next_step    = 1;
-      IndexType temp;
       for (IndexType step_size = 1; step_size < chunk_size; step_size *= 2) {
 #pragma acc loop vector
         for (IndexType thread_id = 0; thread_id < chunk_size; ++thread_id) {
@@ -137,12 +157,12 @@ class Kokkos::Impl::ParallelScan<Functor, Kokkos::RangePolicy<Traits...>,
             element_values[next_step * chunk_size + thread_id] =
                 element_values[current_step * chunk_size + thread_id];
           } else {
-            final_reducer.join(
-                &element_values[current_step * chunk_size + thread_id],
-                &element_values[current_step * chunk_size + thread_id -
-                                step_size]);
-            element_values[next_step * chunk_size + thread_id] =
+            ValueType localValue =
                 element_values[current_step * chunk_size + thread_id];
+            final_reducer.join(&localValue,
+                               &element_values[current_step * chunk_size +
+                                               thread_id - step_size]);
+            element_values[next_step * chunk_size + thread_id] = localValue;
           }
         }
         temp         = current_step;
@@ -156,11 +176,26 @@ class Kokkos::Impl::ParallelScan<Functor, Kokkos::RangePolicy<Traits...>,
         ValueType update =
             element_values[current_step * chunk_size + thread_id];
         if (idx < N) functor(idx, update, true);
+        if (idx == N - 1) {
+          if (m_result_ptr_device_accessible) {
+            *m_result_ptr = update;
+          } else {
+            m_result_total() = update;
+          }
+        }
       }
+    }
+    if (getTotal) {
+      // size_t size = Analysis::value_size(m_functor);
+      DeepCopy<HostSpace, Kokkos::Experimental::OpenACCSpace,
+               Kokkos::Experimental::OpenACC>(m_policy.space(), m_result_ptr,
+                                              m_result_total.data(),
+                                              sizeof(ValueType));
     }
 
 #pragma acc exit data delete (functor, chunk_values, offset_values, \
                               final_reducer)async(async_arg)
+    acc_wait(async_arg);
   }
 
   void execute() const {
@@ -169,21 +204,62 @@ class Kokkos::Impl::ParallelScan<Functor, Kokkos::RangePolicy<Traits...>,
     IndexType chunk_size  = m_policy.chunk_size();
 
     if (end <= begin) {
+      if (!m_result_ptr_device_accessible && m_result_ptr != nullptr) {
+        *m_result_ptr = 0;
+      }
       return;
-    }
-
-    if (chunk_size > 0) {
-      if (!Impl::is_integral_power_of_two(chunk_size))
-        Kokkos::abort(
-            "RangePolicy blocking granularity must be power of two to be used "
-            "with OpenACC parallel_scan()");
-    } else {
-      chunk_size = default_scan_chunk_size;
     }
 
     int const async_arg = m_policy.space().acc_async_queue();
 
     OpenACCParallelScanRangePolicy(begin, end, chunk_size, async_arg);
+  }
+};
+
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+
+template <class FunctorType, class ReturnType, class... Traits>
+class Kokkos::Impl::ParallelScanWithTotal<
+    FunctorType, Kokkos::RangePolicy<Traits...>, ReturnType,
+    Kokkos::Experimental::OpenACC>
+    : public ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
+                          Kokkos::Experimental::OpenACC> {
+  using base_t    = ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
+                              Kokkos::Experimental::OpenACC>;
+  using ValueType = typename base_t::ValueType;
+  using IndexType = typename base_t::IndexType;
+
+ public:
+  void execute() const {
+    const IndexType begin = base_t::m_policy.begin();
+    const IndexType end   = base_t::m_policy.end();
+    IndexType chunk_size  = base_t::m_policy.chunk_size();
+    bool getTotal         = false;
+
+    if (end <= begin) {
+      if (!base_t::m_result_ptr_device_accessible &&
+          base_t::m_result_ptr != nullptr) {
+        *base_t::m_result_ptr = 0;
+      }
+      return;
+    }
+
+    int const async_arg = base_t::m_policy.space().acc_async_queue();
+
+    if (!base_t::m_result_ptr_device_accessible) {
+      getTotal = true;
+    }
+    OpenACCParallelScanRangePolicy(begin, end, chunk_size, async_arg, getTotal);
+  }
+
+  template <class ViewType>
+  ParallelScanWithTotal(const FunctorType& arg_functor,
+                        const typename base_t::Policy& arg_policy,
+                        const ViewType& arg_result_view)
+      : base_t(arg_functor, arg_policy, arg_result_view.data(),
+               MemorySpaceAccess<Kokkos::Experimental::OpenACCSpace,
+                                 typename ViewType::memory_space>::accessible) {
   }
 };
 
