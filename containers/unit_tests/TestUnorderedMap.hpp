@@ -32,6 +32,7 @@ struct TestInsert {
   using value_type      = uint32_t;
 
   struct ExpectedValues {
+    unsigned map_idx;
     typename map_type::value_type v;
   };
   using expected_values_type = Kokkos::View<ExpectedValues *, execution_space>;
@@ -43,7 +44,8 @@ struct TestInsert {
 
   TestInsert(map_type arg_map, uint32_t arg_inserts, uint32_t arg_collisions)
       : map(arg_map), inserts(arg_inserts), collisions(arg_collisions) {
-    expected_values = expected_values_type("ExpectedValues", map.capacity());
+    auto len = map.capacity() > arg_inserts ? map.capacity() : arg_inserts;
+    expected_values = expected_values_type("ExpectedValues", len);
   }
 
   void testit(bool rehash_on_fail = true) {
@@ -71,7 +73,10 @@ struct TestInsert {
 
     if (!rehash_on_fail) {
       for (unsigned i = 0; i < map.size(); i++) {
-        ASSERT_EQ(expected_values(i).v, map.value_at(i));
+        auto map_idx = expected_values(i).map_idx;
+        if (map_idx != static_cast<unsigned>(~0)) {
+          ASSERT_EQ(expected_values(map_idx).v, map.value_at(map_idx));
+        }
       }
     }
   }
@@ -84,19 +89,47 @@ struct TestInsert {
     failed_count += count;
   }
 
+  KOKKOS_FORCEINLINE_FUNCTION
+  bool is_op_noop() const {
+    using vt             = typename map_type::value_type;
+    using Device         = typename map_type::device_type;
+    using UmapOpType     = typename map_type::insert_op_type;
+    using UmapOpTypeArg1 = Kokkos::View<
+        std::remove_const_t<std::conditional_t<std::is_void_v<vt>, int, vt>> *,
+        Device>;
+    return std::is_base_of_v<
+        UmapOpType, typename Kokkos::UnorderedMapInsertOpTypes<UmapOpTypeArg1,
+                                                               uint32_t>::NoOp>;
+  }
+
+  KOKKOS_FORCEINLINE_FUNCTION
+  bool is_op_atomic_add() const {
+    using vt             = typename map_type::value_type;
+    using Device         = typename map_type::device_type;
+    using UmapOpType     = typename map_type::insert_op_type;
+    using UmapOpTypeArg1 = Kokkos::View<
+        std::remove_const_t<std::conditional_t<std::is_void_v<vt>, int, vt>> *,
+        Device>;
+    return std::is_base_of_v<UmapOpType,
+                             typename Kokkos::UnorderedMapInsertOpTypes<
+                                 UmapOpTypeArg1, uint32_t>::AtomicAdd>;
+  }
+
   KOKKOS_INLINE_FUNCTION
   void operator()(uint32_t i, value_type &failed_count) const {
     const uint32_t key = Near ? i / collisions : i % (inserts / collisions);
     auto ret           = map.insert(key, i);
-    if (ret.failed())
+    if (ret.failed()) {
       ++failed_count;
-    else {
-      auto idx = map.find(key);
-      auto ptr = expected_values.data();
-      if (map.is_op_add()) {
-        Kokkos::atomic_add(&((ptr + idx)[0].v), i);
-      } else if (ret.success() && map.is_op_noop()) {
-        Kokkos::atomic_store(&((ptr + idx)[0].v), i);
+      expected_values(i).map_idx = static_cast<unsigned>(~0);
+    } else {
+      auto map_idx                     = map.find(key);
+      expected_values(map_idx).map_idx = map_idx;
+      auto ptr                         = expected_values.data();
+      if (is_op_atomic_add()) {
+        Kokkos::atomic_add(&((ptr + map_idx)[0].v), i);
+      } else if (ret.success() && is_op_noop()) {
+        Kokkos::atomic_store(&((ptr + map_idx)[0].v), i);
       }
     }
   }
@@ -249,10 +282,9 @@ void test_all_insert_ops(uint32_t num_nodes, uint32_t num_inserts,
   using equal_to_type         = typename Kokkos::pod_equal_to<key_type>;
 
   using map_op_type =
-      Kokkos::UnorderedMapInsertOpTypes<value_view_type, size_type, value_type>;
+      Kokkos::UnorderedMapInsertOpTypes<value_view_type, size_type>;
   using const_map_op_type =
-      Kokkos::UnorderedMapInsertOpTypes<const_value_view_type, size_type,
-                                        value_type>;
+      Kokkos::UnorderedMapInsertOpTypes<const_value_view_type, size_type>;
   using noop_type             = typename map_op_type::NoOp;
   using atomic_add_type       = typename map_op_type::AtomicAdd;
   using const_noop_type       = typename const_map_op_type::NoOp;

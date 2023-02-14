@@ -120,22 +120,30 @@ class UnorderedMapInsertResult {
 };
 
 /// \class UnorderedMapInsertOpTypes
+///
 /// \brief Operations applied to the values array upon subsequent insertions.
+///
 /// The default behavior when a k,v pair already exists in the UnorderedMap is
 /// to perform no operation. Alternatively, the caller may select to
 /// instantiate the UnorderedMap with the AtomicAdd insert operator such that
 /// duplicate keys accumulate values into the given values array entry.
-template <class ValueTypeView = int, class ValuesIdxType = uint32_t,
-          class ValueType = int>
+/// \tparam ValueTypeView The UnorderedMap value array type.
+/// \tparam ValuesIdxType The index type for lookups in the value array.
+///
+/// Supported operations:
+///   NoOp:      the first key inserted stores the associated value.
+///   AtomicAdd: duplicate key insertions sum values together.
+template <class ValueTypeView = int, class ValuesIdxType = uint32_t>
 struct UnorderedMapInsertOpTypes {
+  using value_type = typename ValueTypeView::non_const_value_type;
   struct NoOp {
     KOKKOS_FUNCTION
-    void op(ValueTypeView, ValuesIdxType, const ValueType *) const {}
+    void op(ValueTypeView, ValuesIdxType, const value_type *) const {}
   };
   struct AtomicAdd {
     KOKKOS_FUNCTION
     void op(ValueTypeView values, ValuesIdxType values_idx,
-            const ValueType *v) const {
+            const value_type *v) const {
       Kokkos::atomic_add(values.data() + values_idx, *v);
     }
   };
@@ -196,6 +204,11 @@ struct UnorderedMapInsertOpTypes {
 /// \tparam EqualTo Definition of the equality function for instances of
 ///   <tt>Key</tt>.  The default will do a bitwise equality comparison.
 ///
+/// \tparam InsertOp Definition of the insert function for duplicate
+///   insertions of <tt>Key</tt>. The default is to set value to the
+///   first key, value pair that is inserted. Please see
+///   Kokkos::UnorderedMapInsertOpTypes for more details.
+///
 template <typename Key, typename Value,
           typename Device   = Kokkos::DefaultExecutionSpace,
           typename Hasher   = pod_hash<std::remove_const_t<Key>>,
@@ -204,9 +217,7 @@ template <typename Key, typename Value,
               Kokkos::View<std::remove_const_t<std::conditional_t<
                                std::is_void_v<Value>, int, Value>> *,
                            Device>,
-              uint32_t,
-              std::remove_const_t<
-                  std::conditional_t<std::is_void_v<Value>, int, Value>>>::NoOp>
+              uint32_t>::NoOp>
 class UnorderedMap {
  private:
   using host_mirror_space =
@@ -295,16 +306,16 @@ class UnorderedMap {
   //! \name Public member functions
   //@{
 
-  // clang-format off
   /// \brief Constructor
   ///
   /// \param capacity_hint [in] Initial guess of how many unique keys will be
-  /// inserted into the map
-  /// \param hash [in] Hasher function for \c Key instances.
-  /// \param equal_to [in] The operator used for determining if two keys are equal.
-  /// \param insert_op [in] The operator used for combining values if a value already exists. 
-  /// The default value usually suffices.
-  // clang-format on
+  ///                           inserted into the map.
+  /// \param hash          [in] Hasher function for \c Key instances.  The
+  ///                           default value usually suffices.
+  /// \param equal_to      [in] The operator used for determining if two
+  ///                           keys are equal.
+  /// \param insert_op     [in] The operator used for combining values if a
+  ///                           key already exists.
   UnorderedMap(size_type capacity_hint = 0, hasher_type hasher = hasher_type(),
                equal_to_type equal_to   = equal_to_type(),
                insert_op_type insert_op = insert_op_type())
@@ -722,7 +733,7 @@ class UnorderedMap {
       std::enable_if_t<
           Impl::UnorderedMapCanAssign<declared_key_type, declared_value_type,
                                       SKey, SValue>::value,
-          int>                 = 0)
+          int> = 0)
       : m_bounded_insert(src.m_bounded_insert),
         m_hasher(src.m_hasher),
         m_equal_to(src.m_equal_to),
@@ -807,29 +818,6 @@ class UnorderedMap {
 
       *this = tmp;
     }
-  }
-
-  KOKKOS_FORCEINLINE_FUNCTION
-  bool is_op_noop() const {
-    using local_value_type = std::remove_const_t<std::conditional_t<std::is_void_v<Value>, int, Value>>;
-    return std::is_base_of_v<
-        insert_op_type,
-        typename UnorderedMapInsertOpTypes<
-            Kokkos::View<local_value_type *, Device>,
-            uint32_t, local_value_type>::NoOp>;
-  }
-
-  KOKKOS_FORCEINLINE_FUNCTION
-  bool is_op_add() const {
-    return std::is_base_of_v<
-        insert_op_type,
-        typename UnorderedMapInsertOpTypes<
-            Kokkos::View<std::remove_const_t<std::conditional_t<
-                             std::is_void_v<Value>, int, Value>> *,
-                         Device>,
-            uint32_t,
-            std::remove_const_t<std::conditional_t<std::is_void_v<Value>, int,
-                                                   Value>>>::AtomicAdd>;
   }
 
   //@}
