@@ -122,18 +122,18 @@ class UnorderedMapInsertResult {
 /// \class UnorderedMapInsertOpTypes
 /// \brief Operations applied to the values array upon subsequent insertions.
 /// The default behavior when a k,v pair already exists in the UnorderedMap is
-/// to perform no operation. Alternatively, the caller may selected to
+/// to perform no operation. Alternatively, the caller may select to
 /// instantiate the UnorderedMap with the AtomicAdd insert operator such that
 /// duplicate keys accumulate values into the given values array entry.
 template <class ValueTypeView = int, class ValuesIdxType = uint32_t,
           class ValueType = int>
 struct UnorderedMapInsertOpTypes {
   struct NoOp {
-    KOKKOS_INLINE_FUNCTION
+    KOKKOS_FUNCTION
     void op(ValueTypeView, ValuesIdxType, const ValueType *) const {}
   };
   struct AtomicAdd {
-    KOKKOS_INLINE_FUNCTION
+    KOKKOS_FUNCTION
     void op(ValueTypeView values, ValuesIdxType values_idx,
             const ValueType *v) const {
       Kokkos::atomic_add(values.data() + values_idx, *v);
@@ -722,8 +722,7 @@ class UnorderedMap {
       std::enable_if_t<
           Impl::UnorderedMapCanAssign<declared_key_type, declared_value_type,
                                       SKey, SValue>::value,
-          int>                 = 0,
-      insert_op_type insert_op = insert_op_type())
+          int>                 = 0)
       : m_bounded_insert(src.m_bounded_insert),
         m_hasher(src.m_hasher),
         m_equal_to(src.m_equal_to),
@@ -812,15 +811,12 @@ class UnorderedMap {
 
   KOKKOS_FORCEINLINE_FUNCTION
   bool is_op_noop() const {
+    using local_value_type = std::remove_const_t<std::conditional_t<std::is_void_v<Value>, int, Value>>;
     return std::is_base_of_v<
         insert_op_type,
         typename UnorderedMapInsertOpTypes<
-            Kokkos::View<std::remove_const_t<std::conditional_t<
-                             std::is_void_v<Value>, int, Value>> *,
-                         Device>,
-            uint32_t,
-            std::remove_const_t<
-                std::conditional_t<std::is_void_v<Value>, int, Value>>>::NoOp>;
+            Kokkos::View<local_value_type *, Device>,
+            uint32_t, local_value_type>::NoOp>;
   }
 
   KOKKOS_FORCEINLINE_FUNCTION

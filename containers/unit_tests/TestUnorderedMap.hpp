@@ -94,10 +94,8 @@ struct TestInsert {
       auto idx = map.find(key);
       auto ptr = expected_values.data();
       if (map.is_op_add()) {
-        // Kokkos::abort("adding");
         Kokkos::atomic_add(&((ptr + idx)[0].v), i);
       } else if (ret.success() && map.is_op_noop()) {
-        // Kokkos::abort("noop");
         Kokkos::atomic_store(&((ptr + idx)[0].v), i);
       }
     }
