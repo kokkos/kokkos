@@ -1092,6 +1092,11 @@ ifeq ($(KOKKOS_INTERNAL_USE_HIP), 1)
     tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_NAVI")
     KOKKOS_INTERNAL_HIP_ARCH_FLAG := --offload-arch=gfx1030
   endif
+  ifeq ($(KOKKOS_INTERNAL_USE_ARCH_NAVI1100), 1)
+    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_NAVI1100")
+    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_NAVI")
+    KOKKOS_INTERNAL_HIP_ARCH_FLAG := --offload-arch=gfx1100
+  endif
 
 
   KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/core/src/HIP/*.cpp)
