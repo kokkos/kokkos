@@ -277,16 +277,30 @@ class divides {
   }
 };
 
-template <class Abi>
-inline void host_check_math_ops() {
-  std::size_t constexpr n     = 11;
-  double const first_args[n]  = {1, 2, -1, 10, 0, 1, -2, 10, 0, 1, -2};
-  double const second_args[n] = {1, 2, 1, 1, 1, -3, -2, 1, 13, -3, -2};
+template <class Abi, size_t n, typename DataType>
+inline void host_check_all_math_ops(DataType const& first_args, DataType const& second_args) {
   host_check_binary_op_all_loaders<Abi>(plus(), n, first_args, second_args);
   host_check_binary_op_all_loaders<Abi>(minus(), n, first_args, second_args);
   host_check_binary_op_all_loaders<Abi>(multiplies(), n, first_args,
                                         second_args);
-  host_check_binary_op_all_loaders<Abi>(divides(), n, first_args, second_args);
+
+  if constexpr(std::is_same_v<DataType, double>)
+    host_check_binary_op_all_loaders<Abi>(divides(), n, first_args, second_args);
+}
+
+template <class Abi, typename DataType>
+inline void host_check_math_ops() {
+  constexpr size_t n = 11;
+
+  if constexpr(std::is_signed_v<DataType>) {
+    DataType const first_args[n]  = {1, 2, -1, 10, 0, 1, -2, 10, 0, 1, -2};
+    DataType const second_args[n] = {1, 2, 1, 1, 1, -3, -2, 1, 13, -3, -2};
+    host_check_all_math_ops<Abi, n>(first_args, second_args);
+  } else {
+    DataType const first_args[n]  = {1, 2, 1, 10, 0, 1, 2, 10, 0, 1, 2};
+    DataType const second_args[n] = {1, 2, 1, 1, 1, 3, 2, 1, 13, 3, 2};
+    host_check_all_math_ops<Abi, n>(first_args, second_args);
+  }
 }
 
 template <class Abi>
@@ -434,9 +448,28 @@ KOKKOS_INLINE_FUNCTION void device_check_condition() {
   checker.truth(all_of(a == decltype(a)(16)));
 }
 
+template <typename Abi>
+inline void host_check_math_ops_all_types(
+    Kokkos::Experimental::Impl::data_types<>) {}
+
+template <typename Abi, typename DataType, typename... RestTypes>
+inline void host_check_math_ops_all_types(
+    Kokkos::Experimental::Impl::data_types<DataType, RestTypes...> =
+        Kokkos::Experimental::Impl::data_type_set()) {
+  host_check_math_ops<Abi, DataType>();
+  host_check_math_ops_all_types<Abi>(
+      Kokkos::Experimental::Impl::data_types<RestTypes...>());
+}
+
+template <typename Abi>
+inline void host_check_math_ops_all_types() {
+  host_check_math_ops_all_types<Abi>(
+      Kokkos::Experimental::Impl::data_type_set());
+}
+
 template <class Abi>
 inline void host_check_abi() {
-  host_check_math_ops<Abi>();
+  host_check_math_ops_all_types<Abi>();
   host_check_mask_ops<Abi>();
   host_check_conversions<Abi>();
   host_check_shifts<Abi>();
