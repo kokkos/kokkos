@@ -49,7 +49,7 @@ struct MemoryTraits {
   //! Tag this class as a kokkos memory traits:
   using memory_traits = MemoryTraits<T>;
 
-  static constexpr unsigned value = T;
+  static constexpr unsigned impl_value = T;
 
   static constexpr bool is_unmanaged =
       (unsigned(0) != (T & unsigned(Kokkos::Unmanaged)));

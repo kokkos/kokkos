@@ -2123,11 +2123,11 @@ struct TestSubviewMemoryTraitsConstruction {
     // check that the subview memory traits are the same as the original view
     // (with the Aligned trait stripped).
     if constexpr (memory_traits_type::is_aligned)
-      static_assert(decltype(sv)::memory_traits::value + Kokkos::Aligned ==
-                    memory_traits_type::value);
+      static_assert(decltype(sv)::memory_traits::impl_value + Kokkos::Aligned ==
+                    memory_traits_type::impl_value);
     else
-      static_assert(decltype(sv)::memory_traits::value ==
-                    memory_traits_type::value);
+      static_assert(decltype(sv)::memory_traits::impl_value ==
+                    memory_traits_type::impl_value);
 
     ASSERT_EQ(2u, sv.size());
     EXPECT_EQ(3., sv[0]);

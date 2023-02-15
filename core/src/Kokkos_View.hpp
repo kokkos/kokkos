@@ -1766,7 +1766,7 @@ struct RemoveAlignedMemoryTrait {
       typename Kokkos::Impl::type_list_remove_first<memory_traits,
                                                     type_list_in>::type;
   using new_memory_traits =
-      Kokkos::MemoryTraits<memory_traits::value & ~Kokkos::Aligned>;
+      Kokkos::MemoryTraits<memory_traits::impl_value & ~Kokkos::Aligned>;
   using new_type_list = typename Kokkos::Impl::concat_type_list<
       type_list_in_wo_memory_traits,
       Kokkos::Impl::type_list<new_memory_traits>>::type;
