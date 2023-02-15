@@ -1427,6 +1427,11 @@ struct implements_new_reduce_interface<Kokkos::Experimental::HPX>
     : std::true_type {};
 #endif
 
+#ifdef KOKKOS_ENABLE_OPENMP
+template <>
+struct implements_new_reduce_interface<Kokkos::OpenMP> : std::true_type {};
+#endif
+
 #ifdef KOKKOS_ENABLE_CUDA
 template <>
 struct implements_new_reduce_interface<Kokkos::Cuda> : std::true_type {};
