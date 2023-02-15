@@ -2110,18 +2110,22 @@ void test_unmanaged_subview_reset() {
 template <std::underlying_type_t<Kokkos::MemoryTraitsFlags> MTF>
 struct TestSubviewMemoryTraitsConstruction {
   void operator()() const noexcept {
-    using view_type          = Kokkos::View<double*, Kokkos::HostSpace>;
-    using size_type          = view_type::size_type;
     using memory_traits_type = Kokkos::MemoryTraits<MTF>;
+    using view_type =
+        Kokkos::View<double*, Kokkos::HostSpace, memory_traits_type>;
+    using size_type = typename view_type::size_type;
 
-    view_type v("v", 7);
+    Kokkos::View<double*, Kokkos::HostSpace> v_original("v", 7);
+    view_type v(v_original.data(), v_original.size());
     for (size_type i = 0; i != v.size(); ++i) v[i] = static_cast<double>(i);
 
     std::pair<int, int> range(3, 5);
-    auto sv = Kokkos::subview<memory_traits_type>(v, range);
+    auto sv = Kokkos::subview(v, range);
 
     // check that the subview memory traits are the same as the original view
     // (with the Aligned trait stripped).
+    static_assert(decltype(v)::memory_traits::impl_value ==
+                  memory_traits_type::impl_value);
     if constexpr (memory_traits_type::is_aligned)
       static_assert(decltype(sv)::memory_traits::impl_value + Kokkos::Aligned ==
                     memory_traits_type::impl_value);

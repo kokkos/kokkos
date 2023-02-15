@@ -1788,8 +1788,10 @@ KOKKOS_INLINE_FUNCTION auto subview(const View<D, P...>& src, Args... args) {
       Args...>::type(src, args...);
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 template <class MemoryTraits, class D, class... P, class... Args>
-KOKKOS_INLINE_FUNCTION auto subview(const View<D, P...>& src, Args... args) {
+KOKKOS_DEPRECATED KOKKOS_INLINE_FUNCTION auto subview(const View<D, P...>& src,
+                                                      Args... args) {
   static_assert(View<D, P...>::rank == sizeof...(Args),
                 "subview requires one argument for each source View rank");
   static_assert(Kokkos::is_memory_traits<MemoryTraits>::value);
@@ -1800,6 +1802,7 @@ KOKKOS_INLINE_FUNCTION auto subview(const View<D, P...>& src, Args... args) {
       typename Impl::RemoveAlignedMemoryTrait<D, P..., MemoryTraits>::type,
       Args...>::type(src, args...);
 }
+#endif
 
 template <class V, class... Args>
 using Subview = decltype(subview(std::declval<V>(), std::declval<Args>()...));
