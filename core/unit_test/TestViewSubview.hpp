@@ -2120,6 +2120,8 @@ struct TestSubviewMemoryTraitsConstruction {
     std::pair<int, int> range(3, 5);
     auto sv = Kokkos::subview<memory_traits_type>(v, range);
 
+    // check that the subview memory traits are the same as the original view
+    // (with the Aligned trait stripped).
     if constexpr (memory_traits_type::is_aligned)
       static_assert(decltype(sv)::memory_traits::value + Kokkos::Aligned ==
                     memory_traits_type::value);
