@@ -110,3 +110,4 @@
 #cmakedefine KOKKOS_ARCH_VEGA906
 #cmakedefine KOKKOS_ARCH_VEGA908
 #cmakedefine KOKKOS_ARCH_VEGA90A
+#cmakedefine KOKKOS_ARCH_VEGA1100
