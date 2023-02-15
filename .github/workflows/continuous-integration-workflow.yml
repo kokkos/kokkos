@@ -69,9 +69,9 @@ jobs:
         uses: actions/checkout@v3
       - uses: actions/cache@v3
         with:
-          path: ~/.ccache
-          key: kokkos-${{ matrix.distro }}-${{ matrix.cxx }}-${{ matrix.cmake_build_type }}-${{ matrix.openmp }}-${github.ref}-${{ github.sha }}
-          restore-keys: kokkos-${{ matrix.distro }}-${{ matrix.cxx }}-${{ matrix.cmake_build_type }}-${{ matrix.openmp }}-${{github.ref}}
+          path: ~/.cache/ccache
+          key: kokkos-${{ matrix.distro }}-${{ matrix.cxx }}-${{ matrix.cmake_build_type }}-${{ matrix.openmp }}-${{ github.ref }}-${{ github.sha }}
+          restore-keys: kokkos-${{ matrix.distro }}-${{ matrix.cxx }}-${{ matrix.cmake_build_type }}-${{ matrix.openmp }}-${{ github.ref }}
       - name: maybe_disable_death_tests
         if: ${{ matrix.distro == 'fedora:rawhide' }}
         run: echo "GTEST_FILTER=-*DeathTest*" >> $GITHUB_ENV
