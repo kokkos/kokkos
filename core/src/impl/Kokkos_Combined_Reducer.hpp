@@ -251,7 +251,7 @@ struct CombinedReducerImpl<std::integer_sequence<size_t, Idxs...>, Space,
   }
 
   template <int Idx, class View>
-  KOKKOS_FUNCTION void write_one_value_back_on_device(
+  KOKKOS_FUNCTION static void write_one_value_back_on_device(
       View const& inputView, typename View::const_value_type& value) noexcept {
     *inputView.data() = value;
   }
