@@ -655,12 +655,6 @@ class View : public ViewTraits<DataType, Properties...> {
             map_type::Rank};
 #endif
 
-  /** \brief rank() to be implemented
-   */
-  // KOKKOS_INLINE_FUNCTION
-  // static
-  // constexpr unsigned rank() { return map_type::rank; }
-
   template <typename iType>
   KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<
       std::is_integral<iType>::value, size_t>
@@ -1699,14 +1693,10 @@ class View : public ViewTraits<DataType, Properties...> {
   }
 };
 
-/** \brief Temporary free function rank()
- *         until rank() is implemented
- *         in the View
- */
 template <typename D, class... P>
 KOKKOS_INLINE_FUNCTION constexpr unsigned rank(const View<D, P...>& V) {
-  return V.rank;
-}  // Temporary until added to view
+  return V.rank();
+}
 
 namespace Impl {
 
