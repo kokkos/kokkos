@@ -48,12 +48,14 @@ struct TeamTeamCombinedReducer {
               },
               teamResult0, teamResult1, teamResult2, teamResult3);
 
-          Kokkos::single(Kokkos::PerTeam(team), [=]() {
-            teamView(0) += teamResult0;
-            teamView(1) += teamResult1;
-            teamView(2) += teamResult2;
-            teamView(3) += teamResult3;
-          });
+          if (n > 0) {
+            Kokkos::single(Kokkos::PerTeam(team), [=]() {
+              teamView(0) += teamResult0;
+              teamView(1) += teamResult1;
+              teamView(2) += teamResult2;
+              teamView(3) += teamResult3;
+            });
+          }
         });
 
     auto hostView = Kokkos::create_mirror_view_and_copy(
@@ -91,20 +93,22 @@ struct TeamTeamCombinedReducer {
               Kokkos::Sum<int>(teamResult0), Kokkos::Prod<int>(teamResult1),
               Kokkos::Min<int>(teamResult2), Kokkos::Max<int>(teamResult3));
 
-          Kokkos::single(Kokkos::PerTeam(team), [=]() {
-            teamView(0) += teamResult0;
-            teamView(1) += teamResult1;
-            teamView(2) += teamResult2;
-            teamView(3) += teamResult3;
-          });
+          if (n > 0) {
+            Kokkos::single(Kokkos::PerTeam(team), [=]() {
+              teamView(0) += teamResult0;
+              teamView(1) += teamResult1;
+              teamView(2) += teamResult2;
+              teamView(3) += teamResult3;
+            });
+          }
         });
 
     auto hostView = Kokkos::create_mirror_view_and_copy(
         Kokkos::DefaultHostExecutionSpace(), teamView);
 
     EXPECT_EQ((n * (n + 1) / 2), hostView(0));
-    EXPECT_EQ(std::pow(n, n), hostView(1));
-    EXPECT_EQ(1, hostView(2));
+    EXPECT_EQ((n == 0) ? 0 : std::pow(n, n), hostView(1));
+    EXPECT_EQ((n == 0) ? 0 : 1, hostView(2));
     EXPECT_EQ(n, hostView(3));
   }
 
@@ -134,12 +138,14 @@ struct TeamTeamCombinedReducer {
               teamResult0, Kokkos::Sum<int>(teamResult1),
               Kokkos::Max<int>(teamResult2), teamResult3);
 
-          Kokkos::single(Kokkos::PerTeam(team), [=]() {
-            teamView(0) += teamResult0;
-            teamView(1) += teamResult1;
-            teamView(2) += teamResult2;
-            teamView(3) += teamResult3;
-          });
+          if (n > 0) {
+            Kokkos::single(Kokkos::PerTeam(team), [=]() {
+              teamView(0) += teamResult0;
+              teamView(1) += teamResult1;
+              teamView(2) += teamResult2;
+              teamView(3) += teamResult3;
+            });
+          }
         });
 
     auto hostView = Kokkos::create_mirror_view_and_copy(
@@ -178,10 +184,12 @@ struct TeamTeamCombinedReducer {
                 },
                 teamResult0, teamResult1, teamResult2, teamResult3);
 
-            teamView(0) += teamResult0;
-            teamView(1) += teamResult1;
-            teamView(2) += teamResult2;
-            teamView(3) += teamResult3;
+            if (n > 0) {
+              teamView(0) += teamResult0;
+              teamView(1) += teamResult1;
+              teamView(2) += teamResult2;
+              teamView(3) += teamResult3;
+            }
           });
         });
 
@@ -222,10 +230,12 @@ struct TeamTeamCombinedReducer {
                 Kokkos::Sum<int>(teamResult0), Kokkos::Prod<int>(teamResult1),
                 Kokkos::Min<int>(teamResult2), Kokkos::Max<int>(teamResult3));
 
-            teamView(0) += teamResult0;
-            teamView(1) += teamResult1;
-            teamView(2) += teamResult2;
-            teamView(3) += teamResult3;
+            if (n > 0) {
+              teamView(0) += teamResult0;
+              teamView(1) += teamResult1;
+              teamView(2) += teamResult2;
+              teamView(3) += teamResult3;
+            }
           });
         });
 
@@ -233,8 +243,8 @@ struct TeamTeamCombinedReducer {
         Kokkos::DefaultHostExecutionSpace(), teamView);
 
     EXPECT_EQ((n * (n + 1) / 2), hostView(0));
-    EXPECT_EQ(std::pow(n, n), hostView(1));
-    EXPECT_EQ(1, hostView(2));
+    EXPECT_EQ((n == 0) ? 0 : std::pow(n, n), hostView(1));
+    EXPECT_EQ((n == 0) ? 0 : 1, hostView(2));
     EXPECT_EQ(n, hostView(3));
   }
 
@@ -266,19 +276,21 @@ struct TeamTeamCombinedReducer {
                 Kokkos::Prod<int>(teamResult0), teamResult1,
                 Kokkos::Min<int>(teamResult2), teamResult3);
 
-            teamView(0) += teamResult0;
-            teamView(1) += teamResult1;
-            teamView(2) += teamResult2;
-            teamView(3) += teamResult3;
+            if (n > 0) {
+              teamView(0) += teamResult0;
+              teamView(1) += teamResult1;
+              teamView(2) += teamResult2;
+              teamView(3) += teamResult3;
+            }
           });
         });
 
     auto hostView = Kokkos::create_mirror_view_and_copy(
         Kokkos::DefaultHostExecutionSpace(), teamView);
 
-    EXPECT_EQ(std::pow(n, n), hostView(0));
+    EXPECT_EQ((n == 0) ? 0 : std::pow(n, n), hostView(0));
     EXPECT_EQ((n * (n + 1) / 2), hostView(1));
-    EXPECT_EQ(1, hostView(2));
+    EXPECT_EQ((n == 0) ? 0 : 1, hostView(2));
     EXPECT_EQ(n * n, hostView(3));
   }
 
@@ -307,12 +319,14 @@ struct TeamTeamCombinedReducer {
               },
               teamResult0, teamResult1, teamResult2, teamResult3);
 
-          Kokkos::single(Kokkos::PerTeam(team), [=]() {
-            teamView(0) += teamResult0;
-            teamView(1) += teamResult1;
-            teamView(2) += teamResult2;
-            teamView(3) += teamResult3;
-          });
+          if (n > 0) {
+            Kokkos::single(Kokkos::PerTeam(team), [=]() {
+              teamView(0) += teamResult0;
+              teamView(1) += teamResult1;
+              teamView(2) += teamResult2;
+              teamView(3) += teamResult3;
+            });
+          }
         });
 
     auto hostView = Kokkos::create_mirror_view_and_copy(
@@ -350,20 +364,22 @@ struct TeamTeamCombinedReducer {
               Kokkos::Sum<int>(teamResult0), Kokkos::Prod<int>(teamResult1),
               Kokkos::Min<int>(teamResult2), Kokkos::Max<int>(teamResult3));
 
-          Kokkos::single(Kokkos::PerTeam(team), [=]() {
-            teamView(0) += teamResult0;
-            teamView(1) += teamResult1;
-            teamView(2) += teamResult2;
-            teamView(3) += teamResult3;
-          });
+          if (n > 0) {
+            Kokkos::single(Kokkos::PerTeam(team), [=]() {
+              teamView(0) += teamResult0;
+              teamView(1) += teamResult1;
+              teamView(2) += teamResult2;
+              teamView(3) += teamResult3;
+            });
+          }
         });
 
     auto hostView = Kokkos::create_mirror_view_and_copy(
         Kokkos::DefaultHostExecutionSpace(), teamView);
 
     EXPECT_EQ((n * (n + 1) / 2), hostView(0));
-    EXPECT_EQ(std::pow(n, n), hostView(1));
-    EXPECT_EQ(1, hostView(2));
+    EXPECT_EQ((n == 0) ? 0 : std::pow(n, n), hostView(1));
+    EXPECT_EQ((n == 0) ? 0 : 1, hostView(2));
     EXPECT_EQ(n, hostView(3));
   }
 
@@ -393,12 +409,14 @@ struct TeamTeamCombinedReducer {
               teamResult0, Kokkos::Sum<int>(teamResult1),
               Kokkos::Max<int>(teamResult2), teamResult3);
 
-          Kokkos::single(Kokkos::PerTeam(team), [=]() {
-            teamView(0) += teamResult0;
-            teamView(1) += teamResult1;
-            teamView(2) += teamResult2;
-            teamView(3) += teamResult3;
-          });
+          if (n > 0) {
+            Kokkos::single(Kokkos::PerTeam(team), [=]() {
+              teamView(0) += teamResult0;
+              teamView(1) += teamResult1;
+              teamView(2) += teamResult2;
+              teamView(3) += teamResult3;
+            });
+          }
         });
 
     auto hostView = Kokkos::create_mirror_view_and_copy(
@@ -415,6 +433,7 @@ TEST(TEST_CATEGORY, team_thread_range_combined_reducers) {
   TeamTeamCombinedReducer tester;
   tester.test_team_thread_range_only_scalars(5);
   tester.test_team_thread_range_only_builtin(7);
+  tester.test_team_thread_range_combined_reducers(0);
   tester.test_team_thread_range_combined_reducers(9);
 }
 
@@ -422,6 +441,7 @@ TEST(TEST_CATEGORY, thread_vector_range_combined_reducers) {
   TeamTeamCombinedReducer tester;
   tester.test_thread_vector_range_only_scalars(5);
   tester.test_thread_vector_range_only_builtin(7);
+  tester.test_thread_vector_range_combined_reducers(0);
   tester.test_thread_vector_range_combined_reducers(9);
 }
 
@@ -429,6 +449,7 @@ TEST(TEST_CATEGORY, team_vector_range_combined_reducers) {
   TeamTeamCombinedReducer tester;
   tester.test_team_vector_range_only_scalars(5);
   tester.test_team_vector_range_only_builtin(7);
+  tester.test_team_vector_range_combined_reducers(0);
   tester.test_team_vector_range_combined_reducers(9);
 }
 
