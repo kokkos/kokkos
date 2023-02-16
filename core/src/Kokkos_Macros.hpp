@@ -648,7 +648,10 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 #if (defined(KOKKOS_COMPILER_GNU) || defined(KOKKOS_COMPILER_CLANG) ||  \
      defined(KOKKOS_COMPILER_INTEL) || defined(KOKKOS_COMPILER_PGI)) && \
     !defined(_WIN32)
+// disable stacktrace for musl-libc
+#if !defined(__linux__) || defined(__GLIBC_MINOR__)
 #define KOKKOS_IMPL_ENABLE_STACKTRACE
+#endif
 #define KOKKOS_IMPL_ENABLE_CXXABI
 #endif
 
