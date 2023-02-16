@@ -1705,7 +1705,7 @@ struct RankDataType<ValueType, 0> {
 
 template <unsigned N, typename... Args>
 KOKKOS_FUNCTION std::enable_if_t<
-    N == View<Args...>::rank &&
+    N == View<Args...>::rank() &&
         std::is_same<typename ViewTraits<Args...>::specialize, void>::value,
     View<Args...>>
 as_view_of_rank_n(View<Args...> v) {
@@ -1716,7 +1716,7 @@ as_view_of_rank_n(View<Args...> v) {
 // never be called
 template <unsigned N, typename T, typename... Args>
 KOKKOS_FUNCTION std::enable_if_t<
-    N != View<T, Args...>::rank &&
+    N != View<T, Args...>::rank() &&
         std::is_same<typename ViewTraits<T, Args...>::specialize, void>::value,
     View<typename RankDataType<typename View<T, Args...>::value_type, N>::type,
          Args...>>
