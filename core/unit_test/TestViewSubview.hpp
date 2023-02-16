@@ -2115,6 +2115,9 @@ struct TestSubviewMemoryTraitsConstruction {
         Kokkos::View<double*, Kokkos::HostSpace, memory_traits_type>;
     using size_type = typename view_type::size_type;
 
+    // Create a managed View first and then apply the desired memory traits to
+    // an unmanaged version of it since a managed View can't use the Unmanaged
+    // trait.
     Kokkos::View<double*, Kokkos::HostSpace> v_original("v", 7);
     view_type v(v_original.data(), v_original.size());
     for (size_type i = 0; i != v.size(); ++i) v[i] = static_cast<double>(i);
