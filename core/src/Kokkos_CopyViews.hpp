@@ -1636,19 +1636,19 @@ inline void deep_copy(
           "match: ");
       message += dst.label();
       message += "(";
-      for (int r = 0; r < dst_type::rank - 1; r++) {
-        message += std::to_string(dst.extent(r));
+      message += std::to_string(dst.extent(0));
+      for (size_t r = 1; r < dst_type::rank; r++) {
         message += ",";
+        message += std::to_string(dst.extent(r));
       }
-      message += std::to_string(dst.extent(dst_type::rank - 1));
       message += ") ";
       message += src.label();
       message += "(";
-      for (int r = 0; r < src_type::rank - 1; r++) {
-        message += std::to_string(src.extent(r));
+      message += std::to_string(src.extent(0));
+      for (size_t r = 1; r < src_type::rank; r++) {
         message += ",";
+        message += std::to_string(src.extent(r));
       }
-      message += std::to_string(src.extent(src_type::rank - 1));
       message += ") ";
 
       Kokkos::Impl::throw_runtime_exception(message);
@@ -1719,19 +1719,19 @@ inline void deep_copy(
         "Deprecation Error: Kokkos::deep_copy extents of views don't match: ");
     message += dst.label();
     message += "(";
-    for (int r = 0; r < dst_type::rank - 1; r++) {
-      message += std::to_string(dst.extent(r));
+    message += std::to_string(dst.extent(0));
+    for (size_t r = 1; r < dst_type::rank; r++) {
       message += ",";
+      message += std::to_string(dst.extent(r));
     }
-    message += std::to_string(dst.extent(dst_type::rank - 1));
     message += ") ";
     message += src.label();
     message += "(";
-    for (int r = 0; r < src_type::rank - 1; r++) {
-      message += std::to_string(src.extent(r));
+    message += std::to_string(src.extent(0));
+    for (size_t r = 1; r < src_type::rank; r++) {
       message += ",";
+      message += std::to_string(src.extent(r));
     }
-    message += std::to_string(src.extent(src_type::rank - 1));
     message += ") ";
 
     Kokkos::Impl::throw_runtime_exception(message);
@@ -2800,19 +2800,19 @@ inline void deep_copy(
           "match: ");
       message += dst.label();
       message += "(";
-      for (int r = 0; r < dst_type::rank - 1; r++) {
-        message += std::to_string(dst.extent(r));
+      message += std::to_string(dst.extent(0));
+      for (size_t r = 1; r < dst_type::rank; r++) {
         message += ",";
+        message += std::to_string(dst.extent(r));
       }
-      message += std::to_string(dst.extent(dst_type::rank - 1));
       message += ") ";
       message += src.label();
       message += "(";
-      for (int r = 0; r < src_type::rank - 1; r++) {
-        message += std::to_string(src.extent(r));
+      message += std::to_string(src.extent(0));
+      for (size_t r = 1; r < src_type::rank; r++) {
         message += ",";
+        message += std::to_string(src.extent(r));
       }
-      message += std::to_string(src.extent(src_type::rank - 1));
       message += ") ";
 
       Kokkos::Impl::throw_runtime_exception(message);
@@ -2869,19 +2869,19 @@ inline void deep_copy(
         "Deprecation Error: Kokkos::deep_copy extents of views don't match: ");
     message += dst.label();
     message += "(";
-    for (int r = 0; r < dst_type::rank - 1; r++) {
-      message += std::to_string(dst.extent(r));
+    message += std::to_string(dst.extent(0));
+    for (size_t r = 1; r < dst_type::rank; r++) {
       message += ",";
+      message += std::to_string(dst.extent(r));
     }
-    message += std::to_string(dst.extent(dst_type::rank - 1));
     message += ") ";
     message += src.label();
     message += "(";
-    for (int r = 0; r < src_type::rank - 1; r++) {
-      message += std::to_string(src.extent(r));
+    message += std::to_string(src.extent(0));
+    for (size_t r = 1; r < src_type::rank; r++) {
       message += ",";
+      message += std::to_string(src.extent(r));
     }
-    message += std::to_string(src.extent(src_type::rank - 1));
     message += ") ";
 
     Kokkos::Impl::throw_runtime_exception(message);
