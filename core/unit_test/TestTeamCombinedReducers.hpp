@@ -487,7 +487,7 @@ TEST(TEST_CATEGORY, team_vector_range_combined_reducers) {
                  << TEST_EXECSPACE::name();
 #endif
 
-#ifdef KOKKOS_ENABLE_OPENACC // FIXME_OPENACC
+#ifdef KOKKOS_ENABLE_OPENACC  // FIXME_OPENACC
   if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenACC>)
     GTEST_SKIP() << "team_reduce with a generic reducer is not implemented for "
                  << TEST_EXECSPACE::name();
