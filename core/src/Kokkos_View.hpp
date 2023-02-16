@@ -34,6 +34,7 @@ static_assert(false,
 #include <View/Hooks/Kokkos_ViewHooks.hpp>
 
 #include <impl/Kokkos_Tools.hpp>
+#include <impl/Kokkos_Utilities.hpp>  // Impl::integral_constant
 
 #ifdef KOKKOS_ENABLE_IMPL_MDSPAN
 #include <View/MDSpan/Kokkos_MDSpan_Extents.hpp>
@@ -644,6 +645,11 @@ class View : public ViewTraits<DataType, Properties...> {
   //----------------------------------------
   // Domain rank and extents
 
+  static constexpr Impl::integral_constant<size_t, traits::dimension::rank>
+      rank = {};
+  static constexpr Impl::integral_constant<size_t,
+                                           traits::dimension::rank_dynamic>
+      rank_dynamic = {};
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   enum {Rank KOKKOS_DEPRECATED_WITH_COMMENT("Use rank instead.") =
             map_type::Rank};
