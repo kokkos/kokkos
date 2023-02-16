@@ -503,7 +503,7 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce_combined_reducers_impl(
     BoundaryStructType const& boundaries, Functor const& functor,
     ReturnType1&& returnType1, ReturnType2&& returnType2,
     ReturnTypes&&... returnTypes) noexcept {
-  using mem_space_type = DefaultExecutionSpace::memory_space;
+  using mem_space_type = typename MemberType::execution_space::memory_space;
 
   auto combined_value = Impl::make_combined_reducer_value<mem_space_type>(
       returnType1, returnType2, returnTypes...);
