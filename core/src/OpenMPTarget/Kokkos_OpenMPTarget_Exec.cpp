@@ -113,7 +113,9 @@ void OpenMPTargetExec::resize_scratch(int64_t team_size, int64_t shmem_size_L0,
   // max_active_teams is the number of active teams on the given hardware.
   // We set the number of teams to be twice the number of max_active_teams for
   // the compiler to pick the right number in its case.
+#if !defined(KOKKOS_COMPILER_CRAY_LLVM)
   omp_set_num_teams(max_active_teams * 2);
+#endif
 
   // Total amount of scratch memory allocated is depenedent
   // on the maximum number of in-flight teams possible.
