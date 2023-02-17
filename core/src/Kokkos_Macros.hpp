@@ -163,8 +163,8 @@
 #endif
 
 #if defined(__NVCOMPILER)
-#define KOKKOS_COMPILER_NVHPC                              \
-  __NVCOMPILER_MAJOR__ * 100 + __NVCOMPILER_MINOR__ * 10 + \
+#define KOKKOS_COMPILER_NVHPC                                 \
+  __NVCOMPILER_MAJOR__ * 10000 + __NVCOMPILER_MINOR__ * 100 + \
       __NVCOMPILER_PATCHLEVEL__
 #endif
 
