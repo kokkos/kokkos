@@ -1546,12 +1546,12 @@ template <class ReturnType, class FunctorType>
 struct ParallelReduceReturnValue<
     std::enable_if_t<Kokkos::is_reducer<ReturnType>::value>, ReturnType,
     FunctorType> {
-  using return_type  = ReturnType;
+  using return_type  = typename ReturnType::result_view_type;
   using reducer_type = ReturnType;
   using value_type   = typename return_type::value_type;
 
-  static return_type return_value(ReturnType& return_val, const FunctorType&) {
-    return return_val;
+  static auto return_value(ReturnType& return_val, const FunctorType&) {
+    return return_val.view();
   }
 };
 
@@ -1621,23 +1621,18 @@ struct ParallelReduceAdaptor {
         typename Impl::FunctorPolicyExecutionSpace<
             FunctorType, PolicyType>::execution_space>;
 
-    if constexpr (std::is_same_v<InvalidType, PassedReducerType>) {
-      Kokkos::Impl::shared_allocation_tracking_disable();
-      CombinedFunctorReducerType functor_reducer(functor);
-      ParallelReduceType closure(
-          functor_reducer, inner_policy,
-          return_value_adapter::return_value(return_value, functor));
-      Kokkos::Impl::shared_allocation_tracking_enable();
-      closure.execute();
-    } else {
-      Kokkos::Impl::shared_allocation_tracking_disable();
-      auto reducer = return_value_adapter::return_value(return_value, functor);
-      CombinedFunctorReducerType functor_reducer(
-          functor, typename Analysis::Reducer(reducer));
-      ParallelReduceType closure(functor_reducer, inner_policy, reducer.view());
-      Kokkos::Impl::shared_allocation_tracking_enable();
-      closure.execute();
-    }
+    Kokkos::Impl::shared_allocation_tracking_disable();
+    auto functor_reducer = [&]() -> CombinedFunctorReducerType {
+      if constexpr (std::is_same_v<InvalidType, PassedReducerType>)
+        return {functor};
+      else
+        return {functor, typename Analysis::Reducer(return_value)};
+    }();
+    ParallelReduceType closure(
+        functor_reducer, inner_policy,
+        return_value_adapter::return_value(return_value, functor));
+    Kokkos::Impl::shared_allocation_tracking_enable();
+    closure.execute();
 
     Kokkos::Tools::Impl::end_parallel_reduce<PassedReducerType>(
         inner_policy, functor, label, kpID);

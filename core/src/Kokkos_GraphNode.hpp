@@ -393,21 +393,16 @@ class GraphNodeRef {
                                           combined_functor_reducer_type,
                                           Kokkos::ParallelReduceTag>;
 
-    if constexpr (std::is_same_v<InvalidType, passed_reducer_type>) {
-      combined_functor_reducer_type functor_reducer(functor);
-      return this->_then_kernel(next_kernel_t{
-          std::move(arg_name), graph_impl_ptr->get_execution_space(),
-          functor_reducer, (Policy &&) policy,
-          return_value_adapter::return_value(return_value, functor)});
-    } else {
-      auto reducer = return_value_adapter::return_value(return_value, functor);
-      combined_functor_reducer_type functor_reducer(
-          functor, typename analysis::Reducer(reducer));
-
-      return this->_then_kernel(next_kernel_t{
-          std::move(arg_name), graph_impl_ptr->get_execution_space(),
-          functor_reducer, (Policy &&) policy, reducer.view()});
-    }
+    auto functor_reducer = [&]() -> combined_functor_reducer_type {
+      if constexpr (std::is_same_v<InvalidType, passed_reducer_type>)
+        return {functor};
+      else
+        return {functor, typename analysis::Reducer(return_value)};
+    }();
+    return this->_then_kernel(next_kernel_t{
+        std::move(arg_name), graph_impl_ptr->get_execution_space(),
+        functor_reducer, (Policy &&) policy,
+        return_value_adapter::return_value(return_value, functor)});
   }
 
   template <
