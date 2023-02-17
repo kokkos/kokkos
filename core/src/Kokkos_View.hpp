@@ -1815,7 +1815,8 @@ KOKKOS_INLINE_FUNCTION bool operator==(const View<LT, LP...>& lhs,
                       typename rhs_traits::array_layout>::value &&
          std::is_same<typename lhs_traits::memory_space,
                       typename rhs_traits::memory_space>::value &&
-         lhs.rank() == rhs.rank() && lhs.data() == rhs.data() &&
+         View<LT, LP...>::rank() == View<RT, RP...>::rank() &&
+         lhs.data() == rhs.data() &&
          lhs.span() == rhs.span() && lhs.extent(0) == rhs.extent(0) &&
          lhs.extent(1) == rhs.extent(1) && lhs.extent(2) == rhs.extent(2) &&
          lhs.extent(3) == rhs.extent(3) && lhs.extent(4) == rhs.extent(4) &&
