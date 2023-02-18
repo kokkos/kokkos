@@ -458,9 +458,9 @@ class BinSort {
     if (bin_size <= 1) return;
     int lower_bound = bin_offsets(i);
     int upper_bound = lower_bound + bin_size;
-    for (int i = lower_bound + 1; i < upper_bound; ++i) {
-      int old_idx = sort_order(i);
-      int j       = i - 1;
+    for (int k = lower_bound + 1; k < upper_bound; ++k) {
+      int old_idx = sort_order(k);
+      int j       = k - 1;
       while (j >= lower_bound) {
         int new_idx = sort_order(j);
         if (!bin_op(keys_rnd, old_idx, new_idx)) break;
