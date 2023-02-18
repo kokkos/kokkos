@@ -456,18 +456,37 @@ class BinSort {
   void operator()(const bin_sort_bins_tag& /*tag*/, const int i) const {
     auto bin_size = bin_count_const(i);
     if (bin_size <= 1) return;
+    constexpr bool use_std_sort =
+#ifdef KOKKOS_ENABLE_SERIAL
+        std::is_same_v<exec_space, Kokkos::Serial> ||
+#endif
+#ifdef KOKKOS_ENABLE_OPENMP
+        std::is_same_v<exec_space, Kokkos::OpenMP> ||
+#endif
+        false;
     int lower_bound = bin_offsets(i);
     int upper_bound = lower_bound + bin_size;
-    for (int k = lower_bound + 1; k < upper_bound; ++k) {
-      int old_idx = sort_order(k);
-      int j       = k - 1;
-      while (j >= lower_bound) {
-        int new_idx = sort_order(j);
-        if (!bin_op(keys_rnd, old_idx, new_idx)) break;
-        sort_order(j + 1) = new_idx;
-        --j;
+    if (use_std_sort && bin_size > 10) {
+      if constexpr (use_std_sort) {
+        auto& bin_op_c   = bin_op;
+        auto& keys_rnd_c = keys_rnd;
+        std::sort(&sort_order(lower_bound), &sort_order(upper_bound),
+                  [&bin_op_c, &keys_rnd_c](int p, int q) {
+                    return bin_op_c(keys_rnd_c, p, q);
+                  });
       }
-      sort_order(j + 1) = old_idx;
+    } else {
+      for (int k = lower_bound + 1; k < upper_bound; ++k) {
+        int old_idx = sort_order(k);
+        int j       = k - 1;
+        while (j >= lower_bound) {
+          int new_idx = sort_order(j);
+          if (!bin_op(keys_rnd, old_idx, new_idx)) break;
+          sort_order(j + 1) = new_idx;
+          --j;
+        }
+        sort_order(j + 1) = old_idx;
+      }
     }
   }
 };
