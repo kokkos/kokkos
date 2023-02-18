@@ -320,13 +320,15 @@ struct FunctorAnalysis {
 
  private:
   template <bool IsArray, class FF>
-  KOKKOS_INLINE_FUNCTION static constexpr std::enable_if_t<IsArray, unsigned>
+  KOKKOS_INLINE_FUNCTION static constexpr std::enable_if_t<IsArray,
+                                                           unsigned int>
   get_length(FF const& f) {
     return f.value_count;
   }
 
   template <bool IsArray, class FF>
-  KOKKOS_INLINE_FUNCTION static constexpr std::enable_if_t<!IsArray, unsigned>
+  KOKKOS_INLINE_FUNCTION static constexpr std::enable_if_t<!IsArray,
+                                                           unsigned int>
   get_length(FF const&) {
     return candidate_is_void ? 0 : 1;
   }
@@ -337,12 +339,12 @@ struct FunctorAnalysis {
         !candidate_is_void && !candidate_is_array ? sizeof(ValueType) : 0
   };
 
-  KOKKOS_FORCEINLINE_FUNCTION static constexpr unsigned value_count(
+  KOKKOS_FORCEINLINE_FUNCTION static constexpr unsigned int value_count(
       const Functor& f) {
     return FunctorAnalysis::template get_length<candidate_is_array>(f);
   }
 
-  KOKKOS_FORCEINLINE_FUNCTION static constexpr unsigned value_size(
+  KOKKOS_FORCEINLINE_FUNCTION static constexpr unsigned int value_size(
       const Functor& f) {
     return FunctorAnalysis::template get_length<candidate_is_array>(f) *
            sizeof(ValueType);
@@ -351,13 +353,13 @@ struct FunctorAnalysis {
   //----------------------------------------
 
   template <class Unknown>
-  KOKKOS_FORCEINLINE_FUNCTION static constexpr unsigned value_count(
+  KOKKOS_FORCEINLINE_FUNCTION static constexpr unsigned int value_count(
       const Unknown&) {
     return candidate_is_void ? 0 : 1;
   }
 
   template <class Unknown>
-  KOKKOS_FORCEINLINE_FUNCTION static constexpr unsigned value_size(
+  KOKKOS_FORCEINLINE_FUNCTION static constexpr unsigned int value_size(
       const Unknown&) {
     return candidate_is_void ? 0 : sizeof(ValueType);
   }
@@ -903,7 +905,7 @@ struct FunctorAnalysis {
 
   struct Reducer {
    private:
-    Functor const m_functor;
+    Functor m_functor;
 
     template <bool IsArray>
     KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<IsArray, int> len() const
@@ -934,11 +936,11 @@ struct FunctorAnalysis {
       return DeduceFinal<>::value;
     }
 
-    KOKKOS_FUNCTION unsigned value_size() const {
+    KOKKOS_FUNCTION unsigned int value_size() const {
       return FunctorAnalysis::value_size(m_functor);
     }
 
-    KOKKOS_FUNCTION unsigned value_count() const {
+    KOKKOS_FUNCTION unsigned int value_count() const {
       return FunctorAnalysis::value_count(m_functor);
     }
 
