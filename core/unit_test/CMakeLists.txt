@@ -78,6 +78,7 @@ SET(COMPILE_ONLY_SOURCES
   TestInterOp.cpp
   TestStringManipulation.cpp
   TestVersionMacros.cpp
+  TestViewRank.cpp
   TestViewTypeTraits.cpp
   TestTypeList.cpp
   view/TestExtentsDatatypeConversion.cpp
