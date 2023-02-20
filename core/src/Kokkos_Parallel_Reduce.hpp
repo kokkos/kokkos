@@ -1421,6 +1421,12 @@ template <>
 struct implements_new_reduce_interface<Kokkos::Serial> : std::true_type {};
 #endif
 
+#ifdef KOKKOS_ENABLE_HPX
+template <>
+struct implements_new_reduce_interface<Kokkos::Experimental::HPX>
+    : std::true_type {};
+#endif
+
 #ifdef KOKKOS_ENABLE_CUDA
 template <>
 struct implements_new_reduce_interface<Kokkos::Cuda> : std::true_type {};
