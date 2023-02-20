@@ -1904,6 +1904,7 @@ TEST(TEST_CATEGORY, ThreadVectorMDRangeParallelReduce) {
     GTEST_SKIP() << "skipping because of bug in group_barrier implementation";
 #endif
 
+// FIXME_OPENMPTARGET_CRAY: The unit tests fails correctness.
 #if defined(KOKKOS_ENABLE_OPENMPTARGET) && defined(KOKKOS_COMPILER_CRAYCLANG)
   if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenMPTarget>)
     GTEST_SKIP() << "Cray compiler fails correctness at runtime with the "
@@ -1943,6 +1944,7 @@ TEST(TEST_CATEGORY, TeamVectorMDRangeParallelReduce) {
     GTEST_SKIP() << "skipping because of bug in group_barrier implementation";
 #endif
 
+// FIXME_OPENMPTARGET_CRAY: The unit tests fails correctness.
 #if defined(KOKKOS_ENABLE_OPENMPTARGET) && defined(KOKKOS_COMPILER_CRAYCLANG)
   if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenMPTarget>)
     GTEST_SKIP() << "Cray compiler fails correctness at runtime with the "
