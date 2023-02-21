@@ -34,11 +34,12 @@
 #endif
 
 //----------------------------------------------------------------------------
-// Have assumed a 64bit build (8byte pointers) throughout the code base.
-
+// Have assumed a 64-bit build (8-byte pointers) throughout the code base.
+// 32-bit build allowed but unsupported.
+#ifndef KOKKOS_32_BIT
 static_assert(sizeof(void *) == 8,
               "Kokkos assumes 64-bit build; i.e., 8-byte pointers");
-
+#endif
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
