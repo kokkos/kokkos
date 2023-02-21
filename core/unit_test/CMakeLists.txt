@@ -112,6 +112,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
     # file. That then exceeded the shell command line max length.
     set(${Tag}_SOURCES1A)
     foreach(Name
+        BitManipulationBuiltins
         AtomicOperations_int
         AtomicOperations_unsignedint
         AtomicOperations_longint

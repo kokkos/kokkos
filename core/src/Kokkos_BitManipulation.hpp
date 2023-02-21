@@ -155,4 +155,204 @@ bit_width(T x) noexcept {
 
 }  // namespace Kokkos
 
+namespace Kokkos::Impl {
+
+#if defined(KOKKOS_COMPILER_CLANG) || defined(KOKKOS_COMPILER_GCC)
+#define KOKKOS_IMPL_USE_GCC_BUILT_IN_FUNCTIONS
+#endif
+
+template <class T>
+KOKKOS_IMPL_DEVICE_FUNCTION
+    std::enable_if_t<is_standard_unsigned_integer_type_v<T>, int>
+    countl_zero_builtin_device(T x) noexcept {
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
+  if constexpr (sizeof(T) == sizeof(long long int)) {
+    return __clzll(reinterpret_cast<long long int&>(x));
+  } else if constexpr (sizeof(T) == sizeof(int)) {
+    return __clz(reinterpret_cast<int&>(x));
+  } else {
+    using ::Kokkos::Experimental::digits_v;
+    constexpr int shift = digits_v<unsigned int> - digits_v<T>;
+    return __clz(x) - shift;
+  }
+#elif defined(KOKKOS_ENABLE_SYCL)
+  return sycl::clz(x);
+#else
+  return countl_zero_fallback(x);
+#endif
+}
+
+template <class T>
+KOKKOS_IMPL_HOST_FUNCTION
+    std::enable_if_t<is_standard_unsigned_integer_type_v<T>, int>
+    countl_zero_builtin_host(T x) noexcept {
+  using ::Kokkos::Experimental::digits_v;
+  if (x == 0) return digits_v<T>;
+#ifdef KOKKOS_IMPL_USE_GCC_BUILT_IN_FUNCTIONS
+  if constexpr (std::is_same_v<T, unsigned long long>) {
+    return __builtin_clzll(x);
+  } else if constexpr (std::is_same_v<T, unsigned long>) {
+    return __builtin_clzl(x);
+  } else if constexpr (std::is_same_v<T, unsigned int>) {
+    return __builtin_clz(x);
+  } else {
+    constexpr int shift = digits_v<unsigned int> - digits_v<T>;
+    return __builtin_clz(x) - shift;
+  }
+#else
+  return countl_zero_fallback(x);
+#endif
+}
+
+template <class T>
+KOKKOS_IMPL_DEVICE_FUNCTION
+    std::enable_if_t<is_standard_unsigned_integer_type_v<T>, int>
+    countr_zero_builtin_device(T x) noexcept {
+  using ::Kokkos::Experimental::digits_v;
+  if (x == 0) return digits_v<T>;
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
+  if constexpr (sizeof(T) == sizeof(long long int)) {
+    return __ffsll(reinterpret_cast<long long int&>(x)) - 1;
+  } else {
+    return __ffs(reinterpret_cast<int&>(x)) - 1;
+  }
+#elif defined(KOKKOS_ENABLE_SYCL)
+  return sycl::ctz(x);
+#else
+  return countr_zero_fallback(x);
+#endif
+}
+
+template <class T>
+KOKKOS_IMPL_HOST_FUNCTION
+    std::enable_if_t<is_standard_unsigned_integer_type_v<T>, int>
+    countr_zero_builtin_host(T x) noexcept {
+  using ::Kokkos::Experimental::digits_v;
+  if (x == 0) return digits_v<T>;
+#ifdef KOKKOS_IMPL_USE_GCC_BUILT_IN_FUNCTIONS
+  if constexpr (std::is_same_v<T, unsigned long long>) {
+    return __builtin_ctzll(x);
+  } else if constexpr (std::is_same_v<T, unsigned long>) {
+    return __builtin_ctzl(x);
+  } else {
+    return __builtin_ctz(x);
+  }
+#else
+  return countr_zero_fallback(x);
+#endif
+}
+
+template <class T>
+KOKKOS_IMPL_DEVICE_FUNCTION
+    std::enable_if_t<is_standard_unsigned_integer_type_v<T>, int>
+    popcount_builtin_device(T x) noexcept {
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
+  if constexpr (sizeof(T) == sizeof(long long int)) {
+    return __popcll(x);
+  } else {
+    return __popc(x);
+  }
+#elif defined(KOKKOS_ENABLE_SYCL)
+  return sycl::popcount(x);
+#else
+  return popcount_fallback(x);
+#endif
+}
+
+template <class T>
+KOKKOS_IMPL_HOST_FUNCTION
+    std::enable_if_t<is_standard_unsigned_integer_type_v<T>, int>
+    popcount_builtin_host(T x) noexcept {
+#ifdef KOKKOS_IMPL_USE_GCC_BUILT_IN_FUNCTIONS
+  if constexpr (std::is_same_v<T, unsigned long long>) {
+    return __builtin_popcountll(x);
+  } else if constexpr (std::is_same_v<T, unsigned long>) {
+    return __builtin_popcountl(x);
+  } else {
+    return __builtin_popcount(x);
+  }
+#else
+  return popcount_fallback(x);
+#endif
+}
+
+#undef KOKKOS_IMPL_USE_GCC_BUILT_IN_FUNCTIONS
+
+}  // namespace Kokkos::Impl
+
+namespace Kokkos::Experimental {
+
+template <class T>
+KOKKOS_FUNCTION std::enable_if_t<
+    ::Kokkos::Impl::is_standard_unsigned_integer_type_v<T>, int>
+countl_zero_builtin(T x) noexcept {
+  KOKKOS_IF_ON_DEVICE((return ::Kokkos::Impl::countl_zero_builtin_device(x);))
+  KOKKOS_IF_ON_HOST((return ::Kokkos::Impl::countl_zero_builtin_host(x);))
+}
+
+template <class T>
+KOKKOS_FUNCTION std::enable_if_t<
+    ::Kokkos::Impl::is_standard_unsigned_integer_type_v<T>, int>
+countl_one_builtin(T x) noexcept {
+  if (x == finite_max_v<T>) return digits_v<T>;
+  return countl_zero_builtin(static_cast<T>(~x));
+}
+
+template <class T>
+KOKKOS_FUNCTION std::enable_if_t<
+    ::Kokkos::Impl::is_standard_unsigned_integer_type_v<T>, int>
+countr_zero_builtin(T x) noexcept {
+  KOKKOS_IF_ON_DEVICE((return ::Kokkos::Impl::countr_zero_builtin_device(x);))
+  KOKKOS_IF_ON_HOST((return ::Kokkos::Impl::countr_zero_builtin_host(x);))
+}
+
+template <class T>
+KOKKOS_FUNCTION std::enable_if_t<
+    ::Kokkos::Impl::is_standard_unsigned_integer_type_v<T>, int>
+countr_one_builtin(T x) noexcept {
+  if (x == finite_max_v<T>) return digits_v<T>;
+  return countr_zero_builtin(static_cast<T>(~x));
+}
+
+template <class T>
+KOKKOS_FUNCTION std::enable_if_t<
+    ::Kokkos::Impl::is_standard_unsigned_integer_type_v<T>, int>
+popcount_builtin(T x) noexcept {
+  KOKKOS_IF_ON_DEVICE((return ::Kokkos::Impl::popcount_builtin_device(x);))
+  KOKKOS_IF_ON_HOST((return ::Kokkos::Impl::popcount_builtin_host(x);))
+}
+
+template <class T>
+KOKKOS_FUNCTION std::enable_if_t<
+    ::Kokkos::Impl::is_standard_unsigned_integer_type_v<T>, bool>
+has_single_bit_builtin(T x) noexcept {
+  return has_single_bit(x);  // no benefit to call the _builtin variant
+}
+
+template <class T>
+KOKKOS_FUNCTION
+    std::enable_if_t<::Kokkos::Impl::is_standard_unsigned_integer_type_v<T>, T>
+    bit_ceil_builtin(T x) noexcept {
+  if (x <= 1) return 1;
+  return T{1} << (digits_v<T> - countl_zero_builtin(static_cast<T>(x - 1)));
+}
+
+template <class T>
+KOKKOS_FUNCTION
+    std::enable_if_t<::Kokkos::Impl::is_standard_unsigned_integer_type_v<T>, T>
+    bit_floor_builtin(T x) noexcept {
+  if (x == 0) return 0;
+  return T{1} << (digits_v<T> - 1 - countl_zero_builtin(x));
+}
+
+template <class T>
+KOKKOS_FUNCTION
+    std::enable_if_t<::Kokkos::Impl::is_standard_unsigned_integer_type_v<T>, T>
+    bit_width_builtin(T x) noexcept {
+  if (x == 0) return 0;
+  return digits_v<T> - countl_zero_builtin(x);
+}
+
+}  // namespace Kokkos::Experimental
+
 #endif
