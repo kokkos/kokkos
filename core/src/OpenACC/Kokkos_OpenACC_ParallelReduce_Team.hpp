@@ -39,26 +39,21 @@ struct OpenACCParallelReduceTeamHelper {
 
 }  // namespace Kokkos::Experimental::Impl
 
-template <class FunctorType, class ReducerType, class... Properties>
-class Kokkos::Impl::ParallelReduce<FunctorType,
+template <class CombinedFunctorReducerType, class... Properties>
+class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
                                    Kokkos::TeamPolicy<Properties...>,
-                                   ReducerType, Kokkos::Experimental::OpenACC> {
+                                   Kokkos::Experimental::OpenACC> {
  private:
   using Policy =
       TeamPolicyInternal<Kokkos::Experimental::OpenACC, Properties...>;
+  using FunctorType = typename CombinedFunctorReducerType::functor_type;
+  using ReducerType = typename CombinedFunctorReducerType::reducer_type;
 
-  using ReducerConditional =
-      Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
-                         FunctorType, ReducerType>;
-  using ReducerTypeFwd = typename ReducerConditional::type;
-  using Analysis =
-      FunctorAnalysis<FunctorPatternInterface::REDUCE, Policy, ReducerTypeFwd>;
-  using value_type   = typename Analysis::value_type;
-  using pointer_type = typename Analysis::pointer_type;
+  using value_type   = typename ReducerType::value_type;
+  using pointer_type = typename ReducerType::pointer_type;
 
-  FunctorType m_functor;
+  CombinedFunctorReducerType m_functor_reducer;
   Policy m_policy;
-  ReducerType m_reducer;
   pointer_type m_result_ptr;
 
  public:
@@ -68,35 +63,28 @@ class Kokkos::Impl::ParallelReduce<FunctorType,
     auto vector_length = m_policy.impl_vector_length();
 
     value_type tmp;
-    typename Analysis::Reducer final_reducer(
-        ReducerConditional::select(m_functor, m_reducer));
-    final_reducer.init(&tmp);
+    const ReducerType& reducer = m_functor_reducer.get_reducer();
+    reducer.init(&tmp);
 
     Kokkos::Experimental::Impl::OpenACCParallelReduceTeamHelper(
         Kokkos::Experimental::Impl::FunctorAdapter<FunctorType, Policy>(
-            m_functor),
-        std::conditional_t<is_reducer_v<ReducerType>, ReducerType,
-                           Sum<value_type>>(tmp),
+            m_functor_reducer.get_functor()),
+        std::conditional_t<
+            std::is_same_v<FunctorType, typename ReducerType::functor_type>,
+            Sum<value_type>, typename ReducerType::functor_type>(tmp),
         m_policy);
+
+    reducer.final(&tmp);
 
     m_result_ptr[0] = tmp;
   }
 
   template <class ViewType>
-  ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
-                 const ViewType& arg_result_view,
-                 std::enable_if_t<Kokkos::is_view_v<ViewType>>* = nullptr)
-      : m_functor(arg_functor),
+  ParallelReduce(const CombinedFunctorReducerType& arg_functor_reducer,
+                 const Policy& arg_policy, const ViewType& arg_result_view)
+      : m_functor_reducer(arg_functor_reducer),
         m_policy(arg_policy),
-        m_reducer(InvalidType()),
         m_result_ptr(arg_result_view.data()) {}
-
-  ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
-                 const ReducerType& reducer)
-      : m_functor(arg_functor),
-        m_policy(arg_policy),
-        m_reducer(reducer),
-        m_result_ptr(reducer.view().data()) {}
 };
 
 namespace Kokkos {
