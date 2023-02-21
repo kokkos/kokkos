@@ -296,6 +296,18 @@ class UnorderedMap {
     Kokkos::deep_copy(m_next_index, invalid_index);
   }
 
+  /// When creating a host mirror of UnorderedMap within
+  /// a deeper scope than the original map, the mutable
+  /// m_size member within the original map gets reset
+  /// to 0 when the host mirror object falls out of scope.
+  /// Calling set_flag upon destruction ensures that m_size
+  /// will be recomputed in the parent scope. I think this
+  /// is only a problem when the original map resides on
+  /// the host since some of the host mirror members likely
+  /// point to the same memory locations as the original map
+  /// members.
+  ~UnorderedMap() { set_flag(modified_idx); }
+
   void reset_failed_insert_flag() { reset_flag(failed_insert_idx); }
 
   histogram_type get_histogram() { return histogram_type(*this); }
