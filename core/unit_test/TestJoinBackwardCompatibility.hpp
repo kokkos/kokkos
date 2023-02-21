@@ -19,6 +19,7 @@
 
 #ifndef KOKKOS_ENABLE_OPENACC  // FIXME_OPENACC - temporarily disabled due to
                                // unimplemented reduction features
+#ifndef KOKKOS_COMPILER_NVHPC // doesn't work with 23.1
 namespace {
 
 // FIXME_NVHPC 23.3 errors out when using enums here
@@ -146,4 +147,5 @@ TEST(TEST_CATEGORY, join_backward_compatibility) {
 }
 
 }  // namespace
+#endif
 #endif
