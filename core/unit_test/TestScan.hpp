@@ -148,10 +148,16 @@ struct TestScan {
 
 TEST(TEST_CATEGORY, scan) {
   constexpr auto imbalance_size = 1000;
+#ifdef KOKKOS_32_BIT
+  TestScan<TEST_EXECSPACE, int32_t, imbalance_size>::test_range(1, 1000);
+  TestScan<TEST_EXECSPACE, int32_t, imbalance_size>(0);
+  TestScan<TEST_EXECSPACE, int32_t, imbalance_size>(100000);
+#else
   TestScan<TEST_EXECSPACE, int64_t, imbalance_size>::test_range(1, 1000);
   TestScan<TEST_EXECSPACE, int64_t, imbalance_size>(0);
   TestScan<TEST_EXECSPACE, int64_t, imbalance_size>(100000);
   TestScan<TEST_EXECSPACE, int64_t, imbalance_size>(10000000);
+#endif
 }
 
 TEST(TEST_CATEGORY, small_size_scan) {
