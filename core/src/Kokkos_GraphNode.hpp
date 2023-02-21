@@ -377,28 +377,23 @@ class GraphNodeRef {
                                         Kokkos::Impl::KernelInGraphProperty{});
 
     using passed_reducer_type = typename return_value_adapter::reducer_type;
-    using reducer_type =
-        std::conditional_t<std::is_same_v<InvalidType, passed_reducer_type>,
-                           functor_type, passed_reducer_type>;
-    using analysis = Kokkos::Impl::FunctorAnalysis<
-        Kokkos::Impl::FunctorPatternInterface::REDUCE, Policy, reducer_type>;
 
-    using combined_functor_reducer_type =
-        Kokkos::Impl::CombinedFunctorReducer<functor_type,
-                                             typename analysis::Reducer>;
+    using reducer_selector = Kokkos::Impl::if_c<
+        std::is_same<InvalidType, passed_reducer_type>::value, functor_type,
+        passed_reducer_type>;
+    using analysis = Kokkos::Impl::FunctorAnalysis<
+        Kokkos::Impl::FunctorPatternInterface::REDUCE, Policy,
+        typename reducer_selector::type>;
+    Kokkos::Impl::CombinedFunctorReducer functor_reducer(
+        functor, typename analysis::Reducer(
+                     reducer_selector::select(functor, return_value)));
 
     using next_policy_t = decltype(policy);
     using next_kernel_t =
         Kokkos::Impl::GraphNodeKernelImpl<ExecutionSpace, next_policy_t,
-                                          combined_functor_reducer_type,
+                                          decltype(functor_reducer),
                                           Kokkos::ParallelReduceTag>;
 
-    auto functor_reducer = [&]() -> combined_functor_reducer_type {
-      if constexpr (std::is_same_v<InvalidType, passed_reducer_type>)
-        return {functor};
-      else
-        return {functor, typename analysis::Reducer(return_value)};
-    }();
     return this->_then_kernel(next_kernel_t{
         std::move(arg_name), graph_impl_ptr->get_execution_space(),
         functor_reducer, (Policy &&) policy,
