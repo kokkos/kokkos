@@ -932,12 +932,10 @@ void __test_half_operators(half_type h_lhs, half_type h_rhs) {
   Kokkos::deep_copy(f_device_expected_lhs, f_device.expected_lhs);
   for (int op_test = 0; op_test < N_OP_TESTS; op_test++) {
     // printf("op_test = %d\n", op_test);
-    if (op_test != PASS_BY_REF) {
-      ASSERT_NEAR(f_device_actual_lhs(op_test), f_device_expected_lhs(op_test),
-                  epsilon);
-      ASSERT_NEAR(f_host.actual_lhs(op_test), f_host.expected_lhs(op_test),
-                  epsilon);
-    }
+    ASSERT_NEAR(f_device_actual_lhs(op_test), f_device_expected_lhs(op_test),
+                epsilon);
+    ASSERT_NEAR(f_host.actual_lhs(op_test), f_host.expected_lhs(op_test),
+                epsilon);
   }
 
 // volatile-qualified parameter type 'volatile half_type' is deprecated
