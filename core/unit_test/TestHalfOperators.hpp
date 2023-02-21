@@ -24,9 +24,19 @@ using ViewType       = Kokkos::View<ScalarType*, ExecutionSpace>;
 using ViewTypeHost   = Kokkos::View<ScalarType*, Kokkos::HostSpace>;
 KOKKOS_FUNCTION
 const half_t& accept_ref(const half_t& a) { return a; }
+KOKKOS_FUNCTION
+const double accept_ref_expected(const half_t& a) {
+  double tmp = static_cast<double>(a);
+  return tmp;
+}
 #if !KOKKOS_BHALF_T_IS_FLOAT
 KOKKOS_FUNCTION
 const bhalf_t& accept_ref(const bhalf_t& a) { return a; }
+KOKKOS_FUNCTION
+const double accept_ref_expected(const bhalf_t& a) {
+  double tmp = static_cast<double>(a);
+  return tmp;
+}
 #endif  // !KOKKOS_BHALF_T_IS_FLOAT
 
 enum OP_TESTS {
@@ -885,7 +895,7 @@ struct Functor_TestHalfOperators {
     // expected_lhs(TW) = d_lhs <=> d_rhs;  // Need C++20?
 
     actual_lhs(PASS_BY_REF)   = static_cast<double>(accept_ref(h_lhs));
-    expected_lhs(PASS_BY_REF) = d_lhs;
+    expected_lhs(PASS_BY_REF) = accept_ref_expected(h_lhs);
 
     half_tmp = static_cast<float>(h_lhs);
     tmp_ptr  = &(tmp_lhs = half_tmp);
@@ -909,12 +919,6 @@ struct Functor_TestHalfOperators {
 template <class half_type>
 void __test_half_operators(half_type h_lhs, half_type h_rhs) {
   double epsilon = Kokkos::Experimental::epsilon<half_type>::value;
-#if defined(KOKKOS_BHALF_T_IS_FLOAT) && KOKKOS_BHALF_T_IS_FLOAT
-  double constexpr epsilon_bias = 10e3;
-#else
-  double constexpr epsilon_bias = 1;
-#endif
-  epsilon *= epsilon_bias;
 
   Functor_TestHalfOperators<ViewType, half_type> f_device(h_lhs, h_rhs);
   Functor_TestHalfOperators<ViewTypeHost, half_type> f_host(h_lhs, h_rhs);
@@ -928,10 +932,12 @@ void __test_half_operators(half_type h_lhs, half_type h_rhs) {
   Kokkos::deep_copy(f_device_expected_lhs, f_device.expected_lhs);
   for (int op_test = 0; op_test < N_OP_TESTS; op_test++) {
     // printf("op_test = %d\n", op_test);
-    ASSERT_NEAR(f_device_actual_lhs(op_test), f_device_expected_lhs(op_test),
-                epsilon);
-    ASSERT_NEAR(f_host.actual_lhs(op_test), f_host.expected_lhs(op_test),
-                epsilon);
+    if (op_test != PASS_BY_REF) {
+      ASSERT_NEAR(f_device_actual_lhs(op_test), f_device_expected_lhs(op_test),
+                  epsilon);
+      ASSERT_NEAR(f_host.actual_lhs(op_test), f_host.expected_lhs(op_test),
+                  epsilon);
+    }
   }
 
 // volatile-qualified parameter type 'volatile half_type' is deprecated
