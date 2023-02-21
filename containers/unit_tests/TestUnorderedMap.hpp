@@ -54,7 +54,12 @@ struct TestInsert {
       }
     } while (rehash_on_fail && failed_count > 0u);
 
+    // Trigger the m_size mutable bug.
+    typename map_type::HostMirror map_h;
     execution_space().fence();
+    Kokkos::deep_copy(map_h, map);
+    execution_space().fence();
+    ASSERT_EQ(map_h.size(), map.size());
   }
 
   KOKKOS_INLINE_FUNCTION
