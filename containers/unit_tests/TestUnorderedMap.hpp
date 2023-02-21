@@ -65,17 +65,20 @@ struct TestInsert {
     } while (rehash_on_fail && failed_count > 0u);
 
     // Trigger the m_size mutable bug.
+    typename expected_values_type::HostMirror expected_values_h =
+        create_mirror_view(expected_values);
     typename map_type::HostMirror map_h;
     execution_space().fence();
+    Kokkos::deep_copy(expected_values_h, expected_values);
     Kokkos::deep_copy(map_h, map);
     execution_space().fence();
     ASSERT_EQ(map_h.size(), map.size());
 
     if (!rehash_on_fail) {
-      for (unsigned i = 0; i < map.size(); i++) {
-        auto map_idx = expected_values(i).map_idx;
+      for (unsigned i = 0; i < map_h.size(); i++) {
+        auto map_idx = expected_values_h(i).map_idx;
         if (map_idx != static_cast<unsigned>(~0)) {
-          ASSERT_EQ(expected_values(map_idx).v, map.value_at(map_idx));
+          ASSERT_EQ(expected_values_h(map_idx).v, map_h.value_at(map_idx));
         }
       }
     }
