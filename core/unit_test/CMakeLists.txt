@@ -75,6 +75,7 @@ SET(COMPILE_ONLY_SOURCES
   TestArray.cpp
   TestCreateMirror.cpp
   TestDetectionIdiom.cpp
+  TestBitManipulation.cpp
   TestInterOp.cpp
   TestStringManipulation.cpp
   TestVersionMacros.cpp
