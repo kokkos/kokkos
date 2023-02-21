@@ -25,7 +25,7 @@ using ViewTypeHost   = Kokkos::View<ScalarType*, Kokkos::HostSpace>;
 KOKKOS_FUNCTION
 const half_t& accept_ref(const half_t& a) { return a; }
 KOKKOS_FUNCTION
-const double accept_ref_expected(const half_t& a) {
+double accept_ref_expected(const half_t& a) {
   double tmp = static_cast<double>(a);
   return tmp;
 }
@@ -33,7 +33,7 @@ const double accept_ref_expected(const half_t& a) {
 KOKKOS_FUNCTION
 const bhalf_t& accept_ref(const bhalf_t& a) { return a; }
 KOKKOS_FUNCTION
-const double accept_ref_expected(const bhalf_t& a) {
+double accept_ref_expected(const bhalf_t& a) {
   double tmp = static_cast<double>(a);
   return tmp;
 }
