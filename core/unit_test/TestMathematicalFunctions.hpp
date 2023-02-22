@@ -311,7 +311,7 @@ struct math_function_name;
   };                                                                  \
   constexpr char math_function_name<MathUnaryFunction_##FUNC>::name[]
 
-#ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_1
+#ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_3
 // Generally the expected ULP error should come from here:
 // https://www.gnu.org/software/libc/manual/html_node/Errors-in-Math-Functions.html
 // For now 1s largely seem to work ...
@@ -327,7 +327,9 @@ DEFINE_UNARY_FUNCTION_EVAL(log, 2);
 DEFINE_UNARY_FUNCTION_EVAL(log10, 2);
 DEFINE_UNARY_FUNCTION_EVAL(log2, 2);
 DEFINE_UNARY_FUNCTION_EVAL(log1p, 2);
+#endif
 
+#ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_1
 DEFINE_UNARY_FUNCTION_EVAL(sqrt, 2);
 DEFINE_UNARY_FUNCTION_EVAL(cbrt, 2);
 
@@ -729,7 +731,9 @@ TEST(TEST_CATEGORY, mathematical_functions_fma) {
   do_test_math_ternary_function<TEST_EXECSPACE, kk3_fma>(2.l, 3.l, 4.l);
 #endif
 }
+#endif
 
+#ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_3
 TEST(TEST_CATEGORY, mathematical_functions_exponential_functions) {
   TEST_MATH_FUNCTION(exp)({-9, -8, -7, -6, -5, 4, 3, 2, 1, 0});
   TEST_MATH_FUNCTION(exp)({-9l, -8l, -7l, -6l, -5l, 4l, 3l, 2l, 1l, 0l});
@@ -821,7 +825,9 @@ TEST(TEST_CATEGORY, mathematical_functions_exponential_functions) {
   TEST_MATH_FUNCTION(log1p)({1234.l, 567.l, 89.l, -.007l});
 #endif
 }
+#endif
 
+#ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_1
 TEST(TEST_CATEGORY, mathematical_functions_hyperbolic_functions) {
   TEST_MATH_FUNCTION(sinh)({-3, -2, -1, 0, 1});
   TEST_MATH_FUNCTION(sinh)({-3l, -2l, -1l, 0l, 1l});
