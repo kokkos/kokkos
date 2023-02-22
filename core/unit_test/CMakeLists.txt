@@ -75,6 +75,7 @@ SET(COMPILE_ONLY_SOURCES
   TestArray.cpp
   TestCreateMirror.cpp
   TestDetectionIdiom.cpp
+  TestBitManipulation.cpp
   TestInterOp.cpp
   TestStringManipulation.cpp
   TestVersionMacros.cpp
@@ -112,6 +113,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
     # file. That then exceeded the shell command line max length.
     set(${Tag}_SOURCES1A)
     foreach(Name
+        BitManipulationBuiltins
         AtomicOperations_int
         AtomicOperations_unsignedint
         AtomicOperations_longint
