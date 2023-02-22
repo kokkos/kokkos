@@ -827,7 +827,7 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
                   "Incompatible OffsetView copy construction");
     Mapping::assign(m_map, aview.impl_map(), m_track);
 
-    for (int i = 0; i < aview.rank; ++i) {
+    for (size_t i = 0; i < aview.rank; ++i) {
       m_begins[i] = 0;
     }
   }

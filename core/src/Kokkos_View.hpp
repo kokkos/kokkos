@@ -645,16 +645,15 @@ class View : public ViewTraits<DataType, Properties...> {
   //----------------------------------------
   // Domain rank and extents
 
+  static constexpr Impl::integral_constant<size_t, traits::dimension::rank>
+      rank = {};
+  static constexpr Impl::integral_constant<size_t,
+                                           traits::dimension::rank_dynamic>
+      rank_dynamic = {};
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   enum {Rank KOKKOS_DEPRECATED_WITH_COMMENT("Use rank instead.") =
             map_type::Rank};
 #endif
-
-  /** \brief rank() to be implemented
-   */
-  // KOKKOS_INLINE_FUNCTION
-  // static
-  // constexpr unsigned rank() { return map_type::rank; }
 
   template <typename iType>
   KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<
@@ -815,14 +814,14 @@ class View : public ViewTraits<DataType, Properties...> {
 
   template <typename... Is>
   static KOKKOS_FUNCTION void check_access_member_function_valid_args(Is...) {
-    static_assert(traits::rank <= sizeof...(Is), "");
+    static_assert(rank <= sizeof...(Is), "");
     static_assert(sizeof...(Is) <= 8, "");
     static_assert(Kokkos::Impl::are_integral<Is...>::value, "");
   }
 
   template <typename... Is>
   static KOKKOS_FUNCTION void check_operator_parens_valid_args(Is...) {
-    static_assert(traits::rank == sizeof...(Is), "");
+    static_assert(rank == sizeof...(Is), "");
     static_assert(Kokkos::Impl::are_integral<Is...>::value, "");
   }
 
@@ -831,22 +830,22 @@ class View : public ViewTraits<DataType, Properties...> {
   // Rank 1 default map operator()
 
   template <typename I0>
-  KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
-      (Kokkos::Impl::always_true<I0>::value &&  //
-       (1 == traits::rank) && is_default_map && !is_layout_stride),
-      reference_type>
-  operator()(I0 i0) const {
+  KOKKOS_FORCEINLINE_FUNCTION
+      std::enable_if_t<(Kokkos::Impl::always_true<I0>::value &&  //
+                        (1 == rank) && is_default_map && !is_layout_stride),
+                       reference_type>
+      operator()(I0 i0) const {
     check_operator_parens_valid_args(i0);
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(m_track, m_map, i0)
     return m_map.m_impl_handle[i0];
   }
 
   template <typename I0>
-  KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
-      (Kokkos::Impl::always_true<I0>::value &&  //
-       (1 == traits::rank) && is_default_map && is_layout_stride),
-      reference_type>
-  operator()(I0 i0) const {
+  KOKKOS_FORCEINLINE_FUNCTION
+      std::enable_if_t<(Kokkos::Impl::always_true<I0>::value &&  //
+                        (1 == rank) && is_default_map && is_layout_stride),
+                       reference_type>
+      operator()(I0 i0) const {
     check_operator_parens_valid_args(i0);
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(m_track, m_map, i0)
     return m_map.m_impl_handle[m_map.m_impl_offset.m_stride.S0 * i0];
@@ -857,8 +856,7 @@ class View : public ViewTraits<DataType, Properties...> {
 
   template <typename I0>
   KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
-      ((1 == traits::rank) && Kokkos::Impl::are_integral<I0>::value &&
-       !is_default_map),
+      ((1 == rank) && Kokkos::Impl::are_integral<I0>::value && !is_default_map),
       reference_type>
   operator[](I0 i0) const {
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(m_track, m_map, i0)
@@ -866,21 +864,21 @@ class View : public ViewTraits<DataType, Properties...> {
   }
 
   template <typename I0>
-  KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
-      ((1 == traits::rank) && Kokkos::Impl::are_integral<I0>::value &&
-       is_default_map && !is_layout_stride),
-      reference_type>
-  operator[](I0 i0) const {
+  KOKKOS_FORCEINLINE_FUNCTION
+      std::enable_if_t<((1 == rank) && Kokkos::Impl::are_integral<I0>::value &&
+                        is_default_map && !is_layout_stride),
+                       reference_type>
+      operator[](I0 i0) const {
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(m_track, m_map, i0)
     return m_map.m_impl_handle[i0];
   }
 
   template <typename I0>
-  KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
-      ((1 == traits::rank) && Kokkos::Impl::are_integral<I0>::value &&
-       is_default_map && is_layout_stride),
-      reference_type>
-  operator[](I0 i0) const {
+  KOKKOS_FORCEINLINE_FUNCTION
+      std::enable_if_t<((1 == rank) && Kokkos::Impl::are_integral<I0>::value &&
+                        is_default_map && is_layout_stride),
+                       reference_type>
+      operator[](I0 i0) const {
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(m_track, m_map, i0)
     return m_map.m_impl_handle[m_map.m_impl_offset.m_stride.S0 * i0];
   }
@@ -889,59 +887,55 @@ class View : public ViewTraits<DataType, Properties...> {
   // Rank 2 default map operator()
 
   template <typename I0, typename I1>
-  KOKKOS_FORCEINLINE_FUNCTION
-      std::enable_if_t<(Kokkos::Impl::always_true<I0, I1>::value &&  //
-                        (2 == traits::rank) && is_default_map &&
-                        is_layout_left && (traits::rank_dynamic == 0)),
-                       reference_type>
-      operator()(I0 i0, I1 i1) const {
+  KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
+      (Kokkos::Impl::always_true<I0, I1>::value &&  //
+       (2 == rank) && is_default_map && is_layout_left && (rank_dynamic == 0)),
+      reference_type>
+  operator()(I0 i0, I1 i1) const {
     check_operator_parens_valid_args(i0, i1);
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(m_track, m_map, i0, i1)
     return m_map.m_impl_handle[i0 + m_map.m_impl_offset.m_dim.N0 * i1];
   }
 
   template <typename I0, typename I1>
-  KOKKOS_FORCEINLINE_FUNCTION
-      std::enable_if_t<(Kokkos::Impl::always_true<I0, I1>::value &&  //
-                        (2 == traits::rank) && is_default_map &&
-                        is_layout_left && (traits::rank_dynamic != 0)),
-                       reference_type>
-      operator()(I0 i0, I1 i1) const {
+  KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
+      (Kokkos::Impl::always_true<I0, I1>::value &&  //
+       (2 == rank) && is_default_map && is_layout_left && (rank_dynamic != 0)),
+      reference_type>
+  operator()(I0 i0, I1 i1) const {
     check_operator_parens_valid_args(i0, i1);
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(m_track, m_map, i0, i1)
     return m_map.m_impl_handle[i0 + m_map.m_impl_offset.m_stride * i1];
   }
 
   template <typename I0, typename I1>
-  KOKKOS_FORCEINLINE_FUNCTION
-      std::enable_if_t<(Kokkos::Impl::always_true<I0, I1>::value &&  //
-                        (2 == traits::rank) && is_default_map &&
-                        is_layout_right && (traits::rank_dynamic == 0)),
-                       reference_type>
-      operator()(I0 i0, I1 i1) const {
+  KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
+      (Kokkos::Impl::always_true<I0, I1>::value &&  //
+       (2 == rank) && is_default_map && is_layout_right && (rank_dynamic == 0)),
+      reference_type>
+  operator()(I0 i0, I1 i1) const {
     check_operator_parens_valid_args(i0, i1);
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(m_track, m_map, i0, i1)
     return m_map.m_impl_handle[i1 + m_map.m_impl_offset.m_dim.N1 * i0];
   }
 
   template <typename I0, typename I1>
-  KOKKOS_FORCEINLINE_FUNCTION
-      std::enable_if_t<(Kokkos::Impl::always_true<I0, I1>::value &&  //
-                        (2 == traits::rank) && is_default_map &&
-                        is_layout_right && (traits::rank_dynamic != 0)),
-                       reference_type>
-      operator()(I0 i0, I1 i1) const {
+  KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
+      (Kokkos::Impl::always_true<I0, I1>::value &&  //
+       (2 == rank) && is_default_map && is_layout_right && (rank_dynamic != 0)),
+      reference_type>
+  operator()(I0 i0, I1 i1) const {
     check_operator_parens_valid_args(i0, i1);
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(m_track, m_map, i0, i1)
     return m_map.m_impl_handle[i1 + m_map.m_impl_offset.m_stride * i0];
   }
 
   template <typename I0, typename I1>
-  KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
-      (Kokkos::Impl::always_true<I0, I1>::value &&  //
-       (2 == traits::rank) && is_default_map && is_layout_stride),
-      reference_type>
-  operator()(I0 i0, I1 i1) const {
+  KOKKOS_FORCEINLINE_FUNCTION
+      std::enable_if_t<(Kokkos::Impl::always_true<I0, I1>::value &&  //
+                        (2 == rank) && is_default_map && is_layout_stride),
+                       reference_type>
+      operator()(I0 i0, I1 i1) const {
     check_operator_parens_valid_args(i0, i1);
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(m_track, m_map, i0, i1)
     return m_map.m_impl_handle[i0 * m_map.m_impl_offset.m_stride.S0 +
@@ -952,12 +946,11 @@ class View : public ViewTraits<DataType, Properties...> {
   // have "inlined" versions above
 
   template <typename... Is>
-  KOKKOS_FORCEINLINE_FUNCTION
-      std::enable_if_t<(Kokkos::Impl::always_true<Is...>::value &&  //
-                        (2 != traits::rank) && (1 != traits::rank) &&
-                        (0 != traits::rank) && is_default_map),
-                       reference_type>
-      operator()(Is... indices) const {
+  KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
+      (Kokkos::Impl::always_true<Is...>::value &&  //
+       (2 != rank) && (1 != rank) && (0 != rank) && is_default_map),
+      reference_type>
+  operator()(Is... indices) const {
     check_operator_parens_valid_args(indices...);
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(m_track, m_map, indices...)
     return m_map.m_impl_handle[m_map.m_impl_offset(indices...)];
@@ -966,7 +959,7 @@ class View : public ViewTraits<DataType, Properties...> {
   template <typename... Is>
   KOKKOS_FORCEINLINE_FUNCTION
       std::enable_if_t<(Kokkos::Impl::always_true<Is...>::value &&  //
-                        ((0 == traits::rank) || !is_default_map)),
+                        ((0 == rank) || !is_default_map)),
                        reference_type>
       operator()(Is... indices) const {
     check_operator_parens_valid_args(indices...);
@@ -979,8 +972,7 @@ class View : public ViewTraits<DataType, Properties...> {
 
   template <typename... Is>
   KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
-      (Kokkos::Impl::always_true<Is...>::value && (0 == traits::rank)),
-      reference_type>
+      (Kokkos::Impl::always_true<Is...>::value && (0 == rank)), reference_type>
   access(Is... extra) const {
     check_access_member_function_valid_args(extra...);
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(m_track, m_map, extra...)
@@ -993,7 +985,7 @@ class View : public ViewTraits<DataType, Properties...> {
   template <typename I0, typename... Is>
   KOKKOS_FORCEINLINE_FUNCTION
       std::enable_if_t<(Kokkos::Impl::always_true<I0, Is...>::value &&
-                        (1 == traits::rank) && !is_default_map),
+                        (1 == rank) && !is_default_map),
                        reference_type>
       access(I0 i0, Is... extra) const {
     check_access_member_function_valid_args(i0, extra...);
@@ -1002,22 +994,22 @@ class View : public ViewTraits<DataType, Properties...> {
   }
 
   template <typename I0, typename... Is>
-  KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
-      (Kokkos::Impl::always_true<I0, Is...>::value && (1 == traits::rank) &&
-       is_default_map && !is_layout_stride),
-      reference_type>
-  access(I0 i0, Is... extra) const {
+  KOKKOS_FORCEINLINE_FUNCTION
+      std::enable_if_t<(Kokkos::Impl::always_true<I0, Is...>::value &&
+                        (1 == rank) && is_default_map && !is_layout_stride),
+                       reference_type>
+      access(I0 i0, Is... extra) const {
     check_access_member_function_valid_args(i0, extra...);
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(m_track, m_map, i0, extra...)
     return m_map.m_impl_handle[i0];
   }
 
   template <typename I0, typename... Is>
-  KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
-      (Kokkos::Impl::always_true<I0, Is...>::value && (1 == traits::rank) &&
-       is_default_map && is_layout_stride),
-      reference_type>
-  access(I0 i0, Is... extra) const {
+  KOKKOS_FORCEINLINE_FUNCTION
+      std::enable_if_t<(Kokkos::Impl::always_true<I0, Is...>::value &&
+                        (1 == rank) && is_default_map && is_layout_stride),
+                       reference_type>
+      access(I0 i0, Is... extra) const {
     check_access_member_function_valid_args(i0, extra...);
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(m_track, m_map, i0, extra...)
     return m_map.m_impl_handle[m_map.m_impl_offset.m_stride.S0 * i0];
@@ -1029,7 +1021,7 @@ class View : public ViewTraits<DataType, Properties...> {
   template <typename I0, typename I1, typename... Is>
   KOKKOS_FORCEINLINE_FUNCTION
       std::enable_if_t<(Kokkos::Impl::always_true<I0, I1, Is...>::value &&
-                        (2 == traits::rank) && !is_default_map),
+                        (2 == rank) && !is_default_map),
                        reference_type>
       access(I0 i0, I1 i1, Is... extra) const {
     check_access_member_function_valid_args(i0, i1, extra...);
@@ -1039,8 +1031,8 @@ class View : public ViewTraits<DataType, Properties...> {
 
   template <typename I0, typename I1, typename... Is>
   KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
-      (Kokkos::Impl::always_true<I0, I1, Is...>::value && (2 == traits::rank) &&
-       is_default_map && is_layout_left && (traits::rank_dynamic == 0)),
+      (Kokkos::Impl::always_true<I0, I1, Is...>::value && (2 == rank) &&
+       is_default_map && is_layout_left && (rank_dynamic == 0)),
       reference_type>
   access(I0 i0, I1 i1, Is... extra) const {
     check_access_member_function_valid_args(i0, i1, extra...);
@@ -1050,8 +1042,8 @@ class View : public ViewTraits<DataType, Properties...> {
 
   template <typename I0, typename I1, typename... Is>
   KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
-      (Kokkos::Impl::always_true<I0, I1, Is...>::value && (2 == traits::rank) &&
-       is_default_map && is_layout_left && (traits::rank_dynamic != 0)),
+      (Kokkos::Impl::always_true<I0, I1, Is...>::value && (2 == rank) &&
+       is_default_map && is_layout_left && (rank_dynamic != 0)),
       reference_type>
   access(I0 i0, I1 i1, Is... extra) const {
     check_access_member_function_valid_args(i0, i1, extra...);
@@ -1061,8 +1053,8 @@ class View : public ViewTraits<DataType, Properties...> {
 
   template <typename I0, typename I1, typename... Is>
   KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
-      (Kokkos::Impl::always_true<I0, I1, Is...>::value && (2 == traits::rank) &&
-       is_default_map && is_layout_right && (traits::rank_dynamic == 0)),
+      (Kokkos::Impl::always_true<I0, I1, Is...>::value && (2 == rank) &&
+       is_default_map && is_layout_right && (rank_dynamic == 0)),
       reference_type>
   access(I0 i0, I1 i1, Is... extra) const {
     check_access_member_function_valid_args(i0, i1, extra...);
@@ -1072,8 +1064,8 @@ class View : public ViewTraits<DataType, Properties...> {
 
   template <typename I0, typename I1, typename... Is>
   KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
-      (Kokkos::Impl::always_true<I0, I1, Is...>::value && (2 == traits::rank) &&
-       is_default_map && is_layout_right && (traits::rank_dynamic != 0)),
+      (Kokkos::Impl::always_true<I0, I1, Is...>::value && (2 == rank) &&
+       is_default_map && is_layout_right && (rank_dynamic != 0)),
       reference_type>
   access(I0 i0, I1 i1, Is... extra) const {
     check_access_member_function_valid_args(i0, i1, extra...);
@@ -1082,11 +1074,11 @@ class View : public ViewTraits<DataType, Properties...> {
   }
 
   template <typename I0, typename I1, typename... Is>
-  KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
-      (Kokkos::Impl::always_true<I0, I1, Is...>::value && (2 == traits::rank) &&
-       is_default_map && is_layout_stride),
-      reference_type>
-  access(I0 i0, I1 i1, Is... extra) const {
+  KOKKOS_FORCEINLINE_FUNCTION
+      std::enable_if_t<(Kokkos::Impl::always_true<I0, I1, Is...>::value &&
+                        (2 == rank) && is_default_map && is_layout_stride),
+                       reference_type>
+      access(I0 i0, I1 i1, Is... extra) const {
     check_access_member_function_valid_args(i0, i1, extra...);
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(m_track, m_map, i0, i1, extra...)
     return m_map.m_impl_handle[i0 * m_map.m_impl_offset.m_stride.S0 +
@@ -1099,7 +1091,7 @@ class View : public ViewTraits<DataType, Properties...> {
   template <typename I0, typename I1, typename I2, typename... Is>
   KOKKOS_FORCEINLINE_FUNCTION
       std::enable_if_t<(Kokkos::Impl::always_true<I0, I1, I2, Is...>::value &&
-                        (3 == traits::rank) && is_default_map),
+                        (3 == rank) && is_default_map),
                        reference_type>
       access(I0 i0, I1 i1, I2 i2, Is... extra) const {
     check_access_member_function_valid_args(i0, i1, i2, extra...);
@@ -1110,7 +1102,7 @@ class View : public ViewTraits<DataType, Properties...> {
   template <typename I0, typename I1, typename I2, typename... Is>
   KOKKOS_FORCEINLINE_FUNCTION
       std::enable_if_t<(Kokkos::Impl::always_true<I0, I1, I2, Is...>::value &&
-                        (3 == traits::rank) && !is_default_map),
+                        (3 == rank) && !is_default_map),
                        reference_type>
       access(I0 i0, I1 i1, I2 i2, Is... extra) const {
     check_access_member_function_valid_args(i0, i1, i2, extra...);
@@ -1123,8 +1115,8 @@ class View : public ViewTraits<DataType, Properties...> {
 
   template <typename I0, typename I1, typename I2, typename I3, typename... Is>
   KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
-      (Kokkos::Impl::always_true<I0, I1, I2, I3, Is...>::value &&
-       (4 == traits::rank) && is_default_map),
+      (Kokkos::Impl::always_true<I0, I1, I2, I3, Is...>::value && (4 == rank) &&
+       is_default_map),
       reference_type>
   access(I0 i0, I1 i1, I2 i2, I3 i3, Is... extra) const {
     check_access_member_function_valid_args(i0, i1, i2, i3, extra...);
@@ -1134,8 +1126,8 @@ class View : public ViewTraits<DataType, Properties...> {
 
   template <typename I0, typename I1, typename I2, typename I3, typename... Is>
   KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
-      (Kokkos::Impl::always_true<I0, I1, I2, I3, Is...>::value &&
-       (4 == traits::rank) && !is_default_map),
+      (Kokkos::Impl::always_true<I0, I1, I2, I3, Is...>::value && (4 == rank) &&
+       !is_default_map),
       reference_type>
   access(I0 i0, I1 i1, I2 i2, I3 i3, Is... extra) const {
     check_access_member_function_valid_args(i0, i1, i2, i3, extra...);
@@ -1150,7 +1142,7 @@ class View : public ViewTraits<DataType, Properties...> {
             typename... Is>
   KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
       (Kokkos::Impl::always_true<I0, I1, I2, I3, I4, Is...>::value &&
-       (5 == traits::rank) && is_default_map),
+       (5 == rank) && is_default_map),
       reference_type>
   access(I0 i0, I1 i1, I2 i2, I3 i3, I4 i4, Is... extra) const {
     check_access_member_function_valid_args(i0, i1, i2, i3, i4, extra...);
@@ -1163,7 +1155,7 @@ class View : public ViewTraits<DataType, Properties...> {
             typename... Is>
   KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
       (Kokkos::Impl::always_true<I0, I1, I2, I3, I4, Is...>::value &&
-       (5 == traits::rank) && !is_default_map),
+       (5 == rank) && !is_default_map),
       reference_type>
   access(I0 i0, I1 i1, I2 i2, I3 i3, I4 i4, Is... extra) const {
     check_access_member_function_valid_args(i0, i1, i2, i3, i4, extra...);
@@ -1179,7 +1171,7 @@ class View : public ViewTraits<DataType, Properties...> {
             typename I5, typename... Is>
   KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
       (Kokkos::Impl::always_true<I0, I1, I2, I3, I4, I5, Is...>::value &&
-       (6 == traits::rank) && is_default_map),
+       (6 == rank) && is_default_map),
       reference_type>
   access(I0 i0, I1 i1, I2 i2, I3 i3, I4 i4, I5 i5, Is... extra) const {
     check_access_member_function_valid_args(i0, i1, i2, i3, i4, i5, extra...);
@@ -1192,7 +1184,7 @@ class View : public ViewTraits<DataType, Properties...> {
             typename I5, typename... Is>
   KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
       (Kokkos::Impl::always_true<I0, I1, I2, I3, I4, I5, Is...>::value &&
-       (6 == traits::rank) && !is_default_map),
+       (6 == rank) && !is_default_map),
       reference_type>
   access(I0 i0, I1 i1, I2 i2, I3 i3, I4 i4, I5 i5, Is... extra) const {
     check_access_member_function_valid_args(i0, i1, i2, i3, i4, i5, extra...);
@@ -1208,7 +1200,7 @@ class View : public ViewTraits<DataType, Properties...> {
             typename I5, typename I6, typename... Is>
   KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
       (Kokkos::Impl::always_true<I0, I1, I2, I3, I4, I5, I6, Is...>::value &&
-       (7 == traits::rank) && is_default_map),
+       (7 == rank) && is_default_map),
       reference_type>
   access(I0 i0, I1 i1, I2 i2, I3 i3, I4 i4, I5 i5, I6 i6, Is... extra) const {
     check_access_member_function_valid_args(i0, i1, i2, i3, i4, i5, i6,
@@ -1222,7 +1214,7 @@ class View : public ViewTraits<DataType, Properties...> {
             typename I5, typename I6, typename... Is>
   KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
       (Kokkos::Impl::always_true<I0, I1, I2, I3, I4, I5, I6, Is...>::value &&
-       (7 == traits::rank) && !is_default_map),
+       (7 == rank) && !is_default_map),
       reference_type>
   access(I0 i0, I1 i1, I2 i2, I3 i3, I4 i4, I5 i5, I6 i6, Is... extra) const {
     check_access_member_function_valid_args(i0, i1, i2, i3, i4, i5, i6,
@@ -1240,7 +1232,7 @@ class View : public ViewTraits<DataType, Properties...> {
   KOKKOS_FORCEINLINE_FUNCTION
       std::enable_if_t<(Kokkos::Impl::always_true<I0, I1, I2, I3, I4, I5, I6,
                                                   I7, Is...>::value &&
-                        (8 == traits::rank) && is_default_map),
+                        (8 == rank) && is_default_map),
                        reference_type>
       access(I0 i0, I1 i1, I2 i2, I3 i3, I4 i4, I5 i5, I6 i6, I7 i7,
              Is... extra) const {
@@ -1257,7 +1249,7 @@ class View : public ViewTraits<DataType, Properties...> {
   KOKKOS_FORCEINLINE_FUNCTION
       std::enable_if_t<(Kokkos::Impl::always_true<I0, I1, I2, I3, I4, I5, I6,
                                                   I7, Is...>::value &&
-                        (8 == traits::rank) && !is_default_map),
+                        (8 == rank) && !is_default_map),
                        reference_type>
       access(I0 i0, I1 i1, I2 i2, I3 i3, I4 i4, I5 i5, I6 i6, I7 i7,
              Is... extra) const {
@@ -1422,7 +1414,7 @@ class View : public ViewTraits<DataType, Properties...> {
     const std::string& alloc_name =
         Impl::get_property<Impl::LabelTag>(prop_copy);
     Impl::runtime_check_rank(
-        traits::rank, traits::rank_dynamic,
+        rank, rank_dynamic,
         std::is_same<typename traits::specialize, void>::value, i0, i1, i2, i3,
         i4, i5, i6, i7, alloc_name);
 
@@ -1638,7 +1630,7 @@ class View : public ViewTraits<DataType, Properties...> {
         arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7);
 
     if (std::is_void<typename traits::specialize>::value &&
-        num_passed_args != traits::rank_dynamic) {
+        num_passed_args != rank_dynamic) {
       Kokkos::abort(
           "Kokkos::View::shmem_size() rank_dynamic != number of arguments.\n");
     }
@@ -1694,14 +1686,10 @@ class View : public ViewTraits<DataType, Properties...> {
   }
 };
 
-/** \brief Temporary free function rank()
- *         until rank() is implemented
- *         in the View
- */
 template <typename D, class... P>
 KOKKOS_INLINE_FUNCTION constexpr unsigned rank(const View<D, P...>& V) {
-  return V.rank;
-}  // Temporary until added to view
+  return V.rank();
+}
 
 namespace Impl {
 
@@ -1717,7 +1705,7 @@ struct RankDataType<ValueType, 0> {
 
 template <unsigned N, typename... Args>
 KOKKOS_FUNCTION std::enable_if_t<
-    N == View<Args...>::rank &&
+    N == View<Args...>::rank() &&
         std::is_same<typename ViewTraits<Args...>::specialize, void>::value,
     View<Args...>>
 as_view_of_rank_n(View<Args...> v) {
@@ -1728,7 +1716,7 @@ as_view_of_rank_n(View<Args...> v) {
 // never be called
 template <unsigned N, typename T, typename... Args>
 KOKKOS_FUNCTION std::enable_if_t<
-    N != View<T, Args...>::rank &&
+    N != View<T, Args...>::rank() &&
         std::is_same<typename ViewTraits<T, Args...>::specialize, void>::value,
     View<typename RankDataType<typename View<T, Args...>::value_type, N>::type,
          Args...>>
