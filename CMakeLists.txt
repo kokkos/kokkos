@@ -133,7 +133,8 @@ IF (NOT CMAKE_SIZEOF_VOID_P)
     MESSAGE(FATAL_ERROR "Kokkos did not configure correctly and failed to validate compiler. The most likely cause is linkage errors during CMake compiler validation. Please consult the CMake error log shown below for the exact error during compiler validation")
   ENDIF()
 ELSEIF (NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
-  MESSAGE(FATAL_ERROR "Kokkos assumes a 64-bit build; i.e., 8-byte pointers, but found ${CMAKE_SIZEOF_VOID_P}-byte pointers instead")
+  MESSAGE(STATUS "Kokkos assumes a 64-bit build, i.e., 8-byte pointers, but found ${CMAKE_SIZEOF_VOID_P}-byte pointers instead; 32-bit builds are experimental and not officially supported.")
+  add_compile_definitions(KOKKOS_32_BIT)
 ENDIF()
 
 
