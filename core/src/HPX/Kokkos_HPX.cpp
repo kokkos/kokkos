@@ -30,6 +30,7 @@
 #include <hpx/local/runtime.hpp>
 #include <hpx/local/thread.hpp>
 #include <hpx/local/mutex.hpp>
+#include <hpx/version.hpp>
 
 #include <atomic>
 #include <chrono>
@@ -88,10 +89,18 @@ hpx::condition_variable_any HPX::m_active_parallel_region_count_cond;
 HPX::instance_data HPX::m_default_instance_data;
 
 void HPX::print_configuration(std::ostream &os, const bool) const {
-  os << "HPX backend\n";
-  os << "HPX Execution Space:\n";
+  os << "Host Parallel Execution Space\n";
   os << "  KOKKOS_ENABLE_HPX: yes\n";
+  os << "HPX Options:\n";
+#if defined(KOKKOS_ENABLE_IMPL_HPX_ASYNC_DISPATCH)
+  os << "  KOKKOS_ENABLE_IMPL_HPX_ASYNC_DISPATCH: yes\n";
+#else
+  os << "  KOKKOS_ENABLE_IMPL_HPX_ASYNC_DISPATCH: no\n";
+#endif
   os << "\nHPX Runtime Configuration:\n";
+  os << "Worker threads: " << hpx::get_num_worker_threads() << '\n';
+  os << hpx::complete_version() << '\n';
+  os << hpx::configuration_string() << '\n';
 }
 
 void HPX::impl_decrement_active_parallel_region_count() {
