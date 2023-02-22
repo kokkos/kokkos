@@ -1,10 +1,22 @@
 image:
   - Visual Studio 2019
 clone_folder: c:\projects\source
+install:
+  - cinst cuda
+
+environment:
+  matrix:
+    - ENABLE_CUDA: OFF
+      TEST_REGEX: ""
+
+    - ENABLE_CUDA: ON
+      TEST_REGEX: '-E "*"'
+
 build_script:
 - cmd: >-
+    refreshenv &&
     mkdir build &&
     cd build &&
-    cmake c:\projects\source -DKokkos_ENABLE_TESTS=ON -DKokkos_ENABLE_BENCHMARKS=ON -DCMAKE_CXX_FLAGS="/W0 /EHsc" -DKokkos_ENABLE_DEPRECATED_CODE_4=ON -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF &&
+    cmake c:\projects\source -DKokkos_ENABLE_TESTS=ON -DKokkos_ENABLE_BENCHMARKS=ON -DCMAKE_CXX_FLAGS="/W0 /EHsc" -DKokkos_ENABLE_DEPRECATED_CODE_4=ON -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF -DKokkos_ENABLE_CUDA=${ENABLE_CUDA} -DKokkos_ENABLE_CUDA_LAMBDA=${ENABLE_CUDA} -DKokkos_ARCH_VOLTA70=${ENABLE_CUDA} -DKokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE=${ENABLE_CUDA} &&
     cmake --build . --target install &&
-    ctest -C Debug --output-on-failure
+    ctest -C Debug --output-on-failure ${TEST_REGEX}
