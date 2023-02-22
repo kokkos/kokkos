@@ -384,9 +384,11 @@ class GraphNodeRef {
     using analysis = Kokkos::Impl::FunctorAnalysis<
         Kokkos::Impl::FunctorPatternInterface::REDUCE, Policy,
         typename reducer_selector::type>;
-    Kokkos::Impl::CombinedFunctorReducer functor_reducer(
-        functor, typename analysis::Reducer(
-                     reducer_selector::select(functor, return_value)));
+    typename analysis::Reducer final_reducer(
+        reducer_selector::select(functor, return_value));
+    Kokkos::Impl::CombinedFunctorReducer<functor_type,
+                                         typename analysis::Reducer>
+        functor_reducer(functor, final_reducer);
 
     using next_policy_t = decltype(policy);
     using next_kernel_t =
