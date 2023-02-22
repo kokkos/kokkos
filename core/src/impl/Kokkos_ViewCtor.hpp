@@ -234,7 +234,6 @@ struct ViewCtorProp : public ViewCtorProp<void, P>... {
   }
 };
 
-
 #if !defined(KOKKOS_COMPILER_MSVC) || !defined(KOKKOS_COMPILER_NVCC)
 template <typename... P>
 auto with_properties_if_unset(const ViewCtorProp<P...> &view_ctor_prop) {
@@ -278,7 +277,7 @@ auto with_properties_if_unset(const ViewCtorProp<P...> &view_ctor_prop,
 }
 #else
 
-template<class ViewCtorP, class ... Properties>
+template <class ViewCtorP, class... Properties>
 struct WithPropertiesIfUnset;
 
 template <class ViewCtorP>
@@ -290,7 +289,9 @@ struct WithPropertiesIfUnset<ViewCtorP> {
 
 template <class... P, class Property, class... Properties>
 struct WithPropertiesIfUnset<ViewCtorProp<P...>, Property, Properties...> {
-  static constexpr auto apply_prop(const ViewCtorProp<P...> &view_ctor_prop, const Property& prop, const Properties&... properties) {
+  static constexpr auto apply_prop(const ViewCtorProp<P...> &view_ctor_prop,
+                                   const Property &prop,
+                                   const Properties &... properties) {
     if constexpr ((is_execution_space<Property>::value &&
                    !ViewCtorProp<P...>::has_execution_space) ||
                   (is_memory_space<Property>::value &&
@@ -303,21 +304,21 @@ struct WithPropertiesIfUnset<ViewCtorProp<P...>, Property, Properties...> {
       NewViewCtorProp new_view_ctor_prop(view_ctor_prop);
       static_cast<ViewCtorProp<void, Property> &>(new_view_ctor_prop).value =
           prop;
-      return WithPropertiesIfUnset<NewViewCtorProp, Properties...>::apply_prop(new_view_ctor_prop, properties...);
+      return WithPropertiesIfUnset<NewViewCtorProp, Properties...>::apply_prop(
+          new_view_ctor_prop, properties...);
     } else
-      return WithPropertiesIfUnset<ViewCtorProp<P...>, Properties...>::apply_prop(
-          view_ctor_prop, properties...);
-    
+      return WithPropertiesIfUnset<ViewCtorProp<P...>,
+                                   Properties...>::apply_prop(view_ctor_prop,
+                                                              properties...);
   }
 };
 
-
-template <typename... P, class ... Properties>
-auto with_properties_if_unset(const ViewCtorProp<P...> &view_ctor_prop, const Properties& ... properties) {
+template <typename... P, class... Properties>
+auto with_properties_if_unset(const ViewCtorProp<P...> &view_ctor_prop,
+                              const Properties &... properties) {
   return WithPropertiesIfUnset<ViewCtorProp<P...>, Properties...>::apply_prop(
       view_ctor_prop, properties...);
 }
-
 
 #endif
 
