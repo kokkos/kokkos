@@ -1687,7 +1687,7 @@ class View : public ViewTraits<DataType, Properties...> {
 };
 
 template <typename D, class... P>
-KOKKOS_INLINE_FUNCTION constexpr unsigned rank(const View<D, P...>& V) {
+KOKKOS_INLINE_FUNCTION constexpr unsigned rank(const View<D, P...>&) {
   return View<D, P...>::rank();
 }
 
