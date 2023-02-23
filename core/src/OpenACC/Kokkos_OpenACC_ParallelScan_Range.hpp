@@ -48,6 +48,10 @@ class Kokkos::Impl::ParallelScan<Functor, Kokkos::RangePolicy<Traits...>,
         m_result_ptr(arg_result_ptr),
         m_result_ptr_device_accessible(arg_result_ptr_device_accessible) {}
 
+  // This function implements the parallel scan alogithm based on the parallel
+  // prefix sum algorithm proposed by Hillis and Steele (doi:10.1145/7902.7903),
+  // which offers a shorter span and more parallelism but may not be
+  // work-efficient.
   void OpenACCParallelScanRangePolicy(const IndexType begin,
                                       const IndexType end, IndexType chunk_size,
                                       const int async_arg) const {
@@ -185,7 +189,6 @@ class Kokkos::Impl::ParallelScan<Functor, Kokkos::RangePolicy<Traits...>,
       }
     }
     if (!m_result_ptr_device_accessible && m_result_ptr != nullptr) {
-      // size_t size = Analysis::value_size(m_functor);
       DeepCopy<HostSpace, Kokkos::Experimental::OpenACCSpace,
                Kokkos::Experimental::OpenACC>(m_policy.space(), m_result_ptr,
                                               m_result_total.data(),
