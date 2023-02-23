@@ -304,34 +304,6 @@ KOKKOS_IMPL_HOST_FUNCTION
 
 #undef KOKKOS_IMPL_USE_GCC_BUILT_IN_FUNCTIONS
 
-template <class T>
-KOKKOS_FUNCTION T rotl_builtin_host(T x, int s) noexcept {
-  return rotl(x, s);
-}
-
-template <class T>
-KOKKOS_FUNCTION T rotl_builtin_device(T x, int s) noexcept {
-#ifdef KOKKOS_ENABLE_SYCL
-  return sycl::rotate(x, s);
-#else
-  return rotl(x, s);
-#endif
-}
-
-template <class T>
-KOKKOS_FUNCTION T rotr_builtin_host(T x, int s) noexcept {
-  return rotr(x, s);
-}
-
-template <class T>
-KOKKOS_FUNCTION T rotr_builtin_device(T x, int s) noexcept {
-#ifdef KOKKOS_ENABLE_SYCL
-  return sycl::rotate(x, -s);
-#else
-  return rotr(x, s);
-#endif
-}
-
 }  // namespace Kokkos::Impl
 
 namespace Kokkos::Experimental {
@@ -411,16 +383,14 @@ template <class T>
 [[nodiscard]] KOKKOS_FUNCTION
     std::enable_if_t<::Kokkos::Impl::is_standard_unsigned_integer_type_v<T>, T>
     rotl_builtin(T x, int s) noexcept {
-  KOKKOS_IF_ON_DEVICE((return ::Kokkos::Impl::rotl_builtin_device(x, s);))
-  KOKKOS_IF_ON_HOST((return ::Kokkos::Impl::rotl_builtin_host(x, s);))
+  return rotl(x, s);  // no benefit to call the _builtin variant
 }
 
 template <class T>
 [[nodiscard]] KOKKOS_FUNCTION
     std::enable_if_t<::Kokkos::Impl::is_standard_unsigned_integer_type_v<T>, T>
     rotr_builtin(T x, int s) noexcept {
-  KOKKOS_IF_ON_DEVICE((return ::Kokkos::Impl::rotr_builtin_device(x, s);))
-  KOKKOS_IF_ON_HOST((return ::Kokkos::Impl::rotr_builtin_host(x, s);))
+  return rotr(x, s);  // no benefit to call the _builtin variant
 }
 
 }  // namespace Kokkos::Experimental
