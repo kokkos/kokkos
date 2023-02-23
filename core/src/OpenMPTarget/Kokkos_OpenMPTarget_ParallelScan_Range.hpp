@@ -79,7 +79,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
     FunctorType a_functor(m_functor);
 #pragma omp target teams distribute map(to : a_functor) num_teams(nteams)
     for (idx_type team_id = 0; team_id < n_chunks; ++team_id) {
-      typename Analysis::Reducer final_reducer(&a_functor);
+      typename Analysis::Reducer final_reducer(a_functor);
 #pragma omp parallel num_threads(team_size)
       {
         const idx_type local_offset = team_id * chunk_size;
@@ -120,7 +120,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
                                         : a_functor) num_teams(nteams) \
     thread_limit(team_size)
     for (idx_type team_id = 0; team_id < n_chunks; ++team_id) {
-      typename Analysis::Reducer final_reducer(&a_functor);
+      typename Analysis::Reducer final_reducer(a_functor);
 #pragma omp parallel num_threads(team_size)
       {
         const idx_type local_offset = team_id * chunk_size;

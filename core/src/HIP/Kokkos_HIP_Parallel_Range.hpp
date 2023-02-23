@@ -180,7 +180,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                    sizeof(size_type));
 
     typename Analysis::Reducer final_reducer(
-        &ReducerConditional::select(m_functor, m_reducer));
+        ReducerConditional::select(m_functor, m_reducer));
     {
       reference_type value = final_reducer.init(reinterpret_cast<pointer_type>(
           ::Kokkos::kokkos_impl_hip_shared_memory<size_type>() +
@@ -235,7 +235,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
   __device__ inline void run(ShflReductionTag) const {
     typename Analysis::Reducer final_reducer(
-        &ReducerConditional::select(m_functor, m_reducer));
+        ReducerConditional::select(m_functor, m_reducer));
 
     value_type value;
     final_reducer.init(&value);
@@ -296,7 +296,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
   inline void execute() {
     typename Analysis::Reducer final_reducer(
-        &ReducerConditional::select(m_functor, m_reducer));
+        ReducerConditional::select(m_functor, m_reducer));
 
     const index_type nwork     = m_policy.end() - m_policy.begin();
     const bool need_device_set = Analysis::has_init_member_function ||
@@ -456,7 +456,7 @@ class ParallelScanHIPBase {
   //----------------------------------------
 
   __device__ inline void initial() const {
-    typename Analysis::Reducer final_reducer(&m_functor);
+    typename Analysis::Reducer final_reducer(m_functor);
 
     const integral_nonzero_constant<word_size_type, Analysis::StaticValueSize /
                                                         sizeof(word_size_type)>
@@ -494,7 +494,7 @@ class ParallelScanHIPBase {
   //----------------------------------------
 
   __device__ inline void final() const {
-    typename Analysis::Reducer final_reducer(&m_functor);
+    typename Analysis::Reducer final_reducer(m_functor);
 
     const integral_nonzero_constant<word_size_type, Analysis::StaticValueSize /
                                                         sizeof(word_size_type)>

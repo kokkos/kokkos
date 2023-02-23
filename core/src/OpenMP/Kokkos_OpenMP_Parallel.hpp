@@ -345,7 +345,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
  public:
   inline void execute() const {
     typename Analysis::Reducer final_reducer(
-        &ReducerConditional::select(m_functor, m_reducer));
+        ReducerConditional::select(m_functor, m_reducer));
 
     if (m_policy.end() <= m_policy.begin()) {
       if (m_result_ptr) {
@@ -550,7 +550,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     );
 
     typename Analysis::Reducer final_reducer(
-        &ReducerConditional::select(m_iter.m_func, m_reducer));
+        ReducerConditional::select(m_iter.m_func, m_reducer));
 
 #ifndef KOKKOS_COMPILER_INTEL
     if (execute_in_serial(m_iter.m_rp.space())) {
@@ -749,7 +749,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
     );
 
     if (execute_in_serial(m_policy.space())) {
-      typename Analysis::Reducer final_reducer(&m_functor);
+      typename Analysis::Reducer final_reducer(m_functor);
 
       reference_type update = final_reducer.init(
           pointer_type(m_instance->get_thread_data(0)->pool_reduce_local()));
@@ -763,7 +763,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
 #pragma omp parallel num_threads(m_instance->thread_pool_size())
     {
       HostThreadTeamData& data = *(m_instance->get_thread_data());
-      typename Analysis::Reducer final_reducer(&m_functor);
+      typename Analysis::Reducer final_reducer(m_functor);
 
       const WorkRange range(m_policy, omp_get_thread_num(),
                             omp_get_num_threads());
@@ -881,7 +881,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
     );
 
     if (execute_in_serial(m_policy.space())) {
-      typename Analysis::Reducer final_reducer(&m_functor);
+      typename Analysis::Reducer final_reducer(m_functor);
 
       reference_type update = final_reducer.init(
           pointer_type(m_instance->get_thread_data(0)->pool_reduce_local()));
@@ -899,7 +899,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
 #pragma omp parallel num_threads(m_instance->thread_pool_size())
     {
       HostThreadTeamData& data = *(m_instance->get_thread_data());
-      typename Analysis::Reducer final_reducer(&m_functor);
+      typename Analysis::Reducer final_reducer(m_functor);
 
       const WorkRange range(m_policy, omp_get_thread_num(),
                             omp_get_num_threads());
@@ -1202,7 +1202,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     enum { is_dynamic = std::is_same<SchedTag, Kokkos::Dynamic>::value };
 
     typename Analysis::Reducer final_reducer(
-        &ReducerConditional::select(m_functor, m_reducer));
+        ReducerConditional::select(m_functor, m_reducer));
 
     if (m_policy.league_size() == 0 || m_policy.team_size() == 0) {
       if (m_result_ptr) {

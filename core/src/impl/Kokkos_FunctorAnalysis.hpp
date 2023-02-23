@@ -320,13 +320,15 @@ struct FunctorAnalysis {
 
  private:
   template <bool IsArray, class FF>
-  KOKKOS_INLINE_FUNCTION static constexpr std::enable_if_t<IsArray, unsigned>
+  KOKKOS_INLINE_FUNCTION static constexpr std::enable_if_t<IsArray,
+                                                           unsigned int>
   get_length(FF const& f) {
     return f.value_count;
   }
 
   template <bool IsArray, class FF>
-  KOKKOS_INLINE_FUNCTION static constexpr std::enable_if_t<!IsArray, unsigned>
+  KOKKOS_INLINE_FUNCTION static constexpr std::enable_if_t<!IsArray,
+                                                           unsigned int>
   get_length(FF const&) {
     return candidate_is_void ? 0 : 1;
   }
@@ -337,12 +339,12 @@ struct FunctorAnalysis {
         !candidate_is_void && !candidate_is_array ? sizeof(ValueType) : 0
   };
 
-  KOKKOS_FORCEINLINE_FUNCTION static constexpr unsigned value_count(
+  KOKKOS_FORCEINLINE_FUNCTION static constexpr unsigned int value_count(
       const Functor& f) {
     return FunctorAnalysis::template get_length<candidate_is_array>(f);
   }
 
-  KOKKOS_FORCEINLINE_FUNCTION static constexpr unsigned value_size(
+  KOKKOS_FORCEINLINE_FUNCTION static constexpr unsigned int value_size(
       const Functor& f) {
     return FunctorAnalysis::template get_length<candidate_is_array>(f) *
            sizeof(ValueType);
@@ -351,13 +353,13 @@ struct FunctorAnalysis {
   //----------------------------------------
 
   template <class Unknown>
-  KOKKOS_FORCEINLINE_FUNCTION static constexpr unsigned value_count(
+  KOKKOS_FORCEINLINE_FUNCTION static constexpr unsigned int value_count(
       const Unknown&) {
     return candidate_is_void ? 0 : 1;
   }
 
   template <class Unknown>
-  KOKKOS_FORCEINLINE_FUNCTION static constexpr unsigned value_size(
+  KOKKOS_FORCEINLINE_FUNCTION static constexpr unsigned int value_size(
       const Unknown&) {
     return candidate_is_void ? 0 : sizeof(ValueType);
   }
@@ -903,12 +905,12 @@ struct FunctorAnalysis {
 
   struct Reducer {
    private:
-    Functor const* const m_functor;
+    Functor m_functor;
 
     template <bool IsArray>
     KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<IsArray, int> len() const
         noexcept {
-      return m_functor->value_count;
+      return m_functor.value_count;
     }
 
     template <bool IsArray>
@@ -923,6 +925,28 @@ struct FunctorAnalysis {
     using pointer_type   = value_type*;
     using reference_type = FunctorAnalysis::reference_type;
     using functor_type   = Functor;  // Adapts a functor
+
+    static constexpr bool has_join_member_function() {
+      return DeduceJoin<>::value;
+    }
+    static constexpr bool has_init_member_function() {
+      return DeduceInit<>::value;
+    }
+    static constexpr bool has_final_member_function() {
+      return DeduceFinal<>::value;
+    }
+
+    KOKKOS_FUNCTION unsigned int value_size() const {
+      return FunctorAnalysis::value_size(m_functor);
+    }
+
+    KOKKOS_FUNCTION unsigned int value_count() const {
+      return FunctorAnalysis::value_count(m_functor);
+    }
+
+    KOKKOS_FUNCTION static constexpr unsigned int static_value_size() {
+      return StaticValueSize;
+    }
 
     template <bool is_array = candidate_is_array>
     KOKKOS_INLINE_FUNCTION static std::enable_if_t<is_array, reference_type>
@@ -948,19 +972,22 @@ struct FunctorAnalysis {
 
     KOKKOS_INLINE_FUNCTION
     void join(ValueType* dst, ValueType const* src) const noexcept {
-      DeduceJoin<>::join(m_functor, dst, src);
+      DeduceJoin<>::join(&m_functor, dst, src);
     }
 
     KOKKOS_INLINE_FUNCTION reference_type init(ValueType* const dst) const
         noexcept {
-      DeduceInit<>::init(m_functor, dst);
+      DeduceInit<>::init(&m_functor, dst);
       return reference(dst);
     }
 
     KOKKOS_INLINE_FUNCTION
     void final(ValueType* dst) const noexcept {
-      DeduceFinal<>::final(m_functor, dst);
+      DeduceFinal<>::final(&m_functor, dst);
     }
+
+    KOKKOS_INLINE_FUNCTION
+    const Functor& get_functor() const { return m_functor; }
 
     Reducer(Reducer const&) = default;
     Reducer(Reducer&&)      = default;
@@ -969,7 +996,7 @@ struct FunctorAnalysis {
     ~Reducer()                    = default;
 
     KOKKOS_INLINE_FUNCTION explicit constexpr Reducer(
-        Functor const* arg_functor) noexcept
+        Functor const& arg_functor) noexcept
         : m_functor(arg_functor) {}
   };
 };

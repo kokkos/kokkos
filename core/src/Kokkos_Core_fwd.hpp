@@ -330,6 +330,16 @@ template <class FunctorType, class ExecPolicy, class ReducerType = InvalidType,
               FunctorType, ExecPolicy>::execution_space>
 class ParallelReduce;
 
+// FIXME Remove once all backends implement the new interface
+template <typename FunctorType, typename FunctorAnalysisReducerType,
+          typename Enable = void>
+class CombinedFunctorReducer;
+
+// FIXME Remove once all backends implement the new interface
+template <typename CombinedFunctorReducerType, typename PolicyType,
+          typename ExecutionSpaceType, typename Enable = void>
+class ParallelReduceWrapper;
+
 /// \class ParallelScan
 /// \brief Implementation detail of parallel_scan.
 ///
