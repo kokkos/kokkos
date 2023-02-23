@@ -54,6 +54,8 @@ DEFINE_BIT_MANIPULATION_FUNCTION_EVAL(bit_ceil);
 DEFINE_BIT_MANIPULATION_FUNCTION_EVAL(bit_floor);
 DEFINE_BIT_MANIPULATION_FUNCTION_EVAL(bit_width);
 
+#undef DEFINE_BIT_MANIPULATION_FUNCTION_EVAL
+
 template <class Space, class Func, class Arg, std::size_t N>
 struct TestBitManipFunction {
   Arg val_[N];
@@ -425,3 +427,174 @@ TEST(TEST_CATEGORY, bit_manip_bit_width) {
   test_bit_manip_bit_width<unsigned long>();
   test_bit_manip_bit_width<unsigned long long>();
 }
+
+#undef TEST_BIT_MANIP_FUNCTION
+
+#define DEFINE_BIT_ROTATE_FUNCTION_EVAL(FUNC)                \
+  struct BitRotateFunction_##FUNC {                          \
+    template <class T>                                       \
+    static KOKKOS_FUNCTION auto eval_constexpr(T x, int s) { \
+      return Kokkos::FUNC(x, s);                             \
+    }                                                        \
+    template <class T>                                       \
+    static KOKKOS_FUNCTION auto eval_builtin(T x, int s) {   \
+      return Kokkos::Experimental::FUNC##_builtin(x, s);     \
+    }                                                        \
+    static char const* name() { return #FUNC; }              \
+  }
+
+DEFINE_BIT_ROTATE_FUNCTION_EVAL(rotl);
+DEFINE_BIT_ROTATE_FUNCTION_EVAL(rotr);
+
+#undef DEFINE_BIT_ROTATE_FUNCTION_EVAL
+
+template <class T>
+struct P {
+  using type = T;
+  T x;
+  int s;
+};
+
+template <class Space, class Func, class Arg, std::size_t N>
+struct TestBitRotateFunction {
+  Arg val_[N];
+  TestBitRotateFunction(const Arg (&val)[N]) {
+    std::copy(val, val + N, val_);
+    run();
+  }
+  void run() const {
+    int errors = 0;
+    Kokkos::parallel_reduce(Kokkos::RangePolicy<Space>(0, N), *this, errors);
+    ASSERT_EQ(errors, 0) << "Failed check no error for " << Func::name() << "("
+                         << type_helper<typename Arg::type>::name() << ", int)";
+  }
+  KOKKOS_FUNCTION void operator()(int i, int& e) const {
+    if (Func::eval_builtin(val_[i].x, val_[i].s) !=
+        Func::eval_constexpr(val_[i].x, val_[i].s)) {
+      ++e;
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF(
+          "value at %x rotated by %d which is %x was expected to be %x\n",
+          (unsigned)val_[i].x, val_[i].s,
+          (unsigned)Func::eval_builtin(val_[i].x, val_[i].s),
+          (unsigned)Func::eval_constexpr(val_[i].x, val_[i].s));
+    }
+  }
+};
+
+template <class Space, class... Func, class Arg, std::size_t N>
+void do_test_bit_rotate_function(const Arg (&x)[N]) {
+  (void)std::initializer_list<int>{
+      (TestBitRotateFunction<Space, Func, Arg, N>(x), 0)...};
+}
+
+#define TEST_BIT_ROTATE_FUNCTION(FUNC) \
+  do_test_bit_rotate_function<TEST_EXECSPACE, BitRotateFunction_##FUNC>
+
+template <class UInt>
+void test_bit_manip_rotl() {
+  using Kokkos::Experimental::rotl_builtin;
+  static_assert(noexcept(rotl_builtin(UInt(), 0)));
+  static_assert(std::is_same_v<decltype(rotl_builtin(UInt(), 0)), UInt>);
+  constexpr auto dig = Kokkos::Experimental::digits_v<UInt>;
+  constexpr auto max = Kokkos::Experimental::finite_max_v<UInt>;
+  TEST_BIT_ROTATE_FUNCTION(rotl)
+  ({
+      // clang-format off
+      P<UInt>{UInt(0), 0},
+      P<UInt>{UInt(0), 1},
+      P<UInt>{UInt(0), 4},
+      P<UInt>{UInt(0), 8},
+      P<UInt>{max, 0},
+      P<UInt>{max, 1},
+      P<UInt>{max, 4},
+      P<UInt>{max, 8},
+      P<UInt>{UInt(1), 0},
+      P<UInt>{UInt(1), 1},
+      P<UInt>{UInt(1), 4},
+      P<UInt>{UInt(1), dig},
+      P<UInt>{UInt(7), dig},
+      P<UInt>{UInt(6), dig - 1},
+      P<UInt>{UInt(3), 6},
+      P<UInt>{UInt(max - 1), 0},
+      P<UInt>{UInt(max - 1), 1},
+      P<UInt>{UInt(max - 1), 2},
+      P<UInt>{UInt(max - 1), 3},
+      P<UInt>{UInt(max - 1), 4},
+      P<UInt>{UInt(max - 1), 5},
+      P<UInt>{UInt(max - 1), 6},
+      P<UInt>{UInt(max - 1), 7},
+      P<UInt>{UInt(1), 0},
+      P<UInt>{UInt(1), 1},
+      P<UInt>{UInt(1), 2},
+      P<UInt>{UInt(1), 3},
+      P<UInt>{UInt(1), 4},
+      P<UInt>{UInt(1), 5},
+      P<UInt>{UInt(1), 6},
+      P<UInt>{UInt(1), 7},
+      // clang-format on
+  });
+}
+
+TEST(TEST_CATEGORY, bit_manip_rotl) {
+  test_bit_manip_rotl<unsigned char>();
+  test_bit_manip_rotl<unsigned short>();
+  test_bit_manip_rotl<unsigned int>();
+  test_bit_manip_rotl<unsigned long>();
+  test_bit_manip_rotl<unsigned long long>();
+}
+
+template <class UInt>
+void test_bit_manip_rotr() {
+  using Kokkos::rotr;
+  using Kokkos::Experimental::rotr_builtin;
+  static_assert(noexcept(rotr_builtin(UInt(), 0)));
+  static_assert(std::is_same_v<decltype(rotr_builtin(UInt(), 0)), UInt>);
+  constexpr auto dig = Kokkos::Experimental::digits_v<UInt>;
+  constexpr auto max = Kokkos::Experimental::finite_max_v<UInt>;
+  TEST_BIT_ROTATE_FUNCTION(rotr)
+  ({
+      // clang-format off
+      P<UInt>{UInt(0), 0},
+      P<UInt>{UInt(0), 1},
+      P<UInt>{UInt(0), 4},
+      P<UInt>{UInt(0), 8},
+      P<UInt>{max, 0},
+      P<UInt>{max, 1},
+      P<UInt>{max, 4},
+      P<UInt>{max, 8},
+      P<UInt>{UInt(128), 0},
+      P<UInt>{UInt(128), 1},
+      P<UInt>{UInt(128), 4},
+      P<UInt>{UInt(1), dig},
+      P<UInt>{UInt(7), dig},
+      P<UInt>{UInt(6), dig - 1},
+      P<UInt>{UInt(36), dig - 2},
+      P<UInt>{UInt(max - 1), 0},
+      P<UInt>{UInt(max - 1), 1},
+      P<UInt>{UInt(max - 1), 2},
+      P<UInt>{UInt(max - 1), 3},
+      P<UInt>{UInt(max - 1), 4},
+      P<UInt>{UInt(max - 1), 5},
+      P<UInt>{UInt(max - 1), 6},
+      P<UInt>{UInt(max - 1), 7},
+      P<UInt>{UInt(128), 0},
+      P<UInt>{UInt(128), 1},
+      P<UInt>{UInt(128), 2},
+      P<UInt>{UInt(128), 3},
+      P<UInt>{UInt(128), 4},
+      P<UInt>{UInt(128), 5},
+      P<UInt>{UInt(128), 6},
+      P<UInt>{UInt(128), 0},
+      // clang-format on
+  });
+}
+
+TEST(TEST_CATEGORY, bit_manip_rotr) {
+  test_bit_manip_rotr<unsigned char>();
+  test_bit_manip_rotr<unsigned short>();
+  test_bit_manip_rotr<unsigned int>();
+  test_bit_manip_rotr<unsigned long>();
+  test_bit_manip_rotr<unsigned long long>();
+}
+
+#undef TEST_BIT_ROTATE_FUNCTION
