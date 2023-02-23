@@ -36,7 +36,7 @@ class Kokkos::Impl::ParallelScan<Functor, Kokkos::RangePolicy<Traits...>,
   Functor m_functor;
   Policy m_policy;
   ValueType* m_result_ptr;
-  const bool m_result_ptr_device_accessible;
+  bool m_result_ptr_device_accessible;
   static constexpr MemberType default_scan_chunk_size = 128;
 
  public:
