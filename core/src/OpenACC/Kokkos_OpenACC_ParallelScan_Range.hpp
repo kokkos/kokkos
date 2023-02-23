@@ -50,8 +50,7 @@ class Kokkos::Impl::ParallelScan<Functor, Kokkos::RangePolicy<Traits...>,
 
   void OpenACCParallelScanRangePolicy(const IndexType begin,
                                       const IndexType end, IndexType chunk_size,
-                                      const int async_arg,
-                                      bool getTotal = false) const {
+                                      const int async_arg) const {
     if (chunk_size > 1) {
       if (!Impl::is_integral_power_of_two(chunk_size))
         Kokkos::abort(
@@ -185,7 +184,7 @@ class Kokkos::Impl::ParallelScan<Functor, Kokkos::RangePolicy<Traits...>,
         }
       }
     }
-    if (getTotal) {
+    if (!m_result_ptr_device_accessible && m_result_ptr != nullptr) {
       // size_t size = Analysis::value_size(m_functor);
       DeepCopy<HostSpace, Kokkos::Experimental::OpenACCSpace,
                Kokkos::Experimental::OpenACC>(m_policy.space(), m_result_ptr,
@@ -235,7 +234,6 @@ class Kokkos::Impl::ParallelScanWithTotal<
     const IndexType begin = base_t::m_policy.begin();
     const IndexType end   = base_t::m_policy.end();
     IndexType chunk_size  = base_t::m_policy.chunk_size();
-    bool getTotal         = false;
 
     if (end <= begin) {
       if (!base_t::m_result_ptr_device_accessible &&
@@ -247,10 +245,7 @@ class Kokkos::Impl::ParallelScanWithTotal<
 
     int const async_arg = base_t::m_policy.space().acc_async_queue();
 
-    if (!base_t::m_result_ptr_device_accessible) {
-      getTotal = true;
-    }
-    OpenACCParallelScanRangePolicy(begin, end, chunk_size, async_arg, getTotal);
+    OpenACCParallelScanRangePolicy(begin, end, chunk_size, async_arg);
   }
 
   template <class ViewType>
