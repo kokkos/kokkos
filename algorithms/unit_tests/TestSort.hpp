@@ -473,7 +473,7 @@ void test_radix_sort() {
         exec, Kokkos::Experimental::KeyFromView(i1));
     sorter.apply_permutation(exec, i1);
     auto h_i1 = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, i1);
-    for (int i = 0; i < i1.extent(0) - 1; ++i) {
+    for (size_t i = 0; i < i1.extent(0) - 1; ++i) {
       std::cout << h_i1(i) << std::endl;
       EXPECT_LE(h_i1(i), h_i1(i + 1));
     }
