@@ -164,7 +164,9 @@ template <typename KeyView, int BitWidth>
 KeyFromView(KeyView const&, std::integral_constant<int, BitWidth>)
     ->KeyFromView<BitWidth, KeyView>;
 
-template <typename KeyType, typename IndexType = ::std::uint32_t>
+template <typename KeyType,
+          typename MemorySpace = Kokkos::DefaultExecutionSpace::memory_space,
+          typename IndexType   = ::std::uint32_t>
 class RadixSorter {
  public:
   RadixSorter() = default;
@@ -212,7 +214,7 @@ class RadixSorter {
 
   // Directly re-arrange the entries of keys, optionally storing the permutation
   template <bool store_permutation = false, typename ExecutionSpace>
-  void sort(ExecutionSpace const& exec, View<KeyType*> keys) {
+  void sort(ExecutionSpace const& exec, View<KeyType*, MemorySpace> keys) {
     // Almost identical to create_indirection_array, except actually permute the
     // input
     const auto n = keys.extent(0);
@@ -247,8 +249,8 @@ class RadixSorter {
 
   // Directly re-arrange the entries of keys, optionally storing the permutation
   template <bool store_permutation = false, typename U, typename ExecutionSpace>
-  void sortByKeys(ExecutionSpace const& exec, View<KeyType*> keys,
-                  View<U*> values) {
+  void sortByKeys(ExecutionSpace const& exec, View<KeyType*, MemorySpace> keys,
+                  View<U*, MemorySpace> values) {
     // Almost identical to create_indirection_array, except actually permute the
     // input
     const auto n = keys.extent(0);
@@ -261,7 +263,7 @@ class RadixSorter {
           KOKKOS_LAMBDA(IndexType i) { m_index_old(i) = i; });
     }
 
-    auto values_scratch = View<U*>(
+    auto values_scratch = View<U*, MemorySpace>(
         view_alloc(exec, "Kokkos::RadixSorter radix_sorter_values_scratch",
                    Kokkos::WithoutInitializing),
         n);
@@ -290,7 +292,8 @@ class RadixSorter {
   }
 
   template <typename ExecutionSpace>
-  void apply_permutation(ExecutionSpace const& exec, View<KeyType*> v) {
+  void apply_permutation(ExecutionSpace const& exec,
+                         View<KeyType*, MemorySpace> v) {
     parallel_for(
         "Kokkos::RadixSorter apply_permutation",
         RangePolicy<ExecutionSpace, Kokkos::IndexType<IndexType>>(exec, 0,
@@ -301,8 +304,9 @@ class RadixSorter {
 
  private:
   template <typename... U, typename Policy>
-  void permute_by_scan(Policy policy,
-                       Kokkos::pair<View<U*>&, View<U*>&>... views) {
+  void permute_by_scan(
+      Policy policy,
+      Kokkos::pair<View<U*, MemorySpace>&, View<U*, MemorySpace>&>... views) {
     parallel_for(
         "Kokkos::RadixSorter permute_by_scan", policy,
         KOKKOS_LAMBDA(IndexType i) {
@@ -340,11 +344,11 @@ class RadixSorter {
         });
   }
 
-  View<KeyType*> m_key_scratch;
-  View<IndexType*> m_index_old;
-  View<IndexType*> m_index_new;
-  View<size_t*> m_scan;
-  View<unsigned char*> m_bits;
+  View<KeyType*, MemorySpace> m_key_scratch;
+  View<IndexType*, MemorySpace> m_index_old;
+  View<IndexType*, MemorySpace> m_index_new;
+  View<size_t*, MemorySpace> m_scan;
+  View<unsigned char*, MemorySpace> m_bits;
 };
 
 }  // namespace Experimental
