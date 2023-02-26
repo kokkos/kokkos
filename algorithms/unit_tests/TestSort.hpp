@@ -384,19 +384,19 @@ void test_radix_sort() {
   ExecutionSpace exec;
 
   constexpr int num_bits_full = 8 * sizeof(long long);
-  //constexpr int num_bits_half = num_bits_full / 2;
+  // constexpr int num_bits_half = num_bits_full / 2;
 
-  Kokkos::Experimental::RadixSorter<long long> radix(element_.extent(0));
+  Kokkos::Experimental::RadixSorter<long long> radix(exec, element_.extent(0));
 
   {
     Kokkos::deep_copy(exec, element_, h_element_init);
 
-    //radix.create_indirection_vector(exec, Kokkos::ExperimentalKeyFromView{element_});
+    // radix.create_indirection_vector(exec,
+    // Kokkos::ExperimentalKeyFromView{element_});
 
     radix.create_indirection_vector(
-        exec,
-        Kokkos::Experimental::KeyFromView(
-            element_, std::integral_constant<int, num_bits_full>()));
+        exec, Kokkos::Experimental::KeyFromView(
+                  element_, std::integral_constant<int, num_bits_full>()));
 
     radix.apply_permutation(exec, element_);
     Kokkos::deep_copy(h_element, element_);
@@ -448,7 +448,7 @@ void test_radix_sort() {
     auto pol = Kokkos::RangePolicy<ExecutionSpace>(exec, 0, 9);
     Kokkos::parallel_for(
         pol, KOKKOS_LAMBDA(int i) { i1(i) = i - 4; });
-    Kokkos::Experimental::RadixSorter<int> sorter(i1.extent(0));
+    Kokkos::Experimental::RadixSorter<int> sorter(exec, i1.extent(0));
     sorter.sort(exec, i1);
     auto h_i1 = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, i1);
     for (int i = 0; i < 9; ++i) {
@@ -468,9 +468,9 @@ void test_radix_sort() {
             i1(i) = i - 4;
           }
         });
-    Kokkos::Experimental::RadixSorter<int> sorter(i1.extent(0));
-    sorter.create_indirection_vector(
-        exec, Kokkos::Experimental::KeyFromView(i1));
+    Kokkos::Experimental::RadixSorter<int> sorter(exec, i1.extent(0));
+    sorter.create_indirection_vector(exec,
+                                     Kokkos::Experimental::KeyFromView(i1));
     sorter.apply_permutation(exec, i1);
     auto h_i1 = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, i1);
     for (size_t i = 0; i < i1.extent(0) - 1; ++i) {
@@ -492,7 +492,7 @@ void test_radix_sort() {
             fp1(i) = (9 - i) - 4.0;
           }
         });
-    Kokkos::Experimental::RadixSorter<double> sorter(fp1.extent(0));
+    Kokkos::Experimental::RadixSorter<double> sorter(exec, fp1.extent(0));
     sorter.sort(exec, fp1);
     auto h_fp = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, fp1);
     for (int i = 0; i < 9; ++i) {

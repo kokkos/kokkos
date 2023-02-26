@@ -122,8 +122,7 @@ struct KeyFromView {
   // i: index of the key to get
   // bit: which bit, with 0 indicating the least-significant
   template <typename IndexType>
-  KOKKOS_INLINE_FUNCTION
-  auto operator()(IndexType i, std::uint32_t bit) const {
+  KOKKOS_INLINE_FUNCTION auto operator()(IndexType i, std::uint32_t bit) const {
     // I'd rather use a fully aliasing view here ...
     auto key = *reinterpret_cast<key_integral_type*>(&keys(i));
     auto h   = key >> bit;
@@ -169,25 +168,40 @@ template <typename KeyType, typename IndexType = ::std::uint32_t>
 class RadixSorter {
  public:
   RadixSorter() = default;
-  explicit RadixSorter(std::size_t n)
-      : m_key_scratch("Kokkos::RadixSorter radix_sort_key_scratch", n),
-        m_index_old("Kokkos::RadixSorter radix_sort_index", n),
-        m_index_new("Kokkos::RadixSorter radix_sort_index_scratch", n),
-        m_scan("Kokkos::RadixSorter radix_sort_scan", n),
-        m_bits("Kokkos::RadixSorter radix_sort_bits", n) {}
+
+  template <typename ExecutionSpace>
+  explicit RadixSorter(ExecutionSpace const& exec, std::size_t n)
+      : m_key_scratch(
+            Kokkos::view_alloc(exec, Kokkos::WithoutInitializing,
+                               "Kokkos::RadixSorter radix_sort_key_scratch"),
+            n),
+        m_index_old(Kokkos::view_alloc(exec, Kokkos::WithoutInitializing,
+                                       "Kokkos::RadixSorter radix_sort_index"),
+                    n),
+        m_index_new(
+            Kokkos::view_alloc(exec, Kokkos::WithoutInitializing,
+                               "Kokkos::RadixSorter radix_sort_index_scratch"),
+            n),
+        m_scan(Kokkos::view_alloc(exec, Kokkos::WithoutInitializing,
+                                  "Kokkos::RadixSorter radix_sort_scan"),
+               n),
+        m_bits(Kokkos::view_alloc(exec, Kokkos::WithoutInitializing,
+                                  "Kokkos::RadixSorter radix_sort_bits"),
+               n) {}
 
   // Generate and store the permutation induced by the keys, without
   // modifying their initial order
   template <typename ExecutionSpace, typename KeyFunctor>
   void create_indirection_vector(ExecutionSpace const& exec,
                                  KeyFunctor key_functor) {
-    RangePolicy<ExecutionSpace, Kokkos::IndexType<IndexType>> policy(exec, 0,
-                                                                     key_functor.extent());
+    RangePolicy<ExecutionSpace, Kokkos::IndexType<IndexType>> policy(
+        exec, 0, key_functor.extent());
 
     // Initialize m_index_old, since it will be read from in the first
     // iteration's call to step()
-    Kokkos::parallel_for("Kokkos::RadixSorter initializing m_index_old",
-        policy, KOKKOS_LAMBDA(IndexType i) { m_index_old(i) = i; });
+    Kokkos::parallel_for(
+        "Kokkos::RadixSorter initializing m_index_old", policy,
+        KOKKOS_LAMBDA(IndexType i) { m_index_old(i) = i; });
 
     int num_bits = key_functor.getNumBits();
     for (int i = 0; i < num_bits; ++i) {
@@ -206,8 +220,9 @@ class RadixSorter {
                                                                      n);
 
     if constexpr (store_permutation) {
-      Kokkos::parallel_for("Kokkos::RadixSorter sort store_permutation",
-          policy, KOKKOS_LAMBDA(IndexType i) { m_index_old(i) = i; });
+      Kokkos::parallel_for(
+          "Kokkos::RadixSorter sort store_permutation", policy,
+          KOKKOS_LAMBDA(IndexType i) { m_index_old(i) = i; });
     }
 
     using KeyFunctor = decltype(KeyFromView{keys});
@@ -241,14 +256,15 @@ class RadixSorter {
                                                                      n);
 
     if constexpr (store_permutation) {
-      Kokkos::parallel_for("Kokkos::RadixSorter sortByKeys store_permutation",
-          policy, KOKKOS_LAMBDA(IndexType i) { m_index_old(i) = i; });
+      Kokkos::parallel_for(
+          "Kokkos::RadixSorter sortByKeys store_permutation", policy,
+          KOKKOS_LAMBDA(IndexType i) { m_index_old(i) = i; });
     }
 
-    auto values_scratch =
-        View<U*>(view_alloc(exec, "Kokkos::RadixSorter radix_sorter_values_scratch",
-                            Kokkos::WithoutInitializing),
-                 n);
+    auto values_scratch = View<U*>(
+        view_alloc(exec, "Kokkos::RadixSorter radix_sorter_values_scratch",
+                   Kokkos::WithoutInitializing),
+        n);
 
     using KeyFunctor = decltype(KeyFromView{keys});
 
@@ -275,7 +291,8 @@ class RadixSorter {
 
   template <typename ExecutionSpace>
   void apply_permutation(ExecutionSpace const& exec, View<KeyType*> v) {
-    parallel_for("Kokkos::RadixSorter apply_permutation",
+    parallel_for(
+        "Kokkos::RadixSorter apply_permutation",
         RangePolicy<ExecutionSpace, Kokkos::IndexType<IndexType>>(exec, 0,
                                                                   v.extent(0)),
         KOKKOS_LAMBDA(IndexType i) { m_key_scratch(i) = v(m_index_old(i)); });
@@ -286,8 +303,9 @@ class RadixSorter {
   template <typename... U, typename Policy>
   void permute_by_scan(Policy policy,
                        Kokkos::pair<View<U*>&, View<U*>&>... views) {
-    parallel_for("Kokkos::RadixSorter permute_by_scan",
-        policy, KOKKOS_LAMBDA(IndexType i) {
+    parallel_for(
+        "Kokkos::RadixSorter permute_by_scan", policy,
+        KOKKOS_LAMBDA(IndexType i) {
           auto n           = m_scan.extent(0);
           const auto total = m_scan(n - 1) + m_bits(n - 1);
           auto t           = i - m_scan(i) + total;
@@ -303,16 +321,17 @@ class RadixSorter {
   template <typename Policy, typename KeyFunctor, typename Permutation>
   void step(Policy policy, KeyFunctor getKeyBit, std::uint32_t shift,
             const Permutation& permutation) {
-    parallel_for("Kokkos::RadixSorter step for",
-        policy, KOKKOS_LAMBDA(IndexType i) {
+    parallel_for(
+        "Kokkos::RadixSorter step for", policy, KOKKOS_LAMBDA(IndexType i) {
           auto key_bit = getKeyBit(permutation(i), shift);
 
           m_bits(i) = key_bit;
           m_scan(i) = m_bits(i);
         });
 
-    parallel_scan("Kokkos::RadixSorter step scan",
-        policy, KOKKOS_LAMBDA(IndexType i, size_t & _x, bool _final) {
+    parallel_scan(
+        "Kokkos::RadixSorter step scan", policy,
+        KOKKOS_LAMBDA(IndexType i, size_t & _x, bool _final) {
           auto val = m_scan(i);
 
           if (_final) m_scan(i) = _x;
