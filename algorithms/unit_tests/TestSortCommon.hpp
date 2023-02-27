@@ -24,8 +24,6 @@ TEST(TEST_CATEGORY, SortUnsigned) {
   Impl::test_sort<TEST_EXECSPACE, unsigned>(171);
 }
 
-TEST(TEST_CATEGORY, RadixSort) {
-  Impl::test_radix_sort<TEST_EXECSPACE>();
-}
+TEST(TEST_CATEGORY, RadixSort) { Impl::test_radix_sort<TEST_EXECSPACE>(); }
 }  // namespace Test
 #endif
