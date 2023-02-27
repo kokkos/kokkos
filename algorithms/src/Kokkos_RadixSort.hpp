@@ -270,6 +270,8 @@ class RadixSorter {
 
     using KeyFunctor = decltype(KeyFromView{keys});
 
+    (void)values;  // Avoid a false warning from icpc about values being unused
+
     for (int i = 0; i < KeyFunctor::num_bits; ++i) {
       KeyFunctor key_functor = KeyFromView{keys};
 
