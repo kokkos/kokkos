@@ -148,7 +148,7 @@ do
     remove_duplicate_link_files=1
     ;;
   #handle source files to be compiled as cuda files
-  *.cpp|*.cxx|*.cc|*.C|*.c++|*.cu)
+  *.cpp|*.cxx|*.cc|*.C|*.c++|*.cu|*.c)
     cpp_files="$cpp_files $1"
     ;;
    # Ensure we only have one optimization flag because NVCC doesn't allow multiple
