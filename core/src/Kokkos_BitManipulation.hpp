@@ -153,6 +153,32 @@ bit_width(T x) noexcept {
 }
 //</editor-fold>
 
+//<editor-fold desc="[bit.rotate], rotating">
+template <class T>
+[[nodiscard]] KOKKOS_FUNCTION constexpr std::enable_if_t<
+    Impl::is_standard_unsigned_integer_type_v<T>, T>
+rotl(T x, int s) noexcept {
+  using Experimental::digits_v;
+  constexpr auto dig = digits_v<T>;
+  int const rem      = s % dig;
+  if (rem == 0) return x;
+  if (rem > 0) return (x << rem) | (x >> ((dig - rem) % dig));
+  return (x >> -rem) | (x << ((dig + rem) % dig));  // rotr(x, -rem)
+}
+
+template <class T>
+[[nodiscard]] KOKKOS_FUNCTION constexpr std::enable_if_t<
+    Impl::is_standard_unsigned_integer_type_v<T>, T>
+rotr(T x, int s) noexcept {
+  using Experimental::digits_v;
+  constexpr auto dig = digits_v<T>;
+  int const rem      = s % dig;
+  if (rem == 0) return x;
+  if (rem > 0) return (x >> rem) | (x << ((dig - rem) % dig));
+  return (x << -rem) | (x >> ((dig + rem) % dig));  // rotl(x, -rem)
+}
+//</editor-fold>
+
 }  // namespace Kokkos
 
 namespace Kokkos::Impl {
@@ -351,6 +377,20 @@ KOKKOS_FUNCTION
     bit_width_builtin(T x) noexcept {
   if (x == 0) return 0;
   return digits_v<T> - countl_zero_builtin(x);
+}
+
+template <class T>
+[[nodiscard]] KOKKOS_FUNCTION
+    std::enable_if_t<::Kokkos::Impl::is_standard_unsigned_integer_type_v<T>, T>
+    rotl_builtin(T x, int s) noexcept {
+  return rotl(x, s);  // no benefit to call the _builtin variant
+}
+
+template <class T>
+[[nodiscard]] KOKKOS_FUNCTION
+    std::enable_if_t<::Kokkos::Impl::is_standard_unsigned_integer_type_v<T>, T>
+    rotr_builtin(T x, int s) noexcept {
+  return rotr(x, s);  // no benefit to call the _builtin variant
 }
 
 }  // namespace Kokkos::Experimental

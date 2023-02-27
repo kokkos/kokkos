@@ -32,6 +32,105 @@ struct X {
   static_assert(test_##FUNC((float)0).did_not_match()); \
   static_assert(test_##FUNC((void*)0).did_not_match())
 
+//<editor-fold desc="[bit.rotate]">
+template <class UInt>
+constexpr auto test_rotl(UInt x) -> decltype(Kokkos::rotl(x, 0)) {
+  using Kokkos::rotl;
+
+  static_assert(noexcept(rotl(x, 0)));
+  static_assert(std::is_same_v<decltype(rotl(x, 0)), UInt>);
+
+  constexpr auto dig = Kokkos::Experimental::digits_v<UInt>;
+  constexpr auto max = Kokkos::Experimental::finite_max_v<UInt>;
+
+  static_assert(rotl(UInt(0), 0) == 0);
+  static_assert(rotl(UInt(0), 1) == 0);
+  static_assert(rotl(UInt(0), 4) == 0);
+  static_assert(rotl(UInt(0), 8) == 0);
+  static_assert(rotl(max, 0) == max);
+  static_assert(rotl(max, 1) == max);
+  static_assert(rotl(max, 4) == max);
+  static_assert(rotl(max, 8) == max);
+  static_assert(rotl(UInt(1), 0) == UInt(1) << 0);
+  static_assert(rotl(UInt(1), 1) == UInt(1) << 1);
+  static_assert(rotl(UInt(1), 4) == UInt(1) << 4);
+  static_assert(rotl(UInt(1), dig) == UInt(1));
+  static_assert(rotl(UInt(7), dig) == UInt(7));
+  static_assert(rotl(UInt(6), dig - 1) == UInt(3));
+  static_assert(rotl(UInt(3), 6) == UInt(3) << 6);
+
+  static_assert(rotl(UInt(max - 1), 0) == UInt(max - 1));
+  static_assert(rotl(UInt(max - 1), 1) == UInt(max - 2));
+  static_assert(rotl(UInt(max - 1), 2) == UInt(max - 4));
+  static_assert(rotl(UInt(max - 1), 3) == UInt(max - 8));
+  static_assert(rotl(UInt(max - 1), 4) == UInt(max - 16));
+  static_assert(rotl(UInt(max - 1), 5) == UInt(max - 32));
+  static_assert(rotl(UInt(max - 1), 6) == UInt(max - 64));
+  static_assert(rotl(UInt(max - 1), 7) == UInt(max - 128));
+  static_assert(rotl(UInt(1), 0) == UInt(1));
+  static_assert(rotl(UInt(1), 1) == UInt(2));
+  static_assert(rotl(UInt(1), 2) == UInt(4));
+  static_assert(rotl(UInt(1), 3) == UInt(8));
+  static_assert(rotl(UInt(1), 4) == UInt(16));
+  static_assert(rotl(UInt(1), 5) == UInt(32));
+  static_assert(rotl(UInt(1), 6) == UInt(64));
+  static_assert(rotl(UInt(1), 7) == UInt(128));
+
+  return true;
+}
+
+TEST_BIT_MANIPULATION(rotl);
+
+template <class UInt>
+constexpr auto test_rotr(UInt x) -> decltype(Kokkos::rotr(x, 0)) {
+  using Kokkos::rotr;
+
+  static_assert(noexcept(rotr(x, 0)));
+  static_assert(std::is_same_v<decltype(rotr(x, 0)), UInt>);
+
+  constexpr auto dig     = Kokkos::Experimental::digits_v<UInt>;
+  constexpr auto max     = Kokkos::Experimental::finite_max_v<UInt>;
+  constexpr auto highbit = rotr(UInt(1), 1);
+
+  static_assert(rotr(UInt(0), 0) == 0);
+  static_assert(rotr(UInt(0), 1) == 0);
+  static_assert(rotr(UInt(0), 4) == 0);
+  static_assert(rotr(UInt(0), 8) == 0);
+  static_assert(rotr(max, 0) == max);
+  static_assert(rotr(max, 1) == max);
+  static_assert(rotr(max, 4) == max);
+  static_assert(rotr(max, 8) == max);
+  static_assert(rotr(UInt(128), 0) == UInt(128) >> 0);
+  static_assert(rotr(UInt(128), 1) == UInt(128) >> 1);
+  static_assert(rotr(UInt(128), 4) == UInt(128) >> 4);
+  static_assert(rotr(UInt(1), dig) == UInt(1));
+  static_assert(rotr(UInt(7), dig) == UInt(7));
+  static_assert(rotr(UInt(6), dig - 1) == UInt(12));
+  static_assert(rotr(UInt(36), dig - 2) == UInt(144));
+
+  static_assert(rotr(UInt(max - 1), 0) == UInt(max - 1));
+  static_assert(rotr(UInt(max - 1), 1) == UInt(max - highbit));
+  static_assert(rotr(UInt(max - 1), 2) == UInt(max - (highbit >> 1)));
+  static_assert(rotr(UInt(max - 1), 3) == UInt(max - (highbit >> 2)));
+  static_assert(rotr(UInt(max - 1), 4) == UInt(max - (highbit >> 3)));
+  static_assert(rotr(UInt(max - 1), 5) == UInt(max - (highbit >> 4)));
+  static_assert(rotr(UInt(max - 1), 6) == UInt(max - (highbit >> 5)));
+  static_assert(rotr(UInt(max - 1), 7) == UInt(max - (highbit >> 6)));
+  static_assert(rotr(UInt(128), 0) == UInt(128));
+  static_assert(rotr(UInt(128), 1) == UInt(64));
+  static_assert(rotr(UInt(128), 2) == UInt(32));
+  static_assert(rotr(UInt(128), 3) == UInt(16));
+  static_assert(rotr(UInt(128), 4) == UInt(8));
+  static_assert(rotr(UInt(128), 5) == UInt(4));
+  static_assert(rotr(UInt(128), 6) == UInt(2));
+  static_assert(rotr(UInt(128), 7) == UInt(1));
+
+  return true;
+}
+
+TEST_BIT_MANIPULATION(rotr);
+//</editor-fold>
+
 //<editor-fold desc="[bit.count]">
 template <class UInt>
 constexpr auto test_countl_zero(UInt x) -> decltype(Kokkos::countl_zero(x)) {
