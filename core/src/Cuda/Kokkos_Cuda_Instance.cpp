@@ -408,7 +408,9 @@ Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
 #endif
 
   // Init the array for used for arbitrarily sized atomics
-  if (this == &singleton()) Impl::initialize_host_cuda_lock_arrays();
+  if (this == &singleton()) {
+    desul::Impl::init_lock_arrays();  // FIXME
+  }
 
   // Allocate a staging buffer for constant mem in pinned host memory
   // and an event to avoid overwriting driver for previous kernel launches
@@ -582,7 +584,7 @@ void CudaInternal::finalize() {
   // Only finalize this if we're the singleton
   if (this == &singleton()) {
     (void)Impl::cuda_global_unique_token_locks(true);
-    Impl::finalize_host_cuda_lock_arrays();
+    desul::Impl::finalize_lock_arrays();  // FIXME
 
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFreeHost(constantMemHostStaging));
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaEventDestroy(constantMemReusable));
