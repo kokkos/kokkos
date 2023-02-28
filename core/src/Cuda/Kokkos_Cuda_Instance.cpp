@@ -867,14 +867,6 @@ void Cuda::print_configuration(std::ostream &os, bool /*verbose*/) const {
   os << "Device Execution Space:\n";
   os << "  KOKKOS_ENABLE_CUDA: yes\n";
 
-  os << "Cuda Atomics:\n";
-  os << "  KOKKOS_ENABLE_CUDA_ATOMICS: ";
-#ifdef KOKKOS_ENABLE_CUDA_ATOMICS
-  os << "yes\n";
-#else
-  os << "no\n";
-#endif
-
   os << "Cuda Options:\n";
   os << "  KOKKOS_ENABLE_CUDA_LAMBDA: ";
 #ifdef KOKKOS_ENABLE_CUDA_LAMBDA

@@ -57,14 +57,6 @@ void OpenMP::print_configuration(std::ostream &os, bool /*verbose*/) const {
   os << "Host Parallel Execution Space:\n";
   os << "  KOKKOS_ENABLE_OPENMP: yes\n";
 
-  os << "OpenMP Atomics:\n";
-  os << "  KOKKOS_ENABLE_OPENMP_ATOMICS: ";
-#ifdef KOKKOS_ENABLE_OPENMP_ATOMICS
-  os << "yes\n";
-#else
-  os << "no\n";
-#endif
-
   os << "\nOpenMP Runtime Configuration:\n";
 
   m_space_instance->print_configuration(os);
