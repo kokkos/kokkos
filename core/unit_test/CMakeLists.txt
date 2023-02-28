@@ -58,7 +58,7 @@ SET(KOKKOS_SYCL_FEATURE_LEVEL 999)
 SET(KOKKOS_SYCL_NAME Experimental::SYCL)
 SET(KOKKOS_THREADS_FEATURE_LEVEL 999)
 SET(KOKKOS_THREADS_NAME Threads)
-SET(KOKKOS_OPENACC_FEATURE_LEVEL 14)
+SET(KOKKOS_OPENACC_FEATURE_LEVEL 16)
 SET(KOKKOS_OPENACC_NAME Experimental::OpenACC)
 
 
@@ -495,7 +495,6 @@ IF(KOKKOS_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_HostSharedPtr.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_HostSharedPtrAccessOnDevice.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_TeamScratch.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_TestScan.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_TestTeamScan.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_TestTeamReductionScan.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_Atomics.cpp
@@ -519,7 +518,6 @@ IF(KOKKOS_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_Reducers_e.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_ViewMapping_b.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_TeamBasic.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_Scan.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_NumericTraits.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_DeepCopyAlignment.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_MathematicalFunctions.cpp
