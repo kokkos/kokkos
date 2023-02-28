@@ -234,7 +234,7 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
         const pointer_type data =
             (pointer_type)ThreadsExec::root_reduce_scratch();
 
-        const unsigned n = m_functor_reducer.get_reducer().value_count();
+        const unsigned n = reducer.value_count();
         for (unsigned i = 0; i < n; ++i) {
           m_result_ptr[i] = data[i];
         }
