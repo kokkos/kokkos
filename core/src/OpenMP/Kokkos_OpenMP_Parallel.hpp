@@ -446,9 +446,9 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
     m_instance = arg_policy.space().impl_internal_space_instance();
 #endif
     static_assert(
-        std::is_same<typename ViewType::memory_space, Kokkos::HostSpace>::value,
-        "Reduction result on Kokkos::OpenMP must be a Kokkos::View in "
-        "HostSpace");
+        Kokkos::Impl::MemorySpaceAccess<typename ViewType::memory_space,
+                                        Kokkos::HostSpace>::accessible,
+        "Kokkos::OpenMP reduce result must be a View in HostSpace");
   }
 };
 
@@ -594,9 +594,9 @@ class ParallelReduce<CombinedFunctorReducerType,
     m_instance = arg_policy.space().impl_internal_space_instance();
 #endif
     static_assert(
-        std::is_same<typename ViewType::memory_space, Kokkos::HostSpace>::value,
-        "Reduction result on Kokkos::OpenMP must be a Kokkos::View in "
-        "HostSpace");
+        Kokkos::Impl::MemorySpaceAccess<typename ViewType::memory_space,
+                                        Kokkos::HostSpace>::accessible,
+        "Kokkos::OpenMP reduce result must be a View in HostSpace");
   }
 
   template <typename Policy, typename Functor>
@@ -1251,9 +1251,9 @@ class ParallelReduce<CombinedFunctorReducerType,
 #endif
 
     static_assert(
-        std::is_same<typename ViewType::memory_space, Kokkos::HostSpace>::value,
-        "Reduction result on Kokkos::OpenMP must be a Kokkos::View in "
-        "HostSpace");
+        Kokkos::Impl::MemorySpaceAccess<typename ViewType::memory_space,
+                                        Kokkos::HostSpace>::accessible,
+        "Kokkos::OpenMP reduce result must be a View in HostSpace");
   }
 };
 
