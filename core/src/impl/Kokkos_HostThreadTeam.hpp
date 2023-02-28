@@ -481,14 +481,14 @@ class HostThreadTeamMember {
         // with a return value of 'true'
 
         Kokkos::Impl::atomic_store(shared_value, value,
-                                   Kokkos::Impl::memory_order_release);
+                                   desul::MemoryOrderRelease());
 
         m_data.team_rendezvous_release();
         // This thread released all other threads from 'team_rendezvous'
         // with a return value of 'false'
       } else {
         value = Kokkos::Impl::atomic_load(shared_value,
-                                          Kokkos::Impl::memory_order_acquire);
+                                          desul::MemoryOrderAcquire());
       }
     }))
 
@@ -516,7 +516,7 @@ class HostThreadTeamMember {
 
           if (1 < m_data.m_team_size) {
             Kokkos::Impl::atomic_store(shared_value, value,
-                                       Kokkos::Impl::memory_order_release);
+                                       desul::MemoryOrderRelease());
           }
 
           m_data.team_rendezvous_release();
@@ -524,7 +524,7 @@ class HostThreadTeamMember {
           // with a return value of 'false'
         } else {
           value = Kokkos::Impl::atomic_load(shared_value,
-                                            Kokkos::Impl::memory_order_acquire);
+                                            desul::MemoryOrderAcquire());
         }))
 
     KOKKOS_IF_ON_DEVICE(
