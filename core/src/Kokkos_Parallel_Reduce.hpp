@@ -1432,6 +1432,11 @@ template <>
 struct implements_new_reduce_interface<Kokkos::Cuda> : std::true_type {};
 #endif
 
+#ifdef KOKKOS_ENABLE_HIP
+template <>
+struct implements_new_reduce_interface<Kokkos::HIP> : std::true_type {};
+#endif
+
 template <typename CombinedFunctorReducerType, typename PolicyType,
           typename ExecutionSpaceType, typename Enable>
 class ParallelReduceWrapper {
