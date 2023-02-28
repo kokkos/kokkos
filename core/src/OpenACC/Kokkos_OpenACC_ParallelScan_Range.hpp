@@ -76,7 +76,7 @@ class Kokkos::Impl::ParallelScan<Functor, Kokkos::RangePolicy<Traits...>,
     std::unique_ptr<ValueType[]> element_values_owner(
         new ValueType[2 * chunk_size]);
     ValueType* element_values = element_values_owner.get();
-    typename Analysis::Reducer final_reducer(&m_functor);
+    typename Analysis::Reducer final_reducer(m_functor);
 
 #pragma acc enter data copyin(functor, final_reducer) \
     copyin(chunk_values, offset_values) async(async_arg)
