@@ -26,7 +26,6 @@ static_assert(false,
 #include <Kokkos_Atomics_Desul_Config.hpp>
 #include <desul/atomics.hpp>
 
-#include <impl/Kokkos_Atomic_Memory_Order.hpp>
 #include <impl/Kokkos_Volatile_Load.hpp>
 
 // clang-format off
@@ -228,30 +227,6 @@ T atomic_compare_exchange(T* const dest, desul::Impl::dont_deduce_this_parameter
 }
 
 namespace Impl {
-
-  template<class MemoryOrder>
-  struct KokkosToDesulMemoryOrder;
-
-  template<>
-  struct KokkosToDesulMemoryOrder<memory_order_seq_cst_t> {
-    using type = desul::MemoryOrderSeqCst;
-  };
-  template<>
-  struct KokkosToDesulMemoryOrder<memory_order_acquire_t> {
-    using type = desul::MemoryOrderAcquire;
-  };
-  template<>
-  struct KokkosToDesulMemoryOrder<memory_order_release_t> {
-    using type = desul::MemoryOrderRelease;
-  };
-  template<>
-  struct KokkosToDesulMemoryOrder<memory_order_acq_rel_t> {
-    using type = desul::MemoryOrderAcqRel;
-  };
-  template<>
-  struct KokkosToDesulMemoryOrder<memory_order_relaxed_t> {
-    using type = desul::MemoryOrderRelaxed;
-  };
   template<class T, class MemOrderSuccess, class MemOrderFailure> KOKKOS_INLINE_FUNCTION
   bool atomic_compare_exchange_strong(T* const dest, T& expected, const T desired, MemOrderSuccess succ, MemOrderFailure fail) {
     return desul::atomic_compare_exchange_strong(dest, expected, desired, succ, fail, KOKKOS_DESUL_MEM_SCOPE);
