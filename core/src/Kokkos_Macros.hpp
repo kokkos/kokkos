@@ -71,13 +71,6 @@
  *  KOKKOS_COMPILER_NVHPC
  *  KOKKOS_COMPILER_MSVC
  *
- *  Macros for which compiler extension to use for atomics on intrinsic types
- *
- *  KOKKOS_ENABLE_CUDA_ATOMICS
- *  KOKKOS_ENABLE_GNU_ATOMICS
- *  KOKKOS_ENABLE_INTEL_ATOMICS
- *  KOKKOS_ENABLE_OPENMP_ATOMICS
- *
  *  A suite of 'KOKKOS_ENABLE_PRAGMA_...' are defined for internal use.
  *
  *  Macros for marking functions to run in an execution space:
