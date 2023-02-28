@@ -165,7 +165,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                           exec.pool_rank(), exec.pool_size());
 
     typename Analysis::Reducer reducer(
-        &ReducerConditional::select(self.m_iter.m_func, self.m_reducer));
+        ReducerConditional::select(self.m_iter.m_func, self.m_reducer));
 
     self.exec_range(
         range.begin(), range.end(),
@@ -189,7 +189,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
 
     long work_index = exec.get_work_index();
     typename Analysis::Reducer reducer(
-        &ReducerConditional::select(self.m_iter.m_func, self.m_reducer));
+        ReducerConditional::select(self.m_iter.m_func, self.m_reducer));
 
     reference_type update =
         reducer.init(static_cast<pointer_type>(exec.reduce_memory()));

@@ -75,7 +75,7 @@ namespace Kokkos {
 
 namespace Impl {
 
-template <class DstViewType, class SrcViewType, int Rank = DstViewType::Rank>
+template <class DstViewType, class SrcViewType, int Rank = DstViewType::rank>
 struct CopyOp;
 
 template <class DstViewType, class SrcViewType>
@@ -456,24 +456,18 @@ class BinSort {
   void operator()(const bin_sort_bins_tag& /*tag*/, const int i) const {
     auto bin_size = bin_count_const(i);
     if (bin_size <= 1) return;
-    int upper_bound = bin_offsets(i) + bin_size;
-    bool sorted     = false;
-    while (!sorted) {
-      sorted      = true;
-      int old_idx = sort_order(bin_offsets(i));
-      int new_idx = 0;
-      for (int k = bin_offsets(i) + 1; k < upper_bound; k++) {
-        new_idx = sort_order(k);
-
-        if (!bin_op(keys_rnd, old_idx, new_idx)) {
-          sort_order(k - 1) = new_idx;
-          sort_order(k)     = old_idx;
-          sorted            = false;
-        } else {
-          old_idx = new_idx;
-        }
+    int lower_bound = bin_offsets(i);
+    int upper_bound = lower_bound + bin_size;
+    for (int k = lower_bound + 1; k < upper_bound; ++k) {
+      int old_idx = sort_order(k);
+      int j       = k - 1;
+      while (j >= lower_bound) {
+        int new_idx = sort_order(j);
+        if (!bin_op(keys_rnd, old_idx, new_idx)) break;
+        sort_order(j + 1) = new_idx;
+        --j;
       }
-      upper_bound--;
+      sort_order(j + 1) = old_idx;
     }
   }
 };

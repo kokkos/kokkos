@@ -222,7 +222,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
 
 #pragma omp target map(to : f) is_device_ptr(scratch_ptr)
     {
-      typename FunctorAnalysis::Reducer final_reducer(&f);
+      typename FunctorAnalysis::Reducer final_reducer(f);
       // Enter this loop if the functor has an `init`
       if constexpr (HasInit) {
         // The `init` routine needs to be called on the device since it might
@@ -257,7 +257,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
     map(to                                                                   \
         : f) is_device_ptr(scratch_ptr)
     {
-      typename FunctorAnalysis::Reducer final_reducer(&f);
+      typename FunctorAnalysis::Reducer final_reducer(f);
 #pragma omp parallel
       {
         const int team_num    = omp_get_team_num();
@@ -304,7 +304,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
     is_device_ptr(scratch_ptr)
       for (int i = 0; i < max_teams - tree_neighbor_offset;
            i += 2 * tree_neighbor_offset) {
-        typename FunctorAnalysis::Reducer final_reducer(&f);
+        typename FunctorAnalysis::Reducer final_reducer(f);
         ValueType* team_scratch = scratch_ptr;
         const int team_offset   = max_team_threads * value_count;
         final_reducer.join(
@@ -575,7 +575,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
       // device members.
 #pragma omp target map(to : f) is_device_ptr(scratch_ptr)
       {
-        typename FunctorAnalysis::Reducer final_reducer(&f);
+        typename FunctorAnalysis::Reducer final_reducer(f);
         final_reducer.init(scratch_ptr);
         final_reducer.final(scratch_ptr);
       }
@@ -586,7 +586,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
           static_cast<ValueType*>(scratch_ptr)[i] = ValueType();
         }
 
-        typename FunctorAnalysis::Reducer final_reducer(&f);
+        typename FunctorAnalysis::Reducer final_reducer(f);
         final_reducer.final(static_cast<ValueType*>(scratch_ptr));
       }
     }
@@ -616,7 +616,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
         const int num_teams     = omp_get_num_teams();
         ValueType* team_scratch = static_cast<ValueType*>(scratch_ptr) +
                                   team_num * team_size * value_count;
-        typename FunctorAnalysis::Reducer final_reducer(&f);
+        typename FunctorAnalysis::Reducer final_reducer(f);
         ReferenceType result = final_reducer.init(&team_scratch[0]);
 
         for (int league_id = team_num; league_id < league_size;
@@ -642,7 +642,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
            i += 2 * tree_neighbor_offset) {
         ValueType* team_scratch = static_cast<ValueType*>(scratch_ptr);
         const int team_offset   = team_size * value_count;
-        typename FunctorAnalysis::Reducer final_reducer(&f);
+        typename FunctorAnalysis::Reducer final_reducer(f);
         final_reducer.join(
             &team_scratch[i * team_offset],
             &team_scratch[(i + tree_neighbor_offset) * team_offset]);

@@ -608,7 +608,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                   static_cast<const FunctorType&>(functor),
                   static_cast<const ReducerType&>(
                       reducer_wrapper.get_functor()));
-              typename Analysis::Reducer final_reducer(&selected_reducer);
+              typename Analysis::Reducer final_reducer(selected_reducer);
 
               reference_type update = final_reducer.init(results_ptr);
               if (size == 1) {
@@ -670,7 +670,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                     static_cast<const FunctorType&>(functor),
                     static_cast<const ReducerType&>(
                         reducer_wrapper.get_functor()));
-                typename Analysis::Reducer final_reducer(&selected_reducer);
+                typename Analysis::Reducer final_reducer(selected_reducer);
 
                 if constexpr (Analysis::StaticValueSize == 0) {
                   reference_type update =

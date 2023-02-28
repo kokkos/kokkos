@@ -42,9 +42,6 @@ void SerialInternal::initialize() {
 
   Impl::SharedAllocationRecord<void, void>::tracking_enable();
 
-  // Init the array of locks used for arbitrarily sized atomics
-  Impl::init_lock_array_host_space();
-
   m_is_initialized = true;
 }
 

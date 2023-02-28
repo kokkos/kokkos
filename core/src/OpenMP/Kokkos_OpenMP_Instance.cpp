@@ -324,8 +324,6 @@ void OpenMPInternal::initialize(int thread_count) {
     std::cerr << "                                    Requested: "
               << thread_count << " threads per process." << std::endl;
   }
-  // Init the array used for arbitrarily sized atomics
-  init_lock_array_host_space();
 
   m_initialized = true;
 }

@@ -14,25 +14,20 @@
 //
 //@HEADER
 
-#include <benchmark/benchmark.h>
+#include "PerfTest_ViewFill.hpp"
 
-#include "Benchmark_Context.hpp"
-#include <Kokkos_Core.hpp>
+namespace Test {
 
-#include "PerfTest_Category.hpp"
+#if defined(KOKKOS_ENABLE_CUDA_LAMBDA) || !defined(KOKKOS_ENABLE_CUDA)
+BENCHMARK(ViewFill_Raw<Kokkos::LayoutLeft>)
+    ->ArgName("N")
+    ->Arg(N)
+    ->UseManualTime();
 
-int main(int argc, char** argv) {
-  Kokkos::initialize(argc, argv);
-  benchmark::Initialize(&argc, argv);
-  benchmark::SetDefaultTimeUnit(benchmark::kSecond);
-  KokkosBenchmark::add_benchmark_context(true);
+BENCHMARK(ViewFill_Raw<Kokkos::LayoutRight>)
+    ->ArgName("N")
+    ->Arg(N)
+    ->UseManualTime();
+#endif
 
-  (void)Test::command_line_num_args(argc);
-  (void)Test::command_line_arg(0, argv);
-
-  benchmark::RunSpecifiedBenchmarks();
-
-  benchmark::Shutdown();
-  Kokkos::finalize();
-  return 0;
-}
+}  // namespace Test

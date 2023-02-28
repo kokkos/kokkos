@@ -713,7 +713,7 @@ void test_view_mapping() {
                               typename Space::memory_space>::value));
     ASSERT_TRUE((std::is_same<typename T::reference_type, int&>::value));
 
-    ASSERT_EQ(T::Rank, 1);
+    ASSERT_EQ(T::rank, size_t(1));
 
     ASSERT_TRUE((std::is_same<typename C::data_type, const int*>::value));
     ASSERT_TRUE((std::is_same<typename C::const_data_type, const int*>::value));
@@ -734,7 +734,7 @@ void test_view_mapping() {
                               typename Space::memory_space>::value));
     ASSERT_TRUE((std::is_same<typename C::reference_type, const int&>::value));
 
-    ASSERT_EQ(C::Rank, 1);
+    ASSERT_EQ(C::rank, size_t(1));
 
     ASSERT_EQ(vr1.extent(0), size_t(N));
 
@@ -781,7 +781,7 @@ void test_view_mapping() {
     ASSERT_TRUE((std::is_same<typename T::memory_space,
                               typename Space::memory_space>::value));
     ASSERT_TRUE((std::is_same<typename T::reference_type, int&>::value));
-    ASSERT_EQ(T::Rank, 1);
+    ASSERT_EQ(T::rank, size_t(1));
 
     ASSERT_EQ(vr1.extent(0), size_t(N));
 

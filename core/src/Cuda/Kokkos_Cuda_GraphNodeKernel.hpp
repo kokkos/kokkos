@@ -36,6 +36,13 @@
 namespace Kokkos {
 namespace Impl {
 
+// FIXME Remove once all backends implement the new reduce interface
+template <class CombinedFunctorReducer, class PolicyType>
+struct PatternImplSpecializationFromTag<
+    Kokkos::ParallelReduceTag, CombinedFunctorReducer, PolicyType, Kokkos::Cuda>
+    : type_identity<
+          ParallelReduce<CombinedFunctorReducer, PolicyType, Kokkos::Cuda>> {};
+
 template <class PolicyType, class Functor, class PatternTag, class... Args>
 class GraphNodeKernelImpl<Kokkos::Cuda, PolicyType, Functor, PatternTag,
                           Args...>
@@ -133,8 +140,9 @@ template <class KernelType>
 struct get_graph_node_kernel_type<KernelType, Kokkos::ParallelReduceTag>
     : type_identity<GraphNodeKernelImpl<
           Kokkos::Cuda, typename KernelType::Policy,
-          typename KernelType::functor_type, Kokkos::ParallelReduceTag,
-          typename KernelType::reducer_type>> {};
+          CombinedFunctorReducer<typename KernelType::functor_type,
+                                 typename KernelType::reducer_type>,
+          Kokkos::ParallelReduceTag>> {};
 
 //==============================================================================
 // <editor-fold desc="get_cuda_graph_*() helper functions"> {{{1

@@ -165,39 +165,6 @@ SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace, void>::
 }  // namespace Impl
 }  // namespace Kokkos
 
-/*--------------------------------------------------------------------------*/
-/*--------------------------------------------------------------------------*/
-/*
-namespace Kokkos {
-namespace {
-  const unsigned HOST_SPACE_ATOMIC_MASK = 0xFFFF;
-  const unsigned HOST_SPACE_ATOMIC_XOR_MASK = 0x5A39;
-  static int HOST_SPACE_ATOMIC_LOCKS[HOST_SPACE_ATOMIC_MASK+1];
-}
-
-namespace Impl {
-void init_lock_array_host_space() {
-  static int is_initialized = 0;
-  if(! is_initialized)
-    for(int i = 0; i < static_cast<int> (HOST_SPACE_ATOMIC_MASK+1); i++)
-      HOST_SPACE_ATOMIC_LOCKS[i] = 0;
-}
-
-bool lock_address_host_space(void* ptr) {
-  return 0 == atomic_compare_exchange( &HOST_SPACE_ATOMIC_LOCKS[
-      (( size_t(ptr) >> 2 ) & HOST_SPACE_ATOMIC_MASK) ^
-HOST_SPACE_ATOMIC_XOR_MASK] , 0 , 1);
-}
-
-void unlock_address_host_space(void* ptr) {
-   atomic_exchange( &HOST_SPACE_ATOMIC_LOCKS[
-      (( size_t(ptr) >> 2 ) & HOST_SPACE_ATOMIC_MASK) ^
-HOST_SPACE_ATOMIC_XOR_MASK] , 0);
-}
-
-}
-}*/
-
 //==============================================================================
 // <editor-fold desc="Explicit instantiations of CRTP Base classes"> {{{1
 

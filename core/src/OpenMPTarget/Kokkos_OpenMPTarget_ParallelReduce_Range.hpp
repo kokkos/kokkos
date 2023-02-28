@@ -100,7 +100,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   }
 
   template <class ViewType>
-  ParallelReduce(const FunctorType& arg_functor, Policy& arg_policy,
+  ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
                  const ViewType& arg_result_view,
                  std::enable_if_t<Kokkos::is_view<ViewType>::value &&
                                       !Kokkos::is_reducer<ReducerType>::value,
@@ -114,7 +114,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                               typename ViewType::memory_space>::accessible),
         m_result_ptr_num_elems(arg_result_view.size()) {}
 
-  ParallelReduce(const FunctorType& arg_functor, Policy& arg_policy,
+  ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
                  const ReducerType& reducer)
       : m_functor(arg_functor),
         m_policy(arg_policy),

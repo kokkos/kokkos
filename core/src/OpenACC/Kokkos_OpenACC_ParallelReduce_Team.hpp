@@ -69,7 +69,7 @@ class Kokkos::Impl::ParallelReduce<FunctorType,
 
     value_type tmp;
     typename Analysis::Reducer final_reducer(
-        &ReducerConditional::select(m_functor, m_reducer));
+        ReducerConditional::select(m_functor, m_reducer));
     final_reducer.init(&tmp);
 
     Kokkos::Experimental::Impl::OpenACCParallelReduceTeamHelper(

@@ -298,7 +298,7 @@ struct ZeroMemset;
 
 template <class ViewType, class Layout = typename ViewType::array_layout,
           class ExecSpace = typename ViewType::execution_space,
-          int Rank = ViewType::Rank, typename iType = int64_t>
+          int Rank = ViewType::rank, typename iType = int64_t>
 struct ViewFill;
 
 template <class ViewTypeA, class ViewTypeB, class Layout, class ExecSpace,
@@ -329,6 +329,16 @@ template <class FunctorType, class ExecPolicy, class ReducerType = InvalidType,
           class ExecutionSpace = typename Impl::FunctorPolicyExecutionSpace<
               FunctorType, ExecPolicy>::execution_space>
 class ParallelReduce;
+
+// FIXME Remove once all backends implement the new interface
+template <typename FunctorType, typename FunctorAnalysisReducerType,
+          typename Enable = void>
+class CombinedFunctorReducer;
+
+// FIXME Remove once all backends implement the new interface
+template <typename CombinedFunctorReducerType, typename PolicyType,
+          typename ExecutionSpaceType, typename Enable = void>
+class ParallelReduceWrapper;
 
 /// \class ParallelScan
 /// \brief Implementation detail of parallel_scan.

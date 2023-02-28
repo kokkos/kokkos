@@ -1079,9 +1079,10 @@ template <class... Args>
 struct PatternImplSpecializationFromTag<Kokkos::ParallelForTag, Args...>
     : type_identity<ParallelFor<Args...>> {};
 
+// FIXME Drop "Wrapper" when all backends implement the new reduce interface
 template <class... Args>
 struct PatternImplSpecializationFromTag<Kokkos::ParallelReduceTag, Args...>
-    : type_identity<ParallelReduce<Args...>> {};
+    : type_identity<ParallelReduceWrapper<Args...>> {};
 
 template <class... Args>
 struct PatternImplSpecializationFromTag<Kokkos::ParallelScanTag, Args...>

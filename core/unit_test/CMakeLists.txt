@@ -75,8 +75,11 @@ SET(COMPILE_ONLY_SOURCES
   TestArray.cpp
   TestCreateMirror.cpp
   TestDetectionIdiom.cpp
+  TestBitManipulation.cpp
   TestInterOp.cpp
   TestStringManipulation.cpp
+  TestVersionMacros.cpp
+  TestViewRank.cpp
   TestViewTypeTraits.cpp
   TestTypeList.cpp
   view/TestExtentsDatatypeConversion.cpp
@@ -110,6 +113,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
     # file. That then exceeded the shell command line max length.
     set(${Tag}_SOURCES1A)
     foreach(Name
+        BitManipulationBuiltins
         AtomicOperations_int
         AtomicOperations_unsignedint
         AtomicOperations_longint
@@ -136,6 +140,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
         MathematicalConstants
         MathematicalFunctions1
         MathematicalFunctions2
+        MathematicalFunctions3
         MDRange_a
         MDRange_b
         MDRange_c
@@ -518,6 +523,7 @@ IF(KOKKOS_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_MathematicalFunctions.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_MathematicalFunctions1.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_MathematicalFunctions2.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_MathematicalFunctions3.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_SubView_a.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_SubView_b.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_SubView_c01.cpp
@@ -1119,6 +1125,7 @@ KOKKOS_ADD_EXECUTABLE_AND_TEST(
 
 # This test is not properly set up to run within Trilinos
 if (NOT KOKKOS_HAS_TRILINOS)
+  SET_SOURCE_FILES_PROPERTIES(UnitTest_DeviceAndThreads.cpp PROPERTIES LANGUAGE ${KOKKOS_COMPILE_LANGUAGE})
   add_executable(KokkosCore_UnitTest_DeviceAndThreads UnitTest_DeviceAndThreads.cpp)
   target_link_libraries(KokkosCore_UnitTest_DeviceAndThreads Kokkos::kokkoscore)
   find_package(Python3 COMPONENTS Interpreter)
