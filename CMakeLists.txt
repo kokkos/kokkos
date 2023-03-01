@@ -203,6 +203,9 @@ IF(NOT KOKKOS_HAS_TRILINOS)
   # Gather information about the runtime environment
   INCLUDE(${KOKKOS_SRC_PATH}/cmake/build_env_info.cmake)
   check_git_setup()
+
+  # Setup performance benchmarks
+  INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_benchmarks.cmake)
 ENDIF()
 
 # The build environment setup goes in the following steps
