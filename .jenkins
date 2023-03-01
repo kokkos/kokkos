@@ -17,7 +17,7 @@ pipeline {
                 dockerfile {
                     filename 'Dockerfile.clang'
                     dir 'scripts/docker'
-                    label 'nvidia-docker || docker'
+                    label 'nvidia-docker || rocm-docker || docker'
                     args '-v /tmp/ccache.kokkos:/tmp/ccache'
                 }
             }
