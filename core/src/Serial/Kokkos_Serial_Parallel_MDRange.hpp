@@ -138,7 +138,8 @@ class ParallelReduce<CombinedFunctorReducerType,
     static_assert(
         Kokkos::Impl::MemorySpaceAccess<typename ViewType::memory_space,
                                         Kokkos::HostSpace>::accessible,
-        "Kokkos::Serial reduce result must be a View in HostSpace");
+        "Kokkos::Serial reduce result must be a View accessible from "
+        "HostSpace");
   }
 };
 
