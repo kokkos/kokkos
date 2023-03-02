@@ -1035,7 +1035,6 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA_ARCH), 1)
     KOKKOS_INTERNAL_CUDA_ARCH_FLAG := $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)=sm_72
   endif
   ifeq ($(KOKKOS_INTERNAL_USE_ARCH_TURING75), 1)
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_TURING")
     tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_TURING75")
     KOKKOS_INTERNAL_CUDA_ARCH_FLAG := $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)=sm_75
   endif
