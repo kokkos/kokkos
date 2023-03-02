@@ -56,6 +56,7 @@ struct NonTrivialScanFunctor {
   NonTrivialScanFunctor(NonTrivialScanFunctor &&)      = default;
   NonTrivialScanFunctor &operator=(NonTrivialScanFunctor &&) = default;
   NonTrivialScanFunctor &operator=(NonTrivialScanFunctor const &) = default;
+  // Also make sure that it's OK if the destructor is not device-callable.
   ~NonTrivialScanFunctor() {}
 };
 
