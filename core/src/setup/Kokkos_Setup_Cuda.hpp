@@ -62,19 +62,6 @@
 #undef KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
 #endif  // !defined(KOKKOS_ENABLE_CUDA_LAMBDA)
 
-#if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ >= 700)
-// PTX atomics with memory order semantics are only available on volta and later
-#if !defined(KOKKOS_DISABLE_CUDA_ASM)
-#if !defined(KOKKOS_ENABLE_CUDA_ASM)
-#define KOKKOS_ENABLE_CUDA_ASM
-#if !defined(KOKKOS_DISABLE_CUDA_ASM_ATOMICS) && \
-    defined(KOKKOS_ENABLE_GNU_ATOMICS)
-#define KOKKOS_ENABLE_CUDA_ASM_ATOMICS
-#endif
-#endif
-#endif
-#endif
-
 #define KOKKOS_IMPL_FORCEINLINE_FUNCTION __device__ __host__ __forceinline__
 #define KOKKOS_IMPL_FORCEINLINE __forceinline__
 #define KOKKOS_IMPL_INLINE_FUNCTION __device__ __host__ inline
