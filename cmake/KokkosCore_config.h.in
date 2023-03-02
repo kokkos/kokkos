@@ -108,6 +108,7 @@
 #cmakedefine KOKKOS_ARCH_AMPERE86
 #cmakedefine KOKKOS_ARCH_HOPPER
 #cmakedefine KOKKOS_ARCH_HOPPER90
+#cmakedefine KOKKOS_ARCH_NVIDIA_GPU
 #cmakedefine KOKKOS_ARCH_AMD_ZEN
 #cmakedefine KOKKOS_ARCH_AMD_ZEN2
 #cmakedefine KOKKOS_ARCH_AMD_ZEN3
