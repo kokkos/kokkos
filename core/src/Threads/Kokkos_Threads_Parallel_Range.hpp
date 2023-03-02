@@ -242,18 +242,20 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
     }
   }
 
-  template <class HostViewType>
+  template <class ViewType>
   ParallelReduce(const CombinedFunctorReducerType &arg_functor_reducer,
-                 const Policy &arg_policy, const HostViewType &arg_result_view)
+                 const Policy &arg_policy, const ViewType &arg_result_view)
       : m_functor_reducer(arg_functor_reducer),
         m_policy(arg_policy),
         m_result_ptr(arg_result_view.data()) {
-    static_assert(Kokkos::is_view<HostViewType>::value,
+    static_assert(Kokkos::is_view<ViewType>::value,
                   "Kokkos::Threads reduce result must be a View");
 
     static_assert(
-        std::is_same<typename HostViewType::memory_space, HostSpace>::value,
-        "Kokkos::Threads reduce result must be a View in HostSpace");
+        Kokkos::Impl::MemorySpaceAccess<typename ViewType::memory_space,
+                                        Kokkos::HostSpace>::accessible,
+        "Kokkos::Threads reduce result must be a View accessible from "
+        "HostSpace");
   }
 };
 

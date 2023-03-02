@@ -220,8 +220,10 @@ class ParallelReduce<CombinedFunctorReducerType,
                   "Kokkos::Threads reduce result must be a View");
 
     static_assert(
-        std::is_same<typename HostViewType::memory_space, HostSpace>::value,
-        "Kokkos::Threads reduce result must be a View in HostSpace");
+        Kokkos::Impl::MemorySpaceAccess<typename ViewType::memory_space,
+                                        Kokkos::HostSpace>::accessible,
+        "Kokkos::Threads reduce result must be a View accessible from "
+        "HostSpace");
   }
 
   template <typename Policy, typename Functor>
