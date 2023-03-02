@@ -1051,7 +1051,6 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA_ARCH), 1)
     KOKKOS_INTERNAL_CUDA_ARCH_FLAG := $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)=sm_86
   endif
   ifeq ($(KOKKOS_INTERNAL_USE_ARCH_ADA89), 1)
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMPERE")
     tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_ADA89")
     KOKKOS_INTERNAL_CUDA_ARCH_FLAG := $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)=sm_89
   endif
