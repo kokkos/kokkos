@@ -894,7 +894,15 @@ struct Functor_TestHalfOperators {
     // actual_lhs(TW)   = h_lhs <=> h_rhs;  // Need C++20?
     // expected_lhs(TW) = d_lhs <=> d_rhs;  // Need C++20?
 
-    actual_lhs(PASS_BY_REF)   = static_cast<double>(accept_ref(h_lhs));
+    actual_lhs(PASS_BY_REF) = static_cast<double>(accept_ref(h_lhs));
+
+    // Use accept_ref and accept_ref_expected to ensure the compiler
+    // does not optimize out the casts half_type -> double -> half_type.
+    // Note that these casts are accompanied by rounding. For the bhalf_t
+    // epsilon, these rounding policies used for casting is enough to cause
+    // the unit tests to fail.
+    // In short, one cannot simply assign static_cast<double>(h_lhs) to
+    // expected_lhs(PASS_BY_REF).
     expected_lhs(PASS_BY_REF) = accept_ref_expected(h_lhs);
 
     half_tmp = static_cast<float>(h_lhs);
