@@ -224,10 +224,6 @@
 #endif
 #endif
 
-#if defined(KOKKOS_ARCH_AVX512MIC)
-#define KOKKOS_ENABLE_RFO_PREFETCH 1
-#endif
-
 #if defined(__MIC__)
 // Compiling for Xeon Phi
 #endif
@@ -268,10 +264,6 @@
 //#define KOKKOS_ENABLE_PRAGMA_IVDEP 1
 //#define KOKKOS_ENABLE_PRAGMA_LOOPCOUNT 1
 //#define KOKKOS_ENABLE_PRAGMA_VECTOR 1
-
-#if defined(KOKKOS_ARCH_AVX512MIC)
-#define KOKKOS_ENABLE_RFO_PREFETCH 1
-#endif
 
 #if !defined(KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION)
 #define KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION \
