@@ -22,6 +22,9 @@ IF (NOT desul_FOUND)
   IF(KOKKOS_ENABLE_OPENMPTARGET)
     SET(DESUL_ATOMICS_ENABLE_OPENMP ON) # not a typo Kokkos OpenMPTarget -> Desul OpenMP
   ENDIF()
+  IF(KOKKOS_ENABLE_OPENACC)
+    SET(DESUL_ATOMICS_ENABLE_OPENACC ON)
+  ENDIF()
   CONFIGURE_FILE(
     ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/desul/Config.hpp.cmake.in
     ${CMAKE_CURRENT_BINARY_DIR}/desul/atomics/Config.hpp
