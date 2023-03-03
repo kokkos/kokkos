@@ -134,7 +134,7 @@ IF (NOT CMAKE_SIZEOF_VOID_P)
   ENDIF()
 ELSEIF (NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
   MESSAGE(STATUS "Kokkos assumes a 64-bit build, i.e., 8-byte pointers, but found ${CMAKE_SIZEOF_VOID_P}-byte pointers instead; 32-bit builds are experimental and not officially supported.")
-  add_compile_definitions(KOKKOS_32_BIT)
+  add_compile_definitions(KOKKOS_IMPL_32BIT)
 ENDIF()
 
 

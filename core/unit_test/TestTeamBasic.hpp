@@ -182,7 +182,7 @@ struct LargeTeamScratchFunctor {
 };
 
 TEST(TEST_CATEGORY, large_team_scratch_size) {
-#if !KOKKOS_32_BIT
+#if !KOKKOS_IMPL_32BIT
   const int level   = 1;
   const int n_teams = 1;
 
