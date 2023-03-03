@@ -51,7 +51,8 @@ struct NonTrivialScanFunctor {
     update_value += val_i;
   }
 
-  NonTrivialScanFunctor()                              = default;
+  NonTrivialScanFunctor(const Kokkos::View<value_type *, ExecSpace> &data)
+      : d_data(data) {}
   NonTrivialScanFunctor(NonTrivialScanFunctor const &) = default;
   NonTrivialScanFunctor(NonTrivialScanFunctor &&)      = default;
   NonTrivialScanFunctor &operator=(NonTrivialScanFunctor &&) = default;
