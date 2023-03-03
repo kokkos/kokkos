@@ -30,10 +30,9 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
  protected:
   using Policy = Kokkos::RangePolicy<Traits...>;
 
-  using WorkTag   = typename Policy::work_tag;
-  using WorkRange = typename Policy::WorkRange;
-  using Member    = typename Policy::member_type;
-  using idx_type  = typename Policy::index_type;
+  using WorkTag  = typename Policy::work_tag;
+  using Member   = typename Policy::member_type;
+  using idx_type = typename Policy::index_type;
 
   using Analysis = Impl::FunctorAnalysis<Impl::FunctorPatternInterface::SCAN,
                                          Policy, FunctorType>;

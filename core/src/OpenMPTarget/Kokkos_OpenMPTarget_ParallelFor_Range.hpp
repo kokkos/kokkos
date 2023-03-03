@@ -28,10 +28,9 @@ template <class FunctorType, class... Traits>
 class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
                   Kokkos::Experimental::OpenMPTarget> {
  private:
-  using Policy    = Kokkos::RangePolicy<Traits...>;
-  using WorkTag   = typename Policy::work_tag;
-  using WorkRange = typename Policy::WorkRange;
-  using Member    = typename Policy::member_type;
+  using Policy  = Kokkos::RangePolicy<Traits...>;
+  using WorkTag = typename Policy::work_tag;
+  using Member  = typename Policy::member_type;
 
   const FunctorType m_functor;
   const Policy m_policy;

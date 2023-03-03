@@ -908,10 +908,9 @@ template <class FunctorType, class... Traits>
 class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
                   Kokkos::Experimental::HPX> {
  private:
-  using Policy    = Kokkos::RangePolicy<Traits...>;
-  using WorkTag   = typename Policy::work_tag;
-  using WorkRange = typename Policy::WorkRange;
-  using Member    = typename Policy::member_type;
+  using Policy  = Kokkos::RangePolicy<Traits...>;
+  using WorkTag = typename Policy::work_tag;
+  using Member  = typename Policy::member_type;
 
   const FunctorType m_functor;
   const Policy m_policy;
@@ -948,7 +947,6 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   using MDRangePolicy = Kokkos::MDRangePolicy<Traits...>;
   using Policy        = typename MDRangePolicy::impl_range_policy;
   using WorkTag       = typename MDRangePolicy::work_tag;
-  using WorkRange     = typename Policy::WorkRange;
   using Member        = typename Policy::member_type;
   using iterate_type =
       typename Kokkos::Impl::HostIterateTile<MDRangePolicy, FunctorType,
@@ -1000,9 +998,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
   using FunctorType = typename CombinedFunctorReducerType::functor_type;
   using ReducerType = typename CombinedFunctorReducerType::reducer_type;
 
-  using WorkTag   = typename Policy::work_tag;
-  using WorkRange = typename Policy::WorkRange;
-  using Member    = typename Policy::member_type;
+  using WorkTag = typename Policy::work_tag;
+  using Member  = typename Policy::member_type;
 
   using value_type     = typename ReducerType::value_type;
   using pointer_type   = typename ReducerType::pointer_type;
@@ -1101,10 +1098,9 @@ class ParallelReduce<CombinedFunctorReducerType,
   using FunctorType   = typename CombinedFunctorReducerType::functor_type;
   using ReducerType   = typename CombinedFunctorReducerType::reducer_type;
 
-  using Policy    = typename MDRangePolicy::impl_range_policy;
-  using WorkTag   = typename MDRangePolicy::work_tag;
-  using WorkRange = typename Policy::WorkRange;
-  using Member    = typename Policy::member_type;
+  using Policy  = typename MDRangePolicy::impl_range_policy;
+  using WorkTag = typename MDRangePolicy::work_tag;
+  using Member  = typename Policy::member_type;
 
   using pointer_type   = typename ReducerType::pointer_type;
   using value_type     = typename ReducerType::value_type;

@@ -52,10 +52,9 @@ inline bool execute_in_serial(OpenMP const& space = OpenMP()) {
 template <class FunctorType, class... Traits>
 class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::OpenMP> {
  private:
-  using Policy    = Kokkos::RangePolicy<Traits...>;
-  using WorkTag   = typename Policy::work_tag;
-  using WorkRange = typename Policy::WorkRange;
-  using Member    = typename Policy::member_type;
+  using Policy  = Kokkos::RangePolicy<Traits...>;
+  using WorkTag = typename Policy::work_tag;
+  using Member  = typename Policy::member_type;
 
   OpenMPInternal* m_instance;
   const FunctorType m_functor;
@@ -178,8 +177,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   using Policy        = typename MDRangePolicy::impl_range_policy;
   using WorkTag       = typename MDRangePolicy::work_tag;
 
-  using WorkRange = typename Policy::WorkRange;
-  using Member    = typename Policy::member_type;
+  using Member = typename Policy::member_type;
 
   using index_type   = typename Policy::index_type;
   using iterate_type = typename Kokkos::Impl::HostIterateTile<
@@ -300,9 +298,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
   using FunctorType = typename CombinedFunctorReducerType::functor_type;
   using ReducerType = typename CombinedFunctorReducerType::reducer_type;
 
-  using WorkTag   = typename Policy::work_tag;
-  using WorkRange = typename Policy::WorkRange;
-  using Member    = typename Policy::member_type;
+  using WorkTag = typename Policy::work_tag;
+  using Member  = typename Policy::member_type;
 
   using pointer_type   = typename ReducerType::pointer_type;
   using reference_type = typename ReducerType::reference_type;
@@ -463,9 +460,8 @@ class ParallelReduce<CombinedFunctorReducerType,
   using FunctorType   = typename CombinedFunctorReducerType::functor_type;
   using ReducerType   = typename CombinedFunctorReducerType::reducer_type;
 
-  using WorkTag   = typename MDRangePolicy::work_tag;
-  using WorkRange = typename Policy::WorkRange;
-  using Member    = typename Policy::member_type;
+  using WorkTag = typename MDRangePolicy::work_tag;
+  using Member  = typename Policy::member_type;
 
   using pointer_type   = typename ReducerType::pointer_type;
   using value_type     = typename ReducerType::value_type;
