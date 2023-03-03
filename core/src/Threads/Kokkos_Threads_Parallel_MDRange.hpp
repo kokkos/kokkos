@@ -209,14 +209,14 @@ class ParallelReduce<CombinedFunctorReducerType,
     }
   }
 
-  template <class HostViewType>
+  template <class ViewType>
   ParallelReduce(const CombinedFunctorReducerType &arg_functor_reducer,
                  const MDRangePolicy &arg_policy,
-                 const HostViewType &arg_result_view)
+                 const ViewType &arg_result_view)
       : m_iter(arg_policy, arg_functor_reducer.get_functor()),
         m_reducer(arg_functor_reducer.get_reducer()),
         m_result_ptr(arg_result_view.data()) {
-    static_assert(Kokkos::is_view<HostViewType>::value,
+    static_assert(Kokkos::is_view<ViewType>::value,
                   "Kokkos::Threads reduce result must be a View");
 
     static_assert(
