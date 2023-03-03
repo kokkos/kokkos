@@ -10,10 +10,12 @@
 # Default settings: change those according to your machine.  For
 # example, you may have have two different wrappers with either icpc
 # or g++ as their back-end compiler.  The defaults can be overwritten
-# by using the usual arguments (e.g., -arch=sm_30 -ccbin icpc).
+# by using the usual arguments (e.g., -arch=sm_80 -ccbin icpc).
+# sm_70 is supported by every CUDA version from 9-12 and is thus
+# chosen as default
 
-default_arch="sm_35"
-#default_arch="sm_50"
+default_arch="sm_70"
+#default_arch="sm_80"
 
 #
 # The default C++ compiler.
@@ -227,11 +229,11 @@ do
     fi
     ;;
   #Handle known nvcc args
-  --dryrun|--verbose|--keep|--source-in-ptx|-src-in-ptx|--keep-dir*|-G|-lineinfo|-expt-extended-lambda|-expt-relaxed-constexpr|--resource-usage|--fmad=*|--use_fast_math|--Wext-lambda-captures-this|-Wext-lambda-captures-this)
+  --dryrun|--verbose|--keep|--source-in-ptx|-src-in-ptx|--keep-dir*|-G|-lineinfo|-extended-lambda|-expt-extended-lambda|-expt-relaxed-constexpr|--resource-usage|--fmad=*|--use_fast_math|--Wext-lambda-captures-this|-Wext-lambda-captures-this)
     cuda_args="$cuda_args $1"
     ;;
   #Handle more known nvcc args
-  --expt-extended-lambda|--expt-relaxed-constexpr|--Wno-deprecated-gpu-targets|-Wno-deprecated-gpu-targets|-allow-unsupported-compiler|--allow-unsupported-compiler)
+  --extended-lambda|--expt-extended-lambda|--expt-relaxed-constexpr|--Wno-deprecated-gpu-targets|-Wno-deprecated-gpu-targets|-allow-unsupported-compiler|--allow-unsupported-compiler)
     cuda_args="$cuda_args $1"
     ;;
   #Handle known nvcc args that have an argument

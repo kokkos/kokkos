@@ -1,0 +1,16 @@
+files=`git ls-files | grep -e '.*\.\(cc\|cpp\|hpp\)' | grep -v 'tpls/'`
+echo "" &> scripts/diff_files
+tmp=`cat LICENSE_FILE_HEADER | wc -l`
+NNEW=$(($tmp))
+for file in $files; do
+  head -n +$NNEW $file &> header
+  diff header LICENSE_FILE_HEADER &> header_diff
+  count=`cat header_diff | wc -l`
+  #echo $file " " COUNT " " $count >> diff_headers
+  if [ "$count" -ne "0" ]; then
+    echo $file >> scripts/diff_files
+  fi
+done
+tmpfile=$(mktemp -t kokkos_diff_files.XXXX)
+cat scripts/diff_files | sort &> $tmpfile
+mv $tmpfile scripts/diff_files
