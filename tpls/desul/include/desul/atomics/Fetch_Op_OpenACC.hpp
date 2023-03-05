@@ -10,6 +10,21 @@ SPDX-License-Identifier: (BSD-3-Clause)
 
 #include <desul/atomics/Common.hpp>
 #include <algorithm>
+#include <impl/Kokkos_Error.hpp>
+
+#ifdef KOKKOS_COMPILER_NVHPC
+#ifndef DESUL_CUDA_ARCH_IS_PRE_PASCAL
+#define DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,R) std::enable_if_t<std::is_same_v<T,int> \
+	|| std::is_same_v<T,unsigned int> || std::is_same_v<T,unsigned long long> \
+	|| std::is_same_v<T,float> || std::is_same_v<T,double>, R>
+#else
+#define DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,R) std::enable_if_t<std::is_same_v<T,int> \
+	|| std::is_same_v<T,unsigned int> || std::is_same_v<T,unsigned long long> \
+	|| std::is_same_v<T,float>, R>
+#endif
+#else
+#define DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,R) std::enable_if_t<std::is_arithmetic<T>::value, R>
+#endif
 
 namespace desul {
 namespace Impl {
@@ -18,121 +33,89 @@ namespace Impl {
 //<editor-fold desc="device_atomic_fetch_{add,sub,mul,div,lshift,rshift,mod,max,min,and,or,xor}">
 #pragma acc routine seq
 template <class T>
-std::enable_if_t<std::is_arithmetic<T>::value, T> device_atomic_fetch_add(
+DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_fetch_add(
 T* const ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
   T *lptr = const_cast<T *>(ptr);
-  if(acc_on_device(acc_device_host)) {
-    tmp = lptr[0]; lptr[0] += val;
-  } else {
 #pragma acc atomic capture
-    { tmp = lptr[0]; lptr[0] += val; }
-  }
+  { tmp = lptr[0]; lptr[0] += val; }
   return tmp;
 }
 
 #pragma acc routine seq
 template <class T>
-std::enable_if_t<std::is_arithmetic<T>::value, T> device_atomic_fetch_inc(
+DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_fetch_inc(
 T* const ptr, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
   T *lptr = const_cast<T *>(ptr);
-  if(acc_on_device(acc_device_host)) {
-    tmp = lptr[0]; lptr[0] += T(1);
-  } else {
 #pragma acc atomic capture
-    { tmp = lptr[0]; lptr[0] += T(1); }
-  }
+  { tmp = lptr[0]; lptr[0] += T(1); }
   return tmp;
 }
 
 #pragma acc routine seq
 template <class T>
-std::enable_if_t<std::is_arithmetic<T>::value, T> device_atomic_fetch_sub(
+DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_fetch_sub(
 T* const ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
   T *lptr = const_cast<T *>(ptr);
-  if(acc_on_device(acc_device_host)) {
-    tmp = *lptr; *lptr -= val;
-  } else {
 #pragma acc atomic capture
-    { tmp = *lptr; *lptr -= val; }
-  }
+  { tmp = *lptr; *lptr -= val; }
   return tmp;
 }
 
 #pragma acc routine seq
 template <class T>
-std::enable_if_t<std::is_arithmetic<T>::value, T> device_atomic_fetch_dec(
+DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_fetch_dec(
 T* const ptr, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
   T *lptr = const_cast<T *>(ptr);
-  if(acc_on_device(acc_device_host)) {
-    tmp = *lptr; *lptr -= T(1);
-  } else {
 #pragma acc atomic capture
-    { tmp = *lptr; *lptr -= T(1); }
-  }
+  { tmp = *lptr; *lptr -= T(1); }
   return tmp;
 }
 
 #pragma acc routine seq
 template <class T>
-std::enable_if_t<std::is_arithmetic<T>::value, T> device_atomic_fetch_mul(
+DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_fetch_mul(
 T* const ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
   T *lptr = const_cast<T *>(ptr);
-  if(acc_on_device(acc_device_host)) {
-    tmp = *lptr; *lptr *= val;
-  } else {
 #pragma acc atomic capture
-    { tmp = *lptr; *lptr *= val; }
-  }
+  { tmp = *lptr; *lptr *= val; }
   return tmp;
 }
 
 #pragma acc routine seq
 template <class T>
-std::enable_if_t<std::is_arithmetic<T>::value, T> device_atomic_fetch_div(
+DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_fetch_div(
 T* const ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
   T *lptr = const_cast<T *>(ptr);
-  if(acc_on_device(acc_device_host)) {
-    tmp = *lptr; *lptr /= val;
-  } else {
 #pragma acc atomic capture
-    { tmp = *lptr; *lptr /= val; }
-  }
+  { tmp = *lptr; *lptr /= val; }
   return tmp;
 }
 
 #pragma acc routine seq
 template <class T>
-std::enable_if_t<std::is_arithmetic<T>::value, T> device_atomic_fetch_lshift(
+DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_fetch_lshift(
 T* const ptr, const unsigned int val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
   T *lptr = const_cast<T *>(ptr);
-  if(acc_on_device(acc_device_host)) {
-    tmp = *lptr; *lptr = *lptr << val;
-  } else {
 #pragma acc atomic capture
-    { tmp = *lptr; *lptr = *lptr << val; }
-  }
+  { tmp = *lptr; *lptr = *lptr << val; }
   return tmp;
 }
 
 #pragma acc routine seq
 template <class T>
-std::enable_if_t<std::is_arithmetic<T>::value, T> device_atomic_fetch_rshift(
+DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_fetch_rshift(
 T* const ptr, const unsigned int val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
   T *lptr = const_cast<T *>(ptr);
-  if(acc_on_device(acc_device_host)) {
-    tmp = *lptr; *lptr = *lptr >> val;
-  } else {
 #pragma acc atomic capture
-    { tmp = *lptr; *lptr = *lptr >> val; }
-  }
+  { tmp = *lptr; *lptr = *lptr >> val; }
   return tmp;
 }
 
@@ -142,12 +125,11 @@ T device_atomic_fetch_mod(
 T* const ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
   T *lptr = const_cast<T *>(ptr);
-  if(acc_on_device(acc_device_host)) {
-    tmp = *lptr; *lptr = *lptr % val;
-  } else {
+  if(acc_on_device(acc_device_not_host)) {
     Kokkos::abort("Kokkos Error in device_atomic_fetch_mod(): Not supported atomic "
                   "operation in the OpenACC backend");
   }
+  tmp = *lptr; *lptr = *lptr % val;
   return tmp;
 }
 
@@ -157,12 +139,11 @@ T device_atomic_fetch_max(
 T* const ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
   T *lptr = const_cast<T *>(ptr);
-  if(acc_on_device(acc_device_host)) {
-    tmp = *lptr; *lptr = std::max(*lptr, val);
-  } else {
+  if(acc_on_device(acc_device_not_host)) {
     Kokkos::abort("Kokkos Error in device_atomic_fetch_max(): Not supported atomic "
                   "operation in the OpenACC backend");
   }
+  tmp = *lptr; *lptr = std::max(*lptr, val);
   return tmp;
 }
 
@@ -198,12 +179,11 @@ T device_atomic_fetch_min(
 T* const ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
   T *lptr = const_cast<T *>(ptr);
-  if(acc_on_device(acc_device_host)) {
-    tmp = *lptr; *lptr = std::min(*lptr, val);
-  } else {
+  if(acc_on_device(acc_device_not_host)) {
     Kokkos::abort("Kokkos Error in device_atomic_fetch_min(): Not supported atomic "
                   "operation in the OpenACC backend");
   }
+  tmp = *lptr; *lptr = std::min(*lptr, val);
   return tmp;
 }
 
@@ -235,46 +215,34 @@ unsigned long long* const ptr, const unsigned long long val, MemoryOrderRelaxed,
 
 #pragma acc routine seq
 template <class T>
-std::enable_if_t<std::is_arithmetic<T>::value, T> device_atomic_fetch_and(
+DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_fetch_and(
 T* const ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
   T *lptr = const_cast<T *>(ptr);
-  if(acc_on_device(acc_device_host)) {
-    tmp = *lptr; *lptr &= val;
-  } else {
 #pragma acc atomic capture
-    { tmp = *lptr; *lptr &= val; }
-  }
+  { tmp = *lptr; *lptr &= val; }
   return tmp;
 }
 
 #pragma acc routine seq
 template <class T>
-std::enable_if_t<std::is_arithmetic<T>::value, T> device_atomic_fetch_or(
+DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_fetch_or(
 T* const ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
   T *lptr = const_cast<T *>(ptr);
-  if(acc_on_device(acc_device_host)) {
-    tmp = *lptr; *lptr |= val;
-  } else {
 #pragma acc atomic capture
-    { tmp = *lptr; *lptr |= val; }
-  }
+  { tmp = *lptr; *lptr |= val; }
   return tmp;
 }
 
 #pragma acc routine seq
 template <class T>
-std::enable_if_t<std::is_arithmetic<T>::value, T> device_atomic_fetch_xor(
+DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_fetch_xor(
 T* const ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
   T *lptr = const_cast<T *>(ptr);
-  if(acc_on_device(acc_device_host)) {
-    tmp = *lptr; *lptr ^= val;
-  } else {
 #pragma acc atomic capture
-    { tmp = *lptr; *lptr ^= val; }
-  }
+  { tmp = *lptr; *lptr ^= val; }
   return tmp;
 }
 //</editor-fold>
@@ -282,112 +250,84 @@ T* const ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
 //<editor-fold desc="device_atomic_{add,sub,mul,div,lshift,rshift,mod,max,min,and,or,xor}_fetch">
 #pragma acc routine seq
 template <class T>
-std::enable_if_t<std::is_arithmetic<T>::value, T> device_atomic_add_fetch(
+DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_add_fetch(
     T* const ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
   T *lptr = const_cast<T *>(ptr);
-  if(acc_on_device(acc_device_host)) {
-    *lptr += val; tmp = *lptr;
-  } else {
 #pragma acc atomic capture
-    { *lptr += val; tmp = *lptr; }
-  }
+  { *lptr += val; tmp = *lptr; }
   return tmp;
 }
 
 #pragma acc routine seq
 template <class T>
-std::enable_if_t<std::is_arithmetic<T>::value, T> device_atomic_inc_fetch(
+DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_inc_fetch(
     T* const ptr, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
   T *lptr = const_cast<T *>(ptr);
-  if(acc_on_device(acc_device_host)) {
-    *lptr += T(1); tmp = *lptr;
-  } else {
 #pragma acc atomic capture
-    { *lptr += T(1); tmp = *lptr; }
-  }
+  { *lptr += T(1); tmp = *lptr; }
   return tmp;
 }
 
 #pragma acc routine seq
 template <class T>
-std::enable_if_t<std::is_arithmetic<T>::value, T> device_atomic_sub_fetch(
+DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_sub_fetch(
     T* const ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
   T *lptr = const_cast<T *>(ptr);
-  if(acc_on_device(acc_device_host)) {
-    *lptr -= val; tmp = *lptr;
-  } else {
 #pragma acc atomic capture
-    { *lptr -= val; tmp = *lptr; }
-  }
+  { *lptr -= val; tmp = *lptr; }
   return tmp;
 }
 
 #pragma acc routine seq
 template <class T>
-std::enable_if_t<std::is_arithmetic<T>::value, T> device_atomic_dec_fetch(
+DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_dec_fetch(
     T* const ptr, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
   T *lptr = const_cast<T *>(ptr);
-  if(acc_on_device(acc_device_host)) {
-    *lptr -= T(1); tmp = *lptr;
-  } else {
 #pragma acc atomic capture
-    { *lptr -= T(1); tmp = *lptr; }
-  }
+  { *lptr -= T(1); tmp = *lptr; }
   return tmp;
 }
 
 #pragma acc routine seq
 template <class T>
-std::enable_if_t<std::is_arithmetic<T>::value, T> device_atomic_mul_fetch(
+DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_mul_fetch(
     T* const ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
   T *lptr = const_cast<T *>(ptr);
-  if(acc_on_device(acc_device_host)) {
-    *lptr *= val; tmp = *lptr;
-  } else {
 #pragma acc atomic capture
-    { *lptr *= val; tmp = *lptr; }
-  }
+  { *lptr *= val; tmp = *lptr; }
   return tmp;
 }
 
 #pragma acc routine seq
 template <class T>
-std::enable_if_t<std::is_arithmetic<T>::value, T> device_atomic_div_fetch(
+DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_div_fetch(
     T* const ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
   T *lptr = const_cast<T *>(ptr);
-  if(acc_on_device(acc_device_host)) {
-    *lptr /= val; tmp = *lptr;
-  } else {
 #pragma acc atomic capture
-    { *lptr /= val; tmp = *lptr; }
-  }
+  { *lptr /= val; tmp = *lptr; }
   return tmp;
 }
 
 #pragma acc routine seq
 template <class T>
-std::enable_if_t<std::is_arithmetic<T>::value, T> device_atomic_lshift_fetch(
+DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_lshift_fetch(
     T* const ptr, const unsigned int val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
   T *lptr = const_cast<T *>(ptr);
-  if(acc_on_device(acc_device_host)) {
-    *lptr = *lptr << val; tmp = *lptr;
-  } else {
 #pragma acc atomic capture
-    { *lptr = *lptr << val; tmp = *lptr; }
-  }
+  { *lptr = *lptr << val; tmp = *lptr; }
   return tmp;
 }
 
 #pragma acc routine seq
 template <class T>
-std::enable_if_t<std::is_arithmetic<T>::value, T> device_atomic_rshift_fetch(
+DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_rshift_fetch(
     T* const ptr, const unsigned int val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
   T *lptr = const_cast<T *>(ptr);
@@ -406,12 +346,11 @@ T device_atomic_mod_fetch(
 T* const ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
   T *lptr = const_cast<T *>(ptr);
-  if(acc_on_device(acc_device_host)) {
-    *lptr = *lptr % val; tmp = *lptr;
-  } else {
+  if(acc_on_device(acc_device_not_host)) {
     Kokkos::abort("Kokkos Error in device_atomic_mod_fetch(): Not supported atomic "
                   "operation in the OpenACC backend");
   }
+  *lptr = *lptr % val; tmp = *lptr;
   return tmp;
 }
 
@@ -421,12 +360,11 @@ T device_atomic_max_fetch(
 T* const ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
   T *lptr = const_cast<T *>(ptr);
-  if(acc_on_device(acc_device_host)) {
-    *lptr = std::max(*lptr, val); tmp = *lptr;
-  } else {
+  if(acc_on_device(acc_device_not_host)) {
     Kokkos::abort("Kokkos Error in device_atomic_max_fetch(): Not supported atomic "
                   "operation in the OpenACC backend");
   }
+  *lptr = std::max(*lptr, val); tmp = *lptr;
   return tmp;
 }
 
@@ -465,12 +403,11 @@ T device_atomic_min_fetch(
 T* const ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
   T *lptr = const_cast<T *>(ptr);
-  if(acc_on_device(acc_device_host)) {
-    *lptr = std::min(*lptr, val); tmp = *lptr;
-  } else {
+  if(acc_on_device(acc_device_not_host)) {
     Kokkos::abort("Kokkos Error in device_atomic_min_fetch(): Not supported atomic "
                   "operation in the OpenACC backend");
   }
+  *lptr = std::min(*lptr, val); tmp = *lptr;
   return tmp;
 }
 
@@ -505,90 +442,71 @@ unsigned long long* const ptr, const unsigned long long val, MemoryOrderRelaxed,
 
 #pragma acc routine seq
 template <class T>
-std::enable_if_t<std::is_arithmetic<T>::value, T> device_atomic_and_fetch(
+DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_and_fetch(
     T* const ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
   T *lptr = const_cast<T *>(ptr);
-  if(acc_on_device(acc_device_host)) {
-    *lptr &= val; tmp = *lptr;
-  } else {
 #pragma acc atomic capture
-    { *lptr &= val; tmp = *lptr; }
-  }
+  { *lptr &= val; tmp = *lptr; }
   return tmp;
 }
 
 #pragma acc routine seq
 template <class T>
-std::enable_if_t<std::is_arithmetic<T>::value, T> device_atomic_or_fetch(
+DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_or_fetch(
     T* const ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
   T *lptr = const_cast<T *>(ptr);
-  if(acc_on_device(acc_device_host)) {
-    *lptr |= val; tmp = *lptr;
-  } else {
 #pragma acc atomic capture
-    { *lptr |= val; tmp = *lptr; }
-  }
+  { *lptr |= val; tmp = *lptr; }
   return tmp;
 }
 
 #pragma acc routine seq
 template <class T>
-std::enable_if_t<std::is_arithmetic<T>::value, T> device_atomic_xor_fetch(
+DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_xor_fetch(
     T* const ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
   T *lptr = const_cast<T *>(ptr);
-  if(acc_on_device(acc_device_host)) {
-    *lptr ^= val; tmp = *lptr;
-  } else {
 #pragma acc atomic capture
-    { *lptr ^= val; tmp = *lptr; }
-  }
+  { *lptr ^= val; tmp = *lptr; }
   return tmp;
 }
 //</editor-fold>
 
 //<editor-fold desc="device_atomic_{store,load}">
+
+#pragma acc routine seq
+template <class T>
+DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,void) device_atomic_store(
+    T* const ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
+#pragma acc atomic write
+    *ptr = val;
+}
+
 #pragma acc routine seq
 template <class T, class MemoryOrder>
-void device_atomic_store(
+DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,void) device_atomic_store(
     T* const ptr, const T val, MemoryOrder, MemoryScopeDevice) {
   device_atomic_store(ptr, val, MemoryOrderRelaxed(), MemoryScopeDevice()); 
 }
 
 #pragma acc routine seq
 template <class T>
-void device_atomic_store(
-    T* const ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
-  if(acc_on_device(acc_device_host)) {
-    *ptr = val;
-  } else {
-#pragma acc atomic write
-    *ptr = val;
-  }
-}
-
-#pragma acc routine seq
-template <class T, class MemoryOrder>
-T device_atomic_load(
-    const T* const ptr, MemoryOrder, MemoryScopeDevice) {
+DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_load(
+    const T* const ptr, MemoryOrderRelaxed, MemoryScopeDevice) {
   T retval{};
-  retval = device_atomic_load(ptr, MemoryOrderRelaxed(), MemoryScopeDevice());
+#pragma acc atomic read
+  retval = *ptr;
   return retval;
 }
 
 #pragma acc routine seq
-template <class T>
-T device_atomic_load(
-    const T* const ptr, MemoryOrderRelaxed, MemoryScopeDevice) {
+template <class T, class MemoryOrder>
+DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_load(
+    const T* const ptr, MemoryOrder, MemoryScopeDevice) {
   T retval{};
-  if(acc_on_device(acc_device_host)) {
-    retval = *ptr;
-  } else {
-#pragma acc atomic read
-    retval = *ptr;
-  }
+  retval = device_atomic_load(ptr, MemoryOrderRelaxed(), MemoryScopeDevice());
   return retval;
 }
 
@@ -597,5 +515,7 @@ T device_atomic_load(
 
 }  // namespace Impl
 }  // namespace desul
+
+#undef DESUL_IMPL_ATOMICS_OPENACC_PREFIX
 
 #endif
