@@ -97,7 +97,6 @@ class ParallelScanSYCLBase {
  protected:
   using Member       = typename Policy::member_type;
   using WorkTag      = typename Policy::work_tag;
-  using WorkRange    = typename Policy::WorkRange;
   using LaunchBounds = typename Policy::launch_bounds;
 
  public:
