@@ -45,7 +45,7 @@ struct NonTrivialReduceFunctor {
   NonTrivialReduceFunctor(NonTrivialReduceFunctor &&)      = default;
   NonTrivialReduceFunctor &operator=(NonTrivialReduceFunctor &&) = default;
   NonTrivialReduceFunctor &operator=(NonTrivialReduceFunctor const &) = default;
-  ~NonTrivialReduceFunctor() {}
+  KOKKOS_FUNCTION ~NonTrivialReduceFunctor() {}
 };
 
 template <class ExecSpace>

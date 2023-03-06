@@ -161,7 +161,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     const ParallelReduce &self = *((const ParallelReduce *)arg);
 
     typename Analysis::Reducer reducer(
-        &ReducerConditional::select(self.m_functor, self.m_reducer));
+        ReducerConditional::select(self.m_functor, self.m_reducer));
 
     ParallelReduce::template exec_team<WorkTag>(
         self.m_functor, Member(&exec, self.m_policy, self.m_shared),
@@ -175,7 +175,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     if (m_policy.league_size() * m_policy.team_size() == 0) {
       if (m_result_ptr) {
         typename Analysis::Reducer final_reducer(
-            &ReducerConditional::select(m_functor, m_reducer));
+            ReducerConditional::select(m_functor, m_reducer));
         final_reducer.init(m_result_ptr);
         final_reducer.final(m_result_ptr);
       }

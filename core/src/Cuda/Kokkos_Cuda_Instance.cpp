@@ -408,7 +408,9 @@ Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
 #endif
 
   // Init the array for used for arbitrarily sized atomics
-  if (this == &singleton()) Impl::initialize_host_cuda_lock_arrays();
+  if (this == &singleton()) {
+    desul::Impl::init_lock_arrays();  // FIXME
+  }
 
   // Allocate a staging buffer for constant mem in pinned host memory
   // and an event to avoid overwriting driver for previous kernel launches
@@ -582,7 +584,7 @@ void CudaInternal::finalize() {
   // Only finalize this if we're the singleton
   if (this == &singleton()) {
     (void)Impl::cuda_global_unique_token_locks(true);
-    Impl::finalize_host_cuda_lock_arrays();
+    desul::Impl::finalize_lock_arrays();  // FIXME
 
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFreeHost(constantMemHostStaging));
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaEventDestroy(constantMemReusable));
@@ -864,14 +866,6 @@ Cuda::Cuda(cudaStream_t stream, bool manage_stream)
 void Cuda::print_configuration(std::ostream &os, bool /*verbose*/) const {
   os << "Device Execution Space:\n";
   os << "  KOKKOS_ENABLE_CUDA: yes\n";
-
-  os << "Cuda Atomics:\n";
-  os << "  KOKKOS_ENABLE_CUDA_ATOMICS: ";
-#ifdef KOKKOS_ENABLE_CUDA_ATOMICS
-  os << "yes\n";
-#else
-  os << "no\n";
-#endif
 
   os << "Cuda Options:\n";
   os << "  KOKKOS_ENABLE_CUDA_LAMBDA: ";

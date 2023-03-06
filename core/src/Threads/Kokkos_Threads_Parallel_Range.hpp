@@ -183,7 +183,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     const WorkRange range(self.m_policy, exec.pool_rank(), exec.pool_size());
 
     typename Analysis::Reducer reducer(
-        &ReducerConditional::select(self.m_functor, self.m_reducer));
+        ReducerConditional::select(self.m_functor, self.m_reducer));
 
     ParallelReduce::template exec_range<WorkTag>(
         self.m_functor, range.begin(), range.end(),
@@ -206,7 +206,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
     long work_index = exec.get_work_index();
     typename Analysis::Reducer reducer(
-        &ReducerConditional::select(self.m_functor, self.m_reducer));
+        ReducerConditional::select(self.m_functor, self.m_reducer));
 
     reference_type update =
         reducer.init(static_cast<pointer_type>(exec.reduce_memory()));
@@ -231,7 +231,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     if (m_policy.end() <= m_policy.begin()) {
       if (m_result_ptr) {
         typename Analysis::Reducer final_reducer(
-            &ReducerConditional::select(m_functor, m_reducer));
+            ReducerConditional::select(m_functor, m_reducer));
         final_reducer.init(m_result_ptr);
         final_reducer.final(m_result_ptr);
       }
@@ -337,7 +337,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
 
     const WorkRange range(self.m_policy, exec.pool_rank(), exec.pool_size());
 
-    typename Analysis::Reducer final_reducer(&self.m_functor);
+    typename Analysis::Reducer final_reducer(self.m_functor);
 
     reference_type update =
         final_reducer.init(static_cast<pointer_type>(exec.reduce_memory()));
@@ -417,7 +417,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
 
     const WorkRange range(self.m_policy, exec.pool_rank(), exec.pool_size());
 
-    typename Analysis::Reducer final_reducer(&self.m_functor);
+    typename Analysis::Reducer final_reducer(self.m_functor);
 
     reference_type update =
         final_reducer.init(static_cast<pointer_type>(exec.reduce_memory()));

@@ -327,7 +327,7 @@ void HIPInternal::finalize() {
 
   if (this == &singleton()) {
     (void)Kokkos::Impl::hip_global_unique_token_locks(true);
-    Impl::finalize_host_hip_lock_arrays();
+    desul::Impl::finalize_lock_arrays();  // FIXME
 
     KOKKOS_IMPL_HIP_SAFE_CALL(hipHostFree(constantMemHostStaging));
     KOKKOS_IMPL_HIP_SAFE_CALL(hipEventDestroy(constantMemReusable));

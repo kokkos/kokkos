@@ -71,13 +71,6 @@
  *  KOKKOS_COMPILER_NVHPC
  *  KOKKOS_COMPILER_MSVC
  *
- *  Macros for which compiler extension to use for atomics on intrinsic types
- *
- *  KOKKOS_ENABLE_CUDA_ATOMICS
- *  KOKKOS_ENABLE_GNU_ATOMICS
- *  KOKKOS_ENABLE_INTEL_ATOMICS
- *  KOKKOS_ENABLE_OPENMP_ATOMICS
- *
  *  A suite of 'KOKKOS_ENABLE_PRAGMA_...' are defined for internal use.
  *
  *  Macros for marking functions to run in an execution space:
@@ -163,8 +156,8 @@
 #endif
 
 #if defined(__NVCOMPILER)
-#define KOKKOS_COMPILER_NVHPC                              \
-  __NVCOMPILER_MAJOR__ * 100 + __NVCOMPILER_MINOR__ * 10 + \
+#define KOKKOS_COMPILER_NVHPC                                 \
+  __NVCOMPILER_MAJOR__ * 10000 + __NVCOMPILER_MINOR__ * 100 + \
       __NVCOMPILER_PATCHLEVEL__
 #endif
 
@@ -231,10 +224,6 @@
 #endif
 #endif
 
-#if defined(KOKKOS_ARCH_AVX512MIC)
-#define KOKKOS_ENABLE_RFO_PREFETCH 1
-#endif
-
 #if defined(__MIC__)
 // Compiling for Xeon Phi
 #endif
@@ -275,10 +264,6 @@
 //#define KOKKOS_ENABLE_PRAGMA_IVDEP 1
 //#define KOKKOS_ENABLE_PRAGMA_LOOPCOUNT 1
 //#define KOKKOS_ENABLE_PRAGMA_VECTOR 1
-
-#if defined(KOKKOS_ARCH_AVX512MIC)
-#define KOKKOS_ENABLE_RFO_PREFETCH 1
-#endif
 
 #if !defined(KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION)
 #define KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION \

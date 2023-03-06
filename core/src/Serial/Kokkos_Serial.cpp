@@ -42,9 +42,6 @@ void SerialInternal::initialize() {
 
   Impl::SharedAllocationRecord<void, void>::tracking_enable();
 
-  // Init the array of locks used for arbitrarily sized atomics
-  Impl::init_lock_array_host_space();
-
   m_is_initialized = true;
 }
 
@@ -152,12 +149,8 @@ void Serial::print_configuration(std::ostream& os, bool /*verbose*/) const {
   os << "Host Serial Execution Space:\n";
   os << "  KOKKOS_ENABLE_SERIAL: yes\n";
 
-  os << "Serial Atomics:\n";
-  os << "  KOKKOS_ENABLE_SERIAL_ATOMICS: ";
-#ifdef KOKKOS_ENABLE_SERIAL_ATOMICS
-  os << "yes\n";
-#else
-  os << "no\n";
+#ifdef KOKKOS_INTERNAL_NOT_PARALLEL
+  os << "Kokkos atomics disabled\n";
 #endif
 
   os << "\nSerial Runtime Configuration:\n";

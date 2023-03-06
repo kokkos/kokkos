@@ -29,6 +29,23 @@
 namespace Kokkos {
 namespace Impl {
 
+// same as std::integral_constant but with __host__ __device__ annotations on
+// the implicit conversion function and the call operator
+template <class T, T v>
+struct integral_constant {
+  using value_type         = T;
+  using type               = integral_constant<T, v>;
+  static constexpr T value = v;
+  KOKKOS_FUNCTION constexpr operator value_type() const noexcept {
+    return value;
+  }
+  KOKKOS_FUNCTION constexpr value_type operator()() const noexcept {
+    return value;
+  }
+};
+
+//==============================================================================
+
 template <typename... Is>
 struct always_true : std::true_type {};
 

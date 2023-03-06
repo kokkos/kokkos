@@ -516,26 +516,6 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
   declare_configuration_metadata("tools_only", "compiler_family", "msvc");
 #endif
 
-#ifdef KOKKOS_ENABLE_GNU_ATOMICS
-  declare_configuration_metadata("atomics", "KOKKOS_ENABLE_GNU_ATOMICS", "yes");
-#else
-  declare_configuration_metadata("atomics", "KOKKOS_ENABLE_GNU_ATOMICS", "no");
-#endif
-#ifdef KOKKOS_ENABLE_INTEL_ATOMICS
-  declare_configuration_metadata("atomics", "KOKKOS_ENABLE_INTEL_ATOMICS",
-                                 "yes");
-#else
-  declare_configuration_metadata("atomics", "KOKKOS_ENABLE_INTEL_ATOMICS",
-                                 "no");
-#endif
-#ifdef KOKKOS_ENABLE_WINDOWS_ATOMICS
-  declare_configuration_metadata("atomics", "KOKKOS_ENABLE_WINDOWS_ATOMICS",
-                                 "yes");
-#else
-  declare_configuration_metadata("atomics", "KOKKOS_ENABLE_WINDOWS_ATOMICS",
-                                 "no");
-#endif
-
 #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
   declare_configuration_metadata("vectorization", "KOKKOS_ENABLE_PRAGMA_IVDEP",
                                  "yes");
