@@ -30,8 +30,8 @@ inline T device_atomic_fetch_oper(const Oper& op,
                                 MemoryOrder /*order*/,
                                 MemoryScope scope) {
   if (acc_on_device(acc_device_not_host)) {
-    Kokkos::abort("Kokkos Error in device_atomic_fetch_oper(): Not supported atomic "
-                  "operation in the OpenACC backend");
+    printf("Kokkos Error in device_atomic_fetch_oper(): Not supported atomic "
+                  "operation in the OpenACC backend\n");
   }
   // Acquire a lock for the address
   while (!lock_address((void*)dest, scope)) {
@@ -58,8 +58,8 @@ inline T device_atomic_oper_fetch(const Oper& op,
                                 MemoryOrder /*order*/,
                                 MemoryScope scope) {
   if (acc_on_device(acc_device_not_host)) {
-    Kokkos::abort("Kokkos Error in device_atomic_fetch_oper(): Not supported atomic "
-                  "operation in the OpenACC backend");
+    printf("Kokkos Error in device_atomic_fetch_oper(): Not supported atomic "
+                  "operation in the OpenACC backend\n");
   }
   // Acquire a lock for the address
   while (!lock_address((void*)dest, scope)) {

@@ -10,7 +10,6 @@ SPDX-License-Identifier: (BSD-3-Clause)
 
 #include <desul/atomics/Common.hpp>
 #include <algorithm>
-#include <impl/Kokkos_Error.hpp>
 
 #ifdef KOKKOS_COMPILER_NVHPC
 #ifndef DESUL_CUDA_ARCH_IS_PRE_PASCAL
@@ -34,141 +33,131 @@ namespace Impl {
 #pragma acc routine seq
 template <class T>
 DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_fetch_add(
-T* const ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
+T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
-  T *lptr = const_cast<T *>(ptr);
 #pragma acc atomic capture
-  { tmp = lptr[0]; lptr[0] += val; }
+  { tmp = ptr[0]; ptr[0] += val; }
   return tmp;
 }
 
 #pragma acc routine seq
 template <class T>
 DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_fetch_inc(
-T* const ptr, MemoryOrderRelaxed, MemoryScopeDevice) {
+T* ptr, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
-  T *lptr = const_cast<T *>(ptr);
 #pragma acc atomic capture
-  { tmp = lptr[0]; lptr[0] += T(1); }
+  { tmp = ptr[0]; ptr[0] += T(1); }
   return tmp;
 }
 
 #pragma acc routine seq
 template <class T>
 DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_fetch_sub(
-T* const ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
+T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
-  T *lptr = const_cast<T *>(ptr);
 #pragma acc atomic capture
-  { tmp = *lptr; *lptr -= val; }
+  { tmp = *ptr; *ptr -= val; }
   return tmp;
 }
 
 #pragma acc routine seq
 template <class T>
 DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_fetch_dec(
-T* const ptr, MemoryOrderRelaxed, MemoryScopeDevice) {
+T* ptr, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
-  T *lptr = const_cast<T *>(ptr);
 #pragma acc atomic capture
-  { tmp = *lptr; *lptr -= T(1); }
+  { tmp = *ptr; *ptr -= T(1); }
   return tmp;
 }
 
 #pragma acc routine seq
 template <class T>
 DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_fetch_mul(
-T* const ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
+T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
-  T *lptr = const_cast<T *>(ptr);
 #pragma acc atomic capture
-  { tmp = *lptr; *lptr *= val; }
+  { tmp = *ptr; *ptr *= val; }
   return tmp;
 }
 
 #pragma acc routine seq
 template <class T>
 DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_fetch_div(
-T* const ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
+T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
-  T *lptr = const_cast<T *>(ptr);
 #pragma acc atomic capture
-  { tmp = *lptr; *lptr /= val; }
+  { tmp = *ptr; *ptr /= val; }
   return tmp;
 }
 
 #pragma acc routine seq
 template <class T>
 DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_fetch_lshift(
-T* const ptr, const unsigned int val, MemoryOrderRelaxed, MemoryScopeDevice) {
+T* ptr, const unsigned int val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
-  T *lptr = const_cast<T *>(ptr);
 #pragma acc atomic capture
-  { tmp = *lptr; *lptr = *lptr << val; }
+  { tmp = *ptr; *ptr = *ptr << val; }
   return tmp;
 }
 
 #pragma acc routine seq
 template <class T>
 DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_fetch_rshift(
-T* const ptr, const unsigned int val, MemoryOrderRelaxed, MemoryScopeDevice) {
+T* ptr, const unsigned int val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
-  T *lptr = const_cast<T *>(ptr);
 #pragma acc atomic capture
-  { tmp = *lptr; *lptr = *lptr >> val; }
+  { tmp = *ptr; *ptr = *ptr >> val; }
   return tmp;
 }
 
 #pragma acc routine seq
 template <class T>
 T device_atomic_fetch_mod(
-T* const ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
+T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
-  T *lptr = const_cast<T *>(ptr);
   if(acc_on_device(acc_device_not_host)) {
-    Kokkos::abort("Kokkos Error in device_atomic_fetch_mod(): Not supported atomic "
-                  "operation in the OpenACC backend");
+    printf("Kokkos Error in device_atomic_fetch_mod(): Not supported atomic "
+                  "operation in the OpenACC backend\n");
   }
-  tmp = *lptr; *lptr = *lptr % val;
+  tmp = *ptr; *ptr = *ptr % val;
   return tmp;
 }
 
 #pragma acc routine seq
 template <class T>
 T device_atomic_fetch_max(
-T* const ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
+T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
-  T *lptr = const_cast<T *>(ptr);
   if(acc_on_device(acc_device_not_host)) {
-    Kokkos::abort("Kokkos Error in device_atomic_fetch_max(): Not supported atomic "
-                  "operation in the OpenACC backend");
+    printf("Kokkos Error in device_atomic_fetch_max(): Not supported atomic "
+                  "operation in the OpenACC backend\n");
   }
-  tmp = *lptr; *lptr = std::max(*lptr, val);
+  tmp = *ptr; *ptr = std::max(*ptr, val);
   return tmp;
 }
 
 #ifdef KOKKOS_COMPILER_NVHPC
 #pragma acc routine seq
 inline int device_atomic_fetch_max(
-int* const ptr, const int val, MemoryOrderRelaxed, MemoryScopeDevice) {
+int* ptr, const int val, MemoryOrderRelaxed, MemoryScopeDevice) {
   int tmp;
-  tmp = atomicMax(const_cast<int *>(ptr), val);
+  tmp = atomicMax(ptr, val);
   return tmp;
 }
 
 #pragma acc routine seq
 inline unsigned int device_atomic_fetch_max(
-unsigned int* const ptr, const unsigned int val, MemoryOrderRelaxed, MemoryScopeDevice) {
+unsigned int* ptr, const unsigned int val, MemoryOrderRelaxed, MemoryScopeDevice) {
   unsigned int tmp;
-  tmp = atomicMax(const_cast<unsigned int *>(ptr), val);
+  tmp = atomicMax(ptr, val);
   return tmp;
 }
 
 #pragma acc routine seq
 inline unsigned long long device_atomic_fetch_max(
-unsigned long long* const ptr, const unsigned long long val, MemoryOrderRelaxed, MemoryScopeDevice) {
+unsigned long long* ptr, const unsigned long long val, MemoryOrderRelaxed, MemoryScopeDevice) {
   unsigned long long tmp;
-  tmp = atomicMax(const_cast<unsigned long long *>(ptr), val);
+  tmp = atomicMax(ptr, val);
   return tmp;
 }
 #endif
@@ -176,39 +165,38 @@ unsigned long long* const ptr, const unsigned long long val, MemoryOrderRelaxed,
 #pragma acc routine seq
 template <class T>
 T device_atomic_fetch_min(
-T* const ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
+T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
-  T *lptr = const_cast<T *>(ptr);
   if(acc_on_device(acc_device_not_host)) {
-    Kokkos::abort("Kokkos Error in device_atomic_fetch_min(): Not supported atomic "
-                  "operation in the OpenACC backend");
+    printf("Kokkos Error in device_atomic_fetch_min(): Not supported atomic "
+                  "operation in the OpenACC backend\n");
   }
-  tmp = *lptr; *lptr = std::min(*lptr, val);
+  tmp = *ptr; *ptr = std::min(*ptr, val);
   return tmp;
 }
 
 #ifdef KOKKOS_COMPILER_NVHPC
 #pragma acc routine seq
 inline int device_atomic_fetch_min(
-int* const ptr, const int val, MemoryOrderRelaxed, MemoryScopeDevice) {
+int* ptr, const int val, MemoryOrderRelaxed, MemoryScopeDevice) {
   int tmp;
-  tmp = atomicMin(const_cast<int *>(ptr), val);
+  tmp = atomicMin(ptr, val);
   return tmp;
 }
 
 #pragma acc routine seq
 inline unsigned int device_atomic_fetch_min(
-unsigned int* const ptr, const unsigned int val, MemoryOrderRelaxed, MemoryScopeDevice) {
+unsigned int* ptr, const unsigned int val, MemoryOrderRelaxed, MemoryScopeDevice) {
   unsigned int tmp;
-  tmp = atomicMin(const_cast<unsigned int *>(ptr), val);
+  tmp = atomicMin(ptr, val);
   return tmp;
 }
 
 #pragma acc routine seq
 inline unsigned long long device_atomic_fetch_min(
-unsigned long long* const ptr, const unsigned long long val, MemoryOrderRelaxed, MemoryScopeDevice) {
+unsigned long long* ptr, const unsigned long long val, MemoryOrderRelaxed, MemoryScopeDevice) {
   unsigned long long tmp;
-  tmp = atomicMin(const_cast<unsigned long long *>(ptr), val);
+  tmp = atomicMin(ptr, val);
   return tmp;
 }
 #endif
@@ -216,33 +204,30 @@ unsigned long long* const ptr, const unsigned long long val, MemoryOrderRelaxed,
 #pragma acc routine seq
 template <class T>
 DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_fetch_and(
-T* const ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
+T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
-  T *lptr = const_cast<T *>(ptr);
 #pragma acc atomic capture
-  { tmp = *lptr; *lptr &= val; }
+  { tmp = *ptr; *ptr &= val; }
   return tmp;
 }
 
 #pragma acc routine seq
 template <class T>
 DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_fetch_or(
-T* const ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
+T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
-  T *lptr = const_cast<T *>(ptr);
 #pragma acc atomic capture
-  { tmp = *lptr; *lptr |= val; }
+  { tmp = *ptr; *ptr |= val; }
   return tmp;
 }
 
 #pragma acc routine seq
 template <class T>
 DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_fetch_xor(
-T* const ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
+T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
-  T *lptr = const_cast<T *>(ptr);
 #pragma acc atomic capture
-  { tmp = *lptr; *lptr ^= val; }
+  { tmp = *ptr; *ptr ^= val; }
   return tmp;
 }
 //</editor-fold>
@@ -251,91 +236,83 @@ T* const ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
 #pragma acc routine seq
 template <class T>
 DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_add_fetch(
-    T* const ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
+    T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
-  T *lptr = const_cast<T *>(ptr);
 #pragma acc atomic capture
-  { *lptr += val; tmp = *lptr; }
+  { *ptr += val; tmp = *ptr; }
   return tmp;
 }
 
 #pragma acc routine seq
 template <class T>
 DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_inc_fetch(
-    T* const ptr, MemoryOrderRelaxed, MemoryScopeDevice) {
+    T* ptr, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
-  T *lptr = const_cast<T *>(ptr);
 #pragma acc atomic capture
-  { *lptr += T(1); tmp = *lptr; }
+  { *ptr += T(1); tmp = *ptr; }
   return tmp;
 }
 
 #pragma acc routine seq
 template <class T>
 DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_sub_fetch(
-    T* const ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
+    T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
-  T *lptr = const_cast<T *>(ptr);
 #pragma acc atomic capture
-  { *lptr -= val; tmp = *lptr; }
+  { *ptr -= val; tmp = *ptr; }
   return tmp;
 }
 
 #pragma acc routine seq
 template <class T>
 DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_dec_fetch(
-    T* const ptr, MemoryOrderRelaxed, MemoryScopeDevice) {
+    T* ptr, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
-  T *lptr = const_cast<T *>(ptr);
 #pragma acc atomic capture
-  { *lptr -= T(1); tmp = *lptr; }
+  { *ptr -= T(1); tmp = *ptr; }
   return tmp;
 }
 
 #pragma acc routine seq
 template <class T>
 DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_mul_fetch(
-    T* const ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
+    T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
-  T *lptr = const_cast<T *>(ptr);
 #pragma acc atomic capture
-  { *lptr *= val; tmp = *lptr; }
+  { *ptr *= val; tmp = *ptr; }
   return tmp;
 }
 
 #pragma acc routine seq
 template <class T>
 DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_div_fetch(
-    T* const ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
+    T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
-  T *lptr = const_cast<T *>(ptr);
 #pragma acc atomic capture
-  { *lptr /= val; tmp = *lptr; }
+  { *ptr /= val; tmp = *ptr; }
   return tmp;
 }
 
 #pragma acc routine seq
 template <class T>
 DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_lshift_fetch(
-    T* const ptr, const unsigned int val, MemoryOrderRelaxed, MemoryScopeDevice) {
+    T* ptr, const unsigned int val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
-  T *lptr = const_cast<T *>(ptr);
 #pragma acc atomic capture
-  { *lptr = *lptr << val; tmp = *lptr; }
+  { *ptr = *ptr << val; tmp = *ptr; }
   return tmp;
 }
 
 #pragma acc routine seq
 template <class T>
 DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_rshift_fetch(
-    T* const ptr, const unsigned int val, MemoryOrderRelaxed, MemoryScopeDevice) {
+    T* ptr, const unsigned int val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
-  T *lptr = const_cast<T *>(ptr);
   if(acc_on_device(acc_device_host)) {
-    *lptr = *lptr >> val; tmp = *lptr;
+    *ptr = *ptr >> val; tmp = *ptr;
   } else {
 #pragma acc atomic capture
-    { *lptr = *lptr >> val; tmp = *lptr; }
+    { *ptr = *ptr >> val; tmp = *ptr; }
   }
   return tmp;
 }
@@ -343,55 +320,53 @@ DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_rshift_fetch(
 #pragma acc routine seq
 template <class T>
 T device_atomic_mod_fetch(
-T* const ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
+T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
-  T *lptr = const_cast<T *>(ptr);
   if(acc_on_device(acc_device_not_host)) {
-    Kokkos::abort("Kokkos Error in device_atomic_mod_fetch(): Not supported atomic "
-                  "operation in the OpenACC backend");
+    printf("Kokkos Error in device_atomic_mod_fetch(): Not supported atomic "
+                  "operation in the OpenACC backend\n");
   }
-  *lptr = *lptr % val; tmp = *lptr;
+  *ptr = *ptr % val; tmp = *ptr;
   return tmp;
 }
 
 #pragma acc routine seq
 template <class T>
 T device_atomic_max_fetch(
-T* const ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
+T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
-  T *lptr = const_cast<T *>(ptr);
   if(acc_on_device(acc_device_not_host)) {
-    Kokkos::abort("Kokkos Error in device_atomic_max_fetch(): Not supported atomic "
-                  "operation in the OpenACC backend");
+    printf("Kokkos Error in device_atomic_max_fetch(): Not supported atomic "
+                  "operation in the OpenACC backend\n");
   }
-  *lptr = std::max(*lptr, val); tmp = *lptr;
+  *ptr = std::max(*ptr, val); tmp = *ptr;
   return tmp;
 }
 
 #ifdef KOKKOS_COMPILER_NVHPC
 #pragma acc routine seq
 inline int device_atomic_max_fetch(
-int* const ptr, const int val, MemoryOrderRelaxed, MemoryScopeDevice) {
+int* ptr, const int val, MemoryOrderRelaxed, MemoryScopeDevice) {
   int tmp;
-  tmp = atomicMax(const_cast<int *>(ptr), val);
+  tmp = atomicMax(ptr, val);
   tmp = std::max(tmp, val);
   return tmp;
 }
 
 #pragma acc routine seq
 inline unsigned int device_atomic_max_fetch(
-unsigned int* const ptr, const unsigned int val, MemoryOrderRelaxed, MemoryScopeDevice) {
+unsigned int* ptr, const unsigned int val, MemoryOrderRelaxed, MemoryScopeDevice) {
   unsigned int tmp;
-  tmp = atomicMax(const_cast<unsigned int *>(ptr), val);
+  tmp = atomicMax(ptr, val);
   tmp = std::max(tmp, val);
   return tmp;
 }
 
 #pragma acc routine seq
 inline unsigned long long device_atomic_max_fetch(
-unsigned long long* const ptr, const unsigned long long val, MemoryOrderRelaxed, MemoryScopeDevice) {
+unsigned long long* ptr, const unsigned long long val, MemoryOrderRelaxed, MemoryScopeDevice) {
   unsigned long long tmp;
-  tmp = atomicMax(const_cast<unsigned long long *>(ptr), val);
+  tmp = atomicMax(ptr, val);
   tmp = std::max(tmp, val);
   return tmp;
 }
@@ -400,41 +375,40 @@ unsigned long long* const ptr, const unsigned long long val, MemoryOrderRelaxed,
 #pragma acc routine seq
 template <class T>
 T device_atomic_min_fetch(
-T* const ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
+T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
-  T *lptr = const_cast<T *>(ptr);
   if(acc_on_device(acc_device_not_host)) {
-    Kokkos::abort("Kokkos Error in device_atomic_min_fetch(): Not supported atomic "
-                  "operation in the OpenACC backend");
+    printf("Kokkos Error in device_atomic_min_fetch(): Not supported atomic "
+                  "operation in the OpenACC backend\n");
   }
-  *lptr = std::min(*lptr, val); tmp = *lptr;
+  *ptr = std::min(*ptr, val); tmp = *ptr;
   return tmp;
 }
 
 #ifdef KOKKOS_COMPILER_NVHPC
 #pragma acc routine seq
 inline int device_atomic_min_fetch(
-int* const ptr, const int val, MemoryOrderRelaxed, MemoryScopeDevice) {
+int* ptr, const int val, MemoryOrderRelaxed, MemoryScopeDevice) {
   int tmp;
-  tmp = atomicMin(const_cast<int *>(ptr), val);
+  tmp = atomicMin(ptr, val);
   tmp = std::min(tmp, val);
   return tmp;
 }
 
 #pragma acc routine seq
 inline unsigned int device_atomic_min_fetch(
-unsigned int* const ptr, const unsigned int val, MemoryOrderRelaxed, MemoryScopeDevice) {
+unsigned int* ptr, const unsigned int val, MemoryOrderRelaxed, MemoryScopeDevice) {
   unsigned int tmp;
-  tmp = atomicMin(const_cast<unsigned int *>(ptr), val);
+  tmp = atomicMin(ptr, val);
   tmp = std::min(tmp, val);
   return tmp;
 }
 
 #pragma acc routine seq
 inline unsigned long long device_atomic_min_fetch(
-unsigned long long* const ptr, const unsigned long long val, MemoryOrderRelaxed, MemoryScopeDevice) {
+unsigned long long* ptr, const unsigned long long val, MemoryOrderRelaxed, MemoryScopeDevice) {
   unsigned long long tmp;
-  tmp = atomicMin(const_cast<unsigned long long *>(ptr), val);
+  tmp = atomicMin(ptr, val);
   tmp = std::min(tmp, val);
   return tmp;
 }
@@ -443,33 +417,30 @@ unsigned long long* const ptr, const unsigned long long val, MemoryOrderRelaxed,
 #pragma acc routine seq
 template <class T>
 DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_and_fetch(
-    T* const ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
+    T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
-  T *lptr = const_cast<T *>(ptr);
 #pragma acc atomic capture
-  { *lptr &= val; tmp = *lptr; }
+  { *ptr &= val; tmp = *ptr; }
   return tmp;
 }
 
 #pragma acc routine seq
 template <class T>
 DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_or_fetch(
-    T* const ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
+    T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
-  T *lptr = const_cast<T *>(ptr);
 #pragma acc atomic capture
-  { *lptr |= val; tmp = *lptr; }
+  { *ptr |= val; tmp = *ptr; }
   return tmp;
 }
 
 #pragma acc routine seq
 template <class T>
 DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_xor_fetch(
-    T* const ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
+    T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
-  T *lptr = const_cast<T *>(ptr);
 #pragma acc atomic capture
-  { *lptr ^= val; tmp = *lptr; }
+  { *ptr ^= val; tmp = *ptr; }
   return tmp;
 }
 //</editor-fold>
