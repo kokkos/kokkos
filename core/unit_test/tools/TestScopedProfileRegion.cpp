@@ -37,11 +37,6 @@ TEST(defaultdevicetype, scoped_profile_region) {
 
   ASSERT_TRUE(test_region_stack.empty());
 
-  // Unnamed guard!  Profile region is popped at the end of the statement.
-  Kokkos::Profiling::ScopedProfileRegion("bug");
-
-  ASSERT_TRUE(test_region_stack.empty());
-
   {
     std::string outer_identifier = "outer";
     Kokkos::Profiling::ScopedProfileRegion guard_outer(outer_identifier);

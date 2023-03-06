@@ -28,11 +28,14 @@
 
 namespace Kokkos::Profiling {
 
-class ScopedProfileRegion {
+class [[nodiscard]] ScopedProfileRegion {
  public:
   ScopedProfileRegion(ScopedProfileRegion const &) = delete;
   ScopedProfileRegion &operator=(ScopedProfileRegion const &) = delete;
 
+#if defined(__has_cpp_attribute) && __has_cpp_attribute(nodiscard) >= 201907
+  [[nodiscard]]
+#endif
   explicit ScopedProfileRegion(std::string const &name) {
     Kokkos::Profiling::pushRegion(name);
   }
