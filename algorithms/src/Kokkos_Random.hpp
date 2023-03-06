@@ -1912,7 +1912,7 @@ void fill_random_normal(const ExecutionSpace& exec, ViewType a, RandomPool g,
         "Kokkos::fill_random_normal",
         Kokkos::RangePolicy<ExecutionSpace>(exec, 0, (LDA + 127) / 128),
         Impl::fill_random_functor_normal<ViewType, RandomPool, 128,
-                                         ViewType::Rank, IndexType>(a, g, mean,
+                                         ViewType::rank, IndexType>(a, g, mean,
                                                                     std_dev));
 }
 
