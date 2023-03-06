@@ -500,24 +500,24 @@ struct TestView_Normal {
   const int n;
   const ScalarA mean;
   const ScalarA stddev;
-  ScalarA mean_s;
-  ScalarA var_s;
+  double mean_s;
+  double var_s;
 
   TestView_Normal(ViewType A_, int n_, ScalarA mean_, ScalarA stddev_)
       : A(A_), n(n_), mean(mean_), stddev(stddev_) {}
 
   KOKKOS_FUNCTION void operator()(const NormalMeanTag&, int i,
-                                  NormalRandomProperties<ScalarA>& prop) const {
+                                  NormalRandomProperties<double>& prop) const {
     for (int k = 0; k < static_cast<int>(A.size()); k += n) {
-      ScalarA tmp = *(A.data() + i + k);
+      double tmp = static_cast<double>(*(A.data() + i + k));
       prop.mean += tmp;
     }
   }
 
   KOKKOS_FUNCTION void operator()(const NormalVarTag&, int i,
-                                  NormalRandomProperties<ScalarA>& prop) const {
+                                  NormalRandomProperties<double>& prop) const {
     for (int k = 0; k < static_cast<int>(A.size()); k += n) {
-      ScalarA tmp = *(A.data() + i + k);
+      double tmp = static_cast<double>(*(A.data() + i + k));
       prop.variance += (tmp - mean_s) * (tmp - mean_s);
     }
   }
@@ -528,7 +528,7 @@ struct TestView_Normal {
 
     Pool random(ticks);
     ExecutionSpace exec;
-    NormalRandomProperties<ScalarA> val;
+    NormalRandomProperties<double> val;
 
     Kokkos::fill_random_normal(A, random, mean, stddev);
     exec.fence();
@@ -545,19 +545,19 @@ struct TestView_Normal {
     exec.fence();
     var_s = val.variance / (A.size() - 1);
 
-    ScalarA mean_eps     = Kokkos::abs(mean - mean_s);
-    ScalarA variance_eps = Kokkos::abs((stddev * stddev) / var_s - 1.0);
+    double mean_eps     = Kokkos::abs(mean_s - static_cast<double>(mean));
+    double variance_eps = Kokkos::abs(
+        (static_cast<double>(stddev) * static_cast<double>(stddev)) / var_s -
+        1.0);
     std::cout << "Rank " << ViewType::rank << ": mean_eps " << mean_eps
               << ", variance_eps " << variance_eps << ", mean_expect " << mean
               << ", variance_expect " << stddev * stddev << ", mean " << mean_s
-              << ", variance " << var_s << std::endl;
-    if (std::is_same<ScalarA, double>::value) {
-      EXPECT_LE(mean_eps, 1e-2);
-      EXPECT_LE(variance_eps, 1e-2);
-    } else {
-      EXPECT_LE(mean_eps, 1e-1);
-      EXPECT_LE(variance_eps, 1e-1);
-    }
+              << ", variance " << var_s << ", sample size " << A.size()
+              << std::endl;
+
+    double tol = 10.0 / sqrt(A.size());  // Relax tolerance for float tests
+    EXPECT_LE(mean_eps, tol);
+    EXPECT_LE(variance_eps, tol);
   }
 };
 
@@ -569,24 +569,30 @@ struct TestViewCmplx_Normal {
   const int n;
   const ScalarA mean;
   const ScalarA stddev;
-  ScalarA mean_s;
-  typename ScalarA::value_type var_s;
+  Kokkos::complex<double> mean_s;
+  double var_s;
 
   TestViewCmplx_Normal(ViewType A_, int n_, ScalarA mean_, ScalarA stddev_)
       : A(A_), n(n_), mean(mean_), stddev(stddev_) {}
 
-  KOKKOS_FUNCTION void operator()(const NormalMeanTag&, int i,
-                                  NormalRandomProperties<ScalarA>& prop) const {
+  KOKKOS_FUNCTION void operator()(
+      const NormalMeanTag&, int i,
+      NormalRandomProperties<Kokkos::complex<double>>& prop) const {
     for (int k = 0; k < static_cast<int>(A.size()); k += n) {
-      ScalarA tmp = *(A.data() + i + k);
+      Kokkos::complex<double> tmp = Kokkos::complex<double>(
+          static_cast<double>(real(*(A.data() + i + k))),
+          static_cast<double>(imag(*(A.data() + i + k))));
       prop.mean += tmp;
     }
   }
 
-  KOKKOS_FUNCTION void operator()(const NormalVarTag&, int i,
-                                  NormalRandomProperties<ScalarA>& prop) const {
+  KOKKOS_FUNCTION void operator()(
+      const NormalVarTag&, int i,
+      NormalRandomProperties<Kokkos::complex<double>>& prop) const {
     for (int k = 0; k < static_cast<int>(A.size()); k += n) {
-      ScalarA tmp = *(A.data() + i + k);
+      Kokkos::complex<double> tmp = Kokkos::complex<double>(
+          static_cast<double>(real(*(A.data() + i + k))),
+          static_cast<double>(imag(*(A.data() + i + k))));
       prop.variance.real() += real(tmp - mean_s) * real(tmp - mean_s);
       prop.variance.imag() += imag(tmp - mean_s) * imag(tmp - mean_s);
     }
@@ -598,7 +604,7 @@ struct TestViewCmplx_Normal {
 
     Pool random(ticks);
     ExecutionSpace exec;
-    NormalRandomProperties<ScalarA> val;
+    NormalRandomProperties<Kokkos::complex<double>> val;
 
     Kokkos::fill_random_normal(A, random, mean, stddev);
     exec.fence();
@@ -615,22 +621,23 @@ struct TestViewCmplx_Normal {
     exec.fence();
     var_s = (real(val.variance) + imag(val.variance)) / (A.size() - 1);
 
-    typename ScalarA::value_type mean_eps     = Kokkos::abs(mean - mean_s);
-    typename ScalarA::value_type variance_eps = Kokkos::abs(
-        (real(stddev) * real(stddev) + imag(stddev) * imag(stddev)) / var_s -
+    double mean_eps     = Kokkos::abs(mean_s - mean);
+    double variance_eps = Kokkos::abs(
+        (static_cast<double>(real(stddev)) * static_cast<double>(real(stddev)) +
+         static_cast<double>(imag(stddev)) *
+             static_cast<double>(imag(stddev))) /
+            var_s -
         1.0);
     std::cout << "Rank " << ViewType::rank << ": mean_eps " << mean_eps
               << ", variance_eps " << variance_eps << ", mean_expect " << mean
               << ", variance_expect "
               << real(stddev) * real(stddev) + imag(stddev) * imag(stddev)
-              << ", mean " << mean_s << ", variance " << var_s << std::endl;
-    if (std::is_same<ScalarA, Kokkos::complex<double>>::value) {
-      EXPECT_LE(mean_eps, 1e-2);
-      EXPECT_LE(variance_eps, 1e-2);
-    } else {
-      EXPECT_LE(mean_eps, 1e-1);
-      EXPECT_LE(variance_eps, 1e-1);
-    }
+              << ", mean " << mean_s << ", variance " << var_s
+              << ", sample size " << A.size() << std::endl;
+
+    double tol = 10.0 / sqrt(A.size());  // Relax tolerance for float tests
+    EXPECT_LE(mean_eps, tol);
+    EXPECT_LE(variance_eps, tol);
   }
 };
 
