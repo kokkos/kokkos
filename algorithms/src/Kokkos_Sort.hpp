@@ -457,23 +457,13 @@ class BinSort {
     auto bin_size = bin_count_const(i);
     if (bin_size <= 1) return;
     constexpr bool use_std_sort =
-#ifdef KOKKOS_ENABLE_SERIAL
-        std::is_same_v<exec_space, Kokkos::Serial> ||
-#endif
-#ifdef KOKKOS_ENABLE_OPENMP
-        std::is_same_v<exec_space, Kokkos::OpenMP> ||
-#endif
-        false;
+        std::is_same_v<typename exec_space::memory_space, HostSpace>;
     int lower_bound = bin_offsets(i);
     int upper_bound = lower_bound + bin_size;
     if (use_std_sort && bin_size > 10) {
       if constexpr (use_std_sort) {
-        auto& bin_op_c   = bin_op;
-        auto& keys_rnd_c = keys_rnd;
         std::sort(&sort_order(lower_bound), &sort_order(upper_bound),
-                  [&bin_op_c, &keys_rnd_c](int p, int q) {
-                    return bin_op_c(keys_rnd_c, p, q);
-                  });
+                  [this](int p, int q) { return bin_op(keys_rnd, p, q); });
       }
     } else {
       for (int k = lower_bound + 1; k < upper_bound; ++k) {
