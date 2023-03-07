@@ -1453,6 +1453,12 @@ struct implements_new_reduce_interface<Kokkos::Experimental::OpenACC>
     : std::true_type {};
 #endif
 
+#ifdef KOKKOS_ENABLE_SYCL
+template <>
+struct implements_new_reduce_interface<Kokkos::Experimental::SYCL>
+    : std::true_type {};
+#endif
+
 template <typename CombinedFunctorReducerType, typename PolicyType,
           typename ExecutionSpaceType, typename Enable>
 class ParallelReduceWrapper {
