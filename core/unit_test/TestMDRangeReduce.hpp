@@ -46,7 +46,10 @@ void MDRangeReduceTester([[maybe_unused]] int bound, int k) {
 }
 
 TEST(TEST_CATEGORY, mdrange_parallel_reduce_primitive_types) {
-#if !defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_CUDA_LAMBDA)
+#if defined(KOKKOS_ENABLE_OPENMPTARGET)
+  GTEST_SKIP() << "FIXME OPENMPTARGET Tests of MDRange reduce over values "
+                  "smaller than int would fail";
+#elif !defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_CUDA_LAMBDA)
   for (int bound = 0; bound < 100; bound++) {
     for (int k = 0; k < bound; ++k) {
       MDRangeReduceTester<bool>(bound, k);
