@@ -128,12 +128,10 @@ class ParallelReduce<CombinedFunctorReducerType,
   using value_type     = typename ReducerType::value_type;
   using reference_type = typename ReducerType::reference_type;
 
-  using iterate_type =
-      typename Kokkos::Impl::HostIterateTile<MDRangePolicy, FunctorType,
-                                             WorkTag, reference_type>;
+  using iterate_type = typename Kokkos::Impl::HostIterateTile<
+      MDRangePolicy, CombinedFunctorReducerType, WorkTag, reference_type>;
 
   const iterate_type m_iter;
-  const ReducerType m_reducer;
   const pointer_type m_result_ptr;
 
   inline void exec_range(const Member &ibeg, const Member &iend,
@@ -156,11 +154,12 @@ class ParallelReduce<CombinedFunctorReducerType,
     const WorkRange range(Policy(0, num_tiles).set_chunk_size(1),
                           exec.pool_rank(), exec.pool_size());
 
+    const ReducerType &reducer = self.m_iter.m_func.get_reducer();
     self.exec_range(
         range.begin(), range.end(),
-        self.m_reducer.init(static_cast<pointer_type>(exec.reduce_memory())));
+        reducer.init(static_cast<pointer_type>(exec.reduce_memory())));
 
-    exec.fan_in_reduce(self.m_reducer);
+    exec.fan_in_reduce(reducer);
   }
 
   template <class Schedule>
@@ -178,6 +177,7 @@ class ParallelReduce<CombinedFunctorReducerType,
 
     long work_index = exec.get_work_index();
 
+    const ReducerType &reducer = self.m_iter.m_func.get_reducer();
     reference_type update =
         self.m_reducer.init(static_cast<pointer_type>(exec.reduce_memory()));
     while (work_index != -1) {
@@ -192,7 +192,8 @@ class ParallelReduce<CombinedFunctorReducerType,
 
  public:
   inline void execute() const {
-    ThreadsExec::resize_scratch(m_reducer.value_size(), 0);
+    const ReducerType &reducer = m_iter.m_func.get_reducer();
+    ThreadsExec::resize_scratch(reducer.value_size(), 0);
 
     ThreadsExec::start(&ParallelReduce::exec, this);
 
@@ -202,7 +203,7 @@ class ParallelReduce<CombinedFunctorReducerType,
       const pointer_type data =
           (pointer_type)ThreadsExec::root_reduce_scratch();
 
-      const unsigned n = m_reducer.value_count();
+      const unsigned n = reducer.value_count();
       for (unsigned i = 0; i < n; ++i) {
         m_result_ptr[i] = data[i];
       }
@@ -213,8 +214,7 @@ class ParallelReduce<CombinedFunctorReducerType,
   ParallelReduce(const CombinedFunctorReducerType &arg_functor_reducer,
                  const MDRangePolicy &arg_policy,
                  const ViewType &arg_result_view)
-      : m_iter(arg_policy, arg_functor_reducer.get_functor()),
-        m_reducer(arg_functor_reducer.get_reducer()),
+      : m_iter(arg_policy, arg_functor_reducer),
         m_result_ptr(arg_result_view.data()) {
     static_assert(Kokkos::is_view<ViewType>::value,
                   "Kokkos::Threads reduce result must be a View");
