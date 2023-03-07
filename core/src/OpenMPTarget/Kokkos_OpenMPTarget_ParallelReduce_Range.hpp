@@ -31,8 +31,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
  private:
   using Policy = Kokkos::RangePolicy<Traits...>;
 
-  using WorkTag   = typename Policy::work_tag;
-  using WorkRange = typename Policy::WorkRange;
+  using WorkTag = typename Policy::work_tag;
 
   using ReducerTypeFwd =
       std::conditional_t<std::is_same<InvalidType, ReducerType>::value,
