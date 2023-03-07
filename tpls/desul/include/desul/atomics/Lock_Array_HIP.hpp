@@ -63,12 +63,12 @@ void finalize_lock_arrays_hip();
  * will use it.  That is the purpose of the
  * ensure_hip_lock_arrays_on_device function.
  */
-#ifdef DESUL_HIP_RDC
+#ifdef __CLANG_RDC__
 extern
 #endif
     __device__ __constant__ int32_t* HIP_SPACE_ATOMIC_LOCKS_DEVICE;
 
-#ifdef DESUL_HIP_RDC
+#ifdef __CLANG_RDC__
 extern
 #endif
     __device__ __constant__ int32_t* HIP_SPACE_ATOMIC_LOCKS_NODE;
@@ -120,7 +120,7 @@ namespace {
 static int lock_array_copied = 0;
 }  // namespace
 
-#ifdef DESUL_HIP_RDC
+#ifdef __CLANG_RDC__
 inline
 #else
 inline static
@@ -139,7 +139,7 @@ inline static
 }
 }  // namespace Impl
 
-#if defined(DESUL_HIP_RDC)
+#if defined(__CLANG_RDC__)
 inline void ensure_hip_lock_arrays_on_device() {}
 #else
 static inline void ensure_hip_lock_arrays_on_device() {
