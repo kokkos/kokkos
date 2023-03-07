@@ -21,7 +21,7 @@
 namespace {
 
 template <typename T>
-void MDRangeReduceTester(int bound, int k) {
+void MDRangeReduceTester([[maybe_unused]] int bound, int k) {
   const auto policy_MD = Kokkos::MDRangePolicy<Kokkos::Rank<2>, TEST_EXECSPACE>(
       {0, 0}, {bound, 2});
 
