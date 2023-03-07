@@ -163,7 +163,12 @@ ENDIF()
 GLOBAL_SET(KOKKOS_CUDA_OPTIONS)
 # Construct the Makefile options
 IF(KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA)
-  GLOBAL_APPEND(KOKKOS_CUDA_OPTIONS "-expt-extended-lambda")
+  # Extended lambda support was stabilized in nvcc 12
+  IF(KOKKOS_COMPILER_VERSION_MAJOR EQUAL 11)
+    GLOBAL_APPEND(KOKKOS_CUDA_OPTIONS "-expt-extended-lambda")
+  ELSE()
+    GLOBAL_APPEND(KOKKOS_CUDA_OPTIONS "-extended-lambda")
+  ENDIF()
   GLOBAL_APPEND(KOKKOS_CUDA_OPTIONS "-Wext-lambda-captures-this")
 ENDIF()
 
