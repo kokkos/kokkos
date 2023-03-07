@@ -154,7 +154,8 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
   using pointer_type   = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
 
-  const FunctorType m_functor;
+  const CombinedFunctorReducer<FunctorType, typename Analysis::Reducer>
+      m_functor_reducer;
   const Policy m_policy;
 
   template <class TagType>
@@ -162,7 +163,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
       reference_type update) const {
     const typename Policy::member_type e = m_policy.end();
     for (typename Policy::member_type i = m_policy.begin(); i < e; ++i) {
-      m_functor(i, update, true);
+      m_functor_reducer.get_functor()(i, update, true);
     }
   }
 
@@ -172,13 +173,15 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
     const TagType t{};
     const typename Policy::member_type e = m_policy.end();
     for (typename Policy::member_type i = m_policy.begin(); i < e; ++i) {
-      m_functor(t, i, update, true);
+      m_functor_reducer.get_functor()(t, i, update, true);
     }
   }
 
  public:
   inline void execute() const {
-    const size_t pool_reduce_size  = Analysis::value_size(m_functor);
+    const typename Analysis::Reducer& final_reducer =
+        m_functor_reducer.get_reducer();
+    const size_t pool_reduce_size  = final_reducer.value_size();
     const size_t team_reduce_size  = 0;  // Never shrinks
     const size_t team_shared_size  = 0;  // Never shrinks
     const size_t thread_local_size = 0;  // Never shrinks
@@ -191,8 +194,6 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
         pool_reduce_size, team_reduce_size, team_shared_size,
         thread_local_size);
 
-    typename Analysis::Reducer final_reducer(m_functor);
-
     reference_type update = final_reducer.init(pointer_type(
         internal_instance->m_thread_team_data.pool_reduce_local()));
 
@@ -200,7 +201,8 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
   }
 
   inline ParallelScan(const FunctorType& arg_functor, const Policy& arg_policy)
-      : m_functor(arg_functor), m_policy(arg_policy) {}
+      : m_functor_reducer(arg_functor, typename Analysis::Reducer{arg_functor}),
+        m_policy(arg_policy) {}
 };
 
 /*--------------------------------------------------------------------------*/
@@ -218,7 +220,8 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   using pointer_type   = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
 
-  const FunctorType m_functor;
+  const CombinedFunctorReducer<FunctorType, typename Analysis::Reducer>
+      m_functor_reducer;
   const Policy m_policy;
   const pointer_type m_result_ptr;
 
@@ -227,7 +230,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
       reference_type update) const {
     const typename Policy::member_type e = m_policy.end();
     for (typename Policy::member_type i = m_policy.begin(); i < e; ++i) {
-      m_functor(i, update, true);
+      m_functor_reducer.get_functor()(i, update, true);
     }
   }
 
@@ -237,13 +240,14 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
     const TagType t{};
     const typename Policy::member_type e = m_policy.end();
     for (typename Policy::member_type i = m_policy.begin(); i < e; ++i) {
-      m_functor(t, i, update, true);
+      m_functor_reducer.get_functor()(t, i, update, true);
     }
   }
 
  public:
   inline void execute() {
-    const size_t pool_reduce_size  = Analysis::value_size(m_functor);
+    const size_t pool_reduce_size =
+        m_functor_reducer.get_reducer().value_size();
     const size_t team_reduce_size  = 0;  // Never shrinks
     const size_t team_shared_size  = 0;  // Never shrinks
     const size_t thread_local_size = 0;  // Never shrinks
@@ -256,7 +260,8 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
         pool_reduce_size, team_reduce_size, team_shared_size,
         thread_local_size);
 
-    typename Analysis::Reducer final_reducer(m_functor);
+    const typename Analysis::Reducer& final_reducer =
+        m_functor_reducer.get_reducer();
 
     reference_type update = final_reducer.init(pointer_type(
         internal_instance->m_thread_team_data.pool_reduce_local()));
@@ -271,7 +276,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   ParallelScanWithTotal(const FunctorType& arg_functor,
                         const Policy& arg_policy,
                         const ViewType& arg_result_view)
-      : m_functor(arg_functor),
+      : m_functor_reducer(arg_functor, typename Analysis::Reducer{arg_functor}),
         m_policy(arg_policy),
         m_result_ptr(arg_result_view.data()) {
     static_assert(
