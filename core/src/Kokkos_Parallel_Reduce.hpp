@@ -1437,6 +1437,12 @@ template <>
 struct implements_new_reduce_interface<Kokkos::Threads> : std::true_type {};
 #endif
 
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+template <>
+struct implements_new_reduce_interface<Kokkos::Experimental::OpenMPTarget>
+    : std::true_type {};
+#endif
+
 #ifdef KOKKOS_ENABLE_CUDA
 template <>
 struct implements_new_reduce_interface<Kokkos::Cuda> : std::true_type {};
