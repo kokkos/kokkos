@@ -103,6 +103,15 @@ struct NormalRandomProperties {
   }
 };
 
+template <class Scalar>
+KOKKOS_INLINE_FUNCTION NormalRandomProperties<Scalar> operator+(
+    const NormalRandomProperties<Scalar>& org,
+    const NormalRandomProperties<Scalar>& add) {
+  NormalRandomProperties<Scalar> val = org;
+  val += add;
+  return val;
+}
+
 template <class GeneratorPool, class Scalar>
 struct test_random_functor {
   using rnd_type = typename GeneratorPool::generator_type;
