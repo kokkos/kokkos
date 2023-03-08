@@ -922,7 +922,7 @@ KOKKOS_ADD_ADVANCED_TEST( UnitTest_PushFinalizeHook_terminate
     tools/TestEventCorrectness.cpp
     tools/TestWithoutInitializing.cpp
     tools/TestProfilingSection.cpp
-    tools/TestScopedProfileRegion.cpp
+    tools/TestScopedRegion.cpp
     )
 
   # FIXME_OPENMPTARGET This test causes internal compiler errors as of 09/01/22

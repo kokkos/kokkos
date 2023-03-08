@@ -14,7 +14,7 @@
 //
 //@HEADER
 
-#include <Kokkos_Profiling_ScopedProfileRegion.hpp>
+#include <Kokkos_Profiling_ScopedRegion.hpp>
 
 #include <gtest/gtest.h>
 
@@ -39,14 +39,14 @@ TEST(defaultdevicetype, scoped_profile_region) {
 
   {
     std::string outer_identifier = "outer";
-    Kokkos::Profiling::ScopedProfileRegion guard_outer(outer_identifier);
+    Kokkos::Profiling::ScopedRegion guard_outer(outer_identifier);
 
     ASSERT_EQ(test_region_stack.size(), 1u);
     ASSERT_EQ(test_region_stack.top(), outer_identifier);
 
     {
       std::string inner_identifier = "inner";
-      Kokkos::Profiling::ScopedProfileRegion guard_inner(inner_identifier);
+      Kokkos::Profiling::ScopedRegion guard_inner(inner_identifier);
       ASSERT_EQ(test_region_stack.size(), 2u);
       ASSERT_EQ(test_region_stack.top(), inner_identifier);
     }
@@ -62,11 +62,11 @@ TEST(defaultdevicetype, scoped_profile_region) {
   Kokkos::Tools::Experimental::set_pop_region_callback(nullptr);
 }
 
-using Kokkos::Profiling::ScopedProfileRegion;
-static_assert(!std::is_default_constructible<ScopedProfileRegion>::value);
-static_assert(!std::is_copy_constructible<ScopedProfileRegion>::value);
-static_assert(!std::is_move_constructible<ScopedProfileRegion>::value);
-static_assert(!std::is_copy_assignable<ScopedProfileRegion>::value);
-static_assert(!std::is_move_assignable<ScopedProfileRegion>::value);
+using Kokkos::Profiling::ScopedRegion;
+static_assert(!std::is_default_constructible<ScopedRegion>::value);
+static_assert(!std::is_copy_constructible<ScopedRegion>::value);
+static_assert(!std::is_move_constructible<ScopedRegion>::value);
+static_assert(!std::is_copy_assignable<ScopedRegion>::value);
+static_assert(!std::is_move_assignable<ScopedRegion>::value);
 
 }  // namespace
