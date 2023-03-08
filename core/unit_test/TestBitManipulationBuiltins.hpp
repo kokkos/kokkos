@@ -28,6 +28,11 @@ DEFINE_TYPE_NAME(unsigned short)
 DEFINE_TYPE_NAME(unsigned int)
 DEFINE_TYPE_NAME(unsigned long)
 DEFINE_TYPE_NAME(unsigned long long)
+DEFINE_TYPE_NAME(char)
+DEFINE_TYPE_NAME(short)
+DEFINE_TYPE_NAME(int)
+DEFINE_TYPE_NAME(long)
+DEFINE_TYPE_NAME(long long)
 #undef DEFINE_TYPE_NAME
 // clang-format on
 
@@ -598,3 +603,69 @@ TEST(TEST_CATEGORY, bit_manip_rotr) {
 }
 
 #undef TEST_BIT_ROTATE_FUNCTION
+
+template <class Space, class T>
+struct TestByteswapFunction {
+  TestByteswapFunction() { run(); }
+  void run() const {
+    int errors = 0;
+    Kokkos::parallel_reduce(Kokkos::RangePolicy<Space>(0, 1), *this, errors);
+    ASSERT_EQ(errors, 0) << "Failed check no error for byteswap("
+                         << type_helper<T>::name() << ")";
+  }
+  KOKKOS_FUNCTION void operator()(int, int& e) const {
+    T value;
+    T expected;
+    switch (sizeof(T)) {
+      case 1:
+        value    = static_cast<T>(0x12);
+        expected = static_cast<T>(0x12);
+        break;
+      case 2:
+        value    = static_cast<T>(0x1234);
+        expected = static_cast<T>(0x3412);
+        break;
+      case 4:
+        value    = static_cast<T>(0x60AF8503);
+        expected = static_cast<T>(0x0385AF60);
+        break;
+      case 8:
+        value    = static_cast<T>(0xABCDFE9477936406);
+        expected = static_cast<T>(0x0664937794FECDAB);
+        break;
+      default: Kokkos::abort("logic error");
+    }
+    using Kokkos::Experimental::byteswap_builtin;
+    if (byteswap_builtin(value) != expected) {
+      ++e;
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF(
+          "value at %llx which is %llx was expected to be %llx\n",
+          (unsigned long long)value,
+          (unsigned long long)byteswap_builtin(value),
+          (unsigned long long)expected);
+    }
+  }
+};
+
+template <class Integral>
+void test_bit_manip_byteswap() {
+  using Kokkos::rotr;
+  using Kokkos::Experimental::byteswap_builtin;
+  static_assert(noexcept(byteswap_builtin(Integral())));
+  static_assert(
+      std::is_same_v<decltype(byteswap_builtin(Integral())), Integral>);
+  TestByteswapFunction<TEST_EXECSPACE, Integral>();
+}
+
+TEST(TEST_CATEGORY, bit_manip_byeswap) {
+  test_bit_manip_byteswap<char>();
+  test_bit_manip_byteswap<unsigned char>();
+  test_bit_manip_byteswap<short>();
+  test_bit_manip_byteswap<unsigned short>();
+  test_bit_manip_byteswap<int>();
+  test_bit_manip_byteswap<unsigned int>();
+  test_bit_manip_byteswap<long>();
+  test_bit_manip_byteswap<unsigned long>();
+  test_bit_manip_byteswap<long long>();
+  test_bit_manip_byteswap<unsigned long long>();
+}
