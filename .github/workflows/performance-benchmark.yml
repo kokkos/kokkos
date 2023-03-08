@@ -29,7 +29,6 @@ jobs:
       - name: Configure Kokkos
         run: |
           cmake -B builddir \
-            -DKokkos_ARCH_NATIVE=ON \
             -DKokkos_ENABLE_HWLOC=ON \
             -DKokkos_ENABLE_${{ matrix.backend }}=ON \
             -DKokkos_ENABLE_BENCHMARKS=ON \
