@@ -444,7 +444,8 @@ constexpr auto test_byteswap(T x) -> decltype(Kokkos::byteswap(x)) {
   static_assert(byteswap<uint8_t>(0x21) == 0x21);
   static_assert(byteswap<uint16_t>(0x4321) == 0x2143);
   static_assert(byteswap<uint32_t>(0x87654321) == 0x21436587);
-  static_assert(byteswap<uint64_t>(0xfedcba9876543210) == 0x1032547698badcfe);
+  static_assert(byteswap<uint64_t>(0xfedcba9876543210) ==
+                static_cast<uint64_t>(0x1032547698badcfe));
   static_assert(byteswap<const uint32_t>(0xdeadbeef) == 0xefbeadde);
 
   return true;
@@ -452,7 +453,7 @@ constexpr auto test_byteswap(T x) -> decltype(Kokkos::byteswap(x)) {
 
 constexpr X test_byteswap(...) { return {}; }
 
-static_assert(test_byteswap((void*)0).did_not_match());
+static_assert(test_byteswap((void*)0).did_not_match());  // NOLINT
 static_assert(test_byteswap((float)0).did_not_match());
 constexpr char c2[2] = {};
 static_assert(test_byteswap(c2).did_not_match());
