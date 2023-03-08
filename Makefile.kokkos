@@ -1055,8 +1055,6 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA_ARCH), 1)
   endif
 
   ifneq ($(KOKKOS_INTERNAL_USE_ARCH_NVIDIA), 0)
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_NVIDIA_GPU")
-
     KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)
 
     ifeq ($(KOKKOS_INTERNAL_COMPILER_NVCC), 1)
