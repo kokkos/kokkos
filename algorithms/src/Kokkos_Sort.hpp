@@ -460,6 +460,8 @@ class BinSort {
         std::is_same_v<typename exec_space::memory_space, HostSpace>;
     int lower_bound = bin_offsets(i);
     int upper_bound = lower_bound + bin_size;
+    // Switching to std::sort for more than 10 elements has been found
+    // reasonable experimentally.
     if (use_std_sort && bin_size > 10) {
       if constexpr (use_std_sort) {
         std::sort(&sort_order(lower_bound), &sort_order(upper_bound),
