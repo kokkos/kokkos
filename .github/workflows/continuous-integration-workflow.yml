@@ -90,7 +90,6 @@ jobs:
             -DCMAKE_INSTALL_PREFIX=/usr \
             ${{ matrix.clang-tidy }} \
             -Ddesul_ROOT=/usr/desul-install/ \
-            -DKokkos_ARCH_NATIVE=ON \
             -DKokkos_ENABLE_DESUL_ATOMICS_EXTERNAL=ON \
             -DKokkos_ENABLE_HWLOC=ON \
             -DKokkos_ENABLE_${{ matrix.backend }}=ON \
