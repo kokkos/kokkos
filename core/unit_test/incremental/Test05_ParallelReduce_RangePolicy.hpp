@@ -45,7 +45,8 @@ struct NonTrivialReduceFunctor {
   NonTrivialReduceFunctor(NonTrivialReduceFunctor &&)      = default;
   NonTrivialReduceFunctor &operator=(NonTrivialReduceFunctor &&) = default;
   NonTrivialReduceFunctor &operator=(NonTrivialReduceFunctor const &) = default;
-  KOKKOS_FUNCTION ~NonTrivialReduceFunctor() {}
+  // Also make sure that it's OK if the destructor is not device-callable.
+  ~NonTrivialReduceFunctor() {}
 };
 
 template <class ExecSpace>
