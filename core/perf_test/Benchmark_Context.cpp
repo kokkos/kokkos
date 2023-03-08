@@ -57,9 +57,25 @@ void add_kokkos_configuration(bool verbose) {
   }
 }
 
+void add_git_info() {
+  if (!Kokkos::Impl::GIT_BRANCH.empty()) {
+    benchmark::AddCustomContext("GIT_BRANCH", Kokkos::Impl::GIT_BRANCH);
+    benchmark::AddCustomContext("GIT_COMMIT_HASH",
+                                Kokkos::Impl::GIT_COMMIT_HASH);
+    benchmark::AddCustomContext("GIT_CLEAN_STATUS",
+                                Kokkos::Impl::GIT_CLEAN_STATUS);
+    benchmark::AddCustomContext("GIT_COMMIT_DESCRIPTION",
+                                Kokkos::Impl::GIT_COMMIT_DESCRIPTION);
+    benchmark::AddCustomContext("GIT_COMMIT_DATE",
+                                Kokkos::Impl::GIT_COMMIT_DATE);
+  }
+}
+
 void add_benchmark_context(bool verbose) {
   // Add Kokkos configuration to benchmark context data
   add_kokkos_configuration(verbose);
+  // Add git information to benchmark context data
+  add_git_info();
 }
 
 }  // namespace KokkosBenchmark
