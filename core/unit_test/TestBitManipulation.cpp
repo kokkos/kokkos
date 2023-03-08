@@ -440,7 +440,8 @@ constexpr auto test_byteswap(T x) -> decltype(Kokkos::byteswap(x)) {
   static_assert(byteswap<int8_t>(0x12) == 0x12);
   static_assert(byteswap<int16_t>(0x1234) == 0x3412);
   static_assert(byteswap<int32_t>(0x12345678) == 0x78563412);
-  static_assert(byteswap<int64_t>(0x123456789abcdef0) == 0xf0debc9a78563412);
+  static_assert(byteswap<int64_t>(0x123456789abcdef0) ==
+                static_cast<int64_t>(0xf0debc9a78563412));
   static_assert(byteswap<uint8_t>(0x21) == 0x21);
   static_assert(byteswap<uint16_t>(0x4321) == 0x2143);
   static_assert(byteswap<uint32_t>(0x87654321) == 0x21436587);
