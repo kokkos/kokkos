@@ -960,7 +960,7 @@ class Random_XorShift64 {
 
   KOKKOS_INLINE_FUNCTION
   float fnormal(const float& mean, const float& std_dev = 1.0) {
-    return mean + fnormal() * std_dev;
+    return mean + static_cast<float>(normal()) * std_dev;
   }
 };
 
@@ -1211,7 +1211,7 @@ class Random_XorShift1024 {
 
   KOKKOS_INLINE_FUNCTION
   float fnormal(const float& mean, const float& std_dev = 1.0) {
-    return mean + fnormal() * std_dev;
+    return mean + static_cast<float>(normal()) * std_dev;
   }
 };
 
