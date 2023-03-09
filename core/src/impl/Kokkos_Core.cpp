@@ -739,6 +739,9 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
 #elif defined(KOKKOS_ARCH_NAVI1030)
   declare_configuration_metadata("architecture", "GPU architecture",
                                  "NAVI1030");
+#elif defined(KOKKOS_ARCH_NAVI1100)
+  declare_configuration_metadata("architecture", "GPU architecture",
+                                 "NAVI1100");
 
 #else
   declare_configuration_metadata("architecture", "GPU architecture", "none");
