@@ -14,11 +14,11 @@
 //
 //@HEADER
 
-#ifndef KOKKOSP_SCOPED_PROFILE_REGION_HPP
-#define KOKKOSP_SCOPED_PROFILE_REGION_HPP
+#ifndef KOKKOSP_SCOPED_REGION_HPP
+#define KOKKOSP_SCOPED_REGION_HPP
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #define KOKKOS_IMPL_PUBLIC_INCLUDE
-#define KOKKOS_IMPL_PUBLIC_INCLUDE_PROFILING_SCOPEDPROFILEREGION
+#define KOKKOS_IMPL_PUBLIC_INCLUDE_PROFILING_SCOPEDREGION
 #endif
 
 #include <Kokkos_Macros.hpp>
@@ -28,24 +28,24 @@
 
 namespace Kokkos::Profiling {
 
-class [[nodiscard]] ScopedProfileRegion {
+class [[nodiscard]] ScopedRegion {
  public:
-  ScopedProfileRegion(ScopedProfileRegion const &) = delete;
-  ScopedProfileRegion &operator=(ScopedProfileRegion const &) = delete;
+  ScopedRegion(ScopedRegion const &) = delete;
+  ScopedRegion &operator=(ScopedRegion const &) = delete;
 
 #if defined(__has_cpp_attribute) && __has_cpp_attribute(nodiscard) >= 201907
   [[nodiscard]]
 #endif
-  explicit ScopedProfileRegion(std::string const &name) {
+  explicit ScopedRegion(std::string const &name) {
     Kokkos::Profiling::pushRegion(name);
   }
-  ~ScopedProfileRegion() { Kokkos::Profiling::popRegion(); }
+  ~ScopedRegion() { Kokkos::Profiling::popRegion(); }
 };
 
 }  // namespace Kokkos::Profiling
 
 #ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_CORE
 #undef KOKKOS_IMPL_PUBLIC_INCLUDE
-#undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_PROFILING_SCOPEDPROFILEREGION
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_PROFILING_SCOPEDREGION
 #endif
 #endif
