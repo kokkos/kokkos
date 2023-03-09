@@ -31,19 +31,24 @@ KOKKOS_FUNCTION constexpr T byteswap_fallback(T x) {
   } else {
     using U = std::make_unsigned_t<T>;
 
-    size_t diff = CHAR_BIT * (sizeof(T) - 1);
+    size_t shift = CHAR_BIT * (sizeof(T) - 1);
 
-    U mask1 = static_cast<unsigned char>(~0);
-    U mask2 = mask1 << diff;
-    U val   = x;
+    U lo_mask = static_cast<unsigned char>(~0);
+    U hi_mask = lo_mask << shift;
+
+    U val = x;
+
     for (size_t i = 0; i < sizeof(T) / 2; ++i) {
-      U byte1 = val & mask1;
-      U byte2 = val & mask2;
+      U lo_val = val & lo_mask;
+      U hi_val = val & hi_mask;
 
-      val = (val ^ byte1 ^ byte2 ^ (byte1 << diff) ^ (byte2 >> diff));
-      mask1 <<= CHAR_BIT;
-      mask2 >>= CHAR_BIT;
-      diff -= 2 * CHAR_BIT;
+      val = (val & ~lo_mask) | (hi_val >> shift);
+      val = (val & ~hi_mask) | (lo_val << shift);
+
+      lo_mask <<= CHAR_BIT;
+      hi_mask >>= CHAR_BIT;
+
+      shift -= 2 * CHAR_BIT;
     }
     return val;
   }

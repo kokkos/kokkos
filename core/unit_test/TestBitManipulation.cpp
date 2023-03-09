@@ -437,6 +437,29 @@ constexpr auto test_byteswap(T x) -> decltype(Kokkos::byteswap(x)) {
   static_assert(noexcept(byteswap(x)));
   static_assert(std::is_same_v<decltype(byteswap(x)), T>);
 
+  return true;
+}
+
+constexpr X test_byteswap(...) { return {}; }
+
+static_assert(test_byteswap((void*)0).did_not_match());  // NOLINT
+static_assert(test_byteswap((float)0).did_not_match());
+constexpr char c2[2] = {};
+static_assert(test_byteswap(c2).did_not_match());
+static_assert(test_byteswap((char)0));
+static_assert(test_byteswap((short)0));
+static_assert(test_byteswap((int)0));
+static_assert(test_byteswap((long)0));
+static_assert(test_byteswap((long long)0));
+static_assert(test_byteswap((unsigned char)0));
+static_assert(test_byteswap((unsigned short)0));
+static_assert(test_byteswap((unsigned int)0));
+static_assert(test_byteswap((unsigned long)0));
+static_assert(test_byteswap((unsigned long long)0));
+
+constexpr bool test_byteswap2() {
+  using Kokkos::byteswap;
+
   static_assert(byteswap<int8_t>(0x12) == 0x12);
   static_assert(byteswap<int16_t>(0x1234) == 0x3412);
   static_assert(byteswap<int32_t>(0x12345678) == 0x78563412);
@@ -451,13 +474,7 @@ constexpr auto test_byteswap(T x) -> decltype(Kokkos::byteswap(x)) {
 
   return true;
 }
-
-constexpr X test_byteswap(...) { return {}; }
-
-static_assert(test_byteswap((void*)0).did_not_match());  // NOLINT
-static_assert(test_byteswap((float)0).did_not_match());
-constexpr char c2[2] = {};
-static_assert(test_byteswap(c2).did_not_match());
+static_assert(test_byteswap2());
 //</editor-fold>
 
 #undef TEST_BIT_MANIPULATION
