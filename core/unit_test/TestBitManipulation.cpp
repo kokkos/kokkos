@@ -464,18 +464,13 @@ constexpr bool test_byteswap2() {
   static_assert(byteswap<int16_t>(0x1234) == 0x3412);
   static_assert(byteswap<int32_t>(0x12345678) == 0x78563412);
 
-// FIXME_NVCC This case is overflowing int65_t and the conversion from uint64_t
-// to int64_t here is implementation-defined. This seems to be the reason for
-// the check to fail for nvcc with CUDA <= 11.3.0
-#if !defined(KOKKOS_COMPILER_NVCC) || CUDA_VERSION >= 11030
-  static_assert(byteswap<int64_t>(0x123456789abcdef0) ==
-                static_cast<int64_t>(0xf0debc9a78563412));
-#endif
+  static_assert(byteswap<int64_t>(0x123456789abcdef0ll) ==
+                0xf0debc9a78563412ll);
   static_assert(byteswap<uint8_t>(0x21) == 0x21);
   static_assert(byteswap<uint16_t>(0x4321) == 0x2143);
   static_assert(byteswap<uint32_t>(0x87654321) == 0x21436587);
   static_assert(byteswap<uint64_t>(0xfedcba9876543210) ==
-                static_cast<uint64_t>(0x1032547698badcfe));
+                0x1032547698badcfe);
   static_assert(byteswap<const uint32_t>(0xdeadbeef) == 0xefbeadde);
 
   return true;
