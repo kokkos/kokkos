@@ -74,13 +74,13 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
   template <class FunctorType>
   inline int team_size_max(const FunctorType& f,
                            const ParallelReduceTag&) const {
-    return internal_team_size_max_reduce(f);
+    return internal_team_size_max_reduce<void>(f);
   }
 
   template <class FunctorType, class ReducerType>
   inline int team_size_max(const FunctorType& f, const ReducerType& /*r*/,
                            const ParallelReduceTag&) const {
-    return internal_team_size_max_reduce(f);
+    return internal_team_size_max_reduce<typename ReducerType::value_type>(f);
   }
 
   template <typename FunctorType>
@@ -91,13 +91,14 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
   template <typename FunctorType>
   inline int team_size_recommended(FunctorType const& f,
                                    ParallelReduceTag const&) const {
-    return internal_team_size_recommended_reduce(f);
+    return internal_team_size_recommended_reduce<void>(f);
   }
 
   template <class FunctorType, class ReducerType>
   int team_size_recommended(FunctorType const& f, ReducerType const&,
                             ParallelReduceTag const&) const {
-    return internal_team_size_recommended_reduce(f);
+    return internal_team_size_recommended_reduce<
+        typename ReducerType::value_type>(f);
   }
   inline bool impl_auto_vector_length() const { return m_tune_vector_length; }
   inline bool impl_auto_team_size() const { return m_tune_team_size; }
@@ -312,10 +313,11 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
            impl_vector_length();
   }
 
-  template <class FunctorType>
+  template <class ValueType, class FunctorType>
   int internal_team_size_max_reduce(const FunctorType& f) const {
-    using Analysis        = FunctorAnalysis<FunctorPatternInterface::REDUCE,
-                                     TeamPolicyInternal, FunctorType>;
+    using Analysis =
+        FunctorAnalysis<FunctorPatternInterface::REDUCE, TeamPolicyInternal,
+                        FunctorType, ValueType>;
     using value_type      = typename Analysis::value_type;
     const int value_count = Analysis::value_count(f);
 
@@ -348,10 +350,11 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
     return 1 << Kokkos::Impl::int_log2(internal_team_size_max_for(f));
   }
 
-  template <class FunctorType>
+  template <class ValueType, class FunctorType>
   int internal_team_size_recommended_reduce(const FunctorType& f) const {
     // FIXME_SYCL improve
-    return 1 << Kokkos::Impl::int_log2(internal_team_size_max_reduce(f));
+    return 1 << Kokkos::Impl::int_log2(
+               internal_team_size_max_reduce<ValueType>(f));
   }
 };
 

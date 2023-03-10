@@ -321,8 +321,8 @@ class ParallelReduce<CombinedFunctorReducerType,
   inline unsigned local_block_size(const FunctorType& f) {
     unsigned n = CudaTraits::WarpSize * 8;
     int shmem_size =
-        cuda_single_inter_block_reduce_scan_shmem<false, FunctorType, WorkTag>(
-            f, n);
+        cuda_single_inter_block_reduce_scan_shmem<false, FunctorType, WorkTag,
+                                                  value_type>(f, n);
     using closure_type =
         Impl::ParallelReduce<CombinedFunctorReducer<FunctorType, ReducerType>,
                              Policy, Kokkos::Cuda>;
@@ -339,8 +339,9 @@ class ParallelReduce<CombinedFunctorReducerType,
                  m_policy.space().impl_internal_space_instance(), attr, f, 1,
                  shmem_size, 0)))) {
       n >>= 1;
-      shmem_size = cuda_single_inter_block_reduce_scan_shmem<false, FunctorType,
-                                                             WorkTag>(f, n);
+      shmem_size =
+          cuda_single_inter_block_reduce_scan_shmem<false, FunctorType, WorkTag,
+                                                    value_type>(f, n);
     }
     return n;
   }
@@ -382,7 +383,7 @@ class ParallelReduce<CombinedFunctorReducerType,
           UseShflReduction
               ? 0
               : cuda_single_inter_block_reduce_scan_shmem<false, FunctorType,
-                                                          WorkTag>(
+                                                          WorkTag, value_type>(
                     m_functor_reducer.get_functor(), block.y);
 
       CudaParallelLaunch<ParallelReduce, LaunchBounds>(
@@ -428,8 +429,8 @@ class ParallelReduce<CombinedFunctorReducerType,
         m_scratch_space(nullptr),
         m_scratch_flags(nullptr),
         m_unified_space(nullptr) {
-    check_reduced_view_shmem_size<WorkTag>(m_policy,
-                                           m_functor_reducer.get_functor());
+    check_reduced_view_shmem_size<WorkTag, value_type>(
+        m_policy, m_functor_reducer.get_functor());
   }
 };
 }  // namespace Impl

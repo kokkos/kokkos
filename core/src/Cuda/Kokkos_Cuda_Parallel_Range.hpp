@@ -255,8 +255,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
   inline unsigned local_block_size(const FunctorType& f) {
     unsigned n = CudaTraits::WarpSize * 8;
     int shmem_size =
-        cuda_single_inter_block_reduce_scan_shmem<false, FunctorType, WorkTag>(
-            f, n);
+        cuda_single_inter_block_reduce_scan_shmem<false, FunctorType, WorkTag,
+                                                  value_type>(f, n);
     using closure_type =
         Impl::ParallelReduce<CombinedFunctorReducer<FunctorType, ReducerType>,
                              Policy, Kokkos::Cuda>;
@@ -273,8 +273,9 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
                  m_policy.space().impl_internal_space_instance(), attr, f, 1,
                  shmem_size, 0)))) {
       n >>= 1;
-      shmem_size = cuda_single_inter_block_reduce_scan_shmem<false, FunctorType,
-                                                             WorkTag>(f, n);
+      shmem_size =
+          cuda_single_inter_block_reduce_scan_shmem<false, FunctorType, WorkTag,
+                                                    value_type>(f, n);
     }
     return n;
   }
@@ -315,7 +316,7 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
           UseShflReduction
               ? 0
               : cuda_single_inter_block_reduce_scan_shmem<false, FunctorType,
-                                                          WorkTag>(
+                                                          WorkTag, value_type>(
                     m_functor_reducer.get_functor(), block.y);
 
       if ((nwork == 0)
@@ -373,8 +374,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
         m_scratch_space(nullptr),
         m_scratch_flags(nullptr),
         m_unified_space(nullptr) {
-    check_reduced_view_shmem_size<WorkTag>(m_policy,
-                                           m_functor_reducer.get_functor());
+    check_reduced_view_shmem_size<WorkTag, value_type>(
+        m_policy, m_functor_reducer.get_functor());
   }
 };
 
@@ -390,7 +391,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
   using LaunchBounds = typename Policy::launch_bounds;
 
   using Analysis = Kokkos::Impl::FunctorAnalysis<FunctorPatternInterface::SCAN,
-                                                 Policy, FunctorType>;
+                                                 Policy, FunctorType, void>;
 
  public:
   using pointer_type   = typename Analysis::pointer_type;
@@ -612,8 +613,8 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
     while (n && unsigned(m_policy.space()
                              .impl_internal_space_instance()
                              ->m_maxShmemPerBlock) <
-                    cuda_single_inter_block_reduce_scan_shmem<true, FunctorType,
-                                                              WorkTag>(f, n)) {
+                    cuda_single_inter_block_reduce_scan_shmem<
+                        true, FunctorType, WorkTag, value_type>(f, n)) {
       n >>= 1;
     }
     return n;
@@ -703,8 +704,9 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   using WorkRange    = typename Policy::WorkRange;
   using LaunchBounds = typename Policy::launch_bounds;
 
-  using Analysis = Kokkos::Impl::FunctorAnalysis<FunctorPatternInterface::SCAN,
-                                                 Policy, FunctorType>;
+  using Analysis =
+      Kokkos::Impl::FunctorAnalysis<FunctorPatternInterface::SCAN, Policy,
+                                    FunctorType, ReturnType>;
 
  public:
   using value_type     = typename Analysis::value_type;
@@ -934,8 +936,8 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
     while (n && unsigned(m_policy.space()
                              .impl_internal_space_instance()
                              ->m_maxShmemPerBlock) <
-                    cuda_single_inter_block_reduce_scan_shmem<true, FunctorType,
-                                                              WorkTag>(f, n)) {
+                    cuda_single_inter_block_reduce_scan_shmem<
+                        true, FunctorType, WorkTag, value_type>(f, n)) {
       n >>= 1;
     }
     return n;

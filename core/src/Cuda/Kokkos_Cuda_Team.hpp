@@ -196,8 +196,9 @@ class CudaTeamMember {
     (void)reducer;
     (void)value;
     KOKKOS_IF_ON_DEVICE(
-        (typename Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
-                                        TeamPolicy<Cuda>, ReducerType>::Reducer
+        (typename Impl::FunctorAnalysis<
+             Impl::FunctorPatternInterface::REDUCE, TeamPolicy<Cuda>,
+             ReducerType, typename ReducerType::value_type>::Reducer
              wrapped_reducer(reducer);
          cuda_intra_block_reduction(value, wrapped_reducer, blockDim.y);
          reducer.reference() = value;))
@@ -228,7 +229,8 @@ class CudaTeamMember {
         Impl::CudaJoinFunctor<Type> cuda_join_functor;
         typename Impl::FunctorAnalysis<
             Impl::FunctorPatternInterface::SCAN, TeamPolicy<Cuda>,
-            Impl::CudaJoinFunctor<Type>>::Reducer reducer(cuda_join_functor);
+            Impl::CudaJoinFunctor<Type>, Type>::Reducer
+            reducer(cuda_join_functor);
         Impl::cuda_intra_block_reduce_scan<true>(reducer, base_data + 1);
 
         if (global_accum) {
@@ -688,8 +690,8 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
     const FunctorType& lambda) {
   // Extract value_type from lambda
   using value_type = typename Kokkos::Impl::FunctorAnalysis<
-      Kokkos::Impl::FunctorPatternInterface::SCAN, void,
-      FunctorType>::value_type;
+      Kokkos::Impl::FunctorPatternInterface::SCAN, void, FunctorType,
+      void>::value_type;
 
   const auto start     = loop_bounds.start;
   const auto end       = loop_bounds.end;
@@ -825,7 +827,8 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
         loop_boundaries,
     const Closure& closure) {
   using value_type = typename Kokkos::Impl::FunctorAnalysis<
-      Kokkos::Impl::FunctorPatternInterface::SCAN, void, Closure>::value_type;
+      Kokkos::Impl::FunctorPatternInterface::SCAN, void, Closure,
+      void>::value_type;
   value_type dummy;
   parallel_scan(loop_boundaries, closure, Kokkos::Sum<value_type>(dummy));
 }

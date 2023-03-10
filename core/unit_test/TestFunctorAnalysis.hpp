@@ -45,7 +45,7 @@ void test_functor_analysis() {
   using A01 =
       Kokkos::Impl::FunctorAnalysis<Kokkos::Impl::FunctorPatternInterface::FOR,
                                     Kokkos::RangePolicy<ExecSpace>,
-                                    decltype(c01)>;
+                                    decltype(c01), void>;
 
   using R01 = typename A01::Reducer;
 
@@ -65,7 +65,7 @@ void test_functor_analysis() {
   auto c02  = KOKKOS_LAMBDA(int, double&){};
   using A02 = Kokkos::Impl::FunctorAnalysis<
       Kokkos::Impl::FunctorPatternInterface::REDUCE,
-      Kokkos::RangePolicy<ExecSpace>, decltype(c02)>;
+      Kokkos::RangePolicy<ExecSpace>, decltype(c02), void>;
   using R02 = typename A02::Reducer;
 
   static_assert(std::is_same<typename A02::value_type, double>::value, "");
@@ -85,7 +85,7 @@ void test_functor_analysis() {
   TestFunctorAnalysis_03 c03;
   using A03 = Kokkos::Impl::FunctorAnalysis<
       Kokkos::Impl::FunctorPatternInterface::REDUCE,
-      Kokkos::RangePolicy<ExecSpace>, TestFunctorAnalysis_03>;
+      Kokkos::RangePolicy<ExecSpace>, TestFunctorAnalysis_03, void>;
   using R03 = typename A03::Reducer;
 
   static_assert(std::is_same<typename A03::value_type,
