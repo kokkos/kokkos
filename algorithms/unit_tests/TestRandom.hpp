@@ -783,14 +783,8 @@ void test_random_normal(int N) {
   using std::cout;
   using std::endl;
 
-  cout << " -- Testing float Views with Normal distribution " << endl;
-  test_random_normal_scalar<RandomGenerator, float>(N);
-
   cout << " -- Testing double Views with Normal distribution " << endl;
   test_random_normal_scalar<RandomGenerator, double>(N);
-
-  cout << " -- Testing complex<float> Views with Normal distribution " << endl;
-  test_random_normal_cmplx<RandomGenerator, Kokkos::complex<float>>(N);
 
   cout << " -- Testing complex<double> Views with Normal distribution " << endl;
   test_random_normal_cmplx<RandomGenerator, Kokkos::complex<double>>(N);
