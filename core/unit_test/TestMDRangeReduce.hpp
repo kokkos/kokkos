@@ -49,7 +49,7 @@ TEST(TEST_CATEGORY, mdrange_parallel_reduce_primitive_types) {
 #if defined(KOKKOS_ENABLE_OPENMPTARGET)
   GTEST_SKIP() << "FIXME OPENMPTARGET Tests of MDRange reduce over values "
                   "smaller than int would fail";
-#elif !defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_CUDA_LAMBDA)
+#elif defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_CUDA_LAMBDA)
   GTEST_SKIP() << "Skipped ENABLE_CUDA_LAMBDA";
 #else
   for (int bound : {0, 1, 7, 32, 65, 7000}) {
