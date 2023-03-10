@@ -52,6 +52,12 @@ KOKKOS_FUNCTION constexpr T byteswap_fallback(T x) {
     }
     return val;
   }
+
+  // Workaround for buggy nvcc 11.2 compiler warning: missing return statement
+  // at end of non-void function
+  //
+  // Note: this return statement is unreachable
+  return x;
 }
 
 template <class T>

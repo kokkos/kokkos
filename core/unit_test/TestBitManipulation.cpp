@@ -464,9 +464,11 @@ constexpr bool test_byteswap2() {
   static_assert(byteswap<int16_t>(INT16_C(0x1234)) == INT16_C(0x3412));
   static_assert(byteswap<int32_t>(INT32_C(0x12345678)) == INT32_C(0x78563412));
 
+  // These static_casts are a workaround for an nvcc 11.2 compiler bug
   static_assert(
       static_cast<uint64_t>(byteswap<int64_t>(INT64_C(0x123456789abcdef0))) ==
       static_cast<uint64_t>(INT64_C(0xf0debc9a78563412)));
+
   static_assert(byteswap<uint8_t>(UINT8_C(0x21)) == UINT8_C(0x21));
   static_assert(byteswap<uint16_t>(UINT16_C(0x4321)) == UINT16_C(0x2143));
   static_assert(byteswap<uint32_t>(UINT32_C(0x87654321)) ==
