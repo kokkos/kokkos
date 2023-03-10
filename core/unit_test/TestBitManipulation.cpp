@@ -460,18 +460,21 @@ static_assert(test_byteswap((unsigned long long)0));
 constexpr bool test_byteswap2() {
   using Kokkos::byteswap;
 
-  static_assert(byteswap<int8_t>(0x12) == 0x12);
-  static_assert(byteswap<int16_t>(0x1234) == 0x3412);
-  static_assert(byteswap<int32_t>(0x12345678) == 0x78563412);
+  static_assert(byteswap<int8_t>(INT8_C(0x12)) == INT8_C(0x12));
+  static_assert(byteswap<int16_t>(INT16_C(0x1234)) == INT16_C(0x3412));
+  static_assert(byteswap<int32_t>(INT32_C(0x12345678)) == INT32_C(0x78563412));
 
   static_assert(
-      static_cast<uint64_t>(byteswap<int64_t>(0x123456789abcdef0ll)) ==
-      static_cast<uint64_t>(0xf0debc9a78563412ll));
-  static_assert(byteswap<uint8_t>(0x21) == 0x21);
-  static_assert(byteswap<uint16_t>(0x4321) == 0x2143);
-  static_assert(byteswap<uint32_t>(0x87654321) == 0x21436587);
-  static_assert(byteswap<uint64_t>(0xfedcba9876543210) == 0x1032547698badcfe);
-  static_assert(byteswap<const uint32_t>(0xdeadbeef) == 0xefbeadde);
+      static_cast<uint64_t>(byteswap<int64_t>(INT64_C(0x123456789abcdef0))) ==
+      static_cast<uint64_t>(INT64_C(0xf0debc9a78563412)));
+  static_assert(byteswap<uint8_t>(UINT8_C(0x21)) == UINT8_C(0x21));
+  static_assert(byteswap<uint16_t>(UINT16_C(0x4321)) == UINT16_C(0x2143));
+  static_assert(byteswap<uint32_t>(UINT32_C(0x87654321)) ==
+                UINT32_C(0x21436587));
+  static_assert(byteswap<uint64_t>(UINT64_C(0xfedcba9876543210)) ==
+                UINT64_C(0x1032547698badcfe));
+  static_assert(byteswap<const uint32_t>(UINT32_C(0xdeadbeef)) ==
+                UINT32_C(0xefbeadde));
 
   return true;
 }
