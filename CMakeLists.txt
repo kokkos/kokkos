@@ -148,6 +148,7 @@ math(EXPR KOKKOS_VERSION "${Kokkos_VERSION_MAJOR} * 10000 + ${Kokkos_VERSION_MIN
 math(EXPR KOKKOS_VERSION_MAJOR "${KOKKOS_VERSION} / 10000")
 math(EXPR KOKKOS_VERSION_MINOR "${KOKKOS_VERSION} / 100 % 100")
 math(EXPR KOKKOS_VERSION_PATCH "${KOKKOS_VERSION} % 100")
+message( STATUS "Kokkos version: ${Kokkos_VERSION}" )
 
 # Load either the real TriBITS or a TriBITS wrapper
 # for certain utility functions that are universal (like GLOBAL_SET)
