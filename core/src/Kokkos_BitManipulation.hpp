@@ -19,8 +19,40 @@
 
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_NumericTraits.hpp>
+#include <climits>  // CHAR_BIT
+#include <type_traits>
 
 namespace Kokkos::Impl {
+
+template <class T>
+KOKKOS_FUNCTION constexpr T byteswap_fallback(T x) {
+  if constexpr (sizeof(T) > 1) {
+    using U = std::make_unsigned_t<T>;
+
+    size_t shift = CHAR_BIT * (sizeof(T) - 1);
+
+    U lo_mask = static_cast<unsigned char>(~0);
+    U hi_mask = lo_mask << shift;
+
+    U val = x;
+
+    for (size_t i = 0; i < sizeof(T) / 2; ++i) {
+      U lo_val = val & lo_mask;
+      U hi_val = val & hi_mask;
+
+      val = (val & ~lo_mask) | (hi_val >> shift);
+      val = (val & ~hi_mask) | (lo_val << shift);
+
+      lo_mask <<= CHAR_BIT;
+      hi_mask >>= CHAR_BIT;
+
+      shift -= 2 * CHAR_BIT;
+    }
+    return val;
+  }
+  // sizeof(T) == 1
+  return x;
+}
 
 template <class T>
 KOKKOS_FUNCTION constexpr int countl_zero_fallback(T x) {
@@ -65,6 +97,14 @@ inline constexpr bool is_standard_unsigned_integer_type_v =
 }  // namespace Kokkos::Impl
 
 namespace Kokkos {
+
+//<editor-fold desc="[bit.byteswap], byteswap">
+template <class T>
+KOKKOS_FUNCTION constexpr std::enable_if_t<std::is_integral_v<T>, T> byteswap(
+    T value) noexcept {
+  return Impl::byteswap_fallback(value);
+}
+//</editor-fold>
 
 //<editor-fold desc="[bit.count], counting">
 template <class T>
@@ -188,6 +228,35 @@ namespace Kokkos::Impl {
 #endif
 
 template <class T>
+KOKKOS_IMPL_DEVICE_FUNCTION T byteswap_builtin_device(T x) noexcept {
+  return byteswap_fallback(x);
+}
+
+template <class T>
+KOKKOS_IMPL_HOST_FUNCTION T byteswap_builtin_host(T x) noexcept {
+#ifdef KOKKOS_IMPL_USE_GCC_BUILT_IN_FUNCTIONS
+  if constexpr (sizeof(T) == 1) {
+    return x;
+  } else if constexpr (sizeof(T) == 2) {
+    return __builtin_bswap16(x);
+  } else if constexpr (sizeof(T) == 4) {
+    return __builtin_bswap32(x);
+  } else if constexpr (sizeof(T) == 8) {
+    return __builtin_bswap64(x);
+  } else if constexpr (sizeof(T) == 16) {
+#if __has_builtin(__builtin_bswap128)
+    return __builtin_bswap128(x);
+#else
+    return (__builtin_bswap64(x >> 64) |
+            (static_cast<T>(__builtin_bswap64(x)) << 64));
+#endif
+  }
+#endif
+
+  return byteswap_fallback(x);
+}
+
+template <class T>
 KOKKOS_IMPL_DEVICE_FUNCTION
     std::enable_if_t<is_standard_unsigned_integer_type_v<T>, int>
     countl_zero_builtin_device(T x) noexcept {
@@ -307,6 +376,13 @@ KOKKOS_IMPL_HOST_FUNCTION
 }  // namespace Kokkos::Impl
 
 namespace Kokkos::Experimental {
+
+template <class T>
+KOKKOS_FUNCTION std::enable_if_t<std::is_integral_v<T>, T> byteswap_builtin(
+    T x) noexcept {
+  KOKKOS_IF_ON_DEVICE((return ::Kokkos::Impl::byteswap_builtin_device(x);))
+  KOKKOS_IF_ON_HOST((return ::Kokkos::Impl::byteswap_builtin_host(x);))
+}
 
 template <class T>
 KOKKOS_FUNCTION std::enable_if_t<
