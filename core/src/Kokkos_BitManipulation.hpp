@@ -26,9 +26,7 @@ namespace Kokkos::Impl {
 
 template <class T>
 KOKKOS_FUNCTION constexpr T byteswap_fallback(T x) {
-  if constexpr (sizeof(T) == 1) {
-    return x;
-  } else {
+  if constexpr (sizeof(T) > 1) {
     using U = std::make_unsigned_t<T>;
 
     size_t shift = CHAR_BIT * (sizeof(T) - 1);
@@ -52,11 +50,7 @@ KOKKOS_FUNCTION constexpr T byteswap_fallback(T x) {
     }
     return val;
   }
-
-  // Workaround for buggy nvcc 11.2 compiler warning: missing return statement
-  // at end of non-void function
-  //
-  // Note: this return statement is unreachable
+  // sizeof(T) == 1
   return x;
 }
 
