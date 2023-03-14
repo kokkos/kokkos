@@ -149,7 +149,7 @@ using data_type_set =
     data_types<std::int32_t, std::int64_t, std::uint64_t, double>;
 #elif defined(__ARM_NEON)
 using host_abi_set  = abi_set<simd_abi::scalar, simd_abi::neon_fixed_size<2>>;
-using data_type_set = data_types<double>;
+using data_type_set = data_types<std::int32_t, std::int64_t, std::uint64_t, double>;
 #else
 using host_abi_set  = abi_set<simd_abi::scalar>;
 using data_type_set = data_types<double>;
