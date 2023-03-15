@@ -2093,8 +2093,8 @@ struct HostIterateTile<RP, Functor, Tag, ValueType,
     const bool full_tile = check_iteration_bounds(m_tiledims, m_offset);
 
     Tile_Loop_Type<RP::rank, (RP::inner_direction == Iterate::Left), index_type,
-                   Tag>::apply(val, m_func, full_tile, m_offset, m_rp.m_tile,
-                               m_tiledims);
+                   Tag>::apply(val, m_func.get_functor(), full_tile, m_offset,
+                               m_rp.m_tile, m_tiledims);
   }
 
 #else
