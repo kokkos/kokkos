@@ -217,12 +217,6 @@ class UnorderedMap {
  public:
   //! \name Public types and constants
   //@{
-  using default_op_type = typename UnorderedMapInsertOpTypes<
-      Kokkos::View<std::remove_const_t<
-                       std::conditional_t<std::is_void_v<Value>, int, Value>> *,
-                   Device>,
-      uint32_t>::NoOp;
-
   // key_types
   using declared_key_type = Key;
   using key_type          = std::remove_const_t<declared_key_type>;
@@ -298,6 +292,8 @@ class UnorderedMap {
  public:
   //! \name Public member functions
   //@{
+  using default_op_type =
+      typename UnorderedMapInsertOpTypes<value_type_view, uint32_t>::NoOp;
 
   /// \brief Constructor
   ///
