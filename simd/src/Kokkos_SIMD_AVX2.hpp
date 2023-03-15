@@ -824,6 +824,19 @@ class simd<std::uint64_t, simd_abi::avx2_fixed_size<4>> {
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd(U&& value)
       : m_value(_mm256_set1_epi64x(
             Kokkos::bit_cast<std::int64_t>(value_type(value)))) {}
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd(std::uint64_t a, std::uint64_t b,
+                                             std::uint64_t c, std::uint64_t d)
+      : m_value(_mm256_setr_epi64x(a, b, c, d)) {}
+  template <class G,
+            std::enable_if_t<
+                std::is_invocable_r_v<value_type, G,
+                                      std::integral_constant<std::size_t, 0>>,
+                bool> = false>
+  KOKKOS_FORCEINLINE_FUNCTION simd(G&& gen)
+      : simd(gen(std::integral_constant<std::size_t, 0>()),
+             gen(std::integral_constant<std::size_t, 1>()),
+             gen(std::integral_constant<std::size_t, 2>()),
+             gen(std::integral_constant<std::size_t, 3>())) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr simd(__m256i const& value_in)
       : m_value(value_in) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit simd(
@@ -887,6 +900,22 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 simd<std::int64_t, simd_abi::avx2_fixed_size<4>>::simd(
     simd<std::uint64_t, simd_abi::avx2_fixed_size<4>> const& other)
     : m_value(static_cast<__m256i>(other)) {}
+
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+    simd<std::uint64_t, simd_abi::avx2_fixed_size<4>>
+    operator+(simd<std::uint64_t, simd_abi::avx2_fixed_size<4>> const& lhs,
+              simd<std::uint64_t, simd_abi::avx2_fixed_size<4>> const& rhs) {
+  return simd<std::uint64_t, simd_abi::avx2_fixed_size<4>>(
+      _mm256_add_epi64(static_cast<__m256i>(lhs), static_cast<__m256i>(rhs)));
+}
+
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+    simd<std::uint64_t, simd_abi::avx2_fixed_size<4>>
+    operator-(simd<std::uint64_t, simd_abi::avx2_fixed_size<4>> const& lhs,
+              simd<std::uint64_t, simd_abi::avx2_fixed_size<4>> const& rhs) {
+  return simd<std::uint64_t, simd_abi::avx2_fixed_size<4>>(
+      _mm256_sub_epi64(static_cast<__m256i>(lhs), static_cast<__m256i>(rhs)));
+}
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 simd<std::uint64_t, simd_abi::avx2_fixed_size<4>> condition(

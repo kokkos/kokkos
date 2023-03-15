@@ -278,21 +278,23 @@ class divides {
 };
 
 template <class Abi, size_t n, typename DataType>
-inline void host_check_all_math_ops(DataType const& first_args, DataType const& second_args) {
+inline void host_check_all_math_ops(DataType const& first_args,
+                                    DataType const& second_args) {
   host_check_binary_op_all_loaders<Abi>(plus(), n, first_args, second_args);
   host_check_binary_op_all_loaders<Abi>(minus(), n, first_args, second_args);
   host_check_binary_op_all_loaders<Abi>(multiplies(), n, first_args,
                                         second_args);
 
-  if constexpr(std::is_same_v<DataType, double>)
-    host_check_binary_op_all_loaders<Abi>(divides(), n, first_args, second_args);
+  if constexpr (std::is_same_v<DataType, double>)
+    host_check_binary_op_all_loaders<Abi>(divides(), n, first_args,
+                                          second_args);
 }
 
 template <class Abi, typename DataType>
 inline void host_check_math_ops() {
   constexpr size_t n = 11;
 
-  if constexpr(std::is_signed_v<DataType>) {
+  if constexpr (std::is_signed_v<DataType>) {
     DataType const first_args[n]  = {1, 2, -1, 10, 0, 1, -2, 10, 0, 1, -2};
     DataType const second_args[n] = {1, 2, 1, 1, 1, -3, -2, 1, 13, -3, -2};
     host_check_all_math_ops<Abi, n>(first_args, second_args);
