@@ -1086,7 +1086,12 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
       : m_functor_reducer(arg_functor_reducer),
         m_policy(arg_policy),
         m_result_ptr(arg_view.data()),
-        m_force_synchronous(!arg_view.impl_track().has_record()) {}
+        m_force_synchronous(!arg_view.impl_track().has_record()) {
+    static_assert(
+        Kokkos::Impl::MemorySpaceAccess<typename ViewType::memory_space,
+                                        Kokkos::HostSpace>::accessible,
+        "HPX reduce result must be a View accessible from HostSpace");
+  }
 };
 
 template <class CombinedFunctorReducerType, class... Traits>
@@ -1179,7 +1184,12 @@ class ParallelReduce<CombinedFunctorReducerType,
         m_policy(Policy(0, arg_policy.m_num_tiles).set_chunk_size(1)),
         m_functor_reducer(arg_functor_reducer),
         m_result_ptr(arg_view.data()),
-        m_force_synchronous(!arg_view.impl_track().has_record()) {}
+        m_force_synchronous(!arg_view.impl_track().has_record()) {
+    static_assert(
+        Kokkos::Impl::MemorySpaceAccess<typename ViewType::memory_space,
+                                        Kokkos::HostSpace>::accessible,
+        "HPX reduce result must be a View accessible from HostSpace");
+  }
 
   template <typename Policy, typename Functor>
   static int max_tile_size_product(const Policy &, const Functor &) {
@@ -1582,7 +1592,12 @@ class ParallelReduce<CombinedFunctorReducerType,
         m_shared(arg_policy.scratch_size(0) + arg_policy.scratch_size(1) +
                  FunctorTeamShmemSize<FunctorType>::value(
                      m_functor_reducer.get_functor(), arg_policy.team_size())),
-        m_force_synchronous(!arg_result.impl_track().has_record()) {}
+        m_force_synchronous(!arg_result.impl_track().has_record()) {
+    static_assert(
+        Kokkos::Impl::MemorySpaceAccess<typename ViewType::memory_space,
+                                        Kokkos::HostSpace>::accessible,
+        "HPX reduce result must be a View accessible from HostSpace");
+  }
 };
 }  // namespace Impl
 }  // namespace Kokkos
