@@ -729,6 +729,12 @@ if(Kokkos_ENABLE_HIP)
       UnitTestMain.cpp
       hip/TestHIP_InterOp_Streams.cpp
   )
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_HIPGraph
+    SOURCES
+      UnitTestMainInit.cpp
+      hip/TestHIP_Graph.cpp
+  )
 endif()
 
 if(Kokkos_ENABLE_SYCL)
