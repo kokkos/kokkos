@@ -482,6 +482,11 @@ class UnorderedMap {
   KOKKOS_INLINE_FUNCTION insert_result
   insert(key_type const &k, impl_value_type const &v = impl_value_type(),
          InsertOpType arg_insert_op = InsertOpType()) const {
+    if constexpr (is_set) {
+      static_assert(std::is_same_v<InsertOpType, default_op_type>,
+                    "Insert Operations are not supported on sets.");
+    }
+
     insert_result result;
 
     if (!is_insertable_map || capacity() == 0u ||
