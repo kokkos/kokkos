@@ -569,7 +569,9 @@ class UnorderedMap {
         }
 
         result.set_existing(curr, free_existing);
-        if (!is_set) arg_insert_op.op(m_values, curr, v);
+        if constexpr (!is_set) {
+          arg_insert_op.op(m_values, curr, v);
+        }
         not_done = false;
       }
       //------------------------------------------------------------
