@@ -1064,18 +1064,19 @@ class where_expression<simd_mask<std::int64_t, simd_abi::avx512_fixed_size<8>>,
     m_value = value_type(_mm512_mask_loadu_epi64(
         _mm512_set1_epi64(0.0), static_cast<__mmask8>(m_mask), mem));
   }
-  template <class U, std::enable_if_t<
-                         std::is_convertible_v<
-                             U, simd<std::int64_t, simd_abi::avx512_fixed_size<8>>>,
-                         bool> = false>
+  template <class U,
+            std::enable_if_t<
+                std::is_convertible_v<
+                    U, simd<std::int64_t, simd_abi::avx512_fixed_size<8>>>,
+                bool> = false>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void operator=(U&& x) {
     auto const x_as_value_type =
         static_cast<simd<std::int64_t, simd_abi::avx512_fixed_size<8>>>(
             std::forward<U>(x));
-    m_value =
-        simd<std::int64_t, simd_abi::avx512_fixed_size<8>>(_mm512_mask_blend_epi64(
-            static_cast<__mmask8>(m_mask), static_cast<__m512i>(m_value),
-            static_cast<__m512i>(x_as_value_type)));
+    m_value = simd<std::int64_t, simd_abi::avx512_fixed_size<8>>(
+        _mm512_mask_blend_epi64(static_cast<__mmask8>(m_mask),
+                                static_cast<__m512i>(m_value),
+                                static_cast<__m512i>(x_as_value_type)));
   }
 };
 
