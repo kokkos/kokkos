@@ -1561,6 +1561,7 @@ class TestViewAPI {
       // TODO once we remove the conversion to std::runtime_error, catch the
       //      appropriate Kokkos error here
       std::string msg = error.what();
+
       ASSERT_PRED_FORMAT2(::testing::IsSubstring, "hello_world_failure", msg);
       ASSERT_PRED_FORMAT2(::testing::IsSubstring,
                           typename device::memory_space{}.name(), msg);

@@ -255,8 +255,10 @@ TEST(kokkosp, test_streams) {
     std::vector<FencePayload> expected{};
     expect_fence_events(expected, [=]() {
       cudaStream_t s1, s2;
-      cudaStreamCreate(&s1);
-      cudaStreamCreate(&s2);
+      Kokkos::Impl::CudaInternal::singleton().cuda_stream_create_api_wrapper(
+          &s1);
+      Kokkos::Impl::CudaInternal::singleton().cuda_stream_create_api_wrapper(
+          &s2);
       Kokkos::Cuda default_space;
       Kokkos::Cuda space_s1(s1);
       Kokkos::Cuda space_s2(s2);

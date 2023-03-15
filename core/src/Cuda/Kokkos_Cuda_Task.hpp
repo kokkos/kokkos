@@ -259,8 +259,8 @@ class TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::Cuda, QueueType>> {
     cuda_task_queue_execute<<<grid, block, shared_total, stream>>>(
         scheduler, shared_per_warp);
 
+    // Impl::CudaInternal::singleton().cuda_get_last_error_api_wrapper();
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGetLastError());
-
     Impl::cuda_device_synchronize(
         "Kokkos::Impl::TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::"
         "Cuda>::execute: Post Task Execution");
@@ -295,6 +295,7 @@ class TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::Cuda, QueueType>> {
     set_cuda_task_base_apply_function_pointer<TaskType>
         <<<1, 1>>>(ptr_ptr, dtor_ptr);
 
+    // Impl::CudaInternal::singleton().cuda_get_last_error_api_wrapper();
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGetLastError());
     Impl::cuda_device_synchronize(
         "Kokkos::Impl::TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::"
@@ -490,8 +491,8 @@ class TaskQueueSpecializationConstrained<
     cuda_task_queue_execute<<<grid, block, shared_total, stream>>>(
         scheduler, shared_per_warp);
 
+    // Impl::CudaInternal::singleton().cuda_get_last_error_api_wrapper();
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGetLastError());
-
     Impl::cuda_device_synchronize(
         "Kokkos::Impl::TaskQueueSpecializationConstrained<SimpleTaskScheduler<"
         "Kokkos::Cuda>::execute: Post Execute Task");
@@ -521,6 +522,7 @@ class TaskQueueSpecializationConstrained<
     set_cuda_task_base_apply_function_pointer<TaskType>
         <<<1, 1>>>(ptr_ptr, dtor_ptr);
 
+    // Impl::CudaInternal::singleton().cuda_get_last_error_api_wrapper();
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGetLastError());
     Impl::cuda_device_synchronize(
         "Kokkos::Impl::TaskQueueSpecializationConstrained<SimpleTaskScheduler<"

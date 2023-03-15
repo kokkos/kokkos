@@ -193,6 +193,194 @@ class CudaInternal {
     }
   }
 
+  ///////////////////////////////////////////////////////////////////////////////////////////
+
+  // Wrappers for Cuda API calls.
+  void cuda_create_texture_object_api_wrapper(
+      cudaTextureObject_t* pTexObject, const cudaResourceDesc* pResDesc,
+      const cudaTextureDesc* pTexDesc,
+      const cudaResourceViewDesc* pResViewDesc) const {
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(
+        cudaCreateTextureObject(pTexObject, pResDesc, pTexDesc, pResViewDesc));
+  }
+
+  void cuda_device_synchronize_api_wrapper() const {
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaDeviceSynchronize());
+  }
+
+  void cuda_event_create_api_wrapper(cudaEvent_t* event) const {
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaEventCreate(event));
+  }
+
+  void cuda_event_record_api_wrapper(cudaEvent_t event,
+                                     cudaStream_t stream = nullptr) const {
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaEventRecord(event, stream));
+  }
+
+  void cuda_event_synchronize_api_wrapper(cudaEvent_t event) const {
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaEventSynchronize(event));
+  }
+
+  void cuda_free_api_wrapper(void* devPtr) const {
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFree(devPtr));
+  }
+
+  void cuda_free_async_api_wrapper(
+      [[maybe_unused]] void* devPtr,
+      [[maybe_unused]] cudaStream_t hStream) const {
+#if (CUDART_VERSION >= 11020)
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFreeAsync(devPtr, hStream));
+#else
+    const std::string msg(
+        "Kokkos::CudaInternal ERROR: "
+        "cuda_free_async_api_wrapper() contains an internal "
+        "cudaFreeAsync() API call, but "
+        "Cuda version 11.2 or higher is required.");
+    throw_runtime_exception(msg);
+#endif
+  }
+
+  void cuda_free_host_api_wrapper(void* ptr) const {
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFreeHost(ptr));
+  }
+
+  template <class FuncType>
+  void cuda_func_get_attributes_api_wrapper(cudaFuncAttributes* attr,
+                                            FuncType* entry) const {
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFuncGetAttributes(attr, entry));
+  }
+
+  template <class FuncType>
+  void cuda_func_set_attribute_api_wrapper(FuncType* entry,
+                                           cudaFuncAttribute attr,
+                                           int value) const {
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFuncSetAttribute(entry, attr, value));
+  }
+
+  void cuda_get_last_error_api_wrapper(
+      const bool remove_safe_call_macro = false) const {
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
+    // There are cases where we don't want to error out here.
+    if (remove_safe_call_macro)
+      cudaGetLastError();
+    else
+      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGetLastError());
+  }
+
+  void cuda_get_pointer_attributes_api_wrapper(
+      cudaPointerAttributes* attributes, const void* ptr) const {
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaPointerGetAttributes(attributes, ptr));
+  }
+
+  void cuda_graph_add_empty_node_api_wrapper(
+      cudaGraphNode_t* pGraphNode, cudaGraph_t graph,
+      const cudaGraphNode_t* pDependencies, size_t numDependencies) const {
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGraphAddEmptyNode(
+        pGraphNode, graph, pDependencies, numDependencies));
+  }
+
+  void cuda_graph_add_kernel_node_api_wrapper(
+      cudaGraphNode_t* pGraphNode, cudaGraph_t graph,
+      const cudaGraphNode_t* pDependencies, size_t numDependencies,
+      const cudaKernelNodeParams* pNodeParams) const {
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGraphAddKernelNode(
+        pGraphNode, graph, pDependencies, numDependencies, pNodeParams));
+  }
+
+  void cuda_malloc_api_wrapper(void** devPtr, size_t size) const {
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMalloc(devPtr, size));
+  }
+
+  cudaError_t cuda_malloc_api_wrapper_return_error(void** devPtr,
+                                                   size_t size) const {
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
+    cudaError_t error_code = cudaMalloc(devPtr, size);
+    return error_code;
+  }
+
+  cudaError_t cuda_malloc_async_api_wrapper_return_error(
+      [[maybe_unused]] void** devPtr, [[maybe_unused]] size_t size,
+      [[maybe_unused]] cudaStream_t hStream) const {
+#if (defined(KOKKOS_ENABLE_IMPL_CUDA_MALLOC_ASYNC) && CUDART_VERSION >= 11020)
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
+    cudaError_t error_code = cudaMallocAsync(devPtr, size, hStream);
+    return error_code;
+#else
+    const std::string msg(
+        "Kokkos::CudaInternal ERROR: "
+        "cuda_malloc_async_api_wrapper_return_error() contains an internal "
+        "cudaMallocAsync() API call, but "
+        "KOKKOS_ENABLE_IMPL_CUDA_MALLOC_ASYNC must be defined and Cuda version "
+        "11.2 or higher is required.");
+    throw_runtime_exception(msg);
+#endif
+  }
+
+  void cuda_malloc_host_api_wrapper(void** ptr, size_t size) const {
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMallocHost(ptr, size));
+  }
+
+  void cuda_mem_prefetch_async_api_wrapper(
+      const void* devPtr, size_t count, int dstDevice,
+      cudaStream_t stream = nullptr) const {
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(
+        cudaMemPrefetchAsync(devPtr, count, dstDevice, stream));
+  }
+
+  void cuda_memcpy_api_wrapper(void* dst, const void* src, size_t count,
+                               cudaMemcpyKind kind) const {
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMemcpy(dst, src, count, kind));
+  }
+
+  void cuda_memcpy_async_api_wrapper(void* dst, const void* src, size_t count,
+                                     cudaMemcpyKind kind,
+                                     cudaStream_t stream) const {
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMemcpyAsync(dst, src, count, kind, stream));
+  }
+
+  void cuda_memcpy_to_symbol_async_api_wrapper(
+      const void* symbol, const void* src, size_t count, size_t offset,
+      cudaMemcpyKind kind, cudaStream_t stream = nullptr) const {
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(
+        cudaMemcpyToSymbolAsync(symbol, src, count, offset, kind, stream));
+  }
+
+  void cuda_memset_api_wrapper(void* devPtr, int value, size_t count) const {
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMemset(devPtr, value, count));
+  }
+
+  void cuda_stream_create_api_wrapper(cudaStream_t* pStream) const {
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamCreate(pStream));
+  }
+
+  void cuda_stream_synchronize_api_wrapper(cudaStream_t stream) const {
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamSynchronize(stream));
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////////////////
+
   // Resizing of reduction related scratch spaces
   size_type* scratch_space(const std::size_t size) const;
   size_type* scratch_flags(const std::size_t size) const;
@@ -208,6 +396,28 @@ class CudaInternal {
 
 }  // Namespace Impl
 
+namespace Impl {
+
+template <class DT, class... DP>
+struct ZeroMemset<Kokkos::Cuda, DT, DP...> {
+  ZeroMemset(const Kokkos::Cuda& exec_space_instance,
+             const View<DT, DP...>& dst,
+             typename View<DT, DP...>::const_value_type&) {
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMemsetAsync(
+        dst.data(), 0,
+        dst.size() * sizeof(typename View<DT, DP...>::value_type),
+        exec_space_instance.cuda_stream()));
+  }
+
+  ZeroMemset(const View<DT, DP...>& dst,
+             typename View<DT, DP...>::const_value_type&) {
+    Kokkos::Impl::CudaInternal::singleton().cuda_memset_api_wrapper(
+        reinterpret_cast<void*>(dst.data()), 0,
+        dst.size() * sizeof(typename View<DT, DP...>::value_type));
+  }
+};
+}  // namespace Impl
+
 namespace Experimental {
 // Partitioning an Execution Space: expects space and integer arguments for
 // relative weight
@@ -218,7 +428,8 @@ namespace Impl {
 inline void create_Cuda_instances(std::vector<Cuda>& instances) {
   for (int s = 0; s < int(instances.size()); s++) {
     cudaStream_t stream;
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamCreate(&stream));
+    Kokkos::Impl::CudaInternal::singleton().cuda_stream_create_api_wrapper(
+        &stream);
     instances[s] = Cuda(stream, true);
   }
 }

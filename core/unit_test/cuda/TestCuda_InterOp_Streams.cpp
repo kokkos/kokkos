@@ -24,9 +24,11 @@ TEST(cuda, raw_cuda_streams) {
   Kokkos::initialize();
 
   cudaStream_t stream;
-  cudaStreamCreate(&stream);
+  Kokkos::Impl::CudaInternal::singleton().cuda_stream_create_api_wrapper(
+      &stream);
   int* p;
-  cudaMalloc(&p, sizeof(int) * 100);
+  Kokkos::Impl::CudaInternal::singleton().cuda_malloc_api_wrapper(
+      reinterpret_cast<void**>(&p), sizeof(int) * 100);
   using MemorySpace = typename TEST_EXECSPACE::memory_space;
 
   {
@@ -72,12 +74,13 @@ TEST(cuda, raw_cuda_streams) {
   }
   Kokkos::finalize();
   offset_streams<<<100, 64, 0, stream>>>(p);
-  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaDeviceSynchronize());
+  Kokkos::Impl::CudaInternal::singleton().cuda_device_synchronize_api_wrapper();
   cudaStreamDestroy(stream);
 
   int h_p[100];
-  cudaMemcpy(h_p, p, sizeof(int) * 100, cudaMemcpyDefault);
-  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaDeviceSynchronize());
+  Kokkos::Impl::CudaInternal::singleton().cuda_memcpy_api_wrapper(
+      h_p, p, sizeof(int) * 100, cudaMemcpyDefault);
+  Kokkos::Impl::CudaInternal::singleton().cuda_device_synchronize_api_wrapper();
   int64_t sum        = 0;
   int64_t sum_expect = 0;
   for (int i = 0; i < 100; i++) {
