@@ -533,7 +533,10 @@ struct TestView_Normal {
     Pool random(ticks);
     ExecutionSpace exec;
     NormalRandomProperties<double> val;
-
+    printf(
+        "     Just checking A: size = %d, span = %d, span_is_contiguous = %d\n",
+        static_cast<int>(A.size()), static_cast<int>(A.span()),
+        static_cast<int>(A.span_is_contiguous()));
     Kokkos::fill_random_normal(A, random, mean, stddev);
     exec.fence();
 
