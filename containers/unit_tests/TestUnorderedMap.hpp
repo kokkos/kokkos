@@ -277,22 +277,17 @@ void test_insert(uint32_t num_nodes, uint32_t num_inserts,
 template <typename Device>
 void test_all_insert_ops(uint32_t num_nodes, uint32_t num_inserts,
                          uint32_t num_duplicates, bool near) {
-  using key_type              = uint32_t;
-  using value_type            = uint32_t;
-  using value_view_type       = Kokkos::View<value_type *, Device>;
-  using const_value_view_type = Kokkos::View<value_type *, Device>;
-  using size_type             = uint32_t;
-  using hasher_type           = typename Kokkos::pod_hash<key_type>;
-  using equal_to_type         = typename Kokkos::pod_equal_to<key_type>;
+  using key_type        = uint32_t;
+  using value_type      = uint32_t;
+  using value_view_type = Kokkos::View<value_type *, Device>;
+  using size_type       = uint32_t;
+  using hasher_type     = typename Kokkos::pod_hash<key_type>;
+  using equal_to_type   = typename Kokkos::pod_equal_to<key_type>;
 
   using map_op_type =
       Kokkos::UnorderedMapInsertOpTypes<value_view_type, size_type>;
-  using const_map_op_type =
-      Kokkos::UnorderedMapInsertOpTypes<const_value_view_type, size_type>;
-  using noop_type             = typename map_op_type::NoOp;
-  using atomic_add_type       = typename map_op_type::AtomicAdd;
-  using const_noop_type       = typename const_map_op_type::NoOp;
-  using const_atomic_add_type = typename const_map_op_type::AtomicAdd;
+  using noop_type       = typename map_op_type::NoOp;
+  using atomic_add_type = typename map_op_type::AtomicAdd;
 
   using map_type = Kokkos::UnorderedMap<key_type, value_type, Device,
                                         hasher_type, equal_to_type>;

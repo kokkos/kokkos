@@ -313,7 +313,6 @@ class UnorderedMap {
         m_hasher(hasher),
         m_equal_to(equal_to),
         m_size(std::make_shared<size_type>()),
-        m_insert_op(insert_op),
         m_available_indexes(calculate_capacity(capacity_hint)),
         m_hash_lists(view_alloc(WithoutInitializing, "UnorderedMap hash list"),
                      Impl::find_hash_size(capacity())),
@@ -769,7 +768,6 @@ class UnorderedMap {
       tmp.m_hasher            = src.m_hasher;
       tmp.m_equal_to          = src.m_equal_to;
       tmp.m_size              = src.m_size;
-      tmp.m_insert_op         = src.m_insert_op;
       tmp.m_available_indexes = bitset_type(src.capacity());
       tmp.m_hash_lists        = size_type_view(
           view_alloc(WithoutInitializing, "UnorderedMap hash list"),
@@ -863,7 +861,6 @@ class UnorderedMap {
   hasher_type m_hasher;
   equal_to_type m_equal_to;
   std::shared_ptr<size_type> m_size;
-  insert_op_type m_insert_op;
   bitset_type m_available_indexes;
   size_type_view m_hash_lists;
   size_type_view m_next_index;
