@@ -54,7 +54,12 @@ struct TestInsert {
       }
     } while (rehash_on_fail && failed_count > 0u);
 
+    // Trigger the m_size mutable bug.
+    typename map_type::HostMirror map_h;
     execution_space().fence();
+    Kokkos::deep_copy(map_h, map);
+    execution_space().fence();
+    ASSERT_EQ(map_h.size(), map.size());
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -326,6 +331,25 @@ TEST(TEST_CATEGORY, UnorderedMap_clear_zero_size) {
 
   m.clear();
   ASSERT_EQ(0u, m.size());
+}
+
+TEST(TEST_CATEGORY, UnorderedMap_consistent_size) {
+  using Map =
+      Kokkos::UnorderedMap<int, void, Kokkos::DefaultHostExecutionSpace>;
+
+  Map m(11);
+  m.insert(7);
+  ;
+  ASSERT_EQ(1u, m.size());
+
+  {
+    auto m2 = m;
+    m2.insert(2);
+    // This line triggers modified flags to be cleared in both m and m2
+    [[maybe_unused]] auto sz = m2.size();
+  }
+
+  ASSERT_EQ(2u, m.size());
 }
 
 }  // namespace Test
