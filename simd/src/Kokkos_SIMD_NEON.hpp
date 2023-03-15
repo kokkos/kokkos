@@ -991,10 +991,11 @@ class where_expression<simd_mask<std::int32_t, simd_abi::neon_fixed_size<2>>,
     if (m_mask[0]) m_value[0] = mem[0];
     if (m_mask[1]) m_value[1] = mem[1];
   }
-  template <class U,
-            std::enable_if_t<std::is_convertible_v<
-                                 U, simd<int32_t, simd_abi::neon_fixed_size<2>>>,
-                             bool> = false>
+  template <
+      class U,
+      std::enable_if_t<
+          std::is_convertible_v<U, simd<int32_t, simd_abi::neon_fixed_size<2>>>,
+          bool> = false>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void operator=(U&& x) {
     auto const x_as_value_type =
         static_cast<simd<int32_t, simd_abi::neon_fixed_size<2>>>(
@@ -1007,8 +1008,9 @@ class where_expression<simd_mask<std::int32_t, simd_abi::neon_fixed_size<2>>,
 };
 
 template <>
-class const_where_expression<simd_mask<std::int64_t, simd_abi::neon_fixed_size<2>>,
-                             simd<std::int64_t, simd_abi::neon_fixed_size<2>>> {
+class const_where_expression<
+    simd_mask<std::int64_t, simd_abi::neon_fixed_size<2>>,
+    simd<std::int64_t, simd_abi::neon_fixed_size<2>>> {
  public:
   using abi_type   = simd_abi::neon_fixed_size<2>;
   using value_type = simd<std::int64_t, abi_type>;
@@ -1052,10 +1054,11 @@ class where_expression<simd_mask<std::int64_t, simd_abi::neon_fixed_size<2>>,
     if (m_mask[0]) m_value[0] = mem[0];
     if (m_mask[1]) m_value[1] = mem[1];
   }
-  template <class U,
-            std::enable_if_t<std::is_convertible_v<
-                                 U, simd<std::int64_t, simd_abi::neon_fixed_size<2>>>,
-                             bool> = false>
+  template <
+      class U,
+      std::enable_if_t<std::is_convertible_v<
+                           U, simd<std::int64_t, simd_abi::neon_fixed_size<2>>>,
+                       bool> = false>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void operator=(U&& x) {
     auto const x_as_value_type =
         static_cast<simd<std::int64_t, simd_abi::neon_fixed_size<2>>>(
@@ -1068,8 +1071,9 @@ class where_expression<simd_mask<std::int64_t, simd_abi::neon_fixed_size<2>>,
 };
 
 template <>
-class const_where_expression<simd_mask<std::uint64_t, simd_abi::neon_fixed_size<2>>,
-                             simd<std::uint64_t, simd_abi::neon_fixed_size<2>>> {
+class const_where_expression<
+    simd_mask<std::uint64_t, simd_abi::neon_fixed_size<2>>,
+    simd<std::uint64_t, simd_abi::neon_fixed_size<2>>> {
  public:
   using abi_type   = simd_abi::neon_fixed_size<2>;
   using value_type = simd<std::uint64_t, abi_type>;
@@ -1114,9 +1118,10 @@ class where_expression<simd_mask<std::uint64_t, simd_abi::neon_fixed_size<2>>,
     if (m_mask[1]) m_value[1] = mem[1];
   }
   template <class U,
-            std::enable_if_t<std::is_convertible_v<
-                                 U, simd<std::uint64_t, simd_abi::neon_fixed_size<2>>>,
-                             bool> = false>
+            std::enable_if_t<
+                std::is_convertible_v<
+                    U, simd<std::uint64_t, simd_abi::neon_fixed_size<2>>>,
+                bool> = false>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void operator=(U&& x) {
     auto const x_as_value_type =
         static_cast<simd<std::uint64_t, simd_abi::neon_fixed_size<2>>>(
