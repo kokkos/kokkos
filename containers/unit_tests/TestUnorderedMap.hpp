@@ -333,6 +333,25 @@ TEST(TEST_CATEGORY, UnorderedMap_clear_zero_size) {
   ASSERT_EQ(0u, m.size());
 }
 
+TEST(TEST_CATEGORY, UnorderedMap_consistent_size) {
+  using Map =
+      Kokkos::UnorderedMap<int, void, Kokkos::DefaultHostExecutionSpace>;
+
+  Map m(11);
+  m.insert(7);
+  ;
+  ASSERT_EQ(1u, m.size());
+
+  {
+    auto m2 = m;
+    m2.insert(2);
+    // This line triggers modified flags to be cleared in both m and m2
+    [[maybe_unused]] auto sz = m2.size();
+  }
+
+  ASSERT_EQ(2u, m.size());
+}
+
 }  // namespace Test
 
 #endif  // KOKKOS_TEST_UNORDERED_MAP_HPP
