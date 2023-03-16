@@ -485,6 +485,8 @@ class UnorderedMap {
     if constexpr (is_set) {
       static_assert(std::is_same_v<InsertOpType, default_op_type>,
                     "Insert Operations are not supported on sets.");
+      // Silence error #869: parameter "arg_insert_op" was never referenced
+      (void)arg_insert_op;
     }
 
     insert_result result;
