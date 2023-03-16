@@ -529,14 +529,14 @@ struct TestView_Normal {
   void run() {
     uint64_t ticks =
         std::chrono::high_resolution_clock::now().time_since_epoch().count();
-
-    Pool random(ticks);
-    ExecutionSpace exec;
-    NormalRandomProperties<double> val;
     printf(
         "     Just checking A: size = %d, span = %d, span_is_contiguous = %d\n",
         static_cast<int>(A.size()), static_cast<int>(A.span()),
         static_cast<int>(A.span_is_contiguous()));
+    Pool random(ticks);
+    ExecutionSpace exec;
+    NormalRandomProperties<double> val;
+
     Kokkos::fill_random_normal(A, random, mean, stddev);
     exec.fence();
 
@@ -650,6 +650,10 @@ void test_random_normal_scalar(int N) {
     int n          = N;
     using ViewType = Kokkos::View<Scalar*, Kokkos::LayoutLeft, memory_space>;
     ViewType A("a", n);
+    printf(
+        "   Justtt checking A: size = %d, span = %d, span_is_contiguous = %d\n",
+        static_cast<int>(A.size()), static_cast<int>(A.span()),
+        static_cast<int>(A.span_is_contiguous()));
     TestView_Normal<RandomGenerator, ViewType>(A, 0.0, 1.0).run();
     TestView_Normal<RandomGenerator, ViewType>(A, 1.1, 2.1).run();
   }
@@ -657,6 +661,10 @@ void test_random_normal_scalar(int N) {
     int n          = N / 4;
     using ViewType = Kokkos::View<Scalar**, Kokkos::LayoutLeft, memory_space>;
     ViewType A("a", n, 4);
+    printf(
+        "  Justttt checking A: size = %d, span = %d, span_is_contiguous = %d\n",
+        static_cast<int>(A.size()), static_cast<int>(A.span()),
+        static_cast<int>(A.span_is_contiguous()));
     TestView_Normal<RandomGenerator, ViewType>(A, 0.0, 1.0).run();
     TestView_Normal<RandomGenerator, ViewType>(A, 1.1, 2.1).run();
   }
