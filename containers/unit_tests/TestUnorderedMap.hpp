@@ -27,7 +27,7 @@ namespace Impl {
 
 template <typename MapType,
           typename InsertOp = typename MapType::default_op_type,
-          bool Near         = false>
+          bool Near = false, bool CheckValues = false>
 struct TestInsert {
   using map_type        = MapType;
   using execution_space = typename map_type::execution_space;
@@ -68,16 +68,16 @@ struct TestInsert {
     } while (rehash_on_fail && failed_count > 0u);
 
     // Trigger the m_size mutable bug.
-    typename expected_values_type::HostMirror expected_values_h =
-        create_mirror_view(expected_values);
     typename map_type::HostMirror map_h;
     execution_space().fence();
-    Kokkos::deep_copy(expected_values_h, expected_values);
     Kokkos::deep_copy(map_h, map);
     execution_space().fence();
     ASSERT_EQ(map_h.size(), map.size());
 
-    if (!rehash_on_fail) {
+    if (!rehash_on_fail && CheckValues) {
+      typename expected_values_type::HostMirror expected_values_h =
+          create_mirror_view(expected_values);
+      Kokkos::deep_copy(expected_values_h, expected_values);
       for (unsigned i = 0; i < map_h.size(); i++) {
         auto map_idx = expected_values_h(i).map_idx;
         if (map_idx != static_cast<unsigned>(~0)) {
@@ -126,7 +126,7 @@ struct TestInsert {
     if (ret.failed()) {
       ++failed_count;
       expected_values(i).map_idx = static_cast<unsigned>(~0);
-    } else {
+    } else if (CheckValues) {
       auto map_idx                     = map.find(key);
       expected_values(map_idx).map_idx = map_idx;
       auto ptr                         = expected_values.data();
@@ -217,7 +217,7 @@ struct TestFind {
 // WORKAROUND MSVC
 #ifndef _WIN32
 template <typename Device, class map_type, class const_map_type,
-          class insert_op_type>
+          class insert_op_type, bool check_values = false>
 void test_insert(uint32_t num_nodes, uint32_t num_inserts,
                  uint32_t num_duplicates, bool near) {
   const uint32_t expected_inserts =
@@ -230,11 +230,11 @@ void test_insert(uint32_t num_nodes, uint32_t num_inserts,
   map.rehash(num_nodes, false);
 
   if (near) {
-    Impl::TestInsert<map_type, insert_op_type, true> test_insert(
+    Impl::TestInsert<map_type, insert_op_type, true, check_values> test_insert(
         map, num_inserts, num_duplicates);
     test_insert.testit();
   } else {
-    Impl::TestInsert<map_type, insert_op_type, false> test_insert(
+    Impl::TestInsert<map_type, insert_op_type, false, check_values> test_insert(
         map, num_inserts, num_duplicates);
     test_insert.testit();
   }
@@ -275,6 +275,30 @@ void test_insert(uint32_t num_nodes, uint32_t num_inserts,
 }
 
 template <typename Device>
+void test_inserts(uint32_t num_nodes, uint32_t num_inserts,
+                  uint32_t num_duplicates, bool near) {
+  using key_type        = uint32_t;
+  using value_type      = uint32_t;
+  using value_view_type = Kokkos::View<value_type *, Device>;
+  using size_type       = uint32_t;
+  using hasher_type     = typename Kokkos::pod_hash<key_type>;
+  using equal_to_type   = typename Kokkos::pod_equal_to<key_type>;
+
+  using map_op_type =
+      Kokkos::UnorderedMapInsertOpTypes<value_view_type, size_type>;
+  using noop_type = typename map_op_type::NoOp;
+
+  using map_type = Kokkos::UnorderedMap<key_type, value_type, Device,
+                                        hasher_type, equal_to_type>;
+  using const_map_type =
+      Kokkos::UnorderedMap<const key_type, const value_type, Device,
+                           hasher_type, equal_to_type>;
+
+  test_insert<Device, map_type, const_map_type, noop_type>(
+      num_nodes, num_inserts, num_duplicates, near);
+}
+
+template <typename Device>
 void test_all_insert_ops(uint32_t num_nodes, uint32_t num_inserts,
                          uint32_t num_duplicates, bool near) {
   using key_type        = uint32_t;
@@ -295,9 +319,9 @@ void test_all_insert_ops(uint32_t num_nodes, uint32_t num_inserts,
       Kokkos::UnorderedMap<const key_type, const value_type, Device,
                            hasher_type, equal_to_type>;
 
-  test_insert<Device, map_type, const_map_type, noop_type>(
+  test_insert<Device, map_type, const_map_type, noop_type, true>(
       num_nodes, num_inserts, num_duplicates, near);
-  test_insert<Device, map_type, const_map_type, atomic_add_type>(
+  test_insert<Device, map_type, const_map_type, atomic_add_type, true>(
       num_nodes, num_inserts, num_duplicates, near);
 }
 #endif
@@ -374,8 +398,12 @@ TEST(TEST_CATEGORY, UnorderedMap_insert) {
   }
 #endif
   for (int i = 0; i < 500; ++i) {
-    test_all_insert_ops<TEST_EXECSPACE>(100000, 90000, 100, true);
-    test_all_insert_ops<TEST_EXECSPACE>(100000, 90000, 100, false);
+    test_inserts<TEST_EXECSPACE>(100000, 90000, 100, true);
+    test_inserts<TEST_EXECSPACE>(100000, 90000, 100, false);
+  }
+  for (int i = 0; i < 5; ++i) {
+    test_all_insert_ops<TEST_EXECSPACE>(1000, 900, 10, true);
+    test_all_insert_ops<TEST_EXECSPACE>(1000, 900, 10, false);
   }
 }
 #endif
