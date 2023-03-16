@@ -11,7 +11,7 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #include <sstream>
 #include <string>
 
-#ifdef __CLANG_RDC__
+#ifdef DESUL_ATOMICS_ENABLE_HIP_SEPARABLE_COMPILATION
 namespace desul {
 namespace Impl {
 __device__ __constant__ int32_t* HIP_SPACE_ATOMIC_LOCKS_DEVICE = nullptr;
@@ -87,7 +87,7 @@ void finalize_lock_arrays_hip() {
   check_error_and_throw_hip(error_free2, "finalize_lock_arrays_hip: free host locks");
   HIP_SPACE_ATOMIC_LOCKS_DEVICE_h = nullptr;
   HIP_SPACE_ATOMIC_LOCKS_NODE_h = nullptr;
-#ifdef __CLANG_RDC__
+#ifdef DESUL_ATOMICS_ENABLE_HIP_SEPARABLE_COMPILATION
   copy_hip_lock_arrays_to_device();
 #endif
 }
