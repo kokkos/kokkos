@@ -11,6 +11,25 @@ SPDX-License-Identifier: (BSD-3-Clause)
 
 #include <desul/atomics/Config.hpp>
 
+// Intercept incompatible relocatable device code mode which leads to ODR violations
+#ifdef DESUL_ATOMICS_ENABLE_CUDA
+#if (defined(DESUL_ATOMICS_ENABLE_CUDA_SEPARABLE_COMPILATION) &&  \
+     !defined(__CUDACC_RDC__)) ||                                 \
+    (!defined(DESUL_ATOMICS_ENABLE_CUDA_SEPARABLE_COMPILATION) && \
+     defined(__CUDACC_RDC__))
+#error Relocatable device code mode incompatible with desul atomics configuration
+#endif
+#endif
+
+#ifdef DESUL_ATOMICS_ENABLE_HIP
+#if (defined(DESUL_ATOMICS_ENABLE_HIP_SEPARABLE_COMPILATION) &&  \
+     !defined(__CLANG_RDC__)) ||                                 \
+    (!defined(DESUL_ATOMICS_ENABLE_HIP_SEPARABLE_COMPILATION) && \
+     defined(__CLANG_RDC__))
+#error Relocatable device code mode incompatible with desul atomics configuration
+#endif
+#endif
+
 // Macros
 
 #if defined(DESUL_ATOMICS_ENABLE_CUDA) && defined(__CUDACC__)
