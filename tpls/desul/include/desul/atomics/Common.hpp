@@ -83,11 +83,11 @@ struct numeric_limits_max;
 
 template <>
 struct numeric_limits_max<uint32_t> {
-  static constexpr uint32_t value = 0xffffffffu;
+  static constexpr uint32_t value = -1;
 };
 template <>
 struct numeric_limits_max<uint64_t> {
-  static constexpr uint64_t value = 0xfffffffflu;
+  static constexpr uint64_t value = -1;
 };
 
 constexpr bool atomic_always_lock_free(std::size_t size) {
