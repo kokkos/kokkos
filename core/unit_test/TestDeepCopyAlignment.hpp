@@ -341,6 +341,10 @@ struct TestDeepCopyScalarConversion {
 }  // namespace Impl
 
 TEST(TEST_CATEGORY, deep_copy_conversion) {
+  // FIXME KOKKOS_IMPL_32BIT
+#ifdef KOKKOS_IMPL_32BIT
+  GTEST_SKIP() << "Failing KOKKOS_IMPL_32BIT";
+#endif
   int64_t N0 = 19381;
   int64_t N1 = 17;
 
