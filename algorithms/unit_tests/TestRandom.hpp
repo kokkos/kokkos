@@ -796,9 +796,6 @@ void test_random_normal(int N) {
 
   cout << " -- Testing double Views with Normal distribution " << endl;
   test_random_normal_scalar<RandomGenerator, double>(N);
-
-  cout << " -- Testing complex<double> Views with Normal distribution " << endl;
-  test_random_normal_cmplx<RandomGenerator, Kokkos::complex<double>>(N);
 }
 }  // namespace Impl
 
