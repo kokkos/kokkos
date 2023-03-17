@@ -1392,9 +1392,12 @@ TEST(TEST_CATEGORY, atomic_views_integral) {
     ASSERT_TRUE(
         (TestAtomicViews::AtomicViewsTestIntegralType<int64_t, TEST_EXECSPACE>(
             length, 4)));
+#ifndef KOKKOS_ENABLE_OPENACC
+    // FIXME_OPENACC: OpenACC C/C++ does not support atomic mod operations
     ASSERT_TRUE(
         (TestAtomicViews::AtomicViewsTestIntegralType<int64_t, TEST_EXECSPACE>(
             length, 5)));
+#endif
     ASSERT_TRUE(
         (TestAtomicViews::AtomicViewsTestIntegralType<int64_t, TEST_EXECSPACE>(
             length, 6)));

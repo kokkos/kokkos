@@ -21,10 +21,13 @@ TEST(TEST_CATEGORY, atomic_operations_float) {
   const int start = 1;  // Avoid zero for division.
   const int end   = 11;
   for (int i = start; i < end; ++i) {
+#ifndef KOKKOS_ENABLE_OPENACC
+	// FIXME_OPENACC: OpenACC C/C++ does not support atomic min/max operations
     ASSERT_TRUE((TestAtomicOperations::AtomicOperationsTestNonIntegralType<
                  float, TEST_EXECSPACE>(start, end - i, 1)));
     ASSERT_TRUE((TestAtomicOperations::AtomicOperationsTestNonIntegralType<
                  float, TEST_EXECSPACE>(start, end - i, 2)));
+#endif
     ASSERT_TRUE((TestAtomicOperations::AtomicOperationsTestNonIntegralType<
                  float, TEST_EXECSPACE>(start, end - i, 3)));
     ASSERT_TRUE((TestAtomicOperations::AtomicOperationsTestNonIntegralType<
