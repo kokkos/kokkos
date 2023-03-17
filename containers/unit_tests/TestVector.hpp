@@ -51,8 +51,11 @@ struct test_vector_insert {
     it += 17;
     it_return = a.insert(it, n + 5, scalar_type(5));
 
+    using difference_type =
+        typename std::iterator_traits<decltype(it)>::difference_type;
     ASSERT_EQ(a.size(), n + 1 + n + 5);
-    ASSERT_EQ(std::distance(it_return, a.begin() + 17), 0u);
+    ASSERT_EQ(std::distance(it_return, a.begin() + 17),
+              static_cast<difference_type>(0));
 
     Vector b;
 
@@ -65,7 +68,8 @@ struct test_vector_insert {
     it_return = a.insert(it, b.begin(), b.end());
 
     ASSERT_EQ(a.size(), n + 1 + n + 5 + 7);
-    ASSERT_EQ(std::distance(it_return, a.begin() + 27 + n), 0u);
+    ASSERT_EQ(std::distance(it_return, a.begin() + 27 + n),
+              static_cast<difference_type>(0));
 
     // Testing insert at end via all three function interfaces
     a.insert(a.end(), 11);
