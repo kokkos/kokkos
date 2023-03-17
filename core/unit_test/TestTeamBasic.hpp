@@ -212,7 +212,7 @@ TEST(TEST_CATEGORY, large_team_scratch_size) {
                        LargeTeamScratchFunctor<TEST_EXECSPACE>{per_team_bytes});
   Kokkos::fence();
 #else
-  GTEST_SKIP() << "Fails on 32-bit"; // FIXME
+  GTEST_SKIP() << "Fails on 32-bit";  // FIXME
 #endif
 }
 
