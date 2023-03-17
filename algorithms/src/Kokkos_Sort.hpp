@@ -456,18 +456,29 @@ class BinSort {
   void operator()(const bin_sort_bins_tag& /*tag*/, const int i) const {
     auto bin_size = bin_count_const(i);
     if (bin_size <= 1) return;
+    constexpr bool use_std_sort =
+        std::is_same_v<typename exec_space::memory_space, HostSpace>;
     int lower_bound = bin_offsets(i);
     int upper_bound = lower_bound + bin_size;
-    for (int k = lower_bound + 1; k < upper_bound; ++k) {
-      int old_idx = sort_order(k);
-      int j       = k - 1;
-      while (j >= lower_bound) {
-        int new_idx = sort_order(j);
-        if (!bin_op(keys_rnd, old_idx, new_idx)) break;
-        sort_order(j + 1) = new_idx;
-        --j;
+    // Switching to std::sort for more than 10 elements has been found
+    // reasonable experimentally.
+    if (use_std_sort && bin_size > 10) {
+      if constexpr (use_std_sort) {
+        std::sort(&sort_order(lower_bound), &sort_order(upper_bound),
+                  [this](int p, int q) { return bin_op(keys_rnd, p, q); });
       }
-      sort_order(j + 1) = old_idx;
+    } else {
+      for (int k = lower_bound + 1; k < upper_bound; ++k) {
+        int old_idx = sort_order(k);
+        int j       = k - 1;
+        while (j >= lower_bound) {
+          int new_idx = sort_order(j);
+          if (!bin_op(keys_rnd, old_idx, new_idx)) break;
+          sort_order(j + 1) = new_idx;
+          --j;
+        }
+        sort_order(j + 1) = old_idx;
+      }
     }
   }
 };

@@ -65,11 +65,7 @@ void OpenMPTargetInternal::fence(const std::string& name,
         [&]() {});
   }
 }
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-int OpenMPTargetInternal::concurrency() {
-#else
 int OpenMPTargetInternal::concurrency() const {
-#endif
   return 128000;  // FIXME_OPENMPTARGET
 }
 const char* OpenMPTargetInternal::name() { return "OpenMPTarget"; }
@@ -131,9 +127,15 @@ uint32_t OpenMPTarget::impl_instance_id() const noexcept {
   return m_space_instance->impl_get_instance_id();
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 int OpenMPTarget::concurrency() {
   return Impl::OpenMPTargetInternal::impl_singleton()->concurrency();
 }
+#else
+int OpenMPTarget::concurrency() const {
+  return m_space_instance->concurrency();
+}
+#endif
 
 void OpenMPTarget::fence(const std::string& name) {
   Impl::OpenMPTargetInternal::impl_singleton()->fence(name);

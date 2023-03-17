@@ -30,10 +30,9 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
  protected:
   using Policy = Kokkos::RangePolicy<Traits...>;
 
-  using WorkTag   = typename Policy::work_tag;
-  using WorkRange = typename Policy::WorkRange;
-  using Member    = typename Policy::member_type;
-  using idx_type  = typename Policy::index_type;
+  using WorkTag  = typename Policy::work_tag;
+  using Member   = typename Policy::member_type;
+  using idx_type = typename Policy::index_type;
 
   using Analysis = Impl::FunctorAnalysis<Impl::FunctorPatternInterface::SCAN,
                                          Policy, FunctorType>;
@@ -42,7 +41,8 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
   using pointer_type   = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
 
-  const FunctorType m_functor;
+  const CombinedFunctorReducer<FunctorType, typename Analysis::Reducer>
+      m_functor_reducer;
   const Policy m_policy;
 
   value_type* m_result_ptr;
@@ -76,10 +76,12 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
     idx_type nteams           = n_chunks > 512 ? 512 : n_chunks;
     idx_type team_size        = 128;
 
-    FunctorType a_functor(m_functor);
-#pragma omp target teams distribute map(to : a_functor) num_teams(nteams)
+    auto a_functor_reducer = m_functor_reducer;
+#pragma omp target teams distribute map(to \
+                                        : a_functor_reducer) num_teams(nteams)
     for (idx_type team_id = 0; team_id < n_chunks; ++team_id) {
-      typename Analysis::Reducer final_reducer(a_functor);
+      const typename Analysis::Reducer& reducer =
+          a_functor_reducer.get_reducer();
 #pragma omp parallel num_threads(team_size)
       {
         const idx_type local_offset = team_id * chunk_size;
@@ -88,16 +90,18 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
         for (idx_type i = 0; i < chunk_size; ++i) {
           const idx_type idx = local_offset + i;
           value_type val;
-          final_reducer.init(&val);
-          if (idx < N) call_with_tag<WorkTag>(a_functor, idx, val, false);
+          reducer.init(&val);
+          if (idx < N)
+            call_with_tag<WorkTag>(a_functor_reducer.get_functor(), idx, val,
+                                   false);
           element_values(team_id, i) = val;
         }
 #pragma omp barrier
         if (omp_get_thread_num() == 0) {
           value_type sum;
-          final_reducer.init(&sum);
+          reducer.init(&sum);
           for (idx_type i = 0; i < chunk_size; ++i) {
-            final_reducer.join(&sum, &element_values(team_id, i));
+            reducer.join(&sum, &element_values(team_id, i));
             element_values(team_id, i) = sum;
           }
           chunk_values(team_id) = sum;
@@ -106,9 +110,9 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
         if (omp_get_thread_num() == 0) {
           if (Kokkos::atomic_fetch_add(&count(), 1) == n_chunks - 1) {
             value_type sum;
-            final_reducer.init(&sum);
+            reducer.init(&sum);
             for (idx_type i = 0; i < n_chunks; ++i) {
-              final_reducer.join(&sum, &chunk_values(i));
+              reducer.join(&sum, &chunk_values(i));
               chunk_values(i) = sum;
             }
           }
@@ -116,11 +120,12 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
       }
     }
 
-#pragma omp target teams distribute map(to                             \
-                                        : a_functor) num_teams(nteams) \
+#pragma omp target teams distribute map(to                                     \
+                                        : a_functor_reducer) num_teams(nteams) \
     thread_limit(team_size)
     for (idx_type team_id = 0; team_id < n_chunks; ++team_id) {
-      typename Analysis::Reducer final_reducer(a_functor);
+      const typename Analysis::Reducer& reducer =
+          a_functor_reducer.get_reducer();
 #pragma omp parallel num_threads(team_size)
       {
         const idx_type local_offset = team_id * chunk_size;
@@ -128,7 +133,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
         if (team_id > 0)
           offset_value = chunk_values(team_id - 1);
         else
-          final_reducer.init(&offset_value);
+          reducer.init(&offset_value);
 
 #pragma omp for
         for (idx_type i = 0; i < chunk_size; ++i) {
@@ -146,12 +151,13 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
             } else
               local_offset_value += offset_value;
 #else
-            final_reducer.join(&local_offset_value, &offset_value);
+            reducer.join(&local_offset_value, &offset_value);
 #endif
           } else
             local_offset_value = offset_value;
           if (idx < N)
-            call_with_tag<WorkTag>(a_functor, idx, local_offset_value, true);
+            call_with_tag<WorkTag>(a_functor_reducer.get_functor(), idx,
+                                   local_offset_value, true);
           if (idx == N - 1 && m_result_ptr_device_accessible)
             *m_result_ptr = local_offset_value;
         }
@@ -185,7 +191,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
   ParallelScan(const FunctorType& arg_functor, const Policy& arg_policy,
                pointer_type arg_result_ptr           = nullptr,
                bool arg_result_ptr_device_accessible = false)
-      : m_functor(arg_functor),
+      : m_functor_reducer(arg_functor, typename Analysis::Reducer{arg_functor}),
         m_policy(arg_policy),
         m_result_ptr(arg_result_ptr),
         m_result_ptr_device_accessible(arg_result_ptr_device_accessible) {}
@@ -228,7 +234,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
       base_t::impl_execute(element_values, chunk_values, count);
 
       if (!base_t::m_result_ptr_device_accessible) {
-        const int size = base_t::Analysis::value_size(base_t::m_functor);
+        const int size = base_t::m_functor_reducer.get_reducer().value_size();
         DeepCopy<HostSpace, Kokkos::Experimental::OpenMPTargetSpace>(
             base_t::m_result_ptr, chunk_values.data() + (n_chunks - 1), size);
       }

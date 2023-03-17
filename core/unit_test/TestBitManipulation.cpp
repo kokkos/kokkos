@@ -429,4 +429,58 @@ constexpr auto test_bit_width(UInt x) -> decltype(Kokkos::bit_width(x)) {
 TEST_BIT_MANIPULATION(bit_width);
 //</editor-fold>
 
+//<editor-fold desc="[bit.byteswap]">
+template <class T>
+constexpr auto test_byteswap(T x) -> decltype(Kokkos::byteswap(x)) {
+  using Kokkos::byteswap;
+
+  static_assert(noexcept(byteswap(x)));
+  static_assert(std::is_same_v<decltype(byteswap(x)), T>);
+
+  return true;
+}
+
+constexpr X test_byteswap(...) { return {}; }
+
+static_assert(test_byteswap((void*)0).did_not_match());  // NOLINT
+static_assert(test_byteswap((float)0).did_not_match());
+constexpr char c2[2] = {};
+static_assert(test_byteswap(c2).did_not_match());
+static_assert(test_byteswap((char)0));
+static_assert(test_byteswap((short)0));
+static_assert(test_byteswap((int)0));
+static_assert(test_byteswap((long)0));
+static_assert(test_byteswap((long long)0));
+static_assert(test_byteswap((unsigned char)0));
+static_assert(test_byteswap((unsigned short)0));
+static_assert(test_byteswap((unsigned int)0));
+static_assert(test_byteswap((unsigned long)0));
+static_assert(test_byteswap((unsigned long long)0));
+
+constexpr bool test_byteswap2() {
+  using Kokkos::byteswap;
+
+  static_assert(byteswap<int8_t>(INT8_C(0x12)) == INT8_C(0x12));
+  static_assert(byteswap<int16_t>(INT16_C(0x1234)) == INT16_C(0x3412));
+  static_assert(byteswap<int32_t>(INT32_C(0x12345678)) == INT32_C(0x78563412));
+
+  // These static_casts are a workaround for an nvcc 11.2 compiler bug
+  static_assert(
+      static_cast<uint64_t>(byteswap<int64_t>(INT64_C(0x123456789abcdef0))) ==
+      static_cast<uint64_t>(INT64_C(0xf0debc9a78563412)));
+
+  static_assert(byteswap<uint8_t>(UINT8_C(0x21)) == UINT8_C(0x21));
+  static_assert(byteswap<uint16_t>(UINT16_C(0x4321)) == UINT16_C(0x2143));
+  static_assert(byteswap<uint32_t>(UINT32_C(0x87654321)) ==
+                UINT32_C(0x21436587));
+  static_assert(byteswap<uint64_t>(UINT64_C(0xfedcba9876543210)) ==
+                UINT64_C(0x1032547698badcfe));
+  static_assert(byteswap<const uint32_t>(UINT32_C(0xdeadbeef)) ==
+                UINT32_C(0xefbeadde));
+
+  return true;
+}
+static_assert(test_byteswap2());
+//</editor-fold>
+
 #undef TEST_BIT_MANIPULATION

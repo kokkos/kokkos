@@ -203,7 +203,7 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
       // Number of blocks is bounded so that the reduction can be limited to two
       // passes. Each thread block is given an approximately equal amount of
       // work to perform. Accumulate the values for this block. The accumulation
-      // ordering does not match the final pass, but is arithmatically
+      // ordering does not match the final pass, but is arithmetically
       // equivalent.
 
       const WorkRange range(m_policy, blockIdx.x, gridDim.x);
@@ -421,7 +421,8 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
   //  (c) gridDim.x  <= blockDim.y * blockDim.y
   //  (d) gridDim.y  == gridDim.z == 1
 
-  const FunctorType m_functor;
+  const CombinedFunctorReducer<FunctorType, typename Analysis::Reducer>
+      m_functor_reducer;
   const Policy m_policy;
   word_size_type* m_scratch_space;
   size_type* m_scratch_flags;
@@ -433,23 +434,25 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
   template <class TagType>
   __device__ inline std::enable_if_t<std::is_void<TagType>::value> exec_range(
       const Member& i, reference_type update, const bool final_result) const {
-    m_functor(i, update, final_result);
+    m_functor_reducer.get_functor()(i, update, final_result);
   }
 
   template <class TagType>
   __device__ inline std::enable_if_t<!std::is_void<TagType>::value> exec_range(
       const Member& i, reference_type update, const bool final_result) const {
-    m_functor(TagType(), i, update, final_result);
+    m_functor_reducer.get_functor()(TagType(), i, update, final_result);
   }
 
   //----------------------------------------
 
   __device__ inline void initial() const {
-    typename Analysis::Reducer final_reducer(m_functor);
+    const typename Analysis::Reducer& final_reducer =
+        m_functor_reducer.get_reducer();
 
     const integral_nonzero_constant<word_size_type, Analysis::StaticValueSize /
                                                         sizeof(word_size_type)>
-        word_count(Analysis::value_size(m_functor) / sizeof(word_size_type));
+        word_count(Analysis::value_size(m_functor_reducer.get_functor()) /
+                   sizeof(word_size_type));
 
     word_size_type* const shared_value =
         kokkos_impl_cuda_shared_memory<word_size_type>() +
@@ -460,7 +463,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
     // Number of blocks is bounded so that the reduction can be limited to two
     // passes. Each thread block is given an approximately equal amount of work
     // to perform. Accumulate the values for this block. The accumulation
-    // ordering does not match the final pass, but is arithmatically equivalent.
+    // ordering does not match the final pass, but is arithmetically equivalent.
 
     const WorkRange range(m_policy, blockIdx.x, gridDim.x);
 
@@ -485,11 +488,13 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
   //----------------------------------------
 
   __device__ inline void final() const {
-    typename Analysis::Reducer final_reducer(m_functor);
+    const typename Analysis::Reducer& final_reducer =
+        m_functor_reducer.get_reducer();
 
     const integral_nonzero_constant<word_size_type, Analysis::StaticValueSize /
                                                         sizeof(word_size_type)>
-        word_count(Analysis::value_size(m_functor) / sizeof(word_size_type));
+        word_count(Analysis::value_size(m_functor_reducer.get_functor()) /
+                   sizeof(word_size_type));
 
     // Use shared memory as an exclusive scan: { 0 , value[0] , value[1] ,
     // value[2] , ... }
@@ -619,7 +624,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
     if (nwork) {
       constexpr int GridMaxComputeCapability_2x = 0x0ffff;
 
-      const int block_size = local_block_size(m_functor);
+      const int block_size = local_block_size(m_functor_reducer.get_functor());
       KOKKOS_ASSERT(block_size > 0);
 
       const int grid_max =
@@ -639,13 +644,15 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
 
       m_scratch_space =
           reinterpret_cast<word_size_type*>(cuda_internal_scratch_space(
-              m_policy.space(), Analysis::value_size(m_functor) * grid_x));
+              m_policy.space(),
+              Analysis::value_size(m_functor_reducer.get_functor()) * grid_x));
       m_scratch_flags =
           cuda_internal_scratch_flags(m_policy.space(), sizeof(size_type) * 1);
 
       dim3 grid(grid_x, 1, 1);
       dim3 block(1, block_size, 1);  // REQUIRED DIMENSIONS ( 1 , N , 1 )
-      const int shmem = Analysis::value_size(m_functor) * (block_size + 2);
+      const int shmem = Analysis::value_size(m_functor_reducer.get_functor()) *
+                        (block_size + 2);
 
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
       if (m_run_serial) {
@@ -670,7 +677,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
   }
 
   ParallelScan(const FunctorType& arg_functor, const Policy& arg_policy)
-      : m_functor(arg_functor),
+      : m_functor_reducer(arg_functor, typename Analysis::Reducer{arg_functor}),
         m_policy(arg_policy),
         m_scratch_space(nullptr),
         m_scratch_flags(nullptr),
@@ -728,7 +735,8 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   //  (c) gridDim.x  <= blockDim.y * blockDim.y
   //  (d) gridDim.y  == gridDim.z == 1
 
-  const FunctorType m_functor;
+  const CombinedFunctorReducer<FunctorType, typename Analysis::Reducer>
+      m_functor_reducer;
   const Policy m_policy;
   word_size_type* m_scratch_space;
   size_type* m_scratch_flags;
@@ -743,23 +751,25 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   template <class TagType>
   __device__ inline std::enable_if_t<std::is_void<TagType>::value> exec_range(
       const Member& i, reference_type update, const bool final_result) const {
-    m_functor(i, update, final_result);
+    m_functor_reducer.get_functor()(i, update, final_result);
   }
 
   template <class TagType>
   __device__ inline std::enable_if_t<!std::is_void<TagType>::value> exec_range(
       const Member& i, reference_type update, const bool final_result) const {
-    m_functor(TagType(), i, update, final_result);
+    m_functor_reducer.get_functor()(TagType(), i, update, final_result);
   }
 
   //----------------------------------------
 
   __device__ inline void initial() const {
-    typename Analysis::Reducer final_reducer(m_functor);
+    const typename Analysis::Reducer& final_reducer =
+        m_functor_reducer.get_reducer();
 
     const integral_nonzero_constant<word_size_type, Analysis::StaticValueSize /
                                                         sizeof(word_size_type)>
-        word_count(Analysis::value_size(m_functor) / sizeof(word_size_type));
+        word_count(Analysis::value_size(m_functor_reducer.get_functor()) /
+                   sizeof(word_size_type));
 
     word_size_type* const shared_value =
         kokkos_impl_cuda_shared_memory<word_size_type>() +
@@ -770,7 +780,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
     // Number of blocks is bounded so that the reduction can be limited to two
     // passes. Each thread block is given an approximately equal amount of work
     // to perform. Accumulate the values for this block. The accumulation
-    // ordering does not match the final pass, but is arithmatically equivalent.
+    // ordering does not match the final pass, but is arithmetically equivalent.
 
     const WorkRange range(m_policy, blockIdx.x, gridDim.x);
 
@@ -795,11 +805,12 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   //----------------------------------------
 
   __device__ inline void final() const {
-    typename Analysis::Reducer final_reducer(m_functor);
+    const typename Analysis::Reducer& final_reducer =
+        m_functor_reducer.get_reducer();
 
     const integral_nonzero_constant<word_size_type, Analysis::StaticValueSize /
                                                         sizeof(word_size_type)>
-        word_count(Analysis::value_size(m_functor) / sizeof(word_size_type));
+        word_count(final_reducer.value_size() / sizeof(word_size_type));
 
     // Use shared memory as an exclusive scan: { 0 , value[0] , value[1] ,
     // value[2] , ... }
@@ -935,7 +946,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
     if (nwork) {
       enum { GridMaxComputeCapability_2x = 0x0ffff };
 
-      const int block_size = local_block_size(m_functor);
+      const int block_size = local_block_size(m_functor_reducer.get_functor());
       KOKKOS_ASSERT(block_size > 0);
 
       const int grid_max =
@@ -953,15 +964,17 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
       // How many block are really needed for this much work:
       const int grid_x = (nwork + work_per_block - 1) / work_per_block;
 
+      const typename Analysis::Reducer& final_reducer =
+          m_functor_reducer.get_reducer();
       m_scratch_space =
           reinterpret_cast<word_size_type*>(cuda_internal_scratch_space(
-              m_policy.space(), Analysis::value_size(m_functor) * grid_x));
+              m_policy.space(), final_reducer.value_size() * grid_x));
       m_scratch_flags =
           cuda_internal_scratch_flags(m_policy.space(), sizeof(size_type) * 1);
 
       dim3 grid(grid_x, 1, 1);
       dim3 block(1, block_size, 1);  // REQUIRED DIMENSIONS ( 1 , N , 1 )
-      const int shmem = Analysis::value_size(m_functor) * (block_size + 2);
+      const int shmem = final_reducer.value_size() * (block_size + 2);
 
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
       if (m_run_serial) {
@@ -982,7 +995,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
           m_policy.space()
               .impl_internal_space_instance());  // copy to device and execute
 
-      const int size = Analysis::value_size(m_functor);
+      const int size = final_reducer.value_size();
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
       if (m_run_serial)
         DeepCopy<HostSpace, CudaSpace, Cuda>(m_policy.space(), &m_returnvalue,
@@ -1003,7 +1016,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   ParallelScanWithTotal(const FunctorType& arg_functor,
                         const Policy& arg_policy,
                         const ViewType& arg_result_view)
-      : m_functor(arg_functor),
+      : m_functor_reducer(arg_functor, typename Analysis::Reducer{arg_functor}),
         m_policy(arg_policy),
         m_scratch_space(nullptr),
         m_scratch_flags(nullptr),

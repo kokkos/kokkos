@@ -73,11 +73,9 @@ class ParallelReduce<CombinedFunctorReducerType,
   using value_type     = typename ReducerType::value_type;
   using reference_type = typename ReducerType::reference_type;
 
-  using iterate_type =
-      typename Kokkos::Impl::HostIterateTile<MDRangePolicy, FunctorType,
-                                             WorkTag, reference_type>;
+  using iterate_type = typename Kokkos::Impl::HostIterateTile<
+      MDRangePolicy, CombinedFunctorReducerType, WorkTag, reference_type>;
   const iterate_type m_iter;
-  const ReducerType m_reducer;
   const pointer_type m_result_ptr;
 
   inline void exec(reference_type update) const {
@@ -98,7 +96,8 @@ class ParallelReduce<CombinedFunctorReducerType,
     return 1024;
   }
   inline void execute() const {
-    const size_t pool_reduce_size  = m_reducer.value_size();
+    const ReducerType& reducer     = m_iter.m_func.get_reducer();
+    const size_t pool_reduce_size  = reducer.value_size();
     const size_t team_reduce_size  = 0;  // Never shrinks
     const size_t team_shared_size  = 0;  // Never shrinks
     const size_t thread_local_size = 0;  // Never shrinks
@@ -118,19 +117,18 @@ class ParallelReduce<CombinedFunctorReducerType,
             : pointer_type(
                   internal_instance->m_thread_team_data.pool_reduce_local());
 
-    reference_type update = m_reducer.init(ptr);
+    reference_type update = reducer.init(ptr);
 
     this->exec(update);
 
-    m_reducer.final(ptr);
+    reducer.final(ptr);
   }
 
   template <class ViewType>
   ParallelReduce(const CombinedFunctorReducerType& arg_functor_reducer,
                  const MDRangePolicy& arg_policy,
                  const ViewType& arg_result_view)
-      : m_iter(arg_policy, arg_functor_reducer.get_functor()),
-        m_reducer(arg_functor_reducer.get_reducer()),
+      : m_iter(arg_policy, arg_functor_reducer),
         m_result_ptr(arg_result_view.data()) {
     static_assert(Kokkos::is_view<ViewType>::value,
                   "Kokkos::Serial reduce result must be a View");
@@ -138,7 +136,8 @@ class ParallelReduce<CombinedFunctorReducerType,
     static_assert(
         Kokkos::Impl::MemorySpaceAccess<typename ViewType::memory_space,
                                         Kokkos::HostSpace>::accessible,
-        "Kokkos::Serial reduce result must be a View in HostSpace");
+        "Kokkos::Serial reduce result must be a View accessible from "
+        "HostSpace");
   }
 };
 

@@ -169,10 +169,12 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
         MDRange_f
         MDRange_g
         MDRangePolicyConstructors
+        MDRangeReduce
         MDSpan
         MinMaxClamp
         NumericTraits
         Other
+        ParallelScanRangePolicy
         QuadPrecisionMath
         RangePolicy
         RangePolicyConstructors
@@ -185,7 +187,6 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
         Reducers_e
         Reductions
         Reductions_DeviceView
-        Scan
         SharedAlloc
         )
       set(file ${dir}/Test${Tag}_${Name}.cpp)
@@ -441,7 +442,6 @@ IF(KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_Reducers_d.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_Reducers_e.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_Reductions_DeviceView.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_Scan.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_SubView_b.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_SubView_c01.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_SubView_c02.cpp
@@ -729,6 +729,12 @@ if(Kokkos_ENABLE_HIP)
       UnitTestMain.cpp
       hip/TestHIP_InterOp_Streams.cpp
   )
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_HIPGraph
+    SOURCES
+      UnitTestMainInit.cpp
+      hip/TestHIP_Graph.cpp
+  )
 endif()
 
 if(Kokkos_ENABLE_SYCL)
@@ -922,6 +928,7 @@ KOKKOS_ADD_ADVANCED_TEST( UnitTest_PushFinalizeHook_terminate
     tools/TestEventCorrectness.cpp
     tools/TestWithoutInitializing.cpp
     tools/TestProfilingSection.cpp
+    tools/TestScopedRegion.cpp
     )
 
   # FIXME_OPENMPTARGET This test causes internal compiler errors as of 09/01/22

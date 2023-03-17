@@ -52,10 +52,9 @@ inline bool execute_in_serial(OpenMP const& space = OpenMP()) {
 template <class FunctorType, class... Traits>
 class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::OpenMP> {
  private:
-  using Policy    = Kokkos::RangePolicy<Traits...>;
-  using WorkTag   = typename Policy::work_tag;
-  using WorkRange = typename Policy::WorkRange;
-  using Member    = typename Policy::member_type;
+  using Policy  = Kokkos::RangePolicy<Traits...>;
+  using WorkTag = typename Policy::work_tag;
+  using Member  = typename Policy::member_type;
 
   OpenMPInternal* m_instance;
   const FunctorType m_functor;
@@ -178,8 +177,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   using Policy        = typename MDRangePolicy::impl_range_policy;
   using WorkTag       = typename MDRangePolicy::work_tag;
 
-  using WorkRange = typename Policy::WorkRange;
-  using Member    = typename Policy::member_type;
+  using Member = typename Policy::member_type;
 
   using index_type   = typename Policy::index_type;
   using iterate_type = typename Kokkos::Impl::HostIterateTile<
@@ -300,9 +298,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
   using FunctorType = typename CombinedFunctorReducerType::functor_type;
   using ReducerType = typename CombinedFunctorReducerType::reducer_type;
 
-  using WorkTag   = typename Policy::work_tag;
-  using WorkRange = typename Policy::WorkRange;
-  using Member    = typename Policy::member_type;
+  using WorkTag = typename Policy::work_tag;
+  using Member  = typename Policy::member_type;
 
   using pointer_type   = typename ReducerType::pointer_type;
   using reference_type = typename ReducerType::reference_type;
@@ -463,21 +460,18 @@ class ParallelReduce<CombinedFunctorReducerType,
   using FunctorType   = typename CombinedFunctorReducerType::functor_type;
   using ReducerType   = typename CombinedFunctorReducerType::reducer_type;
 
-  using WorkTag   = typename MDRangePolicy::work_tag;
-  using WorkRange = typename Policy::WorkRange;
-  using Member    = typename Policy::member_type;
+  using WorkTag = typename MDRangePolicy::work_tag;
+  using Member  = typename Policy::member_type;
 
   using pointer_type   = typename ReducerType::pointer_type;
   using value_type     = typename ReducerType::value_type;
   using reference_type = typename ReducerType::reference_type;
 
-  using iterate_type =
-      typename Kokkos::Impl::HostIterateTile<MDRangePolicy, FunctorType,
-                                             WorkTag, reference_type>;
+  using iterate_type = typename Kokkos::Impl::HostIterateTile<
+      MDRangePolicy, CombinedFunctorReducerType, WorkTag, reference_type>;
 
   OpenMPInternal* m_instance;
   const iterate_type m_iter;
-  const ReducerType m_reducer;
   const pointer_type m_result_ptr;
 
   inline void exec_range(const Member ibeg, const Member iend,
@@ -489,7 +483,8 @@ class ParallelReduce<CombinedFunctorReducerType,
 
  public:
   inline void execute() const {
-    const size_t pool_reduce_bytes = m_reducer.value_size();
+    const ReducerType& reducer     = m_iter.m_func.get_reducer();
+    const size_t pool_reduce_bytes = reducer.value_size();
 
     m_instance->acquire_lock();
 
@@ -508,11 +503,11 @@ class ParallelReduce<CombinedFunctorReducerType,
               : pointer_type(
                     m_instance->get_thread_data(0)->pool_reduce_local());
 
-      reference_type update = m_reducer.init(ptr);
+      reference_type update = reducer.init(ptr);
 
       ParallelReduce::exec_range(0, m_iter.m_rp.m_num_tiles, update);
 
-      m_reducer.final(ptr);
+      reducer.final(ptr);
 
       m_instance->release_lock();
 
@@ -537,7 +532,7 @@ class ParallelReduce<CombinedFunctorReducerType,
         if (data.pool_rendezvous()) data.pool_rendezvous_release();
       }
 
-      reference_type update = m_reducer.init(
+      reference_type update = reducer.init(
           reinterpret_cast<pointer_type>(data.pool_reduce_local()));
 
       std::pair<int64_t, int64_t> range(0, 0);
@@ -558,15 +553,15 @@ class ParallelReduce<CombinedFunctorReducerType,
         pointer_type(m_instance->get_thread_data(0)->pool_reduce_local());
 
     for (int i = 1; i < pool_size; ++i) {
-      m_reducer.join(ptr,
-                     reinterpret_cast<pointer_type>(
-                         m_instance->get_thread_data(i)->pool_reduce_local()));
+      reducer.join(ptr,
+                   reinterpret_cast<pointer_type>(
+                       m_instance->get_thread_data(i)->pool_reduce_local()));
     }
 
-    m_reducer.final(ptr);
+    reducer.final(ptr);
 
     if (m_result_ptr) {
-      const int n = m_reducer.value_count();
+      const int n = reducer.value_count();
 
       for (int j = 0; j < n; ++j) {
         m_result_ptr[j] = ptr[j];
@@ -582,8 +577,7 @@ class ParallelReduce<CombinedFunctorReducerType,
   ParallelReduce(const CombinedFunctorReducerType& arg_functor_reducer,
                  MDRangePolicy arg_policy, const ViewType& arg_view)
       : m_instance(nullptr),
-        m_iter(arg_policy, arg_functor_reducer.get_functor()),
-        m_reducer(arg_functor_reducer.get_reducer()),
+        m_iter(arg_policy, arg_functor_reducer),
         m_result_ptr(arg_view.data()) {
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
     if (t_openmp_instance) {

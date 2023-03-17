@@ -212,6 +212,23 @@ class ParallelReduce<CombinedFunctorReducerType,
   using size_type      = Cuda::size_type;
   using reducer_type   = ReducerType;
 
+  // Conditionally set word_size_type to int16_t or int8_t if value_type is
+  // smaller than int32_t (Kokkos::Cuda::size_type)
+  // word_size_type is used to determine the word count, shared memory buffer
+  // size, and global memory buffer size before the reduction is performed.
+  // Within the reduction, the word count is recomputed based on word_size_type
+  // and when calculating indexes into the shared/global memory buffers for
+  // performing the reduction, word_size_type is used again.
+  // For scalars > 4 bytes in size, indexing into shared/global memory relies
+  // on the block and grid dimensions to ensure that we index at the correct
+  // offset rather than at every 4 byte word; such that, when the join is
+  // performed, we have the correct data that was copied over in chunks of 4
+  // bytes.
+  static_assert(sizeof(size_type) == 4);
+  using word_size_type = std::conditional_t<
+      sizeof(value_type) < 4,
+      std::conditional_t<sizeof(value_type) == 2, int16_t, int8_t>, size_type>;
+
   // Algorithmic constraints: blockSize is a power of two AND blockDim.y ==
   // blockDim.z == 1
 
@@ -219,9 +236,9 @@ class ParallelReduce<CombinedFunctorReducerType,
   const Policy m_policy;  // used for workrange and nwork
   const pointer_type m_result_ptr;
   const bool m_result_ptr_device_accessible;
-  size_type* m_scratch_space;
+  word_size_type* m_scratch_space;
   size_type* m_scratch_flags;
-  size_type* m_unified_space;
+  word_size_type* m_unified_space;
 
   using DeviceIteratePattern = typename Kokkos::Impl::Reduce::DeviceIterateTile<
       Policy::rank, Policy, FunctorType, typename Policy::work_tag,
@@ -248,21 +265,22 @@ class ParallelReduce<CombinedFunctorReducerType,
   }
 
   inline __device__ void operator()() const {
-    const integral_nonzero_constant<
-        size_type, ReducerType::static_value_size() / sizeof(size_type)>
+    const integral_nonzero_constant<word_size_type,
+                                    ReducerType::static_value_size() /
+                                        sizeof(word_size_type)>
         word_count(m_functor_reducer.get_reducer().value_size() /
-                   sizeof(size_type));
+                   sizeof(word_size_type));
 
     {
       reference_type value =
           m_functor_reducer.get_reducer().init(reinterpret_cast<pointer_type>(
-              kokkos_impl_cuda_shared_memory<size_type>() +
+              kokkos_impl_cuda_shared_memory<word_size_type>() +
               threadIdx.y * word_count.value));
 
       // Number of blocks is bounded so that the reduction can be limited to two
       // passes. Each thread block is given an approximately equal amount of
       // work to perform. Accumulate the values for this block. The accumulation
-      // ordering does not match the final pass, but is arithmatically
+      // ordering does not match the final pass, but is arithmetically
       // equivalent.
 
       this->exec_range(value);
@@ -272,15 +290,16 @@ class ParallelReduce<CombinedFunctorReducerType,
     // Problem: non power-of-two blockDim
     if (cuda_single_inter_block_reduce_scan<false>(
             m_functor_reducer.get_reducer(), blockIdx.x, gridDim.x,
-            kokkos_impl_cuda_shared_memory<size_type>(), m_scratch_space,
+            kokkos_impl_cuda_shared_memory<word_size_type>(), m_scratch_space,
             m_scratch_flags)) {
       // This is the final block with the final result at the final threads'
       // location
-      size_type* const shared = kokkos_impl_cuda_shared_memory<size_type>() +
-                                (blockDim.y - 1) * word_count.value;
-      size_type* const global =
+      word_size_type* const shared =
+          kokkos_impl_cuda_shared_memory<word_size_type>() +
+          (blockDim.y - 1) * word_count.value;
+      word_size_type* const global =
           m_result_ptr_device_accessible
-              ? reinterpret_cast<size_type*>(m_result_ptr)
+              ? reinterpret_cast<word_size_type*>(m_result_ptr)
               : (m_unified_space ? m_unified_space : m_scratch_space);
 
       if (threadIdx.y == 0) {
@@ -342,13 +361,16 @@ class ParallelReduce<CombinedFunctorReducerType,
                        : suggested_blocksize;  // Note: block_size must be less
                                                // than or equal to 512
 
-      m_scratch_space = cuda_internal_scratch_space(
-          m_policy.space(), m_functor_reducer.get_reducer().value_size() *
-                                block_size /* block_size == max block_count */);
+      m_scratch_space =
+          reinterpret_cast<word_size_type*>(cuda_internal_scratch_space(
+              m_policy.space(),
+              m_functor_reducer.get_reducer().value_size() *
+                  block_size /* block_size == max block_count */));
       m_scratch_flags =
           cuda_internal_scratch_flags(m_policy.space(), sizeof(size_type));
-      m_unified_space = cuda_internal_scratch_unified(
-          m_policy.space(), m_functor_reducer.get_reducer().value_size());
+      m_unified_space =
+          reinterpret_cast<word_size_type*>(cuda_internal_scratch_unified(
+              m_policy.space(), m_functor_reducer.get_reducer().value_size()));
 
       // REQUIRED ( 1 , N , 1 )
       const dim3 block(1, block_size, 1);

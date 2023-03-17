@@ -97,7 +97,6 @@ class ParallelScanSYCLBase {
  protected:
   using Member       = typename Policy::member_type;
   using WorkTag      = typename Policy::work_tag;
-  using WorkRange    = typename Policy::WorkRange;
   using LaunchBounds = typename Policy::launch_bounds;
 
  public:
@@ -111,7 +110,8 @@ class ParallelScanSYCLBase {
   using index_type     = typename Policy::index_type;
 
  protected:
-  const FunctorType m_functor;
+  const CombinedFunctorReducer<FunctorType, typename Analysis::Reducer>
+      m_functor_reducer;
   const Policy m_policy;
   pointer_type m_scratch_space = nullptr;
   const pointer_type m_result_ptr;
@@ -144,8 +144,11 @@ class ParallelScanSYCLBase {
       cgh.parallel_for(
           sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
           [=](sycl::nd_item<1> item) {
-            const FunctorType& functor = functor_wrapper.get_functor();
-            typename Analysis::Reducer final_reducer(functor);
+            const CombinedFunctorReducer<
+                FunctorType, typename Analysis::Reducer>& functor_reducer =
+                functor_wrapper.get_functor();
+            const typename Analysis::Reducer& reducer =
+                functor_reducer.get_reducer();
 
             const auto local_id  = item.get_local_linear_id();
             const auto global_id = item.get_global_linear_id();
@@ -155,9 +158,9 @@ class ParallelScanSYCLBase {
             if (global_id < size)
               local_value = global_mem[global_id];
             else
-              final_reducer.init(&local_value);
+              reducer.init(&local_value);
 
-            workgroup_scan<>(item, final_reducer, local_mem.get_pointer(),
+            workgroup_scan<>(item, reducer, local_mem.get_pointer(),
                              local_value, wgroup_size);
 
             if (n_wgroups > 1 && local_id == wgroup_size - 1)
@@ -176,12 +179,15 @@ class ParallelScanSYCLBase {
         cgh.parallel_for(
             sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
             [=](sycl::nd_item<1> item) {
-              const auto global_id       = item.get_global_linear_id();
-              const FunctorType& functor = functor_wrapper.get_functor();
-              typename Analysis::Reducer final_reducer(functor);
+              const auto global_id = item.get_global_linear_id();
+              const CombinedFunctorReducer<FunctorType,
+                                           typename Analysis::Reducer>
+                  functor_reducer = functor_wrapper.get_functor();
+              const typename Analysis::Reducer& reducer =
+                  functor_reducer.get_reducer();
               if (global_id < size)
-                final_reducer.join(&global_mem[global_id],
-                                   &group_results[item.get_group_linear_id()]);
+                reducer.join(&global_mem[global_id],
+                             &group_results[item.get_group_linear_id()]);
             });
       });
       q.ext_oneapi_submit_barrier(
@@ -207,15 +213,18 @@ class ParallelScanSYCLBase {
       cgh.parallel_for(sycl::range<1>(len), [=](sycl::item<1> item) {
         const typename Policy::index_type id =
             static_cast<typename Policy::index_type>(item.get_id()) + begin;
-        const FunctorType& functor = functor_wrapper.get_functor();
-        typename Analysis::Reducer final_reducer(functor);
+        const CombinedFunctorReducer<FunctorType, typename Analysis::Reducer>&
+            functor_reducer = functor_wrapper.get_functor();
+        const typename Analysis::Reducer& reducer =
+            functor_reducer.get_reducer();
 
         value_type update{};
-        final_reducer.init(&update);
+        reducer.init(&update);
+        const FunctorType& functor = functor_reducer.get_functor();
         if constexpr (std::is_void<WorkTag>::value)
-          functor_wrapper.get_functor()(id, update, false);
+          functor(id, update, false);
         else
-          functor_wrapper.get_functor()(WorkTag(), id, update, false);
+          functor(WorkTag(), id, update, false);
         global_mem[id] = update;
       });
     });
@@ -236,10 +245,13 @@ class ParallelScanSYCLBase {
         auto global_id = item.get_id(0);
 
         value_type update = global_mem[global_id];
+        const CombinedFunctorReducer<FunctorType, typename Analysis::Reducer>&
+            functor_reducer        = functor_wrapper.get_functor();
+        const FunctorType& functor = functor_reducer.get_functor();
         if constexpr (std::is_void<WorkTag>::value)
-          functor_wrapper.get_functor()(global_id, update, true);
+          functor(global_id, update, true);
         else
-          functor_wrapper.get_functor()(WorkTag(), global_id, update, true);
+          functor(WorkTag(), global_id, update, true);
         global_mem[global_id] = update;
         if (global_id == len - 1 && result_ptr_device_accessible)
           *result_ptr = update;
@@ -284,7 +296,7 @@ class ParallelScanSYCLBase {
         indirectKernelMem = instance.get_indirect_kernel_mem();
 
     auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
-        m_functor, indirectKernelMem);
+        m_functor_reducer, indirectKernelMem);
 
     sycl::event event =
         sycl_direct_launch(functor_wrapper, functor_wrapper.get_copy_event());
@@ -295,7 +307,7 @@ class ParallelScanSYCLBase {
   ParallelScanSYCLBase(const FunctorType& arg_functor, const Policy& arg_policy,
                        pointer_type arg_result_ptr,
                        bool arg_result_ptr_device_accessible)
-      : m_functor(arg_functor),
+      : m_functor_reducer(arg_functor, typename Analysis::Reducer{arg_functor}),
         m_policy(arg_policy),
         m_result_ptr(arg_result_ptr),
         m_result_ptr_device_accessible(arg_result_ptr_device_accessible),
@@ -335,7 +347,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
     Base::impl_execute([&]() {
       const long long nwork = Base::m_policy.end() - Base::m_policy.begin();
       if (nwork > 0 && !Base::m_result_ptr_device_accessible) {
-        const int size = Base::Analysis::value_size(Base::m_functor);
+        const int size = Base::m_functor_reducer.get_reducer().value_size();
         DeepCopy<HostSpace, Kokkos::Experimental::SYCLDeviceUSMSpace,
                  Kokkos::Experimental::SYCL>(m_exec, Base::m_result_ptr,
                                              Base::m_scratch_space + nwork - 1,

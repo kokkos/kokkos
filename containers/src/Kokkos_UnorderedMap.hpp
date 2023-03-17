@@ -275,7 +275,7 @@ class UnorderedMap {
       : m_bounded_insert(true),
         m_hasher(hasher),
         m_equal_to(equal_to),
-        m_size(),
+        m_size(std::make_shared<size_type>()),
         m_available_indexes(calculate_capacity(capacity_hint)),
         m_hash_lists(view_alloc(WithoutInitializing, "UnorderedMap hash list"),
                      Impl::find_hash_size(capacity())),
@@ -315,7 +315,7 @@ class UnorderedMap {
       Kokkos::deep_copy(m_keys, tmp);
     }
     Kokkos::deep_copy(m_scalars, 0);
-    m_size = 0;
+    *m_size = 0;
   }
 
   KOKKOS_INLINE_FUNCTION constexpr bool is_allocated() const {
@@ -369,10 +369,10 @@ class UnorderedMap {
   size_type size() const {
     if (capacity() == 0u) return 0u;
     if (modified()) {
-      m_size = m_available_indexes.count();
+      *m_size = m_available_indexes.count();
       reset_flag(modified_idx);
     }
-    return m_size;
+    return *m_size;
   }
 
   /// \brief The current number of failed insert() calls.
@@ -725,7 +725,7 @@ class UnorderedMap {
       tmp.m_bounded_insert    = src.m_bounded_insert;
       tmp.m_hasher            = src.m_hasher;
       tmp.m_equal_to          = src.m_equal_to;
-      tmp.m_size              = src.size();
+      tmp.m_size              = src.m_size;
       tmp.m_available_indexes = bitset_type(src.capacity());
       tmp.m_hash_lists        = size_type_view(
           view_alloc(WithoutInitializing, "UnorderedMap hash list"),
@@ -818,7 +818,7 @@ class UnorderedMap {
   bool m_bounded_insert;
   hasher_type m_hasher;
   equal_to_type m_equal_to;
-  mutable size_type m_size;
+  std::shared_ptr<size_type> m_size;
   bitset_type m_available_indexes;
   size_type_view m_hash_lists;
   size_type_view m_next_index;
