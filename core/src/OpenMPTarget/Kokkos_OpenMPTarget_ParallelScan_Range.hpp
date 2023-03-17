@@ -143,7 +143,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
             local_offset_value = element_values(team_id, i - 1);
             // FIXME_OPENMPTARGET We seem to access memory illegaly on AMD GPUs
 #ifdef KOKKOS_ARCH_VEGA
-            if constexpr (Analysis::has_join_member_function) {
+            if constexpr (Analysis::Reducer::has_join_member_function()) {
               if constexpr (std::is_void_v<WorkTag>)
                 a_functor.join(local_offset_value, offset_value);
               else
