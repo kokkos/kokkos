@@ -21,7 +21,12 @@
 namespace Test {
 
 TEST(TEST_CATEGORY, view_subview_memory_traits_construction) {
+#ifdef KOKKOS_COMPILER_NVHPC
+	// FIXME_NVHPC: Old NVHPC compilers (V22.5 or older) fail to compile
+	GTEST_SKIP() << "FIXME_NVHPC: Old NVHPC compilers (V22.5 or older) fail to compile view_subview_memory_traits_construction";
+#else
   TestViewSubview::test_subview_memory_traits_construction();
+#endif
 }
 
 }  // namespace Test

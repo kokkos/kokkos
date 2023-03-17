@@ -20,6 +20,10 @@ namespace Test {
 TEST(TEST_CATEGORY, atomic_operations_double) {
   const int start = 1;  // Avoid zero for division.
   const int end   = 11;
+#ifdef KOKKOS_COMPILER_NVHPC
+    // FIXME_NVHPC: Old NVHPC compilers (V22.5 or older) fail to compile
+	GTEST_SKIP() << "FIXME_NVHPC: Old NVHPC compilers (V22.5 or older) fail to compile atomic_operations_double";
+#else
   for (int i = start; i < end; ++i) {
 #ifndef KOKKOS_ENABLE_OPENACC
     // FIXME_OPENACC: OpenACC C/C++ does not support atomic min/max operations
@@ -35,5 +39,6 @@ TEST(TEST_CATEGORY, atomic_operations_double) {
     ASSERT_TRUE((TestAtomicOperations::AtomicOperationsTestNonIntegralType<
                  double, TEST_EXECSPACE>(start, end - i, 5)));
   }
+#endif
 }
 }  // namespace Test
