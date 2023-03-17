@@ -22,7 +22,7 @@ TEST(TEST_CATEGORY, atomic_operations_float) {
   const int end   = 11;
   for (int i = start; i < end; ++i) {
 #ifndef KOKKOS_ENABLE_OPENACC
-	// FIXME_OPENACC: OpenACC C/C++ does not support atomic min/max operations
+    // FIXME_OPENACC: OpenACC C/C++ does not support atomic min/max operations
     ASSERT_TRUE((TestAtomicOperations::AtomicOperationsTestNonIntegralType<
                  float, TEST_EXECSPACE>(start, end - i, 1)));
     ASSERT_TRUE((TestAtomicOperations::AtomicOperationsTestNonIntegralType<

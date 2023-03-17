@@ -22,7 +22,8 @@ TEST(TEST_CATEGORY, atomic_operations_unsignedlong) {
   const int end   = 11;
   for (int i = start; i < end; ++i) {
 #ifndef KOKKOS_ENABLE_OPENACC
-    // FIXME_OPENACC: OpenACC C/C++ does not support atomic min/max/mod operations
+    // FIXME_OPENACC: OpenACC C/C++ does not support atomic min/max/mod
+    // operations
     ASSERT_TRUE((TestAtomicOperations::AtomicOperationsTestIntegralType<
                  unsigned long int, TEST_EXECSPACE>(start, end - i, 1)));
     ASSERT_TRUE((TestAtomicOperations::AtomicOperationsTestIntegralType<
@@ -33,7 +34,8 @@ TEST(TEST_CATEGORY, atomic_operations_unsignedlong) {
     ASSERT_TRUE((TestAtomicOperations::AtomicOperationsTestIntegralType<
                  unsigned long int, TEST_EXECSPACE>(start, end - i, 4)));
 #ifndef KOKKOS_ENABLE_OPENACC
-    // FIXME_OPENACC: OpenACC C/C++ does not support atomic min/max/mod operations
+    // FIXME_OPENACC: OpenACC C/C++ does not support atomic min/max/mod
+    // operations
     ASSERT_TRUE((TestAtomicOperations::AtomicOperationsTestIntegralType<
                  unsigned long int, TEST_EXECSPACE>(start, end - i, 5)));
 #endif
