@@ -783,7 +783,7 @@ void test_random_normal(int N) {
   using std::cout;
   using std::endl;
 
-#ifdef KOKKOS_ENABLE_OPENMPTARGET // FIXME_OPENMPTARGET
+#ifdef KOKKOS_ENABLE_OPENMPTARGET  // FIXME_OPENMPTARGET
   GTEST_SKIP() << "Skipping only test_random_normal for OpenMPTarget";
 #endif
 
