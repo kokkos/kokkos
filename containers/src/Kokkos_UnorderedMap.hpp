@@ -204,7 +204,6 @@ struct UnorderedMapInsertOpTypes {
 /// \tparam EqualTo Definition of the equality function for instances of
 ///   <tt>Key</tt>.  The default will do a bitwise equality comparison.
 ///
-///
 template <typename Key, typename Value,
           typename Device  = Kokkos::DefaultExecutionSpace,
           typename Hasher  = pod_hash<std::remove_const_t<Key>>,
