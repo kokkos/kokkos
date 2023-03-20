@@ -18,7 +18,6 @@
 
 #include <gtest/gtest.h>
 
-#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC
 template <class View, class ExecutionSpace>
 struct TestViewMemoryAccessViolation {
   View v;
@@ -185,4 +184,3 @@ TEST(TEST_CATEGORY_DEATH, view_memory_access_violations_from_device) {
 
   test_view_memory_access_violations_from_device<ExecutionSpace>();
 }
-#endif
