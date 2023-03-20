@@ -226,9 +226,19 @@ class alignas(FloatType) floating_point_wrapper {
 #if defined(_WIN32) && defined(KOKKOS_ENABLE_CUDA)
   KOKKOS_FUNCTION
   floating_point_wrapper(const floating_point_wrapper& rhs) : val(rhs.val) {}
+
+  KOKKOS_FUNCTION
+  floating_point_wrapper& operator=(const floating_point_wrapper& rhs) {
+    val = rhs.val;
+    return *this;
+  }
 #else
   KOKKOS_DEFAULTED_FUNCTION
   floating_point_wrapper(const floating_point_wrapper&) noexcept = default;
+
+  KOKKOS_DEFAULTED_FUNCTION
+  floating_point_wrapper& operator=(const floating_point_wrapper&) noexcept =
+      default;
 #endif
 
   KOKKOS_INLINE_FUNCTION

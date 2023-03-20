@@ -121,7 +121,7 @@ KOKKOS_ARCH_OPTION(INTEL_PVC       GPU  "Intel GPU Ponte Vecchio"               
 IF(KOKKOS_ENABLE_COMPILER_WARNINGS)
   SET(COMMON_WARNINGS
     "-Wall" "-Wunused-parameter" "-Wshadow" "-pedantic"
-    "-Wsign-compare" "-Wtype-limits" "-Wuninitialized")
+    "-Wsign-compare" "-Wtype-limits" "-Wuninitialized" "-Wdeprecated-copy")
 
   # NOTE KOKKOS_ prefixed variable (all uppercase) is not set yet because TPLs are processed after ARCH
   IF(Kokkos_ENABLE_LIBQUADMATH)

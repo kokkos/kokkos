@@ -248,6 +248,9 @@ struct long_wrapper {
   long_wrapper(long val) : value(val) {}
 
   KOKKOS_FUNCTION
+  long_wrapper(const long_wrapper& val) : value(val.value) {}
+
+  KOKKOS_FUNCTION
   friend void operator+=(long_wrapper& lhs, const long_wrapper& rhs) {
     lhs.value += rhs.value;
   }
