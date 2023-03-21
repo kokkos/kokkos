@@ -45,8 +45,11 @@ class SYCLInternal {
 
   sycl::device_ptr<void> scratch_space(const std::size_t size);
   sycl::device_ptr<void> scratch_flags(const std::size_t size);
-  sycl::device_ptr<void> resize_team_scratch_space(std::int64_t bytes,
+  int acquire_team_scratch_space();
+  sycl::device_ptr<void> resize_team_scratch_space(int scratch_pool_id,
+                                                   std::int64_t bytes,
                                                    bool force_shrink = false);
+  void register_team_scratch_event(int scratch_pool_id, sycl::event event);
 
   uint32_t impl_get_instance_id() const;
   static int m_syclDev;
@@ -62,8 +65,12 @@ class SYCLInternal {
   // mutex to access shared memory
   mutable std::mutex m_mutexScratchSpace;
 
-  int64_t m_team_scratch_current_size       = 0;
-  sycl::device_ptr<void> m_team_scratch_ptr = nullptr;
+  // Team Scratch Level 1 Space
+  static constexpr int m_n_team_scratch                               = 10;
+  mutable int64_t m_team_scratch_current_size[m_n_team_scratch]       = {};
+  mutable sycl::device_ptr<void> m_team_scratch_ptr[m_n_team_scratch] = {};
+  mutable int m_current_team_scratch                                  = 0;
+  mutable sycl::event m_team_scratch_pool[m_n_team_scratch]           = {};
   mutable std::mutex m_team_scratch_mutex;
 
   uint32_t m_instance_id = Kokkos::Tools::Experimental::Impl::idForInstance<

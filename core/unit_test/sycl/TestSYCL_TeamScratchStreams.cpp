@@ -110,9 +110,6 @@ void sycl_queue_scratch_test(
 }  // namespace Impl
 
 TEST(sycl, team_scratch_1_queues) {
-#if defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ARCH_INTEL_GPU)
-  GTEST_SKIP() << "skipping for SYCL+Cuda";
-#endif
   int N      = 1000000;
   int T      = 10;
   int M_base = 150;
