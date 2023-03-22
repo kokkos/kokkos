@@ -70,7 +70,7 @@ class SYCLInternal {
   mutable int64_t m_team_scratch_current_size[m_n_team_scratch]       = {};
   mutable sycl::device_ptr<void> m_team_scratch_ptr[m_n_team_scratch] = {};
   mutable int m_current_team_scratch                                  = 0;
-  mutable sycl::event m_team_scratch_pool[m_n_team_scratch]           = {};
+  mutable sycl::event m_team_scratch_event[m_n_team_scratch]          = {};
   mutable std::mutex m_team_scratch_mutex;
 
   uint32_t m_instance_id = Kokkos::Tools::Experimental::Impl::idForInstance<

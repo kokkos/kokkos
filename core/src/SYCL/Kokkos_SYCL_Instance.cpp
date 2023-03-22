@@ -141,7 +141,7 @@ int SYCLInternal::acquire_team_scratch_space() {
       &m_current_team_scratch, m_n_team_scratch - 1,
       desul::MemoryOrderRelaxed(), desul::MemoryScopeDevice());
 
-  m_team_scratch_pool[current_team_scratch].wait_and_throw();
+  m_team_scratch_event[current_team_scratch].wait_and_throw();
 
   return current_team_scratch;
 }
@@ -172,7 +172,7 @@ sycl::device_ptr<void> SYCLInternal::resize_team_scratch_space(
 
 void SYCLInternal::register_team_scratch_event(int scratch_pool_id,
                                                sycl::event event) {
-  m_team_scratch_pool[scratch_pool_id] = event;
+  m_team_scratch_event[scratch_pool_id] = event;
 }
 
 uint32_t SYCLInternal::impl_get_instance_id() const { return m_instance_id; }
