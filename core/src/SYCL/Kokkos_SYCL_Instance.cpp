@@ -137,6 +137,9 @@ void SYCLInternal::initialize(const sycl::queue& q) {
 }
 
 int SYCLInternal::acquire_team_scratch_space() {
+  // Grab the next scratch memory allocation. We must make sure that the last
+  // kernel using the allocation has completed, so we wait for the event that
+  // was registered with that kernel.
   int current_team_scratch = desul::atomic_fetch_inc_mod(
       &m_current_team_scratch, m_n_team_scratch - 1,
       desul::MemoryOrderRelaxed(), desul::MemoryScopeDevice());
