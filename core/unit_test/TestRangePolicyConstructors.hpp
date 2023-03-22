@@ -17,7 +17,6 @@
 #include <gtest/gtest.h>
 
 #include <Kokkos_Core.hpp>
-
 namespace {
 
 TEST(TEST_CATEGORY, range_policy_runtime_parameters) {
@@ -69,5 +68,111 @@ TEST(TEST_CATEGORY, range_policy_runtime_parameters) {
     ASSERT_EQ(p1.chunk_size(), p2.chunk_size());
   }
 }
+
+struct TestRangePolicyCTADs {
+  struct SomeExecutionSpace {
+    using execution_space = SomeExecutionSpace;
+    using size_type       = size_t;
+  };
+  static_assert(Kokkos::is_execution_space_v<SomeExecutionSpace>);
+
+  struct ImplicitlyConvertibleToDefaultExecutionSpace {
+    operator Kokkos::DefaultExecutionSpace() const;
+  };
+  static_assert(!Kokkos::is_execution_space_v<
+                ImplicitlyConvertibleToDefaultExecutionSpace>);
+
+  static Kokkos::DefaultExecutionSpace des;
+  static ImplicitlyConvertibleToDefaultExecutionSpace notEs;
+  static SomeExecutionSpace ses;
+  static TEST_EXECSPACE es;
+
+  using RangePolicyTestExecSpace = std::conditional_t<
+      std::is_same_v<TEST_EXECSPACE, Kokkos::DefaultExecutionSpace>,
+      Kokkos::RangePolicy<>, Kokkos::RangePolicy<TEST_EXECSPACE> >;
+
+  static int64_t i64;
+  static int32_t i32;
+  static Kokkos::ChunkSize cs;
+
+  static Kokkos::RangePolicy<> rp;
+
+  //  Copy/move
+
+  static_assert(
+      std::is_same_v<Kokkos::RangePolicy<>, decltype(Kokkos::RangePolicy(rp))>);
+  static_assert(std::is_same_v<Kokkos::RangePolicy<>,
+                               decltype(Kokkos::RangePolicy(std::move(rp)))>);
+
+  static Kokkos::RangePolicy<SomeExecutionSpace> rpses;
+  static_assert(std::is_same_v<Kokkos::RangePolicy<SomeExecutionSpace>,
+                               decltype(Kokkos::RangePolicy(rpses))>);
+  static_assert(
+      std::is_same_v<Kokkos::RangePolicy<SomeExecutionSpace>,
+                     decltype(Kokkos::RangePolicy(std::move(rpses)))>);
+
+  //  RangePolicy
+
+  static_assert(
+      std::is_same_v<Kokkos::RangePolicy<>, decltype(Kokkos::RangePolicy())>);
+
+  static_assert(std::is_same_v<Kokkos::RangePolicy<>,
+                               decltype(Kokkos::RangePolicy(des, i64, i64))>);
+  static_assert(std::is_same_v<Kokkos::RangePolicy<>,
+                               decltype(Kokkos::RangePolicy(notEs, i64, i64))>);
+  static_assert(std::is_same_v<Kokkos::RangePolicy<SomeExecutionSpace>,
+                               decltype(Kokkos::RangePolicy(ses, i64, i64))>);
+  static_assert(std::is_same_v<RangePolicyTestExecSpace,
+                               decltype(Kokkos::RangePolicy(es, i64, i64))>);
+  static_assert(std::is_same_v<Kokkos::RangePolicy<>,
+                               decltype(Kokkos::RangePolicy(des, i32, i32))>);
+  static_assert(std::is_same_v<Kokkos::RangePolicy<>,
+                               decltype(Kokkos::RangePolicy(notEs, i32, i32))>);
+  static_assert(std::is_same_v<Kokkos::RangePolicy<SomeExecutionSpace>,
+                               decltype(Kokkos::RangePolicy(ses, i32, i32))>);
+  static_assert(std::is_same_v<RangePolicyTestExecSpace,
+                               decltype(Kokkos::RangePolicy(es, i32, i32))>);
+
+  // RangePolicy(index_type, index_type)
+
+  static_assert(std::is_same_v<Kokkos::RangePolicy<>,
+                               decltype(Kokkos::RangePolicy(i64, i64))>);
+  static_assert(std::is_same_v<Kokkos::RangePolicy<>,
+                               decltype(Kokkos::RangePolicy(i32, i32))>);
+
+  // RangePolicy(execution_space, index_type, index_type, Args...)
+
+  static_assert(
+      std::is_same_v<Kokkos::RangePolicy<>,
+                     decltype(Kokkos::RangePolicy(des, i64, i64, cs))>);
+  static_assert(
+      std::is_same_v<Kokkos::RangePolicy<>,
+                     decltype(Kokkos::RangePolicy(notEs, i64, i64, cs))>);
+  static_assert(
+      std::is_same_v<Kokkos::RangePolicy<SomeExecutionSpace>,
+                     decltype(Kokkos::RangePolicy(ses, i64, i64, cs))>);
+  static_assert(
+      std::is_same_v<RangePolicyTestExecSpace,
+                     decltype(Kokkos::RangePolicy(es, i64, i64, cs))>);
+  static_assert(
+      std::is_same_v<Kokkos::RangePolicy<>,
+                     decltype(Kokkos::RangePolicy(des, i32, i32, cs))>);
+  static_assert(
+      std::is_same_v<Kokkos::RangePolicy<>,
+                     decltype(Kokkos::RangePolicy(notEs, i32, i32, cs))>);
+  static_assert(
+      std::is_same_v<Kokkos::RangePolicy<SomeExecutionSpace>,
+                     decltype(Kokkos::RangePolicy(ses, i32, i32, cs))>);
+  static_assert(
+      std::is_same_v<RangePolicyTestExecSpace,
+                     decltype(Kokkos::RangePolicy(es, i32, i32, cs))>);
+
+  // RangePolicy(index_type, index_type, Args...)
+
+  static_assert(std::is_same_v<Kokkos::RangePolicy<>,
+                               decltype(Kokkos::RangePolicy(i64, i64, cs))>);
+  static_assert(std::is_same_v<Kokkos::RangePolicy<>,
+                               decltype(Kokkos::RangePolicy(i32, i32, cs))>);
+};  // TestRangePolicyCTADs struct
 
 }  // namespace
