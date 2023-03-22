@@ -476,9 +476,7 @@ DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_load(
 template <class T, class MemoryOrder>
 DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_load(
     const T* const ptr, MemoryOrder, MemoryScopeDevice) {
-  T retval{};
-  retval = device_atomic_load(ptr, MemoryOrderRelaxed(), MemoryScopeDevice());
-  return retval;
+  return device_atomic_load(ptr, MemoryOrderRelaxed(), MemoryScopeDevice());
 }
 
 //</editor-fold>
