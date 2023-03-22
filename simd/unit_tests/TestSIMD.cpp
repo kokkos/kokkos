@@ -486,3 +486,62 @@ TEST(simd, device) {
   Kokkos::parallel_for(Kokkos::RangePolicy<Kokkos::IndexType<int>>(0, 1),
                        simd_device_functor());
 }
+
+TEST(simd, test_size) {
+#if defined(KOKKOS_ARCH_AVX512XEON)
+  constexpr int width = 8;
+  using Abi = Kokkos::Experimental::simd_abi::avx512_fixed_size<width>;
+  auto double_abi_size = Kokkos::Experimental::simd<double, Abi>::size();
+  auto int64_abi_size  = Kokkos::Experimental::simd<int64_t, Abi>::size();
+  auto uint32_abi_size = Kokkos::Experimental::simd<uint32_t, Abi>::size();
+  auto int32_abi_size  = Kokkos::Experimental::simd<int32_t, Abi>::size();
+  auto uint64_abi_size = Kokkos::Experimental::simd<uint64_t, Abi>::size();
+
+  EXPECT_EQ(width, double_abi_size);
+  EXPECT_EQ(width, uint64_abi_size);
+  EXPECT_EQ(width, int64_abi_size);
+  EXPECT_EQ(width, uint32_abi_size);
+  EXPECT_EQ(width, int32_abi_size);
+
+#elif defined(KOKKOS_ARCH_AVX2)
+  constexpr int width  = 4;
+  using Abi            = Kokkos::Experimental::simd_abi::avx2_fixed_size<width>;
+  auto double_abi_size = Kokkos::Experimental::simd<double, Abi>::size();
+  auto uint64_abi_size = Kokkos::Experimental::simd<uint64_t, Abi>::size();
+  auto int64_abi_size  = Kokkos::Experimental::simd<int64_t, Abi>::size();
+  auto int32_abi_size  = Kokkos::Experimental::simd<int32_t, Abi>::size();
+
+  EXPECT_EQ(width, double_abi_size);
+  EXPECT_EQ(width, uint64_abi_size);
+  EXPECT_EQ(width, int64_abi_size);
+  EXPECT_EQ(width, int32_abi_size);
+
+#elif defined(__ARM_NEON)
+  constexpr int width  = 2;
+  using Abi            = Kokkos::Experimental::simd_abi::neon_fixed_size<width>;
+  auto double_abi_size = Kokkos::Experimental::simd<double, Abi>::size();
+  auto uint64_abi_size = Kokkos::Experimental::simd<uint64_t, Abi>::size();
+  auto int64_abi_size  = Kokkos::Experimental::simd<int64_t, Abi>::size();
+  auto int32_abi_size  = Kokkos::Experimental::simd<int32_t, Abi>::size();
+
+  EXPECT_EQ(width, double_abi_size);
+  EXPECT_EQ(width, uint64_abi_size);
+  EXPECT_EQ(width, int64_abi_size);
+  EXPECT_EQ(width, int32_abi_size);
+
+#else
+  constexpr int width  = 1;
+  using Abi            = Kokkos::Experimental::simd_abi::scalar;
+  auto double_abi_size = Kokkos::Experimental::simd<double, Abi>::size();
+  auto uint64_abi_size = Kokkos::Experimental::simd<uint64_t, Abi>::size();
+  auto int64_abi_size  = Kokkos::Experimental::simd<int64_t, Abi>::size();
+  auto uint32_abi_size = Kokkos::Experimental::simd<uint32_t, Abi>::size();
+  auto int32_abi_size  = Kokkos::Experimental::simd<int32_t, Abi>::size();
+
+  EXPECT_EQ(width, double_abi_size);
+  EXPECT_EQ(width, uint64_abi_size);
+  EXPECT_EQ(width, int64_abi_size);
+  EXPECT_EQ(width, uint32_abi_size);
+  EXPECT_EQ(width, int32_abi_size);
+#endif
+}
