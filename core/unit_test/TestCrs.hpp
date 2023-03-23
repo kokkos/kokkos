@@ -174,6 +174,9 @@ void test_constructor(std::int32_t nrows) {
 }  // anonymous namespace
 
 TEST(TEST_CATEGORY, crs_count_fill) {
+#if defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ARCH_INTEL_GPU)
+  GTEST_SKIP() << "skipping for SYCL+Cuda";
+#endif
   test_count_fill<TEST_EXECSPACE>(0);
   test_count_fill<TEST_EXECSPACE>(1);
   test_count_fill<TEST_EXECSPACE>(2);
@@ -185,6 +188,9 @@ TEST(TEST_CATEGORY, crs_count_fill) {
 }
 
 TEST(TEST_CATEGORY, crs_copy_constructor) {
+#if defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ARCH_INTEL_GPU)
+  GTEST_SKIP() << "skipping for SYCL+Cuda";
+#endif
   test_constructor<TEST_EXECSPACE>(0);
   test_constructor<TEST_EXECSPACE>(1);
   test_constructor<TEST_EXECSPACE>(2);

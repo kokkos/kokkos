@@ -505,7 +505,13 @@ struct TestComplexBesselJ0Y0Function {
     Kokkos::deep_copy(d_z, h_z);
 
     // Call Bessel functions
-    Kokkos::parallel_for(Kokkos::RangePolicy<ExecSpace>(0, N), *this);
+#if (HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR == 4)
+    using Property =
+        Kokkos::Experimental::WorkItemProperty::ImplForceGlobalLaunch_t;
+#else
+    using Property = Kokkos::Experimental::WorkItemProperty::None_t;
+#endif
+    Kokkos::parallel_for(Kokkos::RangePolicy<ExecSpace, Property>(0, N), *this);
     Kokkos::fence();
 
     Kokkos::deep_copy(h_cbj0, d_cbj0);
@@ -634,8 +640,8 @@ struct TestComplexBesselJ0Y0Function {
 
     Kokkos::deep_copy(d_z_large, h_z_large);
 
-    Kokkos::parallel_for(Kokkos::RangePolicy<ExecSpace, TestLargeArgTag>(0, 1),
-                         *this);
+    Kokkos::parallel_for(
+        Kokkos::RangePolicy<ExecSpace, Property, TestLargeArgTag>(0, 1), *this);
     Kokkos::fence();
 
     Kokkos::deep_copy(h_cbj0_large, d_cbj0_large);
@@ -795,7 +801,13 @@ struct TestComplexBesselJ1Y1Function {
     Kokkos::deep_copy(d_z, h_z);
 
     // Call Bessel functions
-    Kokkos::parallel_for(Kokkos::RangePolicy<ExecSpace>(0, N), *this);
+#if (HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR == 4)
+    using Property =
+        Kokkos::Experimental::WorkItemProperty::ImplForceGlobalLaunch_t;
+#else
+    using Property = Kokkos::Experimental::WorkItemProperty::None_t;
+#endif
+    Kokkos::parallel_for(Kokkos::RangePolicy<ExecSpace, Property>(0, N), *this);
     Kokkos::fence();
 
     Kokkos::deep_copy(h_cbj1, d_cbj1);
@@ -924,8 +936,8 @@ struct TestComplexBesselJ1Y1Function {
 
     Kokkos::deep_copy(d_z_large, h_z_large);
 
-    Kokkos::parallel_for(Kokkos::RangePolicy<ExecSpace, TestLargeArgTag>(0, 1),
-                         *this);
+    Kokkos::parallel_for(
+        Kokkos::RangePolicy<ExecSpace, Property, TestLargeArgTag>(0, 1), *this);
     Kokkos::fence();
 
     Kokkos::deep_copy(h_cbj1_large, d_cbj1_large);
@@ -1083,7 +1095,13 @@ struct TestComplexBesselI0K0Function {
     Kokkos::deep_copy(d_z, h_z);
 
     // Call Bessel functions
-    Kokkos::parallel_for(Kokkos::RangePolicy<ExecSpace>(0, N), *this);
+#if (HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR == 4)
+    using Property =
+        Kokkos::Experimental::WorkItemProperty::ImplForceGlobalLaunch_t;
+#else
+    using Property = Kokkos::Experimental::WorkItemProperty::None_t;
+#endif
+    Kokkos::parallel_for(Kokkos::RangePolicy<ExecSpace, Property>(0, N), *this);
     Kokkos::fence();
 
     Kokkos::deep_copy(h_cbi0, d_cbi0);
@@ -1205,8 +1223,8 @@ struct TestComplexBesselI0K0Function {
 
     Kokkos::deep_copy(d_z_large, h_z_large);
 
-    Kokkos::parallel_for(Kokkos::RangePolicy<ExecSpace, TestLargeArgTag>(0, 1),
-                         *this);
+    Kokkos::parallel_for(
+        Kokkos::RangePolicy<ExecSpace, Property, TestLargeArgTag>(0, 1), *this);
     Kokkos::fence();
 
     Kokkos::deep_copy(h_cbi0_large, d_cbi0_large);
@@ -1318,7 +1336,13 @@ struct TestComplexBesselI1K1Function {
     Kokkos::deep_copy(d_z, h_z);
 
     // Call Bessel functions
-    Kokkos::parallel_for(Kokkos::RangePolicy<ExecSpace>(0, N), *this);
+#if (HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR == 4)
+    using Property =
+        Kokkos::Experimental::WorkItemProperty::ImplForceGlobalLaunch_t;
+#else
+    using Property = Kokkos::Experimental::WorkItemProperty::None_t;
+#endif
+    Kokkos::parallel_for(Kokkos::RangePolicy<ExecSpace, Property>(0, N), *this);
     Kokkos::fence();
 
     Kokkos::deep_copy(h_cbi1, d_cbi1);
@@ -1440,8 +1464,8 @@ struct TestComplexBesselI1K1Function {
 
     Kokkos::deep_copy(d_z_large, h_z_large);
 
-    Kokkos::parallel_for(Kokkos::RangePolicy<ExecSpace, TestLargeArgTag>(0, 1),
-                         *this);
+    Kokkos::parallel_for(
+        Kokkos::RangePolicy<ExecSpace, Property, TestLargeArgTag>(0, 1), *this);
     Kokkos::fence();
 
     Kokkos::deep_copy(h_cbi1_large, d_cbi1_large);
@@ -1549,7 +1573,13 @@ struct TestComplexBesselH1Function {
     Kokkos::deep_copy(d_z, h_z);
 
     // Call Hankel functions
-    Kokkos::parallel_for(Kokkos::RangePolicy<ExecSpace>(0, N), *this);
+#if (HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR == 4)
+    using Property =
+        Kokkos::Experimental::WorkItemProperty::ImplForceGlobalLaunch_t;
+#else
+    using Property = Kokkos::Experimental::WorkItemProperty::None_t;
+#endif
+    Kokkos::parallel_for(Kokkos::RangePolicy<ExecSpace, Property>(0, N), *this);
     Kokkos::fence();
 
     Kokkos::deep_copy(h_ch10, d_ch10);

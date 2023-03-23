@@ -59,7 +59,7 @@ void test_functor_analysis() {
   static_assert(!A01::has_init_member_function, "");
   static_assert(!A01::has_final_member_function, "");
   static_assert(A01::StaticValueSize == 0, "");
-  ASSERT_EQ(R01(&c01).length(), 0);
+  ASSERT_EQ(R01(c01).length(), 0);
 
   //------------------------------
   auto c02  = KOKKOS_LAMBDA(int, double&){};
@@ -78,7 +78,7 @@ void test_functor_analysis() {
   static_assert(!A02::has_init_member_function, "");
   static_assert(!A02::has_final_member_function, "");
   static_assert(A02::StaticValueSize == sizeof(double), "");
-  ASSERT_EQ(R02(&c02).length(), 1);
+  ASSERT_EQ(R02(c02).length(), 1);
 
   //------------------------------
 
@@ -106,7 +106,7 @@ void test_functor_analysis() {
   static_assert(!A03::has_final_member_function, "");
   static_assert(
       A03::StaticValueSize == sizeof(TestFunctorAnalysis_03::value_type), "");
-  ASSERT_EQ(R03(&c03).length(), 1);
+  ASSERT_EQ(R03(c03).length(), 1);
 
   //------------------------------
 }

@@ -324,8 +324,6 @@ void OpenMPInternal::initialize(int thread_count) {
     std::cerr << "                                    Requested: "
               << thread_count << " threads per process." << std::endl;
   }
-  // Init the array used for arbitrarily sized atomics
-  init_lock_array_host_space();
 
   m_initialized = true;
 }
@@ -384,68 +382,4 @@ bool OpenMPInternal::verify_is_initialized(const char *const label) const {
   return m_initialized;
 }
 }  // namespace Impl
-
-//----------------------------------------------------------------------------
-
-OpenMP::OpenMP()
-    : m_space_instance(&Impl::OpenMPInternal::singleton(),
-                       [](Impl::OpenMPInternal *) {}) {
-  Impl::OpenMPInternal::singleton().verify_is_initialized(
-      "OpenMP instance constructor");
-}
-
-OpenMP::OpenMP(int pool_size)
-    : m_space_instance(new Impl::OpenMPInternal(pool_size),
-                       [](Impl::OpenMPInternal *ptr) {
-                         ptr->finalize();
-                         delete ptr;
-                       }) {
-  Impl::OpenMPInternal::singleton().verify_is_initialized(
-      "OpenMP instance constructor");
-}
-
-int OpenMP::impl_get_current_max_threads() noexcept {
-  return Impl::OpenMPInternal::get_current_max_threads();
-}
-
-void OpenMP::impl_initialize(InitializationSettings const &settings) {
-  Impl::OpenMPInternal::singleton().initialize(
-      settings.has_num_threads() ? settings.get_num_threads() : -1);
-}
-
-void OpenMP::impl_finalize() { Impl::OpenMPInternal::singleton().finalize(); }
-
-void OpenMP::print_configuration(std::ostream &os, bool /*verbose*/) const {
-  os << "Host Parallel Execution Space:\n";
-  os << "  KOKKOS_ENABLE_OPENMP: yes\n";
-
-  os << "OpenMP Atomics:\n";
-  os << "  KOKKOS_ENABLE_OPENMP_ATOMICS: ";
-#ifdef KOKKOS_ENABLE_OPENMP_ATOMICS
-  os << "yes\n";
-#else
-  os << "no\n";
-#endif
-
-  os << "\nOpenMP Runtime Configuration:\n";
-
-  m_space_instance->print_configuration(os);
-}
-
-int OpenMP::concurrency(OpenMP const &instance) {
-  return impl_thread_pool_size(instance);
-}
-
-void OpenMP::fence(const std::string &name) const {
-  Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::OpenMP>(
-      name, Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{1}, []() {});
-}
-
-namespace Impl {
-
-int g_openmp_space_factory_initialized =
-    initialize_space_factory<OpenMP>("050_OpenMP");
-
-}  // namespace Impl
-
 }  // namespace Kokkos

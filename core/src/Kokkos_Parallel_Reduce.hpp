@@ -37,6 +37,7 @@ struct Sum {
   // Required
   using reducer    = Sum<Scalar, Space>;
   using value_type = std::remove_cv_t<Scalar>;
+  static_assert(!std::is_pointer_v<value_type> && !std::is_array_v<value_type>);
 
   using result_view_type = Kokkos::View<value_type, Space>;
 
@@ -71,12 +72,17 @@ struct Sum {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Scalar, typename... Properties>
+Sum(View<Scalar, Properties...> const&)
+    ->Sum<Scalar, typename View<Scalar, Properties...>::memory_space>;
+
 template <class Scalar, class Space>
 struct Prod {
  public:
   // Required
   using reducer    = Prod<Scalar, Space>;
   using value_type = std::remove_cv_t<Scalar>;
+  static_assert(!std::is_pointer_v<value_type> && !std::is_array_v<value_type>);
 
   using result_view_type = Kokkos::View<value_type, Space>;
 
@@ -111,12 +117,17 @@ struct Prod {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Scalar, typename... Properties>
+Prod(View<Scalar, Properties...> const&)
+    ->Prod<Scalar, typename View<Scalar, Properties...>::memory_space>;
+
 template <class Scalar, class Space>
 struct Min {
  public:
   // Required
   using reducer    = Min<Scalar, Space>;
   using value_type = std::remove_cv_t<Scalar>;
+  static_assert(!std::is_pointer_v<value_type> && !std::is_array_v<value_type>);
 
   using result_view_type = Kokkos::View<value_type, Space>;
 
@@ -153,12 +164,17 @@ struct Min {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Scalar, typename... Properties>
+Min(View<Scalar, Properties...> const&)
+    ->Min<Scalar, typename View<Scalar, Properties...>::memory_space>;
+
 template <class Scalar, class Space>
 struct Max {
  public:
   // Required
   using reducer    = Max<Scalar, Space>;
   using value_type = std::remove_cv_t<Scalar>;
+  static_assert(!std::is_pointer_v<value_type> && !std::is_array_v<value_type>);
 
   using result_view_type = Kokkos::View<value_type, Space>;
 
@@ -196,12 +212,17 @@ struct Max {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Scalar, typename... Properties>
+Max(View<Scalar, Properties...> const&)
+    ->Max<Scalar, typename View<Scalar, Properties...>::memory_space>;
+
 template <class Scalar, class Space>
 struct LAnd {
  public:
   // Required
   using reducer    = LAnd<Scalar, Space>;
   using value_type = std::remove_cv_t<Scalar>;
+  static_assert(!std::is_pointer_v<value_type> && !std::is_array_v<value_type>);
 
   using result_view_type = Kokkos::View<value_type, Space>;
 
@@ -237,12 +258,17 @@ struct LAnd {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Scalar, typename... Properties>
+LAnd(View<Scalar, Properties...> const&)
+    ->LAnd<Scalar, typename View<Scalar, Properties...>::memory_space>;
+
 template <class Scalar, class Space>
 struct LOr {
  public:
   // Required
   using reducer    = LOr<Scalar, Space>;
   using value_type = std::remove_cv_t<Scalar>;
+  static_assert(!std::is_pointer_v<value_type> && !std::is_array_v<value_type>);
 
   using result_view_type = Kokkos::View<value_type, Space>;
 
@@ -279,12 +305,17 @@ struct LOr {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Scalar, typename... Properties>
+LOr(View<Scalar, Properties...> const&)
+    ->LOr<Scalar, typename View<Scalar, Properties...>::memory_space>;
+
 template <class Scalar, class Space>
 struct BAnd {
  public:
   // Required
   using reducer    = BAnd<Scalar, Space>;
   using value_type = std::remove_cv_t<Scalar>;
+  static_assert(!std::is_pointer_v<value_type> && !std::is_array_v<value_type>);
 
   using result_view_type = Kokkos::View<value_type, Space>;
 
@@ -321,12 +352,17 @@ struct BAnd {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Scalar, typename... Properties>
+BAnd(View<Scalar, Properties...> const&)
+    ->BAnd<Scalar, typename View<Scalar, Properties...>::memory_space>;
+
 template <class Scalar, class Space>
 struct BOr {
  public:
   // Required
   using reducer    = BOr<Scalar, Space>;
   using value_type = std::remove_cv_t<Scalar>;
+  static_assert(!std::is_pointer_v<value_type> && !std::is_array_v<value_type>);
 
   using result_view_type = Kokkos::View<value_type, Space>;
 
@@ -363,6 +399,10 @@ struct BOr {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Scalar, typename... Properties>
+BOr(View<Scalar, Properties...> const&)
+    ->BOr<Scalar, typename View<Scalar, Properties...>::memory_space>;
+
 template <class Scalar, class Index>
 struct ValLocScalar {
   Scalar val;
@@ -380,6 +420,9 @@ struct MinLoc {
  private:
   using scalar_type = std::remove_cv_t<Scalar>;
   using index_type  = std::remove_cv_t<Index>;
+  static_assert(!std::is_pointer_v<scalar_type> &&
+                !std::is_array_v<scalar_type>);
+  static_assert(std::is_integral_v<index_type>);
 
  public:
   // Required
@@ -422,11 +465,20 @@ struct MinLoc {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Scalar, typename Index, typename... Properties>
+MinLoc(View<ValLocScalar<Scalar, Index>, Properties...> const&)
+    ->MinLoc<Scalar, Index,
+             typename View<ValLocScalar<Scalar, Index>,
+                           Properties...>::memory_space>;
+
 template <class Scalar, class Index, class Space>
 struct MaxLoc {
  private:
   using scalar_type = std::remove_cv_t<Scalar>;
   using index_type  = std::remove_cv_t<Index>;
+  static_assert(!std::is_pointer_v<scalar_type> &&
+                !std::is_array_v<scalar_type>);
+  static_assert(std::is_integral_v<index_type>);
 
  public:
   // Required
@@ -469,6 +521,12 @@ struct MaxLoc {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Scalar, typename Index, typename... Properties>
+MaxLoc(View<ValLocScalar<Scalar, Index>, Properties...> const&)
+    ->MaxLoc<Scalar, Index,
+             typename View<ValLocScalar<Scalar, Index>,
+                           Properties...>::memory_space>;
+
 template <class Scalar>
 struct MinMaxScalar {
   Scalar min_val, max_val;
@@ -484,6 +542,8 @@ template <class Scalar, class Space>
 struct MinMax {
  private:
   using scalar_type = std::remove_cv_t<Scalar>;
+  static_assert(!std::is_pointer_v<scalar_type> &&
+                !std::is_array_v<scalar_type>);
 
  public:
   // Required
@@ -531,6 +591,11 @@ struct MinMax {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Scalar, typename... Properties>
+MinMax(View<MinMaxScalar<Scalar>, Properties...> const&)
+    ->MinMax<Scalar,
+             typename View<MinMaxScalar<Scalar>, Properties...>::memory_space>;
+
 template <class Scalar, class Index>
 struct MinMaxLocScalar {
   Scalar min_val, max_val;
@@ -550,6 +615,9 @@ struct MinMaxLoc {
  private:
   using scalar_type = std::remove_cv_t<Scalar>;
   using index_type  = std::remove_cv_t<Index>;
+  static_assert(!std::is_pointer_v<scalar_type> &&
+                !std::is_array_v<scalar_type>);
+  static_assert(std::is_integral_v<index_type>);
 
  public:
   // Required
@@ -601,6 +669,12 @@ struct MinMaxLoc {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Scalar, typename Index, typename... Properties>
+MinMaxLoc(View<MinMaxLocScalar<Scalar, Index>, Properties...> const&)
+    ->MinMaxLoc<Scalar, Index,
+                typename View<MinMaxLocScalar<Scalar, Index>,
+                              Properties...>::memory_space>;
+
 // --------------------------------------------------
 // reducers added to support std algorithms
 // --------------------------------------------------
@@ -613,6 +687,9 @@ struct MaxFirstLoc {
  private:
   using scalar_type = std::remove_cv_t<Scalar>;
   using index_type  = std::remove_cv_t<Index>;
+  static_assert(!std::is_pointer_v<scalar_type> &&
+                !std::is_array_v<scalar_type>);
+  static_assert(std::is_integral_v<index_type>);
 
  public:
   // Required
@@ -659,6 +736,12 @@ struct MaxFirstLoc {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Scalar, typename Index, typename... Properties>
+MaxFirstLoc(View<ValLocScalar<Scalar, Index>, Properties...> const&)
+    ->MaxFirstLoc<Scalar, Index,
+                  typename View<ValLocScalar<Scalar, Index>,
+                                Properties...>::memory_space>;
+
 //
 // MaxFirstLocCustomComparator
 // recall that comp(a,b) returns true is a < b
@@ -668,6 +751,9 @@ struct MaxFirstLocCustomComparator {
  private:
   using scalar_type = std::remove_cv_t<Scalar>;
   using index_type  = std::remove_cv_t<Index>;
+  static_assert(!std::is_pointer_v<scalar_type> &&
+                !std::is_array_v<scalar_type>);
+  static_assert(std::is_integral_v<index_type>);
 
  public:
   // Required
@@ -718,6 +804,14 @@ struct MaxFirstLocCustomComparator {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Scalar, typename Index, typename ComparatorType,
+          typename... Properties>
+MaxFirstLocCustomComparator(
+    View<ValLocScalar<Scalar, Index>, Properties...> const&, ComparatorType)
+    ->MaxFirstLocCustomComparator<Scalar, Index, ComparatorType,
+                                  typename View<ValLocScalar<Scalar, Index>,
+                                                Properties...>::memory_space>;
+
 //
 // MinFirstLoc
 //
@@ -726,6 +820,9 @@ struct MinFirstLoc {
  private:
   using scalar_type = std::remove_cv_t<Scalar>;
   using index_type  = std::remove_cv_t<Index>;
+  static_assert(!std::is_pointer_v<scalar_type> &&
+                !std::is_array_v<scalar_type>);
+  static_assert(std::is_integral_v<index_type>);
 
  public:
   // Required
@@ -772,6 +869,12 @@ struct MinFirstLoc {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Scalar, typename Index, typename... Properties>
+MinFirstLoc(View<ValLocScalar<Scalar, Index>, Properties...> const&)
+    ->MinFirstLoc<Scalar, Index,
+                  typename View<ValLocScalar<Scalar, Index>,
+                                Properties...>::memory_space>;
+
 //
 // MinFirstLocCustomComparator
 // recall that comp(a,b) returns true is a < b
@@ -781,6 +884,9 @@ struct MinFirstLocCustomComparator {
  private:
   using scalar_type = std::remove_cv_t<Scalar>;
   using index_type  = std::remove_cv_t<Index>;
+  static_assert(!std::is_pointer_v<scalar_type> &&
+                !std::is_array_v<scalar_type>);
+  static_assert(std::is_integral_v<index_type>);
 
  public:
   // Required
@@ -831,6 +937,14 @@ struct MinFirstLocCustomComparator {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Scalar, typename Index, typename ComparatorType,
+          typename... Properties>
+MinFirstLocCustomComparator(
+    View<ValLocScalar<Scalar, Index>, Properties...> const&, ComparatorType)
+    ->MinFirstLocCustomComparator<Scalar, Index, ComparatorType,
+                                  typename View<ValLocScalar<Scalar, Index>,
+                                                Properties...>::memory_space>;
+
 //
 // MinMaxFirstLastLoc
 //
@@ -839,6 +953,9 @@ struct MinMaxFirstLastLoc {
  private:
   using scalar_type = std::remove_cv_t<Scalar>;
   using index_type  = std::remove_cv_t<Index>;
+  static_assert(!std::is_pointer_v<scalar_type> &&
+                !std::is_array_v<scalar_type>);
+  static_assert(std::is_integral_v<index_type>);
 
  public:
   // Required
@@ -896,6 +1013,12 @@ struct MinMaxFirstLastLoc {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Scalar, typename Index, typename... Properties>
+MinMaxFirstLastLoc(View<MinMaxLocScalar<Scalar, Index>, Properties...> const&)
+    ->MinMaxFirstLastLoc<Scalar, Index,
+                         typename View<MinMaxLocScalar<Scalar, Index>,
+                                       Properties...>::memory_space>;
+
 //
 // MinMaxFirstLastLocCustomComparator
 // recall that comp(a,b) returns true is a < b
@@ -905,6 +1028,9 @@ struct MinMaxFirstLastLocCustomComparator {
  private:
   using scalar_type = std::remove_cv_t<Scalar>;
   using index_type  = std::remove_cv_t<Index>;
+  static_assert(!std::is_pointer_v<scalar_type> &&
+                !std::is_array_v<scalar_type>);
+  static_assert(std::is_integral_v<index_type>);
 
  public:
   // Required
@@ -965,6 +1091,15 @@ struct MinMaxFirstLastLocCustomComparator {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Scalar, typename Index, typename ComparatorType,
+          typename... Properties>
+MinMaxFirstLastLocCustomComparator(
+    View<MinMaxLocScalar<Scalar, Index>, Properties...> const&, ComparatorType)
+    ->MinMaxFirstLastLocCustomComparator<
+        Scalar, Index, ComparatorType,
+        typename View<MinMaxLocScalar<Scalar, Index>,
+                      Properties...>::memory_space>;
+
 //
 // FirstLoc
 //
@@ -980,6 +1115,7 @@ template <class Index, class Space>
 struct FirstLoc {
  private:
   using index_type = std::remove_cv_t<Index>;
+  static_assert(std::is_integral_v<index_type>);
 
  public:
   // Required
@@ -1023,6 +1159,11 @@ struct FirstLoc {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Index, typename... Properties>
+FirstLoc(View<FirstLocScalar<Index>, Properties...> const&)
+    ->FirstLoc<Index, typename View<FirstLocScalar<Index>,
+                                    Properties...>::memory_space>;
+
 //
 // LastLoc
 //
@@ -1038,6 +1179,7 @@ template <class Index, class Space>
 struct LastLoc {
  private:
   using index_type = std::remove_cv_t<Index>;
+  static_assert(std::is_integral_v<index_type>);
 
  public:
   // Required
@@ -1081,6 +1223,11 @@ struct LastLoc {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Index, typename... Properties>
+LastLoc(View<LastLocScalar<Index>, Properties...> const&)
+    ->LastLoc<Index,
+              typename View<LastLocScalar<Index>, Properties...>::memory_space>;
+
 template <class Index>
 struct StdIsPartScalar {
   Index max_loc_true, min_loc_false;
@@ -1099,6 +1246,7 @@ template <class Index, class Space>
 struct StdIsPartitioned {
  private:
   using index_type = std::remove_cv_t<Index>;
+  static_assert(std::is_integral_v<index_type>);
 
  public:
   // Required
@@ -1148,6 +1296,11 @@ struct StdIsPartitioned {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Index, typename... Properties>
+StdIsPartitioned(View<StdIsPartScalar<Index>, Properties...> const&)
+    ->StdIsPartitioned<Index, typename View<StdIsPartScalar<Index>,
+                                            Properties...>::memory_space>;
+
 template <class Index>
 struct StdPartPointScalar {
   Index min_loc_false;
@@ -1165,6 +1318,7 @@ template <class Index, class Space>
 struct StdPartitionPoint {
  private:
   using index_type = std::remove_cv_t<Index>;
+  static_assert(std::is_integral_v<index_type>);
 
  public:
   // Required
@@ -1209,9 +1363,164 @@ struct StdPartitionPoint {
   bool references_scalar() const { return references_scalar_v; }
 };
 
+template <typename Index, typename... Properties>
+StdPartitionPoint(View<StdPartPointScalar<Index>, Properties...> const&)
+    ->StdPartitionPoint<Index, typename View<StdPartPointScalar<Index>,
+                                             Properties...>::memory_space>;
+
 }  // namespace Kokkos
 namespace Kokkos {
 namespace Impl {
+
+template <typename FunctorType, typename FunctorAnalysisReducerType,
+          typename Enable>
+class CombinedFunctorReducer {
+ public:
+  using functor_type = FunctorType;
+  using reducer_type = FunctorAnalysisReducerType;
+  CombinedFunctorReducer(const FunctorType& functor,
+                         const FunctorAnalysisReducerType& reducer)
+      : m_functor(functor), m_reducer(reducer) {}
+  KOKKOS_FUNCTION const FunctorType& get_functor() const { return m_functor; }
+  KOKKOS_FUNCTION const FunctorAnalysisReducerType& get_reducer() const {
+    return m_reducer;
+  }
+
+ private:
+  FunctorType m_functor;
+  FunctorAnalysisReducerType m_reducer;
+};
+template <typename FunctorType, typename FunctorAnalysisReducerType>
+class CombinedFunctorReducer<
+    FunctorType, FunctorAnalysisReducerType,
+    std::enable_if_t<std::is_same_v<
+        FunctorType, typename FunctorAnalysisReducerType::functor_type>>> {
+ public:
+  using functor_type = FunctorType;
+  using reducer_type = FunctorAnalysisReducerType;
+  CombinedFunctorReducer(const FunctorType& functor,
+                         const FunctorAnalysisReducerType&)
+      : m_reducer(functor) {}
+  KOKKOS_FUNCTION const FunctorType& get_functor() const {
+    return m_reducer.get_functor();
+  }
+  KOKKOS_FUNCTION const FunctorAnalysisReducerType& get_reducer() const {
+    return m_reducer;
+  }
+
+ private:
+  FunctorAnalysisReducerType m_reducer;
+};
+
+// FIXME Remove once all backends implement the new interface
+template <typename ExecutionSpace>
+struct implements_new_reduce_interface : std::false_type {};
+
+#ifdef KOKKOS_ENABLE_SERIAL
+template <>
+struct implements_new_reduce_interface<Kokkos::Serial> : std::true_type {};
+#endif
+
+#ifdef KOKKOS_ENABLE_HPX
+template <>
+struct implements_new_reduce_interface<Kokkos::Experimental::HPX>
+    : std::true_type {};
+#endif
+
+#ifdef KOKKOS_ENABLE_OPENMP
+template <>
+struct implements_new_reduce_interface<Kokkos::OpenMP> : std::true_type {};
+#endif
+
+#ifdef KOKKOS_ENABLE_THREADS
+template <>
+struct implements_new_reduce_interface<Kokkos::Threads> : std::true_type {};
+#endif
+
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+template <>
+struct implements_new_reduce_interface<Kokkos::Experimental::OpenMPTarget>
+    : std::true_type {};
+#endif
+
+#ifdef KOKKOS_ENABLE_CUDA
+template <>
+struct implements_new_reduce_interface<Kokkos::Cuda> : std::true_type {};
+#endif
+
+#ifdef KOKKOS_ENABLE_HIP
+template <>
+struct implements_new_reduce_interface<Kokkos::HIP> : std::true_type {};
+#endif
+
+#ifdef KOKKOS_ENABLE_OPENACC
+template <>
+struct implements_new_reduce_interface<Kokkos::Experimental::OpenACC>
+    : std::true_type {};
+#endif
+
+#ifdef KOKKOS_ENABLE_SYCL
+template <>
+struct implements_new_reduce_interface<Kokkos::Experimental::SYCL>
+    : std::true_type {};
+#endif
+
+template <typename CombinedFunctorReducerType, typename PolicyType,
+          typename ExecutionSpaceType, typename Enable>
+class ParallelReduceWrapper {
+  using functor_type = typename CombinedFunctorReducerType::functor_type;
+  using helper_reducer_type =
+      typename CombinedFunctorReducerType::reducer_type::functor_type;
+
+  static constexpr bool has_reducer =
+      !std::is_same_v<functor_type, helper_reducer_type>;
+
+  using reducer_type =
+      std::conditional_t<has_reducer, helper_reducer_type, InvalidType>;
+
+ public:
+  using wrapped_type = Impl::ParallelReduce<functor_type, PolicyType,
+                                            reducer_type, ExecutionSpaceType>;
+
+ private:
+  wrapped_type m_parallel_reduce;
+
+ public:
+  template <typename ReturnValue>
+  ParallelReduceWrapper(
+      const CombinedFunctorReducerType& combined_functor_reducer,
+      const PolicyType& policy, const ReturnValue& return_value)
+      : m_parallel_reduce(
+            combined_functor_reducer.get_functor(), policy,
+            Kokkos::Impl::if_c<has_reducer, helper_reducer_type, ReturnValue>::
+                select(combined_functor_reducer.get_reducer().get_functor(),
+                       return_value)) {}
+
+  void execute() { m_parallel_reduce.execute(); }
+};
+
+template <typename CombinedFunctorReducerType, typename PolicyType,
+          typename ExecutionSpaceType>
+class ParallelReduceWrapper<
+    CombinedFunctorReducerType, PolicyType, ExecutionSpaceType,
+    std::enable_if_t<
+        implements_new_reduce_interface<ExecutionSpaceType>::value>> {
+ public:
+  using wrapped_type = Impl::ParallelReduce<CombinedFunctorReducerType,
+                                            PolicyType, ExecutionSpaceType>;
+
+ private:
+  wrapped_type m_parallel_reduce;
+
+ public:
+  template <typename ReturnValue>
+  ParallelReduceWrapper(
+      const CombinedFunctorReducerType& combined_functor_reducer,
+      const PolicyType& policy, const ReturnValue& return_value)
+      : m_parallel_reduce(combined_functor_reducer, policy, return_value) {}
+
+  void execute() { m_parallel_reduce.execute(); }
+};
 
 template <class T, class ReturnType, class ValueTraits>
 struct ParallelReduceReturnValue;
@@ -1278,12 +1587,12 @@ template <class ReturnType, class FunctorType>
 struct ParallelReduceReturnValue<
     std::enable_if_t<Kokkos::is_reducer<ReturnType>::value>, ReturnType,
     FunctorType> {
-  using return_type  = ReturnType;
+  using return_type  = typename ReturnType::result_view_type;
   using reducer_type = ReturnType;
   using value_type   = typename return_type::value_type;
 
-  static return_type return_value(ReturnType& return_val, const FunctorType&) {
-    return return_val;
+  static auto return_value(ReturnType& return_val, const FunctorType&) {
+    return return_val.view();
   }
 };
 
@@ -1331,24 +1640,35 @@ struct ParallelReduceAdaptor {
                                   const PolicyType& policy,
                                   const FunctorType& functor,
                                   ReturnType& return_value) {
-    uint64_t kpID = 0;
+    using PassedReducerType = typename return_value_adapter::reducer_type;
+    uint64_t kpID           = 0;
 
     PolicyType inner_policy = policy;
-    Kokkos::Tools::Impl::begin_parallel_reduce<
-        typename return_value_adapter::reducer_type>(inner_policy, functor,
-                                                     label, kpID);
+    Kokkos::Tools::Impl::begin_parallel_reduce<PassedReducerType>(
+        inner_policy, functor, label, kpID);
 
+    using ReducerSelector =
+        Kokkos::Impl::if_c<std::is_same<InvalidType, PassedReducerType>::value,
+                           FunctorType, PassedReducerType>;
+    using Analysis =
+        FunctorAnalysis<FunctorPatternInterface::REDUCE, PolicyType,
+                        typename ReducerSelector::type>;
     Kokkos::Impl::shared_allocation_tracking_disable();
-    Impl::ParallelReduce<FunctorType, PolicyType,
-                         typename return_value_adapter::reducer_type>
-        closure(functor, inner_policy,
+    CombinedFunctorReducer functor_reducer(
+        functor, typename Analysis::Reducer(
+                     ReducerSelector::select(functor, return_value)));
+
+    // FIXME Remove "Wrapper" once all backends implement the new interface
+    Impl::ParallelReduceWrapper<decltype(functor_reducer), PolicyType,
+                                typename Impl::FunctorPolicyExecutionSpace<
+                                    FunctorType, PolicyType>::execution_space>
+        closure(functor_reducer, inner_policy,
                 return_value_adapter::return_value(return_value, functor));
     Kokkos::Impl::shared_allocation_tracking_enable();
     closure.execute();
 
-    Kokkos::Tools::Impl::end_parallel_reduce<
-        typename return_value_adapter::reducer_type>(inner_policy, functor,
-                                                     label, kpID);
+    Kokkos::Tools::Impl::end_parallel_reduce<PassedReducerType>(
+        inner_policy, functor, label, kpID);
   }
 
   static constexpr bool is_array_reduction =

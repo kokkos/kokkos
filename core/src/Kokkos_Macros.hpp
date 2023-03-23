@@ -55,6 +55,7 @@
 
 #ifndef KOKKOS_DONT_INCLUDE_CORE_CONFIG_H
 #include <KokkosCore_config.h>
+#include <impl/Kokkos_NvidiaGpuArchitectures.hpp>
 #endif
 
 //----------------------------------------------------------------------------
@@ -70,13 +71,6 @@
  *  KOKKOS_COMPILER_CLANG
  *  KOKKOS_COMPILER_NVHPC
  *  KOKKOS_COMPILER_MSVC
- *
- *  Macros for which compiler extension to use for atomics on intrinsic types
- *
- *  KOKKOS_ENABLE_CUDA_ATOMICS
- *  KOKKOS_ENABLE_GNU_ATOMICS
- *  KOKKOS_ENABLE_INTEL_ATOMICS
- *  KOKKOS_ENABLE_OPENMP_ATOMICS
  *
  *  A suite of 'KOKKOS_ENABLE_PRAGMA_...' are defined for internal use.
  *
@@ -163,8 +157,8 @@
 #endif
 
 #if defined(__NVCOMPILER)
-#define KOKKOS_COMPILER_NVHPC                              \
-  __NVCOMPILER_MAJOR__ * 100 + __NVCOMPILER_MINOR__ * 10 + \
+#define KOKKOS_COMPILER_NVHPC                                 \
+  __NVCOMPILER_MAJOR__ * 10000 + __NVCOMPILER_MINOR__ * 100 + \
       __NVCOMPILER_PATCHLEVEL__
 #endif
 
@@ -183,8 +177,8 @@
 // Intel compiler macros
 
 #if defined(KOKKOS_COMPILER_INTEL)
-// FIXME_SYCL
-#if !defined(KOKKOS_ENABLE_SYCL)
+// FIXME_ICPX
+#if !defined(__INTEL_LLVM_COMPILER)
 #define KOKKOS_ENABLE_PRAGMA_UNROLL 1
 #define KOKKOS_ENABLE_PRAGMA_LOOPCOUNT 1
 #define KOKKOS_ENABLE_PRAGMA_VECTOR 1
@@ -231,10 +225,6 @@
 #endif
 #endif
 
-#if defined(KOKKOS_ARCH_AVX512MIC)
-#define KOKKOS_ENABLE_RFO_PREFETCH 1
-#endif
-
 #if defined(__MIC__)
 // Compiling for Xeon Phi
 #endif
@@ -275,10 +265,6 @@
 //#define KOKKOS_ENABLE_PRAGMA_IVDEP 1
 //#define KOKKOS_ENABLE_PRAGMA_LOOPCOUNT 1
 //#define KOKKOS_ENABLE_PRAGMA_VECTOR 1
-
-#if defined(KOKKOS_ARCH_AVX512MIC)
-#define KOKKOS_ENABLE_RFO_PREFETCH 1
-#endif
 
 #if !defined(KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION)
 #define KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION \
@@ -451,6 +437,7 @@
 
 //----------------------------------------------------------------------------
 // Determine for what space the code is being compiled:
+#if defined(KOKKOS_ENABLE_DEPRECATED_CODE_3)
 
 #if defined(__CUDACC__) && defined(__CUDA_ARCH__) && defined(KOKKOS_ENABLE_CUDA)
 #define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA
@@ -463,6 +450,7 @@
 #define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
 #endif
 
+#endif
 //----------------------------------------------------------------------------
 
 // Remove surrounding parentheses if present
@@ -522,6 +510,7 @@ static constexpr bool kokkos_omp_on_host() { return false; }
     KOKKOS_IMPL_STRIP_PARENS(CODE)   \
   }
 #else
+#include <openacc.h>
 // FIXME_OPENACC acc_on_device is a non-constexpr function
 #define KOKKOS_IF_ON_DEVICE(CODE)                     \
   if constexpr (acc_on_device(acc_device_not_host)) { \

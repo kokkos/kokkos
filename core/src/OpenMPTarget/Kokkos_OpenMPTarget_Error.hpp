@@ -36,7 +36,7 @@ inline void ompt_internal_safe_call(int e, const char* name,
   }
 }
 
-#define OMPT_SAFE_CALL(call) \
+#define KOKKOS_IMPL_OMPT_SAFE_CALL(call) \
   Kokkos::Impl::ompt_internal_safe_call(call, #call, __FILE__, __LINE__)
 
 }  // namespace Impl

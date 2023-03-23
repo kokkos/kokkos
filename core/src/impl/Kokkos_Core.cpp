@@ -516,26 +516,6 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
   declare_configuration_metadata("tools_only", "compiler_family", "msvc");
 #endif
 
-#ifdef KOKKOS_ENABLE_GNU_ATOMICS
-  declare_configuration_metadata("atomics", "KOKKOS_ENABLE_GNU_ATOMICS", "yes");
-#else
-  declare_configuration_metadata("atomics", "KOKKOS_ENABLE_GNU_ATOMICS", "no");
-#endif
-#ifdef KOKKOS_ENABLE_INTEL_ATOMICS
-  declare_configuration_metadata("atomics", "KOKKOS_ENABLE_INTEL_ATOMICS",
-                                 "yes");
-#else
-  declare_configuration_metadata("atomics", "KOKKOS_ENABLE_INTEL_ATOMICS",
-                                 "no");
-#endif
-#ifdef KOKKOS_ENABLE_WINDOWS_ATOMICS
-  declare_configuration_metadata("atomics", "KOKKOS_ENABLE_WINDOWS_ATOMICS",
-                                 "yes");
-#else
-  declare_configuration_metadata("atomics", "KOKKOS_ENABLE_WINDOWS_ATOMICS",
-                                 "no");
-#endif
-
 #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
   declare_configuration_metadata("vectorization", "KOKKOS_ENABLE_PRAGMA_IVDEP",
                                  "yes");
@@ -743,6 +723,8 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
 #elif defined(KOKKOS_ARCH_AMPERE86)
   declare_configuration_metadata("architecture", "GPU architecture",
                                  "AMPERE86");
+#elif defined(KOKKOS_ARCH_ADA89)
+  declare_configuration_metadata("architecture", "GPU architecture", "ADA89");
 #elif defined(KOKKOS_ARCH_HOPPER90)
   declare_configuration_metadata("architecture", "GPU architecture",
                                  "HOPPER90");
@@ -757,6 +739,9 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
 #elif defined(KOKKOS_ARCH_NAVI1030)
   declare_configuration_metadata("architecture", "GPU architecture",
                                  "NAVI1030");
+#elif defined(KOKKOS_ARCH_NAVI1100)
+  declare_configuration_metadata("architecture", "GPU architecture",
+                                 "NAVI1100");
 
 #else
   declare_configuration_metadata("architecture", "GPU architecture", "none");

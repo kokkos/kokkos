@@ -27,6 +27,9 @@ TEST(TEST_CATEGORY, view_api_d) {
 }
 
 TEST(TEST_CATEGORY, view_allocation_error) {
+#if ((HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR == 3))
+  GTEST_SKIP() << "ROCm 5.3 segfaults when trying to allocate too much memory";
+#endif
   TestViewAPI<double, TEST_EXECSPACE>::run_test_error();
 }
 

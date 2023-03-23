@@ -66,11 +66,16 @@
 
 #endif
 
+#if defined(KOKKOS_ENABLE_ONEDPL)
+#include <oneapi/dpl/execution>
+#include <oneapi/dpl/algorithm>
+#endif
+
 namespace Kokkos {
 
 namespace Impl {
 
-template <class DstViewType, class SrcViewType, int Rank = DstViewType::Rank>
+template <class DstViewType, class SrcViewType, int Rank = DstViewType::rank>
 struct CopyOp;
 
 template <class DstViewType, class SrcViewType>
@@ -451,24 +456,29 @@ class BinSort {
   void operator()(const bin_sort_bins_tag& /*tag*/, const int i) const {
     auto bin_size = bin_count_const(i);
     if (bin_size <= 1) return;
-    int upper_bound = bin_offsets(i) + bin_size;
-    bool sorted     = false;
-    while (!sorted) {
-      sorted      = true;
-      int old_idx = sort_order(bin_offsets(i));
-      int new_idx = 0;
-      for (int k = bin_offsets(i) + 1; k < upper_bound; k++) {
-        new_idx = sort_order(k);
-
-        if (!bin_op(keys_rnd, old_idx, new_idx)) {
-          sort_order(k - 1) = new_idx;
-          sort_order(k)     = old_idx;
-          sorted            = false;
-        } else {
-          old_idx = new_idx;
-        }
+    constexpr bool use_std_sort =
+        std::is_same_v<typename exec_space::memory_space, HostSpace>;
+    int lower_bound = bin_offsets(i);
+    int upper_bound = lower_bound + bin_size;
+    // Switching to std::sort for more than 10 elements has been found
+    // reasonable experimentally.
+    if (use_std_sort && bin_size > 10) {
+      if constexpr (use_std_sort) {
+        std::sort(&sort_order(lower_bound), &sort_order(upper_bound),
+                  [this](int p, int q) { return bin_op(keys_rnd, p, q); });
       }
-      upper_bound--;
+    } else {
+      for (int k = lower_bound + 1; k < upper_bound; ++k) {
+        int old_idx = sort_order(k);
+        int j       = k - 1;
+        while (j >= lower_bound) {
+          int new_idx = sort_order(j);
+          if (!bin_op(keys_rnd, old_idx, new_idx)) break;
+          sort_order(j + 1) = new_idx;
+          --j;
+        }
+        sort_order(j + 1) = old_idx;
+      }
     }
   }
 };
@@ -633,6 +643,32 @@ sort(const ExecutionSpace& exec,
   bin_sort.create_permute_vector(exec);
   bin_sort.sort(exec, view);
 }
+
+#if defined(KOKKOS_ENABLE_ONEDPL)
+template <class DataType, class... Properties>
+void sort(const Experimental::SYCL& space,
+          const Kokkos::View<DataType, Properties...>& view) {
+  using ViewType = Kokkos::View<DataType, Properties...>;
+
+  static_assert(SpaceAccessibility<Experimental::SYCL,
+                                   typename ViewType::memory_space>::accessible,
+                "SYCL execution space is not able to access the memory space "
+                "of the View argument!");
+
+  auto queue  = space.sycl_queue();
+  auto policy = oneapi::dpl::execution::make_device_policy(queue);
+
+  // Can't use Experimental::begin/end here since the oneDPL then assumes that
+  // the data is on the host.
+  static_assert(
+      ViewType::rank == 1 &&
+          (std::is_same<typename ViewType::array_layout, LayoutRight>::value ||
+           std::is_same<typename ViewType::array_layout, LayoutLeft>::value),
+      "SYCL sort only supports contiguous 1D Views.");
+  const int n = view.extent(0);
+  oneapi::dpl::sort(policy, view.data(), view.data() + n);
+}
+#endif
 
 template <class ExecutionSpace, class DataType, class... Properties>
 std::enable_if_t<(Kokkos::is_execution_space<ExecutionSpace>::value) &&

@@ -346,7 +346,7 @@ class ViewMapping<
     dst.m_map.m_impl_handle = Kokkos::Impl::ViewDataHandle<DstTraits>::assign(
         src.m_map.m_impl_handle, src.m_track.m_tracker);
     dst.m_track.assign(src.m_track.m_tracker, DstTraits::is_managed);
-    dst.m_rank = src.Rank;
+    dst.m_rank = Kokkos::View<ST, SP...>::rank();
   }
 };
 
@@ -1025,7 +1025,7 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   // Copy/Assign View to DynRankView
   template <class RT, class... RP>
   KOKKOS_INLINE_FUNCTION DynRankView(const View<RT, RP...>& rhs)
-      : m_track(), m_map(), m_rank(rhs.Rank) {
+      : m_track(), m_map(), m_rank(View<RT, RP...>::rank()) {
     using SrcTraits = typename View<RT, RP...>::traits;
     using Mapping =
         Kokkos::Impl::ViewMapping<traits, SrcTraits,
@@ -1573,7 +1573,7 @@ struct DynRankViewFill {
 };
 
 template <class OutputView>
-struct DynRankViewFill<OutputView, std::enable_if_t<OutputView::Rank == 0>> {
+struct DynRankViewFill<OutputView, std::enable_if_t<OutputView::rank == 0>> {
   DynRankViewFill(const OutputView& dst,
                   const typename OutputView::const_value_type& src) {
     Kokkos::Impl::DeepCopy<typename OutputView::memory_space,

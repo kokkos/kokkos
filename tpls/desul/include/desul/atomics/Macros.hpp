@@ -9,43 +9,34 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #ifndef DESUL_ATOMICS_MACROS_HPP_
 #define DESUL_ATOMICS_MACROS_HPP_
 
+#include <desul/atomics/Config.hpp>
+
 // Macros
 
-#if (!defined(__CUDA_ARCH__) || !defined(__NVCC__)) &&                    \
-    (!defined(__HIP_DEVICE_COMPILE) || !defined(__HIP_PLATFORM_HCC__)) && \
-    !defined(__SYCL_DEVICE_ONLY__) && !defined(DESUL_HAVE_OPENMP_ATOMICS)
-#define DESUL_IMPL_HAVE_GCC_OR_MSVC_ATOMICS
-#endif
-
-// ONLY use GNUC atomics if not compiling for the device
-// and we didn't explicitly say to use OpenMP atomics
-#if defined(__GNUC__) && defined(DESUL_IMPL_HAVE_GCC_OR_MSVC_ATOMICS)
-#define DESUL_HAVE_GCC_ATOMICS
-#endif
-
-// Equivalent to above: if we are compiling for the device we
-// need to use CUDA/HIP/SYCL atomics instead of MSVC atomics
-#if defined(_MSC_VER) && defined(DESUL_IMPL_HAVE_GCC_OR_MSVC_ATOMICS)
-#define DESUL_HAVE_MSVC_ATOMICS
-#endif
-
-#undef DESUL_IMPL_HAVE_GCC_OR_MSVC_ATOMICS
-
-#ifdef __CUDACC__
+#if defined(DESUL_ATOMICS_ENABLE_CUDA) && defined(__CUDACC__)
 #define DESUL_HAVE_CUDA_ATOMICS
 #endif
 
-#ifdef __HIPCC__
+#if defined(DESUL_ATOMICS_ENABLE_HIP) && defined(__HIPCC__)
 #define DESUL_HAVE_HIP_ATOMICS
 #endif
 
-#ifdef __SYCL_DEVICE_ONLY__
+#if defined(DESUL_ATOMICS_ENABLE_SYCL) && defined(SYCL_LANGUAGE_VERSION)
 #define DESUL_HAVE_SYCL_ATOMICS
 #endif
 
-#if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__) || \
-    defined(__SYCL_DEVICE_ONLY__)
-#define DESUL_HAVE_GPU_LIKE_PROGRESS
+#if defined(DESUL_ATOMICS_ENABLE_OPENMP)
+#define DESUL_HAVE_OPENMP_ATOMICS
+#endif
+
+// ONLY use GNUC atomics if not explicitly say to use OpenMP atomics
+#if !defined(DESUL_HAVE_OPENMP_ATOMICS) && defined(__GNUC__)
+#define DESUL_HAVE_GCC_ATOMICS
+#endif
+
+// Equivalent to above for MSVC atomics
+#if !defined(DESUL_HAVE_OPENMP_ATOMICS) && defined(_MSC_VER)
+#define DESUL_HAVE_MSVC_ATOMICS
 #endif
 
 #if defined(DESUL_HAVE_CUDA_ATOMICS) || defined(DESUL_HAVE_HIP_ATOMICS)
@@ -62,17 +53,13 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #define DESUL_IMPL_DEVICE_FUNCTION
 #endif
 
-#if !defined(DESUL_HAVE_GPU_LIKE_PROGRESS)
-#define DESUL_HAVE_FORWARD_PROGRESS
-#endif
-
 #define DESUL_IMPL_STRIP_PARENS(X) DESUL_IMPL_ESC(DESUL_IMPL_ISH X)
 #define DESUL_IMPL_ISH(...) DESUL_IMPL_ISH __VA_ARGS__
 #define DESUL_IMPL_ESC(...) DESUL_IMPL_ESC_(__VA_ARGS__)
 #define DESUL_IMPL_ESC_(...) DESUL_IMPL_VAN_##__VA_ARGS__
 #define DESUL_IMPL_VAN_DESUL_IMPL_ISH
 
-#if defined(__CUDACC__) && defined(__NVCOMPILER)
+#if (defined(DESUL_ATOMICS_ENABLE_CUDA) && defined(__CUDACC__)) && defined(__NVCOMPILER)
 #include <nv/target>
 #define DESUL_IF_ON_DEVICE(CODE) NV_IF_TARGET(NV_IS_DEVICE, CODE)
 #define DESUL_IF_ON_HOST(CODE) NV_IF_TARGET(NV_IS_HOST, CODE)
@@ -109,8 +96,9 @@ static constexpr bool desul_impl_omp_on_host() { return false; }
 #endif
 
 #if !defined(DESUL_IF_ON_HOST) && !defined(DESUL_IF_ON_DEVICE)
-#if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__) || \
-    defined(__SYCL_DEVICE_ONLY__)
+#if (defined(DESUL_ATOMICS_ENABLE_CUDA) && defined(__CUDA_ARCH__)) ||         \
+    (defined(DESUL_ATOMICS_ENABLE_HIP) && defined(__HIP_DEVICE_COMPILE__)) || \
+    (defined(DESUL_ATOMICS_ENABLE_SYCL) && defined(__SYCL_DEVICE_ONLY__))
 #define DESUL_IF_ON_DEVICE(CODE) \
   { DESUL_IMPL_STRIP_PARENS(CODE) }
 #define DESUL_IF_ON_HOST(CODE) \

@@ -180,10 +180,11 @@ void HIPInternal::initialize(hipStream_t stream, bool manage_stream) {
     Kokkos::Impl::throw_runtime_exception(msg.str());
   }
 
+  m_num_scratch_locks = concurrency();
   KOKKOS_IMPL_HIP_SAFE_CALL(
-      hipMalloc(&m_scratch_locks, sizeof(int32_t) * concurrency()));
+      hipMalloc(&m_scratch_locks, sizeof(int32_t) * m_num_scratch_locks));
   KOKKOS_IMPL_HIP_SAFE_CALL(
-      hipMemset(m_scratch_locks, 0, sizeof(int32_t) * concurrency()));
+      hipMemset(m_scratch_locks, 0, sizeof(int32_t) * m_num_scratch_locks));
 }
 
 //----------------------------------------------------------------------------
@@ -236,6 +237,48 @@ Kokkos::HIP::size_type *HIPInternal::scratch_flags(const std::size_t size) {
   return m_scratchFlags;
 }
 
+Kokkos::HIP::size_type *HIPInternal::stage_functor_for_execution(
+    void const *driver, std::size_t const size) const {
+  if (verify_is_initialized("scratch_functor") && m_scratchFunctorSize < size) {
+    m_scratchFunctorSize = size;
+
+    using Record = Kokkos::Impl::SharedAllocationRecord<Kokkos::HIPSpace, void>;
+    using RecordHost =
+        Kokkos::Impl::SharedAllocationRecord<Kokkos::HIPHostPinnedSpace, void>;
+
+    if (m_scratchFunctor) {
+      Record::decrement(Record::get_record(m_scratchFunctor));
+      RecordHost::decrement(RecordHost::get_record(m_scratchFunctorHost));
+    }
+
+    Record *const r =
+        Record::allocate(Kokkos::HIPSpace(), "Kokkos::InternalScratchFunctor",
+                         m_scratchFunctorSize);
+    RecordHost *const r_host = RecordHost::allocate(
+        Kokkos::HIPHostPinnedSpace(), "Kokkos::InternalScratchFunctorHost",
+        m_scratchFunctorSize);
+
+    Record::increment(r);
+    RecordHost::increment(r_host);
+
+    m_scratchFunctor     = reinterpret_cast<size_type *>(r->data());
+    m_scratchFunctorHost = reinterpret_cast<size_type *>(r_host->data());
+  }
+
+  // When using HSA_XNACK=1, it is necessary to copy the driver to the host to
+  // ensure that the driver is not destroyed before the computation is done.
+  // Without this fix, all the atomic tests fail. It is not obvious that this
+  // problem is limited to HSA_XNACK=1 even if all the tests pass when
+  // HSA_XNACK=0. That's why we always copy the driver.
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamSynchronize(m_stream));
+  std::memcpy(m_scratchFunctorHost, driver, size);
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipMemcpyAsync(m_scratchFunctor,
+                                           m_scratchFunctorHost, size,
+                                           hipMemcpyDefault, m_stream));
+
+  return m_scratchFunctor;
+}
+
 int HIPInternal::acquire_team_scratch_space() {
   int current_team_scratch = 0;
   int zero                 = 0;
@@ -284,7 +327,7 @@ void HIPInternal::finalize() {
 
   if (this == &singleton()) {
     (void)Kokkos::Impl::hip_global_unique_token_locks(true);
-    Impl::finalize_host_hip_lock_arrays();
+    desul::Impl::finalize_lock_arrays();  // FIXME
 
     KOKKOS_IMPL_HIP_SAFE_CALL(hipHostFree(constantMemHostStaging));
     KOKKOS_IMPL_HIP_SAFE_CALL(hipEventDestroy(constantMemReusable));
@@ -296,14 +339,19 @@ void HIPInternal::finalize() {
     RecordHIP::decrement(RecordHIP::get_record(m_scratchFlags));
     RecordHIP::decrement(RecordHIP::get_record(m_scratchSpace));
 
-    for (int i = 0; i < m_n_team_scratch; ++i) {
-      if (m_team_scratch_current_size[i] > 0)
-        Kokkos::kokkos_free<Kokkos::HIPSpace>(m_team_scratch_ptr[i]);
+    if (m_scratchFunctorSize > 0) {
+      RecordHIP::decrement(RecordHIP::get_record(m_scratchFunctor));
+      RecordHIP::decrement(RecordHIP::get_record(m_scratchFunctorHost));
     }
-
-    if (m_manage_stream && m_stream != nullptr)
-      KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamDestroy(m_stream));
   }
+
+  for (int i = 0; i < m_n_team_scratch; ++i) {
+    if (m_team_scratch_current_size[i] > 0)
+      Kokkos::kokkos_free<Kokkos::HIPSpace>(m_team_scratch_ptr[i]);
+  }
+
+  if (m_manage_stream && m_stream != nullptr)
+    KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamDestroy(m_stream));
 
   m_scratchSpaceCount = 0;
   m_scratchFlagsCount = 0;
@@ -316,7 +364,8 @@ void HIPInternal::finalize() {
   }
 
   KOKKOS_IMPL_HIP_SAFE_CALL(hipFree(m_scratch_locks));
-  m_scratch_locks = nullptr;
+  m_scratch_locks     = nullptr;
+  m_num_scratch_locks = 0;
 }
 
 //----------------------------------------------------------------------------
@@ -350,14 +399,6 @@ Kokkos::HIP::size_type *hip_internal_scratch_flags(const HIP &instance,
 
 namespace Kokkos {
 namespace Impl {
-void hip_device_synchronize(const std::string &name) {
-  Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::HIP>(
-      name,
-      Kokkos::Tools::Experimental::SpecialSynchronizationCases::
-          GlobalDeviceSynchronization,
-      [&]() { KOKKOS_IMPL_HIP_SAFE_CALL(hipDeviceSynchronize()); });
-}
-
 void hip_internal_error_throw(hipError_t e, const char *name, const char *file,
                               const int line) {
   std::ostringstream out;

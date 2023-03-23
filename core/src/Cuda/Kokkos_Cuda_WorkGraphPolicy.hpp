@@ -17,7 +17,7 @@
 #ifndef KOKKOS_CUDA_WORKGRAPHPOLICY_HPP
 #define KOKKOS_CUDA_WORKGRAPHPOLICY_HPP
 
-#include <Kokkos_Cuda.hpp>
+#include <Cuda/Kokkos_Cuda.hpp>
 #include <Cuda/Kokkos_Cuda_KernelLaunch.hpp>
 
 namespace Kokkos {
@@ -82,8 +82,7 @@ class ParallelFor<FunctorType, Kokkos::WorkGraphPolicy<Traits...>,
     const int shared = 0;
 
     Kokkos::Impl::CudaParallelLaunch<Self>(
-        *this, grid, block, shared, Cuda().impl_internal_space_instance(),
-        false);
+        *this, grid, block, shared, Cuda().impl_internal_space_instance());
   }
 
   inline ParallelFor(const FunctorType& arg_functor, const Policy& arg_policy)

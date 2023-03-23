@@ -827,7 +827,7 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
                   "Incompatible OffsetView copy construction");
     Mapping::assign(m_map, aview.impl_map(), m_track);
 
-    for (int i = 0; i < aview.Rank; ++i) {
+    for (size_t i = 0; i < View<RT, RP...>::rank(); ++i) {
       m_begins[i] = 0;
     }
   }
@@ -1251,8 +1251,7 @@ shift_input(const T arg, const int64_t offset) {
 }
 
 KOKKOS_INLINE_FUNCTION
-Kokkos::Impl::ALL_t shift_input(const Kokkos::Impl::ALL_t arg,
-                                const int64_t /*offset*/) {
+Kokkos::ALL_t shift_input(const Kokkos::ALL_t arg, const int64_t /*offset*/) {
   return arg;
 }
 
@@ -1302,7 +1301,7 @@ KOKKOS_INLINE_FUNCTION
       Kokkos::Impl::ViewMapping<void /* deduce subview type from source view
                                         traits */
                                 ,
-                                ViewTraits<D, P...>, T>::type::Rank;
+                                ViewTraits<D, P...>, T>::type::rank;
 
   auto theSubview = Kokkos::subview(theView, shiftedArg);
 
@@ -1341,7 +1340,7 @@ KOKKOS_INLINE_FUNCTION
       Kokkos::Impl::ViewMapping<void /* deduce subview type from source view
                                         traits */
                                 ,
-                                ViewTraits<D, P...>, T0, T1>::type::Rank;
+                                ViewTraits<D, P...>, T0, T1>::type::rank;
 
   Kokkos::Array<int64_t, rank> subviewBegins;
   size_t counter = 0;
@@ -1382,7 +1381,7 @@ KOKKOS_INLINE_FUNCTION
       Kokkos::Impl::ViewMapping<void /* deduce subview type from source view
                                         traits */
                                 ,
-                                ViewTraits<D, P...>, T0, T1, T2>::type::Rank;
+                                ViewTraits<D, P...>, T0, T1, T2>::type::rank;
 
   Kokkos::Array<int64_t, rank> subviewBegins;
 
@@ -1427,7 +1426,7 @@ KOKKOS_INLINE_FUNCTION
   constexpr size_t rank = Kokkos::Impl::ViewMapping<
       void /* deduce subview type from source view traits */
       ,
-      ViewTraits<D, P...>, T0, T1, T2, T3>::type::Rank;
+      ViewTraits<D, P...>, T0, T1, T2, T3>::type::rank;
   Kokkos::Array<int64_t, rank> subviewBegins;
 
   size_t counter = 0;
@@ -1474,7 +1473,7 @@ KOKKOS_INLINE_FUNCTION
   constexpr size_t rank = Kokkos::Impl::ViewMapping<
       void /* deduce subview type from source view traits */
       ,
-      ViewTraits<D, P...>, T0, T1, T2, T3, T4>::type::Rank;
+      ViewTraits<D, P...>, T0, T1, T2, T3, T4>::type::rank;
   Kokkos::Array<int64_t, rank> subviewBegins;
 
   size_t counter = 0;
@@ -1526,7 +1525,7 @@ KOKKOS_INLINE_FUNCTION
   constexpr size_t rank = Kokkos::Impl::ViewMapping<
       void /* deduce subview type from source view traits */
       ,
-      ViewTraits<D, P...>, T0, T1, T2, T3, T4, T5>::type::Rank;
+      ViewTraits<D, P...>, T0, T1, T2, T3, T4, T5>::type::rank;
 
   Kokkos::Array<int64_t, rank> subviewBegins;
 
@@ -1581,7 +1580,7 @@ KOKKOS_INLINE_FUNCTION
   constexpr size_t rank = Kokkos::Impl::ViewMapping<
       void /* deduce subview type from source view traits */
       ,
-      ViewTraits<D, P...>, T0, T1, T2, T3, T4, T5, T6>::type::Rank;
+      ViewTraits<D, P...>, T0, T1, T2, T3, T4, T5, T6>::type::rank;
 
   Kokkos::Array<int64_t, rank> subviewBegins;
 
@@ -1640,7 +1639,7 @@ KOKKOS_INLINE_FUNCTION
   constexpr size_t rank = Kokkos::Impl::ViewMapping<
       void /* deduce subview type from source view traits */
       ,
-      ViewTraits<D, P...>, T0, T1, T2, T3, T4, T5, T6, T7>::type::Rank;
+      ViewTraits<D, P...>, T0, T1, T2, T3, T4, T5, T6, T7>::type::rank;
 
   Kokkos::Array<int64_t, rank> subviewBegins;
 

@@ -27,7 +27,7 @@
 // constructor. undef'ed at the end
 #define KOKKOS_IMPL_OPENMPTARGET_WORKAROUND
 
-#include <Kokkos_OpenMPTarget.hpp>
+#include <OpenMPTarget/Kokkos_OpenMPTarget.hpp>
 #include <OpenMPTarget/Kokkos_OpenMPTarget_UniqueToken.hpp>
 #include <OpenMPTarget/Kokkos_OpenMPTarget_Instance.hpp>
 #include <impl/Kokkos_ExecSpaceManager.hpp>
@@ -65,11 +65,7 @@ void OpenMPTargetInternal::fence(const std::string& name,
         [&]() {});
   }
 }
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-int OpenMPTargetInternal::concurrency() {
-#else
 int OpenMPTargetInternal::concurrency() const {
-#endif
   return 128000;  // FIXME_OPENMPTARGET
 }
 const char* OpenMPTargetInternal::name() { return "OpenMPTarget"; }
@@ -93,12 +89,9 @@ void OpenMPTargetInternal::impl_initialize() {
 
   // FIXME_OPENMPTARGET:  Only fix the number of teams for NVIDIA architectures
   // from Pascal and upwards.
-#if defined(KOKKOS_ARCH_PASCAL) || defined(KOKKOS_ARCH_VOLTA) ||    \
-    defined(KOKKOS_ARCH_TURING75) || defined(KOKKOS_ARCH_AMPERE) || \
-    defined(KOKKOS_ARCH_HOPPER)
-#if defined(KOKKOS_COMPILER_CLANG) && (KOKKOS_COMPILER_CLANG >= 1300)
+#if defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU) && defined(KOKKOS_COMPILER_CLANG) && \
+    (KOKKOS_COMPILER_CLANG >= 1300)
   omp_set_num_teams(512);
-#endif
 #endif
 }
 int OpenMPTargetInternal::impl_is_initialized() {
@@ -131,9 +124,15 @@ uint32_t OpenMPTarget::impl_instance_id() const noexcept {
   return m_space_instance->impl_get_instance_id();
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 int OpenMPTarget::concurrency() {
   return Impl::OpenMPTargetInternal::impl_singleton()->concurrency();
 }
+#else
+int OpenMPTarget::concurrency() const {
+  return m_space_instance->concurrency();
+}
+#endif
 
 void OpenMPTarget::fence(const std::string& name) {
   Impl::OpenMPTargetInternal::impl_singleton()->fence(name);
@@ -182,9 +181,9 @@ UniqueToken<Kokkos::Experimental::OpenMPTarget,
         Kokkos::kokkos_malloc<Kokkos::Experimental::OpenMPTargetSpace>(
             "Kokkos::OpenMPTarget::m_uniquetoken_ptr", size));
     std::vector<uint32_t> h_buf(count, 0);
-    OMPT_SAFE_CALL(omp_target_memcpy(ptr, h_buf.data(), size, 0, 0,
-                                     omp_get_default_device(),
-                                     omp_get_initial_device()));
+    KOKKOS_IMPL_OMPT_SAFE_CALL(omp_target_memcpy(ptr, h_buf.data(), size, 0, 0,
+                                                 omp_get_default_device(),
+                                                 omp_get_initial_device()));
 
     Kokkos::Impl::OpenMPTargetExec::m_uniquetoken_ptr = ptr;
   }

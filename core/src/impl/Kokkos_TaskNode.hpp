@@ -131,9 +131,8 @@ class ReferenceCountedBase {
 
   KOKKOS_INLINE_FUNCTION
   void increment_reference_count() {
-    Kokkos::Impl::desul_atomic_inc(&m_ref_count,
-                                   Kokkos::Impl::MemoryOrderSeqCst(),
-                                   Kokkos::Impl::MemoryScopeDevice());
+    desul::atomic_inc(&m_ref_count, desul::MemoryOrderSeqCst(),
+                      desul::MemoryScopeDevice());
   }
 };
 

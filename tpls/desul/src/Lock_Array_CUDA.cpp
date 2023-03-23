@@ -11,7 +11,6 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #include <sstream>
 #include <string>
 
-#ifdef DESUL_HAVE_CUDA_ATOMICS
 #ifdef __CUDACC_RDC__
 namespace desul {
 namespace Impl {
@@ -96,4 +95,3 @@ template void finalize_lock_arrays_cuda<int>();
 }  // namespace Impl
 
 }  // namespace desul
-#endif

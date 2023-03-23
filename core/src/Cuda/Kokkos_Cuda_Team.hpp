@@ -198,7 +198,7 @@ class CudaTeamMember {
     KOKKOS_IF_ON_DEVICE(
         (typename Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
                                         TeamPolicy<Cuda>, ReducerType>::Reducer
-             wrapped_reducer(&reducer);
+             wrapped_reducer(reducer);
          cuda_intra_block_reduction(value, wrapped_reducer, blockDim.y);
          reducer.reference() = value;))
   }
@@ -228,7 +228,7 @@ class CudaTeamMember {
         Impl::CudaJoinFunctor<Type> cuda_join_functor;
         typename Impl::FunctorAnalysis<
             Impl::FunctorPatternInterface::SCAN, TeamPolicy<Cuda>,
-            Impl::CudaJoinFunctor<Type>>::Reducer reducer(&cuda_join_functor);
+            Impl::CudaJoinFunctor<Type>>::Reducer reducer(cuda_join_functor);
         Impl::cuda_intra_block_reduce_scan<true>(reducer, base_data + 1);
 
         if (global_accum) {
