@@ -55,6 +55,7 @@
 
 #ifndef KOKKOS_DONT_INCLUDE_CORE_CONFIG_H
 #include <KokkosCore_config.h>
+#include <impl/Kokkos_NvidiaGpuArchitectures.hpp>
 #endif
 
 //----------------------------------------------------------------------------

@@ -303,11 +303,8 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
         (sizeof(double) + m_thread_scratch_size[0]);
     return std::min({
              int(m_space.impl_internal_space_instance()->m_maxWorkgroupSize),
-      // FIXME_SYCL Avoid requesting to many registers on NVIDIA GPUs.
-#if defined(KOKKOS_ARCH_KEPLER) || defined(KOKKOS_ARCH_MAXWELL) ||  \
-    defined(KOKKOS_ARCH_PASCAL) || defined(KOKKOS_ARCH_VOLTA) ||    \
-    defined(KOKKOS_ARCH_TURING75) || defined(KOKKOS_ARCH_AMPERE) || \
-    defined(KOKKOS_ARCH_HOPPER)
+      // FIXME_SYCL Avoid requesting too many registers on NVIDIA GPUs.
+#if defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
                  256,
 #endif
                  max_threads_for_memory
@@ -336,11 +333,8 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
          m_thread_scratch_size[0]);
     return std::min<int>({
              int(m_space.impl_internal_space_instance()->m_maxWorkgroupSize),
-      // FIXME_SYCL Avoid requesting to many registers on NVIDIA GPUs.
-#if defined(KOKKOS_ARCH_KEPLER) || defined(KOKKOS_ARCH_MAXWELL) ||  \
-    defined(KOKKOS_ARCH_PASCAL) || defined(KOKKOS_ARCH_VOLTA) ||    \
-    defined(KOKKOS_ARCH_TURING75) || defined(KOKKOS_ARCH_AMPERE) || \
-    defined(KOKKOS_ARCH_HOPPER)
+      // FIXME_SYCL Avoid requesting too many registers on NVIDIA GPUs.
+#if defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
                  256,
 #endif
                  max_threads_for_memory
