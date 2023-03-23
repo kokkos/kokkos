@@ -505,7 +505,8 @@ TEST(simd, test_size) {
 #else
   constexpr auto width = 1;
   using Abi            = Kokkos::Experimental::simd_abi::scalar;
-  auto uint32_abi_size = Kokkos::Experimental::simd<std::uint32_t, Abi>::size();
+  static_assert(width ==
+                Kokkos::Experimental::simd<std::uint32_t, Abi>::size());
 #endif
 
   static_assert(width == Kokkos::Experimental::simd<double, Abi>::size());
