@@ -668,7 +668,7 @@ class ParallelReduce<CombinedFunctorReducerType,
                   item.barrier(sycl::access::fence_space::local_space);
 
                   SYCLReduction::workgroup_reduction<>(
-                      item, local_mem.get_pointer(), results_ptr,
+                      item, local_mem, results_ptr,
                       device_accessible_result_ptr, value_count, reducer, false,
                       std::min<std::size_t>(size,
                                             item.get_local_range()[0] *
@@ -696,7 +696,7 @@ class ParallelReduce<CombinedFunctorReducerType,
                     }
 
                     SYCLReduction::workgroup_reduction<>(
-                        item, local_mem.get_pointer(), results_ptr,
+                        item, local_mem, results_ptr,
                         device_accessible_result_ptr, value_count, reducer,
                         true,
                         std::min(n_wgroups, item.get_local_range()[0] *
@@ -716,7 +716,7 @@ class ParallelReduce<CombinedFunctorReducerType,
                     functor(WorkTag(), team_member, update);
 
                   SYCLReduction::workgroup_reduction<>(
-                      item, local_mem.get_pointer(), local_value, results_ptr,
+                      item, local_mem, local_value, results_ptr,
                       device_accessible_result_ptr, reducer, false,
                       std::min<std::size_t>(size,
                                             item.get_local_range()[0] *
@@ -742,7 +742,7 @@ class ParallelReduce<CombinedFunctorReducerType,
                     }
 
                     SYCLReduction::workgroup_reduction<>(
-                        item, local_mem.get_pointer(), local_value, results_ptr,
+                        item, local_mem, local_value, results_ptr,
                         device_accessible_result_ptr, reducer, true,
                         std::min(n_wgroups, item.get_local_range()[0] *
                                                 item.get_local_range()[1]));
