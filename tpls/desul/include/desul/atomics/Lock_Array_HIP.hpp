@@ -122,7 +122,7 @@ inline static
 #endif
     void
     copy_hip_lock_arrays_to_device() {
-  static bool lock_array_copied = []() {
+  static bool once = []() {
     (void)hipMemcpyToSymbol(HIP_SYMBOL(HIP_SPACE_ATOMIC_LOCKS_DEVICE),
                             &HIP_SPACE_ATOMIC_LOCKS_DEVICE_h,
                             sizeof(int32_t*));
@@ -131,7 +131,7 @@ inline static
                             sizeof(int32_t*));
     return true;
   }();
-  (void)lock_array_copied;
+  (void)once;
 }
 }  // namespace Impl
 

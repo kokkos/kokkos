@@ -115,7 +115,7 @@ inline static
 #endif
     void
     copy_cuda_lock_arrays_to_device() {
-  static bool lock_array_copied = []() {
+  static bool once = []() {
     cudaMemcpyToSymbol(CUDA_SPACE_ATOMIC_LOCKS_DEVICE,
                        &CUDA_SPACE_ATOMIC_LOCKS_DEVICE_h,
                        sizeof(int32_t*));
@@ -124,7 +124,7 @@ inline static
                        sizeof(int32_t*));
     return true;
   }();
-  (void)lock_array_copied;
+  (void)once;
 }
 
 }  // namespace Impl
