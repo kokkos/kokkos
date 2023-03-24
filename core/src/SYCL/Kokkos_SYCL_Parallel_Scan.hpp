@@ -31,7 +31,7 @@ namespace Impl {
 // total sum.
 template <int dim, typename ValueType, typename FunctorType>
 void workgroup_scan(sycl::nd_item<dim> item, const FunctorType& final_reducer,
-                    sycl::local_ptr<ValueType> local_mem,
+                    sycl::local_accessor<ValueType> local_mem,
                     ValueType& local_value, unsigned int global_range) {
   // subgroup scans
   auto sg                = item.get_sub_group();
@@ -136,7 +136,7 @@ class ParallelScanSYCLBase {
           q.get_device()
               .template get_info<sycl::info::device::sub_group_sizes>()
               .front();
-      sycl::local_accessor<value_type, 1> local_mem(
+      sycl::local_accessor<value_type> local_mem(
           sycl::range<1>((wgroup_size + min_subgroup_size - 1) /
                          min_subgroup_size),
           cgh);
@@ -160,8 +160,8 @@ class ParallelScanSYCLBase {
             else
               reducer.init(&local_value);
 
-            workgroup_scan<>(item, reducer, local_mem.get_pointer(),
-                             local_value, wgroup_size);
+            workgroup_scan<>(item, reducer, local_mem, local_value,
+                             wgroup_size);
 
             if (n_wgroups > 1 && local_id == wgroup_size - 1)
               group_results[item.get_group_linear_id()] =
