@@ -134,28 +134,48 @@ void SYCLInternal::initialize(const sycl::queue& q) {
     desul::Impl::init_lock_arrays_sycl(*m_queue);
   }
 #endif
+}
 
-  m_team_scratch_current_size = 0;
-  m_team_scratch_ptr          = nullptr;
+int SYCLInternal::acquire_team_scratch_space() {
+  // Grab the next scratch memory allocation. We must make sure that the last
+  // kernel using the allocation has completed, so we wait for the event that
+  // was registered with that kernel.
+  int current_team_scratch = desul::atomic_fetch_inc_mod(
+      &m_current_team_scratch, m_n_team_scratch - 1,
+      desul::MemoryOrderRelaxed(), desul::MemoryScopeDevice());
+
+  m_team_scratch_event[current_team_scratch].wait_and_throw();
+
+  return current_team_scratch;
 }
 
 sycl::device_ptr<void> SYCLInternal::resize_team_scratch_space(
-    std::int64_t bytes, bool force_shrink) {
-  if (m_team_scratch_current_size == 0) {
-    m_team_scratch_current_size = bytes;
-    m_team_scratch_ptr =
+    int scratch_pool_id, std::int64_t bytes, bool force_shrink) {
+  // Multiple ParallelFor/Reduce Teams can call this function at the same time
+  // and invalidate the m_team_scratch_ptr. We use a pool to avoid any race
+  // condition.
+  if (m_team_scratch_current_size[scratch_pool_id] == 0) {
+    m_team_scratch_current_size[scratch_pool_id] = bytes;
+    m_team_scratch_ptr[scratch_pool_id] =
         Kokkos::kokkos_malloc<Experimental::SYCLDeviceUSMSpace>(
             "Kokkos::Experimental::SYCLDeviceUSMSpace::TeamScratchMemory",
-            m_team_scratch_current_size);
+            m_team_scratch_current_size[scratch_pool_id]);
   }
-  if ((bytes > m_team_scratch_current_size) ||
-      ((bytes < m_team_scratch_current_size) && (force_shrink))) {
-    m_team_scratch_current_size = bytes;
-    m_team_scratch_ptr =
+  if ((bytes > m_team_scratch_current_size[scratch_pool_id]) ||
+      ((bytes < m_team_scratch_current_size[scratch_pool_id]) &&
+       (force_shrink))) {
+    m_team_scratch_current_size[scratch_pool_id] = bytes;
+    m_team_scratch_ptr[scratch_pool_id] =
         Kokkos::kokkos_realloc<Experimental::SYCLDeviceUSMSpace>(
-            m_team_scratch_ptr, m_team_scratch_current_size);
+            m_team_scratch_ptr[scratch_pool_id],
+            m_team_scratch_current_size[scratch_pool_id]);
   }
-  return m_team_scratch_ptr;
+  return m_team_scratch_ptr[scratch_pool_id];
+}
+
+void SYCLInternal::register_team_scratch_event(int scratch_pool_id,
+                                               sycl::event event) {
+  m_team_scratch_event[scratch_pool_id] = event;
 }
 
 uint32_t SYCLInternal::impl_get_instance_id() const { return m_instance_id; }
@@ -187,11 +207,14 @@ void SYCLInternal::finalize() {
   m_scratchFlagsCount = 0;
   m_scratchFlags      = nullptr;
 
-  if (m_team_scratch_current_size > 0)
-    Kokkos::kokkos_free<Kokkos::Experimental::SYCLDeviceUSMSpace>(
-        m_team_scratch_ptr);
-  m_team_scratch_current_size = 0;
-  m_team_scratch_ptr          = nullptr;
+  for (int i = 0; i < m_n_team_scratch; ++i) {
+    if (m_team_scratch_current_size[i] > 0) {
+      Kokkos::kokkos_free<Kokkos::Experimental::SYCLDeviceUSMSpace>(
+          m_team_scratch_ptr[i]);
+      m_team_scratch_current_size[i] = 0;
+      m_team_scratch_ptr[i]          = nullptr;
+    }
+  }
 
   for (auto& usm_mem : m_indirectKernelMem) usm_mem.reset();
   // guard erasing from all_queues
