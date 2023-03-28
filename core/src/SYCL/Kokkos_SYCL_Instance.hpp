@@ -339,13 +339,13 @@ struct NonTriviallyCopyableAndDeviceCopyable {
 };
 
 template <typename T>
-struct is_device_copyable<NonTriviallyCopyableAndDeviceCopyable<T>>
+struct sycl::is_device_copyable<NonTriviallyCopyableAndDeviceCopyable<T>>
     : std::true_type {};
 
 static_assert(
     !std::is_trivially_copyable_v<
         NonTriviallyCopyableAndDeviceCopyable<void>> &&
-    is_device_copyable_v<NonTriviallyCopyableAndDeviceCopyable<void>>);
+    sycl::is_device_copyable_v<NonTriviallyCopyableAndDeviceCopyable<void>>);
 
 template <typename Functor, typename Storage>
 struct sycl::is_device_copyable<
