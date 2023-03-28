@@ -638,10 +638,6 @@ class simd<double, simd_abi::avx512_fixed_size<8>> {
                                       bool> = false>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd(U&& value)
       : m_value(_mm512_set1_pd(value_type(value))) {}
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd(double a, double b, double c,
-                                             double d, double e, double f,
-                                             double g, double h)
-      : m_value(_mm512_setr_pd(a, b, c, d, e, f, g, h)) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(
       __m512d const& value_in)
       : m_value(value_in) {}
