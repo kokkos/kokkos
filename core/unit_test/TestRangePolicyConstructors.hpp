@@ -98,7 +98,13 @@ struct TestRangePolicyCTADs {
   static inline Kokkos::RangePolicy<> rp;
 
   //  Copy/move
+  //
+  // icpc generates an ICE on implicit deduction guides for copy/move
+  //
+  // internal error: assertion failed: find_placeholder_arg_for_pack: symbol
+  // not found (scope_stk.c, line 11248 in find_placeholder_arg_for_pack)
 
+#if not defined(__INTEL_COMPILER)
   static_assert(
       std::is_same_v<Kokkos::RangePolicy<>, decltype(Kokkos::RangePolicy(rp))>);
   static_assert(std::is_same_v<Kokkos::RangePolicy<>,
@@ -110,6 +116,7 @@ struct TestRangePolicyCTADs {
   static_assert(
       std::is_same_v<Kokkos::RangePolicy<SomeExecutionSpace>,
                      decltype(Kokkos::RangePolicy(std::move(rpses)))>);
+#endif  // not defined(__INTEL_COMPILER)
 
   //  RangePolicy
 
