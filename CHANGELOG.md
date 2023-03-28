@@ -72,9 +72,9 @@
 - Remove Kokkos_ENABLE_CUDA_LDG_INTRINSIC option [\#5623](https://github.com/kokkos/kokkos/pull/5623)
 - Don't rely on synchronization behavior of default stream in CUDA and HIP - this potentially will break unintended implicit synchronization with other libraries such as MPI [\#5391](https://github.com/kokkos/kokkos/pull/5391)
 - Make ExecutionSpace::concurrency() a non-static member function [\#5655](https://github.com/kokkos/kokkos/pull/5655) and related PRs
+- Remove code guarded by `KOKKOS_ENABLE_DEPRECATED_CODE_3`
 
 ### Deprecations
-- Remove code guarded by `KOKKOS_ENABLE_DEPRECATED_CODE_3`
 - Deprecate `CudaUVMSpace::available()` which always returned `true` [\#5614](https://github.com/kokkos/kokkos/pull/5614)
 - Deprecate `volatile`-qualified members from `Kokkos::pair` and `Kokkos::complex` [\#5412](https://github.com/kokkos/kokkos/pull/5412)
 - Deprecate `KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_*` macros [\#5824](https://github.com/kokkos/kokkos/pull/5824) (oversight in 3.6)
