@@ -151,16 +151,16 @@ struct TestTeamPolicyCTADS {
   static_assert(!Kokkos::is_execution_space_v<
                 ImplicitlyConvertibleToDefaultExecutionSpace>);
 
-  static Kokkos::DefaultExecutionSpace des;
-  static ImplicitlyConvertibleToDefaultExecutionSpace notEs;
-  static SomeExecutionSpace ses;
-  static TEST_EXECSPACE es;
+  static inline Kokkos::DefaultExecutionSpace des;
+  static inline ImplicitlyConvertibleToDefaultExecutionSpace notEs;
+  static inline SomeExecutionSpace ses;
+  static inline TEST_EXECSPACE es;
 
   using TeamPolicyTestExecSpace = std::conditional_t<
       std::is_same_v<TEST_EXECSPACE, Kokkos::DefaultExecutionSpace>,
       Kokkos::TeamPolicy<>, Kokkos::TeamPolicy<TEST_EXECSPACE>>;
 
-  static int i;
+  static inline int i;
 
   // Default construction deduces to TeamPolicy<>
   static_assert(
