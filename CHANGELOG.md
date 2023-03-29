@@ -72,23 +72,12 @@
 - Remove Kokkos_ENABLE_CUDA_LDG_INTRINSIC option [\#5623](https://github.com/kokkos/kokkos/pull/5623)
 - Don't rely on synchronization behavior of default stream in CUDA and HIP - this potentially will break unintended implicit synchronization with other libraries such as MPI [\#5391](https://github.com/kokkos/kokkos/pull/5391)
 - Make ExecutionSpace::concurrency() a non-static member function [\#5655](https://github.com/kokkos/kokkos/pull/5655) and related PRs
+- Remove code guarded by `KOKKOS_ENABLE_DEPRECATED_CODE_3`
 
 ### Deprecations
-- Guard against non-public header inclusion [\#5178](https://github.com/kokkos/kokkos/pull/5178)
-- Raise deprecation warnings if non empty WorkTag class is used [\#5230](https://github.com/kokkos/kokkos/pull/5230)
-- Deprecate `parallel_*` overloads taking the label as trailing argument [\#5141](https://github.com/kokkos/kokkos/pull/5141)
-- Deprecate nested types in functional [\#5185](https://github.com/kokkos/kokkos/pull/5185)
-- Deprecate `InitArguments` struct and replace it with `InitializationSettings` [\#5135](https://github.com/kokkos/kokkos/pull/5135)
-- Deprecate `finalize_all()` [\#5134](https://github.com/kokkos/kokkos/pull/5134)
-- Deprecate command line arguments (other than `--help`) that are not prefixed with `kokkos-*` [\#5120](https://github.com/kokkos/kokkos/pull/5120)
-- Deprecate `--[kokkos-]numa` cmdline arg and `KOKKOS_NUMA` env var [\#5117](https://github.com/kokkos/kokkos/pull/5117)
-- Deprecate `--[kokkos-]threads` command line argument in favor of `--[kokkos-]num-threads` [\#5111](https://github.com/kokkos/kokkos/pull/5111)
-- Deprecate `Kokkos::is_reducer_type` [\#4957](https://github.com/kokkos/kokkos/pull/4957)
-- Deprecate `OffsetView` constructors taking `index_list_type` [\#4810](https://github.com/kokkos/kokkos/pull/4810)
-- Deprecate overloads of `Kokkos::sort` taking a parameter `bool always_use_kokkos_sort` [\#5382](https://github.com/kokkos/kokkos/issues/5382)
 - Deprecate `CudaUVMSpace::available()` which always returned `true` [\#5614](https://github.com/kokkos/kokkos/pull/5614)
 - Deprecate `volatile`-qualified members from `Kokkos::pair` and `Kokkos::complex` [\#5412](https://github.com/kokkos/kokkos/pull/5412)
-- Deprecate `KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_*` macros [\#5824](https://github.com/kokkos/kokkos/pull/5824) (oversight in 3.2)
+- Deprecate `KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_*` macros [\#5824](https://github.com/kokkos/kokkos/pull/5824) (oversight in 3.6)
 
 ### Bug Fixes
 - Avoid allocating memory for `UniqueToken` [\#5300](https://github.com/kokkos/kokkos/pull/5300)
