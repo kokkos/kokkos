@@ -325,11 +325,27 @@ template <class T, class Abi>
   return a == simd_mask<T, Abi>(false);
 }
 
-template <class T, class Abi>
+namespace Impl {
+
+template <typename T, typename Abi>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION constexpr auto const& mask(
+    const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> const& x) {
+  return x.m_mask;
+}
+
+template <typename T, typename Abi>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION constexpr auto const& value(
+    const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> const& x) {
+  return x.m_value;
+}
+
+}  // namespace Impl
+
+template <typename T, typename Abi>
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
 hmin(const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> const& x) {
-  auto const& v = x.value();
-  auto const& m = x.mask();
+  auto const& v = Impl::value(x);
+  auto const& m = Impl::mask(x);
   auto result   = Kokkos::reduction_identity<T>::min();
   for (std::size_t i = 0; i < v.size(); ++i) {
     if (m[i]) result = Kokkos::min(result, v[i]);
@@ -340,8 +356,8 @@ hmin(const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> const& x) {
 template <class T, class Abi>
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
 hmax(const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> const& x) {
-  auto const& v = x.value();
-  auto const& m = x.mask();
+  auto const& v = Impl::value(x);
+  auto const& m = Impl::mask(x);
   auto result   = Kokkos::reduction_identity<T>::max();
   for (std::size_t i = 0; i < v.size(); ++i) {
     if (m[i]) result = Kokkos::max(result, v[i]);
@@ -353,8 +369,8 @@ template <class T, class Abi>
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
 reduce(const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> const& x, T,
        std::plus<>) {
-  auto const& v = x.value();
-  auto const& m = x.mask();
+  auto const& v = Impl::value(x);
+  auto const& m = Impl::mask(x);
   auto result   = Kokkos::reduction_identity<T>::sum();
   for (std::size_t i = 0; i < v.size(); ++i) {
     if (m[i]) result += v[i];

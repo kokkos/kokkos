@@ -942,14 +942,7 @@ class const_where_expression<simd_mask<double, simd_abi::avx2_fixed_size<4>>,
  public:
   const_where_expression(mask_type const& mask_arg, value_type const& value_arg)
       : m_value(const_cast<value_type&>(value_arg)), m_mask(mask_arg) {}
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr mask_type const&
-  mask() const {
-    return m_mask;
-  }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr value_type const&
-  value() const {
-    return m_value;
-  }
+
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   void copy_to(double* mem, element_aligned_tag) const {
     _mm256_maskstore_pd(mem, _mm256_castpd_si256(static_cast<__m256d>(m_mask)),
@@ -963,6 +956,12 @@ class const_where_expression<simd_mask<double, simd_abi::avx2_fixed_size<4>>,
       if (m_mask[lane]) mem[index[lane]] = m_value[lane];
     }
   }
+
+  friend constexpr auto const& Impl::mask<double, abi_type>(
+      const_where_expression<mask_type, value_type> const& x);
+
+  friend constexpr auto const& Impl::value<double, abi_type>(
+      const_where_expression<mask_type, value_type> const& x);
 };
 
 template <>
@@ -1019,19 +1018,18 @@ class const_where_expression<
  public:
   const_where_expression(mask_type const& mask_arg, value_type const& value_arg)
       : m_value(const_cast<value_type&>(value_arg)), m_mask(mask_arg) {}
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr mask_type const&
-  mask() const {
-    return m_mask;
-  }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr value_type const&
-  value() const {
-    return m_value;
-  }
+
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   void copy_to(std::int32_t* mem, element_aligned_tag) const {
     _mm_maskstore_epi32(mem, static_cast<__m128i>(m_mask),
                         static_cast<__m128i>(m_value));
   }
+
+  friend constexpr auto const& Impl::mask<std::int32_t, abi_type>(
+      const_where_expression<mask_type, value_type> const& x);
+
+  friend constexpr auto const& Impl::value<std::int32_t, abi_type>(
+      const_where_expression<mask_type, value_type> const& x);
 };
 
 template <>
@@ -1081,19 +1079,18 @@ class const_where_expression<
  public:
   const_where_expression(mask_type const& mask_arg, value_type const& value_arg)
       : m_value(const_cast<value_type&>(value_arg)), m_mask(mask_arg) {}
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr mask_type const&
-  mask() const {
-    return m_mask;
-  }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr value_type const&
-  value() const {
-    return m_value;
-  }
+
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_to(
       std::int64_t* mem, element_aligned_tag) const {
     _mm256_maskstore_epi64(mem, static_cast<__m256i>(m_mask),
                            static_cast<__m256i>(m_value));
   }
+
+  friend constexpr auto const& Impl::mask<std::int64_t, abi_type>(
+      const_where_expression<mask_type, value_type> const& x);
+
+  friend constexpr auto const& Impl::value<std::int64_t, abi_type>(
+      const_where_expression<mask_type, value_type> const& x);
 };
 
 template <>
@@ -1145,19 +1142,18 @@ class const_where_expression<
  public:
   const_where_expression(mask_type const& mask_arg, value_type const& value_arg)
       : m_value(const_cast<value_type&>(value_arg)), m_mask(mask_arg) {}
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr mask_type const&
-  mask() const {
-    return m_mask;
-  }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr value_type const&
-  value() const {
-    return m_value;
-  }
+
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_to(
       std::uint64_t* mem, element_aligned_tag) const {
     _mm256_maskstore_epi64(mem, static_cast<__m256i>(m_mask),
                            static_cast<__m256i>(m_value));
   }
+
+  friend constexpr auto const& Impl::mask<std::uint64_t, abi_type>(
+      const_where_expression<mask_type, value_type> const& x);
+
+  friend constexpr auto const& Impl::value<std::uint64_t, abi_type>(
+      const_where_expression<mask_type, value_type> const& x);
 };
 
 template <>
