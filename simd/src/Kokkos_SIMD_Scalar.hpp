@@ -310,16 +310,18 @@ template <class T>
 [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION T
 hmax(const_where_expression<simd_mask<T, simd_abi::scalar>,
                             simd<T, simd_abi::scalar>> const& x) {
-  return static_cast<bool>(Impl::mask(x)) ? static_cast<T>(Impl::value(x))
-                                          : Kokkos::reduction_identity<T>::max();
+  return static_cast<bool>(Impl::mask(x))
+             ? static_cast<T>(Impl::value(x))
+             : Kokkos::reduction_identity<T>::max();
 }
 
 template <class T>
 [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION T
 hmin(const_where_expression<simd_mask<T, simd_abi::scalar>,
                             simd<T, simd_abi::scalar>> const& x) {
-  return static_cast<bool>(Impl::mask(x)) ? static_cast<T>(Impl::value(x))
-                                          : Kokkos::reduction_identity<T>::min();
+  return static_cast<bool>(Impl::mask(x))
+             ? static_cast<T>(Impl::value(x))
+             : Kokkos::reduction_identity<T>::min();
 }
 
 }  // namespace Experimental
