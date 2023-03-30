@@ -256,10 +256,12 @@ class const_where_expression<simd_mask<T, simd_abi::scalar>,
       mem[static_cast<Integral>(index)] = static_cast<T>(m_value);
   }
 
-  friend constexpr auto const& Impl::mask<T, abi_type>(
+  template <typename U, typename Abi>
+  friend constexpr auto const& Impl::mask(
       const_where_expression<mask_type, value_type> const& x);
 
-  friend constexpr auto const& Impl::value<T, abi_type>(
+  template <typename U, typename Abi>
+  friend constexpr auto const& Impl::value(
       const_where_expression<mask_type, value_type> const& x);
 };
 
