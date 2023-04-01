@@ -39,6 +39,13 @@ struct MyComplex {
   MyComplex(const MyComplex& src) : _re(src._re), _im(src._im) {}
 
   KOKKOS_INLINE_FUNCTION
+  MyComplex& operator=(const MyComplex& src) {
+    _re = src._re;
+    _im = src._im;
+    return *this;
+  }
+
+  KOKKOS_INLINE_FUNCTION
   void operator+=(const MyComplex& src) {
     _re += src._re;
     _im += src._im;
