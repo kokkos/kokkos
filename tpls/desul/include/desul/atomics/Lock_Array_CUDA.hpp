@@ -108,11 +108,6 @@ __device__ inline void unlock_address_cuda(void* ptr, desul::MemoryScopeNode) {
   atomicExch(&desul::Impl::CUDA_SPACE_ATOMIC_LOCKS_NODE[offset], 0);
 }
 
-// Make lock_array_copied an explicit translation unit scope thingy
-namespace {
-static int lock_array_copied = 0;
-}  // namespace
-
 #ifdef __CUDACC_RDC__
 inline
 #else
@@ -120,15 +115,16 @@ inline static
 #endif
     void
     copy_cuda_lock_arrays_to_device() {
-  if (lock_array_copied == 0) {
+  static bool once = []() {
     cudaMemcpyToSymbol(CUDA_SPACE_ATOMIC_LOCKS_DEVICE,
                        &CUDA_SPACE_ATOMIC_LOCKS_DEVICE_h,
                        sizeof(int32_t*));
     cudaMemcpyToSymbol(CUDA_SPACE_ATOMIC_LOCKS_NODE,
                        &CUDA_SPACE_ATOMIC_LOCKS_NODE_h,
                        sizeof(int32_t*));
-  }
-  lock_array_copied = 1;
+    return true;
+  }();
+  (void)once;
 }
 
 }  // namespace Impl

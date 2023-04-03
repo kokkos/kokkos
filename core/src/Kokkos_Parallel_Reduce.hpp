@@ -407,12 +407,6 @@ template <class Scalar, class Index>
 struct ValLocScalar {
   Scalar val;
   Index loc;
-
-  KOKKOS_INLINE_FUNCTION
-  void operator=(const ValLocScalar& rhs) {
-    val = rhs.val;
-    loc = rhs.loc;
-  }
 };
 
 template <class Scalar, class Index, class Space>
@@ -530,12 +524,6 @@ MaxLoc(View<ValLocScalar<Scalar, Index>, Properties...> const&)
 template <class Scalar>
 struct MinMaxScalar {
   Scalar min_val, max_val;
-
-  KOKKOS_INLINE_FUNCTION
-  void operator=(const MinMaxScalar& rhs) {
-    min_val = rhs.min_val;
-    max_val = rhs.max_val;
-  }
 };
 
 template <class Scalar, class Space>
@@ -600,14 +588,6 @@ template <class Scalar, class Index>
 struct MinMaxLocScalar {
   Scalar min_val, max_val;
   Index min_loc, max_loc;
-
-  KOKKOS_INLINE_FUNCTION
-  void operator=(const MinMaxLocScalar& rhs) {
-    min_val = rhs.min_val;
-    min_loc = rhs.min_loc;
-    max_val = rhs.max_val;
-    max_loc = rhs.max_loc;
-  }
 };
 
 template <class Scalar, class Index, class Space>
@@ -1106,9 +1086,6 @@ MinMaxFirstLastLocCustomComparator(
 template <class Index>
 struct FirstLocScalar {
   Index min_loc_true;
-
-  KOKKOS_INLINE_FUNCTION
-  void operator=(const FirstLocScalar& rhs) { min_loc_true = rhs.min_loc_true; }
 };
 
 template <class Index, class Space>
@@ -1170,9 +1147,6 @@ FirstLoc(View<FirstLocScalar<Index>, Properties...> const&)
 template <class Index>
 struct LastLocScalar {
   Index max_loc_true;
-
-  KOKKOS_INLINE_FUNCTION
-  void operator=(const LastLocScalar& rhs) { max_loc_true = rhs.max_loc_true; }
 };
 
 template <class Index, class Space>
@@ -1231,12 +1205,6 @@ LastLoc(View<LastLocScalar<Index>, Properties...> const&)
 template <class Index>
 struct StdIsPartScalar {
   Index max_loc_true, min_loc_false;
-
-  KOKKOS_INLINE_FUNCTION
-  void operator=(const StdIsPartScalar& rhs) {
-    min_loc_false = rhs.min_loc_false;
-    max_loc_true  = rhs.max_loc_true;
-  }
 };
 
 //
@@ -1304,11 +1272,6 @@ StdIsPartitioned(View<StdIsPartScalar<Index>, Properties...> const&)
 template <class Index>
 struct StdPartPointScalar {
   Index min_loc_false;
-
-  KOKKOS_INLINE_FUNCTION
-  void operator=(const StdPartPointScalar& rhs) {
-    min_loc_false = rhs.min_loc_false;
-  }
 };
 
 //

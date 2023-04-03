@@ -721,10 +721,11 @@ class ScatterView<DataType, Layout, DeviceType, Op, ScatterNonDuplicated,
       : internal_view(other_view.internal_view) {}
 
   template <typename OtherDataType, typename OtherDeviceType>
-  KOKKOS_FUNCTION void operator=(
+  KOKKOS_FUNCTION ScatterView& operator=(
       const ScatterView<OtherDataType, Layout, OtherDeviceType, Op,
                         ScatterNonDuplicated, Contribution>& other_view) {
     internal_view = other_view.internal_view;
+    return *this;
   }
 
   template <typename OverrideContribution = Contribution>
@@ -942,11 +943,12 @@ class ScatterView<DataType, Kokkos::LayoutRight, DeviceType, Op,
         internal_view(other_view.internal_view) {}
 
   template <typename OtherDataType, typename OtherDeviceType>
-  KOKKOS_FUNCTION void operator=(
+  KOKKOS_FUNCTION ScatterView& operator=(
       const ScatterView<OtherDataType, Kokkos::LayoutRight, OtherDeviceType, Op,
                         ScatterDuplicated, Contribution>& other_view) {
     unique_token  = other_view.unique_token;
     internal_view = other_view.internal_view;
+    return *this;
   }
 
   template <typename RT, typename... RP>
@@ -1278,11 +1280,12 @@ class ScatterView<DataType, Kokkos::LayoutLeft, DeviceType, Op,
         internal_view(other_view.internal_view) {}
 
   template <typename OtherDataType, typename OtherDeviceType>
-  KOKKOS_FUNCTION void operator=(
+  KOKKOS_FUNCTION ScatterView& operator=(
       const ScatterView<OtherDataType, Kokkos::LayoutLeft, OtherDeviceType, Op,
                         ScatterDuplicated, Contribution>& other_view) {
     unique_token  = other_view.unique_token;
     internal_view = other_view.internal_view;
+    return *this;
   }
 
   template <typename OverrideContribution = Contribution>
