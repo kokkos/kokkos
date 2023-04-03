@@ -71,8 +71,8 @@ void cuda_stream_scratch_test(
   cudaStream_t stream[4];
   Kokkos::Cuda cuda[4];
   for (int i = 0; i < K; i++) {
-    Kokkos::Impl::CudaInternal::singleton().cuda_stream_create_api_wrapper(
-        &stream[i]);
+    Kokkos::Impl::CudaInternal::singleton().cuda_api_interface_safe_call(
+        &cudaStreamCreate, &stream[i]);
     cuda[i] = Kokkos::Cuda(stream[i]);
   }
   // Test that growing scratch size in subsequent calls doesn't crash things

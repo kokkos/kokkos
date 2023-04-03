@@ -35,8 +35,8 @@ TEST(cuda, raw_cuda_interop) {
   Kokkos::initialize();
 
   int* p;
-  Kokkos::Impl::CudaInternal::singleton().cuda_malloc_api_wrapper(
-      reinterpret_cast<void**>(&p), sizeof(int) * 100);
+  Kokkos::Impl::CudaInternal::singleton().cuda_api_interface_safe_call(
+      &cudaMalloc, reinterpret_cast<void**>(&p), sizeof(int) * 100);
 
   Kokkos::View<int*, Kokkos::MemoryTraits<Kokkos::Unmanaged>> v(p, 100);
   Kokkos::deep_copy(v, 5);
@@ -44,12 +44,15 @@ TEST(cuda, raw_cuda_interop) {
   Kokkos::finalize();
 
   offset<<<100, 64>>>(p);
-  Kokkos::Impl::CudaInternal::singleton().cuda_device_synchronize_api_wrapper();
+  Kokkos::Impl::CudaInternal::singleton().cuda_api_interface_safe_call(
+      &cudaDeviceSynchronize);
 
   std::array<int, 100> h_p;
-  Kokkos::Impl::CudaInternal::singleton().cuda_memcpy_api_wrapper(
-      h_p.data(), p, sizeof(int) * 100, cudaMemcpyDefault);
-  Kokkos::Impl::CudaInternal::singleton().cuda_device_synchronize_api_wrapper();
+  Kokkos::Impl::CudaInternal::singleton()
+      .cuda_api_interface_safe_call<void*, const void*, size_t, cudaMemcpyKind>(
+          &cudaMemcpy, h_p.data(), p, sizeof(int) * 100, cudaMemcpyDefault);
+  Kokkos::Impl::CudaInternal::singleton().cuda_api_interface_safe_call(
+      &cudaDeviceSynchronize);
   int64_t sum        = 0;
   int64_t sum_expect = 0;
   for (int i = 0; i < 100; i++) {
@@ -58,6 +61,7 @@ TEST(cuda, raw_cuda_interop) {
   }
 
   ASSERT_EQ(sum, sum_expect);
-  Kokkos::Impl::CudaInternal::singleton().cuda_free_api_wrapper(p);
+  Kokkos::Impl::CudaInternal::singleton().cuda_api_interface_safe_call<void*>(
+      &cudaFree, p);
 }
 }  // namespace Test

@@ -136,7 +136,20 @@ const cudaFuncAttributes& get_cuda_kernel_func_attributes(
   // by leveraging static variable initialization rules
   auto wrap_get_attributes = [&]() -> cudaFuncAttributes {
     cudaFuncAttributes attr;
-    CudaInternal::singleton().cuda_func_get_attributes_api_wrapper(&attr, func);
+
+#if defined(KOKKOS_COMPILER_CLANG)
+    // Clang compilers in the CI were throwing an
+    // error complaining of ambiguous address of overloaded function
+    // "cudaFuncGetAttributes" (templated cudaAPI function).
+    // Manually call cudaAPI functions as a workaround.
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(CudaInternal::m_cudaDev));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFuncGetAttributes(&attr, func));
+#else
+    CudaInternal::singleton()
+        .cuda_api_interface_safe_call<cudaFuncAttributes*, KernelFuncPtr>(
+            &cudaFuncGetAttributes, &attr, func);
+#endif
+
     return attr;
   };
   static cudaFuncAttributes func_attr = wrap_get_attributes();
@@ -218,8 +231,9 @@ inline void configure_shmem_preference(const KernelFuncPtr& func,
 
   // Set the carveout, but only call it once per kernel or when it changes
   auto set_cache_config = [&] {
-    CudaInternal::singleton().cuda_func_set_attribute_api_wrapper(
-        func, cudaFuncAttributePreferredSharedMemoryCarveout, carveout);
+    CudaInternal::singleton().cuda_api_interface_safe_call(
+        &cudaFuncSetAttribute, func,
+        cudaFuncAttributePreferredSharedMemoryCarveout, carveout);
     return carveout;
   };
   // Store the value in a static variable so we only reset if needed
@@ -399,13 +413,17 @@ struct CudaParallelLaunchKernelInvoker<
       params.kernelParams   = (void**)args;
       params.extra          = nullptr;
 
-      cuda_instance->cuda_graph_add_kernel_node_api_wrapper(
-          &graph_node, graph, /* dependencies = */ nullptr,
-          /* numDependencies = */ 0, &params);
+      cuda_instance->cuda_api_interface_safe_call<
+          cudaGraphNode_t*, cudaGraph_t, const cudaGraphNode_t*, size_t,
+          const cudaKernelNodeParams*>(&cudaGraphAddKernelNode, &graph_node,
+                                       graph,
+                                       /* dependencies = */ nullptr,
+                                       /* numDependencies = */ 0, &params);
     } else {
       // We still need an empty node for the dependency structure
-      cuda_instance->cuda_graph_add_empty_node_api_wrapper(
-          &graph_node, graph,
+      cuda_instance->cuda_api_interface_safe_call<
+          cudaGraphNode_t*, cudaGraph_t, const cudaGraphNode_t*, size_t>(
+          &cudaGraphAddEmptyNode, &graph_node, graph,
           /* dependencies = */ nullptr,
           /* numDependencies = */ 0);
     }
@@ -458,9 +476,9 @@ struct CudaParallelLaunchKernelInvoker<
     DriverType* driver_ptr = reinterpret_cast<DriverType*>(
         cuda_instance->scratch_functor(sizeof(DriverType)));
 
-    cuda_instance->cuda_memcpy_async_api_wrapper(
-        driver_ptr, &driver, sizeof(DriverType), cudaMemcpyDefault,
-        cuda_instance->m_stream);
+    cuda_instance->cuda_api_interface_safe_call(
+        &cudaMemcpyAsync, driver_ptr, &driver, sizeof(DriverType),
+        cudaMemcpyDefault, cuda_instance->m_stream);
 
     (base_t::
          get_kernel_func())<<<grid, block, shmem, cuda_instance->m_stream>>>(
@@ -496,9 +514,9 @@ struct CudaParallelLaunchKernelInvoker<
       // which is guaranteed to be alive until the graph instance itself is
       // destroyed, where there should be a fence ensuring that the allocation
       // associated with this kernel on the device side isn't deleted.
-      cuda_instance->cuda_memcpy_async_api_wrapper(
-          driver_ptr, &driver, sizeof(DriverType), cudaMemcpyDefault,
-          cuda_instance->m_stream);
+      cuda_instance->cuda_api_interface_safe_call(
+          &cudaMemcpyAsync, driver_ptr, &driver, sizeof(DriverType),
+          cudaMemcpyDefault, cuda_instance->m_stream);
 
       void const* args[] = {&driver_ptr};
 
@@ -511,15 +529,16 @@ struct CudaParallelLaunchKernelInvoker<
       params.kernelParams   = (void**)args;
       params.extra          = nullptr;
 
-      cuda_instance->cuda_graph_add_kernel_node_api_wrapper(
-          &graph_node, graph, /* dependencies = */ nullptr,
+      cuda_instance->cuda_api_interface_safe_call(
+          &cudaGraphAddKernelNode, &graph_node, graph,
+          /* dependencies = */ nullptr,
           /* numDependencies = */ 0, &params);
     } else {
       // We still need an empty node for the dependency structure
-      cuda_instance->cuda_graph_add_empty_node_api_wrapper(
-          &graph_node, graph,
-          /* dependencies = */ nullptr,
-          /* numDependencies = */ 0);
+      cuda_instance->cuda_api_interface_safe_call(&cudaGraphAddEmptyNode,
+                                                  &graph_node, graph,
+                                                  /* dependencies = */ nullptr,
+                                                  /* numDependencies = */ 0);
     }
     KOKKOS_ENSURES(bool(graph_node))
   }
@@ -575,25 +594,31 @@ struct CudaParallelLaunchKernelInvoker<
                             CudaInternal const* cuda_instance) {
     // Wait until the previous kernel that uses the constant buffer is done
     std::lock_guard<std::mutex> lock(CudaInternal::constantMemMutex);
-    cuda_instance->cuda_event_synchronize_api_wrapper(
-        CudaInternal::constantMemReusable);
+    cuda_instance->cuda_api_interface_safe_call(
+        &cudaEventSynchronize, CudaInternal::constantMemReusable);
 
     // Copy functor (synchronously) to staging buffer in pinned host memory
     unsigned long* staging = cuda_instance->constantMemHostStaging;
     memcpy(staging, &driver, sizeof(DriverType));
 
     // Copy functor asynchronously from there to constant memory on the device
-    cuda_instance->cuda_memcpy_to_symbol_async_api_wrapper(
-        kokkos_impl_cuda_constant_memory_buffer, staging, sizeof(DriverType), 0,
-        cudaMemcpyHostToDevice, cudaStream_t(cuda_instance->m_stream));
+
+    //  const void* symbol, const void* src, size_t count, size_t offset,
+    //  cudaMemcpyKind kind, cudaStream_t stream = 0
+
+    cuda_instance->cuda_api_interface_safe_call<
+        const void*, const void*, size_t, size_t, cudaMemcpyKind, cudaStream_t>(
+        &cudaMemcpyToSymbolAsync, kokkos_impl_cuda_constant_memory_buffer,
+        staging, sizeof(DriverType), 0, cudaMemcpyHostToDevice,
+        cudaStream_t(cuda_instance->m_stream));
 
     // Invoke the driver function on the device
     (base_t::
          get_kernel_func())<<<grid, block, shmem, cuda_instance->m_stream>>>();
 
     // Record an event that says when the constant buffer can be reused
-    cuda_instance->cuda_event_record_api_wrapper(
-        CudaInternal::constantMemReusable,
+    cuda_instance->cuda_api_interface_safe_call(
+        &cudaEventRecord, CudaInternal::constantMemReusable,
         cudaStream_t(cuda_instance->m_stream));
   }
 
@@ -672,7 +697,7 @@ struct CudaParallelLaunchImpl<
       base_t::invoke_kernel(driver, grid, block, shmem, cuda_instance);
 
 #if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
-      cuda_instance->cuda_get_last_error_api_wrapper();
+      cuda_instance->cuda_api_interface_safe_call(&cudaGetLastError);
       cuda_instance->fence(
           "Kokkos::Impl::launch_kernel: Debug Only Check for Execution Error");
 #endif

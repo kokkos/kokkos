@@ -98,10 +98,13 @@ struct GraphImpl<Kokkos::Cuda> {
   void add_node(std::shared_ptr<aggregate_node_impl_t> const& arg_node_ptr) {
     // All of the predecessors are just added as normal, so all we need to
     // do here is add an empty node
-    CudaInternal::singleton().cuda_graph_add_empty_node_api_wrapper(
-        &(arg_node_ptr->node_details_t::node), m_graph,
-        /* dependencies = */ nullptr,
-        /* numDependencies = */ 0);
+    CudaInternal::singleton()
+        .cuda_api_interface_safe_call<cudaGraphNode_t*, cudaGraph_t,
+                                      const cudaGraphNode_t*, size_t>(
+            &cudaGraphAddEmptyNode, &(arg_node_ptr->node_details_t::node),
+            m_graph,
+            /* dependencies = */ nullptr,
+            /* numDependencies = */ 0);
   }
 
   template <class NodeImpl>
@@ -167,10 +170,12 @@ struct GraphImpl<Kokkos::Cuda> {
     KOKKOS_EXPECTS(!bool(m_graph_exec))
     auto rv = std::make_shared<root_node_impl_t>(
         get_execution_space(), _graph_node_is_root_ctor_tag{});
-    CudaInternal::singleton().cuda_graph_add_empty_node_api_wrapper(
-        &(rv->node_details_t::node), m_graph,
-        /* dependencies = */ nullptr,
-        /* numDependencies = */ 0);
+    CudaInternal::singleton()
+        .cuda_api_interface_safe_call<cudaGraphNode_t*, cudaGraph_t,
+                                      const cudaGraphNode_t*, size_t>(
+            &cudaGraphAddEmptyNode, &(rv->node_details_t::node), m_graph,
+            /* dependencies = */ nullptr,
+            /* numDependencies = */ 0);
     KOKKOS_ENSURES(bool(rv->node_details_t::node))
     return rv;
   }

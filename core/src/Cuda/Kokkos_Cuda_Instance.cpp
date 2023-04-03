@@ -100,16 +100,21 @@ int cuda_kernel_arch() {
   int arch    = 0;
   int *d_arch = nullptr;
 
-  CudaInternal::singleton().cuda_malloc_api_wrapper(
-      reinterpret_cast<void **>(&d_arch), sizeof(int));
-  CudaInternal::singleton().cuda_memcpy_api_wrapper(d_arch, &arch, sizeof(int),
-                                                    cudaMemcpyDefault);
+  CudaInternal::singleton().cuda_api_interface_safe_call(
+      &cudaMalloc, reinterpret_cast<void **>(&d_arch), sizeof(int));
+  CudaInternal::singleton()
+      .cuda_api_interface_safe_call<void *, const void *, size_t,
+                                    cudaMemcpyKind>(
+          &cudaMemcpy, d_arch, &arch, sizeof(int), cudaMemcpyDefault);
 
   query_cuda_kernel_arch<<<1, 1>>>(d_arch);
 
-  CudaInternal::singleton().cuda_memcpy_api_wrapper(&arch, d_arch, sizeof(int),
-                                                    cudaMemcpyDefault);
-  Impl::CudaInternal::singleton().cuda_free_api_wrapper(d_arch);
+  CudaInternal::singleton()
+      .cuda_api_interface_safe_call<void *, const void *, size_t,
+                                    cudaMemcpyKind>(
+          &cudaMemcpy, &arch, d_arch, sizeof(int), cudaMemcpyDefault);
+  Impl::CudaInternal::singleton().cuda_api_interface_safe_call<void *>(
+      &cudaFree, d_arch);
   return arch;
 }
 
@@ -134,12 +139,14 @@ void cuda_device_synchronize(const std::string &name) {
 #if defined(KOKKOS_COMPILER_CLANG)
       // annotate with __host__ silence a clang warning about using
       // cudaDeviceSynchronize in device code
-      [] __host__() {  // TODO: correct device ID
-        CudaInternal::singleton().cuda_device_synchronize_api_wrapper();
+      [] __host__() {
+        CudaInternal::singleton().cuda_api_interface_safe_call(
+            &cudaDeviceSynchronize);
       });
 #else
-      []() {  // TODO: correct device ID
-        CudaInternal::singleton().cuda_device_synchronize_api_wrapper();
+      []() {
+        CudaInternal::singleton().cuda_api_interface_safe_call(
+            &cudaDeviceSynchronize);
       });
 #endif
 }
@@ -151,8 +158,8 @@ void cuda_stream_synchronize(const cudaStream_t stream, const CudaInternal *ptr,
       Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{
           ptr->impl_get_instance_id()},
       [&]() {
-        Impl::CudaInternal::singleton().cuda_stream_synchronize_api_wrapper(
-            stream);
+        Impl::CudaInternal::singleton().cuda_api_interface_safe_call(
+            &cudaStreamSynchronize, stream);
       });
 }
 
@@ -162,8 +169,8 @@ void cuda_stream_synchronize(
     const std::string &name) {
   Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Cuda>(
       name, reason, [&]() {
-        Impl::CudaInternal::singleton().cuda_stream_synchronize_api_wrapper(
-            stream);
+        Impl::CudaInternal::singleton().cuda_api_interface_safe_call(
+            &cudaStreamSynchronize, stream);
       });
 }
 
@@ -420,11 +427,11 @@ Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
   // Allocate a staging buffer for constant mem in pinned host memory
   // and an event to avoid overwriting driver for previous kernel launches
   if (this == &singleton()) {
-    cuda_malloc_host_api_wrapper(
-        reinterpret_cast<void **>(&constantMemHostStaging),
+    cuda_api_interface_safe_call<void **, size_t>(
+        &cudaMallocHost, reinterpret_cast<void **>(&constantMemHostStaging),
         CudaTraits::ConstantMemoryUsage);
 
-    cuda_event_create_api_wrapper(&constantMemReusable);
+    cuda_api_interface_safe_call(&cudaEventCreate, &constantMemReusable);
   }
 
   m_stream        = stream;
@@ -435,10 +442,11 @@ Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
   }
 
   m_num_scratch_locks = concurrency();
-  cuda_malloc_api_wrapper(reinterpret_cast<void **>(&m_scratch_locks),
-                          sizeof(int32_t) * m_num_scratch_locks);
-  cuda_memset_api_wrapper(m_scratch_locks, 0,
-                          sizeof(int32_t) * m_num_scratch_locks);
+  cuda_api_interface_safe_call(&cudaMalloc,
+                               reinterpret_cast<void **>(&m_scratch_locks),
+                               sizeof(int32_t) * m_num_scratch_locks);
+  cuda_api_interface_safe_call<void *, int, size_t>(
+      &cudaMemset, m_scratch_locks, 0, sizeof(int32_t) * m_num_scratch_locks);
 }
 
 //----------------------------------------------------------------------------
@@ -464,8 +472,8 @@ Cuda::size_type *CudaInternal::scratch_flags(const std::size_t size) const {
 
     m_scratchFlags = reinterpret_cast<size_type *>(r->data());
 
-    cuda_memset_api_wrapper(m_scratchFlags, 0,
-                            m_scratchFlagsCount * sizeScratchGrain);
+    cuda_api_interface_safe_call<void *, int, size_t>(
+        &cudaMemset, m_scratchFlags, 0, m_scratchFlagsCount * sizeScratchGrain);
   }
 
   return m_scratchFlags;
@@ -591,7 +599,7 @@ void CudaInternal::finalize() {
     (void)Impl::cuda_global_unique_token_locks(true);
     desul::Impl::finalize_lock_arrays();  // FIXME
 
-    cuda_free_host_api_wrapper(constantMemHostStaging);
+    cuda_api_interface_safe_call<void *>(&cudaFreeHost, constantMemHostStaging);
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaEventDestroy(constantMemReusable));
     auto &deep_copy_space =
         Kokkos::Impl::cuda_get_deep_copy_space(/*initialize*/ false);
@@ -632,7 +640,8 @@ void CudaInternal::finalize() {
     m_team_scratch_ptr[i]          = nullptr;
   }
 
-  Impl::CudaInternal::singleton().cuda_free_api_wrapper(m_scratch_locks);
+  Impl::CudaInternal::singleton().cuda_api_interface_safe_call<void *>(
+      &cudaFree, m_scratch_locks);
   m_scratch_locks     = nullptr;
   m_num_scratch_locks = 0;
 }
@@ -816,8 +825,8 @@ void Cuda::impl_initialize(InitializationSettings const &settings) {
   }
 
   cudaStream_t singleton_stream;
-  Impl::CudaInternal::singleton().cuda_stream_create_api_wrapper(
-      &singleton_stream);
+  Impl::CudaInternal::singleton().cuda_api_interface_safe_call(
+      &cudaStreamCreate, &singleton_stream);
 
   auto &cuda_singleton = Impl::CudaInternal::singleton();
   cuda_singleton.initialize(singleton_stream, /*manage*/ true);
