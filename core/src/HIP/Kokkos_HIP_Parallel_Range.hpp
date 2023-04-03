@@ -294,18 +294,18 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
                         "valid execution configuration."));
       }
 
-      m_scratch_space = ::Kokkos::Impl::hip_internal_scratch_space(
-          m_policy.space(), reducer.value_size() *
-                                block_size /* block_size == max block_count */);
-      m_scratch_flags = ::Kokkos::Impl::hip_internal_scratch_flags(
-          m_policy.space(), sizeof(size_type));
-
       // REQUIRED ( 1 , N , 1 )
       dim3 block(1, block_size, 1);
+      // use a slightly less constrained, but still well bounded limit for
+      // scratch
+      uint32_t nblocks = static_cast<uint32_t>((nwork + block.y - 1) / block.y);
+      nblocks          = std::min(nblocks, 4096u);
+      m_scratch_space  = ::Kokkos::Impl::hip_internal_scratch_space(
+          m_policy.space(), reducer.value_size() * nblocks);
+      m_scratch_flags = ::Kokkos::Impl::hip_internal_scratch_flags(
+          m_policy.space(), sizeof(size_type));
       // Required grid.x <= block.y
-      dim3 grid(std::min(block.y, static_cast<uint32_t>((nwork + block.y - 1) /
-                                                        block.y)),
-                1, 1);
+      dim3 grid(nblocks, 1, 1);
 
       if (nwork == 0) {
         block = dim3(1, 1, 1);
