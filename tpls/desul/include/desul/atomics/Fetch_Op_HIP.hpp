@@ -69,14 +69,14 @@ DESUL_IMPL_HIP_ATOMIC_FETCH_SUB(double)
 
 #define DESUL_IMPL_HIP_ATOMIC_FETCH_INC(MEMORY_SCOPE)                             \
   template <class MemoryOrder, class MemoryScope>                                 \
-  __device__ inline T device_atomic_fetch_inc(unsigned int* ptr, MemoryOrder, MemoryScope) { \
+  __device__ inline unsigned int device_atomic_fetch_inc(unsigned int* ptr, MemoryOrder, MemoryScope) { \
     return __hip_atomic_fetch_add(ptr,                                            \
                                   1,                                              \
                                   HIPMemoryOrder<MemoryOrder>::value,             \
                                   HIPMemoryScope<MemoryScope>::value);            \
   }                                                                               \
   template <class MemoryOrder, class MemoryScope>                                 \
-  __device__ inline T device_atomic_fetch_dec(unsigned int* ptr, MemoryOrder, MemoryScope) { \
+  __device__ inline unsigned int device_atomic_fetch_dec(unsigned int* ptr, MemoryOrder, MemoryScope) { \
     return __hip_atomic_fetch_add(ptr,                                            \
                                   -1,                                             \
                                   HIPMemoryOrder<MemoryOrder>::value,             \
