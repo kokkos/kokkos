@@ -49,7 +49,7 @@ DESUL_IMPL_HIP_ATOMIC_FETCH_OP_FLOATING_POINT(max)
 #undef DESUL_IMPL_HIP_ATOMIC_FETCH_OP
 
 #define DESUL_IMPL_HIP_ATOMIC_FETCH_SUB(T)                             \
-  template <class MemoryOrder class MemoryScope>                       \
+  template <class MemoryOrder, class MemoryScope>                      \
   __device__ inline T device_atomic_fetch_sub(                         \
       T* ptr, T val, MemoryOrder, MemoryScope) {                       \
     return __hip_atomic_fetch_add(ptr,                                 \
@@ -68,14 +68,14 @@ DESUL_IMPL_HIP_ATOMIC_FETCH_SUB(double)
 #undef DESUL_IMPL_HIP_ATOMIC_FETCH_SUB
 
 #define DESUL_IMPL_HIP_ATOMIC_FETCH_INC(MEMORY_SCOPE)                             \
-  template <class MemoryOrder class MemoryScope>                                  \
+  template <class MemoryOrder, class MemoryScope>                                 \
   __device__ inline T device_atomic_fetch_inc(T* ptr, MemoryOrder, MemoryScope) { \
     return __hip_atomic_fetch_add(ptr,                                            \
                                   1,                                              \
                                   HIPMemoryOrder<MemoryOrder>::value,             \
                                   HIPMemoryScope<MemoryScope>::value);            \
   }                                                                               \
-  template <class MemoryOrder class MemoryScope>                                  \
+  template <class MemoryOrder, class MemoryScope>                                 \
   __device__ inline T device_atomic_fetch_dec(T* ptr, MemoryOrder, MemoryScope) { \
     return __hip_atomic_fetch_add(ptr,                                            \
                                   -1,                                             \
