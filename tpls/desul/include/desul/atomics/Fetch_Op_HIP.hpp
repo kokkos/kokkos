@@ -67,16 +67,16 @@ DESUL_IMPL_HIP_ATOMIC_FETCH_SUB(double)
 
 #undef DESUL_IMPL_HIP_ATOMIC_FETCH_SUB
 
-#define DESUL_IMPL_HIP_ATOMIC_FETCH_INC(MEMORY_SCOPE)                             \
+#define DESUL_IMPL_HIP_ATOMIC_FETCH_INC(T)                             \
   template <class MemoryOrder, class MemoryScope>                                 \
-  __device__ inline unsigned int device_atomic_fetch_inc(unsigned int* ptr, MemoryOrder, MemoryScope) { \
+  __device__ inline T device_atomic_fetch_inc( T* ptr, MemoryOrder, MemoryScope) { \
     return __hip_atomic_fetch_add(ptr,                                            \
                                   1,                                              \
                                   HIPMemoryOrder<MemoryOrder>::value,             \
                                   HIPMemoryScope<MemoryScope>::value);            \
   }                                                                               \
   template <class MemoryOrder, class MemoryScope>                                 \
-  __device__ inline unsigned int device_atomic_fetch_dec(unsigned int* ptr, MemoryOrder, MemoryScope) { \
+  __device__ inline T device_atomic_fetch_dec( T* ptr, MemoryOrder, MemoryScope) { \
     return __hip_atomic_fetch_add(ptr,                                            \
                                   -1,                                             \
                                   HIPMemoryOrder<MemoryOrder>::value,             \
@@ -92,12 +92,12 @@ DESUL_IMPL_HIP_ATOMIC_FETCH_INC(unsigned long long)
 
 #define DESUL_IMPL_HIP_ATOMIC_FETCH_INC_MOD(MEMORY_SCOPE, MEMORY_SCOPE_STRING_LITERAL) \
   template <class MemoryOrder>                                                         \
-  __device__ inline T device_atomic_fetch_inc_mod(T* ptr, MemoryOrder, MEMORY_SCOPE) { \
+  __device__ inline unsigned int device_atomic_fetch_inc_mod(unsigned int* ptr, unsigned int val, MemoryOrder, MEMORY_SCOPE) { \
     return __builtin_amdgcn_atomic_inc32(                                              \
         ptr, val, HIPMemoryOrder<MemoryOrder>::value, MEMORY_SCOPE_STRING_LITERAL);    \
   }                                                                                    \
   template <class MemoryOrder>                                                         \
-  __device__ inline T device_atomic_fetch_dec_mod(T* ptr, MemoryOrder, MEMORY_SCOPE) { \
+  __device__ inline unsigned int device_atomic_fetch_dec_mod(unsigned int* ptr, unsigned int val, MemoryOrder, MEMORY_SCOPE) { \
     return __builtin_amdgcn_atomic_dec32(                                              \
         ptr, val, HIPMemoryOrder<MemoryOrder>::value, MEMORY_SCOPE_STRING_LITERAL);    \
   }
