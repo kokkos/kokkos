@@ -15,23 +15,23 @@ namespace desul {
 namespace Impl {
 
 template <class MemoryOrder>
-__device__ void device_atomic_thread_fence(MemoryOrder, MemoryOrderCore) {
+__device__ void device_atomic_thread_fence(MemoryOrder, MemoryScopeCore) {
   __builtin_amdgcn_fence(HIPMemoryOrder<MemoryOrder>::value, "workgroup");
 }
 
 template <class MemoryOrder>
-__device__ void device_atomic_thread_fence(MemoryOrder, MemoryOrderDevice) {
+__device__ void device_atomic_thread_fence(MemoryOrder, MemoryScopeDevice) {
   __builtin_amdgcn_fence(HIPMemoryOrder<MemoryOrder>::value, "agent");
 }
 
 // FIXME scope larger than strictly necessary
 template <class MemoryOrder>
-__device__ void device_atomic_thread_fence(MemoryOrder, MemoryOrderNode) {
+__device__ void device_atomic_thread_fence(MemoryOrder, MemoryScopeNode) {
   __builtin_amdgcn_fence(HIPMemoryOrder<MemoryOrder>::value, "");
 }
 
 template <class MemoryOrder>
-__device__ void device_atomic_thread_fence(MemoryOrder, MemoryOrderSystem) {
+__device__ void device_atomic_thread_fence(MemoryOrder, MemoryScopeSystem) {
   __builtin_amdgcn_fence(HIPMemoryOrder<MemoryOrder>::value, "");
 }
 
