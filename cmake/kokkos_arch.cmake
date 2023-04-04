@@ -129,11 +129,6 @@ IF(KOKKOS_ENABLE_COMPILER_WARNINGS)
     LIST(REMOVE_ITEM COMMON_WARNINGS "-pedantic")
   ENDIF()
 
-  # OpenMPTarget compilers give erroneous warnings about sign comparison in loops
-  IF(KOKKOS_ENABLE_OPENMPTARGET)
-    LIST(REMOVE_ITEM COMMON_WARNINGS "-Wsign-compare")
-  ENDIF()
-
   # NVHPC compiler does not support -Wtype-limits.
   IF(KOKKOS_ENABLE_OPENACC)
     IF(KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
