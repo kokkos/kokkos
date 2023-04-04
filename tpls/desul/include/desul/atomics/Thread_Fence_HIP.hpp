@@ -9,25 +9,31 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #ifndef DESUL_ATOMICS_THREAD_FENCE_HIP_HPP_
 #define DESUL_ATOMICS_THREAD_FENCE_HIP_HPP_
 
-#include <desul/atomics/Common.hpp>
+#include <desul/atomics/Adapt_HIP.hpp>
 
 namespace desul {
 namespace Impl {
 
-// clang-format off
-inline __device__ void device_atomic_thread_fence(MemoryOrderRelease, MemoryScopeDevice) { __threadfence();        }
-inline __device__ void device_atomic_thread_fence(MemoryOrderAcquire, MemoryScopeDevice) { __threadfence();        }
-inline __device__ void device_atomic_thread_fence(MemoryOrderAcqRel , MemoryScopeDevice) { __threadfence();        }
-inline __device__ void device_atomic_thread_fence(MemoryOrderSeqCst , MemoryScopeDevice) { __threadfence();        }
-inline __device__ void device_atomic_thread_fence(MemoryOrderRelease, MemoryScopeCore  ) { __threadfence_block();  }
-inline __device__ void device_atomic_thread_fence(MemoryOrderAcquire, MemoryScopeCore  ) { __threadfence_block();  }
-inline __device__ void device_atomic_thread_fence(MemoryOrderAcqRel , MemoryScopeCore  ) { __threadfence_block();  }
-inline __device__ void device_atomic_thread_fence(MemoryOrderSeqCst , MemoryScopeCore  ) { __threadfence_block();  }
-inline __device__ void device_atomic_thread_fence(MemoryOrderRelease, MemoryScopeNode  ) { __threadfence_system(); }
-inline __device__ void device_atomic_thread_fence(MemoryOrderAcquire, MemoryScopeNode  ) { __threadfence_system(); }
-inline __device__ void device_atomic_thread_fence(MemoryOrderAcqRel , MemoryScopeNode  ) { __threadfence_system(); }
-inline __device__ void device_atomic_thread_fence(MemoryOrderSeqCst , MemoryScopeNode  ) { __threadfence_system(); }
-// clang-format on
+template <class MemoryOrder>
+__device__ void device_atomic_thread_fence(MemoryOrder, MemoryOrderCore) {
+  __builtin_amdgcn_fence(HIPMemoryOrder<MemoryOrder>::value, "workgroup");
+}
+
+template <class MemoryOrder>
+__device__ void device_atomic_thread_fence(MemoryOrder, MemoryOrderDevice) {
+  __builtin_amdgcn_fence(HIPMemoryOrder<MemoryOrder>::value, "agent");
+}
+
+// FIXME scope larger than strictly necessary
+template <class MemoryOrder>
+__device__ void device_atomic_thread_fence(MemoryOrder, MemoryOrderNode) {
+  __builtin_amdgcn_fence(HIPMemoryOrder<MemoryOrder>::value, "");
+}
+
+template <class MemoryOrder>
+__device__ void device_atomic_thread_fence(MemoryOrder, MemoryOrderSystem) {
+  __builtin_amdgcn_fence(HIPMemoryOrder<MemoryOrder>::value, "");
+}
 
 }  // namespace Impl
 }  // namespace desul
