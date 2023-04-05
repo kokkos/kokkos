@@ -52,9 +52,10 @@ struct StdFindFirstOfFunctor {
       }
     }
 
-    const auto rv =
-        found ? red_value_type{i}
-              : red_value_type{::Kokkos::reduction_identity<IndexType>::min()};
+    red_value_type rv = {::Kokkos::reduction_identity<IndexType>::min()};
+    if (found) {
+      rv = {i};
+    }
 
     m_reducer.join(red_value, rv);
   }

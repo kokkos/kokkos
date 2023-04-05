@@ -65,10 +65,10 @@ struct StdLexicographicalCompareFunctor {
 
     bool different = m_comparator(my_value1, my_value2) ||
                      m_comparator(my_value2, my_value1);
-    auto rv =
-        different
-            ? red_value_type{i}
-            : red_value_type{::Kokkos::reduction_identity<IndexType>::min()};
+    red_value_type rv = {::Kokkos::reduction_identity<IndexType>::min()};
+    if (different) {
+      rv = {i};
+    }
 
     m_reducer.join(red_value, rv);
   }
