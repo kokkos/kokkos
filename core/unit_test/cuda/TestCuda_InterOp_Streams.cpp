@@ -76,7 +76,8 @@ TEST(cuda, raw_cuda_streams) {
   offset_streams<<<100, 64, 0, stream>>>(p);
   Kokkos::Impl::CudaInternal::singleton().cuda_api_interface_safe_call(
       &cudaDeviceSynchronize);
-  cudaStreamDestroy(stream);
+  Kokkos::Impl::CudaInternal::singleton().cuda_api_interface_safe_call(
+      &cudaStreamDestroy, stream);
 
   int h_p[100];
   Kokkos::Impl::CudaInternal::singleton()

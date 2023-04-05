@@ -176,35 +176,35 @@ void *impl_allocate_common(const Cuda &exec_space, const char *arg_label,
     if (exec_space_provided) {
       cudaStream_t stream = exec_space.cuda_stream();
 
-      error_code =
-          Impl::CudaInternal::singleton().cuda_api_interface_return_error(
-              &cudaMallocAsync, &ptr, arg_alloc_size, stream);
+      error_code = Impl::CudaInternal::singleton()
+                       .cuda_api_interface_return<cudaError_t>(
+                           &cudaMallocAsync, &ptr, arg_alloc_size, stream);
       Impl::CudaInternal::singleton().cuda_api_interface_safe_call(
           &cudaStreamSynchronize, stream);
     } else {
-      error_code =
-          Impl::CudaInternal::singleton().cuda_api_interface_return_error(
-              &cudaMallocAsync, &ptr, arg_alloc_size, 0);
+      error_code = Impl::CudaInternal::singleton()
+                       .cuda_api_interface_return<cudaError_t>(
+                           &cudaMallocAsync, &ptr, arg_alloc_size, 0);
       Impl::CudaInternal::singleton().cuda_api_interface_safe_call(
           &cudaDeviceSynchronize);
     }
   } else {
     error_code =
-        Impl::CudaInternal::singleton().cuda_api_interface_return_error(
+        Impl::CudaInternal::singleton().cuda_api_interface_return<cudaError_t>(
             &cudaMalloc, &ptr, arg_alloc_size);
   }
 #else
   (void)exec_space;
   (void)exec_space_provided;
   auto error_code =
-      Impl::CudaInternal::singleton().cuda_api_interface_return_error(
+      Impl::CudaInternal::singleton().cuda_api_interface_return<cudaError_t>(
           &cudaMalloc, &ptr, arg_alloc_size);
 #endif
   if (error_code != cudaSuccess) {  // TODO tag as unlikely branch
     // This is the only way to clear the last error, which
     // we should do here since we're turning it into an
     // exception here
-    Impl::CudaInternal::singleton().cuda_api_interface_return_error(
+    Impl::CudaInternal::singleton().cuda_api_interface_return<cudaError_t>(
         &cudaGetLastError);
     throw Experimental::CudaRawMemoryAllocationFailure(
         arg_alloc_size, error_code,
@@ -256,19 +256,23 @@ void *CudaUVMSpace::impl_allocate(
     Kokkos::Impl::num_uvm_allocations++;
 
     auto error_code =
-        cudaMallocManaged(&ptr, arg_alloc_size, cudaMemAttachGlobal);
+        Impl::CudaInternal::singleton()
+            .cuda_api_interface_return<cudaError_t, void **, size_t,
+                                       unsigned int>(
+                &cudaMallocManaged, &ptr, arg_alloc_size, cudaMemAttachGlobal);
 
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_PIN_UVM_TO_HOST
     if (Kokkos::CudaUVMSpace::cuda_pin_uvm_to_host())
-      cudaMemAdvise(ptr, arg_alloc_size, cudaMemAdviseSetPreferredLocation,
-                    cudaCpuDeviceId);
+      Impl::CudaInternal::singleton().cuda_api_interface_safe_call(
+          &cudaMemAdvise, ptr, arg_alloc_size,
+          cudaMemAdviseSetPreferredLocation, cudaCpuDeviceId);
 #endif
 
     if (error_code != cudaSuccess) {  // TODO tag as unlikely branch
       // This is the only way to clear the last error,
       // which we should do here since we're turning it
       // into an exception here
-      Impl::CudaInternal::singleton().cuda_api_interface_return_error(
+      Impl::CudaInternal::singleton().cuda_api_interface_return<cudaError_t>(
           &cudaGetLastError);
       throw Experimental::CudaRawMemoryAllocationFailure(
           arg_alloc_size, error_code,
@@ -299,12 +303,16 @@ void *CudaHostPinnedSpace::impl_allocate(
     const Kokkos::Tools::SpaceHandle arg_handle) const {
   void *ptr = nullptr;
 
-  auto error_code = cudaHostAlloc(&ptr, arg_alloc_size, cudaHostAllocDefault);
+  auto error_code =
+      Impl::CudaInternal::singleton()
+          .cuda_api_interface_return<cudaError_t, void **, size_t,
+                                     unsigned int>(
+              &cudaHostAlloc, &ptr, arg_alloc_size, cudaHostAllocDefault);
   if (error_code != cudaSuccess) {  // TODO tag as unlikely branch
     // This is the only way to clear the last error, which
     // we should do here since we're turning it into an
     // exception here
-    Impl::CudaInternal::singleton().cuda_api_interface_return_error(
+    Impl::CudaInternal::singleton().cuda_api_interface_return<cudaError_t>(
         &cudaGetLastError);
     throw Experimental::CudaRawMemoryAllocationFailure(
         arg_alloc_size, error_code,
@@ -470,20 +478,24 @@ SharedAllocationRecord<Kokkos::CudaSpace, void>::attach_texture_object(
 
   struct cudaResourceDesc resDesc;
   struct cudaTextureDesc texDesc;
-  struct cudaResourceViewDesc resViewDesc;
 
   memset(&resDesc, 0, sizeof(resDesc));
   memset(&texDesc, 0, sizeof(texDesc));
-  memset(&resViewDesc, 0, sizeof(resViewDesc));
 
   resDesc.resType = cudaResourceTypeLinear;
   resDesc.res.linear.desc =
       (sizeof_alias == 4
-           ? cudaCreateChannelDesc<int>()
+           ? CudaInternal::singleton()
+                 .cuda_api_interface_return<cudaChannelFormatDesc>(
+                     &cudaCreateChannelDesc<int>)
            : (sizeof_alias == 8
-                  ? cudaCreateChannelDesc< ::int2>()
-                  :
-                  /* sizeof_alias == 16 */ cudaCreateChannelDesc< ::int4>()));
+                  ? CudaInternal::singleton()
+                        .cuda_api_interface_return<cudaChannelFormatDesc>(
+                            &cudaCreateChannelDesc<::int2>)
+                  : /* sizeof_alias == 16 */
+                  CudaInternal::singleton()
+                      .cuda_api_interface_return<cudaChannelFormatDesc>(
+                          &cudaCreateChannelDesc<::int4>)));
   resDesc.res.linear.sizeInBytes = alloc_size;
   resDesc.res.linear.devPtr      = alloc_ptr;
 

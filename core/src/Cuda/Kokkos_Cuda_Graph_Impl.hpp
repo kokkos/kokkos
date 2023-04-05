@@ -56,8 +56,9 @@ struct GraphImpl<Kokkos::Cuda> {
     constexpr size_t error_log_size = 256;
     cudaGraphNode_t error_node      = nullptr;
     char error_log[error_log_size];
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGraphInstantiate(
-        &m_graph_exec, m_graph, &error_node, error_log, error_log_size));
+    CudaInternal::singleton().cuda_api_interface_safe_call(
+        &cudaGraphInstantiate, &m_graph_exec, m_graph, &error_node, error_log,
+        error_log_size);
     // TODO @graphs print out errors
   }
 
@@ -84,15 +85,17 @@ struct GraphImpl<Kokkos::Cuda> {
     m_execution_space.fence("Kokkos::GraphImpl::~GraphImpl: Graph Destruction");
     KOKKOS_EXPECTS(bool(m_graph))
     if (bool(m_graph_exec)) {
-      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGraphExecDestroy(m_graph_exec));
+      CudaInternal::singleton().cuda_api_interface_safe_call(
+          &cudaGraphExecDestroy, m_graph_exec);
     }
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGraphDestroy(m_graph));
+    CudaInternal::singleton().cuda_api_interface_safe_call(&cudaGraphDestroy,
+                                                           m_graph);
   };
 
   explicit GraphImpl(Kokkos::Cuda arg_instance)
       : m_execution_space(std::move(arg_instance)) {
-    KOKKOS_IMPL_CUDA_SAFE_CALL(
-        cudaGraphCreate(&m_graph, cuda_graph_flags_t{0}));
+    CudaInternal::singleton().cuda_api_interface_safe_call(
+        &cudaGraphCreate, &m_graph, cuda_graph_flags_t{0});
   }
 
   void add_node(std::shared_ptr<aggregate_node_impl_t> const& arg_node_ptr) {
@@ -149,16 +152,18 @@ struct GraphImpl<Kokkos::Cuda> {
     auto /*const*/& cuda_node = arg_node_ptr->node_details_t::node;
     KOKKOS_EXPECTS(bool(cuda_node))
 
-    KOKKOS_IMPL_CUDA_SAFE_CALL(
-        cudaGraphAddDependencies(m_graph, &pred_cuda_node, &cuda_node, 1));
+    CudaInternal::singleton()
+        .cuda_api_interface_safe_call<cudaGraph_t, const cudaGraphNode_t*,
+                                      const cudaGraphNode_t*, size_t>(
+            &cudaGraphAddDependencies, m_graph, &pred_cuda_node, &cuda_node, 1);
   }
 
   void submit() {
     if (!bool(m_graph_exec)) {
       _instantiate_graph();
     }
-    KOKKOS_IMPL_CUDA_SAFE_CALL(
-        cudaGraphLaunch(m_graph_exec, m_execution_space.cuda_stream()));
+    CudaInternal::singleton().cuda_api_interface_safe_call(
+        &cudaGraphLaunch, m_graph_exec, m_execution_space.cuda_stream());
   }
 
   execution_space const& get_execution_space() const noexcept {

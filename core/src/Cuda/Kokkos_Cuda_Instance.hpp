@@ -195,20 +195,40 @@ class CudaInternal {
 
   ///////////////////////////////////////////////////////////////////////////////////////////
 
-  template <typename... InputArgs>
+  template <bool setCudaDevice, typename... InputArgs>
   void cuda_api_interface_safe_call(
       cudaError_t (*cuda_api_function)(InputArgs...),
       InputArgs... cuda_api_input) const {
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
+    if (setCudaDevice) {
+      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
+    }
     KOKKOS_IMPL_CUDA_SAFE_CALL(cuda_api_function(cuda_api_input...));
   }
 
   template <typename... InputArgs>
-  cudaError_t cuda_api_interface_return_error(
+  void cuda_api_interface_safe_call(
       cudaError_t (*cuda_api_function)(InputArgs...),
       InputArgs... cuda_api_input) const {
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
+    cuda_api_interface_safe_call<true, InputArgs...>(cuda_api_function,
+                                                     cuda_api_input...);
+  }
+
+  template <bool setCudaDevice, typename ReturnType, typename... InputArgs>
+  ReturnType cuda_api_interface_return(
+      ReturnType (*cuda_api_function)(InputArgs...),
+      InputArgs... cuda_api_input) const {
+    if (setCudaDevice) {
+      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
+    }
     return cuda_api_function(cuda_api_input...);
+  }
+
+  template <typename ReturnType, typename... InputArgs>
+  ReturnType cuda_api_interface_return(
+      ReturnType (*cuda_api_function)(InputArgs...),
+      InputArgs... cuda_api_input) const {
+    return cuda_api_interface_return<true, ReturnType, InputArgs...>(
+        cuda_api_function, cuda_api_input...);
   }
 
   ///////////////////////////////////////////////////////////////////////////////////////////
@@ -235,10 +255,11 @@ struct ZeroMemset<Kokkos::Cuda, DT, DP...> {
   ZeroMemset(const Kokkos::Cuda& exec_space_instance,
              const View<DT, DP...>& dst,
              typename View<DT, DP...>::const_value_type&) {
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMemsetAsync(
-        dst.data(), 0,
-        dst.size() * sizeof(typename View<DT, DP...>::value_type),
-        exec_space_instance.cuda_stream()));
+    Kokkos::Impl::CudaInternal::singleton()
+        .cuda_api_interface_safe_call<void*, int, size_t, cudaStream_t>(
+            &cudaMemsetAsync, dst.data(), 0,
+            dst.size() * sizeof(typename View<DT, DP...>::value_type),
+            exec_space_instance.cuda_stream());
   }
 
   ZeroMemset(const View<DT, DP...>& dst,

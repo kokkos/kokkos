@@ -177,8 +177,12 @@ void cuda_stream_synchronize(
 void cuda_internal_error_throw(cudaError e, const char *name, const char *file,
                                const int line) {
   std::ostringstream out;
-  out << name << " error( " << cudaGetErrorName(e)
-      << "): " << cudaGetErrorString(e);
+  out << name << " error( "
+      << CudaInternal::singleton().cuda_api_interface_return<const char *>(
+             &cudaGetErrorName, e)
+      << "): "
+      << CudaInternal::singleton().cuda_api_interface_return<const char *>(
+             &cudaGetErrorString, e);
   if (file) {
     out << " " << file << ":" << line;
   }
@@ -188,8 +192,12 @@ void cuda_internal_error_throw(cudaError e, const char *name, const char *file,
 void cuda_internal_error_abort(cudaError e, const char *name, const char *file,
                                const int line) {
   std::ostringstream out;
-  out << name << " error( " << cudaGetErrorName(e)
-      << "): " << cudaGetErrorString(e);
+  out << name << " error( "
+      << CudaInternal::singleton().cuda_api_interface_return<const char *>(
+             &cudaGetErrorName, e)
+      << "): "
+      << CudaInternal::singleton().cuda_api_interface_return<const char *>(
+             &cudaGetErrorString, e);
   if (file) {
     out << " " << file << ":" << line;
   }
@@ -265,7 +273,8 @@ CudaInternalDevices::CudaInternalDevices() {
   // See 'cudaSetDeviceFlags' for host-device thread interaction
   // Section 4.4.2.6 of the CUDA Toolkit Reference Manual
 
-  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGetDeviceCount(&m_cudaDevCount));
+  CudaInternal::singleton().cuda_api_interface_safe_call<false, int *>(
+      &cudaGetDeviceCount, &m_cudaDevCount);
 
   if (m_cudaDevCount > MAXIMUM_DEVICE_COUNT) {
     Kokkos::abort(
@@ -273,7 +282,9 @@ CudaInternalDevices::CudaInternalDevices() {
         "have. Please report this to github.com/kokkos/kokkos.");
   }
   for (int i = 0; i < m_cudaDevCount; ++i) {
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGetDeviceProperties(m_cudaProp + i, i));
+    CudaInternal::singleton()
+        .cuda_api_interface_safe_call<false, cudaDeviceProp *, int>(
+            &cudaGetDeviceProperties, m_cudaProp + i, i);
   }
 }
 
@@ -600,12 +611,13 @@ void CudaInternal::finalize() {
     desul::Impl::finalize_lock_arrays();  // FIXME
 
     cuda_api_interface_safe_call<void *>(&cudaFreeHost, constantMemHostStaging);
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaEventDestroy(constantMemReusable));
+    cuda_api_interface_safe_call(&cudaEventDestroy, constantMemReusable);
     auto &deep_copy_space =
         Kokkos::Impl::cuda_get_deep_copy_space(/*initialize*/ false);
     if (deep_copy_space)
       deep_copy_space->impl_internal_space_instance()->finalize();
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamDestroy(cuda_get_deep_copy_stream()));
+    cuda_api_interface_safe_call(&cudaStreamDestroy,
+                                 cuda_get_deep_copy_stream());
   }
 
   if (nullptr != m_scratchSpace || nullptr != m_scratchFlags) {
@@ -626,7 +638,7 @@ void CudaInternal::finalize() {
   }
 
   if (m_manage_stream && m_stream != nullptr)
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamDestroy(m_stream));
+    cuda_api_interface_safe_call(&cudaStreamDestroy, m_stream);
 
   m_scratchSpaceCount   = 0;
   m_scratchFlagsCount   = 0;
@@ -640,8 +652,7 @@ void CudaInternal::finalize() {
     m_team_scratch_ptr[i]          = nullptr;
   }
 
-  Impl::CudaInternal::singleton().cuda_api_interface_safe_call<void *>(
-      &cudaFree, m_scratch_locks);
+  cuda_api_interface_safe_call<void *>(&cudaFree, m_scratch_locks);
   m_scratch_locks     = nullptr;
   m_num_scratch_locks = 0;
 }
@@ -727,7 +738,6 @@ void Cuda::impl_initialize(InitializationSettings const &settings) {
     Impl::CudaInternal::m_cudaDev    = cuda_device_id;
     Impl::CudaInternal::m_deviceProp = cudaProp;
 
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(cuda_device_id));
     Kokkos::Impl::cuda_device_synchronize(
         "Kokkos::CudaInternal::initialize: Fence on space initialization");
 
@@ -828,8 +838,7 @@ void Cuda::impl_initialize(InitializationSettings const &settings) {
   Impl::CudaInternal::singleton().cuda_api_interface_safe_call(
       &cudaStreamCreate, &singleton_stream);
 
-  auto &cuda_singleton = Impl::CudaInternal::singleton();
-  cuda_singleton.initialize(singleton_stream, /*manage*/ true);
+  Impl::CudaInternal::singleton().initialize(singleton_stream, /*manage*/ true);
 }
 
 std::vector<unsigned> Cuda::detect_device_arch() {

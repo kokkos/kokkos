@@ -32,7 +32,6 @@ static_assert(false,
 
 #include <impl/Kokkos_AnalyzePolicy.hpp>
 #include <Cuda/Kokkos_CudaSpace.hpp>
-#include <Cuda/Kokkos_Cuda_Error.hpp>  // CUDA_SAFE_CALL
 
 #include <Kokkos_Parallel.hpp>
 #include <Kokkos_TaskScheduler.hpp>

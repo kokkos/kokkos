@@ -26,7 +26,6 @@
 #include <Kokkos_Core_fwd.hpp>
 
 #include <impl/Kokkos_TaskBase.hpp>
-#include <Cuda/Kokkos_Cuda_Error.hpp>  // KOKKOS_IMPL_CUDA_SAFE_CALL
 #include <impl/Kokkos_TaskTeamMember.hpp>
 
 //----------------------------------------------------------------------------
@@ -244,30 +243,29 @@ class TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::Cuda, QueueType>> {
     // Query the stack size, in bytes:
 
     size_t previous_stack_size = 0;
-    KOKKOS_IMPL_CUDA_SAFE_CALL(
-        cudaDeviceGetLimit(&previous_stack_size, cudaLimitStackSize));
+    CudaInternal::singleton().cuda_api_interface_safe_call(
+        &cudaDeviceGetLimit, &previous_stack_size, cudaLimitStackSize);
 
     // If not large enough then set the stack size, in bytes:
 
     const size_t larger_stack_size = 1 << 11;
 
     if (previous_stack_size < larger_stack_size) {
-      KOKKOS_IMPL_CUDA_SAFE_CALL(
-          cudaDeviceSetLimit(cudaLimitStackSize, larger_stack_size));
+      CudaInternal::singleton().cuda_api_interface_safe_call(
+          &cudaDeviceSetLimit, cudaLimitStackSize, larger_stack_size);
     }
 
     cuda_task_queue_execute<<<grid, block, shared_total, stream>>>(
         scheduler, shared_per_warp);
 
-    Impl::CudaInternal::singleton().cuda_api_interface_safe_call(
-        &cudaGetLastError);
+    CudaInternal::singleton().cuda_api_interface_safe_call(&cudaGetLastError);
     Impl::cuda_device_synchronize(
         "Kokkos::Impl::TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::"
         "Cuda>::execute: Post Task Execution");
 
     if (previous_stack_size < larger_stack_size) {
-      KOKKOS_IMPL_CUDA_SAFE_CALL(
-          cudaDeviceSetLimit(cudaLimitStackSize, previous_stack_size));
+      CudaInternal::singleton().cuda_api_interface_safe_call(
+          &cudaDeviceSetLimit, cudaLimitStackSize, previous_stack_size);
     }
   }
 
@@ -295,8 +293,7 @@ class TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::Cuda, QueueType>> {
     set_cuda_task_base_apply_function_pointer<TaskType>
         <<<1, 1>>>(ptr_ptr, dtor_ptr);
 
-    Impl::CudaInternal::singleton().cuda_api_interface_safe_call(
-        &cudaGetLastError);
+    CudaInternal::singleton().cuda_api_interface_safe_call(&cudaGetLastError);
     Impl::cuda_device_synchronize(
         "Kokkos::Impl::TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::"
         "Cuda>::execute: Post Get Function Pointer for Tasks");
@@ -476,30 +473,29 @@ class TaskQueueSpecializationConstrained<
     // Query the stack size, in bytes:
 
     size_t previous_stack_size = 0;
-    KOKKOS_IMPL_CUDA_SAFE_CALL(
-        cudaDeviceGetLimit(&previous_stack_size, cudaLimitStackSize));
+    CudaInternal::singleton().cuda_api_interface_safe_call(
+        &cudaDeviceGetLimit, &previous_stack_size, cudaLimitStackSize);
 
     // If not large enough then set the stack size, in bytes:
 
     const size_t larger_stack_size = 2048;
 
     if (previous_stack_size < larger_stack_size) {
-      KOKKOS_IMPL_CUDA_SAFE_CALL(
-          cudaDeviceSetLimit(cudaLimitStackSize, larger_stack_size));
+      CudaInternal::singleton().cuda_api_interface_safe_call(
+          &cudaDeviceSetLimit, cudaLimitStackSize, larger_stack_size);
     }
 
     cuda_task_queue_execute<<<grid, block, shared_total, stream>>>(
         scheduler, shared_per_warp);
 
-    Impl::CudaInternal::singleton().cuda_api_interface_safe_call(
-        &cudaGetLastError);
+    CudaInternal::singleton().cuda_api_interface_safe_call(&cudaGetLastError);
     Impl::cuda_device_synchronize(
         "Kokkos::Impl::TaskQueueSpecializationConstrained<SimpleTaskScheduler<"
         "Kokkos::Cuda>::execute: Post Execute Task");
 
     if (previous_stack_size < larger_stack_size) {
-      KOKKOS_IMPL_CUDA_SAFE_CALL(
-          cudaDeviceSetLimit(cudaLimitStackSize, previous_stack_size));
+      CudaInternal::singleton().cuda_api_interface_safe_call(
+          &cudaDeviceSetLimit, cudaLimitStackSize, previous_stack_size);
     }
   }
 
@@ -522,8 +518,7 @@ class TaskQueueSpecializationConstrained<
     set_cuda_task_base_apply_function_pointer<TaskType>
         <<<1, 1>>>(ptr_ptr, dtor_ptr);
 
-    Impl::CudaInternal::singleton().cuda_api_interface_safe_call(
-        &cudaGetLastError);
+    CudaInternal::singleton().cuda_api_interface_safe_call(&cudaGetLastError);
     Impl::cuda_device_synchronize(
         "Kokkos::Impl::TaskQueueSpecializationConstrained<SimpleTaskScheduler<"
         "Kokkos::Cuda>::get_function_pointer: Post Get Function Pointer");
