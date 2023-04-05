@@ -607,4 +607,9 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 #define KOKKOS_IMPL_ENFORCE_EMPTY_BASE_OPTIMIZATION
 #endif
 
+// This was previously defined from the configuration option which was removed
+#if defined(KOKKOS_ENABLE_CUDA)
+#define KOKKOS_ENABLE_CUDA_LAMBDA
+#endif
+
 #endif  // #ifndef KOKKOS_MACROS_HPP
