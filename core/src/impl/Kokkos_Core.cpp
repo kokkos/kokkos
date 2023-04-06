@@ -505,9 +505,9 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
                                  std::to_string(KOKKOS_COMPILER_NVCC));
   declare_configuration_metadata("tools_only", "compiler_family", "nvcc");
 #endif
-#ifdef KOKKOS_COMPILER_PGI
-  declare_configuration_metadata("compiler_version", "KOKKOS_COMPILER_PGI",
-                                 std::to_string(KOKKOS_COMPILER_PGI));
+#ifdef KOKKOS_COMPILER_NVHPC
+  declare_configuration_metadata("compiler_version", "KOKKOS_COMPILER_NVHPC",
+                                 std::to_string(KOKKOS_COMPILER_NVHPC));
   declare_configuration_metadata("tools_only", "compiler_family", "pgi");
 #endif
 #ifdef KOKKOS_COMPILER_MSVC
@@ -1256,7 +1256,7 @@ bool Kokkos::tune_internals() noexcept { return g_tune_internals; }
 
 namespace Kokkos {
 
-#ifdef KOKKOS_COMPILER_PGI
+#ifdef KOKKOS_COMPILER_NVHPC
 namespace Impl {
 // Bizzarely, an extra jump instruction forces the PGI compiler to not have a
 // bug related to (probably?) empty base optimization and/or aggregate

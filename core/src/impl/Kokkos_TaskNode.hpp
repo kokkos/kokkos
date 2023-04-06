@@ -42,7 +42,7 @@
 namespace Kokkos {
 namespace Impl {
 
-#ifdef KOKKOS_COMPILER_PGI
+#ifdef KOKKOS_COMPILER_NVHPC
 // Bizzarely, an extra jump instruction forces the PGI compiler to not have a
 // bug related to (probably?) empty base optimization and/or aggregate
 // construction.  This must be defined out-of-line to generate a jump
@@ -101,7 +101,7 @@ class ReferenceCountedBase {
 
  public:
   KOKKOS_INLINE_FUNCTION
-#ifndef KOKKOS_COMPILER_PGI
+#ifndef KOKKOS_COMPILER_NVHPC
   constexpr
 #endif
       explicit ReferenceCountedBase(
@@ -109,7 +109,7 @@ class ReferenceCountedBase {
       : m_ref_count(initial_reference_count) {
     // This can't be here because it breaks constexpr
     // KOKKOS_EXPECTS(initial_reference_count > 0);
-#ifdef KOKKOS_COMPILER_PGI
+#ifdef KOKKOS_COMPILER_NVHPC
     Impl::_kokkos_pgi_compiler_bug_workaround();
 #endif
   }
