@@ -123,46 +123,41 @@
 
 #if defined(__INTEL_COMPILER)
 #define KOKKOS_COMPILER_INTEL __INTEL_COMPILER
+
 #elif defined(__INTEL_LLVM_COMPILER)
 #define KOKKOS_COMPILER_INTEL __INTEL_LLVM_COMPILER
-#elif defined(__ICC)
-// Old define
-#define KOKKOS_COMPILER_INTEL __ICC
-#elif defined(__ECC)
-// Very old define
-#define KOKKOS_COMPILER_INTEL __ECC
-#endif
 
+#elif defined(_CRAYC)
 // CRAY compiler for host code
-#if defined(_CRAYC)
 #define KOKKOS_COMPILER_CRAYC _CRAYC
-#endif
 
-#if defined(__APPLE_CC__)
+#elif defined(__APPLE_CC__)
 #define KOKKOS_COMPILER_APPLECC __APPLE_CC__
-#endif
 
-#if defined(__clang__) && !defined(KOKKOS_COMPILER_INTEL)
-#define KOKKOS_COMPILER_CLANG \
-  __clang_major__ * 100 + __clang_minor__ * 10 + __clang_patchlevel__
-#endif
-
-#if !defined(__clang__) && !defined(KOKKOS_COMPILER_INTEL) && defined(__GNUC__)
-#define KOKKOS_COMPILER_GNU \
-  __GNUC__ * 100 + __GNUC_MINOR__ * 10 + __GNUC_PATCHLEVEL__
-
-#if (530 > KOKKOS_COMPILER_GNU)
-#error "Compiling with GCC version earlier than 5.3.0 is not supported."
-#endif
-#endif
-
-#if defined(__NVCOMPILER)
+#elif defined(__NVCOMPILER)
 #define KOKKOS_COMPILER_NVHPC                                 \
   __NVCOMPILER_MAJOR__ * 10000 + __NVCOMPILER_MINOR__ * 100 + \
       __NVCOMPILER_PATCHLEVEL__
+
+#elif defined(__clang__)
+// Check this after the Clang-based proprietary compilers which will also define
+// __clang__
+#define KOKKOS_COMPILER_CLANG \
+  __clang_major__ * 100 + __clang_minor__ * 10 + __clang_patchlevel__
+
+#elif defined(__GNUC__)
+// Check this here because many compilers (at least Clang variants and Intel
+// classic) define `__GNUC__` for compatibility
+#define KOKKOS_COMPILER_GNU \
+  __GNUC__ * 100 + __GNUC_MINOR__ * 10 + __GNUC_PATCHLEVEL__
+
+#if (820 > KOKKOS_COMPILER_GNU)
+#error "Compiling with GCC version earlier than 8.2.0 is not supported."
 #endif
 
-#if defined(_MSC_VER) && !defined(KOKKOS_COMPILER_INTEL)
+#elif defined(_MSC_VER)
+// Check this after Intel and Clang because those define _MSC_VER for
+// compatibility
 #define KOKKOS_COMPILER_MSVC _MSC_VER
 #endif
 
@@ -207,7 +202,7 @@
 #endif
 #endif
 
-#if (1900 > KOKKOS_COMPILER_INTEL)
+#if defined(KOKKOS_COMPILER_INTEL) && (1900 > KOKKOS_COMPILER_INTEL)
 #error "Compiling with Intel version earlier than 19.0.5 is not supported."
 #endif
 
