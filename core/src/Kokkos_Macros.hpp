@@ -66,6 +66,7 @@
  *  KOKKOS_COMPILER_NVCC
  *  KOKKOS_COMPILER_GNU
  *  KOKKOS_COMPILER_INTEL
+ *  KOKKOS_COMPILER_INTEL_LLVM
  *  KOKKOS_COMPILER_CRAYC
  *  KOKKOS_COMPILER_APPLECC
  *  KOKKOS_COMPILER_CLANG
@@ -125,7 +126,7 @@
 #define KOKKOS_COMPILER_INTEL __INTEL_COMPILER
 
 #elif defined(__INTEL_LLVM_COMPILER)
-#define KOKKOS_COMPILER_INTEL __INTEL_LLVM_COMPILER
+#define KOKKOS_COMPILER_INTEL_LLVM __INTEL_LLVM_COMPILER
 
 #elif defined(_CRAYC)
 // CRAY compiler for host code
@@ -171,16 +172,13 @@
 //----------------------------------------------------------------------------
 // Intel compiler macros
 
-#if defined(KOKKOS_COMPILER_INTEL)
-// FIXME_ICPX
-#if !defined(__INTEL_LLVM_COMPILER)
+#if defined(KOKKOS_COMPILER_INTEL) || defined(KOKKOS_COMPILER_INTEL_LLVM)
+#if defined(KOKKOS_COMPILER_INTEL_LLVM) && \
+    KOKKOS_COMPILER_INTEL_LLVM >= 20230100
 #define KOKKOS_ENABLE_PRAGMA_UNROLL 1
 #define KOKKOS_ENABLE_PRAGMA_LOOPCOUNT 1
 #define KOKKOS_ENABLE_PRAGMA_VECTOR 1
-#endif
 
-// FIXME_SYCL
-#if !defined(KOKKOS_ENABLE_SYCL)
 #define KOKKOS_ENABLE_PRAGMA_IVDEP 1
 #endif
 
@@ -582,8 +580,9 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 
 #define KOKKOS_ATTRIBUTE_NODISCARD [[nodiscard]]
 
-#if (defined(KOKKOS_COMPILER_GNU) || defined(KOKKOS_COMPILER_CLANG) ||    \
-     defined(KOKKOS_COMPILER_INTEL) || defined(KOKKOS_COMPILER_NVHPC)) && \
+#if (defined(KOKKOS_COMPILER_GNU) || defined(KOKKOS_COMPILER_CLANG) ||        \
+     defined(KOKKOS_COMPILER_INTEL) || defined(KOKKOS_COMPILER_INTEL_LLVM) || \
+     defined(KOKKOS_COMPILER_NVHPC)) &&                                       \
     !defined(_WIN32) && !defined(__ANDROID__)
 #if __has_include(<execinfo.h>)
 #define KOKKOS_IMPL_ENABLE_STACKTRACE
