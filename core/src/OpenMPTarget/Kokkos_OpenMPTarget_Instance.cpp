@@ -66,7 +66,29 @@ void OpenMPTargetInternal::fence(const std::string& name,
   }
 }
 int OpenMPTargetInternal::concurrency() const {
-  return 128000;  // FIXME_OPENMPTARGET
+  int max_threads = 2048 * 80;
+#if defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
+  int max_threads_block = 2048;
+#if defined(KOKKOS_ARCH_AMPERE86)
+  max_threads = max_threads_block * 1536;
+#elif defined(KOKKOS_ARCH_AMPERE80)
+  max_threads = max_threads_block * 108;
+#elif defined(KOKKOS_ARCH_VOLTA72)
+  max_threads = max_threads_block * 84;
+#elif defined(KOKKOS_ARCH_VOLTA70)
+  max_threads = max_threads_block * 80;
+#elif defined(KOKKOS_ARCH_PASCAL60) || defined(KOKKOS_ARCH_PASCAL61)
+  max_threads = max_threads_block * 60;
+#endif
+#elif defined(KOKKOS_ARCH_INTEL_GPU)
+#pragma omp target map(max_threads)
+  { max_threads = omp_get_num_procs(); }
+
+  // Multiply the number of processors with teh SIMD length.
+  max_threads *= 64;
+#endif
+
+  return max_threads;
 }
 const char* OpenMPTargetInternal::name() { return "OpenMPTarget"; }
 void OpenMPTargetInternal::print_configuration(std::ostream& os,
