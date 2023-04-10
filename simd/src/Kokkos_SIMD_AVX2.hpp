@@ -661,6 +661,13 @@ class simd<std::int32_t, simd_abi::avx2_fixed_size<4>> {
       _mm_add_epi32(static_cast<__m128i>(lhs), static_cast<__m128i>(rhs)));
 }
 
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+simd<std::int32_t, simd_abi::avx2_fixed_size<4>> abs(
+    simd<std::int32_t, simd_abi::avx2_fixed_size<4>> const& a) {
+  __m128i const rhs = static_cast<__m128i>(a);
+  return simd<std::int32_t, simd_abi::avx2_fixed_size<4>>(_mm_abs_epi32(rhs));
+}
+
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     simd<std::int32_t, simd_abi::avx2_fixed_size<4>>
     condition(simd_mask<std::int32_t, simd_abi::avx2_fixed_size<4>> const& a,
@@ -783,6 +790,15 @@ class simd<std::int64_t, simd_abi::avx2_fixed_size<4>> {
   return simd<std::int64_t, simd_abi::avx2_fixed_size<4>>(
       _mm256_add_epi64(static_cast<__m256i>(lhs), static_cast<__m256i>(rhs)));
 }
+
+// FIXME: _mm256_abs_epi64() is not supported in AVX2
+// [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+//     simd<std::int64_t, simd_abi::avx2_fixed_size<4>>
+//     abs(simd<std::int64_t, simd_abi::avx2_fixed_size<4>> const& a) {
+//   __m256i const rhs = static_cast<__m256i>(a);
+//   return simd<std::int64_t, simd_abi::avx2_fixed_size<4>>(
+//       _mm256_abs_epi64(rhs));
+// }
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 simd<std::int64_t, simd_abi::avx2_fixed_size<4>> condition(
@@ -907,6 +923,12 @@ simd<std::int64_t, simd_abi::avx2_fixed_size<4>>::simd(
               simd<std::uint64_t, simd_abi::avx2_fixed_size<4>> const& rhs) {
   return simd<std::uint64_t, simd_abi::avx2_fixed_size<4>>(
       _mm256_sub_epi64(static_cast<__m256i>(lhs), static_cast<__m256i>(rhs)));
+}
+
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+simd<std::uint64_t, simd_abi::avx2_fixed_size<4>> abs(
+    simd<std::uint64_t, simd_abi::avx2_fixed_size<4>> const& a) {
+  return a;
 }
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
