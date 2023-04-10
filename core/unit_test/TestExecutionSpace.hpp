@@ -50,4 +50,23 @@ TEST(TEST_CATEGORY, execution_space_as_class_data_member) {
 }
 #endif
 
+
+TEST(TEST_CATEGORY, execution_space_status)
+{
+  TEST_EXECSPACE exec;
+  ASSERT_EQ(exec.get_status(), Kokkos::Experimental::ExecutionSpaceStatus::complete);  
+  const int N = 10000;
+  Kokkos::View<int, typename TEST_EXECSPACE::memory_space> result_view("result_view");
+  Kokkos::parallel_reduce(Kokkos::RangePolicy<TEST_EXECSPACE>(exec, 0, N), KOKKOS_LAMBDA(int i, int& update)
+		  {
+		    update += i;
+		  }, result_view);
+  while (exec.get_status() != Kokkos::Experimental::ExecutionSpaceStatus::complete){}
+  int result;
+  Kokkos::deep_copy(exec, result, result_view);
+  exec.fence();
+  ASSERT_EQ(exec.get_status(), Kokkos::Experimental::ExecutionSpaceStatus::complete);
+  ASSERT_EQ(result, N/2*(N-1));
+}
+
 }  // namespace
