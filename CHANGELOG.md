@@ -8,6 +8,7 @@
 - `parallel_scan` with `View` as result type. [\#5146](https://github.com/kokkos/kokkos/pull/5146)
 - Introduced `SharedSpace`, an alias for a `MemorySpace` that is accessible by every `ExecutionSpace`. The memory is moved and then accessed locally. [\#5289](https://github.com/kokkos/kokkos/pull/5289)
 - Introduced `SharedHostPinnedSpace`, an alias for a `MemorySpace` that is accessible by every `ExecutionSpace`. The memory is pinned to the host and accessed via zero-copy access. [\#5405](https://github.com/kokkos/kokkos/pull/5405)
+- Add team- and thread-level `sort`, `sort_by_key` algorithms. [\#5317](https://github.com/kokkos/kokkos/pull/5317)
 - Groundwork for `MDSpan` integration. [\#4973](https://github.com/kokkos/kokkos/pull/4973) and [\#5304](https://github.com/kokkos/kokkos/pull/5304)
 - Introduced MD version of hierarchical parallelism: `TeamThreadMDRange`, `ThreadVectorMDRange` and `TeamVectorMDRange`. [\#5238](https://github.com/kokkos/kokkos/pull/5238)
 
