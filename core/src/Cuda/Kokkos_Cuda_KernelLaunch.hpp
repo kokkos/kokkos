@@ -375,9 +375,8 @@ struct CudaParallelLaunchKernelInvoker<
   static void invoke_kernel(DriverType const& driver, dim3 const& grid,
                             dim3 const& block, int shmem,
                             CudaInternal const* cuda_instance) {
-    (base_t::
-         get_kernel_func())<<<grid, block, shmem, cuda_instance->m_stream>>>(
-        driver);
+    (base_t::get_kernel_func())<<<grid, block, shmem,
+                                  cuda_instance->get_stream()>>>(driver);
   }
 
   inline static void create_parallel_launch_graph_node(
@@ -478,11 +477,10 @@ struct CudaParallelLaunchKernelInvoker<
 
     cuda_instance->cuda_api_interface_safe_call(
         &cudaMemcpyAsync, driver_ptr, &driver, sizeof(DriverType),
-        cudaMemcpyDefault, cuda_instance->m_stream);
+        cudaMemcpyDefault, cuda_instance->get_stream());
 
-    (base_t::
-         get_kernel_func())<<<grid, block, shmem, cuda_instance->m_stream>>>(
-        driver_ptr);
+    (base_t::get_kernel_func())<<<grid, block, shmem,
+                                  cuda_instance->get_stream()>>>(driver_ptr);
   }
 
   inline static void create_parallel_launch_graph_node(
@@ -516,7 +514,7 @@ struct CudaParallelLaunchKernelInvoker<
       // associated with this kernel on the device side isn't deleted.
       cuda_instance->cuda_api_interface_safe_call(
           &cudaMemcpyAsync, driver_ptr, &driver, sizeof(DriverType),
-          cudaMemcpyDefault, cuda_instance->m_stream);
+          cudaMemcpyDefault, cuda_instance->get_stream());
 
       void const* args[] = {&driver_ptr};
 
@@ -610,16 +608,16 @@ struct CudaParallelLaunchKernelInvoker<
         const void*, const void*, size_t, size_t, cudaMemcpyKind, cudaStream_t>(
         &cudaMemcpyToSymbolAsync, kokkos_impl_cuda_constant_memory_buffer,
         staging, sizeof(DriverType), 0, cudaMemcpyHostToDevice,
-        cudaStream_t(cuda_instance->m_stream));
+        cudaStream_t(cuda_instance->get_stream()));
 
     // Invoke the driver function on the device
-    (base_t::
-         get_kernel_func())<<<grid, block, shmem, cuda_instance->m_stream>>>();
+    (base_t::get_kernel_func())<<<grid, block, shmem,
+                                  cuda_instance->get_stream()>>>();
 
     // Record an event that says when the constant buffer can be reused
     cuda_instance->cuda_api_interface_safe_call(
         &cudaEventRecord, CudaInternal::constantMemReusable,
-        cudaStream_t(cuda_instance->m_stream));
+        cudaStream_t(cuda_instance->get_stream()));
   }
 
   inline static void create_parallel_launch_graph_node(

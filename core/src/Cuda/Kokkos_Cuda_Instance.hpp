@@ -195,13 +195,21 @@ class CudaInternal {
 
   ///////////////////////////////////////////////////////////////////////////////////////////
 
+  void set_cuda_device() const {
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
+  }
+
+  template <bool setCudaDevice = true>
+  cudaStream_t get_stream() const {
+    if (setCudaDevice) set_cuda_device();
+    return m_stream;
+  }
+
   template <bool setCudaDevice, typename... InputArgs>
   void cuda_api_interface_safe_call(
       cudaError_t (*cuda_api_function)(InputArgs...),
       InputArgs... cuda_api_input) const {
-    if (setCudaDevice) {
-      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
-    }
+    if (setCudaDevice) set_cuda_device();
     KOKKOS_IMPL_CUDA_SAFE_CALL(cuda_api_function(cuda_api_input...));
   }
 
@@ -217,9 +225,7 @@ class CudaInternal {
   ReturnType cuda_api_interface_return(
       ReturnType (*cuda_api_function)(InputArgs...),
       InputArgs... cuda_api_input) const {
-    if (setCudaDevice) {
-      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
-    }
+    if (setCudaDevice) set_cuda_device();
     return cuda_api_function(cuda_api_input...);
   }
 
