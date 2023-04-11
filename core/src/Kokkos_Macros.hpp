@@ -55,6 +55,7 @@
 
 #ifndef KOKKOS_DONT_INCLUDE_CORE_CONFIG_H
 #include <KokkosCore_config.h>
+#include <impl/Kokkos_NvidiaGpuArchitectures.hpp>
 #endif
 
 //----------------------------------------------------------------------------
@@ -282,7 +283,7 @@
 
 //----------------------------------------------------------------------------
 
-#if defined(KOKKOS_COMPILER_PGI)
+#if defined(KOKKOS_COMPILER_NVHPC)
 #define KOKKOS_ENABLE_PRAGMA_UNROLL 1
 #define KOKKOS_ENABLE_PRAGMA_IVDEP 1
 //#define KOKKOS_ENABLE_PRAGMA_LOOPCOUNT 1
@@ -586,8 +587,8 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 
 #define KOKKOS_ATTRIBUTE_NODISCARD [[nodiscard]]
 
-#if (defined(KOKKOS_COMPILER_GNU) || defined(KOKKOS_COMPILER_CLANG) ||  \
-     defined(KOKKOS_COMPILER_INTEL) || defined(KOKKOS_COMPILER_PGI)) && \
+#if (defined(KOKKOS_COMPILER_GNU) || defined(KOKKOS_COMPILER_CLANG) ||    \
+     defined(KOKKOS_COMPILER_INTEL) || defined(KOKKOS_COMPILER_NVHPC)) && \
     !defined(_WIN32) && !defined(__ANDROID__)
 #if __has_include(<execinfo.h>)
 #define KOKKOS_IMPL_ENABLE_STACKTRACE

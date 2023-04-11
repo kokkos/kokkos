@@ -565,7 +565,8 @@ struct SubviewExtents {
   // std::pair range
   template <size_t... DimArgs, class... Args>
   void error(char* buf, int buf_len, unsigned domain_rank, unsigned range_rank,
-             const ViewDimension<DimArgs...>& dim, ALL_t, Args... args) const {
+             const ViewDimension<DimArgs...>& dim, Kokkos::ALL_t,
+             Args... args) const {
     const int n = std::min(buf_len, snprintf(buf, buf_len, " Kokkos::ALL %c",
                                              int(sizeof...(Args) ? ',' : ')')));
 
@@ -3773,8 +3774,8 @@ struct SubViewDataTypeImpl<
 /* for ALL slice, subview has the same dimension */
 template <class ValueType, ptrdiff_t Ext, ptrdiff_t... Exts, class... Args>
 struct SubViewDataTypeImpl<void, ValueType,
-                           Kokkos::Experimental::Extents<Ext, Exts...>, ALL_t,
-                           Args...>
+                           Kokkos::Experimental::Extents<Ext, Exts...>,
+                           Kokkos::ALL_t, Args...>
     : SubViewDataTypeImpl<void, typename ApplyExtent<ValueType, Ext>::type,
                           Kokkos::Experimental::Extents<Exts...>, Args...> {};
 

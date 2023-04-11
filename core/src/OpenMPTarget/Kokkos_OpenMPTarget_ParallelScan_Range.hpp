@@ -143,11 +143,13 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
             local_offset_value = element_values(team_id, i - 1);
             // FIXME_OPENMPTARGET We seem to access memory illegaly on AMD GPUs
 #ifdef KOKKOS_ARCH_VEGA
-            if constexpr (Analysis::has_join_member_function) {
+            if constexpr (Analysis::Reducer::has_join_member_function()) {
               if constexpr (std::is_void_v<WorkTag>)
-                a_functor.join(local_offset_value, offset_value);
+                a_functor_reducer.get_functor().join(local_offset_value,
+                                                     offset_value);
               else
-                a_functor.join(WorkTag{}, local_offset_value, offset_value);
+                a_functor_reducer.get_functor().join(
+                    WorkTag{}, local_offset_value, offset_value);
             } else
               local_offset_value += offset_value;
 #else
@@ -239,7 +241,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
             base_t::m_result_ptr, chunk_values.data() + (n_chunks - 1), size);
       }
     } else if (!base_t::m_result_ptr_device_accessible) {
-      *base_t::m_result_ptr = 0;
+      base_t::m_functor_reducer.get_reducer().init(base_t::m_result_ptr);
     }
   }
 
