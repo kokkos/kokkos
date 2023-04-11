@@ -459,17 +459,10 @@ KOKKOS_INLINE_FUNCTION void device_check_condition() {
   checker.truth(all_of(a == decltype(a)(16)));
 }
 
-template <typename Abi>
+template <typename Abi, typename... DataTypes>
 inline void host_check_math_ops_all_types(
-    Kokkos::Experimental::Impl::data_types<>) {}
-
-template <typename Abi, typename DataType, typename... RestTypes>
-inline void host_check_math_ops_all_types(
-    Kokkos::Experimental::Impl::data_types<DataType, RestTypes...> =
-        Kokkos::Experimental::Impl::data_type_set()) {
-  host_check_math_ops<Abi, DataType>();
-  host_check_math_ops_all_types<Abi>(
-      Kokkos::Experimental::Impl::data_types<RestTypes...>());
+    Kokkos::Experimental::Impl::data_types<DataTypes...>) {
+  (host_check_math_ops<Abi, DataTypes>(), ...);
 }
 
 template <typename Abi>
