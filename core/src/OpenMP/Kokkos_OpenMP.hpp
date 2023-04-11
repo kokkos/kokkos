@@ -39,6 +39,7 @@ static_assert(false,
 #include <Kokkos_Parallel.hpp>
 #include <Kokkos_TaskScheduler.hpp>
 #include <Kokkos_Layout.hpp>
+#include <impl/Kokkos_ExecutionSpaceStatus.hpp>
 #include <impl/Kokkos_HostSharedPtr.hpp>
 #include <impl/Kokkos_Profiling_Interface.hpp>
 #include <impl/Kokkos_InitializationSettings.hpp>
@@ -83,6 +84,12 @@ class OpenMP {
   OpenMP();
 
   OpenMP(int pool_size);
+
+  Experimental::ExecutionSpaceStatus get_status() const
+  {
+    // OpenMP is synchronous
+    return Experimental::ExecutionSpaceStatus::complete;
+  }
 
   /// \brief Print configuration information to the given output stream.
   void print_configuration(std::ostream& os, bool verbose = false) const;

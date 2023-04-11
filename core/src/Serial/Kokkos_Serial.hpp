@@ -38,6 +38,7 @@ static_assert(false,
 #include <Kokkos_HostSpace.hpp>
 #include <Kokkos_ScratchSpace.hpp>
 #include <Kokkos_MemoryTraits.hpp>
+#include <impl/Kokkos_ExecutionSpaceStatus.hpp>
 #include <impl/Kokkos_HostThreadTeam.hpp>
 #include <impl/Kokkos_FunctorAnalysis.hpp>
 #include <impl/Kokkos_Tools.hpp>
@@ -107,6 +108,12 @@ class Serial {
   //@}
 
   Serial();
+
+  Experimental::ExecutionSpaceStatus get_status() const
+  {
+    // Serial is synchronous
+    return Experimental::ExecutionSpaceStatus::complete;
+  }
 
   /// \brief True if and only if this method is being called in a
   ///   thread-parallel function.
