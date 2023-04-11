@@ -128,7 +128,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     // respected. Hence we need to use `num_teams` routine to restrict the
     // number of teams generated to max_active_teams. Hopefully we can avoid the
     // num_teams clause in the future and let compiler pick the right number of
-    // teams. This is true for all compilers.
+    // teams. This is not true for Intel architectures.
 
     // If the league size is <=0, do not launch the kernel.
     if (max_active_teams <= 0) return;
