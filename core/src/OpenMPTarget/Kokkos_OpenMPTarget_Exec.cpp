@@ -67,6 +67,8 @@ void OpenMPTargetExec::verify_initialized(const char* const label) {
     msg.append(" ERROR: not initialized");
     Kokkos::Impl::throw_runtime_exception(msg);
   }
+  OpenMPTargetExec::MAX_ACTIVE_THREADS =
+      Kokkos::Experimental::OpenMPTarget().concurrency();
 }
 
 void* OpenMPTargetExec::m_scratch_ptr         = nullptr;
@@ -74,8 +76,7 @@ int64_t OpenMPTargetExec::m_scratch_size      = 0;
 int* OpenMPTargetExec::m_lock_array           = nullptr;
 int64_t OpenMPTargetExec::m_lock_size         = 0;
 uint32_t* OpenMPTargetExec::m_uniquetoken_ptr = nullptr;
-int OpenMPTargetExec::MAX_ACTIVE_THREADS =
-    Kokkos::Experimental::OpenMPTarget().concurrency();
+int OpenMPTargetExec::MAX_ACTIVE_THREADS      = 0;
 
 void OpenMPTargetExec::clear_scratch() {
   Kokkos::Experimental::OpenMPTargetSpace space;

@@ -112,7 +112,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
                                                      : f) reduction(custom \
                                                                     : result)
     for (auto i = begin; i < end; ++i) {
-      if constexpr (std::is_void<TagType>::value) {
+      if constexpr (std::is_void_v<TagType>) {
         f(i, result);
       } else {
         f(TagType(), i, result);
@@ -151,7 +151,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
          map(to:f) reduction(+: result)
         for (auto i = begin; i < end; ++i)
 
-          if constexpr (std::is_void<TagType>::value) {
+          if constexpr (std::is_void_v<TagType>) {
             f(i, result);
           } else {
             f(TagType(), i, result);
@@ -163,7 +163,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
                                                                     : result)
         for (auto i = begin; i < end; ++i)
 
-          if constexpr (std::is_void<TagType>::value) {
+          if constexpr (std::is_void_v<TagType>) {
             f(i, result);
           } else {
             f(TagType(), i, result);
@@ -185,7 +185,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
       }
 #pragma omp target teams distribute parallel for map(to:f) reduction(+:result[:NumReductions])
       for (auto i = begin; i < end; ++i) {
-        if constexpr (std::is_void<TagType>::value) {
+        if constexpr (std::is_void_v<TagType>) {
           f(i, result);
         } else {
           f(TagType(), i, result);
@@ -268,7 +268,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
         // Accumulate partial results in thread specific storage.
 #pragma omp for simd
         for (auto i = team_begin; i < team_end; ++i) {
-          if constexpr (std::is_void<TagType>::value) {
+          if constexpr (std::is_void_v<TagType>) {
             f(i, result);
           } else {
             f(TagType(), i, result);
@@ -390,7 +390,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
         typename PolicyType::member_type team(
             league_id, league_size, team_size, vector_length, scratch_ptr,
             blockIdx, shmem_size_L0, shmem_size_L1);
-        if constexpr (std::is_void<TagType>::value)
+        if constexpr (std::is_void_v<TagType>)
           f(team, result);
         else
           f(TagType(), team, result);
@@ -410,7 +410,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
         typename PolicyType::member_type team(i, league_size, team_size,
                                               vector_length, scratch_ptr, i,
                                               shmem_size_L0, shmem_size_L1);
-        if constexpr (std::is_void<TagType>::value)
+        if constexpr (std::is_void_v<TagType>)
           f(team, result);
         else
           f(TagType(), team, result);
@@ -470,7 +470,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
             typename PolicyType::member_type team(
                 league_id, league_size, team_size, vector_length, scratch_ptr,
                 blockIdx, shmem_size_L0, shmem_size_L1);
-            if constexpr (std::is_void<TagType>::value)
+            if constexpr (std::is_void_v<TagType>)
               f(team, result);
             else
               f(TagType(), team, result);
@@ -497,7 +497,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
             typename PolicyType::member_type team(
                 league_id, league_size, team_size, vector_length, scratch_ptr,
                 blockIdx, shmem_size_L0, shmem_size_L1);
-            if constexpr (std::is_void<TagType>::value)
+            if constexpr (std::is_void_v<TagType>)
               f(team, result);
             else
               f(TagType(), team, result);
@@ -528,7 +528,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
           typename PolicyType::member_type team(
               league_id, league_size, team_size, vector_length, scratch_ptr,
               blockIdx, shmem_size_L0, shmem_size_L1);
-          if constexpr (std::is_void<TagType>::value)
+          if constexpr (std::is_void_v<TagType>)
             f(team, result);
           else
             f(TagType(), team, result);
@@ -617,7 +617,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
           typename PolicyType::member_type team(
               league_id, league_size, team_size, vector_length, scratch_ptr,
               team_num, shmem_size_L0, shmem_size_L1);
-          if constexpr (std::is_void<TagType>::value) {
+          if constexpr (std::is_void_v<TagType>) {
             f(team, result);
           } else {
             f(TagType(), team, result);

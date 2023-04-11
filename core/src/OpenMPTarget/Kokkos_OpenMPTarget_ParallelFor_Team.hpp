@@ -157,7 +157,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
         typename Policy::member_type team(league_id, league_size, team_size,
                                           vector_length, scratch_ptr, blockIdx,
                                           shmem_size_L0, shmem_size_L1);
-        if constexpr (std::is_void<TagType>::value)
+        if constexpr (std::is_void_v<TagType>)
           m_functor(team);
         else
           m_functor(TagType(), team);
@@ -176,7 +176,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
         typename Policy::member_type team(i, league_size, team_size,
                                           vector_length, scratch_ptr, i,
                                           shmem_size_L0, shmem_size_L1);
-        if constexpr (std::is_void<TagType>::value)
+        if constexpr (std::is_void_v<TagType>)
           m_functor(team);
         else
           m_functor(TagType(), team);
