@@ -23,4 +23,3 @@ enum class ExecutionSpaceStatus { submitted, running, complete };
 }
 }  // namespace Kokkos
 #endif  // KOKKOS_EXECUTION_SPACE_STATUS_HPP
--

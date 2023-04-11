@@ -35,6 +35,7 @@ static_assert(false,
 #include <Kokkos_Parallel.hpp>
 #include <Kokkos_TaskScheduler.hpp>
 #include <Kokkos_Layout.hpp>
+#include <impl/Kokkos_ExecutionSpaceStatus.hpp>
 #include <impl/Kokkos_Profiling_Interface.hpp>
 #include <impl/Kokkos_InitializationSettings.hpp>
 #include <KokkosExp_MDRangePolicy.hpp>
@@ -64,6 +65,11 @@ class OpenMPTarget {
   using size_type    = memory_space::size_type;
 
   using scratch_memory_space = ScratchMemorySpace<OpenMPTarget>;
+
+  Experimental::ExecutionSpaceStatus get_status() const {
+    // OpenMPTarget is synchronous
+    return Experimental::ExecutionSpaceStatus::complete;
+  }
 
   inline static bool in_parallel() { return omp_in_parallel(); }
 
