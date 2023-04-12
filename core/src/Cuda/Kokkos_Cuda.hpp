@@ -244,30 +244,6 @@ struct DeviceTypeTraits<Cuda> {
 };
 }  // namespace Experimental
 }  // namespace Tools
-
-namespace Impl {
-
-template <class DT, class... DP>
-struct ZeroMemset<Kokkos::Cuda, DT, DP...> {
-  ZeroMemset(const Kokkos::Cuda& exec_space_instance,
-             const View<DT, DP...>& dst,
-             typename View<DT, DP...>::const_value_type&) {
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMemsetAsync(
-        dst.data(), 0,
-        dst.size() * sizeof(typename View<DT, DP...>::value_type),
-        exec_space_instance.cuda_stream()));
-    instance.impl_internal_space_instance()->m_internal_status =
-        Kokkos::Experimental::ExecutionSpaceStatus::submitted;
-  }
-
-  ZeroMemset(const View<DT, DP...>& dst,
-             typename View<DT, DP...>::const_value_type&) {
-    KOKKOS_IMPL_CUDA_SAFE_CALL(
-        cudaMemset(dst.data(), 0,
-                   dst.size() * sizeof(typename View<DT, DP...>::value_type)));
-  }
-};
-}  // namespace Impl
 }  // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/
