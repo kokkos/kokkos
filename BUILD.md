@@ -199,9 +199,6 @@ The following options control enabling TPLs:
 * Kokkos_ENABLE_HWLOC
     * Whether to enable the HWLOC library
     * BOOL Default: Off
-* Kokkos_ENABLE_LIBNUMA
-    * Whether to enable the LIBNUMA library
-    * BOOL Default: Off
 * Kokkos_ENABLE_MEMKIND
     * Whether to enable the MEMKIND library
     * BOOL Default: Off
@@ -218,9 +215,6 @@ The following options control finding and configuring non-CMake TPLs:
     * PATH Default:
 * Kokkos_HWLOC_DIR or HWLOC_ROOT
     * Location of HWLOC install prefix
-    * PATH Default:
-* Kokkos_LIBNUMA_DIR or LIBNUMA_ROOT
-    * Location of LIBNUMA install prefix
     * PATH Default:
 * Kokkos_MEMKIND_DIR or MEMKIND_ROOT
     * Location of MEMKIND install prefix
