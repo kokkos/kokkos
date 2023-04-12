@@ -27,6 +27,7 @@ static_assert(false,
 #include <Kokkos_Concepts.hpp>
 #include <Kokkos_Layout.hpp>
 #include <Kokkos_ScratchSpace.hpp>
+#include <impl/Kokkos_ExecutionSpaceStatus.hpp>
 #include <impl/Kokkos_InitializationSettings.hpp>
 #include <impl/Kokkos_Profiling_Interface.hpp>
 #include <OpenACC/Kokkos_OpenACC_Traits.hpp>
@@ -81,6 +82,13 @@ class OpenACC {
   void fence(std::string const& name =
                  "Kokkos::OpenACC::fence(): Unnamed Instance Fence") const;
   static void impl_static_fence(std::string const& name);
+
+  Experimental::ExecutionSpaceStatus get_status() const
+  {
+    // OpenACC doesn't provide a query function.
+    fence("OpenACC::get_status()");
+    return Experimental::ExecutionSpaceStatus::complete;
+  }
 
   static char const* name() { return "OpenACC"; }
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
