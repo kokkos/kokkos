@@ -517,6 +517,11 @@ class simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> {
                                                        element_aligned_tag) {
     m_value = _mm512_loadu_epi64(ptr);
   }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_to(
+      value_type* ptr, element_aligned_tag) const {
+    _mm512_mask_storeu_epi64(ptr, static_cast<__mmask8>(mask_type(true)),
+                             m_value);
+  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd
   operator>>(unsigned int rhs) const {
     return _mm512_srli_epi64(m_value, rhs);
@@ -1032,6 +1037,12 @@ class const_where_expression<
   const_where_expression(mask_type const& mask_arg, value_type const& value_arg)
       : m_value(const_cast<value_type&>(value_arg)), m_mask(mask_arg) {}
 
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+  void copy_to(std::int64_t* mem, element_aligned_tag) const {
+    _mm512_mask_storeu_epi64(mem, static_cast<__mmask8>(m_mask),
+                             static_cast<__m512i>(m_value));
+  }
+
   friend constexpr auto const& Impl::mask<std::int64_t, abi_type>(
       const_where_expression<mask_type, value_type> const& x);
 
@@ -1088,6 +1099,12 @@ class const_where_expression<
   const_where_expression(mask_type const& mask_arg, value_type const& value_arg)
       : m_value(const_cast<value_type&>(value_arg)), m_mask(mask_arg) {}
 
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+  void copy_to(std::uint64_t* mem, element_aligned_tag) const {
+    _mm512_mask_storeu_epi64(mem, static_cast<__mmask8>(m_mask),
+                             static_cast<__m512i>(m_value));
+  }
+
   friend constexpr auto const& Impl::mask<std::uint64_t, abi_type>(
       const_where_expression<mask_type, value_type> const& x);
 
@@ -1096,33 +1113,34 @@ class const_where_expression<
 };
 
 template <>
-class where_expression<simd_mask<uint64_t, simd_abi::avx512_fixed_size<8>>,
-                       simd<uint64_t, simd_abi::avx512_fixed_size<8>>>
+class where_expression<simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>>,
+                       simd<std::uint64_t, simd_abi::avx512_fixed_size<8>>>
     : public const_where_expression<
-          simd_mask<uint64_t, simd_abi::avx512_fixed_size<8>>,
-          simd<uint64_t, simd_abi::avx512_fixed_size<8>>> {
+          simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>>,
+          simd<std::uint64_t, simd_abi::avx512_fixed_size<8>>> {
  public:
   where_expression(
-      simd_mask<uint64_t, simd_abi::avx512_fixed_size<8>> const& mask_arg,
-      simd<uint64_t, simd_abi::avx512_fixed_size<8>>& value_arg)
+      simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>> const& mask_arg,
+      simd<std::uint64_t, simd_abi::avx512_fixed_size<8>>& value_arg)
       : const_where_expression(mask_arg, value_arg) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-  void copy_from(uint64_t const* mem, element_aligned_tag) {
+  void copy_from(std::uint64_t const* mem, element_aligned_tag) {
     m_value = value_type(_mm512_mask_loadu_epi64(
         _mm512_set1_epi64(0.0), static_cast<__mmask8>(m_mask), mem));
   }
-  template <class U, std::enable_if_t<
-                         std::is_convertible_v<
-                             U, simd<uint64_t, simd_abi::avx512_fixed_size<8>>>,
-                         bool> = false>
+  template <class U,
+            std::enable_if_t<
+                std::is_convertible_v<
+                    U, simd<std::uint64_t, simd_abi::avx512_fixed_size<8>>>,
+                bool> = false>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void operator=(U&& x) {
     auto const x_as_value_type =
-        static_cast<simd<uint64_t, simd_abi::avx512_fixed_size<8>>>(
+        static_cast<simd<std::uint64_t, simd_abi::avx512_fixed_size<8>>>(
             std::forward<U>(x));
-    m_value =
-        simd<uint64_t, simd_abi::avx512_fixed_size<8>>(_mm512_mask_blend_epi64(
-            static_cast<__mmask8>(m_mask), static_cast<__m512i>(m_value),
-            static_cast<__m512i>(x_as_value_type)));
+    m_value = simd<std::uint64_t, simd_abi::avx512_fixed_size<8>>(
+        _mm512_mask_blend_epi64(static_cast<__mmask8>(m_mask),
+                                static_cast<__m512i>(m_value),
+                                static_cast<__m512i>(x_as_value_type)));
   }
 };
 
