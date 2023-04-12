@@ -110,15 +110,16 @@ void OpenMPTargetExec::resize_scratch(int64_t team_size, int64_t shmem_size_L0,
   int max_active_teams =
       std::min(OpenMPTargetExec::MAX_ACTIVE_THREADS / team_size, league_size);
 
-  // Set max_active_teams as the upper bound to the number of teams that can be
-  // generated.
-  omp_set_num_teams(max_active_teams);
+  // max_active_teams is the number of active teams on the given hardware.
+  // We set the number of teams to be twice the number of max_active_teams for
+  // the compiler to pick the right number in its case.
+  omp_set_num_teams(max_active_teams * 2);
 
   // Total amount of scratch memory allocated is depenedent
   // on the maximum number of in-flight teams possible.
   int64_t total_size =
       (shmem_size + OpenMPTargetExecTeamMember::TEAM_REDUCE_SIZE + padding) *
-      max_active_teams;
+      max_active_teams * 2;
 
   if (total_size > m_scratch_size) {
     space.deallocate(m_scratch_ptr, m_scratch_size);

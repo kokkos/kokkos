@@ -84,8 +84,8 @@ int OpenMPTargetInternal::concurrency() const {
 #pragma omp target map(max_threads)
   { max_threads = omp_get_num_procs(); }
 
-  // Multiply the number of processors with teh SIMD length.
-  max_threads *= 64;
+  // Multiply the number of processors with the SIMD length.
+  max_threads *= 32;
 #endif
 
   return max_threads;
