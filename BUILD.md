@@ -112,10 +112,3 @@ For dev-build details, consult the kokkos-spack repository [README](https://gith
 # Kokkos Keyword Listing
 
 Please refer to our [wiki](https://kokkos.github.io/kokkos-core-wiki/keywords.html#cmake-keywords).
-
-##### [LICENSE](https://github.com/kokkos/kokkos/blob/devel/LICENSE)
-
-[![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
-
-Under the terms of Contract DE-NA0003525 with NTESS,
-the U.S. Government retains certain rights in this software.
