@@ -141,7 +141,7 @@ void HIPInternal::fence(const std::string &name) const {
       Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{
           impl_get_instance_id()},
       [&]() { KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamSynchronize(m_stream)); });
-                                        m_internal_status = Experimental::ExecutionSpaceStatus::complete;
+  m_internal_status = Experimental::ExecutionSpaceStatus::complete;
 }
 
 void HIPInternal::initialize(hipStream_t stream, bool manage_stream) {
@@ -160,8 +160,8 @@ void HIPInternal::initialize(hipStream_t stream, bool manage_stream) {
   const bool ok_init = nullptr == m_scratchSpace || nullptr == m_scratchFlags;
 
   if (ok_init) {
-    m_stream        = stream;
-    hipEventCreateWithFlags(&m_last_event,hipEventDisableTiming);
+    m_stream = stream;
+    hipEventCreateWithFlags(&m_last_event, hipEventDisableTiming);
     m_manage_stream = manage_stream;
 
     //----------------------------------
@@ -360,7 +360,7 @@ void HIPInternal::finalize() {
   m_scratchSpace      = nullptr;
   m_scratchFlags      = nullptr;
   m_stream            = nullptr;
-      hipEventDestroy(m_last_event);
+  hipEventDestroy(m_last_event);
   for (int i = 0; i < m_n_team_scratch; ++i) {
     m_team_scratch_current_size[i] = 0;
     m_team_scratch_ptr[i]          = nullptr;
@@ -418,28 +418,26 @@ void hip_internal_error_throw(hipError_t e, const char *name, const char *file,
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
- Experimental::ExecutionSpaceStatus HIP::get_status() const
-  {
-     switch (m_space_instance->m_internal_status)
-     {
-             case Experimental::ExecutionSpaceStatus::complete:
-                                       return Experimental::ExecutionSpaceStatus::complete;
-             case Experimental::ExecutionSpaceStatus::submitted:
-                  hipEventRecord(m_space_instance->m_last_event, m_space_instance->m_stream);
-                  [[fallthrough]];
-             case Experimental::ExecutionSpaceStatus::running:
-                  if(hipEventQuery(m_space_instance->m_last_event) == hipSuccess)
-                  {
-                                    m_space_instance->m_internal_status = Experimental::ExecutionSpaceStatus::complete;
-                                    return Experimental::ExecutionSpaceStatus::complete;
-                  }
-                  return Experimental::ExecutionSpaceStatus::running;
-        default:
-                  assert(false);
-     }
-  
-     return Experimental::ExecutionSpaceStatus::complete;
+Experimental::ExecutionSpaceStatus HIP::get_status() const {
+  switch (m_space_instance->m_internal_status) {
+    case Experimental::ExecutionSpaceStatus::complete:
+      return Experimental::ExecutionSpaceStatus::complete;
+    case Experimental::ExecutionSpaceStatus::submitted:
+      hipEventRecord(m_space_instance->m_last_event,
+                     m_space_instance->m_stream);
+      [[fallthrough]];
+    case Experimental::ExecutionSpaceStatus::running:
+      if (hipEventQuery(m_space_instance->m_last_event) == hipSuccess) {
+        m_space_instance->m_internal_status =
+            Experimental::ExecutionSpaceStatus::complete;
+        return Experimental::ExecutionSpaceStatus::complete;
+      }
+      return Experimental::ExecutionSpaceStatus::running;
+    default: assert(false);
   }
+
+  return Experimental::ExecutionSpaceStatus::complete;
+}
 
 HIP::size_type HIP::detect_device_count() {
   int hipDevCount;

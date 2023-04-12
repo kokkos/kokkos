@@ -109,8 +109,7 @@ class Serial {
 
   Serial();
 
-  Experimental::ExecutionSpaceStatus get_status() const
-  {
+  Experimental::ExecutionSpaceStatus get_status() const {
     // Serial is synchronous
     return Experimental::ExecutionSpaceStatus::complete;
   }

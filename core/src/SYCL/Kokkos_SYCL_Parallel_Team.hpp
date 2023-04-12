@@ -445,8 +445,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   inline void execute() const {
     if (m_league_size == 0) return;
 
-    auto& instance = *m_policy.space()
-                                .impl_internal_space_instance();
+    auto& instance = *m_policy.space().impl_internal_space_instance();
 
     Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem&
         indirectKernelMem = instance.get_indirect_kernel_mem();

@@ -83,8 +83,7 @@ class OpenACC {
                  "Kokkos::OpenACC::fence(): Unnamed Instance Fence") const;
   static void impl_static_fence(std::string const& name);
 
-  Experimental::ExecutionSpaceStatus get_status() const
-  {
+  Experimental::ExecutionSpaceStatus get_status() const {
     // OpenACC doesn't provide a query function.
     fence("OpenACC::get_status()");
     return Experimental::ExecutionSpaceStatus::complete;

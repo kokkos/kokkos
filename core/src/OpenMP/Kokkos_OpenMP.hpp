@@ -85,8 +85,7 @@ class OpenMP {
 
   OpenMP(int pool_size);
 
-  Experimental::ExecutionSpaceStatus get_status() const
-  {
+  Experimental::ExecutionSpaceStatus get_status() const {
     // OpenMP is synchronous
     return Experimental::ExecutionSpaceStatus::complete;
   }

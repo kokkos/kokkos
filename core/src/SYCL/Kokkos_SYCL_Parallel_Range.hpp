@@ -117,8 +117,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
   void execute() const {
     if (m_policy.begin() == m_policy.end()) return;
 
-    auto& instance = *m_policy.space()
-                                .impl_internal_space_instance();
+    auto& instance = *m_policy.space().impl_internal_space_instance();
 
     Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem&
         indirectKernelMem = instance.get_indirect_kernel_mem();
@@ -281,7 +280,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   }
 
   void execute() const {
-auto & instance  = *m_space.impl_internal_space_instance();
+    auto& instance = *m_space.impl_internal_space_instance();
 
     Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem&
         indirectKernelMem = instance.get_indirect_kernel_mem();

@@ -50,50 +50,56 @@ TEST(TEST_CATEGORY, execution_space_as_class_data_member) {
 }
 #endif
 
-
 template <class ExecutionSpace>
 struct CheckExecutionSpaceStatus {
+  KOKKOS_FUNCTION void operator()(int i, int& update) const { update += i; };
 
-	
-  KOKKOS_FUNCTION void operator()(int i, int& update) const
-                  {
-                    update += i;
-                  };
+  CheckExecutionSpaceStatus() { check(); }
 
-	CheckExecutionSpaceStatus()
-{
-	check();
-}
+  void check() const {
+    std::cout << "submitted: "
+              << static_cast<int>(
+                     Kokkos::Experimental::ExecutionSpaceStatus::submitted)
+              << '\n'
+              << "running: "
+              << static_cast<int>(
+                     Kokkos::Experimental::ExecutionSpaceStatus::running)
+              << '\n'
+              << "complete: "
+              << static_cast<int>(
+                     Kokkos::Experimental::ExecutionSpaceStatus::complete)
+              << std::endl;
+    ExecutionSpace exec;
+    std::cout << static_cast<int>(exec.get_status()) << std::endl;
+    ASSERT_EQ(exec.get_status(),
+              Kokkos::Experimental::ExecutionSpaceStatus::complete);
 
-void check() const {
-  std::cout << "submitted: " << static_cast<int>(Kokkos::Experimental::ExecutionSpaceStatus::submitted) << '\n'
-	    << "running: "   << static_cast<int>(Kokkos::Experimental::ExecutionSpaceStatus::running)   << '\n'
-	    << "complete: "  << static_cast<int>(Kokkos::Experimental::ExecutionSpaceStatus::complete)  << std::endl;
-  ExecutionSpace exec;
-  std::cout << static_cast<int>(exec.get_status()) << std::endl;
-  ASSERT_EQ(exec.get_status(), Kokkos::Experimental::ExecutionSpaceStatus::complete);  
-  
-  const int N = 10000;
-  Kokkos::View<int, typename ExecutionSpace::memory_space> result_view("result_view");
+    const int N = 10000;
+    Kokkos::View<int, typename ExecutionSpace::memory_space> result_view(
+        "result_view");
     int result;
 
-  Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecutionSpace>(exec, 0, N), *this, result_view);
-  Kokkos::deep_copy(exec, result, result_view);
-  while (exec.get_status() != Kokkos::Experimental::ExecutionSpaceStatus::complete){}
-  ASSERT_EQ(result, N/2*(N-1));
+    Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecutionSpace>(exec, 0, N),
+                            *this, result_view);
+    Kokkos::deep_copy(exec, result, result_view);
+    while (exec.get_status() !=
+           Kokkos::Experimental::ExecutionSpaceStatus::complete) {
+    }
+    ASSERT_EQ(result, N / 2 * (N - 1));
 
-  Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecutionSpace>(exec, 0, N), *this, result_view);
-  std::cout << "before deep_copy" << std::endl;
-  Kokkos::deep_copy(exec, result, result_view);
+    Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecutionSpace>(exec, 0, N),
+                            *this, result_view);
+    std::cout << "before deep_copy" << std::endl;
+    Kokkos::deep_copy(exec, result, result_view);
     std::cout << "after deep_copy" << std::endl;
-  exec.fence();
-    ASSERT_EQ(exec.get_status(), Kokkos::Experimental::ExecutionSpaceStatus::complete);
-  ASSERT_EQ(result, N/2*(N-1));
-}
+    exec.fence();
+    ASSERT_EQ(exec.get_status(),
+              Kokkos::Experimental::ExecutionSpaceStatus::complete);
+    ASSERT_EQ(result, N / 2 * (N - 1));
+  }
 };
 
-TEST(TEST_CATEGORY, execution_space_status)
-{
+TEST(TEST_CATEGORY, execution_space_status) {
   CheckExecutionSpaceStatus<TEST_EXECSPACE>();
 }
 

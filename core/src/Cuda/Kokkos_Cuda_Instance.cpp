@@ -422,8 +422,8 @@ Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaEventCreate(&constantMemReusable));
   }
 
-  m_stream        = stream;
-  cudaEventCreateWithFlags(&m_last_event,cudaEventDisableTiming);
+  m_stream = stream;
+  cudaEventCreateWithFlags(&m_last_event, cudaEventDisableTiming);
   m_manage_stream = manage_stream;
   for (int i = 0; i < m_n_team_scratch; ++i) {
     m_team_scratch_current_size[i] = 0;
@@ -623,7 +623,7 @@ void CudaInternal::finalize() {
   m_scratchFlags        = nullptr;
   m_scratchUnified      = nullptr;
   m_stream              = nullptr;
-    cudaEventDestroy(m_last_event);
+  cudaEventDestroy(m_last_event);
   for (int i = 0; i < m_n_team_scratch; ++i) {
     m_team_scratch_current_size[i] = 0;
     m_team_scratch_ptr[i]          = nullptr;
@@ -686,28 +686,26 @@ Cuda::size_type *cuda_internal_scratch_unified(const Cuda &instance,
 
 namespace Kokkos {
 
- Experimental::ExecutionSpaceStatus Cuda::get_status() const
-  {
-     switch (m_space_instance->m_internal_status)
-     {
-             case Experimental::ExecutionSpaceStatus::complete:
-		                       return Experimental::ExecutionSpaceStatus::complete;
-             case Experimental::ExecutionSpaceStatus::submitted:
-                  cudaEventRecord(m_space_instance->m_last_event, m_space_instance->m_stream);
-                  [[fallthrough]];
-             case Experimental::ExecutionSpaceStatus::running:
-                  if(cudaEventQuery(m_space_instance->m_last_event) == cudaSuccess)
-                  {
-                                    m_space_instance->m_internal_status = Experimental::ExecutionSpaceStatus::complete;
-                                    return Experimental::ExecutionSpaceStatus::complete;
-                  }
-                  return Experimental::ExecutionSpaceStatus::running;
-        default:
-                  assert(false);
-     }
-
-     return Experimental::ExecutionSpaceStatus::complete;
+Experimental::ExecutionSpaceStatus Cuda::get_status() const {
+  switch (m_space_instance->m_internal_status) {
+    case Experimental::ExecutionSpaceStatus::complete:
+      return Experimental::ExecutionSpaceStatus::complete;
+    case Experimental::ExecutionSpaceStatus::submitted:
+      cudaEventRecord(m_space_instance->m_last_event,
+                      m_space_instance->m_stream);
+      [[fallthrough]];
+    case Experimental::ExecutionSpaceStatus::running:
+      if (cudaEventQuery(m_space_instance->m_last_event) == cudaSuccess) {
+        m_space_instance->m_internal_status =
+            Experimental::ExecutionSpaceStatus::complete;
+        return Experimental::ExecutionSpaceStatus::complete;
+      }
+      return Experimental::ExecutionSpaceStatus::running;
+    default: assert(false);
   }
+
+  return Experimental::ExecutionSpaceStatus::complete;
+}
 
 Cuda::size_type Cuda::detect_device_count() {
   return Impl::CudaInternalDevices::singleton().m_cudaDevCount;
@@ -933,7 +931,8 @@ void Cuda::impl_static_fence(const std::string &name) {
 
 void Cuda::fence(const std::string &name) const {
   m_space_instance->fence(name);
-                                      m_space_instance->m_internal_status = Experimental::ExecutionSpaceStatus::complete;
+  m_space_instance->m_internal_status =
+      Experimental::ExecutionSpaceStatus::complete;
 }
 
 const char *Cuda::name() { return "Cuda"; }

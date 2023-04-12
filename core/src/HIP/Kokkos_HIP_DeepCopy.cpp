@@ -43,7 +43,8 @@ void DeepCopyAsyncHIP(const HIP& instance, void* dst, void const* src,
                       size_t n) {
   KOKKOS_IMPL_HIP_SAFE_CALL(
       hipMemcpyAsync(dst, src, n, hipMemcpyDefault, instance.hip_stream()));
-    instance.impl_internal_space_instance()->m_internal_status = Kokkos::Experimental::ExecutionSpaceStatus::submitted;
+  instance.impl_internal_space_instance()->m_internal_status =
+      Kokkos::Experimental::ExecutionSpaceStatus::submitted;
 }
 
 void DeepCopyAsyncHIP(void* dst, void const* src, size_t n) {

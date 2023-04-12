@@ -79,19 +79,18 @@ class SYCL {
   //! \name Functions that all Kokkos devices must implement.
   //@{
 
-  ExecutionSpaceStatus get_status() const
-  {
-    const sycl::info::event_command_status sycl_status = m_space_instance->m_last_event.get_info<sycl::info::event::command_execution_status>();
-    switch(sycl_status)
-    {
+  ExecutionSpaceStatus get_status() const {
+    const sycl::info::event_command_status sycl_status =
+        m_space_instance->m_last_event
+            .get_info<sycl::info::event::command_execution_status>();
+    switch (sycl_status) {
       case sycl::info::event_command_status::submitted:
-	      return ExecutionSpaceStatus::submitted;
+        return ExecutionSpaceStatus::submitted;
       case sycl::info::event_command_status::running:
-              return ExecutionSpaceStatus::running;
+        return ExecutionSpaceStatus::running;
       case sycl::info::event_command_status::complete:
-              return ExecutionSpaceStatus::complete;	
-      default:      
-        assert(false);
+        return ExecutionSpaceStatus::complete;
+      default: assert(false);
     }
     return ExecutionSpaceStatus::complete;
   }

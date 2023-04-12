@@ -72,8 +72,7 @@ class Threads {
   //! \name Static functions that all Kokkos devices must implement.
   //@{
 
-  Experimental::ExecutionSpaceStatus get_status() const
-  {
+  Experimental::ExecutionSpaceStatus get_status() const {
     // Threads` is synchronous
     return Experimental::ExecutionSpaceStatus::complete;
   }

@@ -149,7 +149,8 @@ struct ZeroMemset<HIP, DT, DP...> {
         dst.data(), 0,
         dst.size() * sizeof(typename View<DT, DP...>::value_type),
         exec_space.hip_stream()));
-        instance.impl_internal_space_instance()->m_internal_status = Kokkos::Experimental::ExecutionSpaceStatus::submitted;
+    instance.impl_internal_space_instance()->m_internal_status =
+        Kokkos::Experimental::ExecutionSpaceStatus::submitted;
   }
 
   ZeroMemset(const View<DT, DP...>& dst,
