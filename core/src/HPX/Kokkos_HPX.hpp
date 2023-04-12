@@ -42,6 +42,7 @@ static_assert(false,
 #include <Kokkos_ScratchSpace.hpp>
 #include <Kokkos_TaskScheduler.hpp>
 #include <impl/Kokkos_ConcurrentBitset.hpp>
+#include <impl/Kokkos_ExecutionSpaceStatus.hpp>
 #include <impl/Kokkos_FunctorAnalysis.hpp>
 #include <impl/Kokkos_HostSharedPtr.hpp>
 #include <impl/Kokkos_Tools.hpp>
@@ -199,6 +200,12 @@ class HPX {
   }
   uint32_t impl_instance_id() const noexcept {
     return impl_get_instance_data().m_instance_id;
+  }
+
+  Experimental::ExecutionSpaceStatus get_status() const {
+    // HPX doesn't provide a query function.
+    fence("HPX::get_status()");
+    return Experimental::ExecutionSpaceStatus::complete;
   }
 
   static bool in_parallel(HPX const & = HPX()) noexcept {
