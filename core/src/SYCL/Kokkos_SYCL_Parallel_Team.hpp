@@ -446,17 +446,16 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   inline void execute() const {
     if (m_league_size == 0) return;
 
-    auto& instance = *m_policy.space().impl_internal_space_instance();
-
+    auto& space = *m_policy.space().impl_internal_space_instance();
     Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem&
-        indirectKernelMem = instance.get_indirect_kernel_mem();
+        indirectKernelMem = space.get_indirect_kernel_mem();
 
     auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
         m_functor, indirectKernelMem);
 
-    sycl::event event     = sycl_direct_launch(m_policy, functor_wrapper,
-                                           functor_wrapper.get_copy_event());
-    instance.m_last_event = event;
+    sycl::event event  = sycl_direct_launch(m_policy, functor_wrapper,
+                                            functor_wrapper.get_copy_event());
+    space.m_last_event = event;
     functor_wrapper.register_event(event);
     space.register_team_scratch_event(m_scratch_pool_id, event);
   }
