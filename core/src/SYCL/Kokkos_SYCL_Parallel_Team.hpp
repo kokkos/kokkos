@@ -454,7 +454,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
         m_functor, indirectKernelMem);
 
     sycl::event event  = sycl_direct_launch(m_policy, functor_wrapper,
-                                            functor_wrapper.get_copy_event());
+                                           functor_wrapper.get_copy_event());
     space.m_last_event = event;
     functor_wrapper.register_event(event);
     space.register_team_scratch_event(m_scratch_pool_id, event);
