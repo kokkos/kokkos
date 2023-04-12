@@ -57,20 +57,7 @@ struct CheckExecutionSpaceStatus {
   CheckExecutionSpaceStatus() { check(); }
 
   void check() const {
-    std::cout << "submitted: "
-              << static_cast<int>(
-                     Kokkos::Experimental::ExecutionSpaceStatus::submitted)
-              << '\n'
-              << "running: "
-              << static_cast<int>(
-                     Kokkos::Experimental::ExecutionSpaceStatus::running)
-              << '\n'
-              << "complete: "
-              << static_cast<int>(
-                     Kokkos::Experimental::ExecutionSpaceStatus::complete)
-              << std::endl;
     ExecutionSpace exec;
-    std::cout << static_cast<int>(exec.get_status()) << std::endl;
     ASSERT_EQ(exec.get_status(),
               Kokkos::Experimental::ExecutionSpaceStatus::complete);
 
@@ -89,9 +76,7 @@ struct CheckExecutionSpaceStatus {
 
     Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecutionSpace>(exec, 0, N),
                             *this, result_view);
-    std::cout << "before deep_copy" << std::endl;
     Kokkos::deep_copy(exec, result, result_view);
-    std::cout << "after deep_copy" << std::endl;
     exec.fence();
     ASSERT_EQ(exec.get_status(),
               Kokkos::Experimental::ExecutionSpaceStatus::complete);

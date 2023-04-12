@@ -75,7 +75,6 @@ void DeepCopyAsyncCuda(const Cuda &instance, void *dst, const void *src,
       cudaMemcpyAsync(dst, src, n, cudaMemcpyDefault, instance.cuda_stream()));
   instance.impl_internal_space_instance()->m_internal_status =
       Kokkos::Experimental::ExecutionSpaceStatus::submitted;
-  std::cout << "in deep_copy" << std::endl;
 }
 
 void DeepCopyAsyncCuda(void *dst, const void *src, size_t n) {
