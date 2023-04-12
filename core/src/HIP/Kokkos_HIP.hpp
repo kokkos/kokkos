@@ -21,7 +21,7 @@
 
 #include <Kokkos_Layout.hpp>
 #include <HIP/Kokkos_HIP_Space.hpp>
-
+#include <impl/Kokkos_ExecutionSpaceStatus.hpp>
 #include <hip/hip_runtime_api.h>
 
 namespace Kokkos {
@@ -53,6 +53,8 @@ class HIP {
   //------------------------------------
   //! \name Functions that all Kokkos devices must implement.
   //@{
+
+  Experimental::ExecutionSpaceStatus get_status() const;
 
   KOKKOS_INLINE_FUNCTION static int in_parallel() {
 #if defined(__HIP_DEVICE_COMPILE__)
@@ -147,6 +149,7 @@ struct ZeroMemset<HIP, DT, DP...> {
         dst.data(), 0,
         dst.size() * sizeof(typename View<DT, DP...>::value_type),
         exec_space.hip_stream()));
+        instance.impl_internal_space_instance()->m_internal_status = Kokkos::Experimental::ExecutionSpaceStatus::submitted;
   }
 
   ZeroMemset(const View<DT, DP...>& dst,
