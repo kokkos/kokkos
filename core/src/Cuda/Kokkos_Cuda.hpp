@@ -39,6 +39,7 @@ static_assert(false,
 #include <Kokkos_Layout.hpp>
 #include <Kokkos_ScratchSpace.hpp>
 #include <Kokkos_MemoryTraits.hpp>
+#include <impl/Kokkos_ExecutionSpaceStatus.hpp>
 #include <impl/Kokkos_HostSharedPtr.hpp>
 #include <impl/Kokkos_InitializationSettings.hpp>
 
@@ -123,6 +124,8 @@ class Cuda {
   //--------------------------------------------------
   //! \name Functions that all Kokkos devices must implement.
   //@{
+
+  Experimental::ExecutionSpaceStatus get_status() const;
 
   /// \brief True if and only if this method is being called in a
   ///   thread-parallel function.
