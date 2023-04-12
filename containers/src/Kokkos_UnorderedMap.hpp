@@ -119,6 +119,36 @@ class UnorderedMapInsertResult {
   uint32_t m_status;
 };
 
+/// \class UnorderedMapInsertOpTypes
+///
+/// \brief Operations applied to the values array upon subsequent insertions.
+///
+/// The default behavior when a k,v pair already exists in the UnorderedMap is
+/// to perform no operation. Alternatively, the caller may select to
+/// instantiate the UnorderedMap with the AtomicAdd insert operator such that
+/// duplicate keys accumulate values into the given values array entry.
+/// \tparam ValueTypeView The UnorderedMap value array type.
+/// \tparam ValuesIdxType The index type for lookups in the value array.
+///
+/// Supported operations:
+///   NoOp:      the first key inserted stores the associated value.
+///   AtomicAdd: duplicate key insertions sum values together.
+template <class ValueTypeView, class ValuesIdxType>
+struct UnorderedMapInsertOpTypes {
+  using value_type = typename ValueTypeView::non_const_value_type;
+  struct NoOp {
+    KOKKOS_FUNCTION
+    void op(ValueTypeView, ValuesIdxType, const value_type) const {}
+  };
+  struct AtomicAdd {
+    KOKKOS_FUNCTION
+    void op(ValueTypeView values, ValuesIdxType values_idx,
+            const value_type v) const {
+      Kokkos::atomic_add(values.data() + values_idx, v);
+    }
+  };
+};
+
 /// \class UnorderedMap
 /// \brief Thread-safe, performance-portable lookup table.
 ///
@@ -186,7 +216,6 @@ class UnorderedMap {
  public:
   //! \name Public types and constants
   //@{
-
   // key_types
   using declared_key_type = Key;
   using key_type          = std::remove_const_t<declared_key_type>;
@@ -232,7 +261,6 @@ class UnorderedMap {
       UnorderedMap<Key, Value, host_mirror_space, Hasher, EqualTo>;
 
   using histogram_type = Impl::UnorderedMapHistogram<const_map_type>;
-
   //@}
 
  private:
@@ -263,13 +291,17 @@ class UnorderedMap {
  public:
   //! \name Public member functions
   //@{
+  using default_op_type =
+      typename UnorderedMapInsertOpTypes<value_type_view, uint32_t>::NoOp;
 
   /// \brief Constructor
   ///
   /// \param capacity_hint [in] Initial guess of how many unique keys will be
-  /// inserted into the map \param hash [in] Hasher function for \c Key
-  /// instances.  The
-  ///   default value usually suffices.
+  ///                           inserted into the map.
+  /// \param hash          [in] Hasher function for \c Key instances.  The
+  ///                           default value usually suffices.
+  /// \param equal_to      [in] The operator used for determining if two
+  ///                           keys are equal.
   UnorderedMap(size_type capacity_hint = 0, hasher_type hasher = hasher_type(),
                equal_to_type equal_to = equal_to_type())
       : m_bounded_insert(true),
@@ -442,9 +474,18 @@ class UnorderedMap {
   /// \param v [in] The corresponding value to attempt to insert.  If
   ///   using this class as a set (with Value = void), then you need not
   ///   provide this value.
-  KOKKOS_INLINE_FUNCTION
-  insert_result insert(key_type const &k,
-                       impl_value_type const &v = impl_value_type()) const {
+  /// \param insert_op [in] The operator used for combining values if a
+  ///                       key already exists. See
+  ///                       Kokkos::UnorderedMapInsertOpTypes for more ops.
+  template <typename InsertOpType = default_op_type>
+  KOKKOS_INLINE_FUNCTION insert_result
+  insert(key_type const &k, impl_value_type const &v = impl_value_type(),
+         [[maybe_unused]] InsertOpType arg_insert_op = InsertOpType()) const {
+    if constexpr (is_set) {
+      static_assert(std::is_same_v<InsertOpType, default_op_type>,
+                    "Insert Operations are not supported on sets.");
+    }
+
     insert_result result;
 
     if (!is_insertable_map || capacity() == 0u ||
@@ -532,6 +573,9 @@ class UnorderedMap {
         }
 
         result.set_existing(curr, free_existing);
+        if constexpr (!is_set) {
+          arg_insert_op.op(m_values, curr, v);
+        }
         not_done = false;
       }
       //------------------------------------------------------------

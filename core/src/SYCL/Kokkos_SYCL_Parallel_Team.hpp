@@ -380,6 +380,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   // Only let one ParallelFor/Reduce modify the team scratch memory. The
   // constructor acquires the mutex which is released in the destructor.
   std::scoped_lock<std::mutex> m_scratch_lock;
+  int m_scratch_pool_id = -1;
 
   template <typename FunctorWrapper>
   sycl::event sycl_direct_launch(const Policy& policy,
@@ -457,6 +458,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
                                            functor_wrapper.get_copy_event());
     instance.m_last_event = event;
     functor_wrapper.register_event(event);
+    space.register_team_scratch_event(m_scratch_pool_id, event);
   }
 
   ParallelFor(FunctorType const& arg_functor, Policy const& arg_policy)
@@ -482,9 +484,11 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     // Functor's reduce memory, team scan memory, and team shared memory depend
     // upon team size.
-    auto& space = *m_policy.space().impl_internal_space_instance();
+    auto& space       = *m_policy.space().impl_internal_space_instance();
+    m_scratch_pool_id = space.acquire_team_scratch_space();
     m_global_scratch_ptr =
         static_cast<sycl::device_ptr<char>>(space.resize_team_scratch_space(
+            m_scratch_pool_id,
             static_cast<ptrdiff_t>(m_scratch_size[1]) * m_league_size));
 
     if (static_cast<int>(space.m_maxShmemPerBlock) <
@@ -547,6 +551,7 @@ class ParallelReduce<CombinedFunctorReducerType,
   // Only let one ParallelFor/Reduce modify the team scratch memory. The
   // constructor acquires the mutex which is released in the destructor.
   std::scoped_lock<std::mutex> m_scratch_lock;
+  int m_scratch_pool_id = -1;
 
   template <typename PolicyType, typename FunctorWrapper,
             typename ReducerWrapper>
@@ -669,7 +674,7 @@ class ParallelReduce<CombinedFunctorReducerType,
                   item.barrier(sycl::access::fence_space::local_space);
 
                   SYCLReduction::workgroup_reduction<>(
-                      item, local_mem.get_pointer(), results_ptr,
+                      item, local_mem, results_ptr,
                       device_accessible_result_ptr, value_count, reducer, false,
                       std::min<std::size_t>(size,
                                             item.get_local_range()[0] *
@@ -697,7 +702,7 @@ class ParallelReduce<CombinedFunctorReducerType,
                     }
 
                     SYCLReduction::workgroup_reduction<>(
-                        item, local_mem.get_pointer(), results_ptr,
+                        item, local_mem, results_ptr,
                         device_accessible_result_ptr, value_count, reducer,
                         true,
                         std::min(n_wgroups, item.get_local_range()[0] *
@@ -717,7 +722,7 @@ class ParallelReduce<CombinedFunctorReducerType,
                     functor(WorkTag(), team_member, update);
 
                   SYCLReduction::workgroup_reduction<>(
-                      item, local_mem.get_pointer(), local_value, results_ptr,
+                      item, local_mem, local_value, results_ptr,
                       device_accessible_result_ptr, reducer, false,
                       std::min<std::size_t>(size,
                                             item.get_local_range()[0] *
@@ -743,7 +748,7 @@ class ParallelReduce<CombinedFunctorReducerType,
                     }
 
                     SYCLReduction::workgroup_reduction<>(
-                        item, local_mem.get_pointer(), local_value, results_ptr,
+                        item, local_mem, local_value, results_ptr,
                         device_accessible_result_ptr, reducer, true,
                         std::min(n_wgroups, item.get_local_range()[0] *
                                                 item.get_local_range()[1]));
@@ -833,6 +838,8 @@ class ParallelReduce<CombinedFunctorReducerType,
     instance.m_last_event = event;
     functor_wrapper.register_event(event);
     reducer_wrapper.register_event(event);
+
+    instance.register_team_scratch_event(m_scratch_pool_id, event);
   }
 
  private:
@@ -859,9 +866,11 @@ class ParallelReduce<CombinedFunctorReducerType,
 
     // Functor's reduce memory, team scan memory, and team shared memory depend
     // upon team size.
-    auto& space = *m_policy.space().impl_internal_space_instance();
+    auto& space       = *m_policy.space().impl_internal_space_instance();
+    m_scratch_pool_id = space.acquire_team_scratch_space();
     m_global_scratch_ptr =
         static_cast<sycl::device_ptr<char>>(space.resize_team_scratch_space(
+            m_scratch_pool_id,
             static_cast<ptrdiff_t>(m_scratch_size[1]) * m_league_size));
 
     if (static_cast<int>(space.m_maxShmemPerBlock) <

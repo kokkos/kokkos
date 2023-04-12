@@ -38,12 +38,12 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
   using pointer_type   = typename ReducerType::pointer_type;
   using reference_type = typename ReducerType::reference_type;
 
-  static constexpr int FunctorHasJoin =
+  static constexpr bool FunctorHasJoin =
       Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE, Policy,
-                            FunctorType>::has_join_member_function;
-  static constexpr int UseReducer =
+                            FunctorType>::Reducer::has_join_member_function();
+  static constexpr bool UseReducer =
       !std::is_same_v<FunctorType, typename ReducerType::functor_type>;
-  static constexpr int IsArray = std::is_pointer<reference_type>::value;
+  static constexpr bool IsArray = std::is_pointer_v<reference_type>;
 
   using ParReduceSpecialize =
       ParallelReduceSpecialize<FunctorType, Policy,
