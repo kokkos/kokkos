@@ -105,7 +105,7 @@ inline __float128 fma(__float128 x, __float128 y, __float128 z) { return ::fmaq(
 inline __float128 fmax(__float128 x, __float128 y) { return ::fmaxq(x, y); }
 inline __float128 fmin(__float128 x, __float128 y) { return ::fminq(x, y); }
 inline __float128 fdim(__float128 x, __float128 y) { return ::fdimq(x, y); }
-inline __float128 nanq(char const* arg) { return ::nanq(arg); }
+inline __float128 nan(char const* arg) { return ::nanq(arg); }
 // Exponential functions
 inline __float128 exp(__float128 x) { return ::expq(x); }
 #if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU >= 910)
