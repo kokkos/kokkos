@@ -193,18 +193,41 @@ class CudaInternal {
     }
   }
 
-  ///////////////////////////////////////////////////////////////////////////////////////////
+  // Using cudaAPI function/objects will be w.r.t. device 0 unless
+  // cudaSetDevice(device_id) is called with the correct device_id.
+  // The correct device_id is stored in the static variable
+  // CudaInternal::m_cudaDev set in Cuda::impl_initialize(). It is not
+  // sufficient to call cudaSetDevice(m_cudaDev) during cuda initialization
+  // only, however, since if a user creates a new thread, that thread will be
+  // given the default cuda env with device_id=0, causing errors when
+  // device_id!=0 is requested by the user. To ensure against this, almost all
+  // cudaAPI calls, as well as using cudaStream_t variables, must be proceeded
+  // by cudaSetDevice(device_id).
 
+  // This function sets device in cudaAPI to device requested at runtime (set in
+  // m_cudaDev).
   void set_cuda_device() const {
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
   }
 
-  template <bool setCudaDevice = true>
-  cudaStream_t get_stream() const {
-    if (setCudaDevice) set_cuda_device();
-    return m_stream;
-  }
+  // The following takes a cudaAPI function reference and its arguments as
+  // input, and either wraps the call in KOKKOS_IMPL_CUDA_SAFE_CALL() (if no
+  // return value needed, throws if error code is given) or returns the result
+  // of the function. If template setCudaDevice is not given, defaults to true.
+  // Only if the call is guarenteed to be in a cuda instance with the correct
+  // device should setCudaDevice=false. All cudaAPI calls should be wrapped in
+  // these interface functions to ensure saftey when using threads.
 
+  // Some cudaAPI functions take template args which are in addition to its
+  // InputArgs. In this case the functions referenced must include the instance
+  // requested. For an example, see calls to cudaCreateChannelDesc<T>() in
+  // SharedAllocationRecord::attach_texture_object(). At times the InputArgs may
+  // not be deduced correctly by certain compilers. In most cases, explicitly
+  // providing them solves this issue. For an example, see call to
+  // cudaMemset(void*, int, size_t) in CudaInternal::scratch_flags(). If the
+  // compiler still does not recognize InputArgs, some input vars may need to be
+  // cast to their correct type. For an example, see call to cudaMalloc() in
+  // CudaInternal::initialize().
   template <bool setCudaDevice, typename... InputArgs>
   void cuda_api_interface_safe_call(
       cudaError_t (*cuda_api_function)(InputArgs...),
@@ -237,7 +260,12 @@ class CudaInternal {
         cuda_api_function, cuda_api_input...);
   }
 
-  ///////////////////////////////////////////////////////////////////////////////////////////
+  // Using the m_stream variable can also cause issues when device_id!=0.
+  template <bool setCudaDevice = true>
+  cudaStream_t get_stream() const {
+    if (setCudaDevice) set_cuda_device();
+    return m_stream;
+  }
 
   // Resizing of reduction related scratch spaces
   size_type* scratch_space(const std::size_t size) const;
