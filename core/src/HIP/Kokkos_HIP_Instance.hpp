@@ -152,6 +152,25 @@ class HIPInternal {
   void release_team_scratch_space(int scratch_pool_id);
 };
 
+template <class DT, class... DP>
+struct ZeroMemset<HIP, DT, DP...> {
+  ZeroMemset(const HIP &exec_space, const View<DT, DP...> &dst,
+             typename View<DT, DP...>::const_value_type &) {
+    KOKKOS_IMPL_HIP_SAFE_CALL(hipMemsetAsync(
+        dst.data(), 0,
+        dst.size() * sizeof(typename View<DT, DP...>::value_type),
+        exec_space.hip_stream()));
+    exec_space.impl_internal_space_instance()->m_internal_status =
+        Kokkos::Experimental::ExecutionSpaceStatus::submitted;
+  }
+
+  ZeroMemset(const View<DT, DP...> &dst,
+             typename View<DT, DP...>::const_value_type &) {
+    KOKKOS_IMPL_HIP_SAFE_CALL(
+        hipMemset(dst.data(), 0,
+                  dst.size() * sizeof(typename View<DT, DP...>::value_type)));
+  }
+};
 }  // namespace Impl
 
 namespace Experimental {
