@@ -141,7 +141,6 @@ void HIPInternal::fence(const std::string &name) const {
       Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{
           impl_get_instance_id()},
       [&]() { KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamSynchronize(m_stream)); });
-  m_internal_status = Experimental::ExecutionSpaceStatus::complete;
 }
 
 void HIPInternal::initialize(hipStream_t stream, bool manage_stream) {
@@ -161,7 +160,8 @@ void HIPInternal::initialize(hipStream_t stream, bool manage_stream) {
 
   if (ok_init) {
     m_stream = stream;
-    KOKKOS_IMPL_HIP_SAFE_CALL(hipEventCreateWithFlags(&m_last_event, hipEventDisableTiming));
+    KOKKOS_IMPL_HIP_SAFE_CALL(
+        hipEventCreateWithFlags(&m_last_event, hipEventDisableTiming));
     m_manage_stream = manage_stream;
 
     //----------------------------------
@@ -424,7 +424,7 @@ Experimental::ExecutionSpaceStatus HIP::get_status() const {
       return Experimental::ExecutionSpaceStatus::complete;
     case Experimental::ExecutionSpaceStatus::submitted:
       KOKKOS_IMPL_HIP_SAFE_CALL(hipEventRecord(m_space_instance->m_last_event,
-                     m_space_instance->m_stream));
+                                               m_space_instance->m_stream));
       [[fallthrough]];
     case Experimental::ExecutionSpaceStatus::running:
       if (hipEventQuery(m_space_instance->m_last_event) == hipSuccess) {

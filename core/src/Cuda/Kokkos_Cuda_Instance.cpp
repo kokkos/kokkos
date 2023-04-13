@@ -423,7 +423,8 @@ Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
   }
 
   m_stream = stream;
-  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaEventCreateWithFlags(&m_last_event, cudaEventDisableTiming));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(
+      cudaEventCreateWithFlags(&m_last_event, cudaEventDisableTiming));
   m_manage_stream = manage_stream;
   for (int i = 0; i < m_n_team_scratch; ++i) {
     m_team_scratch_current_size[i] = 0;
@@ -692,7 +693,7 @@ Experimental::ExecutionSpaceStatus Cuda::get_status() const {
       return Experimental::ExecutionSpaceStatus::complete;
     case Experimental::ExecutionSpaceStatus::submitted:
       KOKKOS_IMPL_CUDA_SAFE_CALL(cudaEventRecord(m_space_instance->m_last_event,
-                      m_space_instance->m_stream));
+                                                 m_space_instance->m_stream));
       [[fallthrough]];
     case Experimental::ExecutionSpaceStatus::running:
       if (cudaEventQuery(m_space_instance->m_last_event) == cudaSuccess) {
@@ -931,8 +932,6 @@ void Cuda::impl_static_fence(const std::string &name) {
 
 void Cuda::fence(const std::string &name) const {
   m_space_instance->fence(name);
-  m_space_instance->m_internal_status =
-      Experimental::ExecutionSpaceStatus::complete;
 }
 
 const char *Cuda::name() { return "Cuda"; }
