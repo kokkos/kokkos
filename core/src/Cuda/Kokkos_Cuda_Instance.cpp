@@ -423,7 +423,7 @@ Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
   }
 
   m_stream = stream;
-  cudaEventCreateWithFlags(&m_last_event, cudaEventDisableTiming);
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaEventCreateWithFlags(&m_last_event, cudaEventDisableTiming));
   m_manage_stream = manage_stream;
   for (int i = 0; i < m_n_team_scratch; ++i) {
     m_team_scratch_current_size[i] = 0;
@@ -623,7 +623,7 @@ void CudaInternal::finalize() {
   m_scratchFlags        = nullptr;
   m_scratchUnified      = nullptr;
   m_stream              = nullptr;
-  cudaEventDestroy(m_last_event);
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaEventDestroy(m_last_event));
   for (int i = 0; i < m_n_team_scratch; ++i) {
     m_team_scratch_current_size[i] = 0;
     m_team_scratch_ptr[i]          = nullptr;
@@ -691,8 +691,8 @@ Experimental::ExecutionSpaceStatus Cuda::get_status() const {
     case Experimental::ExecutionSpaceStatus::complete:
       return Experimental::ExecutionSpaceStatus::complete;
     case Experimental::ExecutionSpaceStatus::submitted:
-      cudaEventRecord(m_space_instance->m_last_event,
-                      m_space_instance->m_stream);
+      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaEventRecord(m_space_instance->m_last_event,
+                      m_space_instance->m_stream));
       [[fallthrough]];
     case Experimental::ExecutionSpaceStatus::running:
       if (cudaEventQuery(m_space_instance->m_last_event) == cudaSuccess) {

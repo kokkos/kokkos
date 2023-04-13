@@ -161,7 +161,7 @@ void HIPInternal::initialize(hipStream_t stream, bool manage_stream) {
 
   if (ok_init) {
     m_stream = stream;
-    hipEventCreateWithFlags(&m_last_event, hipEventDisableTiming);
+    KOKKOS_IMPL_HIP_SAFE_CALL(hipEventCreateWithFlags(&m_last_event, hipEventDisableTiming));
     m_manage_stream = manage_stream;
 
     //----------------------------------
@@ -360,7 +360,7 @@ void HIPInternal::finalize() {
   m_scratchSpace      = nullptr;
   m_scratchFlags      = nullptr;
   m_stream            = nullptr;
-  hipEventDestroy(m_last_event);
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipEventDestroy(m_last_event));
   for (int i = 0; i < m_n_team_scratch; ++i) {
     m_team_scratch_current_size[i] = 0;
     m_team_scratch_ptr[i]          = nullptr;
@@ -423,8 +423,8 @@ Experimental::ExecutionSpaceStatus HIP::get_status() const {
     case Experimental::ExecutionSpaceStatus::complete:
       return Experimental::ExecutionSpaceStatus::complete;
     case Experimental::ExecutionSpaceStatus::submitted:
-      hipEventRecord(m_space_instance->m_last_event,
-                     m_space_instance->m_stream);
+      KOKKOS_IMPL_HIP_SAFE_CALL(hipEventRecord(m_space_instance->m_last_event,
+                     m_space_instance->m_stream));
       [[fallthrough]];
     case Experimental::ExecutionSpaceStatus::running:
       if (hipEventQuery(m_space_instance->m_last_event) == hipSuccess) {
