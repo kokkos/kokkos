@@ -17,12 +17,6 @@
 #ifndef KOKKOS_OPENMPTARGET_PARALLEL_COMMON_HPP
 #define KOKKOS_OPENMPTARGET_PARALLEL_COMMON_HPP
 
-// Intel architectures prefer the classical hierarchical parallelism that relies
-// on OpenMP.
-#if defined(KOKKOS_ARCH_INTEL_GPU)
-#define KOKKOS_IMPL_HIERARCHICAL_INTEL_GPU
-#endif
-
 #include <omp.h>
 #include <sstream>
 #include <Kokkos_Parallel.hpp>
@@ -662,9 +656,5 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
 
 }  // namespace Impl
 }  // namespace Kokkos
-
-#ifdef KOKKOS_IMPL_HIERARCHICAL_INTEL_GPU
-#undef KOKKOS_IMPL_HIERARCHICAL_INTEL_GPU
-#endif
 
 #endif

@@ -22,12 +22,6 @@
 #include <Kokkos_Parallel.hpp>
 #include <OpenMPTarget/Kokkos_OpenMPTarget_Parallel.hpp>
 
-// Intel architectures prefer the classical hierarchical parallelism that relies
-// on OpenMP.
-#if defined(KOKKOS_ARCH_INTEL_GPU)
-#define KOKKOS_IMPL_HIERARCHICAL_INTEL_GPU
-#endif
-
 namespace Kokkos {
 
 /** \brief  Inter-thread parallel_for. Executes lambda(iType i) for each
@@ -195,9 +189,5 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
 }  // namespace Impl
 }  // namespace Kokkos
-
-#ifdef KOKKOS_IMPL_HIERARCHICAL_INTEL_GPU
-#undef KOKKOS_IMPL_HIERARCHICAL_INTEL_GPU
-#endif
 
 #endif
