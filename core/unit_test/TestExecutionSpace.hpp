@@ -61,10 +61,35 @@ struct CheckExecutionSpaceStatus {
     ASSERT_EQ(exec.get_status(),
               Kokkos::Experimental::ExecutionSpaceStatus::complete);
 
-    const int N = 10000;
     Kokkos::View<int, typename ExecutionSpace::memory_space> result_view(
         "result_view");
     int result;
+
+    Kokkos::deep_copy(exec, result, result_view);
+    while (exec.get_status() !=
+           Kokkos::Experimental::ExecutionSpaceStatus::complete) {
+    }
+    ASSERT_EQ(result, 0);
+
+    Kokkos::deep_copy(result_view, 1);
+    ASSERT_EQ(exec.get_status(),
+              Kokkos::Experimental::ExecutionSpaceStatus::complete);
+    Kokkos::deep_copy(exec, result, result_view);
+    exec.fence();
+    ASSERT_EQ(exec.get_status(),
+              Kokkos::Experimental::ExecutionSpaceStatus::complete);
+    ASSERT_EQ(result, 1);
+
+// FIXME OPENACC
+#ifdef KOKKOS_ENABLE_OPENACC
+    if constexpr (std::is_same_v<ExecutionSpace,
+                                 Kokkos::Experimental::OpenACC>) {
+      GTEST_SKIP() << "skip the other half of the test because of missing "
+                      "functionality in OpenACC backend";
+    }
+#endif
+
+    const int N = 10000;
 
     Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecutionSpace>(exec, 0, N),
                             *this, result_view);
