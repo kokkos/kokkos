@@ -179,13 +179,13 @@ void *impl_allocate_common(const Cuda &exec_space, const char *arg_label,
       error_code = Impl::CudaInternal::singleton()
                        .cuda_api_interface_return<cudaError_t>(
                            &cudaMallocAsync, &ptr, arg_alloc_size, stream);
-      Impl::CudaInternal::singleton().cuda_api_interface_safe_call(
+      Impl::CudaInternal::singleton().cuda_api_interface_safe_call<false>(
           &cudaStreamSynchronize, stream);
     } else {
       error_code = Impl::CudaInternal::singleton()
                        .cuda_api_interface_return<cudaError_t>(
                            &cudaMallocAsync, &ptr, arg_alloc_size, 0);
-      Impl::CudaInternal::singleton().cuda_api_interface_safe_call(
+      Impl::CudaInternal::singleton().cuda_api_interface_safe_call<false>(
           &cudaDeviceSynchronize);
     }
   } else {
@@ -204,8 +204,8 @@ void *impl_allocate_common(const Cuda &exec_space, const char *arg_label,
     // This is the only way to clear the last error, which
     // we should do here since we're turning it into an
     // exception here
-    Impl::CudaInternal::singleton().cuda_api_interface_return<cudaError_t>(
-        &cudaGetLastError);
+    Impl::CudaInternal::singleton()
+        .cuda_api_interface_return<false, cudaError_t>(&cudaGetLastError);
     throw Experimental::CudaRawMemoryAllocationFailure(
         arg_alloc_size, error_code,
         Experimental::RawMemoryAllocationFailure::AllocationMechanism::
@@ -263,7 +263,7 @@ void *CudaUVMSpace::impl_allocate(
 
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_PIN_UVM_TO_HOST
     if (Kokkos::CudaUVMSpace::cuda_pin_uvm_to_host())
-      Impl::CudaInternal::singleton().cuda_api_interface_safe_call(
+      Impl::CudaInternal::singleton().cuda_api_interface_safe_call<false>(
           &cudaMemAdvise, ptr, arg_alloc_size,
           cudaMemAdviseSetPreferredLocation, cudaCpuDeviceId);
 #endif
@@ -272,8 +272,8 @@ void *CudaUVMSpace::impl_allocate(
       // This is the only way to clear the last error,
       // which we should do here since we're turning it
       // into an exception here
-      Impl::CudaInternal::singleton().cuda_api_interface_return<cudaError_t>(
-          &cudaGetLastError);
+      Impl::CudaInternal::singleton()
+          .cuda_api_interface_return<false, cudaError_t>(&cudaGetLastError);
       throw Experimental::CudaRawMemoryAllocationFailure(
           arg_alloc_size, error_code,
           Experimental::RawMemoryAllocationFailure::AllocationMechanism::
@@ -312,8 +312,8 @@ void *CudaHostPinnedSpace::impl_allocate(
     // This is the only way to clear the last error, which
     // we should do here since we're turning it into an
     // exception here
-    Impl::CudaInternal::singleton().cuda_api_interface_return<cudaError_t>(
-        &cudaGetLastError);
+    Impl::CudaInternal::singleton()
+        .cuda_api_interface_return<false, cudaError_t>(&cudaGetLastError);
     throw Experimental::CudaRawMemoryAllocationFailure(
         arg_alloc_size, error_code,
         Experimental::RawMemoryAllocationFailure::AllocationMechanism::
@@ -355,12 +355,12 @@ void CudaSpace::impl_deallocate(
     if (arg_alloc_size >= memory_threshold_g) {
       Impl::CudaInternal::singleton().cuda_api_interface_safe_call(
           &cudaDeviceSynchronize);
-      Impl::CudaInternal::singleton().cuda_api_interface_safe_call(
+      Impl::CudaInternal::singleton().cuda_api_interface_safe_call<false>(
           &cudaFreeAsync, arg_alloc_ptr, 0);
-      Impl::CudaInternal::singleton().cuda_api_interface_safe_call(
+      Impl::CudaInternal::singleton().cuda_api_interface_safe_call<false>(
           &cudaDeviceSynchronize);
     } else {
-      Impl::CudaInternal::singleton().cuda_api_interface_safe_call(
+      Impl::CudaInternal::singleton().cuda_api_interface_safe_call<false>(
           &cudaFree, arg_alloc_ptr);
     }
 #else
@@ -501,7 +501,7 @@ SharedAllocationRecord<Kokkos::CudaSpace, void>::attach_texture_object(
 
   CudaInternal::singleton()
       .cuda_api_interface_safe_call<
-          cudaTextureObject_t *, const cudaResourceDesc *,
+          false, cudaTextureObject_t *, const cudaResourceDesc *,
           const cudaTextureDesc *, const cudaResourceViewDesc *>(
           &cudaCreateTextureObject, &tex_obj, &resDesc, &texDesc, nullptr);
 
@@ -667,7 +667,7 @@ void cuda_prefetch_pointer(const Cuda &space, const void *ptr, size_t bytes,
   bool is_managed = attr.type == cudaMemoryTypeManaged;
   if (to_device && is_managed &&
       space.cuda_device_prop().concurrentManagedAccess) {
-    CudaInternal::singleton().cuda_api_interface_safe_call(
+    CudaInternal::singleton().cuda_api_interface_safe_call<false>(
         &cudaMemPrefetchAsync, ptr, bytes, space.cuda_device(),
         space.cuda_stream());
   }

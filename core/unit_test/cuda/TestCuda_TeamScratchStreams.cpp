@@ -99,7 +99,7 @@ void cuda_stream_scratch_test(
   Kokkos::fence();
   for (int i = 0; i < K; i++) {
     cuda[i] = Kokkos::Cuda();
-    Kokkos::Impl::CudaInternal::singleton().cuda_api_interface_safe_call(
+    Kokkos::Impl::CudaInternal::singleton().cuda_api_interface_safe_call<false>(
         &cudaStreamDestroy, stream[i]);
   }
 }

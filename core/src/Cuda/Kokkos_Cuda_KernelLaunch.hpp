@@ -527,7 +527,7 @@ struct CudaParallelLaunchKernelInvoker<
       params.kernelParams   = (void**)args;
       params.extra          = nullptr;
 
-      cuda_instance->cuda_api_interface_safe_call(
+      cuda_instance->cuda_api_interface_safe_call<false>(
           &cudaGraphAddKernelNode, &graph_node, graph,
           /* dependencies = */ nullptr,
           /* numDependencies = */ 0, &params);
@@ -604,18 +604,19 @@ struct CudaParallelLaunchKernelInvoker<
     //  const void* symbol, const void* src, size_t count, size_t offset,
     //  cudaMemcpyKind kind, cudaStream_t stream = 0
 
-    cuda_instance->cuda_api_interface_safe_call<
-        const void*, const void*, size_t, size_t, cudaMemcpyKind, cudaStream_t>(
-        &cudaMemcpyToSymbolAsync, kokkos_impl_cuda_constant_memory_buffer,
-        staging, sizeof(DriverType), 0, cudaMemcpyHostToDevice,
-        cudaStream_t(cuda_instance->get_stream()));
+    cuda_instance
+        ->cuda_api_interface_safe_call<false, const void*, const void*, size_t,
+                                       size_t, cudaMemcpyKind, cudaStream_t>(
+            &cudaMemcpyToSymbolAsync, kokkos_impl_cuda_constant_memory_buffer,
+            staging, sizeof(DriverType), 0, cudaMemcpyHostToDevice,
+            cudaStream_t(cuda_instance->get_stream<false>()));
 
     // Invoke the driver function on the device
     (base_t::get_kernel_func())<<<grid, block, shmem,
-                                  cuda_instance->get_stream()>>>();
+                                  cuda_instance->get_stream<false>()>>>();
 
     // Record an event that says when the constant buffer can be reused
-    cuda_instance->cuda_api_interface_safe_call(
+    cuda_instance->cuda_api_interface_safe_call<false>(
         &cudaEventRecord, CudaInternal::constantMemReusable,
         cudaStream_t(cuda_instance->get_stream()));
   }
