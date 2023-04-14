@@ -40,7 +40,13 @@ void DeepCopySYCL(void* dst, const void* src, size_t n) {
 void DeepCopyAsyncSYCL(const Kokkos::Experimental::SYCL& instance, void* dst,
                        const void* src, size_t n) {
   sycl::queue& q = *instance.impl_internal_space_instance()->m_queue;
-  auto event     = q.memcpy(dst, src, n);
+  // FIXME_SYCL memcpy doesn't respect submit_barrier which means that we need
+  // to actually fence the execution space to make sure the memcpy is properly
+  // enqueued when using out-of-order queues.
+#ifndef KOKKOS_ARCH_INTEL_GPU
+  q.wait_and_throw();
+#endif
+  auto event = q.memcpy(dst, src, n);
   q.ext_oneapi_submit_barrier(std::vector<sycl::event>{event});
 }
 
