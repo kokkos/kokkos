@@ -1,7 +1,7 @@
 # Change Log
 
 ## [4.0.01](https://github.com/kokkos/kokkos/tree/4.0.01) (2023-04-14)
-[Full Changelog](https://github.com/kokkos/kokkos/compare/4.0.0...4.0.01)
+[Full Changelog](https://github.com/kokkos/kokkos/compare/4.0.00...4.0.01)
 
 ### Backend and Architecture Enhancements:
 
@@ -27,12 +27,11 @@
 
 ### Bug Fixes
 - Fix an incorrectly returning size for SIMD uint64_t in AVX2 [\#6011](https://github.com/kokkos/kokkos/pull/6011)
-- CMake: update package compatibility mode when building within Trilinos [\#6013](https://github.com/kokkos/kokkos/pull/6013)
 - Desul atomics: wrong value for `desul::Impl::numeric_limits_max<uint64_t>` [\#6018](https://github.com/kokkos/kokkos/pull/6018)
 - Fix warning in some user code when using std::memcpy [\#6000](https://github.com/kokkos/kokkos/pull/6000)
 
 ## [4.0.0](https://github.com/kokkos/kokkos/tree/4.0.0) (2023-02-21)
-[Full Changelog](https://github.com/kokkos/kokkos/compare/3.7.01...4.0.0)
+[Full Changelog](https://github.com/kokkos/kokkos/compare/3.7.01...4.0.00)
 
 ### Features:
 - Allow value types without default constructor in `Kokkos::View` with `Kokkos::WithoutInitializing` [\#5307](https://github.com/kokkos/kokkos/pull/5307)
