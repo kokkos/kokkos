@@ -1,5 +1,6 @@
-
-KOKKOS_CONFIGURE_FILE(${PACKAGE_NAME}_config.h)
+CONFIGURE_FILE(
+  ${PACKAGE_SOURCE_DIR}/containers/cmake/KokkosContainers_config.h.in
+  ${CMAKE_CURRENT_BINARY_DIR}/KokkosContainers_config.h )
 
 #need these here for now
 KOKKOS_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
