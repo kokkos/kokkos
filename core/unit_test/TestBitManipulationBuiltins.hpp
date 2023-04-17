@@ -77,9 +77,9 @@ struct TestBitManipFunction {
   KOKKOS_FUNCTION void operator()(int i, int& e) const {
     if (Func::eval_builtin(val_[i]) != Func::eval_constexpr(val_[i])) {
       ++e;
-      KOKKOS_IMPL_DO_NOT_USE_PRINTF(
-          "value at %x which is %d was expected to be %d\n", (unsigned)val_[i],
-          (int)Func::eval_builtin(val_[i]), (int)Func::eval_constexpr(val_[i]));
+      printf("value at %x which is %d was expected to be %d\n",
+             (unsigned)val_[i], (int)Func::eval_builtin(val_[i]),
+             (int)Func::eval_constexpr(val_[i]));
     }
   }
 };
@@ -477,11 +477,10 @@ struct TestBitRotateFunction {
     if (Func::eval_builtin(val_[i].x, val_[i].s) !=
         Func::eval_constexpr(val_[i].x, val_[i].s)) {
       ++e;
-      KOKKOS_IMPL_DO_NOT_USE_PRINTF(
-          "value at %x rotated by %d which is %x was expected to be %x\n",
-          (unsigned)val_[i].x, val_[i].s,
-          (unsigned)Func::eval_builtin(val_[i].x, val_[i].s),
-          (unsigned)Func::eval_constexpr(val_[i].x, val_[i].s));
+      printf("value at %x rotated by %d which is %x was expected to be %x\n",
+             (unsigned)val_[i].x, val_[i].s,
+             (unsigned)Func::eval_builtin(val_[i].x, val_[i].s),
+             (unsigned)Func::eval_constexpr(val_[i].x, val_[i].s));
     }
   }
 };

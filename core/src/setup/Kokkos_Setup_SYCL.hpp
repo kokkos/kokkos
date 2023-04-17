@@ -41,4 +41,6 @@
   } while (0)
 #endif
 
+using sycl::ext::oneapi::experimental::printf;
+
 #endif
