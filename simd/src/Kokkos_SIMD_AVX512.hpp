@@ -277,6 +277,11 @@ class simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> {
   operator[](std::size_t i) const {
     return reinterpret_cast<value_type const*>(&m_value)[i];
   }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_to(
+      value_type* ptr, element_aligned_tag) const {
+    _mm256_mask_storeu_epi32(ptr, static_cast<__mmask8>(mask_type(true)),
+                             m_value);
+  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
                                                        element_aligned_tag) {
     m_value = _mm256_mask_loadu_epi32(
@@ -387,8 +392,7 @@ class simd<std::int64_t, simd_abi::avx512_fixed_size<8>> {
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_to(
       value_type* ptr, element_aligned_tag) const {
-    _mm512_mask_storeu_epi64(ptr, static_cast<__mmask8>(mask_type(true)),
-                             m_value);
+    _mm512_storeu_epi64(ptr, m_value);
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd operator>>(int rhs) const {
     return _mm512_srai_epi64(m_value, rhs);
@@ -519,8 +523,7 @@ class simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> {
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_to(
       value_type* ptr, element_aligned_tag) const {
-    _mm512_mask_storeu_epi64(ptr, static_cast<__mmask8>(mask_type(true)),
-                             m_value);
+    _mm512_storeu_epi64(ptr, m_value);
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd
   operator>>(unsigned int rhs) const {
