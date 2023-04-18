@@ -160,6 +160,13 @@ if(KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM)
   )
 endif()
 
+KOKKOS_ADD_EXECUTABLE_AND_TEST(
+  UnitTest_SortCustomComp
+  SOURCES
+  UnitTestMain.cpp
+  TestSortCustomComp.cpp
+)
+
 # FIXME_OPENMPTARGET This test causes internal compiler errors as of 09/01/22
 # when compiling for Intel's Xe-HP GPUs.
 if(NOT (KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM))
