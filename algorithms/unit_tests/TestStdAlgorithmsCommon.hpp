@@ -522,11 +522,12 @@ compare_views(ViewType1 expected, const ViewType2 actual) {
 }
 
 template <class ViewType1, class ViewType2>
-std::enable_if_t<
-    ViewType1::rank == 2 && ViewType2::rank == 2 &&
-    std::is_same<typename ViewType1::memory_space, Kokkos::HostSpace>::value &&
-    std::is_same<typename ViewType2::memory_space, Kokkos::HostSpace>::value>
-expect_equal_host_views(ViewType1 A, const ViewType2 B) {
+void expect_equal_host_views(ViewType1 A, const ViewType2 B) {
+  static_assert(
+      ViewType1::rank == 2 && ViewType2::rank == 2 &&
+          std::is_same_v<typename ViewType1::memory_space, Kokkos::HostSpace> &&
+          std::is_same_v<typename ViewType2::memory_space, Kokkos::HostSpace>,
+      "Expected 2-dimensional host view.");
   EXPECT_EQ(A.extent(0), B.extent(0));
   EXPECT_EQ(A.extent(1), B.extent(1));
 
