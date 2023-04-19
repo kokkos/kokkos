@@ -113,7 +113,40 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
     # file. That then exceeded the shell command line max length.
     set(${Tag}_SOURCES1A)
     foreach(Name
+        Abort
+        AtomicOperations_complexdouble
+        AtomicOperations_complexfloat
+        AtomicOperations_double
+        AtomicOperations_float
+        AtomicOperations_int
+        AtomicOperations_longint
+        AtomicOperations_longlongint
+        AtomicOperations_shared
+        AtomicOperations_unsignedint
+        AtomicOperations_unsignedlongint
+        Atomics
+        AtomicViews
+        BitManipulationBuiltins
+        BlockSizeDeduction
+        CommonPolicyConstructors
+        CommonPolicyInterface
+        Complex
+        Concepts
+        Crs
+        DeepCopyAlignment
+        ExecSpacePartitioning
         ExecutionSpace
+        FunctorAnalysis
+        HostSharedPtr
+        HostSharedPtrAccessOnDevice
+        Init
+        JoinBackwardCompatibility
+        LocalDeepCopy
+        MathematicalConstants
+        MathematicalFunctions1
+        MathematicalFunctions2
+        MathematicalFunctions3
+        MathematicalSpecialFunctions
         )
       set(file ${dir}/Test${Tag}_${Name}.cpp)
       # Write to a temporary intermediate file and call configure_file to avoid
@@ -276,7 +309,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
       list(APPEND ${Tag}_SOURCES2D ${file})
     endforeach()
 
-    SET(${Tag}_SOURCES1 ${${Tag}_SOURCES1A})
+    SET(${Tag}_SOURCES1 ${${Tag}_SOURCES1A} ${${Tag}_SOURCES1B})
     SET(${Tag}_SOURCES2 ${${Tag}_SOURCES2A} ${${Tag}_SOURCES2B} ${${Tag}_SOURCES2C} ${${Tag}_SOURCES2D})
     SET(${Tag}_SOURCES ${${Tag}_SOURCES1} ${${Tag}_SOURCES2})
   endif()
@@ -622,6 +655,7 @@ if(Kokkos_ENABLE_CUDA)
     SOURCES
       UnitTestMainInit.cpp
       ${Cuda_SOURCES1}
+      cuda/TestCuda_ReducerViewSizeLimit.cpp
     )
 
     KOKKOS_ADD_EXECUTABLE_AND_TEST(
