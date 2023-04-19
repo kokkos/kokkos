@@ -125,7 +125,7 @@ class Cuda {
   //! \name Functions that all Kokkos devices must implement.
   //@{
 
-  Experimental::ExecutionSpaceStatus get_status() const;
+  bool is_running() const;
 
   /// \brief True if and only if this method is being called in a
   ///   thread-parallel function.

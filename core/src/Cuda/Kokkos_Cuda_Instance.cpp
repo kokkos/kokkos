@@ -687,10 +687,9 @@ Cuda::size_type *cuda_internal_scratch_unified(const Cuda &instance,
 
 namespace Kokkos {
 
-Experimental::ExecutionSpaceStatus Cuda::get_status() const {
+bool Cuda::is_running() const {
   switch (m_space_instance->m_internal_status) {
-    case Experimental::ExecutionSpaceStatus::complete:
-      return Experimental::ExecutionSpaceStatus::complete;
+    case Experimental::ExecutionSpaceStatus::complete: return false;
     case Experimental::ExecutionSpaceStatus::submitted:
       KOKKOS_IMPL_CUDA_SAFE_CALL(cudaEventRecord(m_space_instance->m_last_event,
                                                  m_space_instance->m_stream));
@@ -699,13 +698,13 @@ Experimental::ExecutionSpaceStatus Cuda::get_status() const {
       if (cudaEventQuery(m_space_instance->m_last_event) == cudaSuccess) {
         m_space_instance->m_internal_status =
             Experimental::ExecutionSpaceStatus::complete;
-        return Experimental::ExecutionSpaceStatus::complete;
+        return false;
       }
-      return Experimental::ExecutionSpaceStatus::running;
+      return true;
     default: assert(false);
   }
 
-  return Experimental::ExecutionSpaceStatus::complete;
+  return false;
 }
 
 Cuda::size_type Cuda::detect_device_count() {

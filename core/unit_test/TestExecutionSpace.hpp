@@ -58,26 +58,22 @@ struct CheckExecutionSpaceStatus {
 
   void check() const {
     ExecutionSpace exec;
-    ASSERT_EQ(exec.get_status(),
-              Kokkos::Experimental::ExecutionSpaceStatus::complete);
+    ASSERT_EQ(exec.is_running(), false);
 
     Kokkos::View<int, typename ExecutionSpace::memory_space> result_view(
         "result_view");
     int result;
 
     Kokkos::deep_copy(exec, result, result_view);
-    while (exec.get_status() !=
-           Kokkos::Experimental::ExecutionSpaceStatus::complete) {
+    while (exec.is_running() == true) {
     }
     ASSERT_EQ(result, 0);
 
     Kokkos::deep_copy(result_view, 1);
-    ASSERT_EQ(exec.get_status(),
-              Kokkos::Experimental::ExecutionSpaceStatus::complete);
+    ASSERT_EQ(exec.is_running(), false);
     Kokkos::deep_copy(exec, result, result_view);
     exec.fence();
-    ASSERT_EQ(exec.get_status(),
-              Kokkos::Experimental::ExecutionSpaceStatus::complete);
+    ASSERT_EQ(exec.is_running(), false);
     ASSERT_EQ(result, 1);
 
 // FIXME OPENACC
@@ -94,8 +90,7 @@ struct CheckExecutionSpaceStatus {
     Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecutionSpace>(exec, 0, N),
                             *this, result_view);
     Kokkos::deep_copy(exec, result, result_view);
-    while (exec.get_status() !=
-           Kokkos::Experimental::ExecutionSpaceStatus::complete) {
+    while (exec.is_running() == true) {
     }
     ASSERT_EQ(result, N / 2 * (N - 1));
 
@@ -103,8 +98,7 @@ struct CheckExecutionSpaceStatus {
                             *this, result_view);
     Kokkos::deep_copy(exec, result, result_view);
     exec.fence();
-    ASSERT_EQ(exec.get_status(),
-              Kokkos::Experimental::ExecutionSpaceStatus::complete);
+    ASSERT_EQ(exec.is_running(), false);
     ASSERT_EQ(result, N / 2 * (N - 1));
   }
 };

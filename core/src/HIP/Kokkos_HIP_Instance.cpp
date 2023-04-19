@@ -418,10 +418,9 @@ void hip_internal_error_throw(hipError_t e, const char *name, const char *file,
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
-Experimental::ExecutionSpaceStatus HIP::get_status() const {
+bool HIP::is_running() const {
   switch (m_space_instance->m_internal_status) {
-    case Experimental::ExecutionSpaceStatus::complete:
-      return Experimental::ExecutionSpaceStatus::complete;
+    case Experimental::ExecutionSpaceStatus::complete: return false;
     case Experimental::ExecutionSpaceStatus::submitted:
       KOKKOS_IMPL_HIP_SAFE_CALL(hipEventRecord(m_space_instance->m_last_event,
                                                m_space_instance->m_stream));
@@ -430,13 +429,13 @@ Experimental::ExecutionSpaceStatus HIP::get_status() const {
       if (hipEventQuery(m_space_instance->m_last_event) == hipSuccess) {
         m_space_instance->m_internal_status =
             Experimental::ExecutionSpaceStatus::complete;
-        return Experimental::ExecutionSpaceStatus::complete;
+        return false;
       }
-      return Experimental::ExecutionSpaceStatus::running;
+      return true;
     default: assert(false);
   }
 
-  return Experimental::ExecutionSpaceStatus::complete;
+  return false;
 }
 
 HIP::size_type HIP::detect_device_count() {

@@ -109,9 +109,9 @@ class Serial {
 
   Serial();
 
-  Experimental::ExecutionSpaceStatus get_status() const {
+  bool is_running() const {
     // Serial is synchronous
-    return Experimental::ExecutionSpaceStatus::complete;
+    return false;
   }
 
   /// \brief True if and only if this method is being called in a

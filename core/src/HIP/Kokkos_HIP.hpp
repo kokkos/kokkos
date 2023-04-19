@@ -54,7 +54,7 @@ class HIP {
   //! \name Functions that all Kokkos devices must implement.
   //@{
 
-  Experimental::ExecutionSpaceStatus get_status() const;
+  bool is_running() const;
 
   KOKKOS_INLINE_FUNCTION static int in_parallel() {
 #if defined(__HIP_DEVICE_COMPILE__)

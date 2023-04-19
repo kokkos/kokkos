@@ -202,10 +202,10 @@ class HPX {
     return impl_get_instance_data().m_instance_id;
   }
 
-  Experimental::ExecutionSpaceStatus get_status() const {
+  bool is_running() const {
     // HPX doesn't provide a query function.
-    fence("HPX::get_status()");
-    return Experimental::ExecutionSpaceStatus::complete;
+    fence("HPX::is_running");
+    return false;
   }
 
   static bool in_parallel(HPX const & = HPX()) noexcept {

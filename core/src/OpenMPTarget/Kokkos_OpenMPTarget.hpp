@@ -66,9 +66,9 @@ class OpenMPTarget {
 
   using scratch_memory_space = ScratchMemorySpace<OpenMPTarget>;
 
-  Experimental::ExecutionSpaceStatus get_status() const {
+  bool is_running() const {
     // OpenMPTarget is synchronous
-    return Experimental::ExecutionSpaceStatus::complete;
+    return false;
   }
 
   inline static bool in_parallel() { return omp_in_parallel(); }
