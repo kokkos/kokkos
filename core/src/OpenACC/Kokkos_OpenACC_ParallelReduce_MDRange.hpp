@@ -51,6 +51,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
   CombinedFunctorReducerType m_functor_reducer;
   Policy m_policy;
   Pointer m_result_ptr;
+  bool m_result_ptr_on_device;
 
  public:
   template <class ViewType>
@@ -58,7 +59,10 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
                  const Policy& policy, const ViewType& result)
       : m_functor_reducer(functor_reducer),
         m_policy(policy),
-        m_result_ptr(result.data()) {}
+        m_result_ptr(result.data()),
+        m_result_ptr_on_device(
+            MemorySpaceAccess<Kokkos::Experimental::OpenACCSpace,
+                              typename ViewType::memory_space>::accessible) {}
 
   void execute() const {
     static_assert(1 < Policy::rank && Policy::rank < 7);
@@ -71,6 +75,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
       }
     }
 
+    int const async_arg = m_policy.space().acc_async_queue();
     ValueType val;
     const ReducerType& reducer = m_functor_reducer.get_reducer();
     reducer.init(&val);
@@ -86,7 +91,14 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
         m_policy);
 
     reducer.final(&val);
-    *m_result_ptr = val;
+    if (m_result_ptr_on_device == false) {
+      acc_wait(async_arg);
+      *m_result_ptr = val;
+    } else {
+      acc_memcpy_to_device_async(m_result_ptr, &val, sizeof(ValueType),
+                                 async_arg);
+      acc_wait(async_arg);
+    }
   }
 };
 
