@@ -769,7 +769,7 @@ class UnorderedMap {
       tmp.m_bounded_insert    = src.m_bounded_insert;
       tmp.m_hasher            = src.m_hasher;
       tmp.m_equal_to          = src.m_equal_to;
-      tmp.m_size              = src.m_size;
+      *tmp.m_size             = *src.m_size;
       tmp.m_available_indexes = bitset_type(src.capacity());
       tmp.m_hash_lists        = size_type_view(
           view_alloc(WithoutInitializing, "UnorderedMap hash list"),

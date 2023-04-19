@@ -85,6 +85,11 @@ struct TestInsert {
         }
       }
     }
+
+    const unsigned int old_size = map_h.size();
+    map_h.clear();
+    ASSERT_EQ(map.size(), old_size);
+    ASSERT_EQ(map_h.size(), 0u);
   }
 
   KOKKOS_INLINE_FUNCTION
