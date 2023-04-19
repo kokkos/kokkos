@@ -91,6 +91,7 @@
 - Add missing `ReductionIdentity<char>` specialization [\#5798](https://github.com/kokkos/kokkos/pull/5798)
 - Don't install standard algorithms headers multiple times [\#5670](https://github.com/kokkos/kokkos/pull/5670)
 - Fix max scratch size calculation for level 0 scratch in CUDA and HIP [\#5718](https://github.com/kokkos/kokkos/pull/5718)
+- Fix excessive build times using Makefile.kokkos [\#6068](https://github.com/kokkos/kokkos/pull/6068)
 
 ## [3.7.01](https://github.com/kokkos/kokkos/tree/3.7.01) (2022-12-01)
 [Full Changelog](https://github.com/kokkos/kokkos/compare/3.7.00...3.7.01)
