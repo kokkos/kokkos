@@ -74,7 +74,8 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
     reducer.init(&val);
 
     Kokkos::Experimental::Impl::OpenACCParallelReduceHelper(
-        Kokkos::Experimental::Impl::FunctorAdapter<FunctorType, Policy>(
+        Kokkos::Experimental::Impl::FunctorAdapter<
+            FunctorType, Policy, KOKKOS_OPENACC_CONTAIN_SEQLOOP>(
             m_functor_reducer.get_functor()),
         std::conditional_t<
             std::is_same_v<FunctorType, typename ReducerType::functor_type>,

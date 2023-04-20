@@ -21,6 +21,12 @@
 #include <OpenACC/Kokkos_OpenACC_FunctorAdapter.hpp>
 #include <OpenACC/Kokkos_OpenACC_Macros.hpp>
 
+#ifdef KOKKOS_ENABLE_OPENACC_COLLAPSE_HIERARCHICAL_CONSTRUCTS
+#define KOKKOS_OPENACC_CONTAIN_LOOP KOKKOS_OPENACC_CONTAIN_SEQLOOP
+#else
+#define KOKKOS_OPENACC_CONTAIN_LOOP KOKKOS_OPENACC_CONTAIN_WORKERLOOP
+#endif
+
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 // Hierarchical Parallelism -> Team level implementation
@@ -67,7 +73,8 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
     reducer.init(&tmp);
 
     Kokkos::Experimental::Impl::OpenACCParallelReduceTeamHelper(
-        Kokkos::Experimental::Impl::FunctorAdapter<FunctorType, Policy>(
+        Kokkos::Experimental::Impl::FunctorAdapter<FunctorType, Policy,
+                                                   KOKKOS_OPENACC_CONTAIN_LOOP>(
             m_functor_reducer.get_functor()),
         std::conditional_t<
             std::is_same_v<FunctorType, typename ReducerType::functor_type>,

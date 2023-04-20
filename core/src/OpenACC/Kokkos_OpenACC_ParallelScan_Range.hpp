@@ -63,8 +63,9 @@ class Kokkos::Impl::ParallelScan<Functor, Kokkos::RangePolicy<Traits...>,
     } else {
       chunk_size = default_scan_chunk_size;
     }
-    const Kokkos::Experimental::Impl::FunctorAdapter<Functor, Policy> functor(
-        m_functor);
+    const Kokkos::Experimental::Impl::FunctorAdapter<
+        Functor, Policy, KOKKOS_OPENACC_CONTAIN_SEQLOOP>
+        functor(m_functor);
     const IndexType N        = end - begin;
     const IndexType n_chunks = (N + chunk_size - 1) / chunk_size;
     Kokkos::View<ValueType*, Kokkos::Experimental::OpenACCSpace> chunk_values(

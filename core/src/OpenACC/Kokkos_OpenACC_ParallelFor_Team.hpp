@@ -31,7 +31,9 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
  private:
   using Policy = Kokkos::Impl::TeamPolicyInternal<Kokkos::Experimental::OpenACC,
                                                   Properties...>;
-  Kokkos::Experimental::Impl::FunctorAdapter<FunctorType, Policy> m_functor;
+  Kokkos::Experimental::Impl::FunctorAdapter<FunctorType, Policy,
+                                             KOKKOS_OPENACC_CONTAIN_SEQLOOP>
+      m_functor;
   using Member = typename Policy::member_type;
 
   const Policy m_policy;
@@ -130,7 +132,9 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
  private:
   using Policy = Kokkos::Impl::TeamPolicyInternal<Kokkos::Experimental::OpenACC,
                                                   Properties...>;
-  Kokkos::Experimental::Impl::FunctorAdapter<FunctorType, Policy> m_functor;
+  Kokkos::Experimental::Impl::FunctorAdapter<FunctorType, Policy,
+                                             KOKKOS_OPENACC_CONTAIN_WORKERLOOP>
+      m_functor;
   using Member = typename Policy::member_type;
 
   const Policy m_policy;
