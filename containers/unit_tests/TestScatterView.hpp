@@ -758,9 +758,6 @@ void test_scatter_view(int64_t n) {
 }
 
 TEST(TEST_CATEGORY, scatterview) {
-#if defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ARCH_INTEL_GPU)
-  GTEST_SKIP() << "skipping for SYCL+Cuda";
-#endif
   test_scatter_view<TEST_EXECSPACE, Kokkos::Experimental::ScatterSum, double>(
       10);
 
@@ -801,10 +798,6 @@ TEST(TEST_CATEGORY, scatterview) {
 }
 
 TEST(TEST_CATEGORY, scatterview_devicetype) {
-#if defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ARCH_INTEL_GPU)
-  GTEST_SKIP() << "skipping for SYCL+Cuda";
-#endif
-
   using device_type =
       Kokkos::Device<TEST_EXECSPACE, typename TEST_EXECSPACE::memory_space>;
 
