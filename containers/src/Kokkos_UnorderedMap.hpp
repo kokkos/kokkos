@@ -287,7 +287,7 @@ class UnorderedMap {
   enum { modified_idx = 0, erasable_idx = 1, failed_insert_idx = 2 };
   enum { num_scalars = 3 };
   using scalars_view     = View<int[num_scalars], LayoutLeft, device_type>;
-  using scalar_host_view = View<size_type[1], HostSpace>;
+  using scalar_host_view = View<size_type, HostSpace>;
 
  public:
   //! \name Public member functions
@@ -402,7 +402,7 @@ class UnorderedMap {
   size_type size() const {
     if (capacity() == 0u) return 0u;
     if (modified()) {
-      m_size(0) = m_available_indexes.count();
+      m_size() = m_available_indexes.count();
       reset_flag(modified_idx);
     }
     return m_size(0);
@@ -770,7 +770,7 @@ class UnorderedMap {
       tmp.m_bounded_insert    = src.m_bounded_insert;
       tmp.m_hasher            = src.m_hasher;
       tmp.m_equal_to          = src.m_equal_to;
-      tmp.m_size(0)           = src.m_size(0);
+      tmp.m_size()           = src.m_size();
       tmp.m_available_indexes = bitset_type(src.capacity());
       tmp.m_hash_lists        = size_type_view(
           view_alloc(WithoutInitializing, "UnorderedMap hash list"),
