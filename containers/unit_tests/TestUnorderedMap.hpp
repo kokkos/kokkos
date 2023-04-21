@@ -480,6 +480,45 @@ TEST(TEST_CATEGORY, UnorderedMap_consistent_size) {
   ASSERT_EQ(2u, m.size());
 }
 
+namespace Impl {
+
+using map_type = Kokkos::UnorderedMap<int, void, Kokkos::DefaultExecutionSpace>;
+
+void test_unordered_map_device_capture() {
+  map_type map;
+
+  Kokkos::parallel_for(
+      1, KOKKOS_LAMBDA(int const &i) { map.insert(i); });
+
+  ASSERT_EQ(1u, map.size());
+}
+
+KOKKOS_FUNCTION
+void test_insert_to_map_copy(map_type const &input_map, const int i) {
+  auto map = input_map;
+  map.insert(i);
+}
+
+struct TestMapCopy {
+  map_type m_map;
+
+  KOKKOS_FUNCTION
+  void operator()(const int i) const { test_insert_to_map_copy(m_map, i); }
+};
+
+}  // namespace Impl
+
+TEST(TEST_CATEGORY, UnorderedMap_lambda_capturable) {
+  Impl::test_unordered_map_device_capture();
+}
+
+TEST(TEST_CATEGORY, UnorderedMap_shallow_copyable_on_device) {
+  Impl::TestMapCopy test_map_copy;
+
+  Kokkos::parallel_for(1, test_map_copy);
+  ASSERT_EQ(1u, test_map_copy.m_map.size());
+}
+
 }  // namespace Test
 
 #endif  // KOKKOS_TEST_UNORDERED_MAP_HPP
