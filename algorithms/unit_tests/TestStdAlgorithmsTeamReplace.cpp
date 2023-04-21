@@ -96,9 +96,9 @@ struct TestFunctorA {
 template <class LayoutTag, class ValueType>
 void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   /* description:
-     set a random subset of each row of a rank-2 view
-     to a target value that we want to replace with a new value.
-     Do the operation via a team parfor with one row per team.
+     Randomly fill a view with some elements equal to a target value that we
+     want to replace with a new value. Do the operation via a team parfor with
+     one row per team.
    */
 
   const auto targetVal = static_cast<ValueType>(531);
@@ -107,39 +107,13 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // -----------------------------------------------
   // prepare data
   // -----------------------------------------------
-  // construct in memory space associated with default exespace
-  auto dataView =
-      create_view<ValueType>(LayoutTag{}, numTeams, numCols, "dataView");
-
-  // dataView might not deep copyable (e.g. strided layout) so to fill it
-  // we make a new view that is for sure deep copyable, modify it on the host
-  // deep copy to device and then launch copy kernel to dataView
-  auto dataView_dc =
-      create_deep_copyable_compatible_view_with_same_extent(dataView);
-  auto dataView_dc_h = create_mirror_view(Kokkos::HostSpace(), dataView_dc);
-
-  // for each row, randomly select columns, fill with targetVal
-  // and for testing purposes keep track of the entries we are changing.
-  // To do this, I need one rand num obj to generate how many elements
-  // and one object to generate the actual indices to pick.
-
-  std::vector<std::size_t> targetElementsLinearizedIds;
-  const std::size_t maxColInd = numCols > 0 ? numCols - 1 : 0;
-  UnifDist<int> colCountProducer(maxColInd, 3123377);
-  UnifDist<int> colIndicesProducer(maxColInd, 455225);
-  for (std::size_t i = 0; i < dataView_dc_h.extent(0); ++i) {
-    const std::size_t currCount = colCountProducer();
-    for (std::size_t j = 0; j < currCount; ++j) {
-      const auto colInd        = colIndicesProducer();
-      dataView_dc_h(i, colInd) = targetVal;
-      targetElementsLinearizedIds.push_back(i * numCols + colInd);
-    }
-  }
-
-  // copy to dataView_dc and then to dataView
-  Kokkos::deep_copy(dataView_dc, dataView_dc_h);
-  CopyFunctorRank2 F1(dataView_dc, dataView);
-  Kokkos::parallel_for("copy", dataView.extent(0) * dataView.extent(1), F1);
+  // Create a view in the memory space associated with default exespace with as
+  // many rows as the number of teams and fill it with random values from an
+  // arbitrary range. Pick range so that some of the values are equal to target.
+  auto [dataView, dataViewBeforeOp_h] = create_random_view_and_host_clone(
+      LayoutTag{}, numTeams, numCols,
+      Kokkos::pair<ValueType, ValueType>{targetVal - 1, targetVal + 1},
+      "dataView");
 
   // -----------------------------------------------
   // launch kokkos kernel
@@ -155,33 +129,16 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // - the target elements are replaced with the new value
   // - all other elements are unchanged
   // -----------------------------------------------
-
-  // check that the correct elements have the new value
-  auto dataView2_h = create_host_space_copy(dataView);
-  for (auto k : targetElementsLinearizedIds) {
-    const std::size_t i = k / numCols;
-    const std::size_t j = k % numCols;
-    EXPECT_TRUE(dataView2_h(i, j) == newVal);
+  auto dataViewAfterOp_h = create_host_space_copy(dataView);
+  for (std::size_t i = 0; i < dataViewAfterOp_h.extent(0); ++i) {
+    for (std::size_t j = 0; j < dataViewAfterOp_h.extent(1); ++j) {
+      const auto correctVal = (dataViewBeforeOp_h(i, j) == targetVal)
+                                  ? newVal
+                                  : dataViewBeforeOp_h(i, j);
+      ASSERT_EQ(dataViewAfterOp_h(i, j), correctVal)
+          << "i, j = " << i << ", " << j;
+    }
   }
-
-  // figure out which elements should be unchanged
-  std::vector<std::size_t> allIndices(numTeams * numCols);
-  std::iota(allIndices.begin(), allIndices.end(), 0);
-  std::vector<std::size_t> unchanged(allIndices.size());
-  // set_difference requires sorted ranges, allIndices is already sorted
-  std::sort(targetElementsLinearizedIds.begin(),
-            targetElementsLinearizedIds.end());
-  auto bound = std::set_difference(allIndices.cbegin(), allIndices.cend(),
-                                   targetElementsLinearizedIds.cbegin(),
-                                   targetElementsLinearizedIds.cend(),
-                                   unchanged.begin());
-
-  auto verify = [numCols, dataView2_h](std::size_t k) {
-    const std::size_t i = k / numCols;
-    const std::size_t j = k % numCols;
-    EXPECT_TRUE(dataView2_h(i, j) == static_cast<ValueType>(0));
-  };
-  std::for_each(unchanged.begin(), bound, verify);
 }
 
 template <class LayoutTag, class ValueType>
