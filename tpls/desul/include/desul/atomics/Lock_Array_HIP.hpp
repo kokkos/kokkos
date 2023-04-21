@@ -63,12 +63,12 @@ void finalize_lock_arrays_hip();
  * will use it.  That is the purpose of the
  * ensure_hip_lock_arrays_on_device function.
  */
-#ifdef __CLANG_RDC__
+#ifdef DESUL_ATOMICS_ENABLE_HIP_SEPARABLE_COMPILATION
 extern
 #endif
     __device__ __constant__ int32_t* HIP_SPACE_ATOMIC_LOCKS_DEVICE;
 
-#ifdef __CLANG_RDC__
+#ifdef DESUL_ATOMICS_ENABLE_HIP_SEPARABLE_COMPILATION
 extern
 #endif
     __device__ __constant__ int32_t* HIP_SPACE_ATOMIC_LOCKS_NODE;
@@ -115,7 +115,7 @@ __device__ inline void unlock_address_hip(void* ptr, desul::MemoryScopeNode) {
   atomicExch(&desul::Impl::HIP_SPACE_ATOMIC_LOCKS_NODE[offset], 0);
 }
 
-#ifdef __CLANG_RDC__
+#ifdef DESUL_ATOMICS_ENABLE_HIP_SEPARABLE_COMPILATION
 inline
 #else
 inline static
@@ -135,7 +135,7 @@ inline static
 }
 }  // namespace Impl
 
-#if defined(__CLANG_RDC__)
+#ifdef DESUL_ATOMICS_ENABLE_HIP_SEPARABLE_COMPILATION
 inline void ensure_hip_lock_arrays_on_device() {}
 #else
 static inline void ensure_hip_lock_arrays_on_device() {

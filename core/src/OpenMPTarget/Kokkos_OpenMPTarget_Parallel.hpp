@@ -748,7 +748,7 @@ class OpenMPTargetExec {
   static void* m_scratch_ptr;
   static int64_t m_scratch_size;
   static int* m_lock_array;
-  static int64_t m_lock_size;
+  static uint64_t m_lock_size;
   static uint32_t* m_uniquetoken_ptr;
 };
 

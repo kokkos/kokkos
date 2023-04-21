@@ -368,16 +368,8 @@ struct ThreadVectorRangeBoundariesStruct<iType, HIPTeamMember> {
       : start(static_cast<index_type>(0)), end(count) {}
 
   KOKKOS_INLINE_FUNCTION
-  ThreadVectorRangeBoundariesStruct(index_type count)
-      : start(static_cast<index_type>(0)), end(count) {}
-
-  KOKKOS_INLINE_FUNCTION
   ThreadVectorRangeBoundariesStruct(const HIPTeamMember, index_type arg_begin,
                                     index_type arg_end)
-      : start(arg_begin), end(arg_end) {}
-
-  KOKKOS_INLINE_FUNCTION
-  ThreadVectorRangeBoundariesStruct(index_type arg_begin, index_type arg_end)
       : start(arg_begin), end(arg_end) {}
 };
 

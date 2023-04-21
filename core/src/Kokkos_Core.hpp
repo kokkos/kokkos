@@ -100,6 +100,9 @@ void declare_configuration_metadata(const std::string& category,
 [[nodiscard]] bool is_initialized() noexcept;
 [[nodiscard]] bool is_finalized() noexcept;
 
+[[nodiscard]] int device_id() noexcept;
+[[nodiscard]] int num_threads() noexcept;
+
 bool show_warnings() noexcept;
 bool tune_internals() noexcept;
 

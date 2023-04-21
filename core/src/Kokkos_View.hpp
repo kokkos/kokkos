@@ -316,8 +316,8 @@ struct ViewTraits {
       typename prop::specialize,
       typename data_analysis::specialize>; /* mapping specialization tag */
 
-  enum { rank = dimension::rank };
-  enum { rank_dynamic = dimension::rank_dynamic };
+  static constexpr unsigned rank         = dimension::rank;
+  static constexpr unsigned rank_dynamic = dimension::rank_dynamic;
 
   //------------------------------------
   // Execution space, memory space, memory access traits, and host mirror space.
