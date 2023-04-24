@@ -242,11 +242,11 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
         const auto begin = policy.begin();
         cgh.depends_on(memcpy_event);
         cgh.single_task([=]() {
-          const FunctorType& functor =
-              functor_reducer_wrapper.get_functor().get_functor();
-          const ReducerType& reducer =
-              functor_reducer_wrapper.get_functor().get_reducer();
-          reference_type update = reducer.init(results_ptr);
+          const CombinedFunctorReducerType& functor_reducer =
+              functor_reducer_wrapper.get_functor();
+          const FunctorType& functor = functor_reducer.get_functor();
+          const ReducerType& reducer = functor_reducer.get_reducer();
+          reference_type update      = reducer.init(results_ptr);
           if (size == 1) {
             if constexpr (std::is_void_v<WorkTag>)
               functor(begin, update);
@@ -285,10 +285,10 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
               const auto global_id =
                   wgroup_size * item.get_group_linear_id() * values_per_thread +
                   local_id;
-              const FunctorType& functor =
-                  functor_reducer_wrapper.get_functor().get_functor();
-              const ReducerType& reducer =
-                  functor_reducer_wrapper.get_functor().get_reducer();
+              const CombinedFunctorReducerType& functor_reducer =
+                  functor_reducer_wrapper.get_functor();
+              const FunctorType& functor = functor_reducer.get_functor();
+              const ReducerType& reducer = functor_reducer.get_reducer();
 
               using index_type       = typename Policy::index_type;
               const auto upper_bound = std::min<index_type>(
@@ -578,10 +578,10 @@ class ParallelReduce<CombinedFunctorReducerType,
       auto parallel_reduce_event = q.submit([&](sycl::handler& cgh) {
         cgh.depends_on(memcpy_event);
         cgh.single_task([=]() {
-          const FunctorType& functor =
-              functor_reducer_wrapper.get_functor().get_functor();
-          const ReducerType& reducer =
-              functor_reducer_wrapper.get_functor().get_reducer();
+          const CombinedFunctorReducerType& functor_reducer =
+              functor_reducer_wrapper.get_functor();
+          const FunctorType& functor = functor_reducer.get_functor();
+          const ReducerType& reducer = functor_reducer.get_reducer();
 
           reference_type update = reducer.init(results_ptr);
           if (size == 1) {
@@ -618,10 +618,10 @@ class ParallelReduce<CombinedFunctorReducerType,
 
         cgh.parallel_for(range, [=](sycl::nd_item<1> item) {
           const auto local_id = item.get_local_linear_id();
-          const FunctorType& functor =
-              functor_reducer_wrapper.get_functor().get_functor();
-          const ReducerType& reducer =
-              functor_reducer_wrapper.get_functor().get_reducer();
+          const CombinedFunctorReducerType& functor_reducer =
+              functor_reducer_wrapper.get_functor();
+          const FunctorType& functor = functor_reducer.get_functor();
+          const ReducerType& reducer = functor_reducer.get_reducer();
 
           // In the first iteration, we call functor to initialize the local
           // memory. Otherwise, the local memory is initialized with the

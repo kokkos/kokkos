@@ -596,10 +596,10 @@ class ParallelReduce<CombinedFunctorReducerType,
         cgh.parallel_for(
             sycl::nd_range<2>(sycl::range<2>(1, 1), sycl::range<2>(1, 1)),
             [=](sycl::nd_item<2> item) {
-              const FunctorType& functor =
-                  functor_reducer_wrapper.get_functor().get_functor();
-              const ReducerType& reducer =
-                  functor_reducer_wrapper.get_functor().get_reducer();
+              const CombinedFunctorReducerType& functor_reducer =
+                  functor_reducer_wrapper.get_functor();
+              const FunctorType& functor = functor_reducer.get_functor();
+              const ReducerType& reducer = functor_reducer.get_reducer();
 
               reference_type update = reducer.init(results_ptr);
               if (size == 1) {
@@ -655,10 +655,10 @@ class ParallelReduce<CombinedFunctorReducerType,
                 auto& num_teams_done = reinterpret_cast<unsigned int&>(
                     local_mem[wgroup_size * std::max(value_count, 1u)]);
                 const auto local_id = item.get_local_linear_id();
-                const FunctorType& functor =
-                    functor_reducer_wrapper.get_functor().get_functor();
-                const ReducerType& reducer =
-                    functor_reducer_wrapper.get_functor().get_reducer();
+                const CombinedFunctorReducerType& functor_reducer =
+                    functor_reducer_wrapper.get_functor();
+                const FunctorType& functor = functor_reducer.get_functor();
+                const ReducerType& reducer = functor_reducer.get_reducer();
 
                 if constexpr (ReducerType::static_value_size() == 0) {
                   reference_type update =
