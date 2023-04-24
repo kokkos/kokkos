@@ -1,46 +1,18 @@
-/*
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 3.0
-//       Copyright (2020) National Technology & Engineering
+//                        Kokkos v. 4.0
+//       Copyright (2022) National Technology & Engineering
 //               Solutions of Sandia, LLC (NTESS).
 //
 // Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
+// See https://kokkos.org/LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-//
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-//
-// ************************************************************************
 //@HEADER
-*/
 
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #define KOKKOS_IMPL_PUBLIC_INCLUDE
@@ -52,6 +24,7 @@
 #include <impl/Kokkos_ParseCommandLineArgumentsAndEnvironmentVariables.hpp>
 #include <impl/Kokkos_DeviceManagement.hpp>
 #include <impl/Kokkos_ExecSpaceManager.hpp>
+#include <impl/Kokkos_CPUDiscovery.hpp>
 
 #include <algorithm>
 #include <cctype>
@@ -192,6 +165,26 @@ bool is_valid_map_device_id_by(std::string const& x) {
 
 }  // namespace
 
+[[nodiscard]] int Kokkos::device_id() noexcept {
+#if defined(KOKKOS_ENABLE_CUDA)
+  return Cuda().cuda_device();
+#elif defined(KOKKOS_ENABLE_HIP)
+  return HIP().hip_device();
+#elif defined(KOKKOS_ENABLE_OPENACC)
+  return Experimental::OpenACC().acc_device_number();
+#elif defined(KOKKOS_ENABLE_OPENMPTARGET)
+  return omp_get_default_device();  // FIXME_OPENMPTARGET
+#elif defined(KOKKOS_ENABLE_SYCL)
+  return Experimental::Impl::SYCLInternal::m_syclDev;
+#else
+  return -1;
+#endif
+}
+
+[[nodiscard]] int Kokkos::num_threads() noexcept {
+  return DefaultHostExecutionSpace().concurrency();
+}
+
 Kokkos::Impl::ExecSpaceManager& Kokkos::Impl::ExecSpaceManager::get_instance() {
   static ExecSpaceManager space_initializer = {};
   return space_initializer;
@@ -231,7 +224,7 @@ void Kokkos::Impl::ExecSpaceManager::print_configuration(std::ostream& os,
   }
 }
 
-int Kokkos::Impl::get_ctest_gpu(const char* local_rank_str) {
+int Kokkos::Impl::get_ctest_gpu(int local_rank) {
   auto const* ctest_kokkos_device_type =
       std::getenv("CTEST_KOKKOS_DEVICE_TYPE");
   if (!ctest_kokkos_device_type) {
@@ -246,7 +239,7 @@ int Kokkos::Impl::get_ctest_gpu(const char* local_rank_str) {
 
   // Make sure rank is within bounds of resource groups specified by CTest
   auto resource_group_count = std::stoi(ctest_resource_group_count_str);
-  auto local_rank           = std::stoi(local_rank_str);
+  assert(local_rank >= 0);
   if (local_rank >= resource_group_count) {
     std::ostringstream ss;
     ss << "Error: local rank " << local_rank
@@ -428,20 +421,10 @@ int Kokkos::Impl::get_gpu(const InitializationSettings& settings) {
     Kokkos::abort("implementation bug");
   }
 
-  char const* local_rank_str = nullptr;
-  for (char const* env_var : {
-           "OMPI_COMM_WORLD_LOCAL_RANK",  // OpenMPI
-           "MV2_COMM_WORLD_LOCAL_RANK",   // MVAPICH2
-           "MPI_LOCALRANKID",             // MPICH
-           "SLURM_LOCALID",               // SLURM
-           "PMI_LOCAL_RANK"               // PMI
-       }) {
-    local_rank_str = std::getenv(env_var);
-    if (local_rank_str) break;
-  }
+  int const mpi_local_rank = mpi_local_rank_on_node();
 
   // use first GPU available for execution if unable to detect local MPI rank
-  if (!local_rank_str) {
+  if (mpi_local_rank < 0) {
     if (settings.has_map_device_id_by()) {
       std::cerr << "Warning: unable to detect local MPI rank."
                 << " Falling back to the first GPU available for execution."
@@ -453,10 +436,10 @@ int Kokkos::Impl::get_gpu(const InitializationSettings& settings) {
   // use device assigned by CTest when resource allocation is activated
   if (std::getenv("CTEST_KOKKOS_DEVICE_TYPE") &&
       std::getenv("CTEST_RESOURCE_GROUP_COUNT")) {
-    return get_ctest_gpu(local_rank_str);
+    return get_ctest_gpu(mpi_local_rank);
   }
 
-  return visible_devices[std::stoi(local_rank_str) % visible_devices.size()];
+  return visible_devices[mpi_local_rank % visible_devices.size()];
 }
 
 namespace {
@@ -542,35 +525,15 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
                                  std::to_string(KOKKOS_COMPILER_NVCC));
   declare_configuration_metadata("tools_only", "compiler_family", "nvcc");
 #endif
-#ifdef KOKKOS_COMPILER_PGI
-  declare_configuration_metadata("compiler_version", "KOKKOS_COMPILER_PGI",
-                                 std::to_string(KOKKOS_COMPILER_PGI));
+#ifdef KOKKOS_COMPILER_NVHPC
+  declare_configuration_metadata("compiler_version", "KOKKOS_COMPILER_NVHPC",
+                                 std::to_string(KOKKOS_COMPILER_NVHPC));
   declare_configuration_metadata("tools_only", "compiler_family", "pgi");
 #endif
 #ifdef KOKKOS_COMPILER_MSVC
   declare_configuration_metadata("compiler_version", "KOKKOS_COMPILER_MSVC",
                                  std::to_string(KOKKOS_COMPILER_MSVC));
   declare_configuration_metadata("tools_only", "compiler_family", "msvc");
-#endif
-
-#ifdef KOKKOS_ENABLE_GNU_ATOMICS
-  declare_configuration_metadata("atomics", "KOKKOS_ENABLE_GNU_ATOMICS", "yes");
-#else
-  declare_configuration_metadata("atomics", "KOKKOS_ENABLE_GNU_ATOMICS", "no");
-#endif
-#ifdef KOKKOS_ENABLE_INTEL_ATOMICS
-  declare_configuration_metadata("atomics", "KOKKOS_ENABLE_INTEL_ATOMICS",
-                                 "yes");
-#else
-  declare_configuration_metadata("atomics", "KOKKOS_ENABLE_INTEL_ATOMICS",
-                                 "no");
-#endif
-#ifdef KOKKOS_ENABLE_WINDOWS_ATOMICS
-  declare_configuration_metadata("atomics", "KOKKOS_ENABLE_WINDOWS_ATOMICS",
-                                 "yes");
-#else
-  declare_configuration_metadata("atomics", "KOKKOS_ENABLE_WINDOWS_ATOMICS",
-                                 "no");
 #endif
 
 #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
@@ -780,6 +743,8 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
 #elif defined(KOKKOS_ARCH_AMPERE86)
   declare_configuration_metadata("architecture", "GPU architecture",
                                  "AMPERE86");
+#elif defined(KOKKOS_ARCH_ADA89)
+  declare_configuration_metadata("architecture", "GPU architecture", "ADA89");
 #elif defined(KOKKOS_ARCH_HOPPER90)
   declare_configuration_metadata("architecture", "GPU architecture",
                                  "HOPPER90");
@@ -791,6 +756,12 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
   declare_configuration_metadata("architecture", "GPU architecture", "VEGA908");
 #elif defined(KOKKOS_ARCH_VEGA90A)
   declare_configuration_metadata("architecture", "GPU architecture", "VEGA90A");
+#elif defined(KOKKOS_ARCH_NAVI1030)
+  declare_configuration_metadata("architecture", "GPU architecture",
+                                 "NAVI1030");
+#elif defined(KOKKOS_ARCH_NAVI1100)
+  declare_configuration_metadata("architecture", "GPU architecture",
+                                 "NAVI1100");
 
 #else
   declare_configuration_metadata("architecture", "GPU architecture", "none");
@@ -1302,15 +1273,3 @@ void Kokkos::print_configuration(std::ostream& os, bool verbose) {
 bool Kokkos::show_warnings() noexcept { return g_show_warnings; }
 
 bool Kokkos::tune_internals() noexcept { return g_tune_internals; }
-
-namespace Kokkos {
-
-#ifdef KOKKOS_COMPILER_PGI
-namespace Impl {
-// Bizzarely, an extra jump instruction forces the PGI compiler to not have a
-// bug related to (probably?) empty base optimization and/or aggregate
-// construction.
-void _kokkos_pgi_compiler_bug_workaround() {}
-}  // end namespace Impl
-#endif
-}  // namespace Kokkos

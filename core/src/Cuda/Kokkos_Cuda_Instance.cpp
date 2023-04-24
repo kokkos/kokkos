@@ -1,46 +1,18 @@
-/*
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 3.0
-//       Copyright (2020) National Technology & Engineering
+//                        Kokkos v. 4.0
+//       Copyright (2022) National Technology & Engineering
 //               Solutions of Sandia, LLC (NTESS).
 //
 // Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
+// See https://kokkos.org/LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-//
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-//
-// ************************************************************************
 //@HEADER
-*/
 
 /*--------------------------------------------------------------------------*/
 /* Kokkos interfaces */
@@ -57,7 +29,6 @@
 #include <Cuda/Kokkos_Cuda_Error.hpp>
 #include <Cuda/Kokkos_Cuda_BlockSize_Deduction.hpp>
 #include <Cuda/Kokkos_Cuda_Instance.hpp>
-#include <Cuda/Kokkos_Cuda_Locks.hpp>
 #include <Cuda/Kokkos_Cuda_UniqueToken.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_Tools.hpp>
@@ -157,9 +128,17 @@ void cuda_device_synchronize(const std::string &name) {
       name,
       Kokkos::Tools::Experimental::SpecialSynchronizationCases::
           GlobalDeviceSynchronization,
+#if defined(KOKKOS_COMPILER_CLANG)
+      // annotate with __host__ silence a clang warning about using
+      // cudaDeviceSynchronize in device code
+      [] __host__() {  // TODO: correct device ID
+        KOKKOS_IMPL_CUDA_SAFE_CALL(cudaDeviceSynchronize());
+      });
+#else
       []() {  // TODO: correct device ID
         KOKKOS_IMPL_CUDA_SAFE_CALL(cudaDeviceSynchronize());
       });
+#endif
 }
 
 void cuda_stream_synchronize(const cudaStream_t stream, const CudaInternal *ptr,
@@ -295,6 +274,12 @@ const CudaInternalDevices &CudaInternalDevices::singleton() {
 
 //----------------------------------------------------------------------------
 
+int Impl::CudaInternal::concurrency() {
+  static int const concurrency = m_deviceProp.maxThreadsPerMultiProcessor *
+                                 m_deviceProp.multiProcessorCount;
+  return concurrency;
+}
+
 void CudaInternal::print_configuration(std::ostream &s) const {
   const CudaInternalDevices &dev_info = CudaInternalDevices::singleton();
 
@@ -422,10 +407,10 @@ Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
   }
 #endif
 
-  cudaDeviceSetCacheConfig(cudaFuncCachePreferShared);
-
   // Init the array for used for arbitrarily sized atomics
-  if (this == &singleton()) Impl::initialize_host_cuda_lock_arrays();
+  if (this == &singleton()) {
+    desul::Impl::init_lock_arrays();  // FIXME
+  }
 
   // Allocate a staging buffer for constant mem in pinned host memory
   // and an event to avoid overwriting driver for previous kernel launches
@@ -444,10 +429,11 @@ Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
     m_team_scratch_ptr[i]          = nullptr;
   }
 
+  m_num_scratch_locks = concurrency();
   KOKKOS_IMPL_CUDA_SAFE_CALL(
-      cudaMalloc(&m_scratch_locks, sizeof(int32_t) * m_maxConcurrency));
+      cudaMalloc(&m_scratch_locks, sizeof(int32_t) * m_num_scratch_locks));
   KOKKOS_IMPL_CUDA_SAFE_CALL(
-      cudaMemset(m_scratch_locks, 0, sizeof(int32_t) * m_maxConcurrency));
+      cudaMemset(m_scratch_locks, 0, sizeof(int32_t) * m_num_scratch_locks));
 }
 
 //----------------------------------------------------------------------------
@@ -598,7 +584,7 @@ void CudaInternal::finalize() {
   // Only finalize this if we're the singleton
   if (this == &singleton()) {
     (void)Impl::cuda_global_unique_token_locks(true);
-    Impl::finalize_host_cuda_lock_arrays();
+    desul::Impl::finalize_lock_arrays();  // FIXME
 
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFreeHost(constantMemHostStaging));
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaEventDestroy(constantMemReusable));
@@ -642,7 +628,8 @@ void CudaInternal::finalize() {
   }
 
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFree(m_scratch_locks));
-  m_scratch_locks = nullptr;
+  m_scratch_locks     = nullptr;
+  m_num_scratch_locks = 0;
 }
 
 //----------------------------------------------------------------------------
@@ -701,8 +688,12 @@ Cuda::size_type Cuda::detect_device_count() {
   return Impl::CudaInternalDevices::singleton().m_cudaDevCount;
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 int Cuda::concurrency() {
-  return Impl::CudaInternal::singleton().m_maxConcurrency;
+#else
+int Cuda::concurrency() const {
+#endif
+  return Impl::CudaInternal::concurrency();
 }
 
 int Cuda::impl_is_initialized() {
@@ -809,8 +800,6 @@ void Cuda::impl_initialize(InitializationSettings const &settings) {
                 << " does not support unified virtual address space"
                 << std::endl;
     }
-    Impl::CudaInternal::m_maxConcurrency =
-        Impl::CudaInternal::m_maxThreadsPerSM * cudaProp.multiProcessorCount;
   } else {
     std::ostringstream msg;
     msg << "Kokkos::Cuda::initialize(" << cuda_device_id << ") FAILED: Device ";
@@ -878,14 +867,6 @@ void Cuda::print_configuration(std::ostream &os, bool /*verbose*/) const {
   os << "Device Execution Space:\n";
   os << "  KOKKOS_ENABLE_CUDA: yes\n";
 
-  os << "Cuda Atomics:\n";
-  os << "  KOKKOS_ENABLE_CUDA_ATOMICS: ";
-#ifdef KOKKOS_ENABLE_CUDA_ATOMICS
-  os << "yes\n";
-#else
-  os << "no\n";
-#endif
-
   os << "Cuda Options:\n";
   os << "  KOKKOS_ENABLE_CUDA_LAMBDA: ";
 #ifdef KOKKOS_ENABLE_CUDA_LAMBDA
@@ -893,11 +874,9 @@ void Cuda::print_configuration(std::ostream &os, bool /*verbose*/) const {
 #else
   os << "no\n";
 #endif
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   os << "  KOKKOS_ENABLE_CUDA_LDG_INTRINSIC: ";
-#ifdef KOKKOS_ENABLE_CUDA_LDG_INTRINSIC
   os << "yes\n";
-#else
-  os << "no\n";
 #endif
   os << "  KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE: ";
 #ifdef KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE

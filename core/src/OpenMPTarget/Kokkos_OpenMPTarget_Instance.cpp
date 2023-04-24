@@ -1,46 +1,18 @@
-/*
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 3.0
-//       Copyright (2020) National Technology & Engineering
+//                        Kokkos v. 4.0
+//       Copyright (2022) National Technology & Engineering
 //               Solutions of Sandia, LLC (NTESS).
 //
 // Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
+// See https://kokkos.org/LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-//
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-//
-// ************************************************************************
 //@HEADER
-*/
 
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #define KOKKOS_IMPL_PUBLIC_INCLUDE
@@ -55,7 +27,7 @@
 // constructor. undef'ed at the end
 #define KOKKOS_IMPL_OPENMPTARGET_WORKAROUND
 
-#include <Kokkos_OpenMPTarget.hpp>
+#include <OpenMPTarget/Kokkos_OpenMPTarget.hpp>
 #include <OpenMPTarget/Kokkos_OpenMPTarget_UniqueToken.hpp>
 #include <OpenMPTarget/Kokkos_OpenMPTarget_Instance.hpp>
 #include <impl/Kokkos_ExecSpaceManager.hpp>
@@ -93,7 +65,9 @@ void OpenMPTargetInternal::fence(const std::string& name,
         [&]() {});
   }
 }
-int OpenMPTargetInternal::concurrency() { return 128000; }
+int OpenMPTargetInternal::concurrency() const {
+  return 128000;  // FIXME_OPENMPTARGET
+}
 const char* OpenMPTargetInternal::name() { return "OpenMPTarget"; }
 void OpenMPTargetInternal::print_configuration(std::ostream& os,
                                                bool /*verbose*/) const {
@@ -115,12 +89,9 @@ void OpenMPTargetInternal::impl_initialize() {
 
   // FIXME_OPENMPTARGET:  Only fix the number of teams for NVIDIA architectures
   // from Pascal and upwards.
-#if defined(KOKKOS_ARCH_PASCAL) || defined(KOKKOS_ARCH_VOLTA) ||    \
-    defined(KOKKOS_ARCH_TURING75) || defined(KOKKOS_ARCH_AMPERE) || \
-    defined(KOKKOS_ARCH_HOPPER)
-#if defined(KOKKOS_COMPILER_CLANG) && (KOKKOS_COMPILER_CLANG >= 1300)
+#if defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU) && defined(KOKKOS_COMPILER_CLANG) && \
+    (KOKKOS_COMPILER_CLANG >= 1300)
   omp_set_num_teams(512);
-#endif
 #endif
 }
 int OpenMPTargetInternal::impl_is_initialized() {
@@ -153,9 +124,15 @@ uint32_t OpenMPTarget::impl_instance_id() const noexcept {
   return m_space_instance->impl_get_instance_id();
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 int OpenMPTarget::concurrency() {
   return Impl::OpenMPTargetInternal::impl_singleton()->concurrency();
 }
+#else
+int OpenMPTarget::concurrency() const {
+  return m_space_instance->concurrency();
+}
+#endif
 
 void OpenMPTarget::fence(const std::string& name) {
   Impl::OpenMPTargetInternal::impl_singleton()->fence(name);
@@ -204,9 +181,9 @@ UniqueToken<Kokkos::Experimental::OpenMPTarget,
         Kokkos::kokkos_malloc<Kokkos::Experimental::OpenMPTargetSpace>(
             "Kokkos::OpenMPTarget::m_uniquetoken_ptr", size));
     std::vector<uint32_t> h_buf(count, 0);
-    OMPT_SAFE_CALL(omp_target_memcpy(ptr, h_buf.data(), size, 0, 0,
-                                     omp_get_default_device(),
-                                     omp_get_initial_device()));
+    KOKKOS_IMPL_OMPT_SAFE_CALL(omp_target_memcpy(ptr, h_buf.data(), size, 0, 0,
+                                                 omp_get_default_device(),
+                                                 omp_get_initial_device()));
 
     Kokkos::Impl::OpenMPTargetExec::m_uniquetoken_ptr = ptr;
   }

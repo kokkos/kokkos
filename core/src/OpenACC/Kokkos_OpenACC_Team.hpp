@@ -1,46 +1,18 @@
-/*
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 3.0
-//       Copyright (2020) National Technology & Engineering
+//                        Kokkos v. 4.0
+//       Copyright (2022) National Technology & Engineering
 //               Solutions of Sandia, LLC (NTESS).
 //
 // Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
+// See https://kokkos.org/LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-//
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-//
-// ************************************************************************
 //@HEADER
-*/
 
 #ifndef KOKKOS_OPENACC_TEAM_HPP
 #define KOKKOS_OPENACC_TEAM_HPP
@@ -66,6 +38,7 @@ class OpenACCTeamMember {
 
   using execution_space      = Kokkos::Experimental::OpenACC;
   using scratch_memory_space = execution_space::scratch_memory_space;
+  using team_handle          = OpenACCTeamMember;
 
   scratch_memory_space m_team_shared;
   int m_team_scratch_size[2];
@@ -109,7 +82,7 @@ class OpenACCTeamMember {
   // FIXME_OPENACC: team_broadcast() is not implemented.
   template <class ValueType>
   KOKKOS_FUNCTION void team_broadcast(ValueType& value, int thread_id) const {
-    static_assert(Kokkos::Impl::always_false<ValueType>::value,
+    static_assert(!Kokkos::Impl::always_true<ValueType>::value,
                   "Kokkos Error: team_broadcast() is not implemented for the "
                   "OpenACC backend");
     return ValueType();
@@ -126,7 +99,7 @@ class OpenACCTeamMember {
   template <class ValueType, class JoinOp>
   KOKKOS_FUNCTION ValueType team_reduce(const ValueType& value,
                                         const JoinOp& op_in) const {
-    static_assert(Kokkos::Impl::always_false<ValueType>::value,
+    static_assert(!Kokkos::Impl::always_true<ValueType>::value,
                   "Kokkos Error: team_reduce() is not implemented for the "
                   "OpenACC backend");
     return ValueType();
@@ -137,7 +110,7 @@ class OpenACCTeamMember {
   KOKKOS_FUNCTION ArgType team_scan(const ArgType& /*value*/,
                                     ArgType* const /*global_accum*/) const {
     static_assert(
-        Kokkos::Impl::always_false<ArgType>::value,
+        !Kokkos::Impl::always_true<ArgType>::value,
         "Kokkos Error: team_scan() is not implemented for the OpenACC backend");
     return ArgType();
   }
@@ -190,37 +163,37 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenACC, Properties...>
   // implementations.
   template <class FunctorType>
   static int team_size_max(const FunctorType&, const ParallelForTag&) {
-    return DEFAULT_TEAM_SIZE_MAX;
+    return default_team_size_max;
   }
 
   template <class FunctorType>
   static int team_size_max(const FunctorType&, const ParallelReduceTag&) {
-    return DEFAULT_TEAM_SIZE_MAX;
+    return default_team_size_max;
   }
 
   template <class FunctorType, class ReducerType>
   static int team_size_max(const FunctorType&, const ReducerType&,
                            const ParallelReduceTag&) {
-    return DEFAULT_TEAM_SIZE_MAX;
+    return default_team_size_max;
   }
 
   // FIXME_OPENACC: update team_size_recommended() APIs with realistic
   // implementations.
   template <class FunctorType>
   static int team_size_recommended(const FunctorType&, const ParallelForTag&) {
-    return DEFAULT_TEAM_SIZE_REC;
+    return default_team_size;
   }
 
   template <class FunctorType>
   static int team_size_recommended(const FunctorType&,
                                    const ParallelReduceTag&) {
-    return DEFAULT_TEAM_SIZE_REC;
+    return default_team_size;
   }
 
   template <class FunctorType, class ReducerType>
   static int team_size_recommended(const FunctorType&, const ReducerType&,
                                    const ParallelReduceTag&) {
-    return DEFAULT_TEAM_SIZE_REC;
+    return default_team_size;
   }
 
   //----------------------------------------
@@ -235,7 +208,9 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenACC, Properties...>
   std::array<size_t, 2> m_thread_scratch_size;
   bool m_tune_team_size;
   bool m_tune_vector_length;
-  constexpr static const size_t default_team_size =
+  constexpr static int default_team_size_max =
+      OpenACCTeamMember::DEFAULT_TEAM_SIZE_MAX;
+  constexpr static int default_team_size =
       OpenACCTeamMember::DEFAULT_TEAM_SIZE_REC;
   int m_chunk_size;
 
@@ -253,8 +228,8 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenACC, Properties...>
  public:
   bool impl_auto_team_size() const { return m_tune_team_size; }
   bool impl_auto_vector_length() const { return m_tune_vector_length; }
-  void impl_set_team_size(const size_t size) { m_team_size = size; }
-  void impl_set_vector_length(const size_t length) {
+  void impl_set_team_size(const int size) { m_team_size = size; }
+  void impl_set_vector_length(const int length) {
     m_tune_vector_length = length;
   }
   int impl_vector_length() const { return m_vector_length; }
@@ -375,7 +350,7 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenACC, Properties...>
         m_chunk_size(0) {
     init(league_size_request, team_size_request, 1);
   }
-  static size_t vector_length_max() {
+  static int vector_length_max() {
     return 32; /* TODO: this is bad. Need logic that is compiler and backend
                   aware */
   }

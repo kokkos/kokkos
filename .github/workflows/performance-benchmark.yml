@@ -1,0 +1,61 @@
+name: github-benchmarks
+on:
+  push:
+    branches:
+      - develop
+  pull_request:
+
+jobs:
+  CI:
+    continue-on-error: true
+    strategy:
+      matrix:
+        distro: ['ubuntu:latest']
+        cxx: ['g++', 'clang++']
+        backend: ['OPENMP']
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/kokkos/ci-containers/${{ matrix.distro }}
+    env:
+      BUILD_ID: ${{ matrix.distro }}-${{ matrix.cxx }}-${{ matrix.backend }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          path: ~/.cache/ccache
+          key: kokkos-${{ matrix.distro }}-${{ matrix.cxx }}-${{ matrix.backend }}-${{ github.ref }}-${{ github.sha }}
+          restore-keys: kokkos-${{ matrix.distro }}-${{ matrix.cxx }}-${{ matrix.backend }}-${{ github.ref }}
+      - name: Configure Kokkos
+        run: |
+          cmake -B builddir \
+            -DKokkos_ENABLE_HWLOC=ON \
+            -DKokkos_ENABLE_${{ matrix.backend }}=ON \
+            -DKokkos_ENABLE_BENCHMARKS=ON \
+            -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: |
+          ccache -z
+          NUM_CPU=$(grep -c processor /proc/cpuinfo)
+          cmake --build builddir --parallel ${NUM_CPU}
+          ccache -s
+      - name: Tests
+        working-directory: builddir
+        run: ctest --output-on-failure
+      - name: Gather benchmark results
+        run: |
+          mkdir ${{ env.BUILD_ID }}
+          find builddir/core/perf_test/ -name "*.json" -exec mv {} ${{ env.BUILD_ID }}/  \;
+      - name: Push benchmark results
+        if: ${{ github.ref == 'refs/heads/develop' }}
+        uses: dmnemec/copy_file_to_another_repo_action@main
+        env:
+          API_TOKEN_GITHUB: ${{ secrets.DALG24_PUSH_BENCHMARK_RESULTS }}
+        with:
+          source_file: ${{ env.BUILD_ID }}
+          destination_repo: 'kokkos/kokkos-benchmark-results'
+          destination_branch: 'main'
+          user_email: 'kokkos@users.noreply.github.com'
+          user_name: 'Kokkos Developers'

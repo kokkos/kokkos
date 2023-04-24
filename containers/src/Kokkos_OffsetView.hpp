@@ -1,46 +1,18 @@
-/*
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 3.0
-//       Copyright (2020) National Technology & Engineering
+//                        Kokkos v. 4.0
+//       Copyright (2022) National Technology & Engineering
 //               Solutions of Sandia, LLC (NTESS).
 //
 // Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
+// See https://kokkos.org/LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-//
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-//
-// ************************************************************************
 //@HEADER
-*/
 
 #ifndef KOKKOS_OFFSETVIEW_HPP_
 #define KOKKOS_OFFSETVIEW_HPP_
@@ -855,7 +827,7 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
                   "Incompatible OffsetView copy construction");
     Mapping::assign(m_map, aview.impl_map(), m_track);
 
-    for (int i = 0; i < aview.Rank; ++i) {
+    for (size_t i = 0; i < View<RT, RP...>::rank(); ++i) {
       m_begins[i] = 0;
     }
   }
@@ -966,10 +938,10 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
           ")"
           "\n";
 
-    // If there are no errors so far, then rank == Rank
+    // If there are no errors so far, then arg_rank == Rank
     // Otherwise, check as much as possible
-    size_t rank = begins.size() < ends.size() ? begins.size() : ends.size();
-    for (size_t i = 0; i != rank; ++i) {
+    size_t arg_rank = begins.size() < ends.size() ? begins.size() : ends.size();
+    for (size_t i = 0; i != arg_rank; ++i) {
       subtraction_failure sf = check_subtraction(at(ends, i), at(begins, i));
       if (sf != subtraction_failure::none) {
         message +=
@@ -1279,8 +1251,7 @@ shift_input(const T arg, const int64_t offset) {
 }
 
 KOKKOS_INLINE_FUNCTION
-Kokkos::Impl::ALL_t shift_input(const Kokkos::Impl::ALL_t arg,
-                                const int64_t /*offset*/) {
+Kokkos::ALL_t shift_input(const Kokkos::ALL_t arg, const int64_t /*offset*/) {
   return arg;
 }
 
@@ -1330,7 +1301,7 @@ KOKKOS_INLINE_FUNCTION
       Kokkos::Impl::ViewMapping<void /* deduce subview type from source view
                                         traits */
                                 ,
-                                ViewTraits<D, P...>, T>::type::Rank;
+                                ViewTraits<D, P...>, T>::type::rank;
 
   auto theSubview = Kokkos::subview(theView, shiftedArg);
 
@@ -1369,7 +1340,7 @@ KOKKOS_INLINE_FUNCTION
       Kokkos::Impl::ViewMapping<void /* deduce subview type from source view
                                         traits */
                                 ,
-                                ViewTraits<D, P...>, T0, T1>::type::Rank;
+                                ViewTraits<D, P...>, T0, T1>::type::rank;
 
   Kokkos::Array<int64_t, rank> subviewBegins;
   size_t counter = 0;
@@ -1410,7 +1381,7 @@ KOKKOS_INLINE_FUNCTION
       Kokkos::Impl::ViewMapping<void /* deduce subview type from source view
                                         traits */
                                 ,
-                                ViewTraits<D, P...>, T0, T1, T2>::type::Rank;
+                                ViewTraits<D, P...>, T0, T1, T2>::type::rank;
 
   Kokkos::Array<int64_t, rank> subviewBegins;
 
@@ -1455,7 +1426,7 @@ KOKKOS_INLINE_FUNCTION
   constexpr size_t rank = Kokkos::Impl::ViewMapping<
       void /* deduce subview type from source view traits */
       ,
-      ViewTraits<D, P...>, T0, T1, T2, T3>::type::Rank;
+      ViewTraits<D, P...>, T0, T1, T2, T3>::type::rank;
   Kokkos::Array<int64_t, rank> subviewBegins;
 
   size_t counter = 0;
@@ -1502,7 +1473,7 @@ KOKKOS_INLINE_FUNCTION
   constexpr size_t rank = Kokkos::Impl::ViewMapping<
       void /* deduce subview type from source view traits */
       ,
-      ViewTraits<D, P...>, T0, T1, T2, T3, T4>::type::Rank;
+      ViewTraits<D, P...>, T0, T1, T2, T3, T4>::type::rank;
   Kokkos::Array<int64_t, rank> subviewBegins;
 
   size_t counter = 0;
@@ -1554,7 +1525,7 @@ KOKKOS_INLINE_FUNCTION
   constexpr size_t rank = Kokkos::Impl::ViewMapping<
       void /* deduce subview type from source view traits */
       ,
-      ViewTraits<D, P...>, T0, T1, T2, T3, T4, T5>::type::Rank;
+      ViewTraits<D, P...>, T0, T1, T2, T3, T4, T5>::type::rank;
 
   Kokkos::Array<int64_t, rank> subviewBegins;
 
@@ -1609,7 +1580,7 @@ KOKKOS_INLINE_FUNCTION
   constexpr size_t rank = Kokkos::Impl::ViewMapping<
       void /* deduce subview type from source view traits */
       ,
-      ViewTraits<D, P...>, T0, T1, T2, T3, T4, T5, T6>::type::Rank;
+      ViewTraits<D, P...>, T0, T1, T2, T3, T4, T5, T6>::type::rank;
 
   Kokkos::Array<int64_t, rank> subviewBegins;
 
@@ -1668,7 +1639,7 @@ KOKKOS_INLINE_FUNCTION
   constexpr size_t rank = Kokkos::Impl::ViewMapping<
       void /* deduce subview type from source view traits */
       ,
-      ViewTraits<D, P...>, T0, T1, T2, T3, T4, T5, T6, T7>::type::Rank;
+      ViewTraits<D, P...>, T0, T1, T2, T3, T4, T5, T6, T7>::type::rank;
 
   Kokkos::Array<int64_t, rank> subviewBegins;
 
