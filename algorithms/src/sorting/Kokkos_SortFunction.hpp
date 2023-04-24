@@ -280,8 +280,8 @@ sort_no_comp_specialize_for(const Cuda& exec,
                 "View argument!");
 
   Kokkos::fence("Kokkos::sort: before");
-  auto first            = Experimental::begin(view);
-  auto last             = Experimental::end(view);
+  auto first            = ::Kokkos::Experimental::begin(view);
+  auto last             = ::Kokkos::Experimental::end(view);
   const auto thrustExec = thrust::cuda::par.on(space.cuda_stream());
   thrust::sort(thrustExec, first, last);
   exec.fence("Kokkos::sort: fence after sorting");
