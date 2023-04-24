@@ -26,9 +26,10 @@
 namespace Test {
 namespace SortWithComp {
 
+template <class T>
 struct MyComp {
   KOKKOS_INLINE_FUNCTION
-  bool operator()(double const& a, double const& b) const { return a < b; }
+  bool operator()(T a, T b) const { return a < b; }
 };
 
 template <class LayoutTagType, class ValueType>
@@ -64,28 +65,39 @@ auto create_random_view_and_host_clone(
 }
 
 template <class Tag, class ValueType>
-void run_all_scenarios() {
+void run_all_scenarios(int api) {
   for (const auto& scenario : stdalgos::default_scenarios) {
     auto [dataView, dataViewBeforeOp_h] = create_random_view_and_host_clone(
         Tag{}, scenario.second, Kokkos::pair<ValueType, ValueType>{-1045, 565},
         "dataView");
-    Kokkos::sort(dataView);
 
     namespace KE = Kokkos::Experimental;
-    std::sort(KE::begin(dataViewBeforeOp_h), KE::end(dataViewBeforeOp_h));
-
-    stdalgos::compare_views(dataView, dataViewBeforeOp_h);
+    if (api == 0) {
+      Kokkos::sort(dataView);
+      std::sort(KE::begin(dataViewBeforeOp_h), KE::end(dataViewBeforeOp_h));
+    } else {
+      using comp_t = MyComp<ValueType>;
+      Kokkos::sort(dataView, comp_t{});
+      std::sort(KE::begin(dataViewBeforeOp_h), KE::end(dataViewBeforeOp_h),
+                comp_t{});
+    }
 
     auto dataView_h = stdalgos::create_host_space_copy(dataView);
-    if (scenario.first == "small-a") {
-      for (std::size_t i = 0; i < dataView_h.extent(0); i++) {
-        std::cout << dataView_h(i) << " " << dataViewBeforeOp_h(i) << "\n";
-      }
-    }
+    stdalgos::compare_views(dataViewBeforeOp_h, dataView_h);
   }
 }
 
-TEST(sorting, custom_comp) { run_all_scenarios<stdalgos::DynamicTag, int>(); }
+TEST(sorting, custom_comp) {
+  for (int api = 0; api < 1; api++) {
+    run_all_scenarios<stdalgos::DynamicTag, int>(api);
+    run_all_scenarios<stdalgos::StridedTwoTag, int>(api);
+    run_all_scenarios<stdalgos::StridedThreeTag, int>(api);
+
+    run_all_scenarios<stdalgos::DynamicTag, double>(api);
+    run_all_scenarios<stdalgos::StridedTwoTag, double>(api);
+    run_all_scenarios<stdalgos::StridedThreeTag, double>(api);
+  }
+}
 
 #endif
 }
