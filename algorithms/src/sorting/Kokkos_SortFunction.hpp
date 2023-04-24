@@ -278,6 +278,7 @@ void sort(const ExecutionSpace& exec,
   using MemSpace = typename ViewType::memory_space;
 
   if constexpr (SpaceAccessibility<HostSpace, MemSpace>::accessible) {
+    (void)exec;
     auto first = ::Kokkos::Experimental::begin(view);
     auto last  = ::Kokkos::Experimental::end(view);
     std::sort(first, last, comp);
