@@ -271,7 +271,7 @@ sort_no_comp_specialize_for(const ExecutionSpace& exec,
 #if defined(KOKKOS_ENABLE_CUDA)
 template <class ExecutionSpace, class DataType, class... Properties>
 std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value>
-sort_no_comp_specialize_for(const Cuda& exec,
+sort_no_comp_specialize_for(const Cuda& space,
                             const Kokkos::View<DataType, Properties...>& view) {
   using ViewType = Kokkos::View<DataType, Properties...>;
   using MemSpace = typename ViewType::memory_space;
@@ -284,7 +284,7 @@ sort_no_comp_specialize_for(const Cuda& exec,
   auto last             = ::Kokkos::Experimental::end(view);
   const auto thrustExec = thrust::cuda::par.on(space.cuda_stream());
   thrust::sort(thrustExec, first, last);
-  exec.fence("Kokkos::sort: fence after sorting");
+  space.fence("Kokkos::sort: fence after sorting");
 }
 #endif
 
@@ -339,8 +339,8 @@ sort_with_comp(const ExecutionSpace& space,
   KE::copy(space, view, view_dc);
 
   auto mv_h  = create_mirror_view_and_copy(Kokkos::HostSpace(), view_dc);
-  auto first = Experimental::begin(mv_h);
-  auto last  = Experimental::end(mv_h);
+  auto first = KE::begin(mv_h);
+  auto last  = KE::end(mv_h);
   std::sort(first, last, comp);
 }
 
@@ -356,11 +356,11 @@ sort_with_comp(const Cuda& space,
   using MemSpace = typename ViewType::memory_space;
 
   Kokkos::fence("Kokkos::sort: before");
-  auto first               = Experimental::begin(view);
-  auto last                = Experimental::end(view);
+  auto first               = ::Kokkos::Experimental::begin(view);
+  auto last                = ::Kokkos::Experimental::end(view);
   const auto thrust_policy = thrust::cuda::par.on(space.cuda_stream());
   thrust::sort(thrust_policy, first, last);
-  exec.fence("Kokkos::sort: fence after sorting");
+  space.fence("Kokkos::sort: fence after sorting");
 }
 #endif
 
@@ -373,8 +373,8 @@ void sort(const ExecutionSpace& exec,
   using MemSpace = typename ViewType::memory_space;
 
   if constexpr (SpaceAccessibility<HostSpace, MemSpace>::accessible) {
-    auto first = Experimental::begin(view);
-    auto last  = Experimental::end(view);
+    auto first = ::Kokkos::Experimental::begin(view);
+    auto last  = ::Kokkos::Experimental::end(view);
     std::sort(first, last);
   } else {
     Impl::sort_no_comp_specialize_for(exec, view);
@@ -395,8 +395,8 @@ void sort(const Kokkos::View<DataType, Properties...>& view,
   using MemSpace = typename ViewType::memory_space;
 
   if constexpr (SpaceAccessibility<HostSpace, MemSpace>::accessible) {
-    auto first = Experimental::begin(view);
-    auto last  = Experimental::end(view);
+    auto first = ::Kokkos::Experimental::begin(view);
+    auto last  = ::Kokkos::Experimental::end(view);
     std::sort(first, last, comp);
   } else {
     typename ViewType::execution_space exec;
