@@ -98,12 +98,14 @@ void run_all_scenarios(int api) {
 TEST(sorting, custom_comp) {
   for (int api = 0; api < 4; api++) {
     run_all_scenarios<stdalgos::DynamicTag, int>(api);
+    run_all_scenarios<stdalgos::DynamicTag, double>(api);
+
+#if not defined(KOKKOS_ENABLE_ONEDPL)
     run_all_scenarios<stdalgos::StridedTwoTag, int>(api);
     run_all_scenarios<stdalgos::StridedThreeTag, int>(api);
-
-    run_all_scenarios<stdalgos::DynamicTag, double>(api);
     run_all_scenarios<stdalgos::StridedTwoTag, double>(api);
     run_all_scenarios<stdalgos::StridedThreeTag, double>(api);
+#endif
   }
 }
 

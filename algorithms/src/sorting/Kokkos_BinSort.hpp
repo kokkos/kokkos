@@ -292,7 +292,7 @@ class BinSort {
 
     using scratch_view_type =
         Kokkos::View<typename ValuesViewType::data_type,
-                     typename ValuesViewType::array_layout,
+                     /*typename ValuesViewType::array_layout,*/
                      typename ValuesViewType::device_type>;
 
     const size_t len        = range_end - range_begin;

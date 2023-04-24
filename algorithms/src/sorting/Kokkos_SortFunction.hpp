@@ -151,9 +151,10 @@ void sort_without_comparator(
     const Cuda& space, const Kokkos::View<DataType, Properties...>& view) {
   using ViewType = Kokkos::View<DataType, Properties...>;
   using MemSpace = typename ViewType::memory_space;
-  static_assert(SpaceAccessibility<Cuda, MemSpace>::accessible,
-                "execution space is not able to access the memory space of the "
-                "View argument!");
+  static_assert(
+      SpaceAccessibility<Cuda, MemSpace>::accessible,
+      "Cuda execution space is not able to access the memory space of the "
+      "View argument!");
 
   Kokkos::fence("Kokkos::sort: before");
   auto first            = ::Kokkos::Experimental::begin(view);
@@ -167,13 +168,14 @@ void sort_without_comparator(
 #if defined(KOKKOS_ENABLE_ONEDPL)
 template <class DataType, class... Properties>
 void sort_without_comparator(
-    const Experimental::SYCL& exec,
+    const Experimental::SYCL& space,
     const Kokkos::View<DataType, Properties...>& view) {
   using ViewType = Kokkos::View<DataType, Properties...>;
   using MemSpace = typename ViewType::memory_space;
-  static_assert(SpaceAccessibility<Experimental::SYCL, MemSpace>::accessible,
-                "execution space is not able to access the memory space of the "
-                "View argument!");
+  static_assert(
+      SpaceAccessibility<Experimental::SYCL, MemSpace>::accessible,
+      "SYCL execution space is not able to access the memory space of the "
+      "View argument!");
 
   auto queue  = space.sycl_queue();
   auto policy = oneapi::dpl::execution::make_device_policy(queue);
@@ -188,7 +190,7 @@ void sort_without_comparator(
   const int n = view.extent(0);
   oneapi::dpl::sort(policy, view.data(), view.data() + n);
 
-  exec.fence("Kokkos::sort: fence after sorting");
+  space.fence("Kokkos::sort: fence after sorting");
 }
 #endif
 
