@@ -75,9 +75,17 @@ void run_all_scenarios(int api) {
     if (api == 0) {
       Kokkos::sort(dataView);
       std::sort(KE::begin(dataViewBeforeOp_h), KE::end(dataViewBeforeOp_h));
-    } else {
+    } else if (api == 1) {
+      Kokkos::sort(Kokkos::DefaultExecutionSpace{}, dataView);
+      std::sort(KE::begin(dataViewBeforeOp_h), KE::end(dataViewBeforeOp_h));
+    } else if (api == 2) {
       using comp_t = MyComp<ValueType>;
       Kokkos::sort(dataView, comp_t{});
+      std::sort(KE::begin(dataViewBeforeOp_h), KE::end(dataViewBeforeOp_h),
+                comp_t{});
+    } else if (api == 3) {
+      using comp_t = MyComp<ValueType>;
+      Kokkos::sort(Kokkos::DefaultExecutionSpace{}, dataView, comp_t{});
       std::sort(KE::begin(dataViewBeforeOp_h), KE::end(dataViewBeforeOp_h),
                 comp_t{});
     }
@@ -88,7 +96,7 @@ void run_all_scenarios(int api) {
 }
 
 TEST(sorting, custom_comp) {
-  for (int api = 0; api < 1; api++) {
+  for (int api = 0; api < 4; api++) {
     run_all_scenarios<stdalgos::DynamicTag, int>(api);
     run_all_scenarios<stdalgos::StridedTwoTag, int>(api);
     run_all_scenarios<stdalgos::StridedThreeTag, int>(api);
