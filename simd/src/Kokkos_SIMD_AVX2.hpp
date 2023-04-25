@@ -685,7 +685,7 @@ class simd<std::int64_t, simd_abi::avx2_fixed_size<4>> {
  public:
   using value_type = std::int64_t;
   using abi_type   = simd_abi::avx2_fixed_size<4>;
-  using mask_type  = simd_mask<std::int64_t, abi_type>;
+  using mask_type  = simd_mask<value_type, abi_type>;
   using reference  = value_type&;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd()            = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd(simd const&) = default;
