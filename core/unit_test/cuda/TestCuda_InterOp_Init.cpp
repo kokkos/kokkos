@@ -35,8 +35,9 @@ TEST(cuda, raw_cuda_interop) {
   Kokkos::initialize();
 
   int* p;
-  Kokkos::Impl::CudaInternal::singleton().cuda_api_interface_safe_call(
-      &cudaMalloc, reinterpret_cast<void**>(&p), sizeof(int) * 100);
+  Kokkos::Impl::CudaInternal::singleton()
+      .cuda_api_interface_safe_call<void**, size_t>(
+          &cudaMalloc, reinterpret_cast<void**>(&p), sizeof(int) * 100);
 
   Kokkos::View<int*, Kokkos::MemoryTraits<Kokkos::Unmanaged>> v(p, 100);
   Kokkos::deep_copy(v, 5);

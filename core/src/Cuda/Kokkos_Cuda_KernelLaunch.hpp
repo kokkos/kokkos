@@ -231,9 +231,10 @@ inline void configure_shmem_preference(const KernelFuncPtr& func,
 
   // Set the carveout, but only call it once per kernel or when it changes
   auto set_cache_config = [&] {
-    CudaInternal::singleton().cuda_api_interface_safe_call(
-        &cudaFuncSetAttribute, func,
-        cudaFuncAttributePreferredSharedMemoryCarveout, carveout);
+    CudaInternal::singleton()
+        .cuda_api_interface_safe_call<KernelFuncPtr, cudaFuncAttribute, int>(
+            &cudaFuncSetAttribute, func,
+            cudaFuncAttributePreferredSharedMemoryCarveout, carveout);
     return carveout;
   };
   // Store the value in a static variable so we only reset if needed
@@ -475,7 +476,8 @@ struct CudaParallelLaunchKernelInvoker<
     DriverType* driver_ptr = reinterpret_cast<DriverType*>(
         cuda_instance->scratch_functor(sizeof(DriverType)));
 
-    cuda_instance->cuda_api_interface_safe_call(
+    cuda_instance->cuda_api_interface_safe_call<void*, const void*, size_t,
+                                                cudaMemcpyKind, cudaStream_t>(
         &cudaMemcpyAsync, driver_ptr, &driver, sizeof(DriverType),
         cudaMemcpyDefault, cuda_instance->get_stream());
 
@@ -512,7 +514,8 @@ struct CudaParallelLaunchKernelInvoker<
       // which is guaranteed to be alive until the graph instance itself is
       // destroyed, where there should be a fence ensuring that the allocation
       // associated with this kernel on the device side isn't deleted.
-      cuda_instance->cuda_api_interface_safe_call(
+      cuda_instance->cuda_api_interface_safe_call<void*, const void*, size_t,
+                                                  cudaMemcpyKind, cudaStream_t>(
           &cudaMemcpyAsync, driver_ptr, &driver, sizeof(DriverType),
           cudaMemcpyDefault, cuda_instance->get_stream());
 
@@ -527,16 +530,19 @@ struct CudaParallelLaunchKernelInvoker<
       params.kernelParams   = (void**)args;
       params.extra          = nullptr;
 
-      cuda_instance->cuda_api_interface_safe_call<false>(
-          &cudaGraphAddKernelNode, &graph_node, graph,
-          /* dependencies = */ nullptr,
-          /* numDependencies = */ 0, &params);
+      cuda_instance->cuda_api_interface_safe_call<
+          false, cudaGraphNode_t*, cudaGraph_t, const cudaGraphNode_t*, size_t,
+          const cudaKernelNodeParams*>(&cudaGraphAddKernelNode, &graph_node,
+                                       graph,
+                                       /* dependencies = */ nullptr,
+                                       /* numDependencies = */ 0, &params);
     } else {
       // We still need an empty node for the dependency structure
-      cuda_instance->cuda_api_interface_safe_call(&cudaGraphAddEmptyNode,
-                                                  &graph_node, graph,
-                                                  /* dependencies = */ nullptr,
-                                                  /* numDependencies = */ 0);
+      cuda_instance->cuda_api_interface_safe_call<
+          cudaGraphNode_t*, cudaGraph_t, const cudaGraphNode_t*, size_t>(
+          &cudaGraphAddEmptyNode, &graph_node, graph,
+          /* dependencies = */ nullptr,
+          /* numDependencies = */ 0);
     }
     KOKKOS_ENSURES(bool(graph_node))
   }
@@ -592,7 +598,7 @@ struct CudaParallelLaunchKernelInvoker<
                             CudaInternal const* cuda_instance) {
     // Wait until the previous kernel that uses the constant buffer is done
     std::lock_guard<std::mutex> lock(CudaInternal::constantMemMutex);
-    cuda_instance->cuda_api_interface_safe_call(
+    cuda_instance->cuda_api_interface_safe_call<cudaEvent_t>(
         &cudaEventSynchronize, CudaInternal::constantMemReusable);
 
     // Copy functor (synchronously) to staging buffer in pinned host memory
@@ -616,9 +622,10 @@ struct CudaParallelLaunchKernelInvoker<
                                   cuda_instance->get_stream<false>()>>>();
 
     // Record an event that says when the constant buffer can be reused
-    cuda_instance->cuda_api_interface_safe_call<false>(
-        &cudaEventRecord, CudaInternal::constantMemReusable,
-        cudaStream_t(cuda_instance->get_stream()));
+    cuda_instance
+        ->cuda_api_interface_safe_call<false, cudaEvent_t, cudaStream_t>(
+            &cudaEventRecord, CudaInternal::constantMemReusable,
+            cudaStream_t(cuda_instance->get_stream()));
   }
 
   inline static void create_parallel_launch_graph_node(

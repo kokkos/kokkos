@@ -56,9 +56,11 @@ struct GraphImpl<Kokkos::Cuda> {
     constexpr size_t error_log_size = 256;
     cudaGraphNode_t error_node      = nullptr;
     char error_log[error_log_size];
-    CudaInternal::singleton().cuda_api_interface_safe_call(
-        &cudaGraphInstantiate, &m_graph_exec, m_graph, &error_node, error_log,
-        error_log_size);
+    CudaInternal::singleton()
+        .cuda_api_interface_safe_call<cudaGraphExec_t*, cudaGraph_t,
+                                      cudaGraphNode_t*, char*, size_t>(
+            &cudaGraphInstantiate, &m_graph_exec, m_graph, &error_node,
+            error_log, error_log_size);
     // TODO @graphs print out errors
   }
 
@@ -85,17 +87,18 @@ struct GraphImpl<Kokkos::Cuda> {
     m_execution_space.fence("Kokkos::GraphImpl::~GraphImpl: Graph Destruction");
     KOKKOS_EXPECTS(bool(m_graph))
     if (bool(m_graph_exec)) {
-      CudaInternal::singleton().cuda_api_interface_safe_call(
+      CudaInternal::singleton().cuda_api_interface_safe_call<cudaGraphExec_t>(
           &cudaGraphExecDestroy, m_graph_exec);
     }
-    CudaInternal::singleton().cuda_api_interface_safe_call(&cudaGraphDestroy,
-                                                           m_graph);
+    CudaInternal::singleton().cuda_api_interface_safe_call<cudaGraph_t>(
+        &cudaGraphDestroy, m_graph);
   };
 
   explicit GraphImpl(Kokkos::Cuda arg_instance)
       : m_execution_space(std::move(arg_instance)) {
-    CudaInternal::singleton().cuda_api_interface_safe_call(
-        &cudaGraphCreate, &m_graph, cuda_graph_flags_t{0});
+    CudaInternal::singleton()
+        .cuda_api_interface_safe_call<cudaGraph_t*, unsigned int>(
+            &cudaGraphCreate, &m_graph, cuda_graph_flags_t{0});
   }
 
   void add_node(std::shared_ptr<aggregate_node_impl_t> const& arg_node_ptr) {
@@ -162,8 +165,9 @@ struct GraphImpl<Kokkos::Cuda> {
     if (!bool(m_graph_exec)) {
       _instantiate_graph();
     }
-    CudaInternal::singleton().cuda_api_interface_safe_call(
-        &cudaGraphLaunch, m_graph_exec, m_execution_space.cuda_stream());
+    CudaInternal::singleton()
+        .cuda_api_interface_safe_call<cudaGraphExec_t, cudaStream_t>(
+            &cudaGraphLaunch, m_graph_exec, m_execution_space.cuda_stream());
   }
 
   execution_space const& get_execution_space() const noexcept {

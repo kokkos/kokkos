@@ -243,7 +243,7 @@ class TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::Cuda, QueueType>> {
     // Query the stack size, in bytes:
 
     size_t previous_stack_size = 0;
-    CudaInternal::singleton().cuda_api_interface_safe_call(
+    CudaInternal::singleton().cuda_api_interface_safe_call<size_t*, cudaLimit>(
         &cudaDeviceGetLimit, &previous_stack_size, cudaLimitStackSize);
 
     // If not large enough then set the stack size, in bytes:
@@ -251,8 +251,9 @@ class TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::Cuda, QueueType>> {
     const size_t larger_stack_size = 1 << 11;
 
     if (previous_stack_size < larger_stack_size) {
-      CudaInternal::singleton().cuda_api_interface_safe_call<false>(
-          &cudaDeviceSetLimit, cudaLimitStackSize, larger_stack_size);
+      CudaInternal::singleton()
+          .cuda_api_interface_safe_call<false, cudaLimit, size_t>(
+              &cudaDeviceSetLimit, cudaLimitStackSize, larger_stack_size);
     }
 
     cuda_task_queue_execute<<<grid, block, shared_total, stream>>>(
@@ -265,8 +266,9 @@ class TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::Cuda, QueueType>> {
         "Cuda>::execute: Post Task Execution");
 
     if (previous_stack_size < larger_stack_size) {
-      CudaInternal::singleton().cuda_api_interface_safe_call<false>(
-          &cudaDeviceSetLimit, cudaLimitStackSize, previous_stack_size);
+      CudaInternal::singleton()
+          .cuda_api_interface_safe_call<false, cudaLimit, size_t>(
+              &cudaDeviceSetLimit, cudaLimitStackSize, previous_stack_size);
     }
   }
 
@@ -474,7 +476,7 @@ class TaskQueueSpecializationConstrained<
     // Query the stack size, in bytes:
 
     size_t previous_stack_size = 0;
-    CudaInternal::singleton().cuda_api_interface_safe_call(
+    CudaInternal::singleton().cuda_api_interface_safe_call<size_t*, cudaLimit>(
         &cudaDeviceGetLimit, &previous_stack_size, cudaLimitStackSize);
 
     // If not large enough then set the stack size, in bytes:
@@ -482,8 +484,9 @@ class TaskQueueSpecializationConstrained<
     const size_t larger_stack_size = 2048;
 
     if (previous_stack_size < larger_stack_size) {
-      CudaInternal::singleton().cuda_api_interface_safe_call<false>(
-          &cudaDeviceSetLimit, cudaLimitStackSize, larger_stack_size);
+      CudaInternal::singleton()
+          .cuda_api_interface_safe_call<false, cudaLimit, size_t>(
+              &cudaDeviceSetLimit, cudaLimitStackSize, larger_stack_size);
     }
 
     cuda_task_queue_execute<<<grid, block, shared_total, stream>>>(
@@ -496,8 +499,9 @@ class TaskQueueSpecializationConstrained<
         "Kokkos::Cuda>::execute: Post Execute Task");
 
     if (previous_stack_size < larger_stack_size) {
-      CudaInternal::singleton().cuda_api_interface_safe_call<false>(
-          &cudaDeviceSetLimit, cudaLimitStackSize, previous_stack_size);
+      CudaInternal::singleton()
+          .cuda_api_interface_safe_call<false, cudaLimit, size_t>(
+              &cudaDeviceSetLimit, cudaLimitStackSize, previous_stack_size);
     }
   }
 
