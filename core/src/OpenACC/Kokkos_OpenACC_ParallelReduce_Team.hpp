@@ -85,7 +85,12 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
             Sum<value_type>, typename ReducerType::functor_type>(val),
         m_policy);
 
+    // OpenACC backend supports only built-in Reducer types; thus
+    // reducer.final() below is a no-op.
     reducer.final(&val);
+    // acc_wait(async_arg) in the below if-else statements is needed because the
+    // above OpenACC compute kernel can be executed asynchronously and val is a
+    // local host variable.
     if (m_result_ptr_on_device == false) {
       acc_wait(async_arg);
       *m_result_ptr = val;
