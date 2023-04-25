@@ -482,7 +482,7 @@ TEST(TEST_CATEGORY, UnorderedMap_consistent_size) {
 
 namespace Impl {
 
-using map_type = Kokkos::UnorderedMap<int, void, TEST_EXECSPACE>;
+using map_type = Kokkos::UnorderedMap<int, void, Kokkos::DefaultExecutionSpace>;
 
 KOKKOS_FUNCTION
 void test_insert_to_map_copy(map_type const &input_map, const int i) {
