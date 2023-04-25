@@ -91,13 +91,13 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
         m_policy);
 
     reducer.final(&val);
-    if (m_result_ptr_on_device == false) {
-      acc_wait(async_arg);
-      *m_result_ptr = val;
-    } else {
+    if (m_result_ptr_on_device) {
       acc_memcpy_to_device_async(m_result_ptr, &val, sizeof(ValueType),
                                  async_arg);
       acc_wait(async_arg);
+    } else {
+      acc_wait(async_arg);
+      *m_result_ptr = val;
     }
   }
 };
