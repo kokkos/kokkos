@@ -22,9 +22,11 @@
 #include <OpenACC/Kokkos_OpenACC_Macros.hpp>
 
 #ifdef KOKKOS_ENABLE_OPENACC_COLLAPSE_HIERARCHICAL_CONSTRUCTS
-#define KOKKOS_OPENACC_CONTAIN_LOOP KOKKOS_OPENACC_CONTAIN_SEQLOOP
+#define KOKKOS_OPENACC_LOOP_CLAUSE \
+  Kokkos::Experimental::Impl::RoutineClause::seq
 #else
-#define KOKKOS_OPENACC_CONTAIN_LOOP KOKKOS_OPENACC_CONTAIN_WORKERLOOP
+#define KOKKOS_OPENACC_LOOP_CLAUSE \
+  Kokkos::Experimental::Impl::RoutineClause::worker
 #endif
 
 //----------------------------------------------------------------------------
@@ -74,7 +76,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
 
     Kokkos::Experimental::Impl::OpenACCParallelReduceTeamHelper(
         Kokkos::Experimental::Impl::FunctorAdapter<FunctorType, Policy,
-                                                   KOKKOS_OPENACC_CONTAIN_LOOP>(
+                                                   KOKKOS_OPENACC_LOOP_CLAUSE>(
             m_functor_reducer.get_functor()),
         std::conditional_t<
             std::is_same_v<FunctorType, typename ReducerType::functor_type>,

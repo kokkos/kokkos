@@ -78,8 +78,8 @@ template <class Functor, class... Traits>
 class Kokkos::Impl::ParallelFor<Functor, Kokkos::RangePolicy<Traits...>,
                                 Kokkos::Experimental::OpenACC> {
   using Policy = Kokkos::RangePolicy<Traits...>;
-  Kokkos::Experimental::Impl::FunctorAdapter<Functor, Policy,
-                                             KOKKOS_OPENACC_CONTAIN_SEQLOOP>
+  Kokkos::Experimental::Impl::FunctorAdapter<
+      Functor, Policy, Kokkos::Experimental::Impl::RoutineClause::seq>
       m_functor;
   Policy m_policy;
   using ScheduleType = Kokkos::Experimental::Impl::OpenACCScheduleType<Policy>;
