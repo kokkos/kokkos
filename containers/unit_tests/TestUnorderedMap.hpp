@@ -509,7 +509,7 @@ void test_unordered_map_device_capture() {
 
   Kokkos::parallel_for(
       Kokkos::RangePolicy<>(TEST_EXECSPACE(), 0, 1),
-      KOKKOS_LAMBDA(int const &i) { map.insert(i); });
+      KOKKOS_LAMBDA(int const i) { map.insert(i); });
 
   ASSERT_EQ(1u, map.size());
 }
