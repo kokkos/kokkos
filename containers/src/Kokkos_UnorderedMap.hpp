@@ -286,7 +286,7 @@ class UnorderedMap {
 
   enum { modified_idx = 0, erasable_idx = 1, failed_insert_idx = 2 };
   enum { num_scalars = 3 };
-  using scalars_view     = View<int[num_scalars], LayoutLeft, device_type>;
+  using scalars_view = View<int[num_scalars], LayoutLeft, device_type>;
 
  public:
   //! \name Public member functions
