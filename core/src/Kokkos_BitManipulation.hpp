@@ -223,7 +223,8 @@ rotr(T x, int s) noexcept {
 
 namespace Kokkos::Impl {
 
-#if defined(KOKKOS_COMPILER_CLANG) || defined(KOKKOS_COMPILER_GCC)
+#if defined(KOKKOS_COMPILER_CLANG) || defined(KOKKOS_COMPILER_INTEL_LLVM) || \
+    defined(KOKKOS_COMPILER_GCC)
 #define KOKKOS_IMPL_USE_GCC_BUILT_IN_FUNCTIONS
 #endif
 

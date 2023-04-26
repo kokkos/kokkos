@@ -520,6 +520,12 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
                                  std::to_string(KOKKOS_COMPILER_INTEL));
   declare_configuration_metadata("tools_only", "compiler_family", "intel");
 #endif
+#ifdef KOKKOS_COMPILER_INTEL_LLVM
+  declare_configuration_metadata("compiler_version",
+                                 "KOKKOS_COMPILER_INTEL_LLVM",
+                                 std::to_string(KOKKOS_COMPILER_INTEL_LLVM));
+  declare_configuration_metadata("tools_only", "compiler_family", "intel_llvm");
+#endif
 #ifdef KOKKOS_COMPILER_NVCC
   declare_configuration_metadata("compiler_version", "KOKKOS_COMPILER_NVCC",
                                  std::to_string(KOKKOS_COMPILER_NVCC));
