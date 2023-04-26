@@ -31,6 +31,7 @@
 #include <OpenMPTarget/Kokkos_OpenMPTarget_UniqueToken.hpp>
 #include <OpenMPTarget/Kokkos_OpenMPTarget_Instance.hpp>
 #include <impl/Kokkos_ExecSpaceManager.hpp>
+#include <OpenMPTarget/Kokkos_OpenMPTarget_Parallel.hpp>
 
 #include <sstream>
 
@@ -95,6 +96,10 @@ void OpenMPTargetInternal::print_configuration(std::ostream& os,
                                                bool /*verbose*/) const {
   // FIXME_OPENMPTARGET
   os << "Using OpenMPTarget\n";
+#if defined(KOKKOS_OPENEMPTARGET_HIERARCHICAL_INTEL_GPU)
+  os << "Defined KOKKOS_OPENEMPTARGET_HIERARCHICAL_INTEL_GPU: Workaround for "
+        "Hierarchical parallelism for Intel GPUs."
+#endif
 }
 
 void OpenMPTargetInternal::impl_finalize() {

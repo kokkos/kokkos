@@ -29,7 +29,7 @@
 // Intel architectures prefer the classical hierarchical parallelism that relies
 // on OpenMP.
 #if defined(KOKKOS_ARCH_INTEL_GPU)
-#define KOKKOS_IMPL_HIERARCHICAL_INTEL_GPU
+#define KOKKOS_OPENEMPTARGET_HIERARCHICAL_INTEL_GPU
 #endif
 
 //----------------------------------------------------------------------------

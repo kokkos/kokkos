@@ -366,7 +366,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     : OpenMPTargetReducerWrapper <ReducerType>::join(omp_out, omp_in)) \
     initializer(OpenMPTargetReducerWrapper <ReducerType>::init(omp_priv))
 
-#if !defined(KOKKOS_IMPL_HIERARCHICAL_INTEL_GPU)
+#if !defined(KOKKOS_OPENMPTARGET_HIERARCHICAL_INTEL_GPU)
 #pragma omp target teams num_teams(max_active_teams) thread_limit(team_size) \
     firstprivate(f) is_device_ptr(scratch_ptr) reduction(custom              \
                                                          : result)
@@ -656,9 +656,5 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
 
 }  // namespace Impl
 }  // namespace Kokkos
-
-#ifdef KOKKOS_IMPL_HIERARCHICAL_INTEL_GPU
-#undef KOKKOS_IMPL_HIERARCHICAL_INTEL_GPU
-#endif
 
 #endif

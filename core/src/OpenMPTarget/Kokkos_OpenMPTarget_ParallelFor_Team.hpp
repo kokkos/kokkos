@@ -132,7 +132,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 // the clang compiler. atomic_compare_exchange can be avoided since the standard
 // guarantees that the number of teams specified in the `num_teams` clause is
 // always less than or equal to the maximum concurrently running teams.
-#if !defined(KOKKOS_IMPL_HIERARCHICAL_INTEL_GPU)
+#if !defined(KOKKOS_OPENMPTARGET_HIERARCHICAL_INTEL_GPU)
 #pragma omp target teams thread_limit(team_size) firstprivate(a_functor) \
     num_teams(max_active_teams) is_device_ptr(scratch_ptr)
 #pragma omp parallel
@@ -190,9 +190,5 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
 }  // namespace Impl
 }  // namespace Kokkos
-
-#ifdef KOKKOS_IMPL_HIERARCHICAL_INTEL_GPU
-#undef KOKKOS_IMPL_HIERARCHICAL_INTEL_GPU
-#endif
 
 #endif
