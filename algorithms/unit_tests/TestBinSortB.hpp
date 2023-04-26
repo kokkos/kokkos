@@ -103,41 +103,26 @@ auto create_rank1_dev_and_host_views_of_keys(const ExecutionSpace& exec,
   return std::make_pair(keys, keys_h);
 }
 
-template <class ExecutionSpace, class KeyType, class ValueType>
-void test_on_view_with_layout_stride_1d(int N) {
-  ExecutionSpace exec;
-  Kokkos::DefaultHostExecutionSpace defaultHostExeSpace;
-  namespace KE = Kokkos::Experimental;
-
-  // 1. generate 1D view of keys
-  auto [keys, keys_h] =
-      create_rank1_dev_and_host_views_of_keys<KeyType>(exec, N);
-  using KeyViewType = decltype(keys);
-
-  // 2. create sorter
-  using BinOp = Kokkos::BinOp1D<KeyViewType>;
-  auto it     = KE::minmax_element(defaultHostExeSpace, keys_h);
-  BinOp binner(N, *it.first, *it.second);
-  Kokkos::BinSort<KeyViewType, BinOp> Sorter(keys, binner, false);
-  Sorter.create_permute_vector(exec);
-
-  // 3. sort 1D view with strided layout
-  Kokkos::LayoutStride layout{std::size_t(N), 3};
-  using v_t = Kokkos::View<ValueType*, Kokkos::LayoutStride, ExecutionSpace>;
-  v_t v("v", layout);
-  Kokkos::Random_XorShift64_Pool<Kokkos::DefaultHostExecutionSpace> pool(73931);
-  Kokkos::fill_random(v, pool, ValueType(545));
-  auto v_before_sort_h = create_host_space_copy(v);
-  Sorter.sort(exec, v);
-  auto v_after_sort_h = create_host_space_copy(v);
-
-  for (size_t i = 0; i < size_t(N); ++i) {
-    EXPECT_TRUE(v_before_sort_h(i) == v_after_sort_h(keys_h(i)));
+template <class ExecutionSpace, class ValueType, int ValuesViewRank>
+auto create_strided_view(int numRows, int numCols) {
+  if constexpr (ValuesViewRank == 1) {
+    (void)numCols;
+    Kokkos::LayoutStride layout{size_t(numRows), 2};
+    using v_t = Kokkos::View<ValueType*, Kokkos::LayoutStride, ExecutionSpace>;
+    v_t v("v", layout);
+    return v;
+  } else {
+    Kokkos::LayoutStride layout{size_t(numRows), 2, size_t(numCols),
+                                size_t(numRows * 2)};
+    using v_t = Kokkos::View<ValueType**, Kokkos::LayoutStride, ExecutionSpace>;
+    v_t v("v", layout);
+    return v;
   }
 }
 
-template <class ExecutionSpace, class KeyType, class ValueType>
-void test_on_2d_view_with_stride(int numRows, int numCols, int indB, int indE) {
+template <class ExecutionSpace, class KeyType, class ValueType,
+          int ValuesViewRank>
+void test_on_view_with_stride(int numRows, int numCols, int indB, int indE) {
   ExecutionSpace exec;
   Kokkos::DefaultHostExecutionSpace defaultHostExeSpace;
   namespace KE = Kokkos::Experimental;
@@ -146,9 +131,11 @@ void test_on_2d_view_with_stride(int numRows, int numCols, int indB, int indE) {
   auto [keys, keys_h] =
       create_rank1_dev_and_host_views_of_keys<KeyType>(exec, numRows);
   using KeyViewType = decltype(keys);
+  // std::cout << "Keys before sorting\n";
+  // for (size_t i=0; i<keys_h.extent(0); ++i){ std::cout << keys_h(i) << " "; }
+  // std::cout << "\n";
 
-  // need to store this map from key to row because it is used later for
-  // checking
+  // need this map key->row to use later for checking
   std::unordered_map<KeyType, int> keyToRowBeforeSort;
   for (int i = 0; i < numRows; ++i) {
     keyToRowBeforeSort[keys_h(i)] = i;
@@ -166,55 +153,44 @@ void test_on_2d_view_with_stride(int numRows, int numCols, int indB, int indE) {
   // 3. create sorter
   Kokkos::BinSort<KeyViewType, BinOp> sorter(keys, indB, indE, binner, false);
   sorter.create_permute_vector(exec);
-  sorter.sort(exec, keys_h, indB, indE);
+  sorter.sort(exec, keys, indB, indE);
+  Kokkos::deep_copy(exec, keys_h, keys);
   // std::cout << "Keys after sorting\n";
   // for (size_t i=0; i<keys_h.extent(0); ++i){ std::cout << keys_h(i) << " "; }
   // std::cout << "\n";
 
-  // 3. sort 2D view with strided layout
-  Kokkos::LayoutStride layout{size_t(numRows), 2, size_t(numCols),
-                              size_t(numRows * 2)};
-  using v_t = Kokkos::View<ValueType**, Kokkos::LayoutStride, ExecutionSpace>;
-  v_t v("v", layout);
-  Kokkos::Random_XorShift64_Pool<Kokkos::DefaultHostExecutionSpace> pool(73931);
+  auto v = create_strided_view<ExecutionSpace, ValueType, ValuesViewRank>(
+      numRows, numCols);
+
+  Kokkos::Random_XorShift64_Pool<ExecutionSpace> pool(73931);
   Kokkos::fill_random(v, pool, ValueType(545));
   auto v_before_sort_h = create_host_space_copy(v);
   sorter.sort(exec, v, indB, indE);
   auto v_after_sort_h = create_host_space_copy(v);
 
-  // std::cout << "\n values before sortin\n";
-  // for (size_t i=0; i<v.extent(0); ++i){
-  //   std::cout << i << " " << keys_h(i) << " ";
-  //   for (size_t j=0; j<v.extent(1); ++j){
-  //     std::cout << v_before_sort_h(i,j) << " ";
-  //   }
-  //   std::cout << "\n";
-  // }
-  // std::cout << "\nAfter sortin\n";
-  // for (size_t i=0; i<v.extent(0); ++i){
-  //   std::cout << i << " ";
-  //   for (size_t j=0; j<v.extent(1); ++j){
-  //     std::cout << v_after_sort_h(i,j) << " ";
-  //   }
-  //   std::cout << "\n";
-  // }
-  // std::cout << "\n";
-
   for (size_t i = 0; i < v.extent(0); ++i) {
-    // if i is within the target bounds indB,indE, the sorting was done
+    // if i within [indB,indE), the sorting was done
     // so we need to do proper checking since rows have changed
     if (i >= size_t(indB) && i < size_t(indE)) {
       const KeyType key = keys_h(i);
-      for (size_t j = 0; j < v.extent(1); ++j) {
-        EXPECT_TRUE(v_before_sort_h(keyToRowBeforeSort.at(key), j) ==
-                    v_after_sort_h(i, j));
+      if constexpr (ValuesViewRank == 1) {
+        EXPECT_TRUE(v_before_sort_h(keyToRowBeforeSort.at(key)) ==
+                    v_after_sort_h(i));
+      } else {
+        for (size_t j = 0; j < v.extent(1); ++j) {
+          EXPECT_TRUE(v_before_sort_h(keyToRowBeforeSort.at(key), j) ==
+                      v_after_sort_h(i, j));
+        }
       }
     }
-    // if we are NOT within the target bounds, then the i-th row remains
-    // unchanged
+    // outside the target bounds, then the i-th row remains unchanged
     else {
-      for (size_t j = 0; j < v.extent(1); ++j) {
-        EXPECT_TRUE(v_before_sort_h(i, j) == v_after_sort_h(i, j));
+      if constexpr (ValuesViewRank == 1) {
+        EXPECT_TRUE(v_before_sort_h(i) == v_after_sort_h(i));
+      } else {
+        for (size_t j = 0; j < v.extent(1); ++j) {
+          EXPECT_TRUE(v_before_sort_h(i, j) == v_after_sort_h(i, j));
+        }
       }
     }
   }
@@ -223,17 +199,35 @@ void test_on_2d_view_with_stride(int numRows, int numCols, int indB, int indE) {
 
 TEST(TEST_CATEGORY, BinSortUnsignedKeyStridedValuesView) {
   using key_type = unsigned;
-  for (int Nr : {10, 55, 189, 1157}) {
-    for (int Nc : {1, 3, 5, 111}) {
+  for (int Nr : {10, 55, 189, 1157, 15797}) {
+    {
+      constexpr int rank = 1;
       // various cases for bounds
-      BinSortWithLayoutStride::test_on_2d_view_with_stride<
-          TEST_EXECSPACE, key_type, int /*ValueType*/>(Nr, Nc, 0, Nr);
-      BinSortWithLayoutStride::test_on_2d_view_with_stride<
-          TEST_EXECSPACE, key_type, int /*ValueType*/>(Nr, Nc, 3, Nr);
-      BinSortWithLayoutStride::test_on_2d_view_with_stride<
-          TEST_EXECSPACE, key_type, int /*ValueType*/>(Nr, Nc, 0, Nr - 4);
-      BinSortWithLayoutStride::test_on_2d_view_with_stride<
-          TEST_EXECSPACE, key_type, int /*ValueType*/>(Nr, Nc, 4, Nr - 3);
+      BinSortWithLayoutStride::test_on_view_with_stride<
+          TEST_EXECSPACE, key_type, int /*ValueType*/, rank>(Nr, 1, 0, Nr);
+      BinSortWithLayoutStride::test_on_view_with_stride<
+          TEST_EXECSPACE, key_type, int /*ValueType*/, rank>(Nr, 1, 3, Nr);
+      BinSortWithLayoutStride::test_on_view_with_stride<
+          TEST_EXECSPACE, key_type, int /*ValueType*/, rank>(Nr, 1, 0, Nr - 4);
+      BinSortWithLayoutStride::test_on_view_with_stride<
+          TEST_EXECSPACE, key_type, int /*ValueType*/, rank>(Nr, 1, 4, Nr - 3);
+    }
+
+    {
+      constexpr int rank = 2;
+      for (int Nc : {3, 5, 111}) {
+        // various cases for bounds
+        BinSortWithLayoutStride::test_on_view_with_stride<
+            TEST_EXECSPACE, key_type, int /*ValueType*/, rank>(Nr, Nc, 0, Nr);
+        BinSortWithLayoutStride::test_on_view_with_stride<
+            TEST_EXECSPACE, key_type, int /*ValueType*/, rank>(Nr, Nc, 3, Nr);
+        BinSortWithLayoutStride::test_on_view_with_stride<
+            TEST_EXECSPACE, key_type, int /*ValueType*/, rank>(Nr, Nc, 0,
+                                                               Nr - 4);
+        BinSortWithLayoutStride::test_on_view_with_stride<
+            TEST_EXECSPACE, key_type, int /*ValueType*/, rank>(Nr, Nc, 4,
+                                                               Nr - 3);
+      }
     }
   }
 }
