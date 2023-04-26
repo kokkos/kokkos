@@ -515,13 +515,11 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce_combined_reducers_impl(
       combined_value, returnType1, returnType2, returnTypes...);
 
   parallel_reduce(boundaries, combined_functor, combined_reducer);
-  memory_fence();
 
   combined_reducer.write_value_back_to_original_references_on_device(
       combined_value, Impl::_make_reducer_from_arg<mem_space_type>(returnType1),
       Impl::_make_reducer_from_arg<mem_space_type>(returnType2),
       Impl::_make_reducer_from_arg<mem_space_type>(returnTypes)...);
-  memory_fence();
 }
 
 }  // end namespace Impl
