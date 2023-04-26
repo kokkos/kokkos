@@ -113,9 +113,8 @@ TEST(TEST_CATEGORY, repeated_team_reduce) {
                     "properly implemented";
 #endif
 
-// FIXME KOKKOS_IMPL_32BIT
 #ifdef KOKKOS_IMPL_32BIT
-  GTEST_SKIP() << "Failing KOKKOS_IMPL_32BIT";
+  GTEST_SKIP() << "Failing KOKKOS_IMPL_32BIT";  // FIXME_32BIT
 #endif
 
   TestRepeatedTeamReduce<TEST_EXECSPACE>();
