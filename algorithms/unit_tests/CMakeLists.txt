@@ -33,7 +33,9 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
     # and add this .cpp file to the sources for UnitTest_RandomAndSort.
     foreach(SOURCES_A_Input
         TestRandomCommon
-        TestSortCommon
+        TestSort
+	TestBinSortA
+	TestBinSortB
         TestNestedSort
     )
       set(file ${dir}/${SOURCES_A_Input}.cpp)

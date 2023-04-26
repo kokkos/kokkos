@@ -340,9 +340,15 @@ class BinSort {
         "The provided execution space must be able to access the memory space "
         "of the View argument!");
 
+    // FRizzi: 04/2023: Originally this had typename
+    // ValuesViewType::array_layout, as an additional template, however this is
+    // wrong because if the ValuesViewType is a view with LayoutStrided, the
+    // constructor below for sorted_values fails at compiler time since it would
+    // need a layout. To ensure this sort method works on views with
+    // LayoutStride, we can make the scratch view a "regular" view since it is
+    // only used a temporary space for doing the ordering.
     using scratch_view_type =
         Kokkos::View<typename ValuesViewType::data_type,
-                     typename ValuesViewType::array_layout,
                      typename ValuesViewType::device_type>;
 
     const size_t len        = range_end - range_begin;
