@@ -96,7 +96,7 @@ void OpenMPTargetInternal::print_configuration(std::ostream& os,
                                                bool /*verbose*/) const {
   // FIXME_OPENMPTARGET
   os << "Using OpenMPTarget\n";
-#if defined(KOKKOS_OPENEMPTARGET_HIERARCHICAL_INTEL_GPU)
+#if defined(KOKKOS_IMPL_OPENMPTARGET_HIERARCHICAL_INTEL_GPU)
   os << "Defined KOKKOS_OPENEMPTARGET_HIERARCHICAL_INTEL_GPU: Workaround for "
         "Hierarchical parallelism for Intel GPUs."
 #endif
