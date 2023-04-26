@@ -760,8 +760,4 @@ class OpenMPTargetExec {
 }  // namespace Impl
 }  // namespace Kokkos
 
-#ifdef KOKKOS_IMPL_HIERARCHICAL_INTEL_GPU
-#undef KOKKOS_IMPL_HIERARCHICAL_INTEL_GPU
-#endif
-
 #endif /* KOKKOS_OPENMPTARGET_PARALLEL_HPP */

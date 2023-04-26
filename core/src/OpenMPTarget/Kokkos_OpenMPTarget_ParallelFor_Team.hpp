@@ -191,4 +191,8 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 }  // namespace Impl
 }  // namespace Kokkos
 
+#ifdef KOKKOS_IMPL_HIERARCHICAL_INTEL_GPU
+#undef KOKKOS_IMPL_HIERARCHICAL_INTEL_GPU
+#endif
+
 #endif
