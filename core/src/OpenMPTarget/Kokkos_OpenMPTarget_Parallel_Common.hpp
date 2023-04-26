@@ -392,8 +392,8 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     }
 #else
 #pragma omp target teams distribute firstprivate(f) is_device_ptr(scratch_ptr) \
-    thread_limit(team_size) reduction(custom                                   \
-                                      : result)
+    num_teams(max_active_teams) thread_limit(team_size) reduction(custom       \
+                                                                  : result)
     for (int i = 0; i < league_size; i++) {
 #pragma omp parallel reduction(custom : result)
       {

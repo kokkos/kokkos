@@ -159,9 +159,10 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     }
 #else
 #pragma omp target teams distribute firstprivate(a_functor) \
-    is_device_ptr(scratch_ptr) thread_limit(team_size)
+    is_device_ptr(scratch_ptr) num_teams(max_active_teams)  \
+        thread_limit(team_size)
     for (int i = 0; i < league_size; i++) {
-#pragma omp parallel num_threads(team_size)
+#pragma omp parallel
       {
         if (omp_get_num_teams() > max_active_teams)
           Kokkos::abort("`omp_set_num_teams` call was not respected.\n");
