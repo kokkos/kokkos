@@ -266,13 +266,9 @@ else
     KOKKOS_INTERNAL_OPENMP_FLAG := -fopenmp
   endif
 endif
-ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
-  #KOKKOS_INTERNAL_OPENMPTARGET_FLAG := -DKOKKOS_BUG_WORKAROUND_IBM_CLANG_OMP45_VIEW_INIT -fopenmp-implicit-declare-target -fopenmp-targets=nvptx64-nvidia-cuda -fopenmp -fopenmp=libomp
-  KOKKOS_INTERNAL_OPENMPTARGET_FLAG := -DKOKKOS_WORKAROUND_OPENMPTARGET_CLANG -fopenmp -fopenmp=libomp -Wno-openmp-mapping
-  KOKKOS_INTERNAL_OPENMPTARGET_LIB := -lomptarget
-else ifeq ($(KOKKOS_INTERNAL_COMPILER_INTEL_CLANG), 1)
+ifeq ($(KOKKOS_INTERNAL_COMPILER_INTEL_CLANG), 1)
   KOKKOS_INTERNAL_OPENMPTARGET_FLAG := -fiopenmp -Wno-openmp-mapping
-else
+else ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 0)
   #Assume GCC
   KOKKOS_INTERNAL_OPENMPTARGET_FLAG := -fopenmp -foffload=nvptx-none
 endif
@@ -975,136 +971,133 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
   ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
-    KOKKOS_INTERNAL_CUDA_ARCH_FLAG=-fopenmp-targets=nvptx64 -Xopenmp-target -march
+    KOKKOS_INTERNAL_CUDA_ARCH_FLAG=-fopenmp --offload-arch
   endif
-  KOKKOS_INTERNAL_USE_CUDA_ARCH = 1
 endif
 
-ifeq ($(KOKKOS_INTERNAL_USE_CUDA_ARCH), 1)
-  ifeq ($(KOKKOS_INTERNAL_USE_ARCH_KEPLER30), 1)
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_KEPLER")
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_KEPLER30")
-    KOKKOS_INTERNAL_CUDA_ARCH_FLAG := $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)=sm_30
-  endif
-  ifeq ($(KOKKOS_INTERNAL_USE_ARCH_KEPLER32), 1)
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_KEPLER")
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_KEPLER32")
-    KOKKOS_INTERNAL_CUDA_ARCH_FLAG := $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)=sm_32
-  endif
-  ifeq ($(KOKKOS_INTERNAL_USE_ARCH_KEPLER35), 1)
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_KEPLER")
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_KEPLER35")
-    KOKKOS_INTERNAL_CUDA_ARCH_FLAG := $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)=sm_35
-  endif
-  ifeq ($(KOKKOS_INTERNAL_USE_ARCH_KEPLER37), 1)
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_KEPLER")
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_KEPLER37")
-    KOKKOS_INTERNAL_CUDA_ARCH_FLAG := $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)=sm_37
-  endif
-  ifeq ($(KOKKOS_INTERNAL_USE_ARCH_MAXWELL50), 1)
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_MAXWELL")
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_MAXWELL50")
-    KOKKOS_INTERNAL_CUDA_ARCH_FLAG := $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)=sm_50
-  endif
-  ifeq ($(KOKKOS_INTERNAL_USE_ARCH_MAXWELL52), 1)
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_MAXWELL")
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_MAXWELL52")
-    KOKKOS_INTERNAL_CUDA_ARCH_FLAG := $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)=sm_52
-  endif
-  ifeq ($(KOKKOS_INTERNAL_USE_ARCH_MAXWELL53), 1)
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_MAXWELL")
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_MAXWELL53")
-    KOKKOS_INTERNAL_CUDA_ARCH_FLAG := $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)=sm_53
-  endif
-  ifeq ($(KOKKOS_INTERNAL_USE_ARCH_PASCAL60), 1)
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_PASCAL")
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_PASCAL60")
-    KOKKOS_INTERNAL_CUDA_ARCH_FLAG := $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)=sm_60
-  endif
-  ifeq ($(KOKKOS_INTERNAL_USE_ARCH_PASCAL61), 1)
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_PASCAL")
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_PASCAL61")
-    KOKKOS_INTERNAL_CUDA_ARCH_FLAG := $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)=sm_61
-  endif
-  ifeq ($(KOKKOS_INTERNAL_USE_ARCH_VOLTA70), 1)
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_VOLTA")
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_VOLTA70")
-    KOKKOS_INTERNAL_CUDA_ARCH_FLAG := $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)=sm_70
-  endif
-  ifeq ($(KOKKOS_INTERNAL_USE_ARCH_VOLTA72), 1)
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_VOLTA")
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_VOLTA72")
-    KOKKOS_INTERNAL_CUDA_ARCH_FLAG := $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)=sm_72
-  endif
-  ifeq ($(KOKKOS_INTERNAL_USE_ARCH_TURING75), 1)
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_TURING75")
-    KOKKOS_INTERNAL_CUDA_ARCH_FLAG := $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)=sm_75
-  endif
-  ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AMPERE80), 1)
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMPERE")
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMPERE80")
-    KOKKOS_INTERNAL_CUDA_ARCH_FLAG := $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)=sm_80
-  endif
-  ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AMPERE86), 1)
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMPERE")
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMPERE86")
-    KOKKOS_INTERNAL_CUDA_ARCH_FLAG := $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)=sm_86
-  endif
-  ifeq ($(KOKKOS_INTERNAL_USE_ARCH_ADA89), 1)
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_ADA89")
-    KOKKOS_INTERNAL_CUDA_ARCH_FLAG := $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)=sm_89
-  endif
-  ifeq ($(KOKKOS_INTERNAL_USE_ARCH_HOPPER90), 1)
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_HOPPER")
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_HOPPER90")
-    KOKKOS_INTERNAL_CUDA_ARCH_FLAG := $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)=sm_90
-  endif
+# Lets start with adding architecture defines
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_KEPLER30), 1)
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_KEPLER")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_KEPLER30")
+  KOKKOS_INTERNAL_CUDA_ARCH_FLAG := $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)=sm_30
+endif
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_KEPLER32), 1)
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_KEPLER")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_KEPLER32")
+  KOKKOS_INTERNAL_CUDA_ARCH_FLAG := $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)=sm_32
+endif
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_KEPLER35), 1)
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_KEPLER")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_KEPLER35")
+  KOKKOS_INTERNAL_CUDA_ARCH_FLAG := $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)=sm_35
+endif
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_KEPLER37), 1)
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_KEPLER")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_KEPLER37")
+  KOKKOS_INTERNAL_CUDA_ARCH_FLAG := $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)=sm_37
+endif
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_MAXWELL50), 1)
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_MAXWELL")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_MAXWELL50")
+  KOKKOS_INTERNAL_CUDA_ARCH_FLAG := $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)=sm_50
+endif
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_MAXWELL52), 1)
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_MAXWELL")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_MAXWELL52")
+  KOKKOS_INTERNAL_CUDA_ARCH_FLAG := $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)=sm_52
+endif
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_MAXWELL53), 1)
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_MAXWELL")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_MAXWELL53")
+  KOKKOS_INTERNAL_CUDA_ARCH_FLAG := $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)=sm_53
+endif
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_PASCAL60), 1)
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_PASCAL")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_PASCAL60")
+  KOKKOS_INTERNAL_CUDA_ARCH_FLAG := $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)=sm_60
+endif
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_PASCAL61), 1)
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_PASCAL")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_PASCAL61")
+  KOKKOS_INTERNAL_CUDA_ARCH_FLAG := $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)=sm_61
+endif
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_VOLTA70), 1)
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_VOLTA")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_VOLTA70")
+  KOKKOS_INTERNAL_CUDA_ARCH_FLAG := $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)=sm_70
+endif
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_VOLTA72), 1)
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_VOLTA")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_VOLTA72")
+  KOKKOS_INTERNAL_CUDA_ARCH_FLAG := $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)=sm_72
+endif
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_TURING75), 1)
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_TURING75")
+  KOKKOS_INTERNAL_CUDA_ARCH_FLAG := $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)=sm_75
+endif
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AMPERE80), 1)
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMPERE")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMPERE80")
+  KOKKOS_INTERNAL_CUDA_ARCH_FLAG := $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)=sm_80
+endif
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AMPERE86), 1)
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMPERE")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMPERE86")
+  KOKKOS_INTERNAL_CUDA_ARCH_FLAG := $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)=sm_86
+endif
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_ADA89), 1)
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_ADA89")
+  KOKKOS_INTERNAL_CUDA_ARCH_FLAG := $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)=sm_89
+endif
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_HOPPER90), 1)
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_HOPPER")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_HOPPER90")
+  KOKKOS_INTERNAL_CUDA_ARCH_FLAG := $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)=sm_90
+endif
 
-  ifneq ($(KOKKOS_INTERNAL_USE_ARCH_NVIDIA), 0)
-    KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)
+ifneq ($(KOKKOS_INTERNAL_USE_ARCH_NVIDIA), 0)
+  KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)
 
-    ifeq ($(KOKKOS_INTERNAL_COMPILER_NVCC), 1)
+  ifeq ($(KOKKOS_INTERNAL_COMPILER_NVCC), 1)
+    KOKKOS_LDFLAGS += $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)
+  endif
+  ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
+    ifeq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
       KOKKOS_LDFLAGS += $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)
-    endif
-    ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
-      ifeq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
-        KOKKOS_LDFLAGS += $(KOKKOS_INTERNAL_CUDA_ARCH_FLAG)
-      endif
     endif
   endif
 endif
 
 
 # Figure out the architecture flag for ROCm.
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_VEGA906), 1)
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_VEGA906")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_VEGA")
+  KOKKOS_INTERNAL_HIP_ARCH_FLAG := --offload-arch=gfx906
+endif
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_VEGA908), 1)
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_VEGA908")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_VEGA")
+  KOKKOS_INTERNAL_HIP_ARCH_FLAG := --offload-arch=gfx908
+endif
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_VEGA90A), 1)
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_VEGA90A")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_VEGA")
+  KOKKOS_INTERNAL_HIP_ARCH_FLAG := --offload-arch=gfx90a
+endif
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_NAVI1030), 1)
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_NAVI1030")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_NAVI")
+  KOKKOS_INTERNAL_HIP_ARCH_FLAG := --offload-arch=gfx1030
+endif
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_NAVI1100), 1)
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_NAVI1100")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_NAVI")
+  KOKKOS_INTERNAL_HIP_ARCH_FLAG := --offload-arch=gfx1100
+endif
+
+
 ifeq ($(KOKKOS_INTERNAL_USE_HIP), 1)
-  # Lets start with adding architecture defines
-  ifeq ($(KOKKOS_INTERNAL_USE_ARCH_VEGA906), 1)
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_VEGA906")
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_VEGA")
-    KOKKOS_INTERNAL_HIP_ARCH_FLAG := --offload-arch=gfx906
-  endif
-  ifeq ($(KOKKOS_INTERNAL_USE_ARCH_VEGA908), 1)
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_VEGA908")
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_VEGA")
-    KOKKOS_INTERNAL_HIP_ARCH_FLAG := --offload-arch=gfx908
-  endif
-  ifeq ($(KOKKOS_INTERNAL_USE_ARCH_VEGA90A), 1)
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_VEGA90A")
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_VEGA")
-    KOKKOS_INTERNAL_HIP_ARCH_FLAG := --offload-arch=gfx90a
-  endif
-  ifeq ($(KOKKOS_INTERNAL_USE_ARCH_NAVI1030), 1)
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_NAVI1030")
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_NAVI")
-    KOKKOS_INTERNAL_HIP_ARCH_FLAG := --offload-arch=gfx1030
-  endif
-  ifeq ($(KOKKOS_INTERNAL_USE_ARCH_NAVI1100), 1)
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_NAVI1100")
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_NAVI")
-    KOKKOS_INTERNAL_HIP_ARCH_FLAG := --offload-arch=gfx1100
-  endif
-
-
   KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/core/src/HIP/*.cpp)
   KOKKOS_SRC += $(KOKKOS_PATH)/tpls/desul/src/Lock_Array_HIP.cpp
   KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/HIP/*.hpp)
@@ -1399,11 +1392,21 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
 else
   tmp := $(call desul_append_header,"/* $H""undef DESUL_ATOMICS_ENABLE_CUDA */")
 endif
+ifeq ($(KOKKOS_INTERNAL_CUDA_USE_RELOC), 1)
+  tmp := $(call desul_append_header,"$H""define DESUL_ATOMICS_ENABLE_CUDA_SEPARABLE_COMPILATION")
+else
+  tmp := $(call desul_append_header,"/* $H""undef DESUL_ATOMICS_ENABLE_CUDA_SEPARABLE_COMPILATION */")
+endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_HIP), 1)
   tmp := $(call desul_append_header,"$H""define DESUL_ATOMICS_ENABLE_HIP")
 else
   tmp := $(call desul_append_header,"/* $H""undef DESUL_ATOMICS_ENABLE_HIP */")
+endif
+ifeq ($(KOKKOS_INTERNAL_HIP_USE_RELOC), 1)
+  tmp := $(call desul_append_header,"$H""define DESUL_ATOMICS_ENABLE_HIP_SEPARABLE_COMPILATION")
+else
+  tmp := $(call desul_append_header,"/* $H""undef DESUL_ATOMICS_ENABLE_HIP_SEPARABLE_COMPILATION */")
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_SYCL), 1)
@@ -1423,7 +1426,7 @@ tmp := $(call desul_append_header, "$H""endif")
 DESUL_INTERNAL_LS_CONFIG := $(shell ls $(DESUL_CONFIG_HEADER) 2>&1)
 
 ifeq ($(DESUL_INTERNAL_LS_CONFIG), $(DESUL_CONFIG_HEADER))
-  KOKKOS_INTERNAL_NEW_CONFIG := $(strip $(shell diff $(DESUL_CONFIG_HEADER) $(DESUL_INTERNAL_CONFIG_TMP) | grep -c define))
+  DESUL_INTERNAL_NEW_CONFIG := $(strip $(shell diff $(DESUL_CONFIG_HEADER) $(DESUL_INTERNAL_CONFIG_TMP) | grep -c define))
 else
   DESUL_INTERNAL_NEW_CONFIG := 1
 endif

@@ -758,9 +758,6 @@ void test_scatter_view(int64_t n) {
 }
 
 TEST(TEST_CATEGORY, scatterview) {
-#if defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ARCH_INTEL_GPU)
-  GTEST_SKIP() << "skipping for SYCL+Cuda";
-#endif
   test_scatter_view<TEST_EXECSPACE, Kokkos::Experimental::ScatterSum, double>(
       10);
 
@@ -773,9 +770,18 @@ TEST(TEST_CATEGORY, scatterview) {
   int big_n = 100 * 1000;
 #else
 
-#ifdef KOKKOS_ENABLE_SERIAL
+#if defined(KOKKOS_ENABLE_SERIAL) || defined(KOKKOS_ENABLE_OPENMP)
+#if defined(KOKKOS_ENABLE_SERIAL)
   bool is_serial = std::is_same<TEST_EXECSPACE, Kokkos::Serial>::value;
-  int big_n      = is_serial ? 100 * 1000 : 10000 * 1000;
+#else
+  bool is_serial = false;
+#endif
+#if defined(KOKKOS_ENABLE_OPENMP)
+  bool is_openmp = std::is_same<TEST_EXECSPACE, Kokkos::OpenMP>::value;
+#else
+  bool is_openmp = false;
+#endif
+  int big_n      = is_serial || is_openmp ? 100 * 1000 : 10000 * 1000;
 #else
   int big_n = 10000 * 1000;
 #endif
@@ -792,10 +798,6 @@ TEST(TEST_CATEGORY, scatterview) {
 }
 
 TEST(TEST_CATEGORY, scatterview_devicetype) {
-#if defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ARCH_INTEL_GPU)
-  GTEST_SKIP() << "skipping for SYCL+Cuda";
-#endif
-
   using device_type =
       Kokkos::Device<TEST_EXECSPACE, typename TEST_EXECSPACE::memory_space>;
 

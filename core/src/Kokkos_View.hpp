@@ -316,8 +316,8 @@ struct ViewTraits {
       typename prop::specialize,
       typename data_analysis::specialize>; /* mapping specialization tag */
 
-  enum { rank = dimension::rank };
-  enum { rank_dynamic = dimension::rank_dynamic };
+  static constexpr unsigned rank         = dimension::rank;
+  static constexpr unsigned rank_dynamic = dimension::rank_dynamic;
 
   //------------------------------------
   // Execution space, memory space, memory access traits, and host mirror space.
@@ -497,13 +497,13 @@ namespace Kokkos {
 
 // FIXME_OPENMPTARGET - The `declare target` is needed for the Intel GPUs with
 // the OpenMPTarget backend
-#if defined(KOKKOS_ENABLE_OPENMPTARGET) && defined(KOKKOS_COMPILER_INTEL)
+#if defined(KOKKOS_ENABLE_OPENMPTARGET) && defined(KOKKOS_COMPILER_INTEL_LLVM)
 #pragma omp declare target
 #endif
 
 inline constexpr Kokkos::ALL_t ALL{};
 
-#if defined(KOKKOS_ENABLE_OPENMPTARGET) && defined(KOKKOS_COMPILER_INTEL)
+#if defined(KOKKOS_ENABLE_OPENMPTARGET) && defined(KOKKOS_COMPILER_INTEL_LLVM)
 #pragma omp end declare target
 #endif
 

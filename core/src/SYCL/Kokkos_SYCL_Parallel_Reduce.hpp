@@ -37,7 +37,7 @@ inline constexpr bool use_shuffle_based_algorithm =
 namespace SYCLReduction {
 template <typename ValueType, typename ReducerType, int dim>
 std::enable_if_t<!use_shuffle_based_algorithm<ReducerType>> workgroup_reduction(
-    sycl::nd_item<dim>& item, sycl::local_ptr<ValueType> local_mem,
+    sycl::nd_item<dim>& item, sycl::local_accessor<ValueType> local_mem,
     sycl::device_ptr<ValueType> results_ptr,
     sycl::global_ptr<ValueType> device_accessible_result_ptr,
     const unsigned int value_count, const ReducerType& final_reducer,
@@ -109,7 +109,7 @@ std::enable_if_t<!use_shuffle_based_algorithm<ReducerType>> workgroup_reduction(
 
 template <typename ValueType, typename ReducerType, int dim>
 std::enable_if_t<use_shuffle_based_algorithm<ReducerType>> workgroup_reduction(
-    sycl::nd_item<dim>& item, sycl::local_ptr<ValueType> local_mem,
+    sycl::nd_item<dim>& item, sycl::local_accessor<ValueType> local_mem,
     ValueType local_value, sycl::device_ptr<ValueType> results_ptr,
     sycl::global_ptr<ValueType> device_accessible_result_ptr,
     const ReducerType& final_reducer, bool final, unsigned int max_size) {
@@ -271,8 +271,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
           instance.scratch_flags(sizeof(unsigned int)));
 
       auto reduction_lambda_factory =
-          [&](sycl::local_accessor<value_type, 1> local_mem,
-              sycl::local_accessor<unsigned int, 1> num_teams_done,
+          [&](sycl::local_accessor<value_type> local_mem,
+              sycl::local_accessor<unsigned int> num_teams_done,
               sycl::device_ptr<value_type> results_ptr) {
             const auto begin = policy.begin();
 
@@ -304,9 +304,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
                 item.barrier(sycl::access::fence_space::local_space);
 
                 SYCLReduction::workgroup_reduction<>(
-                    item, local_mem.get_pointer(), results_ptr,
-                    device_accessible_result_ptr, value_count, reducer, false,
-                    std::min(size, wgroup_size));
+                    item, local_mem, results_ptr, device_accessible_result_ptr,
+                    value_count, reducer, false, std::min(size, wgroup_size));
 
                 if (local_id == 0) {
                   sycl::atomic_ref<unsigned, sycl::memory_order::relaxed,
@@ -330,7 +329,7 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
                   }
 
                   SYCLReduction::workgroup_reduction<>(
-                      item, local_mem.get_pointer(), results_ptr,
+                      item, local_mem, results_ptr,
                       device_accessible_result_ptr, value_count, reducer, true,
                       std::min(n_wgroups, wgroup_size));
                 }
@@ -346,7 +345,7 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
                 }
 
                 SYCLReduction::workgroup_reduction<>(
-                    item, local_mem.get_pointer(), local_value, results_ptr,
+                    item, local_mem, local_value, results_ptr,
                     device_accessible_result_ptr, reducer, false,
                     std::min(size, wgroup_size));
 
@@ -370,7 +369,7 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
                   }
 
                   SYCLReduction::workgroup_reduction<>(
-                      item, local_mem.get_pointer(), local_value, results_ptr,
+                      item, local_mem, local_value, results_ptr,
                       device_accessible_result_ptr, reducer, true,
                       std::min(n_wgroups, wgroup_size));
                 }
@@ -380,7 +379,7 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
           };
 
       auto parallel_reduce_event = q.submit([&](sycl::handler& cgh) {
-        sycl::local_accessor<unsigned int, 1> num_teams_done(1, cgh);
+        sycl::local_accessor<unsigned int> num_teams_done(1, cgh);
 
         auto dummy_reduction_lambda =
             reduction_lambda_factory({1, cgh}, num_teams_done, nullptr);
@@ -421,7 +420,7 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
                           wgroup_size - 1) /
                          wgroup_size;
 
-        sycl::local_accessor<value_type, 1> local_mem(
+        sycl::local_accessor<value_type> local_mem(
             sycl::range<1>(wgroup_size) * std::max(value_count, 1u), cgh);
 
         cgh.depends_on(memcpy_events);
@@ -608,9 +607,9 @@ class ParallelReduce<CombinedFunctorReducerType,
     if (size > 1) {
       auto n_wgroups             = (size + wgroup_size - 1) / wgroup_size;
       auto parallel_reduce_event = q.submit([&](sycl::handler& cgh) {
-        sycl::local_accessor<value_type, 1> local_mem(
+        sycl::local_accessor<value_type> local_mem(
             sycl::range<1>(wgroup_size) * std::max(value_count, 1u), cgh);
-        sycl::local_accessor<unsigned int, 1> num_teams_done(1, cgh);
+        sycl::local_accessor<unsigned int> num_teams_done(1, cgh);
 
         const BarePolicy bare_policy = m_policy;
 
@@ -652,9 +651,8 @@ class ParallelReduce<CombinedFunctorReducerType,
             item.barrier(sycl::access::fence_space::local_space);
 
             SYCLReduction::workgroup_reduction<>(
-                item, local_mem.get_pointer(), results_ptr,
-                device_accessible_result_ptr, value_count, reducer, false,
-                std::min(size, wgroup_size));
+                item, local_mem, results_ptr, device_accessible_result_ptr,
+                value_count, reducer, false, std::min(size, wgroup_size));
 
             if (local_id == 0) {
               sycl::atomic_ref<unsigned, sycl::memory_order::relaxed,
@@ -678,9 +676,8 @@ class ParallelReduce<CombinedFunctorReducerType,
               }
 
               SYCLReduction::workgroup_reduction<>(
-                  item, local_mem.get_pointer(), results_ptr,
-                  device_accessible_result_ptr, value_count, reducer, true,
-                  std::min(n_wgroups, wgroup_size));
+                  item, local_mem, results_ptr, device_accessible_result_ptr,
+                  value_count, reducer, true, std::min(n_wgroups, wgroup_size));
             }
           } else {
             value_type local_value;
@@ -695,7 +692,7 @@ class ParallelReduce<CombinedFunctorReducerType,
                 .exec_range();
 
             SYCLReduction::workgroup_reduction<>(
-                item, local_mem.get_pointer(), local_value, results_ptr,
+                item, local_mem, local_value, results_ptr,
                 device_accessible_result_ptr, reducer, false,
                 std::min(size, wgroup_size));
 
@@ -719,7 +716,7 @@ class ParallelReduce<CombinedFunctorReducerType,
               }
 
               SYCLReduction::workgroup_reduction<>(
-                  item, local_mem.get_pointer(), local_value, results_ptr,
+                  item, local_mem, local_value, results_ptr,
                   device_accessible_result_ptr, reducer, true,
                   std::min(n_wgroups, wgroup_size));
             }

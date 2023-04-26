@@ -938,10 +938,10 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
           ")"
           "\n";
 
-    // If there are no errors so far, then rank == Rank
+    // If there are no errors so far, then arg_rank == Rank
     // Otherwise, check as much as possible
-    size_t rank = begins.size() < ends.size() ? begins.size() : ends.size();
-    for (size_t i = 0; i != rank; ++i) {
+    size_t arg_rank = begins.size() < ends.size() ? begins.size() : ends.size();
+    for (size_t i = 0; i != arg_rank; ++i) {
       subtraction_failure sf = check_subtraction(at(ends, i), at(begins, i));
       if (sf != subtraction_failure::none) {
         message +=

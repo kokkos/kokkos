@@ -165,6 +165,26 @@ bool is_valid_map_device_id_by(std::string const& x) {
 
 }  // namespace
 
+[[nodiscard]] int Kokkos::device_id() noexcept {
+#if defined(KOKKOS_ENABLE_CUDA)
+  return Cuda().cuda_device();
+#elif defined(KOKKOS_ENABLE_HIP)
+  return HIP().hip_device();
+#elif defined(KOKKOS_ENABLE_OPENACC)
+  return Experimental::OpenACC().acc_device_number();
+#elif defined(KOKKOS_ENABLE_OPENMPTARGET)
+  return omp_get_default_device();  // FIXME_OPENMPTARGET
+#elif defined(KOKKOS_ENABLE_SYCL)
+  return Experimental::Impl::SYCLInternal::m_syclDev;
+#else
+  return -1;
+#endif
+}
+
+[[nodiscard]] int Kokkos::num_threads() noexcept {
+  return DefaultHostExecutionSpace().concurrency();
+}
+
 Kokkos::Impl::ExecSpaceManager& Kokkos::Impl::ExecSpaceManager::get_instance() {
   static ExecSpaceManager space_initializer = {};
   return space_initializer;
@@ -500,14 +520,20 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
                                  std::to_string(KOKKOS_COMPILER_INTEL));
   declare_configuration_metadata("tools_only", "compiler_family", "intel");
 #endif
+#ifdef KOKKOS_COMPILER_INTEL_LLVM
+  declare_configuration_metadata("compiler_version",
+                                 "KOKKOS_COMPILER_INTEL_LLVM",
+                                 std::to_string(KOKKOS_COMPILER_INTEL_LLVM));
+  declare_configuration_metadata("tools_only", "compiler_family", "intel_llvm");
+#endif
 #ifdef KOKKOS_COMPILER_NVCC
   declare_configuration_metadata("compiler_version", "KOKKOS_COMPILER_NVCC",
                                  std::to_string(KOKKOS_COMPILER_NVCC));
   declare_configuration_metadata("tools_only", "compiler_family", "nvcc");
 #endif
-#ifdef KOKKOS_COMPILER_PGI
-  declare_configuration_metadata("compiler_version", "KOKKOS_COMPILER_PGI",
-                                 std::to_string(KOKKOS_COMPILER_PGI));
+#ifdef KOKKOS_COMPILER_NVHPC
+  declare_configuration_metadata("compiler_version", "KOKKOS_COMPILER_NVHPC",
+                                 std::to_string(KOKKOS_COMPILER_NVHPC));
   declare_configuration_metadata("tools_only", "compiler_family", "pgi");
 #endif
 #ifdef KOKKOS_COMPILER_MSVC
@@ -1253,15 +1279,3 @@ void Kokkos::print_configuration(std::ostream& os, bool verbose) {
 bool Kokkos::show_warnings() noexcept { return g_show_warnings; }
 
 bool Kokkos::tune_internals() noexcept { return g_tune_internals; }
-
-namespace Kokkos {
-
-#ifdef KOKKOS_COMPILER_PGI
-namespace Impl {
-// Bizzarely, an extra jump instruction forces the PGI compiler to not have a
-// bug related to (probably?) empty base optimization and/or aggregate
-// construction.
-void _kokkos_pgi_compiler_bug_workaround() {}
-}  // end namespace Impl
-#endif
-}  // namespace Kokkos

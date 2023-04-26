@@ -39,7 +39,7 @@ jobs:
           - backend: 'OPENMP'
             cmake_build_type: 'Release'
             cxx: 'icpx'
-            cxx_extra_flags: '-fp-model=precise'
+            cxx_extra_flags: '-fp-model=precise -Wno-pass-failed'
             desul_external: ['ON']
             distro: 'fedora:intel'
             hwloc: ['ON']
@@ -47,7 +47,7 @@ jobs:
           - backend: 'OPENMP'
             cmake_build_type: 'Debug'
             cxx: 'icpx'
-            cxx_extra_flags: '-fp-model=precise'
+            cxx_extra_flags: '-fp-model=precise -Wno-pass-failed'
             desul_external: ['ON']
             distro: 'fedora:intel'
             hwloc: ['ON']
