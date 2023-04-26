@@ -480,36 +480,32 @@ TEST(TEST_CATEGORY, UnorderedMap_consistent_size) {
   ASSERT_EQ(2u, m.size());
 }
 
-namespace Impl {
-
-using map_type = Kokkos::UnorderedMap<int, void, Kokkos::DefaultExecutionSpace>;
-
-KOKKOS_FUNCTION
-void test_insert_to_map_copy(map_type const &input_map, const int i) {
-  auto map = input_map;
-  map.insert(i);
-}
-
 struct TestMapCopy {
+  using map_type = Kokkos::UnorderedMap<int, void, TEST_EXECSPACE>;
   map_type m_map;
+
+  KOKKOS_FUNCTION
+  void test_insert_to_map_copy(map_type const &input_map, const int i) const {
+    auto map = input_map;
+    map.insert(i);
+  }
 
   KOKKOS_FUNCTION
   void operator()(const int i) const { test_insert_to_map_copy(m_map, i); }
 };
 
-}  // namespace Impl
-
 TEST(TEST_CATEGORY, UnorderedMap_shallow_copyable_on_device) {
-  Impl::TestMapCopy test_map_copy;
+  TestMapCopy test_map_copy;
 
-  Kokkos::parallel_for(1, test_map_copy);
+  Kokkos::parallel_for(Kokkos::RangePolicy<>(TEST_EXECSPACE(), 0, 1),
+                       test_map_copy);
   ASSERT_EQ(1u, test_map_copy.m_map.size());
 }
 
 #if !defined(KOKKOS_ENABLE_CUDA) || \
     (defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_ENABLE_CUDA_LAMBDA))
 void test_unordered_map_device_capture() {
-  Impl::map_type map;
+  TestMapCopy::map_type map;
 
   Kokkos::parallel_for(
       1, KOKKOS_LAMBDA(int const &i) { map.insert(i); });

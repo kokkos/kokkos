@@ -287,7 +287,6 @@ class UnorderedMap {
   enum { modified_idx = 0, erasable_idx = 1, failed_insert_idx = 2 };
   enum { num_scalars = 3 };
   using scalars_view     = View<int[num_scalars], LayoutLeft, device_type>;
-  using scalar_host_view = View<size_type, HostSpace>;
 
  public:
   //! \name Public member functions
@@ -863,7 +862,7 @@ class UnorderedMap {
   bool m_bounded_insert;
   hasher_type m_hasher;
   equal_to_type m_equal_to;
-  scalar_host_view m_size;
+  View<size_type, HostSpace> m_size;
   bitset_type m_available_indexes;
   size_type_view m_hash_lists;
   size_type_view m_next_index;
