@@ -91,6 +91,8 @@ KOKKOS_IMPL_HOST_FUNCTION inline uint64_t clock_tic_host() noexcept {
   return (uint64_t)cycles;
 
 #elif defined(__ppc__)
+  // see : pages.cs.wisc.edu/~legault/miniproj-736.pdf or
+  // cmssdt.cern.ch/lxr/source/FWCore/Utilities/interface/HRRealTime.h
 
   uint64_t result = 0;
   uint32_t upper, lower, tmp;
