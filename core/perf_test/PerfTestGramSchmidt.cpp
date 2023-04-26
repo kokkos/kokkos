@@ -175,6 +175,16 @@ static void GramSchmidt(benchmark::State& state) {
   }
 }
 
+// FIXME_SYCL SYCL+Cuda reports "an illegal memory access was encountered"
+#if defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
+BENCHMARK(GramSchmidt<double>)
+    ->ArgName("Count")
+    ->ArgsProduct({
+        benchmark::CreateRange(1 << 10, 1 << 18, 2),
+    })
+    ->UseManualTime()
+    ->Iterations(5);
+#else
 BENCHMARK(GramSchmidt<double>)
     ->ArgName("Count")
     ->ArgsProduct({
@@ -182,5 +192,6 @@ BENCHMARK(GramSchmidt<double>)
     })
     ->UseManualTime()
     ->Iterations(5);
+#endif
 
 }  // namespace Test
