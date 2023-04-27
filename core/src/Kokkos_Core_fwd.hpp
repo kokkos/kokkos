@@ -39,7 +39,6 @@
 #ifdef KOKKOS_IMPL_32BIT
 static_assert(sizeof(void *) == 4,
               "Kokkos assumes 64-bit build; i.e., 4-byte pointers");
-);
 #else
 static_assert(sizeof(void *) == 8,
               "Kokkos assumes 64-bit build; i.e., 8-byte pointers");
