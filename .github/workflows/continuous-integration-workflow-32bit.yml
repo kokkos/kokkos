@@ -1,0 +1,59 @@
+name: github-Linux-32bit
+on: [push, pull_request]
+
+concurrency:
+  group: ${ {github.event_name }}-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{github.event_name == 'pull_request'}}
+
+jobs:
+  CI-32bit:
+    name: Linux-32bit
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/kokkos/ci-containers/ubuntu:latest
+    steps:
+      - name: Checkout desul
+        uses: actions/checkout@v3
+        with:
+          repository: desul/desul
+          ref: 477da9c8f40f8db369c28dd3f93a67e376d8511b
+          path: desul
+      - name: Install desul
+        working-directory: desul
+        run: |
+          git submodule init
+          git submodule update
+          mkdir build
+          cd build
+          cmake -DDESUL_ENABLE_TESTS=OFF -DCMAKE_INSTALL_PREFIX=/usr/desul-install ..
+          sudo cmake --build . --target install --parallel 2
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: install_multilib
+        run: sudo apt-get update && sudo apt-get install -y gcc-multilib g++-multilib gfortran-multilib
+      - name: Configure Kokkos
+        run: |
+          cmake -B builddir \
+            -DCMAKE_INSTALL_PREFIX=/usr \
+            -Ddesul_ROOT=/usr/desul-install/ \
+            -DKokkos_ENABLE_DESUL_ATOMICS_EXTERNAL=OFF \
+            -DKokkos_ENABLE_HWLOC=OFF \
+            -DKokkos_ENABLE_OPENMP=ON \
+            -DKokkos_ENABLE_TESTS=ON \
+            -DKokkos_ENABLE_BENCHMARKS=ON \
+            -DKokkos_ENABLE_EXAMPLES=ON \
+            -DKokkos_ENABLE_LIBDL=OFF \
+            -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
+            -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
+            -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+            -DCMAKE_CXX_FLAGS="-Werror -m32 -DKOKKOS_IMPL_32BIT" \
+            -DCMAKE_CXX_COMPILER=g++ \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo
+      - name: Build
+        run: |
+          ccache -z
+          cmake --build builddir --parallel 2
+          ccache -s
+      - name: Tests
+        working-directory: builddir
+        run: ctest --output-on-failure
