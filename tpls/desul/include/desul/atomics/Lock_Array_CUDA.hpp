@@ -10,6 +10,8 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #define DESUL_ATOMICS_LOCK_ARRAY_CUDA_HPP_
 
 #include <cstdint>
+#include <map>
+#include <mutex>
 
 #include "desul/atomics/Common.hpp"
 #include "desul/atomics/Macros.hpp"
@@ -19,8 +21,8 @@ namespace Impl {
 
 /// \brief This global variable in Host space is the central definition
 ///        of these arrays.
-extern int32_t* CUDA_SPACE_ATOMIC_LOCKS_DEVICE_h;
-extern int32_t* CUDA_SPACE_ATOMIC_LOCKS_NODE_h;
+extern std::map<int, int32_t*> CUDA_SPACE_ATOMIC_LOCKS_DEVICE_h;
+extern std::map<int, int32_t*> CUDA_SPACE_ATOMIC_LOCKS_NODE_h;
 
 /// \brief After this call, the g_host_cuda_lock_arrays variable has
 ///        valid, initialized arrays.
@@ -29,7 +31,7 @@ extern int32_t* CUDA_SPACE_ATOMIC_LOCKS_NODE_h;
 /// The function is templated to make it a weak symbol to deal with Kokkos/RAJA
 ///   snapshotted version while also linking against pure Desul
 template <typename /*AlwaysInt*/ = int>
-void init_lock_arrays_cuda();
+void init_lock_arrays_cuda(int cuda_device);
 
 /// \brief After this call, the g_host_cuda_lock_arrays variable has
 ///        all null pointers, and all array memory has been freed.
@@ -113,19 +115,21 @@ inline
 #else
 inline static
 #endif
-    void
-    copy_cuda_lock_arrays_to_device() {
-  static bool once = []() {
-    cudaMemcpyToSymbol(CUDA_SPACE_ATOMIC_LOCKS_DEVICE,
-                       &CUDA_SPACE_ATOMIC_LOCKS_DEVICE_h,
-                       sizeof(int32_t*));
-    cudaMemcpyToSymbol(CUDA_SPACE_ATOMIC_LOCKS_NODE,
-                       &CUDA_SPACE_ATOMIC_LOCKS_NODE_h,
-                       sizeof(int32_t*));
-    return true;
-  }();
-  (void)once;
-}
+  void
+  copy_cuda_lock_arrays_to_device(int cuda_device) {
+    static std::map<int, bool> device_initialized;
+    static std::mutex mutex;
+    std::scoped_lock lock(mutex);
+    if(!device_initialized[cuda_device]) {
+      cudaMemcpyToSymbol(CUDA_SPACE_ATOMIC_LOCKS_DEVICE,
+                         &CUDA_SPACE_ATOMIC_LOCKS_DEVICE_h[cuda_device],
+                         sizeof(int32_t*));
+      cudaMemcpyToSymbol(CUDA_SPACE_ATOMIC_LOCKS_NODE,
+                         &CUDA_SPACE_ATOMIC_LOCKS_NODE_h[cuda_device],
+                         sizeof(int32_t*));
+      device_initialized[cuda_device] = true;
+    }
+  }
 
 }  // namespace Impl
 }  // namespace desul
@@ -133,10 +137,10 @@ inline static
 namespace desul {
 
 #ifdef DESUL_ATOMICS_ENABLE_CUDA_SEPARABLE_COMPILATION
-inline void ensure_cuda_lock_arrays_on_device() {}
+inline void ensure_cuda_lock_arrays_on_device(int /*cuda_device*/) {}
 #else
-static inline void ensure_cuda_lock_arrays_on_device() {
-  Impl::copy_cuda_lock_arrays_to_device();
+static inline void ensure_cuda_lock_arrays_on_device(int cuda_device) {
+  Impl::copy_cuda_lock_arrays_to_device(cuda_device);
 }
 #endif
 

@@ -8,6 +8,7 @@ SPDX-License-Identifier: (BSD-3-Clause)
 
 #include <cinttypes>
 #include <desul/atomics/Lock_Array.hpp>
+#include <map>
 #include <sstream>
 #include <string>
 
@@ -36,8 +37,8 @@ __global__ void init_lock_arrays_cuda_kernel() {
 
 namespace Impl {
 
-int32_t* CUDA_SPACE_ATOMIC_LOCKS_DEVICE_h = nullptr;
-int32_t* CUDA_SPACE_ATOMIC_LOCKS_NODE_h = nullptr;
+std::map<int, int32_t*> CUDA_SPACE_ATOMIC_LOCKS_DEVICE_h = {};
+std::map<int, int32_t*> CUDA_SPACE_ATOMIC_LOCKS_NODE_h = {};
 
 // Putting this into anonymous namespace so we don't have multiple defined symbols
 // When linking in more than one copy of the object file
@@ -56,20 +57,22 @@ void check_error_and_throw_cuda(cudaError e, const std::string msg) {
 
 // define functions
 template <typename T>
-void init_lock_arrays_cuda() {
-  if (CUDA_SPACE_ATOMIC_LOCKS_DEVICE_h != nullptr) return;
-  auto error_malloc1 = cudaMalloc(&CUDA_SPACE_ATOMIC_LOCKS_DEVICE_h,
+void init_lock_arrays_cuda(int device_id) {
+  if (CUDA_SPACE_ATOMIC_LOCKS_DEVICE_h[device_id] != nullptr) return;
+  auto error_set_device = cudaSetDevice(device_id);
+  check_error_and_throw_cuda(error_set_device, "init_lock_arrays_cuda: cudaSetDevice");
+  auto error_malloc1 = cudaMalloc(&CUDA_SPACE_ATOMIC_LOCKS_DEVICE_h[device_id],
                                   sizeof(int32_t) * (CUDA_SPACE_ATOMIC_MASK + 1));
   check_error_and_throw_cuda(error_malloc1,
                              "init_lock_arrays_cuda: cudaMalloc device locks");
 
-  auto error_malloc2 = cudaMallocHost(&CUDA_SPACE_ATOMIC_LOCKS_NODE_h,
+  auto error_malloc2 = cudaMallocHost(&CUDA_SPACE_ATOMIC_LOCKS_NODE_h[device_id],
                                       sizeof(int32_t) * (CUDA_SPACE_ATOMIC_MASK + 1));
   check_error_and_throw_cuda(error_malloc2,
                              "init_lock_arrays_cuda: cudaMalloc host locks");
 
   auto error_sync1 = cudaDeviceSynchronize();
-  copy_cuda_lock_arrays_to_device();
+  copy_cuda_lock_arrays_to_device(device_id);
   check_error_and_throw_cuda(error_sync1, "init_lock_arrays_cuda: post mallocs");
   init_lock_arrays_cuda_kernel<<<(CUDA_SPACE_ATOMIC_MASK + 1 + 255) / 256, 256>>>();
   auto error_sync2 = cudaDeviceSynchronize();
@@ -78,18 +81,22 @@ void init_lock_arrays_cuda() {
 
 template <typename T>
 void finalize_lock_arrays_cuda() {
-  if (CUDA_SPACE_ATOMIC_LOCKS_DEVICE_h == nullptr) return;
-  cudaFree(CUDA_SPACE_ATOMIC_LOCKS_DEVICE_h);
-  cudaFreeHost(CUDA_SPACE_ATOMIC_LOCKS_NODE_h);
-  CUDA_SPACE_ATOMIC_LOCKS_DEVICE_h = nullptr;
-  CUDA_SPACE_ATOMIC_LOCKS_NODE_h = nullptr;
+  for(auto &host_device_lock_arrays: CUDA_SPACE_ATOMIC_LOCKS_DEVICE_h)
+  {
+    if (host_device_lock_arrays.second == nullptr) continue;
+    int device_id = host_device_lock_arrays.first;
+    cudaFree(CUDA_SPACE_ATOMIC_LOCKS_DEVICE_h[device_id]);
+    cudaFreeHost(CUDA_SPACE_ATOMIC_LOCKS_NODE_h[device_id]);
+    CUDA_SPACE_ATOMIC_LOCKS_DEVICE_h[device_id] = nullptr;
+    CUDA_SPACE_ATOMIC_LOCKS_NODE_h[device_id] = nullptr;
 #ifdef DESUL_ATOMICS_ENABLE_CUDA_SEPARABLE_COMPILATION
-  copy_cuda_lock_arrays_to_device();
+    copy_cuda_lock_arrays_to_device(device_id);
 #endif
+  }
 }
 
 // Instantiate functions
-template void init_lock_arrays_cuda<int>();
+template void init_lock_arrays_cuda<int>(int cuda_device);
 template void finalize_lock_arrays_cuda<int>();
 
 }  // namespace Impl

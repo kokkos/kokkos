@@ -98,7 +98,7 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
         Impl::ParallelFor<FunctorType, TeamPolicy<Properties...>>;
     cudaFuncAttributes attr =
         CudaParallelLaunch<closure_type, typename traits::launch_bounds>::
-            get_cuda_func_attributes();
+            get_cuda_func_attributes(space().impl_internal_space_instance()->m_cudaDev);
     int block_size =
         Kokkos::Impl::cuda_get_max_block_size<FunctorType,
                                               typename traits::launch_bounds>(
@@ -137,7 +137,7 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
         Impl::ParallelFor<FunctorType, TeamPolicy<Properties...>>;
     cudaFuncAttributes attr =
         CudaParallelLaunch<closure_type, typename traits::launch_bounds>::
-            get_cuda_func_attributes();
+                    get_cuda_func_attributes(space().impl_internal_space_instance()->m_cudaDev);
     const int block_size =
         Kokkos::Impl::cuda_get_opt_block_size<FunctorType,
                                               typename traits::launch_bounds>(
@@ -369,7 +369,8 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
 
     cudaFuncAttributes attr =
         CudaParallelLaunch<closure_type, typename traits::launch_bounds>::
-            get_cuda_func_attributes();
+            get_cuda_func_attributes(
+                space().impl_internal_space_instance()->m_cudaDev);
     const int block_size = std::forward<BlockSizeCallable>(block_size_callable)(
         space().impl_internal_space_instance(), attr, f,
         (size_t)impl_vector_length(),
@@ -539,8 +540,8 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     auto internal_space_instance =
         m_policy.space().impl_internal_space_instance();
     cudaFuncAttributes attr =
-        CudaParallelLaunch<ParallelFor,
-                           LaunchBounds>::get_cuda_func_attributes();
+        CudaParallelLaunch<ParallelFor, LaunchBounds>::get_cuda_func_attributes(
+            internal_space_instance->m_cudaDev);
     m_team_size =
         m_team_size >= 0
             ? m_team_size
@@ -877,9 +878,8 @@ class ParallelReduce<CombinedFunctorReducerType,
         m_vector_size(arg_policy.impl_vector_length()) {
     auto internal_space_instance =
         m_policy.space().impl_internal_space_instance();
-    cudaFuncAttributes attr =
-        CudaParallelLaunch<ParallelReduce,
-                           LaunchBounds>::get_cuda_func_attributes();
+    cudaFuncAttributes attr = CudaParallelLaunch<ParallelReduce, LaunchBounds>::
+        get_cuda_func_attributes(internal_space_instance->m_cudaDev);
     m_team_size =
         m_team_size >= 0
             ? m_team_size

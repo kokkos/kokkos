@@ -23,6 +23,9 @@
 #include <Cuda/Kokkos_Cuda_Error.hpp>
 #include <cuda_runtime_api.h>
 
+#include <set>
+#include <map>
+
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 // These functions fulfill the purpose of allowing to work around
@@ -145,11 +148,11 @@ class CudaInternal {
   bool was_initialized = false;
   bool was_finalized   = false;
 
-  // FIXME_CUDA: these want to be per-device, not per-stream...  use of 'static'
-  //  here will break once there are multiple devices though
-  inline static unsigned long* constantMemHostStaging = nullptr;
-  inline static cudaEvent_t constantMemReusable       = nullptr;
-  inline static std::mutex constantMemMutex;
+  inline static std::set<int> cuda_devices = {};
+  inline static std::map<int, unsigned long*> constantMemHostStagingPerDevice =
+      {};
+  inline static std::map<int, cudaEvent_t> constantMemReusablePerDevice = {};
+  inline static std::map<int, std::mutex> constantMemMutexPerDevice;
 
   static CudaInternal& singleton();
 

@@ -23,15 +23,24 @@ TEST(cuda, raw_cuda_streams) {
   // Make sure that we use the same device for all allocations
   Kokkos::initialize();
 
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(0));
+  cudaStream_t stream0;
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamCreate(&stream0));
+  int *p0;
+  KOKKOS_IMPL_CUDA_SAFE_CALL(
+      cudaMalloc(reinterpret_cast<void **>(&p0), sizeof(int) * 100));
+
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(1));
   cudaStream_t stream;
-  cudaStreamCreate(&stream);
-  int* p;
-  cudaMalloc(&p, sizeof(int) * 100);
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamCreate(&stream));
+  int *p;
+  KOKKOS_IMPL_CUDA_SAFE_CALL(
+      cudaMalloc(reinterpret_cast<void **>(&p), sizeof(int) * 100));
   using MemorySpace = typename TEST_EXECSPACE::memory_space;
 
   {
-    TEST_EXECSPACE space0(stream);
-    Kokkos::View<int*, TEST_EXECSPACE> v(p, 100);
+    TEST_EXECSPACE space0(1, stream);
+    Kokkos::View<int *, TEST_EXECSPACE> v(p, 100);
     Kokkos::deep_copy(space0, v, 5);
     int sum;
 
@@ -71,12 +80,13 @@ TEST(cuda, raw_cuda_streams) {
     ASSERT_EQ(800, sum);
   }
   Kokkos::finalize();
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(1));
   offset_streams<<<100, 64, 0, stream>>>(p);
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaDeviceSynchronize());
-  cudaStreamDestroy(stream);
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamDestroy(stream));
 
   int h_p[100];
-  cudaMemcpy(h_p, p, sizeof(int) * 100, cudaMemcpyDefault);
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMemcpy(h_p, p, sizeof(int) * 100, cudaMemcpyDefault));
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaDeviceSynchronize());
   int64_t sum        = 0;
   int64_t sum_expect = 0;
@@ -84,6 +94,13 @@ TEST(cuda, raw_cuda_streams) {
     sum += h_p[i];
     sum_expect += 8 + i;
   }
+
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(0));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMemset(p0, 0, sizeof(int)*100));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFreeAsync(p0, 0));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(1));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMemset(p, 0, sizeof(int)*100));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFreeAsync(p, 0));
 
   ASSERT_EQ(sum, sum_expect);
 }

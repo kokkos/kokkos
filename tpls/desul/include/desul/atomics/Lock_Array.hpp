@@ -38,7 +38,7 @@ struct HostLocks {
   }
 };
 
-inline void init_lock_arrays() {
+inline void init_lock_arrays(int device_id) {
   static bool is_initialized = false;
   if (!is_initialized) {
     HostLocks::get_host_locks_();
@@ -46,7 +46,7 @@ inline void init_lock_arrays() {
   }
 
 #ifdef DESUL_HAVE_CUDA_ATOMICS
-  init_lock_arrays_cuda();
+  init_lock_arrays_cuda(device_id);
 #endif
 
 #ifdef DESUL_HAVE_HIP_ATOMICS
@@ -64,9 +64,9 @@ inline void finalize_lock_arrays() {
 #endif
 }
 
-inline void ensure_lock_arrays_on_device() {
+inline void ensure_lock_arrays_on_device(int device_id) {
 #ifdef DESUL_HAVE_CUDA_ATOMICS
-  ensure_cuda_lock_arrays_on_device();
+  ensure_cuda_lock_arrays_on_device(device_id);
 #endif
 
 #ifdef DESUL_HAVE_HIP_ATOMICS
