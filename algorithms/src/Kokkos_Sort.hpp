@@ -344,10 +344,11 @@ class BinSort {
     // Originally the following alias also contained
     // "typename ValuesViewType::array_layout", however this is wrong because
     // when ValuesViewType is a view with LayoutStride, the
-    // constructor below for sorted_values fails at compiler time since it would
-    // need a layout object, not just extents. To ensure this sort method works
+    // constructor below for sorted_values fails at compile time since it needs
+    // a layout object, not just extents. To ensure this sort method works
     // also on views with LayoutStride, we can make the scratch view a "regular"
-    // view since it is only used a temporary space for doing the ordering.
+    // view since it is only used a temporary space for doing the proper
+    // ordering, and then copied back to overwrite values.
     using scratch_view_type =
         Kokkos::View<typename ValuesViewType::data_type,
                      typename ValuesViewType::device_type>;
