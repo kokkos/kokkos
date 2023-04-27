@@ -497,7 +497,7 @@ struct TestMapCopy {
 TEST(TEST_CATEGORY, UnorderedMap_shallow_copyable_on_device) {
   TestMapCopy test_map_copy;
 
-  Kokkos::parallel_for(Kokkos::RangePolicy<>(TEST_EXECSPACE(), 0, 1),
+  Kokkos::parallel_for(Kokkos::RangePolicy<TEST_EXECSPACE>(0, 1),
                        test_map_copy);
   ASSERT_EQ(1u, test_map_copy.m_map.size());
 }
@@ -508,7 +508,7 @@ void test_unordered_map_device_capture() {
   TestMapCopy::map_type map;
 
   Kokkos::parallel_for(
-      Kokkos::RangePolicy<>(TEST_EXECSPACE(), 0, 1),
+      Kokkos::RangePolicy<TEST_EXECSPACE>(0, 1),
       KOKKOS_LAMBDA(int const &i) { map.insert(i); });
 
   ASSERT_EQ(1u, map.size());
