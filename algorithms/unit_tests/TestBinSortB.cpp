@@ -14,9 +14,6 @@
 //
 //@HEADER
 
-#ifndef KOKKOS_ALGORITHMS_UNITTESTS_TEST_BINSORT_SETB_HPP
-#define KOKKOS_ALGORITHMS_UNITTESTS_TEST_BINSORT_SETB_HPP
-
 #include <gtest/gtest.h>
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Random.hpp>
@@ -24,6 +21,7 @@
 #include <Kokkos_StdAlgorithms.hpp>
 #include <TestStdAlgorithmsHelperFunctors.hpp>
 #include <random>
+#include <numeric>  //needed for iota
 
 namespace Test {
 namespace BinSortWithLayoutStride {
@@ -256,5 +254,3 @@ TEST(BinSort, UnsignedKeyLayoutStrideValues) {
 }
 
 }  // namespace Test
-
-#endif

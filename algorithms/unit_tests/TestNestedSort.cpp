@@ -14,16 +14,13 @@
 //
 //@HEADER
 
-#ifndef KOKKOS_ALGORITHMS_UNITTESTS_TEST_NESTED_SORT_HPP
-#define KOKKOS_ALGORITHMS_UNITTESTS_TEST_NESTED_SORT_HPP
-
+#include <gtest/gtest.h>
 #include <unordered_set>
 #include <random>
 #include <Kokkos_Random.hpp>
 #include <Kokkos_NestedSort.hpp>
 
 namespace Test {
-
 namespace Impl {
 
 // Comparator for sorting in descending order
@@ -385,24 +382,26 @@ void test_nested_sort_by_key(unsigned int N, KeyType minKey, KeyType maxKey,
 }
 }  // namespace Impl
 
-TEST(TEST_CATEGORY, NestedSort) {
-  Impl::test_nested_sort<TEST_EXECSPACE, unsigned>(171, 0U, UINT_MAX);
-  Impl::test_nested_sort<TEST_EXECSPACE, float>(42, -1e6f, 1e6f);
-  Impl::test_nested_sort<TEST_EXECSPACE, char>(67, CHAR_MIN, CHAR_MAX);
+TEST(sort, NestedSort) {
+  using ExecutionSpace = Kokkos::DefaultExecutionSpace;
+  Impl::test_nested_sort<ExecutionSpace, unsigned>(171, 0U, UINT_MAX);
+  Impl::test_nested_sort<ExecutionSpace, float>(42, -1e6f, 1e6f);
+  Impl::test_nested_sort<ExecutionSpace, char>(67, CHAR_MIN, CHAR_MAX);
 }
 
-TEST(TEST_CATEGORY, NestedSortByKey) {
+TEST(sort, NestedSortByKey) {
+  using ExecutionSpace = Kokkos::DefaultExecutionSpace;
+
   // Second/third template arguments are key and value respectively.
   // In sort_by_key_X functions, a key view and a value view are both permuted
   // to make the keys sorted. This means that the value type doesn't need to be
   // ordered, unlike key
-  Impl::test_nested_sort_by_key<TEST_EXECSPACE, unsigned, unsigned>(
+  Impl::test_nested_sort_by_key<ExecutionSpace, unsigned, unsigned>(
       161, 0U, UINT_MAX, 0U, UINT_MAX);
-  Impl::test_nested_sort_by_key<TEST_EXECSPACE, float, char>(
+  Impl::test_nested_sort_by_key<ExecutionSpace, float, char>(
       267, -1e6f, 1e6f, CHAR_MIN, CHAR_MAX);
-  Impl::test_nested_sort_by_key<TEST_EXECSPACE, char, double>(
+  Impl::test_nested_sort_by_key<ExecutionSpace, char, double>(
       11, CHAR_MIN, CHAR_MAX, 2.718, 3.14);
 }
 
 }  // namespace Test
-#endif

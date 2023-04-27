@@ -14,9 +14,6 @@
 //
 //@HEADER
 
-#ifndef KOKKOS_ALGORITHMS_UNITTESTS_TEST_BINSORT_SETA_HPP
-#define KOKKOS_ALGORITHMS_UNITTESTS_TEST_BINSORT_SETA_HPP
-
 #include <gtest/gtest.h>
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Random.hpp>
@@ -241,5 +238,3 @@ TEST(BinSort, GenericTests) {
 }
 
 }  // namespace Test
-
-#endif

@@ -14,9 +14,6 @@
 //
 //@HEADER
 
-#ifndef KOKKOS_ALGORITHMS_UNITTESTS_TESTSORT_HPP
-#define KOKKOS_ALGORITHMS_UNITTESTS_TESTSORT_HPP
-
 #include <gtest/gtest.h>
 #include <Kokkos_Core.hpp>
 #include <Kokkos_DynamicView.hpp>
@@ -224,4 +221,3 @@ TEST(sort, UnsignedValueType) {
 }
 
 }  // namespace Test
-#endif /* KOKKOS_ALGORITHMS_UNITTESTS_TESTSORT_HPP */

@@ -24,6 +24,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
 	Sort
 	BinSortA
 	BinSortB
+	NestedSort
       )
       list(APPEND ALGO_SORT_SOURCES Test${Name}.cpp)
     endforeach()
