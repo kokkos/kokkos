@@ -38,6 +38,7 @@ static_assert(false,
 
 #include "impl/Kokkos_HostSpace_deepcopy.hpp"
 #include <impl/Kokkos_MemorySpace.hpp>
+#include <impl/Kokkos_ZeroMemset_fwd.hpp>
 
 /*--------------------------------------------------------------------------*/
 

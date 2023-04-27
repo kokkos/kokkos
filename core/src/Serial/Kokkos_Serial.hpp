@@ -43,6 +43,7 @@ static_assert(false,
 #include <impl/Kokkos_Tools.hpp>
 #include <impl/Kokkos_HostSharedPtr.hpp>
 #include <impl/Kokkos_InitializationSettings.hpp>
+#include <impl/Kokkos_ZeroMemset_fwd.hpp>
 
 namespace Kokkos {
 
