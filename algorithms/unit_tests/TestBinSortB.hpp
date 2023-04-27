@@ -47,9 +47,9 @@ struct CopyFunctorRank2 {
   }
 };
 
-template <class ValueType, class ...Props>
-auto create_deep_copyable_compatible_view_with_same_extent(Kokkos::View<ValueType*, Props...> view)
-{
+template <class ValueType, class... Props>
+auto create_deep_copyable_compatible_view_with_same_extent(
+    Kokkos::View<ValueType*, Props...> view) {
   using view_type            = Kokkos::View<ValueType*, Props...>;
   using view_value_type      = typename view_type::value_type;
   using view_exespace        = typename view_type::execution_space;
@@ -58,9 +58,9 @@ auto create_deep_copyable_compatible_view_with_same_extent(Kokkos::View<ValueTyp
   return view_deep_copyable_t{"view_dc", ext0};
 }
 
-template <class ValueType, class ...Props>
-auto create_deep_copyable_compatible_view_with_same_extent(Kokkos::View<ValueType**, Props...> view)
-{
+template <class ValueType, class... Props>
+auto create_deep_copyable_compatible_view_with_same_extent(
+    Kokkos::View<ValueType**, Props...> view) {
   using view_type            = Kokkos::View<ValueType**, Props...>;
   using view_value_type      = typename view_type::value_type;
   using view_exespace        = typename view_type::execution_space;
@@ -248,8 +248,7 @@ void run_for_rank2() {
 
 }  // namespace BinSortSetB
 
-TEST(TEST_CATEGORY, BinSortUnsignedKeyLayoutStrideValues)
-{
+TEST(TEST_CATEGORY, BinSortUnsignedKeyLayoutStrideValues) {
   using ExeSpace = TEST_EXECSPACE;
   using key_type = unsigned;
   BinSortSetB::run_for_rank1<ExeSpace, key_type, int>();

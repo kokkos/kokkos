@@ -389,7 +389,8 @@ TEST(TEST_CATEGORY, NestedSort) {
   using ExecutionSpace = TEST_EXECSPACE;
   NestedSortImpl::test_nested_sort<ExecutionSpace, unsigned>(171, 0U, UINT_MAX);
   NestedSortImpl::test_nested_sort<ExecutionSpace, float>(42, -1e6f, 1e6f);
-  NestedSortImpl::test_nested_sort<ExecutionSpace, char>(67, CHAR_MIN, CHAR_MAX);
+  NestedSortImpl::test_nested_sort<ExecutionSpace, char>(67, CHAR_MIN,
+                                                         CHAR_MAX);
 }
 
 TEST(TEST_CATEGORY, NestedSortByKey) {
