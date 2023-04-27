@@ -122,11 +122,8 @@ auto create_strided_view(int numRows, int numCols) {
 
 template <class ExecutionSpace, class KeyType, class ValueType,
           int ValuesViewRank>
-void test_on_view_with_stride(int numRows,
-			      int indB, int indE,
-			      int numCols = 1)
-{
-
+void test_on_view_with_stride(int numRows, int indB, int indE,
+                              int numCols = 1) {
   ExecutionSpace exec;
   Kokkos::DefaultHostExecutionSpace defaultHostExeSpace;
   namespace KE = Kokkos::Experimental;
@@ -203,50 +200,45 @@ void test_on_view_with_stride(int numRows,
   }
 }
 
-template<class ExecutionSpace, class KeyType, class ValueType>
-void run_for_rank1()
-{
+template <class ExecutionSpace, class KeyType, class ValueType>
+void run_for_rank1() {
   constexpr int rank = 1;
 
   // trivial case
-  test_on_view_with_stride<
-    ExecutionSpace, KeyType, ValueType, rank>(1, 0, 1);
+  test_on_view_with_stride<ExecutionSpace, KeyType, ValueType, rank>(1, 0, 1);
 
   // nontrivial cases
-  for (int N : {311, 710017}){
+  for (int N : {311, 710017}) {
     // various cases for bounds
-    test_on_view_with_stride<
-      ExecutionSpace, KeyType, ValueType, rank>(N, 0, N);
-    test_on_view_with_stride<
-      ExecutionSpace, KeyType, ValueType, rank>(N, 3, N);
-    test_on_view_with_stride<
-      ExecutionSpace, KeyType, ValueType, rank>(N, 0, N - 4);
-    test_on_view_with_stride<
-      ExecutionSpace, KeyType, ValueType, rank>(N, 4, N - 3);
+    test_on_view_with_stride<ExecutionSpace, KeyType, ValueType, rank>(N, 0, N);
+    test_on_view_with_stride<ExecutionSpace, KeyType, ValueType, rank>(N, 3, N);
+    test_on_view_with_stride<ExecutionSpace, KeyType, ValueType, rank>(N, 0,
+                                                                       N - 4);
+    test_on_view_with_stride<ExecutionSpace, KeyType, ValueType, rank>(N, 4,
+                                                                       N - 3);
   }
 }
 
-template<class ExecutionSpace, class KeyType, class ValueType>
-void run_for_rank2()
-{
+template <class ExecutionSpace, class KeyType, class ValueType>
+void run_for_rank2() {
   constexpr int rank = 2;
 
   // trivial case
-  test_on_view_with_stride<
-    ExecutionSpace, KeyType, ValueType, rank>(1, 0, 1, 1);
+  test_on_view_with_stride<ExecutionSpace, KeyType, ValueType, rank>(1, 0, 1,
+                                                                     1);
 
   // nontrivial cases
-  for (int Nr : {11, 1157, 710017}){
+  for (int Nr : {11, 1157, 710017}) {
     for (int Nc : {3, 51}) {
       // various cases for bounds
-      test_on_view_with_stride<
-	ExecutionSpace, KeyType, ValueType, rank>(Nr, 0, Nr, Nc);
-      test_on_view_with_stride<
-	ExecutionSpace, KeyType, ValueType, rank>(Nr, 3, Nr, Nc);
-      test_on_view_with_stride<
-	ExecutionSpace, KeyType, ValueType, rank>(Nr, 0, Nr - 4, Nc);
-      test_on_view_with_stride<
-	ExecutionSpace, KeyType, ValueType, rank>(Nr, 4, Nr - 3, Nc);
+      test_on_view_with_stride<ExecutionSpace, KeyType, ValueType, rank>(
+          Nr, 0, Nr, Nc);
+      test_on_view_with_stride<ExecutionSpace, KeyType, ValueType, rank>(
+          Nr, 3, Nr, Nc);
+      test_on_view_with_stride<ExecutionSpace, KeyType, ValueType, rank>(
+          Nr, 0, Nr - 4, Nc);
+      test_on_view_with_stride<ExecutionSpace, KeyType, ValueType, rank>(
+          Nr, 4, Nr - 3, Nc);
     }
   }
 }

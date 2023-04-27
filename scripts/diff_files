@@ -1,9 +1,1 @@
 
-algorithms/unit_tests/TestBinSortA.hpp
-algorithms/unit_tests/TestBinSortB.hpp
-algorithms/unit_tests/TestOpenMP_Sort1D.cpp
-algorithms/unit_tests/TestOpenMP_Sort3D.cpp
-algorithms/unit_tests/TestOpenMP_SortDynamicView.cpp
-algorithms/unit_tests/TestRandom.hpp
-algorithms/unit_tests/TestRandomCommon.hpp
-algorithms/unit_tests/TestSort.hpp

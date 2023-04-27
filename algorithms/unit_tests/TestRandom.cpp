@@ -468,20 +468,19 @@ struct TestDynRankView {
 
 }  // namespace Impl
 
-
 TEST(random, XorShift64) {
   using ExecutionSpace = Kokkos::DefaultExecutionSpace;
 
-#if defined(KOKKOS_ENABLE_SYCL) || \
-  defined(KOKKOS_ENABLE_CUDA) ||   \
-  defined(KOKKOS_ENABLE_HIP)
+#if defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_CUDA) || \
+    defined(KOKKOS_ENABLE_HIP)
   const int num_draws = 132141141;
 #else  // SERIAL, HPX, OPENMP
   const int num_draws = 10240000;
 #endif
   Impl::test_random<Kokkos::Random_XorShift64_Pool<ExecutionSpace>>(num_draws);
   Impl::test_random<Kokkos::Random_XorShift64_Pool<
-      Kokkos::Device<ExecutionSpace, typename ExecutionSpace::memory_space>>>(num_draws);
+      Kokkos::Device<ExecutionSpace, typename ExecutionSpace::memory_space>>>(
+      num_draws);
   Impl::TestDynRankView<ExecutionSpace,
                         Kokkos::Random_XorShift64_Pool<ExecutionSpace>>(10000)
       .run();
