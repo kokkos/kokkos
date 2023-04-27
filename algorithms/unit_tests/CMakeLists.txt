@@ -161,7 +161,7 @@ endforeach()
 # but we conservatively leave this guard on
 if(NOT (KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM))
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_SortAndBinSort
+    UnitTest_Sort
     SOURCES
     UnitTestMain.cpp
     ${ALGO_SORT_SOURCES}
