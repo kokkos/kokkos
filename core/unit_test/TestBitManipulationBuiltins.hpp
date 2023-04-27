@@ -118,8 +118,11 @@ void test_bit_manip_countl_zero() {
 }
 
 TEST(TEST_CATEGORY, bit_manip_countl_zero) {
+// FIXME_NVHPC: NVC++-W-0155-Compiler failed to translate accelerator region
+#if !defined(KOKKOS_COMPILER_NVHPC)
   test_bit_manip_countl_zero<unsigned char>();
   test_bit_manip_countl_zero<unsigned short>();
+#endif
   test_bit_manip_countl_zero<unsigned int>();
   test_bit_manip_countl_zero<unsigned long>();
   test_bit_manip_countl_zero<unsigned long long>();
@@ -170,8 +173,11 @@ void test_bit_manip_countl_one() {
 }
 
 TEST(TEST_CATEGORY, bit_manip_countl_one) {
+// FIXME_NVHPC: NVC++-W-0155-Compiler failed to translate accelerator region
+#if !defined(KOKKOS_COMPILER_NVHPC)
   test_bit_manip_countl_one<unsigned char>();
   test_bit_manip_countl_one<unsigned short>();
+#endif
   test_bit_manip_countl_one<unsigned int>();
   test_bit_manip_countl_one<unsigned long>();
   test_bit_manip_countl_one<unsigned long long>();
@@ -209,8 +215,11 @@ TEST(TEST_CATEGORY, bit_manip_countr_zero) {
     !defined(KOKKOS_ARCH_INTEL_GPU)  // FIXME_SYCL returns wrong result
   if (!std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::SYCL>)
 #endif
+// FIXME_NVHPC: NVC++-W-0155-Compiler failed to translate accelerator region
+#if !defined(KOKKOS_COMPILER_NVHPC)
     test_bit_manip_countr_zero<unsigned char>();
   test_bit_manip_countr_zero<unsigned short>();
+#endif
   test_bit_manip_countr_zero<unsigned int>();
   test_bit_manip_countr_zero<unsigned long>();
   test_bit_manip_countr_zero<unsigned long long>();
@@ -247,8 +256,11 @@ TEST(TEST_CATEGORY, bit_manip_countr_one) {
     !defined(KOKKOS_ARCH_INTEL_GPU)  // FIXME_SYCL returns wrong result
   if (!std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::SYCL>)
 #endif
+// FIXME_NVHPC: NVC++-W-0155-Compiler failed to translate accelerator region
+#if !defined(KOKKOS_COMPILER_NVHPC)
     test_bit_manip_countr_one<unsigned char>();
   test_bit_manip_countr_one<unsigned short>();
+#endif
   test_bit_manip_countr_one<unsigned int>();
   test_bit_manip_countr_one<unsigned long>();
   test_bit_manip_countr_one<unsigned long long>();
@@ -279,8 +291,11 @@ void test_bit_manip_popcount() {
 }
 
 TEST(TEST_CATEGORY, bit_manip_popcount) {
+// FIXME_NVHPC: NVC++-W-0155-Compiler failed to translate accelerator region
+#if !defined(KOKKOS_COMPILER_NVHPC)
   test_bit_manip_popcount<unsigned char>();
   test_bit_manip_popcount<unsigned short>();
+#endif
   test_bit_manip_popcount<unsigned int>();
   test_bit_manip_popcount<unsigned long>();
   test_bit_manip_popcount<unsigned long long>();
@@ -320,8 +335,11 @@ void test_bit_manip_has_single_bit() {
 }
 
 TEST(TEST_CATEGORY, bit_manip_has_single_bit) {
+// FIXME_NVHPC: NVC++-W-0155-Compiler failed to translate accelerator region
+#if !defined(KOKKOS_COMPILER_NVHPC)
   test_bit_manip_has_single_bit<unsigned char>();
   test_bit_manip_has_single_bit<unsigned short>();
+#endif
   test_bit_manip_has_single_bit<unsigned int>();
   test_bit_manip_has_single_bit<unsigned long>();
   test_bit_manip_has_single_bit<unsigned long long>();
@@ -355,8 +373,11 @@ void test_bit_manip_bit_floor() {
 }
 
 TEST(TEST_CATEGORY, bit_manip_bit_floor) {
+// FIXME_NVHPC: NVC++-W-0155-Compiler failed to translate accelerator region
+#if !defined(KOKKOS_COMPILER_NVHPC)
   test_bit_manip_bit_floor<unsigned char>();
   test_bit_manip_bit_floor<unsigned short>();
+#endif
   test_bit_manip_bit_floor<unsigned int>();
   test_bit_manip_bit_floor<unsigned long>();
   test_bit_manip_bit_floor<unsigned long long>();
@@ -395,8 +416,11 @@ void test_bit_manip_bit_ceil() {
 }
 
 TEST(TEST_CATEGORY, bit_manip_bit_ceil) {
+// FIXME_NVHPC: NVC++-W-0155-Compiler failed to translate accelerator region
+#if !defined(KOKKOS_COMPILER_NVHPC)
   test_bit_manip_bit_ceil<unsigned char>();
   test_bit_manip_bit_ceil<unsigned short>();
+#endif
   test_bit_manip_bit_ceil<unsigned int>();
   test_bit_manip_bit_ceil<unsigned long>();
   test_bit_manip_bit_ceil<unsigned long long>();
@@ -426,8 +450,11 @@ void test_bit_manip_bit_width() {
 }
 
 TEST(TEST_CATEGORY, bit_manip_bit_width) {
+// FIXME_NVHPC: NVC++-W-0155-Compiler failed to translate accelerator region
+#if !defined(KOKKOS_COMPILER_NVHPC)
   test_bit_manip_bit_width<unsigned char>();
   test_bit_manip_bit_width<unsigned short>();
+#endif
   test_bit_manip_bit_width<unsigned int>();
   test_bit_manip_bit_width<unsigned long>();
   test_bit_manip_bit_width<unsigned long long>();
@@ -541,8 +568,11 @@ void test_bit_manip_rotl() {
 }
 
 TEST(TEST_CATEGORY, bit_manip_rotl) {
+// FIXME_NVHPC: NVC++-W-0155-Compiler failed to translate accelerator region
+#if !defined(KOKKOS_COMPILER_NVHPC)
   test_bit_manip_rotl<unsigned char>();
   test_bit_manip_rotl<unsigned short>();
+#endif
   test_bit_manip_rotl<unsigned int>();
   test_bit_manip_rotl<unsigned long>();
   test_bit_manip_rotl<unsigned long long>();
@@ -595,8 +625,11 @@ void test_bit_manip_rotr() {
 }
 
 TEST(TEST_CATEGORY, bit_manip_rotr) {
+// FIXME_NVHPC: NVC++-W-0155-Compiler failed to translate accelerator region
+#if !defined(KOKKOS_COMPILER_NVHPC)
   test_bit_manip_rotr<unsigned char>();
   test_bit_manip_rotr<unsigned short>();
+#endif
   test_bit_manip_rotr<unsigned int>();
   test_bit_manip_rotr<unsigned long>();
   test_bit_manip_rotr<unsigned long long>();
@@ -658,10 +691,13 @@ void test_bit_manip_byteswap() {
 }
 
 TEST(TEST_CATEGORY, bit_manip_byeswap) {
+// FIXME_NVHPC: NVC++-W-0155-Compiler failed to translate accelerator region
+#if !defined(KOKKOS_COMPILER_NVHPC)
   test_bit_manip_byteswap<char>();
   test_bit_manip_byteswap<unsigned char>();
   test_bit_manip_byteswap<short>();
   test_bit_manip_byteswap<unsigned short>();
+#endif
   test_bit_manip_byteswap<int>();
   test_bit_manip_byteswap<unsigned int>();
   test_bit_manip_byteswap<long>();
