@@ -14,9 +14,6 @@
 //
 //@HEADER
 
-#ifndef KOKKOS_TEST_DUALVIEW_HPP
-#define KOKKOS_TEST_DUALVIEW_HPP
-
 #include <gtest/gtest.h>
 #include <iostream>
 #include <cstdlib>
@@ -29,7 +26,6 @@
 #include <chrono>
 
 namespace Test {
-
 namespace Impl {
 
 // This test runs the random number generators and uses some statistic tests to
@@ -469,27 +465,31 @@ struct TestDynRankView {
     ASSERT_LE(val.max_val, max);
   }
 };
+
 }  // namespace Impl
 
-template <typename ExecutionSpace>
-void test_random_xorshift64() {
-#if defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_CUDA) || \
-    defined(KOKKOS_ENABLE_HIP)
+
+TEST(random, XorShift64) {
+  using ExecutionSpace = Kokkos::DefaultExecutionSpace;
+
+#if defined(KOKKOS_ENABLE_SYCL) || \
+  defined(KOKKOS_ENABLE_CUDA) ||   \
+  defined(KOKKOS_ENABLE_HIP)
   const int num_draws = 132141141;
 #else  // SERIAL, HPX, OPENMP
   const int num_draws = 10240000;
 #endif
   Impl::test_random<Kokkos::Random_XorShift64_Pool<ExecutionSpace>>(num_draws);
   Impl::test_random<Kokkos::Random_XorShift64_Pool<
-      Kokkos::Device<ExecutionSpace, typename ExecutionSpace::memory_space>>>(
-      num_draws);
+      Kokkos::Device<ExecutionSpace, typename ExecutionSpace::memory_space>>>(num_draws);
   Impl::TestDynRankView<ExecutionSpace,
                         Kokkos::Random_XorShift64_Pool<ExecutionSpace>>(10000)
       .run();
 }
 
-template <typename ExecutionSpace>
-void test_random_xorshift1024() {
+TEST(random, XorShift1024_0) {
+  using ExecutionSpace = Kokkos::DefaultExecutionSpace;
+
 #if defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_CUDA) || \
     defined(KOKKOS_ENABLE_HIP)
   const int num_draws = 52428813;
@@ -505,6 +505,5 @@ void test_random_xorshift1024() {
                         Kokkos::Random_XorShift1024_Pool<ExecutionSpace>>(10000)
       .run();
 }
-}  // namespace Test
 
-#endif  // KOKKOS_TEST_UNORDERED_MAP_HPP
+}  // namespace Test

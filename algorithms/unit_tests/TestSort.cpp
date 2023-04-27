@@ -208,8 +208,8 @@ void test_sort_integer_overflow() {
 
 }  // namespace Impl
 
-TEST(TEST_CATEGORY, SortUnsigned) {
-  using ExecutionSpace = TEST_EXECSPACE;
+TEST(sort, UnsignedValueType) {
+  using ExecutionSpace = Kokkos::DefaultExecutionSpace;
   using key_type       = unsigned;
   constexpr int N      = 171;
 

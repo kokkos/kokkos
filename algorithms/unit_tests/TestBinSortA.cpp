@@ -218,8 +218,9 @@ void test_sort_integer_overflow() {
 
 }  // namespace BinSortSetA
 
-TEST(TEST_CATEGORY, BinSortGenericTests) {
-  using ExecutionSpace = TEST_EXECSPACE;
+TEST(BinSort, GenericTests)
+{
+  using ExecutionSpace = Kokkos::DefaultExecutionSpace;
   using key_type       = unsigned;
   constexpr int N      = 171;
 
