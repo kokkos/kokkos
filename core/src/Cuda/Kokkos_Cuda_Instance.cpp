@@ -158,8 +158,7 @@ void cuda_stream_synchronize(const cudaStream_t stream, const CudaInternal *ptr,
       Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{
           ptr->impl_get_instance_id()},
       [&]() {
-        Impl::CudaInternal::singleton()
-            .cuda_api_interface_safe_call<cudaStream_t>(&cudaStreamSynchronize,
+        ptr->cuda_api_interface_safe_call<cudaStream_t>(&cudaStreamSynchronize,
                                                         stream);
       });
 }

@@ -56,9 +56,9 @@ struct GraphImpl<Kokkos::Cuda> {
     constexpr size_t error_log_size = 256;
     cudaGraphNode_t error_node      = nullptr;
     char error_log[error_log_size];
-    CudaInternal::singleton()
-        .cuda_api_interface_safe_call<cudaGraphExec_t*, cudaGraph_t,
-                                      cudaGraphNode_t*, char*, size_t>(
+    m_execution_space.impl_internal_space_instance()
+        ->cuda_api_interface_safe_call<cudaGraphExec_t*, cudaGraph_t,
+                                       cudaGraphNode_t*, char*, size_t>(
             &cudaGraphInstantiate, &m_graph_exec, m_graph, &error_node,
             error_log, error_log_size);
     // TODO @graphs print out errors
@@ -87,26 +87,27 @@ struct GraphImpl<Kokkos::Cuda> {
     m_execution_space.fence("Kokkos::GraphImpl::~GraphImpl: Graph Destruction");
     KOKKOS_EXPECTS(bool(m_graph))
     if (bool(m_graph_exec)) {
-      CudaInternal::singleton().cuda_api_interface_safe_call<cudaGraphExec_t>(
-          &cudaGraphExecDestroy, m_graph_exec);
+      m_execution_space.impl_internal_space_instance()
+          ->cuda_api_interface_safe_call<cudaGraphExec_t>(&cudaGraphExecDestroy,
+                                                          m_graph_exec);
     }
-    CudaInternal::singleton().cuda_api_interface_safe_call<cudaGraph_t>(
-        &cudaGraphDestroy, m_graph);
+    m_execution_space.impl_internal_space_instance()
+        ->cuda_api_interface_safe_call<cudaGraph_t>(&cudaGraphDestroy, m_graph);
   };
 
   explicit GraphImpl(Kokkos::Cuda arg_instance)
       : m_execution_space(std::move(arg_instance)) {
-    CudaInternal::singleton()
-        .cuda_api_interface_safe_call<cudaGraph_t*, unsigned int>(
+    m_execution_space.impl_internal_space_instance()
+        ->cuda_api_interface_safe_call<cudaGraph_t*, unsigned int>(
             &cudaGraphCreate, &m_graph, cuda_graph_flags_t{0});
   }
 
   void add_node(std::shared_ptr<aggregate_node_impl_t> const& arg_node_ptr) {
     // All of the predecessors are just added as normal, so all we need to
     // do here is add an empty node
-    CudaInternal::singleton()
-        .cuda_api_interface_safe_call<cudaGraphNode_t*, cudaGraph_t,
-                                      const cudaGraphNode_t*, size_t>(
+    m_execution_space.impl_internal_space_instance()
+        ->cuda_api_interface_safe_call<cudaGraphNode_t*, cudaGraph_t,
+                                       const cudaGraphNode_t*, size_t>(
             &cudaGraphAddEmptyNode, &(arg_node_ptr->node_details_t::node),
             m_graph,
             /* dependencies = */ nullptr,
@@ -155,9 +156,9 @@ struct GraphImpl<Kokkos::Cuda> {
     auto /*const*/& cuda_node = arg_node_ptr->node_details_t::node;
     KOKKOS_EXPECTS(bool(cuda_node))
 
-    CudaInternal::singleton()
-        .cuda_api_interface_safe_call<cudaGraph_t, const cudaGraphNode_t*,
-                                      const cudaGraphNode_t*, size_t>(
+    m_execution_space.impl_internal_space_instance()
+        ->cuda_api_interface_safe_call<cudaGraph_t, const cudaGraphNode_t*,
+                                       const cudaGraphNode_t*, size_t>(
             &cudaGraphAddDependencies, m_graph, &pred_cuda_node, &cuda_node, 1);
   }
 
@@ -165,8 +166,8 @@ struct GraphImpl<Kokkos::Cuda> {
     if (!bool(m_graph_exec)) {
       _instantiate_graph();
     }
-    CudaInternal::singleton()
-        .cuda_api_interface_safe_call<cudaGraphExec_t, cudaStream_t>(
+    m_execution_space.impl_internal_space_instance()
+        ->cuda_api_interface_safe_call<cudaGraphExec_t, cudaStream_t>(
             &cudaGraphLaunch, m_graph_exec, m_execution_space.cuda_stream());
   }
 
@@ -179,9 +180,9 @@ struct GraphImpl<Kokkos::Cuda> {
     KOKKOS_EXPECTS(!bool(m_graph_exec))
     auto rv = std::make_shared<root_node_impl_t>(
         get_execution_space(), _graph_node_is_root_ctor_tag{});
-    CudaInternal::singleton()
-        .cuda_api_interface_safe_call<cudaGraphNode_t*, cudaGraph_t,
-                                      const cudaGraphNode_t*, size_t>(
+    m_execution_space.impl_internal_space_instance()
+        ->cuda_api_interface_safe_call<cudaGraphNode_t*, cudaGraph_t,
+                                       const cudaGraphNode_t*, size_t>(
             &cudaGraphAddEmptyNode, &(rv->node_details_t::node), m_graph,
             /* dependencies = */ nullptr,
             /* numDependencies = */ 0);

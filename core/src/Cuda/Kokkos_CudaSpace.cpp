@@ -75,9 +75,9 @@ void DeepCopyCuda(void *dst, const void *src, size_t n) {
 
 void DeepCopyAsyncCuda(const Cuda &instance, void *dst, const void *src,
                        size_t n) {
-  CudaInternal::singleton()
-      .cuda_api_interface_safe_call<void *, const void *, size_t,
-                                    cudaMemcpyKind, cudaStream_t>(
+  instance.impl_internal_space_instance()
+      ->cuda_api_interface_safe_call<void *, const void *, size_t,
+                                     cudaMemcpyKind, cudaStream_t>(
           &cudaMemcpyAsync, dst, src, n, cudaMemcpyDefault,
           instance.cuda_stream());
 }
@@ -183,31 +183,32 @@ void *impl_allocate_common(const Cuda &exec_space, const char *arg_label,
     if (exec_space_provided) {
       cudaStream_t stream = exec_space.cuda_stream();
 
-      error_code = Impl::CudaInternal::singleton()
-                       .cuda_api_interface_return<cudaError_t, void **, size_t,
-                                                  cudaStream_t>(
+      error_code = exec_space.impl_internal_space_instance()
+                       ->cuda_api_interface_return<cudaError_t, void **, size_t,
+                                                   cudaStream_t>(
                            &cudaMallocAsync, &ptr, arg_alloc_size, stream);
-      Impl::CudaInternal::singleton()
-          .cuda_api_interface_safe_call<false, cudaStream_t>(
+      exec_space.impl_internal_space_instance()
+          ->cuda_api_interface_safe_call<false, cudaStream_t>(
               &cudaStreamSynchronize, stream);
     } else {
-      error_code = Impl::CudaInternal::singleton()
-                       .cuda_api_interface_return<cudaError_t, void **, size_t,
-                                                  cudaStream_t>(
+      error_code = exec_space.impl_internal_space_instance()
+                       ->cuda_api_interface_return<cudaError_t, void **, size_t,
+                                                   cudaStream_t>(
                            &cudaMallocAsync, &ptr, arg_alloc_size, 0);
-      Impl::CudaInternal::singleton().cuda_api_interface_safe_call<false>(
-          &cudaDeviceSynchronize);
+      exec_space.impl_internal_space_instance()
+          ->cuda_api_interface_safe_call<false>(&cudaDeviceSynchronize);
     }
   } else {
-    error_code = Impl::CudaInternal::singleton()
-                     .cuda_api_interface_return<cudaError_t, void **, size_t>(
+    error_code = exec_space.impl_internal_space_instance()
+                     ->cuda_api_interface_return<cudaError_t, void **, size_t>(
                          &cudaMalloc, &ptr, arg_alloc_size);
   }
 #else
   (void)exec_space;
   (void)exec_space_provided;
   auto error_code =
-      Impl::CudaInternal::singleton()
+      exec_space.impl_internal_space_instance()
+          ->Impl::CudaInternal::singleton()
           .cuda_api_interface_return<cudaError_t, void **, size_t>(
               &cudaMalloc, &ptr, arg_alloc_size);
 #endif
@@ -215,8 +216,8 @@ void *impl_allocate_common(const Cuda &exec_space, const char *arg_label,
     // This is the only way to clear the last error, which
     // we should do here since we're turning it into an
     // exception here
-    Impl::CudaInternal::singleton()
-        .cuda_api_interface_return<false, cudaError_t>(&cudaGetLastError);
+    exec_space.impl_internal_space_instance()
+        ->cuda_api_interface_return<false, cudaError_t>(&cudaGetLastError);
     throw Experimental::CudaRawMemoryAllocationFailure(
         arg_alloc_size, error_code,
         Experimental::RawMemoryAllocationFailure::AllocationMechanism::
@@ -672,8 +673,8 @@ void cuda_prefetch_pointer(const Cuda &space, const void *ptr, size_t bytes,
                            bool to_device) {
   if ((ptr == nullptr) || (bytes == 0)) return;
   cudaPointerAttributes attr;
-  CudaInternal::singleton()
-      .cuda_api_interface_safe_call<cudaPointerAttributes *, const void *>(
+  space.impl_internal_space_instance()
+      ->cuda_api_interface_safe_call<cudaPointerAttributes *, const void *>(
           &cudaPointerGetAttributes, &attr, ptr);
   // I measured this and it turns out prefetching towards the host slows
   // DualView syncs down. Probably because the latency is not too bad in the
@@ -682,11 +683,11 @@ void cuda_prefetch_pointer(const Cuda &space, const void *ptr, size_t bytes,
   bool is_managed = attr.type == cudaMemoryTypeManaged;
   if (to_device && is_managed &&
       space.cuda_device_prop().concurrentManagedAccess) {
-    CudaInternal::singleton()
-        .cuda_api_interface_safe_call<false, const void *, size_t, int,
-                                      cudaStream_t>(&cudaMemPrefetchAsync, ptr,
-                                                    bytes, space.cuda_device(),
-                                                    space.cuda_stream());
+    space.impl_internal_space_instance()
+        ->cuda_api_interface_safe_call<false, const void *, size_t, int,
+                                       cudaStream_t>(&cudaMemPrefetchAsync, ptr,
+                                                     bytes, space.cuda_device(),
+                                                     space.cuda_stream());
   }
 }
 

@@ -316,9 +316,10 @@ namespace Impl {
 inline void create_Cuda_instances(std::vector<Cuda>& instances) {
   for (int s = 0; s < int(instances.size()); s++) {
     cudaStream_t stream;
-    Kokkos::Impl::CudaInternal::singleton()
-        .cuda_api_interface_safe_call<cudaStream_t*>(&cudaStreamCreate,
-                                                     &stream);
+    instances[s]
+        .impl_internal_space_instance()
+        ->cuda_api_interface_safe_call<cudaStream_t*>(&cudaStreamCreate,
+                                                      &stream);
     instances[s] = Cuda(stream, true);
   }
 }
