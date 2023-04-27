@@ -10,71 +10,42 @@ jobs:
     continue-on-error: true
     strategy:
       matrix:
-        backend: ['OPENMP']
-        clang-tidy: ['']
-        cmake_build_type: ['Release', 'Debug']
+        distro: ['fedora:latest', 'fedora:rawhide', 'ubuntu:latest']
         cxx: ['g++', 'clang++']
         cxx_extra_flags: ['']
-        desul_external: ['ON']
-        distro: ['fedora:latest', 'fedora:rawhide', 'ubuntu:latest']
-        hwloc: ['ON']
-        libdl: ['ON']
+        cmake_build_type: ['Release', 'Debug']
+        backend: ['OPENMP']
+        clang-tidy: ['']
         include:
-          - backend: 'OPENMP'
-            cmake_build_type: 'Release'
+          - distro: 'fedora:intel'
             cxx: 'icpc'
             cxx_extra_flags: '-diag-disable=177,10441'
-            desul_external: ['ON']
-            distro: 'fedora:intel'
-            hwloc: ['ON']
-            libdl: ['ON']
-          - backend: 'OPENMP'
-            cmake_build_type: 'Debug'
+            cmake_build_type: 'Release'
+            backend: 'OPENMP'
+          - distro: 'fedora:intel'
             cxx: 'icpc'
             cxx_extra_flags: '-diag-disable=177,10441'
-            desul_external: ['ON']
-            distro: 'fedora:intel'
-            hwloc: ['ON']
-            libdl: ['ON']
-          - backend: 'OPENMP'
-            cmake_build_type: 'Release'
-            cxx: 'icpx'
-            cxx_extra_flags: '-fp-model=precise -Wno-pass-failed'
-            desul_external: ['ON']
-            distro: 'fedora:intel'
-            hwloc: ['ON']
-            libdl: ['ON']
-          - backend: 'OPENMP'
             cmake_build_type: 'Debug'
+            backend: 'OPENMP'
+          - distro: 'fedora:intel'
             cxx: 'icpx'
             cxx_extra_flags: '-fp-model=precise -Wno-pass-failed'
-            desul_external: ['ON']
-            distro: 'fedora:intel'
-            hwloc: ['ON']
-            libdl: ['ON']
-          - backend: 'THREADS'
-            clang-tidy: '-DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*"'
-            cmake_build_type: 'RelWithDebInfo'
+            cmake_build_type: 'Release'
+            backend: 'OPENMP'
+          - distro: 'fedora:intel'
+            cxx: 'icpx'
+            cxx_extra_flags: '-fp-model=precise -Wno-pass-failed'
+            cmake_build_type: 'Debug'
+            backend: 'OPENMP'
+          - distro: 'ubuntu:latest'
             cxx: 'clang++'
-            desul_external: ['ON']
-            distro: 'ubuntu:latest'
-            hwloc: ['ON']
-            libdl: ['ON']
-          - backend: 'THREADS'
             cmake_build_type: 'RelWithDebInfo'
+            backend: 'THREADS'
+            clang-tidy: '-DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*"'
+          - distro: 'ubuntu:latest'
             cxx: 'g++'
-            desul_external: ['ON']
-            distro: 'ubuntu:latest'
-            hwloc: ['ON']
-            libdl: ['ON']
-          - backend: 'OPENMP'
             cmake_build_type: 'RelWithDebInfo'
-            cxx: 'g++'
-            cxx_extra_flags: '-m32 -DKOKKOS_IMPL_32BIT'
-            distro: 'ubuntu:latest'
-            desul_external: 'OFF'
-            hwloc: 'OFF'
-            libdl: 'OFF'
+            backend: 'THREADS'
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/kokkos/ci-containers/${{ matrix.distro }}
@@ -108,27 +79,23 @@ jobs:
         if: ${{ matrix.cxx == 'clang++' && startsWith(matrix.distro,'fedora:') }}
         run: echo "FC=flang-new" >> $GITHUB_ENV
       - name: maybe_use_external_gtest
-        if: ${{ matrix.distro == 'ubuntu:latest' && matrix.cxx_extra_flags != '-m32 -DKOKKOS_IMPL_32BIT' }}
+        if: ${{ matrix.distro == 'ubuntu:latest' }}
         run: sudo apt-get update && sudo apt-get install -y libgtest-dev
       - name: maybe_install_clang_tidy
         if: ${{ matrix.clang-tidy != '' }}
         run: sudo apt-get update && sudo apt-get install -y clang-tidy
-      - name: maybe_install_multilib
-        if: ${{ matrix.cxx_extra_flags == '-m32 -DKOKKOS_IMPL_32BIT' }}
-        run: sudo apt-get update && sudo apt-get install -y gcc-multilib g++-multilib gfortran-multilib
       - name: Configure Kokkos
         run: |
           cmake -B builddir \
             -DCMAKE_INSTALL_PREFIX=/usr \
             ${{ matrix.clang-tidy }} \
             -Ddesul_ROOT=/usr/desul-install/ \
-            -DKokkos_ENABLE_DESUL_ATOMICS_EXTERNAL=${{ matrix.desul_external }} \
-            -DKokkos_ENABLE_HWLOC=${{ matrix.hwloc }} \
+            -DKokkos_ENABLE_DESUL_ATOMICS_EXTERNAL=ON \
+            -DKokkos_ENABLE_HWLOC=ON \
             -DKokkos_ENABLE_${{ matrix.backend }}=ON \
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_BENCHMARKS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
-            -DKokkos_ENABLE_LIBDL=${{ matrix.libdl }} \
             -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
             -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
@@ -149,9 +116,8 @@ jobs:
       - name: Install
         run: sudo cmake --build builddir --target install
       - name: Test install
-        if: ${{ matrix.cxx_extra_flags != '-m32 -DKOKKOS_IMPL_32BIT' }}
         working-directory: example/build_cmake_installed
         run: |
-          cmake -B builddir -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} -DCMAKE_CXX_FLAGS="${{ matrix.cxx_extra_flags }}"
+          cmake -B builddir -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
           cmake --build builddir
           cmake --build builddir --target test
