@@ -44,24 +44,29 @@ struct CopyFunctorRank2 {
   }
 };
 
-template <class ViewType>
+template <class ViewType, std::enable_if_t<ViewType::rank == 1, int> = 0>
 auto create_deep_copyable_compatible_view_with_same_extent(ViewType view) {
-  using view_value_type  = typename ViewType::value_type;
-  using view_exespace    = typename ViewType::execution_space;
-  const std::size_t ext0 = view.extent(0);
-  if constexpr (ViewType::rank == 1) {
-    using view_deep_copyable_t = Kokkos::View<view_value_type*, view_exespace>;
-    return view_deep_copyable_t{"view_dc", ext0};
-  } else {
-    static_assert(ViewType::rank == 2, "Only rank 1 or 2 supported.");
-    using view_deep_copyable_t = Kokkos::View<view_value_type**, view_exespace>;
-    const std::size_t ext1     = view.extent(1);
-    return view_deep_copyable_t{"view_dc", ext0, ext1};
-  }
+  using view_value_type      = typename ViewType::value_type;
+  using view_exespace        = typename ViewType::execution_space;
+  const std::size_t ext0     = view.extent(0);
+  using view_deep_copyable_t = Kokkos::View<view_value_type*, view_exespace>;
+  return view_deep_copyable_t{"view_dc", ext0};
+}
+
+template <class ViewType, std::enable_if_t<ViewType::rank == 2, int> = 0>
+auto create_deep_copyable_compatible_view_with_same_extent(ViewType view) {
+  using view_value_type      = typename ViewType::value_type;
+  using view_exespace        = typename ViewType::execution_space;
+  using view_deep_copyable_t = Kokkos::View<view_value_type**, view_exespace>;
+  const std::size_t ext0     = view.extent(0);
+  const std::size_t ext1     = view.extent(1);
+  return view_deep_copyable_t{"view_dc", ext0, ext1};
 }
 
 template <class ViewType>
 auto create_deep_copyable_compatible_clone(ViewType view) {
+  static_assert(ViewType::rank <= 2);
+
   auto view_dc    = create_deep_copyable_compatible_view_with_same_extent(view);
   using view_dc_t = decltype(view_dc);
   if constexpr (ViewType::rank == 1) {
@@ -101,27 +106,28 @@ auto create_rank1_dev_and_host_views_of_keys(const ExecutionSpace& exec,
   return std::make_pair(keys, keys_h);
 }
 
-template <class ExecutionSpace, class ValueType, int ValuesViewRank>
-auto create_strided_view(int numRows, int numCols) {
-  if constexpr (ValuesViewRank == 1) {
-    (void)numCols;
-    Kokkos::LayoutStride layout{size_t(numRows), 2};
-    using v_t = Kokkos::View<ValueType*, Kokkos::LayoutStride, ExecutionSpace>;
-    v_t v("v", layout);
-    return v;
-  } else {
-    Kokkos::LayoutStride layout{size_t(numRows), 2, size_t(numCols),
-                                size_t(numRows * 2)};
-    using v_t = Kokkos::View<ValueType**, Kokkos::LayoutStride, ExecutionSpace>;
-    v_t v("v", layout);
-    return v;
-  }
+template <class ExecutionSpace, class ValueType, int ValuesViewRank,
+          std::enable_if_t<ValuesViewRank == 1, int> = 0>
+auto create_strided_view(std::size_t numRows, std::size_t /*numCols*/) {
+  Kokkos::LayoutStride layout{numRows, 2};
+  using v_t = Kokkos::View<ValueType*, Kokkos::LayoutStride, ExecutionSpace>;
+  v_t v("v", layout);
+  return v;
+}
+
+template <class ExecutionSpace, class ValueType, int ValuesViewRank,
+          std::enable_if_t<ValuesViewRank == 2, int> = 0>
+auto create_strided_view(std::size_t numRows, std::size_t numCols) {
+  Kokkos::LayoutStride layout{numRows, 2, numCols, numRows * 2};
+  using v_t = Kokkos::View<ValueType**, Kokkos::LayoutStride, ExecutionSpace>;
+  v_t v("v", layout);
+  return v;
 }
 
 template <class ExecutionSpace, class KeyType, class ValueType,
           int ValuesViewRank>
-void test_on_view_with_stride(int numRows, int indB, int indE,
-                              int numCols = 1) {
+void test_on_view_with_stride(std::size_t numRows, std::size_t indB,
+                              std::size_t indE, std::size_t numCols = 1) {
   ExecutionSpace exec;
   Kokkos::DefaultHostExecutionSpace defaultHostExeSpace;
   namespace KE = Kokkos::Experimental;
@@ -130,13 +136,10 @@ void test_on_view_with_stride(int numRows, int indB, int indE,
   auto [keys, keys_h] =
       create_rank1_dev_and_host_views_of_keys<KeyType>(exec, numRows);
   using KeyViewType = decltype(keys);
-  // std::cout << "Keys before sorting\n";
-  // for (size_t i=0; i<keys_h.extent(0); ++i){ std::cout << keys_h(i) << " "; }
-  // std::cout << "\n";
 
   // need this map key->row to use later for checking
-  std::unordered_map<KeyType, int> keyToRowBeforeSort;
-  for (int i = 0; i < numRows; ++i) {
+  std::unordered_map<KeyType, std::size_t> keyToRowBeforeSort;
+  for (std::size_t i = 0; i < numRows; ++i) {
     keyToRowBeforeSort[keys_h(i)] = i;
   }
 
@@ -144,22 +147,17 @@ void test_on_view_with_stride(int numRows, int indB, int indE,
   using BinOp = Kokkos::BinOp1D<KeyViewType>;
   auto itB    = KE::cbegin(keys_h) + indB;
   auto itE    = itB + indE - indB;
-  // std::cout << *itB << " " << *itE << std::endl;
-  auto it = KE::minmax_element(defaultHostExeSpace, itB, itE);
+  auto it     = KE::minmax_element(defaultHostExeSpace, itB, itE);
   // seems like the behavior is odd when we use # buckets = # keys
   // so use +5 for using more buckets than keys.
   // This is something to investigate.
   BinOp binner(indE - indB + 5, *it.first, *it.second);
-  //  std::cout << *it.first << " " << *it.second << std::endl;
 
   // 3. create sorter
   Kokkos::BinSort<KeyViewType, BinOp> sorter(keys, indB, indE, binner, false);
   sorter.create_permute_vector(exec);
   sorter.sort(exec, keys, indB, indE);
   Kokkos::deep_copy(exec, keys_h, keys);
-  // std::cout << "Keys after sorting\n";
-  // for (size_t i=0; i<keys_h.extent(0); ++i){ std::cout << keys_h(i) << " "; }
-  // std::cout << "\n";
 
   auto v = create_strided_view<ExecutionSpace, ValueType, ValuesViewRank>(
       numRows, numCols);
@@ -206,7 +204,7 @@ void run_for_rank1() {
   test_on_view_with_stride<ExecutionSpace, KeyType, ValueType, rank>(1, 0, 1);
 
   // nontrivial cases
-  for (int N : {311, 710017}) {
+  for (std::size_t N : {311, 710017}) {
     // various cases for bounds
     test_on_view_with_stride<ExecutionSpace, KeyType, ValueType, rank>(N, 0, N);
     test_on_view_with_stride<ExecutionSpace, KeyType, ValueType, rank>(N, 3, N);
@@ -226,8 +224,8 @@ void run_for_rank2() {
                                                                      1);
 
   // nontrivial cases
-  for (int Nr : {11, 1157, 710017}) {
-    for (int Nc : {3, 51}) {
+  for (std::size_t Nr : {11, 1157, 710017}) {
+    for (std::size_t Nc : {3, 51}) {
       // various cases for bounds
       test_on_view_with_stride<ExecutionSpace, KeyType, ValueType, rank>(
           Nr, 0, Nr, Nc);

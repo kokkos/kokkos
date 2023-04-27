@@ -25,13 +25,11 @@ KOKKOS_CXXFLAGS += -I$(GTEST_PATH) -I${KOKKOS_PATH}/algorithms/unit_tests -I${KO
 TEST_TARGETS =
 TARGETS =
 
-# tmp := $(foreach device, $(KOKKOS_DEVICELIST), \
-#   $(if $(filter Test$(device).cpp, $(shell ls Test$(device).cpp 2>/dev/null)),,\
-#     $(shell echo "\#include <Test"${device}"_Category.hpp>" > Test$(device).cpp); \
-#     $(shell echo "\#include <TestRandomCommon.hpp>" >> Test$(device).cpp); \
-#     $(shell echo "\#include <TestSortCommon.hpp>" >> Test$(device).cpp); \
-#   ) \
-# )
+tmp := $(foreach device, $(KOKKOS_DEVICELIST), \
+  $(if $(filter Test$(device).cpp, $(shell ls Test$(device).cpp 2>/dev/null)),,\
+     $(shell echo "\#include <Test"${device}"_Category.hpp>" > Test$(device).cpp); \
+   ) \
+)
 
 ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
 	OBJ_CUDA = TestCuda.o UnitTestMain.o gtest-all.o
