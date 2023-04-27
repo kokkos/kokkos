@@ -864,6 +864,31 @@ KOKKOS_INLINE_FUNCTION
 
 //----------------------------------------------------------------------------
 
+template <typename iType, class Closure, class Member,
+          class ValueType = typename Kokkos::Impl::FunctorAnalysis<
+              Kokkos::Impl::FunctorPatternInterface::SCAN, void, Closure,
+              void>::value_type>
+KOKKOS_INLINE_FUNCTION
+    std::enable_if_t<!Kokkos::is_reducer<ValueType>::value &&
+                     Impl::is_host_thread_team_member<Member>::value>
+    parallel_scan(Impl::TeamThreadRangeBoundariesStruct<iType, Member> const&
+                      loop_boundaries,
+                  Closure const& closure, ValueType& return_val) {
+  // Intra-member scan
+  for (iType i = loop_boundaries.start; i < loop_boundaries.end;
+       i += loop_boundaries.increment) {
+    closure(i, return_val, false);
+  }
+
+  // 'return_val' output is the exclusive prefix sum
+  return_val = loop_boundaries.thread.team_scan(return_val);
+
+  for (iType i = loop_boundaries.start; i < loop_boundaries.end;
+       i += loop_boundaries.increment) {
+    closure(i, return_val, true);
+  }
+}
+
 template <typename iType, class Closure, class Member>
 KOKKOS_INLINE_FUNCTION
     std::enable_if_t<Impl::is_host_thread_team_member<Member>::value>
@@ -871,25 +896,30 @@ KOKKOS_INLINE_FUNCTION
                       loop_boundaries,
                   Closure const& closure) {
   // Extract ValueType from the closure
-
-  using value_type = typename Kokkos::Impl::FunctorAnalysis<
+  using ValueType = typename Kokkos::Impl::FunctorAnalysis<
       Kokkos::Impl::FunctorPatternInterface::SCAN, void, Closure,
       void>::value_type;
 
-  value_type accum = 0;
+  ValueType scan_val = ValueType();
+  parallel_scan(loop_boundaries, closure, scan_val);
+}
 
-  // Intra-member scan
+template <typename iType, class ClosureType, class Member,
+          class ValueType = typename Kokkos::Impl::FunctorAnalysis<
+              Impl::FunctorPatternInterface::SCAN, void, ClosureType,
+              void>::value_type>
+KOKKOS_INLINE_FUNCTION
+    std::enable_if_t<!Kokkos::is_reducer<ValueType>::value &&
+                     Impl::is_host_thread_team_member<Member>::value>
+    parallel_scan(Impl::ThreadVectorRangeBoundariesStruct<iType, Member> const&
+                      loop_boundaries,
+                  ClosureType const& closure, ValueType& return_val) {
+#ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
+#pragma ivdep
+#endif
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
        i += loop_boundaries.increment) {
-    closure(i, accum, false);
-  }
-
-  // 'accum' output is the exclusive prefix sum
-  accum = loop_boundaries.thread.team_scan(accum);
-
-  for (iType i = loop_boundaries.start; i < loop_boundaries.end;
-       i += loop_boundaries.increment) {
-    closure(i, accum, true);
+    closure(i, return_val, true);
   }
 }
 
@@ -899,18 +929,12 @@ KOKKOS_INLINE_FUNCTION
     parallel_scan(Impl::ThreadVectorRangeBoundariesStruct<iType, Member> const&
                       loop_boundaries,
                   ClosureType const& closure) {
-  using value_type = typename Kokkos::Impl::FunctorAnalysis<
+  // Extract ValueType from the closure
+  using ValueType = typename Kokkos::Impl::FunctorAnalysis<
       Impl::FunctorPatternInterface::SCAN, void, ClosureType, void>::value_type;
 
-  value_type scan_val = value_type();
-
-#ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
-#pragma ivdep
-#endif
-  for (iType i = loop_boundaries.start; i < loop_boundaries.end;
-       i += loop_boundaries.increment) {
-    closure(i, scan_val, true);
-  }
+  ValueType scan_val = ValueType();
+  parallel_scan(loop_boundaries, closure, scan_val);
 }
 
 template <typename iType, class Lambda, typename ReducerType, typename Member>
