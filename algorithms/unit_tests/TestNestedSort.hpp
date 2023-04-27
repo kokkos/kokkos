@@ -14,6 +14,9 @@
 //
 //@HEADER
 
+#ifndef KOKKOS_ALGORITHMS_UNITTESTS_TEST_NESTED_SORT_HPP
+#define KOKKOS_ALGORITHMS_UNITTESTS_TEST_NESTED_SORT_HPP
+
 #include <gtest/gtest.h>
 #include <unordered_set>
 #include <random>
@@ -21,7 +24,7 @@
 #include <Kokkos_NestedSort.hpp>
 
 namespace Test {
-namespace Impl {
+namespace NestedSortImpl {
 
 // Comparator for sorting in descending order
 template <typename Key>
@@ -380,28 +383,29 @@ void test_nested_sort_by_key(unsigned int N, KeyType minKey, KeyType maxKey,
   test_nested_sort_by_key_impl<ExecutionSpace, KeyType, ValueType>(
       N, N, false, true, minKey, maxKey, minVal, maxVal);
 }
-}  // namespace Impl
+}  // namespace NestedSortImpl
 
-TEST(sort, NestedSort) {
-  using ExecutionSpace = Kokkos::DefaultExecutionSpace;
-  Impl::test_nested_sort<ExecutionSpace, unsigned>(171, 0U, UINT_MAX);
-  Impl::test_nested_sort<ExecutionSpace, float>(42, -1e6f, 1e6f);
-  Impl::test_nested_sort<ExecutionSpace, char>(67, CHAR_MIN, CHAR_MAX);
+TEST(TEST_CATEGORY, NestedSort) {
+  using ExecutionSpace = TEST_EXECSPACE;
+  NestedSortImpl::test_nested_sort<ExecutionSpace, unsigned>(171, 0U, UINT_MAX);
+  NestedSortImpl::test_nested_sort<ExecutionSpace, float>(42, -1e6f, 1e6f);
+  NestedSortImpl::test_nested_sort<ExecutionSpace, char>(67, CHAR_MIN, CHAR_MAX);
 }
 
-TEST(sort, NestedSortByKey) {
-  using ExecutionSpace = Kokkos::DefaultExecutionSpace;
+TEST(TEST_CATEGORY, NestedSortByKey) {
+  using ExecutionSpace = TEST_EXECSPACE;
 
   // Second/third template arguments are key and value respectively.
   // In sort_by_key_X functions, a key view and a value view are both permuted
   // to make the keys sorted. This means that the value type doesn't need to be
   // ordered, unlike key
-  Impl::test_nested_sort_by_key<ExecutionSpace, unsigned, unsigned>(
+  NestedSortImpl::test_nested_sort_by_key<ExecutionSpace, unsigned, unsigned>(
       161, 0U, UINT_MAX, 0U, UINT_MAX);
-  Impl::test_nested_sort_by_key<ExecutionSpace, float, char>(
+  NestedSortImpl::test_nested_sort_by_key<ExecutionSpace, float, char>(
       267, -1e6f, 1e6f, CHAR_MIN, CHAR_MAX);
-  Impl::test_nested_sort_by_key<ExecutionSpace, char, double>(
+  NestedSortImpl::test_nested_sort_by_key<ExecutionSpace, char, double>(
       11, CHAR_MIN, CHAR_MAX, 2.718, 3.14);
 }
 
 }  // namespace Test
+#endif

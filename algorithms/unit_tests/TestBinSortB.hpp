@@ -14,6 +14,9 @@
 //
 //@HEADER
 
+#ifndef KOKKOS_ALGORITHMS_UNITTESTS_TEST_BINSORTB_HPP
+#define KOKKOS_ALGORITHMS_UNITTESTS_TEST_BINSORTB_HPP
+
 #include <gtest/gtest.h>
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Random.hpp>
@@ -24,7 +27,7 @@
 #include <numeric>  //needed for iota
 
 namespace Test {
-namespace BinSortWithLayoutStride {
+namespace BinSortSetB {
 
 template <class ViewTypeFrom, class ViewTypeTo>
 struct CopyFunctorRank2 {
@@ -44,19 +47,23 @@ struct CopyFunctorRank2 {
   }
 };
 
-template <class ViewType, std::enable_if_t<ViewType::rank == 1, int> = 0>
-auto create_deep_copyable_compatible_view_with_same_extent(ViewType view) {
-  using view_value_type      = typename ViewType::value_type;
-  using view_exespace        = typename ViewType::execution_space;
+template <class ValueType, class ...Props>
+auto create_deep_copyable_compatible_view_with_same_extent(Kokkos::View<ValueType*, Props...> view)
+{
+  using view_type            = Kokkos::View<ValueType*, Props...>;
+  using view_value_type      = typename view_type::value_type;
+  using view_exespace        = typename view_type::execution_space;
   const std::size_t ext0     = view.extent(0);
   using view_deep_copyable_t = Kokkos::View<view_value_type*, view_exespace>;
   return view_deep_copyable_t{"view_dc", ext0};
 }
 
-template <class ViewType, std::enable_if_t<ViewType::rank == 2, int> = 0>
-auto create_deep_copyable_compatible_view_with_same_extent(ViewType view) {
-  using view_value_type      = typename ViewType::value_type;
-  using view_exespace        = typename ViewType::execution_space;
+template <class ValueType, class ...Props>
+auto create_deep_copyable_compatible_view_with_same_extent(Kokkos::View<ValueType**, Props...> view)
+{
+  using view_type            = Kokkos::View<ValueType**, Props...>;
+  using view_value_type      = typename view_type::value_type;
+  using view_exespace        = typename view_type::execution_space;
   using view_deep_copyable_t = Kokkos::View<view_value_type**, view_exespace>;
   const std::size_t ext0     = view.extent(0);
   const std::size_t ext1     = view.extent(1);
@@ -239,16 +246,18 @@ void run_for_rank2() {
   }
 }
 
-}  // namespace BinSortWithLayoutStride
+}  // namespace BinSortSetB
 
-TEST(BinSort, UnsignedKeyLayoutStrideValues) {
-  using ExeSpace = Kokkos::DefaultExecutionSpace;
+TEST(TEST_CATEGORY, BinSortUnsignedKeyLayoutStrideValues)
+{
+  using ExeSpace = TEST_EXECSPACE;
   using key_type = unsigned;
-  BinSortWithLayoutStride::run_for_rank1<ExeSpace, key_type, int>();
-  BinSortWithLayoutStride::run_for_rank1<ExeSpace, key_type, double>();
+  BinSortSetB::run_for_rank1<ExeSpace, key_type, int>();
+  BinSortSetB::run_for_rank1<ExeSpace, key_type, double>();
 
-  BinSortWithLayoutStride::run_for_rank2<ExeSpace, key_type, int>();
-  BinSortWithLayoutStride::run_for_rank2<ExeSpace, key_type, double>();
+  BinSortSetB::run_for_rank2<ExeSpace, key_type, int>();
+  BinSortSetB::run_for_rank2<ExeSpace, key_type, double>();
 }
 
 }  // namespace Test
+#endif

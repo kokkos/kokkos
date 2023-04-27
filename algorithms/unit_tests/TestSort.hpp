@@ -14,6 +14,9 @@
 //
 //@HEADER
 
+#ifndef KOKKOS_ALGORITHMS_UNITTESTS_TEST_SORT_HPP
+#define KOKKOS_ALGORITHMS_UNITTESTS_TEST_SORT_HPP
+
 #include <gtest/gtest.h>
 #include <Kokkos_Core.hpp>
 #include <Kokkos_DynamicView.hpp>
@@ -21,7 +24,7 @@
 #include <Kokkos_Sort.hpp>
 
 namespace Test {
-namespace Impl {
+namespace SortImpl {
 
 template <class ExecutionSpace, class Scalar>
 struct is_sorted_struct {
@@ -203,21 +206,22 @@ void test_sort_integer_overflow() {
       << "view (" << vh[0] << ", " << vh[1] << ") is not sorted";
 }
 
-}  // namespace Impl
+}  // namespace SortImpl
 
-TEST(sort, UnsignedValueType) {
-  using ExecutionSpace = Kokkos::DefaultExecutionSpace;
+TEST(TEST_CATEGORY, SortUnsignedValueType) {
+  using ExecutionSpace = TEST_EXECSPACE;
   using key_type       = unsigned;
   constexpr int N      = 171;
 
-  Impl::test_1D_sort_impl<ExecutionSpace, key_type>(N * N * N);
+  SortImpl::test_1D_sort_impl<ExecutionSpace, key_type>(N * N * N);
 
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
   // FIXME_OPENMPTARGET: OpenMPTarget doesn't support DynamicView yet.
-  Impl::test_dynamic_view_sort_impl<ExecutionSpace, key_type>(N * N);
+  SortImpl::test_dynamic_view_sort_impl<ExecutionSpace, key_type>(N * N);
 #endif
 
-  Impl::test_issue_4978_impl<ExecutionSpace>();
+  SortImpl::test_issue_4978_impl<ExecutionSpace>();
 }
 
 }  // namespace Test
+#endif

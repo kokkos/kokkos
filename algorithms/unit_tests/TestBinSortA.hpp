@@ -14,6 +14,9 @@
 //
 //@HEADER
 
+#ifndef KOKKOS_ALGORITHMS_UNITTESTS_TEST_BINSORTA_HPP
+#define KOKKOS_ALGORITHMS_UNITTESTS_TEST_BINSORTA_HPP
+
 #include <gtest/gtest.h>
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Random.hpp>
@@ -215,8 +218,8 @@ void test_sort_integer_overflow() {
 
 }  // namespace BinSortSetA
 
-TEST(BinSort, GenericTests) {
-  using ExecutionSpace = Kokkos::DefaultExecutionSpace;
+TEST(TEST_CATEGORY, BinSortGenericTests) {
+  using ExecutionSpace = TEST_EXECSPACE;
   using key_type       = unsigned;
   constexpr int N      = 171;
 
@@ -238,3 +241,4 @@ TEST(BinSort, GenericTests) {
 }
 
 }  // namespace Test
+#endif
