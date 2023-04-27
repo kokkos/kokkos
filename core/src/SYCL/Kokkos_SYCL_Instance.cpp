@@ -81,8 +81,7 @@ void SYCLInternal::initialize(const sycl::device& d) {
   initialize(
       sycl::queue{d, exception_handler, sycl::property::queue::in_order()});
 #else
-  initialize(
-      sycl::queue{d, exception_handler);
+  initialize(sycl::queue{d, exception_handler});
 #endif
 }
 
