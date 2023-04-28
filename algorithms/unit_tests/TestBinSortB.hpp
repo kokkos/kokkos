@@ -181,11 +181,11 @@ void test_on_view_with_stride(std::size_t numRows, std::size_t indB,
     if (i >= size_t(indB) && i < size_t(indE)) {
       const KeyType key = keys_h(i);
       if constexpr (ValuesViewRank == 1) {
-        EXPECT_TRUE(v_before_sort_h(keyToRowBeforeSort.at(key)) ==
+        ASSERT_TRUE(v_before_sort_h(keyToRowBeforeSort.at(key)) ==
                     v_after_sort_h(i));
       } else {
         for (size_t j = 0; j < v.extent(1); ++j) {
-          EXPECT_TRUE(v_before_sort_h(keyToRowBeforeSort.at(key), j) ==
+          ASSERT_TRUE(v_before_sort_h(keyToRowBeforeSort.at(key), j) ==
                       v_after_sort_h(i, j));
         }
       }
@@ -193,10 +193,10 @@ void test_on_view_with_stride(std::size_t numRows, std::size_t indB,
     // outside the target bounds, then the i-th row remains unchanged
     else {
       if constexpr (ValuesViewRank == 1) {
-        EXPECT_TRUE(v_before_sort_h(i) == v_after_sort_h(i));
+        ASSERT_TRUE(v_before_sort_h(i) == v_after_sort_h(i));
       } else {
         for (size_t j = 0; j < v.extent(1); ++j) {
-          EXPECT_TRUE(v_before_sort_h(i, j) == v_after_sort_h(i, j));
+          ASSERT_TRUE(v_before_sort_h(i, j) == v_after_sort_h(i, j));
         }
       }
     }
