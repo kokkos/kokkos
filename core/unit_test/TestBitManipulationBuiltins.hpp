@@ -221,19 +221,19 @@ void test_bit_manip_countr_zero() {
 }
 
 TEST(TEST_CATEGORY, bit_manip_countr_zero) {
-#if defined(KOKKOS_ENABLE_SYCL) && \
-    !defined(KOKKOS_ARCH_INTEL_GPU)  // FIXME_SYCL returns wrong result
-  if (!std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::SYCL>)
-#endif
 // FIXME_NVHPC: NVC++-W-0155-Compiler failed to translate accelerator region
 #if defined(KOKKOS_ENABLE_OPENACC) && defined(KOKKOS_COMPILER_NVHPC)
-    if constexpr (!std::is_same_v<TEST_EXECSPACE,
-                                  Kokkos::Experimental::OpenACC>) {
+  if constexpr (!std::is_same_v<TEST_EXECSPACE,
+                                Kokkos::Experimental::OpenACC>) {
+#endif
+#if defined(KOKKOS_ENABLE_SYCL) && \
+    !defined(KOKKOS_ARCH_INTEL_GPU)  // FIXME_SYCL returns wrong result
+    if (!std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::SYCL>)
 #endif
       test_bit_manip_countr_zero<unsigned char>();
-      test_bit_manip_countr_zero<unsigned short>();
+    test_bit_manip_countr_zero<unsigned short>();
 #if defined(KOKKOS_ENABLE_OPENACC) && defined(KOKKOS_COMPILER_NVHPC)
-    }
+  }
 #endif
   test_bit_manip_countr_zero<unsigned int>();
   test_bit_manip_countr_zero<unsigned long>();
@@ -267,19 +267,19 @@ void test_bit_manip_countr_one() {
 }
 
 TEST(TEST_CATEGORY, bit_manip_countr_one) {
-#if defined(KOKKOS_ENABLE_SYCL) && \
-    !defined(KOKKOS_ARCH_INTEL_GPU)  // FIXME_SYCL returns wrong result
-  if (!std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::SYCL>)
-#endif
 // FIXME_NVHPC: NVC++-W-0155-Compiler failed to translate accelerator region
 #if defined(KOKKOS_ENABLE_OPENACC) && defined(KOKKOS_COMPILER_NVHPC)
-    if constexpr (!std::is_same_v<TEST_EXECSPACE,
-                                  Kokkos::Experimental::OpenACC>) {
+  if constexpr (!std::is_same_v<TEST_EXECSPACE,
+                                Kokkos::Experimental::OpenACC>) {
+#endif
+#if defined(KOKKOS_ENABLE_SYCL) && \
+    !defined(KOKKOS_ARCH_INTEL_GPU)  // FIXME_SYCL returns wrong result
+    if (!std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::SYCL>)
 #endif
       test_bit_manip_countr_one<unsigned char>();
-      test_bit_manip_countr_one<unsigned short>();
+    test_bit_manip_countr_one<unsigned short>();
 #if defined(KOKKOS_ENABLE_OPENACC) && defined(KOKKOS_COMPILER_NVHPC)
-    }
+  }
 #endif
   test_bit_manip_countr_one<unsigned int>();
   test_bit_manip_countr_one<unsigned long>();
