@@ -272,20 +272,20 @@ if(KOKKOS_ENABLE_OPENMPTARGET)
   )
 endif()
 
-# # FIXME_OPENMPTARGET These tests cause internal compiler errors as of 09/01/22
-# # when compiling for Intel's Xe-HP GPUs.
-# if(KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM)
-#   list(REMOVE_ITEM STDALGO_SOURCES_D
-#     TestStdAlgorithmsCopyIf.cpp
-#     TestStdAlgorithmsRemoveCopy.cpp
-#     TestStdAlgorithmsUnique.cpp
-#     TestStdAlgorithmsUniqueCopy.cpp
-#   )
-#   list(REMOVE_ITEM STDALGO_SOURCES_E
-#     TestStdAlgorithmsExclusiveScan.cpp
-#     TestStdAlgorithmsInclusiveScan.cpp
-#   )
-# endif()
+# FIXME_OPENMPTARGET These tests cause internal compiler errors as of 09/01/22
+# when compiling for Intel's Xe-HP GPUs.
+if(KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM)
+  list(REMOVE_ITEM STDALGO_SOURCES_D
+    TestStdAlgorithmsCopyIf.cpp
+    TestStdAlgorithmsRemoveCopy.cpp
+    TestStdAlgorithmsUnique.cpp
+    TestStdAlgorithmsUniqueCopy.cpp
+  )
+  list(REMOVE_ITEM STDALGO_SOURCES_E
+    TestStdAlgorithmsExclusiveScan.cpp
+    TestStdAlgorithmsInclusiveScan.cpp
+  )
+endif()
 
 # # FIXME_OPENMPTARGET This test causes internal compiler errors as of 09/01/22
 # # when compiling for Intel's Xe-HP GPUs.
@@ -298,15 +298,14 @@ endif()
 #   )
 # endif()
 
-# Temporarily disable other algorithms' tests
-# foreach(ID A;B;C;D;E)
-#   KOKKOS_ADD_EXECUTABLE_AND_TEST(
-#     UnitTest_StdSet_${ID}
-#     SOURCES
-#     UnitTestMain.cpp
-#     ${STDALGO_SOURCES_${ID}}
-#     )
-# endforeach()
+foreach(ID A;B;C;D;E)
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_StdSet_${ID}
+    SOURCES
+    UnitTestMain.cpp
+    ${STDALGO_SOURCES_${ID}}
+    )
+endforeach()
 
 foreach(ID A;B;C;D)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
@@ -317,11 +316,11 @@ foreach(ID A;B;C;D)
     )
 endforeach()
 
-# FIXME_OPENMPTARGET This test causes internal compiler errors as of 09/01/22
-# when compiling for Intel's Xe-HP GPUs.
-# if(NOT (KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM))
-#   KOKKOS_ADD_EXECUTABLE(
-#     UnitTest_StdAlgoCompileOnly
-#     SOURCES TestStdAlgorithmsCompileOnly.cpp
-#   )
-# endif()
+FIXME_OPENMPTARGET This test causes internal compiler errors as of 09/01/22
+when compiling for Intel's Xe-HP GPUs.
+if(NOT (KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM))
+  KOKKOS_ADD_EXECUTABLE(
+    UnitTest_StdAlgoCompileOnly
+    SOURCES TestStdAlgorithmsCompileOnly.cpp
+  )
+endif()
