@@ -199,7 +199,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;OpenMPTarget)
       list(APPEND STDALGO_TEAM_SOURCES_B Test${Name}.cpp)
     endforeach()
 
-	# ------------------------------------------
+    # ------------------------------------------
     # std team C
     # ------------------------------------------
     set(STDALGO_TEAM_SOURCES_C)
@@ -227,7 +227,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;OpenMPTarget)
       list(APPEND STDALGO_TEAM_SOURCES_C Test${Name}.cpp)
 	endforeach()
 
-	# ------------------------------------------
+    # ------------------------------------------
     # std team D
     # ------------------------------------------
     set(STDALGO_TEAM_SOURCES_D)
@@ -246,6 +246,31 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;OpenMPTarget)
 
   endif()
 endforeach()
+
+# need to remove tests for OpenMPTarget because in these cases
+# the impl needs to use either Kokkos or tailored reducers
+# which results in runtime memory errors.
+if(KOKKOS_ENABLE_OPENMPTARGET)
+  list(REMOVE_ITEM STDALGO_TEAM_SOURCES_B
+    TestStdAlgorithmsTeamIsPartitioned.cpp
+    TestStdAlgorithmsTeamPartitionPoint.cpp
+  )
+  list(REMOVE_ITEM STDALGO_TEAM_SOURCES_C
+    TestStdAlgorithmsTeamAdjacentFind.cpp
+    TestStdAlgorithmsTeamAllOf.cpp
+    TestStdAlgorithmsTeamAnyOf.cpp
+    TestStdAlgorithmsTeamNoneOf.cpp
+    TestStdAlgorithmsTeamFind.cpp
+    TestStdAlgorithmsTeamFindEnd.cpp
+    TestStdAlgorithmsTeamFindFirstOf.cpp
+    TestStdAlgorithmsTeamFindIf.cpp
+    TestStdAlgorithmsTeamFindIfNot.cpp
+    TestStdAlgorithmsTeamLexicographicalCompare.cpp
+    TestStdAlgorithmsTeamMismatch.cpp
+    TestStdAlgorithmsTeamSearch.cpp
+    TestStdAlgorithmsTeamSearchN.cpp
+  )
+endif()
 
 # # FIXME_OPENMPTARGET These tests cause internal compiler errors as of 09/01/22
 # # when compiling for Intel's Xe-HP GPUs.
