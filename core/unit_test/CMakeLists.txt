@@ -821,6 +821,7 @@ SET(DEFAULT_DEVICE_SOURCES
   TestParseCmdLineArgsAndEnvVars.cpp
   TestSharedSpace.cpp
   TestSharedHostPinnedSpace.cpp
+  TestCompilerMacros.cpp
   default/TestDefaultDeviceType.cpp
   default/TestDefaultDeviceType_a1.cpp
   default/TestDefaultDeviceType_b1.cpp

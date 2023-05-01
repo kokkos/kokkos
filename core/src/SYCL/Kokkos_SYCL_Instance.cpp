@@ -75,7 +75,14 @@ void SYCLInternal::initialize(const sycl::device& d) {
       Kokkos::Impl::throw_runtime_exception(
           "There was an asynchronous SYCL error!\n");
   };
+  // FIXME SYCL+Cuda Apparently, submit_barrier doesn't quite work as expected
+  // for oneAPI 2023.0.0 on NVIDIA GPUs.
+#if defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
+  initialize(
+      sycl::queue{d, exception_handler, sycl::property::queue::in_order()});
+#else
   initialize(sycl::queue{d, exception_handler});
+#endif
 }
 
 // FIXME_SYCL

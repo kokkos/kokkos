@@ -353,6 +353,45 @@ TEST(std_algorithms_numeric_ops_test, inclusive_scan) {
   run_inclusive_scan_all_scenarios<StridedThreeTag, CustomValueType>();
 }
 
+TEST(std_algorithms_numeric_ops_test, inclusive_scan_functor) {
+  using view_type = Kokkos::View<int*, exespace>;
+  view_type dummy_view("dummy_view", 0);
+  using functor_type = Kokkos::Experimental::Impl::InclusiveScanDefaultFunctor<
+      exespace, int, int, view_type, view_type>;
+  functor_type functor(dummy_view, dummy_view);
+  using value_type = functor_type::value_type;
+
+  value_type value1;
+  functor.init(value1);
+  EXPECT_EQ(value1.val, 0);
+  EXPECT_EQ(value1.is_initial, true);
+
+  value_type value2;
+  value2.val        = 1;
+  value2.is_initial = false;
+  functor.join(value1, value2);
+  EXPECT_EQ(value1.val, 1);
+  EXPECT_EQ(value1.is_initial, false);
+
+  functor.init(value1);
+  functor.join(value2, value1);
+  EXPECT_EQ(value2.val, 1);
+  EXPECT_EQ(value2.is_initial, false);
+
+  functor.init(value2);
+  functor.join(value2, value1);
+  EXPECT_EQ(value2.val, 0);
+  EXPECT_EQ(value2.is_initial, true);
+
+  value1.val        = 1;
+  value1.is_initial = false;
+  value2.val        = 2;
+  value2.is_initial = false;
+  functor.join(value2, value1);
+  EXPECT_EQ(value2.val, 3);
+  EXPECT_EQ(value2.is_initial, false);
+}
+
 }  // namespace IncScan
 }  // namespace stdalgos
 }  // namespace Test
