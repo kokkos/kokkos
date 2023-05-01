@@ -465,15 +465,11 @@ inline void host_check_math_ops_all_types(
   (host_check_math_ops<Abi, DataTypes>(), ...);
 }
 
-template <typename Abi>
-inline void host_check_math_ops_all_types() {
-  host_check_math_ops_all_types<Abi>(
-      Kokkos::Experimental::Impl::data_type_set());
-}
-
 template <class Abi>
 inline void host_check_abi() {
-  host_check_math_ops_all_types<Abi>();
+  using DataTypes = Kokkos::Experimental::Impl::data_type_set;
+
+  host_check_math_ops_all_types<Abi>(DataTypes());
   host_check_mask_ops<Abi>();
   host_check_conversions<Abi>();
   host_check_shifts<Abi>();

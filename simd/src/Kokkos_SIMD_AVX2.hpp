@@ -845,7 +845,8 @@ class simd<std::uint64_t, simd_abi::avx2_fixed_size<4>> {
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
                                                        element_aligned_tag) {
-    m_value = _mm256_loadu_si256(reinterpret_cast<__m256i const*>(ptr));
+    m_value = _mm256_maskload_epi64(reinterpret_cast<long long const*>(ptr),
+                                    static_cast<__m256i>(mask_type(true)));
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd
   operator>>(unsigned int rhs) const {
@@ -1082,7 +1083,8 @@ class const_where_expression<
 
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_to(
       std::int64_t* mem, element_aligned_tag) const {
-    _mm256_maskstore_epi64(mem, static_cast<__m256i>(m_mask),
+    _mm256_maskstore_epi64(reinterpret_cast<long long*>(mem),
+                           static_cast<__m256i>(m_mask),
                            static_cast<__m256i>(m_value));
   }
 
@@ -1106,8 +1108,8 @@ class where_expression<simd_mask<std::int64_t, simd_abi::avx2_fixed_size<4>>,
       : const_where_expression(mask_arg, value_arg) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(std::int64_t const* mem,
                                                        element_aligned_tag) {
-    m_value =
-        value_type(_mm256_maskload_epi64(mem, static_cast<__m256i>(m_mask)));
+    m_value = value_type(_mm256_maskload_epi64(
+        reinterpret_cast<long long const*>(mem), static_cast<__m256i>(m_mask)));
   }
   template <
       class u,
@@ -1145,7 +1147,8 @@ class const_where_expression<
 
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_to(
       std::uint64_t* mem, element_aligned_tag) const {
-    _mm256_maskstore_epi64(mem, static_cast<__m256i>(m_mask),
+    _mm256_maskstore_epi64(reinterpret_cast<long long*>(mem),
+                           static_cast<__m256i>(m_mask),
                            static_cast<__m256i>(m_value));
   }
 
@@ -1169,8 +1172,8 @@ class where_expression<simd_mask<std::uint64_t, simd_abi::avx2_fixed_size<4>>,
       : const_where_expression(mask_arg, value_arg) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(std::uint64_t const* mem,
                                                        element_aligned_tag) {
-    m_value =
-        value_type(_mm256_maskload_epi64(mem, static_cast<__m256i>(m_mask)));
+    m_value = value_type(_mm256_maskload_epi64(
+        reinterpret_cast<long long const*>(mem), static_cast<__m256i>(m_mask)));
   }
   template <class u,
             std::enable_if_t<
