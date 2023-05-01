@@ -316,8 +316,8 @@ foreach(ID A;B;C;D)
     )
 endforeach()
 
-FIXME_OPENMPTARGET This test causes internal compiler errors as of 09/01/22
-when compiling for Intel's Xe-HP GPUs.
+# FIXME_OPENMPTARGET This test causes internal compiler errors as of 09/01/22
+# when compiling for Intel's Xe-HP GPUs.
 if(NOT (KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM))
   KOKKOS_ADD_EXECUTABLE(
     UnitTest_StdAlgoCompileOnly
