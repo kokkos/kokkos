@@ -23,7 +23,6 @@ jobs:
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_BENCHMARKS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
-            -DKokkos_ENABLE_LIBDL=ON \
             -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
             -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
@@ -32,9 +31,7 @@ jobs:
             -DCMAKE_BUILD_TYPE=RelWithDebInfo
       - name: Build
         run: |
-          ccache -z
           cmake --build builddir --parallel 2
-          ccache -s
       - name: Tests
         working-directory: builddir
         run: ctest --output-on-failure
