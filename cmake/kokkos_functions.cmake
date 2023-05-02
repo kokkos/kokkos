@@ -60,10 +60,8 @@ FUNCTION(kokkos_option CAMEL_SUFFIX DEFAULT TYPE DOCSTRING)
   # Make sure this appears in the cache with the appropriate DOCSTRING
   SET(${CAMEL_NAME} ${DEFAULT} CACHE ${TYPE} ${DOCSTRING})
 
-  IF (KOKKOS_HAS_TRILINOS)
-    IF (NOT CAMEL_NAME IN_LIST Kokkos_OPTIONS_NOT_TO_EXPORT)
-      TRIBITS_PKG_EXPORT_CACHE_VAR(${CAMEL_NAME})
-    ENDIF()
+  IF (NOT CAMEL_NAME IN_LIST Kokkos_OPTIONS_NOT_TO_EXPORT)
+    TRIBITS_PKG_EXPORT_CACHE_VAR(${CAMEL_NAME})
   ENDIF()
 
   #I don't love doing it this way because it's N^2 in number options, but c'est la vie

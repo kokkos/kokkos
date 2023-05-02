@@ -7,6 +7,10 @@ endif()
 
 if (COMMAND TRIBITS_PACKAGE)
   TRIBITS_PACKAGE(Kokkos)
+else()
+  INCLUDE(${CMAKE_CURRENT_LIST_DIR}/cmake/TribitsPkgExportCacheVars.cmake)
+  set(PACKAGE_NAME Kokkos)
+  tribits_pkg_init_exported_vars(Kokkos)
 endif()
 
 # We want to determine if options are given with the wrong case
