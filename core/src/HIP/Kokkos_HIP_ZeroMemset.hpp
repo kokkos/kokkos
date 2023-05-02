@@ -17,8 +17,7 @@
 #define KOKKOS_HIP_ZEROMEMSET_HPP
 
 #include <Kokkos_Macros.hpp>
-#ifdef KOKKOS_ENABLE_HIP
-
+#include <HIP/Kokkos_HIP.hpp>
 #include <impl/Kokkos_ZeroMemset_fwd.hpp>
 
 namespace Kokkos {

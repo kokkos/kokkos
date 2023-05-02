@@ -17,8 +17,7 @@
 #define KOKKOS_CUDA_ZEROMEMSET_HPP
 
 #include <Kokkos_Macros.hpp>
-#ifdef KOKKOS_ENABLE_CUDA
-
+#include <Cuda/Kokkos_Cuda.hpp>
 #include <impl/Kokkos_ZeroMemset_fwd.hpp>
 
 namespace Kokkos {
@@ -46,5 +45,4 @@ struct ZeroMemset<Kokkos::Cuda, DT, DP...> {
 }  // namespace Impl
 }  // namespace Kokkos
 
-#endif  // defined(KOKKOS_ENABLE_CUDA)
 #endif  // !defined(KOKKOS_CUDA_ZEROMEMSET_HPP)
