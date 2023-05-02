@@ -25,6 +25,7 @@ static_assert(false,
 #include <Kokkos_Parallel.hpp>
 #include <KokkosExp_MDRangePolicy.hpp>
 #include <Kokkos_Layout.hpp>
+#include <impl/Kokkos_ZeroMemset.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -1325,19 +1326,6 @@ inline void contiguous_fill(
                            ViewTypeFlat::rank, int64_t>(dst_flat, value,
                                                         exec_space);
 }
-
-template <typename ExecutionSpace, class DT, class... DP>
-struct ZeroMemset {
-  ZeroMemset(const ExecutionSpace& exec_space, const View<DT, DP...>& dst,
-             typename ViewTraits<DT, DP...>::const_value_type& value) {
-    contiguous_fill(exec_space, dst, value);
-  }
-
-  ZeroMemset(const View<DT, DP...>& dst,
-             typename ViewTraits<DT, DP...>::const_value_type& value) {
-    contiguous_fill(ExecutionSpace(), dst, value);
-  }
-};
 
 template <typename ExecutionSpace, class DT, class... DP>
 inline std::enable_if_t<
