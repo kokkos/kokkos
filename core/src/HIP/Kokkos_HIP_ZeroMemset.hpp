@@ -44,5 +44,4 @@ struct ZeroMemset<HIP, DT, DP...> {
 }  // namespace Impl
 }  // namespace Kokkos
 
-#endif  // defined(KOKKOS_ENABLE_HIP)
 #endif  // !defined(KOKKOS_HIP_ZEROMEMSET_HPP)
