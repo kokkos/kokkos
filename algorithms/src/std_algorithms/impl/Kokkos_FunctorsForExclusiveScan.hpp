@@ -20,7 +20,6 @@
 #include <Kokkos_Core.hpp>
 #include "Kokkos_ValueWrapperForNoNeutralElement.hpp"
 
-
 namespace Kokkos {
 namespace Experimental {
 namespace Impl {
@@ -29,11 +28,9 @@ template <typename ValueType>
 using ex_scan_has_reduction_identity_sum_t =
     decltype(Kokkos::reduction_identity<ValueType>::sum());
 
-
 template <class ExeSpace, class IndexType, class ValueType, class FirstFrom,
           class FirstDest>
-struct ExclusiveScanDefaultFunctorForKnownNeutralElement
-{
+struct ExclusiveScanDefaultFunctorForKnownNeutralElement {
   using execution_space = ExeSpace;
   ValueType m_init_value;
   FirstFrom m_first_from;
@@ -57,17 +54,18 @@ struct ExclusiveScanDefaultFunctorForKnownNeutralElement
 
 template <class ExeSpace, class IndexType, class ValueType, class FirstFrom,
           class FirstDest>
-struct ExclusiveScanDefaultFunctorWithValueWrapper
-{
+struct ExclusiveScanDefaultFunctorWithValueWrapper {
   using execution_space = ExeSpace;
-  using value_type = ::Kokkos::Experimental::Impl::ValueWrapperForNoNeutralElement<ValueType>;
+  using value_type =
+      ::Kokkos::Experimental::Impl::ValueWrapperForNoNeutralElement<ValueType>;
   ValueType m_init_value;
   FirstFrom m_first_from;
   FirstDest m_first_dest;
 
   KOKKOS_FUNCTION
-  ExclusiveScanDefaultFunctorWithValueWrapper(ValueType init, FirstFrom first_from,
-                              FirstDest first_dest)
+  ExclusiveScanDefaultFunctorWithValueWrapper(ValueType init,
+                                              FirstFrom first_from,
+                                              FirstDest first_dest)
       : m_init_value(std::move(init)),
         m_first_from(std::move(first_from)),
         m_first_dest(std::move(first_dest)) {}
@@ -106,15 +104,12 @@ struct ExclusiveScanDefaultFunctorWithValueWrapper
   }
 };
 
-template <
-  class ExeSpace, class IndexType, class ValueType,
-  class FirstFrom, class FirstDest,
-  class BinaryOpType, class UnaryOpType
-  >
-struct TransformExclusiveScanFunctorWithValueWrapper
-{
+template <class ExeSpace, class IndexType, class ValueType, class FirstFrom,
+          class FirstDest, class BinaryOpType, class UnaryOpType>
+struct TransformExclusiveScanFunctorWithValueWrapper {
   using execution_space = ExeSpace;
-  using value_type = ::Kokkos::Experimental::Impl::ValueWrapperForNoNeutralElement<ValueType>;
+  using value_type =
+      ::Kokkos::Experimental::Impl::ValueWrapperForNoNeutralElement<ValueType>;
 
   ValueType m_init_value;
   FirstFrom m_first_from;
@@ -123,9 +118,11 @@ struct TransformExclusiveScanFunctorWithValueWrapper
   UnaryOpType m_unary_op;
 
   KOKKOS_FUNCTION
-  TransformExclusiveScanFunctorWithValueWrapper(ValueType init, FirstFrom first_from,
-						FirstDest first_dest, BinaryOpType bop,
-						UnaryOpType uop)
+  TransformExclusiveScanFunctorWithValueWrapper(ValueType init,
+                                                FirstFrom first_from,
+                                                FirstDest first_dest,
+                                                BinaryOpType bop,
+                                                UnaryOpType uop)
       : m_init_value(std::move(init)),
         m_first_from(std::move(first_from)),
         m_first_dest(std::move(first_dest)),
@@ -149,14 +146,13 @@ struct TransformExclusiveScanFunctorWithValueWrapper
     this->join(update, tmp);
   }
 
-  KOKKOS_FUNCTION void init(value_type& value) const{
+  KOKKOS_FUNCTION void init(value_type& value) const {
     value.val        = {};
     value.is_initial = true;
   }
 
   KOKKOS_FUNCTION
-  void join(value_type& update, const value_type& input) const
-  {
+  void join(value_type& update, const value_type& input) const {
     if (input.is_initial) return;
 
     if (update.is_initial) {
@@ -168,13 +164,9 @@ struct TransformExclusiveScanFunctorWithValueWrapper
   }
 };
 
-
-template <
-  class ExeSpace, class IndexType, class ValueType,
-  class FirstFrom, class FirstDest,
-  class BinaryOpType, class UnaryOpType>
-struct TransformExclusiveScanFunctorWithoutValueWrapper
-{
+template <class ExeSpace, class IndexType, class ValueType, class FirstFrom,
+          class FirstDest, class BinaryOpType, class UnaryOpType>
+struct TransformExclusiveScanFunctorWithoutValueWrapper {
   using execution_space = ExeSpace;
 
   ValueType m_init_value;
@@ -184,9 +176,11 @@ struct TransformExclusiveScanFunctorWithoutValueWrapper
   UnaryOpType m_unary_op;
 
   KOKKOS_FUNCTION
-  TransformExclusiveScanFunctorWithoutValueWrapper(ValueType init, FirstFrom first_from,
-                                    FirstDest first_dest, BinaryOpType bop,
-                                    UnaryOpType uop)
+  TransformExclusiveScanFunctorWithoutValueWrapper(ValueType init,
+                                                   FirstFrom first_from,
+                                                   FirstDest first_dest,
+                                                   BinaryOpType bop,
+                                                   UnaryOpType uop)
       : m_init_value(std::move(init)),
         m_first_from(std::move(first_from)),
         m_first_dest(std::move(first_dest)),
