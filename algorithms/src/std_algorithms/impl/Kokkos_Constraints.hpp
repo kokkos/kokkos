@@ -25,17 +25,25 @@ namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
+template <typename T, typename enable = void>
+struct is_admissible_to_kokkos_std_algorithms : std::false_type {};
+
+template <typename T>
+struct is_admissible_to_kokkos_std_algorithms<
+    T, std::enable_if_t< ::Kokkos::is_view<T>::value && T::rank() == 1 &&
+                         (std::is_same<typename T::traits::array_layout,
+                                       Kokkos::LayoutLeft>::value ||
+                          std::is_same<typename T::traits::array_layout,
+                                       Kokkos::LayoutRight>::value ||
+                          std::is_same<typename T::traits::array_layout,
+                                       Kokkos::LayoutStride>::value)> >
+    : std::true_type {};
+
 template <class ViewType>
 KOKKOS_INLINE_FUNCTION constexpr void
 static_assert_is_admissible_to_kokkos_std_algorithms(
     const ViewType& /* view */) {
-  static_assert(::Kokkos::is_view_v<ViewType> && ViewType::rank == 1 &&
-                    (std::is_same_v<typename ViewType::traits::array_layout,
-                                    Kokkos::LayoutLeft> ||
-                     std::is_same_v<typename ViewType::traits::array_layout,
-                                    Kokkos::LayoutRight> ||
-                     std::is_same_v<typename ViewType::traits::array_layout,
-                                    Kokkos::LayoutStride>),
+  static_assert(is_admissible_to_kokkos_std_algorithms<ViewType>::value,
                 "Currently, Kokkos standard algorithms only accept 1D Views.");
 }
 

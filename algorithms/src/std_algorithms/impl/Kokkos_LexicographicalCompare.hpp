@@ -146,8 +146,8 @@ bool lexicographical_compare_exespace_impl(
   using value_type_2 = typename IteratorType2::value_type;
   using predicate_t =
       Impl::StdAlgoLessThanBinaryPredicate<value_type_1, value_type_2>;
-  return lexicographical_compare_exespace_impl(label, ex, first1, last1, first2, last2,
-					       predicate_t());
+  return lexicographical_compare_exespace_impl(label, ex, first1, last1, first2,
+                                               last2, predicate_t());
 }
 
 //

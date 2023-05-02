@@ -48,10 +48,8 @@ struct UnifDist<int> {
   int operator()() { return m_dist(m_gen); }
 };
 
-template <class ViewType>
-void fill_zero(ViewType view) {
-  Kokkos::parallel_for(view.extent(0), FillZeroFunctor<ViewType>(view));
-}
+template <>
+struct UnifDist<CustomValueType> : UnifDist<double> {};
 
 template <class ViewType>
 void fill_view(ViewType dest_view, const std::string& name) {
@@ -164,8 +162,12 @@ void verify_data(ViewType1 data_view,  // contains data
       //           << gold_h(i) << " " << test_view_h(i) << " "
       //           << std::abs(gold_h(i) - test_view_h(i)) << std::endl;
 
-      if (std::is_same<gold_view_value_type, int>::value) {
+      if constexpr (std::is_same<gold_view_value_type, int>::value) {
         EXPECT_EQ(gold_h(i), test_view_h(i));
+      } else if constexpr (std::is_same<gold_view_value_type,
+                                        CustomValueType>::value) {
+        const auto error = std::abs(gold_h(i)() - test_view_h(i)());
+        EXPECT_LT(error, 1e-10);
       } else {
         const auto error = std::abs(gold_h(i) - test_view_h(i));
         if (error > 1e-10) {
@@ -276,6 +278,7 @@ TEST(std_algorithms_numeric_ops_test, transform_exclusive_scan) {
   run_all_scenarios<StridedThreeTag, double>();
   run_all_scenarios<DynamicTag, int>();
   run_all_scenarios<StridedThreeTag, int>();
+  run_all_scenarios<StridedThreeTag, CustomValueType>();
 }
 #endif
 
@@ -295,7 +298,7 @@ TEST(std_algorithms_numeric_ops_test, transform_exclusive_scan_functor) {
       Kokkos::Experimental::Impl::StdNumericScanIdentityReferenceUnaryFunctor<
           int>;
   using functor_type =
-      Kokkos::Experimental::Impl::TransformExclusiveScanFunctor<
+      Kokkos::Experimental::Impl::TransformExclusiveScanFunctorWithValueWrapper<
           exespace, int, int, view_type, view_type, MultiplyFunctor<int>,
           unary_op_type>;
   functor_type functor(dummy, dummy_view, dummy_view, {}, {});
