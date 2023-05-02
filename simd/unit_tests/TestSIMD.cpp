@@ -378,17 +378,41 @@ inline void host_check_condition() {
   EXPECT_TRUE(all_of(a == decltype(a)(16)));
 }
 
-template <class Abi>
-KOKKOS_INLINE_FUNCTION void device_check_math_ops() {
-  std::size_t constexpr n     = 11;
-  double const first_args[n]  = {1, 2, -1, 10, 0, 1, -2, 10, 0, 1, -2};
-  double const second_args[n] = {1, 2, 1, 1, 1, -3, -2, 1, 13, -3, -2};
+template <class Abi, size_t n, typename DataType>
+KOKKOS_INLINE_FUNCTION void device_check_all_math_ops(
+    DataType const& first_args, DataType const& second_args) {
   device_check_binary_op_all_loaders<Abi>(plus(), n, first_args, second_args);
   device_check_binary_op_all_loaders<Abi>(minus(), n, first_args, second_args);
   device_check_binary_op_all_loaders<Abi>(multiplies(), n, first_args,
                                           second_args);
-  device_check_binary_op_all_loaders<Abi>(divides(), n, first_args,
-                                          second_args);
+
+  if constexpr (std::is_same_v<DataType, double>)
+    device_check_binary_op_all_loaders<Abi>(divides(), n, first_args,
+                                            second_args);
+}
+
+template <typename Abi, typename DataType>
+KOKKOS_INLINE_FUNCTION void device_check_abi_size() {
+  using simd_type = Kokkos::Experimental::simd<DataType, Abi>;
+  using mask_type = typename simd_type::mask_type;
+  static_assert(simd_type::size() == mask_type::size());
+}
+
+template <class Abi, typename DataType>
+KOKKOS_INLINE_FUNCTION void device_check_math_ops() {
+  constexpr size_t n = 11;
+
+  device_check_abi_size<Abi, DataType>();
+
+  if constexpr (std::is_signed_v<DataType>) {
+    DataType const first_args[n]  = {1, 2, -1, 10, 0, 1, -2, 10, 0, 1, -2};
+    DataType const second_args[n] = {1, 2, 1, 1, 1, -3, -2, 1, 13, -3, -2};
+    device_check_all_math_ops<Abi, n>(first_args, second_args);
+  } else {
+    DataType const first_args[n]  = {1, 2, 1, 10, 0, 1, 2, 10, 0, 1, 2};
+    DataType const second_args[n] = {1, 2, 1, 1, 1, 3, 2, 1, 13, 3, 2};
+    device_check_all_math_ops<Abi, n>(first_args, second_args);
+  }
 }
 
 template <class Abi>
@@ -476,9 +500,17 @@ inline void host_check_abi() {
   host_check_condition<Abi>();
 }
 
+template <typename Abi, typename... DataTypes>
+KOKKOS_INLINE_FUNCTION void device_check_math_ops_all_types(
+    Kokkos::Experimental::Impl::data_types<DataTypes...>) {
+  (device_check_math_ops<Abi, DataTypes>(), ...);
+}
+
 template <class Abi>
 KOKKOS_INLINE_FUNCTION void device_check_abi() {
-  device_check_math_ops<Abi>();
+  using DataTypes = Kokkos::Experimental::Impl::data_type_set;
+
+  device_check_math_ops_all_types<Abi>(DataTypes());
   device_check_mask_ops<Abi>();
   device_check_conversions<Abi>();
   device_check_shifts<Abi>();
