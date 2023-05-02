@@ -12,21 +12,6 @@ jobs:
     container:
       image: ghcr.io/kokkos/ci-containers/ubuntu:latest
     steps:
-      - name: Checkout desul
-        uses: actions/checkout@v3
-        with:
-          repository: desul/desul
-          ref: 477da9c8f40f8db369c28dd3f93a67e376d8511b
-          path: desul
-      - name: Install desul
-        working-directory: desul
-        run: |
-          git submodule init
-          git submodule update
-          mkdir build
-          cd build
-          cmake -DDESUL_ENABLE_TESTS=OFF -DCMAKE_INSTALL_PREFIX=/usr/desul-install ..
-          sudo cmake --build . --target install --parallel 2
       - name: Checkout code
         uses: actions/checkout@v3
       - name: install_multilib
@@ -34,10 +19,6 @@ jobs:
       - name: Configure Kokkos
         run: |
           cmake -B builddir \
-            -DCMAKE_INSTALL_PREFIX=/usr \
-            -Ddesul_ROOT=/usr/desul-install/ \
-            -DKokkos_ENABLE_DESUL_ATOMICS_EXTERNAL=OFF \
-            -DKokkos_ENABLE_HWLOC=OFF \
             -DKokkos_ENABLE_OPENMP=ON \
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_BENCHMARKS=ON \
