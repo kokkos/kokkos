@@ -15,11 +15,9 @@
 //@HEADER
 
 #include <Kokkos_Core.hpp>
+#include <gtest/gtest.h>
 
-#include <iostream>
-#include <limits>
-
-namespace Test {
+namespace {
 
 // Extended lambdas in parallel_for and parallel_reduce will not compile if
 // KOKKOS_ENABLE_CUDA_LAMBDA is off
@@ -60,10 +58,17 @@ struct TeamTeamCombinedReducer {
     auto hostView = Kokkos::create_mirror_view_and_copy(
         Kokkos::DefaultHostExecutionSpace(), teamView);
 
-    EXPECT_EQ(n, hostView(0));
-    EXPECT_EQ((n * (n + 1) / 2), hostView(1));
-    EXPECT_EQ(n * n * (n + 1) / 2, hostView(2));
-    EXPECT_EQ(n * n, hostView(3));
+    if (n == 0) {
+      EXPECT_EQ(Kokkos::reduction_identity<int>::sum(), hostView(0));
+      EXPECT_EQ(Kokkos::reduction_identity<int>::sum(), hostView(1));
+      EXPECT_EQ(Kokkos::reduction_identity<int>::sum(), hostView(2));
+      EXPECT_EQ(Kokkos::reduction_identity<int>::sum(), hostView(3));
+    } else {
+      EXPECT_EQ(n, hostView(0));
+      EXPECT_EQ((n * (n + 1) / 2), hostView(1));
+      EXPECT_EQ(n * n * (n + 1) / 2, hostView(2));
+      EXPECT_EQ(n * n, hostView(3));
+    }
   }
 
   void test_team_thread_range_only_builtin(const int n) {
@@ -100,10 +105,17 @@ struct TeamTeamCombinedReducer {
     auto hostView = Kokkos::create_mirror_view_and_copy(
         Kokkos::DefaultHostExecutionSpace(), teamView);
 
-    EXPECT_EQ((n * (n + 1) / 2), hostView(0));
-    EXPECT_EQ((n == 0) ? 0 : std::pow(n, n), hostView(1));
-    EXPECT_EQ((n == 0) ? 0 : 1, hostView(2));
-    EXPECT_EQ(n, hostView(3));
+    if (n == 0) {
+      EXPECT_EQ(Kokkos::reduction_identity<int>::sum(), hostView(0));
+      EXPECT_EQ(Kokkos::reduction_identity<int>::prod(), hostView(1));
+      EXPECT_EQ(Kokkos::reduction_identity<int>::min(), hostView(2));
+      EXPECT_EQ(Kokkos::reduction_identity<int>::max(), hostView(3));
+    } else {
+      EXPECT_EQ((n * (n + 1) / 2), hostView(0));
+      EXPECT_EQ((n == 0) ? 0 : std::pow(n, n), hostView(1));
+      EXPECT_EQ((n == 0) ? 0 : 1, hostView(2));
+      EXPECT_EQ(n, hostView(3));
+    }
   }
 
   void test_team_thread_range_combined_reducers(const int n) {
@@ -140,11 +152,17 @@ struct TeamTeamCombinedReducer {
     auto hostView = Kokkos::create_mirror_view_and_copy(
         Kokkos::DefaultHostExecutionSpace(), teamView);
 
-    EXPECT_EQ((n * (n + 1) / 2), hostView(0));
-    EXPECT_EQ((n * (n + 1) / 2), hostView(1));
-    EXPECT_EQ((n == 0) ? Kokkos::reduction_identity<int>::max() : n,
-              hostView(2));
-    EXPECT_EQ(n * n, hostView(3));
+    if (n == 0) {
+      EXPECT_EQ(Kokkos::reduction_identity<int>::sum(), hostView(0));
+      EXPECT_EQ(Kokkos::reduction_identity<int>::sum(), hostView(1));
+      EXPECT_EQ(Kokkos::reduction_identity<int>::max(), hostView(2));
+      EXPECT_EQ(Kokkos::reduction_identity<int>::sum(), hostView(3));
+    } else {
+      EXPECT_EQ((n * (n + 1) / 2), hostView(0));
+      EXPECT_EQ((n * (n + 1) / 2), hostView(1));
+      EXPECT_EQ(n, hostView(2));
+      EXPECT_EQ(n * n, hostView(3));
+    }
   }
 
   void test_thread_vector_range_only_scalars(const int n) {
@@ -181,10 +199,17 @@ struct TeamTeamCombinedReducer {
     auto hostView = Kokkos::create_mirror_view_and_copy(
         Kokkos::DefaultHostExecutionSpace(), teamView);
 
-    EXPECT_EQ(n, hostView(0));
-    EXPECT_EQ((n * (n + 1) / 2), hostView(1));
-    EXPECT_EQ(n * n * (n + 1) / 2, hostView(2));
-    EXPECT_EQ(n * n, hostView(3));
+    if (n == 0) {
+      EXPECT_EQ(Kokkos::reduction_identity<int>::sum(), hostView(0));
+      EXPECT_EQ(Kokkos::reduction_identity<int>::sum(), hostView(1));
+      EXPECT_EQ(Kokkos::reduction_identity<int>::sum(), hostView(2));
+      EXPECT_EQ(Kokkos::reduction_identity<int>::sum(), hostView(3));
+    } else {
+      EXPECT_EQ(n, hostView(0));
+      EXPECT_EQ((n * (n + 1) / 2), hostView(1));
+      EXPECT_EQ(n * n * (n + 1) / 2, hostView(2));
+      EXPECT_EQ(n * n, hostView(3));
+    }
   }
 
   void test_thread_vector_range_only_builtin(const int n) {
@@ -222,10 +247,17 @@ struct TeamTeamCombinedReducer {
     auto hostView = Kokkos::create_mirror_view_and_copy(
         Kokkos::DefaultHostExecutionSpace(), teamView);
 
-    EXPECT_EQ((n * (n + 1) / 2), hostView(0));
-    EXPECT_EQ((n == 0) ? 0 : std::pow(n, n), hostView(1));
-    EXPECT_EQ((n == 0) ? 0 : 1, hostView(2));
-    EXPECT_EQ(n, hostView(3));
+    if (n == 0) {
+      EXPECT_EQ(Kokkos::reduction_identity<int>::sum(), hostView(0));
+      EXPECT_EQ(Kokkos::reduction_identity<int>::prod(), hostView(1));
+      EXPECT_EQ(Kokkos::reduction_identity<int>::min(), hostView(2));
+      EXPECT_EQ(Kokkos::reduction_identity<int>::max(), hostView(3));
+    } else {
+      EXPECT_EQ((n * (n + 1) / 2), hostView(0));
+      EXPECT_EQ(std::pow(n, n), hostView(1));
+      EXPECT_EQ(1, hostView(2));
+      EXPECT_EQ(n, hostView(3));
+    }
   }
 
   void test_thread_vector_range_combined_reducers(const int n) {
@@ -263,13 +295,17 @@ struct TeamTeamCombinedReducer {
     auto hostView = Kokkos::create_mirror_view_and_copy(
         Kokkos::DefaultHostExecutionSpace(), teamView);
 
-    EXPECT_EQ(
-        (n == 0) ? Kokkos::reduction_identity<int>::prod() : std::pow(n, n),
-        hostView(0));
-    EXPECT_EQ((n * (n + 1) / 2), hostView(1));
-    EXPECT_EQ((n == 0) ? Kokkos::reduction_identity<int>::min() : 1,
-              hostView(2));
-    EXPECT_EQ(n * n, hostView(3));
+    if (n == 0) {
+      EXPECT_EQ(Kokkos::reduction_identity<int>::prod(), hostView(0));
+      EXPECT_EQ(Kokkos::reduction_identity<int>::sum(), hostView(1));
+      EXPECT_EQ(Kokkos::reduction_identity<int>::min(), hostView(2));
+      EXPECT_EQ(Kokkos::reduction_identity<int>::sum(), hostView(3));
+    } else {
+      EXPECT_EQ(std::pow(n, n), hostView(0));
+      EXPECT_EQ((n * (n + 1) / 2), hostView(1));
+      EXPECT_EQ(1, hostView(2));
+      EXPECT_EQ(n * n, hostView(3));
+    }
   }
 
   void test_team_vector_range_only_scalars(const int n) {
@@ -305,10 +341,17 @@ struct TeamTeamCombinedReducer {
     auto hostView = Kokkos::create_mirror_view_and_copy(
         Kokkos::DefaultHostExecutionSpace(), teamView);
 
-    EXPECT_EQ(n, hostView(0));
-    EXPECT_EQ((n * (n + 1) / 2), hostView(1));
-    EXPECT_EQ(n * n * (n + 1) / 2, hostView(2));
-    EXPECT_EQ(n * n, hostView(3));
+    if (n == 0) {
+      EXPECT_EQ(Kokkos::reduction_identity<int>::sum(), hostView(0));
+      EXPECT_EQ(Kokkos::reduction_identity<int>::sum(), hostView(1));
+      EXPECT_EQ(Kokkos::reduction_identity<int>::sum(), hostView(2));
+      EXPECT_EQ(Kokkos::reduction_identity<int>::sum(), hostView(3));
+    } else {
+      EXPECT_EQ(n, hostView(0));
+      EXPECT_EQ((n * (n + 1) / 2), hostView(1));
+      EXPECT_EQ(n * n * (n + 1) / 2, hostView(2));
+      EXPECT_EQ(n * n, hostView(3));
+    }
   }
 
   void test_team_vector_range_only_builtin(const int n) {
@@ -345,10 +388,17 @@ struct TeamTeamCombinedReducer {
     auto hostView = Kokkos::create_mirror_view_and_copy(
         Kokkos::DefaultHostExecutionSpace(), teamView);
 
-    EXPECT_EQ((n * (n + 1) / 2), hostView(0));
-    EXPECT_EQ((n == 0) ? 0 : std::pow(n, n), hostView(1));
-    EXPECT_EQ((n == 0) ? 0 : 1, hostView(2));
-    EXPECT_EQ(n, hostView(3));
+    if (n == 0) {
+      EXPECT_EQ(Kokkos::reduction_identity<int>::sum(), hostView(0));
+      EXPECT_EQ(Kokkos::reduction_identity<int>::prod(), hostView(1));
+      EXPECT_EQ(Kokkos::reduction_identity<int>::min(), hostView(2));
+      EXPECT_EQ(Kokkos::reduction_identity<int>::max(), hostView(3));
+    } else {
+      EXPECT_EQ((n * (n + 1) / 2), hostView(0));
+      EXPECT_EQ(std::pow(n, n), hostView(1));
+      EXPECT_EQ(1, hostView(2));
+      EXPECT_EQ(n, hostView(3));
+    }
   }
 
   void test_team_vector_range_combined_reducers(const int n) {
@@ -385,11 +435,17 @@ struct TeamTeamCombinedReducer {
     auto hostView = Kokkos::create_mirror_view_and_copy(
         Kokkos::DefaultHostExecutionSpace(), teamView);
 
-    EXPECT_EQ((n * (n + 1) / 2), hostView(0));
-    EXPECT_EQ((n * (n + 1) / 2), hostView(1));
-    EXPECT_EQ((n == 0) ? Kokkos::reduction_identity<int>::max() : n,
-              hostView(2));
-    EXPECT_EQ(n * n, hostView(3));
+    if (n == 0) {
+      EXPECT_EQ(Kokkos::reduction_identity<int>::sum(), hostView(0));
+      EXPECT_EQ(Kokkos::reduction_identity<int>::sum(), hostView(1));
+      EXPECT_EQ(Kokkos::reduction_identity<int>::max(), hostView(2));
+      EXPECT_EQ(Kokkos::reduction_identity<int>::sum(), hostView(3));
+    } else {
+      EXPECT_EQ((n * (n + 1) / 2), hostView(0));
+      EXPECT_EQ((n * (n + 1) / 2), hostView(1));
+      EXPECT_EQ(n, hostView(2));
+      EXPECT_EQ(n * n, hostView(3));
+    }
   }
 };
 
@@ -456,4 +512,4 @@ TEST(TEST_CATEGORY, team_vector_range_combined_reducers) {
 
 #endif
 
-}  // namespace Test
+}  // namespace
