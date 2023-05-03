@@ -29,8 +29,9 @@
 - Fix an incorrectly returning size for SIMD uint64_t in AVX2 [\#6011](https://github.com/kokkos/kokkos/pull/6011)
 - Desul atomics: wrong value for `desul::Impl::numeric_limits_max<uint64_t>` [\#6018](https://github.com/kokkos/kokkos/pull/6018)
 - Fix warning in some user code when using std::memcpy [\#6000](https://github.com/kokkos/kokkos/pull/6000)
+- Fix excessive build times using Makefile.kokkos [\#6068](https://github.com/kokkos/kokkos/pull/6068)
 
-## [4.0.0](https://github.com/kokkos/kokkos/tree/4.0.0) (2023-02-21)
+## [4.0.0](https://github.com/kokkos/kokkos/tree/4.0.00) (2023-02-21)
 [Full Changelog](https://github.com/kokkos/kokkos/compare/3.7.01...4.0.00)
 
 ### Features:
@@ -122,7 +123,6 @@
 - Add missing `ReductionIdentity<char>` specialization [\#5798](https://github.com/kokkos/kokkos/pull/5798)
 - Don't install standard algorithms headers multiple times [\#5670](https://github.com/kokkos/kokkos/pull/5670)
 - Fix max scratch size calculation for level 0 scratch in CUDA and HIP [\#5718](https://github.com/kokkos/kokkos/pull/5718)
-- Fix excessive build times using Makefile.kokkos [\#6068](https://github.com/kokkos/kokkos/pull/6068)
 
 ## [3.7.01](https://github.com/kokkos/kokkos/tree/3.7.01) (2022-12-01)
 [Full Changelog](https://github.com/kokkos/kokkos/compare/3.7.00...3.7.01)
