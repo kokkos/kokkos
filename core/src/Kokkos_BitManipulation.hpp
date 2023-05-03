@@ -392,6 +392,15 @@ KOKKOS_IMPL_HOST_FUNCTION
 
 namespace Kokkos::Experimental {
 
+template <class To, class From>
+KOKKOS_FUNCTION std::enable_if_t<sizeof(To) == sizeof(From) &&
+                                     std::is_trivially_copyable_v<To> &&
+                                     std::is_trivially_copyable_v<From>,
+                                 To>
+bit_cast_builtin(From const& from) noexcept {
+  return bit_cast<To>(from);  // no benefit to call the _builtin variant
+}
+
 template <class T>
 KOKKOS_FUNCTION std::enable_if_t<std::is_integral_v<T>, T> byteswap_builtin(
     T x) noexcept {
