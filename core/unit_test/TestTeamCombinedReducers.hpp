@@ -31,15 +31,12 @@ struct TeamTeamCombinedReducer {
     auto policy = Kokkos::TeamPolicy<TEST_EXECSPACE>(1, Kokkos::AUTO);
     using team_member_type = decltype(policy)::member_type;
 
-    auto teamView = Kokkos::View<int*, TEST_EXECSPACE::memory_space>("view", 4);
+    auto teamView = Kokkos::View<int[4], TEST_EXECSPACE::memory_space>("view");
 
     Kokkos::parallel_for(
         policy, KOKKOS_LAMBDA(team_member_type const& team) {
           auto teamThreadRange = Kokkos::TeamThreadRange(team, n);
-          int teamResult0      = 0;
-          int teamResult1      = 0;
-          int teamResult2      = 0;
-          int teamResult3      = 0;
+          int teamResult0, teamResult1, teamResult2, teamResult3;
 
           Kokkos::parallel_reduce(
               teamThreadRange,
@@ -52,14 +49,12 @@ struct TeamTeamCombinedReducer {
               },
               teamResult0, teamResult1, teamResult2, teamResult3);
 
-          if (n > 0) {
-            Kokkos::single(Kokkos::PerTeam(team), [=]() {
-              teamView(0) += teamResult0;
-              teamView(1) += teamResult1;
-              teamView(2) += teamResult2;
-              teamView(3) += teamResult3;
-            });
-          }
+          Kokkos::single(Kokkos::PerTeam(team), [=]() {
+            teamView(0) = teamResult0;
+            teamView(1) = teamResult1;
+            teamView(2) = teamResult2;
+            teamView(3) = teamResult3;
+          });
         });
 
     auto hostView = Kokkos::create_mirror_view_and_copy(
@@ -75,15 +70,12 @@ struct TeamTeamCombinedReducer {
     auto policy = Kokkos::TeamPolicy<TEST_EXECSPACE>(1, Kokkos::AUTO);
     using team_member_type = decltype(policy)::member_type;
 
-    auto teamView = Kokkos::View<int*, TEST_EXECSPACE::memory_space>("view", 4);
+    auto teamView = Kokkos::View<int[4], TEST_EXECSPACE::memory_space>("view");
 
     Kokkos::parallel_for(
         policy, KOKKOS_LAMBDA(team_member_type const& team) {
           auto teamThreadRange = Kokkos::TeamThreadRange(team, n);
-          int teamResult0      = 0;
-          int teamResult1      = 0;
-          int teamResult2      = 0;
-          int teamResult3      = 0;
+          int teamResult0, teamResult1, teamResult2, teamResult3;
 
           Kokkos::parallel_reduce(
               teamThreadRange,
@@ -97,14 +89,12 @@ struct TeamTeamCombinedReducer {
               Kokkos::Sum<int>(teamResult0), Kokkos::Prod<int>(teamResult1),
               Kokkos::Min<int>(teamResult2), Kokkos::Max<int>(teamResult3));
 
-          if (n > 0) {
-            Kokkos::single(Kokkos::PerTeam(team), [=]() {
-              teamView(0) += teamResult0;
-              teamView(1) += teamResult1;
-              teamView(2) += teamResult2;
-              teamView(3) += teamResult3;
-            });
-          }
+          Kokkos::single(Kokkos::PerTeam(team), [=]() {
+            teamView(0) = teamResult0;
+            teamView(1) = teamResult1;
+            teamView(2) = teamResult2;
+            teamView(3) = teamResult3;
+          });
         });
 
     auto hostView = Kokkos::create_mirror_view_and_copy(
@@ -125,10 +115,7 @@ struct TeamTeamCombinedReducer {
     Kokkos::parallel_for(
         policy, KOKKOS_LAMBDA(team_member_type const& team) {
           auto teamThreadRange = Kokkos::TeamThreadRange(team, n);
-          int teamResult0      = 0;
-          int teamResult1      = 0;
-          int teamResult2      = 0;
-          int teamResult3      = 0;
+          int teamResult0, teamResult1, teamResult2, teamResult3;
 
           Kokkos::parallel_reduce(
               teamThreadRange,
@@ -142,14 +129,12 @@ struct TeamTeamCombinedReducer {
               teamResult0, Kokkos::Sum<int>(teamResult1),
               Kokkos::Max<int>(teamResult2), teamResult3);
 
-          if (n > 0) {
-            Kokkos::single(Kokkos::PerTeam(team), [=]() {
-              teamView(0) += teamResult0;
-              teamView(1) += teamResult1;
-              teamView(2) += teamResult2;
-              teamView(3) += teamResult3;
-            });
-          }
+          Kokkos::single(Kokkos::PerTeam(team), [=]() {
+            teamView(0) = teamResult0;
+            teamView(1) = teamResult1;
+            teamView(2) = teamResult2;
+            teamView(3) = teamResult3;
+          });
         });
 
     auto hostView = Kokkos::create_mirror_view_and_copy(
@@ -157,7 +142,8 @@ struct TeamTeamCombinedReducer {
 
     EXPECT_EQ((n * (n + 1) / 2), hostView(0));
     EXPECT_EQ((n * (n + 1) / 2), hostView(1));
-    EXPECT_EQ(n, hostView(2));
+    EXPECT_EQ((n == 0) ? Kokkos::reduction_identity<int>::max() : n,
+              hostView(2));
     EXPECT_EQ(n * n, hostView(3));
   }
 
@@ -165,16 +151,13 @@ struct TeamTeamCombinedReducer {
     auto policy = Kokkos::TeamPolicy<TEST_EXECSPACE>(1, Kokkos::AUTO);
     using team_member_type = decltype(policy)::member_type;
 
-    auto teamView = Kokkos::View<int*, TEST_EXECSPACE::memory_space>("view", 4);
+    auto teamView = Kokkos::View<int[4], TEST_EXECSPACE::memory_space>("view");
 
     Kokkos::parallel_for(
         policy, KOKKOS_LAMBDA(team_member_type const& team) {
           auto teamThreadRange   = Kokkos::TeamThreadRange(team, 1);
           auto threadVectorRange = Kokkos::ThreadVectorRange(team, n);
-          int teamResult0        = 0;
-          int teamResult1        = 0;
-          int teamResult2        = 0;
-          int teamResult3        = 0;
+          int teamResult0, teamResult1, teamResult2, teamResult3;
 
           Kokkos::parallel_for(teamThreadRange, [&](int const&) {
             Kokkos::parallel_reduce(
@@ -188,12 +171,10 @@ struct TeamTeamCombinedReducer {
                 },
                 teamResult0, teamResult1, teamResult2, teamResult3);
 
-            if (n > 0) {
-              teamView(0) += teamResult0;
-              teamView(1) += teamResult1;
-              teamView(2) += teamResult2;
-              teamView(3) += teamResult3;
-            }
+            teamView(0) = teamResult0;
+            teamView(1) = teamResult1;
+            teamView(2) = teamResult2;
+            teamView(3) = teamResult3;
           });
         });
 
@@ -210,16 +191,13 @@ struct TeamTeamCombinedReducer {
     auto policy = Kokkos::TeamPolicy<TEST_EXECSPACE>(1, Kokkos::AUTO);
     using team_member_type = decltype(policy)::member_type;
 
-    auto teamView = Kokkos::View<int*, TEST_EXECSPACE::memory_space>("view", 4);
+    auto teamView = Kokkos::View<int[4], TEST_EXECSPACE::memory_space>("view");
 
     Kokkos::parallel_for(
         policy, KOKKOS_LAMBDA(team_member_type const& team) {
           auto teamThreadRange   = Kokkos::TeamThreadRange(team, 1);
           auto threadVectorRange = Kokkos::ThreadVectorRange(team, n);
-          int teamResult0        = 0;
-          int teamResult1        = 0;
-          int teamResult2        = 0;
-          int teamResult3        = 0;
+          int teamResult0, teamResult1, teamResult2, teamResult3;
 
           Kokkos::parallel_for(teamThreadRange, [&](int const&) {
             Kokkos::parallel_reduce(
@@ -234,12 +212,10 @@ struct TeamTeamCombinedReducer {
                 Kokkos::Sum<int>(teamResult0), Kokkos::Prod<int>(teamResult1),
                 Kokkos::Min<int>(teamResult2), Kokkos::Max<int>(teamResult3));
 
-            if (n > 0) {
-              teamView(0) += teamResult0;
-              teamView(1) += teamResult1;
-              teamView(2) += teamResult2;
-              teamView(3) += teamResult3;
-            }
+            teamView(0) = teamResult0;
+            teamView(1) = teamResult1;
+            teamView(2) = teamResult2;
+            teamView(3) = teamResult3;
           });
         });
 
@@ -256,16 +232,13 @@ struct TeamTeamCombinedReducer {
     auto policy = Kokkos::TeamPolicy<TEST_EXECSPACE>(1, Kokkos::AUTO);
     using team_member_type = decltype(policy)::member_type;
 
-    auto teamView = Kokkos::View<int*, TEST_EXECSPACE::memory_space>("view", 4);
+    auto teamView = Kokkos::View<int[4], TEST_EXECSPACE::memory_space>("view");
 
     Kokkos::parallel_for(
         policy, KOKKOS_LAMBDA(team_member_type const& team) {
           auto teamThreadRange   = Kokkos::TeamThreadRange(team, 1);
           auto threadVectorRange = Kokkos::ThreadVectorRange(team, n);
-          int teamResult0        = 0;
-          int teamResult1        = 0;
-          int teamResult2        = 0;
-          int teamResult3        = 0;
+          int teamResult0, teamResult1, teamResult2, teamResult3;
 
           Kokkos::parallel_for(teamThreadRange, [&](int const&) {
             Kokkos::parallel_reduce(
@@ -280,21 +253,22 @@ struct TeamTeamCombinedReducer {
                 Kokkos::Prod<int>(teamResult0), teamResult1,
                 Kokkos::Min<int>(teamResult2), teamResult3);
 
-            if (n > 0) {
-              teamView(0) += teamResult0;
-              teamView(1) += teamResult1;
-              teamView(2) += teamResult2;
-              teamView(3) += teamResult3;
-            }
+            teamView(0) = teamResult0;
+            teamView(1) = teamResult1;
+            teamView(2) = teamResult2;
+            teamView(3) = teamResult3;
           });
         });
 
     auto hostView = Kokkos::create_mirror_view_and_copy(
         Kokkos::DefaultHostExecutionSpace(), teamView);
 
-    EXPECT_EQ((n == 0) ? 0 : std::pow(n, n), hostView(0));
+    EXPECT_EQ(
+        (n == 0) ? Kokkos::reduction_identity<int>::prod() : std::pow(n, n),
+        hostView(0));
     EXPECT_EQ((n * (n + 1) / 2), hostView(1));
-    EXPECT_EQ((n == 0) ? 0 : 1, hostView(2));
+    EXPECT_EQ((n == 0) ? Kokkos::reduction_identity<int>::min() : 1,
+              hostView(2));
     EXPECT_EQ(n * n, hostView(3));
   }
 
@@ -302,15 +276,12 @@ struct TeamTeamCombinedReducer {
     auto policy = Kokkos::TeamPolicy<TEST_EXECSPACE>(1, Kokkos::AUTO);
     using team_member_type = decltype(policy)::member_type;
 
-    auto teamView = Kokkos::View<int*, TEST_EXECSPACE::memory_space>("view", 4);
+    auto teamView = Kokkos::View<int[4], TEST_EXECSPACE::memory_space>("view");
 
     Kokkos::parallel_for(
         policy, KOKKOS_LAMBDA(team_member_type const& team) {
           auto teamVectorRange = Kokkos::TeamVectorRange(team, n);
-          int teamResult0      = 0;
-          int teamResult1      = 0;
-          int teamResult2      = 0;
-          int teamResult3      = 0;
+          int teamResult0, teamResult1, teamResult2, teamResult3;
 
           Kokkos::parallel_reduce(
               teamVectorRange,
@@ -323,14 +294,12 @@ struct TeamTeamCombinedReducer {
               },
               teamResult0, teamResult1, teamResult2, teamResult3);
 
-          if (n > 0) {
-            Kokkos::single(Kokkos::PerTeam(team), [=]() {
-              teamView(0) += teamResult0;
-              teamView(1) += teamResult1;
-              teamView(2) += teamResult2;
-              teamView(3) += teamResult3;
-            });
-          }
+          Kokkos::single(Kokkos::PerTeam(team), [=]() {
+            teamView(0) = teamResult0;
+            teamView(1) = teamResult1;
+            teamView(2) = teamResult2;
+            teamView(3) = teamResult3;
+          });
         });
 
     auto hostView = Kokkos::create_mirror_view_and_copy(
@@ -346,15 +315,12 @@ struct TeamTeamCombinedReducer {
     auto policy = Kokkos::TeamPolicy<TEST_EXECSPACE>(1, Kokkos::AUTO);
     using team_member_type = decltype(policy)::member_type;
 
-    auto teamView = Kokkos::View<int*, TEST_EXECSPACE::memory_space>("view", 4);
+    auto teamView = Kokkos::View<int[4], TEST_EXECSPACE::memory_space>("view");
 
     Kokkos::parallel_for(
         policy, KOKKOS_LAMBDA(team_member_type const& team) {
           auto teamVectorRange = Kokkos::TeamVectorRange(team, n);
-          int teamResult0      = 0;
-          int teamResult1      = 0;
-          int teamResult2      = 0;
-          int teamResult3      = 0;
+          int teamResult0, teamResult1, teamResult2, teamResult3;
 
           Kokkos::parallel_reduce(
               teamVectorRange,
@@ -368,14 +334,12 @@ struct TeamTeamCombinedReducer {
               Kokkos::Sum<int>(teamResult0), Kokkos::Prod<int>(teamResult1),
               Kokkos::Min<int>(teamResult2), Kokkos::Max<int>(teamResult3));
 
-          if (n > 0) {
-            Kokkos::single(Kokkos::PerTeam(team), [=]() {
-              teamView(0) += teamResult0;
-              teamView(1) += teamResult1;
-              teamView(2) += teamResult2;
-              teamView(3) += teamResult3;
-            });
-          }
+          Kokkos::single(Kokkos::PerTeam(team), [=]() {
+            teamView(0) = teamResult0;
+            teamView(1) = teamResult1;
+            teamView(2) = teamResult2;
+            teamView(3) = teamResult3;
+          });
         });
 
     auto hostView = Kokkos::create_mirror_view_and_copy(
@@ -391,15 +355,12 @@ struct TeamTeamCombinedReducer {
     auto policy = Kokkos::TeamPolicy<TEST_EXECSPACE>(1, Kokkos::AUTO);
     using team_member_type = decltype(policy)::member_type;
 
-    auto teamView = Kokkos::View<int*, TEST_EXECSPACE::memory_space>("view", 4);
+    auto teamView = Kokkos::View<int[4], TEST_EXECSPACE::memory_space>("view");
 
     Kokkos::parallel_for(
         policy, KOKKOS_LAMBDA(team_member_type const& team) {
           auto teamVectorRange = Kokkos::TeamVectorRange(team, n);
-          int teamResult0      = 0;
-          int teamResult1      = 0;
-          int teamResult2      = 0;
-          int teamResult3      = 0;
+          int teamResult0, teamResult1, teamResult2, teamResult3;
 
           Kokkos::parallel_reduce(
               teamVectorRange,
@@ -413,14 +374,12 @@ struct TeamTeamCombinedReducer {
               teamResult0, Kokkos::Sum<int>(teamResult1),
               Kokkos::Max<int>(teamResult2), teamResult3);
 
-          if (n > 0) {
-            Kokkos::single(Kokkos::PerTeam(team), [=]() {
-              teamView(0) += teamResult0;
-              teamView(1) += teamResult1;
-              teamView(2) += teamResult2;
-              teamView(3) += teamResult3;
-            });
-          }
+          Kokkos::single(Kokkos::PerTeam(team), [=]() {
+            teamView(0) = teamResult0;
+            teamView(1) = teamResult1;
+            teamView(2) = teamResult2;
+            teamView(3) = teamResult3;
+          });
         });
 
     auto hostView = Kokkos::create_mirror_view_and_copy(
@@ -428,7 +387,8 @@ struct TeamTeamCombinedReducer {
 
     EXPECT_EQ((n * (n + 1) / 2), hostView(0));
     EXPECT_EQ((n * (n + 1) / 2), hostView(1));
-    EXPECT_EQ(n, hostView(2));
+    EXPECT_EQ((n == 0) ? Kokkos::reduction_identity<int>::max() : n,
+              hostView(2));
     EXPECT_EQ(n * n, hostView(3));
   }
 };
