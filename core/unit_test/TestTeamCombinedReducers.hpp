@@ -112,8 +112,8 @@ struct TeamTeamCombinedReducer {
       EXPECT_EQ(Kokkos::reduction_identity<int>::max(), hostView(3));
     } else {
       EXPECT_EQ((n * (n + 1) / 2), hostView(0));
-      EXPECT_EQ((n == 0) ? 0 : std::pow(n, n), hostView(1));
-      EXPECT_EQ((n == 0) ? 0 : 1, hostView(2));
+      EXPECT_EQ(std::pow(n, n), hostView(1));
+      EXPECT_EQ(1, hostView(2));
       EXPECT_EQ(n, hostView(3));
     }
   }
