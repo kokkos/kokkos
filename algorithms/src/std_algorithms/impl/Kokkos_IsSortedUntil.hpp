@@ -71,8 +71,8 @@ IteratorType is_sorted_until_impl(const std::string& label,
 
   /*
     Do a par_reduce computing the *min* index that breaks the sorting.
-    If one such index is found, then the range is sorted until that element,
-    if no such index is found, then it means the range is sorted until the end.
+    If such an index is found, then the range is sorted until that element.
+    If no such index is found, then the range is sorted until the end.
   */
   using index_type = typename IteratorType::difference_type;
   index_type red_result;
@@ -87,11 +87,11 @@ IteratorType is_sorted_until_impl(const std::string& label,
       StdIsSortedUntilFunctor(first, comp, reducer), reducer);
 
   /* If the reduction result is equal to the initial value,
-     and it means the range is sorted until the end */
+     it means the range is sorted until the end */
   if (red_result == red_result_init) {
     return last;
   } else {
-    /* If  such index is found, then the range is sorted until there and
+    /* If such an index is found, then the range is sorted until there and
        we need to return an iterator past the element found so do +1 */
     return first + (red_result + 1);
   }
