@@ -90,7 +90,9 @@ struct CheckExecutionSpaceStatus {
     Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecutionSpace>(exec, 0, N),
                             *this, result_view);
     Kokkos::deep_copy(exec, result, result_view);
-    while (exec.is_running() == true) {
+    // This happens to work for now but we reserve the right to have a lazy
+    // implementation which would make this hang.
+    while (exec.is_running()) {
     }
     ASSERT_EQ(result, N / 2 * (N - 1));
 

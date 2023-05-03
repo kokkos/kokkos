@@ -73,7 +73,7 @@ class Threads {
   //@{
 
   bool is_running() const {
-    // Threads` is synchronous
+    // Threads is synchronous
     return false;
   }
 
