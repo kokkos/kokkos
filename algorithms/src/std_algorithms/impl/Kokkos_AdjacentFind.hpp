@@ -46,14 +46,14 @@ struct StdAdjacentFindFunctor {
        Originally this was:
         auto rv =  are_equal
           ? red_value_type{i}
-          : red_value_type{::Kokkos::reduction_identity<index_type>::min()};
+          : red_value_type{::Kokkos::reduction_identity<IndexType>::min()};
         m_reducer.join(red_value, rv);
        For nvc++ 22.9 that caused tests to fail, which was the reason
        for disabling algorithms in fb8179f4bae685e8fc29c9fdd890b41e4c8b92ff
        This is now fixed by using the code below.
     */
 
-    red_value_type value = {::Kokkos::reduction_identity<index_type>::min()};
+    red_value_type value = {::Kokkos::reduction_identity<IndexType>::min()};
     if (are_equal) {
       value.min_loc_true = i;
     }

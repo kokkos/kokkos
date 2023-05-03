@@ -73,6 +73,7 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2,
   Impl::expect_valid_range(first2, last2);
 
   // aliases
+  using index_type           = typename IteratorType1::difference_type;
   using return_type          = ::Kokkos::pair<IteratorType1, IteratorType2>;
   using reducer_type         = FirstLoc<index_type>;
   using reduction_value_type = typename reducer_type::value_type;
