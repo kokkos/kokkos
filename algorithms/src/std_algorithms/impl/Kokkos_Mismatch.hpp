@@ -43,6 +43,12 @@ struct StdMismatchRedFunctor {
     const auto& my_value1 = m_first1[i];
     const auto& my_value2 = m_first2[i];
 
+    /* FRIZZI: 05/2023
+       Originally the code below was using a ternary operator but nvc++ for 22.9
+       did not work with that, which was the reason for
+       fb8179f4bae685e8fc29c9fdd890b41e4c8b92ff Using the "simpler" code below
+       works.
+    */
     red_value_type rv = {i};
     if (m_predicate(my_value1, my_value2)) {
       rv = {::Kokkos::reduction_identity<index_type>::min()};

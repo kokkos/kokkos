@@ -59,6 +59,12 @@ struct StdSearchNFunctor {
       }
     }
 
+    /* FRIZZI: 05/2023
+       Originally the code below was using a ternary operator but nvc++ for 22.9
+       did not work with that, which was the reason for
+       fb8179f4bae685e8fc29c9fdd890b41e4c8b92ff Using the "simpler" code below
+       works.
+    */
     red_value_type rv = {::Kokkos::reduction_identity<IndexType>::min()};
     if (found) {
       rv.min_loc_true = i;

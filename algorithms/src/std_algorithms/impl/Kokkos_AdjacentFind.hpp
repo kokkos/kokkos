@@ -43,14 +43,10 @@ struct StdAdjacentFindFunctor {
     const bool are_equal   = m_p(my_value, next_value);
 
     /* FRIZZI: 05/2023
-       Originally this was:
-        auto rv =  are_equal
-          ? red_value_type{i}
-          : red_value_type{::Kokkos::reduction_identity<IndexType>::min()};
-        m_reducer.join(red_value, rv);
-       For nvc++ 22.9 that caused tests to fail, which was the reason
-       for disabling algorithms in fb8179f4bae685e8fc29c9fdd890b41e4c8b92ff
-       This is now fixed by using the code below.
+       Originally the code below was using a ternary operator but nvc++ for 22.9
+       did not work with that, which was the reason for
+       fb8179f4bae685e8fc29c9fdd890b41e4c8b92ff Using the "simpler" code below
+       works.
     */
 
     red_value_type value = {::Kokkos::reduction_identity<IndexType>::min()};
