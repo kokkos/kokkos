@@ -20,6 +20,7 @@
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_NumericTraits.hpp>
 #include <climits>  // CHAR_BIT
+#include <cstring>  //memcpy
 #include <type_traits>
 
 namespace Kokkos::Impl {
@@ -97,6 +98,19 @@ inline constexpr bool is_standard_unsigned_integer_type_v =
 }  // namespace Kokkos::Impl
 
 namespace Kokkos {
+
+//<editor-fold desc="[bit.cast], bit_cast">
+template <class To, class From>
+KOKKOS_FUNCTION std::enable_if_t<sizeof(To) == sizeof(From) &&
+                                     std::is_trivially_copyable_v<To> &&
+                                     std::is_trivially_copyable_v<From>,
+                                 To>
+bit_cast(From const& from) noexcept {
+  To to;
+  memcpy(&to, &from, sizeof(To));
+  return to;
+}
+//</editor-fold>
 
 //<editor-fold desc="[bit.byteswap], byteswap">
 template <class T>
