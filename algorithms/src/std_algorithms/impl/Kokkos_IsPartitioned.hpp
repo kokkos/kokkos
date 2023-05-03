@@ -43,8 +43,10 @@ struct StdIsPartitionedFunctor {
         ::Kokkos::reduction_identity<index_type>::min();
     constexpr index_type m_red_id_max =
         ::Kokkos::reduction_identity<index_type>::max();
-    auto rv = predicate_value ? red_value_type{i, m_red_id_min}
-                              : red_value_type{m_red_id_max, i};
+    red_value_type rv = {m_red_id_max, i};
+    if (predicate_value) {
+      rv = {i, m_red_id_min};
+    }
 
     m_reducer.join(redValue, rv);
   }
