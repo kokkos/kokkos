@@ -44,12 +44,7 @@ struct StdFindIfOrNotFunctor {
     // if doing find_if_not, look for when predicate is false
     const bool found_condition = is_find_if ? m_p(my_value) : !m_p(my_value);
 
-    /* FRIZZI: 05/2023
-       Originally the code below was using a ternary operator but nvc++ for 22.9
-       did not work with that, which was the reason for
-       fb8179f4bae685e8fc29c9fdd890b41e4c8b92ff Using the "simpler" code below
-       works.
-    */
+    // FIXME_NVHPC using a ternary operator causes problems
     red_value_type rv = {::Kokkos::reduction_identity<IndexType>::min()};
     if (found_condition) {
       rv.min_loc_true = i;

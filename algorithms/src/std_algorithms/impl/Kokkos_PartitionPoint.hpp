@@ -40,12 +40,7 @@ struct StdPartitionPointFunctor {
   void operator()(const index_type i, red_value_type& redValue) const {
     const auto predicate_value = m_p(m_first[i]);
 
-    /* FRIZZI: 05/2023
-       Originally the code below was using a ternary operator but nvc++ for 22.9
-       did not work with that, which was the reason for
-       fb8179f4bae685e8fc29c9fdd890b41e4c8b92ff Using the "simpler" code below
-       works.
-    */
+    // FIXME_NVHPC using a ternary operator causes problems
     red_value_type rv = {i};
     if (predicate_value) {
       rv = {::Kokkos::reduction_identity<index_type>::min()};

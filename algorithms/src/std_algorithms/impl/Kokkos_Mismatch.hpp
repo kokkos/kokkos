@@ -27,10 +27,9 @@ namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
-template <class IteratorType1, class IteratorType2, class ReducerType,
-          class BinaryPredicateType>
+template <class IndexType, class IteratorType1, class IteratorType2,
+          class ReducerType, class BinaryPredicateType>
 struct StdMismatchRedFunctor {
-  using index_type     = typename IteratorType1::difference_type;
   using red_value_type = typename ReducerType::value_type;
 
   IteratorType1 m_first1;
@@ -39,19 +38,14 @@ struct StdMismatchRedFunctor {
   BinaryPredicateType m_predicate;
 
   KOKKOS_FUNCTION
-  void operator()(const index_type i, red_value_type& red_value) const {
+  void operator()(const IndexType i, red_value_type& red_value) const {
     const auto& my_value1 = m_first1[i];
     const auto& my_value2 = m_first2[i];
 
-    /* FRIZZI: 05/2023
-       Originally the code below was using a ternary operator but nvc++ for 22.9
-       did not work with that, which was the reason for
-       fb8179f4bae685e8fc29c9fdd890b41e4c8b92ff Using the "simpler" code below
-       works.
-    */
+    // FIXME_NVHPC using a ternary operator causes problems
     red_value_type rv = {i};
     if (m_predicate(my_value1, my_value2)) {
-      rv = {::Kokkos::reduction_identity<index_type>::min()};
+      rv = {::Kokkos::reduction_identity<IndexType>::min()};
     }
 
     m_reducer.join(red_value, rv);
@@ -79,12 +73,13 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2,
   Impl::expect_valid_range(first2, last2);
 
   // aliases
-  using index_type           = typename IteratorType1::difference_type;
   using return_type          = ::Kokkos::pair<IteratorType1, IteratorType2>;
+  using index_type           = typename IteratorType1::difference_type;
   using reducer_type         = FirstLoc<index_type>;
   using reduction_value_type = typename reducer_type::value_type;
-  using functor_type = StdMismatchRedFunctor<IteratorType1, IteratorType2,
-                                             reducer_type, BinaryPredicateType>;
+  using functor_type =
+      StdMismatchRedFunctor<index_type, IteratorType1, IteratorType2,
+                            reducer_type, BinaryPredicateType>;
 
   // trivial case: note that this is important,
   // for OpenMPTarget, omitting special handling of

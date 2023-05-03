@@ -44,12 +44,7 @@ struct StdIsPartitionedFunctor {
     constexpr index_type m_red_id_max =
         ::Kokkos::reduction_identity<index_type>::max();
 
-    /* FRIZZI: 05/2023
-       Originally the code below was using a ternary operator but nvc++ for 22.9
-       did not work with that, which was the reason for
-       fb8179f4bae685e8fc29c9fdd890b41e4c8b92ff Using the "simpler" code below
-       works.
-    */
+    // FIXME_NVHPC using a ternary operator causes problems
     red_value_type rv = {m_red_id_max, i};
     if (predicate_value) {
       rv = {i, m_red_id_min};
