@@ -513,12 +513,7 @@ IF(KOKKOS_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_RangePolicy.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_RangePolicyConstructors.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_RangePolicyRequire.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_Reduce.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_Reducers_a.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_Reducers_b.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_Reducers_c.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_Reducers_d.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_Reducers_e.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_Reductions.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_Reductions_DeviceView.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_SubView_a.cpp

@@ -75,6 +75,14 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
     value_type val;
     const ReducerType& reducer = m_functor_reducer.get_reducer();
     reducer.init(&val);
+    if (league_size <= 0) {
+      if (m_result_ptr_on_device == false) {
+        *m_result_ptr = val;
+      } else {
+        acc_memcpy_to_device(m_result_ptr, &val, sizeof(value_type));
+      }
+      return;
+    }
 
     Kokkos::Experimental::Impl::OpenACCParallelReduceTeamHelper(
         Kokkos::Experimental::Impl::FunctorAdapter<

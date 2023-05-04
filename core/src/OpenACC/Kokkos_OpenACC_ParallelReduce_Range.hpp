@@ -69,14 +69,20 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
     auto const begin = m_policy.begin();
     auto const end   = m_policy.end();
 
+    ValueType val;
+    ReducerType const& reducer = m_functor_reducer.get_reducer();
+    reducer.init(&val);
+
     if (end <= begin) {
+      if (m_result_ptr_on_device == false) {
+        *m_result_ptr = val;
+      } else {
+        acc_memcpy_to_device(m_result_ptr, &val, sizeof(ValueType));
+      }
       return;
     }
 
     int const async_arg = m_policy.space().acc_async_queue();
-    ValueType val;
-    ReducerType const& reducer = m_functor_reducer.get_reducer();
-    reducer.init(&val);
 
     Kokkos::Experimental::Impl::OpenACCParallelReduceHelper(
         Kokkos::Experimental::Impl::FunctorAdapter<

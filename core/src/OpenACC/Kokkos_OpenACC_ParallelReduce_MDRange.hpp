@@ -69,16 +69,22 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
     static_assert(Policy::inner_direction == Iterate::Left ||
                   Policy::inner_direction == Iterate::Right);
     constexpr int rank = Policy::rank;
+    ValueType val;
+    const ReducerType& reducer = m_functor_reducer.get_reducer();
+    reducer.init(&val);
+
     for (int i = 0; i < rank; ++i) {
       if (m_policy.m_lower[i] >= m_policy.m_upper[i]) {
+        if (m_result_ptr_on_device) {
+          acc_memcpy_to_device(m_result_ptr, &val, sizeof(ValueType));
+        } else {
+          *m_result_ptr = val;
+        }
         return;
       }
     }
 
     int const async_arg = m_policy.space().acc_async_queue();
-    ValueType val;
-    const ReducerType& reducer = m_functor_reducer.get_reducer();
-    reducer.init(&val);
 
     Kokkos::Experimental::Impl::OpenACCParallelReduceMDRangeHelper(
         Kokkos::Experimental::Impl::FunctorAdapter<
