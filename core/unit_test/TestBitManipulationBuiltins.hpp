@@ -766,7 +766,7 @@ TEST(TEST_CATEGORY, bit_manip_byeswap) {
   test_bit_manip_byteswap<unsigned long long>();
 }
 
-// CUDA doesn't provide memcpy
+// CUDA doesn't provide memcmp
 KOKKOS_FUNCTION int my_memcmp(void const* lhs, void const* rhs, size_t count) {
   auto u1 = static_cast<unsigned char const*>(lhs);
   auto u2 = static_cast<unsigned char const*>(rhs);
@@ -852,9 +852,5 @@ struct TestBitCastFunction {
 };
 
 TEST(TEST_CATEGORY, bit_manip_bit_cast) {
-  using Kokkos::bit_cast;
-  ASSERT_EQ(bit_cast<int>(123), 123);
-  ASSERT_EQ(bit_cast<int>(123u), 123);
-  ASSERT_EQ(bit_cast<int>(~0u), ~0);
   TestBitCastFunction<TEST_EXECSPACE>();
 }
