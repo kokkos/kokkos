@@ -19,11 +19,16 @@
 
 #include <Kokkos_Macros.hpp>
 #include <impl/Kokkos_ZeroMemset_fwd.hpp>
+#include <Serial/Kokkos_Serial.hpp>
+
+#include <type_traits>
 
 namespace Kokkos {
 namespace Impl {
 
-// We only need to provide a specialization for Serial if there is a host parallel execution space since the specialization for DefaultHostExecutionSpace is defined elsewhere.
+// We only need to provide a specialization for Serial if there is a host
+// parallel execution space since the specialization for
+// DefaultHostExecutionSpace is defined elsewhere.
 struct DummyExecutionSpace;
 template <class DT, class... DP>
 struct ZeroMemset<

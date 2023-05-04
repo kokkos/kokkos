@@ -19,8 +19,7 @@
 
 #include <Kokkos_Macros.hpp>
 #include <impl/Kokkos_ZeroMemset_fwd.hpp>
-
-#include <iostream>
+#include <Kokkos_View.hpp>
 
 namespace Kokkos {
 namespace Impl {
