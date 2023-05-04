@@ -269,25 +269,27 @@ struct TestDynamicView {
       ASSERT_EQ(new_result_sum, (value_type)(da_size * (da_size - 1) / 2));
 #endif
 
-      // Try to deep_copy device_dynamic_view directly to/from host.
-      // host-to-device currently fails to compile because DP and SP are
-      // swapped in the deep_copy implementation.
-      // Once that's fixed, both deep_copy's will fail at runtime because the
-      // destination execution space cannot access the source memory space.
-      try {
-        Kokkos::deep_copy(host_view, device_dynamic_view);
-      } catch (std::runtime_error const& error) {
-        std::string msg = error.what();
-        std::cerr << "Copy from on-device DynamicView to on-host View failed:\n"
-                  << msg << std::endl;
-      }
-      try {
-        Kokkos::deep_copy(device_dynamic_view, host_view);
-      } catch (std::runtime_error const& error) {
-        std::string msg = error.what();
-        std::cerr << "Copy from on-host View to on-device DynamicView failed:\n"
-                  << msg << std::endl;
-      }
+      Kokkos::deep_copy(host_view, 0);
+      Kokkos::deep_copy(host_view, device_dynamic_view);
+      Kokkos::parallel_reduce(
+          Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>(0, da_size),
+          KOKKOS_LAMBDA(const int i, value_type& partial_sum) {
+            partial_sum += (value_type)host_view(i);
+          },
+          new_result_sum);
+      ASSERT_EQ(new_result_sum, (value_type)(da_size * (da_size - 1) / 2));
+
+      Kokkos::parallel_for(
+          Kokkos::RangePolicy<execution_space>(0, da_size),
+          KOKKOS_LAMBDA(const int i) { device_dynamic_view(i) = Scalar(0); });
+      Kokkos::deep_copy(device_dynamic_view, host_view);
+      Kokkos::parallel_reduce(
+          Kokkos::RangePolicy<execution_space>(0, da_size),
+          KOKKOS_LAMBDA(const int i, value_type& partial_sum) {
+            partial_sum += (value_type)device_dynamic_view(i);
+          },
+          new_result_sum);
+      ASSERT_EQ(new_result_sum, (value_type)(da_size * (da_size - 1) / 2));
     }
   }
 };

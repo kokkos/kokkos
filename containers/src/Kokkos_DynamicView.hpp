@@ -870,8 +870,11 @@ inline void deep_copy(const View<T, DP...>& dst,
     Kokkos::Impl::ViewRemap<dst_type, src_type>(dst, src);
     Kokkos::fence("Kokkos::deep_copy(DynamicView)");
   } else {
-    Kokkos::Impl::throw_runtime_exception(
-        "deep_copy given views that would require a temporary allocation");
+    auto dst_mirror = Kokkos::create_mirror_view(
+        Kokkos::view_alloc(Kokkos::WithoutInitializing, src_memory_space{}),
+        dst);
+    Kokkos::Impl::ViewRemap<decltype(dst_mirror), src_type>(dst_mirror, src);
+    Kokkos::deep_copy(dst, dst_mirror);
   }
 }
 
@@ -896,8 +899,10 @@ inline void deep_copy(const Kokkos::Experimental::DynamicView<T, DP...>& dst,
     Kokkos::Impl::ViewRemap<dst_type, src_type>(dst, src);
     Kokkos::fence("Kokkos::deep_copy(DynamicView)");
   } else {
-    Kokkos::Impl::throw_runtime_exception(
-        "deep_copy given views that would require a temporary allocation");
+    auto src_mirror = Kokkos::create_mirror_view_and_copy(
+        typename dst_type::memory_space{}, src);
+    Kokkos::Impl::ViewRemap<dst_type, decltype(src_mirror)>(dst, src_mirror);
+    Kokkos::fence("Kokkos::deep_copy(DynamicView)");
   }
 }
 
