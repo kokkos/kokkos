@@ -38,6 +38,16 @@ struct TestFunctorAnalysis_03 {
   KOKKOS_INLINE_FUNCTION static void init(value_type&) {}
 };
 
+struct TestFunctorAnalysis_04 {
+  KOKKOS_INLINE_FUNCTION
+  void operator()(int, float&) const {}
+
+  KOKKOS_INLINE_FUNCTION
+  void join(float&, float const&) const {}
+
+  KOKKOS_INLINE_FUNCTION static void init(float&) {}
+};
+
 template <class ExecSpace>
 void test_functor_analysis() {
   //------------------------------
@@ -109,6 +119,26 @@ void test_functor_analysis() {
   ASSERT_EQ(R03(c03).length(), 1);
 
   //------------------------------
+
+  TestFunctorAnalysis_04 c04;
+  using A04 = Kokkos::Impl::FunctorAnalysis<
+      Kokkos::Impl::FunctorPatternInterface::REDUCE,
+      Kokkos::RangePolicy<ExecSpace>, TestFunctorAnalysis_04, float>;
+  using R04 = typename A04::Reducer;
+
+  static_assert(std::is_same_v<typename A04::value_type, float>);
+  static_assert(
+      std::is_same_v<typename A04::pointer_type, typename A04::value_type*>);
+  static_assert(
+      std::is_same_v<typename A04::reference_type, typename A04::value_type&>);
+  static_assert(
+      std::is_same_v<typename R04::functor_type, TestFunctorAnalysis_04>);
+
+  static_assert(A04::has_join_member_function);
+  static_assert(A04::has_init_member_function);
+  static_assert(!A04::has_final_member_function);
+  static_assert(A04::StaticValueSize == sizeof(typename A04::value_type));
+  ASSERT_EQ(R04(c04).length(), 1);
 }
 
 TEST(TEST_CATEGORY, functor_analysis) {
