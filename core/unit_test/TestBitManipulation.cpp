@@ -30,7 +30,7 @@ struct X {
   static_assert(test_##FUNC((bool)0).did_not_match());  \
   static_assert(test_##FUNC((int)0).did_not_match());   \
   static_assert(test_##FUNC((float)0).did_not_match()); \
-  static_assert(test_##FUNC((void*)0).did_not_match())
+  static_assert(test_##FUNC((void *)0).did_not_match())
 
 //<editor-fold desc="[bit.rotate]">
 template <class UInt>
@@ -442,7 +442,7 @@ constexpr auto test_byteswap(T x) -> decltype(Kokkos::byteswap(x)) {
 
 constexpr X test_byteswap(...) { return {}; }
 
-static_assert(test_byteswap((void*)0).did_not_match());  // NOLINT
+static_assert(test_byteswap((void *)0).did_not_match());  // NOLINT
 static_assert(test_byteswap((float)0).did_not_match());
 constexpr char c2[2] = {};
 static_assert(test_byteswap(c2).did_not_match());
