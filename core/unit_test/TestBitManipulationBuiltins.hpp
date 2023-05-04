@@ -765,3 +765,90 @@ TEST(TEST_CATEGORY, bit_manip_byeswap) {
   test_bit_manip_byteswap<long long>();
   test_bit_manip_byteswap<unsigned long long>();
 }
+
+// CUDA doesn't provide memcpy
+KOKKOS_FUNCTION int my_memcmp(void const* lhs, void const* rhs, size_t count) {
+  auto u1 = static_cast<unsigned char const*>(lhs);
+  auto u2 = static_cast<unsigned char const*>(rhs);
+  while (count-- != 0) {
+    if (*u1 != *u2) {
+      return (*u1 < *u2) ? -1 : +1;
+    }
+    ++u1;
+    ++u2;
+  }
+  return 0;
+}
+
+template <class Space>
+struct TestBitCastFunction {
+  TestBitCastFunction() { run(); }
+  void run() const {
+    int errors = 0;
+    Kokkos::parallel_reduce(Kokkos::RangePolicy<Space>(0, 1), *this, errors);
+    ASSERT_EQ(errors, 0) << "Failed check no error for bit_cast()";
+  }
+  template <typename To, typename From>
+  static KOKKOS_FUNCTION bool check(const From& from) {
+    using Kokkos::Experimental::bit_cast_builtin;
+    return bit_cast_builtin<From>(bit_cast_builtin<To>(from)) == from;
+  }
+
+  KOKKOS_FUNCTION void operator()(int, int& e) const {
+    using Kokkos::bit_cast;
+    if (bit_cast<int>(123) != 123) {
+      ++e;
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed check #1\n");
+    }
+    if (bit_cast<int>(123u) != 123) {
+      ++e;
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed check #2\n");
+    }
+    if (bit_cast<int>(~0u) != ~0) {
+      ++e;
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed check #3\n");
+    }
+    if constexpr (sizeof(int) == sizeof(float)) {
+      if (!check<int>(12.34f)) {
+        ++e;
+        KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed check #4\n");
+      }
+    }
+    if constexpr (sizeof(unsigned long long) == sizeof(double)) {
+      if (!check<unsigned long long>(123.456)) {
+        ++e;
+        KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed check #5\n");
+      }
+    }
+
+    struct S {
+      int i;
+
+      KOKKOS_FUNCTION bool operator==(const char* s) const {
+        return my_memcmp(&i, s, sizeof(i)) == 0;
+      }
+    };
+    char arr[sizeof(int)];
+    char arr2[sizeof(int)];
+    for (size_t i = 0; i < sizeof(int); ++i) {
+      arr[i]  = i + 1;
+      arr2[i] = (i + 1) * -(i % 2);
+    }
+    if (!(bit_cast<S>(arr) == arr)) {
+      ++e;
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed check #6\n");
+    }
+    if (!(bit_cast<S>(arr2) == arr2)) {
+      ++e;
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed check #7\n");
+    }
+  }
+};
+
+TEST(TEST_CATEGORY, bit_manip_bit_cast) {
+  using Kokkos::bit_cast;
+  ASSERT_EQ(bit_cast<int>(123), 123);
+  ASSERT_EQ(bit_cast<int>(123u), 123);
+  ASSERT_EQ(bit_cast<int>(~0u), ~0);
+  TestBitCastFunction<TEST_EXECSPACE>();
+}
