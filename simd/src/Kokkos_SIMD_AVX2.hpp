@@ -21,6 +21,7 @@
 #include <type_traits>
 
 #include <Kokkos_SIMD_Common.hpp>
+#include <Kokkos_BitManipulation.hpp>  // bit_cast
 
 #include <immintrin.h>
 
