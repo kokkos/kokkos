@@ -43,7 +43,6 @@ static_assert(false,
 #include <impl/Kokkos_Tools.hpp>
 #include <impl/Kokkos_HostSharedPtr.hpp>
 #include <impl/Kokkos_InitializationSettings.hpp>
-#include <impl/Kokkos_ZeroMemset_fwd.hpp>
 
 namespace Kokkos {
 
@@ -207,23 +206,6 @@ struct DeviceTypeTraits<Serial> {
 
 namespace Kokkos {
 namespace Impl {
-
-// We only need to provide a specialization for Serial if there is a host
-// parallel execution space since the specialization for
-// DefaultHostExecutionSpace is defined elsewhere.
-struct DummyExecutionSpace;
-template <class DT, class... DP>
-struct ZeroMemset<
-    std::conditional_t<!std::is_same<Serial, DefaultHostExecutionSpace>::value,
-                       Serial, DummyExecutionSpace>,
-    DT, DP...> : public ZeroMemset<DefaultHostExecutionSpace, DT, DP...> {
-  using Base = ZeroMemset<DefaultHostExecutionSpace, DT, DP...>;
-  using Base::Base;
-
-  ZeroMemset(const Serial&, const View<DT, DP...>& dst,
-             typename View<DT, DP...>::const_value_type& value)
-      : Base(dst, value) {}
-};
 
 template <>
 struct MemorySpaceAccess<Kokkos::Serial::memory_space,
