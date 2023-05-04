@@ -893,8 +893,8 @@ class ParallelReduce<CombinedFunctorReducerType,
     m_team_begin =
         UseShflReduction
             ? 0
-            : cuda_single_inter_block_reduce_scan_shmem<false, FunctorType,
-                                                        WorkTag, value_type>(
+            : cuda_single_inter_block_reduce_scan_shmem<false, WorkTag,
+                                                        value_type>(
                   arg_functor_reducer.get_functor(), m_team_size);
     m_shmem_begin = sizeof(double) * (m_team_size + 2);
     m_shmem_size  = m_policy.scratch_size(0, m_team_size) +

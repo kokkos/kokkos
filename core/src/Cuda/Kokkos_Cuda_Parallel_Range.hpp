@@ -255,8 +255,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
   inline unsigned local_block_size(const FunctorType& f) {
     unsigned n = CudaTraits::WarpSize * 8;
     int shmem_size =
-        cuda_single_inter_block_reduce_scan_shmem<false, FunctorType, WorkTag,
-                                                  value_type>(f, n);
+        cuda_single_inter_block_reduce_scan_shmem<false, WorkTag, value_type>(
+            f, n);
     using closure_type =
         Impl::ParallelReduce<CombinedFunctorReducer<FunctorType, ReducerType>,
                              Policy, Kokkos::Cuda>;
@@ -274,8 +274,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
                  shmem_size, 0)))) {
       n >>= 1;
       shmem_size =
-          cuda_single_inter_block_reduce_scan_shmem<false, FunctorType, WorkTag,
-                                                    value_type>(f, n);
+          cuda_single_inter_block_reduce_scan_shmem<false, WorkTag, value_type>(
+              f, n);
     }
     return n;
   }
@@ -315,8 +315,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
       const int shmem =
           UseShflReduction
               ? 0
-              : cuda_single_inter_block_reduce_scan_shmem<false, FunctorType,
-                                                          WorkTag, value_type>(
+              : cuda_single_inter_block_reduce_scan_shmem<false, WorkTag,
+                                                          value_type>(
                     m_functor_reducer.get_functor(), block.y);
 
       if ((nwork == 0)
@@ -610,11 +610,12 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
     // testing
 
     unsigned n = CudaTraits::WarpSize * 4;
-    while (n && unsigned(m_policy.space()
-                             .impl_internal_space_instance()
-                             ->m_maxShmemPerBlock) <
-                    cuda_single_inter_block_reduce_scan_shmem<
-                        true, FunctorType, WorkTag, value_type>(f, n)) {
+    while (n &&
+           unsigned(m_policy.space()
+                        .impl_internal_space_instance()
+                        ->m_maxShmemPerBlock) <
+               cuda_single_inter_block_reduce_scan_shmem<true, WorkTag,
+                                                         value_type>(f, n)) {
       n >>= 1;
     }
     return n;
@@ -933,11 +934,12 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
     // testing
 
     unsigned n = CudaTraits::WarpSize * 4;
-    while (n && unsigned(m_policy.space()
-                             .impl_internal_space_instance()
-                             ->m_maxShmemPerBlock) <
-                    cuda_single_inter_block_reduce_scan_shmem<
-                        true, FunctorType, WorkTag, value_type>(f, n)) {
+    while (n &&
+           unsigned(m_policy.space()
+                        .impl_internal_space_instance()
+                        ->m_maxShmemPerBlock) <
+               cuda_single_inter_block_reduce_scan_shmem<true, WorkTag,
+                                                         value_type>(f, n)) {
       n >>= 1;
     }
     return n;
