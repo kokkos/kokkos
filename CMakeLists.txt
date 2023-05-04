@@ -37,6 +37,7 @@ IF(COMMAND TRIBITS_PACKAGE_DECL)
   SET(KOKKOS_HAS_TRILINOS ON)
 ELSE()
   SET(KOKKOS_HAS_TRILINOS OFF)
+  SET(PACKAGE_NAME Kokkos)
   SET(PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 ENDIF()
 # Is this build a subdirectory of another project
@@ -299,10 +300,6 @@ IF (KOKKOS_HAS_TRILINOS)
   SET(KOKKOS_ALL_COMPILE_OPTIONS
     $<$<COMPILE_LANGUAGE:CXX>:${KOKKOS_ALL_COMPILE_OPTIONS}>)
 ENDIF()
-
-if (NOT COMMAND TRIBITS_PACKAGE_DECL)
-  KOKKOS_PACKAGE_DECL()
-endif()
 
 
 #------------------------------------------------------------------------------

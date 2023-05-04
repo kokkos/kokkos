@@ -3,7 +3,7 @@
 #
 
 IF(NOT GTest_FOUND)  # fallback to internal gtest
-  SET(GTEST_SOURCE_DIR ${${PARENT_PACKAGE_NAME}_SOURCE_DIR}/tpls/gtest)
+  SET(GTEST_SOURCE_DIR ${Kokkos_SOURCE_DIR}/tpls/gtest)
 
   #need here for tribits
   KOKKOS_INCLUDE_DIRECTORIES(${GTEST_SOURCE_DIR})
