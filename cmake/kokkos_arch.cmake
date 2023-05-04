@@ -162,10 +162,21 @@ ENDIF()
 #clear anything that might be in the cache
 GLOBAL_SET(KOKKOS_CUDA_OPTIONS)
 # Construct the Makefile options
-IF (KOKKOS_ENABLE_CUDA_LAMBDA)
-  IF(KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA)
+IF(KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA)
+  # Extended lambda support was stabilized in nvcc 12
+  IF(KOKKOS_COMPILER_VERSION_MAJOR EQUAL 11)
     GLOBAL_APPEND(KOKKOS_CUDA_OPTIONS "-expt-extended-lambda")
-    GLOBAL_APPEND(KOKKOS_CUDA_OPTIONS "-Wext-lambda-captures-this")
+  ELSE()
+    GLOBAL_APPEND(KOKKOS_CUDA_OPTIONS "-extended-lambda")
+  ENDIF()
+  GLOBAL_APPEND(KOKKOS_CUDA_OPTIONS "-Wext-lambda-captures-this")
+ENDIF()
+
+IF(DEFINED Kokkos_ENABLE_CUDA_LAMBDA)
+  IF(Kokkos_ENABLE_CUDA_LAMBDA)
+    MESSAGE(DEPRECATION "CUDA extended lambda support is now always enabled. The option Kokkos_ENABLE_CUDA_LAMBDA will be removed")
+  ELSE()
+    MESSAGE(FATAL_ERROR "Support for disabling CUDA extended lambdas has been removed. Please unset Kokkos_ENABLE_CUDA_LAMBDA, or see #5964 if this is necessary for your application")
   ENDIF()
 ENDIF()
 
