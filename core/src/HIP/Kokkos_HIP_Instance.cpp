@@ -424,6 +424,8 @@ bool HIP::is_running() const {
     case Experimental::ExecutionSpaceStatus::submitted:
       KOKKOS_IMPL_HIP_SAFE_CALL(hipEventRecord(m_space_instance->m_last_event,
                                                m_space_instance->m_stream));
+      m_space_instance->m_internal_status =
+          Experimental::ExecutionSpaceStatus::running;
       [[fallthrough]];
     case Experimental::ExecutionSpaceStatus::running:
       if (hipEventQuery(m_space_instance->m_last_event) == hipSuccess) {

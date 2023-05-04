@@ -693,6 +693,8 @@ bool Cuda::is_running() const {
     case Experimental::ExecutionSpaceStatus::submitted:
       KOKKOS_IMPL_CUDA_SAFE_CALL(cudaEventRecord(m_space_instance->m_last_event,
                                                  m_space_instance->m_stream));
+      m_space_instance->m_internal_status =
+          Experimental::ExecutionSpaceStatus::running;
       [[fallthrough]];
     case Experimental::ExecutionSpaceStatus::running:
       if (cudaEventQuery(m_space_instance->m_last_event) == cudaSuccess) {
