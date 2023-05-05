@@ -5,8 +5,8 @@ if( "${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}" )
   message( FATAL_ERROR "FATAL: In-source builds are not allowed. You should create a separate directory for build files and delete CMakeCache.txt." )
 endif()
 
-if (COMMAND TRIBITS_PACKAGE_DECL)
-  TRIBITS_PACKAGE_DECL(Kokkos)
+if (COMMAND TRIBITS_PACKAGE)
+  TRIBITS_PACKAGE(Kokkos)
 endif()
 
 # We want to determine if options are given with the wrong case
@@ -37,6 +37,8 @@ IF(COMMAND TRIBITS_PACKAGE_DECL)
   SET(KOKKOS_HAS_TRILINOS ON)
 ELSE()
   SET(KOKKOS_HAS_TRILINOS OFF)
+  SET(PACKAGE_NAME Kokkos)
+  SET(PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 ENDIF()
 # Is this build a subdirectory of another project
 GET_DIRECTORY_PROPERTY(HAS_PARENT PARENT_DIRECTORY)
@@ -299,10 +301,6 @@ IF (KOKKOS_HAS_TRILINOS)
     $<$<COMPILE_LANGUAGE:CXX>:${KOKKOS_ALL_COMPILE_OPTIONS}>)
 ENDIF()
 
-if (NOT COMMAND TRIBITS_PACKAGE_DECL)
-  KOKKOS_PACKAGE_DECL()
-endif()
-
 
 #------------------------------------------------------------------------------
 #
@@ -316,7 +314,6 @@ KOKKOS_PROCESS_SUBPACKAGES()
 # E) If Kokkos itself is enabled, process the Kokkos package
 #
 
-KOKKOS_PACKAGE_DEF()
 KOKKOS_EXCLUDE_AUTOTOOLS_FILES()
 KOKKOS_PACKAGE_POSTPROCESS()
 KOKKOS_CONFIGURE_CORE()

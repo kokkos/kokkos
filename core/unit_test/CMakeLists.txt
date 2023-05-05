@@ -3,7 +3,7 @@
 #
 
 IF(NOT GTest_FOUND)  # fallback to internal gtest
-  SET(GTEST_SOURCE_DIR ${${PARENT_PACKAGE_NAME}_SOURCE_DIR}/tpls/gtest)
+  SET(GTEST_SOURCE_DIR ${Kokkos_SOURCE_DIR}/tpls/gtest)
 
   #need here for tribits
   KOKKOS_INCLUDE_DIRECTORIES(${GTEST_SOURCE_DIR})
@@ -95,7 +95,7 @@ IF(KOKKOS_HAS_TRILINOS)
   LIST(REMOVE_ITEM COMPILE_ONLY_SOURCES TestInterOp.cpp)
 ENDIF()
 KOKKOS_ADD_EXECUTABLE(
-  TestCompileOnly
+  CoreTestCompileOnly
   SOURCES
   TestCompileMain.cpp
   ${COMPILE_ONLY_SOURCES}
@@ -554,20 +554,20 @@ endif()
 
 if(Kokkos_ENABLE_SERIAL)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_Serial1
+    CoreUnitTest_Serial1
     SOURCES
     UnitTestMainInit.cpp
     ${Serial_SOURCES1}
     serial/TestSerial_Task.cpp
   )
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_Serial2
+    CoreUnitTest_Serial2
     SOURCES
     UnitTestMainInit.cpp
     ${Serial_SOURCES2}
   )
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_SerialGraph
+    CoreUnitTest_SerialGraph
     SOURCES
     UnitTestMainInit.cpp
     serial/TestSerial_Graph.cpp
@@ -576,7 +576,7 @@ endif()
 
 if(Kokkos_ENABLE_THREADS)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_Threads
+    CoreUnitTest_Threads
     SOURCES ${Threads_SOURCES}
     UnitTestMainInit.cpp
   )
@@ -588,20 +588,20 @@ if (Kokkos_ENABLE_OPENMP)
     openmp/TestOpenMP_PartitionMaster.cpp
   )
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_OpenMP
+    CoreUnitTest_OpenMP
     SOURCES
     UnitTestMainInit.cpp
     ${OpenMP_SOURCES}
     ${OpenMP_EXTRA_SOURCES}
   )
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_OpenMPInterOp
+    CoreUnitTest_OpenMPInterOp
     SOURCES
       UnitTestMain.cpp
       openmp/TestOpenMP_InterOp.cpp
   )
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_OpenMPGraph
+    CoreUnitTest_OpenMPGraph
     SOURCES
       UnitTestMainInit.cpp
       openmp/TestOpenMP_Graph.cpp
@@ -610,20 +610,20 @@ endif()
 
 if(Kokkos_ENABLE_HPX)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_HPX
+    CoreUnitTest_HPX
     SOURCES
       UnitTestMainInit.cpp
       ${HPX_SOURCES}
       hpx/TestHPX_Task.cpp
   )
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_HPXInterOp
+    CoreUnitTest_HPXInterOp
     SOURCES
       UnitTestMain.cpp
       hpx/TestHPX_InterOp.cpp
   )
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_HPX_IndependentInstances
+    CoreUnitTest_HPX_IndependentInstances
     SOURCES
       UnitTestMainInit.cpp
       hpx/TestHPX_IndependentInstances.cpp
@@ -636,7 +636,7 @@ endif()
 
 if(Kokkos_ENABLE_OPENMPTARGET)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_OpenMPTarget
+    CoreUnitTest_OpenMPTarget
     SOURCES
     UnitTestMainInit.cpp
     ${OpenMPTarget_SOURCES}
@@ -645,7 +645,7 @@ endif()
 
 if(Kokkos_ENABLE_OPENACC)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_OpenACC
+    CoreUnitTest_OpenACC
     SOURCES
     UnitTestMainInit.cpp
     ${OpenACC_SOURCES}
@@ -654,7 +654,7 @@ endif()
 
 if(Kokkos_ENABLE_CUDA)
     KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_Cuda1
+    CoreUnitTest_Cuda1
     SOURCES
       UnitTestMainInit.cpp
       ${Cuda_SOURCES1}
@@ -662,14 +662,14 @@ if(Kokkos_ENABLE_CUDA)
     )
 
     KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_Cuda2
+    CoreUnitTest_Cuda2
     SOURCES
       UnitTestMainInit.cpp
       ${Cuda_SOURCES2}
     )
 
     KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_Cuda3
+    CoreUnitTest_Cuda3
     SOURCES
       UnitTestMainInit.cpp
       cuda/TestCuda_Task.cpp
@@ -680,7 +680,7 @@ if(Kokkos_ENABLE_CUDA)
     )
 
     KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_CudaTimingBased
+    CoreUnitTest_CudaTimingBased
     SOURCES
       UnitTestMainInit.cpp
       cuda/TestCuda_DebugSerialExecution.cpp
@@ -688,19 +688,19 @@ if(Kokkos_ENABLE_CUDA)
   )
 
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_CudaInterOpInit
+    CoreUnitTest_CudaInterOpInit
     SOURCES
       UnitTestMain.cpp
       cuda/TestCuda_InterOp_Init.cpp
   )
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_CudaInterOpStreams
+    CoreUnitTest_CudaInterOpStreams
     SOURCES
       UnitTestMain.cpp
       cuda/TestCuda_InterOp_Streams.cpp
   )
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_CudaGraph
+    CoreUnitTest_CudaGraph
     SOURCES
       UnitTestMainInit.cpp
       cuda/TestCuda_Graph.cpp
@@ -709,7 +709,7 @@ endif()
 
 if(Kokkos_ENABLE_HIP)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_HIP
+    CoreUnitTest_HIP
     SOURCES
       UnitTestMainInit.cpp
       ${HIP_SOURCES}
@@ -721,13 +721,13 @@ if(Kokkos_ENABLE_HIP)
       hip/TestHIP_BlocksizeDeduction.cpp
   )
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_HIPInterOpInit
+    CoreUnitTest_HIPInterOpInit
     SOURCES
       UnitTestMain.cpp
       hip/TestHIP_InterOp_Init.cpp
   )
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_HIPInterOpStreams
+    CoreUnitTest_HIPInterOpStreams
     SOURCES
       UnitTestMain.cpp
       hip/TestHIP_InterOp_Streams.cpp
@@ -746,49 +746,49 @@ if(Kokkos_ENABLE_SYCL)
   )
 
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_SYCL1A
+    CoreUnitTest_SYCL1A
     SOURCES
       UnitTestMainInit.cpp
       ${SYCL_SOURCES1A}
   )
 
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_SYCL1B
+    CoreUnitTest_SYCL1B
     SOURCES
       UnitTestMainInit.cpp
       ${SYCL_SOURCES1B}
   )
 
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_SYCL2A
+    CoreUnitTest_SYCL2A
     SOURCES
       UnitTestMainInit.cpp
       ${SYCL_SOURCES2A}
   )
 
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_SYCL2B
+    CoreUnitTest_SYCL2B
     SOURCES
       UnitTestMainInit.cpp
       ${SYCL_SOURCES2B}
   )
 
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_SYCL2C
+    CoreUnitTest_SYCL2C
     SOURCES
       UnitTestMainInit.cpp
       ${SYCL_SOURCES2C}
   )
 
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_SYCL2D
+    CoreUnitTest_SYCL2D
     SOURCES
       UnitTestMainInit.cpp
       ${SYCL_SOURCES2D}
   )
 
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_SYCL3
+    CoreUnitTest_SYCL3
     SOURCES
       UnitTestMainInit.cpp
       # FIXME_SYCL
@@ -799,19 +799,19 @@ if(Kokkos_ENABLE_SYCL)
   )
 
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_SYCLInterOpInit
+    CoreUnitTest_SYCLInterOpInit
     SOURCES
       UnitTestMain.cpp
       sycl/TestSYCL_InterOp_Init.cpp
   )
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_SYCLInterOpInit_Context
+    CoreUnitTest_SYCLInterOpInit_Context
     SOURCES
     UnitTestMainInit.cpp
       sycl/TestSYCL_InterOp_Init_Context.cpp
   )
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_SYCLInterOpStreams
+    CoreUnitTest_SYCLInterOpStreams
     SOURCES
       UnitTestMain.cpp
      sycl/TestSYCL_InterOp_Streams.cpp
@@ -860,19 +860,19 @@ if ((KOKKOS_ENABLE_OPENMPTARGET OR KOKKOS_ENABLE_OPENACC) AND KOKKOS_CXX_COMPILE
 endif()
 
 KOKKOS_ADD_EXECUTABLE_AND_TEST(
-  UnitTest_Default
+  CoreUnitTest_Default
   SOURCES ${DEFAULT_DEVICE_SOURCES}
 )
 
 KOKKOS_ADD_EXECUTABLE_AND_TEST(
-  UnitTest_LegionInitialization
+  CoreUnitTest_LegionInitialization
   SOURCES
     UnitTestMain.cpp
     TestLegionInitialization.cpp
 )
 
 KOKKOS_ADD_EXECUTABLE_AND_TEST(
-  UnitTest_PushFinalizeHook
+  CoreUnitTest_PushFinalizeHook
   SOURCES
     UnitTest_PushFinalizeHook.cpp
 )
@@ -880,7 +880,7 @@ KOKKOS_ADD_EXECUTABLE_AND_TEST(
 # This test is intended for development and debugging by putting code
 # into TestDefaultDeviceDevelop.cpp. By default its empty.
 KOKKOS_ADD_EXECUTABLE_AND_TEST(
-  UnitTest_Develop
+  CoreUnitTest_Develop
   SOURCES
     UnitTestMainInit.cpp
     default/TestDefaultDeviceDevelop.cpp
@@ -895,7 +895,7 @@ KOKKOS_ADD_TEST_EXECUTABLE( push_finalize_hook_terminate
   SOURCES UnitTest_PushFinalizeHook_terminate.cpp
 )
 
-KOKKOS_ADD_ADVANCED_TEST( UnitTest_PushFinalizeHook_terminate
+KOKKOS_ADD_ADVANCED_TEST( CoreUnitTest_PushFinalizeHook_terminate
   TEST_0
     EXEC push_finalize_hook_terminate
     NUM_MPI_PROCS 1
@@ -905,24 +905,24 @@ KOKKOS_ADD_ADVANCED_TEST( UnitTest_PushFinalizeHook_terminate
 )
   if(KOKKOS_ENABLE_TUNING)
     KOKKOS_ADD_EXECUTABLE_AND_TEST(
-      UnitTest_TuningBuiltins
+      CoreUnitTest_TuningBuiltins
       SOURCES
       tools/TestBuiltinTuners.cpp
     )
     KOKKOS_ADD_EXECUTABLE_AND_TEST(
-      UnitTest_TuningBasics
+      CoreUnitTest_TuningBasics
       SOURCES
         tools/TestTuning.cpp
     )
     KOKKOS_ADD_EXECUTABLE_AND_TEST(
-      UnitTest_CategoricalTuner
+      CoreUnitTest_CategoricalTuner
       SOURCES
       tools/TestCategoricalTuner.cpp
     )
   endif()
   if((NOT Kokkos_ENABLE_OPENMPTARGET) AND (NOT Kokkos_ENABLE_OPENACC))
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_LogicalSpaces
+    CoreUnitTest_LogicalSpaces
     SOURCES
       tools/TestLogicalSpaces.cpp
   )
@@ -942,18 +942,18 @@ KOKKOS_ADD_ADVANCED_TEST( UnitTest_PushFinalizeHook_terminate
   endif()
 
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_KokkosP
+    CoreUnitTest_KokkosP
     SOURCES
     ${KOKKOSP_SOURCES}
   )
   if(KOKKOS_ENABLE_LIBDL)
     KOKKOS_ADD_EXECUTABLE_AND_TEST(
-      UnitTest_ToolIndependence
+      CoreUnitTest_ToolIndependence
       SOURCES
       tools/TestIndependence.cpp
     )
     TARGET_COMPILE_DEFINITIONS(
-      KokkosCore_UnitTest_ToolIndependence PUBLIC
+      Kokkos_CoreUnitTest_ToolIndependence PUBLIC
       KOKKOS_TOOLS_INDEPENDENT_BUILD
     )
     KOKKOS_ADD_TEST_LIBRARY(
@@ -983,7 +983,7 @@ KOKKOS_ADD_ADVANCED_TEST( UnitTest_PushFinalizeHook_terminate
       TOOL kokkosprinter-tool
       ARGS --kokkos-tools-help
       PASS_REGULAR_EXPRESSION
-        "kokkosp_init_library::kokkosp_print_help:KokkosCore_ProfilingAllCalls::kokkosp_finalize_library::")
+        "kokkosp_init_library::kokkosp_print_help:Kokkos_ProfilingAllCalls::kokkosp_finalize_library::")
 
     # check help works via direct library specification
     KOKKOS_ADD_TEST(
@@ -993,7 +993,7 @@ KOKKOS_ADD_ADVANCED_TEST( UnitTest_PushFinalizeHook_terminate
       ARGS --kokkos-tools-help
            --kokkos-tools-libs=$<TARGET_FILE:kokkosprinter-tool>
       PASS_REGULAR_EXPRESSION
-        "kokkosp_init_library::kokkosp_print_help:KokkosCore_ProfilingAllCalls::kokkosp_finalize_library::")
+        "kokkosp_init_library::kokkosp_print_help:Kokkos_ProfilingAllCalls::kokkosp_finalize_library::")
 
     KOKKOS_ADD_TEST(
       SKIP_TRIBITS
@@ -1001,7 +1001,7 @@ KOKKOS_ADD_ADVANCED_TEST( UnitTest_PushFinalizeHook_terminate
       EXE  ProfilingAllCalls
       TOOL kokkosprinter-tool
       ARGS --kokkos-tools-args="-c test delimit"
-      PASS_REGULAR_EXPRESSION "kokkosp_init_library::kokkosp_parse_args:4:KokkosCore_ProfilingAllCalls:-c:test:delimit::.*::kokkosp_allocate_data:${MEMSPACE_REGEX}:source:${ADDRESS_REGEX}:40::kokkosp_begin_parallel_for:Kokkos::View::initialization [[]source] via memset:[0-9]+:0::kokkosp_end_parallel_for:0::kokkosp_allocate_data:${MEMSPACE_REGEX}:destination:${ADDRESS_REGEX}:40::kokkosp_begin_parallel_for:Kokkos::View::initialization [[]destination] via memset:[0-9]+:0::kokkosp_end_parallel_for:0::kokkosp_begin_deep_copy:${MEMSPACE_REGEX}:destination:${ADDRESS_REGEX}:${MEMSPACE_REGEX}:source:${ADDRESS_REGEX}:40::.*kokkosp_end_deep_copy::kokkosp_begin_parallel_for:parallel_for:${SIZE_REGEX}:0::kokkosp_end_parallel_for:0::kokkosp_begin_parallel_reduce:parallel_reduce:${SIZE_REGEX}:1${SKIP_SCRATCH_INITIALIZATION_REGEX}::kokkosp_end_parallel_reduce:1::kokkosp_begin_parallel_scan:parallel_scan:${SIZE_REGEX}:2::kokkosp_end_parallel_scan:2::kokkosp_push_profile_region:push_region::kokkosp_pop_profile_region::kokkosp_create_profile_section:created_section:3::kokkosp_start_profile_section:3::kokkosp_stop_profile_section:3::kokkosp_destroy_profile_section:3::kokkosp_profile_event:profiling_event::kokkosp_declare_metadata:dogs:good::kokkosp_deallocate_data:${MEMSPACE_REGEX}:destination:${ADDRESS_REGEX}:40::kokkosp_deallocate_data:${MEMSPACE_REGEX}:source:${ADDRESS_REGEX}:40::kokkosp_finalize_library::"
+      PASS_REGULAR_EXPRESSION "kokkosp_init_library::kokkosp_parse_args:4:Kokkos_ProfilingAllCalls:-c:test:delimit::.*::kokkosp_allocate_data:${MEMSPACE_REGEX}:source:${ADDRESS_REGEX}:40::kokkosp_begin_parallel_for:Kokkos::View::initialization [[]source] via memset:[0-9]+:0::kokkosp_end_parallel_for:0::kokkosp_allocate_data:${MEMSPACE_REGEX}:destination:${ADDRESS_REGEX}:40::kokkosp_begin_parallel_for:Kokkos::View::initialization [[]destination] via memset:[0-9]+:0::kokkosp_end_parallel_for:0::kokkosp_begin_deep_copy:${MEMSPACE_REGEX}:destination:${ADDRESS_REGEX}:${MEMSPACE_REGEX}:source:${ADDRESS_REGEX}:40::.*kokkosp_end_deep_copy::kokkosp_begin_parallel_for:parallel_for:${SIZE_REGEX}:0::kokkosp_end_parallel_for:0::kokkosp_begin_parallel_reduce:parallel_reduce:${SIZE_REGEX}:1${SKIP_SCRATCH_INITIALIZATION_REGEX}::kokkosp_end_parallel_reduce:1::kokkosp_begin_parallel_scan:parallel_scan:${SIZE_REGEX}:2::kokkosp_end_parallel_scan:2::kokkosp_push_profile_region:push_region::kokkosp_pop_profile_region::kokkosp_create_profile_section:created_section:3::kokkosp_start_profile_section:3::kokkosp_stop_profile_section:3::kokkosp_destroy_profile_section:3::kokkosp_profile_event:profiling_event::kokkosp_declare_metadata:dogs:good::kokkosp_deallocate_data:${MEMSPACE_REGEX}:destination:${ADDRESS_REGEX}:40::kokkosp_deallocate_data:${MEMSPACE_REGEX}:source:${ADDRESS_REGEX}:40::kokkosp_finalize_library::"
     )
 
     # Above will test that leading/trailing quotes are stripped bc ctest cmd args is:
@@ -1018,7 +1018,7 @@ KOKKOS_ADD_ADVANCED_TEST( UnitTest_PushFinalizeHook_terminate
       EXE  ProfilingAllCalls
       ARGS [=[--kokkos-tools-args=-c test delimit]=]
             --kokkos-tools-libs=$<TARGET_FILE:kokkosprinter-tool>
-      PASS_REGULAR_EXPRESSION "kokkosp_init_library::kokkosp_parse_args:4:KokkosCore_ProfilingAllCalls:-c:test:delimit::.*::kokkosp_allocate_data:${MEMSPACE_REGEX}:source:${ADDRESS_REGEX}:40::kokkosp_begin_parallel_for:Kokkos::View::initialization [[]source] via memset:[0-9]+:0::kokkosp_end_parallel_for:0::kokkosp_allocate_data:${MEMSPACE_REGEX}:destination:${ADDRESS_REGEX}:40::kokkosp_begin_parallel_for:Kokkos::View::initialization [[]destination] via memset:[0-9]+:0::kokkosp_end_parallel_for:0::kokkosp_begin_deep_copy:${MEMSPACE_REGEX}:destination:${ADDRESS_REGEX}:${MEMSPACE_REGEX}:source:${ADDRESS_REGEX}:40::.*kokkosp_end_deep_copy::kokkosp_begin_parallel_for:parallel_for:${SIZE_REGEX}:0::kokkosp_end_parallel_for:0::kokkosp_begin_parallel_reduce:parallel_reduce:${SIZE_REGEX}:1${SKIP_SCRATCH_INITIALIZATION_REGEX}::kokkosp_end_parallel_reduce:1::kokkosp_begin_parallel_scan:parallel_scan:${SIZE_REGEX}:2::kokkosp_end_parallel_scan:2::kokkosp_push_profile_region:push_region::kokkosp_pop_profile_region::kokkosp_create_profile_section:created_section:3::kokkosp_start_profile_section:3::kokkosp_stop_profile_section:3::kokkosp_destroy_profile_section:3::kokkosp_profile_event:profiling_event::kokkosp_declare_metadata:dogs:good::kokkosp_deallocate_data:${MEMSPACE_REGEX}:destination:${ADDRESS_REGEX}:40::kokkosp_deallocate_data:${MEMSPACE_REGEX}:source:${ADDRESS_REGEX}:40::kokkosp_finalize_library::"
+      PASS_REGULAR_EXPRESSION "kokkosp_init_library::kokkosp_parse_args:4:Kokkos_ProfilingAllCalls:-c:test:delimit::.*::kokkosp_allocate_data:${MEMSPACE_REGEX}:source:${ADDRESS_REGEX}:40::kokkosp_begin_parallel_for:Kokkos::View::initialization [[]source] via memset:[0-9]+:0::kokkosp_end_parallel_for:0::kokkosp_allocate_data:${MEMSPACE_REGEX}:destination:${ADDRESS_REGEX}:40::kokkosp_begin_parallel_for:Kokkos::View::initialization [[]destination] via memset:[0-9]+:0::kokkosp_end_parallel_for:0::kokkosp_begin_deep_copy:${MEMSPACE_REGEX}:destination:${ADDRESS_REGEX}:${MEMSPACE_REGEX}:source:${ADDRESS_REGEX}:40::.*kokkosp_end_deep_copy::kokkosp_begin_parallel_for:parallel_for:${SIZE_REGEX}:0::kokkosp_end_parallel_for:0::kokkosp_begin_parallel_reduce:parallel_reduce:${SIZE_REGEX}:1${SKIP_SCRATCH_INITIALIZATION_REGEX}::kokkosp_end_parallel_reduce:1::kokkosp_begin_parallel_scan:parallel_scan:${SIZE_REGEX}:2::kokkosp_end_parallel_scan:2::kokkosp_push_profile_region:push_region::kokkosp_pop_profile_region::kokkosp_create_profile_section:created_section:3::kokkosp_start_profile_section:3::kokkosp_stop_profile_section:3::kokkosp_destroy_profile_section:3::kokkosp_profile_event:profiling_event::kokkosp_declare_metadata:dogs:good::kokkosp_deallocate_data:${MEMSPACE_REGEX}:destination:${ADDRESS_REGEX}:40::kokkosp_deallocate_data:${MEMSPACE_REGEX}:source:${ADDRESS_REGEX}:40::kokkosp_finalize_library::"
     )
   endif() #KOKKOS_ENABLE_LIBDL
 if(NOT KOKKOS_HAS_TRILINOS)
@@ -1036,7 +1036,7 @@ KOKKOS_ADD_TEST_EXECUTABLE(
 # to work correctly with shared libraries
 KOKKOS_SET_EXE_PROPERTY(StackTraceTestExec ENABLE_EXPORTS ON)
 
-KOKKOS_ADD_TEST( NAME UnitTest_StackTraceTest
+KOKKOS_ADD_TEST( NAME CoreUnitTest_StackTraceTest
                  EXE  StackTraceTestExec
                  FAIL_REGULAR_EXPRESSION "FAILED"
                )
@@ -1045,7 +1045,7 @@ endif()
 if(Kokkos_ENABLE_DEPRECATED_CODE_3)
   foreach(INITTESTS_NUM RANGE 1 18)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_DefaultInit_${INITTESTS_NUM}
+    CoreUnitTest_DefaultInit_${INITTESTS_NUM}
     SOURCES UnitTestMain.cpp default/TestDefaultDeviceTypeInit_${INITTESTS_NUM}.cpp
   )
   endforeach(INITTESTS_NUM)
@@ -1053,7 +1053,7 @@ endif()
 
 if (KOKKOS_ENABLE_HWLOC)
 KOKKOS_ADD_EXECUTABLE_AND_TEST(
-  UnitTest_HWLOC
+  CoreUnitTest_HWLOC
   SOURCES UnitTestMain.cpp  TestHWLOC.cpp
 )
 endif()
@@ -1109,12 +1109,12 @@ FOREACH (DEVICE ${KOKKOS_ENABLED_DEVICES})
 ENDFOREACH()
 
 KOKKOS_ADD_EXECUTABLE_AND_TEST(
-  UnitTest_CTestDevice
+  CoreUnitTest_CTestDevice
   SOURCES UnitTestMain.cpp  TestCTestDevice.cpp
 )
 
 KOKKOS_ADD_EXECUTABLE_AND_TEST(
-  UnitTest_CMakePassCmdLineArgs
+  CoreUnitTest_CMakePassCmdLineArgs
   SOURCES UnitTest_CMakePassCmdLineArgs.cpp
   ARGS "one 2 THREE"
 )
@@ -1122,22 +1122,22 @@ KOKKOS_ADD_EXECUTABLE_AND_TEST(
 # This test is not properly set up to run within Trilinos
 if (NOT KOKKOS_HAS_TRILINOS)
   SET_SOURCE_FILES_PROPERTIES(UnitTest_DeviceAndThreads.cpp PROPERTIES LANGUAGE ${KOKKOS_COMPILE_LANGUAGE})
-  add_executable(KokkosCore_UnitTest_DeviceAndThreads UnitTest_DeviceAndThreads.cpp)
-  target_link_libraries(KokkosCore_UnitTest_DeviceAndThreads Kokkos::kokkoscore)
+  add_executable(Kokkos_CoreUnitTest_DeviceAndThreads UnitTest_DeviceAndThreads.cpp)
+  target_link_libraries(Kokkos_CoreUnitTest_DeviceAndThreads Kokkos::kokkoscore)
   find_package(Python3 COMPONENTS Interpreter)
   if(Python3_Interpreter_FOUND AND Python3_VERSION VERSION_GREATER_EQUAL 3.7)
     if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.20)
       set(USE_SOURCE_PERMISSIONS_WHEN_SUPPORTED USE_SOURCE_PERMISSIONS)
     endif()
     file(GENERATE
-      OUTPUT $<TARGET_FILE_DIR:KokkosCore_UnitTest_DeviceAndThreads>/TestDeviceAndThreads.py
+      OUTPUT $<TARGET_FILE_DIR:Kokkos_CoreUnitTest_DeviceAndThreads>/TestDeviceAndThreads.py
       INPUT TestDeviceAndThreads.py
       ${USE_SOURCE_PERMISSIONS_WHEN_SUPPORTED}
     )
     if(NOT Kokkos_ENABLE_OPENMPTARGET)  # FIXME_OPENMPTARGET does not select the right device
       add_test(
-        NAME KokkosCore_UnitTest_DeviceAndThreads
-        COMMAND ${Python3_EXECUTABLE} -m unittest -v $<TARGET_FILE_DIR:KokkosCore_UnitTest_DeviceAndThreads>/TestDeviceAndThreads.py
+        NAME Kokkos_CoreUnitTest_DeviceAndThreads
+        COMMAND ${Python3_EXECUTABLE} -m unittest -v $<TARGET_FILE_DIR:Kokkos_CoreUnitTest_DeviceAndThreads>/TestDeviceAndThreads.py
       )
     endif()
   endif()
