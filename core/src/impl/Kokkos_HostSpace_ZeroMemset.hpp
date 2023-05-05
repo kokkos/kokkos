@@ -14,31 +14,18 @@
 //
 //@HEADER
 
-#ifndef KOKKOS_ZEROMEMSET_HPP
-#define KOKKOS_ZEROMEMSET_HPP
+#ifndef KOKKOS_HOSTSPACE_ZEROMEMSET_HPP
+#define KOKKOS_HOSTSPACE_ZEROMEMSET_HPP
 
 #include <Kokkos_Macros.hpp>
+#include <Kokkos_HostSpace.hpp>
 #include <impl/Kokkos_ZeroMemset_fwd.hpp>
-#include <Kokkos_View.hpp>
+
+#include <iostream>
 
 namespace Kokkos {
 namespace Impl {
 
-// Default implementation for execution spaces that don't provide a definition
-template <typename ExecutionSpace, class DT, class... DP>
-struct ZeroMemset {
-  ZeroMemset(const ExecutionSpace& exec_space, const View<DT, DP...>& dst,
-             typename ViewTraits<DT, DP...>::const_value_type& value) {
-    contiguous_fill(exec_space, dst, value);
-  }
-
-  ZeroMemset(const View<DT, DP...>& dst,
-             typename ViewTraits<DT, DP...>::const_value_type& value) {
-    contiguous_fill(ExecutionSpace(), dst, value);
-  }
-};
-
-// Default HostSpace implementation
 template <class DT, class... DP>
 struct ZeroMemset<typename HostSpace::execution_space, DT, DP...> {
   ZeroMemset(const typename HostSpace::execution_space& exec,
@@ -63,4 +50,4 @@ struct ZeroMemset<typename HostSpace::execution_space, DT, DP...> {
 }  // end namespace Impl
 }  // end namespace Kokkos
 
-#endif  // KOKKOS_ZEROMEMSET_HPP
+#endif  // KOKKOS_HOSTSPACE_ZEROMEMSET_HPP
