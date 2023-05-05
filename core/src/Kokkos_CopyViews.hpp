@@ -25,6 +25,7 @@ static_assert(false,
 #include <Kokkos_Parallel.hpp>
 #include <KokkosExp_MDRangePolicy.hpp>
 #include <Kokkos_Layout.hpp>
+#include <impl/Kokkos_HostSpace_ZeroMemset.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
