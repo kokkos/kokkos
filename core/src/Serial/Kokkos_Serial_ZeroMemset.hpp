@@ -30,16 +30,17 @@ namespace Impl {
 // parallel execution space since the specialization for
 // DefaultHostExecutionSpace is defined elsewhere.
 struct DummyExecutionSpace;
-template <class DT, class... DP>
+template <class T, class... P>
 struct ZeroMemset<
     std::conditional_t<!std::is_same<Serial, DefaultHostExecutionSpace>::value,
                        Serial, DummyExecutionSpace>,
-    DT, DP...> : public ZeroMemset<DefaultHostExecutionSpace, DT, DP...> {
-  using Base = ZeroMemset<DefaultHostExecutionSpace, DT, DP...>;
+    View<T, P...>>
+    : public ZeroMemset<DefaultHostExecutionSpace, View<T, P...>> {
+  using Base = ZeroMemset<DefaultHostExecutionSpace, View<T, P...>>;
   using Base::Base;
 
-  ZeroMemset(const Serial&, const View<DT, DP...>& dst,
-             typename View<DT, DP...>::const_value_type& value)
+  ZeroMemset(const Serial&, const View<T, P...>& dst,
+             typename View<T, P...>::const_value_type& value)
       : Base(dst, value) {}
 };
 

@@ -20,7 +20,7 @@
 namespace Kokkos {
 namespace Impl {
 
-template <typename ExecutionSpace, class DT, class... DP>
+template <typename ExecutionSpace, class ViewType>
 struct ZeroMemset;
 
 }  // namespace Impl

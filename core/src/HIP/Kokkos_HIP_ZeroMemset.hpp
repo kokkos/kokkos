@@ -23,21 +23,20 @@
 namespace Kokkos {
 namespace Impl {
 
-template <class DT, class... DP>
-struct ZeroMemset<HIP, DT, DP...> {
-  ZeroMemset(const HIP& exec_space, const View<DT, DP...>& dst,
-             typename View<DT, DP...>::const_value_type&) {
+template <class T, class... P>
+struct ZeroMemset<HIP, View<T, P...>> {
+  ZeroMemset(const HIP& exec_space, const View<T, P...>& dst,
+             typename View<T, P...>::const_value_type&) {
     KOKKOS_IMPL_HIP_SAFE_CALL(hipMemsetAsync(
-        dst.data(), 0,
-        dst.size() * sizeof(typename View<DT, DP...>::value_type),
+        dst.data(), 0, dst.size() * sizeof(typename View<T, P...>::value_type),
         exec_space.hip_stream()));
   }
 
-  ZeroMemset(const View<DT, DP...>& dst,
-             typename View<DT, DP...>::const_value_type&) {
+  ZeroMemset(const View<T, P...>& dst,
+             typename View<T, P...>::const_value_type&) {
     KOKKOS_IMPL_HIP_SAFE_CALL(
         hipMemset(dst.data(), 0,
-                  dst.size() * sizeof(typename View<DT, DP...>::value_type)));
+                  dst.size() * sizeof(typename View<T, P...>::value_type)));
   }
 };
 

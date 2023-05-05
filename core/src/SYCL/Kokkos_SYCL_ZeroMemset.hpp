@@ -23,23 +23,21 @@
 namespace Kokkos {
 namespace Impl {
 
-template <class DT, class... DP>
-struct ZeroMemset<Kokkos::Experimental::SYCL, DT, DP...> {
+template <class T, class... P>
+struct ZeroMemset<Kokkos::Experimental::SYCL, View<T, P...>> {
   ZeroMemset(const Kokkos::Experimental::SYCL& exec_space,
-             const View<DT, DP...>& dst,
-             typename View<DT, DP...>::const_value_type&) {
+             const View<T, P...>& dst,
+             typename View<T, P...>::const_value_type&) {
     auto event = exec_space.impl_internal_space_instance()->m_queue->memset(
-        dst.data(), 0,
-        dst.size() * sizeof(typename View<DT, DP...>::value_type));
+        dst.data(), 0, dst.size() * sizeof(typename View<T, P...>::value_type));
     exec_space.impl_internal_space_instance()
         ->m_queue->ext_oneapi_submit_barrier(std::vector<sycl::event>{event});
   }
 
-  ZeroMemset(const View<DT, DP...>& dst,
-             typename View<DT, DP...>::const_value_type&) {
+  ZeroMemset(const View<T, P...>& dst,
+             typename View<T, P...>::const_value_type&) {
     Experimental::Impl::SYCLInternal::singleton().m_queue->memset(
-        dst.data(), 0,
-        dst.size() * sizeof(typename View<DT, DP...>::value_type));
+        dst.data(), 0, dst.size() * sizeof(typename View<T, P...>::value_type));
   }
 };
 

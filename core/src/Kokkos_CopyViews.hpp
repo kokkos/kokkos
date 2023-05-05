@@ -1327,15 +1327,14 @@ inline void contiguous_fill(
 }
 
 // Default implementation for execution spaces that don't provide a definition
-template <typename ExecutionSpace, class DT, class... DP>
+template <typename ExecutionSpace, class ViewType>
 struct ZeroMemset {
-  ZeroMemset(const ExecutionSpace& exec_space, const View<DT, DP...>& dst,
-             typename ViewTraits<DT, DP...>::const_value_type& value) {
+  ZeroMemset(const ExecutionSpace& exec_space, const ViewType& dst,
+             typename ViewType::const_value_type& value) {
     contiguous_fill(exec_space, dst, value);
   }
 
-  ZeroMemset(const View<DT, DP...>& dst,
-             typename ViewTraits<DT, DP...>::const_value_type& value) {
+  ZeroMemset(const ViewType& dst, typename ViewType::const_value_type& value) {
     contiguous_fill(ExecutionSpace(), dst, value);
   }
 };
@@ -1352,7 +1351,7 @@ contiguous_fill_or_memset(
 // leading to the significant performance issues
 #ifndef KOKKOS_ARCH_A64FX
   if (Impl::is_zero_byte(value))
-    ZeroMemset<ExecutionSpace, DT, DP...>(exec_space, dst, value);
+    ZeroMemset<ExecutionSpace, View<DT, DP...>>(exec_space, dst, value);
   else
 #endif
     contiguous_fill(exec_space, dst, value);
@@ -1384,7 +1383,7 @@ contiguous_fill_or_memset(
 // leading to the significant performance issues
 #ifndef KOKKOS_ARCH_A64FX
   if (Impl::is_zero_byte(value))
-    ZeroMemset<exec_space_type, DT, DP...>(dst, value);
+    ZeroMemset<exec_space_type, View<DT, DP...>>(dst, value);
   else
 #endif
     contiguous_fill(exec_space_type(), dst, value);
