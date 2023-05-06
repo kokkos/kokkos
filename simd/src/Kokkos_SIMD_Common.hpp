@@ -26,14 +26,6 @@ namespace Kokkos {
 
 namespace Experimental {
 
-template <class To, class From>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION constexpr To bit_cast(
-    From const& src) {
-  To dst;
-  std::memcpy(&dst, &src, sizeof(To));
-  return dst;
-}
-
 template <class T, class Abi>
 class simd;
 
