@@ -129,10 +129,10 @@ template <class T, class Abi>
 }
 
 // fallback simd shift using generator constructor
-// At the time of this writing, these fallbacks are only used
-// to shift vectors of 64-bit unsigned integers for the NEON backend
+// At the time of this edit, only the fallback for shift vectors of
+// 64-bit signed integers for the AVX2 backend is used
 
-template <class T, class U, class Abi>
+template <class T, class Abi>
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd<T, Abi> operator>>(
     simd<T, Abi> const& lhs, unsigned int rhs) {
   return simd<T, Abi>([&](std::size_t i) { return lhs[i] >> rhs; });
