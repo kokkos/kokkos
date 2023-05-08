@@ -27,8 +27,8 @@ namespace Kokkos {
 namespace Impl {
 
 template <class T, class... P>
-struct ZeroMemset<typename HostSpace::execution_space, View<T, P...>> {
-  ZeroMemset(const typename HostSpace::execution_space& exec,
+struct ZeroMemset<HostSpace::execution_space, View<T, P...>> {
+  ZeroMemset(const HostSpace::execution_space& exec,
              const View<T, P...>& dst,
              typename View<T, P...>::const_value_type&) {
     // Host spaces, except for HPX, are synchronous and we need to fence for HPX
