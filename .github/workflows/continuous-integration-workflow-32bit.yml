@@ -1,0 +1,37 @@
+name: github-Linux-32bit
+on: [push, pull_request]
+
+concurrency:
+  group: ${ {github.event_name }}-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{github.event_name == 'pull_request'}}
+
+jobs:
+  CI-32bit:
+    name: Linux-32bit
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/kokkos/ci-containers/ubuntu:latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: install_multilib
+        run: sudo apt-get update && sudo apt-get install -y gcc-multilib g++-multilib gfortran-multilib
+      - name: Configure Kokkos
+        run: |
+          cmake -B builddir \
+            -DKokkos_ENABLE_OPENMP=ON \
+            -DKokkos_ENABLE_TESTS=ON \
+            -DKokkos_ENABLE_BENCHMARKS=ON \
+            -DKokkos_ENABLE_EXAMPLES=ON \
+            -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
+            -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
+            -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+            -DCMAKE_CXX_FLAGS="-Werror -m32 -DKOKKOS_IMPL_32BIT" \
+            -DCMAKE_CXX_COMPILER=g++ \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo
+      - name: Build
+        run: |
+          cmake --build builddir --parallel 2
+      - name: Tests
+        working-directory: builddir
+        run: ctest --output-on-failure

@@ -306,6 +306,73 @@ TEST(std_algorithms_numeric_ops_test, transform_inclusive_scan) {
 }
 #endif
 
+template <class ValueType>
+struct MultiplyFunctor {
+  KOKKOS_INLINE_FUNCTION
+  ValueType operator()(const ValueType& a, const ValueType& b) const {
+    return (a * b);
+  }
+};
+
+TEST(std_algorithms_numeric_ops_test, transform_inclusive_scan_functor) {
+  using value_type = KE::Impl::ValueWrapperForNoNeutralElement<int>;
+
+  auto test_lambda = [&](auto& functor) {
+    value_type value1;
+    functor.init(value1);
+    EXPECT_EQ(value1.val, 0);
+    EXPECT_EQ(value1.is_initial, true);
+
+    value_type value2;
+    value2.val        = 1;
+    value2.is_initial = false;
+    functor.join(value1, value2);
+    EXPECT_EQ(value1.val, 1);
+    EXPECT_EQ(value1.is_initial, false);
+
+    functor.init(value1);
+    functor.join(value2, value1);
+    EXPECT_EQ(value2.val, 1);
+    EXPECT_EQ(value2.is_initial, false);
+
+    functor.init(value2);
+    functor.join(value2, value1);
+    EXPECT_EQ(value2.val, 0);
+    EXPECT_EQ(value2.is_initial, true);
+
+    value1.val        = 3;
+    value1.is_initial = false;
+    value2.val        = 2;
+    value2.is_initial = false;
+    functor.join(value2, value1);
+    EXPECT_EQ(value2.val, 6);
+    EXPECT_EQ(value2.is_initial, false);
+  };
+
+  int dummy       = 0;
+  using view_type = Kokkos::View<int*, exespace>;
+  view_type dummy_view("dummy_view", 0);
+  using unary_op_type =
+      KE::Impl::StdNumericScanIdentityReferenceUnaryFunctor<int>;
+  {
+    using functor_type = KE::Impl::TransformInclusiveScanNoInitValueFunctor<
+        exespace, int, int, view_type, view_type, MultiplyFunctor<int>,
+        unary_op_type>;
+    functor_type functor(dummy_view, dummy_view, {}, {});
+
+    test_lambda(functor);
+  }
+
+  {
+    using functor_type = KE::Impl::TransformInclusiveScanWithInitValueFunctor<
+        exespace, int, int, view_type, view_type, MultiplyFunctor<int>,
+        unary_op_type>;
+    functor_type functor(dummy_view, dummy_view, {}, {}, dummy);
+
+    test_lambda(functor);
+  }
+}
+
 }  // namespace TransformIncScan
 }  // namespace stdalgos
 }  // namespace Test

@@ -21,6 +21,7 @@
 #include <type_traits>
 
 #include <Kokkos_SIMD_Common.hpp>
+#include <Kokkos_BitManipulation.hpp>  // bit_cast
 
 #include <immintrin.h>
 
@@ -680,6 +681,8 @@ template <>
 class simd<std::int64_t, simd_abi::avx2_fixed_size<4>> {
   __m256i m_value;
 
+  static_assert(sizeof(long long) == 8);
+
  public:
   using value_type = std::int64_t;
   using abi_type   = simd_abi::avx2_fixed_size<4>;
@@ -727,11 +730,13 @@ class simd<std::int64_t, simd_abi::avx2_fixed_size<4>> {
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
                                                        element_aligned_tag) {
-    m_value = _mm256_maskload_epi64(ptr, static_cast<__m256i>(mask_type(true)));
+    m_value = _mm256_maskload_epi64(reinterpret_cast<long long const*>(ptr),
+                                    static_cast<__m256i>(mask_type(true)));
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_to(
       value_type* ptr, element_aligned_tag) const {
-    _mm256_maskstore_epi64(ptr, static_cast<__m256i>(mask_type(true)), m_value);
+    _mm256_maskstore_epi64(reinterpret_cast<long long*>(ptr),
+                           static_cast<__m256i>(mask_type(true)), m_value);
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit operator __m256i()
       const {

@@ -182,21 +182,18 @@ void *impl_allocate_common(const Cuda &exec_space, const char *arg_label,
   if (arg_alloc_size >= memory_threshold_g) {
     if (exec_space_provided) {
       cudaStream_t stream = exec_space.cuda_stream();
-
-      error_code = exec_space.impl_internal_space_instance()
+      error_code          = exec_space.impl_internal_space_instance()
                        ->cuda_api_interface_return<cudaError_t, void **, size_t,
                                                    cudaStream_t>(
                            &cudaMallocAsync, &ptr, arg_alloc_size, stream);
-      exec_space.impl_internal_space_instance()
-          ->cuda_api_interface_safe_call<false, cudaStream_t>(
-              &cudaStreamSynchronize, stream);
+      exec_space.fence("Kokkos::Cuda: backend fence after async malloc");
     } else {
       error_code = exec_space.impl_internal_space_instance()
                        ->cuda_api_interface_return<cudaError_t, void **, size_t,
                                                    cudaStream_t>(
                            &cudaMallocAsync, &ptr, arg_alloc_size, 0);
-      exec_space.impl_internal_space_instance()
-          ->cuda_api_interface_safe_call<false>(&cudaDeviceSynchronize);
+      Impl::cuda_device_synchronize(
+          "Kokkos::Cuda: backend fence after async malloc");
     }
   } else {
     error_code = exec_space.impl_internal_space_instance()
@@ -367,13 +364,13 @@ void CudaSpace::impl_deallocate(
 #error CUDART_VERSION undefined!
 #elif (defined(KOKKOS_ENABLE_IMPL_CUDA_MALLOC_ASYNC) && CUDART_VERSION >= 11020)
     if (arg_alloc_size >= memory_threshold_g) {
-      Impl::CudaInternal::singleton().cuda_api_interface_safe_call(
-          &cudaDeviceSynchronize);
+      Impl::cuda_device_synchronize(
+          "Kokkos::Cuda: backend fence before async free");
       Impl::CudaInternal::singleton()
           .cuda_api_interface_safe_call<false, void *, cudaStream_t>(
               &cudaFreeAsync, arg_alloc_ptr, 0);
-      Impl::CudaInternal::singleton().cuda_api_interface_safe_call<false>(
-          &cudaDeviceSynchronize);
+      Impl::cuda_device_synchronize(
+          "Kokkos::Cuda: backend fence after async free");
     } else {
       Impl::CudaInternal::singleton().cuda_api_interface_safe_call<void *>(
           &cudaFree, arg_alloc_ptr);

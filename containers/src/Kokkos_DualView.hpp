@@ -239,7 +239,8 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
       : modified_flags(t_modified_flags("DualView::modified_flags")),
         d_view(arg_prop, n0, n1, n2, n3, n4, n5, n6, n7) {
     // without UVM, host View mirrors
-    if (Kokkos::Impl::has_type<Impl::WithoutInitializing_t, P...>::value)
+    if constexpr (Kokkos::Impl::has_type<Impl::WithoutInitializing_t,
+                                         P...>::value)
       h_view = Kokkos::create_mirror_view(Kokkos::WithoutInitializing, d_view);
     else
       h_view = Kokkos::create_mirror_view(d_view);
@@ -576,8 +577,8 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
         impl_report_host_sync();
       }
     }
-    if (std::is_same<typename t_host::memory_space,
-                     typename t_dev::memory_space>::value) {
+    if constexpr (std::is_same<typename t_host::memory_space,
+                               typename t_dev::memory_space>::value) {
       typename t_dev::execution_space().fence(
           "Kokkos::DualView<>::sync: fence after syncing DualView");
       typename t_host::execution_space().fence(
