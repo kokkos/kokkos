@@ -76,15 +76,6 @@ struct CheckExecutionSpaceStatus {
     ASSERT_FALSE(exec.is_running());
     ASSERT_EQ(result, 1);
 
-// FIXME OPENACC
-#ifdef KOKKOS_ENABLE_OPENACC
-    if constexpr (std::is_same_v<ExecutionSpace,
-                                 Kokkos::Experimental::OpenACC>) {
-      GTEST_SKIP() << "skip the other half of the test because of missing "
-                      "functionality in OpenACC backend";
-    }
-#endif
-
     const int N = 10000;
 
     Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecutionSpace>(exec, 0, N),
