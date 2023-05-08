@@ -982,14 +982,23 @@ struct TestReducers {
     test_sum(10001);
     test_prod(35);
     test_min(10003);
+#if !defined(KOKKOS_ENABLE_OPENACC)
+    // FIXME_OPENACC - OpenACC (V3.3) does not support custom reductions.
     test_minloc(10003);
+#endif
     test_max(10007);
+#if !defined(KOKKOS_ENABLE_OPENACC)
+    // FIXME_OPENACC - OpenACC (V3.3) does not support custom reductions.
     test_maxloc(10007);
+#endif
 #if defined(KOKKOS_ENABLE_OPENMPTARGET) && defined(KOKKOS_COMPILER_CLANG) && \
     (KOKKOS_COMPILER_CLANG < 1300)
     // FIXME_OPENMPTARGET - The minmaxloc test fails llvm <= 13 version.
 #else
+#if !defined(KOKKOS_ENABLE_OPENACC)
+    // FIXME_OPENACC - OpenACC (V3.3) does not support custom reductions.
     test_minmaxloc(10007);
+#endif
 #endif
   }
 
@@ -1000,14 +1009,23 @@ struct TestReducers {
     test_sum(10001);
     test_prod(sizeof(Scalar) > 4 ? 35 : 19);  // avoid int overflow (see above)
     test_min(10003);
+#if !defined(KOKKOS_ENABLE_OPENACC)
+    // FIXME_OPENACC - OpenACC (V3.3) does not support custom reductions.
     test_minloc(10003);
+#endif
     test_max(10007);
+#if !defined(KOKKOS_ENABLE_OPENACC)
+    // FIXME_OPENACC - OpenACC (V3.3) does not support custom reductions.
     test_maxloc(10007);
+#endif
 #if defined(KOKKOS_ENABLE_OPENMPTARGET) && defined(KOKKOS_COMPILER_CLANG) && \
     (KOKKOS_COMPILER_CLANG < 1300)
     // FIXME_OPENMPTARGET - The minmaxloc test fails llvm <= 13 version.
 #else
+#if !defined(KOKKOS_ENABLE_OPENACC)
+    // FIXME_OPENACC - OpenACC (V3.3) does not support custom reductions.
     test_minmaxloc(10007);
+#endif
 #endif
     test_BAnd(35);
     test_BOr(35);
