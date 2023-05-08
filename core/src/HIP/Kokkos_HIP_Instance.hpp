@@ -96,8 +96,8 @@ class HIPInternal {
 
   hipStream_t m_stream = nullptr;
   hipEvent_t m_last_event;
-  mutable Kokkos::Experimental::ExecutionSpaceStatus m_internal_status =
-      Kokkos::Experimental::ExecutionSpaceStatus::complete;
+  mutable Kokkos::Impl::ExecutionSpaceStatus m_internal_status =
+      Kokkos::Impl::ExecutionSpaceStatus::complete;
   uint32_t m_instance_id =
       Kokkos::Tools::Experimental::Impl::idForInstance<HIP>(
           reinterpret_cast<uintptr_t>(this));
@@ -161,7 +161,7 @@ struct ZeroMemset<HIP, DT, DP...> {
         dst.size() * sizeof(typename View<DT, DP...>::value_type),
         exec_space.hip_stream()));
     exec_space.impl_internal_space_instance()->m_internal_status =
-        Kokkos::Experimental::ExecutionSpaceStatus::submitted;
+        Kokkos::Impl::ExecutionSpaceStatus::submitted;
   }
 
   ZeroMemset(const View<DT, DP...> &dst,

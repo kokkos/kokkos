@@ -420,17 +420,16 @@ void hip_internal_error_throw(hipError_t e, const char *name, const char *file,
 namespace Kokkos {
 bool HIP::is_running() const {
   switch (m_space_instance->m_internal_status) {
-    case Experimental::ExecutionSpaceStatus::complete: return false;
-    case Experimental::ExecutionSpaceStatus::submitted:
+    case Impl::ExecutionSpaceStatus::complete: return false;
+    case Impl::ExecutionSpaceStatus::submitted:
       KOKKOS_IMPL_HIP_SAFE_CALL(hipEventRecord(m_space_instance->m_last_event,
                                                m_space_instance->m_stream));
-      m_space_instance->m_internal_status =
-          Experimental::ExecutionSpaceStatus::running;
+      m_space_instance->m_internal_status = Impl::ExecutionSpaceStatus::running;
       [[fallthrough]];
-    case Experimental::ExecutionSpaceStatus::running:
+    case Impl::ExecutionSpaceStatus::running:
       if (hipEventQuery(m_space_instance->m_last_event) == hipSuccess) {
         m_space_instance->m_internal_status =
-            Experimental::ExecutionSpaceStatus::complete;
+            Impl::ExecutionSpaceStatus::complete;
         return false;
       }
       return true;

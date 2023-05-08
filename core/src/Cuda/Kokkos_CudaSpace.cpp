@@ -74,7 +74,7 @@ void DeepCopyAsyncCuda(const Cuda &instance, void *dst, const void *src,
   KOKKOS_IMPL_CUDA_SAFE_CALL(
       cudaMemcpyAsync(dst, src, n, cudaMemcpyDefault, instance.cuda_stream()));
   instance.impl_internal_space_instance()->m_internal_status =
-      Kokkos::Experimental::ExecutionSpaceStatus::submitted;
+      Kokkos::Impl::ExecutionSpaceStatus::submitted;
 }
 
 void DeepCopyAsyncCuda(void *dst, const void *src, size_t n) {

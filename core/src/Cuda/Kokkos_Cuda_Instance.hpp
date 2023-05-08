@@ -132,8 +132,8 @@ class CudaInternal {
   mutable size_type* m_scratchFunctor;
   cudaStream_t m_stream;
   cudaEvent_t m_last_event;
-  mutable Kokkos::Experimental::ExecutionSpaceStatus m_internal_status =
-      Kokkos::Experimental::ExecutionSpaceStatus::complete;
+  mutable Kokkos::Impl::ExecutionSpaceStatus m_internal_status =
+      Kokkos::Impl::ExecutionSpaceStatus::complete;
 
   uint32_t m_instance_id;
   bool m_manage_stream;
@@ -221,7 +221,7 @@ struct ZeroMemset<Kokkos::Cuda, DT, DP...> {
         dst.size() * sizeof(typename View<DT, DP...>::value_type),
         exec_space_instance.cuda_stream()));
     exec_space_instance.impl_internal_space_instance()->m_internal_status =
-        Kokkos::Experimental::ExecutionSpaceStatus::submitted;
+        Kokkos::Impl::ExecutionSpaceStatus::submitted;
   }
 
   ZeroMemset(const View<DT, DP...>& dst,

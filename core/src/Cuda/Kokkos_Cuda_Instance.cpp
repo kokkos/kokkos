@@ -689,17 +689,16 @@ namespace Kokkos {
 
 bool Cuda::is_running() const {
   switch (m_space_instance->m_internal_status) {
-    case Experimental::ExecutionSpaceStatus::complete: return false;
-    case Experimental::ExecutionSpaceStatus::submitted:
+    case Impl::ExecutionSpaceStatus::complete: return false;
+    case Impl::ExecutionSpaceStatus::submitted:
       KOKKOS_IMPL_CUDA_SAFE_CALL(cudaEventRecord(m_space_instance->m_last_event,
                                                  m_space_instance->m_stream));
-      m_space_instance->m_internal_status =
-          Experimental::ExecutionSpaceStatus::running;
+      m_space_instance->m_internal_status = Impl::ExecutionSpaceStatus::running;
       [[fallthrough]];
-    case Experimental::ExecutionSpaceStatus::running:
+    case Impl::ExecutionSpaceStatus::running:
       if (cudaEventQuery(m_space_instance->m_last_event) == cudaSuccess) {
         m_space_instance->m_internal_status =
-            Experimental::ExecutionSpaceStatus::complete;
+            Impl::ExecutionSpaceStatus::complete;
         return false;
       }
       return true;

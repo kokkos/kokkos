@@ -17,7 +17,7 @@
 #define KOKKOS_EXECUTION_SPACE_STATUS_HPP
 
 namespace Kokkos {
-namespace Experimental {
+namespace Impl {
 
 enum class ExecutionSpaceStatus { submitted, running, complete };
 }
