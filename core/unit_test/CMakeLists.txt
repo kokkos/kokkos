@@ -504,19 +504,11 @@ IF(KOKKOS_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_Reducers_d.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_Reductions.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_Reductions_DeviceView.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_SubView_b.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_SubView_c02.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_SubView_c03.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_SubView_c05.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_SubView_c08.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_SubView_c11.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_TeamBasic.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_TeamScratch.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_TeamTeamSize.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_UniqueToken.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_ViewMapping_b.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_ViewResize.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_BitManipulationBuiltins.cpp
     )
 endif()
 
