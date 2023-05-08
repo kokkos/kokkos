@@ -14,19 +14,23 @@
 //
 //@HEADER
 
+#include <gtest/gtest.h>
 #include <Kokkos_Core.hpp>
 
-#if defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_CUDA_LAMBDA)
-#if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
-#error "Macro bug: KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA shouldn't be defined"
+#if 1 != ((defined(KOKKOS_COMPILER_INTEL) ? 1 : 0) +      \
+          (defined(KOKKOS_COMPILER_INTEL_LLVM) ? 1 : 0) + \
+          (defined(KOKKOS_COMPILER_CRAYC) ? 1 : 0) +      \
+          (defined(KOKKOS_COMPILER_APPLECC) ? 1 : 0) +    \
+          (defined(KOKKOS_COMPILER_CLANG) ? 1 : 0) +      \
+          (defined(KOKKOS_COMPILER_GNU) ? 1 : 0) +        \
+          (defined(KOKKOS_COMPILER_NVHPC) ? 1 : 0) +      \
+          (defined(KOKKOS_COMPILER_MSVC) ? 1 : 0))
+#error "Only one host compiler macro can be defined"
 #endif
-#else
+
 #if !defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
 #error "Macro bug: KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA should be defined"
 #endif
-#endif
-
-#define KOKKOS_PRAGMA_UNROLL(a)
 
 namespace TestCompilerMacros {
 
@@ -51,7 +55,7 @@ struct AddFunctor {
 #pragma vector always
 #endif
 #ifdef KOKKOS_ENABLE_PRAGMA_LOOPCOUNT
-#pragma loop count(128)
+#pragma loop_count(128)
 #endif
     for (int j = 0; j < length; j++) {
       a(i, j) += b(i, j);
@@ -75,7 +79,7 @@ bool Test() {
 }  // namespace TestCompilerMacros
 
 namespace Test {
-TEST(TEST_CATEGORY, compiler_macros) {
-  ASSERT_TRUE((TestCompilerMacros::Test<TEST_EXECSPACE>()));
+TEST(defaultdevicetype, compiler_macros) {
+  ASSERT_TRUE((TestCompilerMacros::Test<Kokkos::DefaultHostExecutionSpace>()));
 }
 }  // namespace Test

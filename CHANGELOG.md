@@ -1,13 +1,45 @@
 # Change Log
 
-## [4.0.0](https://github.com/kokkos/kokkos/tree/4.0.0) (2023-02-21)
-[Full Changelog](https://github.com/kokkos/kokkos/compare/3.7.01...4.0.0)
+## [4.0.01](https://github.com/kokkos/kokkos/tree/4.0.01) (2023-04-14)
+[Full Changelog](https://github.com/kokkos/kokkos/compare/4.0.00...4.0.01)
+
+### Backend and Architecture Enhancements:
+
+#### CUDA:
+
+- Allow NVCC 12 to compile using C++20 flag [\#6020](https://github.com/kokkos/kokkos/pull/6020)
+- Add CUDA Ada architecture support [\#6022](https://github.com/kokkos/kokkos/pull/6022)
+
+#### HIP:
+
+- Add support for AMDGPU target NAVI31 / RX 7900 XT(X): gfx1100 [\#6021](https://github.com/kokkos/kokkos/pull/6021)
+- HIP: Fix warning from `std::memcpy` [\#6019](https://github.com/kokkos/kokkos/pull/6019)
+
+#### SYCL:
+- Fix `SYCLTeamMember` to take arguments for scratch sizes as `std::size_t` [\#5986](https://github.com/kokkos/kokkos/pull/5986)
+
+### General Enhancements
+- Fixup 4.0 change log [\#6023](https://github.com/kokkos/kokkos/pull/6023)
+
+### Build System Changes
+- Cherry-pick TriBITS update from Trilinos [\#6037](https://github.com/kokkos/kokkos/pull/6037)
+- CMake: update package compatibility mode when building within Trilinos [\#6013](https://github.com/kokkos/kokkos/pull/6013)
+
+### Bug Fixes
+- Fix an incorrectly returning size for SIMD uint64_t in AVX2 [\#6011](https://github.com/kokkos/kokkos/pull/6011)
+- Desul atomics: wrong value for `desul::Impl::numeric_limits_max<uint64_t>` [\#6018](https://github.com/kokkos/kokkos/pull/6018)
+- Fix warning in some user code when using std::memcpy [\#6000](https://github.com/kokkos/kokkos/pull/6000)
+- Fix excessive build times using Makefile.kokkos [\#6068](https://github.com/kokkos/kokkos/pull/6068)
+
+## [4.0.0](https://github.com/kokkos/kokkos/tree/4.0.00) (2023-02-21)
+[Full Changelog](https://github.com/kokkos/kokkos/compare/3.7.01...4.0.00)
 
 ### Features:
 - Allow value types without default constructor in `Kokkos::View` with `Kokkos::WithoutInitializing` [\#5307](https://github.com/kokkos/kokkos/pull/5307)
 - `parallel_scan` with `View` as result type. [\#5146](https://github.com/kokkos/kokkos/pull/5146)
 - Introduced `SharedSpace`, an alias for a `MemorySpace` that is accessible by every `ExecutionSpace`. The memory is moved and then accessed locally. [\#5289](https://github.com/kokkos/kokkos/pull/5289)
 - Introduced `SharedHostPinnedSpace`, an alias for a `MemorySpace` that is accessible by every `ExecutionSpace`. The memory is pinned to the host and accessed via zero-copy access. [\#5405](https://github.com/kokkos/kokkos/pull/5405)
+- Add team- and thread-level `sort`, `sort_by_key` algorithms. [\#5317](https://github.com/kokkos/kokkos/pull/5317)
 - Groundwork for `MDSpan` integration. [\#4973](https://github.com/kokkos/kokkos/pull/4973) and [\#5304](https://github.com/kokkos/kokkos/pull/5304)
 - Introduced MD version of hierarchical parallelism: `TeamThreadMDRange`, `ThreadVectorMDRange` and `TeamVectorMDRange`. [\#5238](https://github.com/kokkos/kokkos/pull/5238)
 

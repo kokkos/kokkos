@@ -665,15 +665,13 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
     endif
   endif
 
-  ifeq ($(KOKKOS_INTERNAL_CUDA_USE_LAMBDA), 1)
-    ifeq ($(KOKKOS_INTERNAL_COMPILER_NVCC), 1)
-      tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_CUDA_LAMBDA")
-      KOKKOS_CXXFLAGS += -expt-extended-lambda
-    endif
+  ifeq ($(KOKKOS_INTERNAL_COMPILER_NVCC), 1)
+    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_CUDA_LAMBDA")
+    KOKKOS_CXXFLAGS += -expt-extended-lambda
+  endif
 
-    ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
-      tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_CUDA_LAMBDA")
-    endif
+  ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
+    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_CUDA_LAMBDA")
   endif
 
   ifeq ($(KOKKOS_INTERNAL_CUDA_USE_CONSTEXPR), 1)
@@ -1426,7 +1424,7 @@ tmp := $(call desul_append_header, "$H""endif")
 DESUL_INTERNAL_LS_CONFIG := $(shell ls $(DESUL_CONFIG_HEADER) 2>&1)
 
 ifeq ($(DESUL_INTERNAL_LS_CONFIG), $(DESUL_CONFIG_HEADER))
-  KOKKOS_INTERNAL_NEW_CONFIG := $(strip $(shell diff $(DESUL_CONFIG_HEADER) $(DESUL_INTERNAL_CONFIG_TMP) | grep -c define))
+  DESUL_INTERNAL_NEW_CONFIG := $(strip $(shell diff $(DESUL_CONFIG_HEADER) $(DESUL_INTERNAL_CONFIG_TMP) | grep -c define))
 else
   DESUL_INTERNAL_NEW_CONFIG := 1
 endif

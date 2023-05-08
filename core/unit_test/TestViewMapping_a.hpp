@@ -1038,16 +1038,16 @@ void test_view_mapping() {
     ASSERT_EQ(a.use_count(), 1);
     ASSERT_EQ(b.use_count(), 0);
 
-#if !defined(KOKKOS_ENABLE_CUDA) || !defined(KOKKOS_ENABLE_CUDA_LAMBDA)
-    // Cannot launch host lambda when CUDA lambda is enabled.
-
     using host_exec_space =
         typename Kokkos::Impl::HostMirror<Space>::Space::execution_space;
 
     int errors = 0;
     Kokkos::parallel_reduce(
         Kokkos::RangePolicy<host_exec_space>(0, 10),
-        KOKKOS_LAMBDA(int, int& e) {
+        // FIXME_NVCC: Cannot launch __host__ __device__ lambda on
+        // host when CUDA lambda is enabled, so use plain [=] instead
+        // of KOKKOS_LAMBDA
+        [=](int, int& e) {
           // an unmanaged copy.  When the parallel dispatch accepts a move for
           // the lambda, this count should become 1.
 
@@ -1058,7 +1058,6 @@ void test_view_mapping() {
         },
         errors);
     ASSERT_EQ(errors, 0);
-#endif  // #if !defined( KOKKOS_ENABLE_CUDA_LAMBDA )
   }
 }
 

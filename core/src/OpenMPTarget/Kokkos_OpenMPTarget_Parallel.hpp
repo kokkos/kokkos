@@ -26,6 +26,12 @@
 #include <Kokkos_Atomic.hpp>
 #include "Kokkos_OpenMPTarget_Abort.hpp"
 
+// Intel architectures prefer the classical hierarchical parallelism that relies
+// on OpenMP.
+#if defined(KOKKOS_ARCH_INTEL_GPU)
+#define KOKKOS_IMPL_OPENMPTARGET_HIERARCHICAL_INTEL_GPU
+#endif
+
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
@@ -727,8 +733,7 @@ class OpenMPTargetExec {
   // teams possible is calculated based on NVIDIA's Volta GPU. In
   // future this value should be based on the chosen architecture for the
   // OpenMPTarget backend.
-  static constexpr int MAX_ACTIVE_THREADS = 2080 * 80;
-  static constexpr int MAX_ACTIVE_TEAMS   = MAX_ACTIVE_THREADS / 32;
+  static int MAX_ACTIVE_THREADS;
 
  private:
   static void* scratch_ptr;

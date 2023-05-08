@@ -28,6 +28,7 @@
 #include <SYCL/Kokkos_SYCL_Parallel_Scan.hpp>
 #include <SYCL/Kokkos_SYCL_Parallel_Team.hpp>
 #include <SYCL/Kokkos_SYCL_UniqueToken.hpp>
+#include <SYCL/Kokkos_SYCL_ZeroMemset.hpp>
 #endif
 
 #endif

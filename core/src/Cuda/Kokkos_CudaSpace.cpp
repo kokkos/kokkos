@@ -174,10 +174,11 @@ void *impl_allocate_common(const Cuda &exec_space, const char *arg_label,
     if (exec_space_provided) {
       cudaStream_t stream = exec_space.cuda_stream();
       error_code          = cudaMallocAsync(&ptr, arg_alloc_size, stream);
-      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamSynchronize(stream));
+      exec_space.fence("Kokkos::Cuda: backend fence after async malloc");
     } else {
       error_code = cudaMallocAsync(&ptr, arg_alloc_size, 0);
-      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaDeviceSynchronize());
+      Impl::cuda_device_synchronize(
+          "Kokkos::Cuda: backend fence after async malloc");
     }
   } else {
     error_code = cudaMalloc(&ptr, arg_alloc_size);
@@ -326,9 +327,11 @@ void CudaSpace::impl_deallocate(
 #error CUDART_VERSION undefined!
 #elif (defined(KOKKOS_ENABLE_IMPL_CUDA_MALLOC_ASYNC) && CUDART_VERSION >= 11020)
     if (arg_alloc_size >= memory_threshold_g) {
-      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaDeviceSynchronize());
+      Impl::cuda_device_synchronize(
+          "Kokkos::Cuda: backend fence before async free");
       KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFreeAsync(arg_alloc_ptr, 0));
-      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaDeviceSynchronize());
+      Impl::cuda_device_synchronize(
+          "Kokkos::Cuda: backend fence after async free");
     } else {
       KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFree(arg_alloc_ptr));
     }

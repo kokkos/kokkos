@@ -640,7 +640,9 @@ template <class Functor, class... Traits>
 class Kokkos::Impl::ParallelFor<Functor, Kokkos::MDRangePolicy<Traits...>,
                                 Kokkos::Experimental::OpenACC> {
   using Policy = MDRangePolicy<Traits...>;
-  Kokkos::Experimental::Impl::FunctorAdapter<Functor, Policy> m_functor;
+  Kokkos::Experimental::Impl::FunctorAdapter<
+      Functor, Policy, Kokkos::Experimental::Impl::RoutineClause::seq>
+      m_functor;
   Policy m_policy;
 
  public:
