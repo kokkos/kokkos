@@ -28,8 +28,7 @@ namespace Impl {
 
 template <class T, class... P>
 struct ZeroMemset<HostSpace::execution_space, View<T, P...>> {
-  ZeroMemset(const HostSpace::execution_space& exec,
-             const View<T, P...>& dst,
+  ZeroMemset(const HostSpace::execution_space& exec, const View<T, P...>& dst,
              typename View<T, P...>::const_value_type&) {
     // Host spaces, except for HPX, are synchronous and we need to fence for HPX
     // since we can't properly enqueue a std::memset otherwise.
