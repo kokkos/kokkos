@@ -282,30 +282,6 @@ class CudaInternal {
 
 }  // Namespace Impl
 
-namespace Impl {
-
-template <class DT, class... DP>
-struct ZeroMemset<Kokkos::Cuda, DT, DP...> {
-  ZeroMemset(const Kokkos::Cuda& exec_space_instance,
-             const View<DT, DP...>& dst,
-             typename View<DT, DP...>::const_value_type&) {
-    Kokkos::Impl::CudaInternal::singleton()
-        .cuda_api_interface_safe_call<void*, int, size_t, cudaStream_t>(
-            &cudaMemsetAsync, dst.data(), 0,
-            dst.size() * sizeof(typename View<DT, DP...>::value_type),
-            exec_space_instance.cuda_stream());
-  }
-
-  ZeroMemset(const View<DT, DP...>& dst,
-             typename View<DT, DP...>::const_value_type&) {
-    Kokkos::Impl::CudaInternal::singleton()
-        .cuda_api_interface_safe_call<void*, int, size_t>(
-            &cudaMemset, dst.data(), 0,
-            dst.size() * sizeof(typename View<DT, DP...>::value_type));
-  }
-};
-}  // namespace Impl
-
 namespace Experimental {
 // Partitioning an Execution Space: expects space and integer arguments for
 // relative weight
