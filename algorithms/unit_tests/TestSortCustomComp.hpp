@@ -96,8 +96,7 @@ void run_all_scenarios(int api) {
 }
 
 TEST(TEST_CATEGORY, SortWithCustomComparator) {
-  for (int api = 0; api < 4; api++)
-  {
+  for (int api = 0; api < 4; api++) {
     run_all_scenarios<stdalgos::DynamicTag, int>(api);
     run_all_scenarios<stdalgos::DynamicTag, double>(api);
     run_all_scenarios<stdalgos::StridedTwoTag, int>(api);
@@ -107,6 +106,6 @@ TEST(TEST_CATEGORY, SortWithCustomComparator) {
   }
 }
 
-} // namespace SortWithComp
-} // namespace Test
+}  // namespace SortWithComp
+}  // namespace Test
 #endif
