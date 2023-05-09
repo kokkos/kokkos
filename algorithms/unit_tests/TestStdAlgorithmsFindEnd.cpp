@@ -282,7 +282,7 @@ void run_single_scenario(const InfoType& scenario_info, std::size_t seq_ext,
     const auto mydiff  = myrit - KE::cbegin(view);
     const auto stddiff = stdrit - KE::cbegin(view_h);
     // std::cout << "result : " << mydiff << " " << stddiff << std::endl;
-    EXPECT_EQ(mydiff, stddiff);
+    ASSERT_EQ(mydiff, stddiff);
   }
 
   {
@@ -291,21 +291,21 @@ void run_single_scenario(const InfoType& scenario_info, std::size_t seq_ext,
                      KE::cbegin(s_view), KE::cend(s_view), args...);
     const auto mydiff  = myrit - KE::cbegin(view);
     const auto stddiff = stdrit - KE::cbegin(view_h);
-    EXPECT_EQ(mydiff, stddiff);
+    ASSERT_EQ(mydiff, stddiff);
   }
 
   {
     auto myrit         = KE::find_end(exespace(), view, s_view, args...);
     const auto mydiff  = myrit - KE::begin(view);
     const auto stddiff = stdrit - KE::cbegin(view_h);
-    EXPECT_EQ(mydiff, stddiff);
+    ASSERT_EQ(mydiff, stddiff);
   }
 
   {
     auto myrit = KE::find_end("label", exespace(), view, s_view, args...);
     const auto mydiff  = myrit - KE::begin(view);
     const auto stddiff = stdrit - KE::cbegin(view_h);
-    EXPECT_EQ(mydiff, stddiff);
+    ASSERT_EQ(mydiff, stddiff);
   }
 
   Kokkos::fence();
