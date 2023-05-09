@@ -114,8 +114,10 @@ TEST(TEST_CATEGORY, SortWithCustomComparator) {
 #if defined(KOKKOS_ENABLE_ONEDPL)
     }
 #endif
-  }
+
+  }  // end for
+}
 
 }  // namespace SortWithComp
-}  // namespace SortWithComp
+}  // namespace Test
 #endif
