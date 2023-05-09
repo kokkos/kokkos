@@ -62,7 +62,7 @@ struct NonTrivialScanFunctor {
 };
 
 template <typename ExecSpace>
-struct GenericScanFunctor {
+struct GenericExclusiveScanFunctor {
   Kokkos::View<value_type *, ExecSpace> d_data;
 
   template <typename SizeType, typename ValueType>
@@ -151,7 +151,7 @@ TEST(TEST_CATEGORY, IncrTest_16_parallelscan) {
   TestScanWithTotal<TEST_EXECSPACE> test_total;
   test_total.parallel_scan<TrivialScanFunctor<TEST_EXECSPACE>>();
   test_total.parallel_scan<NonTrivialScanFunctor<TEST_EXECSPACE>>();
-  test_total.parallel_scan<GenericScanFunctor<TEST_EXECSPACE>>();
+  test_total.parallel_scan<GenericExclusiveScanFunctor<TEST_EXECSPACE>>();
 }
 
 }  // namespace Test
