@@ -53,6 +53,13 @@ void sort(const ExecutionSpace& exec,
   using ViewType = Kokkos::View<DataType, Properties...>;
   using MemSpace = typename ViewType::memory_space;
 
+  static_assert(
+      ViewType::rank == 1 &&
+          (std::is_same_v<typename ViewType::array_layout, LayoutRight> ||
+           std::is_same_v<typename ViewType::array_layout, LayoutLeft> ||
+	   std::is_same_v<typename ViewType::array_layout, LayoutStride>),
+      "sort: only supports 1D Views with LayoutRight, LayoutLeft or LayoutStride.");
+
   if constexpr (SpaceAccessibility<HostSpace, MemSpace>::accessible) {
     (void)exec;
     auto first = ::Kokkos::Experimental::begin(view);
