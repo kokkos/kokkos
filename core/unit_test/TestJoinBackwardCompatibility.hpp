@@ -21,7 +21,7 @@
                                // unimplemented reduction features
 namespace {
 
-// FIXME_NVHPC errors out when using enums here
+// FIXME_NVHPC 23.3 errors out when using enums here
 // NVC++-F-0000-Internal compiler error. process_acc_put_dinit: unexpected
 // datatype    5339
 #ifndef KOKKOS_COMPILER_NVHPC
@@ -144,6 +144,11 @@ void test_join_backward_compatibility() {
 }
 
 TEST(TEST_CATEGORY, join_backward_compatibility) {
+#if defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_COMPILER_NVHPC) && \
+    KOKKOS_COMPILER_NVHPC <                                          \
+        230300  // FIXME_NVHPC test passes with workaround in 23.3
+  GTEST_SKIP() << "FIXME wrong result";
+#endif
   test_join_backward_compatibility();
 }
 
