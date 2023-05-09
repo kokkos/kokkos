@@ -65,8 +65,8 @@ template <typename ExecSpace>
 struct GenericExclusiveScanFunctor {
   Kokkos::View<value_type *, ExecSpace> d_data;
 
-  template <typename SizeType, typename ValueType>
-  KOKKOS_FUNCTION void operator()(const SizeType i, ValueType &update_value,
+  template <typename IndexType, typename ValueType>
+  KOKKOS_FUNCTION void operator()(const IndexType i, ValueType &update_value,
                                   const bool final) const {
     const ValueType val_i = d_data(i);
     if (final) d_data(i) = update_value;
@@ -80,8 +80,8 @@ struct TestScan {
   using View_1D  = typename Kokkos::View<value_type *, ExecSpace>;
   View_1D d_data = View_1D("data", N);
 
-  template <typename SizeType>
-  KOKKOS_FUNCTION void operator()(SizeType i) const {
+  template <typename IndexType>
+  KOKKOS_FUNCTION void operator()(IndexType i) const {
     d_data(i) = i * 0.5;
   }
 
@@ -114,8 +114,8 @@ struct TestScanWithTotal {
   using View_1D  = typename Kokkos::View<value_type *, ExecSpace>;
   View_1D d_data = View_1D("data", N);
 
-  template <typename SizeType>
-  KOKKOS_FUNCTION void operator()(SizeType i) const {
+  template <typename IndexType>
+  KOKKOS_FUNCTION void operator()(IndexType i) const {
     d_data(i) = i * 0.5;
   }
 
