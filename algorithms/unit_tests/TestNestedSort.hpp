@@ -21,7 +21,7 @@
 #include <unordered_set>
 #include <random>
 #include <Kokkos_Random.hpp>
-#include <Kokkos_NestedSort.hpp>
+#include <sorting/Kokkos_NestedSort.hpp>
 
 namespace Test {
 namespace NestedSortImpl {
