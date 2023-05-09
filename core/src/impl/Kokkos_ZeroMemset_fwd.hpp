@@ -14,13 +14,16 @@
 //
 //@HEADER
 
-#ifndef KOKKOS_DECLARE_SERIAL_HPP
-#define KOKKOS_DECLARE_SERIAL_HPP
+#ifndef KOKKOS_ZEROMEMSET_FWD_HPP
+#define KOKKOS_ZEROMEMSET_FWD_HPP
 
-#if defined(KOKKOS_ENABLE_SERIAL)
-#include <Serial/Kokkos_Serial.hpp>
-#include <Serial/Kokkos_Serial_MDRangePolicy.hpp>
-#include <Serial/Kokkos_Serial_ZeroMemset.hpp>
-#endif
+namespace Kokkos {
+namespace Impl {
 
-#endif
+template <typename ExecutionSpace, class ViewType>
+struct ZeroMemset;
+
+}  // namespace Impl
+}  // namespace Kokkos
+
+#endif  // #ifndef KOKKOS_ZEROMEMSET_FWD_HPP

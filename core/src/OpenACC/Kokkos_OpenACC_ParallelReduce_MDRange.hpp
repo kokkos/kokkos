@@ -51,6 +51,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
   CombinedFunctorReducerType m_functor_reducer;
   Policy m_policy;
   Pointer m_result_ptr;
+  bool m_result_ptr_on_device;
 
  public:
   template <class ViewType>
@@ -58,22 +59,32 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
                  const Policy& policy, const ViewType& result)
       : m_functor_reducer(functor_reducer),
         m_policy(policy),
-        m_result_ptr(result.data()) {}
+        m_result_ptr(result.data()),
+        m_result_ptr_on_device(
+            MemorySpaceAccess<Kokkos::Experimental::OpenACCSpace,
+                              typename ViewType::memory_space>::accessible) {}
 
   void execute() const {
     static_assert(1 < Policy::rank && Policy::rank < 7);
     static_assert(Policy::inner_direction == Iterate::Left ||
                   Policy::inner_direction == Iterate::Right);
     constexpr int rank = Policy::rank;
+    ValueType val;
+    const ReducerType& reducer = m_functor_reducer.get_reducer();
+    reducer.init(&val);
+
     for (int i = 0; i < rank; ++i) {
       if (m_policy.m_lower[i] >= m_policy.m_upper[i]) {
+        if (m_result_ptr_on_device) {
+          acc_memcpy_to_device(m_result_ptr, &val, sizeof(ValueType));
+        } else {
+          *m_result_ptr = val;
+        }
         return;
       }
     }
 
-    ValueType val;
-    const ReducerType& reducer = m_functor_reducer.get_reducer();
-    reducer.init(&val);
+    int const async_arg = m_policy.space().acc_async_queue();
 
     Kokkos::Experimental::Impl::OpenACCParallelReduceMDRangeHelper(
         Kokkos::Experimental::Impl::FunctorAdapter<
@@ -85,8 +96,20 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
             Sum<ValueType>, typename ReducerType::functor_type>(val),
         m_policy);
 
+    // OpenACC backend supports only built-in Reducer types; thus
+    // reducer.final() below is a no-op.
     reducer.final(&val);
-    *m_result_ptr = val;
+    // acc_wait(async_arg) in the below if-else statements is needed because the
+    // above OpenACC compute kernel can be executed asynchronously and val is a
+    // local host variable.
+    if (m_result_ptr_on_device) {
+      acc_memcpy_to_device_async(m_result_ptr, &val, sizeof(ValueType),
+                                 async_arg);
+      acc_wait(async_arg);
+    } else {
+      acc_wait(async_arg);
+      *m_result_ptr = val;
+    }
   }
 };
 
