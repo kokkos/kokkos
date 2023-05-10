@@ -30,7 +30,7 @@ export CUDA_LAUNCH_BLOCKING=1
 export CUDA_MANAGED_FORCE_DEVICE_ALLOC=1
 
 
-export KOKKOS_EXTRA_FLAGS=""
+export KOKKOS_EXTRA_FLAGS="-DKokkos_ENABLE_CUDA_LAMBDA=ON"
 scriptdir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 echo "DIR=$scriptdir"
 NVCC_WRAPPER=`realpath $scriptdir/../../bin/nvcc_wrapper`
