@@ -634,8 +634,10 @@ class TeamPolicyCommon<ExecSpace, Properties...>
 
  public:
   using traits = PolicyTraits<Properties...>;
+  static_assert(std::is_same_v<ExecSpace, typename traits::execution_space>);
 
   using execution_policy = TeamPolicy<Properties...>;
+  static_assert(std::is_base_of_v<TeamPolicyCommon, execution_policy>);
 
   TeamPolicyCommon() : internal_policy(0, AUTO) {}
 
@@ -742,12 +744,10 @@ class TeamPolicy
     : public Impl::TeamPolicyCommon<
           typename Impl::PolicyTraits<Properties...>::execution_space,
           Properties...> {
-  using team_policy_common = Impl::TeamPolicyCommon<
-      typename Impl::PolicyTraits<Properties...>::execution_space,
-      Properties...>;
-
  public:
-  using team_policy_common::team_policy_common;
+  using Impl::TeamPolicyCommon<
+      typename Impl::PolicyTraits<Properties...>::execution_space,
+      Properties...>::TeamPolicyCommon;
 };
 
 // Execution space not provided deduces to TeamPolicy<>
