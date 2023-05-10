@@ -34,6 +34,7 @@
 #include <impl/Kokkos_Tools.hpp>
 #include <impl/Kokkos_DeviceManagement.hpp>
 #include <impl/Kokkos_ExecSpaceManager.hpp>
+#include <impl/Kokkos_ExecutionSpaceStatus.hpp>
 
 /*--------------------------------------------------------------------------*/
 /* Standard 'C' libraries */

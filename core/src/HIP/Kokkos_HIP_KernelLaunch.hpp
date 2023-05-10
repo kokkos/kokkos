@@ -24,6 +24,7 @@
 #include <HIP/Kokkos_HIP_Error.hpp>
 #include <HIP/Kokkos_HIP_Instance.hpp>
 #include <HIP/Kokkos_HIP_Space.hpp>
+#include <impl/Kokkos_ExecutionSpaceStatus.hpp>
 
 // Must use global variable on the device with HIP-Clang
 #ifdef __HIP__

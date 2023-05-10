@@ -21,7 +21,6 @@
 
 #include <Kokkos_Layout.hpp>
 #include <HIP/Kokkos_HIP_Space.hpp>
-#include <impl/Kokkos_ExecutionSpaceStatus.hpp>
 #include <hip/hip_runtime_api.h>
 
 namespace Kokkos {

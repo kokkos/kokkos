@@ -27,6 +27,7 @@
 #include <HIP/Kokkos_HIP.hpp>
 #include <HIP/Kokkos_HIP_Space.hpp>
 #include <impl/Kokkos_Error.hpp>
+#include <impl/Kokkos_ExecutionSpaceStatus.hpp>
 
 /*--------------------------------------------------------------------------*/
 /* Standard 'C' libraries */

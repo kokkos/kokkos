@@ -32,6 +32,7 @@
 #include <impl/Kokkos_GraphImpl_fwd.hpp>
 #include <Cuda/Kokkos_Cuda_GraphNodeKernel.hpp>
 #include <Cuda/Kokkos_Cuda_BlockSize_Deduction.hpp>
+#include <impl/Kokkos_ExecutionSpaceStatus.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

@@ -22,6 +22,7 @@
 #include <HIP/Kokkos_HIP_Error.hpp>  // HIP_SAFE_CALL
 #include <HIP/Kokkos_HIP.hpp>
 #include <HIP/Kokkos_HIP_Instance.hpp>
+#include <impl/Kokkos_ExecutionSpaceStatus.hpp>
 
 namespace Kokkos {
 namespace Impl {

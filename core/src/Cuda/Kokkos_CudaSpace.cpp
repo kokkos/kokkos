@@ -24,6 +24,7 @@
 #include <Kokkos_Core.hpp>
 #include <Cuda/Kokkos_Cuda.hpp>
 #include <Cuda/Kokkos_CudaSpace.hpp>
+#include <impl/Kokkos_ExecutionSpaceStatus.hpp>
 
 #include <cstdlib>
 #include <iostream>
