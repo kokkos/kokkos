@@ -89,7 +89,7 @@ void workgroup_scan(sycl::nd_item<dim> item, const FunctorType& final_reducer,
     final_reducer.join(&local_value, &local_mem[sg_group_id - 1]);
 }
 
-template <class FunctorType, class... Traits>
+template <class FunctorType, class ValueType, class... Traits>
 class ParallelScanSYCLBase {
  public:
   using Policy = Kokkos::RangePolicy<Traits...>;
@@ -100,8 +100,8 @@ class ParallelScanSYCLBase {
   using LaunchBounds = typename Policy::launch_bounds;
 
  public:
-  using Analysis =
-      FunctorAnalysis<FunctorPatternInterface::SCAN, Policy, FunctorType>;
+  using Analysis       = FunctorAnalysis<FunctorPatternInterface::SCAN, Policy,
+                                   FunctorType, ValueType>;
   using pointer_type   = typename Analysis::pointer_type;
   using value_type     = typename Analysis::value_type;
   using reference_type = typename Analysis::reference_type;
@@ -353,9 +353,9 @@ class ParallelScanSYCLBase {
 template <class FunctorType, class... Traits>
 class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
                    Kokkos::Experimental::SYCL>
-    : private ParallelScanSYCLBase<FunctorType, Traits...> {
+    : private ParallelScanSYCLBase<FunctorType, void, Traits...> {
  public:
-  using Base = ParallelScanSYCLBase<FunctorType, Traits...>;
+  using Base = ParallelScanSYCLBase<FunctorType, void, Traits...>;
 
   inline void execute() {
     Base::impl_execute([]() {});
@@ -371,9 +371,9 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
 template <class FunctorType, class ReturnType, class... Traits>
 class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
                             ReturnType, Kokkos::Experimental::SYCL>
-    : public ParallelScanSYCLBase<FunctorType, Traits...> {
+    : public ParallelScanSYCLBase<FunctorType, ReturnType, Traits...> {
  public:
-  using Base = ParallelScanSYCLBase<FunctorType, Traits...>;
+  using Base = ParallelScanSYCLBase<FunctorType, ReturnType, Traits...>;
 
   const Kokkos::Experimental::SYCL& m_exec;
 

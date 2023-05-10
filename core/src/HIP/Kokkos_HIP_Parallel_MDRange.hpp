@@ -281,8 +281,8 @@ class ParallelReduce<CombinedFunctorReducerType,
   inline unsigned local_block_size(const FunctorType& f) {
     const auto& instance = m_policy.space().impl_internal_space_instance();
     auto shmem_functor   = [&f](unsigned n) {
-      return hip_single_inter_block_reduce_scan_shmem<false, FunctorType,
-                                                      WorkTag>(f, n);
+      return hip_single_inter_block_reduce_scan_shmem<false, WorkTag,
+                                                      value_type>(f, n);
     };
 
     unsigned block_size =
@@ -331,8 +331,8 @@ class ParallelReduce<CombinedFunctorReducerType,
 
       const int shmem =
           ::Kokkos::Impl::hip_single_inter_block_reduce_scan_shmem<
-              false, FunctorType, WorkTag>(m_functor_reducer.get_functor(),
-                                           block.y);
+              false, WorkTag, value_type>(m_functor_reducer.get_functor(),
+                                          block.y);
 
       hip_parallel_launch<ParallelReduce, LaunchBounds>(
           *this, grid, block, shmem,

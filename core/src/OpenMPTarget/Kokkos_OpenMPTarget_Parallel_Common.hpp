@@ -51,7 +51,8 @@ struct ParallelReduceSpecialize {
                              PointerType /*result_ptr*/) {
     constexpr int FunctorHasJoin =
         Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE, PolicyType,
-                              FunctorType>::Reducer::has_join_member_function();
+                              FunctorType,
+                              ValueType>::Reducer::has_join_member_function();
     constexpr int UseReducerType = is_reducer_v<ReducerType>;
 
     std::stringstream error_message;
@@ -72,7 +73,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
       std::conditional_t<std::is_same<InvalidType, ReducerType>::value,
                          FunctorType, ReducerType>;
   using Analysis = Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
-                                         PolicyType, ReducerTypeFwd>;
+                                         PolicyType, ReducerTypeFwd, ValueType>;
   using ReferenceType = typename Analysis::reference_type;
 
   using ParReduceCopy = ParallelReduceCopy<PointerType>;
@@ -198,7 +199,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
 
     using FunctorAnalysis =
         Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE, PolicyType,
-                              FunctorType>;
+                              FunctorType, ValueType>;
 
     // Initialize the result pointer.
 
@@ -330,7 +331,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
       std::conditional_t<std::is_same<InvalidType, ReducerType>::value,
                          FunctorType, ReducerType>;
   using Analysis = Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
-                                         PolicyType, ReducerTypeFwd>;
+                                         PolicyType, ReducerTypeFwd, ValueType>;
 
   using ReferenceType = typename Analysis::reference_type;
 
@@ -540,7 +541,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
                                 PointerType ptr, const bool ptr_on_device) {
     using FunctorAnalysis =
         Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE, PolicyType,
-                              FunctorType>;
+                              FunctorType, ValueType>;
 
     const int league_size   = p.league_size();
     const int team_size     = p.team_size();

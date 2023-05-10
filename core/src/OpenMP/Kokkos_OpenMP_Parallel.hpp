@@ -622,7 +622,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
   using Policy = Kokkos::RangePolicy<Traits...>;
 
   using Analysis =
-      FunctorAnalysis<FunctorPatternInterface::SCAN, Policy, FunctorType>;
+      FunctorAnalysis<FunctorPatternInterface::SCAN, Policy, FunctorType, void>;
 
   using WorkTag   = typename Policy::work_tag;
   using WorkRange = typename Policy::WorkRange;
@@ -749,8 +749,8 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
  private:
   using Policy = Kokkos::RangePolicy<Traits...>;
 
-  using Analysis =
-      FunctorAnalysis<FunctorPatternInterface::SCAN, Policy, FunctorType>;
+  using Analysis = FunctorAnalysis<FunctorPatternInterface::SCAN, Policy,
+                                   FunctorType, ReturnType>;
 
   using WorkTag   = typename Policy::work_tag;
   using WorkRange = typename Policy::WorkRange;

@@ -21,14 +21,15 @@
 #include <OpenACC/Kokkos_OpenACC_FunctorAdapter.hpp>
 #include <Kokkos_Parallel.hpp>
 
-template <class Functor, class... Traits>
-class Kokkos::Impl::ParallelScan<Functor, Kokkos::RangePolicy<Traits...>,
-                                 Kokkos::Experimental::OpenACC> {
+namespace Kokkos::Impl {
+
+template <class Functor, class GivenValueType, class... Traits>
+class ParallelScanOpenACCBase {
  protected:
   using Policy = Kokkos::RangePolicy<Traits...>;
   using Analysis =
       Kokkos::Impl::FunctorAnalysis<Kokkos::Impl::FunctorPatternInterface::SCAN,
-                                    Policy, Functor>;
+                                    Policy, Functor, GivenValueType>;
   using PointerType = typename Analysis::pointer_type;
   using ValueType   = typename Analysis::value_type;
   using MemberType  = typename Policy::member_type;
@@ -40,9 +41,9 @@ class Kokkos::Impl::ParallelScan<Functor, Kokkos::RangePolicy<Traits...>,
   static constexpr MemberType default_scan_chunk_size = 128;
 
  public:
-  ParallelScan(Functor const& arg_functor, Policy const& arg_policy,
-               ValueType* arg_result_ptr             = nullptr,
-               bool arg_result_ptr_device_accessible = false)
+  ParallelScanOpenACCBase(Functor const& arg_functor, Policy const& arg_policy,
+                          ValueType* arg_result_ptr,
+                          bool arg_result_ptr_device_accessible)
       : m_functor(arg_functor),
         m_policy(arg_policy),
         m_result_ptr(arg_result_ptr),
@@ -219,18 +220,40 @@ class Kokkos::Impl::ParallelScan<Functor, Kokkos::RangePolicy<Traits...>,
   }
 };
 
+}  // namespace Kokkos::Impl
+
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
+
+template <class Functor, class... Traits>
+class Kokkos::Impl::ParallelScan<Functor, Kokkos::RangePolicy<Traits...>,
+                                 Kokkos::Experimental::OpenACC>
+    : public ParallelScanOpenACCBase<Functor, void, Traits...> {
+  using base_t    = ParallelScanOpenACCBase<Functor, void, Traits...>;
+  using IndexType = typename base_t::IndexType;
+
+ public:
+  void execute() const {
+    const IndexType begin = base_t::m_policy.begin();
+    const IndexType end   = base_t::m_policy.end();
+    IndexType chunk_size  = base_t::m_policy.chunk_size();
+
+    int const async_arg = base_t::m_policy.space().acc_async_queue();
+
+    OpenACCParallelScanRangePolicy(begin, end, chunk_size, async_arg);
+  }
+
+  ParallelScan(const Functor& arg_functor,
+               const typename base_t::Policy& arg_policy)
+      : base_t(arg_functor, arg_policy, nullptr, false) {}
+};
 
 template <class FunctorType, class ReturnType, class... Traits>
 class Kokkos::Impl::ParallelScanWithTotal<
     FunctorType, Kokkos::RangePolicy<Traits...>, ReturnType,
     Kokkos::Experimental::OpenACC>
-    : public ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
-                          Kokkos::Experimental::OpenACC> {
-  using base_t    = ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
-                              Kokkos::Experimental::OpenACC>;
-  using ValueType = typename base_t::ValueType;
+    : public ParallelScanOpenACCBase<FunctorType, ReturnType, Traits...> {
+  using base_t    = ParallelScanOpenACCBase<FunctorType, ReturnType, Traits...>;
   using IndexType = typename base_t::IndexType;
 
  public:
