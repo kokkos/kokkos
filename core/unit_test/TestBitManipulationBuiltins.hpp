@@ -791,7 +791,7 @@ struct TestBitCastFunction {
   template <typename To, typename From>
 #if defined(KOKKOS_COMPILER_GNU) && (900 <= KOKKOS_COMPILER_GNU) && \
     (KOKKOS_COMPILER_GNU < 930)
-  // workaround compiler bug in GCC 9.1 and GCC 9.2
+  // workaround compiler bug seen in GCC 9.0.1 and GCC 9.2.0
   KOKKOS_FUNCTION bool check(const From& from) const
 #else
   static KOKKOS_FUNCTION bool check(const From& from)
