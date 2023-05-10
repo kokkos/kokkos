@@ -259,12 +259,13 @@ KOKKOS_IMPL_HOST_FUNCTION T byteswap_builtin_host(T x) noexcept {
   } else if constexpr (sizeof(T) == 8) {
     return __builtin_bswap64(x);
   } else if constexpr (sizeof(T) == 16) {
+#if defined(__has_builtin)
 #if __has_builtin(__builtin_bswap128)
     return __builtin_bswap128(x);
-#else
+#endif
+#endif
     return (__builtin_bswap64(x >> 64) |
             (static_cast<T>(__builtin_bswap64(x)) << 64));
-#endif
   }
 #endif
 
