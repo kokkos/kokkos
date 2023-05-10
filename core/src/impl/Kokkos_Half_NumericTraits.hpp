@@ -217,7 +217,7 @@ struct Kokkos::Experimental::Impl::radix_helper<Kokkos::Experimental::half_t> {
 
 /// \brief: This is the smallest possible exponent value
 ///
-/// Stdc defines this as the smallest possible exponent val`ue for type binary16. 
+/// Stdc defines this as the smallest possible exponent value for type binary16. 
 /// More precisely, it is the minimum negative integer such that the value min_exponent_helper
 /// raised to this power minus 1 can be represented as a normalized floating point number of type float.
 ///
