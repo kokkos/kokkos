@@ -622,7 +622,7 @@ class TeamPolicyCommon;
 // We can't just use TeamPolicyInternal for this, because that
 // is specialized for every ExecSpace (and therefore not common code)
 
-template <typename ExecSpace, typename Properties...>
+template <typename ExecSpace, typename... Properties>
 class TeamPolicyCommon<ExecSpace, Properties...>
     : public TeamPolicyInternal<ExecSpace, Properties...> {
   using internal_policy =
