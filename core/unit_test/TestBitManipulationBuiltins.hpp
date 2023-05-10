@@ -789,7 +789,7 @@ struct TestBitCastFunction {
     ASSERT_EQ(errors, 0) << "Failed check no error for bit_cast()";
   }
   template <typename To, typename From>
-#if defined(KOKKOS_COMPILER_GNU) && (910 <= KOKKOS_COMPILER_GNU) && \
+#if defined(KOKKOS_COMPILER_GNU) && (900 <= KOKKOS_COMPILER_GNU) && \
     (KOKKOS_COMPILER_GNU < 930)
   // workaround compiler bug in GCC 9.1 and GCC 9.2
   KOKKOS_FUNCTION bool check(const From& from) const
