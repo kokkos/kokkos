@@ -72,7 +72,8 @@ namespace Impl {
 
 #if defined(KOKKOS_ENABLE_ONEDPL)
 template <class DataType, class... Properties, class... ComparatorOrEmpty>
-void sort_onedpl(const Kokkos::View<DataType, Properties...>& view,
+void sort_onedpl(const Experimental::SYCL& space,
+                 const Kokkos::View<DataType, Properties...>& view,
                  ComparatorOrEmpty&&... compOrEmpty) {
   using exespace = Experimental::SYCL;
   using ViewType = Kokkos::View<DataType, Properties...>;
@@ -239,9 +240,9 @@ void sort_without_comparator(
 #if defined(KOKKOS_ENABLE_ONEDPL)
 template <class DataType, class... Properties>
 void sort_without_comparator(
-    const Experimental::SYCL& /*space*/,
+    const Experimental::SYCL& space,
     const Kokkos::View<DataType, Properties...>& view) {
-  sort_onedpl(view);
+  sort_onedpl(space, view);
 }
 #endif
 
@@ -296,7 +297,7 @@ void sort_with_comparator(const Experimental::SYCL& space,
     copy_to_host_and_run_stdsort(space, view, comp);
   } else {
     (void)space;
-    sort_onedpl(view, comp);
+    sort_onedpl(space, view, comp);
   }
 }
 #endif
