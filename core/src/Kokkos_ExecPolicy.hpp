@@ -575,8 +575,8 @@ struct ScratchRequest {
 // Throws a runtime exception if level is not `0` or `1`
 void team_policy_check_valid_storage_level_argument(int level);
 
-/** \brief  Execution policy for parallel work over a league of teams of
- * threads.
+/** \brief  TeamPolicy is the execution policy for parallel work over a league
+ * of teams of threads.
  *
  *  The work functor is called for each thread of each team such that
  *  the team's member threads are guaranteed to be concurrent.
@@ -600,23 +600,26 @@ void team_policy_check_valid_storage_level_argument(int level);
  * Integer Index type used to iterate over the Index space.
  *    LaunchBounds<unsigned,unsigned> Launch Bounds for CUDA compilation,
  *    default of LaunchBounds<0,0> indicates no launch bounds specified.
+ *
+ * TeamPolicyCommon is the implementation of TeamPolicy,
+ * designed to get around ICE bugs with CTADs.
+ *
+ * It has no primary template, as that was causing
+ * the CTAD ICEing bugs.
+ *
+ * Since we need to pass ExecSpace to TeamPolicyInternal anyway,
+ * this is implemented as a partial specialization where the first parameter is
+ * ExecSpace. ExecSpace must be the same type as
+ * PolicyTraits<Properties...>::execution_space.
+ *
+ * Usage: TeamPolicy<Properties...> publicly derives from TeamPolicyCommon
+ * and inherits all constructors.
+ * Note: this cannot be enforced with a static_assert inside TeamPolicyCommon,
+ * as TeamPolicy is an incomplete type at that point.
+ *
+ * Note: We can't just use TeamPolicyInternal for this, because that
+ * is specialized for every ExecSpace (and therefore not common code).
  */
-
-// TeamPolicyCommon is the implementation of TeamPolicy,
-// designed to get around ICE bugs with CTADs.
-//
-// It has no primary template, as that was causing
-// the CTAD ICEing bugs.
-//
-// Since we need to pass ExecSpace to TeamPolicyInternal anyway,
-// this is implemented as a partial specialization where the first parameter is ExecSpace.
-// ExecSpace must be the same type as PolicyTraits<Properties...>::execution_space.
-//
-// Usage: TeamPolicy<Properties...> publicly derives from TeamPolicyCommon
-// and inherits all constructors.
-//
-// Note: We can't just use TeamPolicyInternal for this, because that
-// is specialized for every ExecSpace (and therefore not common code).
 
 template <typename... Properties>
 class TeamPolicy;
