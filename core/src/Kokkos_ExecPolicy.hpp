@@ -602,283 +602,152 @@ void team_policy_check_valid_storage_level_argument(int level);
  *    default of LaunchBounds<0,0> indicates no launch bounds specified.
  */
 
-/*
- * Implementation notes:
- *
- * Some compilers ICE when generating implicit deduction guides for types whose
- * primary template has a parameter pack.
- *
- * To work around this, we needed to remove the primary template and only have
- * template specializations.
- *
- * A previous attempt tried doing this with two specializations:  TeamPolicy<>
- * and TeamPolicy<P, Properties...>.  Because TeamPolicy<> is a full
- * specialization, it is a concrete type, and we ran into the following issues:
- *
- * 1. The default execution space must be a complete type.
- * 2. The partial specialization of TeamPolicyInternal (which TeamPolicy derives
- * from) on that execution space exists; otherwise it tries to use the primary
- * TeamPolicyInternal template, which is incorrect and won’t necessarily
- * compile.
- *
- * Because of this, all the specializations have to be partial specializations,
- * as we rely on types that are not yet complete when TeamPolicy itself is
- * defined (but not yet instantiated).
- *
- * We changed the interface to
- * 1. Remove the primary template
- * 2. Require at least one template parameter
- * 3. Two specializations which essentially do the exact same thing:
- * TeamPolicy<P> and TeamPolicy<P1, P2, Properties...>.
- *
- * In order to have backwards compatibility with the interface, we added this
- * forward declaration:
- *
- * template <typename P = DefaultExecutionSpace, typename... Properties>
- * class TeamPolicy;
- *
- * This allows users to still declare:
- *
- * TeamPolicy<>
- *
- * which now becomes an alias for
- *
- * TeamPolicy<DefaultExecutionSpace>
- *
- * Note:  This is a breaking change for users who are already forward declaring
- * TeamPolicy, as we are now requiring at least one template parameter.  This
- * should not impact many folks, and the fix is fairly simple.
- *
- * Important:  Both TeamPolicy<P> and TeamPolicy<P1, P2, Properties...> should
- * be kept in sync when doing maintenance.
- *
- */
-
-template <typename P = DefaultExecutionSpace, typename... Properties>
+template <typename... Properties>
 class TeamPolicy;
 
-template <typename P>
-class TeamPolicy<P> : public Impl::TeamPolicyInternal<
-                          typename Impl::PolicyTraits<P>::execution_space, P> {
-  using internal_policy =
-      Impl::TeamPolicyInternal<typename Impl::PolicyTraits<P>::execution_space,
-                               P>;
+namespace Impl {
 
-  template <typename OP, typename... OtherProperties>
+template <typename...>
+class TeamPolicyCommon;
+
+// This is the implementation of TeamPolicy,
+// designed to get around ICE bugs with CTADs
+//
+// It has no primary template, as that was causing
+// the CTAD ICEing bugs.
+//
+// It assumes that TeamPolicy<Properties...> publicly derives from this
+// and inherits all constructors.
+//
+// We can't just use TeamPolicyInternal for this, because that
+// is specialized for every ExecSpace (and therefore not common code)
+
+template <typename ExecSpace, typename Properties...>
+class TeamPolicyCommon<ExecSpace, Properties...>
+    : public TeamPolicyInternal<ExecSpace, Properties...> {
+  using internal_policy =
+      TeamPolicyInternal<typename PolicyTraits<Properties...>::execution_space,
+                         Properties...>;
+
+  template <class... OtherProperties>
   friend class TeamPolicy;
 
  public:
-  using traits = Impl::PolicyTraits<P>;
+  using traits = PolicyTraits<Properties...>;
 
-  using execution_policy = TeamPolicy<P>;
+  using execution_policy = TeamPolicy<Properties...>;
 
-  TeamPolicy() : internal_policy(0, AUTO) {}
+  TeamPolicyCommon() : internal_policy(0, AUTO) {}
 
   /** \brief  Construct policy with the given instance of the execution space */
-  TeamPolicy(const typename traits::execution_space& space_,
-             int league_size_request, int team_size_request,
-             int vector_length_request = 1)
+  TeamPolicyCommon(const typename traits::execution_space& space_,
+                   int league_size_request, int team_size_request,
+                   int vector_length_request = 1)
       : internal_policy(space_, league_size_request, team_size_request,
                         vector_length_request) {}
 
-  TeamPolicy(const typename traits::execution_space& space_,
-             int league_size_request, const Kokkos::AUTO_t&,
-             int vector_length_request = 1)
+  TeamPolicyCommon(const typename traits::execution_space& space_,
+                   int league_size_request, const Kokkos::AUTO_t&,
+                   int vector_length_request = 1)
       : internal_policy(space_, league_size_request, Kokkos::AUTO(),
                         vector_length_request) {}
 
-  TeamPolicy(const typename traits::execution_space& space_,
-             int league_size_request, const Kokkos::AUTO_t&,
-             const Kokkos::AUTO_t&)
+  TeamPolicyCommon(const typename traits::execution_space& space_,
+                   int league_size_request, const Kokkos::AUTO_t&,
+                   const Kokkos::AUTO_t&)
       : internal_policy(space_, league_size_request, Kokkos::AUTO(),
                         Kokkos::AUTO()) {}
-  TeamPolicy(const typename traits::execution_space& space_,
-             int league_size_request, const int team_size_request,
-             const Kokkos::AUTO_t&)
+  TeamPolicyCommon(const typename traits::execution_space& space_,
+                   int league_size_request, const int team_size_request,
+                   const Kokkos::AUTO_t&)
       : internal_policy(space_, league_size_request, team_size_request,
                         Kokkos::AUTO()) {}
   /** \brief  Construct policy with the default instance of the execution space
    */
-  TeamPolicy(int league_size_request, int team_size_request,
-             int vector_length_request = 1)
+  TeamPolicyCommon(int league_size_request, int team_size_request,
+                   int vector_length_request = 1)
       : internal_policy(league_size_request, team_size_request,
                         vector_length_request) {}
 
-  TeamPolicy(int league_size_request, const Kokkos::AUTO_t&,
-             int vector_length_request = 1)
+  TeamPolicyCommon(int league_size_request, const Kokkos::AUTO_t&,
+                   int vector_length_request = 1)
       : internal_policy(league_size_request, Kokkos::AUTO(),
                         vector_length_request) {}
 
-  TeamPolicy(int league_size_request, const Kokkos::AUTO_t&,
-             const Kokkos::AUTO_t&)
+  TeamPolicyCommon(int league_size_request, const Kokkos::AUTO_t&,
+                   const Kokkos::AUTO_t&)
       : internal_policy(league_size_request, Kokkos::AUTO(), Kokkos::AUTO()) {}
-  TeamPolicy(int league_size_request, const int team_size_request,
-             const Kokkos::AUTO_t&)
+  TeamPolicyCommon(int league_size_request, const int team_size_request,
+                   const Kokkos::AUTO_t&)
       : internal_policy(league_size_request, team_size_request,
                         Kokkos::AUTO()) {}
 
-  template <typename OP, typename... OtherProperties>
-  TeamPolicy(const TeamPolicy<OP, OtherProperties...> p) : internal_policy(p) {
+  template <class... OtherProperties>
+  TeamPolicyCommon(const TeamPolicy<OtherProperties...> p)
+      : internal_policy(p) {
     // Cannot call converting constructor in the member initializer list because
     // it is not a direct base.
     internal_policy::traits::operator=(p);
   }
 
  private:
-  TeamPolicy(const internal_policy& p) : internal_policy(p) {}
+  TeamPolicyCommon(const internal_policy& p) : internal_policy(p) {}
 
  public:
-  inline TeamPolicy& set_chunk_size(int chunk) {
+  execution_policy& set_chunk_size(int chunk) {
     static_assert(std::is_same<decltype(internal_policy::set_chunk_size(chunk)),
                                internal_policy&>::value,
                   "internal set_chunk_size should return a reference");
-    return static_cast<TeamPolicy&>(internal_policy::set_chunk_size(chunk));
+    return static_cast<execution_policy&>(
+        internal_policy::set_chunk_size(chunk));
   }
 
-  inline TeamPolicy& set_scratch_size(const int& level,
-                                      const Impl::PerTeamValue& per_team) {
+  execution_policy& set_scratch_size(const int& level,
+                                     const PerTeamValue& per_team) {
     static_assert(std::is_same<decltype(internal_policy::set_scratch_size(
                                    level, per_team)),
                                internal_policy&>::value,
                   "internal set_chunk_size should return a reference");
 
     team_policy_check_valid_storage_level_argument(level);
-    return static_cast<TeamPolicy&>(
+    return static_cast<execution_policy&>(
         internal_policy::set_scratch_size(level, per_team));
   }
-  inline TeamPolicy& set_scratch_size(const int& level,
-                                      const Impl::PerThreadValue& per_thread) {
+  execution_policy& set_scratch_size(const int& level,
+                                     const PerThreadValue& per_thread) {
     team_policy_check_valid_storage_level_argument(level);
-    return static_cast<TeamPolicy&>(
+    return static_cast<execution_policy&>(
         internal_policy::set_scratch_size(level, per_thread));
   }
-  inline TeamPolicy& set_scratch_size(const int& level,
-                                      const Impl::PerTeamValue& per_team,
-                                      const Impl::PerThreadValue& per_thread) {
+  execution_policy& set_scratch_size(const int& level,
+                                     const PerTeamValue& per_team,
+                                     const PerThreadValue& per_thread) {
     team_policy_check_valid_storage_level_argument(level);
-    return static_cast<TeamPolicy&>(
+    return static_cast<execution_policy&>(
         internal_policy::set_scratch_size(level, per_team, per_thread));
   }
-  inline TeamPolicy& set_scratch_size(const int& level,
-                                      const Impl::PerThreadValue& per_thread,
-                                      const Impl::PerTeamValue& per_team) {
+  execution_policy& set_scratch_size(const int& level,
+                                     const PerThreadValue& per_thread,
+                                     const PerTeamValue& per_team) {
     team_policy_check_valid_storage_level_argument(level);
-    return static_cast<TeamPolicy&>(
+    return static_cast<execution_policy&>(
         internal_policy::set_scratch_size(level, per_team, per_thread));
   }
 };
 
-template <class P1, class P2, class... Properties>
-class TeamPolicy<P1, P2, Properties...>
-    : public Impl::TeamPolicyInternal<
-          typename Impl::PolicyTraits<P1, P2, Properties...>::execution_space,
-          P1, P2, Properties...> {
-  using internal_policy = Impl::TeamPolicyInternal<
-      typename Impl::PolicyTraits<P1, P2, Properties...>::execution_space, P1,
-      P2, Properties...>;
+}  // namespace Impl
 
-  template <typename OP, typename... OtherProperties>
-  friend class TeamPolicy;
-
- public:
-  using traits = Impl::PolicyTraits<P1, P2, Properties...>;
-
-  using execution_policy = TeamPolicy<P1, P2, Properties...>;
-
-  TeamPolicy() : internal_policy(0, AUTO) {}
-
-  /** \brief  Construct policy with the given instance of the execution space */
-  TeamPolicy(const typename traits::execution_space& space_,
-             int league_size_request, int team_size_request,
-             int vector_length_request = 1)
-      : internal_policy(space_, league_size_request, team_size_request,
-                        vector_length_request) {}
-
-  TeamPolicy(const typename traits::execution_space& space_,
-             int league_size_request, const Kokkos::AUTO_t&,
-             int vector_length_request = 1)
-      : internal_policy(space_, league_size_request, Kokkos::AUTO(),
-                        vector_length_request) {}
-
-  TeamPolicy(const typename traits::execution_space& space_,
-             int league_size_request, const Kokkos::AUTO_t&,
-             const Kokkos::AUTO_t&)
-      : internal_policy(space_, league_size_request, Kokkos::AUTO(),
-                        Kokkos::AUTO()) {}
-  TeamPolicy(const typename traits::execution_space& space_,
-             int league_size_request, const int team_size_request,
-             const Kokkos::AUTO_t&)
-      : internal_policy(space_, league_size_request, team_size_request,
-                        Kokkos::AUTO()) {}
-  /** \brief  Construct policy with the default instance of the execution space
-   */
-  TeamPolicy(int league_size_request, int team_size_request,
-             int vector_length_request = 1)
-      : internal_policy(league_size_request, team_size_request,
-                        vector_length_request) {}
-
-  TeamPolicy(int league_size_request, const Kokkos::AUTO_t&,
-             int vector_length_request = 1)
-      : internal_policy(league_size_request, Kokkos::AUTO(),
-                        vector_length_request) {}
-
-  TeamPolicy(int league_size_request, const Kokkos::AUTO_t&,
-             const Kokkos::AUTO_t&)
-      : internal_policy(league_size_request, Kokkos::AUTO(), Kokkos::AUTO()) {}
-  TeamPolicy(int league_size_request, const int team_size_request,
-             const Kokkos::AUTO_t&)
-      : internal_policy(league_size_request, team_size_request,
-                        Kokkos::AUTO()) {}
-
-  template <typename OP, typename... OtherProperties>
-  TeamPolicy(const TeamPolicy<OP, OtherProperties...> p) : internal_policy(p) {
-    // Cannot call converting constructor in the member initializer list because
-    // it is not a direct base.
-    internal_policy::traits::operator=(p);
-  }
-
- private:
-  TeamPolicy(const internal_policy& p) : internal_policy(p) {}
+template <typename... Properties>
+class TeamPolicy
+    : public Impl::TeamPolicyCommon<
+          typename Impl::PolicyTraits<Properties...>::execution_space,
+          Properties...> {
+  using team_policy_common = Impl::TeamPolicyCommon<
+      typename Impl::PolicyTraits<Properties...>::execution_space,
+      Properties...>;
 
  public:
-  inline TeamPolicy& set_chunk_size(int chunk) {
-    static_assert(std::is_same<decltype(internal_policy::set_chunk_size(chunk)),
-                               internal_policy&>::value,
-                  "internal set_chunk_size should return a reference");
-    return static_cast<TeamPolicy&>(internal_policy::set_chunk_size(chunk));
-  }
-
-  inline TeamPolicy& set_scratch_size(const int& level,
-                                      const Impl::PerTeamValue& per_team) {
-    static_assert(std::is_same<decltype(internal_policy::set_scratch_size(
-                                   level, per_team)),
-                               internal_policy&>::value,
-                  "internal set_chunk_size should return a reference");
-
-    team_policy_check_valid_storage_level_argument(level);
-    return static_cast<TeamPolicy&>(
-        internal_policy::set_scratch_size(level, per_team));
-  }
-  inline TeamPolicy& set_scratch_size(const int& level,
-                                      const Impl::PerThreadValue& per_thread) {
-    team_policy_check_valid_storage_level_argument(level);
-    return static_cast<TeamPolicy&>(
-        internal_policy::set_scratch_size(level, per_thread));
-  }
-  inline TeamPolicy& set_scratch_size(const int& level,
-                                      const Impl::PerTeamValue& per_team,
-                                      const Impl::PerThreadValue& per_thread) {
-    team_policy_check_valid_storage_level_argument(level);
-    return static_cast<TeamPolicy&>(
-        internal_policy::set_scratch_size(level, per_team, per_thread));
-  }
-  inline TeamPolicy& set_scratch_size(const int& level,
-                                      const Impl::PerThreadValue& per_thread,
-                                      const Impl::PerTeamValue& per_team) {
-    team_policy_check_valid_storage_level_argument(level);
-    return static_cast<TeamPolicy&>(
-        internal_policy::set_scratch_size(level, per_team, per_thread));
-  }
+  using team_policy_common::team_policy_common;
 };
 
 // Execution space not provided deduces to TeamPolicy<>
@@ -932,6 +801,121 @@ TeamPolicy(ES const&, int, Kokkos::AUTO_t const&, Kokkos::AUTO_t const&)
 template <typename ES,
           typename = std::enable_if_t<Kokkos::is_execution_space_v<ES>>>
 TeamPolicy(ES const&, int, int, Kokkos::AUTO_t const&)->TeamPolicy<ES>;
+
+#if 0
+template <class... Properties>
+class TeamPolicy
+    : public Impl::TeamPolicyInternal<
+          typename Impl::PolicyTraits<Properties...>::execution_space,
+          Properties...> {
+  using internal_policy = Impl::TeamPolicyInternal<
+      typename Impl::PolicyTraits<Properties...>::execution_space,
+      Properties...>;
+
+  template <class... OtherProperties>
+  friend class TeamPolicy;
+
+ public:
+  using traits = Impl::PolicyTraits<Properties...>;
+
+  using execution_policy = TeamPolicy<Properties...>;
+
+  TeamPolicy() : internal_policy(0, AUTO) {}
+
+  /** \brief  Construct policy with the given instance of the execution space */
+  TeamPolicy(const typename traits::execution_space& space_,
+             int league_size_request, int team_size_request,
+             int vector_length_request = 1)
+      : internal_policy(space_, league_size_request, team_size_request,
+                        vector_length_request) {}
+
+  TeamPolicy(const typename traits::execution_space& space_,
+             int league_size_request, const Kokkos::AUTO_t&,
+             int vector_length_request = 1)
+      : internal_policy(space_, league_size_request, Kokkos::AUTO(),
+                        vector_length_request) {}
+
+  TeamPolicy(const typename traits::execution_space& space_,
+             int league_size_request, const Kokkos::AUTO_t&,
+             const Kokkos::AUTO_t&)
+      : internal_policy(space_, league_size_request, Kokkos::AUTO(),
+                        Kokkos::AUTO()) {}
+  TeamPolicy(const typename traits::execution_space& space_,
+             int league_size_request, const int team_size_request,
+             const Kokkos::AUTO_t&)
+      : internal_policy(space_, league_size_request, team_size_request,
+                        Kokkos::AUTO()) {}
+  /** \brief  Construct policy with the default instance of the execution space
+   */
+  TeamPolicy(int league_size_request, int team_size_request,
+             int vector_length_request = 1)
+      : internal_policy(league_size_request, team_size_request,
+                        vector_length_request) {}
+
+  TeamPolicy(int league_size_request, const Kokkos::AUTO_t&,
+             int vector_length_request = 1)
+      : internal_policy(league_size_request, Kokkos::AUTO(),
+                        vector_length_request) {}
+
+  TeamPolicy(int league_size_request, const Kokkos::AUTO_t&,
+             const Kokkos::AUTO_t&)
+      : internal_policy(league_size_request, Kokkos::AUTO(), Kokkos::AUTO()) {}
+  TeamPolicy(int league_size_request, const int team_size_request,
+             const Kokkos::AUTO_t&)
+      : internal_policy(league_size_request, team_size_request,
+                        Kokkos::AUTO()) {}
+
+  template <class... OtherProperties>
+  TeamPolicy(const TeamPolicy<OtherProperties...> p) : internal_policy(p) {
+    // Cannot call converting constructor in the member initializer list because
+    // it is not a direct base.
+    internal_policy::traits::operator=(p);
+  }
+
+ private:
+  TeamPolicy(const internal_policy& p) : internal_policy(p) {}
+
+ public:
+  inline TeamPolicy& set_chunk_size(int chunk) {
+    static_assert(std::is_same<decltype(internal_policy::set_chunk_size(chunk)),
+                               internal_policy&>::value,
+                  "internal set_chunk_size should return a reference");
+    return static_cast<TeamPolicy&>(internal_policy::set_chunk_size(chunk));
+  }
+
+  inline TeamPolicy& set_scratch_size(const int& level,
+                                      const Impl::PerTeamValue& per_team) {
+    static_assert(std::is_same<decltype(internal_policy::set_scratch_size(
+                                   level, per_team)),
+                               internal_policy&>::value,
+                  "internal set_chunk_size should return a reference");
+
+    team_policy_check_valid_storage_level_argument(level);
+    return static_cast<TeamPolicy&>(
+        internal_policy::set_scratch_size(level, per_team));
+  }
+  inline TeamPolicy& set_scratch_size(const int& level,
+                                      const Impl::PerThreadValue& per_thread) {
+    team_policy_check_valid_storage_level_argument(level);
+    return static_cast<TeamPolicy&>(
+        internal_policy::set_scratch_size(level, per_thread));
+  }
+  inline TeamPolicy& set_scratch_size(const int& level,
+                                      const Impl::PerTeamValue& per_team,
+                                      const Impl::PerThreadValue& per_thread) {
+    team_policy_check_valid_storage_level_argument(level);
+    return static_cast<TeamPolicy&>(
+        internal_policy::set_scratch_size(level, per_team, per_thread));
+  }
+  inline TeamPolicy& set_scratch_size(const int& level,
+                                      const Impl::PerThreadValue& per_thread,
+                                      const Impl::PerTeamValue& per_team) {
+    team_policy_check_valid_storage_level_argument(level);
+    return static_cast<TeamPolicy&>(
+        internal_policy::set_scratch_size(level, per_team, per_thread));
+  }
+};
+#endif
 
 namespace Impl {
 
