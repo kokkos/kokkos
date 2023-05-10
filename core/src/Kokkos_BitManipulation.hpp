@@ -238,7 +238,7 @@ rotr(T x, int s) noexcept {
 namespace Kokkos::Impl {
 
 #if defined(KOKKOS_COMPILER_CLANG) || defined(KOKKOS_COMPILER_INTEL_LLVM) || \
-    defined(KOKKOS_COMPILER_GCC)
+    defined(KOKKOS_COMPILER_GNU)
 #define KOKKOS_IMPL_USE_GCC_BUILT_IN_FUNCTIONS
 #endif
 
@@ -259,12 +259,13 @@ KOKKOS_IMPL_HOST_FUNCTION T byteswap_builtin_host(T x) noexcept {
   } else if constexpr (sizeof(T) == 8) {
     return __builtin_bswap64(x);
   } else if constexpr (sizeof(T) == 16) {
+#if defined(__has_builtin)
 #if __has_builtin(__builtin_bswap128)
     return __builtin_bswap128(x);
-#else
+#endif
+#endif
     return (__builtin_bswap64(x >> 64) |
             (static_cast<T>(__builtin_bswap64(x)) << 64));
-#endif
   }
 #endif
 
