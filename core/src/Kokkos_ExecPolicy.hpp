@@ -602,6 +602,22 @@ void team_policy_check_valid_storage_level_argument(int level);
  *    default of LaunchBounds<0,0> indicates no launch bounds specified.
  */
 
+// TeamPolicyCommon is the implementation of TeamPolicy,
+// designed to get around ICE bugs with CTADs.
+//
+// It has no primary template, as that was causing
+// the CTAD ICEing bugs.
+//
+// Since we need to pass ExecSpace to TeamPolicyInternal anyway,
+// this is implemented as a partial specialization where the first parameter is ExecSpace.
+// ExecSpace must be the same type as PolicyTraits<Properties...>::execution_space.
+//
+// Usage: TeamPolicy<Properties...> publicly derives from TeamPolicyCommon
+// and inherits all constructors.
+//
+// Note: We can't just use TeamPolicyInternal for this, because that
+// is specialized for every ExecSpace (and therefore not common code).
+
 template <typename... Properties>
 class TeamPolicy;
 
@@ -609,18 +625,6 @@ namespace Impl {
 
 template <typename...>
 class TeamPolicyCommon;
-
-// This is the implementation of TeamPolicy,
-// designed to get around ICE bugs with CTADs
-//
-// It has no primary template, as that was causing
-// the CTAD ICEing bugs.
-//
-// It assumes that TeamPolicy<Properties...> publicly derives from this
-// and inherits all constructors.
-//
-// We can't just use TeamPolicyInternal for this, because that
-// is specialized for every ExecSpace (and therefore not common code)
 
 template <typename ExecSpace, typename... Properties>
 class TeamPolicyCommon<ExecSpace, Properties...>
@@ -637,7 +641,6 @@ class TeamPolicyCommon<ExecSpace, Properties...>
   static_assert(std::is_same_v<ExecSpace, typename traits::execution_space>);
 
   using execution_policy = TeamPolicy<Properties...>;
-  static_assert(std::is_base_of_v<TeamPolicyCommon, execution_policy>);
 
   TeamPolicyCommon() : internal_policy(0, AUTO) {}
 
