@@ -61,6 +61,18 @@
 //           65504.0
 //
 #if defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
+/// \brief: Infinity
+///
+/// Binary16 encoding:
+///             [s  e  e  e  e  e  f f f f f f f f f f]
+///             [0  1  1  1  1  1  0 0 0 0 0 0 0 0 0 0]
+/// bit index:   15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0
+///
+template <>
+struct Kokkos::Experimental::Impl::infinity_helper<Kokkos::Experimental::half_t> {
+  static constexpr int value = 0x7C00;
+};
+
 /// \brief: Minimum normalized number
 ///
 /// Stdc defines this as the smallest number (representable in binary16).
@@ -246,6 +258,18 @@ struct Kokkos::Experimental::Impl::max_exponent_helper<
 
 ////////////// BEGIN BHALF_T (bfloat16) limits //////////////
 #if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
+/// \brief: Infinity
+///
+/// Bfloat16 encoding:
+///             [s  e  e  e  e  e  e e e f f f f f f f]
+///             [0  1  1  1  1  1  1 1 1 0 0 0 0 0 0 0]
+/// bit index:   15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0
+///
+template <>
+struct Kokkos::Experimental::Impl::infinity_helper<Kokkos::Experimental::bhalf_t> {
+  static constexpr int value = 0x7F80;
+};
+
 // Minimum normalized number
 template <>
 struct Kokkos::Experimental::Impl::finite_min_helper<
