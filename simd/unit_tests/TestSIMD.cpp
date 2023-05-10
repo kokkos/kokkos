@@ -278,8 +278,8 @@ class divides {
 };
 
 template <class Abi, size_t n, typename DataType>
-inline void host_check_all_math_ops(DataType const& first_args,
-                                    DataType const& second_args) {
+inline void host_check_all_math_ops(const DataType (&first_args)[n],
+                                    const DataType (&second_args)[n]) {
   host_check_binary_op_all_loaders<Abi>(plus(), n, first_args, second_args);
   host_check_binary_op_all_loaders<Abi>(minus(), n, first_args, second_args);
   host_check_binary_op_all_loaders<Abi>(multiplies(), n, first_args,
@@ -306,11 +306,11 @@ inline void host_check_math_ops() {
   if constexpr (std::is_signed_v<DataType>) {
     DataType const first_args[n]  = {1, 2, -1, 10, 0, 1, -2, 10, 0, 1, -2};
     DataType const second_args[n] = {1, 2, 1, 1, 1, -3, -2, 1, 13, -3, -2};
-    host_check_all_math_ops<Abi, n>(first_args, second_args);
+    host_check_all_math_ops<Abi>(first_args, second_args);
   } else {
     DataType const first_args[n]  = {1, 2, 1, 10, 0, 1, 2, 10, 0, 1, 2};
     DataType const second_args[n] = {1, 2, 1, 1, 1, 3, 2, 1, 13, 3, 2};
-    host_check_all_math_ops<Abi, n>(first_args, second_args);
+    host_check_all_math_ops<Abi>(first_args, second_args);
   }
 }
 
@@ -380,7 +380,7 @@ inline void host_check_condition() {
 
 template <class Abi, size_t n, typename DataType>
 KOKKOS_INLINE_FUNCTION void device_check_all_math_ops(
-    DataType const& first_args, DataType const& second_args) {
+    const DataType (&first_args)[n], const DataType (&second_args)[n]) {
   device_check_binary_op_all_loaders<Abi>(plus(), n, first_args, second_args);
   device_check_binary_op_all_loaders<Abi>(minus(), n, first_args, second_args);
   device_check_binary_op_all_loaders<Abi>(multiplies(), n, first_args,
@@ -407,11 +407,11 @@ KOKKOS_INLINE_FUNCTION void device_check_math_ops() {
   if constexpr (std::is_signed_v<DataType>) {
     DataType const first_args[n]  = {1, 2, -1, 10, 0, 1, -2, 10, 0, 1, -2};
     DataType const second_args[n] = {1, 2, 1, 1, 1, -3, -2, 1, 13, -3, -2};
-    device_check_all_math_ops<Abi, n>(first_args, second_args);
+    device_check_all_math_ops<Abi>(first_args, second_args);
   } else {
     DataType const first_args[n]  = {1, 2, 1, 10, 0, 1, 2, 10, 0, 1, 2};
     DataType const second_args[n] = {1, 2, 1, 1, 1, 3, 2, 1, 13, 3, 2};
-    device_check_all_math_ops<Abi, n>(first_args, second_args);
+    device_check_all_math_ops<Abi>(first_args, second_args);
   }
 }
 
