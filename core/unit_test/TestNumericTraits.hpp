@@ -42,7 +42,7 @@ struct extrema {
   DEFINE_EXTREMA(double, -DBL_MAX, DBL_MAX);
 
 // FIXME_NVHPC: with 23.3 using long double in KOKKOS_FUNCTION is hard error
-#if !defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_COMPILER_NVHPC)
+#if !defined(KOKKOS_ENABLE_CUDA) || !defined(KOKKOS_COMPILER_NVHPC)
   DEFINE_EXTREMA(long double, -LDBL_MAX, LDBL_MAX);
 #else
   static long double min(long double) { return -LDBL_MAX; }
