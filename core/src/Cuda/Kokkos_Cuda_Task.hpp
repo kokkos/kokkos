@@ -221,6 +221,7 @@ class TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::Cuda, QueueType>> {
     }
   }
 
+  // FIXME_CUDA_MULTIPLE_DEVICES
   static void execute(scheduler_type const& scheduler) {
     const int shared_per_warp = 2048;
     const dim3 grid(Kokkos::Impl::cuda_internal_multiprocessor_count(), 1, 1);
@@ -251,24 +252,21 @@ class TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::Cuda, QueueType>> {
     const size_t larger_stack_size = 1 << 11;
 
     if (previous_stack_size < larger_stack_size) {
-      CudaInternal::singleton()
-          .cuda_api_interface_safe_call<false, cudaLimit, size_t>(
-              &cudaDeviceSetLimit, cudaLimitStackSize, larger_stack_size);
+      CudaInternal::singleton().cuda_api_interface_safe_call<cudaLimit, size_t>(
+          &cudaDeviceSetLimit, cudaLimitStackSize, larger_stack_size);
     }
 
     cuda_task_queue_execute<<<grid, block, shared_total, stream>>>(
         scheduler, shared_per_warp);
 
-    CudaInternal::singleton().cuda_api_interface_safe_call<false>(
-        &cudaGetLastError);
+    CudaInternal::singleton().cuda_api_interface_safe_call(&cudaGetLastError);
     Impl::cuda_device_synchronize(
         "Kokkos::Impl::TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::"
         "Cuda>::execute: Post Task Execution");
 
     if (previous_stack_size < larger_stack_size) {
-      CudaInternal::singleton()
-          .cuda_api_interface_safe_call<false, cudaLimit, size_t>(
-              &cudaDeviceSetLimit, cudaLimitStackSize, previous_stack_size);
+      CudaInternal::singleton().cuda_api_interface_safe_call<cudaLimit, size_t>(
+          &cudaDeviceSetLimit, cudaLimitStackSize, previous_stack_size);
     }
   }
 
@@ -457,6 +455,7 @@ class TaskQueueSpecializationConstrained<
     } while (1);
   }
 
+  // FIXME_CUDA_MULTIPLE_DEVICES
   static void execute(scheduler_type const& scheduler) {
     const int shared_per_warp = 2048;
     const int warps_per_block = 4;
@@ -484,24 +483,21 @@ class TaskQueueSpecializationConstrained<
     const size_t larger_stack_size = 2048;
 
     if (previous_stack_size < larger_stack_size) {
-      CudaInternal::singleton()
-          .cuda_api_interface_safe_call<false, cudaLimit, size_t>(
-              &cudaDeviceSetLimit, cudaLimitStackSize, larger_stack_size);
+      CudaInternal::singleton().cuda_api_interface_safe_call<cudaLimit, size_t>(
+          &cudaDeviceSetLimit, cudaLimitStackSize, larger_stack_size);
     }
 
     cuda_task_queue_execute<<<grid, block, shared_total, stream>>>(
         scheduler, shared_per_warp);
 
-    CudaInternal::singleton().cuda_api_interface_safe_call<false>(
-        &cudaGetLastError);
+    CudaInternal::singleton().cuda_api_interface_safe_call(&cudaGetLastError);
     Impl::cuda_device_synchronize(
         "Kokkos::Impl::TaskQueueSpecializationConstrained<SimpleTaskScheduler<"
         "Kokkos::Cuda>::execute: Post Execute Task");
 
     if (previous_stack_size < larger_stack_size) {
-      CudaInternal::singleton()
-          .cuda_api_interface_safe_call<false, cudaLimit, size_t>(
-              &cudaDeviceSetLimit, cudaLimitStackSize, previous_stack_size);
+      CudaInternal::singleton().cuda_api_interface_safe_call<cudaLimit, size_t>(
+          &cudaDeviceSetLimit, cudaLimitStackSize, previous_stack_size);
     }
   }
 

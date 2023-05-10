@@ -22,8 +22,8 @@
 int get_device_count() {
 #if defined(KOKKOS_ENABLE_CUDA)
   int count;
-  Kokkos::Impl::CudaInternal::singleton()
-      .cuda_api_interface_safe_call<false, int*>(&cudaGetDeviceCount, &count);
+  Kokkos::Impl::CudaInternal::singleton().cuda_api_interface_safe_call<int*>(
+      &cudaGetDeviceCount, &count);
   return count;
 #elif defined(KOKKOS_ENABLE_HIP)
   int count;
@@ -41,8 +41,8 @@ int get_device_count() {
 int get_device_id() {
   int device_id;
 #if defined(KOKKOS_ENABLE_CUDA)
-  Kokkos::Impl::CudaInternal::singleton()
-      .cuda_api_interface_safe_call<false, int*>(&cudaGetDevice, &device_id);
+  Kokkos::Impl::CudaInternal::singleton().cuda_api_interface_safe_call<int*>(
+      &cudaGetDevice, &device_id);
 #elif defined(KOKKOS_ENABLE_HIP)
   KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDevice(&device_id));
 #elif defined(KOKKOS_ENABLE_OPENMPTARGET)

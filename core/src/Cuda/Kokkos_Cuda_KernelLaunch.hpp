@@ -615,11 +615,11 @@ struct CudaParallelLaunchKernelInvoker<
                                        size_t, cudaMemcpyKind, cudaStream_t>(
             &cudaMemcpyToSymbolAsync, kokkos_impl_cuda_constant_memory_buffer,
             staging, sizeof(DriverType), 0, cudaMemcpyHostToDevice,
-            cudaStream_t(cuda_instance->get_stream<false>()));
+            cudaStream_t(cuda_instance->get_stream()));
 
     // Invoke the driver function on the device
     (base_t::get_kernel_func())<<<grid, block, shmem,
-                                  cuda_instance->get_stream<false>()>>>();
+                                  cuda_instance->get_stream()>>>();
 
     // Record an event that says when the constant buffer can be reused
     cuda_instance

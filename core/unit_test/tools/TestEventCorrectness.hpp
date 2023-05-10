@@ -258,8 +258,7 @@ TEST(kokkosp, test_streams) {
       Kokkos::Impl::CudaInternal::singleton()
           .cuda_api_interface_safe_call<cudaStream_t*>(&cudaStreamCreate, &s1);
       Kokkos::Impl::CudaInternal::singleton()
-          .cuda_api_interface_safe_call<false, cudaStream_t*>(&cudaStreamCreate,
-                                                              &s2);
+          .cuda_api_interface_safe_call<cudaStream_t*>(&cudaStreamCreate, &s2);
       Kokkos::Cuda default_space;
       Kokkos::Cuda space_s1(s1);
       Kokkos::Cuda space_s2(s2);

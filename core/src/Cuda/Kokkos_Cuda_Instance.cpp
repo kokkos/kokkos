@@ -131,6 +131,7 @@ Kokkos::View<uint32_t *, Kokkos::CudaSpace> cuda_global_unique_token_locks(
   return locks;
 }
 
+// FIXME_CUDA_MULTIPLE_DEVICES
 void cuda_device_synchronize(const std::string &name) {
   Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Cuda>(
       name,
@@ -180,11 +181,11 @@ void cuda_internal_error_throw(cudaError e, const char *name, const char *file,
   std::ostringstream out;
   out << name << " error( "
       << CudaInternal::singleton()
-             .cuda_api_interface_return<const char *, cudaError_t>(
+             .cuda_api_interface_return<false, const char *, cudaError_t>(
                  &cudaGetErrorName, e)
       << "): "
       << CudaInternal::singleton()
-             .cuda_api_interface_return<const char *, cudaError_t>(
+             .cuda_api_interface_return<false, const char *, cudaError_t>(
                  &cudaGetErrorString, e);
   if (file) {
     out << " " << file << ":" << line;
@@ -197,11 +198,11 @@ void cuda_internal_error_abort(cudaError e, const char *name, const char *file,
   std::ostringstream out;
   out << name << " error( "
       << CudaInternal::singleton()
-             .cuda_api_interface_return<const char *, cudaError_t>(
+             .cuda_api_interface_return<false, const char *, cudaError_t>(
                  &cudaGetErrorName, e)
       << "): "
       << CudaInternal::singleton()
-             .cuda_api_interface_return<const char *, cudaError_t>(
+             .cuda_api_interface_return<false, const char *, cudaError_t>(
                  &cudaGetErrorString, e);
   if (file) {
     out << " " << file << ":" << line;
@@ -644,8 +645,9 @@ void CudaInternal::finalize() {
       Kokkos::kokkos_free<Kokkos::CudaSpace>(m_team_scratch_ptr[i]);
   }
 
-  if (m_manage_stream && m_stream != nullptr)
-    cuda_api_interface_safe_call<cudaStream_t>(&cudaStreamDestroy, m_stream);
+  if (m_manage_stream && get_stream() != nullptr)
+    cuda_api_interface_safe_call<cudaStream_t>(&cudaStreamDestroy,
+                                               get_stream());
 
   m_scratchSpaceCount   = 0;
   m_scratchFlagsCount   = 0;

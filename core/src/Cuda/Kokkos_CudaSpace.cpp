@@ -205,8 +205,7 @@ void *impl_allocate_common(const Cuda &exec_space, const char *arg_label,
   (void)exec_space_provided;
   auto error_code =
       exec_space.impl_internal_space_instance()
-          ->Impl::CudaInternal::singleton()
-          .cuda_api_interface_return<cudaError_t, void **, size_t>(
+          ->cuda_api_interface_return<cudaError_t, void **, size_t>(
               &cudaMalloc, &ptr, arg_alloc_size);
 #endif
   if (error_code != cudaSuccess) {  // TODO tag as unlikely branch
@@ -214,7 +213,7 @@ void *impl_allocate_common(const Cuda &exec_space, const char *arg_label,
     // we should do here since we're turning it into an
     // exception here
     exec_space.impl_internal_space_instance()
-        ->cuda_api_interface_return<false, cudaError_t>(&cudaGetLastError);
+        ->cuda_api_interface_return<cudaError_t>(&cudaGetLastError);
     throw Experimental::CudaRawMemoryAllocationFailure(
         arg_alloc_size, error_code,
         Experimental::RawMemoryAllocationFailure::AllocationMechanism::
@@ -367,8 +366,8 @@ void CudaSpace::impl_deallocate(
       Impl::cuda_device_synchronize(
           "Kokkos::Cuda: backend fence before async free");
       Impl::CudaInternal::singleton()
-          .cuda_api_interface_safe_call<false, void *, cudaStream_t>(
-              &cudaFreeAsync, arg_alloc_ptr, 0);
+          .cuda_api_interface_safe_call<void *, cudaStream_t>(&cudaFreeAsync,
+                                                              arg_alloc_ptr, 0);
       Impl::cuda_device_synchronize(
           "Kokkos::Cuda: backend fence after async free");
     } else {

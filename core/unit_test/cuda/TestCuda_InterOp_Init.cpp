@@ -45,15 +45,14 @@ TEST(cuda, raw_cuda_interop) {
   Kokkos::finalize();
 
   offset<<<100, 64>>>(p);
-  Kokkos::Impl::CudaInternal::singleton().cuda_api_interface_safe_call<false>(
+  Kokkos::Impl::CudaInternal::singleton().cuda_api_interface_safe_call(
       &cudaDeviceSynchronize);
 
   std::array<int, 100> h_p;
   Kokkos::Impl::CudaInternal::singleton()
-      .cuda_api_interface_safe_call<false, void*, const void*, size_t,
-                                    cudaMemcpyKind>(
+      .cuda_api_interface_safe_call<void*, const void*, size_t, cudaMemcpyKind>(
           &cudaMemcpy, h_p.data(), p, sizeof(int) * 100, cudaMemcpyDefault);
-  Kokkos::Impl::CudaInternal::singleton().cuda_api_interface_safe_call<false>(
+  Kokkos::Impl::CudaInternal::singleton().cuda_api_interface_safe_call(
       &cudaDeviceSynchronize);
   int64_t sum        = 0;
   int64_t sum_expect = 0;
@@ -63,7 +62,7 @@ TEST(cuda, raw_cuda_interop) {
   }
 
   ASSERT_EQ(sum, sum_expect);
-  Kokkos::Impl::CudaInternal::singleton()
-      .cuda_api_interface_safe_call<false, void*>(&cudaFree, p);
+  Kokkos::Impl::CudaInternal::singleton().cuda_api_interface_safe_call<void*>(
+      &cudaFree, p);
 }
 }  // namespace Test
