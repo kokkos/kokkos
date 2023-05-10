@@ -285,6 +285,7 @@ inline void host_check_all_math_ops(const DataType (&first_args)[n],
   host_check_binary_op_all_loaders<Abi>(multiplies(), n, first_args,
                                         second_args);
 
+  // TODO: Place fallback division implementations for all simd integer types
   if constexpr (std::is_same_v<DataType, double>)
     host_check_binary_op_all_loaders<Abi>(divides(), n, first_args,
                                           second_args);
