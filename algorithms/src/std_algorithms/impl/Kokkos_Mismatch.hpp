@@ -46,7 +46,7 @@ struct StdMismatchRedFunctor {
     // FIXME_NVHPC using a ternary operator causes problems
     red_value_type rv = {i};
     if (m_predicate(my_value1, my_value2)) {
-      rv = {::Kokkos::reduction_identity<IndexType>::min()};
+      rv = {::Kokkos::reduction_identity<index_type>::min()};
     }
 
     m_reducer.join(red_value, rv);

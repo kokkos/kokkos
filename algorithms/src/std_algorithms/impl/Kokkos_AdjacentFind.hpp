@@ -43,7 +43,7 @@ struct StdAdjacentFindFunctor {
     const bool are_equal   = m_p(my_value, next_value);
 
     // FIXME_NVHPC using a ternary operator causes problems
-    red_value_type value = {::Kokkos::reduction_identity<IndexType>::min()};
+    red_value_type value = {::Kokkos::reduction_identity<index_type>::min()};
     if (are_equal) {
       value.min_loc_true = i;
     }
