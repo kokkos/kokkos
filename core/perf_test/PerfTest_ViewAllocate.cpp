@@ -217,6 +217,7 @@ BENCHMARK(ViewAllocate_Rank8<Kokkos::LayoutRight>)
     ->Arg(N)
     ->UseManualTime();
 
+#if defined(KOKKOS_ENABLE_CUDA_LAMBDA) || !defined(KOKKOS_ENABLE_CUDA)
 BENCHMARK(ViewAllocate_Raw<Kokkos::LayoutLeft>)
     ->ArgName("N")
     ->Arg(N)
@@ -226,5 +227,6 @@ BENCHMARK(ViewAllocate_Raw<Kokkos::LayoutRight>)
     ->ArgName("N")
     ->Arg(N)
     ->UseManualTime();
+#endif
 
 }  // namespace Test

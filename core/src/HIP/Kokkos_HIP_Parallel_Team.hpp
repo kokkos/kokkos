@@ -74,7 +74,7 @@ class TeamPolicyInternal<HIP, Properties...>
     using closure_type =
         Impl::ParallelFor<FunctorType, TeamPolicy<Properties...>>;
 
-    return internal_team_size_common<BlockType::Max, closure_type>(f);
+    return internal_team_size_common<BlockType::Max, closure_type, void>(f);
   }
 
   template <class FunctorType>
@@ -82,12 +82,14 @@ class TeamPolicyInternal<HIP, Properties...>
                            const ParallelReduceTag&) const {
     using functor_analysis_type =
         Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
-                              TeamPolicyInternal, FunctorType>;
+                              TeamPolicyInternal, FunctorType, void>;
     using closure_type = Impl::ParallelReduce<
         CombinedFunctorReducer<FunctorType,
                                typename functor_analysis_type::Reducer>,
         TeamPolicy<Properties...>, Kokkos::HIP>;
-    return internal_team_size_common<BlockType::Max, closure_type>(f);
+    return internal_team_size_common<
+        BlockType::Max, closure_type,
+        typename functor_analysis_type::value_type>(f);
   }
 
   template <typename FunctorType, typename ReducerType>
@@ -96,7 +98,8 @@ class TeamPolicyInternal<HIP, Properties...>
     using closure_type =
         Impl::ParallelReduce<CombinedFunctorReducer<FunctorType, ReducerType>,
                              TeamPolicy<Properties...>, Kokkos::HIP>;
-    return internal_team_size_common<BlockType::Max, closure_type>(f);
+    return internal_team_size_common<BlockType::Max, closure_type,
+                                     typename ReducerType::value_type>(f);
   }
 
   template <typename FunctorType>
@@ -104,7 +107,8 @@ class TeamPolicyInternal<HIP, Properties...>
     using closure_type =
         Impl::ParallelFor<FunctorType, TeamPolicy<Properties...>>;
 
-    return internal_team_size_common<BlockType::Preferred, closure_type>(f);
+    return internal_team_size_common<BlockType::Preferred, closure_type, void>(
+        f);
   }
 
   template <typename FunctorType>
@@ -112,12 +116,14 @@ class TeamPolicyInternal<HIP, Properties...>
                                    ParallelReduceTag const&) const {
     using functor_analysis_type =
         Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
-                              TeamPolicyInternal, FunctorType>;
+                              TeamPolicyInternal, FunctorType, void>;
     using closure_type = Impl::ParallelReduce<
         CombinedFunctorReducer<FunctorType,
                                typename functor_analysis_type::Reducer>,
         TeamPolicy<Properties...>, Kokkos::HIP>;
-    return internal_team_size_common<BlockType::Preferred, closure_type>(f);
+    return internal_team_size_common<
+        BlockType::Preferred, closure_type,
+        typename functor_analysis_type::value_type>(f);
   }
 
   template <typename FunctorType, typename ReducerType>
@@ -126,7 +132,8 @@ class TeamPolicyInternal<HIP, Properties...>
     using closure_type =
         Impl::ParallelReduce<CombinedFunctorReducer<FunctorType, ReducerType>,
                              TeamPolicy<Properties...>, Kokkos::HIP>;
-    return internal_team_size_common<BlockType::Preferred, closure_type>(f);
+    return internal_team_size_common<BlockType::Preferred, closure_type,
+                                     typename ReducerType::value_type>(f);
   }
 
   inline bool impl_auto_vector_length() const { return m_tune_vector_length; }
@@ -325,7 +332,8 @@ class TeamPolicyInternal<HIP, Properties...>
   using member_type = Kokkos::Impl::HIPTeamMember;
 
  protected:
-  template <BlockType BlockSize, class ClosureType, class FunctorType>
+  template <BlockType BlockSize, class ClosureType, class ValueType,
+            class FunctorType>
   int internal_team_size_common(FunctorType const& f) const {
     const unsigned shmem_block = team_scratch_size(0) + 2 * sizeof(double);
     unsigned shmem_thread      = thread_scratch_size(0) + sizeof(double);
@@ -335,7 +343,7 @@ class TeamPolicyInternal<HIP, Properties...>
           typename Impl::DeduceFunctorPatternInterface<ClosureType>::type;
       using Analysis =
           Impl::FunctorAnalysis<Interface, typename ClosureType::Policy,
-                                FunctorType>;
+                                FunctorType, ValueType>;
       shmem_thread +=
           ((Analysis::StaticValueSize != 0) ? 0 : Analysis::value_size(f));
     }
@@ -813,8 +821,8 @@ class ParallelReduce<CombinedFunctorReducerType,
     m_team_begin =
         UseShflReduction
             ? 0
-            : hip_single_inter_block_reduce_scan_shmem<false, FunctorType,
-                                                       work_tag>(
+            : hip_single_inter_block_reduce_scan_shmem<false, work_tag,
+                                                       value_type>(
                   arg_functor_reducer.get_functor(), m_team_size);
     m_shmem_begin = sizeof(double) * (m_team_size + 2);
     m_shmem_size  = m_policy.scratch_size(0, m_team_size) +

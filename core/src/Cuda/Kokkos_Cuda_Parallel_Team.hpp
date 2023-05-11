@@ -114,7 +114,7 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
                            const ParallelReduceTag&) const {
     using functor_analysis_type =
         Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
-                              TeamPolicyInternal, FunctorType>;
+                              TeamPolicyInternal, FunctorType, void>;
     using closure_type = Impl::ParallelReduce<
         CombinedFunctorReducer<FunctorType,
                                typename functor_analysis_type::Reducer>,
@@ -153,7 +153,7 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
                                    const ParallelReduceTag&) const {
     using functor_analysis_type =
         Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
-                              TeamPolicyInternal, FunctorType>;
+                              TeamPolicyInternal, FunctorType, void>;
     using closure_type = Impl::ParallelReduce<
         CombinedFunctorReducer<FunctorType,
                                typename functor_analysis_type::Reducer>,
@@ -365,7 +365,7 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
         typename Impl::DeduceFunctorPatternInterface<ClosureType>::type;
     using Analysis =
         Impl::FunctorAnalysis<Interface, typename ClosureType::Policy,
-                              FunctorType>;
+                              FunctorType, void>;
 
     cudaFuncAttributes attr =
         CudaParallelLaunch<closure_type, typename traits::launch_bounds>::
@@ -893,8 +893,8 @@ class ParallelReduce<CombinedFunctorReducerType,
     m_team_begin =
         UseShflReduction
             ? 0
-            : cuda_single_inter_block_reduce_scan_shmem<false, FunctorType,
-                                                        WorkTag>(
+            : cuda_single_inter_block_reduce_scan_shmem<false, WorkTag,
+                                                        value_type>(
                   arg_functor_reducer.get_functor(), m_team_size);
     m_shmem_begin = sizeof(double) * (m_team_size + 2);
     m_shmem_size  = m_policy.scratch_size(0, m_team_size) +
