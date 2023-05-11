@@ -72,23 +72,32 @@ void run_all_scenarios(int api) {
         "dataView");
 
     namespace KE = Kokkos::Experimental;
+
     if (api == 0) {
-      Kokkos::sort(dataView);
-      std::sort(KE::begin(dataViewBeforeOp_h), KE::end(dataViewBeforeOp_h));
-    } else if (api == 1) {
-      Kokkos::sort(ExecutionSpace(), dataView);
-      std::sort(KE::begin(dataViewBeforeOp_h), KE::end(dataViewBeforeOp_h));
-    } else if (api == 2) {
       using comp_t = MyComp<ValueType>;
       Kokkos::sort(dataView, comp_t{});
       std::sort(KE::begin(dataViewBeforeOp_h), KE::end(dataViewBeforeOp_h),
                 comp_t{});
-    } else if (api == 3) {
+    }
+
+    else if (api == 1) {
       using comp_t = MyComp<ValueType>;
       Kokkos::sort(ExecutionSpace(), dataView, comp_t{});
       std::sort(KE::begin(dataViewBeforeOp_h), KE::end(dataViewBeforeOp_h),
                 comp_t{});
     }
+
+#if defined(KOKKOS_ENABLE_ONEDPL)
+    else if (api == 2) {
+      Kokkos::sort(dataView);
+      std::sort(KE::begin(dataViewBeforeOp_h), KE::end(dataViewBeforeOp_h));
+    }
+
+    else if (api == 3) {
+      Kokkos::sort(ExecutionSpace(), dataView);
+      std::sort(KE::begin(dataViewBeforeOp_h), KE::end(dataViewBeforeOp_h));
+    }
+#endif
 
     auto dataView_h = stdalgos::create_host_space_copy(dataView);
     stdalgos::compare_views(dataViewBeforeOp_h, dataView_h);
@@ -101,19 +110,11 @@ TEST(TEST_CATEGORY, SortWithCustomComparator) {
   for (int api = 0; api < 4; api++) {
     run_all_scenarios<ExeSpace, stdalgos::DynamicTag, int>(api);
     run_all_scenarios<ExeSpace, stdalgos::DynamicTag, double>(api);
-
-#if defined(KOKKOS_ENABLE_ONEDPL)
-    // FIXME_SYCL: currently, we can sort a strided view with a comp
-    // but not a strided view without comp
-    if (api >= 2) {
-#endif
-      run_all_scenarios<ExeSpace, stdalgos::StridedTwoTag, int>(api);
-      run_all_scenarios<ExeSpace, stdalgos::StridedThreeTag, int>(api);
-      run_all_scenarios<ExeSpace, stdalgos::StridedTwoTag, double>(api);
-      run_all_scenarios<ExeSpace, stdalgos::StridedThreeTag, double>(api);
-#if defined(KOKKOS_ENABLE_ONEDPL)
-    }
-#endif
+    run_all_scenarios<ExeSpace, stdalgos::StridedTwoTag, int>(api);
+    run_all_scenarios<ExeSpace, stdalgos::StridedThreeTag, int>(api);
+    run_all_scenarios<ExeSpace, stdalgos::StridedTwoTag, double>(api);
+    run_all_scenarios<ExeSpace, stdalgos::StridedThreeTag, double>(api);
+  }
 
   }  // end for
 }
