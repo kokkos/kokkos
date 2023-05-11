@@ -726,9 +726,9 @@ void test_scatter_view(int64_t n) {
   }
 #endif
   // with hundreds of threads we were running out of memory.
-  // limit (n) so that duplication doesn't exceed 4GB
+  // limit (n) so that duplication doesn't exceed 1GB
   constexpr std::size_t maximum_allowed_total_bytes =
-      4ull * 1024ull * 1024ull * 1024ull;
+      1ull * 1024ull * 1024ull * 1024ull;
   std::size_t const maximum_allowed_copy_bytes =
       maximum_allowed_total_bytes /
       std::size_t(execution_space().concurrency());

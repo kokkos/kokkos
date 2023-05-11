@@ -453,9 +453,9 @@ class ParallelReduce<CombinedFunctorReducerType,
   bool m_result_ptr_on_device;
   const int m_result_ptr_num_elems;
 
-  static constexpr bool FunctorHasJoin =
-      Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE, Policy,
-                            FunctorType>::Reducer::has_join_member_function();
+  static constexpr bool FunctorHasJoin = Impl::FunctorAnalysis<
+      Impl::FunctorPatternInterface::REDUCE, Policy, FunctorType,
+      typename ReducerType::value_type>::Reducer::has_join_member_function();
   static constexpr bool UseReducer =
       !std::is_same_v<FunctorType, typename ReducerType::functor_type>;
   static constexpr bool IsArray = std::is_pointer_v<reference_type>;

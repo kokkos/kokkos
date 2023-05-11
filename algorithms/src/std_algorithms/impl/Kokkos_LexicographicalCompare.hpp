@@ -63,11 +63,13 @@ struct StdLexicographicalCompareFunctor {
     const auto& my_value1 = m_first1[i];
     const auto& my_value2 = m_first2[i];
 
-    bool different = m_comparator(my_value1, my_value2) ||
-                     m_comparator(my_value2, my_value1);
+    const bool different = m_comparator(my_value1, my_value2) ||
+                           m_comparator(my_value2, my_value1);
+
+    // FIXME_NVHPC using a ternary operator causes problems
     red_value_type rv = {::Kokkos::reduction_identity<IndexType>::min()};
     if (different) {
-      rv = {i};
+      rv.min_loc_true = i;
     }
 
     m_reducer.join(red_value, rv);

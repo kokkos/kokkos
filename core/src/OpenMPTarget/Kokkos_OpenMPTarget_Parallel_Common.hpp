@@ -51,7 +51,8 @@ struct ParallelReduceSpecialize {
                              PointerType /*result_ptr*/) {
     constexpr int FunctorHasJoin =
         Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE, PolicyType,
-                              FunctorType>::Reducer::has_join_member_function();
+                              FunctorType,
+                              ValueType>::Reducer::has_join_member_function();
     constexpr int UseReducerType = is_reducer_v<ReducerType>;
 
     std::stringstream error_message;
@@ -72,7 +73,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
       std::conditional_t<std::is_same<InvalidType, ReducerType>::value,
                          FunctorType, ReducerType>;
   using Analysis = Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
-                                         PolicyType, ReducerTypeFwd>;
+                                         PolicyType, ReducerTypeFwd, ValueType>;
   using ReferenceType = typename Analysis::reference_type;
 
   using ParReduceCopy = ParallelReduceCopy<PointerType>;
@@ -106,7 +107,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
                                                      : f) reduction(custom \
                                                                     : result)
     for (auto i = begin; i < end; ++i) {
-      if constexpr (std::is_void<TagType>::value) {
+      if constexpr (std::is_void_v<TagType>) {
         f(i, result);
       } else {
         f(TagType(), i, result);
@@ -138,13 +139,14 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
                                      ptr_on_device);
         return;
       }
+
       // Case where reduction is on a native data type.
       if constexpr (std::is_arithmetic<ValueType>::value) {
 #pragma omp target teams distribute parallel for \
          map(to:f) reduction(+: result)
         for (auto i = begin; i < end; ++i)
 
-          if constexpr (std::is_void<TagType>::value) {
+          if constexpr (std::is_void_v<TagType>) {
             f(i, result);
           } else {
             f(TagType(), i, result);
@@ -156,7 +158,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
                                                                     : result)
         for (auto i = begin; i < end; ++i)
 
-          if constexpr (std::is_void<TagType>::value) {
+          if constexpr (std::is_void_v<TagType>) {
             f(i, result);
           } else {
             f(TagType(), i, result);
@@ -178,7 +180,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
       }
 #pragma omp target teams distribute parallel for map(to:f) reduction(+:result[:NumReductions])
       for (auto i = begin; i < end; ++i) {
-        if constexpr (std::is_void<TagType>::value) {
+        if constexpr (std::is_void_v<TagType>) {
           f(i, result);
         } else {
           f(TagType(), i, result);
@@ -197,7 +199,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
 
     using FunctorAnalysis =
         Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE, PolicyType,
-                              FunctorType>;
+                              FunctorType, ValueType>;
 
     // Initialize the result pointer.
 
@@ -261,7 +263,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
         // Accumulate partial results in thread specific storage.
 #pragma omp for simd
         for (auto i = team_begin; i < team_end; ++i) {
-          if constexpr (std::is_void<TagType>::value) {
+          if constexpr (std::is_void_v<TagType>) {
             f(i, result);
           } else {
             f(TagType(), i, result);
@@ -329,7 +331,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
       std::conditional_t<std::is_same<InvalidType, ReducerType>::value,
                          FunctorType, ReducerType>;
   using Analysis = Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
-                                         PolicyType, ReducerTypeFwd>;
+                                         PolicyType, ReducerTypeFwd, ValueType>;
 
   using ReferenceType = typename Analysis::reference_type;
 
@@ -355,42 +357,60 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     ValueType result = ValueType();
 
     // Maximum active teams possible.
-    int max_active_teams = OpenMPTargetExec::MAX_ACTIVE_THREADS / team_size;
-    const auto nteams =
-        league_size < max_active_teams ? league_size : max_active_teams;
+    int max_active_teams = omp_get_max_teams();
 
     // If the league size is <=0, do not launch the kernel.
-    if (nteams <= 0) return;
+    if (max_active_teams <= 0) return;
 
 #pragma omp declare reduction(                                         \
     custom:ValueType                                                   \
     : OpenMPTargetReducerWrapper <ReducerType>::join(omp_out, omp_in)) \
     initializer(OpenMPTargetReducerWrapper <ReducerType>::init(omp_priv))
 
-#pragma omp target teams num_teams(nteams) thread_limit(team_size) map(to   \
-                                                                       : f) \
-    is_device_ptr(scratch_ptr) reduction(custom                             \
-                                         : result)
+#if !defined(KOKKOS_IMPL_OPENMPTARGET_HIERARCHICAL_INTEL_GPU)
+#pragma omp target teams num_teams(max_active_teams) thread_limit(team_size) \
+    firstprivate(f) is_device_ptr(scratch_ptr) reduction(custom              \
+                                                         : result)
 #pragma omp parallel reduction(custom : result)
     {
+      if (omp_get_num_teams() > max_active_teams)
+        Kokkos::abort("`omp_set_num_teams` call was not respected.\n");
+
       const int blockIdx = omp_get_team_num();
       const int gridDim  = omp_get_num_teams();
 
       // Guarantee that the compilers respect the `num_teams` clause
-      if (gridDim <= nteams) {
-        for (int league_id = blockIdx; league_id < league_size;
-             league_id += gridDim) {
-          typename PolicyType::member_type team(
-              league_id, league_size, team_size, vector_length, scratch_ptr,
-              blockIdx, shmem_size_L0, shmem_size_L1);
-          if constexpr (std::is_void<TagType>::value)
-            f(team, result);
-          else
-            f(TagType(), team, result);
-        }
-      } else
-        Kokkos::abort("`num_teams` clause was not respected.\n");
+      for (int league_id = blockIdx; league_id < league_size;
+           league_id += gridDim) {
+        typename PolicyType::member_type team(
+            league_id, league_size, team_size, vector_length, scratch_ptr,
+            blockIdx, shmem_size_L0, shmem_size_L1);
+        if constexpr (std::is_void_v<TagType>)
+          f(team, result);
+        else
+          f(TagType(), team, result);
+      }
     }
+#else
+#pragma omp target teams distribute firstprivate(f) is_device_ptr(scratch_ptr) \
+    num_teams(max_active_teams) thread_limit(team_size) reduction(custom       \
+                                                                  : result)
+    for (int i = 0; i < league_size; i++) {
+#pragma omp parallel reduction(custom : result)
+      {
+        if (omp_get_num_teams() > max_active_teams)
+          Kokkos::abort("`omp_set_num_teams` call was not respected.\n");
+
+        typename PolicyType::member_type team(i, league_size, team_size,
+                                              vector_length, scratch_ptr, i,
+                                              shmem_size_L0, shmem_size_L1);
+        if constexpr (std::is_void_v<TagType>)
+          f(team, result);
+        else
+          f(TagType(), team, result);
+      }
+    }
+#endif
 
     // Copy results back to device if `parallel_reduce` is on a device view.
     ParReduceCopy::memcpy_result(result_ptr, &result, sizeof(ValueType),
@@ -416,12 +436,10 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
 
     // Maximum active teams possible.
-    int max_active_teams = OpenMPTargetExec::MAX_ACTIVE_THREADS / team_size;
-    const auto nteams =
-        league_size < max_active_teams ? league_size : max_active_teams;
+    int max_active_teams = omp_get_max_teams();
 
     // If the league size is <=0, do not launch the kernel.
-    if (nteams <= 0) return;
+    if (max_active_teams <= 0) return;
 
     // Case where the number of reduction items is 1.
     if constexpr (NumReductions == 1) {
@@ -429,55 +447,55 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
 
       // Case where reduction is on a native data type.
       if constexpr (std::is_arithmetic<ValueType>::value) {
-#pragma omp target teams num_teams(nteams) thread_limit(team_size) map(to   \
+#pragma omp target teams num_teams(max_active_teams) thread_limit(team_size) map(to   \
                                                                        : f) \
     is_device_ptr(scratch_ptr) reduction(+: result)
 #pragma omp parallel reduction(+ : result)
         {
+          if (omp_get_num_teams() > max_active_teams)
+            Kokkos::abort("`omp_set_num_teams` call was not respected.\n");
+
           const int blockIdx = omp_get_team_num();
           const int gridDim  = omp_get_num_teams();
 
           // Guarantee that the compilers respect the `num_teams` clause
-          if (gridDim <= nteams) {
-            for (int league_id = blockIdx; league_id < league_size;
-                 league_id += gridDim) {
-              typename PolicyType::member_type team(
-                  league_id, league_size, team_size, vector_length, scratch_ptr,
-                  blockIdx, shmem_size_L0, shmem_size_L1);
-              if constexpr (std::is_void<TagType>::value)
-                f(team, result);
-              else
-                f(TagType(), team, result);
-            }
-          } else
-            Kokkos::abort("`num_teams` clause was not respected.\n");
+          for (int league_id = blockIdx; league_id < league_size;
+               league_id += gridDim) {
+            typename PolicyType::member_type team(
+                league_id, league_size, team_size, vector_length, scratch_ptr,
+                blockIdx, shmem_size_L0, shmem_size_L1);
+            if constexpr (std::is_void_v<TagType>)
+              f(team, result);
+            else
+              f(TagType(), team, result);
+          }
         }
       } else {
         // Case where the reduction is on a non-native data type.
 #pragma omp declare reduction(custom:ValueType : omp_out += omp_in)
-#pragma omp target teams num_teams(nteams) thread_limit(team_size) map(to   \
-                                                                       : f) \
-    is_device_ptr(scratch_ptr) reduction(custom                             \
-                                         : result)
+#pragma omp target teams num_teams(max_active_teams) thread_limit(team_size) \
+    map(to                                                                   \
+        : f) is_device_ptr(scratch_ptr) reduction(custom                     \
+                                                  : result)
 #pragma omp parallel reduction(custom : result)
         {
+          if (omp_get_num_teams() > max_active_teams)
+            Kokkos::abort("`omp_set_num_teams` call was not respected.\n");
+
           const int blockIdx = omp_get_team_num();
           const int gridDim  = omp_get_num_teams();
 
           // Guarantee that the compilers respect the `num_teams` clause
-          if (gridDim <= nteams) {
-            for (int league_id = blockIdx; league_id < league_size;
-                 league_id += gridDim) {
-              typename PolicyType::member_type team(
-                  league_id, league_size, team_size, vector_length, scratch_ptr,
-                  blockIdx, shmem_size_L0, shmem_size_L1);
-              if constexpr (std::is_void<TagType>::value)
-                f(team, result);
-              else
-                f(TagType(), team, result);
-            }
-          } else
-            Kokkos::abort("`num_teams` clause was not respected.\n");
+          for (int league_id = blockIdx; league_id < league_size;
+               league_id += gridDim) {
+            typename PolicyType::member_type team(
+                league_id, league_size, team_size, vector_length, scratch_ptr,
+                blockIdx, shmem_size_L0, shmem_size_L1);
+            if constexpr (std::is_void_v<TagType>)
+              f(team, result);
+            else
+              f(TagType(), team, result);
+          }
         }
       }
 
@@ -487,28 +505,28 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     } else {
       ValueType result[NumReductions] = {};
       // Case where the reduction is on an array.
-#pragma omp target teams num_teams(nteams) thread_limit(team_size) map(to   \
+#pragma omp target teams num_teams(max_active_teams) thread_limit(team_size) map(to   \
                                                                        : f) \
     is_device_ptr(scratch_ptr) reduction(+ : result[:NumReductions])
 #pragma omp parallel reduction(+ : result[:NumReductions])
       {
+        if (omp_get_num_teams() > max_active_teams)
+          Kokkos::abort("`omp_set_num_teams` call was not respected.\n");
+
         const int blockIdx = omp_get_team_num();
         const int gridDim  = omp_get_num_teams();
 
         // Guarantee that the compilers respect the `num_teams` clause
-        if (gridDim <= nteams) {
-          for (int league_id = blockIdx; league_id < league_size;
-               league_id += gridDim) {
-            typename PolicyType::member_type team(
-                league_id, league_size, team_size, vector_length, scratch_ptr,
-                blockIdx, shmem_size_L0, shmem_size_L1);
-            if constexpr (std::is_void<TagType>::value)
-              f(team, result);
-            else
-              f(TagType(), team, result);
-          }
-        } else
-          Kokkos::abort("`num_teams` clause was not respected.\n");
+        for (int league_id = blockIdx; league_id < league_size;
+             league_id += gridDim) {
+          typename PolicyType::member_type team(
+              league_id, league_size, team_size, vector_length, scratch_ptr,
+              blockIdx, shmem_size_L0, shmem_size_L1);
+          if constexpr (std::is_void_v<TagType>)
+            f(team, result);
+          else
+            f(TagType(), team, result);
+        }
       }
 
       // Copy results back to device if `parallel_reduce` is on a device view.
@@ -523,7 +541,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
                                 PointerType ptr, const bool ptr_on_device) {
     using FunctorAnalysis =
         Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE, PolicyType,
-                              FunctorType>;
+                              FunctorType, ValueType>;
 
     const int league_size   = p.league_size();
     const int team_size     = p.team_size();
@@ -593,7 +611,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
           typename PolicyType::member_type team(
               league_id, league_size, team_size, vector_length, scratch_ptr,
               team_num, shmem_size_L0, shmem_size_L1);
-          if constexpr (std::is_void<TagType>::value) {
+          if constexpr (std::is_void_v<TagType>) {
             f(team, result);
           } else {
             f(TagType(), team, result);

@@ -145,10 +145,10 @@ void run_single_scenario(const InfoType& scenario_info) {
       KE::is_sorted_until("label", exespace(), KE::begin(view), KE::end(view));
   auto r3 = KE::is_sorted_until(exespace(), view);
   auto r4 = KE::is_sorted_until("label", exespace(), view);
-  EXPECT_EQ(r1, gold);
-  EXPECT_EQ(r2, gold);
-  EXPECT_EQ(r3, gold);
-  EXPECT_EQ(r4, gold);
+  ASSERT_EQ(r1, gold);
+  ASSERT_EQ(r2, gold);
+  ASSERT_EQ(r3, gold);
+  ASSERT_EQ(r4, gold);
 
 #if !defined KOKKOS_ENABLE_OPENMPTARGET
   CustomLessThanComparator<ValueType, ValueType> comp;
@@ -160,10 +160,10 @@ void run_single_scenario(const InfoType& scenario_info) {
   auto r8 = KE::is_sorted_until("label", exespace(), view, comp);
 #endif
 
-  EXPECT_EQ(r1, gold);
-  EXPECT_EQ(r2, gold);
-  EXPECT_EQ(r3, gold);
-  EXPECT_EQ(r4, gold);
+  ASSERT_EQ(r1, gold);
+  ASSERT_EQ(r2, gold);
+  ASSERT_EQ(r3, gold);
+  ASSERT_EQ(r4, gold);
 
   Kokkos::fence();
 }

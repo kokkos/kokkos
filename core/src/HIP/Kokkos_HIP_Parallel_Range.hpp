@@ -270,8 +270,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
   inline unsigned local_block_size(const FunctorType& f) {
     const auto& instance = m_policy.space().impl_internal_space_instance();
     auto shmem_functor   = [&f](unsigned n) {
-      return hip_single_inter_block_reduce_scan_shmem<false, FunctorType,
-                                                      WorkTag>(f, n);
+      return hip_single_inter_block_reduce_scan_shmem<false, WorkTag,
+                                                      value_type>(f, n);
     };
     return Kokkos::Impl::hip_get_preferred_blocksize<ParallelReduce,
                                                      LaunchBounds>(
@@ -314,8 +314,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
       const int shmem =
           UseShflReduction
               ? 0
-              : hip_single_inter_block_reduce_scan_shmem<false, FunctorType,
-                                                         WorkTag>(
+              : hip_single_inter_block_reduce_scan_shmem<false, WorkTag,
+                                                         value_type>(
                     m_functor_reducer.get_functor(), block.y);
 
       Kokkos::Impl::hip_parallel_launch<ParallelReduce, LaunchBounds>(
@@ -349,7 +349,7 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
                               typename ViewType::memory_space>::accessible) {}
 };
 
-template <class FunctorType, class... Traits>
+template <class FunctorType, class ValueType, class... Traits>
 class ParallelScanHIPBase {
  public:
   using Policy = Kokkos::RangePolicy<Traits...>;
@@ -360,8 +360,9 @@ class ParallelScanHIPBase {
   using WorkRange    = typename Policy::WorkRange;
   using LaunchBounds = typename Policy::launch_bounds;
 
-  using Analysis = Kokkos::Impl::FunctorAnalysis<FunctorPatternInterface::SCAN,
-                                                 Policy, FunctorType>;
+  using Analysis =
+      Kokkos::Impl::FunctorAnalysis<FunctorPatternInterface::SCAN, Policy,
+                                    FunctorType, ValueType>;
 
  public:
   using value_type     = typename Analysis::value_type;
@@ -589,14 +590,13 @@ class ParallelScanHIPBase {
       m_final = false;
       // these ones are OK to be just the base because the specializations
       // do not modify the kernel at all
-      using DriverType = ParallelScanHIPBase<FunctorType, Traits...>;
-      Impl::hip_parallel_launch<DriverType, LaunchBounds>(
+      Impl::hip_parallel_launch<ParallelScanHIPBase, LaunchBounds>(
           *this, grid, block, shmem,
           m_policy.space().impl_internal_space_instance(),
           false);  // copy to device and execute
 
       m_final = true;
-      Impl::hip_parallel_launch<DriverType, LaunchBounds>(
+      Impl::hip_parallel_launch<ParallelScanHIPBase, LaunchBounds>(
           *this, grid, block, shmem,
           m_policy.space().impl_internal_space_instance(),
           false);  // copy to device and execute
@@ -614,9 +614,9 @@ class ParallelScanHIPBase {
 
 template <class FunctorType, class... Traits>
 class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, HIP>
-    : public ParallelScanHIPBase<FunctorType, Traits...> {
+    : public ParallelScanHIPBase<FunctorType, void, Traits...> {
  public:
-  using Base = ParallelScanHIPBase<FunctorType, Traits...>;
+  using Base = ParallelScanHIPBase<FunctorType, void, Traits...>;
   using Base::operator();
 
   inline void execute() {
@@ -642,9 +642,8 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, HIP>
     const auto& instance =
         Base::m_policy.space().impl_internal_space_instance();
     auto shmem_functor = [&f](unsigned n) {
-      return hip_single_inter_block_reduce_scan_shmem<true, FunctorType,
-                                                      typename Base::WorkTag>(
-          f, n);
+      return hip_single_inter_block_reduce_scan_shmem<
+          true, typename Base::WorkTag, void>(f, n);
     };
     using DriverType = ParallelScan<FunctorType, typename Base::Policy, HIP>;
     return Impl::hip_get_preferred_blocksize<DriverType,
@@ -658,9 +657,9 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, HIP>
 template <class FunctorType, class ReturnType, class... Traits>
 class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
                             ReturnType, HIP>
-    : public ParallelScanHIPBase<FunctorType, Traits...> {
+    : public ParallelScanHIPBase<FunctorType, ReturnType, Traits...> {
  public:
-  using Base = ParallelScanHIPBase<FunctorType, Traits...>;
+  using Base = ParallelScanHIPBase<FunctorType, ReturnType, Traits...>;
   using Base::operator();
 
   inline void execute() {
@@ -701,9 +700,8 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
     const auto& instance =
         Base::m_policy.space().impl_internal_space_instance();
     auto shmem_functor = [&f](unsigned n) {
-      return hip_single_inter_block_reduce_scan_shmem<true, FunctorType,
-                                                      typename Base::WorkTag>(
-          f, n);
+      return hip_single_inter_block_reduce_scan_shmem<
+          true, typename Base::WorkTag, ReturnType>(f, n);
     };
     using DriverType = ParallelScanWithTotal<FunctorType, typename Base::Policy,
                                              ReturnType, HIP>;

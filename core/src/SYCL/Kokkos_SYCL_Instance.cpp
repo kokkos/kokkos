@@ -280,11 +280,9 @@ sycl::device_ptr<void> SYCLInternal::scratch_flags(const std::size_t size) {
 
     m_scratchFlags = reinterpret_cast<size_type*>(r->data());
   }
-  m_queue->memset(m_scratchFlags, 0, m_scratchFlagsCount * sizeScratchGrain);
-  fence(*m_queue,
-        "Kokkos::Experimental::SYCLInternal::scratch_flags fence after "
-        "initializing m_scratchFlags",
-        m_instance_id);
+  auto memset_event = m_queue->memset(m_scratchFlags, 0,
+                                      m_scratchFlagsCount * sizeScratchGrain);
+  m_queue->ext_oneapi_submit_barrier(std::vector{memset_event});
 
   return m_scratchFlags;
 }

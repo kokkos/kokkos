@@ -44,9 +44,10 @@ struct StdFindIfOrNotFunctor {
     // if doing find_if_not, look for when predicate is false
     const bool found_condition = is_find_if ? m_p(my_value) : !m_p(my_value);
 
+    // FIXME_NVHPC using a ternary operator causes problems
     red_value_type rv = {::Kokkos::reduction_identity<IndexType>::min()};
     if (found_condition) {
-      rv = {i};
+      rv.min_loc_true = i;
     }
 
     m_reducer.join(red_value, rv);

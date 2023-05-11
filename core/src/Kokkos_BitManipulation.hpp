@@ -20,6 +20,7 @@
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_NumericTraits.hpp>
 #include <climits>  // CHAR_BIT
+#include <cstring>  //memcpy
 #include <type_traits>
 
 namespace Kokkos::Impl {
@@ -97,6 +98,19 @@ inline constexpr bool is_standard_unsigned_integer_type_v =
 }  // namespace Kokkos::Impl
 
 namespace Kokkos {
+
+//<editor-fold desc="[bit.cast], bit_cast">
+template <class To, class From>
+KOKKOS_FUNCTION std::enable_if_t<sizeof(To) == sizeof(From) &&
+                                     std::is_trivially_copyable_v<To> &&
+                                     std::is_trivially_copyable_v<From>,
+                                 To>
+bit_cast(From const& from) noexcept {
+  To to;
+  memcpy(&to, &from, sizeof(To));
+  return to;
+}
+//</editor-fold>
 
 //<editor-fold desc="[bit.byteswap], byteswap">
 template <class T>
@@ -224,7 +238,7 @@ rotr(T x, int s) noexcept {
 namespace Kokkos::Impl {
 
 #if defined(KOKKOS_COMPILER_CLANG) || defined(KOKKOS_COMPILER_INTEL_LLVM) || \
-    defined(KOKKOS_COMPILER_GCC)
+    defined(KOKKOS_COMPILER_GNU)
 #define KOKKOS_IMPL_USE_GCC_BUILT_IN_FUNCTIONS
 #endif
 
@@ -245,12 +259,13 @@ KOKKOS_IMPL_HOST_FUNCTION T byteswap_builtin_host(T x) noexcept {
   } else if constexpr (sizeof(T) == 8) {
     return __builtin_bswap64(x);
   } else if constexpr (sizeof(T) == 16) {
+#if defined(__has_builtin)
 #if __has_builtin(__builtin_bswap128)
     return __builtin_bswap128(x);
-#else
+#endif
+#endif
     return (__builtin_bswap64(x >> 64) |
             (static_cast<T>(__builtin_bswap64(x)) << 64));
-#endif
   }
 #endif
 
@@ -377,6 +392,16 @@ KOKKOS_IMPL_HOST_FUNCTION
 }  // namespace Kokkos::Impl
 
 namespace Kokkos::Experimental {
+
+template <class To, class From>
+KOKKOS_FUNCTION std::enable_if_t<sizeof(To) == sizeof(From) &&
+                                     std::is_trivially_copyable_v<To> &&
+                                     std::is_trivially_copyable_v<From>,
+                                 To>
+bit_cast_builtin(From const& from) noexcept {
+  // qualify the call to avoid ADL
+  return Kokkos::bit_cast<To>(from);  // no benefit to call the _builtin variant
+}
 
 template <class T>
 KOKKOS_FUNCTION std::enable_if_t<std::is_integral_v<T>, T> byteswap_builtin(

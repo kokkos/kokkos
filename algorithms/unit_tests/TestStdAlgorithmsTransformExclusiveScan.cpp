@@ -163,7 +163,7 @@ void verify_data(ViewType1 data_view,  // contains data
       //           << std::abs(gold_h(i) - test_view_h(i)) << std::endl;
 
       if constexpr (std::is_same<gold_view_value_type, int>::value) {
-        EXPECT_EQ(gold_h(i), test_view_h(i));
+        ASSERT_EQ(gold_h(i), test_view_h(i));
       } else if constexpr (std::is_same<gold_view_value_type,
                                         CustomValueType>::value) {
         const auto error = std::abs(gold_h(i)() - test_view_h(i)());
@@ -223,7 +223,7 @@ void run_single_scenario(const InfoType& scenario_info, ValueType init_value,
     auto r = KE::transform_exclusive_scan(
         exespace(), KE::cbegin(view_from), KE::cend(view_from),
         KE::begin(view_dest), init_value, bop, uop);
-    EXPECT_EQ(r, KE::end(view_dest));
+    ASSERT_EQ(r, KE::end(view_dest));
     verify_data(view_from, view_dest, init_value, bop, uop);
   }
 
@@ -232,7 +232,7 @@ void run_single_scenario(const InfoType& scenario_info, ValueType init_value,
     auto r = KE::transform_exclusive_scan(
         "label", exespace(), KE::cbegin(view_from), KE::cend(view_from),
         KE::begin(view_dest), init_value, bop, uop);
-    EXPECT_EQ(r, KE::end(view_dest));
+    ASSERT_EQ(r, KE::end(view_dest));
     verify_data(view_from, view_dest, init_value, bop, uop);
   }
 
@@ -240,7 +240,7 @@ void run_single_scenario(const InfoType& scenario_info, ValueType init_value,
     fill_zero(view_dest);
     auto r = KE::transform_exclusive_scan(exespace(), view_from, view_dest,
                                           init_value, bop, uop);
-    EXPECT_EQ(r, KE::end(view_dest));
+    ASSERT_EQ(r, KE::end(view_dest));
     verify_data(view_from, view_dest, init_value, bop, uop);
   }
 
@@ -248,7 +248,7 @@ void run_single_scenario(const InfoType& scenario_info, ValueType init_value,
     fill_zero(view_dest);
     auto r = KE::transform_exclusive_scan("label", exespace(), view_from,
                                           view_dest, init_value, bop, uop);
-    EXPECT_EQ(r, KE::end(view_dest));
+    ASSERT_EQ(r, KE::end(view_dest));
     verify_data(view_from, view_dest, init_value, bop, uop);
   }
 
@@ -306,33 +306,33 @@ TEST(std_algorithms_numeric_ops_test, transform_exclusive_scan_functor) {
 
   value_type value1;
   functor.init(value1);
-  EXPECT_EQ(value1.val, 0);
-  EXPECT_EQ(value1.is_initial, true);
+  ASSERT_EQ(value1.val, 0);
+  ASSERT_EQ(value1.is_initial, true);
 
   value_type value2;
   value2.val        = 1;
   value2.is_initial = false;
   functor.join(value1, value2);
-  EXPECT_EQ(value1.val, 1);
-  EXPECT_EQ(value1.is_initial, false);
+  ASSERT_EQ(value1.val, 1);
+  ASSERT_EQ(value1.is_initial, false);
 
   functor.init(value1);
   functor.join(value2, value1);
-  EXPECT_EQ(value2.val, 1);
-  EXPECT_EQ(value2.is_initial, false);
+  ASSERT_EQ(value2.val, 1);
+  ASSERT_EQ(value2.is_initial, false);
 
   functor.init(value2);
   functor.join(value2, value1);
-  EXPECT_EQ(value2.val, 0);
-  EXPECT_EQ(value2.is_initial, true);
+  ASSERT_EQ(value2.val, 0);
+  ASSERT_EQ(value2.is_initial, true);
 
   value1.val        = 3;
   value1.is_initial = false;
   value2.val        = 2;
   value2.is_initial = false;
   functor.join(value2, value1);
-  EXPECT_EQ(value2.val, 6);
-  EXPECT_EQ(value2.is_initial, false);
+  ASSERT_EQ(value2.val, 6);
+  ASSERT_EQ(value2.is_initial, false);
 }
 
 }  // namespace TransformEScan

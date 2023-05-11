@@ -60,6 +60,7 @@ struct StdSearchFunctor {
       }
     }
 
+    // FIXME_NVHPC using a ternary operator causes problems
     red_value_type rv = {::Kokkos::reduction_identity<IndexType>::min()};
     if (found) {
       rv = {i};

@@ -772,6 +772,12 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
 #else
   declare_configuration_metadata("architecture", "GPU architecture", "none");
 #endif
+
+#ifdef KOKKOS_IMPL_32BIT
+  declare_configuration_metadata("architecture", "platform", "32bit");
+#else
+  declare_configuration_metadata("architecture", "platform", "64bit");
+#endif
 }
 
 void post_initialize_internal(const Kokkos::InitializationSettings& settings) {

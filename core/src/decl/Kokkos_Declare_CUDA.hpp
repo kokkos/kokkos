@@ -31,6 +31,7 @@
 #include <Cuda/Kokkos_Cuda_Task.hpp>
 #include <Cuda/Kokkos_Cuda_MDRangePolicy.hpp>
 #include <Cuda/Kokkos_Cuda_UniqueToken.hpp>
+#include <Cuda/Kokkos_Cuda_ZeroMemset.hpp>
 #endif
 
 #endif

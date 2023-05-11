@@ -30,19 +30,19 @@ namespace Impl {
 
 template <class IteratorType, class ComparatorType, class ReducerType>
 struct StdIsSortedUntilFunctor {
-  using index_type     = typename IteratorType::difference_type;
-  using red_value_type = typename ReducerType::value_type;
+  using index_type = typename IteratorType::difference_type;
+  using value_type = typename ReducerType::value_type;
 
   IteratorType m_first;
   ComparatorType m_comparator;
   ReducerType m_reducer;
 
   KOKKOS_FUNCTION
-  void operator()(const index_type i, red_value_type& red_value) const {
+  void operator()(const index_type i, value_type& reduction_result) const {
     const auto& val_i   = m_first[i];
     const auto& val_ip1 = m_first[i + 1];
     if (m_comparator(val_ip1, val_i)) {
-      m_reducer.join(red_value, i);
+      m_reducer.join(reduction_result, i);
     }
   }
 
@@ -76,14 +76,12 @@ IteratorType is_sorted_until_exespace_impl(const std::string& label,
 
   /*
     Do a par_reduce computing the *min* index that breaks the sorting.
-    If one such index is found, then the range is sorted until that element,
-    if no such index is found, then it means the range is sorted until the end.
+    If such an index is found, then the range is sorted until that element.
+    If no such index is found, then the range is sorted until the end.
   */
   using index_type = typename IteratorType::difference_type;
-  index_type red_result;
-  index_type red_result_init;
-  ::Kokkos::Min<index_type> reducer(red_result);
-  reducer.init(red_result_init);
+  index_type reduction_result;
+  ::Kokkos::Min<index_type> reducer(reduction_result);
   ::Kokkos::parallel_reduce(
       label,
       // use num_elements-1 because each index handles i and i+1
@@ -92,13 +90,15 @@ IteratorType is_sorted_until_exespace_impl(const std::string& label,
       StdIsSortedUntilFunctor(first, comp, reducer), reducer);
 
   /* If the reduction result is equal to the initial value,
-     and it means the range is sorted until the end */
-  if (red_result == red_result_init) {
+     it means the range is sorted until the end */
+  index_type reduction_result_init;
+  reducer.init(reduction_result_init);
+  if (reduction_result == reduction_result_init) {
     return last;
   } else {
-    /* If  such index is found, then the range is sorted until there and
+    /* If such an index is found, then the range is sorted until there and
        we need to return an iterator past the element found so do +1 */
-    return first + (red_result + 1);
+    return first + (reduction_result + 1);
   }
 }
 

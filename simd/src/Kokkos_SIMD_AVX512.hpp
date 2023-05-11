@@ -21,6 +21,7 @@
 #include <type_traits>
 
 #include <Kokkos_SIMD_Common.hpp>
+#include <Kokkos_BitManipulation.hpp>  // bit_cast
 
 #include <immintrin.h>
 
@@ -261,7 +262,8 @@ class simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> {
   template <class U, std::enable_if_t<std::is_convertible_v<U, value_type>,
                                       bool> = false>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd(U&& value)
-      : m_value(_mm256_set1_epi32(bit_cast<std::int32_t>(value_type(value)))) {}
+      : m_value(_mm256_set1_epi32(
+            Kokkos::bit_cast<std::int32_t>(value_type(value)))) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(
       __m256i const& value_in)
       : m_value(value_in) {}
@@ -485,7 +487,8 @@ class simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> {
   template <class U, std::enable_if_t<std::is_convertible_v<U, value_type>,
                                       bool> = false>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd(U&& value)
-      : m_value(_mm512_set1_epi64(bit_cast<std::int64_t>(value_type(value)))) {}
+      : m_value(_mm512_set1_epi64(
+            Kokkos::bit_cast<std::int64_t>(value_type(value)))) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr simd(__m512i const& value_in)
       : m_value(value_in) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit simd(

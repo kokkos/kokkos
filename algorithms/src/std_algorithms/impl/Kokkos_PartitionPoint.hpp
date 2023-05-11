@@ -39,7 +39,9 @@ struct StdPartitionPointFunctor {
   KOKKOS_FUNCTION
   void operator()(const index_type i, red_value_type& redValue) const {
     const auto predicate_value = m_p(m_first[i]);
-    red_value_type rv          = {i};
+
+    // FIXME_NVHPC using a ternary operator causes problems
+    red_value_type rv = {i};
     if (predicate_value) {
       rv = {::Kokkos::reduction_identity<index_type>::min()};
     }

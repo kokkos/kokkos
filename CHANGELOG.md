@@ -29,8 +29,9 @@
 - Fix an incorrectly returning size for SIMD uint64_t in AVX2 [\#6011](https://github.com/kokkos/kokkos/pull/6011)
 - Desul atomics: wrong value for `desul::Impl::numeric_limits_max<uint64_t>` [\#6018](https://github.com/kokkos/kokkos/pull/6018)
 - Fix warning in some user code when using std::memcpy [\#6000](https://github.com/kokkos/kokkos/pull/6000)
+- Fix excessive build times using Makefile.kokkos [\#6068](https://github.com/kokkos/kokkos/pull/6068)
 
-## [4.0.0](https://github.com/kokkos/kokkos/tree/4.0.0) (2023-02-21)
+## [4.0.0](https://github.com/kokkos/kokkos/tree/4.0.00) (2023-02-21)
 [Full Changelog](https://github.com/kokkos/kokkos/compare/3.7.01...4.0.00)
 
 ### Features:

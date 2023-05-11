@@ -873,7 +873,8 @@ KOKKOS_INLINE_FUNCTION
   // Extract ValueType from the closure
 
   using value_type = typename Kokkos::Impl::FunctorAnalysis<
-      Kokkos::Impl::FunctorPatternInterface::SCAN, void, Closure>::value_type;
+      Kokkos::Impl::FunctorPatternInterface::SCAN, void, Closure,
+      void>::value_type;
 
   value_type accum = 0;
 
@@ -899,7 +900,7 @@ KOKKOS_INLINE_FUNCTION
                       loop_boundaries,
                   ClosureType const& closure) {
   using value_type = typename Kokkos::Impl::FunctorAnalysis<
-      Impl::FunctorPatternInterface::SCAN, void, ClosureType>::value_type;
+      Impl::FunctorPatternInterface::SCAN, void, ClosureType, void>::value_type;
 
   value_type scan_val = value_type();
 
