@@ -115,6 +115,8 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     // mode but works in the Debug mode.
 
     // Maximum active teams possible.
+    // FIXME_OPENMPTARGET: Cray compiler did not yet implement
+    // omp_get_max_teams.
 #if !defined(KOKKOS_COMPILER_CRAY_LLVM)
     int max_active_teams = omp_get_max_teams();
 #else
