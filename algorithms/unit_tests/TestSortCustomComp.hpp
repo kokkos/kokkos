@@ -113,11 +113,9 @@ TEST(TEST_CATEGORY, SortWithCustomComparator) {
     run_all_scenarios<ExeSpace, stdalgos::StridedThreeTag, int>(api);
     run_all_scenarios<ExeSpace, stdalgos::StridedTwoTag, double>(api);
     run_all_scenarios<ExeSpace, stdalgos::StridedThreeTag, double>(api);
-  }
-
-}  // end for
+  }  // end for
 }  // namespace SortWithComp
 
-}  // namespace Test
+}  // namespace SortWithComp
 }  // namespace Test
 #endif
