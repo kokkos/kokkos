@@ -684,8 +684,8 @@ IF (KOKKOS_ENABLE_OPENMPTARGET)
   IF (CLANG_CUDA_ARCH)
     IF(KOKKOS_CLANG_IS_CRAY)
       COMPILER_SPECIFIC_FLAGS(
-      Cray -fopenmp
-    )
+        Cray -fopenmp
+      )
     ELSE()
       STRING(REPLACE "sm_" "cc" NVHPC_CUDA_ARCH ${CLANG_CUDA_ARCH})
       COMPILER_SPECIFIC_FLAGS(
