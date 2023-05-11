@@ -64,7 +64,9 @@ get_kokkos_cuda_option_list() {
   for CUDA_ in $PARSE_CUDA_LST
   do
      CUDA_OPT_NAME=
-     if  [ "${CUDA_}" == "rdc" ]; then
+     if [ "${CUDA_}" == "enable_lambda" ]; then
+        CUDA_OPT_NAME=CUDA_LAMBDA
+     elif  [ "${CUDA_}" == "rdc" ]; then
         CUDA_OPT_NAME=CUDA_RELOCATABLE_DEVICE_CODE
      elif  [ "${CUDA_}" == "force_uvm" ]; then
         CUDA_OPT_NAME=CUDA_UVM
@@ -229,7 +231,7 @@ display_help_text() {
       echo "                                disable_profiling = do not compile with profiling hooks"
       echo "                                "
       echo "--with-cuda-options=[OPT]:    Additional options to CUDA:"
-      echo "                                force_uvm, use_ldg, rdc"
+      echo "                                force_uvm, use_ldg, enable_lambda, rdc"
       echo "--with-hip-options=[OPT]:     Additional options to HIP:"
       echo "                                rdc"
       echo "--with-hpx-options=[OPT]:     Additional options to HPX:"
