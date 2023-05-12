@@ -294,7 +294,7 @@ void sort_with_comparator(const Experimental::SYCL& space,
       std::is_same_v<LayoutStride, typename ViewType::array_layout>;
   if constexpr (strided) {
     // strided views not supported in dpl so use the most generic case
-    copy_to_host_and_run_stdsort(space, view, comp);
+    to_host_and_stdsort_and_back(space, view, comp);
   } else {
     (void)space;
     sort_onedpl(space, view, comp);
