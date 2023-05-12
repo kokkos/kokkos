@@ -216,7 +216,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId,
 
     // our result must match std
     const std::size_t stdDistance = KE::distance(KE::cbegin(myRow), stdResult);
-    EXPECT_EQ(stdDistance, distancesView_h(i));
+    ASSERT_EQ(stdDistance, distancesView_h(i));
   }
 
   expect_equal_host_views(dataView_dc_h, dataViewAfterOp_h);

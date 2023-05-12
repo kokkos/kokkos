@@ -528,8 +528,8 @@ void expect_equal_host_views(ViewType1 A, const ViewType2 B) {
           std::is_same_v<typename ViewType1::memory_space, Kokkos::HostSpace> &&
           std::is_same_v<typename ViewType2::memory_space, Kokkos::HostSpace>,
       "Expected 2-dimensional host view.");
-  EXPECT_EQ(A.extent(0), B.extent(0));
-  EXPECT_EQ(A.extent(1), B.extent(1));
+  ASSERT_EQ(A.extent(0), B.extent(0));
+  ASSERT_EQ(A.extent(1), B.extent(1));
 
   constexpr bool values_are_floast =
       std::is_floating_point_v<typename ViewType1::value_type> ||
@@ -540,7 +540,7 @@ void expect_equal_host_views(ViewType1 A, const ViewType2 B) {
       if constexpr (values_are_floast) {
         EXPECT_FLOAT_EQ(A(i, j), B(i, j));
       } else {
-        EXPECT_EQ(A(i, j), B(i, j));
+        ASSERT_EQ(A(i, j), B(i, j));
       }
     }
   }

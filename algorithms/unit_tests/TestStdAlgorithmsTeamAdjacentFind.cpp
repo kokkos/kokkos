@@ -200,10 +200,10 @@ void test_A(const bool ensureAdjacentFindCanFind, std::size_t numTeams,
       case 1: {
         const auto it = std::adjacent_find(rowFromBegin, rowFromEnd);
         const std::size_t stdDistance = KE::distance(rowFromBegin, it);
-        EXPECT_EQ(stdDistance, distancesView_h(i));
+        ASSERT_EQ(stdDistance, distancesView_h(i));
 
         if (numCols == 1) {
-          EXPECT_EQ(distancesView_h(i), beginEndDist);
+          ASSERT_EQ(distancesView_h(i), beginEndDist);
         } else if (ensureAdjacentFindCanFind) {
           EXPECT_NE(distancesView_h(i), beginEndDist);
         }
@@ -217,10 +217,10 @@ void test_A(const bool ensureAdjacentFindCanFind, std::size_t numTeams,
             std::adjacent_find(rowFromBegin, rowFromEnd, binaryPred);
         const std::size_t stdDistance = KE::distance(rowFromBegin, it);
 
-        EXPECT_EQ(stdDistance, distancesView_h(i));
+        ASSERT_EQ(stdDistance, distancesView_h(i));
 
         if (numCols == 1) {
-          EXPECT_EQ(distancesView_h(i), beginEndDist);
+          ASSERT_EQ(distancesView_h(i), beginEndDist);
         } else if (ensureAdjacentFindCanFind) {
           EXPECT_NE(distancesView_h(i), beginEndDist);
         }

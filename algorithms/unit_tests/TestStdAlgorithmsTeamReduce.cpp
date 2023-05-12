@@ -211,7 +211,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
         if constexpr (std::is_floating_point_v<ValueType>) {
           EXPECT_FLOAT_EQ(result, reduceResultsView_h(i));
         } else {
-          EXPECT_EQ(result, reduceResultsView_h(i));
+          ASSERT_EQ(result, reduceResultsView_h(i));
         }
 
         break;
@@ -223,7 +223,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
         if constexpr (std::is_floating_point_v<ValueType>) {
           EXPECT_FLOAT_EQ(result, reduceResultsView_h(i));
         } else {
-          EXPECT_EQ(result, reduceResultsView_h(i));
+          ASSERT_EQ(result, reduceResultsView_h(i));
         }
 
         break;
@@ -236,7 +236,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
         if constexpr (std::is_floating_point_v<ValueType>) {
           EXPECT_FLOAT_EQ(result, reduceResultsView_h(i));
         } else {
-          EXPECT_EQ(result, reduceResultsView_h(i));
+          ASSERT_EQ(result, reduceResultsView_h(i));
         }
 
         break;

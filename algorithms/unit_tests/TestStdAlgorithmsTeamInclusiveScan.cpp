@@ -232,7 +232,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
       case 1: {
         auto it                       = inclusive_scan(first, last, firstDest);
         const std::size_t stdDistance = KE::distance(firstDest, it);
-        EXPECT_EQ(stdDistance, distancesView_h(i));
+        ASSERT_EQ(stdDistance, distancesView_h(i));
 
         break;
       }
@@ -241,7 +241,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
       case 3: {
         auto it = inclusive_scan(first, last, firstDest, binaryOp);
         const std::size_t stdDistance = KE::distance(firstDest, it);
-        EXPECT_EQ(stdDistance, distancesView_h(i));
+        ASSERT_EQ(stdDistance, distancesView_h(i));
 
         break;
       }
@@ -250,7 +250,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
       case 5: {
         auto it = inclusive_scan(first, last, firstDest, binaryOp, initValue);
         const std::size_t stdDistance = KE::distance(firstDest, it);
-        EXPECT_EQ(stdDistance, distancesView_h(i));
+        ASSERT_EQ(stdDistance, distancesView_h(i));
 
         break;
       }

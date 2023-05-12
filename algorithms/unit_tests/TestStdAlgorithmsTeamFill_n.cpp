@@ -132,18 +132,18 @@ void test_A(std::size_t numTeams, std::size_t numCols, std::size_t fillCount,
   for (std::size_t i = 0; i < dataView.extent(0); ++i) {
     // check that values match what we expect
     for (std::size_t j = 0; j < fillCount; ++j) {
-      EXPECT_EQ(dataViewAfterOp_h(i, j), ValueType(i));
+      ASSERT_EQ(dataViewAfterOp_h(i, j), ValueType(i));
     }
     // all other elements should be unchanged from before op
     for (std::size_t j = fillCount; j < numCols; ++j) {
-      EXPECT_EQ(dataViewAfterOp_h(i, j), cloneOfDataViewBeforeOp_h(i, j));
+      ASSERT_EQ(dataViewAfterOp_h(i, j), cloneOfDataViewBeforeOp_h(i, j));
     }
 
     // check that returned iterators are correct
     if (fillCount > 0) {
-      EXPECT_EQ(distancesView_h(i), std::size_t(fillCount));
+      ASSERT_EQ(distancesView_h(i), std::size_t(fillCount));
     } else {
-      EXPECT_EQ(distancesView_h(i), std::size_t(0));
+      ASSERT_EQ(distancesView_h(i), std::size_t(0));
     }
   }
 }

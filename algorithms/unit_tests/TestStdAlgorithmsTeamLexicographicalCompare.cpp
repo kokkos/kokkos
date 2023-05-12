@@ -220,13 +220,13 @@ void test_A(const TestCaseType testCase, std::size_t numTeams,
           case TestCaseType::ViewsAreEqual:
           case TestCaseType::FirstIsGreater: {
             EXPECT_FALSE(resultsView_h(i));
-            EXPECT_EQ(result, resultsView_h(i));
+            ASSERT_EQ(result, resultsView_h(i));
             break;
           }
 
           case TestCaseType::FirstIsLess: {
             EXPECT_TRUE(resultsView_h(i));
-            EXPECT_EQ(result, resultsView_h(i));
+            ASSERT_EQ(result, resultsView_h(i));
             break;
           }
         }
@@ -243,13 +243,13 @@ void test_A(const TestCaseType testCase, std::size_t numTeams,
           case TestCaseType::ViewsAreEqual:
           case TestCaseType::FirstIsGreater: {
             EXPECT_FALSE(resultsView_h(i));
-            EXPECT_EQ(result, resultsView_h(i));
+            ASSERT_EQ(result, resultsView_h(i));
             break;
           }
 
           case TestCaseType::FirstIsLess: {
             EXPECT_TRUE(resultsView_h(i));
-            EXPECT_EQ(result, resultsView_h(i));
+            ASSERT_EQ(result, resultsView_h(i));
             break;
           }
         }

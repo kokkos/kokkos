@@ -145,7 +145,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
         goldCountForRow++;
       }
     }
-    EXPECT_EQ(goldCountForRow, countsView_h(i));
+    ASSERT_EQ(goldCountForRow, countsView_h(i));
   }
 }
 

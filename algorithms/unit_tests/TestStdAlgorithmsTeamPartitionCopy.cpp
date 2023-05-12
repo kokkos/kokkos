@@ -265,8 +265,8 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId,
         KE::distance(KE::begin(myRowDestTrue), stdResult.first);
     const std::size_t stdDistanceFalse =
         KE::distance(KE::begin(myRowDestFalse), stdResult.second);
-    EXPECT_EQ(stdDistanceTrue, distancesTrueView_h(i));
-    EXPECT_EQ(stdDistanceFalse, distancesFalseView_h(i));
+    ASSERT_EQ(stdDistanceTrue, distancesTrueView_h(i));
+    ASSERT_EQ(stdDistanceFalse, distancesFalseView_h(i));
   }
 
   expect_equal_host_views(sourceView_dc_h, sourceViewAfterOp_h);

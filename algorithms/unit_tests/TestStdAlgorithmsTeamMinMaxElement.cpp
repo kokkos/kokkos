@@ -171,8 +171,8 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
       stdDistance[1] = KE::distance(KE::cbegin(myRow), itPair.second);
     }
 
-    EXPECT_EQ(stdDistance[0], distancesView_h(i, 0));
-    EXPECT_EQ(stdDistance[1], distancesView_h(i, 1));
+    ASSERT_EQ(stdDistance[0], distancesView_h(i, 0));
+    ASSERT_EQ(stdDistance[1], distancesView_h(i, 1));
   }
 
   // dataView should remain unchanged

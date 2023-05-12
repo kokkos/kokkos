@@ -147,7 +147,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
                             CustomEqualityComparator<value_type>{});
       stdDistance = KE::distance(KE::begin(myRow), it);
     }
-    EXPECT_EQ(stdDistance, distancesView_h(i));
+    ASSERT_EQ(stdDistance, distancesView_h(i));
   }
 
   auto dataViewAfterOp_h = create_host_space_copy(dataView);

@@ -134,7 +134,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, std::size_t pivotShift,
 
     auto it = std::rotate(KE::begin(myRow), pivot, KE::end(myRow));
     const std::size_t stdDistance = KE::distance(KE::begin(myRow), it);
-    EXPECT_EQ(stdDistance, distancesView_h(i));
+    ASSERT_EQ(stdDistance, distancesView_h(i));
   }
 
   auto dataViewAfterOp_h = create_host_space_copy(dataView);

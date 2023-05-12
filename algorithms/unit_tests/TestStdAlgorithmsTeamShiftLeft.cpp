@@ -151,7 +151,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, std::size_t shift,
     auto myRow = Kokkos::subview(cloneOfDataViewBeforeOp_h, i, Kokkos::ALL());
     auto it    = my_std_shift_left(KE::begin(myRow), KE::end(myRow), shift);
     const std::size_t stdDistance = KE::distance(KE::begin(myRow), it);
-    EXPECT_EQ(stdDistance, distancesView_h(i));
+    ASSERT_EQ(stdDistance, distancesView_h(i));
   }
 
   auto dataViewAfterOp_h = create_host_space_copy(dataView);

@@ -200,10 +200,10 @@ void test_A(const bool predicatesReturnTrue, std::size_t numTeams,
     if (predicatesReturnTrue) {
       EXPECT_LT(stdDistance, beginEndDistance);
     } else {
-      EXPECT_EQ(stdDistance, beginEndDistance);
+      ASSERT_EQ(stdDistance, beginEndDistance);
     }
 
-    EXPECT_EQ(stdDistance, distancesView_h(i));
+    ASSERT_EQ(stdDistance, distancesView_h(i));
   }
 }
 

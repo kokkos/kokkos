@@ -137,7 +137,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   auto destViewAfterOp_h = create_host_space_copy(destView);
   for (std::size_t i = 0; i < destViewBeforeOp_h.extent(0); ++i) {
     for (std::size_t j = 0; j < destViewBeforeOp_h.extent(1); ++j) {
-      EXPECT_EQ(destViewBeforeOp_h(i, j), ValueType(0));
+      ASSERT_EQ(destViewBeforeOp_h(i, j), ValueType(0));
       EXPECT_TRUE(destViewAfterOp_h(i, j) != destViewBeforeOp_h(i, j));
     }
     // each team should return an iterator past the last column

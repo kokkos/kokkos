@@ -212,7 +212,7 @@ void test_A(const bool viewsAreEqual, std::size_t numTeams, std::size_t numCols,
         if (viewsAreEqual) {
           EXPECT_TRUE(resultsView_h(i));
         } else {
-          EXPECT_EQ(result, resultsView_h(i));
+          ASSERT_EQ(result, resultsView_h(i));
         }
 
         break;
@@ -226,7 +226,7 @@ void test_A(const bool viewsAreEqual, std::size_t numTeams, std::size_t numCols,
         if (viewsAreEqual) {
           EXPECT_TRUE(resultsView_h(i));
         } else {
-          EXPECT_EQ(result, resultsView_h(i));
+          ASSERT_EQ(result, resultsView_h(i));
         }
 
         break;
@@ -238,7 +238,7 @@ void test_A(const bool viewsAreEqual, std::size_t numTeams, std::size_t numCols,
         if (viewsAreEqual) {
           EXPECT_TRUE(resultsView_h(i));
         } else {
-          EXPECT_EQ(result, resultsView_h(i));
+          ASSERT_EQ(result, resultsView_h(i));
         }
 
         break;
@@ -251,7 +251,7 @@ void test_A(const bool viewsAreEqual, std::size_t numTeams, std::size_t numCols,
         if (viewsAreEqual) {
           EXPECT_TRUE(resultsView_h(i));
         } else {
-          EXPECT_EQ(result, resultsView_h(i));
+          ASSERT_EQ(result, resultsView_h(i));
         }
 
         break;

@@ -149,11 +149,11 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   for (std::size_t i = 0; i < destViewBeforeOp_h.extent(0); ++i) {
     for (std::size_t j = 0; j < destViewBeforeOp_h.extent(1); ++j) {
       // source view should not change
-      EXPECT_EQ(sourceViewAfterOp_h(i, j), cloneOfSourceViewBeforeOp_h(i, j));
+      ASSERT_EQ(sourceViewAfterOp_h(i, j), cloneOfSourceViewBeforeOp_h(i, j));
 
       // elements in dest view should be the source elements plus two
-      EXPECT_EQ(destViewAfterOp_h(i, j), cloneOfSourceViewBeforeOp_h(i, j) + 2);
-      EXPECT_EQ(destViewBeforeOp_h(i, j), ValueType(0));
+      ASSERT_EQ(destViewAfterOp_h(i, j), cloneOfSourceViewBeforeOp_h(i, j) + 2);
+      ASSERT_EQ(destViewBeforeOp_h(i, j), ValueType(0));
     }
 
     // each team should return an iterator whose distance from the

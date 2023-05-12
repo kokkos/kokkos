@@ -226,11 +226,11 @@ void test_A(const bool viewsAreEqual, std::size_t numTeams, std::size_t numCols,
         const std::size_t compDist = KE::distance(compBegin, compIt);
 
         if (viewsAreEqual) {
-          EXPECT_EQ(dataBeginEndDist, resultsView_h(i).first);
-          EXPECT_EQ(compBeginEndDist, resultsView_h(i).second);
+          ASSERT_EQ(dataBeginEndDist, resultsView_h(i).first);
+          ASSERT_EQ(compBeginEndDist, resultsView_h(i).second);
         } else {
-          EXPECT_EQ(dataDist, resultsView_h(i).first);
-          EXPECT_EQ(compDist, resultsView_h(i).second);
+          ASSERT_EQ(dataDist, resultsView_h(i).first);
+          ASSERT_EQ(compDist, resultsView_h(i).second);
         }
 
         break;
@@ -245,11 +245,11 @@ void test_A(const bool viewsAreEqual, std::size_t numTeams, std::size_t numCols,
         const std::size_t compDist = KE::distance(compBegin, compIt);
 
         if (viewsAreEqual) {
-          EXPECT_EQ(dataBeginEndDist, resultsView_h(i).first);
-          EXPECT_EQ(compBeginEndDist, resultsView_h(i).second);
+          ASSERT_EQ(dataBeginEndDist, resultsView_h(i).first);
+          ASSERT_EQ(compBeginEndDist, resultsView_h(i).second);
         } else {
-          EXPECT_EQ(dataDist, resultsView_h(i).first);
-          EXPECT_EQ(compDist, resultsView_h(i).second);
+          ASSERT_EQ(dataDist, resultsView_h(i).first);
+          ASSERT_EQ(compDist, resultsView_h(i).second);
         }
 
         break;

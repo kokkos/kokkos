@@ -154,7 +154,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
                                  CustomLessThanComparator<value_type>{});
       stdDistance = KE::distance(KE::cbegin(myRow), it);
     }
-    EXPECT_EQ(stdDistance, distancesView_h(i));
+    ASSERT_EQ(stdDistance, distancesView_h(i));
   }
 
   // dataView should remain unchanged

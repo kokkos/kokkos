@@ -189,7 +189,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
                                            KE::begin(rowDest));
 
         const std::size_t stdDistance = KE::distance(KE::begin(rowDest), it);
-        EXPECT_EQ(stdDistance, distancesView_h(i));
+        ASSERT_EQ(stdDistance, distancesView_h(i));
         break;
       }
 
@@ -200,7 +200,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
                                            PlusFunctor<ValueType>{});
 
         const std::size_t stdDistance = KE::distance(KE::begin(rowDest), it);
-        EXPECT_EQ(stdDistance, distancesView_h(i));
+        ASSERT_EQ(stdDistance, distancesView_h(i));
         break;
       }
     }

@@ -168,12 +168,12 @@ void test_A(const bool searched_value_exist, std::size_t numTeams,
       const auto val          = valuesView_h(i);
 
       const std::size_t result = std::count(rowFromBegin, rowFromEnd, val);
-      EXPECT_EQ(result, countsView_h(i));
+      ASSERT_EQ(result, countsView_h(i));
     }
   } else {
     for (std::size_t i = 0; i < countsView.extent(0); ++i) {
       constexpr std::size_t zero = 0;
-      EXPECT_EQ(countsView_h(i), zero);
+      ASSERT_EQ(countsView_h(i), zero);
     }
   }
 }

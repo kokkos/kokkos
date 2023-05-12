@@ -129,8 +129,8 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
 
   for (std::size_t i = 0; i < dataView1AfterOp_h.extent(0); ++i) {
     for (std::size_t j = 0; j < dataView1AfterOp_h.extent(1); ++j) {
-      EXPECT_EQ(cloneOfDataView1BeforeOp_h(i, j), dataView2AfterOp_h(i, j));
-      EXPECT_EQ(cloneOfDataView2BeforeOp_h(i, j), dataView1AfterOp_h(i, j));
+      ASSERT_EQ(cloneOfDataView1BeforeOp_h(i, j), dataView2AfterOp_h(i, j));
+      ASSERT_EQ(cloneOfDataView2BeforeOp_h(i, j), dataView1AfterOp_h(i, j));
     }
     // each team should return an iterator past the last column
     EXPECT_TRUE(distancesView_h(i) == numCols);

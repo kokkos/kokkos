@@ -240,10 +240,10 @@ void test_A(const bool sequencesExist, std::size_t numTeams,
         if (sequencesExist) {
           EXPECT_LT(distancesView_h(i), beginEndDist);
         } else {
-          EXPECT_EQ(distancesView_h(i), beginEndDist);
+          ASSERT_EQ(distancesView_h(i), beginEndDist);
         }
 
-        EXPECT_EQ(stdDistance, distancesView_h(i));
+        ASSERT_EQ(stdDistance, distancesView_h(i));
 
         break;
       }
@@ -257,10 +257,10 @@ void test_A(const bool sequencesExist, std::size_t numTeams,
         if (sequencesExist) {
           EXPECT_LT(distancesView_h(i), beginEndDist);
         } else {
-          EXPECT_EQ(distancesView_h(i), beginEndDist);
+          ASSERT_EQ(distancesView_h(i), beginEndDist);
         }
 
-        EXPECT_EQ(stdDistance, distancesView_h(i));
+        ASSERT_EQ(stdDistance, distancesView_h(i));
 
         break;
       }

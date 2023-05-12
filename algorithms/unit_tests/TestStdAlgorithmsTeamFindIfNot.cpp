@@ -193,12 +193,12 @@ void test_A(const bool predicatesReturnTrue, std::size_t numTeams,
     const std::size_t beginEndDistance = KE::distance(rowFromBegin, rowFromEnd);
 
     if (predicatesReturnTrue) {
-      EXPECT_EQ(stdDistance, beginEndDistance);
+      ASSERT_EQ(stdDistance, beginEndDistance);
     } else {
       EXPECT_LT(stdDistance, beginEndDistance);
     }
 
-    EXPECT_EQ(stdDistance, distancesView_h(i));
+    ASSERT_EQ(stdDistance, distancesView_h(i));
   }
 }
 

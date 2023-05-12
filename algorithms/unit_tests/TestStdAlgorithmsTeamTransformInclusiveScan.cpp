@@ -226,7 +226,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
         const auto it =
             transform_inclusive_scan(first, last, firstDest, binaryOp, unaryOp);
         const std::size_t stdDistance = KE::distance(firstDest, it);
-        EXPECT_EQ(stdDistance, distancesView_h(i));
+        ASSERT_EQ(stdDistance, distancesView_h(i));
 
         break;
       }
@@ -236,7 +236,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
         const auto it = transform_inclusive_scan(first, last, firstDest,
                                                  binaryOp, unaryOp, initValue);
         const std::size_t stdDistance = KE::distance(firstDest, it);
-        EXPECT_EQ(stdDistance, distancesView_h(i));
+        ASSERT_EQ(stdDistance, distancesView_h(i));
 
         break;
       }

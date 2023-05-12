@@ -246,7 +246,7 @@ void test_nested_sort_impl(unsigned narray, unsigned n, bool useTeams,
   auto keysOut = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), keys);
   std::string testLabel = useTeams ? "sort_team" : "sort_thread";
   for (unsigned i = 0; i < keys.extent(0); i++) {
-    EXPECT_EQ(keysOut(i), keysHost(i))
+    ASSERT_EQ(keysOut(i), keysHost(i))
         << testLabel << ": after sorting, key at index " << i
         << " is incorrect.";
   }
@@ -323,7 +323,7 @@ void test_nested_sort_by_key_impl(unsigned narray, unsigned n, bool useTeams,
   std::string testLabel = useTeams ? "sort_by_key_team" : "sort_by_key_thread";
   // First, compare keys since they will always match exactly
   for (unsigned i = 0; i < keys.extent(0); i++) {
-    EXPECT_EQ(keysOut(i), keysHost(i))
+    ASSERT_EQ(keysOut(i), keysHost(i))
         << testLabel << ": after sorting, key at index " << i
         << " is incorrect.";
   }
@@ -347,7 +347,7 @@ void test_nested_sort_by_key_impl(unsigned narray, unsigned n, bool useTeams,
       EXPECT_TRUE(outputVals.find(val) != outputVals.end())
           << testLabel << ": after sorting, value " << val
           << " corresponding to key " << key << " is missing.";
-      EXPECT_EQ(correctVals.count(val), outputVals.count(val))
+      ASSERT_EQ(correctVals.count(val), outputVals.count(val))
           << testLabel << ": after sorting, the number of occurences of value "
           << val << " corresponding to key " << key << " changed.";
     }
