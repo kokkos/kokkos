@@ -444,7 +444,6 @@ template <class ExecutionSpace>
 void test_binsort_empty_view() {
   using KeyViewType = Kokkos::View<int*, ExecutionSpace>;
   using BinOp_t     = Kokkos::BinOp1D<KeyViewType>;
-  BinOp_t binner;
   Kokkos::BinSort<KeyViewType, BinOp_t> Sorter;
 
   // does not matter if we use int or something else
