@@ -103,17 +103,17 @@ int cuda_kernel_arch() {
   CudaInternal::singleton().cuda_api_interface_safe_call<void **, size_t>(
       &cudaMalloc, reinterpret_cast<void **>(&d_arch), sizeof(int));
   CudaInternal::singleton()
-      .cuda_api_interface_safe_call<false, void *, const void *, size_t,
+      .cuda_api_interface_safe_call<void *, const void *, size_t,
                                     cudaMemcpyKind>(
           &cudaMemcpy, d_arch, &arch, sizeof(int), cudaMemcpyDefault);
 
   query_cuda_kernel_arch<<<1, 1>>>(d_arch);
 
   CudaInternal::singleton()
-      .cuda_api_interface_safe_call<false, void *, const void *, size_t,
+      .cuda_api_interface_safe_call<void *, const void *, size_t,
                                     cudaMemcpyKind>(
           &cudaMemcpy, &arch, d_arch, sizeof(int), cudaMemcpyDefault);
-  Impl::CudaInternal::singleton().cuda_api_interface_safe_call<false, void *>(
+  Impl::CudaInternal::singleton().cuda_api_interface_safe_call<void *>(
       &cudaFree, d_arch);
   return arch;
 }
@@ -181,11 +181,11 @@ void cuda_internal_error_throw(cudaError e, const char *name, const char *file,
   std::ostringstream out;
   out << name << " error( "
       << CudaInternal::singleton()
-             .cuda_api_interface_return<false, const char *, cudaError_t>(
+             .cuda_api_interface_return<const char *, cudaError_t>(
                  &cudaGetErrorName, e)
       << "): "
       << CudaInternal::singleton()
-             .cuda_api_interface_return<false, const char *, cudaError_t>(
+             .cuda_api_interface_return<const char *, cudaError_t>(
                  &cudaGetErrorString, e);
   if (file) {
     out << " " << file << ":" << line;
@@ -198,11 +198,11 @@ void cuda_internal_error_abort(cudaError e, const char *name, const char *file,
   std::ostringstream out;
   out << name << " error( "
       << CudaInternal::singleton()
-             .cuda_api_interface_return<false, const char *, cudaError_t>(
+             .cuda_api_interface_return<const char *, cudaError_t>(
                  &cudaGetErrorName, e)
       << "): "
       << CudaInternal::singleton()
-             .cuda_api_interface_return<false, const char *, cudaError_t>(
+             .cuda_api_interface_return<const char *, cudaError_t>(
                  &cudaGetErrorString, e);
   if (file) {
     out << " " << file << ":" << line;
@@ -448,8 +448,8 @@ Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
         &cudaMallocHost, reinterpret_cast<void **>(&constantMemHostStaging),
         CudaTraits::ConstantMemoryUsage);
 
-    cuda_api_interface_safe_call<false, cudaEvent_t *>(&cudaEventCreate,
-                                                       &constantMemReusable);
+    cuda_api_interface_safe_call<cudaEvent_t *>(&cudaEventCreate,
+                                                &constantMemReusable);
   }
 
   m_stream        = stream;
@@ -463,7 +463,7 @@ Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
   cuda_api_interface_safe_call<void **, size_t>(
       &cudaMalloc, reinterpret_cast<void **>(&m_scratch_locks),
       sizeof(int32_t) * m_num_scratch_locks);
-  cuda_api_interface_safe_call<false, void *, int, size_t>(
+  cuda_api_interface_safe_call<void *, int, size_t>(
       &cudaMemset, m_scratch_locks, 0, sizeof(int32_t) * m_num_scratch_locks);
 }
 
@@ -618,14 +618,14 @@ void CudaInternal::finalize() {
     desul::Impl::finalize_lock_arrays();  // FIXME
 
     cuda_api_interface_safe_call<void *>(&cudaFreeHost, constantMemHostStaging);
-    cuda_api_interface_safe_call<false, cudaEvent_t>(&cudaEventDestroy,
-                                                     constantMemReusable);
+    cuda_api_interface_safe_call<cudaEvent_t>(&cudaEventDestroy,
+                                              constantMemReusable);
     auto &deep_copy_space =
         Kokkos::Impl::cuda_get_deep_copy_space(/*initialize*/ false);
     if (deep_copy_space)
       deep_copy_space->impl_internal_space_instance()->finalize();
-    cuda_api_interface_safe_call<false, cudaStream_t>(
-        &cudaStreamDestroy, cuda_get_deep_copy_stream());
+    cuda_api_interface_safe_call<cudaStream_t>(&cudaStreamDestroy,
+                                               cuda_get_deep_copy_stream());
   }
 
   if (nullptr != m_scratchSpace || nullptr != m_scratchFlags) {

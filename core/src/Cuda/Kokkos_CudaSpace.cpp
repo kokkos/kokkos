@@ -272,8 +272,8 @@ void *CudaUVMSpace::impl_allocate(
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_PIN_UVM_TO_HOST
     if (Kokkos::CudaUVMSpace::cuda_pin_uvm_to_host())
       Impl::CudaInternal::singleton()
-          .cuda_api_interface_safe_call<false, const void *, size_t,
-                                        cudaMemoryAdvise, int>(
+          .cuda_api_interface_safe_call<const void *, size_t, cudaMemoryAdvise,
+                                        int>(
               &cudaMemAdvise, ptr, arg_alloc_size,
               cudaMemAdviseSetPreferredLocation, cudaCpuDeviceId);
 #endif
@@ -282,8 +282,8 @@ void *CudaUVMSpace::impl_allocate(
       // This is the only way to clear the last error,
       // which we should do here since we're turning it
       // into an exception here
-      Impl::CudaInternal::singleton()
-          .cuda_api_interface_return<false, cudaError_t>(&cudaGetLastError);
+      Impl::CudaInternal::singleton().cuda_api_interface_return<cudaError_t>(
+          &cudaGetLastError);
       throw Experimental::CudaRawMemoryAllocationFailure(
           arg_alloc_size, error_code,
           Experimental::RawMemoryAllocationFailure::AllocationMechanism::
@@ -322,8 +322,8 @@ void *CudaHostPinnedSpace::impl_allocate(
     // This is the only way to clear the last error, which
     // we should do here since we're turning it into an
     // exception here
-    Impl::CudaInternal::singleton()
-        .cuda_api_interface_return<false, cudaError_t>(&cudaGetLastError);
+    Impl::CudaInternal::singleton().cuda_api_interface_return<cudaError_t>(
+        &cudaGetLastError);
     throw Experimental::CudaRawMemoryAllocationFailure(
         arg_alloc_size, error_code,
         Experimental::RawMemoryAllocationFailure::AllocationMechanism::
@@ -625,10 +625,9 @@ void cuda_prefetch_pointer(const Cuda &space, const void *ptr, size_t bytes,
   if (to_device && is_managed &&
       space.cuda_device_prop().concurrentManagedAccess) {
     space.impl_internal_space_instance()
-        ->cuda_api_interface_safe_call<false, const void *, size_t, int,
-                                       cudaStream_t>(&cudaMemPrefetchAsync, ptr,
-                                                     bytes, space.cuda_device(),
-                                                     space.cuda_stream());
+        ->cuda_api_interface_safe_call<const void *, size_t, int, cudaStream_t>(
+            &cudaMemPrefetchAsync, ptr, bytes, space.cuda_device(),
+            space.cuda_stream());
   }
 }
 
