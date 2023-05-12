@@ -23,8 +23,13 @@ namespace Test {
 TEST(TEST_CATEGORY, SortUnsigned) {
   Impl::test_sort<TEST_EXECSPACE, unsigned>(171);
 }
+
 TEST(TEST_CATEGORY, SortEmptyView) {
   Impl::test_sort_empty_view<TEST_EXECSPACE>();
+}
+
+TEST(TEST_CATEGORY, BinSortEmptyView) {
+  Impl::test_binsort_empty_view<TEST_EXECSPACE>();
 }
 }  // namespace Test
 #endif

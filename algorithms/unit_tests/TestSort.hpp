@@ -440,6 +440,30 @@ void test_sort_empty_view() {
   ASSERT_TRUE(v.extent(0) == 0);
 }
 
+template <class ExecutionSpace>
+void test_binsort_empty_view() {
+  using KeyViewType = Kokkos::View<int*, ExecutionSpace>;
+  using BinOp_t     = Kokkos::BinOp1D<KeyViewType>;
+  BinOp_t binner;
+  Kokkos::BinSort<KeyViewType, BinOp_t> Sorter;
+
+  // does not matter if we use int or something else
+  Kokkos::View<int*, ExecutionSpace> v;
+
+  // test all exposed public sort methods
+  Sorter.sort(ExecutionSpace(), v, 3, 8);
+  ASSERT_TRUE(v.extent(0) == 0);
+
+  Sorter.sort(v, 3, 8);
+  ASSERT_TRUE(v.extent(0) == 0);
+
+  Sorter.sort(ExecutionSpace(), v);
+  ASSERT_TRUE(v.extent(0) == 0);
+
+  Sorter.sort(v);
+  ASSERT_TRUE(v.extent(0) == 0);
+}
+
 }  // namespace Impl
 }  // namespace Test
 #endif /* KOKKOS_ALGORITHMS_UNITTESTS_TESTSORT_HPP */
