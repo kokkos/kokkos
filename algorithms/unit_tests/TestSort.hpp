@@ -443,8 +443,11 @@ void test_sort_empty_view() {
 template <class ExecutionSpace>
 void test_binsort_empty_view() {
   using KeyViewType = Kokkos::View<int*, ExecutionSpace>;
-  using BinOp_t     = Kokkos::BinOp1D<KeyViewType>;
-  Kokkos::BinSort<KeyViewType, BinOp_t> Sorter;
+  KeyViewType kv("kv", 20);
+
+  using BinOp_t = Kokkos::BinOp1D<KeyViewType>;
+  BinOp_t binOp(5, 0, 10);
+  Kokkos::BinSort<KeyViewType, BinOp_t> Sorter(ExecutionSpace{}, kv, binOp);
 
   // does not matter if we use int or something else
   Kokkos::View<int*, ExecutionSpace> v;
