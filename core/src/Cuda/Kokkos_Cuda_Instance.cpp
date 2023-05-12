@@ -181,11 +181,11 @@ void cuda_internal_error_throw(cudaError e, const char *name, const char *file,
   std::ostringstream out;
   out << name << " error( "
       << CudaInternal::singleton()
-             .cuda_api_interface_return<const char *, cudaError_t>(
+             .cuda_api_interface_return<false, const char *, cudaError_t>(
                  &cudaGetErrorName, e)
       << "): "
       << CudaInternal::singleton()
-             .cuda_api_interface_return<const char *, cudaError_t>(
+             .cuda_api_interface_return<false, const char *, cudaError_t>(
                  &cudaGetErrorString, e);
   if (file) {
     out << " " << file << ":" << line;
@@ -198,11 +198,11 @@ void cuda_internal_error_abort(cudaError e, const char *name, const char *file,
   std::ostringstream out;
   out << name << " error( "
       << CudaInternal::singleton()
-             .cuda_api_interface_return<const char *, cudaError_t>(
+             .cuda_api_interface_return<false, const char *, cudaError_t>(
                  &cudaGetErrorName, e)
       << "): "
       << CudaInternal::singleton()
-             .cuda_api_interface_return<const char *, cudaError_t>(
+             .cuda_api_interface_return<false, const char *, cudaError_t>(
                  &cudaGetErrorString, e);
   if (file) {
     out << " " << file << ":" << line;
