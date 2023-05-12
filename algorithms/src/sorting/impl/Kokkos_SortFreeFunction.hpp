@@ -296,7 +296,6 @@ void sort_with_comparator(const Experimental::SYCL& space,
     // strided views not supported in dpl so use the most generic case
     to_host_and_stdsort_and_back(space, view, comp);
   } else {
-    (void)space;
     sort_onedpl(space, view, comp);
   }
 }

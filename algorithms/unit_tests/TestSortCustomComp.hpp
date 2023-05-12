@@ -86,7 +86,7 @@ void run_all_scenarios(int api) {
       std::sort(KE::begin(dataViewBeforeOp_h), KE::end(dataViewBeforeOp_h),
                 comp_t{});
     }
-#if defined(KOKKOS_ENABLE_ONEDPL)
+#if !defined(KOKKOS_ENABLE_ONEDPL)
     else if (api == 2) {
       Kokkos::sort(dataView);
       std::sort(KE::begin(dataViewBeforeOp_h), KE::end(dataViewBeforeOp_h));

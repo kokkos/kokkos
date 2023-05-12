@@ -27,14 +27,13 @@ namespace Kokkos {
 
 // clang-format off
 template <class ExecutionSpace, class DataType, class... Properties>
-void sort(const ExecutionSpace& exec,
+void sort([[maybe_unused]] const ExecutionSpace& exec,
           const Kokkos::View<DataType, Properties...>& view)
 {
   using ViewType = Kokkos::View<DataType, Properties...>;
   using MemSpace = typename ViewType::memory_space;
 
   if constexpr (SpaceAccessibility<HostSpace, MemSpace>::accessible) {
-    (void)exec;
     auto first = ::Kokkos::Experimental::begin(view);
     auto last  = ::Kokkos::Experimental::end(view);
     std::sort(first, last);
@@ -46,10 +45,11 @@ void sort(const ExecutionSpace& exec,
 // clang-format off
 template <class ExecutionSpace, class CompType, class DataType,
           class... Properties>
-void sort(const ExecutionSpace& exec,
+void sort([[maybe_unused]] const ExecutionSpace& exec,
           const Kokkos::View<DataType, Properties...>& view,
           CompType const& comp)
 {
+
   using ViewType = Kokkos::View<DataType, Properties...>;
   using MemSpace = typename ViewType::memory_space;
 
@@ -61,7 +61,6 @@ void sort(const ExecutionSpace& exec,
       "sort: only supports 1D Views with LayoutRight, LayoutLeft or LayoutStride.");
 
   if constexpr (SpaceAccessibility<HostSpace, MemSpace>::accessible) {
-    (void)exec;
     auto first = ::Kokkos::Experimental::begin(view);
     auto last  = ::Kokkos::Experimental::end(view);
     std::sort(first, last, comp);
