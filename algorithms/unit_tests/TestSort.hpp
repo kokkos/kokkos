@@ -453,20 +453,13 @@ void test_binsort_empty_view() {
   Kokkos::BinSort<KeyViewType, BinOp_t> Sorter(ExecutionSpace{}, kv, binOp);
 
   // does not matter if we use int or something else
-  Kokkos::View<int*, ExecutionSpace> v;
+  Kokkos::View<int*, ExecutionSpace> v("v", 0);
 
   // test all exposed public sort methods
-  Sorter.sort(ExecutionSpace(), v, 3, 8);
-  ASSERT_TRUE(v.extent(0) == 0);
-
-  Sorter.sort(v, 3, 8);
-  ASSERT_TRUE(v.extent(0) == 0);
-
-  Sorter.sort(ExecutionSpace(), v);
-  ASSERT_TRUE(v.extent(0) == 0);
-
-  Sorter.sort(v);
-  ASSERT_TRUE(v.extent(0) == 0);
+  ASSERT_NO_THROW(Sorter.sort(ExecutionSpace(), v, 0, 0));
+  ASSERT_NO_THROW(Sorter.sort(v, 0, 0));
+  ASSERT_NO_THROW(Sorter.sort(ExecutionSpace(), v));
+  ASSERT_NO_THROW(Sorter.sort(v));
 }
 
 }  // namespace Impl
