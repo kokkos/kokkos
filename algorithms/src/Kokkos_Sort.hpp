@@ -606,6 +606,10 @@ std::enable_if_t<(Kokkos::is_execution_space<ExecutionSpace>::value) &&
                                     memory_space>::accessible)>
 sort(const ExecutionSpace& exec,
      const Kokkos::View<DataType, Properties...>& view) {
+  if (view.extent(0) == 0) {
+    return;
+  }
+
   using ViewType = Kokkos::View<DataType, Properties...>;
   using CompType = BinOp1D<ViewType>;
 
@@ -648,8 +652,11 @@ sort(const ExecutionSpace& exec,
 template <class DataType, class... Properties>
 void sort(const Experimental::SYCL& space,
           const Kokkos::View<DataType, Properties...>& view) {
-  using ViewType = Kokkos::View<DataType, Properties...>;
+  if (view.extent(0) == 0) {
+    return;
+  }
 
+  using ViewType = Kokkos::View<DataType, Properties...>;
   static_assert(SpaceAccessibility<Experimental::SYCL,
                                    typename ViewType::memory_space>::accessible,
                 "SYCL execution space is not able to access the memory space "
@@ -676,6 +683,9 @@ std::enable_if_t<(Kokkos::is_execution_space<ExecutionSpace>::value) &&
                      HostSpace, typename Kokkos::View<DataType, Properties...>::
                                     memory_space>::accessible)>
 sort(const ExecutionSpace&, const Kokkos::View<DataType, Properties...>& view) {
+  if (view.extent(0) == 0) {
+    return;
+  }
   auto first = Experimental::begin(view);
   auto last  = Experimental::end(view);
   std::sort(first, last);
@@ -685,6 +695,9 @@ sort(const ExecutionSpace&, const Kokkos::View<DataType, Properties...>& view) {
 template <class DataType, class... Properties>
 void sort(const Cuda& space,
           const Kokkos::View<DataType, Properties...>& view) {
+  if (view.extent(0) == 0) {
+    return;
+  }
   const auto exec = thrust::cuda::par.on(space.cuda_stream());
   auto first      = Experimental::begin(view);
   auto last       = Experimental::end(view);
@@ -694,6 +707,9 @@ void sort(const Cuda& space,
 
 template <class ViewType>
 void sort(ViewType const& view) {
+  if (view.extent(0) == 0) {
+    return;
+  }
   Kokkos::fence("Kokkos::sort: before");
   typename ViewType::execution_space exec;
   sort(exec, view);
@@ -704,6 +720,10 @@ template <class ExecutionSpace, class ViewType>
 std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value> sort(
     const ExecutionSpace& exec, ViewType view, size_t const begin,
     size_t const end) {
+  if (view.extent(0) == 0) {
+    return;
+  }
+
   using range_policy = Kokkos::RangePolicy<typename ViewType::execution_space>;
   using CompType     = BinOp1D<ViewType>;
 
@@ -725,6 +745,10 @@ std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value> sort(
 
 template <class ViewType>
 void sort(ViewType view, size_t const begin, size_t const end) {
+  if (view.extent(0) == 0) {
+    return;
+  }
+
   Kokkos::fence("Kokkos::sort: before");
   typename ViewType::execution_space exec;
   sort(exec, view, begin, end);

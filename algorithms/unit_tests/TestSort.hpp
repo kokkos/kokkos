@@ -425,6 +425,21 @@ void test_sort(unsigned int N) {
   test_sort_integer_overflow<ExecutionSpace, unsigned long long>();
   test_sort_integer_overflow<ExecutionSpace, int>();
 }
+
+template <class ExecutionSpace>
+void test_sort_empty_view() {
+  // does not matter if we use int or something else
+  Kokkos::View<int*, ExecutionSpace> v;
+
+  Kokkos::sort(v);
+  // nothing should have changed
+  ASSERT_TRUE(v.extent(0) == 0);
+
+  Kokkos::sort(ExecutionSpace(), v);
+  // nothing should have changed
+  ASSERT_TRUE(v.extent(0) == 0);
+}
+
 }  // namespace Impl
 }  // namespace Test
 #endif /* KOKKOS_ALGORITHMS_UNITTESTS_TESTSORT_HPP */
