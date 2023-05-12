@@ -467,58 +467,6 @@ SharedAllocationRecord<void, void>
     SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>::s_root_record;
 #endif
 
-::cudaTextureObject_t
-SharedAllocationRecord<Kokkos::CudaSpace, void>::attach_texture_object(
-    const unsigned sizeof_alias, void *const alloc_ptr,
-    size_t const alloc_size) {
-  enum { TEXTURE_BOUND_1D = 1u << 27 };
-
-  if ((alloc_ptr == nullptr) ||
-      (sizeof_alias * TEXTURE_BOUND_1D <= alloc_size)) {
-    std::ostringstream msg;
-    msg << "Kokkos::CudaSpace ERROR: Cannot attach texture object to"
-        << " alloc_ptr(" << alloc_ptr << ")"
-        << " alloc_size(" << alloc_size << ")"
-        << " max_size(" << (sizeof_alias * TEXTURE_BOUND_1D) << ")";
-    std::cerr << msg.str() << std::endl;
-    std::cerr.flush();
-    Kokkos::Impl::throw_runtime_exception(msg.str());
-  }
-
-  ::cudaTextureObject_t tex_obj;
-
-  struct cudaResourceDesc resDesc;
-  struct cudaTextureDesc texDesc;
-
-  memset(&resDesc, 0, sizeof(resDesc));
-  memset(&texDesc, 0, sizeof(texDesc));
-
-  resDesc.resType = cudaResourceTypeLinear;
-  resDesc.res.linear.desc =
-      (sizeof_alias == 4
-           ? CudaInternal::singleton()
-                 .cuda_api_interface_return<cudaChannelFormatDesc>(
-                     &cudaCreateChannelDesc<int>)
-           : (sizeof_alias == 8
-                  ? CudaInternal::singleton()
-                        .cuda_api_interface_return<cudaChannelFormatDesc>(
-                            &cudaCreateChannelDesc<::int2>)
-                  : /* sizeof_alias == 16 */
-                  CudaInternal::singleton()
-                      .cuda_api_interface_return<cudaChannelFormatDesc>(
-                          &cudaCreateChannelDesc<::int4>)));
-  resDesc.res.linear.sizeInBytes = alloc_size;
-  resDesc.res.linear.devPtr      = alloc_ptr;
-
-  CudaInternal::singleton()
-      .cuda_api_interface_safe_call<
-          false, cudaTextureObject_t *, const cudaResourceDesc *,
-          const cudaTextureDesc *, const cudaResourceViewDesc *>(
-          &cudaCreateTextureObject, &tex_obj, &resDesc, &texDesc, nullptr);
-
-  return tex_obj;
-}
-
 //==============================================================================
 // <editor-fold desc="SharedAllocationRecord destructors"> {{{1
 
@@ -577,7 +525,6 @@ SharedAllocationRecord<Kokkos::CudaSpace, void>::SharedAllocationRecord(
                                                arg_alloc_size),
           sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc,
           arg_label),
-      m_tex_obj(0),
       m_space(arg_space) {
 
   SharedAllocationHeader header;
@@ -608,7 +555,6 @@ SharedAllocationRecord<Kokkos::CudaSpace, void>::SharedAllocationRecord(
                                                arg_label, arg_alloc_size),
           sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc,
           arg_label),
-      m_tex_obj(0),
       m_space(arg_space) {
 
   SharedAllocationHeader header;
@@ -635,7 +581,6 @@ SharedAllocationRecord<Kokkos::CudaUVMSpace, void>::SharedAllocationRecord(
                                                arg_alloc_size),
           sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc,
           arg_label),
-      m_tex_obj(0),
       m_space(arg_space) {
   this->base_t::_fill_host_accessible_header_info(*base_t::m_alloc_ptr,
                                                   arg_label);

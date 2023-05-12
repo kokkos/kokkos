@@ -547,8 +547,6 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 
 #if defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_ENABLE_DEPRECATED_CODE_4)
 #define KOKKOS_ENABLE_CUDA_LDG_INTRINSIC
-// This was previously defined from the configuration option which was removed
-#define KOKKOS_ENABLE_CUDA_LAMBDA
 #endif
 
 #define KOKKOS_INVALID_INDEX (~std::size_t(0))
