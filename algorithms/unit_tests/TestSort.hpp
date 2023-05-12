@@ -442,6 +442,9 @@ void test_sort_empty_view() {
 
 template <class ExecutionSpace>
 void test_binsort_empty_view() {
+  // the bounds and extents used below are totally arbitrary
+  // and, in theory, should have no impact
+
   using KeyViewType = Kokkos::View<int*, ExecutionSpace>;
   KeyViewType kv("kv", 20);
 
