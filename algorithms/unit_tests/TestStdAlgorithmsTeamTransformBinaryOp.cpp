@@ -161,9 +161,9 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   for (std::size_t i = 0; i < destViewAfterOp_h.extent(0); ++i) {
     for (std::size_t j = 0; j < destViewAfterOp_h.extent(1); ++j) {
       // elements in dest view should be the sum of source elements
-      ASSERT_EQ(destViewAfterOp_h(i, j),
-                cloneOfSourceView1BeforeOp_h(i, j) +
-                    cloneOfSourceView2BeforeOp_h(i, j));
+      ASSERT_DOUBLE_EQ(destViewAfterOp_h(i, j),
+                       cloneOfSourceView1BeforeOp_h(i, j) +
+                           cloneOfSourceView2BeforeOp_h(i, j));
     }
 
     // each team should return an iterator whose distance from the

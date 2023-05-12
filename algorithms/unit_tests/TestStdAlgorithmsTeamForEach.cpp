@@ -127,7 +127,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   auto dataViewAfterOp_h = create_host_space_copy(dataView);
   for (std::size_t i = 0; i < dataViewAfterOp_h.extent(0); ++i) {
     for (std::size_t j = 0; j < dataViewAfterOp_h.extent(1); ++j) {
-      ASSERT_EQ(dataViewBeforeOp_h(i, j) + 1, dataViewAfterOp_h(i, j));
+      ASSERT_DOUBLE_EQ(dataViewBeforeOp_h(i, j) + 1, dataViewAfterOp_h(i, j));
     }
   }
 }

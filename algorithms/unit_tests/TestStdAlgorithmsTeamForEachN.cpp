@@ -142,9 +142,9 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   for (std::size_t i = 0; i < dataViewAfterOp_h.extent(0); ++i) {
     for (std::size_t j = 0, n = 0; j < dataViewAfterOp_h.extent(1); ++j, ++n) {
       if (n < nView_h(i)) {
-        ASSERT_EQ(dataViewBeforeOp_h(i, j) + 1, dataViewAfterOp_h(i, j));
+        ASSERT_DOUBLE_EQ(dataViewBeforeOp_h(i, j) + 1, dataViewAfterOp_h(i, j));
       } else {
-        ASSERT_EQ(dataViewBeforeOp_h(i, j), dataViewAfterOp_h(i, j));
+        ASSERT_DOUBLE_EQ(dataViewBeforeOp_h(i, j), dataViewAfterOp_h(i, j));
       }
     }
   }
