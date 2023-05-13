@@ -711,10 +711,12 @@ void sort(const Cuda& space,
 
 template <class ViewType>
 void sort(ViewType const& view) {
+  Kokkos::fence("Kokkos::sort: before");
+
   if (view.extent(0) == 0) {
     return;
   }
-  Kokkos::fence("Kokkos::sort: before");
+
   typename ViewType::execution_space exec;
   sort(exec, view);
   exec.fence("Kokkos::sort: fence after sorting");
@@ -749,11 +751,12 @@ std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value> sort(
 
 template <class ViewType>
 void sort(ViewType view, size_t const begin, size_t const end) {
+  Kokkos::fence("Kokkos::sort: before");
+
   if (view.extent(0) == 0) {
     return;
   }
 
-  Kokkos::fence("Kokkos::sort: before");
   typename ViewType::execution_space exec;
   sort(exec, view, begin, end);
   exec.fence("Kokkos::Sort: fence after sorting");
