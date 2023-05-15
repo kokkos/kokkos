@@ -36,6 +36,7 @@ struct ZeroMemset<Kokkos::Cuda, View<T, P...>> {
 
   ZeroMemset(const View<T, P...>& dst,
              typename View<T, P...>::const_value_type&) {
+    // FIXME_CUDA_MULTIPLE_DEVICES
     Kokkos::Impl::CudaInternal::singleton()
         .cuda_api_interface_safe_call<void*, int, size_t>(
             &cudaMemset, dst.data(), 0,
