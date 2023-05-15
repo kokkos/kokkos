@@ -184,11 +184,11 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
     auto myRow = Kokkos::subview(dataView_dc_h, i, Kokkos::ALL());
     auto stdIt = std::remove(KE::begin(myRow), KE::end(myRow), targetVal);
     const std::size_t stdDistance = KE::distance(KE::begin(myRow), stdIt);
-    EXPECT_TRUE(distancesView_h(i) == stdDistance);
-    EXPECT_TRUE(distancesView_h(i) == numCols - perRowRealCount[i]);
+    ASSERT_EQ(distancesView_h(i), stdDistance);
+    ASSERT_EQ(distancesView_h(i), numCols - perRowRealCount[i]);
 
     for (std::size_t j = 0; j < distancesView_h(i); ++j) {
-      EXPECT_TRUE(dataViewAfterOp_h(i, j) == dataView_dc_h(i, j));
+      ASSERT_EQ(dataViewAfterOp_h(i, j), dataView_dc_h(i, j));
     }
   }
 }
