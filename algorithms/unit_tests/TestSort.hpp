@@ -467,8 +467,6 @@ void test_binsort_empty_keys() {
   BinOp_t binOp(5, 0, 10);
   Kokkos::BinSort<KeyViewType, BinOp_t> Sorter(ExecutionSpace{}, kv, binOp);
 
-  // does not matter if we use int or something else
-  Kokkos::View<int*, ExecutionSpace> v("v", 0);
   ASSERT_NO_THROW(Sorter.create_permute_vector(ExecutionSpace{}));
 }
 
