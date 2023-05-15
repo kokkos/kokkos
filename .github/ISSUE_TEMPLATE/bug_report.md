@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Create a report to correct failures and improve our code
+about: Create a report (for github issue tracker) to correct failures
 title: ''
 labels: ''
 assignees: ''
