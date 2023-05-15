@@ -741,6 +741,7 @@ if(Kokkos_ENABLE_CUDA)
       UnitTestMainInit.cpp
       ${Cuda_SOURCES1}
       cuda/TestCuda_ReducerViewSizeLimit.cpp
+      cuda/TestCuda_TeamSizeMaxIsPositive.cpp
     )
 
     KOKKOS_ADD_EXECUTABLE_AND_TEST(
