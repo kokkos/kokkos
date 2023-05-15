@@ -429,15 +429,11 @@ void test_sort(unsigned int N) {
 template <class ExecutionSpace>
 void test_sort_empty_view() {
   // does not matter if we use int or something else
-  Kokkos::View<int*, ExecutionSpace> v;
+  Kokkos::View<int*, ExecutionSpace> v("v", 0);
 
-  Kokkos::sort(v);
-  // nothing should have changed
-  ASSERT_TRUE(v.extent(0) == 0);
-
-  Kokkos::sort(ExecutionSpace(), v);
-  // nothing should have changed
-  ASSERT_TRUE(v.extent(0) == 0);
+  // TODO check the synchronous behavior of the calls below
+  ASSERT_NO_THROW(Kokkos::sort(ExecutionSpace(), v));
+  ASSERT_NO_THROW(Kokkos::sort(v));
 }
 
 template <class ExecutionSpace>
