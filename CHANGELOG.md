@@ -12,7 +12,6 @@
 - Add error message when not using `hipcc` and when `CMAKE_CXX_STANDARD` is not set [\#5945](https://github.com/kokkos/kokkos/pull/5945)
 ### Bug Fixes:
 - Fix Scratch allocation alignment issues [\#5692](https://github.com/kokkos/kokkos/pull/5692)
-- Fix nvhpc CI after host upgrade to CUDA 12 [\#5703](https://github.com/kokkos/kokkos/pull/5703)
 - Fix Intel Classic Compiler ICE [\#5710](https://github.com/kokkos/kokkos/pull/5710)
 - Don't install std algorithm headers multiple times [\#5711](https://github.com/kokkos/kokkos/pull/5711)
 - Fix static init order issue in InitalizationSettings [\#5721](https://github.com/kokkos/kokkos/pull/5721)
