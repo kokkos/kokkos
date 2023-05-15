@@ -416,7 +416,6 @@ struct MinLoc {
   using index_type  = std::remove_cv_t<Index>;
   static_assert(!std::is_pointer_v<scalar_type> &&
                 !std::is_array_v<scalar_type>);
-  static_assert(std::is_integral_v<index_type>);
 
  public:
   // Required
@@ -472,7 +471,6 @@ struct MaxLoc {
   using index_type  = std::remove_cv_t<Index>;
   static_assert(!std::is_pointer_v<scalar_type> &&
                 !std::is_array_v<scalar_type>);
-  static_assert(std::is_integral_v<index_type>);
 
  public:
   // Required
@@ -597,7 +595,6 @@ struct MinMaxLoc {
   using index_type  = std::remove_cv_t<Index>;
   static_assert(!std::is_pointer_v<scalar_type> &&
                 !std::is_array_v<scalar_type>);
-  static_assert(std::is_integral_v<index_type>);
 
  public:
   // Required
