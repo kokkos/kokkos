@@ -458,6 +458,20 @@ void test_binsort_empty_view() {
   ASSERT_NO_THROW(Sorter.sort(v));
 }
 
+template <class ExecutionSpace>
+void test_binsort_empty_keys() {
+  using KeyViewType = Kokkos::View<int*, ExecutionSpace>;
+  KeyViewType kv("kv", 0);
+
+  using BinOp_t = Kokkos::BinOp1D<KeyViewType>;
+  BinOp_t binOp(5, 0, 10);
+  Kokkos::BinSort<KeyViewType, BinOp_t> Sorter(ExecutionSpace{}, kv, binOp);
+
+  // does not matter if we use int or something else
+  Kokkos::View<int*, ExecutionSpace> v("v", 0);
+  ASSERT_NO_THROW(Sorter.create_permute_vector(ExecutionSpace{}));
+}
+
 }  // namespace Impl
 }  // namespace Test
 #endif /* KOKKOS_ALGORITHMS_UNITTESTS_TESTSORT_HPP */

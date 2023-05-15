@@ -31,5 +31,9 @@ TEST(TEST_CATEGORY, SortEmptyView) {
 TEST(TEST_CATEGORY, BinSortEmptyView) {
   Impl::test_binsort_empty_view<TEST_EXECSPACE>();
 }
+
+TEST(TEST_CATEGORY, BinSortEmptyKeys) {
+  Impl::test_binsort_empty_keys<TEST_EXECSPACE>();
+}
 }  // namespace Test
 #endif
