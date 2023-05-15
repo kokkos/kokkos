@@ -158,20 +158,20 @@ TEST(tools, initialization) {
     Kokkos::View<int*, memory_space> src_view("source", 10);
     Kokkos::View<int*, memory_space> dst_view("destination", 10);
     Kokkos::deep_copy(dst_view, src_view);
-    Kokkos::parallel_for("parallel_for",
-                         Kokkos::RangePolicy<execution_space>(0, 1),
-                         [=](int i) { (void)i; });
+    Kokkos::parallel_for(
+        "parallel_for", Kokkos::RangePolicy<execution_space>(0, 1),
+        KOKKOS_LAMBDA(int i) { (void)i; });
     int result;
     Kokkos::parallel_reduce(
         "parallel_reduce", Kokkos::RangePolicy<execution_space>(0, 1),
-        [=](int i, int& hold_result) { hold_result += i; }, result);
-    Kokkos::parallel_scan("parallel_scan",
-                          Kokkos::RangePolicy<execution_space>(0, 1),
-                          [=](const int i, int& hold_result, const bool final) {
-                            if (final) {
-                              hold_result += i;
-                            }
-                          });
+        KOKKOS_LAMBDA(int i, int& hold_result) { hold_result += i; }, result);
+    Kokkos::parallel_scan(
+        "parallel_scan", Kokkos::RangePolicy<execution_space>(0, 1),
+        KOKKOS_LAMBDA(const int i, int& hold_result, const bool final) {
+          if (final) {
+            hold_result += i;
+          }
+        });
     Kokkos::Profiling::pushRegion("push_region");
     Kokkos::Profiling::popRegion();
     uint32_t sectionId;
