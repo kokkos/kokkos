@@ -1221,13 +1221,19 @@ struct TestReducers {
 #if !defined(KOKKOS_ENABLE_OPENACC)
     // FIXME_OPENACC - OpenACC (V3.3) does not support custom reductions.
     test_minloc(10003);
+// FIXME_NVHPC misaligned memory
+#if !defined(KOKKOS_COMPILER_NVHPC)
     test_minloc_2d(100);
+#endif
 #endif
     test_max(10007);
 #if !defined(KOKKOS_ENABLE_OPENACC)
     // FIXME_OPENACC - OpenACC (V3.3) does not support custom reductions.
     test_maxloc(10007);
+// FIXME_NVHPC misaligned memory
+#if !defined(KOKKOS_COMPILER_NVHPC)
     test_maxloc_2d(100);
+#endif
 #endif
 #if defined(KOKKOS_ENABLE_OPENMPTARGET) && defined(KOKKOS_COMPILER_CLANG) && \
     (KOKKOS_COMPILER_CLANG < 1300)
