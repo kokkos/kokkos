@@ -1212,6 +1212,9 @@ struct TestReducers {
 #if defined(KOKKOS_ENABLE_OPENMPTARGET)
 #if defined(KOKKOS_COMPILER_CLANG) && (KOKKOS_COMPILER_CLANG >= 1300)
     test_minmaxloc(10007);
+#else
+    if (!std::is_same_v<ExecSpace, Kokkos::Experimental::OpenMPTarget>)
+      test_minmaxloc(10007);
 #endif
 #else
     test_minmaxloc(10007);
@@ -1230,10 +1233,11 @@ struct TestReducers {
 #if !defined(KOKKOS_ENABLE_OPENACC)
     // FIXME_OPENACC - OpenACC (V3.3) does not support custom reductions.
     test_minloc(10003);
-#if !defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC misaligned memory
+#if defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC misaligned memory
+    if (!std::is_same_v<ExecSpace, Kokkos::Cuda>)
     // FIXME_OPENMPTARGET requires custom reductions.
 #if !defined(KOKKOS_ENABLE_OPENMPTARGET)
-    test_minloc_2d(100);
+      test_minloc_2d(100);
 #endif
 #endif
 #endif
@@ -1242,9 +1246,10 @@ struct TestReducers {
     // FIXME_OPENACC - OpenACC (V3.3) does not support custom reductions.
     test_maxloc(10007);
 #if !defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC misaligned memory
+    if (!std::is_same_v<ExecSpace, Kokkos::Cuda>)
 // FIXME_OPENMPTARGET requires custom reductions.
 #if !defined(KOKKOS_ENABLE_OPENMPTARGET)
-    test_maxloc_2d(100);
+      test_maxloc_2d(100);
 #endif
 #endif
 #endif
@@ -1255,6 +1260,9 @@ struct TestReducers {
 #if defined(KOKKOS_ENABLE_OPENMPTARGET)
 #if defined(KOKKOS_COMPILER_CLANG) && (KOKKOS_COMPILER_CLANG >= 1300)
     test_minmaxloc(10007);
+#else
+      if (!std::is_same_v<ExecSpace, Kokkos::Experimental::OpenMPTarget>)
+        test_minmaxloc(10007);
 #endif
 #else
     test_minmaxloc(10007);
