@@ -210,7 +210,11 @@ void HPX::impl_finalize() {
   if (m_hpx_initialized) {
     hpx::runtime *rt = hpx::get_runtime_ptr();
     if (rt != nullptr) {
+#if HPX_VERSION_FULL >= 0x010900
+      hpx::post([]() { hpx::local::finalize(); });
+#else
       hpx::apply([]() { hpx::local::finalize(); });
+#endif
       hpx::local::stop();
     } else {
       Kokkos::abort(
