@@ -201,9 +201,30 @@ class HPX {
     return impl_get_instance_data().m_instance_id;
   }
 
+  static bool &impl_get_in_parallel() noexcept;
+
+  struct impl_in_parallel_scope {
+    impl_in_parallel_scope() noexcept;
+    ~impl_in_parallel_scope() noexcept;
+    impl_in_parallel_scope(impl_in_parallel_scope &&)      = delete;
+    impl_in_parallel_scope(impl_in_parallel_scope const &) = delete;
+    impl_in_parallel_scope &operator=(impl_in_parallel_scope &&) = delete;
+    impl_in_parallel_scope &operator=(impl_in_parallel_scope const &) = delete;
+  };
+
+  struct impl_not_in_parallel_scope {
+    impl_not_in_parallel_scope() noexcept;
+    ~impl_not_in_parallel_scope() noexcept;
+    impl_not_in_parallel_scope(impl_not_in_parallel_scope &&)      = delete;
+    impl_not_in_parallel_scope(impl_not_in_parallel_scope const &) = delete;
+    impl_not_in_parallel_scope &operator=(impl_not_in_parallel_scope &&) =
+        delete;
+    impl_not_in_parallel_scope &operator=(impl_not_in_parallel_scope const &) =
+        delete;
+  };
+
   static bool in_parallel(HPX const & = HPX()) noexcept {
-    // TODO: Very awkward to keep track of. What should this really return?
-    return false;
+    return impl_get_in_parallel();
   }
 
   static void impl_decrement_active_parallel_region_count();
@@ -333,7 +354,10 @@ class HPX {
                        hpx::threads::thread_stacksize stacksize =
                            hpx::threads::thread_stacksize::default_) const {
     impl_bulk_plain_erased(force_synchronous, is_light_weight_policy,
-                           {[functor](Index i) { functor.execute_range(i); }},
+                           {[functor](Index i) {
+                             impl_in_parallel_scope p;
+                             functor.execute_range(i);
+                           }},
                            n, stacksize);
   }
 
@@ -391,11 +415,20 @@ class HPX {
       Functor const &functor, Index const n,
       hpx::threads::thread_stacksize stacksize =
           hpx::threads::thread_stacksize::default_) const {
-    impl_bulk_setup_finalize_erased(
-        force_synchronous, is_light_weight_policy,
-        {[functor](Index i) { functor.execute_range(i); }},
-        {[functor]() { functor.setup(); }},
-        {[functor]() { functor.finalize(); }}, n, stacksize);
+    impl_bulk_setup_finalize_erased(force_synchronous, is_light_weight_policy,
+                                    {[functor](Index i) {
+                                      impl_in_parallel_scope p;
+                                      functor.execute_range(i);
+                                    }},
+                                    {[functor]() {
+                                      impl_in_parallel_scope p;
+                                      functor.setup();
+                                    }},
+                                    {[functor]() {
+                                      impl_in_parallel_scope p;
+                                      functor.finalize();
+                                    }},
+                                    n, stacksize);
   }
 
   static constexpr const char *name() noexcept { return "HPX"; }
@@ -1259,7 +1292,13 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
     const WorkRange range(m_policy, t, num_worker_threads);
     execute_chunk(range.begin(), range.end(), update_sum, false);
 
-    barrier.arrive_and_wait();
+    {
+      // Since arrive_and_wait may yield and resume on another worker thread we
+      // set in_parallel = false on the current thread before suspending and set
+      // it again to true when we resume.
+      Kokkos::Experimental::HPX::impl_not_in_parallel_scope p;
+      barrier.arrive_and_wait();
+    }
 
     if (t == 0) {
       final_reducer.init(reinterpret_cast<pointer_type>(
@@ -1281,7 +1320,13 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
       }
     }
 
-    barrier.arrive_and_wait();
+    {
+      // Since arrive_and_wait may yield and resume on another worker thread we
+      // set in_parallel = false on the current thread before suspending and set
+      // it again to true when we resume.
+      Kokkos::Experimental::HPX::impl_not_in_parallel_scope p;
+      barrier.arrive_and_wait();
+    }
 
     reference_type update_base =
         Analysis::Reducer::reference(reinterpret_cast<pointer_type>(
@@ -1362,7 +1407,13 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
     const WorkRange range(m_policy, t, num_worker_threads);
     execute_chunk(range.begin(), range.end(), update_sum, false);
 
-    barrier.arrive_and_wait();
+    {
+      // Since arrive_and_wait may yield and resume on another worker thread we
+      // set in_parallel = false on the current thread before suspending and set
+      // it again to true when we resume.
+      Kokkos::Experimental::HPX::impl_not_in_parallel_scope p;
+      barrier.arrive_and_wait();
+    }
 
     if (t == 0) {
       final_reducer.init(reinterpret_cast<pointer_type>(
@@ -1384,7 +1435,13 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
       }
     }
 
-    barrier.arrive_and_wait();
+    {
+      // Since arrive_and_wait may yield and resume on another worker thread we
+      // set in_parallel = false on the current thread before suspending and set
+      // it again to true when we resume.
+      Kokkos::Experimental::HPX::impl_not_in_parallel_scope p;
+      barrier.arrive_and_wait();
+    }
 
     reference_type update_base =
         Analysis::Reducer::reference(reinterpret_cast<pointer_type>(
