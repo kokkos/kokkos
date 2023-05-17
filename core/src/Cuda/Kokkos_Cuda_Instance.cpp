@@ -696,16 +696,18 @@ bool Cuda::is_running() const {
                                                  m_space_instance->m_stream));
       m_space_instance->m_internal_status = Impl::ExecutionSpaceStatus::running;
       [[fallthrough]];
-    case Impl::ExecutionSpaceStatus::running:
+    case Impl::ExecutionSpaceStatus::running: {
       const cudaError_t query_result =
           cudaEventQuery(m_space_instance->m_last_event);
       if (query_result == cudaSuccess) {
         m_space_instance->m_internal_status =
             Impl::ExecutionSpaceStatus::complete;
         return false;
-      } else if (query_result != cudaErrorNotReady)
+      } else if (query_result != cudaErrorNotReady) {
         KOKKOS_IMPL_CUDA_SAFE_CALL(query_result);
+      }
       return true;
+    }
     default: assert(false);
   }
 

@@ -427,16 +427,18 @@ bool HIP::is_running() const {
                                                m_space_instance->m_stream));
       m_space_instance->m_internal_status = Impl::ExecutionSpaceStatus::running;
       [[fallthrough]];
-    case Impl::ExecutionSpaceStatus::running:
+    case Impl::ExecutionSpaceStatus::running: {
       const hipError_t query_result =
           hipEventQuery(m_space_instance->m_last_event);
       if (query_result == hipSuccess) {
         m_space_instance->m_internal_status =
             Impl::ExecutionSpaceStatus::complete;
         return false;
-      } else if (query_result != hipErrorNotReady)
+      } else if (query_result != hipErrorNotReady) {
         KOKKOS_IMPL_HIP_SAFE_CALL(query_result);
+      }
       return true;
+    }
     default: assert(false);
   }
 
