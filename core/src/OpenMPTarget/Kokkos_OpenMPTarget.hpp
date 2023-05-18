@@ -66,7 +66,7 @@ class OpenMPTarget {
   using scratch_memory_space = ScratchMemorySpace<OpenMPTarget>;
 
   bool is_running() const {
-    // OpenMPTarget is synchronous
+    fence("OpenMPTarget::fence");
     return false;
   }
 

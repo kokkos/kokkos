@@ -85,7 +85,7 @@ class OpenMP {
   OpenMP(int pool_size);
 
   bool is_running() const {
-    // OpenMP is synchronous
+    fence("Serial::is_running");
     return false;
   }
 

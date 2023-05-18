@@ -72,7 +72,7 @@ class Threads {
   //@{
 
   bool is_running() const {
-    // Threads is synchronous
+    fence("Threads::is_running");
     return false;
   }
 

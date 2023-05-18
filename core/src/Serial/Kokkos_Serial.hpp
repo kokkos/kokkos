@@ -109,7 +109,7 @@ class Serial {
   Serial();
 
   bool is_running() const {
-    // Serial is synchronous
+    fence("Serial::is_running");
     return false;
   }
 
