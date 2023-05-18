@@ -97,7 +97,7 @@ class HIPInternal {
 
   hipStream_t m_stream = nullptr;
   hipEvent_t m_last_event;
-  mutable Kokkos::Impl::ExecutionSpaceStatus m_internal_status =
+  mutable std::atomic<Kokkos::Impl::ExecutionSpaceStatus> m_internal_status =
       Kokkos::Impl::ExecutionSpaceStatus::complete;
   uint32_t m_instance_id =
       Kokkos::Tools::Experimental::Impl::idForInstance<HIP>(
