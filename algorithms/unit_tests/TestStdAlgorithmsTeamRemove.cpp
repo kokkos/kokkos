@@ -113,52 +113,27 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // -----------------------------------------------
   // prepare data
   // -----------------------------------------------
-  // construct in memory space associated with default exespace
-  auto dataView =
-      create_view<ValueType>(LayoutTag{}, numTeams, numCols, "dataView");
+  // Create a view in the memory space associated with default exespace with as
+  // many rows as the number of teams and fill it with random values from an
+  // arbitrary range. Pick range so that some of the values are equal to target.
+  auto [dataView, dataView_h] = create_random_view_and_host_clone(
+      LayoutTag{}, numTeams, numCols,
+      Kokkos::pair<ValueType, ValueType>{targetVal - 1, targetVal + 1},
+      "dataView");
 
-  // dataView might not deep copyable (e.g. strided layout) so to fill it
-  // we make a new view that is for sure deep copyable, modify it on the host
-  // deep copy to device and then launch copy kernel to dataView
-  auto dataView_dc =
-      create_deep_copyable_compatible_view_with_same_extent(dataView);
-  auto dataView_dc_h = create_mirror_view(Kokkos::HostSpace(), dataView_dc);
-
-  Kokkos::Random_XorShift64_Pool<Kokkos::DefaultHostExecutionSpace> pool(
-      45234399);
-  Kokkos::fill_random(dataView_dc_h, pool, ValueType(0), ValueType(1177));
-
-  // for each row, randomly select columns, fill with targetVal
+  // note that we need to count how many elements are equal
+  // to targetVal because the dataView was origianlly filled
+  // with random values
   std::vector<std::size_t> perRowRealCount(numTeams);
-  const std::size_t maxColInd = numCols > 0 ? numCols - 1 : 0;
-  UnifDist<int> colCountProducer(maxColInd, 3123377);
-  UnifDist<int> colIndicesProducer(maxColInd, 455225);
-  for (std::size_t i = 0; i < dataView_dc_h.extent(0); ++i) {
-    const std::size_t currCount = colCountProducer();
-    std::vector<std::size_t> colIndForThisRow(currCount);
-    for (std::size_t j = 0; j < currCount; ++j) {
-      const auto colInd        = colIndicesProducer();
-      dataView_dc_h(i, colInd) = targetVal;
-      colIndForThisRow[j]      = colInd;
-    }
-
-    // note that we need to count how many elements are equal
-    // to targetVal because the dataView was origianlly filled
-    // with random values so it could be that we have more matches
-    // than what we manually set above
+  for (std::size_t i = 0; i < dataView_h.extent(0); ++i) {
     std::size_t realCount = 0;
-    for (std::size_t j = 0; j < dataView_dc_h.extent(1); ++j) {
-      if (dataView_dc_h(i, j) == targetVal) {
+    for (std::size_t j = 0; j < dataView_h.extent(1); ++j) {
+      if (dataView_h(i, j) == targetVal) {
         realCount++;
       }
     }
     perRowRealCount[i] = realCount;
   }
-
-  // copy to dataView_dc and then to dataView
-  Kokkos::deep_copy(dataView_dc, dataView_dc_h);
-  CopyFunctorRank2 F1(dataView_dc, dataView);
-  Kokkos::parallel_for("copy", dataView.extent(0) * dataView.extent(1), F1);
 
   // -----------------------------------------------
   // launch kokkos kernel
@@ -181,14 +156,14 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   auto dataViewAfterOp_h = create_host_space_copy(dataView);
   auto distancesView_h   = create_host_space_copy(distancesView);
   for (std::size_t i = 0; i < dataViewAfterOp_h.extent(0); ++i) {
-    auto myRow = Kokkos::subview(dataView_dc_h, i, Kokkos::ALL());
+    auto myRow = Kokkos::subview(dataView_h, i, Kokkos::ALL());
     auto stdIt = std::remove(KE::begin(myRow), KE::end(myRow), targetVal);
     const std::size_t stdDistance = KE::distance(KE::begin(myRow), stdIt);
     ASSERT_EQ(distancesView_h(i), stdDistance);
     ASSERT_EQ(distancesView_h(i), numCols - perRowRealCount[i]);
 
     for (std::size_t j = 0; j < distancesView_h(i); ++j) {
-      ASSERT_EQ(dataViewAfterOp_h(i, j), dataView_dc_h(i, j));
+      ASSERT_EQ(dataViewAfterOp_h(i, j), dataView_h(i, j));
     }
   }
 }
