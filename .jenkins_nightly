@@ -65,7 +65,6 @@ pipeline {
                           spack load kokkos-nvcc-wrapper && \
                           spack load cuda && \
                           spack load kokkos && \
-                          spack load cmake && \
                           spack test run kokkos && \
                           spack test results -l
                           '''
