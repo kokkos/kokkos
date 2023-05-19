@@ -44,7 +44,12 @@ struct StridedThreeTag {};
 struct StridedTwoRowsTag {};
 struct StridedThreeRowsTag {};
 
+#ifndef _WIN32
 const std::vector<int> teamSizesToTest = {1, 2, 23, 77, 123};
+#else
+// avoid timeouts in AppVeyor CI
+const std::vector<int> teamSizesToTest = {1, 2, 23};
+#endif
 
 // map of scenarios where the key is a description
 // and the value is the extent
