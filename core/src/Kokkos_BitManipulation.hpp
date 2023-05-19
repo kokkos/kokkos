@@ -103,7 +103,7 @@ namespace Kokkos {
 // FIXME_SYCL intel/llvm has unqualified calls to bit_cast which are ambiguous
 // if we declare our own bit_cast function
 #ifdef KOKKOS_ENABLE_SYCL
-using sycl::bit_cast;
+using sycl::detail::bit_cast;
 #else
 template <class To, class From>
 KOKKOS_FUNCTION std::enable_if_t<sizeof(To) == sizeof(From) &&

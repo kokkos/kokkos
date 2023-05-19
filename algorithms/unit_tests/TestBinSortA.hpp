@@ -240,5 +240,41 @@ TEST(TEST_CATEGORY, BinSortGenericTests) {
   BinSortSetA::test_sort_integer_overflow<ExecutionSpace, int>();
 }
 
+TEST(TEST_CATEGORY, BinSortEmptyView) {
+  using ExecutionSpace = TEST_EXECSPACE;
+
+  // the bounds and extents used below are totally arbitrary
+  // and, in theory, should have no impact
+
+  using KeyViewType = Kokkos::View<int*, ExecutionSpace>;
+  KeyViewType kv("kv", 20);
+
+  using BinOp_t = Kokkos::BinOp1D<KeyViewType>;
+  BinOp_t binOp(5, 0, 10);
+  Kokkos::BinSort<KeyViewType, BinOp_t> Sorter(ExecutionSpace{}, kv, binOp);
+
+  // does not matter if we use int or something else
+  Kokkos::View<int*, ExecutionSpace> v("v", 0);
+
+  // test all exposed public sort methods
+  ASSERT_NO_THROW(Sorter.sort(ExecutionSpace(), v, 0, 0));
+  ASSERT_NO_THROW(Sorter.sort(v, 0, 0));
+  ASSERT_NO_THROW(Sorter.sort(ExecutionSpace(), v));
+  ASSERT_NO_THROW(Sorter.sort(v));
+}
+
+TEST(TEST_CATEGORY, BinSortEmptyKeysView) {
+  using ExecutionSpace = TEST_EXECSPACE;
+
+  using KeyViewType = Kokkos::View<int*, ExecutionSpace>;
+  KeyViewType kv("kv", 0);
+
+  using BinOp_t = Kokkos::BinOp1D<KeyViewType>;
+  BinOp_t binOp(5, 0, 10);
+  Kokkos::BinSort<KeyViewType, BinOp_t> Sorter(ExecutionSpace{}, kv, binOp);
+
+  ASSERT_NO_THROW(Sorter.create_permute_vector(ExecutionSpace{}));
+}
+
 }  // namespace Test
 #endif
