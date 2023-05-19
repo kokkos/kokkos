@@ -160,9 +160,11 @@ void HIPInternal::initialize(hipStream_t stream, bool manage_stream) {
   const bool ok_init = nullptr == m_scratchSpace || nullptr == m_scratchFlags;
 
   if (ok_init) {
-    m_stream = stream;
+    m_stream   = stream;
+    hipEvent_t = tmp_event;
     KOKKOS_IMPL_HIP_SAFE_CALL(
-        hipEventCreateWithFlags(&m_last_event, hipEventDisableTiming));
+        hipEventCreateWithFlags(&tmp_event, hipEventDisableTiming));
+    m_last_event    = tmp_event;
     m_manage_stream = manage_stream;
 
     //----------------------------------

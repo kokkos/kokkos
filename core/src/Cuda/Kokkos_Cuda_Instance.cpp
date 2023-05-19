@@ -424,8 +424,10 @@ Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
   }
 
   m_stream = stream;
+  cudaEvent_t tmp_event;
   KOKKOS_IMPL_CUDA_SAFE_CALL(
-      cudaEventCreateWithFlags(&m_last_event, cudaEventDisableTiming));
+      cudaEventCreateWithFlags(&tmp_event, cudaEventDisableTiming));
+  m_last_event    = tmp_event;
   m_manage_stream = manage_stream;
   for (int i = 0; i < m_n_team_scratch; ++i) {
     m_team_scratch_current_size[i] = 0;

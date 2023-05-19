@@ -131,7 +131,7 @@ class CudaInternal {
   mutable size_type* m_scratchUnified;
   mutable size_type* m_scratchFunctor;
   cudaStream_t m_stream;
-  cudaEvent_t m_last_event;
+  std::atomic<cudaEvent_t> m_last_event;
   mutable std::atomic<Kokkos::Impl::ExecutionSpaceStatus> m_internal_status =
       Kokkos::Impl::ExecutionSpaceStatus::complete;
 
