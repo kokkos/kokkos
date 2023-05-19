@@ -29,6 +29,13 @@ KOKKOS_DEPRECATED_LIST(OPTIONS ENABLE)
 KOKKOS_ENABLE_OPTION(CUDA_RELOCATABLE_DEVICE_CODE  OFF "Whether to enable relocatable device code (RDC) for CUDA")
 KOKKOS_ENABLE_OPTION(CUDA_UVM             OFF "Whether to use unified memory (UM) for CUDA by default")
 KOKKOS_ENABLE_OPTION(CUDA_LDG_INTRINSIC   OFF "Whether to use CUDA LDG intrinsics")
+# In contrast to other CUDA-dependent, options CUDA_LAMBDA is ON by default.
+# That is problematic when CUDA is not enabled because this not only yields a
+# bogus warning, but also exports the Kokkos_ENABLE_CUDA_LAMBDA variable and
+# sets it to ON. This if-clause is a crutch that delays the refactoring of the
+# way we declare all options until after we get rid of TriBITS.
+KOKKOS_ENABLE_OPTION(CUDA_LAMBDA ${Kokkos_ENABLE_CUDA} "Whether to allow lambda expressions on the device with NVCC **DEPRECATED**")
+
 # As of 08/12/2021 CudaMallocAsync causes issues if UCX is used as MPI communication layer.
 KOKKOS_ENABLE_OPTION(IMPL_CUDA_MALLOC_ASYNC      OFF  "Whether to enable CudaMallocAsync (requires CUDA Toolkit 11.2)")
 KOKKOS_ENABLE_OPTION(DEPRECATED_CODE_3    OFF "Whether code deprecated in major release 3 is available" )
@@ -66,7 +73,6 @@ mark_as_advanced(Kokkos_ENABLE_IMPL_MDSPAN)
 mark_as_advanced(Kokkos_ENABLE_MDSPAN_EXTERNAL)
 mark_as_advanced(Kokkos_ENABLE_IMPL_SKIP_COMPILER_MDSPAN)
 
-KOKKOS_ENABLE_OPTION(CUDA_LAMBDA ON "Whether to allow lambda expressions on the device with NVCC **DEPRECATED**")
 IF (Trilinos_ENABLE_Kokkos)
   SET(COMPLEX_ALIGN_DEFAULT OFF)
 ELSE()
@@ -160,7 +166,7 @@ IF(Kokkos_ENABLE_CUDA_LDG_INTRINSIC)
     MESSAGE(FATAL_ERROR "Kokkos_ENABLE_CUDA_LDG_INTRINSIC has been removed. LDG intrinsics are always enabled.")
   ENDIF()
 ENDIF()
-IF(NOT Kokkos_ENABLE_CUDA_LAMBDA)
+IF(Kokkos_ENABLE_CUDA AND NOT Kokkos_ENABLE_CUDA_LAMBDA)
   IF(KOKKOS_ENABLE_DEPRECATED_CODE_4)
     MESSAGE(DEPRECATION "Setting Kokkos_ENABLE_CUDA_LAMBDA is deprecated. Lambda expressions in device code are always enabled. Forcing -DKokkos_ENABLE_CUDA_LAMBDA=ON")
     set(Kokkos_ENABLE_CUDA_LAMBDA ON CACHE BOOL "Kokkos turned Cuda lambda support ON!" FORCE)
