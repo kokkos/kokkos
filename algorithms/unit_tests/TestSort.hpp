@@ -234,7 +234,5 @@ TEST(TEST_CATEGORY, SortEmptyView) {
   ASSERT_NO_THROW(Kokkos::sort(v));
 }
 
-
-}  // namespace Impl
 }  // namespace Test
 #endif
