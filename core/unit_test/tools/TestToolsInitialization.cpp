@@ -46,7 +46,7 @@ bool declare_metadata_callback                   = false;
 bool request_tool_settings_callback              = false;
 bool provide_tool_programming_interface_callback = false;
 
-TEST(tools, initialization) {
+void test_tools_initialization_with_callbacks() {
   Kokkos::Tools::Experimental::set_init_callback(
       [](const int /*loadseq*/, const uint64_t /*version*/,
          const uint32_t /*num_infos*/,
@@ -209,4 +209,8 @@ TEST(tools, initialization) {
     ASSERT_TRUE(request_tool_settings_callback);
     ASSERT_TRUE(provide_tool_programming_interface_callback);
   }
+}
+
+TEST(tools, initialization_with_callbacks) {
+  test_tools_initialization_with_callbacks();
 }
