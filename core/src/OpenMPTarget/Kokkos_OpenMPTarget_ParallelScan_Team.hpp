@@ -39,7 +39,7 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
     const FunctorType& lambda) {
   using Analysis   = Impl::FunctorAnalysis<Impl::FunctorPatternInterface::SCAN,
                                          TeamPolicy<Experimental::OpenMPTarget>,
-                                         FunctorType>;
+                                         FunctorType, void>;
   using value_type = typename Analysis::value_type;
 
   const auto start = loop_bounds.start;
@@ -107,7 +107,7 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
     const FunctorType& lambda) {
   using Analysis   = Impl::FunctorAnalysis<Impl::FunctorPatternInterface::SCAN,
                                          TeamPolicy<Experimental::OpenMPTarget>,
-                                         FunctorType>;
+                                         FunctorType, void>;
   using value_type = typename Analysis::value_type;
 
   value_type scan_val = value_type();

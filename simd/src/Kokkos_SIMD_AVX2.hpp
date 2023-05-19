@@ -814,8 +814,8 @@ class simd<std::uint64_t, simd_abi::avx2_fixed_size<4>> {
   template <class U, std::enable_if_t<std::is_convertible_v<U, value_type>,
                                       bool> = false>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd(U&& value)
-      : m_value(_mm256_set1_epi64x(bit_cast<std::int64_t>(value_type(value)))) {
-  }
+      : m_value(_mm256_set1_epi64x(
+            Kokkos::bit_cast<std::int64_t>(value_type(value)))) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr simd(__m256i const& value_in)
       : m_value(value_in) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit simd(

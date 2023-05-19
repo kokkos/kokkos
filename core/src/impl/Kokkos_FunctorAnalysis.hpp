@@ -64,14 +64,15 @@ struct DeduceFunctorPatternInterface<ParallelScanWithTotal<
 
 /** \brief  Query Functor and execution policy argument tag for value type.
  *
- *  If 'value_type' is not explicitly declared in the functor
- *  then attempt to deduce the type from FunctorType::operator()
- *  interface used by the pattern and policy.
+ *  If 'value_type' is not explicitly declared in the functor and
+ * OverrideValueType is void, then attempt to deduce the type from
+ * FunctorType::operator() interface used by the pattern and policy.
  *
  *  For the REDUCE pattern generate a Reducer and finalization function
  *  derived from what is available within the functor.
  */
-template <typename PatternInterface, class Policy, class Functor>
+template <typename PatternInterface, class Policy, class Functor,
+          typename OverrideValueType>
 struct FunctorAnalysis {
  private:
   using FOR    = FunctorPatternInterface::FOR;
@@ -124,9 +125,10 @@ struct FunctorAnalysis {
   //----------------------------------------
   // Check for Functor::value_type, which is either a simple type T or T[]
 
+  // If the functor doesn't have a value_type alias, use OverrideValueType.
   template <typename F, typename = std::false_type>
   struct has_value_type {
-    using type = void;
+    using type = OverrideValueType;
   };
 
   template <typename F>
@@ -141,9 +143,9 @@ struct FunctorAnalysis {
   };
 
   //----------------------------------------
-  // If Functor::value_type does not exist then evaluate operator(),
-  // depending upon the pattern and whether the policy has a work tag,
-  // to determine the reduction or scan value_type.
+  // If Functor::value_type does not exist and OverrideValueType is void, then
+  // evaluate operator(), depending upon the pattern and whether the policy has
+  // a work tag, to determine the reduction or scan value_type.
 
   template <typename F, typename P = PatternInterface,
             typename V = typename has_value_type<F>::type,

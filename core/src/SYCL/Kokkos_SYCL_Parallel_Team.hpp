@@ -74,13 +74,13 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
   template <class FunctorType>
   inline int team_size_max(const FunctorType& f,
                            const ParallelReduceTag&) const {
-    return internal_team_size_max_reduce(f);
+    return internal_team_size_max_reduce<void>(f);
   }
 
   template <class FunctorType, class ReducerType>
   inline int team_size_max(const FunctorType& f, const ReducerType& /*r*/,
                            const ParallelReduceTag&) const {
-    return internal_team_size_max_reduce(f);
+    return internal_team_size_max_reduce<typename ReducerType::value_type>(f);
   }
 
   template <typename FunctorType>
@@ -91,13 +91,14 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
   template <typename FunctorType>
   inline int team_size_recommended(FunctorType const& f,
                                    ParallelReduceTag const&) const {
-    return internal_team_size_recommended_reduce(f);
+    return internal_team_size_recommended_reduce<void>(f);
   }
 
   template <class FunctorType, class ReducerType>
   int team_size_recommended(FunctorType const& f, ReducerType const&,
                             ParallelReduceTag const&) const {
-    return internal_team_size_recommended_reduce(f);
+    return internal_team_size_recommended_reduce<
+        typename ReducerType::value_type>(f);
   }
   inline bool impl_auto_vector_length() const { return m_tune_vector_length; }
   inline bool impl_auto_team_size() const { return m_tune_team_size; }
@@ -312,10 +313,11 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
            impl_vector_length();
   }
 
-  template <class FunctorType>
+  template <class ValueType, class FunctorType>
   int internal_team_size_max_reduce(const FunctorType& f) const {
-    using Analysis        = FunctorAnalysis<FunctorPatternInterface::REDUCE,
-                                     TeamPolicyInternal, FunctorType>;
+    using Analysis =
+        FunctorAnalysis<FunctorPatternInterface::REDUCE, TeamPolicyInternal,
+                        FunctorType, ValueType>;
     using value_type      = typename Analysis::value_type;
     const int value_count = Analysis::value_count(f);
 
@@ -348,10 +350,11 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
     return 1 << Kokkos::Impl::int_log2(internal_team_size_max_for(f));
   }
 
-  template <class FunctorType>
+  template <class ValueType, class FunctorType>
   int internal_team_size_recommended_reduce(const FunctorType& f) const {
     // FIXME_SYCL improve
-    return 1 << Kokkos::Impl::int_log2(internal_team_size_max_reduce(f));
+    return 1 << Kokkos::Impl::int_log2(
+               internal_team_size_max_reduce<ValueType>(f));
   }
 };
 
@@ -385,7 +388,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   template <typename FunctorWrapper>
   sycl::event sycl_direct_launch(const Policy& policy,
                                  const FunctorWrapper& functor_wrapper,
-                                 const sycl::event& memcpy_events) const {
+                                 const sycl::event& memcpy_event) const {
     // Convenience references
     const Kokkos::Experimental::SYCL& space = policy.space();
     sycl::queue& q                          = space.sycl_queue();
@@ -431,7 +434,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
       // be used gives a runtime error.
       // cgh.use_kernel_bundle(kernel_bundle);
 
-      cgh.depends_on(memcpy_events);
+      cgh.depends_on(memcpy_event);
       cgh.parallel_for(
           sycl::nd_range<2>(
               sycl::range<2>(m_team_size, m_league_size * final_vector_size),
@@ -552,12 +555,11 @@ class ParallelReduce<CombinedFunctorReducerType,
   std::scoped_lock<std::mutex> m_scratch_lock;
   int m_scratch_pool_id = -1;
 
-  template <typename PolicyType, typename FunctorWrapper,
-            typename ReducerWrapper>
+  template <typename PolicyType, typename CombinedFunctorReducerWrapper>
   sycl::event sycl_direct_launch(
-      const PolicyType& policy, const FunctorWrapper& functor_wrapper,
-      const ReducerWrapper& reducer_wrapper,
-      const std::vector<sycl::event>& memcpy_events) const {
+      const PolicyType& policy,
+      const CombinedFunctorReducerWrapper& functor_reducer_wrapper,
+      const sycl::event& memcpy_event) const {
     // Convenience references
     const Kokkos::Experimental::SYCL& space = policy.space();
     Kokkos::Experimental::Impl::SYCLInternal& instance =
@@ -594,12 +596,14 @@ class ParallelReduce<CombinedFunctorReducerType,
         const size_t scratch_size[2] = {m_scratch_size[0], m_scratch_size[1]};
         sycl::device_ptr<char> const global_scratch_ptr = m_global_scratch_ptr;
 
-        cgh.depends_on(memcpy_events);
+        cgh.depends_on(memcpy_event);
         cgh.parallel_for(
             sycl::nd_range<2>(sycl::range<2>(1, 1), sycl::range<2>(1, 1)),
             [=](sycl::nd_item<2> item) {
-              const FunctorType& functor = functor_wrapper.get_functor();
-              const ReducerType& reducer = reducer_wrapper.get_functor();
+              const CombinedFunctorReducerType& functor_reducer =
+                  functor_reducer_wrapper.get_functor();
+              const FunctorType& functor = functor_reducer.get_functor();
+              const ReducerType& reducer = functor_reducer.get_reducer();
 
               reference_type update = reducer.init(results_ptr);
               if (size == 1) {
@@ -654,9 +658,11 @@ class ParallelReduce<CombinedFunctorReducerType,
 
                 auto& num_teams_done = reinterpret_cast<unsigned int&>(
                     local_mem[wgroup_size * std::max(value_count, 1u)]);
-                const auto local_id        = item.get_local_linear_id();
-                const FunctorType& functor = functor_wrapper.get_functor();
-                const ReducerType& reducer = reducer_wrapper.get_functor();
+                const auto local_id = item.get_local_linear_id();
+                const CombinedFunctorReducerType& functor_reducer =
+                    functor_reducer_wrapper.get_functor();
+                const FunctorType& functor = functor_reducer.get_functor();
+                const ReducerType& reducer = functor_reducer.get_reducer();
 
                 if constexpr (ReducerType::static_value_size() == 0) {
                   reference_type update =
@@ -792,7 +798,7 @@ class ParallelReduce<CombinedFunctorReducerType,
 
         auto reduction_lambda = team_reduction_factory(local_mem, results_ptr);
 
-        cgh.depends_on(memcpy_events);
+        cgh.depends_on(memcpy_event);
 
         cgh.parallel_for(
             sycl::nd_range<2>(
@@ -823,21 +829,17 @@ class ParallelReduce<CombinedFunctorReducerType,
         *m_policy.space().impl_internal_space_instance();
     using IndirectKernelMem =
         Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem;
-    IndirectKernelMem& indirectKernelMem  = instance.get_indirect_kernel_mem();
-    IndirectKernelMem& indirectReducerMem = instance.get_indirect_kernel_mem();
+    IndirectKernelMem& indirectKernelMem = instance.get_indirect_kernel_mem();
 
-    auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
-        m_functor_reducer.get_functor(), indirectKernelMem);
-    auto reducer_wrapper = Experimental::Impl::make_sycl_function_wrapper(
-        m_functor_reducer.get_reducer(), indirectReducerMem);
+    auto functor_reducer_wrapper =
+        Experimental::Impl::make_sycl_function_wrapper(m_functor_reducer,
+                                                       indirectKernelMem);
 
-    sycl::event event = sycl_direct_launch(
-        m_policy, functor_wrapper, reducer_wrapper,
-        {functor_wrapper.get_copy_event(), reducer_wrapper.get_copy_event()});
+    sycl::event event =
+        sycl_direct_launch(m_policy, functor_reducer_wrapper,
+                           functor_reducer_wrapper.get_copy_event());
     instance.m_last_event = event;
-    functor_wrapper.register_event(event);
-    reducer_wrapper.register_event(event);
-
+    functor_reducer_wrapper.register_event(event);
     instance.register_team_scratch_event(m_scratch_pool_id, event);
   }
 

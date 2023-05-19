@@ -1219,7 +1219,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
   using WorkRange = typename Policy::WorkRange;
   using Member    = typename Policy::member_type;
   using Analysis =
-      FunctorAnalysis<FunctorPatternInterface::SCAN, Policy, FunctorType>;
+      FunctorAnalysis<FunctorPatternInterface::SCAN, Policy, FunctorType, void>;
   using pointer_type   = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
   using value_type     = typename Analysis::value_type;
@@ -1316,12 +1316,12 @@ template <class FunctorType, class ReturnType, class... Traits>
 class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
                             ReturnType, Kokkos::Experimental::HPX> {
  private:
-  using Policy    = Kokkos::RangePolicy<Traits...>;
-  using WorkTag   = typename Policy::work_tag;
-  using WorkRange = typename Policy::WorkRange;
-  using Member    = typename Policy::member_type;
-  using Analysis =
-      FunctorAnalysis<FunctorPatternInterface::SCAN, Policy, FunctorType>;
+  using Policy         = Kokkos::RangePolicy<Traits...>;
+  using WorkTag        = typename Policy::work_tag;
+  using WorkRange      = typename Policy::WorkRange;
+  using Member         = typename Policy::member_type;
+  using Analysis       = FunctorAnalysis<FunctorPatternInterface::SCAN, Policy,
+                                   FunctorType, ReturnType>;
   using pointer_type   = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
   using value_type     = typename Analysis::value_type;
@@ -1783,8 +1783,8 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
         &loop_boundaries,
     const FunctorType &lambda) {
   using value_type = typename Kokkos::Impl::FunctorAnalysis<
-      Kokkos::Impl::FunctorPatternInterface::SCAN, void,
-      FunctorType>::value_type;
+      Kokkos::Impl::FunctorPatternInterface::SCAN, void, FunctorType,
+      void>::value_type;
 
   value_type scan_val = value_type();
 
@@ -1821,8 +1821,8 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
     const FunctorType &lambda) {
   using value_type =
       typename Impl::FunctorAnalysis<Impl::FunctorPatternInterface::SCAN,
-                                     TeamPolicy<Experimental::HPX>,
-                                     FunctorType>::value_type;
+                                     TeamPolicy<Experimental::HPX>, FunctorType,
+                                     void>::value_type;
 
   value_type scan_val = value_type();
 

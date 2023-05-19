@@ -35,7 +35,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
   using idx_type = typename Policy::index_type;
 
   using Analysis = Impl::FunctorAnalysis<Impl::FunctorPatternInterface::SCAN,
-                                         Policy, FunctorType>;
+                                         Policy, FunctorType, void>;
 
   using value_type     = typename Analysis::value_type;
   using pointer_type   = typename Analysis::pointer_type;
