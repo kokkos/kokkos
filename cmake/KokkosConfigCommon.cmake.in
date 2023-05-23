@@ -6,6 +6,10 @@ SET(Kokkos_CXX_COMPILER "@CMAKE_CXX_COMPILER@")
 SET(Kokkos_CXX_COMPILER_ID "@KOKKOS_CXX_COMPILER_ID@")
 SET(Kokkos_CXX_STANDARD @KOKKOS_CXX_STANDARD@)
 
+IF(NOT TARGET Kokkos::all_libs)
+  ADD_LIBRARY(Kokkos::all_libs ALIAS Kokkos::kokkos)
+ENDIF()
+
 # Export Kokkos_ENABLE_<BACKEND> for each backend that was enabled.
 # NOTE: "Devices" is a little bit of a misnomer here.  These are really
 # backends, e.g. Kokkos_ENABLE_OPENMP, Kokkos_ENABLE_CUDA, Kokkos_ENABLE_HIP,
