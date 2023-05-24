@@ -13,23 +13,19 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //@HEADER
-#pragma once
 
-#include "macros.hpp"
+#ifndef MDARRAY_HPP_
+#define MDARRAY_HPP_
 
-#if defined(__cpp_lib_span)
-#include <span>
+#ifndef MDSPAN_IMPL_STANDARD_NAMESPACE
+  #define MDSPAN_IMPL_STANDARD_NAMESPACE Kokkos
 #endif
 
-#include <cstddef>  // size_t
-#include <limits>   // numeric_limits
-
-namespace MDSPAN_IMPL_STANDARD_NAMESPACE {
-#if defined(__cpp_lib_span)
-using std::dynamic_extent;
-#else
-_MDSPAN_INLINE_VARIABLE constexpr auto dynamic_extent = std::numeric_limits<size_t>::max();
+#ifndef MDSPAN_IMPL_PROPOSED_NAMESPACE
+  #define MDSPAN_IMPL_PROPOSED_NAMESPACE Experimental
 #endif
-} // namespace MDSPAN_IMPL_STANDARD_NAMESPACE
 
-//==============================================================================================================
+#include "mdspan.hpp"
+#include "../experimental/__p1684_bits/mdarray.hpp"
+
+#endif // MDARRAY_HPP_
