@@ -940,6 +940,12 @@ KOKKOS_ADD_ADVANCED_TEST( CoreUnitTest_PushFinalizeHook_terminate
       tools/TestAllCalls.cpp
     )
 
+    KOKKOS_ADD_TEST_EXECUTABLE(
+      ToolsInitialization
+      UnitTestMain.cpp
+      tools/TestToolsInitialization.cpp
+    )
+
     set(ADDRESS_REGEX "0x[0-9a-f]*")
     set(MEMSPACE_REGEX "[HC][ou][sd][ta][a-zA-Z]*")
     set(SIZE_REGEX "[0-9]*")
