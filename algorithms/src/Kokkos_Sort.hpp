@@ -227,7 +227,7 @@ class BinSort {
 
  public:
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  BinSort() = default;
+  KOKKOS_DEPRECATED BinSort() = default;
 #else
   BinSort() = delete;
 #endif
@@ -496,7 +496,7 @@ struct BinOp1D {
   double min_   = {};
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  BinOp1D() = default;
+  KOKKOS_DEPRECATED BinOp1D() = default;
 #else
   BinOp1D() = delete;
 #endif
@@ -544,7 +544,7 @@ struct BinOp3D {
   double min_[3]   = {};
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  BinOp3D() = default;
+  KOKKOS_DEPRECATED BinOp3D() = default;
 #else
   BinOp3D() = delete;
 #endif
