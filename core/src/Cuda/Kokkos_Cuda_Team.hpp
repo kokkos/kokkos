@@ -486,9 +486,6 @@ KOKKOS_INLINE_FUNCTION std::enable_if_t<Kokkos::is_reducer<ReducerType>::value>
 parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
                     iType, Impl::CudaTeamMember>& loop_boundaries,
                 const Closure& closure, const ReducerType& reducer) {
-  (void)loop_boundaries;
-  (void)closure;
-  (void)reducer;
   KOKKOS_IF_ON_DEVICE(
       (typename ReducerType::value_type value;
 
@@ -498,6 +495,11 @@ parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
             i < loop_boundaries.end; i += blockDim.y) { closure(i, value); }
 
        loop_boundaries.member.team_reduce(reducer, value);))
+  // Avoid bogus warning about reducer value being uninitialized with combined
+  // reducers
+  KOKKOS_IF_ON_HOST(((void)loop_boundaries; (void)closure;
+                     reducer.init(reducer.reference());
+                     Kokkos::abort("Should only run on the device!");));
 }
 
 /** \brief  Inter-thread parallel_reduce assuming summation.
@@ -546,9 +548,6 @@ KOKKOS_INLINE_FUNCTION std::enable_if_t<Kokkos::is_reducer<ReducerType>::value>
 parallel_reduce(const Impl::TeamVectorRangeBoundariesStruct<
                     iType, Impl::CudaTeamMember>& loop_boundaries,
                 const Closure& closure, const ReducerType& reducer) {
-  (void)loop_boundaries;
-  (void)closure;
-  (void)reducer;
   KOKKOS_IF_ON_DEVICE((typename ReducerType::value_type value;
                        reducer.init(value);
 
@@ -559,6 +558,11 @@ parallel_reduce(const Impl::TeamVectorRangeBoundariesStruct<
 
                        loop_boundaries.member.vector_reduce(reducer, value);
                        loop_boundaries.member.team_reduce(reducer, value);))
+  // Avoid bogus warning about reducer value being uninitialized with combined
+  // reducers
+  KOKKOS_IF_ON_HOST(((void)loop_boundaries; (void)closure;
+                     reducer.init(reducer.reference());
+                     Kokkos::abort("Should only run on the device!");));
 }
 
 template <typename iType, class Closure, typename ValueType>
@@ -626,9 +630,6 @@ KOKKOS_INLINE_FUNCTION std::enable_if_t<is_reducer<ReducerType>::value>
 parallel_reduce(Impl::ThreadVectorRangeBoundariesStruct<
                     iType, Impl::CudaTeamMember> const& loop_boundaries,
                 Closure const& closure, ReducerType const& reducer) {
-  (void)loop_boundaries;
-  (void)closure;
-  (void)reducer;
   KOKKOS_IF_ON_DEVICE((
 
       reducer.init(reducer.reference());
@@ -640,6 +641,11 @@ parallel_reduce(Impl::ThreadVectorRangeBoundariesStruct<
       Impl::CudaTeamMember::vector_reduce(reducer);
 
       ))
+  // Avoid bogus warning about reducer value being uninitialized with combined
+  // reducers
+  KOKKOS_IF_ON_HOST(((void)loop_boundaries; (void)closure;
+                     reducer.init(reducer.reference());
+                     Kokkos::abort("Should only run on the device!");));
 }
 
 /** \brief  Intra-thread vector parallel_reduce.
