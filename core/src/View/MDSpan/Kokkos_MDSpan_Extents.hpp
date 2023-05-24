@@ -73,9 +73,9 @@ struct ExtentsFromDimension;
 template <class IndexType, class Dimension, std::size_t... Indices>
 struct ExtentsFromDimension<IndexType, Dimension,
                             std::index_sequence<Indices...>> {
-  using type = ::Kokkos::extents<
-      IndexType,
-      ExtentFromDimension<Dimension::static_extent(Indices)>::value...>;
+  using type =
+      ::Kokkos::extents<IndexType, ExtentFromDimension<Dimension::static_extent(
+                                       Indices)>::value...>;
 };
 
 template <class Extents, class Indices>

@@ -25,12 +25,11 @@ static_assert(false,
 // Look for the right mdspan
 #if __has_include(<mdspan>)
 #include <mdspan>
-namespace Kokkos
-{
-  using std::dynamic_extent;
-  using std::extents;
-  using std::dextents;
-}
+namespace Kokkos {
+using std::dextents;
+using std::dynamic_extent;
+using std::extents;
+}  // namespace Kokkos
 #else
 #include <mdspan/mdspan.hpp>
 #endif
