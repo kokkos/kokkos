@@ -226,7 +226,11 @@ class BinSort {
   bool sort_within_bins;
 
  public:
-  BinSort() = default;
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  KOKKOS_DEPRECATED BinSort() = default;
+#else
+  BinSort() = delete;
+#endif
 
   //----------------------------------------
   // Constructor: takes the keys, the binning_operator and optionally whether to
@@ -495,7 +499,11 @@ struct BinOp1D {
   double mul_   = {};
   double min_   = {};
 
-  BinOp1D() = default;
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  KOKKOS_DEPRECATED BinOp1D() = default;
+#else
+  BinOp1D() = delete;
+#endif
 
   // Construct BinOp with number of bins, minimum value and maximum value
   BinOp1D(int max_bins__, typename KeyViewType::const_value_type min,
@@ -539,7 +547,11 @@ struct BinOp3D {
   double mul_[3]   = {};
   double min_[3]   = {};
 
-  BinOp3D() = default;
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  KOKKOS_DEPRECATED BinOp3D() = default;
+#else
+  BinOp3D() = delete;
+#endif
 
   BinOp3D(int max_bins__[], typename KeyViewType::const_value_type min[],
           typename KeyViewType::const_value_type max[]) {
