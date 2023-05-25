@@ -34,7 +34,14 @@ KOKKOS_ENABLE_OPTION(CUDA_LDG_INTRINSIC   OFF "Whether to use CUDA LDG intrinsic
 # bogus warning, but also exports the Kokkos_ENABLE_CUDA_LAMBDA variable and
 # sets it to ON. This if-clause is a crutch that delays the refactoring of the
 # way we declare all options until after we get rid of TriBITS.
-KOKKOS_ENABLE_OPTION(CUDA_LAMBDA ${Kokkos_ENABLE_CUDA} "Whether to allow lambda expressions on the device with NVCC **DEPRECATED**")
+IF (Trilinos_ENABLE_Kokkos AND TPL_ENABLE_CUDA)
+   SET(CUDA_LAMBDA_DEFAULT ON)
+ELSEIF (KOKKOS_ENABLE_CUDA)
+   SET(CUDA_LAMBDA_DEFAULT ON)
+ELSE()
+   SET(CUDA_LAMBDA_DEFAULT OFF)
+ENDIF()
+KOKKOS_ENABLE_OPTION(CUDA_LAMBDA ${CUDA_LAMBDA_DEFAULT} "Whether to allow lambda expressions on the device with NVCC **DEPRECATED**")
 
 # As of 08/12/2021 CudaMallocAsync causes issues if UCX is used as MPI communication layer.
 KOKKOS_ENABLE_OPTION(IMPL_CUDA_MALLOC_ASYNC      OFF  "Whether to enable CudaMallocAsync (requires CUDA Toolkit 11.2)")
