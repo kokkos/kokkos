@@ -146,8 +146,12 @@ class BinSort {
         Kokkos::is_view<SrcViewType>::value,
         Kokkos::View<typename SrcViewType::const_data_type,
                      typename SrcViewType::array_layout,
-                     typename SrcViewType::device_type,
-                     Kokkos::MemoryTraits<Kokkos::RandomAccess> >,
+                     typename SrcViewType::device_type
+#if !defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC
+                     ,
+                     Kokkos::MemoryTraits<Kokkos::RandomAccess>
+#endif
+                     >,
         typename SrcViewType::const_type>;
 
     using perm_view_type = typename PermuteViewType::const_type;
@@ -348,11 +352,6 @@ class BinSort {
         "The provided execution space must be able to access the memory space "
         "of the View argument!");
 
-    using scratch_view_type =
-        Kokkos::View<typename ValuesViewType::data_type,
-                     typename ValuesViewType::array_layout,
-                     typename ValuesViewType::device_type>;
-
     const size_t len        = range_end - range_begin;
     const size_t values_len = values_range_end - values_range_begin;
     if (len != values_len) {
@@ -360,6 +359,9 @@ class BinSort {
           "BinSort::sort: values range length != permutation vector length");
     }
 
+    using scratch_view_type =
+        Kokkos::View<typename ValuesViewType::data_type,
+                     typename ValuesViewType::device_type>;
     scratch_view_type sorted_values(
         view_alloc(exec, WithoutInitializing,
                    "Kokkos::SortImpl::BinSortFunctor::sorted_values"),
