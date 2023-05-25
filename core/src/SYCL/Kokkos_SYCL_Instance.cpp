@@ -230,12 +230,16 @@ void SYCLInternal::finalize() {
   m_queue.reset();
 }
 
+static constexpr auto sizeScratchGrain =
+    sizeof(Kokkos::Experimental::SYCL::size_type);
+constexpr std::size_t scratch_count(const std::size_t size) {
+  return (size + sizeScratchGrain - 1) / sizeScratchGrain;
+}
+
 sycl::device_ptr<void> SYCLInternal::scratch_space(const std::size_t size) {
-  const size_type sizeScratchGrain =
-      sizeof(Kokkos::Experimental::SYCL::size_type);
   if (verify_is_initialized("scratch_space") &&
-      m_scratchSpaceCount * sizeScratchGrain < size) {
-    m_scratchSpaceCount = (size + sizeScratchGrain - 1) / sizeScratchGrain;
+      m_scratchSpaceCount < scratch_count(size)) {
+    m_scratchSpaceCount = scratch_count(size);
 
     using Record = Kokkos::Impl::SharedAllocationRecord<
         Kokkos::Experimental::SYCLDeviceUSMSpace, void>;
@@ -257,11 +261,9 @@ sycl::device_ptr<void> SYCLInternal::scratch_space(const std::size_t size) {
 }
 
 sycl::device_ptr<void> SYCLInternal::scratch_flags(const std::size_t size) {
-  const size_type sizeScratchGrain =
-      sizeof(Kokkos::Experimental::SYCL::size_type);
   if (verify_is_initialized("scratch_flags") &&
-      m_scratchFlagsCount * sizeScratchGrain < size) {
-    m_scratchFlagsCount = (size + sizeScratchGrain - 1) / sizeScratchGrain;
+      m_scratchFlagsCount < scratch_count(size)) {
+    m_scratchFlagsCount = scratch_count(size);
 
     using Record = Kokkos::Impl::SharedAllocationRecord<
         Kokkos::Experimental::SYCLDeviceUSMSpace, void>;
