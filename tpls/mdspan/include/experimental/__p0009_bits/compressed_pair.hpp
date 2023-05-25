@@ -64,7 +64,7 @@ template <class _T, class _U, class _Enable = void> struct __compressed_pair {
 template <class _T, class _U>
 struct __compressed_pair<
     _T, _U,
-    enable_if_t<_MDSPAN_TRAIT(is_empty, _T) && !_MDSPAN_TRAIT(is_empty, _U)>>
+    std::enable_if_t<std::is_empty_v<_T> && !std::is_empty_v<_U>>>
     : private _T {
   _U __u_val;
   MDSPAN_FORCE_INLINE_FUNCTION _MDSPAN_CONSTEXPR_14 _T &__first() noexcept {
@@ -101,7 +101,7 @@ struct __compressed_pair<
 template <class _T, class _U>
 struct __compressed_pair<
     _T, _U,
-    enable_if_t<!_MDSPAN_TRAIT(is_empty, _T) && _MDSPAN_TRAIT(is_empty, _U)>>
+    std::enable_if_t<!std::is_empty_v<_T> && std::is_empty_v<_U>>>
     : private _U {
   _T __t_val;
   MDSPAN_FORCE_INLINE_FUNCTION _MDSPAN_CONSTEXPR_14 _T &__first() noexcept { return __t_val; }
@@ -139,7 +139,7 @@ struct __compressed_pair<
 template <class _T, class _U>
 struct __compressed_pair<
     _T, _U,
-    enable_if_t<_MDSPAN_TRAIT(is_empty, _T) && _MDSPAN_TRAIT(is_empty, _U)>>
+    std::enable_if_t<std::is_empty_v<_T> && std::is_empty_v<_U>>>
     // We need to use the __no_unique_address_emulation wrapper here to avoid
     // base class ambiguities.
 #ifdef _MDSPAN_COMPILER_MSVC
