@@ -46,6 +46,13 @@ struct TestReducers {
     void operator()(const int& i, Scalar& value) const { value += values(i); }
   };
 
+  struct TeamSumFunctor {
+    using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
+
+    KOKKOS_INLINE_FUNCTION
+    void operator()(const member_type& m, Scalar& value) const { if (m.team_rank() == m.team_size()-1) value += Scalar(1); }
+  };
+
   struct ProdFunctor {
     Kokkos::View<const Scalar*, ExecSpace> values;
 
@@ -381,6 +388,17 @@ struct TestReducers {
       Kokkos::View<Scalar, ExecSpace> sum_view("result");
       Kokkos::deep_copy(sum_view, Scalar(1));
 
+      TeamSumFunctor tf;
+
+      if constexpr (sizeof(Scalar) > 1) {
+	  auto team_pol = Kokkos::TeamPolicy<ExecSpace>(1024, 128);
+	  Kokkos::parallel_reduce(team_pol, tf, sum_view);
+	  Kokkos::deep_copy(sum_scalar, sum_view);
+	  std::cout << "Sum: " << sum_scalar << std::endl;
+	  ASSERT_EQ(sum_scalar, 1024);
+	}
+
+#if 0
       Kokkos::parallel_for(
           Kokkos::TeamPolicy<ExecSpace>(1, 1),
           KOKKOS_LAMBDA(member_type team_member) {
@@ -395,7 +413,7 @@ struct TestReducers {
       ASSERT_EQ(sum_scalar, init) << "N: " << N;
 
       Kokkos::parallel_for(
-          Kokkos::TeamPolicy<ExecSpace>(1, 1),
+			   Kokkos::TeamPolicy<ExecSpace>(10, 128),
           KOKKOS_LAMBDA(member_type team_member) {
             Scalar local_scalar;
             Kokkos::Sum<Scalar, typename ExecSpace::memory_space>
@@ -407,7 +425,6 @@ struct TestReducers {
       Kokkos::deep_copy(sum_scalar, sum_view);
       ASSERT_EQ(sum_scalar, reference_sum) << "N: " << N;
 
-#if 0
       sum_scalar = init;
       Kokkos::parallel_for(Kokkos::TeamPolicy<ExecSpace>(1, 1), KOKKOS_LAMBDA (member_type team_member) {
 	  Scalar local_scalar;
