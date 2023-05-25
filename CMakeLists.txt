@@ -323,6 +323,8 @@ IF (NOT KOKKOS_HAS_TRILINOS AND NOT Kokkos_INSTALL_TESTING)
   #Make sure in-tree projects can reference this as Kokkos::
   #to match the installed target names
   ADD_LIBRARY(Kokkos::kokkos ALIAS kokkos)
+  # all_libs target is required for TriBITS-compliance
+  ADD_LIBRARY(Kokkos::all_libs ALIAS kokkos)
   TARGET_LINK_LIBRARIES(kokkos INTERFACE ${KOKKOS_COMPONENT_LIBRARIES})
   KOKKOS_INTERNAL_ADD_LIBRARY_INSTALL(kokkos)
 ENDIF()

@@ -6,6 +6,17 @@ SET(Kokkos_CXX_COMPILER "@CMAKE_CXX_COMPILER@")
 SET(Kokkos_CXX_COMPILER_ID "@KOKKOS_CXX_COMPILER_ID@")
 SET(Kokkos_CXX_STANDARD @KOKKOS_CXX_STANDARD@)
 
+# Required to be a TriBITS-compliant external package
+IF(NOT TARGET Kokkos::all_libs)
+  # CMake Error at <prefix>/lib/cmake/Kokkos/KokkosConfigCommon.cmake:10 (ADD_LIBRARY):
+  #   ADD_LIBRARY cannot create ALIAS target "Kokkos::all_libs" because target
+  #   "Kokkos::kokkos" is imported but not globally visible.
+  IF(CMAKE_VERSION VERSION_LESS "3.18")
+    SET_TARGET_PROPERTIES(Kokkos::kokkos PROPERTIES IMPORTED_GLOBAL ON)
+  ENDIF()
+  ADD_LIBRARY(Kokkos::all_libs ALIAS Kokkos::kokkos)
+ENDIF()
+
 # Export Kokkos_ENABLE_<BACKEND> for each backend that was enabled.
 # NOTE: "Devices" is a little bit of a misnomer here.  These are really
 # backends, e.g. Kokkos_ENABLE_OPENMP, Kokkos_ENABLE_CUDA, Kokkos_ENABLE_HIP,
