@@ -277,7 +277,7 @@ class divides {
   }
 };
 
-template <class Abi, size_t n, typename DataType>
+template <typename Abi, typename DataType, size_t n>
 inline void host_check_all_math_ops(const DataType (&first_args)[n],
                                     const DataType (&second_args)[n]) {
   host_check_binary_op_all_loaders<Abi>(plus(), n, first_args, second_args);
@@ -379,7 +379,7 @@ inline void host_check_condition() {
   EXPECT_TRUE(all_of(a == decltype(a)(16)));
 }
 
-template <class Abi, size_t n, typename DataType>
+template <typename Abi, typename DataType, size_t n>
 KOKKOS_INLINE_FUNCTION void device_check_all_math_ops(
     const DataType (&first_args)[n], const DataType (&second_args)[n]) {
   device_check_binary_op_all_loaders<Abi>(plus(), n, first_args, second_args);
