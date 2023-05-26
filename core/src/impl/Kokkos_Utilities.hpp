@@ -202,6 +202,17 @@ template <typename T>
 constexpr bool dependent_false_v = !sizeof(T*);
 //==============================================================================
 
+template <typename T>
+T check_mul_of(T a, T b) {
+  auto product = a * b;
+  if ((a == 0) or (b == 0) or (a == product / b)) {
+    return product;
+  } else {
+    Kokkos::abort("Arithmetic overflow detected.");
+  }
+  return 0;
+}
+
 }  // namespace Impl
 }  // namespace Kokkos
 

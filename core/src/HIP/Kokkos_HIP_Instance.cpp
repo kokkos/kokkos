@@ -192,22 +192,22 @@ void HIPInternal::initialize(hipStream_t stream, bool manage_stream) {
 using ScratchGrain = Kokkos::HIP::size_type[Impl::HIPTraits::WarpSize];
 static constexpr auto sizeScratchGrain = sizeof(ScratchGrain);
 
-constexpr std::size_t scratch_count(const std::size_t size) {
+std::size_t scratch_count(const std::size_t size) {
   return (size + sizeScratchGrain - 1) / sizeScratchGrain;
 }
 
 Kokkos::HIP::size_type *HIPInternal::scratch_space(const std::size_t size) {
   if (verify_is_initialized("scratch_space") &&
       m_scratchSpaceCount < scratch_count(size)) {
-    m_scratchSpaceCount = scratch_count(size);
+    m_scratchSpaceCount   = scratch_count(size);
+    const auto alloc_size = check_mul_of(m_scratchSpaceCount, sizeScratchGrain);
 
     using Record = Kokkos::Impl::SharedAllocationRecord<Kokkos::HIPSpace, void>;
 
     if (m_scratchSpace) Record::decrement(Record::get_record(m_scratchSpace));
 
-    Record *const r =
-        Record::allocate(Kokkos::HIPSpace(), "Kokkos::InternalScratchSpace",
-                         (sizeScratchGrain * m_scratchSpaceCount));
+    Record *const r = Record::allocate(
+        Kokkos::HIPSpace(), "Kokkos::InternalScratchSpace", alloc_size);
 
     Record::increment(r);
 
@@ -220,22 +220,21 @@ Kokkos::HIP::size_type *HIPInternal::scratch_space(const std::size_t size) {
 Kokkos::HIP::size_type *HIPInternal::scratch_flags(const std::size_t size) {
   if (verify_is_initialized("scratch_flags") &&
       m_scratchFlagsCount < scratch_count(size)) {
-    m_scratchFlagsCount = scratch_count(size);
+    m_scratchFlagsCount   = scratch_count(size);
+    const auto alloc_size = check_mul_of(m_scratchFlagsCount, sizeScratchGrain);
 
     using Record = Kokkos::Impl::SharedAllocationRecord<Kokkos::HIPSpace, void>;
 
     if (m_scratchFlags) Record::decrement(Record::get_record(m_scratchFlags));
 
-    Record *const r =
-        Record::allocate(Kokkos::HIPSpace(), "Kokkos::InternalScratchFlags",
-                         (sizeScratchGrain * m_scratchFlagsCount));
+    Record *const r = Record::allocate(
+        Kokkos::HIPSpace(), "Kokkos::InternalScratchFlags", alloc_size);
 
     Record::increment(r);
 
     m_scratchFlags = reinterpret_cast<size_type *>(r->data());
 
-    KOKKOS_IMPL_HIP_SAFE_CALL(
-        hipMemset(m_scratchFlags, 0, m_scratchFlagsCount * sizeScratchGrain));
+    KOKKOS_IMPL_HIP_SAFE_CALL(hipMemset(m_scratchFlags, 0, alloc_size));
   }
 
   return m_scratchFlags;

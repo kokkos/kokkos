@@ -232,14 +232,16 @@ void SYCLInternal::finalize() {
 
 static constexpr auto sizeScratchGrain =
     sizeof(Kokkos::Experimental::SYCL::size_type);
-constexpr std::size_t scratch_count(const std::size_t size) {
+
+std::size_t scratch_count(const std::size_t size) {
   return (size + sizeScratchGrain - 1) / sizeScratchGrain;
 }
 
 sycl::device_ptr<void> SYCLInternal::scratch_space(const std::size_t size) {
   if (verify_is_initialized("scratch_space") &&
       m_scratchSpaceCount < scratch_count(size)) {
-    m_scratchSpaceCount = scratch_count(size);
+    m_scratchSpaceCount   = scratch_count(size);
+    const auto alloc_size = check_mul_of(m_scratchSpaceCount, sizeScratchGrain);
 
     using Record = Kokkos::Impl::SharedAllocationRecord<
         Kokkos::Experimental::SYCLDeviceUSMSpace, void>;
@@ -247,10 +249,9 @@ sycl::device_ptr<void> SYCLInternal::scratch_space(const std::size_t size) {
     if (nullptr != m_scratchSpace)
       Record::decrement(Record::get_record(m_scratchSpace));
 
-    Record* const r =
-        Record::allocate(Kokkos::Experimental::SYCLDeviceUSMSpace(*m_queue),
-                         "Kokkos::Experimental::SYCL::InternalScratchSpace",
-                         (sizeScratchGrain * m_scratchSpaceCount));
+    Record* const r = Record::allocate(
+        Kokkos::Experimental::SYCLDeviceUSMSpace(*m_queue),
+        "Kokkos::Experimental::SYCL::InternalScratchSpace", alloc_size);
 
     Record::increment(r);
 
@@ -263,7 +264,8 @@ sycl::device_ptr<void> SYCLInternal::scratch_space(const std::size_t size) {
 sycl::device_ptr<void> SYCLInternal::scratch_flags(const std::size_t size) {
   if (verify_is_initialized("scratch_flags") &&
       m_scratchFlagsCount < scratch_count(size)) {
-    m_scratchFlagsCount = scratch_count(size);
+    m_scratchFlagsCount   = scratch_count(size);
+    const auto alloc_size = check_mul_of(m_scratchFlagsCount, sizeScratchGrain);
 
     using Record = Kokkos::Impl::SharedAllocationRecord<
         Kokkos::Experimental::SYCLDeviceUSMSpace, void>;
@@ -271,17 +273,15 @@ sycl::device_ptr<void> SYCLInternal::scratch_flags(const std::size_t size) {
     if (nullptr != m_scratchFlags)
       Record::decrement(Record::get_record(m_scratchFlags));
 
-    Record* const r =
-        Record::allocate(Kokkos::Experimental::SYCLDeviceUSMSpace(*m_queue),
-                         "Kokkos::Experimental::SYCL::InternalScratchFlags",
-                         (sizeScratchGrain * m_scratchFlagsCount));
+    Record* const r = Record::allocate(
+        Kokkos::Experimental::SYCLDeviceUSMSpace(*m_queue),
+        "Kokkos::Experimental::SYCL::InternalScratchFlags", alloc_size);
 
     Record::increment(r);
 
     m_scratchFlags = reinterpret_cast<size_type*>(r->data());
   }
-  auto memset_event = m_queue->memset(m_scratchFlags, 0,
-                                      m_scratchFlagsCount * sizeScratchGrain);
+  auto memset_event = m_queue->memset(m_scratchFlags, 0, alloc_size);
 #ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
   m_queue->ext_oneapi_submit_barrier(std::vector{memset_event});
 #endif

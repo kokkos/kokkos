@@ -110,6 +110,13 @@ int cuda_kernel_arch() {
   return arch;
 }
 
+using ScratchGrain = Cuda::size_type[Impl::CudaTraits::WarpSize];
+static constexpr auto sizeScratchGrain = sizeof(ScratchGrain);
+
+std::size_t scratch_count(const std::size_t size) {
+  return (size + sizeScratchGrain - 1) / sizeScratchGrain;
+}
+
 }  // namespace
 
 Kokkos::View<uint32_t *, Kokkos::CudaSpace> cuda_global_unique_token_locks(
@@ -438,33 +445,25 @@ Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
 
 //----------------------------------------------------------------------------
 
-using ScratchGrain = Cuda::size_type[Impl::CudaTraits::WarpSize];
-static constexpr auto sizeScratchGrain = sizeof(ScratchGrain);
-
-constexpr std::size_t scratch_count(const std::size_t size) {
-  return (size + sizeScratchGrain - 1) / sizeScratchGrain;
-}
-
 Cuda::size_type *CudaInternal::scratch_flags(const std::size_t size) const {
   if (verify_is_initialized("scratch_flags") &&
       m_scratchFlagsCount < scratch_count(size)) {
-    m_scratchFlagsCount = scratch_count(size);
+    m_scratchFlagsCount   = scratch_count(size);
+    const auto alloc_size = check_mul_of(m_scratchFlagsCount, sizeScratchGrain);
 
     using Record =
         Kokkos::Impl::SharedAllocationRecord<Kokkos::CudaSpace, void>;
 
     if (m_scratchFlags) Record::decrement(Record::get_record(m_scratchFlags));
 
-    Record *const r =
-        Record::allocate(Kokkos::CudaSpace(), "Kokkos::InternalScratchFlags",
-                         (sizeof(ScratchGrain) * m_scratchFlagsCount));
+    Record *const r = Record::allocate(
+        Kokkos::CudaSpace(), "Kokkos::InternalScratchFlags", alloc_size);
 
     Record::increment(r);
 
     m_scratchFlags = reinterpret_cast<size_type *>(r->data());
 
-    KOKKOS_IMPL_CUDA_SAFE_CALL(
-        cudaMemset(m_scratchFlags, 0, m_scratchFlagsCount * sizeScratchGrain));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMemset(m_scratchFlags, 0, alloc_size));
   }
 
   return m_scratchFlags;
@@ -473,16 +472,16 @@ Cuda::size_type *CudaInternal::scratch_flags(const std::size_t size) const {
 Cuda::size_type *CudaInternal::scratch_space(const std::size_t size) const {
   if (verify_is_initialized("scratch_space") &&
       m_scratchSpaceCount < scratch_count(size)) {
-    m_scratchSpaceCount = scratch_count(size);
+    m_scratchSpaceCount   = scratch_count(size);
+    const auto alloc_size = check_mul_of(m_scratchSpaceCount, sizeScratchGrain);
 
     using Record =
         Kokkos::Impl::SharedAllocationRecord<Kokkos::CudaSpace, void>;
 
     if (m_scratchSpace) Record::decrement(Record::get_record(m_scratchSpace));
 
-    Record *const r =
-        Record::allocate(Kokkos::CudaSpace(), "Kokkos::InternalScratchSpace",
-                         (sizeof(ScratchGrain) * m_scratchSpaceCount));
+    Record *const r = Record::allocate(
+        Kokkos::CudaSpace(), "Kokkos::InternalScratchSpace", alloc_size);
 
     Record::increment(r);
 
@@ -496,6 +495,8 @@ Cuda::size_type *CudaInternal::scratch_unified(const std::size_t size) const {
   if (verify_is_initialized("scratch_unified") && m_scratchUnifiedSupported &&
       m_scratchUnifiedCount < scratch_count(size)) {
     m_scratchUnifiedCount = scratch_count(size);
+    const auto alloc_size =
+        check_mul_of(m_scratchUnifiedCount, sizeScratchGrain);
 
     using Record =
         Kokkos::Impl::SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>;
@@ -503,9 +504,9 @@ Cuda::size_type *CudaInternal::scratch_unified(const std::size_t size) const {
     if (m_scratchUnified)
       Record::decrement(Record::get_record(m_scratchUnified));
 
-    Record *const r = Record::allocate(
-        Kokkos::CudaHostPinnedSpace(), "Kokkos::InternalScratchUnified",
-        (sizeof(ScratchGrain) * m_scratchUnifiedCount));
+    Record *const r =
+        Record::allocate(Kokkos::CudaHostPinnedSpace(),
+                         "Kokkos::InternalScratchUnified", alloc_size);
 
     Record::increment(r);
 
