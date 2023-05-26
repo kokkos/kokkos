@@ -59,8 +59,18 @@ Kokkos::View<uint32_t *, HIPSpace> hip_global_unique_token_locks(
 }  // namespace Kokkos
 
 namespace Kokkos {
-
 namespace Impl {
+
+namespace {
+
+using ScratchGrain = Kokkos::HIP::size_type[Impl::HIPTraits::WarpSize];
+constexpr auto sizeScratchGrain = sizeof(ScratchGrain);
+
+std::size_t scratch_count(const std::size_t size) {
+  return (size + sizeScratchGrain - 1) / sizeScratchGrain;
+}
+
+}  // namespace
 
 //----------------------------------------------------------------------------
 
@@ -188,13 +198,6 @@ void HIPInternal::initialize(hipStream_t stream, bool manage_stream) {
 }
 
 //----------------------------------------------------------------------------
-
-using ScratchGrain = Kokkos::HIP::size_type[Impl::HIPTraits::WarpSize];
-static constexpr auto sizeScratchGrain = sizeof(ScratchGrain);
-
-std::size_t scratch_count(const std::size_t size) {
-  return (size + sizeScratchGrain - 1) / sizeScratchGrain;
-}
 
 Kokkos::HIP::size_type *HIPInternal::scratch_space(const std::size_t size) {
   if (verify_is_initialized("scratch_space") &&

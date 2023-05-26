@@ -110,8 +110,8 @@ int cuda_kernel_arch() {
   return arch;
 }
 
-using ScratchGrain = Cuda::size_type[Impl::CudaTraits::WarpSize];
-static constexpr auto sizeScratchGrain = sizeof(ScratchGrain);
+using ScratchGrain              = Cuda::size_type[Impl::CudaTraits::WarpSize];
+constexpr auto sizeScratchGrain = sizeof(ScratchGrain);
 
 std::size_t scratch_count(const std::size_t size) {
   return (size + sizeScratchGrain - 1) / sizeScratchGrain;

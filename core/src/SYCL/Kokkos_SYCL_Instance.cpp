@@ -24,6 +24,17 @@ namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
+namespace {
+
+static constexpr auto sizeScratchGrain =
+    sizeof(Kokkos::Experimental::SYCL::size_type);
+
+std::size_t scratch_count(const std::size_t size) {
+  return (size + sizeScratchGrain - 1) / sizeScratchGrain;
+}
+
+}  // namespace
+
 std::vector<std::optional<sycl::queue>*> SYCLInternal::all_queues;
 std::mutex SYCLInternal::mutex;
 
@@ -228,13 +239,6 @@ void SYCLInternal::finalize() {
     all_queues.erase(std::find(all_queues.begin(), all_queues.end(), &m_queue));
   }
   m_queue.reset();
-}
-
-static constexpr auto sizeScratchGrain =
-    sizeof(Kokkos::Experimental::SYCL::size_type);
-
-std::size_t scratch_count(const std::size_t size) {
-  return (size + sizeScratchGrain - 1) / sizeScratchGrain;
 }
 
 sycl::device_ptr<void> SYCLInternal::scratch_space(const std::size_t size) {
