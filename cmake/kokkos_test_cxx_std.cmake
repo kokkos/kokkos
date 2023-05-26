@@ -18,9 +18,6 @@ FUNCTION(kokkos_set_cxx_standard_feature standard)
     ELSE()
       GLOBAL_SET(KOKKOS_USE_CXX_EXTENSIONS ON)
     ENDIF()
-  ELSE()
-    #For trilinos, we need to make sure downstream projects
-    GLOBAL_SET(KOKKOS_USE_CXX_EXTENSIONS OFF)
   ENDIF()
 
   IF (KOKKOS_USE_CXX_EXTENSIONS AND ${EXTENSION_NAME})

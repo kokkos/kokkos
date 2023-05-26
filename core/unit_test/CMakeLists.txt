@@ -865,14 +865,15 @@ KOKKOS_ADD_TEST_EXECUTABLE( push_finalize_hook_terminate
   SOURCES UnitTest_PushFinalizeHook_terminate.cpp
 )
 
-KOKKOS_ADD_ADVANCED_TEST( CoreUnitTest_PushFinalizeHook_terminate
-  TEST_0
-    EXEC push_finalize_hook_terminate
-    NUM_MPI_PROCS 1
-    PASS_REGULAR_EXPRESSION
-      "PASSED: I am the custom std::terminate handler."
-    ALWAYS_FAIL_ON_ZERO_RETURN
-)
+# FIXME_REFACTOR_TRIBITS
+#KOKKOS_ADD_ADVANCED_TEST( CoreUnitTest_PushFinalizeHook_terminate
+#  TEST_0
+#    EXEC push_finalize_hook_terminate
+#    NUM_MPI_PROCS 1
+#    PASS_REGULAR_EXPRESSION
+#      "PASSED: I am the custom std::terminate handler."
+#    ALWAYS_FAIL_ON_ZERO_RETURN
+#)
   if(KOKKOS_ENABLE_TUNING)
     KOKKOS_ADD_EXECUTABLE_AND_TEST(
       CoreUnitTest_TuningBuiltins
@@ -1071,7 +1072,7 @@ FUNCTION (KOKKOS_ADD_INCREMENTAL_TEST DEVICE)
     SOURCES ${${DEVICE}_SOURCES}
   )
 
-  SET(EXE_NAME ${PACKAGE_NAME}_IncrementalTest_${DEVICE})
+  SET(EXE_NAME Kokkos_IncrementalTest_${DEVICE})
   # Check that the target was actually created because in a TribITS build
   # where only tests marked as PERFORMANCE enabled it would not be.
   IF(TARGET ${EXE_NAME})
