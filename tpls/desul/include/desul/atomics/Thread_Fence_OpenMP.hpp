@@ -16,6 +16,7 @@ SPDX-License-Identifier: (BSD-3-Clause)
 namespace desul {
 namespace Impl {
 
+// FIXME_OPENMPTARGET_NVHPC: NVHPC compiler does not support omp flush.
 #if _OPENMP > 201800 && !defined(KOKKOS_COMPILER_NVHPC)
 
 // There is no seq_cst flush in OpenMP, isn't it the same anyway for fence?
