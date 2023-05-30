@@ -16,7 +16,7 @@ SPDX-License-Identifier: (BSD-3-Clause)
 namespace desul {
 namespace Impl {
 
-#if _OPENMP > 201800
+#if _OPENMP > 201800 && !defined(KOKKOS_COMPILER_NVHPC)
 
 // There is no seq_cst flush in OpenMP, isn't it the same anyway for fence?
 inline void host_atomic_thread_fence(MemoryOrderSeqCst, MemoryScopeCore) {
