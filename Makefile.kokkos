@@ -975,7 +975,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
   endif
 endif
 
-# Do not add this flag it its the cray compiler or the nvhpc compiler.
+# Do not add this flag if its the cray compiler or the nvhpc compiler.
 ifeq ($(KOKKOS_INTERNAL_COMPILER_CRAY_CLANG), 0)
   ifeq ($(KOKKOS_INTERNAL_COMPILER_NVHPC), 0)
     # Lets start with adding architecture defines
