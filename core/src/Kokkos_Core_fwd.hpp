@@ -160,6 +160,27 @@ using DefaultHostExecutionSpace KOKKOS_IMPL_DEFAULT_HOST_EXEC_SPACE_ANNOTATION =
     "At least one of the following execution spaces must be defined in order to use Kokkos: Kokkos::OpenMP, Kokkos::Threads, Kokkos::Experimental::HPX, or Kokkos::Serial."
 #endif
 
+#if defined(KOKKOS_ENABLE_CUDA)
+using DeviceSpace = CudaSpace;
+#define KOKKOS_HAS_DEVICE_SPACE
+#elif defined(KOKKOS_ENABLE_HIP)
+using DeviceSpace = HIPSpace;
+#define KOKKOS_HAS_DEVICE_SPACE
+#elif defined(KOKKOS_ENABLE_SYCL)
+using DeviceSpace = Experimental::SYCLDeviceUSMSpace;
+#define KOKKOS_HAS_DEVICE_SPACE
+#elif defined(KOKKOS_ENABLE_OPENMPTARGET)
+using DeviceSpace = Experimental::OpenMPTargetSpace;
+#define KOKKOS_HAS_DEVICE_SPACE
+#elif defined(KOKKOS_ENABLE_OPENACC)
+using DeviceSpace = Experimental::OpenACCSpace;
+#define KOKKOS_HAS_DEVICE_SPACE
+#else
+// if compiling with just host-only backend(s), point to HostSpace
+using DeviceSpace = HostSpace;
+#define KOKKOS_HAS_DEVICE_SPACE
+#endif
+
 // check for devices that support sharedSpace
 #if defined(KOKKOS_ENABLE_CUDA)
 using SharedSpace = CudaUVMSpace;
