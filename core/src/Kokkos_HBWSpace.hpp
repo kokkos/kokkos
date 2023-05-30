@@ -32,10 +32,7 @@ namespace Kokkos {
 namespace Experimental {
 
 /// \class HBWSpace
-/// \brief Memory management for host memory.
-///
-/// HBWSpace is a memory space that governs host memory.  "Host"
-/// memory means the usual CPU-accessible memory.
+/// \brief Memory management for 'High Bandwidth' memory.
 class HBWSpace {
  public:
   //! Tag this class as a kokkos memory space

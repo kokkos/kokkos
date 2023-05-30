@@ -66,10 +66,7 @@ namespace Kokkos {
 namespace Experimental {
 
 /// \class OpenMPTargetSpace
-/// \brief Memory management for host memory.
-///
-/// OpenMPTargetSpace is a memory space that governs host memory.  "Host"
-/// memory means the usual CPU-accessible memory.
+/// \brief Memory management for OpenMP 'device data environment' memory.
 class OpenMPTargetSpace {
  public:
   //! Tag this class as a kokkos memory space
