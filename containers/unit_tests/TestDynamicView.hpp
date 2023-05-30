@@ -274,20 +274,10 @@ struct TestDynamicView {
       // swapped in the deep_copy implementation.
       // Once that's fixed, both deep_copy's will fail at runtime because the
       // destination execution space cannot access the source memory space.
-      try {
-        Kokkos::deep_copy(host_view, device_dynamic_view);
-      } catch (std::runtime_error const& error) {
-        std::string msg = error.what();
-        std::cerr << "Copy from on-device DynamicView to on-host View failed:\n"
-                  << msg << std::endl;
-      }
-      try {
-        Kokkos::deep_copy(device_dynamic_view, host_view);
-      } catch (std::runtime_error const& error) {
-        std::string msg = error.what();
-        std::cerr << "Copy from on-host View to on-device DynamicView failed:\n"
-                  << msg << std::endl;
-      }
+      ASSERT_THROW(Kokkos::deep_copy(host_view, device_dynamic_view),
+                   std::runtime_error);
+      ASSERT_THROW(Kokkos::deep_copy(device_dynamic_view, host_view),
+                   std::runtime_error);
     }
   }
 };
