@@ -17,7 +17,7 @@ namespace desul {
 namespace Impl {
 
 // FIXME_OPENMPTARGET_NVHPC: NVHPC compiler does not support memory-order-clause in the flush construct in OpenMP.
-#if _OPENMP > 201800 && !defined(KOKKOS_COMPILER_NVHPC)
+#if _OPENMP > 201800 && !defined(_NVCOMPILER)
 
 // There is no seq_cst flush in OpenMP, isn't it the same anyway for fence?
 inline void host_atomic_thread_fence(MemoryOrderSeqCst, MemoryScopeCore) {
