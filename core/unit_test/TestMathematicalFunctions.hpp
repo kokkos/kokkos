@@ -34,6 +34,12 @@
 template <class>
 struct math_unary_function_return_type;
 // Floating-point types
+#if defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
+template <> struct math_unary_function_return_type<Kokkos::Experimental::half_t> { using type = Kokkos::Experimental::half_t; };
+#endif // defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
+#if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
+template <> struct math_unary_function_return_type<Kokkos::Experimental::bhalf_t> { using type = Kokkos::Experimental::bhalf_t; };
+#endif // defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
 template <> struct math_unary_function_return_type<      float> { using type =       float; };
 template <> struct math_unary_function_return_type<     double> { using type =      double; };
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -53,6 +59,12 @@ template <class T>
 using math_unary_function_return_type_t = typename math_unary_function_return_type<T>::type;
 template <class, class>
 struct math_binary_function_return_type;
+#if defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
+template <> struct math_binary_function_return_type<Kokkos::Experimental::half_t, Kokkos::Experimental::half_t> { using type = Kokkos::Experimental::half_t; };
+#endif // defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
+#if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
+template <> struct math_binary_function_return_type<Kokkos::Experimental::bhalf_t, Kokkos::Experimental::bhalf_t> { using type = Kokkos::Experimental::bhalf_t; };
+#endif // defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
 template <> struct math_binary_function_return_type<             float,              float> { using type =       float; };
 template <> struct math_binary_function_return_type<             float,             double> { using type =      double; };
 template <> struct math_binary_function_return_type<             float,               bool> { using type =      double; };
@@ -261,29 +273,34 @@ struct FloatingPointComparison {
 template <class>
 struct math_function_name;
 
-#define DEFINE_UNARY_FUNCTION_EVAL(FUNC, ULP_FACTOR)                  \
-  struct MathUnaryFunction_##FUNC {                                   \
-    template <typename T>                                             \
-    static KOKKOS_FUNCTION auto eval(T x) {                           \
-      static_assert(                                                  \
-          std::is_same<decltype(Kokkos::FUNC((T)0)),                  \
-                       math_unary_function_return_type_t<T>>::value); \
-      return Kokkos::FUNC(x);                                         \
-    }                                                                 \
-    template <typename T>                                             \
-    static auto eval_std(T x) {                                       \
-      static_assert(                                                  \
-          std::is_same<decltype(std::FUNC((T)0)),                     \
-                       math_unary_function_return_type_t<T>>::value); \
-      return std::FUNC(x);                                            \
-    }                                                                 \
-    static KOKKOS_FUNCTION double ulp_factor() { return ULP_FACTOR; } \
-  };                                                                  \
-  using kk_##FUNC = MathUnaryFunction_##FUNC;                         \
-  template <>                                                         \
-  struct math_function_name<MathUnaryFunction_##FUNC> {               \
-    static constexpr char name[] = #FUNC;                             \
-  };                                                                  \
+#define DEFINE_UNARY_FUNCTION_EVAL(FUNC, ULP_FACTOR)                         \
+  struct MathUnaryFunction_##FUNC {                                          \
+    template <typename T>                                                    \
+    static KOKKOS_FUNCTION auto eval(T x) {                                  \
+      static_assert(                                                         \
+          std::is_same<decltype(Kokkos::FUNC((T)0)),                         \
+                       math_unary_function_return_type_t<T>>::value);        \
+      return Kokkos::FUNC(x);                                                \
+    }                                                                        \
+    template <typename T>                                                    \
+    static auto eval_std(T x) {                                              \
+      if constexpr (std::is_same<T, Kokkos::Experimental::half_t>::value ||  \
+                    std::is_same<T, Kokkos::Experimental::bhalf_t>::value) { \
+        return std::FUNC(static_cast<float>(x));                             \
+      } else {                                                               \
+        static_assert(                                                       \
+            std::is_same<decltype(std::FUNC((T)0)),                          \
+                         math_unary_function_return_type_t<T>>::value);      \
+        return std::FUNC(x);                                                 \
+      }                                                                      \
+    }                                                                        \
+    static KOKKOS_FUNCTION double ulp_factor() { return ULP_FACTOR; }        \
+  };                                                                         \
+  using kk_##FUNC = MathUnaryFunction_##FUNC;                                \
+  template <>                                                                \
+  struct math_function_name<MathUnaryFunction_##FUNC> {                      \
+    static constexpr char name[] = #FUNC;                                    \
+  };                                                                         \
   constexpr char math_function_name<MathUnaryFunction_##FUNC>::name[]
 
 #define DEFINE_UNARY_FUNCTION_EVAL_CUSTOM(FUNC, ULP_FACTOR, REF_FUNC) \
@@ -460,6 +477,12 @@ DEFINE_TYPE_NAME(long long)
 DEFINE_TYPE_NAME(unsigned int)
 DEFINE_TYPE_NAME(unsigned long)
 DEFINE_TYPE_NAME(unsigned long long)
+#if defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
+DEFINE_TYPE_NAME(Kokkos::Experimental::half_t)
+#endif
+#if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
+DEFINE_TYPE_NAME(Kokkos::Experimental::bhalf_t)
+#endif
 DEFINE_TYPE_NAME(float)
 DEFINE_TYPE_NAME(double)
 DEFINE_TYPE_NAME(long double)
@@ -599,6 +622,11 @@ TEST(TEST_CATEGORY, mathematical_functions_trigonometric_functions) {
   TEST_MATH_FUNCTION(sin)({2u, 3u, 4u, 5u, 6u});
   TEST_MATH_FUNCTION(sin)({2ul, 3ul, 4ul, 5ul, 6ul});
   TEST_MATH_FUNCTION(sin)({2ull, 3ull, 4ull, 5ull, 6ull});
+  TEST_MATH_FUNCTION(sin)
+  ({static_cast<Kokkos::Experimental::half_t>(.1f),
+    static_cast<Kokkos::Experimental::half_t>(.2f),
+    static_cast<Kokkos::Experimental::half_t>(.3f)});
+  // TEST_MATH_FUNCTION(sin)({.1f, .2f, .3f});
   TEST_MATH_FUNCTION(sin)({.1f, .2f, .3f});
   TEST_MATH_FUNCTION(sin)({.4, .5, .6});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
