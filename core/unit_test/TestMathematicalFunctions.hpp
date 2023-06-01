@@ -1273,6 +1273,16 @@ struct TestAbsoluteValueFunction {
       ++e;
       KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed abs(float)\n");
     }
+    if (abs(static_cast<KE::half_t>(4.f)) != static_cast<KE::half_t>(4.f) ||
+        abs(static_cast<KE::half_t>(-4.f)) != static_cast<KE::half_t>(4.f)) {
+      ++e;
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed abs(KE::half_t)\n");
+    }
+    if (abs(static_cast<KE::bhalf_t>(4.f)) != static_cast<KE::bhalf_t>(4.f) ||
+        abs(static_cast<KE::bhalf_t>(-4.f)) != static_cast<KE::bhalf_t>(4.f)) {
+      ++e;
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed abs(KE::bhalf_t)\n");
+    }
     if (abs(5.) != 5. || abs(-5.) != 5.) {
       ++e;
       KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed abs(double)\n");
@@ -1295,6 +1305,12 @@ struct TestAbsoluteValueFunction {
     static_assert(std::is_same<decltype(abs(1)), int>::value, "");
     static_assert(std::is_same<decltype(abs(2l)), long>::value, "");
     static_assert(std::is_same<decltype(abs(3ll)), long long>::value, "");
+    static_assert(std::is_same<decltype(abs(static_cast<KE::half_t>(4.f))),
+                               KE::half_t>::value,
+                  "");
+    static_assert(std::is_same<decltype(abs(static_cast<KE::bhalf_t>(4.f))),
+                               KE::bhalf_t>::value,
+                  "");
     static_assert(std::is_same<decltype(abs(4.f)), float>::value, "");
     static_assert(std::is_same<decltype(abs(5.)), double>::value, "");
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -1305,6 +1321,221 @@ struct TestAbsoluteValueFunction {
 
 TEST(TEST_CATEGORY, mathematical_functions_absolute_value) {
   TestAbsoluteValueFunction<TEST_EXECSPACE>();
+}
+
+template <class Space>
+struct TestFloatingPointAbsoluteValueFunction {
+  TestFloatingPointAbsoluteValueFunction() { run(); }
+  void run() const {
+    int errors = 0;
+    Kokkos::parallel_reduce(Kokkos::RangePolicy<Space>(0, 1), *this, errors);
+    ASSERT_EQ(errors, 0);
+  }
+  KOKKOS_FUNCTION void operator()(int, int& e) const {
+    using Kokkos::fabs;
+    if (fabs(4.f) != 4.f || fabs(-4.f) != 4.f) {
+      ++e;
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed fabs(float)\n");
+    }
+    if (fabs(static_cast<KE::half_t>(4.f)) != static_cast<KE::half_t>(4.f) ||
+        fabs(static_cast<KE::half_t>(-4.f)) != static_cast<KE::half_t>(4.f)) {
+      ++e;
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed fabs(KE::half_t)\n");
+    }
+    if (fabs(static_cast<KE::bhalf_t>(4.f)) != static_cast<KE::bhalf_t>(4.f) ||
+        fabs(static_cast<KE::bhalf_t>(-4.f)) != static_cast<KE::bhalf_t>(4.f)) {
+      ++e;
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed fabs(KE::bhalf_t)\n");
+    }
+    if (fabs(5.) != 5. || fabs(-5.) != 5.) {
+      ++e;
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed fabs(double)\n");
+    }
+#ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
+    if (fabs(6.l) != 6.l || fabs(-6.l) != 6.l) {
+      ++e;
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed fabs(long double)\n");
+    }
+#endif
+    // special values
+    using Kokkos::isinf;
+    using Kokkos::isnan;
+    if (fabs(-0.) != 0. || !isinf(fabs(-INFINITY)) || !isnan(fabs(-NAN))) {
+      ++e;
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF(
+          "failed fabs(floating_point) special values\n");
+    }
+
+    static_assert(std::is_same<decltype(fabs(static_cast<KE::half_t>(4.f))),
+                               KE::half_t>::value,
+                  "");
+    static_assert(std::is_same<decltype(fabs(static_cast<KE::bhalf_t>(4.f))),
+                               KE::bhalf_t>::value,
+                  "");
+    static_assert(std::is_same<decltype(fabs(4.f)), float>::value, "");
+    static_assert(std::is_same<decltype(fabs(5.)), double>::value, "");
+#ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
+    static_assert(std::is_same<decltype(fabs(6.l)), long double>::value, "");
+#endif
+  }
+};
+
+TEST(TEST_CATEGORY, mathematical_functions_floating_point_absolute_value) {
+  TestFloatingPointAbsoluteValueFunction<TEST_EXECSPACE>();
+}
+
+template <class Space>
+struct TestFloatingPointRemainderFunction : FloatingPointComparison {
+  TestFloatingPointRemainderFunction() { run(); }
+  void run() const {
+    int errors = 0;
+    Kokkos::parallel_reduce(Kokkos::RangePolicy<Space>(0, 1), *this, errors);
+    ASSERT_EQ(errors, 0);
+  }
+  KOKKOS_FUNCTION void operator()(int, int& e) const {
+    using Kokkos::fmod;
+    if (!compare(fmod(6.2f, 4.f), 2.2f, 1) &&
+        !compare(fmod(-6.2f, 4.f), -2.2f, 1)) {
+      ++e;
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed fmod(float)\n");
+    }
+    if (!compare(
+            fmod(static_cast<KE::half_t>(6.2f), static_cast<KE::half_t>(4.f)),
+            static_cast<KE::half_t>(2.2f), 1) &&
+        !compare(
+            fmod(static_cast<KE::half_t>(-6.2f), static_cast<KE::half_t>(4.f)),
+            -static_cast<KE::half_t>(2.2f), 1)) {
+      ++e;
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed fmod(KE::half_t)\n");
+    }
+    if (!compare(
+            fmod(static_cast<KE::bhalf_t>(6.2f), static_cast<KE::bhalf_t>(4.f)),
+            static_cast<KE::bhalf_t>(2.2f), 1) &&
+        !compare(fmod(static_cast<KE::bhalf_t>(-6.2f),
+                      static_cast<KE::bhalf_t>(4.f)),
+                 -static_cast<KE::bhalf_t>(2.2f), 1)) {
+      ++e;
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed fmod(KE::bhalf_t)\n");
+    }
+    if (!compare(fmod(6.2, 4.), 2.2, 1) && !compare(fmod(-6.2, 4.), -2.2, 1)) {
+      ++e;
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed fmod(double)\n");
+    }
+#ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
+    if (!compare(fmod(6.2l, 4.l), 2.2l, 1) &&
+        !compare(fmod(-6.2l, 4.l), -2.2l, 1)) {
+      ++e;
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed fmod(long double)\n");
+    }
+#endif
+    // special values
+    using Kokkos::isinf;
+    using Kokkos::isnan;
+    if (!isinf(fmod(-KE::infinity<float>::value, 1.f)) &&
+        !isnan(fmod(-KE::quiet_NaN<float>::value, 1.f))) {
+      ++e;
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF(
+          "failed fmod(floating_point) special values\n");
+    }
+
+    static_assert(std::is_same<decltype(fmod(static_cast<KE::half_t>(4.f),
+                                             static_cast<KE::half_t>(4.f))),
+                               KE::half_t>::value,
+                  "");
+    static_assert(std::is_same<decltype(fmod(static_cast<KE::bhalf_t>(4.f),
+                                             static_cast<KE::bhalf_t>(4.f))),
+                               KE::bhalf_t>::value,
+                  "");
+    static_assert(std::is_same<decltype(fmod(4.f, 4.f)), float>::value, "");
+    static_assert(std::is_same<decltype(fmod(5., 5.)), double>::value, "");
+#ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
+    static_assert(std::is_same<decltype(fmod(6.l, 6.l)), long double>::value,
+                  "");
+#endif
+  }
+};
+
+TEST(TEST_CATEGORY, mathematical_functions_remainder_function) {
+  TestFloatingPointRemainderFunction<TEST_EXECSPACE>();
+}
+
+template <class Space>
+struct TestIEEEFloatingPointRemainderFunction : FloatingPointComparison {
+  TestIEEEFloatingPointRemainderFunction() { run(); }
+  void run() const {
+    int errors = 0;
+    Kokkos::parallel_reduce(Kokkos::RangePolicy<Space>(0, 1), *this, errors);
+    ASSERT_EQ(errors, 0);
+  }
+  KOKKOS_FUNCTION void operator()(int, int& e) const {
+    using Kokkos::remainder;
+    if (!compare(remainder(6.2f, 4.f), 2.2f, 1) &&
+        !compare(remainder(-6.2f, 4.f), -2.2f, 1)) {
+      ++e;
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed remainder(float)\n");
+    }
+    if (!compare(remainder(static_cast<KE::half_t>(6.2f),
+                           static_cast<KE::half_t>(4.f)),
+                 static_cast<KE::half_t>(2.2f), 1) &&
+        !compare(remainder(static_cast<KE::half_t>(-6.2f),
+                           static_cast<KE::half_t>(4.f)),
+                 -static_cast<KE::half_t>(2.2f), 1)) {
+      ++e;
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed remainder(KE::half_t)\n");
+    }
+    if (!compare(remainder(static_cast<KE::bhalf_t>(6.2f),
+                           static_cast<KE::bhalf_t>(4.f)),
+                 static_cast<KE::bhalf_t>(2.2f), 1) &&
+        !compare(remainder(static_cast<KE::bhalf_t>(-6.2f),
+                           static_cast<KE::bhalf_t>(4.f)),
+                 -static_cast<KE::bhalf_t>(2.2f), 1)) {
+      ++e;
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed remainder(KE::bhalf_t)\n");
+    }
+    if (!compare(remainder(6.2, 4.), 2.2, 1) &&
+        !compare(remainder(-6.2, 4.), -2.2, 1)) {
+      ++e;
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed remainder(double)\n");
+    }
+#ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
+    if (!compare(remainder(6.2l, 4.l), 2.2l, 1) &&
+        !compare(remainder(-6.2l, 4.l), -2.2l, 1)) {
+      ++e;
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed remainder(long double)\n");
+    }
+#endif
+    // special values
+    using Kokkos::isinf;
+    using Kokkos::isnan;
+    if (!isinf(remainder(-KE::infinity<float>::value, 1.f)) &&
+        !isnan(remainder(-KE::quiet_NaN<float>::value, 1.f))) {
+      ++e;
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF(
+          "failed remainder(floating_point) special values\n");
+    }
+
+    static_assert(
+        std::is_same<decltype(remainder(static_cast<KE::half_t>(4.f),
+                                        static_cast<KE::half_t>(4.f))),
+                     KE::half_t>::value,
+        "");
+    static_assert(
+        std::is_same<decltype(remainder(static_cast<KE::bhalf_t>(4.f),
+                                        static_cast<KE::bhalf_t>(4.f))),
+                     KE::bhalf_t>::value,
+        "");
+    static_assert(std::is_same<decltype(remainder(4.f, 4.f)), float>::value,
+                  "");
+    static_assert(std::is_same<decltype(remainder(5., 5.)), double>::value, "");
+#ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
+    static_assert(
+        std::is_same<decltype(remainder(6.l, 6.l)), long double>::value, "");
+#endif
+  }
+};
+
+TEST(TEST_CATEGORY, mathematical_functions_ieee_remainder_function) {
+  TestIEEEFloatingPointRemainderFunction<TEST_EXECSPACE>();
 }
 
 template <class Space>
