@@ -38,7 +38,7 @@ struct ZeroMemset<Kokkos::Cuda, View<T, P...>> {
              typename View<T, P...>::const_value_type&) {
     // FIXME_CUDA_MULTIPLE_DEVICES
     KOKKOS_IMPL_CUDA_SAFE_CALL(
-        (Kokkos::Impl::CudaInternal::singleton().cuda_memset_wrapper(
+        (Kokkos::Impl::CudaInternal::singleton().cuda_memset_async_wrapper(
             dst.data(), 0,
             dst.size() * sizeof(typename View<T, P...>::value_type))));
   }
