@@ -1052,6 +1052,8 @@ TEST(TEST_CATEGORY, mathematical_functions_error_and_gamma_functions) {
   TEST_MATH_FUNCTION(erf)({2u, 3u, 4u, 5u, 6u});
   TEST_MATH_FUNCTION(erf)({2ul, 3ul, 4ul, 5ul, 6ul});
   TEST_MATH_FUNCTION(erf)({2ull, 3ull, 4ull, 5ull, 6ull});
+  TEST_HALF_MATH_FUNCTION(erf, KE::half_t, .1f, -2.f, 3.f);
+  TEST_HALF_MATH_FUNCTION(erf, KE::bhalf_t, .1f, -2.f, 3.f);
   TEST_MATH_FUNCTION(erf)({.1f, -2.f, 3.f});
   TEST_MATH_FUNCTION(erf)({-4., .5, -.6});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -1064,6 +1066,8 @@ TEST(TEST_CATEGORY, mathematical_functions_error_and_gamma_functions) {
   TEST_MATH_FUNCTION(erfc)({2u, 3u, 4u, 5u, 6u});
   TEST_MATH_FUNCTION(erfc)({2ul, 3ul, 4ul, 5ul, 6ul});
   TEST_MATH_FUNCTION(erfc)({2ull, 3ull, 4ull, 5ull, 6ull});
+  TEST_HALF_MATH_FUNCTION(erfc, KE::half_t, .1f, -2.f, 3.f);
+  TEST_HALF_MATH_FUNCTION(erfc, KE::bhalf_t, .1f, -2.f, 3.f);
   TEST_MATH_FUNCTION(erfc)({.1f, -2.f, 3.f});
   TEST_MATH_FUNCTION(erfc)({-4., .5, -.6});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -1076,6 +1080,8 @@ TEST(TEST_CATEGORY, mathematical_functions_error_and_gamma_functions) {
   TEST_MATH_FUNCTION(tgamma)({1u, 2u, 3u, 4u, 56u, 78u});
   TEST_MATH_FUNCTION(tgamma)({1ul, 2ul, 3ul, 4ul, 56ul, 78ul});
   TEST_MATH_FUNCTION(tgamma)({1ull, 2ull, 3ull, 4ull, 56ull, 78ull});
+  TEST_HALF_MATH_FUNCTION(tgamma, KE::half_t, .1f, -2.2f, 3.f);
+  TEST_HALF_MATH_FUNCTION(tgamma, KE::bhalf_t, .1f, -2.2f, 3.f);
   TEST_MATH_FUNCTION(tgamma)({.1f, -2.2f, 3.f});
   TEST_MATH_FUNCTION(tgamma)({-4.4, .5, -.6});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -1088,6 +1094,8 @@ TEST(TEST_CATEGORY, mathematical_functions_error_and_gamma_functions) {
   TEST_MATH_FUNCTION(lgamma)({1u, 2u, 3u, 4u, 56u, 78u});
   TEST_MATH_FUNCTION(lgamma)({1ul, 2ul, 3ul, 4ul, 56ul, 78ul});
   TEST_MATH_FUNCTION(lgamma)({1ull, 2ull, 3ull, 4ull, 56ull, 78ull});
+  TEST_HALF_MATH_FUNCTION(lgamma, KE::half_t, .1f, -2.2f, 3.f);
+  TEST_HALF_MATH_FUNCTION(lgamma, KE::bhalf_t, .1f, -2.2f, 3.f);
   TEST_MATH_FUNCTION(lgamma)({.1f, -2.2f, 3.f});
   TEST_MATH_FUNCTION(lgamma)({-4.4, .5, -.6});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
