@@ -399,29 +399,34 @@ DEFINE_UNARY_FUNCTION_EVAL(logb, 2);
 
 #undef DEFINE_UNARY_FUNCTION_EVAL
 
-#define DEFINE_BINARY_FUNCTION_EVAL(FUNC, ULP_FACTOR)                     \
-  struct MathBinaryFunction_##FUNC {                                      \
-    template <typename T, typename U>                                     \
-    static KOKKOS_FUNCTION auto eval(T x, U y) {                          \
-      static_assert(                                                      \
-          std::is_same<decltype(Kokkos::FUNC((T)0, (U)0)),                \
-                       math_binary_function_return_type_t<T, U>>::value); \
-      return Kokkos::FUNC(x, y);                                          \
-    }                                                                     \
-    template <typename T, typename U>                                     \
-    static auto eval_std(T x, U y) {                                      \
-      static_assert(                                                      \
-          std::is_same<decltype(std::FUNC((T)0, (U)0)),                   \
-                       math_binary_function_return_type_t<T, U>>::value); \
-      return std::FUNC(x, y);                                             \
-    }                                                                     \
-    static KOKKOS_FUNCTION double ulp_factor() { return ULP_FACTOR; }     \
-  };                                                                      \
-  using kk_##FUNC = MathBinaryFunction_##FUNC;                            \
-  template <>                                                             \
-  struct math_function_name<MathBinaryFunction_##FUNC> {                  \
-    static constexpr char name[] = #FUNC;                                 \
-  };                                                                      \
+#define DEFINE_BINARY_FUNCTION_EVAL(FUNC, ULP_FACTOR)                       \
+  struct MathBinaryFunction_##FUNC {                                        \
+    template <typename T, typename U>                                       \
+    static KOKKOS_FUNCTION auto eval(T x, U y) {                            \
+      static_assert(                                                        \
+          std::is_same<decltype(Kokkos::FUNC((T)0, (U)0)),                  \
+                       math_binary_function_return_type_t<T, U>>::value);   \
+      return Kokkos::FUNC(x, y);                                            \
+    }                                                                       \
+    template <typename T, typename U>                                       \
+    static auto eval_std(T x, U y) {                                        \
+      if constexpr (std::is_same<T, KE::half_t>::value ||                   \
+                    std::is_same<T, KE::bhalf_t>::value) {                  \
+        return std::FUNC(static_cast<float>(x), static_cast<int>(y));       \
+      } else {                                                              \
+        static_assert(                                                      \
+            std::is_same<decltype(std::FUNC((T)0, (U)0)),                   \
+                         math_binary_function_return_type_t<T, U>>::value); \
+        return std::FUNC(x, y);                                             \
+      }                                                                     \
+    }                                                                       \
+    static KOKKOS_FUNCTION double ulp_factor() { return ULP_FACTOR; }       \
+  };                                                                        \
+  using kk_##FUNC = MathBinaryFunction_##FUNC;                              \
+  template <>                                                               \
+  struct math_function_name<MathBinaryFunction_##FUNC> {                    \
+    static constexpr char name[] = #FUNC;                                   \
+  };                                                                        \
   constexpr char math_function_name<MathBinaryFunction_##FUNC>::name[]
 
 #ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_1
@@ -544,6 +549,8 @@ void do_test_math_unary_function(const Arg (&x)[N]) {
 #define MAKE_TEST_HALF_MATH_FUNCTION_N(FUNC, T, n0, n1, n2, n3, n4, n5, n6, \
                                        n7, n8, n9, n, ...)                  \
   TEST_HALF_MATH_FUNCTION##n
+
+#define TEST_HALF_MATH_UNARY_FUNCTION
 
 #define TEST_HALF_MATH_FUNCTION(...) \
   MAKE_TEST_HALF_MATH_FUNCTION(FUNC, T, ##__VA_ARGS__)
@@ -748,6 +755,8 @@ TEST(TEST_CATEGORY, mathematical_functions_power_functions) {
   TEST_MATH_FUNCTION(sqrt)({0u, 1u, 2u, 3u, 5u, 7u});
   TEST_MATH_FUNCTION(sqrt)({0ul, 1ul, 2ul, 3ul, 5ul, 7ul});
   TEST_MATH_FUNCTION(sqrt)({0ull, 1ull, 2ull, 3ull, 5ull, 7ull});
+  TEST_HALF_MATH_FUNCTION(sqrt, KE::half_t, 10.f, 20.f, 30.f, 40.f);
+  TEST_HALF_MATH_FUNCTION(sqrt, KE::bhalf_t, 10.f, 20.f, 30.f, 40.f);
   TEST_MATH_FUNCTION(sqrt)({10.f, 20.f, 30.f, 40.f});
   TEST_MATH_FUNCTION(sqrt)({11.1, 22.2, 33.3, 44.4});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -760,18 +769,29 @@ TEST(TEST_CATEGORY, mathematical_functions_power_functions) {
   TEST_MATH_FUNCTION(cbrt)({0u, 1u, 2u, 3u, 4u, 5u});
   TEST_MATH_FUNCTION(cbrt)({0ul, 1ul, 2ul, 3ul, 4ul, 5ul});
   TEST_MATH_FUNCTION(cbrt)({0ull, 1ull, 2ull, 3ull, 4ull, 5ull});
+  TEST_HALF_MATH_FUNCTION(cbrt, KE::half_t, -1.f, .2f, -3.f, .4f, -5.f);
+  TEST_HALF_MATH_FUNCTION(cbrt, KE::bhalf_t, -1.f, .2f, -3.f, .4f, -5.f);
   TEST_MATH_FUNCTION(cbrt)({-1.f, .2f, -3.f, .4f, -5.f});
   TEST_MATH_FUNCTION(cbrt)({11.1, -2.2, 33.3, -4.4, 55.5});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
   TEST_MATH_FUNCTION(cbrt)({-10.l, 20.l, -30.l, 40.l, -50.l});
 #endif
 
+  do_test_math_binary_function<TEST_EXECSPACE, kk_pow>(
+      static_cast<KE::half_t>(2.f), static_cast<KE::half_t>(3.f));
+  do_test_math_binary_function<TEST_EXECSPACE, kk_pow>(
+      static_cast<KE::bhalf_t>(2.f), static_cast<KE::bhalf_t>(3.f));
+  do_test_math_binary_function<TEST_EXECSPACE, kk_pow>(2.f, 3.f);
   do_test_math_binary_function<TEST_EXECSPACE, kk_pow>(2.f, 3.f);
   do_test_math_binary_function<TEST_EXECSPACE, kk_pow>(2., 3.);
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
   do_test_math_binary_function<TEST_EXECSPACE, kk_pow>(2.l, 3.l);
 #endif
 
+  do_test_math_binary_function<TEST_EXECSPACE, kk_hypot>(
+      static_cast<KE::half_t>(2.f), static_cast<KE::half_t>(3.f));
+  do_test_math_binary_function<TEST_EXECSPACE, kk_hypot>(
+      static_cast<KE::bhalf_t>(2.f), static_cast<KE::bhalf_t>(3.f));
   do_test_math_binary_function<TEST_EXECSPACE, kk_hypot>(2.f, 3.f);
   do_test_math_binary_function<TEST_EXECSPACE, kk_hypot>(2., 3.);
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
