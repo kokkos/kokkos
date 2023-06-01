@@ -947,6 +947,8 @@ TEST(TEST_CATEGORY, mathematical_functions_hyperbolic_functions) {
   TEST_MATH_FUNCTION(sinh)({2u, 3u, 4u, 5u, 6u});
   TEST_MATH_FUNCTION(sinh)({2ul, 3ul, 4ul, 5ul, 6ul});
   TEST_MATH_FUNCTION(sinh)({2ull, 3ull, 4ull, 5ull, 6ull});
+  TEST_HALF_MATH_FUNCTION(sinh, KE::half_t, .1f, -2.f, 3.f);
+  TEST_HALF_MATH_FUNCTION(sinh, KE::bhalf_t, .1f, -2.f, 3.f);
   TEST_MATH_FUNCTION(sinh)({.1f, -2.f, 3.f});
   TEST_MATH_FUNCTION(sinh)({-4., .5, -.6});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -959,6 +961,8 @@ TEST(TEST_CATEGORY, mathematical_functions_hyperbolic_functions) {
   TEST_MATH_FUNCTION(cosh)({2u, 3u, 4u, 5u, 6u});
   TEST_MATH_FUNCTION(cosh)({2ul, 3ul, 4ul, 5ul, 6ul});
   TEST_MATH_FUNCTION(cosh)({2ull, 3ull, 4ull, 5ull, 6ull});
+  TEST_HALF_MATH_FUNCTION(cosh, KE::half_t, .1f, -2.f, 3.f);
+  TEST_HALF_MATH_FUNCTION(cosh, KE::bhalf_t, .1f, -2.f, 3.f);
   TEST_MATH_FUNCTION(cosh)({.1f, -2.f, 3.f});
   TEST_MATH_FUNCTION(cosh)({-4., .5, -.6});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -971,6 +975,8 @@ TEST(TEST_CATEGORY, mathematical_functions_hyperbolic_functions) {
   TEST_MATH_FUNCTION(tanh)({2u, 3u, 4u, 5u, 6u});
   TEST_MATH_FUNCTION(tanh)({2ul, 3ul, 4ul, 5ul, 6ul});
   TEST_MATH_FUNCTION(tanh)({2ull, 3ull, 4ull, 5ull, 6ull});
+  TEST_HALF_MATH_FUNCTION(tanh, KE::half_t, .1f, -2.f, 3.f);
+  TEST_HALF_MATH_FUNCTION(tanh, KE::bhalf_t, .1f, -2.f, 3.f);
   TEST_MATH_FUNCTION(tanh)({.1f, -2.f, 3.f});
   TEST_MATH_FUNCTION(tanh)({-4., .5, -.6});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -983,6 +989,8 @@ TEST(TEST_CATEGORY, mathematical_functions_hyperbolic_functions) {
   TEST_MATH_FUNCTION(asinh)({2u, 3u, 4u, 5u, 6u});
   TEST_MATH_FUNCTION(asinh)({2ul, 3ul, 4ul, 5ul, 6ul});
   TEST_MATH_FUNCTION(asinh)({2ull, 3ull, 4ull, 5ull, 6ull});
+  TEST_HALF_MATH_FUNCTION(asinh, KE::half_t, .1f, -2.f, 3.f);
+  TEST_HALF_MATH_FUNCTION(asinh, KE::bhalf_t, .1f, -2.f, 3.f);
   TEST_MATH_FUNCTION(asinh)({.1f, -2.f, 3.f});
   TEST_MATH_FUNCTION(asinh)({-4., .5, -.6});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -995,6 +1003,8 @@ TEST(TEST_CATEGORY, mathematical_functions_hyperbolic_functions) {
   TEST_MATH_FUNCTION(acosh)({1u, 2u, 3u, 4u, 5u, 6u});
   TEST_MATH_FUNCTION(acosh)({1ul, 2ul, 3ul, 4ul, 5ul, 6ul});
   TEST_MATH_FUNCTION(acosh)({1ull, 2ull, 3ull, 4ull, 5ull, 6ull});
+  TEST_HALF_MATH_FUNCTION(acosh, KE::half_t, 1.2f, 34.f, 56.f, 789.f);
+  TEST_HALF_MATH_FUNCTION(acosh, KE::bhalf_t, 1.2f, 34.f, 56.f, 789.f);
   TEST_MATH_FUNCTION(acosh)({1.2f, 34.f, 56.f, 789.f});
   TEST_MATH_FUNCTION(acosh)({1.2, 34., 56., 789.});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -1007,6 +1017,10 @@ TEST(TEST_CATEGORY, mathematical_functions_hyperbolic_functions) {
   TEST_MATH_FUNCTION(atanh)({0u});
   TEST_MATH_FUNCTION(atanh)({0ul});
   TEST_MATH_FUNCTION(atanh)({0ull});
+  TEST_HALF_MATH_FUNCTION(atanh, KE::half_t, -.97f, .86f, -.53f, .42f, -.1f,
+                          0.f);
+  TEST_HALF_MATH_FUNCTION(atanh, KE::bhalf_t, -.97f, .86f, -.53f, .42f, -.1f,
+                          0.f);
   TEST_MATH_FUNCTION(atanh)({-.97f, .86f, -.53f, .42f, -.1f, 0.f});
   TEST_MATH_FUNCTION(atanh)({-.97, .86, -.53, .42, -.1, 0.});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
