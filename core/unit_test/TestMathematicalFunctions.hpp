@@ -63,9 +63,11 @@ template <class, class>
 struct math_binary_function_return_type;
 #if defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
 template <> struct math_binary_function_return_type<KE::half_t, KE::half_t> { using type = KE::half_t; };
+template <> struct math_binary_function_return_type<int, KE::half_t> { using type = KE::half_t; };
 #endif // defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
 #if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
 template <> struct math_binary_function_return_type<KE::bhalf_t, KE::bhalf_t> { using type = KE::bhalf_t; };
+template <> struct math_binary_function_return_type<int, KE::bhalf_t> { using type = KE::bhalf_t; };
 #endif // defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
 template <> struct math_binary_function_return_type<             float,              float> { using type =       float; };
 template <> struct math_binary_function_return_type<             float,             double> { using type =      double; };
@@ -417,6 +419,9 @@ DEFINE_UNARY_FUNCTION_EVAL(logb, 2);
       if constexpr (std::is_same<T, KE::half_t>::value ||                   \
                     std::is_same<T, KE::bhalf_t>::value) {                  \
         return std::FUNC(static_cast<float>(x), static_cast<int>(y));       \
+      } else if constexpr (std::is_same<U, KE::half_t>::value ||            \
+                           std::is_same<U, KE::bhalf_t>::value) {           \
+        return std::FUNC(static_cast<int>(x), static_cast<float>(y));       \
       } else {                                                              \
         static_assert(                                                      \
             std::is_same<decltype(std::FUNC((T)0, (U)0)),                   \
@@ -1195,12 +1200,22 @@ TEST(TEST_CATEGORY,
   TEST_MATH_FUNCTION(logb)({2u, 3u, 4u, 5u, 6u});
   TEST_MATH_FUNCTION(logb)({2ul, 3ul, 4ul, 5ul, 6ul});
   TEST_MATH_FUNCTION(logb)({2ull, 3ull, 4ull, 5ull, 6ull});
+  TEST_HALF_MATH_FUNCTION(logb, KE::half_t, 123.45f, 6789.0f);
+  TEST_HALF_MATH_FUNCTION(logb, KE::bhalf_t, 123.45f, 6789.0f);
   TEST_MATH_FUNCTION(logb)({123.45f, 6789.0f});
   TEST_MATH_FUNCTION(logb)({123.45, 6789.0});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
   TEST_MATH_FUNCTION(logb)({123.45l, 6789.0l});
 #endif
 
+  do_test_math_binary_function<TEST_EXECSPACE, kk_nextafter>(
+      0, static_cast<KE::half_t>(1.f));
+  do_test_math_binary_function<TEST_EXECSPACE, kk_nextafter>(
+      1, static_cast<KE::half_t>(2.f));
+  do_test_math_binary_function<TEST_EXECSPACE, kk_nextafter>(
+      0, static_cast<KE::bhalf_t>(1.f));
+  do_test_math_binary_function<TEST_EXECSPACE, kk_nextafter>(
+      1, static_cast<KE::bhalf_t>(2.f));
   do_test_math_binary_function<TEST_EXECSPACE, kk_nextafter>(0, 1.f);
   do_test_math_binary_function<TEST_EXECSPACE, kk_nextafter>(1, 2.f);
   do_test_math_binary_function<TEST_EXECSPACE, kk_nextafter>(0.1, 0);
@@ -1209,6 +1224,14 @@ TEST(TEST_CATEGORY,
   do_test_math_binary_function<TEST_EXECSPACE, kk_nextafter>(1.l, 2.l);
 #endif
 
+  do_test_math_binary_function<TEST_EXECSPACE, kk_copysign>(
+      0, static_cast<KE::half_t>(1.f));
+  do_test_math_binary_function<TEST_EXECSPACE, kk_copysign>(
+      1, static_cast<KE::half_t>(2.f));
+  do_test_math_binary_function<TEST_EXECSPACE, kk_copysign>(
+      0, static_cast<KE::bhalf_t>(1.f));
+  do_test_math_binary_function<TEST_EXECSPACE, kk_copysign>(
+      1, static_cast<KE::bhalf_t>(2.f));
   do_test_math_binary_function<TEST_EXECSPACE, kk_copysign>(0, 1.f);
   do_test_math_binary_function<TEST_EXECSPACE, kk_copysign>(1, 2.f);
   do_test_math_binary_function<TEST_EXECSPACE, kk_copysign>(0.1, 0);
