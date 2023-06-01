@@ -215,6 +215,10 @@ struct FloatingPointComparison {
     return DBL_EPSILON;
   }
   KOKKOS_FUNCTION
+  KE::half_t eps(KE::half_t) const { return KE::epsilon<KE::half_t>::value; }
+  KOKKOS_FUNCTION
+  KE::bhalf_t eps(KE::bhalf_t) const { return KE::epsilon<KE::bhalf_t>::value; }
+  KOKKOS_FUNCTION
   double eps(float) const { return FLT_EPSILON; }
   KOKKOS_FUNCTION
   double eps(long double) const { return LDBL_EPSILON; }
@@ -829,6 +833,10 @@ TEST(TEST_CATEGORY, mathematical_functions_exponential_functions) {
   TEST_MATH_FUNCTION(exp)({0u, 1u, 2u, 3u, 4u, 5u});
   TEST_MATH_FUNCTION(exp)({0ul, 1ul, 2ul, 3ul, 4ul, 5ul});
   TEST_MATH_FUNCTION(exp)({0ull, 1ull, 2ull, 3ull, 4ull, 5ull});
+  TEST_HALF_MATH_FUNCTION(exp, KE::half_t, -98.f, -7.6f, -.54f, 3.2f, 1.f,
+                          -0.f);
+  TEST_HALF_MATH_FUNCTION(exp, KE::bhalf_t, -98.f, -7.6f, -.54f, 3.2f, 1.f,
+                          -0.f);
   TEST_MATH_FUNCTION(exp)({-98.f, -7.6f, -.54f, 3.2f, 1.f, -0.f});
   TEST_MATH_FUNCTION(exp)({-98., -7.6, -.54, 3.2, 1., -0.});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -841,6 +849,10 @@ TEST(TEST_CATEGORY, mathematical_functions_exponential_functions) {
   TEST_MATH_FUNCTION(exp2)({0u, 1u, 2u, 3u, 4u, 5u});
   TEST_MATH_FUNCTION(exp2)({0ul, 1ul, 2ul, 3ul, 4ul, 5ul});
   TEST_MATH_FUNCTION(exp2)({0ull, 1ull, 2ull, 3ull, 4ull, 5ull});
+  TEST_HALF_MATH_FUNCTION(exp2, KE::half_t, -98.f, -7.6f, -.54f, 3.2f, 1.f,
+                          -0.f);
+  TEST_HALF_MATH_FUNCTION(exp2, KE::bhalf_t, -98.f, -7.6f, -.54f, 3.2f, 1.f,
+                          -0.f);
   TEST_MATH_FUNCTION(exp2)({-98.f, -7.6f, -.54f, 3.2f, 1.f, -0.f});
   TEST_MATH_FUNCTION(exp2)({-98., -7.6, -.54, 3.2, 1., -0.});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -853,6 +865,10 @@ TEST(TEST_CATEGORY, mathematical_functions_exponential_functions) {
   TEST_MATH_FUNCTION(expm1)({0u, 1u, 2u, 3u, 4u, 5u});
   TEST_MATH_FUNCTION(expm1)({0ul, 1ul, 2ul, 3ul, 4ul, 5ul});
   TEST_MATH_FUNCTION(expm1)({0ull, 1ull, 2ull, 3ull, 4ull, 5ull});
+  TEST_HALF_MATH_FUNCTION(expm1, KE::half_t, -98.f, -7.6f, -.54f, 3.2f, 1.f,
+                          -0.f);
+  TEST_HALF_MATH_FUNCTION(expm1, KE::bhalf_t, -98.f, -7.6f, -.54f, 3.2f, 1.f,
+                          -0.f);
   TEST_MATH_FUNCTION(expm1)({-98.f, -7.6f, -.54f, 3.2f, 1.f, -0.f});
   TEST_MATH_FUNCTION(expm1)({-98., -7.6, -.54, 3.2, 1., -0.});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -865,6 +881,8 @@ TEST(TEST_CATEGORY, mathematical_functions_exponential_functions) {
   TEST_MATH_FUNCTION(log)({1u, 23u, 456u, 7890u});
   TEST_MATH_FUNCTION(log)({1ul, 23ul, 456ul, 7890ul});
   TEST_MATH_FUNCTION(log)({1ull, 23ull, 456ull, 7890ull});
+  TEST_HALF_MATH_FUNCTION(log, KE::half_t, 1234.f, 567.f, 89.f, .1f);
+  TEST_HALF_MATH_FUNCTION(log, KE::bhalf_t, 1234.f, 567.f, 89.f, .1f);
   TEST_MATH_FUNCTION(log)({1234.f, 567.f, 89.f, .1f});
   TEST_MATH_FUNCTION(log)({1234., 567., 89., .02});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -877,6 +895,8 @@ TEST(TEST_CATEGORY, mathematical_functions_exponential_functions) {
   TEST_MATH_FUNCTION(log10)({1u, 23u, 456u, 7890u});
   TEST_MATH_FUNCTION(log10)({1ul, 23ul, 456ul, 7890ul});
   TEST_MATH_FUNCTION(log10)({1ull, 23ull, 456ull, 7890ull});
+  TEST_HALF_MATH_FUNCTION(log10, KE::half_t, 1234.f, 567.f, 89.f, .1f);
+  TEST_HALF_MATH_FUNCTION(log10, KE::bhalf_t, 1234.f, 567.f, 89.f, .1f);
   TEST_MATH_FUNCTION(log10)({1234.f, 567.f, 89.f, .1f});
   TEST_MATH_FUNCTION(log10)({1234., 567., 89., .02});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -895,6 +915,8 @@ TEST(TEST_CATEGORY, mathematical_functions_exponential_functions) {
   TEST_MATH_FUNCTION(log2)({1u, 23u, 456u, 7890u});
   TEST_MATH_FUNCTION(log2)({1ul, 23ul, 456ul, 7890ul});
   TEST_MATH_FUNCTION(log2)({1ull, 23ull, 456ull, 7890ull});
+  TEST_HALF_MATH_FUNCTION(log2, KE::half_t, 1234.f, 567.f, 89.f, .1f);
+  TEST_HALF_MATH_FUNCTION(log2, KE::bhalf_t, 1234.f, 567.f, 89.f, .1f);
   TEST_MATH_FUNCTION(log2)({1234.f, 567.f, 89.f, .1f});
   TEST_MATH_FUNCTION(log2)({1234., 567., 89., .02});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -907,6 +929,8 @@ TEST(TEST_CATEGORY, mathematical_functions_exponential_functions) {
   TEST_MATH_FUNCTION(log1p)({1u, 23u, 456u, 7890u, 0u});
   TEST_MATH_FUNCTION(log1p)({1ul, 23ul, 456ul, 7890ul, 0ul});
   TEST_MATH_FUNCTION(log1p)({1ull, 23ull, 456ull, 7890ull, 0ull});
+  TEST_HALF_MATH_FUNCTION(log1p, KE::half_t, 1234.f, 567.f, 89.f, -.9f);
+  TEST_HALF_MATH_FUNCTION(log1p, KE::bhalf_t, 1234.f, 567.f, 89.f, -.9f);
   TEST_MATH_FUNCTION(log1p)({1234.f, 567.f, 89.f, -.9f});
   TEST_MATH_FUNCTION(log1p)({1234., 567., 89., -.08});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
