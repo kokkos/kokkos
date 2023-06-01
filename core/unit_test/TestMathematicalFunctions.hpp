@@ -576,6 +576,11 @@ void do_test_math_unary_function(const Arg (&x)[N]) {
   TEST_MATH_FUNCTION(FUNC)                                   \
   ({static_cast<T>(a), static_cast<T>(b), static_cast<T>(c), \
     static_cast<T>(d), static_cast<T>(e), static_cast<T>(f)})
+#define TEST_HALF_MATH_FUNCTION7(FUNC, T, a, b, c, d, e, f, g) \
+  TEST_MATH_FUNCTION(FUNC)                                     \
+  ({static_cast<T>(a), static_cast<T>(b), static_cast<T>(c),   \
+    static_cast<T>(d), static_cast<T>(e), static_cast<T>(f),   \
+    static_cast<T>(g)})
 
 template <class Space, class Func, class Arg1, class Arg2,
           class Ret = math_binary_function_return_type_t<Arg1, Arg2>>
@@ -1111,6 +1116,8 @@ TEST(TEST_CATEGORY,
   TEST_MATH_FUNCTION(ceil)({2u, 3u, 4u, 5u, 6u});
   TEST_MATH_FUNCTION(ceil)({2ul, 3ul, 4ul, 5ul, 6ul});
   TEST_MATH_FUNCTION(ceil)({2ull, 3ull, 4ull, 5ull, 6ull});
+  TEST_HALF_MATH_FUNCTION(ceil, KE::half_t, -1.1f, 2.2f, -3.3f, 4.4f, -5.5f);
+  TEST_HALF_MATH_FUNCTION(ceil, KE::bhalf_t, -1.1f, 2.2f, -3.3f, 4.4f, -5.5f);
   TEST_MATH_FUNCTION(ceil)({-1.1f, 2.2f, -3.3f, 4.4f, -5.5f});
   TEST_MATH_FUNCTION(ceil)({-6.6, 7.7, -8.8, 9.9});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -1123,6 +1130,8 @@ TEST(TEST_CATEGORY,
   TEST_MATH_FUNCTION(floor)({2u, 3u, 4u, 5u, 6u});
   TEST_MATH_FUNCTION(floor)({2ul, 3ul, 4ul, 5ul, 6ul});
   TEST_MATH_FUNCTION(floor)({2ull, 3ull, 4ull, 5ull, 6ull});
+  TEST_HALF_MATH_FUNCTION(floor, KE::half_t, -1.1f, 2.2f, -3.3f, 4.4f, -5.5f);
+  TEST_HALF_MATH_FUNCTION(floor, KE::bhalf_t, -1.1f, 2.2f, -3.3f, 4.4f, -5.5f);
   TEST_MATH_FUNCTION(floor)({-1.1f, 2.2f, -3.3f, 4.4f, -5.5f});
   TEST_MATH_FUNCTION(floor)({-6.6, 7.7, -8.8, 9.9});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -1135,6 +1144,8 @@ TEST(TEST_CATEGORY,
   TEST_MATH_FUNCTION(trunc)({2u, 3u, 4u, 5u, 6u});
   TEST_MATH_FUNCTION(trunc)({2ul, 3ul, 4ul, 5ul, 6ul});
   TEST_MATH_FUNCTION(trunc)({2ull, 3ull, 4ull, 5ull, 6ull});
+  TEST_HALF_MATH_FUNCTION(trunc, KE::half_t, -1.1f, 2.2f, -3.3f, 4.4f, -5.5f);
+  TEST_HALF_MATH_FUNCTION(trunc, KE::bhalf_t, -1.1f, 2.2f, -3.3f, 4.4f, -5.5f);
   TEST_MATH_FUNCTION(trunc)({-1.1f, 2.2f, -3.3f, 4.4f, -5.5f});
   TEST_MATH_FUNCTION(trunc)({-6.6, 7.7, -8.8, 9.9});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -1147,6 +1158,10 @@ TEST(TEST_CATEGORY,
   TEST_MATH_FUNCTION(round)({2u, 3u, 4u, 5u, 6u});
   TEST_MATH_FUNCTION(round)({2ul, 3ul, 4ul, 5ul, 6ul});
   TEST_MATH_FUNCTION(round)({2ull, 3ull, 4ull, 5ull, 6ull});
+  TEST_HALF_MATH_FUNCTION(round, KE::half_t, 2.3f, 2.5f, 2.7f, -2.3f, -2.5f,
+                          -2.7f, -0.0f);
+  TEST_HALF_MATH_FUNCTION(round, KE::bhalf_t, 2.3f, 2.5f, 2.7f, -2.3f, -2.5f,
+                          -2.7f, -0.0f);
   TEST_MATH_FUNCTION(round)({2.3f, 2.5f, 2.7f, -2.3f, -2.5f, -2.7f, -0.0f});
   TEST_MATH_FUNCTION(round)({2.3, 2.5, 2.7, -2.3, -2.5, -2.7, -0.0});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -1160,6 +1175,10 @@ TEST(TEST_CATEGORY,
   TEST_MATH_FUNCTION(nearbyint)({2u, 3u, 4u, 5u, 6u});
   TEST_MATH_FUNCTION(nearbyint)({2ul, 3ul, 4ul, 5ul, 6ul});
   TEST_MATH_FUNCTION(nearbyint)({2ull, 3ull, 4ull, 5ull, 6ull});
+  TEST_HALF_MATH_FUNCTION(nearbyint, KE::half_t, -1.1f, 2.2f, -3.3f, 4.4f,
+                          -5.5f);
+  TEST_HALF_MATH_FUNCTION(nearbyint, KE::bhalf_t, -1.1f, 2.2f, -3.3f, 4.4f,
+                          -5.5f);
   TEST_MATH_FUNCTION(nearbyint)({-1.1f, 2.2f, -3.3f, 4.4f, -5.5f});
   TEST_MATH_FUNCTION(nearbyint)({-6.6, 7.7, -8.8, 9.9});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
