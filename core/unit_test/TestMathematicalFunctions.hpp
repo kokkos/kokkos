@@ -534,6 +534,37 @@ void do_test_math_unary_function(const Arg (&x)[N]) {
 #define TEST_MATH_FUNCTION(FUNC) \
   do_test_math_unary_function<TEST_EXECSPACE, MathUnaryFunction_##FUNC>
 
+// Use similar approach as linux syscalls to expand and cast constants
+#define MAKE_TEST_HALF_MATH_FUNCTION(FUNC, T, ...)                             \
+  MAKE_TEST_HALF_MATH_FUNCTION_N(fn, ##__VA_ARGS__, 9, 8, 7, 6, 5, 4, 3, 2, 1, \
+                                 0)                                            \
+  (__VA_ARGS__)
+#define MAKE_TEST_HALF_MATH_FUNCTION_N(FUNC, T, n0, n1, n2, n3, n4, n5, n6, \
+                                       n7, n8, n9, n, ...)                  \
+  TEST_HALF_MATH_FUNCTION##n
+
+#define TEST_HALF_MATH_FUNCTION(...) \
+  MAKE_TEST_HALF_MATH_FUNCTION(FUNC, T, ##__VA_ARGS__)
+#define TEST_HALF_MATH_FUNCTION1(FUNC, T, a) \
+  TEST_MATH_FUNCTION(FUNC)({static_cast<T>(a)})
+#define TEST_HALF_MATH_FUNCTION2(FUNC, T, a, b) \
+  TEST_MATH_FUNCTION(FUNC)({static_cast<T>(a), static_cast<T>(b)})
+#define TEST_HALF_MATH_FUNCTION3(FUNC, T, a, b, c) \
+  TEST_MATH_FUNCTION(FUNC)                         \
+  ({static_cast<T>(a), static_cast<T>(b), static_cast<T>(c)})
+#define TEST_HALF_MATH_FUNCTION4(FUNC, T, a, b, c, d)        \
+  TEST_MATH_FUNCTION(FUNC)                                   \
+  ({static_cast<T>(a), static_cast<T>(b), static_cast<T>(c), \
+    static_cast<T>(d)})
+#define TEST_HALF_MATH_FUNCTION5(FUNC, T, a, b, c, d, e)     \
+  TEST_MATH_FUNCTION(FUNC)                                   \
+  ({static_cast<T>(a), static_cast<T>(b), static_cast<T>(c), \
+    static_cast<T>(d), static_cast<T>(e)})
+#define TEST_HALF_MATH_FUNCTION6(FUNC, T, a, b, c, d, e, f)  \
+  TEST_MATH_FUNCTION(FUNC)                                   \
+  ({static_cast<T>(a), static_cast<T>(b), static_cast<T>(c), \
+    static_cast<T>(d), static_cast<T>(e), static_cast<T>(f)})
+
 template <class Space, class Func, class Arg1, class Arg2,
           class Ret = math_binary_function_return_type_t<Arg1, Arg2>>
 struct TestMathBinaryFunction : FloatingPointComparison {
@@ -622,11 +653,8 @@ TEST(TEST_CATEGORY, mathematical_functions_trigonometric_functions) {
   TEST_MATH_FUNCTION(sin)({2u, 3u, 4u, 5u, 6u});
   TEST_MATH_FUNCTION(sin)({2ul, 3ul, 4ul, 5ul, 6ul});
   TEST_MATH_FUNCTION(sin)({2ull, 3ull, 4ull, 5ull, 6ull});
-  TEST_MATH_FUNCTION(sin)
-  ({static_cast<Kokkos::Experimental::half_t>(.1f),
-    static_cast<Kokkos::Experimental::half_t>(.2f),
-    static_cast<Kokkos::Experimental::half_t>(.3f)});
-  // TEST_MATH_FUNCTION(sin)({.1f, .2f, .3f});
+  TEST_HALF_MATH_FUNCTION(sin, Kokkos::Experimental::half_t, .1f, .2f, .3f);
+  TEST_HALF_MATH_FUNCTION(sin, Kokkos::Experimental::bhalf_t, .1f, .2f, .3f);
   TEST_MATH_FUNCTION(sin)({.1f, .2f, .3f});
   TEST_MATH_FUNCTION(sin)({.4, .5, .6});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -640,6 +668,8 @@ TEST(TEST_CATEGORY, mathematical_functions_trigonometric_functions) {
   TEST_MATH_FUNCTION(cos)({2u, 3u, 4u, 5u, 6u});
   TEST_MATH_FUNCTION(cos)({2ul, 3ul, 4ul, 5ul, 6ul});
   TEST_MATH_FUNCTION(cos)({2ull, 3ull, 4ull, 5ull, 6ull});
+  TEST_HALF_MATH_FUNCTION(cos, Kokkos::Experimental::half_t, .1f, .2f, .3f);
+  TEST_HALF_MATH_FUNCTION(cos, Kokkos::Experimental::bhalf_t, .1f, .2f, .3f);
   TEST_MATH_FUNCTION(cos)({.1f, .2f, .3f});
   TEST_MATH_FUNCTION(cos)({.4, .5, .6});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -653,6 +683,8 @@ TEST(TEST_CATEGORY, mathematical_functions_trigonometric_functions) {
   TEST_MATH_FUNCTION(tan)({2u, 3u, 4u, 5u, 6u});
   TEST_MATH_FUNCTION(tan)({2ul, 3ul, 4ul, 5ul, 6ul});
   TEST_MATH_FUNCTION(tan)({2ull, 3ull, 4ull, 5ull, 6ull});
+  TEST_HALF_MATH_FUNCTION(tan, Kokkos::Experimental::half_t, .1f, .2f, .3f);
+  TEST_HALF_MATH_FUNCTION(tan, Kokkos::Experimental::bhalf_t, .1f, .2f, .3f);
   TEST_MATH_FUNCTION(tan)({.1f, .2f, .3f});
   TEST_MATH_FUNCTION(tan)({.4, .5, .6});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -666,6 +698,10 @@ TEST(TEST_CATEGORY, mathematical_functions_trigonometric_functions) {
   TEST_MATH_FUNCTION(asin)({0u, 1u});
   TEST_MATH_FUNCTION(asin)({0ul, 1ul});
   TEST_MATH_FUNCTION(asin)({0ull, 1ull});
+  TEST_HALF_MATH_FUNCTION(asin, Kokkos::Experimental::half_t, -1.f, .9f, -.8f,
+                          .7f, -.6f);
+  TEST_HALF_MATH_FUNCTION(asin, Kokkos::Experimental::bhalf_t, -1.f, .9f, -.8f,
+                          .7f, -.6f);
   TEST_MATH_FUNCTION(asin)({-1.f, .9f, -.8f, .7f, -.6f});
   TEST_MATH_FUNCTION(asin)({-.5, .4, -.3, .2, -.1, 0.});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -679,6 +715,10 @@ TEST(TEST_CATEGORY, mathematical_functions_trigonometric_functions) {
   TEST_MATH_FUNCTION(acos)({0u, 1u});
   TEST_MATH_FUNCTION(acos)({0ul, 1ul});
   TEST_MATH_FUNCTION(acos)({0ull, 1ull});
+  TEST_HALF_MATH_FUNCTION(acos, Kokkos::Experimental::half_t, -1.f, .9f, -.8f,
+                          .7f, -.6f);
+  TEST_HALF_MATH_FUNCTION(acos, Kokkos::Experimental::bhalf_t, -1.f, .9f, -.8f,
+                          .7f, -.6f);
   TEST_MATH_FUNCTION(acos)({-1.f, .9f, -.8f, .7f, -.6f});
   TEST_MATH_FUNCTION(acos)({-.5, .4, -.3, .2, -.1, 0.});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -692,6 +732,10 @@ TEST(TEST_CATEGORY, mathematical_functions_trigonometric_functions) {
   TEST_MATH_FUNCTION(atan)({0u, 1u});
   TEST_MATH_FUNCTION(atan)({0ul, 1ul});
   TEST_MATH_FUNCTION(atan)({0ull, 1ull});
+  TEST_HALF_MATH_FUNCTION(atan, Kokkos::Experimental::half_t, -1.5f, 1.3f,
+                          -1.1f, .9f, -.7f, .5f);
+  TEST_HALF_MATH_FUNCTION(atan, Kokkos::Experimental::bhalf_t, -1.5f, 1.3f,
+                          -1.1f, .9f, -.7f, .5f);
   TEST_MATH_FUNCTION(atan)({-1.5f, 1.3f, -1.1f, .9f, -.7f, .5f});
   TEST_MATH_FUNCTION(atan)({1.4, -1.2, 1., -.8, .6, -.4, .2, -0.});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
