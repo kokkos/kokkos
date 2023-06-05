@@ -1,6 +1,9 @@
 name: github-Linux-hpx
 
 on:
+  push:
+    branches:
+      - develop
   pull_request:
     paths-ignore:
     - '**/*.md'

@@ -1,6 +1,9 @@
 name: github-OSX
 
 on:
+  push:
+    branches:
+      - develop
   pull_request:
     paths-ignore:
     - '**/*.md'

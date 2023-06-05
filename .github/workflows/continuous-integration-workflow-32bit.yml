@@ -1,6 +1,9 @@
 name: github-Linux-32bit
 
 on:
+  push:
+    branches:
+      - develop
   pull_request:
     paths-ignore:
     - '**/*.md'
