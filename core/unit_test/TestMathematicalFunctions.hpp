@@ -554,6 +554,9 @@ void do_test_math_unary_function(const Arg (&x)[N]) {
 #define TEST_MATH_FUNCTION(FUNC) \
   do_test_math_unary_function<TEST_EXECSPACE, MathUnaryFunction_##FUNC>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wno-gnu-zero-variadic-macro-arguments"
+
 // Use similar approach as linux syscalls to expand and cast constants
 #define MAKE_TEST_HALF_MATH_FUNCTION(FUNC, T, ...)                             \
   MAKE_TEST_HALF_MATH_FUNCTION_N(fn, ##__VA_ARGS__, 9, 8, 7, 6, 5, 4, 3, 2, 1, \
@@ -1643,4 +1646,7 @@ TEST(TEST_CATEGORY, mathematical_functions_isnan) {
 }
 
 // TestSignBit
+
+//#pragma clang diagnostic ignored "-Wno-gnu-zero-variadic-macro-arguments"
+#pragma clang diagnostic pop
 #endif
