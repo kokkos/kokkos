@@ -556,7 +556,7 @@ void do_test_math_unary_function(const Arg (&x)[N]) {
 
 #if defined(KOKKOS_COMPILER_CLANG)
 #pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wno-gnu-zero-variadic-macro-arguments"
+#pragma clang diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
 #endif
 
 // Use similar approach as linux syscalls to expand and cast constants
@@ -1650,7 +1650,7 @@ TEST(TEST_CATEGORY, mathematical_functions_isnan) {
 // TestSignBit
 
 #if defined(KOKKOS_COMPILER_CLANG)
-//#pragma clang diagnostic ignored "-Wno-gnu-zero-variadic-macro-arguments"
+//#pragma clang diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
 #pragma clang diagnostic pop
 #endif
 #endif
