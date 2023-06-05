@@ -66,8 +66,8 @@ std::enable_if_t<!use_shuffle_based_algorithm<ReducerType>> workgroup_reduction(
 
   // Do the final reduction only using the first subgroup.
   if (sg.get_group_id()[0] == 0) {
-    const unsigned int n_subgroups       = sg.get_group_range()[0];
-    const int max_subgroup_size = sg.get_max_local_range()[0];
+    const unsigned int n_subgroups = sg.get_group_range()[0];
+    const int max_subgroup_size    = sg.get_max_local_range()[0];
     auto* result_ = &local_mem[id_in_sg * max_subgroup_size * value_count];
     // In case the number of subgroups is larger than the range of
     // the first subgroup, we first combine the items with a higher
@@ -142,7 +142,9 @@ std::enable_if_t<use_shuffle_based_algorithm<ReducerType>> workgroup_reduction(
 
   // Do the final reduction only using the first subgroup.
   if (sg.get_group_id()[0] == 0) {
-    auto sg_value = local_mem[id_in_sg < static_cast<int>(n_active_subgroups) ? id_in_sg : 0];
+    auto sg_value =
+        local_mem[id_in_sg < static_cast<int>(n_active_subgroups) ? id_in_sg
+                                                                  : 0];
 
     // In case the number of subgroups is larger than the range of
     // the first subgroup, we first combine the items with a higher
