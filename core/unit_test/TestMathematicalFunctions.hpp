@@ -554,7 +554,8 @@ void do_test_math_unary_function(const Arg (&x)[N]) {
 #define TEST_MATH_FUNCTION(FUNC) \
   do_test_math_unary_function<TEST_EXECSPACE, MathUnaryFunction_##FUNC>
 
-#if defined(KOKKOS_COMPILER_CLANG)
+#if defined(KOKKOS_COMPILER_CLANG) || defined(KOKKOS_COMPILER_APPLECC) || \
+    defined(KOKKOS_COMPILER_INTEL_LLVM)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
 #endif
@@ -1633,7 +1634,8 @@ TEST(TEST_CATEGORY, mathematical_functions_isnan) {
 
 // TestSignBit
 
-#if defined(KOKKOS_COMPILER_CLANG)
+#if defined(KOKKOS_COMPILER_CLANG) || defined(KOKKOS_COMPILER_APPLECC) || \
+    defined(KOKKOS_COMPILER_INTEL_LLVM)
 //#pragma clang diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
 #pragma clang diagnostic pop
 #endif
