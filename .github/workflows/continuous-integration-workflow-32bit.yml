@@ -1,5 +1,10 @@
 name: github-Linux-32bit
-on: [push, pull_request]
+
+on:
+  pull_request:
+    paths-ignore:
+    - '**/*.md'
+    types: [ opened, reopened, synchronize ]
 
 concurrency:
   group: ${ {github.event_name }}-${{ github.workflow }}-${{ github.ref }}
