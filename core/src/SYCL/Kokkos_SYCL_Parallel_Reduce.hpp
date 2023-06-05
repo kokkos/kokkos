@@ -31,9 +31,11 @@ namespace Kokkos {
 
 namespace Impl {
 
+// FIXME_SYCL It appears that using shuffles is slower than going throw local
+// memory.
 template <class ReducerType>
-inline constexpr bool use_shuffle_based_algorithm =
-    !std::is_reference_v<typename ReducerType::reference_type>;
+inline constexpr bool use_shuffle_based_algorithm = false;
+//! std::is_reference_v<typename ReducerType::reference_type>;
 
 namespace SYCLReduction {
 template <typename ValueType, typename ReducerType, int dim>
