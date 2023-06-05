@@ -216,10 +216,14 @@ struct FloatingPointComparison {
   KOKKOS_FUNCTION double eps(T) const {
     return DBL_EPSILON;
   }
+#if defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
   KOKKOS_FUNCTION
   KE::half_t eps(KE::half_t) const { return KE::epsilon<KE::half_t>::value; }
+#endif
+#if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
   KOKKOS_FUNCTION
   KE::bhalf_t eps(KE::bhalf_t) const { return KE::epsilon<KE::bhalf_t>::value; }
+#endif
   KOKKOS_FUNCTION
   double eps(float) const { return FLT_EPSILON; }
   KOKKOS_FUNCTION
@@ -1586,7 +1590,7 @@ struct TestIsNaN {
     }
     if (isnan(static_cast<KE::half_t>(2.f))
 #if !defined(KOKKOS_ENABLE_CUDA)
-        || !isnan(quite_NaN<KE::half_t>::value) ||
+        || !isnan(quiet_NaN<KE::half_t>::value) ||
         !isnan(signaling_NaN<KE::half_t>::value)
 #endif
     ) {
@@ -1595,8 +1599,8 @@ struct TestIsNaN {
     }
     if (isnan(static_cast<KE::bhalf_t>(2.f))
 #if !defined(KOKKOS_ENABLE_CUDA)
-        || !isnan(quiet_NaN<KE::bhalf_t>::value) !isnan(
-               signaling_NaN<KE::bhalf_t>::value)
+        || !isnan(quiet_NaN<KE::bhalf_t>::value) ||
+        !isnan(signaling_NaN<KE::bhalf_t>::value)
 #endif
     ) {
       ++e;
