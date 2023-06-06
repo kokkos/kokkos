@@ -241,7 +241,8 @@ void OpenMPInternal::initialize(int thread_count) {
   }
 
   {
-    if (Kokkos::show_warnings() && nullptr == std::getenv("OMP_PROC_BIND")) {
+    if (Kokkos::show_warnings() && !std::getenv("OMP_PROC_BIND") &&
+        !is_mpi_exec()) {
       std::cerr
           << R"WARNING(Kokkos::OpenMP::initialize WARNING: OMP_PROC_BIND environment variable not set
   In general, for best performance with OpenMP 4.0 or better set OMP_PROC_BIND=spread and OMP_PLACES=threads
