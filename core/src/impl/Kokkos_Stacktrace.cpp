@@ -197,8 +197,6 @@ void demangle_and_print_traceback_entry(
   std::vector<std::string> tokens;
   size_t cur_col = 0;
   for_each_token(traceback_entry, [&](const std::string& s, bool last) {
-    const size_t old_width(out.width());
-    out.width(max_col_lens[cur_col]);
     try {
       if (found_main && cur_col == main_col) {
         out << demangle(s);
@@ -210,10 +208,8 @@ void demangle_and_print_traceback_entry(
       }
       ++cur_col;
     } catch (...) {
-      out.width(old_width);
       throw;
     }
-    out.width(old_width);
   });
 }
 
