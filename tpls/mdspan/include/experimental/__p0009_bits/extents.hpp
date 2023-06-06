@@ -265,7 +265,8 @@ public:
                                                m_size_dynamic &&
                                            m_size_dynamic > 0))
   MDSPAN_INLINE_FUNCTION
-  constexpr maybe_static_array(DynVals... vals) {
+  constexpr maybe_static_array(DynVals... vals)
+    : m_dyn_vals{} {
     static_assert((sizeof...(DynVals) == m_size), "Invalid number of values.");
     TDynamic values[m_size]{static_cast<TDynamic>(vals)...};
     for (size_t r = 0; r < m_size; r++) {
