@@ -298,9 +298,28 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
       dim3 block(1, block_size, 1);
       // use a slightly less constrained, but still well bounded limit for
       // scratch
-      uint32_t nblocks = static_cast<uint32_t>((nwork + block.y - 1) / block.y);
-      nblocks          = std::min(nblocks, 4096u);
-      m_scratch_space  = ::Kokkos::Impl::hip_internal_scratch_space(
+      int nblocks = (nwork + block.y - 1) / block.y;
+      // Heuristic deciding the value of nblocks. The values have been chosen
+      // using a vector product benchmark on MI250.
+      static constexpr Kokkos::Experimental::WorkItemProperty::HintLightWeight_t
+          light_weight =
+              Kokkos::Experimental::WorkItemProperty::HintLightWeight;
+      static constexpr typename Policy::work_item_property property =
+          typename Policy::work_item_property();
+      if ((property & light_weight) == light_weight)
+      // Kokkos::Experimental::WorkItemProperty::HintHeavyWeight_t) {
+      {
+        if (nblocks < block_size) {
+          // Keep nblocks as is
+        } else if (nblocks < 16 * block_size) {
+          nblocks = block_size;
+        } else {
+          nblocks = 4 * block_size;
+        }
+      } else {
+        nblocks = std::min(nblocks, 4096);
+      }
+      m_scratch_space = ::Kokkos::Impl::hip_internal_scratch_space(
           m_policy.space(), reducer.value_size() * nblocks);
       m_scratch_flags = ::Kokkos::Impl::hip_internal_scratch_flags(
           m_policy.space(), sizeof(size_type));
