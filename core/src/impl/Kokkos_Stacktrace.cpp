@@ -192,7 +192,7 @@ void demangle_and_print_traceback_entry(std::ostream& out,
 
   // Then the function name
   cur_col = 0;
-  for_each_token(traceback_entry, [&](const std::string& s, bool last) {
+  for_each_token(traceback_entry, [&](const std::string& s, bool) {
     if (found_main && cur_col == main_col) {
       out << demangle(s);
     }
