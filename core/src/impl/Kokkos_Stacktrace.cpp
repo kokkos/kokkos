@@ -134,7 +134,7 @@ void for_each_token(const std::string& s, Callback c) {
     const size_t end   = find_first_whitespace(s, cur);
     const bool last    = (end == std::string::npos);
     const size_t count = last ? end : size_t(end - cur);
-    c(s.substr(cur, count), last);
+    c(s.substr(cur, count));
     cur = find_first_non_whitespace(s, end);
   }
 }
@@ -154,7 +154,7 @@ main_column_info find_main_column(const std::vector<std::string>& traceback) {
   size_t main_col = 0;
   for (auto&& entry : traceback) {
     size_t col_count = 0;
-    for_each_token(entry, [&](const std::string& s, bool) {
+    for_each_token(entry, [&](const std::string& s) {
       const size_t pos = s.find("main");
       if (pos != std::string::npos) {
         found_main = true;
@@ -178,12 +178,9 @@ void demangle_and_print_traceback_entry(std::ostream& out,
   size_t cur_col = 0;
 
   // Print the address column first
-  for_each_token(traceback_entry, [&](const std::string& s, bool last) {
+  for_each_token(traceback_entry, [&](const std::string& s) {
     if (!(found_main && cur_col == main_col)) {
       out << s;
-    }
-    if (!last) {
-      out << " ";
     }
     ++cur_col;
   });
@@ -192,7 +189,7 @@ void demangle_and_print_traceback_entry(std::ostream& out,
 
   // Then the function name
   cur_col = 0;
-  for_each_token(traceback_entry, [&](const std::string& s, bool) {
+  for_each_token(traceback_entry, [&](const std::string& s) {
     if (found_main && cur_col == main_col) {
       out << demangle(s);
     }
