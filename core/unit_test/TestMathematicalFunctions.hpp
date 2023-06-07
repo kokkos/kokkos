@@ -560,11 +560,6 @@ void do_test_math_unary_function(const Arg (&x)[N]) {
 #pragma clang diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
 #endif
 
-#if defined(KOKKOS_ENABLE_SYCL)
-#pragma diagnostic push
-#pragma diagnostic ignored "-Winfinite-recursion"
-#endif
-
 // Use similar approach as linux syscalls to expand and cast constants
 #define MAKE_TEST_HALF_MATH_FUNCTION(FUNC, T, ...)                             \
   MAKE_TEST_HALF_MATH_FUNCTION_N(fn, ##__VA_ARGS__, 9, 8, 7, 6, 5, 4, 3, 2, 1, \
@@ -1647,10 +1642,5 @@ TEST(TEST_CATEGORY, mathematical_functions_isnan) {
     defined(KOKKOS_COMPILER_INTEL_LLVM)
 //#pragma clang diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
 #pragma clang diagnostic pop
-#endif
-
-#if defined(KOKKOS_ENABLE_SYCL)
-//#pragma diagnostic ignored "-Winfinite-recursion"
-#pragma diagnostic pop
 #endif
 #endif
