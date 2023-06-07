@@ -30,7 +30,9 @@ void test_dyn_rank_view_resize() {
 
   Kokkos::resize(device_view, 2 * n);
 
-  for (int i = 0; i < 2 * n; ++i) device_view(i) = i + 1;
+  // Loop in reverse to increase likelihood of missing fence detection assuming
+  // that resize copies values in order.
+  for (int i = 2 * n - 1; i >= 0; --i) device_view(i) = i + 1;
 
   Kokkos::fence();
 
@@ -48,7 +50,9 @@ void test_dyn_rank_view_realloc() {
 
   Kokkos::realloc(device_view, 2 * n);
 
-  for (int i = 0; i < 2 * n; ++i) device_view(i) = i + 1;
+  // Loop in reverse to increase likelihood of missing fence detection assuming
+  // that realloc sets values in order.
+  for (int i = 2 * n - 1; i >= 0; --i) device_view(i) = i + 1;
 
   Kokkos::fence();
 
