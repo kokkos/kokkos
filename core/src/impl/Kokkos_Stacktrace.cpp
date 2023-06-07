@@ -170,9 +170,10 @@ main_column_info find_main_column(const std::vector<std::string>& traceback) {
   return main_column_info{found_main, main_col};
 }
 
-void demangle_and_print_traceback_entry(
-    std::ostream& out, const std::string& traceback_entry,
-    const bool found_main, const size_t main_col) {
+void demangle_and_print_traceback_entry(std::ostream& out,
+                                        const std::string& traceback_entry,
+                                        const bool found_main,
+                                        const size_t main_col) {
   std::vector<std::string> tokens;
   size_t cur_col = 0;
   for_each_token(traceback_entry, [&](const std::string& s, bool last) {
