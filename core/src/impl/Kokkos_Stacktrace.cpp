@@ -176,21 +176,29 @@ void demangle_and_print_traceback_entry(std::ostream& out,
                                         const size_t main_col) {
   std::vector<std::string> tokens;
   size_t cur_col = 0;
+
+  // Print the address column first
   for_each_token(traceback_entry, [&](const std::string& s, bool last) {
-    try {
-      if (found_main && cur_col == main_col) {
-        out << demangle(s);
-      } else {
-        out << s;
-      }
-      if (!last) {
-        out << " ";
-      }
-      ++cur_col;
-    } catch (...) {
-      throw;
+    if (!(found_main && cur_col == main_col)) {
+      out << s;
     }
+    if (!last) {
+      out << " ";
+    }
+    ++cur_col;
   });
+
+  out << " ";
+
+  // Then the function name
+  cur_col = 0;
+  for_each_token(traceback_entry, [&](const std::string& s, bool last) {
+    if (found_main && cur_col == main_col) {
+      out << demangle(s);
+    }
+    ++cur_col;
+  });
+
 }
 
 void demangle_and_print_traceback(std::ostream& out,
