@@ -71,7 +71,7 @@ void test_stacktrace(bool bTerminate, bool bCustom = true) {
                      "stacktrace_test_f3", "stacktrace_test_f4"}) {
         ASSERT_EQ(std::string::npos, foutput.find(x));
       }
-      EXPECT_EQ(0, find_first_non_whitespace(foutput, 0));
+      EXPECT_EQ(0u, find_first_non_whitespace(foutput, 0));
     }
   }
 
@@ -109,7 +109,7 @@ void test_stacktrace(bool bTerminate, bool bCustom = true) {
       for (auto x : {"stacktrace_test_f1", "stacktrace_test_f3"}) {
         ASSERT_NE(std::string::npos, foutput.find(x));
       }
-      EXPECT_EQ(0, find_first_non_whitespace(foutput, 0));
+      EXPECT_EQ(0u, find_first_non_whitespace(foutput, 0));
     }
 
     // TODO make sure stacktrace_test_f2/4 don't show up

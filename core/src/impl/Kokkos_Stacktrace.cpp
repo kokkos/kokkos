@@ -147,7 +147,6 @@ void for_each_token(const std::string& s, Callback c) {
 struct main_column_info {
   bool found_main;
   size_t main_col;
-  std::vector<size_t> main_col_lens;
 };
 
 main_column_info find_main_column(const std::vector<std::string>& traceback) {
@@ -168,32 +167,12 @@ main_column_info find_main_column(const std::vector<std::string>& traceback) {
     }
   }
 
-  // Make another pass to get the column lengths.
-  // Only demangle the column of functions.
-  std::vector<size_t> max_col_lengths;
-  for (auto&& entry : traceback) {
-    size_t col_count = 0;
-    for_each_token(entry, [&](const std::string& s, bool) {
-      const size_t cur_col_len =
-          (found_main && col_count == main_col) ? demangle(s).size() : s.size();
-      ++col_count;
-      if (max_col_lengths.size() < col_count) {
-        max_col_lengths.push_back(cur_col_len);
-      } else {
-        const size_t old_max_len = max_col_lengths[col_count - 1];
-        if (old_max_len < cur_col_len) {
-          max_col_lengths[col_count - 1] = cur_col_len;
-        }
-      }
-    });
-  }
-  return main_column_info{found_main, main_col, max_col_lengths};
+  return main_column_info{found_main, main_col};
 }
 
 void demangle_and_print_traceback_entry(
     std::ostream& out, const std::string& traceback_entry,
-    const bool found_main, const size_t main_col,
-    const std::vector<size_t>& max_col_lens) {
+    const bool found_main, const size_t main_col) {
   std::vector<std::string> tokens;
   size_t cur_col = 0;
   for_each_token(traceback_entry, [&](const std::string& s, bool last) {
@@ -218,7 +197,7 @@ void demangle_and_print_traceback(std::ostream& out,
   const auto result = find_main_column(traceback);
   for (auto&& entry : traceback) {
     demangle_and_print_traceback_entry(out, entry, result.found_main,
-                                       result.main_col, result.main_col_lens);
+                                       result.main_col);
     out << std::endl;
   }
 }
