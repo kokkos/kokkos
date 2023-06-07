@@ -420,7 +420,7 @@ void hip_internal_error_throw(hipError_t e, const char *name, const char *file,
 
 namespace Kokkos {
 bool HIP::is_running() const {
-  std::scoped_lock lock(m_space_instance->m_internal_status_lock);
+  std::scoped_lock lock(m_space_instance->m_internal_status_mutex);
   switch (m_space_instance->m_internal_status) {
     case Impl::ExecutionSpaceStatus::complete: return false;
     case Impl::ExecutionSpaceStatus::submitted:

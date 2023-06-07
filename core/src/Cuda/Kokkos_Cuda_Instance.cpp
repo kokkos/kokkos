@@ -689,7 +689,7 @@ Cuda::size_type *cuda_internal_scratch_unified(const Cuda &instance,
 namespace Kokkos {
 
 bool Cuda::is_running() const {
-  std::scoped_lock lock(m_space_instance->m_internal_status_lock);
+  std::scoped_lock lock(m_space_instance->m_internal_status_mutex);
   switch (m_space_instance->m_internal_status) {
     case Impl::ExecutionSpaceStatus::complete: return false;
     case Impl::ExecutionSpaceStatus::submitted:

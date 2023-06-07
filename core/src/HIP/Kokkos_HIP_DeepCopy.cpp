@@ -45,7 +45,7 @@ void DeepCopyAsyncHIP(const HIP& instance, void* dst, void const* src,
   KOKKOS_IMPL_HIP_SAFE_CALL(
       hipMemcpyAsync(dst, src, n, hipMemcpyDefault, instance.hip_stream()));
   std::scoped_lock lock(
-      instance.impl_internal_space_instance()->m_internal_status_lock);
+      instance.impl_internal_space_instance()->m_internal_status_mutex);
   instance.impl_internal_space_instance()->m_internal_status =
       Kokkos::Impl::ExecutionSpaceStatus::submitted;
 }

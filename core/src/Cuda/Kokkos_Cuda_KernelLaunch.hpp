@@ -669,7 +669,7 @@ struct CudaParallelLaunchImpl<
       // Invoke the driver function on the device
       base_t::invoke_kernel(driver, grid, block, shmem, cuda_instance);
       {
-        std::scoped_lock lock(cuda_instance->m_internal_status_lock);
+        std::scoped_lock lock(cuda_instance->m_internal_status_mutex);
         cuda_instance->m_internal_status =
             Kokkos::Impl::ExecutionSpaceStatus::submitted;
       }

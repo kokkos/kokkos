@@ -468,7 +468,7 @@ struct HIPParallelLaunch<
       // Invoke the driver function on the device
       base_t::invoke_kernel(driver, grid, block, shmem, hip_instance);
       {
-        std::scoped_lock lock(m_space_instance->m_internal_status_lock);
+        std::scoped_lock lock(m_space_instance->m_internal_status_mutex);
         hip_instance->m_internal_status =
             Kokkos::Impl::ExecutionSpaceStatus::submitted;
       }
