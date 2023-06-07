@@ -151,10 +151,11 @@ sort(const ExecutionSpace& exec,
 // clang-format off
 template <class ViewType>
 std::enable_if_t<
-  Kokkos::is_execution_space<ExecutionSpace>::value
-  && (is_view_v<ViewType> || is_dynamic_view_v<ViewType>)
+  is_view_v<ViewType> || is_dynamic_view_v<ViewType>
   >
-sort(ViewType view, size_t const begin, size_t const end)
+sort(ViewType view,
+     size_t const begin,
+     size_t const end)
 {
   if (view.extent(0) == 0) { return; }
 
