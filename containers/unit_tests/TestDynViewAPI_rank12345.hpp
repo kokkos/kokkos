@@ -57,16 +57,15 @@ void test_dyn_rank_view_realloc() {
   for (int i = 0; i < 2 * n; ++i) ASSERT_EQ(device_view(i), i + 1);
 }
 
-TEST(TEST_CATEGORY, dyn_rank_view_resize_realloc) {
 #ifdef KOKKOS_HAS_SHARED_SPACE
+TEST(TEST_CATEGORY, dyn_rank_view_resize_realloc) {
   if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::DefaultExecutionSpace>) {
     test_dyn_rank_view_resize<Kokkos::SharedSpace>();
     test_dyn_rank_view_realloc<Kokkos::SharedSpace>();
-  } else
-#endif
-  {
-    GTEST_SKIP() << "skipping since we only test SharedSpace";
+  } else {
+    GTEST_SKIP() << "skipping since not default execution space";
   }
 }
+#endif
 
 }  // namespace Test
