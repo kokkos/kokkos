@@ -77,15 +77,17 @@ std::enable_if_t<!use_shuffle_based_algorithm<ReducerType>> workgroup_reduction(
     for (unsigned int offset = local_range; offset < n_subgroups;
          offset += local_range)
       if (id_in_sg + offset < n_subgroups)
-        final_reducer.join(result_,
-                           &local_mem[(id_in_sg + offset) * value_count]);
+        final_reducer.join(
+            result_,
+            &local_mem[(id_in_sg + offset) * max_subgroup_size * value_count]);
     sycl::group_barrier(sg);
 
     // Then, we proceed as before.
     for (unsigned int stride = 1; stride < local_range; stride <<= 1) {
       if (id_in_sg + stride < n_subgroups)
-        final_reducer.join(result_,
-                           &local_mem[(id_in_sg + stride) * value_count]);
+        final_reducer.join(
+            result_,
+            &local_mem[(id_in_sg + stride) * max_subgroup_size * value_count]);
       sycl::group_barrier(sg);
     }
 
