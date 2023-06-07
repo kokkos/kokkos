@@ -160,11 +160,9 @@ void HIPInternal::initialize(hipStream_t stream, bool manage_stream) {
   const bool ok_init = nullptr == m_scratchSpace || nullptr == m_scratchFlags;
 
   if (ok_init) {
-    m_stream   = stream;
-    hipEvent_t = tmp_event;
+    m_stream = stream;
     KOKKOS_IMPL_HIP_SAFE_CALL(
-        hipEventCreateWithFlags(&tmp_event, hipEventDisableTiming));
-    m_last_event    = tmp_event;
+        hipEventCreateWithFlags(&m_last_event, hipEventDisableTiming));
     m_manage_stream = manage_stream;
 
     //----------------------------------
@@ -422,6 +420,7 @@ void hip_internal_error_throw(hipError_t e, const char *name, const char *file,
 
 namespace Kokkos {
 bool HIP::is_running() const {
+  std::scoped_lock lock(m_space_instance->m_internal_status_lock);
   switch (m_space_instance->m_internal_status) {
     case Impl::ExecutionSpaceStatus::complete: return false;
     case Impl::ExecutionSpaceStatus::submitted:

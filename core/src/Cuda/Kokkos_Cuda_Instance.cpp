@@ -424,10 +424,8 @@ Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
   }
 
   m_stream = stream;
-  cudaEvent_t tmp_event;
   KOKKOS_IMPL_CUDA_SAFE_CALL(
-      cudaEventCreateWithFlags(&tmp_event, cudaEventDisableTiming));
-  m_last_event    = tmp_event;
+      cudaEventCreateWithFlags(&m_last_event, cudaEventDisableTiming));
   m_manage_stream = manage_stream;
   for (int i = 0; i < m_n_team_scratch; ++i) {
     m_team_scratch_current_size[i] = 0;
@@ -691,6 +689,7 @@ Cuda::size_type *cuda_internal_scratch_unified(const Cuda &instance,
 namespace Kokkos {
 
 bool Cuda::is_running() const {
+  std::scoped_lock lock(m_space_instance->m_internal_status_lock);
   switch (m_space_instance->m_internal_status) {
     case Impl::ExecutionSpaceStatus::complete: return false;
     case Impl::ExecutionSpaceStatus::submitted:

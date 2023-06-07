@@ -668,8 +668,11 @@ struct CudaParallelLaunchImpl<
 
       // Invoke the driver function on the device
       base_t::invoke_kernel(driver, grid, block, shmem, cuda_instance);
-      cuda_instance->m_internal_status =
-          Kokkos::Impl::ExecutionSpaceStatus::submitted;
+      {
+        std::scoped_lock lock(cuda_instance->m_internal_status_lock);
+        cuda_instance->m_internal_status =
+            Kokkos::Impl::ExecutionSpaceStatus::submitted;
+      }
 
 #if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
       KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGetLastError());
