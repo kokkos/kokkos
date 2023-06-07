@@ -560,6 +560,11 @@ void do_test_math_unary_function(const Arg (&x)[N]) {
 #pragma clang diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
 #endif
 
+#if defined(KOKKOS_ENABLE_SYCL)
+#pragma diagnostic push
+#pragma diagnostic ignored "-Winfinite-recursion"
+#endif
+
 // Use similar approach as linux syscalls to expand and cast constants
 #define MAKE_TEST_HALF_MATH_FUNCTION(FUNC, T, ...)                             \
   MAKE_TEST_HALF_MATH_FUNCTION_N(fn, ##__VA_ARGS__, 9, 8, 7, 6, 5, 4, 3, 2, 1, \
@@ -571,6 +576,9 @@ void do_test_math_unary_function(const Arg (&x)[N]) {
 
 #define TEST_HALF_MATH_UNARY_FUNCTION
 
+#if defined(KOKKOS_COMPILER_MSVC)
+#define TEST_HALF_MATH_FUNCTION(...)
+#else
 #define TEST_HALF_MATH_FUNCTION(...) \
   MAKE_TEST_HALF_MATH_FUNCTION(FUNC, T, ##__VA_ARGS__)
 #define TEST_HALF_MATH_FUNCTION1(FUNC, T, a) \
@@ -596,6 +604,7 @@ void do_test_math_unary_function(const Arg (&x)[N]) {
   ({static_cast<T>(a), static_cast<T>(b), static_cast<T>(c),   \
     static_cast<T>(d), static_cast<T>(e), static_cast<T>(f),   \
     static_cast<T>(g)})
+#endif  // KOKKOS_COMPILER_MSVC
 
 template <class Space, class Func, class Arg1, class Arg2,
           class Ret = math_binary_function_return_type_t<Arg1, Arg2>>
@@ -1638,5 +1647,10 @@ TEST(TEST_CATEGORY, mathematical_functions_isnan) {
     defined(KOKKOS_COMPILER_INTEL_LLVM)
 //#pragma clang diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
 #pragma clang diagnostic pop
+#endif
+
+#if defined(KOKKOS_ENABLE_SYCL)
+//#pragma diagnostic ignored "-Winfinite-recursion"
+#pragma diagnostic pop
 #endif
 #endif
