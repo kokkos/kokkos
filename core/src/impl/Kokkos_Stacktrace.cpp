@@ -195,7 +195,6 @@ void demangle_and_print_traceback_entry(std::ostream& out,
     }
     ++cur_col;
   });
-
 }
 
 void demangle_and_print_traceback(std::ostream& out,
