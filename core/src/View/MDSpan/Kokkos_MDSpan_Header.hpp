@@ -27,14 +27,14 @@ static_assert(false,
 #if __cpp_lib_mdspan >= 202207L
 #include <mdspan>
 namespace Kokkos {
+using std::default_accessor;
 using std::dextents;
 using std::dynamic_extent;
 using std::extents;
-using std::mdspan;
 using std::layout_left;
 using std::layout_right;
 using std::layout_stride;
-using std::default_accessor;
+using std::mdspan;
 }  // namespace Kokkos
 #else
 #include <mdspan/mdspan.hpp>
