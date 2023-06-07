@@ -23,7 +23,8 @@ static_assert(false,
 #define KOKKOS_EXPERIMENTAL_MDSPAN_HPP
 
 // Look for the right mdspan
-#if __has_include(<mdspan>)
+#include <version>
+#if __cpp_lib_mdspan >= 202207L
 #include <mdspan>
 namespace Kokkos {
 using std::dextents;
