@@ -274,7 +274,7 @@ std::vector<ExecSpace> partition_space(ExecSpace const& space, Args...) {
 
 template <class ExecSpace, class T>
 std::vector<ExecSpace> partition_space(ExecSpace const& space,
-                                       std::vector<T>& weights) {
+                                       std::vector<T> const& weights) {
   static_assert(is_execution_space<ExecSpace>::value,
                 "Kokkos Error: partition_space expects an Execution Space as "
                 "first argument");

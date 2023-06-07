@@ -146,8 +146,12 @@ class BinSort {
         Kokkos::is_view<SrcViewType>::value,
         Kokkos::View<typename SrcViewType::const_data_type,
                      typename SrcViewType::array_layout,
-                     typename SrcViewType::device_type,
-                     Kokkos::MemoryTraits<Kokkos::RandomAccess> >,
+                     typename SrcViewType::device_type
+#if !defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC
+                     ,
+                     Kokkos::MemoryTraits<Kokkos::RandomAccess>
+#endif
+                     >,
         typename SrcViewType::const_type>;
 
     using perm_view_type = typename PermuteViewType::const_type;
@@ -226,7 +230,11 @@ class BinSort {
   bool sort_within_bins;
 
  public:
-  BinSort() = default;
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  KOKKOS_DEPRECATED BinSort() = default;
+#else
+  BinSort() = delete;
+#endif
 
   //----------------------------------------
   // Constructor: takes the keys, the binning_operator and optionally whether to
@@ -344,11 +352,6 @@ class BinSort {
         "The provided execution space must be able to access the memory space "
         "of the View argument!");
 
-    using scratch_view_type =
-        Kokkos::View<typename ValuesViewType::data_type,
-                     typename ValuesViewType::array_layout,
-                     typename ValuesViewType::device_type>;
-
     const size_t len        = range_end - range_begin;
     const size_t values_len = values_range_end - values_range_begin;
     if (len != values_len) {
@@ -356,6 +359,9 @@ class BinSort {
           "BinSort::sort: values range length != permutation vector length");
     }
 
+    using scratch_view_type =
+        Kokkos::View<typename ValuesViewType::data_type,
+                     typename ValuesViewType::device_type>;
     scratch_view_type sorted_values(
         view_alloc(exec, WithoutInitializing,
                    "Kokkos::SortImpl::BinSortFunctor::sorted_values"),
@@ -495,7 +501,11 @@ struct BinOp1D {
   double mul_   = {};
   double min_   = {};
 
-  BinOp1D() = default;
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  KOKKOS_DEPRECATED BinOp1D() = default;
+#else
+  BinOp1D() = delete;
+#endif
 
   // Construct BinOp with number of bins, minimum value and maximum value
   BinOp1D(int max_bins__, typename KeyViewType::const_value_type min,
@@ -539,7 +549,11 @@ struct BinOp3D {
   double mul_[3]   = {};
   double min_[3]   = {};
 
-  BinOp3D() = default;
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  KOKKOS_DEPRECATED BinOp3D() = default;
+#else
+  BinOp3D() = delete;
+#endif
 
   BinOp3D(int max_bins__[], typename KeyViewType::const_value_type min[],
           typename KeyViewType::const_value_type max[]) {

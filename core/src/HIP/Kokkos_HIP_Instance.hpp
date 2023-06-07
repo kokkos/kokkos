@@ -183,11 +183,13 @@ std::vector<HIP> partition_space(const HIP &, Args...) {
 }
 
 template <class T>
-std::vector<HIP> partition_space(const HIP &, std::vector<T> &weights) {
+std::vector<HIP> partition_space(const HIP &, std::vector<T> const &weights) {
   static_assert(
       std::is_arithmetic<T>::value,
       "Kokkos Error: partitioning arguments must be integers or floats");
 
+  // We only care about the number of instances to create and ignore weights
+  // otherwise.
   std::vector<HIP> instances(weights.size());
   Impl::create_HIP_instances(instances);
   return instances;

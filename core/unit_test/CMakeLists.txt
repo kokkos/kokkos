@@ -360,6 +360,13 @@ if(Kokkos_ENABLE_OPENMPTARGET)
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_TeamCombinedReducers.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_TeamReductionScan.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_WorkGraph.cpp
+    # FIXME_OPENMPTARGET_CRAY: The following tests fail at compile time when the OpenMPTarget backend is enabled with the Cray compiler.
+    # Atomic compare/exchange is used in these tests which can be one of the reasons for the compilation failures.
+    IF(KOKKOS_CXX_COMPILER_ID STREQUAL Cray)
+        ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_AtomicOperations_complexdouble.cpp
+        ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_UniqueToken.cpp
+        ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_SharedAlloc.cpp
+    ENDIF()
     )
 endif()
 
@@ -594,6 +601,12 @@ if(Kokkos_ENABLE_HPX)
       hpx/TestHPX_IndependentInstancesInstanceIds.cpp
       hpx/TestHPX_IndependentInstancesRefCounting.cpp
       hpx/TestHPX_IndependentInstancesSynchronization.cpp
+  )
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    CoreUnitTest_HPX_InParallel
+    SOURCES
+      UnitTestMainInit.cpp
+      hpx/TestHPX_InParallel.cpp
   )
 endif()
 
@@ -931,6 +944,12 @@ KOKKOS_ADD_ADVANCED_TEST( CoreUnitTest_PushFinalizeHook_terminate
     KOKKOS_ADD_TEST_EXECUTABLE(
       ProfilingAllCalls
       tools/TestAllCalls.cpp
+    )
+
+    KOKKOS_ADD_TEST_EXECUTABLE(
+      ToolsInitialization
+      UnitTestMain.cpp
+      tools/TestToolsInitialization.cpp
     )
 
     set(ADDRESS_REGEX "0x[0-9a-f]*")

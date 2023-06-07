@@ -792,8 +792,14 @@ void post_initialize_internal(const Kokkos::InitializationSettings& settings) {
 }
 
 void initialize_internal(const Kokkos::InitializationSettings& settings) {
+  // The tool initialization is only called in post_initialize_internal.
+  // Pausing tools here, so that if someone has set callbacks programmatically
+  // these callbacks are not called inside the backend initialization, before
+  // the tool initialization happened.
+  Kokkos::Tools::Experimental::pause_tools();
   pre_initialize_internal(settings);
   initialize_backends(settings);
+  Kokkos::Tools::Experimental::resume_tools();
   post_initialize_internal(settings);
 }
 

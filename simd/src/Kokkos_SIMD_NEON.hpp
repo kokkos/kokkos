@@ -798,6 +798,10 @@ class simd<std::uint64_t, simd_abi::neon_fixed_size<2>> {
   operator[](std::size_t i) const {
     return reference(const_cast<simd*>(this)->m_value, int(i));
   }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
+                                                       element_aligned_tag) {
+    m_value = vld1q_u64(ptr);
+  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd
   operator&(simd const& other) const {
     return simd(vandq_u64(m_value, other.m_value));
@@ -880,14 +884,7 @@ class const_where_expression<simd_mask<double, simd_abi::neon_fixed_size<2>>,
  public:
   const_where_expression(mask_type const& mask_arg, value_type const& value_arg)
       : m_value(const_cast<value_type&>(value_arg)), m_mask(mask_arg) {}
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr mask_type const&
-  mask() const {
-    return m_mask;
-  }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr value_type const&
-  value() const {
-    return m_value;
-  }
+
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   void copy_to(double* mem, element_aligned_tag) const {
     if (m_mask[0]) mem[0] = m_value[0];
@@ -900,6 +897,12 @@ class const_where_expression<simd_mask<double, simd_abi::neon_fixed_size<2>>,
     if (m_mask[0]) mem[index[0]] = m_value[0];
     if (m_mask[1]) mem[index[1]] = m_value[1];
   }
+
+  friend constexpr auto const& Impl::mask<double, abi_type>(
+      const_where_expression<mask_type, value_type> const& x);
+
+  friend constexpr auto const& Impl::value<double, abi_type>(
+      const_where_expression<mask_type, value_type> const& x);
 };
 
 template <>
@@ -956,19 +959,18 @@ class const_where_expression<
  public:
   const_where_expression(mask_type const& mask_arg, value_type const& value_arg)
       : m_value(const_cast<value_type&>(value_arg)), m_mask(mask_arg) {}
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr mask_type const&
-  mask() const {
-    return m_mask;
-  }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr value_type const&
-  value() const {
-    return m_value;
-  }
+
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   void copy_to(std::int32_t* mem, element_aligned_tag) const {
     if (m_mask[0]) mem[0] = m_value[0];
     if (m_mask[1]) mem[1] = m_value[1];
   }
+
+  friend constexpr auto const& Impl::mask<std::int32_t, abi_type>(
+      const_where_expression<mask_type, value_type> const& x);
+
+  friend constexpr auto const& Impl::value<std::int32_t, abi_type>(
+      const_where_expression<mask_type, value_type> const& x);
 };
 
 template <>
@@ -986,6 +988,144 @@ class where_expression<simd_mask<std::int32_t, simd_abi::neon_fixed_size<2>>,
   void copy_from(std::int32_t const* mem, element_aligned_tag) {
     if (m_mask[0]) m_value[0] = mem[0];
     if (m_mask[1]) m_value[1] = mem[1];
+  }
+  template <
+      class U,
+      std::enable_if_t<
+          std::is_convertible_v<U, simd<int32_t, simd_abi::neon_fixed_size<2>>>,
+          bool> = false>
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void operator=(U&& x) {
+    auto const x_as_value_type =
+        static_cast<simd<int32_t, simd_abi::neon_fixed_size<2>>>(
+            std::forward<U>(x));
+    m_value = static_cast<simd<int32_t, simd_abi::neon_fixed_size<2>>>(
+        vbsl_s32(static_cast<uint32x2_t>(m_mask),
+                 static_cast<int32x2_t>(x_as_value_type),
+                 static_cast<int32x2_t>(m_value)));
+  }
+};
+
+template <>
+class const_where_expression<
+    simd_mask<std::int64_t, simd_abi::neon_fixed_size<2>>,
+    simd<std::int64_t, simd_abi::neon_fixed_size<2>>> {
+ public:
+  using abi_type   = simd_abi::neon_fixed_size<2>;
+  using value_type = simd<std::int64_t, abi_type>;
+  using mask_type  = simd_mask<std::int64_t, abi_type>;
+
+ protected:
+  value_type& m_value;
+  mask_type const& m_mask;
+
+ public:
+  const_where_expression(mask_type const& mask_arg, value_type const& value_arg)
+      : m_value(const_cast<value_type&>(value_arg)), m_mask(mask_arg) {}
+
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+  void copy_to(std::int64_t* mem, element_aligned_tag) const {
+    if (m_mask[0]) mem[0] = m_value[0];
+    if (m_mask[1]) mem[1] = m_value[1];
+  }
+
+  friend constexpr auto const& Impl::mask<std::int64_t, abi_type>(
+      const_where_expression<mask_type, value_type> const& x);
+
+  friend constexpr auto const& Impl::value<std::int64_t, abi_type>(
+      const_where_expression<mask_type, value_type> const& x);
+};
+
+template <>
+class where_expression<simd_mask<std::int64_t, simd_abi::neon_fixed_size<2>>,
+                       simd<std::int64_t, simd_abi::neon_fixed_size<2>>>
+    : public const_where_expression<
+          simd_mask<std::int64_t, simd_abi::neon_fixed_size<2>>,
+          simd<std::int64_t, simd_abi::neon_fixed_size<2>>> {
+ public:
+  where_expression(
+      simd_mask<std::int64_t, simd_abi::neon_fixed_size<2>> const& mask_arg,
+      simd<std::int64_t, simd_abi::neon_fixed_size<2>>& value_arg)
+      : const_where_expression(mask_arg, value_arg) {}
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+  void copy_from(std::int64_t const* mem, element_aligned_tag) {
+    if (m_mask[0]) m_value[0] = mem[0];
+    if (m_mask[1]) m_value[1] = mem[1];
+  }
+  template <
+      class U,
+      std::enable_if_t<std::is_convertible_v<
+                           U, simd<std::int64_t, simd_abi::neon_fixed_size<2>>>,
+                       bool> = false>
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void operator=(U&& x) {
+    auto const x_as_value_type =
+        static_cast<simd<std::int64_t, simd_abi::neon_fixed_size<2>>>(
+            std::forward<U>(x));
+    m_value = static_cast<simd<std::int64_t, simd_abi::neon_fixed_size<2>>>(
+        vbslq_s64(static_cast<uint64x2_t>(m_mask),
+                  static_cast<int64x2_t>(x_as_value_type),
+                  static_cast<int64x2_t>(m_value)));
+  }
+};
+
+template <>
+class const_where_expression<
+    simd_mask<std::uint64_t, simd_abi::neon_fixed_size<2>>,
+    simd<std::uint64_t, simd_abi::neon_fixed_size<2>>> {
+ public:
+  using abi_type   = simd_abi::neon_fixed_size<2>;
+  using value_type = simd<std::uint64_t, abi_type>;
+  using mask_type  = simd_mask<std::uint64_t, abi_type>;
+
+ protected:
+  value_type& m_value;
+  mask_type const& m_mask;
+
+ public:
+  const_where_expression(mask_type const& mask_arg, value_type const& value_arg)
+      : m_value(const_cast<value_type&>(value_arg)), m_mask(mask_arg) {}
+
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+  void copy_to(std::uint64_t* mem, element_aligned_tag) const {
+    if (m_mask[0]) mem[0] = m_value[0];
+    if (m_mask[1]) mem[1] = m_value[1];
+  }
+
+  friend constexpr auto const& Impl::mask<std::uint64_t, abi_type>(
+      const_where_expression<mask_type, value_type> const& x);
+
+  friend constexpr auto const& Impl::value<std::uint64_t, abi_type>(
+      const_where_expression<mask_type, value_type> const& x);
+};
+
+template <>
+class where_expression<simd_mask<std::uint64_t, simd_abi::neon_fixed_size<2>>,
+                       simd<std::uint64_t, simd_abi::neon_fixed_size<2>>>
+    : public const_where_expression<
+          simd_mask<std::uint64_t, simd_abi::neon_fixed_size<2>>,
+          simd<std::uint64_t, simd_abi::neon_fixed_size<2>>> {
+ public:
+  where_expression(
+      simd_mask<std::uint64_t, simd_abi::neon_fixed_size<2>> const& mask_arg,
+      simd<std::uint64_t, simd_abi::neon_fixed_size<2>>& value_arg)
+      : const_where_expression(mask_arg, value_arg) {}
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+  void copy_from(std::uint64_t const* mem, element_aligned_tag) {
+    if (m_mask[0]) m_value[0] = mem[0];
+    if (m_mask[1]) m_value[1] = mem[1];
+  }
+  template <class U,
+            std::enable_if_t<
+                std::is_convertible_v<
+                    U, simd<std::uint64_t, simd_abi::neon_fixed_size<2>>>,
+                bool> = false>
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void operator=(U&& x) {
+    auto const x_as_value_type =
+        static_cast<simd<std::uint64_t, simd_abi::neon_fixed_size<2>>>(
+            std::forward<U>(x));
+    m_value = static_cast<simd<std::uint64_t, simd_abi::neon_fixed_size<2>>>(
+        vbslq_u64(static_cast<uint64x2_t>(m_mask),
+                  static_cast<uint64x2_t>(x_as_value_type),
+                  static_cast<uint64x2_t>(m_value)));
   }
 };
 

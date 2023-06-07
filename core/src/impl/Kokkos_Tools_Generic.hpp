@@ -102,10 +102,10 @@ struct SimpleTeamSizeCalculator {
     using exec_space = typename Policy::execution_space;
     using analysis   = Kokkos::Impl::FunctorAnalysis<
         Kokkos::Impl::FunctorPatternInterface::REDUCE, Policy, Functor, void>;
-    using driver = typename Kokkos::Impl::ParallelReduceWrapper<
+    using driver = typename Kokkos::Impl::ParallelReduce<
         Kokkos::Impl::CombinedFunctorReducer<Functor,
                                              typename analysis::Reducer>,
-        Policy, exec_space>::wrapped_type;
+        Policy, exec_space>;
     return driver::max_tile_size_product(policy, functor);
   }
 };
@@ -154,10 +154,10 @@ struct ComplexReducerSizeCalculator {
     using Analysis   = Kokkos::Impl::FunctorAnalysis<
         Kokkos::Impl::FunctorPatternInterface::REDUCE, Policy, ReducerType,
         void>;
-    using driver = typename Kokkos::Impl::ParallelReduceWrapper<
+    using driver = typename Kokkos::Impl::ParallelReduce<
         Kokkos::Impl::CombinedFunctorReducer<Functor,
                                              typename Analysis::Reducer>,
-        Policy, exec_space>::wrapped_type;
+        Policy, exec_space>;
     return driver::max_tile_size_product(policy, functor);
   }
 };

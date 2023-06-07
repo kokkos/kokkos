@@ -128,6 +128,11 @@
 #elif defined(__INTEL_LLVM_COMPILER)
 #define KOKKOS_COMPILER_INTEL_LLVM __INTEL_LLVM_COMPILER
 
+// Cray compiler for device offload code
+#elif defined(__cray__) && defined(__clang__)
+#define KOKKOS_COMPILER_CRAY_LLVM \
+  __cray_major__ * 100 + __cray_minor__ * 10 + __cray_patchlevel__
+
 #elif defined(_CRAYC)
 // CRAY compiler for host code
 #define KOKKOS_COMPILER_CRAYC _CRAYC
