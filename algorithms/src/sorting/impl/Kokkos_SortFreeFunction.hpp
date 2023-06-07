@@ -159,7 +159,7 @@ void sort_via_binsort(const ExecutionSpace& exec,
 
 template <class ExecutionSpace, class CompType, class DataType,
           class... Properties>
-void to_host_and_stdsort_and_back(
+void copy_to_host_run_stdsort_copy_back(
     const ExecutionSpace& space,
     const Kokkos::View<DataType, Properties...>& view, CompType comp) {
   using ViewType         = Kokkos::View<DataType, Properties...>;
@@ -206,12 +206,6 @@ template <class ExecutionSpace, class DataType, class... Properties>
 std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value>
 sort_without_comparator(const ExecutionSpace& exec,
                         const Kokkos::View<DataType, Properties...>& view) {
-  using ViewType = Kokkos::View<DataType, Properties...>;
-  using MemSpace = typename ViewType::memory_space;
-  static_assert(SpaceAccessibility<ExecutionSpace, MemSpace>::accessible,
-                "execution space is not able to access the memory space of the "
-                "View argument!");
-
   Kokkos::fence("Kokkos::sort: before");
   sort_via_binsort(exec, view);
   exec.fence("Kokkos::sort: fence after sorting");
@@ -221,13 +215,6 @@ sort_without_comparator(const ExecutionSpace& exec,
 template <class DataType, class... Properties>
 void sort_without_comparator(
     const Cuda& space, const Kokkos::View<DataType, Properties...>& view) {
-  using ViewType = Kokkos::View<DataType, Properties...>;
-  using MemSpace = typename ViewType::memory_space;
-  static_assert(
-      SpaceAccessibility<Cuda, MemSpace>::accessible,
-      "Cuda execution space is not able to access the memory space of the "
-      "View argument!");
-
   Kokkos::fence("Kokkos::sort: before");
   auto first            = ::Kokkos::Experimental::begin(view);
   auto last             = ::Kokkos::Experimental::end(view);
@@ -255,26 +242,29 @@ void sort_without_comparator(
 template <class ExecutionSpace, class CompType, class DataType,
           class... Properties>
 std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value>
-sort_with_comparator(const ExecutionSpace& space,
-                     const Kokkos::View<DataType, Properties...>& view,
-                     CompType comp) {
-  // fallback case is generic and works (for now)
+sort_device_view_with_comparator(const ExecutionSpace& space,
+				 const Kokkos::View<DataType, Properties...>& view,
+				 CompType comp){
+  // This is a fallback case that is generic and works, for now,
   // by copying data to host, running std::sort and then copying back.
-  // Potentially, this can later be swapped with a better solution
-  // like our own quicksort or similar.
-  // Note that if we are here, it MUST be that the view is not
-  // accessible on the host (see the public API):
+  // Potentially, this can later be changed with a better solution
+  // like our own quicksort on device or similar.
+
+  // Note that this an impl function, but the following static_assert
+  // should always hold because this function is handling specifically the
+  // case of a view on device
   using ViewType = Kokkos::View<DataType, Properties...>;
   using MemSpace = typename ViewType::memory_space;
   static_assert(!SpaceAccessibility<HostSpace, MemSpace>::accessible);
-  to_host_and_stdsort_and_back(space, view, comp);
+
+  copy_to_host_run_stdsort_copy_back(space, view, comp);
 }
 
 #if defined(KOKKOS_ENABLE_CUDA)
 template <class CompType, class DataType, class... Properties>
-void sort_with_comparator(const Cuda& space,
-                          const Kokkos::View<DataType, Properties...>& view,
-                          CompType comp) {
+void sort_device_view_with_comparator(const Cuda& space,
+				      const Kokkos::View<DataType, Properties...>& view,
+				      CompType comp) {
   space.fence("Kokkos::sort: before");
   auto first               = ::Kokkos::Experimental::begin(view);
   auto last                = ::Kokkos::Experimental::end(view);
@@ -286,15 +276,15 @@ void sort_with_comparator(const Cuda& space,
 
 #if defined(KOKKOS_ENABLE_ONEDPL)
 template <class CompType, class DataType, class... Properties>
-void sort_with_comparator(const Experimental::SYCL& space,
-                          const Kokkos::View<DataType, Properties...>& view,
-                          CompType comp) {
+void sort_device_view_with_comparator(const Experimental::SYCL& space,
+				      const Kokkos::View<DataType, Properties...>& view,
+				      CompType comp) {
   using ViewType = Kokkos::View<DataType, Properties...>;
   constexpr bool strided =
       std::is_same_v<LayoutStride, typename ViewType::array_layout>;
   if constexpr (strided) {
     // strided views not supported in dpl so use the most generic case
-    to_host_and_stdsort_and_back(space, view, comp);
+    copy_to_host_run_stdsort_copy_back(space, view, comp);
   } else {
     sort_onedpl(space, view, comp);
   }

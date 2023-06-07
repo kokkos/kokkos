@@ -64,11 +64,17 @@ auto create_random_view_and_host_clone(
   return std::make_pair(dataView, dataView_dc_h);
 }
 
+// clang-format off
 template <class ExecutionSpace, class Tag, class ValueType>
-void run_all_scenarios(int api) {
-  for (const auto& scenario : stdalgos::default_scenarios) {
+void run_all_scenarios(int api)
+{
+  const std::vector<std::size_t> my_scenarios =
+  {0, 1, 2, 9, 1003, 51513, 501578};
+
+  for (std::size_t N : my_scenarios)
+  {
     auto [dataView, dataViewBeforeOp_h] = create_random_view_and_host_clone(
-        Tag{}, scenario.second, Kokkos::pair<ValueType, ValueType>{-1045, 565},
+        Tag{}, N, Kokkos::pair<ValueType, ValueType>{-1045, 565},
         "dataView");
 
     namespace KE = Kokkos::Experimental;

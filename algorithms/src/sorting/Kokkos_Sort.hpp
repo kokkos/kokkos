@@ -30,8 +30,16 @@ template <class ExecutionSpace, class DataType, class... Properties>
 void sort([[maybe_unused]] const ExecutionSpace& exec,
           const Kokkos::View<DataType, Properties...>& view)
 {
+  if (view.extent(0) == 0) {
+    return;
+  }
+
   using ViewType = Kokkos::View<DataType, Properties...>;
   using MemSpace = typename ViewType::memory_space;
+  static_assert(
+      SpaceAccessibility<ExecutionSpace, MemSpace>::accessible,
+      "Kokkos::sort: execution space instance is not able to access the memory space of the "
+      "View argument!");
 
   if constexpr (SpaceAccessibility<HostSpace, MemSpace>::accessible) {
     auto first = ::Kokkos::Experimental::begin(view);
@@ -43,15 +51,36 @@ void sort([[maybe_unused]] const ExecutionSpace& exec,
 }
 
 // clang-format off
+template <class DataType, class... Properties>
+void sort(const Kokkos::View<DataType, Properties...>& view)
+{
+  if (view.extent(0) == 0) {
+    return;
+  }
+
+  using ViewType = Kokkos::View<DataType, Properties...>;
+  typename ViewType::execution_space exec;
+  sort(exec, view);
+}
+
+
+// clang-format off
 template <class ExecutionSpace, class CompType, class DataType,
           class... Properties>
 void sort([[maybe_unused]] const ExecutionSpace& exec,
           const Kokkos::View<DataType, Properties...>& view,
           CompType const& comp)
 {
+  if (view.extent(0) == 0) {
+    return;
+  }
 
   using ViewType = Kokkos::View<DataType, Properties...>;
   using MemSpace = typename ViewType::memory_space;
+  static_assert(
+      SpaceAccessibility<ExecutionSpace, MemSpace>::accessible,
+      "Kokkos::sort: execution space instance is not able to access the memory space of the "
+      "View argument!");
 
   static_assert(
       ViewType::rank == 1 &&
@@ -65,23 +94,18 @@ void sort([[maybe_unused]] const ExecutionSpace& exec,
     auto last  = ::Kokkos::Experimental::end(view);
     std::sort(first, last, comp);
   } else {
-    Impl::sort_with_comparator(exec, view, comp);
+    Impl::sort_device_view_with_comparator(exec, view, comp);
   }
-}
-
-// clang-format off
-template <class DataType, class... Properties>
-void sort(const Kokkos::View<DataType, Properties...>& view)
-{
-  using ViewType = Kokkos::View<DataType, Properties...>;
-  typename ViewType::execution_space exec;
-  sort(exec, view);
 }
 
 template <class CompType, class DataType, class... Properties>
 void sort(const Kokkos::View<DataType, Properties...>& view,
           CompType const& comp)
 {
+  if (view.extent(0) == 0) {
+    return;
+  }
+
   using ViewType = Kokkos::View<DataType, Properties...>;
   typename ViewType::execution_space exec;
   sort(exec, view, comp);
@@ -92,21 +116,28 @@ void sort(const Kokkos::View<DataType, Properties...>& view,
 //
 // clang-format off
 template <class ExecutionSpace, class ViewType>
-std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value>
+std::enable_if_t<
+  Kokkos::is_execution_space<ExecutionSpace>::value
+  && (is_view_v<ViewType> || is_dynamic_view_v<ViewType>)
+  >
 sort(const ExecutionSpace& exec,
      ViewType view,
      size_t const begin,
      size_t const end)
 {
+  if (view.extent(0) == 0) { return; }
+  using MemSpace = typename ViewType::memory_space;
+  static_assert(
+      SpaceAccessibility<ExecutionSpace, MemSpace>::accessible,
+      "Kokkos::sort: execution space instance is not able to access the memory space of the "
+      "View argument!");
+
   using range_policy = Kokkos::RangePolicy<typename ViewType::execution_space>;
   using CompType     = BinOp1D<ViewType>;
-
   Kokkos::MinMaxScalar<typename ViewType::non_const_value_type> result;
   Kokkos::MinMax<typename ViewType::non_const_value_type> reducer(result);
-
   parallel_reduce("Kokkos::Sort::FindExtent", range_policy(exec, begin, end),
                   Impl::min_max_functor<ViewType>(view), reducer);
-
   if (result.min_val == result.max_val) return;
 
   BinSort<ViewType, CompType> bin_sort(
@@ -118,11 +149,15 @@ sort(const ExecutionSpace& exec,
 }
 
 // clang-format off
-template <class DataType, class... Properties>
-void sort(const Kokkos::View<DataType, Properties...>& view,
-	  size_t const begin,
-	  size_t const end)
+template <class ViewType>
+std::enable_if_t<
+  Kokkos::is_execution_space<ExecutionSpace>::value
+  && (is_view_v<ViewType> || is_dynamic_view_v<ViewType>)
+  >
+sort(ViewType view, size_t const begin, size_t const end)
 {
+  if (view.extent(0) == 0) { return; }
+
   using ViewType = Kokkos::View<DataType, Properties...>;
   Kokkos::fence("Kokkos::sort: before");
   typename ViewType::execution_space exec;

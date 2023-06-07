@@ -18,7 +18,7 @@
 #define KOKKOS_BIN_SORT_HPP_
 
 #include "Kokkos_BinOps.hpp"
-#include "impl/Kokkos_BinSort.hpp"
+#include "impl/Kokkos_CopyOpsForBinSort.hpp"
 #include <Kokkos_Core.hpp>
 #include <algorithm>
 
@@ -247,6 +247,10 @@ class BinSort {
   template <class ExecutionSpace, class ValuesViewType>
   void sort(const ExecutionSpace& exec, ValuesViewType const& values,
             int values_range_begin, int values_range_end) const {
+    if (values.extent(0) == 0) {
+      return;
+    }
+
     static_assert(
         Kokkos::SpaceAccessibility<ExecutionSpace,
                                    typename Space::memory_space>::accessible,
