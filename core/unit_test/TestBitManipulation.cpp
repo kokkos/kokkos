@@ -500,6 +500,8 @@ constexpr X test_bit_cast(...) {
   return {};
 }
 
+// FIXME_SYCL The SYCL implementation is unconstrained
+#ifndef KOKKOS_ENABLE_SYCL
 namespace TypesNotTheSameSize {
 struct To {
   char a;
@@ -532,6 +534,7 @@ struct From {
 };
 static_assert(test_bit_cast<To, From>().did_not_match());
 }  // namespace FromNotTriviallyCopyable
+#endif
 
 namespace ReturnTypeIllFormed {
 struct From {

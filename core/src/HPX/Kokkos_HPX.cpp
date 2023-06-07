@@ -103,6 +103,31 @@ void HPX::print_configuration(std::ostream &os, const bool) const {
   os << hpx::configuration_string() << '\n';
 }
 
+bool &HPX::impl_get_in_parallel() noexcept {
+  static thread_local bool in_parallel = false;
+  return in_parallel;
+}
+
+HPX::impl_in_parallel_scope::impl_in_parallel_scope() noexcept {
+  KOKKOS_EXPECTS(!impl_get_in_parallel());
+  impl_get_in_parallel() = true;
+}
+
+HPX::impl_in_parallel_scope::~impl_in_parallel_scope() noexcept {
+  KOKKOS_EXPECTS(impl_get_in_parallel());
+  impl_get_in_parallel() = false;
+}
+
+HPX::impl_not_in_parallel_scope::impl_not_in_parallel_scope() noexcept {
+  KOKKOS_EXPECTS(impl_get_in_parallel());
+  impl_get_in_parallel() = false;
+}
+
+HPX::impl_not_in_parallel_scope::~impl_not_in_parallel_scope() noexcept {
+  KOKKOS_EXPECTS(!impl_get_in_parallel());
+  impl_get_in_parallel() = true;
+}
+
 void HPX::impl_decrement_active_parallel_region_count() {
   std::unique_lock<hpx::spinlock> l(m_active_parallel_region_count_mutex);
   if (--m_active_parallel_region_count == 0) {
@@ -210,7 +235,11 @@ void HPX::impl_finalize() {
   if (m_hpx_initialized) {
     hpx::runtime *rt = hpx::get_runtime_ptr();
     if (rt != nullptr) {
+#if HPX_VERSION_FULL >= 0x010900
+      hpx::post([]() { hpx::local::finalize(); });
+#else
       hpx::apply([]() { hpx::local::finalize(); });
+#endif
       hpx::local::stop();
     } else {
       Kokkos::abort(

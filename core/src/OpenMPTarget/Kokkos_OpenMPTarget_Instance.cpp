@@ -117,9 +117,12 @@ void OpenMPTargetInternal::impl_initialize() {
 
   // FIXME_OPENMPTARGET:  Only fix the number of teams for NVIDIA architectures
   // from Pascal and upwards.
+  // FIXME_OPENMPTARGTE: Cray compiler did not yet implement omp_set_num_teams.
+#if !defined(KOKKOS_COMPILER_CRAY_LLVM)
 #if defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU) && defined(KOKKOS_COMPILER_CLANG) && \
     (KOKKOS_COMPILER_CLANG >= 1300)
   omp_set_num_teams(512);
+#endif
 #endif
 }
 int OpenMPTargetInternal::impl_is_initialized() {

@@ -165,7 +165,10 @@ if(NOT (KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM
     UnitTest_Sort
     SOURCES
     UnitTestMain.cpp
+<<<<<<< HEAD
     TestStdAlgorithmsCommon.cpp
+=======
+>>>>>>> upstream/develop
     ${ALGO_SORT_SOURCES}
   )
 

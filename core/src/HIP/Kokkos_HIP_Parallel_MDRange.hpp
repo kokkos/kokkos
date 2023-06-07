@@ -365,9 +365,8 @@ class ParallelReduce<CombinedFunctorReducerType,
 
   template <typename Policy, typename Functor>
   static int max_tile_size_product(const Policy&, const Functor&) {
-    using closure_type =
-        ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>,
-                       ReducerType, HIP>;
+    using closure_type  = ParallelReduce<CombinedFunctorReducerType,
+                                        Kokkos::MDRangePolicy<Traits...>, HIP>;
     unsigned block_size = hip_get_max_blocksize<closure_type, LaunchBounds>();
     if (block_size == 0) {
       Kokkos::Impl::throw_runtime_exception(

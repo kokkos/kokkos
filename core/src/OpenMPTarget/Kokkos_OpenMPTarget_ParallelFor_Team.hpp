@@ -115,7 +115,14 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     // mode but works in the Debug mode.
 
     // Maximum active teams possible.
+    // FIXME_OPENMPTARGET: Cray compiler did not yet implement
+    // omp_get_max_teams.
+#if !defined(KOKKOS_COMPILER_CRAY_LLVM)
     int max_active_teams = omp_get_max_teams();
+#else
+    int max_active_teams =
+        std::min(OpenMPTargetExec::MAX_ACTIVE_THREADS / team_size, league_size);
+#endif
 
     // FIXME_OPENMPTARGET: Although the maximum number of teams is set using the
     // omp_set_num_teams in the resize_scratch routine, the call is not

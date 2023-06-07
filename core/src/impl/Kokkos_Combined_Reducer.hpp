@@ -505,8 +505,8 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce_combined_reducers_impl(
     ReturnTypes&&... returnTypes) noexcept {
   using mem_space_type = typename MemberType::execution_space::memory_space;
 
-  auto combined_value = Impl::make_combined_reducer_value<mem_space_type>(
-      returnType1, returnType2, returnTypes...);
+  decltype(Impl::make_combined_reducer_value<mem_space_type>(
+      returnType1, returnType2, returnTypes...)) combined_value;
 
   auto combined_functor = Impl::make_wrapped_combined_functor<mem_space_type>(
       functor, returnType1, returnType2, returnTypes...);
@@ -543,8 +543,8 @@ auto parallel_reduce(std::string const& label, PolicyType const& policy,
   // directly
   using space_type = Kokkos::DefaultHostExecutionSpace::memory_space;
 
-  auto value = Impl::make_combined_reducer_value<space_type>(
-      returnType1, returnType2, returnTypes...);
+  decltype(Impl::make_combined_reducer_value<space_type>(
+      returnType1, returnType2, returnTypes...)) value;
 
   using combined_reducer_type = Impl::CombinedReducer<
       space_type, Impl::_reducer_from_arg_t<space_type, ReturnType1>,

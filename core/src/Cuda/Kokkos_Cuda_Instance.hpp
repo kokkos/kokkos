@@ -235,11 +235,13 @@ std::vector<Cuda> partition_space(const Cuda&, Args...) {
 }
 
 template <class T>
-std::vector<Cuda> partition_space(const Cuda&, std::vector<T>& weights) {
+std::vector<Cuda> partition_space(const Cuda&, std::vector<T> const& weights) {
   static_assert(
       std::is_arithmetic<T>::value,
       "Kokkos Error: partitioning arguments must be integers or floats");
 
+  // We only care about the number of instances to create and ignore weights
+  // otherwise.
   std::vector<Cuda> instances(weights.size());
   Impl::create_Cuda_instances(instances);
   return instances;

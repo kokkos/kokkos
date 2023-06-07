@@ -223,5 +223,16 @@ TEST(TEST_CATEGORY, SortUnsignedValueType) {
   SortImpl::test_issue_4978_impl<ExecutionSpace>();
 }
 
+TEST(TEST_CATEGORY, SortEmptyView) {
+  using ExecutionSpace = TEST_EXECSPACE;
+
+  // does not matter if we use int or something else
+  Kokkos::View<int*, ExecutionSpace> v("v", 0);
+
+  // TODO check the synchronous behavior of the calls below
+  ASSERT_NO_THROW(Kokkos::sort(ExecutionSpace(), v));
+  ASSERT_NO_THROW(Kokkos::sort(v));
+}
+
 }  // namespace Test
 #endif

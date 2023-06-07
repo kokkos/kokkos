@@ -186,7 +186,7 @@ std::vector<OpenMP> partition_space(OpenMP const& main_instance, Args... args) {
 
 template <typename T>
 std::vector<OpenMP> partition_space(OpenMP const& main_instance,
-                                    std::vector<T>& weights) {
+                                    std::vector<T> const& weights) {
   return Impl::create_OpenMP_instances(main_instance, weights);
 }
 }  // namespace Experimental

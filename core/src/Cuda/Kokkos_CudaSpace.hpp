@@ -534,15 +534,10 @@ class SharedAllocationRecord<Kokkos::CudaSpace, void>
   SharedAllocationRecord(const SharedAllocationRecord&) = delete;
   SharedAllocationRecord& operator=(const SharedAllocationRecord&) = delete;
 
-  static ::cudaTextureObject_t attach_texture_object(
-      const unsigned sizeof_alias, void* const alloc_ptr,
-      const size_t alloc_size);
-
 #ifdef KOKKOS_ENABLE_DEBUG
   static RecordBase s_root_record;
 #endif
 
-  ::cudaTextureObject_t m_tex_obj = 0;
   const Kokkos::CudaSpace m_space;
 
  protected:
@@ -566,7 +561,6 @@ class SharedAllocationRecord<Kokkos::CudaSpace, void>
                                                  arg_alloc_size),
             sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc,
             arg_label),
-        m_tex_obj(0),
         m_space(arg_space) {
 
     SharedAllocationHeader header;
@@ -592,30 +586,6 @@ class SharedAllocationRecord<Kokkos::CudaSpace, void>
   // helper function to work around MSVC+NVCC issue
   // https://github.com/kokkos/kokkos/issues/5258
   static void deep_copy_header_no_exec(void*, const void*);
-
- public:
-  template <typename AliasType>
-  inline ::cudaTextureObject_t attach_texture_object() {
-    static_assert((std::is_same<AliasType, int>::value ||
-                   std::is_same<AliasType, ::int2>::value ||
-                   std::is_same<AliasType, ::int4>::value),
-                  "Cuda texture fetch only supported for alias types of int, "
-                  "::int2, or ::int4");
-
-    if (m_tex_obj == 0) {
-      m_tex_obj = attach_texture_object(sizeof(AliasType),
-                                        (void*)RecordBase::m_alloc_ptr,
-                                        RecordBase::m_alloc_size);
-    }
-
-    return m_tex_obj;
-  }
-
-  template <typename AliasType>
-  inline int attach_texture_object_offset(const AliasType* const ptr) {
-    // Texture object is attached to the entire allocation range
-    return ptr - reinterpret_cast<AliasType*>(RecordBase::m_alloc_ptr);
-  }
 };
 
 template <>
@@ -632,7 +602,6 @@ class SharedAllocationRecord<Kokkos::CudaUVMSpace, void>
 
   static RecordBase s_root_record;
 
-  ::cudaTextureObject_t m_tex_obj = 0;
   const Kokkos::CudaUVMSpace m_space;
 
  protected:
@@ -657,7 +626,6 @@ class SharedAllocationRecord<Kokkos::CudaUVMSpace, void>
                                                  arg_alloc_size),
             sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc,
             arg_label),
-        m_tex_obj(0),
         m_space(arg_space) {
     this->base_t::_fill_host_accessible_header_info(*base_t::m_alloc_ptr,
                                                     arg_label);
@@ -667,31 +635,6 @@ class SharedAllocationRecord<Kokkos::CudaUVMSpace, void>
       const Kokkos::CudaUVMSpace& arg_space, const std::string& arg_label,
       const size_t arg_alloc_size,
       const RecordBase::function_type arg_dealloc = &base_t::deallocate);
-
- public:
-  template <typename AliasType>
-  inline ::cudaTextureObject_t attach_texture_object() {
-    static_assert((std::is_same<AliasType, int>::value ||
-                   std::is_same<AliasType, ::int2>::value ||
-                   std::is_same<AliasType, ::int4>::value),
-                  "Cuda texture fetch only supported for alias types of int, "
-                  "::int2, or ::int4");
-
-    if (m_tex_obj == 0) {
-      m_tex_obj = SharedAllocationRecord<Kokkos::CudaSpace, void>::
-          attach_texture_object(sizeof(AliasType),
-                                (void*)RecordBase::m_alloc_ptr,
-                                RecordBase::m_alloc_size);
-    }
-
-    return m_tex_obj;
-  }
-
-  template <typename AliasType>
-  inline int attach_texture_object_offset(const AliasType* const ptr) {
-    // Texture object is attached to the entire allocation range
-    return ptr - reinterpret_cast<AliasType*>(RecordBase::m_alloc_ptr);
-  }
 };
 
 template <>

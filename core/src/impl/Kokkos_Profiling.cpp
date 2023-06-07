@@ -645,10 +645,6 @@ void initialize(const std::string& profileLibrary) {
                 << ", RTLD_NOW | RTLD_GLOBAL) failed with " << dlerror()
                 << '\n';
     } else {
-#ifdef KOKKOS_ENABLE_PROFILING_LOAD_PRINT
-      std::cout << "KokkosP: Library Loaded: " << profileLibraryName
-                << std::endl;
-#endif
       lookup_function(firstProfileLibrary, "kokkosp_begin_parallel_scan",
                       Experimental::current_callbacks.begin_parallel_scan);
       lookup_function(firstProfileLibrary, "kokkosp_begin_parallel_for",
