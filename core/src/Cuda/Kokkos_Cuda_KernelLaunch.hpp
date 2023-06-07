@@ -666,13 +666,12 @@ struct CudaParallelLaunchImpl<
 
       desul::ensure_cuda_lock_arrays_on_device();
 
+      std::scoped_lock lock(cuda_instance->m_internal_status_mutex);
+
       // Invoke the driver function on the device
       base_t::invoke_kernel(driver, grid, block, shmem, cuda_instance);
-      {
-        std::scoped_lock lock(cuda_instance->m_internal_status_mutex);
-        cuda_instance->m_internal_status =
-            Kokkos::Impl::ExecutionSpaceStatus::submitted;
-      }
+      cuda_instance->m_internal_status =
+          Kokkos::Impl::ExecutionSpaceStatus::submitted;
 
 #if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
       KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGetLastError());

@@ -465,13 +465,12 @@ struct HIPParallelLaunch<
 
       desul::ensure_hip_lock_arrays_on_device();
 
+      std::scoped_lock lock(m_space_instance->m_internal_status_mutex);
+
       // Invoke the driver function on the device
       base_t::invoke_kernel(driver, grid, block, shmem, hip_instance);
-      {
-        std::scoped_lock lock(m_space_instance->m_internal_status_mutex);
-        hip_instance->m_internal_status =
-            Kokkos::Impl::ExecutionSpaceStatus::submitted;
-      }
+      hip_instance->m_internal_status =
+          Kokkos::Impl::ExecutionSpaceStatus::submitted;
 
 #if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
       KOKKOS_IMPL_HIP_SAFE_CALL(hipGetLastError());
