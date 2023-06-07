@@ -23,7 +23,7 @@ TEST(TEST_CATEGORY, dyn_rank_view_api_operator_rank12345) {
 
 template <typename SharedMemorySpace>
 void test_dyn_rank_view_resize() {
-  int n = 1000000;
+  int n = 1000;
   Kokkos::DynRankView<double, SharedMemorySpace> device_view("device view", n);
   // Make sure we don't deallocate memory in Kokkos::resize
   auto device_view_copy = device_view;
@@ -43,7 +43,7 @@ void test_dyn_rank_view_resize() {
 
 template <typename SharedMemorySpace>
 void test_dyn_rank_view_realloc() {
-  int n = 1000000;
+  int n = 1000;
   Kokkos::DynRankView<double, SharedMemorySpace> device_view("device view", n);
   // Make sure we don't deallocate memory in Kokkos::realloc
   auto device_view_copy = device_view;
@@ -62,7 +62,7 @@ void test_dyn_rank_view_realloc() {
 }
 
 #ifdef KOKKOS_HAS_SHARED_SPACE
-TEST(TEST_CATEGORY, dyn_rank_view_resize_realloc) {
+TEST(TEST_CATEGORY, dyn_rank_view_check_fence_resize_realloc) {
   if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::DefaultExecutionSpace>) {
     test_dyn_rank_view_resize<Kokkos::SharedSpace>();
     test_dyn_rank_view_realloc<Kokkos::SharedSpace>();
