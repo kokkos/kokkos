@@ -306,9 +306,7 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
               Kokkos::Experimental::WorkItemProperty::HintLightWeight;
       static constexpr typename Policy::work_item_property property =
           typename Policy::work_item_property();
-      if ((property & light_weight) == light_weight)
-      // Kokkos::Experimental::WorkItemProperty::HintHeavyWeight_t) {
-      {
+      if ((property & light_weight) == light_weight) {
         if (nblocks < block_size) {
           // Keep nblocks as is
         } else if (nblocks < 16 * block_size) {
