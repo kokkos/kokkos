@@ -301,11 +301,9 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
       int nblocks = (nwork + block.y - 1) / block.y;
       // Heuristic deciding the value of nblocks. The values have been chosen
       // using a vector product benchmark on MI250.
-      static constexpr Kokkos::Experimental::WorkItemProperty::HintLightWeight_t
-          light_weight =
-              Kokkos::Experimental::WorkItemProperty::HintLightWeight;
-      static constexpr typename Policy::work_item_property property =
-          typename Policy::work_item_property();
+      constexpr auto light_weight =
+          Kokkos::Experimental::WorkItemProperty::HintLightWeight;
+      constexpr auto property = typename Policy::work_item_property();
       if ((property & light_weight) == light_weight) {
         if (nblocks < block_size) {
           // Keep nblocks as is
