@@ -87,7 +87,7 @@ void sort_cudathrust(const Cuda& space,
   auto last             = ::Kokkos::Experimental::end(view);
   const auto thrustExec = thrust::cuda::par.on(space.cuda_stream());
   thrust::sort(thrustExec, first, last,
-	       std::forward<ComparatorOrEmpty>(compOrEmpty)...);
+               std::forward<ComparatorOrEmpty>(compOrEmpty)...);
   space.fence("Kokkos::sort: fence after sorting");
 }
 #endif
@@ -179,12 +179,12 @@ void sort_via_binsort(const ExecutionSpace& exec,
   bin_sort.sort(exec, view);
 }
 
-template <class ExecutionSpace, class DataType, class... Properties, class... ComparatorOrEmpty>
+template <class ExecutionSpace, class DataType, class... Properties,
+          class... ComparatorOrEmpty>
 void copy_to_host_run_stdsort_copy_back(
     const ExecutionSpace& space,
     const Kokkos::View<DataType, Properties...>& view,
-    ComparatorOrEmpty&&... compOrEmpty)
-{
+    ComparatorOrEmpty&&... compOrEmpty) {
   using ViewType         = Kokkos::View<DataType, Properties...>;
   using layout           = typename ViewType::array_layout;
   namespace KE           = ::Kokkos::Experimental;
@@ -246,8 +246,7 @@ void sort_device_view_without_comparator(
 template <class DataType, class... Properties>
 void sort_device_view_without_comparator(
     const Experimental::SYCL& space,
-    const Kokkos::View<DataType, Properties...>& view)
-{
+    const Kokkos::View<DataType, Properties...>& view) {
   using ViewType = Kokkos::View<DataType, Properties...>;
   constexpr bool strided =
       std::is_same_v<LayoutStride, typename ViewType::array_layout>;
@@ -300,8 +299,7 @@ void sort_device_view_with_comparator(
 template <class CompType, class DataType, class... Properties>
 void sort_device_view_with_comparator(
     const Experimental::SYCL& space,
-    const Kokkos::View<DataType, Properties...>& view, CompType comp)
-{
+    const Kokkos::View<DataType, Properties...>& view, CompType comp) {
   using ViewType = Kokkos::View<DataType, Properties...>;
   constexpr bool strided =
       std::is_same_v<LayoutStride, typename ViewType::array_layout>;
