@@ -23,22 +23,22 @@
 namespace Kokkos {
 // BEGIN macro definitions
 #if defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
-  #if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
-    #define KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(MACRO, FUNC) \
-      MACRO(FUNC, Kokkos::Experimental::half_t)             \
-      MACRO(FUNC, Kokkos::Experimental::bhalf_t)
-  #else
-    #define KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(MACRO, FUNC) \
-      MACRO(FUNC, Kokkos::Experimental::half_t)
-  #endif  // defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
+  #define KOKKOS_IMPL_MATH_H_FUNC_WRAPPER(MACRO, FUNC) \
+    MACRO(FUNC, Kokkos::Experimental::half_t)
 #else
-  #if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
-    #define KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(MACRO, FUNC) \
-      MACRO(FUNC, Kokkos::Experimental::bhalf_t)
-  #else
-    #define KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(MACRO, FUNC)
-  #endif  // defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
-#endif  // defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
+  #define KOKKOS_IMPL_MATH_H_FUNC_WRAPPER(MACRO, FUNC) \
+#endif
+
+#if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
+  #define KOKKOS_IMPL_MATH_B_FUNC_WRAPPER(MACRO, FUNC) \
+    MACRO(FUNC, Kokkos::Experimental::bhalf_t)
+#else
+  #define KOKKOS_IMPL_MATH_B_FUNC_WRAPPER(MACRO, FUNC) \
+#endif
+
+#define KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(MACRO, FUNC) \
+  KOKKOS_IMPL_MATH_H_FUNC_WRAPPER(MACRO, FUNC)          \
+  KOKKOS_IMPL_MATH_B_FUNC_WRAPPER(MACRO, FUNC)
 
 
 #define KOKKOS_IMPL_MATH_UNARY_FUNCTION_HALF_TYPE(FUNC, HALF_TYPE)      \
