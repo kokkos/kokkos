@@ -96,7 +96,7 @@ class HIPInternal {
   inline static std::mutex scratchFunctorMutex;
 
   hipStream_t m_stream = nullptr;
-  std::mutex m_internal_status_mutex;
+  mutable std::mutex m_internal_status_mutex;
   hipEvent_t m_last_event;
   mutable Kokkos::Impl::ExecutionSpaceStatus m_internal_status =
       Kokkos::Impl::ExecutionSpaceStatus::complete;

@@ -666,7 +666,7 @@ struct CudaParallelLaunchImpl<
 
       desul::ensure_cuda_lock_arrays_on_device();
 
-      std::scoped_lock lock(cuda_instance->m_internal_status_mutex);
+      std::scoped_lock status_lock(cuda_instance->m_internal_status_mutex);
 
       // Invoke the driver function on the device
       base_t::invoke_kernel(driver, grid, block, shmem, cuda_instance);
