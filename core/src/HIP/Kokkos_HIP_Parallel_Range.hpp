@@ -303,7 +303,7 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
       // using a vector product benchmark on MI250.
       constexpr auto light_weight =
           Kokkos::Experimental::WorkItemProperty::HintLightWeight;
-      constexpr auto property = typename Policy::work_item_property();
+      constexpr typename Policy::work_item_property property;
       if ((property & light_weight) == light_weight) {
         if (nblocks < block_size) {
           // Keep nblocks as is
