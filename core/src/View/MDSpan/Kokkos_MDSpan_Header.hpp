@@ -23,7 +23,10 @@ static_assert(false,
 #define KOKKOS_EXPERIMENTAL_MDSPAN_HPP
 
 // Look for the right mdspan
+#if __cplusplus >= 202002L
 #include <version>
+#endif
+
 #if __cpp_lib_mdspan >= 202207L
 #include <mdspan>
 namespace Kokkos {
