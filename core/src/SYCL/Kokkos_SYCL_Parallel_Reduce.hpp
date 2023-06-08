@@ -424,11 +424,12 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
 
         auto max_local_memory =
             q.get_device().get_info<sycl::info::device::local_mem_size>();
-        const auto wgroup_size =
-            std::min({Kokkos::bit_ceil(size),
-                      static_cast<size_t>(max / multiple) * multiple,
-                      Kokkos::bit_floor(max_local_memory /
-                                        (sizeof(value_type) * value_count))});
+        // Leave a maximum of 99% of the available memory as a safe-guard.
+        const auto wgroup_size = std::min(
+            {Kokkos::bit_ceil(size),
+             static_cast<size_t>(max / multiple) * multiple,
+             Kokkos::bit_floor(static_cast<size_t>(max_local_memory * .99) /
+                               (sizeof(value_type) * value_count))});
 
         // FIXME_SYCL Find a better way to determine a good limit for the
         // maximum number of work groups, also see
