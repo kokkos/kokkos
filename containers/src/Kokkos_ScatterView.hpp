@@ -663,6 +663,18 @@ template <typename DataType,
                   typename DeviceType::execution_space, Duplication>::type>
 class ScatterView;
 
+template <class>
+struct is_scatter_view : public std::false_type {};
+
+template <class D, class... P>
+struct is_scatter_view<ScatterView<D, P...>> : public std::true_type {};
+
+template <class D, class... P>
+struct is_scatter_view<const ScatterView<D, P...>> : public std::true_type {};
+
+template <class T>
+inline constexpr bool is_scatter_view_v = is_scatter_view<T>::value;
+
 template <typename DataType, typename Op, typename DeviceType, typename Layout,
           typename Duplication, typename Contribution,
           typename OverrideContribution>

@@ -43,6 +43,9 @@ struct is_offset_view<OffsetView<D, P...>> : public std::true_type {};
 template <class D, class... P>
 struct is_offset_view<const OffsetView<D, P...>> : public std::true_type {};
 
+template <class T>
+inline constexpr bool is_offset_view_v = is_offset_view<T>::value;
+
 #define KOKKOS_INVALID_OFFSET int64_t(0x7FFFFFFFFFFFFFFFLL)
 #define KOKKOS_INVALID_INDEX_RANGE \
   { KOKKOS_INVALID_OFFSET, KOKKOS_INVALID_OFFSET }

@@ -375,6 +375,9 @@ template <class D, class... P>
 struct is_dyn_rank_view<Kokkos::DynRankView<D, P...>> : public std::true_type {
 };
 
+template <class T>
+inline constexpr bool is_dyn_rank_view_v = is_dyn_rank_view<T>::value;
+
 template <typename DataType, class... Properties>
 class DynRankView : public ViewTraits<DataType, Properties...> {
   static_assert(!std::is_array<DataType>::value &&
