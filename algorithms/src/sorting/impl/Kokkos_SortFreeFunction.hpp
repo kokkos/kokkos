@@ -70,6 +70,28 @@
 namespace Kokkos {
 namespace Impl {
 
+#if defined(KOKKOS_ENABLE_CUDA)
+template <class DataType, class... Properties, class... ComparatorOrEmpty>
+void sort_cudathrust(const Cuda& space,
+                     const Kokkos::View<DataType, Properties...>& view,
+                     ComparatorOrEmpty&&... compOrEmpty) {
+  using exespace = Cuda;
+  using ViewType = Kokkos::View<DataType, Properties...>;
+  using MemSpace = typename ViewType::memory_space;
+  static_assert(
+      SpaceAccessibility<exespace, MemSpace>::accessible,
+      "Cuda execution space is not able to access the memory space of the "
+      "View argument!");
+
+  auto first            = ::Kokkos::Experimental::begin(view);
+  auto last             = ::Kokkos::Experimental::end(view);
+  const auto thrustExec = thrust::cuda::par.on(space.cuda_stream());
+  thrust::sort(thrustExec, first, last,
+	       std::forward<ComparatorOrEmpty>(compOrEmpty)...);
+  space.fence("Kokkos::sort: fence after sorting");
+}
+#endif
+
 #if defined(KOKKOS_ENABLE_ONEDPL)
 template <class DataType, class... Properties, class... ComparatorOrEmpty>
 void sort_onedpl(const Experimental::SYCL& space,
@@ -157,11 +179,12 @@ void sort_via_binsort(const ExecutionSpace& exec,
   bin_sort.sort(exec, view);
 }
 
-template <class ExecutionSpace, class CompType, class DataType,
-          class... Properties>
+template <class ExecutionSpace, class DataType, class... Properties, class... ComparatorOrEmpty>
 void copy_to_host_run_stdsort_copy_back(
     const ExecutionSpace& space,
-    const Kokkos::View<DataType, Properties...>& view, CompType comp) {
+    const Kokkos::View<DataType, Properties...>& view,
+    ComparatorOrEmpty&&... compOrEmpty)
+{
   using ViewType         = Kokkos::View<DataType, Properties...>;
   using layout           = typename ViewType::array_layout;
   namespace KE           = ::Kokkos::Experimental;
@@ -181,7 +204,7 @@ void copy_to_host_run_stdsort_copy_back(
     auto mv_h  = create_mirror_view_and_copy(Kokkos::HostSpace(), view_dc);
     auto first = KE::begin(mv_h);
     auto last  = KE::end(mv_h);
-    std::sort(first, last, comp);
+    std::sort(first, last, std::forward<ComparatorOrEmpty>(compOrEmpty)...);
     Kokkos::deep_copy(space, view_dc, mv_h);
 
     KE::copy(space, KE::cbegin(view_dc), KE::cend(view_dc), KE::begin(view));
@@ -189,7 +212,7 @@ void copy_to_host_run_stdsort_copy_back(
     auto mv_h  = create_mirror_view_and_copy(Kokkos::HostSpace(), view);
     auto first = KE::begin(mv_h);
     auto last  = KE::end(mv_h);
-    std::sort(first, last, comp);
+    std::sort(first, last, std::forward<ComparatorOrEmpty>(compOrEmpty)...);
     Kokkos::deep_copy(space, view, mv_h);
   }
 
@@ -204,32 +227,36 @@ void copy_to_host_run_stdsort_copy_back(
 
 template <class ExecutionSpace, class DataType, class... Properties>
 std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value>
-sort_without_comparator(const ExecutionSpace& exec,
-                        const Kokkos::View<DataType, Properties...>& view) {
-  Kokkos::fence("Kokkos::sort: before");
+sort_device_view_without_comparator(
+    const ExecutionSpace& exec,
+    const Kokkos::View<DataType, Properties...>& view) {
   sort_via_binsort(exec, view);
   exec.fence("Kokkos::sort: fence after sorting");
 }
 
 #if defined(KOKKOS_ENABLE_CUDA)
 template <class DataType, class... Properties>
-void sort_without_comparator(
+void sort_device_view_without_comparator(
     const Cuda& space, const Kokkos::View<DataType, Properties...>& view) {
-  Kokkos::fence("Kokkos::sort: before");
-  auto first            = ::Kokkos::Experimental::begin(view);
-  auto last             = ::Kokkos::Experimental::end(view);
-  const auto thrustExec = thrust::cuda::par.on(space.cuda_stream());
-  thrust::sort(thrustExec, first, last);
-  space.fence("Kokkos::sort: fence after sorting");
+  sort_cudathrust(space, view);
 }
 #endif
 
 #if defined(KOKKOS_ENABLE_ONEDPL)
 template <class DataType, class... Properties>
-void sort_without_comparator(
+void sort_device_view_without_comparator(
     const Experimental::SYCL& space,
-    const Kokkos::View<DataType, Properties...>& view) {
-  sort_onedpl(space, view);
+    const Kokkos::View<DataType, Properties...>& view)
+{
+  using ViewType = Kokkos::View<DataType, Properties...>;
+  constexpr bool strided =
+      std::is_same_v<LayoutStride, typename ViewType::array_layout>;
+  if constexpr (strided) {
+    // strided views not supported in dpl so use the most generic case
+    copy_to_host_run_stdsort_copy_back(space, view);
+  } else {
+    sort_onedpl(space, view);
+  }
 }
 #endif
 
@@ -242,9 +269,9 @@ void sort_without_comparator(
 template <class ExecutionSpace, class CompType, class DataType,
           class... Properties>
 std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value>
-sort_device_view_with_comparator(const ExecutionSpace& space,
-				 const Kokkos::View<DataType, Properties...>& view,
-				 CompType comp){
+sort_device_view_with_comparator(
+    const ExecutionSpace& space,
+    const Kokkos::View<DataType, Properties...>& view, CompType comp) {
   // This is a fallback case that is generic and works, for now,
   // by copying data to host, running std::sort and then copying back.
   // Potentially, this can later be changed with a better solution
@@ -262,23 +289,19 @@ sort_device_view_with_comparator(const ExecutionSpace& space,
 
 #if defined(KOKKOS_ENABLE_CUDA)
 template <class CompType, class DataType, class... Properties>
-void sort_device_view_with_comparator(const Cuda& space,
-				      const Kokkos::View<DataType, Properties...>& view,
-				      CompType comp) {
-  space.fence("Kokkos::sort: before");
-  auto first               = ::Kokkos::Experimental::begin(view);
-  auto last                = ::Kokkos::Experimental::end(view);
-  const auto thrust_policy = thrust::cuda::par.on(space.cuda_stream());
-  thrust::sort(thrust_policy, first, last, comp);
-  space.fence("Kokkos::sort: fence after sorting");
+void sort_device_view_with_comparator(
+    const Cuda& space, const Kokkos::View<DataType, Properties...>& view,
+    CompType comp) {
+  sort_cudathrust(space, view, comp);
 }
 #endif
 
 #if defined(KOKKOS_ENABLE_ONEDPL)
 template <class CompType, class DataType, class... Properties>
-void sort_device_view_with_comparator(const Experimental::SYCL& space,
-				      const Kokkos::View<DataType, Properties...>& view,
-				      CompType comp) {
+void sort_device_view_with_comparator(
+    const Experimental::SYCL& space,
+    const Kokkos::View<DataType, Properties...>& view, CompType comp)
+{
   using ViewType = Kokkos::View<DataType, Properties...>;
   constexpr bool strided =
       std::is_same_v<LayoutStride, typename ViewType::array_layout>;

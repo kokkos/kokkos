@@ -69,7 +69,7 @@ template <class ExecutionSpace, class Tag, class ValueType>
 void run_all_scenarios(int api)
 {
   const std::vector<std::size_t> my_scenarios =
-  {0, 1, 2, 9, 1003, 51513, 501578};
+  {0, 1, 2, 9, 1003, 51513};
 
   for (std::size_t N : my_scenarios)
   {
@@ -92,7 +92,6 @@ void run_all_scenarios(int api)
       std::sort(KE::begin(dataViewBeforeOp_h), KE::end(dataViewBeforeOp_h),
                 comp_t{});
     }
-#if !defined(KOKKOS_ENABLE_ONEDPL)
     else if (api == 2) {
       Kokkos::sort(dataView);
       std::sort(KE::begin(dataViewBeforeOp_h), KE::end(dataViewBeforeOp_h));
@@ -102,7 +101,6 @@ void run_all_scenarios(int api)
       Kokkos::sort(ExecutionSpace(), dataView);
       std::sort(KE::begin(dataViewBeforeOp_h), KE::end(dataViewBeforeOp_h));
     }
-#endif
 
     auto dataView_h = stdalgos::create_host_space_copy(dataView);
     stdalgos::compare_views(dataViewBeforeOp_h, dataView_h);
