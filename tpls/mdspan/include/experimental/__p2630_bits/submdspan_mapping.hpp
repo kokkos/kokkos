@@ -134,7 +134,8 @@ submdspan_mapping(const layout_left::mapping<Extents> &src_mapping,
         dst_mapping_t(dst_ext, detail::construct_sub_strides(
                                    src_mapping, inv_map,
     // HIP needs deduction guides to have markups so we need to be explicit
-    #ifdef _MDSPAN_HAS_HIP
+    // NVCC 11.0 has a bug with deduction guide here, tested that 11.2 does not have the issue
+    #if defined(_MDSPAN_HAS_HIP) || (defined(__NVCC__) && (__CUDACC_VER_MAJOR__ * 100 + __CUDACC_VER_MINOR__ * 10) < 1120)
                                    std::tuple<decltype(detail::stride_of(slices))...>{detail::stride_of(slices)...})),
     #else
                                    std::tuple{detail::stride_of(slices)...})),
@@ -242,7 +243,8 @@ submdspan_mapping(const layout_right::mapping<Extents> &src_mapping,
         dst_mapping_t(dst_ext, detail::construct_sub_strides(
                                    src_mapping, inv_map,
     // HIP needs deduction guides to have markups so we need to be explicit
-    #ifdef _MDSPAN_HAS_HIP
+    // NVCC 11.0 has a bug with deduction guide here, tested that 11.2 does not have the issue
+    #if defined(_MDSPAN_HAS_HIP) || (defined(__NVCC__) && (__CUDACC_VER_MAJOR__ * 100 + __CUDACC_VER_MINOR__ * 10) < 1120)
                                    std::tuple<decltype(detail::stride_of(slices))...>{detail::stride_of(slices)...})),
     #else
                                    std::tuple{detail::stride_of(slices)...})),
@@ -285,7 +287,13 @@ submdspan_mapping(const layout_stride::mapping<Extents> &src_mapping,
   return mapping_offset<dst_mapping_t>{
       dst_mapping_t(dst_ext, detail::construct_sub_strides(
                                  src_mapping, inv_map,
-                                 std::tuple{detail::stride_of(slices)...})),
+    // HIP needs deduction guides to have markups so we need to be explicit
+    // NVCC 11.0 has a bug with deduction guide here, tested that 11.2 does not have the issue
+    #if defined(_MDSPAN_HAS_HIP) || (defined(__NVCC__) && (__CUDACC_VER_MAJOR__ * 100 + __CUDACC_VER_MINOR__ * 10) < 1120)
+                                 std::tuple<decltype(detail::stride_of(slices))...>(detail::stride_of(slices)...))),
+#else
+                                 std::tuple(detail::stride_of(slices)...))),
+#endif
       static_cast<size_t>(src_mapping(detail::first_of(slices)...))};
 }
 } // namespace MDSPAN_IMPL_STANDARD_NAMESPACE
