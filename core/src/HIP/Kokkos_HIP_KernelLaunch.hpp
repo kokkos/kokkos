@@ -465,7 +465,7 @@ struct HIPParallelLaunch<
 
       desul::ensure_hip_lock_arrays_on_device();
 
-      std::scoped_lock status_lock(m_space_instance->m_internal_status_mutex);
+      std::scoped_lock status_lock(hip_instance->m_internal_status_mutex);
 
       // Invoke the driver function on the device
       base_t::invoke_kernel(driver, grid, block, shmem, hip_instance);
