@@ -415,12 +415,15 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
         // size but it turns out that this is not accurate and choosing a larger
         // subgroup size gives better peformance (and is what the SYCL compiler
         // does for sycl::reductions).
-        /*auto max =
+#ifndef KOKKOS_ARCH_INTEL_GPU
+        auto max =
             kernel
                 .get_info<sycl::info::kernel_device_specific::work_group_size>(
-                    q.get_device());*/
-        auto max =
-            q.get_device().get_info<sycl::info::device::max_work_group_size>();
+                    q.get_device());
+#else
+	auto max =
+           q.get_device().get_info<sycl::info::device::max_work_group_size>();
+#endif
 
         auto max_local_memory =
             q.get_device().get_info<sycl::info::device::local_mem_size>();
