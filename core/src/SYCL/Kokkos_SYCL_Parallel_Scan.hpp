@@ -334,7 +334,6 @@ class ParallelScanSYCLBase {
 
     sycl::event event =
         sycl_direct_launch(functor_wrapper, functor_wrapper.get_copy_event());
-    instance.m_last_event = event;
     functor_wrapper.register_event(event);
     post_functor();
   }

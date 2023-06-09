@@ -79,16 +79,12 @@ class SYCL {
   //@{
 
   bool is_running() const {
-    const sycl::info::event_command_status sycl_status =
-        m_space_instance->m_last_event
-            .get_info<sycl::info::event::command_execution_status>();
-    switch (sycl_status) {
-      case sycl::info::event_command_status::submitted:
-      case sycl::info::event_command_status::running: return true;
-      case sycl::info::event_command_status::complete: return false;
-      default: assert(false);
-    }
+#ifdef SYCL_EXT_ONEAPI_QUEUE_EMPTY
+    return !m_space_instance->m_queue->ext_oneapi_empty();
+#else
+    fence("SYCL::is_running");
     return false;
+#endif
   }
 
   KOKKOS_INLINE_FUNCTION static int in_parallel() {

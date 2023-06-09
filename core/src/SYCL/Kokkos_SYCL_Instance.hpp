@@ -83,8 +83,6 @@ class SYCLInternal {
   // We need a mutex for thread safety when modifying all_queues.
   static std::mutex mutex;
 
-  std::atomic<sycl::event> m_last_event;
-
   // USMObjectMem is a reusable buffer for a single object
   // in USM memory
   template <sycl::usm::alloc Kind>

@@ -456,9 +456,8 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
         m_functor, indirectKernelMem);
 
-    sycl::event event  = sycl_direct_launch(m_policy, functor_wrapper,
+    sycl::event event = sycl_direct_launch(m_policy, functor_wrapper,
                                            functor_wrapper.get_copy_event());
-    space.m_last_event = event;
     functor_wrapper.register_event(event);
     space.register_team_scratch_event(m_scratch_pool_id, event);
   }
@@ -838,7 +837,6 @@ class ParallelReduce<CombinedFunctorReducerType,
     sycl::event event =
         sycl_direct_launch(m_policy, functor_reducer_wrapper,
                            functor_reducer_wrapper.get_copy_event());
-    instance.m_last_event = event;
     functor_reducer_wrapper.register_event(event);
     instance.register_team_scratch_event(m_scratch_pool_id, event);
   }

@@ -467,7 +467,6 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
     sycl::event event =
         sycl_direct_launch(m_policy, functor_reducer_wrapper,
                            functor_reducer_wrapper.get_copy_event());
-    instance.m_last_event = event;
     functor_reducer_wrapper.register_event(event);
   }
 
@@ -764,7 +763,6 @@ class ParallelReduce<CombinedFunctorReducerType,
     sycl::event event =
         sycl_direct_launch(m_policy, functor_reducer_wrapper,
                            functor_reducer_wrapper.get_copy_event());
-    instance.m_last_event = event;
     functor_reducer_wrapper.register_event(event);
   }
 
