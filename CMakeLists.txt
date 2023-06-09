@@ -150,8 +150,8 @@ ENDIF()
 
 
 set(Kokkos_VERSION_MAJOR 4)
-set(Kokkos_VERSION_MINOR 0)
-set(Kokkos_VERSION_PATCH 99)
+set(Kokkos_VERSION_MINOR 1)
+set(Kokkos_VERSION_PATCH 00)
 set(Kokkos_VERSION "${Kokkos_VERSION_MAJOR}.${Kokkos_VERSION_MINOR}.${Kokkos_VERSION_PATCH}")
 message(STATUS "Kokkos version: ${Kokkos_VERSION}")
 math(EXPR KOKKOS_VERSION "${Kokkos_VERSION_MAJOR} * 10000 + ${Kokkos_VERSION_MINOR} * 100 + ${Kokkos_VERSION_PATCH}")
