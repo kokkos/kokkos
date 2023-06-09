@@ -299,8 +299,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
       // use a slightly less constrained, but still well bounded limit for
       // scratch
       int nblocks = (nwork + block.y - 1) / block.y;
-      // Heuristic deciding the value of nblocks. The values for the light weight case
-      // have been chosen using a vector product benchmark on MI250.
+      // Heuristic deciding the value of nblocks. The values for the light
+      // weight case have been chosen using a vector product benchmark on MI250.
       constexpr auto light_weight =
           Kokkos::Experimental::WorkItemProperty::HintLightWeight;
       constexpr typename Policy::work_item_property property;
