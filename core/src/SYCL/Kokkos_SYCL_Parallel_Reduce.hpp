@@ -427,7 +427,7 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
 
         auto max_local_memory =
             q.get_device().get_info<sycl::info::device::local_mem_size>();
-        // Leave a maximum of 99% of the available memory as a safe-guard.
+        // Use a maximum of 99% of the available memory as a safe-guard.
         const auto wgroup_size = std::min(
             {Kokkos::bit_ceil(size),
              static_cast<size_t>(max / multiple) * multiple,
