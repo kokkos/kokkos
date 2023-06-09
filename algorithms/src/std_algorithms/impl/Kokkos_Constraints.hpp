@@ -19,7 +19,6 @@
 
 #include <Kokkos_DetectionIdiom.hpp>
 #include <Kokkos_View.hpp>
-#include "Kokkos_IsTeamHandle.hpp"
 
 namespace Kokkos {
 namespace Experimental {
