@@ -25,5 +25,11 @@ std::string view_tag_to_string(StridedTwoTag) { return "stride2_view"; }
 
 std::string view_tag_to_string(StridedThreeTag) { return "stride3_view"; }
 
+std::string view_tag_to_string(StridedTwoRowsTag) { return "stride2rows_view"; }
+
+std::string view_tag_to_string(StridedThreeRowsTag) {
+  return "stride3rows_view";
+}
+
 }  // namespace stdalgos
 }  // namespace Test
