@@ -169,7 +169,6 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
       list(APPEND STDALGO_TEAM_SOURCES_A Test${Name}.cpp)
     endforeach()
 
-
   endif()
 endforeach()
 
@@ -207,6 +206,17 @@ if(KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM)
     TestStdAlgorithmsInclusiveScan.cpp
   )
 endif()
+
+# need to remove tests for OpenMPTarget because in these cases
+# the impl needs to use either Kokkos or tailored reducers
+# which results in runtime memory errors.
+if(KOKKOS_ENABLE_OPENMPTARGET)
+  list(REMOVE_ITEM STDALGO_TEAM_SOURCES_A
+    TestStdAlgorithmsTeamAdjacentFind.cpp
+    TestStdAlgorithmsTeamLexicographicalCompare.cpp
+  )
+endif()
+
 
 foreach(ID A;B;C;D;E)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
