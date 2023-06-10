@@ -152,6 +152,21 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
       list(APPEND STDALGO_SOURCES_E Test${Name}.cpp)
     endforeach()
 
+    # ------------------------------------------
+    # std team B
+    # ------------------------------------------
+    set(STDALGO_TEAM_SOURCES_B)
+    foreach(Name
+	StdAlgorithmsCommon
+	StdAlgorithmsTeamEqual
+	StdAlgorithmsTeamSearch
+	StdAlgorithmsTeamFindEnd
+	StdAlgorithmsTeamFindFirstOf
+
+      )
+      list(APPEND STDALGO_TEAM_SOURCES_A Test${Name}.cpp)
+    endforeach()
+
   endif()
 endforeach()
 
@@ -190,12 +205,32 @@ if(KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM)
   )
 endif()
 
+# need to remove tests for OpenMPTarget because in these cases
+# the impl needs to use either Kokkos or tailored reducers
+# which results in runtime memory errors.
+if(KOKKOS_ENABLE_OPENMPTARGET)
+  list(REMOVE_ITEM STDALGO_TEAM_SOURCES_B
+    TestStdAlgorithmsTeamFindEnd.cpp
+    TestStdAlgorithmsTeamFindFirstOf.cpp
+    TestStdAlgorithmsTeamSearch.cpp
+  )
+endif()
+
 foreach(ID A;B;C;D;E)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     AlgorithmsUnitTest_StdSet_${ID}
     SOURCES
     UnitTestMain.cpp
     ${STDALGO_SOURCES_${ID}}
+    )
+endforeach()
+
+foreach(ID B)
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_StdSet_Team_${ID}
+    SOURCES
+    UnitTestMain.cpp
+    ${STDALGO_TEAM_SOURCES_${ID}}
     )
 endforeach()
 
