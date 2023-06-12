@@ -23,42 +23,81 @@
 namespace Kokkos {
 namespace Experimental {
 
+//
+// overload set accepting execution space
+//
 template <class ExecutionSpace, class InputIterator, class OutputIterator>
-OutputIterator reverse_copy(const ExecutionSpace& ex, InputIterator first,
-                            InputIterator last, OutputIterator d_first) {
-  return Impl::reverse_copy_impl("Kokkos::reverse_copy_iterator_api_default",
-                                 ex, first, last, d_first);
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                 OutputIterator>
+reverse_copy(const ExecutionSpace& ex, InputIterator first, InputIterator last,
+             OutputIterator d_first) {
+  return Impl::reverse_copy_exespace_impl(
+      "Kokkos::reverse_copy_iterator_api_default", ex, first, last, d_first);
 }
 
 template <class ExecutionSpace, class InputIterator, class OutputIterator>
-OutputIterator reverse_copy(const std::string& label, const ExecutionSpace& ex,
-                            InputIterator first, InputIterator last,
-                            OutputIterator d_first) {
-  return Impl::reverse_copy_impl(label, ex, first, last, d_first);
+std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                 OutputIterator>
+reverse_copy(const std::string& label, const ExecutionSpace& ex,
+             InputIterator first, InputIterator last, OutputIterator d_first) {
+  return Impl::reverse_copy_exespace_impl(label, ex, first, last, d_first);
 }
 
 template <class ExecutionSpace, class DataType1, class... Properties1,
-          class DataType2, class... Properties2>
+          class DataType2, class... Properties2,
+          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                           int> = 0>
 auto reverse_copy(const ExecutionSpace& ex,
                   const ::Kokkos::View<DataType1, Properties1...>& source,
                   ::Kokkos::View<DataType2, Properties2...>& dest) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
 
-  return Impl::reverse_copy_impl("Kokkos::reverse_copy_view_api_default", ex,
-                                 cbegin(source), cend(source), begin(dest));
+  return Impl::reverse_copy_exespace_impl(
+      "Kokkos::reverse_copy_view_api_default", ex, cbegin(source), cend(source),
+      begin(dest));
 }
 
 template <class ExecutionSpace, class DataType1, class... Properties1,
-          class DataType2, class... Properties2>
+          class DataType2, class... Properties2,
+          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                           int> = 0>
 auto reverse_copy(const std::string& label, const ExecutionSpace& ex,
                   const ::Kokkos::View<DataType1, Properties1...>& source,
                   ::Kokkos::View<DataType2, Properties2...>& dest) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
 
-  return Impl::reverse_copy_impl(label, ex, cbegin(source), cend(source),
-                                 begin(dest));
+  return Impl::reverse_copy_exespace_impl(label, ex, cbegin(source),
+                                          cend(source), begin(dest));
+}
+
+//
+// overload set accepting a team handle
+// Note: for now omit the overloads accepting a label
+// since they cause issues on device because of the string allocation.
+//
+template <class TeamHandleType, class InputIterator, class OutputIterator>
+KOKKOS_FUNCTION std::enable_if_t<
+    ::Kokkos::is_team_handle<TeamHandleType>::value, OutputIterator>
+reverse_copy(const TeamHandleType& teamHandle, InputIterator first,
+             InputIterator last, OutputIterator d_first) {
+  return Impl::reverse_copy_team_impl(teamHandle, first, last, d_first);
+}
+
+template <
+    class TeamHandleType, class DataType1, class... Properties1,
+    class DataType2, class... Properties2,
+    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, int> = 0>
+KOKKOS_FUNCTION auto reverse_copy(
+    const TeamHandleType& teamHandle,
+    const ::Kokkos::View<DataType1, Properties1...>& source,
+    ::Kokkos::View<DataType2, Properties2...>& dest) {
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source);
+  Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
+
+  return Impl::reverse_copy_team_impl(teamHandle, cbegin(source), cend(source),
+                                      begin(dest));
 }
 
 }  // namespace Experimental
