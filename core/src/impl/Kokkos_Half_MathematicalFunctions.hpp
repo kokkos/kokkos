@@ -26,14 +26,14 @@ namespace Kokkos {
   #define KOKKOS_IMPL_MATH_H_FUNC_WRAPPER(MACRO, FUNC) \
     MACRO(FUNC, Kokkos::Experimental::half_t)
 #else
-  #define KOKKOS_IMPL_MATH_H_FUNC_WRAPPER(MACRO, FUNC) \
+  #define KOKKOS_IMPL_MATH_H_FUNC_WRAPPER(MACRO, FUNC)
 #endif
 
 #if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
   #define KOKKOS_IMPL_MATH_B_FUNC_WRAPPER(MACRO, FUNC) \
     MACRO(FUNC, Kokkos::Experimental::bhalf_t)
 #else
-  #define KOKKOS_IMPL_MATH_B_FUNC_WRAPPER(MACRO, FUNC) \
+  #define KOKKOS_IMPL_MATH_B_FUNC_WRAPPER(MACRO, FUNC)
 #endif
 
 #define KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(MACRO, FUNC) \
