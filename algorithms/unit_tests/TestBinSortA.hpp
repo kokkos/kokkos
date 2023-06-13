@@ -197,7 +197,7 @@ void test_issue_1160_impl() {
 
 template <class ExecutionSpace, class T>
 void test_sort_integer_overflow() {
-  // FRIZZI: this test is meant to test something for BinSort,
+  // FIXME: this test is meant to test something for BinSort,
   // but actually uses the kokkos::sort API with the assumption
   // that underneath it calls binsort. I don't think this is correct,
   // because if the kokkos::sort API chages impl, this test is not testing
