@@ -1407,6 +1407,15 @@ class const_where_expression<simd_mask<float, simd_abi::avx2_fixed_size<4>>,
     _mm_maskstore_ps(mem, _mm_castps_si128(static_cast<__m128>(m_mask)),
                      static_cast<__m128>(m_value));
   }
+  //FIXME?
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+  void scatter_to(
+      float* mem,
+      simd<std::int32_t, simd_abi::avx2_fixed_size<4>> const& index) const {
+    for (std::size_t lane = 0; lane < 4; ++lane) {
+      if (m_mask[lane]) mem[index[lane]] = m_value[lane];
+    }
+  }
 
   friend constexpr auto const& Impl::mask<float, abi_type>(
       const_where_expression<mask_type, value_type> const& x);
@@ -1430,6 +1439,15 @@ class where_expression<simd_mask<float, simd_abi::avx2_fixed_size<4>>,
   void copy_from(float const* mem, element_aligned_tag) {
     m_value = value_type(
         _mm_maskload_ps(mem, _mm_castps_si128(static_cast<__m128>(m_mask))));
+  }
+  //FIXME?
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+  void gather_from(
+      float const* mem,
+      simd<std::int32_t, simd_abi::avx2_fixed_size<4>> const& index) {
+    m_value = value_type(_mm_mask_i32gather_ps(
+        _mm_set1_ps(0.0), mem, static_cast<__m128i>(index),
+        static_cast<__m128>(m_mask), 4));
   }
   template <class U,
             std::enable_if_t<std::is_convertible_v<
