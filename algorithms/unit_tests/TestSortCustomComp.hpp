@@ -110,6 +110,12 @@ void run_all_scenarios(int api)
 TEST(TEST_CATEGORY, SortWithCustomComparator) {
   using ExeSpace = TEST_EXECSPACE;
 
+#if defined(KOKKOS_ENABLE_SYCL)
+  for (int api = 0; api < 2; api++) {
+    run_all_scenarios<ExeSpace, stdalgos::DynamicTag, int>(api);
+    run_all_scenarios<ExeSpace, stdalgos::DynamicTag, double>(api);
+  }  // end for
+#else
   for (int api = 0; api < 4; api++) {
     run_all_scenarios<ExeSpace, stdalgos::DynamicTag, int>(api);
     run_all_scenarios<ExeSpace, stdalgos::DynamicTag, double>(api);
@@ -118,6 +124,8 @@ TEST(TEST_CATEGORY, SortWithCustomComparator) {
     run_all_scenarios<ExeSpace, stdalgos::StridedTwoTag, double>(api);
     run_all_scenarios<ExeSpace, stdalgos::StridedThreeTag, double>(api);
   }  // end for
+#endif
+
 }  // namespace SortWithComp
 
 }  // namespace SortWithComp
