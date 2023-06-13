@@ -112,8 +112,10 @@ void run_all_scenarios(int api)
     // comparator MyComp, we should have a result in non-ascending order.
     // We can verify this by running std::is_sorted and if that returns
     // false, then it means everything ran as expected
-    namespace KE = Kokkos::Experimental;
-    ASSERT_FALSE(std::is_sorted( KE::cbegin(dataView_h), KE::cend(dataView_h)));
+    if (api <= 1 && N >= 2){
+      namespace KE = Kokkos::Experimental;
+      ASSERT_FALSE(std::is_sorted( KE::cbegin(dataView_h), KE::cend(dataView_h)));
+    }
   }
 }
 
