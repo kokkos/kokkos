@@ -214,6 +214,7 @@ if(KOKKOS_ENABLE_OPENMPTARGET)
   list(REMOVE_ITEM STDALGO_TEAM_SOURCES_A
     TestStdAlgorithmsTeamAdjacentFind.cpp
     TestStdAlgorithmsTeamLexicographicalCompare.cpp
+    TestStdAlgorithmsTeamMismatch.cpp
   )
 endif()
 
