@@ -375,6 +375,9 @@ template <class D, class... P>
 struct is_dyn_rank_view<Kokkos::DynRankView<D, P...>> : public std::true_type {
 };
 
+template <class T>
+inline constexpr bool is_dyn_rank_view_v = is_dyn_rank_view<T>::value;
+
 template <typename DataType, class... Properties>
 class DynRankView : public ViewTraits<DataType, Properties...> {
   static_assert(!std::is_array<DataType>::value &&
@@ -2299,9 +2302,10 @@ inline void impl_resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
   if constexpr (alloc_prop_input::has_execution_space)
     Kokkos::Impl::DynRankViewRemap<drview_type, drview_type>(
         Impl::get_property<Impl::ExecutionSpaceTag>(prop_copy), v_resized, v);
-  else
+  else {
     Kokkos::Impl::DynRankViewRemap<drview_type, drview_type>(v_resized, v);
-
+    Kokkos::fence("Kokkos::resize(DynRankView)");
+  }
   v = v_resized;
 }
 

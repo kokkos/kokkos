@@ -241,13 +241,19 @@ void OpenMPInternal::initialize(int thread_count) {
   }
 
   {
-    if (Kokkos::show_warnings() && nullptr == std::getenv("OMP_PROC_BIND")) {
+    if (Kokkos::show_warnings() && !std::getenv("OMP_PROC_BIND")) {
       std::cerr
           << R"WARNING(Kokkos::OpenMP::initialize WARNING: OMP_PROC_BIND environment variable not set
   In general, for best performance with OpenMP 4.0 or better set OMP_PROC_BIND=spread and OMP_PLACES=threads
   For best performance with OpenMP 3.1 set OMP_PROC_BIND=true
   For unit testing set OMP_PROC_BIND=false
 )WARNING" << std::endl;
+
+      if (mpi_detected()) {
+        std::cerr
+            << R"WARNING(MPI detected: For OpenMP binding to work as intended, MPI ranks must be bound to exclusive CPU sets.
+)WARNING" << std::endl;
+      }
     }
 
     OpenMP::memory_space space;
