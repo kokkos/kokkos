@@ -73,7 +73,7 @@ namespace Impl {
 
 #if defined(KOKKOS_ENABLE_CUDA)
 template <class DataType, class... Properties, class... ComparatorOrEmpty>
-void sort_cudathurst_and_fence_exec(const Cuda& exec,
+void sort_cudathrust_and_fence_exec(const Cuda& exec,
                      const Kokkos::View<DataType, Properties...>& view,
                      ComparatorOrEmpty&&... compOrEmpty)
 {
@@ -239,7 +239,7 @@ template <class DataType, class... Properties>
 void sort_device_view_without_comparator_and_fence_exec(
     const Cuda& exec, const Kokkos::View<DataType, Properties...>& view)
 {
-  sort_cudathurst_and_fence_exec(exec, view);
+  sort_cudathrust_and_fence_exec(exec, view);
 }
 #endif
 
@@ -276,7 +276,7 @@ void sort_device_view_with_comparator_and_fence_exec(
 	      const Kokkos::View<DataType, Properties...>& view,
 	      CompType comp)
 {
-  sort_cudathurst_and_fence_exec(exec, view, comp);
+  sort_cudathrust_and_fence_exec(exec, view, comp);
 }
 #endif
 

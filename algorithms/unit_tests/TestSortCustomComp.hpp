@@ -29,7 +29,10 @@ namespace SortWithComp {
 template <class T>
 struct MyComp {
   KOKKOS_INLINE_FUNCTION
-  bool operator()(T a, T b) const { return a < b; }
+  bool operator()(T a, T b) const {
+    // we return a>b on purpose here, rather than doing a<b
+    return a > b;
+  }
 };
 
 template <class LayoutTagType, class ValueType>
@@ -104,6 +107,13 @@ void run_all_scenarios(int api)
 
     auto dataView_h = stdalgos::create_host_space_copy(dataView);
     stdalgos::compare_views(dataViewBeforeOp_h, dataView_h);
+
+    // To actually check that Kokkos::sort used the custom
+    // comparator MyComp, we should have a result in non-ascending order.
+    // We can verify this by running std::is_sorted and if that returns
+    // false, then it means everything ran as expected
+    namespace KE = Kokkos::Experimental;
+    ASSERT_FALSE(std::is_sorted( KE::cbegin(dataView_h), KE::cend(dataView_h)));
   }
 }
 
