@@ -34,6 +34,7 @@ template <class ExecutionSpace, class DataType, class... Properties>
 void sort([[maybe_unused]] const ExecutionSpace& exec,
           const Kokkos::View<DataType, Properties...>& view)
 {
+  // constraints
   using ViewType = Kokkos::View<DataType, Properties...>;
   using MemSpace = typename ViewType::memory_space;
   static_assert( (ViewType::rank == 1),
@@ -42,29 +43,35 @@ void sort([[maybe_unused]] const ExecutionSpace& exec,
 		"Kokkos::sort: execution space instance is not able to access the memory space of the "
 		"View argument!");
 
-  if (view.extent(0) == 0) { return; }
+  // trivial cases
+  if (view.extent(0) <= 1) { return; }
 
+  // non trivial
   if constexpr (SpaceAccessibility<HostSpace, MemSpace>::accessible) {
     auto first = ::Kokkos::Experimental::begin(view);
     auto last  = ::Kokkos::Experimental::end(view);
     std::sort(first, last);
   } else {
-    Impl::sort_device_view_without_comparator(exec, view);
+    Impl::sort_device_view_without_comparator_and_fence_exec(exec, view);
   }
 }
 
 template <class DataType, class... Properties>
 void sort(const Kokkos::View<DataType, Properties...>& view)
 {
+  // constraints
   using ViewType = Kokkos::View<DataType, Properties...>;
   static_assert( (ViewType::rank == 1),
 		 "Kokkos::sort: currently supporting 1D Views only.");
 
-  if (view.extent(0) == 0) { return; }
+  // trivial cases
+  if (view.extent(0) <= 1) { return; }
 
+  // non trivial
   using ViewType = Kokkos::View<DataType, Properties...>;
   typename ViewType::execution_space exec;
   sort(exec, view);
+  exec.fence("Kokkos::sort: fence after sorting");
 }
 
 //
@@ -76,6 +83,7 @@ void sort([[maybe_unused]] const ExecutionSpace& exec,
           const Kokkos::View<DataType, Properties...>& view,
           CompType const& comp)
 {
+  // constraints
   using ViewType = Kokkos::View<DataType, Properties...>;
   using MemSpace = typename ViewType::memory_space;
   static_assert(
@@ -87,16 +95,17 @@ void sort([[maybe_unused]] const ExecutionSpace& exec,
           (std::is_same_v<typename ViewType::array_layout, LayoutRight> ||
            std::is_same_v<typename ViewType::array_layout, LayoutLeft> ||
 	   std::is_same_v<typename ViewType::array_layout, LayoutStride>),
-      "sort: only supports 1D Views with LayoutRight, LayoutLeft or LayoutStride.");
+      "Kokkos::sort: supports 1D Views with LayoutRight, LayoutLeft or LayoutStride.");
 
-  if (view.extent(0) == 0) { return; }
+  // trivial cases
+  if (view.extent(0) <= 1) { return; }
 
   if constexpr (SpaceAccessibility<HostSpace, MemSpace>::accessible) {
     auto first = ::Kokkos::Experimental::begin(view);
     auto last  = ::Kokkos::Experimental::end(view);
     std::sort(first, last, comp);
   } else {
-    Impl::sort_device_view_with_comparator(exec, view, comp);
+    Impl::sort_device_view_with_comparator_and_fence_exec(exec, view, comp);
   }
 }
 
@@ -104,12 +113,25 @@ template <class CompType, class DataType, class... Properties>
 void sort(const Kokkos::View<DataType, Properties...>& view,
           CompType const& comp)
 {
-  if (view.extent(0) == 0) { return; }
+  // constraints
+  using ViewType = Kokkos::View<DataType, Properties...>;
+  static_assert(
+      ViewType::rank == 1 &&
+          (std::is_same_v<typename ViewType::array_layout, LayoutRight> ||
+           std::is_same_v<typename ViewType::array_layout, LayoutLeft> ||
+	   std::is_same_v<typename ViewType::array_layout, LayoutStride>),
+      "Kokkos::sort: supports 1D Views with LayoutRight, LayoutLeft or LayoutStride.");
+
+  // trivial cases
+  if (view.extent(0) <= 1) { return; }
 
   using ViewType = Kokkos::View<DataType, Properties...>;
   typename ViewType::execution_space exec;
   sort(exec, view, comp);
+  exec.fence("Kokkos::sort: fence after sorting");
 }
+
+
 
 
 //
@@ -123,8 +145,10 @@ sort(const ExecutionSpace& exec,
      size_t const end)
 {
   // accepting rank1 or 2 views because binsort works with both: for rank2, binsort operators on rows
-  static_assert( (ViewType::rank <= 2) && (is_view_v<ViewType> || is_dynamic_view<ViewType>::value),
-		 "Kokkos::sort: supports 1D or 2D regular or dynamic Views.");
+  static_assert( (ViewType::rank <= 2)
+		 && (is_view_v<ViewType> || is_dynamic_view_v<ViewType>),
+    "Kokkos::sort: supports rank-1 or rank-2 regular or dynamic Views.");
+
   using MemSpace = typename ViewType::memory_space;
   static_assert(
       SpaceAccessibility<ExecutionSpace, MemSpace>::accessible,
@@ -155,8 +179,9 @@ void sort(ViewType view,
 	  size_t const end)
 {
   // accepting rank1 or 2 views because binsort works with both: for rank2, binsort operators on rows
-  static_assert( (ViewType::rank <= 2) && (is_view_v<ViewType> || is_dynamic_view<ViewType>::value),
-    "Kokkos::sort: supports 1D or 2D regular or dynamic Views.");
+  static_assert( (ViewType::rank <= 2)
+		 && (is_view_v<ViewType> || is_dynamic_view_v<ViewType>),
+    "Kokkos::sort: supports rank-1 or rank-2 regular or dynamic Views.");
 
   if (view.extent(0) == 0) { return; }
 

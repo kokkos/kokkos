@@ -69,43 +69,46 @@
 
 namespace Kokkos {
 namespace Impl {
+// clang-format off
 
 #if defined(KOKKOS_ENABLE_CUDA)
 template <class DataType, class... Properties, class... ComparatorOrEmpty>
-void sort_cudathrust(const Cuda& space,
+void sort_cudathurst_and_fence_exec(const Cuda& exec,
                      const Kokkos::View<DataType, Properties...>& view,
-                     ComparatorOrEmpty&&... compOrEmpty) {
-  using exespace = Cuda;
+                     ComparatorOrEmpty&&... compOrEmpty)
+{
   using ViewType = Kokkos::View<DataType, Properties...>;
   using MemSpace = typename ViewType::memory_space;
+  static_assert( (ViewType::rank == 1),
+		 "Kokkos::sort: View must be rank-1");
   static_assert(
-      SpaceAccessibility<exespace, MemSpace>::accessible,
+      SpaceAccessibility<Cuda, MemSpace>::accessible,
       "Cuda execution space is not able to access the memory space of the "
       "View argument!");
 
   auto first            = ::Kokkos::Experimental::begin(view);
   auto last             = ::Kokkos::Experimental::end(view);
-  const auto thrustExec = thrust::cuda::par.on(space.cuda_stream());
+  const auto thrustExec = thrust::cuda::par.on(exec.cuda_stream());
   thrust::sort(thrustExec, first, last,
                std::forward<ComparatorOrEmpty>(compOrEmpty)...);
-  space.fence("Kokkos::sort: fence after sorting");
+  exec.fence("Kokkos::sort: fence after sorting");
 }
 #endif
 
 #if defined(KOKKOS_ENABLE_ONEDPL)
 template <class DataType, class... Properties, class... ComparatorOrEmpty>
-void sort_onedpl(const Experimental::SYCL& space,
+void sort_onedpl_and_fence_exec(const Experimental::SYCL& exec,
                  const Kokkos::View<DataType, Properties...>& view,
-                 ComparatorOrEmpty&&... compOrEmpty) {
-  using exespace = Experimental::SYCL;
+                 ComparatorOrEmpty&&... compOrEmpty)
+{
   using ViewType = Kokkos::View<DataType, Properties...>;
   using MemSpace = typename ViewType::memory_space;
   static_assert(
-      SpaceAccessibility<exespace, MemSpace>::accessible,
+      SpaceAccessibility<Experimental::SYCL, MemSpace>::accessible,
       "SYCL execution space is not able to access the memory space of the "
       "View argument!");
 
-  auto queue  = space.sycl_queue();
+  auto queue  = exec.sycl_queue();
   auto policy = oneapi::dpl::execution::make_device_policy(queue);
 
   // Can't use Experimental::begin/end here since the oneDPL then assumes that
@@ -119,9 +122,10 @@ void sort_onedpl(const Experimental::SYCL& space,
   oneapi::dpl::sort(policy, view.data(), view.data() + n,
                     std::forward<ComparatorOrEmpty>(compOrEmpty)...);
 
-  space.fence("Kokkos::sort: fence after sorting");
+  exec.fence("Kokkos::sort: fence after sorting");
 }
 #endif
+
 
 template <class ViewType>
 struct min_max_functor {
@@ -139,8 +143,9 @@ struct min_max_functor {
 };
 
 template <class ExecutionSpace, class DataType, class... Properties>
-void sort_via_binsort(const ExecutionSpace& exec,
-                      const Kokkos::View<DataType, Properties...>& view) {
+void sort_via_binsort_and_fence_exec(const ExecutionSpace& exec,
+                      const Kokkos::View<DataType, Properties...>& view)
+{
   using ViewType = Kokkos::View<DataType, Properties...>;
   using CompType = BinOp1D<ViewType>;
 
@@ -177,14 +182,16 @@ void sort_via_binsort(const ExecutionSpace& exec,
       view, CompType(max_bins, result.min_val, result.max_val), sort_in_bins);
   bin_sort.create_permute_vector(exec);
   bin_sort.sort(exec, view);
+  exec.fence("Kokkos::sort: fence after sorting");
 }
 
 template <class ExecutionSpace, class DataType, class... Properties,
           class... ComparatorOrEmpty>
-void copy_to_host_run_stdsort_copy_back(
-    const ExecutionSpace& space,
-    const Kokkos::View<DataType, Properties...>& view,
-    ComparatorOrEmpty&&... compOrEmpty) {
+void copy_to_host_run_stdsort_copy_back_fence_exec(
+                   const ExecutionSpace& exec,
+		   const Kokkos::View<DataType, Properties...>& view,
+		   ComparatorOrEmpty&&... compOrEmpty)
+{
   using ViewType         = Kokkos::View<DataType, Properties...>;
   using layout           = typename ViewType::array_layout;
   namespace KE           = ::Kokkos::Experimental;
@@ -198,119 +205,121 @@ void copy_to_host_run_stdsort_copy_back(
     using view_exespace        = typename ViewType::execution_space;
     using view_deep_copyable_t = Kokkos::View<view_value_type*, view_exespace>;
     view_deep_copyable_t view_dc("view_dc", ext);
+    KE::copy(exec, view, view_dc);
 
-    KE::copy(space, view, view_dc);
-
+    // run sort on the mirror of view_dc
     auto mv_h  = create_mirror_view_and_copy(Kokkos::HostSpace(), view_dc);
     auto first = KE::begin(mv_h);
     auto last  = KE::end(mv_h);
     std::sort(first, last, std::forward<ComparatorOrEmpty>(compOrEmpty)...);
-    Kokkos::deep_copy(space, view_dc, mv_h);
+    Kokkos::deep_copy(exec, view_dc, mv_h);
 
-    KE::copy(space, KE::cbegin(view_dc), KE::cend(view_dc), KE::begin(view));
-  } else {
+    // copy back to argument view
+    KE::copy(exec, KE::cbegin(view_dc), KE::cend(view_dc), KE::begin(view));
+  }
+  else {
     auto mv_h  = create_mirror_view_and_copy(Kokkos::HostSpace(), view);
     auto first = KE::begin(mv_h);
     auto last  = KE::end(mv_h);
     std::sort(first, last, std::forward<ComparatorOrEmpty>(compOrEmpty)...);
-    Kokkos::deep_copy(space, view, mv_h);
+    Kokkos::deep_copy(exec, view, mv_h);
   }
 
-  // no fences needed since we have deep_copies
-}
-
-// --------------------------------------------------
-//
-// specialize sort_without_comparator
-//
-// --------------------------------------------------
-
-template <class ExecutionSpace, class DataType, class... Properties>
-std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value>
-sort_device_view_without_comparator(
-    const ExecutionSpace& exec,
-    const Kokkos::View<DataType, Properties...>& view) {
-  sort_via_binsort(exec, view);
   exec.fence("Kokkos::sort: fence after sorting");
 }
 
+// --------------------------------------------------
+//
+// specialize cases for sorting without comparator
+//
+// --------------------------------------------------
+
 #if defined(KOKKOS_ENABLE_CUDA)
 template <class DataType, class... Properties>
-void sort_device_view_without_comparator(
-    const Cuda& space, const Kokkos::View<DataType, Properties...>& view) {
-  sort_cudathrust(space, view);
+void sort_device_view_without_comparator_and_fence_exec(
+    const Cuda& exec, const Kokkos::View<DataType, Properties...>& view)
+{
+  sort_cudathurst_and_fence_exec(exec, view);
 }
 #endif
 
 #if defined(KOKKOS_ENABLE_ONEDPL)
 template <class DataType, class... Properties>
-void sort_device_view_without_comparator(
-    const Experimental::SYCL& space,
-    const Kokkos::View<DataType, Properties...>& view) {
+void sort_device_view_without_comparator_and_fence_exec(
+    const Experimental::SYCL& exec,
+    const Kokkos::View<DataType, Properties...>& view)
+{
+  sort_onedpl_and_fence_exec(exec, view);
+}
+#endif
+
+// fallback case
+template <class ExecutionSpace, class DataType, class... Properties>
+std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value>
+sort_device_view_without_comparator_and_fence_exec(
+    const ExecutionSpace& exec,
+    const Kokkos::View<DataType, Properties...>& view)
+{
+  sort_via_binsort_and_fence_exec(exec, view);
+}
+
+// --------------------------------------------------
+//
+// specialize cases for sorting with comparator
+//
+// --------------------------------------------------
+
+#if defined(KOKKOS_ENABLE_CUDA)
+template <class CompType, class DataType, class... Properties>
+void sort_device_view_with_comparator_and_fence_exec(
+              const Cuda& exec,
+	      const Kokkos::View<DataType, Properties...>& view,
+	      CompType comp)
+{
+  sort_cudathurst_and_fence_exec(exec, view, comp);
+}
+#endif
+
+#if defined(KOKKOS_ENABLE_ONEDPL)
+template <class CompType, class DataType, class... Properties>
+void sort_device_view_with_comparator_and_fence_exec(
+              const Experimental::SYCL& exec,
+	      const Kokkos::View<DataType, Properties...>& view,
+	      CompType comp)
+{
   using ViewType = Kokkos::View<DataType, Properties...>;
   constexpr bool strided =
       std::is_same_v<LayoutStride, typename ViewType::array_layout>;
   if constexpr (strided) {
     // strided views not supported in dpl so use the most generic case
-    copy_to_host_run_stdsort_copy_back(space, view);
+    copy_to_host_run_stdsort_copy_back_fence_exec(exec, view, comp);
   } else {
-    sort_onedpl(space, view);
+    sort_onedpl_and_fence_exec(exec, view, comp);
   }
 }
 #endif
-
-// --------------------------------------------------
-//
-// specialize sort_with_comparator
-//
-// --------------------------------------------------
 
 template <class ExecutionSpace, class CompType, class DataType,
           class... Properties>
 std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value>
-sort_device_view_with_comparator(
-    const ExecutionSpace& space,
-    const Kokkos::View<DataType, Properties...>& view, CompType comp) {
-  // This is a fallback case that is generic and works, for now,
-  // by copying data to host, running std::sort and then copying back.
+sort_device_view_with_comparator_and_fence_exec(
+               const ExecutionSpace& exec,
+	       const Kokkos::View<DataType, Properties...>& view,
+	       CompType comp)
+{
+  // This is a fallback case that, for now, copies data to host,
+  // runs std::sort and then copies data back.
   // Potentially, this can later be changed with a better solution
   // like our own quicksort on device or similar.
 
-  // Note that this an impl function, but the following static_assert
-  // should always hold because this function is handling specifically the
-  // case of a view on device
   using ViewType = Kokkos::View<DataType, Properties...>;
   using MemSpace = typename ViewType::memory_space;
-  static_assert(!SpaceAccessibility<HostSpace, MemSpace>::accessible);
+  static_assert(!SpaceAccessibility<HostSpace, MemSpace>::accessible,
+		"sort_device_view_with_comparator_and_fence_exec: should not be called on a view that is already accessible on the host");
 
-  copy_to_host_run_stdsort_copy_back(space, view, comp);
+  copy_to_host_run_stdsort_copy_back_fence_exec(exec, view, comp);
 }
 
-#if defined(KOKKOS_ENABLE_CUDA)
-template <class CompType, class DataType, class... Properties>
-void sort_device_view_with_comparator(
-    const Cuda& space, const Kokkos::View<DataType, Properties...>& view,
-    CompType comp) {
-  sort_cudathrust(space, view, comp);
-}
-#endif
-
-#if defined(KOKKOS_ENABLE_ONEDPL)
-template <class CompType, class DataType, class... Properties>
-void sort_device_view_with_comparator(
-    const Experimental::SYCL& space,
-    const Kokkos::View<DataType, Properties...>& view, CompType comp) {
-  using ViewType = Kokkos::View<DataType, Properties...>;
-  constexpr bool strided =
-      std::is_same_v<LayoutStride, typename ViewType::array_layout>;
-  if constexpr (strided) {
-    // strided views not supported in dpl so use the most generic case
-    copy_to_host_run_stdsort_copy_back(space, view, comp);
-  } else {
-    sort_onedpl(space, view, comp);
-  }
-}
-#endif
 
 }  // namespace Impl
 }  // namespace Kokkos
