@@ -1108,9 +1108,9 @@ class where_expression<simd_mask<double, simd_abi::avx2_fixed_size<4>>,
   void gather_from(
       double const* mem,
       simd<std::int32_t, simd_abi::avx2_fixed_size<4>> const& index) {
-    m_value = value_type(_mm256_mask_i32gather_pd(
-        _mm256_set1_pd(0.0), mem, static_cast<__m128i>(index),
-        static_cast<__m256d>(m_mask), 8));
+    m_value = value_type(
+        _mm256_mask_i32gather_pd(m_value, mem, static_cast<__m128i>(index),
+                                 static_cast<__m256d>(m_mask), 8));
   }
   template <class U,
             std::enable_if_t<std::is_convertible_v<
@@ -1148,6 +1148,14 @@ class const_where_expression<
     _mm_maskstore_epi32(mem, static_cast<__m128i>(m_mask),
                         static_cast<__m128i>(m_value));
   }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+  void scatter_to(
+      std::int32_t* mem,
+      simd<std::int32_t, simd_abi::avx2_fixed_size<4>> const& index) const {
+    for (std::size_t lane = 0; lane < 4; ++lane) {
+      if (m_mask[lane]) mem[index[lane]] = m_value[lane];
+    }
+  }
 
   [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type const&
   impl_get_value() const {
@@ -1174,6 +1182,14 @@ class where_expression<simd_mask<std::int32_t, simd_abi::avx2_fixed_size<4>>,
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   void copy_from(std::int32_t const* mem, element_aligned_tag) {
     m_value = value_type(_mm_maskload_epi32(mem, static_cast<__m128i>(m_mask)));
+  }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+  void gather_from(
+      std::int32_t const* mem,
+      simd<std::int32_t, simd_abi::avx2_fixed_size<4>> const& index) {
+    m_value = value_type(
+        _mm_mask_i32gather_epi32(m_value, mem, static_cast<__m128i>(index),
+                                 static_cast<__m128i>(m_mask), 4));
   }
   template <
       class U,
@@ -1214,6 +1230,14 @@ class const_where_expression<
                            static_cast<__m256i>(m_mask),
                            static_cast<__m256i>(m_value));
   }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+  void scatter_to(
+      std::int64_t* mem,
+      simd<std::int32_t, simd_abi::avx2_fixed_size<4>> const& index) const {
+    for (std::size_t lane = 0; lane < 4; ++lane) {
+      if (m_mask[lane]) mem[index[lane]] = m_value[lane];
+    }
+  }
 
   [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type const&
   impl_get_value() const {
@@ -1241,6 +1265,14 @@ class where_expression<simd_mask<std::int64_t, simd_abi::avx2_fixed_size<4>>,
                                                        element_aligned_tag) {
     m_value = value_type(_mm256_maskload_epi64(
         reinterpret_cast<long long const*>(mem), static_cast<__m256i>(m_mask)));
+  }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+  void gather_from(
+      std::int64_t const* mem,
+      simd<std::int32_t, simd_abi::avx2_fixed_size<4>> const& index) {
+    m_value = value_type(
+        _mm256_mask_i32gather_epi64(m_value, mem, static_cast<__m128i>(index),
+                                    static_cast<__m256i>(m_mask), 8));
   }
   template <
       class u,
@@ -1282,6 +1314,14 @@ class const_where_expression<
                            static_cast<__m256i>(m_mask),
                            static_cast<__m256i>(m_value));
   }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+  void scatter_to(
+      std::uint64_t* mem,
+      simd<std::int32_t, simd_abi::avx2_fixed_size<4>> const& index) const {
+    for (std::size_t lane = 0; lane < 4; ++lane) {
+      if (m_mask[lane]) mem[index[lane]] = m_value[lane];
+    }
+  }
 
   [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type const&
   impl_get_value() const {
@@ -1309,6 +1349,14 @@ class where_expression<simd_mask<std::uint64_t, simd_abi::avx2_fixed_size<4>>,
                                                        element_aligned_tag) {
     m_value = value_type(_mm256_maskload_epi64(
         reinterpret_cast<long long const*>(mem), static_cast<__m256i>(m_mask)));
+  }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+  void gather_from(
+      std::uint64_t const* mem,
+      simd<std::int32_t, simd_abi::avx2_fixed_size<4>> const& index) {
+    m_value = value_type(
+        _mm256_mask_i32gather_epi64(m_value, mem, static_cast<__m128i>(index),
+                                    static_cast<__m256i>(m_mask), 8));
   }
   template <class u,
             std::enable_if_t<
