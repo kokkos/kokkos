@@ -791,14 +791,12 @@ class simd<std::int64_t, simd_abi::avx2_fixed_size<4>> {
       _mm256_add_epi64(static_cast<__m256i>(lhs), static_cast<__m256i>(rhs)));
 }
 
-// FIXME: _mm256_abs_epi64() is not supported in AVX2
-// [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-//     simd<std::int64_t, simd_abi::avx2_fixed_size<4>>
-//     abs(simd<std::int64_t, simd_abi::avx2_fixed_size<4>> const& a) {
-//   __m256i const rhs = static_cast<__m256i>(a);
-//   return simd<std::int64_t, simd_abi::avx2_fixed_size<4>>(
-//       _mm256_abs_epi64(rhs));
-// }
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+    simd<std::int64_t, simd_abi::avx2_fixed_size<4>>
+    abs(simd<std::int64_t, simd_abi::avx2_fixed_size<4>> const& a) {
+  return simd<std::int64_t, simd_abi::avx2_fixed_size<4>>(
+      [&](std::size_t i) { return a[i] * ((a[i] > 0) - (a[i] < 0)); });
+}
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 simd<std::int64_t, simd_abi::avx2_fixed_size<4>> condition(
