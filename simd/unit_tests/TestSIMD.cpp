@@ -168,9 +168,12 @@ void host_check_binary_op_one_loader(BinaryOp binary_op, std::size_t n,
         loader.host_load(second_args + i, nlanes, second_arg);
     if (!(loaded_first_arg && loaded_second_arg)) continue;
     simd_type expected_result;
-    for (std::size_t lane = 0; lane < nlanes; ++lane) {
-      expected_result[lane] =
-          binary_op.on_host(T(first_arg[lane]), T(second_arg[lane]));
+    // gcc 8.4.0 warns if using nlanes as upper bound about first_arg and/or
+    // second_arg being uninitialized
+    for (std::size_t lane = 0; lane < simd_type::size(); ++lane) {
+      if (lane < nlanes)
+        expected_result[lane] =
+            binary_op.on_host(T(first_arg[lane]), T(second_arg[lane]));
     }
     simd_type const computed_result = binary_op.on_host(first_arg, second_arg);
     host_check_equality(expected_result, computed_result, nlanes);
