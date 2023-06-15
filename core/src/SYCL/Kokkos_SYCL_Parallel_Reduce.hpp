@@ -421,8 +421,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
                 .get_info<sycl::info::kernel_device_specific::work_group_size>(
                     q.get_device());
 #else
-	auto max =
-           q.get_device().get_info<sycl::info::device::max_work_group_size>();
+        auto max =
+            q.get_device().get_info<sycl::info::device::max_work_group_size>();
 #endif
 
         auto max_local_memory =

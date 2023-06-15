@@ -410,7 +410,8 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
         const member_type team_member(
             team_scratch_memory_L0.get_pointer(), shmem_begin, scratch_size[0],
             global_scratch_ptr + item.get_group(1) * scratch_size[1],
-            scratch_size[1], item);
+            scratch_size[1], item, item.get_group_linear_id(),
+            item.get_group_range(1));
         if constexpr (std::is_void<work_tag>::value)
           functor_wrapper.get_functor()(team_member);
         else
@@ -608,7 +609,8 @@ class ParallelReduce<CombinedFunctorReducerType,
               if (size == 1) {
                 const member_type team_member(
                     team_scratch_memory_L0.get_pointer(), shmem_begin,
-                    scratch_size[0], global_scratch_ptr, scratch_size[1], item);
+                    scratch_size[0], global_scratch_ptr, scratch_size[1], item,
+                    item.get_group_linear_id(), item.get_group_range(1));
                 if constexpr (std::is_void_v<WorkTag>)
                   functor(team_member, update);
                 else
@@ -670,7 +672,8 @@ class ParallelReduce<CombinedFunctorReducerType,
                       team_scratch_memory_L0.get_pointer(), shmem_begin,
                       scratch_size[0],
                       global_scratch_ptr + item.get_group(1) * scratch_size[1],
-                      scratch_size[1], item);
+                      scratch_size[1], item, item.get_group_linear_id(),
+                      item.get_group_range(1));
                   if constexpr (std::is_void_v<WorkTag>)
                     functor(team_member, update);
                   else
@@ -719,7 +722,8 @@ class ParallelReduce<CombinedFunctorReducerType,
                       team_scratch_memory_L0.get_pointer(), shmem_begin,
                       scratch_size[0],
                       global_scratch_ptr + item.get_group(1) * scratch_size[1],
-                      scratch_size[1], item);
+                      scratch_size[1], item, item.get_group_linear_id(),
+                      item.get_group_range(1));
                   if constexpr (std::is_void_v<WorkTag>)
                     functor(team_member, update);
                   else
