@@ -30,8 +30,8 @@
 #ifdef __cpp_lib_span
 #include <span>
 #endif
-#if defined(_MDSPAN_USE_CONCEPTS) && MDSPAN_HAS_CXX_20
-#include<concepts>
+#if defined(_MDSPAN_USE_CONCEPTS) && MDSPAN_HAS_CXX_20 && defined(__cpp_lib_concepts)
+#  include <concepts>
 #endif
 
 namespace MDSPAN_IMPL_STANDARD_NAMESPACE {
@@ -51,12 +51,29 @@ namespace detail {
     std::is_same<typename Layout::template mapping<typename Mapping::extents_type>, Mapping>::value;
 
 #if defined(_MDSPAN_USE_CONCEPTS) && MDSPAN_HAS_CXX_20
+#  if !defined(__cpp_lib_concepts)
+  namespace internal {
+  namespace detail {
+  template <typename _Tp, typename _Up>
+  concept __same_as = std::is_same_v<_Tp, _Up>;
+  } // namespace detail
+  template <class T, class U>
+  concept __same_as = detail::__same_as<T, U> && detail::__same_as<U, T>;
+  } // namespace internal
+#  endif
+
   template<class M>
   concept __layout_mapping_alike = requires {
     requires __is_extents<typename M::extents_type>::value;
+#if defined(__cpp_lib_concepts)
     { M::is_always_strided() } -> std::same_as<bool>;
     { M::is_always_exhaustive() } -> std::same_as<bool>;
     { M::is_always_unique() } -> std::same_as<bool>;
+#else
+    { M::is_always_strided() } -> internal::__same_as<bool>;
+    { M::is_always_exhaustive() } -> internal::__same_as<bool>;
+    { M::is_always_unique() } -> internal::__same_as<bool>;
+#endif
     std::bool_constant<M::is_always_strided()>::value;
     std::bool_constant<M::is_always_exhaustive()>::value;
     std::bool_constant<M::is_always_unique()>::value;
