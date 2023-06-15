@@ -80,6 +80,9 @@ void runtime_check_rank(const size_t rank, const size_t dyn_rank,
   }
 }
 
+template <class ViewType, int Traits = 0>
+struct ViewUniformType;
+
 } /* namespace Impl */
 } /* namespace Kokkos */
 
