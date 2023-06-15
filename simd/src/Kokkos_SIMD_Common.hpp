@@ -26,6 +26,10 @@ namespace Kokkos {
 
 namespace Experimental {
 
+namespace simd_abi {
+class scalar;
+}
+
 template <class T, class Abi>
 class simd;
 
@@ -92,17 +96,37 @@ class where_expression<bool, T> : public const_where_expression<bool, T> {
 };
 
 template <class T, class Abi>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     where_expression<simd_mask<T, Abi>, simd<T, Abi>>
     where(typename simd<T, Abi>::mask_type const& mask, simd<T, Abi>& value) {
   return where_expression(mask, value);
 }
 
-template <class T, class Abi>
+template <class T>
 [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
+    where_expression<simd_mask<T, Kokkos::Experimental::simd_abi::scalar>,
+                     simd<T, Kokkos::Experimental::simd_abi::scalar>>
+    where(typename simd<
+              T, Kokkos::Experimental::simd_abi::scalar>::mask_type const& mask,
+          simd<T, Kokkos::Experimental::simd_abi::scalar>& value) {
+  return where_expression(mask, value);
+}
+
+template <class T, class Abi>
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     const_where_expression<simd_mask<T, Abi>, simd<T, Abi>>
     where(typename simd<T, Abi>::mask_type const& mask,
           simd<T, Abi> const& value) {
+  return const_where_expression(mask, value);
+}
+
+template <class T>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
+    const_where_expression<simd_mask<T, Kokkos::Experimental::simd_abi::scalar>,
+                           simd<T, Kokkos::Experimental::simd_abi::scalar>>
+    where(typename simd<
+              T, Kokkos::Experimental::simd_abi::scalar>::mask_type const& mask,
+          simd<T, Kokkos::Experimental::simd_abi::scalar> const& value) {
   return const_where_expression(mask, value);
 }
 
@@ -308,38 +332,46 @@ KOKKOS_FORCEINLINE_FUNCTION where_expression<M, T>& operator/=(
 // fallback implementations of reductions across simd_mask:
 
 template <class T, class Abi>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION bool all_of(
-    simd_mask<T, Abi> const& a) {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::enable_if_t<
+    !std::is_same_v<Abi, Kokkos::Experimental::simd_abi::scalar>, bool>
+all_of(simd_mask<T, Abi> const& a) {
   return a == simd_mask<T, Abi>(true);
 }
 
 template <class T, class Abi>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION bool any_of(
-    simd_mask<T, Abi> const& a) {
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
+    std::is_same_v<Abi, Kokkos::Experimental::simd_abi::scalar>, bool>
+all_of(simd_mask<T, Abi> const& a) {
+  return a == simd_mask<T, Abi>(true);
+}
+
+template <class T, class Abi>
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::enable_if_t<
+    !std::is_same_v<Abi, Kokkos::Experimental::simd_abi::scalar>, bool>
+any_of(simd_mask<T, Abi> const& a) {
   return a != simd_mask<T, Abi>(false);
 }
 
 template <class T, class Abi>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION bool none_of(
-    simd_mask<T, Abi> const& a) {
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
+    std::is_same_v<Abi, Kokkos::Experimental::simd_abi::scalar>, bool>
+any_of(simd_mask<T, Abi> const& a) {
+  return a != simd_mask<T, Abi>(false);
+}
+
+template <class T, class Abi>
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::enable_if_t<
+    !std::is_same_v<Abi, Kokkos::Experimental::simd_abi::scalar>, bool>
+none_of(simd_mask<T, Abi> const& a) {
   return a == simd_mask<T, Abi>(false);
 }
 
-namespace Impl {
-
-template <typename T, typename Abi>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION constexpr auto const& mask(
-    const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> const& x) {
-  return x.m_mask;
+template <class T, class Abi>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
+    std::is_same_v<Abi, Kokkos::Experimental::simd_abi::scalar>, bool>
+none_of(simd_mask<T, Abi> const& a) {
+  return a == simd_mask<T, Abi>(false);
 }
-
-template <typename T, typename Abi>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION constexpr auto const& value(
-    const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> const& x) {
-  return x.m_value;
-}
-
-}  // namespace Impl
 
 template <typename T, typename Abi>
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
