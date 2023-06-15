@@ -898,11 +898,15 @@ class const_where_expression<simd_mask<double, simd_abi::neon_fixed_size<2>>,
     if (m_mask[1]) mem[index[1]] = m_value[1];
   }
 
-  friend constexpr auto const& Impl::mask<double, abi_type>(
-      const_where_expression<mask_type, value_type> const& x);
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type const&
+  impl_get_value() const {
+    return m_value;
+  }
 
-  friend constexpr auto const& Impl::value<double, abi_type>(
-      const_where_expression<mask_type, value_type> const& x);
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type const&
+  impl_get_mask() const {
+    return m_mask;
+  }
 };
 
 template <>
@@ -966,11 +970,15 @@ class const_where_expression<
     if (m_mask[1]) mem[1] = m_value[1];
   }
 
-  friend constexpr auto const& Impl::mask<std::int32_t, abi_type>(
-      const_where_expression<mask_type, value_type> const& x);
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type const&
+  impl_get_value() const {
+    return m_value;
+  }
 
-  friend constexpr auto const& Impl::value<std::int32_t, abi_type>(
-      const_where_expression<mask_type, value_type> const& x);
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type const&
+  impl_get_mask() const {
+    return m_mask;
+  }
 };
 
 template <>
@@ -1028,11 +1036,15 @@ class const_where_expression<
     if (m_mask[1]) mem[1] = m_value[1];
   }
 
-  friend constexpr auto const& Impl::mask<std::int64_t, abi_type>(
-      const_where_expression<mask_type, value_type> const& x);
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type const&
+  impl_get_value() const {
+    return m_value;
+  }
 
-  friend constexpr auto const& Impl::value<std::int64_t, abi_type>(
-      const_where_expression<mask_type, value_type> const& x);
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type const&
+  impl_get_mask() const {
+    return m_mask;
+  }
 };
 
 template <>
@@ -1090,11 +1102,15 @@ class const_where_expression<
     if (m_mask[1]) mem[1] = m_value[1];
   }
 
-  friend constexpr auto const& Impl::mask<std::uint64_t, abi_type>(
-      const_where_expression<mask_type, value_type> const& x);
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type const&
+  impl_get_value() const {
+    return m_value;
+  }
 
-  friend constexpr auto const& Impl::value<std::uint64_t, abi_type>(
-      const_where_expression<mask_type, value_type> const& x);
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type const&
+  impl_get_mask() const {
+    return m_mask;
+  }
 };
 
 template <>
