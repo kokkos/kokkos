@@ -196,10 +196,7 @@ template <class T>
 template <class T>
 [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION simd<T, simd_abi::scalar> abs(
     simd<T, simd_abi::scalar> const& a) {
-  if constexpr (std::is_signed_v<T>)
-    return simd<T, simd_abi::scalar>(std::abs(static_cast<T>(a)));
-  else
-    return simd<T, simd_abi::scalar>(static_cast<T>(a));
+  return simd<T, simd_abi::scalar>(Kokkos::abs<T>(static_cast<T>(a)));
 }
 
 template <class T>

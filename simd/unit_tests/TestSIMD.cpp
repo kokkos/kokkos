@@ -151,9 +151,8 @@ class load_as_scalars {
 };
 
 template <class Abi, class Loader, class BinaryOp, class T>
-void host_check_binary_op_one_loader(BinaryOp binary_op, std::size_t n,
-                                     T const* first_args,
-                                     T const* second_args) {
+void host_check_math_op_one_loader(BinaryOp binary_op, std::size_t n,
+                                   T const* first_args, T const* second_args) {
   Loader loader;
   using simd_type             = Kokkos::Experimental::simd<T, Abi>;
   std::size_t constexpr width = simd_type::size();
@@ -180,9 +179,9 @@ void host_check_binary_op_one_loader(BinaryOp binary_op, std::size_t n,
   }
 }
 
-template <class Abi, class Loader, class BinaryOp, class T>
-void host_check_binary_op_one_loader(BinaryOp binary_op, std::size_t n,
-                                     T const* args) {
+template <class Abi, class Loader, class UnaryOp, class T>
+void host_check_math_op_one_loader(UnaryOp unary_op, std::size_t n,
+                                   T const* args) {
   Loader loader;
   using simd_type             = Kokkos::Experimental::simd<T, Abi>;
   std::size_t constexpr width = simd_type::size();
@@ -194,15 +193,15 @@ void host_check_binary_op_one_loader(BinaryOp binary_op, std::size_t n,
     if (!loaded_arg) continue;
     simd_type expected_result;
     for (std::size_t lane = 0; lane < nlanes; ++lane) {
-      expected_result[lane] = binary_op.on_host(T(arg[lane]));
+      expected_result[lane] = unary_op.on_host_serial(arg[lane]);
     }
-    simd_type const computed_result = binary_op.on_host(arg);
+    simd_type const computed_result = unary_op.on_host(arg);
     host_check_equality(expected_result, computed_result, nlanes);
   }
 }
 
 template <class Abi, class Loader, class BinaryOp, class T>
-KOKKOS_INLINE_FUNCTION void device_check_binary_op_one_loader(
+KOKKOS_INLINE_FUNCTION void device_check_math_op_one_loader(
     BinaryOp binary_op, std::size_t n, T const* first_args,
     T const* second_args) {
   Loader loader;
@@ -229,25 +228,43 @@ KOKKOS_INLINE_FUNCTION void device_check_binary_op_one_loader(
   }
 }
 
-template <class Abi, class BinaryOp, class... T>
-inline void host_check_binary_op_all_loaders(BinaryOp binary_op, std::size_t n,
-                                             T const*... args) {
-  host_check_binary_op_one_loader<Abi, load_element_aligned>(binary_op, n,
-                                                             args...);
-  host_check_binary_op_one_loader<Abi, load_masked>(binary_op, n, args...);
-  host_check_binary_op_one_loader<Abi, load_as_scalars>(binary_op, n, args...);
+template <class Abi, class Loader, class UnaryOp, class T>
+KOKKOS_INLINE_FUNCTION void device_check_math_op_one_loader(UnaryOp unary_op,
+                                                            std::size_t n,
+                                                            T const* args) {
+  Loader loader;
+  using simd_type             = Kokkos::Experimental::simd<T, Abi>;
+  std::size_t constexpr width = simd_type::size();
+  for (std::size_t i = 0; i < n; i += width) {
+    std::size_t const nremaining = n - i;
+    std::size_t const nlanes     = Kokkos::min(nremaining, width);
+    simd_type arg;
+    bool const loaded_arg = loader.device_load(args + i, nlanes, arg);
+    if (!loaded_arg) continue;
+    simd_type expected_result;
+    for (std::size_t lane = 0; lane < nlanes; ++lane) {
+      expected_result[lane] = unary_op.on_device_serial(arg[lane]);
+    }
+    simd_type const computed_result = unary_op.on_device(arg);
+    device_check_equality(expected_result, computed_result, nlanes);
+  }
 }
 
-template <class Abi, class BinaryOp, class T>
-KOKKOS_INLINE_FUNCTION void device_check_binary_op_all_loaders(
-    BinaryOp binary_op, std::size_t n, T const* first_args,
-    T const* second_args) {
-  device_check_binary_op_one_loader<Abi, load_element_aligned>(
-      binary_op, n, first_args, second_args);
-  device_check_binary_op_one_loader<Abi, load_masked>(binary_op, n, first_args,
-                                                      second_args);
-  device_check_binary_op_one_loader<Abi, load_as_scalars>(
-      binary_op, n, first_args, second_args);
+template <class Abi, class Op, class... T>
+inline void host_check_math_op_all_loaders(Op op, std::size_t n,
+                                           T const*... args) {
+  host_check_math_op_one_loader<Abi, load_element_aligned>(op, n, args...);
+  host_check_math_op_one_loader<Abi, load_masked>(op, n, args...);
+  host_check_math_op_one_loader<Abi, load_as_scalars>(op, n, args...);
+}
+
+template <class Abi, class Op, class... T>
+KOKKOS_INLINE_FUNCTION void device_check_math_op_all_loaders(Op op,
+                                                             std::size_t n,
+                                                             T const*... args) {
+  device_check_math_op_one_loader<Abi, load_element_aligned>(op, n, args...);
+  device_check_math_op_one_loader<Abi, load_masked>(op, n, args...);
+  device_check_math_op_one_loader<Abi, load_as_scalars>(op, n, args...);
 }
 
 class plus {
@@ -302,35 +319,37 @@ class absolutes {
  public:
   template <typename T>
   auto on_host(T const& a) const {
-    if constexpr (std::is_arithmetic_v<T>) {
-      if constexpr (std::is_signed_v<T>)
-        return std::abs(a);
-      else
-        return a;
-    } else {
-      return Kokkos::Experimental::abs(a);
+    return Kokkos::Experimental::abs(a);
+  }
+  template <typename T>
+  auto on_host_serial(T const& a) const {
+    if constexpr (std::is_signed_v<T>) {
+      return Kokkos::abs<T>(a);
     }
+    return a;
   }
   template <typename T>
   KOKKOS_INLINE_FUNCTION auto on_device(T const& a) const {
     return Kokkos::Experimental::abs(a);
+  }
+  template <typename T>
+  KOKKOS_INLINE_FUNCTION auto on_device_serial(T const& a) const {
+    return Kokkos::abs<T>(a);
   }
 };
 
 template <typename Abi, typename DataType, size_t n>
 inline void host_check_all_math_ops(const DataType (&first_args)[n],
                                     const DataType (&second_args)[n]) {
-  host_check_binary_op_all_loaders<Abi>(plus(), n, first_args, second_args);
-  host_check_binary_op_all_loaders<Abi>(minus(), n, first_args, second_args);
-  host_check_binary_op_all_loaders<Abi>(multiplies(), n, first_args,
-                                        second_args);
+  host_check_math_op_all_loaders<Abi>(plus(), n, first_args, second_args);
+  host_check_math_op_all_loaders<Abi>(minus(), n, first_args, second_args);
+  host_check_math_op_all_loaders<Abi>(multiplies(), n, first_args, second_args);
 
   // TODO: Place fallback division implementations for all simd integer types
   if constexpr (std::is_same_v<DataType, double>)
-    host_check_binary_op_all_loaders<Abi>(divides(), n, first_args,
-                                          second_args);
+    host_check_math_op_all_loaders<Abi>(divides(), n, first_args, second_args);
 
-  host_check_binary_op_all_loaders<Abi>(absolutes(), n, first_args);
+  host_check_math_op_all_loaders<Abi>(absolutes(), n, first_args);
 }
 
 template <typename Abi, typename DataType>
@@ -424,14 +443,16 @@ inline void host_check_condition() {
 template <typename Abi, typename DataType, size_t n>
 KOKKOS_INLINE_FUNCTION void device_check_all_math_ops(
     const DataType (&first_args)[n], const DataType (&second_args)[n]) {
-  device_check_binary_op_all_loaders<Abi>(plus(), n, first_args, second_args);
-  device_check_binary_op_all_loaders<Abi>(minus(), n, first_args, second_args);
-  device_check_binary_op_all_loaders<Abi>(multiplies(), n, first_args,
-                                          second_args);
+  device_check_math_op_all_loaders<Abi>(plus(), n, first_args, second_args);
+  device_check_math_op_all_loaders<Abi>(minus(), n, first_args, second_args);
+  device_check_math_op_all_loaders<Abi>(multiplies(), n, first_args,
+                                        second_args);
 
   if constexpr (std::is_same_v<DataType, double>)
-    device_check_binary_op_all_loaders<Abi>(divides(), n, first_args,
-                                            second_args);
+    device_check_math_op_all_loaders<Abi>(divides(), n, first_args,
+                                          second_args);
+
+  device_check_math_op_all_loaders<Abi>(absolutes(), n, first_args);
 }
 
 template <typename Abi, typename DataType>

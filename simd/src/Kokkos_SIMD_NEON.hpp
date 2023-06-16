@@ -876,7 +876,7 @@ simd<std::int64_t, simd_abi::neon_fixed_size<2>>::simd(
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 simd<std::uint64_t, simd_abi::neon_fixed_size<2>> abs(
     simd<std::uint64_t, simd_abi::neon_fixed_size<2>> const& a) {
-  return simd<std::uint64_t, simd_abi::neon_fixed_size<2>>(a);
+  return a;
 }
 
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
