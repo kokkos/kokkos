@@ -642,20 +642,22 @@ class ParallelReduce<CombinedFunctorReducerType,
 
         // Avoid capturing *this since it might not be trivially copyable
         const auto shmem_begin       = m_shmem_begin;
+        const auto league_size       = m_league_size;
         const size_t scratch_size[2] = {m_scratch_size[0], m_scratch_size[1]};
         sycl::device_ptr<char> const global_scratch_ptr = m_global_scratch_ptr;
 
         auto team_reduction_factory =
             [&](sycl::local_accessor<value_type, 1> local_mem,
-                sycl::device_ptr<value_type> results_ptr) {
+                sycl::device_ptr<value_type> results_ptr,
+                int values_per_thread) {
               sycl::global_ptr<value_type> device_accessible_result_ptr =
                   m_result_ptr_device_accessible ? m_result_ptr : nullptr;
               auto lambda = [=](sycl::nd_item<2> item) {
-                auto n_wgroups =
-                    item.get_group_range()[0] * item.get_group_range()[1];
-                auto wgroup_size =
+                auto n_wgroups = item.get_group_range()[1];
+                int wgroup_size =
                     item.get_local_range()[0] * item.get_local_range()[1];
-                auto size = n_wgroups * wgroup_size;
+                auto group_id = item.get_group_linear_id();
+                auto size     = n_wgroups * wgroup_size;
 
                 auto& num_teams_done = reinterpret_cast<unsigned int&>(
                     local_mem[wgroup_size * std::max(value_count, 1u)]);
@@ -668,16 +670,19 @@ class ParallelReduce<CombinedFunctorReducerType,
                 if constexpr (!use_shuffle_based_algorithm<ReducerType>) {
                   reference_type update =
                       reducer.init(&local_mem[local_id * value_count]);
-                  const member_type team_member(
-                      team_scratch_memory_L0.get_pointer(), shmem_begin,
-                      scratch_size[0],
-                      global_scratch_ptr + item.get_group(1) * scratch_size[1],
-                      scratch_size[1], item, item.get_group_linear_id(),
-                      item.get_group_range(1));
-                  if constexpr (std::is_void_v<WorkTag>)
-                    functor(team_member, update);
-                  else
-                    functor(WorkTag(), team_member, update);
+                  for (int league_rank = group_id; league_rank < league_size;
+                       league_rank += n_wgroups) {
+                    const member_type team_member(
+                        team_scratch_memory_L0.get_pointer(), shmem_begin,
+                        scratch_size[0],
+                        global_scratch_ptr +
+                            item.get_group(1) * scratch_size[1],
+                        scratch_size[1], item, league_rank, league_size);
+                    if constexpr (std::is_void_v<WorkTag>)
+                      functor(team_member, update);
+                    else
+                      functor(WorkTag(), team_member, update);
+                  }
                   item.barrier(sycl::access::fence_space::local_space);
 
                   SYCLReduction::workgroup_reduction<>(
@@ -718,16 +723,19 @@ class ParallelReduce<CombinedFunctorReducerType,
                 } else {
                   value_type local_value;
                   reference_type update = reducer.init(&local_value);
-                  const member_type team_member(
-                      team_scratch_memory_L0.get_pointer(), shmem_begin,
-                      scratch_size[0],
-                      global_scratch_ptr + item.get_group(1) * scratch_size[1],
-                      scratch_size[1], item, item.get_group_linear_id(),
-                      item.get_group_range(1));
-                  if constexpr (std::is_void_v<WorkTag>)
-                    functor(team_member, update);
-                  else
-                    functor(WorkTag(), team_member, update);
+                  for (int league_rank = group_id; league_rank < league_size;
+                       league_rank += n_wgroups) {
+                    const member_type team_member(
+                        team_scratch_memory_L0.get_pointer(), shmem_begin,
+                        scratch_size[0],
+                        global_scratch_ptr +
+                            item.get_group(1) * scratch_size[1],
+                        scratch_size[1], item, league_rank, league_size);
+                    if constexpr (std::is_void_v<WorkTag>)
+                      functor(team_member, update);
+                    else
+                      functor(WorkTag(), team_member, update);
+                  }
 
                   SYCLReduction::workgroup_reduction<>(
                       item, local_mem, local_value, results_ptr,
@@ -766,7 +774,8 @@ class ParallelReduce<CombinedFunctorReducerType,
               return lambda;
             };
 
-        auto dummy_reduction_lambda = team_reduction_factory({1, cgh}, nullptr);
+        auto dummy_reduction_lambda =
+            team_reduction_factory({1, cgh}, nullptr, 1);
 
         static sycl::kernel kernel = [&] {
           sycl::kernel_id functor_kernel_id =
@@ -799,13 +808,27 @@ class ParallelReduce<CombinedFunctorReducerType,
             static_cast<sycl::device_ptr<value_type>>(instance.scratch_space(
                 sizeof(value_type) * std::max(value_count, 1u) * init_size));
 
-        auto reduction_lambda = team_reduction_factory(local_mem, results_ptr);
+        int max_work_groups =
+            2 *
+            q.get_device().get_info<sycl::info::device::max_compute_units>();
+        int values_per_thread = 1;
+        int n_wgroups         = m_league_size;
+        while (n_wgroups > max_work_groups) {
+          values_per_thread *= 2;
+          n_wgroups = ((m_league_size * wgroup_size + values_per_thread - 1) /
+                           values_per_thread +
+                       wgroup_size - 1) /
+                      wgroup_size;
+        }
+
+        auto reduction_lambda =
+            team_reduction_factory(local_mem, results_ptr, values_per_thread);
 
         cgh.depends_on(memcpy_event);
 
         cgh.parallel_for(
             sycl::nd_range<2>(
-                sycl::range<2>(m_team_size, m_league_size * m_vector_size),
+                sycl::range<2>(m_team_size, n_wgroups * m_vector_size),
                 sycl::range<2>(m_team_size, m_vector_size)),
             reduction_lambda);
       });
