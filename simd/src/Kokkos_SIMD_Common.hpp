@@ -26,10 +26,6 @@ namespace Kokkos {
 
 namespace Experimental {
 
-namespace simd_abi {
-class scalar;
-}
-
 template <class T, class Abi>
 class simd;
 
@@ -102,31 +98,11 @@ template <class T, class Abi>
   return where_expression(mask, value);
 }
 
-template <class T>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
-    where_expression<simd_mask<T, Kokkos::Experimental::simd_abi::scalar>,
-                     simd<T, Kokkos::Experimental::simd_abi::scalar>>
-    where(typename simd<
-              T, Kokkos::Experimental::simd_abi::scalar>::mask_type const& mask,
-          simd<T, Kokkos::Experimental::simd_abi::scalar>& value) {
-  return where_expression(mask, value);
-}
-
 template <class T, class Abi>
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     const_where_expression<simd_mask<T, Abi>, simd<T, Abi>>
     where(typename simd<T, Abi>::mask_type const& mask,
           simd<T, Abi> const& value) {
-  return const_where_expression(mask, value);
-}
-
-template <class T>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
-    const_where_expression<simd_mask<T, Kokkos::Experimental::simd_abi::scalar>,
-                           simd<T, Kokkos::Experimental::simd_abi::scalar>>
-    where(typename simd<
-              T, Kokkos::Experimental::simd_abi::scalar>::mask_type const& mask,
-          simd<T, Kokkos::Experimental::simd_abi::scalar> const& value) {
   return const_where_expression(mask, value);
 }
 
@@ -337,34 +313,16 @@ template <class T, class Abi>
   return a == simd_mask<T, Abi>(true);
 }
 
-template <class T>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION bool all_of(
-    simd_mask<T, Kokkos::Experimental::simd_abi::scalar> const& a) {
-  return a == simd_mask<T, Kokkos::Experimental::simd_abi::scalar>(true);
-}
-
 template <class T, class Abi>
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool any_of(
     simd_mask<T, Abi> const& a) {
   return a != simd_mask<T, Abi>(false);
 }
 
-template <class T>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION bool any_of(
-    simd_mask<T, Kokkos::Experimental::simd_abi::scalar> const& a) {
-  return a != simd_mask<T, Kokkos::Experimental::simd_abi::scalar>(false);
-}
-
 template <class T, class Abi>
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool none_of(
     simd_mask<T, Abi> const& a) {
   return a == simd_mask<T, Abi>(false);
-}
-
-template <class T>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION bool none_of(
-    simd_mask<T, Kokkos::Experimental::simd_abi::scalar> const& a) {
-  return a == simd_mask<T, Kokkos::Experimental::simd_abi::scalar>(false);
 }
 
 template <typename T, typename Abi>
