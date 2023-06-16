@@ -42,6 +42,7 @@ static_assert(false,
 #include <Kokkos_MinMaxClamp.hpp>
 
 #include <View/Kokkos_ViewFwd.hpp>
+#include <View/Kokkos_ViewUtilities.hpp>
 #include <View/Kokkos_ViewTraits.hpp>
 #include <impl/Kokkos_ViewMapping.hpp>
 #include <impl/Kokkos_ViewArray.hpp>
@@ -107,21 +108,6 @@ KOKKOS_INLINE_FUNCTION
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
-
-template <class DataType, class... Properties>
-class View;
-
-template <class>
-struct is_view : public std::false_type {};
-
-template <class D, class... P>
-struct is_view<View<D, P...>> : public std::true_type {};
-
-template <class D, class... P>
-struct is_view<const View<D, P...>> : public std::true_type {};
-
-template <class T>
-inline constexpr bool is_view_v = is_view<T>::value;
 
 /** \class View
  *  \brief View to an array of data.
