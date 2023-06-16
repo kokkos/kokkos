@@ -332,45 +332,39 @@ KOKKOS_FORCEINLINE_FUNCTION where_expression<M, T>& operator/=(
 // fallback implementations of reductions across simd_mask:
 
 template <class T, class Abi>
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::enable_if_t<
-    !std::is_same_v<Abi, Kokkos::Experimental::simd_abi::scalar>, bool>
-all_of(simd_mask<T, Abi> const& a) {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool all_of(
+    simd_mask<T, Abi> const& a) {
   return a == simd_mask<T, Abi>(true);
 }
 
-template <class T, class Abi>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
-    std::is_same_v<Abi, Kokkos::Experimental::simd_abi::scalar>, bool>
-all_of(simd_mask<T, Abi> const& a) {
-  return a == simd_mask<T, Abi>(true);
+template <class T>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION bool all_of(
+    simd_mask<T, Kokkos::Experimental::simd_abi::scalar> const& a) {
+  return a == simd_mask<T, Kokkos::Experimental::simd_abi::scalar>(true);
 }
 
 template <class T, class Abi>
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::enable_if_t<
-    !std::is_same_v<Abi, Kokkos::Experimental::simd_abi::scalar>, bool>
-any_of(simd_mask<T, Abi> const& a) {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool any_of(
+    simd_mask<T, Abi> const& a) {
   return a != simd_mask<T, Abi>(false);
 }
 
-template <class T, class Abi>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
-    std::is_same_v<Abi, Kokkos::Experimental::simd_abi::scalar>, bool>
-any_of(simd_mask<T, Abi> const& a) {
-  return a != simd_mask<T, Abi>(false);
+template <class T>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION bool any_of(
+    simd_mask<T, Kokkos::Experimental::simd_abi::scalar> const& a) {
+  return a != simd_mask<T, Kokkos::Experimental::simd_abi::scalar>(false);
 }
 
 template <class T, class Abi>
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::enable_if_t<
-    !std::is_same_v<Abi, Kokkos::Experimental::simd_abi::scalar>, bool>
-none_of(simd_mask<T, Abi> const& a) {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool none_of(
+    simd_mask<T, Abi> const& a) {
   return a == simd_mask<T, Abi>(false);
 }
 
-template <class T, class Abi>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
-    std::is_same_v<Abi, Kokkos::Experimental::simd_abi::scalar>, bool>
-none_of(simd_mask<T, Abi> const& a) {
-  return a == simd_mask<T, Abi>(false);
+template <class T>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION bool none_of(
+    simd_mask<T, Kokkos::Experimental::simd_abi::scalar> const& a) {
+  return a == simd_mask<T, Kokkos::Experimental::simd_abi::scalar>(false);
 }
 
 template <typename T, typename Abi>
