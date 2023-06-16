@@ -1073,6 +1073,17 @@ KOKKOS_ADD_ADVANCED_TEST( CoreUnitTest_PushFinalizeHook_terminate
       tools/TestAllCalls.cpp
     )
 
+    if(BUILD_SHARED_LIBS)
+      add_library(RtldDeepbind_TestKernel SHARED TestKernel.cpp)
+      target_link_libraries(RtldDeepbind_TestKernel PUBLIC Kokkos::kokkos)
+
+      KOKKOS_ADD_EXECUTABLE_AND_TEST(
+        RtldDeepbind
+        SOURCES TestRtldDeepbind.cpp
+      )
+      add_dependencies(Kokkos_RtldDeepbind RtldDeepbind_TestKernel)
+    endif()
+
     KOKKOS_ADD_TEST_EXECUTABLE(
       ToolsInitialization
       UnitTestMain.cpp
