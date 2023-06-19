@@ -313,22 +313,24 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
       // use a slightly less constrained, but still well bounded limit for
       // scratch
       int nblocks = (nwork + block.y - 1) / block.y;
-      // Heuristic deciding the value of nblocks. The values for the light
-      // weight case have been chosen using a vector product benchmark on MI250.
-      constexpr auto light_weight =
-          Kokkos::Experimental::WorkItemProperty::HintLightWeight;
-      constexpr typename Policy::work_item_property property;
-      if ((property & light_weight) == light_weight) {
-        if (nblocks < block_size) {
-          // Keep nblocks as is
-        } else if (nblocks < 16 * block_size) {
-          nblocks = block_size;
-        } else {
-          nblocks = 4 * block_size;
-        }
+      // Heuristic deciding the value of nblocks.
+      // The general idea here is we want to:
+      //    1. Not undersubscribe the device (i.e., we want at least preferred_block_min blocks)
+      //    2. Have each thread reduce > 1 value to minimize overheads
+      //    3. Limit the total # of blocks, to avoid unbounded scratch space
+      constexpr int block_max = 4096;
+      constexpr int preferred_block_min = 256;
+
+      if (nblocks < preferred_block_min) {
+        // keep blocks as is, already small
       } else {
-        nblocks = std::min(nblocks, 4096);
+        // have each thread process 4 items
+        nblocks = (nblocks + 3) / 4;
+        if  (nblocks < preferred_block_min)
+          nblocks = preferred_block_min;
       }
+      nblocks = std::min(nblocks, 4096);
+
       // TODO: down casting these uses more space than required?
       m_scratch_space  = (word_size_type*)::Kokkos::Impl::hip_internal_scratch_space(
           m_policy.space(), reducer.value_size() * nblocks);
