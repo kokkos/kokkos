@@ -145,7 +145,7 @@ class simd<std::int32_t, simd_abi::avx512_fixed_size<8>> {
                 std::is_invocable_r_v<value_type, G,
                                       std::integral_constant<std::size_t, 0>>,
                 bool> = false>
-  KOKKOS_FORCEINLINE_FUNCTION simd(G&& gen)
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd(G&& gen)
       : m_value(
             _mm256_setr_epi32(gen(std::integral_constant<std::size_t, 0>()),
                               gen(std::integral_constant<std::size_t, 1>()),
@@ -854,11 +854,15 @@ class const_where_expression<simd_mask<double, simd_abi::avx512_fixed_size<8>>,
                               static_cast<__m512d>(m_value), 8);
   }
 
-  friend constexpr auto const& Impl::mask<double, abi_type>(
-      const_where_expression<mask_type, value_type> const& x);
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type const&
+  impl_get_value() const {
+    return m_value;
+  }
 
-  friend constexpr auto const& Impl::value<double, abi_type>(
-      const_where_expression<mask_type, value_type> const& x);
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type const&
+  impl_get_mask() const {
+    return m_mask;
+  }
 };
 
 template <>
@@ -922,11 +926,15 @@ class const_where_expression<
                              static_cast<__m256i>(m_value));
   }
 
-  friend constexpr auto const& Impl::mask<std::int32_t, abi_type>(
-      const_where_expression<mask_type, value_type> const& x);
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type const&
+  impl_get_value() const {
+    return m_value;
+  }
 
-  friend constexpr auto const& Impl::value<std::int32_t, abi_type>(
-      const_where_expression<mask_type, value_type> const& x);
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type const&
+  impl_get_mask() const {
+    return m_mask;
+  }
 };
 
 template <>
@@ -984,11 +992,15 @@ class const_where_expression<
                              static_cast<__m256i>(m_value));
   }
 
-  friend constexpr auto const& Impl::mask<std::uint32_t, abi_type>(
-      const_where_expression<mask_type, value_type> const& x);
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type const&
+  impl_get_value() const {
+    return m_value;
+  }
 
-  friend constexpr auto const& Impl::value<std::uint32_t, abi_type>(
-      const_where_expression<mask_type, value_type> const& x);
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type const&
+  impl_get_mask() const {
+    return m_mask;
+  }
 };
 
 template <>
@@ -1046,11 +1058,15 @@ class const_where_expression<
                              static_cast<__m512i>(m_value));
   }
 
-  friend constexpr auto const& Impl::mask<std::int64_t, abi_type>(
-      const_where_expression<mask_type, value_type> const& x);
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type const&
+  impl_get_value() const {
+    return m_value;
+  }
 
-  friend constexpr auto const& Impl::value<std::int64_t, abi_type>(
-      const_where_expression<mask_type, value_type> const& x);
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type const&
+  impl_get_mask() const {
+    return m_mask;
+  }
 };
 
 template <>
@@ -1108,11 +1124,15 @@ class const_where_expression<
                              static_cast<__m512i>(m_value));
   }
 
-  friend constexpr auto const& Impl::mask<std::uint64_t, abi_type>(
-      const_where_expression<mask_type, value_type> const& x);
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type const&
+  impl_get_value() const {
+    return m_value;
+  }
 
-  friend constexpr auto const& Impl::value<std::uint64_t, abi_type>(
-      const_where_expression<mask_type, value_type> const& x);
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type const&
+  impl_get_mask() const {
+    return m_mask;
+  }
 };
 
 template <>
@@ -1152,16 +1172,16 @@ class where_expression<simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>>,
         simd_mask<std::int32_t, simd_abi::avx512_fixed_size<8>>,
         simd<std::int32_t, simd_abi::avx512_fixed_size<8>>> const& x) {
   return _mm512_mask_reduce_max_epi32(
-      static_cast<__mmask8>(Impl::mask(x)),
-      _mm512_castsi256_si512(static_cast<__m256i>(Impl::value(x))));
+      static_cast<__mmask8>(x.impl_get_mask()),
+      _mm512_castsi256_si512(static_cast<__m256i>(x.impl_get_value())));
 }
 
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION double hmin(
     const_where_expression<simd_mask<double, simd_abi::avx512_fixed_size<8>>,
                            simd<double, simd_abi::avx512_fixed_size<8>>> const&
         x) {
-  return _mm512_mask_reduce_min_pd(static_cast<__mmask8>(Impl::mask(x)),
-                                   static_cast<__m512d>(Impl::value(x)));
+  return _mm512_mask_reduce_min_pd(static_cast<__mmask8>(x.impl_get_mask()),
+                                   static_cast<__m512d>(x.impl_get_value()));
 }
 
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int64_t reduce(
@@ -1169,8 +1189,8 @@ class where_expression<simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>>,
         simd_mask<std::int64_t, simd_abi::avx512_fixed_size<8>>,
         simd<std::int64_t, simd_abi::avx512_fixed_size<8>>> const& x,
     std::int64_t, std::plus<>) {
-  return _mm512_mask_reduce_add_epi64(static_cast<__mmask8>(Impl::mask(x)),
-                                      static_cast<__m512i>(Impl::value(x)));
+  return _mm512_mask_reduce_add_epi64(static_cast<__mmask8>(x.impl_get_mask()),
+                                      static_cast<__m512i>(x.impl_get_value()));
 }
 
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION double reduce(
@@ -1178,8 +1198,8 @@ class where_expression<simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>>,
                            simd<double, simd_abi::avx512_fixed_size<8>>> const&
         x,
     double, std::plus<>) {
-  return _mm512_mask_reduce_add_pd(static_cast<__mmask8>(Impl::mask(x)),
-                                   static_cast<__m512d>(Impl::value(x)));
+  return _mm512_mask_reduce_add_pd(static_cast<__mmask8>(x.impl_get_mask()),
+                                   static_cast<__m512d>(x.impl_get_value()));
 }
 
 }  // namespace Experimental
