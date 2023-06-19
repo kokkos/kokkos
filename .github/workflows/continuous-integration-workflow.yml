@@ -23,7 +23,7 @@ jobs:
         cxx_extra_flags: ['']
         cmake_build_type: ['Release', 'Debug']
         backend: ['OPENMP']
-        clang-tidy: ['']
+        cmake_extra_args: ['']
         include:
           - distro: 'fedora:intel'
             cxx: 'icpc'
@@ -49,11 +49,16 @@ jobs:
             cxx: 'clang++'
             cmake_build_type: 'RelWithDebInfo'
             backend: 'THREADS'
-            clang-tidy: '-DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*"'
+            cmake_extra_args: '-DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*"'
           - distro: 'ubuntu:latest'
             cxx: 'g++'
             cmake_build_type: 'RelWithDebInfo'
             backend: 'THREADS'
+          - distro: 'ubuntu:latest'
+            cxx: 'clang++'
+            cmake_build_type: 'Debug'
+            backend: 'OPENMP'
+            cmake_extra_args: '-DBUILD_SHARED_LIBS=ON'
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/kokkos/ci-containers/${{ matrix.distro }}
@@ -87,13 +92,13 @@ jobs:
         if: ${{ matrix.distro == 'ubuntu:latest' }}
         run: sudo apt-get update && sudo apt-get install -y libgtest-dev
       - name: maybe_install_clang_tidy
-        if: ${{ matrix.clang-tidy != '' }}
+        if: ${{ contains(matrix.cmake_extra_args, 'clang-tidy') }}
         run: sudo apt-get update && sudo apt-get install -y clang-tidy
       - name: Configure Kokkos
         run: |
           cmake -B builddir \
             -DCMAKE_INSTALL_PREFIX=/usr \
-            ${{ matrix.clang-tidy }} \
+            ${{ matrix.cmake_extra_args }} \
             -Ddesul_ROOT=/usr/desul-install/ \
             -DKokkos_ENABLE_DESUL_ATOMICS_EXTERNAL=ON \
             -DKokkos_ENABLE_HWLOC=ON \
