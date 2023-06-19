@@ -589,7 +589,7 @@ class simd<std::int32_t, simd_abi::avx2_fixed_size<4>> {
                 std::is_invocable_r_v<value_type, G,
                                       std::integral_constant<std::size_t, 0>>,
                 bool> = false>
-  KOKKOS_FORCEINLINE_FUNCTION simd(G&& gen)
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd(G&& gen)
       : m_value(_mm_setr_epi32(gen(std::integral_constant<std::size_t, 0>()),
                                gen(std::integral_constant<std::size_t, 1>()),
                                gen(std::integral_constant<std::size_t, 2>()),
@@ -700,7 +700,7 @@ class simd<std::int64_t, simd_abi::avx2_fixed_size<4>> {
                 std::is_invocable_r_v<value_type, G,
                                       std::integral_constant<std::size_t, 0>>,
                 bool> = false>
-  KOKKOS_FORCEINLINE_FUNCTION simd(G&& gen)
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd(G&& gen)
       : m_value(_mm256_setr_epi64x(
             gen(std::integral_constant<std::size_t, 0>()),
             gen(std::integral_constant<std::size_t, 1>()),
@@ -822,7 +822,7 @@ class simd<std::uint64_t, simd_abi::avx2_fixed_size<4>> {
                 std::is_invocable_r_v<value_type, G,
                                       std::integral_constant<std::size_t, 0>>,
                 bool> = false>
-  KOKKOS_FORCEINLINE_FUNCTION simd(G&& gen)
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd(G&& gen)
       : m_value(_mm256_setr_epi64x(
             gen(std::integral_constant<std::size_t, 0>()),
             gen(std::integral_constant<std::size_t, 1>()),
@@ -958,11 +958,15 @@ class const_where_expression<simd_mask<double, simd_abi::avx2_fixed_size<4>>,
     }
   }
 
-  friend constexpr auto const& Impl::mask<double, abi_type>(
-      const_where_expression<mask_type, value_type> const& x);
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type const&
+  impl_get_value() const {
+    return m_value;
+  }
 
-  friend constexpr auto const& Impl::value<double, abi_type>(
-      const_where_expression<mask_type, value_type> const& x);
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type const&
+  impl_get_mask() const {
+    return m_mask;
+  }
 };
 
 template <>
@@ -1026,11 +1030,15 @@ class const_where_expression<
                         static_cast<__m128i>(m_value));
   }
 
-  friend constexpr auto const& Impl::mask<std::int32_t, abi_type>(
-      const_where_expression<mask_type, value_type> const& x);
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type const&
+  impl_get_value() const {
+    return m_value;
+  }
 
-  friend constexpr auto const& Impl::value<std::int32_t, abi_type>(
-      const_where_expression<mask_type, value_type> const& x);
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type const&
+  impl_get_mask() const {
+    return m_mask;
+  }
 };
 
 template <>
@@ -1088,11 +1096,15 @@ class const_where_expression<
                            static_cast<__m256i>(m_value));
   }
 
-  friend constexpr auto const& Impl::mask<std::int64_t, abi_type>(
-      const_where_expression<mask_type, value_type> const& x);
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type const&
+  impl_get_value() const {
+    return m_value;
+  }
 
-  friend constexpr auto const& Impl::value<std::int64_t, abi_type>(
-      const_where_expression<mask_type, value_type> const& x);
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type const&
+  impl_get_mask() const {
+    return m_mask;
+  }
 };
 
 template <>
@@ -1152,11 +1164,15 @@ class const_where_expression<
                            static_cast<__m256i>(m_value));
   }
 
-  friend constexpr auto const& Impl::mask<std::uint64_t, abi_type>(
-      const_where_expression<mask_type, value_type> const& x);
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type const&
+  impl_get_value() const {
+    return m_value;
+  }
 
-  friend constexpr auto const& Impl::value<std::uint64_t, abi_type>(
-      const_where_expression<mask_type, value_type> const& x);
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type const&
+  impl_get_mask() const {
+    return m_mask;
+  }
 };
 
 template <>
