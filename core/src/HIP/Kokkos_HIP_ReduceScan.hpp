@@ -116,16 +116,12 @@ struct HIPReductionsFunctor<FunctorType, true> {
 
     // Use the last block that is done to do the do the reduction across the
     // block
-    __shared__ unsigned int num_teams_done;
+    unsigned int num_teams_done = 0;
     if (threadIdx.x + threadIdx.y == 0) {
       num_teams_done = Kokkos::atomic_fetch_add(global_flags, 1) + 1;
     }
     bool is_last_block = false;
-    // FIXME_HIP HIP does not support syncthreads_or. That's why we need to make
-    // num_teams_done __shared__
-    // if (__syncthreads_or(num_teams_done == gridDim.x)) {*/
-    __syncthreads();
-    if (num_teams_done == gridDim.x) {
+    if (__syncthreads_or(num_teams_done == gridDim.x)) {
       is_last_block = true;
       *global_flags = 0;
       functor.init(&value);
@@ -214,16 +210,12 @@ struct HIPReductionsFunctor<FunctorType, false> {
 
     // Use the last block that is done to do the do the reduction across the
     // block
-    __shared__ unsigned int num_teams_done;
+    unsigned int num_teams_done = 0;
     if (threadIdx.x + threadIdx.y == 0) {
       num_teams_done = Kokkos::atomic_fetch_add(global_flags, 1) + 1;
     }
     bool is_last_block = false;
-    // FIXME_HIP HIP does not support syncthreads_or. That's why we need to make
-    // num_teams_done __shared__
-    // if (__syncthreads_or(num_teams_done == gridDim.x)) {*/
-    __syncthreads();
-    if (num_teams_done == gridDim.x) {
+    if (__syncthreads_or(num_teams_done == gridDim.x)) {
       is_last_block = true;
       *global_flags = 0;
       functor.init(&value);
@@ -395,20 +387,11 @@ __device__ bool hip_single_inter_block_reduce_scan_impl(
   // Contributing blocks note that their contribution has been completed via an
   // atomic-increment flag If this block is not the last block to contribute to
   // this group then the block is done.
-  // FIXME_HIP __syncthreads_or is not supported by HIP yet.
-  // const bool is_last_block = !__syncthreads_or(
-  //    threadIdx.y
-  //        ? 0
-  //        : (1 + atomicInc(global_flags, block_count - 1) < block_count));
-  __shared__ int n_done;
-  n_done = 0;
-  __syncthreads();
-  if (threadIdx.y == 0) {
-    n_done = 1 + atomicInc(global_flags, block_count - 1);
-  }
-  __syncthreads();
-  bool const is_last_block = (n_done == static_cast<int>(block_count));
-
+  int n_done = 0;
+  const bool is_last_block = !__syncthreads_or(
+     threadIdx.y
+         ? 0
+         : (1 + atomicInc(global_flags, block_count - 1) < block_count));
   if (is_last_block) {
     size_type const b = (static_cast<long long int>(block_count) *
                          static_cast<long long int>(threadIdx.y)) >>
