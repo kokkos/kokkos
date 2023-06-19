@@ -322,14 +322,19 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
       constexpr int preferred_block_min = 256;
 
       if (nblocks < preferred_block_min) {
-        // keep blocks as is, already small
+        // keep blocks as is, already have low parallelism
+      } else if (nblocks > block_max) {
+        // "large dispatch" -> already have lots of parallelism
+        nblocks = block_max;
       } else {
-        // have each thread process 4 items
-        nblocks = (nblocks + 3) / 4;
-        if  (nblocks < preferred_block_min)
-          nblocks = preferred_block_min;
+        // in the intermediate range, try to have each thread process multiple items to
+        // offset the cost of the reduction (with not enough parallelism to hide it)
+        int items_per_thread = (nwork + nblocks * block_size - 1) / (nblocks * block_size);
+        if (items_per_thread < 4) {
+          int ratio = std::min((nblocks + preferred_block_min - 1) / preferred_block_min, (4 + items_per_thread - 1) / items_per_thread);
+          nblocks /= ratio;
+        }
       }
-      nblocks = std::min(nblocks, 4096);
 
       // TODO: down casting these uses more space than required?
       m_scratch_space  = (word_size_type*)::Kokkos::Impl::hip_internal_scratch_space(
