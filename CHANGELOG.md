@@ -17,7 +17,7 @@
 * Drop unnecessary fences around the memory allocation when using `CudaUVMSpace` in views [\#6008](https://github.com/kokkos/kokkos/pull/6008)
 
 #### HIP:
-* Improve performance for `parallel_reduce`. Use different parameters for `LightWeigth` kernels [\#6029](https://github.com/kokkos/kokkos/pull/6029) and [\#6160](https://github.com/kokkos/kokkos/pull/6160)
+* Improve performance for `parallel_reduce`. Use different parameters for `LightWeight` kernels [\#6029](https://github.com/kokkos/kokkos/pull/6029) and [\#6160](https://github.com/kokkos/kokkos/pull/6160)
 
 #### SYCL:
 * Only pass one wrapper object in SYCL reductions [\#6047](https://github.com/kokkos/kokkos/pull/6047)
