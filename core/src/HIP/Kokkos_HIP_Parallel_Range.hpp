@@ -122,6 +122,21 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
   using functor_type   = FunctorType;
   using size_type      = Kokkos::HIP::size_type;
   using index_type     = typename Policy::index_type;
+  // Conditionally set word_size_type to int16_t or int8_t if value_type is
+  // smaller than int32_t (Kokkos::HIP::size_type)
+  // word_size_type is used to determine the word count, shared memory buffer
+  // size, and global memory buffer size before the scan is performed.
+  // Within the scan, the word count is recomputed based on word_size_type
+  // and when calculating indexes into the shared/global memory buffers for
+  // performing the scan, word_size_type is used again.
+  // For scalars > 4 bytes in size, indexing into shared/global memory relies
+  // on the block and grid dimensions to ensure that we index at the correct
+  // offset rather than at every 4 byte word; such that, when the join is
+  // performed, we have the correct data that was copied over in chunks of 4
+  // bytes.
+  using word_size_type = std::conditional_t<
+      sizeof(value_type) < sizeof(size_type),
+      std::conditional_t<sizeof(value_type) == 2, int16_t, int8_t>, size_type>;
 
   // Algorithmic constraints: blockSize is a power of two AND blockDim.y ==
   // blockDim.z == 1
@@ -131,7 +146,7 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
   const pointer_type m_result_ptr;
   const bool m_result_ptr_device_accessible;
   const bool m_result_ptr_host_accessible;
-  size_type* m_scratch_space = nullptr;
+  word_size_type* m_scratch_space = nullptr;
   size_type* m_scratch_flags = nullptr;
 
   static bool constexpr UseShflReduction = false;
@@ -163,12 +178,12 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
   __device__ inline void run(SHMEMReductionTag) const {
     const ReducerType& reducer = m_functor_reducer.get_reducer();
     const integral_nonzero_constant<
-        size_type, ReducerType::static_value_size() / sizeof(size_type)>
+        word_size_type, ReducerType::static_value_size() / sizeof(word_size_type)>
         word_count(reducer.value_size() / sizeof(size_type));
 
     {
       reference_type value = reducer.init(reinterpret_cast<pointer_type>(
-          ::Kokkos::kokkos_impl_hip_shared_memory<size_type>() +
+          ::Kokkos::kokkos_impl_hip_shared_memory<word_size_type>() +
           threadIdx.y * word_count.value));
 
       // Number of blocks is bounded so that the reduction can be limited to two
@@ -191,17 +206,17 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
     if (!do_final_reduction)
       do_final_reduction = hip_single_inter_block_reduce_scan<false>(
           reducer, blockIdx.x, gridDim.x,
-          ::Kokkos::kokkos_impl_hip_shared_memory<size_type>(), m_scratch_space,
+          ::Kokkos::kokkos_impl_hip_shared_memory<word_size_type>(), m_scratch_space,
           m_scratch_flags);
     if (do_final_reduction) {
       // This is the final block with the final result at the final threads'
       // location
 
-      size_type* const shared =
-          ::Kokkos::kokkos_impl_hip_shared_memory<size_type>() +
+      word_size_type* const shared =
+          ::Kokkos::kokkos_impl_hip_shared_memory<word_size_type>() +
           (blockDim.y - 1) * word_count.value;
-      size_type* const global = m_result_ptr_device_accessible
-                                    ? reinterpret_cast<size_type*>(m_result_ptr)
+      word_size_type* const global = m_result_ptr_device_accessible
+                                    ? reinterpret_cast<word_size_type*>(m_result_ptr)
                                     : m_scratch_space;
 
       if (threadIdx.y == 0) {
@@ -314,8 +329,11 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
       } else {
         nblocks = std::min(nblocks, 4096);
       }
-      m_scratch_space = ::Kokkos::Impl::hip_internal_scratch_space(
+      // TODO: down casting these uses more space than required?
+      m_scratch_space  = (word_size_type*)::Kokkos::Impl::hip_internal_scratch_space(
           m_policy.space(), reducer.value_size() * nblocks);
+      // Intentionally do not downcast to word_size_type since we use HIP
+      // atomics in Kokkos_HIP_ReduceScan.hpp
       m_scratch_flags = ::Kokkos::Impl::hip_internal_scratch_flags(
           m_policy.space(), sizeof(size_type));
       // Required grid.x <= block.y
