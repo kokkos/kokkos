@@ -240,7 +240,11 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
 
       auto parallel_reduce_event = q.submit([&](sycl::handler& cgh) {
         const auto begin = policy.begin();
+#ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
         cgh.depends_on(memcpy_event);
+#else
+        (void)memcpy_event;
+#endif
         cgh.single_task([=]() {
           const CombinedFunctorReducerType& functor_reducer =
               functor_reducer_wrapper.get_functor();
@@ -258,8 +262,10 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
             reducer.copy(device_accessible_result_ptr.get(), results_ptr.get());
         });
       });
+#ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
       q.ext_oneapi_submit_barrier(
           std::vector<sycl::event>{parallel_reduce_event});
+#endif
       last_reduction_event = parallel_reduce_event;
     }
 
@@ -426,7 +432,11 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
         sycl::local_accessor<value_type> local_mem(
             sycl::range<1>(wgroup_size) * std::max(value_count, 1u), cgh);
 
+#ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
         cgh.depends_on(memcpy_event);
+#else
+        (void)memcpy_event;
+#endif
 
         auto reduction_lambda =
             reduction_lambda_factory(local_mem, num_teams_done, results_ptr);
@@ -434,9 +444,11 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
             sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
             reduction_lambda);
       });
-
-      last_reduction_event = q.ext_oneapi_submit_barrier(
+#ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
+      q.ext_oneapi_submit_barrier(
           std::vector<sycl::event>{parallel_reduce_event});
+#endif
+      last_reduction_event = parallel_reduce_event;
     }
 
     // At this point, the reduced value is written to the entry in results_ptr
@@ -576,7 +588,11 @@ class ParallelReduce<CombinedFunctorReducerType,
     // m_result_ptr yet.
     if (size <= 1) {
       auto parallel_reduce_event = q.submit([&](sycl::handler& cgh) {
+#ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
         cgh.depends_on(memcpy_event);
+#else
+        (void)memcpy_event;
+#endif
         cgh.single_task([=]() {
           const CombinedFunctorReducerType& functor_reducer =
               functor_reducer_wrapper.get_functor();
@@ -596,8 +612,10 @@ class ParallelReduce<CombinedFunctorReducerType,
             reducer.copy(device_accessible_result_ptr.get(), results_ptr.get());
         });
       });
+#ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
       q.ext_oneapi_submit_barrier(
           std::vector<sycl::event>{parallel_reduce_event});
+#endif
       last_reduction_event = parallel_reduce_event;
     }
 
@@ -614,7 +632,11 @@ class ParallelReduce<CombinedFunctorReducerType,
 
         const BarePolicy bare_policy = m_policy;
 
+#ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
         cgh.depends_on(memcpy_event);
+#else
+        (void)memcpy_event;
+#endif
 
         cgh.parallel_for(range, [=](sycl::nd_item<1> item) {
           const auto local_id = item.get_local_linear_id();
@@ -726,8 +748,11 @@ class ParallelReduce<CombinedFunctorReducerType,
           }
         });
       });
-      last_reduction_event       = q.ext_oneapi_submit_barrier(
+#ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
+      q.ext_oneapi_submit_barrier(
           std::vector<sycl::event>{parallel_reduce_event});
+#endif
+      last_reduction_event = parallel_reduce_event;
     }
 
     // At this point, the reduced value is written to the entry in results_ptr

@@ -434,14 +434,20 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
       // be used gives a runtime error.
       // cgh.use_kernel_bundle(kernel_bundle);
 
+#ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
       cgh.depends_on(memcpy_event);
+#else
+      (void)memcpy_event;
+#endif
       cgh.parallel_for(
           sycl::nd_range<2>(
               sycl::range<2>(m_team_size, m_league_size * final_vector_size),
               sycl::range<2>(m_team_size, final_vector_size)),
           lambda);
     });
+#ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
     q.ext_oneapi_submit_barrier(std::vector<sycl::event>{parallel_for_event});
+#endif
     return parallel_for_event;
   }
 
@@ -595,7 +601,11 @@ class ParallelReduce<CombinedFunctorReducerType,
         const size_t scratch_size[2] = {m_scratch_size[0], m_scratch_size[1]};
         sycl::device_ptr<char> const global_scratch_ptr = m_global_scratch_ptr;
 
+#ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
         cgh.depends_on(memcpy_event);
+#else
+        (void)memcpy_event;
+#endif
         cgh.parallel_for(
             sycl::nd_range<2>(sycl::range<2>(1, 1), sycl::range<2>(1, 1)),
             [=](sycl::nd_item<2> item) {
@@ -619,8 +629,10 @@ class ParallelReduce<CombinedFunctorReducerType,
                 reducer.copy(device_accessible_result_ptr, &results_ptr[0]);
             });
       });
+#ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
       q.ext_oneapi_submit_barrier(
           std::vector<sycl::event>{parallel_reduce_event});
+#endif
       last_reduction_event = parallel_reduce_event;
     } else {
       // Otherwise, (if the total range has more than one element) we perform a
@@ -797,7 +809,9 @@ class ParallelReduce<CombinedFunctorReducerType,
 
         auto reduction_lambda = team_reduction_factory(local_mem, results_ptr);
 
+#ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
         cgh.depends_on(memcpy_event);
+#endif
 
         cgh.parallel_for(
             sycl::nd_range<2>(
@@ -805,8 +819,11 @@ class ParallelReduce<CombinedFunctorReducerType,
                 sycl::range<2>(m_team_size, m_vector_size)),
             reduction_lambda);
       });
-      last_reduction_event       = q.ext_oneapi_submit_barrier(
+#ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
+      q.ext_oneapi_submit_barrier(
           std::vector<sycl::event>{parallel_reduce_event});
+#endif
+      last_reduction_event = parallel_reduce_event;
     }
 
     // At this point, the reduced value is written to the entry in results_ptr

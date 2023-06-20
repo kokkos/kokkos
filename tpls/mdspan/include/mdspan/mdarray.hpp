@@ -14,22 +14,18 @@
 //
 //@HEADER
 
-#include <TestStdAlgorithmsCommon.hpp>
+#ifndef MDARRAY_HPP_
+#define MDARRAY_HPP_
 
-namespace Test {
-namespace stdalgos {
+#ifndef MDSPAN_IMPL_STANDARD_NAMESPACE
+  #define MDSPAN_IMPL_STANDARD_NAMESPACE Kokkos
+#endif
 
-std::string view_tag_to_string(DynamicTag) { return "dynamic_view"; }
+#ifndef MDSPAN_IMPL_PROPOSED_NAMESPACE
+  #define MDSPAN_IMPL_PROPOSED_NAMESPACE Experimental
+#endif
 
-std::string view_tag_to_string(StridedTwoTag) { return "stride2_view"; }
+#include "mdspan.hpp"
+#include "../experimental/__p1684_bits/mdarray.hpp"
 
-std::string view_tag_to_string(StridedThreeTag) { return "stride3_view"; }
-
-std::string view_tag_to_string(StridedTwoRowsTag) { return "stride2rows_view"; }
-
-std::string view_tag_to_string(StridedThreeRowsTag) {
-  return "stride3rows_view";
-}
-
-}  // namespace stdalgos
-}  // namespace Test
+#endif // MDARRAY_HPP_
