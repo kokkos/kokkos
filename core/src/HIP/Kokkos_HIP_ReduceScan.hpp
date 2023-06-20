@@ -387,11 +387,11 @@ __device__ bool hip_single_inter_block_reduce_scan_impl(
   // Contributing blocks note that their contribution has been completed via an
   // atomic-increment flag If this block is not the last block to contribute to
   // this group then the block is done.
-  int n_done = 0;
+  int n_done               = 0;
   const bool is_last_block = !__syncthreads_or(
-     threadIdx.y
-         ? 0
-         : (1 + atomicInc(global_flags, block_count - 1) < block_count));
+      threadIdx.y
+          ? 0
+          : (1 + atomicInc(global_flags, block_count - 1) < block_count));
   if (is_last_block) {
     size_type const b = (static_cast<long long int>(block_count) *
                          static_cast<long long int>(threadIdx.y)) >>

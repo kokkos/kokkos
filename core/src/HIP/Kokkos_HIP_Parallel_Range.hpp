@@ -147,7 +147,7 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
   const bool m_result_ptr_device_accessible;
   const bool m_result_ptr_host_accessible;
   word_size_type* m_scratch_space = nullptr;
-  size_type* m_scratch_flags = nullptr;
+  size_type* m_scratch_flags      = nullptr;
 
   static bool constexpr UseShflReduction = false;
 
@@ -177,8 +177,9 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
 
   __device__ inline void run(SHMEMReductionTag) const {
     const ReducerType& reducer = m_functor_reducer.get_reducer();
-    const integral_nonzero_constant<
-        word_size_type, ReducerType::static_value_size() / sizeof(word_size_type)>
+    const integral_nonzero_constant<word_size_type,
+                                    ReducerType::static_value_size() /
+                                        sizeof(word_size_type)>
         word_count(reducer.value_size() / sizeof(size_type));
 
     {
@@ -206,8 +207,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
     if (!do_final_reduction)
       do_final_reduction = hip_single_inter_block_reduce_scan<false>(
           reducer, blockIdx.x, gridDim.x,
-          ::Kokkos::kokkos_impl_hip_shared_memory<word_size_type>(), m_scratch_space,
-          m_scratch_flags);
+          ::Kokkos::kokkos_impl_hip_shared_memory<word_size_type>(),
+          m_scratch_space, m_scratch_flags);
     if (do_final_reduction) {
       // This is the final block with the final result at the final threads'
       // location
@@ -215,9 +216,10 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
       word_size_type* const shared =
           ::Kokkos::kokkos_impl_hip_shared_memory<word_size_type>() +
           (blockDim.y - 1) * word_count.value;
-      word_size_type* const global = m_result_ptr_device_accessible
-                                    ? reinterpret_cast<word_size_type*>(m_result_ptr)
-                                    : m_scratch_space;
+      word_size_type* const global =
+          m_result_ptr_device_accessible
+              ? reinterpret_cast<word_size_type*>(m_result_ptr)
+              : m_scratch_space;
 
       if (threadIdx.y == 0) {
         reducer.final(reinterpret_cast<value_type*>(shared));
@@ -315,10 +317,11 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
       int nblocks = (nwork + block.y - 1) / block.y;
       // Heuristic deciding the value of nblocks.
       // The general idea here is we want to:
-      //    1. Not undersubscribe the device (i.e., we want at least preferred_block_min blocks)
+      //    1. Not undersubscribe the device (i.e., we want at least
+      //    preferred_block_min blocks)
       //    2. Have each thread reduce > 1 value to minimize overheads
       //    3. Limit the total # of blocks, to avoid unbounded scratch space
-      constexpr int block_max = 4096;
+      constexpr int block_max           = 4096;
       constexpr int preferred_block_min = 256;
 
       if (nblocks < preferred_block_min) {
@@ -327,18 +330,23 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
         // "large dispatch" -> already have lots of parallelism
         nblocks = block_max;
       } else {
-        // in the intermediate range, try to have each thread process multiple items to
-        // offset the cost of the reduction (with not enough parallelism to hide it)
-        int items_per_thread = (nwork + nblocks * block_size - 1) / (nblocks * block_size);
+        // in the intermediate range, try to have each thread process multiple
+        // items to offset the cost of the reduction (with not enough
+        // parallelism to hide it)
+        int items_per_thread =
+            (nwork + nblocks * block_size - 1) / (nblocks * block_size);
         if (items_per_thread < 4) {
-          int ratio = std::min((nblocks + preferred_block_min - 1) / preferred_block_min, (4 + items_per_thread - 1) / items_per_thread);
+          int ratio = std::min(
+              (nblocks + preferred_block_min - 1) / preferred_block_min,
+              (4 + items_per_thread - 1) / items_per_thread);
           nblocks /= ratio;
         }
       }
 
       // TODO: down casting these uses more space than required?
-      m_scratch_space  = (word_size_type*)::Kokkos::Impl::hip_internal_scratch_space(
-          m_policy.space(), reducer.value_size() * nblocks);
+      m_scratch_space =
+          (word_size_type*)::Kokkos::Impl::hip_internal_scratch_space(
+              m_policy.space(), reducer.value_size() * nblocks);
       // Intentionally do not downcast to word_size_type since we use HIP
       // atomics in Kokkos_HIP_ReduceScan.hpp
       m_scratch_flags = ::Kokkos::Impl::hip_internal_scratch_flags(
