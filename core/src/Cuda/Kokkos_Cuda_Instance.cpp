@@ -32,6 +32,7 @@
 #include <Cuda/Kokkos_Cuda_UniqueToken.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_Tools.hpp>
+#include <impl/Kokkos_CheckedIntegerOps.hpp>
 #include <impl/Kokkos_DeviceManagement.hpp>
 #include <impl/Kokkos_ExecSpaceManager.hpp>
 
@@ -448,8 +449,10 @@ Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
 Cuda::size_type *CudaInternal::scratch_flags(const std::size_t size) const {
   if (verify_is_initialized("scratch_flags") &&
       m_scratchFlagsCount < scratch_count(size)) {
-    m_scratchFlagsCount   = scratch_count(size);
-    const auto alloc_size = check_mul_of(m_scratchFlagsCount, sizeScratchGrain);
+    m_scratchFlagsCount = scratch_count(size);
+    std::size_t alloc_size;
+    if (multiply_overflow(m_scratchFlagsCount, sizeScratchGrain, alloc_size))
+      Kokkos::abort("Arithmetic overflow detected.");
 
     using Record =
         Kokkos::Impl::SharedAllocationRecord<Kokkos::CudaSpace, void>;
@@ -472,8 +475,10 @@ Cuda::size_type *CudaInternal::scratch_flags(const std::size_t size) const {
 Cuda::size_type *CudaInternal::scratch_space(const std::size_t size) const {
   if (verify_is_initialized("scratch_space") &&
       m_scratchSpaceCount < scratch_count(size)) {
-    m_scratchSpaceCount   = scratch_count(size);
-    const auto alloc_size = check_mul_of(m_scratchSpaceCount, sizeScratchGrain);
+    m_scratchSpaceCount = scratch_count(size);
+    std::size_t alloc_size;
+    if (multiply_overflow(m_scratchSpaceCount, sizeScratchGrain, alloc_size))
+      Kokkos::abort("Arithmetic overflow detected.");
 
     using Record =
         Kokkos::Impl::SharedAllocationRecord<Kokkos::CudaSpace, void>;
@@ -495,8 +500,9 @@ Cuda::size_type *CudaInternal::scratch_unified(const std::size_t size) const {
   if (verify_is_initialized("scratch_unified") && m_scratchUnifiedSupported &&
       m_scratchUnifiedCount < scratch_count(size)) {
     m_scratchUnifiedCount = scratch_count(size);
-    const auto alloc_size =
-        check_mul_of(m_scratchUnifiedCount, sizeScratchGrain);
+    std::size_t alloc_size;
+    if (multiply_overflow(m_scratchUnifiedCount, sizeScratchGrain, alloc_size))
+      Kokkos::abort("Arithmetic overflow detected.");
 
     using Record =
         Kokkos::Impl::SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>;

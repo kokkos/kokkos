@@ -18,7 +18,6 @@
 #define KOKKOS_CORE_IMPL_UTILITIES_HPP
 
 #include <Kokkos_Macros.hpp>
-#include <impl/Kokkos_Error.hpp>
 #include <cstdint>
 #include <type_traits>
 #include <initializer_list>  // in-order comma operator fold emulation
@@ -202,18 +201,6 @@ using filter_type_list_t =
 template <typename T>
 constexpr bool dependent_false_v = !sizeof(T*);
 //==============================================================================
-
-template <typename T>
-std::enable_if_t<std::is_integral_v<T> and std::is_unsigned_v<T>, T>
-check_mul_of(T a, T b) {
-  auto product = a * b;
-  if ((a == 0) or (b == 0) or (a == product / b)) {
-    return product;
-  } else {
-    Kokkos::abort("Arithmetic overflow detected.");
-  }
-  return 0;
-}
 
 }  // namespace Impl
 }  // namespace Kokkos

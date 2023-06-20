@@ -20,6 +20,8 @@
 
 #include <Kokkos_Core.hpp>  //kokkos_malloc
 
+#include <impl/Kokkos_CheckedIntegerOps.hpp>
+
 namespace Kokkos {
 namespace Experimental {
 namespace Impl {
@@ -244,8 +246,10 @@ void SYCLInternal::finalize() {
 sycl::device_ptr<void> SYCLInternal::scratch_space(const std::size_t size) {
   if (verify_is_initialized("scratch_space") &&
       m_scratchSpaceCount < scratch_count(size)) {
-    m_scratchSpaceCount   = scratch_count(size);
-    const auto alloc_size = check_mul_of(m_scratchSpaceCount, sizeScratchGrain);
+    m_scratchSpaceCount = scratch_count(size);
+    std::size_t alloc_size;
+    if (multiply_overflow(m_scratchFlagsCount, sizeScratchGrain, alloc_size))
+      Kokkos::abort("Arithmetic overflow detected.");
 
     using Record = Kokkos::Impl::SharedAllocationRecord<
         Kokkos::Experimental::SYCLDeviceUSMSpace, void>;
@@ -268,8 +272,10 @@ sycl::device_ptr<void> SYCLInternal::scratch_space(const std::size_t size) {
 sycl::device_ptr<void> SYCLInternal::scratch_flags(const std::size_t size) {
   if (verify_is_initialized("scratch_flags") &&
       m_scratchFlagsCount < scratch_count(size)) {
-    m_scratchFlagsCount   = scratch_count(size);
-    const auto alloc_size = check_mul_of(m_scratchFlagsCount, sizeScratchGrain);
+    m_scratchFlagsCount = scratch_count(size);
+    std::size_t alloc_size;
+    if (multiply_overflow(m_scratchFlagsCount, sizeScratchGrain, alloc_size))
+      Kokkos::abort("Arithmetic overflow detected.");
 
     using Record = Kokkos::Impl::SharedAllocationRecord<
         Kokkos::Experimental::SYCLDeviceUSMSpace, void>;
