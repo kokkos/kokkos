@@ -648,8 +648,7 @@ class ParallelReduce<CombinedFunctorReducerType,
 
         auto team_reduction_factory =
             [&](sycl::local_accessor<value_type, 1> local_mem,
-                sycl::device_ptr<value_type> results_ptr,
-                int values_per_thread) {
+                sycl::device_ptr<value_type> results_ptr) {
               sycl::global_ptr<value_type> device_accessible_result_ptr =
                   m_result_ptr_device_accessible ? m_result_ptr : nullptr;
               auto lambda = [=](sycl::nd_item<2> item) {
@@ -775,7 +774,7 @@ class ParallelReduce<CombinedFunctorReducerType,
             };
 
         auto dummy_reduction_lambda =
-            team_reduction_factory({1, cgh}, nullptr, 1);
+            team_reduction_factory({1, cgh}, nullptr);
 
         static sycl::kernel kernel = [&] {
           sycl::kernel_id functor_kernel_id =
@@ -822,7 +821,7 @@ class ParallelReduce<CombinedFunctorReducerType,
         }
 
         auto reduction_lambda =
-            team_reduction_factory(local_mem, results_ptr, values_per_thread);
+            team_reduction_factory(local_mem, results_ptr);
 
         cgh.depends_on(memcpy_event);
 

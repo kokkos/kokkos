@@ -567,9 +567,8 @@ class ParallelReduce<CombinedFunctorReducerType,
             m_space.impl_internal_space_instance()->m_mutexScratchSpace) {}
 
  private:
-  template <typename PolicyType, typename CombinedFunctorReducerWrapper>
+  template <typename CombinedFunctorReducerWrapper>
   sycl::event sycl_direct_launch(
-      const PolicyType& policy,
       const CombinedFunctorReducerWrapper& functor_reducer_wrapper,
       const sycl::event& memcpy_event) const {
     // Convenience references
@@ -584,8 +583,7 @@ class ParallelReduce<CombinedFunctorReducerType,
 
     sycl::event last_reduction_event;
 
-    // If n_tiles==0 we only call init(), the functor and possibly final once
-    // working with the global scratch memory but don't copy back to
+    // If n_tiles==0 we only call init() and final() working with the global scratch memory but don't copy back to
     // m_result_ptr yet.
     if (n_tiles == 0) {
       auto parallel_reduce_event = q.submit([&](sycl::handler& cgh) {
@@ -598,7 +596,6 @@ class ParallelReduce<CombinedFunctorReducerType,
           const CombinedFunctorReducerType& functor_reducer =
               functor_reducer_wrapper.get_functor();
           const ReducerType& reducer = functor_reducer.get_reducer();
-          reference_type update      = reducer.init(results_ptr);
           reducer.final(results_ptr);
           if (device_accessible_result_ptr)
             reducer.copy(device_accessible_result_ptr.get(), results_ptr.get());
@@ -639,7 +636,7 @@ class ParallelReduce<CombinedFunctorReducerType,
       auto parallel_reduce_event = q.submit([&](sycl::handler& cgh) {
         sycl::local_accessor<value_type> local_mem(
             sycl::range<1>(wgroup_size) * value_count, cgh);
-        sycl::local_accessor<unsigned int> num_teams_done(1, cgh);
+        sycl::local_accessor<int> num_teams_done(1, cgh);
 
         const BarePolicy bare_policy = m_policy;
 
@@ -650,7 +647,7 @@ class ParallelReduce<CombinedFunctorReducerType,
         cgh.parallel_for(
             sycl::nd_range<1>{n_wgroups * wgroup_size, wgroup_size},
             [=](sycl::nd_item<1> item) {
-              const auto local_id = item.get_local_linear_id();
+              const int local_id = item.get_local_linear_id();
               const CombinedFunctorReducerType& functor_reducer =
                   functor_reducer_wrapper.get_functor();
               const FunctorType& functor = functor_reducer.get_functor();
@@ -707,7 +704,7 @@ class ParallelReduce<CombinedFunctorReducerType,
                   else {
                     reducer.copy(&local_mem[local_id * value_count],
                                  &results_ptr[local_id * value_count]);
-                    for (unsigned int id = local_id + wgroup_size;
+                    for (int id = local_id + wgroup_size;
                          id < n_wgroups; id += wgroup_size) {
                       reducer.join(&local_mem[local_id * value_count],
                                    &results_ptr[id * value_count]);
@@ -801,7 +798,7 @@ class ParallelReduce<CombinedFunctorReducerType,
                                                        indirectKernelMem);
 
     sycl::event event =
-        sycl_direct_launch(m_policy, functor_reducer_wrapper,
+        sycl_direct_launch(functor_reducer_wrapper,
                            functor_reducer_wrapper.get_copy_event());
     functor_reducer_wrapper.register_event(event);
   }
