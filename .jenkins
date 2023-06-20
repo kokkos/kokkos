@@ -17,7 +17,7 @@ pipeline {
                 dockerfile {
                     filename 'Dockerfile.clang'
                     dir 'scripts/docker'
-                    label 'nvidia-docker || docker'
+                    label 'nvidia-docker || rocm-docker || docker'
                     args '-v /tmp/ccache.kokkos:/tmp/ccache'
                 }
             }
@@ -101,12 +101,14 @@ pipeline {
                     }
                     steps {
                         sh 'ccache --zero-stats'
-                        sh '''rm -rf build && mkdir -p build && cd build && \
+                        sh '''. /opt/intel/oneapi/setvars.sh --include-intel-llvm && \
+                              rm -rf build && mkdir -p build && cd build && \
                               cmake \
                                 -DCMAKE_BUILD_TYPE=Release \
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-                                -DCMAKE_CXX_COMPILER=clang++ \
-                                -DCMAKE_CXX_FLAGS="-fsycl-device-code-split=per_kernel -Werror -Wno-gnu-zero-variadic-macro-arguments -Wno-linker-warnings" \
+                                -DCMAKE_CXX_COMPILER=/opt/intel/oneapi/compiler/2023.0.0/linux/bin-llvm/clang++ \
+                                -DCMAKE_CXX_FLAGS="-fsycl-device-code-split=per_kernel -Wno-deprecated-declarations -Werror -Wno-gnu-zero-variadic-macro-arguments -Wno-unknown-cuda-version -Wno-sycl-target" \
+                                -DKOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED=0 \
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ARCH_VOLTA70=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
@@ -343,7 +345,7 @@ pipeline {
                                 --with-cuda \
                                 --with-cuda-options=enable_lambda \
                                 --arch=Volta70 \
-                              .. && \
+                              && \
                               make test -j8'''
                     }
                     post {
@@ -487,6 +489,7 @@ pipeline {
                                 -DCMAKE_CXX_FLAGS=-Werror \
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+                                -DKokkos_ENABLE_DEPRECATED_CODE_3=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
                                 -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
                                 -DKokkos_ENABLE_TESTS=ON \

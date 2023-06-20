@@ -28,6 +28,14 @@ IF (NOT KOKKOS_HAS_TRILINOS AND NOT Kokkos_INSTALL_TESTING)
     "${Kokkos_BINARY_DIR}/KokkosConfigVersion.cmake"
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Kokkos)
   install(EXPORT KokkosTargets NAMESPACE Kokkos:: DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Kokkos)
+  export(EXPORT KokkosTargets NAMESPACE Kokkos:: FILE ${Kokkos_BINARY_DIR}/KokkosTargets.cmake)
+
+  # Required to be a TriBITS-compliant external package
+  file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/cmake_packages/Kokkos)
+  file(CREATE_LINK ${Kokkos_BINARY_DIR}/KokkosTargets.cmake ${CMAKE_BINARY_DIR}/cmake_packages/Kokkos/KokkosTargets.cmake SYMBOLIC)
+  file(CREATE_LINK ${Kokkos_BINARY_DIR}/KokkosConfig.cmake ${CMAKE_BINARY_DIR}/cmake_packages/Kokkos/KokkosConfig.cmake SYMBOLIC)
+  file(CREATE_LINK ${Kokkos_BINARY_DIR}/KokkosConfigCommon.cmake ${CMAKE_BINARY_DIR}/cmake_packages/Kokkos/KokkosConfigCommon.cmake SYMBOLIC)
+  file(CREATE_LINK ${Kokkos_BINARY_DIR}/KokkosConfigVersion.cmake ${CMAKE_BINARY_DIR}/cmake_packages/Kokkos/KokkosConfigVersion.cmake SYMBOLIC)
 ELSE()
   CONFIGURE_FILE(cmake/KokkosConfigCommon.cmake.in ${Kokkos_BINARY_DIR}/KokkosConfigCommon.cmake @ONLY)
   file(READ ${Kokkos_BINARY_DIR}/KokkosConfigCommon.cmake KOKKOS_CONFIG_COMMON)
