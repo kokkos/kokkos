@@ -785,8 +785,7 @@ class ParallelReduce<CombinedFunctorReducerType,
               return lambda;
             };
 
-        auto dummy_reduction_lambda =
-            team_reduction_factory({1, cgh}, nullptr);
+        auto dummy_reduction_lambda = team_reduction_factory({1, cgh}, nullptr);
 
         static sycl::kernel kernel = [&] {
           sycl::kernel_id functor_kernel_id =
@@ -832,8 +831,7 @@ class ParallelReduce<CombinedFunctorReducerType,
                       wgroup_size;
         }
 
-        auto reduction_lambda =
-            team_reduction_factory(local_mem, results_ptr);
+        auto reduction_lambda = team_reduction_factory(local_mem, results_ptr);
 
 #ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
         cgh.depends_on(memcpy_event);

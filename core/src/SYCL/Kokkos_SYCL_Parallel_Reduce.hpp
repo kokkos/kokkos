@@ -216,8 +216,7 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
             MemorySpaceAccess<Kokkos::Experimental::SYCLDeviceUSMSpace,
                               typename View::memory_space>::accessible),
         m_shared_memory_lock(
-            p.space().impl_internal_space_instance()->m_mutexScratchSpace) {
-	}
+            p.space().impl_internal_space_instance()->m_mutexScratchSpace) {}
 
  private:
   template <typename PolicyType, typename CombinedFunctorReducerWrapper>
@@ -577,8 +576,7 @@ class ParallelReduce<CombinedFunctorReducerType,
             MemorySpaceAccess<Kokkos::Experimental::SYCLDeviceUSMSpace,
                               typename View::memory_space>::accessible),
         m_shared_memory_lock(
-            m_space.impl_internal_space_instance()->m_mutexScratchSpace) {
-	}
+            m_space.impl_internal_space_instance()->m_mutexScratchSpace) {}
 
  private:
   template <typename CombinedFunctorReducerWrapper>
@@ -597,8 +595,8 @@ class ParallelReduce<CombinedFunctorReducerType,
 
     sycl::event last_reduction_event;
 
-    // If n_tiles==0 we only call init() and final() working with the global scratch memory but don't copy back to
-    // m_result_ptr yet.
+    // If n_tiles==0 we only call init() and final() working with the global
+    // scratch memory but don't copy back to m_result_ptr yet.
     if (n_tiles == 0) {
       auto parallel_reduce_event = q.submit([&](sycl::handler& cgh) {
 #ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
@@ -614,7 +612,7 @@ class ParallelReduce<CombinedFunctorReducerType,
           const CombinedFunctorReducerType& functor_reducer =
               functor_reducer_wrapper.get_functor();
           const ReducerType& reducer = functor_reducer.get_reducer();
-	  reducer.init(results_ptr);
+          reducer.init(results_ptr);
           reducer.final(results_ptr);
           if (device_accessible_result_ptr)
             reducer.copy(device_accessible_result_ptr.get(), results_ptr.get());
@@ -712,8 +710,7 @@ class ParallelReduce<CombinedFunctorReducerType,
 
                 SYCLReduction::workgroup_reduction<>(
                     item, local_mem, results_ptr, device_accessible_result_ptr,
-                    value_count, reducer, false,
-                    n_wgroups * wgroup_size);
+                    value_count, reducer, false, n_wgroups * wgroup_size);
 
                 if (local_id == 0) {
                   sycl::atomic_ref<unsigned, sycl::memory_order::relaxed,
@@ -729,8 +726,8 @@ class ParallelReduce<CombinedFunctorReducerType,
                   else {
                     reducer.copy(&local_mem[local_id * value_count],
                                  &results_ptr[local_id * value_count]);
-                    for (int id = local_id + wgroup_size;
-                         id < n_wgroups; id += wgroup_size) {
+                    for (int id = local_id + wgroup_size; id < n_wgroups;
+                         id += wgroup_size) {
                       reducer.join(&local_mem[local_id * value_count],
                                    &results_ptr[id * value_count]);
                     }
@@ -774,8 +771,8 @@ class ParallelReduce<CombinedFunctorReducerType,
                     reducer.init(&local_value);
                   else {
                     local_value = results_ptr[local_id];
-                    for (int id = local_id + wgroup_size;
-                         id < n_wgroups; id += wgroup_size) {
+                    for (int id = local_id + wgroup_size; id < n_wgroups;
+                         id += wgroup_size) {
                       reducer.join(&local_value, &results_ptr[id]);
                     }
                   }
@@ -825,9 +822,8 @@ class ParallelReduce<CombinedFunctorReducerType,
         Experimental::Impl::make_sycl_function_wrapper(m_functor_reducer,
                                                        indirectKernelMem);
 
-    sycl::event event =
-        sycl_direct_launch(functor_reducer_wrapper,
-                           functor_reducer_wrapper.get_copy_event());
+    sycl::event event = sycl_direct_launch(
+        functor_reducer_wrapper, functor_reducer_wrapper.get_copy_event());
     functor_reducer_wrapper.register_event(event);
   }
 
