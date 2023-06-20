@@ -216,7 +216,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
             MemorySpaceAccess<Kokkos::Experimental::SYCLDeviceUSMSpace,
                               typename View::memory_space>::accessible),
         m_shared_memory_lock(
-            p.space().impl_internal_space_instance()->m_mutexScratchSpace) {}
+            p.space().impl_internal_space_instance()->m_mutexScratchSpace) {
+	}
 
  private:
   template <typename PolicyType, typename CombinedFunctorReducerWrapper>
@@ -576,7 +577,8 @@ class ParallelReduce<CombinedFunctorReducerType,
             MemorySpaceAccess<Kokkos::Experimental::SYCLDeviceUSMSpace,
                               typename View::memory_space>::accessible),
         m_shared_memory_lock(
-            m_space.impl_internal_space_instance()->m_mutexScratchSpace) {}
+            m_space.impl_internal_space_instance()->m_mutexScratchSpace) {
+	}
 
  private:
   template <typename CombinedFunctorReducerWrapper>
@@ -612,6 +614,7 @@ class ParallelReduce<CombinedFunctorReducerType,
           const CombinedFunctorReducerType& functor_reducer =
               functor_reducer_wrapper.get_functor();
           const ReducerType& reducer = functor_reducer.get_reducer();
+	  reducer.init(results_ptr);
           reducer.final(results_ptr);
           if (device_accessible_result_ptr)
             reducer.copy(device_accessible_result_ptr.get(), results_ptr.get());
@@ -629,7 +632,7 @@ class ParallelReduce<CombinedFunctorReducerType,
     // until only one workgroup does the reduction and thus gets the final
     // value.
     if (n_tiles > 0) {
-      const typename Policy::index_type wgroup_size = Kokkos::bit_ceil(
+      const int wgroup_size = Kokkos::bit_ceil(
           static_cast<unsigned int>(m_policy.m_prod_tile_dims));
 
       // FIXME_SYCL Find a better way to determine a good limit for the
@@ -710,7 +713,7 @@ class ParallelReduce<CombinedFunctorReducerType,
                 SYCLReduction::workgroup_reduction<>(
                     item, local_mem, results_ptr, device_accessible_result_ptr,
                     value_count, reducer, false,
-                    std::min(n_wgroups * wgroup_size, wgroup_size));
+                    n_wgroups * wgroup_size);
 
                 if (local_id == 0) {
                   sycl::atomic_ref<unsigned, sycl::memory_order::relaxed,
@@ -756,7 +759,7 @@ class ParallelReduce<CombinedFunctorReducerType,
                 SYCLReduction::workgroup_reduction<>(
                     item, local_mem, local_value, results_ptr,
                     device_accessible_result_ptr, reducer, false,
-                    std::min(n_wgroups * wgroup_size, wgroup_size));
+                    n_wgroups * wgroup_size);
 
                 if (local_id == 0) {
                   sycl::atomic_ref<unsigned, sycl::memory_order::relaxed,
@@ -771,7 +774,7 @@ class ParallelReduce<CombinedFunctorReducerType,
                     reducer.init(&local_value);
                   else {
                     local_value = results_ptr[local_id];
-                    for (unsigned int id = local_id + wgroup_size;
+                    for (int id = local_id + wgroup_size;
                          id < n_wgroups; id += wgroup_size) {
                       reducer.join(&local_value, &results_ptr[id]);
                     }
