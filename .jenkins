@@ -27,7 +27,7 @@ pipeline {
         }
         stage('Build') {
             parallel {
-                stage('OPENACC-NVHPC-CUDA-11.6') {
+                stage('OPENACC-NVHPC-CUDA-11.7') {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.nvhpc'
@@ -37,7 +37,7 @@ pipeline {
                         }
                     }
                     environment {
-                        CUDA_HOME = '/opt/nvidia/hpc_sdk/Linux_x86_64/22.3/cuda/11.6'
+                        CUDA_HOME = '/opt/nvidia/hpc_sdk/Linux_x86_64/22.9/cuda/11.7'
                     }
                     steps {
                         sh '''rm -rf build && mkdir -p build && cd build && \
