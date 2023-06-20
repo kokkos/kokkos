@@ -322,7 +322,7 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
       //    2. Have each thread reduce > 1 value to minimize overheads
       //    3. Limit the total # of blocks, to avoid unbounded scratch space
       constexpr int block_max           = 4096;
-      constexpr int preferred_block_min = 256;
+      constexpr int preferred_block_min = 1024;
 
       if (nblocks < preferred_block_min) {
         // keep blocks as is, already have low parallelism
