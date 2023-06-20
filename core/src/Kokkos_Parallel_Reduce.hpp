@@ -1372,116 +1372,6 @@ class CombinedFunctorReducer<
   FunctorAnalysisReducerType m_reducer;
 };
 
-// FIXME Remove once all backends implement the new interface
-template <typename ExecutionSpace>
-struct implements_new_reduce_interface : std::false_type {};
-
-#ifdef KOKKOS_ENABLE_SERIAL
-template <>
-struct implements_new_reduce_interface<Kokkos::Serial> : std::true_type {};
-#endif
-
-#ifdef KOKKOS_ENABLE_HPX
-template <>
-struct implements_new_reduce_interface<Kokkos::Experimental::HPX>
-    : std::true_type {};
-#endif
-
-#ifdef KOKKOS_ENABLE_OPENMP
-template <>
-struct implements_new_reduce_interface<Kokkos::OpenMP> : std::true_type {};
-#endif
-
-#ifdef KOKKOS_ENABLE_THREADS
-template <>
-struct implements_new_reduce_interface<Kokkos::Threads> : std::true_type {};
-#endif
-
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-template <>
-struct implements_new_reduce_interface<Kokkos::Experimental::OpenMPTarget>
-    : std::true_type {};
-#endif
-
-#ifdef KOKKOS_ENABLE_CUDA
-template <>
-struct implements_new_reduce_interface<Kokkos::Cuda> : std::true_type {};
-#endif
-
-#ifdef KOKKOS_ENABLE_HIP
-template <>
-struct implements_new_reduce_interface<Kokkos::HIP> : std::true_type {};
-#endif
-
-#ifdef KOKKOS_ENABLE_OPENACC
-template <>
-struct implements_new_reduce_interface<Kokkos::Experimental::OpenACC>
-    : std::true_type {};
-#endif
-
-#ifdef KOKKOS_ENABLE_SYCL
-template <>
-struct implements_new_reduce_interface<Kokkos::Experimental::SYCL>
-    : std::true_type {};
-#endif
-
-template <typename CombinedFunctorReducerType, typename PolicyType,
-          typename ExecutionSpaceType, typename Enable>
-class ParallelReduceWrapper {
-  using functor_type = typename CombinedFunctorReducerType::functor_type;
-  using helper_reducer_type =
-      typename CombinedFunctorReducerType::reducer_type::functor_type;
-
-  static constexpr bool has_reducer =
-      !std::is_same_v<functor_type, helper_reducer_type>;
-
-  using reducer_type =
-      std::conditional_t<has_reducer, helper_reducer_type, InvalidType>;
-
- public:
-  using wrapped_type = Impl::ParallelReduce<functor_type, PolicyType,
-                                            reducer_type, ExecutionSpaceType>;
-
- private:
-  wrapped_type m_parallel_reduce;
-
- public:
-  template <typename ReturnValue>
-  ParallelReduceWrapper(
-      const CombinedFunctorReducerType& combined_functor_reducer,
-      const PolicyType& policy, const ReturnValue& return_value)
-      : m_parallel_reduce(
-            combined_functor_reducer.get_functor(), policy,
-            Kokkos::Impl::if_c<has_reducer, helper_reducer_type, ReturnValue>::
-                select(combined_functor_reducer.get_reducer().get_functor(),
-                       return_value)) {}
-
-  void execute() { m_parallel_reduce.execute(); }
-};
-
-template <typename CombinedFunctorReducerType, typename PolicyType,
-          typename ExecutionSpaceType>
-class ParallelReduceWrapper<
-    CombinedFunctorReducerType, PolicyType, ExecutionSpaceType,
-    std::enable_if_t<
-        implements_new_reduce_interface<ExecutionSpaceType>::value>> {
- public:
-  using wrapped_type = Impl::ParallelReduce<CombinedFunctorReducerType,
-                                            PolicyType, ExecutionSpaceType>;
-
- private:
-  wrapped_type m_parallel_reduce;
-
- public:
-  template <typename ReturnValue>
-  ParallelReduceWrapper(
-      const CombinedFunctorReducerType& combined_functor_reducer,
-      const PolicyType& policy, const ReturnValue& return_value)
-      : m_parallel_reduce(combined_functor_reducer, policy, return_value) {}
-
-  void execute() { m_parallel_reduce.execute(); }
-};
-
 template <class T, class ReturnType, class ValueTraits>
 struct ParallelReduceReturnValue;
 
@@ -1619,9 +1509,9 @@ struct ParallelReduceAdaptor {
                      ReducerSelector::select(functor, return_value)));
 
     // FIXME Remove "Wrapper" once all backends implement the new interface
-    Impl::ParallelReduceWrapper<decltype(functor_reducer), PolicyType,
-                                typename Impl::FunctorPolicyExecutionSpace<
-                                    FunctorType, PolicyType>::execution_space>
+    Impl::ParallelReduce<decltype(functor_reducer), PolicyType,
+                         typename Impl::FunctorPolicyExecutionSpace<
+                             FunctorType, PolicyType>::execution_space>
         closure(functor_reducer, inner_policy,
                 return_value_adapter::return_value(return_value, functor));
     Kokkos::Impl::shared_allocation_tracking_enable();

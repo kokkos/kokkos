@@ -92,6 +92,13 @@ void SYCL::print_configuration(std::ostream& os, bool verbose) const {
 #else
   os << "macro  KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED : undefined\n";
 #endif
+
+#ifdef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
+  os << "macro  KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES : defined\n";
+#else
+  os << "macro  KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES : undefined\n";
+#endif
+
   if (verbose)
     SYCL::impl_sycl_info(os, m_space_instance->m_queue->get_device());
 }
