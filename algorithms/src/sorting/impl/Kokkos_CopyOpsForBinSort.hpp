@@ -18,6 +18,7 @@
 #define KOKKOS_COPY_OPS_FOR_BINSORT_HPP_
 
 #include <Kokkos_Macros.hpp>
+#include <cstddef>
 
 namespace Kokkos {
 namespace Impl {
