@@ -49,8 +49,10 @@ struct bhalf_impl_t {
   using type = sycl::ext::oneapi::bfloat16;
 };
 }  // namespace Kokkos::Impl
-#elif defined(SYCL_EXT_ONEAPI_BFLOAT16)
-// Only the experimental feature doesn't have a fallback implementation
+#elif defined(SYCL_EXT_ONEAPI_BFLOAT16) && defined(KOKKOS_ARCH_INTEL_GPU)
+// FIXME_SYCL bfloat16 is only supported for compute capability 8.0 or higher
+// on Nvidia GPUs but SYCL_EXT_ONEAPI_BFLOAT16 is defined even for lower compute
+// capability.
 #define KOKKOS_IMPL_BHALF_TYPE_DEFINED
 #define KOKKOS_IMPL_SYCL_BHALF_TYPE_DEFINED
 namespace Kokkos::Impl {
