@@ -14,8 +14,8 @@
 //
 //@HEADER
 
-#ifndef KOKKOS_NESTEDSORT_PUBLIC_API_HPP_
-#define KOKKOS_NESTEDSORT_PUBLIC_API_HPP_
+#ifndef KOKKOS_NESTED_SORT_PUBLIC_API_HPP_
+#define KOKKOS_NESTED_SORT_PUBLIC_API_HPP_
 
 #include "impl/Kokkos_NestedSortImpl.hpp"
 #include <Kokkos_Core.hpp>

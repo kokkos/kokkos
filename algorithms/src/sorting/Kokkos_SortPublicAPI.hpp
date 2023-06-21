@@ -14,8 +14,8 @@
 //
 //@HEADER
 
-#ifndef KOKKOS_SORT_FREE_PUBLIC_API_HPP_
-#define KOKKOS_SORT_FREE_PUBLIC_API_HPP_
+#ifndef KOKKOS_SORT_PUBLIC_API_HPP_
+#define KOKKOS_SORT_PUBLIC_API_HPP_
 
 #include "./impl/Kokkos_SortImpl.hpp"
 #include "Kokkos_BinOpsPublicAPI.hpp"

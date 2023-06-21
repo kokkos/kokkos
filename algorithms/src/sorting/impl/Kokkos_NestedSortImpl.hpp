@@ -14,8 +14,8 @@
 //
 //@HEADER
 
-#ifndef KOKKOS_NESTEDSORT_IMPL_HPP_
-#define KOKKOS_NESTEDSORT_IMPL_HPP_
+#ifndef KOKKOS_NESTED_SORT_IMPL_HPP_
+#define KOKKOS_NESTED_SORT_IMPL_HPP_
 
 #include <Kokkos_Core.hpp>
 #include <std_algorithms/Kokkos_Swap.hpp>
