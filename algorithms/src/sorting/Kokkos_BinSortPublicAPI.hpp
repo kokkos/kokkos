@@ -14,11 +14,11 @@
 //
 //@HEADER
 
-#ifndef KOKKOS_BIN_SORT_HPP_
-#define KOKKOS_BIN_SORT_HPP_
+#ifndef KOKKOS_BIN_SORT_PUBLIC_API_HPP_
+#define KOKKOS_BIN_SORT_PUBLIC_API_HPP_
 
-#include "Kokkos_BinOps.hpp"
-#include "impl/Kokkos_CopyOpsForBinSort.hpp"
+#include "Kokkos_BinOpsPublicAPI.hpp"
+#include "impl/Kokkos_CopyOpsForBinSortImpl.hpp"
 #include <Kokkos_Core.hpp>
 #include <algorithm>
 

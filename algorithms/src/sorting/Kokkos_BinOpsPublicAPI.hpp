@@ -14,8 +14,8 @@
 //
 //@HEADER
 
-#ifndef KOKKOS_BIN_OPS_HPP_
-#define KOKKOS_BIN_OPS_HPP_
+#ifndef KOKKOS_BIN_OPS_PUBLIC_API_HPP_
+#define KOKKOS_BIN_OPS_PUBLIC_API_HPP_
 
 #include <Kokkos_Macros.hpp>
 #include <type_traits>

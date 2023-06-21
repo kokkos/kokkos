@@ -1,1 +1,7 @@
 
+algorithms/src/sorting/Kokkos_BinOps.hpp
+algorithms/src/sorting/Kokkos_BinSort.hpp
+algorithms/src/sorting/Kokkos_NestedSort.hpp
+algorithms/src/sorting/Kokkos_Sort.hpp
+algorithms/src/sorting/impl/Kokkos_CopyOpsForBinSort.hpp
+algorithms/src/sorting/impl/Kokkos_NestedSort.hpp

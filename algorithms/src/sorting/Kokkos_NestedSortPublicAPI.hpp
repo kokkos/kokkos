@@ -14,10 +14,10 @@
 //
 //@HEADER
 
-#ifndef KOKKOS_NESTEDSORT_HPP_
-#define KOKKOS_NESTEDSORT_HPP_
+#ifndef KOKKOS_NESTEDSORT_PUBLIC_API_HPP_
+#define KOKKOS_NESTEDSORT_PUBLIC_API_HPP_
 
-#include "impl/Kokkos_NestedSort.hpp"
+#include "impl/Kokkos_NestedSortImpl.hpp"
 #include <Kokkos_Core.hpp>
 #include <std_algorithms/impl/Kokkos_HelperPredicates.hpp>
 

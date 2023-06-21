@@ -14,8 +14,8 @@
 //
 //@HEADER
 
-#ifndef KOKKOS_COPY_OPS_FOR_BINSORT_HPP_
-#define KOKKOS_COPY_OPS_FOR_BINSORT_HPP_
+#ifndef KOKKOS_COPY_OPS_FOR_BINSORT_IMPL_HPP_
+#define KOKKOS_COPY_OPS_FOR_BINSORT_IMPL_HPP_
 
 #include <Kokkos_Macros.hpp>
 #include <cstddef>

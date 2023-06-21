@@ -14,11 +14,14 @@
 //
 //@HEADER
 
-#ifndef KOKKOS_SORT_FREE_FUNCS_HPP_
-#define KOKKOS_SORT_FREE_FUNCS_HPP_
+#ifndef KOKKOS_SORT_FREE_PUBLIC_API_HPP_
+#define KOKKOS_SORT_FREE_PUBLIC_API_HPP_
 
-#include <Kokkos_Core.hpp>
+#include "./impl/Kokkos_SortImpl.hpp"
+#include "Kokkos_BinOpsPublicAPI.hpp"
+#include "Kokkos_BinSortPublicAPI.hpp"
 #include <std_algorithms/Kokkos_BeginEnd.hpp>
+#include <Kokkos_Core.hpp>
 #include <algorithm>
 
 #if defined(KOKKOS_ENABLE_CUDA)
@@ -67,24 +70,6 @@
 #endif
 
 namespace Kokkos {
-namespace Impl {
-
-template <class ViewType>
-struct min_max_functor {
-  using minmax_scalar =
-      Kokkos::MinMaxScalar<typename ViewType::non_const_value_type>;
-
-  ViewType view;
-  min_max_functor(const ViewType& view_) : view(view_) {}
-
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const size_t& i, minmax_scalar& minmax) const {
-    if (view(i) < minmax.min_val) minmax.min_val = view(i);
-    if (view(i) > minmax.max_val) minmax.max_val = view(i);
-  }
-};
-
-}  // namespace Impl
 
 template <class ExecutionSpace, class DataType, class... Properties>
 std::enable_if_t<(Kokkos::is_execution_space<ExecutionSpace>::value) &&

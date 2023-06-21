@@ -21,9 +21,9 @@
 #define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_SORT
 #endif
 
-#include "sorting/Kokkos_BinSort.hpp"
-#include "sorting/Kokkos_Sort.hpp"
-#include "sorting/Kokkos_NestedSort.hpp"
+#include "sorting/Kokkos_BinSortPublicAPI.hpp"
+#include "sorting/Kokkos_SortPublicAPI.hpp"
+#include "sorting/Kokkos_NestedSortPublicAPI.hpp"
 
 #ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_SORT
 #undef KOKKOS_IMPL_PUBLIC_INCLUDE
