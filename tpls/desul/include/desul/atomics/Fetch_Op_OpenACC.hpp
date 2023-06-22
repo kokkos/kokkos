@@ -13,16 +13,19 @@ SPDX-License-Identifier: (BSD-3-Clause)
 
 #ifdef KOKKOS_COMPILER_NVHPC
 #ifndef DESUL_CUDA_ARCH_IS_PRE_PASCAL
-#define DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,R) std::enable_if_t<std::is_same_v<T,int> \
+template <class T, class R>
+using acc_enable_if_supported_arithmetic_type =  std::enable_if_t<std::is_same_v<T,int> \
 	|| std::is_same_v<T,unsigned int> || std::is_same_v<T,unsigned long long> \
-	|| std::is_same_v<T,float> || std::is_same_v<T,double>, R>
+	|| std::is_same_v<T,float> || std::is_same_v<T,double>, R>;
 #else
-#define DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,R) std::enable_if_t<std::is_same_v<T,int> \
+template <class T, class R>
+using acc_enable_if_supported_arithmetic_type = std::enable_if_t<std::is_same_v<T,int> \
 	|| std::is_same_v<T,unsigned int> || std::is_same_v<T,unsigned long long> \
-	|| std::is_same_v<T,float>, R>
+	|| std::is_same_v<T,float>, R>;
 #endif
 #else
-#define DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,R) std::enable_if_t<std::is_arithmetic<T>::value, R>
+template <class T, class R>
+using acc_enable_if_supported_arithmetic_type = std::enable_if_t<std::is_arithmetic<T>::value, R>;
 #endif
 
 namespace desul {
@@ -32,7 +35,7 @@ namespace Impl {
 //<editor-fold desc="device_atomic_fetch_{add,sub,mul,div,lshift,rshift,mod,max,min,and,or,xor}">
 #pragma acc routine seq
 template <class T>
-DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_fetch_add(
+acc_enable_if_supported_arithmetic_type<T,T> device_atomic_fetch_add(
 T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
 #pragma acc atomic capture
@@ -42,7 +45,7 @@ T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
 
 #pragma acc routine seq
 template <class T>
-DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_fetch_inc(
+acc_enable_if_supported_arithmetic_type<T,T> device_atomic_fetch_inc(
 T* ptr, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
 #pragma acc atomic capture
@@ -52,7 +55,7 @@ T* ptr, MemoryOrderRelaxed, MemoryScopeDevice) {
 
 #pragma acc routine seq
 template <class T>
-DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_fetch_sub(
+acc_enable_if_supported_arithmetic_type<T,T> device_atomic_fetch_sub(
 T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
 #pragma acc atomic capture
@@ -62,7 +65,7 @@ T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
 
 #pragma acc routine seq
 template <class T>
-DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_fetch_dec(
+acc_enable_if_supported_arithmetic_type<T,T> device_atomic_fetch_dec(
 T* ptr, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
 #pragma acc atomic capture
@@ -72,7 +75,7 @@ T* ptr, MemoryOrderRelaxed, MemoryScopeDevice) {
 
 #pragma acc routine seq
 template <class T>
-DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_fetch_mul(
+acc_enable_if_supported_arithmetic_type<T,T> device_atomic_fetch_mul(
 T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
 #pragma acc atomic capture
@@ -82,7 +85,7 @@ T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
 
 #pragma acc routine seq
 template <class T>
-DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_fetch_div(
+acc_enable_if_supported_arithmetic_type<T,T> device_atomic_fetch_div(
 T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
 #pragma acc atomic capture
@@ -92,7 +95,7 @@ T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
 
 #pragma acc routine seq
 template <class T>
-DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_fetch_lshift(
+acc_enable_if_supported_arithmetic_type<T,T> device_atomic_fetch_lshift(
 T* ptr, const unsigned int val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
 #pragma acc atomic capture
@@ -102,7 +105,7 @@ T* ptr, const unsigned int val, MemoryOrderRelaxed, MemoryScopeDevice) {
 
 #pragma acc routine seq
 template <class T>
-DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_fetch_rshift(
+acc_enable_if_supported_arithmetic_type<T,T> device_atomic_fetch_rshift(
 T* ptr, const unsigned int val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
 #pragma acc atomic capture
@@ -203,7 +206,7 @@ unsigned long long* ptr, const unsigned long long val, MemoryOrderRelaxed, Memor
 
 #pragma acc routine seq
 template <class T>
-DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_fetch_and(
+acc_enable_if_supported_arithmetic_type<T,T> device_atomic_fetch_and(
 T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
 #pragma acc atomic capture
@@ -213,7 +216,7 @@ T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
 
 #pragma acc routine seq
 template <class T>
-DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_fetch_or(
+acc_enable_if_supported_arithmetic_type<T,T> device_atomic_fetch_or(
 T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
 #pragma acc atomic capture
@@ -223,7 +226,7 @@ T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
 
 #pragma acc routine seq
 template <class T>
-DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_fetch_xor(
+acc_enable_if_supported_arithmetic_type<T,T> device_atomic_fetch_xor(
 T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
 #pragma acc atomic capture
@@ -235,7 +238,7 @@ T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
 //<editor-fold desc="device_atomic_{add,sub,mul,div,lshift,rshift,mod,max,min,and,or,xor}_fetch">
 #pragma acc routine seq
 template <class T>
-DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_add_fetch(
+acc_enable_if_supported_arithmetic_type<T,T> device_atomic_add_fetch(
     T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
 #pragma acc atomic capture
@@ -245,7 +248,7 @@ DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_add_fetch(
 
 #pragma acc routine seq
 template <class T>
-DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_inc_fetch(
+acc_enable_if_supported_arithmetic_type<T,T> device_atomic_inc_fetch(
     T* ptr, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
 #pragma acc atomic capture
@@ -255,7 +258,7 @@ DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_inc_fetch(
 
 #pragma acc routine seq
 template <class T>
-DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_sub_fetch(
+acc_enable_if_supported_arithmetic_type<T,T> device_atomic_sub_fetch(
     T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
 #pragma acc atomic capture
@@ -265,7 +268,7 @@ DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_sub_fetch(
 
 #pragma acc routine seq
 template <class T>
-DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_dec_fetch(
+acc_enable_if_supported_arithmetic_type<T,T> device_atomic_dec_fetch(
     T* ptr, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
 #pragma acc atomic capture
@@ -275,7 +278,7 @@ DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_dec_fetch(
 
 #pragma acc routine seq
 template <class T>
-DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_mul_fetch(
+acc_enable_if_supported_arithmetic_type<T,T> device_atomic_mul_fetch(
     T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
 #pragma acc atomic capture
@@ -285,7 +288,7 @@ DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_mul_fetch(
 
 #pragma acc routine seq
 template <class T>
-DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_div_fetch(
+acc_enable_if_supported_arithmetic_type<T,T> device_atomic_div_fetch(
     T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
 #pragma acc atomic capture
@@ -295,7 +298,7 @@ DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_div_fetch(
 
 #pragma acc routine seq
 template <class T>
-DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_lshift_fetch(
+acc_enable_if_supported_arithmetic_type<T,T> device_atomic_lshift_fetch(
     T* ptr, const unsigned int val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
 #pragma acc atomic capture
@@ -305,7 +308,7 @@ DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_lshift_fetch(
 
 #pragma acc routine seq
 template <class T>
-DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_rshift_fetch(
+acc_enable_if_supported_arithmetic_type<T,T> device_atomic_rshift_fetch(
     T* ptr, const unsigned int val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
   if(acc_on_device(acc_device_host)) {
@@ -416,7 +419,7 @@ unsigned long long* ptr, const unsigned long long val, MemoryOrderRelaxed, Memor
 
 #pragma acc routine seq
 template <class T>
-DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_and_fetch(
+acc_enable_if_supported_arithmetic_type<T,T> device_atomic_and_fetch(
     T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
 #pragma acc atomic capture
@@ -426,7 +429,7 @@ DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_and_fetch(
 
 #pragma acc routine seq
 template <class T>
-DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_or_fetch(
+acc_enable_if_supported_arithmetic_type<T,T> device_atomic_or_fetch(
     T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
 #pragma acc atomic capture
@@ -436,7 +439,7 @@ DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_or_fetch(
 
 #pragma acc routine seq
 template <class T>
-DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_xor_fetch(
+acc_enable_if_supported_arithmetic_type<T,T> device_atomic_xor_fetch(
     T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T tmp;
 #pragma acc atomic capture
@@ -449,7 +452,7 @@ DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_xor_fetch(
 
 #pragma acc routine seq
 template <class T>
-DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,void) device_atomic_store(
+acc_enable_if_supported_arithmetic_type<T,void> device_atomic_store(
     T* const ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
 #pragma acc atomic write
     *ptr = val;
@@ -457,14 +460,14 @@ DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,void) device_atomic_store(
 
 #pragma acc routine seq
 template <class T, class MemoryOrder>
-DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,void) device_atomic_store(
+acc_enable_if_supported_arithmetic_type<T,void> device_atomic_store(
     T* const ptr, const T val, MemoryOrder, MemoryScopeDevice) {
   device_atomic_store(ptr, val, MemoryOrderRelaxed(), MemoryScopeDevice()); 
 }
 
 #pragma acc routine seq
 template <class T>
-DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_load(
+acc_enable_if_supported_arithmetic_type<T,T> device_atomic_load(
     const T* const ptr, MemoryOrderRelaxed, MemoryScopeDevice) {
   T retval{};
 #pragma acc atomic read
@@ -474,7 +477,7 @@ DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_load(
 
 #pragma acc routine seq
 template <class T, class MemoryOrder>
-DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_load(
+acc_enable_if_supported_arithmetic_type<T,T> device_atomic_load(
     const T* const ptr, MemoryOrder, MemoryScopeDevice) {
   return device_atomic_load(ptr, MemoryOrderRelaxed(), MemoryScopeDevice());
 }
@@ -484,7 +487,5 @@ DESUL_IMPL_ATOMICS_OPENACC_PREFIX(T,T) device_atomic_load(
 
 }  // namespace Impl
 }  // namespace desul
-
-#undef DESUL_IMPL_ATOMICS_OPENACC_PREFIX
 
 #endif
