@@ -83,17 +83,15 @@ std::enable_if_t<
      HostSpace, typename Kokkos::View<DataType, Properties...>::memory_space
     >::accessible)
   >
+// clang-format on
 sort(const ExecutionSpace& exec,
-     const Kokkos::View<DataType, Properties...>& view)
-{
-  // clang-format on
-
-  // despite below we are using BinSort which could work on rank-2 views,
+     const Kokkos::View<DataType, Properties...>& view) {
+  // Although we are using BinSort below, which could work on rank-2 views,
   // for now view must be rank-1 because the Impl::min_max_functor
   // used below only works for rank-1 views
   using ViewType = Kokkos::View<DataType, Properties...>;
   static_assert(ViewType::rank == 1,
-                "Kokkos::sort: currently supports rank-1 Views.");
+                "Kokkos::sort: currently only supports rank-1 Views.");
 
   if (view.extent(0) == 0) {
     return;
@@ -172,12 +170,11 @@ std::enable_if_t<
      HostSpace, typename Kokkos::View<DataType, Properties...>::memory_space
     >::accessible)
   >
-sort(const ExecutionSpace&, const Kokkos::View<DataType, Properties...>& view)
-{
-  // clang-format on
+// clang-format on
+sort(const ExecutionSpace&, const Kokkos::View<DataType, Properties...>& view) {
   using ViewType = Kokkos::View<DataType, Properties...>;
   static_assert(ViewType::rank == 1,
-                "Kokkos::sort: currently supports rank-1 Views.");
+                "Kokkos::sort: currently only supports rank-1 Views.");
 
   if (view.extent(0) == 0) {
     return;
@@ -193,7 +190,7 @@ void sort(const Cuda& space,
           const Kokkos::View<DataType, Properties...>& view) {
   using ViewType = Kokkos::View<DataType, Properties...>;
   static_assert(ViewType::rank == 1,
-                "Kokkos::sort: currently supports rank-1 Views.");
+                "Kokkos::sort: currently only supports rank-1 Views.");
 
   if (view.extent(0) == 0) {
     return;
@@ -209,7 +206,7 @@ template <class DataType, class... Properties>
 void sort(const Kokkos::View<DataType, Properties...>& view) {
   using ViewType = Kokkos::View<DataType, Properties...>;
   static_assert(ViewType::rank == 1,
-                "Kokkos::sort: currently supports rank-1 Views.");
+                "Kokkos::sort: currently only supports rank-1 Views.");
 
   Kokkos::fence("Kokkos::sort: before");
 
@@ -234,7 +231,7 @@ std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value> sort(
   // view must be rank-1 because the Impl::min_max_functor
   // used below only works for rank-1 views for now
   static_assert(ViewType::rank == 1,
-                "Kokkos::sort: currently supports rank-1 Views.");
+                "Kokkos::sort: currently only supports rank-1 Views.");
 
   if (view.extent(0) == 0) {
     return;
@@ -263,7 +260,7 @@ template <class ViewType>
 void sort(ViewType view, size_t const begin, size_t const end) {
   // same constraints as the overload above which this gets dispatched to
   static_assert(ViewType::rank == 1,
-                "Kokkos::sort: currently supports rank-1 Views.");
+                "Kokkos::sort: currently only supports rank-1 Views.");
 
   Kokkos::fence("Kokkos::sort: before");
 
