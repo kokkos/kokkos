@@ -89,8 +89,9 @@ sort(const ExecutionSpace& exec,
 {
   // clang-format on
 
-  // view must be rank-1 because the Impl::min_max_functor
-  // used below only works for rank-1 views for now
+  // despite below we are using BinSort which could work on rank-2 views,
+  // for now view must be rank-1 because the Impl::min_max_functor
+  // used below only works for rank-1 views
   using ViewType = Kokkos::View<DataType, Properties...>;
   static_assert(ViewType::rank == 1,
                 "Kokkos::sort: currently supports rank-1 Views.");
