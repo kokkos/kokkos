@@ -438,11 +438,11 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
         // FIXME_SYCL Find a better way to determine a good limit for the
         // maximum number of work groups, also see
         // https://github.com/intel/llvm/blob/756ba2616111235bba073e481b7f1c8004b34ee6/sycl/source/detail/reduction.cpp#L51-L62
-        int max_work_groups =
+        size_t max_work_groups =
             2 *
             q.get_device().get_info<sycl::info::device::max_compute_units>();
         int values_per_thread = 1;
-        int n_wgroups         = (size + wgroup_size - 1) / wgroup_size;
+        size_t n_wgroups      = (size + wgroup_size - 1) / wgroup_size;
         while (n_wgroups > max_work_groups) {
           values_per_thread *= 2;
           n_wgroups = ((size + values_per_thread - 1) / values_per_thread +
@@ -631,10 +631,10 @@ class ParallelReduce<CombinedFunctorReducerType,
       // FIXME_SYCL Find a better way to determine a good limit for the
       // maximum number of work groups, also see
       // https://github.com/intel/llvm/blob/756ba2616111235bba073e481b7f1c8004b34ee6/sycl/source/detail/reduction.cpp#L51-L62
-      int max_work_groups =
+      size_t max_work_groups =
           2 * q.get_device().get_info<sycl::info::device::max_compute_units>();
       int values_per_thread = 1;
-      int n_wgroups         = n_tiles;
+      size_t n_wgroups      = n_tiles;
       while (n_wgroups > max_work_groups) {
         values_per_thread *= 2;
         n_wgroups = (n_tiles + values_per_thread - 1) / values_per_thread;
@@ -650,7 +650,7 @@ class ParallelReduce<CombinedFunctorReducerType,
       auto parallel_reduce_event = q.submit([&](sycl::handler& cgh) {
         sycl::local_accessor<value_type> local_mem(
             sycl::range<1>(wgroup_size) * value_count, cgh);
-        sycl::local_accessor<int> num_teams_done(1, cgh);
+        sycl::local_accessor<unsigned int> num_teams_done(1, cgh);
 
         const BarePolicy bare_policy = m_policy;
 
@@ -716,13 +716,13 @@ class ParallelReduce<CombinedFunctorReducerType,
                 }
                 item.barrier(sycl::access::fence_space::local_space);
                 if (num_teams_done[0] == n_wgroups) {
-                  if (local_id >= n_wgroups)
+                  if (local_id >= static_cast<int>(n_wgroups))
                     reducer.init(&local_mem[local_id * value_count]);
                   else {
                     reducer.copy(&local_mem[local_id * value_count],
                                  &results_ptr[local_id * value_count]);
-                    for (int id = local_id + wgroup_size; id < n_wgroups;
-                         id += wgroup_size) {
+                    for (unsigned int id = local_id + wgroup_size;
+                         id < n_wgroups; id += wgroup_size) {
                       reducer.join(&local_mem[local_id * value_count],
                                    &results_ptr[id * value_count]);
                     }
@@ -731,7 +731,7 @@ class ParallelReduce<CombinedFunctorReducerType,
                   SYCLReduction::workgroup_reduction<>(
                       item, local_mem, results_ptr,
                       device_accessible_result_ptr, value_count, reducer, true,
-                      std::min(n_wgroups, wgroup_size));
+                      std::min<int>(n_wgroups, wgroup_size));
                 }
               } else {
                 value_type local_value;
@@ -762,12 +762,12 @@ class ParallelReduce<CombinedFunctorReducerType,
                 }
                 item.barrier(sycl::access::fence_space::local_space);
                 if (num_teams_done[0] == n_wgroups) {
-                  if (local_id >= n_wgroups)
+                  if (local_id >= static_cast<int>(n_wgroups))
                     reducer.init(&local_value);
                   else {
                     local_value = results_ptr[local_id];
-                    for (int id = local_id + wgroup_size; id < n_wgroups;
-                         id += wgroup_size) {
+                    for (unsigned int id = local_id + wgroup_size;
+                         id < n_wgroups; id += wgroup_size) {
                       reducer.join(&local_value, &results_ptr[id]);
                     }
                   }
@@ -775,7 +775,7 @@ class ParallelReduce<CombinedFunctorReducerType,
                   SYCLReduction::workgroup_reduction<>(
                       item, local_mem, local_value, results_ptr,
                       device_accessible_result_ptr, reducer, true,
-                      std::min(n_wgroups, wgroup_size));
+                      std::min<int>(n_wgroups, wgroup_size));
                 }
               }
             });

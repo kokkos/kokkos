@@ -39,7 +39,7 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
 
  private:
   typename traits::execution_space m_space;
-  int m_league_size;
+  size_t m_league_size;
   int m_team_size;
   int m_vector_length;
   size_t m_team_scratch_size[2];
@@ -373,7 +373,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
   FunctorType const m_functor;
   Policy const m_policy;
-  size_type const m_league_size;
+  size_t const m_league_size;
   int m_team_size;
   size_type const m_vector_size;
   int m_shmem_begin;
@@ -553,7 +553,7 @@ class ParallelReduce<CombinedFunctorReducerType,
   size_type m_shmem_size;
   sycl::device_ptr<char> m_global_scratch_ptr;
   size_t m_scratch_size[2];
-  const size_type m_league_size;
+  const size_t m_league_size;
   int m_team_size;
   const size_type m_vector_size;
   // Only let one ParallelFor/Reduce modify the team scratch memory. The
@@ -681,7 +681,7 @@ class ParallelReduce<CombinedFunctorReducerType,
                 if constexpr (!use_shuffle_based_algorithm<ReducerType>) {
                   reference_type update =
                       reducer.init(&local_mem[local_id * value_count]);
-                  for (int league_rank = group_id; league_rank < league_size;
+                  for (size_t league_rank = group_id; league_rank < league_size;
                        league_rank += n_wgroups) {
                     const member_type team_member(
                         team_scratch_memory_L0.get_pointer(), shmem_begin,
@@ -818,11 +818,11 @@ class ParallelReduce<CombinedFunctorReducerType,
             static_cast<sycl::device_ptr<value_type>>(instance.scratch_space(
                 sizeof(value_type) * std::max(value_count, 1u) * init_size));
 
-        int max_work_groups =
+        size_t max_work_groups =
             2 *
             q.get_device().get_info<sycl::info::device::max_compute_units>();
         int values_per_thread = 1;
-        int n_wgroups         = m_league_size;
+        size_t n_wgroups      = m_league_size;
         while (n_wgroups > max_work_groups) {
           values_per_thread *= 2;
           n_wgroups = ((m_league_size * wgroup_size + values_per_thread - 1) /
