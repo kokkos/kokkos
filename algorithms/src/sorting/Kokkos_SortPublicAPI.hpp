@@ -205,8 +205,9 @@ void sort(const Cuda& space,
 }
 #endif
 
-template <class ViewType>
-void sort(ViewType const& view) {
+template <class DataType, class... Properties>
+void sort(const Kokkos::View<DataType, Properties...>& view) {
+  using ViewType = Kokkos::View<DataType, Properties...>;
   static_assert(ViewType::rank == 1,
                 "Kokkos::sort: currently supports rank-1 Views.");
 
