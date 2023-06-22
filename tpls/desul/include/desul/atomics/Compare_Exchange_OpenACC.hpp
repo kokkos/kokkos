@@ -21,7 +21,7 @@ namespace Impl {
 template <class T, class MemoryOrder, class MemoryScope>
 std::enable_if_t<!std::is_arithmetic<T>::value, T> device_atomic_exchange(T* dest, T value, MemoryOrder, MemoryScope scope) {
   if (acc_on_device(acc_device_not_host)) {
-    printf("Kokkos Error in device_atomic_exchange(): Not supported atomic "
+    printf("DESUL error in device_atomic_exchange(): Not supported atomic "
                   "operation in the OpenACC backend\n");
   }
   //FIXME_OPENACC OpenACC lock APIs are not implemented.
@@ -37,13 +37,16 @@ std::enable_if_t<!std::is_arithmetic<T>::value, T> device_atomic_exchange(T* des
 }
 
 #ifdef KOKKOS_COMPILER_NVHPC
+  //FIXME_OPENACC_NVHPC: Old NVHPC fails in compiling atomic 
+  //capture constructs in some cases, and thus CUDA intrinsic 
+  //function (atomicExch) is used instead.
 
 #pragma acc routine seq
 template <class T, class MemoryOrder, class MemoryScope>
 std::enable_if_t<std::is_arithmetic<T>::value && (sizeof(T) != 4) && (sizeof(T) != 8), T> 
 	device_atomic_exchange(T* const dest, T value, MemoryOrder, MemoryScope scope) {
   if (acc_on_device(acc_device_not_host)) {
-    printf("Kokkos Error in device_atomic_exchange(): Not supported atomic "
+    printf("DESUL error in device_atomic_exchange(): Not supported atomic "
                   "operation in the OpenACC backend\n");
   }
   // Acquire a lock for the address
@@ -110,7 +113,7 @@ template <class T, class MemoryOrder, class MemoryScope>
 std::enable_if_t<std::is_floating_point<T>::value && (sizeof(T) == 8), T> 
 	device_atomic_exchange(T* const dest, T value, MemoryOrder, MemoryScope scope) {
   if (acc_on_device(acc_device_not_host)) {
-    printf("Kokkos Error in device_atomic_exchange(): Not supported atomic "
+    printf("DESUL error in device_atomic_exchange(): Not supported atomic "
                   "operation in the OpenACC backend\n");
   }
   // Acquire a lock for the address
@@ -151,7 +154,7 @@ std::enable_if_t<!std::is_arithmetic<T>::value || ((sizeof(T) != 4) && (sizeof(T
 	device_atomic_compare_exchange(T* dest, T compare, T value, MemoryOrder, MemoryScope scope) {
   T current_val = *dest;
   if (acc_on_device(acc_device_not_host)) {
-    printf("Kokkos Error in device_atomic_compare_exchange(): Not supported atomic "
+    printf("DESUL error in device_atomic_compare_exchange(): Not supported atomic "
                   "operation in the OpenACC backend\n");
   }
   // Acquire a lock for the address
@@ -219,7 +222,7 @@ template <class T, class MemoryOrder, class MemoryScope>
 std::enable_if_t<std::is_floating_point<T>::value && (sizeof(T) == 8), T> device_atomic_compare_exchange(T* const dest, T compare, T value, MemoryOrder, MemoryScope scope) {
   T current_val = *dest;
   if (acc_on_device(acc_device_not_host)) {
-    printf("Kokkos Error in device_atomic_compare_exchange(): Not supported atomic "
+    printf("DESUL error in device_atomic_compare_exchange(): Not supported atomic "
                   "operation in the OpenACC backend\n");
   }
   // Acquire a lock for the address
@@ -243,7 +246,7 @@ template <class T, class MemoryOrder, class MemoryScope>
 T device_atomic_compare_exchange(T* dest, T compare, T value, MemoryOrder, MemoryScope scope) {
   T current_val = *dest;
   if (acc_on_device(acc_device_not_host)) {
-    printf("Kokkos Error in device_atomic_compare_exchange(): Not supported atomic "
+    printf("DESUL error in device_atomic_compare_exchange(): Not supported atomic "
                   "operation in the OpenACC backend\n");
   }
   // Acquire a lock for the address
