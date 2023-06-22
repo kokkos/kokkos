@@ -136,14 +136,10 @@ sort(const ExecutionSpace& exec,
   bin_sort.sort(exec, view);
 }
 
-// clang-format off
 #if defined(KOKKOS_ENABLE_ONEDPL)
 template <class DataType, class... Properties>
 void sort(const Experimental::SYCL& space,
-          const Kokkos::View<DataType, Properties...>& view)
-{
-  // clang-format on
-
+          const Kokkos::View<DataType, Properties...>& view) {
   using ViewType = Kokkos::View<DataType, Properties...>;
   static_assert(SpaceAccessibility<Experimental::SYCL,
                                    typename ViewType::memory_space>::accessible,
@@ -192,13 +188,10 @@ sort(const ExecutionSpace&, const Kokkos::View<DataType, Properties...>& view)
   std::sort(first, last);
 }
 
-// clang-format off
 #if defined(KOKKOS_ENABLE_CUDA)
 template <class DataType, class... Properties>
 void sort(const Cuda& space,
-          const Kokkos::View<DataType, Properties...>& view)
-{
-  // clang-format on
+          const Kokkos::View<DataType, Properties...>& view) {
   using ViewType = Kokkos::View<DataType, Properties...>;
   static_assert(ViewType::rank == 1,
                 "Kokkos::sort: currently supports rank-1 Views.");
@@ -234,16 +227,10 @@ void sort(ViewType const& view) {
 // specified via integers begin, end
 // ---------------------------------------------------------------
 
-// clang-format off
 template <class ExecutionSpace, class ViewType>
-std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value>
-sort(const ExecutionSpace& exec,
-     ViewType view,
-     size_t const begin,
-     size_t const end)
-{
-  // clang-format on
-
+std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value> sort(
+    const ExecutionSpace& exec, ViewType view, size_t const begin,
+    size_t const end) {
   // view must be rank-1 because the Impl::min_max_functor
   // used below only works for rank-1 views for now
   static_assert(
@@ -274,13 +261,13 @@ sort(const ExecutionSpace& exec,
   bin_sort.sort(exec, view, begin, end);
 }
 
-// clang-format off
 template <class ViewType>
-void sort(ViewType view,
-	  size_t const begin,
-	  size_t const end)
-{
-  // clang-format on
+void sort(ViewType view, size_t const begin, size_t const end) {
+  // same constraints as the overload above to which this gets dispatched to
+  static_assert(
+      (ViewType::rank == 1) &&
+          (is_view_v<ViewType> || is_dynamic_view_v<ViewType>),
+      "Kokkos::sort: currently supports rank-1 regular or dynamic Views.");
 
   Kokkos::fence("Kokkos::sort: before");
 
