@@ -672,7 +672,7 @@ simd<std::int32_t, simd_abi::avx2_fixed_size<4>> operator>>(
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 simd<std::int32_t, simd_abi::avx2_fixed_size<4>> operator>>(
     simd<std::int32_t, simd_abi::avx2_fixed_size<4>> const& lhs,
-    simd<int, simd_abi::avx2_fixed_size<4>> const& rhs) noexcept {
+    simd<std::int32_t, simd_abi::avx2_fixed_size<4>> const& rhs) noexcept {
   return simd<std::int32_t, simd_abi::avx2_fixed_size<4>>(
       _mm_srav_epi32(static_cast<__m128i>(lhs), static_cast<__m128i>(rhs)));
 }
@@ -688,7 +688,7 @@ simd<std::int32_t, simd_abi::avx2_fixed_size<4>> operator<<(
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 simd<std::int32_t, simd_abi::avx2_fixed_size<4>> operator<<(
     simd<std::int32_t, simd_abi::avx2_fixed_size<4>> const& lhs,
-    simd<int, simd_abi::avx2_fixed_size<4>> const& rhs) noexcept {
+    simd<std::int32_t, simd_abi::avx2_fixed_size<4>> const& rhs) noexcept {
   return simd<std::int32_t, simd_abi::avx2_fixed_size<4>>(
       _mm_sllv_epi32(static_cast<__m128i>(lhs), static_cast<__m128i>(rhs)));
 }
@@ -835,7 +835,7 @@ class simd<std::int64_t, simd_abi::avx2_fixed_size<4>> {
 // KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 // simd<std::int64_t, simd_abi::avx2_fixed_size<4>> operator>>(
 //     simd<std::int64_t, simd_abi::avx2_fixed_size<4>> const& lhs,
-//     simd<int, simd_abi::avx2_fixed_size<4>> const& rhs) noexcept {
+//     simd<std::int32_t, simd_abi::avx2_fixed_size<4>> const& rhs) noexcept {
 //   return simd<std::int64_t, simd_abi::avx2_fixed_size<4>>(
 //       _mm256_srav_epi64(static_cast<__m256i>(lhs),
 //       _mm256_cvtepi32_epi64(static_cast<__m128i>(static_cast<__m128i>(rhs))));
@@ -852,7 +852,7 @@ simd<std::int64_t, simd_abi::avx2_fixed_size<4>> operator<<(
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 simd<std::int64_t, simd_abi::avx2_fixed_size<4>> operator<<(
     simd<std::int64_t, simd_abi::avx2_fixed_size<4>> const& lhs,
-    simd<int, simd_abi::avx2_fixed_size<4>> const& rhs) noexcept {
+    simd<std::int32_t, simd_abi::avx2_fixed_size<4>> const& rhs) noexcept {
   return simd<std::int64_t, simd_abi::avx2_fixed_size<4>>(
       _mm256_sllv_epi64(static_cast<__m256i>(lhs),
                         _mm256_cvtepi32_epi64(static_cast<__m128i>(rhs))));
@@ -932,15 +932,6 @@ class simd<std::uint64_t, simd_abi::avx2_fixed_size<4>> {
                                     static_cast<__m256i>(mask_type(true)));
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd
-  operator<<(unsigned int rhs) const {
-    return _mm256_slli_epi64(m_value, rhs);
-  }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd operator<<(
-      simd<std::int32_t, simd_abi::avx2_fixed_size<4>> const& rhs) const {
-    return _mm256_sllv_epi64(m_value,
-                             _mm256_cvtepi32_epi64(static_cast<__m128i>(rhs)));
-  }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd
   operator&(simd const& other) const {
     return _mm256_and_si256(m_value, other.m_value);
   }
@@ -994,7 +985,7 @@ simd<std::uint64_t, simd_abi::avx2_fixed_size<4>> operator>>(
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 simd<std::uint64_t, simd_abi::avx2_fixed_size<4>> operator>>(
     simd<std::uint64_t, simd_abi::avx2_fixed_size<4>> const& lhs,
-    simd<int, simd_abi::avx2_fixed_size<4>> const& rhs) noexcept {
+    simd<std::int32_t, simd_abi::avx2_fixed_size<4>> const& rhs) noexcept {
   return simd<std::uint64_t, simd_abi::avx2_fixed_size<4>>(
       _mm256_srlv_epi64(static_cast<__m256i>(lhs),
                         _mm256_cvtepi32_epi64(static_cast<__m128i>(rhs))));
@@ -1011,7 +1002,7 @@ simd<std::uint64_t, simd_abi::avx2_fixed_size<4>> operator<<(
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 simd<std::uint64_t, simd_abi::avx2_fixed_size<4>> operator<<(
     simd<std::uint64_t, simd_abi::avx2_fixed_size<4>> const& lhs,
-    simd<int, simd_abi::avx2_fixed_size<4>> const& rhs) noexcept {
+    simd<std::int32_t, simd_abi::avx2_fixed_size<4>> const& rhs) noexcept {
   return simd<std::uint64_t, simd_abi::avx2_fixed_size<4>>(
       _mm256_sllv_epi64(static_cast<__m256i>(lhs),
                         _mm256_cvtepi32_epi64(static_cast<__m128i>(rhs))));
