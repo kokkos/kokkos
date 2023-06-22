@@ -26,8 +26,8 @@
 #include <CL/sycl.hpp>
 #endif
 
-#ifndef KOKKOS_IMPL_HALF_TYPE_DEFINED
 // Make sure no one else tries to define half_t
+#ifndef KOKKOS_IMPL_HALF_TYPE_DEFINED
 #define KOKKOS_IMPL_HALF_TYPE_DEFINED
 #define KOKKOS_IMPL_SYCL_HALF_TYPE_DEFINED
 
