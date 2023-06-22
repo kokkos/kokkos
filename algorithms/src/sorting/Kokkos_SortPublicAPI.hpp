@@ -21,7 +21,7 @@
 #include "Kokkos_BinOpsPublicAPI.hpp"
 #include "Kokkos_BinSortPublicAPI.hpp"
 #include <std_algorithms/Kokkos_BeginEnd.hpp>
-#include <Kokkos_DynamicView.hpp>
+#include <Kokkos_DynamicView.hpp>  // needed for is_dynamic_view
 #include <Kokkos_Core.hpp>
 #include <algorithm>
 
