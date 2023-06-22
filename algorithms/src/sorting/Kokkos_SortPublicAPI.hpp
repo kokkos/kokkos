@@ -263,7 +263,7 @@ std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value> sort(
 
 template <class ViewType>
 void sort(ViewType view, size_t const begin, size_t const end) {
-  // same constraints as the overload above to which this gets dispatched to
+  // same constraints as the overload above which this gets dispatched to
   static_assert(
       (ViewType::rank == 1) &&
           (is_view_v<ViewType> || is_dynamic_view_v<ViewType>),
