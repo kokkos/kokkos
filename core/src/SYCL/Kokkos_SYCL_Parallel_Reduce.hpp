@@ -102,11 +102,10 @@ std::enable_if_t<!use_shuffle_based_algorithm<ReducerType>> workgroup_reduction(
           final_reducer.copy(&device_accessible_result_ptr[0], &local_mem[0]);
         else
           final_reducer.copy(&results_ptr[0], &local_mem[0]);
-      } else {
+      } else
         final_reducer.copy(
             &results_ptr[(item.get_group_linear_id()) * value_count],
             &local_mem[0]);
-      }
     }
   }
 }
@@ -180,9 +179,8 @@ std::enable_if_t<use_shuffle_based_algorithm<ReducerType>> workgroup_reduction(
           device_accessible_result_ptr[0] = sg_value;
         else
           results_ptr[0] = sg_value;
-      } else {
+      } else
         results_ptr[(item.get_group_linear_id())] = sg_value;
-      }
     }
   }
 }
@@ -344,6 +342,7 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
                                    &results_ptr[id * value_count]);
                     }
                   }
+
                   SYCLReduction::workgroup_reduction<>(
                       item, local_mem, results_ptr,
                       device_accessible_result_ptr, value_count, reducer, true,
@@ -352,9 +351,6 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
               } else {
                 value_type local_value;
                 reference_type update = reducer.init(&local_value);
-                // Total 7.4ms
-
-                // 0.8ms alone, reduce 1 ms
                 for (index_type id = global_id; id < upper_bound;
                      id += wgroup_size) {
                   if constexpr (std::is_void_v<WorkTag>)
@@ -362,13 +358,12 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
                   else
                     functor(WorkTag(), id + begin, update);
                 }
-                // 4.77ms alone, reduce 4.3ms
+
                 SYCLReduction::workgroup_reduction<>(
                     item, local_mem, local_value, results_ptr,
                     device_accessible_result_ptr, reducer, false,
                     std::min(size, wgroup_size));
 
-                // 3.1 ms alone, reduce 1.4ms
                 if (local_id == 0) {
                   sycl::atomic_ref<unsigned, sycl::memory_order::relaxed,
                                    sycl::memory_scope::device,
@@ -377,8 +372,6 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
                   num_teams_done[0] = ++scratch_flags_ref;
                 }
                 item.barrier(sycl::access::fence_space::local_space);
-
-                // 3 ms alone, reduce by 1.3ms
                 if (num_teams_done[0] == n_wgroups) {
                   if (local_id >= n_wgroups)
                     reducer.init(&local_value);
