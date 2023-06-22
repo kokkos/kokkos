@@ -21,7 +21,6 @@
 #include "Kokkos_BinOpsPublicAPI.hpp"
 #include "Kokkos_BinSortPublicAPI.hpp"
 #include <std_algorithms/Kokkos_BeginEnd.hpp>
-#include <Kokkos_DynamicView.hpp>  // needed for is_dynamic_view
 #include <Kokkos_Core.hpp>
 #include <algorithm>
 
@@ -233,10 +232,8 @@ std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value> sort(
     size_t const end) {
   // view must be rank-1 because the Impl::min_max_functor
   // used below only works for rank-1 views for now
-  static_assert(
-      (ViewType::rank == 1) &&
-          (is_view_v<ViewType> || is_dynamic_view_v<ViewType>),
-      "Kokkos::sort: currently supports rank-1 regular or dynamic Views.");
+  static_assert(ViewType::rank == 1,
+                "Kokkos::sort: currently supports rank-1 Views.");
 
   if (view.extent(0) == 0) {
     return;
@@ -264,10 +261,8 @@ std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value> sort(
 template <class ViewType>
 void sort(ViewType view, size_t const begin, size_t const end) {
   // same constraints as the overload above which this gets dispatched to
-  static_assert(
-      (ViewType::rank == 1) &&
-          (is_view_v<ViewType> || is_dynamic_view_v<ViewType>),
-      "Kokkos::sort: currently supports rank-1 regular or dynamic Views.");
+  static_assert(ViewType::rank == 1,
+                "Kokkos::sort: currently supports rank-1 Views.");
 
   Kokkos::fence("Kokkos::sort: before");
 
