@@ -21,6 +21,7 @@
 #include "Kokkos_BinOpsPublicAPI.hpp"
 #include "Kokkos_BinSortPublicAPI.hpp"
 #include <std_algorithms/Kokkos_BeginEnd.hpp>
+#include <Kokkos_DynamicView.hpp>
 #include <Kokkos_Core.hpp>
 #include <algorithm>
 
@@ -71,19 +72,32 @@
 
 namespace Kokkos {
 
+// ---------------------------------------------------------------
+// basic overloads
+// ---------------------------------------------------------------
+
+// clang-format off
 template <class ExecutionSpace, class DataType, class... Properties>
-std::enable_if_t<(Kokkos::is_execution_space<ExecutionSpace>::value) &&
-                 (!SpaceAccessibility<
-                     HostSpace, typename Kokkos::View<DataType, Properties...>::
-                                    memory_space>::accessible)>
+std::enable_if_t<
+  (Kokkos::is_execution_space<ExecutionSpace>::value) &&
+  (!SpaceAccessibility<
+     HostSpace, typename Kokkos::View<DataType, Properties...>::memory_space
+    >::accessible)
+  >
 sort(const ExecutionSpace& exec,
-     const Kokkos::View<DataType, Properties...>& view) {
+     const Kokkos::View<DataType, Properties...>& view)
+{
+  // clang-format on
+
+  // view must be rank-1 because the Impl::min_max_functor
+  // used below only works for rank-1 views for now
+  using ViewType = Kokkos::View<DataType, Properties...>;
+  static_assert(ViewType::rank == 1,
+                "Kokkos::sort: currently supports rank-1 Views.");
+
   if (view.extent(0) == 0) {
     return;
   }
-
-  using ViewType = Kokkos::View<DataType, Properties...>;
-  using CompType = BinOp1D<ViewType>;
 
   Kokkos::MinMaxScalar<typename ViewType::non_const_value_type> result;
   Kokkos::MinMax<typename ViewType::non_const_value_type> reducer(result);
@@ -114,19 +128,20 @@ sort(const ExecutionSpace& exec,
                                 static_cast<double>(result.min_val)));
   }
 
+  using CompType = BinOp1D<ViewType>;
   BinSort<ViewType, CompType> bin_sort(
       view, CompType(max_bins, result.min_val, result.max_val), sort_in_bins);
   bin_sort.create_permute_vector(exec);
   bin_sort.sort(exec, view);
 }
 
+// clang-format off
 #if defined(KOKKOS_ENABLE_ONEDPL)
 template <class DataType, class... Properties>
 void sort(const Experimental::SYCL& space,
-          const Kokkos::View<DataType, Properties...>& view) {
-  if (view.extent(0) == 0) {
-    return;
-  }
+          const Kokkos::View<DataType, Properties...>& view)
+{
+  // clang-format on
 
   using ViewType = Kokkos::View<DataType, Properties...>;
   static_assert(SpaceAccessibility<Experimental::SYCL,
@@ -134,27 +149,40 @@ void sort(const Experimental::SYCL& space,
                 "SYCL execution space is not able to access the memory space "
                 "of the View argument!");
 
-  auto queue  = space.sycl_queue();
-  auto policy = oneapi::dpl::execution::make_device_policy(queue);
-
   // Can't use Experimental::begin/end here since the oneDPL then assumes that
   // the data is on the host.
   static_assert(
       ViewType::rank == 1 &&
           (std::is_same<typename ViewType::array_layout, LayoutRight>::value ||
            std::is_same<typename ViewType::array_layout, LayoutLeft>::value),
-      "SYCL sort only supports contiguous 1D Views.");
+      "SYCL sort only supports contiguous rank-1 Views.");
+
+  if (view.extent(0) == 0) {
+    return;
+  }
+
+  auto queue  = space.sycl_queue();
+  auto policy = oneapi::dpl::execution::make_device_policy(queue);
   const int n = view.extent(0);
   oneapi::dpl::sort(policy, view.data(), view.data() + n);
 }
 #endif
 
+// clang-format off
 template <class ExecutionSpace, class DataType, class... Properties>
-std::enable_if_t<(Kokkos::is_execution_space<ExecutionSpace>::value) &&
-                 (SpaceAccessibility<
-                     HostSpace, typename Kokkos::View<DataType, Properties...>::
-                                    memory_space>::accessible)>
-sort(const ExecutionSpace&, const Kokkos::View<DataType, Properties...>& view) {
+std::enable_if_t<
+  (Kokkos::is_execution_space<ExecutionSpace>::value) &&
+  (SpaceAccessibility<
+     HostSpace, typename Kokkos::View<DataType, Properties...>::memory_space
+    >::accessible)
+  >
+sort(const ExecutionSpace&, const Kokkos::View<DataType, Properties...>& view)
+{
+  // clang-format on
+  using ViewType = Kokkos::View<DataType, Properties...>;
+  static_assert(ViewType::rank == 1,
+                "Kokkos::sort: currently supports rank-1 Views.");
+
   if (view.extent(0) == 0) {
     return;
   }
@@ -163,10 +191,17 @@ sort(const ExecutionSpace&, const Kokkos::View<DataType, Properties...>& view) {
   std::sort(first, last);
 }
 
+// clang-format off
 #if defined(KOKKOS_ENABLE_CUDA)
 template <class DataType, class... Properties>
 void sort(const Cuda& space,
-          const Kokkos::View<DataType, Properties...>& view) {
+          const Kokkos::View<DataType, Properties...>& view)
+{
+  // clang-format on
+
+  static_assert(ViewType::rank == 1,
+                "Kokkos::sort: currently supports rank-1 Views.");
+
   if (view.extent(0) == 0) {
     return;
   }
@@ -179,6 +214,9 @@ void sort(const Cuda& space,
 
 template <class ViewType>
 void sort(ViewType const& view) {
+  static_assert(ViewType::rank == 1,
+                "Kokkos::sort: currently supports rank-1 Views.");
+
   Kokkos::fence("Kokkos::sort: before");
 
   if (view.extent(0) == 0) {
@@ -190,10 +228,28 @@ void sort(ViewType const& view) {
   exec.fence("Kokkos::sort: fence after sorting");
 }
 
+// ---------------------------------------------------------------
+// overloads for sorting a view with a subrange
+// specified via integers begin, end
+// ---------------------------------------------------------------
+
+// clang-format off
 template <class ExecutionSpace, class ViewType>
-std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value> sort(
-    const ExecutionSpace& exec, ViewType view, size_t const begin,
-    size_t const end) {
+std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value>
+sort(const ExecutionSpace& exec,
+     ViewType view,
+     size_t const begin,
+     size_t const end)
+{
+  // clang-format on
+
+  // view must be rank-1 because the Impl::min_max_functor
+  // used below only works for rank-1 views for now
+  static_assert(
+      (ViewType::rank == 1) &&
+          (is_view_v<ViewType> || is_dynamic_view_v<ViewType>),
+      "Kokkos::sort: currently supports rank-1 regular or dynamic Views.");
+
   if (view.extent(0) == 0) {
     return;
   }
@@ -217,8 +273,14 @@ std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value> sort(
   bin_sort.sort(exec, view, begin, end);
 }
 
+// clang-format off
 template <class ViewType>
-void sort(ViewType view, size_t const begin, size_t const end) {
+void sort(ViewType view,
+	  size_t const begin,
+	  size_t const end)
+{
+  // clang-format on
+
   Kokkos::fence("Kokkos::sort: before");
 
   if (view.extent(0) == 0) {
