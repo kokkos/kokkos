@@ -199,7 +199,7 @@ void sort(const Cuda& space,
           const Kokkos::View<DataType, Properties...>& view)
 {
   // clang-format on
-
+  using ViewType = Kokkos::View<DataType, Properties...>;
   static_assert(ViewType::rank == 1,
                 "Kokkos::sort: currently supports rank-1 Views.");
 
