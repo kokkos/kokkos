@@ -419,6 +419,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
             kernel
                 .get_info<sycl::info::kernel_device_specific::work_group_size>(
                     q.get_device());
+        // FIXME_SYCL 1024 seems to be invalid when running on a Volta70.
+        if (max > 512) max = 512;
 #else
         auto max =
             q.get_device().get_info<sycl::info::device::max_work_group_size>();
