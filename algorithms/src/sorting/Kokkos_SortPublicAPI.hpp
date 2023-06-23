@@ -28,6 +28,7 @@ namespace Kokkos {
 // basic overloads
 // ---------------------------------------------------------------
 
+// clang-format off
 template <class ExecutionSpace, class DataType, class... Properties>
 void sort([[maybe_unused]] const ExecutionSpace& exec,
           const Kokkos::View<DataType, Properties...>& view) {
