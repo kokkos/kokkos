@@ -349,7 +349,7 @@ class absolutes {
 class shift_right {
  public:
   template <typename T>
-  auto on_host(T&& a, unsigned int b) const {
+  auto on_host(T&& a, int b) const {
     return a >> b;
   }
   template <typename T, typename Abi>
@@ -357,7 +357,14 @@ class shift_right {
     return a >> b;
   }
   template <typename T>
-  KOKKOS_INLINE_FUNCTION auto on_device(T& a, unsigned int b) const {
+  KOKKOS_INLINE_FUNCTION auto on_device(T&& a, int b) const {
+    return a >> b;
+  }
+  template <typename T>
+  KOKKOS_INLINE_FUNCTION auto on_device(
+      T&& a,
+      Kokkos::Experimental::simd<
+          std::int32_t, Kokkos::Experimental::simd_abi::scalar>& b) const {
     return a >> b;
   }
 };
@@ -365,7 +372,7 @@ class shift_right {
 class shift_left {
  public:
   template <typename T>
-  auto on_host(T&& a, unsigned int b) const {
+  auto on_host(T&& a, int b) const {
     return a << b;
   }
   template <typename T, typename Abi>
@@ -373,7 +380,14 @@ class shift_left {
     return a << b;
   }
   template <typename T>
-  KOKKOS_INLINE_FUNCTION auto on_device(T& a, unsigned int b) const {
+  KOKKOS_INLINE_FUNCTION auto on_device(T&& a, int b) const {
+    return a << b;
+  }
+  template <typename T>
+  KOKKOS_INLINE_FUNCTION auto on_device(
+      T&& a,
+      Kokkos::Experimental::simd<
+          std::int32_t, Kokkos::Experimental::simd_abi::scalar>& b) const {
     return a << b;
   }
 };
@@ -471,9 +485,10 @@ inline void host_check_conversions() {
 }
 
 template <typename Abi, typename Loader, typename ShiftOp, typename DataType>
-void host_check_shift_on_one_loader(ShiftOp shift_op, DataType test_vals[],
-                                    const unsigned int shift_by[],
-                                    std::size_t n) {
+inline void host_check_shift_on_one_loader(ShiftOp shift_op,
+                                           DataType test_vals[],
+                                           const int shift_by[],
+                                           std::size_t n) {
   using simd_type             = Kokkos::Experimental::simd<DataType, Abi>;
   std::size_t constexpr width = simd_type::size();
   Loader loader;
@@ -498,7 +513,7 @@ void host_check_shift_on_one_loader(ShiftOp shift_op, DataType test_vals[],
 }
 
 template <typename Abi, typename Loader, typename ShiftOp, typename DataType>
-void host_check_shift_by_lanes_on_one_loader(
+inline void host_check_shift_by_lanes_on_one_loader(
     ShiftOp shift_op, DataType test_vals[],
     Kokkos::Experimental::simd<std::int32_t, Abi>& shift_by) {
   using simd_type             = Kokkos::Experimental::simd<DataType, Abi>;
@@ -522,7 +537,7 @@ void host_check_shift_by_lanes_on_one_loader(
 template <typename Abi, typename ShiftOp, typename DataType>
 inline void host_check_shift_op_all_loaders(ShiftOp shift_op,
                                             DataType test_vals[],
-                                            const unsigned int shift_by[],
+                                            const int shift_by[],
                                             std::size_t n) {
   host_check_shift_on_one_loader<Abi, load_element_aligned>(shift_op, test_vals,
                                                             shift_by, n);
@@ -553,7 +568,7 @@ inline void host_check_shift_op() {
     DataType max = std::numeric_limits<DataType>::max();
     DataType min = std::numeric_limits<DataType>::min();
 
-    const unsigned int shift_by[num_cases] = {
+    const int shift_by[num_cases] = {
         0, 1, 3, width / 2, width / 2 + 1, width - 1, width, width + 1};
     DataType test_vals[width];
 
@@ -683,12 +698,111 @@ KOKKOS_INLINE_FUNCTION void device_check_conversions() {
   }
 }
 
-template <class Abi>
-KOKKOS_INLINE_FUNCTION void device_check_shifts() {
-  kokkos_checker checker;
-  auto a = Kokkos::Experimental::simd<std::uint64_t, Abi>(8);
-  auto b = a >> 1;
-  checker.truth(all_of(b == decltype(b)(4)));
+template <typename Abi, typename Loader, typename ShiftOp, typename DataType>
+KOKKOS_INLINE_FUNCTION void device_check_shift_on_one_loader(
+    ShiftOp shift_op, DataType test_vals[], const unsigned int shift_by[],
+    std::size_t n) {
+  using simd_type             = Kokkos::Experimental::simd<DataType, Abi>;
+  std::size_t constexpr width = simd_type::size();
+  Loader loader;
+
+  for (std::size_t i = 0; i < n; ++i) {
+    simd_type simd_vals;
+    bool const loaded_arg = loader.device_load(test_vals, width, simd_vals);
+    if (!loaded_arg) {
+      continue;
+    }
+
+    simd_type expected_result;
+
+    for (std::size_t lane = 0; lane < width; ++lane) {
+      expected_result[lane] =
+          shift_op.on_device(DataType(simd_vals[lane]), shift_by[i]);
+    }
+
+    simd_type const computed_result =
+        shift_op.on_device(simd_vals, shift_by[i]);
+    device_check_equality(expected_result, computed_result, width);
+  }
+}
+
+template <typename Abi, typename Loader, typename ShiftOp, typename DataType>
+KOKKOS_INLINE_FUNCTION void device_check_shift_by_lanes_on_one_loader(
+    ShiftOp shift_op, DataType test_vals[],
+    Kokkos::Experimental::simd<std::int32_t, Abi>& shift_by) {
+  using simd_type             = Kokkos::Experimental::simd<DataType, Abi>;
+  std::size_t constexpr width = simd_type::size();
+  Loader loader;
+  simd_type simd_vals;
+  loader.device_load(test_vals, width, simd_vals);
+
+  simd_type expected_result;
+
+  for (std::size_t lane = 0; lane < width; ++lane) {
+    expected_result[lane] =
+        shift_op.on_device(DataType(simd_vals[lane]), shift_by[lane]);
+  }
+  simd_type const computed_result = shift_op.on_device(simd_vals, shift_by);
+  device_check_equality(expected_result, computed_result, width);
+}
+
+template <typename Abi, typename ShiftOp, typename DataType>
+KOKKOS_INLINE_FUNCTION void device_check_shift_op_all_loaders(
+    ShiftOp shift_op, DataType test_vals[], const unsigned int shift_by[],
+    std::size_t n) {
+  device_check_shift_on_one_loader<Abi, load_element_aligned>(
+      shift_op, test_vals, shift_by, n);
+  device_check_shift_on_one_loader<Abi, load_masked>(shift_op, test_vals,
+                                                     shift_by, n);
+  device_check_shift_on_one_loader<Abi, load_as_scalars>(shift_op, test_vals,
+                                                         shift_by, n);
+
+  Kokkos::Experimental::simd<std::int32_t, Abi> shift_by_lanes;
+  shift_by_lanes.copy_from(reinterpret_cast<std::int32_t const*>(shift_by),
+                           Kokkos::Experimental::element_aligned_tag());
+
+  device_check_shift_by_lanes_on_one_loader<Abi, load_element_aligned>(
+      shift_op, test_vals, shift_by_lanes);
+  device_check_shift_by_lanes_on_one_loader<Abi, load_masked>(
+      shift_op, test_vals, shift_by_lanes);
+  device_check_shift_by_lanes_on_one_loader<Abi, load_as_scalars>(
+      shift_op, test_vals, shift_by_lanes);
+}
+
+template <typename Abi, typename DataType>
+KOKKOS_INLINE_FUNCTION void device_check_shift_op() {
+  if constexpr (std::is_integral_v<DataType>) {
+    using simd_type                 = Kokkos::Experimental::simd<DataType, Abi>;
+    std::size_t constexpr width     = simd_type::size();
+    std::size_t constexpr num_cases = 8;
+
+    DataType max = Kokkos::reduction_identity<DataType>::max();
+    DataType min = Kokkos::reduction_identity<DataType>::min();
+
+    const unsigned int shift_by[num_cases] = {
+        0, 1, 3, width / 2, width / 2 + 1, width - 1, width, width + 1};
+    DataType test_vals[width];
+
+    for (std::size_t i = 0; i < width; ++i) {
+      DataType test_val = max / (i + 1);
+      test_vals[i]      = (test_val < min) ? min : test_val;
+    }
+    device_check_shift_op_all_loaders<Abi>(shift_right(), test_vals, shift_by,
+                                           num_cases);
+
+    for (std::size_t i = 0; i < width; ++i) {
+      DataType test_val = (min == 0) ? 1 : min / (i + 1);
+      test_vals[i]      = (test_val > max) ? max : test_val;
+    }
+    device_check_shift_op_all_loaders<Abi>(shift_left(), test_vals, shift_by,
+                                           num_cases);
+  }
+}
+
+template <typename Abi, typename... DataTypes>
+KOKKOS_INLINE_FUNCTION void device_check_shift_ops_all_types(
+    Kokkos::Experimental::Impl::data_types<DataTypes...>) {
+  (device_check_shift_op<Abi, DataTypes>(), ...);
 }
 
 template <class Abi>
@@ -719,7 +833,7 @@ KOKKOS_INLINE_FUNCTION void device_check_abi() {
   device_check_math_ops_all_types<Abi>(DataTypes());
   device_check_mask_ops<Abi>();
   device_check_conversions<Abi>();
-  device_check_shifts<Abi>();
+  device_check_shift_ops_all_types<Abi>(DataTypes());
   device_check_condition<Abi>();
 }
 

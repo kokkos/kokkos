@@ -134,14 +134,14 @@ template <class T, class Abi>
 
 template <typename T, typename Abi>
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd<T, Abi> operator>>(
-    simd<T, Abi> const& lhs, unsigned int rhs) {
+    simd<T, Abi> const& lhs, int rhs) {
   static_assert(std::is_integral_v<T>);
   return simd<T, Abi>([&](std::size_t i) { return lhs[i] >> rhs; });
 }
 
 template <typename T, typename Abi>
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd<T, Abi> operator<<(
-    simd<T, Abi> const& lhs, unsigned int rhs) {
+    simd<T, Abi> const& lhs, int rhs) {
   static_assert(std::is_integral_v<T>);
   return simd<T, Abi>([&](std::size_t i) { return lhs[i] << rhs; });
 }
