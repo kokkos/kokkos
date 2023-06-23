@@ -240,7 +240,7 @@ class Kokkos::Impl::ParallelScan<Functor, Kokkos::RangePolicy<Traits...>,
 
     int const async_arg = base_t::m_policy.space().acc_async_queue();
 
-    OpenACCParallelScanRangePolicy(begin, end, chunk_size, async_arg);
+    base_t::OpenACCParallelScanRangePolicy(begin, end, chunk_size, async_arg);
   }
 
   ParallelScan(const Functor& arg_functor,
@@ -272,7 +272,7 @@ class Kokkos::Impl::ParallelScanWithTotal<
 
     int const async_arg = base_t::m_policy.space().acc_async_queue();
 
-    OpenACCParallelScanRangePolicy(begin, end, chunk_size, async_arg);
+    base_t::OpenACCParallelScanRangePolicy(begin, end, chunk_size, async_arg);
   }
 
   template <class ViewType>
