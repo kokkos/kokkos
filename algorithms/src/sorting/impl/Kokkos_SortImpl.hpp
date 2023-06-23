@@ -155,7 +155,7 @@ void sort_cudathrust(const Cuda& space,
 
 #if defined(KOKKOS_ENABLE_ONEDPL)
 template <class DataType, class... Properties>
-void sort_odedpl(const Experimental::SYCL& space,
+void sort_onedpl(const Experimental::SYCL& space,
                  const Kokkos::View<DataType, Properties...>& view) {
   using ViewType = Kokkos::View<DataType, Properties...>;
   static_assert(SpaceAccessibility<Experimental::SYCL,
