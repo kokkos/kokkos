@@ -650,15 +650,23 @@ class TeamPolicyCommon<ExecSpace, Properties...>
   /** \brief  Construct policy with the given instance of the execution space */
   TeamPolicyCommon(const typename traits::execution_space& space_,
                    int league_size_request, int team_size_request,
-                   int vector_length_request = 1)
+                   int vector_length_request)
       : internal_policy(space_, league_size_request, team_size_request,
                         vector_length_request) {}
 
   TeamPolicyCommon(const typename traits::execution_space& space_,
+                   int league_size_request, int team_size_request)
+      : internal_policy(space_, league_size_request, team_size_request, 1) {}
+
+  TeamPolicyCommon(const typename traits::execution_space& space_,
                    int league_size_request, const Kokkos::AUTO_t&,
-                   int vector_length_request = 1)
+                   int vector_length_request)
       : internal_policy(space_, league_size_request, Kokkos::AUTO(),
                         vector_length_request) {}
+
+  TeamPolicyCommon(const typename traits::execution_space& space_,
+                   int league_size_request, const Kokkos::AUTO_t&)
+      : internal_policy(space_, league_size_request, Kokkos::AUTO(), 1) {}
 
   TeamPolicyCommon(const typename traits::execution_space& space_,
                    int league_size_request, const Kokkos::AUTO_t&,
@@ -673,14 +681,20 @@ class TeamPolicyCommon<ExecSpace, Properties...>
   /** \brief  Construct policy with the default instance of the execution space
    */
   TeamPolicyCommon(int league_size_request, int team_size_request,
-                   int vector_length_request = 1)
+                   int vector_length_request)
       : internal_policy(league_size_request, team_size_request,
                         vector_length_request) {}
 
+  TeamPolicyCommon(int league_size_request, int team_size_request)
+      : internal_policy(league_size_request, team_size_request, 1) {}
+
   TeamPolicyCommon(int league_size_request, const Kokkos::AUTO_t&,
-                   int vector_length_request = 1)
+                   int vector_length_request)
       : internal_policy(league_size_request, Kokkos::AUTO(),
                         vector_length_request) {}
+
+  TeamPolicyCommon(int league_size_request, const Kokkos::AUTO_t&)
+      : internal_policy(league_size_request, Kokkos::AUTO(), 1) {}
 
   TeamPolicyCommon(int league_size_request, const Kokkos::AUTO_t&,
                    const Kokkos::AUTO_t&)
