@@ -28,7 +28,7 @@ std::enable_if_t<std::is_integral_v<T>, bool> constexpr multiply_overflow(
   static_assert(std::is_unsigned_v<T>,
                 "Operation not implemented for signed integers.");
   auto product = a * b;
-  if ((a == 0) or (b == 0) or (a == product / b)) {
+  if ((a == 0) || (b == 0) || (a == product / b)) {
     res = product;
     return false;
   } else {
