@@ -248,8 +248,10 @@ sycl::device_ptr<void> SYCLInternal::scratch_space(const std::size_t size) {
       m_scratchSpaceCount < scratch_count(size)) {
     m_scratchSpaceCount = scratch_count(size);
     std::size_t alloc_size;
-    if (multiply_overflow(m_scratchFlagsCount, sizeScratchGrain, alloc_size))
+    if (Kokkos::Impl::multiply_overflow(m_scratchFlagsCount, sizeScratchGrain,
+                                        alloc_size)) {
       Kokkos::abort("Arithmetic overflow detected.");
+    }
 
     using Record = Kokkos::Impl::SharedAllocationRecord<
         Kokkos::Experimental::SYCLDeviceUSMSpace, void>;
@@ -273,9 +275,6 @@ sycl::device_ptr<void> SYCLInternal::scratch_flags(const std::size_t size) {
   if (verify_is_initialized("scratch_flags") &&
       m_scratchFlagsCount < scratch_count(size)) {
     m_scratchFlagsCount = scratch_count(size);
-    std::size_t alloc_size;
-    if (multiply_overflow(m_scratchFlagsCount, sizeScratchGrain, alloc_size))
-      Kokkos::abort("Arithmetic overflow detected.");
 
     using Record = Kokkos::Impl::SharedAllocationRecord<
         Kokkos::Experimental::SYCLDeviceUSMSpace, void>;
@@ -283,6 +282,11 @@ sycl::device_ptr<void> SYCLInternal::scratch_flags(const std::size_t size) {
     if (nullptr != m_scratchFlags)
       Record::decrement(Record::get_record(m_scratchFlags));
 
+    std::size_t alloc_size;
+    if (Kokkos::Impl::multiply_overflow(m_scratchFlagsCount, sizeScratchGrain,
+                                        alloc_size)) {
+      Kokkos::abort("Arithmetic overflow detected.");
+    }
     Record* const r = Record::allocate(
         Kokkos::Experimental::SYCLDeviceUSMSpace(*m_queue),
         "Kokkos::Experimental::SYCL::InternalScratchFlags", alloc_size);
@@ -291,7 +295,8 @@ sycl::device_ptr<void> SYCLInternal::scratch_flags(const std::size_t size) {
 
     m_scratchFlags = reinterpret_cast<size_type*>(r->data());
   }
-  auto memset_event = m_queue->memset(m_scratchFlags, 0, alloc_size);
+  auto memset_event = m_queue->memset(m_scratchFlags, 0,
+                                      m_scratchFlagsCount * sizeScratchGrain);
 #ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
   m_queue->ext_oneapi_submit_barrier(std::vector{memset_event});
 #endif
