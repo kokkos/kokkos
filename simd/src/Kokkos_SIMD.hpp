@@ -21,7 +21,7 @@
 
 #include <Kokkos_SIMD_Scalar.hpp>
 
-#if definded(KOKKOS_ARCH_AVX2) || defined(KOKKOS_ARCH_AMD_AVX2)
+#if defined(KOKKOS_ARCH_AVX2) || defined(KOKKOS_ARCH_AMD_AVX2)
 #include <Kokkos_SIMD_AVX2.hpp>
 #endif
 
