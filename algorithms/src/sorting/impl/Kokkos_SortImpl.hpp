@@ -147,8 +147,8 @@ void sort_cudathrust(const Cuda& space,
     return;
   }
   const auto exec = thrust::cuda::par.on(space.cuda_stream());
-  auto first      = Experimental::begin(view);
-  auto last       = Experimental::end(view);
+  auto first      = ::Kokkos::Experimental::begin(view);
+  auto last       = ::Kokkos::Experimental::end(view);
   thrust::sort(exec, first, last);
 }
 #endif
