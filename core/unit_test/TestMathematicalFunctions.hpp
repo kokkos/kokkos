@@ -421,11 +421,10 @@ DEFINE_UNARY_FUNCTION_EVAL(logb, 2);
     template <typename T, typename U>                                       \
     static auto eval_std(T x, U y) {                                        \
       if constexpr (std::is_same<T, KE::half_t>::value ||                   \
-                    std::is_same<T, KE::bhalf_t>::value) {                  \
-        return std::FUNC(static_cast<float>(x), static_cast<int>(y));       \
-      } else if constexpr (std::is_same<U, KE::half_t>::value ||            \
-                           std::is_same<U, KE::bhalf_t>::value) {           \
-        return std::FUNC(static_cast<int>(x), static_cast<float>(y));       \
+                    std::is_same<T, KE::bhalf_t>::value ||                  \
+                    std::is_same<U, KE::half_t>::value ||                   \
+                    std::is_same<U, KE::bhalf_t>::value) {                  \
+        return std::FUNC(static_cast<float>(x), static_cast<float>(y));     \
       } else {                                                              \
         static_assert(                                                      \
             std::is_same<decltype(std::FUNC((T)0, (U)0)),                   \
@@ -1381,15 +1380,13 @@ struct TestFloatingPointAbsoluteValueFunction {
     }
 
     static_assert(std::is_same<decltype(fabs(static_cast<KE::half_t>(4.f))),
-                               KE::half_t>::value,
-                  "");
+                               KE::half_t>::value);
     static_assert(std::is_same<decltype(fabs(static_cast<KE::bhalf_t>(4.f))),
-                               KE::bhalf_t>::value,
-                  "");
-    static_assert(std::is_same<decltype(fabs(4.f)), float>::value, "");
-    static_assert(std::is_same<decltype(fabs(5.)), double>::value, "");
+                               KE::bhalf_t>::value);
+    static_assert(std::is_same<decltype(fabs(4.f)), float>::value);
+    static_assert(std::is_same<decltype(fabs(5.)), double>::value);
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
-    static_assert(std::is_same<decltype(fabs(6.l)), long double>::value, "");
+    static_assert(std::is_same<decltype(fabs(6.l)), long double>::value);
 #endif
   }
 };
