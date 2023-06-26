@@ -63,7 +63,7 @@ void sort(const Kokkos::View<DataType, Properties...>& view) {
 
   Kokkos::fence("Kokkos::sort: before");
 
-  if (view.extent(0) == 0) {
+  if (view.extent(0) <= 0) {
     return;
   }
 
@@ -86,7 +86,7 @@ std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value> sort(
   static_assert(ViewType::rank == 1,
                 "Kokkos::sort: currently only supports rank-1 Views.");
 
-  if (view.extent(0) == 0) {
+  if (view.extent(0) <= 0) {
     return;
   }
 
@@ -117,7 +117,7 @@ void sort(ViewType view, size_t const begin, size_t const end) {
 
   Kokkos::fence("Kokkos::sort: before");
 
-  if (view.extent(0) == 0) {
+  if (view.extent(0) <= 0) {
     return;
   }
 
