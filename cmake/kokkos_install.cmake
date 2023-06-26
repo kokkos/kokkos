@@ -34,7 +34,7 @@ IF (NOT KOKKOS_HAS_TRILINOS AND NOT Kokkos_INSTALL_TESTING)
   file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/cmake_packages/Kokkos)
   file(COPY ${Kokkos_BINARY_DIR}/KokkosConfig.cmake
             ${Kokkos_BINARY_DIR}/KokkosConfigCommon.cmake
-            ${Kokkos_BINARY_DIR}/KokkosConfigVersion.cmake 
+            ${Kokkos_BINARY_DIR}/KokkosConfigVersion.cmake
             DESTINATION ${CMAKE_BINARY_DIR}/cmake_packages/Kokkos)
   export(EXPORT KokkosTargets NAMESPACE Kokkos:: FILE ${CMAKE_BINARY_DIR}/cmake_packages/Kokkos/KokkosTargets.cmake)
 ELSE()
