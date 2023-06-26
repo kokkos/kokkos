@@ -196,7 +196,7 @@ template <class T>
 template <class T>
 [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION simd<T, simd_abi::scalar> abs(
     simd<T, simd_abi::scalar> const& a) {
-  return simd<T, simd_abi::scalar>(((a < 0) ? -a : a));
+  return simd<T, simd_abi::scalar>(Kokkos::abs<T>(a[0]));
 }
 
 template <class T>
