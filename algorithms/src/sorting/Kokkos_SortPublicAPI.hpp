@@ -46,12 +46,7 @@ void sort([[maybe_unused]] const ExecutionSpace& exec,
     return;
   }
 
-  if constexpr (SpaceAccessibility<HostSpace, MemSpace>::accessible
-#if defined(KOKKOS_ENABLE_CUDA)
-		&& !std::is_same_v<MemSpace, Kokkos::CudaUVMSpace>
-#endif
-		)
-  {
+  if constexpr (Impl::better_off_calling_std_sort_v<ExecutionSpace>){
     auto first = ::Kokkos::Experimental::begin(view);
     auto last  = ::Kokkos::Experimental::end(view);
     std::sort(first, last);

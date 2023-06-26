@@ -70,6 +70,34 @@
 namespace Kokkos {
 namespace Impl {
 
+template <class ExecutionSpace>
+struct better_off_calling_std_sort : std::false_type {};
+
+#if defined KOKKOS_ENABLE_SERIAL
+template <>
+struct better_off_calling_std_sort<Kokkos::Serial> : std::true_type {};
+#endif
+
+#if defined KOKKOS_ENABLE_OPENMP
+template <>
+struct better_off_calling_std_sort<Kokkos::OpenMP> : std::true_type {};
+#endif
+
+#if defined KOKKOS_ENABLE_THREADS
+template <>
+struct better_off_calling_std_sort<Kokkos::Threads> : std::true_type {};
+#endif
+
+#if defined KOKKOS_ENABLE_HPX
+template <>
+struct better_off_calling_std_sort<Kokkos::Experimental::HPX> : std::true_type {
+};
+#endif
+
+template <class T>
+inline constexpr bool better_off_calling_std_sort_v =
+    better_off_calling_std_sort<T>::value;
+
 template <class ViewType>
 struct min_max_functor {
   using minmax_scalar =
