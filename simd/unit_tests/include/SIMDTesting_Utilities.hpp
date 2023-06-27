@@ -106,6 +106,26 @@ class load_element_aligned {
   }
 };
 
+// FIXME vector aligned
+class load_vector_aligned {
+ public:
+  template <class T, class Abi>
+  bool host_load(T const* mem, std::size_t n,
+                 Kokkos::Experimental::simd<T, Abi>& result) const {
+    if (n < result.size()) return false;
+    result.copy_from(mem, Kokkos::Experimental::vector_aligned_tag());
+    return true;
+  }
+  template <class T, class Abi>
+  KOKKOS_INLINE_FUNCTION bool device_load(
+      T const* mem, std::size_t n,
+      Kokkos::Experimental::simd<T, Abi>& result) const {
+    if (n < result.size()) return false;
+    result.copy_from(mem, Kokkos::Experimental::vector_aligned_tag());
+    return true;
+  }
+};
+
 class load_masked {
  public:
   template <class T, class Abi>

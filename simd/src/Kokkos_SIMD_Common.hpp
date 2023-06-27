@@ -32,6 +32,9 @@ template <class T, class Abi>
 class simd_mask;
 
 struct element_aligned_tag {};
+struct vector_aligned_tag {};
+inline constexpr element_aligned_tag element_aligned{};
+inline constexpr vector_aligned_tag vector_aligned{};
 
 // class template declarations for const_where_expression and where_expression
 

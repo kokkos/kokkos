@@ -83,6 +83,10 @@ inline void host_check_math_op_all_loaders(Op op, std::size_t n,
   host_check_math_op_one_loader<Abi, load_element_aligned>(op, n, args...);
   host_check_math_op_one_loader<Abi, load_masked>(op, n, args...);
   host_check_math_op_one_loader<Abi, load_as_scalars>(op, n, args...);
+
+  // FIXME vector aligned
+    host_check_binary_op_one_loader<Abi, load_vector_aligned>(
+      binary_op, n, first_args, second_args);
 }
 
 template <typename Abi, typename DataType, size_t n>
@@ -122,21 +126,31 @@ template <typename Abi, typename DataType>
 inline void host_check_math_ops() {
   constexpr size_t n = 11;
 
+  // FIXME vector aligned
+    constexpr size_t alignment =
+      Kokkos::Experimental::simd<DataType, Abi>::size() * sizeof(DataType);
+
   host_check_abi_size<Abi, DataType>();
 
   if constexpr (!std::is_integral_v<DataType>) {
+alignas(alignment)
     DataType const first_args[n]  = {0.1,  0.4,  0.5, 0.7, 1.0, 1.5,
                                     -2.0, 10.0, 0.0, 1.2, -2.8};
+alignas(alignment)
     DataType const second_args[n] = {1.0,  0.2, 1.1,  1.8,  -0.1, -3.0,
                                      -2.4, 1.0, 13.0, -3.2, -2.1};
     host_check_all_math_ops<Abi>(first_args, second_args);
   } else {
     if constexpr (std::is_signed_v<DataType>) {
+alignas(alignment)
       DataType const first_args[n]  = {1, 2, -1, 10, 0, 1, -2, 10, 0, 1, -2};
+alignas(alignment)
       DataType const second_args[n] = {1, 2, 1, 1, 1, -3, -2, 1, 13, -3, -2};
       host_check_all_math_ops<Abi>(first_args, second_args);
     } else {
+alignas(alignment)
       DataType const first_args[n]  = {1, 2, 1, 10, 0, 1, 2, 10, 0, 1, 2};
+alignas(alignment)
       DataType const second_args[n] = {1, 2, 1, 1, 1, 3, 2, 1, 13, 3, 2};
       host_check_all_math_ops<Abi>(first_args, second_args);
     }
@@ -214,6 +228,10 @@ KOKKOS_INLINE_FUNCTION void device_check_math_op_all_loaders(Op op,
   device_check_math_op_one_loader<Abi, load_element_aligned>(op, n, args...);
   device_check_math_op_one_loader<Abi, load_masked>(op, n, args...);
   device_check_math_op_one_loader<Abi, load_as_scalars>(op, n, args...);
+
+  // FIXME vector aligned
+    device_check_binary_op_one_loader<Abi, load_vector_aligned>(
+      binary_op, n, first_args, second_args);
 }
 
 template <typename Abi, typename DataType, size_t n>
