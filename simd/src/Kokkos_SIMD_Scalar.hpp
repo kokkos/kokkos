@@ -315,13 +315,13 @@ class const_where_expression<simd_mask<T, simd_abi::scalar>,
       mem[static_cast<Integral>(index)] = static_cast<T>(m_value);
   }
 
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type const&
-  impl_get_value() const {
+  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION value_type const& impl_get_value()
+      const {
     return m_value;
   }
 
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type const&
-  impl_get_mask() const {
+  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION mask_type const& impl_get_mask()
+      const {
     return m_mask;
   }
 };
