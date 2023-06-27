@@ -420,10 +420,10 @@ DEFINE_UNARY_FUNCTION_EVAL(logb, 2);
     }                                                                       \
     template <typename T, typename U>                                       \
     static auto eval_std(T x, U y) {                                        \
-      if constexpr (std::is_same<T, KE::half_t>::value ||                   \
-                    std::is_same<T, KE::bhalf_t>::value ||                  \
-                    std::is_same<U, KE::half_t>::value ||                   \
-                    std::is_same<U, KE::bhalf_t>::value) {                  \
+      if constexpr (KE::kokkos_type_is_half_t<T>::value ||                  \
+                    KE::kokkos_type_is_bhalf_t<T>::value ||                 \
+                    KE::kokkos_type_is_half_t<U>::value ||                  \
+                    KE::kokkos_type_is_bhalf_t<U>::value) {                 \
         return std::FUNC(static_cast<float>(x), static_cast<float>(y));     \
       } else {                                                              \
         static_assert(                                                      \
