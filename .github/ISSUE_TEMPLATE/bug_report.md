@@ -7,7 +7,7 @@ assignees: ''
 ---
 **Describe the bug**
 
-Please provide a concise, clear description of the bug, as well as any available error logs.  Feel free to contact the Kokkos Slack `# build` channel for further discussion of your issue. 
+Please provide a concise, clear description of the bug, as well as any available error logs.  Feel free to contact the Kokkos Slack `# build` channel for further discussion of your issue.
 
 **Please include the following for a minimal reproducer**
 
