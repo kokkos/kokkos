@@ -409,36 +409,41 @@ DEFINE_UNARY_FUNCTION_EVAL(logb, 2);
 
 #undef DEFINE_UNARY_FUNCTION_EVAL
 
-#define DEFINE_BINARY_FUNCTION_EVAL(FUNC, ULP_FACTOR)                       \
-  struct MathBinaryFunction_##FUNC {                                        \
-    template <typename T, typename U>                                       \
-    static KOKKOS_FUNCTION auto eval(T x, U y) {                            \
-      static_assert(                                                        \
-          std::is_same<decltype(Kokkos::FUNC((T)0, (U)0)),                  \
-                       math_binary_function_return_type_t<T, U>>::value);   \
-      return Kokkos::FUNC(x, y);                                            \
-    }                                                                       \
-    template <typename T, typename U>                                       \
-    static auto eval_std(T x, U y) {                                        \
-      if constexpr (KE::kokkos_type_is_half_t<T>::value ||                  \
-                    KE::kokkos_type_is_bhalf_t<T>::value ||                 \
-                    KE::kokkos_type_is_half_t<U>::value ||                  \
-                    KE::kokkos_type_is_bhalf_t<U>::value) {                 \
-        return std::FUNC(static_cast<float>(x), static_cast<float>(y));     \
-      } else {                                                              \
-        static_assert(                                                      \
-            std::is_same<decltype(std::FUNC((T)0, (U)0)),                   \
-                         math_binary_function_return_type_t<T, U>>::value); \
-        return std::FUNC(x, y);                                             \
-      }                                                                     \
-    }                                                                       \
-    static KOKKOS_FUNCTION double ulp_factor() { return ULP_FACTOR; }       \
-  };                                                                        \
-  using kk_##FUNC = MathBinaryFunction_##FUNC;                              \
-  template <>                                                               \
-  struct math_function_name<MathBinaryFunction_##FUNC> {                    \
-    static constexpr char name[] = #FUNC;                                   \
-  };                                                                        \
+#define DEFINE_BINARY_FUNCTION_EVAL(FUNC, ULP_FACTOR)                          \
+  struct MathBinaryFunction_##FUNC {                                           \
+    template <typename T, typename U>                                          \
+    static KOKKOS_FUNCTION auto eval(T x, U y) {                               \
+      static_assert(                                                           \
+          std::is_same<decltype(Kokkos::FUNC((T)0, (U)0)),                     \
+                       math_binary_function_return_type_t<T, U>>::value);      \
+      return Kokkos::FUNC(x, y);                                               \
+    }                                                                          \
+    template <typename T, typename U>                                          \
+    static auto eval_std(T x, U y) {                                           \
+      constexpr bool const x_is_half = (KE::kokkos_type_is_half_t<T>::value || \
+                                        KE::kokkos_type_is_bhalf_t<T>::value); \
+      constexpr bool const y_is_half = (KE::kokkos_type_is_half_t<U>::value || \
+                                        KE::kokkos_type_is_bhalf_t<U>::value); \
+      if constexpr (x_is_half && y_is_half)                                    \
+        return std::FUNC(static_cast<float>(x), static_cast<float>(y));        \
+      else if constexpr (x_is_half)                                            \
+        return std::FUNC(static_cast<float>(x), y);                            \
+      else if constexpr (y_is_half)                                            \
+        return std::FUNC(x, static_cast<float>(y));                            \
+      else {                                                                   \
+        static_assert(                                                         \
+            std::is_same<decltype(std::FUNC((T)0, (U)0)),                      \
+                         math_binary_function_return_type_t<T, U>>::value);    \
+        return std::FUNC(x, y);                                                \
+      }                                                                        \
+    }                                                                          \
+    static KOKKOS_FUNCTION double ulp_factor() { return ULP_FACTOR; }          \
+  };                                                                           \
+  using kk_##FUNC = MathBinaryFunction_##FUNC;                                 \
+  template <>                                                                  \
+  struct math_function_name<MathBinaryFunction_##FUNC> {                       \
+    static constexpr char name[] = #FUNC;                                      \
+  };                                                                           \
   constexpr char math_function_name<MathBinaryFunction_##FUNC>::name[]
 
 #ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_1
