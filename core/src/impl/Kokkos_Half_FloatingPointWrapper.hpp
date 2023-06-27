@@ -27,16 +27,12 @@ namespace Kokkos::Experimental {
 /// @brief templated struct for determining if half_t is an alias to float.
 /// @tparam T The type to specialize on.
 template <class T>
-struct kokkos_type_is_half_t {
-  enum : bool { value = false };
-};
+struct kokkos_type_is_half_t : std::false_type {};
 
 /// @brief templated struct for determining if bhalf_t is an alias to float.
 /// @tparam T The type to specialize on.
 template <class T>
-struct kokkos_type_is_bhalf_t {
-  enum : bool { value = false };
-};
+struct kokkos_type_is_bhalf_t : std::false_type {};
 }  // namespace Kokkos::Experimental
 
 #ifdef KOKKOS_IMPL_HALF_TYPE_DEFINED
@@ -61,9 +57,7 @@ class floating_point_wrapper;
 using half_t = Kokkos::Experimental::Impl::floating_point_wrapper<
     Kokkos::Impl::half_impl_t ::type>;
 template <>
-struct kokkos_type_is_half_t<half_t> {
-  enum : bool { value = true };
-};
+struct kokkos_type_is_half_t<half_t> : std::true_type{};
 KOKKOS_INLINE_FUNCTION
 half_t cast_to_half(float val);
 KOKKOS_INLINE_FUNCTION
@@ -131,9 +125,7 @@ KOKKOS_INLINE_FUNCTION
 using bhalf_t = Kokkos::Experimental::Impl::floating_point_wrapper<
     Kokkos::Impl ::bhalf_impl_t ::type>;
 template <>
-struct kokkos_type_is_bhalf_t<bhalf_t> {
-  enum : bool { value = true };
-};
+struct kokkos_type_is_bhalf_t<bhalf_t> : std::true_type {};
 KOKKOS_INLINE_FUNCTION
 bhalf_t cast_to_bhalf(float val);
 KOKKOS_INLINE_FUNCTION
