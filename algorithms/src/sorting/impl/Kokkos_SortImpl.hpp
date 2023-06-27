@@ -123,7 +123,7 @@ void sort_via_binsort(const ExecutionSpace& exec,
   static_assert(ViewType::rank == 1,
                 "Kokkos::sort: currently only supports rank-1 Views.");
 
-  if (view.extent(0) == 0) {
+  if (view.extent(0) <= 1) {
     return;
   }
 
@@ -171,7 +171,7 @@ void sort_cudathrust(const Cuda& space,
   static_assert(ViewType::rank == 1,
                 "Kokkos::sort: currently only supports rank-1 Views.");
 
-  if (view.extent(0) == 0) {
+  if (view.extent(0) <= 1) {
     return;
   }
   const auto exec = thrust::cuda::par.on(space.cuda_stream());
@@ -199,7 +199,7 @@ void sort_onedpl(const Experimental::SYCL& space,
            std::is_same<typename ViewType::array_layout, LayoutLeft>::value),
       "SYCL sort only supports contiguous rank-1 Views.");
 
-  if (view.extent(0) == 0) {
+  if (view.extent(0) <= 1) {
     return;
   }
 
