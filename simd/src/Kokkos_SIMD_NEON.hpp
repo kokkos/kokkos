@@ -1263,12 +1263,23 @@ class const_where_expression<simd_mask<float, simd_abi::neon_fixed_size<2>>,
     if (m_mask[0]) mem[0] = m_value[0];
     if (m_mask[1]) mem[1] = m_value[1];
   }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+  void scatter_to(
+      float* mem,
+      simd<std::int32_t, simd_abi::neon_fixed_size<2>> const& index) const {
+    if (m_mask[0]) mem[index[0]] = m_value[0];
+    if (m_mask[1]) mem[index[1]] = m_value[1];
+  }
 
-  friend constexpr auto const& Impl::mask<float, abi_type>(
-      const_where_expression<mask_type, value_type> const& x);
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type const&
+  impl_get_value() const {
+    return m_value;
+  }
 
-  friend constexpr auto const& Impl::value<float, abi_type>(
-      const_where_expression<mask_type, value_type> const& x);
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type const&
+  impl_get_mask() const {
+    return m_mask;
+  }
 };
 
 template <>
@@ -1286,6 +1297,13 @@ class where_expression<simd_mask<float, simd_abi::neon_fixed_size<2>>,
   void copy_from(float const* mem, element_aligned_tag) {
     if (m_mask[0]) m_value[0] = mem[0];
     if (m_mask[1]) m_value[1] = mem[1];
+  }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+  void gather_from(
+      float const* mem,
+      simd<std::int32_t, simd_abi::neon_fixed_size<2>> const& index) {
+    if (m_mask[0]) m_value[0] = mem[index[0]];
+    if (m_mask[1]) m_value[1] = mem[index[1]];
   }
   template <class U,
             std::enable_if_t<std::is_convertible_v<

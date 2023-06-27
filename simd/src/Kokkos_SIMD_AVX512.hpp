@@ -1263,12 +1263,24 @@ class const_where_expression<simd_mask<float, simd_abi::avx512_fixed_size<8>>,
     _mm256_mask_storeu_ps(mem, static_cast<__mmask8>(m_mask),
                           static_cast<__m256>(m_value));
   }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+  void scatter_to(
+      float* mem,
+      simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& index) const {
+    _mm256_mask_i32scatter_ps(mem, static_cast<__mmask8>(m_mask),
+                              static_cast<__m256i>(index),
+                              static_cast<__m256>(m_value), 4);
+  }
 
-  friend constexpr auto const& Impl::mask<float, abi_type>(
-      const_where_expression<mask_type, value_type> const& x);
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type const&
+  impl_get_value() const {
+    return m_value;
+  }
 
-  friend constexpr auto const& Impl::value<float, abi_type>(
-      const_where_expression<mask_type, value_type> const& x);
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type const&
+  impl_get_mask() const {
+    return m_mask;
+  }
 };
 
 template <>
@@ -1286,6 +1298,14 @@ class where_expression<simd_mask<float, simd_abi::avx512_fixed_size<8>>,
   void copy_from(float const* mem, element_aligned_tag) {
     m_value = value_type(_mm256_mask_loadu_ps(
         _mm256_set1_ps(0.0), static_cast<__mmask8>(m_mask), mem));
+  }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+  void gather_from(
+      float const* mem,
+      simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& index) {
+    m_value = value_type(
+        _mm256_mask_i32gather_ps(m_value, static_cast<__mmask8>(m_mask),
+                                 static_cast<__m256>(index), mem, 4));
   }
   template <
       class U,
