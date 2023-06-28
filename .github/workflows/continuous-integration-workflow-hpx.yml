@@ -13,7 +13,7 @@ jobs:
 
     steps:
       - name: checkout code
-        uses: actions/checkout@v2.2.0
+        uses: actions/checkout@v3
         with:
           path: kokkos
       - name: setup hpx dependencies
@@ -26,12 +26,12 @@ jobs:
             libboost-all-dev \
             ninja-build
       - name: checkout hpx
-        uses: actions/checkout@v2.2.0
+        uses: actions/checkout@v3
         with:
           repository: STELLAR-GROUP/hpx
-          ref: 1.7.1
+          ref: 1.8.0
           path: hpx
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         id:   cache-hpx
         with:
           path:         ./hpx/install
@@ -69,12 +69,10 @@ jobs:
             -DCMAKE_CXX_COMPILER=clang++ \
             -DCMAKE_CXX_FLAGS="-Werror" \
             -DHPX_ROOT=$PWD/../../hpx/install \
-            -DKokkos_ARCH_NATIVE=ON \
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
             -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
             -DKokkos_ENABLE_EXAMPLES=ON \
             -DKokkos_ENABLE_HPX=ON \
-            -DKokkos_ENABLE_HPX_ASYNC_DISPATCH=ON \
             -DKokkos_ENABLE_SERIAL=OFF \
             -DKokkos_ENABLE_TESTS=ON \
             ..
