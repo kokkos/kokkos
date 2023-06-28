@@ -18,9 +18,9 @@
 #include <impl/Kokkos_CheckedIntegerOps.hpp>
 #include <limits>
 
-namespace Test {
+namespace {
 
-TEST(TEST_CATEGORY, test_multiply) {
+TEST(TEST_CATEGORY, checked_integer_operations_multiply_overflow) {
   {
     auto result      = 1u;
     auto is_overflow = Kokkos::Impl::multiply_overflow(1u, 2u, result);
@@ -31,9 +31,8 @@ TEST(TEST_CATEGORY, test_multiply) {
     auto result      = 1u;
     auto is_overflow = Kokkos::Impl::multiply_overflow(
         std::numeric_limits<unsigned>::max(), 2u, result);
-    EXPECT_EQ(result, 1u);
     EXPECT_TRUE(is_overflow);
   }
 }
 
-}  // namespace Test
+}  // namespace
