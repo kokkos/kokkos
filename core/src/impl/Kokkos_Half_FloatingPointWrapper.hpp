@@ -57,7 +57,7 @@ class floating_point_wrapper;
 using half_t = Kokkos::Experimental::Impl::floating_point_wrapper<
     Kokkos::Impl::half_impl_t ::type>;
 template <>
-struct kokkos_type_is_half_t<half_t> : std::true_type{};
+struct kokkos_type_is_half_t<half_t> : std::true_type {};
 KOKKOS_INLINE_FUNCTION
 half_t cast_to_half(float val);
 KOKKOS_INLINE_FUNCTION
