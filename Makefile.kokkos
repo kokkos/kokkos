@@ -281,6 +281,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_OPENACC), 1)
   # Set OpenACC flags.
   ifeq ($(KOKKOS_INTERNAL_COMPILER_NVHPC), 1)
     KOKKOS_INTERNAL_OPENACC_FLAG := -acc
+  else ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
   else
     $(error Makefile.kokkos: OpenACC is enabled but the compiler must be NVHPC (got version string $(KOKKOS_CXX_VERSION)))
   endif

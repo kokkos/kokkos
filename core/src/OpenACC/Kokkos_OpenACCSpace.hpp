@@ -85,16 +85,26 @@ class OpenACCSpace {
 template <>
 struct Kokkos::Impl::MemorySpaceAccess<Kokkos::HostSpace,
                                        Kokkos::Experimental::OpenACCSpace> {
+#if KOKKOS_OPENACC_WITHOUT_GPU
+  enum : bool{assignable = true};
+  enum : bool{accessible = true};
+#else
   enum : bool { assignable = false };
   enum : bool { accessible = false };
+#endif
   enum : bool { deepcopy = true };
 };
 
 template <>
 struct Kokkos::Impl::MemorySpaceAccess<Kokkos::Experimental::OpenACCSpace,
                                        Kokkos::HostSpace> {
+#if KOKKOS_OPENACC_WITHOUT_GPU
+  enum : bool{assignable = true};
+  enum : bool{accessible = true};
+#else
   enum : bool { assignable = false };
   enum : bool { accessible = false };
+#endif
   enum : bool { deepcopy = true };
 };
 
