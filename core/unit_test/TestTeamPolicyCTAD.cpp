@@ -31,11 +31,12 @@ struct TestTeamPolicyCTADS {
   static_assert(!Kokkos::is_execution_space_v<
                 ImplicitlyConvertibleToDefaultExecutionSpace>);
 
-  static inline Kokkos::DefaultExecutionSpace des;
-  static inline ImplicitlyConvertibleToDefaultExecutionSpace notEs;
-  static inline SomeExecutionSpace ses;
+  [[maybe_unused]] static inline Kokkos::DefaultExecutionSpace des;
+  [[maybe_unused]] static inline ImplicitlyConvertibleToDefaultExecutionSpace
+      notEs;
+  [[maybe_unused]] static inline SomeExecutionSpace ses;
 
-  static inline int i;
+  [[maybe_unused]] static inline int i;
 
   // Default construction deduces to TeamPolicy<>
   static_assert(
