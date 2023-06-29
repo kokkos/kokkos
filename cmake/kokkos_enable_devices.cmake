@@ -45,7 +45,8 @@ IF (KOKKOS_ENABLE_OPENACC)
   COMPILER_SPECIFIC_FLAGS(
     Clang -fopenacc -fopenacc-fake-async-wait
           -Wno-openacc-and-cxx -Wno-openmp-mapping -Wno-unknown-cuda-version
-          # -Wno-defaulted-function-deleted -Wno-pass-failed
+          -Wno-pass-failed
+          # -Wno-defaulted-function-deleted
     NVHPC -acc=gpu
   )
   COMPILER_SPECIFIC_DEFS(

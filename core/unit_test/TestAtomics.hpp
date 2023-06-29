@@ -585,9 +585,6 @@ TEST(TEST_CATEGORY, atomics_tpetra_max_abs) {
 #ifdef KOKKOS_COMPILER_NVHPC
   GTEST_SKIP() << "FIXME_NVHPC (?)";
 #endif
-#if defined(KOKKOS_ENABLE_OPENACC) && defined(KOKKOS_COMPILER_CLANG)
-  GTEST_SKIP() << "FIXME_OPENACC_CLACC";
-#endif
 
   TpetraUseCase().check();
 }
