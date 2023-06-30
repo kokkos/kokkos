@@ -59,6 +59,8 @@ SYCL::SYCL(const sycl::queue& stream)
         ptr->finalize();
         delete ptr;
       }) {
+  if (!stream.is_in_order())
+    Kokkos::abort("User provided sycl::queues must be in-order!");
   Impl::SYCLInternal::singleton().verify_is_initialized(
       "SYCL instance constructor");
   m_space_instance->initialize(stream);
