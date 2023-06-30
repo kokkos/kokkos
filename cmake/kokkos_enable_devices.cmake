@@ -47,7 +47,6 @@ IF (KOKKOS_ENABLE_OPENACC)
           -Wno-openacc-and-cxx -Wno-openmp-mapping -Wno-unknown-cuda-version
           -Wno-pass-failed
           # -Wno-defaulted-function-deleted
-    NVHPC -acc=gpu
   )
   COMPILER_SPECIFIC_DEFS(
     Clang KOKKOS_WORKAROUND_OPENMPTARGET_CLANG
