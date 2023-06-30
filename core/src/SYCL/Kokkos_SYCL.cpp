@@ -59,6 +59,9 @@ SYCL::SYCL(const sycl::queue& stream)
         ptr->finalize();
         delete ptr;
       }) {
+  // To be on the safe side if we decide to switch the default to out-of-order
+  // queues again, we require user-provided queues to be in-order
+  // unconditionally.
   if (!stream.is_in_order())
     Kokkos::abort("User provided sycl::queues must be in-order!");
   Impl::SYCLInternal::singleton().verify_is_initialized(
