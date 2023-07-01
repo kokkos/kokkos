@@ -31,8 +31,10 @@
  */
 namespace Kokkos {
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 template <class Scalar, class Arg1Type = void>
-class vector : public DualView<Scalar*, LayoutLeft, Arg1Type> {
+class KOKKOS_DEPRECATED vector
+    : public DualView<Scalar*, LayoutLeft, Arg1Type> {
  public:
   using value_type      = Scalar;
   using pointer         = Scalar*;
@@ -312,6 +314,7 @@ class vector : public DualView<Scalar*, LayoutLeft, Arg1Type> {
     void operator()(const int& i) const { _data(i) = _val; }
   };
 };
+#endif
 
 }  // namespace Kokkos
 #ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_VECTOR
