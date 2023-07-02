@@ -582,8 +582,9 @@ IF(KOKKOS_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_ViewAPI_d.cpp
     )
   # Somehow on ExCL's explorer (AMD GPU), these cause clang-linker-wrapper to
-  # hang for at least an hour while building the unit tests.  Excluding them
-  # permits that build step to finish in seconds or less.
+  # hang for a long time while building the unit tests.  In some cases,
+  # including them caused the build not to complete after an hour, but excluding
+  # them permitted the build to finish in 1.5 mins or less.
   IF(KOKKOS_AMDGPU_ARCH)
     list(REMOVE_ITEM OpenACC_SOURCES
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_BitManipulationBuiltins.cpp
@@ -598,6 +599,8 @@ IF(KOKKOS_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_SubView_c10.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_SubView_c11.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_SubView_c12.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_ViewAPI_b.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_ViewAPI_c.cpp
     )
   endif()
   # Fails serial.atomics_tpetra_max_abs when we test with Clacc.
