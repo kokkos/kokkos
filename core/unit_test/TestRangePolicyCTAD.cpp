@@ -31,20 +31,21 @@ struct TestRangePolicyCTADs {
   static_assert(!Kokkos::is_execution_space_v<
                 ImplicitlyConvertibleToDefaultExecutionSpace>);
 
-  static inline Kokkos::DefaultExecutionSpace des;
-  static inline ImplicitlyConvertibleToDefaultExecutionSpace notEs;
-  static inline SomeExecutionSpace ses;
-  static inline TEST_EXECSPACE es;
+  [[maybe_unused]] static inline Kokkos::DefaultExecutionSpace des;
+  [[maybe_unused]] static inline ImplicitlyConvertibleToDefaultExecutionSpace
+      notEs;
+  [[maybe_unused]] static inline SomeExecutionSpace ses;
+  [[maybe_unused]] static inline TEST_EXECSPACE es;
 
   using RangePolicyTestExecSpace = std::conditional_t<
       std::is_same_v<TEST_EXECSPACE, Kokkos::DefaultExecutionSpace>,
       Kokkos::RangePolicy<>, Kokkos::RangePolicy<TEST_EXECSPACE> >;
 
-  static inline int64_t i64;
-  static inline int32_t i32;
-  static inline Kokkos::ChunkSize cs{0};
+  [[maybe_unused]] static inline int64_t i64;
+  [[maybe_unused]] static inline int32_t i32;
+  [[maybe_unused]] static inline Kokkos::ChunkSize cs{0};
 
-  static inline Kokkos::RangePolicy<> rp;
+  [[maybe_unused]] static inline Kokkos::RangePolicy<> rp;
 
   //  Copy/move
   //
@@ -59,7 +60,7 @@ struct TestRangePolicyCTADs {
   static_assert(std::is_same_v<Kokkos::RangePolicy<>,
                                decltype(Kokkos::RangePolicy(std::move(rp)))>);
 
-  static inline Kokkos::RangePolicy<SomeExecutionSpace> rpses;
+  [[maybe_unused]] static inline Kokkos::RangePolicy<SomeExecutionSpace> rpses;
   static_assert(std::is_same_v<Kokkos::RangePolicy<SomeExecutionSpace>,
                                decltype(Kokkos::RangePolicy(rpses))>);
   static_assert(
