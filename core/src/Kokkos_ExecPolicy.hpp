@@ -131,47 +131,30 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
   }
 
   /** \brief  Total range */
-  template <class... Args>
   inline RangePolicy(const typename traits::execution_space& work_space,
                      const member_type work_begin, const member_type work_end,
-                     Args... args)
+                     const ChunkSize& cs)
       : m_space(work_space),
         m_begin(work_begin < work_end ? work_begin : 0),
         m_end(work_begin < work_end ? work_end : 0),
         m_granularity(0),
         m_granularity_mask(0) {
-    set_auto_chunk_size();
-    set(args...);
+    set(cs);
   }
 
   /** \brief  Total range */
   template <class... Args>
   inline RangePolicy(const member_type work_begin, const member_type work_end,
-                     Args... args)
+                     const ChunkSize& cs)
       : RangePolicy(typename traits::execution_space(), work_begin, work_end) {
-    set_auto_chunk_size();
-    set(args...);
+    set(cs);
   }
 
- private:
-  inline void set() {}
-
- public:
-  template <class... Args>
-  inline void set(Args...) {
-    static_assert(
-        0 == sizeof...(Args),
-        "Kokkos::RangePolicy: unhandled constructor arguments encountered.");
-  }
-
-  template <class... Args>
-  inline void set(const ChunkSize& chunksize, Args... args) {
+  inline void set(const ChunkSize& chunksize) {
     m_granularity      = chunksize.value;
     m_granularity_mask = m_granularity - 1;
-    set(args...);
   }
 
- public:
   /** \brief return chunk_size */
   inline member_type chunk_size() const { return m_granularity; }
 
@@ -263,20 +246,18 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
 
 RangePolicy()->RangePolicy<>;
 
-template <typename... Args>
-RangePolicy(int64_t, int64_t, Args...)->RangePolicy<>;
+RangePolicy(int64_t, int64_t)->RangePolicy<>;
+RangePolicy(int64_t, int64_t, ChunkSize const&)->RangePolicy<>;
 
-// enable_if is used in these deduction guides in order
-// to get around a gcc8 deduction guide overload set bug
-template <typename ES, typename... Args,
-          typename = std::enable_if_t<
-              std::is_convertible_v<ES, DefaultExecutionSpace>>>
-RangePolicy(ES const&, int64_t, int64_t, Args...)->RangePolicy<>;
+RangePolicy(DefaultExecutionSpace const&, int64_t, int64_t)->RangePolicy<>;
+RangePolicy(DefaultExecutionSpace const&, int64_t, int64_t, ChunkSize const&)
+    ->RangePolicy<>;
 
-template <typename ES, typename... Args,
-          typename = std::enable_if_t<
-              !std::is_convertible_v<ES, DefaultExecutionSpace>>>
-RangePolicy(ES const&, int64_t, int64_t, Args...)->RangePolicy<ES>;
+template <typename ES, typename = std::enable_if_t<is_execution_space_v<ES>>>
+RangePolicy(ES const&, int64_t, int64_t)->RangePolicy<ES>;
+
+template <typename ES, typename = std::enable_if_t<is_execution_space_v<ES>>>
+RangePolicy(ES const&, int64_t, int64_t, ChunkSize const&)->RangePolicy<ES>;
 
 }  // namespace Kokkos
 
