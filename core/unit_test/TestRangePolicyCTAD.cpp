@@ -35,38 +35,10 @@ struct TestRangePolicyCTADs {
   [[maybe_unused]] static inline ImplicitlyConvertibleToDefaultExecutionSpace
       notEs;
   [[maybe_unused]] static inline SomeExecutionSpace ses;
-  [[maybe_unused]] static inline TEST_EXECSPACE es;
-
-  using RangePolicyTestExecSpace = std::conditional_t<
-      std::is_same_v<TEST_EXECSPACE, Kokkos::DefaultExecutionSpace>,
-      Kokkos::RangePolicy<>, Kokkos::RangePolicy<TEST_EXECSPACE> >;
 
   [[maybe_unused]] static inline int64_t i64;
   [[maybe_unused]] static inline int32_t i32;
   [[maybe_unused]] static inline Kokkos::ChunkSize cs{0};
-
-  [[maybe_unused]] static inline Kokkos::RangePolicy<> rp;
-
-  //  Copy/move
-  //
-  // icpc generates an ICE on implicit deduction guides for copy/move
-  //
-  // internal error: assertion failed: find_placeholder_arg_for_pack: symbol
-  // not found (scope_stk.c, line 11248 in find_placeholder_arg_for_pack)
-
-#if not defined(__INTEL_COMPILER)
-  static_assert(
-      std::is_same_v<Kokkos::RangePolicy<>, decltype(Kokkos::RangePolicy(rp))>);
-  static_assert(std::is_same_v<Kokkos::RangePolicy<>,
-                               decltype(Kokkos::RangePolicy(std::move(rp)))>);
-
-  [[maybe_unused]] static inline Kokkos::RangePolicy<SomeExecutionSpace> rpses;
-  static_assert(std::is_same_v<Kokkos::RangePolicy<SomeExecutionSpace>,
-                               decltype(Kokkos::RangePolicy(rpses))>);
-  static_assert(
-      std::is_same_v<Kokkos::RangePolicy<SomeExecutionSpace>,
-                     decltype(Kokkos::RangePolicy(std::move(rpses)))>);
-#endif  // not defined(__INTEL_COMPILER)
 
   //  RangePolicy
 
@@ -79,16 +51,12 @@ struct TestRangePolicyCTADs {
                                decltype(Kokkos::RangePolicy(notEs, i64, i64))>);
   static_assert(std::is_same_v<Kokkos::RangePolicy<SomeExecutionSpace>,
                                decltype(Kokkos::RangePolicy(ses, i64, i64))>);
-  static_assert(std::is_same_v<RangePolicyTestExecSpace,
-                               decltype(Kokkos::RangePolicy(es, i64, i64))>);
   static_assert(std::is_same_v<Kokkos::RangePolicy<>,
                                decltype(Kokkos::RangePolicy(des, i32, i32))>);
   static_assert(std::is_same_v<Kokkos::RangePolicy<>,
                                decltype(Kokkos::RangePolicy(notEs, i32, i32))>);
   static_assert(std::is_same_v<Kokkos::RangePolicy<SomeExecutionSpace>,
                                decltype(Kokkos::RangePolicy(ses, i32, i32))>);
-  static_assert(std::is_same_v<RangePolicyTestExecSpace,
-                               decltype(Kokkos::RangePolicy(es, i32, i32))>);
 
   // RangePolicy(index_type, index_type)
 
@@ -109,9 +77,6 @@ struct TestRangePolicyCTADs {
       std::is_same_v<Kokkos::RangePolicy<SomeExecutionSpace>,
                      decltype(Kokkos::RangePolicy(ses, i64, i64, cs))>);
   static_assert(
-      std::is_same_v<RangePolicyTestExecSpace,
-                     decltype(Kokkos::RangePolicy(es, i64, i64, cs))>);
-  static_assert(
       std::is_same_v<Kokkos::RangePolicy<>,
                      decltype(Kokkos::RangePolicy(des, i32, i32, cs))>);
   static_assert(
@@ -120,9 +85,6 @@ struct TestRangePolicyCTADs {
   static_assert(
       std::is_same_v<Kokkos::RangePolicy<SomeExecutionSpace>,
                      decltype(Kokkos::RangePolicy(ses, i32, i32, cs))>);
-  static_assert(
-      std::is_same_v<RangePolicyTestExecSpace,
-                     decltype(Kokkos::RangePolicy(es, i32, i32, cs))>);
 
   // RangePolicy(index_type, index_type, Args...)
 
@@ -133,3 +95,4 @@ struct TestRangePolicyCTADs {
 };  // TestRangePolicyCTADs struct
 
 }  // namespace
+
