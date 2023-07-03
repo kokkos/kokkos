@@ -88,6 +88,7 @@ SET(COMPILE_ONLY_SOURCES
   TestViewRank.cpp
   TestViewTypeTraits.cpp
   TestTypeList.cpp
+  TestRangePolicyCTAD.cpp
   view/TestExtentsDatatypeConversion.cpp
 )
 
