@@ -325,9 +325,9 @@ void sort_device_view_with_comparator(
       std::is_same_v<LayoutStride, typename ViewType::array_layout>;
   if constexpr (strided) {
     // strided views not supported in dpl so use the most generic case
-    copy_to_host_run_stdsort_copy_back_fence_exec(exec, view, comparator);
+    copy_to_host_run_stdsort_copy_back(exec, view, comparator);
   } else {
-    sort_onedpl_and_fence_exec(exec, view, comparator);
+    sort_onedpl(exec, view, comparator);
   }
 }
 #endif
