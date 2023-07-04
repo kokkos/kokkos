@@ -46,7 +46,6 @@ IF (KOKKOS_ENABLE_OPENACC)
     Clang -fopenacc -fopenacc-fake-async-wait
           -Wno-openacc-and-cxx -Wno-openmp-mapping -Wno-unknown-cuda-version
           -Wno-pass-failed
-          # -Wno-defaulted-function-deleted
   )
   COMPILER_SPECIFIC_DEFS(
     Clang KOKKOS_WORKAROUND_OPENMPTARGET_CLANG
