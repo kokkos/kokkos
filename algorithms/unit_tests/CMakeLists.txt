@@ -168,16 +168,6 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
   endif()
 endforeach()
 
-# need to remove tests for OpenMPTarget because in these cases
-# the impl needs to use either Kokkos or tailored reducers
-# which results in runtime memory errors.
-if(KOKKOS_ENABLE_OPENMPTARGET)
-  list(REMOVE_ITEM STDALGO_TEAM_SOURCES_D
-    TestStdAlgorithmsTeamIsPartitioned.cpp
-    TestStdAlgorithmsTeamPartitionPoint.cpp
-  )
-endif()
-
 # FIXME_OPENMPTARGET This test causes internal compiler errors as of 09/01/22
 # when compiling for Intel's Xe-HP GPUs.
 # FRIZZI: 04/26/2023: not sure if the compilation error is still applicable
