@@ -153,21 +153,18 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
     endforeach()
 
     # ------------------------------------------
-    # std team D
+    # std team L
     # ------------------------------------------
-    set(STDALGO_TEAM_SOURCES_D)
+    set(STDALGO_TEAM_SOURCES_L)
     foreach(Name
 	StdAlgorithmsCommon
 	StdAlgorithmsTeamIsSorted
 	StdAlgorithmsTeamIsSortedUntil
-	StdAlgorithmsTeamMinElement
-	StdAlgorithmsTeamMaxElement
-	StdAlgorithmsTeamMinMaxElement
 	StdAlgorithmsTeamIsPartitioned
 	StdAlgorithmsTeamPartitionCopy
 	StdAlgorithmsTeamPartitionPoint
 	)
-      list(APPEND STDALGO_TEAM_SOURCES_D Test${Name}.cpp)
+      list(APPEND STDALGO_TEAM_SOURCES_L Test${Name}.cpp)
     endforeach()
 
   endif()
@@ -177,7 +174,7 @@ endforeach()
 # the impl needs to use either Kokkos or tailored reducers
 # which results in runtime memory errors.
 if(KOKKOS_ENABLE_OPENMPTARGET)
-  list(REMOVE_ITEM STDALGO_TEAM_SOURCES_D
+  list(REMOVE_ITEM STDALGO_TEAM_SOURCES_L
     TestStdAlgorithmsTeamIsPartitioned.cpp
     TestStdAlgorithmsTeamPartitionPoint.cpp
   )
@@ -227,7 +224,7 @@ foreach(ID A;B;C;D;E)
     )
 endforeach()
 
-foreach(ID D)
+foreach(ID L)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_StdSet_Team_${ID}
     SOURCES
