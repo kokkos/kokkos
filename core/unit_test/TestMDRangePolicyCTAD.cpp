@@ -31,17 +31,18 @@ struct TestMDRangePolicyCTADs {
   static_assert(!Kokkos::is_execution_space_v<
                 ImplicitlyConvertibleToDefaultExecutionSpace>);
 
-  static inline Kokkos::DefaultExecutionSpace des;
-  static inline ImplicitlyConvertibleToDefaultExecutionSpace notEs;
-  static inline SomeExecutionSpace ses;
-  static inline TEST_EXECSPACE es;
+  [[maybe_unused]] static inline Kokkos::DefaultExecutionSpace des;
+  [[maybe_unused]] static inline ImplicitlyConvertibleToDefaultExecutionSpace
+      notEs;
+  [[maybe_unused]] static inline SomeExecutionSpace ses;
+  [[maybe_unused]] static inline TEST_EXECSPACE es;
 
-  static inline int t[5];
-  static inline int64_t tt[5];
-  static inline Kokkos::Array<int64_t, 3> a;
-  static inline Kokkos::Array<int64_t, 2> aa;
+  [[maybe_unused]] static inline int t[5];
+  [[maybe_unused]] static inline int64_t tt[5];
+  [[maybe_unused]] static inline Kokkos::Array<int64_t, 3> a;
+  [[maybe_unused]] static inline Kokkos::Array<int64_t, 2> aa;
 
-  static inline Kokkos::MDRangePolicy<Kokkos::Rank<2>> p2;
+  [[maybe_unused]] static inline Kokkos::MDRangePolicy<Kokkos::Rank<2>> p2;
 
   // MDRangePolicy copy/move
 
