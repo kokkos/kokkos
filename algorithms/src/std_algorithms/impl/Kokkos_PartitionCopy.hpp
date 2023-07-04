@@ -33,11 +33,10 @@ struct StdPartitionCopyScalar {
   ValueType false_count_;
 };
 
-template <class FirstFrom, class FirstDestTrue, class FirstDestFalse,
-          class PredType>
+template <class IndexType, class FirstFrom, class FirstDestTrue,
+          class FirstDestFalse, class PredType>
 struct StdPartitionCopyFunctor {
-  using index_type = typename FirstFrom::difference_type;
-  using value_type = StdPartitionCopyScalar<index_type>;
+  using value_type = StdPartitionCopyScalar<IndexType>;
 
   FirstFrom m_first_from;
   FirstDestTrue m_first_dest_true;
@@ -53,7 +52,7 @@ struct StdPartitionCopyFunctor {
         m_pred(std::move(pred)) {}
 
   KOKKOS_FUNCTION
-  void operator()(const index_type i, value_type& update,
+  void operator()(const IndexType i, value_type& update,
                   const bool final_pass) const {
     const auto& myval = m_first_from[i];
     if (final_pass) {
@@ -88,12 +87,11 @@ template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorTrueType, class OutputIteratorFalseType,
           class PredicateType>
 ::Kokkos::pair<OutputIteratorTrueType, OutputIteratorFalseType>
-partition_copy_exespace_impl(const std::string& label, const ExecutionSpace& ex,
-                             InputIteratorType from_first,
-                             InputIteratorType from_last,
-                             OutputIteratorTrueType to_first_true,
-                             OutputIteratorFalseType to_first_false,
-                             PredicateType pred) {
+partition_copy_impl(const std::string& label, const ExecutionSpace& ex,
+                    InputIteratorType from_first, InputIteratorType from_last,
+                    OutputIteratorTrueType to_first_true,
+                    OutputIteratorFalseType to_first_false,
+                    PredicateType pred) {
   // impl uses a scan, this is similar how we implemented copy_if
 
   // checks
@@ -107,9 +105,12 @@ partition_copy_exespace_impl(const std::string& label, const ExecutionSpace& ex,
     return {to_first_true, to_first_false};
   }
 
+  // aliases
+  using index_type = typename InputIteratorType::difference_type;
   using func_type =
-      StdPartitionCopyFunctor<InputIteratorType, OutputIteratorTrueType,
-                              OutputIteratorFalseType, PredicateType>;
+      StdPartitionCopyFunctor<index_type, InputIteratorType,
+                              OutputIteratorTrueType, OutputIteratorFalseType,
+                              PredicateType>;
 
   // run
   const auto num_elements =
@@ -123,53 +124,6 @@ partition_copy_exespace_impl(const std::string& label, const ExecutionSpace& ex,
 
   return {to_first_true + counts.true_count_,
           to_first_false + counts.false_count_};
-}
-
-template <class TeamHandleType, class InputIteratorType,
-          class OutputIteratorTrueType, class OutputIteratorFalseType,
-          class PredicateType>
-KOKKOS_FUNCTION ::Kokkos::pair<OutputIteratorTrueType, OutputIteratorFalseType>
-partition_copy_team_impl(const TeamHandleType& teamHandle,
-                         InputIteratorType from_first,
-                         InputIteratorType from_last,
-                         OutputIteratorTrueType to_first_true,
-                         OutputIteratorFalseType to_first_false,
-                         PredicateType pred) {
-  // impl uses a scan, this is similar how we implemented copy_if
-
-  // checks
-  Impl::static_assert_random_access_and_accessible(
-      teamHandle, from_first, to_first_true, to_first_false);
-  Impl::static_assert_iterators_have_matching_difference_type(
-      from_first, to_first_true, to_first_false);
-  Impl::expect_valid_range(from_first, from_last);
-
-  if (from_first == from_last) {
-    return {to_first_true, to_first_false};
-  }
-
-  const std::size_t num_elements =
-      Kokkos::Experimental::distance(from_first, from_last);
-
-  // FIXME: there is no parallel_scan overload that accepts TeamThreadRange and
-  // return_value, so temporarily serial implementation is used
-
-  ::Kokkos::pair<std::size_t, std::size_t> counts{0, 0};
-  if (teamHandle.team_rank() == 0) {
-    for (std::size_t i = 0; i < num_elements; ++i) {
-      const auto& myval = from_first[i];
-      if (pred(myval)) {
-        to_first_true[counts.first++] = myval;
-      } else {
-        to_first_false[counts.second++] = myval;
-      }
-    }
-  }
-
-  // no need for barrier because calling broadcast implicitly blocks
-  teamHandle.team_broadcast(counts, 0);
-
-  return {to_first_true + counts.first, to_first_false + counts.second};
 }
 
 }  // namespace Impl
