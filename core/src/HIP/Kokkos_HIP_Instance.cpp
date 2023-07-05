@@ -204,14 +204,15 @@ Kokkos::HIP::size_type *HIPInternal::scratch_space(const std::size_t size) {
   if (verify_is_initialized("scratch_space") &&
       m_scratchSpaceCount < scratch_count(size)) {
     m_scratchSpaceCount = scratch_count(size);
-    std::size_t alloc_size;
-    if (multiply_overflow(m_scratchFlagsCount, sizeScratchGrain, alloc_size))
-      Kokkos::abort("Arithmetic overflow detected.");
 
     using Record = Kokkos::Impl::SharedAllocationRecord<Kokkos::HIPSpace, void>;
 
     if (m_scratchSpace) Record::decrement(Record::get_record(m_scratchSpace));
 
+    std::size_t alloc_size;
+    if (multiply_overflow(m_scratchSpaceCount, sizeScratchGrain, alloc_size)) {
+      Kokkos::abort("Arithmetic overflow detected.");
+    }
     Record *const r = Record::allocate(
         Kokkos::HIPSpace(), "Kokkos::InternalScratchSpace", alloc_size);
 
@@ -227,14 +228,15 @@ Kokkos::HIP::size_type *HIPInternal::scratch_flags(const std::size_t size) {
   if (verify_is_initialized("scratch_flags") &&
       m_scratchFlagsCount < scratch_count(size)) {
     m_scratchFlagsCount = scratch_count(size);
-    std::size_t alloc_size;
-    if (multiply_overflow(m_scratchFlagsCount, sizeScratchGrain, alloc_size))
-      Kokkos::abort("Arithmetic overflow detected.");
 
     using Record = Kokkos::Impl::SharedAllocationRecord<Kokkos::HIPSpace, void>;
 
     if (m_scratchFlags) Record::decrement(Record::get_record(m_scratchFlags));
 
+    std::size_t alloc_size;
+    if (multiply_overflow(m_scratchFlagsCount, sizeScratchGrain, alloc_size)) {
+      Kokkos::abort("Arithmetic overflow detected.");
+    }
     Record *const r = Record::allocate(
         Kokkos::HIPSpace(), "Kokkos::InternalScratchFlags", alloc_size);
 
