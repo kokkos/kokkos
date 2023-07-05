@@ -31,11 +31,11 @@ namespace Kokkos {
 
 namespace Impl {
 
-// FIXME_SYCL It appears that using shuffles is slower than going throw local
+// FIXME_SYCL It appears that using shuffles is slower than going through local
 // memory.
 template <class ReducerType>
 inline constexpr bool use_shuffle_based_algorithm = false;
-//! std::is_reference_v<typename ReducerType::reference_type>;
+// std::is_reference_v<typename ReducerType::reference_type>;
 
 namespace SYCLReduction {
 template <typename ValueType, typename ReducerType, int dim>
@@ -55,7 +55,7 @@ std::enable_if_t<!use_shuffle_based_algorithm<ReducerType>> workgroup_reduction(
   auto sg            = item.get_sub_group();
   auto* result       = &local_mem[local_id * value_count];
   const int id_in_sg = sg.get_local_id()[0];
-  const unsigned int local_range =
+  const auto local_range =
       std::min<unsigned int>(sg.get_local_range()[0], max_size);
   const auto upper_stride_bound =
       std::min<unsigned int>(local_range - id_in_sg, max_size - local_id);
