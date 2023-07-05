@@ -33,10 +33,11 @@ struct TeamSizeTester {
                                               vectorLengthRequested);
     const auto maxTeamSize =
         myTeam.team_size_max(FunctorFor(), Kokkos::ParallelForTag());
+    EXPECT_GT(maxTeamSize, 0);
 
     const auto recommendedTeamSize =
         myTeam.team_size_recommended(FunctorFor(), Kokkos::ParallelForTag());
-    EXPECT_GT(maxTeamSize, 0);
+    EXPECT_GT(recommendedTeamSize, 0);
   }
 
   void run_test_team_size(Kokkos::AUTO_t teamSizeRequested,
@@ -45,10 +46,11 @@ struct TeamSizeTester {
                                               vectorLengthRequested);
     const auto maxTeamSize =
         myTeam.team_size_max(FunctorFor(), Kokkos::ParallelForTag());
+    EXPECT_GT(maxTeamSize, 0);
 
     const auto recommendedTeamSize =
         myTeam.team_size_recommended(FunctorFor(), Kokkos::ParallelForTag());
-    EXPECT_GT(maxTeamSize, 0);
+    EXPECT_GT(recommendedTeamSize, 0);
   }
 
   void run_test_team_size(int teamSizeRequested,
