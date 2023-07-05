@@ -827,12 +827,21 @@ endif()
 
 # FIXME_OPENMPTARGET, FIXME_OPENACC - Comment non-passing tests with the NVIDIA HPC compiler nvc++
 if ((KOKKOS_ENABLE_OPENMPTARGET OR KOKKOS_ENABLE_OPENACC) AND KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
-  SET(DEFAULT_DEVICE_SOURCES
-    UnitTestMainInit.cpp
-    TestInitializationSettings.cpp
-    TestParseCmdLineArgsAndEnvVars.cpp
-    default/TestDefaultDeviceType.cpp
-  )
+  LIST(REMOVE_ITEM DEFAULT_DEVICE_SOURCES TestSharedSpace.cpp)
+  LIST(REMOVE_ITEM DEFAULT_DEVICE_SOURCES TestSharedHostPinnedSpace.cpp)
+  LIST(REMOVE_ITEM DEFAULT_DEVICE_SOURCES TestCompilerMacros.cpp)
+  LIST(REMOVE_ITEM DEFAULT_DEVICE_SOURCES default/TestDefaultDeviceType_a1.cpp)
+  LIST(REMOVE_ITEM DEFAULT_DEVICE_SOURCES default/TestDefaultDeviceType_b1.cpp)
+  LIST(REMOVE_ITEM DEFAULT_DEVICE_SOURCES default/TestDefaultDeviceType_c1.cpp)
+  LIST(REMOVE_ITEM DEFAULT_DEVICE_SOURCES default/TestDefaultDeviceType_a2.cpp)
+  LIST(REMOVE_ITEM DEFAULT_DEVICE_SOURCES default/TestDefaultDeviceType_b2.cpp)
+  LIST(REMOVE_ITEM DEFAULT_DEVICE_SOURCES default/TestDefaultDeviceType_c2.cpp)
+  LIST(REMOVE_ITEM DEFAULT_DEVICE_SOURCES default/TestDefaultDeviceType_a3.cpp)
+  LIST(REMOVE_ITEM DEFAULT_DEVICE_SOURCES default/TestDefaultDeviceType_b3.cpp)
+  LIST(REMOVE_ITEM DEFAULT_DEVICE_SOURCES default/TestDefaultDeviceType_c3.cpp)
+  LIST(REMOVE_ITEM DEFAULT_DEVICE_SOURCES default/TestDefaultDeviceType_d.cpp)
+  LIST(REMOVE_ITEM DEFAULT_DEVICE_SOURCES default/TestDefaultDeviceTypeResize.cpp)
+  LIST(REMOVE_ITEM DEFAULT_DEVICE_SOURCES default/TestDefaultDeviceTypeViewAPI.cpp)
 endif()
 
 KOKKOS_ADD_EXECUTABLE_AND_TEST(
