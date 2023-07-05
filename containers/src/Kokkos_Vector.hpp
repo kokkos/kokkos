@@ -21,6 +21,8 @@
 #define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_VECTOR
 #endif
 
+#include <Kokkos_Macros.hpp>
+
 #if !defined(KOKKOS_ENABLE_DEPRECATED_CODE_4) || \
     defined(KOKKOS_ENABLE_DEPRECATION_WARNINGS)
 namespace {
