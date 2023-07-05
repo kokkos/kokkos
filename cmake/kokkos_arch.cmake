@@ -763,13 +763,6 @@ IF (KOKKOS_ENABLE_OPENACC)
     COMPILER_SPECIFIC_FLAGS(
       NVHPC -acc
     )
-    # When not compiling for offload to any GPU, we're compiling for kernel
-    # execution on the host.  In that case, memory is shared between the OpenACC
-    # space and the host space.
-    COMPILER_SPECIFIC_DEFS(
-      Clang KOKKOS_OPENACC_WITHOUT_GPU
-      NVHPC KOKKOS_OPENACC_WITHOUT_GPU
-    )
   ENDIF()
 ENDIF()
 
