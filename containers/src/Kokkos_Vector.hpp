@@ -23,8 +23,8 @@
 
 #include <Kokkos_Macros.hpp>
 
-#if !defined(KOKKOS_ENABLE_DEPRECATED_CODE_4) || \
-    defined(KOKKOS_ENABLE_DEPRECATION_WARNINGS)
+#if defined(KOKKOS_ENABLE_DEPRECATED_CODE_4)
+#if defined(KOKKOS_ENABLE_DEPRECATION_WARNINGS)
 namespace {
 [[deprecated("Deprecated <Kokkos_Vector.hpp> header is included")]] int
 emit_warning_kokkos_vector_deprecated() {
@@ -32,6 +32,9 @@ emit_warning_kokkos_vector_deprecated() {
 }
 static auto do_not_include = emit_warning_kokkos_vector_deprecated();
 }  // namespace
+#endif
+#else
+#error "Deprecated <Kokkos_Vector.hpp> header is included"
 #endif
 
 #include <Kokkos_Core_fwd.hpp>
