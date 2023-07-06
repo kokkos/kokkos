@@ -581,10 +581,10 @@ IF(KOKKOS_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_WithoutInitializing.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_ViewAPI_d.cpp
     )
-  # Somehow on ExCL's explorer (AMD GPU), these cause clang-linker-wrapper to
-  # hang for a long time while building the unit tests.  In some cases,
-  # including them caused the build not to complete after an hour, but excluding
-  # them permitted the build to finish in 1.5 mins or less.
+  # When tested on a systme with AMD MI60 GPU and ROCm V5.4.0, these cause
+  # clang-linker-wrapper to hang for a long time while building the unit tests.
+  # In some cases, including them caused the build not to complete after an hour,
+  # but excluding them permitted the build to finish in 1.5 mins or less.
   IF(KOKKOS_AMDGPU_ARCH)
     list(REMOVE_ITEM OpenACC_SOURCES
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_BitManipulationBuiltins.cpp
@@ -914,6 +914,7 @@ endif()
 # FIXME_OPENMPTARGET, FIXME_OPENACC - Comment non-passing tests with the NVIDIA HPC compiler nvc++
 if ((KOKKOS_ENABLE_OPENMPTARGET OR KOKKOS_ENABLE_OPENACC) AND KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
   SET(DEFAULT_DEVICE_SOURCES
+    TestCompilerMacros.cpp
     UnitTestMainInit.cpp
     TestInitializationSettings.cpp
     TestParseCmdLineArgsAndEnvVars.cpp
@@ -924,6 +925,7 @@ endif()
 # FIXME_OPENACC - Comment non-passing tests with the Clang compiler
 if (KOKKOS_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
   SET(DEFAULT_DEVICE_SOURCES
+    TestCompilerMacros.cpp
     UnitTestMainInit.cpp
     TestInitializationSettings.cpp
     TestParseCmdLineArgsAndEnvVars.cpp
