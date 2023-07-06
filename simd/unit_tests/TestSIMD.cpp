@@ -193,7 +193,7 @@ void host_check_math_op_one_loader(UnaryOp unary_op, std::size_t n,
     if (!loaded_arg) continue;
     simd_type expected_result;
     for (std::size_t lane = 0; lane < nlanes; ++lane) {
-      expected_result[lane] = unary_op.on_host_serial(arg[lane]);
+      expected_result[lane] = unary_op.on_host_serial(T(arg[lane]));
     }
     simd_type const computed_result = unary_op.on_host(arg);
     host_check_equality(expected_result, computed_result, nlanes);
