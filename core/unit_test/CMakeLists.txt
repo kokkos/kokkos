@@ -1216,14 +1216,7 @@ if (NOT KOKKOS_HAS_TRILINOS)
       INPUT TestDeviceAndThreads.py
       ${USE_SOURCE_PERMISSIONS_WHEN_SUPPORTED}
     )
-    if(NOT Kokkos_ENABLE_OPENMPTARGET # FIXME_OPENMPTARGET does not select the right device
-       AND
-       # FIXME_OPENACC - does not select specified device beyond 0 until OpenACC
-       # backend is initialized.  For example, adding a Kokkos::parallel_for to
-       # the start of main in core/unit_test/UnitTest_DeviceAndThreads.cpp makes
-       # the test pass.
-       NOT (Kokkos_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
-      )
+    if(NOT Kokkos_ENABLE_OPENMPTARGET) # FIXME_OPENMPTARGET does not select the right device
       add_test(
         NAME Kokkos_CoreUnitTest_DeviceAndThreads
         COMMAND ${Python3_EXECUTABLE} -m unittest -v $<TARGET_FILE_DIR:Kokkos_CoreUnitTest_DeviceAndThreads>/TestDeviceAndThreads.py
