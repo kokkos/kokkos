@@ -927,7 +927,6 @@ if (KOKKOS_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
     UnitTestMainInit.cpp
     TestInitializationSettings.cpp
     TestParseCmdLineArgsAndEnvVars.cpp
-    #default/TestDefaultDeviceType.cpp
     default/TestDefaultDeviceType_d.cpp
     default/TestDefaultDeviceTypeResize.cpp
     default/TestDefaultDeviceTypeViewAPI.cpp
