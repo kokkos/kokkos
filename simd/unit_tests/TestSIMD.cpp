@@ -316,6 +316,14 @@ class divides {
 };
 
 class absolutes {
+  template <typename T>
+  static KOKKOS_FUNCTION auto abs_impl(T const& x) {
+    if constexpr (std::is_signed_v<T>) {
+      return Kokkos::abs(x);
+    }
+    return x;
+  }
+
  public:
   template <typename T>
   auto on_host(T const& a) const {
@@ -323,10 +331,7 @@ class absolutes {
   }
   template <typename T>
   auto on_host_serial(T const& a) const {
-    if constexpr (std::is_signed_v<T>) {
-      return Kokkos::abs<T>(a);
-    }
-    return a;
+    return abs_impl(a);
   }
   template <typename T>
   KOKKOS_INLINE_FUNCTION auto on_device(T const& a) const {
@@ -334,7 +339,7 @@ class absolutes {
   }
   template <typename T>
   KOKKOS_INLINE_FUNCTION auto on_device_serial(T const& a) const {
-    return Kokkos::abs<T>(a);
+    return abs_impl(a);
   }
 };
 
