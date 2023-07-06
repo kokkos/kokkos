@@ -204,7 +204,10 @@ class ParallelScanOpenACCBase {
   }
 #else
   // Alternative implementation to work around OpenACC features not yet
-  // implemented by Clacc
+  // implemented by Clacc: Clacc does not fully support private clauses for
+  // gang-private variables, and this implementation allocates the gang-private
+  // arrays on GPU global memory using array expansion, instead of using the
+  // private clause.
   void OpenACCParallelScanRangePolicy(const IndexType begin,
                                       const IndexType end, IndexType chunk_size,
                                       const int async_arg) const {
