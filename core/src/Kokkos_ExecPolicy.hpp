@@ -636,14 +636,14 @@ class TeamPolicyCommon<ExecSpace, Properties...>
       TeamPolicyInternal<typename PolicyTraits<Properties...>::execution_space,
                          Properties...>;
 
+  using team_policy = TeamPolicy<Properties...>;
+
   template <class... OtherProperties>
   friend class TeamPolicy;
 
  public:
   using traits = PolicyTraits<Properties...>;
   static_assert(std::is_same_v<ExecSpace, typename traits::execution_space>);
-
-  using execution_policy = TeamPolicy<Properties...>;
 
   TeamPolicyCommon() : internal_policy(0, AUTO) {}
 
@@ -716,43 +716,41 @@ class TeamPolicyCommon<ExecSpace, Properties...>
   TeamPolicyCommon(const internal_policy& p) : internal_policy(p) {}
 
  public:
-  execution_policy& set_chunk_size(int chunk) {
+  team_policy& set_chunk_size(int chunk) {
     static_assert(std::is_same<decltype(internal_policy::set_chunk_size(chunk)),
                                internal_policy&>::value,
                   "internal set_chunk_size should return a reference");
-    return static_cast<execution_policy&>(
-        internal_policy::set_chunk_size(chunk));
+    return static_cast<team_policy&>(internal_policy::set_chunk_size(chunk));
   }
 
-  execution_policy& set_scratch_size(const int& level,
-                                     const PerTeamValue& per_team) {
+  team_policy& set_scratch_size(const int& level,
+                                const PerTeamValue& per_team) {
     static_assert(std::is_same<decltype(internal_policy::set_scratch_size(
                                    level, per_team)),
                                internal_policy&>::value,
                   "internal set_chunk_size should return a reference");
 
     team_policy_check_valid_storage_level_argument(level);
-    return static_cast<execution_policy&>(
+    return static_cast<team_policy&>(
         internal_policy::set_scratch_size(level, per_team));
   }
-  execution_policy& set_scratch_size(const int& level,
-                                     const PerThreadValue& per_thread) {
+  team_policy& set_scratch_size(const int& level,
+                                const PerThreadValue& per_thread) {
     team_policy_check_valid_storage_level_argument(level);
-    return static_cast<execution_policy&>(
+    return static_cast<team_policy&>(
         internal_policy::set_scratch_size(level, per_thread));
   }
-  execution_policy& set_scratch_size(const int& level,
-                                     const PerTeamValue& per_team,
-                                     const PerThreadValue& per_thread) {
+  team_policy& set_scratch_size(const int& level, const PerTeamValue& per_team,
+                                const PerThreadValue& per_thread) {
     team_policy_check_valid_storage_level_argument(level);
-    return static_cast<execution_policy&>(
+    return static_cast<team_policy&>(
         internal_policy::set_scratch_size(level, per_team, per_thread));
   }
-  execution_policy& set_scratch_size(const int& level,
-                                     const PerThreadValue& per_thread,
-                                     const PerTeamValue& per_team) {
+  team_policy& set_scratch_size(const int& level,
+                                const PerThreadValue& per_thread,
+                                const PerTeamValue& per_team) {
     team_policy_check_valid_storage_level_argument(level);
-    return static_cast<execution_policy&>(
+    return static_cast<team_policy&>(
         internal_policy::set_scratch_size(level, per_team, per_thread));
   }
 };
@@ -765,6 +763,8 @@ class TeamPolicy
           typename Impl::PolicyTraits<Properties...>::execution_space,
           Properties...> {
  public:
+  using execution_policy = TeamPolicy<Properties...>;
+
   using Impl::TeamPolicyCommon<
       typename Impl::PolicyTraits<Properties...>::execution_space,
       Properties...>::TeamPolicyCommon;
