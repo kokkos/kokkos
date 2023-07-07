@@ -28,8 +28,9 @@ namespace Impl {
 
 namespace {
 
+// FIXME_SYCL Should be a multiple of the maximum subgroup size.
 static constexpr auto sizeScratchGrain =
-    sizeof(Kokkos::Experimental::SYCL::size_type);
+    sizeof(Kokkos::Experimental::SYCL::size_type[32]);
 
 std::size_t scratch_count(const std::size_t size) {
   return (size + sizeScratchGrain - 1) / sizeScratchGrain;
