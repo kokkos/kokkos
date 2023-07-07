@@ -828,8 +828,6 @@ endif()
 # FIXME_OPENMPTARGET, FIXME_OPENACC - Comment non-passing tests with the NVIDIA HPC compiler nvc++
 if ((KOKKOS_ENABLE_OPENMPTARGET OR KOKKOS_ENABLE_OPENACC) AND KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
   LIST(REMOVE_ITEM DEFAULT_DEVICE_SOURCES
-    TestSharedSpace.cpp
-    TestSharedHostPinnedSpace.cpp
     TestCompilerMacros.cpp
     default/TestDefaultDeviceType_a1.cpp
     default/TestDefaultDeviceType_b1.cpp
