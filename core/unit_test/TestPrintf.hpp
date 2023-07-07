@@ -17,11 +17,6 @@
 #include <gtest/gtest.h>
 
 #include <Kokkos_Core.hpp>
-#include <fstream>
-
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 
 template <class ExecutionSpace>
 void test_kokkos_printf() {
