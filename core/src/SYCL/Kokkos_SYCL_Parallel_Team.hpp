@@ -19,7 +19,7 @@
 
 #include <Kokkos_Parallel.hpp>
 
-#include <SYCL/Kokkos_SYCL_Parallel_Reduce.hpp>  // workgroup_reduction
+#include <SYCL/Kokkos_SYCL_WorkgroupReduction.hpp>
 #include <SYCL/Kokkos_SYCL_Team.hpp>
 
 #include <vector>
@@ -678,7 +678,8 @@ class ParallelReduce<CombinedFunctorReducerType,
                 const FunctorType& functor = functor_reducer.get_functor();
                 const ReducerType& reducer = functor_reducer.get_reducer();
 
-                if constexpr (!use_shuffle_based_algorithm<ReducerType>) {
+                if constexpr (!SYCLReduction::use_shuffle_based_algorithm<
+                                  ReducerType>) {
                   reference_type update =
                       reducer.init(&local_mem[local_id * value_count]);
                   for (int league_rank = group_id; league_rank < league_size;
