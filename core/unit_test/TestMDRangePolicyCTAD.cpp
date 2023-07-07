@@ -26,7 +26,7 @@ struct TestMDRangePolicyCTADs {
   static_assert(Kokkos::is_execution_space_v<SomeExecutionSpace>);
 
   struct ImplicitlyConvertibleToDefaultExecutionSpace {
-    operator Kokkos::DefaultExecutionSpace() const;
+    [[maybe_unused]] operator Kokkos::DefaultExecutionSpace() const;
   };
   static_assert(!Kokkos::is_execution_space_v<
                 ImplicitlyConvertibleToDefaultExecutionSpace>);
