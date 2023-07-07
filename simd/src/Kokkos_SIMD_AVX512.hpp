@@ -779,7 +779,12 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 simd<double, simd_abi::avx512_fixed_size<8>> abs(
     simd<double, simd_abi::avx512_fixed_size<8>> const& a) {
   __m512d const rhs = static_cast<__m512d>(a);
+#if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU < 830)
+  return simd<double, simd_abi::avx512_fixed_size<8>>((__m512d)_mm512_and_epi64(
+      (__m512i)rhs, _mm512_set1_epi64(0x7fffffffffffffffLL)));
+#else
   return simd<double, simd_abi::avx512_fixed_size<8>>(_mm512_abs_pd(rhs));
+#endif
 }
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
