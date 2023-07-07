@@ -42,8 +42,14 @@ struct TestRangePolicyCTADs {
 
   //  RangePolicy
 
-  static_assert(
-      std::is_same_v<Kokkos::RangePolicy<>, decltype(Kokkos::RangePolicy())>);
+  // Workaround for gcc 8.4 bug, as
+  //    static_assert(std::is_same_v<Kokkos::RangePolicy<>,
+  //                                 decltype(Kokkos::RangePolicy())>);
+  // gives us:
+  //    error: cannot deduce template arguments for ‘RangePolicy’ from ()
+  //    error: template argument 2 is invalid
+  [[maybe_unused]] static inline Kokkos::RangePolicy rp;
+  static_assert(std::is_same_v<Kokkos::RangePolicy<>, decltype(rp)>);
 
   static_assert(std::is_same_v<Kokkos::RangePolicy<>,
                                decltype(Kokkos::RangePolicy(des, i64, i64))>);
