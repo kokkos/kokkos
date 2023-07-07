@@ -48,7 +48,7 @@ struct TestRangePolicyCTADs {
   // gives us:
   //    error: cannot deduce template arguments for ‘RangePolicy’ from ()
   //    error: template argument 2 is invalid
-  [[maybe_unused]] static inline Kokkos::RangePolicy rp;
+  [[maybe_unused]] static inline Kokkos::RangePolicy rp{};
   static_assert(std::is_same_v<Kokkos::RangePolicy<>, decltype(rp)>);
 
   static_assert(std::is_same_v<Kokkos::RangePolicy<>,
