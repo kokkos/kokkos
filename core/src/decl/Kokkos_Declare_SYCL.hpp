@@ -25,10 +25,11 @@
 #include <SYCL/Kokkos_SYCL_MDRangePolicy.hpp>
 #include <SYCL/Kokkos_SYCL_ParallelFor_Range.hpp>
 #include <SYCL/Kokkos_SYCL_ParallelFor_MDRange.hpp>
+#include <SYCL/Kokkos_SYCL_ParallelFor_Team.hpp>
 #include <SYCL/Kokkos_SYCL_ParallelReduce_Range.hpp>
 #include <SYCL/Kokkos_SYCL_ParallelReduce_MDRange.hpp>
+#include <SYCL/Kokkos_SYCL_ParallelReduce_Team.hpp>
 #include <SYCL/Kokkos_SYCL_ParallelScan_Range.hpp>
-#include <SYCL/Kokkos_SYCL_Parallel_Team.hpp>
 #include <SYCL/Kokkos_SYCL_UniqueToken.hpp>
 #include <SYCL/Kokkos_SYCL_ZeroMemset.hpp>
 #endif
