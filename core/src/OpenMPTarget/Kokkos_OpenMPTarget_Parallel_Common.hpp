@@ -32,7 +32,7 @@ struct ParallelReduceCopy {
   // Copy the result back to device if the view is on the device.
   static void memcpy_result(PointerType dest, PointerType src, size_t size,
                             bool ptr_on_device) {
-    if (ptr_on_device) {
+    if (ptr_on_device && 0 < size) {
       KOKKOS_IMPL_OMPT_SAFE_CALL(omp_target_memcpy(dest, src, size, 0, 0,
                                                    omp_get_default_device(),
                                                    omp_get_initial_device()));
@@ -231,14 +231,16 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
         final_reducer.init(scratch_ptr);
         final_reducer.final(scratch_ptr);
       }
-      if (!ptr_on_device)
-        KOKKOS_IMPL_OMPT_SAFE_CALL(omp_target_memcpy(
-            ptr, scratch_ptr, value_count * sizeof(ValueType), 0, 0,
-            omp_get_initial_device(), omp_get_default_device()));
-      else
-        KOKKOS_IMPL_OMPT_SAFE_CALL(omp_target_memcpy(
-            ptr, scratch_ptr, value_count * sizeof(ValueType), 0, 0,
-            omp_get_default_device(), omp_get_default_device()));
+      if (0 < value_count) {
+        if (!ptr_on_device)
+          KOKKOS_IMPL_OMPT_SAFE_CALL(omp_target_memcpy(
+              ptr, scratch_ptr, value_count * sizeof(ValueType), 0, 0,
+              omp_get_initial_device(), omp_get_default_device()));
+        else
+          KOKKOS_IMPL_OMPT_SAFE_CALL(omp_target_memcpy(
+              ptr, scratch_ptr, value_count * sizeof(ValueType), 0, 0,
+              omp_get_default_device(), omp_get_default_device()));
+      }
 
       return;
     }
@@ -310,14 +312,16 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
     } while (tree_neighbor_offset < max_teams);
 
     // If the result view is on the host, copy back the values via memcpy.
-    if (!ptr_on_device)
-      KOKKOS_IMPL_OMPT_SAFE_CALL(omp_target_memcpy(
-          ptr, scratch_ptr, value_count * sizeof(ValueType), 0, 0,
-          omp_get_initial_device(), omp_get_default_device()));
-    else
-      KOKKOS_IMPL_OMPT_SAFE_CALL(omp_target_memcpy(
-          ptr, scratch_ptr, value_count * sizeof(ValueType), 0, 0,
-          omp_get_default_device(), omp_get_default_device()));
+    if (0 < value_count) {
+      if (!ptr_on_device)
+        KOKKOS_IMPL_OMPT_SAFE_CALL(omp_target_memcpy(
+            ptr, scratch_ptr, value_count * sizeof(ValueType), 0, 0,
+            omp_get_initial_device(), omp_get_default_device()));
+      else
+        KOKKOS_IMPL_OMPT_SAFE_CALL(omp_target_memcpy(
+            ptr, scratch_ptr, value_count * sizeof(ValueType), 0, 0,
+            omp_get_default_device(), omp_get_default_device()));
+    }
   }
 };
 
@@ -596,14 +600,16 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
         final_reducer.final(scratch_ptr);
       }
 
-      if (!ptr_on_device)
-        KOKKOS_IMPL_OMPT_SAFE_CALL(omp_target_memcpy(
-            ptr, scratch_ptr, value_count * sizeof(ValueType), 0, 0,
-            omp_get_initial_device(), omp_get_default_device()));
-      else
-        KOKKOS_IMPL_OMPT_SAFE_CALL(omp_target_memcpy(
-            ptr, scratch_ptr, value_count * sizeof(ValueType), 0, 0,
-            omp_get_default_device(), omp_get_default_device()));
+      if (0 < value_count) {
+        if (!ptr_on_device)
+          KOKKOS_IMPL_OMPT_SAFE_CALL(omp_target_memcpy(
+              ptr, scratch_ptr, value_count * sizeof(ValueType), 0, 0,
+              omp_get_initial_device(), omp_get_default_device()));
+        else
+          KOKKOS_IMPL_OMPT_SAFE_CALL(omp_target_memcpy(
+              ptr, scratch_ptr, value_count * sizeof(ValueType), 0, 0,
+              omp_get_default_device(), omp_get_default_device()));
+      }
 
       return;
     }
@@ -658,14 +664,16 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     } while (tree_neighbor_offset < nteams);
 
     // If the result view is on the host, copy back the values via memcpy.
-    if (!ptr_on_device)
-      KOKKOS_IMPL_OMPT_SAFE_CALL(omp_target_memcpy(
-          ptr, scratch_ptr, value_count * sizeof(ValueType), 0, 0,
-          omp_get_initial_device(), omp_get_default_device()));
-    else
-      KOKKOS_IMPL_OMPT_SAFE_CALL(omp_target_memcpy(
-          ptr, scratch_ptr, value_count * sizeof(ValueType), 0, 0,
-          omp_get_default_device(), omp_get_default_device()));
+    if (0 < value_count) {
+      if (!ptr_on_device)
+        KOKKOS_IMPL_OMPT_SAFE_CALL(omp_target_memcpy(
+            ptr, scratch_ptr, value_count * sizeof(ValueType), 0, 0,
+            omp_get_initial_device(), omp_get_default_device()));
+      else
+        KOKKOS_IMPL_OMPT_SAFE_CALL(omp_target_memcpy(
+            ptr, scratch_ptr, value_count * sizeof(ValueType), 0, 0,
+            omp_get_default_device(), omp_get_default_device()));
+    }
   }
 };
 
