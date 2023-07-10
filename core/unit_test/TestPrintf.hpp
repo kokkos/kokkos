@@ -14,17 +14,20 @@
 //
 //@HEADER
 
-#ifndef KOKKOS_NESTED_SORT_HPP_
-#define KOKKOS_NESTED_SORT_HPP_
-#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
-#define KOKKOS_IMPL_PUBLIC_INCLUDE
-#define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_NESTED_SORT
-#endif
+#include <gtest/gtest.h>
 
-#include "sorting/Kokkos_NestedSortPublicAPI.hpp"
+#include <Kokkos_Core.hpp>
 
-#ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_NESTED_SORT
-#undef KOKKOS_IMPL_PUBLIC_INCLUDE
-#undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_NESTED_SORT
-#endif
-#endif
+template <class ExecutionSpace>
+void test_kokkos_printf() {
+  ::testing::internal::CaptureStdout();
+  Kokkos::parallel_for(
+      Kokkos::RangePolicy<ExecutionSpace>(0, 1),
+      KOKKOS_LAMBDA(int) { Kokkos::printf("Print an integer: %d", 2); });
+  Kokkos::fence();
+  auto const captured = ::testing::internal::GetCapturedStdout();
+  std::string expected_string("Print an integer: 2");
+  ASSERT_EQ(captured, expected_string);
+}
+
+TEST(TEST_CATEGORY, kokkos_printf) { test_kokkos_printf<TEST_EXECSPACE>(); }
