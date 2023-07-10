@@ -21,6 +21,20 @@
 #include <OpenACC/Kokkos_OpenACC_FunctorAdapter.hpp>
 #include <Kokkos_Parallel.hpp>
 
+// Clacc uses an alternative implementation to work around not-yet-implemented
+// OpenACC features: Clacc does not fully support private clauses for
+// gang-private variables, and the alternative implementation allocates
+// the gang-private arrays on GPU global memory using array expansion,
+// instead of using the private clause.
+#ifdef KOKKOS_COMPILER_CLANG
+#define ELEMENT_VALUES_SIZE (n_chunks * 2 * chunk_size)
+#define ACCESS_ELEMENTS(THREADID) \
+  element_values[team_id * 2 * chunk_size + THREADID]
+#else
+#define ELEMENT_VALUES_SIZE (2 * chunk_size)
+#define ACCESS_ELEMENTS(THREADID) element_values[THREADID]
+#endif
+
 namespace Kokkos::Impl {
 
 template <class Functor, class GivenValueType, class... Traits>
@@ -53,7 +67,6 @@ class ParallelScanOpenACCBase {
   // prefix sum algorithm proposed by Hillis and Steele (doi:10.1145/7902.7903),
   // which offers a shorter span and more parallelism but may not be
   // work-efficient.
-#ifndef KOKKOS_COMPILER_CLANG
   void OpenACCParallelScanRangePolicy(const IndexType begin,
                                       const IndexType end, IndexType chunk_size,
                                       const int async_arg) const {
@@ -77,174 +90,22 @@ class ParallelScanOpenACCBase {
     Kokkos::View<ValueType, Kokkos::Experimental::OpenACCSpace> m_result_total(
         "Kokkos::OpenACCParallelScan::m_result_total");
     std::unique_ptr<ValueType[]> element_values_owner(
-        new ValueType[2 * chunk_size]);
+        new ValueType[ELEMENT_VALUES_SIZE]);
     ValueType* element_values = element_values_owner.get();
     typename Analysis::Reducer final_reducer(m_functor);
 
 #pragma acc enter data copyin(functor, final_reducer) \
     copyin(chunk_values, offset_values) async(async_arg)
 
-#pragma acc parallel loop gang vector_length(chunk_size) private( \
-    element_values [0:2 * chunk_size])                            \
-    present(functor, chunk_values, final_reducer) async(async_arg)
-    for (IndexType team_id = 0; team_id < n_chunks; ++team_id) {
-      IndexType current_step = 0;
-      IndexType next_step    = 1;
-      IndexType temp;
-#pragma acc loop vector
-      for (IndexType thread_id = 0; thread_id < chunk_size; ++thread_id) {
-        const IndexType local_offset = team_id * chunk_size;
-        const IndexType idx          = local_offset + thread_id;
-        ValueType update;
-        final_reducer.init(&update);
-        if ((idx > 0) && (idx < N)) functor(idx - 1, update, false);
-        element_values[thread_id] = update;
-      }
-      for (IndexType step_size = 1; step_size < chunk_size; step_size *= 2) {
-#pragma acc loop vector
-        for (IndexType thread_id = 0; thread_id < chunk_size; ++thread_id) {
-          if (thread_id < step_size) {
-            element_values[next_step * chunk_size + thread_id] =
-                element_values[current_step * chunk_size + thread_id];
-          } else {
-            ValueType localValue =
-                element_values[current_step * chunk_size + thread_id];
-            final_reducer.join(&localValue,
-                               &element_values[current_step * chunk_size +
-                                               thread_id - step_size]);
-            element_values[next_step * chunk_size + thread_id] = localValue;
-          }
-        }
-        temp         = current_step;
-        current_step = next_step;
-        next_step    = temp;
-      }
-      chunk_values(team_id) =
-          element_values[current_step * chunk_size + chunk_size - 1];
-    }
-
-    ValueType tempValue;
-#pragma acc serial loop present(chunk_values, offset_values, final_reducer) \
-    async(async_arg)
-    for (IndexType team_id = 0; team_id < n_chunks; ++team_id) {
-      if (team_id == 0) {
-        final_reducer.init(&offset_values(0));
-        final_reducer.init(&tempValue);
-      } else {
-        final_reducer.join(&tempValue, &chunk_values(team_id - 1));
-        offset_values(team_id) = tempValue;
-      }
-    }
-
-#pragma acc parallel loop gang vector_length(chunk_size) private(         \
-    element_values [0:2 * chunk_size])                                    \
-    present(functor, offset_values, final_reducer) copyin(m_result_total) \
-        async(async_arg)
-    for (IndexType team_id = 0; team_id < n_chunks; ++team_id) {
-      IndexType current_step = 0;
-      IndexType next_step    = 1;
-      IndexType temp;
-#pragma acc loop vector
-      for (IndexType thread_id = 0; thread_id < chunk_size; ++thread_id) {
-        const IndexType local_offset = team_id * chunk_size;
-        const IndexType idx          = local_offset + thread_id;
-        ValueType update;
-        final_reducer.init(&update);
-        if (thread_id == 0) {
-          final_reducer.join(&update, &offset_values(team_id));
-        }
-        if ((idx > 0) && (idx < N)) functor(idx - 1, update, false);
-        element_values[thread_id] = update;
-      }
-      for (IndexType step_size = 1; step_size < chunk_size; step_size *= 2) {
-#pragma acc loop vector
-        for (IndexType thread_id = 0; thread_id < chunk_size; ++thread_id) {
-          if (thread_id < step_size) {
-            element_values[next_step * chunk_size + thread_id] =
-                element_values[current_step * chunk_size + thread_id];
-          } else {
-            ValueType localValue =
-                element_values[current_step * chunk_size + thread_id];
-            final_reducer.join(&localValue,
-                               &element_values[current_step * chunk_size +
-                                               thread_id - step_size]);
-            element_values[next_step * chunk_size + thread_id] = localValue;
-          }
-        }
-        temp         = current_step;
-        current_step = next_step;
-        next_step    = temp;
-      }
-#pragma acc loop vector
-      for (IndexType thread_id = 0; thread_id < chunk_size; ++thread_id) {
-        const IndexType local_offset = team_id * chunk_size;
-        const IndexType idx          = local_offset + thread_id;
-        ValueType update =
-            element_values[current_step * chunk_size + thread_id];
-        if (idx < N) functor(idx, update, true);
-        if (idx == N - 1) {
-          if (m_result_ptr_device_accessible) {
-            *m_result_ptr = update;
-          } else {
-            m_result_total() = update;
-          }
-        }
-      }
-    }
-    if (!m_result_ptr_device_accessible && m_result_ptr != nullptr) {
-      DeepCopy<HostSpace, Kokkos::Experimental::OpenACCSpace,
-               Kokkos::Experimental::OpenACC>(m_policy.space(), m_result_ptr,
-                                              m_result_total.data(),
-                                              sizeof(ValueType));
-    }
-
-#pragma acc exit data delete (functor, chunk_values, offset_values, \
-                              final_reducer)async(async_arg)
-    acc_wait(async_arg);
-  }
-#else
-  // Alternative implementation to work around OpenACC features not yet
-  // implemented by Clacc: Clacc does not fully support private clauses for
-  // gang-private variables, and this implementation allocates the gang-private
-  // arrays on GPU global memory using array expansion, instead of using the
-  // private clause.
-  void OpenACCParallelScanRangePolicy(const IndexType begin,
-                                      const IndexType end, IndexType chunk_size,
-                                      const int async_arg) const {
-    if (chunk_size > 1) {
-      if (!Impl::is_integral_power_of_two(chunk_size))
-        Kokkos::abort(
-            "RangePolicy blocking granularity must be power of two to be used "
-            "with OpenACC parallel_scan()");
-    } else {
-      chunk_size = default_scan_chunk_size;
-    }
-    const Kokkos::Experimental::Impl::FunctorAdapter<
-        Functor, Policy, Kokkos::Experimental::Impl::RoutineClause::seq>
-        functor(m_functor);
-    const IndexType N        = end - begin;
-    const IndexType n_chunks = (N + chunk_size - 1) / chunk_size;
-    Kokkos::View<ValueType*, Kokkos::Experimental::OpenACCSpace> chunk_values(
-        "Kokkos::OpenACCParallelScan::chunk_values", n_chunks);
-    Kokkos::View<ValueType*, Kokkos::Experimental::OpenACCSpace> offset_values(
-        "Kokkos::OpenACCParallelScan::offset_values", n_chunks);
-    Kokkos::View<ValueType, Kokkos::Experimental::OpenACCSpace> m_result_total(
-        "Kokkos::OpenACCParallelScan::m_result_total");
-    std::unique_ptr<ValueType[]> element_values_owner(
-        new ValueType[n_chunks * 2 * chunk_size]);
-    ValueType* element_values = element_values_owner.get();
-    typename Analysis::Reducer final_reducer(m_functor);
-
-    auto elementValue = [=](IndexType teamID, IndexType i) -> ValueType& {
-      return element_values[teamID * 2 * chunk_size + i];
-    };
-
-#pragma acc enter data copyin(functor, final_reducer) \
-    copyin(chunk_values, offset_values) async(async_arg)
-
+#ifdef KOKKOS_COMPILER_CLANG
 #pragma acc parallel loop gang vector_length(chunk_size) \
     create(element_values [0:n_chunks * 2 * chunk_size]) \
         present(functor, chunk_values, final_reducer) async(async_arg)
+#else
+#pragma acc parallel loop gang vector_length(chunk_size) private( \
+    element_values [0:2 * chunk_size])                            \
+    present(functor, chunk_values, final_reducer) async(async_arg)
+#endif
     for (IndexType team_id = 0; team_id < n_chunks; ++team_id) {
       IndexType current_step = 0;
       IndexType next_step    = 1;
@@ -256,22 +117,21 @@ class ParallelScanOpenACCBase {
         ValueType update;
         final_reducer.init(&update);
         if ((idx > 0) && (idx < N)) functor(idx - 1, update, false);
-        elementValue(team_id, thread_id) = update;
+        ACCESS_ELEMENTS(thread_id) = update;
       }
       for (IndexType step_size = 1; step_size < chunk_size; step_size *= 2) {
 #pragma acc loop vector
         for (IndexType thread_id = 0; thread_id < chunk_size; ++thread_id) {
           if (thread_id < step_size) {
-            elementValue(team_id, next_step * chunk_size + thread_id) =
-                elementValue(team_id, current_step * chunk_size + thread_id);
+            ACCESS_ELEMENTS(next_step * chunk_size + thread_id) =
+                ACCESS_ELEMENTS(current_step * chunk_size + thread_id);
           } else {
             ValueType localValue =
-                elementValue(team_id, current_step * chunk_size + thread_id);
-            final_reducer.join(
-                &localValue, &elementValue(team_id, current_step * chunk_size +
-                                                        thread_id - step_size));
-            elementValue(team_id, next_step * chunk_size + thread_id) =
-                localValue;
+                ACCESS_ELEMENTS(current_step * chunk_size + thread_id);
+            final_reducer.join(&localValue,
+                               &ACCESS_ELEMENTS(current_step * chunk_size +
+                                                thread_id - step_size));
+            ACCESS_ELEMENTS(next_step * chunk_size + thread_id) = localValue;
           }
         }
         temp         = current_step;
@@ -279,11 +139,11 @@ class ParallelScanOpenACCBase {
         next_step    = temp;
       }
       chunk_values(team_id) =
-          elementValue(team_id, current_step * chunk_size + chunk_size - 1);
+          ACCESS_ELEMENTS(current_step * chunk_size + chunk_size - 1);
     }
 
     ValueType tempValue;
-#pragma acc parallel loop num_gangs(1) num_workers(1) vector_length(1) \
+#pragma acc parallel loop seq num_gangs(1) num_workers(1) vector_length(1) \
     present(chunk_values, offset_values, final_reducer) async(async_arg)
     for (IndexType team_id = 0; team_id < n_chunks; ++team_id) {
       if (team_id == 0) {
@@ -295,10 +155,17 @@ class ParallelScanOpenACCBase {
       }
     }
 
+#ifdef KOKKOS_COMPILER_CLANG
 #pragma acc parallel loop gang vector_length(chunk_size)                      \
     create(element_values [0:n_chunks * 2 * chunk_size])                      \
         present(functor, offset_values, final_reducer) copyin(m_result_total) \
             async(async_arg)
+#else
+#pragma acc parallel loop gang vector_length(chunk_size) private(         \
+    element_values [0:2 * chunk_size])                                    \
+    present(functor, offset_values, final_reducer) copyin(m_result_total) \
+        async(async_arg)
+#endif
     for (IndexType team_id = 0; team_id < n_chunks; ++team_id) {
       IndexType current_step = 0;
       IndexType next_step    = 1;
@@ -313,22 +180,21 @@ class ParallelScanOpenACCBase {
           final_reducer.join(&update, &offset_values(team_id));
         }
         if ((idx > 0) && (idx < N)) functor(idx - 1, update, false);
-        elementValue(team_id, thread_id) = update;
+        ACCESS_ELEMENTS(thread_id) = update;
       }
       for (IndexType step_size = 1; step_size < chunk_size; step_size *= 2) {
 #pragma acc loop vector
         for (IndexType thread_id = 0; thread_id < chunk_size; ++thread_id) {
           if (thread_id < step_size) {
-            elementValue(team_id, next_step * chunk_size + thread_id) =
-                elementValue(team_id, current_step * chunk_size + thread_id);
+            ACCESS_ELEMENTS(next_step * chunk_size + thread_id) =
+                ACCESS_ELEMENTS(current_step * chunk_size + thread_id);
           } else {
             ValueType localValue =
-                elementValue(team_id, current_step * chunk_size + thread_id);
-            final_reducer.join(
-                &localValue, &elementValue(team_id, current_step * chunk_size +
-                                                        thread_id - step_size));
-            elementValue(team_id, next_step * chunk_size + thread_id) =
-                localValue;
+                ACCESS_ELEMENTS(current_step * chunk_size + thread_id);
+            final_reducer.join(&localValue,
+                               &ACCESS_ELEMENTS(current_step * chunk_size +
+                                                thread_id - step_size));
+            ACCESS_ELEMENTS(next_step * chunk_size + thread_id) = localValue;
           }
         }
         temp         = current_step;
@@ -340,7 +206,7 @@ class ParallelScanOpenACCBase {
         const IndexType local_offset = team_id * chunk_size;
         const IndexType idx          = local_offset + thread_id;
         ValueType update =
-            elementValue(team_id, current_step * chunk_size + thread_id);
+            ACCESS_ELEMENTS(current_step * chunk_size + thread_id);
         if (idx < N) functor(idx, update, true);
         if (idx == N - 1) {
           if (m_result_ptr_device_accessible) {
@@ -362,7 +228,6 @@ class ParallelScanOpenACCBase {
                               final_reducer)async(async_arg)
     acc_wait(async_arg);
   }
-#endif
 
   void execute() const {
     const IndexType begin = m_policy.begin();
@@ -446,5 +311,8 @@ class Kokkos::Impl::ParallelScanWithTotal<
                                  typename ViewType::memory_space>::accessible) {
   }
 };
+
+#undef ELEMENT_VALUES_SIZE
+#undef ACCESS_ELEMENTS
 
 #endif
