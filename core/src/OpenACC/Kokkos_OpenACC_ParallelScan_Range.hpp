@@ -19,6 +19,7 @@
 
 #include <OpenACC/Kokkos_OpenACC.hpp>
 #include <OpenACC/Kokkos_OpenACC_FunctorAdapter.hpp>
+#include <OpenACC/Kokkos_OpenACC_Macros.hpp>
 #include <Kokkos_Parallel.hpp>
 
 // Clacc uses an alternative implementation to work around not-yet-implemented
@@ -26,14 +27,18 @@
 // gang-private variables, and the alternative implementation allocates
 // the gang-private arrays on GPU global memory using array expansion,
 // instead of using the private clause.
+/* clang-format off */
 #ifdef KOKKOS_COMPILER_CLANG
 #define ELEMENT_VALUES_SIZE (n_chunks * 2 * chunk_size)
 #define ACCESS_ELEMENTS(THREADID) \
   element_values[team_id * 2 * chunk_size + THREADID]
+#define ELEMENT_VALUES_CLAUSE create(element_values [0:n_chunks * 2 * chunk_size])
 #else
 #define ELEMENT_VALUES_SIZE (2 * chunk_size)
 #define ACCESS_ELEMENTS(THREADID) element_values[THREADID]
+#define ELEMENT_VALUES_CLAUSE private(element_values [0:2 * chunk_size])
 #endif
+/* clang-format on */
 
 namespace Kokkos::Impl {
 
@@ -97,15 +102,9 @@ class ParallelScanOpenACCBase {
 #pragma acc enter data copyin(functor, final_reducer) \
     copyin(chunk_values, offset_values) async(async_arg)
 
-#ifdef KOKKOS_COMPILER_CLANG
-#pragma acc parallel loop gang vector_length(chunk_size) \
-    create(element_values [0:n_chunks * 2 * chunk_size]) \
-        present(functor, chunk_values, final_reducer) async(async_arg)
-#else
-#pragma acc parallel loop gang vector_length(chunk_size) private( \
-    element_values [0:2 * chunk_size])                            \
-    present(functor, chunk_values, final_reducer) async(async_arg)
-#endif
+    /* clang-format off */
+KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang vector_length(chunk_size) ELEMENT_VALUES_CLAUSE present(functor, chunk_values, final_reducer) async(async_arg))
+    /* clang-format on */
     for (IndexType team_id = 0; team_id < n_chunks; ++team_id) {
       IndexType current_step = 0;
       IndexType next_step    = 1;
@@ -155,17 +154,9 @@ class ParallelScanOpenACCBase {
       }
     }
 
-#ifdef KOKKOS_COMPILER_CLANG
-#pragma acc parallel loop gang vector_length(chunk_size)                      \
-    create(element_values [0:n_chunks * 2 * chunk_size])                      \
-        present(functor, offset_values, final_reducer) copyin(m_result_total) \
-            async(async_arg)
-#else
-#pragma acc parallel loop gang vector_length(chunk_size) private(         \
-    element_values [0:2 * chunk_size])                                    \
-    present(functor, offset_values, final_reducer) copyin(m_result_total) \
-        async(async_arg)
-#endif
+    /* clang-format off */
+KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang vector_length(chunk_size) ELEMENT_VALUES_CLAUSE present(functor, offset_values, final_reducer) copyin(m_result_total) async(async_arg))
+    /* clang-format on */
     for (IndexType team_id = 0; team_id < n_chunks; ++team_id) {
       IndexType current_step = 0;
       IndexType next_step    = 1;
