@@ -15,6 +15,7 @@
 //@HEADER
 
 #include <Kokkos_Core.hpp>
+#include "Kokkos_Core_fwd.hpp"
 
 namespace {
 
@@ -26,7 +27,9 @@ struct TestTeamPolicyCTADS {
   static_assert(Kokkos::is_execution_space_v<SomeExecutionSpace>);
 
   struct ImplicitlyConvertibleToDefaultExecutionSpace {
-    [[maybe_unused]] operator Kokkos::DefaultExecutionSpace() const;
+    [[maybe_unused]] operator Kokkos::DefaultExecutionSpace() const {
+      return Kokkos::DefaultExecutionSpace();
+    }
   };
   static_assert(!Kokkos::is_execution_space_v<
                 ImplicitlyConvertibleToDefaultExecutionSpace>);
@@ -37,6 +40,12 @@ struct TestTeamPolicyCTADS {
   [[maybe_unused]] static inline SomeExecutionSpace ses;
 
   [[maybe_unused]] static inline int i;
+
+  // Workaround for nvc++ (CUDA-11.7-NVHPC) ignoring [[maybe_unused]] on
+  // ImplicitlyConvertibleToDefaultExecutionSpace::operator
+  // Kokkos::DefaultExecutionSpace() const
+  [[maybe_unused]] static inline Kokkos::DefaultExecutionSpace notEsToDes =
+      notEs;
 
   // Default construction deduces to TeamPolicy<>
   static_assert(
