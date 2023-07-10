@@ -26,7 +26,9 @@ struct TestMDRangePolicyCTADs {
   static_assert(Kokkos::is_execution_space_v<SomeExecutionSpace>);
 
   struct ImplicitlyConvertibleToDefaultExecutionSpace {
-    [[maybe_unused]] operator Kokkos::DefaultExecutionSpace() const;
+    [[maybe_unused]] operator Kokkos::DefaultExecutionSpace() const {
+      return Kokkos::DefaultExecutionSpace();
+    }
   };
   static_assert(!Kokkos::is_execution_space_v<
                 ImplicitlyConvertibleToDefaultExecutionSpace>);
@@ -40,6 +42,12 @@ struct TestMDRangePolicyCTADs {
   [[maybe_unused]] static inline int64_t tt[5];
   [[maybe_unused]] static inline Kokkos::Array<int64_t, 3> a;
   [[maybe_unused]] static inline Kokkos::Array<int64_t, 2> aa;
+
+  // Workaround for nvc++ (CUDA-11.7-NVHPC) ignoring [[maybe_unused]] on
+  // ImplicitlyConvertibleToDefaultExecutionSpace::operator
+  // Kokkos::DefaultExecutionSpace() const
+  [[maybe_unused]] static inline Kokkos::DefaultExecutionSpace notEsToDes =
+      notEs;
 
   // MDRangePolicy with C array parameters
 
