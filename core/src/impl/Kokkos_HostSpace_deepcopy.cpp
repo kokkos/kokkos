@@ -55,8 +55,9 @@ void hostspace_parallel_deepcopy_async(const DefaultHostExecutionSpace& exec,
 #if !(defined(KOKKOS_ENABLE_HPX) && \
       defined(KOKKOS_ENABLE_IMPL_HPX_ASYNC_DISPATCH))
   constexpr int host_deep_copy_serial_limit = 10 * 8192;
-  if ((n < host_deep_copy_serial_limit) ||
-      (DefaultHostExecutionSpace().concurrency() == 1)) {
+  if (((n < host_deep_copy_serial_limit) ||
+       (DefaultHostExecutionSpace().concurrency() == 1)) &&
+      0 < n) {
     std::memcpy(dst, src, n);
     return;
   }

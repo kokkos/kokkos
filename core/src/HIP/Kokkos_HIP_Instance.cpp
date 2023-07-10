@@ -271,7 +271,7 @@ Kokkos::HIP::size_type *HIPInternal::stage_functor_for_execution(
   // problem is limited to HSA_XNACK=1 even if all the tests pass when
   // HSA_XNACK=0. That's why we always copy the driver.
   KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamSynchronize(m_stream));
-  std::memcpy(m_scratchFunctorHost, driver, size);
+  if (0 < size) std::memcpy(m_scratchFunctorHost, driver, size);
   KOKKOS_IMPL_HIP_SAFE_CALL(hipMemcpyAsync(m_scratchFunctor,
                                            m_scratchFunctorHost, size,
                                            hipMemcpyDefault, m_stream));
