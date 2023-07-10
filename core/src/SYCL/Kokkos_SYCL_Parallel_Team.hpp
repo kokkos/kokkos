@@ -675,7 +675,7 @@ class ParallelReduce<CombinedFunctorReducerType,
                 const FunctorType& functor = functor_reducer.get_functor();
                 const ReducerType& reducer = functor_reducer.get_reducer();
 
-                if constexpr (ReducerType::static_value_size() == 0) {
+                if constexpr (!use_shuffle_based_algorithm<ReducerType>) {
                   reference_type update =
                       reducer.init(&local_mem[local_id * value_count]);
                   const member_type team_member(

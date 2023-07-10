@@ -307,7 +307,7 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
               const auto upper_bound = std::min<index_type>(
                   global_id + values_per_thread * wgroup_size, size);
 
-              if constexpr (ReducerType::static_value_size() == 0) {
+              if constexpr (!use_shuffle_based_algorithm<ReducerType>) {
                 reference_type update =
                     reducer.init(&local_mem[local_id * value_count]);
                 for (index_type id = global_id; id < upper_bound;
@@ -669,7 +669,7 @@ class ParallelReduce<CombinedFunctorReducerType,
           const index_type n_global_y = 1;
           const index_type n_global_z = 1;
 
-          if constexpr (ReducerType::static_value_size() == 0) {
+          if constexpr (!use_shuffle_based_algorithm<ReducerType>) {
             reference_type update =
                 reducer.init(&local_mem[local_id * value_count]);
 
