@@ -19,7 +19,10 @@
 
 namespace {
 
-struct TestTeamPolicyCTADS {
+struct TestTeamPolicyCTAD {
+  template <typename... Ts>
+  static void maybe_unused(Ts&&...) {}
+
   struct SomeExecutionSpace {
     using execution_space = SomeExecutionSpace;
     using size_type       = size_t;
@@ -46,6 +49,9 @@ struct TestTeamPolicyCTADS {
   // Kokkos::DefaultExecutionSpace() const
   [[maybe_unused]] static inline Kokkos::DefaultExecutionSpace notEsToDes =
       notEs;
+
+  // Workaround for HIP-ROCm-5.2 warning about was declared but never referenced
+  TestTeamPolicyCTAD() { maybe_unused(des, notEs, ses, i, notEsToDes); }
 
   // Default construction deduces to TeamPolicy<>
   static_assert(
