@@ -18,7 +18,10 @@
 
 namespace {
 
-struct TestMDRangePolicyCTADs {
+struct TestMDRangePolicyCTAD {
+  template <typename... Ts>
+  static void maybe_unused(Ts&&...) {}
+
   struct SomeExecutionSpace {
     using execution_space = SomeExecutionSpace;
     using size_type       = size_t;
@@ -48,6 +51,11 @@ struct TestMDRangePolicyCTADs {
   // Kokkos::DefaultExecutionSpace() const
   [[maybe_unused]] static inline Kokkos::DefaultExecutionSpace notEsToDes =
       notEs;
+
+  // Workaround for HIP-ROCm-5.2 "declared but never referenced"
+  TestMDRangePolicyCTAD() {
+    maybe_unused(des, notEs, ses, t, tt, a, aa, notEsToDes);
+  }
 
   // MDRangePolicy with C array parameters
 
