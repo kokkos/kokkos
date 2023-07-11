@@ -96,7 +96,7 @@ pipeline {
                         dockerfile {
                             filename 'Dockerfile.sycl'
                             dir 'scripts/docker'
-                            label 'nvidia-docker && volta'
+                            label 'nvidia-docker && ampere'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache'
                         }
                     }
@@ -111,7 +111,7 @@ pipeline {
                                 -DCMAKE_CXX_FLAGS="-fsycl-device-code-split=per_kernel -Wno-deprecated-declarations -Werror -Wno-gnu-zero-variadic-macro-arguments -Wno-unknown-cuda-version -Wno-sycl-target" \
                                 -DKOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED=0 \
                                 -DKokkos_ARCH_NATIVE=ON \
-                                -DKokkos_ARCH_VOLTA70=ON \
+                                -DKokkos_ARCH_AMPERE80=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
                                 -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
