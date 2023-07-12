@@ -756,9 +756,6 @@ IF (KOKKOS_ENABLE_OPENACC)
       Clang -Xopenmp-target=amdgcn-amd-amdhsa -march=${KOKKOS_AMDGPU_ARCH_FLAG}
             -fopenmp-targets=amdgcn-amd-amdhsa
     )
-    COMPILER_SPECIFIC_LIBS(
-      Clang -lm
-    )
   ELSE()
     COMPILER_SPECIFIC_FLAGS(
       NVHPC -acc
