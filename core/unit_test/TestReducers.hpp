@@ -399,7 +399,7 @@ struct TestReducers {
         Kokkos::parallel_reduce(team_pol, tf, sum_view);
         Kokkos::deep_copy(sum_scalar, sum_view);
         std::cout << "Sum: " << sum_scalar << std::endl;
-        ASSERT_EQ(sum_scalar, 1024);
+        ASSERT_EQ(sum_scalar, Scalar{1024});
       }
 
 #if 0
