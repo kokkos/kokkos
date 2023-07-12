@@ -23,17 +23,17 @@
 #include <iosfwd>  // istream & ostream for extraction and insertion ops
 #include <string>
 
-namespace Kokkos::Experimental {
+namespace Kokkos::Experimental::Impl {
 /// @brief templated struct for determining if half_t is an alias to float.
 /// @tparam T The type to specialize on.
 template <class T>
-struct kokkos_type_is_half_t : std::false_type {};
+struct is_float16 : std::false_type {};
 
 /// @brief templated struct for determining if bhalf_t is an alias to float.
 /// @tparam T The type to specialize on.
 template <class T>
-struct kokkos_type_is_bhalf_t : std::false_type {};
-}  // namespace Kokkos::Experimental
+struct is_bfloat16 : std::false_type {};
+}  // namespace Kokkos::Experimental::Impl
 
 #ifdef KOKKOS_IMPL_HALF_TYPE_DEFINED
 
@@ -56,8 +56,10 @@ class floating_point_wrapper;
 // Declare half_t (binary16)
 using half_t = Kokkos::Experimental::Impl::floating_point_wrapper<
     Kokkos::Impl::half_impl_t ::type>;
+namespace Impl {
 template <>
-struct kokkos_type_is_half_t<half_t> : std::true_type {};
+struct is_float16<half_t> : std::true_type {};
+}  // namespace Impl
 KOKKOS_INLINE_FUNCTION
 half_t cast_to_half(float val);
 KOKKOS_INLINE_FUNCTION
@@ -124,8 +126,10 @@ KOKKOS_INLINE_FUNCTION
 #ifdef KOKKOS_IMPL_BHALF_TYPE_DEFINED
 using bhalf_t = Kokkos::Experimental::Impl::floating_point_wrapper<
     Kokkos::Impl ::bhalf_impl_t ::type>;
+namespace Impl {
 template <>
-struct kokkos_type_is_bhalf_t<bhalf_t> : std::true_type {};
+struct is_bfloat16<bhalf_t> : std::true_type {};
+}  // namespace Impl
 KOKKOS_INLINE_FUNCTION
 bhalf_t cast_to_bhalf(float val);
 KOKKOS_INLINE_FUNCTION

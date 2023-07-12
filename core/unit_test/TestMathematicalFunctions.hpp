@@ -420,10 +420,10 @@ DEFINE_UNARY_FUNCTION_EVAL(logb, 2);
     }                                                                          \
     template <typename T, typename U>                                          \
     static auto eval_std(T x, U y) {                                           \
-      constexpr bool const x_is_half = (KE::kokkos_type_is_half_t<T>::value || \
-                                        KE::kokkos_type_is_bhalf_t<T>::value); \
-      constexpr bool const y_is_half = (KE::kokkos_type_is_half_t<U>::value || \
-                                        KE::kokkos_type_is_bhalf_t<U>::value); \
+      constexpr bool const x_is_half =                                         \
+          (KE::Impl::is_float16<T>::value || KE::Impl::is_bfloat16<T>::value); \
+      constexpr bool const y_is_half =                                         \
+          (KE::Impl::is_float16<U>::value || KE::Impl::is_bfloat16<U>::value); \
       if constexpr (x_is_half && y_is_half)                                    \
         return std::FUNC(static_cast<float>(x), static_cast<float>(y));        \
       else if constexpr (x_is_half)                                            \
