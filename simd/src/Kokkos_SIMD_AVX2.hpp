@@ -846,6 +846,31 @@ simd<float, simd_abi::avx2_fixed_size<4>> sqrt(
       _mm_sqrt_ps(static_cast<__m128>(a)));
 }
 
+#ifdef __INTEL_COMPILER
+
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+simd<float, simd_abi::avx2_fixed_size<4>> cbrt(
+    simd<float, simd_abi::avx2_fixed_size<4>> const& a) {
+  return simd<float, simd_abi::avx2_fixed_size<4>>(
+      _mm_cbrt_ps(static_cast<__m128>(a)));
+}
+
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+simd<float, simd_abi::avx2_fixed_size<4>> exp(
+    simd<float, simd_abi::avx2_fixed_size<4>> const& a) {
+  return simd<float, simd_abi::avx2_fixed_size<4>>(
+      _mm_exp_ps(static_cast<__m128>(a)));
+}
+
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+simd<float, simd_abi::avx2_fixed_size<4>> log(
+    simd<float, simd_abi::avx2_fixed_size<4>> const& a) {
+  return simd<float, simd_abi::avx2_fixed_size<4>>(
+      _mm_log_ps(static_cast<__m128>(a)));
+}
+
+#endif
+
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 simd<float, simd_abi::avx2_fixed_size<4>> fma(
     simd<float, simd_abi::avx2_fixed_size<4>> const& a,
@@ -1447,7 +1472,7 @@ class where_expression<simd_mask<float, simd_abi::avx2_fixed_size<4>>,
   void gather_from(
       float const* mem,
       simd<std::int32_t, simd_abi::avx2_fixed_size<4>> const& index) {
-    m_value = value_type(_mm_mask_i32gather_ps(m_value, mem,
+    m_value = value_type(_mm_mask_i32gather_ps((__m128)m_value, mem,
                                                static_cast<__m128i>(index),
                                                static_cast<__m128>(m_mask), 4));
   }

@@ -1128,6 +1128,31 @@ simd<float, simd_abi::avx512_fixed_size<8>> sqrt(
       _mm256_sqrt_ps(static_cast<__m256>(a)));
 }
 
+#ifdef __INTEL_COMPILER
+
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+simd<float, simd_abi::avx512_fixed_size<8>> cbrt(
+    simd<float, simd_abi::avx512_fixed_size<8>> const& a) {
+  return simd<float, simd_abi::avx512_fixed_size<8>>(
+      _mm256_cbrt_ps(static_cast<__m256>(a)));
+}
+
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+simd<float, simd_abi::avx512_fixed_size<8>> exp(
+    simd<float, simd_abi::avx512_fixed_size<8>> const& a) {
+  return simd<float, simd_abi::avx512_fixed_size<8>>(
+      _mm256_exp_ps(static_cast<__m256>(a)));
+}
+
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+simd<float, simd_abi::avx512_fixed_size<8>> log(
+    simd<float, simd_abi::avx512_fixed_size<8>> const& a) {
+  return simd<float, simd_abi::avx512_fixed_size<8>>(
+      _mm256_log_ps(static_cast<__m256>(a)));
+}
+
+#endif
+
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 simd<float, simd_abi::avx512_fixed_size<8>> fma(
     simd<float, simd_abi::avx512_fixed_size<8>> const& a,
@@ -1303,9 +1328,9 @@ class where_expression<simd_mask<float, simd_abi::avx512_fixed_size<8>>,
   void gather_from(
       float const* mem,
       simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& index) {
-    m_value = value_type(
-        _mm256_mask_i32gather_ps(m_value, static_cast<__mmask8>(m_mask),
-                                 static_cast<__m256>(index), mem, 4));
+    m_value = value_type(_mm256_mask_i32gather_ps(
+        (__m256)m_value, mem, static_cast<__m256i>(index),
+        static_cast<__m256>(m_mask), 4));
   }
   template <
       class U,
