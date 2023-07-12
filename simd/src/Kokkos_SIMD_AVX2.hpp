@@ -1472,8 +1472,8 @@ class where_expression<simd_mask<float, simd_abi::avx2_fixed_size<4>>,
   void gather_from(
       float const* mem,
       simd<std::int32_t, simd_abi::avx2_fixed_size<4>> const& index) {
-    m_value = value_type(_mm_mask_i32gather_ps((__m128)m_value, mem,
-                                               static_cast<__m128i>(index),
+    m_value = value_type(_mm_mask_i32gather_ps(static_cast<__m128>(m_value),
+                                               mem, static_cast<__m128i>(index),
                                                static_cast<__m128>(m_mask), 4));
   }
   template <class U,

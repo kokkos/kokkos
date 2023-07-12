@@ -1328,9 +1328,11 @@ class where_expression<simd_mask<float, simd_abi::avx512_fixed_size<8>>,
   void gather_from(
       float const* mem,
       simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& index) {
-    m_value = value_type(_mm256_mask_i32gather_ps(
-        (__m256)m_value, mem, static_cast<__m256i>(index),
-        static_cast<__m256>(m_mask), 4));
+    __m256 on   = _mm256_castsi256_ps(_mm256_set1_epi32(-1));
+    __m256 mask = _mm256_maskz_mov_ps(static_cast<__mmask8>(m_mask), on);
+    m_value     = value_type(
+        _mm256_mask_i32gather_ps(static_cast<__m256>(m_value), mem,
+                                 static_cast<__m256i>(index), mask, 4));
   }
   template <
       class U,
