@@ -864,16 +864,20 @@ KOKKOS_INLINE_FUNCTION
 
 //----------------------------------------------------------------------------
 
-template <typename iType, class Closure, class Member,
-          class ValueType = typename Kokkos::Impl::FunctorAnalysis<
-              Kokkos::Impl::FunctorPatternInterface::SCAN, void, Closure,
-              void>::value_type>
+template <typename iType, class Closure, class Member, typename ValueType>
 KOKKOS_INLINE_FUNCTION
     std::enable_if_t<!Kokkos::is_reducer<ValueType>::value &&
                      Impl::is_host_thread_team_member<Member>::value>
     parallel_scan(Impl::TeamThreadRangeBoundariesStruct<iType, Member> const&
                       loop_boundaries,
                   Closure const& closure, ValueType& return_val) {
+  // Extract ValueType from the Closure
+  using ClosureValueType = typename Kokkos::Impl::FunctorAnalysis<
+      Kokkos::Impl::FunctorPatternInterface::SCAN, void, Closure,
+      ValueType>::value_type;
+  static_assert(std::is_same<ClosureValueType, ValueType>::value,
+                "Non-matching value types of closure and return type");
+
   // Intra-member scan
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
        i += loop_boundaries.increment) {
@@ -904,16 +908,20 @@ KOKKOS_INLINE_FUNCTION
   parallel_scan(loop_boundaries, closure, scan_val);
 }
 
-template <typename iType, class ClosureType, class Member,
-          class ValueType = typename Kokkos::Impl::FunctorAnalysis<
-              Impl::FunctorPatternInterface::SCAN, void, ClosureType,
-              void>::value_type>
+template <typename iType, class ClosureType, class Member, typename ValueType>
 KOKKOS_INLINE_FUNCTION
     std::enable_if_t<!Kokkos::is_reducer<ValueType>::value &&
                      Impl::is_host_thread_team_member<Member>::value>
     parallel_scan(Impl::ThreadVectorRangeBoundariesStruct<iType, Member> const&
                       loop_boundaries,
                   ClosureType const& closure, ValueType& return_val) {
+  // Extract ValueType from the Closure
+  using ClosureValueType = typename Kokkos::Impl::FunctorAnalysis<
+      Kokkos::Impl::FunctorPatternInterface::SCAN, void, ClosureType,
+      ValueType>::value_type;
+  static_assert(std::is_same<ClosureValueType, ValueType>::value,
+                "Non-matching value types of closure and return type");
+
 #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
 #pragma ivdep
 #endif
