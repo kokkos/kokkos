@@ -706,7 +706,7 @@ class ParallelReduce<CombinedFunctorReducerType,
 
                 SYCLReduction::workgroup_reduction<>(
                     item, local_mem, results_ptr, device_accessible_result_ptr,
-                    value_count, reducer, false, n_wgroups * wgroup_size);
+                    value_count, reducer, false, wgroup_size);
 
                 if (local_id == 0) {
                   sycl::atomic_ref<unsigned, sycl::memory_order::relaxed,
@@ -751,8 +751,7 @@ class ParallelReduce<CombinedFunctorReducerType,
 
                 SYCLReduction::workgroup_reduction<>(
                     item, local_mem, local_value, results_ptr,
-                    device_accessible_result_ptr, reducer, false,
-                    n_wgroups * wgroup_size);
+                    device_accessible_result_ptr, reducer, false, wgroup_size);
 
                 if (local_id == 0) {
                   sycl::atomic_ref<unsigned, sycl::memory_order::relaxed,
