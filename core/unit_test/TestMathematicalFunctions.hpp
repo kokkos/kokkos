@@ -558,52 +558,21 @@ void do_test_math_unary_function(const Arg (&x)[N]) {
 #define TEST_MATH_FUNCTION(FUNC) \
   do_test_math_unary_function<TEST_EXECSPACE, MathUnaryFunction_##FUNC>
 
-#if defined(KOKKOS_COMPILER_CLANG) || defined(KOKKOS_COMPILER_APPLECC) || \
-    defined(KOKKOS_COMPILER_INTEL_LLVM)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
-#endif
+template <class Half, class Space, class... Func, class Arg, std::size_t N>
+void do_test_half_math_unary_function(const Arg (&x)[N]) {
+  (void)std::initializer_list<int>{
+      (TestMathUnaryFunction<Space, Func, Arg, N>(static_cast<Half>(x)), 0)...};
 
-// Use similar approach as linux syscalls to expand and cast constants
-#define MAKE_TEST_HALF_MATH_FUNCTION(FUNC, T, ...)                             \
-  MAKE_TEST_HALF_MATH_FUNCTION_N(fn, ##__VA_ARGS__, 9, 8, 7, 6, 5, 4, 3, 2, 1, \
-                                 0)                                            \
-  (__VA_ARGS__)
-#define MAKE_TEST_HALF_MATH_FUNCTION_N(FUNC, T, n0, n1, n2, n3, n4, n5, n6, \
-                                       n7, n8, n9, n, ...)                  \
-  TEST_HALF_MATH_FUNCTION##n
+  // test if potentially device specific math functions also work on host
+  if constexpr (!std::is_same_v<Space, Kokkos::DefaultHostExecutionSpace>)
+    (void)std::initializer_list<int>{
+        (TestMathUnaryFunction<Kokkos::DefaultHostExecutionSpace, Func, Arg, N>(
+             static_cast<Half>(x)),
+         0)...};
+}
 
-#define TEST_HALF_MATH_UNARY_FUNCTION
-
-#if defined(KOKKOS_COMPILER_MSVC)
-#define TEST_HALF_MATH_FUNCTION(...)
-#else
-#define TEST_HALF_MATH_FUNCTION(...) \
-  MAKE_TEST_HALF_MATH_FUNCTION(FUNC, T, ##__VA_ARGS__)
-#define TEST_HALF_MATH_FUNCTION1(FUNC, T, a) \
-  TEST_MATH_FUNCTION(FUNC)({static_cast<T>(a)})
-#define TEST_HALF_MATH_FUNCTION2(FUNC, T, a, b) \
-  TEST_MATH_FUNCTION(FUNC)({static_cast<T>(a), static_cast<T>(b)})
-#define TEST_HALF_MATH_FUNCTION3(FUNC, T, a, b, c) \
-  TEST_MATH_FUNCTION(FUNC)                         \
-  ({static_cast<T>(a), static_cast<T>(b), static_cast<T>(c)})
-#define TEST_HALF_MATH_FUNCTION4(FUNC, T, a, b, c, d) \
-  TEST_MATH_FUNCTION(FUNC)                            \
-  ({static_cast<T>(a), static_cast<T>(b), static_cast<T>(c), static_cast<T>(d)})
-#define TEST_HALF_MATH_FUNCTION5(FUNC, T, a, b, c, d, e)     \
-  TEST_MATH_FUNCTION(FUNC)                                   \
-  ({static_cast<T>(a), static_cast<T>(b), static_cast<T>(c), \
-    static_cast<T>(d), static_cast<T>(e)})
-#define TEST_HALF_MATH_FUNCTION6(FUNC, T, a, b, c, d, e, f)  \
-  TEST_MATH_FUNCTION(FUNC)                                   \
-  ({static_cast<T>(a), static_cast<T>(b), static_cast<T>(c), \
-    static_cast<T>(d), static_cast<T>(e), static_cast<T>(f)})
-#define TEST_HALF_MATH_FUNCTION7(FUNC, T, a, b, c, d, e, f, g) \
-  TEST_MATH_FUNCTION(FUNC)                                     \
-  ({static_cast<T>(a), static_cast<T>(b), static_cast<T>(c),   \
-    static_cast<T>(d), static_cast<T>(e), static_cast<T>(f),   \
-    static_cast<T>(g)})
-#endif  // KOKKOS_COMPILER_MSVC
+#define TEST_HALF_MATH_FUNCTION(FUNC, T) \
+  do_test_half_math_unary_function<T, TEST_EXECSPACE, MathUnaryFunction_##FUNC>
 
 template <class Space, class Func, class Arg1, class Arg2,
           class Ret = math_binary_function_return_type_t<Arg1, Arg2>>
@@ -693,8 +662,8 @@ TEST(TEST_CATEGORY, mathematical_functions_trigonometric_functions) {
   TEST_MATH_FUNCTION(sin)({2u, 3u, 4u, 5u, 6u});
   TEST_MATH_FUNCTION(sin)({2ul, 3ul, 4ul, 5ul, 6ul});
   TEST_MATH_FUNCTION(sin)({2ull, 3ull, 4ull, 5ull, 6ull});
-  TEST_HALF_MATH_FUNCTION(sin, KE::half_t, .1f, .2f, .3f);
-  TEST_HALF_MATH_FUNCTION(sin, KE::bhalf_t, .1f, .2f, .3f);
+  TEST_HALF_MATH_FUNCTION(sin, KE::half_t)({.1f, .2f, .3f});
+  TEST_HALF_MATH_FUNCTION(sin, KE::bhalf_t)({.1f, .2f, .3f});
   TEST_MATH_FUNCTION(sin)({.1f, .2f, .3f});
   TEST_MATH_FUNCTION(sin)({.4, .5, .6});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -708,8 +677,8 @@ TEST(TEST_CATEGORY, mathematical_functions_trigonometric_functions) {
   TEST_MATH_FUNCTION(cos)({2u, 3u, 4u, 5u, 6u});
   TEST_MATH_FUNCTION(cos)({2ul, 3ul, 4ul, 5ul, 6ul});
   TEST_MATH_FUNCTION(cos)({2ull, 3ull, 4ull, 5ull, 6ull});
-  TEST_HALF_MATH_FUNCTION(cos, KE::half_t, .1f, .2f, .3f);
-  TEST_HALF_MATH_FUNCTION(cos, KE::bhalf_t, .1f, .2f, .3f);
+  TEST_HALF_MATH_FUNCTION(cos, KE::half_t)({.1f, .2f, .3f});
+  TEST_HALF_MATH_FUNCTION(cos, KE::bhalf_t)({.1f, .2f, .3f});
   TEST_MATH_FUNCTION(cos)({.1f, .2f, .3f});
   TEST_MATH_FUNCTION(cos)({.4, .5, .6});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -723,8 +692,8 @@ TEST(TEST_CATEGORY, mathematical_functions_trigonometric_functions) {
   TEST_MATH_FUNCTION(tan)({2u, 3u, 4u, 5u, 6u});
   TEST_MATH_FUNCTION(tan)({2ul, 3ul, 4ul, 5ul, 6ul});
   TEST_MATH_FUNCTION(tan)({2ull, 3ull, 4ull, 5ull, 6ull});
-  TEST_HALF_MATH_FUNCTION(tan, KE::half_t, .1f, .2f, .3f);
-  TEST_HALF_MATH_FUNCTION(tan, KE::bhalf_t, .1f, .2f, .3f);
+  TEST_HALF_MATH_FUNCTION(tan, KE::half_t)({.1f, .2f, .3f});
+  TEST_HALF_MATH_FUNCTION(tan, KE::bhalf_t)({.1f, .2f, .3f});
   TEST_MATH_FUNCTION(tan)({.1f, .2f, .3f});
   TEST_MATH_FUNCTION(tan)({.4, .5, .6});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -738,8 +707,8 @@ TEST(TEST_CATEGORY, mathematical_functions_trigonometric_functions) {
   TEST_MATH_FUNCTION(asin)({0u, 1u});
   TEST_MATH_FUNCTION(asin)({0ul, 1ul});
   TEST_MATH_FUNCTION(asin)({0ull, 1ull});
-  TEST_HALF_MATH_FUNCTION(asin, KE::half_t, -1.f, .9f, -.8f, .7f, -.6f);
-  TEST_HALF_MATH_FUNCTION(asin, KE::bhalf_t, -1.f, .9f, -.8f, .7f, -.6f);
+  TEST_HALF_MATH_FUNCTION(asin, KE::half_t)({-1.f, .9f, -.8f, .7f, -.6f});
+  TEST_HALF_MATH_FUNCTION(asin, KE::bhalf_t)({-1.f, .9f, -.8f, .7f, -.6f});
   TEST_MATH_FUNCTION(asin)({-1.f, .9f, -.8f, .7f, -.6f});
   TEST_MATH_FUNCTION(asin)({-.5, .4, -.3, .2, -.1, 0.});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -753,8 +722,8 @@ TEST(TEST_CATEGORY, mathematical_functions_trigonometric_functions) {
   TEST_MATH_FUNCTION(acos)({0u, 1u});
   TEST_MATH_FUNCTION(acos)({0ul, 1ul});
   TEST_MATH_FUNCTION(acos)({0ull, 1ull});
-  TEST_HALF_MATH_FUNCTION(acos, KE::half_t, -1.f, .9f, -.8f, .7f, -.6f);
-  TEST_HALF_MATH_FUNCTION(acos, KE::bhalf_t, -1.f, .9f, -.8f, .7f, -.6f);
+  TEST_HALF_MATH_FUNCTION(acos, KE::half_t)({-1.f, .9f, -.8f, .7f, -.6f});
+  TEST_HALF_MATH_FUNCTION(acos, KE::bhalf_t)({-1.f, .9f, -.8f, .7f, -.6f});
   TEST_MATH_FUNCTION(acos)({-1.f, .9f, -.8f, .7f, -.6f});
   TEST_MATH_FUNCTION(acos)({-.5, .4, -.3, .2, -.1, 0.});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -768,9 +737,10 @@ TEST(TEST_CATEGORY, mathematical_functions_trigonometric_functions) {
   TEST_MATH_FUNCTION(atan)({0u, 1u});
   TEST_MATH_FUNCTION(atan)({0ul, 1ul});
   TEST_MATH_FUNCTION(atan)({0ull, 1ull});
-  TEST_HALF_MATH_FUNCTION(atan, KE::half_t, -1.5f, 1.3f, -1.1f, .9f, -.7f, .5f);
-  TEST_HALF_MATH_FUNCTION(atan, KE::bhalf_t, -1.5f, 1.3f, -1.1f, .9f, -.7f,
-                          .5f);
+  TEST_HALF_MATH_FUNCTION(atan, KE::half_t)
+  ({-1.5f, 1.3f, -1.1f, .9f, -.7f, .5f});
+  TEST_HALF_MATH_FUNCTION(atan, KE::bhalf_t)
+  ({-1.5f, 1.3f, -1.1f, .9f, -.7f, .5f});
   TEST_MATH_FUNCTION(atan)({-1.5f, 1.3f, -1.1f, .9f, -.7f, .5f});
   TEST_MATH_FUNCTION(atan)({1.4, -1.2, 1., -.8, .6, -.4, .2, -0.});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -787,8 +757,8 @@ TEST(TEST_CATEGORY, mathematical_functions_power_functions) {
   TEST_MATH_FUNCTION(sqrt)({0u, 1u, 2u, 3u, 5u, 7u});
   TEST_MATH_FUNCTION(sqrt)({0ul, 1ul, 2ul, 3ul, 5ul, 7ul});
   TEST_MATH_FUNCTION(sqrt)({0ull, 1ull, 2ull, 3ull, 5ull, 7ull});
-  TEST_HALF_MATH_FUNCTION(sqrt, KE::half_t, 10.f, 20.f, 30.f, 40.f);
-  TEST_HALF_MATH_FUNCTION(sqrt, KE::bhalf_t, 10.f, 20.f, 30.f, 40.f);
+  TEST_HALF_MATH_FUNCTION(sqrt, KE::half_t)({10.f, 20.f, 30.f, 40.f});
+  TEST_HALF_MATH_FUNCTION(sqrt, KE::bhalf_t)({10.f, 20.f, 30.f, 40.f});
   TEST_MATH_FUNCTION(sqrt)({10.f, 20.f, 30.f, 40.f});
   TEST_MATH_FUNCTION(sqrt)({11.1, 22.2, 33.3, 44.4});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -801,8 +771,8 @@ TEST(TEST_CATEGORY, mathematical_functions_power_functions) {
   TEST_MATH_FUNCTION(cbrt)({0u, 1u, 2u, 3u, 4u, 5u});
   TEST_MATH_FUNCTION(cbrt)({0ul, 1ul, 2ul, 3ul, 4ul, 5ul});
   TEST_MATH_FUNCTION(cbrt)({0ull, 1ull, 2ull, 3ull, 4ull, 5ull});
-  TEST_HALF_MATH_FUNCTION(cbrt, KE::half_t, -1.f, .2f, -3.f, .4f, -5.f);
-  TEST_HALF_MATH_FUNCTION(cbrt, KE::bhalf_t, -1.f, .2f, -3.f, .4f, -5.f);
+  TEST_HALF_MATH_FUNCTION(cbrt, KE::half_t)({-1.f, .2f, -3.f, .4f, -5.f});
+  TEST_HALF_MATH_FUNCTION(cbrt, KE::bhalf_t)({-1.f, .2f, -3.f, .4f, -5.f});
   TEST_MATH_FUNCTION(cbrt)({-1.f, .2f, -3.f, .4f, -5.f});
   TEST_MATH_FUNCTION(cbrt)({11.1, -2.2, 33.3, -4.4, 55.5});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -861,10 +831,10 @@ TEST(TEST_CATEGORY, mathematical_functions_exponential_functions) {
   TEST_MATH_FUNCTION(exp)({0u, 1u, 2u, 3u, 4u, 5u});
   TEST_MATH_FUNCTION(exp)({0ul, 1ul, 2ul, 3ul, 4ul, 5ul});
   TEST_MATH_FUNCTION(exp)({0ull, 1ull, 2ull, 3ull, 4ull, 5ull});
-  TEST_HALF_MATH_FUNCTION(exp, KE::half_t, -98.f, -7.6f, -.54f, 3.2f, 1.f,
-                          -0.f);
-  TEST_HALF_MATH_FUNCTION(exp, KE::bhalf_t, -98.f, -7.6f, -.54f, 3.2f, 1.f,
-                          -0.f);
+  TEST_HALF_MATH_FUNCTION(exp, KE::half_t)
+  ({-98.f, -7.6f, -.54f, 3.2f, 1.f, -0.f});
+  TEST_HALF_MATH_FUNCTION(exp, KE::bhalf_t)
+  ({-98.f, -7.6f, -.54f, 3.2f, 1.f, -0.f});
   TEST_MATH_FUNCTION(exp)({-98.f, -7.6f, -.54f, 3.2f, 1.f, -0.f});
   TEST_MATH_FUNCTION(exp)({-98., -7.6, -.54, 3.2, 1., -0.});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -877,10 +847,10 @@ TEST(TEST_CATEGORY, mathematical_functions_exponential_functions) {
   TEST_MATH_FUNCTION(exp2)({0u, 1u, 2u, 3u, 4u, 5u});
   TEST_MATH_FUNCTION(exp2)({0ul, 1ul, 2ul, 3ul, 4ul, 5ul});
   TEST_MATH_FUNCTION(exp2)({0ull, 1ull, 2ull, 3ull, 4ull, 5ull});
-  TEST_HALF_MATH_FUNCTION(exp2, KE::half_t, -98.f, -7.6f, -.54f, 3.2f, 1.f,
-                          -0.f);
-  TEST_HALF_MATH_FUNCTION(exp2, KE::bhalf_t, -98.f, -7.6f, -.54f, 3.2f, 1.f,
-                          -0.f);
+  TEST_HALF_MATH_FUNCTION(exp2, KE::half_t)
+  ({-98.f, -7.6f, -.54f, 3.2f, 1.f, -0.f});
+  TEST_HALF_MATH_FUNCTION(exp2, KE::bhalf_t)
+  ({-98.f, -7.6f, -.54f, 3.2f, 1.f, -0.f});
   TEST_MATH_FUNCTION(exp2)({-98.f, -7.6f, -.54f, 3.2f, 1.f, -0.f});
   TEST_MATH_FUNCTION(exp2)({-98., -7.6, -.54, 3.2, 1., -0.});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -893,10 +863,10 @@ TEST(TEST_CATEGORY, mathematical_functions_exponential_functions) {
   TEST_MATH_FUNCTION(expm1)({0u, 1u, 2u, 3u, 4u, 5u});
   TEST_MATH_FUNCTION(expm1)({0ul, 1ul, 2ul, 3ul, 4ul, 5ul});
   TEST_MATH_FUNCTION(expm1)({0ull, 1ull, 2ull, 3ull, 4ull, 5ull});
-  TEST_HALF_MATH_FUNCTION(expm1, KE::half_t, -98.f, -7.6f, -.54f, 3.2f, 1.f,
-                          -0.f);
-  TEST_HALF_MATH_FUNCTION(expm1, KE::bhalf_t, -98.f, -7.6f, -.54f, 3.2f, 1.f,
-                          -0.f);
+  TEST_HALF_MATH_FUNCTION(expm1, KE::half_t)
+  ({-98.f, -7.6f, -.54f, 3.2f, 1.f, -0.f});
+  TEST_HALF_MATH_FUNCTION(expm1, KE::bhalf_t)
+  ({-98.f, -7.6f, -.54f, 3.2f, 1.f, -0.f});
   TEST_MATH_FUNCTION(expm1)({-98.f, -7.6f, -.54f, 3.2f, 1.f, -0.f});
   TEST_MATH_FUNCTION(expm1)({-98., -7.6, -.54, 3.2, 1., -0.});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -909,8 +879,8 @@ TEST(TEST_CATEGORY, mathematical_functions_exponential_functions) {
   TEST_MATH_FUNCTION(log)({1u, 23u, 456u, 7890u});
   TEST_MATH_FUNCTION(log)({1ul, 23ul, 456ul, 7890ul});
   TEST_MATH_FUNCTION(log)({1ull, 23ull, 456ull, 7890ull});
-  TEST_HALF_MATH_FUNCTION(log, KE::half_t, 1234.f, 567.f, 89.f, .1f);
-  TEST_HALF_MATH_FUNCTION(log, KE::bhalf_t, 1234.f, 567.f, 89.f, .1f);
+  TEST_HALF_MATH_FUNCTION(log, KE::half_t)({1234.f, 567.f, 89.f, .1f});
+  TEST_HALF_MATH_FUNCTION(log, KE::bhalf_t)({1234.f, 567.f, 89.f, .1f});
   TEST_MATH_FUNCTION(log)({1234.f, 567.f, 89.f, .1f});
   TEST_MATH_FUNCTION(log)({1234., 567., 89., .02});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -923,8 +893,8 @@ TEST(TEST_CATEGORY, mathematical_functions_exponential_functions) {
   TEST_MATH_FUNCTION(log10)({1u, 23u, 456u, 7890u});
   TEST_MATH_FUNCTION(log10)({1ul, 23ul, 456ul, 7890ul});
   TEST_MATH_FUNCTION(log10)({1ull, 23ull, 456ull, 7890ull});
-  TEST_HALF_MATH_FUNCTION(log10, KE::half_t, 1234.f, 567.f, 89.f, .1f);
-  TEST_HALF_MATH_FUNCTION(log10, KE::bhalf_t, 1234.f, 567.f, 89.f, .1f);
+  TEST_HALF_MATH_FUNCTION(log10, KE::half_t)({1234.f, 567.f, 89.f, .1f});
+  TEST_HALF_MATH_FUNCTION(log10, KE::bhalf_t)({1234.f, 567.f, 89.f, .1f});
   TEST_MATH_FUNCTION(log10)({1234.f, 567.f, 89.f, .1f});
   TEST_MATH_FUNCTION(log10)({1234., 567., 89., .02});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -943,8 +913,8 @@ TEST(TEST_CATEGORY, mathematical_functions_exponential_functions) {
   TEST_MATH_FUNCTION(log2)({1u, 23u, 456u, 7890u});
   TEST_MATH_FUNCTION(log2)({1ul, 23ul, 456ul, 7890ul});
   TEST_MATH_FUNCTION(log2)({1ull, 23ull, 456ull, 7890ull});
-  TEST_HALF_MATH_FUNCTION(log2, KE::half_t, 1234.f, 567.f, 89.f, .1f);
-  TEST_HALF_MATH_FUNCTION(log2, KE::bhalf_t, 1234.f, 567.f, 89.f, .1f);
+  TEST_HALF_MATH_FUNCTION(log2, KE::half_t)({1234.f, 567.f, 89.f, .1f});
+  TEST_HALF_MATH_FUNCTION(log2, KE::bhalf_t)({1234.f, 567.f, 89.f, .1f});
   TEST_MATH_FUNCTION(log2)({1234.f, 567.f, 89.f, .1f});
   TEST_MATH_FUNCTION(log2)({1234., 567., 89., .02});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -957,8 +927,8 @@ TEST(TEST_CATEGORY, mathematical_functions_exponential_functions) {
   TEST_MATH_FUNCTION(log1p)({1u, 23u, 456u, 7890u, 0u});
   TEST_MATH_FUNCTION(log1p)({1ul, 23ul, 456ul, 7890ul, 0ul});
   TEST_MATH_FUNCTION(log1p)({1ull, 23ull, 456ull, 7890ull, 0ull});
-  TEST_HALF_MATH_FUNCTION(log1p, KE::half_t, 1234.f, 567.f, 89.f, -.9f);
-  TEST_HALF_MATH_FUNCTION(log1p, KE::bhalf_t, 1234.f, 567.f, 89.f, -.9f);
+  TEST_HALF_MATH_FUNCTION(log1p, KE::half_t)({1234.f, 567.f, 89.f, -.9f});
+  TEST_HALF_MATH_FUNCTION(log1p, KE::bhalf_t)({1234.f, 567.f, 89.f, -.9f});
   TEST_MATH_FUNCTION(log1p)({1234.f, 567.f, 89.f, -.9f});
   TEST_MATH_FUNCTION(log1p)({1234., 567., 89., -.08});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -975,8 +945,8 @@ TEST(TEST_CATEGORY, mathematical_functions_hyperbolic_functions) {
   TEST_MATH_FUNCTION(sinh)({2u, 3u, 4u, 5u, 6u});
   TEST_MATH_FUNCTION(sinh)({2ul, 3ul, 4ul, 5ul, 6ul});
   TEST_MATH_FUNCTION(sinh)({2ull, 3ull, 4ull, 5ull, 6ull});
-  TEST_HALF_MATH_FUNCTION(sinh, KE::half_t, .1f, -2.f, 3.f);
-  TEST_HALF_MATH_FUNCTION(sinh, KE::bhalf_t, .1f, -2.f, 3.f);
+  TEST_HALF_MATH_FUNCTION(sinh, KE::half_t)({.1f, -2.f, 3.f});
+  TEST_HALF_MATH_FUNCTION(sinh, KE::bhalf_t)({.1f, -2.f, 3.f});
   TEST_MATH_FUNCTION(sinh)({.1f, -2.f, 3.f});
   TEST_MATH_FUNCTION(sinh)({-4., .5, -.6});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -989,8 +959,8 @@ TEST(TEST_CATEGORY, mathematical_functions_hyperbolic_functions) {
   TEST_MATH_FUNCTION(cosh)({2u, 3u, 4u, 5u, 6u});
   TEST_MATH_FUNCTION(cosh)({2ul, 3ul, 4ul, 5ul, 6ul});
   TEST_MATH_FUNCTION(cosh)({2ull, 3ull, 4ull, 5ull, 6ull});
-  TEST_HALF_MATH_FUNCTION(cosh, KE::half_t, .1f, -2.f, 3.f);
-  TEST_HALF_MATH_FUNCTION(cosh, KE::bhalf_t, .1f, -2.f, 3.f);
+  TEST_HALF_MATH_FUNCTION(cosh, KE::half_t)({.1f, -2.f, 3.f});
+  TEST_HALF_MATH_FUNCTION(cosh, KE::bhalf_t)({.1f, -2.f, 3.f});
   TEST_MATH_FUNCTION(cosh)({.1f, -2.f, 3.f});
   TEST_MATH_FUNCTION(cosh)({-4., .5, -.6});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -1003,8 +973,8 @@ TEST(TEST_CATEGORY, mathematical_functions_hyperbolic_functions) {
   TEST_MATH_FUNCTION(tanh)({2u, 3u, 4u, 5u, 6u});
   TEST_MATH_FUNCTION(tanh)({2ul, 3ul, 4ul, 5ul, 6ul});
   TEST_MATH_FUNCTION(tanh)({2ull, 3ull, 4ull, 5ull, 6ull});
-  TEST_HALF_MATH_FUNCTION(tanh, KE::half_t, .1f, -2.f, 3.f);
-  TEST_HALF_MATH_FUNCTION(tanh, KE::bhalf_t, .1f, -2.f, 3.f);
+  TEST_HALF_MATH_FUNCTION(tanh, KE::half_t)({.1f, -2.f, 3.f});
+  TEST_HALF_MATH_FUNCTION(tanh, KE::bhalf_t)({.1f, -2.f, 3.f});
   TEST_MATH_FUNCTION(tanh)({.1f, -2.f, 3.f});
   TEST_MATH_FUNCTION(tanh)({-4., .5, -.6});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -1017,8 +987,8 @@ TEST(TEST_CATEGORY, mathematical_functions_hyperbolic_functions) {
   TEST_MATH_FUNCTION(asinh)({2u, 3u, 4u, 5u, 6u});
   TEST_MATH_FUNCTION(asinh)({2ul, 3ul, 4ul, 5ul, 6ul});
   TEST_MATH_FUNCTION(asinh)({2ull, 3ull, 4ull, 5ull, 6ull});
-  TEST_HALF_MATH_FUNCTION(asinh, KE::half_t, .1f, -2.f, 3.f);
-  TEST_HALF_MATH_FUNCTION(asinh, KE::bhalf_t, .1f, -2.f, 3.f);
+  TEST_HALF_MATH_FUNCTION(asinh, KE::half_t)({.1f, -2.f, 3.f});
+  TEST_HALF_MATH_FUNCTION(asinh, KE::bhalf_t)({.1f, -2.f, 3.f});
   TEST_MATH_FUNCTION(asinh)({.1f, -2.f, 3.f});
   TEST_MATH_FUNCTION(asinh)({-4., .5, -.6});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -1031,8 +1001,8 @@ TEST(TEST_CATEGORY, mathematical_functions_hyperbolic_functions) {
   TEST_MATH_FUNCTION(acosh)({1u, 2u, 3u, 4u, 5u, 6u});
   TEST_MATH_FUNCTION(acosh)({1ul, 2ul, 3ul, 4ul, 5ul, 6ul});
   TEST_MATH_FUNCTION(acosh)({1ull, 2ull, 3ull, 4ull, 5ull, 6ull});
-  TEST_HALF_MATH_FUNCTION(acosh, KE::half_t, 1.2f, 34.f, 56.f, 789.f);
-  TEST_HALF_MATH_FUNCTION(acosh, KE::bhalf_t, 1.2f, 34.f, 56.f, 789.f);
+  TEST_HALF_MATH_FUNCTION(acosh, KE::half_t)({1.2f, 34.f, 56.f, 789.f});
+  TEST_HALF_MATH_FUNCTION(acosh, KE::bhalf_t)({1.2f, 34.f, 56.f, 789.f});
   TEST_MATH_FUNCTION(acosh)({1.2f, 34.f, 56.f, 789.f});
   TEST_MATH_FUNCTION(acosh)({1.2, 34., 56., 789.});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -1045,10 +1015,10 @@ TEST(TEST_CATEGORY, mathematical_functions_hyperbolic_functions) {
   TEST_MATH_FUNCTION(atanh)({0u});
   TEST_MATH_FUNCTION(atanh)({0ul});
   TEST_MATH_FUNCTION(atanh)({0ull});
-  TEST_HALF_MATH_FUNCTION(atanh, KE::half_t, -.97f, .86f, -.53f, .42f, -.1f,
-                          0.f);
-  TEST_HALF_MATH_FUNCTION(atanh, KE::bhalf_t, -.97f, .86f, -.53f, .42f, -.1f,
-                          0.f);
+  TEST_HALF_MATH_FUNCTION(atanh, KE::half_t)
+  ({-.97f, .86f, -.53f, .42f, -.1f, 0.f});
+  TEST_HALF_MATH_FUNCTION(atanh, KE::bhalf_t)
+  ({-.97f, .86f, -.53f, .42f, -.1f, 0.f});
   TEST_MATH_FUNCTION(atanh)({-.97f, .86f, -.53f, .42f, -.1f, 0.f});
   TEST_MATH_FUNCTION(atanh)({-.97, .86, -.53, .42, -.1, 0.});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -1080,8 +1050,8 @@ TEST(TEST_CATEGORY, mathematical_functions_error_and_gamma_functions) {
   TEST_MATH_FUNCTION(erf)({2u, 3u, 4u, 5u, 6u});
   TEST_MATH_FUNCTION(erf)({2ul, 3ul, 4ul, 5ul, 6ul});
   TEST_MATH_FUNCTION(erf)({2ull, 3ull, 4ull, 5ull, 6ull});
-  TEST_HALF_MATH_FUNCTION(erf, KE::half_t, .1f, -2.f, 3.f);
-  TEST_HALF_MATH_FUNCTION(erf, KE::bhalf_t, .1f, -2.f, 3.f);
+  TEST_HALF_MATH_FUNCTION(erf, KE::half_t)({.1f, -2.f, 3.f});
+  TEST_HALF_MATH_FUNCTION(erf, KE::bhalf_t)({.1f, -2.f, 3.f});
   TEST_MATH_FUNCTION(erf)({.1f, -2.f, 3.f});
   TEST_MATH_FUNCTION(erf)({-4., .5, -.6});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -1094,8 +1064,8 @@ TEST(TEST_CATEGORY, mathematical_functions_error_and_gamma_functions) {
   TEST_MATH_FUNCTION(erfc)({2u, 3u, 4u, 5u, 6u});
   TEST_MATH_FUNCTION(erfc)({2ul, 3ul, 4ul, 5ul, 6ul});
   TEST_MATH_FUNCTION(erfc)({2ull, 3ull, 4ull, 5ull, 6ull});
-  TEST_HALF_MATH_FUNCTION(erfc, KE::half_t, .1f, -2.f, 3.f);
-  TEST_HALF_MATH_FUNCTION(erfc, KE::bhalf_t, .1f, -2.f, 3.f);
+  TEST_HALF_MATH_FUNCTION(erfc, KE::half_t)({.1f, -2.f, 3.f});
+  TEST_HALF_MATH_FUNCTION(erfc, KE::bhalf_t)({.1f, -2.f, 3.f});
   TEST_MATH_FUNCTION(erfc)({.1f, -2.f, 3.f});
   TEST_MATH_FUNCTION(erfc)({-4., .5, -.6});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -1108,8 +1078,8 @@ TEST(TEST_CATEGORY, mathematical_functions_error_and_gamma_functions) {
   TEST_MATH_FUNCTION(tgamma)({1u, 2u, 3u, 4u, 56u, 78u});
   TEST_MATH_FUNCTION(tgamma)({1ul, 2ul, 3ul, 4ul, 56ul, 78ul});
   TEST_MATH_FUNCTION(tgamma)({1ull, 2ull, 3ull, 4ull, 56ull, 78ull});
-  TEST_HALF_MATH_FUNCTION(tgamma, KE::half_t, .1f, -2.2f, 3.f);
-  TEST_HALF_MATH_FUNCTION(tgamma, KE::bhalf_t, .1f, -2.2f, 3.f);
+  TEST_HALF_MATH_FUNCTION(tgamma, KE::half_t)({.1f, -2.2f, 3.f});
+  TEST_HALF_MATH_FUNCTION(tgamma, KE::bhalf_t)({.1f, -2.2f, 3.f});
   TEST_MATH_FUNCTION(tgamma)({.1f, -2.2f, 3.f});
   TEST_MATH_FUNCTION(tgamma)({-4.4, .5, -.6});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -1122,8 +1092,8 @@ TEST(TEST_CATEGORY, mathematical_functions_error_and_gamma_functions) {
   TEST_MATH_FUNCTION(lgamma)({1u, 2u, 3u, 4u, 56u, 78u});
   TEST_MATH_FUNCTION(lgamma)({1ul, 2ul, 3ul, 4ul, 56ul, 78ul});
   TEST_MATH_FUNCTION(lgamma)({1ull, 2ull, 3ull, 4ull, 56ull, 78ull});
-  TEST_HALF_MATH_FUNCTION(lgamma, KE::half_t, .1f, -2.2f, 3.f);
-  TEST_HALF_MATH_FUNCTION(lgamma, KE::bhalf_t, .1f, -2.2f, 3.f);
+  TEST_HALF_MATH_FUNCTION(lgamma, KE::half_t)({.1f, -2.2f, 3.f});
+  TEST_HALF_MATH_FUNCTION(lgamma, KE::bhalf_t)({.1f, -2.2f, 3.f});
   TEST_MATH_FUNCTION(lgamma)({.1f, -2.2f, 3.f});
   TEST_MATH_FUNCTION(lgamma)({-4.4, .5, -.6});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -1139,8 +1109,8 @@ TEST(TEST_CATEGORY,
   TEST_MATH_FUNCTION(ceil)({2u, 3u, 4u, 5u, 6u});
   TEST_MATH_FUNCTION(ceil)({2ul, 3ul, 4ul, 5ul, 6ul});
   TEST_MATH_FUNCTION(ceil)({2ull, 3ull, 4ull, 5ull, 6ull});
-  TEST_HALF_MATH_FUNCTION(ceil, KE::half_t, -1.1f, 2.2f, -3.3f, 4.4f, -5.5f);
-  TEST_HALF_MATH_FUNCTION(ceil, KE::bhalf_t, -1.1f, 2.2f, -3.3f, 4.4f, -5.5f);
+  TEST_HALF_MATH_FUNCTION(ceil, KE::half_t)({-1.1f, 2.2f, -3.3f, 4.4f, -5.5f});
+  TEST_HALF_MATH_FUNCTION(ceil, KE::bhalf_t)({-1.1f, 2.2f, -3.3f, 4.4f, -5.5f});
   TEST_MATH_FUNCTION(ceil)({-1.1f, 2.2f, -3.3f, 4.4f, -5.5f});
   TEST_MATH_FUNCTION(ceil)({-6.6, 7.7, -8.8, 9.9});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -1153,8 +1123,9 @@ TEST(TEST_CATEGORY,
   TEST_MATH_FUNCTION(floor)({2u, 3u, 4u, 5u, 6u});
   TEST_MATH_FUNCTION(floor)({2ul, 3ul, 4ul, 5ul, 6ul});
   TEST_MATH_FUNCTION(floor)({2ull, 3ull, 4ull, 5ull, 6ull});
-  TEST_HALF_MATH_FUNCTION(floor, KE::half_t, -1.1f, 2.2f, -3.3f, 4.4f, -5.5f);
-  TEST_HALF_MATH_FUNCTION(floor, KE::bhalf_t, -1.1f, 2.2f, -3.3f, 4.4f, -5.5f);
+  TEST_HALF_MATH_FUNCTION(floor, KE::half_t)({-1.1f, 2.2f, -3.3f, 4.4f, -5.5f});
+  TEST_HALF_MATH_FUNCTION(floor, KE::bhalf_t)
+  ({-1.1f, 2.2f, -3.3f, 4.4f, -5.5f});
   TEST_MATH_FUNCTION(floor)({-1.1f, 2.2f, -3.3f, 4.4f, -5.5f});
   TEST_MATH_FUNCTION(floor)({-6.6, 7.7, -8.8, 9.9});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -1167,8 +1138,9 @@ TEST(TEST_CATEGORY,
   TEST_MATH_FUNCTION(trunc)({2u, 3u, 4u, 5u, 6u});
   TEST_MATH_FUNCTION(trunc)({2ul, 3ul, 4ul, 5ul, 6ul});
   TEST_MATH_FUNCTION(trunc)({2ull, 3ull, 4ull, 5ull, 6ull});
-  TEST_HALF_MATH_FUNCTION(trunc, KE::half_t, -1.1f, 2.2f, -3.3f, 4.4f, -5.5f);
-  TEST_HALF_MATH_FUNCTION(trunc, KE::bhalf_t, -1.1f, 2.2f, -3.3f, 4.4f, -5.5f);
+  TEST_HALF_MATH_FUNCTION(trunc, KE::half_t)({-1.1f, 2.2f, -3.3f, 4.4f, -5.5f});
+  TEST_HALF_MATH_FUNCTION(trunc, KE::bhalf_t)
+  ({-1.1f, 2.2f, -3.3f, 4.4f, -5.5f});
   TEST_MATH_FUNCTION(trunc)({-1.1f, 2.2f, -3.3f, 4.4f, -5.5f});
   TEST_MATH_FUNCTION(trunc)({-6.6, 7.7, -8.8, 9.9});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -1181,10 +1153,10 @@ TEST(TEST_CATEGORY,
   TEST_MATH_FUNCTION(round)({2u, 3u, 4u, 5u, 6u});
   TEST_MATH_FUNCTION(round)({2ul, 3ul, 4ul, 5ul, 6ul});
   TEST_MATH_FUNCTION(round)({2ull, 3ull, 4ull, 5ull, 6ull});
-  TEST_HALF_MATH_FUNCTION(round, KE::half_t, 2.3f, 2.5f, 2.7f, -2.3f, -2.5f,
-                          -2.7f, -0.0f);
-  TEST_HALF_MATH_FUNCTION(round, KE::bhalf_t, 2.3f, 2.5f, 2.7f, -2.3f, -2.5f,
-                          -2.7f, -0.0f);
+  TEST_HALF_MATH_FUNCTION(round, KE::half_t)
+  ({2.3f, 2.5f, 2.7f, -2.3f, -2.5f, -2.7f, -0.0f});
+  TEST_HALF_MATH_FUNCTION(round, KE::bhalf_t)
+  ({2.3f, 2.5f, 2.7f, -2.3f, -2.5f, -2.7f, -0.0f});
   TEST_MATH_FUNCTION(round)({2.3f, 2.5f, 2.7f, -2.3f, -2.5f, -2.7f, -0.0f});
   TEST_MATH_FUNCTION(round)({2.3, 2.5, 2.7, -2.3, -2.5, -2.7, -0.0});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -1198,10 +1170,10 @@ TEST(TEST_CATEGORY,
   TEST_MATH_FUNCTION(nearbyint)({2u, 3u, 4u, 5u, 6u});
   TEST_MATH_FUNCTION(nearbyint)({2ul, 3ul, 4ul, 5ul, 6ul});
   TEST_MATH_FUNCTION(nearbyint)({2ull, 3ull, 4ull, 5ull, 6ull});
-  TEST_HALF_MATH_FUNCTION(nearbyint, KE::half_t, -1.1f, 2.2f, -3.3f, 4.4f,
-                          -5.5f);
-  TEST_HALF_MATH_FUNCTION(nearbyint, KE::bhalf_t, -1.1f, 2.2f, -3.3f, 4.4f,
-                          -5.5f);
+  TEST_HALF_MATH_FUNCTION(nearbyint, KE::half_t)
+  ({-1.1f, 2.2f, -3.3f, 4.4f, -5.5f});
+  TEST_HALF_MATH_FUNCTION(nearbyint, KE::bhalf_t)
+  ({-1.1f, 2.2f, -3.3f, 4.4f, -5.5f});
   TEST_MATH_FUNCTION(nearbyint)({-1.1f, 2.2f, -3.3f, 4.4f, -5.5f});
   TEST_MATH_FUNCTION(nearbyint)({-6.6, 7.7, -8.8, 9.9});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -1218,8 +1190,8 @@ TEST(TEST_CATEGORY,
   TEST_MATH_FUNCTION(logb)({2u, 3u, 4u, 5u, 6u});
   TEST_MATH_FUNCTION(logb)({2ul, 3ul, 4ul, 5ul, 6ul});
   TEST_MATH_FUNCTION(logb)({2ull, 3ull, 4ull, 5ull, 6ull});
-  TEST_HALF_MATH_FUNCTION(logb, KE::half_t, 123.45f, 6789.0f);
-  TEST_HALF_MATH_FUNCTION(logb, KE::bhalf_t, 123.45f, 6789.0f);
+  TEST_HALF_MATH_FUNCTION(logb, KE::half_t)({123.45f, 6789.0f});
+  TEST_HALF_MATH_FUNCTION(logb, KE::bhalf_t)({123.45f, 6789.0f});
   TEST_MATH_FUNCTION(logb)({123.45f, 6789.0f});
   TEST_MATH_FUNCTION(logb)({123.45, 6789.0});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -1642,10 +1614,4 @@ TEST(TEST_CATEGORY, mathematical_functions_isnan) {
 }
 
 // TestSignBit
-
-#if defined(KOKKOS_COMPILER_CLANG) || defined(KOKKOS_COMPILER_APPLECC) || \
-    defined(KOKKOS_COMPILER_INTEL_LLVM)
-//#pragma clang diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
-#pragma clang diagnostic pop
-#endif
 #endif
