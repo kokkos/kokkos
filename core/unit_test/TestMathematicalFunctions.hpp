@@ -560,14 +560,16 @@ void do_test_math_unary_function(const Arg (&x)[N]) {
 
 template <class Half, class Space, class... Func, class Arg, std::size_t N>
 void do_test_half_math_unary_function(const Arg (&x)[N]) {
+  Half y[N];
+  std::copy(x, x + N, y);  // cast to array of half type
   (void)std::initializer_list<int>{
-      (TestMathUnaryFunction<Space, Func, Arg, N>(static_cast<Half>(x)), 0)...};
+      (TestMathUnaryFunction<Space, Func, Arg, N>(y), 0)...};
 
   // test if potentially device specific math functions also work on host
   if constexpr (!std::is_same_v<Space, Kokkos::DefaultHostExecutionSpace>)
     (void)std::initializer_list<int>{
         (TestMathUnaryFunction<Kokkos::DefaultHostExecutionSpace, Func, Arg, N>(
-             static_cast<Half>(x)),
+             y),
          0)...};
 }
 
