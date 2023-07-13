@@ -563,7 +563,7 @@ void do_test_half_math_unary_function(const Arg (&x)[N]) {
   Half y[N];
   std::copy(x, x + N, y);  // cast to array of half type
   (void)std::initializer_list<int>{
-      (TestMathUnaryFunction<Space, Func, Arg, N>(y), 0)...};
+      (TestMathUnaryFunction<Space, Func, Half, N>(y), 0)...};
 
   // test if potentially device specific math functions also work on host
   if constexpr (!std::is_same_v<Space, Kokkos::DefaultHostExecutionSpace>)
