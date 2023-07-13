@@ -1450,7 +1450,7 @@ TEST(TEST_CATEGORY, mathematical_functions_remainder_function) {
 }
 
 #if 0
-// TODO: Adjust expected values for ieee remainders
+// TODO: Adjust expected values, see https://github.com/kokkos/kokkos/issues/6275
 template <class Space>
 struct TestIEEEFloatingPointRemainderFunction : FloatingPointComparison {
   TestIEEEFloatingPointRemainderFunction() { run(); }
@@ -1531,11 +1531,11 @@ TEST(TEST_CATEGORY, mathematical_functions_ieee_remainder_function) {
 }
 #endif
 
-// TestFpClassify
+// TODO: TestFpClassify, see https://github.com/kokkos/kokkos/issues/6279
 
-// TestIsFinite
+// TODO: TestIsFinite, see https://github.com/kokkos/kokkos/issues/6279
 
-// TestIsInf
+// TODO: TestIsInf, see https://github.com/kokkos/kokkos/issues/6279
 
 template <class Space>
 struct TestIsNaN {
@@ -1615,5 +1615,5 @@ TEST(TEST_CATEGORY, mathematical_functions_isnan) {
   TestIsNaN<TEST_EXECSPACE>();
 }
 
-// TestSignBit
+// TODO: TestSignBit, see https://github.com/kokkos/kokkos/issues/6279
 #endif
