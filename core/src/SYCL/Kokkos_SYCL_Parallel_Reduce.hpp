@@ -405,8 +405,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
             q.get_device());
         // FIXME_SYCL The code below queries the kernel for the maximum subgroup
         // size but it turns out that this is not accurate and choosing a larger
-        // subgroup size gives better peformance (and is what the SYCL compiler
-        // does for sycl::reductions).
+        // subgroup size gives better peformance (and is what the oneAPI
+        // reduction algorithm does).
 #ifndef KOKKOS_ARCH_INTEL_GPU
         auto max =
             kernel
@@ -419,10 +419,15 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
 
         auto max_local_memory =
             q.get_device().get_info<sycl::info::device::local_mem_size>();
-        // Use a maximum of 99% of the available memory as a safe-guard.
+        // The workgroup size is computed as the minimum of
+        // - the smallest power of two not less than the total work size
+        // - the largest power of two not exceeding the largest multiple of the
+        //   recommended workgroup size not exceeding the maximum workgroup size
+        // - the largest power of two such that we don't use more than 99% (as a
+        //   safe-gurad) of the available local memory.
         const auto wgroup_size = std::min(
             {Kokkos::bit_ceil(size),
-             static_cast<size_t>(max / multiple) * multiple,
+             Kokkos::bit_floor(static_cast<size_t>(max / multiple) * multiple),
              Kokkos::bit_floor(static_cast<size_t>(max_local_memory * .99) /
                                (sizeof(value_type) * value_count))});
 
