@@ -14,8 +14,8 @@
 //
 //@HEADER
 
-#ifndef KOKKOS_TEST_CONDITION_HPP
-#define KOKKOS_TEST_CONDITION_HPP
+#ifndef KOKKOS_TEST_SIMD_CONDITION_HPP
+#define KOKKOS_TEST_SIMD_CONDITION_HPP
 
 #include <Kokkos_SIMD.hpp>
 #include <SIMDTesting_Utilities.hpp>

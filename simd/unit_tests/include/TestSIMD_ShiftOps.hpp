@@ -14,8 +14,8 @@
 //
 //@HEADER
 
-#ifndef KOKKOS_TEST_SHIFT_OPS_HPP
-#define KOKKOS_TEST_SHIFT_OPS_HPP
+#ifndef KOKKOS_TEST_SIMD_SHIFT_OPS_HPP
+#define KOKKOS_TEST_SIMD_SHIFT_OPS_HPP
 
 #include <Kokkos_SIMD.hpp>
 #include <SIMDTesting_Utilities.hpp>
