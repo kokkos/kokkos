@@ -568,7 +568,7 @@ void do_test_half_math_unary_function(const Arg (&x)[N]) {
   // test if potentially device specific math functions also work on host
   if constexpr (!std::is_same_v<Space, Kokkos::DefaultHostExecutionSpace>)
     (void)std::initializer_list<int>{
-        (TestMathUnaryFunction<Kokkos::DefaultHostExecutionSpace, Func, Arg, N>(
+        (TestMathUnaryFunction<Kokkos::DefaultHostExecutionSpace, Func, Half, N>(
              y),
          0)...};
 }
