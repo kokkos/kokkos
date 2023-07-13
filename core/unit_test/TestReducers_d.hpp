@@ -23,7 +23,6 @@ TEST(TEST_CATEGORY, reducers_complex_double) {
   TestReducers<Kokkos::complex<double>, TEST_EXECSPACE>::execute_basic();
 }
 
-#if 0
 TEST(TEST_CATEGORY, reducers_struct) {
   TestReducers<array_reduce<float, 1>, TEST_EXECSPACE>::test_sum(1031);
   TestReducers<array_reduce<float, 2>, TEST_EXECSPACE>::test_sum(1031);
@@ -37,7 +36,6 @@ TEST(TEST_CATEGORY, reducers_struct) {
   TestReducers<array_reduce<float, 7>, TEST_EXECSPACE>::test_sum(1031);
 #endif
 }
-#endif
 
 TEST(TEST_CATEGORY, reducers_half_t) {
   using ThisTestType = Kokkos::Experimental::half_t;
