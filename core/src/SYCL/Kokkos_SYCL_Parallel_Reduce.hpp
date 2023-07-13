@@ -134,19 +134,17 @@ std::enable_if_t<use_shuffle_based_algorithm<ReducerType>> workgroup_reduction(
   // Copy the subgroup results into the first positions of the
   // reduction array.
   const int max_subgroup_size = sg.get_max_local_range()[0];
-  const unsigned int n_active_subgroups =
+  const int n_active_subgroups =
       (max_size + max_subgroup_size - 1) / max_subgroup_size;
   const int sg_group_id = sg.get_group_id()[0];
-  if (id_in_sg == 0 && sg_group_id <= static_cast<int>(n_active_subgroups))
+  if (id_in_sg == 0 && sg_group_id <= n_active_subgroups)
     local_mem[sg_group_id] = local_value;
 
   item.barrier(sycl::access::fence_space::local_space);
 
   // Do the final reduction only using the first subgroup.
   if (sg.get_group_id()[0] == 0) {
-    auto sg_value =
-        local_mem[id_in_sg < static_cast<int>(n_active_subgroups) ? id_in_sg
-                                                                  : 0];
+    auto sg_value = local_mem[id_in_sg < n_active_subgroups ? id_in_sg : 0];
 
     // In case the number of subgroups is larger than the range of
     // the first subgroup, we first combine the items with a higher
