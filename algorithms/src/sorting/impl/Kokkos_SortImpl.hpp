@@ -183,10 +183,10 @@ void sort_cudathrust(const Cuda& space,
 
 #if defined(KOKKOS_ENABLE_ONEDPL)
 template <class DataType, class... Properties>
-void sort_onedpl(const Experimental::SYCL& space,
+void sort_onedpl(const Kokkos::Experimental::SYCL& space,
                  const Kokkos::View<DataType, Properties...>& view) {
   using ViewType = Kokkos::View<DataType, Properties...>;
-  static_assert(SpaceAccessibility<Experimental::SYCL,
+  static_assert(SpaceAccessibility<Kokkos::Experimental::SYCL,
                                    typename ViewType::memory_space>::accessible,
                 "SYCL execution space is not able to access the memory space "
                 "of the View argument!");
@@ -227,7 +227,7 @@ void sort_device_view_without_comparator(
 #if defined(KOKKOS_ENABLE_ONEDPL)
 template <class DataType, class... Properties>
 void sort_device_view_without_comparator(
-    const Experimental::SYCL& exec,
+    const Kokkos::Experimental::SYCL& exec,
     const Kokkos::View<DataType, Properties...>& view) {
   sort_onedpl(exec, view);
 }
