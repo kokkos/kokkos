@@ -874,23 +874,27 @@ KOKKOS_INLINE_FUNCTION
   // Extract ValueType from the Closure
   using ClosureValueType = typename Kokkos::Impl::FunctorAnalysis<
       Kokkos::Impl::FunctorPatternInterface::SCAN, void, Closure,
-      ValueType>::value_type;
+      void>::value_type;
   static_assert(std::is_same<ClosureValueType, ValueType>::value,
                 "Non-matching value types of closure and return type");
+
+  ValueType accum = 0;
 
   // Intra-member scan
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
        i += loop_boundaries.increment) {
-    closure(i, return_val, false);
+    closure(i, accum, false);
   }
 
-  // 'return_val' output is the exclusive prefix sum
-  return_val = loop_boundaries.thread.team_scan(return_val);
+  // 'accum' output is the exclusive prefix sum
+  accum = loop_boundaries.thread.team_scan(accum);
 
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
        i += loop_boundaries.increment) {
-    closure(i, return_val, true);
+    closure(i, accum, true);
   }
+
+  return_val = accum;
 }
 
 template <typename iType, class Closure, class Member>
@@ -918,9 +922,11 @@ KOKKOS_INLINE_FUNCTION
   // Extract ValueType from the Closure
   using ClosureValueType = typename Kokkos::Impl::FunctorAnalysis<
       Kokkos::Impl::FunctorPatternInterface::SCAN, void, ClosureType,
-      ValueType>::value_type;
+      void>::value_type;
   static_assert(std::is_same<ClosureValueType, ValueType>::value,
                 "Non-matching value types of closure and return type");
+
+  ValueType accum = 0;
 
 #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
 #pragma ivdep
@@ -929,6 +935,8 @@ KOKKOS_INLINE_FUNCTION
        i += loop_boundaries.increment) {
     closure(i, return_val, true);
   }
+
+  return_val = accum;
 }
 
 template <typename iType, class ClosureType, class Member>
