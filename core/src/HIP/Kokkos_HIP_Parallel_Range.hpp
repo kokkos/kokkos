@@ -180,7 +180,7 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
     const integral_nonzero_constant<word_size_type,
                                     ReducerType::static_value_size() /
                                         sizeof(word_size_type)>
-        word_count(reducer.value_size() / sizeof(size_type));
+        word_count(reducer.value_size() / sizeof(word_size_type));
 
     {
       reference_type value = reducer.init(reinterpret_cast<pointer_type>(
