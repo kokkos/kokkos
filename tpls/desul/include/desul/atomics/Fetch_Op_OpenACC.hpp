@@ -469,7 +469,7 @@ acc_enable_if_supported_arithmetic_type<T,void> device_atomic_store(
 template <class T>
 acc_enable_if_supported_arithmetic_type<T,T> device_atomic_load(
     const T* const ptr, MemoryOrderRelaxed, MemoryScopeDevice) {
-  T retval{};
+  T retval;
 #pragma acc atomic read
   retval = *ptr;
   return retval;

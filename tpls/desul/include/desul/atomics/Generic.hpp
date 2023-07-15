@@ -24,6 +24,7 @@ DESUL_INLINE_FUNCTION void atomic_thread_fence(MemoryOrder order, MemoryScope sc
   DESUL_IF_ON_DEVICE(return Impl::device_atomic_thread_fence(order, scope);)
   DESUL_IF_ON_HOST(return Impl::host_atomic_thread_fence(order, scope);)
 }
+
 DESUL_ACC_ROUTINE_DIRECTIVE
 template <class T, class MemoryOrder, class MemoryScope>
 DESUL_INLINE_FUNCTION T
