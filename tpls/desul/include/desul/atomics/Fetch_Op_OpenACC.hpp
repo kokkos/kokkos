@@ -11,7 +11,7 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #include <desul/atomics/Common.hpp>
 #include <algorithm>
 
-#ifdef KOKKOS_COMPILER_NVHPC
+#ifdef __NVCOMPILER
 #ifndef DESUL_CUDA_ARCH_IS_PRE_PASCAL
 template <class T, class R>
 using acc_enable_if_supported_arithmetic_type =  std::enable_if_t<std::is_same_v<T,int> \
@@ -139,7 +139,7 @@ T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   return tmp;
 }
 
-#ifdef KOKKOS_COMPILER_NVHPC
+#ifdef __NVCOMPILER
 #pragma acc routine seq
 inline int device_atomic_fetch_max(
 int* ptr, const int val, MemoryOrderRelaxed, MemoryScopeDevice) {
@@ -178,7 +178,7 @@ T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   return tmp;
 }
 
-#ifdef KOKKOS_COMPILER_NVHPC
+#ifdef __NVCOMPILER
 #pragma acc routine seq
 inline int device_atomic_fetch_min(
 int* ptr, const int val, MemoryOrderRelaxed, MemoryScopeDevice) {
@@ -346,7 +346,7 @@ T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   return tmp;
 }
 
-#ifdef KOKKOS_COMPILER_NVHPC
+#ifdef __NVCOMPILER
 #pragma acc routine seq
 inline int device_atomic_max_fetch(
 int* ptr, const int val, MemoryOrderRelaxed, MemoryScopeDevice) {
@@ -388,7 +388,7 @@ T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   return tmp;
 }
 
-#ifdef KOKKOS_COMPILER_NVHPC
+#ifdef __NVCOMPILER
 #pragma acc routine seq
 inline int device_atomic_min_fetch(
 int* ptr, const int val, MemoryOrderRelaxed, MemoryScopeDevice) {

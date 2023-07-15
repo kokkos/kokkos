@@ -36,7 +36,7 @@ std::enable_if_t<!std::is_arithmetic<T>::value, T> device_atomic_exchange(T* des
   return return_val;
 }
 
-#ifdef KOKKOS_COMPILER_NVHPC
+#ifdef __NVCOMPILER
   //FIXME_OPENACC_NVHPC: Old NVHPC fails in compiling atomic 
   //capture constructs in some cases, and thus CUDA intrinsic 
   //function (atomicExch) is used instead.
@@ -146,7 +146,7 @@ std::enable_if_t<std::is_arithmetic<T>::value, T> device_atomic_exchange(T* dest
 #endif
 
 
-#ifdef KOKKOS_COMPILER_NVHPC
+#ifdef __NVCOMPILER
 
 #pragma acc routine seq
 template <class T, class MemoryOrder, class MemoryScope>
