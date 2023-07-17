@@ -14,8 +14,8 @@
 //
 //@HEADER
 
-#ifndef KOKKOS_ALGORITHMS_SORTING_CUSTOM_COMP_HPP
-#define KOKKOS_ALGORITHMS_SORTING_CUSTOM_COMP_HPP
+#ifndef KOKKOS_ALGORITHMS_UNITTESTS_TEST_SORT_CUSTOM_COMP_HPP
+#define KOKKOS_ALGORITHMS_UNITTESTS_TEST_SORT_CUSTOM_COMP_HPP
 
 #include <gtest/gtest.h>
 #include <Kokkos_Core.hpp>
@@ -36,7 +36,7 @@ auto create_random_view_and_host_clone(
   // construct in memory space associated with default exespace
   auto dataView = create_view<ValueType>(LayoutTag, n, label);
 
-  // dataView might not deep copyable (e.g. strided layout) so to
+  // dataView might not be deep copyable (e.g. strided layout) so to
   // randomize it, we make a new view that is for sure deep copyable,
   // modify it on the host, deep copy to device and then launch
   // a kernel to copy to dataView
@@ -102,9 +102,10 @@ void run_all_scenarios(int api)
     // To actually check that Kokkos::sort used the custom
     // comparator MyComp, we should have a result in non-ascending order.
     // We can verify this by running std::is_sorted and if that returns
-    // false, then it means everything ran as expected
-    if (api <= 1 && N >= 2){
-      namespace KE = Kokkos::Experimental;
+    // false, then it means everything ran as expected.
+    // Note: std::is_sorted returns true for ranges of length one,
+    // so this check makes sense only when N >= 2.
+    if (N >= 2){
       ASSERT_FALSE(std::is_sorted( KE::cbegin(dataView_h), KE::cend(dataView_h)));
     }
   }
@@ -115,9 +116,11 @@ TEST(TEST_CATEGORY, SortWithCustomComparator) {
   for (int api = 0; api < 2; api++) {
     run_all_scenarios<ExeSpace, stdalgos::DynamicTag, int>(api);
     run_all_scenarios<ExeSpace, stdalgos::DynamicTag, double>(api);
-    run_all_scenarios<ExeSpace, stdalgos::StridedTwoTag, int>(api);
+    run_all_scenarios<ExeSpace, stdalgos::DynamicLayoutLeftTag, int>(api);
+    run_all_scenarios<ExeSpace, stdalgos::DynamicLayoutLeftTag, double>(api);
+    run_all_scenarios<ExeSpace, stdalgos::DynamicLayoutRightTag, int>(api);
+    run_all_scenarios<ExeSpace, stdalgos::DynamicLayoutRightTag, double>(api);
     run_all_scenarios<ExeSpace, stdalgos::StridedThreeTag, int>(api);
-    run_all_scenarios<ExeSpace, stdalgos::StridedTwoTag, double>(api);
     run_all_scenarios<ExeSpace, stdalgos::StridedThreeTag, double>(api);
   }
 }  // namespace SortWithComp

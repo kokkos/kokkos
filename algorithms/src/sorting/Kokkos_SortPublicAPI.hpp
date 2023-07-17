@@ -93,8 +93,7 @@ void sort([[maybe_unused]] const ExecutionSpace& exec,
 
   static_assert(SpaceAccessibility<ExecutionSpace, MemSpace>::accessible,
                 "Kokkos::sort: execution space instance is not able to access "
-                "the memory space of the "
-                "View argument!");
+                "the memory space of the View argument!");
 
   if (view.extent(0) <= 1) {
     return;

@@ -339,7 +339,7 @@ sort_device_view_with_comparator(
     const ExecutionSpace& exec,
     const Kokkos::View<DataType, Properties...>& view,
     ComparatorType const& comparator) {
-  // This is a fallback case if a more specialized overload does not exists:
+  // This is a fallback case if a more specialized overload does not exist:
   // for now, this fallback copies data to host, runs std::sort
   // and then copies data back. Potentially, this can later be changed
   // with a better solution like our own quicksort on device or similar.
