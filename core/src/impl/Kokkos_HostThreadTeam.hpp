@@ -912,45 +912,24 @@ KOKKOS_INLINE_FUNCTION
   parallel_scan(loop_boundaries, closure, scan_val);
 }
 
-template <typename iType, class ClosureType, class Member, typename ValueType>
-KOKKOS_INLINE_FUNCTION
-    std::enable_if_t<!Kokkos::is_reducer<ValueType>::value &&
-                     Impl::is_host_thread_team_member<Member>::value>
-    parallel_scan(Impl::ThreadVectorRangeBoundariesStruct<iType, Member> const&
-                      loop_boundaries,
-                  ClosureType const& closure, ValueType& return_val) {
-  // Extract ValueType from the Closure
-  using ClosureValueType = typename Kokkos::Impl::FunctorAnalysis<
-      Kokkos::Impl::FunctorPatternInterface::SCAN, void, ClosureType,
-      void>::value_type;
-  static_assert(std::is_same<ClosureValueType, ValueType>::value,
-                "Non-matching value types of closure and return type");
-
-  ValueType accum = 0;
-
-#ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
-#pragma ivdep
-#endif
-  for (iType i = loop_boundaries.start; i < loop_boundaries.end;
-       i += loop_boundaries.increment) {
-    closure(i, return_val, true);
-  }
-
-  return_val = accum;
-}
-
 template <typename iType, class ClosureType, class Member>
 KOKKOS_INLINE_FUNCTION
     std::enable_if_t<Impl::is_host_thread_team_member<Member>::value>
     parallel_scan(Impl::ThreadVectorRangeBoundariesStruct<iType, Member> const&
                       loop_boundaries,
                   ClosureType const& closure) {
-  // Extract ValueType from the closure
-  using ValueType = typename Kokkos::Impl::FunctorAnalysis<
+  using value_type = typename Kokkos::Impl::FunctorAnalysis<
       Impl::FunctorPatternInterface::SCAN, void, ClosureType, void>::value_type;
 
-  ValueType scan_val = ValueType();
-  parallel_scan(loop_boundaries, closure, scan_val);
+  value_type scan_val = value_type();
+
+#ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
+#pragma ivdep
+#endif
+  for (iType i = loop_boundaries.start; i < loop_boundaries.end;
+       i += loop_boundaries.increment) {
+    closure(i, scan_val, true);
+  }
 }
 
 template <typename iType, class Lambda, typename ReducerType, typename Member>
