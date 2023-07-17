@@ -26,31 +26,32 @@ namespace Experimental {
 //
 // overload set accepting execution space
 //
-template <class ExecutionSpace, class IteratorType, class SizeType,
-          class UnaryFunctorType>
-std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
-                 IteratorType>
-for_each_n(const std::string& label, const ExecutionSpace& ex,
-           IteratorType first, SizeType n, UnaryFunctorType functor) {
+template <
+    class ExecutionSpace, class IteratorType, class SizeType,
+    class UnaryFunctorType,
+    std::enable_if_t<Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
+IteratorType for_each_n(const std::string& label, const ExecutionSpace& ex,
+                        IteratorType first, SizeType n,
+                        UnaryFunctorType functor) {
   return Impl::for_each_n_exespace_impl(label, ex, first, n,
                                         std::move(functor));
 }
 
-template <class ExecutionSpace, class IteratorType, class SizeType,
-          class UnaryFunctorType>
-std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
-                 IteratorType>
-for_each_n(const ExecutionSpace& ex, IteratorType first, SizeType n,
-           UnaryFunctorType functor) {
+template <
+    class ExecutionSpace, class IteratorType, class SizeType,
+    class UnaryFunctorType,
+    std::enable_if_t<Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
+IteratorType for_each_n(const ExecutionSpace& ex, IteratorType first,
+                        SizeType n, UnaryFunctorType functor) {
   return Impl::for_each_n_exespace_impl(
       "Kokkos::for_each_n_iterator_api_default", ex, first, n,
       std::move(functor));
 }
 
-template <class ExecutionSpace, class DataType, class... Properties,
-          class SizeType, class UnaryFunctorType,
-          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
-                           int> = 0>
+template <
+    class ExecutionSpace, class DataType, class... Properties, class SizeType,
+    class UnaryFunctorType,
+    std::enable_if_t<Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
 auto for_each_n(const std::string& label, const ExecutionSpace& ex,
                 const ::Kokkos::View<DataType, Properties...>& v, SizeType n,
                 UnaryFunctorType functor) {
@@ -61,10 +62,10 @@ auto for_each_n(const std::string& label, const ExecutionSpace& ex,
                                         std::move(functor));
 }
 
-template <class ExecutionSpace, class DataType, class... Properties,
-          class SizeType, class UnaryFunctorType,
-          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
-                           int> = 0>
+template <
+    class ExecutionSpace, class DataType, class... Properties, class SizeType,
+    class UnaryFunctorType,
+    std::enable_if_t<Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
 auto for_each_n(const ExecutionSpace& ex,
                 const ::Kokkos::View<DataType, Properties...>& v, SizeType n,
                 UnaryFunctorType functor) {
@@ -83,18 +84,17 @@ auto for_each_n(const ExecutionSpace& ex,
 //
 
 template <class TeamHandleType, class IteratorType, class SizeType,
-          class UnaryFunctorType>
-KOKKOS_FUNCTION std::enable_if_t<
-    ::Kokkos::is_team_handle<TeamHandleType>::value, IteratorType>
-for_each_n(const TeamHandleType& teamHandle, IteratorType first, SizeType n,
-           UnaryFunctorType functor) {
+          class UnaryFunctorType,
+          std::enable_if_t<Kokkos::is_team_handle_v<TeamHandleType>, int> = 0>
+KOKKOS_FUNCTION IteratorType for_each_n(const TeamHandleType& teamHandle,
+                                        IteratorType first, SizeType n,
+                                        UnaryFunctorType functor) {
   return Impl::for_each_n_team_impl(teamHandle, first, n, std::move(functor));
 }
 
-template <
-    class TeamHandleType, class DataType, class... Properties, class SizeType,
-    class UnaryFunctorType,
-    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, int> = 0>
+template <class TeamHandleType, class DataType, class... Properties,
+          class SizeType, class UnaryFunctorType,
+          std::enable_if_t<Kokkos::is_team_handle_v<TeamHandleType>, int> = 0>
 KOKKOS_FUNCTION auto for_each_n(
     const TeamHandleType& teamHandle,
     const ::Kokkos::View<DataType, Properties...>& v, SizeType n,

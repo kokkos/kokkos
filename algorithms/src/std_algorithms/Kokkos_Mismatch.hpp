@@ -33,52 +33,57 @@ namespace Experimental {
 //
 // overload set accepting execution space
 //
-template <class ExecutionSpace, class IteratorType1, class IteratorType2>
-std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
-                 ::Kokkos::pair<IteratorType1, IteratorType2>>
-mismatch(const ExecutionSpace& ex, IteratorType1 first1, IteratorType1 last1,
-         IteratorType2 first2, IteratorType2 last2) {
+template <
+    class ExecutionSpace, class IteratorType1, class IteratorType2,
+    std::enable_if_t<Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
+::Kokkos::pair<IteratorType1, IteratorType2> mismatch(const ExecutionSpace& ex,
+                                                      IteratorType1 first1,
+                                                      IteratorType1 last1,
+                                                      IteratorType2 first2,
+                                                      IteratorType2 last2) {
   return Impl::mismatch_exespace_impl("Kokkos::mismatch_iterator_api_default",
                                       ex, first1, last1, first2, last2);
 }
 
-template <class ExecutionSpace, class IteratorType1, class IteratorType2,
-          class BinaryPredicateType>
-std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
-                 ::Kokkos::pair<IteratorType1, IteratorType2>>
-mismatch(const ExecutionSpace& ex, IteratorType1 first1, IteratorType1 last1,
-         IteratorType2 first2, IteratorType2 last2,
-         BinaryPredicateType&& predicate) {
+template <
+    class ExecutionSpace, class IteratorType1, class IteratorType2,
+    class BinaryPredicateType,
+    std::enable_if_t<Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
+::Kokkos::pair<IteratorType1, IteratorType2> mismatch(
+    const ExecutionSpace& ex, IteratorType1 first1, IteratorType1 last1,
+    IteratorType2 first2, IteratorType2 last2,
+    BinaryPredicateType&& predicate) {
   return Impl::mismatch_exespace_impl(
       "Kokkos::mismatch_iterator_api_default", ex, first1, last1, first2, last2,
       std::forward<BinaryPredicateType>(predicate));
 }
 
-template <class ExecutionSpace, class IteratorType1, class IteratorType2>
-std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
-                 ::Kokkos::pair<IteratorType1, IteratorType2>>
-mismatch(const std::string& label, const ExecutionSpace& ex,
-         IteratorType1 first1, IteratorType1 last1, IteratorType2 first2,
-         IteratorType2 last2) {
+template <
+    class ExecutionSpace, class IteratorType1, class IteratorType2,
+    std::enable_if_t<Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
+::Kokkos::pair<IteratorType1, IteratorType2> mismatch(
+    const std::string& label, const ExecutionSpace& ex, IteratorType1 first1,
+    IteratorType1 last1, IteratorType2 first2, IteratorType2 last2) {
   return Impl::mismatch_exespace_impl(label, ex, first1, last1, first2, last2);
 }
 
-template <class ExecutionSpace, class IteratorType1, class IteratorType2,
-          class BinaryPredicateType>
-std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
-                 ::Kokkos::pair<IteratorType1, IteratorType2>>
-mismatch(const std::string& label, const ExecutionSpace& ex,
-         IteratorType1 first1, IteratorType1 last1, IteratorType2 first2,
-         IteratorType2 last2, BinaryPredicateType&& predicate) {
+template <
+    class ExecutionSpace, class IteratorType1, class IteratorType2,
+    class BinaryPredicateType,
+    std::enable_if_t<Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
+::Kokkos::pair<IteratorType1, IteratorType2> mismatch(
+    const std::string& label, const ExecutionSpace& ex, IteratorType1 first1,
+    IteratorType1 last1, IteratorType2 first2, IteratorType2 last2,
+    BinaryPredicateType&& predicate) {
   return Impl::mismatch_exespace_impl(
       label, ex, first1, last1, first2, last2,
       std::forward<BinaryPredicateType>(predicate));
 }
 
-template <class ExecutionSpace, class DataType1, class... Properties1,
-          class DataType2, class... Properties2,
-          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
-                           int> = 0>
+template <
+    class ExecutionSpace, class DataType1, class... Properties1,
+    class DataType2, class... Properties2,
+    std::enable_if_t<Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
 auto mismatch(const ExecutionSpace& ex,
               const ::Kokkos::View<DataType1, Properties1...>& view1,
               const ::Kokkos::View<DataType2, Properties2...>& view2) {
@@ -91,10 +96,10 @@ auto mismatch(const ExecutionSpace& ex,
                                       KE::begin(view2), KE::end(view2));
 }
 
-template <class ExecutionSpace, class DataType1, class... Properties1,
-          class DataType2, class... Properties2, class BinaryPredicateType,
-          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
-                           int> = 0>
+template <
+    class ExecutionSpace, class DataType1, class... Properties1,
+    class DataType2, class... Properties2, class BinaryPredicateType,
+    std::enable_if_t<Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
 auto mismatch(const ExecutionSpace& ex,
               const ::Kokkos::View<DataType1, Properties1...>& view1,
               const ::Kokkos::View<DataType2, Properties2...>& view2,
@@ -109,10 +114,10 @@ auto mismatch(const ExecutionSpace& ex,
       std::forward<BinaryPredicateType>(predicate));
 }
 
-template <class ExecutionSpace, class DataType1, class... Properties1,
-          class DataType2, class... Properties2,
-          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
-                           int> = 0>
+template <
+    class ExecutionSpace, class DataType1, class... Properties1,
+    class DataType2, class... Properties2,
+    std::enable_if_t<Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
 auto mismatch(const std::string& label, const ExecutionSpace& ex,
               const ::Kokkos::View<DataType1, Properties1...>& view1,
               const ::Kokkos::View<DataType2, Properties2...>& view2) {
@@ -125,10 +130,10 @@ auto mismatch(const std::string& label, const ExecutionSpace& ex,
                                       KE::end(view2));
 }
 
-template <class ExecutionSpace, class DataType1, class... Properties1,
-          class DataType2, class... Properties2, class BinaryPredicateType,
-          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
-                           int> = 0>
+template <
+    class ExecutionSpace, class DataType1, class... Properties1,
+    class DataType2, class... Properties2, class BinaryPredicateType,
+    std::enable_if_t<Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
 auto mismatch(const std::string& label, const ExecutionSpace& ex,
               const ::Kokkos::View<DataType1, Properties1...>& view1,
               const ::Kokkos::View<DataType2, Properties2...>& view2,
@@ -147,31 +152,28 @@ auto mismatch(const std::string& label, const ExecutionSpace& ex,
 // Note: for now omit the overloads accepting a label
 // since they cause issues on device because of the string allocation.
 //
-template <class TeamHandleType, class IteratorType1, class IteratorType2>
-KOKKOS_FUNCTION
-    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value,
-                     ::Kokkos::pair<IteratorType1, IteratorType2>>
-    mismatch(const TeamHandleType& teamHandle, IteratorType1 first1,
-             IteratorType1 last1, IteratorType2 first2, IteratorType2 last2) {
+template <class TeamHandleType, class IteratorType1, class IteratorType2,
+          std::enable_if_t<Kokkos::is_team_handle_v<TeamHandleType>, int> = 0>
+KOKKOS_FUNCTION ::Kokkos::pair<IteratorType1, IteratorType2> mismatch(
+    const TeamHandleType& teamHandle, IteratorType1 first1, IteratorType1 last1,
+    IteratorType2 first2, IteratorType2 last2) {
   return Impl::mismatch_team_impl(teamHandle, first1, last1, first2, last2);
 }
 
 template <class TeamHandleType, class IteratorType1, class IteratorType2,
-          class BinaryPredicateType>
-KOKKOS_FUNCTION
-    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value,
-                     ::Kokkos::pair<IteratorType1, IteratorType2>>
-    mismatch(const TeamHandleType& teamHandle, IteratorType1 first1,
-             IteratorType1 last1, IteratorType2 first2, IteratorType2 last2,
-             BinaryPredicateType&& predicate) {
+          class BinaryPredicateType,
+          std::enable_if_t<Kokkos::is_team_handle_v<TeamHandleType>, int> = 0>
+KOKKOS_FUNCTION ::Kokkos::pair<IteratorType1, IteratorType2> mismatch(
+    const TeamHandleType& teamHandle, IteratorType1 first1, IteratorType1 last1,
+    IteratorType2 first2, IteratorType2 last2,
+    BinaryPredicateType&& predicate) {
   return Impl::mismatch_team_impl(teamHandle, first1, last1, first2, last2,
                                   std::forward<BinaryPredicateType>(predicate));
 }
 
-template <
-    class TeamHandleType, class DataType1, class... Properties1,
-    class DataType2, class... Properties2,
-    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, int> = 0>
+template <class TeamHandleType, class DataType1, class... Properties1,
+          class DataType2, class... Properties2,
+          std::enable_if_t<Kokkos::is_team_handle_v<TeamHandleType>, int> = 0>
 KOKKOS_FUNCTION auto mismatch(
     const TeamHandleType& teamHandle,
     const ::Kokkos::View<DataType1, Properties1...>& view1,
@@ -184,10 +186,9 @@ KOKKOS_FUNCTION auto mismatch(
                                   KE::begin(view2), KE::end(view2));
 }
 
-template <
-    class TeamHandleType, class DataType1, class... Properties1,
-    class DataType2, class... Properties2, class BinaryPredicateType,
-    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, int> = 0>
+template <class TeamHandleType, class DataType1, class... Properties1,
+          class DataType2, class... Properties2, class BinaryPredicateType,
+          std::enable_if_t<Kokkos::is_team_handle_v<TeamHandleType>, int> = 0>
 KOKKOS_FUNCTION auto mismatch(
     const TeamHandleType& teamHandle,
     const ::Kokkos::View<DataType1, Properties1...>& view1,

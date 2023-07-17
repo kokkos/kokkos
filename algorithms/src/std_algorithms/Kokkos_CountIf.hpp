@@ -26,28 +26,32 @@ namespace Experimental {
 //
 // overload set accepting execution space
 //
-template <class ExecutionSpace, class IteratorType, class Predicate>
-std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
-                 typename IteratorType::difference_type>
-count_if(const ExecutionSpace& ex, IteratorType first, IteratorType last,
-         Predicate predicate) {
+template <
+    class ExecutionSpace, class IteratorType, class Predicate,
+    std::enable_if_t<Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
+typename IteratorType::difference_type count_if(const ExecutionSpace& ex,
+                                                IteratorType first,
+                                                IteratorType last,
+                                                Predicate predicate) {
   return Impl::count_if_exespace_impl("Kokkos::count_if_iterator_api_default",
                                       ex, first, last, std::move(predicate));
 }
 
-template <class ExecutionSpace, class IteratorType, class Predicate>
-std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
-                 typename IteratorType::difference_type>
-count_if(const std::string& label, const ExecutionSpace& ex, IteratorType first,
-         IteratorType last, Predicate predicate) {
+template <
+    class ExecutionSpace, class IteratorType, class Predicate,
+    std::enable_if_t<Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
+typename IteratorType::difference_type count_if(const std::string& label,
+                                                const ExecutionSpace& ex,
+                                                IteratorType first,
+                                                IteratorType last,
+                                                Predicate predicate) {
   return Impl::count_if_exespace_impl(label, ex, first, last,
                                       std::move(predicate));
 }
 
 template <
     class ExecutionSpace, class DataType, class... Properties, class Predicate,
-    std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, int> =
-        0>
+    std::enable_if_t<Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
 auto count_if(const ExecutionSpace& ex,
               const ::Kokkos::View<DataType, Properties...>& v,
               Predicate predicate) {
@@ -61,8 +65,7 @@ auto count_if(const ExecutionSpace& ex,
 
 template <
     class ExecutionSpace, class DataType, class... Properties, class Predicate,
-    std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, int> =
-        0>
+    std::enable_if_t<Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
 auto count_if(const std::string& label, const ExecutionSpace& ex,
               const ::Kokkos::View<DataType, Properties...>& v,
               Predicate predicate) {
@@ -76,25 +79,25 @@ auto count_if(const std::string& label, const ExecutionSpace& ex,
 //
 // overload set accepting team handle
 //
-template <class ExecutionSpace, class IteratorType, class Predicate>
-KOKKOS_FUNCTION
-    std::enable_if_t<::Kokkos::is_team_handle<ExecutionSpace>::value,
-                     typename IteratorType::difference_type>
-    count_if(const ExecutionSpace& ex, IteratorType first, IteratorType last,
-             Predicate predicate) {
-  return Impl::count_if_team_impl(ex, first, last, std::move(predicate));
+template <class TeamHandleType, class IteratorType, class Predicate,
+          std::enable_if_t<Kokkos::is_team_handle_v<TeamHandleType>, int> = 0>
+KOKKOS_FUNCTION typename IteratorType::difference_type count_if(
+    const TeamHandleType& teamHandle, IteratorType first, IteratorType last,
+    Predicate predicate) {
+  return Impl::count_if_team_impl(teamHandle, first, last,
+                                  std::move(predicate));
 }
 
-template <
-    class ExecutionSpace, class DataType, class... Properties, class Predicate,
-    std::enable_if_t<::Kokkos::is_team_handle<ExecutionSpace>::value, int> = 0>
-KOKKOS_FUNCTION auto count_if(const ExecutionSpace& ex,
+template <class TeamHandleType, class DataType, class... Properties,
+          class Predicate,
+          std::enable_if_t<Kokkos::is_team_handle_v<TeamHandleType>, int> = 0>
+KOKKOS_FUNCTION auto count_if(const TeamHandleType& teamHandle,
                               const ::Kokkos::View<DataType, Properties...>& v,
                               Predicate predicate) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
 
   namespace KE = ::Kokkos::Experimental;
-  return Impl::count_if_team_impl(ex, KE::cbegin(v), KE::cend(v),
+  return Impl::count_if_team_impl(teamHandle, KE::cbegin(v), KE::cend(v),
                                   std::move(predicate));
 }
 

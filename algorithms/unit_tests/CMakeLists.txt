@@ -207,8 +207,8 @@ if(KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM)
   )
 endif()
 
-# need to remove tests for OpenMPTarget because in these cases
-# the impl needs to use either Kokkos or tailored reducers
+# FIXME_OPENMPTARGET need to remove tests for OpenMPTarget because
+# in these cases the impl needs to use either Kokkos or tailored reducers
 # which results in runtime memory errors.
 if(KOKKOS_ENABLE_OPENMPTARGET)
   list(REMOVE_ITEM STDALGO_TEAM_SOURCES_A
@@ -230,7 +230,7 @@ endforeach()
 
 foreach(ID A)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_StdSet_Team_${ID}
+    AlgorithmsUnitTest_StdSet_Team_${ID}
     SOURCES
     UnitTestMain.cpp
     ${STDALGO_TEAM_SOURCES_${ID}}

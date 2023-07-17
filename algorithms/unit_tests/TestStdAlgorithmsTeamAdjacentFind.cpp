@@ -116,10 +116,10 @@ void test_A(const bool ensureAdjacentFindCanFind, std::size_t numTeams,
       LayoutTag{}, numTeams, numCols, bounds, "dataView");
 
   // If ensureAdjacentFindCanFind == true ensure there are two consecutive equal
-  // elemnts in each row
+  // elements in each row
 
   // dataView might not deep copyable (e.g. strided layout) so to prepare it
-  // correclty, we make a new view that is for sure deep copyable, modify it on
+  // correctly, we make a new view that is for sure deep copyable, modify it on
   // the host, deep copy to device and then launch a kernel to copy to dataView
   auto dataView_dc =
       create_deep_copyable_compatible_view_with_same_extent(dataView);
