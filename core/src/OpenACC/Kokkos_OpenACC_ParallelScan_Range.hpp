@@ -31,10 +31,10 @@
 #ifdef KOKKOS_COMPILER_CLANG
 #define KOKKOS_IMPL_ACC_ACCESS_ELEMENTS(THREADID) \
   element_values[team_id * 2 * chunk_size + THREADID]
-#define KOKKOS_IMPL_ACC_ELEMENT_VALUES_CLAUSE create(element_values [0:n_chunks * 2 * chunk_size])
+#define KOKKOS_IMPL_ACC_ELEMENT_VALUES_CLAUSE create(element_values [0:num_elements])
 #else
 #define KOKKOS_IMPL_ACC_ACCESS_ELEMENTS(THREADID) element_values[THREADID]
-#define KOKKOS_IMPL_ACC_ELEMENT_VALUES_CLAUSE private(element_values [0:2 * chunk_size])
+#define KOKKOS_IMPL_ACC_ELEMENT_VALUES_CLAUSE private(element_values [0:num_elements])
 #endif
 /* clang-format on */
 
