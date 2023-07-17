@@ -23,7 +23,7 @@
 #include <Kokkos_Sort.hpp>
 #include <TestStdAlgorithmsCommon.hpp>
 
-namespace Test {
+namespace {
 namespace SortWithComp {
 
 template <class LayoutTagType, class ValueType>
@@ -96,8 +96,8 @@ void run_all_scenarios(int api)
       exespace.fence();
     }
 
-    auto dataView_h = stdalgos::create_host_space_copy(dataView);
-    stdalgos::compare_views(dataViewBeforeOp_h, dataView_h);
+    auto dataView_h = Test::stdalgos::create_host_space_copy(dataView);
+    Test::stdalgos::compare_views(dataViewBeforeOp_h, dataView_h);
 
     // To actually check that Kokkos::sort used the custom
     // comparator MyComp, we should have a result in non-ascending order.
@@ -113,18 +113,19 @@ void run_all_scenarios(int api)
 
 TEST(TEST_CATEGORY, SortWithCustomComparator) {
   using ExeSpace = TEST_EXECSPACE;
+  using namespace ::Test::stdalgos;
   for (int api = 0; api < 2; api++) {
-    run_all_scenarios<ExeSpace, stdalgos::DynamicTag, int>(api);
-    run_all_scenarios<ExeSpace, stdalgos::DynamicTag, double>(api);
-    run_all_scenarios<ExeSpace, stdalgos::DynamicLayoutLeftTag, int>(api);
-    run_all_scenarios<ExeSpace, stdalgos::DynamicLayoutLeftTag, double>(api);
-    run_all_scenarios<ExeSpace, stdalgos::DynamicLayoutRightTag, int>(api);
-    run_all_scenarios<ExeSpace, stdalgos::DynamicLayoutRightTag, double>(api);
-    run_all_scenarios<ExeSpace, stdalgos::StridedThreeTag, int>(api);
-    run_all_scenarios<ExeSpace, stdalgos::StridedThreeTag, double>(api);
+    run_all_scenarios<ExeSpace, DynamicTag, int>(api);
+    run_all_scenarios<ExeSpace, DynamicTag, double>(api);
+    run_all_scenarios<ExeSpace, DynamicLayoutLeftTag, int>(api);
+    run_all_scenarios<ExeSpace, DynamicLayoutLeftTag, double>(api);
+    run_all_scenarios<ExeSpace, DynamicLayoutRightTag, int>(api);
+    run_all_scenarios<ExeSpace, DynamicLayoutRightTag, double>(api);
+    run_all_scenarios<ExeSpace, StridedThreeTag, int>(api);
+    run_all_scenarios<ExeSpace, StridedThreeTag, double>(api);
   }
-}  // namespace SortWithComp
+}
 
 }  // namespace SortWithComp
-}  // namespace Test
+}  // namespace anonym
 #endif
