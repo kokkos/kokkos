@@ -31,9 +31,11 @@ namespace Kokkos {
 
 namespace Impl {
 
+// FIXME_SYCL It appears that using shuffles is slower than going through local
+// memory.
 template <class ReducerType>
-inline constexpr bool use_shuffle_based_algorithm =
-    std::is_reference_v<typename ReducerType::reference_type>;
+inline constexpr bool use_shuffle_based_algorithm = false;
+// std::is_reference_v<typename ReducerType::reference_type>;
 
 namespace SYCLReduction {
 template <typename ValueType, typename ReducerType, int dim>
@@ -41,19 +43,22 @@ std::enable_if_t<!use_shuffle_based_algorithm<ReducerType>> workgroup_reduction(
     sycl::nd_item<dim>& item, sycl::local_accessor<ValueType> local_mem,
     sycl::device_ptr<ValueType> results_ptr,
     sycl::global_ptr<ValueType> device_accessible_result_ptr,
-    const unsigned int value_count, const ReducerType& final_reducer,
+    const unsigned int value_count_, const ReducerType& final_reducer,
     bool final, unsigned int max_size) {
-  const auto local_id = item.get_local_linear_id();
+  const unsigned int value_count =
+      std::is_reference_v<typename ReducerType::reference_type> ? 1
+                                                                : value_count_;
+  const int local_id = item.get_local_linear_id();
 
   // Perform the actual workgroup reduction in each subgroup
   // separately.
-  auto sg             = item.get_sub_group();
-  auto* result        = &local_mem[local_id * value_count];
-  const auto id_in_sg = sg.get_local_id()[0];
+  auto sg            = item.get_sub_group();
+  auto* result       = &local_mem[local_id * value_count];
+  const int id_in_sg = sg.get_local_id()[0];
   const auto local_range =
       std::min<unsigned int>(sg.get_local_range()[0], max_size);
   const auto upper_stride_bound =
-      std::min(local_range - id_in_sg, max_size - local_id);
+      std::min<unsigned int>(local_range - id_in_sg, max_size - local_id);
   for (unsigned int stride = 1; stride < local_range; stride <<= 1) {
     if (stride < upper_stride_bound)
       final_reducer.join(result, &local_mem[(local_id + stride) * value_count]);
@@ -61,31 +66,28 @@ std::enable_if_t<!use_shuffle_based_algorithm<ReducerType>> workgroup_reduction(
   }
   sycl::group_barrier(item.get_group());
 
-  // Copy the subgroup results into the first positions of the
-  // reduction array.
-  if (id_in_sg == 0)
-    final_reducer.copy(&local_mem[sg.get_group_id()[0] * value_count], result);
-  sycl::group_barrier(item.get_group());
-
   // Do the final reduction only using the first subgroup.
   if (sg.get_group_id()[0] == 0) {
-    const auto n_subgroups = sg.get_group_range()[0];
-    auto* result_          = &local_mem[id_in_sg * value_count];
+    const unsigned int n_subgroups = sg.get_group_range()[0];
+    const int max_subgroup_size    = sg.get_max_local_range()[0];
+    auto* result_ = &local_mem[id_in_sg * max_subgroup_size * value_count];
     // In case the number of subgroups is larger than the range of
     // the first subgroup, we first combine the items with a higher
     // index.
     for (unsigned int offset = local_range; offset < n_subgroups;
          offset += local_range)
       if (id_in_sg + offset < n_subgroups)
-        final_reducer.join(result_,
-                           &local_mem[(id_in_sg + offset) * value_count]);
+        final_reducer.join(
+            result_,
+            &local_mem[(id_in_sg + offset) * max_subgroup_size * value_count]);
     sycl::group_barrier(sg);
 
     // Then, we proceed as before.
     for (unsigned int stride = 1; stride < local_range; stride <<= 1) {
       if (id_in_sg + stride < n_subgroups)
-        final_reducer.join(result_,
-                           &local_mem[(id_in_sg + stride) * value_count]);
+        final_reducer.join(
+            result_,
+            &local_mem[(id_in_sg + stride) * max_subgroup_size * value_count]);
       sycl::group_barrier(sg);
     }
 
@@ -118,12 +120,13 @@ std::enable_if_t<use_shuffle_based_algorithm<ReducerType>> workgroup_reduction(
 
   // Perform the actual workgroup reduction in each subgroup
   // separately.
-  auto sg             = item.get_sub_group();
-  const auto id_in_sg = sg.get_local_id()[0];
+  auto sg            = item.get_sub_group();
+  const int id_in_sg = sg.get_local_id()[0];
   const auto local_range =
       std::min<unsigned int>(sg.get_local_range()[0], max_size);
+
   const auto upper_stride_bound =
-      std::min(local_range - id_in_sg, max_size - local_id);
+      std::min<unsigned int>(local_range - id_in_sg, max_size - local_id);
   for (unsigned int stride = 1; stride < local_range; stride <<= 1) {
     auto tmp = sg.shuffle_down(local_value, stride);
     if (stride < upper_stride_bound) final_reducer.join(&local_value, &tmp);
@@ -131,11 +134,13 @@ std::enable_if_t<use_shuffle_based_algorithm<ReducerType>> workgroup_reduction(
 
   // Copy the subgroup results into the first positions of the
   // reduction array.
-  const auto max_subgroup_size = sg.get_max_local_range()[0];
-  const auto n_active_subgroups =
+  const int max_subgroup_size = sg.get_max_local_range()[0];
+  const int n_active_subgroups =
       (max_size + max_subgroup_size - 1) / max_subgroup_size;
-  if (id_in_sg == 0 && sg.get_group_id()[0] <= n_active_subgroups)
-    local_mem[sg.get_group_id()[0]] = local_value;
+  const int sg_group_id = sg.get_group_id()[0];
+  if (id_in_sg == 0 && sg_group_id <= n_active_subgroups)
+    local_mem[sg_group_id] = local_value;
+
   item.barrier(sycl::access::fence_space::local_space);
 
   // Do the final reduction only using the first subgroup.
@@ -684,7 +689,7 @@ class ParallelReduce<CombinedFunctorReducerType,
           const index_type n_global_y = 1;
           const index_type n_global_z = 1;
 
-          if constexpr (ReducerType::static_value_size() == 0) {
+          if constexpr (!use_shuffle_based_algorithm<ReducerType>) {
             reference_type update =
                 reducer.init(&local_mem[local_id * value_count]);
 
