@@ -26,6 +26,7 @@ static_assert(false,
 #include <string>
 #include <algorithm>
 #include <initializer_list>
+#include <functional>
 
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_HostSpace.hpp>
@@ -1917,13 +1918,20 @@ KOKKOS_INLINE_FUNCTION bool operator!=(const View<LT, LP...>& lhs,
 
 namespace Kokkos {
 namespace Impl {
+struct SharedAllocationDisableTrackingGuard {
+  SharedAllocationDisableTrackingGuard() {
+    Kokkos::Impl::SharedAllocationRecord<void, void>::tracking_disable();
+  }
 
-inline void shared_allocation_tracking_disable() {
-  Kokkos::Impl::SharedAllocationRecord<void, void>::tracking_disable();
-}
+  ~SharedAllocationDisableTrackingGuard() {
+    Kokkos::Impl::SharedAllocationRecord<void, void>::tracking_enable();
+  }
+};
 
-inline void shared_allocation_tracking_enable() {
-  Kokkos::Impl::SharedAllocationRecord<void, void>::tracking_enable();
+template <class F>
+inline decltype(auto) with_shared_allocation_tracking_disabled(F&& fun) {
+  [[maybe_unused]] auto guard = SharedAllocationDisableTrackingGuard{};
+  return std::invoke(std::forward<F>(fun));
 }
 
 } /* namespace Impl */
