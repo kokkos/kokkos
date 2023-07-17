@@ -224,21 +224,7 @@ void copy_to_host_run_stdsort_copy_back(
   namespace KE = ::Kokkos::Experimental;
 
   using ViewType = Kokkos::View<DataType, Properties...>;
-  using MemSpace = typename ViewType::memory_space;
   using layout   = typename ViewType::array_layout;
-  static_assert(
-      ViewType::rank == 1 &&
-          (std::is_same_v<typename ViewType::array_layout, LayoutRight> ||
-           std::is_same_v<typename ViewType::array_layout, LayoutLeft> ||
-           std::is_same_v<typename ViewType::array_layout, LayoutStride>),
-      "Impl::copy_to_host_run_stdsort_copy_back: supports 1D Views with "
-      "LayoutRight, LayoutLeft or LayoutStride.");
-
-  static_assert(
-      SpaceAccessibility<ExecutionSpace, MemSpace>::accessible,
-      "Impl::copy_to_host_run_stdsort_copy_back: execution space instance is "
-      "not able to access the memory space of the  View argument!");
-
   if constexpr (std::is_same_v<LayoutStride, layout>) {
     // for strided views we cannot just deep_copy from device to host,
     // so we need to do a few more jumps
