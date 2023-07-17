@@ -29,14 +29,12 @@
 // instead of using the private clause.
 /* clang-format off */
 #ifdef KOKKOS_COMPILER_CLANG
-#define ELEMENT_VALUES_SIZE (n_chunks * 2 * chunk_size)
-#define ACCESS_ELEMENTS(THREADID) \
+#define KOKKOS_IMPL_ACC_ACCESS_ELEMENTS(THREADID) \
   element_values[team_id * 2 * chunk_size + THREADID]
-#define ELEMENT_VALUES_CLAUSE create(element_values [0:n_chunks * 2 * chunk_size])
+#define KOKKOS_IMPL_ACC_ELEMENT_VALUES_CLAUSE create(element_values [0:n_chunks * 2 * chunk_size])
 #else
-#define ELEMENT_VALUES_SIZE (2 * chunk_size)
-#define ACCESS_ELEMENTS(THREADID) element_values[THREADID]
-#define ELEMENT_VALUES_CLAUSE private(element_values [0:2 * chunk_size])
+#define KOKKOS_IMPL_ACC_ACCESS_ELEMENTS(THREADID) element_values[THREADID]
+#define KOKKOS_IMPL_ACC_ELEMENT_VALUES_CLAUSE private(element_values [0:2 * chunk_size])
 #endif
 /* clang-format on */
 
@@ -88,6 +86,11 @@ class ParallelScanOpenACCBase {
         functor(m_functor);
     const IndexType N        = end - begin;
     const IndexType n_chunks = (N + chunk_size - 1) / chunk_size;
+#ifdef KOKKOS_COMPILER_CLANG
+    int const num_elements = n_chunks * 2 * chunk_size;
+#else
+    int const num_elements = 2 * chunk_size;
+#endif
     Kokkos::View<ValueType*, Kokkos::Experimental::OpenACCSpace> chunk_values(
         "Kokkos::OpenACCParallelScan::chunk_values", n_chunks);
     Kokkos::View<ValueType*, Kokkos::Experimental::OpenACCSpace> offset_values(
@@ -95,7 +98,7 @@ class ParallelScanOpenACCBase {
     Kokkos::View<ValueType, Kokkos::Experimental::OpenACCSpace> m_result_total(
         "Kokkos::OpenACCParallelScan::m_result_total");
     std::unique_ptr<ValueType[]> element_values_owner(
-        new ValueType[ELEMENT_VALUES_SIZE]);
+        new ValueType[num_elements]);
     ValueType* element_values = element_values_owner.get();
     typename Analysis::Reducer final_reducer(m_functor);
 
@@ -103,7 +106,7 @@ class ParallelScanOpenACCBase {
     copyin(chunk_values, offset_values) async(async_arg)
 
     /* clang-format off */
-KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang vector_length(chunk_size) ELEMENT_VALUES_CLAUSE present(functor, chunk_values, final_reducer) async(async_arg))
+KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang vector_length(chunk_size) KOKKOS_IMPL_ACC_ELEMENT_VALUES_CLAUSE present(functor, chunk_values, final_reducer) async(async_arg))
     /* clang-format on */
     for (IndexType team_id = 0; team_id < n_chunks; ++team_id) {
       IndexType current_step = 0;
@@ -116,29 +119,32 @@ KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang vector_length(chunk_size) ELEMENT_VALU
         ValueType update;
         final_reducer.init(&update);
         if ((idx > 0) && (idx < N)) functor(idx - 1, update, false);
-        ACCESS_ELEMENTS(thread_id) = update;
+        KOKKOS_IMPL_ACC_ACCESS_ELEMENTS(thread_id) = update;
       }
       for (IndexType step_size = 1; step_size < chunk_size; step_size *= 2) {
 #pragma acc loop vector
         for (IndexType thread_id = 0; thread_id < chunk_size; ++thread_id) {
           if (thread_id < step_size) {
-            ACCESS_ELEMENTS(next_step * chunk_size + thread_id) =
-                ACCESS_ELEMENTS(current_step * chunk_size + thread_id);
+            KOKKOS_IMPL_ACC_ACCESS_ELEMENTS(next_step * chunk_size +
+                                            thread_id) =
+                KOKKOS_IMPL_ACC_ACCESS_ELEMENTS(current_step * chunk_size +
+                                                thread_id);
           } else {
-            ValueType localValue =
-                ACCESS_ELEMENTS(current_step * chunk_size + thread_id);
-            final_reducer.join(&localValue,
-                               &ACCESS_ELEMENTS(current_step * chunk_size +
+            ValueType localValue = KOKKOS_IMPL_ACC_ACCESS_ELEMENTS(
+                current_step * chunk_size + thread_id);
+            final_reducer.join(&localValue, &KOKKOS_IMPL_ACC_ACCESS_ELEMENTS(
+                                                current_step * chunk_size +
                                                 thread_id - step_size));
-            ACCESS_ELEMENTS(next_step * chunk_size + thread_id) = localValue;
+            KOKKOS_IMPL_ACC_ACCESS_ELEMENTS(next_step * chunk_size +
+                                            thread_id) = localValue;
           }
         }
         temp         = current_step;
         current_step = next_step;
         next_step    = temp;
       }
-      chunk_values(team_id) =
-          ACCESS_ELEMENTS(current_step * chunk_size + chunk_size - 1);
+      chunk_values(team_id) = KOKKOS_IMPL_ACC_ACCESS_ELEMENTS(
+          current_step * chunk_size + chunk_size - 1);
     }
 
     ValueType tempValue;
@@ -155,7 +161,7 @@ KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang vector_length(chunk_size) ELEMENT_VALU
     }
 
     /* clang-format off */
-KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang vector_length(chunk_size) ELEMENT_VALUES_CLAUSE present(functor, offset_values, final_reducer) copyin(m_result_total) async(async_arg))
+KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang vector_length(chunk_size) KOKKOS_IMPL_ACC_ELEMENT_VALUES_CLAUSE present(functor, offset_values, final_reducer) copyin(m_result_total) async(async_arg))
     /* clang-format on */
     for (IndexType team_id = 0; team_id < n_chunks; ++team_id) {
       IndexType current_step = 0;
@@ -171,21 +177,24 @@ KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang vector_length(chunk_size) ELEMENT_VALU
           final_reducer.join(&update, &offset_values(team_id));
         }
         if ((idx > 0) && (idx < N)) functor(idx - 1, update, false);
-        ACCESS_ELEMENTS(thread_id) = update;
+        KOKKOS_IMPL_ACC_ACCESS_ELEMENTS(thread_id) = update;
       }
       for (IndexType step_size = 1; step_size < chunk_size; step_size *= 2) {
 #pragma acc loop vector
         for (IndexType thread_id = 0; thread_id < chunk_size; ++thread_id) {
           if (thread_id < step_size) {
-            ACCESS_ELEMENTS(next_step * chunk_size + thread_id) =
-                ACCESS_ELEMENTS(current_step * chunk_size + thread_id);
+            KOKKOS_IMPL_ACC_ACCESS_ELEMENTS(next_step * chunk_size +
+                                            thread_id) =
+                KOKKOS_IMPL_ACC_ACCESS_ELEMENTS(current_step * chunk_size +
+                                                thread_id);
           } else {
-            ValueType localValue =
-                ACCESS_ELEMENTS(current_step * chunk_size + thread_id);
-            final_reducer.join(&localValue,
-                               &ACCESS_ELEMENTS(current_step * chunk_size +
+            ValueType localValue = KOKKOS_IMPL_ACC_ACCESS_ELEMENTS(
+                current_step * chunk_size + thread_id);
+            final_reducer.join(&localValue, &KOKKOS_IMPL_ACC_ACCESS_ELEMENTS(
+                                                current_step * chunk_size +
                                                 thread_id - step_size));
-            ACCESS_ELEMENTS(next_step * chunk_size + thread_id) = localValue;
+            KOKKOS_IMPL_ACC_ACCESS_ELEMENTS(next_step * chunk_size +
+                                            thread_id) = localValue;
           }
         }
         temp         = current_step;
@@ -196,8 +205,8 @@ KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang vector_length(chunk_size) ELEMENT_VALU
       for (IndexType thread_id = 0; thread_id < chunk_size; ++thread_id) {
         const IndexType local_offset = team_id * chunk_size;
         const IndexType idx          = local_offset + thread_id;
-        ValueType update =
-            ACCESS_ELEMENTS(current_step * chunk_size + thread_id);
+        ValueType update             = KOKKOS_IMPL_ACC_ACCESS_ELEMENTS(
+            current_step * chunk_size + thread_id);
         if (idx < N) functor(idx, update, true);
         if (idx == N - 1) {
           if (m_result_ptr_device_accessible) {
@@ -303,7 +312,7 @@ class Kokkos::Impl::ParallelScanWithTotal<
   }
 };
 
-#undef ELEMENT_VALUES_SIZE
-#undef ACCESS_ELEMENTS
+#undef KOKKOS_IMPL_ACC_ACCESS_ELEMENTS
+#undef KOKKOS_IMPL_ACC_ELEMENT_VALUES_CLAUSE
 
 #endif
