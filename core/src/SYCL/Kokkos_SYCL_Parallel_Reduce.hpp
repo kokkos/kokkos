@@ -424,7 +424,7 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
         // - the largest power of two not exceeding the largest multiple of the
         //   recommended workgroup size not exceeding the maximum workgroup size
         // - the largest power of two such that we don't use more than 99% (as a
-        //   safe-gurad) of the available local memory.
+        //   safe-guard) of the available local memory.
         const auto wgroup_size = std::min(
             {Kokkos::bit_ceil(size),
              Kokkos::bit_floor(static_cast<size_t>(max / multiple) * multiple),
