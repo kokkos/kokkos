@@ -22,6 +22,7 @@
 #include <vector>
 #if defined(KOKKOS_ENABLE_SYCL)
 #include <Kokkos_Parallel_Reduce.hpp>
+#include <Kokkos_BitManipulation.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -220,10 +221,9 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
         *space.impl_internal_space_instance();
     sycl::queue& q = space.sycl_queue();
 
-    constexpr size_t values_per_thread = 2;
-    std::size_t size                   = policy.end() - policy.begin();
+    std::size_t size = policy.end() - policy.begin();
     const unsigned int value_count =
-        m_functor_reducer.get_reducer().value_count();
+        std::max(m_functor_reducer.get_reducer().value_count(), 1u);
     sycl::device_ptr<value_type> results_ptr = nullptr;
     sycl::global_ptr<value_type> device_accessible_result_ptr =
         m_result_ptr_device_accessible ? m_result_ptr : nullptr;
@@ -234,9 +234,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
     // working with the global scratch memory but don't copy back to
     // m_result_ptr yet.
     if (size <= 1) {
-      results_ptr =
-          static_cast<sycl::device_ptr<value_type>>(instance.scratch_space(
-              sizeof(value_type) * std::max(value_count, 1u)));
+      results_ptr = static_cast<sycl::device_ptr<value_type>>(
+          instance.scratch_space(sizeof(value_type) * value_count));
 
       auto parallel_reduce_event = q.submit([&](sycl::handler& cgh) {
         const auto begin = policy.begin();
@@ -280,7 +279,7 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
       auto reduction_lambda_factory =
           [&](sycl::local_accessor<value_type> local_mem,
               sycl::local_accessor<unsigned int> num_teams_done,
-              sycl::device_ptr<value_type> results_ptr) {
+              sycl::device_ptr<value_type> results_ptr, int values_per_thread) {
             const auto begin = policy.begin();
 
             auto lambda = [=](sycl::nd_item<1> item) {
@@ -300,7 +299,7 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
               const auto upper_bound = std::min<index_type>(
                   global_id + values_per_thread * wgroup_size, size);
 
-              if constexpr (ReducerType::static_value_size() == 0) {
+              if constexpr (!use_shuffle_based_algorithm<ReducerType>) {
                 reference_type update =
                     reducer.init(&local_mem[local_id * value_count]);
                 for (index_type id = global_id; id < upper_bound;
@@ -391,7 +390,7 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
         sycl::local_accessor<unsigned int> num_teams_done(1, cgh);
 
         auto dummy_reduction_lambda =
-            reduction_lambda_factory({1, cgh}, num_teams_done, nullptr);
+            reduction_lambda_factory({1, cgh}, num_teams_done, nullptr, 1);
 
         static sycl::kernel kernel = [&] {
           sycl::kernel_id functor_kernel_id =
@@ -404,33 +403,55 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
         auto multiple = kernel.get_info<sycl::info::kernel_device_specific::
                                             preferred_work_group_size_multiple>(
             q.get_device());
+        // FIXME_SYCL The code below queries the kernel for the maximum subgroup
+        // size but it turns out that this is not accurate and choosing a larger
+        // subgroup size gives better peformance (and is what the oneAPI
+        // reduction algorithm does).
+#ifndef KOKKOS_ARCH_INTEL_GPU
         auto max =
             kernel
                 .get_info<sycl::info::kernel_device_specific::work_group_size>(
                     q.get_device());
-
-// FIXME_SYCL 1024 seems to be invalid when running on a Volta70.
-#ifndef KOKKOS_ARCH_INTEL_GPU
-        if (max > 512) max = 512;
+#else
+        auto max =
+            q.get_device().get_info<sycl::info::device::max_work_group_size>();
 #endif
 
-        const size_t wgroup_size =
-            static_cast<size_t>(max / multiple) * multiple;
+        auto max_local_memory =
+            q.get_device().get_info<sycl::info::device::local_mem_size>();
+        // The workgroup size is computed as the minimum of
+        // - the smallest power of two not less than the total work size
+        // - the largest power of two not exceeding the largest multiple of the
+        //   recommended workgroup size not exceeding the maximum workgroup size
+        // - the largest power of two such that we don't use more than 99% (as a
+        //   safe-guard) of the available local memory.
+        const auto wgroup_size = std::min(
+            {Kokkos::bit_ceil(size),
+             Kokkos::bit_floor(static_cast<size_t>(max / multiple) * multiple),
+             Kokkos::bit_floor(static_cast<size_t>(max_local_memory * .99) /
+                               (sizeof(value_type) * value_count))});
 
-        const std::size_t init_size =
-            ((size + values_per_thread - 1) / values_per_thread + wgroup_size -
-             1) /
-            wgroup_size;
+        // FIXME_SYCL Find a better way to determine a good limit for the
+        // maximum number of work groups, also see
+        // https://github.com/intel/llvm/blob/756ba2616111235bba073e481b7f1c8004b34ee6/sycl/source/detail/reduction.cpp#L51-L62
+        size_t max_work_groups =
+            2 *
+            q.get_device().get_info<sycl::info::device::max_compute_units>();
+        int values_per_thread = 1;
+        size_t n_wgroups      = (size + wgroup_size - 1) / wgroup_size;
+        while (n_wgroups > max_work_groups) {
+          values_per_thread *= 2;
+          n_wgroups = ((size + values_per_thread - 1) / values_per_thread +
+                       wgroup_size - 1) /
+                      wgroup_size;
+        }
+
         results_ptr =
             static_cast<sycl::device_ptr<value_type>>(instance.scratch_space(
-                sizeof(value_type) * std::max(value_count, 1u) * init_size));
-
-        auto n_wgroups = ((size + values_per_thread - 1) / values_per_thread +
-                          wgroup_size - 1) /
-                         wgroup_size;
+                sizeof(value_type) * value_count * n_wgroups));
 
         sycl::local_accessor<value_type> local_mem(
-            sycl::range<1>(wgroup_size) * std::max(value_count, 1u), cgh);
+            sycl::range<1>(wgroup_size) * value_count, cgh);
 
 #ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
         cgh.depends_on(memcpy_event);
@@ -438,8 +459,9 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
         (void)memcpy_event;
 #endif
 
-        auto reduction_lambda =
-            reduction_lambda_factory(local_mem, num_teams_done, results_ptr);
+        auto reduction_lambda = reduction_lambda_factory(
+            local_mem, num_teams_done, results_ptr, values_per_thread);
+
         cgh.parallel_for(
             sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
             reduction_lambda);
