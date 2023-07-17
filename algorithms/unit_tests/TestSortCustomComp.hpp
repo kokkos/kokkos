@@ -31,7 +31,7 @@ auto create_random_view_and_host_clone(
     LayoutTagType LayoutTag, std::size_t n,
     Kokkos::pair<ValueType, ValueType> bounds, const std::string& label,
     std::size_t seedIn = 12371) {
-  using namespace ::Test::stdalgos;
+  using namespace Test::stdalgos;
 
   // construct in memory space associated with default exespace
   auto dataView = create_view<ValueType>(LayoutTag, n, label);
@@ -113,7 +113,7 @@ void run_all_scenarios(int api)
 
 TEST(TEST_CATEGORY, SortWithCustomComparator) {
   using ExeSpace = TEST_EXECSPACE;
-  using namespace ::Test::stdalgos;
+  using namespace Test::stdalgos;
   for (int api = 0; api < 2; api++) {
     run_all_scenarios<ExeSpace, DynamicTag, int>(api);
     run_all_scenarios<ExeSpace, DynamicTag, double>(api);
