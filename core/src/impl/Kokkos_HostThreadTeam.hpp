@@ -878,7 +878,7 @@ KOKKOS_INLINE_FUNCTION
   static_assert(std::is_same<ClosureValueType, ValueType>::value,
                 "Non-matching value types of closure and return type");
 
-  ValueType accum = 0;
+  ValueType accum = ValueType();
 
   // Intra-member scan
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
@@ -908,7 +908,7 @@ KOKKOS_INLINE_FUNCTION
       Kokkos::Impl::FunctorPatternInterface::SCAN, void, Closure,
       void>::value_type;
 
-  ValueType scan_val = ValueType();
+  ValueType scan_val;
   parallel_scan(loop_boundaries, closure, scan_val);
 }
 

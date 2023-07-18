@@ -163,7 +163,7 @@ struct TestTeamScanRetVal {
         Kokkos::TeamThreadRange(team, beg, end),
         [&](const int i) { a_d(leagueRank, i) = leagueRank * N + i; });
 
-    DataType accum = 0;
+    DataType accum;
     Kokkos::parallel_scan(
         Kokkos::TeamThreadRange(team, beg, end),
         [&](int i, DataType& val, const bool final) {
