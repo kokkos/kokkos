@@ -607,11 +607,9 @@ struct functor_vec_scan {
 
 // Temporary: This condition will progressively be reduced when parallel_scan
 // with return value will be implemented for more backends.
-#if defined(KOKKOS_ENABLE_SERIAL) || defined(KOKKOS_ENABLE_OPENMP)
-#if !defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_HIP) &&             \
-    !defined(KOKKOS_ENABLE_OPENACC) && !defined(KOKKOS_ENABLE_SYCL) &&         \
-    !defined(KOKKOS_ENABLE_THREADS) && !defined(KOKKOS_ENABLE_OPENMPTARGET) && \
-    !defined(KOKKOS_ENABLE_HPX)
+#if !defined(KOKKOS_ENABLE_HIP) && !defined(KOKKOS_ENABLE_OPENACC) &&  \
+    !defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ENABLE_THREADS) && \
+    !defined(KOKKOS_ENABLE_OPENMPTARGET) && !defined(KOKKOS_ENABLE_HPX)
 template <typename Scalar, class ExecutionSpace>
 struct functor_vec_scan_ret_val {
   using policy_type     = Kokkos::TeamPolicy<ExecutionSpace>;
@@ -666,7 +664,6 @@ struct functor_vec_scan_ret_val {
     }
   }
 };
-#endif
 #endif
 
 template <typename Scalar, class ExecutionSpace>
@@ -741,19 +738,15 @@ bool test_scalar(int nteams, int team_size, int test) {
         "B", Kokkos::TeamPolicy<ExecutionSpace>(nteams, team_size, 8),
         functor_vec_single<Scalar, ExecutionSpace>(d_flag, 4, 13));
   } else if (test == 12) {
-// Temporary: This condition will progressively be reduced when
-// parallel_scan
+// Temporary: This condition will progressively be reduced when parallel_scan
 // with return value will be implemented for more backends.
-#if defined(KOKKOS_ENABLE_SERIAL) || defined(KOKKOS_ENABLE_OPENMP)
-#if !defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_HIP) &&             \
-    !defined(KOKKOS_ENABLE_OPENACC) && !defined(KOKKOS_ENABLE_SYCL) &&         \
-    !defined(KOKKOS_ENABLE_THREADS) && !defined(KOKKOS_ENABLE_OPENMPTARGET) && \
-    !defined(KOKKOS_ENABLE_HPX)
+#if !defined(KOKKOS_ENABLE_HIP) && !defined(KOKKOS_ENABLE_OPENACC) &&  \
+    !defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ENABLE_THREADS) && \
+    !defined(KOKKOS_ENABLE_OPENMPTARGET) && !defined(KOKKOS_ENABLE_HPX)
     Kokkos::parallel_for(
         Kokkos::TeamPolicy<ExecutionSpace>(nteams, team_size, 8),
         functor_vec_scan_ret_val<Scalar, ExecutionSpace>(d_flag, nteams,
                                                          team_size));
-#endif
 #endif
   }
 
