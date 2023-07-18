@@ -681,7 +681,7 @@ class ParallelReduce<CombinedFunctorReducerType,
                 if constexpr (!use_shuffle_based_algorithm<ReducerType>) {
                   reference_type update =
                       reducer.init(&local_mem[local_id * value_count]);
-                  for (size_t league_rank = group_id; league_rank < league_size;
+                  for (int league_rank = group_id; league_rank < league_size;
                        league_rank += n_wgroups) {
                     const member_type team_member(
                         team_scratch_memory_L0.get_pointer(), shmem_begin,
