@@ -1210,7 +1210,7 @@ class Random_XorShift1024_Pool {
   KOKKOS_INLINE_FUNCTION
   void free_state(const Random_XorShift1024<DeviceType>& state) const {
     for (int i = 0; i < 16; i++) state_(state.state_idx_, i) = state.state_[i];
-    p_(state.state_idx_, 0)     = state.p_;
+    p_(state.state_idx_, 0) = state.p_;
     // Release the lock only after the state has been updated in memory
     Kokkos::memory_fence();
     locks_(state.state_idx_, 0) = 0;
