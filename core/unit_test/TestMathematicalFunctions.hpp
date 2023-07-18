@@ -63,11 +63,11 @@ template <class, class>
 struct math_binary_function_return_type;
 #if defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
 template <> struct math_binary_function_return_type<KE::half_t, KE::half_t> { using type = KE::half_t; };
-template <> struct math_binary_function_return_type<int, KE::half_t> { using type = KE::half_t; };
+template <> struct math_binary_function_return_type<int, KE::half_t> { using type = float; };
 #endif // defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
 #if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
 template <> struct math_binary_function_return_type<KE::bhalf_t, KE::bhalf_t> { using type = KE::bhalf_t; };
-template <> struct math_binary_function_return_type<int, KE::bhalf_t> { using type = KE::bhalf_t; };
+template <> struct math_binary_function_return_type<int, KE::bhalf_t> { using type = float; };
 #endif // defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
 template <> struct math_binary_function_return_type<             float,              float> { using type =       float; };
 template <> struct math_binary_function_return_type<             float,             double> { using type =      double; };
