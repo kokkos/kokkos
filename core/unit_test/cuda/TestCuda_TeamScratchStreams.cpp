@@ -71,9 +71,9 @@ void cuda_stream_scratch_test(
   cudaStream_t stream[4];
   Kokkos::Cuda cuda[4];
   for (int i = 0; i < K; i++) {
-    Kokkos::Impl::CudaInternal::singleton()
-        .cuda_api_interface_safe_call<cudaStream_t*>(&cudaStreamCreate,
-                                                     &stream[i]);
+    KOKKOS_IMPL_CUDA_SAFE_CALL((
+        Kokkos::Impl::CudaInternal::singleton()
+            .cuda_api_interface<cudaStream_t*>(&cudaStreamCreate, &stream[i])));
     cuda[i] = Kokkos::Cuda(stream[i]);
   }
   // Test that growing scratch size in subsequent calls doesn't crash things
@@ -100,9 +100,9 @@ void cuda_stream_scratch_test(
   Kokkos::fence();
   for (int i = 0; i < K; i++) {
     cuda[i] = Kokkos::Cuda();
-    Kokkos::Impl::CudaInternal::singleton()
-        .cuda_api_interface_safe_call<cudaStream_t>(&cudaStreamDestroy,
-                                                    stream[i]);
+    KOKKOS_IMPL_CUDA_SAFE_CALL(
+        (Kokkos::Impl::CudaInternal::singleton()
+             .cuda_api_interface<cudaStream_t>(&cudaStreamDestroy, stream[i])));
   }
 }
 }  // namespace Impl

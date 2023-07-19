@@ -24,12 +24,14 @@ TEST(cuda, raw_cuda_streams) {
   Kokkos::initialize();
 
   cudaStream_t stream;
-  Kokkos::Impl::CudaInternal::singleton()
-      .cuda_api_interface_safe_call<cudaStream_t *>(&cudaStreamCreate, &stream);
+  KOKKOS_IMPL_CUDA_SAFE_CALL(
+      (Kokkos::Impl::CudaInternal::singleton()
+           .cuda_api_interface<cudaStream_t *>(&cudaStreamCreate, &stream)));
   int *p;
-  Kokkos::Impl::CudaInternal::singleton()
-      .cuda_api_interface_safe_call<void **, size_t>(
-          &cudaMalloc, reinterpret_cast<void **>(&p), sizeof(int) * 100);
+  KOKKOS_IMPL_CUDA_SAFE_CALL(
+      (Kokkos::Impl::CudaInternal::singleton()
+           .cuda_api_interface<void **, size_t>(
+               &cudaMalloc, reinterpret_cast<void **>(&p), sizeof(int) * 100)));
   using MemorySpace = typename TEST_EXECSPACE::memory_space;
 
   {
@@ -75,18 +77,21 @@ TEST(cuda, raw_cuda_streams) {
   }
   Kokkos::finalize();
   offset_streams<<<100, 64, 0, stream>>>(p);
-  Kokkos::Impl::CudaInternal::singleton().cuda_api_interface_safe_call(
-      &cudaDeviceSynchronize);
-  Kokkos::Impl::CudaInternal::singleton()
-      .cuda_api_interface_safe_call<cudaStream_t>(&cudaStreamDestroy, stream);
+  KOKKOS_IMPL_CUDA_SAFE_CALL(
+      (Kokkos::Impl::CudaInternal::singleton().cuda_api_interface(
+          &cudaDeviceSynchronize)));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(
+      (Kokkos::Impl::CudaInternal::singleton().cuda_api_interface<cudaStream_t>(
+          &cudaStreamDestroy, stream)));
 
   int h_p[100];
-  Kokkos::Impl::CudaInternal::singleton()
-      .cuda_api_interface_safe_call<void *, const void *, size_t,
-                                    cudaMemcpyKind>(
-          &cudaMemcpy, h_p, p, sizeof(int) * 100, cudaMemcpyDefault);
-  Kokkos::Impl::CudaInternal::singleton().cuda_api_interface_safe_call(
-      &cudaDeviceSynchronize);
+  KOKKOS_IMPL_CUDA_SAFE_CALL(
+      (Kokkos::Impl::CudaInternal::singleton()
+           .cuda_api_interface<void *, const void *, size_t, cudaMemcpyKind>(
+               &cudaMemcpy, h_p, p, sizeof(int) * 100, cudaMemcpyDefault)));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(
+      (Kokkos::Impl::CudaInternal::singleton().cuda_api_interface(
+          &cudaDeviceSynchronize)));
   int64_t sum        = 0;
   int64_t sum_expect = 0;
   for (int i = 0; i < 100; i++) {

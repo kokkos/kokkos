@@ -268,8 +268,9 @@ void check_correct_initialization(const Kokkos::InitArguments& argstruct) {
 #ifdef KOKKOS_ENABLE_CUDA
   if (std::is_same<Kokkos::DefaultExecutionSpace, Kokkos::Cuda>::value) {
     int device;
-    Kokkos::Impl::CudaInternal::singleton().cuda_api_interface_safe_call<int*>(
-        &cudaGetDevice, &device);
+    KOKKOS_IMPL_CUDA_SAFE_CALL(
+        (Kokkos::Impl::CudaInternal::singleton().cuda_api_interface<int*>(
+            &cudaGetDevice, &device)));
 
     int expected_device = argstruct.device_id;
     if (argstruct.device_id < 0) {

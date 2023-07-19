@@ -212,53 +212,48 @@ class CudaInternal {
   }
 
   // The following takes a cudaAPI function reference and its arguments as input
-  // and either wraps the call in KOKKOS_IMPL_CUDA_SAFE_CALL() (if no return
-  // value is needed, throws if an error code is given) or returns the result of
-  // the function. If the template parameter setCudaDevice is not given,
-  // defaults to true. We should set CudaDevice=true for all calls which take a
+  // and sets the correct device (unless explicitly disabled by setting
+  // setCudaDevice=false) before calling the cudaAPI function.
+  // We should set CudaDevice=true for all calls which take a
   // stream unless we can be guarenteed it is called from a cuda instance with
   // the correct device set. All cudaAPI calls should be wrapped in these
   // interface functions to ensure safety when using threads.
 
-  // Some cudaAPI functions take template args which are in addition to its
-  // InputArgs. In this case, the functions referenced must include the instance
-  // requested. For an example, see calls to cudaCreateChannelDesc<T>() in
-  // SharedAllocationRecord::attach_texture_object(). At times the InputArgs may
-  // not be deduced correctly by certain compilers. In most cases, explicitly
-  // providing them solves this issue. For an example, see the call to
-  // cudaMemset(void*, int, size_t) in CudaInternal::scratch_flags(). If the
-  // compiler still does not recognize InputArgs, some input vars may need to be
-  // cast to their correct type. For an example, see the call to cudaMalloc() in
-  // CudaInternal::initialize().
-  template <bool setCudaDevice, typename... InputArgs>
-  void cuda_api_interface_safe_call(
-      cudaError_t (*cuda_api_function)(InputArgs...),
-      InputArgs... cuda_api_input) const {
-    if (setCudaDevice) set_cuda_device();
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cuda_api_function(cuda_api_input...));
-  }
-
-  template <typename... InputArgs>
-  void cuda_api_interface_safe_call(
-      cudaError_t (*cuda_api_function)(InputArgs...),
-      InputArgs... cuda_api_input) const {
-    cuda_api_interface_safe_call<true, InputArgs...>(cuda_api_function,
-                                                     cuda_api_input...);
-  }
-
+  // At times the InputArgs may not be deduced correctly by certain compilers.
+  // In most cases, explicitly providing them solves this issue. For an example,
+  // see the call to cudaMemset(void*, int, size_t) in
+  // CudaInternal::scratch_flags(). If the compiler still does not recognize
+  // InputArgs, some input vars may need to be cast to their correct type. For
+  // an example, see the call to cudaMalloc() in CudaInternal::initialize().
   template <bool setCudaDevice, typename ReturnType, typename... InputArgs>
-  ReturnType cuda_api_interface_return(
-      ReturnType (*cuda_api_function)(InputArgs...),
-      InputArgs... cuda_api_input) const {
+  ReturnType cuda_api_interface(ReturnType (*cuda_api_function)(InputArgs...),
+                                InputArgs... cuda_api_input) const {
     if (setCudaDevice) set_cuda_device();
     return cuda_api_function(cuda_api_input...);
   }
 
+  // If no setCudaDevice given, default setCudaDevice=true
   template <typename ReturnType, typename... InputArgs>
-  ReturnType cuda_api_interface_return(
-      ReturnType (*cuda_api_function)(InputArgs...),
-      InputArgs... cuda_api_input) const {
-    return cuda_api_interface_return<true, ReturnType, InputArgs...>(
+  ReturnType cuda_api_interface(ReturnType (*cuda_api_function)(InputArgs...),
+                                InputArgs... cuda_api_input) const {
+    return cuda_api_interface<true, ReturnType, InputArgs...>(
+        cuda_api_function, cuda_api_input...);
+  }
+
+  // If no ReturnType is given, assume ReturnType=cudaError_t
+  template <bool setCudaDevice, typename... InputArgs>
+  cudaError_t cuda_api_interface(cudaError_t (*cuda_api_function)(InputArgs...),
+                                 InputArgs... cuda_api_input) const {
+    return cuda_api_interface<setCudaDevice, cudaError_t, InputArgs...>(
+        cuda_api_function, cuda_api_input...);
+  }
+
+  // If only InputArgs given, default setCudaDevice=true and assume
+  // ReturnType=cudaError_t
+  template <typename... InputArgs>
+  cudaError_t cuda_api_interface(cudaError_t (*cuda_api_function)(InputArgs...),
+                                 InputArgs... cuda_api_input) const {
+    return cuda_api_interface<true, cudaError_t, InputArgs...>(
         cuda_api_function, cuda_api_input...);
   }
 
@@ -296,10 +291,10 @@ namespace Impl {
 inline void create_Cuda_instances(std::vector<Cuda>& instances) {
   for (int s = 0; s < int(instances.size()); s++) {
     cudaStream_t stream;
-    instances[s]
-        .impl_internal_space_instance()
-        ->cuda_api_interface_safe_call<cudaStream_t*>(&cudaStreamCreate,
-                                                      &stream);
+    KOKKOS_IMPL_CUDA_SAFE_CALL(
+        instances[s]
+            .impl_internal_space_instance()
+            ->cuda_api_interface<cudaStream_t*>(&cudaStreamCreate, &stream));
     instances[s] = Cuda(stream, true);
   }
 }

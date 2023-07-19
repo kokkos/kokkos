@@ -35,9 +35,10 @@ TEST(cuda, raw_cuda_interop) {
   Kokkos::initialize();
 
   int* p;
-  Kokkos::Impl::CudaInternal::singleton()
-      .cuda_api_interface_safe_call<void**, size_t>(
-          &cudaMalloc, reinterpret_cast<void**>(&p), sizeof(int) * 100);
+  KOKKOS_IMPL_CUDA_SAFE_CALL(
+      (Kokkos::Impl::CudaInternal::singleton()
+           .cuda_api_interface<void**, size_t>(
+               &cudaMalloc, reinterpret_cast<void**>(&p), sizeof(int) * 100)));
 
   Kokkos::View<int*, Kokkos::MemoryTraits<Kokkos::Unmanaged>> v(p, 100);
   Kokkos::deep_copy(v, 5);
@@ -45,15 +46,19 @@ TEST(cuda, raw_cuda_interop) {
   Kokkos::finalize();
 
   offset<<<100, 64>>>(p);
-  Kokkos::Impl::CudaInternal::singleton().cuda_api_interface_safe_call(
-      &cudaDeviceSynchronize);
+  KOKKOS_IMPL_CUDA_SAFE_CALL(
+      (Kokkos::Impl::CudaInternal::singleton().cuda_api_interface(
+          &cudaDeviceSynchronize)));
 
   std::array<int, 100> h_p;
-  Kokkos::Impl::CudaInternal::singleton()
-      .cuda_api_interface_safe_call<void*, const void*, size_t, cudaMemcpyKind>(
-          &cudaMemcpy, h_p.data(), p, sizeof(int) * 100, cudaMemcpyDefault);
-  Kokkos::Impl::CudaInternal::singleton().cuda_api_interface_safe_call(
-      &cudaDeviceSynchronize);
+  KOKKOS_IMPL_CUDA_SAFE_CALL(
+      (Kokkos::Impl::CudaInternal::singleton()
+           .cuda_api_interface<void*, const void*, size_t, cudaMemcpyKind>(
+               &cudaMemcpy, h_p.data(), p, sizeof(int) * 100,
+               cudaMemcpyDefault)));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(
+      (Kokkos::Impl::CudaInternal::singleton().cuda_api_interface(
+          &cudaDeviceSynchronize)));
   int64_t sum        = 0;
   int64_t sum_expect = 0;
   for (int i = 0; i < 100; i++) {
@@ -62,7 +67,8 @@ TEST(cuda, raw_cuda_interop) {
   }
 
   ASSERT_EQ(sum, sum_expect);
-  Kokkos::Impl::CudaInternal::singleton().cuda_api_interface_safe_call<void*>(
-      &cudaFree, p);
+  KOKKOS_IMPL_CUDA_SAFE_CALL(
+      (Kokkos::Impl::CudaInternal::singleton().cuda_api_interface<void*>(
+          &cudaFree, p)));
 }
 }  // namespace Test
