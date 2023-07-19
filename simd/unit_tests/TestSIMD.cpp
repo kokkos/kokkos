@@ -192,8 +192,8 @@ void host_check_math_op_one_loader(UnaryOp unary_op, std::size_t n,
     bool const loaded_arg = loader.host_load(args + i, nlanes, arg);
     if (!loaded_arg) continue;
     simd_type expected_result;
-    // gcc 8.4.0 warns if using nlanes as upper bound about first_arg and/or
-    // second_arg being uninitialized
+    // gcc 8.4.0 warns if using nlanes as upper bound about arg
+    // being uninitialized
     for (std::size_t lane = 0; lane < simd_type::size(); ++lane) {
       if (lane < nlanes)
         expected_result[lane] = unary_op.on_host_serial(T(arg[lane]));
