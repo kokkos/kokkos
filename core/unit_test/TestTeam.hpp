@@ -290,6 +290,58 @@ class ReduceTeamFunctor {
   }
 };
 
+template <typename ScalarType, class DeviceType, class ScheduleType>
+class ArrayReduceTeamFunctor {
+ public:
+  using execution_space = DeviceType;
+  using policy_type     = Kokkos::TeamPolicy<ScheduleType, execution_space>;
+  using size_type       = typename execution_space::size_type;
+
+  using value_type      = ScalarType[];
+  size_type value_count = 3;
+
+  const size_type nwork;
+
+  KOKKOS_INLINE_FUNCTION
+  ArrayReduceTeamFunctor(const size_type &arg_nwork) : nwork(arg_nwork) {}
+
+  KOKKOS_INLINE_FUNCTION
+  ArrayReduceTeamFunctor(const ArrayReduceTeamFunctor &rhs)
+      : nwork(rhs.nwork) {}
+
+  KOKKOS_INLINE_FUNCTION
+  void init(value_type dst) const {
+    dst[0] = 0;
+    dst[1] = 0;
+    dst[2] = 0;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void join(value_type dst, const value_type src) const {
+    dst[0] += src[0];
+    dst[1] += src[1];
+    dst[2] += src[2];
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const typename policy_type::member_type ind,
+                  value_type dst) const {
+    const int thread_rank =
+        ind.team_rank() + ind.team_size() * ind.league_rank();
+    const int thread_size = ind.team_size() * ind.league_size();
+    const int chunk       = (nwork + thread_size - 1) / thread_size;
+
+    size_type iwork           = chunk * thread_rank;
+    const size_type iwork_end = iwork + chunk < nwork ? iwork + chunk : nwork;
+
+    for (; iwork < iwork_end; ++iwork) {
+      dst[0] += 1;
+      dst[1] += iwork + 1;
+      dst[2] += nwork - iwork;
+    }
+  }
+};
+
 }  // namespace Test
 
 namespace {
@@ -304,39 +356,73 @@ class TestReduceTeam {
   TestReduceTeam(const size_type &nwork) { run_test(nwork); }
 
   void run_test(const size_type &nwork) {
-    using functor_type =
-        Test::ReduceTeamFunctor<ScalarType, execution_space, ScheduleType>;
-    using value_type = typename functor_type::value_type;
-    using result_type =
-        Kokkos::View<value_type, Kokkos::HostSpace, Kokkos::MemoryUnmanaged>;
-
     enum { Count = 3 };
     enum { Repeat = 100 };
-
-    value_type result[Repeat];
 
     const uint64_t nw   = nwork;
     const uint64_t nsum = nw % 2 ? nw * ((nw + 1) / 2) : (nw / 2) * (nw + 1);
 
     policy_type team_exec(nw, 1);
 
-    const unsigned team_size = team_exec.team_size_recommended(
-        functor_type(nwork), Kokkos::ParallelReduceTag());
-    const unsigned league_size = (nwork + team_size - 1) / team_size;
+    // non-array reduction
+    {
+      using functor_type =
+          Test::ReduceTeamFunctor<ScalarType, execution_space, ScheduleType>;
+      using value_type = typename functor_type::value_type;
+      using result_type =
+          Kokkos::View<value_type, Kokkos::HostSpace, Kokkos::MemoryUnmanaged>;
 
-    team_exec = policy_type(league_size, team_size);
+      value_type result[Repeat];
 
-    for (unsigned i = 0; i < Repeat; ++i) {
-      result_type tmp(&result[i]);
-      Kokkos::parallel_reduce(team_exec, functor_type(nwork), tmp);
+      const unsigned team_size = team_exec.team_size_recommended(
+          functor_type(nwork), Kokkos::ParallelReduceTag());
+      const unsigned league_size = (nwork + team_size - 1) / team_size;
+
+      team_exec = policy_type(league_size, team_size);
+
+      for (unsigned i = 0; i < Repeat; ++i) {
+        result_type tmp(&result[i]);
+        Kokkos::parallel_reduce(team_exec, functor_type(nwork), tmp);
+      }
+
+      execution_space().fence();
+
+      for (unsigned i = 0; i < Repeat; ++i) {
+        for (unsigned j = 0; j < Count; ++j) {
+          const uint64_t correct = 0 == j % 3 ? nw : nsum;
+          ASSERT_EQ((ScalarType)correct, result[i].value[j]);
+        }
+      }
     }
 
-    execution_space().fence();
+    // array reduction
+    {
+      using functor_type =
+          Test::ArrayReduceTeamFunctor<ScalarType, execution_space,
+                                       ScheduleType>;
+      using result_type = Kokkos::View<ScalarType *, Kokkos::HostSpace,
+                                       Kokkos::MemoryUnmanaged>;
 
-    for (unsigned i = 0; i < Repeat; ++i) {
-      for (unsigned j = 0; j < Count; ++j) {
-        const uint64_t correct = 0 == j % 3 ? nw : nsum;
-        ASSERT_EQ((ScalarType)correct, result[i].value[j]);
+      ScalarType result[Repeat][3];
+
+      const unsigned team_size = team_exec.team_size_recommended(
+          functor_type(nwork), Kokkos::ParallelReduceTag());
+      const unsigned league_size = (nwork + team_size - 1) / team_size;
+
+      team_exec = policy_type(league_size, team_size);
+
+      for (unsigned i = 0; i < Repeat; ++i) {
+        result_type tmp(&result[i][0]);
+        Kokkos::parallel_reduce(team_exec, functor_type(nwork), tmp);
+      }
+
+      execution_space().fence();
+
+      for (unsigned i = 0; i < Repeat; ++i) {
+        for (unsigned j = 0; j < Count; ++j) {
+          const uint64_t correct = 0 == j % 3 ? nw : nsum;
+          ASSERT_EQ((ScalarType)correct, result[i][j]);
+        }
       }
     }
   }
