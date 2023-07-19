@@ -581,8 +581,15 @@ TEST(TEST_CATEGORY, Random_XorShift1024_0) {
 
 TEST(TEST_CATEGORY, Multi_streams) {
   using ExecutionSpace = TEST_EXECSPACE;
-  using Pool64         = Kokkos::Random_XorShift64_Pool<ExecutionSpace>;
-  using Pool1024       = Kokkos::Random_XorShift1024_Pool<ExecutionSpace>;
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+  if constexpr (std::is_same_v<ExecutionSpace,
+                               Kokkos::Experimental::OpenMPTarget>) {
+    GTEST_SKIP() << "Libomptarget error";  // FIXME_OPENMPTARGET
+  }
+#endif
+
+  using Pool64   = Kokkos::Random_XorShift64_Pool<ExecutionSpace>;
+  using Pool1024 = Kokkos::Random_XorShift1024_Pool<ExecutionSpace>;
 
   AlgoRandomImpl::test_duplicate_stream<ExecutionSpace, Pool64>();
   AlgoRandomImpl::test_duplicate_stream<ExecutionSpace, Pool1024>();
