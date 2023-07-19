@@ -530,7 +530,8 @@ void test_duplicate_stream() {
   std::sort(indices.begin(), indices.end(), comparator);
 
   for (int i = 0; i < n_streams - 1; i++) {
-    int idx1 = indices[i], idx2 = indices[i + 1];
+    int idx1 = indices[i];
+    int idx2 = indices[i + 1];
 
     int k = 0;
     while (k < samples && vals_h(idx1, k) == vals_h(idx2, k)) k++;
