@@ -37,131 +37,131 @@ namespace Impl {
 template <class T>
 acc_enable_if_supported_arithmetic_type<T,T> device_atomic_fetch_add(
 T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
-  T tmp;
+  T old;
 #pragma acc atomic capture
-  { tmp = ptr[0]; ptr[0] += val; }
-  return tmp;
+  { old = ptr[0]; ptr[0] += val; }
+  return old;
 }
 
 #pragma acc routine seq
 template <class T>
 acc_enable_if_supported_arithmetic_type<T,T> device_atomic_fetch_inc(
 T* ptr, MemoryOrderRelaxed, MemoryScopeDevice) {
-  T tmp;
+  T old;
 #pragma acc atomic capture
-  { tmp = ptr[0]; ptr[0] += T(1); }
-  return tmp;
+  { old = ptr[0]; ptr[0] += T(1); }
+  return old;
 }
 
 #pragma acc routine seq
 template <class T>
 acc_enable_if_supported_arithmetic_type<T,T> device_atomic_fetch_sub(
 T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
-  T tmp;
+  T old;
 #pragma acc atomic capture
-  { tmp = *ptr; *ptr -= val; }
-  return tmp;
+  { old = *ptr; *ptr -= val; }
+  return old;
 }
 
 #pragma acc routine seq
 template <class T>
 acc_enable_if_supported_arithmetic_type<T,T> device_atomic_fetch_dec(
 T* ptr, MemoryOrderRelaxed, MemoryScopeDevice) {
-  T tmp;
+  T old;
 #pragma acc atomic capture
-  { tmp = *ptr; *ptr -= T(1); }
-  return tmp;
+  { old = *ptr; *ptr -= T(1); }
+  return old;
 }
 
 #pragma acc routine seq
 template <class T>
 acc_enable_if_supported_arithmetic_type<T,T> device_atomic_fetch_mul(
 T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
-  T tmp;
+  T old;
 #pragma acc atomic capture
-  { tmp = *ptr; *ptr *= val; }
-  return tmp;
+  { old = *ptr; *ptr *= val; }
+  return old;
 }
 
 #pragma acc routine seq
 template <class T>
 acc_enable_if_supported_arithmetic_type<T,T> device_atomic_fetch_div(
 T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
-  T tmp;
+  T old;
 #pragma acc atomic capture
-  { tmp = *ptr; *ptr /= val; }
-  return tmp;
+  { old = *ptr; *ptr /= val; }
+  return old;
 }
 
 #pragma acc routine seq
 template <class T>
 acc_enable_if_supported_arithmetic_type<T,T> device_atomic_fetch_lshift(
 T* ptr, const unsigned int val, MemoryOrderRelaxed, MemoryScopeDevice) {
-  T tmp;
+  T old;
 #pragma acc atomic capture
-  { tmp = *ptr; *ptr = *ptr << val; }
-  return tmp;
+  { old = *ptr; *ptr = *ptr << val; }
+  return old;
 }
 
 #pragma acc routine seq
 template <class T>
 acc_enable_if_supported_arithmetic_type<T,T> device_atomic_fetch_rshift(
 T* ptr, const unsigned int val, MemoryOrderRelaxed, MemoryScopeDevice) {
-  T tmp;
+  T old;
 #pragma acc atomic capture
-  { tmp = *ptr; *ptr = *ptr >> val; }
-  return tmp;
+  { old = *ptr; *ptr = *ptr >> val; }
+  return old;
 }
 
 #pragma acc routine seq
 template <class T>
 T device_atomic_fetch_mod(
 T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
-  T tmp;
+  T old;
   if(acc_on_device(acc_device_not_host)) {
     printf("Kokkos Error in device_atomic_fetch_mod(): Not supported atomic "
                   "operation in the OpenACC backend\n");
   }
-  tmp = *ptr; *ptr = *ptr % val;
-  return tmp;
+  old = *ptr; *ptr = *ptr % val;
+  return old;
 }
 
 #pragma acc routine seq
 template <class T>
 T device_atomic_fetch_max(
 T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
-  T tmp;
+  T old;
   if(acc_on_device(acc_device_not_host)) {
     printf("Kokkos Error in device_atomic_fetch_max(): Not supported atomic "
                   "operation in the OpenACC backend\n");
   }
-  tmp = *ptr; *ptr = std::max(*ptr, val);
-  return tmp;
+  old = *ptr; *ptr = std::max(*ptr, val);
+  return old;
 }
 
 #ifdef __NVCOMPILER
 #pragma acc routine seq
 inline int device_atomic_fetch_max(
 int* ptr, const int val, MemoryOrderRelaxed, MemoryScopeDevice) {
-  int tmp;
-  tmp = atomicMax(ptr, val);
-  return tmp;
+  int old;
+  old = atomicMax(ptr, val);
+  return old;
 }
 
 #pragma acc routine seq
 inline unsigned int device_atomic_fetch_max(
 unsigned int* ptr, const unsigned int val, MemoryOrderRelaxed, MemoryScopeDevice) {
-  unsigned int tmp;
-  tmp = atomicMax(ptr, val);
-  return tmp;
+  unsigned int old;
+  old = atomicMax(ptr, val);
+  return old;
 }
 
 #pragma acc routine seq
 inline unsigned long long device_atomic_fetch_max(
 unsigned long long* ptr, const unsigned long long val, MemoryOrderRelaxed, MemoryScopeDevice) {
-  unsigned long long tmp;
-  tmp = atomicMax(ptr, val);
-  return tmp;
+  unsigned long long old;
+  old = atomicMax(ptr, val);
+  return old;
 }
 #endif
 
@@ -169,38 +169,38 @@ unsigned long long* ptr, const unsigned long long val, MemoryOrderRelaxed, Memor
 template <class T>
 T device_atomic_fetch_min(
 T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
-  T tmp;
+  T old;
   if(acc_on_device(acc_device_not_host)) {
     printf("Kokkos Error in device_atomic_fetch_min(): Not supported atomic "
                   "operation in the OpenACC backend\n");
   }
-  tmp = *ptr; *ptr = std::min(*ptr, val);
-  return tmp;
+  old = *ptr; *ptr = std::min(*ptr, val);
+  return old;
 }
 
 #ifdef __NVCOMPILER
 #pragma acc routine seq
 inline int device_atomic_fetch_min(
 int* ptr, const int val, MemoryOrderRelaxed, MemoryScopeDevice) {
-  int tmp;
-  tmp = atomicMin(ptr, val);
-  return tmp;
+  int old;
+  old = atomicMin(ptr, val);
+  return old;
 }
 
 #pragma acc routine seq
 inline unsigned int device_atomic_fetch_min(
 unsigned int* ptr, const unsigned int val, MemoryOrderRelaxed, MemoryScopeDevice) {
-  unsigned int tmp;
-  tmp = atomicMin(ptr, val);
-  return tmp;
+  unsigned int old;
+  old = atomicMin(ptr, val);
+  return old;
 }
 
 #pragma acc routine seq
 inline unsigned long long device_atomic_fetch_min(
 unsigned long long* ptr, const unsigned long long val, MemoryOrderRelaxed, MemoryScopeDevice) {
-  unsigned long long tmp;
-  tmp = atomicMin(ptr, val);
-  return tmp;
+  unsigned long long old;
+  old = atomicMin(ptr, val);
+  return old;
 }
 #endif
 
@@ -208,30 +208,30 @@ unsigned long long* ptr, const unsigned long long val, MemoryOrderRelaxed, Memor
 template <class T>
 acc_enable_if_supported_arithmetic_type<T,T> device_atomic_fetch_and(
 T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
-  T tmp;
+  T old;
 #pragma acc atomic capture
-  { tmp = *ptr; *ptr &= val; }
-  return tmp;
+  { old = *ptr; *ptr &= val; }
+  return old;
 }
 
 #pragma acc routine seq
 template <class T>
 acc_enable_if_supported_arithmetic_type<T,T> device_atomic_fetch_or(
 T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
-  T tmp;
+  T old;
 #pragma acc atomic capture
-  { tmp = *ptr; *ptr |= val; }
-  return tmp;
+  { old = *ptr; *ptr |= val; }
+  return old;
 }
 
 #pragma acc routine seq
 template <class T>
 acc_enable_if_supported_arithmetic_type<T,T> device_atomic_fetch_xor(
 T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
-  T tmp;
+  T old;
 #pragma acc atomic capture
-  { tmp = *ptr; *ptr ^= val; }
-  return tmp;
+  { old = *ptr; *ptr ^= val; }
+  return old;
 }
 //</editor-fold>
 
