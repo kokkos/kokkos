@@ -505,13 +505,13 @@ void test_duplicate_stream() {
 
   Pool rand_pool(42);
   ViewType vals_d("Vals", n_streams, samples);
-  typename ViewType::HostMirror vals_h = Kokkos::create_mirror_view(vals_d);
 
-  Kokkos::parallel_for(n_streams, generate_random_stream<ExecutionSpace, Pool>(
-                                      vals_d, rand_pool, samples));
+  Kokkos::parallel_for(
+      Kokkos::RangePolicy<ExecutionSpace>(0, n_streams),
+      generate_random_stream<ExecutionSpace, Pool>(vals_d, rand_pool, samples));
 
-  Kokkos::fence();
-  Kokkos::deep_copy(vals_h, vals_d);
+  auto vals_h =
+      Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, vals_d);
 
   /*
   To quickly find streams that are identical, we sort them by the first number,
