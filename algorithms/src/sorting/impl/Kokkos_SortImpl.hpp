@@ -233,7 +233,6 @@ void copy_to_host_run_stdsort_copy_back(
     using view_deep_copyable_t = Kokkos::View<view_value_type*, view_exespace>;
     view_deep_copyable_t view_dc("view_dc", view.extent(0));
     KE::copy(exec, view, view_dc);
-    exec.fence();
 
     // run sort on the mirror of view_dc
     auto mv_h  = create_mirror_view_and_copy(Kokkos::HostSpace(), view_dc);
