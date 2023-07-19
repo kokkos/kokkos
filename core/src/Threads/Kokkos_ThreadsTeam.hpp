@@ -1038,6 +1038,32 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
  * final==true. Scan_val will be set to the final sum value over all vector
  * lanes.
  */
+template <typename iType, class FunctorType, typename ValueType>
+KOKKOS_INLINE_FUNCTION void parallel_scan(
+    const Impl::ThreadVectorRangeBoundariesStruct<
+        iType, Impl::ThreadsExecTeamMember>& loop_boundaries,
+    const FunctorType& lambda, ValueType& return_val) {
+  // Extract ValueType from the Closure
+  using closure_value_type =
+      typename Impl::FunctorAnalysis<Impl::FunctorPatternInterface::SCAN,
+                                     TeamPolicy<Threads>, FunctorType,
+                                     void>::value_type;
+  static_assert(std::is_same<closure_value_type, ValueType>::value,
+                "Non-matching value types of closure and return type");
+
+  ValueType scan_val = ValueType();
+
+#ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
+#pragma ivdep
+#endif
+  for (iType i = loop_boundaries.start; i < loop_boundaries.end;
+       i += loop_boundaries.increment) {
+    lambda(i, scan_val, true);
+  }
+
+  return_val = scan_val;
+}
+
 template <typename iType, class FunctorType>
 KOKKOS_INLINE_FUNCTION void parallel_scan(
     const Impl::ThreadVectorRangeBoundariesStruct<
@@ -1048,15 +1074,8 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
                                      TeamPolicy<Threads>, FunctorType,
                                      void>::value_type;
 
-  value_type scan_val = value_type();
-
-#ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
-#pragma ivdep
-#endif
-  for (iType i = loop_boundaries.start; i < loop_boundaries.end;
-       i += loop_boundaries.increment) {
-    lambda(i, scan_val, true);
-  }
+  value_type scan_val;
+  parallel_scan(loop_boundaries, lambda, scan_val);
 }
 
 /** \brief  Intra-thread vector parallel scan with reducer
