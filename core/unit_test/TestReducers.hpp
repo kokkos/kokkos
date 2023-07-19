@@ -390,13 +390,21 @@ struct TestReducers {
       Kokkos::View<Scalar, ExecSpace> sum_view("result");
       Kokkos::deep_copy(sum_view, Scalar(1));
 
-      // if constexpr (sizeof(Scalar) > 1) {
-      //   TeamSumFunctor tf;
-      //   auto team_pol = Kokkos::TeamPolicy<ExecSpace>(1024, 1);
-      //   Kokkos::parallel_reduce(team_pol, tf, sum_view);
-      //   Kokkos::deep_copy(sum_scalar, sum_view);
-      //   ASSERT_EQ(sum_scalar, Scalar{1024});
-      // }
+      if constexpr (sizeof(Scalar) > 1) {
+        TeamSumFunctor tf;
+        auto team_pol = Kokkos::TeamPolicy<ExecSpace>(1024, 1);
+        Kokkos::parallel_reduce(team_pol, tf, sum_view);
+        Kokkos::deep_copy(sum_scalar, sum_view);
+        ASSERT_EQ(sum_scalar, Scalar{1024});
+      }
+
+      if constexpr (sizeof(Scalar) == 1) {
+        TeamSumFunctor tf;
+        auto team_pol = Kokkos::TeamPolicy<ExecSpace>(126, 1);
+        Kokkos::parallel_reduce(team_pol, tf, sum_view);
+        Kokkos::deep_copy(sum_scalar, sum_view);
+        ASSERT_EQ(sum_scalar, Scalar{126});
+      }
       
       Kokkos::parallel_for(
           Kokkos::TeamPolicy<ExecSpace>(1, 1),
@@ -411,9 +419,9 @@ struct TestReducers {
       Kokkos::deep_copy(sum_scalar, sum_view);
       ASSERT_EQ(sum_scalar, init) << "N: " << N;
 
-#if 0
+      auto team_size = std::min(128, TEST_EXECSPACE().concurrency());
       Kokkos::parallel_for(
-          Kokkos::TeamPolicy<ExecSpace>(10, 128),
+          Kokkos::TeamPolicy<ExecSpace>(10, team_size),
           KOKKOS_LAMBDA(member_type team_member) {
             Scalar local_scalar;
             Kokkos::Sum<Scalar, typename ExecSpace::memory_space>
@@ -424,7 +432,6 @@ struct TestReducers {
           });
       Kokkos::deep_copy(sum_scalar, sum_view);
       ASSERT_EQ(sum_scalar, reference_sum) << "N: " << N;
-#endif
     }
 
     {
