@@ -79,7 +79,7 @@ template <class ExecutionSpace, class ComparatorType, class DataType,
           class... Properties>
 void sort([[maybe_unused]] const ExecutionSpace& exec,
           const Kokkos::View<DataType, Properties...>& view,
-          ComparatorType const& comparator)
+          const ComparatorType & comparator)
 {
   // constraints
   using ViewType = Kokkos::View<DataType, Properties...>;
@@ -110,7 +110,7 @@ void sort([[maybe_unused]] const ExecutionSpace& exec,
 
 template <class ComparatorType, class DataType, class... Properties>
 void sort(const Kokkos::View<DataType, Properties...>& view,
-          ComparatorType const& comparator)
+          const ComparatorType & comparator)
 {
   using ViewType = Kokkos::View<DataType, Properties...>;
   static_assert(
