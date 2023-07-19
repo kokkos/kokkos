@@ -294,7 +294,7 @@ sort_device_view_without_comparator(
 template <class ComparatorType, class DataType, class... Properties>
 void sort_device_view_with_comparator(
     const Cuda& exec, const Kokkos::View<DataType, Properties...>& view,
-    ComparatorType const& comparator) {
+    const ComparatorType& comparator) {
   sort_cudathrust(exec, view, comparator);
 }
 #endif
@@ -304,7 +304,7 @@ template <class ComparatorType, class DataType, class... Properties>
 void sort_device_view_with_comparator(
     const Experimental::SYCL& exec,
     const Kokkos::View<DataType, Properties...>& view,
-    ComparatorType const& comparator) {
+    const ComparatorType& comparator) {
   using ViewType = Kokkos::View<DataType, Properties...>;
   constexpr bool strided =
       std::is_same_v<LayoutStride, typename ViewType::array_layout>;
@@ -323,7 +323,7 @@ std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value>
 sort_device_view_with_comparator(
     const ExecutionSpace& exec,
     const Kokkos::View<DataType, Properties...>& view,
-    ComparatorType const& comparator) {
+    const ComparatorType& comparator) {
   // This is a fallback case if a more specialized overload does not exist:
   // for now, this fallback copies data to host, runs std::sort
   // and then copies data back. Potentially, this can later be changed
