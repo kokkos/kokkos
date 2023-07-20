@@ -65,7 +65,7 @@ TEST(TEST_CATEGORY, to_Array_lvalue) {
                                     std::size(array)>,
                       decltype(ka)>);
 
-        for (int j = 0; j != ka.size(); ++j) {
+        for (size_t j = 0; j != ka.size(); ++j) {
           asum += array[j];
           somsum += som_array[j];
           kasum += ka[j];
@@ -101,7 +101,7 @@ TEST(TEST_CATEGORY, to_Array_rvalue) {
                                     std::size(array)>,
                       decltype(ka)>);
 
-        for (int j = 0; j != ka.size(); ++j) {
+        for (size_t j = 0; j != ka.size(); ++j) {
           asum += array[j];
           somsum += som_array[j];
           kasum += ka[j];
