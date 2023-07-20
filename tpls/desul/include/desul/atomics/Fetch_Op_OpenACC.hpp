@@ -39,7 +39,7 @@ acc_enable_if_supported_arithmetic_type<T,T> device_atomic_fetch_add(
 T* ptr, const T val, MemoryOrderRelaxed, MemoryScopeDevice) {
   T old;
 #pragma acc atomic capture
-  { old = ptr[0]; ptr[0] += val; }
+  { old = *ptr; *ptr += val; }
   return old;
 }
 
@@ -49,7 +49,7 @@ acc_enable_if_supported_arithmetic_type<T,T> device_atomic_fetch_inc(
 T* ptr, MemoryOrderRelaxed, MemoryScopeDevice) {
   T old;
 #pragma acc atomic capture
-  { old = ptr[0]; ptr[0] += T(1); }
+  { old = *ptr; *ptr += T(1); }
   return old;
 }
 
