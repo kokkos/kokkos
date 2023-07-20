@@ -15,6 +15,7 @@ namespace Impl {
 #pragma acc routine seq
 template <class MemoryOrder, class MemoryScope>
 void device_atomic_thread_fence(MemoryOrder, MemoryScope) {
+	//FIXME_OPENACC: The current OpenACC standard does not support explicit thread fence operations.
 }
 
 }  // namespace Impl
