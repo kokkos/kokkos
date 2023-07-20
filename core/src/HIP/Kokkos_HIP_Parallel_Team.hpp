@@ -677,9 +677,9 @@ class ParallelReduce<CombinedFunctorReducerType,
                                              sizeof(size_type)> const
         word_count(reducer.value_size() / sizeof(size_type));
 
-    reference_type value =
-        reducer.init(kokkos_impl_hip_shared_memory<size_type>() +
-                     threadIdx.y * word_count.value);
+    reference_type value = reducer.init(reinterpret_cast<pointer_type>(
+        kokkos_impl_hip_shared_memory<size_type>() +
+        threadIdx.y * word_count.value));
 
     // Iterate this block through the league
     iterate_through_league(threadid, value);
@@ -687,11 +687,10 @@ class ParallelReduce<CombinedFunctorReducerType,
     // Reduce with final value at blockDim.y - 1 location.
     bool do_final_reduce = (m_league_size == 0);
     if (!do_final_reduce)
-      do_final_reduce =
-          hip_single_inter_block_reduce_scan<false, FunctorType, work_tag>(
-              reducer, blockIdx.x, gridDim.x,
-              kokkos_impl_hip_shared_memory<size_type>(), m_scratch_space,
-              m_scratch_flags);
+      do_final_reduce = hip_single_inter_block_reduce_scan<false>(
+          reducer, blockIdx.x, gridDim.x,
+          kokkos_impl_hip_shared_memory<size_type>(), m_scratch_space,
+          m_scratch_flags);
     if (do_final_reduce) {
       // This is the final block with the final result at the final threads'
       // location
