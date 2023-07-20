@@ -228,7 +228,7 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
 
     std::size_t size = policy.end() - policy.begin();
     const unsigned int value_count =
-        std::max(m_functor_reducer.get_reducer().value_count(), 1u);
+        m_functor_reducer.get_reducer().value_count();
     sycl::device_ptr<value_type> results_ptr = nullptr;
     sycl::global_ptr<value_type> device_accessible_result_ptr =
         m_result_ptr_device_accessible ? m_result_ptr : nullptr;
@@ -586,7 +586,7 @@ class ParallelReduce<CombinedFunctorReducerType,
 
     const typename Policy::index_type n_tiles = m_policy.m_num_tiles;
     const unsigned int value_count =
-        std::max(m_functor_reducer.get_reducer().value_count(), 1u);
+        m_functor_reducer.get_reducer().value_count();
     sycl::device_ptr<value_type> results_ptr;
 
     sycl::event last_reduction_event;
