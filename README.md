@@ -55,3 +55,13 @@ the U.S. Government retains certain rights in this software.
 
 The full license statement used in all headers is available [here](https://kokkos.github.io/kokkos-core-wiki/license.html) or
 [here](https://github.com/kokkos/kokkos/blob/master/LICENSE).
+
+# Test Status
+
+[![jenkins-nightly](https://cloud.cees.ornl.gov/jenkins-ci/job/Kokkos-nightly/badge/icon?style=plastic&subject=jenkins-nightly)](https://cloud.cees.ornl.gov/jenkins-ci/job/Kokkos-nightly/)
+[![workflows/linux-64bit](https://github.com/kokkos/kokkos/actions/workflows/continuous-integration-workflow.yml/badge.svg?branch=develop)](https://github.com/kokkos/kokkos/actions/workflows/continuous-integration-workflow.yml)
+[![workflows/linux-32bit](https://github.com/kokkos/kokkos/actions/workflows/continuous-integration-workflow-32bit.yml/badge.svg?branch=develop)](https://github.com/kokkos/kokkos/actions/workflows/continuous-integration-workflow-32bit.yml)
+[![workflows/hpx](https://github.com/kokkos/kokkos/actions/workflows/continuous-integration-workflow-hpx.yml/badge.svg?branch=develop)](https://github.com/kokkos/kokkos/actions/workflows/continuous-integration-workflow-hpx.yml)
+[![workflows/osx](https://github.com/kokkos/kokkos/actions/workflows/osx.yml/badge.svg?branch=develop)](https://github.com/kokkos/kokkos/actions/workflows/osx.yml)
+[![workflows/performance-benchmark](https://github.com/kokkos/kokkos/actions/workflows/performance-benchmark.yml/badge.svg?branch=develop)](https://github.com/kokkos/kokkos/actions/workflows/performance-benchmark.yml)
+[![appveyor/windows](https://ci.appveyor.com/api/projects/status/github/kokkos/kokkos?branch=develop?svg=true)](https://ci.appveyor.com/project/dalg24/kokkos)
