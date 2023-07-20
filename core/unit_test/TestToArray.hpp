@@ -54,7 +54,7 @@ TEST(TEST_CATEGORY, to_Array_lvalue) {
 
   Kokkos::parallel_reduce(
       1,
-      KOKKOS_LAMBDA(int, int& a_sum, int& som_sum, int& ka_sum) {
+      KOKKOS_LAMBDA(int, int& asum, int& somsum, int& kasum) {
         SetOnMove som_array[std::size(array)];
         int i = 0;
         for (auto& v : array) som_array[i++] = v;
@@ -66,9 +66,9 @@ TEST(TEST_CATEGORY, to_Array_lvalue) {
                       decltype(ka)>);
 
         for (int j = 0; j != ka.size(); ++j) {
-          a_sum += array[j];
-          som_sum += som_array[j];
-          ka_sum += ka[j];
+          asum += array[j];
+          somsum += som_array[j];
+          kasum += ka[j];
         }
       },
       a_sum, som_sum, ka_sum);
@@ -90,7 +90,7 @@ TEST(TEST_CATEGORY, to_Array_rvalue) {
 
   Kokkos::parallel_reduce(
       1,
-      KOKKOS_LAMBDA(int, int& a_sum, int& som_sum, int& ka_sum) {
+      KOKKOS_LAMBDA(int, int& asum, int& somsum, int& kasum) {
         SetOnMove som_array[std::size(array)];
         int i = 0;
         for (auto& v : array) som_array[i++] = v;
@@ -102,14 +102,14 @@ TEST(TEST_CATEGORY, to_Array_rvalue) {
                       decltype(ka)>);
 
         for (int j = 0; j != ka.size(); ++j) {
-          a_sum += array[j];
-          som_sum += som_array[j];
-          ka_sum += ka[j];
+          asum += array[j];
+          somsum += som_array[j];
+          kasum += ka[j];
         }
       },
       a_sum, som_sum, ka_sum);
 
-  ASSERT_EQ(som_sum, -1 * std::size(array));
+  ASSERT_EQ(som_sum, -1 * static_cast<int>(std::size(array)));
   ASSERT_EQ(ka_sum, a_sum);
 }
 }  // namespace
