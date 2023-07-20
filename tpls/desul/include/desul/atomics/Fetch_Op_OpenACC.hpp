@@ -11,6 +11,9 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #include <desul/atomics/Common.hpp>
 #include <algorithm>
 
+namespace desul {
+namespace Impl {
+
 #ifdef __NVCOMPILER
 #ifndef DESUL_CUDA_ARCH_IS_PRE_PASCAL
 template <class T, class R>
@@ -27,9 +30,6 @@ using acc_enable_if_supported_arithmetic_type = std::enable_if_t<std::is_same_v<
 template <class T, class R>
 using acc_enable_if_supported_arithmetic_type = std::enable_if_t<std::is_arithmetic<T>::value, R>;
 #endif
-
-namespace desul {
-namespace Impl {
 
 // clang-format off
 //<editor-fold desc="device_atomic_fetch_{add,sub,mul,div,lshift,rshift,mod,max,min,and,or,xor}">
