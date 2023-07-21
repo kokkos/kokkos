@@ -72,7 +72,7 @@ pipeline {
                 }   
                 stage('GCC-13') {
                     agent {
-                        dockerfile {
+                        docker {
                             image 'gcc:13.1'
                             label 'docker'
                         }
