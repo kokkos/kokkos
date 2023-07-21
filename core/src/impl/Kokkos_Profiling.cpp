@@ -557,8 +557,7 @@ void parseArgs(const std::string& args) {
   for (int i = 0; i < _argc; ++i) {
     auto& _str = vargs.at(i);
     _argv[i]   = new char[_str.length() + 1];
-    if (0 < _str.length())
-      std::memcpy(_argv[i], _str.c_str(), _str.length() * sizeof(char));
+    std::memcpy(_argv[i], _str.c_str(), _str.length() * sizeof(char));
     _argv[i][_str.length()] = '\0';
   }
   parseArgs(_argc, _argv);

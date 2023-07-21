@@ -32,10 +32,13 @@ struct ParallelReduceCopy {
   // Copy the result back to device if the view is on the device.
   static void memcpy_result(PointerType dest, PointerType src, size_t size,
                             bool ptr_on_device) {
-    if (ptr_on_device && 0 < size) {
-      KOKKOS_IMPL_OMPT_SAFE_CALL(omp_target_memcpy(dest, src, size, 0, 0,
-                                                   omp_get_default_device(),
-                                                   omp_get_initial_device()));
+    if (ptr_on_device) {
+      if (0 < size) {
+        KOKKOS_IMPL_OMPT_SAFE_CALL(omp_target_memcpy(dest, src, size, 0, 0,
+                                                     omp_get_default_device(),
+                                                     omp_get_initial_device()));
+      }
+
     } else {
       *dest = *src;
     }
