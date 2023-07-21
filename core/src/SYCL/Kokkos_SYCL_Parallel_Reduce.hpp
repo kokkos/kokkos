@@ -271,13 +271,11 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
           std::vector<sycl::event>{parallel_reduce_event});
 #endif
       last_reduction_event = parallel_reduce_event;
-    }
-
-    // Otherwise, we perform a reduction on the values in all workgroups
-    // separately, write the workgroup results back to global memory and recurse
-    // until only one workgroup does the reduction and thus gets the final
-    // value.
-    if (size > 1) {
+    } else {
+      // Otherwise (when size > 1), we perform a reduction on the values in all
+      // workgroups separately, write the workgroup results back to global
+      // memory and recurse until only one workgroup does the reduction and thus
+      // gets the final value.
       auto scratch_flags = static_cast<sycl::device_ptr<unsigned int>>(
           instance.scratch_flags(sizeof(unsigned int)));
 
@@ -619,13 +617,11 @@ class ParallelReduce<CombinedFunctorReducerType,
           std::vector<sycl::event>{parallel_reduce_event});
 #endif
       last_reduction_event = parallel_reduce_event;
-    }
-
-    // Otherwise, we perform a reduction on the values in all workgroups
-    // separately, write the workgroup results back to global memory and recurse
-    // until only one workgroup does the reduction and thus gets the final
-    // value.
-    if (n_tiles > 0) {
+    } else {
+      // Otherwise (when n_tiles is not zero), we perform a reduction on the
+      // values in all workgroups separately, write the workgroup results back
+      // to global memory and recurse until only one workgroup does the
+      // reduction and thus gets the final value.
       const int wgroup_size = Kokkos::bit_ceil(
           static_cast<unsigned int>(m_policy.m_prod_tile_dims));
 
