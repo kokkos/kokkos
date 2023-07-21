@@ -19,6 +19,8 @@
 
 #include <type_traits>
 
+#include <impl/Kokkos_Error.hpp>
+
 namespace Kokkos {
 namespace Impl {
 
@@ -34,6 +36,15 @@ std::enable_if_t<std::is_integral_v<T>, bool> constexpr multiply_overflow(
   } else {
     return true;
   }
+}
+
+template <typename T>
+T multiply_overflow_abort(T a, T b) {
+  T result;
+  if (multiply_overflow(a, b, result))
+    Kokkos::abort("Arithmetic overflow detected.");
+
+  return result;
 }
 
 }  // namespace Impl

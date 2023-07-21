@@ -35,4 +35,16 @@ TEST(TEST_CATEGORY, checked_integer_operations_multiply_overflow) {
   }
 }
 
+TEST(TEST_CATEGORY, checked_integer_operations_multiply_overflow_abort) {
+  {
+    auto result = Kokkos::Impl::multiply_overflow_abort(1u, 2u);
+    EXPECT_EQ(result, 2u);
+  }
+  {
+    ASSERT_DEATH(Kokkos::Impl::multiply_overflow_abort(
+                     std::numeric_limits<unsigned>::max(), 2u),
+                 "Arithmetic overflow detected.");
+  }
+}
+
 }  // namespace
