@@ -765,10 +765,9 @@ simd<std::int64_t, simd_abi::neon_fixed_size<2>> operator>>(
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 simd<std::int64_t, simd_abi::neon_fixed_size<2>> operator>>(
     simd<std::int64_t, simd_abi::neon_fixed_size<2>> const& lhs,
-    simd<std::int32_t, simd_abi::neon_fixed_size<2>> const& rhs) noexcept {
-  return simd<std::int64_t, simd_abi::neon_fixed_size<2>>(
-      vshlq_s64(static_cast<int64x2_t>(lhs),
-                vnegq_s64(vmovl_s32(static_cast<int32x2_t>(rhs)))));
+    simd<std::int64_t, simd_abi::neon_fixed_size<2>> const& rhs) noexcept {
+  return simd<std::int64_t, simd_abi::neon_fixed_size<2>>(vshlq_s64(
+      static_cast<int64x2_t>(lhs), vnegq_s64(static_cast<int64x2_t>(rhs))));
 }
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 simd<std::int64_t, simd_abi::neon_fixed_size<2>> operator<<(
@@ -780,9 +779,9 @@ simd<std::int64_t, simd_abi::neon_fixed_size<2>> operator<<(
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 simd<std::int64_t, simd_abi::neon_fixed_size<2>> operator<<(
     simd<std::int64_t, simd_abi::neon_fixed_size<2>> const& lhs,
-    simd<std::int32_t, simd_abi::neon_fixed_size<2>> const& rhs) noexcept {
-  return simd<std::int64_t, simd_abi::neon_fixed_size<2>>(vshlq_s64(
-      static_cast<int64x2_t>(lhs), vmovl_s32(static_cast<int32x2_t>(rhs))));
+    simd<std::int64_t, simd_abi::neon_fixed_size<2>> const& rhs) noexcept {
+  return simd<std::int64_t, simd_abi::neon_fixed_size<2>>(
+      vshlq_s64(static_cast<int64x2_t>(lhs), static_cast<int64x2_t>(rhs)));
 }
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
@@ -935,10 +934,9 @@ simd<std::uint64_t, simd_abi::neon_fixed_size<2>> operator>>(
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 simd<std::uint64_t, simd_abi::neon_fixed_size<2>> operator>>(
     simd<std::uint64_t, simd_abi::neon_fixed_size<2>> const& lhs,
-    simd<std::int32_t, simd_abi::neon_fixed_size<2>> const& rhs) noexcept {
-  return simd<std::uint64_t, simd_abi::neon_fixed_size<2>>(
-      vshlq_u64(static_cast<uint64x2_t>(lhs),
-                vnegq_s64(vmovl_s32(static_cast<int32x2_t>(rhs)))));
+    simd<std::uint64_t, simd_abi::neon_fixed_size<2>> const& rhs) noexcept {
+  return simd<std::uint64_t, simd_abi::neon_fixed_size<2>>(vshlq_u64(
+      static_cast<uint64x2_t>(lhs), vnegq_s64(static_cast<uint64x2_t>(rhs))));
 }
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
@@ -952,9 +950,9 @@ simd<std::uint64_t, simd_abi::neon_fixed_size<2>> operator<<(
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 simd<std::uint64_t, simd_abi::neon_fixed_size<2>> operator<<(
     simd<std::uint64_t, simd_abi::neon_fixed_size<2>> const& lhs,
-    simd<std::int32_t, simd_abi::neon_fixed_size<2>> const& rhs) noexcept {
-  return simd<std::uint64_t, simd_abi::neon_fixed_size<2>>(vshlq_u64(
-      static_cast<uint64x2_t>(lhs), vmovl_s32(static_cast<int32x2_t>(rhs))));
+    simd<std::uint64_t, simd_abi::neon_fixed_size<2>> const& rhs) noexcept {
+  return simd<std::uint64_t, simd_abi::neon_fixed_size<2>>(
+      vshlq_u64(static_cast<uint64x2_t>(lhs), static_cast<int32x2_t>(rhs)));
 }
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION

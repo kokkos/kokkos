@@ -835,7 +835,7 @@ class simd<std::int64_t, simd_abi::avx2_fixed_size<4>> {
 // KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 // simd<std::int64_t, simd_abi::avx2_fixed_size<4>> operator>>(
 //     simd<std::int64_t, simd_abi::avx2_fixed_size<4>> const& lhs,
-//     simd<std::int32_t, simd_abi::avx2_fixed_size<4>> const& rhs) noexcept {
+//     simd<std::int64_t, simd_abi::avx2_fixed_size<4>> const& rhs) noexcept {
 //   return simd<std::int64_t, simd_abi::avx2_fixed_size<4>>(
 //       _mm256_srav_epi64(static_cast<__m256i>(lhs),
 //       _mm256_cvtepi32_epi64(static_cast<__m128i>(static_cast<__m128i>(rhs))));
@@ -928,6 +928,7 @@ class simd<std::uint64_t, simd_abi::avx2_fixed_size<4>> {
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
                                                        element_aligned_tag) {
+    // if(ptr)
     m_value = _mm256_maskload_epi64(reinterpret_cast<long long const*>(ptr),
                                     static_cast<__m256i>(mask_type(true)));
   }
@@ -985,10 +986,9 @@ simd<std::uint64_t, simd_abi::avx2_fixed_size<4>> operator>>(
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 simd<std::uint64_t, simd_abi::avx2_fixed_size<4>> operator>>(
     simd<std::uint64_t, simd_abi::avx2_fixed_size<4>> const& lhs,
-    simd<std::int32_t, simd_abi::avx2_fixed_size<4>> const& rhs) noexcept {
+    simd<std::uint64_t, simd_abi::avx2_fixed_size<4>> const& rhs) noexcept {
   return simd<std::uint64_t, simd_abi::avx2_fixed_size<4>>(
-      _mm256_srlv_epi64(static_cast<__m256i>(lhs),
-                        _mm256_cvtepi32_epi64(static_cast<__m128i>(rhs))));
+      _mm256_srlv_epi64(static_cast<__m256i>(lhs), static_cast<__m256i>(rhs)));
 }
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
@@ -1002,10 +1002,9 @@ simd<std::uint64_t, simd_abi::avx2_fixed_size<4>> operator<<(
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 simd<std::uint64_t, simd_abi::avx2_fixed_size<4>> operator<<(
     simd<std::uint64_t, simd_abi::avx2_fixed_size<4>> const& lhs,
-    simd<std::int32_t, simd_abi::avx2_fixed_size<4>> const& rhs) noexcept {
+    simd<std::uint64_t, simd_abi::avx2_fixed_size<4>> const& rhs) noexcept {
   return simd<std::uint64_t, simd_abi::avx2_fixed_size<4>>(
-      _mm256_sllv_epi64(static_cast<__m256i>(lhs),
-                        _mm256_cvtepi32_epi64(static_cast<__m128i>(rhs))));
+      _mm256_sllv_epi64(static_cast<__m256i>(lhs), static_cast<__m256i>(rhs)));
 }
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION

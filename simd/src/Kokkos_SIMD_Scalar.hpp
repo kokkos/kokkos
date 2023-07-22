@@ -113,15 +113,15 @@ class simd<T, simd_abi::scalar> {
     return simd(m_value >> rhs);
   }
   KOKKOS_FORCEINLINE_FUNCTION simd
-  operator>>(simd<int, abi_type> const& rhs) const {
-    return simd(m_value >> static_cast<int>(rhs));
+  operator>>(simd<value_type, abi_type> const& rhs) const {
+    return simd(m_value >> static_cast<int>(rhs[0]));
   }
   KOKKOS_FORCEINLINE_FUNCTION simd operator<<(int rhs) const {
     return simd(m_value << rhs);
   }
   KOKKOS_FORCEINLINE_FUNCTION simd
-  operator<<(simd<int, abi_type> const& rhs) const {
-    return simd(m_value << static_cast<int>(rhs));
+  operator<<(simd<value_type, abi_type> const& rhs) const {
+    return simd(m_value << static_cast<int>(rhs[0]));
   }
   KOKKOS_FORCEINLINE_FUNCTION simd operator&(simd const& other) const {
     return m_value & other.m_value;

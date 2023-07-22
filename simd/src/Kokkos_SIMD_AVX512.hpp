@@ -394,7 +394,7 @@ simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> operator>>(
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> operator>>(
     simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> const& lhs,
-    simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& rhs) noexcept {
+    simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> const& rhs) noexcept {
   return simd<std::uint32_t, simd_abi::avx512_fixed_size<8>>(
       _mm256_srlv_epi32(static_cast<__m256i>(lhs), static_cast<__m256i>(rhs)));
 }
@@ -408,7 +408,7 @@ simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> operator<<(
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> operator<<(
     simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> const& lhs,
-    simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& rhs) noexcept {
+    simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> const& rhs) noexcept {
   return simd<std::uint32_t, simd_abi::avx512_fixed_size<8>>(
       _mm256_sllv_epi32(static_cast<__m256i>(lhs), static_cast<__m256i>(rhs)));
 }
@@ -543,10 +543,9 @@ simd<std::int64_t, simd_abi::avx512_fixed_size<8>> operator>>(
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 simd<std::int64_t, simd_abi::avx512_fixed_size<8>> operator>>(
     simd<std::int64_t, simd_abi::avx512_fixed_size<8>> const& lhs,
-    simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& rhs) {
+    simd<std::int64_t, simd_abi::avx512_fixed_size<8>> const& rhs) {
   return simd<std::int64_t, simd_abi::avx512_fixed_size<8>>(
-      _mm512_srav_epi64(static_cast<__m512i>(lhs),
-                        _mm512_cvtepi32_epi64(static_cast<__m256i>(rhs))));
+      _mm512_srav_epi64(static_cast<__m512i>(lhs), static_cast<__m512i>(rhs)));
 }
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 simd<std::int64_t, simd_abi::avx512_fixed_size<8>> operator<<(
@@ -557,10 +556,9 @@ simd<std::int64_t, simd_abi::avx512_fixed_size<8>> operator<<(
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 simd<std::int64_t, simd_abi::avx512_fixed_size<8>> operator<<(
     simd<std::int64_t, simd_abi::avx512_fixed_size<8>> const& lhs,
-    simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& rhs) {
+    simd<std::int64_t, simd_abi::avx512_fixed_size<8>> const& rhs) {
   return simd<std::int64_t, simd_abi::avx512_fixed_size<8>>(
-      _mm512_sllv_epi64(static_cast<__m512i>(lhs),
-                        _mm512_cvtepi32_epi64(static_cast<__m256i>(rhs))));
+      _mm512_sllv_epi64(static_cast<__m512i>(lhs), static_cast<__m512i>(rhs)));
 }
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
@@ -695,10 +693,9 @@ simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> operator>>(
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> operator>>(
     simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> const& lhs,
-    simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& rhs) {
-  return _mm512_srlv_epi64(
-      static_cast<__m512i>(lhs),
-      static_cast<__m512i>(_mm512_cvtepi32_epi64(static_cast<__m256i>(rhs))));
+    simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> const& rhs) {
+  return _mm512_srlv_epi64(static_cast<__m512i>(lhs),
+                           static_cast<__m512i>(rhs));
 }
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> operator<<(
@@ -709,10 +706,9 @@ simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> operator<<(
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> operator<<(
     simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> const& lhs,
-    simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& rhs) {
+    simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> const& rhs) {
   return simd<std::uint64_t, simd_abi::avx512_fixed_size<8>>(
-      _mm512_sllv_epi64(static_cast<__m512i>(lhs),
-                        _mm512_cvtepi32_epi64(static_cast<__m256i>(rhs))));
+      _mm512_sllv_epi64(static_cast<__m512i>(lhs), static_cast<__m512i>(rhs)));
 }
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
