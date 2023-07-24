@@ -32,8 +32,8 @@ template <
 UnaryFunctorType for_each(const std::string& label, const ExecutionSpace& ex,
                           IteratorType first, IteratorType last,
                           UnaryFunctorType functor) {
-  return Impl::for_each_exespace_impl(label, ex, first, last,
-                                      std::move(functor));
+  return Impl::for_each_impl(label.c_str(), ex, first, last,
+                             std::move(functor));
 }
 
 template <
@@ -41,8 +41,8 @@ template <
     std::enable_if_t<Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
 UnaryFunctorType for_each(const ExecutionSpace& ex, IteratorType first,
                           IteratorType last, UnaryFunctorType functor) {
-  return Impl::for_each_exespace_impl("Kokkos::for_each_iterator_api_default",
-                                      ex, first, last, std::move(functor));
+  return Impl::for_each_impl("Kokkos::for_each_iterator_api_default", ex, first,
+                             last, std::move(functor));
 }
 
 template <
@@ -55,8 +55,8 @@ UnaryFunctorType for_each(const std::string& label, const ExecutionSpace& ex,
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
 
   namespace KE = ::Kokkos::Experimental;
-  return Impl::for_each_exespace_impl(label, ex, KE::begin(v), KE::end(v),
-                                      std::move(functor));
+  return Impl::for_each_impl(label.c_str(), ex, KE::begin(v), KE::end(v),
+                             std::move(functor));
 }
 
 template <
@@ -69,9 +69,8 @@ UnaryFunctorType for_each(const ExecutionSpace& ex,
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
 
   namespace KE = ::Kokkos::Experimental;
-  return Impl::for_each_exespace_impl("Kokkos::for_each_view_api_default", ex,
-                                      KE::begin(v), KE::end(v),
-                                      std::move(functor));
+  return Impl::for_each_impl("Kokkos::for_each_view_api_default", ex,
+                             KE::begin(v), KE::end(v), std::move(functor));
 }
 
 //
@@ -85,7 +84,7 @@ template <class TeamHandleType, class IteratorType, class UnaryFunctorType,
 KOKKOS_FUNCTION UnaryFunctorType for_each(const TeamHandleType& teamHandle,
                                           IteratorType first, IteratorType last,
                                           UnaryFunctorType functor) {
-  return Impl::for_each_team_impl(teamHandle, first, last, std::move(functor));
+  return Impl::for_each_impl("", teamHandle, first, last, std::move(functor));
 }
 
 template <class TeamHandleType, class DataType, class... Properties,
@@ -98,8 +97,8 @@ for_each(const TeamHandleType& teamHandle,
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
 
   namespace KE = ::Kokkos::Experimental;
-  return Impl::for_each_team_impl(teamHandle, KE::begin(v), KE::end(v),
-                                  std::move(functor));
+  return Impl::for_each_impl("", teamHandle, KE::begin(v), KE::end(v),
+                             std::move(functor));
 }
 
 }  // namespace Experimental

@@ -41,24 +41,27 @@ struct StdForEachFunctor {
       : m_first(std::move(_first)), m_functor(std::move(_functor)) {}
 };
 
-//
-// exespace impl
-//
-template <class ExecutionSpace, class IteratorType, class UnaryFunctorType>
-UnaryFunctorType for_each_exespace_impl(const std::string& label,
-                                        const ExecutionSpace& ex,
-                                        IteratorType first, IteratorType last,
-                                        UnaryFunctorType functor) {
+template <class HandleType, class IteratorType, class UnaryFunctorType>
+KOKKOS_FUNCTION UnaryFunctorType
+for_each_impl([[maybe_unused]] const char* label, const HandleType& handle,
+              IteratorType first, IteratorType last, UnaryFunctorType functor) {
   // checks
-  Impl::static_assert_random_access_and_accessible(ex, first);
+  Impl::static_assert_random_access_and_accessible(handle, first);
   Impl::expect_valid_range(first, last);
 
   // run
   const auto num_elements = Kokkos::Experimental::distance(first, last);
-  ::Kokkos::parallel_for(
-      label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-      StdForEachFunctor<IteratorType, UnaryFunctorType>(first, functor));
-  ex.fence("Kokkos::for_each: fence after operation");
+  if constexpr (is_execution_space_v<HandleType>) {
+    ::Kokkos::parallel_for(
+        label, RangePolicy<HandleType>(handle, 0, num_elements),
+        StdForEachFunctor<IteratorType, UnaryFunctorType>(first, functor));
+    handle.fence("Kokkos::for_each: fence after operation");
+  } else {
+    ::Kokkos::parallel_for(
+        TeamThreadRange(handle, 0, num_elements),
+        StdForEachFunctor<IteratorType, UnaryFunctorType>(first, functor));
+    handle.team_barrier();
+  }
 
   return functor;
 }
@@ -77,7 +80,7 @@ IteratorType for_each_n_exespace_impl(const std::string& label,
     return first;
   }
 
-  for_each_exespace_impl(label, ex, first, last, std::move(functor));
+  for_each_impl(label.c_str(), ex, first, last, std::move(functor));
   // no neeed to fence since for_each_exespace_impl fences already
 
   return last;
@@ -86,24 +89,24 @@ IteratorType for_each_n_exespace_impl(const std::string& label,
 //
 // team impl
 //
-template <class TeamHandleType, class IteratorType, class UnaryFunctorType>
-KOKKOS_FUNCTION UnaryFunctorType
-for_each_team_impl(const TeamHandleType& teamHandle, IteratorType first,
-                   IteratorType last, UnaryFunctorType functor) {
-  // checks
-  Impl::static_assert_random_access_and_accessible(teamHandle, first);
-  Impl::expect_valid_range(first, last);
+// template <class TeamHandleType, class IteratorType, class UnaryFunctorType>
+// KOKKOS_FUNCTION UnaryFunctorType
+// for_each_team_impl(const TeamHandleType& teamHandle, IteratorType first,
+//                    IteratorType last, UnaryFunctorType functor) {
+//   // checks
+//   Impl::static_assert_random_access_and_accessible(teamHandle, first);
+//   Impl::expect_valid_range(first, last);
 
-  // run
-  const auto num_elements = Kokkos::Experimental::distance(first, last);
-  ::Kokkos::parallel_for(
-      TeamThreadRange(teamHandle, 0, num_elements),
-      StdForEachFunctor<IteratorType, UnaryFunctorType>(first, functor));
+//   // run
+//   const auto num_elements = Kokkos::Experimental::distance(first, last);
+//   ::Kokkos::parallel_for(
+//       TeamThreadRange(teamHandle, 0, num_elements),
+//       StdForEachFunctor<IteratorType, UnaryFunctorType>(first, functor));
 
-  teamHandle.team_barrier();
+//   teamHandle.team_barrier();
 
-  return functor;
-}
+//   return functor;
+// }
 
 template <class TeamHandleType, class IteratorType, class SizeType,
           class UnaryFunctorType>
@@ -118,7 +121,7 @@ for_each_n_team_impl(const TeamHandleType& teamHandle, IteratorType first,
     return first;
   }
 
-  for_each_team_impl(teamHandle, first, last, std::move(functor));
+  for_each_impl("", teamHandle, first, last, std::move(functor));
   // no neeed to fence since for_each_team_impl fences already
 
   return last;
