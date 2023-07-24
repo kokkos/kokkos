@@ -132,9 +132,9 @@ TEST(TEST_CATEGORY, team_scan) {
 
 // Temporary: This condition will progressively be reduced when parallel_scan
 // with return value will be implemented for more backends.
-#if !defined(KOKKOS_ENABLE_OPENACC) &&  \
-    !defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ENABLE_THREADS) && \
-    !defined(KOKKOS_ENABLE_OPENMPTARGET) && !defined(KOKKOS_ENABLE_HPX)
+#if !defined(KOKKOS_ENABLE_OPENACC) && !defined(KOKKOS_ENABLE_SYCL) &&         \
+    !defined(KOKKOS_ENABLE_THREADS) && !defined(KOKKOS_ENABLE_OPENMPTARGET) && \
+    !defined(KOKKOS_ENABLE_HPX)
 template <class ExecutionSpace, class DataType>
 struct TestTeamScanRetVal {
   using execution_space = ExecutionSpace;
