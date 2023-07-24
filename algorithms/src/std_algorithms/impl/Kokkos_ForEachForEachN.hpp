@@ -96,15 +96,12 @@ IteratorType for_each_n_exespace_impl(const std::string& label,
 //   // checks
 //   Impl::static_assert_random_access_and_accessible(teamHandle, first);
 //   Impl::expect_valid_range(first, last);
-
 //   // run
 //   const auto num_elements = Kokkos::Experimental::distance(first, last);
 //   ::Kokkos::parallel_for(
 //       TeamThreadRange(teamHandle, 0, num_elements),
 //       StdForEachFunctor<IteratorType, UnaryFunctorType>(first, functor));
-
 //   teamHandle.team_barrier();
-
 //   return functor;
 // }
 
