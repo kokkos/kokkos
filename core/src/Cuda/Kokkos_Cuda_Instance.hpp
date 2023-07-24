@@ -274,13 +274,6 @@ class CudaInternal {
   }
 
   template <bool setCudaDevice = true>
-  cudaError_t cuda_free_async_wrapper(void* devPtr,
-                                      cudaStream_t hStream) const {
-    if (setCudaDevice) set_cuda_device();
-    return cudaFreeAsync(devPtr, hStream);
-  }
-
-  template <bool setCudaDevice = true>
   cudaError_t cuda_free_host_wrapper(void* ptr) const {
     if (setCudaDevice) set_cuda_device();
     return cudaFreeHost(ptr);
@@ -384,13 +377,6 @@ class CudaInternal {
   }
 
   template <bool setCudaDevice = true>
-  cudaError_t cuda_malloc_async_wrapper(void** devPtr, size_t size,
-                                        cudaStream_t hStream) const {
-    if (setCudaDevice) set_cuda_device();
-    return cudaMallocAsync(devPtr, size, hStream);
-  }
-
-  template <bool setCudaDevice = true>
   cudaError_t cuda_malloc_host_wrapper(void** ptr, size_t size) const {
     if (setCudaDevice) set_cuda_device();
     return cudaMallocHost(ptr, size);
@@ -480,6 +466,23 @@ class CudaInternal {
     if (setCudaDevice) set_cuda_device();
     return cudaStreamSynchronize(stream);
   }
+
+  // The following are only available for cuda 11.2 and greater
+#if (defined(KOKKOS_ENABLE_IMPL_CUDA_MALLOC_ASYNC) && CUDART_VERSION >= 11020)
+  template <bool setCudaDevice = true>
+  cudaError_t cuda_malloc_async_wrapper(void** devPtr, size_t size,
+                                        cudaStream_t hStream) const {
+    if (setCudaDevice) set_cuda_device();
+    return cudaMallocAsync(devPtr, size, hStream);
+  }
+
+  template <bool setCudaDevice = true>
+  cudaError_t cuda_free_async_wrapper(void* devPtr,
+                                      cudaStream_t hStream) const {
+    if (setCudaDevice) set_cuda_device();
+    return cudaFreeAsync(devPtr, hStream);
+  }
+#endif
 
   // C++ API routines
   template <typename T, bool setCudaDevice = true>
