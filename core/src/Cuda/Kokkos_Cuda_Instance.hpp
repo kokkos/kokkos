@@ -21,6 +21,7 @@
 #include <impl/Kokkos_Tools.hpp>
 #include <atomic>
 #include <Cuda/Kokkos_Cuda_Error.hpp>
+#include <cuda_runtime_api.h>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
