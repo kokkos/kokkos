@@ -220,6 +220,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
       TeamTeamSize
       TeamVectorRange
       ToArray
+      ToUnderlying
       UniqueToken
       View_64bit
       ViewAPI_a
