@@ -483,7 +483,7 @@ inline void host_check_shift_on_one_loader(ShiftOp shift_op,
     simd_type expected_result;
 
     for (std::size_t lane = 0; lane < width; ++lane) {
-      auto value = simd_vals[lane];
+      DataType value = simd_vals[lane];
       if (value)
         expected_result[lane] =
             shift_op.on_host(value, static_cast<int>(shift_by[i]));
@@ -510,7 +510,7 @@ inline void host_check_shift_by_lanes_on_one_loader(
   simd_type expected_result;
 
   for (std::size_t lane = 0; lane < width; ++lane) {
-    auto value = simd_vals[lane];
+    DataType value = simd_vals[lane];
     if (value) {
       expected_result[lane] =
           shift_op.on_host(value, static_cast<int>(shift_by[lane]));
