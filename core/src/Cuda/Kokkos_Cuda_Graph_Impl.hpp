@@ -167,8 +167,7 @@ struct GraphImpl<Kokkos::Cuda> {
     }
     KOKKOS_IMPL_CUDA_SAFE_CALL(
         (m_execution_space.impl_internal_space_instance()
-             ->cuda_graph_launch_wrapper(m_graph_exec,
-                                         m_execution_space.cuda_stream())));
+             ->cuda_graph_launch_wrapper(m_graph_exec)));
   }
 
   execution_space const& get_execution_space() const noexcept {

@@ -75,7 +75,7 @@ void DeepCopyAsyncCuda(const Cuda &instance, void *dst, const void *src,
                        size_t n) {
   KOKKOS_IMPL_CUDA_SAFE_CALL(
       (instance.impl_internal_space_instance()->cuda_memcpy_async_wrapper(
-          dst, src, n, cudaMemcpyDefault, instance.cuda_stream())));
+          dst, src, n, cudaMemcpyDefault)));
 }
 
 void DeepCopyAsyncCuda(void *dst, const void *src, size_t n) {
@@ -174,21 +174,23 @@ void *impl_allocate_common(const Cuda &exec_space, const char *arg_label,
   cudaError_t error_code;
   if (arg_alloc_size >= memory_threshold_g) {
     if (exec_space_provided) {
-      cudaStream_t stream = exec_space.cuda_stream();
       error_code =
           exec_space.impl_internal_space_instance()->cuda_malloc_async_wrapper(
-              &ptr, arg_alloc_size, stream);
+              &ptr, arg_alloc_size);
       exec_space.fence("Kokkos::Cuda: backend fence after async malloc");
     } else {
-      error_code =
-          exec_space.impl_internal_space_instance()->cuda_malloc_async_wrapper(
-              &ptr, arg_alloc_size, 0);
+      error_code = Impl::CudaInternal::singleton().cuda_malloc_async_wrapper(
+          &ptr, arg_alloc_size);
       Impl::cuda_device_synchronize(
           "Kokkos::Cuda: backend fence after async malloc");
     }
   } else {
-    error_code = exec_space.impl_internal_space_instance()->cuda_malloc_wrapper(
-        &ptr, arg_alloc_size);
+    error_code =
+        (exec_space_provided
+             ? exec_space.impl_internal_space_instance()->cuda_malloc_wrapper(
+                   &ptr, arg_alloc_size)
+             : Impl::CudaInternal::singleton().cuda_malloc_wrapper(
+                   &ptr, arg_alloc_size));
   }
 #else
   cudaError_t error_code;
@@ -350,7 +352,7 @@ void CudaSpace::impl_deallocate(
           "Kokkos::Cuda: backend fence before async free");
       KOKKOS_IMPL_CUDA_SAFE_CALL(
           (Impl::CudaInternal::singleton().cuda_free_async_wrapper(
-              arg_alloc_ptr, 0)));
+              arg_alloc_ptr)));
       Impl::cuda_device_synchronize(
           "Kokkos::Cuda: backend fence after async free");
     } else {
@@ -606,7 +608,7 @@ void cuda_prefetch_pointer(const Cuda &space, const void *ptr, size_t bytes,
       space.cuda_device_prop().concurrentManagedAccess) {
     KOKKOS_IMPL_CUDA_SAFE_CALL(
         (space.impl_internal_space_instance()->cuda_mem_prefetch_async_wrapper(
-            ptr, bytes, space.cuda_device(), space.cuda_stream())));
+            ptr, bytes, space.cuda_device())));
   }
 }
 

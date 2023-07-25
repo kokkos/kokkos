@@ -212,14 +212,28 @@ class CudaInternal {
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
   }
 
+  // Return the class stream, optionally setting the device id.
+  template <bool setCudaDevice = true>
+  cudaStream_t get_stream() const {
+    if (setCudaDevice) set_cuda_device();
+    return m_stream;
+  }
+
   // The following are wrappers for cudaAPI functions (C and C++ routines) which
   // set the correct device id directly before the cudaAPI call (unless
   // explicitly disabled by providing setCudaDevice=false template).
-  // setCudaDevice=true should be used for all calls which take a stream unless
-  // it is guarenteed to be from a cuda instance with the correct device set
-  // already (e.g., back-to-back cudaAPI calls in a single function). All
-  // cudaAPI calls should be wrapped in these interface functions to ensure
-  // safety when using threads.
+  // setCudaDevice=true should be used for all API calls which take a stream
+  // unless it is guarenteed to be from a cuda instance with the correct device
+  // set already (e.g., back-to-back cudaAPI calls in a single function). For
+  // cudaAPI functions that take a stream, an optional input stream is
+  // available. If no stream is given, the stream for the CudaInternal instance
+  // is used. All cudaAPI calls should be wrapped in these interface functions
+  // to ensure safety when using threads.
+
+  // Helper function for selecting the correct input stream
+  cudaStream_t get_input_stream(cudaStream_t s) const {
+    return s == nullptr ? get_stream<false>() : s;
+  }
 
   // C API routines
   template <bool setCudaDevice = true>
@@ -258,7 +272,7 @@ class CudaInternal {
   cudaError_t cuda_event_record_wrapper(cudaEvent_t event,
                                         cudaStream_t stream = nullptr) const {
     if (setCudaDevice) set_cuda_device();
-    return cudaEventRecord(event, stream);
+    return cudaEventRecord(event, get_input_stream(stream));
   }
 
   template <bool setCudaDevice = true>
@@ -358,9 +372,9 @@ class CudaInternal {
 
   template <bool setCudaDevice = true>
   cudaError_t cuda_graph_launch_wrapper(cudaGraphExec_t graphExec,
-                                        cudaStream_t stream) const {
+                                        cudaStream_t stream = nullptr) const {
     if (setCudaDevice) set_cuda_device();
-    return cudaGraphLaunch(graphExec, stream);
+    return cudaGraphLaunch(graphExec, get_input_stream(stream));
   }
 
   template <bool setCudaDevice = true>
@@ -403,7 +417,8 @@ class CudaInternal {
       const void* devPtr, size_t count, int dstDevice,
       cudaStream_t stream = nullptr) const {
     if (setCudaDevice) set_cuda_device();
-    return cudaMemPrefetchAsync(devPtr, count, dstDevice, stream);
+    return cudaMemPrefetchAsync(devPtr, count, dstDevice,
+                                get_input_stream(stream));
   }
 
   template <bool setCudaDevice = true>
@@ -418,7 +433,7 @@ class CudaInternal {
                                         size_t count, cudaMemcpyKind kind,
                                         cudaStream_t stream = nullptr) const {
     if (setCudaDevice) set_cuda_device();
-    return cudaMemcpyAsync(dst, src, count, kind, stream);
+    return cudaMemcpyAsync(dst, src, count, kind, get_input_stream(stream));
   }
 
   template <bool setCudaDevice = true>
@@ -426,7 +441,8 @@ class CudaInternal {
       const void* symbol, const void* src, size_t count, size_t offset,
       cudaMemcpyKind kind, cudaStream_t stream = nullptr) const {
     if (setCudaDevice) set_cuda_device();
-    return cudaMemcpyToSymbolAsync(symbol, src, count, offset, kind, stream);
+    return cudaMemcpyToSymbolAsync(symbol, src, count, offset, kind,
+                                   get_input_stream(stream));
   }
 
   template <bool setCudaDevice = true>
@@ -439,7 +455,7 @@ class CudaInternal {
   cudaError_t cuda_memset_async_wrapper(void* devPtr, int value, size_t count,
                                         cudaStream_t stream = nullptr) const {
     if (setCudaDevice) set_cuda_device();
-    return cudaMemsetAsync(devPtr, value, count, stream);
+    return cudaMemsetAsync(devPtr, value, count, get_input_stream(stream));
   }
 
   template <bool setCudaDevice = true>
@@ -471,16 +487,16 @@ class CudaInternal {
 #if (defined(KOKKOS_ENABLE_IMPL_CUDA_MALLOC_ASYNC) && CUDART_VERSION >= 11020)
   template <bool setCudaDevice = true>
   cudaError_t cuda_malloc_async_wrapper(void** devPtr, size_t size,
-                                        cudaStream_t hStream) const {
+                                        cudaStream_t hStream == nullptr) const {
     if (setCudaDevice) set_cuda_device();
-    return cudaMallocAsync(devPtr, size, hStream);
+    return cudaMallocAsync(devPtr, size, get_input_stream(stream));
   }
 
   template <bool setCudaDevice = true>
   cudaError_t cuda_free_async_wrapper(void* devPtr,
-                                      cudaStream_t hStream) const {
+                                      cudaStream_t hStream == nullptr) const {
     if (setCudaDevice) set_cuda_device();
-    return cudaFreeAsync(devPtr, hStream);
+    return cudaFreeAsync(devPtr, get_input_stream(stream));
   }
 #endif
 
@@ -508,13 +524,6 @@ class CudaInternal {
     if (setCudaDevice) set_cuda_device();
     return cudaGraphInstantiate(pGraphExec, graph, pErrorNode, pLogBuffer,
                                 bufferSize);
-  }
-
-  // Using the m_stream variable can also cause issues when device_id!=0.
-  template <bool setCudaDevice = true>
-  cudaStream_t get_stream() const {
-    if (setCudaDevice) set_cuda_device();
-    return m_stream;
   }
 
   // Resizing of reduction related scratch spaces

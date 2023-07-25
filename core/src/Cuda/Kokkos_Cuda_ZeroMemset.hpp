@@ -31,8 +31,7 @@ struct ZeroMemset<Kokkos::Cuda, View<T, P...>> {
         (exec_space_instance.impl_internal_space_instance()
              ->cuda_memset_async_wrapper(
                  dst.data(), 0,
-                 dst.size() * sizeof(typename View<T, P...>::value_type),
-                 exec_space_instance.cuda_stream())));
+                 dst.size() * sizeof(typename View<T, P...>::value_type))));
   }
 
   ZeroMemset(const View<T, P...>& dst,

@@ -464,8 +464,7 @@ struct CudaParallelLaunchKernelInvoker<
         cuda_instance->scratch_functor(sizeof(DriverType)));
 
     KOKKOS_IMPL_CUDA_SAFE_CALL((cuda_instance->cuda_memcpy_async_wrapper(
-        driver_ptr, &driver, sizeof(DriverType), cudaMemcpyDefault,
-        cuda_instance->get_stream())));
+        driver_ptr, &driver, sizeof(DriverType), cudaMemcpyDefault)));
     (base_t::get_kernel_func())<<<grid, block, shmem,
                                   cuda_instance->get_stream()>>>(driver_ptr);
   }
@@ -500,8 +499,7 @@ struct CudaParallelLaunchKernelInvoker<
       // destroyed, where there should be a fence ensuring that the allocation
       // associated with this kernel on the device side isn't deleted.
       KOKKOS_IMPL_CUDA_SAFE_CALL((cuda_instance->cuda_memcpy_async_wrapper(
-          driver_ptr, &driver, sizeof(DriverType), cudaMemcpyDefault,
-          cuda_instance->get_stream())));
+          driver_ptr, &driver, sizeof(DriverType), cudaMemcpyDefault)));
 
       void const* args[] = {&driver_ptr};
 
@@ -591,8 +589,7 @@ struct CudaParallelLaunchKernelInvoker<
     KOKKOS_IMPL_CUDA_SAFE_CALL(
         (cuda_instance->cuda_memcpy_to_symbol_async_wrapper(
             kokkos_impl_cuda_constant_memory_buffer, staging,
-            sizeof(DriverType), 0, cudaMemcpyHostToDevice,
-            cudaStream_t(cuda_instance->get_stream()))));
+            sizeof(DriverType), 0, cudaMemcpyHostToDevice)));
 
     // Invoke the driver function on the device
     (base_t::get_kernel_func())<<<grid, block, shmem,
@@ -600,8 +597,7 @@ struct CudaParallelLaunchKernelInvoker<
 
     // Record an event that says when the constant buffer can be reused
     KOKKOS_IMPL_CUDA_SAFE_CALL((cuda_instance->cuda_event_record_wrapper(
-        CudaInternal::constantMemReusable,
-        cudaStream_t(cuda_instance->get_stream()))));
+        CudaInternal::constantMemReusable)));
   }
 
   inline static void create_parallel_launch_graph_node(
