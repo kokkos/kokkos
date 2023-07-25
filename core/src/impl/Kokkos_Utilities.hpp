@@ -124,7 +124,7 @@ struct is_scoped_enum_impl<E, true>
     : std::bool_constant<!std::is_convertible_v<E, underlying_type_t<E>>> {};
 
 template <typename E>
-using is_scoped_enum = typename is_scoped_enum_impl<E>::type;
+struct is_scoped_enum : is_scoped_enum_impl<E>::type {};
 
 template <typename E>
 inline constexpr bool is_scoped_enum_v = is_scoped_enum<E>::value;
