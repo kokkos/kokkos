@@ -928,7 +928,6 @@ class simd<std::uint64_t, simd_abi::avx2_fixed_size<4>> {
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
                                                        element_aligned_tag) {
-    // if(ptr)
     m_value = _mm256_maskload_epi64(reinterpret_cast<long long const*>(ptr),
                                     static_cast<__m256i>(mask_type(true)));
   }
