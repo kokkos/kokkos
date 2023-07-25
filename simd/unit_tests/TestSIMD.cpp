@@ -546,6 +546,13 @@ inline void host_check_shift_op_all_loaders(ShiftOp shift_op,
       shift_op, test_vals, shift_by_lanes);
 }
 
+template <typename DataType>
+inline void host_check_shift_op_corner_case() {
+  DataType value = -1;
+  auto shifted = value >> 1;
+  EXPECT_EQ(shifted, value);
+}
+
 template <typename Abi, typename DataType>
 inline void host_check_shift_op() {
   if constexpr (std::is_integral_v<DataType>) {
@@ -573,6 +580,9 @@ inline void host_check_shift_op() {
     }
     host_check_shift_op_all_loaders<Abi>(shift_left(), test_vals, shift_by,
                                          num_cases);
+
+    if constexpr (std::is_signed_v<DataType>)
+      host_check_shift_op_corner_case<DataType>();
   }
 }
 
@@ -757,6 +767,13 @@ KOKKOS_INLINE_FUNCTION void device_check_shift_op_all_loaders(
       shift_op, test_vals, shift_by_lanes);
 }
 
+template <typename DataType>
+KOKKOS_INLINE_FUNCTION void device_check_shift_op_corner_case() {
+  DataType value = -1;
+  auto shifted = value >> 1;
+  kokkos_checker().equality(shifted, value);
+}
+
 template <typename Abi, typename DataType>
 KOKKOS_INLINE_FUNCTION void device_check_shift_op() {
   if constexpr (std::is_integral_v<DataType>) {
@@ -784,6 +801,9 @@ KOKKOS_INLINE_FUNCTION void device_check_shift_op() {
     }
     device_check_shift_op_all_loaders<Abi>(shift_left(), test_vals, shift_by,
                                            num_cases);
+
+    if constexpr (std::is_signed_v<DataType>)
+      device_check_shift_op_corner_case<DataType>();
   }
 }
 
