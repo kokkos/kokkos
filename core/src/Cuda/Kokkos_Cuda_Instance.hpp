@@ -256,7 +256,7 @@ class CudaInternal {
 
   template <bool setCudaDevice = true>
   cudaError_t cuda_event_record_wrapper(cudaEvent_t event,
-                                        cudaStream_t stream = 0) const {
+                                        cudaStream_t stream = nullptr) const {
     if (setCudaDevice) set_cuda_device();
     return cudaEventRecord(event, stream);
   }
@@ -399,9 +399,9 @@ class CudaInternal {
   }
 
   template <bool setCudaDevice = true>
-  cudaError_t cuda_mem_prefetch_async_wrapper(const void* devPtr, size_t count,
-                                              int dstDevice,
-                                              cudaStream_t stream = 0) const {
+  cudaError_t cuda_mem_prefetch_async_wrapper(
+      const void* devPtr, size_t count, int dstDevice,
+      cudaStream_t stream = nullptr) const {
     if (setCudaDevice) set_cuda_device();
     return cudaMemPrefetchAsync(devPtr, count, dstDevice, stream);
   }
@@ -416,7 +416,7 @@ class CudaInternal {
   template <bool setCudaDevice = true>
   cudaError_t cuda_memcpy_async_wrapper(void* dst, const void* src,
                                         size_t count, cudaMemcpyKind kind,
-                                        cudaStream_t stream = 0) const {
+                                        cudaStream_t stream = nullptr) const {
     if (setCudaDevice) set_cuda_device();
     return cudaMemcpyAsync(dst, src, count, kind, stream);
   }
@@ -424,7 +424,7 @@ class CudaInternal {
   template <bool setCudaDevice = true>
   cudaError_t cuda_memcpy_to_symbol_async_wrapper(
       const void* symbol, const void* src, size_t count, size_t offset,
-      cudaMemcpyKind kind, cudaStream_t stream = 0) const {
+      cudaMemcpyKind kind, cudaStream_t stream = nullptr) const {
     if (setCudaDevice) set_cuda_device();
     return cudaMemcpyToSymbolAsync(symbol, src, count, offset, kind, stream);
   }
@@ -437,7 +437,7 @@ class CudaInternal {
 
   template <bool setCudaDevice = true>
   cudaError_t cuda_memset_async_wrapper(void* devPtr, int value, size_t count,
-                                        cudaStream_t stream = 0) const {
+                                        cudaStream_t stream = nullptr) const {
     if (setCudaDevice) set_cuda_device();
     return cudaMemsetAsync(devPtr, value, count, stream);
   }
