@@ -34,6 +34,7 @@
 #include <impl/Kokkos_Tools.hpp>
 #include <impl/Kokkos_DeviceManagement.hpp>
 #include <impl/Kokkos_ExecSpaceManager.hpp>
+#include <impl/Kokkos_ExecutionSpaceStatus.hpp>
 
 /*--------------------------------------------------------------------------*/
 /* Standard 'C' libraries */
@@ -422,7 +423,9 @@ Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaEventCreate(&constantMemReusable));
   }
 
-  m_stream        = stream;
+  m_stream = stream;
+  KOKKOS_IMPL_CUDA_SAFE_CALL(
+      cudaEventCreateWithFlags(&m_last_event, cudaEventDisableTiming));
   m_manage_stream = manage_stream;
   for (int i = 0; i < m_n_team_scratch; ++i) {
     m_team_scratch_current_size[i] = 0;
@@ -622,6 +625,7 @@ void CudaInternal::finalize() {
   m_scratchFlags        = nullptr;
   m_scratchUnified      = nullptr;
   m_stream              = nullptr;
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaEventDestroy(m_last_event));
   for (int i = 0; i < m_n_team_scratch; ++i) {
     m_team_scratch_current_size[i] = 0;
     m_team_scratch_ptr[i]          = nullptr;
@@ -683,6 +687,33 @@ Cuda::size_type *cuda_internal_scratch_unified(const Cuda &instance,
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
+
+bool Cuda::is_running() const {
+  std::scoped_lock lock(m_space_instance->m_internal_status_mutex);
+  switch (m_space_instance->m_internal_status) {
+    case Impl::ExecutionSpaceStatus::complete: return false;
+    case Impl::ExecutionSpaceStatus::submitted:
+      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaEventRecord(m_space_instance->m_last_event,
+                                                 m_space_instance->m_stream));
+      m_space_instance->m_internal_status = Impl::ExecutionSpaceStatus::running;
+      [[fallthrough]];
+    case Impl::ExecutionSpaceStatus::running: {
+      const cudaError_t query_result =
+          cudaEventQuery(m_space_instance->m_last_event);
+      if (query_result == cudaSuccess) {
+        m_space_instance->m_internal_status =
+            Impl::ExecutionSpaceStatus::complete;
+        return false;
+      } else if (query_result != cudaErrorNotReady) {
+        KOKKOS_IMPL_CUDA_SAFE_CALL(query_result);
+      }
+      return true;
+    }
+    default: assert(false);
+  }
+
+  return false;
+}
 
 Cuda::size_type Cuda::detect_device_count() {
   return Impl::CudaInternalDevices::singleton().m_cudaDevCount;

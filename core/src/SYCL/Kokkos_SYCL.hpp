@@ -78,6 +78,15 @@ class SYCL {
   //! \name Functions that all Kokkos devices must implement.
   //@{
 
+  bool is_running() const {
+#ifdef SYCL_EXT_ONEAPI_QUEUE_EMPTY
+    return !m_space_instance->m_queue->ext_oneapi_empty();
+#else
+    fence("SYCL::is_running");
+    return false;
+#endif
+  }
+
   KOKKOS_INLINE_FUNCTION static int in_parallel() {
 #if defined(__SYCL_DEVICE_ONLY__)
     return true;

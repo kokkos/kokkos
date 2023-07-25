@@ -21,6 +21,7 @@
 #include <impl/Kokkos_Tools.hpp>
 #include <atomic>
 #include <Cuda/Kokkos_Cuda_Error.hpp>
+#include <impl/Kokkos_ExecutionSpaceStatus.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -130,6 +131,11 @@ class CudaInternal {
   mutable size_type* m_scratchUnified;
   mutable size_type* m_scratchFunctor;
   cudaStream_t m_stream;
+  mutable std::mutex m_internal_status_mutex;
+  cudaEvent_t m_last_event;
+  mutable Kokkos::Impl::ExecutionSpaceStatus m_internal_status =
+      Kokkos::Impl::ExecutionSpaceStatus::complete;
+
   uint32_t m_instance_id;
   bool m_manage_stream;
 
@@ -205,8 +211,7 @@ class CudaInternal {
                                   bool force_shrink = false);
   void release_team_scratch_space(int scratch_pool_id);
 };
-
-}  // Namespace Impl
+}  // namespace Impl
 
 namespace Experimental {
 // Partitioning an Execution Space: expects space and integer arguments for

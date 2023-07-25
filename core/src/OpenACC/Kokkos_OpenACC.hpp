@@ -85,6 +85,12 @@ class OpenACC {
                  "Kokkos::OpenACC::fence(): Unnamed Instance Fence") const;
   static void impl_static_fence(std::string const& name);
 
+  bool is_running() const {
+    // OpenACC doesn't provide a query function.
+    fence("OpenACC::is_running()");
+    return false;
+  }
+
   static char const* name() { return "OpenACC"; }
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   static int concurrency() { return 256000; }  // FIXME_OPENACC

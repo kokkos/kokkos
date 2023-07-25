@@ -71,6 +71,11 @@ class Threads {
   //! \name Static functions that all Kokkos devices must implement.
   //@{
 
+  bool is_running() const {
+    fence("Threads::is_running");
+    return false;
+  }
+
   /// \brief True if and only if this method is being called in a
   ///   thread-parallel function.
   static int in_parallel();

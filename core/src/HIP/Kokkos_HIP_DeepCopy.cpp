@@ -21,6 +21,8 @@
 #include <HIP/Kokkos_HIP_DeepCopy.hpp>
 #include <HIP/Kokkos_HIP_Error.hpp>  // HIP_SAFE_CALL
 #include <HIP/Kokkos_HIP.hpp>
+#include <HIP/Kokkos_HIP_Instance.hpp>
+#include <impl/Kokkos_ExecutionSpaceStatus.hpp>
 
 namespace Kokkos {
 namespace Impl {
@@ -40,8 +42,12 @@ void DeepCopyHIP(void* dst, void const* src, size_t n) {
 
 void DeepCopyAsyncHIP(const HIP& instance, void* dst, void const* src,
                       size_t n) {
+  std::scoped_lock lock(
+      instance.impl_internal_space_instance()->m_internal_status_mutex);
   KOKKOS_IMPL_HIP_SAFE_CALL(
       hipMemcpyAsync(dst, src, n, hipMemcpyDefault, instance.hip_stream()));
+  instance.impl_internal_space_instance()->m_internal_status =
+      Kokkos::Impl::ExecutionSpaceStatus::submitted;
 }
 
 void DeepCopyAsyncHIP(void* dst, void const* src, size_t n) {

@@ -24,6 +24,7 @@
 #include <HIP/Kokkos_HIP_Error.hpp>
 #include <HIP/Kokkos_HIP_Instance.hpp>
 #include <HIP/Kokkos_HIP_Space.hpp>
+#include <impl/Kokkos_ExecutionSpaceStatus.hpp>
 
 // Must use global variable on the device with HIP-Clang
 #ifdef __HIP__
@@ -464,8 +465,12 @@ struct HIPParallelLaunch<
 
       desul::ensure_hip_lock_arrays_on_device();
 
+      std::scoped_lock status_lock(hip_instance->m_internal_status_mutex);
+
       // Invoke the driver function on the device
       base_t::invoke_kernel(driver, grid, block, shmem, hip_instance);
+      hip_instance->m_internal_status =
+          Kokkos::Impl::ExecutionSpaceStatus::submitted;
 
 #if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
       KOKKOS_IMPL_HIP_SAFE_CALL(hipGetLastError());

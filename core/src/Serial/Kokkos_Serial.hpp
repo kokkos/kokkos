@@ -108,6 +108,11 @@ class Serial {
 
   Serial();
 
+  bool is_running() const {
+    fence("Serial::is_running");
+    return false;
+  }
+
   /// \brief True if and only if this method is being called in a
   ///   thread-parallel function.
   ///

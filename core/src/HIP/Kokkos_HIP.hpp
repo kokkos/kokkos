@@ -21,7 +21,6 @@
 
 #include <Kokkos_Layout.hpp>
 #include <HIP/Kokkos_HIP_Space.hpp>
-
 #include <hip/hip_runtime_api.h>
 
 namespace Kokkos {
@@ -53,6 +52,8 @@ class HIP {
   //------------------------------------
   //! \name Functions that all Kokkos devices must implement.
   //@{
+
+  bool is_running() const;
 
   KOKKOS_INLINE_FUNCTION static int in_parallel() {
 #if defined(__HIP_DEVICE_COMPILE__)

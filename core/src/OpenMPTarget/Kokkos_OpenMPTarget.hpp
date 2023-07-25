@@ -65,6 +65,11 @@ class OpenMPTarget {
 
   using scratch_memory_space = ScratchMemorySpace<OpenMPTarget>;
 
+  bool is_running() const {
+    fence("OpenMPTarget::fence");
+    return false;
+  }
+
   inline static bool in_parallel() { return omp_in_parallel(); }
 
   static void fence(const std::string& name =

@@ -50,4 +50,54 @@ TEST(TEST_CATEGORY, execution_space_as_class_data_member) {
 }
 #endif
 
+template <class ExecutionSpace>
+struct CheckExecutionSpaceStatus {
+  KOKKOS_FUNCTION void operator()(int i, int& update) const { update += i; };
+
+  CheckExecutionSpaceStatus() { check(); }
+
+  void check() const {
+    ExecutionSpace exec;
+    ASSERT_FALSE(exec.is_running());
+
+    Kokkos::View<int, typename ExecutionSpace::memory_space> result_view(
+        "result_view");
+    int result;
+
+    Kokkos::deep_copy(exec, result, result_view);
+    while (exec.is_running()) {
+    }
+    ASSERT_EQ(result, 0);
+
+    Kokkos::deep_copy(result_view, 1);
+    ASSERT_FALSE(exec.is_running());
+    Kokkos::deep_copy(exec, result, result_view);
+    exec.fence();
+    ASSERT_FALSE(exec.is_running());
+    ASSERT_EQ(result, 1);
+
+    const int N = 10000;
+
+    Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecutionSpace>(exec, 0, N),
+                            *this, result_view);
+    Kokkos::deep_copy(exec, result, result_view);
+    // This happens to work for now but we reserve the right to have a lazy
+    // implementation which would make this hang.
+    while (exec.is_running()) {
+    }
+    ASSERT_EQ(result, N / 2 * (N - 1));
+
+    Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecutionSpace>(exec, 0, N),
+                            *this, result_view);
+    Kokkos::deep_copy(exec, result, result_view);
+    exec.fence();
+    ASSERT_FALSE(exec.is_running());
+    ASSERT_EQ(result, N / 2 * (N - 1));
+  }
+};
+
+TEST(TEST_CATEGORY, execution_space_status) {
+  CheckExecutionSpaceStatus<TEST_EXECSPACE>();
+}
+
 }  // namespace

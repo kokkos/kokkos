@@ -201,6 +201,12 @@ class HPX {
     return impl_get_instance_data().m_instance_id;
   }
 
+  bool is_running() const {
+    // HPX doesn't provide a query function.
+    fence("HPX::is_running");
+    return false;
+  }
+
   static bool &impl_get_in_parallel() noexcept;
 
   struct impl_in_parallel_scope {

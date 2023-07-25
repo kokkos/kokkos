@@ -84,6 +84,11 @@ class OpenMP {
 
   OpenMP(int pool_size);
 
+  bool is_running() const {
+    fence("Serial::is_running");
+    return false;
+  }
+
   /// \brief Print configuration information to the given output stream.
   void print_configuration(std::ostream& os, bool verbose = false) const;
 

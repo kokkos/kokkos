@@ -27,6 +27,7 @@
 #include <HIP/Kokkos_HIP.hpp>
 #include <HIP/Kokkos_HIP_Space.hpp>
 #include <impl/Kokkos_Error.hpp>
+#include <impl/Kokkos_ExecutionSpaceStatus.hpp>
 
 /*--------------------------------------------------------------------------*/
 /* Standard 'C' libraries */
@@ -159,7 +160,9 @@ void HIPInternal::initialize(hipStream_t stream, bool manage_stream) {
   const bool ok_init = nullptr == m_scratchSpace || nullptr == m_scratchFlags;
 
   if (ok_init) {
-    m_stream        = stream;
+    m_stream = stream;
+    KOKKOS_IMPL_HIP_SAFE_CALL(
+        hipEventCreateWithFlags(&m_last_event, hipEventDisableTiming));
     m_manage_stream = manage_stream;
 
     //----------------------------------
@@ -358,6 +361,7 @@ void HIPInternal::finalize() {
   m_scratchSpace      = nullptr;
   m_scratchFlags      = nullptr;
   m_stream            = nullptr;
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipEventDestroy(m_last_event));
   for (int i = 0; i < m_n_team_scratch; ++i) {
     m_team_scratch_current_size[i] = 0;
     m_team_scratch_ptr[i]          = nullptr;
@@ -415,6 +419,33 @@ void hip_internal_error_throw(hipError_t e, const char *name, const char *file,
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
+bool HIP::is_running() const {
+  std::scoped_lock lock(m_space_instance->m_internal_status_mutex);
+  switch (m_space_instance->m_internal_status) {
+    case Impl::ExecutionSpaceStatus::complete: return false;
+    case Impl::ExecutionSpaceStatus::submitted:
+      KOKKOS_IMPL_HIP_SAFE_CALL(hipEventRecord(m_space_instance->m_last_event,
+                                               m_space_instance->m_stream));
+      m_space_instance->m_internal_status = Impl::ExecutionSpaceStatus::running;
+      [[fallthrough]];
+    case Impl::ExecutionSpaceStatus::running: {
+      const hipError_t query_result =
+          hipEventQuery(m_space_instance->m_last_event);
+      if (query_result == hipSuccess) {
+        m_space_instance->m_internal_status =
+            Impl::ExecutionSpaceStatus::complete;
+        return false;
+      } else if (query_result != hipErrorNotReady) {
+        KOKKOS_IMPL_HIP_SAFE_CALL(query_result);
+      }
+      return true;
+    }
+    default: assert(false);
+  }
+
+  return false;
+}
+
 HIP::size_type HIP::detect_device_count() {
   int hipDevCount;
   KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDeviceCount(&hipDevCount));

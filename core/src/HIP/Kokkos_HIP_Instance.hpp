@@ -21,6 +21,7 @@
 
 #include <HIP/Kokkos_HIP_Space.hpp>
 #include <HIP/Kokkos_HIP_Error.hpp>
+#include <impl/Kokkos_ExecutionSpaceStatus.hpp>
 
 #include <atomic>
 #include <mutex>
@@ -95,6 +96,10 @@ class HIPInternal {
   inline static std::mutex scratchFunctorMutex;
 
   hipStream_t m_stream = nullptr;
+  mutable std::mutex m_internal_status_mutex;
+  hipEvent_t m_last_event;
+  mutable Kokkos::Impl::ExecutionSpaceStatus m_internal_status =
+      Kokkos::Impl::ExecutionSpaceStatus::complete;
   uint32_t m_instance_id =
       Kokkos::Tools::Experimental::Impl::idForInstance<HIP>(
           reinterpret_cast<uintptr_t>(this));
@@ -148,7 +153,6 @@ class HIPInternal {
                                   bool force_shrink = false);
   void release_team_scratch_space(int scratch_pool_id);
 };
-
 }  // namespace Impl
 
 namespace Experimental {
