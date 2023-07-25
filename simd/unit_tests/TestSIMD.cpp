@@ -549,7 +549,7 @@ inline void host_check_shift_op_all_loaders(ShiftOp shift_op,
 template <typename DataType>
 inline void host_check_shift_op_corner_case() {
   DataType value = -1;
-  auto shifted = value >> 1;
+  auto shifted   = value >> 1;
   EXPECT_EQ(shifted, value);
 }
 
@@ -770,7 +770,7 @@ KOKKOS_INLINE_FUNCTION void device_check_shift_op_all_loaders(
 template <typename DataType>
 KOKKOS_INLINE_FUNCTION void device_check_shift_op_corner_case() {
   DataType value = -1;
-  auto shifted = value >> 1;
+  auto shifted   = value >> 1;
   kokkos_checker().equality(shifted, value);
 }
 
