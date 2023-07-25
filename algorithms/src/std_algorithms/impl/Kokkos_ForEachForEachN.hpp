@@ -52,10 +52,11 @@ for_each_impl([[maybe_unused]] const char* label, const HandleType& handle,
   // run
   const auto num_elements = Kokkos::Experimental::distance(first, last);
   if constexpr (is_execution_space_v<HandleType>) {
-    ::Kokkos::parallel_for(
-        label, RangePolicy<HandleType>(handle, 0, num_elements),
-        StdForEachFunctor<IteratorType, UnaryFunctorType>(first, functor));
-    handle.fence("Kokkos::for_each: fence after operation");
+    KOKKOS_IF_ON_HOST(
+        (::Kokkos::parallel_for(
+             label, RangePolicy<HandleType>(handle, 0, num_elements),
+             StdForEachFunctor<IteratorType, UnaryFunctorType>(first, functor));
+         handle.fence("Kokkos::for_each: fence after operation");))
   } else {
     ::Kokkos::parallel_for(
         TeamThreadRange(handle, 0, num_elements),
