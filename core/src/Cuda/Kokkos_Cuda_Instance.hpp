@@ -215,7 +215,7 @@ class CudaInternal {
   // Return the class stream, optionally setting the device id.
   template <bool setCudaDevice = true>
   cudaStream_t get_stream() const {
-    if (setCudaDevice) set_cuda_device();
+    if constexpr (setCudaDevice) set_cuda_device();
     return m_stream;
   }
 
@@ -239,88 +239,88 @@ class CudaInternal {
   template <bool setCudaDevice = true>
   cudaError_t cuda_device_get_limit_wrapper(size_t* pValue,
                                             cudaLimit limit) const {
-    if (setCudaDevice) set_cuda_device();
+    if constexpr (setCudaDevice) set_cuda_device();
     return cudaDeviceGetLimit(pValue, limit);
   }
 
   template <bool setCudaDevice = true>
   cudaError_t cuda_device_set_limit_wrapper(cudaLimit limit,
                                             size_t value) const {
-    if (setCudaDevice) set_cuda_device();
+    if constexpr (setCudaDevice) set_cuda_device();
     return cudaDeviceSetLimit(limit, value);
   }
 
   template <bool setCudaDevice = true>
   cudaError_t cuda_device_synchronize_wrapper() const {
-    if (setCudaDevice) set_cuda_device();
+    if constexpr (setCudaDevice) set_cuda_device();
     return cudaDeviceSynchronize();
   }
 
   template <bool setCudaDevice = true>
   cudaError_t cuda_event_create_wrapper(cudaEvent_t* event) const {
-    if (setCudaDevice) set_cuda_device();
+    if constexpr (setCudaDevice) set_cuda_device();
     return cudaEventCreate(event);
   }
 
   template <bool setCudaDevice = true>
   cudaError_t cuda_event_destroy_wrapper(cudaEvent_t event) const {
-    if (setCudaDevice) set_cuda_device();
+    if constexpr (setCudaDevice) set_cuda_device();
     return cudaEventDestroy(event);
   }
 
   template <bool setCudaDevice = true>
   cudaError_t cuda_event_record_wrapper(cudaEvent_t event,
                                         cudaStream_t stream = nullptr) const {
-    if (setCudaDevice) set_cuda_device();
+    if constexpr (setCudaDevice) set_cuda_device();
     return cudaEventRecord(event, get_input_stream(stream));
   }
 
   template <bool setCudaDevice = true>
   cudaError_t cuda_event_synchronize_wrapper(cudaEvent_t event) const {
-    if (setCudaDevice) set_cuda_device();
+    if constexpr (setCudaDevice) set_cuda_device();
     return cudaEventSynchronize(event);
   }
 
   template <bool setCudaDevice = true>
   cudaError_t cuda_free_wrapper(void* devPtr) const {
-    if (setCudaDevice) set_cuda_device();
+    if constexpr (setCudaDevice) set_cuda_device();
     return cudaFree(devPtr);
   }
 
   template <bool setCudaDevice = true>
   cudaError_t cuda_free_host_wrapper(void* ptr) const {
-    if (setCudaDevice) set_cuda_device();
+    if constexpr (setCudaDevice) set_cuda_device();
     return cudaFreeHost(ptr);
   }
 
   template <bool setCudaDevice = true>
   cudaError_t cuda_get_device_count_wrapper(int* count) const {
-    if (setCudaDevice) set_cuda_device();
+    if constexpr (setCudaDevice) set_cuda_device();
     return cudaGetDeviceCount(count);
   }
 
   template <bool setCudaDevice = true>
   cudaError_t cuda_get_device_properties_wrapper(cudaDeviceProp* prop,
                                                  int device) const {
-    if (setCudaDevice) set_cuda_device();
+    if constexpr (setCudaDevice) set_cuda_device();
     return cudaGetDeviceProperties(prop, device);
   }
 
   template <bool setCudaDevice = true>
   const char* cuda_get_error_name_wrapper(cudaError_t error) const {
-    if (setCudaDevice) set_cuda_device();
+    if constexpr (setCudaDevice) set_cuda_device();
     return cudaGetErrorName(error);
   }
 
   template <bool setCudaDevice = true>
   const char* cuda_get_error_string_wrapper(cudaError_t error) const {
-    if (setCudaDevice) set_cuda_device();
+    if constexpr (setCudaDevice) set_cuda_device();
     return cudaGetErrorString(error);
   }
 
   template <bool setCudaDevice = true>
   cudaError_t cuda_get_last_error_wrapper() const {
-    if (setCudaDevice) set_cuda_device();
+    if constexpr (setCudaDevice) set_cuda_device();
     return cudaGetLastError();
   }
 
@@ -328,7 +328,7 @@ class CudaInternal {
   cudaError_t cuda_graph_add_dependencies_wrapper(
       cudaGraph_t graph, const cudaGraphNode_t* from, const cudaGraphNode_t* to,
       size_t numDependencies) const {
-    if (setCudaDevice) set_cuda_device();
+    if constexpr (setCudaDevice) set_cuda_device();
     return cudaGraphAddDependencies(graph, from, to, numDependencies);
   }
 
@@ -336,7 +336,7 @@ class CudaInternal {
   cudaError_t cuda_graph_add_empty_node_wrapper(
       cudaGraphNode_t* pGraphNode, cudaGraph_t graph,
       const cudaGraphNode_t* pDependencies, size_t numDependencies) const {
-    if (setCudaDevice) set_cuda_device();
+    if constexpr (setCudaDevice) set_cuda_device();
     return cudaGraphAddEmptyNode(pGraphNode, graph, pDependencies,
                                  numDependencies);
   }
@@ -346,7 +346,7 @@ class CudaInternal {
       cudaGraphNode_t* pGraphNode, cudaGraph_t graph,
       const cudaGraphNode_t* pDependencies, size_t numDependencies,
       const cudaKernelNodeParams* pNodeParams) const {
-    if (setCudaDevice) set_cuda_device();
+    if constexpr (setCudaDevice) set_cuda_device();
     return cudaGraphAddKernelNode(pGraphNode, graph, pDependencies,
                                   numDependencies, pNodeParams);
   }
@@ -354,45 +354,45 @@ class CudaInternal {
   template <bool setCudaDevice = true>
   cudaError_t cuda_graph_create_wrapper(cudaGraph_t* pGraph,
                                         unsigned int flags) const {
-    if (setCudaDevice) set_cuda_device();
+    if constexpr (setCudaDevice) set_cuda_device();
     return cudaGraphCreate(pGraph, flags);
   }
 
   template <bool setCudaDevice = true>
   cudaError_t cuda_graph_destroy_wrapper(cudaGraph_t graph) const {
-    if (setCudaDevice) set_cuda_device();
+    if constexpr (setCudaDevice) set_cuda_device();
     return cudaGraphDestroy(graph);
   }
 
   template <bool setCudaDevice = true>
   cudaError_t cuda_graph_exec_destroy_wrapper(cudaGraphExec_t graphExec) const {
-    if (setCudaDevice) set_cuda_device();
+    if constexpr (setCudaDevice) set_cuda_device();
     return cudaGraphExecDestroy(graphExec);
   }
 
   template <bool setCudaDevice = true>
   cudaError_t cuda_graph_launch_wrapper(cudaGraphExec_t graphExec,
                                         cudaStream_t stream = nullptr) const {
-    if (setCudaDevice) set_cuda_device();
+    if constexpr (setCudaDevice) set_cuda_device();
     return cudaGraphLaunch(graphExec, get_input_stream(stream));
   }
 
   template <bool setCudaDevice = true>
   cudaError_t cuda_host_alloc_wrapper(void** pHost, size_t size,
                                       unsigned int flags) const {
-    if (setCudaDevice) set_cuda_device();
+    if constexpr (setCudaDevice) set_cuda_device();
     return cudaHostAlloc(pHost, size, flags);
   }
 
   template <bool setCudaDevice = true>
   cudaError_t cuda_malloc_wrapper(void** devPtr, size_t size) const {
-    if (setCudaDevice) set_cuda_device();
+    if constexpr (setCudaDevice) set_cuda_device();
     return cudaMalloc(devPtr, size);
   }
 
   template <bool setCudaDevice = true>
   cudaError_t cuda_malloc_host_wrapper(void** ptr, size_t size) const {
-    if (setCudaDevice) set_cuda_device();
+    if constexpr (setCudaDevice) set_cuda_device();
     return cudaMallocHost(ptr, size);
   }
 
@@ -400,7 +400,7 @@ class CudaInternal {
   cudaError_t cuda_malloc_managed_wrapper(
       void** devPtr, size_t size,
       unsigned int flags = cudaMemAttachGlobal) const {
-    if (setCudaDevice) set_cuda_device();
+    if constexpr (setCudaDevice) set_cuda_device();
     return cudaMallocManaged(devPtr, size, flags);
   }
 
@@ -408,7 +408,7 @@ class CudaInternal {
   cudaError_t cuda_mem_advise_wrapper(const void* devPtr, size_t count,
                                       cudaMemoryAdvise advice,
                                       int device) const {
-    if (setCudaDevice) set_cuda_device();
+    if constexpr (setCudaDevice) set_cuda_device();
     return cudaMemAdvise(devPtr, count, advice, device);
   }
 
@@ -416,7 +416,7 @@ class CudaInternal {
   cudaError_t cuda_mem_prefetch_async_wrapper(
       const void* devPtr, size_t count, int dstDevice,
       cudaStream_t stream = nullptr) const {
-    if (setCudaDevice) set_cuda_device();
+    if constexpr (setCudaDevice) set_cuda_device();
     return cudaMemPrefetchAsync(devPtr, count, dstDevice,
                                 get_input_stream(stream));
   }
@@ -424,7 +424,7 @@ class CudaInternal {
   template <bool setCudaDevice = true>
   cudaError_t cuda_memcpy_wrapper(void* dst, const void* src, size_t count,
                                   cudaMemcpyKind kind) const {
-    if (setCudaDevice) set_cuda_device();
+    if constexpr (setCudaDevice) set_cuda_device();
     return cudaMemcpy(dst, src, count, kind);
   }
 
@@ -432,7 +432,7 @@ class CudaInternal {
   cudaError_t cuda_memcpy_async_wrapper(void* dst, const void* src,
                                         size_t count, cudaMemcpyKind kind,
                                         cudaStream_t stream = nullptr) const {
-    if (setCudaDevice) set_cuda_device();
+    if constexpr (setCudaDevice) set_cuda_device();
     return cudaMemcpyAsync(dst, src, count, kind, get_input_stream(stream));
   }
 
@@ -440,46 +440,46 @@ class CudaInternal {
   cudaError_t cuda_memcpy_to_symbol_async_wrapper(
       const void* symbol, const void* src, size_t count, size_t offset,
       cudaMemcpyKind kind, cudaStream_t stream = nullptr) const {
-    if (setCudaDevice) set_cuda_device();
+    if constexpr (setCudaDevice) set_cuda_device();
     return cudaMemcpyToSymbolAsync(symbol, src, count, offset, kind,
                                    get_input_stream(stream));
   }
 
   template <bool setCudaDevice = true>
   cudaError_t cuda_memset_wrapper(void* devPtr, int value, size_t count) const {
-    if (setCudaDevice) set_cuda_device();
+    if constexpr (setCudaDevice) set_cuda_device();
     return cudaMemset(devPtr, value, count);
   }
 
   template <bool setCudaDevice = true>
   cudaError_t cuda_memset_async_wrapper(void* devPtr, int value, size_t count,
                                         cudaStream_t stream = nullptr) const {
-    if (setCudaDevice) set_cuda_device();
+    if constexpr (setCudaDevice) set_cuda_device();
     return cudaMemsetAsync(devPtr, value, count, get_input_stream(stream));
   }
 
   template <bool setCudaDevice = true>
   cudaError_t cuda_pointer_get_attributes_wrapper(
       cudaPointerAttributes* attributes, const void* ptr) const {
-    if (setCudaDevice) set_cuda_device();
+    if constexpr (setCudaDevice) set_cuda_device();
     return cudaPointerGetAttributes(attributes, ptr);
   }
 
   template <bool setCudaDevice = true>
   cudaError_t cuda_stream_create_wrapper(cudaStream_t* pStream) const {
-    if (setCudaDevice) set_cuda_device();
+    if constexpr (setCudaDevice) set_cuda_device();
     return cudaStreamCreate(pStream);
   }
 
   template <bool setCudaDevice = true>
   cudaError_t cuda_stream_destroy_wrapper(cudaStream_t stream) const {
-    if (setCudaDevice) set_cuda_device();
+    if constexpr (setCudaDevice) set_cuda_device();
     return cudaStreamDestroy(stream);
   }
 
   template <bool setCudaDevice = true>
   cudaError_t cuda_stream_synchronize_wrapper(cudaStream_t stream) const {
-    if (setCudaDevice) set_cuda_device();
+    if constexpr (setCudaDevice) set_cuda_device();
     return cudaStreamSynchronize(stream);
   }
 
@@ -488,14 +488,14 @@ class CudaInternal {
   template <bool setCudaDevice = true>
   cudaError_t cuda_malloc_async_wrapper(void** devPtr, size_t size,
                                         cudaStream_t hStream == nullptr) const {
-    if (setCudaDevice) set_cuda_device();
+    if constexpr (setCudaDevice) set_cuda_device();
     return cudaMallocAsync(devPtr, size, get_input_stream(stream));
   }
 
   template <bool setCudaDevice = true>
   cudaError_t cuda_free_async_wrapper(void* devPtr,
                                       cudaStream_t hStream == nullptr) const {
-    if (setCudaDevice) set_cuda_device();
+    if constexpr (setCudaDevice) set_cuda_device();
     return cudaFreeAsync(devPtr, get_input_stream(stream));
   }
 #endif
@@ -504,14 +504,14 @@ class CudaInternal {
   template <typename T, bool setCudaDevice = true>
   cudaError_t cuda_func_get_attributes_wrapper(cudaFuncAttributes* attr,
                                                T* entry) const {
-    if (setCudaDevice) set_cuda_device();
+    if constexpr (setCudaDevice) set_cuda_device();
     return cudaFuncGetAttributes(attr, entry);
   }
 
   template <typename T, bool setCudaDevice = true>
   cudaError_t cuda_func_set_attributes_wrapper(T* entry, cudaFuncAttribute attr,
                                                int value) const {
-    if (setCudaDevice) set_cuda_device();
+    if constexpr (setCudaDevice) set_cuda_device();
     return cudaFuncSetAttributes(entry, attr, value);
   }
 
@@ -521,7 +521,7 @@ class CudaInternal {
                                              cudaGraphNode_t* pErrorNode,
                                              char* pLogBuffer,
                                              size_t bufferSize) const {
-    if (setCudaDevice) set_cuda_device();
+    if constexpr (setCudaDevice) set_cuda_device();
     return cudaGraphInstantiate(pGraphExec, graph, pErrorNode, pLogBuffer,
                                 bufferSize);
   }
