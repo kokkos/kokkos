@@ -134,6 +134,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
         AtomicViews
         BitManipulationBuiltins
         BlockSizeDeduction
+        CheckedIntegerOps
         CommonPolicyConstructors
         CommonPolicyInterface
         Complex
