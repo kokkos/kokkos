@@ -24,18 +24,16 @@
 #include <string>
 
 #define KOKKOS_DO_PRAGMA(x) _Pragma(#x)
-#if defined __NVCC__
-#ifdef __NVCC_DIAG_PRAGMA_SUPPORT__
+#if defined __NVCC__ && defined __NVCC_DIAG_PRAGMA_SUPPORT__
 #define KOKKOS_NVCC_PRAGMA_PUSH KOKKOS_DO_PRAGMA(nv_diagnostic push)
 #define KOKKOS_NVCC_PRAGMA_SUPPRESS(WARNING) \
   KOKKOS_DO_PRAGMA(nv_diag_suppress = WARNING)
 #define KOKKOS_NVCC_PRAGMA_POP KOKKOS_DO_PRAGMA(nv_diagnostic pop)
-#elif defined __CUDA_ARCH__
+#elif defined __NVCC__
 #define KOKKOS_NVCC_PRAGMA_PUSH KOKKOS_DO_PRAGMA(diagnostic push)
 #define KOKKOS_NVCC_PRAGMA_SUPPRESS(WARNING) \
   KOKKOS_DO_PRAGMA(diag_suppress WARNING)
 #define KOKKOS_NVCC_PRAGMA_POP KOKKOS_DO_PRAGMA(diagnostic pop)
-#endif
 #else
 #define KOKKOS_NVCC_PRAGMA_PUSH
 #define KOKKOS_NVCC_PRAGMA_SUPPRESS(WARNING)
