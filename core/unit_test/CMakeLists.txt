@@ -219,6 +219,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
       TeamScratch
       TeamTeamSize
       TeamVectorRange
+      ArrayOps
       ToArray
       ToUnderlying
       UniqueToken
