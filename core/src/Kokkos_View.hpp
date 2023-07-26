@@ -614,11 +614,15 @@ class View : public ViewTraits<DataType, Properties...> {
            typename traits::memory_traits>;
 
   /** \brief  Compatible HostMirror view */
-  using HostMirror =
-      View<typename traits::non_const_data_type, typename traits::array_layout,
-           Device<DefaultHostExecutionSpace,
-                  typename traits::host_mirror_space::memory_space>,
-           typename traits::hooks_policy>;
+  using HostMirror = View<
+      typename traits::non_const_data_type, typename traits::array_layout,
+      Device<std::conditional_t<
+                 SpaceAccessibility<typename traits::execution_space,
+                                    typename traits::host_mirror_space::
+                                        memory_space>::accessible,
+                 typename traits::execution_space, DefaultHostExecutionSpace>,
+             typename traits::host_mirror_space::memory_space>,
+      typename traits::hooks_policy>;
 
   /** \brief  Compatible HostMirror view */
   using host_mirror_type =
