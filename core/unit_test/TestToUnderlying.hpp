@@ -28,10 +28,10 @@ TEST(TEST_CATEGORY, to_underlying) {
   using Kokkos::Impl::to_underlying;
 
   auto e0 = to_underlying(EZero);
-  ASSERT_EQ(e0, 0);
+  ASSERT_EQ(static_cast<int>(e0), 0);
 
   auto e1 = to_underlying(EOne);
-  ASSERT_EQ(e1, 1);
+  ASSERT_EQ(static_cast<int>(e1), 1);
 
   auto eb0 = to_underlying(EBFalse);
   bool b0  = false;
