@@ -109,10 +109,12 @@ struct Array {
     static_assert(
         (std::is_integral<iType>::value || std::is_enum<iType>::value),
         "Must be integral argument");
-    if constexpr (Impl::is_scoped_enum_v<iType>)
+    if constexpr (Impl::is_scoped_enum_v<iType>) {
       return operator[](Impl::to_underlying(i));
-    KOKKOS_ARRAY_BOUNDS_CHECK(i, N);
-    return m_internal_implementation_private_member_data[i];
+    } else {
+      KOKKOS_ARRAY_BOUNDS_CHECK(i, N);
+      return m_internal_implementation_private_member_data[i];
+    }
   }
 
   template <typename iType>
@@ -121,10 +123,12 @@ struct Array {
     static_assert(
         (std::is_integral<iType>::value || std::is_enum<iType>::value),
         "Must be integral argument");
-    if constexpr (Impl::is_scoped_enum_v<iType>)
+    if constexpr (Impl::is_scoped_enum_v<iType>) {
       return operator[](Impl::to_underlying(i));
-    KOKKOS_ARRAY_BOUNDS_CHECK(i, N);
-    return m_internal_implementation_private_member_data[i];
+    } else {
+      KOKKOS_ARRAY_BOUNDS_CHECK(i, N);
+      return m_internal_implementation_private_member_data[i];
+    }
   }
 
   KOKKOS_INLINE_FUNCTION constexpr pointer data() {
@@ -212,10 +216,12 @@ struct Array<T, KOKKOS_INVALID_INDEX, Array<>::contiguous> {
     static_assert(
         (std::is_integral<iType>::value || std::is_enum<iType>::value),
         "Must be integral argument");
-    if constexpr (Impl::is_scoped_enum_v<iType>)
+    if constexpr (Impl::is_scoped_enum_v<iType>) {
       return operator[](Impl::to_underlying(i));
-    KOKKOS_ARRAY_BOUNDS_CHECK(i, m_size);
-    return m_elem[i];
+    } else {
+      KOKKOS_ARRAY_BOUNDS_CHECK(i, m_size);
+      return m_elem[i];
+    }
   }
 
   template <typename iType>
@@ -223,10 +229,12 @@ struct Array<T, KOKKOS_INVALID_INDEX, Array<>::contiguous> {
     static_assert(
         (std::is_integral<iType>::value || std::is_enum<iType>::value),
         "Must be integral argument");
-    if constexpr (Impl::is_scoped_enum_v<iType>)
+    if constexpr (Impl::is_scoped_enum_v<iType>) {
       return operator[](Impl::to_underlying(i));
-    KOKKOS_ARRAY_BOUNDS_CHECK(i, m_size);
-    return m_elem[i];
+    } else {
+      KOKKOS_ARRAY_BOUNDS_CHECK(i, m_size);
+      return m_elem[i];
+    }
   }
 
   KOKKOS_INLINE_FUNCTION pointer data() { return m_elem; }
@@ -285,10 +293,12 @@ struct Array<T, KOKKOS_INVALID_INDEX, Array<>::strided> {
     static_assert(
         (std::is_integral<iType>::value || std::is_enum<iType>::value),
         "Must be integral argument");
-    if constexpr (Impl::is_scoped_enum_v<iType>)
+    if constexpr (Impl::is_scoped_enum_v<iType>) {
       return operator[](Impl::to_underlying(i));
-    KOKKOS_ARRAY_BOUNDS_CHECK(i, m_size);
-    return m_elem[i * m_stride];
+    } else {
+      KOKKOS_ARRAY_BOUNDS_CHECK(i, m_size);
+      return m_elem[i * m_stride];
+    }
   }
 
   template <typename iType>
@@ -296,10 +306,12 @@ struct Array<T, KOKKOS_INVALID_INDEX, Array<>::strided> {
     static_assert(
         (std::is_integral<iType>::value || std::is_enum<iType>::value),
         "Must be integral argument");
-    if constexpr (Impl::is_scoped_enum_v<iType>)
+    if constexpr (Impl::is_scoped_enum_v<iType>) {
       return operator[](Impl::to_underlying(i));
-    KOKKOS_ARRAY_BOUNDS_CHECK(i, m_size);
-    return m_elem[i * m_stride];
+    } else {
+      KOKKOS_ARRAY_BOUNDS_CHECK(i, m_size);
+      return m_elem[i * m_stride];
+    }
   }
 
   KOKKOS_INLINE_FUNCTION pointer data() { return m_elem; }
