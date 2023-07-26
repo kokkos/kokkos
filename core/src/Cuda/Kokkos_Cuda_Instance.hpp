@@ -196,7 +196,7 @@ class CudaInternal {
 
   // Using cudaAPI function/objects will be w.r.t. device 0 unless
   // cudaSetDevice(device_id) is called with the correct device_id.
-  // The correct device_id is stored in the static variable
+  // The correct device_id is stored in the variable
   // CudaInternal::m_cudaDev set in Cuda::impl_initialize(). It is not
   // sufficient to call cudaSetDevice(m_cudaDev) during cuda initialization
   // only, however, since if a user creates a new thread, that thread will be
