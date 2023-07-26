@@ -193,4 +193,3 @@ TEST(TEST_CATEGORY, to_Array_rvalue) {
 }
 
 }  // namespace
-

@@ -113,4 +113,3 @@ TEST(TEST_CATEGORY, to_Array_rvalue) {
   ASSERT_EQ(ka_sum, a_sum);
 }
 }  // namespace
-
