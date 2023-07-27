@@ -650,13 +650,13 @@ elif [ -n "$nvcc_depfile_command" ]; then
   if [ "$NVCC_WRAPPER_SHOW_COMMANDS_BEING_RUN" == "1" ] ; then
     echo "TMPDIR=${temp_dir} $nvcc_command && TMPDIR=${temp_dir} $nvcc_depfile_command"
   fi
-  mkdir -p ${temp_dir} || ( echo "ERROR: Could not create TMPDIR=${temp_dir} for nvcc" >&2 ; error_code=1 )
+  mkdir -p ${temp_dir} || ( echo "ERROR: Could not create TMPDIR=${temp_dir} for nvcc" >&2 ; exit 1 )
   TMPDIR=${temp_dir} $nvcc_command && TMPDIR=${temp_dir} $nvcc_depfile_command
 else
   if [ "$NVCC_WRAPPER_SHOW_COMMANDS_BEING_RUN" == "1" ] ; then
     echo "TMPDIR=${temp_dir} $nvcc_command"
   fi
-  mkdir -p ${temp_dir} || ( echo "ERROR: Could not create TMPDIR=${temp_dir} for nvcc" >&2 ; error_code=1 )
+  mkdir -p ${temp_dir} || ( echo "ERROR: Could not create TMPDIR=${temp_dir} for nvcc" >&2 ; exit 1 )
   TMPDIR=${temp_dir} $nvcc_command
 fi
 error_code=$?
