@@ -26,26 +26,27 @@ namespace Experimental {
 //
 // overload set accepting execution space
 //
-template <class ExecutionSpace, class InputIterator, class T>
-std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
-                 InputIterator>
-find(const ExecutionSpace& ex, InputIterator first, InputIterator last,
-     const T& value) {
+template <
+    typename ExecutionSpace, typename InputIterator, typename T,
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
+InputIterator find(const ExecutionSpace& ex, InputIterator first,
+                   InputIterator last, const T& value) {
   return Impl::find_exespace_impl("Kokkos::find_iterator_api_default", ex,
                                   first, last, value);
 }
 
-template <class ExecutionSpace, class InputIterator, class T>
-std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
-                 InputIterator>
-find(const std::string& label, const ExecutionSpace& ex, InputIterator first,
-     InputIterator last, const T& value) {
+template <
+    typename ExecutionSpace, typename InputIterator, typename T,
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
+InputIterator find(const std::string& label, const ExecutionSpace& ex,
+                   InputIterator first, InputIterator last, const T& value) {
   return Impl::find_exespace_impl(label, ex, first, last, value);
 }
 
-template <class ExecutionSpace, class DataType, class... Properties, class T,
-          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
-                           int> = 0>
+template <
+    typename ExecutionSpace, typename DataType, typename... Properties,
+    typename T,
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
 auto find(const ExecutionSpace& ex,
           const ::Kokkos::View<DataType, Properties...>& view, const T& value) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
@@ -55,9 +56,10 @@ auto find(const ExecutionSpace& ex,
                                   KE::begin(view), KE::end(view), value);
 }
 
-template <class ExecutionSpace, class DataType, class... Properties, class T,
-          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
-                           int> = 0>
+template <
+    typename ExecutionSpace, typename DataType, typename... Properties,
+    typename T,
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
 auto find(const std::string& label, const ExecutionSpace& ex,
           const ::Kokkos::View<DataType, Properties...>& view, const T& value) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
@@ -72,17 +74,17 @@ auto find(const std::string& label, const ExecutionSpace& ex,
 // Note: for now omit the overloads accepting a label
 // since they cause issues on device because of the string allocation.
 //
-template <class TeamHandleType, class InputIterator, class T>
-KOKKOS_FUNCTION std::enable_if_t<
-    ::Kokkos::is_team_handle<TeamHandleType>::value, InputIterator>
-find(const TeamHandleType& teamHandle, InputIterator first, InputIterator last,
-     const T& value) {
+template <typename TeamHandleType, typename InputIterator, typename T,
+          std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>, int> = 0>
+KOKKOS_FUNCTION InputIterator find(const TeamHandleType& teamHandle,
+                                   InputIterator first, InputIterator last,
+                                   const T& value) {
   return Impl::find_team_impl(teamHandle, first, last, value);
 }
 
-template <
-    class TeamHandleType, class DataType, class... Properties, class T,
-    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, int> = 0>
+template <typename TeamHandleType, typename DataType, typename... Properties,
+          typename T,
+          std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>, int> = 0>
 KOKKOS_FUNCTION auto find(const TeamHandleType& teamHandle,
                           const ::Kokkos::View<DataType, Properties...>& view,
                           const T& value) {

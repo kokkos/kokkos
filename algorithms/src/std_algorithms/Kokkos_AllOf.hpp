@@ -26,26 +26,30 @@ namespace Experimental {
 //
 // overload set accepting execution space
 //
-template <class ExecutionSpace, class InputIterator, class Predicate>
-std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, bool>
-all_of(const ExecutionSpace& ex, InputIterator first, InputIterator last,
-       Predicate predicate) {
+template <
+    typename ExecutionSpace, typename InputIterator, typename Predicate,
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
+bool all_of(const ExecutionSpace& ex, InputIterator first, InputIterator last,
+            Predicate predicate) {
   return Impl::all_of_exespace_impl("Kokkos::all_of_iterator_api_default", ex,
                                     first, last, predicate);
 }
 
-template <class ExecutionSpace, class InputIterator, class Predicate>
-std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, bool>
-all_of(const std::string& label, const ExecutionSpace& ex, InputIterator first,
-       InputIterator last, Predicate predicate) {
+template <
+    typename ExecutionSpace, typename InputIterator, typename Predicate,
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
+bool all_of(const std::string& label, const ExecutionSpace& ex,
+            InputIterator first, InputIterator last, Predicate predicate) {
   return Impl::all_of_exespace_impl(label, ex, first, last, predicate);
 }
 
-template <class ExecutionSpace, class DataType, class... Properties,
-          class Predicate>
-std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, bool>
-all_of(const ExecutionSpace& ex,
-       const ::Kokkos::View<DataType, Properties...>& v, Predicate predicate) {
+template <
+    typename ExecutionSpace, typename DataType, typename... Properties,
+    typename Predicate,
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
+bool all_of(const ExecutionSpace& ex,
+            const ::Kokkos::View<DataType, Properties...>& v,
+            Predicate predicate) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
 
   namespace KE = ::Kokkos::Experimental;
@@ -54,11 +58,13 @@ all_of(const ExecutionSpace& ex,
                                     std::move(predicate));
 }
 
-template <class ExecutionSpace, class DataType, class... Properties,
-          class Predicate>
-std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, bool>
-all_of(const std::string& label, const ExecutionSpace& ex,
-       const ::Kokkos::View<DataType, Properties...>& v, Predicate predicate) {
+template <
+    typename ExecutionSpace, typename DataType, typename... Properties,
+    typename Predicate,
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
+bool all_of(const std::string& label, const ExecutionSpace& ex,
+            const ::Kokkos::View<DataType, Properties...>& v,
+            Predicate predicate) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
 
   namespace KE = ::Kokkos::Experimental;
@@ -71,21 +77,21 @@ all_of(const std::string& label, const ExecutionSpace& ex,
 // Note: for now omit the overloads accepting a label
 // since they cause issues on device because of the string allocation.
 //
-template <class TeamHandleType, class InputIterator, class Predicate>
-KOKKOS_FUNCTION
-    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, bool>
-    all_of(const TeamHandleType& teamHandle, InputIterator first,
-           InputIterator last, Predicate predicate) {
+template <typename TeamHandleType, typename InputIterator, typename Predicate,
+          std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>, int> = 0>
+
+KOKKOS_FUNCTION bool all_of(const TeamHandleType& teamHandle,
+                            InputIterator first, InputIterator last,
+                            Predicate predicate) {
   return Impl::all_of_team_impl(teamHandle, first, last, predicate);
 }
 
-template <class TeamHandleType, class DataType, class... Properties,
-          class Predicate>
-KOKKOS_FUNCTION
-    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, bool>
-    all_of(const TeamHandleType& teamHandle,
-           const ::Kokkos::View<DataType, Properties...>& v,
-           Predicate predicate) {
+template <typename TeamHandleType, typename DataType, typename... Properties,
+          typename Predicate,
+          std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>, int> = 0>
+KOKKOS_FUNCTION bool all_of(const TeamHandleType& teamHandle,
+                            const ::Kokkos::View<DataType, Properties...>& v,
+                            Predicate predicate) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
 
   namespace KE = ::Kokkos::Experimental;

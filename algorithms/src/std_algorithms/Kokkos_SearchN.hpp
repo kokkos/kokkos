@@ -28,22 +28,22 @@ namespace Experimental {
 //
 
 // overload set 1: no binary predicate passed
-template <class ExecutionSpace, class IteratorType, class SizeType,
-          class ValueType>
-std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
-                 IteratorType>
-search_n(const ExecutionSpace& ex, IteratorType first, IteratorType last,
-         SizeType count, const ValueType& value) {
+template <
+    class ExecutionSpace, class IteratorType, class SizeType, class ValueType,
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
+IteratorType search_n(const ExecutionSpace& ex, IteratorType first,
+                      IteratorType last, SizeType count,
+                      const ValueType& value) {
   return Impl::search_n_exespace_impl("Kokkos::search_n_iterator_api_default",
                                       ex, first, last, count, value);
 }
 
-template <class ExecutionSpace, class IteratorType, class SizeType,
-          class ValueType>
-std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
-                 IteratorType>
-search_n(const std::string& label, const ExecutionSpace& ex, IteratorType first,
-         IteratorType last, SizeType count, const ValueType& value) {
+template <
+    class ExecutionSpace, class IteratorType, class SizeType, class ValueType,
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
+IteratorType search_n(const std::string& label, const ExecutionSpace& ex,
+                      IteratorType first, IteratorType last, SizeType count,
+                      const ValueType& value) {
   return Impl::search_n_exespace_impl(label, ex, first, last, count, value);
 }
 
@@ -77,24 +77,24 @@ auto search_n(const std::string& label, const ExecutionSpace& ex,
 }
 
 // overload set 2: binary predicate passed
-template <class ExecutionSpace, class IteratorType, class SizeType,
-          class ValueType, class BinaryPredicateType>
-std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
-                 IteratorType>
-search_n(const ExecutionSpace& ex, IteratorType first, IteratorType last,
-         SizeType count, const ValueType& value,
-         const BinaryPredicateType& pred) {
+template <
+    class ExecutionSpace, class IteratorType, class SizeType, class ValueType,
+    class BinaryPredicateType,
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
+IteratorType search_n(const ExecutionSpace& ex, IteratorType first,
+                      IteratorType last, SizeType count, const ValueType& value,
+                      const BinaryPredicateType& pred) {
   return Impl::search_n_exespace_impl("Kokkos::search_n_iterator_api_default",
                                       ex, first, last, count, value, pred);
 }
 
-template <class ExecutionSpace, class IteratorType, class SizeType,
-          class ValueType, class BinaryPredicateType>
-std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
-                 IteratorType>
-search_n(const std::string& label, const ExecutionSpace& ex, IteratorType first,
-         IteratorType last, SizeType count, const ValueType& value,
-         const BinaryPredicateType& pred) {
+template <
+    class ExecutionSpace, class IteratorType, class SizeType, class ValueType,
+    class BinaryPredicateType,
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
+IteratorType search_n(const std::string& label, const ExecutionSpace& ex,
+                      IteratorType first, IteratorType last, SizeType count,
+                      const ValueType& value, const BinaryPredicateType& pred) {
   return Impl::search_n_exespace_impl(label, ex, first, last, count, value,
                                       pred);
 }
@@ -138,11 +138,11 @@ auto search_n(const std::string& label, const ExecutionSpace& ex,
 
 // overload set 1: no binary predicate passed
 template <class TeamHandleType, class IteratorType, class SizeType,
-          class ValueType>
-KOKKOS_FUNCTION std::enable_if_t<
-    ::Kokkos::is_team_handle<TeamHandleType>::value, IteratorType>
-search_n(const TeamHandleType& teamHandle, IteratorType first,
-         IteratorType last, SizeType count, const ValueType& value) {
+          class ValueType,
+          std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>, int> = 0>
+KOKKOS_FUNCTION IteratorType search_n(const TeamHandleType& teamHandle,
+                                      IteratorType first, IteratorType last,
+                                      SizeType count, const ValueType& value) {
   return Impl::search_n_team_impl(teamHandle, first, last, count, value);
 }
 
@@ -163,12 +163,12 @@ KOKKOS_FUNCTION auto search_n(
 
 // overload set 2: binary predicate passed
 template <class TeamHandleType, class IteratorType, class SizeType,
-          class ValueType, class BinaryPredicateType>
-KOKKOS_FUNCTION std::enable_if_t<
-    ::Kokkos::is_team_handle<TeamHandleType>::value, IteratorType>
-search_n(const TeamHandleType& teamHandle, IteratorType first,
-         IteratorType last, SizeType count, const ValueType& value,
-         const BinaryPredicateType& pred) {
+          class ValueType, class BinaryPredicateType,
+          std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>, int> = 0>
+KOKKOS_FUNCTION IteratorType search_n(const TeamHandleType& teamHandle,
+                                      IteratorType first, IteratorType last,
+                                      SizeType count, const ValueType& value,
+                                      const BinaryPredicateType& pred) {
   return Impl::search_n_team_impl(teamHandle, first, last, count, value, pred);
 }
 
