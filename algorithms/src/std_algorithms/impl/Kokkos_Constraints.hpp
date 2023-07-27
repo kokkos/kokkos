@@ -55,6 +55,9 @@ using iterator_category_t = typename T::iterator_category;
 template <class T>
 using is_iterator = Kokkos::is_detected<iterator_category_t, T>;
 
+template <class T>
+inline constexpr bool is_iterator_v = is_iterator<T>::value;
+
 //
 // are_iterators
 //
@@ -63,7 +66,7 @@ struct are_iterators;
 
 template <class T>
 struct are_iterators<T> {
-  static constexpr bool value = is_iterator<T>::value;
+  static constexpr bool value = is_iterator_v<T>;
 };
 
 template <class Head, class... Tail>
@@ -71,6 +74,9 @@ struct are_iterators<Head, Tail...> {
   static constexpr bool value =
       are_iterators<Head>::value && are_iterators<Tail...>::value;
 };
+
+template <class... Ts>
+inline constexpr bool are_iterators_v = are_iterators<Ts...>::value;
 
 //
 // are_random_access_iterators
@@ -81,9 +87,8 @@ struct are_random_access_iterators;
 template <class T>
 struct are_random_access_iterators<T> {
   static constexpr bool value =
-      is_iterator<T>::value &&
-      std::is_base_of<std::random_access_iterator_tag,
-                      typename T::iterator_category>::value;
+      is_iterator_v<T> && std::is_base_of<std::random_access_iterator_tag,
+                                          typename T::iterator_category>::value;
 };
 
 template <class Head, class... Tail>
@@ -91,6 +96,10 @@ struct are_random_access_iterators<Head, Tail...> {
   static constexpr bool value = are_random_access_iterators<Head>::value &&
                                 are_random_access_iterators<Tail...>::value;
 };
+
+template <class... Ts>
+inline constexpr bool are_random_access_iterators_v =
+    are_random_access_iterators<Ts...>::value;
 
 //
 // iterators_are_accessible_from
