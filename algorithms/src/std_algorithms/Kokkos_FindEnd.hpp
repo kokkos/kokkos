@@ -29,28 +29,29 @@ namespace Experimental {
 //
 
 // overload set 1: no binary predicate passed
-template <class ExecutionSpace, class IteratorType1, class IteratorType2>
-std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
-                 IteratorType1>
-find_end(const ExecutionSpace& ex, IteratorType1 first, IteratorType1 last,
-         IteratorType2 s_first, IteratorType2 s_last) {
+template <
+    typename ExecutionSpace, typename IteratorType1, typename IteratorType2,
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
+IteratorType1 find_end(const ExecutionSpace& ex, IteratorType1 first,
+                       IteratorType1 last, IteratorType2 s_first,
+                       IteratorType2 s_last) {
   return Impl::find_end_exespace_impl("Kokkos::find_end_iterator_api_default",
                                       ex, first, last, s_first, s_last);
 }
 
-template <class ExecutionSpace, class IteratorType1, class IteratorType2>
-std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
-                 IteratorType1>
-find_end(const std::string& label, const ExecutionSpace& ex,
-         IteratorType1 first, IteratorType1 last, IteratorType2 s_first,
-         IteratorType2 s_last) {
+template <
+    typename ExecutionSpace, typename IteratorType1, typename IteratorType2,
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
+IteratorType1 find_end(const std::string& label, const ExecutionSpace& ex,
+                       IteratorType1 first, IteratorType1 last,
+                       IteratorType2 s_first, IteratorType2 s_last) {
   return Impl::find_end_exespace_impl(label, ex, first, last, s_first, s_last);
 }
 
-template <class ExecutionSpace, class DataType1, class... Properties1,
-          class DataType2, class... Properties2,
-          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
-                           int> = 0>
+template <
+    typename ExecutionSpace, typename DataType1, typename... Properties1,
+    typename DataType2, typename... Properties2,
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
 auto find_end(const ExecutionSpace& ex,
               const ::Kokkos::View<DataType1, Properties1...>& view,
               const ::Kokkos::View<DataType2, Properties2...>& s_view) {
@@ -63,10 +64,10 @@ auto find_end(const ExecutionSpace& ex,
                                       KE::begin(s_view), KE::end(s_view));
 }
 
-template <class ExecutionSpace, class DataType1, class... Properties1,
-          class DataType2, class... Properties2,
-          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
-                           int> = 0>
+template <
+    typename ExecutionSpace, typename DataType1, typename... Properties1,
+    typename DataType2, typename... Properties2,
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
 auto find_end(const std::string& label, const ExecutionSpace& ex,
               const ::Kokkos::View<DataType1, Properties1...>& view,
               const ::Kokkos::View<DataType2, Properties2...>& s_view) {
@@ -79,32 +80,33 @@ auto find_end(const std::string& label, const ExecutionSpace& ex,
 }
 
 // overload set 2: binary predicate passed
-template <class ExecutionSpace, class IteratorType1, class IteratorType2,
-          class BinaryPredicateType>
-std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
-                 IteratorType1>
-find_end(const ExecutionSpace& ex, IteratorType1 first, IteratorType1 last,
-         IteratorType2 s_first, IteratorType2 s_last,
-         const BinaryPredicateType& pred) {
+template <
+    typename ExecutionSpace, typename IteratorType1, typename IteratorType2,
+    typename BinaryPredicateType,
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
+IteratorType1 find_end(const ExecutionSpace& ex, IteratorType1 first,
+                       IteratorType1 last, IteratorType2 s_first,
+                       IteratorType2 s_last, const BinaryPredicateType& pred) {
   return Impl::find_end_exespace_impl("Kokkos::find_end_iterator_api_default",
                                       ex, first, last, s_first, s_last, pred);
 }
 
-template <class ExecutionSpace, class IteratorType1, class IteratorType2,
-          class BinaryPredicateType>
-std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
-                 IteratorType1>
-find_end(const std::string& label, const ExecutionSpace& ex,
-         IteratorType1 first, IteratorType1 last, IteratorType2 s_first,
-         IteratorType2 s_last, const BinaryPredicateType& pred) {
+template <
+    typename ExecutionSpace, typename IteratorType1, typename IteratorType2,
+    typename BinaryPredicateType,
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
+IteratorType1 find_end(const std::string& label, const ExecutionSpace& ex,
+                       IteratorType1 first, IteratorType1 last,
+                       IteratorType2 s_first, IteratorType2 s_last,
+                       const BinaryPredicateType& pred) {
   return Impl::find_end_exespace_impl(label, ex, first, last, s_first, s_last,
                                       pred);
 }
 
-template <class ExecutionSpace, class DataType1, class... Properties1,
-          class DataType2, class... Properties2, class BinaryPredicateType,
-          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
-                           int> = 0>
+template <
+    typename ExecutionSpace, typename DataType1, typename... Properties1,
+    typename DataType2, typename... Properties2, typename BinaryPredicateType,
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
 auto find_end(const ExecutionSpace& ex,
               const ::Kokkos::View<DataType1, Properties1...>& view,
               const ::Kokkos::View<DataType2, Properties2...>& s_view,
@@ -118,10 +120,10 @@ auto find_end(const ExecutionSpace& ex,
                                       KE::begin(s_view), KE::end(s_view), pred);
 }
 
-template <class ExecutionSpace, class DataType1, class... Properties1,
-          class DataType2, class... Properties2, class BinaryPredicateType,
-          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
-                           int> = 0>
+template <
+    typename ExecutionSpace, typename DataType1, typename... Properties1,
+    typename DataType2, typename... Properties2, typename BinaryPredicateType,
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
 auto find_end(const std::string& label, const ExecutionSpace& ex,
               const ::Kokkos::View<DataType1, Properties1...>& view,
               const ::Kokkos::View<DataType2, Properties2...>& s_view,
@@ -141,18 +143,19 @@ auto find_end(const std::string& label, const ExecutionSpace& ex,
 //
 
 // overload set 1: no binary predicate passed
-template <class TeamHandleType, class IteratorType1, class IteratorType2>
-KOKKOS_FUNCTION std::enable_if_t<
-    ::Kokkos::is_team_handle<TeamHandleType>::value, IteratorType1>
-find_end(const TeamHandleType& teamHandle, IteratorType1 first,
-         IteratorType1 last, IteratorType2 s_first, IteratorType2 s_last) {
+template <typename TeamHandleType, typename IteratorType1,
+          typename IteratorType2,
+          std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>, int> = 0>
+KOKKOS_FUNCTION IteratorType1 find_end(const TeamHandleType& teamHandle,
+                                       IteratorType1 first, IteratorType1 last,
+                                       IteratorType2 s_first,
+                                       IteratorType2 s_last) {
   return Impl::find_end_team_impl(teamHandle, first, last, s_first, s_last);
 }
 
-template <
-    class TeamHandleType, class DataType1, class... Properties1,
-    class DataType2, class... Properties2,
-    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, int> = 0>
+template <typename TeamHandleType, typename DataType1, typename... Properties1,
+          typename DataType2, typename... Properties2,
+          std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>, int> = 0>
 KOKKOS_FUNCTION auto find_end(
     const TeamHandleType& teamHandle,
     const ::Kokkos::View<DataType1, Properties1...>& view,
@@ -166,21 +169,23 @@ KOKKOS_FUNCTION auto find_end(
 }
 
 // overload set 2: binary predicate passed
-template <class TeamHandleType, class IteratorType1, class IteratorType2,
-          class BinaryPredicateType>
-KOKKOS_FUNCTION std::enable_if_t<
-    ::Kokkos::is_team_handle<TeamHandleType>::value, IteratorType1>
-find_end(const TeamHandleType& teamHandle, IteratorType1 first,
-         IteratorType1 last, IteratorType2 s_first, IteratorType2 s_last,
-         const BinaryPredicateType& pred) {
+template <typename TeamHandleType, typename IteratorType1,
+          typename IteratorType2, typename BinaryPredicateType,
+          std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>, int> = 0>
+
+KOKKOS_FUNCTION IteratorType1 find_end(const TeamHandleType& teamHandle,
+                                       IteratorType1 first, IteratorType1 last,
+                                       IteratorType2 s_first,
+                                       IteratorType2 s_last,
+                                       const BinaryPredicateType& pred) {
   return Impl::find_end_team_impl(teamHandle, first, last, s_first, s_last,
                                   pred);
 }
 
-template <
-    class TeamHandleType, class DataType1, class... Properties1,
-    class DataType2, class... Properties2, class BinaryPredicateType,
-    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, int> = 0>
+template <typename TeamHandleType, typename DataType1, typename... Properties1,
+          typename DataType2, typename... Properties2,
+          typename BinaryPredicateType,
+          std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>, int> = 0>
 KOKKOS_FUNCTION auto find_end(
     const TeamHandleType& teamHandle,
     const ::Kokkos::View<DataType1, Properties1...>& view,
