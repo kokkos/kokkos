@@ -618,8 +618,7 @@ class View : public ViewTraits<DataType, Properties...> {
       typename traits::non_const_data_type, typename traits::array_layout,
       Device<std::conditional_t<
                  SpaceAccessibility<typename traits::execution_space,
-                                    typename traits::host_mirror_space::
-                                        memory_space>::accessible,
+                                    Kokkos::HostSpace>::accessible,
                  typename traits::execution_space, DefaultHostExecutionSpace>,
              typename traits::host_mirror_space::memory_space>,
       typename traits::hooks_policy>;
