@@ -484,9 +484,9 @@ inline void host_check_shift_on_one_loader(ShiftOp shift_op,
 
     for (std::size_t lane = 0; lane < width; ++lane) {
       DataType value = simd_vals[lane];
-      if (value)
-        expected_result[lane] =
-            shift_op.on_host(value, static_cast<int>(shift_by[i]));
+      expected_result[lane] =
+          shift_op.on_host(value, static_cast<int>(shift_by[i]));
+      EXPECT_EQ(value, value);
     }
 
     simd_type const computed_result =
@@ -511,12 +511,9 @@ inline void host_check_shift_by_lanes_on_one_loader(
 
   for (std::size_t lane = 0; lane < width; ++lane) {
     DataType value = simd_vals[lane];
-    if (value) {
-      expected_result[lane] =
-          shift_op.on_host(value, static_cast<int>(shift_by[lane]));
-      continue;
-    }
-    ASSERT_TRUE(value != 0);
+    expected_result[lane] =
+        shift_op.on_host(value, static_cast<int>(shift_by[lane]));
+    EXPECT_EQ(value, value);
   }
   simd_type const computed_result = shift_op.on_host(simd_vals, shift_by);
   host_check_equality(expected_result, computed_result, width);
@@ -546,13 +543,6 @@ inline void host_check_shift_op_all_loaders(ShiftOp shift_op,
       shift_op, test_vals, shift_by_lanes);
 }
 
-template <typename DataType>
-inline void host_check_shift_op_corner_case() {
-  DataType value = -1;
-  auto shifted   = value >> 1;
-  EXPECT_EQ(shifted, value);
-}
-
 template <typename Abi, typename DataType>
 inline void host_check_shift_op() {
   if constexpr (std::is_integral_v<DataType>) {
@@ -561,28 +551,27 @@ inline void host_check_shift_op() {
     std::size_t constexpr num_cases = 8;
 
     DataType max = std::numeric_limits<DataType>::max();
-    DataType min = std::numeric_limits<DataType>::min();
 
     DataType shift_by[num_cases] = {
         0, 1, 3, width / 2, width / 2 + 1, width - 1, width, width + 1};
     DataType test_vals[width];
-
     for (std::size_t i = 0; i < width; ++i) {
-      DataType test_val = max / (i + 1);
-      test_vals[i]      = (test_val < min) ? min : test_val;
+      DataType inc = max / width;
+      test_vals[i] = i * inc + 1;
     }
+
     host_check_shift_op_all_loaders<Abi>(shift_right(), test_vals, shift_by,
                                          num_cases);
-
-    for (std::size_t i = 0; i < width; ++i) {
-      DataType test_val = (min == 0) ? 1 : min / (i + 1);
-      test_vals[i]      = (test_val > max) ? max : test_val;
-    }
     host_check_shift_op_all_loaders<Abi>(shift_left(), test_vals, shift_by,
                                          num_cases);
 
-    if constexpr (std::is_signed_v<DataType>)
-      host_check_shift_op_corner_case<DataType>();
+    if constexpr (std::is_signed_v<DataType>) {
+      for (std::size_t i = 0; i < width; ++i) test_vals[i] *= -1;
+      host_check_shift_op_all_loaders<Abi>(shift_right(), test_vals, shift_by,
+                                           num_cases);
+      host_check_shift_op_all_loaders<Abi>(shift_left(), test_vals, shift_by,
+                                           num_cases);
+    }
   }
 }
 
@@ -789,11 +778,17 @@ KOKKOS_INLINE_FUNCTION void device_check_shift_op() {
     DataType test_vals[width];
 
     for (std::size_t i = 0; i < width; ++i) {
-      DataType test_val = max / (i + 1);
-      test_vals[i]      = (test_val < min) ? min : test_val;
+      DataType inc = max / width;
+      test_vals[i] = i * inc + 1;
     }
     device_check_shift_op_all_loaders<Abi>(shift_right(), test_vals, shift_by,
                                            num_cases);
+
+    if constexpr (std::is_signed_v<DataType>) {
+      for (std::size_t i = 0; i < width; ++i) test_vals[i] *= -1;
+      device_check_shift_op_all_loaders<Abi>(shift_right(), test_vals, shift_by,
+                                             num_cases);
+    }
 
     for (std::size_t i = 0; i < width; ++i) {
       DataType test_val = (min == 0) ? 1 : min / (i + 1);
