@@ -29,6 +29,9 @@ std::enable_if_t<std::is_integral_v<T>, bool> constexpr multiply_overflow(
     T a, T b, T& res) {
   static_assert(std::is_unsigned_v<T>,
                 "Operation not implemented for signed integers.");
+#if defined(KOKKOS_COMPILER_CLANG) || defined(KOKKOS_COMPILER_GNU)
+  return __builtin_mul_overflow(a, b, &res);
+#else
   auto product = a * b;
   if ((a == 0) || (b == 0) || (a == product / b)) {
     res = product;
@@ -36,6 +39,7 @@ std::enable_if_t<std::is_integral_v<T>, bool> constexpr multiply_overflow(
   } else {
     return true;
   }
+#endif
 }
 
 template <typename T>
