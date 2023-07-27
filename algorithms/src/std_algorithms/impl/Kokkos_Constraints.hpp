@@ -72,7 +72,7 @@ struct are_iterators<T> {
 template <class Head, class... Tail>
 struct are_iterators<Head, Tail...> {
   static constexpr bool value =
-      are_iterators<Head>::value && are_iterators<Tail...>::value;
+      are_iterators<Head>::value && (are_iterators<Tail>::value && ... && true);
 };
 
 template <class... Ts>
@@ -93,8 +93,9 @@ struct are_random_access_iterators<T> {
 
 template <class Head, class... Tail>
 struct are_random_access_iterators<Head, Tail...> {
-  static constexpr bool value = are_random_access_iterators<Head>::value &&
-                                are_random_access_iterators<Tail...>::value;
+  static constexpr bool value =
+      are_random_access_iterators<Head>::value &&
+      (are_random_access_iterators<Tail>::value && ... && true);
 };
 
 template <class... Ts>

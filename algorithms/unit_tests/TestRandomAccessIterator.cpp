@@ -225,6 +225,7 @@ TEST_F(random_access_iterator_test, traits_helpers) {
   namespace KE = Kokkos::Experimental;
   static_assert(KE::Impl::are_iterators_v<T1_t, T2_t, T3_t>);
   static_assert(KE::Impl::are_random_access_iterators_v<T1_t, T2_t, T3_t>);
+  static_assert(!KE::Impl::are_iterators_v<int, T2_t, T3_t>);
 }
 
 }  // namespace stdalgos
