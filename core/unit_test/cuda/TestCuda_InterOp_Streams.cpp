@@ -41,44 +41,75 @@ TEST(cuda, raw_cuda_streams) {
   using MemorySpace = typename TEST_EXECSPACE::memory_space;
 
   {
-    TEST_EXECSPACE space0(n_devices-1, stream);
+    TEST_EXECSPACE space0(0, stream0);
+    Kokkos::View<int *, TEST_EXECSPACE> v0(p0, 100);
+    Kokkos::deep_copy(space0, v0, 5);
+    TEST_EXECSPACE space(n_devices-1, stream);
     Kokkos::View<int *, TEST_EXECSPACE> v(p, 100);
     Kokkos::deep_copy(space0, v, 5);
-    int sum;
 
-    Kokkos::parallel_for("Test::cuda::raw_cuda_stream::Range",
+    int sum;
+    int sum0;
+
+    Kokkos::parallel_for("Test::cuda::raw_cuda_stream::Range_0",
                          Kokkos::RangePolicy<TEST_EXECSPACE>(space0, 0, 100),
+                         FunctorRange<MemorySpace>(v0));
+    Kokkos::parallel_for("Test::cuda::raw_cuda_stream::Range",
+                         Kokkos::RangePolicy<TEST_EXECSPACE>(space, 0, 100),
                          FunctorRange<MemorySpace>(v));
+    Kokkos::parallel_reduce(
+        "Test::cuda::raw_cuda_stream::RangeReduce_0",
+        Kokkos::RangePolicy<TEST_EXECSPACE, Kokkos::LaunchBounds<128, 2>>(
+            space0, 0, 100),
+        FunctorRangeReduce<MemorySpace>(v0), sum0);
     Kokkos::parallel_reduce(
         "Test::cuda::raw_cuda_stream::RangeReduce",
         Kokkos::RangePolicy<TEST_EXECSPACE, Kokkos::LaunchBounds<128, 2>>(
-            space0, 0, 100),
+            space, 0, 100),
         FunctorRangeReduce<MemorySpace>(v), sum);
-    space0.fence();
+    ASSERT_EQ(600, sum0);
     ASSERT_EQ(600, sum);
 
-    Kokkos::parallel_for("Test::cuda::raw_cuda_stream::MDRange",
+    Kokkos::parallel_for("Test::cuda::raw_cuda_stream::MDRange_0",
                          Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>(
                              space0, {0, 0}, {10, 10}),
+                         FunctorMDRange<MemorySpace>(v0));
+    Kokkos::parallel_for("Test::cuda::raw_cuda_stream::MDRange",
+                         Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>(
+                             space, {0, 0}, {10, 10}),
                          FunctorMDRange<MemorySpace>(v));
     Kokkos::parallel_reduce(
-        "Test::cuda::raw_cuda_stream::MDRangeReduce",
+        "Test::cuda::raw_cuda_stream::MDRangeReduce_0",
         Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>,
                               Kokkos::LaunchBounds<128, 2>>(space0, {0, 0},
                                                             {10, 10}),
+        FunctorMDRangeReduce<MemorySpace>(v0), sum0);
+    Kokkos::parallel_reduce(
+        "Test::cuda::raw_cuda_stream::MDRangeReduce",
+        Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>,
+                              Kokkos::LaunchBounds<128, 2>>(space, {0, 0},
+                                                            {10, 10}),
         FunctorMDRangeReduce<MemorySpace>(v), sum);
-    space0.fence();
+    ASSERT_EQ(700, sum0);
     ASSERT_EQ(700, sum);
 
-    Kokkos::parallel_for("Test::cuda::raw_cuda_stream::Team",
+    Kokkos::parallel_for("Test::cuda::raw_cuda_stream::Team_0",
                          Kokkos::TeamPolicy<TEST_EXECSPACE>(space0, 10, 10),
+                         FunctorTeam<MemorySpace, TEST_EXECSPACE>(v0));
+    Kokkos::parallel_for("Test::cuda::raw_cuda_stream::Team",
+                         Kokkos::TeamPolicy<TEST_EXECSPACE>(space, 10, 10),
                          FunctorTeam<MemorySpace, TEST_EXECSPACE>(v));
     Kokkos::parallel_reduce(
-        "Test::cuda::raw_cuda_stream::Team",
+        "Test::cuda::raw_cuda_stream::Team_0",
         Kokkos::TeamPolicy<TEST_EXECSPACE, Kokkos::LaunchBounds<128, 2>>(
             space0, 10, 10),
+        FunctorTeamReduce<MemorySpace, TEST_EXECSPACE>(v0), sum0);
+Kokkos::parallel_reduce(
+        "Test::cuda::raw_cuda_stream::Team",
+        Kokkos::TeamPolicy<TEST_EXECSPACE, Kokkos::LaunchBounds<128, 2>>(
+            space, 10, 10),
         FunctorTeamReduce<MemorySpace, TEST_EXECSPACE>(v), sum);
-    space0.fence();
+    ASSERT_EQ(800, sum0);
     ASSERT_EQ(800, sum);
   }
   Kokkos::finalize();
