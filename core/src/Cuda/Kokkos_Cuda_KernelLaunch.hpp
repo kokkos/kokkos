@@ -149,11 +149,13 @@ template <class DriverType, class LaunchBounds, class KernelFuncPtr>
 inline void configure_shmem_preference(const KernelFuncPtr& func,
                                        const cudaDeviceProp& device_props,
                                        const size_t block_size, int& shmem,
-                                       const size_t occupancy, int cuda_device) {
+                                       const size_t occupancy,
+                                       int cuda_device) {
 #ifndef KOKKOS_ARCH_KEPLER
 
   const auto& func_attr =
-      get_cuda_kernel_func_attributes<DriverType, LaunchBounds>(cuda_device, func);
+      get_cuda_kernel_func_attributes<DriverType, LaunchBounds>(cuda_device,
+                                                                func);
 
   // Compute limits for number of blocks due to registers/SM
   const size_t regs_per_sm     = device_props.regsPerMultiprocessor;
@@ -222,7 +224,7 @@ inline void configure_shmem_preference(const KernelFuncPtr& func,
   auto set_cache_config = [&] {
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(cuda_device));
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFuncSetAttributes(
-            func, cudaFuncAttributePreferredSharedMemoryCarveout, carveout));
+        func, cudaFuncAttributePreferredSharedMemoryCarveout, carveout));
     return carveout;
   };
   // Store the value in a static variable so we only reset if needed
@@ -577,7 +579,8 @@ struct CudaParallelLaunchKernelInvoker<
                             CudaInternal const* cuda_instance) {
     int cuda_device = cuda_instance->m_cudaDev;
     // Wait until the previous kernel that uses the constant buffer is done
-    std::lock_guard<std::mutex> lock(CudaInternal::constantMemMutexPerDevice[cuda_device]);
+    std::lock_guard<std::mutex> lock(
+        CudaInternal::constantMemMutexPerDevice[cuda_device]);
     KOKKOS_IMPL_CUDA_SAFE_CALL((cuda_instance->cuda_event_synchronize_wrapper(
         CudaInternal::constantMemReusablePerDevice[cuda_device])));
 

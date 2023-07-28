@@ -98,7 +98,8 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
         Impl::ParallelFor<FunctorType, TeamPolicy<Properties...>>;
     cudaFuncAttributes attr =
         CudaParallelLaunch<closure_type, typename traits::launch_bounds>::
-            get_cuda_func_attributes(space().impl_internal_space_instance()->m_cudaDev);
+            get_cuda_func_attributes(
+                space().impl_internal_space_instance()->m_cudaDev);
     int block_size =
         Kokkos::Impl::cuda_get_max_block_size<FunctorType,
                                               typename traits::launch_bounds>(
@@ -137,7 +138,8 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
         Impl::ParallelFor<FunctorType, TeamPolicy<Properties...>>;
     cudaFuncAttributes attr =
         CudaParallelLaunch<closure_type, typename traits::launch_bounds>::
-                    get_cuda_func_attributes(space().impl_internal_space_instance()->m_cudaDev);
+            get_cuda_func_attributes(
+                space().impl_internal_space_instance()->m_cudaDev);
     const int block_size =
         Kokkos::Impl::cuda_get_opt_block_size<FunctorType,
                                               typename traits::launch_bounds>(

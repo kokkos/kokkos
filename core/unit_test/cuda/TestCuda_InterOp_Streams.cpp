@@ -32,7 +32,7 @@ TEST(cuda, raw_cuda_streams) {
   KOKKOS_IMPL_CUDA_SAFE_CALL(
       cudaMalloc(reinterpret_cast<void **>(&p0), sizeof(int) * 100));
 
-  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(n_devices-1));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(n_devices - 1));
   cudaStream_t stream;
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamCreate(&stream));
   int *p;
@@ -44,7 +44,7 @@ TEST(cuda, raw_cuda_streams) {
     TEST_EXECSPACE space0(0, stream0);
     Kokkos::View<int *, TEST_EXECSPACE> v0(p0, 100);
     Kokkos::deep_copy(space0, v0, 5);
-    TEST_EXECSPACE space(n_devices-1, stream);
+    TEST_EXECSPACE space(n_devices - 1, stream);
     Kokkos::View<int *, TEST_EXECSPACE> v(p, 100);
     Kokkos::deep_copy(space, v, 5);
 
@@ -104,7 +104,7 @@ TEST(cuda, raw_cuda_streams) {
         Kokkos::TeamPolicy<TEST_EXECSPACE, Kokkos::LaunchBounds<128, 2>>(
             space0, 10, 10),
         FunctorTeamReduce<MemorySpace, TEST_EXECSPACE>(v0), sum0);
-Kokkos::parallel_reduce(
+    Kokkos::parallel_reduce(
         "Test::cuda::raw_cuda_stream::Team",
         Kokkos::TeamPolicy<TEST_EXECSPACE, Kokkos::LaunchBounds<128, 2>>(
             space, 10, 10),
@@ -113,13 +113,14 @@ Kokkos::parallel_reduce(
     ASSERT_EQ(800, sum);
   }
   Kokkos::finalize();
-  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(n_devices-1));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(n_devices - 1));
   offset_streams<<<100, 64, 0, stream>>>(p);
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaDeviceSynchronize());
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamDestroy(stream));
 
   int h_p[100];
-  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMemcpy(h_p, p, sizeof(int) * 100, cudaMemcpyDefault));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(
+      cudaMemcpy(h_p, p, sizeof(int) * 100, cudaMemcpyDefault));
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaDeviceSynchronize());
   int64_t sum        = 0;
   int64_t sum_expect = 0;
@@ -129,11 +130,11 @@ Kokkos::parallel_reduce(
   }
 
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(0));
-  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMemset(p0, 0, sizeof(int)*100));
-  //KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFree(p0));
-  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(n_devices-1));
-  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMemset(p, 0, sizeof(int)*100));
-  //KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFree(p));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMemset(p0, 0, sizeof(int) * 100));
+  // KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFree(p0));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(n_devices - 1));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMemset(p, 0, sizeof(int) * 100));
+  // KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFree(p));
 
   ASSERT_EQ(sum, sum_expect);
 }

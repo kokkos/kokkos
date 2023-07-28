@@ -142,28 +142,25 @@ void cuda_device_synchronize(const std::string &name) {
 #if defined(KOKKOS_COMPILER_CLANG)
       // annotate with __host__ silence a clang warning about using
       // cudaDeviceSynchronize in device code
-      [] __host__() 
+      [] __host__()
 #else
-[]() 
+      []()
 #endif
-{
-
-        for(int cuda_device: CudaInternal::cuda_devices) {
+      {
+        for (int cuda_device : CudaInternal::cuda_devices) {
           KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(cuda_device));
           KOKKOS_IMPL_CUDA_SAFE_CALL(cudaDeviceSynchronize());
-}
+        }
       });
 }
 
-void cuda_stream_synchronize(const CudaInternal *ptr,
-                             const std::string &name) {
+void cuda_stream_synchronize(const CudaInternal *ptr, const std::string &name) {
   Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Cuda>(
       name,
       Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{
           ptr->impl_get_instance_id()},
       [&]() {
-        KOKKOS_IMPL_CUDA_SAFE_CALL(
-            (ptr->cuda_stream_synchronize_wrapper()));
+        KOKKOS_IMPL_CUDA_SAFE_CALL((ptr->cuda_stream_synchronize_wrapper()));
       });
 }
 
@@ -423,7 +420,8 @@ Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
   }
 #endif
 
-  // Make sure the array used for arbitrarily sized atomics is initialized on this device
+  // Make sure the array used for arbitrarily sized atomics is initialized on
+  // this device
   desul::Impl::init_lock_arrays(m_cudaDev);
 
   // Allocate a staging buffer for constant mem in pinned host memory
@@ -494,7 +492,7 @@ Cuda::size_type *CudaInternal::scratch_unified(const std::size_t size) const {
 
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFreeHost(m_scratchUnified));
-      std::size_t alloc_size =
+    std::size_t alloc_size =
         multiply_overflow_abort(m_scratchUnifiedCount, sizeScratchGrain);
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMallocHost(&m_scratchUnified, alloc_size));
   }
@@ -508,7 +506,8 @@ Cuda::size_type *CudaInternal::scratch_functor(const std::size_t size) const {
 
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFree(m_scratchFunctor));
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMalloc(&m_scratchFunctor, m_scratchFunctorSize));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(
+        cudaMalloc(&m_scratchFunctor, m_scratchFunctorSize));
   }
 
   return m_scratchFunctor;
