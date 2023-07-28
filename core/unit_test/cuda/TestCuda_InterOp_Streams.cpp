@@ -46,7 +46,7 @@ TEST(cuda, raw_cuda_streams) {
     Kokkos::deep_copy(space0, v0, 5);
     TEST_EXECSPACE space(n_devices-1, stream);
     Kokkos::View<int *, TEST_EXECSPACE> v(p, 100);
-    Kokkos::deep_copy(space0, v, 5);
+    Kokkos::deep_copy(space, v, 5);
 
     int sum;
     int sum0;
