@@ -38,7 +38,7 @@ struct HostLocks {
   }
 };
 
-inline void init_lock_arrays(int device_id) {
+inline void init_lock_arrays([[maybe_unused]] int device_id) {
   static bool is_initialized = false;
   if (!is_initialized) {
     HostLocks::get_host_locks_();
