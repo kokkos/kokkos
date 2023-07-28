@@ -447,7 +447,7 @@ Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
 
   if (!constantMemReusablePerDevice[m_cudaDev])
     KOKKOS_IMPL_CUDA_SAFE_CALL(
-        (cuda_event_create_wrapper(&constantMemReusable[m_cudaDev])));
+        (cuda_event_create_wrapper(&constantMemReusablePerDevice[m_cudaDev])));
 
   m_stream        = stream;
   m_manage_stream = manage_stream;

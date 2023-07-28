@@ -577,10 +577,11 @@ struct CudaParallelLaunchKernelInvoker<
   static void invoke_kernel(DriverType const& driver, dim3 const& grid,
                             dim3 const& block, int shmem,
                             CudaInternal const* cuda_instance) {
+    int cuda_device = cuda_instance->m_cudaDev;
     // Wait until the previous kernel that uses the constant buffer is done
-    std::lock_guard<std::mutex> lock(CudaInternal::constantMemMutex);
+    std::lock_guard<std::mutex> lock(CudaInternal::constantMemMutexPerDevice[cuda_device]);
     KOKKOS_IMPL_CUDA_SAFE_CALL((cuda_instance->cuda_event_synchronize_wrapper(
-        CudaInternal::constantMemReusable)));
+        CudaInternal::constantMemReusablePerDevice[cuda_device])));
 
     // Copy functor (synchronously) to staging buffer in pinned host memory
     unsigned long* staging =
