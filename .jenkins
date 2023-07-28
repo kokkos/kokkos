@@ -288,7 +288,7 @@ pipeline {
                         }
                     }
                 }
-                stage('CUDA-10.1-Clang-Tidy') {
+                stage('CUDA-11.0.3-Clang-Tidy') {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.kokkosllvmproject'
