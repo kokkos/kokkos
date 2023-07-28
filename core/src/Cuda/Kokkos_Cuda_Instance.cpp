@@ -134,7 +134,6 @@ Kokkos::View<uint32_t *, Kokkos::CudaSpace> cuda_global_unique_token_locks(
   return locks;
 }
 
-// FIXME_CUDA_MULTIPLE_DEVICES
 void cuda_device_synchronize(const std::string &name) {
   Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Cuda>(
       name,
@@ -143,19 +142,20 @@ void cuda_device_synchronize(const std::string &name) {
 #if defined(KOKKOS_COMPILER_CLANG)
       // annotate with __host__ silence a clang warning about using
       // cudaDeviceSynchronize in device code
-      [] __host__() {
-        KOKKOS_IMPL_CUDA_SAFE_CALL(
-            (CudaInternal::singleton().cuda_device_synchronize_wrapper()));
-      });
+      [] __host__() 
 #else
-      []() {
-        KOKKOS_IMPL_CUDA_SAFE_CALL(
-            (CudaInternal::singleton().cuda_device_synchronize_wrapper()));
-      });
+[]() 
 #endif
+{
+
+        for(int cuda_device: CudaInternal::cuda_devices) {
+          KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(cuda_device));
+          KOKKOS_IMPL_CUDA_SAFE_CALL(cudaDeviceSynchronize());
+}
+      });
 }
 
-void cuda_stream_synchronize(const cudaStream_t stream, const CudaInternal *ptr,
+void cuda_stream_synchronize(const CudaInternal *ptr,
                              const std::string &name) {
   Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Cuda>(
       name,
@@ -163,19 +163,7 @@ void cuda_stream_synchronize(const cudaStream_t stream, const CudaInternal *ptr,
           ptr->impl_get_instance_id()},
       [&]() {
         KOKKOS_IMPL_CUDA_SAFE_CALL(
-            (ptr->cuda_stream_synchronize_wrapper(stream)));
-      });
-}
-
-void cuda_stream_synchronize(
-    const cudaStream_t stream,
-    Kokkos::Tools::Experimental::SpecialSynchronizationCases reason,
-    const std::string &name) {
-  Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Cuda>(
-      name, reason, [&]() {
-        KOKKOS_IMPL_CUDA_SAFE_CALL(
-            (Impl::CudaInternal::singleton().cuda_stream_synchronize_wrapper(
-                stream)));
+            (ptr->cuda_stream_synchronize_wrapper()));
       });
 }
 
@@ -363,7 +351,7 @@ CudaInternal &CudaInternal::singleton() {
   return self;
 }
 void CudaInternal::fence(const std::string &name) const {
-  Impl::cuda_stream_synchronize(get_stream(), this, name);
+  Impl::cuda_stream_synchronize(this, name);
 }
 void CudaInternal::fence() const {
   fence("Kokkos::CudaInternal::fence(): Unnamed Instance Fence");

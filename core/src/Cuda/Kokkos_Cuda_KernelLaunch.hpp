@@ -128,7 +128,6 @@ inline void check_shmem_request(CudaInternal const* cuda_instance, int shmem) {
 // These functions need to be templated on DriverType and LaunchBounds
 // so that the static bool is unique for each type combo
 // KernelFuncPtr does not necessarily contain that type information.
-// FIXME_CUDA_MULTIPLE_DEVICES
 template <class DriverType, class LaunchBounds, class KernelFuncPtr>
 const cudaFuncAttributes& get_cuda_kernel_func_attributes(
     int cuda_device, const KernelFuncPtr& func) {
@@ -220,11 +219,10 @@ inline void configure_shmem_preference(const KernelFuncPtr& func,
   if (carveout > 100) carveout = 100;
 
   // Set the carveout, but only call it once per kernel or when it changes
-  // FIXME_CUDA_MULTIPLE_DEVICES
   auto set_cache_config = [&] {
-    KOKKOS_IMPL_CUDA_SAFE_CALL(
-        (CudaInternal::singleton().cuda_func_set_attributes_wrapper(
-            func, cudaFuncAttributePreferredSharedMemoryCarveout, carveout)));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(cuda_device));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFuncSetAttributes(
+            func, cudaFuncAttributePreferredSharedMemoryCarveout, carveout));
     return carveout;
   };
   // Store the value in a static variable so we only reset if needed

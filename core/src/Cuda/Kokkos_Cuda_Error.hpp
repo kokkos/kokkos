@@ -27,13 +27,7 @@
 namespace Kokkos {
 namespace Impl {
 
-void cuda_stream_synchronize(
-    const cudaStream_t stream,
-    Kokkos::Tools::Experimental::SpecialSynchronizationCases reason,
-    const std::string& name);
 void cuda_device_synchronize(const std::string& name);
-void cuda_stream_synchronize(const cudaStream_t stream,
-                             const std::string& name);
 
 [[noreturn]] void cuda_internal_error_throw(cudaError e, const char* name,
                                             const char* file = nullptr,

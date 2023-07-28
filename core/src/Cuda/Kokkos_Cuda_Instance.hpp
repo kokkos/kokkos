@@ -254,12 +254,6 @@ class CudaInternal {
   }
 
   template <bool setCudaDevice = true>
-  cudaError_t cuda_device_synchronize_wrapper() const {
-    if constexpr (setCudaDevice) set_cuda_device();
-    return cudaDeviceSynchronize();
-  }
-
-  template <bool setCudaDevice = true>
   cudaError_t cuda_event_create_wrapper(cudaEvent_t* event) const {
     if constexpr (setCudaDevice) set_cuda_device();
     return cudaEventCreate(event);
@@ -481,9 +475,9 @@ class CudaInternal {
   }
 
   template <bool setCudaDevice = true>
-  cudaError_t cuda_stream_synchronize_wrapper(cudaStream_t stream) const {
+  cudaError_t cuda_stream_synchronize_wrapper() const {
     if constexpr (setCudaDevice) set_cuda_device();
-    return cudaStreamSynchronize(stream);
+    return cudaStreamSynchronize(get_stream<false>());
   }
 
   // The following are only available for cuda 11.2 and greater

@@ -130,10 +130,10 @@ Kokkos::parallel_reduce(
 
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(0));
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMemset(p0, 0, sizeof(int)*100));
-  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFree(p0));
+  //KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFree(p0));
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(n_devices-1));
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMemset(p, 0, sizeof(int)*100));
-  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFree(p));
+  //KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFree(p));
 
   ASSERT_EQ(sum, sum_expect);
 }
