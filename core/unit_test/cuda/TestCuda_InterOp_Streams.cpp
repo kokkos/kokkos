@@ -20,8 +20,10 @@
 namespace Test {
 // Test Interoperability with Cuda Streams
 TEST(cuda, raw_cuda_streams) {
-  // Make sure that we use the same device for all allocations
   Kokkos::initialize();
+
+  int n_devices;
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGetDeviceCount(&n_devices));
 
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(0));
   cudaStream_t stream0;
@@ -30,7 +32,7 @@ TEST(cuda, raw_cuda_streams) {
   KOKKOS_IMPL_CUDA_SAFE_CALL(
       cudaMalloc(reinterpret_cast<void **>(&p0), sizeof(int) * 100));
 
-  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(1));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(n_devices-1));
   cudaStream_t stream;
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamCreate(&stream));
   int *p;
@@ -39,7 +41,7 @@ TEST(cuda, raw_cuda_streams) {
   using MemorySpace = typename TEST_EXECSPACE::memory_space;
 
   {
-    TEST_EXECSPACE space0(1, stream);
+    TEST_EXECSPACE space0(n_devices-1, stream);
     Kokkos::View<int *, TEST_EXECSPACE> v(p, 100);
     Kokkos::deep_copy(space0, v, 5);
     int sum;
@@ -80,7 +82,7 @@ TEST(cuda, raw_cuda_streams) {
     ASSERT_EQ(800, sum);
   }
   Kokkos::finalize();
-  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(1));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(n_devices-1));
   offset_streams<<<100, 64, 0, stream>>>(p);
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaDeviceSynchronize());
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamDestroy(stream));
@@ -97,10 +99,10 @@ TEST(cuda, raw_cuda_streams) {
 
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(0));
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMemset(p0, 0, sizeof(int)*100));
-  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFreeAsync(p0, 0));
-  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(1));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFree(p0));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(n_devices-1));
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMemset(p, 0, sizeof(int)*100));
-  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFreeAsync(p, 0));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFree(p));
 
   ASSERT_EQ(sum, sum_expect);
 }
