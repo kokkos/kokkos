@@ -49,7 +49,7 @@ ARG NPROC=8
 
 # Clone Kokkos fork of the LLVM Project and build Clang
 ENV LLVM_DIR=/opt/llvm
-RUN LLVM_VERSION=55b3bcf643685c63fcc529d434bed112fdf03939 && \
+RUN LLVM_VERSION=65d206484c54177641d4b11d42cab1f1acc8c0c7 && \
     LLVM_URL=https://github.com/kokkos/llvm-project/archive/${LLVM_VERSION}.tar.gz &&\
     LLVM_ARCHIVE=llvm.tar.xz && \
     SCRATCH_DIR=/scratch && mkdir -p ${SCRATCH_DIR} && cd ${SCRATCH_DIR} && \
