@@ -739,7 +739,7 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_ZEN), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_ZEN")
-  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_AVX2")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AVX2")
 
   ifeq ($(KOKKOS_INTERNAL_COMPILER_INTEL), 1)
     KOKKOS_CXXFLAGS += -mavx2
@@ -752,7 +752,7 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_ZEN2), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_ZEN2")
-  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_AVX2")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AVX2")
 
   ifeq ($(KOKKOS_INTERNAL_COMPILER_INTEL), 1)
     KOKKOS_CXXFLAGS += -mavx2
@@ -765,7 +765,7 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_ZEN3), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_ZEN3")
-  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_AVX2")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AVX2")
 
   ifeq ($(KOKKOS_INTERNAL_COMPILER_INTEL), 1)
     KOKKOS_CXXFLAGS += -mavx2

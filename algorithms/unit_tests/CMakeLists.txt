@@ -25,6 +25,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
     set(ALGO_SORT_SOURCES)
     foreach(SOURCE_Input
 	TestSort
+	TestSortCustomComp
 	TestBinSortA
 	TestBinSortB
 	TestNestedSort
@@ -179,6 +180,7 @@ if(NOT (KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM
     UnitTest_Sort
     SOURCES
     UnitTestMain.cpp
+    TestStdAlgorithmsCommon.cpp
     ${ALGO_SORT_SOURCES}
   )
 

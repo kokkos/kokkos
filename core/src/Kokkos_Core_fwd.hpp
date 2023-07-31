@@ -27,6 +27,7 @@
 
 #include <Kokkos_Macros.hpp>
 #include <impl/Kokkos_Error.hpp>
+#include <impl/Kokkos_Printf.hpp>
 #include <impl/Kokkos_Utilities.hpp>
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
