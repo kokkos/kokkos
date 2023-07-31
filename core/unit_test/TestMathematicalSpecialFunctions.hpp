@@ -1198,8 +1198,8 @@ struct TestComplexBesselI0K0Function {
 
     // FIXME_HIP Disable the test when using ROCm 5.5 and 5.6 due to a known
     // compiler bug
-#if (HIP_VERSION_MAJOR != 5) ||  \
-    ((HIP_VERSION_MAJOR == 5) && \
+#if !defined(KOKKOS_ENABLE_HIP) || (HIP_VERSION_MAJOR != 5) || \
+    ((HIP_VERSION_MAJOR == 5) &&                               \
      !((HIP_VERSION_MINOR == 5) || (HIP_VERSION_MINOR == 6)))
     for (int i = 0; i < N; i++) {
       EXPECT_LE(Kokkos::abs(h_cbi0(i) - h_ref_cbi0(i)),
@@ -1694,8 +1694,8 @@ struct TestComplexBesselH1Function {
 
     // FIXME_HIP Disable the test when using ROCm 5.5 and 5.6 due to a known
     // compiler bug
-#if (HIP_VERSION_MAJOR != 5) ||  \
-    ((HIP_VERSION_MAJOR == 5) && \
+#if !defined(KOKKOS_ENABLE_HIP) || (HIP_VERSION_MAJOR != 5) || \
+    ((HIP_VERSION_MAJOR == 5) &&                               \
      !((HIP_VERSION_MINOR == 5) || (HIP_VERSION_MINOR == 6)))
     EXPECT_EQ(h_ref_ch10(0), h_ch10(0));
     for (int i = 1; i < N; i++) {
@@ -1882,8 +1882,8 @@ struct TestComplexBesselH2Function {
 
     // FIXME_HIP Disable the test when using ROCm 5.5 and 5.6 due to a known
     // compiler bug
-#if (HIP_VERSION_MAJOR != 5) ||  \
-    ((HIP_VERSION_MAJOR == 5) && \
+#if !defined(KOKKOS_ENABLE_HIP) || (HIP_VERSION_MAJOR != 5) || \
+    ((HIP_VERSION_MAJOR == 5) &&                               \
      !((HIP_VERSION_MINOR == 5) || (HIP_VERSION_MINOR == 6)))
     EXPECT_EQ(h_ref_ch20(0), h_ch20(0));
     for (int i = 1; i < N; i++) {
