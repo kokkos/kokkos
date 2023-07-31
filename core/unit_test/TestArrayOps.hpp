@@ -120,7 +120,7 @@ TEST(TEST_CATEGORY, array_T_0_contiguous) {
       Kokkos::Array<int, KOKKOS_INVALID_INDEX, Kokkos::Array<>::contiguous>;
   A a(is, std::size(is));
 
-  ASSERT_TRUE(a.empty());
+  ASSERT_FALSE(a.empty());
   ASSERT_EQ(a.size(), std::size(is));
   ASSERT_EQ(a.max_size(), std::size(is));
 

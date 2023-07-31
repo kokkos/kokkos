@@ -208,7 +208,7 @@ struct Array<T, KOKKOS_INVALID_INDEX, Array<>::contiguous> {
   using const_pointer   = std::add_const_t<T>*;
 
   KOKKOS_INLINE_FUNCTION constexpr size_type size() const { return m_size; }
-  KOKKOS_INLINE_FUNCTION constexpr bool empty() const { return 0 != m_size; }
+  KOKKOS_INLINE_FUNCTION constexpr bool empty() const { return !m_size; }
   KOKKOS_INLINE_FUNCTION constexpr size_type max_size() const { return m_size; }
 
   template <typename iType>
@@ -285,7 +285,7 @@ struct Array<T, KOKKOS_INVALID_INDEX, Array<>::strided> {
   using const_pointer   = std::add_const_t<T>*;
 
   KOKKOS_INLINE_FUNCTION constexpr size_type size() const { return m_size; }
-  KOKKOS_INLINE_FUNCTION constexpr bool empty() const { return 0 != m_size; }
+  KOKKOS_INLINE_FUNCTION constexpr bool empty() const { return !m_size; }
   KOKKOS_INLINE_FUNCTION constexpr size_type max_size() const { return m_size; }
 
   template <typename iType>
