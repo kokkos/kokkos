@@ -462,7 +462,7 @@ struct HIPParallelLaunch<
             "HIPParallelLaunch FAILED: shared memory request is too large");
       }
 
-      desul::ensure_hip_lock_arrays_on_device();
+      desul::ensure_hip_lock_arrays_on_device(hip_instance->m_hipDev);
 
       // Invoke the driver function on the device
       base_t::invoke_kernel(driver, grid, block, shmem, hip_instance);

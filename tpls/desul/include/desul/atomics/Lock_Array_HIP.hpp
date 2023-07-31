@@ -12,6 +12,8 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #include <hip/hip_runtime.h>
 
 #include <cstdint>
+#include <mutex>
+#include <unordered_map>
 
 #include "desul/atomics/Common.hpp"
 #include "desul/atomics/Macros.hpp"
@@ -23,8 +25,8 @@ namespace Impl {
  * \brief This global variable in Host space is the central definition of these
  * arrays.
  */
-extern int32_t* HIP_SPACE_ATOMIC_LOCKS_DEVICE_h;
-extern int32_t* HIP_SPACE_ATOMIC_LOCKS_NODE_h;
+extern std::unordered_map<int, int32_t*> HIP_SPACE_ATOMIC_LOCKS_DEVICE_h;
+extern std::unordered_map<int, int32_t*> HIP_SPACE_ATOMIC_LOCKS_NODE_h;
 
 /// \brief After this call, the g_host_cuda_lock_arrays variable has
 ///        valid, initialized arrays.
@@ -33,7 +35,7 @@ extern int32_t* HIP_SPACE_ATOMIC_LOCKS_NODE_h;
 /// The function is templated to make it a weak symbol to deal with Kokkos/RAJA
 ///   snapshotted version while also linking against pure Desul
 template <typename /*AlwaysInt*/ = int>
-void init_lock_arrays_hip();
+void init_lock_arrays_hip(int device_id);
 
 /// \brief After this call, the g_host_hip_lock_arrays variable has
 ///        all null pointers, and all array memory has been freed.
@@ -121,25 +123,28 @@ inline
 inline static
 #endif
     void
-    copy_hip_lock_arrays_to_device() {
-  static bool once = []() {
+    copy_hip_lock_arrays_to_device(int hip_device) {
+  static std::unordered_map<int, bool> device_initialized;
+  static std::mutex mutex;
+  std::scoped_lock lock(mutex);
+  if (!device_initialized[hip_device]) {
+    (void)hipSetDevice(hip_device);
     (void)hipMemcpyToSymbol(HIP_SYMBOL(HIP_SPACE_ATOMIC_LOCKS_DEVICE),
-                            &HIP_SPACE_ATOMIC_LOCKS_DEVICE_h,
+                            &HIP_SPACE_ATOMIC_LOCKS_DEVICE_h[hip_device],
                             sizeof(int32_t*));
     (void)hipMemcpyToSymbol(HIP_SYMBOL(HIP_SPACE_ATOMIC_LOCKS_NODE),
-                            &HIP_SPACE_ATOMIC_LOCKS_NODE_h,
+                            &HIP_SPACE_ATOMIC_LOCKS_NODE_h[hip_device],
                             sizeof(int32_t*));
-    return true;
-  }();
-  (void)once;
+    device_initialized[hip_device] = true;
+  }
 }
 }  // namespace Impl
 
 #ifdef DESUL_ATOMICS_ENABLE_HIP_SEPARABLE_COMPILATION
-inline void ensure_hip_lock_arrays_on_device() {}
+inline void ensure_hip_lock_arrays_on_device() { int /*hip_device*/ }
 #else
-static inline void ensure_hip_lock_arrays_on_device() {
-  Impl::copy_hip_lock_arrays_to_device();
+static inline void ensure_hip_lock_arrays_on_device(int hip_device) {
+  Impl::copy_hip_lock_arrays_to_device(hip_device);
 }
 #endif
 

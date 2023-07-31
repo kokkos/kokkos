@@ -669,7 +669,7 @@ struct CudaParallelLaunchImpl<
             shmem, desired_occupancy);
       }
 
-      desul::ensure_cuda_lock_arrays_on_device();
+      desul::ensure_cuda_lock_arrays_on_device(cuda_instance->m_cudaDev);
 
       // Invoke the driver function on the device
       base_t::invoke_kernel(driver, grid, block, shmem, cuda_instance);
