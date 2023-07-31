@@ -778,7 +778,7 @@ IF (KOKKOS_ENABLE_SYCL)
         DEFAULT -fsycl-targets=amdgcn-amd-amdhsa -Xsycl-target-backend --offload-arch=${KOKKOS_AMDGPU_ARCH_FLAG}
       )
     ELSE()
-      MESSAGE(SEND_ERROR "Setting a AMDGPU architecture for SYCL is only allowed with Kokkos_ENABLE_UNSUPPORTED_ARCHS=ON!")    
+      MESSAGE(SEND_ERROR "Setting a AMDGPU architecture for SYCL is only allowed with Kokkos_ENABLE_UNSUPPORTED_ARCHS=ON!")
     ENDIF()
   ELSEIF(KOKKOS_ARCH_INTEL_GEN)
     COMPILER_SPECIFIC_FLAGS(
