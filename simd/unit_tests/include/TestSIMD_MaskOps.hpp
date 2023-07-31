@@ -20,7 +20,7 @@
 #include <Kokkos_SIMD.hpp>
 #include <SIMDTesting_Utilities.hpp>
 
-template <typename Abi, typename DataType>
+template <typename Abi>
 inline void host_check_mask_ops() {
   using mask_type = Kokkos::Experimental::simd_mask<double, Abi>;
   EXPECT_FALSE(none_of(mask_type(true)));
@@ -29,20 +29,13 @@ inline void host_check_mask_ops() {
   EXPECT_FALSE(all_of(mask_type(false)));
 }
 
-template <typename Abi, typename... DataTypes>
-inline void host_check_mask_ops_all_types(
-    Kokkos::Experimental::Impl::data_types<DataTypes...>) {
-  (host_check_mask_ops<Abi, DataTypes>(), ...);
-}
-
 template <typename... Abis>
 inline void host_check_mask_ops_all_abis(
     Kokkos::Experimental::Impl::abi_set<Abis...>) {
-  using DataTypes = Kokkos::Experimental::Impl::data_type_set;
-  (host_check_mask_ops_all_types<Abis>(DataTypes()), ...);
+  (host_check_mask_ops<Abis>(), ...);
 }
 
-template <typename Abi, typename DataType>
+template <typename Abi>
 KOKKOS_INLINE_FUNCTION void device_check_mask_ops() {
   using mask_type = Kokkos::Experimental::simd_mask<double, Abi>;
   kokkos_checker checker;
@@ -52,17 +45,10 @@ KOKKOS_INLINE_FUNCTION void device_check_mask_ops() {
   checker.truth(!all_of(mask_type(false)));
 }
 
-template <typename Abi, typename... DataTypes>
-KOKKOS_INLINE_FUNCTION void device_check_mask_ops_all_types(
-    Kokkos::Experimental::Impl::data_types<DataTypes...>) {
-  (device_check_mask_ops<Abi, DataTypes>(), ...);
-}
-
 template <typename... Abis>
 KOKKOS_INLINE_FUNCTION void device_check_mask_ops_all_abis(
     Kokkos::Experimental::Impl::abi_set<Abis...>) {
-  using DataTypes = Kokkos::Experimental::Impl::data_type_set;
-  (device_check_mask_ops_all_types<Abis>(DataTypes()), ...);
+  (device_check_mask_ops<Abis>(), ...);
 }
 
 class simd_device_mask_ops_functor {

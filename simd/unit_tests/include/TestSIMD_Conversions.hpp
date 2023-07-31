@@ -20,7 +20,7 @@
 #include <Kokkos_SIMD.hpp>
 #include <SIMDTesting_Utilities.hpp>
 
-template <typename Abi, typename DataType>
+template <typename Abi>
 inline void host_check_conversions() {
   {
     auto a = Kokkos::Experimental::simd<std::uint64_t, Abi>(1);
@@ -59,20 +59,13 @@ inline void host_check_conversions() {
   }
 }
 
-template <typename Abi, typename... DataTypes>
-inline void host_check_conversions_all_types(
-    Kokkos::Experimental::Impl::data_types<DataTypes...>) {
-  (host_check_conversions<Abi, DataTypes>(), ...);
-}
-
 template <typename... Abis>
 inline void host_check_conversions_all_abis(
     Kokkos::Experimental::Impl::abi_set<Abis...>) {
-  using DataTypes = Kokkos::Experimental::Impl::data_type_set;
-  (host_check_conversions_all_types<Abis>(DataTypes()), ...);
+  (host_check_conversions<Abis>(), ...);
 }
 
-template <typename Abi, typename DataType>
+template <typename Abi>
 KOKKOS_INLINE_FUNCTION void device_check_conversions() {
   kokkos_checker checker;
   {
@@ -112,17 +105,10 @@ KOKKOS_INLINE_FUNCTION void device_check_conversions() {
   }
 }
 
-template <typename Abi, typename... DataTypes>
-KOKKOS_INLINE_FUNCTION void device_check_conversions_all_types(
-    Kokkos::Experimental::Impl::data_types<DataTypes...>) {
-  (device_check_conversions<Abi, DataTypes>(), ...);
-}
-
 template <typename... Abis>
 KOKKOS_INLINE_FUNCTION void device_check_conversions_all_abis(
     Kokkos::Experimental::Impl::abi_set<Abis...>) {
-  using DataTypes = Kokkos::Experimental::Impl::data_type_set;
-  (device_check_conversions_all_types<Abis>(DataTypes()), ...);
+  (device_check_conversions<Abis>(), ...);
 }
 
 class simd_device_conversions_functor {
