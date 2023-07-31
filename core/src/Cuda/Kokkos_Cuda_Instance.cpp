@@ -101,17 +101,16 @@ int cuda_kernel_arch() {
   int arch    = 0;
   int *d_arch = nullptr;
 
-  KOKKOS_IMPL_CUDA_SAFE_CALL((CudaInternal::singleton().cuda_malloc_wrapper(
-      reinterpret_cast<void **>(&d_arch), sizeof(int))));
-  KOKKOS_IMPL_CUDA_SAFE_CALL((CudaInternal::singleton().cuda_memcpy_wrapper(
-      d_arch, &arch, sizeof(int), cudaMemcpyDefault)));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(
+      cudaMalloc(reinterpret_cast<void **>(&d_arch), sizeof(int)));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(
+      cudaMemcpy(d_arch, &arch, sizeof(int), cudaMemcpyDefault));
 
   query_cuda_kernel_arch<<<1, 1>>>(d_arch);
 
-  KOKKOS_IMPL_CUDA_SAFE_CALL((CudaInternal::singleton().cuda_memcpy_wrapper(
-      &arch, d_arch, sizeof(int), cudaMemcpyDefault)));
   KOKKOS_IMPL_CUDA_SAFE_CALL(
-      (CudaInternal::singleton().cuda_free_wrapper(d_arch)));
+      cudaMemcpy(&arch, d_arch, sizeof(int), cudaMemcpyDefault));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFree(d_arch));
   return arch;
 }
 
@@ -370,7 +369,8 @@ void CudaInternal::fence() const {
   fence("Kokkos::CudaInternal::fence(): Unnamed Instance Fence");
 }
 
-void CudaInternal::initialize(cudaStream_t stream, bool manage_stream) {
+void CudaInternal::initialize(int cuda_device, cudaStream_t stream,
+                              bool manage_stream) {
   if (was_finalized)
     Kokkos::abort("Calling Cuda::initialize after Cuda::finalize is illegal\n");
   was_initialized = true;
@@ -386,6 +386,8 @@ void CudaInternal::initialize(cudaStream_t stream, bool manage_stream) {
 #endif
 
   const bool ok_init = nullptr == m_scratchSpace || nullptr == m_scratchFlags;
+
+  m_cudaDev = cuda_device;
 
   if (ok_init) {
     //----------------------------------
@@ -736,17 +738,15 @@ void Cuda::impl_initialize(InitializationSettings const &settings) {
   const int cuda_device_id = Impl::get_gpu(settings);
   const auto &dev_info     = Impl::CudaInternalDevices::singleton();
 
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(cuda_device_id));
+
   // Need device capability 3.0 or better
   const bool ok_dev = 3 <= dev_info.m_cudaProp[cuda_device_id].major &&
                       0 <= dev_info.m_cudaProp[cuda_device_id].minor;
   if (ok_dev) {
     const struct cudaDeviceProp &cudaProp = dev_info.m_cudaProp[cuda_device_id];
 
-    Impl::CudaInternal::m_cudaDev    = cuda_device_id;
     Impl::CudaInternal::m_deviceProp = cudaProp;
-
-    Kokkos::Impl::cuda_device_synchronize(
-        "Kokkos::CudaInternal::initialize: Fence on space initialization");
 
     // Query what compute capability architecture a kernel executes:
     Impl::CudaInternal::m_cudaArch = Impl::cuda_kernel_arch();
@@ -842,12 +842,10 @@ void Cuda::impl_initialize(InitializationSettings const &settings) {
   }
 
   cudaStream_t singleton_stream;
-  KOKKOS_IMPL_CUDA_SAFE_CALL(
-      (Impl::CudaInternal::singleton().cuda_stream_create_wrapper(
-          &singleton_stream)));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamCreate(&singleton_stream));
 
-  auto &cuda_singleton = Impl::CudaInternal::singleton();
-  cuda_singleton.initialize(singleton_stream, /*manage*/ true);
+  Impl::CudaInternal::singleton().initialize(cuda_device_id, singleton_stream,
+                                             /*manage*/ true);
 }
 
 std::vector<unsigned> Cuda::detect_device_arch() {
@@ -893,7 +891,18 @@ Cuda::Cuda(cudaStream_t stream, bool manage_stream)
       }) {
   Impl::CudaInternal::singleton().verify_is_initialized(
       "Cuda instance constructor");
-  m_space_instance->initialize(stream, manage_stream);
+  m_space_instance->initialize(Impl::CudaInternal::singleton().m_cudaDev,
+                               stream, manage_stream);
+}
+
+Cuda::Cuda(int device_id, cudaStream_t stream, bool manage_stream)
+    : m_space_instance(new Impl::CudaInternal, [](Impl::CudaInternal *ptr) {
+        ptr->finalize();
+        delete ptr;
+      }) {
+  Impl::CudaInternal::singleton().verify_is_initialized(
+      "Cuda instance constructor");
+  m_space_instance->initialize(device_id, stream, manage_stream);
 }
 
 void Cuda::print_configuration(std::ostream &os, bool /*verbose*/) const {

@@ -183,6 +183,8 @@ class Cuda {
 
   Cuda(cudaStream_t stream, bool manage_stream = false);
 
+  Cuda(int device_id, cudaStream_t stream, bool manage_stream = false);
+
   //--------------------------------------------------------------------------
   //! Free any resources being consumed by the device.
   static void impl_finalize();
