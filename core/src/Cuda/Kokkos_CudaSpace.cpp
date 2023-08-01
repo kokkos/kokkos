@@ -83,11 +83,12 @@ void DeepCopyAsyncCuda(void *dst, const void *src, size_t n) {
   KOKKOS_IMPL_CUDA_SAFE_CALL(
       (CudaInternal::singleton().cuda_memcpy_async_wrapper(
           dst, src, n, cudaMemcpyDefault, s)));
-  Impl::cuda_stream_synchronize(
-      s,
+
+  Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Cuda>(
+      "Kokkos::Impl::DeepCopyAsyncCuda: Deep Copy Stream Sync",
       Kokkos::Tools::Experimental::SpecialSynchronizationCases::
           DeepCopyResourceSynchronization,
-      "Kokkos::Impl::DeepCopyAsyncCuda: Deep Copy Stream Sync");
+      [&]() { KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamSynchronize(s)); });
 }
 
 }  // namespace Impl
@@ -168,45 +169,33 @@ void *impl_allocate_common(const Cuda &exec_space, const char *arg_label,
                            bool exec_space_provided) {
   void *ptr = nullptr;
 
+  const Impl::CudaInternal &cuda_internal =
+      *exec_space.impl_internal_space_instance();
+  cudaError_t error_code;
 #ifndef CUDART_VERSION
 #error CUDART_VERSION undefined!
 #elif (defined(KOKKOS_ENABLE_IMPL_CUDA_MALLOC_ASYNC) && CUDART_VERSION >= 11020)
-  cudaError_t error_code;
   if (arg_alloc_size >= memory_threshold_g) {
+    error_code = cuda_internal.cuda_malloc_async_wrapper(&ptr, arg_alloc_size);
+
     if (exec_space_provided) {
-      error_code =
-          exec_space.impl_internal_space_instance()->cuda_malloc_async_wrapper(
-              &ptr, arg_alloc_size);
       exec_space.fence("Kokkos::Cuda: backend fence after async malloc");
     } else {
-      error_code = Impl::CudaInternal::singleton().cuda_malloc_async_wrapper(
-          &ptr, arg_alloc_size);
       Impl::cuda_device_synchronize(
           "Kokkos::Cuda: backend fence after async malloc");
     }
   } else {
-    error_code =
-        (exec_space_provided
-             ? exec_space.impl_internal_space_instance()->cuda_malloc_wrapper(
-                   &ptr, arg_alloc_size)
-             : Impl::CudaInternal::singleton().cuda_malloc_wrapper(
-                   &ptr, arg_alloc_size));
+    error_code = cuda_internal.cuda_malloc_wrapper(&ptr, arg_alloc_size);
   }
 #else
-  cudaError_t error_code;
-  if (exec_space_provided) {
-    error_code = exec_space.impl_internal_space_instance()->cuda_malloc_wrapper(
-        &ptr, arg_alloc_size);
-  } else {
-    error_code = Impl::CudaInternal::singleton().cuda_malloc_wrapper(
-        &ptr, arg_alloc_size);
-  }
+  (void)exec_space_provided;
+  error_code = cuda_internal.cuda_malloc_wrapper(&ptr, arg_alloc_size);
 #endif
   if (error_code != cudaSuccess) {  // TODO tag as unlikely branch
     // This is the only way to clear the last error, which
     // we should do here since we're turning it into an
     // exception here
-    exec_space.impl_internal_space_instance()->cuda_get_last_error_wrapper();
+    cuda_internal.cuda_get_last_error_wrapper();
     throw Experimental::CudaRawMemoryAllocationFailure(
         arg_alloc_size, error_code,
         Experimental::RawMemoryAllocationFailure::AllocationMechanism::
