@@ -26,34 +26,36 @@ namespace Experimental {
 //
 // overload set accepting execution space
 //
-template <typename ExecutionSpace, typename InputIterator, typename OutputIterator,
-          typename ValueType,
-          std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0
-          >
+template <
+    typename ExecutionSpace, typename InputIterator, typename OutputIterator,
+    typename ValueType,
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
 OutputIterator replace_copy(const ExecutionSpace& ex, InputIterator first_from,
-             InputIterator last_from, OutputIterator first_dest,
-             const ValueType& old_value, const ValueType& new_value) {
+                            InputIterator last_from, OutputIterator first_dest,
+                            const ValueType& old_value,
+                            const ValueType& new_value) {
   return Impl::replace_copy_exespace_impl("Kokkos::replace_copy_iterator_api",
                                           ex, first_from, last_from, first_dest,
                                           old_value, new_value);
 }
 
-template <typename ExecutionSpace, typename InputIterator, typename OutputIterator,
-          typename ValueType,
-          std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0
-          >
+template <
+    typename ExecutionSpace, typename InputIterator, typename OutputIterator,
+    typename ValueType,
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
 OutputIterator replace_copy(const std::string& label, const ExecutionSpace& ex,
-             InputIterator first_from, InputIterator last_from,
-             OutputIterator first_dest, const ValueType& old_value,
-             const ValueType& new_value) {
+                            InputIterator first_from, InputIterator last_from,
+                            OutputIterator first_dest,
+                            const ValueType& old_value,
+                            const ValueType& new_value) {
   return Impl::replace_copy_exespace_impl(label, ex, first_from, last_from,
                                           first_dest, old_value, new_value);
 }
 
-template <typename ExecutionSpace, typename DataType1, typename... Properties1,
-          typename DataType2, typename... Properties2, typename ValueType,
-          std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>,int> = 0
->
+template <
+    typename ExecutionSpace, typename DataType1, typename... Properties1,
+    typename DataType2, typename... Properties2, typename ValueType,
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
 auto replace_copy(const ExecutionSpace& ex,
                   const ::Kokkos::View<DataType1, Properties1...>& view_from,
                   const ::Kokkos::View<DataType2, Properties2...>& view_dest,
@@ -66,10 +68,10 @@ auto replace_copy(const ExecutionSpace& ex,
       KE::cend(view_from), KE::begin(view_dest), old_value, new_value);
 }
 
-template <typename ExecutionSpace, typename DataType1, typename... Properties1,
-          typename DataType2, typename... Properties2, typename ValueType,
-          std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0
-          >
+template <
+    typename ExecutionSpace, typename DataType1, typename... Properties1,
+    typename DataType2, typename... Properties2, typename ValueType,
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
 auto replace_copy(const std::string& label, const ExecutionSpace& ex,
                   const ::Kokkos::View<DataType1, Properties1...>& view_from,
                   const ::Kokkos::View<DataType2, Properties2...>& view_dest,
@@ -87,22 +89,22 @@ auto replace_copy(const std::string& label, const ExecutionSpace& ex,
 // Note: for now omit the overloads accepting a label
 // since they cause issues on device because of the string allocation.
 //
-template <typename TeamHandleType, typename InputIterator, typename OutputIterator,
-          typename ValueType,
-          std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>, int> = 0
-          >
-KOKKOS_FUNCTION
-OutputIterator replace_copy(const TeamHandleType& teamHandle, InputIterator first_from,
-             InputIterator last_from, OutputIterator first_dest,
-             const ValueType& old_value, const ValueType& new_value) {
+template <typename TeamHandleType, typename InputIterator,
+          typename OutputIterator, typename ValueType,
+          std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>, int> = 0>
+KOKKOS_FUNCTION OutputIterator replace_copy(const TeamHandleType& teamHandle,
+                                            InputIterator first_from,
+                                            InputIterator last_from,
+                                            OutputIterator first_dest,
+                                            const ValueType& old_value,
+                                            const ValueType& new_value) {
   return Impl::replace_copy_team_impl(teamHandle, first_from, last_from,
                                       first_dest, old_value, new_value);
 }
 
-template <
-    typename TeamHandleType, typename DataType1, typename... Properties1,
-    typename DataType2, typename... Properties2, typename ValueType,
-    std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>, int> = 0>
+template <typename TeamHandleType, typename DataType1, typename... Properties1,
+          typename DataType2, typename... Properties2, typename ValueType,
+          std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>, int> = 0>
 KOKKOS_FUNCTION auto replace_copy(
     const TeamHandleType& teamHandle,
     const ::Kokkos::View<DataType1, Properties1...>& view_from,
