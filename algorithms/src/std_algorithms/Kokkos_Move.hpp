@@ -26,26 +26,28 @@ namespace Experimental {
 //
 // overload set accepting execution space
 //
-template <class ExecutionSpace, class InputIterator, class OutputIterator>
-std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
-                 OutputIterator>
-move(const ExecutionSpace& ex, InputIterator first, InputIterator last,
+template <
+  typename ExecutionSpace, typename InputIterator, typename OutputIterator,
+  std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0
+  >
+OutputIterator move(const ExecutionSpace& ex, InputIterator first, InputIterator last,
      OutputIterator d_first) {
   return Impl::move_exespace_impl("Kokkos::move_iterator_api_default", ex,
                                   first, last, d_first);
 }
 
-template <class ExecutionSpace, class InputIterator, class OutputIterator>
-std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
-                 OutputIterator>
-move(const std::string& label, const ExecutionSpace& ex, InputIterator first,
+template <
+  typename ExecutionSpace, typename InputIterator, typename OutputIterator,
+  std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0
+  >
+OutputIterator move(const std::string& label, const ExecutionSpace& ex, InputIterator first,
      InputIterator last, OutputIterator d_first) {
   return Impl::move_exespace_impl(label, ex, first, last, d_first);
 }
 
-template <class ExecutionSpace, class DataType1, class... Properties1,
-          class DataType2, class... Properties2,
-          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+template <typename ExecutionSpace, typename DataType1, typename... Properties1,
+          typename DataType2, typename... Properties2,
+          std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>,
                            int> = 0>
 auto move(const ExecutionSpace& ex,
           const ::Kokkos::View<DataType1, Properties1...>& source,
@@ -57,9 +59,9 @@ auto move(const ExecutionSpace& ex,
                                   begin(source), end(source), begin(dest));
 }
 
-template <class ExecutionSpace, class DataType1, class... Properties1,
-          class DataType2, class... Properties2,
-          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+template <typename ExecutionSpace, typename DataType1, typename... Properties1,
+          typename DataType2, typename... Properties2,
+          std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>,
                            int> = 0>
 auto move(const std::string& label, const ExecutionSpace& ex,
           const ::Kokkos::View<DataType1, Properties1...>& source,
@@ -76,18 +78,20 @@ auto move(const std::string& label, const ExecutionSpace& ex,
 // Note: for now omit the overloads accepting a label
 // since they cause issues on device because of the string allocation.
 //
-template <class TeamHandleType, class InputIterator, class OutputIterator>
-KOKKOS_FUNCTION std::enable_if_t<
-    ::Kokkos::is_team_handle<TeamHandleType>::value, OutputIterator>
-move(const TeamHandleType& teamHandle, InputIterator first, InputIterator last,
+template <
+  typename TeamHandleType, typename InputIterator, typename OutputIterator,
+  std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>, int> = 0
+  >
+KOKKOS_FUNCTION
+OutputIterator move(const TeamHandleType& teamHandle, InputIterator first, InputIterator last,
      OutputIterator d_first) {
   return Impl::move_team_impl(teamHandle, first, last, d_first);
 }
 
 template <
-    class TeamHandleType, class DataType1, class... Properties1,
-    class DataType2, class... Properties2,
-    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, int> = 0>
+    typename TeamHandleType, typename DataType1, typename... Properties1,
+    typename DataType2, typename... Properties2,
+    std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>, int> = 0>
 KOKKOS_FUNCTION auto move(
     const TeamHandleType& teamHandle,
     const ::Kokkos::View<DataType1, Properties1...>& source,
