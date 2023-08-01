@@ -26,29 +26,31 @@ namespace Experimental {
 //
 // overload set accepting execution space
 //
-template <class ExecutionSpace, class InputIterator, class OutputIterator>
-std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
-                 OutputIterator>
-rotate_copy(const ExecutionSpace& ex, InputIterator first,
+template <
+    typename ExecutionSpace, typename InputIterator, typename OutputIterator,
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0
+    >
+OutputIterator rotate_copy(const ExecutionSpace& ex, InputIterator first,
             InputIterator n_first, InputIterator last, OutputIterator d_first) {
   return Impl::rotate_copy_exespace_impl(
       "Kokkos::rotate_copy_iterator_api_default", ex, first, n_first, last,
       d_first);
 }
 
-template <class ExecutionSpace, class InputIterator, class OutputIterator>
-std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
-                 OutputIterator>
-rotate_copy(const std::string& label, const ExecutionSpace& ex,
+template <
+    typename ExecutionSpace, typename InputIterator, typename OutputIterator,
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0
+    >
+OutputIterator rotate_copy(const std::string& label, const ExecutionSpace& ex,
             InputIterator first, InputIterator n_first, InputIterator last,
             OutputIterator d_first) {
   return Impl::rotate_copy_exespace_impl(label, ex, first, n_first, last,
                                          d_first);
 }
 
-template <class ExecutionSpace, class DataType1, class... Properties1,
-          class DataType2, class... Properties2,
-          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+template <typename ExecutionSpace, typename DataType1, typename... Properties1,
+          typename DataType2, typename... Properties2,
+          std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>,
                            int> = 0>
 auto rotate_copy(const ExecutionSpace& ex,
                  const ::Kokkos::View<DataType1, Properties1...>& source,
@@ -62,9 +64,9 @@ auto rotate_copy(const ExecutionSpace& ex,
       cbegin(source) + n_location, cend(source), begin(dest));
 }
 
-template <class ExecutionSpace, class DataType1, class... Properties1,
-          class DataType2, class... Properties2,
-          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+template <typename ExecutionSpace, typename DataType1, typename... Properties1,
+          typename DataType2, typename... Properties2,
+          std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>,
                            int> = 0>
 auto rotate_copy(const std::string& label, const ExecutionSpace& ex,
                  const ::Kokkos::View<DataType1, Properties1...>& source,
@@ -83,18 +85,20 @@ auto rotate_copy(const std::string& label, const ExecutionSpace& ex,
 // Note: for now omit the overloads accepting a label
 // since they cause issues on device because of the string allocation.
 //
-template <class TeamHandleType, class InputIterator, class OutputIterator>
-KOKKOS_FUNCTION std::enable_if_t<
-    ::Kokkos::is_team_handle<TeamHandleType>::value, OutputIterator>
-rotate_copy(const TeamHandleType& teamHandle, InputIterator first,
+template <
+  typename TeamHandleType, typename InputIterator, typename OutputIterator,
+  std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>, int> = 0
+  >
+KOKKOS_FUNCTION
+OutputIterator rotate_copy(const TeamHandleType& teamHandle, InputIterator first,
             InputIterator n_first, InputIterator last, OutputIterator d_first) {
   return Impl::rotate_copy_team_impl(teamHandle, first, n_first, last, d_first);
 }
 
 template <
-    class TeamHandleType, class DataType1, class... Properties1,
-    class DataType2, class... Properties2,
-    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, int> = 0>
+    typename TeamHandleType, typename DataType1, typename... Properties1,
+    typename DataType2, typename... Properties2,
+    std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>, int> = 0>
 KOKKOS_FUNCTION auto rotate_copy(
     const TeamHandleType& teamHandle,
     const ::Kokkos::View<DataType1, Properties1...>& source,
