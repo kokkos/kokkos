@@ -313,7 +313,15 @@ void sort_device_view_with_comparator(
     const Experimental::SYCL& exec,
     const Kokkos::View<DataType, Properties...>& view,
     const ComparatorType& comparator) {
-  if (view.stride(0) == 1) {
+  using ViewType = Kokkos::View<DataType, Properties...>;
+
+  static_assert(ViewType::rank == 1,
+                "sort_device_view_with_comparator: currently only supports "
+                "rank-1 Views.");
+
+  if constexpr (std::is_same_v<typename ViewType::array_layout, LayoutRight> ||
+                std::is_same_v<typename ViewType::array_layout, LayoutLeft> ||
+                std::is_same_v<typename ViewType::array_layout, LayoutStride>) {
     sort_onedpl(exec, view, comparator);
   } else {
     copy_to_host_run_stdsort_copy_back(exec, view, comparator);
