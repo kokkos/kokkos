@@ -60,7 +60,6 @@ void reverse_exespace_impl(const std::string& label, const ExecutionSpace& ex,
     const auto num_elements = Kokkos::Experimental::distance(first, last) / 2;
     ::Kokkos::parallel_for(label,
                            RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-                           // use CTAD
                            StdReverseFunctor(first, last));
     ex.fence("Kokkos::reverse: fence after operation");
   }
@@ -79,7 +78,6 @@ KOKKOS_FUNCTION void reverse_team_impl(const TeamHandleType& teamHandle,
     // only need half
     const auto num_elements = Kokkos::Experimental::distance(first, last) / 2;
     ::Kokkos::parallel_for(TeamThreadRange(teamHandle, 0, num_elements),
-                           // use CTAD
                            StdReverseFunctor(first, last));
     teamHandle.team_barrier();
   }

@@ -103,7 +103,6 @@ OutputIterator rotate_copy_exespace_impl(
   const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_for(label,
                          RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-                         // use CTAD
                          StdRotateCopyFunctor(first, last, n_first, d_first));
 
   ex.fence("Kokkos::rotate_copy: fence after operation");
@@ -130,7 +129,6 @@ KOKKOS_FUNCTION OutputIterator rotate_copy_team_impl(
   // run
   const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_for(TeamThreadRange(teamHandle, 0, num_elements),
-                         // use CTAD
                          StdRotateCopyFunctor(first, last, n_first, d_first));
 
   teamHandle.team_barrier();

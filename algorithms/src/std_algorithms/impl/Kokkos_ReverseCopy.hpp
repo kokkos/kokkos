@@ -59,7 +59,6 @@ OutputIterator reverse_copy_exespace_impl(const std::string& label,
   const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_for(label,
                          RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-                         // use CTAD
                          StdReverseCopyFunctor(last, d_first));
   ex.fence("Kokkos::reverse_copy: fence after operation");
 
@@ -79,7 +78,6 @@ reverse_copy_team_impl(const TeamHandleType& teamHandle, InputIterator first,
   // run
   const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_for(TeamThreadRange(teamHandle, 0, num_elements),
-                         // use CTAD
                          StdReverseCopyFunctor(last, d_first));
   teamHandle.team_barrier();
 
