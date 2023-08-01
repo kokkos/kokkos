@@ -198,7 +198,7 @@ void sort_onedpl(const Kokkos::Experimental::SYCL& space,
   static_assert(
       (ViewType::rank == 1) &&
           (std::is_same_v<typename ViewType::array_layout, LayoutRight> ||
-               std::is_same_v<typename ViewType::array_layout, LayoutLeft>,
+           std::is_same_v<typename ViewType::array_layout, LayoutLeft> ||
            std::is_same_v<typename ViewType::array_layout, LayoutStride>),
       "SYCL sort only supports contiguous rank-1 Views with LayoutLeft, "
       "LayoutRight or LayoutStride"
