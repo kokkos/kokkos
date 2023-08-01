@@ -64,7 +64,6 @@ void replace_if_exespace_impl(const std::string& label,
   const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_for(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-      // use CTAD
       StdReplaceIfFunctor(first, std::move(pred), new_value));
   ex.fence("Kokkos::replace_if: fence after operation");
 }
@@ -83,7 +82,6 @@ KOKKOS_FUNCTION void replace_if_team_impl(const TeamHandleType& teamHandle,
   const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_for(
       TeamThreadRange(teamHandle, 0, num_elements),
-      // use CTAD
       StdReplaceIfFunctor(first, std::move(pred), new_value));
   teamHandle.team_barrier();
 }

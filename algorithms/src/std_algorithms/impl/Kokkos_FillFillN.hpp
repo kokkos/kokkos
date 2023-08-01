@@ -55,7 +55,6 @@ void fill_exespace_impl(const std::string& label, const ExecutionSpace& ex,
   const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_for(label,
                          RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-                         // use CTAD
                          StdFillFunctor(first, value));
   ex.fence("Kokkos::fill: fence after operation");
 }
@@ -88,7 +87,6 @@ KOKKOS_FUNCTION void fill_team_impl(const TeamHandleType& teamHandle,
 
   const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_for(TeamThreadRange(teamHandle, 0, num_elements),
-                         // use CTAD
                          StdFillFunctor(first, value));
 
   teamHandle.team_barrier();
