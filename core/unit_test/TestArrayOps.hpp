@@ -24,7 +24,7 @@ TEST(TEST_CATEGORY, array_capacity) {
   using A = Kokkos::Array<int, 2>;
   A a{{3, 5}};
 
-  ASSERT_FALSE(a.empty());
+  ASSERT_EQ(a.empty(), 0 == a.size());
   ASSERT_EQ(a.size(), 2u);
   ASSERT_EQ(a.max_size(), 2u);
 }
@@ -103,7 +103,7 @@ TEST(TEST_CATEGORY, array_T_0) {
   using A = Kokkos::Array<int, 0>;
   A a;
 
-  ASSERT_TRUE(a.empty());
+  ASSERT_EQ(a.empty(), 0 == a.size());
   ASSERT_EQ(a.size(), 0u);
   ASSERT_EQ(a.max_size(), 0u);
 
@@ -114,30 +114,37 @@ TEST(TEST_CATEGORY, array_T_0) {
 }
 
 TEST(TEST_CATEGORY, array_T_0_contiguous) {
-  int is[] = {3, 5};
+  int aa[] = {3, 5};
 
   using A =
       Kokkos::Array<int, KOKKOS_INVALID_INDEX, Kokkos::Array<>::contiguous>;
-  A a(is, std::size(is));
+  A a(aa, std::size(aa));
 
-  ASSERT_FALSE(a.empty());
-  ASSERT_EQ(a.size(), std::size(is));
-  ASSERT_EQ(a.max_size(), std::size(is));
+  // capacity
+  ASSERT_EQ(a.empty(), 0 == a.size());
+  ASSERT_EQ(a.size(), std::size(aa));
+  ASSERT_EQ(a.max_size(), std::size(aa));
 
+  // index 0
   ASSERT_EQ(a[0], 3);
   ASSERT_EQ(a[false], 3);
   ASSERT_EQ(a[EZero], 3);
   ASSERT_EQ(a[ScopedEnum::SEZero], 3);
   ASSERT_EQ(a[ScopedEnumShort::SESZero], 3);
 
+  // index 1
   ASSERT_EQ(a[1], 5);
   ASSERT_EQ(a[true], 5);
   ASSERT_EQ(a[EOne], 5);
   ASSERT_EQ(a[ScopedEnum::SEOne], 5);
   ASSERT_EQ(a[ScopedEnumShort::SESOne], 5);
 
-  ASSERT_EQ(a.data(), is);
+  // data()
+  ASSERT_EQ(a.data(), aa);
+  ASSERT_EQ(a[0], aa[0]);
+  ASSERT_EQ(a[1], aa[1]);
 
+  // const index, data()
   const A& c = a;
 
   ASSERT_EQ(c[0], 3);
@@ -152,25 +159,49 @@ TEST(TEST_CATEGORY, array_T_0_contiguous) {
   ASSERT_EQ(c[ScopedEnum::SEOne], 5);
   ASSERT_EQ(c[ScopedEnumShort::SESOne], 5);
 
-  ASSERT_EQ(c.data(), is);
+  ASSERT_EQ(c.data(), aa);
+  ASSERT_EQ(c[0], aa[0]);
+  ASSERT_EQ(c[1], aa[1]);
 
+  // operator=(Array<T, N, P> const&) semantics when b.size() < a.size()
   using B = Kokkos::Array<int, 1>;
+  static_assert(B::size() < std::size(aa));
   B b{{7}};
   a = b;
 
-  ASSERT_EQ(a.size(), std::size(is));
-  ASSERT_EQ(a.max_size(), std::size(is));
+  ASSERT_EQ(a.size(), std::size(aa));
+  ASSERT_EQ(a.max_size(), std::size(aa));
   ASSERT_EQ(a[0], 7);
   ASSERT_EQ(a[1], 5);
 
+  // operator=(Array<T, N, P> const&) semantics when a.size() < d.size()
   using D = Kokkos::Array<int, 4>;
+  static_assert(std::size(aa) < D::size());
   D d{{11, 13, 17, 19}};
   a = d;
 
-  ASSERT_EQ(a.size(), std::size(is));
-  ASSERT_EQ(a.max_size(), std::size(is));
+  ASSERT_EQ(a.size(), std::size(aa));
+  ASSERT_EQ(a.max_size(), std::size(aa));
   ASSERT_EQ(a[0], 11);
   ASSERT_EQ(a[1], 13);
+
+  int ee[] = {23};
+  A e(ee, std::size(ee));
+  ASSERT_LT(e.size(), a.size());
+
+  a = e;
+  ASSERT_LT(e.size(), a.size());
+  ASSERT_EQ(a.size(), std::size(aa));
+  ASSERT_EQ(a.max_size(), std::size(aa));
+  ASSERT_EQ(a[0], 23);
+  ASSERT_EQ(a[1], 13);
+
+  e[0] = 29;
+  e    = a;
+  ASSERT_LT(e.size(), a.size());
+  ASSERT_EQ(e.size(), std::size(ee));
+  ASSERT_EQ(e.max_size(), std::size(ee));
+  ASSERT_EQ(e[0], 23);
 }
 
 struct SetOnMove {
