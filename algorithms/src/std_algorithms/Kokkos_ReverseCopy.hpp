@@ -90,8 +90,7 @@ KOKKOS_FUNCTION OutputIterator reverse_copy(const TeamHandleType& teamHandle,
 
 template <typename TeamHandleType, typename DataType1, typename... Properties1,
           typename DataType2, typename... Properties2,
-          std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>,
-                           int> = 0>
+          std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>, int> = 0>
 KOKKOS_FUNCTION auto reverse_copy(
     const TeamHandleType& teamHandle,
     const ::Kokkos::View<DataType1, Properties1...>& source,
