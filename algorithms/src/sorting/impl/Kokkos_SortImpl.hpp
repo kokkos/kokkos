@@ -206,7 +206,7 @@ void sort_onedpl(const Kokkos::Experimental::SYCL& space,
       "at runtime.");
 
   if (view.stride(0) != 1) {
-    Kokkos::abort("SYCL sort only supports rank-1 Views with stride(0) = 1".);
+    Kokkos::abort("SYCL sort only supports rank-1 Views with stride(0) = 1.");
   }
 
   if (view.extent(0) <= 1) {
