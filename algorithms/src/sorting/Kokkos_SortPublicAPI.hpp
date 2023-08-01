@@ -28,7 +28,6 @@ namespace Kokkos {
 // basic overloads
 // ---------------------------------------------------------------
 
-// clang-format off
 template <class ExecutionSpace, class DataType, class... Properties>
 void sort([[maybe_unused]] const ExecutionSpace& exec,
           const Kokkos::View<DataType, Properties...>& view) {
@@ -46,7 +45,7 @@ void sort([[maybe_unused]] const ExecutionSpace& exec,
     return;
   }
 
-  if constexpr (Impl::better_off_calling_std_sort_v<ExecutionSpace>){
+  if constexpr (Impl::better_off_calling_std_sort_v<ExecutionSpace>) {
     auto first = ::Kokkos::Experimental::begin(view);
     auto last  = ::Kokkos::Experimental::end(view);
     std::sort(first, last);
@@ -70,6 +69,65 @@ void sort(const Kokkos::View<DataType, Properties...>& view) {
   typename ViewType::execution_space exec;
   sort(exec, view);
   exec.fence("Kokkos::sort: fence after sorting");
+}
+
+// ---------------------------------------------------------------
+// overloads supporting a custom comparator
+// ---------------------------------------------------------------
+template <class ExecutionSpace, class ComparatorType, class DataType,
+          class... Properties>
+void sort([[maybe_unused]] const ExecutionSpace& exec,
+          const Kokkos::View<DataType, Properties...>& view,
+          const ComparatorType& comparator) {
+  // constraints
+  using ViewType = Kokkos::View<DataType, Properties...>;
+  using MemSpace = typename ViewType::memory_space;
+  static_assert(
+      ViewType::rank == 1 &&
+          (std::is_same_v<typename ViewType::array_layout, LayoutRight> ||
+           std::is_same_v<typename ViewType::array_layout, LayoutLeft> ||
+           std::is_same_v<typename ViewType::array_layout, LayoutStride>),
+      "Kokkos::sort with comparator: supports 1D Views with LayoutRight, "
+      "LayoutLeft or LayoutStride.");
+
+  static_assert(SpaceAccessibility<ExecutionSpace, MemSpace>::accessible,
+                "Kokkos::sort: execution space instance is not able to access "
+                "the memory space of the View argument!");
+
+  if (view.extent(0) <= 1) {
+    return;
+  }
+
+  if constexpr (Impl::better_off_calling_std_sort_v<ExecutionSpace>) {
+    auto first = ::Kokkos::Experimental::begin(view);
+    auto last  = ::Kokkos::Experimental::end(view);
+    std::sort(first, last, comparator);
+  } else {
+    Impl::sort_device_view_with_comparator(exec, view, comparator);
+  }
+}
+
+template <class ComparatorType, class DataType, class... Properties>
+void sort(const Kokkos::View<DataType, Properties...>& view,
+          const ComparatorType& comparator) {
+  using ViewType = Kokkos::View<DataType, Properties...>;
+  static_assert(
+      ViewType::rank == 1 &&
+          (std::is_same_v<typename ViewType::array_layout, LayoutRight> ||
+           std::is_same_v<typename ViewType::array_layout, LayoutLeft> ||
+           std::is_same_v<typename ViewType::array_layout, LayoutStride>),
+      "Kokkos::sort with comparator: supports 1D Views with LayoutRight, "
+      "LayoutLeft or LayoutStride.");
+
+  Kokkos::fence("Kokkos::sort with comparator: before");
+
+  if (view.extent(0) <= 1) {
+    return;
+  }
+
+  typename ViewType::execution_space exec;
+  sort(exec, view, comparator);
+  exec.fence("Kokkos::sort with comparator: fence after sorting");
 }
 
 // ---------------------------------------------------------------

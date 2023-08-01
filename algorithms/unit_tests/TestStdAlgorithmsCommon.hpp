@@ -35,6 +35,8 @@ using exespace = Kokkos::DefaultExecutionSpace;
 // tags
 //
 struct DynamicTag {};
+struct DynamicLayoutLeftTag {};
+struct DynamicLayoutRightTag {};
 
 // these are for rank-1
 struct StridedTwoTag {};
@@ -61,6 +63,8 @@ const std::map<std::string, std::size_t> default_scenarios = {
 
 // see cpp file for these functions
 std::string view_tag_to_string(DynamicTag);
+std::string view_tag_to_string(DynamicLayoutLeftTag);
+std::string view_tag_to_string(DynamicLayoutRightTag);
 std::string view_tag_to_string(StridedTwoTag);
 std::string view_tag_to_string(StridedThreeTag);
 std::string view_tag_to_string(StridedTwoRowsTag);
@@ -75,6 +79,24 @@ template <class ValueType>
 auto create_view(DynamicTag, std::size_t ext, const std::string label) {
   using view_t = Kokkos::View<ValueType*>;
   view_t view{label + "_" + view_tag_to_string(DynamicTag{}), ext};
+  return view;
+}
+
+// dynamic layout left
+template <class ValueType>
+auto create_view(DynamicLayoutLeftTag, std::size_t ext,
+                 const std::string label) {
+  using view_t = Kokkos::View<ValueType*, Kokkos::LayoutLeft>;
+  view_t view{label + "_" + view_tag_to_string(DynamicLayoutLeftTag{}), ext};
+  return view;
+}
+
+// dynamic layout right
+template <class ValueType>
+auto create_view(DynamicLayoutRightTag, std::size_t ext,
+                 const std::string label) {
+  using view_t = Kokkos::View<ValueType*, Kokkos::LayoutRight>;
+  view_t view{label + "_" + view_tag_to_string(DynamicLayoutRightTag{}), ext};
   return view;
 }
 
@@ -106,6 +128,26 @@ auto create_view(DynamicTag, std::size_t ext0, std::size_t ext1,
                  const std::string label) {
   using view_t = Kokkos::View<ValueType**>;
   view_t view{label + "_" + view_tag_to_string(DynamicTag{}), ext0, ext1};
+  return view;
+}
+
+// dynamic layout left
+template <class ValueType>
+auto create_view(DynamicLayoutLeftTag, std::size_t ext0, std::size_t ext1,
+                 const std::string label) {
+  using view_t = Kokkos::View<ValueType**, Kokkos::LayoutLeft>;
+  view_t view{label + "_" + view_tag_to_string(DynamicLayoutLeftTag{}), ext0,
+              ext1};
+  return view;
+}
+
+// dynamic layout right
+template <class ValueType>
+auto create_view(DynamicLayoutRightTag, std::size_t ext0, std::size_t ext1,
+                 const std::string label) {
+  using view_t = Kokkos::View<ValueType**, Kokkos::LayoutRight>;
+  view_t view{label + "_" + view_tag_to_string(DynamicLayoutRightTag{}), ext0,
+              ext1};
   return view;
 }
 
