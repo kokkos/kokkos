@@ -585,10 +585,6 @@ void CudaInternal::finalize() {
   }
 
   if (nullptr != m_scratchSpace || nullptr != m_scratchFlags) {
-    using RecordCuda = Kokkos::Impl::SharedAllocationRecord<CudaSpace>;
-    using RecordHost =
-        Kokkos::Impl::SharedAllocationRecord<CudaHostPinnedSpace>;
-
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
     if (m_scratchFlagsCount > 0)
       KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFree(m_scratchFlags));
