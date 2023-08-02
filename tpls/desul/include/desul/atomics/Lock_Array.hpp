@@ -64,7 +64,7 @@ inline void finalize_lock_arrays() {
 #endif
 }
 
-inline void ensure_lock_arrays_on_device(int device_id) {
+inline void ensure_lock_arrays_on_device([[maybe_unused]] int device_id) {
 #ifdef DESUL_HAVE_CUDA_ATOMICS
   ensure_cuda_lock_arrays_on_device(device_id);
 #endif
