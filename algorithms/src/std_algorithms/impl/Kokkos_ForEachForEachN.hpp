@@ -122,9 +122,4 @@ for_each_n_team_impl(const TeamHandleType& teamHandle, IteratorType first,
 }  // namespace Experimental
 }  // namespace Kokkos
 
-#undef KOKKOS_DO_PRAGMA
-#undef KOKKOS_NVCC_PRAGMA_PUSH
-#undef KOKKOS_NVCC_PRAGMA_SUPPRESS
-#undef KOKKOS_NVCC_PRAGMA_POP
-
 #endif
