@@ -74,11 +74,12 @@ void* HIPSpace::impl_allocate(
     const Kokkos::Tools::SpaceHandle arg_handle) const {
   void* ptr = nullptr;
 
-  auto const error_code = hipMalloc(&ptr, arg_alloc_size);
+  auto const error_code =
+      Impl::HIPInternal::singleton().hip_malloc_wrapper(&ptr, arg_alloc_size);
   if (error_code != hipSuccess) {
     // This is the only way to clear the last error, which we should do here
     // since we're turning it into an exception here
-    (void)hipGetLastError();
+    (void)Impl::HIPInternal::singleton().hip_get_last_error_wrapper();
     throw Experimental::HIPRawMemoryAllocationFailure(
         arg_alloc_size, error_code,
         Experimental::RawMemoryAllocationFailure::AllocationMechanism::
@@ -108,11 +109,12 @@ void* HIPHostPinnedSpace::impl_allocate(
   void* ptr = nullptr;
 
   auto const error_code =
-      hipHostMalloc(&ptr, arg_alloc_size, hipHostMallocNonCoherent);
+      Impl::HIPInternal::singleton().hip_host_malloc_wrapper(
+          &ptr, arg_alloc_size, hipHostMallocNonCoherent);
   if (error_code != hipSuccess) {
     // This is the only way to clear the last error, which we should do here
     // since we're turning it into an exception here
-    (void)hipGetLastError();
+    (void)Impl::HIPInternal::singleton().hip_get_last_error_wrapper();
     throw Experimental::HIPRawMemoryAllocationFailure(
         arg_alloc_size, error_code,
         Experimental::RawMemoryAllocationFailure::AllocationMechanism::
@@ -175,18 +177,21 @@ Kokkos::HIP::runtime WARNING: Kokkos did not find an environment variable 'HSA_X
               << std::endl;
       } while (false);
     }
-    auto const error_code = hipMallocManaged(&ptr, arg_alloc_size);
+    auto const error_code =
+        Impl::HIPInternal::singleton().hip_malloc_managed_wrapper(
+            &ptr, arg_alloc_size);
     if (error_code != hipSuccess) {
       // This is the only way to clear the last error, which we should do here
       // since we're turning it into an exception here
-      (void)hipGetLastError();
+      (void)Impl::HIPInternal::singleton().hip_get_last_error_wrapper();
       throw Experimental::HIPRawMemoryAllocationFailure(
           arg_alloc_size, error_code,
           Experimental::RawMemoryAllocationFailure::AllocationMechanism::
               HIPMallocManaged);
     }
-    KOKKOS_IMPL_HIP_SAFE_CALL(hipMemAdvise(
-        ptr, arg_alloc_size, hipMemAdviseSetCoarseGrain, m_device));
+    KOKKOS_IMPL_HIP_SAFE_CALL(
+        (Impl::HIPInternal::singleton().hip_mem_advise_wrapper(
+            ptr, arg_alloc_size, hipMemAdviseSetCoarseGrain, m_device)));
   }
 
   if (Kokkos::Profiling::profileLibraryLoaded()) {
@@ -201,13 +206,16 @@ bool HIPManagedSpace::impl_hip_driver_check_page_migration() const {
   // check with driver if page migrating memory is available
   // this driver query is copied from the hip documentation
   int hasManagedMemory = 0;  // false by default
-  KOKKOS_IMPL_HIP_SAFE_CALL(hipDeviceGetAttribute(
-      &hasManagedMemory, hipDeviceAttributeManagedMemory, m_device));
+  KOKKOS_IMPL_HIP_SAFE_CALL(
+      Impl::HIPInternal().hip_device_get_attribute_wrapper(
+          &hasManagedMemory, hipDeviceAttributeManagedMemory, m_device));
   if (!static_cast<bool>(hasManagedMemory)) return false;
   // next, check pageableMemoryAccess
   int hasPageableMemory = 0;  // false by default
-  KOKKOS_IMPL_HIP_SAFE_CALL(hipDeviceGetAttribute(
-      &hasPageableMemory, hipDeviceAttributePageableMemoryAccess, m_device));
+  KOKKOS_IMPL_HIP_SAFE_CALL(
+      Impl::HIPInternal().hip_device_get_attribute_wrapper(
+          &hasPageableMemory, hipDeviceAttributePageableMemoryAccess,
+          m_device));
   return static_cast<bool>(hasPageableMemory);
 }
 
@@ -230,7 +238,8 @@ void HIPSpace::impl_deallocate(
     Kokkos::Profiling::deallocateData(arg_handle, arg_label, arg_alloc_ptr,
                                       reported_size);
   }
-  KOKKOS_IMPL_HIP_SAFE_CALL(hipFree(arg_alloc_ptr));
+  KOKKOS_IMPL_HIP_SAFE_CALL(
+      (Impl::HIPInternal::singleton().hip_free_wrapper(arg_alloc_ptr)));
 }
 
 void HIPHostPinnedSpace::deallocate(void* const arg_alloc_ptr,
@@ -254,7 +263,8 @@ void HIPHostPinnedSpace::impl_deallocate(
     Kokkos::Profiling::deallocateData(arg_handle, arg_label, arg_alloc_ptr,
                                       reported_size);
   }
-  KOKKOS_IMPL_HIP_SAFE_CALL(hipHostFree(arg_alloc_ptr));
+  KOKKOS_IMPL_HIP_SAFE_CALL(
+      (Impl::HIPInternal::singleton().hip_host_free_wrapper(arg_alloc_ptr)));
 }
 
 void HIPManagedSpace::deallocate(void* const arg_alloc_ptr,
@@ -281,9 +291,12 @@ void HIPManagedSpace::impl_deallocate(
   // We have to unset the CoarseGrain property manually as hipFree does not take
   // care of it. Otherwise, the allocation would continue to linger in the
   // kernel mem page table.
-  KOKKOS_IMPL_HIP_SAFE_CALL(hipMemAdvise(
-      arg_alloc_ptr, arg_alloc_size, hipMemAdviseUnsetCoarseGrain, m_device));
-  KOKKOS_IMPL_HIP_SAFE_CALL(hipFree(arg_alloc_ptr));
+  KOKKOS_IMPL_HIP_SAFE_CALL(
+      (Impl::HIPInternal::singleton().hip_mem_advise_wrapper(
+          arg_alloc_ptr, arg_alloc_size, hipMemAdviseUnsetCoarseGrain,
+          m_device)));
+  KOKKOS_IMPL_HIP_SAFE_CALL(
+      (Impl::HIPInternal::singleton().hip_free_wrapper(arg_alloc_ptr)));
 }
 
 }  // namespace Kokkos

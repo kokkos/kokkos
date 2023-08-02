@@ -45,9 +45,9 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
 
   Impl::HIPInternal::m_hipDev = hip_device_id;
   KOKKOS_IMPL_HIP_SAFE_CALL(
-      hipGetDeviceProperties(&Impl::HIPInternal::m_deviceProp, hip_device_id));
+      (Impl::HIPInternal::singleton().hip_get_device_properties_wrapper(
+          &Impl::HIPInternal::m_deviceProp, hip_device_id)));
   const auto& hipProp = Impl::HIPInternal::m_deviceProp;
-  KOKKOS_IMPL_HIP_SAFE_CALL(hipSetDevice(hip_device_id));
 
   // number of multiprocessors
   Impl::HIPInternal::m_multiProcCount = hipProp.multiProcessorCount;
@@ -81,14 +81,18 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
   // Allocate a staging buffer for constant mem in pinned host memory
   // and an event to avoid overwriting driver for previous kernel launches
   KOKKOS_IMPL_HIP_SAFE_CALL(
-      hipHostMalloc((void**)&Impl::HIPInternal::constantMemHostStaging,
-                    Impl::HIPTraits::ConstantMemoryUsage));
+      (Impl::HIPInternal::singleton().hip_host_malloc_wrapper(
+          (void**)&Impl::HIPInternal::constantMemHostStaging,
+          Impl::HIPTraits::ConstantMemoryUsage)));
 
   KOKKOS_IMPL_HIP_SAFE_CALL(
-      hipEventCreate(&Impl::HIPInternal::constantMemReusable));
+      (Impl::HIPInternal::singleton().hip_event_create_wrapper(
+          &Impl::HIPInternal::constantMemReusable)));
 
   hipStream_t singleton_stream;
-  KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamCreate(&singleton_stream));
+  KOKKOS_IMPL_HIP_SAFE_CALL(
+      (Impl::HIPInternal::singleton().hip_stream_create_wrapper(
+          &singleton_stream)));
   Impl::HIPInternal::singleton().initialize(singleton_stream, /*manage*/ true);
 }
 
@@ -140,14 +144,17 @@ void HIP::impl_static_fence(const std::string& name) {
       name,
       Kokkos::Tools::Experimental::SpecialSynchronizationCases::
           GlobalDeviceSynchronization,
-      [&]() { KOKKOS_IMPL_HIP_SAFE_CALL(hipDeviceSynchronize()); });
+      [&]() {
+        KOKKOS_IMPL_HIP_SAFE_CALL(
+            (Impl::HIPInternal::singleton().hip_device_synchronize_wrapper()));
+      });
 }
 
 void HIP::fence(const std::string& name) const {
   m_space_instance->fence(name);
 }
 
-hipStream_t HIP::hip_stream() const { return m_space_instance->m_stream; }
+hipStream_t HIP::hip_stream() const { return m_space_instance->get_stream(); }
 
 int HIP::hip_device() const { return impl_internal_space_instance()->m_hipDev; }
 

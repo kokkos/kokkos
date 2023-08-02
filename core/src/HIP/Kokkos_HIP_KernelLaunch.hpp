@@ -186,7 +186,9 @@ struct HIPParallelLaunchKernelFuncData {
   static hipFuncAttributes get_hip_func_attributes(void const *kernel_func) {
     static hipFuncAttributes attr = [=]() {
       hipFuncAttributes attr;
-      KOKKOS_IMPL_HIP_SAFE_CALL(hipFuncGetAttributes(&attr, kernel_func));
+      KOKKOS_IMPL_HIP_SAFE_CALL(
+          (HIPInternal::singleton().hip_func_get_attributes_wrapper(
+              &attr, kernel_func)));
       return attr;
     }();
     return attr;
@@ -364,7 +366,8 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
   static void invoke_kernel(DriverType const &driver, dim3 const &grid,
                             dim3 const &block, int shmem,
                             HIPInternal const *hip_instance) {
-    (base_t::get_kernel_func())<<<grid, block, shmem, hip_instance->m_stream>>>(
+    (base_t::
+         get_kernel_func())<<<grid, block, shmem, hip_instance->get_stream()>>>(
         driver);
   }
 };
@@ -386,7 +389,8 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
     DriverType *driver_ptr = reinterpret_cast<DriverType *>(
         hip_instance->stage_functor_for_execution(
             reinterpret_cast<void const *>(&driver), sizeof(DriverType)));
-    (base_t::get_kernel_func())<<<grid, block, shmem, hip_instance->m_stream>>>(
+    (base_t::
+         get_kernel_func())<<<grid, block, shmem, hip_instance->get_stream()>>>(
         driver_ptr);
   }
 };
@@ -409,8 +413,8 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
                             HIPInternal const *hip_instance) {
     // Wait until the previous kernel that uses the constant buffer is done
     std::lock_guard<std::mutex> lock(HIPInternal::constantMemMutex);
-    KOKKOS_IMPL_HIP_SAFE_CALL(
-        hipEventSynchronize(HIPInternal::constantMemReusable));
+    KOKKOS_IMPL_HIP_SAFE_CALL((hip_instance->hip_event_synchronize_wrapper(
+        HIPInternal::constantMemReusable)));
 
     // Copy functor (synchronously) to staging buffer in pinned host memory
     unsigned long *staging = hip_instance->constantMemHostStaging;
@@ -418,17 +422,17 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
                 static_cast<const void *>(&driver), sizeof(DriverType));
 
     // Copy functor asynchronously from there to constant memory on the device
-    KOKKOS_IMPL_HIP_SAFE_CALL(hipMemcpyToSymbolAsync(
+    KOKKOS_IMPL_HIP_SAFE_CALL((hip_instance->hip_memcpy_to_symbol_async_wrapper(
         HIP_SYMBOL(kokkos_impl_hip_constant_memory_buffer), staging,
-        sizeof(DriverType), 0, hipMemcpyHostToDevice, hip_instance->m_stream));
+        sizeof(DriverType), 0, hipMemcpyHostToDevice)));
 
     // Invoke the driver function on the device
-    (base_t::
-         get_kernel_func())<<<grid, block, shmem, hip_instance->m_stream>>>();
+    (base_t::get_kernel_func())<<<grid, block, shmem,
+                                  hip_instance->get_stream()>>>();
 
     // Record an event that says when the constant buffer can be reused
-    KOKKOS_IMPL_HIP_SAFE_CALL(hipEventRecord(HIPInternal::constantMemReusable,
-                                             hip_instance->m_stream));
+    KOKKOS_IMPL_HIP_SAFE_CALL((hip_instance->hip_event_record_wrapper(
+        HIPInternal::constantMemReusable)));
   }
 };
 
@@ -468,7 +472,7 @@ struct HIPParallelLaunch<
       base_t::invoke_kernel(driver, grid, block, shmem, hip_instance);
 
 #if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
-      KOKKOS_IMPL_HIP_SAFE_CALL(hipGetLastError());
+      KOKKOS_IMPL_HIP_SAFE_CALL((hip_instance->hip_get_last_error_wrapper()));
       hip_instance->fence(
           "Kokkos::Impl::HIParallelLaunch: Debug Only Check for "
           "Execution Error");
