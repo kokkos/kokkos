@@ -373,6 +373,7 @@ void CudaInternal::initialize(int cuda_device, cudaStream_t stream,
   const bool ok_init = nullptr == m_scratchSpace || nullptr == m_scratchFlags;
 
   m_cudaDev = cuda_device;
+  CudaInternal::cuda_devices.insert(cuda_device);
 
   if (ok_init) {
     //----------------------------------
