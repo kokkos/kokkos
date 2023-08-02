@@ -113,7 +113,7 @@ TEST(TEST_CATEGORY, array_T_0) {
   ASSERT_EQ(c.data(), nullptr);
 }
 
-TEST(TEST_CATEGORY, array_T_0_contiguous) {
+TEST(TEST_CATEGORY, array_contiguous) {
   int aa[] = {3, 5};
 
   using A =
@@ -167,7 +167,10 @@ TEST(TEST_CATEGORY, array_T_0_contiguous) {
   using B = Kokkos::Array<int, 1>;
   static_assert(B::size() < std::size(aa));
   B b{{7}};
+
+  ASSERT_LT(std::size(b), std::size(a));
   a = b;
+  ASSERT_LT(std::size(b), std::size(a));
 
   ASSERT_EQ(a.size(), std::size(aa));
   ASSERT_EQ(a.max_size(), std::size(aa));
@@ -178,7 +181,10 @@ TEST(TEST_CATEGORY, array_T_0_contiguous) {
   using D = Kokkos::Array<int, 4>;
   static_assert(std::size(aa) < D::size());
   D d{{11, 13, 17, 19}};
+
+  ASSERT_LT(std::size(a), std::size(d));
   a = d;
+  ASSERT_LT(std::size(a), std::size(d));
 
   ASSERT_EQ(a.size(), std::size(aa));
   ASSERT_EQ(a.max_size(), std::size(aa));
@@ -189,19 +195,117 @@ TEST(TEST_CATEGORY, array_T_0_contiguous) {
   A e(ee, std::size(ee));
   ASSERT_LT(e.size(), a.size());
 
+  ASSERT_LT(e.size(), a.size());
   a = e;
   ASSERT_LT(e.size(), a.size());
+
   ASSERT_EQ(a.size(), std::size(aa));
   ASSERT_EQ(a.max_size(), std::size(aa));
   ASSERT_EQ(a[0], 23);
   ASSERT_EQ(a[1], 13);
 
   e[0] = 29;
-  e    = a;
+
   ASSERT_LT(e.size(), a.size());
+  e = a;
+  ASSERT_LT(e.size(), a.size());
+
   ASSERT_EQ(e.size(), std::size(ee));
   ASSERT_EQ(e.max_size(), std::size(ee));
   ASSERT_EQ(e[0], 23);
+}
+TEST(TEST_CATEGORY, array_strided) {
+  int aa[] = {5, 7, 11, 13, 17, 19};
+
+  using A = Kokkos::Array<int, KOKKOS_INVALID_INDEX, Kokkos::Array<>::strided>;
+
+  constexpr size_t aStride = 2;
+
+  A a(aa, std::size(aa) / aStride, aStride);
+
+  // capacity
+  ASSERT_EQ(a.empty(), 0 == a.size());
+  ASSERT_EQ(a.size(), std::size(aa) / aStride);
+  ASSERT_EQ(a.max_size(), std::size(aa) / aStride);
+
+  // index 0
+  ASSERT_EQ(a[0], aa[0 * aStride]);
+  ASSERT_EQ(a[false], aa[0 * aStride]);
+  ASSERT_EQ(a[EZero], aa[0 * aStride]);
+  ASSERT_EQ(a[ScopedEnum::SEZero], aa[0 * aStride]);
+  ASSERT_EQ(a[ScopedEnumShort::SESZero], aa[0 * aStride]);
+
+  // index 1
+  ASSERT_EQ(a[1], aa[1 * aStride]);
+  ASSERT_EQ(a[true], aa[1 * aStride]);
+  ASSERT_EQ(a[EOne], aa[1 * aStride]);
+  ASSERT_EQ(a[ScopedEnum::SEOne], aa[1 * aStride]);
+  ASSERT_EQ(a[ScopedEnumShort::SESOne], aa[1 * aStride]);
+
+  // data()
+  ASSERT_EQ(a.data(), aa);
+
+  // const index, data()
+  const A& c = a;
+
+  ASSERT_EQ(c[0], aa[0 * aStride]);
+  ASSERT_EQ(c[false], aa[0 * aStride]);
+  ASSERT_EQ(c[EZero], aa[0 * aStride]);
+  ASSERT_EQ(c[ScopedEnum::SEZero], aa[0 * aStride]);
+  ASSERT_EQ(c[ScopedEnumShort::SESZero], aa[0 * aStride]);
+
+  ASSERT_EQ(c[1], aa[1 * aStride]);
+  ASSERT_EQ(c[true], aa[1 * aStride]);
+  ASSERT_EQ(c[EOne], aa[1 * aStride]);
+  ASSERT_EQ(c[ScopedEnum::SEOne], aa[1 * aStride]);
+  ASSERT_EQ(c[ScopedEnumShort::SESOne], aa[1 * aStride]);
+
+  ASSERT_EQ(c.data(), aa);
+
+  // operator=(Array<T, N, P> const&) semantics when b.size() < a.size()
+  using B = Kokkos::Array<int, 1>;
+  B b{{23}};
+
+  ASSERT_LT(std::size(b), std::size(a));
+  a = b;
+
+  ASSERT_EQ(a.size(), std::size(aa) / aStride);
+  ASSERT_EQ(a.max_size(), std::size(aa) / aStride);
+  ASSERT_EQ(a[0], b[0]);
+  ASSERT_EQ(a[1], aa[1 * aStride]);
+
+  // operator=(Array<T, N, P> const&) semantics when a.size() < d.size()
+  using D = Kokkos::Array<int, 7>;
+  D d{{29, 31, 37, 41, 43, 47, 53}};
+
+  ASSERT_LT(std::size(a), std::size(d));
+  a = d;
+  ASSERT_LT(std::size(a), std::size(d));
+
+  ASSERT_EQ(a.size(), std::size(aa) / aStride);
+  ASSERT_EQ(a.max_size(), std::size(aa) / aStride);
+  ASSERT_EQ(a[0], d[0]);
+  ASSERT_EQ(a[1], d[1]);
+
+  int ee[]                 = {59, 61, 67, 71, 73, 79};
+  constexpr size_t eStride = 3;
+  A e(ee, std::size(ee) / eStride, eStride);
+
+  ASSERT_LT(e.size(), a.size());
+  a = e;
+  ASSERT_LT(e.size(), a.size());
+
+  ASSERT_EQ(a.size(), std::size(aa) / aStride);
+  ASSERT_EQ(a.max_size(), std::size(aa) / aStride);
+  ASSERT_EQ(a[0], ee[0 * eStride]);
+  ASSERT_EQ(a[1], ee[1 * eStride]);
+
+  e[0] = 83;
+  e    = a;
+  ASSERT_LT(e.size(), a.size());
+  ASSERT_EQ(e.size(), std::size(ee) / eStride);
+  ASSERT_EQ(e.max_size(), std::size(ee) / eStride);
+  ASSERT_EQ(e[0], ee[0]);
 }
 
 struct SetOnMove {

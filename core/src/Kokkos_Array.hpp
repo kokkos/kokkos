@@ -106,9 +106,8 @@ struct Array {
 
   template <typename iType>
   KOKKOS_INLINE_FUNCTION constexpr reference operator[](const iType& i) {
-    static_assert(
-        (std::is_integral<iType>::value || std::is_enum<iType>::value),
-        "Must be integral argument");
+    static_assert((std::is_integral_v<iType> || std::is_enum_v<iType>),
+                  "Must be integral argument");
     if constexpr (Impl::is_scoped_enum_v<iType>) {
       return operator[](Impl::to_underlying(i));
     } else {
@@ -120,9 +119,8 @@ struct Array {
   template <typename iType>
   KOKKOS_INLINE_FUNCTION constexpr const_reference operator[](
       const iType& i) const {
-    static_assert(
-        (std::is_integral<iType>::value || std::is_enum<iType>::value),
-        "Must be integral argument");
+    static_assert((std::is_integral_v<iType> || std::is_enum_v<iType>),
+                  "Must be integral argument");
     if constexpr (Impl::is_scoped_enum_v<iType>) {
       return operator[](Impl::to_underlying(i));
     } else {
@@ -156,24 +154,22 @@ struct Array<T, 0, Proxy> {
 
   template <typename iType>
   KOKKOS_INLINE_FUNCTION reference operator[](const iType&) {
-    static_assert(
-        (std::is_integral<iType>::value || std::is_enum<iType>::value),
-        "Must be integer argument");
+    static_assert((std::is_integral_v<iType> || std::is_enum_v<iType>),
+                  "Must be integer argument");
     Kokkos::abort("Unreachable code");
     return *reinterpret_cast<pointer>(-1);
   }
 
   template <typename iType>
   KOKKOS_INLINE_FUNCTION const_reference operator[](const iType&) const {
-    static_assert(
-        (std::is_integral<iType>::value || std::is_enum<iType>::value),
-        "Must be integer argument");
+    static_assert((std::is_integral_v<iType> || std::is_enum_v<iType>),
+                  "Must be integer argument");
     Kokkos::abort("Unreachable code");
     return *reinterpret_cast<const_pointer>(-1);
   }
 
-  KOKKOS_INLINE_FUNCTION pointer data() { return pointer(0); }
-  KOKKOS_INLINE_FUNCTION const_pointer data() const { return const_pointer(0); }
+  KOKKOS_INLINE_FUNCTION pointer data() { return nullptr; }
+  KOKKOS_INLINE_FUNCTION const_pointer data() const { return nullptr; }
 
   KOKKOS_DEFAULTED_FUNCTION ~Array()            = default;
   KOKKOS_DEFAULTED_FUNCTION Array()             = default;
@@ -213,9 +209,8 @@ struct Array<T, KOKKOS_INVALID_INDEX, Array<>::contiguous> {
 
   template <typename iType>
   KOKKOS_INLINE_FUNCTION reference operator[](const iType& i) {
-    static_assert(
-        (std::is_integral<iType>::value || std::is_enum<iType>::value),
-        "Must be integral argument");
+    static_assert((std::is_integral_v<iType> || std::is_enum_v<iType>),
+                  "Must be integral argument");
     if constexpr (Impl::is_scoped_enum_v<iType>) {
       return operator[](Impl::to_underlying(i));
     } else {
@@ -226,9 +221,8 @@ struct Array<T, KOKKOS_INVALID_INDEX, Array<>::contiguous> {
 
   template <typename iType>
   KOKKOS_INLINE_FUNCTION const_reference operator[](const iType& i) const {
-    static_assert(
-        (std::is_integral<iType>::value || std::is_enum<iType>::value),
-        "Must be integral argument");
+    static_assert((std::is_integral_v<iType> || std::is_enum_v<iType>),
+                  "Must be integral argument");
     if constexpr (Impl::is_scoped_enum_v<iType>) {
       return operator[](Impl::to_underlying(i));
     } else {
@@ -290,9 +284,8 @@ struct Array<T, KOKKOS_INVALID_INDEX, Array<>::strided> {
 
   template <typename iType>
   KOKKOS_INLINE_FUNCTION reference operator[](const iType& i) {
-    static_assert(
-        (std::is_integral<iType>::value || std::is_enum<iType>::value),
-        "Must be integral argument");
+    static_assert((std::is_integral_v<iType> || std::is_enum_v<iType>),
+                  "Must be integral argument");
     if constexpr (Impl::is_scoped_enum_v<iType>) {
       return operator[](Impl::to_underlying(i));
     } else {
@@ -303,9 +296,8 @@ struct Array<T, KOKKOS_INVALID_INDEX, Array<>::strided> {
 
   template <typename iType>
   KOKKOS_INLINE_FUNCTION const_reference operator[](const iType& i) const {
-    static_assert(
-        (std::is_integral<iType>::value || std::is_enum<iType>::value),
-        "Must be integral argument");
+    static_assert((std::is_integral_v<iType> || std::is_enum_v<iType>),
+                  "Must be integral argument");
     if constexpr (Impl::is_scoped_enum_v<iType>) {
       return operator[](Impl::to_underlying(i));
     } else {
@@ -329,14 +321,14 @@ struct Array<T, KOKKOS_INVALID_INDEX, Array<>::strided> {
   KOKKOS_INLINE_FUNCTION
   Array& operator=(const Array& rhs) {
     const size_t n = std::min(m_size, rhs.size());
-    for (size_t i = 0; i < n; ++i) m_elem[i] = rhs[i];
+    for (size_t i = 0; i < n; ++i) m_elem[i * m_stride] = rhs[i];
     return *this;
   }
 
   template <size_t N, class P>
   KOKKOS_INLINE_FUNCTION Array& operator=(const Array<T, N, P>& rhs) {
     const size_t n = std::min(m_size, rhs.size());
-    for (size_t i = 0; i < n; ++i) m_elem[i] = rhs[i];
+    for (size_t i = 0; i < n; ++i) m_elem[i * m_stride] = rhs[i];
     return *this;
   }
 
