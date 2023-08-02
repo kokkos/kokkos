@@ -79,8 +79,11 @@ class load_element_aligned {
   bool host_load(T const* mem, std::size_t n,
                  Kokkos::Experimental::simd<T, Abi>& result) const {
     if (n < result.size()) return false;
-    result.copy_from(mem, Kokkos::Experimental::element_aligned_tag());
-    return true;
+    if (mem) {
+      result.copy_from(mem, Kokkos::Experimental::element_aligned_tag());
+      return true;
+    }
+    return false;
   }
   template <class T, class Abi>
   KOKKOS_INLINE_FUNCTION bool device_load(
@@ -151,9 +154,8 @@ class load_as_scalars {
 };
 
 template <class Abi, class Loader, class BinaryOp, class T>
-void host_check_binary_op_one_loader(BinaryOp binary_op, std::size_t n,
-                                     T const* first_args,
-                                     T const* second_args) {
+void host_check_math_op_one_loader(BinaryOp binary_op, std::size_t n,
+                                   T const* first_args, T const* second_args) {
   Loader loader;
   using simd_type             = Kokkos::Experimental::simd<T, Abi>;
   std::size_t constexpr width = simd_type::size();
@@ -180,8 +182,32 @@ void host_check_binary_op_one_loader(BinaryOp binary_op, std::size_t n,
   }
 }
 
+template <class Abi, class Loader, class UnaryOp, class T>
+void host_check_math_op_one_loader(UnaryOp unary_op, std::size_t n,
+                                   T const* args) {
+  Loader loader;
+  using simd_type             = Kokkos::Experimental::simd<T, Abi>;
+  std::size_t constexpr width = simd_type::size();
+  for (std::size_t i = 0; i < n; i += width) {
+    std::size_t const nremaining = n - i;
+    std::size_t const nlanes     = Kokkos::min(nremaining, width);
+    simd_type arg;
+    bool const loaded_arg = loader.host_load(args + i, nlanes, arg);
+    if (!loaded_arg) continue;
+    simd_type expected_result;
+    // gcc 8.4.0 warns if using nlanes as upper bound about arg
+    // being uninitialized
+    for (std::size_t lane = 0; lane < simd_type::size(); ++lane) {
+      if (lane < nlanes)
+        expected_result[lane] = unary_op.on_host_serial(T(arg[lane]));
+    }
+    simd_type const computed_result = unary_op.on_host(arg);
+    host_check_equality(expected_result, computed_result, nlanes);
+  }
+}
+
 template <class Abi, class Loader, class BinaryOp, class T>
-KOKKOS_INLINE_FUNCTION void device_check_binary_op_one_loader(
+KOKKOS_INLINE_FUNCTION void device_check_math_op_one_loader(
     BinaryOp binary_op, std::size_t n, T const* first_args,
     T const* second_args) {
   Loader loader;
@@ -208,28 +234,43 @@ KOKKOS_INLINE_FUNCTION void device_check_binary_op_one_loader(
   }
 }
 
-template <class Abi, class BinaryOp, class T>
-inline void host_check_binary_op_all_loaders(BinaryOp binary_op, std::size_t n,
-                                             T const* first_args,
-                                             T const* second_args) {
-  host_check_binary_op_one_loader<Abi, load_element_aligned>(
-      binary_op, n, first_args, second_args);
-  host_check_binary_op_one_loader<Abi, load_masked>(binary_op, n, first_args,
-                                                    second_args);
-  host_check_binary_op_one_loader<Abi, load_as_scalars>(
-      binary_op, n, first_args, second_args);
+template <class Abi, class Loader, class UnaryOp, class T>
+KOKKOS_INLINE_FUNCTION void device_check_math_op_one_loader(UnaryOp unary_op,
+                                                            std::size_t n,
+                                                            T const* args) {
+  Loader loader;
+  using simd_type             = Kokkos::Experimental::simd<T, Abi>;
+  std::size_t constexpr width = simd_type::size();
+  for (std::size_t i = 0; i < n; i += width) {
+    std::size_t const nremaining = n - i;
+    std::size_t const nlanes     = Kokkos::min(nremaining, width);
+    simd_type arg;
+    bool const loaded_arg = loader.device_load(args + i, nlanes, arg);
+    if (!loaded_arg) continue;
+    simd_type expected_result;
+    for (std::size_t lane = 0; lane < nlanes; ++lane) {
+      expected_result[lane] = unary_op.on_device_serial(arg[lane]);
+    }
+    simd_type const computed_result = unary_op.on_device(arg);
+    device_check_equality(expected_result, computed_result, nlanes);
+  }
 }
 
-template <class Abi, class BinaryOp, class T>
-KOKKOS_INLINE_FUNCTION void device_check_binary_op_all_loaders(
-    BinaryOp binary_op, std::size_t n, T const* first_args,
-    T const* second_args) {
-  device_check_binary_op_one_loader<Abi, load_element_aligned>(
-      binary_op, n, first_args, second_args);
-  device_check_binary_op_one_loader<Abi, load_masked>(binary_op, n, first_args,
-                                                      second_args);
-  device_check_binary_op_one_loader<Abi, load_as_scalars>(
-      binary_op, n, first_args, second_args);
+template <class Abi, class Op, class... T>
+inline void host_check_math_op_all_loaders(Op op, std::size_t n,
+                                           T const*... args) {
+  host_check_math_op_one_loader<Abi, load_element_aligned>(op, n, args...);
+  host_check_math_op_one_loader<Abi, load_masked>(op, n, args...);
+  host_check_math_op_one_loader<Abi, load_as_scalars>(op, n, args...);
+}
+
+template <class Abi, class Op, class... T>
+KOKKOS_INLINE_FUNCTION void device_check_math_op_all_loaders(Op op,
+                                                             std::size_t n,
+                                                             T const*... args) {
+  device_check_math_op_one_loader<Abi, load_element_aligned>(op, n, args...);
+  device_check_math_op_one_loader<Abi, load_masked>(op, n, args...);
+  device_check_math_op_one_loader<Abi, load_as_scalars>(op, n, args...);
 }
 
 class plus {
@@ -280,18 +321,70 @@ class divides {
   }
 };
 
+class absolutes {
+  template <typename T>
+  static KOKKOS_FUNCTION auto abs_impl(T const& x) {
+    if constexpr (std::is_signed_v<T>) {
+      return Kokkos::abs(x);
+    }
+    return x;
+  }
+
+ public:
+  template <typename T>
+  auto on_host(T const& a) const {
+    return Kokkos::Experimental::abs(a);
+  }
+  template <typename T>
+  auto on_host_serial(T const& a) const {
+    return abs_impl(a);
+  }
+  template <typename T>
+  KOKKOS_INLINE_FUNCTION auto on_device(T const& a) const {
+    return Kokkos::Experimental::abs(a);
+  }
+  template <typename T>
+  KOKKOS_INLINE_FUNCTION auto on_device_serial(T const& a) const {
+    return abs_impl(a);
+  }
+};
+
+class shift_right {
+ public:
+  template <typename T, typename U>
+  auto on_host(T&& a, U&& b) const {
+    return a >> b;
+  }
+  template <typename T, typename U>
+  KOKKOS_INLINE_FUNCTION auto on_device(T&& a, U&& b) const {
+    return a >> b;
+  }
+};
+
+class shift_left {
+ public:
+  template <typename T, typename U>
+  auto on_host(T&& a, U&& b) const {
+    return a << b;
+  }
+  template <typename T, typename U>
+  KOKKOS_INLINE_FUNCTION auto on_device(T&& a, U&& b) const {
+    return a << b;
+  }
+};
+
 template <typename Abi, typename DataType, size_t n>
 inline void host_check_all_math_ops(const DataType (&first_args)[n],
                                     const DataType (&second_args)[n]) {
-  host_check_binary_op_all_loaders<Abi>(plus(), n, first_args, second_args);
-  host_check_binary_op_all_loaders<Abi>(minus(), n, first_args, second_args);
-  host_check_binary_op_all_loaders<Abi>(multiplies(), n, first_args,
-                                        second_args);
+  host_check_math_op_all_loaders<Abi>(plus(), n, first_args, second_args);
+  host_check_math_op_all_loaders<Abi>(minus(), n, first_args, second_args);
+  host_check_math_op_all_loaders<Abi>(multiplies(), n, first_args, second_args);
 
   // TODO: Place fallback division implementations for all simd integer types
   if constexpr (std::is_same_v<DataType, double>)
-    host_check_binary_op_all_loaders<Abi>(divides(), n, first_args,
-                                          second_args);
+    host_check_math_op_all_loaders<Abi>(divides(), n, first_args, second_args);
+
+  host_check_math_op_all_loaders<Abi>(absolutes(), n, first_args);
 }
 
 template <typename Abi, typename DataType>
@@ -316,6 +409,12 @@ inline void host_check_math_ops() {
     DataType const second_args[n] = {1, 2, 1, 1, 1, 3, 2, 1, 13, 3, 2};
     host_check_all_math_ops<Abi>(first_args, second_args);
   }
+}
+
+template <typename Abi, typename... DataTypes>
+inline void host_check_math_ops_all_types(
+    Kokkos::Experimental::Impl::data_types<DataTypes...>) {
+  (host_check_math_ops<Abi, DataTypes>(), ...);
 }
 
 template <class Abi>
@@ -366,11 +465,120 @@ inline void host_check_conversions() {
   }
 }
 
-template <class Abi>
-inline void host_check_shifts() {
-  auto a = Kokkos::Experimental::simd<std::uint64_t, Abi>(8);
-  auto b = a >> 1;
-  EXPECT_TRUE(all_of(b == decltype(b)(4)));
+template <typename Abi, typename Loader, typename ShiftOp, typename DataType>
+inline void host_check_shift_on_one_loader(ShiftOp shift_op,
+                                           DataType test_vals[],
+                                           DataType shift_by[], std::size_t n) {
+  using simd_type             = Kokkos::Experimental::simd<DataType, Abi>;
+  std::size_t constexpr width = simd_type::size();
+  Loader loader;
+
+  for (std::size_t i = 0; i < n; ++i) {
+    simd_type simd_vals;
+    bool const loaded_arg = loader.host_load(test_vals, width, simd_vals);
+    if (!loaded_arg) {
+      continue;
+    }
+
+    simd_type expected_result;
+
+    for (std::size_t lane = 0; lane < width; ++lane) {
+      DataType value = simd_vals[lane];
+      expected_result[lane] =
+          shift_op.on_host(value, static_cast<int>(shift_by[i]));
+      EXPECT_EQ(value, value);
+    }
+
+    simd_type const computed_result =
+        shift_op.on_host(simd_vals, static_cast<int>(shift_by[i]));
+    host_check_equality(expected_result, computed_result, width);
+  }
+}
+
+template <typename Abi, typename Loader, typename ShiftOp, typename DataType>
+inline void host_check_shift_by_lanes_on_one_loader(
+    ShiftOp shift_op, DataType test_vals[],
+    Kokkos::Experimental::simd<DataType, Abi>& shift_by) {
+  using simd_type             = Kokkos::Experimental::simd<DataType, Abi>;
+  std::size_t constexpr width = simd_type::size();
+  Loader loader;
+
+  simd_type simd_vals;
+  bool const loaded_arg = loader.host_load(test_vals, width, simd_vals);
+  ASSERT_TRUE(loaded_arg);
+
+  simd_type expected_result;
+
+  for (std::size_t lane = 0; lane < width; ++lane) {
+    DataType value = simd_vals[lane];
+    expected_result[lane] =
+        shift_op.on_host(value, static_cast<int>(shift_by[lane]));
+    EXPECT_EQ(value, value);
+  }
+  simd_type const computed_result = shift_op.on_host(simd_vals, shift_by);
+  host_check_equality(expected_result, computed_result, width);
+}
+
+template <typename Abi, typename ShiftOp, typename DataType>
+inline void host_check_shift_op_all_loaders(ShiftOp shift_op,
+                                            DataType test_vals[],
+                                            DataType shift_by[],
+                                            std::size_t n) {
+  host_check_shift_on_one_loader<Abi, load_element_aligned>(shift_op, test_vals,
+                                                            shift_by, n);
+  host_check_shift_on_one_loader<Abi, load_masked>(shift_op, test_vals,
+                                                   shift_by, n);
+  host_check_shift_on_one_loader<Abi, load_as_scalars>(shift_op, test_vals,
+                                                       shift_by, n);
+
+  Kokkos::Experimental::simd<DataType, Abi> shift_by_lanes;
+  shift_by_lanes.copy_from(shift_by,
+                           Kokkos::Experimental::element_aligned_tag());
+
+  host_check_shift_by_lanes_on_one_loader<Abi, load_element_aligned>(
+      shift_op, test_vals, shift_by_lanes);
+  host_check_shift_by_lanes_on_one_loader<Abi, load_masked>(shift_op, test_vals,
+                                                            shift_by_lanes);
+  host_check_shift_by_lanes_on_one_loader<Abi, load_as_scalars>(
+      shift_op, test_vals, shift_by_lanes);
+}
+
+template <typename Abi, typename DataType>
+inline void host_check_shift_op() {
+  if constexpr (std::is_integral_v<DataType>) {
+    using simd_type                 = Kokkos::Experimental::simd<DataType, Abi>;
+    std::size_t constexpr width     = simd_type::size();
+    std::size_t constexpr num_cases = 8;
+
+    DataType max = std::numeric_limits<DataType>::max();
+
+    DataType shift_by[num_cases] = {
+        0, 1, 3, width / 2, width / 2 + 1, width - 1, width, width + 1};
+    DataType test_vals[width];
+    for (std::size_t i = 0; i < width; ++i) {
+      DataType inc = max / width;
+      test_vals[i] = i * inc + 1;
+    }
+
+    host_check_shift_op_all_loaders<Abi>(shift_right(), test_vals, shift_by,
+                                         num_cases);
+    host_check_shift_op_all_loaders<Abi>(shift_left(), test_vals, shift_by,
+                                         num_cases);
+
+    if constexpr (std::is_signed_v<DataType>) {
+      for (std::size_t i = 0; i < width; ++i) test_vals[i] *= -1;
+      host_check_shift_op_all_loaders<Abi>(shift_right(), test_vals, shift_by,
+                                           num_cases);
+      host_check_shift_op_all_loaders<Abi>(shift_left(), test_vals, shift_by,
+                                           num_cases);
+    }
+  }
+}
+
+template <typename Abi, typename... DataTypes>
+inline void host_check_shift_ops_all_types(
+    Kokkos::Experimental::Impl::data_types<DataTypes...>) {
+  (host_check_shift_op<Abi, DataTypes>(), ...);
 }
 
 template <class Abi>
@@ -385,14 +593,16 @@ inline void host_check_condition() {
 template <typename Abi, typename DataType, size_t n>
 KOKKOS_INLINE_FUNCTION void device_check_all_math_ops(
     const DataType (&first_args)[n], const DataType (&second_args)[n]) {
-  device_check_binary_op_all_loaders<Abi>(plus(), n, first_args, second_args);
-  device_check_binary_op_all_loaders<Abi>(minus(), n, first_args, second_args);
-  device_check_binary_op_all_loaders<Abi>(multiplies(), n, first_args,
-                                          second_args);
+  device_check_math_op_all_loaders<Abi>(plus(), n, first_args, second_args);
+  device_check_math_op_all_loaders<Abi>(minus(), n, first_args, second_args);
+  device_check_math_op_all_loaders<Abi>(multiplies(), n, first_args,
+                                        second_args);
 
   if constexpr (std::is_same_v<DataType, double>)
-    device_check_binary_op_all_loaders<Abi>(divides(), n, first_args,
-                                            second_args);
+    device_check_math_op_all_loaders<Abi>(divides(), n, first_args,
+                                          second_args);
+
+  device_check_math_op_all_loaders<Abi>(absolutes(), n, first_args);
 }
 
 template <typename Abi, typename DataType>
@@ -417,6 +627,12 @@ KOKKOS_INLINE_FUNCTION void device_check_math_ops() {
     DataType const second_args[n] = {1, 2, 1, 1, 1, 3, 2, 1, 13, 3, 2};
     device_check_all_math_ops<Abi>(first_args, second_args);
   }
+}
+
+template <typename Abi, typename... DataTypes>
+KOKKOS_INLINE_FUNCTION void device_check_math_ops_all_types(
+    Kokkos::Experimental::Impl::data_types<DataTypes...>) {
+  (device_check_math_ops<Abi, DataTypes>(), ...);
 }
 
 template <class Abi>
@@ -469,12 +685,127 @@ KOKKOS_INLINE_FUNCTION void device_check_conversions() {
   }
 }
 
-template <class Abi>
-KOKKOS_INLINE_FUNCTION void device_check_shifts() {
-  kokkos_checker checker;
-  auto a = Kokkos::Experimental::simd<std::uint64_t, Abi>(8);
-  auto b = a >> 1;
-  checker.truth(all_of(b == decltype(b)(4)));
+template <typename Abi, typename Loader, typename ShiftOp, typename DataType>
+KOKKOS_INLINE_FUNCTION void device_check_shift_on_one_loader(
+    ShiftOp shift_op, DataType test_vals[], DataType shift_by[],
+    std::size_t n) {
+  using simd_type             = Kokkos::Experimental::simd<DataType, Abi>;
+  std::size_t constexpr width = simd_type::size();
+  Loader loader;
+
+  for (std::size_t i = 0; i < n; ++i) {
+    simd_type simd_vals;
+    bool const loaded_arg = loader.device_load(test_vals, width, simd_vals);
+    if (!loaded_arg) {
+      continue;
+    }
+
+    simd_type expected_result;
+
+    for (std::size_t lane = 0; lane < width; ++lane) {
+      expected_result[lane] = shift_op.on_device(DataType(simd_vals[lane]),
+                                                 static_cast<int>(shift_by[i]));
+    }
+
+    simd_type const computed_result =
+        shift_op.on_device(simd_vals, static_cast<int>(shift_by[i]));
+    device_check_equality(expected_result, computed_result, width);
+  }
+}
+
+template <typename Abi, typename Loader, typename ShiftOp, typename DataType>
+KOKKOS_INLINE_FUNCTION void device_check_shift_by_lanes_on_one_loader(
+    ShiftOp shift_op, DataType test_vals[],
+    Kokkos::Experimental::simd<DataType, Abi>& shift_by) {
+  using simd_type             = Kokkos::Experimental::simd<DataType, Abi>;
+  std::size_t constexpr width = simd_type::size();
+  Loader loader;
+  simd_type simd_vals;
+  loader.device_load(test_vals, width, simd_vals);
+
+  simd_type expected_result;
+
+  for (std::size_t lane = 0; lane < width; ++lane) {
+    expected_result[lane] = shift_op.on_device(
+        DataType(simd_vals[lane]), static_cast<int>(shift_by[lane]));
+  }
+  simd_type const computed_result = shift_op.on_device(simd_vals, shift_by);
+  device_check_equality(expected_result, computed_result, width);
+}
+
+template <typename Abi, typename ShiftOp, typename DataType>
+KOKKOS_INLINE_FUNCTION void device_check_shift_op_all_loaders(
+    ShiftOp shift_op, DataType test_vals[], DataType shift_by[],
+    std::size_t n) {
+  device_check_shift_on_one_loader<Abi, load_element_aligned>(
+      shift_op, test_vals, shift_by, n);
+  device_check_shift_on_one_loader<Abi, load_masked>(shift_op, test_vals,
+                                                     shift_by, n);
+  device_check_shift_on_one_loader<Abi, load_as_scalars>(shift_op, test_vals,
+                                                         shift_by, n);
+
+  Kokkos::Experimental::simd<DataType, Abi> shift_by_lanes;
+  shift_by_lanes.copy_from(shift_by,
+                           Kokkos::Experimental::element_aligned_tag());
+
+  device_check_shift_by_lanes_on_one_loader<Abi, load_element_aligned>(
+      shift_op, test_vals, shift_by_lanes);
+  device_check_shift_by_lanes_on_one_loader<Abi, load_masked>(
+      shift_op, test_vals, shift_by_lanes);
+  device_check_shift_by_lanes_on_one_loader<Abi, load_as_scalars>(
+      shift_op, test_vals, shift_by_lanes);
+}
+
+template <typename DataType>
+KOKKOS_INLINE_FUNCTION void device_check_shift_op_corner_case() {
+  DataType value = -1;
+  auto shifted   = value >> 1;
+  kokkos_checker().equality(shifted, value);
+}
+
+template <typename Abi, typename DataType>
+KOKKOS_INLINE_FUNCTION void device_check_shift_op() {
+  if constexpr (std::is_integral_v<DataType>) {
+    using simd_type                 = Kokkos::Experimental::simd<DataType, Abi>;
+    std::size_t constexpr width     = simd_type::size();
+    std::size_t constexpr num_cases = 8;
+
+    DataType max = Kokkos::reduction_identity<DataType>::max();
+    DataType min = Kokkos::reduction_identity<DataType>::min();
+
+    DataType shift_by[num_cases] = {
+        0, 1, 3, width / 2, width / 2 + 1, width - 1, width, width + 1};
+    DataType test_vals[width];
+
+    for (std::size_t i = 0; i < width; ++i) {
+      DataType inc = max / width;
+      test_vals[i] = i * inc + 1;
+    }
+    device_check_shift_op_all_loaders<Abi>(shift_right(), test_vals, shift_by,
+                                           num_cases);
+
+    if constexpr (std::is_signed_v<DataType>) {
+      for (std::size_t i = 0; i < width; ++i) test_vals[i] *= -1;
+      device_check_shift_op_all_loaders<Abi>(shift_right(), test_vals, shift_by,
+                                             num_cases);
+    }
+
+    for (std::size_t i = 0; i < width; ++i) {
+      DataType test_val = (min == 0) ? 1 : min / (i + 1);
+      test_vals[i]      = (test_val > max) ? max : test_val;
+    }
+    device_check_shift_op_all_loaders<Abi>(shift_left(), test_vals, shift_by,
+                                           num_cases);
+
+    if constexpr (std::is_signed_v<DataType>)
+      device_check_shift_op_corner_case<DataType>();
+  }
+}
+
+template <typename Abi, typename... DataTypes>
+KOKKOS_INLINE_FUNCTION void device_check_shift_ops_all_types(
+    Kokkos::Experimental::Impl::data_types<DataTypes...>) {
+  (device_check_shift_op<Abi, DataTypes>(), ...);
 }
 
 template <class Abi>
@@ -487,12 +818,6 @@ KOKKOS_INLINE_FUNCTION void device_check_condition() {
   checker.truth(all_of(a == decltype(a)(16)));
 }
 
-template <typename Abi, typename... DataTypes>
-inline void host_check_math_ops_all_types(
-    Kokkos::Experimental::Impl::data_types<DataTypes...>) {
-  (host_check_math_ops<Abi, DataTypes>(), ...);
-}
-
 template <class Abi>
 inline void host_check_abi() {
   using DataTypes = Kokkos::Experimental::Impl::data_type_set;
@@ -500,14 +825,8 @@ inline void host_check_abi() {
   host_check_math_ops_all_types<Abi>(DataTypes());
   host_check_mask_ops<Abi>();
   host_check_conversions<Abi>();
-  host_check_shifts<Abi>();
+  host_check_shift_ops_all_types<Abi>(DataTypes());
   host_check_condition<Abi>();
-}
-
-template <typename Abi, typename... DataTypes>
-KOKKOS_INLINE_FUNCTION void device_check_math_ops_all_types(
-    Kokkos::Experimental::Impl::data_types<DataTypes...>) {
-  (device_check_math_ops<Abi, DataTypes>(), ...);
 }
 
 template <class Abi>
@@ -517,7 +836,7 @@ KOKKOS_INLINE_FUNCTION void device_check_abi() {
   device_check_math_ops_all_types<Abi>(DataTypes());
   device_check_mask_ops<Abi>();
   device_check_conversions<Abi>();
-  device_check_shifts<Abi>();
+  device_check_shift_ops_all_types<Abi>(DataTypes());
   device_check_condition<Abi>();
 }
 

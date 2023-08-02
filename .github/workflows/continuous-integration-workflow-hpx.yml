@@ -1,6 +1,13 @@
 name: github-Linux-hpx
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - develop
+  pull_request:
+    paths-ignore:
+    - '**/*.md'
+    types: [ opened, reopened, synchronize ]
 
 concurrency:
   group: ${ {github.event_name }}-${{ github.workflow }}-${{ github.ref }}
@@ -73,7 +80,7 @@ jobs:
             -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
             -DKokkos_ENABLE_EXAMPLES=ON \
             -DKokkos_ENABLE_HPX=ON \
-            -DKokkos_ENABLE_SERIAL=OFF \
+            -DKokkos_ENABLE_SERIAL=ON \
             -DKokkos_ENABLE_TESTS=ON \
             ..
 

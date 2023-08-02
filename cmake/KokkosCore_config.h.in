@@ -69,7 +69,6 @@
 #cmakedefine KOKKOS_ARCH_ARMV81
 #cmakedefine KOKKOS_ARCH_ARMV8_THUNDERX2
 #cmakedefine KOKKOS_ARCH_A64FX
-#cmakedefine KOKKOS_ARCH_AMD_AVX2
 #cmakedefine KOKKOS_ARCH_AVX
 #cmakedefine KOKKOS_ARCH_AVX2
 #cmakedefine KOKKOS_ARCH_AVX512XEON

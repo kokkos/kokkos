@@ -129,30 +129,34 @@ template <class T, class Abi>
 }
 
 // fallback simd shift using generator constructor
-// At the time of this writing, these fallbacks are only used
-// to shift vectors of 64-bit unsigned integers for the NEON backend
+// At the time of this edit, only the fallback for shift vectors of
+// 64-bit signed integers for the AVX2 backend is used
 
-template <class T, class U, class Abi>
+template <typename T, typename Abi,
+          typename = std::enable_if_t<std::is_integral_v<T>>>
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd<T, Abi> operator>>(
-    simd<T, Abi> const& lhs, unsigned int rhs) {
+    simd<T, Abi> const& lhs, int rhs) {
   return simd<T, Abi>([&](std::size_t i) { return lhs[i] >> rhs; });
 }
 
-template <class T, class U, class Abi>
+template <typename T, typename Abi,
+          typename = std::enable_if_t<std::is_integral_v<T>>>
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd<T, Abi> operator<<(
-    simd<T, Abi> const& lhs, unsigned int rhs) {
+    simd<T, Abi> const& lhs, int rhs) {
   return simd<T, Abi>([&](std::size_t i) { return lhs[i] << rhs; });
 }
 
-template <class T, class U, class Abi>
+template <typename T, typename Abi,
+          typename = std::enable_if_t<std::is_integral_v<T>>>
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd<T, Abi> operator>>(
-    simd<T, Abi> const& lhs, simd<U, Abi> const& rhs) {
+    simd<T, Abi> const& lhs, simd<T, Abi> const& rhs) {
   return simd<T, Abi>([&](std::size_t i) { return lhs[i] >> rhs[i]; });
 }
 
-template <class T, class U, class Abi>
+template <typename T, typename Abi,
+          typename = std::enable_if_t<std::is_integral_v<T>>>
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd<T, Abi> operator<<(
-    simd<T, Abi> const& lhs, simd<U, Abi> const& rhs) {
+    simd<T, Abi> const& lhs, simd<T, Abi> const& rhs) {
   return simd<T, Abi>([&](std::size_t i) { return lhs[i] << rhs[i]; });
 }
 
