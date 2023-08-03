@@ -279,7 +279,20 @@ template <class DataType, class... Properties>
 void sort_device_view_without_comparator(
     const Kokkos::Experimental::SYCL& exec,
     const Kokkos::View<DataType, Properties...>& view) {
-  sort_onedpl(exec, view);
+  using ViewType = Kokkos::View<DataType, Properties...>;
+  static_assert(
+      (ViewType::rank == 1) &&
+          (std::is_same_v<typename ViewType::array_layout, LayoutRight> ||
+           std::is_same_v<typename ViewType::array_layout, LayoutLeft> ||
+           std::is_same_v<typename ViewType::array_layout, LayoutStride>),
+      "sort_device_view_without_comparator: support rank-1 Views "
+      " with LayoutLeft, LayoutRight or LayoutStride");
+
+  if (view.stride(0) == 1) {
+    sort_onedpl(exec, view);
+  } else {
+    copy_to_host_run_stdsort_copy_back(exec, view);
+  }
 }
 #endif
 
@@ -313,7 +326,20 @@ void sort_device_view_with_comparator(
     const Experimental::SYCL& exec,
     const Kokkos::View<DataType, Properties...>& view,
     const ComparatorType& comparator) {
-  sort_onedpl(exec, view, comparator);
+  using ViewType = Kokkos::View<DataType, Properties...>;
+  static_assert(
+      (ViewType::rank == 1) &&
+          (std::is_same_v<typename ViewType::array_layout, LayoutRight> ||
+           std::is_same_v<typename ViewType::array_layout, LayoutLeft> ||
+           std::is_same_v<typename ViewType::array_layout, LayoutStride>),
+      "sort_device_view_with_comparator: support rank-1 Views "
+      " with LayoutLeft, LayoutRight or LayoutStride");
+
+  if (view.stride(0) == 1) {
+    sort_onedpl(exec, view, comparator);
+  } else {
+    copy_to_host_run_stdsort_copy_back(exec, view, comparator);
+  }
 }
 #endif
 
