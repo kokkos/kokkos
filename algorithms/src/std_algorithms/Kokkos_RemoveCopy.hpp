@@ -29,12 +29,10 @@ namespace Experimental {
 template <
     typename ExecutionSpace, typename InputIterator, typename OutputIterator,
     typename ValueType,
-    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0
-  >
-        OutputIterator remove_copy(
-            const ExecutionSpace& ex, InputIterator first_from,
-            InputIterator last_from, OutputIterator first_dest,
-            const ValueType& value) {
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
+OutputIterator remove_copy(const ExecutionSpace& ex, InputIterator first_from,
+                           InputIterator last_from, OutputIterator first_dest,
+                           const ValueType& value) {
   return Impl::remove_copy_exespace_impl(
       "Kokkos::remove_copy_iterator_api_default", ex, first_from, last_from,
       first_dest, value);
@@ -43,12 +41,10 @@ template <
 template <
     typename ExecutionSpace, typename InputIterator, typename OutputIterator,
     typename ValueType,
-    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0
-  >
-        OutputIterator remove_copy(
-            const std::string& label, const ExecutionSpace& ex,
-            InputIterator first_from, InputIterator last_from,
-            OutputIterator first_dest, const ValueType& value) {
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
+OutputIterator remove_copy(const std::string& label, const ExecutionSpace& ex,
+                           InputIterator first_from, InputIterator last_from,
+                           OutputIterator first_dest, const ValueType& value) {
   return Impl::remove_copy_exespace_impl(label, ex, first_from, last_from,
                                          first_dest, value);
 }
@@ -95,13 +91,12 @@ auto remove_copy(const std::string& label, const ExecutionSpace& ex,
 //
 template <typename TeamHandleType, typename InputIterator,
           typename OutputIterator, typename ValueType,
-          std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>, int> = 0
-	  >
-KOKKOS_FUNCTION OutputIterator remove_copy(
-					   const TeamHandleType& teamHandle, InputIterator first_from,
-					   InputIterator last_from, OutputIterator first_dest,
-					   const ValueType& value)
-{
+          std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>, int> = 0>
+KOKKOS_FUNCTION OutputIterator remove_copy(const TeamHandleType& teamHandle,
+                                           InputIterator first_from,
+                                           InputIterator last_from,
+                                           OutputIterator first_dest,
+                                           const ValueType& value) {
   return Impl::remove_copy_team_impl(teamHandle, first_from, last_from,
                                      first_dest, value);
 }

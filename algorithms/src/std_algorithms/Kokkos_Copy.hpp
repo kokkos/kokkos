@@ -27,20 +27,17 @@ namespace Experimental {
 // overload set accepting execution space
 //
 template <
-  typename ExecutionSpace, typename InputIterator, typename OutputIterator,
-  std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0
-  >
+    typename ExecutionSpace, typename InputIterator, typename OutputIterator,
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
 OutputIterator copy(const ExecutionSpace& ex, InputIterator first,
-                    InputIterator last, OutputIterator d_first)
-{
+                    InputIterator last, OutputIterator d_first) {
   return Impl::copy_exespace_impl("Kokkos::copy_iterator_api_default", ex,
                                   first, last, d_first);
 }
 
 template <
     typename ExecutionSpace, typename InputIterator, typename OutputIterator,
-  std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0
-  >
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
 OutputIterator copy(const std::string& label, const ExecutionSpace& ex,
                     InputIterator first, InputIterator last,
                     OutputIterator d_first) {

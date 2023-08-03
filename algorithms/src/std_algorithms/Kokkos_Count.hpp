@@ -28,13 +28,11 @@ namespace Experimental {
 //
 template <
     typename ExecutionSpace, typename IteratorType, typename T,
-    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0
-  >
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
 typename IteratorType::difference_type count(const ExecutionSpace& ex,
                                              IteratorType first,
                                              IteratorType last,
-                                             const T& value)
-{
+                                             const T& value) {
   return Impl::count_exespace_impl("Kokkos::count_iterator_api_default", ex,
                                    first, last, value);
 }
@@ -51,10 +49,9 @@ typename IteratorType::difference_type count(const std::string& label,
 }
 
 template <
-  typename ExecutionSpace, typename DataType,
-  typename... Properties, typename T,
-  std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0
-  >
+    typename ExecutionSpace, typename DataType, typename... Properties,
+    typename T,
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
 auto count(const ExecutionSpace& ex,
            const ::Kokkos::View<DataType, Properties...>& v, const T& value) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
@@ -66,8 +63,8 @@ auto count(const ExecutionSpace& ex,
 
 template <
     typename ExecutionSpace, typename DataType, typename... Properties,
-    typename T, std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0
-  >
+    typename T,
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
 auto count(const std::string& label, const ExecutionSpace& ex,
            const ::Kokkos::View<DataType, Properties...>& v, const T& value) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);

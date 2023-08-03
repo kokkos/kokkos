@@ -28,20 +28,18 @@ namespace Experimental {
 //
 template <
     typename ExecutionSpace, typename Iterator, typename ValueType,
-    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0
-  >
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
 Iterator remove(const ExecutionSpace& ex, Iterator first, Iterator last,
-                        const ValueType& value) {
+                const ValueType& value) {
   return Impl::remove_exespace_impl("Kokkos::remove_iterator_api_default", ex,
                                     first, last, value);
 }
 
 template <
     typename ExecutionSpace, typename Iterator, typename ValueType,
-    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0
-  >
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
 Iterator remove(const std::string& label, const ExecutionSpace& ex,
-                        Iterator first, Iterator last, const ValueType& value) {
+                Iterator first, Iterator last, const ValueType& value) {
   return Impl::remove_exespace_impl(label, ex, first, last, value);
 }
 
@@ -77,11 +75,10 @@ auto remove(const std::string& label, const ExecutionSpace& ex,
 // since they cause issues on device because of the string allocation.
 //
 template <typename TeamHandleType, typename Iterator, typename ValueType,
-          std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>, int> = 0
-	  >
+          std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>, int> = 0>
 KOKKOS_FUNCTION Iterator remove(const TeamHandleType& teamHandle,
-				Iterator first, Iterator last,
-				const ValueType& value) {
+                                Iterator first, Iterator last,
+                                const ValueType& value) {
   return Impl::remove_team_impl(teamHandle, first, last, value);
 }
 

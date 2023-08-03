@@ -28,21 +28,18 @@ namespace Experimental {
 //
 template <
     typename ExecutionSpace, typename Iterator, typename UnaryPredicate,
-    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0
- >
-Iterator remove_if(const ExecutionSpace& ex, Iterator first,
-                           Iterator last, UnaryPredicate pred)
-{
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
+Iterator remove_if(const ExecutionSpace& ex, Iterator first, Iterator last,
+                   UnaryPredicate pred) {
   return Impl::remove_if_exespace_impl("Kokkos::remove_if_iterator_api_default",
                                        ex, first, last, pred);
 }
 
 template <
     typename ExecutionSpace, typename Iterator, typename UnaryPredicate,
-    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0
-  >
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
 Iterator remove_if(const std::string& label, const ExecutionSpace& ex,
-                           Iterator first, Iterator last, UnaryPredicate pred) {
+                   Iterator first, Iterator last, UnaryPredicate pred) {
   return Impl::remove_if_exespace_impl(label, ex, first, last, pred);
 }
 
@@ -79,18 +76,16 @@ auto remove_if(const std::string& label, const ExecutionSpace& ex,
 // since they cause issues on device because of the string allocation.
 //
 template <typename TeamHandleType, typename Iterator, typename UnaryPredicate,
-          std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>, int> = 0
-	  >
-KOKKOS_FUNCTION Iterator remove_if(
-                  const TeamHandleType& teamHandle, Iterator first,
-                  Iterator last, UnaryPredicate pred) {
+          std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>, int> = 0>
+KOKKOS_FUNCTION Iterator remove_if(const TeamHandleType& teamHandle,
+                                   Iterator first, Iterator last,
+                                   UnaryPredicate pred) {
   return Impl::remove_if_team_impl(teamHandle, first, last, pred);
 }
 
 template <typename TeamHandleType, typename DataType, typename... Properties,
           typename UnaryPredicate,
-          std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>, int> = 0
-	  >
+          std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>, int> = 0>
 KOKKOS_FUNCTION auto remove_if(
     const TeamHandleType& teamHandle,
     const ::Kokkos::View<DataType, Properties...>& view, UnaryPredicate pred) {

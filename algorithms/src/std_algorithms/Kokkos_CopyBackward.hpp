@@ -35,10 +35,9 @@ IteratorType2 copy_backward(const ExecutionSpace& ex, IteratorType1 first,
       "Kokkos::copy_backward_iterator_api_default", ex, first, last, d_last);
 }
 
-template <typename ExecutionSpace, typename IteratorType1,
-          typename IteratorType2,
-	  std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0
-	  >
+template <
+    typename ExecutionSpace, typename IteratorType1, typename IteratorType2,
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
 IteratorType2 copy_backward(const std::string& label, const ExecutionSpace& ex,
                             IteratorType1 first, IteratorType1 last,
                             IteratorType2 d_last) {
@@ -79,8 +78,7 @@ auto copy_backward(const std::string& label, const ExecutionSpace& ex,
 //
 template <typename TeamHandleType, typename IteratorType1,
           typename IteratorType2,
-          std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>, int> = 0
-	  >
+          std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>, int> = 0>
 KOKKOS_FUNCTION IteratorType2 copy_backward(const TeamHandleType& teamHandle,
                                             IteratorType1 first,
                                             IteratorType1 last,
@@ -90,8 +88,7 @@ KOKKOS_FUNCTION IteratorType2 copy_backward(const TeamHandleType& teamHandle,
 
 template <typename TeamHandleType, typename DataType1, typename... Properties1,
           typename DataType2, typename... Properties2,
-          std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>, int> = 0
-	  >
+          std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>, int> = 0>
 KOKKOS_FUNCTION auto copy_backward(
     const TeamHandleType& teamHandle,
     const ::Kokkos::View<DataType1, Properties1...>& source,
