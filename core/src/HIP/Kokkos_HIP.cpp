@@ -139,6 +139,8 @@ void HIP::print_configuration(std::ostream& os, bool /*verbose*/) const {
 uint32_t HIP::impl_instance_id() const noexcept {
   return m_space_instance->impl_get_instance_id();
 }
+
+// FIXME_HIP_MULTIPLE_DEVICES
 void HIP::impl_static_fence(const std::string& name) {
   Kokkos::Tools::Experimental::Impl::profile_fence_event<HIP>(
       name,

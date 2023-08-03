@@ -35,6 +35,7 @@ struct ZeroMemset<HIP, View<T, P...>> {
 
   ZeroMemset(const View<T, P...>& dst,
              typename View<T, P...>::const_value_type&) {
+    // FIXME_HIP_MULTIPLE_DEVICES
     KOKKOS_IMPL_HIP_SAFE_CALL((HIPInternal::singleton().hip_memset_wrapper(
         dst.data(), 0,
         dst.size() * sizeof(typename View<T, P...>::value_type))));
