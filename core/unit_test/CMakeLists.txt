@@ -357,9 +357,24 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
       list(APPEND ${Tag}_SOURCES2D ${file})
     endforeach()
 
+    set(${Tag}_SOURCES3)
+    foreach(Name
+      BasicView
+      )
+      set(file ${dir}/view/Test${Tag}_${Name}.cpp)
+      # Write to a temporary intermediate file and call configure_file to avoid
+      # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
+      file(WRITE ${dir}/dummy.cpp
+          "#include <Test${Tag}_Category.hpp>\n"
+          "#include <view/Test${Name}.hpp>\n"
+      )
+      configure_file(${dir}/dummy.cpp ${file})
+      list(APPEND ${Tag}_SOURCES3 ${file})
+    endforeach()
+
     SET(${Tag}_SOURCES1 ${${Tag}_SOURCES1A} ${${Tag}_SOURCES1B})
     SET(${Tag}_SOURCES2 ${${Tag}_SOURCES2A} ${${Tag}_SOURCES2B} ${${Tag}_SOURCES2C} ${${Tag}_SOURCES2D})
-    SET(${Tag}_SOURCES ${${Tag}_SOURCES1} ${${Tag}_SOURCES2})
+    SET(${Tag}_SOURCES ${${Tag}_SOURCES1} ${${Tag}_SOURCES2} ${${Tag}_SOURCES3})
   endif()
 endforeach()
 
