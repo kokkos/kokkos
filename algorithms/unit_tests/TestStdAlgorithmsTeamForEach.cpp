@@ -116,6 +116,9 @@ void run_all_scenarios() {
 }
 
 TEST(std_algorithms_for_each_team_test, test) {
+#if defined KOKKOS_COMPILER_NVHPC
+  GTEST_SKIP() << "machine-dependent nvhpc opc compiler error ";  // FIXME_NVHPC
+#endif
   run_all_scenarios<DynamicTag, double>();
   run_all_scenarios<StridedTwoRowsTag, int>();
   run_all_scenarios<StridedThreeRowsTag, unsigned>();
