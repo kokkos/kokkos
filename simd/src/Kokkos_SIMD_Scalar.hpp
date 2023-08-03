@@ -109,20 +109,6 @@ class simd<T, simd_abi::scalar> {
   KOKKOS_FORCEINLINE_FUNCTION simd(G&& gen)
       : m_value(gen(std::integral_constant<std::size_t, 0>())) {}
   KOKKOS_FORCEINLINE_FUNCTION simd operator-() const { return simd(-m_value); }
-  KOKKOS_FORCEINLINE_FUNCTION simd operator>>(int rhs) const {
-    return simd(m_value >> rhs);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION simd
-  operator>>(simd<int, abi_type> const& rhs) const {
-    return simd(m_value >> static_cast<int>(rhs));
-  }
-  KOKKOS_FORCEINLINE_FUNCTION simd operator<<(int rhs) const {
-    return simd(m_value << rhs);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION simd
-  operator<<(simd<int, abi_type> const& rhs) const {
-    return simd(m_value << static_cast<int>(rhs));
-  }
   KOKKOS_FORCEINLINE_FUNCTION simd operator&(simd const& other) const {
     return m_value & other.m_value;
   }
@@ -162,6 +148,23 @@ class simd<T, simd_abi::scalar> {
   }
   KOKKOS_FORCEINLINE_FUNCTION value_type operator[](std::size_t) const {
     return m_value;
+  }
+
+  KOKKOS_FORCEINLINE_FUNCTION friend constexpr simd operator>>(
+      simd const& lhs, int rhs) noexcept {
+    return simd(lhs.m_value >> rhs);
+  }
+  KOKKOS_FORCEINLINE_FUNCTION friend constexpr simd operator>>(
+      simd const& lhs, simd const& rhs) noexcept {
+    return simd(lhs.m_value >> static_cast<int>(rhs[0]));
+  }
+  KOKKOS_FORCEINLINE_FUNCTION friend constexpr simd operator<<(
+      simd const& lhs, int rhs) noexcept {
+    return simd(lhs.m_value << rhs);
+  }
+  KOKKOS_FORCEINLINE_FUNCTION friend constexpr simd operator<<(
+      simd const& lhs, simd const& rhs) noexcept {
+    return simd(lhs.m_value << static_cast<int>(rhs[0]));
   }
 };
 

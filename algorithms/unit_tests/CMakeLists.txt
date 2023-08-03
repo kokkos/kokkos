@@ -163,7 +163,23 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
 	StdAlgorithmsTeamSearch
 	StdAlgorithmsTeamFindEnd
 	StdAlgorithmsTeamFindFirstOf
+      )
+      list(APPEND STDALGO_TEAM_SOURCES_B Test${Name}.cpp)
+    endforeach()
 
+    # ------------------------------------------
+    # std team A
+    # ------------------------------------------
+    set(STDALGO_TEAM_SOURCES_A)
+    foreach(Name
+	StdAlgorithmsCommon
+	StdAlgorithmsTeamAdjacentFind
+	StdAlgorithmsTeamCount
+	StdAlgorithmsTeamCountIf
+	StdAlgorithmsTeamForEach
+	StdAlgorithmsTeamForEachN
+	StdAlgorithmsTeamLexicographicalCompare
+	StdAlgorithmsTeamMismatch
       )
       list(APPEND STDALGO_TEAM_SOURCES_A Test${Name}.cpp)
     endforeach()
@@ -218,6 +234,17 @@ if(KOKKOS_ENABLE_OPENMPTARGET)
   )
 endif()
 
+# FIXME_OPENMPTARGET need to remove tests for OpenMPTarget because
+# in these cases the impl needs to use either Kokkos or tailored reducers
+# which results in runtime memory errors.
+if(KOKKOS_ENABLE_OPENMPTARGET)
+  list(REMOVE_ITEM STDALGO_TEAM_SOURCES_A
+    TestStdAlgorithmsTeamAdjacentFind.cpp
+    TestStdAlgorithmsTeamLexicographicalCompare.cpp
+    TestStdAlgorithmsTeamMismatch.cpp
+  )
+endif()
+
 foreach(ID A;B;C;D;E)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     AlgorithmsUnitTest_StdSet_${ID}
@@ -227,9 +254,9 @@ foreach(ID A;B;C;D;E)
     )
 endforeach()
 
-foreach(ID B)
+foreach(ID A;B)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_StdSet_Team_${ID}
+    AlgorithmsUnitTest_StdSet_Team_${ID}
     SOURCES
     UnitTestMain.cpp
     ${STDALGO_TEAM_SOURCES_${ID}}

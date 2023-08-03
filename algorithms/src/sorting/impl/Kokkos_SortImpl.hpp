@@ -302,7 +302,7 @@ void sort_device_view_with_comparator(
 #if defined(KOKKOS_ENABLE_ONEDPL)
 template <class ComparatorType, class DataType, class... Properties>
 void sort_device_view_with_comparator(
-    const Experimental::SYCL& exec,
+    const Kokkos::Experimental::SYCL& exec,
     const Kokkos::View<DataType, Properties...>& view,
     const ComparatorType& comparator) {
   using ViewType = Kokkos::View<DataType, Properties...>;
