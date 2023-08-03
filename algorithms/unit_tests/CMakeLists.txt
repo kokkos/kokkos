@@ -207,7 +207,7 @@ if(KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM)
   )
 endif()
 
-# need to remove tests for OpenMPTarget because in these cases
+# FIXME_OPENMPTARGET need to remove tests for OpenMPTarget because in these cases
 # the impl needs to use either Kokkos or tailored reducers
 # which results in runtime memory errors.
 if(KOKKOS_ENABLE_OPENMPTARGET)
