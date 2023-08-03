@@ -82,7 +82,11 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
     sycl::queue& q                          = space.sycl_queue();
 
     auto parallel_for_event = q.submit([&](sycl::handler& cgh) {
+#ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
       cgh.depends_on(memcpy_event);
+#else
+      (void)memcpy_event;
+#endif
       if (policy.chunk_size() <= 1) {
         FunctorWrapperRangePolicyParallelFor<Functor, Policy> f{policy.begin(),
                                                                 functor};
@@ -106,7 +110,9 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
                                                                          f);
       }
     });
+#ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
     q.ext_oneapi_submit_barrier(std::vector<sycl::event>{parallel_for_event});
+#endif
 
     return parallel_for_event;
   }
@@ -243,7 +249,11 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
           sycl::range<3>{global_range[2], global_range[1], global_range[0]},
           sycl::range<3>{local_range[2], local_range[1], local_range[0]}};
 
+#ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
       cgh.depends_on(memcpy_event);
+#else
+      (void)memcpy_event;
+#endif
       cgh.parallel_for(sycl_swapped_range, [functor_wrapper, bare_policy](
                                                sycl::nd_item<3> item) {
         // swap back for correct index calculations in DeviceIterateTile
@@ -265,7 +275,9 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
             .exec_range();
       });
     });
+#ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
     q.ext_oneapi_submit_barrier(std::vector<sycl::event>{parallel_for_event});
+#endif
 
     return parallel_for_event;
   }

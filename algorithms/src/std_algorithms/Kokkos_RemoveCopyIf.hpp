@@ -26,29 +26,37 @@ namespace Experimental {
 //
 // overload set accepting execution space
 //
-template <typename ExecutionSpace, typename InputIterator, typename OutputIterator,
-          typename UnaryPredicate, std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int>=0>
-OutputIterator remove_copy_if(const ExecutionSpace& ex, InputIterator first_from,
-               InputIterator last_from, OutputIterator first_dest,
-               const UnaryPredicate& pred) {
+template <
+    typename ExecutionSpace, typename InputIterator, typename OutputIterator,
+    typename UnaryPredicate,
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0
+  >
+OutputIterator remove_copy_if(
+            const ExecutionSpace& ex, InputIterator first_from,
+            InputIterator last_from, OutputIterator first_dest,
+            const UnaryPredicate& pred) {
   return Impl::remove_copy_if_exespace_impl(
       "Kokkos::remove_copy_if_iterator_api_default", ex, first_from, last_from,
       first_dest, pred);
 }
 
-template <typename ExecutionSpace, typename InputIterator, typename OutputIterator,
-          typename UnaryPredicate, std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int>=0>
-OutputIterator remove_copy_if(const std::string& label, const ExecutionSpace& ex,
-               InputIterator first_from, InputIterator last_from,
-               OutputIterator first_dest, const UnaryPredicate& pred) {
+template <
+    typename ExecutionSpace, typename InputIterator, typename OutputIterator,
+    typename UnaryPredicate,
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0
+  >
+OutputIterator remove_copy_if(
+            const std::string& label, const ExecutionSpace& ex,
+            InputIterator first_from, InputIterator last_from,
+            OutputIterator first_dest, const UnaryPredicate& pred) {
   return Impl::remove_copy_if_exespace_impl(label, ex, first_from, last_from,
                                             first_dest, pred);
 }
 
-template <typename ExecutionSpace, typename DataType1, typename... Properties1,
-          typename DataType2, typename... Properties2, typename UnaryPredicate,
-          std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>,
-                           int> = 0>
+template <
+    typename ExecutionSpace, typename DataType1, typename... Properties1,
+    typename DataType2, typename... Properties2, typename UnaryPredicate,
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
 auto remove_copy_if(const ExecutionSpace& ex,
                     const ::Kokkos::View<DataType1, Properties1...>& view_from,
                     const ::Kokkos::View<DataType2, Properties2...>& view_dest,
@@ -63,10 +71,10 @@ auto remove_copy_if(const ExecutionSpace& ex,
       ::Kokkos::Experimental::begin(view_dest), pred);
 }
 
-template <typename ExecutionSpace, typename DataType1, typename... Properties1,
-          typename DataType2, typename... Properties2, typename UnaryPredicate,
-          std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>,
-                           int> = 0>
+template <
+    typename ExecutionSpace, typename DataType1, typename... Properties1,
+    typename DataType2, typename... Properties2, typename UnaryPredicate,
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
 auto remove_copy_if(const std::string& label, const ExecutionSpace& ex,
                     const ::Kokkos::View<DataType1, Properties1...>& view_from,
                     const ::Kokkos::View<DataType2, Properties2...>& view_dest,
@@ -85,20 +93,21 @@ auto remove_copy_if(const std::string& label, const ExecutionSpace& ex,
 // Note: for now omit the overloads accepting a label
 // since they cause issues on device because of the string allocation.
 //
-template <typename TeamHandleType, typename InputIterator, typename OutputIterator,
-          typename UnaryPredicate, std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>, int>=0>
-KOKKOS_FUNCTION
-OutputIterator remove_copy_if(const TeamHandleType& teamHandle, InputIterator first_from,
-               InputIterator last_from, OutputIterator first_dest,
-               const UnaryPredicate& pred) {
+template <typename TeamHandleType, typename InputIterator,
+          typename OutputIterator, typename UnaryPredicate,
+          std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>, int> = 0
+	  >
+KOKKOS_FUNCTION OutputIterator remove_copy_if(
+                  const TeamHandleType& teamHandle, InputIterator first_from,
+                  InputIterator last_from, OutputIterator first_dest,
+                  const UnaryPredicate& pred) {
   return Impl::remove_copy_if_team_impl(teamHandle, first_from, last_from,
                                         first_dest, pred);
 }
 
-template <
-    typename TeamHandleType, typename DataType1, typename... Properties1,
-    typename DataType2, typename... Properties2, typename UnaryPredicate,
-    std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>, int> = 0>
+template <typename TeamHandleType, typename DataType1, typename... Properties1,
+          typename DataType2, typename... Properties2, typename UnaryPredicate,
+          std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>, int> = 0>
 KOKKOS_FUNCTION auto remove_copy_if(
     const TeamHandleType& teamHandle,
     const ::Kokkos::View<DataType1, Properties1...>& view_from,

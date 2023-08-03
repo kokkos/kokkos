@@ -269,7 +269,11 @@ class ParallelScanSYCLBase {
                          min_subgroup_size),
           cgh);
 
+#ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
       cgh.depends_on(memcpy_event);
+#else
+      (void)memcpy_event;
+#endif
 
       auto scan_lambda = scan_lambda_factory(local_mem, num_teams_done,
                                              global_mem, group_results);
@@ -284,7 +288,9 @@ class ParallelScanSYCLBase {
       // directly.
       auto result_ptr = m_result_ptr_device_accessible ? m_result_ptr : nullptr;
 
+#ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
       cgh.depends_on(perform_work_group_scans);
+#endif
 
       cgh.parallel_for(
           sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
@@ -314,8 +320,10 @@ class ParallelScanSYCLBase {
             }
           });
     });
+#ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
     q.ext_oneapi_submit_barrier(
         std::vector<sycl::event>{update_global_results});
+#endif
     return update_global_results;
   }
 
