@@ -285,8 +285,8 @@ void sort_device_view_without_comparator(
           (std::is_same_v<typename ViewType::array_layout, LayoutRight> ||
            std::is_same_v<typename ViewType::array_layout, LayoutLeft> ||
            std::is_same_v<typename ViewType::array_layout, LayoutStride>),
-      "sort_device_view_without_comparator: support rank-1 Views "
-      " with LayoutLeft, LayoutRight or LayoutStride");
+      "sort_device_view_without_comparator: supports rank-1 Views "
+      "with LayoutLeft, LayoutRight or LayoutStride");
 
   if (view.stride(0) == 1) {
     sort_onedpl(exec, view);
@@ -332,8 +332,8 @@ void sort_device_view_with_comparator(
           (std::is_same_v<typename ViewType::array_layout, LayoutRight> ||
            std::is_same_v<typename ViewType::array_layout, LayoutLeft> ||
            std::is_same_v<typename ViewType::array_layout, LayoutStride>),
-      "sort_device_view_with_comparator: support rank-1 Views "
-      " with LayoutLeft, LayoutRight or LayoutStride");
+      "sort_device_view_with_comparator: supports rank-1 Views "
+      "with LayoutLeft, LayoutRight or LayoutStride");
 
   if (view.stride(0) == 1) {
     sort_onedpl(exec, view, comparator);
