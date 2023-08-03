@@ -26,11 +26,9 @@ namespace Experimental {
 //
 // overload set accepting execution space
 //
-template <class ExecutionSpace, class InputIterator, class OutputIterator,
-          class ValueType>
-std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
-                 OutputIterator>
-remove_copy(const ExecutionSpace& ex, InputIterator first_from,
+template <typename ExecutionSpace, typename InputIterator, typename OutputIterator,
+          typename ValueType, std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int>=0>
+OutputIterator remove_copy(const ExecutionSpace& ex, InputIterator first_from,
             InputIterator last_from, OutputIterator first_dest,
             const ValueType& value) {
   return Impl::remove_copy_exespace_impl(
@@ -38,20 +36,18 @@ remove_copy(const ExecutionSpace& ex, InputIterator first_from,
       first_dest, value);
 }
 
-template <class ExecutionSpace, class InputIterator, class OutputIterator,
-          class ValueType>
-std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
-                 OutputIterator>
-remove_copy(const std::string& label, const ExecutionSpace& ex,
+template <typename ExecutionSpace, typename InputIterator, typename OutputIterator,
+          typename ValueType, std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>,int>=0>
+OutputIterator remove_copy(const std::string& label, const ExecutionSpace& ex,
             InputIterator first_from, InputIterator last_from,
             OutputIterator first_dest, const ValueType& value) {
   return Impl::remove_copy_exespace_impl(label, ex, first_from, last_from,
                                          first_dest, value);
 }
 
-template <class ExecutionSpace, class DataType1, class... Properties1,
-          class DataType2, class... Properties2, class ValueType,
-          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+template <typename ExecutionSpace, typename DataType1, typename... Properties1,
+          typename DataType2, typename... Properties2, typename ValueType,
+          std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>,
                            int> = 0>
 auto remove_copy(const ExecutionSpace& ex,
                  const ::Kokkos::View<DataType1, Properties1...>& view_from,
@@ -67,9 +63,9 @@ auto remove_copy(const ExecutionSpace& ex,
       ::Kokkos::Experimental::begin(view_dest), value);
 }
 
-template <class ExecutionSpace, class DataType1, class... Properties1,
-          class DataType2, class... Properties2, class ValueType,
-          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+template <typename ExecutionSpace, typename DataType1, typename... Properties1,
+          typename DataType2, typename... Properties2, typename ValueType,
+          std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>,
                            int> = 0>
 auto remove_copy(const std::string& label, const ExecutionSpace& ex,
                  const ::Kokkos::View<DataType1, Properties1...>& view_from,
@@ -89,11 +85,10 @@ auto remove_copy(const std::string& label, const ExecutionSpace& ex,
 // Note: for now omit the overloads accepting a label
 // since they cause issues on device because of the string allocation.
 //
-template <class TeamHandleType, class InputIterator, class OutputIterator,
-          class ValueType>
-KOKKOS_FUNCTION std::enable_if_t<
-    ::Kokkos::is_team_handle<TeamHandleType>::value, OutputIterator>
-remove_copy(const TeamHandleType& teamHandle, InputIterator first_from,
+template <typename TeamHandleType, typename InputIterator, typename OutputIterator,
+          typename ValueType, std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>, int>=0>
+KOKKOS_FUNCTION
+OutputIterator remove_copy(const TeamHandleType& teamHandle, InputIterator first_from,
             InputIterator last_from, OutputIterator first_dest,
             const ValueType& value) {
   return Impl::remove_copy_team_impl(teamHandle, first_from, last_from,
@@ -101,9 +96,9 @@ remove_copy(const TeamHandleType& teamHandle, InputIterator first_from,
 }
 
 template <
-    class TeamHandleType, class DataType1, class... Properties1,
-    class DataType2, class... Properties2, class ValueType,
-    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, int> = 0>
+    typename TeamHandleType, typename DataType1, typename... Properties1,
+    typename DataType2, typename... Properties2, typename ValueType,
+    std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>, int> = 0>
 KOKKOS_FUNCTION auto remove_copy(
     const TeamHandleType& teamHandle,
     const ::Kokkos::View<DataType1, Properties1...>& view_from,

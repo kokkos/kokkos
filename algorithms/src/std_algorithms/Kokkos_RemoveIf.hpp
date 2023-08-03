@@ -26,25 +26,25 @@ namespace Experimental {
 //
 // overload set accepting execution space
 //
-template <class ExecutionSpace, class Iterator, class UnaryPredicate>
-std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, Iterator>
-remove_if(const ExecutionSpace& ex, Iterator first, Iterator last,
+template <typename ExecutionSpace, typename Iterator, typename UnaryPredicate,
+std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int>=0>
+Iterator remove_if(const ExecutionSpace& ex, Iterator first, Iterator last,
           UnaryPredicate pred) {
   return Impl::remove_if_exespace_impl("Kokkos::remove_if_iterator_api_default",
                                        ex, first, last, pred);
 }
 
-template <class ExecutionSpace, class Iterator, class UnaryPredicate>
-std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, Iterator>
-remove_if(const std::string& label, const ExecutionSpace& ex, Iterator first,
+template <typename ExecutionSpace, typename Iterator, typename UnaryPredicate,
+std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int>=0>
+Iterator remove_if(const std::string& label, const ExecutionSpace& ex, Iterator first,
           Iterator last, UnaryPredicate pred) {
   return Impl::remove_if_exespace_impl(label, ex, first, last, pred);
 }
 
-template <class ExecutionSpace, class DataType, class... Properties,
-          class UnaryPredicate,
-          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
-                           int> = 0>
+template <typename ExecutionSpace, typename DataType, typename... Properties,
+          typename UnaryPredicate,
+          std::enable_if_t<
+              ::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
 auto remove_if(const ExecutionSpace& ex,
                const ::Kokkos::View<DataType, Properties...>& view,
                UnaryPredicate pred) {
@@ -55,10 +55,10 @@ auto remove_if(const ExecutionSpace& ex,
                                        ::Kokkos::Experimental::end(view), pred);
 }
 
-template <class ExecutionSpace, class DataType, class... Properties,
-          class UnaryPredicate,
-          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
-                           int> = 0>
+template <typename ExecutionSpace, typename DataType, typename... Properties,
+          typename UnaryPredicate,
+          std::enable_if_t<
+              ::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
 auto remove_if(const std::string& label, const ExecutionSpace& ex,
                const ::Kokkos::View<DataType, Properties...>& view,
                UnaryPredicate pred) {
@@ -73,18 +73,18 @@ auto remove_if(const std::string& label, const ExecutionSpace& ex,
 // Note: for now omit the overloads accepting a label
 // since they cause issues on device because of the string allocation.
 //
-template <class TeamHandleType, class Iterator, class UnaryPredicate>
+template <typename TeamHandleType, typename Iterator, typename UnaryPredicate,
+std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>, int>=0>
 KOKKOS_FUNCTION
-    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, Iterator>
-    remove_if(const TeamHandleType& teamHandle, Iterator first, Iterator last,
+Iterator remove_if(const TeamHandleType& teamHandle, Iterator first, Iterator last,
               UnaryPredicate pred) {
   return Impl::remove_if_team_impl(teamHandle, first, last, pred);
 }
 
 template <
-    class TeamHandleType, class DataType, class... Properties,
-    class UnaryPredicate,
-    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, int> = 0>
+    typename TeamHandleType, typename DataType, typename... Properties,
+    typename UnaryPredicate,
+    std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>, int> = 0>
 KOKKOS_FUNCTION auto remove_if(
     const TeamHandleType& teamHandle,
     const ::Kokkos::View<DataType, Properties...>& view, UnaryPredicate pred) {

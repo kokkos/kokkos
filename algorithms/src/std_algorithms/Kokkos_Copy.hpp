@@ -26,27 +26,24 @@ namespace Experimental {
 //
 // overload set accepting execution space
 //
-template <class ExecutionSpace, class InputIterator, class OutputIterator>
-std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
-                 OutputIterator>
-copy(const ExecutionSpace& ex, InputIterator first, InputIterator last,
+template <typename ExecutionSpace, typename InputIterator, typename OutputIterator,
+std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
+OutputIterator copy(const ExecutionSpace& ex, InputIterator first, InputIterator last,
      OutputIterator d_first) {
   return Impl::copy_exespace_impl("Kokkos::copy_iterator_api_default", ex,
                                   first, last, d_first);
 }
 
-template <class ExecutionSpace, class InputIterator, class OutputIterator>
-std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
-                 OutputIterator>
-copy(const std::string& label, const ExecutionSpace& ex, InputIterator first,
+template <typename ExecutionSpace, typename InputIterator, typename OutputIterator,
+std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
+OutputIterator copy(const std::string& label, const ExecutionSpace& ex, InputIterator first,
      InputIterator last, OutputIterator d_first) {
   return Impl::copy_exespace_impl(label, ex, first, last, d_first);
 }
 
-template <class ExecutionSpace, class DataType1, class... Properties1,
-          class DataType2, class... Properties2,
-          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
-                           int> = 0>
+template <typename ExecutionSpace, typename DataType1, typename... Properties1,
+          typename DataType2, typename... Properties2,
+          std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
 auto copy(const ExecutionSpace& ex,
           const ::Kokkos::View<DataType1, Properties1...>& source,
           ::Kokkos::View<DataType2, Properties2...>& dest) {
@@ -59,9 +56,9 @@ auto copy(const ExecutionSpace& ex,
                                   KE::begin(dest));
 }
 
-template <class ExecutionSpace, class DataType1, class... Properties1,
-          class DataType2, class... Properties2,
-          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+template <typename ExecutionSpace, typename DataType1, typename... Properties1,
+          typename DataType2, typename... Properties2,
+          std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>,
                            int> = 0>
 auto copy(const std::string& label, const ExecutionSpace& ex,
           const ::Kokkos::View<DataType1, Properties1...>& source,
@@ -77,18 +74,18 @@ auto copy(const std::string& label, const ExecutionSpace& ex,
 //
 // overload set accepting team handle
 //
-template <class TeamHandleType, class InputIterator, class OutputIterator>
-KOKKOS_FUNCTION std::enable_if_t<
-    ::Kokkos::is_team_handle<TeamHandleType>::value, OutputIterator>
-copy(const TeamHandleType& teamHandle, InputIterator first, InputIterator last,
+template <typename TeamHandleType, typename InputIterator, typename OutputIterator,
+std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>, int> = 0>
+KOKKOS_FUNCTION
+OutputIterator copy(const TeamHandleType& teamHandle, InputIterator first, InputIterator last,
      OutputIterator d_first) {
   return Impl::copy_team_impl(teamHandle, first, last, d_first);
 }
 
 template <
-    class TeamHandleType, class DataType1, class... Properties1,
-    class DataType2, class... Properties2,
-    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, int> = 0>
+    typename TeamHandleType, typename DataType1, typename... Properties1,
+    typename DataType2, typename... Properties2,
+    std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>, int> = 0>
 KOKKOS_FUNCTION auto copy(
     const TeamHandleType& teamHandle,
     const ::Kokkos::View<DataType1, Properties1...>& source,
