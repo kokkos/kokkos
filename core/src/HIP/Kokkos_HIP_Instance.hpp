@@ -177,6 +177,8 @@ class HIPInternal {
   }
 
   // HIP C API
+
+  // Device Management
   template <bool setHIPDevice = true>
   hipError_t hip_device_get_attribute_wrapper(int *pi,
                                               hipDeviceAttribute_t attr,
@@ -191,6 +193,39 @@ class HIPInternal {
     return hipDeviceSynchronize();
   }
 
+  template <bool setHIPDevice = true>
+  hipError_t hip_get_device_count_wrapper(int *count) const {
+    if constexpr (setHIPDevice) set_hip_device();
+    return hipGetDeviceCount(count);
+  }
+
+  template <bool setHIPDevice = true>
+  hipError_t hip_get_device_properties_wrapper(hipDeviceProp_t *prop,
+                                               int deviceId) const {
+    if constexpr (setHIPDevice) set_hip_device();
+    return hipGetDeviceProperties(prop, deviceId);
+  }
+
+  // Error Handling
+  template <bool setHIPDevice = true>
+  const char *hip_get_error_name_wrapper(hipError_t hip_error) const {
+    if constexpr (setHIPDevice) set_hip_device();
+    return hipGetErrorName(hip_error);
+  }
+
+  template <bool setHIPDevice = true>
+  const char *hip_get_error_string_wrapper(hipError_t hip_error) const {
+    if constexpr (setHIPDevice) set_hip_device();
+    return hipGetErrorString(hip_error);
+  }
+
+  template <bool setHIPDevice = true>
+  hipError_t hip_get_last_error_wrapper() const {
+    if constexpr (setHIPDevice) set_hip_device();
+    return hipGetLastError();
+  }
+
+  // Event Management
   template <bool setHIPDevice = true>
   hipError_t hip_event_create_wrapper(hipEvent_t *event) const {
     if constexpr (setHIPDevice) set_hip_device();
@@ -216,48 +251,11 @@ class HIPInternal {
     return hipEventSynchronize(event);
   }
 
+  // Memory Management
   template <bool setHIPDevice = true>
   hipError_t hip_free_wrapper(void *ptr) const {
     if constexpr (setHIPDevice) set_hip_device();
     return hipFree(ptr);
-  }
-
-  template <bool setHIPDevice = true>
-  hipError_t hip_func_get_attributes_wrapper(struct hipFuncAttributes *attr,
-                                             const void *func) const {
-    if constexpr (setHIPDevice) set_hip_device();
-    return hipFuncGetAttributes(attr, func);
-  }
-
-  template <bool setHIPDevice = true>
-  hipError_t hip_get_device_count_wrapper(int *count) const {
-    if constexpr (setHIPDevice) set_hip_device();
-    return hipGetDeviceCount(count);
-  }
-
-  template <bool setHIPDevice = true>
-  hipError_t hip_get_device_properties_wrapper(hipDeviceProp_t *prop,
-                                               int deviceId) const {
-    if constexpr (setHIPDevice) set_hip_device();
-    return hipGetDeviceProperties(prop, deviceId);
-  }
-
-  template <bool setHIPDevice = true>
-  const char *hip_get_error_name_wrapper(hipError_t hip_error) const {
-    if constexpr (setHIPDevice) set_hip_device();
-    return hipGetErrorName(hip_error);
-  }
-
-  template <bool setHIPDevice = true>
-  const char *hip_get_error_string_wrapper(hipError_t hip_error) const {
-    if constexpr (setHIPDevice) set_hip_device();
-    return hipGetErrorString(hip_error);
-  }
-
-  template <bool setHIPDevice = true>
-  hipError_t hip_get_last_error_wrapper() const {
-    if constexpr (setHIPDevice) set_hip_device();
-    return hipGetLastError();
   }
 
   template <bool setHIPDevice = true>
@@ -325,6 +323,15 @@ class HIPInternal {
     return hipMemsetAsync(dst, value, sizeBytes, get_input_stream(stream));
   }
 
+  // Module Management
+  template <bool setHIPDevice = true>
+  hipError_t hip_func_get_attributes_wrapper(struct hipFuncAttributes *attr,
+                                             const void *func) const {
+    if constexpr (setHIPDevice) set_hip_device();
+    return hipFuncGetAttributes(attr, func);
+  }
+
+  // Stream Management
   template <bool setHIPDevice = true>
   hipError_t hip_stream_create_wrapper(hipStream_t *pStream) const {
     if constexpr (setHIPDevice) set_hip_device();

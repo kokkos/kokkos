@@ -233,6 +233,8 @@ class CudaInternal {
   }
 
   // C API routines
+
+  // Device Management
   template <bool setCudaDevice = true>
   cudaError_t cuda_device_get_limit_wrapper(size_t* pValue,
                                             cudaLimit limit) const {
@@ -253,6 +255,39 @@ class CudaInternal {
     return cudaDeviceSynchronize();
   }
 
+  template <bool setCudaDevice = true>
+  cudaError_t cuda_get_device_count_wrapper(int* count) const {
+    if constexpr (setCudaDevice) set_cuda_device();
+    return cudaGetDeviceCount(count);
+  }
+
+  template <bool setCudaDevice = true>
+  cudaError_t cuda_get_device_properties_wrapper(cudaDeviceProp* prop,
+                                                 int device) const {
+    if constexpr (setCudaDevice) set_cuda_device();
+    return cudaGetDeviceProperties(prop, device);
+  }
+
+  // Error Handling
+  template <bool setCudaDevice = true>
+  const char* cuda_get_error_name_wrapper(cudaError_t error) const {
+    if constexpr (setCudaDevice) set_cuda_device();
+    return cudaGetErrorName(error);
+  }
+
+  template <bool setCudaDevice = true>
+  const char* cuda_get_error_string_wrapper(cudaError_t error) const {
+    if constexpr (setCudaDevice) set_cuda_device();
+    return cudaGetErrorString(error);
+  }
+
+  template <bool setCudaDevice = true>
+  cudaError_t cuda_get_last_error_wrapper() const {
+    if constexpr (setCudaDevice) set_cuda_device();
+    return cudaGetLastError();
+  }
+
+  // Event Management
   template <bool setCudaDevice = true>
   cudaError_t cuda_event_create_wrapper(cudaEvent_t* event) const {
     if constexpr (setCudaDevice) set_cuda_device();
@@ -278,49 +313,7 @@ class CudaInternal {
     return cudaEventSynchronize(event);
   }
 
-  template <bool setCudaDevice = true>
-  cudaError_t cuda_free_wrapper(void* devPtr) const {
-    if constexpr (setCudaDevice) set_cuda_device();
-    return cudaFree(devPtr);
-  }
-
-  template <bool setCudaDevice = true>
-  cudaError_t cuda_free_host_wrapper(void* ptr) const {
-    if constexpr (setCudaDevice) set_cuda_device();
-    return cudaFreeHost(ptr);
-  }
-
-  template <bool setCudaDevice = true>
-  cudaError_t cuda_get_device_count_wrapper(int* count) const {
-    if constexpr (setCudaDevice) set_cuda_device();
-    return cudaGetDeviceCount(count);
-  }
-
-  template <bool setCudaDevice = true>
-  cudaError_t cuda_get_device_properties_wrapper(cudaDeviceProp* prop,
-                                                 int device) const {
-    if constexpr (setCudaDevice) set_cuda_device();
-    return cudaGetDeviceProperties(prop, device);
-  }
-
-  template <bool setCudaDevice = true>
-  const char* cuda_get_error_name_wrapper(cudaError_t error) const {
-    if constexpr (setCudaDevice) set_cuda_device();
-    return cudaGetErrorName(error);
-  }
-
-  template <bool setCudaDevice = true>
-  const char* cuda_get_error_string_wrapper(cudaError_t error) const {
-    if constexpr (setCudaDevice) set_cuda_device();
-    return cudaGetErrorString(error);
-  }
-
-  template <bool setCudaDevice = true>
-  cudaError_t cuda_get_last_error_wrapper() const {
-    if constexpr (setCudaDevice) set_cuda_device();
-    return cudaGetLastError();
-  }
-
+  // Graph Management
   template <bool setCudaDevice = true>
   cudaError_t cuda_graph_add_dependencies_wrapper(
       cudaGraph_t graph, const cudaGraphNode_t* from, const cudaGraphNode_t* to,
@@ -374,6 +367,28 @@ class CudaInternal {
     return cudaGraphLaunch(graphExec, get_input_stream(stream));
   }
 
+  // Memory Management
+  template <bool setCudaDevice = true>
+  cudaError_t cuda_free_wrapper(void* devPtr) const {
+    if constexpr (setCudaDevice) set_cuda_device();
+    return cudaFree(devPtr);
+  }
+
+#if (defined(KOKKOS_ENABLE_IMPL_CUDA_MALLOC_ASYNC) && CUDART_VERSION >= 11020)
+  template <bool setCudaDevice = true>
+  cudaError_t cuda_free_async_wrapper(void* devPtr,
+                                      cudaStream_t hStream = nullptr) const {
+    if constexpr (setCudaDevice) set_cuda_device();
+    return cudaFreeAsync(devPtr, get_input_stream(hStream));
+  }
+#endif
+
+  template <bool setCudaDevice = true>
+  cudaError_t cuda_free_host_wrapper(void* ptr) const {
+    if constexpr (setCudaDevice) set_cuda_device();
+    return cudaFreeHost(ptr);
+  }
+
   template <bool setCudaDevice = true>
   cudaError_t cuda_host_alloc_wrapper(void** pHost, size_t size,
                                       unsigned int flags) const {
@@ -386,6 +401,15 @@ class CudaInternal {
     if constexpr (setCudaDevice) set_cuda_device();
     return cudaMalloc(devPtr, size);
   }
+
+#if (defined(KOKKOS_ENABLE_IMPL_CUDA_MALLOC_ASYNC) && CUDART_VERSION >= 11020)
+  template <bool setCudaDevice = true>
+  cudaError_t cuda_malloc_async_wrapper(void** devPtr, size_t size,
+                                        cudaStream_t hStream = nullptr) const {
+    if constexpr (setCudaDevice) set_cuda_device();
+    return cudaMallocAsync(devPtr, size, get_input_stream(hStream));
+  }
+#endif
 
   template <bool setCudaDevice = true>
   cudaError_t cuda_malloc_host_wrapper(void** ptr, size_t size) const {
@@ -455,6 +479,7 @@ class CudaInternal {
     return cudaMemsetAsync(devPtr, value, count, get_input_stream(stream));
   }
 
+  // Unified Addressing
   template <bool setCudaDevice = true>
   cudaError_t cuda_pointer_get_attributes_wrapper(
       cudaPointerAttributes* attributes, const void* ptr) const {
@@ -462,6 +487,7 @@ class CudaInternal {
     return cudaPointerGetAttributes(attributes, ptr);
   }
 
+  // Stream Management
   template <bool setCudaDevice = true>
   cudaError_t cuda_stream_create_wrapper(cudaStream_t* pStream) const {
     if constexpr (setCudaDevice) set_cuda_device();
@@ -479,23 +505,6 @@ class CudaInternal {
     if constexpr (setCudaDevice) set_cuda_device();
     return cudaStreamSynchronize(stream);
   }
-
-  // The following are only available for cuda 11.2 and greater
-#if (defined(KOKKOS_ENABLE_IMPL_CUDA_MALLOC_ASYNC) && CUDART_VERSION >= 11020)
-  template <bool setCudaDevice = true>
-  cudaError_t cuda_malloc_async_wrapper(void** devPtr, size_t size,
-                                        cudaStream_t hStream = nullptr) const {
-    if constexpr (setCudaDevice) set_cuda_device();
-    return cudaMallocAsync(devPtr, size, get_input_stream(hStream));
-  }
-
-  template <bool setCudaDevice = true>
-  cudaError_t cuda_free_async_wrapper(void* devPtr,
-                                      cudaStream_t hStream = nullptr) const {
-    if constexpr (setCudaDevice) set_cuda_device();
-    return cudaFreeAsync(devPtr, get_input_stream(hStream));
-  }
-#endif
 
   // C++ API routines
   template <typename T, bool setCudaDevice = true>
