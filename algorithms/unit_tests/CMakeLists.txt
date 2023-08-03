@@ -192,7 +192,7 @@ if(NOT (KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM
   )
 endif()
 
-# FIXME_OPENMPTARGET These tests cause internal compiler errors as of 09/01/22
+# FIXME_OPENMPTARGET: These tests cause internal compiler errors as of 09/01/22
 # when compiling for Intel's Xe-HP GPUs.
 if(KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM)
   list(REMOVE_ITEM STDALGO_SOURCES_D

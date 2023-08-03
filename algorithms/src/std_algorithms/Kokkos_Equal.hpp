@@ -29,8 +29,8 @@ namespace Experimental {
 template <typename ExecutionSpace, typename IteratorType1,
           typename IteratorType2,
           std::enable_if_t<::Kokkos::Experimental::Impl::are_iterators_v<
-                               IteratorType1, IteratorType2>&& ::Kokkos::
-                               is_execution_space_v<ExecutionSpace>,
+                               IteratorType1, IteratorType2> &&
+                               Kokkos::is_execution_space_v<ExecutionSpace>,
                            int> = 0>
 bool equal(const ExecutionSpace& ex, IteratorType1 first1, IteratorType1 last1,
            IteratorType2 first2) {
