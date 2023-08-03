@@ -39,6 +39,7 @@ static_assert(false,
 
 #ifdef KOKKOS_ENABLE_IMPL_MDSPAN
 #include <View/MDSpan/Kokkos_MDSpan_Extents.hpp>
+//#include <View/Kokkos_BasicView.hpp>
 #endif
 #include <Kokkos_MinMax.hpp>
 
