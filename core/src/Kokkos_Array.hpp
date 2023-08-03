@@ -106,13 +106,15 @@ struct Array {
 
   template <typename iType>
   KOKKOS_INLINE_FUNCTION constexpr reference operator[](const iType& i) {
-    static_assert((std::is_integral_v<iType> || std::is_enum_v<iType>),
-                  "Must be integral argument");
     if constexpr (Impl::is_scoped_enum_v<iType>) {
       return operator[](Impl::to_underlying(i));
-    } else {
+    } else if constexpr (std::is_integral_v<iType> || std::is_enum_v<iType>) {
       KOKKOS_ARRAY_BOUNDS_CHECK(i, N);
       return m_internal_implementation_private_member_data[i];
+    } else if constexpr (std::is_convertible_v<iType, size_t>) {
+      return operator[](static_cast<size_t>(i));
+    } else {
+      static_assert(true, "Must be integral argument");
     }
   }
 
