@@ -171,6 +171,7 @@ auto create_view(StridedThreeRowsTag, std::size_t ext0, std::size_t ext1,
   return view;
 }
 
+
 template <class ViewType>
 std::enable_if_t<
   ViewType::rank == 1,
@@ -178,9 +179,9 @@ std::enable_if_t<
   >
 create_deep_copyable_compatible_view_with_same_extent(ViewType view) {
   using result_t         = Kokkos::View<typename ViewType::value_type*,
-                                typename ViewType::execution_space>;
+					typename ViewType::execution_space>;
   const std::size_t ext0 = view.extent(0);
-  return result_t{"view_dc", ext0};
+  return result_t("view_dc", ext0);
 }
 
 template <class ViewType>
@@ -190,10 +191,10 @@ std::enable_if_t<
   >
 create_deep_copyable_compatible_view_with_same_extent(ViewType view) {
   using result_t         = Kokkos::View<typename ViewType::value_type**,
-                                typename ViewType::execution_space>;
+					typename ViewType::execution_space>;
   const std::size_t ext0 = view.extent(0);
   const std::size_t ext1 = view.extent(1);
-  return result_t{"view_dc", ext0, ext1};
+  return result_t("view_dc", ext0, ext1);
 }
 
 template <class ViewType>
