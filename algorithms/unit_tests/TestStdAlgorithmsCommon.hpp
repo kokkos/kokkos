@@ -184,9 +184,10 @@ create_deep_copyable_compatible_view_with_same_extent(ViewType view) {
 }
 
 template <class ViewType>
-std::enable_if_t<ViewType::rank == 2,
-   Kokkos::View<typename ViewType::value_type**, typename ViewType::execution_space>
-		 >
+std::enable_if_t<
+  ViewType::rank == 2,
+  Kokkos::View<typename ViewType::value_type**, typename ViewType::execution_space>
+  >
 create_deep_copyable_compatible_view_with_same_extent(ViewType view) {
   using result_t         = Kokkos::View<typename ViewType::value_type**,
                                 typename ViewType::execution_space>;
