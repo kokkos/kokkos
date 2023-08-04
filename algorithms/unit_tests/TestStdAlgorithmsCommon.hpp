@@ -197,17 +197,21 @@ create_deep_copyable_compatible_view_with_same_extent(ViewType view) {
   return result_t("view_dc", ext0, ext1);
 }
 
-template <class ViewType>
-auto create_deep_copyable_compatible_clone(ViewType view) {
+template <class ViewType, std::enable_if_t< ViewType::rank == 1, int > = 0 >
+auto create_deep_copyable_compatible_clone(ViewType view)
+{
   auto view_dc    = create_deep_copyable_compatible_view_with_same_extent(view);
-  if constexpr (ViewType::rank == 1) {
-    CopyFunctor F1(view, view_dc);
-    Kokkos::parallel_for("copy", view.extent(0), F1);
-  } else {
-    static_assert(ViewType::rank == 2, "Only rank 1 or 2 supported.");
-    CopyFunctorRank2 F1(view, view_dc);
-    Kokkos::parallel_for("copy", view.extent(0) * view.extent(1), F1);
-  }
+  CopyFunctor F1(view, view_dc);
+  Kokkos::parallel_for("copy", view.extent(0), F1);
+  return view_dc;
+}
+
+template <class ViewType, std::enable_if_t< ViewType::rank == 2, int > = 0 >
+auto create_deep_copyable_compatible_clone(ViewType view)
+{
+  auto view_dc    = create_deep_copyable_compatible_view_with_same_extent(view);
+  CopyFunctorRank2 F1(view, view_dc);
+  Kokkos::parallel_for("copy", view.extent(0) * view.extent(1), F1);
   return view_dc;
 }
 
