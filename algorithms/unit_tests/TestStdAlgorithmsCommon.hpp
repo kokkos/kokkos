@@ -171,7 +171,8 @@ auto create_view(StridedThreeRowsTag, std::size_t ext0, std::size_t ext1,
   return view;
 }
 
-
+// THERE MUST BE A BETTER WAY
+#if defined KOKKOS_COMPILER_INTEL
 template <class ViewType>
 std::enable_if_t<
   ViewType::rank == 1,
@@ -197,23 +198,38 @@ create_deep_copyable_compatible_view_with_same_extent(ViewType view) {
   return result_t("view_dc", ext0, ext1);
 }
 
-template <class ViewType, std::enable_if_t< ViewType::rank == 1, int > = 0 >
-auto create_deep_copyable_compatible_clone(ViewType view)
-{
-  Kokkos::View<typename ViewType::value_type*,
-	       typename ViewType::execution_space> view_dc("view_dc", view.extent(0));
-  CopyFunctor F1(view, view_dc);
-  Kokkos::parallel_for("copy", view.extent(0), F1);
-  return view_dc;
+#else
+
+template <class ViewType>
+auto create_deep_copyable_compatible_view_with_same_extent(ViewType view) {
+  using view_value_type  = typename ViewType::value_type;
+  using view_exespace    = typename ViewType::execution_space;
+  const std::size_t ext0 = view.extent(0);
+  if constexpr (ViewType::rank == 1) {
+    using view_deep_copyable_t = Kokkos::View<view_value_type*, view_exespace>;
+    return view_deep_copyable_t{"view_dc", ext0};
+  } else {
+    static_assert(ViewType::rank == 2, "Only rank 1 or 2 supported.");
+    using view_deep_copyable_t = Kokkos::View<view_value_type**, view_exespace>;
+    const std::size_t ext1     = view.extent(1);
+    return view_deep_copyable_t{"view_dc", ext0, ext1};
+  }
 }
 
-template <class ViewType, std::enable_if_t< ViewType::rank == 2, int > = 0 >
-auto create_deep_copyable_compatible_clone(ViewType view)
-{
-  Kokkos::View<typename ViewType::value_type**,
-	       typename ViewType::execution_space> view_dc("view_dc", view.extent(0), view.extent(1));
-  CopyFunctorRank2 F1(view, view_dc);
-  Kokkos::parallel_for("copy", view.extent(0) * view.extent(1), F1);
+#endif
+
+template <class ViewType>
+auto create_deep_copyable_compatible_clone(ViewType view) {
+  auto view_dc    = create_deep_copyable_compatible_view_with_same_extent(view);
+  using view_dc_t = decltype(view_dc);
+  if constexpr (ViewType::rank == 1) {
+    CopyFunctor<ViewType, view_dc_t> F1(view, view_dc);
+    Kokkos::parallel_for("copy", view.extent(0), F1);
+  } else {
+    static_assert(ViewType::rank == 2, "Only rank 1 or 2 supported.");
+    CopyFunctorRank2<ViewType, view_dc_t> F1(view, view_dc);
+    Kokkos::parallel_for("copy", view.extent(0) * view.extent(1), F1);
+  }
   return view_dc;
 }
 
