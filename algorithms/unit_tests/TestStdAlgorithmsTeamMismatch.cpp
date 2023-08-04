@@ -67,7 +67,7 @@ struct TestFunctorA {
 
         const auto dataDist = KE::distance(dataBegin, dataIt);
         const auto compDist = KE::distance(compBegin, compIt);
-        Kokkos::single(Kokkos::PerTeam(member), [=, this]() {
+        Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
           m_resultsView(rowIndex) = Kokkos::make_pair(dataDist, compDist);
         });
 
@@ -80,7 +80,7 @@ struct TestFunctorA {
 
         const auto dataDist = KE::distance(dataBegin, dataIt);
         const auto compDist = KE::distance(compBegin, compIt);
-        Kokkos::single(Kokkos::PerTeam(member), [=, this]() {
+        Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
           m_resultsView(rowIndex) = Kokkos::make_pair(dataDist, compDist);
         });
 
@@ -92,7 +92,7 @@ struct TestFunctorA {
 
         const std::size_t dataDist = KE::distance(dataBegin, dataIt);
         const std::size_t compDist = KE::distance(compBegin, compIt);
-        Kokkos::single(Kokkos::PerTeam(member), [=, this]() {
+        Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
           m_resultsView(rowIndex) = Kokkos::make_pair(dataDist, compDist);
         });
 
@@ -105,7 +105,7 @@ struct TestFunctorA {
 
         const std::size_t dataDist = KE::distance(dataBegin, dataIt);
         const std::size_t compDist = KE::distance(compBegin, compIt);
-        Kokkos::single(Kokkos::PerTeam(member), [=, this]() {
+        Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
           m_resultsView(rowIndex) = Kokkos::make_pair(dataDist, compDist);
         });
 
