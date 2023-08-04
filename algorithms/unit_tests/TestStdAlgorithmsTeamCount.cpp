@@ -47,7 +47,7 @@ struct TestFunctorA {
         auto result =
             KE::count(member, KE::cbegin(rowView), KE::cend(rowView), value);
         Kokkos::single(Kokkos::PerTeam(member),
-                       [=]() { m_countsView(rowIndex) = result; });
+                       [=, this]() { m_countsView(rowIndex) = result; });
 
         break;
       }
@@ -55,7 +55,7 @@ struct TestFunctorA {
       case 1: {
         auto result = KE::count(member, rowView, value);
         Kokkos::single(Kokkos::PerTeam(member),
-                       [=]() { m_countsView(rowIndex) = result; });
+                       [=, this]() { m_countsView(rowIndex) = result; });
 
         break;
       }
