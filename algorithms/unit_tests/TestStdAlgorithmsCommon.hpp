@@ -171,20 +171,25 @@ auto create_view(StridedThreeRowsTag, std::size_t ext0, std::size_t ext1,
   return view;
 }
 
-template <class ViewType>
+template <class ViewType, std::enable_if_t<ViewType::rank == 1, int> = 0>
 auto create_deep_copyable_compatible_view_with_same_extent(ViewType view) {
-  using view_value_type  = typename ViewType::value_type;
-  using view_exespace    = typename ViewType::execution_space;
+  using view_value_type      = typename ViewType::value_type;
+  using view_exespace        = typename ViewType::execution_space;
+  using view_deep_copyable_t = Kokkos::View<view_value_type*, view_exespace>;
+
   const std::size_t ext0 = view.extent(0);
-  if constexpr (ViewType::rank == 1) {
-    using view_deep_copyable_t = Kokkos::View<view_value_type*, view_exespace>;
-    return view_deep_copyable_t{"view_dc", ext0};
-  } else {
-    static_assert(ViewType::rank == 2, "Only rank 1 or 2 supported.");
-    using view_deep_copyable_t = Kokkos::View<view_value_type**, view_exespace>;
-    const std::size_t ext1     = view.extent(1);
-    return view_deep_copyable_t{"view_dc", ext0, ext1};
-  }
+  return view_deep_copyable_t{"view_dc", ext0};
+}
+
+template <class ViewType, std::enable_if_t<ViewType::rank == 2, int> = 0>
+auto create_deep_copyable_compatible_view_with_same_extent(ViewType view) {
+  using view_value_type      = typename ViewType::value_type;
+  using view_exespace        = typename ViewType::execution_space;
+  using view_deep_copyable_t = Kokkos::View<view_value_type**, view_exespace>;
+
+  const std::size_t ext0 = view.extent(0);
+  const std::size_t ext1 = view.extent(1);
+  return view_deep_copyable_t{"view_dc", ext0, ext1};
 }
 
 template <class ViewType>
