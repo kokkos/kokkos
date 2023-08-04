@@ -34,8 +34,14 @@ void sort([[maybe_unused]] const ExecutionSpace& exec,
   // constraints
   using ViewType = Kokkos::View<DataType, Properties...>;
   using MemSpace = typename ViewType::memory_space;
-  static_assert(ViewType::rank == 1,
-                "Kokkos::sort: currently only supports rank-1 Views.");
+  static_assert(
+      ViewType::rank == 1 &&
+          (std::is_same_v<typename ViewType::array_layout, LayoutRight> ||
+           std::is_same_v<typename ViewType::array_layout, LayoutLeft> ||
+           std::is_same_v<typename ViewType::array_layout, LayoutStride>),
+      "Kokkos::sort without comparator: supports 1D Views with LayoutRight, "
+      "LayoutLeft or LayoutStride.");
+
   static_assert(SpaceAccessibility<ExecutionSpace, MemSpace>::accessible,
                 "Kokkos::sort: execution space instance is not able to access "
                 "the memory space of the "
