@@ -80,7 +80,7 @@ jobs:
             -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
             -DKokkos_ENABLE_EXAMPLES=ON \
             -DKokkos_ENABLE_HPX=ON \
-            -DKokkos_ENABLE_SERIAL=OFF \
+            -DKokkos_ENABLE_SERIAL=ON \
             -DKokkos_ENABLE_TESTS=ON \
             ..
 

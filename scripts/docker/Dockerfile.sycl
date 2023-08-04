@@ -1,4 +1,4 @@
-ARG BASE=nvidia/cuda:11.7.0-devel-ubuntu22.04
+ARG BASE=nvidia/cuda:11.7.1-devel-ubuntu22.04
 FROM $BASE
 
 RUN apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/3bf863cc.pub
