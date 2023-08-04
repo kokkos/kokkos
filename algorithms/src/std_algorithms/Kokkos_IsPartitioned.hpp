@@ -26,27 +26,30 @@ namespace Experimental {
 //
 // overload set accepting execution space
 //
-template <class ExecutionSpace, class IteratorType, class PredicateType>
-std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, bool>
-is_partitioned(const ExecutionSpace& ex, IteratorType first, IteratorType last,
+template <typename ExecutionSpace, typename IteratorType, typename PredicateType,
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>,
+    int> = 0>
+bool is_partitioned(const ExecutionSpace& ex, IteratorType first, IteratorType last,
                PredicateType p) {
   return Impl::is_partitioned_exespace_impl(
       "Kokkos::is_partitioned_iterator_api_default", ex, first, last,
       std::move(p));
 }
 
-template <class ExecutionSpace, class IteratorType, class PredicateType>
-std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, bool>
-is_partitioned(const std::string& label, const ExecutionSpace& ex,
+template <typename ExecutionSpace, typename IteratorType, typename PredicateType,
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>,
+    int> = 0>
+bool is_partitioned(const std::string& label, const ExecutionSpace& ex,
                IteratorType first, IteratorType last, PredicateType p) {
   return Impl::is_partitioned_exespace_impl(label, ex, first, last,
                                             std::move(p));
 }
 
-template <class ExecutionSpace, class PredicateType, class DataType,
-          class... Properties>
-std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, bool>
-is_partitioned(const ExecutionSpace& ex,
+template <typename ExecutionSpace, typename PredicateType, typename DataType,
+          typename... Properties,
+          std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>,
+          int> = 0>
+bool is_partitioned(const ExecutionSpace& ex,
                const ::Kokkos::View<DataType, Properties...>& v,
                PredicateType p) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
@@ -56,10 +59,11 @@ is_partitioned(const ExecutionSpace& ex,
       std::move(p));
 }
 
-template <class ExecutionSpace, class PredicateType, class DataType,
-          class... Properties>
-std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, bool>
-is_partitioned(const std::string& label, const ExecutionSpace& ex,
+template <typename ExecutionSpace, typename PredicateType, typename DataType,
+          typename... Properties,
+          std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>,
+          int> = 0>
+bool is_partitioned(const std::string& label, const ExecutionSpace& ex,
                const ::Kokkos::View<DataType, Properties...>& v,
                PredicateType p) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
@@ -73,19 +77,21 @@ is_partitioned(const std::string& label, const ExecutionSpace& ex,
 // Note: for now omit the overloads accepting a label
 // since they cause issues on device because of the string allocation.
 //
-template <class TeamHandleType, class IteratorType, class PredicateType>
+template <typename TeamHandleType, typename IteratorType, typename PredicateType,
+    std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>,
+    int> = 0>
 KOKKOS_FUNCTION
-    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, bool>
-    is_partitioned(const TeamHandleType& teamHandle, IteratorType first,
+bool is_partitioned(const TeamHandleType& teamHandle, IteratorType first,
                    IteratorType last, PredicateType p) {
   return Impl::is_partitioned_team_impl(teamHandle, first, last, std::move(p));
 }
 
-template <class TeamHandleType, class PredicateType, class DataType,
-          class... Properties>
+template <typename TeamHandleType, typename PredicateType, typename DataType,
+          typename... Properties,
+          std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>,
+          int> = 0>
 KOKKOS_FUNCTION
-    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, bool>
-    is_partitioned(const TeamHandleType& teamHandle,
+bool is_partitioned(const TeamHandleType& teamHandle,
                    const ::Kokkos::View<DataType, Properties...>& v,
                    PredicateType p) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);

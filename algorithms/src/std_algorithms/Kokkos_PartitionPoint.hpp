@@ -26,28 +26,28 @@ namespace Experimental {
 //
 // overload set accepting execution space
 //
-template <class ExecutionSpace, class IteratorType, class UnaryPredicate>
-std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
-                 IteratorType>
-partition_point(const ExecutionSpace& ex, IteratorType first, IteratorType last,
+template <typename ExecutionSpace, typename IteratorType, typename UnaryPredicate,
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>,
+    int> = 0>
+IteratorType partition_point(const ExecutionSpace& ex, IteratorType first, IteratorType last,
                 UnaryPredicate p) {
   return Impl::partition_point_exespace_impl(
       "Kokkos::partitioned_point_iterator_api_default", ex, first, last,
       std::move(p));
 }
 
-template <class ExecutionSpace, class IteratorType, class UnaryPredicate>
-std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
-                 IteratorType>
-partition_point(const std::string& label, const ExecutionSpace& ex,
+template <typename ExecutionSpace, typename IteratorType, typename UnaryPredicate,
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>,
+    int> = 0>
+IteratorType partition_point(const std::string& label, const ExecutionSpace& ex,
                 IteratorType first, IteratorType last, UnaryPredicate p) {
   return Impl::partition_point_exespace_impl(label, ex, first, last,
                                              std::move(p));
 }
 
-template <class ExecutionSpace, class UnaryPredicate, class DataType,
-          class... Properties,
-          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+template <typename ExecutionSpace, typename UnaryPredicate, typename DataType,
+          typename... Properties,
+          std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>,
                            int> = 0>
 auto partition_point(const std::string& label, const ExecutionSpace& ex,
                      const ::Kokkos::View<DataType, Properties...>& v,
@@ -57,9 +57,9 @@ auto partition_point(const std::string& label, const ExecutionSpace& ex,
                                              std::move(p));
 }
 
-template <class ExecutionSpace, class UnaryPredicate, class DataType,
-          class... Properties,
-          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+template <typename ExecutionSpace, typename UnaryPredicate, typename DataType,
+          typename... Properties,
+          std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>,
                            int> = 0>
 auto partition_point(const ExecutionSpace& ex,
                      const ::Kokkos::View<DataType, Properties...>& v,
@@ -75,18 +75,19 @@ auto partition_point(const ExecutionSpace& ex,
 // Note: for now omit the overloads accepting a label
 // since they cause issues on device because of the string allocation.
 //
-template <class TeamHandleType, class IteratorType, class UnaryPredicate>
-KOKKOS_FUNCTION std::enable_if_t<
-    ::Kokkos::is_team_handle<TeamHandleType>::value, IteratorType>
-partition_point(const TeamHandleType& teamHandle, IteratorType first,
+template <typename TeamHandleType, typename IteratorType, typename UnaryPredicate,
+    std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>,
+    int> = 0>
+KOKKOS_FUNCTION
+IteratorType partition_point(const TeamHandleType& teamHandle, IteratorType first,
                 IteratorType last, UnaryPredicate p) {
   return Impl::partition_point_team_impl(teamHandle, first, last, std::move(p));
 }
 
 template <
-    class TeamHandleType, class UnaryPredicate, class DataType,
-    class... Properties,
-    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, int> = 0>
+    typename TeamHandleType, typename UnaryPredicate, typename DataType,
+    typename... Properties,
+    std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>, int> = 0>
 KOKKOS_FUNCTION auto partition_point(
     const TeamHandleType& teamHandle,
     const ::Kokkos::View<DataType, Properties...>& v, UnaryPredicate p) {

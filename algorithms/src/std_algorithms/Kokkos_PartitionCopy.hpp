@@ -27,9 +27,9 @@ namespace Experimental {
 // overload set accepting execution space
 //
 template <
-    class ExecutionSpace, class InputIteratorType, class OutputIteratorTrueType,
-    class OutputIteratorFalseType, class PredicateType,
-    std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, int> =
+    typename ExecutionSpace, typename InputIteratorType, typename OutputIteratorTrueType,
+    typename OutputIteratorFalseType, typename PredicateType,
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> =
         0>
 ::Kokkos::pair<OutputIteratorTrueType, OutputIteratorFalseType> partition_copy(
     const ExecutionSpace& ex, InputIteratorType from_first,
@@ -41,9 +41,9 @@ template <
 }
 
 template <
-    class ExecutionSpace, class InputIteratorType, class OutputIteratorTrueType,
-    class OutputIteratorFalseType, class PredicateType,
-    std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, int> =
+    typename ExecutionSpace, typename InputIteratorType, typename OutputIteratorTrueType,
+    typename OutputIteratorFalseType, typename PredicateType,
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> =
         0>
 ::Kokkos::pair<OutputIteratorTrueType, OutputIteratorFalseType> partition_copy(
     const std::string& label, const ExecutionSpace& ex,
@@ -55,10 +55,10 @@ template <
                                             std::move(p));
 }
 
-template <class ExecutionSpace, class DataType1, class... Properties1,
-          class DataType2, class... Properties2, class DataType3,
-          class... Properties3, class PredicateType,
-          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+template <typename ExecutionSpace, typename DataType1, typename... Properties1,
+          typename DataType2, typename... Properties2, typename DataType3,
+          typename... Properties3, typename PredicateType,
+          std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>,
                            int> = 0>
 auto partition_copy(
     const ExecutionSpace& ex,
@@ -72,10 +72,10 @@ auto partition_copy(
       std::move(p));
 }
 
-template <class ExecutionSpace, class DataType1, class... Properties1,
-          class DataType2, class... Properties2, class DataType3,
-          class... Properties3, class PredicateType,
-          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+template <typename ExecutionSpace, typename DataType1, typename... Properties1,
+          typename DataType2, typename... Properties2, typename DataType3,
+          typename... Properties3, typename PredicateType,
+          std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>,
                            int> = 0>
 auto partition_copy(
     const std::string& label, const ExecutionSpace& ex,
@@ -94,9 +94,9 @@ auto partition_copy(
 // since they cause issues on device because of the string allocation.
 //
 template <
-    class TeamHandleType, class InputIteratorType, class OutputIteratorTrueType,
-    class OutputIteratorFalseType, class PredicateType,
-    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, int> = 0>
+    typename TeamHandleType, typename InputIteratorType, typename OutputIteratorTrueType,
+    typename OutputIteratorFalseType, typename PredicateType,
+    std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>, int> = 0>
 KOKKOS_FUNCTION ::Kokkos::pair<OutputIteratorTrueType, OutputIteratorFalseType>
 partition_copy(const TeamHandleType& teamHandle, InputIteratorType from_first,
                InputIteratorType from_last,
@@ -108,10 +108,10 @@ partition_copy(const TeamHandleType& teamHandle, InputIteratorType from_first,
 }
 
 template <
-    class TeamHandleType, class DataType1, class... Properties1,
-    class DataType2, class... Properties2, class DataType3,
-    class... Properties3, class PredicateType,
-    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, int> = 0>
+    typename TeamHandleType, typename DataType1, typename... Properties1,
+    typename DataType2, typename... Properties2, typename DataType3,
+    typename... Properties3, typename PredicateType,
+    std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>, int> = 0>
 KOKKOS_FUNCTION auto partition_copy(
     const TeamHandleType& teamHandle,
     const ::Kokkos::View<DataType1, Properties1...>& view_from,
