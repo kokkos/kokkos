@@ -200,7 +200,8 @@ create_deep_copyable_compatible_view_with_same_extent(ViewType view) {
 template <class ViewType, std::enable_if_t< ViewType::rank == 1, int > = 0 >
 auto create_deep_copyable_compatible_clone(ViewType view)
 {
-  auto view_dc    = create_deep_copyable_compatible_view_with_same_extent(view);
+  Kokkos::View<typename ViewType::value_type*,
+	       typename ViewType::execution_space> view_dc("view_dc", view.extent(0));
   CopyFunctor F1(view, view_dc);
   Kokkos::parallel_for("copy", view.extent(0), F1);
   return view_dc;
@@ -209,7 +210,8 @@ auto create_deep_copyable_compatible_clone(ViewType view)
 template <class ViewType, std::enable_if_t< ViewType::rank == 2, int > = 0 >
 auto create_deep_copyable_compatible_clone(ViewType view)
 {
-  auto view_dc    = create_deep_copyable_compatible_view_with_same_extent(view);
+  Kokkos::View<typename ViewType::value_type**,
+	       typename ViewType::execution_space> view_dc("view_dc", view.extent(0), view.extent(1));
   CopyFunctorRank2 F1(view, view_dc);
   Kokkos::parallel_for("copy", view.extent(0) * view.extent(1), F1);
   return view_dc;
