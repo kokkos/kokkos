@@ -171,33 +171,6 @@ auto create_view(StridedThreeRowsTag, std::size_t ext0, std::size_t ext1,
   return view;
 }
 
-// THERE MUST BE A BETTER WAY
-#if defined KOKKOS_COMPILER_INTEL
-template <class ViewType>
-std::enable_if_t<ViewType::rank == 1,
-                 Kokkos::View<typename ViewType::value_type*,
-                              typename ViewType::execution_space> >
-create_deep_copyable_compatible_view_with_same_extent(ViewType view) {
-  using result_t         = Kokkos::View<typename ViewType::value_type*,
-                                typename ViewType::execution_space>;
-  const std::size_t ext0 = view.extent(0);
-  return result_t("view_dc", ext0);
-}
-
-template <class ViewType>
-std::enable_if_t<ViewType::rank == 2,
-                 Kokkos::View<typename ViewType::value_type**,
-                              typename ViewType::execution_space> >
-create_deep_copyable_compatible_view_with_same_extent(ViewType view) {
-  using result_t         = Kokkos::View<typename ViewType::value_type**,
-                                typename ViewType::execution_space>;
-  const std::size_t ext0 = view.extent(0);
-  const std::size_t ext1 = view.extent(1);
-  return result_t("view_dc", ext0, ext1);
-}
-
-#else
-
 template <class ViewType>
 auto create_deep_copyable_compatible_view_with_same_extent(ViewType view) {
   using view_value_type  = typename ViewType::value_type;
@@ -212,9 +185,13 @@ auto create_deep_copyable_compatible_view_with_same_extent(ViewType view) {
     const std::size_t ext1     = view.extent(1);
     return view_deep_copyable_t{"view_dc", ext0, ext1};
   }
-}
 
+  // this is needed for intel to avoid
+  // error #1011: missing return statement at end of non-void function
+#if defined KOKKOS_COMPILER_INTEL
+  __builtin_unreachable();
 #endif
+}
 
 template <class ViewType>
 auto create_deep_copyable_compatible_clone(ViewType view) {
