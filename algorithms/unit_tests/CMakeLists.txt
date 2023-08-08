@@ -191,9 +191,9 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
 endforeach()
 
 
-# need to remove tests for OpenMPTarget because in these cases
-# the impl needs to use either Kokkos or tailored reducers
-# which results in runtime memory errors.
+# FIXME_OPENMPTARGET need to remove tests for OpenMPTarget because
+# in these cases the impl needs to use either Kokkos or
+# tailored reducers which results in runtime memory errors.
 if(KOKKOS_ENABLE_OPENMPTARGET)
   list(REMOVE_ITEM STDALGO_TEAM_SOURCES_C
     TestStdAlgorithmsTeamFind.cpp

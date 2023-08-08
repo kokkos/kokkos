@@ -79,7 +79,6 @@ bool all_of(const std::string& label, const ExecutionSpace& ex,
 //
 template <typename TeamHandleType, typename InputIterator, typename Predicate,
           std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>, int> = 0>
-
 KOKKOS_FUNCTION bool all_of(const TeamHandleType& teamHandle,
                             InputIterator first, InputIterator last,
                             Predicate predicate) {
