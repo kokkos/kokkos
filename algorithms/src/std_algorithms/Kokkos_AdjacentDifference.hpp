@@ -26,12 +26,13 @@ namespace Experimental {
 //
 // overload set accepting execution space
 //
-template <class ExecutionSpace, class InputIteratorType,
-          class OutputIteratorType>
-std::enable_if_t<!::Kokkos::is_view<InputIteratorType>::value &&
-                     ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                 OutputIteratorType>
-adjacent_difference(const ExecutionSpace& ex, InputIteratorType first_from,
+template <
+  typename ExecutionSpace, typename InputIteratorType,
+  typename OutputIteratorType,
+  std::enable_if_t<!::Kokkos::is_view<InputIteratorType>::value &&
+		 ::Kokkos::is_execution_space<ExecutionSpace>::value, int > = 0
+  >
+OutputIteratorType adjacent_difference(const ExecutionSpace& ex, InputIteratorType first_from,
                     InputIteratorType last_from,
                     OutputIteratorType first_dest) {
   using value_type1 = typename InputIteratorType::value_type;
@@ -44,11 +45,12 @@ adjacent_difference(const ExecutionSpace& ex, InputIteratorType first_from,
       first_dest, binary_op());
 }
 
-template <class ExecutionSpace, class InputIteratorType,
-          class OutputIteratorType, class BinaryOp>
-std::enable_if_t<!::Kokkos::is_view<InputIteratorType>::value &&
-                     ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                 OutputIteratorType>
+template <typename ExecutionSpace, typename InputIteratorType,
+          typename OutputIteratorType, typename BinaryOp,
+	  std::enable_if_t<!::Kokkos::is_view<InputIteratorType>::value &&
+			   ::Kokkos::is_execution_space<ExecutionSpace>::value, int > = 0
+	  >
+OutputIteratorType
 adjacent_difference(const ExecutionSpace& ex, InputIteratorType first_from,
                     InputIteratorType last_from, OutputIteratorType first_dest,
                     BinaryOp bin_op) {
@@ -57,11 +59,12 @@ adjacent_difference(const ExecutionSpace& ex, InputIteratorType first_from,
       first_dest, bin_op);
 }
 
-template <class ExecutionSpace, class InputIteratorType,
-          class OutputIteratorType>
-std::enable_if_t<!::Kokkos::is_view<InputIteratorType>::value &&
-                     ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                 OutputIteratorType>
+template <typename ExecutionSpace, typename InputIteratorType,
+          typename OutputIteratorType,
+	  std::enable_if_t<!::Kokkos::is_view<InputIteratorType>::value &&
+		   ::Kokkos::is_execution_space<ExecutionSpace>::value, int > = 0
+	  >
+OutputIteratorType
 adjacent_difference(const std::string& label, const ExecutionSpace& ex,
                     InputIteratorType first_from, InputIteratorType last_from,
                     OutputIteratorType first_dest) {
@@ -74,11 +77,12 @@ adjacent_difference(const std::string& label, const ExecutionSpace& ex,
       label, ex, first_from, last_from, first_dest, binary_op());
 }
 
-template <class ExecutionSpace, class InputIteratorType,
-          class OutputIteratorType, class BinaryOp>
-std::enable_if_t<!::Kokkos::is_view<InputIteratorType>::value &&
-                     ::Kokkos::is_execution_space<ExecutionSpace>::value,
-                 OutputIteratorType>
+template <typename ExecutionSpace, typename InputIteratorType,
+  typename OutputIteratorType, typename BinaryOp,
+  std::enable_if_t<!::Kokkos::is_view<InputIteratorType>::value &&
+		   ::Kokkos::is_execution_space<ExecutionSpace>::value, int > = 0
+	  >
+OutputIteratorType
 adjacent_difference(const std::string& label, const ExecutionSpace& ex,
                     InputIteratorType first_from, InputIteratorType last_from,
                     OutputIteratorType first_dest, BinaryOp bin_op) {
@@ -86,8 +90,8 @@ adjacent_difference(const std::string& label, const ExecutionSpace& ex,
                                                  last_from, first_dest, bin_op);
 }
 
-template <class ExecutionSpace, class DataType1, class... Properties1,
-          class DataType2, class... Properties2,
+template <typename ExecutionSpace, typename DataType1, typename... Properties1,
+          typename DataType2, typename... Properties2,
           std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
                            int> = 0>
 auto adjacent_difference(
@@ -110,8 +114,8 @@ auto adjacent_difference(
       KE::cend(view_from), KE::begin(view_dest), binary_op());
 }
 
-template <class ExecutionSpace, class DataType1, class... Properties1,
-          class DataType2, class... Properties2, class BinaryOp,
+template <typename ExecutionSpace, typename DataType1, typename... Properties1,
+          typename DataType2, typename... Properties2, typename BinaryOp,
           std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
                            int> = 0>
 auto adjacent_difference(
@@ -127,8 +131,8 @@ auto adjacent_difference(
       KE::cend(view_from), KE::begin(view_dest), bin_op);
 }
 
-template <class ExecutionSpace, class DataType1, class... Properties1,
-          class DataType2, class... Properties2,
+template <typename ExecutionSpace, typename DataType1, typename... Properties1,
+          typename DataType2, typename... Properties2,
           std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
                            int> = 0>
 auto adjacent_difference(
@@ -152,8 +156,8 @@ auto adjacent_difference(
       KE::begin(view_dest), binary_op());
 }
 
-template <class ExecutionSpace, class DataType1, class... Properties1,
-          class DataType2, class... Properties2, class BinaryOp,
+template <typename ExecutionSpace, typename DataType1, typename... Properties1,
+          typename DataType2, typename... Properties2, typename BinaryOp,
           std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
                            int> = 0>
 auto adjacent_difference(
@@ -174,13 +178,14 @@ auto adjacent_difference(
 // Note: for now omit the overloads accepting a label
 // since they cause issues on device because of the string allocation.
 //
-template <class TeamHandleType, class InputIteratorType,
-          class OutputIteratorType>
+template <
+  typename TeamHandleType, typename InputIteratorType,
+  typename OutputIteratorType,
+  std::enable_if_t<!::Kokkos::is_view<InputIteratorType>::value &&
+		   ::Kokkos::is_team_handle<TeamHandleType>::value, int > = 0
+  >
 KOKKOS_FUNCTION
-    std::enable_if_t<!::Kokkos::is_view<InputIteratorType>::value &&
-                         ::Kokkos::is_team_handle<TeamHandleType>::value,
-                     OutputIteratorType>
-    adjacent_difference(const TeamHandleType& teamHandle,
+OutputIteratorType adjacent_difference(const TeamHandleType& teamHandle,
                         InputIteratorType first_from,
                         InputIteratorType last_from,
                         OutputIteratorType first_dest) {
@@ -193,13 +198,13 @@ KOKKOS_FUNCTION
                                              first_dest, binary_op());
 }
 
-template <class TeamHandleType, class InputIteratorType,
-          class OutputIteratorType, class BinaryOp>
+template <typename TeamHandleType, typename InputIteratorType,
+  typename OutputIteratorType, typename BinaryOp,
+  std::enable_if_t<!::Kokkos::is_view<InputIteratorType>::value &&
+  ::Kokkos::is_team_handle<TeamHandleType>::value, int > = 0
+  >
 KOKKOS_FUNCTION
-    std::enable_if_t<!::Kokkos::is_view<InputIteratorType>::value &&
-                         ::Kokkos::is_team_handle<TeamHandleType>::value,
-                     OutputIteratorType>
-    adjacent_difference(const TeamHandleType& teamHandle,
+OutputIteratorType adjacent_difference(const TeamHandleType& teamHandle,
                         InputIteratorType first_from,
                         InputIteratorType last_from,
                         OutputIteratorType first_dest, BinaryOp bin_op) {
@@ -208,8 +213,8 @@ KOKKOS_FUNCTION
 }
 
 template <
-    class TeamHandleType, class DataType1, class... Properties1,
-    class DataType2, class... Properties2,
+    typename TeamHandleType, typename DataType1, typename... Properties1,
+    typename DataType2, typename... Properties2,
     std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, int> = 0>
 KOKKOS_FUNCTION auto adjacent_difference(
     const TeamHandleType& teamHandle,
@@ -232,8 +237,8 @@ KOKKOS_FUNCTION auto adjacent_difference(
 }
 
 template <
-    class TeamHandleType, class DataType1, class... Properties1,
-    class DataType2, class... Properties2, class BinaryOp,
+    typename TeamHandleType, typename DataType1, typename... Properties1,
+    typename DataType2, typename... Properties2, typename BinaryOp,
     std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, int> = 0>
 KOKKOS_FUNCTION auto adjacent_difference(
     const TeamHandleType& teamHandle,
