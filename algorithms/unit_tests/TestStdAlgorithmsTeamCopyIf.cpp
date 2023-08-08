@@ -65,14 +65,14 @@ struct TestFunctorA {
           KE::copy_if(member, KE::begin(myRowViewFrom), KE::end(myRowViewFrom),
                       KE::begin(myRowViewDest), predicate);
 
-      Kokkos::single(Kokkos::PerTeam(member), [=]() {
+      Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
         m_distancesView(myRowIndex) =
             KE::distance(KE::begin(myRowViewDest), it);
       });
     } else if (m_apiPick == 1) {
       auto it = KE::copy_if(member, myRowViewFrom, myRowViewDest, predicate);
 
-      Kokkos::single(Kokkos::PerTeam(member), [=]() {
+      Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
         m_distancesView(myRowIndex) =
             KE::distance(KE::begin(myRowViewDest), it);
       });

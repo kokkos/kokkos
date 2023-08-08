@@ -58,12 +58,12 @@ struct TestFunctorA {
       auto it = KE::remove_if(member, KE::begin(myRowView), KE::end(myRowView),
                               predicate);
 
-      Kokkos::single(Kokkos::PerTeam(member), [=]() {
+      Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
         m_distancesView(myRowIndex) = KE::distance(KE::begin(myRowView), it);
       });
     } else if (m_apiPick == 1) {
       auto it = KE::remove_if(member, myRowView, predicate);
-      Kokkos::single(Kokkos::PerTeam(member), [=]() {
+      Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
         m_distancesView(myRowIndex) = KE::distance(KE::begin(myRowView), it);
       });
     }
