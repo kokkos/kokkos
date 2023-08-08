@@ -58,15 +58,17 @@ struct TestFunctorA {
       case 0: {
         const bool result = KE::all_of(member, KE::cbegin(myRowViewFrom),
                                        KE::cend(myRowViewFrom), m_unaryPred);
-        Kokkos::single(Kokkos::PerTeam(member),
-                       [=]() { m_allOfResultsView(myRowIndex) = result; });
+        Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
+          m_allOfResultsView(myRowIndex) = result;
+        });
         break;
       }
 
       case 1: {
         const bool result = KE::all_of(member, myRowViewFrom, m_unaryPred);
-        Kokkos::single(Kokkos::PerTeam(member),
-                       [=]() { m_allOfResultsView(myRowIndex) = result; });
+        Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
+          m_allOfResultsView(myRowIndex) = result;
+        });
         break;
       }
     }
