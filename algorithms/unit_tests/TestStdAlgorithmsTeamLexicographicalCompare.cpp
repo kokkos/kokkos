@@ -67,7 +67,7 @@ struct TestFunctorA {
         const bool result = KE::lexicographical_compare(
             member, dataBegin, dataEnd, compBegin, compEnd);
         Kokkos::single(Kokkos::PerTeam(member),
-                       [=]() { m_resultsView(rowIndex) = result; });
+                       [=, *this]() { m_resultsView(rowIndex) = result; });
         break;
       }
 
@@ -75,7 +75,7 @@ struct TestFunctorA {
         const bool result =
             KE::lexicographical_compare(member, rowData, rowComp);
         Kokkos::single(Kokkos::PerTeam(member),
-                       [=]() { m_resultsView(rowIndex) = result; });
+                       [=, *this]() { m_resultsView(rowIndex) = result; });
         break;
       }
 
@@ -83,7 +83,7 @@ struct TestFunctorA {
         const bool result = KE::lexicographical_compare(
             member, dataBegin, dataEnd, compBegin, compEnd, m_binaryComp);
         Kokkos::single(Kokkos::PerTeam(member),
-                       [=]() { m_resultsView(rowIndex) = result; });
+                       [=, *this]() { m_resultsView(rowIndex) = result; });
         break;
       }
 
@@ -91,7 +91,7 @@ struct TestFunctorA {
         const bool result =
             KE::lexicographical_compare(member, rowData, rowComp, m_binaryComp);
         Kokkos::single(Kokkos::PerTeam(member),
-                       [=]() { m_resultsView(rowIndex) = result; });
+                       [=, *this]() { m_resultsView(rowIndex) = result; });
         break;
       }
     }

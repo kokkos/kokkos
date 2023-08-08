@@ -58,11 +58,11 @@ struct TestFunctorA {
                                   KE::end(myRowView), predicate);
 
       Kokkos::single(Kokkos::PerTeam(member),
-                     [=]() { m_countsView(myRowIndex) = myCount; });
+                     [=, *this]() { m_countsView(myRowIndex) = myCount; });
     } else if (m_apiPick == 1) {
       auto myCount = KE::count_if(member, myRowView, predicate);
       Kokkos::single(Kokkos::PerTeam(member),
-                     [=]() { m_countsView(myRowIndex) = myCount; });
+                     [=, *this]() { m_countsView(myRowIndex) = myCount; });
     }
   }
 };
