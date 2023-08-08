@@ -3,6 +3,9 @@
 IF ((KOKKOS_ENABLE_OPENMPTARGET OR KOKKOS_ENABLE_OPENACC) AND KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
   RETURN()
 ENDIF()
+IF (KOKKOS_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
+  RETURN()
+ENDIF()
 
 # all PerformanceTest_* executables are part of regular tests
 # TODO: finish converting these into benchmarks (in progress)
