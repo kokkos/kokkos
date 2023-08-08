@@ -42,7 +42,7 @@ struct TestFunctorA {
       auto itPair = KE::minmax_element(member, KE::cbegin(myRowView),
                                        KE::cend(myRowView));
 
-      Kokkos::single(Kokkos::PerTeam(member), [=]() {
+      Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
         m_distancesView(myRowIndex, 0) =
             KE::distance(KE::cbegin(myRowView), itPair.first);
         m_distancesView(myRowIndex, 1) =
@@ -53,7 +53,7 @@ struct TestFunctorA {
     else if (m_apiPick == 1) {
       auto itPair = KE::minmax_element(member, myRowView);
 
-      Kokkos::single(Kokkos::PerTeam(member), [=]() {
+      Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
         m_distancesView(myRowIndex, 0) =
             KE::distance(KE::begin(myRowView), itPair.first);
         m_distancesView(myRowIndex, 1) =
@@ -66,7 +66,7 @@ struct TestFunctorA {
       auto itPair =
           KE::minmax_element(member, KE::cbegin(myRowView), KE::cend(myRowView),
                              CustomLessThanComparator<value_type>{});
-      Kokkos::single(Kokkos::PerTeam(member), [=]() {
+      Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
         m_distancesView(myRowIndex, 0) =
             KE::distance(KE::cbegin(myRowView), itPair.first);
         m_distancesView(myRowIndex, 1) =
@@ -78,7 +78,7 @@ struct TestFunctorA {
       using value_type = typename ViewType::value_type;
       auto itPair      = KE::minmax_element(member, myRowView,
                                        CustomLessThanComparator<value_type>{});
-      Kokkos::single(Kokkos::PerTeam(member), [=]() {
+      Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
         m_distancesView(myRowIndex, 0) =
             KE::distance(KE::begin(myRowView), itPair.first);
         m_distancesView(myRowIndex, 1) =
