@@ -11957,7 +11957,7 @@ static const char* GetCharWidthPrefix(unsigned char) {
   return "";
 }
 
-#ifdef __cpp_char8_t
+#ifdef __cpp_lib_char8_t
 static const char* GetCharWidthPrefix(char8_t) {
   return "u8";
 }
@@ -11981,7 +11981,7 @@ static CharFormat PrintAsStringLiteralTo(char c, ostream* os) {
   return PrintAsStringLiteralTo(ToChar32(c), os);
 }
 
-#ifdef __cpp_char8_t
+#ifdef __cpp_lib_char8_t
 static CharFormat PrintAsStringLiteralTo(char8_t c, ostream* os) {
   return PrintAsStringLiteralTo(ToChar32(c), os);
 }
@@ -12103,7 +12103,7 @@ void UniversalPrintArray(const char* begin, size_t len, ostream* os) {
   UniversalPrintCharArray(begin, len, os);
 }
 
-#ifdef __cpp_char8_t
+#ifdef __cpp_lib_char8_t
 // Prints a (const) char8_t array of 'len' elements, starting at address
 // 'begin'.
 void UniversalPrintArray(const char8_t* begin, size_t len, ostream* os) {
@@ -12146,7 +12146,7 @@ void PrintCStringTo(const Char* s, ostream* os) {
 
 void PrintTo(const char* s, ostream* os) { PrintCStringTo(s, os); }
 
-#ifdef __cpp_char8_t
+#ifdef __cpp_lib_char8_t
 void PrintTo(const char8_t* s, ostream* os) { PrintCStringTo(s, os); }
 #endif
 
@@ -12240,7 +12240,7 @@ void PrintStringTo(const ::std::string& s, ostream* os) {
   }
 }
 
-#ifdef __cpp_char8_t
+#ifdef __cpp_lib_char8_t
 void PrintU8StringTo(const ::std::u8string& s, ostream* os) {
   PrintCharsAsStringTo(s.data(), s.size(), os);
 }

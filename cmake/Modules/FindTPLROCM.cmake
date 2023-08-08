@@ -3,6 +3,9 @@ include(FindPackageHandleStandardArgs)
 FIND_LIBRARY(AMD_HIP_LIBRARY amdhip64 PATHS ENV ROCM_PATH PATH_SUFFIXES lib)
 FIND_LIBRARY(HSA_RUNTIME_LIBRARY hsa-runtime64 PATHS ENV ROCM_PATH PATH_SUFFIXES lib)
 
+# FIXME_HIP Starting with ROCm 5.5 it is not necessary to link againt clang_rt.
+# We keep the code as is for now because it is hard to find the version of ROCM
+# found.
 # clang_rt.builtins is necessary to use half precision. The following code to
 # find clang_rt.buitins is based on
 # https://github.com/ROCm-Developer-Tools/HIP/blob/develop/hip-lang-config.cmake.in#L99-L111

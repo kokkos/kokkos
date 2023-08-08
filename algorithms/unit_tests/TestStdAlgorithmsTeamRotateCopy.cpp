@@ -53,7 +53,7 @@ struct TestFunctorA {
           KE::rotate_copy(member, KE::cbegin(myRowViewFrom), pivot,
                           KE::cend(myRowViewFrom), KE::begin(myRowViewDest));
 
-      Kokkos::single(Kokkos::PerTeam(member), [=]() {
+      Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
         m_distancesView(myRowIndex) =
             KE::distance(KE::begin(myRowViewDest), it);
       });
@@ -61,7 +61,7 @@ struct TestFunctorA {
       auto it =
           KE::rotate_copy(member, myRowViewFrom, m_pivotShift, myRowViewDest);
 
-      Kokkos::single(Kokkos::PerTeam(member), [=]() {
+      Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
         m_distancesView(myRowIndex) =
             KE::distance(KE::begin(myRowViewDest), it);
       });
