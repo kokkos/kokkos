@@ -244,7 +244,7 @@ foreach(ID A;B;C;D;E)
     )
 endforeach()
 
-foreach(ID A)
+foreach(ID A;G)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     AlgorithmsUnitTest_StdSet_Team_${ID}
     SOURCES
