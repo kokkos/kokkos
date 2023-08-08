@@ -61,7 +61,7 @@ struct TestFunctorA {
         const auto it = KE::search(
             member, KE::cbegin(myRowViewFrom), KE::cend(myRowViewFrom),
             KE::cbegin(myRowSearchedSeqView), KE::cend(myRowSearchedSeqView));
-        Kokkos::single(Kokkos::PerTeam(member), [=]() {
+        Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
           m_distancesView(myRowIndex) =
               KE::distance(KE::cbegin(myRowViewFrom), it);
         });
@@ -71,7 +71,7 @@ struct TestFunctorA {
 
       case 1: {
         const auto it = KE::search(member, myRowViewFrom, myRowSearchedSeqView);
-        Kokkos::single(Kokkos::PerTeam(member), [=]() {
+        Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
           m_distancesView(myRowIndex) =
               KE::distance(KE::begin(myRowViewFrom), it);
         });
@@ -84,7 +84,7 @@ struct TestFunctorA {
             member, KE::cbegin(myRowViewFrom), KE::cend(myRowViewFrom),
             KE::cbegin(myRowSearchedSeqView), KE::cend(myRowSearchedSeqView),
             m_binaryPred);
-        Kokkos::single(Kokkos::PerTeam(member), [=]() {
+        Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
           m_distancesView(myRowIndex) =
               KE::distance(KE::cbegin(myRowViewFrom), it);
         });
@@ -95,7 +95,7 @@ struct TestFunctorA {
       case 3: {
         const auto it = KE::search(member, myRowViewFrom, myRowSearchedSeqView,
                                    m_binaryPred);
-        Kokkos::single(Kokkos::PerTeam(member), [=]() {
+        Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
           m_distancesView(myRowIndex) =
               KE::distance(KE::begin(myRowViewFrom), it);
         });

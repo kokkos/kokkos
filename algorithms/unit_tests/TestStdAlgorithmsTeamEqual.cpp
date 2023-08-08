@@ -64,7 +64,7 @@ struct TestFunctorA {
       case 0: {
         const bool result = KE::equal(member, dataBegin, dataEnd, compBegin);
         Kokkos::single(Kokkos::PerTeam(member),
-                       [=]() { m_resultsView(rowIndex) = result; });
+                       [=, *this]() { m_resultsView(rowIndex) = result; });
         break;
       }
 
@@ -72,21 +72,21 @@ struct TestFunctorA {
         const bool result =
             KE::equal(member, dataBegin, dataEnd, compBegin, m_binaryPred);
         Kokkos::single(Kokkos::PerTeam(member),
-                       [=]() { m_resultsView(rowIndex) = result; });
+                       [=, *this]() { m_resultsView(rowIndex) = result; });
         break;
       }
 
       case 2: {
         const bool result = KE::equal(member, rowData, rowComp);
         Kokkos::single(Kokkos::PerTeam(member),
-                       [=]() { m_resultsView(rowIndex) = result; });
+                       [=, *this]() { m_resultsView(rowIndex) = result; });
         break;
       }
 
       case 3: {
         const bool result = KE::equal(member, rowData, rowComp, m_binaryPred);
         Kokkos::single(Kokkos::PerTeam(member),
-                       [=]() { m_resultsView(rowIndex) = result; });
+                       [=, *this]() { m_resultsView(rowIndex) = result; });
 
         break;
       }
@@ -95,7 +95,7 @@ struct TestFunctorA {
         const bool result =
             KE::equal(member, dataBegin, dataEnd, compBegin, compEnd);
         Kokkos::single(Kokkos::PerTeam(member),
-                       [=]() { m_resultsView(rowIndex) = result; });
+                       [=, *this]() { m_resultsView(rowIndex) = result; });
         break;
       }
 
@@ -103,7 +103,7 @@ struct TestFunctorA {
         const bool result = KE::equal(member, dataBegin, dataEnd, compBegin,
                                       compEnd, m_binaryPred);
         Kokkos::single(Kokkos::PerTeam(member),
-                       [=]() { m_resultsView(rowIndex) = result; });
+                       [=, *this]() { m_resultsView(rowIndex) = result; });
         break;
       }
     }
