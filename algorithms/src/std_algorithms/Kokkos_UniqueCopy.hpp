@@ -17,7 +17,6 @@
 #ifndef KOKKOS_STD_ALGORITHMS_UNIQUE_COPY_HPP
 #define KOKKOS_STD_ALGORITHMS_UNIQUE_COPY_HPP
 
-#include "./impl/Kokkos_IsRandomAccessIterator.hpp"
 #include "impl/Kokkos_UniqueCopy.hpp"
 #include "Kokkos_BeginEnd.hpp"
 
@@ -27,22 +26,22 @@ namespace Experimental {
 //
 // overload set1: default predicate, accepting execution space
 //
-template <typename ExecutionSpace, typename InputIterator,
-          typename OutputIterator,
-          std::enable_if_t<Impl::is_random_access_iterator_v<InputIterator> &&
-                               is_execution_space_v<ExecutionSpace>,
-                           int> = 0>
+template <
+    typename ExecutionSpace, typename InputIterator, typename OutputIterator,
+    std::enable_if_t<Impl::are_iterators_v<InputIterator, OutputIterator> &&
+                         is_execution_space_v<ExecutionSpace>,
+                     int> = 0>
 OutputIterator unique_copy(const ExecutionSpace& ex, InputIterator first,
                            InputIterator last, OutputIterator d_first) {
   return Impl::unique_copy_exespace_impl(
       "Kokkos::unique_copy_iterator_api_default", ex, first, last, d_first);
 }
 
-template <typename ExecutionSpace, typename InputIterator,
-          typename OutputIterator,
-          std::enable_if_t<Impl::is_random_access_iterator_v<InputIterator> &&
-                               is_execution_space_v<ExecutionSpace>,
-                           int> = 0>
+template <
+    typename ExecutionSpace, typename InputIterator, typename OutputIterator,
+    std::enable_if_t<Impl::are_iterators_v<InputIterator, OutputIterator> &&
+                         is_execution_space_v<ExecutionSpace>,
+                     int> = 0>
 OutputIterator unique_copy(const std::string& label, const ExecutionSpace& ex,
                            InputIterator first, InputIterator last,
                            OutputIterator d_first) {
@@ -140,11 +139,11 @@ auto unique_copy(const std::string& label, const ExecutionSpace& ex,
 // Note: for now omit the overloads accepting a label
 // since they cause issues on device because of the string allocation.
 //
-template <typename TeamHandleType, typename InputIterator,
-          typename OutputIterator,
-          std::enable_if_t<Impl::is_random_access_iterator_v<InputIterator> &&
-                               Kokkos::is_team_handle_v<TeamHandleType>,
-                           int> = 0>
+template <
+    typename TeamHandleType, typename InputIterator, typename OutputIterator,
+    std::enable_if_t<Impl::are_iterators_v<InputIterator, OutputIterator> &&
+                         Kokkos::is_team_handle_v<TeamHandleType>,
+                     int> = 0>
 KOKKOS_FUNCTION OutputIterator unique_copy(const TeamHandleType& teamHandle,
                                            InputIterator first,
                                            InputIterator last,

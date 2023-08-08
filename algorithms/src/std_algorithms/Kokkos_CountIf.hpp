@@ -86,7 +86,8 @@ template <typename TeamHandleType, typename IteratorType, typename Predicate,
 KOKKOS_FUNCTION typename IteratorType::difference_type count_if(
     const TeamHandleType& teamHandle, IteratorType first, IteratorType last,
     Predicate predicate) {
-  return Impl::count_if_team_impl(teamHandle, first, last, std::move(predicate));
+  return Impl::count_if_team_impl(teamHandle, first, last,
+                                  std::move(predicate));
 }
 
 template <typename TeamHandleType, typename DataType, typename... Properties,
@@ -98,7 +99,7 @@ KOKKOS_FUNCTION auto count_if(const TeamHandleType& teamHandle,
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);
 
   namespace KE = ::Kokkos::Experimental;
-  return Impl::count_if_team_impl(ex, KE::cbegin(v), KE::cend(v),
+  return Impl::count_if_team_impl(teamHandle, KE::cbegin(v), KE::cend(v),
                                   std::move(predicate));
 }
 
