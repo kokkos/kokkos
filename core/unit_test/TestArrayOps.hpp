@@ -34,6 +34,72 @@ enum EnumBool : bool { EBFalse, EBTrue };
 enum class ScopedEnum { SEZero, SEOne };
 enum class ScopedEnumShort : short { SESZero, SESOne };
 
+TEST(TEST_CATEGORY, array_element_access) {
+    using A = Kokkos::Array<int, 2>;
+    A a{{3, 5}};
+
+    bool b{};
+    char c{};
+    signed char sc{};
+    unsigned char uc{};
+    char16_t c16{};
+    char32_t c32{};
+    wchar_t wc{};
+    short s{};
+    unsigned short us{};
+    int i{};
+    unsigned int ui{};
+    long l{};
+    unsigned long ul{};
+    long long ll{};
+    unsigned long long ull{};
+    Enum e{};
+    EnumBool eb{};
+    ScopedEnum se{};
+    ScopedEnumShort ses{};
+
+    ASSERT_EQ(a[b], 3);
+    ASSERT_EQ(a[c], 3);
+    ASSERT_EQ(a[sc], 3);
+    ASSERT_EQ(a[uc], 3);
+    ASSERT_EQ(a[c16], 3);
+    ASSERT_EQ(a[c32], 3);
+    ASSERT_EQ(a[wc], 3);
+    ASSERT_EQ(a[s], 3);
+    ASSERT_EQ(a[us], 3);
+    ASSERT_EQ(a[i], 3);
+    ASSERT_EQ(a[ui], 3);
+    ASSERT_EQ(a[l], 3);
+    ASSERT_EQ(a[ul], 3);
+    ASSERT_EQ(a[ll], 3);
+    ASSERT_EQ(a[ull], 3);
+    ASSERT_EQ(a[e], 3);
+    ASSERT_EQ(a[eb], 3);
+    ASSERT_EQ(a[se], 3);
+    ASSERT_EQ(a[ses], 3);
+
+    A const& ca = a;
+    ASSERT_EQ(ca[b], 3);
+    ASSERT_EQ(ca[c], 3);
+    ASSERT_EQ(ca[sc], 3);
+    ASSERT_EQ(ca[uc], 3);
+    ASSERT_EQ(ca[c16], 3);
+    ASSERT_EQ(ca[c32], 3);
+    ASSERT_EQ(ca[wc], 3);
+    ASSERT_EQ(ca[s], 3);
+    ASSERT_EQ(ca[us], 3);
+    ASSERT_EQ(ca[i], 3);
+    ASSERT_EQ(ca[ui], 3);
+    ASSERT_EQ(ca[l], 3);
+    ASSERT_EQ(ca[ul], 3);
+    ASSERT_EQ(ca[ll], 3);
+    ASSERT_EQ(ca[ull], 3);
+    ASSERT_EQ(ca[e], 3);
+    ASSERT_EQ(ca[eb], 3);
+    ASSERT_EQ(ca[se], 3);
+    ASSERT_EQ(ca[ses], 3);
+}
+
 TEST(TEST_CATEGORY, array_element_access_by_bool) {
   using A = Kokkos::Array<int, 2>;
   A a{{3, 5}};
