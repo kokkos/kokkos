@@ -92,14 +92,14 @@ class where_expression<bool, T> : public const_where_expression<bool, T> {
 };
 
 template <class T, class Abi>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     where_expression<simd_mask<T, Abi>, simd<T, Abi>>
     where(typename simd<T, Abi>::mask_type const& mask, simd<T, Abi>& value) {
   return where_expression(mask, value);
 }
 
 template <class T, class Abi>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     const_where_expression<simd_mask<T, Abi>, simd<T, Abi>>
     where(typename simd<T, Abi>::mask_type const& mask,
           simd<T, Abi> const& value) {
@@ -129,30 +129,34 @@ template <class T, class Abi>
 }
 
 // fallback simd shift using generator constructor
-// At the time of this writing, these fallbacks are only used
-// to shift vectors of 64-bit unsigned integers for the NEON backend
+// At the time of this edit, only the fallback for shift vectors of
+// 64-bit signed integers for the AVX2 backend is used
 
-template <class T, class U, class Abi>
+template <typename T, typename Abi,
+          typename = std::enable_if_t<std::is_integral_v<T>>>
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd<T, Abi> operator>>(
-    simd<T, Abi> const& lhs, unsigned int rhs) {
+    simd<T, Abi> const& lhs, int rhs) {
   return simd<T, Abi>([&](std::size_t i) { return lhs[i] >> rhs; });
 }
 
-template <class T, class U, class Abi>
+template <typename T, typename Abi,
+          typename = std::enable_if_t<std::is_integral_v<T>>>
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd<T, Abi> operator<<(
-    simd<T, Abi> const& lhs, unsigned int rhs) {
+    simd<T, Abi> const& lhs, int rhs) {
   return simd<T, Abi>([&](std::size_t i) { return lhs[i] << rhs; });
 }
 
-template <class T, class U, class Abi>
+template <typename T, typename Abi,
+          typename = std::enable_if_t<std::is_integral_v<T>>>
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd<T, Abi> operator>>(
-    simd<T, Abi> const& lhs, simd<U, Abi> const& rhs) {
+    simd<T, Abi> const& lhs, simd<T, Abi> const& rhs) {
   return simd<T, Abi>([&](std::size_t i) { return lhs[i] >> rhs[i]; });
 }
 
-template <class T, class U, class Abi>
+template <typename T, typename Abi,
+          typename = std::enable_if_t<std::is_integral_v<T>>>
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd<T, Abi> operator<<(
-    simd<T, Abi> const& lhs, simd<U, Abi> const& rhs) {
+    simd<T, Abi> const& lhs, simd<T, Abi> const& rhs) {
   return simd<T, Abi>([&](std::size_t i) { return lhs[i] << rhs[i]; });
 }
 
@@ -308,44 +312,28 @@ KOKKOS_FORCEINLINE_FUNCTION where_expression<M, T>& operator/=(
 // fallback implementations of reductions across simd_mask:
 
 template <class T, class Abi>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION bool all_of(
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool all_of(
     simd_mask<T, Abi> const& a) {
   return a == simd_mask<T, Abi>(true);
 }
 
 template <class T, class Abi>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION bool any_of(
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool any_of(
     simd_mask<T, Abi> const& a) {
   return a != simd_mask<T, Abi>(false);
 }
 
 template <class T, class Abi>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION bool none_of(
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool none_of(
     simd_mask<T, Abi> const& a) {
   return a == simd_mask<T, Abi>(false);
 }
 
-namespace Impl {
-
-template <typename T, typename Abi>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION constexpr auto const& mask(
-    const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> const& x) {
-  return x.m_mask;
-}
-
-template <typename T, typename Abi>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION constexpr auto const& value(
-    const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> const& x) {
-  return x.m_value;
-}
-
-}  // namespace Impl
-
 template <typename T, typename Abi>
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
 hmin(const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> const& x) {
-  auto const& v = Impl::value(x);
-  auto const& m = Impl::mask(x);
+  auto const& v = x.impl_get_value();
+  auto const& m = x.impl_get_mask();
   auto result   = Kokkos::reduction_identity<T>::min();
   for (std::size_t i = 0; i < v.size(); ++i) {
     if (m[i]) result = Kokkos::min(result, v[i]);
@@ -356,8 +344,8 @@ hmin(const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> const& x) {
 template <class T, class Abi>
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
 hmax(const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> const& x) {
-  auto const& v = Impl::value(x);
-  auto const& m = Impl::mask(x);
+  auto const& v = x.impl_get_value();
+  auto const& m = x.impl_get_mask();
   auto result   = Kokkos::reduction_identity<T>::max();
   for (std::size_t i = 0; i < v.size(); ++i) {
     if (m[i]) result = Kokkos::max(result, v[i]);
@@ -369,8 +357,8 @@ template <class T, class Abi>
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
 reduce(const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> const& x, T,
        std::plus<>) {
-  auto const& v = Impl::value(x);
-  auto const& m = Impl::mask(x);
+  auto const& v = x.impl_get_value();
+  auto const& m = x.impl_get_mask();
   auto result   = Kokkos::reduction_identity<T>::sum();
   for (std::size_t i = 0; i < v.size(); ++i) {
     if (m[i]) result += v[i];
