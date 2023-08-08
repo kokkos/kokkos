@@ -1196,6 +1196,11 @@ struct TestComplexBesselI0K0Function {
     h_ref_cbk0(24) =
         Kokkos::complex<double>(1.413897840559108e-27, -1.851678917759592e+25);
 
+    // FIXME_HIP Disable the test when using ROCm 5.5 and 5.6 due to a known
+    // compiler bug
+#if !defined(KOKKOS_ENABLE_HIP) || (HIP_VERSION_MAJOR != 5) || \
+    ((HIP_VERSION_MAJOR == 5) &&                               \
+     !((HIP_VERSION_MINOR == 5) || (HIP_VERSION_MINOR == 6)))
     for (int i = 0; i < N; i++) {
       EXPECT_LE(Kokkos::abs(h_cbi0(i) - h_ref_cbi0(i)),
                 Kokkos::abs(h_ref_cbi0(i)) * 1e-13);
@@ -1206,6 +1211,7 @@ struct TestComplexBesselI0K0Function {
       EXPECT_LE(Kokkos::abs(h_cbk0(i) - h_ref_cbk0(i)),
                 Kokkos::abs(h_ref_cbk0(i)) * 1e-13);
     }
+#endif
 
     ////Test large arguments
     d_z_large        = ViewType("d_z_large", 6);
@@ -1686,6 +1692,11 @@ struct TestComplexBesselH1Function {
     h_ref_ch11(24) =
         Kokkos::complex<double>(-5.430453818237824e-02, -1.530182458039000e-02);
 
+    // FIXME_HIP Disable the test when using ROCm 5.5 and 5.6 due to a known
+    // compiler bug
+#if !defined(KOKKOS_ENABLE_HIP) || (HIP_VERSION_MAJOR != 5) || \
+    ((HIP_VERSION_MAJOR == 5) &&                               \
+     !((HIP_VERSION_MINOR == 5) || (HIP_VERSION_MINOR == 6)))
     EXPECT_EQ(h_ref_ch10(0), h_ch10(0));
     for (int i = 1; i < N; i++) {
       EXPECT_LE(Kokkos::abs(h_ch10(i) - h_ref_ch10(i)),
@@ -1699,6 +1710,7 @@ struct TestComplexBesselH1Function {
                 Kokkos::abs(h_ref_ch11(i)) * 1e-13)
           << "at index " << i;
     }
+#endif
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -1868,6 +1880,11 @@ struct TestComplexBesselH2Function {
     h_ref_ch21(24) =
         Kokkos::complex<double>(1.629136145471347e-01, +1.530182458039000e-02);
 
+    // FIXME_HIP Disable the test when using ROCm 5.5 and 5.6 due to a known
+    // compiler bug
+#if !defined(KOKKOS_ENABLE_HIP) || (HIP_VERSION_MAJOR != 5) || \
+    ((HIP_VERSION_MAJOR == 5) &&                               \
+     !((HIP_VERSION_MINOR == 5) || (HIP_VERSION_MINOR == 6)))
     EXPECT_EQ(h_ref_ch20(0), h_ch20(0));
     for (int i = 1; i < N; i++) {
       EXPECT_LE(Kokkos::abs(h_ch20(i) - h_ref_ch20(i)),
@@ -1879,6 +1896,7 @@ struct TestComplexBesselH2Function {
       EXPECT_LE(Kokkos::abs(h_ch21(i) - h_ref_ch21(i)),
                 Kokkos::abs(h_ref_ch21(i)) * 1e-13);
     }
+#endif
   }
 
   KOKKOS_INLINE_FUNCTION

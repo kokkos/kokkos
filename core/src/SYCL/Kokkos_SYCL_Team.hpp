@@ -42,6 +42,8 @@ class SYCLTeamMember {
   scratch_memory_space m_team_shared;
   int m_team_reduce_size;
   sycl::nd_item<2> m_item;
+  int m_league_rank;
+  int m_league_size;
 
  public:
   KOKKOS_INLINE_FUNCTION
@@ -61,12 +63,8 @@ class SYCLTeamMember {
     return m_team_shared.set_team_thread_mode(level, team_size(), team_rank());
   }
 
-  KOKKOS_INLINE_FUNCTION int league_rank() const {
-    return m_item.get_group_linear_id();
-  }
-  KOKKOS_INLINE_FUNCTION int league_size() const {
-    return m_item.get_group_range(1);
-  }
+  KOKKOS_INLINE_FUNCTION int league_rank() const { return m_league_rank; }
+  KOKKOS_INLINE_FUNCTION int league_size() const { return m_league_size; }
   KOKKOS_INLINE_FUNCTION int team_rank() const {
     return m_item.get_local_id(0);
   }
@@ -341,12 +339,15 @@ class SYCLTeamMember {
                  const std::size_t shared_size,
                  sycl::device_ptr<void> scratch_level_1_ptr,
                  const std::size_t scratch_level_1_size,
-                 const sycl::nd_item<2> item)
+                 const sycl::nd_item<2> item, const int arg_league_rank,
+                 const int arg_league_size)
       : m_team_reduce(shared),
         m_team_shared(static_cast<sycl::local_ptr<char>>(shared) + shared_begin,
                       shared_size, scratch_level_1_ptr, scratch_level_1_size),
         m_team_reduce_size(shared_begin),
-        m_item(item) {}
+        m_item(item),
+        m_league_rank(arg_league_rank),
+        m_league_size(arg_league_size) {}
 
  public:
   // Declare to avoid unused private member warnings which are trigger

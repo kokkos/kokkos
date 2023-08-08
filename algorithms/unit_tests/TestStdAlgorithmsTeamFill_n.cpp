@@ -46,13 +46,13 @@ struct TestFunctorA {
       auto it =
           KE::fill_n(member, KE::begin(myRowView), m_fillCount, leagueRank);
 
-      Kokkos::single(Kokkos::PerTeam(member), [=]() {
+      Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
         m_distancesView(myRowIndex) = KE::distance(KE::begin(myRowView), it);
       });
     } else if (m_apiPick == 1) {
       auto it = KE::fill_n(member, myRowView, m_fillCount, leagueRank);
 
-      Kokkos::single(Kokkos::PerTeam(member), [=]() {
+      Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
         m_distancesView(myRowIndex) = KE::distance(KE::begin(myRowView), it);
       });
     }
