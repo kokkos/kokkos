@@ -64,46 +64,52 @@ struct TestFunctorA {
     switch (m_apiPick) {
       case 0: {
         const auto result = KE::reduce(member, rowFromBegin, rowFromEnd);
-        Kokkos::single(Kokkos::PerTeam(member),
-                       [=]() { m_reduceResultsView(myRowIndex) = result; });
+        Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
+          m_reduceResultsView(myRowIndex) = result;
+        });
         break;
       }
 
       case 1: {
         const auto result = KE::reduce(member, myRowViewFrom);
-        Kokkos::single(Kokkos::PerTeam(member),
-                       [=]() { m_reduceResultsView(myRowIndex) = result; });
+        Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
+          m_reduceResultsView(myRowIndex) = result;
+        });
         break;
       }
 
       case 2: {
         const auto result =
             KE::reduce(member, rowFromBegin, rowFromEnd, initReductionVal);
-        Kokkos::single(Kokkos::PerTeam(member),
-                       [=]() { m_reduceResultsView(myRowIndex) = result; });
+        Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
+          m_reduceResultsView(myRowIndex) = result;
+        });
         break;
       }
 
       case 3: {
         const auto result = KE::reduce(member, myRowViewFrom, initReductionVal);
-        Kokkos::single(Kokkos::PerTeam(member),
-                       [=]() { m_reduceResultsView(myRowIndex) = result; });
+        Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
+          m_reduceResultsView(myRowIndex) = result;
+        });
         break;
       }
 
       case 4: {
         const auto result = KE::reduce(member, rowFromBegin, rowFromEnd,
                                        initReductionVal, m_binaryPred);
-        Kokkos::single(Kokkos::PerTeam(member),
-                       [=]() { m_reduceResultsView(myRowIndex) = result; });
+        Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
+          m_reduceResultsView(myRowIndex) = result;
+        });
         break;
       }
 
       case 5: {
         const auto result =
             KE::reduce(member, myRowViewFrom, initReductionVal, m_binaryPred);
-        Kokkos::single(Kokkos::PerTeam(member),
-                       [=]() { m_reduceResultsView(myRowIndex) = result; });
+        Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
+          m_reduceResultsView(myRowIndex) = result;
+        });
         break;
       }
     }

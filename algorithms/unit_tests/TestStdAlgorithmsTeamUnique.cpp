@@ -40,26 +40,26 @@ struct TestFunctorA {
 
     if (m_apiPick == 0) {
       auto it = KE::unique(member, KE::begin(myRowView), KE::end(myRowView));
-      Kokkos::single(Kokkos::PerTeam(member), [=]() {
+      Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
         m_distancesView(myRowIndex) = KE::distance(KE::begin(myRowView), it);
       });
     } else if (m_apiPick == 1) {
       auto it = KE::unique(member, myRowView);
-      Kokkos::single(Kokkos::PerTeam(member), [=]() {
+      Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
         m_distancesView(myRowIndex) = KE::distance(KE::begin(myRowView), it);
       });
     } else if (m_apiPick == 2) {
       using value_type = typename ViewType::value_type;
       auto it = KE::unique(member, KE::begin(myRowView), KE::end(myRowView),
                            CustomEqualityComparator<value_type>{});
-      Kokkos::single(Kokkos::PerTeam(member), [=]() {
+      Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
         m_distancesView(myRowIndex) = KE::distance(KE::begin(myRowView), it);
       });
     } else if (m_apiPick == 3) {
       using value_type = typename ViewType::value_type;
       auto it =
           KE::unique(member, myRowView, CustomEqualityComparator<value_type>{});
-      Kokkos::single(Kokkos::PerTeam(member), [=]() {
+      Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
         m_distancesView(myRowIndex) = KE::distance(KE::begin(myRowView), it);
       });
     }

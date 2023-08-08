@@ -61,7 +61,7 @@ struct TestFunctorA {
         auto it = KE::adjacent_difference(member, KE::cbegin(myRowViewFrom),
                                           KE::cend(myRowViewFrom),
                                           KE::begin(myRowViewDest));
-        Kokkos::single(Kokkos::PerTeam(member), [=]() {
+        Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
           m_distancesView(myRowIndex) =
               KE::distance(KE::begin(myRowViewDest), it);
         });
@@ -72,7 +72,7 @@ struct TestFunctorA {
         auto it = KE::adjacent_difference(member, KE::cbegin(myRowViewFrom),
                                           KE::cend(myRowViewFrom),
                                           KE::begin(myRowViewDest), m_binaryOp);
-        Kokkos::single(Kokkos::PerTeam(member), [=]() {
+        Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
           m_distancesView(myRowIndex) =
               KE::distance(KE::begin(myRowViewDest), it);
         });
@@ -81,7 +81,7 @@ struct TestFunctorA {
 
       case 2: {
         auto it = KE::adjacent_difference(member, myRowViewFrom, myRowViewDest);
-        Kokkos::single(Kokkos::PerTeam(member), [=]() {
+        Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
           m_distancesView(myRowIndex) =
               KE::distance(KE::begin(myRowViewDest), it);
         });
@@ -91,7 +91,7 @@ struct TestFunctorA {
       case 3: {
         auto it = KE::adjacent_difference(member, myRowViewFrom, myRowViewDest,
                                           m_binaryOp);
-        Kokkos::single(Kokkos::PerTeam(member), [=]() {
+        Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
           m_distancesView(myRowIndex) =
               KE::distance(KE::begin(myRowViewDest), it);
         });

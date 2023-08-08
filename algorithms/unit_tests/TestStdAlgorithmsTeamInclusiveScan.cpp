@@ -68,7 +68,7 @@ struct TestFunctorA {
     switch (m_apiPick) {
       case 0: {
         auto it = KE::inclusive_scan(member, first, last, firstDest);
-        Kokkos::single(Kokkos::PerTeam(member), [=] {
+        Kokkos::single(Kokkos::PerTeam(member), [=, *this] {
           m_distancesView(rowIndex) = KE::distance(firstDest, it);
         });
 
@@ -77,7 +77,7 @@ struct TestFunctorA {
 
       case 1: {
         auto it = KE::inclusive_scan(member, srcRow, destRow);
-        Kokkos::single(Kokkos::PerTeam(member), [=] {
+        Kokkos::single(Kokkos::PerTeam(member), [=, *this] {
           m_distancesView(rowIndex) = KE::distance(firstDest, it);
         });
 
@@ -87,7 +87,7 @@ struct TestFunctorA {
       case 2: {
         auto it =
             KE::inclusive_scan(member, first, last, firstDest, m_binaryOp);
-        Kokkos::single(Kokkos::PerTeam(member), [=] {
+        Kokkos::single(Kokkos::PerTeam(member), [=, *this] {
           m_distancesView(rowIndex) = KE::distance(firstDest, it);
         });
 
@@ -96,7 +96,7 @@ struct TestFunctorA {
 
       case 3: {
         auto it = KE::inclusive_scan(member, srcRow, destRow, m_binaryOp);
-        Kokkos::single(Kokkos::PerTeam(member), [=] {
+        Kokkos::single(Kokkos::PerTeam(member), [=, *this] {
           m_distancesView(rowIndex) = KE::distance(firstDest, it);
         });
 
@@ -106,7 +106,7 @@ struct TestFunctorA {
       case 4: {
         auto it = KE::inclusive_scan(member, first, last, firstDest, m_binaryOp,
                                      initVal);
-        Kokkos::single(Kokkos::PerTeam(member), [=] {
+        Kokkos::single(Kokkos::PerTeam(member), [=, *this] {
           m_distancesView(rowIndex) = KE::distance(firstDest, it);
         });
 
@@ -116,7 +116,7 @@ struct TestFunctorA {
       case 5: {
         auto it =
             KE::inclusive_scan(member, srcRow, destRow, m_binaryOp, initVal);
-        Kokkos::single(Kokkos::PerTeam(member), [=] {
+        Kokkos::single(Kokkos::PerTeam(member), [=, *this] {
           m_distancesView(rowIndex) = KE::distance(firstDest, it);
         });
 

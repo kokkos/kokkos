@@ -96,7 +96,7 @@ struct TestFunctorA {
             KE::transform_reduce(member, firstDataRowBegin, firstDataRowEnd,
                                  secondDataRowBegin, initVal);
         Kokkos::single(Kokkos::PerTeam(member),
-                       [=]() { m_resultsView(rowIndex) = result; });
+                       [=, *this]() { m_resultsView(rowIndex) = result; });
         break;
       }
 
@@ -104,7 +104,7 @@ struct TestFunctorA {
         const auto result =
             KE::transform_reduce(member, firstDataRow, secondDataRow, initVal);
         Kokkos::single(Kokkos::PerTeam(member),
-                       [=]() { m_resultsView(rowIndex) = result; });
+                       [=, *this]() { m_resultsView(rowIndex) = result; });
         break;
       }
 
@@ -113,7 +113,7 @@ struct TestFunctorA {
             member, firstDataRowBegin, firstDataRowEnd, secondDataRowBegin,
             initVal, m_binaryJoiner, m_binaryTransform);
         Kokkos::single(Kokkos::PerTeam(member),
-                       [=]() { m_resultsView(rowIndex) = result; });
+                       [=, *this]() { m_resultsView(rowIndex) = result; });
         break;
       }
 
@@ -122,7 +122,7 @@ struct TestFunctorA {
             KE::transform_reduce(member, firstDataRow, secondDataRow, initVal,
                                  m_binaryJoiner, m_binaryTransform);
         Kokkos::single(Kokkos::PerTeam(member),
-                       [=]() { m_resultsView(rowIndex) = result; });
+                       [=, *this]() { m_resultsView(rowIndex) = result; });
         break;
       }
 
@@ -131,7 +131,7 @@ struct TestFunctorA {
             KE::transform_reduce(member, firstDataRowBegin, firstDataRowEnd,
                                  initVal, m_binaryJoiner, m_unaryTransform);
         Kokkos::single(Kokkos::PerTeam(member),
-                       [=]() { m_resultsView(rowIndex) = result; });
+                       [=, *this]() { m_resultsView(rowIndex) = result; });
         break;
       }
 
@@ -139,7 +139,7 @@ struct TestFunctorA {
         const auto result = KE::transform_reduce(
             member, firstDataRow, initVal, m_binaryJoiner, m_unaryTransform);
         Kokkos::single(Kokkos::PerTeam(member),
-                       [=]() { m_resultsView(rowIndex) = result; });
+                       [=, *this]() { m_resultsView(rowIndex) = result; });
         break;
       }
     }
