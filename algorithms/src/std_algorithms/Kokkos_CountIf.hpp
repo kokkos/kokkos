@@ -81,18 +81,18 @@ auto count_if(const std::string& label, const ExecutionSpace& ex,
 //
 // overload set accepting team handle
 //
-template <typename ExecutionSpace, typename IteratorType, typename Predicate,
-          std::enable_if_t<::Kokkos::is_team_handle_v<ExecutionSpace>, int> = 0>
+template <typename TeamHandleType, typename IteratorType, typename Predicate,
+          std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>, int> = 0>
 KOKKOS_FUNCTION typename IteratorType::difference_type count_if(
-    const ExecutionSpace& ex, IteratorType first, IteratorType last,
+    const TeamHandleType& teamHandle, IteratorType first, IteratorType last,
     Predicate predicate) {
-  return Impl::count_if_team_impl(ex, first, last, std::move(predicate));
+  return Impl::count_if_team_impl(teamHandle, first, last, std::move(predicate));
 }
 
-template <typename ExecutionSpace, typename DataType, typename... Properties,
+template <typename TeamHandleType, typename DataType, typename... Properties,
           typename Predicate,
-          std::enable_if_t<::Kokkos::is_team_handle_v<ExecutionSpace>, int> = 0>
-KOKKOS_FUNCTION auto count_if(const ExecutionSpace& ex,
+          std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>, int> = 0>
+KOKKOS_FUNCTION auto count_if(const TeamHandleType& teamHandle,
                               const ::Kokkos::View<DataType, Properties...>& v,
                               Predicate predicate) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(v);

@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         CCACHE_DIR = '/tmp/ccache'
-        CCACHE_MAXSIZE = '10G'
+        CCACHE_MAXSIZE = '5G'
         CCACHE_CPP2 = 'true'
     }
 
@@ -59,7 +59,7 @@ pipeline {
                             filename 'Dockerfile.nvhpc'
                             dir 'scripts/docker'
                             additionalBuildArgs '--build-arg BASE=nvcr.io/nvidia/nvhpc:22.9-devel-cuda11.7-ubuntu20.04'
-                            label 'nvidia-docker && large_images'
+                            label 'nvidia-docker && large_images && volta'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
                         }
                     }
