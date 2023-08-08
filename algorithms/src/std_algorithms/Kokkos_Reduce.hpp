@@ -31,20 +31,23 @@ namespace Experimental {
 // overload set 1
 //
 template <typename ExecutionSpace, typename IteratorType,
-  std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, int > = 0
-	  >
-typename IteratorType::value_type reduce(const ExecutionSpace& ex, IteratorType first, IteratorType last) {
+          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                           int> = 0>
+typename IteratorType::value_type reduce(const ExecutionSpace& ex,
+                                         IteratorType first,
+                                         IteratorType last) {
   return Impl::reduce_default_functors_exespace_impl(
       "Kokkos::reduce_default_functors_iterator_api", ex, first, last,
       typename IteratorType::value_type());
 }
 
-template <
-  typename ExecutionSpace, typename IteratorType,
-  std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, int > = 0
-  >
-typename IteratorType::value_type reduce(const std::string& label, const ExecutionSpace& ex, IteratorType first,
-       IteratorType last) {
+template <typename ExecutionSpace, typename IteratorType,
+          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                           int> = 0>
+typename IteratorType::value_type reduce(const std::string& label,
+                                         const ExecutionSpace& ex,
+                                         IteratorType first,
+                                         IteratorType last) {
   return Impl::reduce_default_functors_exespace_impl(
       label, ex, first, last, typename IteratorType::value_type());
 }
@@ -83,12 +86,11 @@ auto reduce(const std::string& label, const ExecutionSpace& ex,
 //
 // overload set2:
 //
-template <
-  typename ExecutionSpace, typename IteratorType, typename ValueType,
-  std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, int > = 0
-  >
-ValueType reduce(const ExecutionSpace& ex, IteratorType first, IteratorType last,
-       ValueType init_reduction_value) {
+template <typename ExecutionSpace, typename IteratorType, typename ValueType,
+          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                           int> = 0>
+ValueType reduce(const ExecutionSpace& ex, IteratorType first,
+                 IteratorType last, ValueType init_reduction_value) {
   static_assert(std::is_move_constructible<ValueType>::value,
                 "ValueType must be move constructible.");
 
@@ -97,12 +99,12 @@ ValueType reduce(const ExecutionSpace& ex, IteratorType first, IteratorType last
       init_reduction_value);
 }
 
-template <
-  typename ExecutionSpace, typename IteratorType, typename ValueType,
-  std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, int > = 0
-  >
-ValueType reduce(const std::string& label, const ExecutionSpace& ex, IteratorType first,
-       IteratorType last, ValueType init_reduction_value) {
+template <typename ExecutionSpace, typename IteratorType, typename ValueType,
+          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                           int> = 0>
+ValueType reduce(const std::string& label, const ExecutionSpace& ex,
+                 IteratorType first, IteratorType last,
+                 ValueType init_reduction_value) {
   static_assert(std::is_move_constructible<ValueType>::value,
                 "ValueType must be move constructible.");
 
@@ -111,12 +113,12 @@ ValueType reduce(const std::string& label, const ExecutionSpace& ex, IteratorTyp
 }
 
 template <typename ExecutionSpace, typename DataType, typename... Properties,
-  typename ValueType,
-  std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, int > = 0
-  >
+          typename ValueType,
+          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                           int> = 0>
 ValueType reduce(const ExecutionSpace& ex,
-       const ::Kokkos::View<DataType, Properties...>& view,
-       ValueType init_reduction_value) {
+                 const ::Kokkos::View<DataType, Properties...>& view,
+                 ValueType init_reduction_value) {
   static_assert(std::is_move_constructible<ValueType>::value,
                 "ValueType must be move constructible.");
 
@@ -130,11 +132,11 @@ ValueType reduce(const ExecutionSpace& ex,
 
 template <typename ExecutionSpace, typename DataType, typename... Properties,
           typename ValueType,
-	  std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, int > = 0
-	  >
+          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                           int> = 0>
 ValueType reduce(const std::string& label, const ExecutionSpace& ex,
-       const ::Kokkos::View<DataType, Properties...>& view,
-       ValueType init_reduction_value) {
+                 const ::Kokkos::View<DataType, Properties...>& view,
+                 ValueType init_reduction_value) {
   static_assert(std::is_move_constructible<ValueType>::value,
                 "ValueType must be move constructible.");
 
@@ -150,10 +152,11 @@ ValueType reduce(const std::string& label, const ExecutionSpace& ex,
 //
 template <typename ExecutionSpace, typename IteratorType, typename ValueType,
           typename BinaryOp,
-	  std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, int > = 0
-	  >
-ValueType reduce(const ExecutionSpace& ex, IteratorType first, IteratorType last,
-       ValueType init_reduction_value, BinaryOp joiner) {
+          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                           int> = 0>
+ValueType reduce(const ExecutionSpace& ex, IteratorType first,
+                 IteratorType last, ValueType init_reduction_value,
+                 BinaryOp joiner) {
   static_assert(std::is_move_constructible<ValueType>::value,
                 "ValueType must be move constructible.");
 
@@ -164,10 +167,11 @@ ValueType reduce(const ExecutionSpace& ex, IteratorType first, IteratorType last
 
 template <typename ExecutionSpace, typename IteratorType, typename ValueType,
           typename BinaryOp,
-	  std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, int > = 0
-	  >
-ValueType reduce(const std::string& label, const ExecutionSpace& ex, IteratorType first,
-       IteratorType last, ValueType init_reduction_value, BinaryOp joiner) {
+          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                           int> = 0>
+ValueType reduce(const std::string& label, const ExecutionSpace& ex,
+                 IteratorType first, IteratorType last,
+                 ValueType init_reduction_value, BinaryOp joiner) {
   static_assert(std::is_move_constructible<ValueType>::value,
                 "ValueType must be move constructible.");
 
@@ -177,11 +181,11 @@ ValueType reduce(const std::string& label, const ExecutionSpace& ex, IteratorTyp
 
 template <typename ExecutionSpace, typename DataType, typename... Properties,
           typename ValueType, typename BinaryOp,
-	  std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, int > = 0
-	  >
+          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                           int> = 0>
 ValueType reduce(const ExecutionSpace& ex,
-       const ::Kokkos::View<DataType, Properties...>& view,
-       ValueType init_reduction_value, BinaryOp joiner) {
+                 const ::Kokkos::View<DataType, Properties...>& view,
+                 ValueType init_reduction_value, BinaryOp joiner) {
   static_assert(std::is_move_constructible<ValueType>::value,
                 "ValueType must be move constructible.");
 
@@ -195,11 +199,11 @@ ValueType reduce(const ExecutionSpace& ex,
 
 template <typename ExecutionSpace, typename DataType, typename... Properties,
           typename ValueType, typename BinaryOp,
-	  std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value, int > = 0
-  >
+          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
+                           int> = 0>
 ValueType reduce(const std::string& label, const ExecutionSpace& ex,
-       const ::Kokkos::View<DataType, Properties...>& view,
-       ValueType init_reduction_value, BinaryOp joiner) {
+                 const ::Kokkos::View<DataType, Properties...>& view,
+                 ValueType init_reduction_value, BinaryOp joiner) {
   static_assert(std::is_move_constructible<ValueType>::value,
                 "ValueType must be move constructible.");
 
@@ -221,14 +225,10 @@ ValueType reduce(const std::string& label, const ExecutionSpace& ex,
 // overload set 1
 //
 template <
-  typename TeamHandleType, typename IteratorType,
-  std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, int > = 0
-  >
-KOKKOS_FUNCTION
-typename IteratorType::value_type
-    reduce(const TeamHandleType& teamHandle, IteratorType first,
-           IteratorType last)
-{
+    typename TeamHandleType, typename IteratorType,
+    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, int> = 0>
+KOKKOS_FUNCTION typename IteratorType::value_type reduce(
+    const TeamHandleType& teamHandle, IteratorType first, IteratorType last) {
   return Impl::reduce_default_functors_team_impl(
       teamHandle, first, last, typename IteratorType::value_type());
 }
@@ -252,12 +252,12 @@ KOKKOS_FUNCTION auto reduce(
 //
 // overload set2:
 //
-template <typename TeamHandleType, typename IteratorType, typename ValueType,
-  std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, int > = 0
-  >
-KOKKOS_FUNCTION
-ValueType reduce(const TeamHandleType& teamHandle, IteratorType first,
-           IteratorType last, ValueType init_reduction_value) {
+template <
+    typename TeamHandleType, typename IteratorType, typename ValueType,
+    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, int> = 0>
+KOKKOS_FUNCTION ValueType reduce(const TeamHandleType& teamHandle,
+                                 IteratorType first, IteratorType last,
+                                 ValueType init_reduction_value) {
   static_assert(std::is_move_constructible<ValueType>::value,
                 "ValueType must be move constructible.");
 
@@ -265,14 +265,14 @@ ValueType reduce(const TeamHandleType& teamHandle, IteratorType first,
                                                  init_reduction_value);
 }
 
-template <typename TeamHandleType, typename DataType, typename... Properties,
-  typename ValueType,
-  std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, int > = 0
-  >
-KOKKOS_FUNCTION
-ValueType reduce(const TeamHandleType& teamHandle,
-           const ::Kokkos::View<DataType, Properties...>& view,
-           ValueType init_reduction_value) {
+template <
+    typename TeamHandleType, typename DataType, typename... Properties,
+    typename ValueType,
+    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, int> = 0>
+KOKKOS_FUNCTION ValueType
+reduce(const TeamHandleType& teamHandle,
+       const ::Kokkos::View<DataType, Properties...>& view,
+       ValueType init_reduction_value) {
   static_assert(std::is_move_constructible<ValueType>::value,
                 "ValueType must be move constructible.");
 
@@ -286,13 +286,14 @@ ValueType reduce(const TeamHandleType& teamHandle,
 //
 // overload set 3
 //
-template <typename TeamHandleType, typename IteratorType, typename ValueType,
-  typename BinaryOp,
-  std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, int > = 0
-  >
-KOKKOS_FUNCTION
-ValueType  reduce(const TeamHandleType& teamHandle, IteratorType first,
-           IteratorType last, ValueType init_reduction_value, BinaryOp joiner) {
+template <
+    typename TeamHandleType, typename IteratorType, typename ValueType,
+    typename BinaryOp,
+    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, int> = 0>
+KOKKOS_FUNCTION ValueType reduce(const TeamHandleType& teamHandle,
+                                 IteratorType first, IteratorType last,
+                                 ValueType init_reduction_value,
+                                 BinaryOp joiner) {
   static_assert(std::is_move_constructible<ValueType>::value,
                 "ValueType must be move constructible.");
 
@@ -300,14 +301,14 @@ ValueType  reduce(const TeamHandleType& teamHandle, IteratorType first,
                                                 init_reduction_value, joiner);
 }
 
-template <typename TeamHandleType, typename DataType, typename... Properties,
-          typename ValueType, typename BinaryOp,
-	  std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, int > = 0
-	  >
-KOKKOS_FUNCTION
-ValueType reduce(const TeamHandleType& teamHandle,
-           const ::Kokkos::View<DataType, Properties...>& view,
-           ValueType init_reduction_value, BinaryOp joiner) {
+template <
+    typename TeamHandleType, typename DataType, typename... Properties,
+    typename ValueType, typename BinaryOp,
+    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, int> = 0>
+KOKKOS_FUNCTION ValueType
+reduce(const TeamHandleType& teamHandle,
+       const ::Kokkos::View<DataType, Properties...>& view,
+       ValueType init_reduction_value, BinaryOp joiner) {
   static_assert(std::is_move_constructible<ValueType>::value,
                 "ValueType must be move constructible.");
 

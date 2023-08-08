@@ -27,14 +27,15 @@ namespace Experimental {
 // overload set accepting execution space
 //
 template <
-  typename ExecutionSpace, typename InputIteratorType,
-  typename OutputIteratorType,
-  std::enable_if_t<!::Kokkos::is_view<InputIteratorType>::value &&
-		 ::Kokkos::is_execution_space<ExecutionSpace>::value, int > = 0
-  >
-OutputIteratorType adjacent_difference(const ExecutionSpace& ex, InputIteratorType first_from,
-                    InputIteratorType last_from,
-                    OutputIteratorType first_dest) {
+    typename ExecutionSpace, typename InputIteratorType,
+    typename OutputIteratorType,
+    std::enable_if_t<!::Kokkos::is_view<InputIteratorType>::value &&
+                         ::Kokkos::is_execution_space<ExecutionSpace>::value,
+                     int> = 0>
+OutputIteratorType adjacent_difference(const ExecutionSpace& ex,
+                                       InputIteratorType first_from,
+                                       InputIteratorType last_from,
+                                       OutputIteratorType first_dest) {
   using value_type1 = typename InputIteratorType::value_type;
   using value_type2 = typename OutputIteratorType::value_type;
   using binary_op =
@@ -45,29 +46,33 @@ OutputIteratorType adjacent_difference(const ExecutionSpace& ex, InputIteratorTy
       first_dest, binary_op());
 }
 
-template <typename ExecutionSpace, typename InputIteratorType,
-          typename OutputIteratorType, typename BinaryOp,
-	  std::enable_if_t<!::Kokkos::is_view<InputIteratorType>::value &&
-			   ::Kokkos::is_execution_space<ExecutionSpace>::value, int > = 0
-	  >
-OutputIteratorType
-adjacent_difference(const ExecutionSpace& ex, InputIteratorType first_from,
-                    InputIteratorType last_from, OutputIteratorType first_dest,
-                    BinaryOp bin_op) {
+template <
+    typename ExecutionSpace, typename InputIteratorType,
+    typename OutputIteratorType, typename BinaryOp,
+    std::enable_if_t<!::Kokkos::is_view<InputIteratorType>::value &&
+                         ::Kokkos::is_execution_space<ExecutionSpace>::value,
+                     int> = 0>
+OutputIteratorType adjacent_difference(const ExecutionSpace& ex,
+                                       InputIteratorType first_from,
+                                       InputIteratorType last_from,
+                                       OutputIteratorType first_dest,
+                                       BinaryOp bin_op) {
   return Impl::adjacent_difference_exespace_impl(
       "Kokkos::adjacent_difference_iterator_api", ex, first_from, last_from,
       first_dest, bin_op);
 }
 
-template <typename ExecutionSpace, typename InputIteratorType,
-          typename OutputIteratorType,
-	  std::enable_if_t<!::Kokkos::is_view<InputIteratorType>::value &&
-		   ::Kokkos::is_execution_space<ExecutionSpace>::value, int > = 0
-	  >
-OutputIteratorType
-adjacent_difference(const std::string& label, const ExecutionSpace& ex,
-                    InputIteratorType first_from, InputIteratorType last_from,
-                    OutputIteratorType first_dest) {
+template <
+    typename ExecutionSpace, typename InputIteratorType,
+    typename OutputIteratorType,
+    std::enable_if_t<!::Kokkos::is_view<InputIteratorType>::value &&
+                         ::Kokkos::is_execution_space<ExecutionSpace>::value,
+                     int> = 0>
+OutputIteratorType adjacent_difference(const std::string& label,
+                                       const ExecutionSpace& ex,
+                                       InputIteratorType first_from,
+                                       InputIteratorType last_from,
+                                       OutputIteratorType first_dest) {
   using value_type1 = typename InputIteratorType::value_type;
   using value_type2 = typename OutputIteratorType::value_type;
   using binary_op =
@@ -77,15 +82,18 @@ adjacent_difference(const std::string& label, const ExecutionSpace& ex,
       label, ex, first_from, last_from, first_dest, binary_op());
 }
 
-template <typename ExecutionSpace, typename InputIteratorType,
-  typename OutputIteratorType, typename BinaryOp,
-  std::enable_if_t<!::Kokkos::is_view<InputIteratorType>::value &&
-		   ::Kokkos::is_execution_space<ExecutionSpace>::value, int > = 0
-	  >
-OutputIteratorType
-adjacent_difference(const std::string& label, const ExecutionSpace& ex,
-                    InputIteratorType first_from, InputIteratorType last_from,
-                    OutputIteratorType first_dest, BinaryOp bin_op) {
+template <
+    typename ExecutionSpace, typename InputIteratorType,
+    typename OutputIteratorType, typename BinaryOp,
+    std::enable_if_t<!::Kokkos::is_view<InputIteratorType>::value &&
+                         ::Kokkos::is_execution_space<ExecutionSpace>::value,
+                     int> = 0>
+OutputIteratorType adjacent_difference(const std::string& label,
+                                       const ExecutionSpace& ex,
+                                       InputIteratorType first_from,
+                                       InputIteratorType last_from,
+                                       OutputIteratorType first_dest,
+                                       BinaryOp bin_op) {
   return Impl::adjacent_difference_exespace_impl(label, ex, first_from,
                                                  last_from, first_dest, bin_op);
 }
@@ -178,17 +186,14 @@ auto adjacent_difference(
 // Note: for now omit the overloads accepting a label
 // since they cause issues on device because of the string allocation.
 //
-template <
-  typename TeamHandleType, typename InputIteratorType,
-  typename OutputIteratorType,
-  std::enable_if_t<!::Kokkos::is_view<InputIteratorType>::value &&
-		   ::Kokkos::is_team_handle<TeamHandleType>::value, int > = 0
-  >
-KOKKOS_FUNCTION
-OutputIteratorType adjacent_difference(const TeamHandleType& teamHandle,
-                        InputIteratorType first_from,
-                        InputIteratorType last_from,
-                        OutputIteratorType first_dest) {
+template <typename TeamHandleType, typename InputIteratorType,
+          typename OutputIteratorType,
+          std::enable_if_t<!::Kokkos::is_view<InputIteratorType>::value &&
+                               ::Kokkos::is_team_handle<TeamHandleType>::value,
+                           int> = 0>
+KOKKOS_FUNCTION OutputIteratorType adjacent_difference(
+    const TeamHandleType& teamHandle, InputIteratorType first_from,
+    InputIteratorType last_from, OutputIteratorType first_dest) {
   using value_type1 = typename InputIteratorType::value_type;
   using value_type2 = typename OutputIteratorType::value_type;
   using binary_op =
@@ -199,15 +204,14 @@ OutputIteratorType adjacent_difference(const TeamHandleType& teamHandle,
 }
 
 template <typename TeamHandleType, typename InputIteratorType,
-  typename OutputIteratorType, typename BinaryOp,
-  std::enable_if_t<!::Kokkos::is_view<InputIteratorType>::value &&
-  ::Kokkos::is_team_handle<TeamHandleType>::value, int > = 0
-  >
-KOKKOS_FUNCTION
-OutputIteratorType adjacent_difference(const TeamHandleType& teamHandle,
-                        InputIteratorType first_from,
-                        InputIteratorType last_from,
-                        OutputIteratorType first_dest, BinaryOp bin_op) {
+          typename OutputIteratorType, typename BinaryOp,
+          std::enable_if_t<!::Kokkos::is_view<InputIteratorType>::value &&
+                               ::Kokkos::is_team_handle<TeamHandleType>::value,
+                           int> = 0>
+KOKKOS_FUNCTION OutputIteratorType
+adjacent_difference(const TeamHandleType& teamHandle,
+                    InputIteratorType first_from, InputIteratorType last_from,
+                    OutputIteratorType first_dest, BinaryOp bin_op) {
   return Impl::adjacent_difference_team_impl(teamHandle, first_from, last_from,
                                              first_dest, bin_op);
 }
