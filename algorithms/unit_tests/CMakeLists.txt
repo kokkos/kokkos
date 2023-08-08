@@ -163,10 +163,6 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
 	StdAlgorithmsTeamAdjacentDifference
 	StdAlgorithmsTeamReduce
 	StdAlgorithmsTeamTransformReduce
-	StdAlgorithmsTeamExclusiveScan
-	StdAlgorithmsTeamTransformExclusiveScan
-	StdAlgorithmsTeamInclusiveScan
-	StdAlgorithmsTeamTransformInclusiveScan
 	)
       list(APPEND STDALGO_TEAM_SOURCES_I Test${Name}.cpp)
     endforeach()

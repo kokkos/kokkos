@@ -107,9 +107,9 @@ auto unique(const std::string& label, const ExecutionSpace& ex,
 // since they cause issues on device because of the string allocation.
 //
 template <class TeamHandleType, class IteratorType>
-KOKKOS_FUNCTION std::enable_if_t<
-    Impl::is_iterator_v<IteratorType>&& ::is_team_handle<TeamHandleType>::value,
-    IteratorType>
+KOKKOS_FUNCTION std::enable_if_t<Impl::is_iterator_v<IteratorType> &&
+                                     is_team_handle<TeamHandleType>::value,
+                                 IteratorType>
 unique(const TeamHandleType& teamHandle, IteratorType first,
        IteratorType last) {
   return Impl::unique_team_impl(teamHandle, first, last);
