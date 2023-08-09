@@ -28,15 +28,17 @@ inline void host_check_gen_ctor() {
 
   DataType init[lanes];
   DataType expected[lanes];
-  mask_type mask(false);
+  mask_type init_mask(false);
 
   for (std::size_t i = 0; i < lanes; ++i) {
-    if (i % 3 == 0) mask[i] = true;
+    if (i % 3 == 0) init_mask[i] = true;
     init[i]     = 7;
-    expected[i] = (mask[i]) ? init[i] * 9 : init[i];
+    expected[i] = (init_mask[i]) ? init[i] * 9 : init[i];
   }
 
   simd_type basic([&](std::size_t i) { return init[i]; });
+	mask_type mask([&](std::size_t i) { return init_mask[i]; });
+
   simd_type rhs;
   rhs.copy_from(init, Kokkos::Experimental::element_aligned_tag());
   host_check_equality(basic, rhs, lanes);

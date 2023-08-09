@@ -140,7 +140,7 @@ template <typename... Ts>
 class data_types {};
 
 #if defined(KOKKOS_ARCH_AVX512XEON)
-using host_abi_set  = abi_set<simd_abi::scalar/*, simd_abi::avx512_fixed_size<8>*/>;
+using host_abi_set  = abi_set<simd_abi::scalar, simd_abi::avx512_fixed_size<8>>;
 using data_type_set = data_types<std::int32_t, std::uint32_t, std::int64_t,
                                  std::uint64_t, double>;
 #elif defined(KOKKOS_ARCH_AVX2)
