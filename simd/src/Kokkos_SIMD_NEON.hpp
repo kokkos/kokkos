@@ -86,13 +86,13 @@ class neon_mask<Derived, 64> {
                 std::is_invocable_r_v<value_type, G,
                                       std::integral_constant<std::size_t, 0>>,
                 bool> = false>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit neon_mask(
       G&& gen) noexcept {
-    m_value = vsetq_lane_f64(
+    m_value = vsetq_lane_u64(
         (gen(std::integral_constant<std::size_t, 0>()) ? 0xFFFFFFFFFFFFFFFFULL
                                                        : 0),
         m_value, 0);
-    m_value = vsetq_lane_f64(
+    m_value = vsetq_lane_u64(
         (gen(std::integral_constant<std::size_t, 1>()) ? 0xFFFFFFFFFFFFFFFFULL
                                                        : 0),
         m_value, 1);
@@ -196,7 +196,7 @@ class neon_mask<Derived, 32> {
                 std::is_invocable_r_v<value_type, G,
                                       std::integral_constant<std::size_t, 0>>,
                 bool> = false>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit neon_mask(
       G&& gen) noexcept {
     m_value = vset_lane_u32(
         (gen(std::integral_constant<std::size_t, 0>()) ? 0xFFFFFFFFU : 0),
@@ -276,6 +276,14 @@ class simd_mask<T, simd_abi::neon_fixed_size<2>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd_mask(
       implementation_type const& value)
       : base_type(value) {}
+  template <class G,
+            std::enable_if_t<
+                std::is_invocable_r_v<typename base_type::value_type, G,
+                                      std::integral_constant<std::size_t, 0>>,
+                bool> = false>
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd_mask(
+      G&& gen) noexcept
+      : base_type(gen) {}
 };
 
 template <>
