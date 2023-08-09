@@ -73,6 +73,18 @@ class simd_mask<double, simd_abi::avx2_fixed_size<4>> {
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit simd_mask(value_type value)
       : m_value(_mm256_castsi256_pd(_mm256_set1_epi64x(-std::int64_t(value)))) {
   }
+  template <class G,
+            std::enable_if_t<
+                std::is_invocable_r_v<value_type, G,
+                                      std::integral_constant<std::size_t, 0>>,
+                bool> = false>
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd_mask(
+      G&& gen) noexcept
+      : m_value(_mm256_castsi256_pd(_mm256_setr_epi64x(
+            -std::int64_t(gen(std::integral_constant<std::size_t, 0>())),
+            -std::int64_t(gen(std::integral_constant<std::size_t, 1>())),
+            -std::int64_t(gen(std::integral_constant<std::size_t, 2>())),
+            -std::int64_t(gen(std::integral_constant<std::size_t, 3>()))))) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd_mask(
       simd_mask<std::int32_t, simd_abi::avx2_fixed_size<4>> const& i32_mask);
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION static constexpr std::size_t size() {
@@ -159,6 +171,18 @@ class simd_mask<std::int32_t, simd_abi::avx2_fixed_size<4>> {
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd_mask(
       __m128i const& value_in)
       : m_value(value_in) {}
+  template <class G,
+            std::enable_if_t<
+                std::is_invocable_r_v<value_type, G,
+                                      std::integral_constant<std::size_t, 0>>,
+                bool> = false>
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd_mask(
+      G&& gen) noexcept
+      : m_value(_mm_setr_epi32(
+            -std::int32_t(gen(std::integral_constant<std::size_t, 0>())),
+            -std::int32_t(gen(std::integral_constant<std::size_t, 1>())),
+            -std::int32_t(gen(std::integral_constant<std::size_t, 2>())),
+            -std::int32_t(gen(std::integral_constant<std::size_t, 3>())))) {}
   template <class U>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd_mask(
       simd_mask<U, abi_type> const& other) {
@@ -244,6 +268,18 @@ class simd_mask<std::int64_t, simd_abi::avx2_fixed_size<4>> {
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd_mask(
       __m256i const& value_in)
       : m_value(value_in) {}
+  template <class G,
+            std::enable_if_t<
+                std::is_invocable_r_v<value_type, G,
+                                      std::integral_constant<std::size_t, 0>>,
+                bool> = false>
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd_mask(
+      G&& gen) noexcept
+      : m_value(_mm256_setr_epi64x(
+            -std::int64_t(gen(std::integral_constant<std::size_t, 0>())),
+            -std::int64_t(gen(std::integral_constant<std::size_t, 1>())),
+            -std::int64_t(gen(std::integral_constant<std::size_t, 2>())),
+            -std::int64_t(gen(std::integral_constant<std::size_t, 3>())))) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd_mask(
       simd_mask<std::int32_t, abi_type> const& other)
       : m_value(_mm256_cvtepi32_epi64(static_cast<__m128i>(other))) {}
@@ -328,6 +364,18 @@ class simd_mask<std::uint64_t, simd_abi::avx2_fixed_size<4>> {
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd_mask(
       __m256i const& value_in)
       : m_value(value_in) {}
+  template <class G,
+            std::enable_if_t<
+                std::is_invocable_r_v<value_type, G,
+                                      std::integral_constant<std::size_t, 0>>,
+                bool> = false>
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd_mask(
+      G&& gen) noexcept
+      : m_value(_mm256_setr_epi64x(
+            -std::int64_t(gen(std::integral_constant<std::size_t, 0>())),
+            -std::int64_t(gen(std::integral_constant<std::size_t, 1>())),
+            -std::int64_t(gen(std::integral_constant<std::size_t, 2>())),
+            -std::int64_t(gen(std::integral_constant<std::size_t, 3>())))) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit operator __m256i()
       const {
     return m_value;
@@ -393,6 +441,18 @@ class simd<double, simd_abi::avx2_fixed_size<4>> {
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(
       __m256d const& value_in)
       : m_value(value_in) {}
+  template <class G,
+            std::enable_if_t<
+                std::is_invocable_r_v<value_type, G,
+                                      std::integral_constant<std::size_t, 0>>,
+                bool> = false>
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(
+      G&& gen) noexcept
+      : m_value(_mm256_setr_pd(gen(std::integral_constant<std::size_t, 0>()),
+                               gen(std::integral_constant<std::size_t, 1>()),
+                               gen(std::integral_constant<std::size_t, 2>()),
+                               gen(std::integral_constant<std::size_t, 3>()))) {
+  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference operator[](std::size_t i) {
     return reinterpret_cast<value_type*>(&m_value)[i];
   }
@@ -589,7 +649,8 @@ class simd<std::int32_t, simd_abi::avx2_fixed_size<4>> {
                 std::is_invocable_r_v<value_type, G,
                                       std::integral_constant<std::size_t, 0>>,
                 bool> = false>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd(G&& gen)
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(
+      G&& gen) noexcept
       : m_value(_mm_setr_epi32(gen(std::integral_constant<std::size_t, 0>()),
                                gen(std::integral_constant<std::size_t, 1>()),
                                gen(std::integral_constant<std::size_t, 2>()),
@@ -741,7 +802,8 @@ class simd<std::int64_t, simd_abi::avx2_fixed_size<4>> {
                 std::is_invocable_r_v<value_type, G,
                                       std::integral_constant<std::size_t, 0>>,
                 bool> = false>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd(G&& gen)
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(
+      G&& gen) noexcept
       : m_value(_mm256_setr_epi64x(
             gen(std::integral_constant<std::size_t, 0>()),
             gen(std::integral_constant<std::size_t, 1>()),
@@ -908,7 +970,8 @@ class simd<std::uint64_t, simd_abi::avx2_fixed_size<4>> {
                 std::is_invocable_r_v<value_type, G,
                                       std::integral_constant<std::size_t, 0>>,
                 bool> = false>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd(G&& gen)
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(
+      G&& gen) noexcept
       : m_value(_mm256_setr_epi64x(
             gen(std::integral_constant<std::size_t, 0>()),
             gen(std::integral_constant<std::size_t, 1>()),

@@ -37,7 +37,7 @@ inline void host_check_gen_ctor() {
   }
 
   simd_type basic([&](std::size_t i) { return init[i]; });
-	mask_type mask([&](std::size_t i) { return init_mask[i]; });
+  mask_type mask([&](std::size_t i) { return init_mask[i]; });
 
   simd_type rhs;
   rhs.copy_from(init, Kokkos::Experimental::element_aligned_tag());
@@ -48,7 +48,7 @@ inline void host_check_gen_ctor() {
 
   simd_type blend;
   blend.copy_from(expected, Kokkos::Experimental::element_aligned_tag());
-  host_check_equality(result, blend, lanes);
+  host_check_equality(blend, result, lanes);
 }
 
 template <typename Abi, typename... DataTypes>
