@@ -87,7 +87,7 @@ void *HostSpace::impl_allocate(
   void *ptr = nullptr;
 
   if (arg_alloc_size) {
-    // Over-allocate to to multiple of alignment
+    // Over-allocate to multiple of alignment
     size_t size_alignment_multiple =
         (arg_alloc_size + alignment - 1) / alignment * alignment;
 #ifdef KOKKOS_COMPILER_MSVC
