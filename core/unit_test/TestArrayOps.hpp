@@ -14,6 +14,17 @@
 //
 //@HEADER
 
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wchar-subscripts"
+#endif
+
+#include <Kokkos_Array.hpp>
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
+
 #include <gtest/gtest.h>
 #include <Kokkos_Core.hpp>
 #include <numeric>
@@ -42,85 +53,87 @@ TEST(TEST_CATEGORY, array_element_access) {
   size_t index = 1;
   ASSERT_EQ(a[index], 5);
 
-  auto b       = static_cast<bool>(index);
-ASSERT_EQ(a[b], a[index]);
-ASSERT_EQ(ca[b], a[index]);
-
-  auto c       = static_cast<char>(index);
-  auto sc      = static_cast<signed char>(index);
-  auto uc      = static_cast<unsigned char>(index);
-  auto c16     = static_cast<char16_t>(index);
-  auto c32     = static_cast<char32_t>(index);
-  auto wc      = static_cast<wchar_t>(index);
-  auto s       = static_cast<short>(index);
-  auto us      = static_cast<unsigned short>(index);
-  auto i       = static_cast<int>(index);
-  auto ui      = static_cast<unsigned int>(index);
-  auto l       = static_cast<long>(index);
-  auto ul      = static_cast<unsigned long>(index);
-  auto ll      = static_cast<long long>(index);
-  auto ull     = static_cast<unsigned long long>(index);
-  auto e       = static_cast<Enum>(index);
-  auto eb      = static_cast<EnumBool>(index);
-  auto se      = static_cast<ScopedEnum>(index);
-  auto ses     = static_cast<ScopedEnumShort>(index);
-
-
+  auto b = static_cast<bool>(index);
   ASSERT_EQ(a[b], a[index]);
-  ASSERT_EQ(a[sc], a[index]);
-  ASSERT_EQ(a[uc], a[index]);
-  ASSERT_EQ(a[c16], a[index]);
-  ASSERT_EQ(a[c32], a[index]);
-  ASSERT_EQ(a[wc], a[index]);
-  ASSERT_EQ(a[s], a[index]);
-  ASSERT_EQ(a[us], a[index]);
-  ASSERT_EQ(a[i], a[index]);
-  ASSERT_EQ(a[ui], a[index]);
-  ASSERT_EQ(a[l], a[index]);
-  ASSERT_EQ(a[ul], a[index]);
-  ASSERT_EQ(a[ll], a[index]);
-  ASSERT_EQ(a[ull], a[index]);
-  ASSERT_EQ(a[e], a[index]);
-  ASSERT_EQ(a[eb], a[index]);
-  ASSERT_EQ(a[se], a[index]);
-  ASSERT_EQ(a[ses], a[index]);
-
   ASSERT_EQ(ca[b], a[index]);
-  ASSERT_EQ(ca[sc], a[index]);
-  ASSERT_EQ(ca[uc], a[index]);
-  ASSERT_EQ(ca[c16], a[index]);
-  ASSERT_EQ(ca[c32], a[index]);
-  ASSERT_EQ(ca[wc], a[index]);
-  ASSERT_EQ(ca[s], a[index]);
-  ASSERT_EQ(ca[us], a[index]);
-  ASSERT_EQ(ca[i], a[index]);
-  ASSERT_EQ(ca[ui], a[index]);
-  ASSERT_EQ(ca[l], a[index]);
-  ASSERT_EQ(ca[ul], a[index]);
-  ASSERT_EQ(ca[ll], a[index]);
-  ASSERT_EQ(ca[ull], a[index]);
-  ASSERT_EQ(ca[e], a[index]);
-  ASSERT_EQ(ca[eb], a[index]);
-  ASSERT_EQ(ca[se], a[index]);
-  ASSERT_EQ(ca[ses], a[index]);
 
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wchar-subscripts"
-#endif
-
+  auto c = static_cast<char>(index);
   ASSERT_EQ(a[c], a[index]);
   ASSERT_EQ(ca[c], a[index]);
 
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#endif
+  auto sc = static_cast<signed char>(index);
+  ASSERT_EQ(a[sc], a[index]);
+  ASSERT_EQ(ca[sc], a[index]);
+
+  auto uc = static_cast<unsigned char>(index);
+  ASSERT_EQ(a[uc], a[index]);
+  ASSERT_EQ(ca[uc], a[index]);
 
 #if defined(__cpp_char8_t)
   auto c8 = static_cast<char8_t>(index);
   ASSERT_EQ(a[ch], a[index]);
   ASSERT_EQ(a[ch], a[index]);
 #endif
+
+  auto c16 = static_cast<char16_t>(index);
+  ASSERT_EQ(a[c16], a[index]);
+  ASSERT_EQ(ca[c16], a[index]);
+
+  auto c32 = static_cast<char32_t>(index);
+  ASSERT_EQ(a[c32], a[index]);
+  ASSERT_EQ(ca[c32], a[index]);
+
+  auto wc = static_cast<wchar_t>(index);
+  ASSERT_EQ(a[wc], a[index]);
+  ASSERT_EQ(ca[wc], a[index]);
+
+  auto s = static_cast<short>(index);
+  ASSERT_EQ(a[s], a[index]);
+  ASSERT_EQ(ca[s], a[index]);
+
+  auto us = static_cast<unsigned short>(index);
+  ASSERT_EQ(a[us], a[index]);
+  ASSERT_EQ(ca[us], a[index]);
+
+  auto i = static_cast<int>(index);
+  ASSERT_EQ(a[i], a[index]);
+  ASSERT_EQ(ca[i], a[index]);
+
+  auto ui = static_cast<unsigned int>(index);
+  ASSERT_EQ(a[ui], a[index]);
+  ASSERT_EQ(ca[ui], a[index]);
+
+  auto l = static_cast<long>(index);
+  ASSERT_EQ(a[l], a[index]);
+  ASSERT_EQ(ca[l], a[index]);
+
+  auto ul = static_cast<unsigned long>(index);
+  ASSERT_EQ(a[ul], a[index]);
+  ASSERT_EQ(ca[ul], a[index]);
+
+  auto ll = static_cast<long long>(index);
+  ASSERT_EQ(a[ll], a[index]);
+  ASSERT_EQ(ca[ll], a[index]);
+
+  auto ull = static_cast<unsigned long long>(index);
+  ASSERT_EQ(a[ull], a[index]);
+  ASSERT_EQ(ca[ull], a[index]);
+
+  auto e = static_cast<Enum>(index);
+  ASSERT_EQ(a[e], a[index]);
+  ASSERT_EQ(ca[e], a[index]);
+
+  auto eb = static_cast<EnumBool>(index);
+  ASSERT_EQ(a[eb], a[index]);
+  ASSERT_EQ(ca[eb], a[index]);
+
+  auto se = static_cast<ScopedEnum>(index);
+  ASSERT_EQ(a[se], a[index]);
+  ASSERT_EQ(ca[se], a[index]);
+
+  auto ses = static_cast<ScopedEnumShort>(index);
+  ASSERT_EQ(a[ses], a[index]);
+  ASSERT_EQ(ca[ses], a[index]);
 
 #if defined(__clang__)
   auto i128 = static_cast<__int128>(index);
@@ -134,73 +147,6 @@ ASSERT_EQ(ca[b], a[index]);
 
   ASSERT_EQ(a.data()[index], a[index]);
   ASSERT_EQ(ca.data()[index], a[index]);
-
-
-}
-
-TEST(TEST_CATEGORY, array_element_access_by_bool) {
-  using A = Kokkos::Array<int, 2>;
-  A a{{3, 5}};
-  ASSERT_EQ(a[false], 3);
-  ASSERT_EQ(a[true], 5);
-
-  const A& c = a;
-  ASSERT_EQ(c[false], 3);
-  ASSERT_EQ(c[true], 5);
-}
-
-TEST(TEST_CATEGORY, array_element_access_by_int) {
-  using A = Kokkos::Array<int, 2>;
-  A a{{3, 5}};
-  ASSERT_EQ(a[0], 3);
-  ASSERT_EQ(a[1], 5);
-
-  const A& c = a;
-  ASSERT_EQ(c[0], 3);
-  ASSERT_EQ(c[1], 5);
-}
-
-TEST(TEST_CATEGORY, array_element_access_by_long_long) {
-  using A = Kokkos::Array<int, 2>;
-  A a{{3, 5}};
-  ASSERT_EQ(a[0ll], 3);
-  ASSERT_EQ(a[1ll], 5);
-
-  const A& c = a;
-  ASSERT_EQ(c[0ll], 3);
-  ASSERT_EQ(c[1ll], 5);
-}
-
-TEST(TEST_CATEGORY, array_element_access_by_enum) {
-  using A = Kokkos::Array<int, 2>;
-  A a{{3, 5}};
-  ASSERT_EQ(a[EZero], 3);
-  ASSERT_EQ(a[EOne], 5);
-
-  const A& c = a;
-  ASSERT_EQ(c[EZero], 3);
-  ASSERT_EQ(c[EOne], 5);
-}
-
-TEST(TEST_CATEGORY, array_element_access_by_scoped_enum) {
-  using A = Kokkos::Array<int, 2>;
-  A a{{3, 5}};
-  ASSERT_EQ(a[ScopedEnum::SEZero], 3);
-  ASSERT_EQ(a[ScopedEnum::SEOne], 5);
-
-  const A& c = a;
-  ASSERT_EQ(c[ScopedEnum::SEZero], 3);
-  ASSERT_EQ(c[ScopedEnum::SEOne], 5);
-}
-TEST(TEST_CATEGORY, array_element_access_data) {
-  using A = Kokkos::Array<int, 2>;
-  A a{{3, 5}};
-  ASSERT_EQ(a.data()[0], 3);
-  ASSERT_EQ(a.data()[1], 5);
-
-  const A& c = a;
-  ASSERT_EQ(c.data()[0], 3);
-  ASSERT_EQ(c.data()[1], 5);
 }
 
 TEST(TEST_CATEGORY, array_T_0) {
