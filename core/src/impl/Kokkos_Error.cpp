@@ -102,13 +102,6 @@ void Experimental::RawMemoryAllocationFailure::print_error_message(
   o << "  (The allocation mechanism was ";
   switch (m_mechanism) {
     case AllocationMechanism::StdMalloc: o << "standard malloc()."; break;
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-    case AllocationMechanism::PosixMemAlign: o << "posix_memalign()."; break;
-    case AllocationMechanism::PosixMMap: o << "POSIX mmap()."; break;
-    case AllocationMechanism::IntelMMAlloc:
-      o << "the Intel _mm_malloc() intrinsic.";
-      break;
-#endif
     case AllocationMechanism::CudaMalloc: o << "cudaMalloc()."; break;
     case AllocationMechanism::CudaMallocManaged:
       o << "cudaMallocManaged().";
