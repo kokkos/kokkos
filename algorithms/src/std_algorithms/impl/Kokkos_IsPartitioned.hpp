@@ -110,7 +110,7 @@ bool is_partitioned_exespace_impl(const std::string& label,
 
   if (red_result.max_loc_true != red_id_max &&
       red_result.min_loc_false != red_id_min) {
-    // when the reduction produces nontrivial values
+    // this occurs when the reduction yields nontrivial values
     return red_result.max_loc_true < red_result.min_loc_false;
   } else if (red_result.max_loc_true == red_id_max &&
              red_result.min_loc_false == 0) {
@@ -166,7 +166,7 @@ KOKKOS_FUNCTION bool is_partitioned_team_impl(const TeamHandleType& teamHandle,
 
   if (red_result.max_loc_true != red_id_max &&
       red_result.min_loc_false != red_id_min) {
-    // when the reduction produces nontrivial values
+    // this occurs when the reduction yields nontrivial values
     return red_result.max_loc_true < red_result.min_loc_false;
   } else if (red_result.max_loc_true == red_id_max &&
              red_result.min_loc_false == 0) {
