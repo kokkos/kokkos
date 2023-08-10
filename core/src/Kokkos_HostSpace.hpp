@@ -116,9 +116,6 @@ class HostSpace {
   static constexpr const char* name() { return m_name; }
 
  private:
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  KOKKOS_DEPRECATED AllocationMechanism m_alloc_mech = STD_MALLOC;
-#endif
   static constexpr const char* m_name = "Host";
   friend class Kokkos::Impl::SharedAllocationRecord<Kokkos::HostSpace, void>;
 };
