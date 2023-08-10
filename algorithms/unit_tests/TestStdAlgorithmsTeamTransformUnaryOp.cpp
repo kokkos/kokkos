@@ -57,7 +57,7 @@ struct TestFunctorA {
                               KE::cend(myRowViewFrom), KE::begin(myRowViewDest),
                               PlusTwoUnaryOp<value_type>());
 
-      Kokkos::single(Kokkos::PerTeam(member), [=]() {
+      Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
         m_distancesView(myRowIndex) =
             KE::distance(KE::begin(myRowViewDest), it);
       });
@@ -65,7 +65,7 @@ struct TestFunctorA {
       auto it = KE::transform(member, myRowViewFrom, myRowViewDest,
                               PlusTwoUnaryOp<value_type>());
 
-      Kokkos::single(Kokkos::PerTeam(member), [=]() {
+      Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
         m_distancesView(myRowIndex) =
             KE::distance(KE::begin(myRowViewDest), it);
       });

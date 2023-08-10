@@ -46,12 +46,12 @@ struct TestFunctorA {
       auto it = KE::swap_ranges(member, KE::begin(myRowView1),
                                 KE::end(myRowView1), KE::begin(myRowView2));
 
-      Kokkos::single(Kokkos::PerTeam(member), [=]() {
+      Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
         m_distancesView(myRowIndex) = KE::distance(KE::begin(myRowView2), it);
       });
     } else if (m_apiPick == 1) {
       auto it = KE::swap_ranges(member, myRowView1, myRowView2);
-      Kokkos::single(Kokkos::PerTeam(member), [=]() {
+      Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
         m_distancesView(myRowIndex) = KE::distance(KE::begin(myRowView2), it);
       });
     }

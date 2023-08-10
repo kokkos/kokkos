@@ -53,14 +53,14 @@ struct TestFunctorA {
       auto it = KE::generate_n(member, KE::begin(myRowView), m_count,
                                GenerateFunctor<value_type>());
 
-      Kokkos::single(Kokkos::PerTeam(member), [=]() {
+      Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
         m_distancesView(myRowIndex) = KE::distance(KE::begin(myRowView), it);
       });
     } else if (m_apiPick == 1) {
       auto it = KE::generate_n(member, myRowView, m_count,
                                GenerateFunctor<value_type>());
 
-      Kokkos::single(Kokkos::PerTeam(member), [=]() {
+      Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
         m_distancesView(myRowIndex) = KE::distance(KE::begin(myRowView), it);
       });
     }
