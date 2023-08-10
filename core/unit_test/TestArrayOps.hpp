@@ -14,6 +14,7 @@
 //
 //@HEADER
 
+#include "Kokkos_Macros.hpp"
 #if defined(__clang__)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wchar-subscripts"
@@ -149,18 +150,140 @@ TEST(TEST_CATEGORY, array_element_access) {
   ASSERT_EQ(ca.data()[index], a[index]);
 }
 
-TEST(TEST_CATEGORY, array_T_0) {
+TEST(TEST_CATEGORY, array_zero_capacity) {
   using A = Kokkos::Array<int, 0>;
   A a;
 
-  ASSERT_EQ(a.empty(), 0 == a.size());
+  ASSERT_TRUE(a.empty());
   ASSERT_EQ(a.size(), 0u);
   ASSERT_EQ(a.max_size(), 0u);
+}
+
+TEST(TEST_CATEGORY, array_zero_data_nullptr) {
+  using A = Kokkos::Array<int, 0>;
+  A a;
 
   ASSERT_EQ(a.data(), nullptr);
 
-  const A& c = a;
-  ASSERT_EQ(c.data(), nullptr);
+  const A& ca = a;
+  ASSERT_EQ(ca.data(), nullptr);
+}
+
+TEST(TEST_CATEGORY, array_contiguous_capacity) {
+  int aa[] = {3, 5};
+  using A =
+      Kokkos::Array<int, KOKKOS_INVALID_INDEX, Kokkos::Array<>::contiguous>;
+  A a(aa, std::size(aa));
+
+  ASSERT_EQ(a.empty(), 0 == a.size());
+  ASSERT_EQ(a.size(), std::size(aa));
+  ASSERT_EQ(a.max_size(), std::size(aa));
+}
+
+TEST(TEST_CATEGORY, array_contiguous_element_access) {
+  int aa[] = {3, 5};
+  using A =
+      Kokkos::Array<int, KOKKOS_INVALID_INDEX, Kokkos::Array<>::contiguous>;
+  A a(aa, std::size(aa));
+  A const& ca = a;
+
+  size_t index = 1;
+  ASSERT_EQ(a[index], aa[index]);
+
+  auto b = static_cast<bool>(index);
+  ASSERT_EQ(a[b], aa[index]);
+  ASSERT_EQ(ca[b], aa[index]);
+
+  auto c = static_cast<char>(index);
+  ASSERT_EQ(a[c], aa[index]);
+  ASSERT_EQ(ca[c], aa[index]);
+
+  auto sc = static_cast<signed char>(index);
+  ASSERT_EQ(a[sc], aa[index]);
+  ASSERT_EQ(ca[sc], aa[index]);
+
+  auto uc = static_cast<unsigned char>(index);
+  ASSERT_EQ(a[uc], aa[index]);
+  ASSERT_EQ(ca[uc], aa[index]);
+
+#if defined(__cpp_char8_t)
+  auto c8 = static_cast<char8_t>(index);
+  ASSERT_EQ(a[ch], aa[index]);
+  ASSERT_EQ(a[ch], aa[index]);
+#endif
+
+  auto c16 = static_cast<char16_t>(index);
+  ASSERT_EQ(a[c16], aa[index]);
+  ASSERT_EQ(ca[c16], aa[index]);
+
+  auto c32 = static_cast<char32_t>(index);
+  ASSERT_EQ(a[c32], aa[index]);
+  ASSERT_EQ(ca[c32], aa[index]);
+
+  auto wc = static_cast<wchar_t>(index);
+  ASSERT_EQ(a[wc], aa[index]);
+  ASSERT_EQ(ca[wc], aa[index]);
+
+  auto s = static_cast<short>(index);
+  ASSERT_EQ(a[s], aa[index]);
+  ASSERT_EQ(ca[s], aa[index]);
+
+  auto us = static_cast<unsigned short>(index);
+  ASSERT_EQ(a[us], aa[index]);
+  ASSERT_EQ(ca[us], aa[index]);
+
+  auto i = static_cast<int>(index);
+  ASSERT_EQ(a[i], aa[index]);
+  ASSERT_EQ(ca[i], aa[index]);
+
+  auto ui = static_cast<unsigned int>(index);
+  ASSERT_EQ(a[ui], aa[index]);
+  ASSERT_EQ(ca[ui], aa[index]);
+
+  auto l = static_cast<long>(index);
+  ASSERT_EQ(a[l], aa[index]);
+  ASSERT_EQ(ca[l], aa[index]);
+
+  auto ul = static_cast<unsigned long>(index);
+  ASSERT_EQ(a[ul], aa[index]);
+  ASSERT_EQ(ca[ul], aa[index]);
+
+  auto ll = static_cast<long long>(index);
+  ASSERT_EQ(a[ll], aa[index]);
+  ASSERT_EQ(ca[ll], aa[index]);
+
+  auto ull = static_cast<unsigned long long>(index);
+  ASSERT_EQ(a[ull], aa[index]);
+  ASSERT_EQ(ca[ull], aa[index]);
+
+  auto e = static_cast<Enum>(index);
+  ASSERT_EQ(a[e], aa[index]);
+  ASSERT_EQ(ca[e], aa[index]);
+
+  auto eb = static_cast<EnumBool>(index);
+  ASSERT_EQ(a[eb], aa[index]);
+  ASSERT_EQ(ca[eb], aa[index]);
+
+  auto se = static_cast<ScopedEnum>(index);
+  ASSERT_EQ(a[se], aa[index]);
+  ASSERT_EQ(ca[se], aa[index]);
+
+  auto ses = static_cast<ScopedEnumShort>(index);
+  ASSERT_EQ(a[ses], aa[index]);
+  ASSERT_EQ(ca[ses], aa[index]);
+
+#if defined(__clang__)
+  auto i128 = static_cast<__int128>(index);
+  ASSERT_EQ(a[i128], aa[index]);
+  ASSERT_EQ(ca[i128], aa[index]);
+
+  auto u128 = static_cast<unsigned __int128>(index);
+  ASSERT_EQ(a[u128], aa[index]);
+  ASSERT_EQ(ca[u128], aa[index]);
+#endif
+
+  ASSERT_EQ(a.data()[index], aa[index]);
+  ASSERT_EQ(ca.data()[index], aa[index]);
 }
 
 TEST(TEST_CATEGORY, array_contiguous) {
