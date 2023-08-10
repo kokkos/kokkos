@@ -396,7 +396,7 @@ elif [ "$MACHINE" = "caraway" ]; then
   )
 
   if [ -z "$ARCH_FLAG" ]; then
-    ARCH_FLAG="--arch=VEGA908"
+    ARCH_FLAG="--arch=AMD_GFX908"
   fi
 
 elif [ "$MACHINE" = "blake" ]; then
