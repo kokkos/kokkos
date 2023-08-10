@@ -81,6 +81,22 @@ class neon_mask<Derived, 64> {
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION neon_mask() = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit neon_mask(value_type value)
       : m_value(vmovq_n_u64(value ? 0xFFFFFFFFFFFFFFFFULL : 0)) {}
+  template <class G,
+            std::enable_if_t<
+                std::is_invocable_r_v<value_type, G,
+                                      std::integral_constant<std::size_t, 0>>,
+                bool> = false>
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit neon_mask(
+      G&& gen) noexcept {
+    m_value = vsetq_lane_u64(
+        (gen(std::integral_constant<std::size_t, 0>()) ? 0xFFFFFFFFFFFFFFFFULL
+                                                       : 0),
+        m_value, 0);
+    m_value = vsetq_lane_u64(
+        (gen(std::integral_constant<std::size_t, 1>()) ? 0xFFFFFFFFFFFFFFFFULL
+                                                       : 0),
+        m_value, 1);
+  }
   template <class U>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION neon_mask(
       neon_mask<U, 32> const& other) {
@@ -175,6 +191,20 @@ class neon_mask<Derived, 32> {
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION neon_mask() = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit neon_mask(value_type value)
       : m_value(vmov_n_u32(value ? 0xFFFFFFFFU : 0)) {}
+  template <class G,
+            std::enable_if_t<
+                std::is_invocable_r_v<value_type, G,
+                                      std::integral_constant<std::size_t, 0>>,
+                bool> = false>
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit neon_mask(
+      G&& gen) noexcept {
+    m_value = vset_lane_u32(
+        (gen(std::integral_constant<std::size_t, 0>()) ? 0xFFFFFFFFU : 0),
+        m_value, 0);
+    m_value = vset_lane_u32(
+        (gen(std::integral_constant<std::size_t, 1>()) ? 0xFFFFFFFFU : 0),
+        m_value, 1);
+  }
   template <class U>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION neon_mask(neon_mask<U, 64> const& other)
       : m_value(vqmovn_u64(static_cast<uint64x2_t>(other))) {}
@@ -246,6 +276,14 @@ class simd_mask<T, simd_abi::neon_fixed_size<2>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd_mask(
       implementation_type const& value)
       : base_type(value) {}
+  template <class G,
+            std::enable_if_t<
+                std::is_invocable_r_v<typename base_type::value_type, G,
+                                      std::integral_constant<std::size_t, 0>>,
+                bool> = false>
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd_mask(
+      G&& gen) noexcept
+      : base_type(gen) {}
 };
 
 template <>
@@ -299,7 +337,8 @@ class simd<double, simd_abi::neon_fixed_size<2>> {
                 std::is_invocable_r_v<value_type, G,
                                       std::integral_constant<std::size_t, 0>>,
                 bool> = false>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd(G&& gen) {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(
+      G&& gen) noexcept {
     m_value = vsetq_lane_f64(gen(std::integral_constant<std::size_t, 0>()),
                              m_value, 0);
     m_value = vsetq_lane_f64(gen(std::integral_constant<std::size_t, 1>()),
@@ -502,7 +541,8 @@ class simd<std::int32_t, simd_abi::neon_fixed_size<2>> {
                 std::is_invocable_r_v<value_type, G,
                                       std::integral_constant<std::size_t, 0>>,
                 bool> = false>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd(G&& gen) {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(
+      G&& gen) noexcept {
     m_value = vset_lane_s32(gen(std::integral_constant<std::size_t, 0>()),
                             m_value, 0);
     m_value = vset_lane_s32(gen(std::integral_constant<std::size_t, 1>()),
@@ -678,7 +718,8 @@ class simd<std::int64_t, simd_abi::neon_fixed_size<2>> {
                 std::is_invocable_r_v<value_type, G,
                                       std::integral_constant<std::size_t, 0>>,
                 bool> = false>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd(G&& gen) {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(
+      G&& gen) noexcept {
     m_value = vsetq_lane_s64(gen(std::integral_constant<std::size_t, 0>()),
                              m_value, 0);
     m_value = vsetq_lane_s64(gen(std::integral_constant<std::size_t, 1>()),
@@ -855,7 +896,8 @@ class simd<std::uint64_t, simd_abi::neon_fixed_size<2>> {
                 std::is_invocable_r_v<value_type, G,
                                       std::integral_constant<std::size_t, 0>>,
                 bool> = false>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd(G&& gen) {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(
+      G&& gen) noexcept {
     m_value = vsetq_lane_u64(gen(std::integral_constant<std::size_t, 0>()),
                              m_value, 0);
     m_value = vsetq_lane_u64(gen(std::integral_constant<std::size_t, 1>()),
