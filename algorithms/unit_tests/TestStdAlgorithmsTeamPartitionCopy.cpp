@@ -95,7 +95,7 @@ struct TestFunctorA {
           KE::begin(myRowViewDestTrue), KE::begin(myRowViewDestFalse),
           predicate);
 
-      Kokkos::single(Kokkos::PerTeam(member), [=]() {
+      Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
         m_distancesTrueView(myRowIndex) =
             KE::distance(KE::begin(myRowViewDestTrue), result.first);
         m_distancesFalseView(myRowIndex) =
@@ -108,7 +108,7 @@ struct TestFunctorA {
           KE::partition_copy(member, myRowViewFrom, myRowViewDestTrue,
                              myRowViewDestFalse, predicate);
 
-      Kokkos::single(Kokkos::PerTeam(member), [=]() {
+      Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
         m_distancesTrueView(myRowIndex) =
             KE::distance(KE::begin(myRowViewDestTrue), result.first);
         m_distancesFalseView(myRowIndex) =

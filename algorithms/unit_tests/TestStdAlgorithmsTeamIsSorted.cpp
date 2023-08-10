@@ -41,11 +41,11 @@ struct TestFunctorA {
       const bool result =
           KE::is_sorted(member, KE::cbegin(myRowView), KE::cend(myRowView));
       Kokkos::single(Kokkos::PerTeam(member),
-                     [=]() { m_returnsView(myRowIndex) = result; });
+                     [=, *this]() { m_returnsView(myRowIndex) = result; });
     } else if (m_apiPick == 1) {
       const bool result = KE::is_sorted(member, myRowView);
       Kokkos::single(Kokkos::PerTeam(member),
-                     [=]() { m_returnsView(myRowIndex) = result; });
+                     [=, *this]() { m_returnsView(myRowIndex) = result; });
     }
 #if not defined KOKKOS_ENABLE_OPENMPTARGET
     else if (m_apiPick == 2) {
@@ -54,13 +54,13 @@ struct TestFunctorA {
           KE::is_sorted(member, KE::cbegin(myRowView), KE::cend(myRowView),
                         CustomLessThanComparator<value_type>{});
       Kokkos::single(Kokkos::PerTeam(member),
-                     [=]() { m_returnsView(myRowIndex) = result; });
+                     [=, *this]() { m_returnsView(myRowIndex) = result; });
     } else if (m_apiPick == 3) {
       using value_type  = typename ViewType::value_type;
       const bool result = KE::is_sorted(member, myRowView,
                                         CustomLessThanComparator<value_type>{});
       Kokkos::single(Kokkos::PerTeam(member),
-                     [=]() { m_returnsView(myRowIndex) = result; });
+                     [=, *this]() { m_returnsView(myRowIndex) = result; });
     }
 #endif
   }

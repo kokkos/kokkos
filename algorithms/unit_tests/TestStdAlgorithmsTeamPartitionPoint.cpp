@@ -74,7 +74,7 @@ struct TestFunctorA {
       const auto it = KE::partition_point(member, KE::cbegin(myRowView),
                                           KE::cend(myRowView), predicate);
 
-      Kokkos::single(Kokkos::PerTeam(member), [=]() {
+      Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
         m_distancesView(myRowIndex) = KE::distance(KE::cbegin(myRowView), it);
       });
     }
@@ -82,7 +82,7 @@ struct TestFunctorA {
     else if (m_apiPick == 1) {
       const auto it = KE::partition_point(member, myRowView, predicate);
 
-      Kokkos::single(Kokkos::PerTeam(member), [=]() {
+      Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
         m_distancesView(myRowIndex) = KE::distance(KE::begin(myRowView), it);
       });
     }

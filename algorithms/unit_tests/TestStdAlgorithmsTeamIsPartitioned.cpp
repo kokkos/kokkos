@@ -75,12 +75,12 @@ struct TestFunctorA {
                                              KE::cend(myRowView), predicate);
 
       Kokkos::single(Kokkos::PerTeam(member),
-                     [=]() { m_returnsView(myRowIndex) = result; });
+                     [=, *this]() { m_returnsView(myRowIndex) = result; });
     } else if (m_apiPick == 1) {
       const bool result = KE::is_partitioned(member, myRowView, predicate);
 
       Kokkos::single(Kokkos::PerTeam(member),
-                     [=]() { m_returnsView(myRowIndex) = result; });
+                     [=, *this]() { m_returnsView(myRowIndex) = result; });
     }
   }
 };
