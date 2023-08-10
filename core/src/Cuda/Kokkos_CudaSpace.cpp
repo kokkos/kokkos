@@ -141,7 +141,7 @@ CudaUVMSpace::CudaUVMSpace() : m_device(Kokkos::Cuda().cuda_device()) {}
 
 CudaHostPinnedSpace::CudaHostPinnedSpace() {}
 
-int memory_threshold_g = 40000;  // 40 kB
+size_t memory_threshold_g = 40000;  // 40 kB
 
 //==============================================================================
 // <editor-fold desc="allocate()"> {{{1
@@ -172,7 +172,7 @@ void *impl_allocate_common(const Cuda &exec_space, const char *arg_label,
 #error CUDART_VERSION undefined!
 #elif (defined(KOKKOS_ENABLE_IMPL_CUDA_MALLOC_ASYNC) && CUDART_VERSION >= 11020)
   cudaError_t error_code;
-  if (arg_alloc_size >= (size_t)memory_threshold_g) {
+  if (arg_alloc_size >= memory_threshold_g) {
     if (exec_space_provided) {
       error_code =
           exec_space.impl_internal_space_instance()->cuda_malloc_async_wrapper(
@@ -347,7 +347,7 @@ void CudaSpace::impl_deallocate(
 #ifndef CUDART_VERSION
 #error CUDART_VERSION undefined!
 #elif (defined(KOKKOS_ENABLE_IMPL_CUDA_MALLOC_ASYNC) && CUDART_VERSION >= 11020)
-    if (arg_alloc_size >= (size_t)memory_threshold_g) {
+    if (arg_alloc_size >= memory_threshold_g) {
       Impl::cuda_device_synchronize(
           "Kokkos::Cuda: backend fence before async free");
       KOKKOS_IMPL_CUDA_SAFE_CALL(
