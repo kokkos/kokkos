@@ -152,30 +152,37 @@ TEST(TEST_CATEGORY, array_element_access) {
 
 TEST(TEST_CATEGORY, array_zero_capacity) {
   using A = Kokkos::Array<int, 0>;
-  A a;
+  A e;
 
-  ASSERT_TRUE(a.empty());
-  ASSERT_EQ(a.size(), 0u);
-  ASSERT_EQ(a.max_size(), 0u);
+  ASSERT_TRUE(e.empty());
+  ASSERT_EQ(e.size(), 0u);
+  ASSERT_EQ(e.max_size(), 0u);
 }
 
 TEST(TEST_CATEGORY, array_zero_data_nullptr) {
   using A = Kokkos::Array<int, 0>;
-  A a;
 
-  ASSERT_EQ(a.data(), nullptr);
+  A e;
+  ASSERT_EQ(e.data(), nullptr);
 
-  const A& ca = a;
-  ASSERT_EQ(ca.data(), nullptr);
+  const A& ce = e;
+  ASSERT_EQ(ce.data(), nullptr);
 }
 
 TEST(TEST_CATEGORY, array_contiguous_capacity) {
-  int aa[] = {3, 5};
   using A =
       Kokkos::Array<int, KOKKOS_INVALID_INDEX, Kokkos::Array<>::contiguous>;
+
+  A e(nullptr, 0);
+
+  ASSERT_TRUE(e.empty());
+  ASSERT_EQ(e.size(), 0u);
+  ASSERT_EQ(e.max_size(), 0u);
+
+  int aa[] = {3, 5};
   A a(aa, std::size(aa));
 
-  ASSERT_EQ(a.empty(), 0 == a.size());
+  ASSERT_EQ(a.empty(), 0 == std::size(aa));
   ASSERT_EQ(a.size(), std::size(aa));
   ASSERT_EQ(a.max_size(), std::size(aa));
 }
@@ -188,7 +195,7 @@ TEST(TEST_CATEGORY, array_contiguous_element_access) {
   A const& ca = a;
 
   size_t index = 1;
-  ASSERT_EQ(a[index], aa[index]);
+  ASSERT_EQ(std::addressof(a[index]), std::addressof(aa[index]));
 
   auto b = static_cast<bool>(index);
   ASSERT_EQ(a[b], aa[index]);
@@ -282,8 +289,67 @@ TEST(TEST_CATEGORY, array_contiguous_element_access) {
   ASSERT_EQ(ca[u128], aa[index]);
 #endif
 
-  ASSERT_EQ(a.data()[index], aa[index]);
-  ASSERT_EQ(ca.data()[index], aa[index]);
+  ASSERT_EQ(a.data(), aa);
+  ASSERT_EQ(ca.data(), aa);
+}
+
+TEST(TEST_CATEGORY, array_contiguous_assignment) {
+  using A =
+      Kokkos::Array<int, KOKKOS_INVALID_INDEX, Kokkos::Array<>::contiguous>;
+
+  int aa[] = {3, 5};
+  A a(aa, std::size(aa));
+
+  // operator=(Array<T, N, P> const&) semantics when lhs size a > rhs size b
+  using B = Kokkos::Array<int, 1>;
+  static_assert(std::size(aa) > B::size());
+  B b{{7}};
+
+  ASSERT_GT(std::size(a), std::size(b));
+  a = b;
+  ASSERT_GT(std::size(a), std::size(b));
+
+  ASSERT_EQ(a.size(), std::size(aa));
+  ASSERT_EQ(a.max_size(), std::size(aa));
+  ASSERT_EQ(a[0], 7);
+  ASSERT_EQ(a[1], 5);
+
+  // operator=(Array<T, N, P> const&) semantics when lhs size a < rhs size d
+  using D = Kokkos::Array<int, 4>;
+  static_assert(std::size(aa) < D::size());
+  D d{{11, 13, 17, 19}};
+
+  ASSERT_LT(std::size(a), std::size(d));
+  a = d;
+  ASSERT_LT(std::size(a), std::size(d));
+
+  ASSERT_EQ(a.size(), std::size(aa));
+  ASSERT_EQ(a.max_size(), std::size(aa));
+  ASSERT_EQ(a[0], 11);
+  ASSERT_EQ(a[1], 13);
+
+  // Copy assignment operator semantics when lhs size a > rhs size e
+  int ee[] = {23};
+  A e(ee, std::size(ee));
+
+  ASSERT_GT(a.size(), e.size());
+  a = e;
+  ASSERT_GT(a.size(), e.size());
+
+  ASSERT_EQ(a.size(), std::size(aa));
+  ASSERT_EQ(a.max_size(), std::size(aa));
+  ASSERT_EQ(a[0], 23);
+  ASSERT_EQ(a[1], 13);
+
+  // Copy assignment operator semantics when lhs size e < rhs size a
+  ASSERT_LT(e.size(), a.size());
+  e[0] = 29;  // To make sure e[0] / ee[0] is overwritten
+  e    = a;
+  ASSERT_LT(e.size(), a.size());
+
+  ASSERT_EQ(e.size(), std::size(ee));
+  ASSERT_EQ(e.max_size(), std::size(ee));
+  ASSERT_EQ(e[0], 23);
 }
 
 TEST(TEST_CATEGORY, array_contiguous) {
