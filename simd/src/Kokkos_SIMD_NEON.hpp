@@ -914,7 +914,8 @@ class simd<std::uint64_t, simd_abi::neon_fixed_size<2>> {
       simd<std::uint64_t, simd_abi::neon_fixed_size<2>> const& lhs,
       simd<std::uint64_t, simd_abi::neon_fixed_size<2>> const& rhs) noexcept {
     return simd<std::uint64_t, simd_abi::neon_fixed_size<2>>(vshlq_u64(
-        static_cast<uint64x2_t>(lhs), vnegq_s64(static_cast<uint64x2_t>(rhs))));
+        static_cast<uint64x2_t>(lhs),
+        vnegq_s64(vreinterpretq_s64_u64(static_cast<uint64x2_t>(rhs)))));
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd<
       std::uint64_t, simd_abi::neon_fixed_size<2>>
@@ -929,7 +930,8 @@ class simd<std::uint64_t, simd_abi::neon_fixed_size<2>> {
       simd<std::uint64_t, simd_abi::neon_fixed_size<2>> const& lhs,
       simd<std::uint64_t, simd_abi::neon_fixed_size<2>> const& rhs) noexcept {
     return simd<std::uint64_t, simd_abi::neon_fixed_size<2>>(
-        vshlq_u64(static_cast<uint64x2_t>(lhs), static_cast<uint64x2_t>(rhs)));
+        vshlq_u64(static_cast<uint64x2_t>(lhs),
+                  vreinterpretq_s64_u64(static_cast<uint64x2_t>(rhs))));
   }
 };
 
