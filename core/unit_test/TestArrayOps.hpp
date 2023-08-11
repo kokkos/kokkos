@@ -36,7 +36,7 @@ TEST(TEST_CATEGORY, array_capacity) {
   using A = Kokkos::Array<int, 2>;
   A a{{3, 5}};
 
-  ASSERT_EQ(a.empty(), 0 == a.size());
+  ASSERT_FALSE(a.empty());
   ASSERT_EQ(a.size(), 2u);
   ASSERT_EQ(a.max_size(), 2u);
 }
@@ -343,7 +343,7 @@ TEST(TEST_CATEGORY, array_contiguous_assignment) {
 
   // Copy assignment operator semantics when lhs size e < rhs size a
   ASSERT_LT(e.size(), a.size());
-  e[0] = 29;  // To make sure e[0] / ee[0] is overwritten
+  e[0] = 29;  // To check that e[0] is overwritten by e = a
   e    = a;
   ASSERT_LT(e.size(), a.size());
 
@@ -352,68 +352,155 @@ TEST(TEST_CATEGORY, array_contiguous_assignment) {
   ASSERT_EQ(e[0], 23);
 }
 
-TEST(TEST_CATEGORY, array_strided) {
-  int aa[] = {5, 7, 11, 13, 17, 19};
-
+TEST(TEST_CATEGORY, array_strided_capacity) {
   using A = Kokkos::Array<int, KOKKOS_INVALID_INDEX, Kokkos::Array<>::strided>;
 
+  A e(nullptr, 0, 0);
+
+  ASSERT_TRUE(e.empty());
+  ASSERT_EQ(e.size(), 0u);
+  ASSERT_EQ(e.max_size(), 0u);
+
+  int aa[]                 = {5, 7, 11, 13, 17, 19};
+  constexpr size_t aStride = 2;
+  A a(aa, std::size(aa) / aStride, aStride);
+
+  ASSERT_EQ(a.empty(), 0 == std::size(aa) / aStride);
+  ASSERT_EQ(a.size(), std::size(aa) / aStride);
+  ASSERT_EQ(a.max_size(), std::size(aa) / aStride);
+}
+
+TEST(TEST_CATEGORY, array_strided_element_access) {
+  using A = Kokkos::Array<int, KOKKOS_INVALID_INDEX, Kokkos::Array<>::strided>;
+
+  int aa[]                 = {5, 7, 11, 13, 17, 19};
   constexpr size_t aStride = 2;
 
   A a(aa, std::size(aa) / aStride, aStride);
+  A const& ca = a;
 
-  // capacity
-  ASSERT_EQ(a.empty(), 0 == a.size());
-  ASSERT_EQ(a.size(), std::size(aa) / aStride);
-  ASSERT_EQ(a.max_size(), std::size(aa) / aStride);
+  size_t index = 1;
+  ASSERT_EQ(std::addressof(a[index]), std::addressof(aa[index * aStride]));
 
-  // index 0
-  ASSERT_EQ(a[0], aa[0 * aStride]);
-  ASSERT_EQ(a[false], aa[0 * aStride]);
-  ASSERT_EQ(a[EZero], aa[0 * aStride]);
-  ASSERT_EQ(a[ScopedEnum::SEZero], aa[0 * aStride]);
-  ASSERT_EQ(a[ScopedEnumShort::SESZero], aa[0 * aStride]);
+  auto b = static_cast<bool>(index);
+  ASSERT_EQ(a[b], aa[index * aStride]);
+  ASSERT_EQ(ca[b], aa[index * aStride]);
 
-  // index 1
-  ASSERT_EQ(a[1], aa[1 * aStride]);
-  ASSERT_EQ(a[true], aa[1 * aStride]);
-  ASSERT_EQ(a[EOne], aa[1 * aStride]);
-  ASSERT_EQ(a[ScopedEnum::SEOne], aa[1 * aStride]);
-  ASSERT_EQ(a[ScopedEnumShort::SESOne], aa[1 * aStride]);
+  auto c = static_cast<char>(index);
+  ASSERT_EQ(a[c], aa[index * aStride]);
+  ASSERT_EQ(ca[c], aa[index * aStride]);
 
-  // data()
+  auto sc = static_cast<signed char>(index);
+  ASSERT_EQ(a[sc], aa[index * aStride]);
+  ASSERT_EQ(ca[sc], aa[index * aStride]);
+
+  auto uc = static_cast<unsigned char>(index);
+  ASSERT_EQ(a[uc], aa[index * aStride]);
+  ASSERT_EQ(ca[uc], aa[index * aStride]);
+
+#if defined(__cpp_char8_t)
+  auto c8 = static_cast<char8_t>(index);
+  ASSERT_EQ(a[ch], aa[index * aStride]);
+  ASSERT_EQ(a[ch], aa[index * aStride]);
+#endif
+
+  auto c16 = static_cast<char16_t>(index);
+  ASSERT_EQ(a[c16], aa[index * aStride]);
+  ASSERT_EQ(ca[c16], aa[index * aStride]);
+
+  auto c32 = static_cast<char32_t>(index);
+  ASSERT_EQ(a[c32], aa[index * aStride]);
+  ASSERT_EQ(ca[c32], aa[index * aStride]);
+
+  auto wc = static_cast<wchar_t>(index);
+  ASSERT_EQ(a[wc], aa[index * aStride]);
+  ASSERT_EQ(ca[wc], aa[index * aStride]);
+
+  auto s = static_cast<short>(index);
+  ASSERT_EQ(a[s], aa[index * aStride]);
+  ASSERT_EQ(ca[s], aa[index * aStride]);
+
+  auto us = static_cast<unsigned short>(index);
+  ASSERT_EQ(a[us], aa[index * aStride]);
+  ASSERT_EQ(ca[us], aa[index * aStride]);
+
+  auto i = static_cast<int>(index);
+  ASSERT_EQ(a[i], aa[index * aStride]);
+  ASSERT_EQ(ca[i], aa[index * aStride]);
+
+  auto ui = static_cast<unsigned int>(index);
+  ASSERT_EQ(a[ui], aa[index * aStride]);
+  ASSERT_EQ(ca[ui], aa[index * aStride]);
+
+  auto l = static_cast<long>(index);
+  ASSERT_EQ(a[l], aa[index * aStride]);
+  ASSERT_EQ(ca[l], aa[index * aStride]);
+
+  auto ul = static_cast<unsigned long>(index);
+  ASSERT_EQ(a[ul], aa[index * aStride]);
+  ASSERT_EQ(ca[ul], aa[index * aStride]);
+
+  auto ll = static_cast<long long>(index);
+  ASSERT_EQ(a[ll], aa[index * aStride]);
+  ASSERT_EQ(ca[ll], aa[index * aStride]);
+
+  auto ull = static_cast<unsigned long long>(index);
+  ASSERT_EQ(a[ull], aa[index * aStride]);
+  ASSERT_EQ(ca[ull], aa[index * aStride]);
+
+  auto e = static_cast<Enum>(index);
+  ASSERT_EQ(a[e], aa[index * aStride]);
+  ASSERT_EQ(ca[e], aa[index * aStride]);
+
+  auto eb = static_cast<EnumBool>(index);
+  ASSERT_EQ(a[eb], aa[index * aStride]);
+  ASSERT_EQ(ca[eb], aa[index * aStride]);
+
+  auto se = static_cast<ScopedEnum>(index);
+  ASSERT_EQ(a[se], aa[index * aStride]);
+  ASSERT_EQ(ca[se], aa[index * aStride]);
+
+  auto ses = static_cast<ScopedEnumShort>(index);
+  ASSERT_EQ(a[ses], aa[index * aStride]);
+  ASSERT_EQ(ca[ses], aa[index * aStride]);
+
+#if defined(__clang__)
+  auto i128 = static_cast<__int128>(index);
+  ASSERT_EQ(a[i128], aa[index * aStride]);
+  ASSERT_EQ(ca[i128], aa[index * aStride]);
+
+  auto u128 = static_cast<unsigned __int128>(index);
+  ASSERT_EQ(a[u128], aa[index * aStride]);
+  ASSERT_EQ(ca[u128], aa[index * aStride]);
+#endif
+
   ASSERT_EQ(a.data(), aa);
+  ASSERT_EQ(ca.data(), aa);
+}
 
-  // const index, data()
-  const A& c = a;
+TEST(TEST_CATEGORY, array_strided_assignment) {
+  using A  = Kokkos::Array<int, KOKKOS_INVALID_INDEX, Kokkos::Array<>::strided>;
+  int aa[] = {5, 7, 11, 13, 17, 19};
+  constexpr size_t aStride = 2;
+  A a(aa, std::size(aa) / aStride, aStride);
 
-  ASSERT_EQ(c[0], aa[0 * aStride]);
-  ASSERT_EQ(c[false], aa[0 * aStride]);
-  ASSERT_EQ(c[EZero], aa[0 * aStride]);
-  ASSERT_EQ(c[ScopedEnum::SEZero], aa[0 * aStride]);
-  ASSERT_EQ(c[ScopedEnumShort::SESZero], aa[0 * aStride]);
-
-  ASSERT_EQ(c[1], aa[1 * aStride]);
-  ASSERT_EQ(c[true], aa[1 * aStride]);
-  ASSERT_EQ(c[EOne], aa[1 * aStride]);
-  ASSERT_EQ(c[ScopedEnum::SEOne], aa[1 * aStride]);
-  ASSERT_EQ(c[ScopedEnumShort::SESOne], aa[1 * aStride]);
-
-  ASSERT_EQ(c.data(), aa);
-
-  // operator=(Array<T, N, P> const&) semantics when b.size() < a.size()
+  // operator=(Array<T, N, P> const&) semantics when lhs size a > rhs size b
   using B = Kokkos::Array<int, 1>;
+  static_assert(std::size(aa) / aStride > B::size());
   B b{{23}};
 
-  ASSERT_LT(std::size(b), std::size(a));
+  ASSERT_GT(std::size(a), std::size(b));
   a = b;
+  ASSERT_GT(std::size(a), std::size(b));
 
   ASSERT_EQ(a.size(), std::size(aa) / aStride);
   ASSERT_EQ(a.max_size(), std::size(aa) / aStride);
   ASSERT_EQ(a[0], b[0]);
   ASSERT_EQ(a[1], aa[1 * aStride]);
 
-  // operator=(Array<T, N, P> const&) semantics when a.size() < d.size()
+  // operator=(Array<T, N, P> const&) semantics when lhs size a < rhs size d
   using D = Kokkos::Array<int, 7>;
+  static_assert(std::size(aa) / aStride < D::size());
   D d{{29, 31, 37, 41, 43, 47, 53}};
 
   ASSERT_LT(std::size(a), std::size(d));
@@ -425,21 +512,24 @@ TEST(TEST_CATEGORY, array_strided) {
   ASSERT_EQ(a[0], d[0]);
   ASSERT_EQ(a[1], d[1]);
 
+  // Copy assignment operator semantics when lhs size a > rhs size e
   int ee[]                 = {59, 61, 67, 71, 73, 79};
   constexpr size_t eStride = 3;
   A e(ee, std::size(ee) / eStride, eStride);
 
-  ASSERT_LT(e.size(), a.size());
+  ASSERT_GT(a.size(), e.size());
   a = e;
-  ASSERT_LT(e.size(), a.size());
+  ASSERT_GT(a.size(), e.size());
 
   ASSERT_EQ(a.size(), std::size(aa) / aStride);
   ASSERT_EQ(a.max_size(), std::size(aa) / aStride);
   ASSERT_EQ(a[0], ee[0 * eStride]);
   ASSERT_EQ(a[1], ee[1 * eStride]);
 
-  e[0] = 83;
-  e    = a;
+  // Copy assignment operator semantics when lhs size e < rhs size a
+  e[0] = 83;  // To check that e[0] is overwritten by e = a
+  ASSERT_LT(e.size(), a.size());
+  e = a;
   ASSERT_LT(e.size(), a.size());
   ASSERT_EQ(e.size(), std::size(ee) / eStride);
   ASSERT_EQ(e.max_size(), std::size(ee) / eStride);
