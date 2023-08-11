@@ -79,6 +79,57 @@ template <class T>
 using remove_cvref_t = typename remove_cvref<T>::type;
 #endif
 
+#if __cplusplus >= 202002
+// C++20 version of std::underlying_type
+//
+// If T is a complete enumeration (enum) type, provides a member typedef type
+// that names the underlying type of T.
+// Otherwise, if T is not an enumeration type, there is no member type.
+// Otherwise (T is an incomplete enumeration type), the program is ill-formed.
+using std::underlying_type;
+using std::underlying_type_t;
+#else
+template <typename E, bool = std::is_enum_v<E>>
+struct underlying_type_impl {};
+
+template <typename E>
+struct underlying_type_impl<E, true> {
+  using type = std::underlying_type_t<E>;
+};
+
+template <typename E>
+using underlying_type = underlying_type_impl<E>;
+
+template <typename E>
+using underlying_type_t = typename underlying_type<E>::type;
+#endif
+
+// same as C++23 std::to_underlying but with __host__ __device__ annotations
+template <typename E>
+KOKKOS_INLINE_FUNCTION constexpr underlying_type_t<E> to_underlying(
+    E e) noexcept {
+  return static_cast<underlying_type_t<E>>(e);
+}
+
+#if defined(__cpp_lib_is_scoped_enum)
+// since C++23
+using std::is_scoped_enum;
+using std::is_scoped_enum_v;
+#else
+template <typename E, bool = std::is_enum_v<E>>
+struct is_scoped_enum_impl : std::false_type {};
+
+template <typename E>
+struct is_scoped_enum_impl<E, true>
+    : std::bool_constant<!std::is_convertible_v<E, underlying_type_t<E>>> {};
+
+template <typename E>
+struct is_scoped_enum : is_scoped_enum_impl<E>::type {};
+
+template <typename E>
+inline constexpr bool is_scoped_enum_v = is_scoped_enum<E>::value;
+#endif
+
 //==============================================================================
 // <editor-fold desc="is_specialization_of"> {{{1
 
