@@ -304,14 +304,14 @@ struct Array<T, KOKKOS_INVALID_INDEX, Array<>::strided> {
   KOKKOS_INLINE_FUNCTION
   Array& operator=(const Array& rhs) {
     const size_t n = std::min(m_size, rhs.size());
-    for (size_t i = 0; i < n; ++i) m_elem[i] = rhs[i];
+    for (size_t i = 0; i < n; ++i) m_elem[i * m_stride] = rhs[i];
     return *this;
   }
 
   template <size_t N, class P>
   KOKKOS_INLINE_FUNCTION Array& operator=(const Array<T, N, P>& rhs) {
     const size_t n = std::min(m_size, rhs.size());
-    for (size_t i = 0; i < n; ++i) m_elem[i] = rhs[i];
+    for (size_t i = 0; i < n; ++i) m_elem[i * m_stride] = rhs[i];
     return *this;
   }
 
