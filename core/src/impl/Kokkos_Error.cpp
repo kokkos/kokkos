@@ -121,6 +121,7 @@ void Experimental::RawMemoryAllocationFailure::print_error_message(
     case AllocationMechanism::SYCLMallocHost:
       o << "sycl::malloc_host().";
       break;
+    default: o << "unsupported.";
   }
   append_additional_error_information(o);
   o << ")" << std::endl;

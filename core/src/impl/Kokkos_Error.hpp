@@ -113,6 +113,11 @@ class RawMemoryAllocationFailure : public std::bad_alloc {
   };
   enum class AllocationMechanism {
     StdMalloc,
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+    PosixMemAlign KOKKOS_DEPRECATED,
+    PosixMMap KOKKOS_DEPRECATED,
+    IntelMMAlloc KOKKOS_DEPRECATED,
+#endif
     CudaMalloc,
     CudaMallocManaged,
     CudaHostAlloc,
