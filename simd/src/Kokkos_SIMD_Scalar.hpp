@@ -157,7 +157,7 @@ class simd<T, simd_abi::scalar> {
   }
   [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr simd operator>>(
       simd const& lhs, simd const& rhs) noexcept {
-    return simd(lhs.m_value >> static_cast<value_type>(rhs));
+    return simd(lhs.m_value >> rhs.m_value);
   }
   [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr simd operator<<(
       simd const& lhs, int rhs) noexcept {
@@ -165,7 +165,7 @@ class simd<T, simd_abi::scalar> {
   }
   [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr simd operator<<(
       simd const& lhs, simd const& rhs) noexcept {
-    return simd(lhs.m_value << static_cast<value_type>(rhs));
+    return simd(lhs.m_value << rhs.m_value);
   }
   [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr simd operator&(
       simd const& lhs, simd const& rhs) noexcept {
