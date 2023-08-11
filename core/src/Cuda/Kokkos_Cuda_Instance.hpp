@@ -487,16 +487,16 @@ class CudaInternal {
 #if (defined(KOKKOS_ENABLE_IMPL_CUDA_MALLOC_ASYNC) && CUDART_VERSION >= 11020)
   template <bool setCudaDevice = true>
   cudaError_t cuda_malloc_async_wrapper(void** devPtr, size_t size,
-                                        cudaStream_t hStream == nullptr) const {
+                                        cudaStream_t hStream = nullptr) const {
     if constexpr (setCudaDevice) set_cuda_device();
-    return cudaMallocAsync(devPtr, size, get_input_stream(stream));
+    return cudaMallocAsync(devPtr, size, get_input_stream(hStream));
   }
 
   template <bool setCudaDevice = true>
   cudaError_t cuda_free_async_wrapper(void* devPtr,
-                                      cudaStream_t hStream == nullptr) const {
+                                      cudaStream_t hStream = nullptr) const {
     if constexpr (setCudaDevice) set_cuda_device();
-    return cudaFreeAsync(devPtr, get_input_stream(stream));
+    return cudaFreeAsync(devPtr, get_input_stream(hStream));
   }
 #endif
 
