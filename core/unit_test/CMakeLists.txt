@@ -120,6 +120,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
     set(${Tag}_SOURCES1A)
     foreach(Name
         Abort
+        ArrayOps
         AtomicOperations_complexdouble
         AtomicOperations_complexfloat
         AtomicOperations_double
