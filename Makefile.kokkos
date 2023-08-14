@@ -405,7 +405,6 @@ endif
 KOKKOS_INTERNAL_USE_ARCH_AMD_GFX906 := $(or $(call kokkos_has_string,$(KOKKOS_ARCH),VEGA906),$(call kokkos_has_string,$(KOKKOS_ARCH),AMD_GFX906))
 KOKKOS_INTERNAL_USE_ARCH_AMD_GFX908 := $(or $(call kokkos_has_string,$(KOKKOS_ARCH),VEGA908),$(call kokkos_has_string,$(KOKKOS_ARCH),AMD_GFX908))
 KOKKOS_INTERNAL_USE_ARCH_AMD_GFX90A := $(or $(call kokkos_has_string,$(KOKKOS_ARCH),VEGA90A),$(call kokkos_has_string,$(KOKKOS_ARCH),AMD_GFX90A))
-KOKKOS_INTERNAL_USE_ARCH_AMD_GFX942 := $(or $(call kokkos_has_string,$(KOKKOS_ARCH),VEGA942),$(call kokkos_has_string,$(KOKKOS_ARCH),AMD_GFX942))
 KOKKOS_INTERNAL_USE_ARCH_AMD_GFX1030 := $(or $(call kokkos_has_string,$(KOKKOS_ARCH),NAVI1030),$(call kokkos_has_string,$(KOKKOS_ARCH),AMD_GFX1030))
 KOKKOS_INTERNAL_USE_ARCH_AMD_GFX1100 := $(or $(call kokkos_has_string,$(KOKKOS_ARCH),NAVI1100),$(call kokkos_has_string,$(KOKKOS_ARCH),AMD_GFX1100))
 
