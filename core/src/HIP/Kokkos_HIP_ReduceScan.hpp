@@ -185,8 +185,7 @@ struct HIPReductionsFunctor<FunctorType, false> {
           blockDim.x * blockDim.y / HIPTraits::WarpSize);
       if (threadIdx.x + threadIdx.y == 0) {
         *result = *shared_team_buffer_element;
-        if (skip)
-          __threadfence();
+        if (skip) __threadfence();
       }
     }
   }
