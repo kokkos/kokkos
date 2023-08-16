@@ -72,13 +72,13 @@ KOKKOS_INLINE_FUNCTION void device_check_mask_ops() {
   for (std::size_t i = 0; i < mask_type::size(); ++i) {
     mask_type test_mask([&](std::size_t j) { return i == j; });
 
-    EXPECT_TRUE(any_of(test_mask));
-    EXPECT_FALSE(none_of(test_mask));
+    checker.truth(any_of(test_mask));
+    checker.truth(!none_of(test_mask));
 
     if constexpr (mask_type::size() > 1) {
-      EXPECT_FALSE(all_of(test_mask));
+      checker.truth(!all_of(test_mask));
     } else {
-      EXPECT_TRUE(all_of(test_mask));
+      checker.truth(all_of(test_mask));
     }
   }
 }
