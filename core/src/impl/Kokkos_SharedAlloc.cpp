@@ -282,7 +282,7 @@ SharedAllocationRecord<void, void>* SharedAllocationRecord<
 // FIXME GCC warns that we truncate the output below.
 #ifdef KOKKOS_COMPILER_GNU
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wformat-truncation"
+#pragma GCC diagnostic ignored "-Wformat-truncation="
 #endif
 
 void SharedAllocationRecord<void, void>::print_host_accessible_records(
