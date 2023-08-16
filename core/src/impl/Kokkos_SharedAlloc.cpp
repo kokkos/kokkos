@@ -278,13 +278,6 @@ SharedAllocationRecord<void, void>* SharedAllocationRecord<
 }
 
 #ifdef KOKKOS_ENABLE_DEBUG
-
-// FIXME GCC warns that we truncate the output below.
-#ifdef KOKKOS_COMPILER_GNU
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wformat-truncation="
-#endif
-
 void SharedAllocationRecord<void, void>::print_host_accessible_records(
     std::ostream& s, const char* const space_name,
     const SharedAllocationRecord* const root, const bool detail) {
@@ -292,57 +285,23 @@ void SharedAllocationRecord<void, void>::print_host_accessible_records(
   // allocation.
   const SharedAllocationRecord<void, void>* r = root->m_next;
 
-  char buffer[256];
-
   if (detail) {
     while (r != root) {
-      // Formatting dependent on sizeof(uintptr_t)
-      const char* format_string;
-
-      if (sizeof(uintptr_t) == sizeof(unsigned long)) {
-        format_string =
-            "%s addr( 0x%.12lx ) list( 0x%.12lx 0x%.12lx ) extent[ 0x%.12lx + "
-            "%.8ld ] count(%d) dealloc(0x%.12lx) %s\n";
-      } else if (sizeof(uintptr_t) == sizeof(unsigned long long)) {
-        format_string =
-            "%s addr( 0x%.12llx ) list( 0x%.12llx 0x%.12llx ) extent[ "
-            "0x%.12llx + %.8ld ] count(%d) dealloc(0x%.12llx) %s\n";
-      }
-
-      snprintf(buffer, 256, format_string, space_name,
-               reinterpret_cast<uintptr_t>(r),
-               reinterpret_cast<uintptr_t>(r->m_prev),
-               reinterpret_cast<uintptr_t>(r->m_next),
-               reinterpret_cast<uintptr_t>(r->m_alloc_ptr), r->m_alloc_size,
-               r->use_count(), reinterpret_cast<uintptr_t>(r->m_dealloc),
-               r->m_alloc_ptr->m_label);
-      s << buffer;
+      s << space_name << " addr( " << r << " ) list ( " << r->m_prev << ' '
+        << r->m_next << " ) extent[ " << r->m_alloc_ptr << " + "
+        << r->m_alloc_size << " ] count(" << r->use_count() << ") dealloc("
+        << reinterpret_cast<void*>(r->m_dealloc) << ") "
+        << r->m_alloc_ptr->m_label << '\n';
       r = r->m_next;
     }
   } else {
     while (r != root) {
-      // Formatting dependent on sizeof(uintptr_t)
-      const char* format_string;
-
-      if (sizeof(uintptr_t) == sizeof(unsigned long)) {
-        format_string = "%s [ 0x%.12lx + %ld ] %s\n";
-      } else if (sizeof(uintptr_t) == sizeof(unsigned long long)) {
-        format_string = "%s [ 0x%.12llx + %ld ] %s\n";
-      }
-
-      snprintf(buffer, 256, format_string, space_name,
-               reinterpret_cast<uintptr_t>(r->data()), r->size(),
-               r->m_alloc_ptr->m_label);
-      s << buffer;
+      s << space_name << " [ " << r->data() << " + " << r->size() << " ] "
+        << r->m_alloc_ptr->m_label << '\n';
       r = r->m_next;
     }
   }
 }
-
-#ifdef KOKKOS_COMPILER_GNU
-#pragma GCC diagnostic pop
-#endif
-
 #else
 void SharedAllocationRecord<void, void>::print_host_accessible_records(
     std::ostream&, const char* const, const SharedAllocationRecord* const,
