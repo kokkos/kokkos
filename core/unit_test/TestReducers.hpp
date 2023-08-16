@@ -405,7 +405,7 @@ struct TestReducers {
         Kokkos::deep_copy(sum_scalar, sum_view);
         ASSERT_EQ(sum_scalar, Scalar{126});
       }
-      
+
       Kokkos::parallel_for(
           Kokkos::TeamPolicy<ExecSpace>(1, 1),
           KOKKOS_LAMBDA(member_type team_member) {
