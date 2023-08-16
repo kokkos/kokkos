@@ -122,8 +122,5 @@ TEST(cuda, raw_cuda_streams) {
 
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(n_devices - 1));
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamDestroy(stream));
-
-  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFree(p0));
-  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFree(p));
 }
 }  // namespace Test
