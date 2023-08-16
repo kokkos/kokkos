@@ -278,6 +278,13 @@ SharedAllocationRecord<void, void>* SharedAllocationRecord<
 }
 
 #ifdef KOKKOS_ENABLE_DEBUG
+
+// FIXME GCC warns that we truncate the output below.
+#ifdef KOKKOS_COMPILER_GNU
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation"
+#endif
+
 void SharedAllocationRecord<void, void>::print_host_accessible_records(
     std::ostream& s, const char* const space_name,
     const SharedAllocationRecord* const root, const bool detail) {
@@ -331,6 +338,11 @@ void SharedAllocationRecord<void, void>::print_host_accessible_records(
     }
   }
 }
+
+#ifdef KOKKOS_COMPILER_GNU
+#pragma GCC diagnostic pop
+#endif
+
 #else
 void SharedAllocationRecord<void, void>::print_host_accessible_records(
     std::ostream&, const char* const, const SharedAllocationRecord* const,
