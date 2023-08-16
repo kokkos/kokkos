@@ -850,14 +850,14 @@ Cuda::Cuda(cudaStream_t stream, bool manage_stream)
                                stream, manage_stream);
 }
 
-Cuda::Cuda(int device_id, cudaStream_t stream, bool manage_stream)
+Cuda::Cuda(int device_id, cudaStream_t stream)
     : m_space_instance(new Impl::CudaInternal, [](Impl::CudaInternal *ptr) {
         ptr->finalize();
         delete ptr;
       }) {
   Impl::CudaInternal::singleton().verify_is_initialized(
       "Cuda instance constructor");
-  m_space_instance->initialize(device_id, stream, manage_stream);
+  m_space_instance->initialize(device_id, stream, /*manage_stream*/ false);
 }
 
 void Cuda::print_configuration(std::ostream &os, bool /*verbose*/) const {
