@@ -994,8 +994,8 @@ ENDFOREACH()
 
 #Regardless of version, make sure we define the general architecture name
 FOREACH(ARCH IN LISTS SUPPORTED_AMD_ARCHS)
-  SET(KOKKOS_ARCH_AMD_GPU ON)
   IF (KOKKOS_ARCH_${ARCH})
+    SET(KOKKOS_ARCH_AMD_GPU ON)
     STRING(REGEX MATCH "(VEGA)" IS_VEGA ${ARCH})
     IF(IS_VEGA)
       SET(KOKKOS_ARCH_VEGA ON)
