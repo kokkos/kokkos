@@ -203,10 +203,9 @@ bool HIPManagedSpace::hip_driver_check_page_migration() const {
   int hasManagedMemory = 0;  // false by default
   KOKKOS_IMPL_HIP_SAFE_CALL(hipDeviceGetAttribute(
       &hasManagedMemory, hipDeviceAttributeManagedMemory, m_device));
-  if (!static_cast<bool>(hasManagedMemory))
-    return false;
+  if (!static_cast<bool>(hasManagedMemory)) return false;
   // next, check pageableMemoryAccess
-  int hasPageableMemory = 0; // false by default
+  int hasPageableMemory = 0;  // false by default
   KOKKOS_IMPL_HIP_SAFE_CALL(hipDeviceGetAttribute(
       &hasPageableMemory, hipDeviceAttributePageableMemoryAccess, m_device));
   return static_cast<bool>(hasPageableMemory);

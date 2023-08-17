@@ -106,8 +106,8 @@ TEST(defaultdevicetype, shared_space) {
 
 #if defined(KOKKOS_ARCH_AMD_GPU)
   if (!Kokkos::SharedSpace().hip_driver_check_page_migration())
-  GTEST_SKIP()
-      << "skipping because specified arch does not support page migration";
+    GTEST_SKIP()
+        << "skipping because specified arch does not support page migration";
 #endif
 #if defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ARCH_INTEL_GPU)
   GTEST_SKIP()
