@@ -104,7 +104,8 @@ TEST(defaultdevicetype, shared_space) {
                                Kokkos::DefaultHostExecutionSpace>)
     GTEST_SKIP() << "Skipping as host and device are the same space";
 
-#if defined(KOKKOS_ARCH_AMD_GPU) && !defined(KOKKOS_ARCH_AMD_GFX90A)
+#if defined(KOKKOS_ARCH_AMD_GPU)
+  if (!Kokkos::SharedSpace().hip_driver_check_page_migration())
   GTEST_SKIP()
       << "skipping because specified arch does not support page migration";
 #endif
