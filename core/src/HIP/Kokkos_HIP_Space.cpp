@@ -145,7 +145,7 @@ void* HIPManagedSpace::impl_allocate(
     if (is_first_hip_managed_allocation.exchange(false) &&
         Kokkos::show_warnings()) {
       do {  // hack to avoid spamming users with too many warnings
-        if (!hip_driver_check_page_migration()) {
+        if (!impl_hip_driver_check_page_migration()) {
           std::cerr << R"warning(
 Kokkos::HIP::allocation WARNING: The combination of device and system configuration
                                  does not support page migration between device and host.
@@ -197,7 +197,7 @@ Kokkos::HIP::runtime WARNING: Kokkos did not find an environment variable 'HSA_X
 
   return ptr;
 }
-bool HIPManagedSpace::hip_driver_check_page_migration() const {
+bool HIPManagedSpace::impl_hip_driver_check_page_migration() const {
   // check with driver if page migrating memory is available
   // this driver query is copied from the hip documentation
   int hasManagedMemory = 0;  // false by default
