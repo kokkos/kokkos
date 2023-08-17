@@ -31,6 +31,7 @@ static_assert(false,
 #include <typeinfo>
 #include <string>
 #include <memory>
+#include <optional>
 
 #include <Kokkos_HostSpace.hpp>
 #include <impl/Kokkos_SharedAlloc.hpp>
@@ -68,6 +69,7 @@ class CudaSpace {
   /*--------------------------------*/
 
   CudaSpace();
+  CudaSpace(int cuda_device, cudaStream_t cuda_stream);
   CudaSpace(CudaSpace&& rhs)      = default;
   CudaSpace(const CudaSpace& rhs) = default;
   CudaSpace& operator=(CudaSpace&& rhs) = default;
@@ -112,7 +114,8 @@ class CudaSpace {
   static constexpr const char* name() { return m_name; }
 
  private:
-  int m_device;  ///< Which Cuda device
+  int m_device;
+  cudaStream_t m_stream;
 
   static constexpr const char* m_name = "Cuda";
   friend class Kokkos::Impl::SharedAllocationRecord<Kokkos::CudaSpace, void>;
@@ -149,6 +152,7 @@ class CudaUVMSpace {
   /*--------------------------------*/
 
   CudaUVMSpace();
+  CudaUVMSpace(int cuda_device, cudaStream_t cuda_stream);
   CudaUVMSpace(CudaUVMSpace&& rhs)      = default;
   CudaUVMSpace(const CudaUVMSpace& rhs) = default;
   CudaUVMSpace& operator=(CudaUVMSpace&& rhs) = default;
@@ -190,7 +194,8 @@ class CudaUVMSpace {
   /*--------------------------------*/
 
  private:
-  int m_device;  ///< Which Cuda device
+  int m_device;
+  cudaStream_t m_stream;
 
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_PIN_UVM_TO_HOST
   static bool kokkos_impl_cuda_pin_uvm_to_host_v;
@@ -223,6 +228,7 @@ class CudaHostPinnedSpace {
   /*--------------------------------*/
 
   CudaHostPinnedSpace();
+  CudaHostPinnedSpace(int cuda_device, cudaStream_t cuda_stream);
   CudaHostPinnedSpace(CudaHostPinnedSpace&& rhs)      = default;
   CudaHostPinnedSpace(const CudaHostPinnedSpace& rhs) = default;
   CudaHostPinnedSpace& operator=(CudaHostPinnedSpace&& rhs) = default;
@@ -258,6 +264,9 @@ class CudaHostPinnedSpace {
   static constexpr const char* name() { return m_name; }
 
  private:
+  int m_device;
+  cudaStream_t m_stream;
+
   static constexpr const char* m_name = "CudaHostPinned";
 
   /*--------------------------------*/

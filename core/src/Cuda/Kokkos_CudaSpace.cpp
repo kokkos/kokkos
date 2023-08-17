@@ -136,11 +136,24 @@ void kokkos_impl_cuda_set_pin_uvm_to_host(bool val) {
 
 namespace Kokkos {
 
-CudaSpace::CudaSpace() : m_device(Kokkos::Cuda().cuda_device()) {}
+CudaSpace::CudaSpace()
+    : m_device(Kokkos::Cuda().cuda_device()),
+      m_stream(Kokkos::Cuda().cuda_stream()) {}
+CudaSpace::CudaSpace(int cuda_device, cudaStream_t cuda_stream)
+    : m_device(cuda_device), m_stream(cuda_stream) {}
 
-CudaUVMSpace::CudaUVMSpace() : m_device(Kokkos::Cuda().cuda_device()) {}
+CudaUVMSpace::CudaUVMSpace()
+    : m_device(Kokkos::Cuda().cuda_device()),
+      m_stream(Kokkos::Cuda().cuda_stream()) {}
+CudaUVMSpace::CudaUVMSpace(int cuda_device, cudaStream_t cuda_stream)
+    : m_device(cuda_device), m_stream(cuda_stream) {}
 
-CudaHostPinnedSpace::CudaHostPinnedSpace() {}
+CudaHostPinnedSpace::CudaHostPinnedSpace()
+    : m_device(Kokkos::Cuda().cuda_device()),
+      m_stream(Kokkos::Cuda().cuda_stream()) {}
+CudaHostPinnedSpace::CudaHostPinnedSpace(int cuda_device,
+                                         cudaStream_t cuda_stream)
+    : m_device(cuda_device), m_stream(cuda_stream) {}
 
 int memory_threshold_g = 40000;  // 40 kB
 
@@ -162,21 +175,20 @@ void *CudaSpace::allocate(const char *arg_label, const size_t arg_alloc_size,
 }
 
 namespace {
-void *impl_allocate_common(const Cuda &exec_space, const char *arg_label,
-                           const size_t arg_alloc_size,
+void *impl_allocate_common(const int device_id, const cudaStream_t stream,
+                           const char *arg_label, const size_t arg_alloc_size,
                            const size_t arg_logical_size,
                            const Kokkos::Tools::SpaceHandle arg_handle,
-                           bool exec_space_provided) {
+                           [[maybe_unused]] bool exec_space_provided) {
   void *ptr = nullptr;
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(device_id));
 
-  const Impl::CudaInternal &cuda_internal =
-      *exec_space.impl_internal_space_instance();
   cudaError_t error_code;
 #ifndef CUDART_VERSION
 #error CUDART_VERSION undefined!
 #elif (defined(KOKKOS_ENABLE_IMPL_CUDA_MALLOC_ASYNC) && CUDART_VERSION >= 11020)
   if (arg_alloc_size >= memory_threshold_g) {
-    error_code = cuda_internal.cuda_malloc_async_wrapper(&ptr, arg_alloc_size);
+    error_code = cudaMallocAsync(&ptr, arg_alloc_size, stream);
 
     if (exec_space_provided) {
       exec_space.fence("Kokkos::Cuda: backend fence after async malloc");
@@ -184,18 +196,15 @@ void *impl_allocate_common(const Cuda &exec_space, const char *arg_label,
       Impl::cuda_device_synchronize(
           "Kokkos::Cuda: backend fence after async malloc");
     }
-  } else {
-    error_code = cuda_internal.cuda_malloc_wrapper(&ptr, arg_alloc_size);
-  }
+  } else
 #else
-  (void)exec_space_provided;
-  error_code = cuda_internal.cuda_malloc_wrapper(&ptr, arg_alloc_size);
+  { error_code = cudaMalloc(&ptr, arg_alloc_size); }
 #endif
   if (error_code != cudaSuccess) {  // TODO tag as unlikely branch
     // This is the only way to clear the last error, which
     // we should do here since we're turning it into an
     // exception here
-    cuda_internal.cuda_get_last_error_wrapper();
+    cudaGetLastError();
     throw Experimental::CudaRawMemoryAllocationFailure(
         arg_alloc_size, error_code,
         Experimental::RawMemoryAllocationFailure::AllocationMechanism::
@@ -215,7 +224,7 @@ void *CudaSpace::impl_allocate(
     const char *arg_label, const size_t arg_alloc_size,
     const size_t arg_logical_size,
     const Kokkos::Tools::SpaceHandle arg_handle) const {
-  return impl_allocate_common(Kokkos::Cuda{}, arg_label, arg_alloc_size,
+  return impl_allocate_common(m_device, m_stream, arg_label, arg_alloc_size,
                               arg_logical_size, arg_handle, false);
 }
 
@@ -223,8 +232,9 @@ void *CudaSpace::impl_allocate(
     const Cuda &exec_space, const char *arg_label, const size_t arg_alloc_size,
     const size_t arg_logical_size,
     const Kokkos::Tools::SpaceHandle arg_handle) const {
-  return impl_allocate_common(exec_space, arg_label, arg_alloc_size,
-                              arg_logical_size, arg_handle, true);
+  return impl_allocate_common(
+      exec_space.cuda_device(), exec_space.cuda_stream(), arg_label,
+      arg_alloc_size, arg_logical_size, arg_handle, true);
 }
 
 void *CudaUVMSpace::allocate(const size_t arg_alloc_size) const {
@@ -245,28 +255,27 @@ void *CudaUVMSpace::impl_allocate(
   if (arg_alloc_size > 0) {
     Kokkos::Impl::num_uvm_allocations++;
 
-    auto error_code =
-        Impl::CudaInternal::singleton().cuda_malloc_managed_wrapper(
-            &ptr, arg_alloc_size, cudaMemAttachGlobal);
-
-#ifdef KOKKOS_IMPL_DEBUG_CUDA_PIN_UVM_TO_HOST
-    if (Kokkos::CudaUVMSpace::cuda_pin_uvm_to_host())
-      KOKKOS_IMPL_CUDA_SAFE_CALL(
-          (Impl::CudaInternal::singleton().cuda_mem_advise_wrapper(
-              ptr, arg_alloc_size, cudaMemAdviseSetPreferredLocation,
-              cudaCpuDeviceId)));
-#endif
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_device));
+    cudaError_t error_code =
+        cudaMallocManaged(&ptr, arg_alloc_size, cudaMemAttachGlobal);
 
     if (error_code != cudaSuccess) {  // TODO tag as unlikely branch
       // This is the only way to clear the last error, which
       // we should do here since we're turning it into an
       // exception here
-      Impl::CudaInternal::singleton().cuda_get_last_error_wrapper();
+      cudaGetLastError();
       throw Experimental::CudaRawMemoryAllocationFailure(
           arg_alloc_size, error_code,
           Experimental::RawMemoryAllocationFailure::AllocationMechanism::
               CudaMallocManaged);
     }
+
+#ifdef KOKKOS_IMPL_DEBUG_CUDA_PIN_UVM_TO_HOST
+    if (Kokkos::CudaUVMSpace::cuda_pin_uvm_to_host())
+      KOKKOS_IMPL_CUDA_SAFE_CALL(
+          cudaMemAdvise(ptr, arg_alloc_size, cudaMemAdviseSetPreferredLocation,
+                        cudaCpuDeviceId));
+#endif
   }
   Cuda::impl_static_fence(
       "Kokkos::CudaUVMSpace::impl_allocate: Post UVM Allocation");
@@ -291,13 +300,14 @@ void *CudaHostPinnedSpace::impl_allocate(
     const Kokkos::Tools::SpaceHandle arg_handle) const {
   void *ptr = nullptr;
 
-  auto error_code = Impl::CudaInternal::singleton().cuda_host_alloc_wrapper(
-      &ptr, arg_alloc_size, cudaHostAllocDefault);
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_device));
+  cudaError_t error_code =
+      cudaHostAlloc(&ptr, arg_alloc_size, cudaHostAllocDefault);
   if (error_code != cudaSuccess) {  // TODO tag as unlikely branch
     // This is the only way to clear the last error, which
     // we should do here since we're turning it into an
     // exception here
-    Impl::CudaInternal::singleton().cuda_get_last_error_wrapper();
+    cudaGetLastError();
     throw Experimental::CudaRawMemoryAllocationFailure(
         arg_alloc_size, error_code,
         Experimental::RawMemoryAllocationFailure::AllocationMechanism::
