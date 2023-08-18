@@ -118,6 +118,7 @@ __device__ inline bool hip_inter_block_shuffle_reduction(
     pointer_type global =
         reinterpret_cast<pointer_type>(m_scratch_space) + blockIdx.x;
     *global = value;
+    __threadfence();
   }
 
   // One warp of last block performs inter block reduction through loading the

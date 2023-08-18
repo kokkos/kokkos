@@ -19,3 +19,4 @@
 #include <TestSIMD_Conversions.hpp>
 #include <TestSIMD_ShiftOps.hpp>
 #include <TestSIMD_Condition.hpp>
+#include <TestSIMD_GeneratorCtors.hpp>

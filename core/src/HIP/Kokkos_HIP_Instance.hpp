@@ -29,11 +29,12 @@ namespace Kokkos {
 namespace Impl {
 
 struct HIPTraits {
-#if defined(KOKKOS_ARCH_VEGA)
+#if defined(KOKKOS_ARCH_AMD_GFX906) || defined(KOKKOS_ARCH_AMD_GFX908) || \
+    defined(KOKKOS_ARCH_AMD_GFX90A) || defined(KOKKOS_ARCH_AMD_GFX942)
   static int constexpr WarpSize       = 64;
   static int constexpr WarpIndexMask  = 0x003f; /* hexadecimal for 63 */
   static int constexpr WarpIndexShift = 6;      /* WarpSize == 1 << WarpShift*/
-#elif defined(KOKKOS_ARCH_NAVI)
+#elif defined(KOKKOS_ARCH_AMD_GFX1030) || defined(KOKKOS_ARCH_AMD_GFX1100)
   static int constexpr WarpSize       = 32;
   static int constexpr WarpIndexMask  = 0x001f; /* hexadecimal for 31 */
   static int constexpr WarpIndexShift = 5;      /* WarpSize == 1 << WarpShift*/
