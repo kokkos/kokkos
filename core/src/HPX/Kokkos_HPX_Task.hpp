@@ -20,6 +20,7 @@
 #include <Kokkos_Macros.hpp>
 #if defined(KOKKOS_ENABLE_HPX) && defined(KOKKOS_ENABLE_TASKDAG)
 
+#include <Kokkos_Atomic.hpp>
 #include <Kokkos_TaskScheduler_fwd.hpp>
 
 #include <HPX/Kokkos_HPX.hpp>
