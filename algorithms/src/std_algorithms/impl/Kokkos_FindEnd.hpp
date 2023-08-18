@@ -100,7 +100,7 @@ IteratorType1 find_end_exespace_impl(const std::string& label,
   // the target sequence should not be larger than the range [first, last)
   namespace KE                        = ::Kokkos::Experimental;
   const auto num_elements             = KE::distance(first, last);
-  [[maybe_unused]] const auto s_count = KE::distance(s_first, s_last);
+  const auto s_count = KE::distance(s_first, s_last);
   KOKKOS_EXPECTS(num_elements >= s_count);
 
   if (s_first == s_last) {
