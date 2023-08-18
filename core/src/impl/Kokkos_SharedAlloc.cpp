@@ -286,6 +286,7 @@ void SharedAllocationRecord<void, void>::print_host_accessible_records(
   // allocation.
   const SharedAllocationRecord<void, void>* r = root->m_next;
 
+  std::ios_base::fmtflags saved_flags = s.flags();
 #define KOKKOS_PAD_HEX(ptr)                              \
   "0x" << std::hex << std::setw(12) << std::setfill('0') \
        << reinterpret_cast<uintptr_t>(ptr)
@@ -308,6 +309,7 @@ void SharedAllocationRecord<void, void>::print_host_accessible_records(
     }
   }
 #undef KOKKOS_PAD_HEX
+  s.flags(saved_flags);
 }
 #else
 void SharedAllocationRecord<void, void>::print_host_accessible_records(
