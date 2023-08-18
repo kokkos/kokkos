@@ -466,8 +466,8 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>, HIP> {
   }
 
  public:
-  ParallelFor()                   = delete;
-  ParallelFor(ParallelFor const&) = default;
+  ParallelFor()                              = delete;
+  ParallelFor(ParallelFor const&)            = default;
   ParallelFor& operator=(ParallelFor const&) = delete;
 
   __device__ inline void operator()() const {
@@ -536,12 +536,12 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>, HIP> {
     } else {
       m_scratch_pool_id = internal_space_instance->acquire_team_scratch_space();
       m_scratch_ptr[1]  = internal_space_instance->resize_team_scratch_space(
-          m_scratch_pool_id,
-          static_cast<std::int64_t>(m_scratch_size[1]) *
-              (std::min(
-                  static_cast<std::int64_t>(HIP().concurrency() /
+           m_scratch_pool_id,
+           static_cast<std::int64_t>(m_scratch_size[1]) *
+               (std::min(
+                   static_cast<std::int64_t>(HIP().concurrency() /
                                             (m_team_size * m_vector_size)),
-                  static_cast<std::int64_t>(m_league_size))));
+                   static_cast<std::int64_t>(m_league_size))));
     }
 
     int const shmem_size_total = m_shmem_begin + m_shmem_size;
@@ -589,12 +589,31 @@ class ParallelReduce<CombinedFunctorReducerType,
  public:
   using size_type = HIP::size_type;
 
+  // static int constexpr UseShflReduction = false;
+  // FIXME_HIP This should be disabled unconditionally for best performance, but
+  // it currently causes tests to fail.
   static constexpr int UseShflReduction =
-      (ReducerType::static_value_size() != 0);
 
- private:
-  struct ShflReductionTag {};
+      private : struct ShflReductionTag {};
   struct SHMEMReductionTag {};
+
+  // Conditionally set word_size_type to int16_t or int8_t if value_type is
+  // smaller than int32_t (Kokkos::HIP::size_type)
+  // word_size_type is used to determine the word count, shared memory buffer
+  // size, and global memory buffer size before the scan is performed.
+  // Within the scan, the word count is recomputed based on word_size_type
+  // and when calculating indexes into the shared/global memory buffers for
+  // performing the scan, word_size_type is used again.
+  // For scalars > 4 bytes in size, indexing into shared/global memory relies
+  // on the block and grid dimensions to ensure that we index at the correct
+  // offset rather than at every 4 byte word; such that, when the join is
+  // performed, we have the correct data that was copied over in chunks of 4
+  // bytes.
+  // FIXME_HIP: This is currently unused due to compilation errors and test
+  // failures that occur when it is used.
+  using word_size_type = std::conditional_t<
+      sizeof(value_type) < sizeof(size_type),
+      std::conditional_t<sizeof(value_type) == 2, int16_t, int8_t>, size_type>;
 
   // Algorithmic constraints: blockDim.y is a power of two AND
   // blockDim.y == blockDim.z == 1 shared memory utilization:
@@ -609,6 +628,9 @@ class ParallelReduce<CombinedFunctorReducerType,
   const pointer_type m_result_ptr;
   const bool m_result_ptr_device_accessible;
   const bool m_result_ptr_host_accessible;
+  // FIXME_HIP: m_scratch_space should be word_size_type*, but doing so
+  // currently results in compilation and/or test failures word_size_type*
+  // m_scratch_space;
   size_type* m_scratch_space;
   size_type* m_scratch_flags;
   size_type m_team_begin;
@@ -673,6 +695,16 @@ class ParallelReduce<CombinedFunctorReducerType,
   __device__ inline void run(SHMEMReductionTag, int const threadid) const {
     const ReducerType& reducer = m_functor_reducer.get_reducer();
 
+    // FIXME_HIP comments below contain changes necessary to use word_size_type.
+    // Currently enabling them causes test failures and/or compiler errors
+    // elsewhere
+    /*integral_nonzero_constant<word_size_type, ReducerType::static_value_size()
+    / sizeof(word_size_type)> const word_count(reducer.value_size() /
+    sizeof(word_size_type));
+
+    reference_type value =
+        reducer.init(reinterpret_cast<pointer_type>(kokkos_impl_hip_shared_memory<word_size_type>()
+    + threadIdx.y * word_count.value));*/
     integral_nonzero_constant<size_type, ReducerType::static_value_size() /
                                              sizeof(size_type)> const
         word_count(reducer.value_size() / sizeof(size_type));
@@ -680,7 +712,6 @@ class ParallelReduce<CombinedFunctorReducerType,
     reference_type value =
         reducer.init(kokkos_impl_hip_shared_memory<size_type>() +
                      threadIdx.y * word_count.value);
-
     // Iterate this block through the league
     iterate_through_league(threadid, value);
 
@@ -692,10 +723,22 @@ class ParallelReduce<CombinedFunctorReducerType,
               reducer, blockIdx.x, gridDim.x,
               kokkos_impl_hip_shared_memory<size_type>(), m_scratch_space,
               m_scratch_flags);
+    /* FIXME_HIP: this is the call to use with word_size_type, currently broken
+     * hip_single_inter_block_reduce_scan<false>(
+        reducer, blockIdx.x, gridDim.x,
+        kokkos_impl_hip_shared_memory<word_size_type>(), m_scratch_space,
+        m_scratch_flags);*/
     if (do_final_reduce) {
       // This is the final block with the final result at the final threads'
       // location
 
+      // FIXME_HIP: word_size_type change below, once test and compilation
+      // issues are fixed
+      /*word_size_type* const shared =
+      kokkos_impl_hip_shared_memory<word_size_type>() + (blockDim.y - 1) *
+      word_count.value; word_size_type* const global =
+      m_result_ptr_device_accessible ?
+      reinterpret_cast<word_size_type*>(m_result_ptr) : m_scratch_space;*/
       size_type* const shared = kokkos_impl_hip_shared_memory<size_type>() +
                                 (blockDim.y - 1) * word_count.value;
       size_type* const global = m_result_ptr_device_accessible
@@ -757,23 +800,31 @@ class ParallelReduce<CombinedFunctorReducerType,
     if (!is_empty_range || need_device_set) {
       constexpr int block_max           = 65536;
       constexpr int preferred_block_min = 1024;
-      int block_count_tmp = m_league_size;
-      if(block_count_tmp < preferred_block_min){
-        //keep blocks as is, already low parallelism
-      } else if (block_count_tmp >= block_max){
+      int block_count_tmp               = m_league_size;
+      if (block_count_tmp < preferred_block_min) {
+        // keep blocks as is, already low parallelism
+      } else if (block_count_tmp >= block_max) {
         block_count_tmp = block_max;
+        // block_count_tmp = m_league_size;
+
       } else {
-        int nwork = m_league_size * m_team_size;
-	int items_per_thread = (nwork + block_count_tmp * m_team_size - 1)/(block_count_tmp * m_team_size);
-	if (items_per_thread < 4){
-	  int ratio = std::min(
-	       (block_count_tmp + preferred_block_min - 1) / preferred_block_min,
-	       (4 + items_per_thread - 1) / items_per_thread);
-	  block_count_tmp /= ratio;
-	}
+        int nwork            = m_league_size * m_team_size;
+        int items_per_thread = (nwork + block_count_tmp * m_team_size - 1) /
+                               (block_count_tmp * m_team_size);
+        if (items_per_thread < 4) {
+          int ratio = std::min(
+              (block_count_tmp + preferred_block_min - 1) / preferred_block_min,
+              (4 + items_per_thread - 1) / items_per_thread);
+          block_count_tmp /= ratio;
+        }
       }
       const int block_count = block_count_tmp;
-      
+
+      // FIXME_HIP: last word_size_type change
+      /*m_scratch_space =
+         reinterpret_cast<word_size_type*>(hip_internal_scratch_space(
+          m_policy.space(), reducer.value_size()*block_count));
+      */
       m_scratch_space = hip_internal_scratch_space(
           m_policy.space(), reducer.value_size() * block_count);
       m_scratch_flags =
@@ -855,12 +906,12 @@ class ParallelReduce<CombinedFunctorReducerType,
     } else {
       m_scratch_pool_id = internal_space_instance->acquire_team_scratch_space();
       m_scratch_ptr[1]  = internal_space_instance->resize_team_scratch_space(
-          m_scratch_pool_id,
-          static_cast<std::int64_t>(m_scratch_size[1]) *
-              (std::min(
-                  static_cast<std::int64_t>(HIP().concurrency() /
+           m_scratch_pool_id,
+           static_cast<std::int64_t>(m_scratch_size[1]) *
+               (std::min(
+                   static_cast<std::int64_t>(HIP().concurrency() /
                                             (m_team_size * m_vector_size)),
-                  static_cast<std::int64_t>(m_league_size))));
+                   static_cast<std::int64_t>(m_league_size))));
     }
 
     // The global parallel_reduce does not support vector_length other than 1 at
