@@ -98,9 +98,9 @@ IteratorType1 find_end_exespace_impl(const std::string& label,
   Impl::expect_valid_range(s_first, s_last);
 
   // the target sequence should not be larger than the range [first, last)
-  namespace KE                        = ::Kokkos::Experimental;
-  const auto num_elements             = KE::distance(first, last);
-  const auto s_count = KE::distance(s_first, s_last);
+  namespace KE            = ::Kokkos::Experimental;
+  const auto num_elements = KE::distance(first, last);
+  const auto s_count      = KE::distance(s_first, s_last);
   KOKKOS_EXPECTS(num_elements >= s_count);
 
   if (s_first == s_last) {
@@ -181,9 +181,9 @@ find_end_team_impl(const TeamHandleType& teamHandle, IteratorType1 first,
   Impl::expect_valid_range(s_first, s_last);
 
   // the target sequence should not be larger than the range [first, last)
-  namespace KE                        = ::Kokkos::Experimental;
-  const auto num_elements             = KE::distance(first, last);
-  const auto s_count = KE::distance(s_first, s_last);
+  namespace KE            = ::Kokkos::Experimental;
+  const auto num_elements = KE::distance(first, last);
+  const auto s_count      = KE::distance(s_first, s_last);
   KOKKOS_EXPECTS(num_elements >= s_count);
 
   if (s_first == s_last) {
