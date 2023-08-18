@@ -46,6 +46,10 @@
 #include <sstream>
 #include <cstring>
 
+#ifdef KOKKOS_COMPILER_INTEL
+#include <aligned_new>
+#endif
+
 #include <Kokkos_HostSpace.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <Kokkos_Atomic.hpp>
@@ -86,15 +90,9 @@ void *HostSpace::impl_allocate(
 
   void *ptr = nullptr;
 
-  if (arg_alloc_size) {
-    // Over-allocate to multiple of alignment
-    size_t size = (arg_alloc_size + alignment - 1) / alignment * alignment;
-#ifdef KOKKOS_COMPILER_MSVC
-    ptr = _aligned_malloc(size, alignment);
-#else
-    ptr = std::aligned_alloc(alignment, size);
-#endif
-  }
+  if (arg_alloc_size)
+    ptr = operator new (arg_alloc_size, std::align_val_t(alignment),
+                        std::nothrow_t{});
 
   if ((ptr == nullptr) || (reinterpret_cast<uintptr_t>(ptr) == ~uintptr_t(0)) ||
       (reinterpret_cast<uintptr_t>(ptr) & alignment_mask)) {
@@ -143,11 +141,9 @@ void HostSpace::impl_deallocate(
       Kokkos::Profiling::deallocateData(arg_handle, arg_label, arg_alloc_ptr,
                                         reported_size);
     }
-#ifdef KOKKOS_COMPILER_MSVC
-    _aligned_free(arg_alloc_ptr);
-#else
-    std::free(arg_alloc_ptr);
-#endif
+    constexpr uintptr_t alignment = Kokkos::Impl::MEMORY_ALIGNMENT;
+    operator delete (arg_alloc_ptr, std::align_val_t(alignment),
+                     std::nothrow_t{});
   }
 }
 
