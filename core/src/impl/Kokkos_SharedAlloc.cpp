@@ -19,6 +19,7 @@
 #endif
 
 #include <Kokkos_Core.hpp>
+#include <iomanip>
 
 namespace Kokkos {
 namespace Impl {
@@ -285,22 +286,28 @@ void SharedAllocationRecord<void, void>::print_host_accessible_records(
   // allocation.
   const SharedAllocationRecord<void, void>* r = root->m_next;
 
+#define KOKKOS_PAD_HEX(ptr)                              \
+  "0x" << std::hex << std::setw(12) << std::setfill('0') \
+       << reinterpret_cast<uintptr_t>(ptr)
   if (detail) {
     while (r != root) {
-      s << space_name << " addr( " << r << " ) list ( " << r->m_prev << ' '
-        << r->m_next << " ) extent[ " << r->m_alloc_ptr << " + "
-        << r->m_alloc_size << " ] count(" << r->use_count() << ") dealloc("
-        << reinterpret_cast<void*>(r->m_dealloc) << ") "
+      s << space_name << " addr( " << KOKKOS_PAD_HEX(r) << " ) list ( "
+        << KOKKOS_PAD_HEX(r->m_prev) << ' ' << KOKKOS_PAD_HEX(r->m_next)
+        << " ) extent[ " << KOKKOS_PAD_HEX(r->m_alloc_ptr) << " + " << std::dec
+        << std::setw(8) << r->m_alloc_size << " ] count(" << r->use_count()
+        << ") dealloc(" << KOKKOS_PAD_HEX(r->m_dealloc) << ") "
         << r->m_alloc_ptr->m_label << '\n';
+
       r = r->m_next;
     }
   } else {
     while (r != root) {
-      s << space_name << " [ " << r->data() << " + " << r->size() << " ] "
-        << r->m_alloc_ptr->m_label << '\n';
+      s << space_name << " [ " << KOKKOS_PAD_HEX(r->data()) << " + " << std::dec
+        << r->size() << " ] " << r->m_alloc_ptr->m_label << '\n';
       r = r->m_next;
     }
   }
+#undef KOKKOS_PAD_HEX
 }
 #else
 void SharedAllocationRecord<void, void>::print_host_accessible_records(
