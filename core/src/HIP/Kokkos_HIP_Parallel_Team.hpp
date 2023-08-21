@@ -585,7 +585,7 @@ class ParallelReduce<CombinedFunctorReducerType,
   using pointer_type   = typename ReducerType::pointer_type;
   using reference_type = typename ReducerType::reference_type;
   using value_type     = typename ReducerType::value_type;
-  
+
  public:
   using size_type = HIP::size_type;
 
@@ -780,7 +780,7 @@ class ParallelReduce<CombinedFunctorReducerType,
         block_max = 65536;
       }
       constexpr int preferred_block_min = 1024;
-      int block_count_tmp = m_league_size;
+      int block_count_tmp               = m_league_size;
       if (block_count_tmp < preferred_block_min) {
         // keep blocks as is, already low parallelism
       } else if (block_count_tmp >= block_max) {
