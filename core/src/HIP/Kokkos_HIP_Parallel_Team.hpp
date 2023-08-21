@@ -593,8 +593,10 @@ class ParallelReduce<CombinedFunctorReducerType,
   // FIXME_HIP This should be disabled unconditionally for best performance, but
   // it currently causes tests to fail.
   static constexpr int UseShflReduction =
+      (ReducerType::static_value_size() != 0);
 
-      private : struct ShflReductionTag {};
+ private:
+  struct ShflReductionTag {};
   struct SHMEMReductionTag {};
 
   // Conditionally set word_size_type to int16_t or int8_t if value_type is
