@@ -585,7 +585,7 @@ class ParallelReduce<CombinedFunctorReducerType,
   using pointer_type   = typename ReducerType::pointer_type;
   using reference_type = typename ReducerType::reference_type;
   using value_type     = typename ReducerType::value_type;
-
+  
  public:
   using size_type = HIP::size_type;
 
@@ -770,9 +770,17 @@ class ParallelReduce<CombinedFunctorReducerType,
                                  !m_result_ptr_host_accessible ||
                                  !std::is_same<ReducerType, InvalidType>::value;
     if (!is_empty_range || need_device_set) {
-      constexpr int block_max           = 65536;
+      int block_max = 0;
+      constexpr auto light_weight =
+          Kokkos::Experimental::WorkItemProperty::HintLightWeight;
+      constexpr typename Policy::work_item_property property;
+      if ((property & light_weight) == light_weight) {
+        block_max = 2097152;
+      } else {
+        block_max = 65536;
+      }
       constexpr int preferred_block_min = 1024;
-      int block_count_tmp               = m_league_size;
+      int block_count_tmp = m_league_size;
       if (block_count_tmp < preferred_block_min) {
         // keep blocks as is, already low parallelism
       } else if (block_count_tmp >= block_max) {
