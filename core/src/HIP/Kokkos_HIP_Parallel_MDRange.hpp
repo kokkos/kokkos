@@ -30,7 +30,8 @@ namespace Impl {
 template <class FunctorType, class... Traits>
 class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, HIP> {
  public:
-  using Policy = Kokkos::MDRangePolicy<Traits...>;
+  using Policy       = Kokkos::MDRangePolicy<Traits...>;
+  using functor_type = FunctorType;
 
  private:
   using array_index_type = typename Policy::array_index_type;

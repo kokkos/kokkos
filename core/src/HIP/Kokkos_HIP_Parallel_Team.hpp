@@ -425,7 +425,7 @@ __device__ inline void hip_release_scratch_index(int32_t* scratch_locks,
 template <typename FunctorType, typename... Properties>
 class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>, HIP> {
  public:
-  using Policy       = TeamPolicyInternal<HIP, Properties...>;
+  using Policy       = TeamPolicy<Properties...>;
   using functor_type = FunctorType;
   using size_type    = HIP::size_type;
 
@@ -587,7 +587,8 @@ class ParallelReduce<CombinedFunctorReducerType,
   using value_type     = typename ReducerType::value_type;
 
  public:
-  using size_type = HIP::size_type;
+  using functor_type = FunctorType;
+  using size_type    = HIP::size_type;
 
   static int constexpr UseShflReduction =
       (ReducerType::static_value_size() != 0);
@@ -753,6 +754,7 @@ class ParallelReduce<CombinedFunctorReducerType,
     const bool need_device_set = ReducerType::has_init_member_function() ||
                                  ReducerType::has_final_member_function() ||
                                  !m_result_ptr_host_accessible ||
+                                 Policy::is_graph_kernel::value ||
                                  !std::is_same<ReducerType, InvalidType>::value;
     if (!is_empty_range || need_device_set) {
       const int block_count =
