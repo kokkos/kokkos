@@ -599,7 +599,6 @@ class ParallelReduce<CombinedFunctorReducerType,
   struct ShflReductionTag {};
   struct SHMEMReductionTag {};
 
-
   // Algorithmic constraints: blockDim.y is a power of two AND
   // blockDim.y == blockDim.z == 1 shared memory utilization:
   //
