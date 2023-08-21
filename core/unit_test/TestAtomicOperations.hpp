@@ -1116,22 +1116,11 @@ bool RShiftAtomicTest(T i0, T i1) {
 template <class T, class DeviceType>
 bool AtomicOperationsTestIntegralType(int i0, int i1, int test) {
   switch (test) {
-#ifdef KOKKOS_ENABLE_OPENACC
-    // FIXME_OPENACC: OpenACC C/C++ does not support atomic min/max operations
-    case 1: return true;
-    case 2: return true;
-#else
     case 1: return MaxAtomicTest<T, DeviceType>((T)i0, (T)i1);
     case 2: return MinAtomicTest<T, DeviceType>((T)i0, (T)i1);
-#endif
     case 3: return MulAtomicTest<T, DeviceType>((T)i0, (T)i1);
     case 4: return DivAtomicTest<T, DeviceType>((T)i0, (T)i1);
-#ifdef KOKKOS_ENABLE_OPENACC
-    // FIXME_OPENACC: OpenACC C/C++ does not support atomic mod operation
-    case 5: return true;
-#else
     case 5: return ModAtomicTest<T, DeviceType>((T)i0, (T)i1);
-#endif
     case 6: return AndAtomicTest<T, DeviceType>((T)i0, (T)i1);
     case 7: return OrAtomicTest<T, DeviceType>((T)i0, (T)i1);
     case 8: return XorAtomicTest<T, DeviceType>((T)i0, (T)i1);
@@ -1158,14 +1147,8 @@ bool AtomicOperationsTestUnsignedIntegralType(int i0, int i1, int test) {
 template <class T, class DeviceType>
 bool AtomicOperationsTestNonIntegralType(int i0, int i1, int test) {
   switch (test) {
-#ifdef KOKKOS_ENABLE_OPENACC
-    // FIXME_OPENACC: OpenACC C/C++ does not support atomic min/max operations
-    case 1: return true;
-    case 2: return true;
-#else
     case 1: return MaxAtomicTest<T, DeviceType>((T)i0, (T)i1);
     case 2: return MinAtomicTest<T, DeviceType>((T)i0, (T)i1);
-#endif
     case 3: return MulAtomicTest<T, DeviceType>((T)i0, (T)i1);
     case 4: return DivAtomicTest<T, DeviceType>((T)i0, (T)i1);
     case 5: return LoadStoreAtomicTest<T, DeviceType>((T)i0, (T)i1);

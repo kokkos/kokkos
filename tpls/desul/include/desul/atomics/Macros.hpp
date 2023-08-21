@@ -128,10 +128,24 @@ static constexpr bool desul_impl_omp_on_host() { return false; }
 #endif
 
 #if defined(DESUL_HAVE_OPENACC_ATOMICS)
+#ifdef __NVCOMPILER
+//In NVHPC, acc_on_device() is not constexpr; therefore, the same
+//device atomic implementations are used for both host and device.
 #define DESUL_IF_ON_DEVICE(CODE) \
   { DESUL_IMPL_STRIP_PARENS(CODE) }
 #define DESUL_IF_ON_HOST(CODE) \
   {}
+#else
+#include <openacc.h>
+#define DESUL_IF_ON_DEVICE(CODE)                     \
+  if constexpr (acc_on_device(acc_device_not_host)) {\
+    DESUL_IMPL_STRIP_PARENS(CODE)                    \
+  }
+#define DESUL_IF_ON_HOST(CODE)                       \
+  else {                                             \
+    DESUL_IMPL_STRIP_PARENS(CODE)                    \
+  }
+#endif
 #define DESUL_ACC_ROUTINE_DIRECTIVE _Pragma("acc routine seq")
 #else
 #define DESUL_ACC_ROUTINE_DIRECTIVE 
