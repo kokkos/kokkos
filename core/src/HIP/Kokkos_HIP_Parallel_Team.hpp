@@ -611,11 +611,6 @@ class ParallelReduce<CombinedFunctorReducerType,
   // offset rather than at every 4 byte word; such that, when the join is
   // performed, we have the correct data that was copied over in chunks of 4
   // bytes.
-  // FIXME_HIP: This is currently unused due to compilation errors and test
-  // failures that occur when it is used.
-  using word_size_type = std::conditional_t<
-      sizeof(value_type) < sizeof(size_type),
-      std::conditional_t<sizeof(value_type) == 2, int16_t, int8_t>, size_type>;
 
   // Algorithmic constraints: blockDim.y is a power of two AND
   // blockDim.y == blockDim.z == 1 shared memory utilization:
@@ -630,9 +625,6 @@ class ParallelReduce<CombinedFunctorReducerType,
   const pointer_type m_result_ptr;
   const bool m_result_ptr_device_accessible;
   const bool m_result_ptr_host_accessible;
-  // FIXME_HIP: m_scratch_space should be word_size_type*, but doing so
-  // currently results in compilation and/or test failures word_size_type*
-  // m_scratch_space;
   size_type* m_scratch_space;
   size_type* m_scratch_flags;
   size_type m_team_begin;
@@ -697,16 +689,6 @@ class ParallelReduce<CombinedFunctorReducerType,
   __device__ inline void run(SHMEMReductionTag, int const threadid) const {
     const ReducerType& reducer = m_functor_reducer.get_reducer();
 
-    // FIXME_HIP comments below contain changes necessary to use word_size_type.
-    // Currently enabling them causes test failures and/or compiler errors
-    // elsewhere
-    /*integral_nonzero_constant<word_size_type, ReducerType::static_value_size()
-    / sizeof(word_size_type)> const word_count(reducer.value_size() /
-    sizeof(word_size_type));
-
-    reference_type value =
-        reducer.init(reinterpret_cast<pointer_type>(kokkos_impl_hip_shared_memory<word_size_type>()
-    + threadIdx.y * word_count.value));*/
     integral_nonzero_constant<size_type, ReducerType::static_value_size() /
                                              sizeof(size_type)> const
         word_count(reducer.value_size() / sizeof(size_type));
@@ -725,22 +707,10 @@ class ParallelReduce<CombinedFunctorReducerType,
               reducer, blockIdx.x, gridDim.x,
               kokkos_impl_hip_shared_memory<size_type>(), m_scratch_space,
               m_scratch_flags);
-    /* FIXME_HIP: this is the call to use with word_size_type, currently broken
-     * hip_single_inter_block_reduce_scan<false>(
-        reducer, blockIdx.x, gridDim.x,
-        kokkos_impl_hip_shared_memory<word_size_type>(), m_scratch_space,
-        m_scratch_flags);*/
     if (do_final_reduce) {
       // This is the final block with the final result at the final threads'
       // location
 
-      // FIXME_HIP: word_size_type change below, once test and compilation
-      // issues are fixed
-      /*word_size_type* const shared =
-      kokkos_impl_hip_shared_memory<word_size_type>() + (blockDim.y - 1) *
-      word_count.value; word_size_type* const global =
-      m_result_ptr_device_accessible ?
-      reinterpret_cast<word_size_type*>(m_result_ptr) : m_scratch_space;*/
       size_type* const shared = kokkos_impl_hip_shared_memory<size_type>() +
                                 (blockDim.y - 1) * word_count.value;
       size_type* const global = m_result_ptr_device_accessible
@@ -807,7 +777,6 @@ class ParallelReduce<CombinedFunctorReducerType,
         // keep blocks as is, already low parallelism
       } else if (block_count_tmp >= block_max) {
         block_count_tmp = block_max;
-        // block_count_tmp = m_league_size;
 
       } else {
         int nwork            = m_league_size * m_team_size;
@@ -822,11 +791,6 @@ class ParallelReduce<CombinedFunctorReducerType,
       }
       const int block_count = block_count_tmp;
 
-      // FIXME_HIP: last word_size_type change
-      /*m_scratch_space =
-         reinterpret_cast<word_size_type*>(hip_internal_scratch_space(
-          m_policy.space(), reducer.value_size()*block_count));
-      */
       m_scratch_space = hip_internal_scratch_space(
           m_policy.space(), reducer.value_size() * block_count);
       m_scratch_flags =
