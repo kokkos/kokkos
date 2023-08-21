@@ -599,18 +599,6 @@ class ParallelReduce<CombinedFunctorReducerType,
   struct ShflReductionTag {};
   struct SHMEMReductionTag {};
 
-  // Conditionally set word_size_type to int16_t or int8_t if value_type is
-  // smaller than int32_t (Kokkos::HIP::size_type)
-  // word_size_type is used to determine the word count, shared memory buffer
-  // size, and global memory buffer size before the scan is performed.
-  // Within the scan, the word count is recomputed based on word_size_type
-  // and when calculating indexes into the shared/global memory buffers for
-  // performing the scan, word_size_type is used again.
-  // For scalars > 4 bytes in size, indexing into shared/global memory relies
-  // on the block and grid dimensions to ensure that we index at the correct
-  // offset rather than at every 4 byte word; such that, when the join is
-  // performed, we have the correct data that was copied over in chunks of 4
-  // bytes.
 
   // Algorithmic constraints: blockDim.y is a power of two AND
   // blockDim.y == blockDim.z == 1 shared memory utilization:
