@@ -106,7 +106,7 @@ using underlying_type_t = typename underlying_type<E>::type;
 
 // same as C++23 std::to_underlying but with __host__ __device__ annotations
 template <typename E>
-KOKKOS_INLINE_FUNCTION constexpr underlying_type_t<E> to_underlying(
+KOKKOS_FUNCTION constexpr underlying_type_t<E> to_underlying(
     E e) noexcept {
   return static_cast<underlying_type_t<E>>(e);
 }
