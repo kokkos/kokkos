@@ -320,6 +320,32 @@ struct Array<T, KOKKOS_INVALID_INDEX, Array<>::strided> {
       : m_elem(arg_ptr), m_size(arg_size), m_stride(arg_stride) {}
 };
 
+namespace Impl {
+
+template <typename T, size_t N, size_t... I>
+KOKKOS_INLINE_FUNCTION constexpr Array<std::remove_cv_t<T>, N> to_Array_impl(
+    T (&a)[N], std::index_sequence<I...>) {
+  return {{a[I]...}};
+}
+
+template <typename T, size_t N, size_t... I>
+KOKKOS_INLINE_FUNCTION constexpr Array<std::remove_cv_t<T>, N> to_Array_impl(
+    T(&&a)[N], std::index_sequence<I...>) {
+  return {{std::move(a[I])...}};
+}
+
+}  // namespace Impl
+
+template <class T, size_t N>
+KOKKOS_INLINE_FUNCTION constexpr auto to_Array(T (&a)[N]) {
+  return Impl::to_Array_impl(a, std::make_index_sequence<N>{});
+}
+
+template <class T, size_t N>
+KOKKOS_INLINE_FUNCTION constexpr auto to_Array(T(&&a)[N]) {
+  return Impl::to_Array_impl(std::move(a), std::make_index_sequence<N>{});
+}
+
 }  // namespace Kokkos
 
 //<editor-fold desc="Support for structured binding">
