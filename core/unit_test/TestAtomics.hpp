@@ -581,8 +581,6 @@ struct TpetraUseCase {
   }
 };
 
-TEST(TEST_CATEGORY, atomics_tpetra_max_abs) {
-  TpetraUseCase().check();
-}
+TEST(TEST_CATEGORY, atomics_tpetra_max_abs) { TpetraUseCase().check(); }
 
 }  // namespace Test

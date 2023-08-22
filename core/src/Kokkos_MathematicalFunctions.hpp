@@ -286,7 +286,7 @@ KOKKOS_INLINE_FUNCTION int abs(int n) {
 }
 KOKKOS_INLINE_FUNCTION long abs(long n) {
 // FIXME_NVHPC ptxas fatal   : unresolved extern function 'labs'
-#if defined(KOKKOS_COMPILER_NVHPC) && KOKKOS_COMPILER_NVHPC<230700
+#if defined(KOKKOS_COMPILER_NVHPC) && KOKKOS_COMPILER_NVHPC < 230700
   return n > 0 ? n : -n;
 #else
   using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::abs;
@@ -295,7 +295,7 @@ KOKKOS_INLINE_FUNCTION long abs(long n) {
 }
 KOKKOS_INLINE_FUNCTION long long abs(long long n) {
 // FIXME_NVHPC ptxas fatal   : unresolved extern function 'labs'
-#if defined(KOKKOS_COMPILER_NVHPC) && KOKKOS_COMPILER_NVHPC<230700
+#if defined(KOKKOS_COMPILER_NVHPC) && KOKKOS_COMPILER_NVHPC < 230700
   return n > 0 ? n : -n;
 #else
   using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::abs;
@@ -345,7 +345,7 @@ KOKKOS_IMPL_MATH_FUNCTIONS_DEFINED_IF_DEPRECATED_CODE_ENABLED(
 // Exponential functions
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(exp)
 // FIXME_NVHPC nvc++ has issues with exp2
-#if defined(KOKKOS_COMPILER_NVHPC) && KOKKOS_COMPILER_NVHPC<230700
+#if defined(KOKKOS_COMPILER_NVHPC) && KOKKOS_COMPILER_NVHPC < 230700
 KOKKOS_INLINE_FUNCTION float exp2(float val) {
   constexpr float ln2 = 0.693147180559945309417232121458176568L;
   return exp(ln2 * val);
