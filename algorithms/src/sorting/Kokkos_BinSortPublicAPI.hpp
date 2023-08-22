@@ -60,8 +60,12 @@ class BinSort {
         Kokkos::is_view<SrcViewType>::value,
         Kokkos::View<typename SrcViewType::const_data_type,
                      typename SrcViewType::array_layout,
-                     typename SrcViewType::device_type,
-                     Kokkos::MemoryTraits<Kokkos::RandomAccess> >,
+                     typename SrcViewType::device_type
+#if !defined(KOKKOS_COMPILER_NVHPC) || (KOKKOS_COMPILER_NVHPC >= 230700)
+                     ,
+                     Kokkos::MemoryTraits<Kokkos::RandomAccess>
+#endif
+                     >,
         typename SrcViewType::const_type>;
 
     using perm_view_type = typename PermuteViewType::const_type;

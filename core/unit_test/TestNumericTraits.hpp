@@ -41,7 +41,6 @@ struct extrema {
   DEFINE_EXTREMA(float, -FLT_MAX, FLT_MAX);
   DEFINE_EXTREMA(double, -DBL_MAX, DBL_MAX);
 
-// FIXME_NVHPC: with 23.3 using long double in KOKKOS_FUNCTION is hard error
 #if !defined(KOKKOS_ENABLE_CUDA) || \
     !defined(KOKKOS_COMPILER_NVHPC)  // 23.7 long double
   DEFINE_EXTREMA(long double, -LDBL_MAX, LDBL_MAX);
@@ -208,7 +207,8 @@ TEST(TEST_CATEGORY, numeric_traits_infinity) {
   TestNumericTraits<TEST_EXECSPACE, float, Infinity>();
   TestNumericTraits<TEST_EXECSPACE, double, Infinity>();
   // FIXME_NVHPC long double not supported
-#ifndef KOKKOS_COMPILER_NVHPC  // 23.7 long double
+#if !defined(KOKKOS_ENABLE_CUDA) || \
+    !defined(KOKKOS_COMPILER_NVHPC)  // 23.7 long double
   TestNumericTraits<TEST_EXECSPACE, long double, Infinity>();
 #endif
 }
@@ -217,7 +217,8 @@ TEST(TEST_CATEGORY, numeric_traits_epsilon) {
   TestNumericTraits<TEST_EXECSPACE, float, Epsilon>();
   TestNumericTraits<TEST_EXECSPACE, double, Epsilon>();
   // FIXME_NVHPC long double not supported
-#ifndef KOKKOS_COMPILER_NVHPC  // 23.7 long double:
+#if !defined(KOKKOS_ENABLE_CUDA) || \
+    !defined(KOKKOS_COMPILER_NVHPC)  // 23.7 long double:
   TestNumericTraits<TEST_EXECSPACE, long double, Epsilon>();
 #endif
 }
@@ -226,7 +227,8 @@ TEST(TEST_CATEGORY, numeric_traits_round_error) {
   TestNumericTraits<TEST_EXECSPACE, float, RoundError>();
   TestNumericTraits<TEST_EXECSPACE, double, RoundError>();
   // FIXME_NVHPC long double not supported
-#ifndef KOKKOS_COMPILER_NVHPC  // 23.7 long double:
+#if !defined(KOKKOS_ENABLE_CUDA) || \
+    !defined(KOKKOS_COMPILER_NVHPC)  // 23.7 long double:
   TestNumericTraits<TEST_EXECSPACE, long double, RoundError>();
 #endif
 }
@@ -235,7 +237,8 @@ TEST(TEST_CATEGORY, numeric_traits_norm_min) {
   TestNumericTraits<TEST_EXECSPACE, float, NormMin>();
   TestNumericTraits<TEST_EXECSPACE, double, NormMin>();
   // FIXME_NVHPC long double not supported
-#ifndef KOKKOS_COMPILER_NVHPC  // 23.7 long double:
+#if !defined(KOKKOS_ENABLE_CUDA) || \
+    !defined(KOKKOS_COMPILER_NVHPC)  // 23.7 long double:
   TestNumericTraits<TEST_EXECSPACE, long double, NormMin>();
 #endif
 }
@@ -244,7 +247,8 @@ TEST(TEST_CATEGORY, numeric_traits_denorm_min) {
   TestNumericTraits<TEST_EXECSPACE, float, DenormMin>();
   TestNumericTraits<TEST_EXECSPACE, double, DenormMin>();
   // FIXME_NVHPC long double not supported
-#ifndef KOKKOS_COMPILER_NVHPC  // 23.7 long double:
+#if !defined(KOKKOS_ENABLE_CUDA) || \
+    !defined(KOKKOS_COMPILER_NVHPC)  // 23.7 long double:
   TestNumericTraits<TEST_EXECSPACE, long double, DenormMin>();
 #endif
 }
@@ -281,8 +285,8 @@ TEST(TEST_CATEGORY, numeric_traits_finite_min_max) {
   TestNumericTraits<TEST_EXECSPACE, float, FiniteMax>();
   TestNumericTraits<TEST_EXECSPACE, double, FiniteMin>();
   TestNumericTraits<TEST_EXECSPACE, double, FiniteMax>();
-  // FIXME_NVHPC long double not supported
-#ifndef KOKKOS_COMPILER_NVHPC  // 23.7 long double:
+#if !defined(KOKKOS_ENABLE_CUDA) || \
+    !defined(KOKKOS_COMPILER_NVHPC)  // 23.7 long double:
   TestNumericTraits<TEST_EXECSPACE, long double, FiniteMin>();
   TestNumericTraits<TEST_EXECSPACE, long double, FiniteMax>();
 #endif
@@ -303,8 +307,8 @@ TEST(TEST_CATEGORY, numeric_traits_digits) {
   TestNumericTraits<TEST_EXECSPACE, unsigned long long int, Digits>();
   TestNumericTraits<TEST_EXECSPACE, float, Digits>();
   TestNumericTraits<TEST_EXECSPACE, double, Digits>();
-  // FIXME_NVHPC long double not supported
-#ifndef KOKKOS_COMPILER_NVHPC  // 23.7 long double:
+#if !defined(KOKKOS_ENABLE_CUDA) || \
+    !defined(KOKKOS_COMPILER_NVHPC)  // 23.7 long double:
   TestNumericTraits<TEST_EXECSPACE, long double, Digits>();
 #endif
 }
@@ -324,8 +328,8 @@ TEST(TEST_CATEGORY, numeric_traits_digits10) {
   TestNumericTraits<TEST_EXECSPACE, unsigned long long int, Digits10>();
   TestNumericTraits<TEST_EXECSPACE, float, Digits10>();
   TestNumericTraits<TEST_EXECSPACE, double, Digits10>();
-  // FIXME_NVHPC long double not supported
-#ifndef KOKKOS_COMPILER_NVHPC  // 23.7 long double:
+#if !defined(KOKKOS_ENABLE_CUDA) || \
+    !defined(KOKKOS_COMPILER_NVHPC)  // 23.7 long double:
   TestNumericTraits<TEST_EXECSPACE, long double, Digits10>();
 #endif
 }
@@ -333,8 +337,8 @@ TEST(TEST_CATEGORY, numeric_traits_digits10) {
 TEST(TEST_CATEGORY, numeric_traits_max_digits10) {
   TestNumericTraits<TEST_EXECSPACE, float, MaxDigits10>();
   TestNumericTraits<TEST_EXECSPACE, double, MaxDigits10>();
-  // FIXME_NVHPC long double not supported
-#ifndef KOKKOS_COMPILER_NVHPC  // 23.7 long double:
+#if !defined(KOKKOS_ENABLE_CUDA) || \
+    !defined(KOKKOS_COMPILER_NVHPC)  // 23.7 long double:
   TestNumericTraits<TEST_EXECSPACE, long double, MaxDigits10>();
 #endif
 }
@@ -353,8 +357,8 @@ TEST(TEST_CATEGORY, numeric_traits_radix) {
   TestNumericTraits<TEST_EXECSPACE, unsigned long long int, Radix>();
   TestNumericTraits<TEST_EXECSPACE, float, Radix>();
   TestNumericTraits<TEST_EXECSPACE, double, Radix>();
-  // FIXME_NVHPC long double not supported
-#ifndef KOKKOS_COMPILER_NVHPC  // 23.7 long double:
+#if !defined(KOKKOS_ENABLE_CUDA) || \
+    !defined(KOKKOS_COMPILER_NVHPC)  // 23.7 long double:
   TestNumericTraits<TEST_EXECSPACE, long double, Radix>();
 #endif
 }
@@ -364,8 +368,8 @@ TEST(TEST_CATEGORY, numeric_traits_min_max_exponent) {
   TestNumericTraits<TEST_EXECSPACE, float, MaxExponent>();
   TestNumericTraits<TEST_EXECSPACE, double, MinExponent>();
   TestNumericTraits<TEST_EXECSPACE, double, MaxExponent>();
-  // FIXME_NVHPC long double not supported
-#ifndef KOKKOS_COMPILER_NVHPC  // 23.7 long double:
+#if !defined(KOKKOS_ENABLE_CUDA) || \
+    !defined(KOKKOS_COMPILER_NVHPC)  // 23.7 long double:
   TestNumericTraits<TEST_EXECSPACE, long double, MinExponent>();
   TestNumericTraits<TEST_EXECSPACE, long double, MaxExponent>();
 #endif
@@ -376,8 +380,8 @@ TEST(TEST_CATEGORY, numeric_traits_min_max_exponent10) {
   TestNumericTraits<TEST_EXECSPACE, float, MaxExponent10>();
   TestNumericTraits<TEST_EXECSPACE, double, MinExponent10>();
   TestNumericTraits<TEST_EXECSPACE, double, MaxExponent10>();
-  // FIXME_NVHPC long double not supported
-#ifndef KOKKOS_COMPILER_NVHPC  // 23.7 long double:
+#if !defined(KOKKOS_ENABLE_CUDA) || \
+    !defined(KOKKOS_COMPILER_NVHPC)  // 23.7 long double:
   TestNumericTraits<TEST_EXECSPACE, long double, MinExponent10>();
   TestNumericTraits<TEST_EXECSPACE, long double, MaxExponent10>();
 #endif
@@ -387,8 +391,8 @@ TEST(TEST_CATEGORY, numeric_traits_quiet_and_signaling_nan) {
   TestNumericTraits<TEST_EXECSPACE, float, SignalingNaN>();
   TestNumericTraits<TEST_EXECSPACE, double, QuietNaN>();
   TestNumericTraits<TEST_EXECSPACE, double, SignalingNaN>();
-  // FIXME_NVHPC long double not supported
-#ifndef KOKKOS_COMPILER_NVHPC  // 23.7 long double:
+#if !defined(KOKKOS_ENABLE_CUDA) || \
+    !defined(KOKKOS_COMPILER_NVHPC)  // 23.7 long double:
   TestNumericTraits<TEST_EXECSPACE, long double, QuietNaN>();
   TestNumericTraits<TEST_EXECSPACE, long double, SignalingNaN>();
 #endif

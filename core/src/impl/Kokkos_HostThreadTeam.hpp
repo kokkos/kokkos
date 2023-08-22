@@ -155,7 +155,10 @@ class HostThreadTeamData {
 
   //----------------------------------------
 
-  constexpr HostThreadTeamData() noexcept
+#if !defined(KOKKOS_COMPILER_NVHPC) || (KOKKOS_COMPILER_NVHPC >= 230700)
+  constexpr
+#endif
+      HostThreadTeamData() noexcept
       : m_work_range(-1, -1),
         m_work_end(0),
         m_scratch(nullptr),
@@ -176,7 +179,8 @@ class HostThreadTeamData {
         m_work_chunk(0),
         m_steal_rank(0),
         m_pool_rendezvous_step(0),
-        m_team_rendezvous_step(0) {}
+        m_team_rendezvous_step(0) {
+  }
 
   //----------------------------------------
   // Organize array of members into a pool.
