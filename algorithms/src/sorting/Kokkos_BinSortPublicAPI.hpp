@@ -60,11 +60,8 @@ class BinSort {
         Kokkos::is_view<SrcViewType>::value,
         Kokkos::View<typename SrcViewType::const_data_type,
                      typename SrcViewType::array_layout,
-                     typename SrcViewType::device_type
-#if not defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC
-                     ,
+                     typename SrcViewType::device_type,
                      Kokkos::MemoryTraits<Kokkos::RandomAccess>
-#endif
                      >,
         typename SrcViewType::const_type>;
 
