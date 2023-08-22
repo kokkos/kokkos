@@ -510,26 +510,4 @@ TEST(TEST_CATEGORY, array_strided_assignment) {
   ASSERT_EQ(e[0], ee[0]);
 }
 
-struct SetOnMove {
-  KOKKOS_INLINE_FUNCTION SetOnMove(int i_) : i(i_) {}
-  KOKKOS_INLINE_FUNCTION operator int() const { return i; }
-
-  KOKKOS_DEFAULTED_FUNCTION SetOnMove() = default;
-
-  KOKKOS_DEFAULTED_FUNCTION SetOnMove(SetOnMove const&) = default;
-  KOKKOS_DEFAULTED_FUNCTION SetOnMove& operator=(SetOnMove const&) = default;
-  KOKKOS_DEFAULTED_FUNCTION ~SetOnMove()                           = default;
-
-  KOKKOS_INLINE_FUNCTION SetOnMove(SetOnMove&& that) : i(that.i) {
-    that.i = -1;
-  }
-  KOKKOS_INLINE_FUNCTION SetOnMove& operator=(SetOnMove&& that) {
-    i      = that.i;
-    that.i = -1;
-    return *this;
-  }
-
-  int i = std::numeric_limits<int>::min();
-};
-
 }  // namespace
