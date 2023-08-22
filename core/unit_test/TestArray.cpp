@@ -49,4 +49,28 @@ KOKKOS_FUNCTION constexpr bool test_array_structured_binding_support() {
 
 static_assert(test_array_structured_binding_support());
 
+KOKKOS_FUNCTION constexpr bool test_to_array() {
+  // copies a string literal
+  auto a1 = Kokkos::to_Array("foo");
+  static_assert(a1.size() == 4);
+
+  // deduces both element type and length
+  auto a2 = Kokkos::to_Array({0, 2, 1, 3});
+  static_assert(std::is_same_v<decltype(a2), Kokkos::Array<int, 4>>);
+
+  // deduces length with element type specified
+  // implicit conversion happens
+  auto a3 = Kokkos::to_Array<long>({0, 1, 3});
+  static_assert(std::is_same_v<decltype(a3), Kokkos::Array<long, 3>>);
+
+  auto a4 = Kokkos::to_Array<std::pair<int, float>>(
+      {{3, 0.0f}, {4, 0.1f}, {4, 0.1e23f}});
+  static_assert(a4.size() == 3);
+
+  return true;
+}
+
+static_assert(test_to_array());
+
+
 }  // namespace

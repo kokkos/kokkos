@@ -532,4 +532,76 @@ struct SetOnMove {
   int i = std::numeric_limits<int>::min();
 };
 
+TEST(TEST_CATEGORY, to_Array_lvalue) {
+  int array[] = {
+      2,
+      3,
+      5,
+      7,
+  };
+  int a_sum   = 0;  // sum of array elements
+  int som_sum = 0;  // sum of som_array elements
+  int ka_sum  = 0;  // sum of Kokkos::Array elements
+
+  Kokkos::parallel_reduce(
+      1,
+      KOKKOS_LAMBDA(int, int& asum, int& somsum, int& kasum) {
+        SetOnMove som_array[std::size(array)];
+        int i = 0;
+        for (auto& v : array) som_array[i++] = v;
+
+        auto ka = Kokkos::to_Array(som_array);
+        static_assert(std::is_same_v<
+                      Kokkos::Array<std::remove_extent_t<decltype(som_array)>,
+                                    std::size(array)>,
+                      decltype(ka)>);
+
+        for (size_t j = 0; j != ka.size(); ++j) {
+          asum += array[j];
+          somsum += som_array[j];
+          kasum += ka[j];
+        }
+      },
+      a_sum, som_sum, ka_sum);
+
+  ASSERT_EQ(som_sum, a_sum);
+  ASSERT_EQ(ka_sum, a_sum);
+}
+
+TEST(TEST_CATEGORY, to_Array_rvalue) {
+  int array[] = {
+      2,
+      3,
+      5,
+      7,
+  };
+  int a_sum   = 0;  // sum of array elements
+  int som_sum = 0;  // sum of som_array elements
+  int ka_sum  = 0;  // sum of Kokkos::Array elements
+
+  Kokkos::parallel_reduce(
+      1,
+      KOKKOS_LAMBDA(int, int& asum, int& somsum, int& kasum) {
+        SetOnMove som_array[std::size(array)];
+        int i = 0;
+        for (auto& v : array) som_array[i++] = v;
+
+        auto ka = Kokkos::to_Array(std::move(som_array));
+        static_assert(std::is_same_v<
+                      Kokkos::Array<std::remove_extent_t<decltype(som_array)>,
+                                    std::size(array)>,
+                      decltype(ka)>);
+
+        for (size_t j = 0; j != ka.size(); ++j) {
+          asum += array[j];
+          somsum += som_array[j];
+          kasum += ka[j];
+        }
+      },
+      a_sum, som_sum, ka_sum);
+
+  ASSERT_EQ(som_sum, -1 * static_cast<int>(std::size(array)));
+  ASSERT_EQ(ka_sum, a_sum);
+}
+
 }  // namespace
