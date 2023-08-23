@@ -80,7 +80,13 @@ void test_abort_from_device() {
   } else {
     TestAbortCausingAbnormalProgramTerminationAndPrinting<ExecutionSpace>();
   }
-#elif defined(KOKKOS_ENABLE_SYCL)  // FIXME_SYCL
+#elif defined(KOKKOS_ENABLE_OPENACC)  // FIXME_OPENACC
+  if (std::is_same<ExecutionSpace, Kokkos::Experimental::OpenACC>::value) {
+    TestAbortPrintingToStdout<ExecutionSpace>();
+  } else {
+    TestAbortCausingAbnormalProgramTerminationAndPrinting<ExecutionSpace>();
+  }
+#elif defined(KOKKOS_ENABLE_SYCL)     // FIXME_SYCL
   if (std::is_same<ExecutionSpace, Kokkos::Experimental::SYCL>::value) {
 #ifdef NDEBUG
     TestAbortPrintingToStdout<ExecutionSpace>();
