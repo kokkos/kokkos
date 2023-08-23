@@ -31,21 +31,21 @@ namespace Impl {
 struct HIPTraits {
 #if defined(KOKKOS_ARCH_AMD_GFX906) || defined(KOKKOS_ARCH_AMD_GFX908) || \
     defined(KOKKOS_ARCH_AMD_GFX90A) || defined(KOKKOS_ARCH_AMD_GFX942)
-  static int constexpr WarpSize       = 64;
-  static int constexpr WarpIndexMask  = 0x003f; /* hexadecimal for 63 */
-  static int constexpr WarpIndexShift = 6;      /* WarpSize == 1 << WarpShift*/
+  static constexpr int WarpSize       = 64;
+  static constexpr int WarpIndexMask  = 0x003f; /* hexadecimal for 63 */
+  static constexpr int WarpIndexShift = 6;      /* WarpSize == 1 << WarpShift*/
 #elif defined(KOKKOS_ARCH_AMD_GFX1030) || defined(KOKKOS_ARCH_AMD_GFX1100)
-  static int constexpr WarpSize       = 32;
-  static int constexpr WarpIndexMask  = 0x001f; /* hexadecimal for 31 */
-  static int constexpr WarpIndexShift = 5;      /* WarpSize == 1 << WarpShift*/
+  static constexpr int WarpSize       = 32;
+  static constexpr int WarpIndexMask  = 0x001f; /* hexadecimal for 31 */
+  static constexpr int WarpIndexShift = 5;      /* WarpSize == 1 << WarpShift*/
 #endif
-  static int constexpr ConservativeThreadsPerBlock =
+  static constexpr int ConservativeThreadsPerBlock =
       256;  // conservative fallback blocksize in case of spills
-  static int constexpr MaxThreadsPerBlock =
+  static constexpr int MaxThreadsPerBlock =
       1024;  // the maximum we can fit in a block
-  static int constexpr ConstantMemoryUsage        = 0x008000; /* 32k bytes */
-  static int constexpr KernelArgumentLimit        = 0x001000; /*  4k bytes */
-  static int constexpr ConstantMemoryUseThreshold = 0x000200; /* 512 bytes */
+  static constexpr int ConstantMemoryUsage        = 0x008000; /* 32k bytes */
+  static constexpr int KernelArgumentLimit        = 0x001000; /*  4k bytes */
+  static constexpr int ConstantMemoryUseThreshold = 0x000200; /* 512 bytes */
 };
 
 //----------------------------------------------------------------------------

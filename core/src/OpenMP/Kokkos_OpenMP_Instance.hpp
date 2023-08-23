@@ -48,7 +48,7 @@ class OpenMPInternal;
 inline int g_openmp_hardware_max_threads = 1;
 
 struct OpenMPTraits {
-  static int constexpr MAX_THREAD_COUNT = 512;
+  static constexpr int MAX_THREAD_COUNT = 512;
 };
 
 class OpenMPInternal {
