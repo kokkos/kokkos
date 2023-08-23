@@ -394,9 +394,16 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     initializer(OpenMPTargetReducerWrapper <ReducerType>::init(omp_priv))
 
 #if !defined(KOKKOS_IMPL_OPENMPTARGET_HIERARCHICAL_INTEL_GPU)
+#if defined(KOKKOS_IMPL_OPENMPTARGET_LLVM_EXTENSIONS)
+#pragma omp target teams num_teams(max_active_teams) thread_limit(team_size) \
+    firstprivate(f) is_device_ptr(scratch_ptr) reduction(custom              \
+                                                         : result)           \
+        ompx_dyn_cgroup_mem(shmem_size_L0)
+#else
 #pragma omp target teams num_teams(max_active_teams) thread_limit(team_size) \
     firstprivate(f) is_device_ptr(scratch_ptr) reduction(custom              \
                                                          : result)
+#endif
 #pragma omp parallel reduction(custom : result)
     {
       if (omp_get_num_teams() > max_active_teams)
@@ -482,9 +489,18 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
 
       // Case where reduction is on a native data type.
       if constexpr (std::is_arithmetic<ValueType>::value) {
+        // Use scratch memory extensions to request dynamic shared memory for
+        // the right compiler/architecture combination.
+#if defined(KOKKOS_IMPL_OPENMPTARGET_LLVM_EXTENSIONS)
+#pragma omp target teams num_teams(max_active_teams) thread_limit(team_size) map(to   \
+                                                                       : f) \
+    is_device_ptr(scratch_ptr) reduction(+: result)               \
+        ompx_dyn_cgroup_mem(shmem_size_L0)
+#else
 #pragma omp target teams num_teams(max_active_teams) thread_limit(team_size) map(to   \
                                                                        : f) \
     is_device_ptr(scratch_ptr) reduction(+: result)
+#endif
 #pragma omp parallel reduction(+ : result)
         {
           if (omp_get_num_teams() > max_active_teams)
@@ -636,10 +652,17 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
 
       return;
     }
-
+    // Use scratch memory extensions to request dynamic shared memory for the
+    // right compiler/architecture combination.
+#if defined(KOKKOS_IMPL_OPENMPTARGET_LLVM_EXTENSIONS)
+#pragma omp target teams num_teams(nteams) thread_limit(team_size) map(to   \
+                                                                       : f) \
+    is_device_ptr(scratch_ptr) ompx_dyn_cgroup_mem(shmem_size_L0)
+#else
 #pragma omp target teams num_teams(nteams) thread_limit(team_size) map(to   \
                                                                        : f) \
     is_device_ptr(scratch_ptr)
+#endif
     {
 #pragma omp parallel
       {

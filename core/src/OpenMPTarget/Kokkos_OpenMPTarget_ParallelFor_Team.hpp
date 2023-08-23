@@ -140,8 +140,16 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 // guarantees that the number of teams specified in the `num_teams` clause is
 // always less than or equal to the maximum concurrently running teams.
 #if !defined(KOKKOS_IMPL_OPENMPTARGET_HIERARCHICAL_INTEL_GPU)
+      // Use scratch memory extensions to request dynamic shared memory for the
+      // right compiler/architecture combination.
+#if defined(KOKKOS_IMPL_OPENMPTARGET_LLVM_EXTENSIONS)
+#pragma omp target teams thread_limit(team_size) firstprivate(a_functor) \
+    num_teams(max_active_teams) is_device_ptr(scratch_ptr)               \
+        ompx_dyn_cgroup_mem(shmem_size_L0)
+#else
 #pragma omp target teams thread_limit(team_size) firstprivate(a_functor) \
     num_teams(max_active_teams) is_device_ptr(scratch_ptr)
+#endif
 #pragma omp parallel
     {
       if (omp_get_num_teams() > max_active_teams)
