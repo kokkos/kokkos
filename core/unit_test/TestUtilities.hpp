@@ -48,23 +48,6 @@ enum class ScopedEnum { SEZero, SEOne };
 enum class ScopedEnumShort : short { SESZero, SESOne };
 }  // namespace
 
-void test_cpp20_underlying_type() {
-  using Kokkos::Impl::underlying_type;
-  using Kokkos::Impl::underlying_type_t;
-
-  static_assert(std::is_integral_v<underlying_type<Enum>::type>);
-  static_assert(std::is_integral_v<underlying_type_t<Enum>>);
-
-  static_assert(std::is_same_v<bool, underlying_type<EnumBool>::type>);
-  static_assert(std::is_same_v<bool, underlying_type_t<EnumBool>>);
-
-  static_assert(std::is_integral_v<underlying_type<ScopedEnum>::type>);
-  static_assert(std::is_integral_v<underlying_type_t<ScopedEnum>>);
-
-  static_assert(std::is_same_v<short, underlying_type<ScopedEnumShort>::type>);
-  static_assert(std::is_same_v<short, underlying_type_t<ScopedEnumShort>>);
-}
-
 void test_to_underlying() {
   using Kokkos::Impl::to_underlying;
 
