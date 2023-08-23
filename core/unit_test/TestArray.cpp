@@ -72,5 +72,4 @@ KOKKOS_FUNCTION constexpr bool test_to_array() {
 
 static_assert(test_to_array());
 
-
 }  // namespace
