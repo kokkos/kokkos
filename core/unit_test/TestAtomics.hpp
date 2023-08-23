@@ -563,7 +563,7 @@ struct TpetraUseCase {
   };
 
   using T = int;
-  Kokkos::View<T> d_{"lbl"};
+  Kokkos::View<T, TEST_EXECSPACE> d_{"lbl"};
   KOKKOS_FUNCTION void operator()(int i) const {
     // 0, -1, 2, -3, ...
     auto v_i = static_cast<T>(i);
@@ -572,7 +572,9 @@ struct TpetraUseCase {
                        AbsMaxHelper<T>{v_i});
   }
 
-  TpetraUseCase() { Kokkos::parallel_for(10, *this); }
+  TpetraUseCase() {
+    Kokkos::parallel_for(Kokkos::RangePolicy<TEST_EXECSPACE>(0, 10), *this);
+  }
 
   void check() {
     T v;
