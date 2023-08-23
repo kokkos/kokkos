@@ -163,8 +163,8 @@ struct Array<T, 0, Proxy> {
     return *reinterpret_cast<const_pointer>(-1);
   }
 
-  KOKKOS_INLINE_FUNCTION pointer data() { return pointer(0); }
-  KOKKOS_INLINE_FUNCTION const_pointer data() const { return const_pointer(0); }
+  KOKKOS_INLINE_FUNCTION pointer data() { return nullptr; }
+  KOKKOS_INLINE_FUNCTION const_pointer data() const { return nullptr; }
 
   KOKKOS_DEFAULTED_FUNCTION ~Array()            = default;
   KOKKOS_DEFAULTED_FUNCTION Array()             = default;
