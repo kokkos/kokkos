@@ -24,8 +24,11 @@
 #include <HIP/Kokkos_HIP_Error.hpp>
 #include <HIP/Kokkos_HIP_Instance.hpp>
 #include <HIP/Kokkos_HIP_Space.hpp>
+
+#if (HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR > 2)
 #include <HIP/Kokkos_HIP_GraphNodeKernel.hpp>
 #include <impl/Kokkos_GraphImpl_fwd.hpp>
+#endif
 
 // Must use global variable on the device with HIP-Clang
 #ifdef __HIP__
@@ -377,6 +380,7 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
         driver);
   }
 
+#if (HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR > 2)
   static void create_parallel_launch_graph_node(
       DriverType const &driver, dim3 const &grid, dim3 const &block, int shmem,
       HIPInternal const * /*hip_instance*/) {
@@ -410,6 +414,7 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
     }
     KOKKOS_ENSURES(graph_node);
   }
+#endif
 };
 
 // HIPLaunchMechanism::GlobalMemory specialization
@@ -433,6 +438,7 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
         driver_ptr);
   }
 
+#if (HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR > 2)
   static void create_parallel_launch_graph_node(
       DriverType const &driver, dim3 const &grid, dim3 const &block, int shmem,
       HIPInternal const *hip_instance) {
@@ -476,6 +482,7 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
     }
     KOKKOS_ENSURES(bool(graph_node))
   }
+#endif
 };
 
 // HIPLaunchMechanism::ConstantMemory specializations
@@ -574,13 +581,16 @@ void hip_parallel_launch(const DriverType &driver, const dim3 &grid,
                          const dim3 &block, const int shmem,
                          const HIPInternal *hip_instance,
                          const bool prefer_shmem) {
+#if (HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR > 2)
   if constexpr (DoGraph) {
     // Graph launch
     using base_t = HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
                                                   LaunchMechanism>;
     base_t::create_parallel_launch_graph_node(driver, grid, block, shmem,
                                               hip_instance);
-  } else {
+  } else
+#endif
+  {
     // Regular kernel launch
 #ifndef KOKKOS_ENABLE_HIP_MULTIPLE_KERNEL_INSTANTIATIONS
     HIPParallelLaunch<DriverType, LaunchBounds, LaunchMechanism>(
