@@ -154,6 +154,20 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
     endforeach()
 
     # ------------------------------------------
+    # std team B
+    # ------------------------------------------
+    set(STDALGO_TEAM_SOURCES_B)
+    foreach(Name
+	StdAlgorithmsCommon
+	StdAlgorithmsTeamEqual
+	StdAlgorithmsTeamSearch
+	StdAlgorithmsTeamFindEnd
+	StdAlgorithmsTeamFindFirstOf
+      )
+      list(APPEND STDALGO_TEAM_SOURCES_B Test${Name}.cpp)
+    endforeach()
+
+    # ------------------------------------------
     # std team A
     # ------------------------------------------
     set(STDALGO_TEAM_SOURCES_A)
@@ -194,7 +208,7 @@ if(NOT (KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM
   )
 endif()
 
-# FIXME_OPENMPTARGET These tests cause internal compiler errors as of 09/01/22
+# FIXME_OPENMPTARGET: These tests cause internal compiler errors as of 09/01/22
 # when compiling for Intel's Xe-HP GPUs.
 if(KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM)
   list(REMOVE_ITEM STDALGO_SOURCES_D
@@ -209,6 +223,17 @@ if(KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM)
   )
 endif()
 
+# FIXME_OPENMPTARGET need to remove tests for OpenMPTarget because in these cases
+# the impl needs to use either Kokkos or tailored reducers
+# which results in runtime memory errors.
+if(KOKKOS_ENABLE_OPENMPTARGET)
+  list(REMOVE_ITEM STDALGO_TEAM_SOURCES_B
+    TestStdAlgorithmsTeamFindEnd.cpp
+    TestStdAlgorithmsTeamFindFirstOf.cpp
+    TestStdAlgorithmsTeamSearch.cpp
+  )
+endif()
+
 # FIXME_OPENMPTARGET need to remove tests for OpenMPTarget because
 # in these cases the impl needs to use either Kokkos or tailored reducers
 # which results in runtime memory errors.
@@ -220,7 +245,6 @@ if(KOKKOS_ENABLE_OPENMPTARGET)
   )
 endif()
 
-
 foreach(ID A;B;C;D;E)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     AlgorithmsUnitTest_StdSet_${ID}
@@ -230,7 +254,7 @@ foreach(ID A;B;C;D;E)
     )
 endforeach()
 
-foreach(ID A)
+foreach(ID A;B)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     AlgorithmsUnitTest_StdSet_Team_${ID}
     SOURCES
