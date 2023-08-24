@@ -157,7 +157,7 @@ struct TestNumericTraits {
     use_on_device();
   }
   KOKKOS_FUNCTION void operator()(SignalingNaN, int, int& e) const {
-#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC  23.7 nan
+#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC 23.7 nan
     using Kokkos::Experimental::signaling_NaN;
     constexpr auto nan  = signaling_NaN<T>::value;
     constexpr auto zero = T(0);
