@@ -134,13 +134,6 @@ void test_join_backward_compatibility() {
   ReducerWithJoinThatTakesVolatileQualifiedArgs my_red;
   my_red.join(vol_result, result2);
   ASSERT_EQ(vol_result.err, expected_join_volatile);
-
-#if defined(KOKKOS_ENABLE_DEPRECATED_CODE_3)
-  MyJoinBackCompatValueType result3;
-  Kokkos::parallel_reduce(
-      policy, ReducerWithJoinThatTakesVolatileQualifiedArgs{}, result3);
-  ASSERT_EQ(result3.err, expected_join_volatile);
-#endif
 }
 
 TEST(TEST_CATEGORY, join_backward_compatibility) {
