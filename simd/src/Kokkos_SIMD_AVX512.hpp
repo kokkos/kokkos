@@ -1038,8 +1038,8 @@ class simd<float, simd_abi::avx512_fixed_size<8>> {
       const {
     return m_value;
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd
-  operator-() const noexcept {
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd operator-() const
+      noexcept {
     return simd(_mm256_sub_ps(_mm256_set1_ps(0.0), m_value));
   }
 
@@ -1061,33 +1061,27 @@ class simd<float, simd_abi::avx512_fixed_size<8>> {
   }
   [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
   operator<(simd const& lhs, simd const& rhs) noexcept {
-    return mask_type(
-        _mm256_cmp_ps_mask(lhs.m_value, rhs.m_value, _CMP_LT_OS));
+    return mask_type(_mm256_cmp_ps_mask(lhs.m_value, rhs.m_value, _CMP_LT_OS));
   }
   [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
   operator>(simd const& lhs, simd const& rhs) noexcept {
-    return mask_type(
-        _mm256_cmp_ps_mask(lhs.m_value, rhs.m_value, _CMP_GT_OS));
+    return mask_type(_mm256_cmp_ps_mask(lhs.m_value, rhs.m_value, _CMP_GT_OS));
   }
   [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
   operator<=(simd const& lhs, simd const& rhs) noexcept {
-    return mask_type(
-        _mm256_cmp_ps_mask(lhs.m_value, rhs.m_value, _CMP_LE_OS));
+    return mask_type(_mm256_cmp_ps_mask(lhs.m_value, rhs.m_value, _CMP_LE_OS));
   }
   [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
   operator>=(simd const& lhs, simd const& rhs) noexcept {
-    return mask_type(
-        _mm256_cmp_ps_mask(lhs.m_value, rhs.m_value, _CMP_GE_OS));
+    return mask_type(_mm256_cmp_ps_mask(lhs.m_value, rhs.m_value, _CMP_GE_OS));
   }
   [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
   operator==(simd const& lhs, simd const& rhs) noexcept {
-    return mask_type(
-        _mm256_cmp_ps_mask(lhs.m_value, rhs.m_value, _CMP_EQ_OS));
+    return mask_type(_mm256_cmp_ps_mask(lhs.m_value, rhs.m_value, _CMP_EQ_OS));
   }
   [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
   operator!=(simd const& lhs, simd const& rhs) noexcept {
-    return mask_type(
-        _mm256_cmp_ps_mask(lhs.m_value, rhs.m_value, _CMP_NEQ_OS));
+    return mask_type(_mm256_cmp_ps_mask(lhs.m_value, rhs.m_value, _CMP_NEQ_OS));
   }
 };
 
