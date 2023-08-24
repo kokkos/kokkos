@@ -756,70 +756,51 @@ class simd<float, simd_abi::avx2_fixed_size<4>> {
       const {
     return m_value;
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  operator==(simd const& other) const {
-    return mask_type(_mm_cmpeq_ps(m_value, other.m_value));
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd operator-() const
+      noexcept {
+    return simd(_mm_sub_ps(_mm_set1_ps(0.0), m_value));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  operator>(simd const& other) const {
-    return mask_type(_mm_cmpgt_ps(m_value, other.m_value));
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd operator*(
+      simd const& lhs, simd const& rhs) noexcept {
+    return simd(_mm_mul_ps(lhs.m_value, rhs.m_value));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  operator<(simd const& other) const {
-    return mask_type(_mm_cmplt_ps(m_value, other.m_value));
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd operator/(
+      simd const& lhs, simd const& rhs) noexcept {
+    return simd(_mm_div_ps(lhs.m_value, rhs.m_value));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  operator<=(simd const& other) const {
-    return mask_type(_mm_cmple_ps(m_value, other.m_value));
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd operator+(
+      simd const& lhs, simd const& rhs) noexcept {
+    return simd(_mm_add_ps(lhs.m_value, rhs.m_value));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  operator>=(simd const& other) const {
-    return mask_type(_mm_cmpge_ps(m_value, other.m_value));
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd operator-(
+      simd const& lhs, simd const& rhs) noexcept {
+    return simd(_mm_sub_ps(lhs.m_value, rhs.m_value));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  operator!=(simd const& other) const {
-    return mask_type(_mm_cmpneq_ps(m_value, other.m_value));
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
+  operator==(simd const& lhs, simd const& rhs) noexcept {
+    return mask_type(_mm_cmpeq_ps(lhs.m_value, rhs.m_value));
+  }
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
+  operator>(simd const& lhs, simd const& rhs) noexcept {
+    return mask_type(_mm_cmpgt_ps(lhs.m_value, rhs.m_value));
+  }
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
+  operator<(simd const& lhs, simd const& rhs) noexcept {
+    return mask_type(_mm_cmplt_ps(lhs.m_value, rhs.m_value));
+  }
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
+  operator<=(simd const& lhs, simd const& rhs) noexcept {
+    return mask_type(_mm_cmple_ps(lhs.m_value, rhs.m_value));
+  }
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
+  operator>=(simd const& lhs, simd const& rhs) noexcept {
+    return mask_type(_mm_cmpge_ps(lhs.m_value, rhs.m_value));
+  }
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
+  operator!=(simd const& lhs, simd const& rhs) noexcept {
+    return mask_type(_mm_cmpneq_ps(lhs.m_value, rhs.m_value));
   }
 };
-
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    simd<float, simd_abi::avx2_fixed_size<4>>
-    operator*(simd<float, simd_abi::avx2_fixed_size<4>> const& lhs,
-              simd<float, simd_abi::avx2_fixed_size<4>> const& rhs) {
-  return simd<float, simd_abi::avx2_fixed_size<4>>(
-      _mm_mul_ps(static_cast<__m128>(lhs), static_cast<__m128>(rhs)));
-}
-
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    simd<float, simd_abi::avx2_fixed_size<4>>
-    operator/(simd<float, simd_abi::avx2_fixed_size<4>> const& lhs,
-              simd<float, simd_abi::avx2_fixed_size<4>> const& rhs) {
-  return simd<float, simd_abi::avx2_fixed_size<4>>(
-      _mm_div_ps(static_cast<__m128>(lhs), static_cast<__m128>(rhs)));
-}
-
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    simd<float, simd_abi::avx2_fixed_size<4>>
-    operator-(simd<float, simd_abi::avx2_fixed_size<4>> const& a) {
-  return simd<float, simd_abi::avx2_fixed_size<4>>(
-      _mm_sub_ps(_mm_set1_ps(0.0), static_cast<__m128>(a)));
-}
-
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    simd<float, simd_abi::avx2_fixed_size<4>>
-    operator+(simd<float, simd_abi::avx2_fixed_size<4>> const& lhs,
-              simd<float, simd_abi::avx2_fixed_size<4>> const& rhs) {
-  return simd<float, simd_abi::avx2_fixed_size<4>>(
-      _mm_add_ps(static_cast<__m128>(lhs), static_cast<__m128>(rhs)));
-}
-
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    simd<float, simd_abi::avx2_fixed_size<4>>
-    operator-(simd<float, simd_abi::avx2_fixed_size<4>> const& lhs,
-              simd<float, simd_abi::avx2_fixed_size<4>> const& rhs) {
-  return simd<float, simd_abi::avx2_fixed_size<4>>(
-      _mm_sub_ps(static_cast<__m128>(lhs), static_cast<__m128>(rhs)));
-}
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 simd<float, simd_abi::avx2_fixed_size<4>> copysign(
