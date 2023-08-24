@@ -72,6 +72,29 @@ class simd_mask<T, simd_abi::avx512_fixed_size<8>> {
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd_mask(
       simd_mask<U, simd_abi::avx512_fixed_size<8>> const& other)
       : m_value(static_cast<__mmask8>(other)) {}
+  template <class G,
+            std::enable_if_t<
+                std::is_invocable_r_v<value_type, G,
+                                      std::integral_constant<std::size_t, 0>>,
+                bool> = false>
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd_mask(G&& gen) : m_value(false) {
+    reference(m_value, int(0)) =
+        static_cast<bool>(gen(std::integral_constant<std::size_t, 0>()));
+    reference(m_value, int(1)) =
+        static_cast<bool>(gen(std::integral_constant<std::size_t, 1>()));
+    reference(m_value, int(2)) =
+        static_cast<bool>(gen(std::integral_constant<std::size_t, 2>()));
+    reference(m_value, int(3)) =
+        static_cast<bool>(gen(std::integral_constant<std::size_t, 3>()));
+    reference(m_value, int(4)) =
+        static_cast<bool>(gen(std::integral_constant<std::size_t, 4>()));
+    reference(m_value, int(5)) =
+        static_cast<bool>(gen(std::integral_constant<std::size_t, 5>()));
+    reference(m_value, int(6)) =
+        static_cast<bool>(gen(std::integral_constant<std::size_t, 6>()));
+    reference(m_value, int(7)) =
+        static_cast<bool>(gen(std::integral_constant<std::size_t, 7>()));
+  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION static constexpr std::size_t size() {
     return 8;
   }
@@ -145,7 +168,8 @@ class simd<std::int32_t, simd_abi::avx512_fixed_size<8>> {
                 std::is_invocable_r_v<value_type, G,
                                       std::integral_constant<std::size_t, 0>>,
                 bool> = false>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd(G&& gen)
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(
+      G&& gen) noexcept
       : m_value(
             _mm256_setr_epi32(gen(std::integral_constant<std::size_t, 0>()),
                               gen(std::integral_constant<std::size_t, 1>()),
@@ -176,92 +200,77 @@ class simd<std::int32_t, simd_abi::avx512_fixed_size<8>> {
       const {
     return m_value;
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  operator<(simd const& other) const {
-    return mask_type(_mm256_cmplt_epi32_mask(m_value, other.m_value));
-  }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  operator>(simd const& other) const {
-    return mask_type(_mm256_cmplt_epi32_mask(other.m_value, m_value));
-  }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  operator<=(simd const& other) const {
-    return mask_type(_mm256_cmple_epi32_mask(m_value, other.m_value));
-  }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  operator>=(simd const& other) const {
-    return mask_type(_mm256_cmple_epi32_mask(other.m_value, m_value));
-  }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  operator==(simd const& other) const {
-    return mask_type(_mm256_cmpeq_epi32_mask(m_value, other.m_value));
-  }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  operator!=(simd const& other) const {
-    return mask_type(_mm256_cmpneq_epi32_mask(m_value, other.m_value));
+
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd operator-() const
+      noexcept {
+    return simd(_mm256_sub_epi32(_mm256_set1_epi32(0), m_value));
   }
 
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd<
-      std::int32_t, simd_abi::avx512_fixed_size<8>>
-  operator>>(simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& lhs,
-             int rhs) noexcept {
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd operator*(
+      simd const& lhs, simd const& rhs) noexcept {
+    return simd(_mm256_mullo_epi32(static_cast<__m256i>(lhs),
+                                   static_cast<__m256i>(rhs)));
+  }
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd operator+(
+      simd const& lhs, simd const& rhs) noexcept {
     return simd<std::int32_t, simd_abi::avx512_fixed_size<8>>(
-        _mm256_srai_epi32(static_cast<__m256i>(lhs), rhs));
+        _mm256_add_epi32(static_cast<__m256i>(lhs), static_cast<__m256i>(rhs)));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd<
-      std::int32_t, simd_abi::avx512_fixed_size<8>>
-  operator>>(
-      simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& lhs,
-      simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& rhs) noexcept {
-    return simd<std::int32_t, simd_abi::avx512_fixed_size<8>>(_mm256_srav_epi32(
-        static_cast<__m256i>(lhs), static_cast<__m256i>(rhs)));
-  }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd<
-      std::int32_t, simd_abi::avx512_fixed_size<8>>
-  operator<<(simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& lhs,
-             int rhs) noexcept {
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd operator-(
+      simd const& lhs, simd const& rhs) noexcept {
     return simd<std::int32_t, simd_abi::avx512_fixed_size<8>>(
-        _mm256_slli_epi32(static_cast<__m256i>(lhs), rhs));
+        _mm256_sub_epi32(static_cast<__m256i>(lhs), static_cast<__m256i>(rhs)));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd<
-      std::int32_t, simd_abi::avx512_fixed_size<8>>
-  operator<<(
-      simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& lhs,
-      simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& rhs) noexcept {
-    return simd<std::int32_t, simd_abi::avx512_fixed_size<8>>(_mm256_sllv_epi32(
-        static_cast<__m256i>(lhs), static_cast<__m256i>(rhs)));
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
+  operator<(simd const& lhs, simd const& rhs) noexcept {
+    return mask_type(_mm256_cmplt_epi32_mask(static_cast<__m256i>(lhs),
+                                             static_cast<__m256i>(rhs)));
+  }
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
+  operator>(simd const& lhs, simd const& rhs) noexcept {
+    return mask_type(_mm256_cmplt_epi32_mask(static_cast<__m256i>(rhs),
+                                             static_cast<__m256i>(lhs)));
+  }
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
+  operator<=(simd const& lhs, simd const& rhs) noexcept {
+    return mask_type(_mm256_cmple_epi32_mask(static_cast<__m256i>(lhs),
+                                             static_cast<__m256i>(rhs)));
+  }
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
+  operator>=(simd const& lhs, simd const& rhs) noexcept {
+    return mask_type(_mm256_cmple_epi32_mask(static_cast<__m256i>(rhs),
+                                             static_cast<__m256i>(lhs)));
+  }
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
+  operator==(simd const& lhs, simd const& rhs) noexcept {
+    return mask_type(_mm256_cmpeq_epi32_mask(static_cast<__m256i>(lhs),
+                                             static_cast<__m256i>(rhs)));
+  }
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
+  operator!=(simd const& lhs, simd const& rhs) noexcept {
+    return mask_type(_mm256_cmpneq_epi32_mask(static_cast<__m256i>(lhs),
+                                              static_cast<__m256i>(rhs)));
+  }
+
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd operator>>(
+      simd const& lhs, int rhs) noexcept {
+    return simd(_mm256_srai_epi32(static_cast<__m256i>(lhs), rhs));
+  }
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd operator>>(
+      simd const& lhs, simd const& rhs) noexcept {
+    return simd(_mm256_srav_epi32(static_cast<__m256i>(lhs),
+                                  static_cast<__m256i>(rhs)));
+  }
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd operator<<(
+      simd const& lhs, int rhs) noexcept {
+    return simd(_mm256_slli_epi32(static_cast<__m256i>(lhs), rhs));
+  }
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd operator<<(
+      simd const& lhs, simd const& rhs) noexcept {
+    return simd(_mm256_sllv_epi32(static_cast<__m256i>(lhs),
+                                  static_cast<__m256i>(rhs)));
   }
 };
-
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    simd<std::int32_t, simd_abi::avx512_fixed_size<8>>
-    operator*(simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& lhs,
-              simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& rhs) {
-  return simd<std::int32_t, simd_abi::avx512_fixed_size<8>>(
-      _mm256_mullo_epi32(static_cast<__m256i>(lhs), static_cast<__m256i>(rhs)));
-}
-
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    simd<std::int32_t, simd_abi::avx512_fixed_size<8>>
-    operator+(simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& lhs,
-              simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& rhs) {
-  return simd<std::int32_t, simd_abi::avx512_fixed_size<8>>(
-      _mm256_add_epi32(static_cast<__m256i>(lhs), static_cast<__m256i>(rhs)));
-}
-
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    simd<std::int32_t, simd_abi::avx512_fixed_size<8>>
-    operator-(simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& lhs,
-              simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& rhs) {
-  return simd<std::int32_t, simd_abi::avx512_fixed_size<8>>(
-      _mm256_sub_epi32(static_cast<__m256i>(lhs), static_cast<__m256i>(rhs)));
-}
-
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    simd<std::int32_t, simd_abi::avx512_fixed_size<8>>
-    operator-(simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& a) {
-  return simd<std::int32_t, simd_abi::avx512_fixed_size<8>>(0) - a;
-}
 
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     simd<std::int32_t, simd_abi::avx512_fixed_size<8>>
@@ -309,6 +318,24 @@ class simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> {
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit simd(
       simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& other)
       : m_value(static_cast<__m256i>(other)) {}
+  template <class G,
+            std::enable_if_t<
+                // basically, can you do { value_type r =
+                // gen(std::integral_constant<std::size_t, i>()); }
+                std::is_invocable_r_v<value_type, G,
+                                      std::integral_constant<std::size_t, 0>>,
+                bool> = false>
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(
+      G&& gen) noexcept
+      : m_value(
+            _mm256_setr_epi32(gen(std::integral_constant<std::size_t, 0>()),
+                              gen(std::integral_constant<std::size_t, 1>()),
+                              gen(std::integral_constant<std::size_t, 2>()),
+                              gen(std::integral_constant<std::size_t, 3>()),
+                              gen(std::integral_constant<std::size_t, 4>()),
+                              gen(std::integral_constant<std::size_t, 5>()),
+                              gen(std::integral_constant<std::size_t, 6>()),
+                              gen(std::integral_constant<std::size_t, 7>()))) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference operator[](std::size_t i) {
     return reinterpret_cast<value_type*>(&m_value)[i];
   }
@@ -330,88 +357,73 @@ class simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> {
       const {
     return m_value;
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  operator<(simd const& other) const {
-    return mask_type(_mm256_cmplt_epu32_mask(m_value, other.m_value));
+
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd operator*(
+      simd const& lhs, simd const& rhs) noexcept {
+    return simd(_mm256_mullo_epi32(static_cast<__m256i>(lhs),
+                                   static_cast<__m256i>(rhs)));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  operator>(simd const& other) const {
-    return mask_type(_mm256_cmplt_epu32_mask(other.m_value, m_value));
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd operator+(
+      simd const& lhs, simd const& rhs) noexcept {
+    return simd(
+        _mm256_add_epi32(static_cast<__m256i>(lhs), static_cast<__m256i>(rhs)));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  operator<=(simd const& other) const {
-    return mask_type(_mm256_cmple_epu32_mask(m_value, other.m_value));
-  }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  operator>=(simd const& other) const {
-    return mask_type(_mm256_cmple_epu32_mask(other.m_value, m_value));
-  }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  operator==(simd const& other) const {
-    return mask_type(_mm256_cmpeq_epu32_mask(m_value, other.m_value));
-  }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  operator!=(simd const& other) const {
-    return mask_type(_mm256_cmpneq_epu32_mask(m_value, other.m_value));
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd operator-(
+      simd const& lhs, simd const& rhs) noexcept {
+    return simd(
+        _mm256_sub_epi32(static_cast<__m256i>(lhs), static_cast<__m256i>(rhs)));
   }
 
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd<
-      std::uint32_t, simd_abi::avx512_fixed_size<8>>
-  operator>>(simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> const& lhs,
-             int rhs) noexcept {
-    return simd<std::uint32_t, simd_abi::avx512_fixed_size<8>>(
-        _mm256_srli_epi32(static_cast<__m256i>(lhs), rhs));
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
+  operator<(simd const& lhs, simd const& rhs) noexcept {
+    return mask_type(_mm256_cmplt_epu32_mask(static_cast<__m256i>(lhs),
+                                             static_cast<__m256i>(rhs)));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd<
-      std::uint32_t, simd_abi::avx512_fixed_size<8>>
-  operator>>(
-      simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> const& lhs,
-      simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> const& rhs) noexcept {
-    return simd<std::uint32_t, simd_abi::avx512_fixed_size<8>>(
-        _mm256_srlv_epi32(static_cast<__m256i>(lhs),
-                          static_cast<__m256i>(rhs)));
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
+  operator>(simd const& lhs, simd const& rhs) noexcept {
+    return mask_type(_mm256_cmplt_epu32_mask(static_cast<__m256i>(rhs),
+                                             static_cast<__m256i>(lhs)));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd<
-      std::uint32_t, simd_abi::avx512_fixed_size<8>>
-  operator<<(simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> const& lhs,
-             int rhs) noexcept {
-    return simd<std::uint32_t, simd_abi::avx512_fixed_size<8>>(
-        _mm256_slli_epi32(static_cast<__m256i>(lhs), rhs));
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
+  operator<=(simd const& lhs, simd const& rhs) noexcept {
+    return mask_type(_mm256_cmple_epu32_mask(static_cast<__m256i>(lhs),
+                                             static_cast<__m256i>(rhs)));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd<
-      std::uint32_t, simd_abi::avx512_fixed_size<8>>
-  operator<<(
-      simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> const& lhs,
-      simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> const& rhs) noexcept {
-    return simd<std::uint32_t, simd_abi::avx512_fixed_size<8>>(
-        _mm256_sllv_epi32(static_cast<__m256i>(lhs),
-                          static_cast<__m256i>(rhs)));
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
+  operator>=(simd const& lhs, simd const& rhs) noexcept {
+    return mask_type(_mm256_cmple_epu32_mask(static_cast<__m256i>(rhs),
+                                             static_cast<__m256i>(lhs)));
+  }
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
+  operator==(simd const& lhs, simd const& rhs) noexcept {
+    return mask_type(_mm256_cmpeq_epu32_mask(static_cast<__m256i>(lhs),
+                                             static_cast<__m256i>(rhs)));
+  }
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
+  operator!=(simd const& lhs, simd const& rhs) noexcept {
+    return mask_type(_mm256_cmpneq_epu32_mask(static_cast<__m256i>(lhs),
+                                              static_cast<__m256i>(rhs)));
+  }
+
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd operator>>(
+      simd const& lhs, int rhs) noexcept {
+    return simd(_mm256_srli_epi32(static_cast<__m256i>(lhs), rhs));
+  }
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd operator>>(
+      simd const& lhs, simd const& rhs) noexcept {
+    return simd(_mm256_srlv_epi32(static_cast<__m256i>(lhs),
+                                  static_cast<__m256i>(rhs)));
+  }
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd operator<<(
+      simd const& lhs, int rhs) noexcept {
+    return simd(_mm256_slli_epi32(static_cast<__m256i>(lhs), rhs));
+  }
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd operator<<(
+      simd const& lhs, simd const& rhs) noexcept {
+    return simd(_mm256_sllv_epi32(static_cast<__m256i>(lhs),
+                                  static_cast<__m256i>(rhs)));
   }
 };
-
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    simd<std::uint32_t, simd_abi::avx512_fixed_size<8>>
-    operator*(simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> const& lhs,
-              simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> const& rhs) {
-  return simd<std::uint32_t, simd_abi::avx512_fixed_size<8>>(
-      _mm256_mullo_epi32(static_cast<__m256i>(lhs), static_cast<__m256i>(rhs)));
-}
-
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    simd<std::uint32_t, simd_abi::avx512_fixed_size<8>>
-    operator+(simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> const& lhs,
-              simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> const& rhs) {
-  return simd<std::uint32_t, simd_abi::avx512_fixed_size<8>>(
-      _mm256_add_epi32(static_cast<__m256i>(lhs), static_cast<__m256i>(rhs)));
-}
-
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    simd<std::uint32_t, simd_abi::avx512_fixed_size<8>>
-    operator-(simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> const& lhs,
-              simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> const& rhs) {
-  return simd<std::uint32_t, simd_abi::avx512_fixed_size<8>>(
-      _mm256_sub_epi32(static_cast<__m256i>(lhs), static_cast<__m256i>(rhs)));
-}
 
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     simd<std::uint32_t, simd_abi::avx512_fixed_size<8>>
@@ -455,6 +467,24 @@ class simd<std::int64_t, simd_abi::avx512_fixed_size<8>> {
       : m_value(_mm512_cvtepi32_epi64(static_cast<__m256i>(other))) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit simd(
       simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> const& other);
+  template <class G,
+            std::enable_if_t<
+                // basically, can you do { value_type r =
+                // gen(std::integral_constant<std::size_t, i>()); }
+                std::is_invocable_r_v<value_type, G,
+                                      std::integral_constant<std::size_t, 0>>,
+                bool> = false>
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(
+      G&& gen) noexcept
+      : m_value(
+            _mm512_setr_epi64(gen(std::integral_constant<std::size_t, 0>()),
+                              gen(std::integral_constant<std::size_t, 1>()),
+                              gen(std::integral_constant<std::size_t, 2>()),
+                              gen(std::integral_constant<std::size_t, 3>()),
+                              gen(std::integral_constant<std::size_t, 4>()),
+                              gen(std::integral_constant<std::size_t, 5>()),
+                              gen(std::integral_constant<std::size_t, 6>()),
+                              gen(std::integral_constant<std::size_t, 7>()))) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr simd(__m512i const& value_in)
       : m_value(value_in) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference operator[](std::size_t i) {
@@ -476,94 +506,83 @@ class simd<std::int64_t, simd_abi::avx512_fixed_size<8>> {
       const {
     return m_value;
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  operator<(simd const& other) const {
-    return mask_type(_mm512_cmplt_epi64_mask(m_value, other.m_value));
-  }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  operator>(simd const& other) const {
-    return mask_type(_mm512_cmplt_epi64_mask(other.m_value, m_value));
-  }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  operator<=(simd const& other) const {
-    return mask_type(_mm512_cmple_epi64_mask(m_value, other.m_value));
-  }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  operator>=(simd const& other) const {
-    return mask_type(_mm512_cmple_epi64_mask(other.m_value, m_value));
-  }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  operator==(simd const& other) const {
-    return mask_type(_mm512_cmpeq_epi64_mask(m_value, other.m_value));
-  }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  operator!=(simd const& other) const {
-    return mask_type(_mm512_cmpneq_epi64_mask(m_value, other.m_value));
+
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd operator-() const
+      noexcept {
+    return simd(_mm512_sub_epi64(_mm512_set1_epi64(0), m_value));
   }
 
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd<
-      std::int64_t, simd_abi::avx512_fixed_size<8>>
-  operator>>(simd<std::int64_t, simd_abi::avx512_fixed_size<8>> const& lhs,
-             int rhs) {
-    return simd<std::int64_t, simd_abi::avx512_fixed_size<8>>(
-        _mm512_srai_epi64(static_cast<__m512i>(lhs), rhs));
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd operator*(
+      simd const& lhs, simd const& rhs) noexcept {
+    return simd(_mm512_mullo_epi64(static_cast<__m512i>(lhs),
+                                   static_cast<__m512i>(rhs)));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd<
-      std::int64_t, simd_abi::avx512_fixed_size<8>>
-  operator>>(simd<std::int64_t, simd_abi::avx512_fixed_size<8>> const& lhs,
-             simd<std::int64_t, simd_abi::avx512_fixed_size<8>> const& rhs) {
-    return simd<std::int64_t, simd_abi::avx512_fixed_size<8>>(_mm512_srav_epi64(
-        static_cast<__m512i>(lhs), static_cast<__m512i>(rhs)));
+
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd operator+(
+      simd const& lhs, simd const& rhs) noexcept {
+    return simd(
+        _mm512_add_epi64(static_cast<__m512i>(lhs), static_cast<__m512i>(rhs)));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd<
-      std::int64_t, simd_abi::avx512_fixed_size<8>>
-  operator<<(simd<std::int64_t, simd_abi::avx512_fixed_size<8>> const& lhs,
-             int rhs) {
-    return simd<std::int64_t, simd_abi::avx512_fixed_size<8>>(
-        _mm512_slli_epi64(static_cast<__m512i>(lhs), rhs));
+
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd operator-(
+      simd const& lhs, simd const& rhs) noexcept {
+    return simd(
+        _mm512_sub_epi64(static_cast<__m512i>(lhs), static_cast<__m512i>(rhs)));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd<
-      std::int64_t, simd_abi::avx512_fixed_size<8>>
-  operator<<(simd<std::int64_t, simd_abi::avx512_fixed_size<8>> const& lhs,
-             simd<std::int64_t, simd_abi::avx512_fixed_size<8>> const& rhs) {
-    return simd<std::int64_t, simd_abi::avx512_fixed_size<8>>(_mm512_sllv_epi64(
-        static_cast<__m512i>(lhs), static_cast<__m512i>(rhs)));
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
+  operator<(simd const& lhs, simd const& rhs) noexcept {
+    return mask_type(_mm512_cmplt_epi64_mask(static_cast<__m512i>(lhs),
+                                             static_cast<__m512i>(rhs)));
+  }
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
+  operator>(simd const& lhs, simd const& rhs) noexcept {
+    return mask_type(_mm512_cmplt_epi64_mask(static_cast<__m512i>(rhs),
+                                             static_cast<__m512i>(lhs)));
+  }
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
+  operator<=(simd const& lhs, simd const& rhs) noexcept {
+    return mask_type(_mm512_cmple_epi64_mask(static_cast<__m512i>(lhs),
+                                             static_cast<__m512i>(rhs)));
+  }
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
+  operator>=(simd const& lhs, simd const& rhs) noexcept {
+    return mask_type(_mm512_cmple_epi64_mask(static_cast<__m512i>(rhs),
+                                             static_cast<__m512i>(lhs)));
+  }
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
+  operator==(simd const& lhs, simd const& rhs) noexcept {
+    return mask_type(_mm512_cmpeq_epi64_mask(static_cast<__m512i>(lhs),
+                                             static_cast<__m512i>(rhs)));
+  }
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
+  operator!=(simd const& lhs, simd const& rhs) noexcept {
+    return mask_type(_mm512_cmpneq_epi64_mask(static_cast<__m512i>(lhs),
+                                              static_cast<__m512i>(rhs)));
+  }
+
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd operator>>(
+      simd const& lhs, int rhs) {
+    return simd(_mm512_srai_epi64(static_cast<__m512i>(lhs), rhs));
+  }
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd operator>>(
+      simd const& lhs, simd const& rhs) {
+    return simd(_mm512_srav_epi64(static_cast<__m512i>(lhs),
+                                  static_cast<__m512i>(rhs)));
+  }
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd operator<<(
+      simd const& lhs, int rhs) {
+    return simd(_mm512_slli_epi64(static_cast<__m512i>(lhs), rhs));
+  }
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd operator<<(
+      simd const& lhs, simd const& rhs) {
+    return simd(_mm512_sllv_epi64(static_cast<__m512i>(lhs),
+                                  static_cast<__m512i>(rhs)));
   }
 };
 
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     simd<std::int64_t, simd_abi::avx512_fixed_size<8>>
-    operator*(simd<std::int64_t, simd_abi::avx512_fixed_size<8>> const& lhs,
-              simd<std::int64_t, simd_abi::avx512_fixed_size<8>> const& rhs) {
-  return simd<std::int64_t, simd_abi::avx512_fixed_size<8>>(
-      _mm512_mullo_epi64(static_cast<__m512i>(lhs), static_cast<__m512i>(rhs)));
-}
-
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    simd<std::int64_t, simd_abi::avx512_fixed_size<8>>
-    operator+(simd<std::int64_t, simd_abi::avx512_fixed_size<8>> const& lhs,
-              simd<std::int64_t, simd_abi::avx512_fixed_size<8>> const& rhs) {
-  return simd<std::int64_t, simd_abi::avx512_fixed_size<8>>(
-      _mm512_add_epi64(static_cast<__m512i>(lhs), static_cast<__m512i>(rhs)));
-}
-
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    simd<std::int64_t, simd_abi::avx512_fixed_size<8>>
-    operator-(simd<std::int64_t, simd_abi::avx512_fixed_size<8>> const& lhs,
-              simd<std::int64_t, simd_abi::avx512_fixed_size<8>> const& rhs) {
-  return simd<std::int64_t, simd_abi::avx512_fixed_size<8>>(
-      _mm512_sub_epi64(static_cast<__m512i>(lhs), static_cast<__m512i>(rhs)));
-}
-
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    simd<std::int64_t, simd_abi::avx512_fixed_size<8>>
-    operator-(simd<std::int64_t, simd_abi::avx512_fixed_size<8>> const& a) {
-  return simd<std::int64_t, simd_abi::avx512_fixed_size<8>>(0) - a;
-}
-
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-simd<std::int64_t, simd_abi::avx512_fixed_size<8>> abs(
-    simd<std::int64_t, simd_abi::avx512_fixed_size<8>> const& a) {
+    abs(simd<std::int64_t, simd_abi::avx512_fixed_size<8>> const& a) {
   __m512i const rhs = static_cast<__m512i>(a);
   return simd<std::int64_t, simd_abi::avx512_fixed_size<8>>(
       _mm512_abs_epi64(rhs));
@@ -606,6 +625,24 @@ class simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> {
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit simd(
       simd<std::int32_t, abi_type> const& other)
       : m_value(_mm512_cvtepi32_epi64(static_cast<__m256i>(other))) {}
+  template <class G,
+            std::enable_if_t<
+                // basically, can you do { value_type r =
+                // gen(std::integral_constant<std::size_t, i>()); }
+                std::is_invocable_r_v<value_type, G,
+                                      std::integral_constant<std::size_t, 0>>,
+                bool> = false>
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(
+      G&& gen) noexcept
+      : m_value(
+            _mm512_setr_epi64(gen(std::integral_constant<std::size_t, 0>()),
+                              gen(std::integral_constant<std::size_t, 1>()),
+                              gen(std::integral_constant<std::size_t, 2>()),
+                              gen(std::integral_constant<std::size_t, 3>()),
+                              gen(std::integral_constant<std::size_t, 4>()),
+                              gen(std::integral_constant<std::size_t, 5>()),
+                              gen(std::integral_constant<std::size_t, 6>()),
+                              gen(std::integral_constant<std::size_t, 7>()))) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit simd(
       simd<std::int64_t, abi_type> const& other)
       : m_value(static_cast<__m512i>(other)) {}
@@ -624,101 +661,90 @@ class simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> {
       value_type* ptr, element_aligned_tag) const {
     _mm512_storeu_si512(ptr, m_value);
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd
-  operator&(simd const& other) const {
-    return _mm512_and_epi64(m_value, other.m_value);
-  }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd
-  operator|(simd const& other) const {
-    return _mm512_or_epi64(m_value, other.m_value);
-  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit operator __m512i()
       const {
     return m_value;
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  operator<(simd const& other) const {
-    return mask_type(_mm512_cmplt_epu64_mask(m_value, other.m_value));
-  }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  operator>(simd const& other) const {
-    return mask_type(_mm512_cmplt_epu64_mask(other.m_value, m_value));
-  }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  operator<=(simd const& other) const {
-    return mask_type(_mm512_cmple_epu64_mask(m_value, other.m_value));
-  }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  operator>=(simd const& other) const {
-    return mask_type(_mm512_cmple_epu64_mask(other.m_value, m_value));
-  }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  operator==(simd const& other) const {
-    return mask_type(_mm512_cmpeq_epu64_mask(m_value, other.m_value));
-  }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  operator!=(simd const& other) const {
-    return mask_type(_mm512_cmpneq_epu64_mask(m_value, other.m_value));
-  }
 
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd<
-      std::uint64_t, simd_abi::avx512_fixed_size<8>>
-  operator>>(simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> const& lhs,
-             int rhs) {
-    return simd<std::uint64_t, simd_abi::avx512_fixed_size<8>>(
-        _mm512_srli_epi64(static_cast<__m512i>(lhs), rhs));
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd operator*(
+      simd const& lhs, simd const& rhs) noexcept {
+    return simd(_mm512_mullo_epi64(static_cast<__m512i>(lhs),
+                                   static_cast<__m512i>(rhs)));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd<
-      std::uint64_t, simd_abi::avx512_fixed_size<8>>
-  operator>>(simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> const& lhs,
-             simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> const& rhs) {
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd operator+(
+      simd const& lhs, simd const& rhs) noexcept {
+    return simd(
+        _mm512_add_epi64(static_cast<__m512i>(lhs), static_cast<__m512i>(rhs)));
+  }
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd operator-(
+      simd const& lhs, simd const& rhs) noexcept {
+    return simd(
+        _mm512_sub_epi64(static_cast<__m512i>(lhs), static_cast<__m512i>(rhs)));
+  }
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd operator>>(
+      simd const& lhs, int rhs) noexcept {
+    return _mm512_srli_epi64(static_cast<__m512i>(lhs), rhs);
+  }
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd operator>>(
+      simd const& lhs, simd const& rhs) noexcept {
     return _mm512_srlv_epi64(static_cast<__m512i>(lhs),
                              static_cast<__m512i>(rhs));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd<
-      std::uint64_t, simd_abi::avx512_fixed_size<8>>
-  operator<<(simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> const& lhs,
-             int rhs) {
-    return simd<std::uint64_t, simd_abi::avx512_fixed_size<8>>(
-        _mm512_slli_epi64(static_cast<__m512i>(lhs), rhs));
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd operator<<(
+      simd const& lhs, int rhs) noexcept {
+    return _mm512_slli_epi64(static_cast<__m512i>(lhs), rhs);
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd<
-      std::uint64_t, simd_abi::avx512_fixed_size<8>>
-  operator<<(simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> const& lhs,
-             simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> const& rhs) {
-    return simd<std::uint64_t, simd_abi::avx512_fixed_size<8>>(
-        _mm512_sllv_epi64(static_cast<__m512i>(lhs),
-                          static_cast<__m512i>(rhs)));
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd operator<<(
+      simd const& lhs, simd const& rhs) noexcept {
+    return _mm512_sllv_epi64(static_cast<__m512i>(lhs),
+                             static_cast<__m512i>(rhs));
+  }
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd operator&(
+      simd const& lhs, simd const& rhs) noexcept {
+    return _mm512_and_epi64(static_cast<__m512i>(lhs),
+                            static_cast<__m512i>(rhs));
+  }
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd operator|(
+      simd const& lhs, simd const& rhs) noexcept {
+    return _mm512_or_epi64(static_cast<__m512i>(lhs),
+                           static_cast<__m512i>(rhs));
+  }
+
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
+  operator<(simd const& lhs, simd const& rhs) noexcept {
+    return mask_type(_mm512_cmplt_epu64_mask(static_cast<__m512i>(lhs),
+                                             static_cast<__m512i>(rhs)));
+  }
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
+  operator>(simd const& lhs, simd const& rhs) noexcept {
+    return mask_type(_mm512_cmplt_epu64_mask(static_cast<__m512i>(rhs),
+                                             static_cast<__m512i>(lhs)));
+  }
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
+  operator<=(simd const& lhs, simd const& rhs) noexcept {
+    return mask_type(_mm512_cmple_epu64_mask(static_cast<__m512i>(lhs),
+                                             static_cast<__m512i>(rhs)));
+  }
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
+  operator>=(simd const& lhs, simd const& rhs) noexcept {
+    return mask_type(_mm512_cmple_epu64_mask(static_cast<__m512i>(rhs),
+                                             static_cast<__m512i>(lhs)));
+  }
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
+  operator==(simd const& lhs, simd const& rhs) noexcept {
+    return mask_type(_mm512_cmpeq_epu64_mask(static_cast<__m512i>(lhs),
+                                             static_cast<__m512i>(rhs)));
+  }
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
+  operator!=(simd const& lhs, simd const& rhs) noexcept {
+    return mask_type(_mm512_cmpneq_epu64_mask(static_cast<__m512i>(lhs),
+                                              static_cast<__m512i>(rhs)));
   }
 };
 
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     simd<std::uint64_t, simd_abi::avx512_fixed_size<8>>
-    operator*(simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> const& lhs,
-              simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> const& rhs) {
-  return simd<std::uint64_t, simd_abi::avx512_fixed_size<8>>(
-      _mm512_mullo_epi64(static_cast<__m512i>(lhs), static_cast<__m512i>(rhs)));
-}
-
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    simd<std::uint64_t, simd_abi::avx512_fixed_size<8>>
-    operator+(simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> const& lhs,
-              simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> const& rhs) {
-  return simd<std::uint64_t, simd_abi::avx512_fixed_size<8>>(
-      _mm512_add_epi64(static_cast<__m512i>(lhs), static_cast<__m512i>(rhs)));
-}
-
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    simd<std::uint64_t, simd_abi::avx512_fixed_size<8>>
-    operator-(simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> const& lhs,
-              simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> const& rhs) {
-  return simd<std::uint64_t, simd_abi::avx512_fixed_size<8>>(
-      _mm512_sub_epi64(static_cast<__m512i>(lhs), static_cast<__m512i>(rhs)));
-}
-
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> abs(
-    simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> const& a) {
+    abs(simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> const& a) {
   return a;
 }
 
@@ -766,6 +792,24 @@ class simd<double, simd_abi::avx512_fixed_size<8>> {
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(
       __m512d const& value_in)
       : m_value(value_in) {}
+  template <class G,
+            std::enable_if_t<
+                // basically, can you do { value_type r =
+                // gen(std::integral_constant<std::size_t, i>()); }
+                std::is_invocable_r_v<value_type, G,
+                                      std::integral_constant<std::size_t, 0>>,
+                bool> = false>
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(
+      G&& gen) noexcept
+      : m_value(_mm512_setr_pd(gen(std::integral_constant<std::size_t, 0>()),
+                               gen(std::integral_constant<std::size_t, 1>()),
+                               gen(std::integral_constant<std::size_t, 2>()),
+                               gen(std::integral_constant<std::size_t, 3>()),
+                               gen(std::integral_constant<std::size_t, 4>()),
+                               gen(std::integral_constant<std::size_t, 5>()),
+                               gen(std::integral_constant<std::size_t, 6>()),
+                               gen(std::integral_constant<std::size_t, 7>()))) {
+  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference operator[](std::size_t i) {
     return reinterpret_cast<value_type*>(&m_value)[i];
   }
@@ -785,75 +829,67 @@ class simd<double, simd_abi::avx512_fixed_size<8>> {
       const {
     return m_value;
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  operator<(simd const& other) const {
-    return mask_type(_mm512_cmp_pd_mask(m_value, other.m_value, _CMP_LT_OS));
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd operator-() const
+      noexcept {
+    return simd(_mm512_sub_pd(_mm512_set1_pd(0.0), m_value));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  operator>(simd const& other) const {
-    return mask_type(_mm512_cmp_pd_mask(m_value, other.m_value, _CMP_GT_OS));
+
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd operator*(
+      simd const& lhs, simd const& rhs) noexcept {
+    return simd(
+        _mm512_mul_pd(static_cast<__m512d>(lhs), static_cast<__m512d>(rhs)));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  operator<=(simd const& other) const {
-    return mask_type(_mm512_cmp_pd_mask(m_value, other.m_value, _CMP_LE_OS));
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd operator/(
+      simd const& lhs, simd const& rhs) noexcept {
+    return simd(
+        _mm512_div_pd(static_cast<__m512d>(lhs), static_cast<__m512d>(rhs)));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  operator>=(simd const& other) const {
-    return mask_type(_mm512_cmp_pd_mask(m_value, other.m_value, _CMP_GE_OS));
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd operator+(
+      simd const& lhs, simd const& rhs) noexcept {
+    return simd(
+        _mm512_add_pd(static_cast<__m512d>(lhs), static_cast<__m512d>(rhs)));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  operator==(simd const& other) const {
-    return mask_type(_mm512_cmp_pd_mask(m_value, other.m_value, _CMP_EQ_OS));
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd operator-(
+      simd const& lhs, simd const& rhs) noexcept {
+    return simd(
+        _mm512_sub_pd(static_cast<__m512d>(lhs), static_cast<__m512d>(rhs)));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  operator!=(simd const& other) const {
-    return mask_type(_mm512_cmp_pd_mask(m_value, other.m_value, _CMP_NEQ_OS));
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
+  operator<(simd const& lhs, simd const& rhs) noexcept {
+    return mask_type(_mm512_cmp_pd_mask(static_cast<__m512d>(lhs),
+                                        static_cast<__m512d>(rhs), _CMP_LT_OS));
+  }
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
+  operator>(simd const& lhs, simd const& rhs) noexcept {
+    return mask_type(_mm512_cmp_pd_mask(static_cast<__m512d>(rhs),
+                                        static_cast<__m512d>(lhs), _CMP_GT_OS));
+  }
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
+  operator<=(simd const& lhs, simd const& rhs) noexcept {
+    return mask_type(_mm512_cmp_pd_mask(static_cast<__m512d>(lhs),
+                                        static_cast<__m512d>(rhs), _CMP_LE_OS));
+  }
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
+  operator>=(simd const& lhs, simd const& rhs) noexcept {
+    return mask_type(_mm512_cmp_pd_mask(static_cast<__m512d>(rhs),
+                                        static_cast<__m512d>(lhs), _CMP_GE_OS));
+  }
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
+  operator==(simd const& lhs, simd const& rhs) noexcept {
+    return mask_type(_mm512_cmp_pd_mask(static_cast<__m512d>(lhs),
+                                        static_cast<__m512d>(rhs), _CMP_EQ_OS));
+  }
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
+  operator!=(simd const& lhs, simd const& rhs) noexcept {
+    return mask_type(_mm512_cmp_pd_mask(
+        static_cast<__m512d>(lhs), static_cast<__m512d>(rhs), _CMP_NEQ_OS));
   }
 };
 
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     simd<double, simd_abi::avx512_fixed_size<8>>
-    operator*(simd<double, simd_abi::avx512_fixed_size<8>> const& lhs,
-              simd<double, simd_abi::avx512_fixed_size<8>> const& rhs) {
-  return simd<double, simd_abi::avx512_fixed_size<8>>(
-      _mm512_mul_pd(static_cast<__m512d>(lhs), static_cast<__m512d>(rhs)));
-}
-
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    simd<double, simd_abi::avx512_fixed_size<8>>
-    operator/(simd<double, simd_abi::avx512_fixed_size<8>> const& lhs,
-              simd<double, simd_abi::avx512_fixed_size<8>> const& rhs) {
-  return simd<double, simd_abi::avx512_fixed_size<8>>(
-      _mm512_div_pd(static_cast<__m512d>(lhs), static_cast<__m512d>(rhs)));
-}
-
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    simd<double, simd_abi::avx512_fixed_size<8>>
-    operator+(simd<double, simd_abi::avx512_fixed_size<8>> const& lhs,
-              simd<double, simd_abi::avx512_fixed_size<8>> const& rhs) {
-  return simd<double, simd_abi::avx512_fixed_size<8>>(
-      _mm512_add_pd(static_cast<__m512d>(lhs), static_cast<__m512d>(rhs)));
-}
-
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    simd<double, simd_abi::avx512_fixed_size<8>>
-    operator-(simd<double, simd_abi::avx512_fixed_size<8>> const& lhs,
-              simd<double, simd_abi::avx512_fixed_size<8>> const& rhs) {
-  return simd<double, simd_abi::avx512_fixed_size<8>>(
-      _mm512_sub_pd(static_cast<__m512d>(lhs), static_cast<__m512d>(rhs)));
-}
-
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    simd<double, simd_abi::avx512_fixed_size<8>>
-    operator-(simd<double, simd_abi::avx512_fixed_size<8>> const& a) {
-  return simd<double, simd_abi::avx512_fixed_size<8>>(
-      _mm512_sub_pd(_mm512_set1_pd(0.0), static_cast<__m512d>(a)));
-}
-
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-simd<double, simd_abi::avx512_fixed_size<8>> copysign(
-    simd<double, simd_abi::avx512_fixed_size<8>> const& a,
-    simd<double, simd_abi::avx512_fixed_size<8>> const& b) {
+    copysign(simd<double, simd_abi::avx512_fixed_size<8>> const& a,
+             simd<double, simd_abi::avx512_fixed_size<8>> const& b) {
   static const __m512i sign_mask = reinterpret_cast<__m512i>(
       static_cast<__m512d>(simd<double, simd_abi::avx512_fixed_size<8>>(-0.0)));
   return simd<double, simd_abi::avx512_fixed_size<8>>(
@@ -864,9 +900,9 @@ simd<double, simd_abi::avx512_fixed_size<8>> copysign(
               sign_mask, reinterpret_cast<__m512i>(static_cast<__m512d>(b))))));
 }
 
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-simd<double, simd_abi::avx512_fixed_size<8>> abs(
-    simd<double, simd_abi::avx512_fixed_size<8>> const& a) {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+    simd<double, simd_abi::avx512_fixed_size<8>>
+    abs(simd<double, simd_abi::avx512_fixed_size<8>> const& a) {
   __m512d const rhs = static_cast<__m512d>(a);
 #if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU < 830)
   return simd<double, simd_abi::avx512_fixed_size<8>>((__m512d)_mm512_and_epi64(
@@ -876,69 +912,69 @@ simd<double, simd_abi::avx512_fixed_size<8>> abs(
 #endif
 }
 
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-simd<double, simd_abi::avx512_fixed_size<8>> sqrt(
-    simd<double, simd_abi::avx512_fixed_size<8>> const& a) {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+    simd<double, simd_abi::avx512_fixed_size<8>>
+    sqrt(simd<double, simd_abi::avx512_fixed_size<8>> const& a) {
   return simd<double, simd_abi::avx512_fixed_size<8>>(
       _mm512_sqrt_pd(static_cast<__m512d>(a)));
 }
 
 #ifdef __INTEL_COMPILER
 
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-simd<double, simd_abi::avx512_fixed_size<8>> cbrt(
-    simd<double, simd_abi::avx512_fixed_size<8>> const& a) {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+    simd<double, simd_abi::avx512_fixed_size<8>>
+    cbrt(simd<double, simd_abi::avx512_fixed_size<8>> const& a) {
   return simd<double, simd_abi::avx512_fixed_size<8>>(
       _mm512_cbrt_pd(static_cast<__m512d>(a)));
 }
 
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-simd<double, simd_abi::avx512_fixed_size<8>> exp(
-    simd<double, simd_abi::avx512_fixed_size<8>> const& a) {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+    simd<double, simd_abi::avx512_fixed_size<8>>
+    exp(simd<double, simd_abi::avx512_fixed_size<8>> const& a) {
   return simd<double, simd_abi::avx512_fixed_size<8>>(
       _mm512_exp_pd(static_cast<__m512d>(a)));
 }
 
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-simd<double, simd_abi::avx512_fixed_size<8>> log(
-    simd<double, simd_abi::avx512_fixed_size<8>> const& a) {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+    simd<double, simd_abi::avx512_fixed_size<8>>
+    log(simd<double, simd_abi::avx512_fixed_size<8>> const& a) {
   return simd<double, simd_abi::avx512_fixed_size<8>>(
       _mm512_log_pd(static_cast<__m512d>(a)));
 }
 
 #endif
 
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-simd<double, simd_abi::avx512_fixed_size<8>> fma(
-    simd<double, simd_abi::avx512_fixed_size<8>> const& a,
-    simd<double, simd_abi::avx512_fixed_size<8>> const& b,
-    simd<double, simd_abi::avx512_fixed_size<8>> const& c) {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+    simd<double, simd_abi::avx512_fixed_size<8>>
+    fma(simd<double, simd_abi::avx512_fixed_size<8>> const& a,
+        simd<double, simd_abi::avx512_fixed_size<8>> const& b,
+        simd<double, simd_abi::avx512_fixed_size<8>> const& c) {
   return simd<double, simd_abi::avx512_fixed_size<8>>(
       _mm512_fmadd_pd(static_cast<__m512d>(a), static_cast<__m512d>(b),
                       static_cast<__m512d>(c)));
 }
 
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-simd<double, simd_abi::avx512_fixed_size<8>> max(
-    simd<double, simd_abi::avx512_fixed_size<8>> const& a,
-    simd<double, simd_abi::avx512_fixed_size<8>> const& b) {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+    simd<double, simd_abi::avx512_fixed_size<8>>
+    max(simd<double, simd_abi::avx512_fixed_size<8>> const& a,
+        simd<double, simd_abi::avx512_fixed_size<8>> const& b) {
   return simd<double, simd_abi::avx512_fixed_size<8>>(
       _mm512_max_pd(static_cast<__m512d>(a), static_cast<__m512d>(b)));
 }
 
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-simd<double, simd_abi::avx512_fixed_size<8>> min(
-    simd<double, simd_abi::avx512_fixed_size<8>> const& a,
-    simd<double, simd_abi::avx512_fixed_size<8>> const& b) {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+    simd<double, simd_abi::avx512_fixed_size<8>>
+    min(simd<double, simd_abi::avx512_fixed_size<8>> const& a,
+        simd<double, simd_abi::avx512_fixed_size<8>> const& b) {
   return simd<double, simd_abi::avx512_fixed_size<8>>(
       _mm512_min_pd(static_cast<__m512d>(a), static_cast<__m512d>(b)));
 }
 
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-simd<double, simd_abi::avx512_fixed_size<8>> condition(
-    simd_mask<double, simd_abi::avx512_fixed_size<8>> const& a,
-    simd<double, simd_abi::avx512_fixed_size<8>> const& b,
-    simd<double, simd_abi::avx512_fixed_size<8>> const& c) {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+    simd<double, simd_abi::avx512_fixed_size<8>>
+    condition(simd_mask<double, simd_abi::avx512_fixed_size<8>> const& a,
+              simd<double, simd_abi::avx512_fixed_size<8>> const& b,
+              simd<double, simd_abi::avx512_fixed_size<8>> const& c) {
   return simd<double, simd_abi::avx512_fixed_size<8>>(
       _mm512_mask_blend_pd(static_cast<__mmask8>(a), static_cast<__m512d>(c),
                            static_cast<__m512d>(b)));

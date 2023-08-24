@@ -45,6 +45,13 @@ class simd_mask<T, simd_abi::scalar> {
   KOKKOS_FORCEINLINE_FUNCTION static constexpr std::size_t size() { return 1; }
   KOKKOS_FORCEINLINE_FUNCTION explicit simd_mask(value_type value)
       : m_value(value) {}
+  template <
+      class G,
+      std::enable_if_t<std::is_invocable_r_v<
+                           value_type, G, std::integral_constant<bool, false>>,
+                       bool> = false>
+  KOKKOS_FORCEINLINE_FUNCTION constexpr explicit simd_mask(G&& gen) noexcept
+      : m_value(gen(std::integral_constant<std::size_t, 0>())) {}
   template <class U>
   KOKKOS_FORCEINLINE_FUNCTION simd_mask(
       simd_mask<U, simd_abi::scalar> const& other)
@@ -106,35 +113,10 @@ class simd<T, simd_abi::scalar> {
                 std::is_invocable_r_v<value_type, G,
                                       std::integral_constant<std::size_t, 0>>,
                 bool> = false>
-  KOKKOS_FORCEINLINE_FUNCTION simd(G&& gen)
+  KOKKOS_FORCEINLINE_FUNCTION constexpr explicit simd(G&& gen) noexcept
       : m_value(gen(std::integral_constant<std::size_t, 0>())) {}
-  KOKKOS_FORCEINLINE_FUNCTION simd operator-() const { return simd(-m_value); }
-  KOKKOS_FORCEINLINE_FUNCTION simd operator&(simd const& other) const {
-    return m_value & other.m_value;
-  }
-  KOKKOS_FORCEINLINE_FUNCTION simd operator|(simd const& other) const {
-    return m_value | other.m_value;
-  }
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit operator T() const {
     return m_value;
-  }
-  KOKKOS_FORCEINLINE_FUNCTION mask_type operator<(simd const& other) const {
-    return mask_type(m_value < other.m_value);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION mask_type operator>(simd const& other) const {
-    return mask_type(m_value > other.m_value);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION mask_type operator<=(simd const& other) const {
-    return mask_type(m_value <= other.m_value);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION mask_type operator>=(simd const& other) const {
-    return mask_type(m_value >= other.m_value);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION mask_type operator==(simd const& other) const {
-    return mask_type(m_value == other.m_value);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION mask_type operator!=(simd const& other) const {
-    return mask_type(m_value != other.m_value);
   }
   KOKKOS_FORCEINLINE_FUNCTION void copy_from(T const* ptr,
                                              element_aligned_tag) {
@@ -149,52 +131,75 @@ class simd<T, simd_abi::scalar> {
   KOKKOS_FORCEINLINE_FUNCTION value_type operator[](std::size_t) const {
     return m_value;
   }
+  KOKKOS_FORCEINLINE_FUNCTION simd operator-() const noexcept {
+    return simd(-m_value);
+  }
 
-  KOKKOS_FORCEINLINE_FUNCTION friend constexpr simd operator>>(
+  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr simd operator*(
+      simd const& lhs, simd const& rhs) noexcept {
+    return simd(lhs.m_value * rhs.m_value);
+  }
+  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr simd operator/(
+      simd const& lhs, simd const& rhs) noexcept {
+    return simd(lhs.m_value / rhs.m_value);
+  }
+  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr simd operator+(
+      simd const& lhs, simd const& rhs) noexcept {
+    return simd(lhs.m_value + rhs.m_value);
+  }
+  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr simd operator-(
+      simd const& lhs, simd const& rhs) noexcept {
+    return simd(lhs.m_value - rhs.m_value);
+  }
+  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr simd operator>>(
       simd const& lhs, int rhs) noexcept {
     return simd(lhs.m_value >> rhs);
   }
-  KOKKOS_FORCEINLINE_FUNCTION friend constexpr simd operator>>(
+  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr simd operator>>(
       simd const& lhs, simd const& rhs) noexcept {
-    return simd(lhs.m_value >> static_cast<int>(rhs[0]));
+    return simd(lhs.m_value >> rhs.m_value);
   }
-  KOKKOS_FORCEINLINE_FUNCTION friend constexpr simd operator<<(
+  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr simd operator<<(
       simd const& lhs, int rhs) noexcept {
     return simd(lhs.m_value << rhs);
   }
-  KOKKOS_FORCEINLINE_FUNCTION friend constexpr simd operator<<(
+  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr simd operator<<(
       simd const& lhs, simd const& rhs) noexcept {
-    return simd(lhs.m_value << static_cast<int>(rhs[0]));
+    return simd(lhs.m_value << rhs.m_value);
+  }
+  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr simd operator&(
+      simd const& lhs, simd const& rhs) noexcept {
+    return lhs.m_value & rhs.m_value;
+  }
+  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr simd operator|(
+      simd const& lhs, simd const& rhs) noexcept {
+    return lhs.m_value | rhs.m_value;
+  }
+  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr mask_type
+  operator<(simd const& lhs, simd const& rhs) noexcept {
+    return mask_type(lhs.m_value < rhs.m_value);
+  }
+  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr mask_type
+  operator>(simd const& lhs, simd const& rhs) noexcept {
+    return mask_type(lhs.m_value > rhs.m_value);
+  }
+  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr mask_type
+  operator<=(simd const& lhs, simd const& rhs) noexcept {
+    return mask_type(lhs.m_value <= rhs.m_value);
+  }
+  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr mask_type
+  operator>=(simd const& lhs, simd const& rhs) noexcept {
+    return mask_type(lhs.m_value >= rhs.m_value);
+  }
+  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr mask_type
+  operator==(simd const& lhs, simd const& rhs) noexcept {
+    return mask_type(lhs.m_value == rhs.m_value);
+  }
+  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr mask_type
+  operator!=(simd const& lhs, simd const& rhs) noexcept {
+    return mask_type(lhs.m_value != rhs.m_value);
   }
 };
-
-template <class T>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION simd<T, simd_abi::scalar> operator*(
-    simd<T, simd_abi::scalar> const& lhs,
-    simd<T, simd_abi::scalar> const& rhs) {
-  return simd<T, simd_abi::scalar>(static_cast<T>(lhs) * static_cast<T>(rhs));
-}
-
-template <class T>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION simd<T, simd_abi::scalar> operator/(
-    simd<T, simd_abi::scalar> const& lhs,
-    simd<T, simd_abi::scalar> const& rhs) {
-  return simd<T, simd_abi::scalar>(static_cast<T>(lhs) / static_cast<T>(rhs));
-}
-
-template <class T>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION simd<T, simd_abi::scalar> operator+(
-    simd<T, simd_abi::scalar> const& lhs,
-    simd<T, simd_abi::scalar> const& rhs) {
-  return simd<T, simd_abi::scalar>(static_cast<T>(lhs) + static_cast<T>(rhs));
-}
-
-template <class T>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION simd<T, simd_abi::scalar> operator-(
-    simd<T, simd_abi::scalar> const& lhs,
-    simd<T, simd_abi::scalar> const& rhs) {
-  return simd<T, simd_abi::scalar>(static_cast<T>(lhs) - static_cast<T>(rhs));
-}
 
 template <class T>
 [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION simd<T, simd_abi::scalar> abs(

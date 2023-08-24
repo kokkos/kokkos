@@ -20,6 +20,7 @@
 #include <Kokkos_Macros.hpp>
 #if defined(KOKKOS_ENABLE_HPX) && defined(KOKKOS_ENABLE_TASKDAG)
 
+#include <Kokkos_Atomic.hpp>
 #include <Kokkos_TaskScheduler_fwd.hpp>
 
 #include <HPX/Kokkos_HPX.hpp>
@@ -164,7 +165,9 @@ class TaskQueueSpecializationConstrained<
         team_queue.complete(task);
       }
 
-      if (*((volatile int *)&team_queue.m_ready_count) > 0) {
+      if (desul::atomic_load(&team_queue.m_ready_count,
+                             desul::MemoryOrderAcquire(),
+                             desul::MemoryScopeDevice()) > 0) {
         task = end;
         for (int i = 0; i < queue_type::NumQueue && end == task; ++i) {
           for (int j = 0; j < 2 && end == task; ++j) {

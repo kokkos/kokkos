@@ -240,7 +240,7 @@ pipeline {
                                 -DKokkos_ENABLE_BENCHMARKS=ON \
                                 -DKokkos_ENABLE_OPENMPTARGET=ON \
                                 -DKokkos_ENABLE_OPENMP=ON \
-                                -DKokkos_ARCH_VEGA906=ON \
+                                -DKokkos_ARCH_AMD_GFX906=ON \
                               && \
                               cmake --build build --parallel ${BUILD_JOBS} && \
                               cd build && ctest --output-on-failure
@@ -458,6 +458,7 @@ pipeline {
                                 -DKokkos_ENABLE_CUDA_LAMBDA=ON \
                                 -DKokkos_ENABLE_LIBDL=OFF \
                                 -DKokkos_ENABLE_IMPL_MDSPAN=ON \
+                                -DKokkos_ENABLE_IMPL_CUDA_MALLOC_ASYNC=ON \
                               .. && \
                               make -j8 && ctest --verbose && \
                               cd ../example/build_cmake_in_tree && \

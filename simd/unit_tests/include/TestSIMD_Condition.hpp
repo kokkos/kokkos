@@ -20,35 +20,69 @@
 #include <Kokkos_SIMD.hpp>
 #include <SIMDTesting_Utilities.hpp>
 
-template <typename Abi>
+template <typename Abi, typename DataType>
 inline void host_check_condition() {
-  auto a = Kokkos::Experimental::condition(
-      Kokkos::Experimental::simd<std::int32_t, Abi>(1) > 0,
-      Kokkos::Experimental::simd<std::uint64_t, Abi>(16),
-      Kokkos::Experimental::simd<std::uint64_t, Abi>(20));
-  EXPECT_TRUE(all_of(a == decltype(a)(16)));
+  using simd_type = typename Kokkos::Experimental::simd<DataType, Abi>;
+  using mask_type = typename simd_type::mask_type;
+
+  auto condition_op = [](mask_type const& mask, simd_type const& a,
+                         simd_type const& b) {
+    return Kokkos::Experimental::condition(mask, a, b);
+  };
+
+  simd_type value_a(16);
+  simd_type value_b(20);
+
+  auto condition_result = condition_op(mask_type(false), value_a, value_b);
+  EXPECT_TRUE(all_of(condition_result == value_b));
+  condition_result = condition_op(mask_type(true), value_a, value_b);
+  EXPECT_TRUE(all_of(condition_result == value_a));
+}
+
+template <typename Abi, typename... DataTypes>
+inline void host_check_condition_all_types(
+    Kokkos::Experimental::Impl::data_types<DataTypes...>) {
+  (host_check_condition<Abi, DataTypes>(), ...);
 }
 
 template <typename... Abis>
 inline void host_check_condition_all_abis(
     Kokkos::Experimental::Impl::abi_set<Abis...>) {
-  (host_check_condition<Abis>(), ...);
+  using DataTypes = Kokkos::Experimental::Impl::data_type_set;
+  (host_check_condition_all_types<Abis>(DataTypes()), ...);
 }
 
-template <typename Abi>
+template <typename Abi, typename DataType>
 KOKKOS_INLINE_FUNCTION void device_check_condition() {
+  using simd_type = typename Kokkos::Experimental::simd<DataType, Abi>;
+  using mask_type = typename simd_type::mask_type;
   kokkos_checker checker;
-  auto a = Kokkos::Experimental::condition(
-      Kokkos::Experimental::simd<std::int32_t, Abi>(1) > 0,
-      Kokkos::Experimental::simd<std::uint64_t, Abi>(16),
-      Kokkos::Experimental::simd<std::uint64_t, Abi>(20));
-  checker.truth(all_of(a == decltype(a)(16)));
+
+  auto condition_op = [](mask_type const& mask, simd_type const& a,
+                         simd_type const& b) {
+    return Kokkos::Experimental::condition(mask, a, b);
+  };
+
+  simd_type value_a(16);
+  simd_type value_b(20);
+
+  auto condition_result = condition_op(mask_type(false), value_a, value_b);
+  checker.truth(all_of(condition_result == value_b));
+  condition_result = condition_op(mask_type(true), value_a, value_b);
+  checker.truth(all_of(condition_result == value_a));
+}
+
+template <typename Abi, typename... DataTypes>
+KOKKOS_INLINE_FUNCTION void device_check_condition_all_types(
+    Kokkos::Experimental::Impl::data_types<DataTypes...>) {
+  (device_check_condition<Abi, DataTypes>(), ...);
 }
 
 template <typename... Abis>
 KOKKOS_INLINE_FUNCTION void device_check_condition_all_abis(
     Kokkos::Experimental::Impl::abi_set<Abis...>) {
-  (device_check_condition<Abis>(), ...);
+  using DataTypes = Kokkos::Experimental::Impl::data_type_set;
+  (device_check_condition_all_types<Abis>(DataTypes()), ...);
 }
 
 class simd_device_condition_functor {

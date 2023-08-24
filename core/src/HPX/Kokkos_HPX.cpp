@@ -208,11 +208,6 @@ void HPX::impl_initialize(InitializationSettings const &settings) {
   hpx::runtime *rt = hpx::get_runtime_ptr();
   if (rt == nullptr) {
     hpx::local::init_params i;
-    i.cfg = {
-#ifdef KOKKOS_ENABLE_DEBUG
-        "--hpx:attach-debugger=exception",
-#endif
-    };
     if (settings.has_num_threads()) {
       i.cfg.emplace_back("hpx.os_threads=" +
                          std::to_string(settings.get_num_threads()));
