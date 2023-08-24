@@ -19,6 +19,13 @@
 
 #include <Kokkos_SIMD_Common.hpp>
 
+// suppress NVCC warnings with the [[nodiscard]] attribute on overloaded
+// operators implemented as hidden friends
+#if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC < 1130
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wattributes"
+#endif
+
 #include <Kokkos_SIMD_Scalar.hpp>
 
 #ifdef KOKKOS_ARCH_AVX2
@@ -31,6 +38,10 @@
 
 #ifdef __ARM_NEON
 #include <Kokkos_SIMD_NEON.hpp>
+#endif
+
+#if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC < 1130
+#pragma GCC diagnostic pop
 #endif
 
 namespace Kokkos {
