@@ -20,11 +20,18 @@
 
 namespace {
 
+struct FunctorFor {
+  KOKKOS_FUNCTION
+  void operator()(
+      Kokkos::TeamPolicy<TEST_EXECSPACE>::member_type const&) const {}
+};
+
 template <typename Policy>
 void test_run_time_parameters() {
   int league_size = 131;
 
   using ExecutionSpace = typename Policy::execution_space;
+  using ParallelTag    = Kokkos::ParallelForTag;
   int team_size =
       4 < ExecutionSpace().concurrency() ? 4 : ExecutionSpace().concurrency();
 #ifdef KOKKOS_ENABLE_HPX
@@ -44,6 +51,8 @@ void test_run_time_parameters() {
   ASSERT_EQ(p1.team_size(), team_size);
   ASSERT_GT(p1.chunk_size(), 0);
   ASSERT_EQ(p1.scratch_size(0), 0u);
+  ASSERT_GT(p1.team_size_max(FunctorFor(), ParallelTag()), 0);
+  ASSERT_GT(p1.team_size_recommended(FunctorFor(), ParallelTag()), 0);
 
   Policy p2 = p1.set_chunk_size(chunk_size);
   ASSERT_EQ(p1.league_size(), league_size);
@@ -112,6 +121,8 @@ void test_run_time_parameters() {
   Policy p8;  // default constructed
   ASSERT_EQ(p8.league_size(), 0);
   ASSERT_EQ(p8.scratch_size(0), 0u);
+  ASSERT_GT(p8.team_size_max(FunctorFor(), ParallelTag()), 0);
+  ASSERT_GT(p8.team_size_recommended(FunctorFor(), ParallelTag()), 0);
   p8 = p3;  // call assignment operator
   ASSERT_EQ(p3.league_size(), league_size);
   ASSERT_EQ(p3.team_size(), team_size);
@@ -121,6 +132,24 @@ void test_run_time_parameters() {
   ASSERT_EQ(p8.team_size(), team_size);
   ASSERT_EQ(p8.chunk_size(), chunk_size);
   ASSERT_EQ(p8.scratch_size(0), size_t(scratch_size));
+
+  Policy p9(league_size, Kokkos::AUTO);
+  ASSERT_EQ(p9.league_size(), league_size);
+  ASSERT_GT(p9.team_size(), 0);
+  ASSERT_GT(p9.team_size_max(FunctorFor(), ParallelTag()), 0);
+  ASSERT_GT(p9.team_size_recommended(FunctorFor(), ParallelTag()), 0);
+
+  Policy p10(league_size, team_size, Kokkos::AUTO);
+  ASSERT_EQ(p10.league_size(), league_size);
+  ASSERT_EQ(p10.team_size(), team_size);
+  ASSERT_GT(p10.team_size_max(FunctorFor(), ParallelTag()), 0);
+  ASSERT_GT(p10.team_size_recommended(FunctorFor(), ParallelTag()), 0);
+
+  Policy p11(league_size, Kokkos::AUTO, Kokkos::AUTO);
+  ASSERT_EQ(p11.league_size(), league_size);
+  ASSERT_GT(p11.team_size(), 0);
+  ASSERT_GT(p11.team_size_max(FunctorFor(), ParallelTag()), 0);
+  ASSERT_GT(p11.team_size_recommended(FunctorFor(), ParallelTag()), 0);
 }
 
 TEST(TEST_CATEGORY, team_policy_runtime_parameters) {
