@@ -56,7 +56,8 @@
 namespace Kokkos {
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-HostSpace::HostSpace(const HostSpace::AllocationMechanism &) : HostSpace() {}
+KOKKOS_DEPRECATED HostSpace::HostSpace(const HostSpace::AllocationMechanism &)
+    : HostSpace() {}
 #endif
 
 void *HostSpace::allocate(const size_t arg_alloc_size) const {
