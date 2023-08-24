@@ -41,7 +41,7 @@ inline void host_check_where_expr_scatter_to() {
     for (std::size_t i = 0; i < nlanes; ++i) {
       dst[i]             = (2 + (i * 2));
       index[i]           = i;
-      expected_result[i] = (mask[i]) ? src[index[i]] : (2 + (i * 2));
+      expected_result[i] = (mask[i]) ? src[index[i]] : dst[i];
     }
     where(mask, src).scatter_to(dst, index);
 
@@ -71,7 +71,7 @@ inline void host_check_where_expr_gather_from() {
     for (std::size_t i = 0; i < nlanes; ++i) {
       dst[i]             = (2 + (i * 2));
       index[i]           = i;
-      expected_result[i] = (mask[i]) ? src[index[i]] : (2 + (i * 2));
+      expected_result[i] = (mask[i]) ? src[index[i]] : dst[i];
     }
     where(mask, dst).gather_from(src, index);
 
@@ -119,7 +119,7 @@ KOKKOS_INLINE_FUNCTION void device_check_where_expr_scatter_to() {
     for (std::size_t i = 0; i < nlanes; ++i) {
       dst[i]             = (2 + (i * 2));
       index[i]           = i;
-      expected_result[i] = (mask[i]) ? src[index[i]] : (2 + (i * 2));
+      expected_result[i] = (mask[i]) ? src[index[i]] : dst[i];
     }
     where(mask, src).scatter_to(dst, index);
 
@@ -149,7 +149,7 @@ KOKKOS_INLINE_FUNCTION void device_check_where_expr_gather_from() {
     for (std::size_t i = 0; i < nlanes; ++i) {
       dst[i]             = (2 + (i * 2));
       index[i]           = i;
-      expected_result[i] = (mask[i]) ? src[index[i]] : (2 + (i * 2));
+      expected_result[i] = (mask[i]) ? src[index[i]] : dst[i];
     }
     where(mask, dst).gather_from(src, index);
 

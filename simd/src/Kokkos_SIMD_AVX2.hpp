@@ -1108,9 +1108,9 @@ class where_expression<simd_mask<double, simd_abi::avx2_fixed_size<4>>,
   void gather_from(
       double const* mem,
       simd<std::int32_t, simd_abi::avx2_fixed_size<4>> const& index) {
-    m_value = value_type(
-        _mm256_mask_i32gather_pd(m_value, mem, static_cast<__m128i>(index),
-                                 static_cast<__m256d>(m_mask), 8));
+    m_value = value_type(_mm256_mask_i32gather_pd(
+        static_cast<__m256d>(m_value), mem, static_cast<__m128i>(index),
+        static_cast<__m256d>(m_mask), 8));
   }
   template <class U,
             std::enable_if_t<std::is_convertible_v<
@@ -1187,9 +1187,9 @@ class where_expression<simd_mask<std::int32_t, simd_abi::avx2_fixed_size<4>>,
   void gather_from(
       std::int32_t const* mem,
       simd<std::int32_t, simd_abi::avx2_fixed_size<4>> const& index) {
-    m_value = value_type(
-        _mm_mask_i32gather_epi32(m_value, mem, static_cast<__m128i>(index),
-                                 static_cast<__m128i>(m_mask), 4));
+    m_value = value_type(_mm_mask_i32gather_epi32(
+        static_cast<__m128i>(m_value), mem, static_cast<__m128i>(index),
+        static_cast<__m128i>(m_mask), 4));
   }
   template <
       class U,
@@ -1270,9 +1270,9 @@ class where_expression<simd_mask<std::int64_t, simd_abi::avx2_fixed_size<4>>,
   void gather_from(
       std::int64_t const* mem,
       simd<std::int32_t, simd_abi::avx2_fixed_size<4>> const& index) {
-    m_value = value_type(
-        _mm256_mask_i32gather_epi64(m_value, mem, static_cast<__m128i>(index),
-                                    static_cast<__m256i>(m_mask), 8));
+    m_value = value_type(_mm256_mask_i32gather_epi64(
+        static_cast<__m256i>(m_value), reinterpret_cast<long long const*>(mem),
+        static_cast<__m128i>(index), static_cast<__m256i>(m_mask), 8));
   }
   template <
       class u,
@@ -1354,9 +1354,9 @@ class where_expression<simd_mask<std::uint64_t, simd_abi::avx2_fixed_size<4>>,
   void gather_from(
       std::uint64_t const* mem,
       simd<std::int32_t, simd_abi::avx2_fixed_size<4>> const& index) {
-    m_value = value_type(
-        _mm256_mask_i32gather_epi64(m_value, mem, static_cast<__m128i>(index),
-                                    static_cast<__m256i>(m_mask), 8));
+    m_value = value_type(_mm256_mask_i32gather_epi64(
+        static_cast<__m256i>(m_value), reinterpret_cast<long long const*>(mem),
+        static_cast<__m128i>(index), static_cast<__m256i>(m_mask), 8));
   }
   template <class u,
             std::enable_if_t<
