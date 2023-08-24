@@ -32,7 +32,7 @@ inline void host_check_mask_ops() {
   EXPECT_FALSE(any_of(mask_type(false)));
 
   for (std::size_t i = 0; i < mask_type::size(); ++i) {
-    mask_type test_mask([&](std::size_t j) { return i == j; });
+    mask_type test_mask(KOKKOS_LAMBDA(std::size_t j) { return i == j; });
 
     EXPECT_TRUE(any_of(test_mask));
     EXPECT_FALSE(none_of(test_mask));
@@ -70,7 +70,7 @@ KOKKOS_INLINE_FUNCTION void device_check_mask_ops() {
   checker.truth(!any_of(mask_type(false)));
 
   for (std::size_t i = 0; i < mask_type::size(); ++i) {
-    mask_type test_mask([&](std::size_t j) { return i == j; });
+    mask_type test_mask(KOKKOS_LAMBDA(std::size_t j) { return i == j; });
 
     checker.truth(any_of(test_mask));
     checker.truth(!none_of(test_mask));

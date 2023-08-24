@@ -51,7 +51,7 @@ class simd_mask<T, simd_abi::scalar> {
                            value_type, G, std::integral_constant<bool, false>>,
                        bool> = false>
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit simd_mask(G&& gen) noexcept
-      : m_value(gen(std::integral_constant<std::size_t, 0>())) {}
+      : m_value(gen(0)) {}
   template <class U>
   KOKKOS_FORCEINLINE_FUNCTION simd_mask(
       simd_mask<U, simd_abi::scalar> const& other)
@@ -114,7 +114,7 @@ class simd<T, simd_abi::scalar> {
                                       std::integral_constant<std::size_t, 0>>,
                 bool> = false>
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit simd(G&& gen) noexcept
-      : m_value(gen(std::integral_constant<std::size_t, 0>())) {}
+      : m_value(gen(0)) {}
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit operator T() const {
     return m_value;
   }
