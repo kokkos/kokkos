@@ -1042,7 +1042,7 @@ class where_expression<simd_mask<double, simd_abi::avx512_fixed_size<8>>,
       double const* mem,
       simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& index) {
     m_value = value_type(_mm512_mask_i32gather_pd(
-        _mm512_set1_pd(0.0), static_cast<__mmask8>(m_mask),
+        static_cast<__m512d>(m_value), static_cast<__mmask8>(m_mask),
         static_cast<__m256i>(index), mem, 8));
   }
   template <class U, std::enable_if_t<
@@ -1081,6 +1081,14 @@ class const_where_expression<
     _mm256_mask_storeu_epi32(mem, static_cast<__mmask8>(m_mask),
                              static_cast<__m256i>(m_value));
   }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+  void scatter_to(
+      std::int32_t* mem,
+      simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& index) const {
+    _mm256_mask_i32scatter_epi32(mem, static_cast<__mmask8>(m_mask),
+                                 static_cast<__m256i>(index),
+                                 static_cast<__m256i>(m_value), 4);
+  }
 
   [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type const&
   impl_get_value() const {
@@ -1108,6 +1116,14 @@ class where_expression<simd_mask<std::int32_t, simd_abi::avx512_fixed_size<8>>,
   void copy_from(std::int32_t const* mem, element_aligned_tag) {
     m_value = value_type(_mm256_mask_loadu_epi32(
         _mm256_set1_epi32(0), static_cast<__mmask8>(m_mask), mem));
+  }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+  void gather_from(
+      std::int32_t const* mem,
+      simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& index) {
+    m_value = value_type(_mm256_mmask_i32gather_epi32(
+        static_cast<__m256i>(m_value), static_cast<__mmask8>(m_mask),
+        static_cast<__m256i>(index), mem, 4));
   }
   template <class U,
             std::enable_if_t<
@@ -1147,6 +1163,14 @@ class const_where_expression<
     _mm256_mask_storeu_epi32(mem, static_cast<__mmask8>(m_mask),
                              static_cast<__m256i>(m_value));
   }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+  void scatter_to(
+      std::uint32_t* mem,
+      simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& index) const {
+    _mm256_mask_i32scatter_epi32(mem, static_cast<__mmask8>(m_mask),
+                                 static_cast<__m256i>(index),
+                                 static_cast<__m256i>(m_value), 4);
+  }
 
   [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type const&
   impl_get_value() const {
@@ -1174,6 +1198,14 @@ class where_expression<simd_mask<std::uint32_t, simd_abi::avx512_fixed_size<8>>,
   void copy_from(std::uint32_t const* mem, element_aligned_tag) {
     m_value = value_type(_mm256_mask_loadu_epi32(
         _mm256_set1_epi32(0), static_cast<__mmask8>(m_mask), mem));
+  }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+  void gather_from(
+      std::uint32_t const* mem,
+      simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& index) {
+    m_value = value_type(_mm256_mmask_i32gather_epi32(
+        static_cast<__m256i>(m_value), static_cast<__mmask8>(m_mask),
+        static_cast<__m256i>(index), mem, 4));
   }
   template <class U,
             std::enable_if_t<
@@ -1213,6 +1245,14 @@ class const_where_expression<
     _mm512_mask_storeu_epi64(mem, static_cast<__mmask8>(m_mask),
                              static_cast<__m512i>(m_value));
   }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+  void scatter_to(
+      std::int64_t* mem,
+      simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& index) const {
+    _mm512_mask_i32scatter_epi64(mem, static_cast<__mmask8>(m_mask),
+                                 static_cast<__m256i>(index),
+                                 static_cast<__m512i>(m_value), 8);
+  }
 
   [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type const&
   impl_get_value() const {
@@ -1240,6 +1280,14 @@ class where_expression<simd_mask<std::int64_t, simd_abi::avx512_fixed_size<8>>,
   void copy_from(std::int64_t const* mem, element_aligned_tag) {
     m_value = value_type(_mm512_mask_loadu_epi64(
         _mm512_set1_epi64(0.0), static_cast<__mmask8>(m_mask), mem));
+  }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+  void gather_from(
+      std::int64_t const* mem,
+      simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& index) {
+    m_value = value_type(_mm512_mask_i32gather_epi64(
+        static_cast<__m512i>(m_value), static_cast<__mmask8>(m_mask),
+        static_cast<__m256i>(index), mem, 8));
   }
   template <class U,
             std::enable_if_t<
@@ -1279,6 +1327,14 @@ class const_where_expression<
     _mm512_mask_storeu_epi64(mem, static_cast<__mmask8>(m_mask),
                              static_cast<__m512i>(m_value));
   }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+  void scatter_to(
+      std::uint64_t* mem,
+      simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& index) const {
+    _mm512_mask_i32scatter_epi64(mem, static_cast<__mmask8>(m_mask),
+                                 static_cast<__m256i>(index),
+                                 static_cast<__m512i>(m_value), 8);
+  }
 
   [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type const&
   impl_get_value() const {
@@ -1306,6 +1362,14 @@ class where_expression<simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>>,
   void copy_from(std::uint64_t const* mem, element_aligned_tag) {
     m_value = value_type(_mm512_mask_loadu_epi64(
         _mm512_set1_epi64(0.0), static_cast<__mmask8>(m_mask), mem));
+  }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+  void gather_from(
+      std::uint64_t const* mem,
+      simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& index) {
+    m_value = value_type(_mm512_mask_i32gather_epi64(
+        static_cast<__m512i>(m_value), static_cast<__mmask8>(m_mask),
+        static_cast<__m256i>(index), mem, 8));
   }
   template <class U,
             std::enable_if_t<

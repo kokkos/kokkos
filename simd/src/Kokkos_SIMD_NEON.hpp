@@ -1077,6 +1077,13 @@ class const_where_expression<
     if (m_mask[0]) mem[0] = m_value[0];
     if (m_mask[1]) mem[1] = m_value[1];
   }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+  void scatter_to(
+      std::int32_t* mem,
+      simd<std::int32_t, simd_abi::neon_fixed_size<2>> const& index) const {
+    if (m_mask[0]) mem[index[0]] = m_value[0];
+    if (m_mask[1]) mem[index[1]] = m_value[1];
+  }
 
   [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type const&
   impl_get_value() const {
@@ -1104,6 +1111,13 @@ class where_expression<simd_mask<std::int32_t, simd_abi::neon_fixed_size<2>>,
   void copy_from(std::int32_t const* mem, element_aligned_tag) {
     if (m_mask[0]) m_value[0] = mem[0];
     if (m_mask[1]) m_value[1] = mem[1];
+  }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+  void gather_from(
+      std::int32_t const* mem,
+      simd<std::int32_t, simd_abi::neon_fixed_size<2>> const& index) {
+    if (m_mask[0]) m_value[0] = mem[index[0]];
+    if (m_mask[1]) m_value[1] = mem[index[1]];
   }
   template <
       class U,
@@ -1143,6 +1157,13 @@ class const_where_expression<
     if (m_mask[0]) mem[0] = m_value[0];
     if (m_mask[1]) mem[1] = m_value[1];
   }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+  void scatter_to(
+      std::int64_t* mem,
+      simd<std::int32_t, simd_abi::neon_fixed_size<2>> const& index) const {
+    if (m_mask[0]) mem[index[0]] = m_value[0];
+    if (m_mask[1]) mem[index[1]] = m_value[1];
+  }
 
   [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type const&
   impl_get_value() const {
@@ -1170,6 +1191,13 @@ class where_expression<simd_mask<std::int64_t, simd_abi::neon_fixed_size<2>>,
   void copy_from(std::int64_t const* mem, element_aligned_tag) {
     if (m_mask[0]) m_value[0] = mem[0];
     if (m_mask[1]) m_value[1] = mem[1];
+  }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+  void gather_from(
+      std::int64_t const* mem,
+      simd<std::int32_t, simd_abi::neon_fixed_size<2>> const& index) {
+    if (m_mask[0]) m_value[0] = mem[index[0]];
+    if (m_mask[1]) m_value[1] = mem[index[1]];
   }
   template <
       class U,
@@ -1209,6 +1237,13 @@ class const_where_expression<
     if (m_mask[0]) mem[0] = m_value[0];
     if (m_mask[1]) mem[1] = m_value[1];
   }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+  void scatter_to(
+      std::uint64_t* mem,
+      simd<std::int32_t, simd_abi::neon_fixed_size<2>> const& index) const {
+    if (m_mask[0]) mem[index[0]] = m_value[0];
+    if (m_mask[1]) mem[index[1]] = m_value[1];
+  }
 
   [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type const&
   impl_get_value() const {
@@ -1236,6 +1271,13 @@ class where_expression<simd_mask<std::uint64_t, simd_abi::neon_fixed_size<2>>,
   void copy_from(std::uint64_t const* mem, element_aligned_tag) {
     if (m_mask[0]) m_value[0] = mem[0];
     if (m_mask[1]) m_value[1] = mem[1];
+  }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+  void gather_from(
+      std::uint64_t const* mem,
+      simd<std::int32_t, simd_abi::neon_fixed_size<2>> const& index) {
+    if (m_mask[0]) m_value[0] = mem[index[0]];
+    if (m_mask[1]) m_value[1] = mem[index[1]];
   }
   template <class U,
             std::enable_if_t<
