@@ -47,6 +47,10 @@ enum EnumBool : bool { EBFalse, EBTrue };
 enum class ScopedEnum { SEZero, SEOne };
 enum class ScopedEnumShort : short { SESZero, SESOne };
 class Class {};
+
+template <typename Base, typename Derived>
+inline constexpr bool is_public_unambiguous_base_of_v =
+    std::is_convertible_v<Derived*, Base*> && !std::is_same_v<Derived, Base>;
 }  // namespace
 
 void test_to_underlying() {
@@ -92,39 +96,39 @@ void test_is_scoped_enum() {
   static_assert(!is_scoped_enum<int>{});
   static_assert(!is_scoped_enum<int>::value);
   static_assert(!is_scoped_enum_v<int>);
-  static_assert(std::is_base_of_v<std::false_type, is_scoped_enum<int>> &&
-                !std::is_same_v<std::false_type, is_scoped_enum<int>>);
+  static_assert(
+      is_public_unambiguous_base_of_v<std::false_type, is_scoped_enum<int>>);
 
   static_assert(!is_scoped_enum<Class>{});
   static_assert(!is_scoped_enum<Class>::value);
   static_assert(!is_scoped_enum_v<Class>);
-  static_assert(std::is_base_of_v<std::false_type, is_scoped_enum<Class>> &&
-                !std::is_same_v<std::false_type, is_scoped_enum<Class>>);
+  static_assert(
+      is_public_unambiguous_base_of_v<std::false_type, is_scoped_enum<Class>>);
 
   static_assert(!is_scoped_enum<Enum>{});
   static_assert(!is_scoped_enum<Enum>::value);
   static_assert(!is_scoped_enum_v<Enum>);
-  static_assert(std::is_base_of_v<std::false_type, is_scoped_enum<Enum>> &&
-                !std::is_same_v<std::false_type, is_scoped_enum<Enum>>);
+  static_assert(
+      is_public_unambiguous_base_of_v<std::false_type, is_scoped_enum<Enum>>);
 
   static_assert(!is_scoped_enum<EnumBool>{});
   static_assert(!is_scoped_enum<EnumBool>::value);
   static_assert(!is_scoped_enum_v<EnumBool>);
-  static_assert(std::is_base_of_v<std::false_type, is_scoped_enum<EnumBool>> &&
-                !std::is_same_v<std::false_type, is_scoped_enum<EnumBool>>);
+  static_assert(is_public_unambiguous_base_of_v<std::false_type,
+                                                is_scoped_enum<EnumBool>>);
 
   static_assert(is_scoped_enum<ScopedEnum>{});
   static_assert(is_scoped_enum<ScopedEnum>::value);
   static_assert(is_scoped_enum_v<ScopedEnum>);
-  static_assert(std::is_base_of_v<std::true_type, is_scoped_enum<ScopedEnum>> &&
-                !std::is_same_v<std::true_type, is_scoped_enum<ScopedEnum>>);
+  static_assert(is_public_unambiguous_base_of_v<std::true_type,
+                                                is_scoped_enum<ScopedEnum>>);
 
   static_assert(is_scoped_enum<ScopedEnumShort>{});
   static_assert(is_scoped_enum<ScopedEnumShort>::value);
   static_assert(is_scoped_enum_v<ScopedEnumShort>);
   static_assert(
-      std::is_base_of_v<std::true_type, is_scoped_enum<ScopedEnumShort>> &&
-      !std::is_same_v<std::true_type, is_scoped_enum<ScopedEnumShort>>);
+      is_public_unambiguous_base_of_v<std::true_type,
+                                      is_scoped_enum<ScopedEnumShort>>);
 }
 
 }  // namespace Test
