@@ -97,10 +97,14 @@ void HIPInternal::print_configuration(std::ostream &s) const {
     KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDeviceProperties(&hipProp, i));
 
     s << "Kokkos::HIP[ " << i << " ] "
-      << "gcnArch " << hipProp.gcnArch << ", Total Global Memory: "
+      << "gcnArch " << hipProp.gcnArchName << ", Total Global Memory: "
       << ::Kokkos::Impl::human_memory_size(hipProp.totalGlobalMem)
       << ", Shared Memory per Block: "
-      << ::Kokkos::Impl::human_memory_size(hipProp.sharedMemPerBlock);
+      << ::Kokkos::Impl::human_memory_size(hipProp.sharedMemPerBlock)
+      << ", APU: " << hipProp.integrated
+      << ", Is Large Bar: " << hipProp.isLargeBar
+      << ", Support Managed Memory: " << hipProp.managedMemory
+      << ", Wavefront Size: " << hipProp.warpSize;
     if (m_hipDev == i) s << " : Selected";
     s << '\n';
   }
