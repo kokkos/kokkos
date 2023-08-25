@@ -46,6 +46,7 @@ enum Enum { EZero, EOne };
 enum EnumBool : bool { EBFalse, EBTrue };
 enum class ScopedEnum { SEZero, SEOne };
 enum class ScopedEnumShort : short { SESZero, SESOne };
+class Class {};
 }  // namespace
 
 void test_to_underlying() {
@@ -107,6 +108,10 @@ void test_is_scoped_enum() {
   static_assert(is_scoped_enum<ScopedEnumShort>{});
   static_assert(is_scoped_enum<ScopedEnumShort>::value);
   static_assert(is_scoped_enum_v<ScopedEnumShort>);
+
+  static_assert(!is_scoped_enum<Class>{});
+  static_assert(!is_scoped_enum<Class>::value);
+  static_assert(!is_scoped_enum_v<Class>);
 }
 
 }  // namespace Test
