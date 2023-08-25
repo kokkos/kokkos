@@ -27,7 +27,7 @@ pipeline {
         }
         stage('Build') {
             parallel {
-                stage('OPENACC-NVHPC-CUDA-11.6') {
+                stage('OPENACC-NVHPC-CUDA-12.2') {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.nvhpc'
@@ -37,7 +37,7 @@ pipeline {
                         }
                     }
                     environment {
-                        CUDA_HOME = '/opt/nvidia/hpc_sdk/Linux_x86_64/22.3/cuda/11.6'
+                        NVHPC_CUDA_HOME = '/opt/nvidia/hpc_sdk/Linux_x86_64/23.7/cuda/12.2'
                     }
                     steps {
                         sh '''rm -rf build && mkdir -p build && cd build && \
@@ -53,12 +53,11 @@ pipeline {
                               make -j8 && ctest --verbose'''
                     }
                 }
-                stage('CUDA-11.7-NVHPC') {
+                stage('CUDA-12.2-NVHPC') {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.nvhpc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--build-arg BASE=nvcr.io/nvidia/nvhpc:22.9-devel-cuda11.7-ubuntu20.04'
                             label 'nvidia-docker && large_images && volta'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
                         }
@@ -70,7 +69,7 @@ pipeline {
                         OMP_MAX_ACTIVE_LEVELS = 1
                         OMP_PLACES = 'threads'
                         OMP_PROC_BIND = 'spread'
-                        NVHPC_CUDA_HOME = '/opt/nvidia/hpc_sdk/Linux_x86_64/22.9/cuda/11.7'
+                        NVHPC_CUDA_HOME = '/opt/nvidia/hpc_sdk/Linux_x86_64/23.7/cuda/12.2'
                     }
                     steps {
                         sh '''rm -rf build && mkdir -p build && cd build && \
