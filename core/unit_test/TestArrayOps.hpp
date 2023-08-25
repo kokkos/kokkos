@@ -135,13 +135,15 @@ TEST(TEST_CATEGORY, array_element_access) {
   ASSERT_EQ(ca[eb], a[index]);
 
 #if defined(__clang__)
-  auto i128 = static_cast<__int128>(index);
-  ASSERT_EQ(a[i128], a[index]);
-  ASSERT_EQ(ca[i128], a[index]);
+  if constexpr (std::is_integral_v<__int128>) {
+    auto i128 = static_cast<__int128>(index);
+    ASSERT_EQ(a[i128], a[index]);
+    ASSERT_EQ(ca[i128], a[index]);
 
-  auto u128 = static_cast<unsigned __int128>(index);
-  ASSERT_EQ(a[u128], a[index]);
-  ASSERT_EQ(ca[u128], a[index]);
+    auto u128 = static_cast<unsigned __int128>(index);
+    ASSERT_EQ(a[u128], a[index]);
+    ASSERT_EQ(ca[u128], a[index]);
+  }
 #endif
 
   ASSERT_EQ(a.data()[index], a[index]);
@@ -270,13 +272,15 @@ TEST(TEST_CATEGORY, array_contiguous_element_access) {
   ASSERT_EQ(ca[eb], aa[index]);
 
 #if defined(__clang__)
-  auto i128 = static_cast<__int128>(index);
-  ASSERT_EQ(a[i128], aa[index]);
-  ASSERT_EQ(ca[i128], aa[index]);
+  if constexpr (std::is_integral_v<__int128>) {
+    auto i128 = static_cast<__int128>(index);
+    ASSERT_EQ(a[i128], aa[index]);
+    ASSERT_EQ(ca[i128], aa[index]);
 
-  auto u128 = static_cast<unsigned __int128>(index);
-  ASSERT_EQ(a[u128], aa[index]);
-  ASSERT_EQ(ca[u128], aa[index]);
+    auto u128 = static_cast<unsigned __int128>(index);
+    ASSERT_EQ(a[u128], aa[index]);
+    ASSERT_EQ(ca[u128], aa[index]);
+  }
 #endif
 
   ASSERT_EQ(a.data(), aa);
@@ -447,13 +451,15 @@ TEST(TEST_CATEGORY, array_strided_element_access) {
   ASSERT_EQ(ca[eb], aa[index * aStride]);
 
 #if defined(__clang__)
-  auto i128 = static_cast<__int128>(index);
-  ASSERT_EQ(a[i128], aa[index * aStride]);
-  ASSERT_EQ(ca[i128], aa[index * aStride]);
+  if constexpr (std::is_integral_v<__int128>) {
+    auto i128 = static_cast<__int128>(index);
+    ASSERT_EQ(a[i128], aa[index * aStride]);
+    ASSERT_EQ(ca[i128], aa[index * aStride]);
 
-  auto u128 = static_cast<unsigned __int128>(index);
-  ASSERT_EQ(a[u128], aa[index * aStride]);
-  ASSERT_EQ(ca[u128], aa[index * aStride]);
+    auto u128 = static_cast<unsigned __int128>(index);
+    ASSERT_EQ(a[u128], aa[index * aStride]);
+    ASSERT_EQ(ca[u128], aa[index * aStride]);
+  }
 #endif
 
   ASSERT_EQ(a.data(), aa);
