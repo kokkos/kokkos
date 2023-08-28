@@ -19,9 +19,6 @@
 
 #include <Kokkos_Macros.hpp>
 
-#if defined(KOKKOS_ENABLE_HIP)
-#if (HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR > 2)
-
 #include <Kokkos_Graph_fwd.hpp>
 
 #include <impl/Kokkos_GraphImpl.hpp>
@@ -187,6 +184,4 @@ auto GraphImpl<Kokkos::HIP>::create_aggregate_ptr(PredecessorRefs&&...) {
 }  // namespace Impl
 }  // namespace Kokkos
 
-#endif
-#endif
 #endif

@@ -31,12 +31,6 @@
 namespace Kokkos {
 namespace Impl {
 
-template <class CombinedFunctorReducer, class PolicyType>
-struct PatternImplSpecializationFromTag<
-    Kokkos::ParallelReduceTag, CombinedFunctorReducer, PolicyType, Kokkos::HIP>
-    : type_identity<
-          ParallelReduce<CombinedFunctorReducer, PolicyType, Kokkos::HIP>> {};
-
 template <typename PolicyType, typename Functor, typename PatternTag,
           typename... Args>
 class GraphNodeKernelImpl<Kokkos::HIP, PolicyType, Functor, PatternTag, Args...>
@@ -105,7 +99,7 @@ struct HIPGraphNodeAggregateKernel {
   using graph_kernel = HIPGraphNodeAggregateKernel;
 
   // Aggregates don't need a policy, but for the purposes of checking the static
-  // assertions about graph kerenls,
+  // assertions about graph kernels,
   struct Policy {
     using is_graph_kernel = std::true_type;
   };

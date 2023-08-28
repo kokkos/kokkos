@@ -25,7 +25,7 @@
 #include <HIP/Kokkos_HIP_Instance.hpp>
 #include <HIP/Kokkos_HIP_Space.hpp>
 
-#if (HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR > 2)
+#if !((HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR == 2))
 #include <HIP/Kokkos_HIP_GraphNodeKernel.hpp>
 #include <impl/Kokkos_GraphImpl_fwd.hpp>
 #endif
@@ -380,7 +380,7 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
         driver);
   }
 
-#if (HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR > 2)
+#if !((HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR == 2))
   static void create_parallel_launch_graph_node(
       DriverType const &driver, dim3 const &grid, dim3 const &block, int shmem,
       HIPInternal const * /*hip_instance*/) {
@@ -438,7 +438,7 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
         driver_ptr);
   }
 
-#if (HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR > 2)
+#if !((HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR == 2))
   static void create_parallel_launch_graph_node(
       DriverType const &driver, dim3 const &grid, dim3 const &block, int shmem,
       HIPInternal const *hip_instance) {
@@ -581,7 +581,7 @@ void hip_parallel_launch(const DriverType &driver, const dim3 &grid,
                          const dim3 &block, const int shmem,
                          const HIPInternal *hip_instance,
                          const bool prefer_shmem) {
-#if (HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR > 2)
+#if !((HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR == 2))
   if constexpr (DoGraph) {
     // Graph launch
     using base_t = HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
