@@ -410,6 +410,13 @@ if(KOKKOS_ENABLE_OPENMPTARGET)
   )
 endif()
 
+# FIXME_OPENMPTARGET - remove sort test as it leads to ICE with clang/17 and above at compile time.
+if(KOKKOS_ENABLE_OPENMPTARGET STREQUAL "Clang" AND KOKKOS_CXX_COMPILER_VERSION VERSION_GREATER 16.0.0)
+    list(REMOVE_ITEM ALGO_SORT_SOURCES
+    TestSort.cpp
+  )
+endif()
+
 foreach(ID A;B;C;D;E)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     AlgorithmsUnitTest_StdSet_${ID}
