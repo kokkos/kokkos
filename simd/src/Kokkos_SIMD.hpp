@@ -21,11 +21,21 @@
 
 #include <Kokkos_SIMD_Scalar.hpp>
 
-#ifdef KOKKOS_ARCH_AVX2
+#include <Kokkos_Macros.hpp>
+
+#if defined(KOKKOS_ARCH_AVX) && !defined(__AVX__)
+#error "__AVX__ must be defined for KOKKOS_ARCH_AVX"
+#endif
+#if defined(KOKKOS_ARCH_AVX2)
+#if !defined(__AVX2__)
+#error "__AVX2__ must be defined for KOKKOS_ARCH_AVX2"
+#endif
 #include <Kokkos_SIMD_AVX2.hpp>
 #endif
-
-#ifdef KOKKOS_ARCH_AVX512XEON
+#if defined(KOKKOS_ARCH_AVX512XEON)
+#if !defined(__AVX512F__)
+#error "__AVX512F__ must be defined for KOKKOS_ARCH_AVX512XEON"
+#endif
 #include <Kokkos_SIMD_AVX512.hpp>
 #endif
 

@@ -70,17 +70,8 @@
 #cmakedefine KOKKOS_ARCH_ARMV8_THUNDERX2
 #cmakedefine KOKKOS_ARCH_A64FX
 #cmakedefine KOKKOS_ARCH_AVX
-#if defined(KOKKOS_ARCH_AVX) && !defined(__AVX__)
-#error "__AVX__ must be defined for KOKKOS_ARCH_AVX"
-#endif
 #cmakedefine KOKKOS_ARCH_AVX2
-#if defined(KOKKOS_ARCH_AVX2) && !defined(__AVX2__)
-#error "__AVX2__ must be defined for KOKKOS_ARCH_AVX2"
-#endif
 #cmakedefine KOKKOS_ARCH_AVX512XEON
-#if defined(KOKKOS_ARCH_AVX512XEON) && !defined(__AVX512F__)
-#error "__AVX512F__ must be defined for KOKKOS_ARCH_AVX512XEON"
-#endif
 #cmakedefine KOKKOS_ARCH_KNC
 #cmakedefine KOKKOS_ARCH_AVX512MIC
 #cmakedefine KOKKOS_ARCH_POWER7
