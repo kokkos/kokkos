@@ -19,7 +19,7 @@
 #include <gtest/gtest.h>
 
 namespace Test {
-// Test Interoperability with Cuda Streams and muliple GPUs.
+// Test Interoperability with Cuda Streams and multiple GPUs.
 TEST(cuda, raw_cuda_streams) {
   Kokkos::ScopeGuard scope_guard;
 
