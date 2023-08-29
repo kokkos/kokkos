@@ -179,7 +179,7 @@ void *impl_allocate_common(const int device_id,
                            const char *arg_label, const size_t arg_alloc_size,
                            const size_t arg_logical_size,
                            const Kokkos::Tools::SpaceHandle arg_handle,
-                           [[maybe_unused]] bool exec_space_provided) {
+                           [[maybe_unused]] bool stream_sync_only) {
   void *ptr = nullptr;
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(device_id));
 
@@ -190,7 +190,7 @@ void *impl_allocate_common(const int device_id,
   if (arg_alloc_size >= memory_threshold_g) {
     error_code = cudaMallocAsync(&ptr, arg_alloc_size, stream);
 
-    if (exec_space_provided) {
+    if (stream_sync_only) {
       KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamSynchronize(stream));
     } else {
       Impl::cuda_device_synchronize(
