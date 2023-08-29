@@ -25,8 +25,8 @@
 
 #include <HPX/Kokkos_HPX.hpp>
 
-#include <hpx/local/execution.hpp>
-#include <hpx/local/future.hpp>
+#include <hpx/execution.hpp>
+#include <hpx/future.hpp>
 
 #include <type_traits>
 
