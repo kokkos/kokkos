@@ -186,7 +186,7 @@ void test_A(const bool sequencesExist, std::size_t numTeams,
     auto rowSearchedSeq =
         Kokkos::subview(searchedSequencesView_h, i, Kokkos::ALL());
 
-    std::size_t stdDistance;
+    std::size_t stdDistance = std::numeric_limits<std::size_t>::max();
     const std::size_t beginEndDistance = KE::distance(rowFromBegin, rowFromEnd);
 
     switch (apiId) {
