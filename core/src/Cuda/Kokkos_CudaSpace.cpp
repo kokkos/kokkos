@@ -197,9 +197,8 @@ void *impl_allocate_common(const int device_id,
           "Kokkos::Cuda: backend fence after async malloc");
     }
   } else
-#else
-  { error_code = cudaMalloc(&ptr, arg_alloc_size); }
 #endif
+  { error_code = cudaMalloc(&ptr, arg_alloc_size); }
   if (error_code != cudaSuccess) {  // TODO tag as unlikely branch
     // This is the only way to clear the last error, which
     // we should do here since we're turning it into an
