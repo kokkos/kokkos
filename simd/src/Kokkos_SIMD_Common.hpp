@@ -329,7 +329,6 @@ template <class T, class Abi>
 }
 
 }  // namespace Experimental
-
 }  // namespace Kokkos
 
 #endif

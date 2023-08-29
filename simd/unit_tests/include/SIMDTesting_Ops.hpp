@@ -105,6 +105,86 @@ class absolutes {
   }
 };
 
+class floors {
+ public:
+  template <typename T>
+  auto on_host(T const& a) const {
+    return Kokkos::floor(a);
+  }
+  template <typename T>
+  auto on_host_serial(T const& a) const {
+    return Kokkos::floor(a);
+  }
+  template <typename T>
+  KOKKOS_INLINE_FUNCTION auto on_device(T const& a) const {
+    return Kokkos::floor(a);
+  }
+  template <typename T>
+  KOKKOS_INLINE_FUNCTION auto on_device_serial(T const& a) const {
+    return Kokkos::floor(a);
+  }
+};
+
+class ceils {
+ public:
+  template <typename T>
+  auto on_host(T const& a) const {
+    return Kokkos::ceil(a);
+  }
+  template <typename T>
+  auto on_host_serial(T const& a) const {
+    return Kokkos::ceil(a);
+  }
+  template <typename T>
+  KOKKOS_INLINE_FUNCTION auto on_device(T const& a) const {
+    return Kokkos::ceil(a);
+  }
+  template <typename T>
+  KOKKOS_INLINE_FUNCTION auto on_device_serial(T const& a) const {
+    return Kokkos::ceil(a);
+  }
+};
+
+class rounds {
+ public:
+  template <typename T>
+  auto on_host(T const& a) const {
+    return Kokkos::round(a);
+  }
+  template <typename T>
+  auto on_host_serial(T const& a) const {
+    return std::rint(a);
+  }
+  template <typename T>
+  KOKKOS_INLINE_FUNCTION auto on_device(T const& a) const {
+    return Kokkos::round(a);
+  }
+  template <typename T>
+  KOKKOS_INLINE_FUNCTION auto on_device_serial(T const& a) const {
+    return Kokkos::Experimental::Impl::round_half_to_nearest_even(a);
+  }
+};
+
+class truncates {
+ public:
+  template <typename T>
+  auto on_host(T const& a) const {
+    return Kokkos::trunc(a);
+  }
+  template <typename T>
+  auto on_host_serial(T const& a) const {
+    return Kokkos::trunc(a);
+  }
+  template <typename T>
+  KOKKOS_INLINE_FUNCTION auto on_device(T const& a) const {
+    return Kokkos::trunc(a);
+  }
+  template <typename T>
+  KOKKOS_INLINE_FUNCTION auto on_device_serial(T const& a) const {
+    return Kokkos::trunc(a);
+  }
+};
+
 class shift_right {
  public:
   template <typename T, typename U>
