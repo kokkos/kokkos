@@ -902,6 +902,14 @@ Cuda::Cuda(int device_id, cudaStream_t stream)
       }) {
   Impl::CudaInternal::singleton().verify_is_initialized(
       "Cuda instance constructor");
+  const int n_devices = Kokkos::Cuda::detect_device_count();
+  if (device_id < 0 || device_id >= n_devices) {
+    std::stringstream ss;
+    ss << "Error: Requested GPU with invalid id '" << device_id << "'."
+       << " The device id must be in the interval [0, " << n_devices << ")!"
+       << " Raised by Kokkos::Cuda::Cuda().\n";
+    Kokkos::abort(ss.str().c_str());
+  }
   m_space_instance->initialize(device_id, stream, /*manage_stream*/ false);
 }
 
