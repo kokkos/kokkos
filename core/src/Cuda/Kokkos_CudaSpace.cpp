@@ -183,7 +183,7 @@ void *impl_allocate_common(const int device_id,
   void *ptr = nullptr;
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(device_id));
 
-  cudaError_t error_code;
+  cudaError_t error_code = cudaSuccess;
 #ifndef CUDART_VERSION
 #error CUDART_VERSION undefined!
 #elif (defined(KOKKOS_ENABLE_IMPL_CUDA_MALLOC_ASYNC) && CUDART_VERSION >= 11020)
