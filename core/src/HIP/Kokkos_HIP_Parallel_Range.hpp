@@ -150,7 +150,7 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
   word_size_type* m_scratch_space = nullptr;
   size_type* m_scratch_flags      = nullptr;
 
-  static bool constexpr UseShflReduction = false;
+  static constexpr bool UseShflReduction = false;
 
  private:
   struct ShflReductionTag {};

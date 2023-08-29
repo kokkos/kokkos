@@ -19,18 +19,41 @@
 
 #include <Kokkos_SIMD_Common.hpp>
 
+// suppress NVCC warnings with the [[nodiscard]] attribute on overloaded
+// operators implemented as hidden friends
+#if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC < 1130
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wattributes"
+#endif
+
 #include <Kokkos_SIMD_Scalar.hpp>
 
-#ifdef KOKKOS_ARCH_AVX2
+#include <Kokkos_Macros.hpp>
+
+#if defined(KOKKOS_ARCH_AVX) && !defined(__AVX__)
+#error "__AVX__ must be defined for KOKKOS_ARCH_AVX"
+#endif
+
+#if defined(KOKKOS_ARCH_AVX2)
+#if !defined(__AVX2__)
+#error "__AVX2__ must be defined for KOKKOS_ARCH_AVX2"
+#endif
 #include <Kokkos_SIMD_AVX2.hpp>
 #endif
 
-#ifdef KOKKOS_ARCH_AVX512XEON
+#if defined(KOKKOS_ARCH_AVX512XEON)
+#if !defined(__AVX512F__)
+#error "__AVX512F__ must be defined for KOKKOS_ARCH_AVX512XEON"
+#endif
 #include <Kokkos_SIMD_AVX512.hpp>
 #endif
 
 #ifdef __ARM_NEON
 #include <Kokkos_SIMD_NEON.hpp>
+#endif
+
+#if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC < 1130
+#pragma GCC diagnostic pop
 #endif
 
 namespace Kokkos {

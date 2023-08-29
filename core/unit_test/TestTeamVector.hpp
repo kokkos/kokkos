@@ -952,10 +952,7 @@ struct checkScan {
 TEST(TEST_CATEGORY, team_vector) {
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(0)));
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(1)));
-#if !(defined(KOKKOS_ENABLE_CUDA) && \
-      defined(KOKKOS_COMPILER_NVHPC))  // FIXME_NVHPC
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(2)));
-#endif
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(3)));
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(4)));
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(5)));
@@ -1003,7 +1000,7 @@ TEST(TEST_CATEGORY, parallel_scan_with_reducers) {
   constexpr int n_vector_range = 100;
 
 #if defined(KOKKOS_ENABLE_CUDA) && \
-    defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC
+    defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC 23.7
   if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>) {
     GTEST_SKIP() << "All but max inclusive scan differ at index 101";
   }
