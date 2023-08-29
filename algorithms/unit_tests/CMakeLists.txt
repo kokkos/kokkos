@@ -167,6 +167,23 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
     endforeach()
 
     # ------------------------------------------
+    # std team C
+    # ------------------------------------------
+    set(STDALGO_TEAM_SOURCES_C)
+    foreach(Name
+	StdAlgorithmsCommon
+	StdAlgorithmsTeamFind
+	StdAlgorithmsTeamFindIf
+	StdAlgorithmsTeamFindIfNot
+	StdAlgorithmsTeamAllOf
+	StdAlgorithmsTeamAnyOf
+	StdAlgorithmsTeamNoneOf
+	StdAlgorithmsTeamSearchN
+	)
+      list(APPEND STDALGO_TEAM_SOURCES_C Test${Name}.cpp)
+    endforeach()
+
+    # ------------------------------------------
     # std team B
     # ------------------------------------------
     set(STDALGO_TEAM_SOURCES_B)
@@ -199,6 +216,23 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
 
   endif()
 endforeach()
+
+
+# FIXME_OPENMPTARGET need to remove tests for OpenMPTarget because
+# in these cases the impl needs to use either Kokkos or
+# tailored reducers which results in runtime memory errors.
+if(KOKKOS_ENABLE_OPENMPTARGET)
+  list(REMOVE_ITEM STDALGO_TEAM_SOURCES_C
+    TestStdAlgorithmsTeamFind.cpp
+    TestStdAlgorithmsTeamFindIf.cpp
+    TestStdAlgorithmsTeamFindIfNot.cpp
+    TestStdAlgorithmsTeamAllOf.cpp
+    TestStdAlgorithmsTeamAnyOf.cpp
+    TestStdAlgorithmsTeamNoneOf.cpp
+    TestStdAlgorithmsTeamSearchN.cpp
+  )
+endif()
+
 
 # FIXME_OPENMPTARGET This test causes internal compiler errors as of 09/01/22
 # when compiling for Intel's Xe-HP GPUs.
@@ -267,7 +301,7 @@ foreach(ID A;B;C;D;E)
     )
 endforeach()
 
-foreach(ID A;B;D)
+foreach(ID A;B;C;D)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     AlgorithmsUnitTest_StdSet_Team_${ID}
     SOURCES
