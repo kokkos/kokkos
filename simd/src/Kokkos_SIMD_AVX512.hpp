@@ -1026,13 +1026,13 @@ class simd<float, simd_abi::avx512_fixed_size<8>> {
   operator[](std::size_t i) const {
     return reinterpret_cast<value_type const*>(&m_value)[i];
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_to(
-      value_type* ptr, element_aligned_tag) const {
-    _mm256_storeu_ps(ptr, m_value);
-  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
                                                        element_aligned_tag) {
     m_value = _mm256_loadu_ps(ptr);
+  }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_to(
+      value_type* ptr, element_aligned_tag) const {
+    _mm256_storeu_ps(ptr, m_value);
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit operator __m256()
       const {
