@@ -78,8 +78,8 @@ TEST(TEST_CATEGORY, array_element_access) {
 
 #if defined(__cpp_char8_t)
   auto c8 = static_cast<char8_t>(index);
-  ASSERT_EQ(a[ch], a[index]);
-  ASSERT_EQ(a[ch], a[index]);
+  ASSERT_EQ(a[c8], a[index]);
+  ASSERT_EQ(a[c8], a[index]);
 #endif
 
   auto c16 = static_cast<char16_t>(index);
@@ -203,8 +203,8 @@ TEST(TEST_CATEGORY, array_contiguous_element_access) {
 
 #if defined(__cpp_char8_t)
   auto c8 = static_cast<char8_t>(index);
-  ASSERT_EQ(a[ch], aa[index]);
-  ASSERT_EQ(a[ch], aa[index]);
+  ASSERT_EQ(a[c8], aa[index]);
+  ASSERT_EQ(a[c8], aa[index]);
 #endif
 
   auto c16 = static_cast<char16_t>(index);
@@ -370,8 +370,8 @@ TEST(TEST_CATEGORY, array_strided_element_access) {
 
 #if defined(__cpp_char8_t)
   auto c8 = static_cast<char8_t>(index);
-  ASSERT_EQ(a[ch], aa[index * aStride]);
-  ASSERT_EQ(a[ch], aa[index * aStride]);
+  ASSERT_EQ(a[c8], aa[index * aStride]);
+  ASSERT_EQ(a[c8], aa[index * aStride]);
 #endif
 
   auto c16 = static_cast<char16_t>(index);
