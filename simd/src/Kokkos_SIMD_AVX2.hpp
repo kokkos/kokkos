@@ -163,6 +163,18 @@ class simd_mask<float, simd_abi::avx2_fixed_size<4>> {
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd_mask() = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit simd_mask(value_type value)
       : m_value(_mm_castsi128_ps(_mm_set1_epi32(-std::int32_t(value)))) {}
+  template <class G,
+            std::enable_if_t<
+                std::is_invocable_r_v<value_type, G,
+                                      std::integral_constant<std::size_t, 0>>,
+                bool> = false>
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd_mask(
+      G&& gen) noexcept
+      : m_value(_mm_castsi128_ps(_mm_setr_epi32(
+            -std::int32_t(gen(std::integral_constant<std::size_t, 0>())),
+            -std::int32_t(gen(std::integral_constant<std::size_t, 1>())),
+            -std::int32_t(gen(std::integral_constant<std::size_t, 2>())),
+            -std::int32_t(gen(std::integral_constant<std::size_t, 3>()))))) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION static constexpr std::size_t size() {
     return 4;
   }
