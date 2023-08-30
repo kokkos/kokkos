@@ -399,7 +399,7 @@ if(Kokkos_ENABLE_OPENACC)
 endif()
 
 # FIXME_OPENMPTARGET - Comment non-passing tests with amdclang++
-# FIXME_OPENMPTARGET - Need to check on NAVI architecture
+# FIXME_OPENMPTARGET - Need to check on GFX1030 and GFX1100 architectures
 IF(KOKKOS_ARCH_VEGA)
   SET(KOKKOS_AMDGPU_ARCH TRUE)
 ENDIF()

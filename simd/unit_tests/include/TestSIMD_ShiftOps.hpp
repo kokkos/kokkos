@@ -25,7 +25,7 @@ inline void host_check_shift_on_one_loader(ShiftOp shift_op,
                                            DataType test_vals[],
                                            DataType shift_by[], std::size_t n) {
   using simd_type             = Kokkos::Experimental::simd<DataType, Abi>;
-  std::size_t constexpr width = simd_type::size();
+  constexpr std::size_t width = simd_type::size();
   Loader loader;
 
   for (std::size_t i = 0; i < n; ++i) {
@@ -55,7 +55,7 @@ inline void host_check_shift_by_lanes_on_one_loader(
     ShiftOp shift_op, DataType test_vals[],
     Kokkos::Experimental::simd<DataType, Abi>& shift_by) {
   using simd_type             = Kokkos::Experimental::simd<DataType, Abi>;
-  std::size_t constexpr width = simd_type::size();
+  constexpr std::size_t width = simd_type::size();
   Loader loader;
 
   simd_type simd_vals;
@@ -102,8 +102,8 @@ template <typename Abi, typename DataType>
 inline void host_check_shift_ops() {
   if constexpr (std::is_integral_v<DataType>) {
     using simd_type                 = Kokkos::Experimental::simd<DataType, Abi>;
-    std::size_t constexpr width     = simd_type::size();
-    std::size_t constexpr num_cases = 8;
+    constexpr std::size_t width     = simd_type::size();
+    constexpr std::size_t num_cases = 8;
 
     DataType max = std::numeric_limits<DataType>::max();
 
@@ -148,7 +148,7 @@ KOKKOS_INLINE_FUNCTION void device_check_shift_on_one_loader(
     ShiftOp shift_op, DataType test_vals[], DataType shift_by[],
     std::size_t n) {
   using simd_type             = Kokkos::Experimental::simd<DataType, Abi>;
-  std::size_t constexpr width = simd_type::size();
+  constexpr std::size_t width = simd_type::size();
   Loader loader;
 
   for (std::size_t i = 0; i < n; ++i) {
@@ -176,7 +176,7 @@ KOKKOS_INLINE_FUNCTION void device_check_shift_by_lanes_on_one_loader(
     ShiftOp shift_op, DataType test_vals[],
     Kokkos::Experimental::simd<DataType, Abi>& shift_by) {
   using simd_type             = Kokkos::Experimental::simd<DataType, Abi>;
-  std::size_t constexpr width = simd_type::size();
+  constexpr std::size_t width = simd_type::size();
   Loader loader;
   simd_type simd_vals;
   loader.device_load(test_vals, width, simd_vals);
@@ -218,8 +218,8 @@ template <typename Abi, typename DataType>
 KOKKOS_INLINE_FUNCTION void device_check_shift_ops() {
   if constexpr (std::is_integral_v<DataType>) {
     using simd_type                 = Kokkos::Experimental::simd<DataType, Abi>;
-    std::size_t constexpr width     = simd_type::size();
-    std::size_t constexpr num_cases = 8;
+    constexpr std::size_t width     = simd_type::size();
+    constexpr std::size_t num_cases = 8;
 
     DataType max = Kokkos::reduction_identity<DataType>::max();
 

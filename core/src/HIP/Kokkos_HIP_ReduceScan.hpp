@@ -58,7 +58,7 @@ struct HIPReductionsFunctor<FunctorType, true> {
       FunctorType const& functor, Scalar value, bool const skip,
       Scalar* my_global_team_buffer_element, int const shared_elements,
       Scalar* shared_team_buffer_element) {
-    unsigned int constexpr warp_size = HIPTraits::WarpSize;
+    constexpr unsigned int warp_size = HIPTraits::WarpSize;
     int const warp_id                = (threadIdx.y * blockDim.x) / warp_size;
     Scalar* const my_shared_team_buffer_element =
         shared_team_buffer_element + warp_id % shared_elements;
@@ -90,6 +90,7 @@ struct HIPReductionsFunctor<FunctorType, true> {
       }
       scalar_intra_warp_reduction(functor, value, false, warp_size,
                                   *my_global_team_buffer_element);
+      __threadfence();
     }
   }
 
@@ -104,7 +105,7 @@ struct HIPReductionsFunctor<FunctorType, true> {
     Scalar* shared_team_buffer_elements =
         reinterpret_cast<Scalar*>(shared_data);
     Scalar value                     = shared_team_buffer_elements[threadIdx.y];
-    unsigned int constexpr warp_size = Impl::HIPTraits::WarpSize;
+    constexpr unsigned int warp_size = Impl::HIPTraits::WarpSize;
     int shared_elements              = blockDim.x * blockDim.y / warp_size;
     int global_elements              = block_count;
     __syncthreads();
@@ -182,7 +183,10 @@ struct HIPReductionsFunctor<FunctorType, false> {
       scalar_intra_warp_reduction(
           functor, my_shared_team_buffer_element, false,
           blockDim.x * blockDim.y / HIPTraits::WarpSize);
-      if (threadIdx.x + threadIdx.y == 0) *result = *shared_team_buffer_element;
+      if (threadIdx.x + threadIdx.y == 0) {
+        *result = *shared_team_buffer_element;
+        if (skip) __threadfence();
+      }
     }
   }
 
@@ -382,6 +386,7 @@ __device__ bool hip_single_inter_block_reduce_scan_impl(
     for (size_t i = threadIdx.y; i < word_count.value; i += blockDim.y) {
       global[i] = shared[i];
     }
+    __threadfence();
   }
 
   // Contributing blocks note that their contribution has been completed via an

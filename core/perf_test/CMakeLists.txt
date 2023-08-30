@@ -126,6 +126,7 @@ SET(
   PerfTest_CustomReduction.cpp
   PerfTest_ExecSpacePartitioning.cpp
   PerfTestHexGrad.cpp
+  PerfTest_MallocFree.cpp
   PerfTest_ViewAllocate.cpp
   PerfTest_ViewCopy_a123.cpp
   PerfTest_ViewCopy_b123.cpp
