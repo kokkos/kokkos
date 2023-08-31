@@ -14,3 +14,4 @@ done
 tmpfile=$(mktemp -t kokkos_diff_files.XXXX)
 cat scripts/diff_files | sort &> $tmpfile
 mv $tmpfile scripts/diff_files
+rm -f header header_diff
