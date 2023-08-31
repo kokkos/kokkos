@@ -59,6 +59,13 @@ namespace Kokkos {
     return static_cast<HALF_TYPE>(                                   \
         Kokkos::FUNC(static_cast<float>(x), static_cast<float>(y))); \
   } \
+  KOKKOS_INLINE_FUNCTION float FUNC(float x, HALF_TYPE y) {  \
+    return Kokkos::FUNC(static_cast<float>(x), static_cast<float>(y)); \
+  } \
+  KOKKOS_INLINE_FUNCTION float FUNC(HALF_TYPE x, float y) {  \
+    return Kokkos::FUNC(static_cast<float>(x), static_cast<float>(y)); \
+  } \
+  KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF_MIXED(FUNC, HALF_TYPE, double) \
   KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF_MIXED(FUNC, HALF_TYPE, short) \
   KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF_MIXED(FUNC, HALF_TYPE, unsigned short) \
   KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF_MIXED(FUNC, HALF_TYPE, int) \
