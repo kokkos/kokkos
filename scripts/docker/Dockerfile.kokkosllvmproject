@@ -1,8 +1,8 @@
-FROM nvidia/cuda:10.1-devel
+FROM nvidia/cuda:11.0.3-devel
 
 RUN apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/3bf863cc.pub
 
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
         bc \
         git \
         wget \
@@ -15,10 +15,10 @@ RUN apt-get update && apt-get install -y \
 
 # unbuntu18.04-based images have libstdc++ that is lacking filesystem support
 RUN apt-get update && \
-    apt-get install -y software-properties-common && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y software-properties-common && \
     add-apt-repository ppa:ubuntu-toolchain-r/test -y && \
     apt-get update && \
-    apt-get install -y g++-9 && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y g++-9 && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -49,7 +49,7 @@ ARG NPROC=8
 
 # Clone Kokkos fork of the LLVM Project and build Clang
 ENV LLVM_DIR=/opt/llvm
-RUN LLVM_VERSION=55b3bcf643685c63fcc529d434bed112fdf03939 && \
+RUN LLVM_VERSION=32413084ecbb5e739c6b35d8bf13ad972985acb3 && \
     LLVM_URL=https://github.com/kokkos/llvm-project/archive/${LLVM_VERSION}.tar.gz &&\
     LLVM_ARCHIVE=llvm.tar.xz && \
     SCRATCH_DIR=/scratch && mkdir -p ${SCRATCH_DIR} && cd ${SCRATCH_DIR} && \

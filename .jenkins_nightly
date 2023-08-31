@@ -70,6 +70,38 @@ pipeline {
                           '''
                     }      
                 }   
+                stage('GCC-13') {
+                    agent {
+                        docker {
+                            image 'gcc:13.1'
+                            label 'docker'
+                        }
+                    }
+                    steps {
+                        sh '''
+                          DEBIAN_FRONTEND=noninteractive && \
+                          apt-get update && apt-get upgrade -y && apt-get install -y \
+                          cmake \
+                          && \
+                          apt-get clean && rm -rf /var/lib/apt/lists/*
+
+                          mkdir -p build && cd build && \
+                          cmake \
+                            -DCMAKE_BUILD_TYPE=Release \
+                            -DCMAKE_CXX_STANDARD=23 \
+                            -DCMAKE_CXX_FLAGS=-Werror \
+                            -DKokkos_ARCH_NATIVE=ON \
+                            -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+                            -DKokkos_ENABLE_BENCHMARKS=ON \
+                            -DKokkos_ENABLE_EXAMPLES=ON \
+                            -DKokkos_ENABLE_TESTS=ON \
+                            -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
+                            -DKokkos_ENABLE_SERIAL=ON \
+                          .. && \
+                          make -j8 && ctest --verbose
+                          '''
+                    }
+                }
             }
         }
     }

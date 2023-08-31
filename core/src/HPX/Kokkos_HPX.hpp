@@ -50,12 +50,12 @@ static_assert(false,
 
 #include <KokkosExp_MDRangePolicy.hpp>
 
-#include <hpx/local/barrier.hpp>
-#include <hpx/local/condition_variable.hpp>
-#include <hpx/local/execution.hpp>
-#include <hpx/local/future.hpp>
-#include <hpx/local/mutex.hpp>
-#include <hpx/local/thread.hpp>
+#include <hpx/barrier.hpp>
+#include <hpx/condition_variable.hpp>
+#include <hpx/execution.hpp>
+#include <hpx/future.hpp>
+#include <hpx/mutex.hpp>
+#include <hpx/thread.hpp>
 
 #include <Kokkos_UniqueToken.hpp>
 

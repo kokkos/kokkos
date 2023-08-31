@@ -100,9 +100,8 @@ inline constexpr bool is_standard_unsigned_integer_type_v =
 namespace Kokkos {
 
 //<editor-fold desc="[bit.cast], bit_cast">
-// FIXME_SYCL intel/llvm has unqualified calls to bit_cast which are ambiguous
-// if we declare our own bit_cast function
-#ifdef KOKKOS_ENABLE_SYCL
+#if defined(KOKKOS_ENABLE_SYCL) && defined(__INTEL_LLVM_COMPILER) && \
+    __INTEL_LLVM_COMPILER < 20240000
 using sycl::detail::bit_cast;
 #else
 template <class To, class From>
@@ -111,9 +110,14 @@ KOKKOS_FUNCTION std::enable_if_t<sizeof(To) == sizeof(From) &&
                                      std::is_trivially_copyable_v<From>,
                                  To>
 bit_cast(From const& from) noexcept {
+#if defined(KOKKOS_ENABLE_SYCL) && defined(__INTEL_LLVM_COMPILER) && \
+    __INTEL_LLVM_COMPILER >= 20240000
+  return sycl::bit_cast<To>(from);
+#else
   To to;
   memcpy(&to, &from, sizeof(To));
   return to;
+#endif
 }
 #endif
 //</editor-fold>
