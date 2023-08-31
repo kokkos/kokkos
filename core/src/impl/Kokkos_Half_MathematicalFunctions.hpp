@@ -46,13 +46,28 @@ namespace Kokkos {
     return static_cast<HALF_TYPE>(Kokkos::FUNC(static_cast<float>(x))); \
   }
 
+#define KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF_MIXED(FUNC, HALF_TYPE, MIXED_TYPE) \
+  KOKKOS_INLINE_FUNCTION double FUNC(HALF_TYPE x, MIXED_TYPE y) {  \
+    return Kokkos::FUNC(static_cast<double>(x), static_cast<double>(y)); \
+  } \
+  KOKKOS_INLINE_FUNCTION double FUNC(MIXED_TYPE x, HALF_TYPE y) {  \
+    return Kokkos::FUNC(static_cast<double>(x), static_cast<double>(y)); \
+  }
 
 #define KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF(FUNC, HALF_TYPE)       \
   KOKKOS_INLINE_FUNCTION HALF_TYPE FUNC(HALF_TYPE x, HALF_TYPE y) {  \
     return static_cast<HALF_TYPE>(                                   \
         Kokkos::FUNC(static_cast<float>(x), static_cast<float>(y))); \
-  }
-
+  } \
+  KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF_MIXED(FUNC, HALF_TYPE, short) \
+  KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF_MIXED(FUNC, HALF_TYPE, unsigned short) \
+  KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF_MIXED(FUNC, HALF_TYPE, int) \
+  KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF_MIXED(FUNC, HALF_TYPE, unsigned int) \
+  KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF_MIXED(FUNC, HALF_TYPE, long) \
+  KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF_MIXED(FUNC, HALF_TYPE, unsigned long) \
+  KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF_MIXED(FUNC, HALF_TYPE, long long) \
+  KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF_MIXED(FUNC, HALF_TYPE, unsigned long long)
+  
 
 #define KOKKOS_IMPL_MATH_UNARY_PREDICATE_HALF(FUNC, HALF_TYPE) \
   KOKKOS_INLINE_FUNCTION bool FUNC(HALF_TYPE x) {              \
