@@ -311,6 +311,5 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
 }  // namespace Impl
 }  // namespace Kokkos
 
-
 #endif /* KOKKOS_ENABLE_OPENMP */
 #endif /* KOKKOS_OPENMP_PARALLEL_REDUCE_SCAN_HPP */
