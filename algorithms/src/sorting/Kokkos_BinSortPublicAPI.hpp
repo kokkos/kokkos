@@ -61,7 +61,7 @@ class BinSort {
         Kokkos::View<typename SrcViewType::const_data_type,
                      typename SrcViewType::array_layout,
                      typename SrcViewType::device_type
-#if not defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC
+#if !defined(KOKKOS_COMPILER_NVHPC) || (KOKKOS_COMPILER_NVHPC >= 230700)
                      ,
                      Kokkos::MemoryTraits<Kokkos::RandomAccess>
 #endif
