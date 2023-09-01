@@ -235,6 +235,9 @@ struct MemorySpaceAccess<Kokkos::OpenMP::memory_space,
 #include <OpenMP/Kokkos_OpenMP_Instance.hpp>
 #include <OpenMP/Kokkos_OpenMP_Team.hpp>
 #include <OpenMP/Kokkos_OpenMP_Parallel.hpp>
+#include <OpenMP/Kokkos_OpenMP_Parallel_For.hpp>
+#include <OpenMP/Kokkos_OpenMP_Parallel_Reduce.hpp>
+#include <OpenMP/Kokkos_OpenMP_Parallel_Scan.hpp>
 #include <OpenMP/Kokkos_OpenMP_Task.hpp>
 
 #include <KokkosExp_MDRangePolicy.hpp>
