@@ -20,7 +20,7 @@
 #include <Kokkos_Macros.hpp>
 #if defined(KOKKOS_ENABLE_OPENMP)
 
-#include <Kokkos_OpenMP_Parallel.hpp>
+#include <OpenMP/Kokkos_OpenMP_Parallel.hpp>
 
 namespace Kokkos {
 namespace Impl {
