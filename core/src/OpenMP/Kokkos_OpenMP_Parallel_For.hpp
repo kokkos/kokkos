@@ -18,6 +18,9 @@
 #define KOKKOS_OPENMP_PARALLEL_FOR_HPP
 
 #include <Kokkos_Macros.hpp>
+
+#if defined(KOKKOS_ENABLE_OPENMP)
+
 #include <omp.h>
 #include <OpenMP/Kokkos_OpenMP_Instance.hpp>
 #include <KokkosExp_MDRangePolicy.hpp>
@@ -431,4 +434,5 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 #undef KOKKOS_PRAGMA_IVDEP_IF_ENABLED
 #undef KOKKOS_OPENMP_OPTIONAL_CHUNK_SIZE
 
+#endif /* #if defined( KOKKOS_ENABLE_OPENMP ) */
 #endif /* KOKKOS_OPENMP_PARALLEL_FOR_HPP */

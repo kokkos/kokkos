@@ -23,6 +23,7 @@ static_assert(false,
 #define KOKKOS_OPENMP_HPP
 
 #include <Kokkos_Macros.hpp>
+#if defined(KOKKOS_ENABLE_OPENMP)
 
 #include <Kokkos_Core_fwd.hpp>
 
@@ -35,8 +36,8 @@ static_assert(false,
 #endif
 
 #include <Kokkos_ScratchSpace.hpp>
-#include <Kokkos_TaskScheduler.hpp>
 #include <Kokkos_Parallel.hpp>
+#include <Kokkos_TaskScheduler.hpp>
 #include <Kokkos_Layout.hpp>
 #include <impl/Kokkos_HostSharedPtr.hpp>
 #include <impl/Kokkos_Profiling_Interface.hpp>
@@ -238,4 +239,5 @@ struct MemorySpaceAccess<Kokkos::OpenMP::memory_space,
 #include <KokkosExp_MDRangePolicy.hpp>
 /*--------------------------------------------------------------------------*/
 
+#endif /* #if defined( KOKKOS_ENABLE_OPENMP ) && defined( _OPENMP ) */
 #endif /* #ifndef KOKKOS_OPENMP_HPP */

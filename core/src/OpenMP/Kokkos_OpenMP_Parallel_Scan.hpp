@@ -18,6 +18,9 @@
 #define KOKKOS_OPENMP_PARALLEL_SCAN_HPP
 
 #include <Kokkos_Macros.hpp>
+
+#if defined(KOKKOS_ENABLE_OPENMP)
+
 #include <omp.h>
 #include <OpenMP/Kokkos_OpenMP_Instance.hpp>
 
@@ -310,4 +313,5 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
 }  // namespace Impl
 }  // namespace Kokkos
 
+#endif /* #if defined( KOKKOS_ENABLE_OPENMP ) */
 #endif /* KOKKOS_OPENMP_PARALLEL_REDUCE_SCAN_HPP */
