@@ -18,8 +18,6 @@
 #define KOKKOS_OPENMP_TEAM_HPP
 
 #include <Kokkos_Macros.hpp>
-#if defined(KOKKOS_ENABLE_OPENMP)
-
 #include <OpenMP/Kokkos_OpenMP_Instance.hpp>
 
 namespace Kokkos {
@@ -331,5 +329,4 @@ class TeamPolicyInternal<Kokkos::OpenMP, Properties...>
 }  // namespace Impl
 }  // namespace Kokkos
 
-#endif
 #endif /* KOKKOS_OPENMP_TEAM_HPP */
