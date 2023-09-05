@@ -17,7 +17,6 @@
 #ifndef KOKKOS_OPENMP_PARALLEL_SCAN_HPP
 #define KOKKOS_OPENMP_PARALLEL_SCAN_HPP
 
-#include <Kokkos_Macros.hpp>
 #include <omp.h>
 #include <OpenMP/Kokkos_OpenMP_Instance.hpp>
 

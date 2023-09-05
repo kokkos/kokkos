@@ -17,7 +17,6 @@
 #ifndef KOKKOS_OPENMP_PARALLEL_FOR_HPP
 #define KOKKOS_OPENMP_PARALLEL_FOR_HPP
 
-#include <Kokkos_Macros.hpp>
 #include <omp.h>
 #include <OpenMP/Kokkos_OpenMP_Instance.hpp>
 #include <KokkosExp_MDRangePolicy.hpp>
