@@ -49,6 +49,7 @@ ELSE()
   list(APPEND CMAKE_MESSAGE_INDENT "[benchmark] ")
   FetchContent_Declare(
     googlebenchmark
+    DOWNLOAD_EXTRACT_TIMESTAMP FALSE
     URL https://github.com/google/benchmark/archive/refs/tags/v1.6.2.tar.gz
     URL_HASH MD5=14d14849e075af116143a161bc3b927b
   )
