@@ -564,4 +564,4 @@ class ParallelReduce<CombinedFunctorReducerType,
 }  // namespace Impl
 }  // namespace Kokkos
 
-#endif /* KOKKOS_OPENMP_PARALLEL_REDUCE__HPP */
+#endif /* KOKKOS_OPENMP_PARALLEL_REDUCE_HPP */
