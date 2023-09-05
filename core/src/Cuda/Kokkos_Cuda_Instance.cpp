@@ -886,14 +886,18 @@ Cuda::Cuda()
       "Cuda instance constructor");
 }
 
-Cuda::Cuda(cudaStream_t stream, bool manage_stream)
+KOKKOS_DEPRECATED Cuda::Cuda(cudaStream_t stream, bool manage_stream)
+    : Cuda(stream,
+           manage_stream ? Impl::ManageStream::yes : Impl::ManageStream::no) {}
+
+Cuda::Cuda(cudaStream_t stream, Impl::ManageStream manage_stream)
     : m_space_instance(new Impl::CudaInternal, [](Impl::CudaInternal *ptr) {
         ptr->finalize();
         delete ptr;
       }) {
   Impl::CudaInternal::singleton().verify_is_initialized(
       "Cuda instance constructor");
-  m_space_instance->initialize(stream, manage_stream);
+  m_space_instance->initialize(stream, static_cast<bool>(manage_stream));
 }
 
 void Cuda::print_configuration(std::ostream &os, bool /*verbose*/) const {
@@ -925,6 +929,12 @@ void Cuda::print_configuration(std::ostream &os, bool /*verbose*/) const {
 #endif
   os << "  KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA: ";
 #ifdef KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
+  os << "yes\n";
+#else
+  os << "no\n";
+#endif
+  os << "  KOKKOS_ENABLE_IMPL_CUDA_MALLOC_ASYNC: ";
+#ifdef KOKKOS_ENABLE_IMPL_CUDA_MALLOC_ASYNC
   os << "yes\n";
 #else
   os << "no\n";
@@ -964,6 +974,16 @@ int g_cuda_space_factory_initialized =
 }  // namespace Impl
 
 }  // namespace Kokkos
+
+void Kokkos::Impl::create_Cuda_instances(std::vector<Cuda> &instances) {
+  for (int s = 0; s < int(instances.size()); s++) {
+    cudaStream_t stream;
+    KOKKOS_IMPL_CUDA_SAFE_CALL((
+        instances[s].impl_internal_space_instance()->cuda_stream_create_wrapper(
+            &stream)));
+    instances[s] = Cuda(stream, ManageStream::yes);
+  }
+}
 
 #else
 

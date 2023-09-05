@@ -95,12 +95,17 @@ void HIPInternal::print_configuration(std::ostream &s) const {
   for (int i = 0; i < hipDevCount; ++i) {
     hipDeviceProp_t hipProp;
     KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDeviceProperties(&hipProp, i));
+    std::string gpu_type = hipProp.integrated == 1 ? "APU" : "dGPU";
 
     s << "Kokkos::HIP[ " << i << " ] "
-      << "gcnArch " << hipProp.gcnArch << ", Total Global Memory: "
+      << "gcnArch " << hipProp.gcnArchName << ", Total Global Memory: "
       << ::Kokkos::Impl::human_memory_size(hipProp.totalGlobalMem)
       << ", Shared Memory per Block: "
-      << ::Kokkos::Impl::human_memory_size(hipProp.sharedMemPerBlock);
+      << ::Kokkos::Impl::human_memory_size(hipProp.sharedMemPerBlock)
+      << ", APU or dGPU: " << gpu_type
+      << ", Is Large Bar: " << hipProp.isLargeBar
+      << ", Supports Managed Memory: " << hipProp.managedMemory
+      << ", Wavefront Size: " << hipProp.warpSize;
     if (m_hipDev == i) s << " : Selected";
     s << '\n';
   }
@@ -420,6 +425,16 @@ void hip_internal_error_throw(hipError_t e, const char *name, const char *file,
 }
 }  // namespace Impl
 }  // namespace Kokkos
+
+//----------------------------------------------------------------------------
+
+void Kokkos::Impl::create_HIP_instances(std::vector<HIP> &instances) {
+  for (int s = 0; s < int(instances.size()); s++) {
+    hipStream_t stream;
+    KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamCreate(&stream));
+    instances[s] = HIP(stream, ManageStream::yes);
+  }
+}
 
 //----------------------------------------------------------------------------
 
