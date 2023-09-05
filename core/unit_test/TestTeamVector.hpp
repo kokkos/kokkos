@@ -618,13 +618,12 @@ struct functor_vec_scan_ret_val {
   using execution_space = ExecutionSpace;
   using view_type       = Kokkos::View<Scalar **, execution_space>;
 
-  Kokkos::View<int, Kokkos::LayoutLeft, ExecutionSpace> flag;
+  Kokkos::View<int, ExecutionSpace> flag;
   view_type return_values;
   int team_size;
 
-  functor_vec_scan_ret_val(
-      Kokkos::View<int, Kokkos::LayoutLeft, ExecutionSpace> flag_, int nteams,
-      int tsize)
+  functor_vec_scan_ret_val(Kokkos::View<int, ExecutionSpace> flag_, int nteams,
+                           int tsize)
       : flag(flag_), team_size(tsize) {
     return_values = view_type("return_values", nteams, tsize);
   }
