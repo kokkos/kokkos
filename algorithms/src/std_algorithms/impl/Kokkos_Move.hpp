@@ -37,7 +37,8 @@ struct StdMoveFunctor {
     m_dest_first[i] = std::move(m_first[i]);
   }
 
-  StdMoveFunctor(InputIterator _first, OutputIterator _dest_first)
+  KOKKOS_FUNCTION StdMoveFunctor(InputIterator _first,
+                                 OutputIterator _dest_first)
       : m_first(std::move(_first)), m_dest_first(std::move(_dest_first)) {}
 };
 
