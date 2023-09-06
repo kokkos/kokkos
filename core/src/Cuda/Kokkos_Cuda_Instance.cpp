@@ -690,10 +690,6 @@ std::array<Cuda::size_type, 3> cuda_internal_maximum_grid_count() {
   return CudaInternal::singleton().m_maxBlock;
 }
 
-Cuda::size_type cuda_internal_maximum_shared_words() {
-  return CudaInternal::singleton().m_maxSharedWords;
-}
-
 Cuda::size_type *cuda_internal_scratch_space(const Cuda &instance,
                                              const std::size_t size) {
   return instance.impl_internal_space_instance()->scratch_space(size);
@@ -796,10 +792,6 @@ void Cuda::impl_initialize(InitializationSettings const &settings) {
     if (Impl::CudaTraits::WarpSize < Impl::CudaInternal::m_maxWarpCount) {
       Impl::CudaInternal::m_maxWarpCount = Impl::CudaTraits::WarpSize;
     }
-
-    constexpr auto WordSize = sizeof(size_type);
-    Impl::CudaInternal::m_maxSharedWords =
-        cudaProp.sharedMemPerBlock / WordSize;
 
     //----------------------------------
     // Maximum number of blocks:
