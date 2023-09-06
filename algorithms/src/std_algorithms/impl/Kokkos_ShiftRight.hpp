@@ -147,11 +147,11 @@ KOKKOS_FUNCTION IteratorType shift_right_team_impl(
 
   const std::size_t numElementsToMove =
       ::Kokkos::Experimental::distance(first, last - n);
-  if (teamHandle.team_rank() == 0) {
+  Kokkos::single(Kokkos::PerTeam(teamHandle), [=]() {
     for (std::size_t i = 0; i < numElementsToMove; ++i) {
       last[-i - 1] = std::move(last[-n - i - 1]);
     }
-  }
+  });
   teamHandle.team_barrier();
 
   return first + n;
