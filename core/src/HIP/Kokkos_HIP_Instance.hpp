@@ -70,12 +70,10 @@ class HIPInternal {
   using size_type = ::Kokkos::HIP::size_type;
 
   inline static int m_hipDev                        = -1;
-  inline static int m_hipArch                       = -1;
   inline static unsigned m_multiProcCount           = 0;
   inline static unsigned m_maxWarpCount             = 0;
   inline static std::array<size_type, 3> m_maxBlock = {0, 0, 0};
   inline static unsigned m_maxWavesPerCU            = 0;
-  inline static unsigned m_maxSharedWords           = 0;
   inline static int m_shmemPerSM                    = 0;
   inline static int m_maxShmemPerBlock              = 0;
   inline static int m_maxThreadsPerSM               = 0;

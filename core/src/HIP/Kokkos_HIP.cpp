@@ -60,8 +60,6 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
   if (Impl::HIPTraits::WarpSize < Impl::HIPInternal::m_maxWarpCount) {
     Impl::HIPInternal::m_maxWarpCount = Impl::HIPTraits::WarpSize;
   }
-  constexpr int WordSize              = sizeof(size_type);
-  Impl::HIPInternal::m_maxSharedWords = hipProp.sharedMemPerBlock / WordSize;
 
   //----------------------------------
   // Maximum number of blocks
