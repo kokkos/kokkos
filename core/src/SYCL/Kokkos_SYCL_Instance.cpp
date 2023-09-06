@@ -21,6 +21,7 @@
 #include <Kokkos_Core.hpp>  //kokkos_malloc
 
 #include <impl/Kokkos_CheckedIntegerOps.hpp>
+#include <impl/Kokkos_Error.hpp>
 
 namespace Kokkos {
 namespace Experimental {
@@ -99,44 +100,31 @@ void SYCLInternal::initialize(const sycl::device& d) {
 
 // FIXME_SYCL
 void SYCLInternal::initialize(const sycl::queue& q) {
+  KOKKOS_EXPECTS(!is_initialized());
+
   if (was_finalized)
     Kokkos::abort("Calling SYCL::initialize after SYCL::finalize is illegal\n");
 
-  if (is_initialized()) return;
+  m_queue = q;
+  // guard pushing to all_queues
+  {
+    std::scoped_lock lock(mutex);
+    all_queues.push_back(&m_queue);
+  }
+  const sycl::device& d = m_queue->get_device();
 
-  const bool ok_init = nullptr == m_scratchSpace || nullptr == m_scratchFlags;
-  const bool ok_dev  = true;
-  if (ok_init && ok_dev) {
-    m_queue = q;
-    // guard pushing to all_queues
-    {
-      std::scoped_lock lock(mutex);
-      all_queues.push_back(&m_queue);
-    }
-    const sycl::device& d = m_queue->get_device();
+  m_maxWorkgroupSize =
+      d.template get_info<sycl::info::device::max_work_group_size>();
+  // FIXME_SYCL this should give the correct value for NVIDIA GPUs
+  m_maxConcurrency =
+      m_maxWorkgroupSize * 2 *
+      d.template get_info<sycl::info::device::max_compute_units>();
 
-    m_maxWorkgroupSize =
-        d.template get_info<sycl::info::device::max_work_group_size>();
-    // FIXME_SYCL this should give the correct value for NVIDIA GPUs
-    m_maxConcurrency =
-        m_maxWorkgroupSize * 2 *
-        d.template get_info<sycl::info::device::max_compute_units>();
+  m_maxShmemPerBlock =
+      d.template get_info<sycl::info::device::local_mem_size>();
 
-    m_maxShmemPerBlock =
-        d.template get_info<sycl::info::device::local_mem_size>();
-
-    for (auto& usm_mem : m_indirectKernelMem) {
-      usm_mem.reset(*m_queue, m_instance_id);
-    }
-
-  } else {
-    std::ostringstream msg;
-    msg << "Kokkos::Experimental::SYCL::initialize(...) FAILED";
-
-    if (!ok_init) {
-      msg << " : Already initialized";
-    }
-    Kokkos::Impl::throw_runtime_exception(msg.str());
+  for (auto& usm_mem : m_indirectKernelMem) {
+    usm_mem.reset(*m_queue, m_instance_id);
   }
 
 #ifdef KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED
