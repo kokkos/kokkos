@@ -104,13 +104,6 @@ void SYCLInternal::initialize(const sycl::queue& q) {
 
   if (is_initialized()) return;
 
-  if (!HostSpace::execution_space::impl_is_initialized()) {
-    const std::string msg(
-        "SYCL::initialize ERROR : HostSpace::execution_space is not "
-        "initialized");
-    Kokkos::Impl::throw_runtime_exception(msg);
-  }
-
   const bool ok_init = nullptr == m_scratchSpace || nullptr == m_scratchFlags;
   const bool ok_dev  = true;
   if (ok_init && ok_dev) {

@@ -376,15 +376,6 @@ void CudaInternal::initialize(cudaStream_t stream, bool manage_stream) {
   was_initialized = true;
   if (is_initialized()) return;
 
-#ifndef KOKKOS_IMPL_TURN_OFF_CUDA_HOST_INIT_CHECK
-  if (!HostSpace::execution_space::impl_is_initialized()) {
-    const std::string msg(
-        "Cuda::initialize ERROR : HostSpace::execution_space is not "
-        "initialized");
-    throw_runtime_exception(msg);
-  }
-#endif
-
   const bool ok_init = nullptr == m_scratchSpace || nullptr == m_scratchFlags;
 
   if (ok_init) {
