@@ -499,7 +499,7 @@ Cuda::size_type *CudaInternal::scratch_space(const std::size_t size) const {
 }
 
 Cuda::size_type *CudaInternal::scratch_unified(const std::size_t size) const {
-  if (verify_is_initialized("scratch_unified") && m_scratchUnifiedSupported &&
+  if (verify_is_initialized("scratch_unified") &&
       m_scratchUnifiedCount < scratch_count(size)) {
     m_scratchUnifiedCount = scratch_count(size);
 
@@ -791,15 +791,6 @@ void Cuda::impl_initialize(InitializationSettings const &settings) {
   Impl::CudaInternal::m_maxThreadsPerBlock = cudaProp.maxThreadsPerBlock;
 
   //----------------------------------
-
-  Impl::CudaInternal::m_scratchUnifiedSupported = cudaProp.unifiedAddressing;
-
-  if (Kokkos::show_warnings() &&
-      !Impl::CudaInternal::m_scratchUnifiedSupported) {
-    std::cerr << "Kokkos::Cuda device " << cudaProp.name << " capability "
-              << cudaProp.major << "." << cudaProp.minor
-              << " does not support unified virtual address space" << std::endl;
-  }
 
   cudaStream_t singleton_stream;
   KOKKOS_IMPL_CUDA_SAFE_CALL(
