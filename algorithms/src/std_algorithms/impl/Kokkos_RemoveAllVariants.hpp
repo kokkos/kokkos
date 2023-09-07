@@ -158,17 +158,19 @@ remove_if_team_impl(const TeamHandleType& teamHandle, IteratorType first,
     const std::size_t num_elements =
         ::Kokkos::Experimental::distance(first, last);
 
-    if (teamHandle.team_rank() == 0) {
-      if (remove_count > 0) {
-        std::size_t count = 0;
+    if (remove_count > 0) {
+      std::size_t count = 0;
+      Kokkos::View<std::size_t, typename TeamHandleType::execution_space>
+          countView(&count);
+      Kokkos::single(Kokkos::PerTeam(teamHandle), [=]() {
         for (std::size_t i = 0; i < num_elements; ++i) {
           if (!pred(first[i])) {
-            first[count++] = std::move(first[i]);
+            first[countView()++] = std::move(first[i]);
           }
         }
-      }
+      });
+      teamHandle.team_barrier();
     }
-    teamHandle.team_barrier();
 
     return first + num_elements - remove_count;
   }

@@ -125,18 +125,18 @@ KOKKOS_FUNCTION OutputIterator copy_if_team_impl(
   // FIXME: there is no parallel_scan overload that accepts TeamThreadRange and
   // return_value, so temporarily serial implementation is used here
   const std::size_t num_elements = Kokkos::Experimental::distance(first, last);
-  std::size_t count              = {};
-  if (teamHandle.team_rank() == 0) {
+  std::size_t count              = 0;
+  Kokkos::View<std::size_t, typename TeamHandleType::execution_space> countView(
+      &count);
+  Kokkos::single(Kokkos::PerTeam(teamHandle), [=]() {
     for (std::size_t i = 0; i < num_elements; ++i) {
       const auto& myval = first[i];
       if (pred(myval)) {
-        d_first[count++] = myval;
+        d_first[countView()++] = myval;
       }
     }
-  }
-
-  // no need for barrier because calling broadcast implicitly blocks
-  teamHandle.team_broadcast(count, 0);
+  });
+  teamHandle.team_barrier();
 
   return d_first + count;
 }
