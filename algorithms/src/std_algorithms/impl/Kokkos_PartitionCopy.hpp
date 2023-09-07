@@ -153,23 +153,25 @@ partition_copy_team_impl(const TeamHandleType& teamHandle,
 
   // FIXME: there is no parallel_scan overload that accepts TeamThreadRange and
   // return_value, so temporarily serial implementation is used
-
-  ::Kokkos::pair<std::size_t, std::size_t> counts{0, 0};
-  if (teamHandle.team_rank() == 0) {
+  std::size_t countTrue  = 0;
+  std::size_t countFalse = 0;
+  Kokkos::View<std::size_t, typename TeamHandleType::execution_space>
+      countTrueView(&countTrue);
+  Kokkos::View<std::size_t, typename TeamHandleType::execution_space>
+      countFalseView(&countFalse);
+  Kokkos::single(Kokkos::PerTeam(teamHandle), [=]() {
     for (std::size_t i = 0; i < num_elements; ++i) {
       const auto& myval = from_first[i];
       if (pred(myval)) {
-        to_first_true[counts.first++] = myval;
+        to_first_true[countTrueView()++] = myval;
       } else {
-        to_first_false[counts.second++] = myval;
+        to_first_false[countFalseView()++] = myval;
       }
     }
-  }
+  });
+  teamHandle.team_barrier();
 
-  // no need for barrier because calling broadcast implicitly blocks
-  teamHandle.team_broadcast(counts, 0);
-
-  return {to_first_true + counts.first, to_first_false + counts.second};
+  return {to_first_true + countTrue, to_first_false + countFalse};
 }
 
 }  // namespace Impl
