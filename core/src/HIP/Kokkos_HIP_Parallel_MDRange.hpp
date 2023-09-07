@@ -40,10 +40,11 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, HIP> {
   const FunctorType m_functor;
   const Policy m_policy;
 
-  ParallelFor()        = delete;
+ public:
+  ParallelFor()                   = delete;
+  ParallelFor(ParallelFor const&) = default;
   ParallelFor& operator=(ParallelFor const&) = delete;
 
- public:
   inline __device__ void operator()() const {
     Kokkos::Impl::DeviceIterateTile<Policy::rank, Policy, FunctorType,
                                     typename Policy::work_tag>(m_policy,
@@ -281,8 +282,8 @@ class ParallelReduce<CombinedFunctorReducerType,
   inline unsigned local_block_size(const FunctorType& f) {
     const auto& instance = m_policy.space().impl_internal_space_instance();
     auto shmem_functor   = [&f](unsigned n) {
-      return hip_single_inter_block_reduce_scan_shmem<false, FunctorType,
-                                                      WorkTag>(f, n);
+      return hip_single_inter_block_reduce_scan_shmem<false, WorkTag,
+                                                      value_type>(f, n);
     };
 
     unsigned block_size =
@@ -331,8 +332,8 @@ class ParallelReduce<CombinedFunctorReducerType,
 
       const int shmem =
           ::Kokkos::Impl::hip_single_inter_block_reduce_scan_shmem<
-              false, FunctorType, WorkTag>(m_functor_reducer.get_functor(),
-                                           block.y);
+              false, WorkTag, value_type>(m_functor_reducer.get_functor(),
+                                          block.y);
 
       hip_parallel_launch<ParallelReduce, LaunchBounds>(
           *this, grid, block, shmem,
@@ -365,9 +366,8 @@ class ParallelReduce<CombinedFunctorReducerType,
 
   template <typename Policy, typename Functor>
   static int max_tile_size_product(const Policy&, const Functor&) {
-    using closure_type =
-        ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>,
-                       ReducerType, HIP>;
+    using closure_type  = ParallelReduce<CombinedFunctorReducerType,
+                                        Kokkos::MDRangePolicy<Traits...>, HIP>;
     unsigned block_size = hip_get_max_blocksize<closure_type, LaunchBounds>();
     if (block_size == 0) {
       Kokkos::Impl::throw_runtime_exception(

@@ -520,6 +520,12 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
                                  std::to_string(KOKKOS_COMPILER_INTEL));
   declare_configuration_metadata("tools_only", "compiler_family", "intel");
 #endif
+#ifdef KOKKOS_COMPILER_INTEL_LLVM
+  declare_configuration_metadata("compiler_version",
+                                 "KOKKOS_COMPILER_INTEL_LLVM",
+                                 std::to_string(KOKKOS_COMPILER_INTEL_LLVM));
+  declare_configuration_metadata("tools_only", "compiler_family", "intel_llvm");
+#endif
 #ifdef KOKKOS_COMPILER_NVCC
   declare_configuration_metadata("compiler_version", "KOKKOS_COMPILER_NVCC",
                                  std::to_string(KOKKOS_COMPILER_NVCC));
@@ -748,23 +754,30 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
 #elif defined(KOKKOS_ARCH_HOPPER90)
   declare_configuration_metadata("architecture", "GPU architecture",
                                  "HOPPER90");
-#elif defined(KOKKOS_ARCH_VEGA900)
-  declare_configuration_metadata("architecture", "GPU architecture", "VEGA900");
-#elif defined(KOKKOS_ARCH_VEGA906)
-  declare_configuration_metadata("architecture", "GPU architecture", "VEGA906");
-#elif defined(KOKKOS_ARCH_VEGA908)
-  declare_configuration_metadata("architecture", "GPU architecture", "VEGA908");
-#elif defined(KOKKOS_ARCH_VEGA90A)
-  declare_configuration_metadata("architecture", "GPU architecture", "VEGA90A");
-#elif defined(KOKKOS_ARCH_NAVI1030)
+#elif defined(KOKKOS_ARCH_AMD_GFX906)
   declare_configuration_metadata("architecture", "GPU architecture",
-                                 "NAVI1030");
-#elif defined(KOKKOS_ARCH_NAVI1100)
+                                 "AMD_GFX906");
+#elif defined(KOKKOS_ARCH_AMD_GFX908)
   declare_configuration_metadata("architecture", "GPU architecture",
-                                 "NAVI1100");
+                                 "AMD_GFX908");
+#elif defined(KOKKOS_ARCH_AMD_GFX90A)
+  declare_configuration_metadata("architecture", "GPU architecture",
+                                 "AMD_GFX90A");
+#elif defined(KOKKOS_ARCH_AMD_GFX1030)
+  declare_configuration_metadata("architecture", "GPU architecture",
+                                 "AMD_GFX1030");
+#elif defined(KOKKOS_ARCH_AMD_GFX1100)
+  declare_configuration_metadata("architecture", "GPU architecture",
+                                 "AMD_GFX1100");
 
 #else
   declare_configuration_metadata("architecture", "GPU architecture", "none");
+#endif
+
+#ifdef KOKKOS_IMPL_32BIT
+  declare_configuration_metadata("architecture", "platform", "32bit");
+#else
+  declare_configuration_metadata("architecture", "platform", "64bit");
 #endif
 }
 
@@ -780,8 +793,14 @@ void post_initialize_internal(const Kokkos::InitializationSettings& settings) {
 }
 
 void initialize_internal(const Kokkos::InitializationSettings& settings) {
+  // The tool initialization is only called in post_initialize_internal.
+  // Pausing tools here, so that if someone has set callbacks programmatically
+  // these callbacks are not called inside the backend initialization, before
+  // the tool initialization happened.
+  Kokkos::Tools::Experimental::pause_tools();
   pre_initialize_internal(settings);
   initialize_backends(settings);
+  Kokkos::Tools::Experimental::resume_tools();
   post_initialize_internal(settings);
 }
 

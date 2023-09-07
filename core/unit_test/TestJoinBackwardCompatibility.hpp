@@ -27,7 +27,6 @@ enum MyErrorCode {
   error_operator_plus_equal_volatile = 0b010,
   error_join_volatile                = 0b100,
   expected_join_volatile             = 0b1000
-
 };
 
 KOKKOS_FUNCTION constexpr MyErrorCode operator|(MyErrorCode lhs,
@@ -97,7 +96,7 @@ struct ReducerWithJoinThatTakesVolatileQualifiedArgs {
 
 void test_join_backward_compatibility() {
   MyJoinBackCompatValueType result;
-  Kokkos::RangePolicy<> policy(0, 1);
+  Kokkos::RangePolicy<TEST_EXECSPACE> policy(0, 1);
 
   Kokkos::parallel_reduce(
       policy, ReducerWithJoinThatTakesBothVolatileAndNonVolatileQualifiedArgs{},
@@ -120,20 +119,9 @@ void test_join_backward_compatibility() {
   ReducerWithJoinThatTakesVolatileQualifiedArgs my_red;
   my_red.join(vol_result, result2);
   ASSERT_EQ(vol_result.err, expected_join_volatile);
-
-#if defined(KOKKOS_ENABLE_DEPRECATED_CODE_3)
-  MyJoinBackCompatValueType result3;
-  Kokkos::parallel_reduce(
-      policy, ReducerWithJoinThatTakesVolatileQualifiedArgs{}, result3);
-  ASSERT_EQ(result3.err, expected_join_volatile);
-#endif
 }
 
 TEST(TEST_CATEGORY, join_backward_compatibility) {
-#if defined(KOKKOS_ENABLE_CUDA) && \
-    defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC
-  GTEST_SKIP() << "FIXME wrong result";
-#endif
   test_join_backward_compatibility();
 }
 

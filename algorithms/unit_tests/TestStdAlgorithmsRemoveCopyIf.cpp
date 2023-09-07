@@ -119,12 +119,12 @@ void verify_data(ViewTypeFrom view_from, ViewTypeDest view_dest,
   // check that returned iterators are correct
   const std::size_t std_diff = std_result - gold_dest_std.begin();
   const std::size_t my_diff  = my_result - KE::begin(view_dest);
-  EXPECT_EQ(std_diff, my_diff);
+  ASSERT_EQ(std_diff, my_diff);
 
   // check the actual data after algo has been applied
   auto view_dest_h = create_host_space_copy(view_dest);
   for (std::size_t i = 0; i < my_diff; ++i) {
-    EXPECT_EQ(view_dest_h(i), gold_dest_std[i]);
+    ASSERT_EQ(view_dest_h(i), gold_dest_std[i]);
     // std::cout << "i= " << i << " "
     // 	      << "mine: " << view_dest_h(i) << " "
     // 	      << "std: " << gold_dest_std[i]
@@ -208,9 +208,6 @@ void run_all_scenarios() {
 }
 
 TEST(std_algorithms_mod_seq_ops, remove_copy_if) {
-#if defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ARCH_INTEL_GPU)
-  GTEST_SKIP() << "skipping for SYCL+Cuda";
-#endif
   run_all_scenarios<DynamicTag, int>();
   run_all_scenarios<StridedThreeTag, int>();
 }

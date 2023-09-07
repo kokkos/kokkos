@@ -43,6 +43,9 @@ struct is_offset_view<OffsetView<D, P...>> : public std::true_type {};
 template <class D, class... P>
 struct is_offset_view<const OffsetView<D, P...>> : public std::true_type {};
 
+template <class T>
+inline constexpr bool is_offset_view_v = is_offset_view<T>::value;
+
 #define KOKKOS_INVALID_OFFSET int64_t(0x7FFFFFFFFFFFFFFFLL)
 #define KOKKOS_INVALID_INDEX_RANGE \
   { KOKKOS_INVALID_OFFSET, KOKKOS_INVALID_OFFSET }
@@ -1191,34 +1194,9 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
           "execution space");
     }
 
-    //------------------------------------------------------------
-#if defined(KOKKOS_ENABLE_CUDA)
-    // If allocating in CudaUVMSpace must fence before and after
-    // the allocation to protect against possible concurrent access
-    // on the CPU and the GPU.
-    // Fence using the trait's executon space (which will be Kokkos::Cuda)
-    // to avoid incomplete type errors from usng Kokkos::Cuda directly.
-    if (std::is_same<Kokkos::CudaUVMSpace,
-                     typename traits::device_type::memory_space>::value) {
-      typename traits::device_type::memory_space::execution_space().fence(
-          "Kokkos::OffsetView::OffsetView(): fence before UVM allocation");
-    }
-#endif
-    //------------------------------------------------------------
-
     Kokkos::Impl::SharedAllocationRecord<>* record = m_map.allocate_shared(
         prop_copy, arg_layout,
         Kokkos::Impl::ViewCtorProp<P...>::has_execution_space);
-
-    //------------------------------------------------------------
-#if defined(KOKKOS_ENABLE_CUDA)
-    if (std::is_same<Kokkos::CudaUVMSpace,
-                     typename traits::device_type::memory_space>::value) {
-      typename traits::device_type::memory_space::execution_space().fence(
-          "Kokkos::OffsetView::OffsetView(): fence after UVM allocation");
-    }
-#endif
-    //------------------------------------------------------------
 
     // Setup and initialization complete, start tracking
     m_track.assign_allocated_record_to_uninitialized(record);

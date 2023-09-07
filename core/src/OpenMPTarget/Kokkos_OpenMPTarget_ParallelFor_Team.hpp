@@ -115,44 +115,75 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     // mode but works in the Debug mode.
 
     // Maximum active teams possible.
-    int max_active_teams = OpenMPTargetExec::MAX_ACTIVE_THREADS / team_size;
-    // nteams should not exceed the maximum in-flight teams possible.
-    const auto nteams =
-        league_size < max_active_teams ? league_size : max_active_teams;
+    // FIXME_OPENMPTARGET: Cray compiler did not yet implement
+    // omp_get_max_teams.
+#if !defined(KOKKOS_COMPILER_CRAY_LLVM)
+    int max_active_teams = omp_get_max_teams();
+#else
+    int max_active_teams =
+        std::min(OpenMPTargetExec::MAX_ACTIVE_THREADS / team_size, league_size);
+#endif
+
+    // FIXME_OPENMPTARGET: Although the maximum number of teams is set using the
+    // omp_set_num_teams in the resize_scratch routine, the call is not
+    // respected. Hence we need to use `num_teams` routine to restrict the
+    // number of teams generated to max_active_teams. Hopefully we can avoid the
+    // num_teams clause in the future and let compiler pick the right number of
+    // teams. This is not true for Intel architectures.
 
     // If the league size is <=0, do not launch the kernel.
-    if (nteams <= 0) return;
+    if (max_active_teams <= 0) return;
 
 // Performing our own scheduling of teams to avoid separation of code between
 // teams-distribute and parallel. Gave a 2x performance boost in test cases with
 // the clang compiler. atomic_compare_exchange can be avoided since the standard
 // guarantees that the number of teams specified in the `num_teams` clause is
 // always less than or equal to the maximum concurrently running teams.
-#pragma omp target teams num_teams(nteams) thread_limit(team_size) \
-    map(to                                                         \
-        : a_functor) is_device_ptr(scratch_ptr)
+#if !defined(KOKKOS_IMPL_OPENMPTARGET_HIERARCHICAL_INTEL_GPU)
+#pragma omp target teams thread_limit(team_size) firstprivate(a_functor) \
+    num_teams(max_active_teams) is_device_ptr(scratch_ptr)
 #pragma omp parallel
     {
+      if (omp_get_num_teams() > max_active_teams)
+        Kokkos::abort("`omp_set_num_teams` call was not respected.\n");
+
       const int blockIdx = omp_get_team_num();
       const int gridDim  = omp_get_num_teams();
 
       // Iterate through the number of teams until league_size and assign the
       // league_id accordingly
       // Guarantee that the compilers respect the `num_teams` clause
-      if (gridDim <= nteams) {
-        for (int league_id = blockIdx; league_id < league_size;
-             league_id += gridDim) {
-          typename Policy::member_type team(
-              league_id, league_size, team_size, vector_length, scratch_ptr,
-              blockIdx, shmem_size_L0, shmem_size_L1);
-          if constexpr (std::is_void<TagType>::value)
-            m_functor(team);
-          else
-            m_functor(TagType(), team);
-        }
-      } else
-        Kokkos::abort("`num_teams` clause was not respected.\n");
+      for (int league_id = blockIdx; league_id < league_size;
+           league_id += gridDim) {
+        typename Policy::member_type team(league_id, league_size, team_size,
+                                          vector_length, scratch_ptr, blockIdx,
+                                          shmem_size_L0, shmem_size_L1);
+        if constexpr (std::is_void_v<TagType>)
+          m_functor(team);
+        else
+          m_functor(TagType(), team);
+      }
     }
+#else
+#pragma omp target teams distribute firstprivate(a_functor) \
+    is_device_ptr(scratch_ptr) num_teams(max_active_teams)  \
+        thread_limit(team_size)
+    for (int i = 0; i < league_size; i++) {
+#pragma omp parallel
+      {
+        if (omp_get_num_teams() > max_active_teams)
+          Kokkos::abort("`omp_set_num_teams` call was not respected.\n");
+
+        typename Policy::member_type team(i, league_size, team_size,
+                                          vector_length, scratch_ptr, i,
+                                          shmem_size_L0, shmem_size_L1);
+        if constexpr (std::is_void_v<TagType>)
+          m_functor(team);
+        else
+          m_functor(TagType(), team);
+      }
+    }
+#endif
   }
 
  public:

@@ -16,35 +16,46 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
     set(dir ${CMAKE_CURRENT_BINARY_DIR}/${dir})
     file(MAKE_DIRECTORY ${dir})
 
-    # -------------------------
-    # Sort1d,3d, Random
-    # -------------------------
-    set(SOURCES_A)
-    if(Tag STREQUAL "OpenMP")
-      LIST(APPEND SOURCES_A
-	TestOpenMP_Sort1D.cpp
-	TestOpenMP_Sort3D.cpp
-	TestOpenMP_SortDynamicView.cpp
-	)
-    endif()
-
+    # ------------------------------------------
+    # Sort
+    # ------------------------------------------
     # Each of these inputs is an .hpp file.
     # Generate a .cpp file for each one that runs it on the current backend (Tag),
     # and add this .cpp file to the sources for UnitTest_RandomAndSort.
-    foreach(SOURCES_A_Input
-        TestRandomCommon
-        TestSortCommon
-        TestNestedSort
-    )
-      set(file ${dir}/${SOURCES_A_Input}.cpp)
+    set(ALGO_SORT_SOURCES)
+    foreach(SOURCE_Input
+	TestSort
+	TestSortCustomComp
+	TestBinSortA
+	TestBinSortB
+	TestNestedSort
+      )
+      set(file ${dir}/${SOURCE_Input}.cpp)
       # Write to a temporary intermediate file and call configure_file to avoid
       # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
       file(WRITE ${dir}/dummy.cpp
         "#include <Test${Tag}_Category.hpp>\n"
-        "#include <${SOURCES_A_Input}.hpp>\n"
+        "#include <${SOURCE_Input}.hpp>\n"
         )
       configure_file(${dir}/dummy.cpp ${file})
-      list(APPEND SOURCES_A ${file})
+      list(APPEND ALGO_SORT_SOURCES ${file})
+    endforeach()
+
+    # ------------------------------------------
+    # Random
+    # ------------------------------------------
+    # do as above
+    set(ALGO_RANDOM_SOURCES)
+    foreach(SOURCE_Input
+	TestRandom
+      )
+      set(file ${dir}/${SOURCE_Input}.cpp)
+      file(WRITE ${dir}/dummy.cpp
+        "#include <Test${Tag}_Category.hpp>\n"
+        "#include <${SOURCE_Input}.hpp>\n"
+        )
+      configure_file(${dir}/dummy.cpp ${file})
+      list(APPEND ALGO_RANDOM_SOURCES ${file})
     endforeach()
 
     # ------------------------------------------
@@ -142,10 +153,153 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
       list(APPEND STDALGO_SOURCES_E Test${Name}.cpp)
     endforeach()
 
+    # ------------------------------------------
+    # std team G
+    # ------------------------------------------
+    set(STDALGO_TEAM_SOURCES_G)
+    foreach(Name
+	StdAlgorithmsCommon
+	StdAlgorithmsTeamMove
+	StdAlgorithmsTeamMoveBackward
+	StdAlgorithmsTeamShiftLeft
+	StdAlgorithmsTeamShiftRight
+	)
+      list(APPEND STDALGO_TEAM_SOURCES_G Test${Name}.cpp)
+    endforeach()
+
+    # ------------------------------------------
+    # std team F
+    # ------------------------------------------
+    set(STDALGO_TEAM_SOURCES_F)
+    foreach(Name
+	StdAlgorithmsCommon
+	StdAlgorithmsTeamReverse
+	StdAlgorithmsTeamReverseCopy
+	StdAlgorithmsTeamRotate
+	StdAlgorithmsTeamRotateCopy
+      )
+      list(APPEND STDALGO_TEAM_SOURCES_F Test${Name}.cpp)
+    endforeach()
+
+    # ------------------------------------------
+    # std team E
+    # ------------------------------------------
+    set(STDALGO_TEAM_SOURCES_E)
+    foreach(Name
+	StdAlgorithmsCommon
+	StdAlgorithmsTeamFill
+	StdAlgorithmsTeamFill_n
+	StdAlgorithmsTeamReplace
+	StdAlgorithmsTeamReplaceIf
+	StdAlgorithmsTeamReplaceCopy
+	StdAlgorithmsTeamReplaceCopyIf
+	)
+      list(APPEND STDALGO_TEAM_SOURCES_E Test${Name}.cpp)
+    endforeach()
+
+    # ------------------------------------------
+    # std team D
+    # ------------------------------------------
+    set(STDALGO_TEAM_SOURCES_D)
+    foreach(Name
+	StdAlgorithmsCommon
+	StdAlgorithmsTeamMinElement
+	StdAlgorithmsTeamMaxElement
+	StdAlgorithmsTeamMinMaxElement
+	)
+      list(APPEND STDALGO_TEAM_SOURCES_D Test${Name}.cpp)
+    endforeach()
+
+    # ------------------------------------------
+    # std team C
+    # ------------------------------------------
+    set(STDALGO_TEAM_SOURCES_C)
+    foreach(Name
+	StdAlgorithmsCommon
+	StdAlgorithmsTeamFind
+	StdAlgorithmsTeamFindIf
+	StdAlgorithmsTeamFindIfNot
+	StdAlgorithmsTeamAllOf
+	StdAlgorithmsTeamAnyOf
+	StdAlgorithmsTeamNoneOf
+	StdAlgorithmsTeamSearchN
+	)
+      list(APPEND STDALGO_TEAM_SOURCES_C Test${Name}.cpp)
+    endforeach()
+
+    # ------------------------------------------
+    # std team B
+    # ------------------------------------------
+    set(STDALGO_TEAM_SOURCES_B)
+    foreach(Name
+	StdAlgorithmsCommon
+	StdAlgorithmsTeamEqual
+	StdAlgorithmsTeamSearch
+	StdAlgorithmsTeamFindEnd
+	StdAlgorithmsTeamFindFirstOf
+      )
+      list(APPEND STDALGO_TEAM_SOURCES_B Test${Name}.cpp)
+    endforeach()
+
+    # ------------------------------------------
+    # std team A
+    # ------------------------------------------
+    set(STDALGO_TEAM_SOURCES_A)
+    foreach(Name
+	StdAlgorithmsCommon
+	StdAlgorithmsTeamAdjacentFind
+	StdAlgorithmsTeamCount
+	StdAlgorithmsTeamCountIf
+	StdAlgorithmsTeamForEach
+	StdAlgorithmsTeamForEachN
+	StdAlgorithmsTeamLexicographicalCompare
+	StdAlgorithmsTeamMismatch
+      )
+      list(APPEND STDALGO_TEAM_SOURCES_A Test${Name}.cpp)
+    endforeach()
+
   endif()
 endforeach()
 
-# FIXME_OPENMPTARGET These tests cause internal compiler errors as of 09/01/22
+
+# FIXME_OPENMPTARGET need to remove tests for OpenMPTarget because
+# in these cases the impl needs to use either Kokkos or
+# tailored reducers which results in runtime memory errors.
+if(KOKKOS_ENABLE_OPENMPTARGET)
+  list(REMOVE_ITEM STDALGO_TEAM_SOURCES_C
+    TestStdAlgorithmsTeamFind.cpp
+    TestStdAlgorithmsTeamFindIf.cpp
+    TestStdAlgorithmsTeamFindIfNot.cpp
+    TestStdAlgorithmsTeamAllOf.cpp
+    TestStdAlgorithmsTeamAnyOf.cpp
+    TestStdAlgorithmsTeamNoneOf.cpp
+    TestStdAlgorithmsTeamSearchN.cpp
+  )
+endif()
+
+
+# FIXME_OPENMPTARGET This test causes internal compiler errors as of 09/01/22
+# when compiling for Intel's Xe-HP GPUs.
+# FRIZZI: 04/26/2023: not sure if the compilation error is still applicable
+# but we conservatively leave this guard on
+if(NOT (KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM))
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_Sort
+    SOURCES
+    UnitTestMain.cpp
+    TestStdAlgorithmsCommon.cpp
+    ${ALGO_SORT_SOURCES}
+  )
+
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_Random
+    SOURCES
+    UnitTestMain.cpp
+    ${ALGO_RANDOM_SOURCES}
+  )
+endif()
+
+# FIXME_OPENMPTARGET: These tests cause internal compiler errors as of 09/01/22
 # when compiling for Intel's Xe-HP GPUs.
 if(KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM)
   list(REMOVE_ITEM STDALGO_SOURCES_D
@@ -160,23 +314,43 @@ if(KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM)
   )
 endif()
 
-# FIXME_OPENMPTARGET This test causes internal compiler errors as of 09/01/22
-# when compiling for Intel's Xe-HP GPUs.
-if(NOT (KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM))
-  KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_RandomAndSort
-    SOURCES
-      UnitTestMain.cpp
-      ${SOURCES_A}
+# FIXME_OPENMPTARGET need to remove tests for OpenMPTarget because in these cases
+# the impl needs to use either Kokkos or tailored reducers
+# which results in runtime memory errors.
+if(KOKKOS_ENABLE_OPENMPTARGET)
+  list(REMOVE_ITEM STDALGO_TEAM_SOURCES_B
+    TestStdAlgorithmsTeamFindEnd.cpp
+    TestStdAlgorithmsTeamFindFirstOf.cpp
+    TestStdAlgorithmsTeamSearch.cpp
+  )
+endif()
+
+# FIXME_OPENMPTARGET need to remove tests for OpenMPTarget because
+# in these cases the impl needs to use either Kokkos or tailored reducers
+# which results in runtime memory errors.
+if(KOKKOS_ENABLE_OPENMPTARGET)
+  list(REMOVE_ITEM STDALGO_TEAM_SOURCES_A
+    TestStdAlgorithmsTeamAdjacentFind.cpp
+    TestStdAlgorithmsTeamLexicographicalCompare.cpp
+    TestStdAlgorithmsTeamMismatch.cpp
   )
 endif()
 
 foreach(ID A;B;C;D;E)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_StdSet_${ID}
+    AlgorithmsUnitTest_StdSet_${ID}
     SOURCES
     UnitTestMain.cpp
     ${STDALGO_SOURCES_${ID}}
+    )
+endforeach()
+
+foreach(ID A;B;C;D;E;F;G)
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    AlgorithmsUnitTest_StdSet_Team_${ID}
+    SOURCES
+    UnitTestMain.cpp
+    ${STDALGO_TEAM_SOURCES_${ID}}
     )
 endforeach()
 
@@ -184,7 +358,7 @@ endforeach()
 # when compiling for Intel's Xe-HP GPUs.
 if(NOT (KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM))
   KOKKOS_ADD_EXECUTABLE(
-    UnitTest_StdAlgoCompileOnly
+    AlgorithmsUnitTest_StdAlgoCompileOnly
     SOURCES TestStdAlgorithmsCompileOnly.cpp
   )
 endif()

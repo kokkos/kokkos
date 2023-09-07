@@ -103,12 +103,12 @@ void verify_data(ResultIt result_it, ViewType view, ViewHostType data_view_host,
   // make sure results match
   const auto my_diff  = result_it - KE::begin(view);
   const auto std_diff = std_rit - KE::begin(data_view_host);
-  EXPECT_EQ(my_diff, std_diff);
+  ASSERT_EQ(my_diff, std_diff);
 
   // check views match
   auto view_h = create_host_space_copy(view);
   for (std::size_t i = 0; i < (std::size_t)my_diff; ++i) {
-    EXPECT_EQ(view_h(i), data_view_host[i]);
+    ASSERT_EQ(view_h(i), data_view_host[i]);
     // std::cout << "i= " << i << " "
     // 	      << "mine: " << view_h(i) << " "
     // 	      << "std: " << data_view_host(i)
@@ -202,9 +202,6 @@ void run_all_scenarios() {
 }
 
 TEST(std_algorithms_mod_seq_ops, shift_left) {
-#if defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ARCH_INTEL_GPU)
-  GTEST_SKIP() << "skipping for SYCL+Cuda";
-#endif
   run_all_scenarios<DynamicTag, int>();
   run_all_scenarios<StridedThreeTag, int>();
   run_all_scenarios<DynamicTag, double>();

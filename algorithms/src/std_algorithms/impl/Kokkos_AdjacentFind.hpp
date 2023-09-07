@@ -27,9 +27,9 @@ namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
-template <class IndexType, class IteratorType, class ReducerType,
-          class PredicateType>
+template <class IteratorType, class ReducerType, class PredicateType>
 struct StdAdjacentFindFunctor {
+  using index_type     = typename IteratorType::difference_type;
   using red_value_type = typename ReducerType::value_type;
 
   IteratorType m_first;
@@ -37,17 +37,18 @@ struct StdAdjacentFindFunctor {
   PredicateType m_p;
 
   KOKKOS_FUNCTION
-  void operator()(const IndexType i, red_value_type& red_value) const {
+  void operator()(const index_type i, red_value_type& red_value) const {
     const auto& my_value   = m_first[i];
     const auto& next_value = m_first[i + 1];
     const bool are_equal   = m_p(my_value, next_value);
 
-    auto rv =
-        are_equal
-            ? red_value_type{i}
-            : red_value_type{::Kokkos::reduction_identity<IndexType>::min()};
+    // FIXME_NVHPC using a ternary operator causes problems
+    red_value_type value = {::Kokkos::reduction_identity<index_type>::min()};
+    if (are_equal) {
+      value.min_loc_true = i;
+    }
 
-    m_reducer.join(red_value, rv);
+    m_reducer.join(red_value, value);
   }
 
   KOKKOS_FUNCTION
@@ -58,10 +59,14 @@ struct StdAdjacentFindFunctor {
         m_p(std::move(p)) {}
 };
 
+//
+// exespace impl
+//
 template <class ExecutionSpace, class IteratorType, class PredicateType>
-IteratorType adjacent_find_impl(const std::string& label,
-                                const ExecutionSpace& ex, IteratorType first,
-                                IteratorType last, PredicateType pred) {
+IteratorType adjacent_find_exespace_impl(const std::string& label,
+                                         const ExecutionSpace& ex,
+                                         IteratorType first, IteratorType last,
+                                         PredicateType pred) {
   // checks
   Impl::static_assert_random_access_and_accessible(ex, first);
   Impl::expect_valid_range(first, last);
@@ -75,8 +80,6 @@ IteratorType adjacent_find_impl(const std::string& label,
   using index_type           = typename IteratorType::difference_type;
   using reducer_type         = FirstLoc<index_type>;
   using reduction_value_type = typename reducer_type::value_type;
-  using func_t = StdAdjacentFindFunctor<index_type, IteratorType, reducer_type,
-                                        PredicateType>;
 
   reduction_value_type red_result;
   reducer_type reducer(red_result);
@@ -85,7 +88,8 @@ IteratorType adjacent_find_impl(const std::string& label,
   // each index i in the reduction checks i and (i+1).
   ::Kokkos::parallel_reduce(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements - 1),
-      func_t(first, reducer, pred), reducer);
+      // use CTAD
+      StdAdjacentFindFunctor(first, reducer, pred), reducer);
 
   // fence not needed because reducing into scalar
   if (red_result.min_loc_true ==
@@ -97,12 +101,62 @@ IteratorType adjacent_find_impl(const std::string& label,
 }
 
 template <class ExecutionSpace, class IteratorType>
-IteratorType adjacent_find_impl(const std::string& label,
-                                const ExecutionSpace& ex, IteratorType first,
-                                IteratorType last) {
+IteratorType adjacent_find_exespace_impl(const std::string& label,
+                                         const ExecutionSpace& ex,
+                                         IteratorType first,
+                                         IteratorType last) {
   using value_type     = typename IteratorType::value_type;
   using default_pred_t = StdAlgoEqualBinaryPredicate<value_type>;
-  return adjacent_find_impl(label, ex, first, last, default_pred_t());
+  return adjacent_find_exespace_impl(label, ex, first, last, default_pred_t());
+}
+
+//
+// team impl
+//
+template <class TeamHandleType, class IteratorType, class PredicateType>
+KOKKOS_FUNCTION IteratorType
+adjacent_find_team_impl(const TeamHandleType& teamHandle, IteratorType first,
+                        IteratorType last, PredicateType pred) {
+  // checks
+  Impl::static_assert_random_access_and_accessible(teamHandle, first);
+  Impl::expect_valid_range(first, last);
+
+  const auto num_elements = Kokkos::Experimental::distance(first, last);
+
+  if (num_elements <= 1) {
+    return last;
+  }
+
+  using index_type           = typename IteratorType::difference_type;
+  using reducer_type         = FirstLoc<index_type>;
+  using reduction_value_type = typename reducer_type::value_type;
+
+  reduction_value_type red_result;
+  reducer_type reducer(red_result);
+
+  // note that we use below num_elements-1 because
+  // each index i in the reduction checks i and (i+1).
+  ::Kokkos::parallel_reduce(TeamThreadRange(teamHandle, 0, num_elements - 1),
+                            // use CTAD
+                            StdAdjacentFindFunctor(first, reducer, pred),
+                            reducer);
+
+  teamHandle.team_barrier();
+
+  if (red_result.min_loc_true ==
+      ::Kokkos::reduction_identity<index_type>::min()) {
+    return last;
+  } else {
+    return first + red_result.min_loc_true;
+  }
+}
+
+template <class TeamHandleType, class IteratorType>
+KOKKOS_FUNCTION IteratorType adjacent_find_team_impl(
+    const TeamHandleType& teamHandle, IteratorType first, IteratorType last) {
+  using value_type     = typename IteratorType::value_type;
+  using default_pred_t = StdAlgoEqualBinaryPredicate<value_type>;
+  return adjacent_find_team_impl(teamHandle, first, last, default_pred_t());
 }
 
 }  // namespace Impl

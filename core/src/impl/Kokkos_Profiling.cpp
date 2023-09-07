@@ -626,17 +626,11 @@ void initialize(const std::string& profileLibrary) {
     return;
   }
 
-  char* envProfileLibrary = const_cast<char*>(profileLibrary.c_str());
-
-  const size_t envProfileLen = strlen(envProfileLibrary) + 1;
-  const auto envProfileCopy  = std::make_unique<char[]>(envProfileLen);
-  snprintf(envProfileCopy.get(), envProfileLen, "%s", envProfileLibrary);
-
-  char* profileLibraryName = strtok(envProfileCopy.get(), ";");
-
-  if ((profileLibraryName != nullptr) &&
-      (strcmp(profileLibraryName, "") != 0)) {
-    firstProfileLibrary = dlopen(profileLibraryName, RTLD_NOW | RTLD_GLOBAL);
+  if (auto end_first_library = profileLibrary.find(';');
+      end_first_library != 0) {
+    auto profileLibraryName = profileLibrary.substr(0, end_first_library);
+    firstProfileLibrary =
+        dlopen(profileLibraryName.c_str(), RTLD_NOW | RTLD_GLOBAL);
 
     if (firstProfileLibrary == nullptr) {
       std::cerr << "Error: Unable to load KokkosP library: "
@@ -645,10 +639,6 @@ void initialize(const std::string& profileLibrary) {
                 << ", RTLD_NOW | RTLD_GLOBAL) failed with " << dlerror()
                 << '\n';
     } else {
-#ifdef KOKKOS_ENABLE_PROFILING_LOAD_PRINT
-      std::cout << "KokkosP: Library Loaded: " << profileLibraryName
-                << std::endl;
-#endif
       lookup_function(firstProfileLibrary, "kokkosp_begin_parallel_scan",
                       Experimental::current_callbacks.begin_parallel_scan);
       lookup_function(firstProfileLibrary, "kokkosp_begin_parallel_for",

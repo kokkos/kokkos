@@ -30,7 +30,7 @@ struct X {
   static_assert(test_##FUNC((bool)0).did_not_match());  \
   static_assert(test_##FUNC((int)0).did_not_match());   \
   static_assert(test_##FUNC((float)0).did_not_match()); \
-  static_assert(test_##FUNC((void*)0).did_not_match())
+  static_assert(test_##FUNC((void *)0).did_not_match())
 
 //<editor-fold desc="[bit.rotate]">
 template <class UInt>
@@ -442,7 +442,7 @@ constexpr auto test_byteswap(T x) -> decltype(Kokkos::byteswap(x)) {
 
 constexpr X test_byteswap(...) { return {}; }
 
-static_assert(test_byteswap((void*)0).did_not_match());  // NOLINT
+static_assert(test_byteswap((void *)0).did_not_match());  // NOLINT
 static_assert(test_byteswap((float)0).did_not_match());
 constexpr char c2[2] = {};
 static_assert(test_byteswap(c2).did_not_match());
@@ -484,3 +484,64 @@ static_assert(test_byteswap2());
 //</editor-fold>
 
 #undef TEST_BIT_MANIPULATION
+
+//<editor-fold desc="[bit.bit_cast]">
+template <class To, class From>
+constexpr auto test_bit_cast() -> typename std::is_same<
+    decltype(Kokkos::bit_cast<To>(std::declval<From const &>())),
+    To>::value_type {
+  static_assert(
+      std::is_same_v<
+          decltype(Kokkos::bit_cast<To>(std::declval<From const &>())), To>);
+  return true;
+}
+template <class To, class From>
+constexpr X test_bit_cast(...) {
+  return {};
+}
+
+#if !defined(KOKKOS_ENABLE_SYCL) || \
+    (defined(__INTEL_LLVM_COMPILER) && __INTEL_LLVM_COMPILER >= 20240000)
+namespace TypesNotTheSameSize {
+struct To {
+  char a;
+};
+struct From {
+  char b;
+  char c;
+};
+static_assert(test_bit_cast<To, From>().did_not_match());
+}  // namespace TypesNotTheSameSize
+
+namespace ToNotTriviallyCopyable {
+struct To {
+  char a;
+  To(To const &);
+};
+struct From {
+  char b;
+};
+static_assert(test_bit_cast<To, From>().did_not_match());
+}  // namespace ToNotTriviallyCopyable
+
+namespace FromNotTriviallyCopyable {
+struct To {
+  char a;
+};
+struct From {
+  char b;
+  From(From const &);
+};
+static_assert(test_bit_cast<To, From>().did_not_match());
+}  // namespace FromNotTriviallyCopyable
+#endif
+
+namespace ReturnTypeIllFormed {
+struct From {
+  char a;
+  char b;
+};
+static_assert(test_bit_cast<int(), From>().did_not_match());
+static_assert(test_bit_cast<char[2], From>().did_not_match());
+}  // namespace ReturnTypeIllFormed
+   //</editor-fold>

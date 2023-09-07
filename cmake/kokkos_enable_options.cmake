@@ -11,7 +11,7 @@
 FUNCTION(KOKKOS_ENABLE_OPTION SUFFIX DEFAULT DOCSTRING)
   KOKKOS_OPTION(ENABLE_${SUFFIX} ${DEFAULT} BOOL ${DOCSTRING})
   STRING(TOUPPER ${SUFFIX} UC_NAME)
-  IF (KOKKOS_ENABLE_${UC_NAME})
+  IF (KOKKOS_ENABLE_${UC_NAME} AND NOT "Kokkos_ENABLE_${UC_NAME}" IN_LIST Kokkos_OPTIONS_NOT_TO_EXPORT)
     LIST(APPEND KOKKOS_ENABLED_OPTIONS ${UC_NAME})
     #I hate that CMake makes me do this
     SET(KOKKOS_ENABLED_OPTIONS ${KOKKOS_ENABLED_OPTIONS} PARENT_SCOPE)
@@ -29,8 +29,24 @@ KOKKOS_DEPRECATED_LIST(OPTIONS ENABLE)
 KOKKOS_ENABLE_OPTION(CUDA_RELOCATABLE_DEVICE_CODE  OFF "Whether to enable relocatable device code (RDC) for CUDA")
 KOKKOS_ENABLE_OPTION(CUDA_UVM             OFF "Whether to use unified memory (UM) for CUDA by default")
 KOKKOS_ENABLE_OPTION(CUDA_LDG_INTRINSIC   OFF "Whether to use CUDA LDG intrinsics")
-# As of 08/12/2021 CudaMallocAsync causes issues if UCX is used as MPI communication layer.
-KOKKOS_ENABLE_OPTION(IMPL_CUDA_MALLOC_ASYNC      OFF  "Whether to enable CudaMallocAsync (requires CUDA Toolkit 11.2)")
+# In contrast to other CUDA-dependent, options CUDA_LAMBDA is ON by default.
+# That is problematic when CUDA is not enabled because this not only yields a
+# bogus warning, but also exports the Kokkos_ENABLE_CUDA_LAMBDA variable and
+# sets it to ON. This if-clause is a crutch that delays the refactoring of the
+# way we declare all options until after we get rid of TriBITS.
+IF (Trilinos_ENABLE_Kokkos AND TPL_ENABLE_CUDA)
+   SET(CUDA_LAMBDA_DEFAULT ON)
+ELSEIF (KOKKOS_ENABLE_CUDA)
+   SET(CUDA_LAMBDA_DEFAULT ON)
+ELSE()
+   SET(CUDA_LAMBDA_DEFAULT OFF)
+ENDIF()
+KOKKOS_ENABLE_OPTION(CUDA_LAMBDA ${CUDA_LAMBDA_DEFAULT} "Whether to allow lambda expressions on the device with NVCC **DEPRECATED**")
+
+# May be used to disable our use of CudaMallocAsync.  It had caused issues in
+# the past when UCX was used as MPI communication layer.  We expect it is
+# resolved but we keep the option around a bit longer to be safe.
+KOKKOS_ENABLE_OPTION(IMPL_CUDA_MALLOC_ASYNC ON  "Whether to enable CudaMallocAsync (requires CUDA Toolkit 11.2)")
 KOKKOS_ENABLE_OPTION(DEPRECATED_CODE_3    OFF "Whether code deprecated in major release 3 is available" )
 KOKKOS_ENABLE_OPTION(DEPRECATED_CODE_4    ON "Whether code deprecated in major release 4 is available" )
 KOKKOS_ENABLE_OPTION(DEPRECATION_WARNINGS ON "Whether to emit deprecation warnings" )
@@ -50,10 +66,8 @@ UNSET(_UPPERCASE_CMAKE_BUILD_TYPE)
 KOKKOS_ENABLE_OPTION(LARGE_MEM_TESTS      OFF "Whether to perform extra large memory tests")
 KOKKOS_ENABLE_OPTION(DEBUG_BOUNDS_CHECK   OFF "Whether to use bounds checking - will increase runtime")
 KOKKOS_ENABLE_OPTION(COMPILER_WARNINGS    OFF "Whether to print all compiler warnings")
-KOKKOS_ENABLE_OPTION(PROFILING_LOAD_PRINT OFF "Whether to print information about which profiling tools got loaded")
 KOKKOS_ENABLE_OPTION(TUNING               OFF "Whether to create bindings for tuning tools")
 KOKKOS_ENABLE_OPTION(AGGRESSIVE_VECTORIZATION OFF "Whether to aggressively vectorize loops")
-KOKKOS_ENABLE_OPTION(LAUNCH_COMPILER      ON  "Whether to potentially use the launch compiler")
 KOKKOS_ENABLE_OPTION(COMPILE_AS_CMAKE_LANGUAGE OFF "Whether to use native cmake language support")
 KOKKOS_ENABLE_OPTION(HIP_MULTIPLE_KERNEL_INSTANTIATIONS OFF "Whether multiple kernels are instantiated at compile time - improve performance but increase compile time")
 
@@ -62,19 +76,11 @@ KOKKOS_ENABLE_OPTION(DESUL_ATOMICS_EXTERNAL OFF "Whether to use an external desu
 
 KOKKOS_ENABLE_OPTION(IMPL_MDSPAN OFF "Whether to enable experimental mdspan support")
 KOKKOS_ENABLE_OPTION(MDSPAN_EXTERNAL OFF BOOL "Whether to use an external version of mdspan")
-KOKKOS_ENABLE_OPTION(IMPL_SKIP_COMPILER_MDSPAN OFF BOOL "Whether to use an internal version of mdspan even if the compiler supports mdspan")
+KOKKOS_ENABLE_OPTION(IMPL_SKIP_COMPILER_MDSPAN ON BOOL "Whether to use an internal version of mdspan even if the compiler supports mdspan")
 mark_as_advanced(Kokkos_ENABLE_IMPL_MDSPAN)
 mark_as_advanced(Kokkos_ENABLE_MDSPAN_EXTERNAL)
 mark_as_advanced(Kokkos_ENABLE_IMPL_SKIP_COMPILER_MDSPAN)
 
-IF (Trilinos_ENABLE_Kokkos AND TPL_ENABLE_CUDA)
-  SET(CUDA_LAMBDA_DEFAULT ON)
-ELSEIF (KOKKOS_ENABLE_CUDA)
-  SET(CUDA_LAMBDA_DEFAULT ON)
-ELSE()
-  SET(CUDA_LAMBDA_DEFAULT OFF)
-ENDIF()
-KOKKOS_ENABLE_OPTION(CUDA_LAMBDA ${CUDA_LAMBDA_DEFAULT} "Whether to activate experimental lambda features")
 IF (Trilinos_ENABLE_Kokkos)
   SET(COMPLEX_ALIGN_DEFAULT OFF)
 ELSE()
@@ -168,6 +174,16 @@ IF(Kokkos_ENABLE_CUDA_LDG_INTRINSIC)
     MESSAGE(FATAL_ERROR "Kokkos_ENABLE_CUDA_LDG_INTRINSIC has been removed. LDG intrinsics are always enabled.")
   ENDIF()
 ENDIF()
+IF(Kokkos_ENABLE_CUDA AND NOT Kokkos_ENABLE_CUDA_LAMBDA)
+  IF(KOKKOS_ENABLE_DEPRECATED_CODE_4)
+    MESSAGE(DEPRECATION "Setting Kokkos_ENABLE_CUDA_LAMBDA is deprecated. Lambda expressions in device code are always enabled. Forcing -DKokkos_ENABLE_CUDA_LAMBDA=ON")
+    set(Kokkos_ENABLE_CUDA_LAMBDA ON CACHE BOOL "Kokkos turned Cuda lambda support ON!" FORCE)
+    set(KOKKOS_ENABLE_CUDA_LAMBDA ON)
+  ELSE()
+    MESSAGE(FATAL_ERROR "Kokkos_ENABLE_CUDA_LAMBDA has been removed. Lambda expressions in device code always enabled.")
+  ENDIF()
+ENDIF()
+
 
 IF(DEFINED Kokkos_ENABLE_IMPL_DESUL_ATOMICS)
   MESSAGE(WARNING "Kokkos_ENABLE_IMPL_DESUL_ATOMICS option has been removed. Desul atomics cannot be disabled.")

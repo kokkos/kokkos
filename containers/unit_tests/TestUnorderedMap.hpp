@@ -396,12 +396,6 @@ void test_deep_copy(uint32_t num_nodes) {
 
 #if !defined(_WIN32)
 TEST(TEST_CATEGORY, UnorderedMap_insert) {
-#if defined(KOKKOS_ENABLE_CUDA) && \
-    defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC
-  if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>) {
-    GTEST_SKIP() << "unit test is hanging from index 0";
-  }
-#endif
   for (int i = 0; i < 500; ++i) {
     test_inserts<TEST_EXECSPACE>(100000, 90000, 100, true);
     test_inserts<TEST_EXECSPACE>(100000, 90000, 100, false);
@@ -418,12 +412,6 @@ TEST(TEST_CATEGORY, UnorderedMap_failed_insert) {
 }
 
 TEST(TEST_CATEGORY, UnorderedMap_deep_copy) {
-#if defined(KOKKOS_ENABLE_CUDA) && \
-    defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC
-  if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>) {
-    GTEST_SKIP() << "unit test is hanging from index 0";
-  }
-#endif
   for (int i = 0; i < 2; ++i) test_deep_copy<TEST_EXECSPACE>(10000);
 }
 
@@ -479,6 +467,45 @@ TEST(TEST_CATEGORY, UnorderedMap_consistent_size) {
 
   ASSERT_EQ(2u, m.size());
 }
+
+struct TestMapCopy {
+  using map_type = Kokkos::UnorderedMap<int, void, TEST_EXECSPACE>;
+  map_type m_map;
+
+  KOKKOS_FUNCTION
+  void test_insert_to_map_copy(map_type const &input_map, const int i) const {
+    auto map = input_map;
+    map.insert(i);
+  }
+
+  KOKKOS_FUNCTION
+  void operator()(const int i) const { test_insert_to_map_copy(m_map, i); }
+};
+
+TEST(TEST_CATEGORY, UnorderedMap_shallow_copyable_on_device) {
+  TestMapCopy test_map_copy;
+
+  Kokkos::parallel_for(Kokkos::RangePolicy<TEST_EXECSPACE>(0, 1),
+                       test_map_copy);
+  ASSERT_EQ(1u, test_map_copy.m_map.size());
+}
+
+#if !defined(KOKKOS_ENABLE_CUDA) || \
+    (defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_ENABLE_CUDA_LAMBDA))
+void test_unordered_map_device_capture() {
+  TestMapCopy::map_type map;
+
+  Kokkos::parallel_for(
+      Kokkos::RangePolicy<TEST_EXECSPACE>(0, 1),
+      KOKKOS_LAMBDA(int const i) { map.insert(i); });
+
+  ASSERT_EQ(1u, map.size());
+}
+
+TEST(TEST_CATEGORY, UnorderedMap_lambda_capturable) {
+  test_unordered_map_device_capture();
+}
+#endif
 
 }  // namespace Test
 

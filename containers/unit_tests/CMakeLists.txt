@@ -28,6 +28,9 @@ foreach(Tag Threads;Serial;OpenMP;HPX;Cuda;HIP;SYCL)
         Vector
         ViewCtorPropEmbeddedDim
         )
+      if(NOT Kokkos_ENABLE_DEPRECATED_CODE_4 AND Name STREQUAL "Vector")
+        continue() # skip Kokkos::vector test if deprecated code 4 is not enabled
+      endif()
       # Write to a temporary intermediate file and call configure_file to avoid
       # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
       set(file ${dir}/Test${Tag}_${Name}.cpp)
@@ -43,15 +46,17 @@ foreach(Tag Threads;Serial;OpenMP;HPX;Cuda;HIP;SYCL)
      LIST(REMOVE_ITEM UnitTestSources ${dir}/TestCuda_DynViewAPI_generic.cpp)
     endif()
 
-    KOKKOS_ADD_EXECUTABLE_AND_TEST(UnitTest_${Tag} SOURCES ${UnitTestSources})
+    KOKKOS_ADD_EXECUTABLE_AND_TEST(ContainersUnitTest_${Tag} SOURCES ${UnitTestSources})
   endif()
 endforeach()
 
 SET(COMPILE_ONLY_SOURCES
   TestCreateMirror.cpp
+  TestDualViewParameterPack.cpp
+  TestIsViewTrait.cpp
 )
 KOKKOS_ADD_EXECUTABLE(
-  TestCompileOnly
+  ContainersTestCompileOnly
   SOURCES
   TestCompileMain.cpp
   ${COMPILE_ONLY_SOURCES}

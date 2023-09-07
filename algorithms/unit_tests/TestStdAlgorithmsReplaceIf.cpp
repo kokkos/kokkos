@@ -138,7 +138,7 @@ void verify_data(ViewType1 data_view,  // contains data
       // 		<< data_view_dc(i) << " "
       // 		<< data_view_h(i) << " "
       // 		<< test_view_h(i) << std::endl;
-      EXPECT_EQ(data_view_h(i), test_view_h(i));
+      ASSERT_EQ(data_view_h(i), test_view_h(i));
     }
   }
 }
@@ -216,9 +216,6 @@ void run_all_scenarios() {
 }
 
 TEST(std_algorithms_replace_ops_test, replace_if) {
-#if defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ARCH_INTEL_GPU)
-  GTEST_SKIP() << "skipping for SYCL+Cuda";
-#endif
   run_all_scenarios<DynamicTag, double>();
   run_all_scenarios<StridedThreeTag, double>();
   run_all_scenarios<DynamicTag, int>();

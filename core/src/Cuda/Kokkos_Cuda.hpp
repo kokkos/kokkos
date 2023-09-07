@@ -80,6 +80,9 @@ struct CudaDispatchProperties {
   CudaLaunchMechanism launch_mechanism = l;
 };
 }  // namespace Experimental
+
+enum class ManageStream : bool { no, yes };
+
 }  // namespace Impl
 /// \class Cuda
 /// \brief Kokkos Execution Space that uses CUDA to run on GPUs.
@@ -181,7 +184,10 @@ class Cuda {
 
   Cuda();
 
-  Cuda(cudaStream_t stream, bool manage_stream = false);
+  Cuda(cudaStream_t stream,
+       Impl::ManageStream manage_stream = Impl::ManageStream::no);
+
+  KOKKOS_DEPRECATED Cuda(cudaStream_t stream, bool manage_stream);
 
   //--------------------------------------------------------------------------
   //! Free any resources being consumed by the device.
@@ -241,28 +247,6 @@ struct DeviceTypeTraits<Cuda> {
 };
 }  // namespace Experimental
 }  // namespace Tools
-
-namespace Impl {
-
-template <class DT, class... DP>
-struct ZeroMemset<Kokkos::Cuda, DT, DP...> {
-  ZeroMemset(const Kokkos::Cuda& exec_space_instance,
-             const View<DT, DP...>& dst,
-             typename View<DT, DP...>::const_value_type&) {
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMemsetAsync(
-        dst.data(), 0,
-        dst.size() * sizeof(typename View<DT, DP...>::value_type),
-        exec_space_instance.cuda_stream()));
-  }
-
-  ZeroMemset(const View<DT, DP...>& dst,
-             typename View<DT, DP...>::const_value_type&) {
-    KOKKOS_IMPL_CUDA_SAFE_CALL(
-        cudaMemset(dst.data(), 0,
-                   dst.size() * sizeof(typename View<DT, DP...>::value_type)));
-  }
-};
-}  // namespace Impl
 }  // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/

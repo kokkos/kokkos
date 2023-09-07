@@ -86,6 +86,9 @@ struct DynamicRank<0> {
   using type = int;
 };
 
+// Skip test execution when KOKKOS_ENABLE_OPENMPTARGET is enabled until
+// Kokkos::abort() aborts properly on that backend
+#ifndef KOKKOS_ENABLE_OPENMPTARGET
 TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_dyn) {
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 

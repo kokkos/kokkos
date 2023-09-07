@@ -221,7 +221,7 @@ KOKKOS_INLINE_FUNCTION bool dyn_rank_view_verify_operator_bounds(
     return (size_t(i) < map.extent(R)) &&
            dyn_rank_view_verify_operator_bounds<R + 1>(rank, map, args...);
   } else if (i != 0) {
-    KOKKOS_IMPL_DO_NOT_USE_PRINTF(
+    Kokkos::printf(
         "DynRankView Debug Bounds Checking Error: at rank %u\n  Extra "
         "arguments beyond the rank must be zero \n",
         R);
@@ -374,6 +374,9 @@ struct is_dyn_rank_view : public std::false_type {};
 template <class D, class... P>
 struct is_dyn_rank_view<Kokkos::DynRankView<D, P...>> : public std::true_type {
 };
+
+template <class T>
+inline constexpr bool is_dyn_rank_view_v = is_dyn_rank_view<T>::value;
 
 template <typename DataType, class... Properties>
 class DynRankView : public ViewTraits<DataType, Properties...> {
@@ -1089,36 +1092,11 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
           "execution space");
     }
 
-//------------------------------------------------------------
-#if defined(KOKKOS_ENABLE_CUDA)
-    // If allocating in CudaUVMSpace must fence before and after
-    // the allocation to protect against possible concurrent access
-    // on the CPU and the GPU.
-    // Fence using the trait's executon space (which will be Kokkos::Cuda)
-    // to avoid incomplete type errors from usng Kokkos::Cuda directly.
-    if (std::is_same<Kokkos::CudaUVMSpace,
-                     typename traits::device_type::memory_space>::value) {
-      typename traits::device_type::memory_space::execution_space().fence(
-          "Kokkos::DynRankView<>::DynRankView: fence before UVM allocation");
-    }
-#endif
-    //------------------------------------------------------------
-
     Kokkos::Impl::SharedAllocationRecord<>* record = m_map.allocate_shared(
         prop_copy,
         Impl::DynRankDimTraits<typename traits::specialize>::
             template createLayout<traits, P...>(arg_prop, arg_layout),
         Impl::ViewCtorProp<P...>::has_execution_space);
-
-//------------------------------------------------------------
-#if defined(KOKKOS_ENABLE_CUDA)
-    if (std::is_same<Kokkos::CudaUVMSpace,
-                     typename traits::device_type::memory_space>::value) {
-      typename traits::device_type::memory_space::execution_space().fence(
-          "Kokkos::DynRankView<>::DynRankView: fence after UVM allocation");
-    }
-#endif
-    //------------------------------------------------------------
 
     // Setup and initialization complete, start tracking
     m_track.assign_allocated_record_to_uninitialized(record);
@@ -2333,9 +2311,10 @@ inline void impl_resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
   if constexpr (alloc_prop_input::has_execution_space)
     Kokkos::Impl::DynRankViewRemap<drview_type, drview_type>(
         Impl::get_property<Impl::ExecutionSpaceTag>(prop_copy), v_resized, v);
-  else
+  else {
     Kokkos::Impl::DynRankViewRemap<drview_type, drview_type>(v_resized, v);
-
+    Kokkos::fence("Kokkos::resize(DynRankView)");
+  }
   v = v_resized;
 }
 

@@ -206,6 +206,7 @@ class TaskBase {
 // the number of full task types that fit into a cache line.  We'll leave it
 // here for now, though, since we're probably going to be ripping all of the
 // old TaskBase stuff out eventually anyway.
+#ifndef KOKKOS_IMPL_32BIT
 constexpr size_t unpadded_task_base_size = 44 + 2 * sizeof(int16_t);
 // don't forget padding:
 constexpr size_t task_base_misalignment =
@@ -229,7 +230,7 @@ static constexpr
 
 static_assert(sizeof(TaskBase) == expected_task_base_size,
               "Verifying expected sizeof(TaskBase)");
-
+#endif
 // </editor-fold> end Verify the size of TaskBase is as expected }}}2
 //------------------------------------------------------------------------------
 

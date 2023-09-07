@@ -5,8 +5,8 @@ if( "${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}" )
   message( FATAL_ERROR "FATAL: In-source builds are not allowed. You should create a separate directory for build files and delete CMakeCache.txt." )
 endif()
 
-if (COMMAND TRIBITS_PACKAGE_DECL)
-  TRIBITS_PACKAGE_DECL(Kokkos)
+if (COMMAND TRIBITS_PACKAGE)
+  TRIBITS_PACKAGE(Kokkos)
 endif()
 
 # We want to determine if options are given with the wrong case
@@ -37,6 +37,8 @@ IF(COMMAND TRIBITS_PACKAGE_DECL)
   SET(KOKKOS_HAS_TRILINOS ON)
 ELSE()
   SET(KOKKOS_HAS_TRILINOS OFF)
+  SET(PACKAGE_NAME Kokkos)
+  SET(PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 ENDIF()
 # Is this build a subdirectory of another project
 GET_DIRECTORY_PROPERTY(HAS_PARENT PARENT_DIRECTORY)
@@ -138,12 +140,17 @@ IF (NOT CMAKE_SIZEOF_VOID_P)
     MESSAGE(FATAL_ERROR "Kokkos did not configure correctly and failed to validate compiler. The most likely cause is linkage errors during CMake compiler validation. Please consult the CMake error log shown below for the exact error during compiler validation")
   ENDIF()
 ELSEIF (NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
-  MESSAGE(FATAL_ERROR "Kokkos assumes a 64-bit build; i.e., 8-byte pointers, but found ${CMAKE_SIZEOF_VOID_P}-byte pointers instead")
+  IF(CMAKE_SIZEOF_VOID_P EQUAL 4)
+    MESSAGE(WARNING "32-bit builds are experimental and not officially supported.")
+    SET(KOKKOS_IMPL_32BIT ON)
+  ELSE()
+    MESSAGE(FATAL_ERROR "Kokkos assumes a 64-bit build, i.e., 8-byte pointers, but found ${CMAKE_SIZEOF_VOID_P}-byte pointers instead;")
+  ENDIF()
 ENDIF()
 
 
 set(Kokkos_VERSION_MAJOR 4)
-set(Kokkos_VERSION_MINOR 0)
+set(Kokkos_VERSION_MINOR 1)
 set(Kokkos_VERSION_PATCH 99)
 set(Kokkos_VERSION "${Kokkos_VERSION_MAJOR}.${Kokkos_VERSION_MINOR}.${Kokkos_VERSION_PATCH}")
 message(STATUS "Kokkos version: ${Kokkos_VERSION}")
@@ -294,10 +301,6 @@ IF (KOKKOS_HAS_TRILINOS)
     $<$<COMPILE_LANGUAGE:CXX>:${KOKKOS_ALL_COMPILE_OPTIONS}>)
 ENDIF()
 
-if (NOT COMMAND TRIBITS_PACKAGE_DECL)
-  KOKKOS_PACKAGE_DECL()
-endif()
-
 
 #------------------------------------------------------------------------------
 #
@@ -311,8 +314,6 @@ KOKKOS_PROCESS_SUBPACKAGES()
 # E) If Kokkos itself is enabled, process the Kokkos package
 #
 
-KOKKOS_PACKAGE_DEF()
-KOKKOS_EXCLUDE_AUTOTOOLS_FILES()
 KOKKOS_PACKAGE_POSTPROCESS()
 KOKKOS_CONFIGURE_CORE()
 
@@ -321,6 +322,8 @@ IF (NOT KOKKOS_HAS_TRILINOS AND NOT Kokkos_INSTALL_TESTING)
   #Make sure in-tree projects can reference this as Kokkos::
   #to match the installed target names
   ADD_LIBRARY(Kokkos::kokkos ALIAS kokkos)
+  # all_libs target is required for TriBITS-compliance
+  ADD_LIBRARY(Kokkos::all_libs ALIAS kokkos)
   TARGET_LINK_LIBRARIES(kokkos INTERFACE ${KOKKOS_COMPONENT_LIBRARIES})
   KOKKOS_INTERNAL_ADD_LIBRARY_INSTALL(kokkos)
 ENDIF()

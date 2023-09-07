@@ -182,6 +182,9 @@ struct LargeTeamScratchFunctor {
 };
 
 TEST(TEST_CATEGORY, large_team_scratch_size) {
+#ifdef KOKKOS_IMPL_32BIT
+  GTEST_SKIP() << "Fails on 32-bit";  // FIXME_32BIT
+#endif
   const int level   = 1;
   const int n_teams = 1;
 

@@ -416,7 +416,6 @@ struct MinLoc {
   using index_type  = std::remove_cv_t<Index>;
   static_assert(!std::is_pointer_v<scalar_type> &&
                 !std::is_array_v<scalar_type>);
-  static_assert(std::is_integral_v<index_type>);
 
  public:
   // Required
@@ -472,7 +471,6 @@ struct MaxLoc {
   using index_type  = std::remove_cv_t<Index>;
   static_assert(!std::is_pointer_v<scalar_type> &&
                 !std::is_array_v<scalar_type>);
-  static_assert(std::is_integral_v<index_type>);
 
  public:
   // Required
@@ -597,7 +595,6 @@ struct MinMaxLoc {
   using index_type  = std::remove_cv_t<Index>;
   static_assert(!std::is_pointer_v<scalar_type> &&
                 !std::is_array_v<scalar_type>);
-  static_assert(std::is_integral_v<index_type>);
 
  public:
   // Required
@@ -1375,116 +1372,6 @@ class CombinedFunctorReducer<
   FunctorAnalysisReducerType m_reducer;
 };
 
-// FIXME Remove once all backends implement the new interface
-template <typename ExecutionSpace>
-struct implements_new_reduce_interface : std::false_type {};
-
-#ifdef KOKKOS_ENABLE_SERIAL
-template <>
-struct implements_new_reduce_interface<Kokkos::Serial> : std::true_type {};
-#endif
-
-#ifdef KOKKOS_ENABLE_HPX
-template <>
-struct implements_new_reduce_interface<Kokkos::Experimental::HPX>
-    : std::true_type {};
-#endif
-
-#ifdef KOKKOS_ENABLE_OPENMP
-template <>
-struct implements_new_reduce_interface<Kokkos::OpenMP> : std::true_type {};
-#endif
-
-#ifdef KOKKOS_ENABLE_THREADS
-template <>
-struct implements_new_reduce_interface<Kokkos::Threads> : std::true_type {};
-#endif
-
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-template <>
-struct implements_new_reduce_interface<Kokkos::Experimental::OpenMPTarget>
-    : std::true_type {};
-#endif
-
-#ifdef KOKKOS_ENABLE_CUDA
-template <>
-struct implements_new_reduce_interface<Kokkos::Cuda> : std::true_type {};
-#endif
-
-#ifdef KOKKOS_ENABLE_HIP
-template <>
-struct implements_new_reduce_interface<Kokkos::HIP> : std::true_type {};
-#endif
-
-#ifdef KOKKOS_ENABLE_OPENACC
-template <>
-struct implements_new_reduce_interface<Kokkos::Experimental::OpenACC>
-    : std::true_type {};
-#endif
-
-#ifdef KOKKOS_ENABLE_SYCL
-template <>
-struct implements_new_reduce_interface<Kokkos::Experimental::SYCL>
-    : std::true_type {};
-#endif
-
-template <typename CombinedFunctorReducerType, typename PolicyType,
-          typename ExecutionSpaceType, typename Enable>
-class ParallelReduceWrapper {
-  using functor_type = typename CombinedFunctorReducerType::functor_type;
-  using helper_reducer_type =
-      typename CombinedFunctorReducerType::reducer_type::functor_type;
-
-  static constexpr bool has_reducer =
-      !std::is_same_v<functor_type, helper_reducer_type>;
-
-  using reducer_type =
-      std::conditional_t<has_reducer, helper_reducer_type, InvalidType>;
-
- public:
-  using wrapped_type = Impl::ParallelReduce<functor_type, PolicyType,
-                                            reducer_type, ExecutionSpaceType>;
-
- private:
-  wrapped_type m_parallel_reduce;
-
- public:
-  template <typename ReturnValue>
-  ParallelReduceWrapper(
-      const CombinedFunctorReducerType& combined_functor_reducer,
-      const PolicyType& policy, const ReturnValue& return_value)
-      : m_parallel_reduce(
-            combined_functor_reducer.get_functor(), policy,
-            Kokkos::Impl::if_c<has_reducer, helper_reducer_type, ReturnValue>::
-                select(combined_functor_reducer.get_reducer().get_functor(),
-                       return_value)) {}
-
-  void execute() { m_parallel_reduce.execute(); }
-};
-
-template <typename CombinedFunctorReducerType, typename PolicyType,
-          typename ExecutionSpaceType>
-class ParallelReduceWrapper<
-    CombinedFunctorReducerType, PolicyType, ExecutionSpaceType,
-    std::enable_if_t<
-        implements_new_reduce_interface<ExecutionSpaceType>::value>> {
- public:
-  using wrapped_type = Impl::ParallelReduce<CombinedFunctorReducerType,
-                                            PolicyType, ExecutionSpaceType>;
-
- private:
-  wrapped_type m_parallel_reduce;
-
- public:
-  template <typename ReturnValue>
-  ParallelReduceWrapper(
-      const CombinedFunctorReducerType& combined_functor_reducer,
-      const PolicyType& policy, const ReturnValue& return_value)
-      : m_parallel_reduce(combined_functor_reducer, policy, return_value) {}
-
-  void execute() { m_parallel_reduce.execute(); }
-};
-
 template <class T, class ReturnType, class ValueTraits>
 struct ParallelReduceReturnValue;
 
@@ -1613,18 +1500,18 @@ struct ParallelReduceAdaptor {
     using ReducerSelector =
         Kokkos::Impl::if_c<std::is_same<InvalidType, PassedReducerType>::value,
                            FunctorType, PassedReducerType>;
-    using Analysis =
-        FunctorAnalysis<FunctorPatternInterface::REDUCE, PolicyType,
-                        typename ReducerSelector::type>;
+    using Analysis = FunctorAnalysis<FunctorPatternInterface::REDUCE,
+                                     PolicyType, typename ReducerSelector::type,
+                                     typename return_value_adapter::value_type>;
     Kokkos::Impl::shared_allocation_tracking_disable();
     CombinedFunctorReducer functor_reducer(
         functor, typename Analysis::Reducer(
                      ReducerSelector::select(functor, return_value)));
 
     // FIXME Remove "Wrapper" once all backends implement the new interface
-    Impl::ParallelReduceWrapper<decltype(functor_reducer), PolicyType,
-                                typename Impl::FunctorPolicyExecutionSpace<
-                                    FunctorType, PolicyType>::execution_space>
+    Impl::ParallelReduce<decltype(functor_reducer), PolicyType,
+                         typename Impl::FunctorPolicyExecutionSpace<
+                             FunctorType, PolicyType>::execution_space>
         closure(functor_reducer, inner_policy,
                 return_value_adapter::return_value(return_value, functor));
     Kokkos::Impl::shared_allocation_tracking_enable();
@@ -1635,8 +1522,9 @@ struct ParallelReduceAdaptor {
   }
 
   static constexpr bool is_array_reduction =
-      Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE, PolicyType,
-                            FunctorType>::StaticValueSize == 0;
+      Impl::FunctorAnalysis<
+          Impl::FunctorPatternInterface::REDUCE, PolicyType, FunctorType,
+          typename return_value_adapter::value_type>::StaticValueSize == 0;
 
   template <typename Dummy = ReturnType>
   static inline std::enable_if_t<!(is_array_reduction &&
@@ -1936,7 +1824,7 @@ inline void parallel_reduce(
         nullptr) {
   using FunctorAnalysis =
       Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE, PolicyType,
-                            FunctorType>;
+                            FunctorType, void>;
   using value_type = std::conditional_t<(FunctorAnalysis::StaticValueSize != 0),
                                         typename FunctorAnalysis::value_type,
                                         typename FunctorAnalysis::pointer_type>;
@@ -1961,7 +1849,7 @@ inline void parallel_reduce(
         nullptr) {
   using FunctorAnalysis =
       Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE, PolicyType,
-                            FunctorType>;
+                            FunctorType, void>;
   using value_type = std::conditional_t<(FunctorAnalysis::StaticValueSize != 0),
                                         typename FunctorAnalysis::value_type,
                                         typename FunctorAnalysis::pointer_type>;
@@ -1986,7 +1874,7 @@ inline void parallel_reduce(const size_t& policy, const FunctorType& functor) {
                                               FunctorType>::policy_type;
   using FunctorAnalysis =
       Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE, policy_type,
-                            FunctorType>;
+                            FunctorType, void>;
   using value_type = std::conditional_t<(FunctorAnalysis::StaticValueSize != 0),
                                         typename FunctorAnalysis::value_type,
                                         typename FunctorAnalysis::pointer_type>;
@@ -2013,7 +1901,7 @@ inline void parallel_reduce(const std::string& label, const size_t& policy,
                                               FunctorType>::policy_type;
   using FunctorAnalysis =
       Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE, policy_type,
-                            FunctorType>;
+                            FunctorType, void>;
   using value_type = std::conditional_t<(FunctorAnalysis::StaticValueSize != 0),
                                         typename FunctorAnalysis::value_type,
                                         typename FunctorAnalysis::pointer_type>;

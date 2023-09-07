@@ -225,9 +225,8 @@ struct FloatingPointComparison {
 
     bool ar = absolute(fpv) < abs_tol;
     if (!ar) {
-      KOKKOS_IMPL_DO_NOT_USE_PRINTF(
-          "absolute value exceeds tolerance [|%e| > %e]\n", (double)fpv,
-          abs_tol);
+      Kokkos::printf("absolute value exceeds tolerance [|%e| > %e]\n",
+                     (double)fpv, abs_tol);
     }
 
     return ar;
@@ -248,9 +247,8 @@ struct FloatingPointComparison {
       double rel_diff = abs_diff / min_denom;
       bool ar         = abs_diff == 0 || rel_diff < rel_tol;
       if (!ar) {
-        KOKKOS_IMPL_DO_NOT_USE_PRINTF(
-            "relative difference exceeds tolerance [%e > %e]\n",
-            (double)rel_diff, rel_tol);
+        Kokkos::printf("relative difference exceeds tolerance [%e > %e]\n",
+                       (double)rel_diff, rel_tol);
       }
 
       return ar;
@@ -316,12 +314,7 @@ struct math_function_name;
 // https://www.gnu.org/software/libc/manual/html_node/Errors-in-Math-Functions.html
 // For now 1s largely seem to work ...
 DEFINE_UNARY_FUNCTION_EVAL(exp, 2);
-#ifdef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC exp2 not device callable,
-                              // workaround computes it via exp
-DEFINE_UNARY_FUNCTION_EVAL(exp2, 30);
-#else
 DEFINE_UNARY_FUNCTION_EVAL(exp2, 2);
-#endif
 DEFINE_UNARY_FUNCTION_EVAL(expm1, 2);
 DEFINE_UNARY_FUNCTION_EVAL(log, 2);
 DEFINE_UNARY_FUNCTION_EVAL(log10, 2);
@@ -488,9 +481,9 @@ struct TestMathUnaryFunction : FloatingPointComparison {
     bool ar = compare(Func::eval(val_[i]), res_[i], Func::ulp_factor());
     if (!ar) {
       ++e;
-      KOKKOS_IMPL_DO_NOT_USE_PRINTF(
-          "value at %f which is %f was expected to be %f\n", (double)val_[i],
-          (double)Func::eval(val_[i]), (double)res_[i]);
+      Kokkos::printf("value at %f which is %f was expected to be %f\n",
+                     (double)val_[i], (double)Func::eval(val_[i]),
+                     (double)res_[i]);
     }
   }
 };
@@ -533,9 +526,9 @@ struct TestMathBinaryFunction : FloatingPointComparison {
     bool ar = compare(Func::eval(val1_, val2_), res_, Func::ulp_factor());
     if (!ar) {
       ++e;
-      KOKKOS_IMPL_DO_NOT_USE_PRINTF(
-          "value at %f, %f which is %f was expected to be %f\n", (double)val1_,
-          (double)val2_, (double)Func::eval(val1_, val2_), (double)res_);
+      Kokkos::printf("value at %f, %f which is %f was expected to be %f\n",
+                     (double)val1_, (double)val2_,
+                     (double)Func::eval(val1_, val2_), (double)res_);
     }
   }
 };
@@ -574,10 +567,9 @@ struct TestMathTernaryFunction : FloatingPointComparison {
         compare(Func::eval(val1_, val2_, val3_), res_, Func::ulp_factor());
     if (!ar) {
       ++e;
-      KOKKOS_IMPL_DO_NOT_USE_PRINTF(
-          "value at %f, %f, %f which is %f was expected to be %f\n",
-          (double)val1_, (double)val2_, (double)val3_,
-          (double)Func::eval(val1_, val2_, val3_), (double)res_);
+      Kokkos::printf("value at %f, %f, %f which is %f was expected to be %f\n",
+                     (double)val1_, (double)val2_, (double)val3_,
+                     (double)Func::eval(val1_, val2_, val3_), (double)res_);
     }
   }
 };
@@ -796,9 +788,9 @@ TEST(TEST_CATEGORY, mathematical_functions_exponential_functions) {
 #endif
 
 // FIXME_OPENMPTARGET FIXME_AMD
-#if defined(KOKKOS_ENABLE_OPENMPTARGET) &&                           \
-    (defined(KOKKOS_ARCH_VEGA906) || defined(KOKKOS_ARCH_VEGA908) || \
-     defined(KOKKOS_ARCH_VEGA90A))
+#if defined(KOKKOS_ENABLE_OPENMPTARGET) &&                                 \
+    (defined(KOKKOS_ARCH_AMD_GFX906) || defined(KOKKOS_ARCH_AMD_GFX908) || \
+     defined(KOKKOS_ARCH_AMD_GFX90A) || defined(KOKKOS_ARCH_AMD_GFX942))
 
   TEST_MATH_FUNCTION(log2)({1, 23, 456, 7890});
 #endif
@@ -1083,28 +1075,28 @@ struct TestAbsoluteValueFunction {
     using Kokkos::abs;
     if (abs(1) != 1 || abs(-1) != 1) {
       ++e;
-      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed abs(int)\n");
+      Kokkos::printf("failed abs(int)\n");
     }
     if (abs(2l) != 2l || abs(-2l) != 2l) {
       ++e;
-      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed abs(long int)\n");
+      Kokkos::printf("failed abs(long int)\n");
     }
     if (abs(3ll) != 3ll || abs(-3ll) != 3ll) {
       ++e;
-      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed abs(long long int)\n");
+      Kokkos::printf("failed abs(long long int)\n");
     }
     if (abs(4.f) != 4.f || abs(-4.f) != 4.f) {
       ++e;
-      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed abs(float)\n");
+      Kokkos::printf("failed abs(float)\n");
     }
     if (abs(5.) != 5. || abs(-5.) != 5.) {
       ++e;
-      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed abs(double)\n");
+      Kokkos::printf("failed abs(double)\n");
     }
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
     if (abs(6.l) != 6.l || abs(-6.l) != 6.l) {
       ++e;
-      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed abs(long double)\n");
+      Kokkos::printf("failed abs(long double)\n");
     }
 #endif
     // special values
@@ -1112,8 +1104,7 @@ struct TestAbsoluteValueFunction {
     using Kokkos::isnan;
     if (abs(-0.) != 0. || !isinf(abs(-INFINITY)) || !isnan(abs(-NAN))) {
       ++e;
-      KOKKOS_IMPL_DO_NOT_USE_PRINTF(
-          "failed abs(floating_point) special values\n");
+      Kokkos::printf("failed abs(floating_point) special values\n");
     }
 
     static_assert(std::is_same<decltype(abs(1)), int>::value, "");
@@ -1145,36 +1136,35 @@ struct TestIsNaN {
     using Kokkos::Experimental::signaling_NaN;
     if (isnan(1) || isnan(INT_MAX)) {
       ++e;
-      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed isnan(integral)\n");
+      Kokkos::printf("failed isnan(integral)\n");
     }
     if (isnan(2.f) || !isnan(quiet_NaN<float>::value) ||
         !isnan(signaling_NaN<float>::value)
 
     ) {
       ++e;
-      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed isnan(float)\n");
+      Kokkos::printf("failed isnan(float)\n");
     }
     if (isnan(3.)
-#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC
+#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC 23.7
         || !isnan(quiet_NaN<double>::value) ||
         !isnan(signaling_NaN<double>::value)
 #endif
     ) {
       ++e;
-      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed isnan(double)\n");
+      Kokkos::printf("failed isnan(double)\n");
     }
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
     if (isnan(4.l) || !isnan(quiet_NaN<long double>::value) ||
         !isnan(signaling_NaN<long double>::value)) {
       ++e;
-      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed isnan(long double)\n");
+      Kokkos::printf("failed isnan(long double)\n");
     }
 #endif
     // special values
     if (isnan(INFINITY) || !isnan(NAN)) {
       ++e;
-      KOKKOS_IMPL_DO_NOT_USE_PRINTF(
-          "failed isnan(floating_point) special values\n");
+      Kokkos::printf("failed isnan(floating_point) special values\n");
     }
 
     static_assert(std::is_same<decltype(isnan(1)), bool>::value, "");

@@ -43,8 +43,12 @@ struct StdIsPartitionedFunctor {
         ::Kokkos::reduction_identity<index_type>::min();
     constexpr index_type m_red_id_max =
         ::Kokkos::reduction_identity<index_type>::max();
-    auto rv = predicate_value ? red_value_type{i, m_red_id_min}
-                              : red_value_type{m_red_id_max, i};
+
+    // FIXME_NVHPC using a ternary operator causes problems
+    red_value_type rv = {m_red_id_max, i};
+    if (predicate_value) {
+      rv = {i, m_red_id_min};
+    }
 
     m_reducer.join(redValue, rv);
   }
@@ -105,8 +109,16 @@ bool is_partitioned_impl(const std::string& label, const ExecutionSpace& ex,
 
   if (red_result.max_loc_true != red_id_max &&
       red_result.min_loc_false != red_id_min) {
+    // this occurs when the reduction yields nontrivial values
     return red_result.max_loc_true < red_result.min_loc_false;
+  } else if (red_result.max_loc_true == red_id_max &&
+             red_result.min_loc_false == 0) {
+    // this occurs when all values do NOT satisfy
+    // the predicate, and this corner case should also be true
+    return true;
   } else if (first + red_result.max_loc_true == --last) {
+    // this occurs when all values DO satisfy the predicate,
+    // this corner case should also be true
     return true;
   } else {
     return false;
