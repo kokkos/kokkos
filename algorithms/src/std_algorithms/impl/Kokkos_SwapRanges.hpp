@@ -60,7 +60,6 @@ IteratorType2 swap_ranges_exespace_impl(const std::string& label,
       Kokkos::Experimental::distance(first1, last1);
   ::Kokkos::parallel_for(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements_to_swap),
-      // use CTAD
       StdSwapRangesFunctor(first1, first2));
   ex.fence("Kokkos::swap_ranges: fence after operation");
 
@@ -81,7 +80,6 @@ swap_ranges_team_impl(const TeamHandleType& teamHandle, IteratorType1 first1,
   const auto num_elements_to_swap =
       Kokkos::Experimental::distance(first1, last1);
   ::Kokkos::parallel_for(TeamThreadRange(teamHandle, 0, num_elements_to_swap),
-                         // use CTAD
                          StdSwapRangesFunctor(first1, first2));
   teamHandle.team_barrier();
 
