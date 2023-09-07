@@ -14,16 +14,14 @@
 //
 //@HEADER
 
-#ifndef KOKKO_SYCL_PARALLEL_SCAN_HPP
-#define KOKKO_SYCL_PARALLEL_SCAN_HPP
+#ifndef KOKKO_SYCL_PARALLEL_SCAN_RANGE_HPP
+#define KOKKO_SYCL_PARALLEL_SCAN_RANGE_HPP
 
 #include <Kokkos_Macros.hpp>
 #include <memory>
 #include <vector>
-#if defined(KOKKOS_ENABLE_SYCL)
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 // Perform a scan over a workgroup.
 // At the end of this function, the subgroup scans are stored in the local array
@@ -358,9 +356,11 @@ class ParallelScanSYCLBase {
                                  ->m_mutexScratchSpace) {}
 };
 
+}  // namespace Kokkos::Impl
+
 template <class FunctorType, class... Traits>
-class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
-                   Kokkos::Experimental::SYCL>
+class Kokkos::Impl::ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
+                                 Kokkos::Experimental::SYCL>
     : private ParallelScanSYCLBase<FunctorType, void, Traits...> {
  public:
   using Base = ParallelScanSYCLBase<FunctorType, void, Traits...>;
@@ -377,8 +377,9 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
 //----------------------------------------------------------------------------
 
 template <class FunctorType, class ReturnType, class... Traits>
-class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
-                            ReturnType, Kokkos::Experimental::SYCL>
+class Kokkos::Impl::ParallelScanWithTotal<
+    FunctorType, Kokkos::RangePolicy<Traits...>, ReturnType,
+    Kokkos::Experimental::SYCL>
     : public ParallelScanSYCLBase<FunctorType, ReturnType, Traits...> {
  public:
   using Base = ParallelScanSYCLBase<FunctorType, ReturnType, Traits...>;
@@ -407,10 +408,5 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
                                typename ViewType::memory_space>::accessible),
         m_exec(arg_policy.space()) {}
 };
-
-}  // namespace Impl
-}  // namespace Kokkos
-
-#endif
 
 #endif
