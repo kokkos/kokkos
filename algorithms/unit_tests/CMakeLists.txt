@@ -154,7 +154,6 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
     endforeach()
 
     # ------------------------------------------
-<<<<<<< HEAD
     # std team L
     # ------------------------------------------
     set(STDALGO_TEAM_SOURCES_L)
@@ -167,7 +166,9 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
 	StdAlgorithmsTeamPartitionPoint
 	)
       list(APPEND STDALGO_TEAM_SOURCES_L Test${Name}.cpp)
-=======
+    endforeach()
+
+    # ------------------------------------------
     # std team F
     # ------------------------------------------
     set(STDALGO_TEAM_SOURCES_F)
