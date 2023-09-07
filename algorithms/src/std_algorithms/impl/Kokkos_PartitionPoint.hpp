@@ -124,7 +124,6 @@ partition_point_team_impl(const TeamHandleType& teamHandle, IteratorType first,
   reducer_type reducer(red_result);
   const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_reduce(TeamThreadRange(teamHandle, 0, num_elements),
-                            // use CTAD here
                             StdPartitionPointFunctor(first, reducer, pred),
                             reducer);
 

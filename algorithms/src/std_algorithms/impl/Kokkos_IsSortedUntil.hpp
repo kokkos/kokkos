@@ -86,7 +86,6 @@ IteratorType is_sorted_until_exespace_impl(const std::string& label,
       label,
       // use num_elements-1 because each index handles i and i+1
       RangePolicy<ExecutionSpace>(ex, 0, num_elements - 1),
-      // use CTAD
       StdIsSortedUntilFunctor(first, comp, reducer), reducer);
 
   /* If the reduction result is equal to the initial value,
@@ -143,7 +142,6 @@ is_sorted_until_team_impl(const ExecutionSpace& teamHandle, IteratorType first,
   ::Kokkos::parallel_reduce(  // use num_elements-1 because each index handles i
                               // and i+1
       TeamThreadRange(teamHandle, 0, num_elements - 1),
-      // use CTAD
       StdIsSortedUntilFunctor(first, comp, reducer), reducer);
   teamHandle.team_barrier();
 
