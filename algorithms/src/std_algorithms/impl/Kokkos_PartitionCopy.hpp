@@ -153,25 +153,25 @@ partition_copy_team_impl(const TeamHandleType& teamHandle,
 
   // FIXME: there is no parallel_scan overload that accepts TeamThreadRange and
   // return_value, so temporarily serial implementation is used
-  std::size_t countTrue  = 0;
-  std::size_t countFalse = 0;
-  Kokkos::View<std::size_t, typename TeamHandleType::execution_space>
-      countTrueView(&countTrue);
-  Kokkos::View<std::size_t, typename TeamHandleType::execution_space>
-      countFalseView(&countFalse);
-  Kokkos::single(Kokkos::PerTeam(teamHandle), [=]() {
-    for (std::size_t i = 0; i < num_elements; ++i) {
-      const auto& myval = from_first[i];
-      if (pred(myval)) {
-        to_first_true[countTrueView()++] = myval;
-      } else {
-        to_first_false[countFalseView()++] = myval;
-      }
-    }
-  });
-  teamHandle.team_barrier();
+  using counts_t  = ::Kokkos::pair<std::size_t, std::size_t>;
+  counts_t counts = {};
+  Kokkos::single(
+      Kokkos::PerTeam(teamHandle),
+      [=](counts_t& lcounts) {
+        lcounts = {};
+        for (std::size_t i = 0; i < num_elements; ++i) {
+          const auto& myval = from_first[i];
+          if (pred(myval)) {
+            to_first_true[lcounts.first++] = myval;
+          } else {
+            to_first_false[lcounts.second++] = myval;
+          }
+        }
+      },
+      counts);
+  // no barrier needed since single above broadcasts to all members
 
-  return {to_first_true + countTrue, to_first_false + countFalse};
+  return {to_first_true + counts.first, to_first_false + counts.second};
 }
 
 }  // namespace Impl
