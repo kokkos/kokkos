@@ -145,21 +145,21 @@ KOKKOS_FUNCTION OutputIterator unique_copy_team_impl(
     // if this can be done in parallel
 
     std::size_t count = 0;
-    Kokkos::View<std::size_t, typename TeamHandleType::execution_space>
-        countView(&count);
-    Kokkos::single(Kokkos::PerTeam(teamHandle), [=]() {
-      for (std::size_t i = 0; i < num_elements - 1; ++i) {
-        const auto& val_i   = first[i];
-        const auto& val_ip1 = first[i + 1];
-        if (!pred(val_i, val_ip1)) {
-          d_first[countView()++] = val_i;
-        }
-      }
-
-      // we need to copy the last element always
-      d_first[countView()++] = first[num_elements - 1];
-    });
-    teamHandle.team_barrier();
+    Kokkos::single(
+        Kokkos::PerTeam(teamHandle),
+        [=](std::size_t& lcount) {
+          lcount = 0;
+          for (std::size_t i = 0; i < num_elements - 1; ++i) {
+            const auto& val_i   = first[i];
+            const auto& val_ip1 = first[i + 1];
+            if (!pred(val_i, val_ip1)) {
+              d_first[lcount++] = val_i;
+            }
+          }
+          // we need to copy the last element always
+          d_first[lcount++] = first[num_elements - 1];
+        },
+        count);
 
     // return the correct iterator: we need +1 here because we need to
     // return iterator to the element past the last element copied

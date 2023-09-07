@@ -160,16 +160,17 @@ remove_if_team_impl(const TeamHandleType& teamHandle, IteratorType first,
 
     if (remove_count > 0) {
       std::size_t count = 0;
-      Kokkos::View<std::size_t, typename TeamHandleType::execution_space>
-          countView(&count);
-      Kokkos::single(Kokkos::PerTeam(teamHandle), [=]() {
-        for (std::size_t i = 0; i < num_elements; ++i) {
-          if (!pred(first[i])) {
-            first[countView()++] = std::move(first[i]);
-          }
-        }
-      });
-      teamHandle.team_barrier();
+      Kokkos::single(
+          Kokkos::PerTeam(teamHandle),
+          [=](std::size_t& lcount) {
+            lcount = 0;
+            for (std::size_t i = 0; i < num_elements; ++i) {
+              if (!pred(first[i])) {
+                first[lcount++] = std::move(first[i]);
+              }
+            }
+          },
+          count);
     }
 
     return first + num_elements - remove_count;

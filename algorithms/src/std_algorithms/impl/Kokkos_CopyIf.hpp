@@ -126,17 +126,18 @@ KOKKOS_FUNCTION OutputIterator copy_if_team_impl(
   // return_value, so temporarily serial implementation is used here
   const std::size_t num_elements = Kokkos::Experimental::distance(first, last);
   std::size_t count              = 0;
-  Kokkos::View<std::size_t, typename TeamHandleType::execution_space> countView(
-      &count);
-  Kokkos::single(Kokkos::PerTeam(teamHandle), [=]() {
-    for (std::size_t i = 0; i < num_elements; ++i) {
-      const auto& myval = first[i];
-      if (pred(myval)) {
-        d_first[countView()++] = myval;
-      }
-    }
-  });
-  teamHandle.team_barrier();
+  Kokkos::single(
+      Kokkos::PerTeam(teamHandle),
+      [=](std::size_t& lcount) {
+        lcount = 0;
+        for (std::size_t i = 0; i < num_elements; ++i) {
+          const auto& myval = first[i];
+          if (pred(myval)) {
+            d_first[lcount++] = myval;
+          }
+        }
+      },
+      count);
 
   return d_first + count;
 }
