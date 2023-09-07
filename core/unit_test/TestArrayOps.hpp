@@ -14,26 +14,6 @@
 //
 //@HEADER
 
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wchar-subscripts"
-#endif
-
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wchar-subscripts"
-#endif
-
-#include <Kokkos_Array.hpp>
-
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic pop
-#endif
-
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#endif
-
 #include <gtest/gtest.h>
 #include <Kokkos_Core.hpp>
 #include <numeric>
@@ -50,7 +30,7 @@ TEST(TEST_CATEGORY, array_capacity) {
 }
 
 enum Enum { EZero, EOne };
-enum EnumBool : bool { EBFalse, EBTrue };
+enum EnumShort : short { ESZero, ESOne };
 
 TEST(TEST_CATEGORY, array_element_access) {
   using A = Kokkos::Array<int, 2>;
@@ -60,14 +40,6 @@ TEST(TEST_CATEGORY, array_element_access) {
   size_t index = 1;
   ASSERT_EQ(a[index], 5);
 
-  auto b = static_cast<bool>(index);
-  ASSERT_EQ(a[b], a[index]);
-  ASSERT_EQ(ca[b], a[index]);
-
-  auto c = static_cast<char>(index);
-  ASSERT_EQ(a[c], a[index]);
-  ASSERT_EQ(ca[c], a[index]);
-
   auto sc = static_cast<signed char>(index);
   ASSERT_EQ(a[sc], a[index]);
   ASSERT_EQ(ca[sc], a[index]);
@@ -75,24 +47,6 @@ TEST(TEST_CATEGORY, array_element_access) {
   auto uc = static_cast<unsigned char>(index);
   ASSERT_EQ(a[uc], a[index]);
   ASSERT_EQ(ca[uc], a[index]);
-
-#if defined(__cpp_char8_t)
-  auto c8 = static_cast<char8_t>(index);
-  ASSERT_EQ(a[c8], a[index]);
-  ASSERT_EQ(a[c8], a[index]);
-#endif
-
-  auto c16 = static_cast<char16_t>(index);
-  ASSERT_EQ(a[c16], a[index]);
-  ASSERT_EQ(ca[c16], a[index]);
-
-  auto c32 = static_cast<char32_t>(index);
-  ASSERT_EQ(a[c32], a[index]);
-  ASSERT_EQ(ca[c32], a[index]);
-
-  auto wc = static_cast<wchar_t>(index);
-  ASSERT_EQ(a[wc], a[index]);
-  ASSERT_EQ(ca[wc], a[index]);
 
   auto s = static_cast<short>(index);
   ASSERT_EQ(a[s], a[index]);
@@ -130,9 +84,9 @@ TEST(TEST_CATEGORY, array_element_access) {
   ASSERT_EQ(a[e], a[index]);
   ASSERT_EQ(ca[e], a[index]);
 
-  auto eb = static_cast<EnumBool>(index);
-  ASSERT_EQ(a[eb], a[index]);
-  ASSERT_EQ(ca[eb], a[index]);
+  auto es = static_cast<EnumShort>(index);
+  ASSERT_EQ(a[es], a[index]);
+  ASSERT_EQ(ca[es], a[index]);
 
   ASSERT_EQ(a.data()[index], a[index]);
   ASSERT_EQ(ca.data()[index], a[index]);
@@ -185,14 +139,6 @@ TEST(TEST_CATEGORY, array_contiguous_element_access) {
   size_t index = 1;
   ASSERT_EQ(std::addressof(a[index]), std::addressof(aa[index]));
 
-  auto b = static_cast<bool>(index);
-  ASSERT_EQ(a[b], aa[index]);
-  ASSERT_EQ(ca[b], aa[index]);
-
-  auto c = static_cast<char>(index);
-  ASSERT_EQ(a[c], aa[index]);
-  ASSERT_EQ(ca[c], aa[index]);
-
   auto sc = static_cast<signed char>(index);
   ASSERT_EQ(a[sc], aa[index]);
   ASSERT_EQ(ca[sc], aa[index]);
@@ -200,24 +146,6 @@ TEST(TEST_CATEGORY, array_contiguous_element_access) {
   auto uc = static_cast<unsigned char>(index);
   ASSERT_EQ(a[uc], aa[index]);
   ASSERT_EQ(ca[uc], aa[index]);
-
-#if defined(__cpp_char8_t)
-  auto c8 = static_cast<char8_t>(index);
-  ASSERT_EQ(a[c8], aa[index]);
-  ASSERT_EQ(a[c8], aa[index]);
-#endif
-
-  auto c16 = static_cast<char16_t>(index);
-  ASSERT_EQ(a[c16], aa[index]);
-  ASSERT_EQ(ca[c16], aa[index]);
-
-  auto c32 = static_cast<char32_t>(index);
-  ASSERT_EQ(a[c32], aa[index]);
-  ASSERT_EQ(ca[c32], aa[index]);
-
-  auto wc = static_cast<wchar_t>(index);
-  ASSERT_EQ(a[wc], aa[index]);
-  ASSERT_EQ(ca[wc], aa[index]);
 
   auto s = static_cast<short>(index);
   ASSERT_EQ(a[s], aa[index]);
@@ -255,9 +183,9 @@ TEST(TEST_CATEGORY, array_contiguous_element_access) {
   ASSERT_EQ(a[e], aa[index]);
   ASSERT_EQ(ca[e], aa[index]);
 
-  auto eb = static_cast<EnumBool>(index);
-  ASSERT_EQ(a[eb], aa[index]);
-  ASSERT_EQ(ca[eb], aa[index]);
+  auto es = static_cast<EnumShort>(index);
+  ASSERT_EQ(a[es], aa[index]);
+  ASSERT_EQ(ca[es], aa[index]);
 
   ASSERT_EQ(a.data(), aa);
   ASSERT_EQ(ca.data(), aa);
@@ -352,14 +280,6 @@ TEST(TEST_CATEGORY, array_strided_element_access) {
   size_t index = 1;
   ASSERT_EQ(std::addressof(a[index]), std::addressof(aa[index * aStride]));
 
-  auto b = static_cast<bool>(index);
-  ASSERT_EQ(a[b], aa[index * aStride]);
-  ASSERT_EQ(ca[b], aa[index * aStride]);
-
-  auto c = static_cast<char>(index);
-  ASSERT_EQ(a[c], aa[index * aStride]);
-  ASSERT_EQ(ca[c], aa[index * aStride]);
-
   auto sc = static_cast<signed char>(index);
   ASSERT_EQ(a[sc], aa[index * aStride]);
   ASSERT_EQ(ca[sc], aa[index * aStride]);
@@ -367,24 +287,6 @@ TEST(TEST_CATEGORY, array_strided_element_access) {
   auto uc = static_cast<unsigned char>(index);
   ASSERT_EQ(a[uc], aa[index * aStride]);
   ASSERT_EQ(ca[uc], aa[index * aStride]);
-
-#if defined(__cpp_char8_t)
-  auto c8 = static_cast<char8_t>(index);
-  ASSERT_EQ(a[c8], aa[index * aStride]);
-  ASSERT_EQ(a[c8], aa[index * aStride]);
-#endif
-
-  auto c16 = static_cast<char16_t>(index);
-  ASSERT_EQ(a[c16], aa[index * aStride]);
-  ASSERT_EQ(ca[c16], aa[index * aStride]);
-
-  auto c32 = static_cast<char32_t>(index);
-  ASSERT_EQ(a[c32], aa[index * aStride]);
-  ASSERT_EQ(ca[c32], aa[index * aStride]);
-
-  auto wc = static_cast<wchar_t>(index);
-  ASSERT_EQ(a[wc], aa[index * aStride]);
-  ASSERT_EQ(ca[wc], aa[index * aStride]);
 
   auto s = static_cast<short>(index);
   ASSERT_EQ(a[s], aa[index * aStride]);
@@ -422,9 +324,9 @@ TEST(TEST_CATEGORY, array_strided_element_access) {
   ASSERT_EQ(a[e], aa[index * aStride]);
   ASSERT_EQ(ca[e], aa[index * aStride]);
 
-  auto eb = static_cast<EnumBool>(index);
-  ASSERT_EQ(a[eb], aa[index * aStride]);
-  ASSERT_EQ(ca[eb], aa[index * aStride]);
+  auto es = static_cast<EnumShort>(index);
+  ASSERT_EQ(a[es], aa[index * aStride]);
+  ASSERT_EQ(ca[es], aa[index * aStride]);
 
   ASSERT_EQ(a.data(), aa);
   ASSERT_EQ(ca.data(), aa);
