@@ -176,9 +176,9 @@ KOKKOS_FUNCTION IteratorType unique_team_impl(const TeamHandleType& teamHandle,
   } else if (num_elements == 1) {
     return last;
   } else {
-    // FIXME: for the execution-space-based impl we used an auxiliary allocation,
-    // but for the team level we cannot do the same, so do this serially
-    // for now and later figure out if this can be done in parallel
+    // FIXME: for the execution-space-based impl we used an auxiliary
+    // allocation, but for the team level we cannot do the same, so do this
+    // serially for now and later figure out if this can be done in parallel
 
     std::size_t count = {};
     if (teamHandle.team_rank() == 0) {
