@@ -119,10 +119,10 @@ IteratorType unique_exespace_impl(const std::string& label,
           StdUniqueFunctor(it_found, last, tmp_first, pred), count);
 
       // move last element too, for the same reason as the unique_copy
-      [[maybe_unused]] auto unused_r = Impl::move_exespace_impl("Kokkos::move_from_unique", ex,
-                                               it_found + scan_size, last,
-                                               tmp_first + count);
-      
+      [[maybe_unused]] auto unused_r = Impl::move_exespace_impl(
+          "Kokkos::move_from_unique", ex, it_found + scan_size, last,
+          tmp_first + count);
+
       // ----------
       // step 3
       // ----------
