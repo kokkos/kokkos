@@ -314,12 +314,7 @@ struct math_function_name;
 // https://www.gnu.org/software/libc/manual/html_node/Errors-in-Math-Functions.html
 // For now 1s largely seem to work ...
 DEFINE_UNARY_FUNCTION_EVAL(exp, 2);
-#ifdef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC exp2 not device callable,
-                              // workaround computes it via exp
-DEFINE_UNARY_FUNCTION_EVAL(exp2, 30);
-#else
 DEFINE_UNARY_FUNCTION_EVAL(exp2, 2);
-#endif
 DEFINE_UNARY_FUNCTION_EVAL(expm1, 2);
 DEFINE_UNARY_FUNCTION_EVAL(log, 2);
 DEFINE_UNARY_FUNCTION_EVAL(log10, 2);
@@ -793,9 +788,9 @@ TEST(TEST_CATEGORY, mathematical_functions_exponential_functions) {
 #endif
 
 // FIXME_OPENMPTARGET FIXME_AMD
-#if defined(KOKKOS_ENABLE_OPENMPTARGET) &&                           \
-    (defined(KOKKOS_ARCH_VEGA906) || defined(KOKKOS_ARCH_VEGA908) || \
-     defined(KOKKOS_ARCH_VEGA90A))
+#if defined(KOKKOS_ENABLE_OPENMPTARGET) &&                                 \
+    (defined(KOKKOS_ARCH_AMD_GFX906) || defined(KOKKOS_ARCH_AMD_GFX908) || \
+     defined(KOKKOS_ARCH_AMD_GFX90A) || defined(KOKKOS_ARCH_AMD_GFX942))
 
   TEST_MATH_FUNCTION(log2)({1, 23, 456, 7890});
 #endif
@@ -1151,7 +1146,7 @@ struct TestIsNaN {
       Kokkos::printf("failed isnan(float)\n");
     }
     if (isnan(3.)
-#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC
+#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC 23.7
         || !isnan(quiet_NaN<double>::value) ||
         !isnan(signaling_NaN<double>::value)
 #endif

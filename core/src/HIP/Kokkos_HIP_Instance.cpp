@@ -95,12 +95,17 @@ void HIPInternal::print_configuration(std::ostream &s) const {
   for (int i = 0; i < hipDevCount; ++i) {
     hipDeviceProp_t hipProp;
     KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDeviceProperties(&hipProp, i));
+    std::string gpu_type = hipProp.integrated == 1 ? "APU" : "dGPU";
 
     s << "Kokkos::HIP[ " << i << " ] "
-      << "gcnArch " << hipProp.gcnArch << ", Total Global Memory: "
+      << "gcnArch " << hipProp.gcnArchName << ", Total Global Memory: "
       << ::Kokkos::Impl::human_memory_size(hipProp.totalGlobalMem)
       << ", Shared Memory per Block: "
-      << ::Kokkos::Impl::human_memory_size(hipProp.sharedMemPerBlock);
+      << ::Kokkos::Impl::human_memory_size(hipProp.sharedMemPerBlock)
+      << ", APU or dGPU: " << gpu_type
+      << ", Is Large Bar: " << hipProp.isLargeBar
+      << ", Supports Managed Memory: " << hipProp.managedMemory
+      << ", Wavefront Size: " << hipProp.warpSize;
     if (m_hipDev == i) s << " : Selected";
     s << '\n';
   }
@@ -155,40 +160,24 @@ void HIPInternal::fence(const std::string &name) const {
 }
 
 void HIPInternal::initialize(hipStream_t stream, bool manage_stream) {
+  KOKKOS_EXPECTS(!is_initialized());
+
   if (was_finalized)
     Kokkos::abort("Calling HIP::initialize after HIP::finalize is illegal\n");
 
-  if (is_initialized()) return;
+  m_stream        = stream;
+  m_manage_stream = manage_stream;
 
-  if (!HostSpace::execution_space::impl_is_initialized()) {
-    const std::string msg(
-        "HIP::initialize ERROR : HostSpace::execution_space "
-        "is not initialized");
-    Kokkos::Impl::throw_runtime_exception(msg);
-  }
+  //----------------------------------
+  // Multiblock reduction uses scratch flags for counters
+  // and scratch space for partial reduction values.
+  // Allocate some initial space.  This will grow as needed.
+  {
+    const unsigned reduce_block_count =
+        m_maxWarpCount * Impl::HIPTraits::WarpSize;
 
-  const bool ok_init = nullptr == m_scratchSpace || nullptr == m_scratchFlags;
-
-  if (ok_init) {
-    m_stream        = stream;
-    m_manage_stream = manage_stream;
-
-    //----------------------------------
-    // Multiblock reduction uses scratch flags for counters
-    // and scratch space for partial reduction values.
-    // Allocate some initial space.  This will grow as needed.
-    {
-      const unsigned reduce_block_count =
-          m_maxWarpCount * Impl::HIPTraits::WarpSize;
-
-      (void)scratch_flags(reduce_block_count * 2 * sizeof(size_type));
-      (void)scratch_space(reduce_block_count * 16 * sizeof(size_type));
-    }
-  } else {
-    std::ostringstream msg;
-    msg << "Kokkos::HIP::initialize(" << m_hipDev
-        << ") FAILED : Already initialized";
-    Kokkos::Impl::throw_runtime_exception(msg.str());
+    (void)scratch_flags(reduce_block_count * 2 * sizeof(size_type));
+    (void)scratch_space(reduce_block_count * 16 * sizeof(size_type));
   }
 
   m_num_scratch_locks = concurrency();
@@ -420,6 +409,16 @@ void hip_internal_error_throw(hipError_t e, const char *name, const char *file,
 }
 }  // namespace Impl
 }  // namespace Kokkos
+
+//----------------------------------------------------------------------------
+
+void Kokkos::Impl::create_HIP_instances(std::vector<HIP> &instances) {
+  for (int s = 0; s < int(instances.size()); s++) {
+    hipStream_t stream;
+    KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamCreate(&stream));
+    instances[s] = HIP(stream, ManageStream::yes);
+  }
+}
 
 //----------------------------------------------------------------------------
 
