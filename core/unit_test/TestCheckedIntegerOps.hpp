@@ -35,7 +35,8 @@ TEST(TEST_CATEGORY, checked_integer_operations_multiply_overflow) {
   }
 }
 
-TEST(TEST_CATEGORY, checked_integer_operations_multiply_overflow_abort) {
+TEST(TEST_CATEGORY_DEATH, checked_integer_operations_multiply_overflow_abort) {
+  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
   {
     auto result = Kokkos::Impl::multiply_overflow_abort(1u, 2u);
     EXPECT_EQ(result, 2u);

@@ -371,41 +371,24 @@ void CudaInternal::fence() const {
 }
 
 void CudaInternal::initialize(cudaStream_t stream, bool manage_stream) {
+  KOKKOS_EXPECTS(!is_initialized());
+
   if (was_finalized)
     Kokkos::abort("Calling Cuda::initialize after Cuda::finalize is illegal\n");
   was_initialized = true;
-  if (is_initialized()) return;
 
-#ifndef KOKKOS_IMPL_TURN_OFF_CUDA_HOST_INIT_CHECK
-  if (!HostSpace::execution_space::impl_is_initialized()) {
-    const std::string msg(
-        "Cuda::initialize ERROR : HostSpace::execution_space is not "
-        "initialized");
-    throw_runtime_exception(msg);
-  }
-#endif
+  //----------------------------------
+  // Multiblock reduction uses scratch flags for counters
+  // and scratch space for partial reduction values.
+  // Allocate some initial space.  This will grow as needed.
 
-  const bool ok_init = nullptr == m_scratchSpace || nullptr == m_scratchFlags;
+  {
+    const unsigned reduce_block_count =
+        m_maxWarpCount * Impl::CudaTraits::WarpSize;
 
-  if (ok_init) {
-    //----------------------------------
-    // Multiblock reduction uses scratch flags for counters
-    // and scratch space for partial reduction values.
-    // Allocate some initial space.  This will grow as needed.
-
-    {
-      const unsigned reduce_block_count =
-          m_maxWarpCount * Impl::CudaTraits::WarpSize;
-
-      (void)scratch_unified(16 * sizeof(size_type));
-      (void)scratch_flags(reduce_block_count * 2 * sizeof(size_type));
-      (void)scratch_space(reduce_block_count * 16 * sizeof(size_type));
-    }
-  } else {
-    std::ostringstream msg;
-    msg << "Kokkos::Cuda::initialize(" << m_cudaDev
-        << ") FAILED : Already initialized";
-    Kokkos::Impl::throw_runtime_exception(msg.str());
+    (void)scratch_unified(16 * sizeof(size_type));
+    (void)scratch_flags(reduce_block_count * 2 * sizeof(size_type));
+    (void)scratch_space(reduce_block_count * 16 * sizeof(size_type));
   }
 
 #ifdef KOKKOS_ENABLE_CUDA_UVM
@@ -690,10 +673,6 @@ std::array<Cuda::size_type, 3> cuda_internal_maximum_grid_count() {
   return CudaInternal::singleton().m_maxBlock;
 }
 
-Cuda::size_type cuda_internal_maximum_shared_words() {
-  return CudaInternal::singleton().m_maxSharedWords;
-}
-
 Cuda::size_type *cuda_internal_scratch_space(const Cuda &instance,
                                              const std::size_t size) {
   return instance.impl_internal_space_instance()->scratch_space(size);
@@ -797,10 +776,6 @@ void Cuda::impl_initialize(InitializationSettings const &settings) {
       Impl::CudaInternal::m_maxWarpCount = Impl::CudaTraits::WarpSize;
     }
 
-    constexpr auto WordSize = sizeof(size_type);
-    Impl::CudaInternal::m_maxSharedWords =
-        cudaProp.sharedMemPerBlock / WordSize;
-
     //----------------------------------
     // Maximum number of blocks:
 
@@ -886,14 +861,18 @@ Cuda::Cuda()
       "Cuda instance constructor");
 }
 
-Cuda::Cuda(cudaStream_t stream, bool manage_stream)
+KOKKOS_DEPRECATED Cuda::Cuda(cudaStream_t stream, bool manage_stream)
+    : Cuda(stream,
+           manage_stream ? Impl::ManageStream::yes : Impl::ManageStream::no) {}
+
+Cuda::Cuda(cudaStream_t stream, Impl::ManageStream manage_stream)
     : m_space_instance(new Impl::CudaInternal, [](Impl::CudaInternal *ptr) {
         ptr->finalize();
         delete ptr;
       }) {
   Impl::CudaInternal::singleton().verify_is_initialized(
       "Cuda instance constructor");
-  m_space_instance->initialize(stream, manage_stream);
+  m_space_instance->initialize(stream, static_cast<bool>(manage_stream));
 }
 
 void Cuda::print_configuration(std::ostream &os, bool /*verbose*/) const {
@@ -925,6 +904,12 @@ void Cuda::print_configuration(std::ostream &os, bool /*verbose*/) const {
 #endif
   os << "  KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA: ";
 #ifdef KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
+  os << "yes\n";
+#else
+  os << "no\n";
+#endif
+  os << "  KOKKOS_ENABLE_IMPL_CUDA_MALLOC_ASYNC: ";
+#ifdef KOKKOS_ENABLE_IMPL_CUDA_MALLOC_ASYNC
   os << "yes\n";
 #else
   os << "no\n";
@@ -964,6 +949,16 @@ int g_cuda_space_factory_initialized =
 }  // namespace Impl
 
 }  // namespace Kokkos
+
+void Kokkos::Impl::create_Cuda_instances(std::vector<Cuda> &instances) {
+  for (int s = 0; s < int(instances.size()); s++) {
+    cudaStream_t stream;
+    KOKKOS_IMPL_CUDA_SAFE_CALL((
+        instances[s].impl_internal_space_instance()->cuda_stream_create_wrapper(
+            &stream)));
+    instances[s] = Cuda(stream, ManageStream::yes);
+  }
+}
 
 #else
 
