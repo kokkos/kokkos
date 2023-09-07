@@ -109,7 +109,6 @@ ValueType reduce_custom_functors_exespace_impl(
   const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_reduce(label,
                             RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-                            // Use CTAD
                             StdReduceFunctor(first, reducer), reducer);
 
   // fence not needed since reducing into scalar
@@ -184,7 +183,6 @@ KOKKOS_FUNCTION ValueType reduce_custom_functors_team_impl(
   reducer_type reducer(result, joiner);
   const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_reduce(TeamThreadRange(teamHandle, 0, num_elements),
-                            // Use CTAD
                             StdReduceFunctor(first, reducer), reducer);
 
   teamHandle.team_barrier();

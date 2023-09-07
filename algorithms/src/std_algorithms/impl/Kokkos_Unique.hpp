@@ -116,7 +116,6 @@ IteratorType unique_exespace_impl(const std::string& label,
       index_type count = 0;
       ::Kokkos::parallel_scan(
           label, RangePolicy<ExecutionSpace>(ex, 0, scan_size),
-          // use CTAD
           StdUniqueFunctor(it_found, last, tmp_first, pred), count);
 
       // move last element too, for the same reason as the unique_copy
@@ -177,7 +176,7 @@ KOKKOS_FUNCTION IteratorType unique_team_impl(const TeamHandleType& teamHandle,
   } else if (num_elements == 1) {
     return last;
   } else {
-    // for the execution-space-based impl we used an auxiliary allocation,
+    // FIXME: for the execution-space-based impl we used an auxiliary allocation,
     // but for the team level we cannot do the same, so do this serially
     // for now and later figure out if this can be done in parallel
 

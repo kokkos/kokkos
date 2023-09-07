@@ -87,7 +87,6 @@ OutputIteratorType adjacent_difference_exespace_impl(
       Kokkos::Experimental::distance(first_from, last_from);
   ::Kokkos::parallel_for(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-      // use CTAD
       StdAdjacentDiffFunctor(first_from, first_dest, bin_op));
   ex.fence("Kokkos::adjacent_difference: fence after operation");
 
@@ -120,7 +119,6 @@ KOKKOS_FUNCTION OutputIteratorType adjacent_difference_team_impl(
       Kokkos::Experimental::distance(first_from, last_from);
   ::Kokkos::parallel_for(
       TeamThreadRange(teamHandle, 0, num_elements),
-      // use CTAD
       StdAdjacentDiffFunctor(first_from, first_dest, bin_op));
   teamHandle.team_barrier();
 

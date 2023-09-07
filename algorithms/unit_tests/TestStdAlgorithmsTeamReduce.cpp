@@ -176,6 +176,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
     const auto rowFromEnd   = KE::cend(rowFrom);
     const auto initVal      = reductionInitValuesView_h(i);
 
+// GCC 8 does not have reduce so guard against this
 #if defined(__GNUC__) && __GNUC__ == 8
 #define reduce testing_reduce
 #else

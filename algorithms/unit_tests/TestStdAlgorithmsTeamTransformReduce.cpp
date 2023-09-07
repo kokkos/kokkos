@@ -219,6 +219,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
 
     const auto initVal = initValuesView_h(i);
 
+// GCC 8 does not have transform_reduce so guard against this
 #if defined(__GNUC__) && __GNUC__ == 8
 #define transform_reduce testing_transform_reduce
 #else
