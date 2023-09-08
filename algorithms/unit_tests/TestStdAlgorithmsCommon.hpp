@@ -75,44 +75,49 @@ std::string view_tag_to_string(StridedThreeRowsTag);
 //
 
 // dynamic
-template <class ValueType>
+template <class ValueType,
+          class MemSpace = typename Kokkos::DefaultExecutionSpace::memory_space>
 auto create_view(DynamicTag, std::size_t ext, const std::string label) {
-  using view_t = Kokkos::View<ValueType*>;
+  using view_t = Kokkos::View<ValueType*, MemSpace>;
   view_t view{label + "_" + view_tag_to_string(DynamicTag{}), ext};
   return view;
 }
 
 // dynamic layout left
-template <class ValueType>
+template <class ValueType,
+          class MemSpace = typename Kokkos::DefaultExecutionSpace::memory_space>
 auto create_view(DynamicLayoutLeftTag, std::size_t ext,
                  const std::string label) {
-  using view_t = Kokkos::View<ValueType*, Kokkos::LayoutLeft>;
+  using view_t = Kokkos::View<ValueType*, Kokkos::LayoutLeft, MemSpace>;
   view_t view{label + "_" + view_tag_to_string(DynamicLayoutLeftTag{}), ext};
   return view;
 }
 
 // dynamic layout right
-template <class ValueType>
+template <class ValueType,
+          class MemSpace = typename Kokkos::DefaultExecutionSpace::memory_space>
 auto create_view(DynamicLayoutRightTag, std::size_t ext,
                  const std::string label) {
-  using view_t = Kokkos::View<ValueType*, Kokkos::LayoutRight>;
+  using view_t = Kokkos::View<ValueType*, Kokkos::LayoutRight, MemSpace>;
   view_t view{label + "_" + view_tag_to_string(DynamicLayoutRightTag{}), ext};
   return view;
 }
 
 // stride2
-template <class ValueType>
+template <class ValueType,
+          class MemSpace = typename Kokkos::DefaultExecutionSpace::memory_space>
 auto create_view(StridedTwoTag, std::size_t ext, const std::string label) {
-  using view_t = Kokkos::View<ValueType*, Kokkos::LayoutStride>;
+  using view_t = Kokkos::View<ValueType*, Kokkos::LayoutStride, MemSpace>;
   Kokkos::LayoutStride layout{ext, 2};
   view_t view{label + "_" + view_tag_to_string(StridedTwoTag{}), layout};
   return view;
 }
 
 // stride3
-template <class ValueType>
+template <class ValueType,
+          class MemSpace = typename Kokkos::DefaultExecutionSpace::memory_space>
 auto create_view(StridedThreeTag, std::size_t ext, const std::string label) {
-  using view_t = Kokkos::View<ValueType*, Kokkos::LayoutStride>;
+  using view_t = Kokkos::View<ValueType*, Kokkos::LayoutStride, MemSpace>;
   Kokkos::LayoutStride layout{ext, 3};
   view_t view{label + "_" + view_tag_to_string(StridedThreeTag{}), layout};
   return view;
@@ -123,49 +128,54 @@ auto create_view(StridedThreeTag, std::size_t ext, const std::string label) {
 //
 
 // dynamic
-template <class ValueType>
+template <class ValueType,
+          class MemSpace = typename Kokkos::DefaultExecutionSpace::memory_space>
 auto create_view(DynamicTag, std::size_t ext0, std::size_t ext1,
                  const std::string label) {
-  using view_t = Kokkos::View<ValueType**>;
+  using view_t = Kokkos::View<ValueType**, MemSpace>;
   view_t view{label + "_" + view_tag_to_string(DynamicTag{}), ext0, ext1};
   return view;
 }
 
 // dynamic layout left
-template <class ValueType>
+template <class ValueType,
+          class MemSpace = typename Kokkos::DefaultExecutionSpace::memory_space>
 auto create_view(DynamicLayoutLeftTag, std::size_t ext0, std::size_t ext1,
                  const std::string label) {
-  using view_t = Kokkos::View<ValueType**, Kokkos::LayoutLeft>;
+  using view_t = Kokkos::View<ValueType**, Kokkos::LayoutLeft, MemSpace>;
   view_t view{label + "_" + view_tag_to_string(DynamicLayoutLeftTag{}), ext0,
               ext1};
   return view;
 }
 
 // dynamic layout right
-template <class ValueType>
+template <class ValueType,
+          class MemSpace = typename Kokkos::DefaultExecutionSpace::memory_space>
 auto create_view(DynamicLayoutRightTag, std::size_t ext0, std::size_t ext1,
                  const std::string label) {
-  using view_t = Kokkos::View<ValueType**, Kokkos::LayoutRight>;
+  using view_t = Kokkos::View<ValueType**, Kokkos::LayoutRight, MemSpace>;
   view_t view{label + "_" + view_tag_to_string(DynamicLayoutRightTag{}), ext0,
               ext1};
   return view;
 }
 
 // stride2rows
-template <class ValueType>
+template <class ValueType,
+          class MemSpace = typename Kokkos::DefaultExecutionSpace::memory_space>
 auto create_view(StridedTwoRowsTag, std::size_t ext0, std::size_t ext1,
                  const std::string label) {
-  using view_t = Kokkos::View<ValueType**, Kokkos::LayoutStride>;
+  using view_t = Kokkos::View<ValueType**, Kokkos::LayoutStride, MemSpace>;
   Kokkos::LayoutStride layout{ext0, 2, ext1, ext0 * 2};
   view_t view{label + "_" + view_tag_to_string(StridedTwoRowsTag{}), layout};
   return view;
 }
 
 // stride3rows
-template <class ValueType>
+template <class ValueType,
+          class MemSpace = typename Kokkos::DefaultExecutionSpace::memory_space>
 auto create_view(StridedThreeRowsTag, std::size_t ext0, std::size_t ext1,
                  const std::string label) {
-  using view_t = Kokkos::View<ValueType**, Kokkos::LayoutStride>;
+  using view_t = Kokkos::View<ValueType**, Kokkos::LayoutStride, MemSpace>;
   Kokkos::LayoutStride layout{ext0, 3, ext1, ext0 * 3};
   view_t view{label + "_" + view_tag_to_string(StridedThreeRowsTag{}), layout};
   return view;
