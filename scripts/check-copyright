@@ -7,7 +7,7 @@ do
   head -n +$NNEW "$file" | diff -q - LICENSE_FILE_HEADER > /dev/null
   if [[ "${?}" == 1 ]]
   then
-    echo $file >> scripts/diff_files
+    echo "$file" >> scripts/diff_files
   fi
 done
 tmpfile=$(mktemp -t kokkos_diff_files.XXXX)
