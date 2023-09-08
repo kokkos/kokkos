@@ -28,10 +28,10 @@ struct ZeroFunctor {
   using type            = typename Kokkos::View<T, execution_space>;
   using h_type          = typename Kokkos::View<T, execution_space>::HostMirror;
 
-  type data;
+  type data_fetch_op, data_op;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(int) const { data() = 0; }
+  void operator()(int) const { data_fetch_op() = 0; data_op() = 0; }
 };
 
 //-----------------------------------------------
@@ -44,11 +44,11 @@ struct InitFunctor {
   using type            = typename Kokkos::View<T, execution_space>;
   using h_type          = typename Kokkos::View<T, execution_space>::HostMirror;
 
-  type data;
+  type data_fetch_op, data_op;
   T init_value;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(int) const { data() = init_value; }
+  void operator()(int) const { data_fetch_op() = init_value; data_op() = init_value; }
 
   InitFunctor(T _init_value) : init_value(_init_value) {}
 };
@@ -61,17 +61,17 @@ struct LoadStoreFunctor {
   using execution_space = DEVICE_TYPE;
   using type            = Kokkos::View<T, execution_space>;
 
-  type data;
+  type data_fetch_op, data_op;
   T i0;
   T i1;
 
   KOKKOS_INLINE_FUNCTION
   void operator()(int) const {
-    T old = Kokkos::atomic_load(&data());
+    T old = Kokkos::atomic_load(&data_fetch_op());
     if (old != i0)
       Kokkos::abort("Kokkos Atomic Load didn't get the right value");
-    Kokkos::atomic_store(&data(), i1);
-    Kokkos::atomic_assign(&data(), old);
+    Kokkos::atomic_store(&data_fetch_op(), i1);
+    Kokkos::atomic_assign(&data_fetch_op(), old);
   }
   LoadStoreFunctor(T _i0, T _i1) : i0(_i0), i1(_i1) {}
 };
@@ -80,21 +80,24 @@ template <class T, class DeviceType>
 bool LoadStoreAtomicTest(T i0, T i1) {
   using execution_space = typename DeviceType::execution_space;
   struct InitFunctor<T, execution_space> f_init(i0);
-  typename InitFunctor<T, execution_space>::type data("Data");
-  typename InitFunctor<T, execution_space>::h_type h_data("HData");
+  typename InitFunctor<T, execution_space>::type data_op("Data");
+  typename InitFunctor<T, execution_space>::type data_fetch_op("Data");
+  typename InitFunctor<T, execution_space>::h_type h_data_fetch_op("HData");
 
-  f_init.data = data;
+  f_init.data_op = data_op;
+  f_init.data_fetch_op = data_fetch_op;
   Kokkos::parallel_for(1, f_init);
   execution_space().fence();
 
   struct LoadStoreFunctor<T, execution_space> f(i0, i1);
 
-  f.data = data;
+  f.data_op = data_op;
+  f.data_fetch_op = data_fetch_op;
   Kokkos::parallel_for(1, f);
 
-  Kokkos::deep_copy(h_data, data);
+  Kokkos::deep_copy(h_data_fetch_op, data_fetch_op);
 
-  return h_data() == i0;
+  return h_data_fetch_op() == i0;
 }
 
 //---------------------------------------------------
@@ -106,14 +109,14 @@ struct MaxFunctor {
   using execution_space = DEVICE_TYPE;
   using type            = Kokkos::View<T, execution_space>;
 
-  type data;
+  type data_fetch_op, data_op;
   T i0;
   T i1;
 
   KOKKOS_INLINE_FUNCTION
   void operator()(int) const {
-    // Kokkos::atomic_fetch_max( &data(), (T) 1 );
-    Kokkos::atomic_fetch_max(&data(), (T)i1);
+    Kokkos::atomic_max(&data_op(), (T)i1);
+    Kokkos::atomic_fetch_max(&data_fetch_op(), (T)i1);
   }
   MaxFunctor(T _i0, T _i1) : i0(_i0), i1(_i1) {}
 };
@@ -121,34 +124,37 @@ struct MaxFunctor {
 template <class T, class execution_space>
 T MaxAtomic(T i0, T i1) {
   struct InitFunctor<T, execution_space> f_init(i0);
-  typename InitFunctor<T, execution_space>::type data("Data");
-  typename InitFunctor<T, execution_space>::h_type h_data("HData");
+  typename InitFunctor<T, execution_space>::type data_op("Data");
+  typename InitFunctor<T, execution_space>::type data_fetch_op("Data");
+  typename InitFunctor<T, execution_space>::h_type h_data_fetch_op("HData");
 
-  f_init.data = data;
+  f_init.data_op = data_op;
+  f_init.data_fetch_op = data_fetch_op;
   Kokkos::parallel_for(1, f_init);
   execution_space().fence();
 
   struct MaxFunctor<T, execution_space> f(i0, i1);
 
-  f.data = data;
+  f.data_op = data_op;
+  f.data_fetch_op = data_fetch_op;
   Kokkos::parallel_for(1, f);
   execution_space().fence();
 
-  Kokkos::deep_copy(h_data, data);
-  T val = h_data();
+  Kokkos::deep_copy(h_data_fetch_op, data_fetch_op);
+  T val = h_data_fetch_op();
 
   return val;
 }
 
 template <class T>
 T MaxAtomicCheck(T i0, T i1) {
-  T* data = new T[1];
-  data[0] = 0;
+  T* data_fetch_op = new T[1];
+  data_fetch_op[0] = 0;
 
-  *data = (i0 > i1 ? i0 : i1);
+  *data_fetch_op = (i0 > i1 ? i0 : i1);
 
-  T val = *data;
-  delete[] data;
+  T val = *data_fetch_op;
+  delete[] data_fetch_op;
 
   return val;
 }
@@ -179,12 +185,12 @@ struct MinFunctor {
   using execution_space = DEVICE_TYPE;
   using type            = Kokkos::View<T, execution_space>;
 
-  type data;
+  type data_fetch_op, data_op;
   T i0;
   T i1;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(int) const { Kokkos::atomic_fetch_min(&data(), (T)i1); }
+  void operator()(int) const { Kokkos::atomic_fetch_min(&data_fetch_op(), (T)i1); }
 
   MinFunctor(T _i0, T _i1) : i0(_i0), i1(_i1) {}
 };
@@ -192,34 +198,37 @@ struct MinFunctor {
 template <class T, class execution_space>
 T MinAtomic(T i0, T i1) {
   struct InitFunctor<T, execution_space> f_init(i0);
-  typename InitFunctor<T, execution_space>::type data("Data");
-  typename InitFunctor<T, execution_space>::h_type h_data("HData");
+  typename InitFunctor<T, execution_space>::type data_op("Data");
+  typename InitFunctor<T, execution_space>::type data_fetch_op("Data");
+  typename InitFunctor<T, execution_space>::h_type h_data_fetch_op("HData");
 
-  f_init.data = data;
+  f_init.data_op = data_op;
+  f_init.data_fetch_op = data_fetch_op;
   Kokkos::parallel_for(1, f_init);
   execution_space().fence();
 
   struct MinFunctor<T, execution_space> f(i0, i1);
 
-  f.data = data;
+  f.data_op = data_op;
+  f.data_fetch_op = data_fetch_op;
   Kokkos::parallel_for(1, f);
   execution_space().fence();
 
-  Kokkos::deep_copy(h_data, data);
-  T val = h_data();
+  Kokkos::deep_copy(h_data_fetch_op, data_fetch_op);
+  T val = h_data_fetch_op();
 
   return val;
 }
 
 template <class T>
 T MinAtomicCheck(T i0, T i1) {
-  T* data = new T[1];
-  data[0] = 0;
+  T* data_fetch_op = new T[1];
+  data_fetch_op[0] = 0;
 
-  *data = (i0 < i1 ? i0 : i1);
+  *data_fetch_op = (i0 < i1 ? i0 : i1);
 
-  T val = *data;
-  delete[] data;
+  T val = *data_fetch_op;
+  delete[] data_fetch_op;
 
   return val;
 }
@@ -250,11 +259,11 @@ struct IncFunctor {
   using execution_space = DEVICE_TYPE;
   using type            = Kokkos::View<T, execution_space>;
 
-  type data;
+  type data_fetch_op, data_op;
   T i0;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(int) const { Kokkos::atomic_increment(&data()); }
+  void operator()(int) const { Kokkos::atomic_increment(&data_fetch_op()); }
 
   IncFunctor(T _i0) : i0(_i0) {}
 };
@@ -262,34 +271,37 @@ struct IncFunctor {
 template <class T, class execution_space>
 T IncAtomic(T i0) {
   struct InitFunctor<T, execution_space> f_init(i0);
-  typename InitFunctor<T, execution_space>::type data("Data");
-  typename InitFunctor<T, execution_space>::h_type h_data("HData");
+  typename InitFunctor<T, execution_space>::type data_op("Data");
+  typename InitFunctor<T, execution_space>::type data_fetch_op("Data");
+  typename InitFunctor<T, execution_space>::h_type h_data_fetch_op("HData");
 
-  f_init.data = data;
+  f_init.data_op = data_op;
+  f_init.data_fetch_op = data_fetch_op;
   Kokkos::parallel_for(1, f_init);
   execution_space().fence();
 
   struct IncFunctor<T, execution_space> f(i0);
 
-  f.data = data;
+  f.data_op = data_op;
+  f.data_fetch_op = data_fetch_op;
   Kokkos::parallel_for(1, f);
   execution_space().fence();
 
-  Kokkos::deep_copy(h_data, data);
-  T val = h_data();
+  Kokkos::deep_copy(h_data_fetch_op, data_fetch_op);
+  T val = h_data_fetch_op();
 
   return val;
 }
 
 template <class T>
 T IncAtomicCheck(T i0) {
-  T* data = new T[1];
-  data[0] = 0;
+  T* data_fetch_op = new T[1];
+  data_fetch_op[0] = 0;
 
-  *data = i0 + 1;
+  *data_fetch_op = i0 + 1;
 
-  T val = *data;
-  delete[] data;
+  T val = *data_fetch_op;
+  delete[] data_fetch_op;
 
   return val;
 }
@@ -320,13 +332,13 @@ struct WrappingIncFunctor {
   using execution_space = DEVICE_TYPE;
   using type            = Kokkos::View<T, execution_space>;
 
-  type data;
+  type data_fetch_op, data_op;
   T i0;
   T i1;
 
   KOKKOS_INLINE_FUNCTION
   void operator()(int) const {
-    desul::atomic_fetch_inc_mod(&data(), (T)i1, desul::MemoryOrderRelaxed(),
+    desul::atomic_fetch_inc_mod(&data_fetch_op(), (T)i1, desul::MemoryOrderRelaxed(),
                                 desul::MemoryScopeDevice());
   }
 
@@ -336,35 +348,38 @@ struct WrappingIncFunctor {
 template <class T, class execution_space>
 T WrappingIncAtomic(T i0, T i1) {
   struct InitFunctor<T, execution_space> f_init(i0);
-  typename InitFunctor<T, execution_space>::type data("Data");
-  typename InitFunctor<T, execution_space>::h_type h_data("HData");
+  typename InitFunctor<T, execution_space>::type data_op("Data");
+  typename InitFunctor<T, execution_space>::type data_fetch_op("Data");
+  typename InitFunctor<T, execution_space>::h_type h_data_fetch_op("HData");
 
-  f_init.data = data;
+  f_init.data_op = data_op;
+  f_init.data_fetch_op = data_fetch_op;
   Kokkos::parallel_for(1, f_init);
   execution_space().fence();
 
   struct WrappingIncFunctor<T, execution_space> f(i0, i1);
 
-  f.data = data;
+  f.data_op = data_op;
+  f.data_fetch_op = data_fetch_op;
   Kokkos::parallel_for(1, f);
   execution_space().fence();
 
-  Kokkos::deep_copy(h_data, data);
-  T val = h_data();
+  Kokkos::deep_copy(h_data_fetch_op, data_fetch_op);
+  T val = h_data_fetch_op();
 
   return val;
 }
 
 template <class T>
 T WrappingIncAtomicCheck(T i0, T i1) {
-  T* data = new T[1];
-  data[0] = 0;
+  T* data_fetch_op = new T[1];
+  data_fetch_op[0] = 0;
 
   // Wraps to 0 when i0 >= i1
-  *data = ((i0 >= i1) ? (T)0 : i0 + (T)1);
+  *data_fetch_op = ((i0 >= i1) ? (T)0 : i0 + (T)1);
 
-  T val = *data;
-  delete[] data;
+  T val = *data_fetch_op;
+  delete[] data_fetch_op;
 
   return val;
 }
@@ -396,11 +411,11 @@ struct DecFunctor {
   using execution_space = DEVICE_TYPE;
   using type            = Kokkos::View<T, execution_space>;
 
-  type data;
+  type data_fetch_op, data_op;
   T i0;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(int) const { Kokkos::atomic_decrement(&data()); }
+  void operator()(int) const { Kokkos::atomic_decrement(&data_fetch_op()); }
 
   DecFunctor(T _i0) : i0(_i0) {}
 };
@@ -408,34 +423,37 @@ struct DecFunctor {
 template <class T, class execution_space>
 T DecAtomic(T i0) {
   struct InitFunctor<T, execution_space> f_init(i0);
-  typename InitFunctor<T, execution_space>::type data("Data");
-  typename InitFunctor<T, execution_space>::h_type h_data("HData");
+  typename InitFunctor<T, execution_space>::type data_op("Data");
+  typename InitFunctor<T, execution_space>::type data_fetch_op("Data");
+  typename InitFunctor<T, execution_space>::h_type h_data_fetch_op("HData");
 
-  f_init.data = data;
+  f_init.data_op = data_op;
+  f_init.data_fetch_op = data_fetch_op;
   Kokkos::parallel_for(1, f_init);
   execution_space().fence();
 
   struct DecFunctor<T, execution_space> f(i0);
 
-  f.data = data;
+  f.data_op = data_op;
+  f.data_fetch_op = data_fetch_op;
   Kokkos::parallel_for(1, f);
   execution_space().fence();
 
-  Kokkos::deep_copy(h_data, data);
-  T val = h_data();
+  Kokkos::deep_copy(h_data_fetch_op, data_fetch_op);
+  T val = h_data_fetch_op();
 
   return val;
 }
 
 template <class T>
 T DecAtomicCheck(T i0) {
-  T* data = new T[1];
-  data[0] = 0;
+  T* data_fetch_op = new T[1];
+  data_fetch_op[0] = 0;
 
-  *data = i0 - 1;
+  *data_fetch_op = i0 - 1;
 
-  T val = *data;
-  delete[] data;
+  T val = *data_fetch_op;
+  delete[] data_fetch_op;
 
   return val;
 }
@@ -466,13 +484,13 @@ struct WrappingDecFunctor {
   using execution_space = DEVICE_TYPE;
   using type            = Kokkos::View<T, execution_space>;
 
-  type data;
+  type data_fetch_op, data_op;
   T i0;
   T i1;
 
   KOKKOS_INLINE_FUNCTION
   void operator()(int) const {
-    desul::atomic_fetch_dec_mod(&data(), (T)i1, desul::MemoryOrderRelaxed(),
+    desul::atomic_fetch_dec_mod(&data_fetch_op(), (T)i1, desul::MemoryOrderRelaxed(),
                                 desul::MemoryScopeDevice());
   }
 
@@ -482,36 +500,39 @@ struct WrappingDecFunctor {
 template <class T, class execution_space>
 T WrappingDecAtomic(T i0, T i1) {
   struct InitFunctor<T, execution_space> f_init(i0);
-  typename InitFunctor<T, execution_space>::type data("Data");
-  typename InitFunctor<T, execution_space>::h_type h_data("HData");
+  typename InitFunctor<T, execution_space>::type data_op("Data");
+  typename InitFunctor<T, execution_space>::type data_fetch_op("Data");
+  typename InitFunctor<T, execution_space>::h_type h_data_fetch_op("HData");
 
-  f_init.data = data;
+  f_init.data_op = data_op;
+  f_init.data_fetch_op = data_fetch_op;
   Kokkos::parallel_for(1, f_init);
   execution_space().fence();
 
   struct WrappingDecFunctor<T, execution_space> f(i0, i1);
 
-  f.data = data;
+  f.data_op = data_op;
+  f.data_fetch_op = data_fetch_op;
   Kokkos::parallel_for(1, f);
   execution_space().fence();
 
-  Kokkos::deep_copy(h_data, data);
-  T val = h_data();
+  Kokkos::deep_copy(h_data_fetch_op, data_fetch_op);
+  T val = h_data_fetch_op();
 
   return val;
 }
 
 template <class T>
 T WrappingDecAtomicCheck(T i0, T i1) {
-  T* data = new T[1];
-  data[0] = 0;
+  T* data_fetch_op = new T[1];
+  data_fetch_op[0] = 0;
 
   // Wraps to i1 when i0 <= 0
   // i0 should never be negative
-  *data = ((i0 <= (T)0) ? i1 : i0 - (T)1);
+  *data_fetch_op = ((i0 <= (T)0) ? i1 : i0 - (T)1);
 
-  T val = *data;
-  delete[] data;
+  T val = *data_fetch_op;
+  delete[] data_fetch_op;
 
   return val;
 }
@@ -543,12 +564,12 @@ struct MulFunctor {
   using execution_space = DEVICE_TYPE;
   using type            = Kokkos::View<T, execution_space>;
 
-  type data;
+  type data_fetch_op, data_op;
   T i0;
   T i1;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(int) const { Kokkos::atomic_fetch_mul(&data(), (T)i1); }
+  void operator()(int) const { Kokkos::atomic_fetch_mul(&data_fetch_op(), (T)i1); }
 
   MulFunctor(T _i0, T _i1) : i0(_i0), i1(_i1) {}
 };
@@ -556,34 +577,37 @@ struct MulFunctor {
 template <class T, class execution_space>
 T MulAtomic(T i0, T i1) {
   struct InitFunctor<T, execution_space> f_init(i0);
-  typename InitFunctor<T, execution_space>::type data("Data");
-  typename InitFunctor<T, execution_space>::h_type h_data("HData");
+  typename InitFunctor<T, execution_space>::type data_op("Data");
+  typename InitFunctor<T, execution_space>::type data_fetch_op("Data");
+  typename InitFunctor<T, execution_space>::h_type h_data_fetch_op("HData");
 
-  f_init.data = data;
+  f_init.data_op = data_op;
+  f_init.data_fetch_op = data_fetch_op;
   Kokkos::parallel_for(1, f_init);
   execution_space().fence();
 
   struct MulFunctor<T, execution_space> f(i0, i1);
 
-  f.data = data;
+  f.data_op = data_op;
+  f.data_fetch_op = data_fetch_op;
   Kokkos::parallel_for(1, f);
   execution_space().fence();
 
-  Kokkos::deep_copy(h_data, data);
-  T val = h_data();
+  Kokkos::deep_copy(h_data_fetch_op, data_fetch_op);
+  T val = h_data_fetch_op();
 
   return val;
 }
 
 template <class T>
 T MulAtomicCheck(T i0, T i1) {
-  T* data = new T[1];
-  data[0] = 0;
+  T* data_fetch_op = new T[1];
+  data_fetch_op[0] = 0;
 
-  *data = i0 * i1;
+  *data_fetch_op = i0 * i1;
 
-  T val = *data;
-  delete[] data;
+  T val = *data_fetch_op;
+  delete[] data_fetch_op;
 
   return val;
 }
@@ -614,12 +638,12 @@ struct DivFunctor {
   using execution_space = DEVICE_TYPE;
   using type            = Kokkos::View<T, execution_space>;
 
-  type data;
+  type data_fetch_op, data_op;
   T i0;
   T i1;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(int) const { Kokkos::atomic_fetch_div(&data(), (T)i1); }
+  void operator()(int) const { Kokkos::atomic_fetch_div(&data_fetch_op(), (T)i1); }
 
   DivFunctor(T _i0, T _i1) : i0(_i0), i1(_i1) {}
 };
@@ -627,40 +651,44 @@ struct DivFunctor {
 template <class T, class execution_space>
 T DivAtomic(T i0, T i1) {
   struct InitFunctor<T, execution_space> f_init(i0);
-  typename InitFunctor<T, execution_space>::type data("Data");
-  typename InitFunctor<T, execution_space>::h_type h_data("HData");
+  typename InitFunctor<T, execution_space>::type data_op("Data");
+  typename InitFunctor<T, execution_space>::type data_fetch_op("Data");
+  typename InitFunctor<T, execution_space>::h_type h_data_fetch_op("HData");
 
-  f_init.data = data;
+  f_init.data_op = data_op;
+  f_init.data_fetch_op = data_fetch_op;
   Kokkos::parallel_for(1, f_init);
   execution_space().fence();
 
   struct DivFunctor<T, execution_space> f(i0, i1);
 
-  f.data = data;
+  f.data_op = data_op;
+  f.data_fetch_op = data_fetch_op;
   Kokkos::parallel_for(1, f);
   execution_space().fence();
 
-  Kokkos::deep_copy(h_data, data);
-  T val = h_data();
+  Kokkos::deep_copy(h_data_fetch_op, data_fetch_op);
+  T val = h_data_fetch_op();
 
   return val;
 }
 
 template <class T>
 T DivAtomicCheck(T i0, T i1) {
-  T* data = new T[1];
-  data[0] = 0;
+  T* data_fetch_op = new T[1];
+  data_fetch_op[0] = 0;
 
-  *data = i0 / i1;
+  *data_fetch_op = i0 / i1;
 
-  T val = *data;
-  delete[] data;
+  T val = *data_fetch_op;
+  delete[] data_fetch_op;
 
   return val;
 }
 
 template <class T, class DeviceType>
 bool DivAtomicTest(T i0, T i1) {
+  if(i1 == 0) return true;
   T res       = DivAtomic<T, DeviceType>(i0, i1);
   T resSerial = DivAtomicCheck<T>(i0, i1);
 
@@ -686,12 +714,12 @@ struct ModFunctor {
   using execution_space = DEVICE_TYPE;
   using type            = Kokkos::View<T, execution_space>;
 
-  type data;
+  type data_fetch_op, data_op;
   T i0;
   T i1;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(int) const { Kokkos::atomic_fetch_mod(&data(), (T)i1); }
+  void operator()(int) const { Kokkos::atomic_fetch_mod(&data_fetch_op(), (T)i1); }
 
   ModFunctor(T _i0, T _i1) : i0(_i0), i1(_i1) {}
 };
@@ -699,34 +727,37 @@ struct ModFunctor {
 template <class T, class execution_space>
 T ModAtomic(T i0, T i1) {
   struct InitFunctor<T, execution_space> f_init(i0);
-  typename InitFunctor<T, execution_space>::type data("Data");
-  typename InitFunctor<T, execution_space>::h_type h_data("HData");
+  typename InitFunctor<T, execution_space>::type data_op("Data");
+  typename InitFunctor<T, execution_space>::type data_fetch_op("Data");
+  typename InitFunctor<T, execution_space>::h_type h_data_fetch_op("HData");
 
-  f_init.data = data;
+  f_init.data_op = data_op;
+  f_init.data_fetch_op = data_fetch_op;
   Kokkos::parallel_for(1, f_init);
   execution_space().fence();
 
   struct ModFunctor<T, execution_space> f(i0, i1);
 
-  f.data = data;
+  f.data_op = data_op;
+  f.data_fetch_op = data_fetch_op;
   Kokkos::parallel_for(1, f);
   execution_space().fence();
 
-  Kokkos::deep_copy(h_data, data);
-  T val = h_data();
+  Kokkos::deep_copy(h_data_fetch_op, data_fetch_op);
+  T val = h_data_fetch_op();
 
   return val;
 }
 
 template <class T>
 T ModAtomicCheck(T i0, T i1) {
-  T* data = new T[1];
-  data[0] = 0;
+  T* data_fetch_op = new T[1];
+  data_fetch_op[0] = 0;
 
-  *data = i0 % i1;
+  *data_fetch_op = i0 % i1;
 
-  T val = *data;
-  delete[] data;
+  T val = *data_fetch_op;
+  delete[] data_fetch_op;
 
   return val;
 }
@@ -757,14 +788,14 @@ struct AndFunctor {
   using execution_space = DEVICE_TYPE;
   using type            = Kokkos::View<T, execution_space>;
 
-  type data;
+  type data_fetch_op, data_op;
   T i0;
   T i1;
 
   KOKKOS_INLINE_FUNCTION
   void operator()(int) const {
-    T result = Kokkos::atomic_fetch_and(&data(), (T)i1);
-    Kokkos::atomic_and(&data(), result);
+    T result = Kokkos::atomic_fetch_and(&data_fetch_op(), (T)i1);
+    Kokkos::atomic_and(&data_fetch_op(), result);
   }
 
   AndFunctor(T _i0, T _i1) : i0(_i0), i1(_i1) {}
@@ -773,34 +804,37 @@ struct AndFunctor {
 template <class T, class execution_space>
 T AndAtomic(T i0, T i1) {
   struct InitFunctor<T, execution_space> f_init(i0);
-  typename InitFunctor<T, execution_space>::type data("Data");
-  typename InitFunctor<T, execution_space>::h_type h_data("HData");
+  typename InitFunctor<T, execution_space>::type data_op("Data");
+  typename InitFunctor<T, execution_space>::type data_fetch_op("Data");
+  typename InitFunctor<T, execution_space>::h_type h_data_fetch_op("HData");
 
-  f_init.data = data;
+  f_init.data_op = data_op;
+  f_init.data_fetch_op = data_fetch_op;
   Kokkos::parallel_for(1, f_init);
   execution_space().fence();
 
   struct AndFunctor<T, execution_space> f(i0, i1);
 
-  f.data = data;
+  f.data_op = data_op;
+  f.data_fetch_op = data_fetch_op;
   Kokkos::parallel_for(1, f);
   execution_space().fence();
 
-  Kokkos::deep_copy(h_data, data);
-  T val = h_data();
+  Kokkos::deep_copy(h_data_fetch_op, data_fetch_op);
+  T val = h_data_fetch_op();
 
   return val;
 }
 
 template <class T>
 T AndAtomicCheck(T i0, T i1) {
-  T* data = new T[1];
-  data[0] = 0;
+  T* data_fetch_op = new T[1];
+  data_fetch_op[0] = 0;
 
-  *data = i0 & i1;
+  *data_fetch_op = i0 & i1;
 
-  T val = *data;
-  delete[] data;
+  T val = *data_fetch_op;
+  delete[] data_fetch_op;
 
   return val;
 }
@@ -831,14 +865,14 @@ struct OrFunctor {
   using execution_space = DEVICE_TYPE;
   using type            = Kokkos::View<T, execution_space>;
 
-  type data;
+  type data_fetch_op, data_op;
   T i0;
   T i1;
 
   KOKKOS_INLINE_FUNCTION
   void operator()(int) const {
-    T result = Kokkos::atomic_fetch_or(&data(), (T)i1);
-    Kokkos::atomic_or(&data(), result);
+    T result = Kokkos::atomic_fetch_or(&data_fetch_op(), (T)i1);
+    Kokkos::atomic_or(&data_fetch_op(), result);
   }
 
   OrFunctor(T _i0, T _i1) : i0(_i0), i1(_i1) {}
@@ -847,34 +881,37 @@ struct OrFunctor {
 template <class T, class execution_space>
 T OrAtomic(T i0, T i1) {
   struct InitFunctor<T, execution_space> f_init(i0);
-  typename InitFunctor<T, execution_space>::type data("Data");
-  typename InitFunctor<T, execution_space>::h_type h_data("HData");
+  typename InitFunctor<T, execution_space>::type data_op("Data");
+  typename InitFunctor<T, execution_space>::type data_fetch_op("Data");
+  typename InitFunctor<T, execution_space>::h_type h_data_fetch_op("HData");
 
-  f_init.data = data;
+  f_init.data_op = data_op;
+  f_init.data_fetch_op = data_fetch_op;
   Kokkos::parallel_for(1, f_init);
   execution_space().fence();
 
   struct OrFunctor<T, execution_space> f(i0, i1);
 
-  f.data = data;
+  f.data_op = data_op;
+  f.data_fetch_op = data_fetch_op;
   Kokkos::parallel_for(1, f);
   execution_space().fence();
 
-  Kokkos::deep_copy(h_data, data);
-  T val = h_data();
+  Kokkos::deep_copy(h_data_fetch_op, data_fetch_op);
+  T val = h_data_fetch_op();
 
   return val;
 }
 
 template <class T>
 T OrAtomicCheck(T i0, T i1) {
-  T* data = new T[1];
-  data[0] = 0;
+  T* data_fetch_op = new T[1];
+  data_fetch_op[0] = 0;
 
-  *data = i0 | i1;
+  *data_fetch_op = i0 | i1;
 
-  T val = *data;
-  delete[] data;
+  T val = *data_fetch_op;
+  delete[] data_fetch_op;
 
   return val;
 }
@@ -905,12 +942,12 @@ struct XorFunctor {
   using execution_space = DEVICE_TYPE;
   using type            = Kokkos::View<T, execution_space>;
 
-  type data;
+  type data_fetch_op, data_op;
   T i0;
   T i1;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(int) const { Kokkos::atomic_fetch_xor(&data(), (T)i1); }
+  void operator()(int) const { Kokkos::atomic_fetch_xor(&data_fetch_op(), (T)i1); }
 
   XorFunctor(T _i0, T _i1) : i0(_i0), i1(_i1) {}
 };
@@ -918,34 +955,37 @@ struct XorFunctor {
 template <class T, class execution_space>
 T XorAtomic(T i0, T i1) {
   struct InitFunctor<T, execution_space> f_init(i0);
-  typename InitFunctor<T, execution_space>::type data("Data");
-  typename InitFunctor<T, execution_space>::h_type h_data("HData");
+  typename InitFunctor<T, execution_space>::type data_op("Data");
+  typename InitFunctor<T, execution_space>::type data_fetch_op("Data");
+  typename InitFunctor<T, execution_space>::h_type h_data_fetch_op("HData");
 
-  f_init.data = data;
+  f_init.data_op = data_op;
+  f_init.data_fetch_op = data_fetch_op;
   Kokkos::parallel_for(1, f_init);
   execution_space().fence();
 
   struct XorFunctor<T, execution_space> f(i0, i1);
 
-  f.data = data;
+  f.data_op = data_op;
+  f.data_fetch_op = data_fetch_op;
   Kokkos::parallel_for(1, f);
   execution_space().fence();
 
-  Kokkos::deep_copy(h_data, data);
-  T val = h_data();
+  Kokkos::deep_copy(h_data_fetch_op, data_fetch_op);
+  T val = h_data_fetch_op();
 
   return val;
 }
 
 template <class T>
 T XorAtomicCheck(T i0, T i1) {
-  T* data = new T[1];
-  data[0] = 0;
+  T* data_fetch_op = new T[1];
+  data_fetch_op[0] = 0;
 
-  *data = i0 ^ i1;
+  *data_fetch_op = i0 ^ i1;
 
-  T val = *data;
-  delete[] data;
+  T val = *data_fetch_op;
+  delete[] data_fetch_op;
 
   return val;
 }
@@ -976,12 +1016,12 @@ struct LShiftFunctor {
   using execution_space = DEVICE_TYPE;
   using type            = Kokkos::View<T, execution_space>;
 
-  type data;
+  type data_fetch_op, data_op;
   T i0;
   T i1;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(int) const { Kokkos::atomic_fetch_lshift(&data(), (T)i1); }
+  void operator()(int) const { Kokkos::atomic_fetch_lshift(&data_fetch_op(), (T)i1); }
 
   LShiftFunctor(T _i0, T _i1) : i0(_i0), i1(_i1) {}
 };
@@ -989,34 +1029,37 @@ struct LShiftFunctor {
 template <class T, class execution_space>
 T LShiftAtomic(T i0, T i1) {
   struct InitFunctor<T, execution_space> f_init(i0);
-  typename InitFunctor<T, execution_space>::type data("Data");
-  typename InitFunctor<T, execution_space>::h_type h_data("HData");
+  typename InitFunctor<T, execution_space>::type data_op("Data");
+  typename InitFunctor<T, execution_space>::type data_fetch_op("Data");
+  typename InitFunctor<T, execution_space>::h_type h_data_fetch_op("HData");
 
-  f_init.data = data;
+  f_init.data_op = data_op;
+  f_init.data_fetch_op = data_fetch_op;
   Kokkos::parallel_for(1, f_init);
   execution_space().fence();
 
   struct LShiftFunctor<T, execution_space> f(i0, i1);
 
-  f.data = data;
+  f.data_op = data_op;
+  f.data_fetch_op = data_fetch_op;
   Kokkos::parallel_for(1, f);
   execution_space().fence();
 
-  Kokkos::deep_copy(h_data, data);
-  T val = h_data();
+  Kokkos::deep_copy(h_data_fetch_op, data_fetch_op);
+  T val = h_data_fetch_op();
 
   return val;
 }
 
 template <class T>
 T LShiftAtomicCheck(T i0, T i1) {
-  T* data = new T[1];
-  data[0] = 0;
+  T* data_fetch_op = new T[1];
+  data_fetch_op[0] = 0;
 
-  *data = i0 << i1;
+  *data_fetch_op = i0 << i1;
 
-  T val = *data;
-  delete[] data;
+  T val = *data_fetch_op;
+  delete[] data_fetch_op;
 
   return val;
 }
@@ -1047,12 +1090,12 @@ struct RShiftFunctor {
   using execution_space = DEVICE_TYPE;
   using type            = Kokkos::View<T, execution_space>;
 
-  type data;
+  type data_fetch_op, data_op;
   T i0;
   T i1;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(int) const { Kokkos::atomic_fetch_rshift(&data(), (T)i1); }
+  void operator()(int) const { Kokkos::atomic_fetch_rshift(&data_fetch_op(), (T)i1); }
 
   RShiftFunctor(T _i0, T _i1) : i0(_i0), i1(_i1) {}
 };
@@ -1060,34 +1103,37 @@ struct RShiftFunctor {
 template <class T, class execution_space>
 T RShiftAtomic(T i0, T i1) {
   struct InitFunctor<T, execution_space> f_init(i0);
-  typename InitFunctor<T, execution_space>::type data("Data");
-  typename InitFunctor<T, execution_space>::h_type h_data("HData");
+  typename InitFunctor<T, execution_space>::type data_op("Data");
+  typename InitFunctor<T, execution_space>::type data_fetch_op("Data");
+  typename InitFunctor<T, execution_space>::h_type h_data_fetch_op("HData");
 
-  f_init.data = data;
+  f_init.data_op = data_op;
+  f_init.data_fetch_op = data_fetch_op;
   Kokkos::parallel_for(1, f_init);
   execution_space().fence();
 
   struct RShiftFunctor<T, execution_space> f(i0, i1);
 
-  f.data = data;
+  f.data_op = data_op;
+  f.data_fetch_op = data_fetch_op;
   Kokkos::parallel_for(1, f);
   execution_space().fence();
 
-  Kokkos::deep_copy(h_data, data);
-  T val = h_data();
+  Kokkos::deep_copy(h_data_fetch_op, data_fetch_op);
+  T val = h_data_fetch_op();
 
   return val;
 }
 
 template <class T>
 T RShiftAtomicCheck(T i0, T i1) {
-  T* data = new T[1];
-  data[0] = 0;
+  T* data_fetch_op = new T[1];
+  data_fetch_op[0] = 0;
 
-  *data = i0 >> i1;
+  *data_fetch_op = i0 >> i1;
 
-  T val = *data;
-  delete[] data;
+  T val = *data_fetch_op;
+  delete[] data_fetch_op;
 
   return val;
 }
