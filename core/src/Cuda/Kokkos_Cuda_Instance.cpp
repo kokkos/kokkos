@@ -391,31 +391,6 @@ void CudaInternal::initialize(cudaStream_t stream, bool manage_stream) {
     (void)scratch_space(reduce_block_count * 16 * sizeof(size_type));
   }
 
-#ifdef KOKKOS_ENABLE_CUDA_UVM
-  const char *env_force_device_alloc =
-      getenv("CUDA_MANAGED_FORCE_DEVICE_ALLOC");
-  bool force_device_alloc;
-  if (env_force_device_alloc == nullptr)
-    force_device_alloc = false;
-  else
-    force_device_alloc = std::stoi(env_force_device_alloc) != 0;
-
-  const char *env_visible_devices = getenv("CUDA_VISIBLE_DEVICES");
-  bool visible_devices_one        = true;
-  if (env_visible_devices == nullptr) visible_devices_one = false;
-
-  if (Kokkos::show_warnings() &&
-      (!visible_devices_one && !force_device_alloc)) {
-    std::cerr << R"warning(
-Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
-                                  without setting CUDA_MANAGED_FORCE_DEVICE_ALLOC=1 or
-                                  setting CUDA_VISIBLE_DEVICES.
-                                  This could on multi GPU systems lead to severe performance"
-                                  penalties.)warning"
-              << std::endl;
-  }
-#endif
-
   // Init the array for used for arbitrarily sized atomics
   if (this == &singleton()) {
     desul::Impl::init_lock_arrays();  // FIXME
@@ -759,6 +734,34 @@ void Cuda::impl_initialize(InitializationSettings const &settings) {
               << std::endl;
   }
 
+  //----------------------------------
+
+#ifdef KOKKOS_ENABLE_CUDA_UVM
+  const char *env_force_device_alloc =
+      getenv("CUDA_MANAGED_FORCE_DEVICE_ALLOC");
+  bool force_device_alloc;
+  if (env_force_device_alloc == nullptr)
+    force_device_alloc = false;
+  else
+    force_device_alloc = std::stoi(env_force_device_alloc) != 0;
+
+  const char *env_visible_devices = getenv("CUDA_VISIBLE_DEVICES");
+  bool visible_devices_one        = true;
+  if (env_visible_devices == nullptr) visible_devices_one = false;
+
+  if (Kokkos::show_warnings() &&
+      (!visible_devices_one && !force_device_alloc)) {
+    std::cerr << R"warning(
+Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
+                                  without setting CUDA_MANAGED_FORCE_DEVICE_ALLOC=1 or
+                                  setting CUDA_VISIBLE_DEVICES.
+                                  This could on multi GPU systems lead to severe performance"
+                                  penalties.)warning"
+              << std::endl;
+  }
+#endif
+
+  //----------------------------------
   // number of multiprocessors
   Impl::CudaInternal::m_multiProcCount = cudaProp.multiProcessorCount;
 
