@@ -4,7 +4,7 @@ tmp=$(wc -l < LICENSE_FILE_HEADER)
 NNEW=$(($tmp))
 for file in $files
 do
-  head -n +$NNEW $file | diff -q - LICENSE_FILE_HEADER > /dev/null
+  head -n +$NNEW "$file" | diff -q - LICENSE_FILE_HEADER > /dev/null
   if [[ "${?}" == 1 ]]
   then
     echo $file >> scripts/diff_files
