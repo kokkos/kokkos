@@ -51,6 +51,4 @@ struct GraphNodeBackendDetailsBeforeTypeErasure<Kokkos::HIP, Kernel,
 }  // namespace Impl
 }  // namespace Kokkos
 
-#include <HIP/Kokkos_HIP_GraphNodeKernel.hpp>
-
 #endif

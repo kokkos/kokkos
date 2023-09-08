@@ -27,6 +27,7 @@
 #include <Kokkos_PointerOwnership.hpp>
 
 #include <HIP/Kokkos_HIP_SharedAllocationRecord.hpp>
+#include <HIP/Kokkos_HIP_GraphNode_Impl.hpp>
 
 namespace Kokkos {
 namespace Impl {

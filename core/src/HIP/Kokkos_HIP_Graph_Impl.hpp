@@ -22,9 +22,9 @@
 #include <Kokkos_Graph_fwd.hpp>
 
 #include <impl/Kokkos_GraphImpl.hpp>
-
 #include <impl/Kokkos_GraphNodeImpl.hpp>
-#include <HIP/Kokkos_HIP_GraphNode_Impl.hpp>
+
+#include <HIP/Kokkos_HIP_GraphNodeKernel.hpp>
 
 namespace Kokkos {
 namespace Impl {
