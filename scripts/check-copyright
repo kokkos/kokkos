@@ -1,6 +1,6 @@
 files=$(git ls-files | grep -e '.*\.\(cc\|cpp\|hpp\)' | grep -v 'tpls/')
 echo "" &> scripts/diff_files
-tmp=`wc -l < LICENSE_FILE_HEADER`
+tmp=$(wc -l < LICENSE_FILE_HEADER)
 NNEW=$(($tmp))
 for file in $files
 do
