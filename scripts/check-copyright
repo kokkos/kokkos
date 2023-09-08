@@ -1,4 +1,4 @@
-files=`git ls-files | grep -e '.*\.\(cc\|cpp\|hpp\)' | grep -v 'tpls/'`
+files=$(git ls-files | grep -e '.*\.\(cc\|cpp\|hpp\)' | grep -v 'tpls/')
 echo "" &> scripts/diff_files
 tmp=`wc -l < LICENSE_FILE_HEADER`
 NNEW=$(($tmp))
