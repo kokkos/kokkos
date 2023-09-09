@@ -142,8 +142,8 @@ void test_on_view_with_stride(std::size_t numRows, std::size_t indB,
 template <class ExecutionSpace, class KeyType, class ValueType>
 void run_for_rank1() {
   constexpr int rank = 1;
-  (void)rank;
-  // // trivial case
+
+  // trivial case
   test_on_view_with_stride<ExecutionSpace, KeyType, ValueType, rank>(1, 0, 1);
 
   // nontrivial cases
