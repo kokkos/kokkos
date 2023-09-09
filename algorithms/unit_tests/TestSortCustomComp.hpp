@@ -85,7 +85,7 @@ void run_all_scenarios(int api)
     namespace KE = Kokkos::Experimental;
 
     if (api == 0) {
-       Kokkos::sort(dataView, comp_t{});
+      Kokkos::sort(dataView, comp_t{});
       std::sort(KE::begin(dataViewBeforeOp_h), KE::end(dataViewBeforeOp_h),
                 comp_t{});
     }
