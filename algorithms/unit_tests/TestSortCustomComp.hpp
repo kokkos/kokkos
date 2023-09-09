@@ -116,7 +116,7 @@ void run_all_scenarios(int api)
 TEST(TEST_CATEGORY, SortWithCustomComparator) {
   using ExeSpace = TEST_EXECSPACE;
   using namespace ::Test::stdalgos;
-  for (int api = 0; api < 1; api++) {
+  for (int api = 0; api < 2; api++) {
     run_all_scenarios<ExeSpace, DynamicTag, int>(api);
     run_all_scenarios<ExeSpace, DynamicTag, double>(api);
     run_all_scenarios<ExeSpace, DynamicLayoutLeftTag, int>(api);
