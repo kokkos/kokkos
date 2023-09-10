@@ -472,11 +472,15 @@ struct SubviewExtents {
                                        unsigned range_rank,
                                        const ViewDimension<DimArgs...>& dim,
                                        Kokkos::ALL_t, Args... args) {
-    m_begin[domain_rank] = 0;
-    m_length[range_rank] = dim.extent(domain_rank);
-    m_index[range_rank]  = domain_rank;
+    // should never fail but silences a gcc-13 warning
+    if (domain_rank < DomainRank && range_rank < RangeRank) {
+      m_begin[domain_rank] = 0;
+      m_length[range_rank] = dim.extent(domain_rank);
+      m_index[range_rank]  = domain_rank;
 
-    return set(domain_rank + 1, range_rank + 1, dim, args...);
+      return set(domain_rank + 1, range_rank + 1, dim, args...);
+    } else
+      return false;
   }
 
   // std::pair range
