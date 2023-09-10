@@ -132,7 +132,7 @@ void test_A(const bool searched_value_exist, std::size_t numTeams,
   // launch kokkos kernel
   // -----------------------------------------------
   using space_t = Kokkos::DefaultExecutionSpace;
-  Kokkos::TeamPolicy<space_t> policy(numTeams, 3);  // Kokkos::AUTO());
+  Kokkos::TeamPolicy<space_t> policy(numTeams, Kokkos::AUTO());
 
   // to verify that things work, each team stores the result of its count
   // call, and then we check that these match what we expect
