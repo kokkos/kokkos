@@ -22,18 +22,22 @@ namespace TeamCount {
 
 namespace KE = Kokkos::Experimental;
 
-template <class ViewType, class ValuesViewType, class CountsViewType>
+template <class ViewType, class ValuesViewType, class CountsViewType,
+          class IntraTeamSentinelView>
 struct TestFunctorA {
   ViewType m_view;
   ValuesViewType m_valuesView;
   CountsViewType m_countsView;
+  IntraTeamSentinelView m_intraTeamSentinelView;
   int m_apiPick;
 
   TestFunctorA(const ViewType view, const ValuesViewType valuesView,
-               const CountsViewType countsView, int apiPick)
+               const CountsViewType countsView,
+               const IntraTeamSentinelView intraTeamSentinelView, int apiPick)
       : m_view(view),
         m_valuesView(valuesView),
         m_countsView(countsView),
+        m_intraTeamSentinelView(intraTeamSentinelView),
         m_apiPick(apiPick) {}
 
   template <class MemberType>
@@ -41,10 +45,11 @@ struct TestFunctorA {
     const auto rowIndex = member.league_rank();
     const auto value    = m_valuesView(rowIndex);
     auto rowView        = Kokkos::subview(m_view, rowIndex, Kokkos::ALL());
+    std::size_t result  = 0;
 
     switch (m_apiPick) {
       case 0: {
-        auto result =
+        result =
             KE::count(member, KE::cbegin(rowView), KE::cend(rowView), value);
         Kokkos::single(Kokkos::PerTeam(member),
                        [=, *this]() { m_countsView(rowIndex) = result; });
@@ -53,13 +58,22 @@ struct TestFunctorA {
       }
 
       case 1: {
-        auto result = KE::count(member, rowView, value);
+        result = KE::count(member, rowView, value);
         Kokkos::single(Kokkos::PerTeam(member),
                        [=, *this]() { m_countsView(rowIndex) = result; });
 
         break;
       }
     }
+
+    // store result of checking if all members have their local
+    // values matching the one stored in m_distancesView
+    member.team_barrier();
+    const bool intraTeamCheck = team_members_have_matching_result(
+        member, result, m_countsView(rowIndex));
+    Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
+      m_intraTeamSentinelView(rowIndex) = intraTeamCheck;
+    });
   }
 };
 
@@ -118,20 +132,24 @@ void test_A(const bool searched_value_exist, std::size_t numTeams,
   // launch kokkos kernel
   // -----------------------------------------------
   using space_t = Kokkos::DefaultExecutionSpace;
-  Kokkos::TeamPolicy<space_t> policy(numTeams, Kokkos::AUTO());
+  Kokkos::TeamPolicy<space_t> policy(numTeams, 3);  // Kokkos::AUTO());
 
   // to verify that things work, each team stores the result of its count
   // call, and then we check that these match what we expect
   Kokkos::View<std::size_t*> countsView("countsView", numTeams);
+  // sentinel to check if all members of the team compute the same result
+  Kokkos::View<bool*> intraTeamSentinelView("intraTeamSameResult", numTeams);
 
   // use CTAD for functor
-  TestFunctorA fnc(dataView, valuesView, countsView, apiId);
+  TestFunctorA fnc(dataView, valuesView, countsView, intraTeamSentinelView,
+                   apiId);
   Kokkos::parallel_for(policy, fnc);
 
   // -----------------------------------------------
   // check
   // -----------------------------------------------
-  auto countsView_h = create_host_space_copy(countsView);
+  auto countsView_h            = create_host_space_copy(countsView);
+  auto intraTeamSentinelView_h = create_host_space_copy(intraTeamSentinelView);
   if (searched_value_exist) {
     for (std::size_t i = 0; i < dataView.extent(0); ++i) {
       auto rowFrom = Kokkos::subview(dataViewBeforeOp_h, i, Kokkos::ALL());
@@ -141,11 +159,13 @@ void test_A(const bool searched_value_exist, std::size_t numTeams,
 
       const std::size_t result = std::count(rowFromBegin, rowFromEnd, val);
       ASSERT_EQ(result, countsView_h(i));
+      ASSERT_TRUE(intraTeamSentinelView_h(i));
     }
   } else {
     for (std::size_t i = 0; i < countsView.extent(0); ++i) {
       constexpr std::size_t zero = 0;
       ASSERT_EQ(countsView_h(i), zero);
+      ASSERT_TRUE(intraTeamSentinelView_h(i));
     }
   }
 }
