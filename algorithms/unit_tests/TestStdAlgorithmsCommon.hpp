@@ -223,10 +223,11 @@ KOKKOS_FUNCTION bool team_members_have_matching_result(
   // set accum to 1 if a mismach is found
   const bool mismatch = memberValue != target;
   int accum           = static_cast<int>(mismatch);
-  // FIXME_FIXME_OPENMPTARGET: this is because the OpenMPTarget's team API
-  // does not meet the TeamHandle concept
+  // FIXME_OPENMPTARGET: team API does not meet the TeamHandle concept and
+  // ignores the reducer passed
 #if defined KOKKOS_ENABLE_OPENMPTARGET
-  const auto result = teamHandle.team_reduce(accum);
+  Kokkos::Sum<int> dummyReducer(accum);
+  const auto result = teamHandle.team_reduce(accum, dummyReducer);
   return (result == 0);
 #else
   teamHandle.team_reduce(Kokkos::Sum<int>(accum));
