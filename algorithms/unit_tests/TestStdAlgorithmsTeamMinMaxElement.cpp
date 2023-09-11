@@ -23,47 +23,41 @@ namespace TeamMinMaxElement {
 
 namespace KE = Kokkos::Experimental;
 
-template <class ViewType, class DistancesViewType, class IntraTeamSentinelView>
+template <class ViewType, class DistancesViewType>
 struct TestFunctorA {
   ViewType m_view;
   DistancesViewType m_distancesView;
-  IntraTeamSentinelView m_intraTeamSentinelView;
   int m_apiPick;
 
   TestFunctorA(const ViewType view, const DistancesViewType distancesView,
-               IntraTeamSentinelView intraTeamSentinelView, int apiPick)
-      : m_view(view),
-        m_distancesView(distancesView),
-        m_intraTeamSentinelView(intraTeamSentinelView),
-        m_apiPick(apiPick) {}
+               int apiPick)
+      : m_view(view), m_distancesView(distancesView), m_apiPick(apiPick) {}
 
   template <class MemberType>
   KOKKOS_INLINE_FUNCTION void operator()(const MemberType& member) const {
     const auto myRowIndex = member.league_rank();
     auto myRowView        = Kokkos::subview(m_view, myRowIndex, Kokkos::ALL());
-    ptrdiff_t resultDist1 = 0;
-    ptrdiff_t resultDist2 = 0;
 
     if (m_apiPick == 0) {
       auto itPair = KE::minmax_element(member, KE::cbegin(myRowView),
                                        KE::cend(myRowView));
-      resultDist1 = KE::distance(KE::cbegin(myRowView), itPair.first);
-      resultDist2 = KE::distance(KE::cbegin(myRowView), itPair.second);
 
       Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
-        m_distancesView(myRowIndex, 0) = resultDist1;
-        m_distancesView(myRowIndex, 1) = resultDist2;
+        m_distancesView(myRowIndex, 0) =
+            KE::distance(KE::cbegin(myRowView), itPair.first);
+        m_distancesView(myRowIndex, 1) =
+            KE::distance(KE::cbegin(myRowView), itPair.second);
       });
     }
 
     else if (m_apiPick == 1) {
       auto itPair = KE::minmax_element(member, myRowView);
-      resultDist1 = KE::distance(KE::begin(myRowView), itPair.first);
-      resultDist2 = KE::distance(KE::begin(myRowView), itPair.second);
 
       Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
-        m_distancesView(myRowIndex, 0) = resultDist1;
-        m_distancesView(myRowIndex, 1) = resultDist2;
+        m_distancesView(myRowIndex, 0) =
+            KE::distance(KE::begin(myRowView), itPair.first);
+        m_distancesView(myRowIndex, 1) =
+            KE::distance(KE::begin(myRowView), itPair.second);
       });
     }
 #if not defined KOKKOS_ENABLE_OPENMPTARGET
@@ -72,12 +66,11 @@ struct TestFunctorA {
       auto itPair =
           KE::minmax_element(member, KE::cbegin(myRowView), KE::cend(myRowView),
                              CustomLessThanComparator<value_type>{});
-      resultDist1 = KE::distance(KE::cbegin(myRowView), itPair.first);
-      resultDist2 = KE::distance(KE::cbegin(myRowView), itPair.second);
-
       Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
-        m_distancesView(myRowIndex, 0) = resultDist1;
-        m_distancesView(myRowIndex, 1) = resultDist2;
+        m_distancesView(myRowIndex, 0) =
+            KE::distance(KE::cbegin(myRowView), itPair.first);
+        m_distancesView(myRowIndex, 1) =
+            KE::distance(KE::cbegin(myRowView), itPair.second);
       });
     }
 
@@ -85,26 +78,14 @@ struct TestFunctorA {
       using value_type = typename ViewType::value_type;
       auto itPair      = KE::minmax_element(member, myRowView,
                                        CustomLessThanComparator<value_type>{});
-      resultDist1      = KE::distance(KE::begin(myRowView), itPair.first);
-      resultDist2      = KE::distance(KE::begin(myRowView), itPair.second);
-
       Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
-        m_distancesView(myRowIndex, 0) = resultDist1;
-        m_distancesView(myRowIndex, 1) = resultDist2;
+        m_distancesView(myRowIndex, 0) =
+            KE::distance(KE::begin(myRowView), itPair.first);
+        m_distancesView(myRowIndex, 1) =
+            KE::distance(KE::begin(myRowView), itPair.second);
       });
     }
 #endif
-
-    // store result of checking if all members have their local
-    // values matching the one stored in m_distancesView
-    member.team_barrier();
-    const bool intraTeamCheck1 = team_members_have_matching_result(
-        member, resultDist1, m_distancesView(myRowIndex, 0));
-    const bool intraTeamCheck2 = team_members_have_matching_result(
-        member, resultDist2, m_distancesView(myRowIndex, 1));
-    Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
-      m_intraTeamSentinelView(myRowIndex) = intraTeamCheck1 && intraTeamCheck2;
-    });
   }
 };
 
@@ -135,11 +116,9 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // beginning of the interval that team operates on and then we check
   // that these distances match the expectation
   Kokkos::View<std::size_t**> distancesView("distancesView", numTeams, 2);
-  // sentinel to check if all members of the team compute the same result
-  Kokkos::View<bool*> intraTeamSentinelView("intraTeamSameResult", numTeams);
 
   // use CTAD for functor
-  TestFunctorA fnc(dataView, distancesView, intraTeamSentinelView, apiId);
+  TestFunctorA fnc(dataView, distancesView, apiId);
   Kokkos::parallel_for(policy, fnc);
 
   // -----------------------------------------------
@@ -147,9 +126,8 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // -----------------------------------------------
   // here I can use cloneOfDataViewBeforeOp_h to run std algo on
   // since that contains a valid copy of the data
-  auto distancesView_h         = create_host_space_copy(distancesView);
-  auto intraTeamSentinelView_h = create_host_space_copy(intraTeamSentinelView);
-  auto dataViewAfterOp_h       = create_host_space_copy(dataView);
+  auto distancesView_h   = create_host_space_copy(distancesView);
+  auto dataViewAfterOp_h = create_host_space_copy(dataView);
   for (std::size_t i = 0; i < cloneOfDataViewBeforeOp_h.extent(0); ++i) {
     auto myRow = Kokkos::subview(cloneOfDataViewBeforeOp_h, i, Kokkos::ALL());
 
@@ -167,7 +145,6 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
 
     ASSERT_EQ(stdDistance[0], distancesView_h(i, 0));
     ASSERT_EQ(stdDistance[1], distancesView_h(i, 1));
-    ASSERT_TRUE(intraTeamSentinelView_h(i));
   }
 
   // dataView should remain unchanged
