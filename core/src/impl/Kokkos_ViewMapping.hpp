@@ -450,8 +450,8 @@ struct SubviewExtents {
   }
 
   template <int DRank, int RRank, class T, size_t... DimArgs, class... Args>
-  KOKKOS_FORCEINLINE_FUNCTION bool set(const ViewDimension<DimArgs...>& dim,
-                                       const T& val, Args... args) {
+  KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<std::is_integral_v<T>, bool> set(
+      const ViewDimension<DimArgs...>& dim, const T& val, Args... args) {
     const size_t v = static_cast<size_t>(val);
 
     m_begin[DRank] = v;
