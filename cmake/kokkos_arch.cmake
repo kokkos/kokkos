@@ -509,10 +509,13 @@ IF (KOKKOS_ARCH_NATIVE)
   # Only define one of these macros for now
   # to be uniform with what we are doing for other architectures.
   IF(KOKKOS_COMPILER_HAS_AVX512)
+    MESSAGE(STATUS "SIMD: AVX512 detected")
     SET(KOKKOS_ARCH_AVX512XEON ON)
   ELSEIF(KOKKOS_COMPILER_HAS_AVX2)
+    MESSAGE(STATUS "SIMD: AVX2 detected")
     SET(KOKKOS_ARCH_AVX2 ON)
   ELSEIF(KOKKOS_COMPILER_HAS_AVX)
+    MESSAGE(STATUS "SIMD: AVX detected")
     SET(KOKKOS_ARCH_AVX ON)
   ENDIF()
 ENDIF()
