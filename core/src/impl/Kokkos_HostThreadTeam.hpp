@@ -155,8 +155,7 @@ class HostThreadTeamData {
 
   //----------------------------------------
 
-#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC bug in NVHPC regarding constexpr
-                               // constructors used in device code
+#if !defined(KOKKOS_COMPILER_NVHPC) || (KOKKOS_COMPILER_NVHPC >= 230700)
   constexpr
 #endif
       HostThreadTeamData() noexcept

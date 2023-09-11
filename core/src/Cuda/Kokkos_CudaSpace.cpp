@@ -141,7 +141,7 @@ CudaUVMSpace::CudaUVMSpace() : m_device(Kokkos::Cuda().cuda_device()) {}
 
 CudaHostPinnedSpace::CudaHostPinnedSpace() {}
 
-int memory_threshold_g = 40000;  // 40 kB
+size_t memory_threshold_g = 40000;  // 40 kB
 
 //==============================================================================
 // <editor-fold desc="allocate()"> {{{1

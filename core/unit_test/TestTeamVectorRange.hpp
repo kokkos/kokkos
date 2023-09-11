@@ -437,7 +437,7 @@ namespace Test {
 TEST(TEST_CATEGORY, team_teamvector_range) {
   ASSERT_TRUE((TestTeamVectorRange::Test<TEST_EXECSPACE>(0)));
 #if defined(KOKKOS_ENABLE_CUDA) && \
-    defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC
+    defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC 23.7
   if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>) {
     GTEST_SKIP() << "Disabling 2/3rd of the test for now";
   }

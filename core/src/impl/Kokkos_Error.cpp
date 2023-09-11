@@ -102,11 +102,6 @@ void Experimental::RawMemoryAllocationFailure::print_error_message(
   o << "  (The allocation mechanism was ";
   switch (m_mechanism) {
     case AllocationMechanism::StdMalloc: o << "standard malloc()."; break;
-    case AllocationMechanism::PosixMemAlign: o << "posix_memalign()."; break;
-    case AllocationMechanism::PosixMMap: o << "POSIX mmap()."; break;
-    case AllocationMechanism::IntelMMAlloc:
-      o << "the Intel _mm_malloc() intrinsic.";
-      break;
     case AllocationMechanism::CudaMalloc: o << "cudaMalloc()."; break;
     case AllocationMechanism::CudaMallocManaged:
       o << "cudaMallocManaged().";
@@ -126,6 +121,7 @@ void Experimental::RawMemoryAllocationFailure::print_error_message(
     case AllocationMechanism::SYCLMallocHost:
       o << "sycl::malloc_host().";
       break;
+    default: o << "unsupported.";
   }
   append_additional_error_information(o);
   o << ")" << std::endl;

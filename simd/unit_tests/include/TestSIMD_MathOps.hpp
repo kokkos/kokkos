@@ -25,7 +25,7 @@ void host_check_math_op_one_loader(BinaryOp binary_op, std::size_t n,
                                    T const* first_args, T const* second_args) {
   Loader loader;
   using simd_type             = Kokkos::Experimental::simd<T, Abi>;
-  std::size_t constexpr width = simd_type::size();
+  constexpr std::size_t width = simd_type::size();
   for (std::size_t i = 0; i < n; i += width) {
     std::size_t const nremaining = n - i;
     std::size_t const nlanes     = Kokkos::min(nremaining, width);
@@ -54,7 +54,7 @@ void host_check_math_op_one_loader(UnaryOp unary_op, std::size_t n,
                                    T const* args) {
   Loader loader;
   using simd_type             = Kokkos::Experimental::simd<T, Abi>;
-  std::size_t constexpr width = simd_type::size();
+  constexpr std::size_t width = simd_type::size();
   for (std::size_t i = 0; i < n; i += width) {
     std::size_t const nremaining = n - i;
     std::size_t const nlanes     = Kokkos::min(nremaining, width);
@@ -136,7 +136,7 @@ KOKKOS_INLINE_FUNCTION void device_check_math_op_one_loader(
     T const* second_args) {
   Loader loader;
   using simd_type             = Kokkos::Experimental::simd<T, Abi>;
-  std::size_t constexpr width = simd_type::size();
+  constexpr std::size_t width = simd_type::size();
   for (std::size_t i = 0; i < n; i += width) {
     std::size_t const nremaining = n - i;
     std::size_t const nlanes     = Kokkos::min(nremaining, width);
@@ -164,7 +164,7 @@ KOKKOS_INLINE_FUNCTION void device_check_math_op_one_loader(UnaryOp unary_op,
                                                             T const* args) {
   Loader loader;
   using simd_type             = Kokkos::Experimental::simd<T, Abi>;
-  std::size_t constexpr width = simd_type::size();
+  constexpr std::size_t width = simd_type::size();
   for (std::size_t i = 0; i < n; i += width) {
     std::size_t const nremaining = n - i;
     std::size_t const nlanes     = Kokkos::min(nremaining, width);

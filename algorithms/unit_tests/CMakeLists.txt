@@ -154,6 +154,94 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
     endforeach()
 
     # ------------------------------------------
+    # std team G
+    # ------------------------------------------
+    set(STDALGO_TEAM_SOURCES_G)
+    foreach(Name
+	StdAlgorithmsCommon
+	StdAlgorithmsTeamMove
+	StdAlgorithmsTeamMoveBackward
+	StdAlgorithmsTeamShiftLeft
+	StdAlgorithmsTeamShiftRight
+	)
+      list(APPEND STDALGO_TEAM_SOURCES_G Test${Name}.cpp)
+    endforeach()
+
+    # ------------------------------------------
+    # std team F
+    # ------------------------------------------
+    set(STDALGO_TEAM_SOURCES_F)
+    foreach(Name
+	StdAlgorithmsCommon
+	StdAlgorithmsTeamReverse
+	StdAlgorithmsTeamReverseCopy
+	StdAlgorithmsTeamRotate
+	StdAlgorithmsTeamRotateCopy
+      )
+      list(APPEND STDALGO_TEAM_SOURCES_F Test${Name}.cpp)
+    endforeach()
+
+    # ------------------------------------------
+    # std team E
+    # ------------------------------------------
+    set(STDALGO_TEAM_SOURCES_E)
+    foreach(Name
+	StdAlgorithmsCommon
+	StdAlgorithmsTeamFill
+	StdAlgorithmsTeamFill_n
+	StdAlgorithmsTeamReplace
+	StdAlgorithmsTeamReplaceIf
+	StdAlgorithmsTeamReplaceCopy
+	StdAlgorithmsTeamReplaceCopyIf
+	)
+      list(APPEND STDALGO_TEAM_SOURCES_E Test${Name}.cpp)
+    endforeach()
+
+    # ------------------------------------------
+    # std team D
+    # ------------------------------------------
+    set(STDALGO_TEAM_SOURCES_D)
+    foreach(Name
+	StdAlgorithmsCommon
+	StdAlgorithmsTeamMinElement
+	StdAlgorithmsTeamMaxElement
+	StdAlgorithmsTeamMinMaxElement
+	)
+      list(APPEND STDALGO_TEAM_SOURCES_D Test${Name}.cpp)
+    endforeach()
+
+    # ------------------------------------------
+    # std team C
+    # ------------------------------------------
+    set(STDALGO_TEAM_SOURCES_C)
+    foreach(Name
+	StdAlgorithmsCommon
+	StdAlgorithmsTeamFind
+	StdAlgorithmsTeamFindIf
+	StdAlgorithmsTeamFindIfNot
+	StdAlgorithmsTeamAllOf
+	StdAlgorithmsTeamAnyOf
+	StdAlgorithmsTeamNoneOf
+	StdAlgorithmsTeamSearchN
+	)
+      list(APPEND STDALGO_TEAM_SOURCES_C Test${Name}.cpp)
+    endforeach()
+
+    # ------------------------------------------
+    # std team B
+    # ------------------------------------------
+    set(STDALGO_TEAM_SOURCES_B)
+    foreach(Name
+	StdAlgorithmsCommon
+	StdAlgorithmsTeamEqual
+	StdAlgorithmsTeamSearch
+	StdAlgorithmsTeamFindEnd
+	StdAlgorithmsTeamFindFirstOf
+      )
+      list(APPEND STDALGO_TEAM_SOURCES_B Test${Name}.cpp)
+    endforeach()
+
+    # ------------------------------------------
     # std team A
     # ------------------------------------------
     set(STDALGO_TEAM_SOURCES_A)
@@ -172,6 +260,23 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
 
   endif()
 endforeach()
+
+
+# FIXME_OPENMPTARGET need to remove tests for OpenMPTarget because
+# in these cases the impl needs to use either Kokkos or
+# tailored reducers which results in runtime memory errors.
+if(KOKKOS_ENABLE_OPENMPTARGET)
+  list(REMOVE_ITEM STDALGO_TEAM_SOURCES_C
+    TestStdAlgorithmsTeamFind.cpp
+    TestStdAlgorithmsTeamFindIf.cpp
+    TestStdAlgorithmsTeamFindIfNot.cpp
+    TestStdAlgorithmsTeamAllOf.cpp
+    TestStdAlgorithmsTeamAnyOf.cpp
+    TestStdAlgorithmsTeamNoneOf.cpp
+    TestStdAlgorithmsTeamSearchN.cpp
+  )
+endif()
+
 
 # FIXME_OPENMPTARGET This test causes internal compiler errors as of 09/01/22
 # when compiling for Intel's Xe-HP GPUs.
@@ -194,7 +299,7 @@ if(NOT (KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM
   )
 endif()
 
-# FIXME_OPENMPTARGET These tests cause internal compiler errors as of 09/01/22
+# FIXME_OPENMPTARGET: These tests cause internal compiler errors as of 09/01/22
 # when compiling for Intel's Xe-HP GPUs.
 if(KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM)
   list(REMOVE_ITEM STDALGO_SOURCES_D
@@ -209,6 +314,17 @@ if(KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM)
   )
 endif()
 
+# FIXME_OPENMPTARGET need to remove tests for OpenMPTarget because in these cases
+# the impl needs to use either Kokkos or tailored reducers
+# which results in runtime memory errors.
+if(KOKKOS_ENABLE_OPENMPTARGET)
+  list(REMOVE_ITEM STDALGO_TEAM_SOURCES_B
+    TestStdAlgorithmsTeamFindEnd.cpp
+    TestStdAlgorithmsTeamFindFirstOf.cpp
+    TestStdAlgorithmsTeamSearch.cpp
+  )
+endif()
+
 # FIXME_OPENMPTARGET need to remove tests for OpenMPTarget because
 # in these cases the impl needs to use either Kokkos or tailored reducers
 # which results in runtime memory errors.
@@ -220,7 +336,6 @@ if(KOKKOS_ENABLE_OPENMPTARGET)
   )
 endif()
 
-
 foreach(ID A;B;C;D;E)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     AlgorithmsUnitTest_StdSet_${ID}
@@ -230,7 +345,7 @@ foreach(ID A;B;C;D;E)
     )
 endforeach()
 
-foreach(ID A)
+foreach(ID A;B;C;D;E;F;G)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     AlgorithmsUnitTest_StdSet_Team_${ID}
     SOURCES

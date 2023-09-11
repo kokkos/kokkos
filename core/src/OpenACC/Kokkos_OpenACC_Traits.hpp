@@ -25,7 +25,7 @@ struct OpenACC_Traits {
 #if defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
   static constexpr acc_device_t dev_type     = acc_device_nvidia;
   static constexpr bool may_fallback_to_host = false;
-#elif defined(KOKKOS_ARCH_VEGA) || defined(KOKKOS_ARCH_NAVI)
+#elif defined(KOKKOS_ARCH_AMD_GPU)
   static constexpr acc_device_t dev_type     = acc_device_radeon;
   static constexpr bool may_fallback_to_host = false;
 #else
