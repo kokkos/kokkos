@@ -1433,6 +1433,7 @@ class View : public ViewTraits<DataType, Properties...> {
           "execution space");
     }
 
+#ifdef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
     if constexpr (std::is_same_v<typename traits::array_layout,
                                  Kokkos::LayoutLeft> ||
                   std::is_same_v<typename traits::array_layout,
@@ -1455,6 +1456,7 @@ class View : public ViewTraits<DataType, Properties...> {
           *this, std::is_same<typename traits::specialize, void>::value, i0, i1,
           i2, i3, i4, i5, i6, i7, alloc_name.c_str());
     }
+#endif
 
     Kokkos::Impl::SharedAllocationRecord<>* record = m_map.allocate_shared(
         prop_copy, arg_layout, Impl::ViewCtorProp<P...>::has_execution_space);
@@ -1484,6 +1486,7 @@ class View : public ViewTraits<DataType, Properties...> {
         "Constructing View to wrap user memory must supply matching pointer "
         "type");
 
+#ifdef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
     if constexpr (std::is_same_v<typename traits::array_layout,
                                  Kokkos::LayoutLeft> ||
                   std::is_same_v<typename traits::array_layout,
@@ -1504,6 +1507,7 @@ class View : public ViewTraits<DataType, Properties...> {
           *this, std::is_same<typename traits::specialize, void>::value, i0, i1,
           i2, i3, i4, i5, i6, i7, "UNMANAGED");
     }
+#endif
   }
 
   // Simple dimension-only layout
