@@ -79,10 +79,9 @@ constexpr KOKKOS_INLINE_FUNCTION std::size_t count_valid_integers(
 // type. We should be able to only pass "extent" when we use mdspan.
 template <typename View>
 KOKKOS_INLINE_FUNCTION void runtime_check_rank(
-    const View&, const size_t rank, const size_t dyn_rank,
-    const bool is_void_spec, const size_t i0, const size_t i1, const size_t i2,
-    const size_t i3, const size_t i4, const size_t i5, const size_t i6,
-    const size_t i7, const char* label) {
+    const View&, const bool is_void_spec, const size_t i0, const size_t i1,
+    const size_t i2, const size_t i3, const size_t i4, const size_t i5,
+    const size_t i6, const size_t i7, const char* label) {
   (void)(label);
 
   if (is_void_spec) {
@@ -92,12 +91,14 @@ KOKKOS_INLINE_FUNCTION void runtime_check_rank(
     // as many extents as the total rank is. In the latter case, the given
     // extents for the static dimensions must match the
     // compile-time extents.
+    constexpr int rank            = View::rank();
+    constexpr int dyn_rank        = View::rank_dynamic();
     const bool n_args_is_dyn_rank = num_passed_args == dyn_rank;
     const bool n_args_is_rank     = num_passed_args == rank;
 
     if (n_args_is_rank) {
       size_t new_extents[8] = {i0, i1, i2, i3, i4, i5, i6, i7};
-      for (size_t i = dyn_rank; i < rank; ++i)
+      for (int i = dyn_rank; i < rank; ++i)
         if (new_extents[i] != View::static_extent(i)) {
           KOKKOS_IF_ON_HOST(
               const std::string message =
@@ -1451,9 +1452,8 @@ class View : public ViewTraits<DataType, Properties...> {
       const std::string& alloc_name =
           Impl::get_property<Impl::LabelTag>(prop_copy);
       Impl::runtime_check_rank(
-          *this, traits::rank, traits::rank_dynamic,
-          std::is_same<typename traits::specialize, void>::value, i0, i1, i2,
-          i3, i4, i5, i6, i7, alloc_name.c_str());
+          *this, std::is_same<typename traits::specialize, void>::value, i0, i1,
+          i2, i3, i4, i5, i6, i7, alloc_name.c_str());
     }
 
     Kokkos::Impl::SharedAllocationRecord<>* record = m_map.allocate_shared(
@@ -1501,9 +1501,8 @@ class View : public ViewTraits<DataType, Properties...> {
       size_t i7 = arg_layout.dimension[7];
 
       Impl::runtime_check_rank(
-          *this, traits::rank, traits::rank_dynamic,
-          std::is_same<typename traits::specialize, void>::value, i0, i1, i2,
-          i3, i4, i5, i6, i7, "UNMANAGED");
+          *this, std::is_same<typename traits::specialize, void>::value, i0, i1,
+          i2, i3, i4, i5, i6, i7, "UNMANAGED");
     }
   }
 
