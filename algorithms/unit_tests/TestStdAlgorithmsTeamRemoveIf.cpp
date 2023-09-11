@@ -34,39 +34,54 @@ struct GreaterThanValueFunctor {
   bool operator()(ValueType val) const { return (val > m_val); }
 };
 
-template <class ViewType, class DistancesViewType, class ValueType>
+template <class ViewType, class DistancesViewType, class IntraTeamSentinelView,
+          class ValueType>
 struct TestFunctorA {
   ViewType m_view;
   ValueType m_threshold;
   DistancesViewType m_distancesView;
+  IntraTeamSentinelView m_intraTeamSentinelView;
   int m_apiPick;
 
   TestFunctorA(const ViewType view, ValueType threshold,
-               const DistancesViewType distancesView, int apiPick)
+               const DistancesViewType distancesView,
+               const IntraTeamSentinelView intraTeamSentinelView, int apiPick)
       : m_view(view),
         m_threshold(threshold),
         m_distancesView(distancesView),
+        m_intraTeamSentinelView(intraTeamSentinelView),
         m_apiPick(apiPick) {}
 
   template <class MemberType>
   KOKKOS_INLINE_FUNCTION void operator()(const MemberType& member) const {
     const auto myRowIndex = member.league_rank();
     auto myRowView        = Kokkos::subview(m_view, myRowIndex, Kokkos::ALL());
+    ptrdiff_t resultDist  = 0;
 
     GreaterThanValueFunctor predicate(m_threshold);
     if (m_apiPick == 0) {
       auto it = KE::remove_if(member, KE::begin(myRowView), KE::end(myRowView),
                               predicate);
-
+      resultDist = KE::distance(KE::begin(myRowView), it);
       Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
-        m_distancesView(myRowIndex) = KE::distance(KE::begin(myRowView), it);
+        m_distancesView(myRowIndex) = resultDist;
       });
     } else if (m_apiPick == 1) {
-      auto it = KE::remove_if(member, myRowView, predicate);
+      auto it    = KE::remove_if(member, myRowView, predicate);
+      resultDist = KE::distance(KE::begin(myRowView), it);
       Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
-        m_distancesView(myRowIndex) = KE::distance(KE::begin(myRowView), it);
+        m_distancesView(myRowIndex) = resultDist;
       });
     }
+
+    // store result of checking if all members have their local
+    // values matching the one stored in m_distancesView
+    member.team_barrier();
+    const bool intraTeamCheck = team_members_have_matching_result(
+        member, resultDist, m_distancesView(myRowIndex));
+    Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
+      m_intraTeamSentinelView(myRowIndex) = intraTeamCheck;
+    });
   }
 };
 
@@ -101,17 +116,21 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // beginning of the interval that team operates on and then we check
   // that these distances match the std result
   Kokkos::View<std::size_t*> distancesView("distancesView", numTeams);
+  // sentinel to check if all members of the team compute the same result
+  Kokkos::View<bool*> intraTeamSentinelView("intraTeamSameResult", numTeams);
 
   // use CTAD for functor
-  TestFunctorA fnc(dataView, threshold, distancesView, apiId);
+  TestFunctorA fnc(dataView, threshold, distancesView, intraTeamSentinelView,
+                   apiId);
   Kokkos::parallel_for(policy, fnc);
 
   // -----------------------------------------------
   // check against std
   // -----------------------------------------------
   GreaterThanValueFunctor predicate(threshold);
-  auto dataViewAfterOp_h = create_host_space_copy(dataView);
-  auto distancesView_h   = create_host_space_copy(distancesView);
+  auto dataViewAfterOp_h       = create_host_space_copy(dataView);
+  auto distancesView_h         = create_host_space_copy(distancesView);
+  auto intraTeamSentinelView_h = create_host_space_copy(intraTeamSentinelView);
   for (std::size_t i = 0; i < dataViewAfterOp_h.extent(0); ++i) {
     auto myRow = Kokkos::subview(cloneOfDataViewBeforeOp_h, i, Kokkos::ALL());
     auto stdIt = std::remove_if(KE::begin(myRow), KE::end(myRow), predicate);
@@ -121,6 +140,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
     for (std::size_t j = 0; j < distancesView_h(i); ++j) {
       EXPECT_TRUE(dataViewAfterOp_h(i, j) == cloneOfDataViewBeforeOp_h(i, j));
     }
+    ASSERT_TRUE(intraTeamSentinelView_h(i));
   }
 }
 

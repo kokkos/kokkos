@@ -34,20 +34,23 @@ struct GreaterThanValueFunctor {
 };
 
 template <class SourceViewType, class DestViewType, class DistancesViewType,
-          class ValueType>
+          class IntraTeamSentinelView, class ValueType>
 struct TestFunctorA {
   SourceViewType m_sourceView;
   DestViewType m_destView;
   DistancesViewType m_distancesView;
+  IntraTeamSentinelView m_intraTeamSentinelView;
   ValueType m_threshold;
   int m_apiPick;
 
   TestFunctorA(const SourceViewType sourceView, const DestViewType destView,
-               const DistancesViewType distancesView, ValueType threshold,
-               int apiPick)
+               const DistancesViewType distancesView,
+               const IntraTeamSentinelView intraTeamSentinelView,
+               ValueType threshold, int apiPick)
       : m_sourceView(sourceView),
         m_destView(destView),
         m_distancesView(distancesView),
+        m_intraTeamSentinelView(intraTeamSentinelView),
         m_threshold(threshold),
         m_apiPick(apiPick) {}
 
@@ -59,24 +62,32 @@ struct TestFunctorA {
     auto myRowViewDest = Kokkos::subview(m_destView, myRowIndex, Kokkos::ALL());
 
     GreaterThanValueFunctor predicate(m_threshold);
+    ptrdiff_t resultDist = 0;
 
     if (m_apiPick == 0) {
       auto it =
           KE::copy_if(member, KE::begin(myRowViewFrom), KE::end(myRowViewFrom),
                       KE::begin(myRowViewDest), predicate);
-
+      resultDist = KE::distance(KE::begin(myRowViewDest), it);
       Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
-        m_distancesView(myRowIndex) =
-            KE::distance(KE::begin(myRowViewDest), it);
+        m_distancesView(myRowIndex) = resultDist;
       });
     } else if (m_apiPick == 1) {
-      auto it = KE::copy_if(member, myRowViewFrom, myRowViewDest, predicate);
-
+      auto it    = KE::copy_if(member, myRowViewFrom, myRowViewDest, predicate);
+      resultDist = KE::distance(KE::begin(myRowViewDest), it);
       Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
-        m_distancesView(myRowIndex) =
-            KE::distance(KE::begin(myRowViewDest), it);
+        m_distancesView(myRowIndex) = resultDist;
       });
     }
+
+    // store result of checking if all members have their local
+    // values matching the one stored in m_distancesView
+    member.team_barrier();
+    const bool intraTeamCheck = team_members_have_matching_result(
+        member, resultDist, m_distancesView(myRowIndex));
+    Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
+      m_intraTeamSentinelView(myRowIndex) = intraTeamCheck;
+    });
   }
 };
 
@@ -113,15 +124,19 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // beginning of the interval that team operates on and then we check
   // that these distances match the std result
   Kokkos::View<std::size_t*> distancesView("distancesView", numTeams);
+  // sentinel to check if all members of the team compute the same result
+  Kokkos::View<bool*> intraTeamSentinelView("intraTeamSameResult", numTeams);
 
   // use CTAD for functor
-  TestFunctorA fnc(sourceView, destView, distancesView, threshold, apiId);
+  TestFunctorA fnc(sourceView, destView, distancesView, intraTeamSentinelView,
+                   threshold, apiId);
   Kokkos::parallel_for(policy, fnc);
 
   // -----------------------------------------------
   // run cpp-std kernel and check
   // -----------------------------------------------
-  auto distancesView_h = create_host_space_copy(distancesView);
+  auto distancesView_h         = create_host_space_copy(distancesView);
+  auto intraTeamSentinelView_h = create_host_space_copy(intraTeamSentinelView);
   Kokkos::View<ValueType**, Kokkos::HostSpace> stdDestView("stdDestView",
                                                            numTeams, numCols);
   GreaterThanValueFunctor predicate(threshold);
