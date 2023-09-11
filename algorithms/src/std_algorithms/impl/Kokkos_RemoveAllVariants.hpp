@@ -172,6 +172,7 @@ remove_if_team_impl(const TeamHandleType& teamHandle, IteratorType first,
           },
           count);
     }
+    // no barrier needed since single above broadcasts to all members
 
     return first + num_elements - remove_count;
   }

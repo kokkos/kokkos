@@ -138,6 +138,7 @@ KOKKOS_FUNCTION OutputIterator copy_if_team_impl(
         }
       },
       count);
+  // no barrier needed since single above broadcasts to all members
 
   return d_first + count;
 }

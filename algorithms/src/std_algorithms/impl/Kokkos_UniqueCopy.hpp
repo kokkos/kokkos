@@ -160,6 +160,7 @@ KOKKOS_FUNCTION OutputIterator unique_copy_team_impl(
           d_first[lcount++] = first[num_elements - 1];
         },
         count);
+    // no barrier needed since single above broadcasts to all members
 
     // return the correct iterator: we need +1 here because we need to
     // return iterator to the element past the last element copied
