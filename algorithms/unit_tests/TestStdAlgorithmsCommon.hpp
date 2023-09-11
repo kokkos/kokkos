@@ -212,6 +212,21 @@ auto create_deep_copyable_compatible_clone(ViewType view) {
 // others
 //
 
+template <class TeamHandleType, class ValueType1, class ValueType2>
+KOKKOS_FUNCTION bool team_members_have_matching_result(
+    const TeamHandleType& teamHandle, const ValueType1 memberValueIn,
+    const ValueType2 targetIn) {
+  using T             = std::common_type_t<ValueType1, ValueType2>;
+  const T memberValue = memberValueIn;
+  const T target      = targetIn;
+
+  // set accum to 1 if a mismach is found
+  const bool mismatch = memberValue != target;
+  int accum           = static_cast<int>(mismatch);
+  teamHandle.team_reduce(Kokkos::Sum<int>(accum));
+  return (accum == 0);
+}
+
 template <class ValueType1, class ValueType2>
 auto make_bounds(const ValueType1& lower, const ValueType2 upper) {
   return Kokkos::pair<ValueType1, ValueType2>{lower, upper};
