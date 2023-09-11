@@ -444,104 +444,90 @@ struct SubviewExtents {
   size_t m_length[InternalRangeRank];
   unsigned m_index[InternalRangeRank];
 
-  template <size_t... DimArgs>
-  KOKKOS_FORCEINLINE_FUNCTION bool set(unsigned, unsigned,
-                                       const ViewDimension<DimArgs...>&) {
+  template <int DRank, int RRank, size_t... DimArgs>
+  KOKKOS_FORCEINLINE_FUNCTION bool set(const ViewDimension<DimArgs...>&) {
     return true;
   }
 
-  template <class T, size_t... DimArgs, class... Args>
-  KOKKOS_FORCEINLINE_FUNCTION bool set(unsigned domain_rank,
-                                       unsigned range_rank,
-                                       const ViewDimension<DimArgs...>& dim,
+  template <int DRank, int RRank, class T, size_t... DimArgs, class... Args>
+  KOKKOS_FORCEINLINE_FUNCTION bool set(const ViewDimension<DimArgs...>& dim,
                                        const T& val, Args... args) {
     const size_t v = static_cast<size_t>(val);
 
-    m_begin[domain_rank] = v;
+    m_begin[DRank] = v;
 
-    return set(domain_rank + 1, range_rank, dim, args...)
+    return set<DRank + 1, RRank>(dim, args...)
 #if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
-           && (v < dim.extent(domain_rank))
+           && (v < dim.extent(DRank))
 #endif
         ;
   }
 
   // ALL_t
-  template <size_t... DimArgs, class... Args>
-  KOKKOS_FORCEINLINE_FUNCTION bool set(unsigned domain_rank,
-                                       unsigned range_rank,
-                                       const ViewDimension<DimArgs...>& dim,
+  template <int DRank, int RRank, size_t... DimArgs, class... Args>
+  KOKKOS_FORCEINLINE_FUNCTION bool set(const ViewDimension<DimArgs...>& dim,
                                        Kokkos::ALL_t, Args... args) {
     // should never fail but silences a gcc-13 warning
-    if (domain_rank < DomainRank && range_rank < RangeRank) {
-      m_begin[domain_rank] = 0;
-      m_length[range_rank] = dim.extent(domain_rank);
-      m_index[range_rank]  = domain_rank;
+    m_begin[DRank]  = 0;
+    m_length[RRank] = dim.extent(DRank);
+    m_index[RRank]  = DRank;
 
-      return set(domain_rank + 1, range_rank + 1, dim, args...);
-    } else
-      return false;
+    return set<DRank + 1, RRank + 1>(dim, args...);
   }
 
   // std::pair range
-  template <class T, size_t... DimArgs, class... Args>
-  KOKKOS_FORCEINLINE_FUNCTION bool set(unsigned domain_rank,
-                                       unsigned range_rank,
-                                       const ViewDimension<DimArgs...>& dim,
+  template <int DRank, int RRank, class T, size_t... DimArgs, class... Args>
+  KOKKOS_FORCEINLINE_FUNCTION bool set(const ViewDimension<DimArgs...>& dim,
                                        const std::pair<T, T>& val,
                                        Args... args) {
     const size_t b = static_cast<size_t>(val.first);
     const size_t e = static_cast<size_t>(val.second);
 
-    m_begin[domain_rank] = b;
-    m_length[range_rank] = e - b;
-    m_index[range_rank]  = domain_rank;
+    m_begin[DRank]  = b;
+    m_length[RRank] = e - b;
+    m_index[RRank]  = DRank;
 
-    return set(domain_rank + 1, range_rank + 1, dim, args...)
+    return set<DRank + 1, RRank + 1>(dim, args...)
 #if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
-           && (e <= b + dim.extent(domain_rank))
+           && (e <= b + dim.extent(DRank))
 #endif
         ;
   }
 
   // Kokkos::pair range
-  template <class T, size_t... DimArgs, class... Args>
-  KOKKOS_FORCEINLINE_FUNCTION bool set(unsigned domain_rank,
-                                       unsigned range_rank,
-                                       const ViewDimension<DimArgs...>& dim,
+  template <int DRank, int RRank, class T, size_t... DimArgs, class... Args>
+  KOKKOS_FORCEINLINE_FUNCTION bool set(const ViewDimension<DimArgs...>& dim,
                                        const Kokkos::pair<T, T>& val,
                                        Args... args) {
     const size_t b = static_cast<size_t>(val.first);
     const size_t e = static_cast<size_t>(val.second);
 
-    m_begin[domain_rank] = b;
-    m_length[range_rank] = e - b;
-    m_index[range_rank]  = domain_rank;
+    m_begin[DRank]  = b;
+    m_length[RRank] = e - b;
+    m_index[RRank]  = DRank;
 
-    return set(domain_rank + 1, range_rank + 1, dim, args...)
+    return set<DRank + 1, RRank + 1>(dim, args...)
 #if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
-           && (e <= b + dim.extent(domain_rank))
+           && (e <= b + dim.extent(DRank))
 #endif
         ;
   }
 
   // { begin , end } range
-  template <class T, size_t... DimArgs, class... Args>
-  KOKKOS_FORCEINLINE_FUNCTION bool set(unsigned domain_rank,
-                                       unsigned range_rank,
-                                       const ViewDimension<DimArgs...>& dim,
+  template <int DRank, int RRank, class T, size_t... DimArgs, class... Args>
+  KOKKOS_FORCEINLINE_FUNCTION bool set(const ViewDimension<DimArgs...>& dim,
                                        const std::initializer_list<T>& val,
                                        Args... args) {
     const size_t b = static_cast<size_t>(val.begin()[0]);
     const size_t e = static_cast<size_t>(val.begin()[1]);
 
-    m_begin[domain_rank] = b;
-    m_length[range_rank] = e - b;
-    m_index[range_rank]  = domain_rank;
+    m_begin[DRank]  = b;
+    m_length[RRank] = e - b;
+    m_index[RRank]  = DRank;
 
-    return set(domain_rank + 1, range_rank + 1, dim, args...)
+    return set<DRank + 1, RRank + 1>(dim, args...)
 #if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
-           && (val.size() == 2) && (e <= b + dim.extent(domain_rank))
+           && (val.size() == 2) && (e <= b + dim.extent(DRank))
 #endif
         ;
   }
@@ -682,7 +668,7 @@ struct SubviewExtents {
       m_index[0]  = ~0u;
     }
 
-    if (!set(0, 0, dim, args...)) error(dim, args...);
+    if (!set<0, 0>(dim, args...)) error(dim, args...);
   }
 
   template <typename iType>
