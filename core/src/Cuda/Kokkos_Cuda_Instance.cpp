@@ -97,10 +97,11 @@ __global__ void query_cuda_kernel_arch(int *d_arch) {
 }
 
 /** Query what compute capability is actually launched to the device: */
-int cuda_kernel_arch() {
+int cuda_kernel_arch(int cuda_device) {
   int arch    = 0;
   int *d_arch = nullptr;
 
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(cuda_device));
   KOKKOS_IMPL_CUDA_SAFE_CALL(
       cudaMalloc(reinterpret_cast<void **>(&d_arch), sizeof(int)));
   KOKKOS_IMPL_CUDA_SAFE_CALL(
@@ -692,14 +693,12 @@ void Cuda::impl_initialize(InitializationSettings const &settings) {
   const int cuda_device_id = Impl::get_gpu(settings);
   const auto &dev_info     = Impl::CudaInternalDevices::singleton();
 
-  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(cuda_device_id));
-
   const struct cudaDeviceProp &cudaProp = dev_info.m_cudaProp[cuda_device_id];
 
   Impl::CudaInternal::m_deviceProp = cudaProp;
 
   // Query what compute capability architecture a kernel executes:
-  Impl::CudaInternal::m_cudaArch = Impl::cuda_kernel_arch();
+  Impl::CudaInternal::m_cudaArch = Impl::cuda_kernel_arch(cuda_device_id);
 
   if (Impl::CudaInternal::m_cudaArch == 0) {
     std::stringstream ss;
