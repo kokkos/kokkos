@@ -18,19 +18,12 @@
 
 namespace Test {
 TEST(TEST_CATEGORY, atomic_operations_double) {
-  const int start = 1;  // Avoid zero for division.
+  const int start = -5;
   const int end   = 11;
   for (int i = start; i < end; ++i) {
-    ASSERT_TRUE((TestAtomicOperations::AtomicOperationsTestNonIntegralType<
-                 double, TEST_EXECSPACE>(start, end - i, 1)));
-    ASSERT_TRUE((TestAtomicOperations::AtomicOperationsTestNonIntegralType<
-                 double, TEST_EXECSPACE>(start, end - i, 2)));
-    ASSERT_TRUE((TestAtomicOperations::AtomicOperationsTestNonIntegralType<
-                 double, TEST_EXECSPACE>(start, end - i, 3)));
-    ASSERT_TRUE((TestAtomicOperations::AtomicOperationsTestNonIntegralType<
-                 double, TEST_EXECSPACE>(start, end - i, 4)));
-    ASSERT_TRUE((TestAtomicOperations::AtomicOperationsTestNonIntegralType<
-                 double, TEST_EXECSPACE>(start, end - i, 5)));
+    for (int t = 0; t < 8; t++)
+      ASSERT_TRUE((TestAtomicOperations::AtomicOperationsTestNonIntegralType<
+                   double, TEST_EXECSPACE>(i, end - i + start, t)));
   }
 }
 }  // namespace Test
