@@ -154,7 +154,8 @@ struct HIPReductionsFunctor<FunctorType, false> {
     int const lane_id =
         (threadIdx.y * blockDim.x + threadIdx.x) % HIPTraits::WarpSize;
     for (int delta = skip_vector ? blockDim.x : 1; delta < width; delta *= 2) {
-      if (lane_id + delta < HIPTraits::WarpSize) {
+      if (lane_id + delta < HIPTraits::WarpSize &&
+          (lane_id % (delta * 2) == 0)) {
         functor.join(value, value + delta);
       }
     }

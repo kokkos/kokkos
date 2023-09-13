@@ -1575,7 +1575,6 @@ struct TestIsNaN {
       ++e;
       KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed isnan(KE::half_t)\n");
     }
-#endif
     if (isnan(static_cast<KE::bhalf_t>(2.f))
 #if !defined(KOKKOS_ENABLE_CUDA)
         || !isnan(quiet_NaN<KE::bhalf_t>::value) ||
@@ -1585,6 +1584,7 @@ struct TestIsNaN {
       ++e;
       KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed isnan(KE::bhalf_t)\n");
     }
+#endif
     if (isnan(3.)
 #ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC 23.7
         || !isnan(quiet_NaN<double>::value) ||
