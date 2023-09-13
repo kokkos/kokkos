@@ -25,13 +25,14 @@ template <class Oper,
           //   requires !atomic_always_lock_free(sizeof(T))
           std::enable_if_t<!atomic_always_lock_free(sizeof(T)), int> = 0>
 inline T device_atomic_fetch_oper(const Oper& op,
-                                T* const dest,
-                                dont_deduce_this_parameter_t<const T> val,
-                                MemoryOrder /*order*/,
-                                MemoryScope scope) {
+                                  T* const dest,
+                                  dont_deduce_this_parameter_t<const T> val,
+                                  MemoryOrder /*order*/,
+                                  MemoryScope scope) {
   if (acc_on_device(acc_device_not_host)) {
-    printf("Kokkos Error in device_atomic_fetch_oper(): Not supported atomic "
-                  "operation in the OpenACC backend\n");
+    printf(
+        "Kokkos Error in device_atomic_fetch_oper(): Not supported atomic "
+        "operation in the OpenACC backend\n");
   }
   // Acquire a lock for the address
   while (!lock_address((void*)dest, scope)) {
@@ -53,13 +54,14 @@ template <class Oper,
           //   requires !atomic_always_lock_free(sizeof(T))
           std::enable_if_t<!atomic_always_lock_free(sizeof(T)), int> = 0>
 inline T device_atomic_oper_fetch(const Oper& op,
-                                T* const dest,
-                                dont_deduce_this_parameter_t<const T> val,
-                                MemoryOrder /*order*/,
-                                MemoryScope scope) {
+                                  T* const dest,
+                                  dont_deduce_this_parameter_t<const T> val,
+                                  MemoryOrder /*order*/,
+                                  MemoryScope scope) {
   if (acc_on_device(acc_device_not_host)) {
-    printf("Kokkos Error in device_atomic_fetch_oper(): Not supported atomic "
-                  "operation in the OpenACC backend\n");
+    printf(
+        "Kokkos Error in device_atomic_oper_fetch(): Not supported atomic "
+        "operation in the OpenACC backend\n");
   }
   // Acquire a lock for the address
   while (!lock_address((void*)dest, scope)) {
