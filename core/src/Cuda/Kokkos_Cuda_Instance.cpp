@@ -391,31 +391,6 @@ void CudaInternal::initialize(cudaStream_t stream, bool manage_stream) {
     (void)scratch_space(reduce_block_count * 16 * sizeof(size_type));
   }
 
-#ifdef KOKKOS_ENABLE_CUDA_UVM
-  const char *env_force_device_alloc =
-      getenv("CUDA_MANAGED_FORCE_DEVICE_ALLOC");
-  bool force_device_alloc;
-  if (env_force_device_alloc == nullptr)
-    force_device_alloc = false;
-  else
-    force_device_alloc = std::stoi(env_force_device_alloc) != 0;
-
-  const char *env_visible_devices = getenv("CUDA_VISIBLE_DEVICES");
-  bool visible_devices_one        = true;
-  if (env_visible_devices == nullptr) visible_devices_one = false;
-
-  if (Kokkos::show_warnings() &&
-      (!visible_devices_one && !force_device_alloc)) {
-    std::cerr << R"warning(
-Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
-                                  without setting CUDA_MANAGED_FORCE_DEVICE_ALLOC=1 or
-                                  setting CUDA_VISIBLE_DEVICES.
-                                  This could on multi GPU systems lead to severe performance"
-                                  penalties.)warning"
-              << std::endl;
-  }
-#endif
-
   // Init the array for used for arbitrarily sized atomics
   if (this == &singleton()) {
     desul::Impl::init_lock_arrays();  // FIXME
@@ -499,7 +474,7 @@ Cuda::size_type *CudaInternal::scratch_space(const std::size_t size) const {
 }
 
 Cuda::size_type *CudaInternal::scratch_unified(const std::size_t size) const {
-  if (verify_is_initialized("scratch_unified") && m_scratchUnifiedSupported &&
+  if (verify_is_initialized("scratch_unified") &&
       m_scratchUnifiedCount < scratch_count(size)) {
     m_scratchUnifiedCount = scratch_count(size);
 
@@ -759,6 +734,34 @@ void Cuda::impl_initialize(InitializationSettings const &settings) {
               << std::endl;
   }
 
+  //----------------------------------
+
+#ifdef KOKKOS_ENABLE_CUDA_UVM
+  const char *env_force_device_alloc =
+      getenv("CUDA_MANAGED_FORCE_DEVICE_ALLOC");
+  bool force_device_alloc;
+  if (env_force_device_alloc == nullptr)
+    force_device_alloc = false;
+  else
+    force_device_alloc = std::stoi(env_force_device_alloc) != 0;
+
+  const char *env_visible_devices = getenv("CUDA_VISIBLE_DEVICES");
+  bool visible_devices_one        = true;
+  if (env_visible_devices == nullptr) visible_devices_one = false;
+
+  if (Kokkos::show_warnings() &&
+      (!visible_devices_one && !force_device_alloc)) {
+    std::cerr << R"warning(
+Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
+                                  without setting CUDA_MANAGED_FORCE_DEVICE_ALLOC=1 or
+                                  setting CUDA_VISIBLE_DEVICES.
+                                  This could on multi GPU systems lead to severe performance"
+                                  penalties.)warning"
+              << std::endl;
+  }
+#endif
+
+  //----------------------------------
   // number of multiprocessors
   Impl::CudaInternal::m_multiProcCount = cudaProp.multiProcessorCount;
 
@@ -791,15 +794,6 @@ void Cuda::impl_initialize(InitializationSettings const &settings) {
   Impl::CudaInternal::m_maxThreadsPerBlock = cudaProp.maxThreadsPerBlock;
 
   //----------------------------------
-
-  Impl::CudaInternal::m_scratchUnifiedSupported = cudaProp.unifiedAddressing;
-
-  if (Kokkos::show_warnings() &&
-      !Impl::CudaInternal::m_scratchUnifiedSupported) {
-    std::cerr << "Kokkos::Cuda device " << cudaProp.name << " capability "
-              << cudaProp.major << "." << cudaProp.minor
-              << " does not support unified virtual address space" << std::endl;
-  }
 
   cudaStream_t singleton_stream;
   KOKKOS_IMPL_CUDA_SAFE_CALL(
