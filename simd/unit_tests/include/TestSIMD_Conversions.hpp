@@ -20,95 +20,84 @@
 #include <Kokkos_SIMD.hpp>
 #include <SIMDTesting_Utilities.hpp>
 
-template <typename Abi>
+template <typename Abi, typename DataTypeA, typename DataTypeB>
 inline void host_check_conversions() {
+  DataTypeA test_val =
+      (std::is_signed_v<DataTypeA> && std::is_signed_v<DataTypeB>) ? -213 : 213;
+  bool test_mask_val = true;
   {
-    auto a = Kokkos::Experimental::simd<std::uint64_t, Abi>(1);
-    auto b = Kokkos::Experimental::simd<std::int64_t, Abi>(a);
-    EXPECT_TRUE(all_of(b == decltype(b)(1)));
+    auto from = Kokkos::Experimental::simd<DataTypeA, Abi>(test_val);
+    auto to   = Kokkos::Experimental::simd<DataTypeB, Abi>(from);
+    EXPECT_EQ(from.size(), to.size());
+    host_check_equality(to, decltype(to)(static_cast<std::int64_t>(test_val)),
+                        to.size());
   }
   {
-    auto a = Kokkos::Experimental::simd<std::int32_t, Abi>(1);
-    auto b = Kokkos::Experimental::simd<std::uint64_t, Abi>(a);
-    EXPECT_TRUE(all_of(b == decltype(b)(1)));
+    auto from = Kokkos::Experimental::simd_mask<DataTypeA, Abi>(test_mask_val);
+    auto to   = Kokkos::Experimental::simd_mask<DataTypeB, Abi>(from);
+    EXPECT_EQ(from.size(), to.size());
+    EXPECT_TRUE(to == decltype(to)(test_mask_val));
   }
-  {
-    auto a = Kokkos::Experimental::simd<std::uint64_t, Abi>(1);
-    auto b = Kokkos::Experimental::simd<std::int32_t, Abi>(a);
-    EXPECT_TRUE(all_of(b == decltype(b)(1)));
-  }
-  {
-    auto a = Kokkos::Experimental::simd_mask<double, Abi>(true);
-    auto b = Kokkos::Experimental::simd_mask<std::int32_t, Abi>(a);
-    EXPECT_TRUE(b == decltype(b)(true));
-  }
-  {
-    auto a = Kokkos::Experimental::simd_mask<std::int32_t, Abi>(true);
-    auto b = Kokkos::Experimental::simd_mask<std::uint64_t, Abi>(a);
-    EXPECT_TRUE(b == decltype(b)(true));
-  }
-  {
-    auto a = Kokkos::Experimental::simd_mask<std::int32_t, Abi>(true);
-    auto b = Kokkos::Experimental::simd_mask<std::int64_t, Abi>(a);
-    EXPECT_TRUE(b == decltype(b)(true));
-  }
-  {
-    auto a = Kokkos::Experimental::simd_mask<std::int32_t, Abi>(true);
-    auto b = Kokkos::Experimental::simd_mask<double, Abi>(a);
-    EXPECT_TRUE(b == decltype(b)(true));
-  }
+}
+
+template <typename Abi, typename DataTypeA, typename... DataTypesB>
+inline void host_check_conversions_all_types_to(
+    Kokkos::Experimental::Impl::data_types<DataTypesB...>) {
+  (host_check_conversions<Abi, DataTypeA, DataTypesB>(), ...);
+}
+
+template <typename Abi, typename... DataTypesA>
+inline void host_check_conversions_all_types_from(
+    Kokkos::Experimental::Impl::data_types<DataTypesA...>) {
+  using DataTypes = Kokkos::Experimental::Impl::data_type_set;
+  (host_check_conversions_all_types_to<Abi, DataTypesA>(DataTypes()), ...);
 }
 
 template <typename... Abis>
 inline void host_check_conversions_all_abis(
     Kokkos::Experimental::Impl::abi_set<Abis...>) {
-  (host_check_conversions<Abis>(), ...);
+  using DataTypes = Kokkos::Experimental::Impl::data_type_set;
+  (host_check_conversions_all_types_from<Abis>(DataTypes()), ...);
 }
 
-template <typename Abi>
+template <typename Abi, typename DataTypeA, typename DataTypeB>
 KOKKOS_INLINE_FUNCTION void device_check_conversions() {
+  DataTypeA test_val =
+      (std::is_signed_v<DataTypeA> && std::is_signed_v<DataTypeB>) ? -213 : 213;
+  bool test_mask_val = true;
   kokkos_checker checker;
   {
-    auto a = Kokkos::Experimental::simd<std::uint64_t, Abi>(1);
-    auto b = Kokkos::Experimental::simd<std::int64_t, Abi>(a);
-    checker.truth(all_of(b == decltype(b)(1)));
+    auto from = Kokkos::Experimental::simd<DataTypeA, Abi>(test_val);
+    auto to   = Kokkos::Experimental::simd<DataTypeB, Abi>(from);
+    checker.truth(from.size() == to.size());
+    device_check_equality(to, decltype(to)(test_val), to.size());
   }
   {
-    auto a = Kokkos::Experimental::simd<std::int32_t, Abi>(1);
-    auto b = Kokkos::Experimental::simd<std::uint64_t, Abi>(a);
-    checker.truth(all_of(b == decltype(b)(1)));
+    auto from = Kokkos::Experimental::simd_mask<DataTypeA, Abi>(test_mask_val);
+    auto to   = Kokkos::Experimental::simd_mask<DataTypeB, Abi>(from);
+    checker.truth(from.size() == to.size());
+    checker.truth(to == decltype(to)(test_mask_val));
   }
-  {
-    auto a = Kokkos::Experimental::simd<std::uint64_t, Abi>(1);
-    auto b = Kokkos::Experimental::simd<std::int32_t, Abi>(a);
-    checker.truth(all_of(b == decltype(b)(1)));
-  }
-  {
-    auto a = Kokkos::Experimental::simd_mask<double, Abi>(true);
-    auto b = Kokkos::Experimental::simd_mask<std::int32_t, Abi>(a);
-    checker.truth(b == decltype(b)(true));
-  }
-  {
-    auto a = Kokkos::Experimental::simd_mask<std::int32_t, Abi>(true);
-    auto b = Kokkos::Experimental::simd_mask<std::uint64_t, Abi>(a);
-    checker.truth(b == decltype(b)(true));
-  }
-  {
-    auto a = Kokkos::Experimental::simd_mask<std::int32_t, Abi>(true);
-    auto b = Kokkos::Experimental::simd_mask<std::int64_t, Abi>(a);
-    checker.truth(b == decltype(b)(true));
-  }
-  {
-    auto a = Kokkos::Experimental::simd_mask<std::int32_t, Abi>(true);
-    auto b = Kokkos::Experimental::simd_mask<double, Abi>(a);
-    checker.truth(b == decltype(b)(true));
-  }
+}
+
+template <typename Abi, typename DataTypeA, typename... DataTypesB>
+KOKKOS_INLINE_FUNCTION void device_check_conversions_all_types_to(
+    Kokkos::Experimental::Impl::data_types<DataTypesB...>) {
+  (device_check_conversions<Abi, DataTypeA, DataTypesB>(), ...);
+}
+
+template <typename Abi, typename... DataTypesA>
+KOKKOS_INLINE_FUNCTION void device_check_conversions_all_types_from(
+    Kokkos::Experimental::Impl::data_types<DataTypesA...>) {
+  using DataTypes = Kokkos::Experimental::Impl::data_type_set;
+  (device_check_conversions_all_types_to<Abi, DataTypesA>(DataTypes()), ...);
 }
 
 template <typename... Abis>
 KOKKOS_INLINE_FUNCTION void device_check_conversions_all_abis(
     Kokkos::Experimental::Impl::abi_set<Abis...>) {
-  (device_check_conversions<Abis>(), ...);
+  using DataTypes = Kokkos::Experimental::Impl::data_type_set;
+  (device_check_conversions_all_types_from<Abis>(DataTypes()), ...);
 }
 
 class simd_device_conversions_functor {
