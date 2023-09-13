@@ -50,17 +50,21 @@ struct GreaterThanValueFunctor {
   bool operator()(ValueType val) const { return (val > m_val); }
 };
 
-template <class ViewType, class ReturnViewType, class ValueType>
+template <class ViewType, class ReturnViewType, class IntraTeamSentinelView,
+          class ValueType>
 struct TestFunctorA {
   ViewType m_view;
   ReturnViewType m_returnsView;
+  IntraTeamSentinelView m_intraTeamSentinelView;
   ValueType m_threshold;
   int m_apiPick;
 
   TestFunctorA(const ViewType view, const ReturnViewType returnsView,
+               const IntraTeamSentinelView intraTeamSentinelView,
                ValueType threshold, int apiPick)
       : m_view(view),
         m_returnsView(returnsView),
+        m_intraTeamSentinelView(intraTeamSentinelView),
         m_threshold(threshold),
         m_apiPick(apiPick) {}
 
@@ -68,20 +72,30 @@ struct TestFunctorA {
   KOKKOS_INLINE_FUNCTION void operator()(const MemberType& member) const {
     const auto myRowIndex = member.league_rank();
     auto myRowView        = Kokkos::subview(m_view, myRowIndex, Kokkos::ALL());
+    bool result           = false;
 
     GreaterThanValueFunctor predicate(m_threshold);
     if (m_apiPick == 0) {
-      const bool result = KE::is_partitioned(member, KE::cbegin(myRowView),
-                                             KE::cend(myRowView), predicate);
+      result = KE::is_partitioned(member, KE::cbegin(myRowView),
+                                  KE::cend(myRowView), predicate);
 
       Kokkos::single(Kokkos::PerTeam(member),
                      [=, *this]() { m_returnsView(myRowIndex) = result; });
     } else if (m_apiPick == 1) {
-      const bool result = KE::is_partitioned(member, myRowView, predicate);
+      result = KE::is_partitioned(member, myRowView, predicate);
 
       Kokkos::single(Kokkos::PerTeam(member),
                      [=, *this]() { m_returnsView(myRowIndex) = result; });
     }
+
+    // store result of checking if all members have their local
+    // values matching the one stored in m_distancesView
+    member.team_barrier();
+    const bool intraTeamCheck = team_members_have_matching_result(
+        member, result, m_returnsView(myRowIndex));
+    Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
+      m_intraTeamSentinelView(myRowIndex) = intraTeamCheck;
+    });
   }
 };
 
@@ -164,15 +178,19 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId,
   // to verify that things work, each team stores the result
   // and then we check that these match what we expect
   Kokkos::View<bool*> returnView("returnView", numTeams);
+  // sentinel to check if all members of the team compute the same result
+  Kokkos::View<bool*> intraTeamSentinelView("intraTeamSameResult", numTeams);
 
   // use CTAD for functor
-  TestFunctorA fnc(dataView, returnView, threshold, apiId);
+  TestFunctorA fnc(dataView, returnView, intraTeamSentinelView, threshold,
+                   apiId);
   Kokkos::parallel_for(policy, fnc);
 
   // -----------------------------------------------
   // check
   // -----------------------------------------------
-  auto returnView_h = create_host_space_copy(returnView);
+  auto returnView_h            = create_host_space_copy(returnView);
+  auto intraTeamSentinelView_h = create_host_space_copy(intraTeamSentinelView);
   GreaterThanValueFunctor predicate(threshold);
 
   for (std::size_t i = 0; i < dataView_dc_h.extent(0); ++i) {
@@ -181,6 +199,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId,
         std::is_partitioned(KE::cbegin(myRow), KE::cend(myRow), predicate);
     // our result must match std
     EXPECT_TRUE(stdResult == returnView_h(i));
+    ASSERT_TRUE(intraTeamSentinelView_h(i));
   }
 
   // dataView should remain unchanged

@@ -22,47 +22,60 @@ namespace TeamIsSorted {
 
 namespace KE = Kokkos::Experimental;
 
-template <class ViewType, class ReturnViewType>
+template <class ViewType, class ReturnViewType, class IntraTeamSentinelView>
 struct TestFunctorA {
   ViewType m_view;
   ReturnViewType m_returnsView;
+  IntraTeamSentinelView m_intraTeamSentinelView;
   int m_apiPick;
 
   TestFunctorA(const ViewType view, const ReturnViewType returnsView,
-               int apiPick)
-      : m_view(view), m_returnsView(returnsView), m_apiPick(apiPick) {}
+               const IntraTeamSentinelView intraTeamSentinelView, int apiPick)
+      : m_view(view),
+        m_returnsView(returnsView),
+        m_intraTeamSentinelView(intraTeamSentinelView),
+        m_apiPick(apiPick) {}
 
   template <class MemberType>
   KOKKOS_INLINE_FUNCTION void operator()(const MemberType& member) const {
     const auto myRowIndex = member.league_rank();
     auto myRowView        = Kokkos::subview(m_view, myRowIndex, Kokkos::ALL());
+    bool result           = false;
 
     if (m_apiPick == 0) {
-      const bool result =
+      result =
           KE::is_sorted(member, KE::cbegin(myRowView), KE::cend(myRowView));
       Kokkos::single(Kokkos::PerTeam(member),
                      [=, *this]() { m_returnsView(myRowIndex) = result; });
     } else if (m_apiPick == 1) {
-      const bool result = KE::is_sorted(member, myRowView);
+      result = KE::is_sorted(member, myRowView);
       Kokkos::single(Kokkos::PerTeam(member),
                      [=, *this]() { m_returnsView(myRowIndex) = result; });
     }
 #if not defined KOKKOS_ENABLE_OPENMPTARGET
     else if (m_apiPick == 2) {
       using value_type = typename ViewType::value_type;
-      const bool result =
-          KE::is_sorted(member, KE::cbegin(myRowView), KE::cend(myRowView),
-                        CustomLessThanComparator<value_type>{});
+      result = KE::is_sorted(member, KE::cbegin(myRowView), KE::cend(myRowView),
+                             CustomLessThanComparator<value_type>{});
       Kokkos::single(Kokkos::PerTeam(member),
                      [=, *this]() { m_returnsView(myRowIndex) = result; });
     } else if (m_apiPick == 3) {
-      using value_type  = typename ViewType::value_type;
-      const bool result = KE::is_sorted(member, myRowView,
-                                        CustomLessThanComparator<value_type>{});
+      using value_type = typename ViewType::value_type;
+      result           = KE::is_sorted(member, myRowView,
+                             CustomLessThanComparator<value_type>{});
       Kokkos::single(Kokkos::PerTeam(member),
                      [=, *this]() { m_returnsView(myRowIndex) = result; });
     }
 #endif
+
+    // store result of checking if all members have their local
+    // values matching the one stored in m_distancesView
+    member.team_barrier();
+    const bool intraTeamCheck = team_members_have_matching_result(
+        member, result, m_returnsView(myRowIndex));
+    Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
+      m_intraTeamSentinelView(myRowIndex) = intraTeamCheck;
+    });
   }
 };
 
@@ -118,15 +131,18 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId,
   // to verify that things work, each team stores the result
   // and then we check that these match what we expect
   Kokkos::View<bool*> returnView("returnView", numTeams);
+  // sentinel to check if all members of the team compute the same result
+  Kokkos::View<bool*> intraTeamSentinelView("intraTeamSameResult", numTeams);
 
   // use CTAD for functor
-  TestFunctorA fnc(dataView, returnView, apiId);
+  TestFunctorA fnc(dataView, returnView, intraTeamSentinelView, apiId);
   Kokkos::parallel_for(policy, fnc);
 
   // -----------------------------------------------
   // check
   // -----------------------------------------------
-  auto returnView_h = create_host_space_copy(returnView);
+  auto returnView_h            = create_host_space_copy(returnView);
+  auto intraTeamSentinelView_h = create_host_space_copy(intraTeamSentinelView);
   for (std::size_t i = 0; i < dataView_dc_h.extent(0); ++i) {
     auto myRow = Kokkos::subview(dataView_dc_h, i, Kokkos::ALL());
 
@@ -151,6 +167,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId,
     } else if (numCols > 10) {
       EXPECT_TRUE(stdResult == makeDataSortedOnPurpose);
     }
+    ASSERT_TRUE(intraTeamSentinelView_h(i));
   }
 
   // dataView should remain unchanged
