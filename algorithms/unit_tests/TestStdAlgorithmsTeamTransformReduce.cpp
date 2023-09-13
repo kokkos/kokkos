@@ -48,13 +48,14 @@ struct PlusOneFunctor {
 
 template <class FirstDataViewType, class SecondDataViewType,
           class InitValuesViewType, class ResultsViewType,
-          class BinaryJoinerType, class BinaryTransformType,
-          class UnaryTransformType>
+          class IntraTeamSentinelView, class BinaryJoinerType,
+          class BinaryTransformType, class UnaryTransformType>
 struct TestFunctorA {
   FirstDataViewType m_firstDataView;
   SecondDataViewType m_secondDataView;
   InitValuesViewType m_initValuesView;
   ResultsViewType m_resultsView;
+  IntraTeamSentinelView m_intraTeamSentinelView;
   BinaryJoinerType m_binaryJoiner;
   BinaryTransformType m_binaryTransform;
   UnaryTransformType m_unaryTransform;
@@ -63,13 +64,16 @@ struct TestFunctorA {
   TestFunctorA(const FirstDataViewType firstDataView,
                const SecondDataViewType secondDataview,
                const InitValuesViewType initValuesView,
-               const ResultsViewType resultsView, BinaryJoinerType binaryJoiner,
+               const ResultsViewType resultsView,
+               const IntraTeamSentinelView intraTeamSentinelView,
+               BinaryJoinerType binaryJoiner,
                BinaryTransformType binaryTransform,
                UnaryTransformType unaryTransform, int apiPick)
       : m_firstDataView(firstDataView),
         m_secondDataView(secondDataview),
         m_initValuesView(initValuesView),
         m_resultsView(resultsView),
+        m_intraTeamSentinelView(intraTeamSentinelView),
         m_binaryJoiner(binaryJoiner),
         m_binaryTransform(binaryTransform),
         m_unaryTransform(unaryTransform),
@@ -89,10 +93,11 @@ struct TestFunctorA {
     auto secondDataRowBegin = KE::cbegin(secondDataRow);
 
     const auto initVal = m_initValuesView(rowIndex);
+    typename InitValuesViewType::non_const_value_type result = 0;
 
     switch (m_apiPick) {
       case 0: {
-        const auto result =
+        result =
             KE::transform_reduce(member, firstDataRowBegin, firstDataRowEnd,
                                  secondDataRowBegin, initVal);
         Kokkos::single(Kokkos::PerTeam(member),
@@ -101,7 +106,7 @@ struct TestFunctorA {
       }
 
       case 1: {
-        const auto result =
+        result =
             KE::transform_reduce(member, firstDataRow, secondDataRow, initVal);
         Kokkos::single(Kokkos::PerTeam(member),
                        [=, *this]() { m_resultsView(rowIndex) = result; });
@@ -109,7 +114,7 @@ struct TestFunctorA {
       }
 
       case 2: {
-        const auto result = KE::transform_reduce(
+        result = KE::transform_reduce(
             member, firstDataRowBegin, firstDataRowEnd, secondDataRowBegin,
             initVal, m_binaryJoiner, m_binaryTransform);
         Kokkos::single(Kokkos::PerTeam(member),
@@ -118,7 +123,7 @@ struct TestFunctorA {
       }
 
       case 3: {
-        const auto result =
+        result =
             KE::transform_reduce(member, firstDataRow, secondDataRow, initVal,
                                  m_binaryJoiner, m_binaryTransform);
         Kokkos::single(Kokkos::PerTeam(member),
@@ -127,7 +132,7 @@ struct TestFunctorA {
       }
 
       case 4: {
-        const auto result =
+        result =
             KE::transform_reduce(member, firstDataRowBegin, firstDataRowEnd,
                                  initVal, m_binaryJoiner, m_unaryTransform);
         Kokkos::single(Kokkos::PerTeam(member),
@@ -136,13 +141,22 @@ struct TestFunctorA {
       }
 
       case 5: {
-        const auto result = KE::transform_reduce(
-            member, firstDataRow, initVal, m_binaryJoiner, m_unaryTransform);
+        result = KE::transform_reduce(member, firstDataRow, initVal,
+                                      m_binaryJoiner, m_unaryTransform);
         Kokkos::single(Kokkos::PerTeam(member),
                        [=, *this]() { m_resultsView(rowIndex) = result; });
         break;
       }
     }
+
+    // store result of checking if all members have their local
+    // values matching the one stored in m_distancesView
+    member.team_barrier();
+    const bool intraTeamCheck = team_members_have_matching_result(
+        member, result, m_resultsView(rowIndex));
+    Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
+      m_intraTeamSentinelView(rowIndex) = intraTeamCheck;
+    });
   }
 };
 
@@ -187,6 +201,8 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // to verify that things work, each team stores the result of its
   // transform_reduce call, and then we check that these match what we expect
   Kokkos::View<ValueType*> resultsView("resultsView", numTeams);
+  // sentinel to check if all members of the team compute the same result
+  Kokkos::View<bool*> intraTeamSentinelView("intraTeamSameResult", numTeams);
 
   PlusFunctor<ValueType> binaryJoiner;
   MultipliesFunctor<ValueType> binaryTransform;
@@ -196,14 +212,16 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   auto initValuesView =
       Kokkos::create_mirror_view_and_copy(space_t(), initValuesView_h);
   TestFunctorA fnc(firstDataView, secondDataView, initValuesView, resultsView,
-                   binaryJoiner, binaryTransform, unaryTransform, apiId);
+                   intraTeamSentinelView, binaryJoiner, binaryTransform,
+                   unaryTransform, apiId);
   Kokkos::parallel_for(policy, fnc);
 
   // -----------------------------------------------
   // run cpp-std kernel and check
   // -----------------------------------------------
 
-  auto resultsView_h = create_host_space_copy(resultsView);
+  auto resultsView_h           = create_host_space_copy(resultsView);
+  auto intraTeamSentinelView_h = create_host_space_copy(intraTeamSentinelView);
 
   for (std::size_t i = 0; i < firstDataView.extent(0); ++i) {
     auto firstDataRow =
@@ -218,6 +236,8 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
     const auto secondDataRowBegin = KE::cbegin(secondDataRow);
 
     const auto initVal = initValuesView_h(i);
+
+    ASSERT_TRUE(intraTeamSentinelView_h(i));
 
 // GCC 8 does not have transform_reduce so guard against this
 #if defined(__GNUC__) && __GNUC__ == 8

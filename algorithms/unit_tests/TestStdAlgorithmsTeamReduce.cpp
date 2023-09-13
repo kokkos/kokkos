@@ -33,21 +33,25 @@ struct PlusFunctor {
 };
 
 template <class DataViewType, class ReductionInitValuesViewType,
-          class ReduceResultsViewType, class BinaryPredType>
+          class ReduceResultsViewType, class IntraTeamSentinelView,
+          class BinaryPredType>
 struct TestFunctorA {
   DataViewType m_dataView;
   ReductionInitValuesViewType m_reductionInitValuesView;
   ReduceResultsViewType m_reduceResultsView;
+  IntraTeamSentinelView m_intraTeamSentinelView;
   int m_apiPick;
   BinaryPredType m_binaryPred;
 
   TestFunctorA(const DataViewType dataView,
                const ReductionInitValuesViewType reductionInitValuesView,
-               const ReduceResultsViewType reduceResultsView, int apiPick,
+               const ReduceResultsViewType reduceResultsView,
+               const IntraTeamSentinelView intraTeamSentinelView, int apiPick,
                BinaryPredType binaryPred)
       : m_dataView(dataView),
         m_reductionInitValuesView(reductionInitValuesView),
         m_reduceResultsView(reduceResultsView),
+        m_intraTeamSentinelView(intraTeamSentinelView),
         m_apiPick(apiPick),
         m_binaryPred(binaryPred) {}
 
@@ -60,10 +64,11 @@ struct TestFunctorA {
     const auto rowFromBegin     = KE::cbegin(myRowViewFrom);
     const auto rowFromEnd       = KE::cend(myRowViewFrom);
     const auto initReductionVal = m_reductionInitValuesView(myRowIndex);
+    typename ReduceResultsViewType::non_const_value_type result = 0;
 
     switch (m_apiPick) {
       case 0: {
-        const auto result = KE::reduce(member, rowFromBegin, rowFromEnd);
+        result = KE::reduce(member, rowFromBegin, rowFromEnd);
         Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
           m_reduceResultsView(myRowIndex) = result;
         });
@@ -71,7 +76,7 @@ struct TestFunctorA {
       }
 
       case 1: {
-        const auto result = KE::reduce(member, myRowViewFrom);
+        result = KE::reduce(member, myRowViewFrom);
         Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
           m_reduceResultsView(myRowIndex) = result;
         });
@@ -79,8 +84,7 @@ struct TestFunctorA {
       }
 
       case 2: {
-        const auto result =
-            KE::reduce(member, rowFromBegin, rowFromEnd, initReductionVal);
+        result = KE::reduce(member, rowFromBegin, rowFromEnd, initReductionVal);
         Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
           m_reduceResultsView(myRowIndex) = result;
         });
@@ -88,7 +92,7 @@ struct TestFunctorA {
       }
 
       case 3: {
-        const auto result = KE::reduce(member, myRowViewFrom, initReductionVal);
+        result = KE::reduce(member, myRowViewFrom, initReductionVal);
         Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
           m_reduceResultsView(myRowIndex) = result;
         });
@@ -96,8 +100,8 @@ struct TestFunctorA {
       }
 
       case 4: {
-        const auto result = KE::reduce(member, rowFromBegin, rowFromEnd,
-                                       initReductionVal, m_binaryPred);
+        result = KE::reduce(member, rowFromBegin, rowFromEnd, initReductionVal,
+                            m_binaryPred);
         Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
           m_reduceResultsView(myRowIndex) = result;
         });
@@ -105,7 +109,7 @@ struct TestFunctorA {
       }
 
       case 5: {
-        const auto result =
+        result =
             KE::reduce(member, myRowViewFrom, initReductionVal, m_binaryPred);
         Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
           m_reduceResultsView(myRowIndex) = result;
@@ -113,6 +117,15 @@ struct TestFunctorA {
         break;
       }
     }
+
+    // store result of checking if all members have their local
+    // values matching the one stored in m_distancesView
+    member.team_barrier();
+    const bool intraTeamCheck = team_members_have_matching_result(
+        member, result, m_reduceResultsView(myRowIndex));
+    Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
+      m_intraTeamSentinelView(myRowIndex) = intraTeamCheck;
+    });
   }
 };
 
@@ -153,21 +166,24 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // to verify that things work, each team stores the result of its reduce
   // call, and then we check that these match what we expect
   Kokkos::View<ValueType*> reduceResultsView("reduceResultsView", numTeams);
+  // sentinel to check if all members of the team compute the same result
+  Kokkos::View<bool*> intraTeamSentinelView("intraTeamSameResult", numTeams);
 
   PlusFunctor<ValueType> binaryPred;
 
   // use CTAD for functor
   auto reductionInitValuesView =
       Kokkos::create_mirror_view_and_copy(space_t(), reductionInitValuesView_h);
-  TestFunctorA fnc(dataView, reductionInitValuesView, reduceResultsView, apiId,
-                   binaryPred);
+  TestFunctorA fnc(dataView, reductionInitValuesView, reduceResultsView,
+                   intraTeamSentinelView, apiId, binaryPred);
   Kokkos::parallel_for(policy, fnc);
 
   // -----------------------------------------------
   // run cpp-std kernel and check
   // -----------------------------------------------
 
-  auto reduceResultsView_h = create_host_space_copy(reduceResultsView);
+  auto reduceResultsView_h     = create_host_space_copy(reduceResultsView);
+  auto intraTeamSentinelView_h = create_host_space_copy(intraTeamSentinelView);
 
   for (std::size_t i = 0; i < dataView.extent(0); ++i) {
     auto rowFrom = Kokkos::subview(dataViewBeforeOp_h, i, Kokkos::ALL());
@@ -175,6 +191,8 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
     const auto rowFromBegin = KE::cbegin(rowFrom);
     const auto rowFromEnd   = KE::cend(rowFrom);
     const auto initVal      = reductionInitValuesView_h(i);
+
+    ASSERT_TRUE(intraTeamSentinelView_h(i));
 
 // GCC 8 does not have reduce so guard against this
 #if defined(__GNUC__) && __GNUC__ == 8
