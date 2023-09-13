@@ -295,7 +295,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
   endif()
 endforeach()
 
-# need to remove tests for OpenMPTarget because in these cases
+# FIXME_OPENMPTARGET remove tests for OpenMPTarget because in these cases
 # the impl needs to use either Kokkos or tailored reducers
 # which results in runtime memory errors.
 if(KOKKOS_ENABLE_OPENMPTARGET)
