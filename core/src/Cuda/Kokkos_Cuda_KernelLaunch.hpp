@@ -21,7 +21,6 @@
 #ifdef KOKKOS_ENABLE_CUDA
 
 #include <mutex>
-#include <string>
 #include <cstdint>
 #include <cmath>
 #include <Kokkos_Parallel.hpp>
@@ -121,8 +120,8 @@ inline void check_shmem_request(CudaInternal const* cuda_instance, int shmem) {
   int const maxShmemPerBlock = cuda_instance->m_deviceProp.sharedMemPerBlock;
   if (maxShmemPerBlock < shmem) {
     Kokkos::Impl::throw_runtime_exception(
-        std::string("CudaParallelLaunch (or graph node creation) FAILED: shared"
-                    " memory request is too large"));
+        "CudaParallelLaunch (or graph node creation) FAILED: shared memory "
+        "request is too large");
   }
 }
 
