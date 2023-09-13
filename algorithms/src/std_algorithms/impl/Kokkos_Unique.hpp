@@ -179,17 +179,33 @@ KOKKOS_FUNCTION IteratorType unique_team_impl(const TeamHandleType& teamHandle,
     // allocation, but for the team level we cannot do the same, so do this
     // serially for now and later figure out if this can be done in parallel
 
-    std::size_t count = {};
-    if (teamHandle.team_rank() == 0) {
-      IteratorType result = first;
-      while (++first != last) {
-        if (!pred(*result, *first) && ++result != first) {
-          *result = std::move(*first);
-        }
-      }
-      count = Kokkos::Experimental::distance(first, result);
-    }
-    teamHandle.team_broadcast(count, 0);
+    std::size_t count = 0;
+    Kokkos::single(
+        Kokkos::PerTeam(teamHandle),
+        [=](std::size_t& lcount) {
+          IteratorType result = first;
+          IteratorType lfirst = first;
+          while (++lfirst != last) {
+            if (!pred(*result, *lfirst) && ++result != lfirst) {
+              *result = std::move(*lfirst);
+            }
+          }
+          lcount = Kokkos::Experimental::distance(first, result);
+        },
+        count);
+    // no barrier needed since single above broadcasts to all members
+
+    // std::size_t count = {};
+    // if (teamHandle.team_rank() == 0) {
+    //   IteratorType result = first;
+    //   while (++first != last) {
+    //     if (!pred(*result, *first) && ++result != first) {
+    //       *result = std::move(*first);
+    //     }
+    //   }
+    //   count = Kokkos::Experimental::distance(first, result);
+    // }
+    // teamHandle.team_broadcast(count, 0);
 
     // +1 is needed because we want one element past the end
     return first + count + 1;
