@@ -190,11 +190,13 @@ void *impl_allocate_common(const int device_id,
   if (arg_alloc_size >= memory_threshold_g) {
     error_code = cudaMallocAsync(&ptr, arg_alloc_size, stream);
 
-    if (stream_sync_only) {
-      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamSynchronize(stream));
-    } else {
-      Impl::cuda_device_synchronize(
-          "Kokkos::Cuda: backend fence after async malloc");
+    if (error_code == cudaSuccess) {
+      if (stream_sync_only) {
+        KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamSynchronize(stream));
+      } else {
+        Impl::cuda_device_synchronize(
+            "Kokkos::Cuda: backend fence after async malloc");
+      }
     }
   } else
 #endif
