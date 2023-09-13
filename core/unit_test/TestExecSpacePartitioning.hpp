@@ -104,28 +104,6 @@ void test_partitioning(std::vector<TEST_EXECSPACE>& instances) {
       });
   ASSERT_EQ(sum1, sum2);
   ASSERT_EQ(sum1, N * (N - 1) / 2);
-
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
-    defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENMP)
-  // Eliminate unused function warning
-  // (i.e. when compiling for Serial and CUDA, during Serial compilation the
-  // Cuda overload is unused ...)
-  if (sum1 != sum2) {
-#ifdef KOKKOS_ENABLE_CUDA
-    check_distinctive(Kokkos::Cuda(), Kokkos::Cuda());
-#endif
-#ifdef KOKKOS_ENABLE_HIP
-    check_distinctive(Kokkos::HIP(), Kokkos::HIP());
-#endif
-#ifdef KOKKOS_ENABLE_SYCL
-    check_distinctive(Kokkos::Experimental::SYCL(),
-                      Kokkos::Experimental::SYCL());
-#endif
-#ifdef KOKKOS_ENABLE_OPENMP
-    check_distinctive(Kokkos::OpenMP(), Kokkos::OpenMP());
-#endif
-  }
-#endif
 }
 
 TEST(TEST_CATEGORY, partitioning_by_args) {
