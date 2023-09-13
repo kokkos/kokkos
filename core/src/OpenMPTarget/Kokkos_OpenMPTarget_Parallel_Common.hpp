@@ -197,6 +197,10 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
 
   static void execute_init_join(const FunctorType& f, const PolicyType& p,
                                 PointerType ptr, const bool ptr_on_device) {
+    OpenMPTargetExec::verify_is_process(
+        "Kokkos::Experimental::OpenMPTarget parallel_for");
+    OpenMPTargetExec::verify_initialized(
+        "Kokkos::Experimental::OpenMPTarget parallel_for");
     const auto begin = p.begin();
     const auto end   = p.end();
 
@@ -560,6 +564,10 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
   // RangePolicy. Need a new implementation.
   static void execute_init_join(const FunctorType& f, const PolicyType& p,
                                 PointerType ptr, const bool ptr_on_device) {
+    OpenMPTargetExec::verify_is_process(
+        "Kokkos::Experimental::OpenMPTarget parallel_for");
+    OpenMPTargetExec::verify_initialized(
+        "Kokkos::Experimental::OpenMPTarget parallel_for");
     using FunctorAnalysis =
         Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE, PolicyType,
                               FunctorType, ValueType>;
