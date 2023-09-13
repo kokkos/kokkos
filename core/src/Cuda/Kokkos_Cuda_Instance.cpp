@@ -391,31 +391,6 @@ void CudaInternal::initialize(cudaStream_t stream, bool manage_stream) {
     (void)scratch_space(reduce_block_count * 16 * sizeof(size_type));
   }
 
-#ifdef KOKKOS_ENABLE_CUDA_UVM
-  const char *env_force_device_alloc =
-      getenv("CUDA_MANAGED_FORCE_DEVICE_ALLOC");
-  bool force_device_alloc;
-  if (env_force_device_alloc == nullptr)
-    force_device_alloc = false;
-  else
-    force_device_alloc = std::stoi(env_force_device_alloc) != 0;
-
-  const char *env_visible_devices = getenv("CUDA_VISIBLE_DEVICES");
-  bool visible_devices_one        = true;
-  if (env_visible_devices == nullptr) visible_devices_one = false;
-
-  if (Kokkos::show_warnings() &&
-      (!visible_devices_one && !force_device_alloc)) {
-    std::cerr << R"warning(
-Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
-                                  without setting CUDA_MANAGED_FORCE_DEVICE_ALLOC=1 or
-                                  setting CUDA_VISIBLE_DEVICES.
-                                  This could on multi GPU systems lead to severe performance"
-                                  penalties.)warning"
-              << std::endl;
-  }
-#endif
-
   // Init the array for used for arbitrarily sized atomics
   if (this == &singleton()) {
     desul::Impl::init_lock_arrays();  // FIXME
@@ -499,7 +474,7 @@ Cuda::size_type *CudaInternal::scratch_space(const std::size_t size) const {
 }
 
 Cuda::size_type *CudaInternal::scratch_unified(const std::size_t size) const {
-  if (verify_is_initialized("scratch_unified") && m_scratchUnifiedSupported &&
+  if (verify_is_initialized("scratch_unified") &&
       m_scratchUnifiedCount < scratch_count(size)) {
     m_scratchUnifiedCount = scratch_count(size);
 
@@ -715,106 +690,110 @@ void Cuda::impl_initialize(InitializationSettings const &settings) {
   const int cuda_device_id = Impl::get_gpu(settings);
   const auto &dev_info     = Impl::CudaInternalDevices::singleton();
 
-  // Need device capability 3.0 or better
-  const bool ok_dev = 3 <= dev_info.m_cudaProp[cuda_device_id].major &&
-                      0 <= dev_info.m_cudaProp[cuda_device_id].minor;
-  if (ok_dev) {
-    const struct cudaDeviceProp &cudaProp = dev_info.m_cudaProp[cuda_device_id];
+  const struct cudaDeviceProp &cudaProp = dev_info.m_cudaProp[cuda_device_id];
 
-    Impl::CudaInternal::m_cudaDev    = cuda_device_id;
-    Impl::CudaInternal::m_deviceProp = cudaProp;
+  Impl::CudaInternal::m_cudaDev    = cuda_device_id;
+  Impl::CudaInternal::m_deviceProp = cudaProp;
 
-    Kokkos::Impl::cuda_device_synchronize(
-        "Kokkos::CudaInternal::initialize: Fence on space initialization");
+  Kokkos::Impl::cuda_device_synchronize(
+      "Kokkos::CudaInternal::initialize: Fence on space initialization");
 
-    // Query what compute capability architecture a kernel executes:
-    Impl::CudaInternal::m_cudaArch = Impl::cuda_kernel_arch();
+  // Query what compute capability architecture a kernel executes:
+  Impl::CudaInternal::m_cudaArch = Impl::cuda_kernel_arch();
 
-    if (Impl::CudaInternal::m_cudaArch == 0) {
-      std::stringstream ss;
-      ss << "Kokkos::Cuda::initialize ERROR: likely mismatch of architecture\n";
-      std::string msg = ss.str();
-      Kokkos::abort(msg.c_str());
-    }
-
-    int compiled_major = Impl::CudaInternal::m_cudaArch / 100;
-    int compiled_minor = (Impl::CudaInternal::m_cudaArch % 100) / 10;
-
-    if ((compiled_major > cudaProp.major) ||
-        ((compiled_major == cudaProp.major) &&
-         (compiled_minor > cudaProp.minor))) {
-      std::stringstream ss;
-      ss << "Kokkos::Cuda::initialize ERROR: running kernels compiled for "
-            "compute capability "
-         << compiled_major << "." << compiled_minor
-         << " on device with compute capability " << cudaProp.major << "."
-         << cudaProp.minor << " is not supported by CUDA!\n";
-      std::string msg = ss.str();
-      Kokkos::abort(msg.c_str());
-    }
-    if (Kokkos::show_warnings() && (compiled_major != cudaProp.major ||
-                                    compiled_minor != cudaProp.minor)) {
-      std::cerr << "Kokkos::Cuda::initialize WARNING: running kernels compiled "
-                   "for compute capability "
-                << compiled_major << "." << compiled_minor
-                << " on device with compute capability " << cudaProp.major
-                << "." << cudaProp.minor
-                << " , this will likely reduce potential performance."
-                << std::endl;
-    }
-
-    // number of multiprocessors
-    Impl::CudaInternal::m_multiProcCount = cudaProp.multiProcessorCount;
-
-    //----------------------------------
-    // Maximum number of warps,
-    // at most one warp per thread in a warp for reduction.
-    Impl::CudaInternal::m_maxWarpCount =
-        cudaProp.maxThreadsPerBlock / Impl::CudaTraits::WarpSize;
-
-    if (Impl::CudaTraits::WarpSize < Impl::CudaInternal::m_maxWarpCount) {
-      Impl::CudaInternal::m_maxWarpCount = Impl::CudaTraits::WarpSize;
-    }
-
-    //----------------------------------
-    // Maximum number of blocks:
-
-    Impl::CudaInternal::m_maxBlock[0] = cudaProp.maxGridSize[0];
-    Impl::CudaInternal::m_maxBlock[1] = cudaProp.maxGridSize[1];
-    Impl::CudaInternal::m_maxBlock[2] = cudaProp.maxGridSize[2];
-
-    Impl::CudaInternal::m_shmemPerSM = cudaProp.sharedMemPerMultiprocessor;
-    Impl::CudaInternal::m_maxShmemPerBlock = cudaProp.sharedMemPerBlock;
-    Impl::CudaInternal::m_maxBlocksPerSM =
-        Impl::CudaInternal::m_cudaArch < 500
-            ? 16
-            : (Impl::CudaInternal::m_cudaArch < 750
-                   ? 32
-                   : (Impl::CudaInternal::m_cudaArch == 750 ? 16 : 32));
-    Impl::CudaInternal::m_maxThreadsPerSM =
-        cudaProp.maxThreadsPerMultiProcessor;
-    Impl::CudaInternal::m_maxThreadsPerBlock = cudaProp.maxThreadsPerBlock;
-
-    //----------------------------------
-
-    Impl::CudaInternal::m_scratchUnifiedSupported = cudaProp.unifiedAddressing;
-
-    if (Kokkos::show_warnings() &&
-        !Impl::CudaInternal::m_scratchUnifiedSupported) {
-      std::cerr << "Kokkos::Cuda device " << cudaProp.name << " capability "
-                << cudaProp.major << "." << cudaProp.minor
-                << " does not support unified virtual address space"
-                << std::endl;
-    }
-  } else {
-    std::ostringstream msg;
-    msg << "Kokkos::Cuda::initialize(" << cuda_device_id << ") FAILED: Device ";
-    msg << dev_info.m_cudaProp[cuda_device_id].major;
-    msg << ".";
-    msg << dev_info.m_cudaProp[cuda_device_id].minor;
-    msg << " has insufficient capability, required 3.0 or better";
-    Kokkos::Impl::throw_runtime_exception(msg.str());
+  if (Impl::CudaInternal::m_cudaArch == 0) {
+    std::stringstream ss;
+    ss << "Kokkos::Cuda::initialize ERROR: likely mismatch of architecture\n";
+    std::string msg = ss.str();
+    Kokkos::abort(msg.c_str());
   }
+
+  int compiled_major = Impl::CudaInternal::m_cudaArch / 100;
+  int compiled_minor = (Impl::CudaInternal::m_cudaArch % 100) / 10;
+
+  if ((compiled_major > cudaProp.major) ||
+      ((compiled_major == cudaProp.major) &&
+       (compiled_minor > cudaProp.minor))) {
+    std::stringstream ss;
+    ss << "Kokkos::Cuda::initialize ERROR: running kernels compiled for "
+          "compute capability "
+       << compiled_major << "." << compiled_minor
+       << " on device with compute capability " << cudaProp.major << "."
+       << cudaProp.minor << " is not supported by CUDA!\n";
+    std::string msg = ss.str();
+    Kokkos::abort(msg.c_str());
+  }
+  if (Kokkos::show_warnings() &&
+      (compiled_major != cudaProp.major || compiled_minor != cudaProp.minor)) {
+    std::cerr << "Kokkos::Cuda::initialize WARNING: running kernels compiled "
+                 "for compute capability "
+              << compiled_major << "." << compiled_minor
+              << " on device with compute capability " << cudaProp.major << "."
+              << cudaProp.minor
+              << " , this will likely reduce potential performance."
+              << std::endl;
+  }
+
+  //----------------------------------
+
+#ifdef KOKKOS_ENABLE_CUDA_UVM
+  const char *env_force_device_alloc =
+      getenv("CUDA_MANAGED_FORCE_DEVICE_ALLOC");
+  bool force_device_alloc;
+  if (env_force_device_alloc == nullptr)
+    force_device_alloc = false;
+  else
+    force_device_alloc = std::stoi(env_force_device_alloc) != 0;
+
+  const char *env_visible_devices = getenv("CUDA_VISIBLE_DEVICES");
+  bool visible_devices_one        = true;
+  if (env_visible_devices == nullptr) visible_devices_one = false;
+
+  if (Kokkos::show_warnings() &&
+      (!visible_devices_one && !force_device_alloc)) {
+    std::cerr << R"warning(
+Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
+                                  without setting CUDA_MANAGED_FORCE_DEVICE_ALLOC=1 or
+                                  setting CUDA_VISIBLE_DEVICES.
+                                  This could on multi GPU systems lead to severe performance"
+                                  penalties.)warning"
+              << std::endl;
+  }
+#endif
+
+  //----------------------------------
+  // number of multiprocessors
+  Impl::CudaInternal::m_multiProcCount = cudaProp.multiProcessorCount;
+
+  //----------------------------------
+  // Maximum number of warps,
+  // at most one warp per thread in a warp for reduction.
+  Impl::CudaInternal::m_maxWarpCount =
+      cudaProp.maxThreadsPerBlock / Impl::CudaTraits::WarpSize;
+
+  if (Impl::CudaTraits::WarpSize < Impl::CudaInternal::m_maxWarpCount) {
+    Impl::CudaInternal::m_maxWarpCount = Impl::CudaTraits::WarpSize;
+  }
+
+  //----------------------------------
+  // Maximum number of blocks:
+
+  Impl::CudaInternal::m_maxBlock[0] = cudaProp.maxGridSize[0];
+  Impl::CudaInternal::m_maxBlock[1] = cudaProp.maxGridSize[1];
+  Impl::CudaInternal::m_maxBlock[2] = cudaProp.maxGridSize[2];
+
+  Impl::CudaInternal::m_shmemPerSM       = cudaProp.sharedMemPerMultiprocessor;
+  Impl::CudaInternal::m_maxShmemPerBlock = cudaProp.sharedMemPerBlock;
+  Impl::CudaInternal::m_maxBlocksPerSM =
+      Impl::CudaInternal::m_cudaArch < 500
+          ? 16
+          : (Impl::CudaInternal::m_cudaArch < 750
+                 ? 32
+                 : (Impl::CudaInternal::m_cudaArch == 750 ? 16 : 32));
+  Impl::CudaInternal::m_maxThreadsPerSM = cudaProp.maxThreadsPerMultiProcessor;
+  Impl::CudaInternal::m_maxThreadsPerBlock = cudaProp.maxThreadsPerBlock;
+
+  //----------------------------------
 
   cudaStream_t singleton_stream;
   KOKKOS_IMPL_CUDA_SAFE_CALL(
