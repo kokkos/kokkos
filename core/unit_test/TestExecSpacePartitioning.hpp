@@ -31,6 +31,11 @@ struct SumFunctor {
 template <class ExecSpace>
 void check_distinctive(ExecSpace, ExecSpace) {}
 
+#ifdef KOKKOS_ENABLE_SERIAL
+void check_distinctive(Kokkos::Serial exec1, Kokkos::Serial exec2) {
+  ASSERT_NE(exec1, exec2);
+}
+#endif
 #ifdef KOKKOS_ENABLE_CUDA
 void check_distinctive(Kokkos::Cuda exec1, Kokkos::Cuda exec2) {
   ASSERT_NE(exec1.cuda_stream(), exec2.cuda_stream());
