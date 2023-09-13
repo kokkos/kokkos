@@ -30,18 +30,22 @@ struct PlusTwoUnaryOp {
   }
 };
 
-template <class SourceViewType, class DestViewType, class DistancesViewType>
+template <class SourceViewType, class DestViewType, class DistancesViewType,
+          class IntraTeamSentinelView>
 struct TestFunctorA {
   SourceViewType m_sourceView;
   DestViewType m_destView;
   DistancesViewType m_distancesView;
+  IntraTeamSentinelView m_intraTeamSentinelView;
   int m_apiPick;
 
   TestFunctorA(const SourceViewType sourceView, const DestViewType destView,
-               const DistancesViewType distancesView, int apiPick)
+               const DistancesViewType distancesView,
+               const IntraTeamSentinelView intraTeamSentinelView, int apiPick)
       : m_sourceView(sourceView),
         m_destView(destView),
         m_distancesView(distancesView),
+        m_intraTeamSentinelView(intraTeamSentinelView),
         m_apiPick(apiPick) {}
 
   template <class MemberType>
@@ -50,6 +54,7 @@ struct TestFunctorA {
     auto myRowViewFrom =
         Kokkos::subview(m_sourceView, myRowIndex, Kokkos::ALL());
     auto myRowViewDest = Kokkos::subview(m_destView, myRowIndex, Kokkos::ALL());
+    ptrdiff_t resultDist = 0;
 
     using value_type = typename SourceViewType::value_type;
     if (m_apiPick == 0) {
@@ -57,19 +62,28 @@ struct TestFunctorA {
                               KE::cend(myRowViewFrom), KE::begin(myRowViewDest),
                               PlusTwoUnaryOp<value_type>());
 
+      resultDist = KE::distance(KE::begin(myRowViewDest), it);
       Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
-        m_distancesView(myRowIndex) =
-            KE::distance(KE::begin(myRowViewDest), it);
+        m_distancesView(myRowIndex) = resultDist;
       });
     } else if (m_apiPick == 1) {
       auto it = KE::transform(member, myRowViewFrom, myRowViewDest,
                               PlusTwoUnaryOp<value_type>());
 
+      resultDist = KE::distance(KE::begin(myRowViewDest), it);
       Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
-        m_distancesView(myRowIndex) =
-            KE::distance(KE::begin(myRowViewDest), it);
+        m_distancesView(myRowIndex) = resultDist;
       });
     }
+
+    // store result of checking if all members have their local
+    // values matching the one stored in m_distancesView
+    member.team_barrier();
+    const bool intraTeamCheck = team_members_have_matching_result(
+        member, resultDist, m_distancesView(myRowIndex));
+    Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
+      m_intraTeamSentinelView(myRowIndex) = intraTeamCheck;
+    });
   }
 };
 
@@ -107,17 +121,21 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // beginning of the interval that team operates on and then we check
   // that these distances match the expectation
   Kokkos::View<std::size_t*> distancesView("distancesView", numTeams);
+  // sentinel to check if all members of the team compute the same result
+  Kokkos::View<bool*> intraTeamSentinelView("intraTeamSameResult", numTeams);
 
   // use CTAD for functor
-  TestFunctorA fnc(sourceView, destView, distancesView, apiId);
+  TestFunctorA fnc(sourceView, destView, distancesView, intraTeamSentinelView,
+                   apiId);
   Kokkos::parallel_for(policy, fnc);
 
   // -----------------------------------------------
   // check
   // -----------------------------------------------
-  auto distancesView_h     = create_host_space_copy(distancesView);
-  auto sourceViewAfterOp_h = create_host_space_copy(sourceView);
-  auto destViewAfterOp_h   = create_host_space_copy(destView);
+  auto distancesView_h         = create_host_space_copy(distancesView);
+  auto sourceViewAfterOp_h     = create_host_space_copy(sourceView);
+  auto destViewAfterOp_h       = create_host_space_copy(destView);
+  auto intraTeamSentinelView_h = create_host_space_copy(intraTeamSentinelView);
   for (std::size_t i = 0; i < destViewBeforeOp_h.extent(0); ++i) {
     for (std::size_t j = 0; j < destViewBeforeOp_h.extent(1); ++j) {
       // source view should not change
@@ -132,6 +150,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
     // beginning of the row equals the num of columns since
     // each team transforms all elements in each row
     EXPECT_TRUE(distancesView_h(i) == numCols);
+    ASSERT_TRUE(intraTeamSentinelView_h(i));
   }
 }
 
