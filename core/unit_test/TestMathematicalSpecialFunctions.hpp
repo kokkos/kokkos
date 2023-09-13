@@ -1208,7 +1208,7 @@ struct TestComplexBesselI0K0Function {
 
     EXPECT_EQ(h_ref_cbk0(0), h_cbk0(0));
     int upper_limit = N;
-    // FIXME_SYCL Failing for Intel GPUs
+    // FIXME_SYCL Failing for Intel GPUs, 19 is the first failing test case
 #if defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_ARCH_INTEL_GPU)
     if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::SYCL>)
       upper_limit = 19;
@@ -1457,7 +1457,7 @@ struct TestComplexBesselI1K1Function {
 
     EXPECT_EQ(h_ref_cbk1(0), h_cbk1(0));
     int upper_limit = N;
-    // FIXME_SYCL Failing for Intel GPUs
+    // FIXME_SYCL Failing for Intel GPUs, 8 is the first failing test case
 #if defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_ARCH_INTEL_GPU)
     if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::SYCL>)
       upper_limit = 8;
@@ -1720,7 +1720,7 @@ struct TestComplexBesselH1Function {
 
     EXPECT_EQ(h_ref_ch11(0), h_ch11(0));
     int upper_limit = N;
-    // FIXME_SYCL Failing for Intel GPUs
+    // FIXME_SYCL Failing for Intel GPUs, 16 is the first failing test case
 #if defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_ARCH_INTEL_GPU)
     if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::SYCL>)
       upper_limit = 16;
@@ -1913,7 +1913,7 @@ struct TestComplexBesselH2Function {
 
     EXPECT_EQ(h_ref_ch21(0), h_ch21(0));
     int upper_limit = N;
-    // FIXME_SYCL Failing for Intel GPUs
+    // FIXME_SYCL Failing for Intel GPUs, 17 is the first failing test case
 #if defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_ARCH_INTEL_GPU)
     if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::SYCL>)
       upper_limit = 17;
