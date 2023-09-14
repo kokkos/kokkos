@@ -1268,6 +1268,187 @@ KOKKOS_INLINE_FUNCTION CmplxType cyl_bessel_h21(const CmplxType& z) {
   return ch21;
 }
 
+template <auto BesselZero, auto BesselOne, class CmplxType, class IntType,
+          class... Args>
+KOKKOS_INLINE_FUNCTION CmplxType cyl_bessel(const IntType& a,
+                                            const CmplxType& z, Args... args) {
+  if (a == 0) return BesselZero(z, args...);
+  if (a == 1) return BesselOne(z, args...);
+  return CmplxType(2 * (a - 1)) *
+             cyl_bessel<BesselZero, BesselOne, CmplxType, IntType, Args...>(
+                 a - 1, z, args...) /
+             z -
+         cyl_bessel<BesselZero, BesselOne, CmplxType, IntType, Args...>(
+             a - 2, z, args...);
+}
+
+template <class CmplxType, class RealType, class IntType>
+KOKKOS_INLINE_FUNCTION CmplxType cyl_bessel_j(const IntType& a,
+                                              const CmplxType& z,
+                                              const RealType& joint_val = 25.0,
+                                              const IntType& bw_start   = 70) {
+  if ((z.real() == 0.0) && (z.imag() == 0.0)) {
+    return CmplxType(0.0, 0.0);
+  }
+  auto pos_a  = a;
+  auto factor = 1.0;
+  if (a < 0) {
+    pos_a = -a;
+    // minus for odd orders
+    factor = -1 * (pos_a % 2 - 0.5) * 2;
+  }
+  return factor *
+         cyl_bessel<cyl_bessel_j0<CmplxType, RealType, IntType>,
+                    cyl_bessel_j1<CmplxType, RealType, IntType>, CmplxType,
+                    IntType, RealType>(pos_a, z, joint_val, bw_start);
+}
+
+template <class CmplxType, class RealType, class IntType>
+KOKKOS_INLINE_FUNCTION CmplxType cyl_bessel_y(const IntType& a,
+                                              const CmplxType& z,
+                                              const RealType& joint_val = 25,
+                                              const IntType& bw_start   = 70) {
+  if ((z.real() == 0.0) && (z.imag() == 0.0)) {
+    return CmplxType(-infinity<double>::value, 0.0);
+  }
+  auto pos_a  = a;
+  auto factor = 1.0;
+  if (a < 0) {
+    pos_a = -a;
+    // minus for odd orders
+    factor = -1 * (pos_a % 2 - 0.5) * 2;
+  }
+  return factor *
+         cyl_bessel<cyl_bessel_y0<CmplxType, RealType, IntType>,
+                    cyl_bessel_y1<CmplxType, RealType, IntType>, CmplxType,
+                    IntType, RealType>(pos_a, z, joint_val, bw_start);
+}
+
+template <class CmplxType, class RealType, class IntType>
+KOKKOS_INLINE_FUNCTION CmplxType cyl_bessel_h1(const IntType& a,
+                                               const CmplxType& z) {
+  if ((z.real() == 0.0) && (z.imag() == 0.0)) {
+    return CmplxType(0.0, 0.0);
+  }
+  auto pos_a       = a;
+  CmplxType factor = 1.0;
+  if (a < 0) {
+    CmplxType ci      = CmplxType(0.0, 1.0);
+    pos_a             = -a;
+    constexpr auto pi = Kokkos::numbers::pi_v<RealType>;
+    factor            = Kokkos::exp(ci * pos_a * pi);
+  }
+  return factor *
+         cyl_bessel<cyl_bessel_h10<CmplxType>, cyl_bessel_h11<CmplxType>,
+                    CmplxType, IntType>(pos_a, z);
+}
+
+template <class CmplxType, class RealType, class IntType>
+KOKKOS_INLINE_FUNCTION CmplxType cyl_bessel_h2(const IntType& a,
+                                               const CmplxType& z) {
+  if ((z.real() == 0.0) && (z.imag() == 0.0)) {
+    return CmplxType(0.0, 0.0);
+  }
+
+  auto pos_a       = a;
+  CmplxType factor = 1.0;
+  if (a < 0) {
+    CmplxType ci      = CmplxType(0.0, 1.0);
+    constexpr auto pi = Kokkos::numbers::pi_v<RealType>;
+    pos_a             = -a;
+    // minus for odd orders
+    factor = Kokkos::exp(-ci * pos_a * pi);
+  }
+  return factor *
+         cyl_bessel<cyl_bessel_h20<CmplxType>, cyl_bessel_h21<CmplxType>,
+                    CmplxType, IntType>(pos_a, z);
+}
+
+template <class CmplxType, class RealType, class IntType>
+KOKKOS_INLINE_FUNCTION CmplxType cyl_bessel_i(IntType a, const CmplxType& z,
+                                              const RealType& joint_val = 25,
+                                              const IntType& bw_start   = 70) {
+  if ((z.real() == 0.0) && (z.imag() == 0.0)) {
+    return CmplxType(0.0, 0.0);
+  }
+  a = Kokkos::abs(a);
+  if (a == 0) return cyl_bessel_i0(z, joint_val, bw_start);
+  if (a == 1) return cyl_bessel_i1(z, joint_val, bw_start);
+  return -CmplxType(2 * (a - 1)) *
+             cyl_bessel_i<CmplxType, RealType, IntType>(a - 1, z, joint_val,
+                                                        bw_start) /
+             z +
+         cyl_bessel_i<CmplxType, RealType, IntType>(a - 2, z, joint_val,
+                                                    bw_start);
+}
+
+template <class CmplxType, class RealType, class IntType>
+KOKKOS_INLINE_FUNCTION CmplxType cyl_bessel_k(IntType a, const CmplxType& z,
+                                              const RealType& joint_val = 9,
+                                              const IntType& bw_start   = 30) {
+  using Kokkos::Experimental::infinity_v;
+  if ((z.real() == 0.0) && (z.imag() == 0.0)) {
+    constexpr auto inf = infinity_v<RealType>;
+    return CmplxType(inf, 0.0);
+  }
+  a = Kokkos::abs(a);
+  if (a == 0) return cyl_bessel_k0(z, joint_val, bw_start);
+  if (a == 1) {
+    return cyl_bessel_k1(z, joint_val, bw_start);
+  }
+
+  return CmplxType(2 * (a - 1)) *
+             cyl_bessel_k<CmplxType, RealType, IntType>(a - 1, z, joint_val,
+                                                        bw_start) /
+             z +
+         cyl_bessel_k<CmplxType, RealType, IntType>(a - 2, z, joint_val,
+                                                    bw_start);
+}
+
+template <class RealType, class IntType>
+KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> cyl_bessel_j(
+    const IntType& a, const Kokkos::complex<RealType>& z,
+    const RealType& joint_val = 25, const IntType& bw_start = 70) {
+  return cyl_bessel_j<Kokkos::complex<RealType>, RealType, IntType>(
+      a, z, joint_val, bw_start);
+}
+
+template <class RealType, class IntType>
+KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> cyl_bessel_y(
+    const IntType& a, const Kokkos::complex<RealType>& z,
+    const RealType& joint_val = 25, const IntType& bw_start = 70) {
+  return cyl_bessel_y<Kokkos::complex<RealType>, RealType, IntType>(
+      a, z, joint_val, bw_start);
+}
+
+template <class RealType, class IntType>
+KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> cyl_bessel_h1(
+    const IntType& a, const Kokkos::complex<RealType>& z) {
+  return cyl_bessel_h1<Kokkos::complex<RealType>, RealType, IntType>(a, z);
+}
+
+template <class RealType, class IntType>
+KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> cyl_bessel_h2(
+    const IntType& a, const Kokkos::complex<RealType>& z) {
+  return cyl_bessel_h2<Kokkos::complex<RealType>, RealType, IntType>(a, z);
+}
+
+template <class RealType, class IntType>
+KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> cyl_bessel_i(
+    IntType a, const Kokkos::complex<RealType>& z,
+    const RealType& joint_val = 25, const IntType& bw_start = 70) {
+  return cyl_bessel_i<Kokkos::complex<RealType>, RealType, IntType>(
+      a, z, joint_val, bw_start);
+}
+
+template <class RealType, class IntType>
+KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> cyl_bessel_k(
+    IntType a, const Kokkos::complex<RealType>& z,
+    const RealType& joint_val = 9, const IntType& bw_start = 30) {
+  return cyl_bessel_k<Kokkos::complex<RealType>, RealType, IntType>(
+      a, z, joint_val, bw_start);
+}
+
 }  // namespace Experimental
 }  // namespace Kokkos
 
