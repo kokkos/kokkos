@@ -249,10 +249,8 @@ std::vector<Serial> partition_space(const Serial&,
   // otherwise.
   std::vector<Serial> instances;
   instances.reserve(weights.size());
-  std::generate_n(std::back_inserter(instances), weights.size(), []() {
-    Serial s{NewInstance{}};
-    return s;
-  });
+  std::generate_n(std::back_inserter(instances), weights.size(),
+                  []() { return Serial{NewInstance{}}; });
   return instances;
 }
 
