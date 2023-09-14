@@ -329,25 +329,27 @@ if(KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM)
   )
 endif()
 
-# FIXME_OPENMPTARGET need to remove tests for OpenMPTarget because in these cases
-# the impl needs to use either Kokkos or tailored reducers
-# which results in runtime memory errors.
+# FIXME_OPENMPTARGET remove tests for OpenMPTarget
+# causing failures for various reasons
 if(KOKKOS_ENABLE_OPENMPTARGET)
+  # the following use either Kokkos or tailored reducers
+  # which results in runtime memory errors.
   list(REMOVE_ITEM STDALGO_TEAM_SOURCES_B
     TestStdAlgorithmsTeamFindEnd.cpp
     TestStdAlgorithmsTeamFindFirstOf.cpp
     TestStdAlgorithmsTeamSearch.cpp
   )
-endif()
 
-# FIXME_OPENMPTARGET need to remove tests for OpenMPTarget because
-# in these cases the impl needs to use either Kokkos or tailored reducers
-# which results in runtime memory errors.
-if(KOKKOS_ENABLE_OPENMPTARGET)
   list(REMOVE_ITEM STDALGO_TEAM_SOURCES_A
     TestStdAlgorithmsTeamAdjacentFind.cpp
     TestStdAlgorithmsTeamLexicographicalCompare.cpp
     TestStdAlgorithmsTeamMismatch.cpp
+  )
+
+  # this causes an illegal memory access if team_members_have_matching_result
+  # is called
+  list(REMOVE_ITEM STDALGO_TEAM_SOURCES_M
+    TestStdAlgorithmsTeamTransformBinaryOp.cpp
   )
 endif()
 
