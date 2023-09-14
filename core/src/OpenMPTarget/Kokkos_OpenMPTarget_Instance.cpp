@@ -115,6 +115,9 @@ void OpenMPTargetInternal::impl_finalize() {
 void OpenMPTargetInternal::impl_initialize() {
   m_is_initialized = true;
 
+  Kokkos::Impl::OpenMPTargetExec::MAX_ACTIVE_THREADS =
+      Kokkos::Experimental::OpenMPTarget().concurrency();
+
   // FIXME_OPENMPTARGET:  Only fix the number of teams for NVIDIA architectures
   // from Pascal and upwards.
   // FIXME_OPENMPTARGTE: Cray compiler did not yet implement omp_set_num_teams.
