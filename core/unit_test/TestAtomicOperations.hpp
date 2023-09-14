@@ -396,13 +396,13 @@ bool AtomicOperationsTestIntegralType(int old_val_in, int update_in, int test) {
     case 10:
       return atomic_op_test<NandAtomicTest, T, ExecSpace>(old_val, update);
     case 11:
-      return update >= 0 ? atomic_op_test<LShiftAtomicTest, T, ExecSpace>(
-                               old_val, update)
-                         : true;
+      return update_in >= 0 ? atomic_op_test<LShiftAtomicTest, T, ExecSpace>(
+                                  old_val, update)
+                            : true;
     case 12:
-      return update >= 0 ? atomic_op_test<RShiftAtomicTest, T, ExecSpace>(
-                               old_val, update)
-                         : true;
+      return update_in >= 0 ? atomic_op_test<RShiftAtomicTest, T, ExecSpace>(
+                                  old_val, update)
+                            : true;
     case 13:
       return atomic_op_test<IncAtomicTest, T, ExecSpace>(old_val, update);
     case 14:
