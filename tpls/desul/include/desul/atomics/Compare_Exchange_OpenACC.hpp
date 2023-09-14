@@ -52,18 +52,14 @@ T device_atomic_exchange(T* dest, T value, MemoryOrder, MemoryScope /*scope*/) {
 template <class T, class MemoryOrder, class MemoryScope>
 T device_atomic_compare_exchange(
     T* dest, T compare, T value, MemoryOrder, MemoryScope scope) {
-  if constexpr (std::is_integral_v<T> && (sizeof(T) == 4)) {
+  if constexpr (std::is_integral_v<T> && ((sizeof(T) == 4) || (sizeof(T) == 8))) {
     static_assert(sizeof(unsigned int) == 4);
-    unsigned int return_val = atomicCAS(reinterpret_cast<unsigned int*>(dest),
-                                        reinterpret_cast<unsigned int&>(compare),
-                                        reinterpret_cast<unsigned int&>(value));
-    return reinterpret_cast<T&>(return_val);
-  } else if constexpr (std::is_integral_v<T> && (sizeof(T) == 8)) {
     static_assert(sizeof(unsigned long long int) == 8);
-    unsigned long long int return_val =
-        atomicCAS(reinterpret_cast<unsigned long long int*>(dest),
-                  reinterpret_cast<unsigned long long int&>(compare),
-                  reinterpret_cast<unsigned long long int&>(value));
+    using cas_t =
+        std::conditional_t<(sizeof(T) == 4), unsigned int, unsigned long long int>;
+    cas_t return_val = atomicCAS(reinterpret_cast<cas_t*>(dest),
+                                 reinterpret_cast<cas_t&>(compare),
+                                 reinterpret_cast<cas_t&>(value));
     return reinterpret_cast<T&>(return_val);
 #ifdef DESUL_CUDA_ARCH_IS_PRE_PASCAL
   } else if constexpr (std::is_same_v<T, float>) {
@@ -73,10 +69,10 @@ T device_atomic_compare_exchange(
     return atomicCAS(dest, compare, value);
   } else {
     // FIXME_OPENACC
-    T current_val = *dest;
     printf(
         "DESUL error in device_atomic_compare_exchange(): Not supported atomic "
         "operation in the OpenACC backend\n");
+    T current_val = *dest;
     // Acquire a lock for the address
     // while (!lock_address_openacc((void*)dest, scope)) {
     //}
