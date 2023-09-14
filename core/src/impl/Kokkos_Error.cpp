@@ -21,7 +21,7 @@
 #include <cstring>
 #include <cstdlib>
 
-#include <iostream>
+#include <ostream>
 #include <sstream>
 #include <iomanip>
 #include <stdexcept>
@@ -46,12 +46,6 @@ void traceback_callstack(std::ostream &msg) {
 
 void throw_runtime_exception(const std::string &msg) {
   throw std::runtime_error(msg);
-}
-
-void host_abort(const char *const message) {
-  std::cerr << message;
-  traceback_callstack(std::cerr);
-  ::abort();
 }
 
 std::string human_memory_size(size_t arg_bytes) {
