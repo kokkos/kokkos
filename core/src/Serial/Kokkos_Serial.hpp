@@ -72,7 +72,9 @@ class SerialInternal {
 };
 }  // namespace Impl
 
-struct NewInstance {};
+struct NewInstance {
+  explicit NewInstance() = default;
+};
 
 /// \class Serial
 /// \brief Kokkos device for non-parallel execution
