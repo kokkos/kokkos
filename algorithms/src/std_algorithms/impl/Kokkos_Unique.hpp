@@ -195,18 +195,6 @@ KOKKOS_FUNCTION IteratorType unique_team_impl(const TeamHandleType& teamHandle,
         count);
     // no barrier needed since single above broadcasts to all members
 
-    // std::size_t count = {};
-    // if (teamHandle.team_rank() == 0) {
-    //   IteratorType result = first;
-    //   while (++first != last) {
-    //     if (!pred(*result, *first) && ++result != first) {
-    //       *result = std::move(*first);
-    //     }
-    //   }
-    //   count = Kokkos::Experimental::distance(first, result);
-    // }
-    // teamHandle.team_broadcast(count, 0);
-
     // +1 is needed because we want one element past the end
     return first + count + 1;
   }
