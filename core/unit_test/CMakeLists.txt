@@ -629,6 +629,13 @@ IF(KOKKOS_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
     ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_Atomics.cpp)
 endif()
 
+KOKKOS_ADD_EXECUTABLE_AND_TEST(
+  CoreUnitTest_Instance
+  SOURCES
+    UnitTestMain.cpp
+    TestInstance.cpp
+)
+
 if(Kokkos_ENABLE_SERIAL)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     CoreUnitTest_Serial1

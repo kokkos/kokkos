@@ -125,7 +125,7 @@ class CudaInternal {
 
   static CudaInternal& singleton();
 
-  int verify_is_initialized(const char* const label) const;
+  bool verify_is_initialized(const char* const label) const;
 
   int is_initialized() const {
     return nullptr != m_scratchSpace && nullptr != m_scratchFlags;

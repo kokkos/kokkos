@@ -350,19 +350,21 @@ CudaInternal::~CudaInternal() {
   }
 }
 
-int CudaInternal::verify_is_initialized(const char *const label) const {
+bool CudaInternal::verify_is_initialized(const char *const label) const {
   if (m_cudaDev < 0) {
-    Kokkos::abort((std::string("Kokkos::Cuda::") + label +
-                   " : ERROR device not initialized\n")
+    Kokkos::abort((std::string("Kokkos::Cuda : ") + label +
+                   " : ERROR device not initialized")
                       .c_str());
   }
   return 0 <= m_cudaDev;
 }
+
 uint32_t CudaInternal::impl_get_instance_id() const { return m_instance_id; }
 CudaInternal &CudaInternal::singleton() {
   static CudaInternal self;
   return self;
 }
+
 void CudaInternal::fence(const std::string &name) const {
   Impl::cuda_stream_synchronize(get_stream(), this, name);
 }

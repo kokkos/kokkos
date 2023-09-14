@@ -37,7 +37,7 @@ Kokkos::Experimental::Impl::OpenACCInternal::singleton() {
 bool Kokkos::Experimental::Impl::OpenACCInternal::verify_is_initialized(
     const char* const label) const {
   if (!m_is_initialized) {
-    Kokkos::abort((std::string("Kokkos::Experimental::OpenACC::") + label +
+    Kokkos::abort((std::string("Kokkos::Experimental::OpenACC : ") + label +
                    " : ERROR device not initialized\n")
                       .c_str());
   }

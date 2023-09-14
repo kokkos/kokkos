@@ -325,10 +325,12 @@ void OpenMPInternal::print_configuration(std::ostream &s) const {
 
 bool OpenMPInternal::verify_is_initialized(const char *const label) const {
   if (!m_initialized) {
-    std::cerr << "Kokkos::OpenMP " << label
-              << " : ERROR OpenMP is not initialized" << std::endl;
+    Kokkos::abort((std::string("Kokkos::OpenMP : ") + label +
+                   " : ERROR device not initialized")
+                      .c_str());
   }
   return m_initialized;
 }
+
 }  // namespace Impl
 }  // namespace Kokkos
