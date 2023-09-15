@@ -115,7 +115,8 @@ void test_A(std::size_t numTeams, std::size_t numCols, std::size_t pivotShift,
   // -----------------------------------------------
   // here I can use cloneOfDataViewBeforeOp_h to run std algo on
   // since that contains a valid copy of the data
-  auto distancesView_h = create_host_space_copy(distancesView);
+  auto distancesView_h         = create_host_space_copy(distancesView);
+  auto intraTeamSentinelView_h = create_host_space_copy(intraTeamSentinelView);
   for (std::size_t i = 0; i < cloneOfDataViewBeforeOp_h.extent(0); ++i) {
     auto myRow = Kokkos::subview(cloneOfDataViewBeforeOp_h, i, Kokkos::ALL());
     auto pivot = KE::begin(myRow) + pivotShift;

@@ -117,8 +117,9 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // -----------------------------------------------
   // check
   // -----------------------------------------------
-  auto distancesView_h   = create_host_space_copy(distancesView);
-  auto destViewAfterOp_h = create_host_space_copy(destView);
+  auto distancesView_h         = create_host_space_copy(distancesView);
+  auto destViewAfterOp_h       = create_host_space_copy(destView);
+  auto intraTeamSentinelView_h = create_host_space_copy(intraTeamSentinelView);
   for (std::size_t i = 0; i < destViewAfterOp_h.extent(0); ++i) {
     for (std::size_t j = 0; j < destViewAfterOp_h.extent(1); ++j) {
       EXPECT_TRUE(destViewAfterOp_h(i, j) ==
