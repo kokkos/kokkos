@@ -938,7 +938,14 @@ class simd<std::int32_t, simd_abi::avx2_fixed_size<4>> {
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
                                                        element_aligned_tag) {
+    // FIXME_HIP ROCm 5.6 can't compile with the intrinsic used here.
+#if defined(__HIPCC__) &&       \
+    ((HIP_VERSION_MAJOR > 5) || \
+     ((HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR >= 6)))
+    m_value = _mm_loadu_si128(reinterpret_cast<__m128i const*>(ptr));
+#else
     m_value = _mm_maskload_epi32(ptr, static_cast<__m128i>(mask_type(true)));
+#endif
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_to(
       value_type* ptr, element_aligned_tag) const {
@@ -1079,8 +1086,15 @@ class simd<std::int64_t, simd_abi::avx2_fixed_size<4>> {
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
                                                        element_aligned_tag) {
+    // FIXME_HIP ROCm 5.6 can't compile with the intrinsic used here.
+#if defined(__HIPCC__) &&       \
+    ((HIP_VERSION_MAJOR > 5) || \
+     ((HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR >= 6)))
+    m_value = _mm256_loadu_si256(reinterpret_cast<__m256i const*>(ptr));
+#else
     m_value = _mm256_maskload_epi64(reinterpret_cast<long long const*>(ptr),
                                     static_cast<__m256i>(mask_type(true)));
+#endif
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_to(
       value_type* ptr, element_aligned_tag) const {
@@ -1232,8 +1246,15 @@ class simd<std::uint64_t, simd_abi::avx2_fixed_size<4>> {
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
                                                        element_aligned_tag) {
+    // FIXME_HIP ROCm 5.6 can't compile with the intrinsic used here.
+#if defined(__HIPCC__) &&       \
+    ((HIP_VERSION_MAJOR > 5) || \
+     ((HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR >= 6)))
+    m_value = _mm256_loadu_si256(reinterpret_cast<__m256i const*>(ptr));
+#else
     m_value = _mm256_maskload_epi64(reinterpret_cast<long long const*>(ptr),
                                     static_cast<__m256i>(mask_type(true)));
+#endif
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit operator __m256i()
       const {
@@ -1531,7 +1552,15 @@ class where_expression<simd_mask<std::int32_t, simd_abi::avx2_fixed_size<4>>,
       : const_where_expression(mask_arg, value_arg) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   void copy_from(std::int32_t const* mem, element_aligned_tag) {
+    // FIXME_HIP ROCm 5.6 can't compile with the intrinsic used here.
+#if defined(__HIPCC__) &&       \
+    ((HIP_VERSION_MAJOR > 5) || \
+     ((HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR >= 6)))
+    __m128i tmp = _mm_loadu_si128(reinterpret_cast<__m128i const*>(mem));
+    m_value     = value_type(_mm_and_si128(tmp, static_cast<__m128i>(m_mask)));
+#else
     m_value = value_type(_mm_maskload_epi32(mem, static_cast<__m128i>(m_mask)));
+#endif
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   void gather_from(
@@ -1613,8 +1642,16 @@ class where_expression<simd_mask<std::int64_t, simd_abi::avx2_fixed_size<4>>,
       : const_where_expression(mask_arg, value_arg) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(std::int64_t const* mem,
                                                        element_aligned_tag) {
+    // FIXME_HIP ROCm 5.6 can't compile with the intrinsic used here.
+#if defined(__HIPCC__) &&       \
+    ((HIP_VERSION_MAJOR > 5) || \
+     ((HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR >= 6)))
+    __m256i tmp = _mm256_loadu_si256(reinterpret_cast<__m256i const*>(mem));
+    m_value = value_type(_mm256_and_si256(tmp, static_cast<__m256i>(m_mask)));
+#else
     m_value = value_type(_mm256_maskload_epi64(
         reinterpret_cast<long long const*>(mem), static_cast<__m256i>(m_mask)));
+#endif
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   void gather_from(
@@ -1697,8 +1734,16 @@ class where_expression<simd_mask<std::uint64_t, simd_abi::avx2_fixed_size<4>>,
       : const_where_expression(mask_arg, value_arg) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(std::uint64_t const* mem,
                                                        element_aligned_tag) {
+    // FIXME_HIP ROCm 5.6 can't compile with the intrinsic used here.
+#if defined(__HIPCC__) &&       \
+    ((HIP_VERSION_MAJOR > 5) || \
+     ((HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR >= 6)))
+    __m256i tmp = _mm256_loadu_si256(reinterpret_cast<__m256i const*>(mem));
+    m_value = value_type(_mm256_and_si256(tmp, static_cast<__m256i>(m_mask)));
+#else
     m_value = value_type(_mm256_maskload_epi64(
         reinterpret_cast<long long const*>(mem), static_cast<__m256i>(m_mask)));
+#endif
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   void gather_from(
