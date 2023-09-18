@@ -63,10 +63,6 @@ KOKKOS_FUNCTION constexpr bool test_to_array() {
   auto a3 = Kokkos::to_Array<long>({0, 1, 3});
   static_assert(std::is_same_v<decltype(a3), Kokkos::Array<long, 3>>);
 
-  auto a4 = Kokkos::to_Array<std::pair<int, float>>(
-      {{3, 0.0f}, {4, 0.1f}, {4, 0.1e23f}});
-  static_assert(a4.size() == 3);
-
   return true;
 }
 

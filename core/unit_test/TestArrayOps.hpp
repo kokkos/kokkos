@@ -412,6 +412,12 @@ struct SetOnMove {
   int i = std::numeric_limits<int>::min();
 };
 
+TEST(TEST_CATEGORY, to_Array_from_pair) {
+  auto a4 = Kokkos::to_Array<std::pair<int, float>>(
+      {{3, 0.0f}, {4, 0.1f}, {4, 0.1e23f}});
+  ASSERT_EQ(a4.size(), 3u);
+}
+
 TEST(TEST_CATEGORY, to_Array_lvalue) {
   int array[] = {
       2,
