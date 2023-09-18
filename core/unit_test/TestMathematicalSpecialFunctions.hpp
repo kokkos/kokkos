@@ -2476,6 +2476,7 @@ struct TestComplexBesselFunctionsWithLargeIndexAndLargeArguments {
     Kokkos::fence();
 
     Kokkos::deep_copy(h_cbj8, d_cbj8);
+    Kokkos::deep_copy(h_cbj9, d_cbj9);
 
     h_ref_cbj8(0) =
         Kokkos::complex<double>(35.14290937115415, 55.89195296301610);
