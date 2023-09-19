@@ -199,9 +199,10 @@ OutputIteratorType transform_inclusive_scan_exespace_impl(
   // run
   const auto num_elements =
       Kokkos::Experimental::distance(first_from, last_from);
-  ::Kokkos::parallel_scan(
-      label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-      func_type(first_from, first_dest, binary_op, unary_op, init_value));
+  ::Kokkos::parallel_scan(label,
+                          RangePolicy<ExecutionSpace>(ex, 0, num_elements),
+                          func_type(first_from, first_dest, binary_op, unary_op,
+                                    std::move(init_value)));
   ex.fence("Kokkos::transform_inclusive_scan: fence after operation");
 
   // return
@@ -312,8 +313,6 @@ KOKKOS_FUNCTION OutputIteratorType transform_inclusive_scan_team_impl(
                                                               first_dest);
   Impl::expect_valid_range(first_from, last_from);
 
-  // #if defined(KOKKOS_ENABLE_CUDA)
-
   // aliases
   using exe_space = typename TeamHandleType::execution_space;
   using value_type =
@@ -351,8 +350,6 @@ KOKKOS_FUNCTION OutputIteratorType transform_inclusive_scan_team_impl(
                                                               first_dest);
   Impl::expect_valid_range(first_from, last_from);
 
-  // #if defined(KOKKOS_ENABLE_CUDA)
-
   // aliases
   using exe_space = typename TeamHandleType::execution_space;
   using func_type = TeamTransformInclusiveScanWithInitValueFunctor<
@@ -362,9 +359,9 @@ KOKKOS_FUNCTION OutputIteratorType transform_inclusive_scan_team_impl(
   // run
   const auto num_elements =
       Kokkos::Experimental::distance(first_from, last_from);
-  ::Kokkos::parallel_scan(
-      TeamThreadRange(teamHandle, 0, num_elements),
-      func_type(first_from, first_dest, binary_op, unary_op, init_value));
+  ::Kokkos::parallel_scan(TeamThreadRange(teamHandle, 0, num_elements),
+                          func_type(first_from, first_dest, binary_op, unary_op,
+                                    std::move(init_value)));
   teamHandle.team_barrier();
 
   // return

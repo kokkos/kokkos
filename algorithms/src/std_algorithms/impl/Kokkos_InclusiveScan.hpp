@@ -206,7 +206,7 @@ OutputIteratorType inclusive_scan_custom_binary_op_exespace_impl(
   ::Kokkos::parallel_scan(label,
                           RangePolicy<ExecutionSpace>(ex, 0, num_elements),
                           func_type(first_from, first_dest, binary_op,
-                                    unary_op_type(), init_value));
+                                    unary_op_type(), std::move(init_value)));
   ex.fence("Kokkos::inclusive_scan_custom_binary_op: fence after operation");
 
   // return
@@ -335,7 +335,7 @@ KOKKOS_FUNCTION OutputIteratorType inclusive_scan_custom_binary_op_team_impl(
       Kokkos::Experimental::distance(first_from, last_from);
   ::Kokkos::parallel_scan(TeamThreadRange(teamHandle, 0, num_elements),
                           func_type(first_from, first_dest, binary_op,
-                                    unary_op_type(), init_value));
+                                    unary_op_type(), std::move(init_value)));
   teamHandle.team_barrier();
 
   // return
