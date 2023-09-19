@@ -120,6 +120,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
     set(${Tag}_SOURCES1A)
     foreach(Name
         Abort
+        ArrayOps
         AtomicOperations_complexdouble
         AtomicOperations_complexfloat
         AtomicOperations_double
@@ -399,7 +400,7 @@ if(Kokkos_ENABLE_OPENACC)
 endif()
 
 # FIXME_OPENMPTARGET - Comment non-passing tests with amdclang++
-# FIXME_OPENMPTARGET - Need to check on NAVI architecture
+# FIXME_OPENMPTARGET - Need to check on GFX1030 and GFX1100 architectures
 IF(KOKKOS_ARCH_VEGA)
   SET(KOKKOS_AMDGPU_ARCH TRUE)
 ENDIF()

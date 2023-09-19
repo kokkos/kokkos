@@ -155,8 +155,7 @@ class HostThreadTeamData {
 
   //----------------------------------------
 
-#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC bug in NVHPC regarding constexpr
-                               // constructors used in device code
+#if !defined(KOKKOS_COMPILER_NVHPC) || (KOKKOS_COMPILER_NVHPC >= 230700)
   constexpr
 #endif
       HostThreadTeamData() noexcept
@@ -912,16 +911,21 @@ KOKKOS_INLINE_FUNCTION
   parallel_scan(loop_boundaries, closure, scan_val);
 }
 
-template <typename iType, class ClosureType, class Member>
+template <typename iType, class ClosureType, class Member, typename ValueType>
 KOKKOS_INLINE_FUNCTION
-    std::enable_if_t<Impl::is_host_thread_team_member<Member>::value>
+    std::enable_if_t<!Kokkos::is_reducer<ValueType>::value &&
+                     Impl::is_host_thread_team_member<Member>::value>
     parallel_scan(Impl::ThreadVectorRangeBoundariesStruct<iType, Member> const&
                       loop_boundaries,
-                  ClosureType const& closure) {
-  using value_type = typename Kokkos::Impl::FunctorAnalysis<
-      Impl::FunctorPatternInterface::SCAN, void, ClosureType, void>::value_type;
+                  ClosureType const& closure, ValueType& return_val) {
+  // Extract ValueType from the Closure
+  using ClosureValueType = typename Kokkos::Impl::FunctorAnalysis<
+      Kokkos::Impl::FunctorPatternInterface::SCAN, void, ClosureType,
+      void>::value_type;
+  static_assert(std::is_same<ClosureValueType, ValueType>::value,
+                "Non-matching value types of closure and return type");
 
-  value_type scan_val = value_type();
+  ValueType scan_val = ValueType();
 
 #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
 #pragma ivdep
@@ -930,6 +934,22 @@ KOKKOS_INLINE_FUNCTION
        i += loop_boundaries.increment) {
     closure(i, scan_val, true);
   }
+
+  return_val = scan_val;
+}
+
+template <typename iType, class ClosureType, class Member>
+KOKKOS_INLINE_FUNCTION
+    std::enable_if_t<Impl::is_host_thread_team_member<Member>::value>
+    parallel_scan(Impl::ThreadVectorRangeBoundariesStruct<iType, Member> const&
+                      loop_boundaries,
+                  ClosureType const& closure) {
+  // Extract ValueType from the closure
+  using ValueType = typename Kokkos::Impl::FunctorAnalysis<
+      Impl::FunctorPatternInterface::SCAN, void, ClosureType, void>::value_type;
+
+  ValueType scan_val;
+  parallel_scan(loop_boundaries, closure, scan_val);
 }
 
 template <typename iType, class Lambda, typename ReducerType, typename Member>
