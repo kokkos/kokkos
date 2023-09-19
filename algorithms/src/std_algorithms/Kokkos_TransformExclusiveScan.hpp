@@ -26,17 +26,17 @@ namespace Experimental {
 //
 // overload set accepting execution space
 //
-template <class ExecutionSpace, class InputIteratorType,
-          class OutputIteratorType, class ValueType, class BinaryOpType,
-          class UnaryOpType>
-std::enable_if_t<::Kokkos::Experimental::Impl::are_iterators<
-                     InputIteratorType, OutputIteratorType>::value&& ::Kokkos::
-                     is_execution_space<ExecutionSpace>::value,
-                 OutputIteratorType>
-transform_exclusive_scan(const ExecutionSpace& ex, InputIteratorType first,
-                         InputIteratorType last, OutputIteratorType first_dest,
-                         ValueType init_value, BinaryOpType binary_op,
-                         UnaryOpType unary_op) {
+template <typename ExecutionSpace, typename InputIteratorType,
+          typename OutputIteratorType, typename ValueType,
+          typename BinaryOpType, typename UnaryOpType,
+          std::enable_if_t<
+              Impl::are_iterators_v<InputIteratorType, OutputIteratorType>&& ::
+                  Kokkos::is_execution_space_v<ExecutionSpace>,
+              int> = 0>
+OutputIteratorType transform_exclusive_scan(
+    const ExecutionSpace& ex, InputIteratorType first, InputIteratorType last,
+    OutputIteratorType first_dest, ValueType init_value, BinaryOpType binary_op,
+    UnaryOpType unary_op) {
   Impl::static_assert_is_not_openmptarget(ex);
   static_assert(std::is_move_constructible<ValueType>::value,
                 "ValueType must be move constructible.");
@@ -45,17 +45,17 @@ transform_exclusive_scan(const ExecutionSpace& ex, InputIteratorType first,
       first, last, first_dest, init_value, binary_op, unary_op);
 }
 
-template <class ExecutionSpace, class InputIteratorType,
-          class OutputIteratorType, class ValueType, class BinaryOpType,
-          class UnaryOpType>
-std::enable_if_t<::Kokkos::Experimental::Impl::are_iterators<
-                     InputIteratorType, OutputIteratorType>::value&& ::Kokkos::
-                     is_execution_space<ExecutionSpace>::value,
-                 OutputIteratorType>
-transform_exclusive_scan(const std::string& label, const ExecutionSpace& ex,
-                         InputIteratorType first, InputIteratorType last,
-                         OutputIteratorType first_dest, ValueType init_value,
-                         BinaryOpType binary_op, UnaryOpType unary_op) {
+template <typename ExecutionSpace, typename InputIteratorType,
+          typename OutputIteratorType, typename ValueType,
+          typename BinaryOpType, typename UnaryOpType,
+          std::enable_if_t<
+              Impl::are_iterators_v<InputIteratorType, OutputIteratorType>&& ::
+                  Kokkos::is_execution_space_v<ExecutionSpace>,
+              int> = 0>
+OutputIteratorType transform_exclusive_scan(
+    const std::string& label, const ExecutionSpace& ex, InputIteratorType first,
+    InputIteratorType last, OutputIteratorType first_dest, ValueType init_value,
+    BinaryOpType binary_op, UnaryOpType unary_op) {
   Impl::static_assert_is_not_openmptarget(ex);
   static_assert(std::is_move_constructible<ValueType>::value,
                 "ValueType must be move constructible.");
@@ -63,11 +63,11 @@ transform_exclusive_scan(const std::string& label, const ExecutionSpace& ex,
       label, ex, first, last, first_dest, init_value, binary_op, unary_op);
 }
 
-template <class ExecutionSpace, class DataType1, class... Properties1,
-          class DataType2, class... Properties2, class ValueType,
-          class BinaryOpType, class UnaryOpType,
-          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
-                           int> = 0>
+template <
+    typename ExecutionSpace, typename DataType1, typename... Properties1,
+    typename DataType2, typename... Properties2, typename ValueType,
+    typename BinaryOpType, typename UnaryOpType,
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
 auto transform_exclusive_scan(
     const ExecutionSpace& ex,
     const ::Kokkos::View<DataType1, Properties1...>& view_from,
@@ -85,11 +85,11 @@ auto transform_exclusive_scan(
       init_value, binary_op, unary_op);
 }
 
-template <class ExecutionSpace, class DataType1, class... Properties1,
-          class DataType2, class... Properties2, class ValueType,
-          class BinaryOpType, class UnaryOpType,
-          std::enable_if_t<::Kokkos::is_execution_space<ExecutionSpace>::value,
-                           int> = 0>
+template <
+    typename ExecutionSpace, typename DataType1, typename... Properties1,
+    typename DataType2, typename... Properties2, typename ValueType,
+    typename BinaryOpType, typename UnaryOpType,
+    std::enable_if_t<::Kokkos::is_execution_space_v<ExecutionSpace>, int> = 0>
 auto transform_exclusive_scan(
     const std::string& label, const ExecutionSpace& ex,
     const ::Kokkos::View<DataType1, Properties1...>& view_from,
@@ -111,19 +111,17 @@ auto transform_exclusive_scan(
 // Note: for now omit the overloads accepting a label
 // since they cause issues on device because of the string allocation.
 //
-template <class TeamHandleType, class InputIteratorType,
-          class OutputIteratorType, class ValueType, class BinaryOpType,
-          class UnaryOpType>
-KOKKOS_FUNCTION
-    std::enable_if_t<::Kokkos::Experimental::Impl::are_iterators<
-                         InputIteratorType, OutputIteratorType>::value&& ::
-                         Kokkos::is_team_handle<TeamHandleType>::value,
-                     OutputIteratorType>
-    transform_exclusive_scan(const TeamHandleType& teamHandle,
-                             InputIteratorType first, InputIteratorType last,
-                             OutputIteratorType first_dest,
-                             ValueType init_value, BinaryOpType binary_op,
-                             UnaryOpType unary_op) {
+template <typename TeamHandleType, typename InputIteratorType,
+          typename OutputIteratorType, typename ValueType,
+          typename BinaryOpType, typename UnaryOpType,
+          std::enable_if_t<
+              Impl::are_iterators_v<InputIteratorType, OutputIteratorType>&& ::
+                  Kokkos::is_team_handle_v<TeamHandleType>,
+              int> = 0>
+KOKKOS_FUNCTION OutputIteratorType transform_exclusive_scan(
+    const TeamHandleType& teamHandle, InputIteratorType first,
+    InputIteratorType last, OutputIteratorType first_dest, ValueType init_value,
+    BinaryOpType binary_op, UnaryOpType unary_op) {
   Impl::static_assert_is_not_openmptarget(teamHandle);
   static_assert(std::is_move_constructible<ValueType>::value,
                 "ValueType must be move constructible.");
@@ -131,11 +129,10 @@ KOKKOS_FUNCTION
       teamHandle, first, last, first_dest, init_value, binary_op, unary_op);
 }
 
-template <
-    class TeamHandleType, class DataType1, class... Properties1,
-    class DataType2, class... Properties2, class ValueType, class BinaryOpType,
-    class UnaryOpType,
-    std::enable_if_t<::Kokkos::is_team_handle<TeamHandleType>::value, int> = 0>
+template <typename TeamHandleType, typename DataType1, typename... Properties1,
+          typename DataType2, typename... Properties2, typename ValueType,
+          typename BinaryOpType, typename UnaryOpType,
+          std::enable_if_t<::Kokkos::is_team_handle_v<TeamHandleType>, int> = 0>
 KOKKOS_FUNCTION auto transform_exclusive_scan(
     const TeamHandleType& teamHandle,
     const ::Kokkos::View<DataType1, Properties1...>& view_from,

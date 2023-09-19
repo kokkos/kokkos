@@ -80,9 +80,9 @@ OutputIteratorType exclusive_scan_default_op_exespace_impl(
   // run
   const auto num_elements =
       Kokkos::Experimental::distance(first_from, last_from);
-  ::Kokkos::parallel_scan(label,
-                          RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-                          func_type(init_value, first_from, first_dest));
+  ::Kokkos::parallel_scan(
+      label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
+      func_type(std::move(init_value), first_from, first_dest));
 
   ex.fence("Kokkos::exclusive_scan_default_op: fence after operation");
 
@@ -111,9 +111,10 @@ OutputIteratorType exclusive_scan_custom_op_exespace_impl(
   // run
   const auto num_elements =
       Kokkos::Experimental::distance(first_from, last_from);
-  ::Kokkos::parallel_scan(
-      label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-      func_type(init_value, first_from, first_dest, bop, unary_op_type()));
+  ::Kokkos::parallel_scan(label,
+                          RangePolicy<ExecutionSpace>(ex, 0, num_elements),
+                          func_type(std::move(init_value), first_from,
+                                    first_dest, bop, unary_op_type()));
   ex.fence("Kokkos::exclusive_scan_custom_op: fence after operation");
 
   // return
@@ -149,8 +150,9 @@ KOKKOS_FUNCTION OutputIteratorType exclusive_scan_default_op_team_impl(
 
   const auto num_elements =
       Kokkos::Experimental::distance(first_from, last_from);
-  ::Kokkos::parallel_scan(TeamThreadRange(teamHandle, 0, num_elements),
-                          func_type(init_value, first_from, first_dest));
+  ::Kokkos::parallel_scan(
+      TeamThreadRange(teamHandle, 0, num_elements),
+      func_type(std::move(init_value), first_from, first_dest));
   teamHandle.team_barrier();
   return first_dest + num_elements;
 }
@@ -183,9 +185,9 @@ KOKKOS_FUNCTION OutputIteratorType exclusive_scan_custom_op_team_impl(
 
   const auto num_elements =
       Kokkos::Experimental::distance(first_from, last_from);
-  ::Kokkos::parallel_scan(
-      TeamThreadRange(teamHandle, 0, num_elements),
-      func_type(init_value, first_from, first_dest, bop, unary_op_type()));
+  ::Kokkos::parallel_scan(TeamThreadRange(teamHandle, 0, num_elements),
+                          func_type(std::move(init_value), first_from,
+                                    first_dest, bop, unary_op_type()));
   teamHandle.team_barrier();
 
   return first_dest + num_elements;
