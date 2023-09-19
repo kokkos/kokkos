@@ -782,7 +782,7 @@ parallel_scan(const Impl::ThreadVectorRangeBoundariesStruct<
         // exclusive scan -- the final accumulation
         // of i's val will be included in the second
         // closure call later.
-        if (i < loop_boundaries.end && threadIdx.x > 0) {
+        if (i - 1 < loop_boundaries.end && threadIdx.x > 0) {
           closure(i - 1, val, false);
         }
 
