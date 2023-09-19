@@ -38,7 +38,7 @@ OutputIteratorType transform_exclusive_scan(
     OutputIteratorType first_dest, ValueType init_value, BinaryOpType binary_op,
     UnaryOpType unary_op) {
   Impl::static_assert_is_not_openmptarget(ex);
-  static_assert(std::is_move_constructible<ValueType>::value,
+  static_assert(std::is_move_constructible_v<ValueType>,
                 "ValueType must be move constructible.");
   return Impl::transform_exclusive_scan_exespace_impl(
       "Kokkos::transform_exclusive_scan_custom_functors_iterator_api", ex,
@@ -57,7 +57,7 @@ OutputIteratorType transform_exclusive_scan(
     InputIteratorType last, OutputIteratorType first_dest, ValueType init_value,
     BinaryOpType binary_op, UnaryOpType unary_op) {
   Impl::static_assert_is_not_openmptarget(ex);
-  static_assert(std::is_move_constructible<ValueType>::value,
+  static_assert(std::is_move_constructible_v<ValueType>,
                 "ValueType must be move constructible.");
   return Impl::transform_exclusive_scan_exespace_impl(
       label, ex, first, last, first_dest, std::move(init_value), binary_op,
@@ -77,7 +77,7 @@ auto transform_exclusive_scan(
   Impl::static_assert_is_not_openmptarget(ex);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
-  static_assert(std::is_move_constructible<ValueType>::value,
+  static_assert(std::is_move_constructible_v<ValueType>,
                 "ValueType must be move constructible.");
   namespace KE = ::Kokkos::Experimental;
   return Impl::transform_exclusive_scan_exespace_impl(
@@ -99,7 +99,7 @@ auto transform_exclusive_scan(
   Impl::static_assert_is_not_openmptarget(ex);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
-  static_assert(std::is_move_constructible<ValueType>::value,
+  static_assert(std::is_move_constructible_v<ValueType>,
                 "ValueType must be move constructible.");
   namespace KE = ::Kokkos::Experimental;
   return Impl::transform_exclusive_scan_exespace_impl(
@@ -124,7 +124,7 @@ KOKKOS_FUNCTION OutputIteratorType transform_exclusive_scan(
     InputIteratorType last, OutputIteratorType first_dest, ValueType init_value,
     BinaryOpType binary_op, UnaryOpType unary_op) {
   Impl::static_assert_is_not_openmptarget(teamHandle);
-  static_assert(std::is_move_constructible<ValueType>::value,
+  static_assert(std::is_move_constructible_v<ValueType>,
                 "ValueType must be move constructible.");
   return Impl::transform_exclusive_scan_team_impl(
       teamHandle, first, last, first_dest, std::move(init_value), binary_op,
@@ -143,7 +143,7 @@ KOKKOS_FUNCTION auto transform_exclusive_scan(
   Impl::static_assert_is_not_openmptarget(teamHandle);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
-  static_assert(std::is_move_constructible<ValueType>::value,
+  static_assert(std::is_move_constructible_v<ValueType>,
                 "ValueType must be move constructible.");
   namespace KE = ::Kokkos::Experimental;
   return Impl::transform_exclusive_scan_team_impl(
