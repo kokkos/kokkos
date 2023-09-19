@@ -76,6 +76,17 @@ KOKKOS_INLINE_FUNCTION void device_check_equality(
   checker.equality((expected_result == computed_result) && mask, mask);
 }
 
+template <typename T, typename Abi>
+KOKKOS_INLINE_FUNCTION void check_equality(
+    Kokkos::Experimental::simd<T, Abi> const& expected_result,
+    Kokkos::Experimental::simd<T, Abi> const& computed_result,
+    std::size_t nlanes) {
+  KOKKOS_IF_ON_HOST(
+      (host_check_equality(expected_result, computed_result, nlanes);))
+  KOKKOS_IF_ON_DEVICE(
+      (device_check_equality(expected_result, computed_result, nlanes);))
+}
+
 class load_element_aligned {
  public:
   template <class T, class Abi>

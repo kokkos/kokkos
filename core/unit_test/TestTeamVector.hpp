@@ -605,6 +605,70 @@ struct functor_vec_scan {
   }
 };
 
+// Temporary: This condition will progressively be reduced when parallel_scan
+// with return value will be implemented for more backends.
+#if defined(KOKKOS_ENABLE_SERIAL) || defined(KOKKOS_ENABLE_OPENMP)
+#if !defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_HIP) &&             \
+    !defined(KOKKOS_ENABLE_OPENACC) && !defined(KOKKOS_ENABLE_SYCL) &&         \
+    !defined(KOKKOS_ENABLE_THREADS) && !defined(KOKKOS_ENABLE_OPENMPTARGET) && \
+    !defined(KOKKOS_ENABLE_HPX)
+template <typename Scalar, class ExecutionSpace>
+struct functor_vec_scan_ret_val {
+  using policy_type     = Kokkos::TeamPolicy<ExecutionSpace>;
+  using execution_space = ExecutionSpace;
+  using view_type       = Kokkos::View<Scalar **, execution_space>;
+
+  Kokkos::View<int, ExecutionSpace> flag;
+  view_type return_values;
+  int team_size;
+
+  functor_vec_scan_ret_val(Kokkos::View<int, ExecutionSpace> flag_, int nteams,
+                           int tsize)
+      : flag(flag_), team_size(tsize) {
+    return_values = view_type("return_values", nteams, tsize);
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(typename policy_type::member_type team) const {
+    Scalar return_val;
+
+    Kokkos::parallel_scan(
+        Kokkos::ThreadVectorRange(team, 13),
+        [&](int i, Scalar &val, bool final) {
+          val += i;
+
+          if (final) {
+            Scalar test = 0;
+            for (int k = 0; k <= i; k++) test += k;
+            return_values(team.league_rank(), team.team_rank()) = test;
+
+            if (test != val) {
+              Kokkos::printf("FAILED vector_par_scan %i %i %lf %lf\n",
+                             team.league_rank(), team.team_rank(),
+                             static_cast<double>(test),
+                             static_cast<double>(val));
+
+              flag() = 1;
+            }
+          }
+        },
+        return_val);
+
+    if (flag() == 0 &&
+        return_values(team.league_rank(), team.team_rank()) != return_val) {
+      Kokkos::printf("FAILED vector_scan_ret_val %i %i %lf %lf\n",
+                     team.league_rank(), team.team_rank(),
+                     static_cast<double>(
+                         return_values(team.league_rank(), team.team_rank())),
+                     static_cast<double>(return_val));
+
+      flag() = 1;
+    }
+  }
+};
+#endif
+#endif
+
 template <typename Scalar, class ExecutionSpace>
 struct functor_reduce {
   using value_type      = double;
@@ -676,6 +740,21 @@ bool test_scalar(int nteams, int team_size, int test) {
     Kokkos::parallel_for(
         "B", Kokkos::TeamPolicy<ExecutionSpace>(nteams, team_size, 8),
         functor_vec_single<Scalar, ExecutionSpace>(d_flag, 4, 13));
+  } else if (test == 12) {
+// Temporary: This condition will progressively be reduced when
+// parallel_scan
+// with return value will be implemented for more backends.
+#if defined(KOKKOS_ENABLE_SERIAL) || defined(KOKKOS_ENABLE_OPENMP)
+#if !defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_HIP) &&             \
+    !defined(KOKKOS_ENABLE_OPENACC) && !defined(KOKKOS_ENABLE_SYCL) &&         \
+    !defined(KOKKOS_ENABLE_THREADS) && !defined(KOKKOS_ENABLE_OPENMPTARGET) && \
+    !defined(KOKKOS_ENABLE_HPX)
+    Kokkos::parallel_for(
+        Kokkos::TeamPolicy<ExecutionSpace>(nteams, team_size, 8),
+        functor_vec_scan_ret_val<Scalar, ExecutionSpace>(d_flag, nteams,
+                                                         team_size));
+#endif
+#endif
   }
 
   Kokkos::deep_copy(h_flag, d_flag);
@@ -952,10 +1031,7 @@ struct checkScan {
 TEST(TEST_CATEGORY, team_vector) {
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(0)));
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(1)));
-#if !(defined(KOKKOS_ENABLE_CUDA) && \
-      defined(KOKKOS_COMPILER_NVHPC))  // FIXME_NVHPC
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(2)));
-#endif
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(3)));
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(4)));
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(5)));
@@ -965,6 +1041,7 @@ TEST(TEST_CATEGORY, team_vector) {
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(9)));
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(10)));
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(11)));
+  ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(12)));
 }
 #endif
 
@@ -1003,7 +1080,7 @@ TEST(TEST_CATEGORY, parallel_scan_with_reducers) {
   constexpr int n_vector_range = 100;
 
 #if defined(KOKKOS_ENABLE_CUDA) && \
-    defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC
+    defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC 23.7
   if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>) {
     GTEST_SKIP() << "All but max inclusive scan differ at index 101";
   }
