@@ -42,7 +42,7 @@ OutputIteratorType transform_exclusive_scan(
                 "ValueType must be move constructible.");
   return Impl::transform_exclusive_scan_exespace_impl(
       "Kokkos::transform_exclusive_scan_custom_functors_iterator_api", ex,
-      first, last, first_dest, init_value, binary_op, unary_op);
+      first, last, first_dest, std::move(init_value), binary_op, unary_op);
 }
 
 template <typename ExecutionSpace, typename InputIteratorType,
@@ -60,7 +60,8 @@ OutputIteratorType transform_exclusive_scan(
   static_assert(std::is_move_constructible<ValueType>::value,
                 "ValueType must be move constructible.");
   return Impl::transform_exclusive_scan_exespace_impl(
-      label, ex, first, last, first_dest, init_value, binary_op, unary_op);
+      label, ex, first, last, first_dest, std::move(init_value), binary_op,
+      unary_op);
 }
 
 template <
@@ -82,7 +83,7 @@ auto transform_exclusive_scan(
   return Impl::transform_exclusive_scan_exespace_impl(
       "Kokkos::transform_exclusive_scan_custom_functors_view_api", ex,
       KE::cbegin(view_from), KE::cend(view_from), KE::begin(view_dest),
-      init_value, binary_op, unary_op);
+      std::move(init_value), binary_op, unary_op);
 }
 
 template <
@@ -103,7 +104,7 @@ auto transform_exclusive_scan(
   namespace KE = ::Kokkos::Experimental;
   return Impl::transform_exclusive_scan_exespace_impl(
       label, ex, KE::cbegin(view_from), KE::cend(view_from),
-      KE::begin(view_dest), init_value, binary_op, unary_op);
+      KE::begin(view_dest), std::move(init_value), binary_op, unary_op);
 }
 
 //
@@ -126,7 +127,8 @@ KOKKOS_FUNCTION OutputIteratorType transform_exclusive_scan(
   static_assert(std::is_move_constructible<ValueType>::value,
                 "ValueType must be move constructible.");
   return Impl::transform_exclusive_scan_team_impl(
-      teamHandle, first, last, first_dest, init_value, binary_op, unary_op);
+      teamHandle, first, last, first_dest, std::move(init_value), binary_op,
+      unary_op);
 }
 
 template <typename TeamHandleType, typename DataType1, typename... Properties1,
@@ -146,7 +148,7 @@ KOKKOS_FUNCTION auto transform_exclusive_scan(
   namespace KE = ::Kokkos::Experimental;
   return Impl::transform_exclusive_scan_team_impl(
       teamHandle, KE::cbegin(view_from), KE::cend(view_from),
-      KE::begin(view_dest), init_value, binary_op, unary_op);
+      KE::begin(view_dest), std::move(init_value), binary_op, unary_op);
 }
 
 }  // namespace Experimental
