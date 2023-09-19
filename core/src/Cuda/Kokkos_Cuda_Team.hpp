@@ -815,6 +815,7 @@ parallel_scan(const Impl::ThreadVectorRangeBoundariesStruct<
       }
 
       ))
+  reducer.reference() = accum;
 }
 
 //----------------------------------------------------------------------------
