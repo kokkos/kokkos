@@ -1763,10 +1763,6 @@ class where_expression<simd_mask<std::uint64_t, simd_abi::avx2_fixed_size<4>>,
 }  // namespace Experimental
 }  // namespace Kokkos
 
-#if defined(__HIPCC__) &&       \
-    ((HIP_VERSION_MAJOR > 5) || \
-     ((HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR >= 6)))
 #undef KOKKOS_IMPL_WORKAROUND_ROCM_AVX2_ISSUE
-#endif
 
 #endif
