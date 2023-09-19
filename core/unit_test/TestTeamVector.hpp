@@ -614,31 +614,26 @@ template <typename Scalar, class ExecutionSpace>
 struct functor_vec_scan_ret_val {
   using policy_type     = Kokkos::TeamPolicy<ExecutionSpace>;
   using execution_space = ExecutionSpace;
-  using view_type       = Kokkos::View<Scalar **, execution_space>;
 
   Kokkos::View<int, ExecutionSpace> flag;
-  view_type return_values;
   int team_size;
 
-  functor_vec_scan_ret_val(Kokkos::View<int, ExecutionSpace> flag_, int nteams,
-                           int tsize)
-      : flag(flag_), team_size(tsize) {
-    return_values = view_type("return_values", nteams, tsize);
-  }
+  functor_vec_scan_ret_val(Kokkos::View<int, ExecutionSpace> flag_, int tsize)
+      : flag(flag_), team_size(tsize) {}
 
   KOKKOS_INLINE_FUNCTION
   void operator()(typename policy_type::member_type team) const {
     Scalar return_val;
+    int upper_bound = 13;
 
     Kokkos::parallel_scan(
-        Kokkos::ThreadVectorRange(team, 13),
+        Kokkos::ThreadVectorRange(team, upper_bound),
         [&](int i, Scalar &val, bool final) {
           val += i;
 
           if (final) {
             Scalar test = 0;
             for (int k = 0; k <= i; k++) test += k;
-            return_values(team.league_rank(), team.team_rank()) = test;
 
             if (test != val) {
               Kokkos::printf("FAILED vector_par_scan %i %i %lf %lf\n",
@@ -652,13 +647,14 @@ struct functor_vec_scan_ret_val {
         },
         return_val);
 
-    if (flag() == 0 &&
-        return_values(team.league_rank(), team.team_rank()) != return_val) {
-      Kokkos::printf("FAILED vector_scan_ret_val %i %i %lf %lf\n",
-                     team.league_rank(), team.team_rank(),
-                     static_cast<double>(
-                         return_values(team.league_rank(), team.team_rank())),
-                     static_cast<double>(return_val));
+    Scalar sum_ref = ((upper_bound - 1) * (upper_bound)) / 2;
+
+    if (flag() == 0 && return_val != sum_ref) {
+      Kokkos::printf(
+          "FAILED vector_scan_ret_val: league_rank %i, team_rank %i, sum_ref "
+          "%lf, return_val %lf\n",
+          team.league_rank(), team.team_rank(), static_cast<double>(sum_ref),
+          static_cast<double>(return_val));
 
       flag() = 1;
     }
@@ -745,8 +741,7 @@ bool test_scalar(int nteams, int team_size, int test) {
     !defined(KOKKOS_ENABLE_OPENMPTARGET) && !defined(KOKKOS_ENABLE_HPX)
     Kokkos::parallel_for(
         Kokkos::TeamPolicy<ExecutionSpace>(nteams, team_size, 8),
-        functor_vec_scan_ret_val<Scalar, ExecutionSpace>(d_flag, nteams,
-                                                         team_size));
+        functor_vec_scan_ret_val<Scalar, ExecutionSpace>(d_flag, team_size));
 #endif
   }
 
