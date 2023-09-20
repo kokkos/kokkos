@@ -254,12 +254,12 @@ auto make_bounds(const ValueType1& lower, const ValueType2 upper) {
   return Kokkos::pair<ValueType1, ValueType2>{lower, upper};
 }
 
+// libstdc++ as provided by GCC 8 does not have reduce, transform_reduce,
+// exclusive_scan, inclusive_scan, transform_exclusive_scan,
+// transform_inclusive_scan and for GCC 9.1, 9.2 fails to compile them for
+// missing overload not accepting policy so use here simplified versions of
+// them, only for testing purpose
 #if defined(_GLIBCXX_RELEASE) && (_GLIBCXX_RELEASE <= 9)
-
-// GCC 8 does not have reduce, transform_reduce, exclusive_scan, inclusive_scan,
-//       transform_exclusive_scan, transform_inclusive_scan
-// GCC 9.1, 9.2 fails to compile them for missing overload not accepting policy
-// so use here simplified versions of them, only for testing purpose
 
 template <class InputIterator, class ValueType, class BinaryOp>
 ValueType testing_reduce(InputIterator first, InputIterator last,
