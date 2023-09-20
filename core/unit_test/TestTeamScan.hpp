@@ -132,11 +132,9 @@ TEST(TEST_CATEGORY, team_scan) {
 
 // Temporary: This condition will progressively be reduced when parallel_scan
 // with return value will be implemented for more backends.
-#if defined(KOKKOS_ENABLE_SERIAL) || defined(KOKKOS_ENABLE_OPENMP)
-#if !defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_HIP) &&             \
-    !defined(KOKKOS_ENABLE_OPENACC) && !defined(KOKKOS_ENABLE_SYCL) &&         \
-    !defined(KOKKOS_ENABLE_THREADS) && !defined(KOKKOS_ENABLE_OPENMPTARGET) && \
-    !defined(KOKKOS_ENABLE_HPX)
+#if !defined(KOKKOS_ENABLE_HIP) && !defined(KOKKOS_ENABLE_OPENACC) &&  \
+    !defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ENABLE_THREADS) && \
+    !defined(KOKKOS_ENABLE_OPENMPTARGET) && !defined(KOKKOS_ENABLE_HPX)
 template <class ExecutionSpace, class DataType>
 struct TestTeamScanRetVal {
   using execution_space = ExecutionSpace;
@@ -255,7 +253,6 @@ TEST(TEST_CATEGORY, team_scan_ret_val) {
   TestTeamScanRetVal<TEST_EXECSPACE, int64_t>{}(2596, 987);
   TestTeamScanRetVal<TEST_EXECSPACE, double>{}(2596, 1311);
 }
-#endif
 #endif
 
 }  // namespace Test

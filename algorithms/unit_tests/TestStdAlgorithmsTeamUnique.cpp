@@ -15,10 +15,11 @@
 //@HEADER
 
 #include <TestStdAlgorithmsCommon.hpp>
+#include <algorithm>
 
 namespace Test {
 namespace stdalgos {
-namespace TeamShiftRight {
+namespace TeamUniqueDefaultPredicate {
 
 namespace KE = Kokkos::Experimental;
 
@@ -27,16 +28,13 @@ struct TestFunctorA {
   ViewType m_view;
   DistancesViewType m_distancesView;
   IntraTeamSentinelView m_intraTeamSentinelView;
-  std::size_t m_shift;
   int m_apiPick;
 
   TestFunctorA(const ViewType view, const DistancesViewType distancesView,
-               const IntraTeamSentinelView intraTeamSentinelView,
-               std::size_t shift, int apiPick)
+               const IntraTeamSentinelView intraTeamSentinelView, int apiPick)
       : m_view(view),
         m_distancesView(distancesView),
         m_intraTeamSentinelView(intraTeamSentinelView),
-        m_shift(shift),
         m_apiPick(apiPick) {}
 
   template <class MemberType>
@@ -46,14 +44,29 @@ struct TestFunctorA {
     ptrdiff_t resultDist  = 0;
 
     if (m_apiPick == 0) {
-      auto it    = KE::shift_right(member, KE::begin(myRowView),
-                                KE::end(myRowView), m_shift);
+      auto it    = KE::unique(member, KE::begin(myRowView), KE::end(myRowView));
       resultDist = KE::distance(KE::begin(myRowView), it);
       Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
         m_distancesView(myRowIndex) = resultDist;
       });
     } else if (m_apiPick == 1) {
-      auto it    = KE::shift_right(member, myRowView, m_shift);
+      auto it    = KE::unique(member, myRowView);
+      resultDist = KE::distance(KE::begin(myRowView), it);
+      Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
+        m_distancesView(myRowIndex) = resultDist;
+      });
+    } else if (m_apiPick == 2) {
+      using value_type = typename ViewType::value_type;
+      auto it    = KE::unique(member, KE::begin(myRowView), KE::end(myRowView),
+                           CustomEqualityComparator<value_type>{});
+      resultDist = KE::distance(KE::begin(myRowView), it);
+      Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
+        m_distancesView(myRowIndex) = resultDist;
+      });
+    } else if (m_apiPick == 3) {
+      using value_type = typename ViewType::value_type;
+      auto it =
+          KE::unique(member, myRowView, CustomEqualityComparator<value_type>{});
       resultDist = KE::distance(KE::begin(myRowView), it);
       Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
         m_distancesView(myRowIndex) = resultDist;
@@ -71,31 +84,12 @@ struct TestFunctorA {
   }
 };
 
-// shift_right is only supported starting from C++20,
-// so put here a working version of the std algo copied from
-// https://github.com/llvm/llvm-project/blob/main/libcxx/include/__algorithm/shift_right.h
-template <class ForwardIterator>
-ForwardIterator my_std_shift_right(
-    ForwardIterator first, ForwardIterator last,
-    typename std::iterator_traits<ForwardIterator>::difference_type n) {
-  if (n == 0) {
-    return first;
-  }
-
-  decltype(n) d = last - first;
-  if (n >= d) {
-    return last;
-  }
-  ForwardIterator m = first + (d - n);
-  return std::move_backward(first, m, last);
-}
-
 template <class LayoutTag, class ValueType>
-void test_A(std::size_t numTeams, std::size_t numCols, std::size_t shift,
-            int apiId) {
+void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   /* description:
-     randomly fill a rank-2 view and do a team-level KE::shift_right
-     using shift as the shift count.
+     team-level KE::unique on a rank-2 view where
+     data is filled randomly such that we have several subsets
+     of consecutive equal elements. Use one team per row.
    */
 
   // -----------------------------------------------
@@ -103,11 +97,12 @@ void test_A(std::size_t numTeams, std::size_t numCols, std::size_t shift,
   // -----------------------------------------------
   // create a view in the memory space associated with default exespace
   // with as many rows as the number of teams and fill it with random
-  // values from an arbitrary range
+  // values from a range that is tight enough that there is a high likelihood
+  // of having several consecutive subsets of equal elements
   auto [dataView, cloneOfDataViewBeforeOp_h] =
       create_random_view_and_host_clone(
           LayoutTag{}, numTeams, numCols,
-          Kokkos::pair<ValueType, ValueType>{11, 523}, "dataView");
+          Kokkos::pair<ValueType, ValueType>{121, 153}, "dataView");
 
   // -----------------------------------------------
   // launch kokkos kernel
@@ -123,8 +118,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, std::size_t shift,
   Kokkos::View<bool*> intraTeamSentinelView("intraTeamSameResult", numTeams);
 
   // use CTAD for functor
-  TestFunctorA fnc(dataView, distancesView, intraTeamSentinelView, shift,
-                   apiId);
+  TestFunctorA fnc(dataView, distancesView, intraTeamSentinelView, apiId);
   Kokkos::parallel_for(policy, fnc);
 
   // -----------------------------------------------
@@ -134,10 +128,19 @@ void test_A(std::size_t numTeams, std::size_t numCols, std::size_t shift,
   // since that contains a valid copy of the data
   auto distancesView_h         = create_host_space_copy(distancesView);
   auto intraTeamSentinelView_h = create_host_space_copy(intraTeamSentinelView);
+
   for (std::size_t i = 0; i < cloneOfDataViewBeforeOp_h.extent(0); ++i) {
     auto myRow = Kokkos::subview(cloneOfDataViewBeforeOp_h, i, Kokkos::ALL());
-    auto it    = my_std_shift_right(KE::begin(myRow), KE::end(myRow), shift);
-    const std::size_t stdDistance = KE::distance(KE::begin(myRow), it);
+
+    std::size_t stdDistance = 0;
+    if (apiId <= 1) {
+      auto it     = std::unique(KE::begin(myRow), KE::end(myRow));
+      stdDistance = KE::distance(KE::begin(myRow), it);
+    } else {
+      auto it     = std::unique(KE::begin(myRow), KE::end(myRow),
+                            CustomEqualityComparator<value_type>{});
+      stdDistance = KE::distance(KE::begin(myRow), it);
+    }
     ASSERT_EQ(stdDistance, distancesView_h(i));
     ASSERT_TRUE(intraTeamSentinelView_h(i));
   }
@@ -146,42 +149,23 @@ void test_A(std::size_t numTeams, std::size_t numCols, std::size_t shift,
   expect_equal_host_views(cloneOfDataViewBeforeOp_h, dataViewAfterOp_h);
 }
 
-template <class Tag, class ValueType>
+template <class LayoutTag, class ValueType>
 void run_all_scenarios() {
-  // prepare a map where, for a given set of num cols
-  // we provide a list of shifts to use for testing
-  // key = num of columns
-  // value = list of shifts
-  // Note that the cornerCase number is here since the shift_right algo
-  // should work even when the shift given is way larger than the range.
-  constexpr std::size_t cornerCase                        = 110111;
-  const std::map<int, std::vector<std::size_t>> scenarios = {
-      {0, {0, cornerCase}},
-      {2, {0, 1, 2, cornerCase}},
-      {6, {0, 1, 2, 5, cornerCase}},
-      {13, {0, 1, 2, 8, 11, cornerCase}},
-      {56, {0, 1, 2, 8, 11, 33, 56, cornerCase}},
-      {123, {0, 1, 11, 33, 56, 89, 112, cornerCase}},
-      {3145, {0, 1, 11, 33, 56, 89, 112, 5677, cornerCase}}};
-
   for (int numTeams : teamSizesToTest) {
-    for (const auto& scenario : scenarios) {
-      const std::size_t numCols = scenario.first;
-      for (int copyCount : scenario.second) {
-        for (int apiId : {0, 1}) {
-          test_A<Tag, ValueType>(numTeams, numCols, copyCount, apiId);
-        }
+    for (const auto& numCols : {0, 1, 2, 13, 101, 1444, 11113}) {
+      for (int apiId : {0, 1}) {
+        test_A<LayoutTag, ValueType>(numTeams, numCols, apiId);
       }
     }
   }
 }
 
-TEST(std_algorithms_shift_right_team_test, test) {
-  run_all_scenarios<DynamicTag, double>();
+TEST(std_algorithms_unique_team_test, test_default_predicate) {
+  run_all_scenarios<DynamicTag, int>();
   run_all_scenarios<StridedTwoRowsTag, int>();
-  run_all_scenarios<StridedThreeRowsTag, unsigned>();
+  run_all_scenarios<StridedThreeRowsTag, int>();
 }
 
-}  // namespace TeamShiftRight
+}  // namespace TeamUniqueDefaultPredicate
 }  // namespace stdalgos
 }  // namespace Test

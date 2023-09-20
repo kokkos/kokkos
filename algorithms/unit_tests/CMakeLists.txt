@@ -166,6 +166,20 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
     endforeach()
 
     # ------------------------------------------
+    # std team I
+    # ------------------------------------------
+    set(STDALGO_TEAM_SOURCES_I)
+    foreach(Name
+	StdAlgorithmsCommon
+	StdAlgorithmsTeamUnique
+	StdAlgorithmsTeamAdjacentDifference
+	StdAlgorithmsTeamReduce
+	StdAlgorithmsTeamTransformReduce
+	)
+      list(APPEND STDALGO_TEAM_SOURCES_I Test${Name}.cpp)
+    endforeach()
+
+    # ------------------------------------------
     # std team H
     # ------------------------------------------
     set(STDALGO_TEAM_SOURCES_H)
@@ -376,7 +390,7 @@ foreach(ID A;B;C;D;E)
     )
 endforeach()
 
-foreach(ID A;B;C;D;E;F;G;H;P)
+foreach(ID A;B;C;D;E;F;G;H;I;P)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     AlgorithmsUnitTest_StdSet_Team_${ID}
     SOURCES

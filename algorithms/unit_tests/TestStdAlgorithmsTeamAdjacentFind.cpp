@@ -30,43 +30,47 @@ struct IsEqualFunctor {
   }
 };
 
-template <class DataViewType, class DistancesViewType, class BinaryPredType>
+template <class DataViewType, class DistancesViewType,
+          class IntraTeamSentinelView, class BinaryPredType>
 struct TestFunctorA {
   DataViewType m_dataView;
   DistancesViewType m_distancesView;
+  IntraTeamSentinelView m_intraTeamSentinelView;
   int m_apiPick;
   BinaryPredType m_binaryPred;
 
   TestFunctorA(const DataViewType dataView,
-               const DistancesViewType distancesView, int apiPick,
+               const DistancesViewType distancesView,
+               const IntraTeamSentinelView intraTeamSentinelView, int apiPick,
                BinaryPredType binaryPred)
       : m_dataView(dataView),
         m_distancesView(distancesView),
+        m_intraTeamSentinelView(intraTeamSentinelView),
         m_apiPick(apiPick),
         m_binaryPred(binaryPred) {}
 
   template <class MemberType>
   KOKKOS_INLINE_FUNCTION void operator()(const MemberType& member) const {
     const auto myRowIndex = member.league_rank();
-
     auto myRowViewFrom = Kokkos::subview(m_dataView, myRowIndex, Kokkos::ALL());
+    ptrdiff_t resultDist = 0;
 
     switch (m_apiPick) {
       case 0: {
         const auto it = KE::adjacent_find(member, KE::cbegin(myRowViewFrom),
                                           KE::cend(myRowViewFrom));
+        resultDist    = KE::distance(KE::cbegin(myRowViewFrom), it);
         Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
-          m_distancesView(myRowIndex) =
-              KE::distance(KE::cbegin(myRowViewFrom), it);
+          m_distancesView(myRowIndex) = resultDist;
         });
         break;
       }
 
       case 1: {
         const auto it = KE::adjacent_find(member, myRowViewFrom);
+        resultDist    = KE::distance(KE::begin(myRowViewFrom), it);
         Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
-          m_distancesView(myRowIndex) =
-              KE::distance(KE::begin(myRowViewFrom), it);
+          m_distancesView(myRowIndex) = resultDist;
         });
         break;
       }
@@ -75,22 +79,31 @@ struct TestFunctorA {
         const auto it =
             KE::adjacent_find(member, KE::cbegin(myRowViewFrom),
                               KE::cend(myRowViewFrom), m_binaryPred);
+        resultDist = KE::distance(KE::cbegin(myRowViewFrom), it);
         Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
-          m_distancesView(myRowIndex) =
-              KE::distance(KE::cbegin(myRowViewFrom), it);
+          m_distancesView(myRowIndex) = resultDist;
         });
         break;
       }
 
       case 3: {
         const auto it = KE::adjacent_find(member, myRowViewFrom, m_binaryPred);
+        resultDist    = KE::distance(KE::begin(myRowViewFrom), it);
         Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
-          m_distancesView(myRowIndex) =
-              KE::distance(KE::begin(myRowViewFrom), it);
+          m_distancesView(myRowIndex) = resultDist;
         });
         break;
       }
     }
+
+    // store result of checking if all members have their local
+    // values matching the one stored in m_distancesView
+    member.team_barrier();
+    const bool intraTeamCheck = team_members_have_matching_result(
+        member, resultDist, m_distancesView(myRowIndex));
+    Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
+      m_intraTeamSentinelView(myRowIndex) = intraTeamCheck;
+    });
   }
 };
 
@@ -150,16 +163,20 @@ void test_A(const bool ensureAdjacentFindCanFind, std::size_t numTeams,
   // of the interval that team operates on and then we check that these
   // distances match the std result
   Kokkos::View<std::size_t*> distancesView("distancesView", numTeams);
+  // sentinel to check if all members of the team compute the same result
+  Kokkos::View<bool*> intraTeamSentinelView("intraTeamSameResult", numTeams);
 
   // use CTAD for functor
   IsEqualFunctor<ValueType> binaryPred;
-  TestFunctorA fnc(dataView, distancesView, apiId, binaryPred);
+  TestFunctorA fnc(dataView, distancesView, intraTeamSentinelView, apiId,
+                   binaryPred);
   Kokkos::parallel_for(policy, fnc);
 
   // -----------------------------------------------
   // run cpp-std kernel and check
   // -----------------------------------------------
-  auto distancesView_h = create_host_space_copy(distancesView);
+  auto distancesView_h         = create_host_space_copy(distancesView);
+  auto intraTeamSentinelView_h = create_host_space_copy(intraTeamSentinelView);
 
   for (std::size_t i = 0; i < dataView.extent(0); ++i) {
     auto rowFrom            = Kokkos::subview(dataView_dc_h, i, Kokkos::ALL());
@@ -167,6 +184,7 @@ void test_A(const bool ensureAdjacentFindCanFind, std::size_t numTeams,
     const auto rowFromEnd   = KE::cend(rowFrom);
     const std::size_t beginEndDist = KE::distance(rowFromBegin, rowFromEnd);
 
+    ASSERT_TRUE(intraTeamSentinelView_h(i));
     switch (apiId) {
       case 0:
       case 1: {
