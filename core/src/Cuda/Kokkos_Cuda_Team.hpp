@@ -814,8 +814,9 @@ parallel_scan(const Impl::ThreadVectorRangeBoundariesStruct<
         Impl::in_place_shfl(accum, val, mask, blockDim.x, active_mask);
       }
 
+      reducer.reference() = accum;
+
       ))
-  reducer.reference() = accum;
 }
 
 //----------------------------------------------------------------------------
