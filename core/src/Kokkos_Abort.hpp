@@ -17,6 +17,7 @@
 #ifndef KOKKOS_ABORT_HPP
 #define KOKKOS_ABORT_HPP
 
+#include <ostream>
 #include <Kokkos_Macros.hpp>
 #include <impl/Kokkos_Printf.hpp>
 #ifdef KOKKOS_ENABLE_CUDA
@@ -32,6 +33,7 @@
 namespace Kokkos {
 namespace Impl {
 
+void traceback_callstack(std::ostream &);
 [[noreturn]] void host_abort(const char *const);
 
 #if defined(KOKKOS_ENABLE_CUDA) && defined(__CUDA_ARCH__)
