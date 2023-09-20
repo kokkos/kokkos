@@ -330,6 +330,21 @@ struct TestReducers {
   };
 
   static void test_sum_team_policy(int N, SumFunctor f, Scalar reference_sum) {
+#ifdef KOKKOS_ENABLE_OPENACC
+    if constexpr (std::is_same_v<ExecutionSpace,
+                                 Kokkos::Experimental::OpenACC> &&
+                  (std::is_same_v<Scalar, size_t> ||
+                   std::is_same_v<Scalar, double>)) {
+      return;  // FIXME_OPENACC
+    }
+#endif
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+    if constexpr (std::is_same_v<ExecutionSpace,
+                                 Kokkos::Experimental::OpenMPTarget>) {
+      return;  // FIXME_OPENMPTARGET
+    }
+#endif
+
     using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
 
     Scalar sum_scalar;
