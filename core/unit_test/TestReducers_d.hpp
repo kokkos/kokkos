@@ -94,7 +94,7 @@ TEST(TEST_CATEGORY, reducers_int16_t) {
   TestReducers<ThisTestType, TEST_EXECSPACE>::test_prod(4);
 }
 
-#if 0 && !defined(KOKKOS_ENABLE_HIP) && !defined(KOKKOS_ENABLE_OPENMPTARGET)
+#if !defined(KOKKOS_ENABLE_HIP) && !defined(KOKKOS_ENABLE_OPENMPTARGET)
 // TODO - resolve: "Kokkos_HIP_Vectorization.hpp:80:15: error: call to
 //                 implicitly-deleted default constructor of 'conv_type'
 //                   conv_type tmp_in;"

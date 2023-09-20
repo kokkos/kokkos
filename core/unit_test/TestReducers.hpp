@@ -19,6 +19,7 @@
 #include <limits>
 
 #include <Kokkos_Core.hpp>
+#include <TestNonTrivialScalarTypes.hpp>
 
 //--------------------------------------------------------------------------
 
@@ -330,6 +331,34 @@ struct TestReducers {
   };
 
   static void test_sum_team_policy(int N, SumFunctor f, Scalar reference_sum) {
+#ifdef KOKKOS_ENABLE_SERIAL
+    if constexpr (std::is_same_v<ExecSpace, Kokkos::Serial> &&
+                  std::is_same_v<Scalar, Kokkos::Experimental::bhalf_t>) {
+      return;  // FIXME_SERIAL
+    }
+#endif
+#ifdef KOKKOS_ENABLE_OPENACC
+    if constexpr (std::is_same_v<ExecSpace, Kokkos::Experimental::OpenACC> &&
+                  (std::is_same_v<Scalar, size_t> ||
+                   std::is_same_v<Scalar, double>)) {
+      return;  // FIXME_OPENACC
+    }
+#endif
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+    if constexpr (std::is_same_v<ExecSpace,
+                                 Kokkos::Experimental::OpenMPTarget>) {
+      return;  // FIXME_OPENMPTARGET
+    }
+#endif
+#ifdef KOKKOS_ENABLE_SYCL
+    if constexpr (std::is_same_v<ExecSpace, Kokkos::Experimental::SYCL>) {
+      return;  // FIXME_SYCL
+    }
+#endif
+    if constexpr (std::is_same_v<Scalar, point_t>) {
+      return;  // FIXME_POINT_T
+    }
+
     using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
 
     Scalar sum_scalar;
