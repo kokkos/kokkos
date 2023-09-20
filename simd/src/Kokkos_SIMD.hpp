@@ -30,6 +30,20 @@
 
 #include <Kokkos_Macros.hpp>
 
+// FIXME_OPENMPTARGET The device pass disables all compiler macros checked
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+#if defined(KOKKOS_ARCH_AVX2)
+#include <Kokkos_SIMD_AVX2.hpp>
+#endif
+
+#if defined(KOKKOS_ARCH_AVX512XEON)
+#include <Kokkos_SIMD_AVX512.hpp>
+#endif
+
+#ifdef __ARM_NEON
+#include <Kokkos_SIMD_NEON.hpp>
+#endif
+#else  // KOKKOS_ENABLE_OPENMPTARGET
 #if defined(KOKKOS_ARCH_AVX) && !defined(__AVX__)
 #error "__AVX__ must be defined for KOKKOS_ARCH_AVX"
 #endif
@@ -50,6 +64,7 @@
 
 #ifdef __ARM_NEON
 #include <Kokkos_SIMD_NEON.hpp>
+#endif
 #endif
 
 #if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC < 1130

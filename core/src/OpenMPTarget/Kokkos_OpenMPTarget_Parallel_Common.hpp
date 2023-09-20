@@ -84,9 +84,11 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
   static void execute_reducer(const FunctorType& f, const PolicyType& p,
                               PointerType result_ptr, bool ptr_on_device) {
     OpenMPTargetExec::verify_is_process(
-        "Kokkos::Experimental::OpenMPTarget parallel_for");
+        "Kokkos::Experimental::OpenMPTarget RangePolicy "
+        "parallel_reduce:reducer");
     OpenMPTargetExec::verify_initialized(
-        "Kokkos::Experimental::OpenMPTarget parallel_for");
+        "Kokkos::Experimental::OpenMPTarget RangePolicy "
+        "parallel_reduce:reducer");
     const auto begin = p.begin();
     const auto end   = p.end();
 
@@ -125,9 +127,11 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
   static void execute_array(const FunctorType& f, const PolicyType& p,
                             PointerType result_ptr, bool ptr_on_device) {
     OpenMPTargetExec::verify_is_process(
-        "Kokkos::Experimental::OpenMPTarget parallel_for");
+        "Kokkos::Experimental::OpenMPTarget RangePolicy "
+        "parallel_reduce:array_reduction");
     OpenMPTargetExec::verify_initialized(
-        "Kokkos::Experimental::OpenMPTarget parallel_for");
+        "Kokkos::Experimental::OpenMPTarget RangePolicy "
+        "parallel_reduce:array_reduction");
     const auto begin = p.begin();
     const auto end   = p.end();
 
@@ -197,6 +201,12 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
 
   static void execute_init_join(const FunctorType& f, const PolicyType& p,
                                 PointerType ptr, const bool ptr_on_device) {
+    OpenMPTargetExec::verify_is_process(
+        "Kokkos::Experimental::OpenMPTarget RangePolicy "
+        "parallel_reduce:init_join");
+    OpenMPTargetExec::verify_initialized(
+        "Kokkos::Experimental::OpenMPTarget RangePolicy "
+        "parallel_reduce:init_join");
     const auto begin = p.begin();
     const auto end   = p.end();
 
@@ -347,9 +357,11 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
   static void execute_reducer(const FunctorType& f, const PolicyType& p,
                               PointerType result_ptr, bool ptr_on_device) {
     OpenMPTargetExec::verify_is_process(
-        "Kokkos::Experimental::OpenMPTarget parallel_for");
+        "Kokkos::Experimental::OpenMPTarget TeamPolicy "
+        "parallel_reduce:reducer");
     OpenMPTargetExec::verify_initialized(
-        "Kokkos::Experimental::OpenMPTarget parallel_for");
+        "Kokkos::Experimental::OpenMPTarget TeamPolicy "
+        "parallel_reduce:reducer");
 
     const int league_size   = p.league_size();
     const int team_size     = p.team_size();
@@ -435,9 +447,11 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
   static void execute_array(const FunctorType& f, const PolicyType& p,
                             PointerType result_ptr, bool ptr_on_device) {
     OpenMPTargetExec::verify_is_process(
-        "Kokkos::Experimental::OpenMPTarget parallel_for");
+        "Kokkos::Experimental::OpenMPTarget TeamPolicy "
+        "parallel_reduce:array_reduction");
     OpenMPTargetExec::verify_initialized(
-        "Kokkos::Experimental::OpenMPTarget parallel_for");
+        "Kokkos::Experimental::OpenMPTarget TeamPolicy "
+        "parallel_reduce:array_reduction");
 
     const int league_size   = p.league_size();
     const int team_size     = p.team_size();
@@ -560,6 +574,12 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
   // RangePolicy. Need a new implementation.
   static void execute_init_join(const FunctorType& f, const PolicyType& p,
                                 PointerType ptr, const bool ptr_on_device) {
+    OpenMPTargetExec::verify_is_process(
+        "Kokkos::Experimental::OpenMPTarget TeamPolicy "
+        "parallel_reduce:init_join ");
+    OpenMPTargetExec::verify_initialized(
+        "Kokkos::Experimental::OpenMPTarget TeamPolicy "
+        "parallel_reduce:init_join");
     using FunctorAnalysis =
         Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE, PolicyType,
                               FunctorType, ValueType>;
