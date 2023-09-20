@@ -23,17 +23,20 @@ namespace TeamRotate {
 
 namespace KE = Kokkos::Experimental;
 
-template <class ViewType, class DistancesViewType>
+template <class ViewType, class DistancesViewType, class IntraTeamSentinelView>
 struct TestFunctorA {
   ViewType m_view;
   DistancesViewType m_distancesView;
+  IntraTeamSentinelView m_intraTeamSentinelView;
   std::size_t m_pivotShift;
   int m_apiPick;
 
   TestFunctorA(const ViewType view, const DistancesViewType distancesView,
+               const IntraTeamSentinelView intraTeamSentinelView,
                std::size_t pivotShift, int apiPick)
       : m_view(view),
         m_distancesView(distancesView),
+        m_intraTeamSentinelView(intraTeamSentinelView),
         m_pivotShift(pivotShift),
         m_apiPick(apiPick) {}
 
@@ -41,22 +44,32 @@ struct TestFunctorA {
   KOKKOS_INLINE_FUNCTION void operator()(const MemberType& member) const {
     const auto myRowIndex = member.league_rank();
     auto myRowView        = Kokkos::subview(m_view, myRowIndex, Kokkos::ALL());
+    ptrdiff_t resultDist  = 0;
 
     if (m_apiPick == 0) {
       auto pivot = KE::begin(myRowView) + m_pivotShift;
       auto it =
           KE::rotate(member, KE::begin(myRowView), pivot, KE::end(myRowView));
-
+      resultDist = KE::distance(KE::begin(myRowView), it);
       Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
-        m_distancesView(myRowIndex) = KE::distance(KE::begin(myRowView), it);
+        m_distancesView(myRowIndex) = resultDist;
       });
     } else if (m_apiPick == 1) {
-      auto it = KE::rotate(member, myRowView, m_pivotShift);
-
+      auto it    = KE::rotate(member, myRowView, m_pivotShift);
+      resultDist = KE::distance(KE::begin(myRowView), it);
       Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
-        m_distancesView(myRowIndex) = KE::distance(KE::begin(myRowView), it);
+        m_distancesView(myRowIndex) = resultDist;
       });
     }
+
+    // store result of checking if all members have their local
+    // values matching the one stored in m_distancesView
+    member.team_barrier();
+    const bool intraTeamCheck = team_members_have_matching_result(
+        member, resultDist, m_distancesView(myRowIndex));
+    Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
+      m_intraTeamSentinelView(myRowIndex) = intraTeamCheck;
+    });
   }
 };
 
@@ -89,9 +102,12 @@ void test_A(std::size_t numTeams, std::size_t numCols, std::size_t pivotShift,
   // beginning of the interval that team operates on and then we check
   // that these distances match the expectation
   Kokkos::View<std::size_t*> distancesView("distancesView", numTeams);
+  // sentinel to check if all members of the team compute the same result
+  Kokkos::View<bool*> intraTeamSentinelView("intraTeamSameResult", numTeams);
 
   // use CTAD for functor
-  TestFunctorA fnc(dataView, distancesView, pivotShift, apiId);
+  TestFunctorA fnc(dataView, distancesView, intraTeamSentinelView, pivotShift,
+                   apiId);
   Kokkos::parallel_for(policy, fnc);
 
   // -----------------------------------------------
@@ -99,7 +115,8 @@ void test_A(std::size_t numTeams, std::size_t numCols, std::size_t pivotShift,
   // -----------------------------------------------
   // here I can use cloneOfDataViewBeforeOp_h to run std algo on
   // since that contains a valid copy of the data
-  auto distancesView_h = create_host_space_copy(distancesView);
+  auto distancesView_h         = create_host_space_copy(distancesView);
+  auto intraTeamSentinelView_h = create_host_space_copy(intraTeamSentinelView);
   for (std::size_t i = 0; i < cloneOfDataViewBeforeOp_h.extent(0); ++i) {
     auto myRow = Kokkos::subview(cloneOfDataViewBeforeOp_h, i, Kokkos::ALL());
     auto pivot = KE::begin(myRow) + pivotShift;
@@ -107,6 +124,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, std::size_t pivotShift,
     auto it = std::rotate(KE::begin(myRow), pivot, KE::end(myRow));
     const std::size_t stdDistance = KE::distance(KE::begin(myRow), it);
     ASSERT_EQ(stdDistance, distancesView_h(i));
+    ASSERT_TRUE(intraTeamSentinelView_h(i));
   }
 
   auto dataViewAfterOp_h = create_host_space_copy(dataView);

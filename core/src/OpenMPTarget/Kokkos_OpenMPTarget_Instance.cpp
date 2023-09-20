@@ -112,8 +112,11 @@ void OpenMPTargetInternal::impl_finalize() {
     Kokkos::kokkos_free<Kokkos::Experimental::OpenMPTargetSpace>(
         space.m_uniquetoken_ptr);
 }
+
 void OpenMPTargetInternal::impl_initialize() {
   m_is_initialized = true;
+
+  Kokkos::Impl::OpenMPTargetExec::MAX_ACTIVE_THREADS = concurrency();
 
   // FIXME_OPENMPTARGET:  Only fix the number of teams for NVIDIA architectures
   // from Pascal and upwards.
