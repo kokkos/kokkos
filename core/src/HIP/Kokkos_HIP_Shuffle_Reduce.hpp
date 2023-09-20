@@ -100,7 +100,7 @@ template <class FunctorType>
 __device__ inline bool hip_inter_block_shuffle_reduction(
     typename FunctorType::reference_type value,
     typename FunctorType::reference_type neutral, FunctorType const& reducer,
-    HIP::size_type* const m_scratch_space,
+    void* const m_scratch_space,
     typename FunctorType::pointer_type const /*result*/,
     HIP::size_type* const m_scratch_flags,
     int const max_active_thread = blockDim.y) {
