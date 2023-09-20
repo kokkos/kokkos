@@ -194,8 +194,9 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
 
     ASSERT_TRUE(intraTeamSentinelView_h(i));
 
-// GCC 8 does not have reduce so guard against this
-#if defined(__GNUC__) && __GNUC__ == 8
+// GCC 8 does not have reduce
+// GCC 9.1, 9.2 fails to compile for missing overload not accepting policy
+#if defined(__GNUC__) && (KOKKOS_COMPILER_GNU <= 920)
 #define reduce testing_reduce
 #else
 #define reduce std::reduce

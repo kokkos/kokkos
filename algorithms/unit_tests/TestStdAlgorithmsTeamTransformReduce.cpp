@@ -239,8 +239,9 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
 
     ASSERT_TRUE(intraTeamSentinelView_h(i));
 
-// GCC 8 does not have transform_reduce so guard against this
-#if defined(__GNUC__) && __GNUC__ == 8
+// GCC 8 does not have transform_reduce
+// GCC 9.1, 9.2 fails to compile for missing overload not accepting policy
+#if defined(__GNUC__) && (KOKKOS_COMPILER_GNU <= 920)
 #define transform_reduce testing_transform_reduce
 #else
 #define transform_reduce std::transform_reduce
