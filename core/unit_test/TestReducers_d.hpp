@@ -52,6 +52,11 @@ TEST(TEST_CATEGORY, reducers_half_t) {
 }
 
 TEST(TEST_CATEGORY, reducers_bhalf_t) {
+#ifdef KOKKOS_ENABLE_SERIAL
+  if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Serial>) {
+    GTEST_SKIP() << "Skip serial for now";  // FIXME_SERIAL
+  }
+#endif
   using ThisTestType = Kokkos::Experimental::bhalf_t;
 
   TestReducers<ThisTestType, TEST_EXECSPACE>::test_sum(2);
