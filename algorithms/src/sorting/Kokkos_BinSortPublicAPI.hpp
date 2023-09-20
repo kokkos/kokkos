@@ -37,16 +37,16 @@ class BinSort {
 
     DstViewType dst_values;
     src_view_type src_values;
-    int dst_offset;
+    std::size_t dst_offset;
 
-    copy_functor(DstViewType const& dst_values_, int const& dst_offset_,
+    copy_functor(DstViewType const& dst_values_, std::size_t const& dst_offset_,
                  SrcViewType const& src_values_)
         : dst_values(dst_values_),
           src_values(src_values_),
           dst_offset(dst_offset_) {}
 
     KOKKOS_INLINE_FUNCTION
-    void operator()(const int& i) const {
+    void operator()(const std::size_t& i) const {
       copy_op::copy(dst_values, i + dst_offset, src_values, i);
     }
   };
@@ -75,18 +75,19 @@ class BinSort {
     DstViewType dst_values;
     perm_view_type sort_order;
     src_view_type src_values;
-    int src_offset;
+    std::size_t src_offset;
 
     copy_permute_functor(DstViewType const& dst_values_,
                          PermuteViewType const& sort_order_,
-                         SrcViewType const& src_values_, int const& src_offset_)
+                         SrcViewType const& src_values_,
+                         std::size_t const& src_offset_)
         : dst_values(dst_values_),
           sort_order(sort_order_),
           src_values(src_values_),
           src_offset(src_offset_) {}
 
     KOKKOS_INLINE_FUNCTION
-    void operator()(const int& i) const {
+    void operator()(const std::size_t& i) const {
       copy_op::copy(dst_values, i, src_values, src_offset + sort_order(i));
     }
   };
@@ -107,7 +108,7 @@ class BinSort {
   using value_type = size_type;
 
   using offset_type    = Kokkos::View<size_type*, Space>;
-  using bin_count_type = Kokkos::View<const int*, Space>;
+  using bin_count_type = Kokkos::View<const std::size_t*, Space>;
 
   using const_key_view_type = typename KeyViewType::const_type;
 
@@ -126,7 +127,7 @@ class BinSort {
   using const_key_scalar     = typename KeyViewType::const_value_type;
 
   using bin_count_atomic_type =
-      Kokkos::View<int*, Space, Kokkos::MemoryTraits<Kokkos::Atomic> >;
+      Kokkos::View<std::size_t*, Space, Kokkos::MemoryTraits<Kokkos::Atomic> >;
 
  private:
   const_key_view_type keys;
@@ -139,8 +140,8 @@ class BinSort {
   bin_count_type bin_count_const;
   offset_type sort_order;
 
-  int range_begin;
-  int range_end;
+  std::size_t range_begin;
+  std::size_t range_end;
   bool sort_within_bins;
 
  public:
@@ -155,7 +156,7 @@ class BinSort {
   // sort within bins (default false)
   template <typename ExecutionSpace>
   BinSort(const ExecutionSpace& exec, const_key_view_type keys_,
-          int range_begin_, int range_end_, BinSortOp bin_op_,
+          std::size_t range_begin_, std::size_t range_end_, BinSortOp bin_op_,
           bool sort_within_bins_ = false)
       : keys(keys_),
         keys_rnd(keys_),
@@ -175,7 +176,7 @@ class BinSort {
     if (bin_op.max_bins() <= 0)
       Kokkos::abort(
           "The number of bins in the BinSortOp object must be greater than 0!");
-    bin_count_atomic = Kokkos::View<int*, Space>(
+    bin_count_atomic = Kokkos::View<std::size_t*, Space>(
         "Kokkos::SortImpl::BinSortFunctor::bin_count", bin_op.max_bins());
     bin_count_const = bin_count_atomic;
     bin_offsets =
@@ -188,8 +189,9 @@ class BinSort {
                     range_end - range_begin);
   }
 
-  BinSort(const_key_view_type keys_, int range_begin_, int range_end_,
-          BinSortOp bin_op_, bool sort_within_bins_ = false)
+  BinSort(const_key_view_type keys_, std::size_t range_begin_,
+          std::size_t range_end_, BinSortOp bin_op_,
+          bool sort_within_bins_ = false)
       : BinSort(exec_space{}, keys_, range_begin_, range_end_, bin_op_,
                 sort_within_bins_) {}
 
@@ -250,7 +252,8 @@ class BinSort {
   // permutation array
   template <class ExecutionSpace, class ValuesViewType>
   void sort(const ExecutionSpace& exec, ValuesViewType const& values,
-            int values_range_begin, int values_range_end) const {
+            std::size_t values_range_begin,
+            std::size_t values_range_end) const {
     if (values.extent(0) == 0) {
       return;
     }
@@ -321,8 +324,8 @@ class BinSort {
   // Sort a subset of a view with respect to the first dimension using the
   // permutation array
   template <class ValuesViewType>
-  void sort(ValuesViewType const& values, int values_range_begin,
-            int values_range_end) const {
+  void sort(ValuesViewType const& values, std::size_t values_range_begin,
+            std::size_t values_range_end) const {
     Kokkos::fence("Kokkos::Binsort::sort: before");
     exec_space exec;
     sort(exec, values, values_range_begin, values_range_end);
@@ -353,13 +356,13 @@ class BinSort {
 
  public:
   KOKKOS_INLINE_FUNCTION
-  void operator()(const bin_count_tag& /*tag*/, const int i) const {
-    const int j = range_begin + i;
+  void operator()(const bin_count_tag& /*tag*/, const std::size_t i) const {
+    const std::size_t j = range_begin + i;
     bin_count_atomic(bin_op.bin(keys, j))++;
   }
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const bin_offset_tag& /*tag*/, const int i,
+  void operator()(const bin_offset_tag& /*tag*/, const std::size_t i,
                   value_type& offset, const bool& final) const {
     if (final) {
       bin_offsets(i) = offset;
@@ -368,35 +371,37 @@ class BinSort {
   }
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const bin_binning_tag& /*tag*/, const int i) const {
-    const int j     = range_begin + i;
-    const int bin   = bin_op.bin(keys, j);
-    const int count = bin_count_atomic(bin)++;
+  void operator()(const bin_binning_tag& /*tag*/, const std::size_t i) const {
+    const std::size_t j     = range_begin + i;
+    const std::size_t bin   = bin_op.bin(keys, j);
+    const std::size_t count = bin_count_atomic(bin)++;
 
     sort_order(bin_offsets(bin) + count) = j;
   }
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const bin_sort_bins_tag& /*tag*/, const int i) const {
+  void operator()(const bin_sort_bins_tag& /*tag*/, const std::size_t i) const {
     auto bin_size = bin_count_const(i);
     if (bin_size <= 1) return;
     constexpr bool use_std_sort =
         std::is_same_v<typename exec_space::memory_space, HostSpace>;
-    int lower_bound = bin_offsets(i);
-    int upper_bound = lower_bound + bin_size;
+    std::size_t lower_bound = bin_offsets(i);
+    std::size_t upper_bound = lower_bound + bin_size;
     // Switching to std::sort for more than 10 elements has been found
     // reasonable experimentally.
     if (use_std_sort && bin_size > 10) {
       if constexpr (use_std_sort) {
         std::sort(&sort_order(lower_bound), &sort_order(upper_bound),
-                  [this](int p, int q) { return bin_op(keys_rnd, p, q); });
+                  [this](std::size_t p, std::size_t q) {
+                    return bin_op(keys_rnd, p, q);
+                  });
       }
     } else {
-      for (int k = lower_bound + 1; k < upper_bound; ++k) {
-        int old_idx = sort_order(k);
-        int j       = k - 1;
+      for (std::size_t k = lower_bound + 1; k < upper_bound; ++k) {
+        std::size_t old_idx = sort_order(k);
+        std::size_t j       = k - 1;
         while (j >= lower_bound) {
-          int new_idx = sort_order(j);
+          std::size_t new_idx = sort_order(j);
           if (!bin_op(keys_rnd, old_idx, new_idx)) break;
           sort_order(j + 1) = new_idx;
           --j;
