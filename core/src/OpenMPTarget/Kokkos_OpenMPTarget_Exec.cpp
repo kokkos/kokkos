@@ -67,8 +67,6 @@ void OpenMPTargetExec::verify_initialized(const char* const label) {
     msg.append(" ERROR: not initialized");
     Kokkos::Impl::throw_runtime_exception(msg);
   }
-  OpenMPTargetExec::MAX_ACTIVE_THREADS =
-      Kokkos::Experimental::OpenMPTarget().concurrency();
 }
 
 void* OpenMPTargetExec::m_scratch_ptr         = nullptr;
