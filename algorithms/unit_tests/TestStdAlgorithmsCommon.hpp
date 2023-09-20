@@ -254,7 +254,7 @@ auto make_bounds(const ValueType1& lower, const ValueType2 upper) {
   return Kokkos::pair<ValueType1, ValueType2>{lower, upper};
 }
 
-#if defined(__GNUC__) && (KOKKOS_COMPILER_GNU <= 920)
+#if defined(_GLIBCXX_RELEASE) && (_GLIBCXX_RELEASE <= 9)
 
 // GCC 8 does not have reduce, transform_reduce, exclusive_scan, inclusive_scan,
 //       transform_exclusive_scan, transform_inclusive_scan

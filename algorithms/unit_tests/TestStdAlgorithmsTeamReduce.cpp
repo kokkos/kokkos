@@ -196,7 +196,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
 
 // GCC 8 does not have reduce
 // GCC 9.1, 9.2 fails to compile for missing overload not accepting policy
-#if defined(__GNUC__) && (KOKKOS_COMPILER_GNU <= 920)
+#if defined(_GLIBCXX_RELEASE) && (_GLIBCXX_RELEASE <= 9)
 #define reduce testing_reduce
 #else
 #define reduce std::reduce
