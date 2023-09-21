@@ -354,7 +354,7 @@ struct TestReducers {
     constexpr int num_teams = (sizeof(Scalar) == 1) ? 126 : 1024;
 
     TeamSumFunctor tf;
-    auto team_pol = Kokkos::TeamPolicy<ExecSpace>(num_teams, Kokkos::AUTO);
+    auto team_pol = Kokkos::TeamPolicy<ExecSpace>(num_teams, 1);
     Kokkos::parallel_reduce(team_pol, tf, sum_view);
     Kokkos::deep_copy(sum_scalar, sum_view);
     ASSERT_EQ(sum_scalar, Scalar{num_teams});
