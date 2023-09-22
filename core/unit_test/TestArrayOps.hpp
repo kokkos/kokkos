@@ -20,6 +20,18 @@
 
 namespace {
 
+// std::size doesn't appear to be constexpr under icpc, so reimplementing it
+
+template <typename C>
+KOKKOS_FUNCTION constexpr auto size(const C& c) {
+  return c.size();
+}
+
+template <typename T, size_t N>
+KOKKOS_FUNCTION constexpr size_t size(const T (&)[N]) noexcept {
+  return N;
+}
+
 TEST(TEST_CATEGORY, array_capacity) {
   using A = Kokkos::Array<int, 2>;
   A a{{3, 5}};
@@ -122,18 +134,18 @@ TEST(TEST_CATEGORY, array_contiguous_capacity) {
   ASSERT_EQ(e.max_size(), 0u);
 
   int aa[] = {3, 5};
-  A a(aa, std::size(aa));
+  A a(aa, size(aa));
 
-  ASSERT_EQ(a.empty(), 0 == std::size(aa));
-  ASSERT_EQ(a.size(), std::size(aa));
-  ASSERT_EQ(a.max_size(), std::size(aa));
+  ASSERT_EQ(a.empty(), 0 == size(aa));
+  ASSERT_EQ(a.size(), size(aa));
+  ASSERT_EQ(a.max_size(), size(aa));
 }
 
 TEST(TEST_CATEGORY, array_contiguous_element_access) {
   int aa[] = {3, 5};
   using A =
       Kokkos::Array<int, KOKKOS_INVALID_INDEX, Kokkos::Array<>::contiguous>;
-  A a(aa, std::size(aa));
+  A a(aa, size(aa));
   A const& ca = a;
 
   size_t index = 1;
@@ -196,46 +208,46 @@ TEST(TEST_CATEGORY, array_contiguous_assignment) {
       Kokkos::Array<int, KOKKOS_INVALID_INDEX, Kokkos::Array<>::contiguous>;
 
   int aa[] = {3, 5};
-  A a(aa, std::size(aa));
+  A a(aa, size(aa));
 
   // operator=(Array<T, N, P> const&) semantics when lhs size a > rhs size b
   using B = Kokkos::Array<int, 1>;
-  static_assert(std::size(aa) > B::size());
+  static_assert(size(aa) > B::size());
   B b{{7}};
 
-  ASSERT_GT(std::size(a), std::size(b));
+  ASSERT_GT(size(a), size(b));
   a = b;
-  ASSERT_GT(std::size(a), std::size(b));
+  ASSERT_GT(size(a), size(b));
 
-  ASSERT_EQ(a.size(), std::size(aa));
-  ASSERT_EQ(a.max_size(), std::size(aa));
+  ASSERT_EQ(a.size(), size(aa));
+  ASSERT_EQ(a.max_size(), size(aa));
   ASSERT_EQ(a[0], 7);
   ASSERT_EQ(a[1], 5);
 
   // operator=(Array<T, N, P> const&) semantics when lhs size a < rhs size d
   using D = Kokkos::Array<int, 4>;
-  static_assert(std::size(aa) < D::size());
+  static_assert(size(aa) < D::size());
   D d{{11, 13, 17, 19}};
 
-  ASSERT_LT(std::size(a), std::size(d));
+  ASSERT_LT(size(a), size(d));
   a = d;
-  ASSERT_LT(std::size(a), std::size(d));
+  ASSERT_LT(size(a), size(d));
 
-  ASSERT_EQ(a.size(), std::size(aa));
-  ASSERT_EQ(a.max_size(), std::size(aa));
+  ASSERT_EQ(a.size(), size(aa));
+  ASSERT_EQ(a.max_size(), size(aa));
   ASSERT_EQ(a[0], 11);
   ASSERT_EQ(a[1], 13);
 
   // Copy assignment operator semantics when lhs size a > rhs size e
   int ee[] = {23};
-  A e(ee, std::size(ee));
+  A e(ee, size(ee));
 
   ASSERT_GT(a.size(), e.size());
   a = e;
   ASSERT_GT(a.size(), e.size());
 
-  ASSERT_EQ(a.size(), std::size(aa));
-  ASSERT_EQ(a.max_size(), std::size(aa));
+  ASSERT_EQ(a.size(), size(aa));
+  ASSERT_EQ(a.max_size(), size(aa));
   ASSERT_EQ(a[0], 23);
   ASSERT_EQ(a[1], 13);
 
@@ -245,8 +257,8 @@ TEST(TEST_CATEGORY, array_contiguous_assignment) {
   e    = a;
   ASSERT_LT(e.size(), a.size());
 
-  ASSERT_EQ(e.size(), std::size(ee));
-  ASSERT_EQ(e.max_size(), std::size(ee));
+  ASSERT_EQ(e.size(), size(ee));
+  ASSERT_EQ(e.max_size(), size(ee));
   ASSERT_EQ(e[0], 23);
 }
 
@@ -261,11 +273,11 @@ TEST(TEST_CATEGORY, array_strided_capacity) {
 
   int aa[]                 = {5, 7, 11, 13, 17, 19};
   constexpr size_t aStride = 2;
-  A a(aa, std::size(aa) / aStride, aStride);
+  A a(aa, size(aa) / aStride, aStride);
 
-  ASSERT_EQ(a.empty(), 0 == std::size(aa) / aStride);
-  ASSERT_EQ(a.size(), std::size(aa) / aStride);
-  ASSERT_EQ(a.max_size(), std::size(aa) / aStride);
+  ASSERT_EQ(a.empty(), 0 == size(aa) / aStride);
+  ASSERT_EQ(a.size(), size(aa) / aStride);
+  ASSERT_EQ(a.max_size(), size(aa) / aStride);
 }
 
 TEST(TEST_CATEGORY, array_strided_element_access) {
@@ -274,7 +286,7 @@ TEST(TEST_CATEGORY, array_strided_element_access) {
   int aa[]                 = {5, 7, 11, 13, 17, 19};
   constexpr size_t aStride = 2;
 
-  A a(aa, std::size(aa) / aStride, aStride);
+  A a(aa, size(aa) / aStride, aStride);
   A const& ca = a;
 
   size_t index = 1;
@@ -336,47 +348,47 @@ TEST(TEST_CATEGORY, array_strided_assignment) {
   using A  = Kokkos::Array<int, KOKKOS_INVALID_INDEX, Kokkos::Array<>::strided>;
   int aa[] = {5, 7, 11, 13, 17, 19};
   constexpr size_t aStride = 2;
-  A a(aa, std::size(aa) / aStride, aStride);
+  A a(aa, size(aa) / aStride, aStride);
 
   // operator=(Array<T, N, P> const&) semantics when lhs size a > rhs size b
   using B = Kokkos::Array<int, 1>;
-  static_assert(std::size(aa) / aStride > B::size());
+  static_assert(size(aa) / aStride > B::size());
   B b{{23}};
 
-  ASSERT_GT(std::size(a), std::size(b));
+  ASSERT_GT(size(a), size(b));
   a = b;
-  ASSERT_GT(std::size(a), std::size(b));
+  ASSERT_GT(size(a), size(b));
 
-  ASSERT_EQ(a.size(), std::size(aa) / aStride);
-  ASSERT_EQ(a.max_size(), std::size(aa) / aStride);
+  ASSERT_EQ(a.size(), size(aa) / aStride);
+  ASSERT_EQ(a.max_size(), size(aa) / aStride);
   ASSERT_EQ(a[0], b[0]);
   ASSERT_EQ(a[1], aa[1 * aStride]);
 
   // operator=(Array<T, N, P> const&) semantics when lhs size a < rhs size d
   using D = Kokkos::Array<int, 7>;
-  static_assert(std::size(aa) / aStride < D::size());
+  static_assert(size(aa) / aStride < D::size());
   D d{{29, 31, 37, 41, 43, 47, 53}};
 
-  ASSERT_LT(std::size(a), std::size(d));
+  ASSERT_LT(size(a), size(d));
   a = d;
-  ASSERT_LT(std::size(a), std::size(d));
+  ASSERT_LT(size(a), size(d));
 
-  ASSERT_EQ(a.size(), std::size(aa) / aStride);
-  ASSERT_EQ(a.max_size(), std::size(aa) / aStride);
+  ASSERT_EQ(a.size(), size(aa) / aStride);
+  ASSERT_EQ(a.max_size(), size(aa) / aStride);
   ASSERT_EQ(a[0], d[0]);
   ASSERT_EQ(a[1], d[1]);
 
   // Copy assignment operator semantics when lhs size a > rhs size e
   int ee[]                 = {59, 61, 67, 71, 73, 79};
   constexpr size_t eStride = 3;
-  A e(ee, std::size(ee) / eStride, eStride);
+  A e(ee, size(ee) / eStride, eStride);
 
   ASSERT_GT(a.size(), e.size());
   a = e;
   ASSERT_GT(a.size(), e.size());
 
-  ASSERT_EQ(a.size(), std::size(aa) / aStride);
-  ASSERT_EQ(a.max_size(), std::size(aa) / aStride);
+  ASSERT_EQ(a.size(), size(aa) / aStride);
+  ASSERT_EQ(a.max_size(), size(aa) / aStride);
   ASSERT_EQ(a[0], ee[0 * eStride]);
   ASSERT_EQ(a[1], ee[1 * eStride]);
 
@@ -385,8 +397,8 @@ TEST(TEST_CATEGORY, array_strided_assignment) {
   ASSERT_LT(e.size(), a.size());
   e = a;
   ASSERT_LT(e.size(), a.size());
-  ASSERT_EQ(e.size(), std::size(ee) / eStride);
-  ASSERT_EQ(e.max_size(), std::size(ee) / eStride);
+  ASSERT_EQ(e.size(), size(ee) / eStride);
+  ASSERT_EQ(e.max_size(), size(ee) / eStride);
   ASSERT_EQ(e[0], ee[0]);
 }
 
@@ -432,14 +444,14 @@ TEST(TEST_CATEGORY, to_Array_lvalue) {
   Kokkos::parallel_reduce(
       1,
       KOKKOS_LAMBDA(int, int& asum, int& somsum, int& kasum) {
-        SetOnMove som_array[std::size(array)];
+        SetOnMove som_array[size(array)];
         int i = 0;
         for (auto& v : array) som_array[i++] = v;
 
         auto ka = Kokkos::to_Array(som_array);
         static_assert(std::is_same_v<
                       Kokkos::Array<std::remove_extent_t<decltype(som_array)>,
-                                    std::size(array)>,
+                                    size(array)>,
                       decltype(ka)>);
 
         for (size_t j = 0; j != ka.size(); ++j) {
@@ -468,14 +480,14 @@ TEST(TEST_CATEGORY, to_Array_rvalue) {
   Kokkos::parallel_reduce(
       1,
       KOKKOS_LAMBDA(int, int& asum, int& somsum, int& kasum) {
-        SetOnMove som_array[std::size(array)];
+        SetOnMove som_array[size(array)];
         int i = 0;
         for (auto& v : array) som_array[i++] = v;
 
         auto ka = Kokkos::to_Array(std::move(som_array));
         static_assert(std::is_same_v<
                       Kokkos::Array<std::remove_extent_t<decltype(som_array)>,
-                                    std::size(array)>,
+                                    size(array)>,
                       decltype(ka)>);
 
         for (size_t j = 0; j != ka.size(); ++j) {
@@ -486,7 +498,7 @@ TEST(TEST_CATEGORY, to_Array_rvalue) {
       },
       a_sum, som_sum, ka_sum);
 
-  ASSERT_EQ(som_sum, -1 * static_cast<int>(std::size(array)));
+  ASSERT_EQ(som_sum, -1 * static_cast<int>(size(array)));
   ASSERT_EQ(ka_sum, a_sum);
 }
 
