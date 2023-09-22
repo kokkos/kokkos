@@ -171,12 +171,6 @@ TEST(std_algorithms_transform_team_test, test_unary_op) {
   run_all_scenarios<StridedThreeRowsTag, unsigned>();
 }
 
-// TEST(std_algorithms_transform_team_test, test_binary_op) {
-//   run_all_scenarios<DynamicTag, double>(1);
-//   run_all_scenarios<StridedTwoRowsTag, int>(1);
-//   run_all_scenarios<StridedThreeRowsTag, unsigned>(1);
-// }
-
 }  // namespace TeamTransformUnaryOp
 }  // namespace stdalgos
 }  // namespace Test
