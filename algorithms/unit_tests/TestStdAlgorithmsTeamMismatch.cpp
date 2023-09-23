@@ -31,20 +31,23 @@ struct EqualFunctor {
 };
 
 template <class DataViewType, class CompViewType, class ResultsViewType,
-          class BinaryOpType>
+          class IntraTeamSentinelView, class BinaryOpType>
 struct TestFunctorA {
   DataViewType m_dataView;
   CompViewType m_compView;
   ResultsViewType m_resultsView;
+  IntraTeamSentinelView m_intraTeamSentinelView;
   int m_apiPick;
   BinaryOpType m_binaryOp;
 
   TestFunctorA(const DataViewType dataView, const CompViewType compView,
-               const ResultsViewType resultsView, int apiPick,
+               const ResultsViewType resultsView,
+               const IntraTeamSentinelView intraTeamSentinelView, int apiPick,
                BinaryOpType binaryOp)
       : m_dataView(dataView),
         m_compView(compView),
         m_resultsView(resultsView),
+        m_intraTeamSentinelView(intraTeamSentinelView),
         m_apiPick(apiPick),
         m_binaryOp(binaryOp) {}
 
@@ -60,13 +63,16 @@ struct TestFunctorA {
     auto compBegin = KE::begin(rowComp);
     auto compEnd   = KE::end(rowComp);
 
+    ptrdiff_t dataDist = 0;
+    ptrdiff_t compDist = 0;
+
     switch (m_apiPick) {
       case 0: {
         auto [dataIt, compIt] =
             KE::mismatch(member, dataBegin, dataEnd, compBegin, compEnd);
 
-        const auto dataDist = KE::distance(dataBegin, dataIt);
-        const auto compDist = KE::distance(compBegin, compIt);
+        dataDist = KE::distance(dataBegin, dataIt);
+        compDist = KE::distance(compBegin, compIt);
         Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
           m_resultsView(rowIndex) = Kokkos::make_pair(dataDist, compDist);
         });
@@ -78,8 +84,8 @@ struct TestFunctorA {
         const auto [dataIt, compIt] = KE::mismatch(
             member, dataBegin, dataEnd, compBegin, compEnd, m_binaryOp);
 
-        const auto dataDist = KE::distance(dataBegin, dataIt);
-        const auto compDist = KE::distance(compBegin, compIt);
+        dataDist = KE::distance(dataBegin, dataIt);
+        compDist = KE::distance(compBegin, compIt);
         Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
           m_resultsView(rowIndex) = Kokkos::make_pair(dataDist, compDist);
         });
@@ -90,8 +96,8 @@ struct TestFunctorA {
       case 2: {
         const auto [dataIt, compIt] = KE::mismatch(member, rowData, rowComp);
 
-        const std::size_t dataDist = KE::distance(dataBegin, dataIt);
-        const std::size_t compDist = KE::distance(compBegin, compIt);
+        dataDist = KE::distance(dataBegin, dataIt);
+        compDist = KE::distance(compBegin, compIt);
         Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
           m_resultsView(rowIndex) = Kokkos::make_pair(dataDist, compDist);
         });
@@ -103,8 +109,8 @@ struct TestFunctorA {
         const auto [dataIt, compIt] =
             KE::mismatch(member, rowData, rowComp, m_binaryOp);
 
-        const std::size_t dataDist = KE::distance(dataBegin, dataIt);
-        const std::size_t compDist = KE::distance(compBegin, compIt);
+        dataDist = KE::distance(dataBegin, dataIt);
+        compDist = KE::distance(compBegin, compIt);
         Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
           m_resultsView(rowIndex) = Kokkos::make_pair(dataDist, compDist);
         });
@@ -112,6 +118,17 @@ struct TestFunctorA {
         break;
       }
     }
+
+    // store result of checking if all members have their local
+    // values matching the one stored in m_distancesView
+    member.team_barrier();
+    const bool intraTeamCheck1 = team_members_have_matching_result(
+        member, dataDist, m_resultsView(rowIndex).first);
+    const bool intraTeamCheck2 = team_members_have_matching_result(
+        member, compDist, m_resultsView(rowIndex).second);
+    Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
+      m_intraTeamSentinelView(rowIndex) = intraTeamCheck1 && intraTeamCheck2;
+    });
   }
 };
 
@@ -161,19 +178,25 @@ void test_A(const bool viewsAreEqual, std::size_t numTeams, std::size_t numCols,
   // create the view to store results of mismatch()
   Kokkos::View<Kokkos::pair<std::size_t, std::size_t>*> resultsView(
       "resultsView", numTeams);
+  // sentinel to check if all members of the team compute the same result
+  Kokkos::View<bool*> intraTeamSentinelView("intraTeamSameResult", numTeams);
 
   EqualFunctor<ValueType> binaryPred{};
 
   // use CTAD for functor
-  TestFunctorA fnc(dataView, compView, resultsView, apiId, binaryPred);
+  TestFunctorA fnc(dataView, compView, resultsView, intraTeamSentinelView,
+                   apiId, binaryPred);
   Kokkos::parallel_for(policy, fnc);
 
   // -----------------------------------------------
   // run cpp-std kernel and check
   // -----------------------------------------------
-  auto resultsView_h = create_host_space_copy(resultsView);
+  auto resultsView_h           = create_host_space_copy(resultsView);
+  auto intraTeamSentinelView_h = create_host_space_copy(intraTeamSentinelView);
 
   for (std::size_t i = 0; i < dataView.extent(0); ++i) {
+    ASSERT_TRUE(intraTeamSentinelView_h(i));
+
     auto rowData = Kokkos::subview(dataViewBeforeOp_h, i, Kokkos::ALL());
 
     const auto dataBegin = KE::cbegin(rowData);

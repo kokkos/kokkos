@@ -34,19 +34,22 @@ struct GreaterEqualFunctor {
 };
 
 template <class DataViewType, class GreaterThanValuesViewType,
-          class DistancesViewType>
+          class DistancesViewType, class IntraTeamSentinelView>
 struct TestFunctorA {
   DataViewType m_dataView;
   GreaterThanValuesViewType m_greaterThanValuesView;
   DistancesViewType m_distancesView;
+  IntraTeamSentinelView m_intraTeamSentinelView;
   int m_apiPick;
 
   TestFunctorA(const DataViewType dataView,
                const GreaterThanValuesViewType greaterThanValuesView,
-               DistancesViewType distancesView, int apiPick)
+               DistancesViewType distancesView,
+               const IntraTeamSentinelView intraTeamSentinelView, int apiPick)
       : m_dataView(dataView),
         m_greaterThanValuesView(greaterThanValuesView),
         m_distancesView(distancesView),
+        m_intraTeamSentinelView(intraTeamSentinelView),
         m_apiPick(apiPick) {}
 
   template <class MemberType>
@@ -54,32 +57,47 @@ struct TestFunctorA {
     const auto myRowIndex = member.league_rank();
     auto myRowViewFrom = Kokkos::subview(m_dataView, myRowIndex, Kokkos::ALL());
     const auto val     = m_greaterThanValuesView(myRowIndex);
+    // FIXME_INTEL
+#if defined(KOKKOS_COMPILER_INTEL) && (1900 == KOKKOS_COMPILER_INTEL)
+    GreaterEqualFunctor<
+        typename GreaterThanValuesViewType::non_const_value_type>
+        unaryPred{val};
+#else
     GreaterEqualFunctor unaryPred{val};
+#endif
+    ptrdiff_t resultDist = 0;
 
     switch (m_apiPick) {
       case 0: {
-        auto it = KE::find_if_not(member, KE::cbegin(myRowViewFrom),
+        auto it    = KE::find_if_not(member, KE::cbegin(myRowViewFrom),
                                   KE::cend(myRowViewFrom), unaryPred);
-
+        resultDist = KE::distance(KE::cbegin(myRowViewFrom), it);
         Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
-          m_distancesView(myRowIndex) =
-              KE::distance(KE::cbegin(myRowViewFrom), it);
+          m_distancesView(myRowIndex) = resultDist;
         });
 
         break;
       }
 
       case 1: {
-        auto it = KE::find_if_not(member, myRowViewFrom, unaryPred);
-
+        auto it    = KE::find_if_not(member, myRowViewFrom, unaryPred);
+        resultDist = KE::distance(KE::begin(myRowViewFrom), it);
         Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
-          m_distancesView(myRowIndex) =
-              KE::distance(KE::begin(myRowViewFrom), it);
+          m_distancesView(myRowIndex) = resultDist;
         });
 
         break;
       }
     }
+
+    // store result of checking if all members have their local
+    // values matching the one stored in m_distancesView
+    member.team_barrier();
+    const bool intraTeamCheck = team_members_have_matching_result(
+        member, resultDist, m_distancesView(myRowIndex));
+    Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
+      m_intraTeamSentinelView(myRowIndex) = intraTeamCheck;
+    });
   }
 };
 
@@ -115,6 +133,8 @@ void test_A(const bool predicatesReturnTrue, std::size_t numTeams,
   // beginning of the interval that team operates on and then we check
   // that these distances match the std result
   Kokkos::View<std::size_t*> distancesView("distancesView", numTeams);
+  // sentinel to check if all members of the team compute the same result
+  Kokkos::View<bool*> intraTeamSentinelView("intraTeamSameResult", numTeams);
 
   // If predicatesReturnTrue == true, we want to ensure that for each dataView's
   // row find_if_not always returns end iterator. To do that,
@@ -145,19 +165,27 @@ void test_A(const bool predicatesReturnTrue, std::size_t numTeams,
   Kokkos::deep_copy(greaterEqualValuesView, greaterEqualValuesView_h);
 
   // use CTAD for functor
-  TestFunctorA fnc(dataView, greaterEqualValuesView, distancesView, apiId);
+  TestFunctorA fnc(dataView, greaterEqualValuesView, distancesView,
+                   intraTeamSentinelView, apiId);
   Kokkos::parallel_for(policy, fnc);
 
   // -----------------------------------------------
   // run cpp-std kernel and check
   // -----------------------------------------------
-  auto distancesView_h = create_host_space_copy(distancesView);
+  auto distancesView_h         = create_host_space_copy(distancesView);
+  auto intraTeamSentinelView_h = create_host_space_copy(intraTeamSentinelView);
+
   for (std::size_t i = 0; i < dataView.extent(0); ++i) {
     auto rowFrom = Kokkos::subview(dataViewBeforeOp_h, i, Kokkos::ALL());
     const auto rowFromBegin = KE::cbegin(rowFrom);
     const auto rowFromEnd   = KE::cend(rowFrom);
     const auto val          = greaterEqualValuesView_h(i);
+    // FIXME_INTEL
+#if defined(KOKKOS_COMPILER_INTEL) && (1900 == KOKKOS_COMPILER_INTEL)
+    const GreaterEqualFunctor<ValueType> unaryPred{val};
+#else
     const GreaterEqualFunctor unaryPred{val};
+#endif
 
     auto it = std::find_if_not(rowFromBegin, rowFromEnd, unaryPred);
 
@@ -171,6 +199,7 @@ void test_A(const bool predicatesReturnTrue, std::size_t numTeams,
     }
 
     ASSERT_EQ(stdDistance, distancesView_h(i));
+    ASSERT_TRUE(intraTeamSentinelView_h(i));
   }
 }
 

@@ -23,20 +23,24 @@ namespace TeamRotateCopy {
 
 namespace KE = Kokkos::Experimental;
 
-template <class SourceViewType, class DestViewType, class DistancesViewType>
+template <class SourceViewType, class DestViewType, class DistancesViewType,
+          class IntraTeamSentinelView>
 struct TestFunctorA {
   SourceViewType m_sourceView;
   DestViewType m_destView;
   DistancesViewType m_distancesView;
+  IntraTeamSentinelView m_intraTeamSentinelView;
   std::size_t m_pivotShift;
   int m_apiPick;
 
   TestFunctorA(const SourceViewType sourceView, const DestViewType destView,
-               const DistancesViewType distancesView, std::size_t pivotShift,
-               int apiPick)
+               const DistancesViewType distancesView,
+               const IntraTeamSentinelView intraTeamSentinelView,
+               std::size_t pivotShift, int apiPick)
       : m_sourceView(sourceView),
         m_destView(destView),
         m_distancesView(distancesView),
+        m_intraTeamSentinelView(intraTeamSentinelView),
         m_pivotShift(pivotShift),
         m_apiPick(apiPick) {}
 
@@ -46,26 +50,34 @@ struct TestFunctorA {
     auto myRowViewFrom =
         Kokkos::subview(m_sourceView, myRowIndex, Kokkos::ALL());
     auto myRowViewDest = Kokkos::subview(m_destView, myRowIndex, Kokkos::ALL());
+    ptrdiff_t resultDist = 0;
 
     if (m_apiPick == 0) {
       auto pivot = KE::cbegin(myRowViewFrom) + m_pivotShift;
       auto it =
           KE::rotate_copy(member, KE::cbegin(myRowViewFrom), pivot,
                           KE::cend(myRowViewFrom), KE::begin(myRowViewDest));
-
+      resultDist = KE::distance(KE::begin(myRowViewDest), it);
       Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
-        m_distancesView(myRowIndex) =
-            KE::distance(KE::begin(myRowViewDest), it);
+        m_distancesView(myRowIndex) = resultDist;
       });
     } else if (m_apiPick == 1) {
       auto it =
           KE::rotate_copy(member, myRowViewFrom, m_pivotShift, myRowViewDest);
-
+      resultDist = KE::distance(KE::begin(myRowViewDest), it);
       Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
-        m_distancesView(myRowIndex) =
-            KE::distance(KE::begin(myRowViewDest), it);
+        m_distancesView(myRowIndex) = resultDist;
       });
     }
+
+    // store result of checking if all members have their local
+    // values matching the one stored in m_distancesView
+    member.team_barrier();
+    const bool intraTeamCheck = team_members_have_matching_result(
+        member, resultDist, m_distancesView(myRowIndex));
+    Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
+      m_intraTeamSentinelView(myRowIndex) = intraTeamCheck;
+    });
   }
 };
 
@@ -101,9 +113,12 @@ void test_A(std::size_t numTeams, std::size_t numCols, std::size_t pivotShift,
   // beginning of the interval that team operates on and then we check
   // that these distances match the expectation
   Kokkos::View<std::size_t*> distancesView("distancesView", numTeams);
+  // sentinel to check if all members of the team compute the same result
+  Kokkos::View<bool*> intraTeamSentinelView("intraTeamSameResult", numTeams);
 
   // use CTAD for functor
-  TestFunctorA fnc(sourceView, destView, distancesView, pivotShift, apiId);
+  TestFunctorA fnc(sourceView, destView, distancesView, intraTeamSentinelView,
+                   pivotShift, apiId);
   Kokkos::parallel_for(policy, fnc);
 
   // -----------------------------------------------
@@ -111,7 +126,9 @@ void test_A(std::size_t numTeams, std::size_t numCols, std::size_t pivotShift,
   // -----------------------------------------------
   Kokkos::View<ValueType**, Kokkos::HostSpace> stdDestView("stdDestView",
                                                            numTeams, numCols);
-  auto distancesView_h = create_host_space_copy(distancesView);
+  auto distancesView_h         = create_host_space_copy(distancesView);
+  auto intraTeamSentinelView_h = create_host_space_copy(intraTeamSentinelView);
+
   for (std::size_t i = 0; i < cloneOfSourceViewBeforeOp_h.extent(0); ++i) {
     auto myRowFrom =
         Kokkos::subview(cloneOfSourceViewBeforeOp_h, i, Kokkos::ALL());
@@ -122,6 +139,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, std::size_t pivotShift,
                                KE::cend(myRowFrom), KE::begin(myRowDest));
     const std::size_t stdDistance = KE::distance(KE::begin(myRowDest), it);
     ASSERT_EQ(stdDistance, distancesView_h(i));
+    ASSERT_TRUE(intraTeamSentinelView_h(i));
   }
 
   auto destViewAfterOp_h = create_host_space_copy(destView);

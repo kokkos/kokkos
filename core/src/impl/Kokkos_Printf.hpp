@@ -39,10 +39,13 @@ KOKKOS_FUNCTION void printf(const char* format, Args... args) {
   else
     sycl::ext::oneapi::experimental::printf(format, args...);
 #else
-  if constexpr (sizeof...(Args) == 0)
-    ::printf("%s", format);
+  if constexpr (sizeof...(Args) == 0) ::printf("%s", format);
+    // FIXME_OPENMPTARGET non-string-literal argument used in printf is not
+    // supported for spir64
+#if !(defined(KOKKOS_ENABLE_OPENMPTARGET) && defined(KOKKOS_ARCH_INTEL_GPU))
   else
     ::printf(format, args...);
+#endif
 #endif
 }
 

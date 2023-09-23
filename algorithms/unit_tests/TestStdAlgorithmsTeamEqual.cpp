@@ -31,20 +31,23 @@ struct EqualFunctor {
 };
 
 template <class DataViewType, class CompViewType, class ResultsViewType,
-          class BinaryPredType>
+          class IntraTeamSentinelView, class BinaryPredType>
 struct TestFunctorA {
   DataViewType m_dataView;
   CompViewType m_compView;
   ResultsViewType m_resultsView;
+  IntraTeamSentinelView m_intraTeamSentinelView;
   int m_apiPick;
   BinaryPredType m_binaryPred;
 
   TestFunctorA(const DataViewType dataView, const CompViewType compView,
-               const ResultsViewType resultsView, int apiPick,
+               const ResultsViewType resultsView,
+               const IntraTeamSentinelView intraTeamSentinelView, int apiPick,
                BinaryPredType binaryPred)
       : m_dataView(dataView),
         m_compView(compView),
         m_resultsView(resultsView),
+        m_intraTeamSentinelView(intraTeamSentinelView),
         m_apiPick(apiPick),
         m_binaryPred(binaryPred) {}
 
@@ -60,31 +63,31 @@ struct TestFunctorA {
     const auto compBegin = KE::cbegin(rowComp);
     const auto compEnd   = KE::cend(rowComp);
 
+    bool result = false;
     switch (m_apiPick) {
       case 0: {
-        const bool result = KE::equal(member, dataBegin, dataEnd, compBegin);
+        result = KE::equal(member, dataBegin, dataEnd, compBegin);
         Kokkos::single(Kokkos::PerTeam(member),
                        [=, *this]() { m_resultsView(rowIndex) = result; });
         break;
       }
 
       case 1: {
-        const bool result =
-            KE::equal(member, dataBegin, dataEnd, compBegin, m_binaryPred);
+        result = KE::equal(member, dataBegin, dataEnd, compBegin, m_binaryPred);
         Kokkos::single(Kokkos::PerTeam(member),
                        [=, *this]() { m_resultsView(rowIndex) = result; });
         break;
       }
 
       case 2: {
-        const bool result = KE::equal(member, rowData, rowComp);
+        result = KE::equal(member, rowData, rowComp);
         Kokkos::single(Kokkos::PerTeam(member),
                        [=, *this]() { m_resultsView(rowIndex) = result; });
         break;
       }
 
       case 3: {
-        const bool result = KE::equal(member, rowData, rowComp, m_binaryPred);
+        result = KE::equal(member, rowData, rowComp, m_binaryPred);
         Kokkos::single(Kokkos::PerTeam(member),
                        [=, *this]() { m_resultsView(rowIndex) = result; });
 
@@ -92,21 +95,29 @@ struct TestFunctorA {
       }
 
       case 4: {
-        const bool result =
-            KE::equal(member, dataBegin, dataEnd, compBegin, compEnd);
+        result = KE::equal(member, dataBegin, dataEnd, compBegin, compEnd);
         Kokkos::single(Kokkos::PerTeam(member),
                        [=, *this]() { m_resultsView(rowIndex) = result; });
         break;
       }
 
       case 5: {
-        const bool result = KE::equal(member, dataBegin, dataEnd, compBegin,
-                                      compEnd, m_binaryPred);
+        result = KE::equal(member, dataBegin, dataEnd, compBegin, compEnd,
+                           m_binaryPred);
         Kokkos::single(Kokkos::PerTeam(member),
                        [=, *this]() { m_resultsView(rowIndex) = result; });
         break;
       }
     }
+
+    // store result of checking if all members have their local
+    // values matching the one stored in m_distancesView
+    member.team_barrier();
+    const bool intraTeamCheck = team_members_have_matching_result(
+        member, result, m_resultsView(rowIndex));
+    Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
+      m_intraTeamSentinelView(rowIndex) = intraTeamCheck;
+    });
   }
 };
 
@@ -155,17 +166,21 @@ void test_A(const bool viewsAreEqual, std::size_t numTeams, std::size_t numCols,
 
   // create the view to store results of equal()
   Kokkos::View<bool*> resultsView("resultsView", numTeams);
+  // sentinel to check if all members of the team compute the same result
+  Kokkos::View<bool*> intraTeamSentinelView("intraTeamSameResult", numTeams);
 
   EqualFunctor<ValueType> binaryPred{};
 
   // use CTAD for functor
-  TestFunctorA fnc(dataView, compView, resultsView, apiId, binaryPred);
+  TestFunctorA fnc(dataView, compView, resultsView, intraTeamSentinelView,
+                   apiId, binaryPred);
   Kokkos::parallel_for(policy, fnc);
 
   // -----------------------------------------------
   // run cpp-std kernel and check
   // -----------------------------------------------
-  auto resultsView_h = create_host_space_copy(resultsView);
+  auto resultsView_h           = create_host_space_copy(resultsView);
+  auto intraTeamSentinelView_h = create_host_space_copy(intraTeamSentinelView);
 
   for (std::size_t i = 0; i < dataView.extent(0); ++i) {
     auto rowData = Kokkos::subview(dataViewBeforeOp_h, i, Kokkos::ALL());
@@ -176,6 +191,7 @@ void test_A(const bool viewsAreEqual, std::size_t numTeams, std::size_t numCols,
     const auto compBegin = KE::cbegin(rowComp);
     const auto compEnd   = KE::cend(rowComp);
 
+    ASSERT_TRUE(intraTeamSentinelView_h(i));
     switch (apiId) {
       case 0:
       case 2: {

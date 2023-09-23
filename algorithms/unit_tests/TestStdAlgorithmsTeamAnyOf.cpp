@@ -33,18 +33,22 @@ struct GreaterThanValueFunctor {
   bool operator()(ValueType val) const { return (val > m_val); }
 };
 
-template <class DataViewType, class AnyOfResultsViewType, class UnaryPredType>
+template <class DataViewType, class AnyOfResultsViewType,
+          class IntraTeamSentinelView, class UnaryPredType>
 struct TestFunctorA {
   DataViewType m_dataView;
   AnyOfResultsViewType m_anyOfResultsView;
+  IntraTeamSentinelView m_intraTeamSentinelView;
   int m_apiPick;
   UnaryPredType m_unaryPred;
 
   TestFunctorA(const DataViewType dataView,
-               const AnyOfResultsViewType anyOfResultsView, int apiPick,
+               const AnyOfResultsViewType anyOfResultsView,
+               const IntraTeamSentinelView intraTeamSentinelView, int apiPick,
                UnaryPredType unaryPred)
       : m_dataView(dataView),
         m_anyOfResultsView(anyOfResultsView),
+        m_intraTeamSentinelView(intraTeamSentinelView),
         m_apiPick(apiPick),
         m_unaryPred(unaryPred) {}
 
@@ -53,11 +57,12 @@ struct TestFunctorA {
     const auto myRowIndex = member.league_rank();
 
     auto myRowViewFrom = Kokkos::subview(m_dataView, myRowIndex, Kokkos::ALL());
+    bool result        = false;
 
     switch (m_apiPick) {
       case 0: {
-        const bool result = KE::any_of(member, KE::cbegin(myRowViewFrom),
-                                       KE::cend(myRowViewFrom), m_unaryPred);
+        result = KE::any_of(member, KE::cbegin(myRowViewFrom),
+                            KE::cend(myRowViewFrom), m_unaryPred);
         Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
           m_anyOfResultsView(myRowIndex) = result;
         });
@@ -65,13 +70,22 @@ struct TestFunctorA {
       }
 
       case 1: {
-        const bool result = KE::any_of(member, myRowViewFrom, m_unaryPred);
+        result = KE::any_of(member, myRowViewFrom, m_unaryPred);
         Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
           m_anyOfResultsView(myRowIndex) = result;
         });
         break;
       }
     }
+
+    // store result of checking if all members have their local
+    // values matching the one stored in m_distancesView
+    member.team_barrier();
+    const bool intraTeamCheck = team_members_have_matching_result(
+        member, result, m_anyOfResultsView(myRowIndex));
+    Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
+      m_intraTeamSentinelView(myRowIndex) = intraTeamCheck;
+    });
   }
 };
 
@@ -104,23 +118,28 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // to verify that things work, each team stores the result of its any_of call,
   // and then we check that these match what we expect
   Kokkos::View<bool*> anyOfResultsView("anyOfResultsView", numTeams);
+  // sentinel to check if all members of the team compute the same result
+  Kokkos::View<bool*> intraTeamSentinelView("intraTeamSameResult", numTeams);
 
   GreaterThanValueFunctor unaryPred{lowerBound};
 
   // use CTAD for functor
-  TestFunctorA fnc(dataView, anyOfResultsView, apiId, unaryPred);
+  TestFunctorA fnc(dataView, anyOfResultsView, intraTeamSentinelView, apiId,
+                   unaryPred);
   Kokkos::parallel_for(policy, fnc);
 
   // -----------------------------------------------
   // run cpp-std kernel and check
   // -----------------------------------------------
-  auto anyOfResultsView_h = create_host_space_copy(anyOfResultsView);
+  auto anyOfResultsView_h      = create_host_space_copy(anyOfResultsView);
+  auto intraTeamSentinelView_h = create_host_space_copy(intraTeamSentinelView);
 
   for (std::size_t i = 0; i < dataView.extent(0); ++i) {
     auto rowFrom = Kokkos::subview(dataViewBeforeOp_h, i, Kokkos::ALL());
     const bool result =
         std::any_of(KE::cbegin(rowFrom), KE::cend(rowFrom), unaryPred);
     ASSERT_EQ(result, anyOfResultsView_h(i));
+    ASSERT_TRUE(intraTeamSentinelView_h(i));
   }
 }
 
