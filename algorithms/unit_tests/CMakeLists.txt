@@ -158,10 +158,10 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
     # ------------------------------------------
     set(STDALGO_TEAM_SOURCES_Q)
     foreach(Name
-  StdAlgorithmsCommon
-  StdAlgorithmsTeamInclusiveScan
-  StdAlgorithmsTeamTransformInclusiveScan
-  )
+	StdAlgorithmsCommon
+	StdAlgorithmsTeamInclusiveScan
+	StdAlgorithmsTeamTransformInclusiveScan
+      )
       list(APPEND STDALGO_TEAM_SOURCES_Q Test${Name}.cpp)
     endforeach()
 
