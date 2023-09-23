@@ -177,7 +177,9 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
     auto initValue = initValuesView_h(i);
     ASSERT_TRUE(intraTeamSentinelView_h(i));
 
-#if defined(__GNUC__) && __GNUC__ == 8
+// libstdc++ as provided by GCC 8 does not have transform_exclusive_scan and
+// for GCC 9.1, 9.2 fails to compile for missing overload not accepting policy
+#if defined(_GLIBCXX_RELEASE) && (_GLIBCXX_RELEASE <= 9)
 #define transform_exclusive_scan testing_transform_exclusive_scan
 #else
 #define transform_exclusive_scan std::transform_exclusive_scan
