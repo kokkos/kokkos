@@ -138,21 +138,20 @@ namespace Kokkos {
 CudaSpace::CudaSpace()
     : m_device(Kokkos::Cuda().cuda_device()),
       m_stream(Kokkos::Cuda().cuda_stream()) {}
-CudaSpace::CudaSpace(int cuda_device, cudaStream_t cuda_stream)
-    : m_device(cuda_device), m_stream(cuda_stream) {}
+CudaSpace::CudaSpace(int device_id, cudaStream_t stream)
+    : m_device(device_id), m_stream(stream) {}
 
 CudaUVMSpace::CudaUVMSpace()
     : m_device(Kokkos::Cuda().cuda_device()),
       m_stream(Kokkos::Cuda().cuda_stream()) {}
-CudaUVMSpace::CudaUVMSpace(int cuda_device, cudaStream_t cuda_stream)
-    : m_device(cuda_device), m_stream(cuda_stream) {}
+CudaUVMSpace::CudaUVMSpace(int device_id, cudaStream_t stream)
+    : m_device(device_id), m_stream(stream) {}
 
 CudaHostPinnedSpace::CudaHostPinnedSpace()
     : m_device(Kokkos::Cuda().cuda_device()),
       m_stream(Kokkos::Cuda().cuda_stream()) {}
-CudaHostPinnedSpace::CudaHostPinnedSpace(int cuda_device,
-                                         cudaStream_t cuda_stream)
-    : m_device(cuda_device), m_stream(cuda_stream) {}
+CudaHostPinnedSpace::CudaHostPinnedSpace(int device_id, cudaStream_t stream)
+    : m_device(device_id), m_stream(stream) {}
 
 size_t memory_threshold_g = 40000;  // 40 kB
 

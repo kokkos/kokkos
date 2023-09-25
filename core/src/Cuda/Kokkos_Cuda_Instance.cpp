@@ -26,10 +26,10 @@
 
 #include <Kokkos_Core.hpp>
 
-#include <Cuda/Kokkos_Cuda_Error.hpp>
-#include <Cuda/Kokkos_Cuda_BlockSize_Deduction.hpp>
-#include <Cuda/Kokkos_Cuda_Instance.hpp>
-#include <Cuda/Kokkos_Cuda_UniqueToken.hpp>
+//#include <Cuda/Kokkos_Cuda_Error.hpp>
+//#include <Cuda/Kokkos_Cuda_BlockSize_Deduction.hpp>
+//#include <Cuda/Kokkos_Cuda_Instance.hpp>
+//#include <Cuda/Kokkos_Cuda_UniqueToken.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_Tools.hpp>
 #include <impl/Kokkos_CheckedIntegerOps.hpp>
@@ -479,7 +479,7 @@ Cuda::size_type *CudaInternal::scratch_flags(const std::size_t size) const {
     std::size_t alloc_size =
         multiply_overflow_abort(m_scratchFlagsCount, sizeScratchGrain);
     Record *const r =
-        Record::allocate(Kokkos::CudaSpace(m_cudaDev, m_stream),
+        Record::allocate(CudaSpace::impl_create(m_cudaDev, m_stream),
                          "Kokkos::InternalScratchFlags", alloc_size);
 
     Record::increment(r);
@@ -506,7 +506,7 @@ Cuda::size_type *CudaInternal::scratch_space(const std::size_t size) const {
     std::size_t alloc_size =
         multiply_overflow_abort(m_scratchSpaceCount, sizeScratchGrain);
     Record *const r =
-        Record::allocate(Kokkos::CudaSpace(m_cudaDev, m_stream),
+        Record::allocate(CudaSpace::impl_create(m_cudaDev, m_stream),
                          "Kokkos::InternalScratchSpace", alloc_size);
 
     Record::increment(r);
@@ -531,7 +531,7 @@ Cuda::size_type *CudaInternal::scratch_unified(const std::size_t size) const {
     std::size_t alloc_size =
         multiply_overflow_abort(m_scratchUnifiedCount, sizeScratchGrain);
     Record *const r =
-        Record::allocate(Kokkos::CudaHostPinnedSpace(m_cudaDev, m_stream),
+        Record::allocate(CudaHostPinnedSpace::impl_create(m_cudaDev, m_stream),
                          "Kokkos::InternalScratchUnified", alloc_size);
 
     Record::increment(r);
@@ -552,9 +552,9 @@ Cuda::size_type *CudaInternal::scratch_functor(const std::size_t size) const {
     if (m_scratchFunctor)
       Record::decrement(Record::get_record(m_scratchFunctor));
 
-    Record *const r = Record::allocate(Kokkos::CudaSpace(m_cudaDev, m_stream),
-                                       "Kokkos::InternalScratchFunctor",
-                                       m_scratchFunctorSize);
+    Record *const r = Record::allocate(
+        CudaSpace::impl_create(m_cudaDev, m_stream),
+        "Kokkos::InternalScratchFunctor", m_scratchFunctorSize);
 
     Record::increment(r);
 

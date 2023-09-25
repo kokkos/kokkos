@@ -68,7 +68,11 @@ class CudaSpace {
   /*--------------------------------*/
 
   CudaSpace();
-  CudaSpace(int cuda_device, cudaStream_t cuda_stream);
+
+ private:
+  CudaSpace(int device_id, cudaStream_t stream);
+
+ public:
   CudaSpace(CudaSpace&& rhs)      = default;
   CudaSpace(const CudaSpace& rhs) = default;
   CudaSpace& operator=(CudaSpace&& rhs) = default;
@@ -89,6 +93,10 @@ class CudaSpace {
   void deallocate(const char* arg_label, void* const arg_alloc_ptr,
                   const size_t arg_alloc_size,
                   const size_t arg_logical_size = 0) const;
+
+  static CudaSpace impl_create(int device_id, cudaStream_t stream) {
+    return CudaSpace(device_id, stream);
+  }
 
  private:
   template <class, class, class, class>
@@ -151,7 +159,11 @@ class CudaUVMSpace {
   /*--------------------------------*/
 
   CudaUVMSpace();
-  CudaUVMSpace(int cuda_device, cudaStream_t cuda_stream);
+
+ private:
+  CudaUVMSpace(int device_id, cudaStream_t stream);
+
+ public:
   CudaUVMSpace(CudaUVMSpace&& rhs)      = default;
   CudaUVMSpace(const CudaUVMSpace& rhs) = default;
   CudaUVMSpace& operator=(CudaUVMSpace&& rhs) = default;
@@ -192,6 +204,10 @@ class CudaUVMSpace {
 #endif
   /*--------------------------------*/
 
+  static CudaUVMSpace impl_create(int device_id, cudaStream_t stream) {
+    return CudaUVMSpace(device_id, stream);
+  }
+
  private:
   int m_device;
   cudaStream_t m_stream;
@@ -227,7 +243,11 @@ class CudaHostPinnedSpace {
   /*--------------------------------*/
 
   CudaHostPinnedSpace();
-  CudaHostPinnedSpace(int cuda_device, cudaStream_t cuda_stream);
+
+ private:
+  CudaHostPinnedSpace(int device_id, cudaStream_t stream);
+
+ public:
   CudaHostPinnedSpace(CudaHostPinnedSpace&& rhs)      = default;
   CudaHostPinnedSpace(const CudaHostPinnedSpace& rhs) = default;
   CudaHostPinnedSpace& operator=(CudaHostPinnedSpace&& rhs) = default;
@@ -244,6 +264,10 @@ class CudaHostPinnedSpace {
   void deallocate(const char* arg_label, void* const arg_alloc_ptr,
                   const size_t arg_alloc_size,
                   const size_t arg_logical_size = 0) const;
+
+  static CudaHostPinnedSpace impl_create(int device_id, cudaStream_t stream) {
+    return CudaHostPinnedSpace(device_id, stream);
+  }
 
  private:
   template <class, class, class, class>
