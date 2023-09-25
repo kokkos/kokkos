@@ -867,6 +867,11 @@ Cuda::Cuda(int device_id, cudaStream_t stream)
        << " Raised by Kokkos::Cuda::Cuda().\n";
     Kokkos::abort(ss.str().c_str());
   }
+  // FIXME_CUDA
+  if (device_id != Cuda().cuda_device())
+    Kokkos::abort(
+        "Currently, the device id must match the device id used when Kokkos "
+        "was initialized!");
   m_space_instance->initialize(device_id, stream, /*manage_stream*/ false);
 }
 
