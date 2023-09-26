@@ -29,35 +29,35 @@ struct SumFunctor {
 };
 
 template <class ExecSpace>
-void check_distinctive(ExecSpace, ExecSpace) {}
-
+void check_distinctive([[maybe_unused]] ExecSpace exec1,
+                       [[maybe_unused]] ExecSpace exec2) {
 #ifdef KOKKOS_ENABLE_SERIAL
-void check_distinctive(Kokkos::Serial exec1, Kokkos::Serial exec2) {
-  ASSERT_NE(exec1, exec2);
-}
-#endif
-#ifdef KOKKOS_ENABLE_CUDA
-void check_distinctive(Kokkos::Cuda exec1, Kokkos::Cuda exec2) {
-  ASSERT_NE(exec1.cuda_stream(), exec2.cuda_stream());
-}
-#endif
-#ifdef KOKKOS_ENABLE_HIP
-void check_distinctive(Kokkos::HIP exec1, Kokkos::HIP exec2) {
-  ASSERT_NE(exec1.hip_stream(), exec2.hip_stream());
-}
-#endif
-#ifdef KOKKOS_ENABLE_SYCL
-void check_distinctive(Kokkos::Experimental::SYCL exec1,
-                       Kokkos::Experimental::SYCL exec2) {
-  ASSERT_NE(*exec1.impl_internal_space_instance()->m_queue,
-            *exec2.impl_internal_space_instance()->m_queue);
-}
+  if constexpr (std::is_same_v<ExecSpace, Kokkos::Serial>) {
+    ASSERT_NE(exec1, exec2);
+  }
 #endif
 #ifdef KOKKOS_ENABLE_OPENMP
-void check_distinctive(Kokkos::OpenMP exec1, Kokkos::OpenMP exec2) {
-  ASSERT_NE(exec1, exec2);
-}
+  if constexpr (std::is_same_v<ExecSpace, Kokkos::OpenMP>) {
+    ASSERT_NE(exec1, exec2);
+  }
 #endif
+#ifdef KOKKOS_ENABLE_CUDA
+  if constexpr (std::is_same_v<ExecSpace, Kokkos::Cuda>) {
+    ASSERT_NE(exec1.cuda_stream(), exec2.cuda_stream());
+  }
+#endif
+#ifdef KOKKOS_ENABLE_HIP
+  if constexpr (std::is_same_v<ExecSpace, Kokkos::HIP>) {
+    ASSERT_NE(exec1.hip_stream(), exec2.hip_stream());
+  }
+#endif
+#ifdef KOKKOS_ENABLE_SYCL
+  if constexpr (std::is_same_v<ExecSpace, Kokkos::Experimental::SYCL>) {
+    ASSERT_NE(*exec1.impl_internal_space_instance()->m_queue,
+              *exec2.impl_internal_space_instance()->m_queue);
+  }
+#endif
+}
 }  // namespace
 
 #ifdef KOKKOS_ENABLE_OPENMP
