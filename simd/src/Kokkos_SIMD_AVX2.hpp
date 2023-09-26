@@ -25,10 +25,9 @@
 
 #include <immintrin.h>
 
-// FIXME_HIP ROCm 5.6 can't compile with the intrinsic used here.
-#if defined(__HIPCC__) &&       \
-    ((HIP_VERSION_MAJOR > 5) || \
-     ((HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR >= 6)))
+// FIXME_HIP ROCm 5.6 and 5.7 can't compile with the intrinsic used here.
+#if defined(__HIPCC__) && (HIP_VERSION_MAJOR == 5) && \
+    ((HIP_VERSION_MINOR == 6) || (HIP_VERSION_MINOR == 7))
 #define KOKKOS_IMPL_WORKAROUND_ROCM_AVX2_ISSUE
 #endif
 
