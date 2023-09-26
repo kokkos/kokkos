@@ -21,13 +21,11 @@
 #include <cstdlib>
 #include <iostream>
 #include <Kokkos_Abort.hpp>
-#include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_Stacktrace.hpp>
 
-namespace Kokkos {
-namespace Impl {
+namespace {
 
-inline void traceback_callstack(std::ostream &msg) {
+void traceback_callstack(std::ostream &msg) {
 #ifdef KOKKOS_IMPL_ENABLE_STACKTRACE
   msg << "\nBacktrace:\n";
   save_stacktrace();
@@ -36,6 +34,11 @@ inline void traceback_callstack(std::ostream &msg) {
   msg << "\nTraceback functionality not available\n";
 #endif
 }
+
+}  // namespace
+
+namespace Kokkos {
+namespace Impl {
 
 void host_abort(const char *const message) {
   std::cerr << message;
