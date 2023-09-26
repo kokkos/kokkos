@@ -194,8 +194,12 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
 
     ASSERT_TRUE(intraTeamSentinelView_h(i));
 
-// GCC 8 does not have reduce so guard against this
-#if defined(__GNUC__) && __GNUC__ == 8
+    // libstdc++ as provided by GCC 8 does not have reduce, transform_reduce,
+    // exclusive_scan, inclusive_scan, transform_exclusive_scan,
+    // transform_inclusive_scan and for GCC 9.1, 9.2 fails to compile them for
+    // missing overload not accepting policy
+
+#if defined(_GLIBCXX_RELEASE) && (_GLIBCXX_RELEASE <= 9)
 #define reduce testing_reduce
 #else
 #define reduce std::reduce
