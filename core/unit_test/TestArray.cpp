@@ -50,7 +50,7 @@ KOKKOS_FUNCTION constexpr bool test_array_structured_binding_support() {
 static_assert(test_array_structured_binding_support());
 
 template <typename L, typename R>
-constexpr bool is_equal(L const& l, R const& r) {
+KOKKOS_FUNCTION constexpr bool is_equal(L const& l, R const& r) {
   if (std::size(l) != std::size(r)) return false;
 
   for (size_t i = 0; i != std::size(l); ++i) {
