@@ -93,10 +93,9 @@ void run(int N, int M, int K, const Opts& opts) {
 
   if (!opts.no_par_for) {
     // warmup
-    Kokkos::parallel_for(l_no_fence, N, f);
-    Kokkos::parallel_for(l_no_fence, N, f);
-    Kokkos::parallel_for(l_no_fence, N, f);
-    Kokkos::parallel_for(l_no_fence, N, f);
+    for (int i = 0; i < 4; ++i) {
+      Kokkos::parallel_for(l_no_fence, N, f);
+    }
 
     Kokkos::fence();
 
@@ -120,10 +119,9 @@ void run(int N, int M, int K, const Opts& opts) {
 
   if (!opts.no_par_reduce) {
     // warmup
-    Kokkos::parallel_reduce(l_red_no_fence, N, rf, result);
-    Kokkos::parallel_reduce(l_red_no_fence, N, rf, result);
-    Kokkos::parallel_reduce(l_red_no_fence, N, rf, result);
-    Kokkos::parallel_reduce(l_red_no_fence, N, rf, result);
+    for (int i = 0; i < 4; ++i) {
+      Kokkos::parallel_reduce(l_red_no_fence, N, rf, result);
+    }
 
     timer.reset();
 
@@ -146,10 +144,9 @@ void run(int N, int M, int K, const Opts& opts) {
 
   if (!opts.no_par_reduce_view) {
     // warmup
-    Kokkos::parallel_reduce(l_red_view_no_fence, N, rf, v_result);
-    Kokkos::parallel_reduce(l_red_view_no_fence, N, rf, v_result);
-    Kokkos::parallel_reduce(l_red_view_no_fence, N, rf, v_result);
-    Kokkos::parallel_reduce(l_red_view_no_fence, N, rf, v_result);
+    for (int i = 0; i < 4; ++i) {
+      Kokkos::parallel_reduce(l_red_view_no_fence, N, rf, v_result);
+    }
 
     timer.reset();
 
@@ -249,6 +246,8 @@ int main(int argc, char* argv[]) {
         "N V K M time_no_fence time_fence (time_no_fence_fenced "
         "time_fence_fenced)\n");
 
+    /* A backend may have different launch strategies for functors of different
+     * sizes: test a variety of functor sizes.*/
     run<1>(N, M, K <= 1 ? K : 1, opts);
     run<16>(N, M, K <= 16 ? K : 16, opts);
     run<200>(N, M, K <= 200 ? K : 200, opts);
