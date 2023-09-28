@@ -36,7 +36,7 @@ IF (NOT Kokkos_INSTALL_TESTING)
             ${Kokkos_BINARY_DIR}/KokkosConfigCommon.cmake
             ${Kokkos_BINARY_DIR}/KokkosConfigVersion.cmake
             DESTINATION ${CMAKE_BINARY_DIR}/cmake_packages/Kokkos)
-  export(EXPORT KokkosTargets NAMESPACE Kokkos:: FILE ${CMAKE_BINARY_DIR}/cmake_packages/Kokkos/KokkosTargets.cmake)
+  file(WRITE ${CMAKE_BINARY_DIR}/cmake_packages/Kokkos/KokkosTargets.cmake "include(${Kokkos_BINARY_DIR}/KokkosTargets.cmake)")
 ELSE()
   CONFIGURE_FILE(cmake/KokkosConfigCommon.cmake.in ${Kokkos_BINARY_DIR}/KokkosConfigCommon.cmake @ONLY)
   file(READ ${Kokkos_BINARY_DIR}/KokkosConfigCommon.cmake KOKKOS_CONFIG_COMMON)

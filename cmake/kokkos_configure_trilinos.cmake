@@ -38,7 +38,4 @@ IF(CMAKE_PROJECT_NAME STREQUAL "Trilinos")
   endif()
 
   set(Kokkos_ENABLE_COMPLEX_ALIGN OFF CACHE BOOL "Whether to align Kokkos::complex to 2*alignof(RealType)")
-
-  # FIXME_TRIBITS This should not be necessary if we define the correct targets
-  tribits_package_postprocess()
 ENDIF()

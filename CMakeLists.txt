@@ -5,10 +5,6 @@ if( "${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}" )
   message( FATAL_ERROR "FATAL: In-source builds are not allowed. You should create a separate directory for build files and delete CMakeCache.txt." )
 endif()
 
-if (COMMAND TRIBITS_PACKAGE)
-  TRIBITS_PACKAGE(Kokkos)
-endif()
-
 # We want to determine if options are given with the wrong case
 # In order to detect which arguments are given to compare against
 # the list of valid arguments, at the beginning here we need to
