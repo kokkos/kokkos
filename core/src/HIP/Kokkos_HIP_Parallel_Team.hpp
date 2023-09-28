@@ -147,7 +147,7 @@ class TeamPolicyInternal<HIP, Properties...>
     // Allow only power-of-two vector_length
     if (!(is_integral_power_of_two(test_vector_length))) {
       int test_pow2           = 1;
-      int constexpr warp_size = HIPTraits::WarpSize;
+      constexpr int warp_size = HIPTraits::WarpSize;
       while (test_pow2 < warp_size) {
         test_pow2 <<= 1;
         if (test_pow2 > test_vector_length) {
@@ -466,6 +466,10 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>, HIP> {
   }
 
  public:
+  ParallelFor()                   = delete;
+  ParallelFor(ParallelFor const&) = default;
+  ParallelFor& operator=(ParallelFor const&) = delete;
+
   __device__ inline void operator()() const {
     // Iterate this block through the league
     int64_t threadid = 0;
@@ -585,7 +589,7 @@ class ParallelReduce<CombinedFunctorReducerType,
  public:
   using size_type = HIP::size_type;
 
-  static int constexpr UseShflReduction =
+  static constexpr int UseShflReduction =
       (ReducerType::static_value_size() != 0);
 
  private:

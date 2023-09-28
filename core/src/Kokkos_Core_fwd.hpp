@@ -27,6 +27,7 @@
 
 #include <Kokkos_Macros.hpp>
 #include <impl/Kokkos_Error.hpp>
+#include <impl/Kokkos_Printf.hpp>
 #include <impl/Kokkos_Utilities.hpp>
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
@@ -326,20 +327,13 @@ class ParallelFor;
 ///
 /// This is an implementation detail of parallel_reduce.  Users should
 /// skip this and go directly to the nonmember function parallel_reduce.
-template <class FunctorType, class ExecPolicy, class ReducerType = InvalidType,
-          class ExecutionSpace = typename Impl::FunctorPolicyExecutionSpace<
-              FunctorType, ExecPolicy>::execution_space>
+template <typename CombinedFunctorReducerType, typename PolicyType,
+          typename ExecutionSpaceType>
 class ParallelReduce;
 
-// FIXME Remove once all backends implement the new interface
 template <typename FunctorType, typename FunctorAnalysisReducerType,
           typename Enable = void>
 class CombinedFunctorReducer;
-
-// FIXME Remove once all backends implement the new interface
-template <typename CombinedFunctorReducerType, typename PolicyType,
-          typename ExecutionSpaceType, typename Enable = void>
-class ParallelReduceWrapper;
 
 /// \class ParallelScan
 /// \brief Implementation detail of parallel_scan.
