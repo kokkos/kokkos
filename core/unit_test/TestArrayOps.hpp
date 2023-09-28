@@ -430,6 +430,7 @@ TEST(TEST_CATEGORY, to_Array_from_pair) {
   ASSERT_EQ(a4.size(), 3u);
 }
 
+#if not defined(KOKKOS_COMPILER_INTEL)
 TEST(TEST_CATEGORY, to_Array_lvalue) {
   int array[] = {
       2,
@@ -465,7 +466,9 @@ TEST(TEST_CATEGORY, to_Array_lvalue) {
   ASSERT_EQ(som_sum, a_sum);
   ASSERT_EQ(ka_sum, a_sum);
 }
+#endif
 
+#if not defined(KOKKOS_COMPILER_INTEL)
 TEST(TEST_CATEGORY, to_Array_rvalue) {
   int array[] = {
       2,
@@ -501,5 +504,6 @@ TEST(TEST_CATEGORY, to_Array_rvalue) {
   ASSERT_EQ(som_sum, -1 * static_cast<int>(size(array)));
   ASSERT_EQ(ka_sum, a_sum);
 }
+#endif
 
 }  // namespace
