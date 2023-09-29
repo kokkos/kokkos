@@ -152,9 +152,9 @@ void test_run_time_parameters() {
   ASSERT_GT(p11.team_size_recommended(FunctorFor(), ParallelTag()), 0);
 }
 
-TEST(TEST_CATEGORY, team_policy_runtime_parameters) {
-  struct SomeTag {};
+struct SomeTag {};
 
+TEST(TEST_CATEGORY, team_policy_runtime_parameters) {
   using TestExecSpace   = TEST_EXECSPACE;
   using DynamicSchedule = Kokkos::Schedule<Kokkos::Dynamic>;
   using LongIndex       = Kokkos::IndexType<long>;
