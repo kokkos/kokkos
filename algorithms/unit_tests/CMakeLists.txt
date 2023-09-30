@@ -324,6 +324,13 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
   endif()
 endforeach()
 
+# FIXME_OPENMPTARGET - remove sort test as it leads to ICE with clang/16 and above at compile time.
+if(KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL "Clang" AND KOKKOS_CXX_COMPILER_VERSION VERSION_GREATER 15.0.0)
+    list(REMOVE_ITEM ALGO_SORT_SOURCES
+    TestSort.cpp
+  )
+endif()
+
 # FIXME_OPENMPTARGET remove tests for OpenMPTarget because in these cases
 # the impl needs to use either Kokkos or tailored reducers
 # which results in runtime memory errors.
@@ -386,6 +393,7 @@ if(KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM)
   )
 endif()
 
+
 # FIXME_OPENMPTARGET remove tests for OpenMPTarget
 # causing failures for various reasons
 if(KOKKOS_ENABLE_OPENMPTARGET)
@@ -407,13 +415,6 @@ if(KOKKOS_ENABLE_OPENMPTARGET)
   # is called
   list(REMOVE_ITEM STDALGO_TEAM_SOURCES_M
     TestStdAlgorithmsTeamTransformBinaryOp.cpp
-  )
-endif()
-
-# FIXME_OPENMPTARGET - remove sort test as it leads to ICE with clang/17 and above at compile time.
-if(KOKKOS_ENABLE_OPENMPTARGET STREQUAL "Clang" AND KOKKOS_CXX_COMPILER_VERSION VERSION_GREATER 17.0.0)
-    list(REMOVE_ITEM ALGO_SORT_SOURCES
-    TestSort.cpp
   )
 endif()
 
