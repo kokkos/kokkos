@@ -75,7 +75,7 @@ void run(int N, int M, int K, const Opts& opts) {
   TestRFunctor<V> rf(a, K);
   Kokkos::Timer timer;
 
-  // initialize to a obviously wrong value
+  // initialize to an obviously wrong value
   double time_no_fence        = -1;  // launch loop
   double time_no_fence_fenced = -1;  // launch loop then fence
   double time_fence           = -1;  // launch&fence loop
