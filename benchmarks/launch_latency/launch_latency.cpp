@@ -1,5 +1,3 @@
-#include <Kokkos_Core.hpp>
-
 //@HEADER
 // ************************************************************************
 //
@@ -34,6 +32,8 @@
     2. Avg functor completion throughput: (M launches + sync) / M
     3. Avg functor completion latency: (M (launch + sync)) / M
 */
+
+#include <Kokkos_Core.hpp>
 
 template <int V>
 struct TestFunctor {
