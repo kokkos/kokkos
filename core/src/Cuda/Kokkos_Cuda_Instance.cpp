@@ -939,6 +939,9 @@ void Kokkos::Impl::create_Cuda_instances(std::vector<Cuda> &instances) {
   }
 }
 
+template uint32_t
+Kokkos::Tools::Experimental::Impl::idForInstance<Kokkos::Cuda>(const uintptr_t);
+
 #else
 
 void KOKKOS_CORE_SRC_CUDA_IMPL_PREVENT_LINK_ERROR() {}

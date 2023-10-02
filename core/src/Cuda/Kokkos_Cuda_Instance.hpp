@@ -570,4 +570,8 @@ std::vector<Cuda> partition_space(const Cuda&, std::vector<T> const& weights) {
 }  // namespace Experimental
 
 }  // Namespace Kokkos
+
+extern template uint32_t
+Kokkos::Tools::Experimental::Impl::idForInstance<Kokkos::Cuda>(const uintptr_t);
+
 #endif
