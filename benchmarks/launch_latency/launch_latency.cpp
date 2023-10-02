@@ -1,8 +1,43 @@
 #include <Kokkos_Core.hpp>
 
-template <int N>
+//@HEADER
+// ************************************************************************
+//
+//                        Kokkos v. 4.0
+//       Copyright (2022) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
+//
+// Under the terms of Contract DE-NA0003525 with NTESS,
+// the U.S. Government retains certain rights in this software.
+//
+// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
+// See https://kokkos.org/LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+//
+//@HEADER
+
+/*! \file launch_latency.cpp
+
+    Tests of parallel_for and parallel_reduce latency for different
+   circumstances.
+
+    Three launch kinds are tested: parallel_for, parallel_reduce into scalar,
+   and parallel_reduce into view
+
+   N controls how large the parallel loops is
+   V controls how large the functor is
+   M controls across how many launches the latency is averaged
+   K controls how larege the nested loop is (no larger than V)
+
+    For each launch kind,
+    1. Avg functor dispatch latency: (time to do M launches) / M
+    2. Avg functor completion throughput: (M launches + sync) / M
+    3. Avg functor completion latency: (M (launch + sync)) / M
+*/
+
+template <int V>
 struct TestFunctor {
-  double values[N];
+  double values[V];
   Kokkos::View<double*> a;
   int K;
   TestFunctor(Kokkos::View<double*> a_, int K_) : a(a_), K(K_) {}
@@ -13,9 +48,9 @@ struct TestFunctor {
   }
 };
 
-template <int N>
+template <int V>
 struct TestRFunctor {
-  double values[N];
+  double values[V];
   Kokkos::View<double*> a;
   int K;
   TestRFunctor(Kokkos::View<double*> a_, int K_) : a(a_), K(K_) {}
@@ -28,9 +63,9 @@ struct TestRFunctor {
 };
 
 struct Opts {
-  bool no_par_for         = false;
-  bool no_par_reduce      = false;
-  bool no_par_reduce_view = false;
+  bool par_for         = true;
+  bool par_reduce      = true;
+  bool par_reduce_view = true;
 };
 
 template <int V>
@@ -79,24 +114,20 @@ void run(int N, int M, int K, const Opts& opts) {
   double time_no_fence        = -1;  // launch loop
   double time_no_fence_fenced = -1;  // launch loop then fence
   double time_fence           = -1;  // launch&fence loop
-  double time_fence_fenced    = -1;  // launch&fence loop then fence
 
   double time_red_no_fence        = -1;
   double time_red_no_fence_fenced = -1;
   double time_red_fence           = -1;
-  double time_red_fence_fenced    = -1;
 
   double time_red_view_no_fence        = -1;
   double time_red_view_no_fence_fenced = -1;
   double time_red_view_fence           = -1;
-  double time_red_view_fence_fenced    = -1;
 
-  if (!opts.no_par_for) {
+  if (opts.par_for) {
     // warmup
     for (int i = 0; i < 4; ++i) {
       Kokkos::parallel_for(l_no_fence, N, f);
     }
-
     Kokkos::fence();
 
     timer.reset();
@@ -106,83 +137,79 @@ void run(int N, int M, int K, const Opts& opts) {
     time_no_fence = timer.seconds();
     Kokkos::fence();
     time_no_fence_fenced = timer.seconds();
-    timer.reset();
 
+    timer.reset();
     for (int i = 0; i < M; i++) {
       Kokkos::parallel_for(l_fence, N, f);
       Kokkos::fence();
     }
     time_fence = timer.seconds();
     Kokkos::fence();
-    time_fence_fenced = timer.seconds();
   }
 
-  if (!opts.no_par_reduce) {
+  if (opts.par_reduce) {
     // warmup
     for (int i = 0; i < 4; ++i) {
       Kokkos::parallel_reduce(l_red_no_fence, N, rf, result);
     }
+    Kokkos::fence();
 
     timer.reset();
-
     for (int i = 0; i < M; i++) {
       Kokkos::parallel_reduce(l_red_no_fence, N, rf, result);
     }
     time_red_no_fence = timer.seconds();
     Kokkos::fence();
     time_red_no_fence_fenced = timer.seconds();
-    timer.reset();
 
+    timer.reset();
     for (int i = 0; i < M; i++) {
       Kokkos::parallel_reduce(l_red_fence, N, rf, result);
       Kokkos::fence();
     }
     time_red_fence = timer.seconds();
     Kokkos::fence();
-    time_red_fence_fenced = timer.seconds();
   }
 
-  if (!opts.no_par_reduce_view) {
+  if (opts.par_reduce_view) {
     // warmup
     for (int i = 0; i < 4; ++i) {
       Kokkos::parallel_reduce(l_red_view_no_fence, N, rf, v_result);
     }
+    Kokkos::fence();
 
     timer.reset();
-
     for (int i = 0; i < M; i++) {
       Kokkos::parallel_reduce(l_red_view_no_fence, N, rf, v_result);
     }
     time_red_view_no_fence = timer.seconds();
     Kokkos::fence();
     time_red_view_no_fence_fenced = timer.seconds();
-    timer.reset();
 
+    timer.reset();
     for (int i = 0; i < M; i++) {
       Kokkos::parallel_reduce(l_red_view_fence, N, rf, v_result);
       Kokkos::fence();
     }
     time_red_view_fence = timer.seconds();
     Kokkos::fence();
-    time_red_view_fence_fenced = timer.seconds();
     timer.reset();
   }
 
   const double x = 1.e6 / M;
   printf("%i %i %i %i", N, V, K, M);
-  if (!opts.no_par_for) {
-    printf(" parallel_for: %lf %lf ( %lf %lf )", x * time_no_fence,
-           x * time_fence, x * time_no_fence_fenced, x * time_fence_fenced);
+  if (opts.par_for) {
+    printf(" parallel_for: %lf %lf ( %lf )", x * time_no_fence, x * time_fence,
+           x * time_no_fence_fenced);
   }
-  if (!opts.no_par_reduce) {
-    printf(" parallel_reduce: %lf %lf ( %lf %lf )", x * time_red_no_fence,
-           x * time_red_fence, x * time_red_no_fence_fenced,
-           x * time_red_fence_fenced);
+  if (opts.par_reduce) {
+    printf(" parallel_reduce: %lf %lf ( %lf )", x * time_red_no_fence,
+           x * time_red_fence, x * time_red_no_fence_fenced);
   }
-  if (!opts.no_par_reduce_view) {
-    printf(" parallel_reduce(view): %lf %lf ( %lf %lf )",
+  if (opts.par_reduce_view) {
+    printf(" parallel_reduce(view): %lf %lf ( %lf )",
            x * time_red_view_no_fence, x * time_red_view_fence,
-           x * time_red_view_no_fence_fenced, x * time_red_view_fence_fenced);
+           x * time_red_view_no_fence_fenced);
   }
   printf("\n");
 }
@@ -190,7 +217,7 @@ int main(int argc, char* argv[]) {
   Kokkos::initialize(argc, argv);
   {
     int N = 10000;
-    int M = 1;
+    int M = 20;
     int K = 1;
 
     Opts opts;
@@ -198,7 +225,7 @@ int main(int argc, char* argv[]) {
     printf("==========================\n");
     printf("Kokkos Launch Latency Test\n");
     printf("==========================\n");
-    printf("\n\n");
+    printf("\n");
     printf("Usage: %s ARGUMENTS [OPTIONS...]\n\n", argv[0]);
     printf("Arguments: N M K\n");
     printf("  N: loop length\n");
@@ -219,7 +246,8 @@ int main(int argc, char* argv[]) {
       const std::string_view arg(argv[i]);
 
       // anything that doesn't start with --
-      if (arg.size() >= 2 && arg[0] != '-' && arg[1] != '-') {
+      if (arg.size() < 2 ||
+          (arg.size() >= 2 && arg[0] != '-' && arg[1] != '-')) {
         if (i == 1)
           N = atoi(arg.data());
         else if (i == 2)
@@ -230,21 +258,19 @@ int main(int argc, char* argv[]) {
           throw std::runtime_error("unexpected argument!");
         }
       } else if (arg == "--no-parallel-for") {
-        opts.no_par_for = true;
+        opts.par_for = false;
       } else if (arg == "--no-parallel-reduce") {
-        opts.no_par_reduce = true;
+        opts.par_reduce = false;
       } else if (arg == "--no-parallel-reduce-view") {
-        opts.no_par_reduce_view = true;
+        opts.par_reduce_view = false;
       } else {
         std::stringstream ss;
-        ss << "unexpected option " << arg;
+        ss << "unexpected argument \"" << arg << "\" at position " << i;
         throw std::runtime_error(ss.str());
       }
     }
 
-    printf(
-        "N V K M time_no_fence time_fence (time_no_fence_fenced "
-        "time_fence_fenced)\n");
+    printf("N V K M time_no_fence time_fence (time_no_fence_fenced)\n");
 
     /* A backend may have different launch strategies for functors of different
      * sizes: test a variety of functor sizes.*/
