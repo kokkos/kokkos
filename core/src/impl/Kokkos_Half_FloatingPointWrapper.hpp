@@ -850,6 +850,7 @@ class alignas(FloatType) floating_point_wrapper {
     return lhs.val < rhs;
 #else
     return static_cast<float>(lhs) < rhs;
+#endif
   }
 
   template <class T>
@@ -861,8 +862,9 @@ class alignas(FloatType) floating_point_wrapper {
 #ifdef KOKKOS_HALF_IS_FULL_TYPE_ON_ARCH
     // CAUTION: this may result in different implicit casting across backends
     return lhs < rhs.val;
-#else 
+#else
     return lhs < static_cast<float>(rhs);
+#endif
   }
 
   KOKKOS_FUNCTION
@@ -874,24 +876,30 @@ class alignas(FloatType) floating_point_wrapper {
 
   template <class T>
   KOKKOS_FUNCTION friend std::enable_if_t<std::is_convertible_v<T, float> &&
-      (std::is_same_v<T, float> || std::is_same_v<T, double>), bool>
+                                              (std::is_same_v<T, float> ||
+                                               std::is_same_v<T, double>),
+                                          bool>
   operator>(floating_point_wrapper lhs, T rhs) {
 #ifdef KOKKOS_HALF_IS_FULL_TYPE_ON_ARCH
     // CAUTION: this may result in different implicit casting across backends
     return lhs.val > rhs;
 #else
     return static_cast<float>(lhs) > rhs;
+#endif
   }
 
   template <class T>
   KOKKOS_FUNCTION friend std::enable_if_t<std::is_convertible_v<T, float> &&
-      (std::is_same_v<T, float> || std::is_same_v<T, double>), bool>
+                                              (std::is_same_v<T, float> ||
+                                               std::is_same_v<T, double>),
+                                          bool>
   operator>(T lhs, floating_point_wrapper rhs) {
 #ifdef KOKKOS_HALF_IS_FULL_TYPE_ON_ARCH
     // CAUTION: this may result in different implicit casting across backends
     return lhs.val > rhs;
 #else
     return lhs > static_cast<float>(rhs);
+#endif
   }
 
   KOKKOS_FUNCTION
@@ -903,24 +911,30 @@ class alignas(FloatType) floating_point_wrapper {
 
   template <class T>
   KOKKOS_FUNCTION friend std::enable_if_t<std::is_convertible_v<T, float> &&
-      (std::is_same_v<T, float> || std::is_same_v<T, double>), bool>
+                                              (std::is_same_v<T, float> ||
+                                               std::is_same_v<T, double>),
+                                          bool>
   operator<=(floating_point_wrapper lhs, T rhs) {
 #ifdef KOKKOS_HALF_IS_FULL_TYPE_ON_ARCH
     // CAUTION: this may result in different implicit casting across backends
     return lhs.val <= rhs;
 #else
     return static_cast<float>(lhs) <= rhs;
+#endif
   }
 
   template <class T>
   KOKKOS_FUNCTION friend std::enable_if_t<std::is_convertible_v<T, float> &&
-      (std::is_same_v<T, float> || std::is_same_v<T, double>), bool>
+                                              (std::is_same_v<T, float> ||
+                                               std::is_same_v<T, double>),
+                                          bool>
   operator<=(T lhs, floating_point_wrapper rhs) {
 #ifdef KOKKOS_HALF_IS_FULL_TYPE_ON_ARCH
     // CAUTION: this may result in different implicit casting across backends
     return lhs <= rhs.val;
 #else
     return lhs <= static_cast<float>(rhs);
+#endif
   }
 
   KOKKOS_FUNCTION
@@ -932,14 +946,18 @@ class alignas(FloatType) floating_point_wrapper {
 
   template <class T>
   KOKKOS_FUNCTION friend std::enable_if_t<std::is_convertible_v<T, float> &&
-      (std::is_same_v<T, float> || std::is_same_v<T, double>), bool>
+                                              (std::is_same_v<T, float> ||
+                                               std::is_same_v<T, double>),
+                                          bool>
   operator>=(floating_point_wrapper lhs, T rhs) {
     return T(lhs) >= rhs;
   }
 
   template <class T>
   KOKKOS_FUNCTION friend std::enable_if_t<std::is_convertible_v<T, float> &&
-      (std::is_same_v<T, float> || std::is_same_v<T, double>), bool>
+                                              (std::is_same_v<T, float> ||
+                                               std::is_same_v<T, double>),
+                                          bool>
   operator>=(T lhs, floating_point_wrapper rhs) {
     return lhs >= T(rhs);
   }
