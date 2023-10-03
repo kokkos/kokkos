@@ -896,7 +896,7 @@ class alignas(FloatType) floating_point_wrapper {
   operator>(T lhs, floating_point_wrapper rhs) {
 #ifdef KOKKOS_HALF_IS_FULL_TYPE_ON_ARCH
     // CAUTION: this may result in different implicit casting across backends
-    return lhs.val > rhs;
+    return lhs > rhs.val;
 #else
     return lhs > static_cast<float>(rhs);
 #endif
