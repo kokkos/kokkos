@@ -65,18 +65,21 @@ struct test_dualview_copy_construction_and_assignment {
   using scalar_type     = Scalar;
   using execution_space = Device;
 
-  template <typename ViewType>
   void run_me() {
-    const unsigned int n = 10;
-    const unsigned int m = 5;
+    constexpr unsigned int n = 10;
+    constexpr unsigned int m = 5;
 
-    ViewType a("A", n, m);
+    using SrcViewType = Kokkos::DualView<Scalar**, Kokkos::LayoutLeft, Device>;
+    using DstViewType =
+        Kokkos::DualView<const Scalar * [m], Kokkos::LayoutLeft, Device>;
+    
+    SrcViewType a("A", n, m);
 
     // Copy construction
-    ViewType b(a);
+    DstViewType b(a);
 
     // Copy assignment
-    ViewType c = a;
+    DstViewType c = a;
 
     // Check equality (shallow) of the host and device views
     ASSERT_EQ(a.view_host(), b.view_host());
@@ -87,7 +90,7 @@ struct test_dualview_copy_construction_and_assignment {
 
     // We can't test shallow equality of modified_flags because it's protected.
     // So we test it indirectly through sync state behavior.
-    if (!std::decay_t<ViewType>::impl_dualview_is_single_device::value) {
+    if (!std::decay_t<SrcViewType>::impl_dualview_is_single_device::value) {
       a.clear_sync_state();
       a.modify_host();
       ASSERT_TRUE(a.need_sync_device());
@@ -97,9 +100,7 @@ struct test_dualview_copy_construction_and_assignment {
     }
   }
 
-  test_dualview_copy_construction_and_assignment() {
-    run_me<Kokkos::DualView<Scalar**, Kokkos::LayoutLeft, Device> >();
-  }
+  test_dualview_copy_construction_and_assignment() { run_me(); }
 };
 
 template <typename Scalar, class Device>
