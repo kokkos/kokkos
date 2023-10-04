@@ -185,7 +185,14 @@ struct TestTeamScanRetVal {
     a_r = view_2d_type("a_r", M, N);
     a_s = view_1d_type("a_s", M);
 
-    Kokkos::parallel_for(policy_type(M, Kokkos::AUTO), *this);
+    // Set team size explicitly to check whether non-power-of-two team sizes can
+    // be used.
+    if (ExecutionSpace().concurrency() > 10000)
+      Kokkos::parallel_for(policy_type(M, 127), *this);
+    else if (ExecutionSpace().concurrency() > 2)
+      Kokkos::parallel_for(policy_type(M, 3), *this);
+    else
+      Kokkos::parallel_for(policy_type(M, 1), *this);
 
     Kokkos::fence();
     auto a_i  = Kokkos::create_mirror_view(a_d);
