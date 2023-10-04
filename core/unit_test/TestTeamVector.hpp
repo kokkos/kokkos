@@ -607,9 +607,9 @@ struct functor_vec_scan {
 
 // Temporary: This condition will progressively be reduced when parallel_scan
 // with return value will be implemented for more backends.
-#if !defined(KOKKOS_ENABLE_HIP) && !defined(KOKKOS_ENABLE_OPENACC) &&  \
-    !defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ENABLE_THREADS) && \
-    !defined(KOKKOS_ENABLE_OPENMPTARGET) && !defined(KOKKOS_ENABLE_HPX)
+#if !defined(KOKKOS_ENABLE_OPENACC) && !defined(KOKKOS_ENABLE_SYCL) &&         \
+    !defined(KOKKOS_ENABLE_THREADS) && !defined(KOKKOS_ENABLE_OPENMPTARGET) && \
+    !defined(KOKKOS_ENABLE_HPX)
 template <typename Scalar, class ExecutionSpace>
 struct functor_vec_scan_ret_val {
   using policy_type     = Kokkos::TeamPolicy<ExecutionSpace>;
@@ -736,9 +736,9 @@ bool test_scalar(int nteams, int team_size, int test) {
   } else if (test == 12) {
 // Temporary: This condition will progressively be reduced when parallel_scan
 // with return value will be implemented for more backends.
-#if !defined(KOKKOS_ENABLE_HIP) && !defined(KOKKOS_ENABLE_OPENACC) &&  \
-    !defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ENABLE_THREADS) && \
-    !defined(KOKKOS_ENABLE_OPENMPTARGET) && !defined(KOKKOS_ENABLE_HPX)
+#if !defined(KOKKOS_ENABLE_OPENACC) && !defined(KOKKOS_ENABLE_SYCL) &&         \
+    !defined(KOKKOS_ENABLE_THREADS) && !defined(KOKKOS_ENABLE_OPENMPTARGET) && \
+    !defined(KOKKOS_ENABLE_HPX)
     Kokkos::parallel_for(
         Kokkos::TeamPolicy<ExecutionSpace>(nteams, team_size, 8),
         functor_vec_scan_ret_val<Scalar, ExecutionSpace>(d_flag, team_size));
@@ -1016,7 +1016,7 @@ struct checkScan {
 };
 }  // namespace VectorScanReducer
 
-#if !(defined(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND) || defined(KOKKOS_ENABLE_HIP))
+#if !defined(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND)
 TEST(TEST_CATEGORY, team_vector) {
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(0)));
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(1)));
