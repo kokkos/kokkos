@@ -607,40 +607,33 @@ struct functor_vec_scan {
 
 // Temporary: This condition will progressively be reduced when parallel_scan
 // with return value will be implemented for more backends.
-#if defined(KOKKOS_ENABLE_SERIAL) || defined(KOKKOS_ENABLE_OPENMP)
-#if !defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_HIP) &&             \
-    !defined(KOKKOS_ENABLE_OPENACC) && !defined(KOKKOS_ENABLE_SYCL) &&         \
+#if !defined(KOKKOS_ENABLE_OPENACC) && !defined(KOKKOS_ENABLE_SYCL) &&         \
     !defined(KOKKOS_ENABLE_THREADS) && !defined(KOKKOS_ENABLE_OPENMPTARGET) && \
     !defined(KOKKOS_ENABLE_HPX)
 template <typename Scalar, class ExecutionSpace>
 struct functor_vec_scan_ret_val {
   using policy_type     = Kokkos::TeamPolicy<ExecutionSpace>;
   using execution_space = ExecutionSpace;
-  using view_type       = Kokkos::View<Scalar **, execution_space>;
 
   Kokkos::View<int, ExecutionSpace> flag;
-  view_type return_values;
   int team_size;
 
-  functor_vec_scan_ret_val(Kokkos::View<int, ExecutionSpace> flag_, int nteams,
-                           int tsize)
-      : flag(flag_), team_size(tsize) {
-    return_values = view_type("return_values", nteams, tsize);
-  }
+  functor_vec_scan_ret_val(Kokkos::View<int, ExecutionSpace> flag_, int tsize)
+      : flag(flag_), team_size(tsize) {}
 
   KOKKOS_INLINE_FUNCTION
   void operator()(typename policy_type::member_type team) const {
     Scalar return_val;
+    int upper_bound = 13;
 
     Kokkos::parallel_scan(
-        Kokkos::ThreadVectorRange(team, 13),
+        Kokkos::ThreadVectorRange(team, upper_bound),
         [&](int i, Scalar &val, bool final) {
           val += i;
 
           if (final) {
             Scalar test = 0;
             for (int k = 0; k <= i; k++) test += k;
-            return_values(team.league_rank(), team.team_rank()) = test;
 
             if (test != val) {
               Kokkos::printf("FAILED vector_par_scan %i %i %lf %lf\n",
@@ -654,19 +647,19 @@ struct functor_vec_scan_ret_val {
         },
         return_val);
 
-    if (flag() == 0 &&
-        return_values(team.league_rank(), team.team_rank()) != return_val) {
-      Kokkos::printf("FAILED vector_scan_ret_val %i %i %lf %lf\n",
-                     team.league_rank(), team.team_rank(),
-                     static_cast<double>(
-                         return_values(team.league_rank(), team.team_rank())),
-                     static_cast<double>(return_val));
+    Scalar sum_ref = ((upper_bound - 1) * (upper_bound)) / 2;
+
+    if (flag() == 0 && return_val != sum_ref) {
+      Kokkos::printf(
+          "FAILED vector_scan_ret_val: league_rank %i, team_rank %i, sum_ref "
+          "%lf, return_val %lf\n",
+          team.league_rank(), team.team_rank(), static_cast<double>(sum_ref),
+          static_cast<double>(return_val));
 
       flag() = 1;
     }
   }
 };
-#endif
 #endif
 
 template <typename Scalar, class ExecutionSpace>
@@ -741,19 +734,14 @@ bool test_scalar(int nteams, int team_size, int test) {
         "B", Kokkos::TeamPolicy<ExecutionSpace>(nteams, team_size, 8),
         functor_vec_single<Scalar, ExecutionSpace>(d_flag, 4, 13));
   } else if (test == 12) {
-// Temporary: This condition will progressively be reduced when
-// parallel_scan
+// Temporary: This condition will progressively be reduced when parallel_scan
 // with return value will be implemented for more backends.
-#if defined(KOKKOS_ENABLE_SERIAL) || defined(KOKKOS_ENABLE_OPENMP)
-#if !defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_HIP) &&             \
-    !defined(KOKKOS_ENABLE_OPENACC) && !defined(KOKKOS_ENABLE_SYCL) &&         \
+#if !defined(KOKKOS_ENABLE_OPENACC) && !defined(KOKKOS_ENABLE_SYCL) &&         \
     !defined(KOKKOS_ENABLE_THREADS) && !defined(KOKKOS_ENABLE_OPENMPTARGET) && \
     !defined(KOKKOS_ENABLE_HPX)
     Kokkos::parallel_for(
         Kokkos::TeamPolicy<ExecutionSpace>(nteams, team_size, 8),
-        functor_vec_scan_ret_val<Scalar, ExecutionSpace>(d_flag, nteams,
-                                                         team_size));
-#endif
+        functor_vec_scan_ret_val<Scalar, ExecutionSpace>(d_flag, team_size));
 #endif
   }
 
@@ -929,9 +917,6 @@ struct checkScan {
   view_type inputs  = view_type{"inputs"};
   view_type outputs = view_type{"outputs"};
 
-  value_type result;
-  Reducer reducer = {result};
-
   struct ThreadVectorFunctor {
     KOKKOS_FUNCTION void operator()(const size_type j, value_type &update,
                                     const bool final) const {
@@ -979,6 +964,8 @@ struct checkScan {
       const {
     const size_type iTeam       = team.league_rank();
     const size_type iTeamOffset = iTeam * n_per_team;
+    value_type dummy;
+    Reducer reducer = {dummy};
     Kokkos::parallel_for(
         Kokkos::TeamThreadRange(team, n_team_thread_range),
         TeamThreadRangeFunctor{team, reducer, iTeamOffset, outputs, inputs});
@@ -1009,7 +996,9 @@ struct checkScan {
     Kokkos::View<value_type[n], Kokkos::HostSpace> expected("expected");
     {
       value_type identity;
+      Reducer reducer = {identity};
       reducer.init(identity);
+
       for (int i = 0; i < expected.extent_int(0); ++i) {
         const int vector       = i % n_vector_range;
         const value_type accum = vector == 0 ? identity : expected(i - 1);
@@ -1027,7 +1016,7 @@ struct checkScan {
 };
 }  // namespace VectorScanReducer
 
-#if !(defined(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND) || defined(KOKKOS_ENABLE_HIP))
+#if !defined(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND)
 TEST(TEST_CATEGORY, team_vector) {
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(0)));
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(1)));
