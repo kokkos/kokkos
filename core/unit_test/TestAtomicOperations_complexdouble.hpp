@@ -38,13 +38,14 @@ TEST(TEST_CATEGORY, atomic_operations_complexdouble) {
     ASSERT_TRUE(
         (atomic_op_test<MulAtomicTest, T, TEST_EXECSPACE>(old_val, update)));
 
-    // disable division test for 32bit where we have accuracy issues with
-    // division atomics still compile it though
-    if (sizeof(void*) == 8)
+    // FIXME_32BIT disable division test for 32bit where we have accuracy issues
+    // with division atomics still compile it though
+    if (sizeof(void*) == 8) {
       ASSERT_TRUE((update != 0
                        ? atomic_op_test<DivAtomicTest, T, TEST_EXECSPACE>(
                              old_val, update)
                        : true));
+    }
     ASSERT_TRUE((atomic_op_test<LoadStoreAtomicTest, T, TEST_EXECSPACE>(
         old_val, update)));
   }
