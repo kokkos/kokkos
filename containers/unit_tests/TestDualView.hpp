@@ -65,14 +65,14 @@ struct test_dualview_copy_construction_and_assignment {
   using scalar_type     = Scalar;
   using execution_space = Device;
 
-  void run_me() {
+  void operator()() {
     constexpr unsigned int n = 10;
     constexpr unsigned int m = 5;
 
     using SrcViewType = Kokkos::DualView<Scalar**, Kokkos::LayoutLeft, Device>;
     using DstViewType =
         Kokkos::DualView<const Scalar * [m], Kokkos::LayoutLeft, Device>;
-    
+
     SrcViewType a("A", n, m);
 
     // Copy construction
@@ -99,8 +99,6 @@ struct test_dualview_copy_construction_and_assignment {
       a.clear_sync_state();
     }
   }
-
-  test_dualview_copy_construction_and_assignment() { run_me(); }
 };
 
 template <typename Scalar, class Device>
@@ -424,7 +422,7 @@ void test_dualview_alloc(unsigned int size) {
 
 template <typename Scalar, typename Device>
 void test_dualview_copy_construction_and_assignment() {
-  Impl::test_dualview_copy_construction_and_assignment<Scalar, Device>();
+  Impl::test_dualview_copy_construction_and_assignment<Scalar, Device>()();
 }
 
 template <typename Scalar, typename Device>
