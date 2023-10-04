@@ -35,8 +35,6 @@
 #include <impl/Kokkos_Traits.hpp>
 #include <impl/Kokkos_UnorderedMap_impl.hpp>
 
-#include <iostream>
-
 #include <cstdint>
 
 namespace Kokkos {
