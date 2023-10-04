@@ -573,15 +573,17 @@ parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
  *  final == true.
  */
 // This is the same code as in CUDA and largely the same as in OpenMPTarget
-template <typename iType, typename FunctorType>
+template <typename iType, typename FunctorType, typename ValueType>
 KOKKOS_INLINE_FUNCTION void parallel_scan(
     const Impl::TeamThreadRangeBoundariesStruct<iType, Impl::SYCLTeamMember>&
         loop_bounds,
-    const FunctorType& lambda) {
-  // Extract value_type from lambda
-  using value_type = typename Kokkos::Impl::FunctorAnalysis<
+    const FunctorType& lambda, ValueType& return_val) {
+  // Extract ValueType from the Closure
+  using closure_value_type = typename Kokkos::Impl::FunctorAnalysis<
       Kokkos::Impl::FunctorPatternInterface::SCAN, void, FunctorType,
       void>::value_type;
+  static_assert(std::is_same_v<closure_value_type, ValueType>,
+                "Non-matching value types of closure and return type");
 
   const auto start     = loop_bounds.start;
   const auto end       = loop_bounds.end;
@@ -589,12 +591,12 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
   const auto team_size = member.team_size();
   const auto team_rank = member.team_rank();
   const auto nchunk    = (end - start + team_size - 1) / team_size;
-  value_type accum     = 0;
+  ValueType accum      = 0;
   // each team has to process one or more chunks of the prefix scan
   for (iType i = 0; i < nchunk; ++i) {
     auto ii = start + i * team_size + team_rank;
     // local accumulation for this chunk
-    value_type local_accum = 0;
+    ValueType local_accum = 0;
     // user updates value with prefix value
     if (ii < loop_bounds.end) lambda(ii, local_accum, false);
     // perform team scan
@@ -608,6 +610,21 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
     // broadcast last value to rest of the team
     member.team_broadcast(accum, team_size - 1);
   }
+
+  return_val = accum;
+}
+
+template <typename iType, class FunctorType>
+KOKKOS_INLINE_FUNCTION void parallel_scan(
+    const Impl::TeamThreadRangeBoundariesStruct<iType, Impl::SYCLTeamMember>&
+        loop_bounds,
+    const FunctorType& lambda) {
+  using value_type = typename Kokkos::Impl::FunctorAnalysis<
+      Kokkos::Impl::FunctorPatternInterface::SCAN, void, FunctorType,
+      void>::value_type;
+
+  value_type scan_val;
+  parallel_scan(loop_bounds, lambda, scan_val);
 }
 
 template <typename iType, class Closure>
