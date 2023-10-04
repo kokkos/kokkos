@@ -38,7 +38,7 @@ IF (KOKKOS_HAS_TRILINOS)
 ENDIF()
 
 # Find or download google/benchmark library
-find_package(benchmark QUIET)
+find_package(benchmark QUIET 1.5.6)
 IF(benchmark_FOUND)
   MESSAGE(STATUS "Using google benchmark found in ${benchmark_DIR}")
 ELSE()
