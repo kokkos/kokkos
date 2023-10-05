@@ -80,7 +80,7 @@ class absolutes {
   template <typename T>
   auto on_host(T const& a) const {
     if constexpr (std::is_signed_v<typename T::value_type>) {
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+#if defined(KOKKOS_ENABLE_DEPRECATED_CODE_4) && !defined(KOKKOS_COMPILER_NVCC)
       return Kokkos::Experimental::abs(a);
 #else
       return Kokkos::abs(a);
@@ -95,11 +95,7 @@ class absolutes {
   template <typename T>
   KOKKOS_INLINE_FUNCTION auto on_device(T const& a) const {
     if constexpr (std::is_signed_v<typename T::value_type>) {
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-      return Kokkos::Experimental::abs(a);
-#else
       return Kokkos::abs(a);
-#endif
     }
     return a;
   }
