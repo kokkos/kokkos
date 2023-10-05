@@ -22,7 +22,6 @@
 #endif
 
 #include <Kokkos_Macros.hpp>
-#include <Kokkos_MinMaxClamp.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_StringManipulation.hpp>
 
@@ -235,14 +234,14 @@ struct Array<T, KOKKOS_INVALID_INDEX, Array<>::contiguous> {
 
   KOKKOS_INLINE_FUNCTION
   Array& operator=(const Array& rhs) {
-    const size_t n = Kokkos::min(m_size, rhs.size());
+    const size_t n = size() < rhs.size() ? size() : rhs.size();
     for (size_t i = 0; i < n; ++i) m_elem[i] = rhs[i];
     return *this;
   }
 
   template <size_t N, class P>
   KOKKOS_INLINE_FUNCTION Array& operator=(const Array<T, N, P>& rhs) {
-    const size_t n = Kokkos::min(m_size, rhs.size());
+    const size_t n = size() < rhs.size() ? size() : rhs.size();
     for (size_t i = 0; i < n; ++i) m_elem[i] = rhs[i];
     return *this;
   }
@@ -304,14 +303,14 @@ struct Array<T, KOKKOS_INVALID_INDEX, Array<>::strided> {
 
   KOKKOS_INLINE_FUNCTION
   Array& operator=(const Array& rhs) {
-    const size_t n = Kokkos::min(m_size, rhs.size());
+    const size_t n = size() < rhs.size() ? size() : rhs.size();
     for (size_t i = 0; i < n; ++i) m_elem[i * m_stride] = rhs[i];
     return *this;
   }
 
   template <size_t N, class P>
   KOKKOS_INLINE_FUNCTION Array& operator=(const Array<T, N, P>& rhs) {
-    const size_t n = Kokkos::min(m_size, rhs.size());
+    const size_t n = size() < rhs.size() ? size() : rhs.size();
     for (size_t i = 0; i < n; ++i) m_elem[i * m_stride] = rhs[i];
     return *this;
   }
