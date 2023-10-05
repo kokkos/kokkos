@@ -247,9 +247,15 @@ struct FloatingPointComparison {
 #endif
   KOKKOS_FUNCTION
   double eps(float) const { return FLT_EPSILON; }
+// POWER9 gives unexpected values with LDBL_EPSILON issues
+// https://stackoverflow.com/questions/68960416/ppc64-long-doubles-machine-epsilon-calculation
+#if defined(KOKKOS_ARCH_POWER9) || defined(KOKKOS_ARCH_POWER8)
+  KOKKOS_FUNCTION
+  double eps(long double) const { return DBL_EPSILON; }
+#else
   KOKKOS_FUNCTION
   double eps(long double) const { return LDBL_EPSILON; }
-
+#endif
   // Using absolute here instead of abs, since we actually test abs ...
   template <class T>
   KOKKOS_FUNCTION std::enable_if_t<std::is_signed<T>::value, T> absolute(
