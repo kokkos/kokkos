@@ -694,51 +694,61 @@ struct TestComplexBesselJ0Y0Function {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const int& i) const {
-    d_cbj0(i) = Kokkos::Experimental::cyl_bessel_j0<Kokkos::complex<double>,
-                                                    double, int>(d_z(i));
-    d_cby0(i) = Kokkos::Experimental::cyl_bessel_y0<Kokkos::complex<double>,
-                                                    double, int>(d_z(i));
+    d_cbj0(i) =
+        Kokkos::Experimental::Impl::cyl_bessel_j0<Kokkos::complex<double>,
+                                                  double, int>(d_z(i));
+    d_cby0(i) =
+        Kokkos::Experimental::Impl::cyl_bessel_y0<Kokkos::complex<double>,
+                                                  double, int>(d_z(i));
   }
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const TestLargeArgTag&, const int& /*i*/) const {
     d_cbj0_large(0) =
-        Kokkos::Experimental::cyl_bessel_j0<Kokkos::complex<double>, double,
-                                            int>(d_z_large(0));
+        Kokkos::Experimental::Impl::cyl_bessel_j0<Kokkos::complex<double>,
+                                                  double, int>(d_z_large(0));
     d_cbj0_large(1) =
-        Kokkos::Experimental::cyl_bessel_j0<Kokkos::complex<double>, double,
-                                            int>(d_z_large(1), 11000, 3000);
+        Kokkos::Experimental::Impl::cyl_bessel_j0<Kokkos::complex<double>,
+                                                  double, int>(d_z_large(1),
+                                                               11000, 3000);
     d_cbj0_large(2) =
-        Kokkos::Experimental::cyl_bessel_j0<Kokkos::complex<double>, double,
-                                            int>(d_z_large(2), 11000, 7500);
+        Kokkos::Experimental::Impl::cyl_bessel_j0<Kokkos::complex<double>,
+                                                  double, int>(d_z_large(2),
+                                                               11000, 7500);
     d_cbj0_large(3) =
-        Kokkos::Experimental::cyl_bessel_j0<Kokkos::complex<double>, double,
-                                            int>(d_z_large(3));
+        Kokkos::Experimental::Impl::cyl_bessel_j0<Kokkos::complex<double>,
+                                                  double, int>(d_z_large(3));
     d_cbj0_large(4) =
-        Kokkos::Experimental::cyl_bessel_j0<Kokkos::complex<double>, double,
-                                            int>(d_z_large(4), 11000, 3000);
+        Kokkos::Experimental::Impl::cyl_bessel_j0<Kokkos::complex<double>,
+                                                  double, int>(d_z_large(4),
+                                                               11000, 3000);
     d_cbj0_large(5) =
-        Kokkos::Experimental::cyl_bessel_j0<Kokkos::complex<double>, double,
-                                            int>(d_z_large(5), 11000, 7500);
+        Kokkos::Experimental::Impl::cyl_bessel_j0<Kokkos::complex<double>,
+                                                  double, int>(d_z_large(5),
+                                                               11000, 7500);
 
     d_cby0_large(0) =
-        Kokkos::Experimental::cyl_bessel_y0<Kokkos::complex<double>, double,
-                                            int>(d_z_large(0));
+        Kokkos::Experimental::Impl::cyl_bessel_y0<Kokkos::complex<double>,
+                                                  double, int>(d_z_large(0));
     d_cby0_large(1) =
-        Kokkos::Experimental::cyl_bessel_y0<Kokkos::complex<double>, double,
-                                            int>(d_z_large(1), 11000, 3000);
+        Kokkos::Experimental::Impl::cyl_bessel_y0<Kokkos::complex<double>,
+                                                  double, int>(d_z_large(1),
+                                                               11000, 3000);
     d_cby0_large(2) =
-        Kokkos::Experimental::cyl_bessel_y0<Kokkos::complex<double>, double,
-                                            int>(d_z_large(2), 11000, 7500);
+        Kokkos::Experimental::Impl::cyl_bessel_y0<Kokkos::complex<double>,
+                                                  double, int>(d_z_large(2),
+                                                               11000, 7500);
     d_cby0_large(3) =
-        Kokkos::Experimental::cyl_bessel_y0<Kokkos::complex<double>, double,
-                                            int>(d_z_large(3));
+        Kokkos::Experimental::Impl::cyl_bessel_y0<Kokkos::complex<double>,
+                                                  double, int>(d_z_large(3));
     d_cby0_large(4) =
-        Kokkos::Experimental::cyl_bessel_y0<Kokkos::complex<double>, double,
-                                            int>(d_z_large(4), 11000, 3000);
+        Kokkos::Experimental::Impl::cyl_bessel_y0<Kokkos::complex<double>,
+                                                  double, int>(d_z_large(4),
+                                                               11000, 3000);
     d_cby0_large(5) =
-        Kokkos::Experimental::cyl_bessel_y0<Kokkos::complex<double>, double,
-                                            int>(d_z_large(5), 11000, 7500);
+        Kokkos::Experimental::Impl::cyl_bessel_y0<Kokkos::complex<double>,
+                                                  double, int>(d_z_large(5),
+                                                               11000, 7500);
   }
 };
 
@@ -990,51 +1000,61 @@ struct TestComplexBesselJ1Y1Function {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const int& i) const {
-    d_cbj1(i) = Kokkos::Experimental::cyl_bessel_j1<Kokkos::complex<double>,
-                                                    double, int>(d_z(i));
-    d_cby1(i) = Kokkos::Experimental::cyl_bessel_y1<Kokkos::complex<double>,
-                                                    double, int>(d_z(i));
+    d_cbj1(i) =
+        Kokkos::Experimental::Impl::cyl_bessel_j1<Kokkos::complex<double>,
+                                                  double, int>(d_z(i));
+    d_cby1(i) =
+        Kokkos::Experimental::Impl::cyl_bessel_y1<Kokkos::complex<double>,
+                                                  double, int>(d_z(i));
   }
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const TestLargeArgTag&, const int& /*i*/) const {
     d_cbj1_large(0) =
-        Kokkos::Experimental::cyl_bessel_j1<Kokkos::complex<double>, double,
-                                            int>(d_z_large(0));
+        Kokkos::Experimental::Impl::cyl_bessel_j1<Kokkos::complex<double>,
+                                                  double, int>(d_z_large(0));
     d_cbj1_large(1) =
-        Kokkos::Experimental::cyl_bessel_j1<Kokkos::complex<double>, double,
-                                            int>(d_z_large(1), 11000, 3000);
+        Kokkos::Experimental::Impl::cyl_bessel_j1<Kokkos::complex<double>,
+                                                  double, int>(d_z_large(1),
+                                                               11000, 3000);
     d_cbj1_large(2) =
-        Kokkos::Experimental::cyl_bessel_j1<Kokkos::complex<double>, double,
-                                            int>(d_z_large(2), 11000, 7500);
+        Kokkos::Experimental::Impl::cyl_bessel_j1<Kokkos::complex<double>,
+                                                  double, int>(d_z_large(2),
+                                                               11000, 7500);
     d_cbj1_large(3) =
-        Kokkos::Experimental::cyl_bessel_j1<Kokkos::complex<double>, double,
-                                            int>(d_z_large(3));
+        Kokkos::Experimental::Impl::cyl_bessel_j1<Kokkos::complex<double>,
+                                                  double, int>(d_z_large(3));
     d_cbj1_large(4) =
-        Kokkos::Experimental::cyl_bessel_j1<Kokkos::complex<double>, double,
-                                            int>(d_z_large(4), 11000, 3000);
+        Kokkos::Experimental::Impl::cyl_bessel_j1<Kokkos::complex<double>,
+                                                  double, int>(d_z_large(4),
+                                                               11000, 3000);
     d_cbj1_large(5) =
-        Kokkos::Experimental::cyl_bessel_j1<Kokkos::complex<double>, double,
-                                            int>(d_z_large(5), 11000, 7500);
+        Kokkos::Experimental::Impl::cyl_bessel_j1<Kokkos::complex<double>,
+                                                  double, int>(d_z_large(5),
+                                                               11000, 7500);
 
     d_cby1_large(0) =
-        Kokkos::Experimental::cyl_bessel_y1<Kokkos::complex<double>, double,
-                                            int>(d_z_large(0));
+        Kokkos::Experimental::Impl::cyl_bessel_y1<Kokkos::complex<double>,
+                                                  double, int>(d_z_large(0));
     d_cby1_large(1) =
-        Kokkos::Experimental::cyl_bessel_y1<Kokkos::complex<double>, double,
-                                            int>(d_z_large(1), 11000, 3000);
+        Kokkos::Experimental::Impl::cyl_bessel_y1<Kokkos::complex<double>,
+                                                  double, int>(d_z_large(1),
+                                                               11000, 3000);
     d_cby1_large(2) =
-        Kokkos::Experimental::cyl_bessel_y1<Kokkos::complex<double>, double,
-                                            int>(d_z_large(2), 11000, 7500);
+        Kokkos::Experimental::Impl::cyl_bessel_y1<Kokkos::complex<double>,
+                                                  double, int>(d_z_large(2),
+                                                               11000, 7500);
     d_cby1_large(3) =
-        Kokkos::Experimental::cyl_bessel_y1<Kokkos::complex<double>, double,
-                                            int>(d_z_large(3));
+        Kokkos::Experimental::Impl::cyl_bessel_y1<Kokkos::complex<double>,
+                                                  double, int>(d_z_large(3));
     d_cby1_large(4) =
-        Kokkos::Experimental::cyl_bessel_y1<Kokkos::complex<double>, double,
-                                            int>(d_z_large(4), 11000, 3000);
+        Kokkos::Experimental::Impl::cyl_bessel_y1<Kokkos::complex<double>,
+                                                  double, int>(d_z_large(4),
+                                                               11000, 3000);
     d_cby1_large(5) =
-        Kokkos::Experimental::cyl_bessel_y1<Kokkos::complex<double>, double,
-                                            int>(d_z_large(5), 11000, 7500);
+        Kokkos::Experimental::Impl::cyl_bessel_y1<Kokkos::complex<double>,
+                                                  double, int>(d_z_large(5),
+                                                               11000, 7500);
   }
 };
 
@@ -1256,32 +1276,38 @@ struct TestComplexBesselI0K0Function {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const int& i) const {
-    d_cbi0(i) = Kokkos::Experimental::cyl_bessel_i0<Kokkos::complex<double>,
-                                                    double, int>(d_z(i));
-    d_cbk0(i) = Kokkos::Experimental::cyl_bessel_k0<Kokkos::complex<double>,
-                                                    double, int>(d_z(i));
+    d_cbi0(i) =
+        Kokkos::Experimental::Impl::cyl_bessel_i0<Kokkos::complex<double>,
+                                                  double, int>(d_z(i));
+    d_cbk0(i) =
+        Kokkos::Experimental::Impl::cyl_bessel_k0<Kokkos::complex<double>,
+                                                  double, int>(d_z(i));
   }
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const TestLargeArgTag&, const int& /*i*/) const {
     d_cbi0_large(0) =
-        Kokkos::Experimental::cyl_bessel_i0<Kokkos::complex<double>, double,
-                                            int>(d_z_large(0));
+        Kokkos::Experimental::Impl::cyl_bessel_i0<Kokkos::complex<double>,
+                                                  double, int>(d_z_large(0));
     d_cbi0_large(1) =
-        Kokkos::Experimental::cyl_bessel_i0<Kokkos::complex<double>, double,
-                                            int>(d_z_large(1), 110, 35);
+        Kokkos::Experimental::Impl::cyl_bessel_i0<Kokkos::complex<double>,
+                                                  double, int>(d_z_large(1),
+                                                               110, 35);
     d_cbi0_large(2) =
-        Kokkos::Experimental::cyl_bessel_i0<Kokkos::complex<double>, double,
-                                            int>(d_z_large(2), 110, 190);
+        Kokkos::Experimental::Impl::cyl_bessel_i0<Kokkos::complex<double>,
+                                                  double, int>(d_z_large(2),
+                                                               110, 190);
     d_cbi0_large(3) =
-        Kokkos::Experimental::cyl_bessel_i0<Kokkos::complex<double>, double,
-                                            int>(d_z_large(3));
+        Kokkos::Experimental::Impl::cyl_bessel_i0<Kokkos::complex<double>,
+                                                  double, int>(d_z_large(3));
     d_cbi0_large(4) =
-        Kokkos::Experimental::cyl_bessel_i0<Kokkos::complex<double>, double,
-                                            int>(d_z_large(4), 110, 35);
+        Kokkos::Experimental::Impl::cyl_bessel_i0<Kokkos::complex<double>,
+                                                  double, int>(d_z_large(4),
+                                                               110, 35);
     d_cbi0_large(5) =
-        Kokkos::Experimental::cyl_bessel_i0<Kokkos::complex<double>, double,
-                                            int>(d_z_large(5), 110, 190);
+        Kokkos::Experimental::Impl::cyl_bessel_i0<Kokkos::complex<double>,
+                                                  double, int>(d_z_large(5),
+                                                               110, 190);
   }
 };
 
@@ -1497,32 +1523,38 @@ struct TestComplexBesselI1K1Function {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const int& i) const {
-    d_cbi1(i) = Kokkos::Experimental::cyl_bessel_i1<Kokkos::complex<double>,
-                                                    double, int>(d_z(i));
-    d_cbk1(i) = Kokkos::Experimental::cyl_bessel_k1<Kokkos::complex<double>,
-                                                    double, int>(d_z(i));
+    d_cbi1(i) =
+        Kokkos::Experimental::Impl::cyl_bessel_i1<Kokkos::complex<double>,
+                                                  double, int>(d_z(i));
+    d_cbk1(i) =
+        Kokkos::Experimental::Impl::cyl_bessel_k1<Kokkos::complex<double>,
+                                                  double, int>(d_z(i));
   }
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const TestLargeArgTag&, const int& /*i*/) const {
     d_cbi1_large(0) =
-        Kokkos::Experimental::cyl_bessel_i1<Kokkos::complex<double>, double,
-                                            int>(d_z_large(0));
+        Kokkos::Experimental::Impl::cyl_bessel_i1<Kokkos::complex<double>,
+                                                  double, int>(d_z_large(0));
     d_cbi1_large(1) =
-        Kokkos::Experimental::cyl_bessel_i1<Kokkos::complex<double>, double,
-                                            int>(d_z_large(1), 110, 35);
+        Kokkos::Experimental::Impl::cyl_bessel_i1<Kokkos::complex<double>,
+                                                  double, int>(d_z_large(1),
+                                                               110, 35);
     d_cbi1_large(2) =
-        Kokkos::Experimental::cyl_bessel_i1<Kokkos::complex<double>, double,
-                                            int>(d_z_large(2), 110, 190);
+        Kokkos::Experimental::Impl::cyl_bessel_i1<Kokkos::complex<double>,
+                                                  double, int>(d_z_large(2),
+                                                               110, 190);
     d_cbi1_large(3) =
-        Kokkos::Experimental::cyl_bessel_i1<Kokkos::complex<double>, double,
-                                            int>(d_z_large(3));
+        Kokkos::Experimental::Impl::cyl_bessel_i1<Kokkos::complex<double>,
+                                                  double, int>(d_z_large(3));
     d_cbi1_large(4) =
-        Kokkos::Experimental::cyl_bessel_i1<Kokkos::complex<double>, double,
-                                            int>(d_z_large(4), 110, 35);
+        Kokkos::Experimental::Impl::cyl_bessel_i1<Kokkos::complex<double>,
+                                                  double, int>(d_z_large(4),
+                                                               110, 35);
     d_cbi1_large(5) =
-        Kokkos::Experimental::cyl_bessel_i1<Kokkos::complex<double>, double,
-                                            int>(d_z_large(5), 110, 190);
+        Kokkos::Experimental::Impl::cyl_bessel_i1<Kokkos::complex<double>,
+                                                  double, int>(d_z_large(5),
+                                                               110, 190);
   }
 };
 
@@ -1715,8 +1747,8 @@ struct TestComplexBesselH1Function {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const int& i) const {
-    d_ch10(i) = Kokkos::Experimental::cyl_bessel_h10(d_z(i));
-    d_ch11(i) = Kokkos::Experimental::cyl_bessel_h11(d_z(i));
+    d_ch10(i) = Kokkos::Experimental::Impl::cyl_bessel_h10(d_z(i));
+    d_ch11(i) = Kokkos::Experimental::Impl::cyl_bessel_h11(d_z(i));
   }
 };
 
@@ -1901,8 +1933,8 @@ struct TestComplexBesselH2Function {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const int& i) const {
-    d_ch20(i) = Kokkos::Experimental::cyl_bessel_h20(d_z(i));
-    d_ch21(i) = Kokkos::Experimental::cyl_bessel_h21(d_z(i));
+    d_ch20(i) = Kokkos::Experimental::Impl::cyl_bessel_h20(d_z(i));
+    d_ch21(i) = Kokkos::Experimental::Impl::cyl_bessel_h21(d_z(i));
   }
 };
 
@@ -2535,11 +2567,19 @@ struct TestBesselCalsWithDeduction {
   KOKKOS_INLINE_FUNCTION
   void operator()(const int& /*i*/) const {
     Kokkos::Experimental::cyl_bessel_j(6, Kokkos::complex<double>(1.0, 1.0));
+    Kokkos::Experimental::cyl_bessel_i(6, Kokkos::complex<double>(1.0, 1.0));
+    Kokkos::Experimental::cyl_bessel_k(6, Kokkos::complex<double>(1.0, 1.0));
     Kokkos::Experimental::cyl_bessel_y(6, Kokkos::complex<double>(1.0, 1.0));
     Kokkos::Experimental::cyl_bessel_h1(6, Kokkos::complex<double>(1.0, 1.0));
     Kokkos::Experimental::cyl_bessel_h2(6, Kokkos::complex<double>(1.0, 1.0));
-    Kokkos::Experimental::cyl_bessel_i(6, Kokkos::complex<double>(1.0, 1.0));
-    Kokkos::Experimental::cyl_bessel_k(6, Kokkos::complex<double>(1.0, 1.0));
+
+    // Call to vendor functions of possible and ret real type
+    Kokkos::Experimental::cyl_bessel_j(6, 1.0);
+    Kokkos::Experimental::cyl_bessel_i(6, 1.0);
+    Kokkos::Experimental::cyl_bessel_k(6, 1.0);
+    Kokkos::Experimental::cyl_bessel_y(6, 1.0);
+    Kokkos::Experimental::cyl_bessel_h1(6, 1.0);
+    Kokkos::Experimental::cyl_bessel_h2(6, 1.0);
   }
 };
 
