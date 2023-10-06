@@ -758,7 +758,7 @@ class simd<float, simd_abi::avx2_fixed_size<4>> {
                 std::is_invocable_r_v<value_type, G,
                                       std::integral_constant<std::size_t, 0>>,
                 bool> = false>
-  KOKKOS_FORCEINLINE_FUNCTION simd(G&& gen)
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd(G&& gen)
       : m_value(_mm_setr_ps(gen(std::integral_constant<std::size_t, 0>()),
                             gen(std::integral_constant<std::size_t, 1>()),
                             gen(std::integral_constant<std::size_t, 2>()),

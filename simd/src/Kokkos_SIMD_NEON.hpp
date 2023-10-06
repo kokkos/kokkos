@@ -550,7 +550,7 @@ class simd<float, simd_abi::neon_fixed_size<2>> {
                 std::is_invocable_r_v<value_type, G,
                                       std::integral_constant<std::size_t, 0>>,
                 bool> = false>
-  KOKKOS_FORCEINLINE_FUNCTION simd(G&& gen) {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd(G&& gen) {
     m_value = vset_lane_f32(gen(std::integral_constant<std::size_t, 0>()),
                             m_value, 0);
     m_value = vset_lane_f32(gen(std::integral_constant<std::size_t, 1>()),
