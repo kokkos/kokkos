@@ -466,8 +466,8 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>, HIP> {
   }
 
  public:
-  ParallelFor()                              = delete;
-  ParallelFor(ParallelFor const&)            = default;
+  ParallelFor()                   = delete;
+  ParallelFor(ParallelFor const&) = default;
   ParallelFor& operator=(ParallelFor const&) = delete;
 
   __device__ inline void operator()() const {
@@ -536,12 +536,12 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>, HIP> {
     } else {
       m_scratch_pool_id = internal_space_instance->acquire_team_scratch_space();
       m_scratch_ptr[1]  = internal_space_instance->resize_team_scratch_space(
-           m_scratch_pool_id,
-           static_cast<std::int64_t>(m_scratch_size[1]) *
-               (std::min(
-                   static_cast<std::int64_t>(HIP().concurrency() /
+          m_scratch_pool_id,
+          static_cast<std::int64_t>(m_scratch_size[1]) *
+              (std::min(
+                  static_cast<std::int64_t>(HIP().concurrency() /
                                             (m_team_size * m_vector_size)),
-                   static_cast<std::int64_t>(m_league_size))));
+                  static_cast<std::int64_t>(m_league_size))));
     }
 
     int const shmem_size_total = m_shmem_begin + m_shmem_size;
@@ -656,6 +656,35 @@ class ParallelReduce<CombinedFunctorReducerType,
     }
   }
 
+  int compute_block_count() {
+    constexpr auto light_weight =
+        Kokkos::Experimental::WorkItemProperty::HintLightWeight;
+    constexpr typename Policy::work_item_property property;
+    // Numbers were tuned on MI210 using dot product and yAx benchmarks
+    constexpr int block_max =
+        (property & light_weight) == light_weight ? 2097152 : 65536;
+    constexpr int preferred_block_min = 1024;
+    int block_count                   = m_league_size;
+    if (block_count < preferred_block_min) {
+      // keep blocks as is, already low parallelism
+    } else if (block_count >= block_max) {
+      block_count = block_max;
+
+    } else {
+      int nwork = m_league_size * m_team_size;
+      int items_per_thread =
+          (nwork + block_count * m_team_size - 1) / (block_count * m_team_size);
+      if (items_per_thread < 4) {
+        int ratio = std::min(
+            (block_count + preferred_block_min - 1) / preferred_block_min,
+            (4 + items_per_thread - 1) / items_per_thread);
+        block_count /= ratio;
+      }
+    }
+
+    return block_count;
+  }
+
  public:
   __device__ inline void operator()() const {
     int64_t threadid = 0;
@@ -757,34 +786,7 @@ class ParallelReduce<CombinedFunctorReducerType,
                                  !m_result_ptr_host_accessible ||
                                  !std::is_same<ReducerType, InvalidType>::value;
     if (!is_empty_range || need_device_set) {
-      int block_max = 0;
-      constexpr auto light_weight =
-          Kokkos::Experimental::WorkItemProperty::HintLightWeight;
-      constexpr typename Policy::work_item_property property;
-      if ((property & light_weight) == light_weight) {
-        block_max = 2097152;
-      } else {
-        block_max = 65536;
-      }
-      constexpr int preferred_block_min = 1024;
-      int block_count_tmp               = m_league_size;
-      if (block_count_tmp < preferred_block_min) {
-        // keep blocks as is, already low parallelism
-      } else if (block_count_tmp >= block_max) {
-        block_count_tmp = block_max;
-
-      } else {
-        int nwork            = m_league_size * m_team_size;
-        int items_per_thread = (nwork + block_count_tmp * m_team_size - 1) /
-                               (block_count_tmp * m_team_size);
-        if (items_per_thread < 4) {
-          int ratio = std::min(
-              (block_count_tmp + preferred_block_min - 1) / preferred_block_min,
-              (4 + items_per_thread - 1) / items_per_thread);
-          block_count_tmp /= ratio;
-        }
-      }
-      const int block_count = block_count_tmp;
+      int const block_count = compute_block_count();
 
       m_scratch_space = hip_internal_scratch_space(
           m_policy.space(), reducer.value_size() * block_count);
@@ -867,12 +869,12 @@ class ParallelReduce<CombinedFunctorReducerType,
     } else {
       m_scratch_pool_id = internal_space_instance->acquire_team_scratch_space();
       m_scratch_ptr[1]  = internal_space_instance->resize_team_scratch_space(
-           m_scratch_pool_id,
-           static_cast<std::int64_t>(m_scratch_size[1]) *
-               (std::min(
-                   static_cast<std::int64_t>(HIP().concurrency() /
+          m_scratch_pool_id,
+          static_cast<std::int64_t>(m_scratch_size[1]) *
+              (std::min(
+                  static_cast<std::int64_t>(HIP().concurrency() /
                                             (m_team_size * m_vector_size)),
-                   static_cast<std::int64_t>(m_league_size))));
+                  static_cast<std::int64_t>(m_league_size))));
     }
 
     // The global parallel_reduce does not support vector_length other than 1 at
