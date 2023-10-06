@@ -1325,8 +1325,8 @@ KOKKOS_INLINE_FUNCTION CmplxType cyl_bessel_h1(const IntType& a,
     return CmplxType(0.0, 0.0);
   }
   auto pos_a       = Kokkos::abs(a);
-  CmplxType factor = Kokkos::exp(CmplxType(0.0, 1.0) *
-                                 Kokkos::numbers::pi_v<RealType> * pos_a);
+  auto pi          = Kokkos::numbers::pi_v<RealType>;
+  CmplxType factor = Kokkos::exp(CmplxType(0.0, 1.0) * pi * pos_a);
   return factor *
          cyl_bessel<cyl_bessel_h10<CmplxType>, cyl_bessel_h11<CmplxType>,
                     CmplxType, IntType>(pos_a, z);
@@ -1340,8 +1340,8 @@ KOKKOS_INLINE_FUNCTION CmplxType cyl_bessel_h2(const IntType& a,
   }
 
   auto pos_a       = Kokkos::abs(a);
-  CmplxType factor = Kokkos::exp(-CmplxType(0.0, 1.0) *
-                                 Kokkos::numbers::pi_v<RealType> * pos_a);
+  auto pi          = Kokkos::numbers::pi_v<RealType>;
+  CmplxType factor = Kokkos::exp(-CmplxType(0.0, 1.0) * pi * pos_a);
   return factor *
          cyl_bessel<cyl_bessel_h20<CmplxType>, cyl_bessel_h21<CmplxType>,
                     CmplxType, IntType>(pos_a, z);
