@@ -20,8 +20,9 @@
 #include <Kokkos_Macros.hpp>
 
 #include <cstdio>
-
+#include <ostream>
 #include <utility>
+
 #include <impl/Kokkos_Spinwait.hpp>
 
 #include <Kokkos_Atomic.hpp>
