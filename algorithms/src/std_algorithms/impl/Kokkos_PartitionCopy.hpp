@@ -37,10 +37,10 @@ struct StdPartitionCopyScalar {
 
   // this is needed because the impl of
   // scan in some places uses "type value = 0"
-  KOKKOS_FUNCTION StdPartitionCopyScalar([[maybe_unused]] int v) {
-    KOKKOS_EXPECTS(v == 0);
-    true_count_  = {};
-    false_count_ = {};
+  KOKKOS_FUNCTION StdPartitionCopyScalar(int zero) {
+    KOKKOS_EXPECTS(zero == 0);
+    true_count_  = zero;
+    false_count_ = zero;
   }
 
   KOKKOS_FUNCTION
@@ -50,10 +50,10 @@ struct StdPartitionCopyScalar {
   // this assignement is needed because the impl of
   // scan in some places uses "value = 0"
   KOKKOS_FUNCTION
-  StdPartitionCopyScalar& operator=([[maybe_unused]] int v) {
-    KOKKOS_EXPECTS(v == 0);
-    true_count_  = {};
-    false_count_ = {};
+  StdPartitionCopyScalar& operator=(int zero) {
+    KOKKOS_EXPECTS(zero == 0);
+    true_count_  = zero;
+    false_count_ = zero;
     return *this;
   }
 
