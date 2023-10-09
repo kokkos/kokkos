@@ -121,6 +121,13 @@ struct LaunchBounds {
   static constexpr unsigned int minBperSM{minB};
 };
 
+template <int size>
+struct SubGroupSize {
+  using subgroup_size        = SubGroupSize;
+  using type                 = SubGroupSize<size>;
+  static constexpr int value = size;
+};
+
 }  // namespace Kokkos
 
 //----------------------------------------------------------------------------
