@@ -656,7 +656,7 @@ class ParallelReduce<CombinedFunctorReducerType,
     }
   }
 
-  int compute_block_count() {
+  int compute_block_count() const {
     constexpr auto light_weight =
         Kokkos::Experimental::WorkItemProperty::HintLightWeight;
     constexpr typename Policy::work_item_property property;
