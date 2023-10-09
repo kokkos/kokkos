@@ -17,14 +17,20 @@
 #ifndef KOKKOS_SIMD_COMMON_MATH_HPP
 #define KOKKOS_SIMD_COMMON_MATH_HPP
 
-#include <cmath>
-#include <cstring>
-
-#include <Kokkos_Core.hpp>
+#include <Kokkos_Core.hpp>  // Kokkos::min, etc.
 
 namespace Kokkos {
 
 namespace Experimental {
+
+template <class T, class Abi>
+class simd;
+
+template <class T, class Abi>
+class simd_mask;
+
+template <class M, class T>
+class const_where_expression;
 
 template <typename T, typename Abi>
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
