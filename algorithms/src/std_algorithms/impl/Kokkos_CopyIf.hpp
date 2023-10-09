@@ -122,23 +122,29 @@ KOKKOS_FUNCTION OutputIterator copy_if_team_impl(
     return d_first;
   }
 
-  // FIXME: there is no parallel_scan overload that accepts TeamThreadRange and
-  // return_value, so temporarily serial implementation is used here
+  // // FIXME: there is no parallel_scan overload that accepts TeamThreadRange
+  // and
+  // // return_value, so temporarily serial implementation is used here
+  // const std::size_t num_elements = Kokkos::Experimental::distance(first,
+  // last); std::size_t count              = 0; Kokkos::single(
+  //     Kokkos::PerTeam(teamHandle),
+  //     [=](std::size_t& lcount) {
+  //       lcount = 0;
+  //       for (std::size_t i = 0; i < num_elements; ++i) {
+  //         const auto& myval = first[i];
+  //         if (pred(myval)) {
+  //           d_first[lcount++] = myval;
+  //         }
+  //       }
+  //     },
+  //     count);
+  // // no barrier needed since single above broadcasts to all members
+
   const std::size_t num_elements = Kokkos::Experimental::distance(first, last);
-  std::size_t count              = 0;
-  Kokkos::single(
-      Kokkos::PerTeam(teamHandle),
-      [=](std::size_t& lcount) {
-        lcount = 0;
-        for (std::size_t i = 0; i < num_elements; ++i) {
-          const auto& myval = first[i];
-          if (pred(myval)) {
-            d_first[lcount++] = myval;
-          }
-        }
-      },
-      count);
-  // no barrier needed since single above broadcasts to all members
+  typename InputIterator::difference_type count = 0;
+  ::Kokkos::parallel_scan(TeamThreadRange(teamHandle, 0, num_elements),
+                          StdCopyIfFunctor(first, d_first, pred), count);
+  // no barrier needed because of the scan accumulating into count
 
   return d_first + count;
 }
