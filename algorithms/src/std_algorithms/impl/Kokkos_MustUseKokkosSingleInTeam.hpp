@@ -29,35 +29,35 @@ struct stdalgo_team_level_must_use_kokkos_single : std::false_type {};
 #if defined(KOKKOS_ENABLE_OPENACC)
 template <>
 struct stdalgo_team_level_must_use_kokkos_single<Kokkos::Experimental::OpenACC>
-  : std::true_type{};
+    : std::true_type {};
 #endif
 
 #if defined(KOKKOS_ENABLE_OPENMPTARGET)
 template <>
-struct stdalgo_team_level_must_use_kokkos_single<Kokkos::Experimental::OpenMPTarget>
-  : std::true_type{};
+struct stdalgo_team_level_must_use_kokkos_single<
+    Kokkos::Experimental::OpenMPTarget> : std::true_type {};
 #endif
 
 #if defined(KOKKOS_ENABLE_HPX)
 template <>
 struct stdalgo_team_level_must_use_kokkos_single<Kokkos::Experimental::HPX>
-  : std::true_type{};
+    : std::true_type {};
 #endif
 
 #if defined(KOKKOS_ENABLE_THREADS)
 template <>
 struct stdalgo_team_level_must_use_kokkos_single<Kokkos::Threads>
-  : std::true_type{};
+    : std::true_type {};
 #endif
-
 
 // template <class TeamHandleType>
 // KOKKOS_INLINE_FUNCTION
-// constexpr bool team_level_must_use_kokkos_single(const TeamHandleType& /* th*/)
+// constexpr bool team_level_must_use_kokkos_single(const TeamHandleType& /*
+// th*/)
 // {
-//   return stdalgo_team_level_must_use_kokkos_single<typename TeamHandleType::execution_space>::value;
+//   return stdalgo_team_level_must_use_kokkos_single<typename
+//   TeamHandleType::execution_space>::value;
 // }
-
 
 }  // namespace Impl
 }  // namespace Experimental
