@@ -27,7 +27,16 @@ struct FunctorWrapperRangePolicyParallelFor {
   using WorkTag = typename Policy::work_tag;
 
     template <int sg_size = Policy::subgroup_size>
-    std::enable_if_t<(sg_size<0)> operator()(sycl::item<1> item) const {
+    std::enable_if_t<(sg_size<=0)> operator()(sycl::item<1> item) const {
+    const typename Policy::index_type id = item.get_linear_id() + m_begin;
+    if constexpr (std::is_void_v<WorkTag>)
+      m_functor_wrapper.get_functor()(id);
+    else
+      m_functor_wrapper.get_functor()(WorkTag(), id);
+  }
+
+    template <int sg_size = Policy::subgroup_size>
+    [[sycl::reqd_work_group_size(sg_size)]] std::enable_if_t<(sg_size>0)> operator()(sycl::item<1> item) const {
     const typename Policy::index_type id = item.get_linear_id() + m_begin;
     if constexpr (std::is_void_v<WorkTag>)
       m_functor_wrapper.get_functor()(id);
