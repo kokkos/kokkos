@@ -29,17 +29,36 @@ namespace Impl {
 
 template <class ValueType>
 struct StdPartitionCopyScalar {
-  ValueType true_count_;
-  ValueType false_count_;
+  ValueType true_count_  = {};
+  ValueType false_count_ = {};
+
+  KOKKOS_DEFAULTED_FUNCTION
+  StdPartitionCopyScalar() = default;
+
+  KOKKOS_FUNCTION StdPartitionCopyScalar(int v) {
+    KOKKOS_EXPECTS(v == 0);
+    true_count_  = {};
+    false_count_ = {};
+  }
+
+  KOKKOS_FUNCTION
+  StdPartitionCopyScalar(const volatile StdPartitionCopyScalar& o)
+      : true_count_(o.true_count_), false_count_(o.false_count_) {}
 
   // this assignement is needed because the impl of
-  // scan and reduction in some places uses "value = 0"
+  // scan in some places uses "value = 0"
   KOKKOS_FUNCTION
   StdPartitionCopyScalar& operator=(int v) {
     KOKKOS_EXPECTS(v == 0);
-    true_count_  = v;
-    false_count_ = v;
+    true_count_  = {};
+    false_count_ = {};
     return *this;
+  }
+
+  KOKKOS_FUNCTION
+  void operator=(const StdPartitionCopyScalar& o) volatile {
+    true_count_  = o.true_count_;
+    false_count_ = o.false_count_;
   }
 
   KOKKOS_FUNCTION
@@ -51,7 +70,7 @@ struct StdPartitionCopyScalar {
 
   KOKKOS_FUNCTION
   StdPartitionCopyScalar operator+(StdPartitionCopyScalar const& o) const {
-    StdPartitionCopyScalar res{false, false};
+    StdPartitionCopyScalar res;
     res.true_count_  = true_count_ + o.true_count_;
     res.false_count_ = false_count_ + o.false_count_;
     return res;
@@ -202,7 +221,7 @@ partition_copy_team_impl(const TeamHandleType& teamHandle,
       StdPartitionCopyFunctor<InputIteratorType, OutputIteratorTrueType,
                               OutputIteratorFalseType, PredicateType>;
 
-  typename func_type::value_type counts{0, 0};
+  typename func_type::value_type counts;
   ::Kokkos::parallel_scan(
       TeamThreadRange(teamHandle, 0, num_elements),
       func_type(from_first, to_first_true, to_first_false, pred), counts);
