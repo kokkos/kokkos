@@ -82,8 +82,8 @@ Lock_Array_HIP.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/tpls/desul/src/Lock_Array
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_THREADS), 1)
-Kokkos_ThreadsExec.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/Threads/Kokkos_ThreadsExec.cpp
-	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) -c $(KOKKOS_PATH)/core/src/Threads/Kokkos_ThreadsExec.cpp
+Kokkos_Threads_Instance.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/Threads/Kokkos_Threads_Instance.cpp
+	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) -c $(KOKKOS_PATH)/core/src/Threads/Kokkos_Threads_Instance.cpp
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)

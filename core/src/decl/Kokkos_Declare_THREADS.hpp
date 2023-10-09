@@ -19,7 +19,7 @@
 
 #if defined(KOKKOS_ENABLE_THREADS)
 #include <Threads/Kokkos_Threads.hpp>
-#include <Threads/Kokkos_ThreadsExec.hpp>
+#include <Threads/Kokkos_Threads_Instance.hpp>
 #include <Threads/Kokkos_Threads_MDRangePolicy.hpp>
 #include <Threads/Kokkos_Threads_ParallelFor_Range.hpp>
 #include <Threads/Kokkos_Threads_ParallelFor_MDRange.hpp>

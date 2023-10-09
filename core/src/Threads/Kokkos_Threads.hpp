@@ -40,7 +40,7 @@ static_assert(false,
 
 namespace Kokkos {
 namespace Impl {
-class ThreadsExec;
+class ThreadsInternal;
 enum class fence_is_static { yes, no };
 }  // namespace Impl
 }  // namespace Kokkos
