@@ -158,7 +158,7 @@ partition_copy_exespace_impl(const std::string& label, const ExecutionSpace& ex,
   // run
   const auto num_elements =
       Kokkos::Experimental::distance(from_first, from_last);
-  typename func_type::value_type counts{0, 0};
+  typename func_type::value_type counts;
   ::Kokkos::parallel_scan(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
       func_type(from_first, to_first_true, to_first_false, pred), counts);
