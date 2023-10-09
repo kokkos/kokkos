@@ -394,7 +394,7 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
     // Expect node not yet initialized
     KOKKOS_EXPECTS(!graph_node);
 
-    if (!Impl::is_empty_launch(grid, block)) {
+    if (!is_empty_launch(grid, block)) {
       void const *args[] = {&driver};
 
       hipKernelNodeParams params = {};
