@@ -144,7 +144,6 @@ void run(int N, int M, int K, const Opts& opts) {
       Kokkos::fence();
     }
     time_fence = timer.seconds();
-    Kokkos::fence();
   }
 
   if (opts.par_reduce) {
