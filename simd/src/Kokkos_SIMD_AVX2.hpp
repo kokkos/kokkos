@@ -25,6 +25,11 @@
 
 #include <immintrin.h>
 
+#ifdef KOKKOS_SIMD_COMMON_MATH_HPP
+#error \
+    "Kokkos_SIMD_AVX2.hpp must be included before Kokkos_SIMD_Common_Math.hpp!"
+#endif
+
 // FIXME_HIP ROCm 5.6 and 5.7 can't compile with the intrinsic used here.
 #if defined(__HIPCC__) && (HIP_VERSION_MAJOR == 5) && \
     ((HIP_VERSION_MINOR == 6) || (HIP_VERSION_MINOR == 7))
