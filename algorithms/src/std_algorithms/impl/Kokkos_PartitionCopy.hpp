@@ -200,7 +200,16 @@ partition_copy_team_impl(const TeamHandleType& teamHandle,
       Kokkos::Experimental::distance(from_first, from_last);
 
   if constexpr (stdalgo_team_level_must_use_kokkos_single<
-                    typename TeamHandleType::execution_space>::value) {
+                    typename TeamHandleType::execution_space>::value
+// FIXME_CUDA we get an illegal memory error if we use the parallel_scan
+// that seems related to the use of StdPartitionCopyScalar
+#if defined KOKKOS_ENABLE_CUDA
+                || std::is_same_v<typename TeamHandleType::execution_space,
+                                  Kokkos::CUDA>
+#endif
+  )
+
+  {
     using counts_t  = ::Kokkos::pair<std::size_t, std::size_t>;
     counts_t counts = {};
     Kokkos::single(
@@ -218,6 +227,7 @@ partition_copy_team_impl(const TeamHandleType& teamHandle,
         },
         counts);
     // no barrier needed since single above broadcasts to all members
+
     return {to_first_true + counts.first, to_first_false + counts.second};
 
   } else {
@@ -229,7 +239,8 @@ partition_copy_team_impl(const TeamHandleType& teamHandle,
     ::Kokkos::parallel_scan(
         TeamThreadRange(teamHandle, 0, num_elements),
         func_type(from_first, to_first_true, to_first_false, pred), counts);
-    // fence not needed here because of the scan into counts
+    // no barrier needed since reducing into counts
+
     return {to_first_true + counts.true_count_,
             to_first_false + counts.false_count_};
   }

@@ -159,6 +159,7 @@ KOKKOS_FUNCTION OutputIterator unique_copy_team_impl(
           },
           count);
       // no barrier needed since single above broadcasts to all members
+
       return d_first + count;
     } else {
       const auto scan_size = num_elements - 1;
@@ -166,6 +167,8 @@ KOKKOS_FUNCTION OutputIterator unique_copy_team_impl(
       ::Kokkos::parallel_scan(TeamThreadRange(teamHandle, 0, scan_size),
                               StdUniqueCopyFunctor(first, last, d_first, pred),
                               count);
+      // no barrier needed since reducing into count
+
       return Impl::copy_team_impl(teamHandle, first + scan_size, last,
                                   d_first + count);
     }
