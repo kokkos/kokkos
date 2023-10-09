@@ -26,7 +26,8 @@ template <typename FunctorWrapper, typename Policy>
 struct FunctorWrapperRangePolicyParallelFor {
   using WorkTag = typename Policy::work_tag;
 
-  void operator()(sycl::item<1> item) const {
+    template <int sg_size = Policy::subgroup_size>
+    std::enable_if_t<(sg_size<0)> operator()(sycl::item<1> item) const {
     const typename Policy::index_type id = item.get_linear_id() + m_begin;
     if constexpr (std::is_void_v<WorkTag>)
       m_functor_wrapper.get_functor()(id);
@@ -87,7 +88,6 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
 #else
       (void)memcpy_event;
 #endif
-      static_assert(Policy::subgroup_size<0);
       if (policy.chunk_size() <= 1) {
         FunctorWrapperRangePolicyParallelFor<Functor, Policy> f{policy.begin(),
                                                                 functor};
