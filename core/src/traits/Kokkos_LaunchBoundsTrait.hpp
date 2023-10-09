@@ -67,7 +67,7 @@ struct PolicyTraitMatcher<LaunchBoundsTrait, LaunchBounds<maxT, minB>>
 
 struct SubGroupSizeTrait : TraitSpecificationBase<SubGroupSizeTrait> {
   struct base_traits {
-    static constexpr bool launch_bounds_is_defaulted = true;
+    static constexpr bool subgroup_size_is_defaulted = true;
     static constexpr int subgroup_size               = -1;
 
     KOKKOS_IMPL_MSVC_NVCC_EBO_WORKAROUND
@@ -77,12 +77,12 @@ struct SubGroupSizeTrait : TraitSpecificationBase<SubGroupSizeTrait> {
     using base_t = AnalyzeNextTrait;
     using base_t::base_t;
 
-    static constexpr bool launch_bounds_is_defaulted = false;
+    static constexpr bool subgroup_size_is_defaulted = false;
 
-    static_assert(base_t::launch_bounds_is_defaulted,
-                  "Kokkos Error: More than one launch_bounds given");
+    static_assert(base_t::subgroup_size_is_defaulted,
+                  "Kokkos Error: More than one subgroup size given");
 
-    static constexpr int subgroup_size = SubGroupSizeParam::size;
+    static constexpr int subgroup_size = SubGroupSizeParam::value;
   };
 };
 
@@ -93,7 +93,7 @@ struct SubGroupSizeTrait : TraitSpecificationBase<SubGroupSizeTrait> {
 // <editor-fold desc="PolicyTraitMatcher specialization"> {{{1
 
 template <int size>
-struct PolicyTraitMatcher<SubGroupsSizeTrait, SubGroupSize<size>>
+struct PolicyTraitMatcher<SubGroupSizeTrait, SubGroupSize<size>>
     : std::true_type {};
 
 // </editor-fold> end PolicyTraitMatcher specialization }}}1
