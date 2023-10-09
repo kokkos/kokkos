@@ -20,6 +20,7 @@
 #include <Kokkos_Core.hpp>
 #include "Kokkos_Constraints.hpp"
 #include "Kokkos_HelperPredicates.hpp"
+#include "Kokkos_MustUseKokkosSingleInTeam.hpp"
 #include "Kokkos_CopyCopyN.hpp"
 #include <std_algorithms/Kokkos_Distance.hpp>
 #include <string>
@@ -139,38 +140,35 @@ KOKKOS_FUNCTION OutputIterator unique_copy_team_impl(
     d_first[0] = first[0];
     return d_first + 1;
   } else {
-    // // FIXME: parallel_scan is what we used for the execution space impl,
-    // // but parallel_scan does not support TeamThreadRange, so for the
-    // // team-level impl we do this serially for now and later figure out
-    // // if this can be done in parallel
-    // std::size_t count = 0;
-    // Kokkos::single(
-    //     Kokkos::PerTeam(teamHandle),
-    //     [=](std::size_t& lcount) {
-    //       lcount = 0;
-    //       for (std::size_t i = 0; i < num_elements - 1; ++i) {
-    //         const auto& val_i   = first[i];
-    //         const auto& val_ip1 = first[i + 1];
-    //         if (!pred(val_i, val_ip1)) {
-    //           d_first[lcount++] = val_i;
-    //         }
-    //       }
-    //       // we need to copy the last element always
-    //       d_first[lcount++] = first[num_elements - 1];
-    //     },
-    //     count);
-    // // no barrier needed since single above broadcasts to all members
-    // // return the correct iterator: we need +1 here because we need to
-    // // return iterator to the element past the last element copied
-    // return d_first + count;
-
-    const auto scan_size = num_elements - 1;
-    std::size_t count    = 0;
-    ::Kokkos::parallel_scan(TeamThreadRange(teamHandle, 0, scan_size),
-                            StdUniqueCopyFunctor(first, last, d_first, pred),
-                            count);
-    return Impl::copy_team_impl(teamHandle, first + scan_size, last,
-                                d_first + count);
+    if constexpr (stdalgo_team_level_must_use_kokkos_single<
+                      typename TeamHandleType::execution_space>::value) {
+      std::size_t count = 0;
+      Kokkos::single(
+          Kokkos::PerTeam(teamHandle),
+          [=](std::size_t& lcount) {
+            lcount = 0;
+            for (std::size_t i = 0; i < num_elements - 1; ++i) {
+              const auto& val_i   = first[i];
+              const auto& val_ip1 = first[i + 1];
+              if (!pred(val_i, val_ip1)) {
+                d_first[lcount++] = val_i;
+              }
+            }
+            // we need to copy the last element always
+            d_first[lcount++] = first[num_elements - 1];
+          },
+          count);
+      // no barrier needed since single above broadcasts to all members
+      return d_first + count;
+    } else {
+      const auto scan_size = num_elements - 1;
+      std::size_t count    = 0;
+      ::Kokkos::parallel_scan(TeamThreadRange(teamHandle, 0, scan_size),
+                              StdUniqueCopyFunctor(first, last, d_first, pred),
+                              count);
+      return Impl::copy_team_impl(teamHandle, first + scan_size, last,
+                                  d_first + count);
+    }
   }
 }
 

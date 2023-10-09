@@ -20,6 +20,7 @@
 #include <Kokkos_Core.hpp>
 #include "Kokkos_Constraints.hpp"
 #include "Kokkos_HelperPredicates.hpp"
+#include "Kokkos_MustUseKokkosSingleInTeam.hpp"
 #include <std_algorithms/Kokkos_Distance.hpp>
 #include <string>
 
@@ -198,40 +199,40 @@ partition_copy_team_impl(const TeamHandleType& teamHandle,
   const std::size_t num_elements =
       Kokkos::Experimental::distance(from_first, from_last);
 
-  // // FIXME: there is no parallel_scan overload that accepts TeamThreadRange
-  // and
-  // // return_value, so temporarily serial implementation is used
-  // using counts_t  = ::Kokkos::pair<std::size_t, std::size_t>;
-  // counts_t counts = {};
-  // Kokkos::single(
-  //     Kokkos::PerTeam(teamHandle),
-  //     [=](counts_t& lcounts) {
-  //       lcounts = {};
-  //       for (std::size_t i = 0; i < num_elements; ++i) {
-  //         const auto& myval = from_first[i];
-  //         if (pred(myval)) {
-  //           to_first_true[lcounts.first++] = myval;
-  //         } else {
-  //           to_first_false[lcounts.second++] = myval;
-  //         }
-  //       }
-  //     },
-  //     counts);
-  // // no barrier needed since single above broadcasts to all members
+  if constexpr (stdalgo_team_level_must_use_kokkos_single<
+                    typename TeamHandleType::execution_space>::value) {
+    using counts_t  = ::Kokkos::pair<std::size_t, std::size_t>;
+    counts_t counts = {};
+    Kokkos::single(
+        Kokkos::PerTeam(teamHandle),
+        [=](counts_t& lcounts) {
+          lcounts = {};
+          for (std::size_t i = 0; i < num_elements; ++i) {
+            const auto& myval = from_first[i];
+            if (pred(myval)) {
+              to_first_true[lcounts.first++] = myval;
+            } else {
+              to_first_false[lcounts.second++] = myval;
+            }
+          }
+        },
+        counts);
+    // no barrier needed since single above broadcasts to all members
+    return {to_first_true + counts.first, to_first_false + counts.second};
 
-  using func_type =
-      StdPartitionCopyFunctor<InputIteratorType, OutputIteratorTrueType,
-                              OutputIteratorFalseType, PredicateType>;
+  } else {
+    using func_type =
+        StdPartitionCopyFunctor<InputIteratorType, OutputIteratorTrueType,
+                                OutputIteratorFalseType, PredicateType>;
 
-  typename func_type::value_type counts;
-  ::Kokkos::parallel_scan(
-      TeamThreadRange(teamHandle, 0, num_elements),
-      func_type(from_first, to_first_true, to_first_false, pred), counts);
-  // fence not needed here because of the scan into counts
-
-  return {to_first_true + counts.true_count_,
-          to_first_false + counts.false_count_};
-  // return {to_first_true + counts.first, to_first_false + counts.second};
+    typename func_type::value_type counts;
+    ::Kokkos::parallel_scan(
+        TeamThreadRange(teamHandle, 0, num_elements),
+        func_type(from_first, to_first_true, to_first_false, pred), counts);
+    // fence not needed here because of the scan into counts
+    return {to_first_true + counts.true_count_,
+            to_first_false + counts.false_count_};
+  }
 }
 
 }  // namespace Impl
