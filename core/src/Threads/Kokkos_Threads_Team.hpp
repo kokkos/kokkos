@@ -84,15 +84,15 @@ class ThreadsExecTeamMember {
     for (n = 1;
          (!(m_team_rank_rev & n)) && ((j = m_team_rank_rev + n) < m_team_size);
          n <<= 1) {
-      Impl::spinwait_while_equal<int>(m_team_base[j]->state(),
-                                      ThreadsInternal::Active);
+      Impl::spinwait_while_equal<ThreadsInternal::State>(
+          m_team_base[j]->state(), ThreadsInternal::State::Active);
     }
 
     // If not root then wait for release
     if (m_team_rank_rev) {
-      m_instance->state() = ThreadsInternal::Rendezvous;
-      Impl::spinwait_while_equal<int>(m_instance->state(),
-                                      ThreadsInternal::Rendezvous);
+      m_instance->state() = ThreadsInternal::State::Rendezvous;
+      Impl::spinwait_while_equal<ThreadsInternal::State>(
+          m_instance->state(), ThreadsInternal::State::Rendezvous);
     }
 
     return !m_team_rank_rev;
@@ -103,7 +103,7 @@ class ThreadsExecTeamMember {
     for (n = 1;
          (!(m_team_rank_rev & n)) && ((j = m_team_rank_rev + n) < m_team_size);
          n <<= 1) {
-      m_team_base[j]->state() = ThreadsInternal::Active;
+      m_team_base[j]->state() = ThreadsInternal::State::Active;
     }
   }
 
