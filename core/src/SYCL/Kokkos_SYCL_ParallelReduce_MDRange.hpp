@@ -168,9 +168,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
 
         // REMEMBER swap local x<->y to be conforming with Cuda/HIP
         // implementation
-        cgh.parallel_for(
-            sycl::nd_range<1>{n_wgroups * wgroup_size, wgroup_size},
-            [=](sycl::nd_item<1> item) {
+        auto lambda =  [=](sycl::nd_item<1> item) {
               const int local_id = item.get_local_linear_id();
               const CombinedFunctorReducerType& functor_reducer =
                   functor_reducer_wrapper.get_functor();
@@ -284,7 +282,23 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
                       std::min<int>(n_wgroups, wgroup_size));
                 }
               }
-            });
+            };
+
+        #ifdef SYCL_EXT_ONEAPI_PROPERTIES
+        auto get_properties = [&]()
+        {
+          if constexpr(Policy::subgroup_size >0)
+          return sycl::ext::oneapi::experimental::properties{sycl::ext::oneapi::experimental::sub_group_size<Policy::subgroup_size>};
+          else
+         return sycl::ext::oneapi::experimental::properties{};
+        };
+       cgh.parallel_for(
+            sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
+             get_properties(), lambda);
+#else
+	 cgh.parallel_for(
+            sycl::nd_range<1>{n_wgroups * wgroup_size, wgroup_size} ,lambda);
+#endif
       });
 #ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
       q.ext_oneapi_submit_barrier(
