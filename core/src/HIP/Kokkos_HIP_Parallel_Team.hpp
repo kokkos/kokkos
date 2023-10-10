@@ -590,6 +590,9 @@ class ParallelReduce<CombinedFunctorReducerType,
   using functor_type = FunctorType;
   using size_type    = HIP::size_type;
 
+  // static int constexpr UseShflReduction = false;
+  // FIXME_HIP This should be disabled unconditionally for best performance, but
+  // it currently causes tests to fail.
   static constexpr int UseShflReduction =
       (ReducerType::static_value_size() != 0);
 
@@ -654,6 +657,35 @@ class ParallelReduce<CombinedFunctorReducerType,
     }
   }
 
+  int compute_block_count() const {
+    constexpr auto light_weight =
+        Kokkos::Experimental::WorkItemProperty::HintLightWeight;
+    constexpr typename Policy::work_item_property property;
+    // Numbers were tuned on MI210 using dot product and yAx benchmarks
+    constexpr int block_max =
+        (property & light_weight) == light_weight ? 2097152 : 65536;
+    constexpr int preferred_block_min = 1024;
+    int block_count                   = m_league_size;
+    if (block_count < preferred_block_min) {
+      // keep blocks as is, already low parallelism
+    } else if (block_count >= block_max) {
+      block_count = block_max;
+
+    } else {
+      int nwork = m_league_size * m_team_size;
+      int items_per_thread =
+          (nwork + block_count * m_team_size - 1) / (block_count * m_team_size);
+      if (items_per_thread < 4) {
+        int ratio = std::min(
+            (block_count + preferred_block_min - 1) / preferred_block_min,
+            (4 + items_per_thread - 1) / items_per_thread);
+        block_count /= ratio;
+      }
+    }
+
+    return block_count;
+  }
+
  public:
   __device__ inline void operator()() const {
     int64_t threadid = 0;
@@ -681,7 +713,6 @@ class ParallelReduce<CombinedFunctorReducerType,
     reference_type value =
         reducer.init(kokkos_impl_hip_shared_memory<size_type>() +
                      threadIdx.y * word_count.value);
-
     // Iterate this block through the league
     iterate_through_league(threadid, value);
 
@@ -757,10 +788,7 @@ class ParallelReduce<CombinedFunctorReducerType,
                                  Policy::is_graph_kernel::value ||
                                  !std::is_same<ReducerType, InvalidType>::value;
     if (!is_empty_range || need_device_set) {
-      const int block_count =
-          UseShflReduction
-              ? std::min(m_league_size, size_type(1024 * HIPTraits::WarpSize))
-              : std::min(static_cast<int>(m_league_size), m_team_size);
+      int const block_count = compute_block_count();
 
       m_scratch_space = hip_internal_scratch_space(
           m_policy.space(), reducer.value_size() * block_count);
