@@ -50,12 +50,9 @@ struct stdalgo_must_use_kokkos_single_for_team_scan<Kokkos::Experimental::HPX>
     : std::true_type {};
 #endif
 
-// FIXME_THREADS
-#if defined(KOKKOS_ENABLE_THREADS)
-template <>
-struct stdalgo_must_use_kokkos_single_for_team_scan<Kokkos::Threads>
-    : std::true_type {};
-#endif
+template <typename T>
+inline constexpr bool stdalgo_must_use_kokkos_single_for_team_scan_v =
+    stdalgo_must_use_kokkos_single_for_team_scan<T>::value;
 
 }  // namespace Impl
 }  // namespace Experimental

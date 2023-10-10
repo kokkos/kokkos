@@ -142,8 +142,8 @@ KOKKOS_FUNCTION OutputIterator unique_copy_team_impl(
   }
 
   else {
-    if constexpr (stdalgo_must_use_kokkos_single_for_team_scan<
-                      typename TeamHandleType::execution_space>::value) {
+    if constexpr (stdalgo_must_use_kokkos_single_for_team_scan_v<
+                      typename TeamHandleType::execution_space>) {
       std::size_t count = 0;
       Kokkos::single(
           Kokkos::PerTeam(teamHandle),

@@ -124,8 +124,8 @@ KOKKOS_FUNCTION OutputIterator copy_if_team_impl(
   }
 
   const std::size_t num_elements = Kokkos::Experimental::distance(first, last);
-  if constexpr (stdalgo_must_use_kokkos_single_for_team_scan<
-                    typename TeamHandleType::execution_space>::value) {
+  if constexpr (stdalgo_must_use_kokkos_single_for_team_scan_v<
+                    typename TeamHandleType::execution_space>) {
     std::size_t count = 0;
     Kokkos::single(
         Kokkos::PerTeam(teamHandle),
