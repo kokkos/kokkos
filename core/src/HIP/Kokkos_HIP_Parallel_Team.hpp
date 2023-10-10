@@ -587,6 +587,10 @@ class ParallelReduce<CombinedFunctorReducerType,
   using value_type     = typename ReducerType::value_type;
 
  public:
+  using word_size_type = std::conditional_t<
+      sizeof(value_type) < sizeof(Kokkos::HIP::size_type),
+      std::conditional_t<sizeof(value_type) == 2, int16_t, int8_t>,
+      Kokkos::HIP::size_type>;
   using size_type = HIP::size_type;
 
   static constexpr int UseShflReduction =
@@ -609,7 +613,7 @@ class ParallelReduce<CombinedFunctorReducerType,
   const pointer_type m_result_ptr;
   const bool m_result_ptr_device_accessible;
   const bool m_result_ptr_host_accessible;
-  size_type* m_scratch_space;
+  word_size_type* m_scratch_space;
   size_type* m_scratch_flags;
   size_type m_team_begin;
   size_type m_shmem_begin;
@@ -760,8 +764,9 @@ class ParallelReduce<CombinedFunctorReducerType,
               ? std::min(m_league_size, size_type(1024 * HIPTraits::WarpSize))
               : std::min(static_cast<int>(m_league_size), m_team_size);
 
-      m_scratch_space = hip_internal_scratch_space(
-          m_policy.space(), reducer.value_size() * block_count);
+      m_scratch_space =
+          reinterpret_cast<word_size_type*>(hip_internal_scratch_space(
+              m_policy.space(), reducer.value_size() * block_count));
       m_scratch_flags =
           hip_internal_scratch_flags(m_policy.space(), sizeof(size_type));
 
