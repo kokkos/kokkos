@@ -118,8 +118,6 @@ template <class T, class Abi>
 // fallback implementations of <cmath> functions.
 // individual Abi types may provide overloads with more efficient
 // implementations.
-// These are not in the Experimental namespace because their double
-// overloads are not either
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 #define KOKKOS_IMPL_SIMD_UNARY_FUNCTION(FUNC)                                \
