@@ -27,10 +27,12 @@ UniqueToken<Cuda, UniqueTokenScope::Global>::UniqueToken(size_type max_size) {
   m_locks = Kokkos::View<uint32_t*, Kokkos::CudaSpace>(
       std::string("Kokkos::UniqueToken::m_locks"), max_size);
 }
+
 UniqueToken<Cuda, UniqueTokenScope::Global>::UniqueToken(size_type max_size,
                                                          Cuda const& exec) {
   m_locks = Kokkos::View<uint32_t*, Kokkos::CudaSpace>(
       Kokkos::view_alloc(exec, std::string("Kokkos::UniqueToken::m_locks")),
       max_size);
 }
+
 }  // namespace Kokkos::Experimental
