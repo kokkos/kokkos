@@ -76,8 +76,8 @@ std::size_t scratch_count(const std::size_t size) {
 //----------------------------------------------------------------------------
 
 int HIPInternal::concurrency() {
-  static int const concurrency = m_deviceProp.maxThreadsPerMultiProcessor *
-                                 m_deviceProp.multiProcessorCount;
+  static int const concurrency = m_maxThreadsPerSM * m_multiProcCount;
+
   return concurrency;
 }
 
