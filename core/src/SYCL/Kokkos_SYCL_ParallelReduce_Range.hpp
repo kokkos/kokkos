@@ -306,9 +306,22 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
         auto reduction_lambda = reduction_lambda_factory(
             local_mem, num_teams_done, results_ptr, values_per_thread);
 
+	 #ifdef SYCL_EXT_ONEAPI_PROPERTIES
+        auto get_properties = [&]()
+        {
+          if constexpr(Policy::subgroup_size >0)
+          return sycl::ext::oneapi::experimental::properties{sycl::ext::oneapi::experimental::sub_group_size<Policy::subgroup_size>};
+          else
+          return sycl::ext::oneapi::experimental::properties{};
+        };
+	cgh.parallel_for(
+            sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
+             get_properties(), reduction_lambda);
+#else
         cgh.parallel_for(
             sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
             reduction_lambda);
+#endif
       });
 #ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
       q.ext_oneapi_submit_barrier(
