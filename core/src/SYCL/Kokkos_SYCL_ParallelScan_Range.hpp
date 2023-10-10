@@ -220,6 +220,16 @@ class ParallelScanSYCLBase {
     sycl::device_ptr<value_type> global_mem;
     sycl::device_ptr<value_type> group_results;
 
+               #ifdef SYCL_EXT_ONEAPI_PROPERTIES
+        auto get_properties = [&]()
+        {
+          if constexpr(Policy::subgroup_size >0)
+          return sycl::ext::oneapi::experimental::properties{sycl::ext::oneapi::experimental::sub_group_size<Policy::subgroup_size>};
+          else
+         return sycl::ext::oneapi::experimental::properties{};
+        };
+#endif
+
     auto perform_work_group_scans = q.submit([&](sycl::handler& cgh) {
       sycl::local_accessor<unsigned int> num_teams_done(1, cgh);
 
@@ -275,8 +285,14 @@ class ParallelScanSYCLBase {
 
       auto scan_lambda = scan_lambda_factory(local_mem, num_teams_done,
                                              global_mem, group_results);
+      
+#ifdef SYCL_EXT_ONEAPI_PROPERTIES
+       cgh.parallel_for(sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
+                       get_properties(), scan_lambda);
+#else
       cgh.parallel_for(sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
                        scan_lambda);
+#endif
     });
 
     // Write results to global memory
@@ -290,8 +306,7 @@ class ParallelScanSYCLBase {
       cgh.depends_on(perform_work_group_scans);
 #endif
 
-      cgh.parallel_for(
-          sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
+	  auto lambda = 
           [=](sycl::nd_item<1> item) {
             auto global_mem_copy       = global_mem;
             const index_type global_id = item.get_global_linear_id();
@@ -315,8 +330,15 @@ class ParallelScanSYCLBase {
               global_mem_copy[global_id] = update;
               if (global_id == size - 1 && result_ptr_device_accessible)
                 *result_ptr = update;
-            }
-          });
+            }};
+    
+#ifdef SYCL_EXT_ONEAPI_PROPERTIES
+       cgh.parallel_for(sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
+                       get_properties(), lambda);
+#else
+      cgh.parallel_for(
+          sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size), lambda);
+#endif
     });
 #ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
     q.ext_oneapi_submit_barrier(
