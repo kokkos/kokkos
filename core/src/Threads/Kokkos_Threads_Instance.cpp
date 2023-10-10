@@ -70,17 +70,13 @@ std::pair<unsigned, unsigned>
 
 int s_thread_pool_size[3] = {0, 0, 0};
 
-unsigned s_current_reduce_size = 0;
-unsigned s_current_shared_size = 0;
-
 void (*volatile s_current_function)(ThreadsInternal &, const void *);
 const void *volatile s_current_function_arg = nullptr;
 
 struct Sentinel {
   ~Sentinel() {
     if (s_thread_pool_size[0] || s_thread_pool_size[1] ||
-        s_thread_pool_size[2] || s_current_reduce_size ||
-        s_current_shared_size || s_current_function || s_current_function_arg ||
+        s_thread_pool_size[2] || s_current_function || s_current_function_arg ||
         s_threads_exec[0]) {
       std::cerr << "ERROR : Process exiting while Kokkos::Threads is still "
                    "initialized"
@@ -511,8 +507,6 @@ void ThreadsInternal::print_configuration(std::ostream &s, const bool detail) {
     if (nullptr == s_threads_process.m_pool_base) {
       s << " Asynchronous";
     }
-    s << " ReduceScratch[" << s_current_reduce_size << "]"
-      << " SharedScratch[" << s_current_shared_size << "]";
     s << std::endl;
 
     if (detail) {
