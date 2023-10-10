@@ -134,13 +134,12 @@ struct TestParallel_For {
   }
 };
 
-/*
 TEST(TEST_CATEGORY, IncrTest_04_simple_parallelFor) {
   if (std::is_same<Kokkos::DefaultExecutionSpace, TEST_EXECSPACE>::value) {
     TestParallel_For<TEST_EXECSPACE> test;
     test.simple_test();
   }
-}*/
+}
 
 TEST(TEST_CATEGORY, IncrTest_04_RangePolicy_parallelFor) {
   TestParallel_For<TEST_EXECSPACE> test;

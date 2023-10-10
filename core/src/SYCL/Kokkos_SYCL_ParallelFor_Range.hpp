@@ -87,7 +87,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
 #else
       (void)memcpy_event;
 #endif
-      std::cout << "chunk size: " << policy.chunk_size() << std::endl;
+
 #ifdef SYCL_EXT_ONEAPI_PROPERTIES
       auto get_properties = [&]() {
         if constexpr (Policy::subgroup_size > 0)
