@@ -342,19 +342,20 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
         cgh.depends_on(memcpy_event);
 #endif
 
-	        #ifdef SYCL_EXT_ONEAPI_PROPERTIES
-        auto get_properties = [&]()
-        {
-          if constexpr(Policy::subgroup_size >0)
-          return sycl::ext::oneapi::experimental::properties{sycl::ext::oneapi::experimental::sub_group_size<Policy::subgroup_size>};
+#ifdef SYCL_EXT_ONEAPI_PROPERTIES
+        auto get_properties = [&]() {
+          if constexpr (Policy::subgroup_size > 0)
+            return sycl::ext::oneapi::experimental::properties{
+                sycl::ext::oneapi::experimental::sub_group_size<
+                    Policy::subgroup_size>};
           else
-         return sycl::ext::oneapi::experimental::properties{};
+            return sycl::ext::oneapi::experimental::properties{};
         };
-       cgh.parallel_for(
-           sycl::nd_range<2>(
-	       sycl::range<2>(m_team_size, n_wgroups * m_vector_size), 
-	       sycl::range<2>(m_team_size, m_vector_size)),
-             get_properties(), reduction_lambda);
+        cgh.parallel_for(
+            sycl::nd_range<2>(
+                sycl::range<2>(m_team_size, n_wgroups * m_vector_size),
+                sycl::range<2>(m_team_size, m_vector_size)),
+            get_properties(), reduction_lambda);
 #else
         cgh.parallel_for(
             sycl::nd_range<2>(

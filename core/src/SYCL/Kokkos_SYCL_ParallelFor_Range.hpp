@@ -88,14 +88,15 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
       (void)memcpy_event;
 #endif
       std::cout << "chunk size: " << policy.chunk_size() << std::endl;
-     #ifdef SYCL_EXT_ONEAPI_PROPERTIES
-        auto get_properties = [&]()
-        {
-          if constexpr(Policy::subgroup_size >0)
-          return sycl::ext::oneapi::experimental::properties{sycl::ext::oneapi::experimental::sub_group_size<Policy::subgroup_size>};
-          else
+#ifdef SYCL_EXT_ONEAPI_PROPERTIES
+      auto get_properties = [&]() {
+        if constexpr (Policy::subgroup_size > 0)
+          return sycl::ext::oneapi::experimental::properties{
+              sycl::ext::oneapi::experimental::sub_group_size<
+                  Policy::subgroup_size>};
+        else
           return sycl::ext::oneapi::experimental::properties{};
-        };
+      };
 #endif
       if (policy.chunk_size() <= 1) {
         FunctorWrapperRangePolicyParallelFor<Functor, Policy> f{policy.begin(),
@@ -120,11 +121,12 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
         FunctorWrapperRangePolicyParallelForCustom<Functor, Policy> f{
             policy.begin(), functor, actual_range};
         sycl::nd_range<1> range(launch_range, wgroup_size);
-        #ifdef SYCL_EXT_ONEAPI_PROPERTIES
-        cgh.parallel_for<FunctorWrapperRangePolicyParallelForCustom<Functor, Policy>>(
+#ifdef SYCL_EXT_ONEAPI_PROPERTIES
+        cgh.parallel_for<
+            FunctorWrapperRangePolicyParallelForCustom<Functor, Policy>>(
             range, get_properties(), f);
 #else
-	cgh.parallel_for<
+        cgh.parallel_for<
             FunctorWrapperRangePolicyParallelForCustom<Functor, Policy>>(range,
                                                                          f);
 #endif
