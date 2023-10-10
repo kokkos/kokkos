@@ -73,18 +73,6 @@ int s_thread_pool_size[3] = {0, 0, 0};
 void (*volatile s_current_function)(ThreadsInternal &, const void *);
 const void *volatile s_current_function_arg = nullptr;
 
-struct Sentinel {
-  ~Sentinel() {
-    if (s_thread_pool_size[0] || s_thread_pool_size[1] ||
-        s_thread_pool_size[2] || s_current_function || s_current_function_arg ||
-        s_threads_exec[0]) {
-      std::cerr << "ERROR : Process exiting while Kokkos::Threads is still "
-                   "initialized"
-                << std::endl;
-    }
-  }
-};
-
 inline unsigned fan_size(const unsigned rank, const unsigned size) {
   const unsigned rank_rev = size - (rank + 1);
   unsigned count          = 0;
@@ -549,8 +537,6 @@ void ThreadsInternal::initialize(int thread_count_arg) {
   unsigned use_numa_count     = 0;
   unsigned use_cores_per_numa = 0;
   bool allow_asynchronous_threadpool = false;
-  // need to provide an initializer for Intel compilers
-  static const Sentinel sentinel = {};
 
   const bool is_initialized = 0 != s_thread_pool_size[0];
 
