@@ -85,11 +85,11 @@ struct TestScan {
 
     // Initialize data.
     Kokkos::parallel_for(
-        Kokkos::RangePolicy<ExecSpace>(0, N),
+        Kokkos::RangePolicy<ExecSpace,  Kokkos::SubGroupSize<16>>(0, N),
         KOKKOS_LAMBDA(const int i) { d_data(i) = i * 0.5; });
 
     // Exclusive parallel_scan call
-    Kokkos::parallel_scan(Kokkos::RangePolicy<ExecSpace>(0, N),
+    Kokkos::parallel_scan(Kokkos::RangePolicy<ExecSpace,  Kokkos::SubGroupSize<16>>(0, N),
                           FunctorType{d_data});
 
     // Copy back the data.
@@ -120,11 +120,11 @@ struct TestScanWithTotal {
   template <typename FunctorType>
   void parallel_scan() {
     // Initialize data.
-    Kokkos::parallel_for(Kokkos::RangePolicy<ExecSpace>(0, N), *this);
+    Kokkos::parallel_for(Kokkos::RangePolicy<ExecSpace,  Kokkos::SubGroupSize<16>>(0, N), *this);
 
     value_type total;
     // Exclusive parallel_scan call
-    Kokkos::parallel_scan(Kokkos::RangePolicy<ExecSpace>(0, N),
+    Kokkos::parallel_scan(Kokkos::RangePolicy<ExecSpace,  Kokkos::SubGroupSize<16>>(0, N),
                           FunctorType{d_data}, total);
 
     // Copy back the data.

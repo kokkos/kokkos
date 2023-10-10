@@ -65,7 +65,7 @@ struct TestMDRangeReduce {
 
   // An MDRangePolicy for 2 nested loops
   using MDPolicyType_2D =
-      Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<2>, int_index>;
+      Kokkos::MDRangePolicy<ExecSpace,  Kokkos::SubGroupSize<16>, Kokkos::Rank<2>, int_index>;
 
   //  1D - complex View
   using Complex_View_1D = Kokkos::View<MyComplex*, ExecSpace>;
@@ -134,13 +134,13 @@ struct TestMDRangeReduce {
 
     // Fill data
     Kokkos::parallel_for(
-        Kokkos::RangePolicy<ExecSpace>(0, N), KOKKOS_LAMBDA(const int i) {
+        Kokkos::RangePolicy<ExecSpace,  Kokkos::SubGroupSize<16>>(0, N), KOKKOS_LAMBDA(const int i) {
           d_data(i) = MyComplex(i * 0.5, -i * 0.5);
         });
 
     // Reduction for complex number.
     Kokkos::parallel_reduce(
-        Kokkos::RangePolicy<ExecSpace>(0, N),
+        Kokkos::RangePolicy<ExecSpace,  Kokkos::SubGroupSize<16>>(0, N),
         KOKKOS_LAMBDA(const int i, MyComplex& update_value) {
           update_value += d_data(i);
         },

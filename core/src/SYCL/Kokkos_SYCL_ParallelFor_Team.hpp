@@ -72,6 +72,13 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
       const size_t scratch_size[2] = {m_scratch_size[0], m_scratch_size[1]};
       sycl::device_ptr<char> const global_scratch_ptr = m_global_scratch_ptr;
 
+#ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
+      cgh.depends_on(memcpy_event);
+#else
+      (void)memcpy_event;
+#endif
+
+      if (Policy::subgroup_size <=0) {
       auto lambda = [=](sycl::nd_item<2> item) {
         const member_type team_member(
             team_scratch_memory_L0.get_pointer(), shmem_begin, scratch_size[0],
@@ -101,16 +108,29 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
       // be used gives a runtime error.
       // cgh.use_kernel_bundle(kernel_bundle);
 
-#ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
-      cgh.depends_on(memcpy_event);
-#else
-      (void)memcpy_event;
-#endif
       cgh.parallel_for(
           sycl::nd_range<2>(
               sycl::range<2>(m_team_size, m_league_size * final_vector_size),
               sycl::range<2>(m_team_size, final_vector_size)),
           lambda);
+      }
+      else
+      {
+	       auto final_vector_size = std::min<int>(m_vector_size, Policy::subgroup_size);
+	      cgh.parallel_for(sycl::nd_range<2>(sycl::range<2>(m_team_size, m_league_size * final_vector_size),
+              sycl::range<2>(m_team_size, final_vector_size)),
+		      [=](sycl::nd_item<2> item) [[sycl::reqd_sub_group_size(Policy::subgroup_size)]] {
+        const member_type team_member(
+            team_scratch_memory_L0.get_pointer(), shmem_begin, scratch_size[0],
+            global_scratch_ptr + item.get_group(1) * scratch_size[1],
+            scratch_size[1], item, item.get_group_linear_id(),
+            item.get_group_range(1));
+        if constexpr (std::is_void<work_tag>::value)
+          functor_wrapper.get_functor()(team_member);
+        else
+          functor_wrapper.get_functor()(work_tag(), team_member);
+      });
+      }
     });
 #ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
     q.ext_oneapi_submit_barrier(std::vector<sycl::event>{parallel_for_event});

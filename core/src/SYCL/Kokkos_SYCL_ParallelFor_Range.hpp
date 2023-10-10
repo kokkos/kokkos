@@ -27,7 +27,7 @@ struct FunctorWrapperRangePolicyParallelFor {
   using WorkTag = typename Policy::work_tag;
 
     template <int sg_size = Policy::subgroup_size>
-    std::enable_if_t<(sg_size<=0)> operator()(sycl::item<1> item) const {
+    std::enable_if_t<(sg_size<=0)> operator()(const sycl::item<1> item) const {
     const typename Policy::index_type id = item.get_linear_id() + m_begin;
     if constexpr (std::is_void_v<WorkTag>)
       m_functor_wrapper.get_functor()(id);
@@ -36,7 +36,7 @@ struct FunctorWrapperRangePolicyParallelFor {
   }
 
     template <int sg_size = Policy::subgroup_size>
-    [[sycl::reqd_work_group_size(sg_size)]] std::enable_if_t<(sg_size>0)> operator()(sycl::item<1> item) const {
+    [[sycl::reqd_sub_group_size(sg_size)]] std::enable_if_t<(sg_size>0)> operator()(const sycl::item<1> item) const {
     const typename Policy::index_type id = item.get_linear_id() + m_begin;
     if constexpr (std::is_void_v<WorkTag>)
       m_functor_wrapper.get_functor()(id);
@@ -53,8 +53,25 @@ template <typename FunctorWrapper, typename Policy>
 struct FunctorWrapperRangePolicyParallelForCustom {
   using WorkTag = typename Policy::work_tag;
 
-  void operator()(sycl::item<1> item) const {
-    const typename Policy::index_type id = item.get_linear_id();
+  template <int sg_size = Policy::subgroup_size>
+    std::enable_if_t<(sg_size<=0)>
+  operator()(const sycl::nd_item<1> item) const {
+	      Kokkos::printf("Executing with subgroup size %d, chunk size: %d\n", int(item.get_sub_group().get_local_linear_range()), int(item.get_group_range(0)));
+    const typename Policy::index_type id = item.get_global_linear_id();
+    if (id < m_work_size) {
+      const auto shifted_id = id + m_begin;
+      if constexpr (std::is_void_v<WorkTag>)
+        m_functor_wrapper.get_functor()(shifted_id);
+      else
+        m_functor_wrapper.get_functor()(WorkTag(), shifted_id);
+    }
+  }
+
+  template <int sg_size = Policy::subgroup_size>
+  [[sycl::reqd_sub_group_size(sg_size)]]  std::enable_if_t<(sg_size>0)>
+  operator()(const sycl::nd_item<1> item) const {
+    Kokkos::printf("Executing with subgroup size %d set, chunk size: %d\n", int(item.get_sub_group().get_local_linear_range()), int(item.get_group_range(0)));
+    const typename Policy::index_type id = item.get_global_linear_id();
     if (id < m_work_size) {
       const auto shifted_id = id + m_begin;
       if constexpr (std::is_void_v<WorkTag>)
@@ -97,6 +114,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
 #else
       (void)memcpy_event;
 #endif
+      std::cout << "chunk size: " << policy.chunk_size() << std::endl;
       if (policy.chunk_size() <= 1) {
         FunctorWrapperRangePolicyParallelFor<Functor, Policy> f{policy.begin(),
                                                                 functor};

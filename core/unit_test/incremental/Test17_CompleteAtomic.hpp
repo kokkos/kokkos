@@ -74,7 +74,7 @@ struct TestAtomicView {
 
     // Update histogram
     Kokkos::parallel_for(
-        Kokkos::RangePolicy<ExecSpace>(0, N),
+        Kokkos::RangePolicy<ExecSpace,  Kokkos::SubGroupSize<16>>(0, N),
         KOKKOS_LAMBDA(const int i) { d_hist(d_data(i) % num_buckets)++; });
 
     // Perform the same computation on host for correctness test.

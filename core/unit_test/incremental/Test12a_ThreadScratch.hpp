@@ -26,8 +26,8 @@ namespace Test {
 
 template <class ExecSpace>
 struct ThreadScratch {
-  using policy_t = Kokkos::TeamPolicy<ExecSpace>;
-  using team_t   = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
+  using policy_t = Kokkos::TeamPolicy<ExecSpace,  Kokkos::SubGroupSize<16>>;
+  using team_t   = typename Kokkos::TeamPolicy<ExecSpace,  Kokkos::SubGroupSize<16>>::member_type;
   using data_t   = Kokkos::View<size_t **, ExecSpace>;
 
   using scratch_t = Kokkos::View<size_t *, ExecSpace,
