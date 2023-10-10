@@ -26,17 +26,7 @@ template <typename FunctorWrapper, typename Policy>
 struct FunctorWrapperRangePolicyParallelFor {
   using WorkTag = typename Policy::work_tag;
 
-    template <int sg_size = Policy::subgroup_size>
-    std::enable_if_t<(sg_size<=0)> operator()(const sycl::item<1> item) const {
-    const typename Policy::index_type id = item.get_linear_id() + m_begin;
-    if constexpr (std::is_void_v<WorkTag>)
-      m_functor_wrapper.get_functor()(id);
-    else
-      m_functor_wrapper.get_functor()(WorkTag(), id);
-  }
-
-    template <int sg_size = Policy::subgroup_size>
-    [[sycl::reqd_sub_group_size(sg_size)]] std::enable_if_t<(sg_size>0)> operator()(const sycl::item<1> item) const {
+  void operator()(sycl::item<1> item) const {
     const typename Policy::index_type id = item.get_linear_id() + m_begin;
     if constexpr (std::is_void_v<WorkTag>)
       m_functor_wrapper.get_functor()(id);
@@ -53,24 +43,7 @@ template <typename FunctorWrapper, typename Policy>
 struct FunctorWrapperRangePolicyParallelForCustom {
   using WorkTag = typename Policy::work_tag;
 
-  template <int sg_size = Policy::subgroup_size>
-    std::enable_if_t<(sg_size<=0)>
-  operator()(const sycl::nd_item<1> item) const {
-	      Kokkos::printf("Executing with subgroup size %d, chunk size: %d\n", int(item.get_sub_group().get_local_linear_range()), int(item.get_group_range(0)));
-    const typename Policy::index_type id = item.get_global_linear_id();
-    if (id < m_work_size) {
-      const auto shifted_id = id + m_begin;
-      if constexpr (std::is_void_v<WorkTag>)
-        m_functor_wrapper.get_functor()(shifted_id);
-      else
-        m_functor_wrapper.get_functor()(WorkTag(), shifted_id);
-    }
-  }
-
-  template <int sg_size = Policy::subgroup_size>
-  [[sycl::reqd_sub_group_size(sg_size)]]  std::enable_if_t<(sg_size>0)>
-  operator()(const sycl::nd_item<1> item) const {
-    Kokkos::printf("Executing with subgroup size %d set, chunk size: %d\n", int(item.get_sub_group().get_local_linear_range()), int(item.get_group_range(0)));
+  void operator()(sycl::nd_item<1> item) const {
     const typename Policy::index_type id = item.get_global_linear_id();
     if (id < m_work_size) {
       const auto shifted_id = id + m_begin;
@@ -115,12 +88,26 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
       (void)memcpy_event;
 #endif
       std::cout << "chunk size: " << policy.chunk_size() << std::endl;
+     #ifdef SYCL_EXT_ONEAPI_PROPERTIES
+        auto get_properties = [&]()
+        {
+          if constexpr(Policy::subgroup_size >0)
+          return sycl::ext::oneapi::experimental::properties{sycl::ext::oneapi::experimental::sub_group_size<Policy::subgroup_size>};
+          else
+          return sycl::ext::oneapi::experimental::properties{};
+        };
+#endif
       if (policy.chunk_size() <= 1) {
         FunctorWrapperRangePolicyParallelFor<Functor, Policy> f{policy.begin(),
                                                                 functor};
         sycl::range<1> range(policy.end() - policy.begin());
+#ifdef SYCL_EXT_ONEAPI_PROPERTIES
+        cgh.parallel_for<FunctorWrapperRangePolicyParallelFor<Functor, Policy>>(
+            range, get_properties(), f);
+#else
         cgh.parallel_for<FunctorWrapperRangePolicyParallelFor<Functor, Policy>>(
             range, f);
+#endif
       } else {
         // Use the chunk size as workgroup size. We need to make sure that the
         // range the kernel is launched with is a multiple of the workgroup
@@ -133,9 +120,14 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
         FunctorWrapperRangePolicyParallelForCustom<Functor, Policy> f{
             policy.begin(), functor, actual_range};
         sycl::nd_range<1> range(launch_range, wgroup_size);
-        cgh.parallel_for<
+        #ifdef SYCL_EXT_ONEAPI_PROPERTIES
+        cgh.parallel_for<FunctorWrapperRangePolicyParallelForCustom<Functor, Policy>>(
+            range, get_properties(), f);
+#else
+	cgh.parallel_for<
             FunctorWrapperRangePolicyParallelForCustom<Functor, Policy>>(range,
                                                                          f);
+#endif
       }
     });
 #ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
