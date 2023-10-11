@@ -136,8 +136,8 @@ ThreadsInternal::ThreadsInternal()
       m_pool_fan_size(0),
       m_pool_state(ThreadState::Terminating) {
   if (&s_threads_process != this) {
-    // A spawned thread
-
+    // The code in the if is executed by a spawned thread not by the root
+    // thread
     ThreadsInternal *const nil = nullptr;
 
     // Which entry in 's_threads_exec', possibly determined from hwloc binding
@@ -326,7 +326,9 @@ void ThreadsInternal::start(void (*func)(ThreadsInternal &, const void *),
   // Make sure function and arguments are written before activating threads.
   memory_fence();
 
-  // Activate threads:
+  // Activate threads. The spawned threads will start working on
+  // s_current_function. The root thread is only set to active, we still need to
+  // call s_current_function.
   for (int i = s_thread_pool_size[0]; 0 < i--;) {
     s_threads_exec[i]->m_pool_state = ThreadState::Active;
   }
