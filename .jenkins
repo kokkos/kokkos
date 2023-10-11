@@ -86,6 +86,7 @@ pipeline {
                                 -DKokkos_ENABLE_CUDA_LAMBDA=ON \
                                 -DKokkos_ENABLE_OPENMP=ON \
                                 -DKokkos_ENABLE_IMPL_MDSPAN=ON \
+                                -DKokkos_ENABLE_IMPL_NVHPC_AS_DEVICE_COMPILER=ON \
                               .. && \
                               make -j8 && ctest --verbose'''
                     }
