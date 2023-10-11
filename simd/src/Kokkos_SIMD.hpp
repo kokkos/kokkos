@@ -74,6 +74,8 @@
 #pragma GCC diagnostic pop
 #endif
 
+#include <Kokkos_SIMD_Common_Math.hpp>
+
 namespace Kokkos {
 namespace Experimental {
 
