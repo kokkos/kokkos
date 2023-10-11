@@ -52,6 +52,10 @@ T device_atomic_exchange(T* dest, T value, MemoryOrder, MemoryScope /*scope*/) {
 template <class T, class MemoryOrder, class MemoryScope>
 T device_atomic_compare_exchange(
     T* dest, T compare, T value, MemoryOrder, MemoryScope scope) {
+  // Floating point types treated separetely to work around compiler errors
+  // "parse invalid cast opcode for cast from 'i32' to 'float'".
+  // Also not just "forwarding" arguments to atomicCAS because it does not have an
+  // overload that takes int64_t
   if constexpr (std::is_integral_v<T> && ((sizeof(T) == 4) || (sizeof(T) == 8))) {
     static_assert(sizeof(unsigned int) == 4);
     static_assert(sizeof(unsigned long long int) == 8);

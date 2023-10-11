@@ -23,12 +23,11 @@ inline constexpr bool is_openacc_integral_type_v =
     std::is_same_v<T, unsigned long long>;
 
 template <class T>
-inline constexpr bool is_openacc_arithmetic_type_v =
-    is_openacc_integral_type_v<T> || std::is_same_v<T, float>
+inline constexpr bool is_openacc_arithmetic_type_v = std::is_same_v<T, float> ||
 #ifndef DESUL_CUDA_ARCH_IS_PRE_PASCAL
-    || std::is_same_v<T, double>
+                                                     std::is_same_v<T, double> ||
 #endif
-    ;
+                                                     is_openacc_integral_type_v<T>;
 
 #else
 
