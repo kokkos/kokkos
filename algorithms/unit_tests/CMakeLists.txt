@@ -325,7 +325,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
 endforeach()
 
 # FIXME_OPENMPTARGET - remove sort test as it leads to ICE with clang/16 and above at compile time.
-if(KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL "Clang" AND KOKKOS_CXX_COMPILER_VERSION VERSION_GREATER 15.0.0)
+if(KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL "Clang" AND KOKKOS_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 16.0.0)
     list(REMOVE_ITEM ALGO_SORT_SOURCES
     TestSort.cpp
   )
@@ -392,7 +392,6 @@ if(KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM)
     TestStdAlgorithmsInclusiveScan.cpp
   )
 endif()
-
 
 # FIXME_OPENMPTARGET remove tests for OpenMPTarget
 # causing failures for various reasons
