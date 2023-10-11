@@ -179,7 +179,7 @@ class ParallelScanSYCLBase {
               group_results[item.get_group_linear_id()] =
                   local_mem[item.get_sub_group().get_group_range()[0] - 1];
 
-              sycl::atomic_ref<unsigned, sycl::memory_order::relaxed,
+              sycl::atomic_ref<unsigned, sycl::memory_order::acq_rel,
                                sycl::memory_scope::device,
                                sycl::access::address_space::global_space>
                   scratch_flags_ref(*scratch_flags);
