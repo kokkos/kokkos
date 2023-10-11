@@ -69,23 +69,6 @@ reduce(const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> const& x, T,
   return result;
 }
 
-namespace Impl {
-
-// A temporary device-callable implemenation of round half to nearest even
-template <typename T>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION auto round_half_to_nearest_even(
-    T const& x) {
-  auto ceil  = Kokkos::ceil(x);
-  auto floor = Kokkos::floor(x);
-
-  if (Kokkos::abs(ceil - x) == Kokkos::abs(floor - x)) {
-    auto rem = Kokkos::remainder(ceil, 2.0);
-    return (rem == 0) ? ceil : floor;
-  }
-  return Kokkos::round(x);
-}
-
-}  // namespace Impl
 }  // namespace Experimental
 
 template <class T, class Abi>

@@ -239,7 +239,7 @@ template <typename T>
     Experimental::simd<T, Experimental::simd_abi::scalar> const& a) {
   using data_type = std::conditional_t<std::is_floating_point_v<T>, T, double>;
   return Experimental::simd<data_type, Experimental::simd_abi::scalar>(
-      Experimental::Impl::round_half_to_nearest_even(
+      Experimental::round_half_to_nearest_even(
           static_cast<data_type>(a[0])));
 };
 

@@ -161,7 +161,7 @@ class rounds {
   }
   template <typename T>
   KOKKOS_INLINE_FUNCTION auto on_device_serial(T const& a) const {
-    return Kokkos::Experimental::Impl::round_half_to_nearest_even(a);
+    return Kokkos::Experimental::round_half_to_nearest_even(a);
   }
 };
 

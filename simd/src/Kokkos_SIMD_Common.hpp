@@ -328,6 +328,20 @@ template <class T, class Abi>
   return a == simd_mask<T, Abi>(false);
 }
 
+// A temporary device-callable implemenation of round half to nearest even
+template <typename T>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION auto round_half_to_nearest_even(
+    T const& x) {
+  auto ceil  = Kokkos::ceil(x);
+  auto floor = Kokkos::floor(x);
+
+  if (Kokkos::abs(ceil - x) == Kokkos::abs(floor - x)) {
+    auto rem = Kokkos::remainder(ceil, 2.0);
+    return (rem == 0) ? ceil : floor;
+  }
+  return Kokkos::round(x);
+}
+
 }  // namespace Experimental
 }  // namespace Kokkos
 
