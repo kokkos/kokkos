@@ -1499,7 +1499,7 @@ class simd<std::uint64_t, simd_abi::avx2_fixed_size<4>> {
   }
 };
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 simd<std::int64_t, simd_abi::avx2_fixed_size<4>>::simd(
     simd<std::uint64_t, simd_abi::avx2_fixed_size<4>> const& other)
     : m_value(static_cast<__m256i>(other)) {}
