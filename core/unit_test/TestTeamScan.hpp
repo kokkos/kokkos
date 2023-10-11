@@ -132,10 +132,7 @@ TEST(TEST_CATEGORY, team_scan) {
 
 // Temporary: This condition will progressively be reduced when parallel_scan
 // with return value will be implemented for more backends.
-#if defined(KOKKOS_ENABLE_SERIAL) || defined(KOKKOS_ENABLE_OPENMP)
-#if !defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_HIP) &&             \
-    !defined(KOKKOS_ENABLE_OPENACC) && !defined(KOKKOS_ENABLE_SYCL) &&         \
-    !defined(KOKKOS_ENABLE_THREADS) && !defined(KOKKOS_ENABLE_OPENMPTARGET) && \
+#if !defined(KOKKOS_ENABLE_OPENACC) && !defined(KOKKOS_ENABLE_OPENMPTARGET) && \
     !defined(KOKKOS_ENABLE_HPX)
 template <class ExecutionSpace, class DataType>
 struct TestTeamScanRetVal {
@@ -188,8 +185,14 @@ struct TestTeamScanRetVal {
     a_r = view_2d_type("a_r", M, N);
     a_s = view_1d_type("a_s", M);
 
-    // Execute calculations
-    Kokkos::parallel_for(policy_type(M, Kokkos::AUTO), *this);
+    // Set team size explicitly to check whether non-power-of-two team sizes can
+    // be used.
+    if (ExecutionSpace().concurrency() > 10000)
+      Kokkos::parallel_for(policy_type(M, 127), *this);
+    else if (ExecutionSpace().concurrency() > 2)
+      Kokkos::parallel_for(policy_type(M, 3), *this);
+    else
+      Kokkos::parallel_for(policy_type(M, 1), *this);
 
     Kokkos::fence();
     auto a_i  = Kokkos::create_mirror_view(a_d);
@@ -255,7 +258,6 @@ TEST(TEST_CATEGORY, team_scan_ret_val) {
   TestTeamScanRetVal<TEST_EXECSPACE, int64_t>{}(2596, 987);
   TestTeamScanRetVal<TEST_EXECSPACE, double>{}(2596, 1311);
 }
-#endif
 #endif
 
 }  // namespace Test

@@ -25,6 +25,11 @@
 
 #include <immintrin.h>
 
+#ifdef KOKKOS_SIMD_COMMON_MATH_HPP
+#error \
+    "Kokkos_SIMD_AVX512.hpp must be included before Kokkos_SIMD_Common_Math.hpp!"
+#endif
+
 namespace Kokkos {
 namespace Experimental {
 
@@ -272,13 +277,19 @@ class simd<std::int32_t, simd_abi::avx512_fixed_size<8>> {
   }
 };
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    simd<std::int32_t, simd_abi::avx512_fixed_size<8>>
-    abs(simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& a) {
+}  // namespace Experimental
+
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::simd<
+    std::int32_t, Experimental::simd_abi::avx512_fixed_size<8>>
+abs(Experimental::simd<std::int32_t,
+                       Experimental::simd_abi::avx512_fixed_size<8>> const& a) {
   __m256i const rhs = static_cast<__m256i>(a);
-  return simd<std::int32_t, simd_abi::avx512_fixed_size<8>>(
+  return Experimental::simd<std::int32_t,
+                            Experimental::simd_abi::avx512_fixed_size<8>>(
       _mm256_abs_epi32(rhs));
 }
+
+namespace Experimental {
 
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     simd<std::int32_t, simd_abi::avx512_fixed_size<8>>
@@ -425,11 +436,16 @@ class simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> {
   }
 };
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    simd<std::uint32_t, simd_abi::avx512_fixed_size<8>>
-    abs(simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> const& a) {
+}  // namespace Experimental
+
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::simd<
+    std::uint32_t, Experimental::simd_abi::avx512_fixed_size<8>>
+abs(Experimental::simd<std::uint32_t,
+                       Experimental::simd_abi::avx512_fixed_size<8>> const& a) {
   return a;
 }
+
+namespace Experimental {
 
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     simd<std::uint32_t, simd_abi::avx512_fixed_size<8>>
@@ -580,13 +596,19 @@ class simd<std::int64_t, simd_abi::avx512_fixed_size<8>> {
   }
 };
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    simd<std::int64_t, simd_abi::avx512_fixed_size<8>>
-    abs(simd<std::int64_t, simd_abi::avx512_fixed_size<8>> const& a) {
+}  // namespace Experimental
+
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::simd<
+    std::int64_t, Experimental::simd_abi::avx512_fixed_size<8>>
+abs(Experimental::simd<std::int64_t,
+                       Experimental::simd_abi::avx512_fixed_size<8>> const& a) {
   __m512i const rhs = static_cast<__m512i>(a);
-  return simd<std::int64_t, simd_abi::avx512_fixed_size<8>>(
+  return Experimental::simd<std::int64_t,
+                            Experimental::simd_abi::avx512_fixed_size<8>>(
       _mm512_abs_epi64(rhs));
 }
+
+namespace Experimental {
 
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     simd<std::int64_t, simd_abi::avx512_fixed_size<8>>
@@ -742,11 +764,16 @@ class simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> {
   }
 };
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    simd<std::uint64_t, simd_abi::avx512_fixed_size<8>>
-    abs(simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> const& a) {
+}  // namespace Experimental
+
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::simd<
+    std::uint64_t, Experimental::simd_abi::avx512_fixed_size<8>>
+abs(Experimental::simd<std::uint64_t,
+                       Experimental::simd_abi::avx512_fixed_size<8>> const& a) {
   return a;
 }
+
+namespace Experimental {
 
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     simd<std::uint64_t, simd_abi::avx512_fixed_size<8>>
@@ -886,13 +913,21 @@ class simd<double, simd_abi::avx512_fixed_size<8>> {
   }
 };
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    simd<double, simd_abi::avx512_fixed_size<8>>
-    copysign(simd<double, simd_abi::avx512_fixed_size<8>> const& a,
-             simd<double, simd_abi::avx512_fixed_size<8>> const& b) {
-  static const __m512i sign_mask = reinterpret_cast<__m512i>(
-      static_cast<__m512d>(simd<double, simd_abi::avx512_fixed_size<8>>(-0.0)));
-  return simd<double, simd_abi::avx512_fixed_size<8>>(
+}  // namespace Experimental
+
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::simd<
+    double, Experimental::simd_abi::avx512_fixed_size<8>>
+copysign(
+    Experimental::simd<double,
+                       Experimental::simd_abi::avx512_fixed_size<8>> const& a,
+    Experimental::simd<double,
+                       Experimental::simd_abi::avx512_fixed_size<8>> const& b) {
+  static const __m512i sign_mask =
+      reinterpret_cast<__m512i>(static_cast<__m512d>(
+          Experimental::simd<
+              double, Experimental::simd_abi::avx512_fixed_size<8>>(-0.0)));
+  return Experimental::simd<double,
+                            Experimental::simd_abi::avx512_fixed_size<8>>(
       reinterpret_cast<__m512d>(_mm512_xor_epi64(
           _mm512_andnot_epi64(
               sign_mask, reinterpret_cast<__m512i>(static_cast<__m512d>(a))),
@@ -901,74 +936,99 @@ class simd<double, simd_abi::avx512_fixed_size<8>> {
 }
 
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    simd<double, simd_abi::avx512_fixed_size<8>>
-    abs(simd<double, simd_abi::avx512_fixed_size<8>> const& a) {
+    Experimental::simd<double, Experimental::simd_abi::avx512_fixed_size<8>>
+    abs(Experimental::simd<
+        double, Experimental::simd_abi::avx512_fixed_size<8>> const& a) {
   __m512d const rhs = static_cast<__m512d>(a);
 #if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU < 830)
-  return simd<double, simd_abi::avx512_fixed_size<8>>((__m512d)_mm512_and_epi64(
-      (__m512i)rhs, _mm512_set1_epi64(0x7fffffffffffffffLL)));
+  return Experimental::simd<double,
+                            Experimental::simd_abi::avx512_fixed_size<8>>(
+      (__m512d)_mm512_and_epi64((__m512i)rhs,
+                                _mm512_set1_epi64(0x7fffffffffffffffLL)));
 #else
-  return simd<double, simd_abi::avx512_fixed_size<8>>(_mm512_abs_pd(rhs));
+  return Experimental::simd<double,
+                            Experimental::simd_abi::avx512_fixed_size<8>>(
+      _mm512_abs_pd(rhs));
 #endif
 }
 
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    simd<double, simd_abi::avx512_fixed_size<8>>
-    sqrt(simd<double, simd_abi::avx512_fixed_size<8>> const& a) {
-  return simd<double, simd_abi::avx512_fixed_size<8>>(
+    Experimental::simd<double, Experimental::simd_abi::avx512_fixed_size<8>>
+    sqrt(Experimental::simd<
+         double, Experimental::simd_abi::avx512_fixed_size<8>> const& a) {
+  return Experimental::simd<double,
+                            Experimental::simd_abi::avx512_fixed_size<8>>(
       _mm512_sqrt_pd(static_cast<__m512d>(a)));
 }
 
 #ifdef __INTEL_COMPILER
 
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    simd<double, simd_abi::avx512_fixed_size<8>>
-    cbrt(simd<double, simd_abi::avx512_fixed_size<8>> const& a) {
-  return simd<double, simd_abi::avx512_fixed_size<8>>(
+    Experimental::simd<double, Experimental::simd_abi::avx512_fixed_size<8>>
+    cbrt(Experimental::simd<
+         double, Experimental::simd_abi::avx512_fixed_size<8>> const& a) {
+  return Experimental::simd<double,
+                            Experimental::simd_abi::avx512_fixed_size<8>>(
       _mm512_cbrt_pd(static_cast<__m512d>(a)));
 }
 
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    simd<double, simd_abi::avx512_fixed_size<8>>
-    exp(simd<double, simd_abi::avx512_fixed_size<8>> const& a) {
-  return simd<double, simd_abi::avx512_fixed_size<8>>(
+    Experimental::simd<double, Experimental::simd_abi::avx512_fixed_size<8>>
+    exp(Experimental::simd<
+        double, Experimental::simd_abi::avx512_fixed_size<8>> const& a) {
+  return Experimental::simd<double,
+                            Experimental::simd_abi::avx512_fixed_size<8>>(
       _mm512_exp_pd(static_cast<__m512d>(a)));
 }
 
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    simd<double, simd_abi::avx512_fixed_size<8>>
-    log(simd<double, simd_abi::avx512_fixed_size<8>> const& a) {
-  return simd<double, simd_abi::avx512_fixed_size<8>>(
+    Experimental::simd<double, Experimental::simd_abi::avx512_fixed_size<8>>
+    log(Experimental::simd<
+        double, Experimental::simd_abi::avx512_fixed_size<8>> const& a) {
+  return Experimental::simd<double,
+                            Experimental::simd_abi::avx512_fixed_size<8>>(
       _mm512_log_pd(static_cast<__m512d>(a)));
 }
 
 #endif
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    simd<double, simd_abi::avx512_fixed_size<8>>
-    fma(simd<double, simd_abi::avx512_fixed_size<8>> const& a,
-        simd<double, simd_abi::avx512_fixed_size<8>> const& b,
-        simd<double, simd_abi::avx512_fixed_size<8>> const& c) {
-  return simd<double, simd_abi::avx512_fixed_size<8>>(
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::simd<
+    double, Experimental::simd_abi::avx512_fixed_size<8>>
+fma(Experimental::simd<double,
+                       Experimental::simd_abi::avx512_fixed_size<8>> const& a,
+    Experimental::simd<double,
+                       Experimental::simd_abi::avx512_fixed_size<8>> const& b,
+    Experimental::simd<double,
+                       Experimental::simd_abi::avx512_fixed_size<8>> const& c) {
+  return Experimental::simd<double,
+                            Experimental::simd_abi::avx512_fixed_size<8>>(
       _mm512_fmadd_pd(static_cast<__m512d>(a), static_cast<__m512d>(b),
                       static_cast<__m512d>(c)));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    simd<double, simd_abi::avx512_fixed_size<8>>
-    max(simd<double, simd_abi::avx512_fixed_size<8>> const& a,
-        simd<double, simd_abi::avx512_fixed_size<8>> const& b) {
-  return simd<double, simd_abi::avx512_fixed_size<8>>(
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::simd<
+    double, Experimental::simd_abi::avx512_fixed_size<8>>
+max(Experimental::simd<double,
+                       Experimental::simd_abi::avx512_fixed_size<8>> const& a,
+    Experimental::simd<double,
+                       Experimental::simd_abi::avx512_fixed_size<8>> const& b) {
+  return Experimental::simd<double,
+                            Experimental::simd_abi::avx512_fixed_size<8>>(
       _mm512_max_pd(static_cast<__m512d>(a), static_cast<__m512d>(b)));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    simd<double, simd_abi::avx512_fixed_size<8>>
-    min(simd<double, simd_abi::avx512_fixed_size<8>> const& a,
-        simd<double, simd_abi::avx512_fixed_size<8>> const& b) {
-  return simd<double, simd_abi::avx512_fixed_size<8>>(
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::simd<
+    double, Experimental::simd_abi::avx512_fixed_size<8>>
+min(Experimental::simd<double,
+                       Experimental::simd_abi::avx512_fixed_size<8>> const& a,
+    Experimental::simd<double,
+                       Experimental::simd_abi::avx512_fixed_size<8>> const& b) {
+  return Experimental::simd<double,
+                            Experimental::simd_abi::avx512_fixed_size<8>>(
       _mm512_min_pd(static_cast<__m512d>(a), static_cast<__m512d>(b)));
 }
+
+namespace Experimental {
 
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     simd<double, simd_abi::avx512_fixed_size<8>>
@@ -1009,7 +1069,7 @@ class simd<float, simd_abi::avx512_fixed_size<8>> {
                 std::is_invocable_r_v<value_type, G,
                                       std::integral_constant<std::size_t, 0>>,
                 bool> = false>
-  KOKKOS_FORCEINLINE_FUNCTION simd(G&& gen)
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd(G&& gen)
       : m_value(_mm256_setr_ps(gen(std::integral_constant<std::size_t, 0>()),
                                gen(std::integral_constant<std::size_t, 1>()),
                                gen(std::integral_constant<std::size_t, 2>()),
@@ -1085,80 +1145,109 @@ class simd<float, simd_abi::avx512_fixed_size<8>> {
   }
 };
 
+}  // namespace Experimental
+
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-simd<float, simd_abi::avx512_fixed_size<8>> copysign(
-    simd<float, simd_abi::avx512_fixed_size<8>> const& a,
-    simd<float, simd_abi::avx512_fixed_size<8>> const& b) {
+Experimental::simd<float, Experimental::simd_abi::avx512_fixed_size<8>>
+copysign(
+    Experimental::simd<float,
+                       Experimental::simd_abi::avx512_fixed_size<8>> const& a,
+    Experimental::simd<float,
+                       Experimental::simd_abi::avx512_fixed_size<8>> const& b) {
   __m256 const sign_mask = _mm256_set1_ps(-0.0);
-  return simd<float, simd_abi::avx512_fixed_size<8>>(
+  return Experimental::simd<float,
+                            Experimental::simd_abi::avx512_fixed_size<8>>(
       _mm256_xor_ps(_mm256_andnot_ps(sign_mask, static_cast<__m256>(a)),
                     _mm256_and_ps(sign_mask, static_cast<__m256>(b))));
 }
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-simd<float, simd_abi::avx512_fixed_size<8>> abs(
-    simd<float, simd_abi::avx512_fixed_size<8>> const& a) {
+Experimental::simd<float, Experimental::simd_abi::avx512_fixed_size<8>> abs(
+    Experimental::simd<float,
+                       Experimental::simd_abi::avx512_fixed_size<8>> const& a) {
   __m256 const sign_mask = _mm256_set1_ps(-0.0);
-  return simd<float, simd_abi::avx512_fixed_size<8>>(
+  return Experimental::simd<float,
+                            Experimental::simd_abi::avx512_fixed_size<8>>(
       _mm256_andnot_ps(sign_mask, static_cast<__m256>(a)));
 }
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-simd<float, simd_abi::avx512_fixed_size<8>> sqrt(
-    simd<float, simd_abi::avx512_fixed_size<8>> const& a) {
-  return simd<float, simd_abi::avx512_fixed_size<8>>(
+Experimental::simd<float, Experimental::simd_abi::avx512_fixed_size<8>> sqrt(
+    Experimental::simd<float,
+                       Experimental::simd_abi::avx512_fixed_size<8>> const& a) {
+  return Experimental::simd<float,
+                            Experimental::simd_abi::avx512_fixed_size<8>>(
       _mm256_sqrt_ps(static_cast<__m256>(a)));
 }
 
 #ifdef __INTEL_COMPILER
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-simd<float, simd_abi::avx512_fixed_size<8>> cbrt(
-    simd<float, simd_abi::avx512_fixed_size<8>> const& a) {
-  return simd<float, simd_abi::avx512_fixed_size<8>>(
+Experimental::simd<float, Experimental::simd_abi::avx512_fixed_size<8>> cbrt(
+    Experimental::simd<float,
+                       Experimental::simd_abi::avx512_fixed_size<8>> const& a) {
+  return Experimental::simd<float,
+                            Experimental::simd_abi::avx512_fixed_size<8>>(
       _mm256_cbrt_ps(static_cast<__m256>(a)));
 }
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-simd<float, simd_abi::avx512_fixed_size<8>> exp(
-    simd<float, simd_abi::avx512_fixed_size<8>> const& a) {
-  return simd<float, simd_abi::avx512_fixed_size<8>>(
+Experimental::simd<float, Experimental::simd_abi::avx512_fixed_size<8>> exp(
+    Experimental::simd<float,
+                       Experimental::simd_abi::avx512_fixed_size<8>> const& a) {
+  return Experimental::simd<float,
+                            Experimental::simd_abi::avx512_fixed_size<8>>(
       _mm256_exp_ps(static_cast<__m256>(a)));
 }
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-simd<float, simd_abi::avx512_fixed_size<8>> log(
-    simd<float, simd_abi::avx512_fixed_size<8>> const& a) {
-  return simd<float, simd_abi::avx512_fixed_size<8>>(
+Experimental::simd<float, Experimental::simd_abi::avx512_fixed_size<8>> log(
+    Experimental::simd<float,
+                       Experimental::simd_abi::avx512_fixed_size<8>> const& a) {
+  return Experimental::simd<float,
+                            Experimental::simd_abi::avx512_fixed_size<8>>(
       _mm256_log_ps(static_cast<__m256>(a)));
 }
 
 #endif
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-simd<float, simd_abi::avx512_fixed_size<8>> fma(
-    simd<float, simd_abi::avx512_fixed_size<8>> const& a,
-    simd<float, simd_abi::avx512_fixed_size<8>> const& b,
-    simd<float, simd_abi::avx512_fixed_size<8>> const& c) {
-  return simd<float, simd_abi::avx512_fixed_size<8>>(_mm256_fmadd_ps(
-      static_cast<__m256>(a), static_cast<__m256>(b), static_cast<__m256>(c)));
+Experimental::simd<float, Experimental::simd_abi::avx512_fixed_size<8>> fma(
+    Experimental::simd<float,
+                       Experimental::simd_abi::avx512_fixed_size<8>> const& a,
+    Experimental::simd<float,
+                       Experimental::simd_abi::avx512_fixed_size<8>> const& b,
+    Experimental::simd<float,
+                       Experimental::simd_abi::avx512_fixed_size<8>> const& c) {
+  return Experimental::simd<float,
+                            Experimental::simd_abi::avx512_fixed_size<8>>(
+      _mm256_fmadd_ps(static_cast<__m256>(a), static_cast<__m256>(b),
+                      static_cast<__m256>(c)));
 }
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-simd<float, simd_abi::avx512_fixed_size<8>> max(
-    simd<float, simd_abi::avx512_fixed_size<8>> const& a,
-    simd<float, simd_abi::avx512_fixed_size<8>> const& b) {
-  return simd<float, simd_abi::avx512_fixed_size<8>>(
+Experimental::simd<float, Experimental::simd_abi::avx512_fixed_size<8>> max(
+    Experimental::simd<float,
+                       Experimental::simd_abi::avx512_fixed_size<8>> const& a,
+    Experimental::simd<float,
+                       Experimental::simd_abi::avx512_fixed_size<8>> const& b) {
+  return Experimental::simd<float,
+                            Experimental::simd_abi::avx512_fixed_size<8>>(
       _mm256_max_ps(static_cast<__m256>(a), static_cast<__m256>(b)));
 }
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-simd<float, simd_abi::avx512_fixed_size<8>> min(
-    simd<float, simd_abi::avx512_fixed_size<8>> const& a,
-    simd<float, simd_abi::avx512_fixed_size<8>> const& b) {
-  return simd<float, simd_abi::avx512_fixed_size<8>>(
+Experimental::simd<float, Experimental::simd_abi::avx512_fixed_size<8>> min(
+    Experimental::simd<float,
+                       Experimental::simd_abi::avx512_fixed_size<8>> const& a,
+    Experimental::simd<float,
+                       Experimental::simd_abi::avx512_fixed_size<8>> const& b) {
+  return Experimental::simd<float,
+                            Experimental::simd_abi::avx512_fixed_size<8>>(
       _mm256_min_ps(static_cast<__m256>(a), static_cast<__m256>(b)));
 }
+
+namespace Experimental {
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 simd<float, simd_abi::avx512_fixed_size<8>> condition(

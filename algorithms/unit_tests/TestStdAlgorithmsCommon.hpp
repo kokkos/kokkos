@@ -75,44 +75,49 @@ std::string view_tag_to_string(StridedThreeRowsTag);
 //
 
 // dynamic
-template <class ValueType>
+template <class ValueType,
+          class MemSpace = typename Kokkos::DefaultExecutionSpace::memory_space>
 auto create_view(DynamicTag, std::size_t ext, const std::string label) {
-  using view_t = Kokkos::View<ValueType*>;
+  using view_t = Kokkos::View<ValueType*, MemSpace>;
   view_t view{label + "_" + view_tag_to_string(DynamicTag{}), ext};
   return view;
 }
 
 // dynamic layout left
-template <class ValueType>
+template <class ValueType,
+          class MemSpace = typename Kokkos::DefaultExecutionSpace::memory_space>
 auto create_view(DynamicLayoutLeftTag, std::size_t ext,
                  const std::string label) {
-  using view_t = Kokkos::View<ValueType*, Kokkos::LayoutLeft>;
+  using view_t = Kokkos::View<ValueType*, Kokkos::LayoutLeft, MemSpace>;
   view_t view{label + "_" + view_tag_to_string(DynamicLayoutLeftTag{}), ext};
   return view;
 }
 
 // dynamic layout right
-template <class ValueType>
+template <class ValueType,
+          class MemSpace = typename Kokkos::DefaultExecutionSpace::memory_space>
 auto create_view(DynamicLayoutRightTag, std::size_t ext,
                  const std::string label) {
-  using view_t = Kokkos::View<ValueType*, Kokkos::LayoutRight>;
+  using view_t = Kokkos::View<ValueType*, Kokkos::LayoutRight, MemSpace>;
   view_t view{label + "_" + view_tag_to_string(DynamicLayoutRightTag{}), ext};
   return view;
 }
 
 // stride2
-template <class ValueType>
+template <class ValueType,
+          class MemSpace = typename Kokkos::DefaultExecutionSpace::memory_space>
 auto create_view(StridedTwoTag, std::size_t ext, const std::string label) {
-  using view_t = Kokkos::View<ValueType*, Kokkos::LayoutStride>;
+  using view_t = Kokkos::View<ValueType*, Kokkos::LayoutStride, MemSpace>;
   Kokkos::LayoutStride layout{ext, 2};
   view_t view{label + "_" + view_tag_to_string(StridedTwoTag{}), layout};
   return view;
 }
 
 // stride3
-template <class ValueType>
+template <class ValueType,
+          class MemSpace = typename Kokkos::DefaultExecutionSpace::memory_space>
 auto create_view(StridedThreeTag, std::size_t ext, const std::string label) {
-  using view_t = Kokkos::View<ValueType*, Kokkos::LayoutStride>;
+  using view_t = Kokkos::View<ValueType*, Kokkos::LayoutStride, MemSpace>;
   Kokkos::LayoutStride layout{ext, 3};
   view_t view{label + "_" + view_tag_to_string(StridedThreeTag{}), layout};
   return view;
@@ -123,49 +128,54 @@ auto create_view(StridedThreeTag, std::size_t ext, const std::string label) {
 //
 
 // dynamic
-template <class ValueType>
+template <class ValueType,
+          class MemSpace = typename Kokkos::DefaultExecutionSpace::memory_space>
 auto create_view(DynamicTag, std::size_t ext0, std::size_t ext1,
                  const std::string label) {
-  using view_t = Kokkos::View<ValueType**>;
+  using view_t = Kokkos::View<ValueType**, MemSpace>;
   view_t view{label + "_" + view_tag_to_string(DynamicTag{}), ext0, ext1};
   return view;
 }
 
 // dynamic layout left
-template <class ValueType>
+template <class ValueType,
+          class MemSpace = typename Kokkos::DefaultExecutionSpace::memory_space>
 auto create_view(DynamicLayoutLeftTag, std::size_t ext0, std::size_t ext1,
                  const std::string label) {
-  using view_t = Kokkos::View<ValueType**, Kokkos::LayoutLeft>;
+  using view_t = Kokkos::View<ValueType**, Kokkos::LayoutLeft, MemSpace>;
   view_t view{label + "_" + view_tag_to_string(DynamicLayoutLeftTag{}), ext0,
               ext1};
   return view;
 }
 
 // dynamic layout right
-template <class ValueType>
+template <class ValueType,
+          class MemSpace = typename Kokkos::DefaultExecutionSpace::memory_space>
 auto create_view(DynamicLayoutRightTag, std::size_t ext0, std::size_t ext1,
                  const std::string label) {
-  using view_t = Kokkos::View<ValueType**, Kokkos::LayoutRight>;
+  using view_t = Kokkos::View<ValueType**, Kokkos::LayoutRight, MemSpace>;
   view_t view{label + "_" + view_tag_to_string(DynamicLayoutRightTag{}), ext0,
               ext1};
   return view;
 }
 
 // stride2rows
-template <class ValueType>
+template <class ValueType,
+          class MemSpace = typename Kokkos::DefaultExecutionSpace::memory_space>
 auto create_view(StridedTwoRowsTag, std::size_t ext0, std::size_t ext1,
                  const std::string label) {
-  using view_t = Kokkos::View<ValueType**, Kokkos::LayoutStride>;
+  using view_t = Kokkos::View<ValueType**, Kokkos::LayoutStride, MemSpace>;
   Kokkos::LayoutStride layout{ext0, 2, ext1, ext0 * 2};
   view_t view{label + "_" + view_tag_to_string(StridedTwoRowsTag{}), layout};
   return view;
 }
 
 // stride3rows
-template <class ValueType>
+template <class ValueType,
+          class MemSpace = typename Kokkos::DefaultExecutionSpace::memory_space>
 auto create_view(StridedThreeRowsTag, std::size_t ext0, std::size_t ext1,
                  const std::string label) {
-  using view_t = Kokkos::View<ValueType**, Kokkos::LayoutStride>;
+  using view_t = Kokkos::View<ValueType**, Kokkos::LayoutStride, MemSpace>;
   Kokkos::LayoutStride layout{ext0, 3, ext1, ext0 * 3};
   view_t view{label + "_" + view_tag_to_string(StridedThreeRowsTag{}), layout};
   return view;
@@ -188,7 +198,8 @@ auto create_deep_copyable_compatible_view_with_same_extent(ViewType view) {
 
   // this is needed for intel to avoid
   // error #1011: missing return statement at end of non-void function
-#if defined KOKKOS_COMPILER_INTEL
+#if defined KOKKOS_COMPILER_INTEL || \
+    (defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130)
   __builtin_unreachable();
 #endif
 }
@@ -197,13 +208,17 @@ template <class ViewType>
 auto create_deep_copyable_compatible_clone(ViewType view) {
   auto view_dc    = create_deep_copyable_compatible_view_with_same_extent(view);
   using view_dc_t = decltype(view_dc);
+  using exe_space = typename view_dc_t::execution_space;
   if constexpr (ViewType::rank == 1) {
     CopyFunctor<ViewType, view_dc_t> F1(view, view_dc);
-    Kokkos::parallel_for("copy", view.extent(0), F1);
+    Kokkos::RangePolicy<exe_space> policy(0, view.extent(0));
+    Kokkos::parallel_for("copy", policy, F1);
+
   } else {
     static_assert(ViewType::rank == 2, "Only rank 1 or 2 supported.");
     CopyFunctorRank2<ViewType, view_dc_t> F1(view, view_dc);
-    Kokkos::parallel_for("copy", view.extent(0) * view.extent(1), F1);
+    Kokkos::RangePolicy<exe_space> policy(0, view.extent(0) * view.extent(1));
+    Kokkos::parallel_for("copy", policy, F1);
   }
   return view_dc;
 }
@@ -212,16 +227,40 @@ auto create_deep_copyable_compatible_clone(ViewType view) {
 // others
 //
 
+template <class TeamHandleType, class ValueType1, class ValueType2>
+KOKKOS_FUNCTION bool team_members_have_matching_result(
+    const TeamHandleType& teamHandle, const ValueType1 memberValueIn,
+    const ValueType2 targetIn) {
+  using T             = std::common_type_t<ValueType1, ValueType2>;
+  const T memberValue = memberValueIn;
+  const T target      = targetIn;
+
+  // set accum to 1 if a mismach is found
+  const bool mismatch = memberValue != target;
+  int accum           = static_cast<int>(mismatch);
+  // FIXME_OPENMPTARGET: team API does not meet the TeamHandle concept and
+  // ignores the reducer passed
+#if defined KOKKOS_ENABLE_OPENMPTARGET
+  Kokkos::Sum<int> dummyReducer(accum);
+  const auto result = teamHandle.team_reduce(accum, dummyReducer);
+  return (result == 0);
+#else
+  teamHandle.team_reduce(Kokkos::Sum<int>(accum));
+  return (accum == 0);
+#endif
+}
+
 template <class ValueType1, class ValueType2>
 auto make_bounds(const ValueType1& lower, const ValueType2 upper) {
   return Kokkos::pair<ValueType1, ValueType2>{lower, upper};
 }
 
-#if defined(__GNUC__) && __GNUC__ == 8
-
-// GCC 8 doesn't come with reduce, transform_reduce, exclusive_scan,
-// inclusive_scan, transform_exclusive_scan and transform_inclusive_scan so here
-// are simplified versions of them, only for testing purpose
+// libstdc++ as provided by GCC 8 does not have reduce, transform_reduce,
+// exclusive_scan, inclusive_scan, transform_exclusive_scan,
+// transform_inclusive_scan and for GCC 9.1, 9.2 fails to compile them for
+// missing overload not accepting policy so use here simplified versions of
+// them, only for testing purpose
+#if defined(_GLIBCXX_RELEASE) && (_GLIBCXX_RELEASE <= 9)
 
 template <class InputIterator, class ValueType, class BinaryOp>
 ValueType testing_reduce(InputIterator first, InputIterator last,

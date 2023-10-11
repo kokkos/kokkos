@@ -40,6 +40,18 @@
 #include <type_traits>
 #include <vector>
 
+/*--------------------------------------------------------------------------*/
+namespace Kokkos {
+namespace Impl {
+
+inline bool execute_in_serial(OpenMP const& space = OpenMP()) {
+  return (OpenMP::in_parallel(space) &&
+          !(omp_get_nested() && (omp_get_level() == 1)));
+}
+
+}  // namespace Impl
+}  // namespace Kokkos
+
 namespace Kokkos {
 namespace Impl {
 

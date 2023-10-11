@@ -22,7 +22,6 @@
 
 #include <cstdio>
 #include <climits>
-#include <iostream>
 #include <iomanip>
 
 namespace Kokkos {

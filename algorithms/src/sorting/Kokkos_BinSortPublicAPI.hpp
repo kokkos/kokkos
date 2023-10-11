@@ -387,10 +387,9 @@ class BinSort {
     // Switching to std::sort for more than 10 elements has been found
     // reasonable experimentally.
     if (use_std_sort && bin_size > 10) {
-      if constexpr (use_std_sort) {
-        std::sort(&sort_order(lower_bound), &sort_order(upper_bound),
-                  [this](int p, int q) { return bin_op(keys_rnd, p, q); });
-      }
+      KOKKOS_IF_ON_HOST(
+          (std::sort(&sort_order(lower_bound), &sort_order(upper_bound),
+                     [this](int p, int q) { return bin_op(keys_rnd, p, q); });))
     } else {
       for (int k = lower_bound + 1; k < upper_bound; ++k) {
         int old_idx = sort_order(k);

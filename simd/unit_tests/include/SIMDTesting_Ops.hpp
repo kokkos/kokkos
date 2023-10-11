@@ -79,7 +79,14 @@ class absolutes {
  public:
   template <typename T>
   auto on_host(T const& a) const {
-    return Kokkos::Experimental::abs(a);
+    if constexpr (std::is_signed_v<typename T::value_type>) {
+#if defined(KOKKOS_ENABLE_DEPRECATED_CODE_4)
+      return Kokkos::Experimental::abs(a);
+#else
+      return Kokkos::abs(a);
+#endif
+    }
+    return a;
   }
   template <typename T>
   auto on_host_serial(T const& a) const {
@@ -87,7 +94,10 @@ class absolutes {
   }
   template <typename T>
   KOKKOS_INLINE_FUNCTION auto on_device(T const& a) const {
-    return Kokkos::Experimental::abs(a);
+    if constexpr (std::is_signed_v<typename T::value_type>) {
+      return Kokkos::abs(a);
+    }
+    return a;
   }
   template <typename T>
   KOKKOS_INLINE_FUNCTION auto on_device_serial(T const& a) const {

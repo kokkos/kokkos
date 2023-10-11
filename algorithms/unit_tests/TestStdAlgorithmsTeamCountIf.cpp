@@ -33,17 +33,21 @@ struct GreaterThanValueFunctor {
   bool operator()(ValueType val) const { return (val > m_val); }
 };
 
-template <class ViewType, class CountsViewType, class ValueType>
+template <class ViewType, class CountsViewType, class IntraTeamSentinelView,
+          class ValueType>
 struct TestFunctorA {
   ViewType m_view;
   CountsViewType m_countsView;
+  IntraTeamSentinelView m_intraTeamSentinelView;
   ValueType m_threshold;
   int m_apiPick;
 
   TestFunctorA(const ViewType view, const CountsViewType countsView,
+               const IntraTeamSentinelView intraTeamSentinelView,
                ValueType threshold, int apiPick)
       : m_view(view),
         m_countsView(countsView),
+        m_intraTeamSentinelView(intraTeamSentinelView),
         m_threshold(threshold),
         m_apiPick(apiPick) {}
 
@@ -51,19 +55,29 @@ struct TestFunctorA {
   KOKKOS_INLINE_FUNCTION void operator()(const MemberType& member) const {
     const auto myRowIndex = member.league_rank();
     auto myRowView        = Kokkos::subview(m_view, myRowIndex, Kokkos::ALL());
+    std::size_t myCount   = 0;
 
     GreaterThanValueFunctor predicate(m_threshold);
     if (m_apiPick == 0) {
-      auto myCount = KE::count_if(member, KE::begin(myRowView),
-                                  KE::end(myRowView), predicate);
+      myCount = KE::count_if(member, KE::begin(myRowView), KE::end(myRowView),
+                             predicate);
 
       Kokkos::single(Kokkos::PerTeam(member),
                      [=, *this]() { m_countsView(myRowIndex) = myCount; });
     } else if (m_apiPick == 1) {
-      auto myCount = KE::count_if(member, myRowView, predicate);
+      myCount = KE::count_if(member, myRowView, predicate);
       Kokkos::single(Kokkos::PerTeam(member),
                      [=, *this]() { m_countsView(myRowIndex) = myCount; });
     }
+
+    // store result of checking if all members have their local
+    // values matching the one stored in m_distancesView
+    member.team_barrier();
+    const bool intraTeamCheck = team_members_have_matching_result(
+        member, myCount, m_countsView(myRowIndex));
+    Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
+      m_intraTeamSentinelView(myRowIndex) = intraTeamCheck;
+    });
   }
 };
 
@@ -101,15 +115,19 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   // of its count_if call, and then we check
   // that these match what we expect
   Kokkos::View<std::size_t*> countsView("countsView", numTeams);
+  // sentinel to check if all members of the team compute the same result
+  Kokkos::View<bool*> intraTeamSentinelView("intraTeamSameResult", numTeams);
 
   // use CTAD for functor
-  TestFunctorA fnc(dataView, countsView, threshold, apiId);
+  TestFunctorA fnc(dataView, countsView, intraTeamSentinelView, threshold,
+                   apiId);
   Kokkos::parallel_for(policy, fnc);
 
   // -----------------------------------------------
   // check
   // -----------------------------------------------
-  auto countsView_h = create_host_space_copy(countsView);
+  auto countsView_h            = create_host_space_copy(countsView);
+  auto intraTeamSentinelView_h = create_host_space_copy(intraTeamSentinelView);
   for (std::size_t i = 0; i < cloneOfDataViewBeforeOp_h.extent(0); ++i) {
     std::size_t goldCountForRow = 0;
     for (std::size_t j = 0; j < cloneOfDataViewBeforeOp_h.extent(1); ++j) {
@@ -118,6 +136,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
       }
     }
     ASSERT_EQ(goldCountForRow, countsView_h(i));
+    ASSERT_TRUE(intraTeamSentinelView_h(i));
   }
 }
 

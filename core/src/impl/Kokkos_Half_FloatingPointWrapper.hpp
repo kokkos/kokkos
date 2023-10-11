@@ -23,6 +23,18 @@
 #include <iosfwd>  // istream & ostream for extraction and insertion ops
 #include <string>
 
+namespace Kokkos::Experimental::Impl {
+/// @brief templated struct for determining if half_t is an alias to float.
+/// @tparam T The type to specialize on.
+template <class T>
+struct is_float16 : std::false_type {};
+
+/// @brief templated struct for determining if bhalf_t is an alias to float.
+/// @tparam T The type to specialize on.
+template <class T>
+struct is_bfloat16 : std::false_type {};
+}  // namespace Kokkos::Experimental::Impl
+
 #ifdef KOKKOS_IMPL_HALF_TYPE_DEFINED
 
 // KOKKOS_HALF_IS_FULL_TYPE_ON_ARCH: A macro to select which
@@ -44,6 +56,10 @@ class floating_point_wrapper;
 // Declare half_t (binary16)
 using half_t = Kokkos::Experimental::Impl::floating_point_wrapper<
     Kokkos::Impl::half_impl_t ::type>;
+namespace Impl {
+template <>
+struct is_float16<half_t> : std::true_type {};
+}  // namespace Impl
 KOKKOS_INLINE_FUNCTION
 half_t cast_to_half(float val);
 KOKKOS_INLINE_FUNCTION
@@ -110,7 +126,10 @@ KOKKOS_INLINE_FUNCTION
 #ifdef KOKKOS_IMPL_BHALF_TYPE_DEFINED
 using bhalf_t = Kokkos::Experimental::Impl::floating_point_wrapper<
     Kokkos::Impl ::bhalf_impl_t ::type>;
-
+namespace Impl {
+template <>
+struct is_bfloat16<bhalf_t> : std::true_type {};
+}  // namespace Impl
 KOKKOS_INLINE_FUNCTION
 bhalf_t cast_to_bhalf(float val);
 KOKKOS_INLINE_FUNCTION
@@ -820,11 +839,47 @@ class alignas(FloatType) floating_point_wrapper {
     return tmp_lhs < tmp_rhs;
   }
 
+  template <class T>
+  KOKKOS_FUNCTION friend std::enable_if_t<std::is_convertible_v<T, float> &&
+                                              (std::is_same_v<T, float> ||
+                                               std::is_same_v<T, double>),
+                                          bool>
+  operator<(floating_point_wrapper lhs, T rhs) {
+    return static_cast<float>(lhs) < rhs;
+  }
+
+  template <class T>
+  KOKKOS_FUNCTION friend std::enable_if_t<std::is_convertible_v<T, float> &&
+                                              (std::is_same_v<T, float> ||
+                                               std::is_same_v<T, double>),
+                                          bool>
+  operator<(T lhs, floating_point_wrapper rhs) {
+    return lhs < static_cast<float>(rhs);
+  }
+
   KOKKOS_FUNCTION
   friend bool operator>(const volatile floating_point_wrapper& lhs,
                         const volatile floating_point_wrapper& rhs) {
     floating_point_wrapper tmp_lhs = lhs, tmp_rhs = rhs;
     return tmp_lhs > tmp_rhs;
+  }
+
+  template <class T>
+  KOKKOS_FUNCTION friend std::enable_if_t<std::is_convertible_v<T, float> &&
+                                              (std::is_same_v<T, float> ||
+                                               std::is_same_v<T, double>),
+                                          bool>
+  operator>(floating_point_wrapper lhs, T rhs) {
+    return static_cast<float>(lhs) > rhs;
+  }
+
+  template <class T>
+  KOKKOS_FUNCTION friend std::enable_if_t<std::is_convertible_v<T, float> &&
+                                              (std::is_same_v<T, float> ||
+                                               std::is_same_v<T, double>),
+                                          bool>
+  operator>(T lhs, floating_point_wrapper rhs) {
+    return lhs > static_cast<float>(rhs);
   }
 
   KOKKOS_FUNCTION
@@ -834,11 +889,47 @@ class alignas(FloatType) floating_point_wrapper {
     return tmp_lhs <= tmp_rhs;
   }
 
+  template <class T>
+  KOKKOS_FUNCTION friend std::enable_if_t<std::is_convertible_v<T, float> &&
+                                              (std::is_same_v<T, float> ||
+                                               std::is_same_v<T, double>),
+                                          bool>
+  operator<=(floating_point_wrapper lhs, T rhs) {
+    return static_cast<float>(lhs) <= rhs;
+  }
+
+  template <class T>
+  KOKKOS_FUNCTION friend std::enable_if_t<std::is_convertible_v<T, float> &&
+                                              (std::is_same_v<T, float> ||
+                                               std::is_same_v<T, double>),
+                                          bool>
+  operator<=(T lhs, floating_point_wrapper rhs) {
+    return lhs <= static_cast<float>(rhs);
+  }
+
   KOKKOS_FUNCTION
   friend bool operator>=(const volatile floating_point_wrapper& lhs,
                          const volatile floating_point_wrapper& rhs) {
     floating_point_wrapper tmp_lhs = lhs, tmp_rhs = rhs;
     return tmp_lhs >= tmp_rhs;
+  }
+
+  template <class T>
+  KOKKOS_FUNCTION friend std::enable_if_t<std::is_convertible_v<T, float> &&
+                                              (std::is_same_v<T, float> ||
+                                               std::is_same_v<T, double>),
+                                          bool>
+  operator>=(floating_point_wrapper lhs, T rhs) {
+    return static_cast<float>(lhs) >= rhs;
+  }
+
+  template <class T>
+  KOKKOS_FUNCTION friend std::enable_if_t<std::is_convertible_v<T, float> &&
+                                              (std::is_same_v<T, float> ||
+                                               std::is_same_v<T, double>),
+                                          bool>
+  operator>=(T lhs, floating_point_wrapper rhs) {
+    return lhs >= static_cast<float>(rhs);
   }
 
   // Insertion and extraction operators

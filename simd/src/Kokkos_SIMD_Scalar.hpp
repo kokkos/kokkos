@@ -23,6 +23,11 @@
 
 #include <Kokkos_SIMD_Common.hpp>
 
+#ifdef KOKKOS_SIMD_COMMON_MATH_HPP
+#error \
+    "Kokkos_SIMD_Scalar.hpp must be included before Kokkos_SIMD_Common_Math.hpp!"
+#endif
+
 namespace Kokkos {
 namespace Experimental {
 
@@ -201,9 +206,12 @@ class simd<T, simd_abi::scalar> {
   }
 };
 
+}  // namespace Experimental
+
 template <class T>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION simd<T, simd_abi::scalar> abs(
-    simd<T, simd_abi::scalar> const& a) {
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
+    Experimental::simd<T, Experimental::simd_abi::scalar>
+    abs(Experimental::simd<T, Experimental::simd_abi::scalar> const& a) {
   if constexpr (std::is_signed_v<T>) {
     return (a < 0 ? -a : a);
   }
@@ -211,18 +219,32 @@ template <class T>
 }
 
 template <class T>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION simd<T, simd_abi::scalar> sqrt(
-    simd<T, simd_abi::scalar> const& a) {
-  return simd<T, simd_abi::scalar>(std::sqrt(static_cast<T>(a)));
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
+    Experimental::simd<T, Experimental::simd_abi::scalar>
+    sqrt(Experimental::simd<T, Experimental::simd_abi::scalar> const& a) {
+  return Experimental::simd<T, Experimental::simd_abi::scalar>(
+      std::sqrt(static_cast<T>(a)));
 }
 
 template <class T>
-KOKKOS_FORCEINLINE_FUNCTION simd<T, simd_abi::scalar> fma(
-    simd<T, simd_abi::scalar> const& x, simd<T, simd_abi::scalar> const& y,
-    simd<T, simd_abi::scalar> const& z) {
-  return simd<T, simd_abi::scalar>((static_cast<T>(x) * static_cast<T>(y)) +
-                                   static_cast<T>(z));
+KOKKOS_FORCEINLINE_FUNCTION
+    Experimental::simd<T, Experimental::simd_abi::scalar>
+    fma(Experimental::simd<T, Experimental::simd_abi::scalar> const& x,
+        Experimental::simd<T, Experimental::simd_abi::scalar> const& y,
+        Experimental::simd<T, Experimental::simd_abi::scalar> const& z) {
+  return Experimental::simd<T, Experimental::simd_abi::scalar>(
+      (static_cast<T>(x) * static_cast<T>(y)) + static_cast<T>(z));
 }
+
+template <class T>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
+    Experimental::simd<T, Experimental::simd_abi::scalar>
+    copysign(Experimental::simd<T, Experimental::simd_abi::scalar> const& a,
+             Experimental::simd<T, Experimental::simd_abi::scalar> const& b) {
+  return std::copysign(static_cast<T>(a), static_cast<T>(b));
+}
+
+namespace Experimental {
 
 template <class T>
 KOKKOS_FORCEINLINE_FUNCTION simd<T, simd_abi::scalar> condition(
@@ -231,12 +253,6 @@ KOKKOS_FORCEINLINE_FUNCTION simd<T, simd_abi::scalar> condition(
     simd<T, simd_abi::scalar> const& b, simd<T, simd_abi::scalar> const& c) {
   return simd<T, simd_abi::scalar>(static_cast<bool>(a) ? static_cast<T>(b)
                                                         : static_cast<T>(c));
-}
-
-template <class T, class Abi>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION simd<T, Abi> copysign(
-    simd<T, Abi> const& a, simd<T, Abi> const& b) {
-  return std::copysign(static_cast<T>(a), static_cast<T>(b));
 }
 
 template <class T>

@@ -70,12 +70,10 @@ class HIPInternal {
   using size_type = ::Kokkos::HIP::size_type;
 
   inline static int m_hipDev                        = -1;
-  inline static int m_hipArch                       = -1;
   inline static unsigned m_multiProcCount           = 0;
   inline static unsigned m_maxWarpCount             = 0;
   inline static std::array<size_type, 3> m_maxBlock = {0, 0, 0};
   inline static unsigned m_maxWavesPerCU            = 0;
-  inline static unsigned m_maxSharedWords           = 0;
   inline static int m_shmemPerSM                    = 0;
   inline static int m_maxShmemPerBlock              = 0;
   inline static int m_maxThreadsPerSM               = 0;
@@ -150,6 +148,7 @@ class HIPInternal {
   void release_team_scratch_space(int scratch_pool_id);
 };
 
+void create_HIP_instances(std::vector<HIP> &instances);
 }  // namespace Impl
 
 namespace Experimental {
@@ -158,16 +157,6 @@ namespace Experimental {
 //   Customization point for backends
 //   Default behavior is to return the passed in instance
 
-namespace Impl {
-inline void create_HIP_instances(std::vector<HIP> &instances) {
-  for (int s = 0; s < int(instances.size()); s++) {
-    hipStream_t stream;
-    KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamCreate(&stream));
-    instances[s] = HIP(stream, true);
-  }
-}
-}  // namespace Impl
-
 template <class... Args>
 std::vector<HIP> partition_space(const HIP &, Args...) {
   static_assert(
@@ -175,7 +164,7 @@ std::vector<HIP> partition_space(const HIP &, Args...) {
       "Kokkos Error: partitioning arguments must be integers or floats");
 
   std::vector<HIP> instances(sizeof...(Args));
-  Impl::create_HIP_instances(instances);
+  Kokkos::Impl::create_HIP_instances(instances);
   return instances;
 }
 
@@ -188,7 +177,7 @@ std::vector<HIP> partition_space(const HIP &, std::vector<T> const &weights) {
   // We only care about the number of instances to create and ignore weights
   // otherwise.
   std::vector<HIP> instances(weights.size());
-  Impl::create_HIP_instances(instances);
+  Kokkos::Impl::create_HIP_instances(instances);
   return instances;
 }
 }  // namespace Experimental
