@@ -77,7 +77,6 @@ class ThreadsInternal {
 
   static void global_lock();
   static void global_unlock();
-  static void spawn();
 
   static void first_touch_allocate_thread_private_scratch(ThreadsInternal &,
                                                           const void *);

@@ -92,16 +92,6 @@ inline unsigned fan_size(const unsigned rank, const unsigned size) {
 namespace Kokkos {
 namespace Impl {
 
-//----------------------------------------------------------------------------
-// Spawn a thread
-
-void ThreadsInternal::spawn() {
-  std::thread t(internal_cppthread_driver);
-  t.detach();
-}
-
-//----------------------------------------------------------------------------
-
 bool ThreadsInternal::is_process() {
   static const std::thread::id master_pid = std::this_thread::get_id();
 
@@ -592,7 +582,8 @@ void ThreadsInternal::initialize(int thread_count_arg) {
       // Wait until spawned thread has attempted to initialize.
       // If spawning and initialization is successful then
       // an entry in 's_threads_exec' will be assigned.
-      ThreadsInternal::spawn();
+      std::thread t(internal_cppthread_driver);
+      t.detach();
       wait_yield(s_threads_process.m_pool_state, ThreadState::Inactive);
       if (s_threads_process.m_pool_state == ThreadState::Terminating) break;
     }
