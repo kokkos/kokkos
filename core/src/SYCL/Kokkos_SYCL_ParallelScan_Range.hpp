@@ -111,8 +111,8 @@ class ParallelScanSYCLBase {
   const CombinedFunctorReducer<FunctorType, typename Analysis::Reducer>
       m_functor_reducer;
   const Policy m_policy;
-  pointer_type m_scratch_space = nullptr;
-  const pointer_type m_result_ptr;
+  sycl::host_ptr<value_type> m_scratch_host = nullptr;
+  pointer_type m_result_ptr;
   const bool m_result_ptr_device_accessible;
 
   // Only let one Parallel/Scan modify the shared memory. The
@@ -253,7 +253,8 @@ class ParallelScanSYCLBase {
       global_mem =
           static_cast<sycl::device_ptr<value_type>>(instance.scratch_space(
               n_wgroups * (wgroup_size + 1) * sizeof(value_type)));
-      m_scratch_space = global_mem;
+      m_scratch_host = static_cast<sycl::host_ptr<value_type>>(
+          instance.scratch_host(sizeof(value_type)));
 
       group_results = global_mem + n_wgroups * wgroup_size;
 
@@ -284,7 +285,9 @@ class ParallelScanSYCLBase {
       auto result_ptr_device_accessible = m_result_ptr_device_accessible;
       // The compiler failed with CL_INVALID_ARG_VALUE if using m_result_ptr
       // directly.
-      auto result_ptr = m_result_ptr_device_accessible ? m_result_ptr : nullptr;
+      pointer_type result_ptr = m_result_ptr_device_accessible
+                                    ? m_result_ptr
+                                    : static_cast<pointer_type>(m_scratch_host);
 
 #ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
       cgh.depends_on(perform_work_group_scans);
@@ -312,9 +315,7 @@ class ParallelScanSYCLBase {
               else
                 functor(WorkTag(), global_id + begin, update, true);
 
-              global_mem_copy[global_id] = update;
-              if (global_id == size - 1 && result_ptr_device_accessible)
-                *result_ptr = update;
+              if (global_id == size - 1) *result_ptr = update;
             }
           });
     });
@@ -390,11 +391,11 @@ class Kokkos::Impl::ParallelScanWithTotal<
     Base::impl_execute([&]() {
       const long long nwork = Base::m_policy.end() - Base::m_policy.begin();
       if (nwork > 0 && !Base::m_result_ptr_device_accessible) {
+        m_exec.fence(
+            "Kokkos::Impl::ParallelReduce<SYCL, MDRangePolicy>::execute: "
+            "result not device-accessible");
         const int size = Base::m_functor_reducer.get_reducer().value_size();
-        DeepCopy<HostSpace, Kokkos::Experimental::SYCLDeviceUSMSpace,
-                 Kokkos::Experimental::SYCL>(m_exec, Base::m_result_ptr,
-                                             Base::m_scratch_space + nwork - 1,
-                                             size);
+        std::memcpy(Base::m_result_ptr, Base::m_scratch_host, size);
       }
     });
   }

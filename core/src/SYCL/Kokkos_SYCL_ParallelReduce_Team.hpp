@@ -79,6 +79,11 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
         m_functor_reducer.get_reducer().value_count();
     std::size_t size = std::size_t(m_league_size) * m_team_size * m_vector_size;
     value_type* results_ptr = nullptr;
+    auto host_result_ptr =
+        (m_result_ptr && !m_result_ptr_device_accessible)
+            ? static_cast<sycl::host_ptr<value_type>>(
+                  instance.scratch_host(sizeof(value_type) * value_count))
+            : nullptr;
 
     sycl::event last_reduction_event;
 
@@ -89,8 +94,10 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
       results_ptr =
           static_cast<sycl::device_ptr<value_type>>(instance.scratch_space(
               sizeof(value_type) * std::max(value_count, 1u)));
-      sycl::global_ptr<value_type> device_accessible_result_ptr =
-          m_result_ptr_device_accessible ? m_result_ptr : nullptr;
+      auto device_accessible_result_ptr =
+          m_result_ptr_device_accessible
+              ? static_cast<sycl::global_ptr<value_type>>(m_result_ptr)
+              : static_cast<sycl::global_ptr<value_type>>(host_result_ptr);
 
       auto parallel_reduce_event = q.submit([&](sycl::handler& cgh) {
         // FIXME_SYCL accessors seem to need a size greater than zero at least
@@ -164,8 +171,11 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
         auto team_reduction_factory =
             [&](sycl::local_accessor<value_type, 1> local_mem,
                 sycl::device_ptr<value_type> results_ptr) {
-              sycl::global_ptr<value_type> device_accessible_result_ptr =
-                  m_result_ptr_device_accessible ? m_result_ptr : nullptr;
+              auto device_accessible_result_ptr =
+                  m_result_ptr_device_accessible
+                      ? static_cast<sycl::global_ptr<value_type>>(m_result_ptr)
+                      : static_cast<sycl::global_ptr<value_type>>(
+                            host_result_ptr);
               auto lambda = [=](sycl::nd_item<2> item) {
                 auto n_wgroups = item.get_group_range()[1];
                 int wgroup_size =
@@ -358,11 +368,12 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
     // At this point, the reduced value is written to the entry in results_ptr
     // and all that is left is to copy it back to the given result pointer if
     // necessary.
-    if (m_result_ptr && !m_result_ptr_device_accessible) {
-      Kokkos::Impl::DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace,
-                             Kokkos::Experimental::SYCLDeviceUSMSpace>(
-          space, m_result_ptr, results_ptr,
-          sizeof(*m_result_ptr) * value_count);
+    if (host_result_ptr) {
+      space.fence(
+          "Kokkos::Impl::ParallelReduce<SYCL, TeamPolicy>::execute: result not "
+          "device-accessible");
+      std::memcpy(m_result_ptr, host_result_ptr,
+                  sizeof(*m_result_ptr) * value_count);
     }
 
     return last_reduction_event;
