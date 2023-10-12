@@ -357,7 +357,9 @@ struct TestReducers {
     }
 #endif
 #ifdef KOKKOS_ENABLE_SYCL
-    if constexpr (std::is_same_v<ExecSpace, Kokkos::Experimental::SYCL>) {
+    if constexpr (std::is_same_v<ExecSpace, Kokkos::Experimental::SYCL> &&
+                  (std::is_same_v<Scalar, array_reduce<float, 7>> ||
+                   std::is_same_v<Scalar, int8_t>)) {
       return;  // FIXME_SYCL
     }
 #endif
