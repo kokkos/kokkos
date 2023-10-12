@@ -139,6 +139,30 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
   }
 }
 
+template <typename iType, class FunctorType, class ValueType>
+KOKKOS_INLINE_FUNCTION void parallel_scan(
+    const Impl::ThreadVectorRangeBoundariesStruct<
+        iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
+    const FunctorType& lambda, ValueType& return_val) {
+  using Analysis = Impl::FunctorAnalysis<Impl::FunctorPatternInterface::SCAN,
+                                         TeamPolicy<Experimental::OpenMPTarget>,
+                                         FunctorType, void>;
+  using analysis_value_type = typename Analysis::value_type;
+  static_assert(std::is_same_v<analysis_value_type, ValueType>,
+                "Non-matching value types of functor and return type");
+
+  ValueType scan_val = {};
+
+#ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
+#pragma ivdep
+#endif
+  for (iType i = loop_boundaries.start; i < loop_boundaries.end; ++i) {
+    lambda(i, scan_val, true);
+  }
+
+  return_val = scan_val;
+}
+
 }  // namespace Kokkos
 
 #ifdef KOKKOS_IMPL_TEAM_SCAN_WORKAROUND
