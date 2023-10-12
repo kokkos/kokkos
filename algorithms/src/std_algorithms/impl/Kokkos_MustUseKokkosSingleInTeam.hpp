@@ -36,20 +36,6 @@ struct stdalgo_must_use_kokkos_single_for_team_scan<
     Kokkos::Experimental::OpenACC> : std::true_type {};
 #endif
 
-// FIXME_OPENMPTARGET
-#if defined(KOKKOS_ENABLE_OPENMPTARGET)
-template <>
-struct stdalgo_must_use_kokkos_single_for_team_scan<
-    Kokkos::Experimental::OpenMPTarget> : std::true_type {};
-#endif
-
-// FIXME_HPX
-#if defined(KOKKOS_ENABLE_HPX)
-template <>
-struct stdalgo_must_use_kokkos_single_for_team_scan<Kokkos::Experimental::HPX>
-    : std::true_type {};
-#endif
-
 template <typename T>
 inline constexpr bool stdalgo_must_use_kokkos_single_for_team_scan_v =
     stdalgo_must_use_kokkos_single_for_team_scan<T>::value;
