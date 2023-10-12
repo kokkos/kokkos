@@ -119,26 +119,6 @@ namespace Kokkos {
  * final==true. Scan_val will be set to the final sum value over all vector
  * lanes.
  */
-template <typename iType, class FunctorType>
-KOKKOS_INLINE_FUNCTION void parallel_scan(
-    const Impl::ThreadVectorRangeBoundariesStruct<
-        iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
-    const FunctorType& lambda) {
-  using Analysis   = Impl::FunctorAnalysis<Impl::FunctorPatternInterface::SCAN,
-                                         TeamPolicy<Experimental::OpenMPTarget>,
-                                         FunctorType, void>;
-  using value_type = typename Analysis::value_type;
-
-  value_type scan_val = value_type();
-
-#ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
-#pragma ivdep
-#endif
-  for (iType i = loop_boundaries.start; i < loop_boundaries.end; ++i) {
-    lambda(i, scan_val, true);
-  }
-}
-
 template <typename iType, class FunctorType, class ValueType>
 KOKKOS_INLINE_FUNCTION void parallel_scan(
     const Impl::ThreadVectorRangeBoundariesStruct<
@@ -161,6 +141,20 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
   }
 
   return_val = scan_val;
+}
+
+template <typename iType, class FunctorType>
+KOKKOS_INLINE_FUNCTION void parallel_scan(
+    const Impl::ThreadVectorRangeBoundariesStruct<
+        iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
+    const FunctorType& lambda) {
+  using Analysis   = Impl::FunctorAnalysis<Impl::FunctorPatternInterface::SCAN,
+                                         TeamPolicy<Experimental::OpenMPTarget>,
+                                         FunctorType, void>;
+  using value_type = typename Analysis::value_type;
+
+  value_type scan_val = value_type();
+  parallel_scan(loop_boundaries, lambda, scan_val);
 }
 
 }  // namespace Kokkos
