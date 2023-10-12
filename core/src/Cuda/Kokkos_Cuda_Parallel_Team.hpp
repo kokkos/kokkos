@@ -804,7 +804,8 @@ class ParallelReduce<CombinedFunctorReducerType,
       *result = value;
     } else if (Impl::cuda_inter_block_reduction(
                    value, init, m_functor_reducer.get_reducer(),
-                   m_scratch_space, result, m_scratch_flags, blockDim.y)) {
+                   reinterpret_cast<pointer_type>(m_scratch_space), result,
+                   m_scratch_flags, blockDim.y)) {
       const unsigned id = threadIdx.y * blockDim.x + threadIdx.x;
       if (id == 0) {
         m_functor_reducer.get_reducer().final(&value);
