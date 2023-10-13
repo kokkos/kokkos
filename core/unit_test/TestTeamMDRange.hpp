@@ -923,7 +923,8 @@ struct TestTeamThreadMDRangeParallelReduce : public TestTeamMDParallelReduce {
                 threadSum += v(leagueRank, i, j);
               },
               teamSum);
-          leagueSum += teamSum;
+          Kokkos::single(Kokkos::PerTeam(team),
+                         [&]() { leagueSum += teamSum; });
         },
         finalSum);
 
@@ -966,7 +967,8 @@ struct TestTeamThreadMDRangeParallelReduce : public TestTeamMDParallelReduce {
               [=](const int& i, const int& j, const int& k,
                   DataType& threadSum) { threadSum += v(leagueRank, i, j, k); },
               teamSum);
-          leagueSum += teamSum;
+          Kokkos::single(Kokkos::PerTeam(team),
+                         [&]() { leagueSum += teamSum; });
         },
         finalSum);
 
@@ -1013,7 +1015,8 @@ struct TestTeamThreadMDRangeParallelReduce : public TestTeamMDParallelReduce {
                 threadSum += v(leagueRank, i, j, k, l);
               },
               teamSum);
-          leagueSum += teamSum;
+          Kokkos::single(Kokkos::PerTeam(team),
+                         [&]() { leagueSum += teamSum; });
         },
         finalSum);
 
@@ -1061,7 +1064,8 @@ struct TestTeamThreadMDRangeParallelReduce : public TestTeamMDParallelReduce {
                 threadSum += v(leagueRank, i, j, k, l, m);
               },
               teamSum);
-          leagueSum += teamSum;
+          Kokkos::single(Kokkos::PerTeam(team),
+                         [&]() { leagueSum += teamSum; });
         },
         finalSum);
 
@@ -1116,7 +1120,8 @@ struct TestTeamThreadMDRangeParallelReduce : public TestTeamMDParallelReduce {
                 threadSum += v(leagueRank, i, j, k, l, m, n);
               },
               teamSum);
-          leagueSum += teamSum;
+          Kokkos::single(Kokkos::PerTeam(team),
+                         [&]() { leagueSum += teamSum; });
         },
         finalSum);
 
@@ -1174,7 +1179,8 @@ struct TestTeamThreadMDRangeParallelReduce : public TestTeamMDParallelReduce {
                 threadSum += v(leagueRank, i, j, k, l, m, n, o);
               },
               teamSum);
-          leagueSum += teamSum;
+          Kokkos::single(Kokkos::PerTeam(team),
+                         [&]() { leagueSum += teamSum; });
         },
         finalSum);
 
@@ -1527,7 +1533,8 @@ struct TestTeamVectorMDRangeParallelReduce : public TestTeamMDParallelReduce {
               [=](const int& i, const int& j, const int& k,
                   DataType& vectorSum) { vectorSum += v(leagueRank, i, j, k); },
               teamSum);
-          leagueSum += teamSum;
+          Kokkos::single(Kokkos::PerTeam(team),
+                         [&]() { leagueSum += teamSum; });
         },
         finalSum);
 
@@ -1577,7 +1584,8 @@ struct TestTeamVectorMDRangeParallelReduce : public TestTeamMDParallelReduce {
                 vectorSum += v(leagueRank, i, j, k, l);
               },
               teamSum);
-          leagueSum += teamSum;
+          Kokkos::single(Kokkos::PerTeam(team),
+                         [&]() { leagueSum += teamSum; });
         },
         finalSum);
 
@@ -1628,7 +1636,8 @@ struct TestTeamVectorMDRangeParallelReduce : public TestTeamMDParallelReduce {
                 vectorSum += v(leagueRank, i, j, k, l, m);
               },
               teamSum);
-          leagueSum += teamSum;
+          Kokkos::single(Kokkos::PerTeam(team),
+                         [&]() { leagueSum += teamSum; });
         },
         finalSum);
 
@@ -1684,7 +1693,8 @@ struct TestTeamVectorMDRangeParallelReduce : public TestTeamMDParallelReduce {
                 vectorSum += v(leagueRank, i, j, k, l, m, n);
               },
               teamSum);
-          leagueSum += teamSum;
+          Kokkos::single(Kokkos::PerTeam(team),
+                         [&]() { leagueSum += teamSum; });
         },
         finalSum);
 
@@ -1745,7 +1755,8 @@ struct TestTeamVectorMDRangeParallelReduce : public TestTeamMDParallelReduce {
                 vectorSum += v(leagueRank, i, j, k, l, m, n, o);
               },
               teamSum);
-          leagueSum += teamSum;
+          Kokkos::single(Kokkos::PerTeam(team),
+                         [&]() { leagueSum += teamSum; });
         },
         finalSum);
 
