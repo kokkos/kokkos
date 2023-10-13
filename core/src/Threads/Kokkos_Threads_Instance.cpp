@@ -212,8 +212,6 @@ ThreadsInternal::~ThreadsInternal() {
   }
 }
 
-int ThreadsInternal::get_thread_count() { return s_thread_pool_size[0]; }
-
 ThreadsInternal *ThreadsInternal::get_thread(const int init_thread_rank) {
   ThreadsInternal *const th =
       init_thread_rank < s_thread_pool_size[0]

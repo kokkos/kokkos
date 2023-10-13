@@ -93,7 +93,6 @@ class ThreadsInternal {
   KOKKOS_INLINE_FUNCTION int numa_core_rank() const { return m_numa_core_rank; }
   inline long team_work_index() const { return m_team_work_index; }
 
-  static int get_thread_count();
   static ThreadsInternal *get_thread(const int init_thread_rank);
 
   inline void *reduce_memory() const { return m_scratch; }
