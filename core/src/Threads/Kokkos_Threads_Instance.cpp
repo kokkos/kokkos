@@ -253,46 +253,29 @@ int ThreadsInternal::in_parallel() {
   return s_current_function && (&s_threads_process != s_current_function_arg) &&
          (s_threads_process.m_pool_base || !is_process());
 }
-void ThreadsInternal::fence() { internal_fence(Impl::fence_is_static::yes); }
-void ThreadsInternal::fence(const std::string &name) {
-  internal_fence(name, Impl::fence_is_static::yes);
+void ThreadsInternal::fence() {
+  fence("Kokkos::ThreadsInternal::fence : Unnamed Instance Fence");
 }
-
-void ThreadsInternal::internal_fence(Impl::fence_is_static is_static) {
-  internal_fence((is_static == Impl::fence_is_static::no)
-                     ? "Kokkos::ThreadsInternal::fence: Unnamed Instance Fence"
-                     : "Kokkos::ThreadsInternal::fence: Unnamed Static Fence",
-                 is_static);
+void ThreadsInternal::fence(const std::string &name) {
+  Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Threads>(
+      name, Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{1},
+      internal_fence);
 }
 
 // Wait for root thread to become inactive
-void ThreadsInternal::internal_fence(const std::string &name,
-                                     Impl::fence_is_static is_static) {
-  const auto &fence_lam = [&]() {
-    if (s_thread_pool_size[0]) {
-      // Wait for the root thread to complete:
-      Impl::spinwait_while_equal(s_threads_exec[0]->m_pool_state,
-                                 ThreadState::Active);
-    }
-
-    s_current_function     = nullptr;
-    s_current_function_arg = nullptr;
-
-    // Make sure function and arguments are cleared before
-    // potentially re-activating threads with a subsequent launch.
-    memory_fence();
-  };
-  if (is_static == Impl::fence_is_static::yes) {
-    Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Threads>(
-        name,
-        Kokkos::Tools::Experimental::SpecialSynchronizationCases::
-            GlobalDeviceSynchronization,
-        fence_lam);
-  } else {
-    Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Threads>(
-        name, Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{1},
-        fence_lam);
+void ThreadsInternal::internal_fence() {
+  if (s_thread_pool_size[0]) {
+    // Wait for the root thread to complete:
+    Impl::spinwait_while_equal(s_threads_exec[0]->m_pool_state,
+                               ThreadState::Active);
   }
+
+  s_current_function     = nullptr;
+  s_current_function_arg = nullptr;
+
+  // Make sure function and arguments are cleared before
+  // potentially re-activating threads with a subsequent launch.
+  memory_fence();
 }
 
 /** \brief  Begin execution of the asynchronous functor */
@@ -710,7 +693,7 @@ int Threads::concurrency() const { return impl_thread_pool_size(0); }
 #endif
 
 void Threads::fence(const std::string &name) const {
-  Impl::ThreadsInternal::internal_fence(name, Impl::fence_is_static::no);
+  Impl::ThreadsInternal::fence(name);
 }
 
 Threads &Threads::impl_instance(int) {
