@@ -19,9 +19,14 @@
 static_assert(false,
               "Including non-public Kokkos header files is not allowed.");
 #endif
-#ifndef KOKKOS_SCRATCHSPACE_HPP
-#define KOKKOS_SCRATCHSPACE_HPP
+#ifndef KOKKOS_SYCL_SCRATCHSPACE_HPP
+#define KOKKOS_SYCL_SCRATCHSPACE_HPP
 
+// Prior to oneAPI 2023.1.0, this gives
+//
+// InvalidModule: Invalid SPIR-V module: Casts from private/local/global address
+// space are allowed only to generic
+#if defined(__INTEL_LLVM_COMPILER) && __INTEL_LLVM_COMPILER >= 20230100
 #include <cstdio>
 #include <cstddef>
 #include <Kokkos_Core_fwd.hpp>
@@ -31,11 +36,16 @@ static_assert(false,
 
 namespace Kokkos {
 
+template <int Level>
+struct ScratchMemorySpaceWrapper;
+
 /** \brief  Scratch memory space associated with an execution space.
  *
  */
-template <class ExecSpace>
-class ScratchMemorySpace {
+template <>
+class ScratchMemorySpace<Kokkos::Experimental::SYCL> {
+  using ExecSpace = Kokkos::Experimental::SYCL;
+
   static_assert(
       is_execution_space<ExecSpace>::value,
       "Instantiating ScratchMemorySpace on non-execution-space type.");
@@ -45,21 +55,17 @@ class ScratchMemorySpace {
   constexpr static int ALIGN = 8;
 
   template <int Level>
-  using wrapper_type = ScratchMemorySpace<ExecSpace>;
+  using wrapper_type = ScratchMemorySpaceWrapper<Level>;
 
  private:
-  mutable char* m_iter_L0 = nullptr;
-  mutable char* m_iter_L1 = nullptr;
-  char* m_end_L0          = nullptr;
-  char* m_end_L1          = nullptr;
+  mutable sycl::local_ptr<char> m_iter_L0  = nullptr;
+  mutable sycl::device_ptr<char> m_iter_L1 = nullptr;
+  sycl::local_ptr<char> m_end_L0           = nullptr;
+  sycl::device_ptr<char> m_end_L1          = nullptr;
 
   mutable int m_multiplier    = 0;
   mutable int m_offset        = 0;
   mutable int m_default_level = 0;
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  constexpr static int DEFAULT_ALIGNMENT_MASK = ALIGN - 1;
-#endif
 
  public:
   //! Tag this class as a memory space
@@ -73,69 +79,81 @@ class ScratchMemorySpace {
 
   static constexpr const char* name() { return "ScratchMemorySpace"; }
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  // This function is unused
-  template <typename IntType>
-  KOKKOS_DEPRECATED KOKKOS_INLINE_FUNCTION static constexpr IntType align(
-      const IntType& size) {
-    return (size + DEFAULT_ALIGNMENT_MASK) & ~DEFAULT_ALIGNMENT_MASK;
-  }
-#endif
-
   template <typename IntType>
   KOKKOS_INLINE_FUNCTION void* get_shmem(const IntType& size,
                                          int level = -1) const {
-    return get_shmem_common</*alignment_requested*/ false>(size, 1, level);
+    if (level == -1) level = m_default_level;
+    constexpr bool align = false;
+    if (level == 1)
+      return sycl::device_ptr<void>(
+          get_shmem_common<align>(size, 1, m_iter_L1, m_end_L1));
+    else
+      return sycl::local_ptr<void>(
+          get_shmem_common<align>(size, 1, m_iter_L0, m_end_L0));
   }
 
   template <typename IntType>
   KOKKOS_INLINE_FUNCTION void* get_shmem_aligned(const IntType& size,
                                                  const ptrdiff_t alignment,
                                                  int level = -1) const {
-    return get_shmem_common</*alignment_requested*/ true>(size, alignment,
-                                                          level);
+    if (level == -1) level = m_default_level;
+    constexpr bool align = true;
+    if (level == 1) {
+      return sycl::device_ptr<void>(
+          get_shmem_common<align>(size, alignment, m_iter_L1, m_end_L1));
+    } else {
+      return sycl::local_ptr<void>(
+          get_shmem_common<align>(size, alignment, m_iter_L0, m_end_L0));
+    }
+  }
+
+  template <int Level, typename IntType>
+  KOKKOS_INLINE_FUNCTION void* get_shmem_aligned_on_level(
+      const IntType& size, const ptrdiff_t alignment) const {
+    static_assert(Level == 0 || Level == 1);
+    constexpr bool align = true;
+    if constexpr (Level == 1) {
+      return sycl::device_ptr<void>(
+          get_shmem_common<align>(size, alignment, m_iter_L1, m_end_L1));
+    } else {
+      return sycl::local_ptr<void>(
+          get_shmem_common<align>(size, alignment, m_iter_L0, m_end_L0));
+    }
   }
 
  private:
-  template <bool alignment_requested, typename IntType>
-  KOKKOS_INLINE_FUNCTION void* get_shmem_common(
+  template <bool align, typename IntType, typename PointerType>
+  KOKKOS_INLINE_FUNCTION PointerType get_shmem_common(
       const IntType& size, [[maybe_unused]] const ptrdiff_t alignment,
-      int level = -1) const {
-    if (level == -1) level = m_default_level;
-    auto& m_iter    = (level == 0) ? m_iter_L0 : m_iter_L1;
-    auto m_iter_old = m_iter;
-    if constexpr (alignment_requested) {
-      const ptrdiff_t missalign = size_t(m_iter) % alignment;
-      if (missalign) m_iter += alignment - missalign;
+      PointerType& begin, const PointerType end) const {
+    auto m_iter_old = begin;
+    if constexpr (align) {
+      const ptrdiff_t missalign = size_t(begin.get()) % alignment;
+      if (missalign) begin += alignment - missalign;
     }
 
     // This is each thread's start pointer for its allocation
     // Note: for team scratch m_offset is 0, since every
     // thread will get back the same shared pointer
-    void* tmp           = m_iter + m_offset * size;
+    PointerType tmp     = begin + m_offset * size;
     uintptr_t increment = size * m_multiplier;
-
-    // Cast to uintptr_t to avoid problems with pointer arithmetic using SYCL
-    const auto end_iter =
-        reinterpret_cast<uintptr_t>((level == 0) ? m_end_L0 : m_end_L1);
-    auto current_iter = reinterpret_cast<uintptr_t>(m_iter);
-    auto capacity     = end_iter - current_iter;
+    uintptr_t capacity  = end.get() - begin.get();
 
     if (increment > capacity) {
       // Request did overflow: return nullptr and reset m_iter
-      m_iter = m_iter_old;
-      tmp    = nullptr;
+      begin = m_iter_old;
+      tmp   = nullptr;
 #ifdef KOKKOS_ENABLE_DEBUG
       // mfh 23 Jun 2015: printf call consumes 25 registers
       // in a CUDA build, so only print in debug mode.  The
       // function still returns nullptr if not enough memory.
-      Kokkos::printf(
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF(
           "ScratchMemorySpace<...>::get_shmem: Failed to allocate "
-          "%ld byte(s); remaining capacity is %ld byte(s)\n",
+          "%lu byte(s); remaining capacity is %lu byte(s)\n",
           long(size), long(capacity));
 #endif  // KOKKOS_ENABLE_DEBUG
     } else {
-      m_iter += increment;
+      begin += increment;
     }
     return tmp;
   }
@@ -145,14 +163,14 @@ class ScratchMemorySpace {
   ScratchMemorySpace() = default;
 
   template <typename IntType>
-  KOKKOS_INLINE_FUNCTION ScratchMemorySpace(void* ptr_L0,
+  KOKKOS_INLINE_FUNCTION ScratchMemorySpace(sycl::local_ptr<void> ptr_L0,
                                             const IntType& size_L0,
-                                            void* ptr_L1           = nullptr,
-                                            const IntType& size_L1 = 0)
-      : m_iter_L0(static_cast<char*>(ptr_L0)),
-        m_iter_L1(static_cast<char*>(ptr_L1)),
-        m_end_L0(static_cast<char*>(ptr_L0) + size_L0),
-        m_end_L1(static_cast<char*>(ptr_L1) + size_L1),
+                                            sycl::device_ptr<void> ptr_L1,
+                                            const IntType& size_L1)
+      : m_iter_L0(ptr_L0),
+        m_iter_L1(ptr_L1),
+        m_end_L0(sycl::local_ptr<char>(ptr_L0) + size_L0),
+        m_end_L1(sycl::device_ptr<char>(ptr_L1) + size_L1),
         m_multiplier(1),
         m_offset(0),
         m_default_level(0) {}
@@ -168,6 +186,20 @@ class ScratchMemorySpace {
   }
 };
 
+template <int Level>
+struct ScratchMemorySpaceWrapper {
+  template <typename IntType>
+  KOKKOS_INLINE_FUNCTION void* get_shmem_aligned(
+      const IntType& size, const ptrdiff_t alignment) const {
+    return m_scratch_space.get_shmem_aligned_on_level<Level>(size, alignment);
+  }
+
+  const ScratchMemorySpace<Kokkos::Experimental::SYCL>& m_scratch_space;
+};
+
 }  // namespace Kokkos
 
-#endif /* #ifndef KOKKOS_SCRATCHSPACE_HPP */
+#endif  // #if defined(__INTEL_LLVM_COMPILER) && __INTEL_LLVM_COMPILER >=
+        // 20230100
+
+#endif /* #ifndef KOKKOS_SYCL_SCRATCHSPACE_HPP */

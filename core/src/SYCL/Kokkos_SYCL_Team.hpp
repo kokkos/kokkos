@@ -19,6 +19,8 @@
 
 #include <Kokkos_Macros.hpp>
 
+#include <SYCL/Kokkos_SYCL_ScratchSpace.hpp>
+
 #ifdef KOKKOS_ENABLE_SYCL
 
 #include <utility>
@@ -35,7 +37,10 @@ class SYCLTeamMember {
  public:
   using execution_space      = Kokkos::Experimental::SYCL;
   using scratch_memory_space = execution_space::scratch_memory_space;
-  using team_handle          = SYCLTeamMember;
+  template <int Level>
+  using scratch_memory_space_wrapper =
+      scratch_memory_space::wrapper_type<Level>;
+  using team_handle = SYCLTeamMember;
 
  private:
   mutable sycl::local_ptr<void> m_team_reduce;
@@ -55,6 +60,13 @@ class SYCLTeamMember {
   const execution_space::scratch_memory_space& team_scratch(
       const int level) const {
     return m_team_shared.set_team_thread_mode(level, 1, 0);
+  }
+
+  template <int Level>
+  KOKKOS_INLINE_FUNCTION scratch_memory_space_wrapper<Level> thread_scratch()
+      const {
+    return {
+        m_team_shared.set_team_thread_mode(Level, team_size(), team_rank())};
   }
 
   KOKKOS_INLINE_FUNCTION
