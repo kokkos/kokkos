@@ -18,7 +18,7 @@
 #define KOKKOS_ABORT_HPP
 
 #include <Kokkos_Macros.hpp>
-#include <impl/Kokkos_Printf.hpp>
+#include <Kokkos_Printf.hpp>
 #ifdef KOKKOS_ENABLE_CUDA
 #include <Cuda/Kokkos_Cuda_abort.hpp>
 #endif
