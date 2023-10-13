@@ -124,9 +124,6 @@ class ThreadsInternal {
 
   static void finalize();
 
-  /* Given a requested team size, return valid team size */
-  static unsigned team_size_valid(unsigned);
-
   static void print_configuration(std::ostream &, const bool detail = false);
 
   //------------------------------------
