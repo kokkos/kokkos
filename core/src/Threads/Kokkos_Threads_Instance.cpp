@@ -82,6 +82,12 @@ inline unsigned fan_size(const unsigned rank, const unsigned size) {
   return count;
 }
 
+void wait_yield(volatile ThreadState &flag, const ThreadState value) {
+  while (value == flag) {
+    std::this_thread::yield();
+  }
+}
+
 }  // namespace
 }  // namespace Impl
 }  // namespace Kokkos
@@ -99,13 +105,6 @@ bool ThreadsInternal::is_process() {
 }
 
 //----------------------------------------------------------------------------
-
-void ThreadsInternal::wait_yield(volatile ThreadState &flag,
-                                 const ThreadState value) {
-  while (value == flag) {
-    std::this_thread::yield();
-  }
-}
 
 void execute_function_noop(ThreadsInternal &, const void *) {}
 
@@ -595,7 +594,7 @@ void ThreadsInternal::initialize(int thread_count_arg) {
     for (unsigned ith = 1; ith < thread_count; ++ith) {
       // Try to protect against cache coherency failure by casting to volatile.
       ThreadsInternal *const th =
-          ((ThreadsInternal * volatile *)s_threads_exec)[ith];
+          ((ThreadsInternal *volatile *)s_threads_exec)[ith];
       if (th) {
         wait_yield(th->m_pool_state, ThreadState::Active);
       } else {

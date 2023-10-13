@@ -131,10 +131,6 @@ class ThreadsInternal {
   static void print_configuration(std::ostream &, const bool detail = false);
 
   //------------------------------------
-
-  static void wait_yield(volatile ThreadState &, const ThreadState);
-
-  //------------------------------------
   // All-thread functions:
 
   inline int all_reduce(const int value) {
