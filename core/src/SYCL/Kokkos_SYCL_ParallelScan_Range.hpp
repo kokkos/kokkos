@@ -282,7 +282,6 @@ class ParallelScanSYCLBase {
 
     // Write results to global memory
     auto update_global_results = q.submit([&](sycl::handler& cgh) {
-      auto result_ptr_device_accessible = m_result_ptr_device_accessible;
       // The compiler failed with CL_INVALID_ARG_VALUE if using m_result_ptr
       // directly.
       pointer_type result_ptr = m_result_ptr_device_accessible
@@ -296,7 +295,6 @@ class ParallelScanSYCLBase {
       cgh.parallel_for(
           sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
           [=](sycl::nd_item<1> item) {
-            auto global_mem_copy       = global_mem;
             const index_type global_id = item.get_global_linear_id();
             const CombinedFunctorReducer<
                 FunctorType, typename Analysis::Reducer>& functor_reducer =
