@@ -983,6 +983,7 @@ template <typename Rank, typename TeamHandle, typename Lambda,
 KOKKOS_INLINE_FUNCTION void parallel_reduce(
     TeamThreadMDRange<Rank, TeamHandle> const& policy, Lambda const& lambda,
     ReducerValueType& val) {
+  val = ReducerValueType{};
   Impl::md_parallel_impl<Rank>(policy, lambda, val);
   policy.team.team_reduce(
       Kokkos::Sum<ReducerValueType, typename TeamHandle::execution_space>{val});
@@ -999,6 +1000,7 @@ template <typename Rank, typename TeamHandle, typename Lambda,
 KOKKOS_INLINE_FUNCTION void parallel_reduce(
     ThreadVectorMDRange<Rank, TeamHandle> const& policy, Lambda const& lambda,
     ReducerValueType& val) {
+  val = ReducerValueType{};
   Impl::md_parallel_impl<Rank>(policy, lambda, val);
   if constexpr (false
 #ifdef KOKKOS_ENABLE_CUDA
@@ -1026,6 +1028,7 @@ template <typename Rank, typename TeamHandle, typename Lambda,
 KOKKOS_INLINE_FUNCTION void parallel_reduce(
     TeamVectorMDRange<Rank, TeamHandle> const& policy, Lambda const& lambda,
     ReducerValueType& val) {
+  val = ReducerValueType{};
   Impl::md_parallel_impl<Rank>(policy, lambda, val);
   if constexpr (false
 #ifdef KOKKOS_ENABLE_CUDA
