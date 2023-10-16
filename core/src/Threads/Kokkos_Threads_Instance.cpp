@@ -445,22 +445,17 @@ void ThreadsInternal::print_configuration(std::ostream &s, const bool detail) {
 
   fence();
 
-  const unsigned numa_count     = Kokkos::hwloc::get_available_numa_count();
-  const unsigned cores_per_numa = Kokkos::hwloc::get_available_cores_per_numa();
-  const unsigned threads_per_core =
-      Kokkos::hwloc::get_available_threads_per_core();
-
-  // Forestall compiler warnings for unused variables.
-  (void)numa_count;
-  (void)cores_per_numa;
-  (void)threads_per_core;
-
   s << "Kokkos::Threads";
 
 #if defined(KOKKOS_ENABLE_THREADS)
   s << " KOKKOS_ENABLE_THREADS";
 #endif
 #if defined(KOKKOS_ENABLE_HWLOC)
+  const unsigned numa_count     = Kokkos::hwloc::get_available_numa_count();
+  const unsigned cores_per_numa = Kokkos::hwloc::get_available_cores_per_numa();
+  const unsigned threads_per_core =
+      Kokkos::hwloc::get_available_threads_per_core();
+
   s << " hwloc[" << numa_count << "x" << cores_per_numa << "x"
     << threads_per_core << "]";
 #endif
