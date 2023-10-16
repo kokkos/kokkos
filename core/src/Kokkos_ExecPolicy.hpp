@@ -1004,11 +1004,13 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
   Impl::md_parallel_impl<Rank>(policy, lambda, val);
   if constexpr (false
 #ifdef KOKKOS_ENABLE_CUDA
-                || std::is_same_v<TeamHandle::execution_space, Kokkos::Cuda>
+                || std::is_same_v<typename TeamHandle::execution_space,
+                                  Kokkos::Cuda>
 #elif defined(KOKKOS_ENABLE_HIP)
-                || std::is_same_v<TeamHandle::execution_space, Kokkos::HIP>
+                || std::is_same_v<typename TeamHandle::execution_space,
+                                  Kokkos::HIP>
 #elif defined(KOKKOS_ENABLE_SYCL)
-                || std::is_same_v<TeamHandle::execution_space,
+                || std::is_same_v<typename TeamHandle::execution_space,
                                   Kokkos::Experimental::SYCL>
 #endif
   )
@@ -1032,11 +1034,13 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
   Impl::md_parallel_impl<Rank>(policy, lambda, val);
   if constexpr (false
 #ifdef KOKKOS_ENABLE_CUDA
-                || std::is_same_v<TeamHandle::execution_space, Kokkos::Cuda>
+                || std::is_same_v<typename TeamHandle::execution_space,
+                                  Kokkos::Cuda>
 #elif defined(KOKKOS_ENABLE_HIP)
-                || std::is_same_v<TeamHandle::execution_space, Kokkos::HIP>
+                || std::is_same_v<typename TeamHandle::execution_space,
+                                  Kokkos::HIP>
 #elif defined(KOKKOS_ENABLE_SYCL)
-                || std::is_same_v<TeamHandle::execution_space,
+                || std::is_same_v<typename TeamHandle::execution_space,
                                   Kokkos::Experimental::SYCL>
 #endif
   )
