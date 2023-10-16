@@ -220,7 +220,7 @@ class ParallelScanSYCLBase {
     sycl::device_ptr<value_type> global_mem;
     sycl::device_ptr<value_type> group_results;
 
-#ifdef SYCL_EXT_ONEAPI_PROPERTIES
+#if defined(__INTEL_LLVM_COMPILER) && __INTEL_LLVM_COMPILER >= 20230100
     auto get_properties = [&]() {
       if constexpr (Policy::subgroup_size > 0)
         return sycl::ext::oneapi::experimental::properties{
@@ -287,7 +287,7 @@ class ParallelScanSYCLBase {
       auto scan_lambda = scan_lambda_factory(local_mem, num_teams_done,
                                              global_mem, group_results);
 
-#ifdef SYCL_EXT_ONEAPI_PROPERTIES
+#if defined(__INTEL_LLVM_COMPILER) && __INTEL_LLVM_COMPILER >= 20230100
       cgh.parallel_for(sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
                        get_properties(), scan_lambda);
 #else
@@ -332,7 +332,7 @@ class ParallelScanSYCLBase {
         }
       };
 
-#ifdef SYCL_EXT_ONEAPI_PROPERTIES
+#if defined(__INTEL_LLVM_COMPILER) && __INTEL_LLVM_COMPILER >= 20230100
       cgh.parallel_for(sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
                        get_properties(), lambda);
 #else
