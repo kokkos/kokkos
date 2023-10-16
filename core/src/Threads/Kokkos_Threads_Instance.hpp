@@ -165,14 +165,14 @@ class ThreadsInternal {
     // Fan-in reduction with highest ranking thread as the root
     for (int i = 0; i < m_pool_fan_size; ++i) {
       // Wait: Active -> Rendezvous
-      Impl::spinwait_while_equal<State>(
-          m_pool_base[rev_rank + (1 << i)]->m_pool_state, State::Active);
+      Impl::spinwait_while_equal(m_pool_base[rev_rank + (1 << i)]->m_pool_state,
+                                 State::Active);
     }
 
     if (rev_rank) {
       m_pool_state = State::Rendezvous;
       // Wait: Rendezvous -> Active
-      Impl::spinwait_while_equal<State>(m_pool_state, State::Rendezvous);
+      Impl::spinwait_while_equal(m_pool_state, State::Rendezvous);
     } else {
       // Root thread does the reduction and broadcast
 
@@ -206,14 +206,14 @@ class ThreadsInternal {
     // Fan-in reduction with highest ranking thread as the root
     for (int i = 0; i < m_pool_fan_size; ++i) {
       // Wait: Active -> Rendezvous
-      Impl::spinwait_while_equal<State>(
-          m_pool_base[rev_rank + (1 << i)]->m_pool_state, State::Active);
+      Impl::spinwait_while_equal(m_pool_base[rev_rank + (1 << i)]->m_pool_state,
+                                 State::Active);
     }
 
     if (rev_rank) {
       m_pool_state = State::Rendezvous;
       // Wait: Rendezvous -> Active
-      Impl::spinwait_while_equal<State>(m_pool_state, State::Rendezvous);
+      Impl::spinwait_while_equal(m_pool_state, State::Rendezvous);
     } else {
       // Root thread does the reduction and broadcast
 
@@ -235,7 +235,7 @@ class ThreadsInternal {
     for (int i = 0; i < m_pool_fan_size; ++i) {
       ThreadsInternal &fan = *m_pool_base[rev_rank + (1 << i)];
 
-      Impl::spinwait_while_equal<State>(fan.m_pool_state, State::Active);
+      Impl::spinwait_while_equal(fan.m_pool_state, State::Active);
 
       f.join(
           reinterpret_cast<typename FunctorType::value_type *>(reduce_memory()),
@@ -264,8 +264,8 @@ class ThreadsInternal {
     const int rev_rank = m_pool_size - (m_pool_rank + 1);
 
     for (int i = 0; i < m_pool_fan_size; ++i) {
-      Impl::spinwait_while_equal<State>(
-          m_pool_base[rev_rank + (1 << i)]->m_pool_state, State::Active);
+      Impl::spinwait_while_equal(m_pool_base[rev_rank + (1 << i)]->m_pool_state,
+                                 State::Active);
     }
   }
 
@@ -291,7 +291,7 @@ class ThreadsInternal {
       ThreadsInternal &fan = *m_pool_base[rev_rank + (1 << i)];
 
       // Wait: Active -> ReductionAvailable (or ScanAvailable)
-      Impl::spinwait_while_equal<State>(fan.m_pool_state, State::Active);
+      Impl::spinwait_while_equal(fan.m_pool_state, State::Active);
       f.join(work_value, fan.reduce_memory());
     }
 
@@ -310,9 +310,8 @@ class ThreadsInternal {
 
         // Wait: Active             -> ReductionAvailable
         // Wait: ReductionAvailable -> ScanAvailable
-        Impl::spinwait_while_equal<State>(th.m_pool_state, State::Active);
-        Impl::spinwait_while_equal<State>(th.m_pool_state,
-                                          State::ReductionAvailable);
+        Impl::spinwait_while_equal(th.m_pool_state, State::Active);
+        Impl::spinwait_while_equal(th.m_pool_state, State::ReductionAvailable);
 
         f.join(work_value + count, ((scalar_type *)th.reduce_memory()) + count);
       }
@@ -323,7 +322,7 @@ class ThreadsInternal {
 
       // Wait for all threads to complete inclusive scan
       // Wait: ScanAvailable -> Rendezvous
-      Impl::spinwait_while_equal<State>(m_pool_state, State::ScanAvailable);
+      Impl::spinwait_while_equal(m_pool_state, State::ScanAvailable);
     }
 
     //--------------------------------
@@ -331,8 +330,7 @@ class ThreadsInternal {
     for (int i = 0; i < m_pool_fan_size; ++i) {
       ThreadsInternal &fan = *m_pool_base[rev_rank + (1 << i)];
       // Wait: ReductionAvailable -> ScanAvailable
-      Impl::spinwait_while_equal<State>(fan.m_pool_state,
-                                        State::ReductionAvailable);
+      Impl::spinwait_while_equal(fan.m_pool_state, State::ReductionAvailable);
       // Set: ScanAvailable -> Rendezvous
       fan.m_pool_state = State::Rendezvous;
     }
@@ -361,14 +359,14 @@ class ThreadsInternal {
     // Wait for all threads to copy previous thread's inclusive scan value
     // Wait for all threads: Rendezvous -> ScanCompleted
     for (int i = 0; i < m_pool_fan_size; ++i) {
-      Impl::spinwait_while_equal<State>(
-          m_pool_base[rev_rank + (1 << i)]->m_pool_state, State::Rendezvous);
+      Impl::spinwait_while_equal(m_pool_base[rev_rank + (1 << i)]->m_pool_state,
+                                 State::Rendezvous);
     }
     if (rev_rank) {
       // Set: ScanAvailable -> ScanCompleted
       m_pool_state = State::ScanCompleted;
       // Wait: ScanCompleted -> Active
-      Impl::spinwait_while_equal<State>(m_pool_state, State::ScanCompleted);
+      Impl::spinwait_while_equal(m_pool_state, State::ScanCompleted);
     }
     // Set: ScanCompleted -> Active
     for (int i = 0; i < m_pool_fan_size; ++i) {
@@ -389,8 +387,8 @@ class ThreadsInternal {
     // Fan-in reduction with highest ranking thread as the root
     for (int i = 0; i < m_pool_fan_size; ++i) {
       // Wait: Active -> Rendezvous
-      Impl::spinwait_while_equal<State>(
-          m_pool_base[rev_rank + (1 << i)]->m_pool_state, State::Active);
+      Impl::spinwait_while_equal(m_pool_base[rev_rank + (1 << i)]->m_pool_state,
+                                 State::Active);
     }
 
     for (unsigned i = 0; i < count; ++i) {
@@ -400,7 +398,7 @@ class ThreadsInternal {
     if (rev_rank) {
       m_pool_state = State::Rendezvous;
       // Wait: Rendezvous -> Active
-      Impl::spinwait_while_equal<State>(m_pool_state, State::Rendezvous);
+      Impl::spinwait_while_equal(m_pool_state, State::Rendezvous);
     } else {
       // Root thread does the thread-scan before releasing threads
 

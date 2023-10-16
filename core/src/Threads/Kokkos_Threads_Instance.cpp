@@ -278,7 +278,7 @@ void ThreadsInternal::execute_sleep(ThreadsInternal &exec, const void *) {
   const int rank_rev = exec.m_pool_size - (exec.m_pool_rank + 1);
 
   for (int i = 0; i < n; ++i) {
-    Impl::spinwait_while_equal<State>(
+    Impl::spinwait_while_equal(
         exec.m_pool_base[rank_rev + (1 << i)]->m_pool_state, State::Active);
   }
 
@@ -335,8 +335,8 @@ void ThreadsInternal::internal_fence(const std::string &name,
   const auto &fence_lam = [&]() {
     if (s_thread_pool_size[0]) {
       // Wait for the root thread to complete:
-      Impl::spinwait_while_equal<State>(s_threads_exec[0]->m_pool_state,
-                                        State::Active);
+      Impl::spinwait_while_equal(s_threads_exec[0]->m_pool_state,
+                                 State::Active);
     }
 
     s_current_function     = nullptr;
