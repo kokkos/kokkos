@@ -40,11 +40,12 @@ struct ThreadScratch {
   KOKKOS_FUNCTION
   void operator()(const team_t &team) const {
     // Allocate and use scratch pad memory
+    scratch_t v_S;
 #ifdef KOKKOS_ENABLE_SYCL
     if constexpr (std::is_same_v<ExecSpace, Kokkos::Experimental::SYCL>)
-      scratch_t v_S(team.template thread_scratch<scratch_level>(), sY);
+      v_S = scratch_t(team.template thread_scratch<scratch_level>(), sY);
 #else
-    scratch_t v_S(team.thread_scratch(scratch_level), sY);
+    v_S = scratch_t(team.thread_scratch(scratch_level), sY);
 #endif
     int n = team.league_rank();
 
