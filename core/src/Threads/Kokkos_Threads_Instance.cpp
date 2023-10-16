@@ -21,13 +21,10 @@
 
 #include <Kokkos_Macros.hpp>
 
-#include <cstdint>
-#include <limits>
 #include <utility>
 #include <iostream>
 #include <sstream>
 #include <thread>
-#include <mutex>
 
 #include <Kokkos_Core.hpp>
 
