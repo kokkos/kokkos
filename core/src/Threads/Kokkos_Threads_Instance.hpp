@@ -56,8 +56,6 @@ class ThreadsInternal {
   void *m_scratch;
   int m_scratch_reduce_end;
   size_t m_scratch_thread_end;
-  int m_numa_rank;
-  int m_numa_core_rank;
   int m_pool_rank;
   int m_pool_rank_rev;
   int m_pool_size;
@@ -89,8 +87,6 @@ class ThreadsInternal {
  public:
   KOKKOS_INLINE_FUNCTION int pool_size() const { return m_pool_size; }
   KOKKOS_INLINE_FUNCTION int pool_rank() const { return m_pool_rank; }
-  KOKKOS_INLINE_FUNCTION int numa_rank() const { return m_numa_rank; }
-  KOKKOS_INLINE_FUNCTION int numa_core_rank() const { return m_numa_core_rank; }
   inline long team_work_index() const { return m_team_work_index; }
 
   static ThreadsInternal *get_thread(const int init_thread_rank);
