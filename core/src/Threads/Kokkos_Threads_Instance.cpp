@@ -16,6 +16,7 @@
 
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #define KOKKOS_IMPL_PUBLIC_INCLUDE
+#include "Threads/Kokkos_Threads_Instance.hpp"
 #endif
 
 #include <Kokkos_Macros.hpp>
@@ -49,7 +50,7 @@ std::mutex host_internal_cppthread_mutex;
 // abort the process.
 void internal_cppthread_driver() {
   try {
-    ThreadsExec::driver();
+    ThreadsInternal::driver();
   } catch (const std::exception &x) {
     std::cerr << "Exception thrown from worker thread: " << x.what()
               << std::endl;
@@ -62,17 +63,18 @@ void internal_cppthread_driver() {
   }
 }
 
-ThreadsExec s_threads_process;
-ThreadsExec *s_threads_exec[ThreadsExec::MAX_THREAD_COUNT] = {nullptr};
-std::thread::id s_threads_pid[ThreadsExec::MAX_THREAD_COUNT];
-std::pair<unsigned, unsigned> s_threads_coord[ThreadsExec::MAX_THREAD_COUNT];
+ThreadsInternal s_threads_process;
+ThreadsInternal *s_threads_exec[ThreadsInternal::MAX_THREAD_COUNT] = {nullptr};
+std::thread::id s_threads_pid[ThreadsInternal::MAX_THREAD_COUNT];
+std::pair<unsigned, unsigned>
+    s_threads_coord[ThreadsInternal::MAX_THREAD_COUNT];
 
 int s_thread_pool_size[3] = {0, 0, 0};
 
 unsigned s_current_reduce_size = 0;
 unsigned s_current_shared_size = 0;
 
-void (*volatile s_current_function)(ThreadsExec &, const void *);
+void (*volatile s_current_function)(ThreadsInternal &, const void *);
 const void *volatile s_current_function_arg = nullptr;
 
 struct Sentinel {
@@ -110,49 +112,51 @@ namespace Impl {
 //----------------------------------------------------------------------------
 // Spawn a thread
 
-void ThreadsExec::spawn() {
+void ThreadsInternal::spawn() {
   std::thread t(internal_cppthread_driver);
   t.detach();
 }
 
 //----------------------------------------------------------------------------
 
-bool ThreadsExec::is_process() {
+bool ThreadsInternal::is_process() {
   static const std::thread::id master_pid = std::this_thread::get_id();
 
   return master_pid == std::this_thread::get_id();
 }
 
-void ThreadsExec::global_lock() { host_internal_cppthread_mutex.lock(); }
+void ThreadsInternal::global_lock() { host_internal_cppthread_mutex.lock(); }
 
-void ThreadsExec::global_unlock() { host_internal_cppthread_mutex.unlock(); }
+void ThreadsInternal::global_unlock() {
+  host_internal_cppthread_mutex.unlock();
+}
 
 //----------------------------------------------------------------------------
 
-void ThreadsExec::wait_yield(volatile int &flag, const int value) {
+void ThreadsInternal::wait_yield(volatile int &flag, const int value) {
   while (value == flag) {
     std::this_thread::yield();
   }
 }
 
-void execute_function_noop(ThreadsExec &, const void *) {}
+void execute_function_noop(ThreadsInternal &, const void *) {}
 
-void ThreadsExec::driver() {
+void ThreadsInternal::driver() {
   SharedAllocationRecord<void, void>::tracking_enable();
 
-  ThreadsExec this_thread;
+  ThreadsInternal this_thread;
 
-  while (ThreadsExec::Active == this_thread.m_pool_state) {
+  while (this_thread.m_pool_state == ThreadsInternal::Active) {
     (*s_current_function)(this_thread, s_current_function_arg);
 
     // Deactivate thread and wait for reactivation
-    this_thread.m_pool_state = ThreadsExec::Inactive;
+    this_thread.m_pool_state = ThreadsInternal::Inactive;
 
-    wait_yield(this_thread.m_pool_state, ThreadsExec::Inactive);
+    wait_yield(this_thread.m_pool_state, ThreadsInternal::Inactive);
   }
 }
 
-ThreadsExec::ThreadsExec()
+ThreadsInternal::ThreadsInternal()
     : m_pool_base(nullptr),
       m_scratch(nullptr),
       m_scratch_reduce_end(0),
@@ -162,11 +166,11 @@ ThreadsExec::ThreadsExec()
       m_pool_rank(0),
       m_pool_size(0),
       m_pool_fan_size(0),
-      m_pool_state(ThreadsExec::Terminating) {
+      m_pool_state(ThreadsInternal::Terminating) {
   if (&s_threads_process != this) {
     // A spawned thread
 
-    ThreadsExec *const nil = nullptr;
+    ThreadsInternal *const nil = nullptr;
 
     // Which entry in 's_threads_exec', possibly determined from hwloc binding
     const int entry = reinterpret_cast<size_t>(s_current_function_arg) <
@@ -188,27 +192,27 @@ ThreadsExec::ThreadsExec()
       m_pool_rank_rev  = s_thread_pool_size[0] - (pool_rank() + 1);
       m_pool_size      = s_thread_pool_size[0];
       m_pool_fan_size  = fan_size(m_pool_rank, m_pool_size);
-      m_pool_state     = ThreadsExec::Active;
+      m_pool_state     = ThreadsInternal::Active;
 
       s_threads_pid[m_pool_rank] = std::this_thread::get_id();
 
       // Inform spawning process that the threads_exec entry has been set.
-      s_threads_process.m_pool_state = ThreadsExec::Active;
+      s_threads_process.m_pool_state = ThreadsInternal::Active;
     } else {
       // Inform spawning process that the threads_exec entry could not be set.
-      s_threads_process.m_pool_state = ThreadsExec::Terminating;
+      s_threads_process.m_pool_state = ThreadsInternal::Terminating;
     }
   } else {
     // Enables 'parallel_for' to execute on unitialized Threads device
     m_pool_rank  = 0;
     m_pool_size  = 1;
-    m_pool_state = ThreadsExec::Inactive;
+    m_pool_state = ThreadsInternal::Inactive;
 
     s_threads_pid[m_pool_rank] = std::this_thread::get_id();
   }
 }
 
-ThreadsExec::~ThreadsExec() {
+ThreadsInternal::~ThreadsInternal() {
   const unsigned entry = m_pool_size - (m_pool_rank + 1);
 
   using Record = Kokkos::Impl::SharedAllocationRecord<Kokkos::HostSpace, void>;
@@ -230,28 +234,28 @@ ThreadsExec::~ThreadsExec() {
   m_pool_size          = 0;
   m_pool_fan_size      = 0;
 
-  m_pool_state = ThreadsExec::Terminating;
+  m_pool_state = ThreadsInternal::Terminating;
 
   if (&s_threads_process != this && entry < MAX_THREAD_COUNT) {
-    ThreadsExec *const nil = nullptr;
+    ThreadsInternal *const nil = nullptr;
 
     atomic_compare_exchange(s_threads_exec + entry, this, nil);
 
-    s_threads_process.m_pool_state = ThreadsExec::Terminating;
+    s_threads_process.m_pool_state = ThreadsInternal::Terminating;
   }
 }
 
-int ThreadsExec::get_thread_count() { return s_thread_pool_size[0]; }
+int ThreadsInternal::get_thread_count() { return s_thread_pool_size[0]; }
 
-ThreadsExec *ThreadsExec::get_thread(const int init_thread_rank) {
-  ThreadsExec *const th =
+ThreadsInternal *ThreadsInternal::get_thread(const int init_thread_rank) {
+  ThreadsInternal *const th =
       init_thread_rank < s_thread_pool_size[0]
           ? s_threads_exec[s_thread_pool_size[0] - (init_thread_rank + 1)]
           : nullptr;
 
   if (nullptr == th || th->m_pool_rank != init_thread_rank) {
     std::ostringstream msg;
-    msg << "Kokkos::Impl::ThreadsExec::get_thread ERROR : "
+    msg << "Kokkos::Impl::ThreadsInternal::get_thread ERROR : "
         << "thread " << init_thread_rank << " of " << s_thread_pool_size[0];
     if (nullptr == th) {
       msg << " does not exist";
@@ -266,9 +270,9 @@ ThreadsExec *ThreadsExec::get_thread(const int init_thread_rank) {
 
 //----------------------------------------------------------------------------
 
-void ThreadsExec::execute_sleep(ThreadsExec &exec, const void *) {
-  ThreadsExec::global_lock();
-  ThreadsExec::global_unlock();
+void ThreadsInternal::execute_sleep(ThreadsInternal &exec, const void *) {
+  ThreadsInternal::global_lock();
+  ThreadsInternal::global_unlock();
 
   const int n        = exec.m_pool_fan_size;
   const int rank_rev = exec.m_pool_size - (exec.m_pool_rank + 1);
@@ -276,10 +280,10 @@ void ThreadsExec::execute_sleep(ThreadsExec &exec, const void *) {
   for (int i = 0; i < n; ++i) {
     Impl::spinwait_while_equal<int>(
         exec.m_pool_base[rank_rev + (1 << i)]->m_pool_state,
-        ThreadsExec::Active);
+        ThreadsInternal::Active);
   }
 
-  exec.m_pool_state = ThreadsExec::Inactive;
+  exec.m_pool_state = ThreadsInternal::Inactive;
 }
 
 }  // namespace Impl
@@ -290,8 +294,8 @@ void ThreadsExec::execute_sleep(ThreadsExec &exec, const void *) {
 namespace Kokkos {
 namespace Impl {
 
-void ThreadsExec::verify_is_process(const std::string &name,
-                                    const bool initialized) {
+void ThreadsInternal::verify_is_process(const std::string &name,
+                                        const bool initialized) {
   if (!is_process()) {
     std::string msg(name);
     msg.append(
@@ -307,33 +311,33 @@ void ThreadsExec::verify_is_process(const std::string &name,
   }
 }
 
-int ThreadsExec::in_parallel() {
+int ThreadsInternal::in_parallel() {
   // A thread function is in execution and
   // the function argument is not the special threads process argument and
   // the master process is a worker or is not the master process.
   return s_current_function && (&s_threads_process != s_current_function_arg) &&
          (s_threads_process.m_pool_base || !is_process());
 }
-void ThreadsExec::fence() { internal_fence(Impl::fence_is_static::yes); }
-void ThreadsExec::fence(const std::string &name) {
+void ThreadsInternal::fence() { internal_fence(Impl::fence_is_static::yes); }
+void ThreadsInternal::fence(const std::string &name) {
   internal_fence(name, Impl::fence_is_static::yes);
 }
 
-void ThreadsExec::internal_fence(Impl::fence_is_static is_static) {
+void ThreadsInternal::internal_fence(Impl::fence_is_static is_static) {
   internal_fence((is_static == Impl::fence_is_static::no)
-                     ? "Kokkos::ThreadsExec::fence: Unnamed Instance Fence"
-                     : "Kokkos::ThreadsExec::fence: Unnamed Static Fence",
+                     ? "Kokkos::ThreadsInternal::fence: Unnamed Instance Fence"
+                     : "Kokkos::ThreadsInternal::fence: Unnamed Static Fence",
                  is_static);
 }
 
 // Wait for root thread to become inactive
-void ThreadsExec::internal_fence(const std::string &name,
-                                 Impl::fence_is_static is_static) {
+void ThreadsInternal::internal_fence(const std::string &name,
+                                     Impl::fence_is_static is_static) {
   const auto &fence_lam = [&]() {
     if (s_thread_pool_size[0]) {
       // Wait for the root thread to complete:
       Impl::spinwait_while_equal<int>(s_threads_exec[0]->m_pool_state,
-                                      ThreadsExec::Active);
+                                      ThreadsInternal::Active);
     }
 
     s_current_function     = nullptr;
@@ -357,13 +361,13 @@ void ThreadsExec::internal_fence(const std::string &name,
 }
 
 /** \brief  Begin execution of the asynchronous functor */
-void ThreadsExec::start(void (*func)(ThreadsExec &, const void *),
-                        const void *arg) {
-  verify_is_process("ThreadsExec::start", true);
+void ThreadsInternal::start(void (*func)(ThreadsInternal &, const void *),
+                            const void *arg) {
+  verify_is_process("ThreadsInternal::start", true);
 
   if (s_current_function || s_current_function_arg) {
     Kokkos::Impl::throw_runtime_exception(
-        std::string("ThreadsExec::start() FAILED : already executing"));
+        std::string("ThreadsInternal::start() FAILED : already executing"));
   }
 
   s_current_function     = func;
@@ -374,47 +378,47 @@ void ThreadsExec::start(void (*func)(ThreadsExec &, const void *),
 
   // Activate threads:
   for (int i = s_thread_pool_size[0]; 0 < i--;) {
-    s_threads_exec[i]->m_pool_state = ThreadsExec::Active;
+    s_threads_exec[i]->m_pool_state = ThreadsInternal::Active;
   }
 
   if (s_threads_process.m_pool_size) {
     // Master process is the root thread, run it:
     (*func)(s_threads_process, arg);
-    s_threads_process.m_pool_state = ThreadsExec::Inactive;
+    s_threads_process.m_pool_state = ThreadsInternal::Inactive;
   }
 }
 
 //----------------------------------------------------------------------------
 
-bool ThreadsExec::sleep() {
-  verify_is_process("ThreadsExec::sleep", true);
+bool ThreadsInternal::sleep() {
+  verify_is_process("ThreadsInternal::sleep", true);
 
   if (&execute_sleep == s_current_function) return false;
 
   fence();
 
-  ThreadsExec::global_lock();
+  ThreadsInternal::global_lock();
 
   s_current_function = &execute_sleep;
 
   // Activate threads:
   for (unsigned i = s_thread_pool_size[0]; 0 < i;) {
-    s_threads_exec[--i]->m_pool_state = ThreadsExec::Active;
+    s_threads_exec[--i]->m_pool_state = ThreadsInternal::Active;
   }
 
   return true;
 }
 
-bool ThreadsExec::wake() {
-  verify_is_process("ThreadsExec::wake", true);
+bool ThreadsInternal::wake() {
+  verify_is_process("ThreadsInternal::wake", true);
 
   if (&execute_sleep != s_current_function) return false;
 
-  ThreadsExec::global_unlock();
+  ThreadsInternal::global_unlock();
 
   if (s_threads_process.m_pool_base) {
     execute_sleep(s_threads_process, nullptr);
-    s_threads_process.m_pool_state = ThreadsExec::Inactive;
+    s_threads_process.m_pool_state = ThreadsInternal::Inactive;
   }
 
   fence();
@@ -424,10 +428,10 @@ bool ThreadsExec::wake() {
 
 //----------------------------------------------------------------------------
 
-void ThreadsExec::execute_resize_scratch_in_serial() {
+void ThreadsInternal::execute_resize_scratch_in_serial() {
   const unsigned begin = s_threads_process.m_pool_base ? 1 : 0;
 
-  auto deallocate_scratch_memory = [](ThreadsExec &exec) {
+  auto deallocate_scratch_memory = [](ThreadsInternal &exec) {
     if (exec.m_scratch) {
       using Record =
           Kokkos::Impl::SharedAllocationRecord<Kokkos::HostSpace, void>;
@@ -449,18 +453,18 @@ void ThreadsExec::execute_resize_scratch_in_serial() {
   memory_fence();
 
   for (unsigned i = s_thread_pool_size[0]; begin < i;) {
-    ThreadsExec &th = *s_threads_exec[--i];
+    ThreadsInternal &th = *s_threads_exec[--i];
 
-    th.m_pool_state = ThreadsExec::Active;
+    th.m_pool_state = ThreadsInternal::Active;
 
-    wait_yield(th.m_pool_state, ThreadsExec::Active);
+    wait_yield(th.m_pool_state, ThreadsInternal::Active);
   }
 
   if (s_threads_process.m_pool_base) {
     deallocate_scratch_memory(s_threads_process);
-    s_threads_process.m_pool_state = ThreadsExec::Active;
+    s_threads_process.m_pool_state = ThreadsInternal::Active;
     first_touch_allocate_thread_private_scratch(s_threads_process, nullptr);
-    s_threads_process.m_pool_state = ThreadsExec::Inactive;
+    s_threads_process.m_pool_state = ThreadsInternal::Inactive;
   }
 
   s_current_function_arg = nullptr;
@@ -472,12 +476,12 @@ void ThreadsExec::execute_resize_scratch_in_serial() {
 
 //----------------------------------------------------------------------------
 
-void *ThreadsExec::root_reduce_scratch() {
+void *ThreadsInternal::root_reduce_scratch() {
   return s_threads_process.reduce_memory();
 }
 
-void ThreadsExec::first_touch_allocate_thread_private_scratch(ThreadsExec &exec,
-                                                              const void *) {
+void ThreadsInternal::first_touch_allocate_thread_private_scratch(
+    ThreadsInternal &exec, const void *) {
   exec.m_scratch_reduce_end = s_threads_process.m_scratch_reduce_end;
   exec.m_scratch_thread_end = s_threads_process.m_scratch_thread_end;
 
@@ -505,7 +509,7 @@ void ThreadsExec::first_touch_allocate_thread_private_scratch(ThreadsExec &exec,
   }
 }
 
-void *ThreadsExec::resize_scratch(size_t reduce_size, size_t thread_size) {
+void *ThreadsInternal::resize_scratch(size_t reduce_size, size_t thread_size) {
   enum { ALIGN_MASK = Kokkos::Impl::MEMORY_ALIGNMENT - 1 };
 
   fence();
@@ -522,7 +526,7 @@ void *ThreadsExec::resize_scratch(size_t reduce_size, size_t thread_size) {
   if ((old_reduce_size < reduce_size) || (old_thread_size < thread_size) ||
       ((reduce_size == 0 && thread_size == 0) &&
        (old_reduce_size != 0 || old_thread_size != 0))) {
-    verify_is_process("ThreadsExec::resize_scratch", true);
+    verify_is_process("ThreadsInternal::resize_scratch", true);
 
     s_threads_process.m_scratch_reduce_end = reduce_size;
     s_threads_process.m_scratch_thread_end = reduce_size + thread_size;
@@ -537,8 +541,8 @@ void *ThreadsExec::resize_scratch(size_t reduce_size, size_t thread_size) {
 
 //----------------------------------------------------------------------------
 
-void ThreadsExec::print_configuration(std::ostream &s, const bool detail) {
-  verify_is_process("ThreadsExec::print_configuration", false);
+void ThreadsInternal::print_configuration(std::ostream &s, const bool detail) {
+  verify_is_process("ThreadsInternal::print_configuration", false);
 
   fence();
 
@@ -575,7 +579,7 @@ void ThreadsExec::print_configuration(std::ostream &s, const bool detail) {
 
     if (detail) {
       for (int i = 0; i < s_thread_pool_size[0]; ++i) {
-        ThreadsExec *const th = s_threads_exec[i];
+        ThreadsInternal *const th = s_threads_exec[i];
 
         if (th) {
           const int rank_rev = th->m_pool_size - (th->m_pool_rank + 1);
@@ -585,7 +589,7 @@ void ThreadsExec::print_configuration(std::ostream &s, const bool detail) {
 
           s << " Fan{";
           for (int j = 0; j < th->m_pool_fan_size; ++j) {
-            ThreadsExec *const thfan = th->m_pool_base[rank_rev + (1 << j)];
+            ThreadsInternal *const thfan = th->m_pool_base[rank_rev + (1 << j)];
             s << " [ " << thfan->m_pool_rank << " : " << thfan->m_numa_rank
               << "." << thfan->m_numa_core_rank << " ]";
           }
@@ -605,9 +609,9 @@ void ThreadsExec::print_configuration(std::ostream &s, const bool detail) {
 
 //----------------------------------------------------------------------------
 
-int ThreadsExec::is_initialized() { return nullptr != s_threads_exec[0]; }
+int ThreadsInternal::is_initialized() { return nullptr != s_threads_exec[0]; }
 
-void ThreadsExec::initialize(int thread_count_arg) {
+void ThreadsInternal::initialize(int thread_count_arg) {
   // legacy arguments
   unsigned thread_count       = thread_count_arg == -1 ? 0 : thread_count_arg;
   unsigned use_numa_count     = 0;
@@ -620,7 +624,7 @@ void ThreadsExec::initialize(int thread_count_arg) {
 
   unsigned thread_spawn_failed = 0;
 
-  for (int i = 0; i < ThreadsExec::MAX_THREAD_COUNT; i++)
+  for (int i = 0; i < ThreadsInternal::MAX_THREAD_COUNT; i++)
     s_threads_exec[i] = nullptr;
 
   if (!is_initialized) {
@@ -659,7 +663,7 @@ void ThreadsExec::initialize(int thread_count_arg) {
         &execute_function_noop;  // Initialization work function
 
     for (unsigned ith = thread_spawn_begin; ith < thread_count; ++ith) {
-      s_threads_process.m_pool_state = ThreadsExec::Inactive;
+      s_threads_process.m_pool_state = ThreadsInternal::Inactive;
 
       // If hwloc available then spawned thread will
       // choose its own entry in 's_threads_coord'
@@ -675,18 +679,19 @@ void ThreadsExec::initialize(int thread_count_arg) {
       // Wait until spawned thread has attempted to initialize.
       // If spawning and initialization is successful then
       // an entry in 's_threads_exec' will be assigned.
-      ThreadsExec::spawn();
-      wait_yield(s_threads_process.m_pool_state, ThreadsExec::Inactive);
-      if (s_threads_process.m_pool_state == ThreadsExec::Terminating) break;
+      ThreadsInternal::spawn();
+      wait_yield(s_threads_process.m_pool_state, ThreadsInternal::Inactive);
+      if (s_threads_process.m_pool_state == ThreadsInternal::Terminating) break;
     }
 
     // Wait for all spawned threads to deactivate before zeroing the function.
 
     for (unsigned ith = thread_spawn_begin; ith < thread_count; ++ith) {
       // Try to protect against cache coherency failure by casting to volatile.
-      ThreadsExec *const th = ((ThreadsExec * volatile *)s_threads_exec)[ith];
+      ThreadsInternal *const th =
+          ((ThreadsInternal * volatile *)s_threads_exec)[ith];
       if (th) {
-        wait_yield(th->m_pool_state, ThreadsExec::Active);
+        wait_yield(th->m_pool_state, ThreadsInternal::Active);
       } else {
         ++thread_spawn_failed;
       }
@@ -694,7 +699,7 @@ void ThreadsExec::initialize(int thread_count_arg) {
 
     s_current_function             = nullptr;
     s_current_function_arg         = nullptr;
-    s_threads_process.m_pool_state = ThreadsExec::Inactive;
+    s_threads_process.m_pool_state = ThreadsInternal::Inactive;
 
     memory_fence();
 
@@ -728,7 +733,7 @@ void ThreadsExec::initialize(int thread_count_arg) {
       }
 
       // Initial allocations:
-      ThreadsExec::resize_scratch(1024, 1024);
+      ThreadsInternal::resize_scratch(1024, 1024);
     } else {
       s_thread_pool_size[0] = 0;
       s_thread_pool_size[1] = 0;
@@ -773,8 +778,8 @@ void ThreadsExec::initialize(int thread_count_arg) {
 
 //----------------------------------------------------------------------------
 
-void ThreadsExec::finalize() {
-  verify_is_process("ThreadsExec::finalize", false);
+void ThreadsInternal::finalize() {
+  verify_is_process("ThreadsInternal::finalize", false);
 
   fence();
 
@@ -784,18 +789,18 @@ void ThreadsExec::finalize() {
 
   for (unsigned i = s_thread_pool_size[0]; begin < i--;) {
     if (s_threads_exec[i]) {
-      s_threads_exec[i]->m_pool_state = ThreadsExec::Terminating;
+      s_threads_exec[i]->m_pool_state = ThreadsInternal::Terminating;
 
-      wait_yield(s_threads_process.m_pool_state, ThreadsExec::Inactive);
+      wait_yield(s_threads_process.m_pool_state, ThreadsInternal::Inactive);
 
-      s_threads_process.m_pool_state = ThreadsExec::Inactive;
+      s_threads_process.m_pool_state = ThreadsInternal::Inactive;
     }
 
     s_threads_pid[i] = std::thread::id();
   }
 
   if (s_threads_process.m_pool_base) {
-    (&s_threads_process)->~ThreadsExec();
+    (&s_threads_process)->~ThreadsInternal();
     s_threads_exec[0] = nullptr;
   }
 
@@ -814,7 +819,7 @@ void ThreadsExec::finalize() {
   s_threads_process.m_pool_rank      = 0;
   s_threads_process.m_pool_size      = 1;
   s_threads_process.m_pool_fan_size  = 0;
-  s_threads_process.m_pool_state     = ThreadsExec::Inactive;
+  s_threads_process.m_pool_state     = ThreadsInternal::Inactive;
 
   Kokkos::Profiling::finalize();
 }
@@ -836,7 +841,7 @@ int Threads::concurrency() const { return impl_thread_pool_size(0); }
 #endif
 
 void Threads::fence(const std::string &name) const {
-  Impl::ThreadsExec::internal_fence(name, Impl::fence_is_static::no);
+  Impl::ThreadsInternal::internal_fence(name, Impl::fence_is_static::no);
 }
 
 Threads &Threads::impl_instance(int) {

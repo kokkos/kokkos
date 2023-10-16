@@ -61,12 +61,13 @@ void host_check_math_op_one_loader(UnaryOp unary_op, std::size_t n,
     simd_type arg;
     bool const loaded_arg = loader.host_load(args + i, nlanes, arg);
     if (!loaded_arg) continue;
-    simd_type expected_result;
+    auto computed_result = unary_op.on_host(arg);
+
+    decltype(computed_result) expected_result;
     for (std::size_t lane = 0; lane < simd_type::size(); ++lane) {
       if (lane < nlanes)
         expected_result[lane] = unary_op.on_host_serial(T(arg[lane]));
     }
-    simd_type const computed_result = unary_op.on_host(arg);
     host_check_equality(expected_result, computed_result, nlanes);
   }
 }
@@ -85,12 +86,17 @@ inline void host_check_all_math_ops(const DataType (&first_args)[n],
   host_check_math_op_all_loaders<Abi>(plus(), n, first_args, second_args);
   host_check_math_op_all_loaders<Abi>(minus(), n, first_args, second_args);
   host_check_math_op_all_loaders<Abi>(multiplies(), n, first_args, second_args);
-
-  // TODO: Place fallback division implementations for all simd integer types
-  if constexpr (std::is_same_v<DataType, double>)
-    host_check_math_op_all_loaders<Abi>(divides(), n, first_args, second_args);
-
   host_check_math_op_all_loaders<Abi>(absolutes(), n, first_args);
+
+  host_check_math_op_all_loaders<Abi>(floors(), n, first_args);
+  host_check_math_op_all_loaders<Abi>(ceils(), n, first_args);
+  host_check_math_op_all_loaders<Abi>(rounds(), n, first_args);
+  host_check_math_op_all_loaders<Abi>(truncates(), n, first_args);
+
+  // TODO: Place fallback implementations for all simd integer types
+  if constexpr (std::is_floating_point_v<DataType>) {
+    host_check_math_op_all_loaders<Abi>(divides(), n, first_args, second_args);
+  }
 }
 
 template <typename Abi, typename DataType>
@@ -100,20 +106,28 @@ inline void host_check_abi_size() {
   static_assert(simd_type::size() == mask_type::size());
 }
 
-template <class Abi, typename DataType>
+template <typename Abi, typename DataType>
 inline void host_check_math_ops() {
   constexpr size_t n = 11;
 
   host_check_abi_size<Abi, DataType>();
 
-  if constexpr (std::is_signed_v<DataType>) {
-    DataType const first_args[n]  = {1, 2, -1, 10, 0, 1, -2, 10, 0, 1, -2};
-    DataType const second_args[n] = {1, 2, 1, 1, 1, -3, -2, 1, 13, -3, -2};
+  if constexpr (!std::is_integral_v<DataType>) {
+    DataType const first_args[n]  = {0.1,  0.4,  0.5, 0.7, 1.0, 1.5,
+                                    -2.0, 10.0, 0.0, 1.2, -2.8};
+    DataType const second_args[n] = {1.0,  0.2, 1.1,  1.8,  -0.1, -3.0,
+                                     -2.4, 1.0, 13.0, -3.2, -2.1};
     host_check_all_math_ops<Abi>(first_args, second_args);
   } else {
-    DataType const first_args[n]  = {1, 2, 1, 10, 0, 1, 2, 10, 0, 1, 2};
-    DataType const second_args[n] = {1, 2, 1, 1, 1, 3, 2, 1, 13, 3, 2};
-    host_check_all_math_ops<Abi>(first_args, second_args);
+    if constexpr (std::is_signed_v<DataType>) {
+      DataType const first_args[n]  = {1, 2, -1, 10, 0, 1, -2, 10, 0, 1, -2};
+      DataType const second_args[n] = {1, 2, 1, 1, 1, -3, -2, 1, 13, -3, -2};
+      host_check_all_math_ops<Abi>(first_args, second_args);
+    } else {
+      DataType const first_args[n]  = {1, 2, 1, 10, 0, 1, 2, 10, 0, 1, 2};
+      DataType const second_args[n] = {1, 2, 1, 1, 1, 3, 2, 1, 13, 3, 2};
+      host_check_all_math_ops<Abi>(first_args, second_args);
+    }
   }
 }
 
@@ -171,11 +185,12 @@ KOKKOS_INLINE_FUNCTION void device_check_math_op_one_loader(UnaryOp unary_op,
     simd_type arg;
     bool const loaded_arg = loader.device_load(args + i, nlanes, arg);
     if (!loaded_arg) continue;
-    simd_type expected_result;
+    auto computed_result = unary_op.on_device(arg);
+
+    decltype(computed_result) expected_result;
     for (std::size_t lane = 0; lane < nlanes; ++lane) {
       expected_result[lane] = unary_op.on_device_serial(arg[lane]);
     }
-    simd_type const computed_result = unary_op.on_device(arg);
     device_check_equality(expected_result, computed_result, nlanes);
   }
 }
@@ -196,12 +211,17 @@ KOKKOS_INLINE_FUNCTION void device_check_all_math_ops(
   device_check_math_op_all_loaders<Abi>(minus(), n, first_args, second_args);
   device_check_math_op_all_loaders<Abi>(multiplies(), n, first_args,
                                         second_args);
+  device_check_math_op_all_loaders<Abi>(absolutes(), n, first_args);
 
-  if constexpr (std::is_same_v<DataType, double>)
+  device_check_math_op_all_loaders<Abi>(floors(), n, first_args);
+  device_check_math_op_all_loaders<Abi>(ceils(), n, first_args);
+  device_check_math_op_all_loaders<Abi>(rounds(), n, first_args);
+  device_check_math_op_all_loaders<Abi>(truncates(), n, first_args);
+
+  if constexpr (std::is_floating_point_v<DataType>) {
     device_check_math_op_all_loaders<Abi>(divides(), n, first_args,
                                           second_args);
-
-  device_check_math_op_all_loaders<Abi>(absolutes(), n, first_args);
+  }
 }
 
 template <typename Abi, typename DataType>
@@ -217,14 +237,22 @@ KOKKOS_INLINE_FUNCTION void device_check_math_ops() {
 
   device_check_abi_size<Abi, DataType>();
 
-  if constexpr (std::is_signed_v<DataType>) {
-    DataType const first_args[n]  = {1, 2, -1, 10, 0, 1, -2, 10, 0, 1, -2};
-    DataType const second_args[n] = {1, 2, 1, 1, 1, -3, -2, 1, 13, -3, -2};
+  if constexpr (!std::is_integral_v<DataType>) {
+    DataType const first_args[n]  = {0.1,  0.4,  0.5, 0.7, 1.0, 1.5,
+                                    -2.0, 10.0, 0.0, 1.2, -2.8};
+    DataType const second_args[n] = {1.0,  0.2, 1.1,  1.8,  -0.1, -3.0,
+                                     -2.4, 1.0, 13.0, -3.2, -2.1};
     device_check_all_math_ops<Abi>(first_args, second_args);
   } else {
-    DataType const first_args[n]  = {1, 2, 1, 10, 0, 1, 2, 10, 0, 1, 2};
-    DataType const second_args[n] = {1, 2, 1, 1, 1, 3, 2, 1, 13, 3, 2};
-    device_check_all_math_ops<Abi>(first_args, second_args);
+    if constexpr (std::is_signed_v<DataType>) {
+      DataType const first_args[n]  = {1, 2, -1, 10, 0, 1, -2, 10, 0, 1, -2};
+      DataType const second_args[n] = {1, 2, 1, 1, 1, -3, -2, 1, 13, -3, -2};
+      device_check_all_math_ops<Abi>(first_args, second_args);
+    } else {
+      DataType const first_args[n]  = {1, 2, 1, 10, 0, 1, 2, 10, 0, 1, 2};
+      DataType const second_args[n] = {1, 2, 1, 1, 1, 3, 2, 1, 13, 3, 2};
+      device_check_all_math_ops<Abi>(first_args, second_args);
+    }
   }
 }
 

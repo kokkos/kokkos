@@ -23,6 +23,11 @@
 
 #include <Kokkos_SIMD_Common.hpp>
 
+#ifdef KOKKOS_SIMD_COMMON_MATH_HPP
+#error \
+    "Kokkos_SIMD_Scalar.hpp must be included before Kokkos_SIMD_Common_Math.hpp!"
+#endif
+
 namespace Kokkos {
 namespace Experimental {
 
@@ -211,6 +216,38 @@ template <class T>
     return (a < 0 ? -a : a);
   }
   return a;
+}
+
+template <typename T>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION auto floor(
+    Experimental::simd<T, Experimental::simd_abi::scalar> const& a) {
+  using data_type = std::conditional_t<std::is_floating_point_v<T>, T, double>;
+  return Experimental::simd<data_type, Experimental::simd_abi::scalar>(
+      Kokkos::floor(static_cast<data_type>(a[0])));
+}
+
+template <typename T>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION auto ceil(
+    Experimental::simd<T, Experimental::simd_abi::scalar> const& a) {
+  using data_type = std::conditional_t<std::is_floating_point_v<T>, T, double>;
+  return Experimental::simd<data_type, Experimental::simd_abi::scalar>(
+      Kokkos::ceil(static_cast<data_type>(a[0])));
+}
+
+template <typename T>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION auto round(
+    Experimental::simd<T, Experimental::simd_abi::scalar> const& a) {
+  using data_type = std::conditional_t<std::is_floating_point_v<T>, T, double>;
+  return Experimental::simd<data_type, Experimental::simd_abi::scalar>(
+      Experimental::round_half_to_nearest_even(static_cast<data_type>(a[0])));
+}
+
+template <typename T>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION auto trunc(
+    Experimental::simd<T, Experimental::simd_abi::scalar> const& a) {
+  using data_type = std::conditional_t<std::is_floating_point_v<T>, T, double>;
+  return Experimental::simd<data_type, Experimental::simd_abi::scalar>(
+      Kokkos::trunc(static_cast<data_type>(a[0])));
 }
 
 template <class T>

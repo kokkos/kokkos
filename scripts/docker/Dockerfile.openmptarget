@@ -23,7 +23,7 @@ RUN KEYDUMP_URL=https://cloud.cees.ornl.gov/download && \
     gpg --verify ${KEYDUMP_FILE}.sig ${KEYDUMP_FILE} && \
     rm ${KEYDUMP_FILE}*
 
-ARG CMAKE_VERSION=3.18.5
+ARG CMAKE_VERSION=3.27.7
 ENV CMAKE_DIR=/opt/cmake
 RUN CMAKE_URL=https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION} && \
     CMAKE_SCRIPT=cmake-${CMAKE_VERSION}-Linux-x86_64.sh && \
@@ -38,7 +38,7 @@ RUN CMAKE_URL=https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSIO
     rm ${CMAKE_SCRIPT}
 ENV PATH=${CMAKE_DIR}/bin:$PATH
 
-ARG LLVM_VERSION=llvmorg-15.0.0
+ARG LLVM_VERSION=llvmorg-17.0.1
 ENV LLVM_DIR=/opt/llvm
 RUN LLVM_URL=https://github.com/llvm/llvm-project/archive &&\
     LLVM_ARCHIVE=${LLVM_VERSION}.tar.gz &&\

@@ -14,8 +14,8 @@
 //
 //@HEADER
 
-#ifndef KOKKOS_IMPL_PRINTF_HPP
-#define KOKKOS_IMPL_PRINTF_HPP
+#ifndef KOKKOS_PRINTF_HPP
+#define KOKKOS_PRINTF_HPP
 
 #include <Kokkos_Macros.hpp>
 
@@ -51,4 +51,4 @@ KOKKOS_FUNCTION void printf(const char* format, Args... args) {
 
 }  // namespace Kokkos
 
-#endif /* #ifndef KOKKOS_IMPL_PRINTF_HPP */
+#endif /* #ifndef KOKKOS_PRINTF_HPP */

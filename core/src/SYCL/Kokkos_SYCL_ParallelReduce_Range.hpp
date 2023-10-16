@@ -160,7 +160,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
                     value_count, reducer, false, std::min(size, wgroup_size));
 
                 if (local_id == 0) {
-                  sycl::atomic_ref<unsigned, sycl::memory_order::relaxed,
+                  sycl::atomic_ref<unsigned, sycl::memory_order::acq_rel,
                                    sycl::memory_scope::device,
                                    sycl::access::address_space::global_space>
                       scratch_flags_ref(*scratch_flags);
@@ -202,7 +202,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
                     std::min(size, wgroup_size));
 
                 if (local_id == 0) {
-                  sycl::atomic_ref<unsigned, sycl::memory_order::relaxed,
+                  sycl::atomic_ref<unsigned, sycl::memory_order::acq_rel,
                                    sycl::memory_scope::device,
                                    sycl::access::address_space::global_space>
                       scratch_flags_ref(*scratch_flags);
