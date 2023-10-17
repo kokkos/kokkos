@@ -2541,16 +2541,16 @@ struct TestComplexBesselFunctionsWithLargeIndexAndLargeArguments {
   KOKKOS_INLINE_FUNCTION
   void operator()(const int& /*i*/) const {
     d_cbj8(0) = Kokkos::Experimental::cyl_bessel_j(8, d_z(0));
-    d_cbj8(1) = Kokkos::Experimental::cyl_bessel_j(8, d_z(1), 1000.0, 800);
-    d_cbj8(2) = Kokkos::Experimental::cyl_bessel_j(8, d_z(2), 1000.0, 800);
-    d_cbj8(3) = Kokkos::Experimental::cyl_bessel_j(8, d_z(3), 1000.0, 800);
-    d_cbj8(4) = Kokkos::Experimental::cyl_bessel_j(8, d_z(4), 2000.0, 1800);
+    d_cbj8(1) = Kokkos::Experimental::cyl_bessel_j(8, d_z(1));
+    d_cbj8(2) = Kokkos::Experimental::cyl_bessel_j(8, d_z(2));
+    d_cbj8(3) = Kokkos::Experimental::cyl_bessel_j(8, d_z(3));
+    d_cbj8(4) = Kokkos::Experimental::cyl_bessel_j(8, d_z(4));
 
     d_cbj9(0) = Kokkos::Experimental::cyl_bessel_j(9, d_z(0));
-    d_cbj9(1) = Kokkos::Experimental::cyl_bessel_j(9, d_z(1), 1000.0, 800);
-    d_cbj9(2) = Kokkos::Experimental::cyl_bessel_j(9, d_z(2), 1000.0, 800);
-    d_cbj9(3) = Kokkos::Experimental::cyl_bessel_j(9, d_z(3), 1000.0, 800);
-    d_cbj9(4) = Kokkos::Experimental::cyl_bessel_j(9, d_z(4), 2000.0, 1800);
+    d_cbj9(1) = Kokkos::Experimental::cyl_bessel_j(9, d_z(1));
+    d_cbj9(2) = Kokkos::Experimental::cyl_bessel_j(9, d_z(2));
+    d_cbj9(3) = Kokkos::Experimental::cyl_bessel_j(9, d_z(3));
+    d_cbj9(4) = Kokkos::Experimental::cyl_bessel_j(9, d_z(4));
   }
 };
 
