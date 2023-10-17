@@ -113,14 +113,19 @@ class OpenMPTargetExecTeamMember {
     team_broadcast(value, thread_id);
   }
 
-  // FIXME_OPENMPTARGET this function has the wrong interface and currently
-  // ignores the reducer passed.
-  template <class ValueType, class JoinOp>
-  KOKKOS_INLINE_FUNCTION ValueType team_reduce(const ValueType& value,
-                                               const JoinOp&) const {
+  template <typename ReducerType>
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<is_reducer<ReducerType>::value>
+  team_reduce(ReducerType const& reducer) const noexcept {
+    team_reduce(reducer, reducer.reference());
+  }
+
+  template <typename ReducerType>
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<is_reducer<ReducerType>::value>
+  team_reduce(ReducerType const& reducer,
+              typename ReducerType::value_type& value) const noexcept {
 #pragma omp barrier
 
-    using value_type = ValueType;
+    using value_type = typename ReducerType::value_type;
     //    const JoinLambdaAdapter<value_type, JoinOp> op(op_in);
 
     // Make sure there is enough scratch space:
@@ -149,8 +154,8 @@ class OpenMPTargetExecTeamMember {
       }
 #pragma omp barrier
     }
-    return team_scratch[0];
   }
+
   /** \brief  Intra-team exclusive prefix sum with team_rank() ordering
    *          with intra-team non-deterministic ordering accumulation.
    *
