@@ -28,7 +28,7 @@
 #include <Threads/Kokkos_Threads_ParallelReduce_MDRange.hpp>
 #include <Threads/Kokkos_Threads_ParallelReduce_Team.hpp>
 #include <Threads/Kokkos_Threads_ParallelScan_Range.hpp>
-#include <Threads/Kokkos_ThreadsTeam.hpp>
+#include <Threads/Kokkos_Threads_Team.hpp>
 #include <Threads/Kokkos_Threads_UniqueToken.hpp>
 #endif
 
