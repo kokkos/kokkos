@@ -33,9 +33,10 @@ namespace Impl {
 template <typename... P>
 auto with_updated_label(const ViewCtorProp<P...>& view_ctor_prop,
                         const std::string& label) {
+  using vcp_t = ViewCtorProp<P...>;
   //! If the label property is already set, append. Otherwise, set label.
-  if constexpr (ViewCtorProp<P...>::has_label) {
-    auto new_ctor_props(view_ctor_prop);
+  if constexpr (vcp_t::has_label) {
+    vcp_t new_ctor_props(view_ctor_prop);
     static_cast<ViewCtorProp<void, std::string>&>(new_ctor_props)
         .value.append(label);
     return new_ctor_props;
