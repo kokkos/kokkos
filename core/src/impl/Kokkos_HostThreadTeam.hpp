@@ -443,9 +443,19 @@ class HostThreadTeamMember {
     return m_scratch.set_team_thread_mode(0, 1, 0);
   }
 
+  template <int Level>
+  KOKKOS_INLINE_FUNCTION scratch_memory_space team_scratch() const {
+    return {m_scratch.set_team_thread_mode(0, 1, 0)};
+  }
+
   KOKKOS_INLINE_FUNCTION
   const scratch_memory_space& team_scratch(int) const {
     return m_scratch.set_team_thread_mode(0, 1, 0);
+  }
+
+  template <int Level>
+  KOKKOS_INLINE_FUNCTION scratch_memory_space thread_scratch() const {
+    m_scratch.set_team_thread_mode(0, m_data.m_team_size, m_data.m_team_rank);
   }
 
   KOKKOS_INLINE_FUNCTION

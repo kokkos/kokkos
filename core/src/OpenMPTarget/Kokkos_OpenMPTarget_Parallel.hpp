@@ -69,9 +69,21 @@ class OpenMPTargetExecTeamMember {
   // second parameter - size multiplier for advancing scratch ptr after a
   // request was serviced. third parameter - offset size multiplier from current
   // scratch ptr when returning a ptr for a request.
+  template <int Level>
+  KOKKOS_INLINE_FUNCTION const execution_space::scratch_memory_space&
+  team_scratch() const {
+    return m_team_shared.set_team_thread_mode(Level, 1, 0);
+  }
+
   KOKKOS_INLINE_FUNCTION
   const execution_space::scratch_memory_space& team_scratch(int level) const {
     return m_team_shared.set_team_thread_mode(level, 1, 0);
+  }
+
+  template <int Level>
+  KOKKOS_INLINE_FUNCTION const execution_space::scratch_memory_space&
+  thread_scratch() const {
+    return m_team_shared.set_team_thread_mode(Level, team_size(), team_rank());
   }
 
   KOKKOS_INLINE_FUNCTION

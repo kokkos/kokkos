@@ -56,6 +56,12 @@ class SYCLTeamMember {
     return m_team_shared.set_team_thread_mode(0, 1, 0);
   }
 
+  template <int Level>
+  KOKKOS_INLINE_FUNCTION scratch_memory_space_wrapper<Level> team_scratch()
+      const {
+    return {m_team_shared.set_team_thread_mode(Level, 1, 0)};
+  }
+
   KOKKOS_INLINE_FUNCTION
   const execution_space::scratch_memory_space& team_scratch(
       const int level) const {

@@ -117,9 +117,21 @@ class ThreadsExecTeamMember {
     return m_team_shared.set_team_thread_mode(0, 1, 0);
   }
 
+  template <int Level>
+  KOKKOS_INLINE_FUNCTION const execution_space::scratch_memory_space&
+  team_scratch() const {
+    return m_team_shared.set_team_thread_mode(0, 1, 0);
+  }
+
   KOKKOS_INLINE_FUNCTION
   const execution_space::scratch_memory_space& team_scratch(int) const {
     return m_team_shared.set_team_thread_mode(0, 1, 0);
+  }
+
+  template <int Level>
+  KOKKOS_INLINE_FUNCTION const execution_space::scratch_memory_space&
+  thread_scratch() const {
+    return m_team_shared.set_team_thread_mode(0, team_size(), team_rank());
   }
 
   KOKKOS_INLINE_FUNCTION
