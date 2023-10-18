@@ -92,9 +92,10 @@ class Bitset {
   using block_view_type = View<unsigned*, Device, MemoryTraits<RandomAccess>>;
 
  public:
-  /// constructor
+  Bitset() = default;
+
   /// arg_size := number of bit in set
-  Bitset(unsigned arg_size = 0u) : Bitset(Kokkos::view_alloc(), arg_size) {}
+  Bitset(unsigned arg_size) : Bitset(Kokkos::view_alloc(), arg_size) {}
 
   template <class... P>
   Bitset(const Impl::ViewCtorProp<P...>& arg_prop, unsigned arg_size)
@@ -310,8 +311,8 @@ class Bitset {
   }
 
  private:
-  unsigned m_size;
-  unsigned m_last_block_mask;
+  unsigned m_size            = 0;
+  unsigned m_last_block_mask = 0;
   block_view_type m_blocks;
 
  private:
