@@ -60,7 +60,8 @@ class SYCL {
   using array_layout = LayoutLeft;
   using size_type    = memory_space::size_type;
 
-  using scratch_memory_space = ScratchMemorySpace<SYCL>;
+  using scratch_memory_space =
+      ScratchMemorySpace<SYCL, sycl::local_ptr<char>, sycl::device_ptr<char>>;
 
   SYCL();
   explicit SYCL(const sycl::queue&);

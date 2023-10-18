@@ -41,9 +41,6 @@ class ScratchMemorySpaceBase {
   // Minimal overalignment used by view scratch allocations
   constexpr static int ALIGN = 8;
 
-  template <int Level>
-  using wrapper_type = ScratchMemorySpace<ExecSpace>;
-
  private:
   mutable PointerType m_iter = nullptr;
   PointerType m_end          = nullptr;
@@ -64,11 +61,12 @@ class ScratchMemorySpaceBase {
   static constexpr const char* name() { return "ScratchMemorySpaceBase"; }
 
   template <bool alignment_requested, typename IntType>
-  KOKKOS_INLINE_FUNCTION PointerType get_shmem_common(
+  KOKKOS_INLINE_FUNCTION void* get_shmem(
       const IntType& size, [[maybe_unused]] const ptrdiff_t alignment) const {
     auto m_iter_old = m_iter;
     if constexpr (alignment_requested) {
-      const ptrdiff_t missalign = size_t(m_iter) % alignment;
+      const ptrdiff_t missalign =
+          size_t(static_cast<char*>(m_iter)) % alignment;
       if (missalign) m_iter += alignment - missalign;
     }
 
@@ -132,7 +130,7 @@ class ScratchMemorySpace {
   constexpr static int ALIGN = 8;
 
   //! Tag this class as a memory space
-  using memory_space    = ScratchMemorySpace<ExecSpace>;
+  using memory_space    = ScratchMemorySpace;
   using execution_space = ExecSpace;
   //! This execution space preferred device_type
   using device_type = Kokkos::Device<execution_space, memory_space>;
@@ -148,9 +146,9 @@ class ScratchMemorySpace {
     if (level == -1) level = m_default_level;
     constexpr bool align = false;
     if (level == 1)
-      return m_scratch_L0.template get_shmem_common<align>(size, 1);
+      return m_scratch_L0.template get_shmem<align>(size, 1);
     else
-      return m_scratch_L1.template get_shmem_common<align>(size, 1);
+      return m_scratch_L1.template get_shmem<align>(size, 1);
   }
 
   template <typename IntType>
@@ -160,31 +158,10 @@ class ScratchMemorySpace {
     if (level == -1) level = m_default_level;
     constexpr bool align = true;
     if (level == 1)
-      return m_scratch_L0.template get_shmem_common<align>(size, alignment);
+      return m_scratch_L0.template get_shmem<align>(size, alignment);
     else
-      return m_scratch_L1.template get_shmem_common<align>(size, alignment);
+      return m_scratch_L1.template get_shmem<align>(size, alignment);
   }
-
-  template <int Level>
-  KOKKOS_INLINE_FUNCTION ScratchMemorySpaceBase<ExecSpace, PointerTypeL0>*
-  get_scratch_L0() {
-    if constexpr (Level == 0) {
-      return m_scratch_L0;
-    } else {
-      return m_scratch_L1;
-    }
-  }
-
-  KOKKOS_DEFAULTED_FUNCTION
-  ScratchMemorySpace() = default;
-
-  template <typename IntType>
-  KOKKOS_INLINE_FUNCTION ScratchMemorySpace(void* ptr_L0,
-                                            const IntType& size_L0,
-                                            void* ptr_L1           = nullptr,
-                                            const IntType& size_L1 = 0)
-      : m_scratch_L0(static_cast<PointerTypeL0>(ptr_L0), size_L0),
-        m_scratch_L1(static_cast<PointerTypeL1>(ptr_L1), size_L1) {}
 
   KOKKOS_INLINE_FUNCTION
   const ScratchMemorySpace& set_team_thread_mode(const int& level,
@@ -198,6 +175,26 @@ class ScratchMemorySpace {
     }
     return *this;
   }
+
+  template <int Level>
+  KOKKOS_INLINE_FUNCTION const auto& set_team_thread_mode(
+      const int& multiplier, const int& offset) const {
+    if constexpr (Level == 0) {
+      return m_scratch_L0.set_team_thread_mode(multiplier, offset);
+    } else {
+      return m_scratch_L1.set_team_thread_mode(multiplier, offset);
+    }
+  }
+
+  KOKKOS_DEFAULTED_FUNCTION
+  ScratchMemorySpace() = default;
+
+  template <typename IntType>
+  KOKKOS_INLINE_FUNCTION ScratchMemorySpace(PointerTypeL0 ptr_L0,
+                                            const IntType& size_L0,
+                                            PointerTypeL1 ptr_L1   = nullptr,
+                                            const IntType& size_L1 = 0)
+      : m_scratch_L0(ptr_L0, size_L0), m_scratch_L1(ptr_L1, size_L1) {}
 };
 
 }  // namespace Kokkos

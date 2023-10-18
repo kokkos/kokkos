@@ -1629,28 +1629,29 @@ class View : public ViewTraits<DataType, Properties...> {
     return map_type::memory_span(arg_layout) + scratch_value_alignment;
   }
 
-  template <int Level>
+  template <typename PointerType>
   explicit KOKKOS_INLINE_FUNCTION View(
-      const typename traits::execution_space::scratch_memory_space::
-          template wrapper_type<Level>& arg_space,
+      const Kokkos::ScratchMemorySpaceBase<typename traits::execution_space,
+                                           PointerType>& arg_space,
       const typename traits::array_layout& arg_layout)
-      : View(Impl::ViewCtorProp<pointer_type>(reinterpret_cast<pointer_type>(
-                 arg_space.get_shmem_aligned(map_type::memory_span(arg_layout),
-                                             scratch_value_alignment))),
+      : View(Impl::ViewCtorProp<pointer_type>(static_cast<pointer_type>(
+                 arg_space.template get_shmem</*aligned*/ true>(
+                     map_type::memory_span(arg_layout),
+                     scratch_value_alignment))),
              arg_layout) {}
 
   explicit KOKKOS_INLINE_FUNCTION View(
       const typename traits::execution_space::scratch_memory_space& arg_space,
       const typename traits::array_layout& arg_layout)
-      : View(Impl::ViewCtorProp<pointer_type>(reinterpret_cast<pointer_type>(
+      : View(Impl::ViewCtorProp<pointer_type>(static_cast<pointer_type>(
                  arg_space.get_shmem_aligned(map_type::memory_span(arg_layout),
                                              scratch_value_alignment))),
              arg_layout) {}
 
-  template <int Level>
+  template <typename PointerType>
   explicit KOKKOS_INLINE_FUNCTION View(
-      const typename traits::execution_space::scratch_memory_space::
-          template wrapper_type<Level>& arg_space,
+      const Kokkos::ScratchMemorySpaceBase<typename traits::execution_space,
+                                           PointerType>& arg_space,
       const size_t arg_N0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
       const size_t arg_N1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
       const size_t arg_N2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
@@ -1659,8 +1660,8 @@ class View : public ViewTraits<DataType, Properties...> {
       const size_t arg_N5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
       const size_t arg_N6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
       const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG)
-      : View(Impl::ViewCtorProp<pointer_type>(
-                 reinterpret_cast<pointer_type>(arg_space.get_shmem_aligned(
+      : View(Impl::ViewCtorProp<pointer_type>(static_cast<pointer_type>(
+                 arg_space.template get_shmem</*aligned*/ true>(
                      map_type::memory_span(typename traits::array_layout(
                          arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6,
                          arg_N7)),
@@ -1683,7 +1684,7 @@ class View : public ViewTraits<DataType, Properties...> {
       const size_t arg_N6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
       const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG)
       : View(Impl::ViewCtorProp<pointer_type>(
-                 reinterpret_cast<pointer_type>(arg_space.get_shmem_aligned(
+                 static_cast<pointer_type>(arg_space.get_shmem_aligned(
                      map_type::memory_span(typename traits::array_layout(
                          arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6,
                          arg_N7)),

@@ -19,8 +19,6 @@
 
 #include <Kokkos_Macros.hpp>
 
-#include <SYCL/Kokkos_SYCL_ScratchSpace.hpp>
-
 #ifdef KOKKOS_ENABLE_SYCL
 
 #include <utility>
@@ -37,10 +35,7 @@ class SYCLTeamMember {
  public:
   using execution_space      = Kokkos::Experimental::SYCL;
   using scratch_memory_space = execution_space::scratch_memory_space;
-  template <int Level>
-  using scratch_memory_space_wrapper =
-      scratch_memory_space::wrapper_type<Level>;
-  using team_handle = SYCLTeamMember;
+  using team_handle          = SYCLTeamMember;
 
  private:
   mutable sycl::local_ptr<void> m_team_reduce;
@@ -57,9 +52,8 @@ class SYCLTeamMember {
   }
 
   template <int Level>
-  KOKKOS_INLINE_FUNCTION scratch_memory_space_wrapper<Level> team_scratch()
-      const {
-    return {m_team_shared.set_team_thread_mode(Level, 1, 0)};
+  KOKKOS_INLINE_FUNCTION auto& team_scratch() const {
+    return m_team_shared.set_team_thread_mode<Level>(1, 0);
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -69,10 +63,8 @@ class SYCLTeamMember {
   }
 
   template <int Level>
-  KOKKOS_INLINE_FUNCTION scratch_memory_space_wrapper<Level> thread_scratch()
-      const {
-    return {
-        m_team_shared.set_team_thread_mode(Level, team_size(), team_rank())};
+  KOKKOS_INLINE_FUNCTION auto& thread_scratch() const {
+    return m_team_shared.set_team_thread_mode<Level>(team_size(), team_rank());
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -361,7 +353,9 @@ class SYCLTeamMember {
                  const int arg_league_size)
       : m_team_reduce(shared),
         m_team_shared(static_cast<sycl::local_ptr<char>>(shared) + shared_begin,
-                      shared_size, scratch_level_1_ptr, scratch_level_1_size),
+                      shared_size,
+                      static_cast<sycl::device_ptr<char>>(scratch_level_1_ptr),
+                      scratch_level_1_size),
         m_team_reduce_size(shared_begin),
         m_item(item),
         m_league_rank(arg_league_rank),
