@@ -135,7 +135,7 @@ using promote_3_t = typename promote_3<T, U, V>::type;
   KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_integral_v<T>, bool> FUNC( \
       T x) {                                                                 \
     return ::FUNC(static_cast<double>(x));                                   \
-  }                                                                          \
+  }
 #else
 #define KOKKOS_IMPL_MATH_UNARY_PREDICATE(FUNC)                               \
   KOKKOS_INLINE_FUNCTION bool FUNC(float x) {                                \
@@ -155,7 +155,7 @@ using promote_3_t = typename promote_3<T, U, V>::type;
       T x) {                                                                 \
     using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                        \
     return FUNC(static_cast<double>(x));                                     \
-  }                                                                          \
+  }
 #endif
 
 #define KOKKOS_IMPL_MATH_BINARY_FUNCTION(FUNC)                                 \
