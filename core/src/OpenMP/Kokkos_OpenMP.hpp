@@ -104,18 +104,6 @@ class OpenMP {
   /// This always returns false on OpenMP
   inline static bool is_asynchronous(OpenMP const& = OpenMP()) noexcept;
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-  /// \brief Partition the default instance and call 'f' on each new 'master'
-  /// thread
-  ///
-  /// Func is a functor with the following signiture
-  ///   void( int partition_id, int num_partitions )
-  template <typename F>
-  KOKKOS_DEPRECATED static void partition_master(
-      F const& f, int requested_num_partitions = 0,
-      int requested_partition_size = 0);
-#endif
-
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   static int concurrency(OpenMP const& = OpenMP());
 #else
