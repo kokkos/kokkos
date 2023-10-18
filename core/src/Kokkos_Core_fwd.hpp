@@ -75,9 +75,6 @@ template <class ExecutionSpace, class MemorySpace>
 struct Device;
 
 // forward declare here so that backend initializer calls can use it.
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-struct InitArguments;
-#endif
 class InitializationSettings;
 
 }  // namespace Kokkos
