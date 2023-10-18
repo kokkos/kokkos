@@ -337,27 +337,27 @@ class UnorderedMap {
         Impl::get_property<Impl::LabelTag>(prop_copy) + " - size"));
 
     m_available_indexes =
-        bitset_type(Kokkos::Impl::with_updated_label(prop_copy, " - bitset"),
+        bitset_type(Kokkos::Impl::append_to_label(prop_copy, " - bitset"),
                     calculate_capacity(capacity_hint));
 
     m_hash_lists = size_type_view(
-        Kokkos::Impl::with_updated_label(prop_copy_noinit, " - hash list"),
+        Kokkos::Impl::append_to_label(prop_copy_noinit, " - hash list"),
         Impl::find_hash_size(capacity()));
 
     m_next_index = size_type_view(
-        Kokkos::Impl::with_updated_label(prop_copy_noinit, " - next index"),
+        Kokkos::Impl::append_to_label(prop_copy_noinit, " - next index"),
         capacity() + 1);  // +1 so that the *_at functions can always return a
                           // valid reference
 
-    m_keys = key_type_view(
-        Kokkos::Impl::with_updated_label(prop_copy, " - keys"), capacity());
+    m_keys = key_type_view(Kokkos::Impl::append_to_label(prop_copy, " - keys"),
+                           capacity());
 
-    m_values = value_type_view(
-        Kokkos::Impl::with_updated_label(prop_copy, " - values"),
-        is_set ? 0 : capacity());
+    m_values =
+        value_type_view(Kokkos::Impl::append_to_label(prop_copy, " - values"),
+                        is_set ? 0 : capacity());
 
     m_scalars =
-        scalars_view(Kokkos::Impl::with_updated_label(prop_copy, " - scalars"));
+        scalars_view(Kokkos::Impl::append_to_label(prop_copy, " - scalars"));
 
     /**
      * Deep copies should also be done using the space instance if given.

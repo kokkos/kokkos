@@ -27,20 +27,16 @@
 namespace Kokkos {
 namespace Impl {
 
-//! Either append to the label if the property already exists, or set it.
+//! Append to the label contained in view_ctor_prop.
 template <typename... P>
-auto with_updated_label(const ViewCtorProp<P...>& view_ctor_prop,
-                        const std::string& label) {
+auto append_to_label(const ViewCtorProp<P...>& view_ctor_prop,
+                     const std::string& label) {
   using vcp_t = ViewCtorProp<P...>;
-  //! If the label property is already set, append. Otherwise, set label.
-  if constexpr (vcp_t::has_label) {
-    vcp_t new_ctor_props(view_ctor_prop);
-    static_cast<ViewCtorProp<void, std::string>&>(new_ctor_props)
-        .value.append(label);
-    return new_ctor_props;
-  } else {
-    return Impl::with_properties_if_unset(view_ctor_prop, label);
-  }
+  static_assert(vcp_t::has_label);
+  vcp_t new_ctor_props(view_ctor_prop);
+  static_cast<ViewCtorProp<void, std::string>&>(new_ctor_props)
+      .value.append(label);
+  return new_ctor_props;
 }
 
 uint32_t find_hash_size(uint32_t size);
