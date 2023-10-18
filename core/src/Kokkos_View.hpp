@@ -45,6 +45,10 @@ static_assert(false,
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
+
+template <typename ExewcutionSpace, typename PointerType>
+class ScratchMemorySpaceBase;
+
 namespace Impl {
 
 template <class DataType>
