@@ -350,12 +350,6 @@ struct TestReducers {
       return;  // FIXME_OPENACC
     }
 #endif
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-    if constexpr (std::is_same_v<ExecSpace,
-                                 Kokkos::Experimental::OpenMPTarget>) {
-      return;  // FIXME_OPENMPTARGET
-    }
-#endif
 #ifdef KOKKOS_ENABLE_SYCL
     if constexpr (std::is_same_v<ExecSpace, Kokkos::Experimental::SYCL> &&
                   (std::is_same_v<Scalar, array_reduce<float, 7>> ||
@@ -375,13 +369,21 @@ struct TestReducers {
 
     constexpr int num_teams = get_num_teams();
     TeamSumFunctor tf;
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+    auto team_pol = Kokkos::TeamPolicy<ExecSpace>(num_teams, Kokkos::AUTO);
+#else
     auto team_pol = Kokkos::TeamPolicy<ExecSpace>(num_teams, 1);
+#endif
     Kokkos::parallel_reduce(team_pol, tf, sum_view);
     Kokkos::deep_copy(sum_scalar, sum_view);
     ASSERT_EQ(sum_scalar, Scalar{num_teams});
 
     Kokkos::parallel_for(
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+        Kokkos::TeamPolicy<ExecSpace>(1, Kokkos::AUTO),
+#else
         Kokkos::TeamPolicy<ExecSpace>(1, 1),
+#endif
         KOKKOS_LAMBDA(member_type team_member) {
           Scalar local_scalar;
           Kokkos::Sum<Scalar, typename ExecSpace::memory_space> reducer_scalar(
