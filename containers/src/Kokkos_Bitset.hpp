@@ -28,24 +28,6 @@
 
 namespace Kokkos {
 
-namespace Impl {
-//! Either append to the label if the property already exists, or set it.
-template <typename... P>
-auto with_updated_label(const ViewCtorProp<P...>& view_ctor_prop,
-                        const std::string& label) {
-  using vcp_t = ViewCtorProp<P...>;
-  //! If the label property is already set, append. Otherwise, set label.
-  if constexpr (vcp_t::has_label) {
-    vcp_t new_ctor_props(view_ctor_prop);
-    static_cast<ViewCtorProp<void, std::string>&>(new_ctor_props)
-        .value.append(label);
-    return new_ctor_props;
-  } else {
-    return Impl::with_properties_if_unset(view_ctor_prop, label);
-  }
-}
-}  // namespace Impl
-
 template <typename Device = Kokkos::DefaultExecutionSpace>
 class Bitset;
 
@@ -108,9 +90,8 @@ class Bitset {
         "Allocation properties should not contain the 'pointer' property.");
 
     //! Update 'label' property and allocate.
-    const auto prop_copy = Kokkos::Impl::with_updated_label(
-        Impl::with_properties_if_unset(arg_prop, std::string("Bitset")),
-        " - blocks");
+    const auto prop_copy =
+        Impl::with_properties_if_unset(arg_prop, std::string("Bitset"));
     m_blocks =
         block_view_type(prop_copy, ((m_size + block_mask) >> block_shift));
 
