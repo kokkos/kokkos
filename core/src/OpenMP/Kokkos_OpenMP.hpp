@@ -149,8 +149,6 @@ class OpenMP {
 };
 
 inline int OpenMP::impl_thread_pool_rank() noexcept {
-  // FIXME_OPENMP Can we remove this when removing partition_master? It's only
-  // used in one partition_master test
   KOKKOS_IF_ON_HOST((return omp_get_thread_num();))
 
   KOKKOS_IF_ON_DEVICE((return -1;))
