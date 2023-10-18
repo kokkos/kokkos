@@ -99,11 +99,6 @@ class OpenMPInternal {
   // Release lock used to protect access to m_pool
   void release_lock();
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-  static void validate_partition_impl(const int nthreads, int& num_partitions,
-                                      int& partition_size);
-#endif
-
   void resize_thread_data(size_t pool_reduce_bytes, size_t team_reduce_bytes,
                           size_t team_shared_bytes, size_t thread_local_bytes);
 

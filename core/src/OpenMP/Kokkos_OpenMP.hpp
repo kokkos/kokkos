@@ -53,11 +53,6 @@ namespace Kokkos {
 
 namespace Impl {
 class OpenMPInternal;
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-// FIXME_OPENMP we can remove this after we remove partition_master
-inline thread_local OpenMPInternal* t_openmp_instance = nullptr;
-#endif
 }  // namespace Impl
 
 /// \class OpenMP
@@ -156,12 +151,7 @@ class OpenMP {
 inline int OpenMP::impl_thread_pool_rank() noexcept {
   // FIXME_OPENMP Can we remove this when removing partition_master? It's only
   // used in one partition_master test
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-  KOKKOS_IF_ON_HOST(
-      (return Impl::t_openmp_instance ? 0 : omp_get_thread_num();))
-#else
   KOKKOS_IF_ON_HOST((return omp_get_thread_num();))
-#endif
 
   KOKKOS_IF_ON_DEVICE((return -1;))
 }
