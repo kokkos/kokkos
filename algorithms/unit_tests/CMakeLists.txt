@@ -351,7 +351,7 @@ endforeach()
 # FIXME_OPENMPTARGET - remove sort test as it leads to ICE with clang/16 and above at compile time.
 if(KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL "Clang" AND KOKKOS_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 16.0.0)
     list(REMOVE_ITEM ALGO_SORT_SOURCES
-    TestSort.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestSort.cpp
   )
 endif()
 
