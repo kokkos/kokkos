@@ -174,6 +174,11 @@ KOKKOS_FUNCTION OutputIterator unique_copy_team_impl(
       return Impl::copy_team_impl(teamHandle, first + scan_size, last,
                                   d_first + count);
     }
+
+#if defined KOKKOS_COMPILER_INTEL || \
+    (defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130)
+    __builtin_unreachable();
+#endif
   }
 }
 
