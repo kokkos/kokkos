@@ -588,32 +588,39 @@ IF (KOKKOS_ENABLE_SYCL)
 ENDIF()
 
 # Check support for device_global variables
-# FIXME_SYCL Once the feature test macro SYCL_EXT_ONEAPI_DEVICE_GLOBAL is
-#            available, use that instead.
+# FIXME_SYCL Even if SYCL_EXT_ONEAPI_DEVICE_GLOBAL is defined, we still can't
+#            use device global variables with shared libraries
 IF(KOKKOS_ENABLE_SYCL AND NOT BUILD_SHARED_LIBS)
-  INCLUDE(CheckCXXSourceCompiles)
   STRING(REPLACE ";" " " CMAKE_REQUIRED_FLAGS "${KOKKOS_COMPILE_OPTIONS}")
-  CHECK_CXX_SOURCE_COMPILES("
-    #include <sycl/sycl.hpp>
-    using namespace sycl::ext::oneapi::experimental;
-    using namespace sycl;
+  INCLUDE(CheckCXXSymbolExists)
+  CHECK_CXX_SYMBOL_EXISTS(SYCL_EXT_ONEAPI_DEVICE_GLOBAL "sycl/sycl.hpp" KOKKOS_IMPL_HAVE_SYCL_EXT_ONEAPI_DEVICE_GLOBAL)
+  IF (KOKKOS_IMPL_HAVE_SYCL_EXT_ONEAPI_DEVICE_GLOBAL)
+    SET(KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED ON)
+    COMPILER_SPECIFIC_FLAGS(DEFAULT -DDESUL_SYCL_DEVICE_GLOBAL_SUPPORTED)
+  ELSE()
+    INCLUDE(CheckCXXSourceCompiles)
+    CHECK_CXX_SOURCE_COMPILES("
+      #include <sycl/sycl.hpp>
+      using namespace sycl::ext::oneapi::experimental;
+      using namespace sycl;
 
-    SYCL_EXTERNAL device_global<int, decltype(properties(device_image_scope))> Foo;
+      SYCL_EXTERNAL device_global<int, decltype(properties(device_image_scope))> Foo;
 
-    void bar(queue q) {
-      q.single_task([=] {
-      Foo = 42;
-    });
-    }
+      void bar(queue q) {
+        q.single_task([=] {
+        Foo = 42;
+      });
+      }
 
-    int main(){ return 0; }
-    "
-    KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED)
+      int main(){ return 0; }
+      "
+      KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED)
 
-  IF(KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED)
-    COMPILER_SPECIFIC_FLAGS(
-      DEFAULT -fsycl-device-code-split=off -DDESUL_SYCL_DEVICE_GLOBAL_SUPPORTED
-    )
+    IF(KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED)
+      COMPILER_SPECIFIC_FLAGS(
+        DEFAULT -fsycl-device-code-split=off -DDESUL_SYCL_DEVICE_GLOBAL_SUPPORTED
+      )
+    ENDIF()
   ENDIF()
 ENDIF()
 
