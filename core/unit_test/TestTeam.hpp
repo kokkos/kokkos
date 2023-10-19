@@ -700,11 +700,11 @@ struct ScratchTeamFunctor {
   KOKKOS_INLINE_FUNCTION
   void operator()(const typename policy_type::member_type &ind,
                   value_type &update) const {
-    const shared_int_array_type scratch_ptr(ind.team_scratch(1),
+    const shared_int_array_type scratch_ptr(ind.template team_scratch<1>(),
                                             3 * ind.team_size());
-    const shared_int_array_type scratch_A(ind.team_scratch(1),
+    const shared_int_array_type scratch_A(ind.template team_scratch<1>(),
                                           SHARED_TEAM_COUNT);
-    const shared_int_array_type scratch_B(ind.thread_scratch(1),
+    const shared_int_array_type scratch_B(ind.template thread_scratch<1>(),
                                           SHARED_THREAD_COUNT);
 
     if ((scratch_ptr.data() == nullptr) ||
@@ -834,31 +834,31 @@ template <class ExecSpace>
 KOKKOS_INLINE_FUNCTION int test_team_mulit_level_scratch_loop_body(
     const typename Kokkos::TeamPolicy<ExecSpace>::member_type &team) {
   Kokkos::View<double *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
-      a_team1(team.team_scratch(0), 128);
+      a_team1(team.template team_scratch<0>(), 128);
   Kokkos::View<double *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
-      a_thread1(team.thread_scratch(0), 16);
+      a_thread1(team.template thread_scratch<0>(), 16);
   Kokkos::View<double *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
-      a_team2(team.team_scratch(0), 128);
+      a_team2(team.template team_scratch<0>(), 128);
   Kokkos::View<double *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
-      a_thread2(team.thread_scratch(0), 16);
+      a_thread2(team.template thread_scratch<0>(), 16);
 
   Kokkos::View<double *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
-      b_team1(team.team_scratch(1), 12800);
+      b_team1(team.template team_scratch<1>(), 12800);
   Kokkos::View<double *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
-      b_thread1(team.thread_scratch(1), 1600);
+      b_thread1(team.template thread_scratch<1>(), 1600);
   Kokkos::View<double *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
-      b_team2(team.team_scratch(1), 12800);
+      b_team2(team.template team_scratch<1>(), 12800);
   Kokkos::View<double *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
-      b_thread2(team.thread_scratch(1), 1600);
+      b_thread2(team.template thread_scratch<1>(), 1600);
 
   Kokkos::View<double *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
-      a_team3(team.team_scratch(0), 128);
+      a_team3(team.template team_scratch<0>(), 128);
   Kokkos::View<double *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
-      a_thread3(team.thread_scratch(0), 16);
+      a_thread3(team.template thread_scratch<0>(), 16);
   Kokkos::View<double *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
-      b_team3(team.team_scratch(1), 12800);
+      b_team3(team.template team_scratch<1>(), 12800);
   Kokkos::View<double *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
-      b_thread3(team.thread_scratch(1), 1600);
+      b_thread3(team.template thread_scratch<1>(), 1600);
 
   // The explicit types for 0 and 128 are here to test TeamThreadRange accepting
   // different types for begin and end.
@@ -1547,8 +1547,9 @@ struct TestScratchAlignment {
             .set_scratch_size(0, Kokkos::PerTeam(shmem_size)),
         KOKKOS_LAMBDA(
             const typename Kokkos::TeamPolicy<ExecSpace>::member_type &team) {
-          if (allocate_small) ScratchViewInt(team.team_scratch(0), 1);
-          ScratchView a(team.team_scratch(0), 11);
+          if (allocate_small)
+            ScratchViewInt(team.template team_scratch<0>(), 1);
+          ScratchView a(team.template team_scratch<0>(), 11);
           if (ptrdiff_t(a.data()) % sizeof(TestScalar) != 0)
             Kokkos::abort("Error: invalid scratch view alignment\n");
         });
