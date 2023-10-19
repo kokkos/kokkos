@@ -155,7 +155,7 @@ void test_bitset() {
 
   {
     unsigned ts = 100u;
-    bitset_type b1;
+    bitset_type b1(Kokkos::view_alloc("MyBitset"), 0);
     ASSERT_TRUE(b1.is_allocated());
 
     b1 = bitset_type(ts);
@@ -165,6 +165,9 @@ void test_bitset() {
     ASSERT_TRUE(b1.is_allocated());
     ASSERT_TRUE(b2.is_allocated());
     ASSERT_TRUE(b3.is_allocated());
+
+    bitset_type b4;
+    ASSERT_FALSE(b4.is_allocated());
   }
 
   std::array<unsigned, 7> test_sizes = {
