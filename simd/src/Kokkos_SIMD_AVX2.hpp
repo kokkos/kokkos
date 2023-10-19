@@ -836,8 +836,8 @@ class simd<float, simd_abi::avx2_fixed_size<4>> {
       value_type* ptr, element_aligned_tag) const {
     _mm_storeu_ps(ptr, m_value);
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_to(
-      value_type* ptr, vector_aligned_tag) const {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_to(value_type* ptr,
+                                                     vector_aligned_tag) const {
     _mm_store_ps(ptr, m_value);
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit operator __m128()
