@@ -39,23 +39,8 @@ enum class WaitMode : int {
 
 void host_thread_yield(const uint32_t i, const WaitMode mode);
 
-void root_spinwait_while_equal(ThreadState const volatile& flag,
-                               ThreadState const value);
-
-void root_spinwait_until_equal(ThreadState const volatile& flag,
-                               ThreadState const value);
-
 void spinwait_while_equal(ThreadState const volatile& flag,
                           ThreadState const value);
-
-void yield_while_equal(ThreadState const volatile& flag,
-                       ThreadState const value);
-
-void spinwait_until_equal(ThreadState const volatile& flag,
-                          ThreadState const value);
-
-void yield_until_equal(ThreadState const volatile& flag,
-                       ThreadState const value);
 
 }  // namespace Impl
 }  // namespace Kokkos

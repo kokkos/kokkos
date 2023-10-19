@@ -108,26 +108,6 @@ void host_thread_yield(const uint32_t i, const WaitMode mode) {
 #endif /* defined( KOKKOS_ENABLE_ASM ) */
 }
 
-void root_spinwait_while_equal(ThreadState const volatile& flag,
-                               ThreadState const value) {
-  Kokkos::store_fence();
-  uint32_t i = 0;
-  while (value == flag) {
-    host_thread_yield(++i, WaitMode::ROOT);
-  }
-  Kokkos::load_fence();
-}
-
-void root_spinwait_until_equal(ThreadState const volatile& flag,
-                               ThreadState const value) {
-  Kokkos::store_fence();
-  uint32_t i = 0;
-  while (value != flag) {
-    host_thread_yield(++i, WaitMode::ROOT);
-  }
-  Kokkos::load_fence();
-}
-
 void spinwait_while_equal(ThreadState const volatile& flag,
                           ThreadState const value) {
   Kokkos::store_fence();
@@ -138,34 +118,5 @@ void spinwait_while_equal(ThreadState const volatile& flag,
   Kokkos::load_fence();
 }
 
-void yield_while_equal(ThreadState const volatile& flag,
-                       ThreadState const value) {
-  Kokkos::store_fence();
-  uint32_t i = 0;
-  while (value == flag) {
-    host_thread_yield(++i, WaitMode::PASSIVE);
-  }
-  Kokkos::load_fence();
-}
-
-void spinwait_until_equal(ThreadState const volatile& flag,
-                          ThreadState const value) {
-  Kokkos::store_fence();
-  uint32_t i = 0;
-  while (value != flag) {
-    host_thread_yield(++i, WaitMode::ACTIVE);
-  }
-  Kokkos::load_fence();
-}
-
-void yield_until_equal(ThreadState const volatile& flag,
-                       ThreadState const value) {
-  Kokkos::store_fence();
-  uint32_t i = 0;
-  while (value != flag) {
-    host_thread_yield(++i, WaitMode::PASSIVE);
-  }
-  Kokkos::load_fence();
-}
 }  // namespace Impl
 }  // namespace Kokkos
