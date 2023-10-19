@@ -690,7 +690,7 @@ void ThreadsInternal::initialize(int thread_count_arg) {
     for (unsigned ith = thread_spawn_begin; ith < thread_count; ++ith) {
       // Try to protect against cache coherency failure by casting to volatile.
       ThreadsInternal *const th =
-          ((ThreadsInternal *volatile *)s_threads_exec)[ith];
+          ((ThreadsInternal * volatile *)s_threads_exec)[ith];
       if (th) {
         wait_yield(th->m_pool_state, ThreadState::Active);
       } else {
