@@ -202,8 +202,8 @@ class ScratchMemorySpace {
                                             const IntType& size_L0,
                                             void* ptr_L1           = nullptr,
                                             const IntType& size_L1 = 0)
-      : m_scratch_L0(static_cast<PointerTypeL0>(ptr_L0), size_L0),
-        m_scratch_L1(static_cast<PointerTypeL1>(ptr_L1), size_L1) {}
+      : m_scratch_L0(PointerTypeL0(static_cast<char*>(ptr_L0)), size_L0),
+        m_scratch_L1(PointerTypeL1(static_cast<char*>(ptr_L1)), size_L1) {}
 };
 
 }  // namespace Kokkos
