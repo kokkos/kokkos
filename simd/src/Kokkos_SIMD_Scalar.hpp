@@ -127,8 +127,6 @@ class simd<T, simd_abi::scalar> {
                                              element_aligned_tag) {
     m_value = *ptr;
   }
-
-  // FIXME vector aligned
   KOKKOS_FORCEINLINE_FUNCTION void copy_from(T const* ptr, vector_aligned_tag) {
     m_value = *ptr;
   }

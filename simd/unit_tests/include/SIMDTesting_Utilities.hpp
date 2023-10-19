@@ -106,7 +106,6 @@ class load_element_aligned {
   }
 };
 
-// FIXME vector aligned
 class load_vector_aligned {
  public:
   template <class T, class Abi>
