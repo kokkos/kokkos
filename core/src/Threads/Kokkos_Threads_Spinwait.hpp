@@ -14,8 +14,8 @@
 //
 //@HEADER
 
-#ifndef KOKKOS_SPINWAIT_HPP
-#define KOKKOS_SPINWAIT_HPP
+#ifndef KOKKOS_THREADS_SPINWAIT_HPP
+#define KOKKOS_THREADS_SPINWAIT_HPP
 
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Atomic.hpp>

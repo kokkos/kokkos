@@ -21,7 +21,7 @@
 #include <Kokkos_Macros.hpp>
 
 #include <Kokkos_Atomic.hpp>
-#include <impl/Kokkos_Spinwait.hpp>
+#include <Threads/Kokkos_Threads_Spinwait.hpp>
 #include <impl/Kokkos_BitOps.hpp>
 
 #include <thread>

@@ -21,7 +21,6 @@
 #include <sstream>
 #include <Kokkos_Parallel.hpp>
 #include <impl/Kokkos_Traits.hpp>
-#include <impl/Kokkos_Spinwait.hpp>
 
 #include <Kokkos_Atomic.hpp>
 #include "Kokkos_OpenMPTarget_Abort.hpp"
@@ -256,8 +255,8 @@ class OpenMPTargetExecTeamMember {
     const int l0_offset = reduce_offset + TEAM_REDUCE_SIZE;
     const int l1_offset = l0_offset + shmem_size_L0;
     m_team_shared       = scratch_memory_space(
-        (static_cast<char*>(glb_scratch) + l0_offset), shmem_size_L0,
-        static_cast<char*>(glb_scratch) + l1_offset, shmem_size_L1);
+              (static_cast<char*>(glb_scratch) + l0_offset), shmem_size_L0,
+              static_cast<char*>(glb_scratch) + l1_offset, shmem_size_L1);
     m_reduce_scratch = static_cast<char*>(glb_scratch) + reduce_offset;
     m_league_rank    = league_rank;
     m_team_rank      = omp_tid;
