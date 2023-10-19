@@ -330,8 +330,8 @@ struct sycl::is_device_copyable<
     Kokkos::Experimental::Impl::SYCLFunctionWrapper<Functor, Storage, false>>
     : std::true_type {};
 
-// FIXME_SYCL Remove when this specialization when specializations for
-// sycl::device_copyable also apply to const-qualified types.
+#if defined(KOKKOS_ENABLE_SYCL) && defined(__INTEL_LLVM_COMPILER) && \
+    __INTEL_LLVM_COMPILER < 20240000
 template <typename>
 struct NonTriviallyCopyableAndDeviceCopyable {
   NonTriviallyCopyableAndDeviceCopyable(
@@ -354,5 +354,6 @@ struct sycl::is_device_copyable<
     std::enable_if_t<!sycl::is_device_copyable_v<
         const NonTriviallyCopyableAndDeviceCopyable<Functor>>>>
     : std::true_type {};
+#endif
 #endif
 #endif
