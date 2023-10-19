@@ -2130,11 +2130,6 @@ TEST(TEST_CATEGORY, TeamVectorMDRangeParallelFor) {
 }
 
 TEST(TEST_CATEGORY, TeamThreadMDRangeParallelReduce) {
-  // FIXME_OPENMPTARGET The unit tests fails correctness.
-#if defined(KOKKOS_ENABLE_OPENMPTARGET)
-  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenMPTarget>)
-    GTEST_SKIP() << "OpenMPTarget fails correctness.";
-#endif
   TestTeamThreadMDRangeParallelReduce<TEST_EXECSPACE>::
       test_parallel_reduce_for_3D_TeamThreadMDRange<Left>(dims);
   TestTeamThreadMDRangeParallelReduce<TEST_EXECSPACE>::
@@ -2173,12 +2168,6 @@ TEST(TEST_CATEGORY, ThreadVectorMDRangeParallelReduce) {
     GTEST_SKIP() << "skipping because of bug in group_barrier implementation";
 #endif
 
-// FIXME_OPENMPTARGET_CRAY: The unit tests fails correctness.
-#if defined(KOKKOS_ENABLE_OPENMPTARGET) && defined(KOKKOS_COMPILER_CRAYCLANG)
-  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenMPTarget>)
-    GTEST_SKIP() << "OpenMPTarget fails correctness.";
-#endif
-
   TestThreadVectorMDRangeParallelReduce<TEST_EXECSPACE>::
       test_parallel_reduce_for_4D_ThreadVectorMDRange<Left>(dims);
   TestThreadVectorMDRangeParallelReduce<TEST_EXECSPACE>::
@@ -2210,12 +2199,6 @@ TEST(TEST_CATEGORY, TeamVectorMDRangeParallelReduce) {
 #if defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ARCH_INTEL_GPU)
   if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::SYCL>)
     GTEST_SKIP() << "skipping because of bug in group_barrier implementation";
-#endif
-
-// FIXME_OPENMPTARGET The unit tests fails correctness.
-#if defined(KOKKOS_ENABLE_OPENMPTARGET)
-  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenMPTarget>)
-    GTEST_SKIP() << "OpenMPTarget fails correctness.";
 #endif
 
   TestTeamVectorMDRangeParallelReduce<TEST_EXECSPACE>::

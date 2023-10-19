@@ -155,6 +155,7 @@ class OpenMPTargetExecTeamMember {
       }
 #pragma omp barrier
     }
+    value = team_scratch[0];
   }
 
   /** \brief  Intra-team exclusive prefix sum with team_rank() ordering
