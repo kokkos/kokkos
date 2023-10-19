@@ -20,6 +20,8 @@
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Atomic.hpp>
 
+#include <Threads/Kokkos_Threads_State.hpp>
+
 #include <cstdint>
 
 #include <type_traits>
@@ -37,73 +39,25 @@ enum class WaitMode : int {
 
 void host_thread_yield(const uint32_t i, const WaitMode mode);
 
-template <typename T>
-std::enable_if_t<std::is_integral_v<T> || std::is_enum_v<T>, void>
-root_spinwait_while_equal(T const volatile& flag, const T value) {
-  Kokkos::store_fence();
-  uint32_t i = 0;
-  while (value == flag) {
-    host_thread_yield(++i, WaitMode::ROOT);
-  }
-  Kokkos::load_fence();
-}
+void root_spinwait_while_equal(ThreadState const volatile& flag,
+                               ThreadState const value);
 
-template <typename T>
-std::enable_if_t<std::is_integral_v<T> || std::is_enum_v<T>, void>
-root_spinwait_until_equal(T const volatile& flag, const T value) {
-  Kokkos::store_fence();
-  uint32_t i = 0;
-  while (value != flag) {
-    host_thread_yield(++i, WaitMode::ROOT);
-  }
-  Kokkos::load_fence();
-}
+void root_spinwait_until_equal(ThreadState const volatile& flag,
+                               ThreadState const value);
 
-template <typename T>
-std::enable_if_t<std::is_integral_v<T> || std::is_enum_v<T>, void>
-spinwait_while_equal(T const volatile& flag, const T value) {
-  Kokkos::store_fence();
-  uint32_t i = 0;
-  while (value == flag) {
-    host_thread_yield(++i, WaitMode::ACTIVE);
-  }
-  Kokkos::load_fence();
-}
+void spinwait_while_equal(ThreadState const volatile& flag,
+                          ThreadState const value);
 
-template <typename T>
-std::enable_if_t<std::is_integral_v<T> || std::is_enum_v<T>, void>
-yield_while_equal(T const volatile& flag, const T value) {
-  Kokkos::store_fence();
-  uint32_t i = 0;
-  while (value == flag) {
-    host_thread_yield(++i, WaitMode::PASSIVE);
-  }
-  Kokkos::load_fence();
-}
+void yield_while_equal(ThreadState const volatile& flag,
+                       ThreadState const value);
 
-template <typename T>
-std::enable_if_t<std::is_integral_v<T> || std::is_enum_v<T>, void>
-spinwait_until_equal(T const volatile& flag, const T value) {
-  Kokkos::store_fence();
-  uint32_t i = 0;
-  while (value != flag) {
-    host_thread_yield(++i, WaitMode::ACTIVE);
-  }
-  Kokkos::load_fence();
-}
+void spinwait_until_equal(ThreadState const volatile& flag,
+                          ThreadState const value);
 
-template <typename T>
-std::enable_if_t<std::is_integral_v<T> || std::is_enum_v<T>, void>
-yield_until_equal(T const volatile& flag, const T value) {
-  Kokkos::store_fence();
-  uint32_t i = 0;
-  while (value != flag) {
-    host_thread_yield(++i, WaitMode::PASSIVE);
-  }
-  Kokkos::load_fence();
-}
+void yield_until_equal(ThreadState const volatile& flag,
+                       ThreadState const value);
 
-} /* namespace Impl */
-} /* namespace Kokkos */
+}  // namespace Impl
+}  // namespace Kokkos
 
-#endif /* #ifndef KOKKOS_SPINWAIT_HPP */
+#endif
