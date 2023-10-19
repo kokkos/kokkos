@@ -145,7 +145,7 @@ class ScratchMemorySpace {
                                          int level = -1) const {
     if (level == -1) level = m_default_level;
     constexpr bool align = false;
-    if (level == 1)
+    if (level == 0)
       return m_scratch_L0.template get_shmem<align>(size, 1);
     else
       return m_scratch_L1.template get_shmem<align>(size, 1);
@@ -157,7 +157,7 @@ class ScratchMemorySpace {
                                                  int level = -1) const {
     if (level == -1) level = m_default_level;
     constexpr bool align = true;
-    if (level == 1)
+    if (level == 0)
       return m_scratch_L0.template get_shmem<align>(size, alignment);
     else
       return m_scratch_L1.template get_shmem<align>(size, alignment);
@@ -168,11 +168,10 @@ class ScratchMemorySpace {
                                                  const int& multiplier,
                                                  const int& offset) const {
     m_default_level = level;
-    if (level == 0) {
+    if (level == 0)
       m_scratch_L0.set_team_thread_mode(multiplier, offset);
-    } else {
+    else
       m_scratch_L1.set_team_thread_mode(multiplier, offset);
-    }
     return *this;
   }
 
@@ -190,11 +189,12 @@ class ScratchMemorySpace {
   ScratchMemorySpace() = default;
 
   template <typename IntType>
-  KOKKOS_INLINE_FUNCTION ScratchMemorySpace(PointerTypeL0 ptr_L0,
+  KOKKOS_INLINE_FUNCTION ScratchMemorySpace(void* ptr_L0,
                                             const IntType& size_L0,
-                                            PointerTypeL1 ptr_L1   = nullptr,
+                                            void* ptr_L1           = nullptr,
                                             const IntType& size_L1 = 0)
-      : m_scratch_L0(ptr_L0, size_L0), m_scratch_L1(ptr_L1, size_L1) {}
+      : m_scratch_L0(static_cast<PointerTypeL0>(ptr_L0), size_L0),
+        m_scratch_L1(static_cast<PointerTypeL1>(ptr_L1), size_L1) {}
 };
 
 }  // namespace Kokkos

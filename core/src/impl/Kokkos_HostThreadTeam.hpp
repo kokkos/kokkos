@@ -401,8 +401,7 @@ class HostThreadTeamMember {
 
  public:
   constexpr HostThreadTeamMember(HostThreadTeamData& arg_data) noexcept
-      : m_scratch(reinterpret_cast<char*>(arg_data.team_shared()),
-                  arg_data.team_shared_bytes()),
+      : m_scratch(arg_data.team_shared(), arg_data.team_shared_bytes()),
         m_data(arg_data),
         m_league_rank(arg_data.m_league_rank),
         m_league_size(arg_data.m_league_size) {}
@@ -410,10 +409,8 @@ class HostThreadTeamMember {
   constexpr HostThreadTeamMember(HostThreadTeamData& arg_data,
                                  int const arg_league_rank,
                                  int const arg_league_size) noexcept
-      : m_scratch(reinterpret_cast<char*>(arg_data.team_shared()),
-                  arg_data.team_shared_bytes(),
-                  reinterpret_cast<char*>(arg_data.team_shared()),
-                  arg_data.team_shared_bytes()),
+      : m_scratch(arg_data.team_shared(), arg_data.team_shared_bytes(),
+                  arg_data.team_shared(), arg_data.team_shared_bytes()),
         m_data(arg_data),
         m_league_rank(arg_league_rank),
         m_league_size(arg_league_size) {}
