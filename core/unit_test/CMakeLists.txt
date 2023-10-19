@@ -677,7 +677,6 @@ endif()
 if (Kokkos_ENABLE_OPENMP)
   set(OpenMP_EXTRA_SOURCES
     openmp/TestOpenMP_Task.cpp
-    openmp/TestOpenMP_PartitionMaster.cpp
   )
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     CoreUnitTest_OpenMP
@@ -1165,15 +1164,6 @@ KOKKOS_ADD_TEST( NAME CoreUnitTest_StackTraceTest
                  EXE  StackTraceTestExec
                  FAIL_REGULAR_EXPRESSION "FAILED"
                )
-endif()
-
-if(Kokkos_ENABLE_DEPRECATED_CODE_3)
-  foreach(INITTESTS_NUM RANGE 1 18)
-  KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    CoreUnitTest_DefaultInit_${INITTESTS_NUM}
-    SOURCES UnitTestMain.cpp default/TestDefaultDeviceTypeInit_${INITTESTS_NUM}.cpp
-  )
-  endforeach(INITTESTS_NUM)
 endif()
 
 if (KOKKOS_ENABLE_HWLOC)
