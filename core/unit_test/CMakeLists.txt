@@ -214,7 +214,35 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
 
     SET(${Tag}_SOURCES2A)
     foreach(Name
+      TeamBasic
+      TeamCombinedReducers
       TeamMDRange
+      TeamPolicyConstructors
+      TeamReductionScan
+      TeamScan
+      TeamScratch
+      TeamTeamSize
+      TeamVectorRange
+      UniqueToken
+      View_64bit
+      ViewAPI_a
+      ViewAPI_b
+      ViewAPI_c
+      ViewAPI_d
+      ViewAPI_e
+      ViewCopy_a
+      ViewCopy_b
+      ViewCtorDimMatch
+      ViewHooks
+      ViewLayoutStrideAssignment
+      ViewMapping_a
+      ViewMapping_b
+      ViewMapping_subview
+      ViewMemoryAccessViolation
+      ViewOfClass
+      ViewResize
+      WorkGraph
+      WithoutInitializing
       )
       set(file ${dir}/Test${Tag}_${Name}.cpp)
       # Write to a temporary intermediate file and call configure_file to avoid
@@ -295,8 +323,8 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
     endforeach()
 
     SET(${Tag}_SOURCES1 ${${Tag}_SOURCES1A} ${${Tag}_SOURCES1B})
-    SET(${Tag}_SOURCES2 ${${Tag}_SOURCES2A}) # ${${Tag}_SOURCES2B} ${${Tag}_SOURCES2C} ${${Tag}_SOURCES2D})
-    SET(${Tag}_SOURCES ${${Tag}_SOURCES2})
+    SET(${Tag}_SOURCES2 ${${Tag}_SOURCES2A} ${${Tag}_SOURCES2B} ${${Tag}_SOURCES2C} ${${Tag}_SOURCES2D})
+    SET(${Tag}_SOURCES ${${Tag}_SOURCES1} ${${Tag}_SOURCES2})
   endif()
 endforeach()
 
