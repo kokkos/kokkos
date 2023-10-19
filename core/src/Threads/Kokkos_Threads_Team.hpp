@@ -26,6 +26,7 @@
 #include <impl/Kokkos_HostThreadTeam.hpp>
 
 #include <Kokkos_Atomic.hpp>
+#include <Threads/Kokkos_Threads_State.hpp>
 
 //----------------------------------------------------------------------------
 
@@ -84,15 +85,13 @@ class ThreadsExecTeamMember {
     for (n = 1;
          (!(m_team_rank_rev & n)) && ((j = m_team_rank_rev + n) < m_team_size);
          n <<= 1) {
-      Impl::spinwait_while_equal(m_team_base[j]->state(),
-                                 ThreadsInternal::State::Active);
+      Impl::spinwait_while_equal(m_team_base[j]->state(), ThreadState::Active);
     }
 
     // If not root then wait for release
     if (m_team_rank_rev) {
-      m_instance->state() = ThreadsInternal::State::Rendezvous;
-      Impl::spinwait_while_equal(m_instance->state(),
-                                 ThreadsInternal::State::Rendezvous);
+      m_instance->state() = ThreadState::Rendezvous;
+      Impl::spinwait_while_equal(m_instance->state(), ThreadState::Rendezvous);
     }
 
     return !m_team_rank_rev;
@@ -103,7 +102,7 @@ class ThreadsExecTeamMember {
     for (n = 1;
          (!(m_team_rank_rev & n)) && ((j = m_team_rank_rev + n) < m_team_size);
          n <<= 1) {
-      m_team_base[j]->state() = ThreadsInternal::State::Active;
+      m_team_base[j]->state() = ThreadState::Active;
     }
   }
 
