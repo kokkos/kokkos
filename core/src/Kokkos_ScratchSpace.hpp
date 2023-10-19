@@ -60,8 +60,19 @@ class ScratchMemorySpaceBase {
 
   static constexpr const char* name() { return "ScratchMemorySpaceBase"; }
 
+  template <typename IntType>
+  KOKKOS_INLINE_FUNCTION void* get_shmem(const IntType& size) const {
+    return get_shmem_common<false>(size, 1);
+  }
+
+  template <typename IntType>
+  KOKKOS_INLINE_FUNCTION void* get_shmem_aligned(
+      const IntType& size, const ptrdiff_t alignment) const {
+    return get_shmem_common<true>(size, alignment);
+  }
+
   template <bool alignment_requested, typename IntType>
-  KOKKOS_INLINE_FUNCTION void* get_shmem(
+  KOKKOS_INLINE_FUNCTION void* get_shmem_common(
       const IntType& size, [[maybe_unused]] const ptrdiff_t alignment) const {
     auto m_iter_old = m_iter;
     if constexpr (alignment_requested) {
@@ -144,11 +155,10 @@ class ScratchMemorySpace {
   KOKKOS_INLINE_FUNCTION void* get_shmem(const IntType& size,
                                          int level = -1) const {
     if (level == -1) level = m_default_level;
-    constexpr bool align = false;
     if (level == 0)
-      return m_scratch_L0.template get_shmem<align>(size, 1);
+      return m_scratch_L0.template get_shmem(size);
     else
-      return m_scratch_L1.template get_shmem<align>(size, 1);
+      return m_scratch_L1.template get_shmem(size);
   }
 
   template <typename IntType>
@@ -156,11 +166,10 @@ class ScratchMemorySpace {
                                                  const ptrdiff_t alignment,
                                                  int level = -1) const {
     if (level == -1) level = m_default_level;
-    constexpr bool align = true;
     if (level == 0)
-      return m_scratch_L0.template get_shmem<align>(size, alignment);
+      return m_scratch_L0.template get_shmem_aligned(size, alignment);
     else
-      return m_scratch_L1.template get_shmem<align>(size, alignment);
+      return m_scratch_L1.template get_shmem_aligned(size, alignment);
   }
 
   KOKKOS_INLINE_FUNCTION
