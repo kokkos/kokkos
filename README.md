@@ -28,7 +28,7 @@ To start learning about Kokkos:
 
 - [Use cases and Examples](https://kokkos.github.io/kokkos-core-wiki/usecases.html): a series of examples ranging from how to use Kokkos with MPI to Fortran interoperability.
 
-For questions find us on Slack: https://kokkosteam.slack.com or open a github issue.
+For questions find us on Slack: https://kokkosteam.slack.com or open a GitHub issue.
 
 For non-public questions send an email to: *crtrott(at)sandia.gov*
 
