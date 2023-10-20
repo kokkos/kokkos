@@ -23,6 +23,8 @@
 #include <Kokkos_Bitset.hpp>
 #include <array>
 
+#include <../../core/unit_test/tools/include/ToolTestingUtilities.hpp>
+
 namespace Test {
 
 namespace Impl {
@@ -240,6 +242,24 @@ void test_bitset() {
 }
 
 TEST(TEST_CATEGORY, bitset) { test_bitset<TEST_EXECSPACE>(); }
+
+TEST(TEST_CATEGORY, bitset_default_constructor_no_alloc) {
+  using namespace Kokkos::Test::Tools;
+  listen_tool_events(Config::DisableAll(), Config::EnableAllocs());
+
+  auto success = validate_absence(
+      [&]() {
+        Kokkos::Bitset bs;
+        EXPECT_FALSE(bs.is_allocated());
+      },
+      [&](AllocateDataEvent) {
+        return MatchDiagnostic{true, {"Found alloc event"}};
+      });
+  ASSERT_TRUE(success);
+
+  listen_tool_events(Config::DisableAll());
+}
+
 }  // namespace Test
 
 #endif  // KOKKOS_TEST_BITSET_HPP
