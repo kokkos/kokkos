@@ -17,14 +17,9 @@
 #ifndef KOKKOS_THREADS_SPINWAIT_HPP
 #define KOKKOS_THREADS_SPINWAIT_HPP
 
-#include <Kokkos_Macros.hpp>
-#include <Kokkos_Atomic.hpp>
-
 #include <Threads/Kokkos_Threads_State.hpp>
 
 #include <cstdint>
-
-#include <type_traits>
 
 namespace Kokkos {
 namespace Impl {
