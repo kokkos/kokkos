@@ -59,8 +59,9 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
   const size_type m_league_size;
   int m_team_size;
   const size_type m_vector_size;
-  // Only let one ParallelFor/Reduce modify the team scratch memory. The
-  // constructor acquires the mutex which is released in the destructor.
+  // Only let one ParallelReduce instance at a time use the team scratch memory
+  // and the host scratch memory. The constructor acquires the mutex which is
+  // released in the destructor.
   std::scoped_lock<std::mutex> m_scratch_lock;
   int m_scratch_pool_id = -1;
 

@@ -46,8 +46,8 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   int m_shmem_size;
   sycl::device_ptr<char> m_global_scratch_ptr;
   size_t m_scratch_size[2];
-  // Only let one ParallelFor/Reduce modify the team scratch memory. The
-  // constructor acquires the mutex which is released in the destructor.
+  // Only let one ParallelFor instance at a time use the team scratch memory.
+  // The constructor acquires the mutex which is released in the destructor.
   std::scoped_lock<std::mutex> m_scratch_lock;
   int m_scratch_pool_id = -1;
 
