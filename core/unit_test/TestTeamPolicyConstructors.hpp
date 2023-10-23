@@ -20,9 +20,16 @@
 
 namespace {
 
+struct SomeTag {};
+
 struct FunctorFor {
   KOKKOS_FUNCTION
   void operator()(
+      Kokkos::TeamPolicy<TEST_EXECSPACE>::member_type const&) const {}
+
+  KOKKOS_FUNCTION
+  void operator()(
+      SomeTag const&,
       Kokkos::TeamPolicy<TEST_EXECSPACE>::member_type const&) const {}
 };
 
@@ -151,8 +158,6 @@ void test_run_time_parameters() {
   ASSERT_GT(p11.team_size_max(FunctorFor(), ParallelTag()), 0);
   ASSERT_GT(p11.team_size_recommended(FunctorFor(), ParallelTag()), 0);
 }
-
-struct SomeTag {};
 
 TEST(TEST_CATEGORY, team_policy_runtime_parameters) {
   using TestExecSpace   = TEST_EXECSPACE;
