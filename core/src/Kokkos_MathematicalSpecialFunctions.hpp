@@ -32,6 +32,7 @@
 
 namespace Kokkos {
 namespace Experimental {
+
 //! Compute exponential integral E1(x) (x > 0).
 template <class RealType>
 KOKKOS_INLINE_FUNCTION RealType expint1(RealType x) {
@@ -1288,9 +1289,9 @@ KOKKOS_INLINE_FUNCTION CmplxType cyl_bessel(const IntType& a,
 
 template <class CmplxType, class RealType, class IntType>
 KOKKOS_INLINE_FUNCTION CmplxType cyl_bessel_j(const IntType& a,
-                                              const CmplxType& z,
-                                              const RealType& joint_val = 25.0,
-                                              const IntType& bw_start   = 70) {
+                                              const CmplxType& z) {
+  constexpr RealType joint_val = 25.0;
+  constexpr IntType bw_start   = 70;
   if ((z.real() == 0.0) && (z.imag() == 0.0)) {
     return CmplxType(0.0, 0.0);
   }
@@ -1304,9 +1305,9 @@ KOKKOS_INLINE_FUNCTION CmplxType cyl_bessel_j(const IntType& a,
 
 template <class CmplxType, class RealType, class IntType>
 KOKKOS_INLINE_FUNCTION CmplxType cyl_bessel_y(const IntType& a,
-                                              const CmplxType& z,
-                                              const RealType& joint_val = 25,
-                                              const IntType& bw_start   = 70) {
+                                              const CmplxType& z) {
+  constexpr RealType joint_val = 25.0;
+  constexpr IntType bw_start   = 70;
   if ((z.real() == 0.0) && (z.imag() == 0.0)) {
     return CmplxType(-infinity<double>::value, 0.0);
   }
@@ -1349,9 +1350,9 @@ KOKKOS_INLINE_FUNCTION CmplxType cyl_bessel_h2(const IntType& a,
 
 template <class CmplxType, class RealType, class IntType>
 KOKKOS_INLINE_FUNCTION CmplxType cyl_bessel_i(const IntType& a,
-                                              const CmplxType& z,
-                                              const RealType& joint_val = 25,
-                                              const IntType& bw_start   = 70) {
+                                              const CmplxType& z) {
+  constexpr RealType joint_val = 25.0;
+  constexpr IntType bw_start   = 70;
   if ((z.real() == 0.0) && (z.imag() == 0.0)) {
     return CmplxType(0.0, 0.0);
   }
@@ -1369,9 +1370,9 @@ KOKKOS_INLINE_FUNCTION CmplxType cyl_bessel_i(const IntType& a,
 
 template <class CmplxType, class RealType, class IntType>
 KOKKOS_INLINE_FUNCTION CmplxType cyl_bessel_k(const IntType& a,
-                                              const CmplxType& z,
-                                              const RealType& joint_val = 9,
-                                              const IntType& bw_start   = 30) {
+                                              const CmplxType& z) {
+  constexpr RealType joint_val = 9.0;
+  constexpr IntType bw_start   = 30;
   using Kokkos::Experimental::infinity_v;
   if ((z.real() == 0.0) && (z.imag() == 0.0)) {
     constexpr auto inf = infinity_v<RealType>;
