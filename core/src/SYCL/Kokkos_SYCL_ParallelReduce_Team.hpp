@@ -369,6 +369,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
     // At this point, the reduced value is written to the entry in results_ptr
     // and all that is left is to copy it back to the given result pointer if
     // necessary.
+    // Using DeepCopy instead of fence+memcpy turned out to be up to 2x slower.
     if (host_result_ptr) {
       space.fence(
           "Kokkos::Impl::ParallelReduce<SYCL, TeamPolicy>::execute: result not "

@@ -389,6 +389,8 @@ class Kokkos::Impl::ParallelScanWithTotal<
     Base::impl_execute([&]() {
       const long long nwork = Base::m_policy.end() - Base::m_policy.begin();
       if (nwork > 0 && !Base::m_result_ptr_device_accessible) {
+        // Using DeepCopy instead of fence+memcpy turned out to be up to 2x
+        // slower.
         m_exec.fence(
             "Kokkos::Impl::ParallelReduce<SYCL, MDRangePolicy>::execute: "
             "result not device-accessible");
