@@ -1408,7 +1408,9 @@ class simd<std::int64_t, simd_abi::avx2_fixed_size<4>> {
         std::int64_t, Experimental::simd_abi::avx2_fixed_size<4>> const& a) {
   return Experimental::simd<std::int64_t,
                             Experimental::simd_abi::avx2_fixed_size<4>>(
-      [&](Experimental::simd_size_type i) { return (a[i] < 0) ? -a[i] : a[i]; });
+      [&](Experimental::simd_size_type i) {
+        return (a[i] < 0) ? -a[i] : a[i];
+      });
 }
 
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
