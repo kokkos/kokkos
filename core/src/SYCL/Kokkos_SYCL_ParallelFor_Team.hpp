@@ -48,7 +48,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   size_t m_scratch_size[2];
   // Only let one ParallelFor instance at a time use the team scratch memory.
   // The constructor acquires the mutex which is released in the destructor.
-  std::scoped_lock<std::mutex> m_scratch_lock;
+  std::scoped_lock<std::mutex> m_scratch_buffers_lock;
   int m_scratch_pool_id = -1;
 
   template <typename FunctorWrapper>
@@ -141,9 +141,9 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
         m_league_size(arg_policy.league_size()),
         m_team_size(arg_policy.team_size()),
         m_vector_size(arg_policy.impl_vector_length()),
-        m_scratch_lock(arg_policy.space()
-                           .impl_internal_space_instance()
-                           ->m_team_scratch_mutex) {
+        m_scratch_buffers_lock(arg_policy.space()
+                                   .impl_internal_space_instance()
+                                   ->m_team_scratch_mutex) {
     // FIXME_SYCL optimize
     if (m_team_size < 0)
       m_team_size =

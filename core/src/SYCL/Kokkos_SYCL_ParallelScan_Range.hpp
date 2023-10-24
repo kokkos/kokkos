@@ -117,7 +117,7 @@ class ParallelScanSYCLBase {
 
   // Only let one ParallelScan instance at a time use the host scratch memory.
   // The constructor acquires the mutex which is released in the destructor.
-  std::scoped_lock<std::mutex> m_host_scratch_lock;
+  std::scoped_lock<std::mutex> m_scratch_buffers_lock;
 
  private:
   template <typename FunctorWrapper>
@@ -350,9 +350,9 @@ class ParallelScanSYCLBase {
         m_policy(arg_policy),
         m_result_ptr(arg_result_ptr),
         m_result_ptr_device_accessible(arg_result_ptr_device_accessible),
-        m_host_scratch_lock(m_policy.space()
-                                .impl_internal_space_instance()
-                                ->m_mutexScratchSpace) {}
+        m_scratch_buffers_lock(m_policy.space()
+                                   .impl_internal_space_instance()
+                                   ->m_mutexScratchSpace) {}
 };
 
 }  // namespace Kokkos::Impl

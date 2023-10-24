@@ -51,7 +51,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
         m_result_ptr_device_accessible(
             MemorySpaceAccess<Kokkos::Experimental::SYCLDeviceUSMSpace,
                               typename View::memory_space>::accessible),
-        m_host_scratch_lock(
+        m_scratch_buffers_lock(
             p.space().impl_internal_space_instance()->m_mutexScratchSpace) {}
 
  private:
@@ -365,7 +365,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
 
   // Only let one ParallelReduce instance at a time use the host scratch memory.
   // The constructor acquires the mutex which is released in the destructor.
-  std::scoped_lock<std::mutex> m_host_scratch_lock;
+  std::scoped_lock<std::mutex> m_scratch_buffers_lock;
 };
 
 #endif /* KOKKOS_SYCL_PARALLEL_REDUCE_RANGE_HPP */
