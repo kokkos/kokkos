@@ -93,7 +93,7 @@ class load_element_aligned {
   bool host_load(T const* mem, std::size_t n,
                  Kokkos::Experimental::simd<T, Abi>& result) const {
     if (n < result.size()) return false;
-    result.copy_from(mem, Kokkos::Experimental::element_aligned_tag());
+    result.copy_from(mem, Kokkos::Experimental::simd_flag_default);
     return true;
   }
   template <class T, class Abi>
@@ -101,7 +101,7 @@ class load_element_aligned {
       T const* mem, std::size_t n,
       Kokkos::Experimental::simd<T, Abi>& result) const {
     if (n < result.size()) return false;
-    result.copy_from(mem, Kokkos::Experimental::element_aligned_tag());
+    result.copy_from(mem, Kokkos::Experimental::simd_flag_default);
     return true;
   }
 };
@@ -112,7 +112,7 @@ class load_vector_aligned {
   bool host_load(T const* mem, std::size_t n,
                  Kokkos::Experimental::simd<T, Abi>& result) const {
     if (n < result.size()) return false;
-    result.copy_from(mem, Kokkos::Experimental::vector_aligned_tag());
+    result.copy_from(mem, Kokkos::Experimental::simd_flag_aligned);
     return true;
   }
   template <class T, class Abi>
@@ -120,7 +120,7 @@ class load_vector_aligned {
       T const* mem, std::size_t n,
       Kokkos::Experimental::simd<T, Abi>& result) const {
     if (n < result.size()) return false;
-    result.copy_from(mem, Kokkos::Experimental::vector_aligned_tag());
+    result.copy_from(mem, Kokkos::Experimental::simd_flag_aligned);
     return true;
   }
 };
@@ -136,7 +136,7 @@ class load_masked {
       mask[i] = true;
     }
     where(mask, result)
-        .copy_from(mem, Kokkos::Experimental::element_aligned_tag());
+        .copy_from(mem, Kokkos::Experimental::simd_flag_default);
     where(!mask, result) = 0;
     return true;
   }
@@ -150,7 +150,7 @@ class load_masked {
       mask[i] = true;
     }
     where(mask, result)
-        .copy_from(mem, Kokkos::Experimental::element_aligned_tag());
+        .copy_from(mem, Kokkos::Experimental::simd_flag_default);
     where(!mask, result) = T(0);
     return true;
   }

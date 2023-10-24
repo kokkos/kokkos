@@ -89,8 +89,7 @@ inline void host_check_shift_op_all_loaders(ShiftOp shift_op,
                                                            shift_by, n);
 
   Kokkos::Experimental::simd<DataType, Abi> shift_by_lanes;
-  shift_by_lanes.copy_from(shift_by,
-                           Kokkos::Experimental::element_aligned_tag());
+  shift_by_lanes.copy_from(shift_by, Kokkos::Experimental::simd_flag_default);
 
   host_check_shift_by_lanes_on_one_loader<Abi, load_element_aligned>(
       shift_op, test_vals, shift_by_lanes);
@@ -211,8 +210,7 @@ KOKKOS_INLINE_FUNCTION void device_check_shift_op_all_loaders(
       shift_op, test_vals, shift_by, n);
 
   Kokkos::Experimental::simd<DataType, Abi> shift_by_lanes;
-  shift_by_lanes.copy_from(shift_by,
-                           Kokkos::Experimental::element_aligned_tag());
+  shift_by_lanes.copy_from(shift_by, Kokkos::Experimental::simd_flag_default);
 
   device_check_shift_by_lanes_on_one_loader<Abi, load_element_aligned>(
       shift_op, test_vals, shift_by_lanes);
