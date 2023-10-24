@@ -372,6 +372,22 @@ void CudaInternal::fence() const {
 
 void CudaInternal::initialize(int cuda_device, cudaStream_t stream,
                               bool manage_stream) {
+  // Check that the device associated with the stream matches cuda_device
+  CUcontext context;
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaError_t(cuStreamGetCtx(stream, &context)));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaError_t(cuCtxPushCurrent(context)));
+  int device_for_stream;
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaError_t(cuCtxGetDevice(&device_for_stream)));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaError_t(cuCtxPopCurrent(&context)));
+
+  if (device_for_stream != cuda_device) {
+    std::stringstream ss;
+    ss << "Error: The provided stream is associated with device "
+       << device_for_stream << " but device " << cuda_device
+       << " was requested in the execution space instance constructor!";
+    Kokkos::abort(ss.str().c_str());
+  }
+
   KOKKOS_EXPECTS(!is_initialized());
 
   if (was_finalized)
