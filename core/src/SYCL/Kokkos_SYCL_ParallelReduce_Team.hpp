@@ -88,6 +88,8 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
 
     sycl::event last_reduction_event;
 
+    desul::ensure_sycl_lock_arrays_on_device(q);
+
     // If size<=1 we only call init(), the functor and possibly final once
     // working with the global scratch memory but don't copy back to
     // m_result_ptr yet.

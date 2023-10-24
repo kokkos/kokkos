@@ -62,9 +62,21 @@ void finalize_lock_arrays_sycl(sycl::queue q);
  * declaration here must be extern). This one instance will be initialized
  * by initialize_host_sycl_lock_arrays and need not be modified afterwards.
  */
-SYCL_EXTERNAL extern sycl_device_global<int32_t*> SYCL_SPACE_ATOMIC_LOCKS_DEVICE;
+#ifdef DESUL_ATOMICS_ENABLE_SYCL_SEPARABLE_COMPILATION
+SYCL_EXTERNAL extern
+#else
+static
+#endif
+    sycl_device_global<int32_t*>
+        SYCL_SPACE_ATOMIC_LOCKS_DEVICE;
 
-SYCL_EXTERNAL extern sycl_device_global<int32_t*> SYCL_SPACE_ATOMIC_LOCKS_NODE;
+#ifdef DESUL_ATOMICS_ENABLE_SYCL_SEPARABLE_COMPILATION
+SYCL_EXTERNAL extern
+#else
+static
+#endif
+    sycl_device_global<int32_t*>
+        SYCL_SPACE_ATOMIC_LOCKS_NODE;
 
 #define SYCL_SPACE_ATOMIC_MASK 0x1FFFF
 
@@ -128,6 +140,34 @@ inline void unlock_address_sycl(void* ptr, MemoryScopeNode) {
   lock_node_ref.exchange(0);
 }
 
+#ifdef DESUL_ATOMICS_ENABLE_SYCL_SEPARABLE_COMPILATION
+inline
+#else
+inline static
+#endif
+    void
+    copy_sycl_lock_arrays_to_device(sycl::queue q) {
+  static bool once = [&q]() {
+#ifdef SYCL_EXT_ONEAPI_DEVICE_GLOBAL
+    q.memcpy(SYCL_SPACE_ATOMIC_LOCKS_DEVICE,
+             &SYCL_SPACE_ATOMIC_LOCKS_DEVICE_h,
+             sizeof(int32_t*));
+    q.memcpy(SYCL_SPACE_ATOMIC_LOCKS_NODE,
+             &SYCL_SPACE_ATOMIC_LOCKS_NODE_h,
+             sizeof(int32_t*));
+#else
+    auto device_ptr = SYCL_SPACE_ATOMIC_LOCKS_DEVICE_h;
+    auto node_ptr = SYCL_SPACE_ATOMIC_LOCKS_NODE_h;
+    q.single_task([=] {
+      SYCL_SPACE_ATOMIC_LOCKS_DEVICE.get() = device_ptr;
+      SYCL_SPACE_ATOMIC_LOCKS_NODE.get() = node_ptr;
+    });
+#endif
+    return true;
+  }();
+  (void)once;
+}
+
 #else  // not supported
 
 template <typename /*AlwaysInt*/ = int>
@@ -155,7 +195,26 @@ inline bool lock_address_sycl(void*, MemoryScopeNode) {
 inline void unlock_address_sycl(void*, MemoryScopeDevice) { assert(false); }
 
 inline void unlock_address_sycl(void*, MemoryScopeNode) { assert(false); }
+
+#ifdef DESUL_ATOMICS_ENABLE_SYCL_SEPARABLE_COMPILATION
+inline
+#else
+inline static
+#endif
+    void
+    copy_sycl_lock_arrays_to_device(sycl::queue) {
+}
+
 #endif
 }  // namespace Impl
+
+#ifdef DESUL_ATOMICS_ENABLE_SYCL_SEPARABLE_COMPILATION
+inline void ensure_sycl_lock_arrays_on_device(sycl::queue) {}
+#else
+static inline void ensure_sycl_lock_arrays_on_device(sycl::queue q) {
+  Impl::copy_sycl_lock_arrays_to_device(q);
+}
+#endif
+
 }  // namespace desul
 #endif

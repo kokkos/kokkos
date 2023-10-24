@@ -59,6 +59,8 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     const Kokkos::Experimental::SYCL& space = policy.space();
     sycl::queue& q                          = space.sycl_queue();
 
+    desul::ensure_sycl_lock_arrays_on_device(q);
+
     auto parallel_for_event = q.submit([&](sycl::handler& cgh) {
       // FIXME_SYCL accessors seem to need a size greater than zero at least for
       // host queues

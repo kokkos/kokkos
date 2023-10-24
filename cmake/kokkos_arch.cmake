@@ -588,16 +588,18 @@ IF (KOKKOS_ENABLE_SYCL)
 ENDIF()
 
 # Check support for device_global variables
-# FIXME_SYCL Even if SYCL_EXT_ONEAPI_DEVICE_GLOBAL is defined, we still can't
-#            use device global variables with shared libraries
-IF(KOKKOS_ENABLE_SYCL AND NOT BUILD_SHARED_LIBS)
+# FIXME_SYCL If SYCL_EXT_ONEAPI_DEVICE_GLOBAL is defined, we can
+#            use device global variables with shared libraries using the
+#            non-separable compilation implementation. We get compile-time
+#            errors for the separable compilation implementation in either case.
+IF(KOKKOS_ENABLE_SYCL)
   STRING(REPLACE ";" " " CMAKE_REQUIRED_FLAGS "${KOKKOS_COMPILE_OPTIONS}")
   INCLUDE(CheckCXXSymbolExists)
   CHECK_CXX_SYMBOL_EXISTS(SYCL_EXT_ONEAPI_DEVICE_GLOBAL "sycl/sycl.hpp" KOKKOS_IMPL_HAVE_SYCL_EXT_ONEAPI_DEVICE_GLOBAL)
   IF (KOKKOS_IMPL_HAVE_SYCL_EXT_ONEAPI_DEVICE_GLOBAL)
     SET(KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED ON)
     COMPILER_SPECIFIC_FLAGS(DEFAULT -DDESUL_SYCL_DEVICE_GLOBAL_SUPPORTED)
-  ELSE()
+  ELSEIF(NOT BUILD_SHARED_LIBS)
     INCLUDE(CheckCXXSourceCompiles)
     CHECK_CXX_SOURCE_COMPILES("
       #include <sycl/sycl.hpp>
@@ -618,7 +620,7 @@ IF(KOKKOS_ENABLE_SYCL AND NOT BUILD_SHARED_LIBS)
 
     IF(KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED)
       COMPILER_SPECIFIC_FLAGS(
-        DEFAULT -fsycl-device-code-split=off -DDESUL_SYCL_DEVICE_GLOBAL_SUPPORTED
+        DEFAULT -fsycl-device-code-split=off -DDESUL_ATOMICS_ENABLE_SYCL_SEPARABLE_COMPILATION -DDESUL_SYCL_DEVICE_GLOBAL_SUPPORTED
       )
     ENDIF()
   ENDIF()

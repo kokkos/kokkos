@@ -220,6 +220,8 @@ class ParallelScanSYCLBase {
     sycl::device_ptr<value_type> global_mem;
     sycl::device_ptr<value_type> group_results;
 
+    desul::ensure_sycl_lock_arrays_on_device(q);
+
     auto perform_work_group_scans = q.submit([&](sycl::handler& cgh) {
       sycl::local_accessor<unsigned int> num_teams_done(1, cgh);
 
