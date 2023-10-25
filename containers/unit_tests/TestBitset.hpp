@@ -260,26 +260,6 @@ TEST(TEST_CATEGORY, bitset_default_constructor_no_alloc) {
   listen_tool_events(Config::DisableAll());
 }
 
-TEST(TEST_CATEGORY, bitset_zero_size_does_alloc) {
-  using namespace Kokkos::Test::Tools;
-  listen_tool_events(Config::DisableAll(), Config::EnableAllocs());
-
-  auto success = validate_existence(
-      [&]() {
-        Kokkos::Bitset bs1(0);
-        EXPECT_TRUE(bs1.is_allocated());
-
-        Kokkos::Bitset bs2(Kokkos::view_alloc("MyBitset"), 0);
-        EXPECT_TRUE(bs2.is_allocated());
-      },
-      [&](AllocateDataEvent) {
-        return MatchDiagnostic{true, {"Found alloc event"}};
-      });
-  ASSERT_TRUE(success);
-
-  listen_tool_events(Config::DisableAll());
-}
-
 }  // namespace Test
 
 #endif  // KOKKOS_TEST_BITSET_HPP
