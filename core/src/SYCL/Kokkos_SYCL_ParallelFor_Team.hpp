@@ -106,11 +106,28 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 #else
       (void)memcpy_event;
 #endif
+
+#if defined(__INTEL_LLVM_COMPILER) && __INTEL_LLVM_COMPILER >= 20230100
+      auto get_properties = [&]() {
+        if constexpr (Policy::subgroup_size > 0)
+          return sycl::ext::oneapi::experimental::properties{
+              sycl::ext::oneapi::experimental::sub_group_size<
+                  Policy::subgroup_size>};
+        else
+          return sycl::ext::oneapi::experimental::properties{};
+      };
+      cgh.parallel_for(
+          sycl::nd_range<2>(
+              sycl::range<2>(m_team_size, m_league_size * final_vector_size),
+              sycl::range<2>(m_team_size, final_vector_size)),
+          get_properties(), lambda);
+#else
       cgh.parallel_for(
           sycl::nd_range<2>(
               sycl::range<2>(m_team_size, m_league_size * final_vector_size),
               sycl::range<2>(m_team_size, final_vector_size)),
           lambda);
+#endif
     });
 #ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
     q.ext_oneapi_submit_barrier(std::vector<sycl::event>{parallel_for_event});

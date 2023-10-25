@@ -131,8 +131,9 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 #else
       (void)memcpy_event;
 #endif
-      cgh.parallel_for(sycl_swapped_range, [functor_wrapper, bare_policy](
-                                               sycl::nd_item<3> item) {
+
+      const auto lambda = [functor_wrapper,
+                           bare_policy](sycl::nd_item<3> item) {
         // swap back for correct index calculations in DeviceIterateTile
         const index_type local_x    = item.get_local_id(2);
         const index_type local_y    = item.get_local_id(1);
@@ -150,8 +151,22 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
             {n_global_x, n_global_y, n_global_z},
             {global_x, global_y, global_z}, {local_x, local_y, local_z})
             .exec_range();
-      });
+      };
+#if defined(__INTEL_LLVM_COMPILER) && __INTEL_LLVM_COMPILER >= 20230100
+      auto get_properties = [&]() {
+        if constexpr (Policy::subgroup_size > 0)
+          return sycl::ext::oneapi::experimental::properties{
+              sycl::ext::oneapi::experimental::sub_group_size<
+                  Policy::subgroup_size>};
+        else
+          return sycl::ext::oneapi::experimental::properties{};
+      };
+      cgh.parallel_for(sycl_swapped_range, get_properties(), lambda);
+#else
+      cgh.parallel_for(sycl_swapped_range, lambda);
+#endif
     });
+
 #ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
     q.ext_oneapi_submit_barrier(std::vector<sycl::event>{parallel_for_event});
 #endif
