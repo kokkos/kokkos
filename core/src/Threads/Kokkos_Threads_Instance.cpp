@@ -42,7 +42,6 @@
 namespace Kokkos {
 namespace Impl {
 namespace {
-std::mutex host_internal_cppthread_mutex;
 
 // std::thread compatible driver.
 // Recovery from an exception would require constant intra-thread health
@@ -123,12 +122,6 @@ bool ThreadsInternal::is_process() {
   static const std::thread::id master_pid = std::this_thread::get_id();
 
   return master_pid == std::this_thread::get_id();
-}
-
-void ThreadsInternal::global_lock() { host_internal_cppthread_mutex.lock(); }
-
-void ThreadsInternal::global_unlock() {
-  host_internal_cppthread_mutex.unlock();
 }
 
 //----------------------------------------------------------------------------
@@ -269,24 +262,6 @@ ThreadsInternal *ThreadsInternal::get_thread(const int init_thread_rank) {
   return th;
 }
 
-//----------------------------------------------------------------------------
-
-void ThreadsInternal::execute_sleep(ThreadsInternal &exec, const void *) {
-  ThreadsInternal::global_lock();
-  ThreadsInternal::global_unlock();
-
-  const int n        = exec.m_pool_fan_size;
-  const int rank_rev = exec.m_pool_size - (exec.m_pool_rank + 1);
-
-  for (int i = 0; i < n; ++i) {
-    Impl::spinwait_while_equal(
-        exec.m_pool_base[rank_rev + (1 << i)]->m_pool_state,
-        ThreadState::Active);
-  }
-
-  exec.m_pool_state = ThreadState::Inactive;
-}
-
 }  // namespace Impl
 }  // namespace Kokkos
 
@@ -387,44 +362,6 @@ void ThreadsInternal::start(void (*func)(ThreadsInternal &, const void *),
     (*func)(s_threads_process, arg);
     s_threads_process.m_pool_state = ThreadState::Inactive;
   }
-}
-
-//----------------------------------------------------------------------------
-
-bool ThreadsInternal::sleep() {
-  verify_is_process("ThreadsInternal::sleep", true);
-
-  if (&execute_sleep == s_current_function) return false;
-
-  fence();
-
-  ThreadsInternal::global_lock();
-
-  s_current_function = &execute_sleep;
-
-  // Activate threads:
-  for (unsigned i = s_thread_pool_size[0]; 0 < i;) {
-    s_threads_exec[--i]->m_pool_state = ThreadState::Active;
-  }
-
-  return true;
-}
-
-bool ThreadsInternal::wake() {
-  verify_is_process("ThreadsInternal::wake", true);
-
-  if (&execute_sleep != s_current_function) return false;
-
-  ThreadsInternal::global_unlock();
-
-  if (s_threads_process.m_pool_base) {
-    execute_sleep(s_threads_process, nullptr);
-    s_threads_process.m_pool_state = ThreadState::Inactive;
-  }
-
-  fence();
-
-  return true;
 }
 
 //----------------------------------------------------------------------------

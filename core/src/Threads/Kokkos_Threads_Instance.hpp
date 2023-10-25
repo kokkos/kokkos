@@ -81,7 +81,6 @@ class ThreadsInternal {
 
   static void first_touch_allocate_thread_private_scratch(ThreadsInternal &,
                                                           const void *);
-  static void execute_sleep(ThreadsInternal &, const void *);
 
   ThreadsInternal(const ThreadsInternal &);
   ThreadsInternal &operator=(const ThreadsInternal &);
@@ -424,8 +423,6 @@ class ThreadsInternal {
   static void internal_fence(
       const std::string &,
       Impl::fence_is_static is_static = Impl::fence_is_static::yes);
-  static bool sleep();
-  static bool wake();
 
   /* Dynamic Scheduling related functionality */
   // Initialize the work range for this thread
