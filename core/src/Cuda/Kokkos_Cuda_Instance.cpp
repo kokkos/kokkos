@@ -370,31 +370,27 @@ void CudaInternal::fence() const {
   fence("Kokkos::CudaInternal::fence(): Unnamed Instance Fence");
 }
 
-void CudaInternal::initialize(int cuda_device, cudaStream_t stream,
-                              bool manage_stream) {
-  // Check that the device associated with the stream matches cuda_device
-  CUcontext context;
-  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaError_t(cuStreamGetCtx(stream, &context)));
-  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaError_t(cuCtxPushCurrent(context)));
-  int device_for_stream;
-  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaError_t(cuCtxGetDevice(&device_for_stream)));
-  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaError_t(cuCtxPopCurrent(&context)));
-
-  if (device_for_stream != cuda_device) {
-    std::stringstream ss;
-    ss << "Error: The provided stream is associated with device "
-       << device_for_stream << " but device " << cuda_device
-       << " was requested in the execution space instance constructor!";
-    Kokkos::abort(ss.str().c_str());
-  }
-
+void CudaInternal::initialize(cudaStream_t stream, bool manage_stream) {
   KOKKOS_EXPECTS(!is_initialized());
 
   if (was_finalized)
     Kokkos::abort("Calling Cuda::initialize after Cuda::finalize is illegal\n");
   was_initialized = true;
 
-  m_cudaDev = cuda_device;
+  // Check that the device associated with the stream matches cuda_device
+  CUcontext context;
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaError_t(cuStreamGetCtx(stream, &context)));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaError_t(cuCtxPushCurrent(context)));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaError_t(cuCtxGetDevice(&m_cudaDev)));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
+
+  // FIXME_CUDA multiple devices
+  if (m_cudaDev != Cuda().cuda_device())
+    Kokkos::abort(
+        "Currently, the device id must match the device id used when Kokkos "
+        "was initialized!");
+
+  was_initialized = true;
 
   //----------------------------------
   // Multiblock reduction uses scratch flags for counters
@@ -813,7 +809,7 @@ Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
   cudaStream_t singleton_stream;
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamCreate(&singleton_stream));
 
-  Impl::CudaInternal::singleton().initialize(cuda_device_id, singleton_stream,
+  Impl::CudaInternal::singleton().initialize(singleton_stream,
                                              /*manage*/ true);
 }
 
@@ -864,31 +860,7 @@ Cuda::Cuda(cudaStream_t stream, Impl::ManageStream manage_stream)
       }) {
   Impl::CudaInternal::singleton().verify_is_initialized(
       "Cuda instance constructor");
-  m_space_instance->initialize(Impl::CudaInternal::singleton().m_cudaDev,
-                               stream, static_cast<bool>(manage_stream));
-}
-
-Cuda::Cuda(int device_id, cudaStream_t stream)
-    : m_space_instance(new Impl::CudaInternal, [](Impl::CudaInternal *ptr) {
-        ptr->finalize();
-        delete ptr;
-      }) {
-  Impl::CudaInternal::singleton().verify_is_initialized(
-      "Cuda instance constructor");
-  const int n_devices = Kokkos::Cuda::detect_device_count();
-  if (device_id < 0 || device_id >= n_devices) {
-    std::stringstream ss;
-    ss << "Error: Requested GPU with invalid id '" << device_id << "'."
-       << " The device id must be in the interval [0, " << n_devices << ")!"
-       << " Raised by Kokkos::Cuda::Cuda().\n";
-    Kokkos::abort(ss.str().c_str());
-  }
-  // FIXME_CUDA
-  if (device_id != Cuda().cuda_device())
-    Kokkos::abort(
-        "Currently, the device id must match the device id used when Kokkos "
-        "was initialized!");
-  m_space_instance->initialize(device_id, stream, /*manage_stream*/ false);
+  m_space_instance->initialize(stream, static_cast<bool>(manage_stream));
 }
 
 void Cuda::print_configuration(std::ostream &os, bool /*verbose*/) const {
