@@ -102,7 +102,6 @@ class CudaInternal {
 
   // Device Properties
   inline static int m_cudaArch                      = -1;
-  inline static unsigned m_multiProcCount           = 0;
   inline static std::array<size_type, 3> m_maxBlock = {0, 0, 0};
   inline static int m_maxShmemPerBlock              = 0;
   inline static int m_maxThreadsPerSM               = 0;

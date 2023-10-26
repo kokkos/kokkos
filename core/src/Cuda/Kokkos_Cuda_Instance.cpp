@@ -630,7 +630,7 @@ void CudaInternal::finalize() {
 //----------------------------------------------------------------------------
 
 Cuda::size_type cuda_internal_multiprocessor_count() {
-  return CudaInternal::singleton().m_multiProcCount;
+  return CudaInternal::singleton().m_deviceProp.multiProcessorCount;
 }
 
 std::array<Cuda::size_type, 3> cuda_internal_maximum_grid_count() {
@@ -749,10 +749,6 @@ Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
               << std::endl;
   }
 #endif
-
-  //----------------------------------
-  // number of multiprocessors
-  Impl::CudaInternal::m_multiProcCount = cudaProp.multiProcessorCount;
 
   //----------------------------------
   // Maximum number of blocks:
