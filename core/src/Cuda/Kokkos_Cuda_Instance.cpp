@@ -772,7 +772,6 @@ Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
 
   Impl::CudaInternal::m_maxShmemPerBlock = cudaProp.sharedMemPerBlock;
   Impl::CudaInternal::m_maxThreadsPerSM  = cudaProp.maxThreadsPerMultiProcessor;
-  Impl::CudaInternal::m_maxThreadsPerBlock = cudaProp.maxThreadsPerBlock;
 
   //----------------------------------
 

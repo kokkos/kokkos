@@ -108,7 +108,6 @@ class CudaInternal {
   inline static std::array<size_type, 3> m_maxBlock = {0, 0, 0};
   inline static int m_maxShmemPerBlock              = 0;
   inline static int m_maxThreadsPerSM               = 0;
-  inline static int m_maxThreadsPerBlock            = 0;
   static int concurrency();
 
   inline static cudaDeviceProp m_deviceProp;
