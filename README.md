@@ -20,13 +20,21 @@ For the complete documentation, click below:
 
 To start learning about Kokkos:
 
-- [Kokkos Lectures](https://kokkos.github.io/kokkos-core-wiki/videolectures.html): they contain a mix of lecture videos and hands-on exercises covering all the important Kokkos Ecosystem capabilities.
+- [Kokkos Lectures](https://kokkos.github.io/kokkos-core-wiki/videolectures.html):-
+  They contain a mix of lecture videos and hands-on exercises covering all the important Kokkos Ecosystem capabilities.
 
-- [Programming guide](https://kokkos.github.io/kokkos-core-wiki/programmingguide.html): contains in "narrative" form a technical description of the programming model, machine model, and the main building blocks like the Views and parallel dispatch.
+- [Programming guide](https://kokkos.github.io/kokkos-core-wiki/programmingguide.html):-
+  Contains in "narrative" form a technical description of the programming model, machine model, and the main building blocks like the Views and parallel dispatch.
 
-- [API reference](https://kokkos.github.io/kokkos-core-wiki/): organized by category, i.e., [core](https://kokkos.github.io/kokkos-core-wiki/API/core-index.html), [algorithms](https://kokkos.github.io/kokkos-core-wiki/API/algorithms-index.html) and [containers](https://kokkos.github.io/kokkos-core-wiki/API/containers-index.html) or, if you prefer, in [alphabetical order](https://kokkos.github.io/kokkos-core-wiki/API/alphabetical.html).
+- [API reference](https://kokkos.github.io/kokkos-core-wiki/):-
+  Organized by category
+   i.e.- [core](https://kokkos.github.io/kokkos-core-wiki/API/core-index.html).
+       - [algorithms](https://kokkos.github.io/kokkos-core-wiki/API/algorithms-index.html).
+       - [containers](https://kokkos.github.io/kokkos-core-wiki/API/containers-index.html).
+       - [alphabetical order(if you prefer)](https://kokkos.github.io/kokkos-core-wiki/API/alphabetical.html).
 
-- [Use cases and Examples](https://kokkos.github.io/kokkos-core-wiki/usecases.html): a series of examples ranging from how to use Kokkos with MPI to Fortran interoperability.
+- [Use cases and Examples](https://kokkos.github.io/kokkos-core-wiki/usecases.html):-
+  A series of examples ranging from how to use Kokkos with MPI to Fortran interoperability.
 
 For questions find us on Slack: https://kokkosteam.slack.com or open a github issue.
 
