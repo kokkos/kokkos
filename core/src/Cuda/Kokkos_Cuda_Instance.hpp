@@ -71,7 +71,6 @@ struct CudaTraits {
 //----------------------------------------------------------------------------
 
 CudaSpace::size_type cuda_internal_multiprocessor_count();
-std::array<CudaSpace::size_type, 3> cuda_internal_maximum_grid_count();
 
 CudaSpace::size_type* cuda_internal_scratch_flags(const Cuda&,
                                                   const std::size_t size);
@@ -101,9 +100,8 @@ class CudaInternal {
   inline static int m_cudaDev = -1;
 
   // Device Properties
-  inline static int m_cudaArch                      = -1;
-  inline static std::array<size_type, 3> m_maxBlock = {0, 0, 0};
-  inline static int m_maxShmemPerBlock              = 0;
+  inline static int m_cudaArch         = -1;
+  inline static int m_maxShmemPerBlock = 0;
   static int concurrency();
 
   inline static cudaDeviceProp m_deviceProp;

@@ -262,7 +262,8 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
         m_tune_team(bool(team_size_request <= 0)),
         m_tune_vector(bool(vector_length_request <= 0)) {
     // Make sure league size is permissible
-    if (league_size_ >= int(Impl::cuda_internal_maximum_grid_count()[0]))
+    const int maxGridSizeX = m_space.cuda_device_prop().maxGridSize[0];
+    if (league_size_ >= maxGridSizeX)
       Impl::throw_runtime_exception(
           "Requested too large league_size for TeamPolicy on Cuda execution "
           "space.");

@@ -94,10 +94,10 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
             0, 0);
     KOKKOS_ASSERT(block_size > 0);
     dim3 block(1, block_size, 1);
+    const int maxGridSizeX = m_policy.space().cuda_device_prop().maxGridSize[0];
     dim3 grid(
-        std::min(
-            typename Policy::index_type((nwork + block.y - 1) / block.y),
-            typename Policy::index_type(cuda_internal_maximum_grid_count()[0])),
+        std::min(typename Policy::index_type((nwork + block.y - 1) / block.y),
+                 typename Policy::index_type(maxGridSizeX)),
         1, 1);
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
     if (Kokkos::Impl::CudaInternal::cuda_use_serial_execution()) {

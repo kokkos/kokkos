@@ -633,11 +633,6 @@ Cuda::size_type cuda_internal_multiprocessor_count() {
   return CudaInternal::singleton().m_deviceProp.multiProcessorCount;
 }
 
-std::array<Cuda::size_type, 3> cuda_internal_maximum_grid_count() {
-  auto const &maxGridSize = CudaInternal::singleton().m_deviceProp.maxGridSize;
-  return {maxGridSize[0], maxGridSize[1], maxGridSize[2]};
-}
-
 Cuda::size_type *cuda_internal_scratch_space(const Cuda &instance,
                                              const std::size_t size) {
   return instance.impl_internal_space_instance()->scratch_space(size);

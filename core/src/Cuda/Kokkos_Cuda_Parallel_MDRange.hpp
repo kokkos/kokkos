@@ -96,7 +96,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
 
   inline void execute() const {
     if (m_rp.m_num_tiles == 0) return;
-    const auto maxblocks = cuda_internal_maximum_grid_count();
+    const auto maxblocks = m_rp.space().cuda_device_prop().maxGridSize;
     if (RP::rank == 2) {
       const dim3 block(m_rp.m_tile[0], m_rp.m_tile[1], 1);
       KOKKOS_ASSERT(block.x > 0);
