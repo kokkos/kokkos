@@ -1305,8 +1305,8 @@ KOKKOS_INLINE_FUNCTION CmplxType cyl_bessel_y(const IntType& a,
                                               const CmplxType& z) {
   constexpr RealType joint_val = 25.0;
   constexpr IntType bw_start   = 70;
-  auto const pos_a         = Kokkos::abs(a);
-  auto const factor        = a < 0 ? Kokkos::pow(-1.0, pos_a) : 1.0;
+  auto const pos_a             = Kokkos::abs(a);
+  auto const factor            = a < 0 ? Kokkos::pow(-1.0, pos_a) : 1.0;
   if ((pos_a > 1) && (z.real() == 0.0) && (z.imag() == 0.0)) {
     return CmplxType(-infinity<double>::value, 0.0);
   }
@@ -1338,8 +1338,8 @@ KOKKOS_INLINE_FUNCTION CmplxType cyl_bessel_h1(const IntType& a,
 template <class CmplxType, class RealType, class IntType>
 KOKKOS_INLINE_FUNCTION CmplxType cyl_bessel_h2(const IntType& a,
                                                const CmplxType& z) {
-  auto const pos_a       = Kokkos::abs(a);
-  constexpr auto pi          = Kokkos::numbers::pi_v<RealType>;
+  auto const pos_a  = Kokkos::abs(a);
+  constexpr auto pi = Kokkos::numbers::pi_v<RealType>;
   if (pos_a > 1) {
     auto const factor = Kokkos::exp(-CmplxType(0.0, 1.0) * pi * pos_a);
     if ((z.real() == 0.0) && (z.imag() == 0.0)) {

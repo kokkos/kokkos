@@ -694,10 +694,8 @@ struct TestComplexBesselJ0Y0Function {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const int& i) const {
-    d_cbj0(i) =
-        Kokkos::Experimental::cyl_bessel_j(0, d_z(i));
-    d_cby0(i) =
-        Kokkos::Experimental::cyl_bessel_y(0, d_z(i));
+    d_cbj0(i) = Kokkos::Experimental::cyl_bessel_j(0, d_z(i));
+    d_cby0(i) = Kokkos::Experimental::cyl_bessel_y(0, d_z(i));
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -998,10 +996,8 @@ struct TestComplexBesselJ1Y1Function {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const int& i) const {
-    d_cbj1(i) =
-        Kokkos::Experimental::cyl_bessel_j(1,d_z(i));
-    d_cby1(i) =
-        Kokkos::Experimental::cyl_bessel_y(1,d_z(i));
+    d_cbj1(i) = Kokkos::Experimental::cyl_bessel_j(1, d_z(i));
+    d_cby1(i) = Kokkos::Experimental::cyl_bessel_y(1, d_z(i));
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -1272,10 +1268,8 @@ struct TestComplexBesselI0K0Function {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const int& i) const {
-    d_cbi0(i) =
-        Kokkos::Experimental::cyl_bessel_i(0,d_z(i));
-    d_cbk0(i) =
-        Kokkos::Experimental::cyl_bessel_k(0,d_z(i));
+    d_cbi0(i) = Kokkos::Experimental::cyl_bessel_i(0, d_z(i));
+    d_cbk0(i) = Kokkos::Experimental::cyl_bessel_k(0, d_z(i));
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -1517,10 +1511,8 @@ struct TestComplexBesselI1K1Function {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const int& i) const {
-    d_cbi1(i) =
-        Kokkos::Experimental::cyl_bessel_i(1,d_z(i));
-    d_cbk1(i) =
-        Kokkos::Experimental::cyl_bessel_k(1,d_z(i));
+    d_cbi1(i) = Kokkos::Experimental::cyl_bessel_i(1, d_z(i));
+    d_cbk1(i) = Kokkos::Experimental::cyl_bessel_k(1, d_z(i));
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -1739,8 +1731,8 @@ struct TestComplexBesselH1Function {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const int& i) const {
-    d_ch10(i) = Kokkos::Experimental::cyl_bessel_h1(0,d_z(i));
-    d_ch11(i) = Kokkos::Experimental::cyl_bessel_h1(1,d_z(i));
+    d_ch10(i) = Kokkos::Experimental::cyl_bessel_h1(0, d_z(i));
+    d_ch11(i) = Kokkos::Experimental::cyl_bessel_h1(1, d_z(i));
   }
 };
 
@@ -1925,8 +1917,8 @@ struct TestComplexBesselH2Function {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const int& i) const {
-    d_ch20(i) = Kokkos::Experimental::cyl_bessel_h2(0,d_z(i));
-    d_ch21(i) = Kokkos::Experimental::cyl_bessel_h2(1,d_z(i));
+    d_ch20(i) = Kokkos::Experimental::cyl_bessel_h2(0, d_z(i));
+    d_ch21(i) = Kokkos::Experimental::cyl_bessel_h2(1, d_z(i));
   }
 };
 
