@@ -14,8 +14,8 @@
 //
 //@HEADER
 
-#ifndef KOKKO_HIP_PARALLEL_RANGE_HPP
-#define KOKKO_HIP_PARALLEL_RANGE_HPP
+#ifndef KOKKOS_HIP_PARALLEL_RANGE_HPP
+#define KOKKOS_HIP_PARALLEL_RANGE_HPP
 
 #include <Kokkos_Parallel.hpp>
 
