@@ -70,8 +70,6 @@ struct CudaTraits {
 
 //----------------------------------------------------------------------------
 
-CudaSpace::size_type cuda_internal_multiprocessor_count();
-
 CudaSpace::size_type* cuda_internal_scratch_flags(const Cuda&,
                                                   const std::size_t size);
 CudaSpace::size_type* cuda_internal_scratch_space(const Cuda&,
