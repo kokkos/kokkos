@@ -54,7 +54,7 @@ Kokkos::View<uint32_t*, SYCLDeviceUSMSpace> sycl_global_unique_token_locks(
 }
 
 SYCLInternal::~SYCLInternal() {
-  if (!was_finalized || m_scratchSpace || m_scratchFlags) {
+  if (!was_finalized || m_scratchSpace || m_scratchHost || m_scratchFlags) {
     std::cerr << "Kokkos::Experimental::SYCL ERROR: Failed to call "
                  "Kokkos::Experimental::SYCL::finalize()"
               << std::endl;
@@ -199,11 +199,15 @@ void SYCLInternal::finalize() {
   using RecordSYCL = Kokkos::Impl::SharedAllocationRecord<SYCLDeviceUSMSpace>;
   if (nullptr != m_scratchSpace)
     RecordSYCL::decrement(RecordSYCL::get_record(m_scratchSpace));
+  if (nullptr != m_scratchHost)
+    RecordSYCL::decrement(RecordSYCL::get_record(m_scratchHost));
   if (nullptr != m_scratchFlags)
     RecordSYCL::decrement(RecordSYCL::get_record(m_scratchFlags));
   m_syclDev           = -1;
   m_scratchSpaceCount = 0;
   m_scratchSpace      = nullptr;
+  m_scratchHostCount  = 0;
+  m_scratchHost       = nullptr;
   m_scratchFlagsCount = 0;
   m_scratchFlags      = nullptr;
 
@@ -248,6 +252,30 @@ sycl::device_ptr<void> SYCLInternal::scratch_space(const std::size_t size) {
   }
 
   return m_scratchSpace;
+}
+
+sycl::host_ptr<void> SYCLInternal::scratch_host(const std::size_t size) {
+  if (verify_is_initialized("scratch_unified") &&
+      m_scratchHostCount < scratch_count(size)) {
+    m_scratchHostCount = scratch_count(size);
+
+    using Record = Kokkos::Impl::SharedAllocationRecord<
+        Kokkos::Experimental::SYCLHostUSMSpace, void>;
+
+    if (m_scratchHost) Record::decrement(Record::get_record(m_scratchHost));
+
+    std::size_t alloc_size = Kokkos::Impl::multiply_overflow_abort(
+        m_scratchHostCount, sizeScratchGrain);
+    Record* const r = Record::allocate(
+        Kokkos::Experimental::SYCLHostUSMSpace(*m_queue),
+        "Kokkos::Experimental::SYCL::InternalScratchHost", alloc_size);
+
+    Record::increment(r);
+
+    m_scratchHost = reinterpret_cast<size_type*>(r->data());
+  }
+
+  return m_scratchHost;
 }
 
 sycl::device_ptr<void> SYCLInternal::scratch_flags(const std::size_t size) {
