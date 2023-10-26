@@ -14,8 +14,8 @@
 //
 //@HEADER
 
-#ifndef KOKKO_HIP_PARALLEL_TEAM_HPP
-#define KOKKO_HIP_PARALLEL_TEAM_HPP
+#ifndef KOKKOS_HIP_PARALLEL_TEAM_HPP
+#define KOKKOS_HIP_PARALLEL_TEAM_HPP
 
 #include <Kokkos_Parallel.hpp>
 

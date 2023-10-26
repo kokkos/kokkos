@@ -14,8 +14,8 @@
 //
 //@HEADER
 
-#ifndef KOKKO_SYCL_PARALLEL_SCAN_RANGE_HPP
-#define KOKKO_SYCL_PARALLEL_SCAN_RANGE_HPP
+#ifndef KOKKOS_SYCL_PARALLEL_SCAN_RANGE_HPP
+#define KOKKOS_SYCL_PARALLEL_SCAN_RANGE_HPP
 
 #include <Kokkos_Macros.hpp>
 #include <memory>
