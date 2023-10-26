@@ -86,12 +86,6 @@ class SYCL {
 #endif
   }
 
-  /** \brief  Set the device in a "sleep" state. */
-  static bool sleep();
-
-  /** \brief Wake the device from the 'sleep' state. A noop for OpenMP. */
-  static bool wake();
-
   /** \brief Wait until all dispatched functors complete. A noop for OpenMP. */
   static void impl_static_fence(const std::string& name);
 
