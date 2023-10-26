@@ -320,6 +320,8 @@ class ParallelReduce<CombinedFunctorReducerType,
   // Determine block size constrained by shared memory:
   inline unsigned local_block_size(const FunctorType& f) {
     unsigned n = CudaTraits::WarpSize * 8;
+    int const maxShmemPerBlock =
+        m_policy.space().cuda_device_prop().sharedMemPerBlock;
     int shmem_size =
         cuda_single_inter_block_reduce_scan_shmem<false, WorkTag, value_type>(
             f, n);
@@ -330,9 +332,7 @@ class ParallelReduce<CombinedFunctorReducerType,
         CudaParallelLaunch<closure_type,
                            LaunchBounds>::get_cuda_func_attributes();
     while (
-        (n &&
-         (m_policy.space().impl_internal_space_instance()->m_maxShmemPerBlock <
-          shmem_size)) ||
+        (n && (maxShmemPerBlock < shmem_size)) ||
         (n >
          static_cast<unsigned>(
              Kokkos::Impl::cuda_get_max_block_size<FunctorType, LaunchBounds>(

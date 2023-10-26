@@ -254,6 +254,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
   // Determine block size constrained by shared memory:
   inline unsigned local_block_size(const FunctorType& f) {
     unsigned n = CudaTraits::WarpSize * 8;
+    const int maxShmemPerBlock =
+        m_policy.space().cuda_device_prop().sharedMemPerBlock;
     int shmem_size =
         cuda_single_inter_block_reduce_scan_shmem<false, WorkTag, value_type>(
             f, n);
@@ -264,9 +266,7 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
         CudaParallelLaunch<closure_type,
                            LaunchBounds>::get_cuda_func_attributes();
     while (
-        (n &&
-         (m_policy.space().impl_internal_space_instance()->m_maxShmemPerBlock <
-          shmem_size)) ||
+        (n && (maxShmemPerBlock < shmem_size)) ||
         (n >
          static_cast<unsigned>(
              Kokkos::Impl::cuda_get_max_block_size<FunctorType, LaunchBounds>(
@@ -609,11 +609,11 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
     // 4 warps was 10% faster than 8 warps and 20% faster than 16 warps in unit
     // testing
 
+    const int maxShmemPerBlock =
+        m_policy.space().cuda_device_prop().sharedMemPerBlock;
     unsigned n = CudaTraits::WarpSize * 4;
     while (n &&
-           unsigned(m_policy.space()
-                        .impl_internal_space_instance()
-                        ->m_maxShmemPerBlock) <
+           unsigned(maxShmemPerBlock) <
                cuda_single_inter_block_reduce_scan_shmem<true, WorkTag,
                                                          value_type>(f, n)) {
       n >>= 1;
@@ -933,11 +933,11 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
     // 4 warps was 10% faster than 8 warps and 20% faster than 16 warps in unit
     // testing
 
+    const int maxShmemPerBlock =
+        m_policy.space().cuda_device_prop().sharedMemPerBlock;
     unsigned n = CudaTraits::WarpSize * 4;
     while (n &&
-           unsigned(m_policy.space()
-                        .impl_internal_space_instance()
-                        ->m_maxShmemPerBlock) <
+           unsigned(maxShmemPerBlock) <
                cuda_single_inter_block_reduce_scan_shmem<true, WorkTag,
                                                          value_type>(f, n)) {
       n >>= 1;

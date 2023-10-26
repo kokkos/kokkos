@@ -118,7 +118,8 @@ inline bool is_empty_launch(dim3 const& grid, dim3 const& block) {
 }
 
 inline void check_shmem_request(CudaInternal const* cuda_instance, int shmem) {
-  if (cuda_instance->m_maxShmemPerBlock < shmem) {
+  int const maxShmemPerBlock = cuda_instance->m_deviceProp.sharedMemPerBlock;
+  if (maxShmemPerBlock < shmem) {
     Kokkos::Impl::throw_runtime_exception(
         std::string("CudaParallelLaunch (or graph node creation) FAILED: shared"
                     " memory request is too large"));

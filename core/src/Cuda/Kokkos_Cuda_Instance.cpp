@@ -748,10 +748,6 @@ Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
 
   //----------------------------------
 
-  Impl::CudaInternal::m_maxShmemPerBlock = cudaProp.sharedMemPerBlock;
-
-  //----------------------------------
-
   cudaStream_t singleton_stream;
   KOKKOS_IMPL_CUDA_SAFE_CALL(
       (Impl::CudaInternal::singleton().cuda_stream_create_wrapper(
