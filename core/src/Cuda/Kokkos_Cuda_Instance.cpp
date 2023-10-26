@@ -628,10 +628,6 @@ Cuda::size_type cuda_internal_multiprocessor_count() {
   return CudaInternal::singleton().m_multiProcCount;
 }
 
-Cuda::size_type cuda_internal_maximum_warp_count() {
-  return CudaInternal::singleton().m_maxWarpCount;
-}
-
 std::array<Cuda::size_type, 3> cuda_internal_maximum_grid_count() {
   return CudaInternal::singleton().m_maxBlock;
 }

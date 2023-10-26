@@ -71,7 +71,6 @@ struct CudaTraits {
 //----------------------------------------------------------------------------
 
 CudaSpace::size_type cuda_internal_multiprocessor_count();
-CudaSpace::size_type cuda_internal_maximum_warp_count();
 std::array<CudaSpace::size_type, 3> cuda_internal_maximum_grid_count();
 
 CudaSpace::size_type* cuda_internal_scratch_flags(const Cuda&,
