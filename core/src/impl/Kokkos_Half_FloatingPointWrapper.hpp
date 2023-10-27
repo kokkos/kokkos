@@ -18,6 +18,7 @@
 #define KOKKOS_HALF_FLOATING_POINT_WRAPPER_HPP_
 
 #include <Kokkos_Macros.hpp>
+#include <Kokkos_BitManipulation.hpp>  // bit_cast
 
 #include <type_traits>
 #include <iosfwd>  // istream & ostream for extraction and insertion ops
@@ -215,10 +216,17 @@ cast_from_wrapper(const Kokkos::Experimental::bhalf_t& x);
 /************************** END forward declarations **************************/
 
 namespace Impl {
+
+template <typename FloatType>
+struct BitComparisonWrapper {
+  std::uint16_t value;
+};
+
 template <class FloatType>
 class alignas(FloatType) floating_point_wrapper {
  public:
-  using impl_type = FloatType;
+  using impl_type           = FloatType;
+  using bit_comparison_type = BitComparisonWrapper<FloatType>;
 
  private:
   impl_type val;
@@ -267,6 +275,11 @@ class alignas(FloatType) floating_point_wrapper {
     const fixed_width_integer_type rv_val = *rv_ptr;
     val       = reinterpret_cast<const impl_type&>(rv_val);
 #endif  // KOKKOS_HALF_IS_FULL_TYPE_ON_ARCH
+  }
+
+  KOKKOS_FUNCTION
+  floating_point_wrapper(bit_comparison_type rhs) {
+    val = Kokkos::bit_cast<impl_type>(rhs);
   }
 
   // Don't support implicit conversion back to impl_type.
