@@ -469,7 +469,9 @@ class TaskQueueSpecializationConstrained<
     const int shared_per_warp = 2048;
     const int warps_per_block = 4;
     const int multi_processor_count =
-        scheduler.get_execution_space().cuda_device_prop().multiProcessorCount;
+        // FIXME not sure why this didn't work
+        // scheduler.get_execution_space().cuda_device_prop().multiProcessorCount;
+        CudaInternal::singleton().m_deviceProp.multiProcessorCount;
     const dim3 grid(multi_processor_count, 1, 1);
     // const dim3 grid( 1 , 1 , 1 );
     const dim3 block(1, Kokkos::Impl::CudaTraits::WarpSize, warps_per_block);
