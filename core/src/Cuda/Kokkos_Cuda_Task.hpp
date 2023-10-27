@@ -226,7 +226,7 @@ class TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::Cuda, QueueType>> {
   static void execute(scheduler_type const& scheduler) {
     const int shared_per_warp = 2048;
     const int multi_processor_count =
-        m_policy.space().cuda_device_prop().multiProcessorCount;
+        scheduler.get_execution_space().cuda_device_prop().multiProcessorCount;
     const dim3 grid(multi_processor_count, 1, 1);
     const dim3 block(1, Kokkos::Impl::CudaTraits::WarpSize, warps_per_block);
     const int shared_total    = shared_per_warp * warps_per_block;
@@ -469,7 +469,7 @@ class TaskQueueSpecializationConstrained<
     const int shared_per_warp = 2048;
     const int warps_per_block = 4;
     const int multi_processor_count =
-        m_policy.space().cuda_device_prop().multiProcessorCount;
+        scheduler.get_execution_space().cuda_device_prop().multiProcessorCount;
     const dim3 grid(multi_processor_count, 1, 1);
     // const dim3 grid( 1 , 1 , 1 );
     const dim3 block(1, Kokkos::Impl::CudaTraits::WarpSize, warps_per_block);
