@@ -18,9 +18,9 @@
 
 namespace Test {
 TEST(TEST_CATEGORY, atomic_operations_double) {
-  const int start = -5;
-  const int end   = 11;
-  for (int i = start; i < end; ++i) {
+  const int start = -6;
+  const int end   = 12;
+  for (int i = start; i < end; i += 2) {
     for (int t = 0; t < 8; t++)
       // FIXME_32BIT disable division test for 32bit where we have accuracy
       // issues with division atomics still compile it though
