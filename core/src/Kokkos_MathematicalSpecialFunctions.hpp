@@ -1320,11 +1320,11 @@ KOKKOS_INLINE_FUNCTION CmplxType cyl_bessel_h1(const IntType& a,
                                                const CmplxType& z) {
   auto const pos_a  = Kokkos::abs(a);
   constexpr auto pi = Kokkos::numbers::pi_v<RealType>;
-  if (pos_a > 1) {
+  if ((pos_a > 1) && (z.real() == 0.0) && (z.imag() == 0.0)) {
+    return CmplxType(0.0, 0.0);
+  }
+  if (a < 0) {
     auto const factor = Kokkos::exp(CmplxType(0.0, 1.0) * pi * pos_a);
-    if ((z.real() == 0.0) && (z.imag() == 0.0)) {
-      return CmplxType(0.0, 0.0);
-    }
 
     return factor *
            cyl_bessel<cyl_bessel_h10<CmplxType>, cyl_bessel_h11<CmplxType>,
@@ -1340,11 +1340,11 @@ KOKKOS_INLINE_FUNCTION CmplxType cyl_bessel_h2(const IntType& a,
                                                const CmplxType& z) {
   auto const pos_a  = Kokkos::abs(a);
   constexpr auto pi = Kokkos::numbers::pi_v<RealType>;
-  if (pos_a > 1) {
+  if ((pos_a > 1) && (z.real() == 0.0) && (z.imag() == 0.0)) {
+    return CmplxType(0.0, 0.0);
+  }
+  if (a < 0) {
     auto const factor = Kokkos::exp(-CmplxType(0.0, 1.0) * pi * pos_a);
-    if ((z.real() == 0.0) && (z.imag() == 0.0)) {
-      return CmplxType(0.0, 0.0);
-    }
     return factor *
            cyl_bessel<cyl_bessel_h20<CmplxType>, cyl_bessel_h21<CmplxType>,
                       CmplxType, IntType>(pos_a, z);
@@ -1471,6 +1471,9 @@ template <typename RealType, typename IntType,
           typename = std::enable_if<std::is_floating_point<RealType>::value>>
 KOKKOS_INLINE_FUNCTION RealType cyl_bessel_y(const IntType& a,
                                              const RealType& z) {
+#if defined(KOKKOS_ENABLE_CUDA)
+  KOKKOS_IF_ON_DEVICE((return yn(a, z);))
+#endif
   return real(cyl_bessel_y(a, Kokkos::complex<RealType>(z)));
 }
 
