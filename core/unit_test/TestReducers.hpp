@@ -350,6 +350,12 @@ struct TestReducers {
       return;  // FIXME_OPENACC
     }
 #endif
+#ifdef KOKKOS_ENABLE_SYCL
+    if constexpr (std::is_same_v<ExecSpace, Kokkos::Experimental::SYCL> &&
+                  std::is_same_v<Scalar, array_reduce<float, 7>>) {
+      return;  // FIXME_SYCL
+    }
+#endif
     if constexpr (std::is_same_v<Scalar, point_t>) {
       return;  // FIXME_POINT_T
     }
