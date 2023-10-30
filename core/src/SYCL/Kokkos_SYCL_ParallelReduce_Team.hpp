@@ -170,6 +170,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
         const auto league_size       = m_league_size;
         const size_t scratch_size[2] = {m_scratch_size[0], m_scratch_size[1]};
         sycl::device_ptr<char> const global_scratch_ptr = m_global_scratch_ptr;
+        sycl::local_accessor<unsigned int> num_teams_done(1, cgh);
 
         auto team_reduction_factory =
             [&](sycl::local_accessor<value_type, 1> local_mem,
@@ -186,8 +187,6 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
                 auto group_id = item.get_group_linear_id();
                 auto size     = n_wgroups * wgroup_size;
 
-                auto& num_teams_done = reinterpret_cast<unsigned int&>(
-                    local_mem[wgroup_size * std::max(value_count, 1u)]);
                 const auto local_id = item.get_local_linear_id();
                 const CombinedFunctorReducerType& functor_reducer =
                     functor_reducer_wrapper.get_functor();
@@ -225,10 +224,10 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
                                      sycl::memory_scope::device,
                                      sycl::access::address_space::global_space>
                         scratch_flags_ref(*scratch_flags);
-                    num_teams_done = ++scratch_flags_ref;
+                    num_teams_done[0] = ++scratch_flags_ref;
                   }
                   sycl::group_barrier(item.get_group());
-                  if (num_teams_done == n_wgroups) {
+                  if (num_teams_done[0] == n_wgroups) {
                     if (local_id >= n_wgroups)
                       reducer.init(&local_mem[local_id * value_count]);
                     else {
@@ -277,10 +276,10 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
                                      sycl::memory_scope::device,
                                      sycl::access::address_space::global_space>
                         scratch_flags_ref(*scratch_flags);
-                    num_teams_done = ++scratch_flags_ref;
+                    num_teams_done[0] = ++scratch_flags_ref;
                   }
                   item.barrier(sycl::access::fence_space::local_space);
-                  if (num_teams_done == n_wgroups) {
+                  if (num_teams_done[0] == n_wgroups) {
                     if (local_id >= n_wgroups)
                       reducer.init(&local_value);
                     else {
@@ -324,10 +323,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
         auto wgroup_size = m_team_size * final_vector_size;
         std::size_t size = std::size_t(m_league_size) * wgroup_size;
         sycl::local_accessor<value_type, 1> local_mem(
-            sycl::range<1>(wgroup_size) * std::max(value_count, 1u) +
-                (sizeof(unsigned int) + sizeof(value_type) - 1) /
-                    sizeof(value_type),
-            cgh);
+            sycl::range<1>(wgroup_size) * std::max(value_count, 1u), cgh);
 
         const auto init_size =
             std::max<std::size_t>((size + wgroup_size - 1) / wgroup_size, 1);
