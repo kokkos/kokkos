@@ -255,12 +255,6 @@ KOKKOS_FUNCTION void runtime_check_memory_access_violation(
 }
 
 }  // namespace Impl
-
-namespace Experimental {
-template <class, class, class, class>
-class LogicalMemorySpace;
-}
-
 }  // namespace Kokkos
 
 //----------------------------------------------------------------------------

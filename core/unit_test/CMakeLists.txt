@@ -1038,13 +1038,7 @@ KOKKOS_ADD_ADVANCED_TEST( CoreUnitTest_PushFinalizeHook_terminate
       tools/TestCategoricalTuner.cpp
     )
   endif()
-  if((NOT Kokkos_ENABLE_OPENMPTARGET) AND (NOT Kokkos_ENABLE_OPENACC))
-  KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    CoreUnitTest_LogicalSpaces
-    SOURCES
-      tools/TestLogicalSpaces.cpp
-  )
-  endif()
+
   SET(KOKKOSP_SOURCES
     UnitTestMainInit.cpp
     tools/TestEventCorrectness.cpp

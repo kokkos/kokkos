@@ -66,11 +66,6 @@ class SYCLDeviceUSMSpace {
                   const size_t arg_alloc_size,
                   const size_t arg_logical_size = 0) const;
 
- private:
-  template <class, class, class, class>
-  friend class LogicalMemorySpace;
-
- public:
   static constexpr const char* name() { return "SYCLDeviceUSM"; };
 
  private:
@@ -102,11 +97,6 @@ class SYCLSharedUSMSpace {
                   const size_t arg_alloc_size,
                   const size_t arg_logical_size = 0) const;
 
- private:
-  template <class, class, class, class>
-  friend class LogicalMemorySpace;
-
- public:
   static constexpr const char* name() { return "SYCLSharedUSM"; };
 
  private:
@@ -138,11 +128,6 @@ class SYCLHostUSMSpace {
                   const size_t arg_alloc_size,
                   const size_t arg_logical_size = 0) const;
 
- private:
-  template <class, class, class, class>
-  friend class LogicalMemorySpace;
-
- public:
   static constexpr const char* name() { return "SYCLHostUSM"; };
 
  private:
