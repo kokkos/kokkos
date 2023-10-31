@@ -52,15 +52,6 @@ template <class BaseSpace, class DefaultBaseExecutionSpace = void,
           class Namer                = DefaultMemorySpaceNamer,
           class SharesAccessWithBase = LogicalSpaceSharesAccess::shared_access>
 class LogicalMemorySpace {
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-  // [DZP] For some reason I don't yet know, using LogicalMemorySpaces
-  // inside an OpenMPTarget build causes errors in the
-  // SharedAllocationRecords of other types. This is my way of erroring
-  // a build if we instantiate a LogicalMemSpace in an OMPTarget build
-  static_assert(!std::is_same<BaseSpace, BaseSpace>::value,
-                "Can't use LogicalMemorySpaces in an OpenMPTarget build, we're "
-                "debugging memory issues");
-#endif
  public:
   //! Tag this class as a kokkos memory space
   using memory_space = LogicalMemorySpace<BaseSpace, DefaultBaseExecutionSpace,
