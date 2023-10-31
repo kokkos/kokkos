@@ -233,6 +233,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
       ViewCopy_a
       ViewCopy_b
       ViewCtorDimMatch
+      ViewEmptyRuntimeUnmanaged
       ViewHooks
       ViewLayoutStrideAssignment
       ViewMapping_a
