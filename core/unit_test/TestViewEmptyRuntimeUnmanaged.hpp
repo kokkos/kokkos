@@ -46,8 +46,10 @@ void test_empty_view_runtime_unmanaged() {
 
 TEST(TEST_CATEGORY, view_empty_runtime_unmanaged) {
   test_empty_view_runtime_unmanaged<float>();
+  test_empty_view_runtime_unmanaged<const double>();
   test_empty_view_runtime_unmanaged<int>();
   test_empty_view_runtime_unmanaged<char>();
+  test_empty_view_runtime_unmanaged<const char>();
 }
 
 }  // namespace
