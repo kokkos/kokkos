@@ -174,4 +174,13 @@ TEST(defaultdevicetype_DeathTest, access_forbidden) {
 }
 #endif
 
+TEST(defaultdevicetype,
+     logical_space_construct_view_without_initializing_then_deep_copy) {
+  Kokkos::View<int*, semantically_independent_logical_space> v(
+      Kokkos::view_alloc("v", Kokkos::WithoutInitializing), 1);
+  Kokkos::deep_copy(v, 3);
+  // not asserting anything, just checking view allocation w/o init followed by
+  // fill using deep_copy does not error out.
+}
+
 }  // namespace Test
