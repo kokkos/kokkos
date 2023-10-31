@@ -140,65 +140,41 @@ class SYCLTeamMember {
     }
     value = sg.shuffle(value, 0);
 
-    const auto n_subgroups = sg.get_group_range()[0];
+    const int n_subgroups = sg.get_group_range()[0];
     if (n_subgroups == 1) {
       reducer.reference() = value;
       return;
     }
 
-    // We need to chunk up the whole reduction because we might not have
-    // allocated enough memory.
-    const unsigned int maximum_work_range =
-        std::min<int>(m_team_reduce_size / sizeof(value_type), n_subgroups);
+    constexpr int step_width = 8;
+    auto tmp_alloc = sycl::ext::oneapi::group_local_memory_for_overwrite<
+        value_type[step_width]>(m_item.get_group());
+    auto& reduction_array = *tmp_alloc;
 
     const auto id_in_sg = sg.get_local_id()[0];
-    auto reduction_array =
-        static_cast<sycl::local_ptr<value_type>>(m_team_reduce);
 
-    // Load values into the first maximum_work_range values of the reduction
+    // Load values into the first step_width values of the reduction
     // array in chunks. This means that only sub groups with an id in the
     // corresponding chunk load values.
     const auto group_id = sg.get_group_id()[0];
-    if (id_in_sg == 0 && group_id < maximum_work_range)
+    if (id_in_sg == 0 && group_id < step_width)
       reduction_array[group_id] = value;
     sycl::group_barrier(m_item.get_group());
 
-    for (unsigned int start = maximum_work_range; start < n_subgroups;
-         start += maximum_work_range) {
+    for (unsigned int start = step_width; start < n_subgroups;
+         start += step_width) {
       if (id_in_sg == 0 && group_id >= start &&
-          group_id <
-              std::min<unsigned int>(start + maximum_work_range, n_subgroups))
+          group_id < std::min<unsigned int>(start + step_width, n_subgroups))
         reducer.join(reduction_array[group_id - start], value);
       sycl::group_barrier(m_item.get_group());
     }
 
-    // Let the first subgroup do the final reduction
-    if (group_id == 0) {
-      const auto local_range = sg.get_local_range()[0];
-      auto result =
-          reduction_array[id_in_sg < maximum_work_range ? id_in_sg : 0];
-      // In case the maximum_work_range is larger than the range of the first
-      // subgroup, we first combine the items with a higher index.
-      for (unsigned int offset = local_range; offset < maximum_work_range;
-           offset += local_range)
-        if (id_in_sg + offset < maximum_work_range)
-          reducer.join(result, reduction_array[id_in_sg + offset]);
-      sycl::group_barrier(sg);
+    // Do the final reduction for all threads redundantly
+    value = reduction_array[0];
+    for (unsigned int i = 1; i < std::min(step_width, n_subgroups); ++i)
+      reducer.join(value, reduction_array[i]);
 
-      // Now do the actual subgroup reduction.
-      const auto min_range =
-          std::min<unsigned int>(maximum_work_range, local_range);
-      for (unsigned int stride = 1; stride < min_range; stride <<= 1) {
-        const auto tmp = sg.shuffle_down(result, stride);
-        if (id_in_sg + stride < min_range) reducer.join(result, tmp);
-      }
-      if (id_in_sg == 0) reduction_array[0] = result;
-    }
-    sycl::group_barrier(m_item.get_group());
-
-    reducer.reference() = reduction_array[0];
-    // Make sure that the reduction array hasn't been modified in the meantime.
-    m_item.barrier(sycl::access::fence_space::local_space);
+    reducer.reference() = value;
   }
 
   //--------------------------------------------------------------------------
