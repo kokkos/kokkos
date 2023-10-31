@@ -329,7 +329,8 @@ class ViewMapping<Traits, Kokkos::Array<>> {
     using execution_space = typename alloc_prop::execution_space;
     using memory_space    = typename Traits::memory_space;
     static_assert(
-        SpaceAccessibility<execution_space, memory_space>::accessible);
+        SpaceAccessibility<execution_space, memory_space>::accessible ||
+        !alloc_prop::initialize);
     using functor_type =
         ViewValueFunctor<typename Traits::device_type, scalar_type>;
     using record_type =
