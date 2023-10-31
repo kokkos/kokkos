@@ -62,6 +62,8 @@ class OpenACCSpace {
   static constexpr char const* name() { return "OpenACCSpace"; }
 
  private:
+  template <class, class, class, class>
+  friend class Kokkos::Experimental::LogicalMemorySpace;
   void* impl_allocate(const Kokkos::Experimental::OpenACC& exec_space,
                       const char* arg_label, const size_t arg_alloc_size,
                       const size_t arg_logical_size = 0,
