@@ -222,11 +222,41 @@ struct BitComparisonWrapper {
   std::uint16_t value;
 };
 
+template <typename FloatType>
+static constexpr BitComparisonWrapper<FloatType> exponent_mask;
+
+#ifdef KOKKOS_IMPL_HALF_TYPE_DEFINED
+template <>
+static constexpr BitComparisonWrapper<Kokkos::Experimental::half_t>
+    exponent_mask<Kokkos::Experimental::half_t>{0b0'11111'0000000000};
+#endif
+
+#ifdef KOKKOS_IMPL_BHALF_TYPE_DEFINED
+template <>
+static constexpr BitComparisonWrapper<Kokkos::Experimental::bhalf_t>
+    exponent_mask<Kokkos::Experimental::bhalf_t>{0b0'11111111'0000000};
+#endif
+
+template <typename FloatType>
+static constexpr BitComparisonWrapper<FloatType> fraction_mask;
+
+#ifdef KOKKOS_IMPL_HALF_TYPE_DEFINED
+template <>
+static constexpr BitComparisonWrapper<Kokkos::Experimental::half_t>
+    fraction_mask<Kokkos::Experimental::half_t>{0b0'00000'1111111111};
+#endif
+
+#ifdef KOKKOS_IMPL_BHALF_TYPE_DEFINED
+template <>
+static constexpr BitComparisonWrapper<Kokkos::Experimwental::bhalf_t>
+    fraction_mask<Kokkos::Experimental::bhalf_t>{0b0'00000000'1111111};
+#endif
+
 template <class FloatType>
 class alignas(FloatType) floating_point_wrapper {
  public:
   using impl_type           = FloatType;
-  using bit_comparison_type = BitComparisonWrapper<FloatType>;
+  using bit_comparison_type = BitComparisonWrapper<floating_point_wrapper>;
 
  private:
   impl_type val;
