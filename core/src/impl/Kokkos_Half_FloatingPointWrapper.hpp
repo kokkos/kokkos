@@ -223,32 +223,25 @@ struct BitComparisonWrapper {
 };
 
 template <typename FloatType>
-static constexpr BitComparisonWrapper<FloatType> exponent_mask;
-
-#ifdef KOKKOS_IMPL_HALF_TYPE_DEFINED
-template <>
-constexpr BitComparisonWrapper<Kokkos::Experimental::half_t>
-    exponent_mask<Kokkos::Experimental::half_t>{0b0'11111'0000000000};
-#endif
-
-#ifdef KOKKOS_IMPL_BHALF_TYPE_DEFINED
-template <>
-constexpr BitComparisonWrapper<Kokkos::Experimental::bhalf_t>
-    exponent_mask<Kokkos::Experimental::bhalf_t>{0b0'11111111'0000000};
-#endif
-
+inline constexpr BitComparisonWrapper<FloatType> exponent_mask;
 template <typename FloatType>
-constexpr BitComparisonWrapper<FloatType> fraction_mask;
+inline constexpr BitComparisonWrapper<FloatType> fraction_mask;
 
 #ifdef KOKKOS_IMPL_HALF_TYPE_DEFINED
 template <>
-constexpr BitComparisonWrapper<Kokkos::Experimental::half_t>
+inline constexpr BitComparisonWrapper<Kokkos::Experimental::half_t>
+    exponent_mask<Kokkos::Experimental::half_t>{0b0'11111'0000000000};
+template <>
+inline constexpr BitComparisonWrapper<Kokkos::Experimental::half_t>
     fraction_mask<Kokkos::Experimental::half_t>{0b0'00000'1111111111};
 #endif
 
 #ifdef KOKKOS_IMPL_BHALF_TYPE_DEFINED
 template <>
-constexpr BitComparisonWrapper<Kokkos::Experimental::bhalf_t>
+inline constexpr BitComparisonWrapper<Kokkos::Experimental::bhalf_t>
+    exponent_mask<Kokkos::Experimental::bhalf_t>{0b0'11111111'0000000};
+template <>
+inline constexpr BitComparisonWrapper<Kokkos::Experimental::bhalf_t>
     fraction_mask<Kokkos::Experimental::bhalf_t>{0b0'00000000'1111111};
 #endif
 
