@@ -1315,19 +1315,17 @@ struct TestAbsoluteValueFunction {
       Kokkos::printf("failed abs(floating_point) special values\n");
     }
 
-    static_assert(std::is_same<decltype(abs(1)), int>::value, "");
-    static_assert(std::is_same<decltype(abs(2l)), long>::value, "");
-    static_assert(std::is_same<decltype(abs(3ll)), long long>::value, "");
+    static_assert(std::is_same<decltype(abs(1)), int>::value);
+    static_assert(std::is_same<decltype(abs(2l)), long>::value);
+    static_assert(std::is_same<decltype(abs(3ll)), long long>::value);
     static_assert(std::is_same<decltype(abs(static_cast<KE::half_t>(4.f))),
-                               KE::half_t>::value,
-                  "");
+                               KE::half_t>::value);
     static_assert(std::is_same<decltype(abs(static_cast<KE::bhalf_t>(4.f))),
-                               KE::bhalf_t>::value,
-                  "");
-    static_assert(std::is_same<decltype(abs(4.f)), float>::value, "");
-    static_assert(std::is_same<decltype(abs(5.)), double>::value, "");
+                               KE::bhalf_t>::value);
+    static_assert(std::is_same<decltype(abs(4.f)), float>::value);
+    static_assert(std::is_same<decltype(abs(5.)), double>::value);
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
-    static_assert(std::is_same<decltype(abs(6.l)), long double>::value, "");
+    static_assert(std::is_same<decltype(abs(6.l)), long double>::value);
 #endif
   }
 };
@@ -1451,17 +1449,14 @@ struct TestFloatingPointRemainderFunction : FloatingPointComparison {
 
     static_assert(std::is_same<decltype(fmod(static_cast<KE::half_t>(4.f),
                                              static_cast<KE::half_t>(4.f))),
-                               KE::half_t>::value,
-                  "");
+                               KE::half_t>::value);
     static_assert(std::is_same<decltype(fmod(static_cast<KE::bhalf_t>(4.f),
                                              static_cast<KE::bhalf_t>(4.f))),
-                               KE::bhalf_t>::value,
-                  "");
-    static_assert(std::is_same<decltype(fmod(4.f, 4.f)), float>::value, "");
-    static_assert(std::is_same<decltype(fmod(5., 5.)), double>::value, "");
+                               KE::bhalf_t>::value);
+    static_assert(std::is_same<decltype(fmod(4.f, 4.f)), float>::value);
+    static_assert(std::is_same<decltype(fmod(5., 5.)), double>::value);
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
-    static_assert(std::is_same<decltype(fmod(6.l, 6.l)), long double>::value,
-                  "");
+    static_assert(std::is_same<decltype(fmod(6.l, 6.l)), long double>::value);
 #endif
   }
 };
@@ -1530,19 +1525,16 @@ struct TestIEEEFloatingPointRemainderFunction : FloatingPointComparison {
     static_assert(
         std::is_same<decltype(remainder(static_cast<KE::half_t>(4.f),
                                         static_cast<KE::half_t>(4.f))),
-                     KE::half_t>::value,
-        "");
+                     KE::half_t>::value);
     static_assert(
         std::is_same<decltype(remainder(static_cast<KE::bhalf_t>(4.f),
                                         static_cast<KE::bhalf_t>(4.f))),
-                     KE::bhalf_t>::value,
-        "");
-    static_assert(std::is_same<decltype(remainder(4.f, 4.f)), float>::value,
-                  "");
-    static_assert(std::is_same<decltype(remainder(5., 5.)), double>::value, "");
+                     KE::bhalf_t>::value);
+    static_assert(std::is_same<decltype(remainder(4.f, 4.f)), float>::value);
+    static_assert(std::is_same<decltype(remainder(5., 5.)), double>::value);
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
     static_assert(
-        std::is_same<decltype(remainder(6.l, 6.l)), long double>::value, "");
+        std::is_same<decltype(remainder(6.l, 6.l)), long double>::value);
 #endif
   }
 };
@@ -1622,11 +1614,11 @@ struct TestIsNaN {
       Kokkos::printf("failed isnan(floating_point) special values\n");
     }
 
-    static_assert(std::is_same<decltype(isnan(1)), bool>::value, "");
-    static_assert(std::is_same<decltype(isnan(2.f)), bool>::value, "");
-    static_assert(std::is_same<decltype(isnan(3.)), bool>::value, "");
+    static_assert(std::is_same<decltype(isnan(1)), bool>::value);
+    static_assert(std::is_same<decltype(isnan(2.f)), bool>::value);
+    static_assert(std::is_same<decltype(isnan(3.)), bool>::value);
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
-    static_assert(std::is_same<decltype(isnan(4.l)), bool>::value, "");
+    static_assert(std::is_same<decltype(isnan(4.l)), bool>::value);
 #endif
   }
 };
