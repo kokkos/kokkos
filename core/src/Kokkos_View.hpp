@@ -1419,7 +1419,8 @@ class View : public ViewTraits<DataType, Properties...> {
         i4, i5, i6, i7, alloc_name);
 
     Kokkos::Impl::SharedAllocationRecord<>* record = m_map.allocate_shared(
-        prop_copy, arg_layout, Impl::ViewCtorProp<P...>::has_execution_space);
+        prop_copy, arg_layout,
+        std::bool_constant<Impl::ViewCtorProp<P...>::has_execution_space>());
 
     // Setup and initialization complete, start tracking
     m_track.m_tracker.assign_allocated_record_to_uninitialized(record);

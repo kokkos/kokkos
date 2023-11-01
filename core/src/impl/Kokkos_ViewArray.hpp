@@ -319,18 +319,19 @@ class ViewMapping<Traits, Kokkos::Array<>> {
 
   //----------------------------------------
 
-  template <class... P>
+  template <class... P, bool B>
   Kokkos::Impl::SharedAllocationRecord<> *allocate_shared(
       Kokkos::Impl::ViewCtorProp<P...> const &arg_prop,
       typename Traits::array_layout const &arg_layout,
-      bool execution_space_specified) {
+      std::bool_constant<B> execution_space_specified) {
     using alloc_prop = Kokkos::Impl::ViewCtorProp<P...>;
 
     using execution_space = typename alloc_prop::execution_space;
     using memory_space    = typename Traits::memory_space;
-    static_assert(
-        SpaceAccessibility<execution_space, memory_space>::accessible ||
-        !alloc_prop::initialize);
+    if constexpr (execution_space_specified || alloc_prop::initialize) {
+      static_assert(
+          SpaceAccessibility<execution_space, memory_space>::accessible);
+    }
     using functor_type =
         ViewValueFunctor<typename Traits::device_type, scalar_type>;
     using record_type =

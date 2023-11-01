@@ -1196,7 +1196,8 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
 
     Kokkos::Impl::SharedAllocationRecord<>* record = m_map.allocate_shared(
         prop_copy, arg_layout,
-        Kokkos::Impl::ViewCtorProp<P...>::has_execution_space);
+        std::bool_constant<
+            Kokkos::Impl::ViewCtorProp<P...>::has_execution_space>());
 
     // Setup and initialization complete, start tracking
     m_track.assign_allocated_record_to_uninitialized(record);
