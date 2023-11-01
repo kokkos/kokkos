@@ -45,6 +45,7 @@ class SYCLInternal {
 
   sycl::device_ptr<void> scratch_space(const std::size_t size);
   sycl::device_ptr<void> scratch_flags(const std::size_t size);
+  sycl::host_ptr<void> scratch_host(const std::size_t size);
   int acquire_team_scratch_space();
   sycl::device_ptr<void> resize_team_scratch_space(int scratch_pool_id,
                                                    std::int64_t bytes,
@@ -60,6 +61,8 @@ class SYCLInternal {
 
   std::size_t m_scratchSpaceCount            = 0;
   sycl::device_ptr<size_type> m_scratchSpace = nullptr;
+  std::size_t m_scratchHostCount             = 0;
+  sycl::host_ptr<size_type> m_scratchHost    = nullptr;
   std::size_t m_scratchFlagsCount            = 0;
   sycl::device_ptr<size_type> m_scratchFlags = nullptr;
   // mutex to access shared memory

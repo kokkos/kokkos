@@ -1,7 +1,7 @@
 # Default settings common options.
 
 KOKKOS_VERSION_MAJOR = 4
-KOKKOS_VERSION_MINOR = 1
+KOKKOS_VERSION_MINOR = 2
 KOKKOS_VERSION_PATCH = 99
 KOKKOS_VERSION = $(shell echo $(KOKKOS_VERSION_MAJOR)*10000+$(KOKKOS_VERSION_MINOR)*100+$(KOKKOS_VERSION_PATCH) | bc)
 
@@ -708,6 +708,7 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_ARMV80), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_ARMV80")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_ARM_NEON")
 
   ifeq ($(KOKKOS_INTERNAL_COMPILER_CRAY), 1)
     KOKKOS_CXXFLAGS +=
@@ -720,6 +721,7 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_ARMV81), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_ARMV81")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_ARM_NEON")
 
   ifeq ($(KOKKOS_INTERNAL_COMPILER_CRAY), 1)
     KOKKOS_CXXFLAGS +=
@@ -732,6 +734,7 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_A64FX), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_A64FX")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_ARM_NEON")
 
   KOKKOS_CXXFLAGS += -march=armv8.2-a+sve
   KOKKOS_LDFLAGS += -march=armv8.2-a+sve
@@ -787,6 +790,7 @@ endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_ARMV8_THUNDERX), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_ARMV80")
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_ARMV8_THUNDERX")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_ARM_NEON")
 
   ifeq ($(KOKKOS_INTERNAL_COMPILER_CRAY), 1)
     KOKKOS_CXXFLAGS +=
@@ -800,6 +804,7 @@ endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_ARMV8_THUNDERX2), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_ARMV81")
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_ARMV8_THUNDERX2")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_ARM_NEON")
 
   ifeq ($(KOKKOS_INTERNAL_COMPILER_CRAY), 1)
     KOKKOS_CXXFLAGS +=

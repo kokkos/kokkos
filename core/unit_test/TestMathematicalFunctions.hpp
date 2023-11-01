@@ -30,6 +30,13 @@
 #define MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
 #endif
 
+#if defined KOKKOS_COMPILER_INTEL || \
+    (defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130)
+#define MATHEMATICAL_FUNCTIONS_TEST_UNREACHABLE __builtin_unreachable();
+#else
+#define MATHEMATICAL_FUNCTIONS_TEST_UNREACHABLE
+#endif
+
 namespace KE = Kokkos::Experimental;
 
 // clang-format off
@@ -241,9 +248,15 @@ struct FloatingPointComparison {
 #endif
   KOKKOS_FUNCTION
   double eps(float) const { return FLT_EPSILON; }
+// POWER9 gives unexpected values with LDBL_EPSILON issues
+// https://stackoverflow.com/questions/68960416/ppc64-long-doubles-machine-epsilon-calculation
+#if defined(KOKKOS_ARCH_POWER9) || defined(KOKKOS_ARCH_POWER8)
+  KOKKOS_FUNCTION
+  double eps(long double) const { return DBL_EPSILON; }
+#else
   KOKKOS_FUNCTION
   double eps(long double) const { return LDBL_EPSILON; }
-
+#endif
   // Using absolute here instead of abs, since we actually test abs ...
   template <class T>
   KOKKOS_FUNCTION std::enable_if_t<std::is_signed<T>::value, T> absolute(
@@ -318,6 +331,7 @@ struct math_function_name;
                          math_unary_function_return_type_t<T>>::value); \
         return std::FUNC(x);                                            \
       }                                                                 \
+      MATHEMATICAL_FUNCTIONS_TEST_UNREACHABLE                           \
     }                                                                   \
     static KOKKOS_FUNCTION double ulp_factor() { return ULP_FACTOR; }   \
   };                                                                    \
@@ -444,6 +458,7 @@ DEFINE_UNARY_FUNCTION_EVAL(logb, 2);
                          math_binary_function_return_type_t<T, U>>::value);    \
         return std::FUNC(x, y);                                                \
       }                                                                        \
+      MATHEMATICAL_FUNCTIONS_TEST_UNREACHABLE                                  \
     }                                                                          \
     static KOKKOS_FUNCTION double ulp_factor() { return ULP_FACTOR; }          \
   };                                                                           \
@@ -1575,7 +1590,6 @@ struct TestIsNaN {
       ++e;
       KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed isnan(KE::half_t)\n");
     }
-#endif
     if (isnan(static_cast<KE::bhalf_t>(2.f))
 #if !defined(KOKKOS_ENABLE_CUDA)
         || !isnan(quiet_NaN<KE::bhalf_t>::value) ||
@@ -1585,6 +1599,7 @@ struct TestIsNaN {
       ++e;
       KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed isnan(KE::bhalf_t)\n");
     }
+#endif
     if (isnan(3.)
 #ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC 23.7
         || !isnan(quiet_NaN<double>::value) ||

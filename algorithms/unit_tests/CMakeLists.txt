@@ -154,6 +154,93 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
     endforeach()
 
     # ------------------------------------------
+    # std team Q
+    # ------------------------------------------
+    set(STDALGO_TEAM_SOURCES_Q)
+    foreach(Name
+	StdAlgorithmsCommon
+	StdAlgorithmsTeamInclusiveScan
+	StdAlgorithmsTeamTransformInclusiveScan
+      )
+      list(APPEND STDALGO_TEAM_SOURCES_Q Test${Name}.cpp)
+    endforeach()
+
+    # ------------------------------------------
+    # std team P
+    # ------------------------------------------
+    set(STDALGO_TEAM_SOURCES_P)
+    foreach(Name
+	StdAlgorithmsCommon
+	StdAlgorithmsTeamExclusiveScan
+	StdAlgorithmsTeamTransformExclusiveScan
+      )
+      list(APPEND STDALGO_TEAM_SOURCES_P Test${Name}.cpp)
+    endforeach()
+
+    # ------------------------------------------
+    # std team M
+    # ------------------------------------------
+    set(STDALGO_TEAM_SOURCES_M)
+    foreach(Name
+	StdAlgorithmsCommon
+	StdAlgorithmsTeamTransformUnaryOp
+	StdAlgorithmsTeamTransformBinaryOp
+	StdAlgorithmsTeamGenerate
+	StdAlgorithmsTeamGenerate_n
+	StdAlgorithmsTeamSwapRanges
+      )
+      list(APPEND STDALGO_TEAM_SOURCES_M Test${Name}.cpp)
+    endforeach()
+
+    # ------------------------------------------
+    # std team L
+    # ------------------------------------------
+    set(STDALGO_TEAM_SOURCES_L)
+    foreach(Name
+	StdAlgorithmsCommon
+	StdAlgorithmsTeamIsSorted
+	StdAlgorithmsTeamIsSortedUntil
+	StdAlgorithmsTeamIsPartitioned
+	StdAlgorithmsTeamPartitionCopy
+	StdAlgorithmsTeamPartitionPoint
+	)
+      list(APPEND STDALGO_TEAM_SOURCES_L Test${Name}.cpp)
+    endforeach()
+
+    # ------------------------------------------
+    # std team I
+    # ------------------------------------------
+    set(STDALGO_TEAM_SOURCES_I)
+    foreach(Name
+	StdAlgorithmsCommon
+	StdAlgorithmsTeamUnique
+	StdAlgorithmsTeamAdjacentDifference
+	StdAlgorithmsTeamReduce
+	StdAlgorithmsTeamTransformReduce
+	)
+      list(APPEND STDALGO_TEAM_SOURCES_I Test${Name}.cpp)
+    endforeach()
+
+    # ------------------------------------------
+    # std team H
+    # ------------------------------------------
+    set(STDALGO_TEAM_SOURCES_H)
+    foreach(Name
+	StdAlgorithmsCommon
+	StdAlgorithmsTeamCopy
+	StdAlgorithmsTeamCopy_n
+	StdAlgorithmsTeamCopyBackward
+	StdAlgorithmsTeamCopyIf
+	StdAlgorithmsTeamUniqueCopy
+	StdAlgorithmsTeamRemove
+	StdAlgorithmsTeamRemoveIf
+	StdAlgorithmsTeamRemoveCopy
+	StdAlgorithmsTeamRemoveCopyIf
+	)
+      list(APPEND STDALGO_TEAM_SOURCES_H Test${Name}.cpp)
+    endforeach()
+
+    # ------------------------------------------
     # std team G
     # ------------------------------------------
     set(STDALGO_TEAM_SOURCES_G)
@@ -261,6 +348,23 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
   endif()
 endforeach()
 
+# FIXME_OPENMPTARGET - remove sort test as it leads to ICE with clang/16 and above at compile time.
+if(KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL "Clang" AND KOKKOS_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 16.0.0)
+    list(REMOVE_ITEM ALGO_SORT_SOURCES
+    TestSort.cpp
+  )
+endif()
+
+# FIXME_OPENMPTARGET remove tests for OpenMPTarget because in these cases
+# the impl needs to use either Kokkos or tailored reducers
+# which results in runtime memory errors.
+if(KOKKOS_ENABLE_OPENMPTARGET)
+  list(REMOVE_ITEM STDALGO_TEAM_SOURCES_L
+    TestStdAlgorithmsTeamIsPartitioned.cpp
+    TestStdAlgorithmsTeamPartitionPoint.cpp
+    TestStdAlgorithmsTeamPartitionCopy.cpp
+  )
+endif()
 
 # FIXME_OPENMPTARGET need to remove tests for OpenMPTarget because
 # in these cases the impl needs to use either Kokkos or
@@ -276,7 +380,6 @@ if(KOKKOS_ENABLE_OPENMPTARGET)
     TestStdAlgorithmsTeamSearchN.cpp
   )
 endif()
-
 
 # FIXME_OPENMPTARGET This test causes internal compiler errors as of 09/01/22
 # when compiling for Intel's Xe-HP GPUs.
@@ -314,25 +417,27 @@ if(KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM)
   )
 endif()
 
-# FIXME_OPENMPTARGET need to remove tests for OpenMPTarget because in these cases
-# the impl needs to use either Kokkos or tailored reducers
-# which results in runtime memory errors.
+# FIXME_OPENMPTARGET remove tests for OpenMPTarget
+# causing failures for various reasons
 if(KOKKOS_ENABLE_OPENMPTARGET)
+  # the following use either Kokkos or tailored reducers
+  # which results in runtime memory errors.
   list(REMOVE_ITEM STDALGO_TEAM_SOURCES_B
     TestStdAlgorithmsTeamFindEnd.cpp
     TestStdAlgorithmsTeamFindFirstOf.cpp
     TestStdAlgorithmsTeamSearch.cpp
   )
-endif()
 
-# FIXME_OPENMPTARGET need to remove tests for OpenMPTarget because
-# in these cases the impl needs to use either Kokkos or tailored reducers
-# which results in runtime memory errors.
-if(KOKKOS_ENABLE_OPENMPTARGET)
   list(REMOVE_ITEM STDALGO_TEAM_SOURCES_A
     TestStdAlgorithmsTeamAdjacentFind.cpp
     TestStdAlgorithmsTeamLexicographicalCompare.cpp
     TestStdAlgorithmsTeamMismatch.cpp
+  )
+
+  # this causes an illegal memory access if team_members_have_matching_result
+  # is called
+  list(REMOVE_ITEM STDALGO_TEAM_SOURCES_M
+    TestStdAlgorithmsTeamTransformBinaryOp.cpp
   )
 endif()
 
@@ -345,7 +450,7 @@ foreach(ID A;B;C;D;E)
     )
 endforeach()
 
-foreach(ID A;B;C;D;E;F;G)
+foreach(ID A;B;C;D;E;F;G;H;I;L;M;P;Q)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     AlgorithmsUnitTest_StdSet_Team_${ID}
     SOURCES

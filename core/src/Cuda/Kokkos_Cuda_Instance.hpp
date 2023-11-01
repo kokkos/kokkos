@@ -55,26 +55,9 @@ struct CudaTraits {
       unsigned long[ConstantMemoryUsage / sizeof(unsigned long)];
 
   static constexpr int ConstantMemoryUseThreshold = 0x000200 /* 512 bytes */;
-
-  KOKKOS_INLINE_FUNCTION static CudaSpace::size_type warp_count(
-      CudaSpace::size_type i) {
-    return (i + WarpIndexMask) >> WarpIndexShift;
-  }
-
-  KOKKOS_INLINE_FUNCTION static CudaSpace::size_type warp_align(
-      CudaSpace::size_type i) {
-    constexpr CudaSpace::size_type Mask = ~WarpIndexMask;
-    return (i + WarpIndexMask) & Mask;
-  }
 };
 
 //----------------------------------------------------------------------------
-
-CudaSpace::size_type cuda_internal_multiprocessor_count();
-CudaSpace::size_type cuda_internal_maximum_warp_count();
-std::array<CudaSpace::size_type, 3> cuda_internal_maximum_grid_count();
-
-CudaSpace::size_type cuda_internal_maximum_concurrent_block_count();
 
 CudaSpace::size_type* cuda_internal_scratch_flags(const Cuda&,
                                                   const std::size_t size);
@@ -104,15 +87,7 @@ class CudaInternal {
   int m_cudaDev = -1;
 
   // Device Properties
-  inline static int m_cudaArch                      = -1;
-  inline static unsigned m_multiProcCount           = 0;
-  inline static unsigned m_maxWarpCount             = 0;
-  inline static std::array<size_type, 3> m_maxBlock = {0, 0, 0};
-  inline static int m_shmemPerSM                    = 0;
-  inline static int m_maxShmemPerBlock              = 0;
-  inline static int m_maxBlocksPerSM                = 0;
-  inline static int m_maxThreadsPerSM               = 0;
-  inline static int m_maxThreadsPerBlock            = 0;
+  inline static int m_cudaArch = -1;
   static int concurrency();
 
   inline static cudaDeviceProp m_deviceProp;

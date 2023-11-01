@@ -398,8 +398,13 @@ void CudaInternal::initialize(cudaStream_t stream, bool manage_stream) {
   // Allocate some initial space.  This will grow as needed.
 
   {
-    const unsigned reduce_block_count =
-        m_maxWarpCount * Impl::CudaTraits::WarpSize;
+    // Maximum number of warps,
+    // at most one warp per thread in a warp for reduction.
+    auto const maxWarpCount = std::min<unsigned>(
+        m_deviceProp.maxThreadsPerBlock / CudaTraits::WarpSize,
+        CudaTraits::WarpSize);
+    unsigned const reduce_block_count =
+        maxWarpCount * Impl::CudaTraits::WarpSize;
 
     (void)scratch_unified(16 * sizeof(size_type));
     (void)scratch_flags(reduce_block_count * 2 * sizeof(size_type));
@@ -639,30 +644,6 @@ void CudaInternal::finalize() {
 
 //----------------------------------------------------------------------------
 
-Cuda::size_type cuda_internal_multiprocessor_count() {
-  return CudaInternal::singleton().m_multiProcCount;
-}
-
-CudaSpace::size_type cuda_internal_maximum_concurrent_block_count() {
-#if defined(KOKKOS_ARCH_KEPLER)
-  // Compute capability 3.0 through 3.7
-  enum : int { max_resident_blocks_per_multiprocessor = 16 };
-#else
-  // Compute capability 5.0 through 6.2
-  enum : int { max_resident_blocks_per_multiprocessor = 32 };
-#endif
-  return CudaInternal::singleton().m_multiProcCount *
-         max_resident_blocks_per_multiprocessor;
-};
-
-Cuda::size_type cuda_internal_maximum_warp_count() {
-  return CudaInternal::singleton().m_maxWarpCount;
-}
-
-std::array<Cuda::size_type, 3> cuda_internal_maximum_grid_count() {
-  return CudaInternal::singleton().m_maxBlock;
-}
-
 Cuda::size_type *cuda_internal_scratch_space(const Cuda &instance,
                                              const std::size_t size) {
   return instance.impl_internal_space_instance()->scratch_space(size);
@@ -771,38 +752,6 @@ Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
               << std::endl;
   }
 #endif
-
-  //----------------------------------
-  // number of multiprocessors
-  Impl::CudaInternal::m_multiProcCount = cudaProp.multiProcessorCount;
-
-  //----------------------------------
-  // Maximum number of warps,
-  // at most one warp per thread in a warp for reduction.
-  Impl::CudaInternal::m_maxWarpCount =
-      cudaProp.maxThreadsPerBlock / Impl::CudaTraits::WarpSize;
-
-  if (Impl::CudaTraits::WarpSize < Impl::CudaInternal::m_maxWarpCount) {
-    Impl::CudaInternal::m_maxWarpCount = Impl::CudaTraits::WarpSize;
-  }
-
-  //----------------------------------
-  // Maximum number of blocks:
-
-  Impl::CudaInternal::m_maxBlock[0] = cudaProp.maxGridSize[0];
-  Impl::CudaInternal::m_maxBlock[1] = cudaProp.maxGridSize[1];
-  Impl::CudaInternal::m_maxBlock[2] = cudaProp.maxGridSize[2];
-
-  Impl::CudaInternal::m_shmemPerSM       = cudaProp.sharedMemPerMultiprocessor;
-  Impl::CudaInternal::m_maxShmemPerBlock = cudaProp.sharedMemPerBlock;
-  Impl::CudaInternal::m_maxBlocksPerSM =
-      Impl::CudaInternal::m_cudaArch < 500
-          ? 16
-          : (Impl::CudaInternal::m_cudaArch < 750
-                 ? 32
-                 : (Impl::CudaInternal::m_cudaArch == 750 ? 16 : 32));
-  Impl::CudaInternal::m_maxThreadsPerSM = cudaProp.maxThreadsPerMultiProcessor;
-  Impl::CudaInternal::m_maxThreadsPerBlock = cudaProp.maxThreadsPerBlock;
 
   //----------------------------------
 

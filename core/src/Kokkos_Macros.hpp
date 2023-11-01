@@ -434,22 +434,6 @@
 #endif
 
 //----------------------------------------------------------------------------
-// Determine for what space the code is being compiled:
-#if defined(KOKKOS_ENABLE_DEPRECATED_CODE_3)
-
-#if defined(__CUDACC__) && defined(__CUDA_ARCH__) && defined(KOKKOS_ENABLE_CUDA)
-#define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA
-#elif defined(__SYCL_DEVICE_ONLY__) && defined(KOKKOS_ENABLE_SYCL)
-#define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL
-#elif defined(__HIPCC__) && defined(__HIP_DEVICE_COMPILE__) && \
-    defined(KOKKOS_ENABLE_HIP)
-#define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HIP_GPU
-#else
-#define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
-#endif
-
-#endif
-//----------------------------------------------------------------------------
 
 // Remove surrounding parentheses if present
 #define KOKKOS_IMPL_STRIP_PARENS(X) KOKKOS_IMPL_ESC(KOKKOS_IMPL_ISH X)
