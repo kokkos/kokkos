@@ -28,20 +28,20 @@ void test_empty_view_runtime_unmanaged() {
   (void)Kokkos::View<T>(p);
   (void)Kokkos::View<T>(&d);
   (void)Kokkos::View<T>(nullptr);
-  (void)Kokkos::View<T>(NULL);
-  (void)Kokkos::View<T>(0);
+  (void)Kokkos::View<T>(NULL);  // NOLINT(modernize-use-nullptr)
+  (void)Kokkos::View<T>(0);     // NOLINT(modernize-use-nullptr)
 
   (void)Kokkos::View<T*>(p, 0);
   (void)Kokkos::View<T*>(&d, 0);
   (void)Kokkos::View<T*>(nullptr, 0);
-  (void)Kokkos::View<T*>(NULL, 0);
-  (void)Kokkos::View<T*>(0, 0);
+  (void)Kokkos::View<T*>(NULL, 0);  // NOLINT(modernize-use-nullptr)
+  (void)Kokkos::View<T*>(0, 0);     // NOLINT(modernize-use-nullptr)
 
   (void)Kokkos::View<T**>(p, 0, 0);
   (void)Kokkos::View<T**>(&d, 0, 0);
   (void)Kokkos::View<T**>(nullptr, 0, 0);
-  (void)Kokkos::View<T**>(NULL, 0, 0);
-  (void)Kokkos::View<T**>(0, 0, 0);
+  (void)Kokkos::View<T**>(NULL, 0, 0);  // NOLINT(modernize-use-nullptr)
+  (void)Kokkos::View<T**>(0, 0, 0);     // NOLINT(modernize-use-nullptr)
 }
 
 TEST(TEST_CATEGORY, view_empty_runtime_unmanaged) {
