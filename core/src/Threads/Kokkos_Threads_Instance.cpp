@@ -21,13 +21,10 @@
 
 #include <Kokkos_Macros.hpp>
 
-#include <cstdint>
-#include <limits>
 #include <utility>
 #include <iostream>
 #include <sstream>
 #include <thread>
-#include <mutex>
 
 #include <Kokkos_Core.hpp>
 
@@ -82,6 +79,12 @@ inline unsigned fan_size(const unsigned rank, const unsigned size) {
   return count;
 }
 
+void wait_yield(volatile ThreadState &flag, const ThreadState value) {
+  while (value == flag) {
+    std::this_thread::yield();
+  }
+}
+
 }  // namespace
 }  // namespace Impl
 }  // namespace Kokkos
@@ -99,13 +102,6 @@ bool ThreadsInternal::is_process() {
 }
 
 //----------------------------------------------------------------------------
-
-void ThreadsInternal::wait_yield(volatile ThreadState &flag,
-                                 const ThreadState value) {
-  while (value == flag) {
-    std::this_thread::yield();
-  }
-}
 
 void execute_function_noop(ThreadsInternal &, const void *) {}
 
@@ -129,8 +125,6 @@ ThreadsInternal::ThreadsInternal()
       m_scratch(nullptr),
       m_scratch_reduce_end(0),
       m_scratch_thread_end(0),
-      m_numa_rank(0),
-      m_numa_core_rank(0),
       m_pool_rank(0),
       m_pool_size(0),
       m_pool_fan_size(0),
@@ -150,17 +144,12 @@ ThreadsInternal::ThreadsInternal()
     // Given a good entry set this thread in the 's_threads_exec' array
     if (entry < s_thread_pool_size[0] &&
         nil == atomic_compare_exchange(s_threads_exec + entry, nil, this)) {
-      const std::pair<unsigned, unsigned> coord =
-          Kokkos::hwloc::get_this_thread_coordinate();
-
-      m_numa_rank      = coord.first;
-      m_numa_core_rank = coord.second;
-      m_pool_base      = s_threads_exec;
-      m_pool_rank      = s_thread_pool_size[0] - (entry + 1);
-      m_pool_rank_rev  = s_thread_pool_size[0] - (pool_rank() + 1);
-      m_pool_size      = s_thread_pool_size[0];
-      m_pool_fan_size  = fan_size(m_pool_rank, m_pool_size);
-      m_pool_state     = ThreadState::Active;
+      m_pool_base     = s_threads_exec;
+      m_pool_rank     = s_thread_pool_size[0] - (entry + 1);
+      m_pool_rank_rev = s_thread_pool_size[0] - (pool_rank() + 1);
+      m_pool_size     = s_thread_pool_size[0];
+      m_pool_fan_size = fan_size(m_pool_rank, m_pool_size);
+      m_pool_state    = ThreadState::Active;
 
       s_threads_pid[m_pool_rank] = std::this_thread::get_id();
 
@@ -196,8 +185,6 @@ ThreadsInternal::~ThreadsInternal() {
   m_pool_base          = nullptr;
   m_scratch_reduce_end = 0;
   m_scratch_thread_end = 0;
-  m_numa_rank          = 0;
-  m_numa_core_rank     = 0;
   m_pool_rank          = 0;
   m_pool_size          = 0;
   m_pool_fan_size      = 0;
@@ -212,8 +199,6 @@ ThreadsInternal::~ThreadsInternal() {
     s_threads_process.m_pool_state = ThreadState::Terminating;
   }
 }
-
-int ThreadsInternal::get_thread_count() { return s_thread_pool_size[0]; }
 
 ThreadsInternal *ThreadsInternal::get_thread(const int init_thread_rank) {
   ThreadsInternal *const th =
@@ -460,22 +445,17 @@ void ThreadsInternal::print_configuration(std::ostream &s, const bool detail) {
 
   fence();
 
-  const unsigned numa_count     = Kokkos::hwloc::get_available_numa_count();
-  const unsigned cores_per_numa = Kokkos::hwloc::get_available_cores_per_numa();
-  const unsigned threads_per_core =
-      Kokkos::hwloc::get_available_threads_per_core();
-
-  // Forestall compiler warnings for unused variables.
-  (void)numa_count;
-  (void)cores_per_numa;
-  (void)threads_per_core;
-
   s << "Kokkos::Threads";
 
 #if defined(KOKKOS_ENABLE_THREADS)
   s << " KOKKOS_ENABLE_THREADS";
 #endif
 #if defined(KOKKOS_ENABLE_HWLOC)
+  const unsigned numa_count     = Kokkos::hwloc::get_available_numa_count();
+  const unsigned cores_per_numa = Kokkos::hwloc::get_available_cores_per_numa();
+  const unsigned threads_per_core =
+      Kokkos::hwloc::get_available_threads_per_core();
+
   s << " hwloc[" << numa_count << "x" << cores_per_numa << "x"
     << threads_per_core << "]";
 #endif
@@ -496,14 +476,12 @@ void ThreadsInternal::print_configuration(std::ostream &s, const bool detail) {
         if (th) {
           const int rank_rev = th->m_pool_size - (th->m_pool_rank + 1);
 
-          s << " Thread[ " << th->m_pool_rank << " : " << th->m_numa_rank << "."
-            << th->m_numa_core_rank << " ]";
+          s << " Thread[ " << th->m_pool_rank << " ]";
 
           s << " Fan{";
           for (int j = 0; j < th->m_pool_fan_size; ++j) {
             ThreadsInternal *const thfan = th->m_pool_base[rank_rev + (1 << j)];
-            s << " [ " << thfan->m_pool_rank << " : " << thfan->m_numa_rank
-              << "." << thfan->m_numa_core_rank << " ]";
+            s << " [ " << thfan->m_pool_rank << " ]";
           }
           s << " }";
 
@@ -616,13 +594,8 @@ void ThreadsInternal::initialize(int thread_count_arg) {
         Kokkos::hwloc::bind_this_thread(proc_coord);
       }
 
-      const std::pair<unsigned, unsigned> coord =
-          Kokkos::hwloc::get_this_thread_coordinate();
-
-      s_threads_exec[0]                  = &s_threads_process;
-      s_threads_process.m_numa_rank      = coord.first;
-      s_threads_process.m_numa_core_rank = coord.second;
-      s_threads_process.m_pool_base      = s_threads_exec;
+      s_threads_exec[0]             = &s_threads_process;
+      s_threads_process.m_pool_base = s_threads_exec;
       s_threads_process.m_pool_rank =
           thread_count - 1;  // Reversed for scan-compatible reductions
       s_threads_process.m_pool_size     = thread_count;
@@ -711,13 +684,11 @@ void ThreadsInternal::finalize() {
   s_thread_pool_size[2] = 0;
 
   // Reset master thread to run solo.
-  s_threads_process.m_numa_rank      = 0;
-  s_threads_process.m_numa_core_rank = 0;
-  s_threads_process.m_pool_base      = nullptr;
-  s_threads_process.m_pool_rank      = 0;
-  s_threads_process.m_pool_size      = 1;
-  s_threads_process.m_pool_fan_size  = 0;
-  s_threads_process.m_pool_state     = ThreadState::Inactive;
+  s_threads_process.m_pool_base     = nullptr;
+  s_threads_process.m_pool_rank     = 0;
+  s_threads_process.m_pool_size     = 1;
+  s_threads_process.m_pool_fan_size = 0;
+  s_threads_process.m_pool_state    = ThreadState::Inactive;
 
   Kokkos::Profiling::finalize();
 }
