@@ -204,8 +204,10 @@ struct TestNumericTraits<
 #endif
 
 TEST(TEST_CATEGORY, numeric_traits_infinity) {
+#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC 23.7
   TestNumericTraits<TEST_EXECSPACE, Kokkos::Experimental::half_t, Infinity>();
   TestNumericTraits<TEST_EXECSPACE, Kokkos::Experimental::bhalf_t, Infinity>();
+#endif
   TestNumericTraits<TEST_EXECSPACE, float, Infinity>();
   TestNumericTraits<TEST_EXECSPACE, double, Infinity>();
   // FIXME_NVHPC long double not supported
@@ -389,12 +391,14 @@ TEST(TEST_CATEGORY, numeric_traits_min_max_exponent10) {
 #endif
 }
 TEST(TEST_CATEGORY, numeric_traits_quiet_and_signaling_nan) {
+#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC 23.7
   TestNumericTraits<TEST_EXECSPACE, Kokkos::Experimental::half_t, QuietNaN>();
   TestNumericTraits<TEST_EXECSPACE, Kokkos::Experimental::half_t,
                     SignalingNaN>();
   TestNumericTraits<TEST_EXECSPACE, Kokkos::Experimental::bhalf_t, QuietNaN>();
   TestNumericTraits<TEST_EXECSPACE, Kokkos::Experimental::bhalf_t,
                     SignalingNaN>();
+#endif
   TestNumericTraits<TEST_EXECSPACE, float, QuietNaN>();
   TestNumericTraits<TEST_EXECSPACE, float, SignalingNaN>();
   TestNumericTraits<TEST_EXECSPACE, double, QuietNaN>();
