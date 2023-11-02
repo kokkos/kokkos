@@ -57,10 +57,19 @@ void finalize_lock_arrays_sycl(sycl::queue q);
  * \brief This global variable in SYCL space is what kernels use to get access
  * to the lock arrays.
  *
- * There is only one single instance of this global variable for the entire
- * executable, whose definition will be in Kokkos_SYCL_Locks.cpp (and whose
- * declaration here must be extern). This one instance will be initialized
- * by initialize_host_sycl_lock_arrays and need not be modified afterwards.
+ * When relocatable device code is enabled, there is only one single instance of this
+ * global variable for the entire executable, whose definition will be in
+ * Kokkos_SYCL_Locks.cpp (and whose declaration here must then be extern). This one
+ * instance will be initialized by initialize_host_sycl_lock_arrays and need not be
+ * modified afterwards.
+ *
+ * When relocatable device code is disabled, an instance of this variable will be
+ * created in every translation unit that sees this header file (we make this clear by
+ * marking it static, meaning no other translation unit can link to it). Since the
+ * Kokkos_SYCL_Locks.cpp translation unit cannot initialize the instances in other
+ * translation units, we must update this SYCL global variable based on the Host global
+ * variable prior to running any kernels that will use it. That is the purpose of the
+ * ensure_sycl_lock_arrays_on_device function.
  */
 #ifdef DESUL_ATOMICS_ENABLE_SYCL_SEPARABLE_COMPILATION
 SYCL_EXTERNAL extern
