@@ -254,7 +254,7 @@ int ThreadsInternal::in_parallel() {
          (s_threads_process.m_pool_base || !is_process());
 }
 void ThreadsInternal::fence() {
-  fence("Kokkos::ThreadsInternal::fence : Unnamed Instance Fence");
+  fence("Kokkos::ThreadsInternal::fence: Unnamed Instance Fence");
 }
 void ThreadsInternal::fence(const std::string &name) {
   Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Threads>(
