@@ -3133,16 +3133,12 @@ class ViewMapping<
 
   using handle_type = typename ViewDataHandle<Traits>::handle_type;
 
-  handle_type m_impl_handle;
+  handle_type m_impl_handle = nullptr;
   offset_type m_impl_offset;
 
  private:
   template <class, class...>
   friend class ViewMapping;
-
-  KOKKOS_INLINE_FUNCTION
-  ViewMapping(const handle_type& arg_handle, const offset_type& arg_offset)
-      : m_impl_handle(arg_handle), m_impl_offset(arg_offset) {}
 
  public:
   using printable_label_typedef = void;
@@ -3350,7 +3346,7 @@ class ViewMapping<
   //----------------------------------------
 
   KOKKOS_DEFAULTED_FUNCTION ~ViewMapping() = default;
-  KOKKOS_INLINE_FUNCTION ViewMapping() : m_impl_handle(), m_impl_offset() {}
+  KOKKOS_DEFAULTED_FUNCTION ViewMapping()  = default;
 
   KOKKOS_DEFAULTED_FUNCTION ViewMapping(const ViewMapping&) = default;
   KOKKOS_DEFAULTED_FUNCTION ViewMapping& operator=(const ViewMapping&) =

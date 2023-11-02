@@ -414,10 +414,11 @@ union SharedAllocationTracker {
     m_record_bits = DO_NOT_DEREF_FLAG;
   }
 
-  // Copy:
+  //! Destructor. Current problem: a constexpr destructor is only allowed from C++20 onwards.
   KOKKOS_FORCEINLINE_FUNCTION
-  ~SharedAllocationTracker(){KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT}
+  constexpr ~SharedAllocationTracker(){KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT}
 
+  //! Constructor.
   KOKKOS_FORCEINLINE_FUNCTION constexpr SharedAllocationTracker()
       : m_record_bits(DO_NOT_DEREF_FLAG) {}
 

@@ -1235,6 +1235,10 @@ KOKKOS_ADD_EXECUTABLE_AND_TEST(
   ARGS "one 2 THREE"
 )
 
+KOKKOS_ADD_EXECUTABLE_AND_TEST( TestConstexpr
+  SOURCES TestConstexpr.cpp UnitTestMainInit.cpp
+)
+
 # This test is not properly set up to run within Trilinos
 if (NOT KOKKOS_HAS_TRILINOS)
   SET_SOURCE_FILES_PROPERTIES(UnitTest_DeviceAndThreads.cpp PROPERTIES LANGUAGE ${KOKKOS_COMPILE_LANGUAGE})
