@@ -74,7 +74,6 @@ class ScratchMemorySpaceBase {
   template <bool alignment_requested, typename IntType>
   KOKKOS_INLINE_FUNCTION void* get_shmem_common(
       const IntType& size, [[maybe_unused]] const ptrdiff_t alignment) const {
-    auto m_iter_old = m_iter;
     if constexpr (alignment_requested) {
       const ptrdiff_t missalign =
           size_t(static_cast<char*>(m_iter)) % alignment;
@@ -90,8 +89,7 @@ class ScratchMemorySpaceBase {
 
     if (increment > capacity) {
       // Request did overflow: return nullptr and reset m_iter
-      m_iter = m_iter_old;
-      tmp    = nullptr;
+      tmp = nullptr;
 #ifdef KOKKOS_ENABLE_DEBUG
       // mfh 23 Jun 2015: printf call consumes 25 registers
       // in a CUDA build, so only print in debug mode.  The
