@@ -372,7 +372,7 @@ if(Kokkos_ENABLE_OPENMPTARGET)
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_TeamCombinedReducers.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_TeamReductionScan.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_WorkGraph.cpp
-    IF (KOKKOS_CXX_COMPILER_ID STREQUAL "Clang" AND KOKKOS_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 17.0.3)
+    IF (KOKKOS_CXX_COMPILER_ID STREQUAL "Clang" AND KOKKOS_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 16.0.0)
         ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_AtomicOperations_shared.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_MinMaxClamp.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_LocalDeepCopy.cpp
@@ -381,6 +381,12 @@ if(Kokkos_ENABLE_OPENMPTARGET)
         ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_ViewAPI_e.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_TeamScan.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_TeamBasic.cpp
+        IF (KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 17.0.3)
+            ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_SubView_c01.cpp
+            ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_SubView_c02.cpp
+            ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_SubView_c03.cpp
+            ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_Reducers_d.cpp
+        endif()
     endif()
     # FIXME_OPENMPTARGET_CRAY: The following tests fail at compile time when the OpenMPTarget backend is enabled with the Cray compiler.
     # Atomic compare/exchange is used in these tests which can be one of the reasons for the compilation failures.
