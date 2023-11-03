@@ -350,9 +350,6 @@ struct TestReducers {
       return;  // FIXME_OPENACC
     }
 #endif
-    if constexpr (std::is_same_v<Scalar, point_t>) {
-      return;  // FIXME_POINT_T
-    }
 
     using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
 
@@ -369,7 +366,7 @@ struct TestReducers {
 #endif
     Kokkos::parallel_reduce(team_pol, tf, sum_view);
     Kokkos::deep_copy(sum_scalar, sum_view);
-    ASSERT_EQ(sum_scalar, Scalar{num_teams});
+    ASSERT_EQ(sum_scalar, Scalar{num_teams}) << "num_teams: " << num_teams;
 
     Kokkos::parallel_for(
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
