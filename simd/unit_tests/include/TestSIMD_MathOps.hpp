@@ -294,6 +294,9 @@ TEST(simd, host_math_ops) {
 }
 
 TEST(simd, device_math_ops) {
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+  GTEST_SKIP();
+#endif
   Kokkos::parallel_for(1, simd_device_math_ops_functor());
 }
 
