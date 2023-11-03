@@ -1348,16 +1348,14 @@ inline std::enable_if_t<
 contiguous_fill_or_memset(
     const ExecutionSpace& exec_space, const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value) {
-// On A64FX memset seems to do the wrong thing with regards to first touch
-// leading to the significant performance issues
+  // With OpenMP, using memset has significant performance issues.
   if (Impl::is_zero_byte(value)
 #ifdef KOKKOS_ENABLE_OPENMP
-      && std::is_same_v<ExecutionSpace, Kokkos::OpenMP>
+      && !std::is_same_v<ExecutionSpace, Kokkos::OpenMP>
 #endif
   )
     ZeroMemset<ExecutionSpace, View<DT, DP...>>(exec_space, dst, value);
   else
-#endif
     contiguous_fill(exec_space, dst, value);
 }
 
