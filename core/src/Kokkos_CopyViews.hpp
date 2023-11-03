@@ -1350,8 +1350,11 @@ contiguous_fill_or_memset(
     typename ViewTraits<DT, DP...>::const_value_type& value) {
 // On A64FX memset seems to do the wrong thing with regards to first touch
 // leading to the significant performance issues
-#if !defined(KOKKOS_ARCH_A64FX) && !defined(KOKKOS_ENABLE_OPENMP)
-  if (Impl::is_zero_byte(value))
+  if (Impl::is_zero_byte(value)
+#ifdef KOKKOS_ENABLE_OPENMP
+      && std::is_same_v<ExecutionSpace, Kokkos::OpenMP>
+#endif
+  )
     ZeroMemset<ExecutionSpace, View<DT, DP...>>(exec_space, dst, value);
   else
 #endif
