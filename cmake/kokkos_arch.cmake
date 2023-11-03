@@ -623,7 +623,7 @@ IF(KOKKOS_ENABLE_SYCL)
     IF(KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED)
       # Only the separable compilation implementation is supported.
       COMPILER_SPECIFIC_FLAGS(
-        DEFAULT -fsycl-device-code-split=off -DDESUL_ATOMICS_ENABLE_SYCL_SEPARABLE_COMPILATION -DDESUL_SYCL_DEVICE_GLOBAL_SUPPORTED
+        DEFAULT -fsycl-device-code-split=off -DDESUL_SYCL_DEVICE_GLOBAL_SUPPORTED
       )
     ENDIF()
   ENDIF()
