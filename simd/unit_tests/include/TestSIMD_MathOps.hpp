@@ -61,13 +61,18 @@ void host_check_math_op_one_loader(UnaryOp unary_op, std::size_t n,
     simd_type arg;
     bool const loaded_arg = loader.host_load(args + i, nlanes, arg);
     if (!loaded_arg) continue;
-    auto computed_result = unary_op.on_host(arg);
 
-    decltype(computed_result) expected_result;
+    decltype(unary_op.on_host(arg)) expected_result;
     for (std::size_t lane = 0; lane < simd_type::size(); ++lane) {
-      if (lane < nlanes)
+      if (lane < nlanes) {
+        if constexpr (std::is_same_v<UnaryOp, cbrt_op> ||
+                      std::is_same_v<UnaryOp, exp_op> ||
+                      std::is_same_v<UnaryOp, log_op>)
+          arg[lane] = Kokkos::abs(arg[lane]);
         expected_result[lane] = unary_op.on_host_serial(T(arg[lane]));
+      }
     }
+    auto computed_result = unary_op.on_host(arg);
     host_check_equality(expected_result, computed_result, nlanes);
   }
 }
@@ -96,6 +101,13 @@ inline void host_check_all_math_ops(const DataType (&first_args)[n],
   // TODO: Place fallback implementations for all simd integer types
   if constexpr (std::is_floating_point_v<DataType>) {
     host_check_math_op_all_loaders<Abi>(divides(), n, first_args, second_args);
+
+#if defined(__INTEL_COMPILER) && \
+    (defined(KOKKOS_ARCH_AVX2) || defined(KOKKOS_ARCH_AVX512XEON))
+    host_check_math_op_all_loaders<Abi>(cbrt_op(), n, first_args);
+    host_check_math_op_all_loaders<Abi>(exp_op(), n, first_args);
+    host_check_math_op_all_loaders<Abi>(log_op(), n, first_args);
+#endif
   }
 }
 
@@ -282,8 +294,7 @@ TEST(simd, host_math_ops) {
 }
 
 TEST(simd, device_math_ops) {
-  Kokkos::parallel_for(Kokkos::RangePolicy<Kokkos::IndexType<int>>(0, 1),
-                       simd_device_math_ops_functor());
+  Kokkos::parallel_for(1, simd_device_math_ops_functor());
 }
 
 #endif
