@@ -101,8 +101,8 @@ struct TestNumericTraits {
 
   KOKKOS_FUNCTION void operator()(Infinity, int, int& e) const {
     using Kokkos::Experimental::infinity;
-    auto const inf  = infinity<T>::value;
-    auto const zero = T(0);
+    constexpr auto inf = infinity<T>::value;
+    auto const zero    = T(0);
     e += (int)!(inf + inf == inf);
     e += (int)!(inf != zero);
     use_on_device();
@@ -147,8 +147,8 @@ struct TestNumericTraits {
   KOKKOS_FUNCTION void operator()(QuietNaN, int, int& e) const {
 #ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC 23.7 nan
     using Kokkos::Experimental::quiet_NaN;
-    constexpr auto nan  = quiet_NaN<T>::value;
-    constexpr auto zero = T(0);
+    constexpr auto nan = quiet_NaN<T>::value;
+    auto const zero    = T(0);
     e += (int)!(nan != nan);
     e += (int)!(nan != zero);
 #else
@@ -159,8 +159,8 @@ struct TestNumericTraits {
   KOKKOS_FUNCTION void operator()(SignalingNaN, int, int& e) const {
 #ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC 23.7 nan
     using Kokkos::Experimental::signaling_NaN;
-    constexpr auto nan  = signaling_NaN<T>::value;
-    constexpr auto zero = T(0);
+    constexpr auto nan = signaling_NaN<T>::value;
+    auto const zero    = T(0);
     e += (int)!(nan != nan);
     e += (int)!(nan != zero);
 #else
