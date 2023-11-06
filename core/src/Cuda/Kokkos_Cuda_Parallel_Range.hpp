@@ -40,9 +40,9 @@ template <typename IndexType>
 void admissible_iteration_count_else_throw(IndexType nwork, int blockSize,
                                            const std::string& patternName,
                                            Impl::CudaInternal* instance) {
-  const int max_grid_size    = instance->m_deviceProp.maxGridSize[0];
-  const int64_t max_num_iter = (int64_t)max_grid_size * blockSize;
-  if (nwork / blockSize > max_grid_size) {
+  const int max_grid_size        = instance->m_deviceProp.maxGridSize[0];
+  const std::size_t max_num_iter = (std::size_t)max_grid_size * blockSize;
+  if ((std::size_t)nwork / blockSize > (std::size_t)max_grid_size) {
     const std::string msg =
         patternName + ": the target number of iterations " +
         std::to_string(nwork) + " > the maximum number of iterations " +
