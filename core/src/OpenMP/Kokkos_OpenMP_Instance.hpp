@@ -42,14 +42,7 @@
 
 /*--------------------------------------------------------------------------*/
 namespace Kokkos {
-namespace Impl {
-
-inline bool execute_in_serial(OpenMP const& space = OpenMP()) {
-  return (space.impl_internal_space_instance()->m_level < omp_get_level() &&
-          !(omp_get_nested() && (omp_get_level() == 1)));
-}
-
-}  // namespace Impl
+namespace Impl {}  // namespace Impl
 }  // namespace Kokkos
 
 namespace Kokkos {
@@ -174,4 +167,8 @@ std::vector<OpenMP> partition_space(OpenMP const& main_instance,
 }  // namespace Experimental
 }  // namespace Kokkos
 
+inline bool execute_in_serial(OpenMP const& space = OpenMP()) {
+  return (space.impl_internal_space_instance()->m_level < omp_get_level() &&
+          !(omp_get_nested() && (omp_get_level() == 1)));
+}
 #endif
