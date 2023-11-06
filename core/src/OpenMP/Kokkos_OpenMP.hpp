@@ -84,7 +84,7 @@ class OpenMP {
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   /// \brief is the instance running a parallel algorithm
-  static bool in_parallel(OpenMP const& = OpenMP()) noexcept;
+  KOKKOS_DEPRECATED static bool in_parallel(OpenMP const& = OpenMP()) noexcept;
 #endif
 
   /// \brief Wait until all dispatched functors complete on the given instance

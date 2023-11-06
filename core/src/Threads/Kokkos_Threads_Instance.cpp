@@ -247,7 +247,7 @@ void ThreadsInternal::verify_is_process(const std::string &name,
 }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-int ThreadsInternal::in_parallel() {
+KOKKOS_DEPRECATED int ThreadsInternal::in_parallel() {
   // A thread function is in execution and
   // the function argument is not the special threads process argument and
   // the master process is a worker or is not the master process.
@@ -558,7 +558,7 @@ void ThreadsInternal::initialize(int thread_count_arg) {
     for (unsigned ith = 1; ith < thread_count; ++ith) {
       // Try to protect against cache coherency failure by casting to volatile.
       ThreadsInternal *const th =
-          ((ThreadsInternal * volatile *)s_threads_exec)[ith];
+          ((ThreadsInternal *volatile *)s_threads_exec)[ith];
       if (th) {
         wait_yield(th->m_pool_state, ThreadState::Active);
       } else {

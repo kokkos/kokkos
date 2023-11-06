@@ -110,22 +110,22 @@ bool &HPX::impl_get_in_parallel() noexcept {
 }
 
 HPX::impl_in_parallel_scope::impl_in_parallel_scope() noexcept {
-  KOKKOS_DEPRECATED KOKKOS_EXPECTS(!impl_get_in_parallel());
+  KOKKOS_EXPECTS(!impl_get_in_parallel());
   impl_get_in_parallel() = true;
 }
 
 HPX::impl_in_parallel_scope::~impl_in_parallel_scope() noexcept {
-  KOKKOS_DEPRECATED KOKKOS_EXPECTS(impl_get_in_parallel());
+  KOKKOS_EXPECTS(impl_get_in_parallel());
   impl_get_in_parallel() = false;
 }
 
 HPX::impl_not_in_parallel_scope::impl_not_in_parallel_scope() noexcept {
-  KOKKOS DEPRECATED KOKKOS_EXPECTS(impl_get_in_parallel());
+  KOKKOS_EXPECTS(impl_get_in_parallel());
   impl_get_in_parallel() = false;
 }
 
 HPX::impl_not_in_parallel_scope::~impl_not_in_parallel_scope() noexcept {
-  KOKKOS_DEPRECATED KOKKOS_EXPECTS(!impl_get_in_parallel());
+  KOKKOS_EXPECTS(!impl_get_in_parallel());
   impl_get_in_parallel() = true;
 }
 #endif

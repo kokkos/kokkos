@@ -45,8 +45,7 @@ namespace Kokkos {
 namespace Impl {
 
 inline bool execute_in_serial(OpenMP const& space = OpenMP()) {
-  return (exec_space.impl_internal_space_instance()->m_level <
-              omp_get_level() &&
+  return (space.impl_internal_space_instance()->m_level < omp_get_level() &&
           !(omp_get_nested() && (omp_get_level() == 1)));
 }
 

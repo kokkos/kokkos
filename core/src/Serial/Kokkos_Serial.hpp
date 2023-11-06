@@ -122,7 +122,7 @@ class Serial {
   /// always execute sequentially.
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  inline static int in_parallel() { return false; }
+  KOKKOS_DEPRECATED inline static int in_parallel() { return false; }
 #endif
 
   /// \brief Wait until all dispatched functors complete.
