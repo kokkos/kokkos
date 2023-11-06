@@ -42,7 +42,8 @@ void admissible_iteration_count_else_throw(IndexType nwork, int blockSize,
                                            Impl::CudaInternal* instance) {
   const int max_grid_size        = instance->m_deviceProp.maxGridSize[0];
   const std::size_t max_num_iter = (std::size_t)max_grid_size * blockSize;
-  if ((std::size_t)nwork / blockSize > (std::size_t)max_grid_size) {
+
+  if ((std::size_t)nwork > max_num_iter) {
     const std::string msg =
         patternName + ": the target number of iterations " +
         std::to_string(nwork) + " > the maximum number of iterations " +
