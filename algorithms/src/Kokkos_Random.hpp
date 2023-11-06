@@ -853,12 +853,12 @@ class Random_XorShift64 {
   // number
   KOKKOS_INLINE_FUNCTION
   double normal() {
-    constexpr double M_PI2 = 2.0 * Kokkos::numbers::pi_v<double>;
+    constexpr auto two_pi = 2 * Kokkos::numbers::pi_v<double>;
 
-    double u     = drand();
-    double v     = drand();
-    double r     = Kokkos::sqrt(-2.0 * Kokkos::log(u));
-    double theta = v * M_PI2;
+    const double u     = drand();
+    const double v     = drand();
+    const double r     = Kokkos::sqrt(-2.0 * Kokkos::log(u));
+    const double theta = v * M_PI2;
     return r * Kokkos::cos(theta);
   }
 
@@ -1097,12 +1097,12 @@ class Random_XorShift1024 {
   // number
   KOKKOS_INLINE_FUNCTION
   double normal() {
-    constexpr double M_PI2 = 2.0 * Kokkos::numbers::pi_v<double>;
+    constexpr auto two_pi = 2 * Kokkos::numbers::pi_v<double>;
 
-    double u     = drand();
-    double v     = drand();
-    double r     = Kokkos::sqrt(-2.0 * Kokkos::log(u));
-    double theta = v * M_PI2;
+    const double u     = drand();
+    const double v     = drand();
+    const double r     = Kokkos::sqrt(-2.0 * Kokkos::log(u));
+    const double theta = v * M_PI2;
     return r * Kokkos::cos(theta);
   }
 
