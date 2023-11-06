@@ -269,7 +269,8 @@ enum OP_TESTS {
 };
 
 // volatile-qualified parameter type 'volatile half_type' is deprecated
-#if !defined(KOKKOS_ENABLE_CXX20) && !defined(KOKKOS_ENABLE_CXX23)
+#if defined(KOKKOS_ENABLE_DEPRECATED_CODE_4) && \
+    !defined(KOKKOS_ENABLE_CXX20) && !defined(KOKKOS_ENABLE_CXX23)
 template <class view_type, class half_type>
 struct Functor_TestHalfVolatileOperators {
   volatile half_type h_lhs, h_rhs;
@@ -996,7 +997,8 @@ void __test_half_operators(half_type h_lhs, half_type h_rhs) {
   }
 
 // volatile-qualified parameter type 'volatile half_type' is deprecated
-#if !defined(KOKKOS_ENABLE_CXX20) && !defined(KOKKOS_ENABLE_CXX23)
+#if defined(KOKKOS_ENABLE_DEPRECATED_CODE_4) && \
+    !defined(KOKKOS_ENABLE_CXX20) && !defined(KOKKOS_ENABLE_CXX23)
   // Test partial volatile support
   volatile half_type _h_lhs = h_lhs;
   volatile half_type _h_rhs = h_rhs;
