@@ -346,7 +346,7 @@ copysign(
       _mm512_sqrt_pd(static_cast<__m512d>(a)));
 }
 
-#ifdef __INTEL_COMPILER
+#if (defined(__INTEL_COMPILER) || defined(__INTEL_LLVM_COMPILER))
 
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     Experimental::simd<double, Experimental::simd_abi::avx512_fixed_size<8>>
@@ -605,7 +605,7 @@ Experimental::simd<float, Experimental::simd_abi::avx512_fixed_size<8>> sqrt(
       _mm256_sqrt_ps(static_cast<__m256>(a)));
 }
 
-#ifdef __INTEL_COMPILER
+#if (defined(__INTEL_COMPILER) || defined(__INTEL_LLVM_COMPILER))
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 Experimental::simd<float, Experimental::simd_abi::avx512_fixed_size<8>> cbrt(
