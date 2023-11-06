@@ -32,13 +32,14 @@
 
 #include <impl/Kokkos_Tools.hpp>
 #include <typeinfo>
+#include <iostream>
 
 namespace Kokkos {
 namespace Impl {
 
 template <typename IndexType>
-void admissible_iteration_count_else_throw(IndexType nwork, int blockSize,
-                                           const std::string& patternName,
+void admissible_iteration_count_else_throw(IndexType /*nwork*/, int blockSize,
+                                           const std::string& /*patternName*/,
                                            Impl::CudaInternal* instance) {
   const int max_grid_size        = instance->m_deviceProp.maxGridSize[0];
   const std::size_t max_num_iter = (std::size_t)max_grid_size * blockSize;
@@ -116,18 +117,14 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
                  typename Policy::index_type(maxGridSizeX)),
         1, 1);
 
-    auto cuda_instance = m_policy.space().impl_internal_space_instance();
-    admissible_iteration_count_else_throw(nwork, block_size, "parallel_for",
-                                          cuda_instance);
-
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
     if (Kokkos::Impl::CudaInternal::cuda_use_serial_execution()) {
       block = dim3(1, 1, 1);
       grid  = dim3(1, 1, 1);
     }
 #endif
-    CudaParallelLaunch<ParallelFor, LaunchBounds>(*this, grid, block, 0,
-                                                  cuda_instance);
+    CudaParallelLaunch<ParallelFor, LaunchBounds>(
+        *this, grid, block, 0, m_policy.space().impl_internal_space_instance());
   }
 
   ParallelFor(const FunctorType& arg_functor, const Policy& arg_policy)
@@ -648,6 +645,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
     const auto nwork = m_policy.end() - m_policy.begin();
     if (nwork) {
       constexpr int GridMaxComputeCapability_2x = 0x0ffff;
+      std::cout << GridMaxComputeCapability_2x << '\n';
 
       const int block_size = local_block_size(m_functor_reducer.get_functor());
       KOKKOS_ASSERT(block_size > 0);
@@ -975,7 +973,8 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
     if (nwork) {
       enum { GridMaxComputeCapability_2x = 0x0ffff };
 
-      const int block_size = local_block_size(m_functor_reducer.get_functor());
+      const int block_size =
+          256;  // local_block_size(m_functor_reducer.get_functor());
       KOKKOS_ASSERT(block_size > 0);
 
       const int grid_max =
