@@ -858,7 +858,7 @@ class Random_XorShift64 {
     const double u     = drand();
     const double v     = drand();
     const double r     = Kokkos::sqrt(-2.0 * Kokkos::log(u));
-    const double theta = v * M_PI2;
+    const double theta = v * two_pi;
     return r * Kokkos::cos(theta);
   }
 
@@ -1102,7 +1102,7 @@ class Random_XorShift1024 {
     const double u     = drand();
     const double v     = drand();
     const double r     = Kokkos::sqrt(-2.0 * Kokkos::log(u));
-    const double theta = v * M_PI2;
+    const double theta = v * two_pi;
     return r * Kokkos::cos(theta);
   }
 
