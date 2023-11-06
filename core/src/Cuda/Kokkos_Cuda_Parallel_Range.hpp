@@ -32,7 +32,6 @@
 
 #include <impl/Kokkos_Tools.hpp>
 #include <typeinfo>
-#include <iostream>
 
 namespace Kokkos {
 namespace Impl {
