@@ -21,8 +21,6 @@
 - `TeamThreadRange` `parallel_scan` with return value [\#6090](https://github.com/kokkos/kokkos/pull/6090), [\#6301](https://github.com/kokkos/kokkos/pull/6301), [\#6302](https://github.com/kokkos/kokkos/pull/6302), [\#6303](https://github.com/kokkos/kokkos/pull/6303), [\#6307](https://github.com/kokkos/kokkos/pull/6307)
 - `ThreadVectorRange` `parallel_scan` with return value [\#6235](https://github.com/kokkos/kokkos/pull/6235), [\#6242](https://github.com/kokkos/kokkos/pull/6242), [\#6308](https://github.com/kokkos/kokkos/pull/6308), [\#6305](https://github.com/kokkos/kokkos/pull/6305), [\#6292](https://github.com/kokkos/kokkos/pull/6292)
 - Add team-level std algorithms [\#6200](https://github.com/kokkos/kokkos/pull/6200), [\#6205](https://github.com/kokkos/kokkos/pull/6205), [\#6207](https://github.com/kokkos/kokkos/pull/6207), [\#6207](https://github.com/kokkos/kokkos/pull/6207), [\#6208](https://github.com/kokkos/kokkos/pull/6208), [\#6209](https://github.com/kokkos/kokkos/pull/6209), [\#6210](https://github.com/kokkos/kokkos/pull/6210), [\#6211](https://github.com/kokkos/kokkos/pull/6211), [\#6212](https://github.com/kokkos/kokkos/pull/6212), [\#6213](https://github.com/kokkos/kokkos/pull/6213), [\#6256](https://github.com/kokkos/kokkos/pull/6256), [\#6258](https://github.com/kokkos/kokkos/pull/6258), [\#6350](https://github.com/kokkos/kokkos/pull/6350), [\#6351](https://github.com/kokkos/kokkos/pull/6351)
-- Add `is_*_view` and `is_*_view_v` where missing, [\#6195](https://github.com/kokkos/kokkos/pull/6195)
-- Adding `is_scoped_enum`, `to_underlying` [\#6356](https://github.com/kokkos/kokkos/pull/6356) 
 - Serial: Allow for distinct execution space instances [\#6441](https://github.com/kokkos/kokkos/pull/6441)
 
 ### Backend and Architecture Enhancements:
@@ -30,16 +28,13 @@
 #### CUDA:
 - Fixed potential data race in Cuda `parallel_reduce` [\#6236](https://github.com/kokkos/kokkos/pull/6236)
 - Use `cudaMallocAsync` by default [\#6402](https://github.com/kokkos/kokkos/pull/6402)
-- Bugfix when specifying non-default device ID while launching threads after initialization [\#6299](https://github.com/kokkos/kokkos/pull/6299)
-- Deprecate `Cuda(cudaStream_t,bool)` constructor [\#6401](https://github.com/kokkos/kokkos/pull/6401)
+- Bugfix for using Kokkos from a thread of execution [\#6299](https://github.com/kokkos/kokkos/pull/6299)
 
 #### HIP:
-- New naming convention for AMD GPU: [\#6226](https://github.com/kokkos/kokkos/pull/6266)
+- New naming convention for AMD GPU: Vega906,Vega908,Vega90A,Navi1030 to Gfx906,Gfx908,Gfx90A,Gfx1030 [\#6226](https://github.com/kokkos/kokkos/pull/6266)
 - Add initial support for gfx942: [\#6358](https://github.com/kokkos/kokkos/pull/6358)
-- Add support for ROCM 5.5 and 5.6 [\#6316](https://github.com/kokkos/kokkos/pull/6316)
 - Improve reduction performance [\#6229](https://github.com/kokkos/kokkos/pull/6229)
 - Deprecate `HIP(hipStream_t,bool)` constructor [\#6401](https://github.com/kokkos/kokkos/pull/6401)
-- Update print_configuration [\#6387](https://github.com/kokkos/kokkos/pull/6387)
 - Add support for Graph [\#6370](https://github.com/kokkos/kokkos/pull/6370)
 - Improve reduction performance when using Teams [\#6284](https://github.com/kokkos/kokkos/pull/6284)
 - Fix concurrency calculation [\#6479](https://github.com/kokkos/kokkos/pull/6479)
@@ -61,6 +56,7 @@
 #### HPX:
 
 ### General Enhancements
+- Add missing `is_*_view` traits and `is_*_view_v` helper variable templates for `DynRankView`, `DynamicView`, `OffsetView`, `ScatterView` containers [\#6195](https://github.com/kokkos/kokkos/pull/6195)
 - Make `nvcc_wrapper` and `compiler_launcher` scripts more portable by switching to a `#!/usr/bin/env` shebang [\#6357](https://github.com/kokkos/kokkos/pull/6357)
 - Add an improved `Kokkos::malloc` / `Kokkos::free` performance test [\#6377](https://github.com/kokkos/kokkos/pull/6377)
 - Ensure `Views` with `size==0` can be used with `deep_copy` [\#6273](https://github.com/kokkos/kokkos/pull/6273))
