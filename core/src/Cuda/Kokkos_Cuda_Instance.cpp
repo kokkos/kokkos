@@ -686,7 +686,7 @@ void Cuda::impl_initialize(InitializationSettings const &settings) {
 
   const struct cudaDeviceProp &cudaProp = dev_info.m_cudaProp[cuda_device_id];
 
-  Impl::CudaInternal::m_cudaDev    = cuda_device_id;
+  m_cudaDev                        = cuda_device_id;
   Impl::CudaInternal::m_deviceProp = cudaProp;
 
   Kokkos::Impl::cuda_device_synchronize(
