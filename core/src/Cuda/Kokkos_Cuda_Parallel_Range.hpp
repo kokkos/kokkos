@@ -37,8 +37,8 @@ namespace Kokkos {
 namespace Impl {
 
 template <typename IndexType>
-void admissible_iteration_count_else_throw(IndexType /*nwork*/, int blockSize,
-                                           const std::string& /*patternName*/,
+void admissible_iteration_count_else_throw(IndexType nwork, int blockSize,
+                                           const std::string& patternName,
                                            Impl::CudaInternal* instance) {
   const int max_grid_size        = instance->m_deviceProp.maxGridSize[0];
   const std::size_t max_num_iter = (std::size_t)max_grid_size * blockSize;
