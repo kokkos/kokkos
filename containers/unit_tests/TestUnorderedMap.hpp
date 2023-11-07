@@ -246,7 +246,7 @@ void test_insert(uint32_t num_nodes, uint32_t num_inserts,
 
   const bool print_list = false;
   if (print_list) {
-    Kokkos::Impl::UnorderedMapPrint<map_type> f(map);
+    Kokkos::Impl::UnorderedMapPrint<map_type> f{map};
     f.apply();
   }
 
