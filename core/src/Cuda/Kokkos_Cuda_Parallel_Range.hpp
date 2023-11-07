@@ -644,7 +644,6 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
     const auto nwork = m_policy.end() - m_policy.begin();
     if (nwork) {
       constexpr int GridMaxComputeCapability_2x = 0x0ffff;
-      std::cout << GridMaxComputeCapability_2x << '\n';
 
       const int block_size = local_block_size(m_functor_reducer.get_functor());
       KOKKOS_ASSERT(block_size > 0);
