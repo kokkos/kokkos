@@ -971,8 +971,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
     if (nwork) {
       enum { GridMaxComputeCapability_2x = 0x0ffff };
 
-      const int block_size =
-          256;  // local_block_size(m_functor_reducer.get_functor());
+      const int block_size = local_block_size(m_functor_reducer.get_functor());
       KOKKOS_ASSERT(block_size > 0);
 
       const int grid_max =
