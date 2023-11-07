@@ -121,6 +121,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
       grid  = dim3(1, 1, 1);
     }
 #endif
+
     CudaParallelLaunch<ParallelFor, LaunchBounds>(
         *this, grid, block, 0, m_policy.space().impl_internal_space_instance());
   }
