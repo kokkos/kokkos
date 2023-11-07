@@ -88,8 +88,9 @@ KOKKOS_DEPRECATED bool OpenMP::in_parallel(OpenMP const &exec_space) noexcept {
 #endif
 
 int OpenMP::impl_thread_pool_size() const noexcept {
-  return exec_space.impl_internal_space_instance()->m_level < omp_get_level();
-  ? omp_get_num_threads() : impl_internal_space_instance()->m_pool_size;
+  return (impl_internal_space_instance()->get_level() < omp_get_level())
+             ? omp_get_num_threads()
+             : impl_internal_space_instance()->m_pool_size;
 }
 
 int OpenMP::impl_max_hardware_threads() noexcept {

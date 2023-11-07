@@ -41,14 +41,13 @@
 #include <vector>
 
 /*--------------------------------------------------------------------------*/
-namespace Kokkos {
-namespace Impl {}  // namespace Impl
-}  // namespace Kokkos
 
 namespace Kokkos {
 namespace Impl {
 
-class OpenMPInternal;
+class OpenMPInternal {
+  return m_pool[i];
+}
 
 inline int g_openmp_hardware_max_threads = 1;
 
@@ -103,12 +102,19 @@ class OpenMPInternal {
     return m_pool[i];
   }
 
+  bool get_level() const { return m_level; }
+
   bool is_initialized() const { return m_initialized; }
 
   bool verify_is_initialized(const char* const label) const;
 
   void print_configuration(std::ostream& s) const;
 };
+
+inline bool execute_in_serial(OpenMP const& space = OpenMP()) {
+  return (space.impl_internal_space_instance()->get_level() < omp_get_level() &&
+          !(omp_get_nested() && (omp_get_level() == 1)));
+}
 
 }  // namespace Impl
 
@@ -167,8 +173,4 @@ std::vector<OpenMP> partition_space(OpenMP const& main_instance,
 }  // namespace Experimental
 }  // namespace Kokkos
 
-inline bool execute_in_serial(OpenMP const& space = OpenMP()) {
-  return (space.impl_internal_space_instance()->m_level < omp_get_level() &&
-          !(omp_get_nested() && (omp_get_level() == 1)));
-}
 #endif
