@@ -47,7 +47,7 @@ namespace Impl {
 
 class OpenMPInternal {
   return m_pool[i];
-}
+};
 
 inline int g_openmp_hardware_max_threads = 1;
 
