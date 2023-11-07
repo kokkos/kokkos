@@ -685,12 +685,10 @@ void Cuda::impl_initialize(InitializationSettings const &settings) {
   const auto &dev_info     = Impl::CudaInternalDevices::singleton();
 
   const struct cudaDeviceProp &cudaProp = dev_info.m_cudaProp[cuda_device_id];
+  Impl::CudaInternal::m_deviceProp      = cudaProp;
 
-  m_cudaDev                        = cuda_device_id;
-  Impl::CudaInternal::m_deviceProp = cudaProp;
-
-  Kokkos::Impl::cuda_device_synchronize(
-      "Kokkos::CudaInternal::initialize: Fence on space initialization");
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(cuda_device_id));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaDeviceSynchronize());
 
   // Query what compute capability architecture a kernel executes:
   Impl::CudaInternal::m_cudaArch = Impl::cuda_kernel_arch(cuda_device_id);
@@ -758,6 +756,7 @@ Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
   //----------------------------------
 
   cudaStream_t singleton_stream;
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(cuda_device_id));
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamCreate(&singleton_stream));
 
   Impl::CudaInternal::singleton().initialize(singleton_stream,
