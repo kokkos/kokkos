@@ -120,7 +120,10 @@ class Serial {
   /// For the Serial device, this method <i>always</i> returns false,
   /// because parallel_for or parallel_reduce with the Serial device
   /// always execute sequentially.
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   inline static int in_parallel() { return false; }
+#endif
 
   /// \brief Wait until all dispatched functors complete.
   ///

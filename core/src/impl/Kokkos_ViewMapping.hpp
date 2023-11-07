@@ -2949,6 +2949,7 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
 
   template <typename Tag>
   void parallel_for_implementation() {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
     if (!space.in_parallel()) {
       using PolicyType =
           Kokkos::RangePolicy<ExecSpace, Kokkos::IndexType<int64_t>, Tag>;
@@ -2978,7 +2979,9 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
       if (Kokkos::Profiling::profileLibraryLoaded()) {
         Kokkos::Profiling::endParallelFor(kpID);
       }
-    } else {
+    }
+#endif
+    else {
       for (size_t i = 0; i < n; ++i) operator()(Tag{}, i);
     }
   }

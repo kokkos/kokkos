@@ -223,9 +223,11 @@ class HPX {
         delete;
   };
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   static bool in_parallel(HPX const & = HPX()) noexcept {
     return impl_get_in_parallel();
   }
+#endif
 
   static void impl_decrement_active_parallel_region_count();
   static void impl_increment_active_parallel_region_count();

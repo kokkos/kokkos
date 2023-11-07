@@ -246,6 +246,7 @@ void ThreadsInternal::verify_is_process(const std::string &name,
   }
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 int ThreadsInternal::in_parallel() {
   // A thread function is in execution and
   // the function argument is not the special threads process argument and
@@ -255,7 +256,8 @@ int ThreadsInternal::in_parallel() {
 }
 void ThreadsInternal::fence() {
   fence("Kokkos::ThreadsInternal::fence: Unnamed Instance Fence");
-}
+#endif
+}  // namespace Impl
 void ThreadsInternal::fence(const std::string &name) {
   Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Threads>(
       name, Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{1},
