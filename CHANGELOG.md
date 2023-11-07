@@ -4,7 +4,7 @@
 [Full Changelog](https://github.com/kokkos/kokkos/compare/4.1.00...4.2.00)
 
 ### Features:
-- SIMD: significant improvements to SIMD support and alignment with C++ 26 SIMD
+- SIMD: significant improvements to SIMD support and alignment with C++26 SIMD
   - add `abs` overload for SIMD types [\#6069](https://github.com/kokkos/kokkos/pull/6069)
   - add generator constructors [\#6347](https://github.com/kokkos/kokkos/pull/6347)
   - use hidden friends for binary operators [\#6320](https://github.com/kokkos/kokkos/pull/6320)
@@ -46,14 +46,9 @@
 - Allow using the SYCL execution space on AMD GPUs [\#6321](https://github.com/kokkos/kokkos/pull/6321)
 - Allow sorting via native oneDPL to support Views with stride=1 [\#6322](https://github.com/kokkos/kokkos/pull/6322)
 - Make in-order queues the default via macro [\#6189](https://github.com/kokkos/kokkos/pull/6189)
-- Improve modularity of headers for every policy/parallel_* combination [\#6267](https://github.com/kokkos/kokkos/pull/6267)
-
-#### OpenMPTarget:
 
 #### OpenACC:
 - Support Clacc compiler [\#6250](https://github.com/kokkos/kokkos/pull/6250)
-
-#### HPX:
 
 ### General Enhancements
 - Add missing `is_*_view` traits and `is_*_view_v` helper variable templates for `DynRankView`, `DynamicView`, `OffsetView`, `ScatterView` containers [\#6195](https://github.com/kokkos/kokkos/pull/6195)
@@ -66,7 +61,6 @@
 - Check for overflow during backend initialization [\#6159](https://github.com/kokkos/kokkos/pull/6159)
 - Reorganized `sort` headers for readability and separation of public/impl [\#6230](https://github.com/kokkos/kokkos/pull/6230)
 - Make constraints on `Kokkos::sort` more visible [\#6234](https://github.com/kokkos/kokkos/pull/6234) and cleanup API [\#6239](https://github.com/kokkos/kokkos/pull/6239)
-- `Kokkos::complex` only gets instantiated for cv-unqualified floating point types [\#6251](https://github.com/kokkos/kokkos/pull/6251)
 - Add converting assignment to `DualView`:  [\#6474](https://github.com/kokkos/kokkos/pull/6474)
 
 
@@ -76,7 +70,6 @@
 - Rename AMD GPU Architectures to align with AMD preferences: [\#6266](https://github.com/kokkos/kokkos/pull/6266)
 - Remove calling `tribits_exclude_autotools_files()` [\#6247](https://github.com/kokkos/kokkos/pull/6247)
 - Disable default oneDPL support in Trilinos [\#6342](https://github.com/kokkos/kokkos/pull/6342)
-- Only set KOKKOS_ARCH_AMD_GPU if a AMD GPU architecture is enabled [\#6365](https://github.com/kokkos/kokkos/pull/6365)
 
 ### Incompatibilities (i.e. breaking changes)
  - Ensure that `Kokkos::complex` only gets instantiated for cv-unqualified floating-point types  [\#6251](https://github.com/kokkos/kokkos/pull/6251)
@@ -95,7 +88,7 @@
  - Fix for corner case in `is_partitioned` [\#6257](https://github.com/kokkos/kokkos/pull/6257)
  - Fix initialization of scratch lock variables in the `Cuda` backend [\#6433](https://github.com/kokkos/kokkos/pull/6433)
  - Fixes for `Kokkos::Array` [\#6372](https://github.com/kokkos/kokkos/pull/6372)
- - Fixes for LLVM-Clacc for OpenAPP [\#6240](https://github.com/kokkos/kokkos/pull/6240) and [\#6250](https://github.com/kokkos/kokkos/pull/6250)
+ - Fixes for LLVM-Clacc for OpenACC [\#6240](https://github.com/kokkos/kokkos/pull/6240) and [\#6250](https://github.com/kokkos/kokkos/pull/6250)
  - Fixed symlink configure issue for Windows [\#6241](https://github.com/kokkos/kokkos/pull/6241)
  - Fix cudaAPI wrapper errors for `CUDA_MALLOC_ASYNC` [\#6346](https://github.com/kokkos/kokkos/pull/6346)
  - simd: added a missing generator ctor for avx2 float simd_mask [\#6397](https://github.com/kokkos/kokkos/pull/6397)
