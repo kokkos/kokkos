@@ -30,7 +30,7 @@ inline T device_atomic_fetch_oper(const Oper& op,
                                   MemoryOrder /*order*/,
                                   MemoryScope scope) {
   printf(
-      "Kokkos Error in device_atomic_fetch_oper(): Not supported atomic operation in "
+      "DESUL error in device_atomic_fetch_oper(): Not supported atomic operation in "
       "the OpenACC backend\n");
   // Acquire a lock for the address
   while (!lock_address((void*)dest, scope)) {
@@ -57,7 +57,7 @@ inline T device_atomic_oper_fetch(const Oper& op,
                                   MemoryOrder /*order*/,
                                   MemoryScope scope) {
   printf(
-      "Kokkos Error in device_atomic_oper_fetch(): Not supported atomic operation in "
+      "DESUL error in device_atomic_oper_fetch(): Not supported atomic operation in "
       "the OpenACC backend\n");
   // Acquire a lock for the address
   while (!lock_address((void*)dest, scope)) {
