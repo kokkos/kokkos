@@ -657,21 +657,20 @@ struct SubviewExtents {
   template <size_t... DimArgs, class... Args>
   KOKKOS_INLINE_FUNCTION SubviewExtents(const ViewDimension<DimArgs...>& dim,
                                         Args... args) {
-    static_assert(DomainRank == sizeof...(DimArgs), "");
-    static_assert(DomainRank == sizeof...(Args), "");
+    static_assert(DomainRank == sizeof...(DimArgs));
+    static_assert(DomainRank == sizeof...(Args));
 
     // Verifies that all arguments, up to 8, are integral types,
     // integral extents, or don't exist.
-    static_assert(
-        RangeRank == unsigned(is_integral_extent<0, Args...>::value) +
-                         unsigned(is_integral_extent<1, Args...>::value) +
-                         unsigned(is_integral_extent<2, Args...>::value) +
-                         unsigned(is_integral_extent<3, Args...>::value) +
-                         unsigned(is_integral_extent<4, Args...>::value) +
-                         unsigned(is_integral_extent<5, Args...>::value) +
-                         unsigned(is_integral_extent<6, Args...>::value) +
-                         unsigned(is_integral_extent<7, Args...>::value),
-        "");
+    static_assert(RangeRank ==
+                  unsigned(is_integral_extent<0, Args...>::value) +
+                      unsigned(is_integral_extent<1, Args...>::value) +
+                      unsigned(is_integral_extent<2, Args...>::value) +
+                      unsigned(is_integral_extent<3, Args...>::value) +
+                      unsigned(is_integral_extent<4, Args...>::value) +
+                      unsigned(is_integral_extent<5, Args...>::value) +
+                      unsigned(is_integral_extent<6, Args...>::value) +
+                      unsigned(is_integral_extent<7, Args...>::value));
 
     if (RangeRank == 0) {
       m_length[0] = 0;
@@ -814,8 +813,7 @@ struct ViewDataAnalysis {
   // Must match array analysis when this default template is used.
   static_assert(
       std::is_same<ValueType,
-                   typename array_analysis::non_const_value_type>::value,
-      "");
+                   typename array_analysis::non_const_value_type>::value);
 
  public:
   using specialize = void;  // No specialization
@@ -3896,7 +3894,7 @@ class ViewMapping<
 
   template <class MemoryTraits>
   struct apply {
-    static_assert(Kokkos::is_memory_traits<MemoryTraits>::value, "");
+    static_assert(Kokkos::is_memory_traits<MemoryTraits>::value);
 
     using traits_type =
         Kokkos::ViewTraits<data_type, array_layout,
