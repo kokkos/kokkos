@@ -32,7 +32,7 @@
 - Bugfix for using Kokkos from a thread of execution [\#6299](https://github.com/kokkos/kokkos/pull/6299)
 
 #### HIP:
-- New naming convention for AMD GPU: VEGA906, VEGA908, VEGA90A, NAVI1030 to AMD_GFX906, AMD_GFX908, AMD_GFX90A, AMD_GFX1030 [\#6226](https://github.com/kokkos/kokkos/pull/6266)
+- New naming convention for AMD GPU: VEGA906, VEGA908, VEGA90A, NAVI1030 to AMD_GFX906, AMD_GFX908, AMD_GFX90A, AMD_GFX1030 [\#6266](https://github.com/kokkos/kokkos/pull/6266)
 - Add initial support for gfx942: [\#6358](https://github.com/kokkos/kokkos/pull/6358)
 - Improve reduction performance [\#6229](https://github.com/kokkos/kokkos/pull/6229)
 - Deprecate `HIP(hipStream_t,bool)` constructor [\#6401](https://github.com/kokkos/kokkos/pull/6401)
