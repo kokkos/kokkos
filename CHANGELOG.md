@@ -68,7 +68,6 @@
 ### Build System Changes 
 
 - Export `Kokkos_CXX_COMPILER_VERSION` [\#6282](https://github.com/kokkos/kokkos/pull/6282)
-- Remove calling `tribits_exclude_autotools_files()` [\#6247](https://github.com/kokkos/kokkos/pull/6247)
 - Disable default oneDPL support in Trilinos [\#6342](https://github.com/kokkos/kokkos/pull/6342)
 
 ### Incompatibilities (i.e. breaking changes)
