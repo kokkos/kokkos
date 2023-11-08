@@ -60,7 +60,6 @@
 - `KOKKOS_ASSERT`, `KOKKOS_EXPECTS`, `KOKKOS_ENSURES` are moved to header `Kokkos_Assert.hpp` [\#6445](https://github.com/kokkos/kokkos/pull/6445)
 - Add a permuted-index mode to the gups benchmark [\#6378](https://github.com/kokkos/kokkos/pull/6378)
 - Check for overflow during backend initialization [\#6159](https://github.com/kokkos/kokkos/pull/6159)
-- Reorganized headers for sorting API for readability and separation of public/impl [\#6230](https://github.com/kokkos/kokkos/pull/6230)
 - Make constraints on `Kokkos::sort` more visible [\#6234](https://github.com/kokkos/kokkos/pull/6234) and cleanup API [\#6239](https://github.com/kokkos/kokkos/pull/6239)
 - Add converting assignment to `DualView`:  [\#6474](https://github.com/kokkos/kokkos/pull/6474)
 
@@ -86,12 +85,11 @@
  - Fix for corner case in `Kokkos::Experimental::is_partitioned` algorithm [\#6257](https://github.com/kokkos/kokkos/pull/6257)
  - Fix initialization of scratch lock variables in the `Cuda` backend [\#6433](https://github.com/kokkos/kokkos/pull/6433)
  - Fixes for `Kokkos::Array` [\#6372](https://github.com/kokkos/kokkos/pull/6372)
- - Fixes for LLVM-Clacc for OpenACC [\#6240](https://github.com/kokkos/kokkos/pull/6240) and [\#6250](https://github.com/kokkos/kokkos/pull/6250)
  - Fixed symlink configure issue for Windows [\#6241](https://github.com/kokkos/kokkos/pull/6241)
  - OpenMPTarget init-join fix [\#6444](https://github.com/kokkos/kokkos/pull/6444)
  - Fix atomic operations bug for Min and Max [\#6435](https://github.com/kokkos/kokkos/pull/6435)
  - Fix implementation for `cyl_bessel_i0` [\#6484](https://github.com/kokkos/kokkos/pull/6484)
- - Fix various NVCC warnings in `BinSort`, `algorithms` tests, `Array`, `BitManipulation`, and `MathematicalFunctions` tests [\#6483](https://github.com/kokkos/kokkos/pull/6483)
+ - Fix various NVCC warnings in `BinSort`, `Array`, and bit manipulation function templates [\#6483](https://github.com/kokkos/kokkos/pull/6483)
 
 ## [4.1.00](https://github.com/kokkos/kokkos/tree/4.1.00) (2023-06-16)
 [Full Changelog](https://github.com/kokkos/kokkos/compare/4.0.01...4.1.00)
