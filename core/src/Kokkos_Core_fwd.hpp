@@ -26,13 +26,9 @@
 // and compiler environment then sets a collection of #define macros.
 
 #include <Kokkos_Macros.hpp>
+#include <Kokkos_Printf.hpp>
 #include <impl/Kokkos_Error.hpp>
-#include <impl/Kokkos_Printf.hpp>
 #include <impl/Kokkos_Utilities.hpp>
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-#include <Kokkos_MasterLock.hpp>
-#endif
 
 //----------------------------------------------------------------------------
 // Have assumed a 64-bit build (8-byte pointers) throughout the code base.
@@ -75,9 +71,6 @@ template <class ExecutionSpace, class MemorySpace>
 struct Device;
 
 // forward declare here so that backend initializer calls can use it.
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-struct InitArguments;
-#endif
 class InitializationSettings;
 
 }  // namespace Kokkos

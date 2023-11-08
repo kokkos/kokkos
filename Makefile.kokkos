@@ -1,7 +1,7 @@
 # Default settings common options.
 
 KOKKOS_VERSION_MAJOR = 4
-KOKKOS_VERSION_MINOR = 1
+KOKKOS_VERSION_MINOR = 2
 KOKKOS_VERSION_PATCH = 99
 KOKKOS_VERSION = $(shell echo $(KOKKOS_VERSION_MAJOR)*10000+$(KOKKOS_VERSION_MINOR)*100+$(KOKKOS_VERSION_PATCH) | bc)
 
@@ -685,10 +685,6 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
     ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
       tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_CUDA_CONSTEXPR")
     endif
-  endif
-
-  ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_IMPL_CUDA_CLANG_WORKAROUND")
   endif
 
   ifeq ($(KOKKOS_INTERNAL_CUDA_DISABLE_MALLOC_ASYNC), 0)

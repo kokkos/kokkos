@@ -21,7 +21,7 @@
 #include <Kokkos_Macros.hpp>
 
 #include <Kokkos_Atomic.hpp>
-#include <impl/Kokkos_Spinwait.hpp>
+#include <Threads/Kokkos_Threads_Spinwait.hpp>
 #include <impl/Kokkos_BitOps.hpp>
 
 #include <thread>
@@ -106,6 +106,16 @@ void host_thread_yield(const uint32_t i, const WaitMode mode) {
   }
 
 #endif /* defined( KOKKOS_ENABLE_ASM ) */
+}
+
+void spinwait_while_equal(ThreadState const volatile& flag,
+                          ThreadState const value) {
+  Kokkos::store_fence();
+  uint32_t i = 0;
+  while (value == flag) {
+    host_thread_yield(++i, WaitMode::ACTIVE);
+  }
+  Kokkos::load_fence();
 }
 
 }  // namespace Impl

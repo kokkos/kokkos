@@ -39,15 +39,6 @@ static_assert(false,
 /*--------------------------------------------------------------------------*/
 
 namespace Kokkos {
-namespace Impl {
-class ThreadsExec;
-enum class fence_is_static { yes, no };
-}  // namespace Impl
-}  // namespace Kokkos
-
-/*--------------------------------------------------------------------------*/
-
-namespace Kokkos {
 
 /** \brief  Execution space for a pool of C++11 threads on a CPU. */
 class Threads {

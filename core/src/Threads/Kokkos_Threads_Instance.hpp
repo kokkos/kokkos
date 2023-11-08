@@ -14,8 +14,8 @@
 //
 //@HEADER
 
-#ifndef KOKKOS_THREADSEXEC_HPP
-#define KOKKOS_THREADSEXEC_HPP
+#ifndef KOKKOS_THREADS_INSTANCE_HPP
+#define KOKKOS_THREADS_INSTANCE_HPP
 
 #include <Kokkos_Macros.hpp>
 
@@ -23,41 +23,25 @@
 #include <ostream>
 #include <utility>
 
-#include <impl/Kokkos_Spinwait.hpp>
-
 #include <Kokkos_Atomic.hpp>
 #include <Kokkos_Pair.hpp>
 
 #include <impl/Kokkos_ConcurrentBitset.hpp>
 #include <Threads/Kokkos_Threads.hpp>
+#include <Threads/Kokkos_Threads_Spinwait.hpp>
+#include <Threads/Kokkos_Threads_State.hpp>
 
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
 namespace Impl {
-class ThreadsExec {
+class ThreadsInternal {
  public:
   // Fan array has log_2(NT) reduction threads plus 2 scan threads
   // Currently limited to 16k threads.
-  enum { MAX_FAN_COUNT = 16 };
-  enum { MAX_THREAD_COUNT = 1 << (MAX_FAN_COUNT - 2) };
-  enum { VECTOR_LENGTH = 8 };
-
-  /** \brief States of a worker thread */
-  enum {
-    Terminating  ///<  Termination in progress
-    ,
-    Inactive  ///<  Exists, waiting for work
-    ,
-    Active  ///<  Exists, performing work
-    ,
-    Rendezvous  ///<  Exists, waiting in a barrier or reduce
-
-    ,
-    ScanCompleted,
-    ScanAvailable,
-    ReductionAvailable
-  };
+  static constexpr int MAX_FAN_COUNT    = 16;
+  static constexpr int MAX_THREAD_COUNT = 1 << (MAX_FAN_COUNT - 2);
+  static constexpr int VECTOR_LENGTH    = 8;
 
  private:
   friend class Kokkos::Threads;
@@ -67,18 +51,16 @@ class ThreadsExec {
   // the threads that need them.
   // For a simple reduction the thread location is arbitrary.
 
-  ThreadsExec *const *m_pool_base;  ///< Base for pool fan-in
+  ThreadsInternal *const *m_pool_base;  ///< Base for pool fan-in
 
   void *m_scratch;
   int m_scratch_reduce_end;
   size_t m_scratch_thread_end;
-  int m_numa_rank;
-  int m_numa_core_rank;
   int m_pool_rank;
   int m_pool_rank_rev;
   int m_pool_size;
   int m_pool_fan_size;
-  int volatile m_pool_state;  ///< State for global synchronizations
+  ThreadState volatile m_pool_state;  ///< State for global synchronizations
 
   // Members for dynamic scheduling
   // Which thread am I stealing from currently
@@ -93,41 +75,36 @@ class ThreadsExec {
 
   static void global_lock();
   static void global_unlock();
-  static void spawn();
 
-  static void first_touch_allocate_thread_private_scratch(ThreadsExec &,
+  static void first_touch_allocate_thread_private_scratch(ThreadsInternal &,
                                                           const void *);
-  static void execute_sleep(ThreadsExec &, const void *);
 
-  ThreadsExec(const ThreadsExec &);
-  ThreadsExec &operator=(const ThreadsExec &);
+  ThreadsInternal(const ThreadsInternal &);
+  ThreadsInternal &operator=(const ThreadsInternal &);
 
   static void execute_resize_scratch_in_serial();
 
  public:
   KOKKOS_INLINE_FUNCTION int pool_size() const { return m_pool_size; }
   KOKKOS_INLINE_FUNCTION int pool_rank() const { return m_pool_rank; }
-  KOKKOS_INLINE_FUNCTION int numa_rank() const { return m_numa_rank; }
-  KOKKOS_INLINE_FUNCTION int numa_core_rank() const { return m_numa_core_rank; }
   inline long team_work_index() const { return m_team_work_index; }
 
-  static int get_thread_count();
-  static ThreadsExec *get_thread(const int init_thread_rank);
+  static ThreadsInternal *get_thread(const int init_thread_rank);
 
   inline void *reduce_memory() const { return m_scratch; }
   KOKKOS_INLINE_FUNCTION void *scratch_memory() const {
     return reinterpret_cast<unsigned char *>(m_scratch) + m_scratch_reduce_end;
   }
 
-  KOKKOS_INLINE_FUNCTION int volatile &state() { return m_pool_state; }
-  KOKKOS_INLINE_FUNCTION ThreadsExec *const *pool_base() const {
+  KOKKOS_INLINE_FUNCTION ThreadState volatile &state() { return m_pool_state; }
+  KOKKOS_INLINE_FUNCTION ThreadsInternal *const *pool_base() const {
     return m_pool_base;
   }
 
   static void driver(void);
 
-  ~ThreadsExec();
-  ThreadsExec();
+  ~ThreadsInternal();
+  ThreadsInternal();
 
   static void *resize_scratch(size_t reduce_size, size_t thread_size);
 
@@ -143,14 +120,7 @@ class ThreadsExec {
 
   static void finalize();
 
-  /* Given a requested team size, return valid team size */
-  static unsigned team_size_valid(unsigned);
-
   static void print_configuration(std::ostream &, const bool detail = false);
-
-  //------------------------------------
-
-  static void wait_yield(volatile int &, const int);
 
   //------------------------------------
   // All-thread functions:
@@ -166,14 +136,14 @@ class ThreadsExec {
     // Fan-in reduction with highest ranking thread as the root
     for (int i = 0; i < m_pool_fan_size; ++i) {
       // Wait: Active -> Rendezvous
-      Impl::spinwait_while_equal<int>(
-          m_pool_base[rev_rank + (1 << i)]->m_pool_state, ThreadsExec::Active);
+      spinwait_while_equal(m_pool_base[rev_rank + (1 << i)]->m_pool_state,
+                           ThreadState::Active);
     }
 
     if (rev_rank) {
-      m_pool_state = ThreadsExec::Rendezvous;
+      m_pool_state = ThreadState::Rendezvous;
       // Wait: Rendezvous -> Active
-      Impl::spinwait_while_equal<int>(m_pool_state, ThreadsExec::Rendezvous);
+      spinwait_while_equal(m_pool_state, ThreadState::Rendezvous);
     } else {
       // Root thread does the reduction and broadcast
 
@@ -191,7 +161,7 @@ class ThreadsExec {
       memory_fence();
 
       for (int rank = 0; rank < m_pool_size; ++rank) {
-        get_thread(rank)->m_pool_state = ThreadsExec::Active;
+        get_thread(rank)->m_pool_state = ThreadState::Active;
       }
     }
 
@@ -207,21 +177,21 @@ class ThreadsExec {
     // Fan-in reduction with highest ranking thread as the root
     for (int i = 0; i < m_pool_fan_size; ++i) {
       // Wait: Active -> Rendezvous
-      Impl::spinwait_while_equal<int>(
-          m_pool_base[rev_rank + (1 << i)]->m_pool_state, ThreadsExec::Active);
+      spinwait_while_equal(m_pool_base[rev_rank + (1 << i)]->m_pool_state,
+                           ThreadState::Active);
     }
 
     if (rev_rank) {
-      m_pool_state = ThreadsExec::Rendezvous;
+      m_pool_state = ThreadState::Rendezvous;
       // Wait: Rendezvous -> Active
-      Impl::spinwait_while_equal<int>(m_pool_state, ThreadsExec::Rendezvous);
+      spinwait_while_equal(m_pool_state, ThreadState::Rendezvous);
     } else {
       // Root thread does the reduction and broadcast
 
       memory_fence();
 
       for (int rank = 0; rank < m_pool_size; ++rank) {
-        get_thread(rank)->m_pool_state = ThreadsExec::Active;
+        get_thread(rank)->m_pool_state = ThreadState::Active;
       }
     }
   }
@@ -234,9 +204,9 @@ class ThreadsExec {
     const int rev_rank = m_pool_size - (m_pool_rank + 1);
 
     for (int i = 0; i < m_pool_fan_size; ++i) {
-      ThreadsExec &fan = *m_pool_base[rev_rank + (1 << i)];
+      ThreadsInternal &fan = *m_pool_base[rev_rank + (1 << i)];
 
-      Impl::spinwait_while_equal<int>(fan.m_pool_state, ThreadsExec::Active);
+      spinwait_while_equal(fan.m_pool_state, ThreadState::Active);
 
       f.join(
           reinterpret_cast<typename FunctorType::value_type *>(reduce_memory()),
@@ -265,8 +235,8 @@ class ThreadsExec {
     const int rev_rank = m_pool_size - (m_pool_rank + 1);
 
     for (int i = 0; i < m_pool_fan_size; ++i) {
-      Impl::spinwait_while_equal<int>(
-          m_pool_base[rev_rank + (1 << i)]->m_pool_state, ThreadsExec::Active);
+      spinwait_while_equal(m_pool_base[rev_rank + (1 << i)]->m_pool_state,
+                           ThreadState::Active);
     }
   }
 
@@ -289,10 +259,10 @@ class ThreadsExec {
     //--------------------------------
     // Fan-in reduction with highest ranking thread as the root
     for (int i = 0; i < m_pool_fan_size; ++i) {
-      ThreadsExec &fan = *m_pool_base[rev_rank + (1 << i)];
+      ThreadsInternal &fan = *m_pool_base[rev_rank + (1 << i)];
 
       // Wait: Active -> ReductionAvailable (or ScanAvailable)
-      Impl::spinwait_while_equal<int>(fan.m_pool_state, ThreadsExec::Active);
+      spinwait_while_equal(fan.m_pool_state, ThreadState::Active);
       f.join(work_value, fan.reduce_memory());
     }
 
@@ -303,39 +273,37 @@ class ThreadsExec {
 
     if (rev_rank) {
       // Set: Active -> ReductionAvailable
-      m_pool_state = ThreadsExec::ReductionAvailable;
+      m_pool_state = ThreadState::ReductionAvailable;
 
       // Wait for contributing threads' scan value to be available.
       if ((1 << m_pool_fan_size) < (m_pool_rank + 1)) {
-        ThreadsExec &th = *m_pool_base[rev_rank + (1 << m_pool_fan_size)];
+        ThreadsInternal &th = *m_pool_base[rev_rank + (1 << m_pool_fan_size)];
 
         // Wait: Active             -> ReductionAvailable
         // Wait: ReductionAvailable -> ScanAvailable
-        Impl::spinwait_while_equal<int>(th.m_pool_state, ThreadsExec::Active);
-        Impl::spinwait_while_equal<int>(th.m_pool_state,
-                                        ThreadsExec::ReductionAvailable);
+        spinwait_while_equal(th.m_pool_state, ThreadState::Active);
+        spinwait_while_equal(th.m_pool_state, ThreadState::ReductionAvailable);
 
         f.join(work_value + count, ((scalar_type *)th.reduce_memory()) + count);
       }
 
       // This thread has completed inclusive scan
       // Set: ReductionAvailable -> ScanAvailable
-      m_pool_state = ThreadsExec::ScanAvailable;
+      m_pool_state = ThreadState::ScanAvailable;
 
       // Wait for all threads to complete inclusive scan
       // Wait: ScanAvailable -> Rendezvous
-      Impl::spinwait_while_equal<int>(m_pool_state, ThreadsExec::ScanAvailable);
+      spinwait_while_equal(m_pool_state, ThreadState::ScanAvailable);
     }
 
     //--------------------------------
 
     for (int i = 0; i < m_pool_fan_size; ++i) {
-      ThreadsExec &fan = *m_pool_base[rev_rank + (1 << i)];
+      ThreadsInternal &fan = *m_pool_base[rev_rank + (1 << i)];
       // Wait: ReductionAvailable -> ScanAvailable
-      Impl::spinwait_while_equal<int>(fan.m_pool_state,
-                                      ThreadsExec::ReductionAvailable);
+      spinwait_while_equal(fan.m_pool_state, ThreadState::ReductionAvailable);
       // Set: ScanAvailable -> Rendezvous
-      fan.m_pool_state = ThreadsExec::Rendezvous;
+      fan.m_pool_state = ThreadState::Rendezvous;
     }
 
     // All threads have completed the inclusive scan.
@@ -346,7 +314,7 @@ class ThreadsExec {
     if ((rev_rank + 1) < m_pool_size) {
       // Exclusive scan: copy the previous thread's inclusive scan value
 
-      ThreadsExec &th = *m_pool_base[rev_rank + 1];  // Not the root thread
+      ThreadsInternal &th = *m_pool_base[rev_rank + 1];  // Not the root thread
 
       const scalar_type *const src_value =
           ((scalar_type *)th.reduce_memory()) + count;
@@ -362,19 +330,18 @@ class ThreadsExec {
     // Wait for all threads to copy previous thread's inclusive scan value
     // Wait for all threads: Rendezvous -> ScanCompleted
     for (int i = 0; i < m_pool_fan_size; ++i) {
-      Impl::spinwait_while_equal<int>(
-          m_pool_base[rev_rank + (1 << i)]->m_pool_state,
-          ThreadsExec::Rendezvous);
+      spinwait_while_equal(m_pool_base[rev_rank + (1 << i)]->m_pool_state,
+                           ThreadState::Rendezvous);
     }
     if (rev_rank) {
       // Set: ScanAvailable -> ScanCompleted
-      m_pool_state = ThreadsExec::ScanCompleted;
+      m_pool_state = ThreadState::ScanCompleted;
       // Wait: ScanCompleted -> Active
-      Impl::spinwait_while_equal<int>(m_pool_state, ThreadsExec::ScanCompleted);
+      spinwait_while_equal(m_pool_state, ThreadState::ScanCompleted);
     }
     // Set: ScanCompleted -> Active
     for (int i = 0; i < m_pool_fan_size; ++i) {
-      m_pool_base[rev_rank + (1 << i)]->m_pool_state = ThreadsExec::Active;
+      m_pool_base[rev_rank + (1 << i)]->m_pool_state = ThreadState::Active;
     }
   }
 
@@ -391,8 +358,8 @@ class ThreadsExec {
     // Fan-in reduction with highest ranking thread as the root
     for (int i = 0; i < m_pool_fan_size; ++i) {
       // Wait: Active -> Rendezvous
-      Impl::spinwait_while_equal<int>(
-          m_pool_base[rev_rank + (1 << i)]->m_pool_state, ThreadsExec::Active);
+      spinwait_while_equal(m_pool_base[rev_rank + (1 << i)]->m_pool_state,
+                           ThreadState::Active);
     }
 
     for (unsigned i = 0; i < count; ++i) {
@@ -400,9 +367,9 @@ class ThreadsExec {
     }
 
     if (rev_rank) {
-      m_pool_state = ThreadsExec::Rendezvous;
+      m_pool_state = ThreadState::Rendezvous;
       // Wait: Rendezvous -> Active
-      Impl::spinwait_while_equal<int>(m_pool_state, ThreadsExec::Rendezvous);
+      spinwait_while_equal(m_pool_state, ThreadState::Rendezvous);
     } else {
       // Root thread does the thread-scan before releasing threads
 
@@ -424,7 +391,7 @@ class ThreadsExec {
     }
 
     for (int i = 0; i < m_pool_fan_size; ++i) {
-      m_pool_base[rev_rank + (1 << i)]->m_pool_state = ThreadsExec::Active;
+      m_pool_base[rev_rank + (1 << i)]->m_pool_state = ThreadState::Active;
     }
   }
 
@@ -433,18 +400,12 @@ class ThreadsExec {
    *          complete and release the Threads device.
    *          Acquire the Threads device and start this functor.
    */
-  static void start(void (*)(ThreadsExec &, const void *), const void *);
+  static void start(void (*)(ThreadsInternal &, const void *), const void *);
 
   static int in_parallel();
   static void fence();
   static void fence(const std::string &);
-  static void internal_fence(
-      Impl::fence_is_static is_static = Impl::fence_is_static::yes);
-  static void internal_fence(
-      const std::string &,
-      Impl::fence_is_static is_static = Impl::fence_is_static::yes);
-  static bool sleep();
-  static bool wake();
+  static void internal_fence();
 
   /* Dynamic Scheduling related functionality */
   // Initialize the work range for this thread
@@ -583,30 +544,36 @@ class ThreadsExec {
 
 namespace Kokkos {
 
-inline int Threads::in_parallel() { return Impl::ThreadsExec::in_parallel(); }
+inline int Threads::in_parallel() {
+  return Impl::ThreadsInternal::in_parallel();
+}
 
 inline int Threads::impl_is_initialized() {
-  return Impl::ThreadsExec::is_initialized();
+  return Impl::ThreadsInternal::is_initialized();
 }
 
 inline void Threads::impl_initialize(InitializationSettings const &settings) {
-  Impl::ThreadsExec::initialize(
+  Impl::ThreadsInternal::initialize(
       settings.has_num_threads() ? settings.get_num_threads() : -1);
 }
 
-inline void Threads::impl_finalize() { Impl::ThreadsExec::finalize(); }
+inline void Threads::impl_finalize() { Impl::ThreadsInternal::finalize(); }
 
 inline void Threads::print_configuration(std::ostream &os, bool verbose) const {
   os << "Host Parallel Execution Space:\n";
   os << "  KOKKOS_ENABLE_THREADS: yes\n";
 
   os << "\nThreads Runtime Configuration:\n";
-  Impl::ThreadsExec::print_configuration(os, verbose);
+  Impl::ThreadsInternal::print_configuration(os, verbose);
 }
 
 inline void Threads::impl_static_fence(const std::string &name) {
-  Impl::ThreadsExec::internal_fence(name, Impl::fence_is_static::yes);
+  Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Threads>(
+      name,
+      Kokkos::Tools::Experimental::SpecialSynchronizationCases::
+          GlobalDeviceSynchronization,
+      Impl::ThreadsInternal::internal_fence);
 }
 } /* namespace Kokkos */
 
-#endif /* #define KOKKOS_THREADSEXEC_HPP */
+#endif

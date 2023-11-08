@@ -218,6 +218,38 @@ template <class T>
   return a;
 }
 
+template <typename T>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION auto floor(
+    Experimental::simd<T, Experimental::simd_abi::scalar> const& a) {
+  using data_type = std::conditional_t<std::is_floating_point_v<T>, T, double>;
+  return Experimental::simd<data_type, Experimental::simd_abi::scalar>(
+      Kokkos::floor(static_cast<data_type>(a[0])));
+}
+
+template <typename T>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION auto ceil(
+    Experimental::simd<T, Experimental::simd_abi::scalar> const& a) {
+  using data_type = std::conditional_t<std::is_floating_point_v<T>, T, double>;
+  return Experimental::simd<data_type, Experimental::simd_abi::scalar>(
+      Kokkos::ceil(static_cast<data_type>(a[0])));
+}
+
+template <typename T>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION auto round(
+    Experimental::simd<T, Experimental::simd_abi::scalar> const& a) {
+  using data_type = std::conditional_t<std::is_floating_point_v<T>, T, double>;
+  return Experimental::simd<data_type, Experimental::simd_abi::scalar>(
+      Experimental::round_half_to_nearest_even(static_cast<data_type>(a[0])));
+}
+
+template <typename T>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION auto trunc(
+    Experimental::simd<T, Experimental::simd_abi::scalar> const& a) {
+  using data_type = std::conditional_t<std::is_floating_point_v<T>, T, double>;
+  return Experimental::simd<data_type, Experimental::simd_abi::scalar>(
+      Kokkos::trunc(static_cast<data_type>(a[0])));
+}
+
 template <class T>
 [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
     Experimental::simd<T, Experimental::simd_abi::scalar>
@@ -283,13 +315,13 @@ class const_where_expression<simd_mask<T, simd_abi::scalar>,
       mem[static_cast<Integral>(index)] = static_cast<T>(m_value);
   }
 
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type const&
-  impl_get_value() const {
+  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION value_type const& impl_get_value()
+      const {
     return m_value;
   }
 
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type const&
-  impl_get_mask() const {
+  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION mask_type const& impl_get_mask()
+      const {
     return m_mask;
   }
 };

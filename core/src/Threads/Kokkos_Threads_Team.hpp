@@ -22,10 +22,11 @@
 #include <cstdio>
 
 #include <utility>
-#include <impl/Kokkos_Spinwait.hpp>
 #include <impl/Kokkos_HostThreadTeam.hpp>
 
 #include <Kokkos_Atomic.hpp>
+#include <Threads/Kokkos_Threads_Spinwait.hpp>
+#include <Threads/Kokkos_Threads_State.hpp>
 
 //----------------------------------------------------------------------------
 
@@ -50,8 +51,8 @@ class ThreadsExecTeamMember {
 
  private:
   using space = execution_space::scratch_memory_space;
-  ThreadsExec* const m_exec;
-  ThreadsExec* const* m_team_base;  ///< Base for team fan-in
+  ThreadsInternal* const m_instance;
+  ThreadsInternal* const* m_team_base;  ///< Base for team fan-in
   space m_team_shared;
   size_t m_team_shared_size;
   int m_team_size;
@@ -84,14 +85,13 @@ class ThreadsExecTeamMember {
     for (n = 1;
          (!(m_team_rank_rev & n)) && ((j = m_team_rank_rev + n) < m_team_size);
          n <<= 1) {
-      Impl::spinwait_while_equal<int>(m_team_base[j]->state(),
-                                      ThreadsExec::Active);
+      spinwait_while_equal(m_team_base[j]->state(), ThreadState::Active);
     }
 
     // If not root then wait for release
     if (m_team_rank_rev) {
-      m_exec->state() = ThreadsExec::Rendezvous;
-      Impl::spinwait_while_equal<int>(m_exec->state(), ThreadsExec::Rendezvous);
+      m_instance->state() = ThreadState::Rendezvous;
+      spinwait_while_equal(m_instance->state(), ThreadState::Rendezvous);
     }
 
     return !m_team_rank_rev;
@@ -102,7 +102,7 @@ class ThreadsExecTeamMember {
     for (n = 1;
          (!(m_team_rank_rev & n)) && ((j = m_team_rank_rev + n) < m_team_size);
          n <<= 1) {
-      m_team_base[j]->state() = ThreadsExec::Active;
+      m_team_base[j]->state() = ThreadState::Active;
     }
   }
 
@@ -188,10 +188,10 @@ class ThreadsExecTeamMember {
         using type =
             typename if_c<sizeof(Type) < TEAM_REDUCE_SIZE, Type, void>::type;
 
-        if (nullptr == m_exec) return value;
+        if (m_instance == nullptr) return value;
 
         if (team_rank() != team_size() - 1) *
-            ((volatile type*)m_exec->scratch_memory()) = value;
+            ((volatile type*)m_instance->scratch_memory()) = value;
 
         memory_fence();
 
@@ -229,9 +229,9 @@ class ThreadsExecTeamMember {
         using type = typename if_c<sizeof(value_type) < TEAM_REDUCE_SIZE,
                                    value_type, void>::type;
 
-        if (nullptr == m_exec) return;
+        if (m_instance == nullptr) return;
 
-        type* const local_value = ((type*)m_exec->scratch_memory());
+        type* const local_value = ((type*)m_instance->scratch_memory());
 
         // Set this thread's contribution
         if (team_rank() != team_size() - 1) { *local_value = contribution; }
@@ -285,9 +285,9 @@ class ThreadsExecTeamMember {
         using type = typename if_c<sizeof(ArgType) < TEAM_REDUCE_SIZE, ArgType,
                                    void>::type;
 
-        if (nullptr == m_exec) return type(0);
+        if (m_instance == nullptr) return type(0);
 
-        volatile type* const work_value = ((type*)m_exec->scratch_memory());
+        volatile type* const work_value = ((type*)m_instance->scratch_memory());
 
         *work_value = value;
 
@@ -342,10 +342,10 @@ class ThreadsExecTeamMember {
 
   template <class... Properties>
   ThreadsExecTeamMember(
-      Impl::ThreadsExec* exec,
+      Impl::ThreadsInternal* instance,
       const TeamPolicyInternal<Kokkos::Threads, Properties...>& team,
       const size_t shared_size)
-      : m_exec(exec),
+      : m_instance(instance),
         m_team_base(nullptr),
         m_team_shared(nullptr, 0),
         m_team_shared_size(shared_size),
@@ -361,9 +361,11 @@ class ThreadsExecTeamMember {
     if (team.league_size()) {
       // Execution is using device-team interface:
 
-      const int pool_rank_rev = m_exec->pool_size() - (m_exec->pool_rank() + 1);
+      const int pool_rank_rev =
+          m_instance->pool_size() - (m_instance->pool_rank() + 1);
       const int team_rank_rev = pool_rank_rev % team.team_alloc();
-      const size_t pool_league_size = m_exec->pool_size() / team.team_alloc();
+      const size_t pool_league_size =
+          m_instance->pool_size() / team.team_alloc();
       const size_t pool_league_rank_rev = pool_rank_rev / team.team_alloc();
       if (pool_league_rank_rev >= pool_league_size) {
         m_invalid_thread = 1;
@@ -372,7 +374,7 @@ class ThreadsExecTeamMember {
       const size_t pool_league_rank =
           pool_league_size - (pool_league_rank_rev + 1);
 
-      const int pool_num_teams = m_exec->pool_size() / team.team_alloc();
+      const int pool_num_teams = m_instance->pool_size() / team.team_alloc();
       const int chunk_size =
           team.chunk_size() > 0 ? team.chunk_size() : team.team_iter();
       const int chunks_per_team =
@@ -387,8 +389,8 @@ class ThreadsExecTeamMember {
 
       if ((team.team_alloc() > size_t(m_team_size))
               ? (team_rank_rev >= m_team_size)
-              : (m_exec->pool_size() - pool_num_teams * m_team_size >
-                 m_exec->pool_rank()))
+              : (m_instance->pool_size() - pool_num_teams * m_team_size >
+                 m_instance->pool_rank()))
         m_invalid_thread = 1;
       else
         m_invalid_thread = 0;
@@ -398,7 +400,7 @@ class ThreadsExecTeamMember {
 
       if (team_rank_rev < team.team_size() && !m_invalid_thread) {
         m_team_base =
-            m_exec->pool_base() + team.team_alloc() * pool_league_rank_rev;
+            m_instance->pool_base() + team.team_alloc() * pool_league_rank_rev;
         m_team_size     = team.team_size();
         m_team_rank     = team.team_size() - (team_rank_rev + 1);
         m_team_rank_rev = team_rank_rev;
@@ -413,13 +415,13 @@ class ThreadsExecTeamMember {
       }
 
       if ((m_team_rank_rev == 0) && (m_invalid_thread == 0)) {
-        m_exec->set_work_range(m_league_rank, m_league_end, m_chunk_size);
-        m_exec->reset_steal_target(m_team_size);
+        m_instance->set_work_range(m_league_rank, m_league_end, m_chunk_size);
+        m_instance->reset_steal_target(m_team_size);
       }
       if (std::is_same<typename TeamPolicyInternal<
                            Kokkos::Threads, Properties...>::schedule_type::type,
                        Kokkos::Dynamic>::value) {
-        m_exec->barrier();
+        m_instance->barrier();
       }
     } else {
       m_invalid_thread = 1;
@@ -427,7 +429,7 @@ class ThreadsExecTeamMember {
   }
 
   ThreadsExecTeamMember()
-      : m_exec(nullptr),
+      : m_instance(nullptr),
         m_team_base(nullptr),
         m_team_shared(nullptr, 0),
         m_team_shared_size(0),
@@ -442,8 +444,8 @@ class ThreadsExecTeamMember {
         m_invalid_thread(0),
         m_team_alloc(0) {}
 
-  inline ThreadsExec& threads_exec_team_base() const {
-    return m_team_base ? **m_team_base : *m_exec;
+  inline ThreadsInternal& threads_exec_team_base() const {
+    return m_team_base ? **m_team_base : *m_instance;
   }
 
   bool valid_static() const { return m_league_rank < m_league_end; }
