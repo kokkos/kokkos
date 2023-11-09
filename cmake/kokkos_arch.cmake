@@ -595,8 +595,9 @@ IF(KOKKOS_ENABLE_SYCL)
   INCLUDE(CheckCXXSymbolExists)
   CHECK_CXX_SYMBOL_EXISTS(SYCL_EXT_ONEAPI_DEVICE_GLOBAL "sycl/sycl.hpp" KOKKOS_IMPL_HAVE_SYCL_EXT_ONEAPI_DEVICE_GLOBAL)
   IF (KOKKOS_IMPL_HAVE_SYCL_EXT_ONEAPI_DEVICE_GLOBAL)
-    # Use the non-separable compilation implementation to support shared libraries as well.
     SET(KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED ON)
+    # Use the non-separable compilation implementation to support shared libraries as well.
+    COMPILER_SPECIFIC_FLAGS(DEFAULT -DDESUL_SYCL_DEVICE_GLOBAL_SUPPORTED)
   ELSEIF(NOT BUILD_SHARED_LIBS)
     INCLUDE(CheckCXXSourceCompiles)
     CHECK_CXX_SOURCE_COMPILES("
@@ -619,7 +620,7 @@ IF(KOKKOS_ENABLE_SYCL)
     IF(KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED)
       # Only the separable compilation implementation is supported.
       COMPILER_SPECIFIC_FLAGS(
-        DEFAULT -fsycl-device-code-split=off
+        DEFAULT -fsycl-device-code-split=off -DDESUL_SYCL_DEVICE_GLOBAL_SUPPORTED
       )
     ENDIF()
   ENDIF()
