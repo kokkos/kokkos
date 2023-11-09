@@ -36,22 +36,6 @@
 namespace Kokkos {
 namespace Impl {
 
-template <typename IndexType>
-void admissible_iteration_count_else_throw(IndexType nwork, int blockSize,
-                                           const std::string& patternName,
-                                           Impl::CudaInternal* instance) {
-  const int max_grid_size        = instance->m_deviceProp.maxGridSize[0];
-  const std::size_t max_num_iter = (std::size_t)max_grid_size * blockSize;
-
-  if ((std::size_t)nwork > max_num_iter) {
-    const std::string msg =
-        patternName + ": the target number of iterations " +
-        std::to_string(nwork) + " > the maximum number of iterations " +
-        std::to_string(max_num_iter) + " currently allowed on CUDA.";
-    Impl::throw_runtime_exception(msg);
-  }
-}
-
 template <class FunctorType, class... Traits>
 class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
  public:
@@ -115,6 +99,9 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
         std::min(typename Policy::index_type((nwork + block.y - 1) / block.y),
                  typename Policy::index_type(maxGridSizeX)),
         1, 1);
+    std::cout << block.x << " " << block.y << " " << block.z << '\n';
+    std::cout << grid.x << " " << grid.y << " " << grid.z << '\n';
+
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
     if (Kokkos::Impl::CudaInternal::cuda_use_serial_execution()) {
       block = dim3(1, 1, 1);
@@ -324,12 +311,9 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
       // REQUIRED ( 1 , N , 1 )
       dim3 block(1, block_size, 1);
       // Required grid.x <= block.y
-      dim3 grid(std::min(int(block.y), int((nwork + block.y - 1) / block.y)), 1,
-                1);
-
-      auto cuda_instance = m_policy.space().impl_internal_space_instance();
-      admissible_iteration_count_else_throw(nwork, block_size,
-                                            "parallel_reduce", cuda_instance);
+      dim3 grid(std::min(index_type(block.y),
+                         index_type((nwork + block.y - 1) / block.y)),
+                1, 1);
 
       // TODO @graph We need to effectively insert this in to the graph
       const int shmem =
@@ -350,7 +334,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
 
       CudaParallelLaunch<ParallelReduce, LaunchBounds>(
           *this, grid, block, shmem,
-          cuda_instance);  // copy to device and execute
+          m_policy.space()
+              .impl_internal_space_instance());  // copy to device and execute
 
       if (!m_result_ptr_device_accessible) {
         if (m_result_ptr) {
@@ -675,10 +660,6 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
       const int shmem = Analysis::value_size(m_functor_reducer.get_functor()) *
                         (block_size + 2);
 
-      auto cuda_instance = m_policy.space().impl_internal_space_instance();
-      admissible_iteration_count_else_throw(nwork, block_size, "parallel_scan",
-                                            cuda_instance);
-
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
       if (m_run_serial) {
         block = dim3(1, 1, 1);
@@ -688,14 +669,16 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
         m_final = false;
         CudaParallelLaunch<ParallelScan, LaunchBounds>(
             *this, grid, block, shmem,
-            cuda_instance);  // copy to device and execute
+            m_policy.space()
+                .impl_internal_space_instance());  // copy to device and execute
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
       }
 #endif
       m_final = true;
       CudaParallelLaunch<ParallelScan, LaunchBounds>(
           *this, grid, block, shmem,
-          cuda_instance);  // copy to device and execute
+          m_policy.space()
+              .impl_internal_space_instance());  // copy to device and execute
     }
   }
 
@@ -1001,10 +984,6 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
       dim3 block(1, block_size, 1);  // REQUIRED DIMENSIONS ( 1 , N , 1 )
       const int shmem = final_reducer.value_size() * (block_size + 2);
 
-      auto cuda_instance = m_policy.space().impl_internal_space_instance();
-      admissible_iteration_count_else_throw(nwork, block_size, "parallel_scan",
-                                            cuda_instance);
-
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
       if (m_run_serial) {
         block = dim3(1, 1, 1);
@@ -1015,12 +994,14 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
         m_final = false;
         CudaParallelLaunch<ParallelScanWithTotal, LaunchBounds>(
             *this, grid, block, shmem,
-            cuda_instance);  // copy to device and execute
+            m_policy.space()
+                .impl_internal_space_instance());  // copy to device and execute
       }
       m_final = true;
       CudaParallelLaunch<ParallelScanWithTotal, LaunchBounds>(
           *this, grid, block, shmem,
-          cuda_instance);  // copy to device and execute
+          m_policy.space()
+              .impl_internal_space_instance());  // copy to device and execute
 
       const int size = final_reducer.value_size();
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
