@@ -2949,10 +2949,7 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
 
   template <typename Tag>
   void parallel_for_implementation() {
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-    if (!space.in_parallel())
-#endif
-    {
+    if (!space.in_parallel()) {
       using PolicyType =
           Kokkos::RangePolicy<ExecSpace, Kokkos::IndexType<int64_t>, Tag>;
       PolicyType policy(space, 0, n);
@@ -2981,12 +2978,9 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
       if (Kokkos::Profiling::profileLibraryLoaded()) {
         Kokkos::Profiling::endParallelFor(kpID);
       }
-    }
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-    else {
+    } else {
       for (size_t i = 0; i < n; ++i) operator()(Tag{}, i);
     }
-#endif
   }
 
   void construct_shared_allocation() { construct_dispatch(); }
@@ -3092,10 +3086,7 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
   }
 
   void parallel_for_implementation() {
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-    if (!space.in_parallel())
-#endif
-    {
+    if (!space.in_parallel()) {
       PolicyType policy(0, n);
       uint64_t kpID = 0;
       if (Kokkos::Profiling::profileLibraryLoaded()) {
@@ -3119,12 +3110,9 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
       if (Kokkos::Profiling::profileLibraryLoaded()) {
         Kokkos::Profiling::endParallelFor(kpID);
       }
-    }
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-    else {
+    } else {
       for (size_t i = 0; i < n; ++i) operator()(i);
     }
-#endif
   }
 
   void destroy_shared_allocation() {}
