@@ -105,7 +105,15 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     const size_t shmem_size_L0 = m_policy.scratch_size(0, team_size);
     const size_t shmem_size_L1 = m_policy.scratch_size(1, team_size);
+
+    // FIXME_OPENMPTATGET - Level-0 scratch when using clang/17 and higher comes
+    // from OpenMP extensions in llvm.
+#if defined(KOKKOS_IMPL_OPENMPTARGET_LLVM_EXTENSIONS)
     OpenMPTargetExec::resize_scratch(team_size, 0, shmem_size_L1, league_size);
+#else
+    OpenMPTargetExec::resize_scratch(team_size, shmem_size_L0, shmem_size_L1,
+                                     league_size);
+#endif
 
     void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
     FunctorType a_functor(m_functor);
