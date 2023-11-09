@@ -57,7 +57,7 @@ class HIP {
   //! \name Functions that all Kokkos devices must implement.
   //@{
 
-#ifdef KOKKOS_ENABLE_DEPRECATED
+#ifdef KOKKOS_ENABLE_DEPRECATED_4
   KOKKOS_DEPRECATED KOKKOS_INLINE_FUNCTION static int in_parallel() {
 #if defined(__HIP_DEVICE_COMPILE__)
     return true;

@@ -62,7 +62,7 @@ struct TestIncrExecSpace {
     auto concurrency = ExecSpace().concurrency();
     ASSERT_GT(concurrency, 0);
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE4
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
     int in_parallel = ExecSpace::in_parallel();
     ASSERT_FALSE(in_parallel);
 #endif
