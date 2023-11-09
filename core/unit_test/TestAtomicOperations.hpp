@@ -332,7 +332,7 @@ struct DecModAtomicTest {
 };
 
 template <class Op, class T, class ExecSpace>
-bool atomic_op_test(T old_val, T update) {
+bool atomic_op_test(T old_val, T update, double relative_error_threshold = 0.) {
   Kokkos::View<T[3], ExecSpace> op_data("op_data");
   Kokkos::deep_copy(op_data, old_val);
   int result = 0;
@@ -343,70 +343,39 @@ bool atomic_op_test(T old_val, T update) {
             Op::atomic_op(&op_data(0), &op_data(1), &op_data(2), update);
         T expected_val = Op::op(old_val, update);
         Kokkos::memory_fence();
-        if (op_data(0) != expected_val) local_result += 1;
-        if (op_data(1) != expected_val) local_result += 2;
-        if (op_data(2) != expected_val) local_result += 4;
-        if (fetch_result.first != old_val) local_result += 8;
-        if (fetch_result.second != expected_val) local_result += 16;
-      },
-      result);
-  if ((result & 1) != 0)
-    printf("atomic_%s failed with type %s\n", Op::name(), typeid(T).name());
-  if ((result & 2) != 0)
-    printf("atomic_fetch_%s failed with type %s\n", Op::name(),
-           typeid(T).name());
-  if ((result & 4) != 0)
-    printf("atomic_%s_fetch failed with type %s\n", Op::name(),
-           typeid(T).name());
-  if ((result & 8) != 0)
-    printf("atomic_fetch_%s did not return old value with type %s\n",
-           Op::name(), typeid(T).name());
-  if ((result & 16) != 0)
-    printf("atomic_%s_fetch did not return updated value with type %s\n",
-           Op::name(), typeid(T).name());
-
-  return result == 0;
-}
-
-template <class T>
-constexpr T relative_error_threshold = T(1.0e-15);
-
-template <class Op, class T, class ExecSpace>
-bool atomic_op_test_rel(T old_val, T update) {
-  Kokkos::View<T[3], ExecSpace> op_data("op_data");
-  Kokkos::deep_copy(op_data, old_val);
-  int result = 0;
-  Kokkos::parallel_reduce(
-      Kokkos::RangePolicy<ExecSpace>(0, 1),
-      KOKKOS_LAMBDA(int, int& local_result) {
-        auto fetch_result =
-            Op::atomic_op(&op_data(0), &op_data(1), &op_data(2), update);
-        T expected_val = Op::op(old_val, update);
-        Kokkos::memory_fence();
-        if (expected_val == T(0)) {
-          if (fabs(op_data(0)) > relative_error_threshold<T>) local_result += 1;
-          if (fabs(op_data(1)) > relative_error_threshold<T>) local_result += 2;
-          if (fabs(op_data(2)) > relative_error_threshold<T>) local_result += 4;
-          if (fetch_result.first != old_val) local_result += 8;
-          if (fabs(fetch_result.second) > relative_error_threshold<T>)
-            local_result += 16;
+        using Kokkos::fabs;
+        if constexpr (std::is_integral_v<T>) {
+          if (op_data(0) != expected_val) local_result |= 1;
+          if (op_data(1) != expected_val) local_result |= 2;
+          if (op_data(2) != expected_val) local_result |= 4;
+          if (fetch_result.first != old_val) local_result |= 8;
+          if (fetch_result.second != expected_val) local_result |= 16;
         } else {
-          if (fabs((op_data(0) - expected_val) / expected_val) >
-              relative_error_threshold<T>)
-            local_result += 1;
-          if (fabs((op_data(1) - expected_val) / expected_val) >
-              relative_error_threshold<T>)
-            local_result += 2;
-          if (fabs((op_data(2) - expected_val) / expected_val) >
-              relative_error_threshold<T>)
-            local_result += 4;
-          if (fetch_result.first != old_val) local_result += 8;
-          if (fabs((fetch_result.second - expected_val) / expected_val) >
-              relative_error_threshold<T>)
-            local_result += 16;
+          if (expected_val == T(0)) {
+            if (fabs(op_data(0)) > relative_error_threshold) local_result |= 1;
+            if (fabs(op_data(1)) > relative_error_threshold) local_result |= 2;
+            if (fabs(op_data(2)) > relative_error_threshold) local_result |= 4;
+            if (fetch_result.first != old_val) local_result |= 8;
+            if (fabs(fetch_result.second) > relative_error_threshold)
+              local_result |= 16;
+          } else {
+            if (fabs((op_data(0) - expected_val) / expected_val) >
+                relative_error_threshold)
+              local_result |= 1;
+            if (fabs((op_data(1) - expected_val) / expected_val) >
+                relative_error_threshold)
+              local_result |= 2;
+            if (fabs((op_data(2) - expected_val) / expected_val) >
+                relative_error_threshold)
+              local_result |= 4;
+            if (fetch_result.first != old_val) local_result |= 8;
+            if (fabs((fetch_result.second - expected_val) / expected_val) >
+                relative_error_threshold)
+              local_result |= 16;
+          }
         }
       },
-      result);
+      Kokkos::LOr<int>(result));
   if ((result & 1) != 0)
     printf("atomic_%s failed with type %s\n", Op::name(), typeid(T).name());
   if ((result & 2) != 0)
@@ -509,8 +478,8 @@ bool AtomicOperationsTestNonIntegralType(int old_val_in, int update_in,
     // atomic operations. Therefore, relative errors are used to compare the
     // host results and device results.
     case 5:
-      return update != 0 ? atomic_op_test_rel<DivAtomicTest, T, ExecSpace>(
-                               old_val, update)
+      return update != 0 ? atomic_op_test<DivAtomicTest, T, ExecSpace>(
+                               old_val, update, 1.e-15)
                          : true;
 #else
     case 5:
