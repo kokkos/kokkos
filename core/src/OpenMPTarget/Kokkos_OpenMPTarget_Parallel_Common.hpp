@@ -660,7 +660,8 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     // Use scratch memory extensions to request dynamic shared memory for the
     // right compiler/architecture combination.
     KOKKOS_IMPL_OMPTARGET_PRAGMA(
-        teams num_teams(nteams) thread_limit(team_size) firstprivate(f)
+        teams num_teams(nteams) thread_limit(team_size) map(to
+                                                            : f)
             is_device_ptr(scratch_ptr)
                 KOKKOS_IMPL_OMPX_DYN_CGROUP_MEM(shmem_size_L0)) {
 #pragma omp parallel
