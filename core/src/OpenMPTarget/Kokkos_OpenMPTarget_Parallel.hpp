@@ -24,20 +24,7 @@
 
 #include <Kokkos_Atomic.hpp>
 #include "Kokkos_OpenMPTarget_Abort.hpp"
-
-// Intel architectures prefer the classical hierarchical parallelism that relies
-// on OpenMP.
-#if defined(KOKKOS_ARCH_INTEL_GPU)
-#define KOKKOS_IMPL_OPENMPTARGET_HIERARCHICAL_INTEL_GPU
-#endif
-
-// Define a macro for llvm compiler greater than version 15 and on NVIDIA and
-// AMD GPUs. This would be useful in cases where non-OpenMP standard llvm
-// extensions can be used.
-#if defined(KOKKOS_COMPILER_CLANG) && (KOKKOS_COMPILER_CLANG >= 1500) && \
-    (defined(KOKKOS_ARCH_AMD_GPU) || defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU))
-#define KOKKOS_IMPL_OPENMPTARGET_LLVM_EXTENSIONS
-#endif
+#include <OpenMPTarget/Kokkos_OpenMPTarget_Macros.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -271,7 +258,7 @@ class OpenMPTargetExecTeamMember {
 
     // Per team offset for buffer in HBM.
     const int reduce_offset =
-        m_shmem_block_index * total_shmem + TEAM_REDUCE_SIZE;
+        m_shmem_block_index * (total_shmem + TEAM_REDUCE_SIZE);
 
 #if defined(KOKKOS_IMPL_OPENMPTARGET_LLVM_EXTENSIONS)
     const int l1_offset = reduce_offset + TEAM_REDUCE_SIZE;

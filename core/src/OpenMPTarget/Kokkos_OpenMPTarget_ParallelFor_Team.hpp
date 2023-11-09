@@ -19,20 +19,9 @@
 
 #include <omp.h>
 #include <sstream>
+#include <OpenMPTarget/Kokkos_OpenMPTarget_Macros.hpp>
 #include <Kokkos_Parallel.hpp>
 #include <OpenMPTarget/Kokkos_OpenMPTarget_Parallel.hpp>
-
-#define KOKKOS_IMPL_OPENMPTARGET_PRAGMA_HELPER(x) _Pragma(#x)
-#define KOKKOS_IMPL_OMPTARGET_PRAGMA(x) \
-  KOKKOS_IMPL_OPENMPTARGET_PRAGMA_HELPER(omp target x)
-
-// Use scratch memory extensions to request dynamic shared memory for the
-// right compiler/architecture combination.
-#ifdef KOKKOS_IMPL_OPENMPTARGET_LLVM_EXTENSIONS
-#define KOKKOS_IMPL_OMPX_DYN_CGROUP_MEM(N) ompx_dyn_cgroup_mem(N)
-#else
-#define KOKKOS_IMPL_OMPX_DYN_CGROUP_MEM(N)
-#endif
 
 namespace Kokkos {
 
@@ -116,8 +105,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     const size_t shmem_size_L0 = m_policy.scratch_size(0, team_size);
     const size_t shmem_size_L1 = m_policy.scratch_size(1, team_size);
-    OpenMPTargetExec::resize_scratch(team_size, shmem_size_L0, shmem_size_L1,
-                                     league_size);
+    OpenMPTargetExec::resize_scratch(team_size, 0, shmem_size_L1, league_size);
 
     void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
     FunctorType a_functor(m_functor);
