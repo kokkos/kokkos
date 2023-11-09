@@ -99,8 +99,6 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
         std::min(typename Policy::index_type((nwork + block.y - 1) / block.y),
                  typename Policy::index_type(maxGridSizeX)),
         1, 1);
-    std::cout << block.x << " " << block.y << " " << block.z << '\n';
-    std::cout << grid.x << " " << grid.y << " " << grid.z << '\n';
 
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
     if (Kokkos::Impl::CudaInternal::cuda_use_serial_execution()) {
