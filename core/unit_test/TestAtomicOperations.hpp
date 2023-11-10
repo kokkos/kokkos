@@ -332,7 +332,8 @@ struct DecModAtomicTest {
 };
 
 template <class Op, class T, class ExecSpace>
-bool atomic_op_test(T old_val, T update, double relative_error_threshold = 0.) {
+bool atomic_op_test(T old_val, T update,
+                    [[maybe_unused]] double relative_error_threshold = 0.) {
   Kokkos::View<T[3], ExecSpace> op_data("op_data");
   Kokkos::deep_copy(op_data, old_val);
   int result = 0;
