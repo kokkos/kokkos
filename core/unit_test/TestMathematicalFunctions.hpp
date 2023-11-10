@@ -240,11 +240,25 @@ struct FloatingPointComparison {
   }
 #if defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
   KOKKOS_FUNCTION
-  KE::half_t eps(KE::half_t) const { return KE::epsilon<KE::half_t>::value; }
+  KE::half_t eps(KE::half_t) const {
+// FIXME_NVHPC compile-time error
+#ifdef KOKKOS_COMPILER_NVHPC
+    return 0.0009765625F;
+#else
+    return KE::epsilon<KE::half_t>::value;
+#endif
+  }
 #endif
 #if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
   KOKKOS_FUNCTION
-  KE::bhalf_t eps(KE::bhalf_t) const { return KE::epsilon<KE::bhalf_t>::value; }
+  KE::bhalf_t eps(KE::bhalf_t) const {
+// FIXME_NVHPC compile-time error
+#ifdef KOKKOS_COMPILER_NVHPC
+    return 0.0078125;
+#else
+    return KE::epsilon<KE::bhalf_t>::value;
+#endif
+  }
 #endif
   KOKKOS_FUNCTION
   double eps(float) const { return FLT_EPSILON; }
