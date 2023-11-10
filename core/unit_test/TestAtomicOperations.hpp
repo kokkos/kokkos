@@ -343,7 +343,7 @@ bool atomic_op_test(T old_val, T update, double relative_error_threshold = 0.) {
             Op::atomic_op(&op_data(0), &op_data(1), &op_data(2), update);
         T expected_val = Op::op(old_val, update);
         Kokkos::memory_fence();
-        using Kokkos::fabs;
+        using Kokkos::abs;
         if constexpr (std::is_integral_v<T>) {
           if (op_data(0) != expected_val) local_result |= 1;
           if (op_data(1) != expected_val) local_result |= 2;
@@ -352,24 +352,24 @@ bool atomic_op_test(T old_val, T update, double relative_error_threshold = 0.) {
           if (fetch_result.second != expected_val) local_result |= 16;
         } else {
           if (expected_val == T(0)) {
-            if (fabs(op_data(0)) > relative_error_threshold) local_result |= 1;
-            if (fabs(op_data(1)) > relative_error_threshold) local_result |= 2;
-            if (fabs(op_data(2)) > relative_error_threshold) local_result |= 4;
+            if (abs(op_data(0)) > relative_error_threshold) local_result |= 1;
+            if (abs(op_data(1)) > relative_error_threshold) local_result |= 2;
+            if (abs(op_data(2)) > relative_error_threshold) local_result |= 4;
             if (fetch_result.first != old_val) local_result |= 8;
-            if (fabs(fetch_result.second) > relative_error_threshold)
+            if (abs(fetch_result.second) > relative_error_threshold)
               local_result |= 16;
           } else {
-            if (fabs((op_data(0) - expected_val) / expected_val) >
+            if (abs((op_data(0) - expected_val) / expected_val) >
                 relative_error_threshold)
               local_result |= 1;
-            if (fabs((op_data(1) - expected_val) / expected_val) >
+            if (abs((op_data(1) - expected_val) / expected_val) >
                 relative_error_threshold)
               local_result |= 2;
-            if (fabs((op_data(2) - expected_val) / expected_val) >
+            if (abs((op_data(2) - expected_val) / expected_val) >
                 relative_error_threshold)
               local_result |= 4;
             if (fetch_result.first != old_val) local_result |= 8;
-            if (fabs((fetch_result.second - expected_val) / expected_val) >
+            if (abs((fetch_result.second - expected_val) / expected_val) >
                 relative_error_threshold)
               local_result |= 16;
           }
