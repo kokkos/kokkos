@@ -218,8 +218,10 @@ TEST(TEST_CATEGORY, numeric_traits_infinity) {
 }
 
 TEST(TEST_CATEGORY, numeric_traits_epsilon) {
+#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC 23.7 bit_comparison_type
   TestNumericTraits<TEST_EXECSPACE, Kokkos::Experimental::half_t, Epsilon>();
   TestNumericTraits<TEST_EXECSPACE, Kokkos::Experimental::bhalf_t, Epsilon>();
+#endif
   TestNumericTraits<TEST_EXECSPACE, float, Epsilon>();
   TestNumericTraits<TEST_EXECSPACE, double, Epsilon>();
   // FIXME_NVHPC long double not supported
@@ -230,9 +232,11 @@ TEST(TEST_CATEGORY, numeric_traits_epsilon) {
 }
 
 TEST(TEST_CATEGORY, numeric_traits_round_error) {
+#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC 23.7 bit_comparison_type
   TestNumericTraits<TEST_EXECSPACE, Kokkos::Experimental::half_t, RoundError>();
   TestNumericTraits<TEST_EXECSPACE, Kokkos::Experimental::bhalf_t,
                     RoundError>();
+#endif
   TestNumericTraits<TEST_EXECSPACE, float, RoundError>();
   TestNumericTraits<TEST_EXECSPACE, double, RoundError>();
   // FIXME_NVHPC long double not supported
@@ -243,8 +247,10 @@ TEST(TEST_CATEGORY, numeric_traits_round_error) {
 }
 
 TEST(TEST_CATEGORY, numeric_traits_norm_min) {
+#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC 23.7 bit_comparison_type
   TestNumericTraits<TEST_EXECSPACE, Kokkos::Experimental::half_t, NormMin>();
   TestNumericTraits<TEST_EXECSPACE, Kokkos::Experimental::bhalf_t, NormMin>();
+#endif
   TestNumericTraits<TEST_EXECSPACE, float, NormMin>();
   TestNumericTraits<TEST_EXECSPACE, double, NormMin>();
   // FIXME_NVHPC long double not supported
