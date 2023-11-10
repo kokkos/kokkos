@@ -1546,9 +1546,163 @@ TEST(TEST_CATEGORY, mathematical_functions_ieee_remainder_function) {
 
 // TODO: TestFpClassify, see https://github.com/kokkos/kokkos/issues/6279
 
-// TODO: TestIsFinite, see https://github.com/kokkos/kokkos/issues/6279
+template <class Space>
+struct TestIsFinite {
+  TestIsFinite() { run(); }
+  void run() const {
+    int errors = 0;
+    Kokkos::parallel_reduce(Kokkos::RangePolicy<Space>(0, 1), *this, errors);
+    ASSERT_EQ(errors, 0);
+  }
+  KOKKOS_FUNCTION void operator()(int, int& e) const {
+    using KE::infinity;
+    using KE::quiet_NaN;
+    using KE::signaling_NaN;
+    using Kokkos::isfinite;
+    if (!isfinite(1) || !isfinite(INT_MAX)) {
+      ++e;
+      Kokkos::printf("failed isfinite(integral)\n");
+    }
+    if (!isfinite(2.f) || isfinite(quiet_NaN<float>::value) ||
+        isfinite(signaling_NaN<float>::value) ||
+        isfinite(infinity<float>::value)) {
+      ++e;
+      Kokkos::printf("failed isfinite(float)\n");
+    }
+    if (!isfinite(static_cast<KE::half_t>(2.f))
+#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC 23.7
+        || isfinite(quiet_NaN<KE::half_t>::value) ||
+        isfinite(signaling_NaN<KE::half_t>::value) ||
+        isfinite(infinity<KE::half_t>::value)
+#endif
+    ) {
+      ++e;
+      Kokkos::printf("failed isfinite(KE::half_t)\n");
+    }
+    if (!isfinite(static_cast<KE::bhalf_t>(2.f))
+#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC 23.7
+        || isfinite(quiet_NaN<KE::bhalf_t>::value) ||
+        isfinite(signaling_NaN<KE::bhalf_t>::value) ||
+        isfinite(infinity<KE::bhalf_t>::value)
+#endif
+    ) {
+      ++e;
+      Kokkos::printf("failed isfinite(KE::bhalf_t)\n");
+    }
+    if (!isfinite(3.)
+#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC 23.7
+        || isfinite(quiet_NaN<double>::value) ||
+        isfinite(signaling_NaN<double>::value) ||
+        isfinite(infinity<double>::value)
+#endif
+    ) {
+      ++e;
+      Kokkos::printf("failed isfinite(double)\n");
+    }
+#ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
+    if (!isfinite(4.l) || isfinite(quiet_NaN<long double>::value) ||
+        isfinite(signaling_NaN<long double>::value) ||
+        isfinite(infinity<long double>::value)) {
+      ++e;
+      Kokkos::printf("failed isfinite(long double)\n");
+    }
+#endif
+    // special values
+    if (isfinite(INFINITY) || isfinite(NAN)) {
+      ++e;
+      Kokkos::printf("failed isfinite(floating_point) special values\n");
+    }
 
-// TODO: TestIsInf, see https://github.com/kokkos/kokkos/issues/6279
+    static_assert(std::is_same<decltype(isfinite(1)), bool>::value);
+    static_assert(std::is_same<decltype(isfinite(2.f)), bool>::value);
+    static_assert(std::is_same<decltype(isfinite(3.)), bool>::value);
+#ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
+    static_assert(std::is_same<decltype(isfinite(4.l)), bool>::value);
+#endif
+  }
+};
+
+TEST(TEST_CATEGORY, mathematical_functions_isfinite) {
+  TestIsFinite<TEST_EXECSPACE>();
+}
+
+template <class Space>
+struct TestIsInf {
+  TestIsInf() { run(); }
+  void run() const {
+    int errors = 0;
+    Kokkos::parallel_reduce(Kokkos::RangePolicy<Space>(0, 1), *this, errors);
+    ASSERT_EQ(errors, 0);
+  }
+  KOKKOS_FUNCTION void operator()(int, int& e) const {
+    using KE::infinity;
+    using KE::quiet_NaN;
+    using KE::signaling_NaN;
+    using Kokkos::isinf;
+    if (isinf(1) || isinf(INT_MAX)) {
+      ++e;
+      Kokkos::printf("failed isinf(integral)\n");
+    }
+    if (isinf(2.f) || isinf(quiet_NaN<float>::value) ||
+        isinf(signaling_NaN<float>::value) || !isinf(infinity<float>::value)) {
+      ++e;
+      Kokkos::printf("failed isinf(float)\n");
+    }
+    if (isinf(static_cast<KE::half_t>(2.f))
+#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC 23.7
+        || isinf(quiet_NaN<KE::half_t>::value) ||
+        isinf(signaling_NaN<KE::half_t>::value) ||
+        !isinf(infinity<KE::half_t>::value)
+#endif
+    ) {
+      ++e;
+      Kokkos::printf("failed isinf(KE::half_t)\n");
+    }
+    if (isinf(static_cast<KE::bhalf_t>(2.f))
+#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC 23.7
+        || isinf(quiet_NaN<KE::bhalf_t>::value) ||
+        isinf(signaling_NaN<KE::bhalf_t>::value) ||
+        !isinf(infinity<KE::bhalf_t>::value)
+#endif
+    ) {
+      ++e;
+      Kokkos::printf("failed isinf(KE::bhalf_t)\n");
+    }
+    if (isinf(3.)
+#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC 23.7
+        || isinf(quiet_NaN<double>::value) ||
+        isinf(signaling_NaN<double>::value) || !isinf(infinity<double>::value)
+#endif
+    ) {
+      ++e;
+      Kokkos::printf("failed isinf(double)\n");
+    }
+#ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
+    if (isinf(4.l) || isinf(quiet_NaN<long double>::value) ||
+        isinf(signaling_NaN<long double>::value) ||
+        !isinf(infinity<long double>::value)) {
+      ++e;
+      Kokkos::printf("failed isinf(long double)\n");
+    }
+#endif
+    // special values
+    if (!isinf(INFINITY) || isinf(NAN)) {
+      ++e;
+      Kokkos::printf("failed isinf(floating_point) special values\n");
+    }
+
+    static_assert(std::is_same<decltype(isinf(1)), bool>::value);
+    static_assert(std::is_same<decltype(isinf(2.f)), bool>::value);
+    static_assert(std::is_same<decltype(isinf(3.)), bool>::value);
+#ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
+    static_assert(std::is_same<decltype(isinf(4.l)), bool>::value);
+#endif
+  }
+};
+
+TEST(TEST_CATEGORY, mathematical_functions_isinf) {
+  TestIsInf<TEST_EXECSPACE>();
+}
 
 template <class Space>
 struct TestIsNaN {
@@ -1559,6 +1713,7 @@ struct TestIsNaN {
     ASSERT_EQ(errors, 0);
   }
   KOKKOS_FUNCTION void operator()(int, int& e) const {
+    using KE::infinity;
     using KE::quiet_NaN;
     using KE::signaling_NaN;
     using Kokkos::isnan;
@@ -1567,35 +1722,34 @@ struct TestIsNaN {
       Kokkos::printf("failed isnan(integral)\n");
     }
     if (isnan(2.f) || !isnan(quiet_NaN<float>::value) ||
-        !isnan(signaling_NaN<float>::value)) {
+        !isnan(signaling_NaN<float>::value) || isnan(infinity<float>::value)) {
       ++e;
       Kokkos::printf("failed isnan(float)\n");
     }
-#if !defined(KOKKOS_ENABLE_SYCL) && \
-    !defined(KOKKOS_ENABLE_HIP)  // FIXME_SYCL, FIXME_HIP
     if (isnan(static_cast<KE::half_t>(2.f))
-#if !defined(KOKKOS_ENABLE_CUDA)
+#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC 23.7
         || !isnan(quiet_NaN<KE::half_t>::value) ||
-        !isnan(signaling_NaN<KE::half_t>::value)
+        !isnan(signaling_NaN<KE::half_t>::value) ||
+        isnan(infinity<KE::half_t>::value)
 #endif
     ) {
       ++e;
       KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed isnan(KE::half_t)\n");
     }
     if (isnan(static_cast<KE::bhalf_t>(2.f))
-#if !defined(KOKKOS_ENABLE_CUDA)
+#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC 23.7
         || !isnan(quiet_NaN<KE::bhalf_t>::value) ||
-        !isnan(signaling_NaN<KE::bhalf_t>::value)
+        !isnan(signaling_NaN<KE::bhalf_t>::value) ||
+        isnan(infinity<KE::bhalf_t>::value)
 #endif
     ) {
       ++e;
       KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed isnan(KE::bhalf_t)\n");
     }
-#endif
     if (isnan(3.)
 #ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC 23.7
         || !isnan(quiet_NaN<double>::value) ||
-        !isnan(signaling_NaN<double>::value)
+        !isnan(signaling_NaN<double>::value) || isnan(infinity<double>::value)
 #endif
     ) {
       ++e;
@@ -1603,7 +1757,8 @@ struct TestIsNaN {
     }
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
     if (isnan(4.l) || !isnan(quiet_NaN<long double>::value) ||
-        !isnan(signaling_NaN<long double>::value)) {
+        !isnan(signaling_NaN<long double>::value) ||
+        isnan(infinity<long double>::value)) {
       ++e;
       Kokkos::printf("failed isnan(long double)\n");
     }
