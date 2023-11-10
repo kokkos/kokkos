@@ -218,6 +218,8 @@ TEST(TEST_CATEGORY, numeric_traits_infinity) {
 }
 
 TEST(TEST_CATEGORY, numeric_traits_epsilon) {
+  TestNumericTraits<TEST_EXECSPACE, Kokkos::Experimental::half_t, Epsilon>();
+  TestNumericTraits<TEST_EXECSPACE, Kokkos::Experimental::bhalf_t, Epsilon>();
   TestNumericTraits<TEST_EXECSPACE, float, Epsilon>();
   TestNumericTraits<TEST_EXECSPACE, double, Epsilon>();
   // FIXME_NVHPC long double not supported
@@ -228,6 +230,9 @@ TEST(TEST_CATEGORY, numeric_traits_epsilon) {
 }
 
 TEST(TEST_CATEGORY, numeric_traits_round_error) {
+  TestNumericTraits<TEST_EXECSPACE, Kokkos::Experimental::half_t, RoundError>();
+  TestNumericTraits<TEST_EXECSPACE, Kokkos::Experimental::bhalf_t,
+                    RoundError>();
   TestNumericTraits<TEST_EXECSPACE, float, RoundError>();
   TestNumericTraits<TEST_EXECSPACE, double, RoundError>();
   // FIXME_NVHPC long double not supported
@@ -238,6 +243,8 @@ TEST(TEST_CATEGORY, numeric_traits_round_error) {
 }
 
 TEST(TEST_CATEGORY, numeric_traits_norm_min) {
+  TestNumericTraits<TEST_EXECSPACE, Kokkos::Experimental::half_t, NormMin>();
+  TestNumericTraits<TEST_EXECSPACE, Kokkos::Experimental::bhalf_t, NormMin>();
   TestNumericTraits<TEST_EXECSPACE, float, NormMin>();
   TestNumericTraits<TEST_EXECSPACE, double, NormMin>();
   // FIXME_NVHPC long double not supported
@@ -248,6 +255,8 @@ TEST(TEST_CATEGORY, numeric_traits_norm_min) {
 }
 
 TEST(TEST_CATEGORY, numeric_traits_denorm_min) {
+  TestNumericTraits<TEST_EXECSPACE, Kokkos::Experimental::half_t, DenormMin>();
+  TestNumericTraits<TEST_EXECSPACE, Kokkos::Experimental::bhalf_t, DenormMin>();
   TestNumericTraits<TEST_EXECSPACE, float, DenormMin>();
   TestNumericTraits<TEST_EXECSPACE, double, DenormMin>();
   // FIXME_NVHPC long double not supported
@@ -309,6 +318,8 @@ TEST(TEST_CATEGORY, numeric_traits_digits) {
   TestNumericTraits<TEST_EXECSPACE, unsigned long int, Digits>();
   TestNumericTraits<TEST_EXECSPACE, long long int, Digits>();
   TestNumericTraits<TEST_EXECSPACE, unsigned long long int, Digits>();
+  TestNumericTraits<TEST_EXECSPACE, Kokkos::Experimental::half_t, Digits>();
+  TestNumericTraits<TEST_EXECSPACE, Kokkos::Experimental::bhalf_t, Digits>();
   TestNumericTraits<TEST_EXECSPACE, float, Digits>();
   TestNumericTraits<TEST_EXECSPACE, double, Digits>();
 #if !defined(KOKKOS_ENABLE_CUDA) || \
@@ -330,6 +341,8 @@ TEST(TEST_CATEGORY, numeric_traits_digits10) {
   TestNumericTraits<TEST_EXECSPACE, unsigned long int, Digits10>();
   TestNumericTraits<TEST_EXECSPACE, long long int, Digits10>();
   TestNumericTraits<TEST_EXECSPACE, unsigned long long int, Digits10>();
+  TestNumericTraits<TEST_EXECSPACE, Kokkos::Experimental::half_t, Digits10>();
+  TestNumericTraits<TEST_EXECSPACE, Kokkos::Experimental::bhalf_t, Digits10>();
   TestNumericTraits<TEST_EXECSPACE, float, Digits10>();
   TestNumericTraits<TEST_EXECSPACE, double, Digits10>();
 #if !defined(KOKKOS_ENABLE_CUDA) || \
@@ -339,6 +352,10 @@ TEST(TEST_CATEGORY, numeric_traits_digits10) {
 }
 
 TEST(TEST_CATEGORY, numeric_traits_max_digits10) {
+  TestNumericTraits<TEST_EXECSPACE, Kokkos::Experimental::half_t,
+                    MaxDigits10>();
+  TestNumericTraits<TEST_EXECSPACE, Kokkos::Experimental::bhalf_t,
+                    MaxDigits10>();
   TestNumericTraits<TEST_EXECSPACE, float, MaxDigits10>();
   TestNumericTraits<TEST_EXECSPACE, double, MaxDigits10>();
 #if !defined(KOKKOS_ENABLE_CUDA) || \
@@ -359,6 +376,8 @@ TEST(TEST_CATEGORY, numeric_traits_radix) {
   TestNumericTraits<TEST_EXECSPACE, unsigned long int, Radix>();
   TestNumericTraits<TEST_EXECSPACE, long long int, Radix>();
   TestNumericTraits<TEST_EXECSPACE, unsigned long long int, Radix>();
+  TestNumericTraits<TEST_EXECSPACE, Kokkos::Experimental::half_t, Radix>();
+  TestNumericTraits<TEST_EXECSPACE, Kokkos::Experimental::bhalf_t, Radix>();
   TestNumericTraits<TEST_EXECSPACE, float, Radix>();
   TestNumericTraits<TEST_EXECSPACE, double, Radix>();
 #if !defined(KOKKOS_ENABLE_CUDA) || \
@@ -368,6 +387,10 @@ TEST(TEST_CATEGORY, numeric_traits_radix) {
 }
 
 TEST(TEST_CATEGORY, numeric_traits_min_max_exponent) {
+  TestNumericTraits<TEST_EXECSPACE, Kokkos::Experimental::half_t,
+                    MinExponent>();
+  TestNumericTraits<TEST_EXECSPACE, Kokkos::Experimental::bhalf_t,
+                    MaxExponent>();
   TestNumericTraits<TEST_EXECSPACE, float, MinExponent>();
   TestNumericTraits<TEST_EXECSPACE, float, MaxExponent>();
   TestNumericTraits<TEST_EXECSPACE, double, MinExponent>();
@@ -380,6 +403,10 @@ TEST(TEST_CATEGORY, numeric_traits_min_max_exponent) {
 }
 
 TEST(TEST_CATEGORY, numeric_traits_min_max_exponent10) {
+  TestNumericTraits<TEST_EXECSPACE, Kokkos::Experimental::half_t,
+                    MinExponent10>();
+  TestNumericTraits<TEST_EXECSPACE, Kokkos::Experimental::bhalf_t,
+                    MinExponent10>();
   TestNumericTraits<TEST_EXECSPACE, float, MinExponent10>();
   TestNumericTraits<TEST_EXECSPACE, float, MaxExponent10>();
   TestNumericTraits<TEST_EXECSPACE, double, MinExponent10>();
