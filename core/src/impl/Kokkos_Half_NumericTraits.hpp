@@ -152,7 +152,7 @@ struct Kokkos::Experimental::Impl::round_error_helper<
 template <>
 struct Kokkos::Experimental::Impl::norm_min_helper<
     Kokkos::Experimental::half_t> {
-  static constexpr Kokkos::Experimental::half_t::bit_comparison_type value{0b0'00001'0000000001}; // 0.00006103515625
+  static constexpr Kokkos::Experimental::half_t::bit_comparison_type value{0b0'00001'0000000000}; // 0.00006103515625
 };
 
 /// \brief: Quiet not a half precision number
@@ -297,7 +297,7 @@ struct Kokkos::Experimental::Impl::round_error_helper<
 template <>
 struct Kokkos::Experimental::Impl::norm_min_helper<
     Kokkos::Experimental::bhalf_t> {
-  static constexpr Kokkos::Experimental::bhalf_t::bit_comparison_type value{0b0'00000001'0000001}; // 1.1754494351e-38
+  static constexpr Kokkos::Experimental::bhalf_t::bit_comparison_type value{0b0'00000001'0000000}; // 1.1754494351e-38
 };
 // Quiet not a bhalf number
 template <>
