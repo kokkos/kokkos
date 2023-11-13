@@ -21,6 +21,7 @@
 #include <sstream>
 #include <Kokkos_Parallel.hpp>
 #include <OpenMPTarget/Kokkos_OpenMPTarget_Parallel_Common.hpp>
+#include <OpenMPTarget/Kokkos_OpenMPTarget_Instance.hpp>
 
 namespace Kokkos {
 namespace Impl {
@@ -109,7 +110,9 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
             MemorySpaceAccess<Kokkos::Experimental::OpenMPTargetSpace,
                               typename ViewType::memory_space>::accessible),
         m_result_ptr_num_elems(arg_result_view.size()),
-        m_scratch_memory_lock(OpenMPTargetExec::m_mutex_scratch_ptr) {}
+        m_scratch_memory_lock(m_policy.space()
+                                  .impl_internal_space_instance()
+                                  ->m_ompt_exec.m_mutex_scratch_ptr) {}
 };
 
 }  // namespace Impl
