@@ -179,7 +179,9 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
 
     // Only let one ParallelReduce instance at a time use the scratch memory.
     std::scoped_lock<std::mutex> scratch_memory_lock(
-        OpenMPTargetExec::m_mutex_scratch_ptr);
+        m_policy.space()
+            .impl_internal_space_instance()
+            ->m_ompt_exec.m_mutex_scratch_ptr);
 
     // This could be scratch memory per team
     Kokkos::View<value_type**, Kokkos::LayoutRight,
@@ -231,7 +233,9 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
     if (N > 0) {
       // Only let one ParallelReduce instance at a time use the scratch memory.
       std::scoped_lock<std::mutex> scratch_memory_lock(
-          OpenMPTargetExec::m_mutex_scratch_ptr);
+          base_t::m_policy.space()
+              .impl_internal_space_instance()
+              ->m_ompt_exec.m_mutex_scratch_ptr);
 
       // This could be scratch memory per team
       Kokkos::View<value_type**, Kokkos::LayoutRight,

@@ -223,17 +223,22 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
     // based on NVIDIA-V100 and should be modifid to be based on the
     // architecture in the future.
     const int max_team_threads = 32;
-    const int max_teams =
-        OpenMPTargetExec::MAX_ACTIVE_THREADS / max_team_threads;
+    const int max_teams        = p.space()
+                              .impl_internal_space_instance()
+                              ->m_ompt_exec.MAX_ACTIVE_THREADS /
+                          max_team_threads;
     // Number of elements in the reduction
     const auto value_count = FunctorAnalysis::value_count(f);
 
     // Allocate scratch per active thread. Achieved by setting the first
     // parameter of `resize_scratch=1`.
-    OpenMPTargetExec::resize_scratch(1, 0, value_count * sizeof(ValueType),
-                                     std::numeric_limits<int64_t>::max());
+    p.space().impl_internal_space_instance()->m_ompt_exec.resize_scratch(
+        1, 0, value_count * sizeof(ValueType),
+        std::numeric_limits<int64_t>::max());
     ValueType* scratch_ptr =
-        static_cast<ValueType*>(OpenMPTargetExec::get_scratch_ptr());
+        static_cast<ValueType*>(p.space()
+                                    .impl_internal_space_instance()
+                                    ->m_ompt_exec.get_scratch_ptr());
 
     typename FunctorAnalysis::Reducer final_reducer(f);
 
@@ -370,9 +375,11 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
 
     const size_t shmem_size_L0 = p.scratch_size(0, team_size);
     const size_t shmem_size_L1 = p.scratch_size(1, team_size);
-    OpenMPTargetExec::resize_scratch(PolicyType::member_type::TEAM_REDUCE_SIZE,
-                                     shmem_size_L0, shmem_size_L1, league_size);
-    void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
+    p.space().impl_internal_space_instance()->m_ompt_exec.resize_scratch(
+        PolicyType::member_type::TEAM_REDUCE_SIZE, shmem_size_L0, shmem_size_L1,
+        league_size);
+    void* scratch_ptr =
+        p.space().impl_internal_space_instance()->m_ompt_exec.get_scratch_ptr();
 
     ValueType result = ValueType();
 
@@ -383,7 +390,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     int max_active_teams = omp_get_max_teams();
 #else
     int max_active_teams =
-        std::min(OpenMPTargetExec::MAX_ACTIVE_THREADS / team_size, league_size);
+        std::min(p.space().MAX_ACTIVE_THREADS / team_size, league_size);
 #endif
 
     // If the league size is <=0, do not launch the kernel.
@@ -462,9 +469,11 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
 
     const size_t shmem_size_L0 = p.scratch_size(0, team_size);
     const size_t shmem_size_L1 = p.scratch_size(1, team_size);
-    OpenMPTargetExec::resize_scratch(PolicyType::member_type::TEAM_REDUCE_SIZE,
-                                     shmem_size_L0, shmem_size_L1, league_size);
-    void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
+    p.space().impl_internal_space_instance()->m_ompt_exec.resize_scratch(
+        PolicyType::member_type::TEAM_REDUCE_SIZE, shmem_size_L0, shmem_size_L1,
+        league_size);
+    void* scratch_ptr =
+        p.space().impl_internal_space_instance()->m_ompt_exec.get_scratch_ptr();
 
     // Maximum active teams possible.
     // FIXME_OPENMPTARGET: Cray compiler did not yet implement
@@ -473,7 +482,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     int max_active_teams = omp_get_max_teams();
 #else
     int max_active_teams =
-        std::min(OpenMPTargetExec::MAX_ACTIVE_THREADS / team_size, league_size);
+        std::min(p.space().MAX_ACTIVE_THREADS / team_size, league_size);
 #endif
 
     // If the league size is <=0, do not launch the kernel.
@@ -614,9 +623,10 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     const auto value_count = FunctorAnalysis::value_count(f);
 
     // Allocate scratch per active thread.
-    OpenMPTargetExec::resize_scratch(1, 0, value_count * sizeof(ValueType),
-                                     league_size);
-    void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
+    p.space().impl_internal_space_instance()->m_ompt_exec.resize_scratch(
+        1, 0, value_count * sizeof(ValueType), league_size);
+    void* scratch_ptr =
+        p.space().impl_internal_space_instance()->m_ompt_exec.get_scratch_ptr();
     typename FunctorAnalysis::Reducer final_reducer(f);
 
     if (end <= begin) {

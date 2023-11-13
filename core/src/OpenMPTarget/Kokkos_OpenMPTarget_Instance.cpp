@@ -115,7 +115,7 @@ void OpenMPTargetInternal::impl_finalize() {
 void OpenMPTargetInternal::impl_initialize() {
   m_is_initialized = true;
 
-  Kokkos::Impl::OpenMPTargetExec::MAX_ACTIVE_THREADS = concurrency();
+  m_ompt_exec.MAX_ACTIVE_THREADS = concurrency();
 
   // FIXME_OPENMPTARGET:  Only fix the number of teams for NVIDIA architectures
   // from Pascal and upwards.
@@ -206,10 +206,11 @@ namespace Experimental {
 
 UniqueToken<Kokkos::Experimental::OpenMPTarget,
             Kokkos::Experimental::UniqueTokenScope::Global>::
-    UniqueToken(Kokkos::Experimental::OpenMPTarget const&) {
+    UniqueToken(Kokkos::Experimental::OpenMPTarget const& space) {
 #ifdef KOKKOS_IMPL_OPENMPTARGET_WORKAROUND
-  uint32_t* ptr = Kokkos::Impl::OpenMPTargetExec::m_uniquetoken_ptr;
-  int count     = Kokkos::Experimental::OpenMPTarget().concurrency();
+  uint32_t* ptr =
+      space.impl_internal_space_instance()->m_ompt_exec.m_uniquetoken_ptr;
+  int count = Kokkos::Experimental::OpenMPTarget().concurrency();
   if (ptr == nullptr) {
     int size = count * sizeof(uint32_t);
     ptr      = static_cast<uint32_t*>(
@@ -221,7 +222,7 @@ UniqueToken<Kokkos::Experimental::OpenMPTarget,
                                                    0, omp_get_default_device(),
                                                    omp_get_initial_device()));
 
-    Kokkos::Impl::OpenMPTargetExec::m_uniquetoken_ptr = ptr;
+    space.impl_internal_space_instance()->m_ompt_exec.m_uniquetoken_ptr = ptr;
   }
 #else
 // FIXME_OPENMPTARGET - 2 versions of non-working implementations to fill `ptr`
