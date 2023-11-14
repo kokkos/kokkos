@@ -382,6 +382,26 @@ KOKKOS_FUNCTION constexpr auto to_array(T(&&a)[N]) {
   return Impl::to_array_impl(std::move(a), std::make_index_sequence<N>{});
 }
 
+template <typename T,
+          size_t LN, typename LP, 
+          size_t RN, typename RP>
+KOKKOS_INLINE_FUNCTION constexpr bool operator==(const Array<T, LN, LP>& lhs, 
+                                                 const Array<T, RN, RP>& rhs) {
+  if (lhs.size() != rhs.size()) return false;
+    for (int i = 0; i < (int)(lhs.size()); ++i) {
+      if (lhs[i] != rhs[i]) return false;
+    }
+    return true;
+}
+
+template <typename T,
+          size_t LN, typename LP, 
+          size_t RN, typename RP>
+KOKKOS_INLINE_FUNCTION constexpr bool operator!=(const Array<T, LN, LP>& lhs, 
+                                                 const Array<T, RN, RP>& rhs) {
+  return !(lhs == rhs);
+}
+
 }  // namespace Kokkos
 
 //<editor-fold desc="Support for structured binding">
