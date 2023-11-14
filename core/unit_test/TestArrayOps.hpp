@@ -92,6 +92,84 @@ TEST(TEST_CATEGORY, array_element_access) {
   ASSERT_EQ(ca.data()[index], a[index]);
 }
 
+TEST(TEST_CATEGORY, array_operator_equal) {
+  using A = Kokkos::Array<int, 2>;
+  constexpr A a{{3, 5}};
+  constexpr A b{{3, 5}};
+  constexpr A c{{5, 3}};
+
+  static_assert(a == b);
+  static_assert(!(a == c));
+  static_assert(a != c);
+
+  ASSERT_TRUE(a == b);
+  ASSERT_FALSE(a == c);
+  ASSERT_TRUE(a != c);
+
+  using E = Kokkos::Array<int, 0>;
+  constexpr E e;
+  constexpr E f;
+
+  static_assert(e == f);
+  static_assert(!(e != f));
+
+  ASSERT_TRUE(e == f);
+  ASSERT_FALSE(e != f);
+
+  static_assert(a != e);
+
+  ASSERT_TRUE(a != e);
+
+  using AC =
+    Kokkos::Array<int, KOKKOS_INVALID_INDEX, Kokkos::Array<>::contiguous>;
+
+  int ac_[] = {3, 5};
+  const AC ac(ac_, std::size(ac_));
+  int bc_[] = {3, 5};
+  const AC bc(bc_, std::size(bc_));
+
+  int dc_[] = {11, 13, 17, 19};
+  const AC dc(dc_, std::size(dc_));
+
+  ASSERT_TRUE(ac == bc);
+  ASSERT_TRUE(ac != dc);
+
+  ASSERT_TRUE(ac == a);
+  ASSERT_FALSE(ac == e);
+
+  const AC ec(nullptr, 0);
+  const AC fc(nullptr, 0);
+
+  ASSERT_TRUE(ec == fc);
+  ASSERT_FALSE(ec != fc);
+
+  ASSERT_FALSE(a == ec);
+  ASSERT_TRUE(e == ec);
+  ASSERT_FALSE(ac == ec);
+
+  using AS =
+    Kokkos::Array<int, KOKKOS_INVALID_INDEX, Kokkos::Array<>::strided>;
+
+  int as_[] = {3, 5, 7, 11, 13, 17, 19};
+  constexpr size_t asStride = 2;
+  const AS as(as_, std::size(as_) / asStride, asStride);
+  int bs_[] = {3, 5, 7, 11, 13, 17, 19};
+  constexpr size_t bsStride = 2;
+  const AS bs(bs_, std::size(bs_) / bsStride, bsStride);
+
+  int ds_[] = {3, 13, 5, 19};
+  constexpr size_t dsStride = 2;
+  const AS ds(ds_, std::size(ds_) / dsStride, dsStride);
+
+  ASSERT_TRUE(as == bs);
+  ASSERT_TRUE(as != ds);
+
+  ASSERT_TRUE(a == ds);
+  ASSERT_FALSE(e == as);
+  ASSERT_TRUE(ac == ds);
+  ASSERT_FALSE(ec == as);
+}
+
 TEST(TEST_CATEGORY, array_zero_capacity) {
   using A = Kokkos::Array<int, 0>;
   A e;

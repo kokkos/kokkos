@@ -320,6 +320,26 @@ struct Array<T, KOKKOS_INVALID_INDEX, Array<>::strided> {
       : m_elem(arg_ptr), m_size(arg_size), m_stride(arg_stride) {}
 };
 
+template <typename T,
+          size_t LN, typename LP, 
+          size_t RN, typename RP>
+KOKKOS_INLINE_FUNCTION constexpr bool operator==(const Array<T, LN, LP>& lhs, 
+                                                 const Array<T, RN, RP>& rhs) {
+  if (lhs.size() != rhs.size()) return false;
+    for (int i = 0; i < (int)(lhs.size()); ++i) {
+      if (lhs[i] != rhs[i]) return false;
+    }
+    return true;
+}
+
+template <typename T,
+          size_t LN, typename LP, 
+          size_t RN, typename RP>
+KOKKOS_INLINE_FUNCTION constexpr bool operator!=(const Array<T, LN, LP>& lhs, 
+                                                 const Array<T, RN, RP>& rhs) {
+  return !(lhs == rhs);
+}
+
 }  // namespace Kokkos
 
 //<editor-fold desc="Support for structured binding">
