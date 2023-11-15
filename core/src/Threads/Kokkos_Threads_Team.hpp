@@ -1001,8 +1001,10 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
     lambda(i, scan_val, false);
   }
 
+  auto team_member = loop_bounds.thread;
+
   // 'scan_val' output is the exclusive prefix sum
-  scan_val = loop_bounds.thread.team_scan(scan_val);
+  scan_val = team_member.team_scan(scan_val);
 
 #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
 #pragma ivdep
@@ -1011,6 +1013,8 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
        i += loop_bounds.increment) {
     lambda(i, scan_val, true);
   }
+
+  team_member.team_broadcast(scan_val, team_member.team_size() - 1);
 
   return_val = scan_val;
 }
