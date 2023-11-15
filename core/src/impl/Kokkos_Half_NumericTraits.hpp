@@ -87,7 +87,7 @@ struct Kokkos::Experimental::Impl::infinity_helper<Kokkos::Experimental::half_t>
 template <>
 struct Kokkos::Experimental::Impl::finite_min_helper<
     Kokkos::Experimental::half_t> {
-  static constexpr float value = -65504.0F;
+  static constexpr Kokkos::Experimental::half_t::bit_comparison_type value{0b1'11110'1111111111}; // -65504
 };
 
 /// \brief: Maximum normalized number
@@ -104,7 +104,7 @@ struct Kokkos::Experimental::Impl::finite_min_helper<
 template <>
 struct Kokkos::Experimental::Impl::finite_max_helper<
     Kokkos::Experimental::half_t> {
-  static constexpr float value = 65504.0F;
+  static constexpr Kokkos::Experimental::half_t::bit_comparison_type value{0b0'11110'1111111111}; // +65504
 };
 
 /// \brief: This is the difference between 1 and the smallest floating point
@@ -123,7 +123,7 @@ struct Kokkos::Experimental::Impl::finite_max_helper<
 template <>
 struct Kokkos::Experimental::Impl::epsilon_helper<
     Kokkos::Experimental::half_t> {
-  static constexpr float value = 0.0009765625F;
+  static constexpr Kokkos::Experimental::half_t::bit_comparison_type value{0b0'00101'0000000000}; // 0.0009765625
 };
 
 /// @brief: The largest possible rounding error in ULPs
@@ -134,7 +134,7 @@ struct Kokkos::Experimental::Impl::epsilon_helper<
 template <>
 struct Kokkos::Experimental::Impl::round_error_helper<
     Kokkos::Experimental::half_t> {
-  static constexpr float value = 0.5F;
+  static constexpr Kokkos::Experimental::half_t::bit_comparison_type value{0b0'01110'0000000000}; // 0.5
 };
 
 /// \brief: Minimum normalized positive half precision number
@@ -152,7 +152,7 @@ struct Kokkos::Experimental::Impl::round_error_helper<
 template <>
 struct Kokkos::Experimental::Impl::norm_min_helper<
     Kokkos::Experimental::half_t> {
-  static constexpr float value = 0.00006103515625F;
+  static constexpr Kokkos::Experimental::half_t::bit_comparison_type value{0b0'00001'0000000000}; // 0.00006103515625
 };
 
 /// \brief: Quiet not a half precision number
@@ -274,30 +274,30 @@ struct Kokkos::Experimental::Impl::infinity_helper<Kokkos::Experimental::bhalf_t
 template <>
 struct Kokkos::Experimental::Impl::finite_min_helper<
     Kokkos::Experimental::bhalf_t> {
-  static constexpr float value = -3.38953139e38;
+  static constexpr Kokkos::Experimental::bhalf_t::bit_comparison_type value{0b1'11111110'1111111}; // -3.38953139e38
 };
 // Maximum normalized number
 template <>
 struct Kokkos::Experimental::Impl::finite_max_helper<
     Kokkos::Experimental::bhalf_t> {
-  static constexpr float value = 3.38953139e38;
+  static constexpr Kokkos::Experimental::bhalf_t::bit_comparison_type value{0b0'11111110'1111111}; // +3.38953139e3
 };
 // 1/2^7
 template <>
 struct Kokkos::Experimental::Impl::epsilon_helper<
     Kokkos::Experimental::bhalf_t> {
-  static constexpr float value = 0.0078125F;
+  static constexpr Kokkos::Experimental::bhalf_t::bit_comparison_type value{0b0'01111000'0000000}; // 0.0078125
 };
 template <>
 struct Kokkos::Experimental::Impl::round_error_helper<
     Kokkos::Experimental::bhalf_t> {
-  static constexpr float value = 0.5F;
+  static constexpr Kokkos::Experimental::bhalf_t::bit_comparison_type value{0b0'01111110'0000000}; // 0.5
 };
 // Minimum normalized positive bhalf number
 template <>
 struct Kokkos::Experimental::Impl::norm_min_helper<
     Kokkos::Experimental::bhalf_t> {
-  static constexpr float value = 1.1754494351e-38;
+  static constexpr Kokkos::Experimental::bhalf_t::bit_comparison_type value{0b0'00000001'0000000}; // 1.175494351e-38
 };
 // Quiet not a bhalf number
 template <>
