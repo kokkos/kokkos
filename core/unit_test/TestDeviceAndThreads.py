@@ -30,7 +30,7 @@ def GetFlag(flag, *extra_args):
     return int(p.stdout)
 
 def GetNumThreads(max_threads):
-    for x in [1, 2, 3, 5, 7]:
+    for x in [1, 2, 4, 6, 8]:
         if x >= max_threads:
             break
         yield x
