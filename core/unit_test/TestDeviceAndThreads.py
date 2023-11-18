@@ -17,7 +17,7 @@
 
 import unittest
 import subprocess
-import psutil
+import os #psutil
 
 PREFIX = "$<TARGET_FILE_DIR:Kokkos_CoreUnitTest_DeviceAndThreads>"
 EXECUTABLE = "$<TARGET_FILE_NAME:Kokkos_CoreUnitTest_DeviceAndThreads>"
@@ -31,7 +31,16 @@ def GetFlag(flag, *extra_args):
     return int(p.stdout)
 
 def GetNumThreads(max_threads):
-    phys_cores_count = psutil.cpu_count(logical=False)
+    #phys_cores_count = psutil.cpu_count(logical=False)
+    args = ['sysctl', '-n', 'hw.physicalcpu_max']
+    if os.name == 'nt':
+        args = ['wmic', 'cpu', 'get', 'NumberOfCores']
+
+    result = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    output = result.stdout.decode('utf-8')
+    phys_cores_count = int(output)
+    print(phys_cores_count)
+
     looplist = [1] + [i*phys_cores_count for i in [1,2,3,4,5,6,7]]
     for x in looplist:
         if x >= max_threads:
