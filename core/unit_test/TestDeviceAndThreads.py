@@ -32,7 +32,7 @@ def GetFlag(flag, *extra_args):
 
 def GetNumThreads(max_threads):
     #phys_cores_count = psutil.cpu_count(logical=False)
-    args = ['sysctl', '-n', 'hw.physicalcpu_max']
+    args = ['nproc', '--all'] #'sysctl', '-n', 'hw.physicalcpu_max']
     if os.name == 'nt':
         args = ['wmic', 'cpu', 'get', 'NumberOfCores']
 
