@@ -17,7 +17,7 @@
 
 import unittest
 import subprocess
-import platform #psutil
+import platform
 
 PREFIX = "$<TARGET_FILE_DIR:Kokkos_CoreUnitTest_DeviceAndThreads>"
 EXECUTABLE = "$<TARGET_FILE_NAME:Kokkos_CoreUnitTest_DeviceAndThreads>"
@@ -31,7 +31,6 @@ def GetFlag(flag, *extra_args):
     return int(p.stdout)
 
 def GetNumThreads(max_threads):
-    #phys_cores_count = psutil.cpu_count(logical=False)
     args = []
     name = platform.system()
     if name == 'Darwin':
