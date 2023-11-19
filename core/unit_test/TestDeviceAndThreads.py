@@ -43,7 +43,9 @@ def GetNumThreads(max_threads):
     result = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     output = result.stdout.decode('utf-8')
     phys_cores_count = int(output)
-    looplist = [1] + [i*phys_cores_count for i in [1,2,3,4,5,6,7]]
+    looplist = [1] + [i*phys_cores_count for i in [1,2,3,4,5,6,7]] \
+        if GetFlag("hwloc_enabled") else [1,2,3,4,5]
+
     for x in looplist:
         if x >= max_threads:
             break
