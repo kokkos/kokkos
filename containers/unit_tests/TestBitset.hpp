@@ -37,13 +37,9 @@ struct TestBitset {
 
   bitset_type m_bitset;
 
-  TestBitset(bitset_type const& bitset) : m_bitset(bitset) {}
-
-  unsigned testit(unsigned collisions) {
-    execution_space().fence();
-
+  unsigned testit(const execution_space& exec, unsigned collisions) {
     unsigned count = 0;
-    Kokkos::parallel_reduce(m_bitset.size() * collisions, *this, count);
+    Kokkos::parallel_reduce(Kokkos::RangePolicy<execution_space>(exec, 0, m_bitset.size() * collisions), *this, count);
     return count;
   }
 
@@ -76,13 +72,9 @@ struct TestBitsetTest {
 
   bitset_type m_bitset;
 
-  TestBitsetTest(bitset_type const& bitset) : m_bitset(bitset) {}
-
-  unsigned testit() {
-    execution_space().fence();
-
+  unsigned testit(const execution_space& exec) {
     unsigned count = 0;
-    Kokkos::parallel_reduce(m_bitset.size(), *this, count);
+    Kokkos::parallel_reduce(Kokkos::RangePolicy<execution_space>(exec, 0, m_bitset.size()), *this, count);
     return count;
   }
 
@@ -106,13 +98,9 @@ struct TestBitsetAny {
 
   bitset_type m_bitset;
 
-  TestBitsetAny(bitset_type const& bitset) : m_bitset(bitset) {}
-
-  unsigned testit() {
-    execution_space().fence();
-
+  unsigned testit(const execution_space& exec) {
     unsigned count = 0;
-    Kokkos::parallel_reduce(m_bitset.size(), *this, count);
+    Kokkos::parallel_reduce(Kokkos::RangePolicy<execution_space>(exec, 0, m_bitset.size()), *this, count);
     return count;
   }
 
@@ -151,13 +139,13 @@ struct TestBitsetAny {
 }  // namespace Impl
 
 template <typename Device>
-void test_bitset() {
+void test_bitset(const typename Device::execution_space& exec) {
   using bitset_type       = Kokkos::Bitset<Device>;
   using const_bitset_type = Kokkos::ConstBitset<Device>;
 
   {
     unsigned ts = 100u;
-    bitset_type b1(Kokkos::view_alloc("MyBitset"), 0);
+    bitset_type b1(Kokkos::view_alloc(exec, "MyBitset"), 0);
     ASSERT_TRUE(b1.is_allocated());
 
     b1 = bitset_type(ts);
@@ -178,36 +166,36 @@ void test_bitset() {
   for (const auto test_size : test_sizes) {
     // std::cout << "Bitset " << test_sizes[i] << std::endl;
 
-    bitset_type bitset(test_size);
+    bitset_type bitset(Kokkos::view_alloc(exec), test_size);
 
     // std::cout << "  Check initial count " << std::endl;
     // nothing should be set
     {
-      Impl::TestBitsetTest<bitset_type> f(bitset);
-      uint32_t count = f.testit();
+      Impl::TestBitsetTest<bitset_type> f{bitset};
+      uint32_t count = f.testit(exec);
       EXPECT_EQ(0u, count);
       EXPECT_EQ(count, bitset.count());
     }
 
     // std::cout << "  Check set() " << std::endl;
-    bitset.set();
+    bitset.set(exec);
     // everything should be set
     {
-      Impl::TestBitsetTest<const_bitset_type> f(bitset);
-      uint32_t count = f.testit();
+      Impl::TestBitsetTest<const_bitset_type> f{bitset};
+      uint32_t count = f.testit(exec);
       EXPECT_EQ(bitset.size(), count);
       EXPECT_EQ(count, bitset.count());
     }
 
     // std::cout << "  Check reset() " << std::endl;
-    bitset.reset();
+    bitset.reset(exec);
     EXPECT_EQ(0u, bitset.count());
 
     // std::cout << "  Check set(i) " << std::endl;
     // test setting bits
     {
-      Impl::TestBitset<bitset_type, true> f(bitset);
-      uint32_t count = f.testit(10u);
+      Impl::TestBitset<bitset_type, true> f{bitset};
+      uint32_t count = f.testit(exec, 10u);
       EXPECT_EQ(bitset.size(), bitset.count());
       EXPECT_EQ(bitset.size(), count);
     }
@@ -215,8 +203,8 @@ void test_bitset() {
     // std::cout << "  Check reset(i) " << std::endl;
     // test resetting bits
     {
-      Impl::TestBitset<bitset_type, false> f(bitset);
-      uint32_t count = f.testit(10u);
+      Impl::TestBitset<bitset_type, false> f{bitset};
+      uint32_t count = f.testit(exec, 10u);
       EXPECT_EQ(bitset.size(), count);
       EXPECT_EQ(0u, bitset.count());
     }
@@ -224,8 +212,8 @@ void test_bitset() {
     // std::cout << "  Check find_any_set(i) " << std::endl;
     // test setting any bits
     {
-      Impl::TestBitsetAny<bitset_type, true> f(bitset);
-      uint32_t count = f.testit();
+      Impl::TestBitsetAny<bitset_type, true> f{bitset};
+      uint32_t count = f.testit(exec);
       EXPECT_EQ(bitset.size(), bitset.count());
       EXPECT_EQ(bitset.size(), count);
     }
@@ -233,15 +221,15 @@ void test_bitset() {
     // std::cout << "  Check find_any_unset(i) " << std::endl;
     // test resetting any bits
     {
-      Impl::TestBitsetAny<bitset_type, false> f(bitset);
-      uint32_t count = f.testit();
+      Impl::TestBitsetAny<bitset_type, false> f{bitset};
+      uint32_t count = f.testit(exec);
       EXPECT_EQ(bitset.size(), count);
       EXPECT_EQ(0u, bitset.count());
     }
   }
 }
 
-TEST(TEST_CATEGORY, bitset) { test_bitset<TEST_EXECSPACE>(); }
+TEST(TEST_CATEGORY, bitset) { test_bitset<TEST_EXECSPACE>(TEST_EXECSPACE{}); }
 
 TEST(TEST_CATEGORY, bitset_default_constructor_no_alloc) {
   using namespace Kokkos::Test::Tools;
