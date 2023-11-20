@@ -45,9 +45,7 @@
 namespace Kokkos {
 namespace Impl {
 
-class OpenMPInternal {
-  return m_pool[i];
-};
+class OpenMPInternal;
 
 inline int g_openmp_hardware_max_threads = 1;
 

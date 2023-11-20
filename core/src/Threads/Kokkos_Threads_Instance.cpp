@@ -254,10 +254,10 @@ KOKKOS_DEPRECATED int ThreadsInternal::in_parallel() {
   return s_current_function && (&s_threads_process != s_current_function_arg) &&
          (s_threads_process.m_pool_base || !is_process());
 }
+#endif
 void ThreadsInternal::fence() {
   fence("Kokkos::ThreadsInternal::fence: Unnamed Instance Fence");
-#endif
-}  // namespace Impl
+}
 void ThreadsInternal::fence(const std::string &name) {
   Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Threads>(
       name, Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{1},
