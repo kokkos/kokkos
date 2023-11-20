@@ -181,8 +181,8 @@ class HIPTeamMember {
               typename ReducerType::value_type& value) const noexcept {
 #ifdef __HIP_DEVICE_COMPILE__
     typename Kokkos::Impl::FunctorAnalysis<
-        FunctorPatternInterface::REDUCE, TeamPolicy<HIP>, ReducerType>::Reducer
-        wrapped_reducer(&reducer);
+        FunctorPatternInterface::REDUCE, TeamPolicy<HIP>, ReducerType,
+        typename ReducerType::value_type>::Reducer wrapped_reducer(reducer);
     hip_intra_block_shuffle_reduction(value, wrapped_reducer, blockDim.y);
     reducer.reference() = value;
 #else
@@ -219,7 +219,7 @@ class HIPTeamMember {
     Impl::HIPJoinFunctor<Type> hip_join_functor;
     typename Kokkos::Impl::FunctorAnalysis<
         FunctorPatternInterface::REDUCE, TeamPolicy<HIP>,
-        Impl::HIPJoinFunctor<Type>>::Reducer reducer(&hip_join_functor);
+        Impl::HIPJoinFunctor<Type>, Type>::Reducer reducer(hip_join_functor);
     Impl::hip_intra_block_reduce_scan<true>(reducer, base_data + 1);
 
     if (global_accum) {
@@ -368,16 +368,8 @@ struct ThreadVectorRangeBoundariesStruct<iType, HIPTeamMember> {
       : start(static_cast<index_type>(0)), end(count) {}
 
   KOKKOS_INLINE_FUNCTION
-  ThreadVectorRangeBoundariesStruct(index_type count)
-      : start(static_cast<index_type>(0)), end(count) {}
-
-  KOKKOS_INLINE_FUNCTION
   ThreadVectorRangeBoundariesStruct(const HIPTeamMember, index_type arg_begin,
                                     index_type arg_end)
-      : start(arg_begin), end(arg_end) {}
-
-  KOKKOS_INLINE_FUNCTION
-  ThreadVectorRangeBoundariesStruct(index_type arg_begin, index_type arg_end)
       : start(arg_begin), end(arg_end) {}
 };
 
@@ -545,15 +537,17 @@ parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
  *  final == true.
  */
 // This is the same code as in CUDA and largely the same as in OpenMPTarget
-template <typename iType, typename FunctorType>
+template <typename iType, typename FunctorType, typename ValueType>
 KOKKOS_INLINE_FUNCTION void parallel_scan(
     const Impl::TeamThreadRangeBoundariesStruct<iType, Impl::HIPTeamMember>&
         loop_bounds,
-    const FunctorType& lambda) {
-  // Extract value_type from lambda
-  using value_type = typename Kokkos::Impl::FunctorAnalysis<
-      Kokkos::Impl::FunctorPatternInterface::SCAN, void,
-      FunctorType>::value_type;
+    const FunctorType& lambda, ValueType& return_val) {
+  // Extract ValueType from the Functor
+  using functor_value_type = typename Kokkos::Impl::FunctorAnalysis<
+      Kokkos::Impl::FunctorPatternInterface::SCAN, void, FunctorType,
+      ValueType>::value_type;
+  static_assert(std::is_same_v<functor_value_type, ValueType>,
+                "Non-matching value types of functor and return type");
 
   const auto start     = loop_bounds.start;
   const auto end       = loop_bounds.end;
@@ -561,12 +555,12 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
   const auto team_size = member.team_size();
   const auto team_rank = member.team_rank();
   const auto nchunk    = (end - start + team_size - 1) / team_size;
-  value_type accum     = 0;
+  ValueType accum      = {};
   // each team has to process one or more chunks of the prefix scan
   for (iType i = 0; i < nchunk; ++i) {
     auto ii = start + i * team_size + team_rank;
     // local accumulation for this chunk
-    value_type local_accum = 0;
+    ValueType local_accum = 0;
     // user updates value with prefix value
     if (ii < loop_bounds.end) lambda(ii, local_accum, false);
     // perform team scan
@@ -580,6 +574,29 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
     // broadcast last value to rest of the team
     member.team_broadcast(accum, team_size - 1);
   }
+  return_val = accum;
+}
+
+/** \brief  Inter-thread parallel exclusive prefix sum.
+ *
+ *  Executes closure(iType i, ValueType & val, bool final) for each i=[0..N)
+ *
+ *  The range [0..N) is mapped to each rank in the team (whose global rank is
+ *  less than N) and a scan operation is performed. The last call to closure has
+ *  final == true.
+ */
+template <typename iType, typename FunctorType>
+KOKKOS_INLINE_FUNCTION void parallel_scan(
+    const Impl::TeamThreadRangeBoundariesStruct<iType, Impl::HIPTeamMember>&
+        loop_bounds,
+    const FunctorType& lambda) {
+  // Extract value_type from lambda
+  using value_type = typename Kokkos::Impl::FunctorAnalysis<
+      Kokkos::Impl::FunctorPatternInterface::SCAN, void, FunctorType,
+      void>::value_type;
+
+  value_type scan_val;
+  parallel_scan(loop_bounds, lambda, scan_val);
 }
 
 template <typename iType, class Closure>
@@ -780,7 +797,8 @@ parallel_scan(const Impl::ThreadVectorRangeBoundariesStruct<
     // exclusive scan -- the final accumulation
     // of i's val will be included in the second
     // closure call later.
-    if (i < loop_boundaries.end && threadIdx.x > 0) closure(i - 1, val, false);
+    if (i - 1 < loop_boundaries.end && threadIdx.x > 0)
+      closure(i - 1, val, false);
 
     // Bottom up exclusive scan in triangular pattern
     // where each HIP thread is the root of a reduction tree
@@ -809,6 +827,7 @@ parallel_scan(const Impl::ThreadVectorRangeBoundariesStruct<
     if (i < loop_boundaries.end) closure(i, val, true);
     Impl::in_place_shfl(accum, val, blockDim.x - 1, blockDim.x);
   }
+  reducer.reference() = accum;
 #else
   (void)loop_boundaries;
   (void)closure;
@@ -832,9 +851,36 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
         loop_boundaries,
     const Closure& closure) {
   using value_type = typename Kokkos::Impl::FunctorAnalysis<
-      Kokkos::Impl::FunctorPatternInterface::SCAN, void, Closure>::value_type;
+      Kokkos::Impl::FunctorPatternInterface::SCAN, void, Closure,
+      void>::value_type;
   value_type dummy;
   parallel_scan(loop_boundaries, closure, Kokkos::Sum<value_type>(dummy));
+}
+
+/** \brief  Intra-thread vector parallel exclusive prefix sum.
+ *
+ *  Executes closure(iType i, ValueType & val, bool final) for each i=[0..N)
+ *
+ *  The range [0..N) is mapped to all vector lanes in the
+ *  thread and a scan operation is performed.
+ *  The last call to closure has final == true.
+ */
+template <typename iType, class Closure, typename ValueType>
+KOKKOS_INLINE_FUNCTION void parallel_scan(
+    const Impl::ThreadVectorRangeBoundariesStruct<iType, Impl::HIPTeamMember>&
+        loop_boundaries,
+    const Closure& closure, ValueType& return_val) {
+  // Extract ValueType from the Closure
+  using closure_value_type = typename Kokkos::Impl::FunctorAnalysis<
+      Kokkos::Impl::FunctorPatternInterface::SCAN, void, Closure,
+      ValueType>::value_type;
+  static_assert(std::is_same_v<closure_value_type, ValueType>,
+                "Non-matching value types of closure and return type");
+
+  ValueType accum;
+  parallel_scan(loop_boundaries, closure, Kokkos::Sum<ValueType>(accum));
+
+  return_val = accum;
 }
 
 }  // namespace Kokkos

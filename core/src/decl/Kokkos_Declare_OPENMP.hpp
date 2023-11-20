@@ -18,8 +18,12 @@
 #define KOKKOS_DECLARE_OPENMP_HPP
 
 #if defined(KOKKOS_ENABLE_OPENMP)
-#include <Kokkos_OpenMP.hpp>
+#include <OpenMP/Kokkos_OpenMP.hpp>
 #include <OpenMP/Kokkos_OpenMP_MDRangePolicy.hpp>
+#include <OpenMP/Kokkos_OpenMP_UniqueToken.hpp>
+#include <OpenMP/Kokkos_OpenMP_Parallel_For.hpp>
+#include <OpenMP/Kokkos_OpenMP_Parallel_Reduce.hpp>
+#include <OpenMP/Kokkos_OpenMP_Parallel_Scan.hpp>
 #endif
 
 #endif

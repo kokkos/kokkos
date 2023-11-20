@@ -155,8 +155,7 @@ class HostThreadTeamData {
 
   //----------------------------------------
 
-#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC bug in NVHPC regarding constexpr
-                               // constructors used in device code
+#if !defined(KOKKOS_COMPILER_NVHPC) || (KOKKOS_COMPILER_NVHPC >= 230700)
   constexpr
 #endif
       HostThreadTeamData() noexcept
@@ -481,14 +480,14 @@ class HostThreadTeamMember {
         // with a return value of 'true'
 
         Kokkos::Impl::atomic_store(shared_value, value,
-                                   Kokkos::Impl::memory_order_release);
+                                   desul::MemoryOrderRelease());
 
         m_data.team_rendezvous_release();
         // This thread released all other threads from 'team_rendezvous'
         // with a return value of 'false'
       } else {
         value = Kokkos::Impl::atomic_load(shared_value,
-                                          Kokkos::Impl::memory_order_acquire);
+                                          desul::MemoryOrderAcquire());
       }
     }))
 
@@ -516,7 +515,7 @@ class HostThreadTeamMember {
 
           if (1 < m_data.m_team_size) {
             Kokkos::Impl::atomic_store(shared_value, value,
-                                       Kokkos::Impl::memory_order_release);
+                                       desul::MemoryOrderRelease());
           }
 
           m_data.team_rendezvous_release();
@@ -524,7 +523,7 @@ class HostThreadTeamMember {
           // with a return value of 'false'
         } else {
           value = Kokkos::Impl::atomic_load(shared_value,
-                                            Kokkos::Impl::memory_order_acquire);
+                                            desul::MemoryOrderAcquire());
         }))
 
     KOKKOS_IF_ON_DEVICE(
@@ -864,18 +863,21 @@ KOKKOS_INLINE_FUNCTION
 
 //----------------------------------------------------------------------------
 
-template <typename iType, class Closure, class Member>
+template <typename iType, class Closure, class Member, typename ValueType>
 KOKKOS_INLINE_FUNCTION
-    std::enable_if_t<Impl::is_host_thread_team_member<Member>::value>
+    std::enable_if_t<!Kokkos::is_reducer<ValueType>::value &&
+                     Impl::is_host_thread_team_member<Member>::value>
     parallel_scan(Impl::TeamThreadRangeBoundariesStruct<iType, Member> const&
                       loop_boundaries,
-                  Closure const& closure) {
-  // Extract ValueType from the closure
+                  Closure const& closure, ValueType& return_val) {
+  // Extract ValueType from the Closure
+  using ClosureValueType = typename Kokkos::Impl::FunctorAnalysis<
+      Kokkos::Impl::FunctorPatternInterface::SCAN, void, Closure,
+      void>::value_type;
+  static_assert(std::is_same<ClosureValueType, ValueType>::value,
+                "Non-matching value types of closure and return type");
 
-  using value_type = typename Kokkos::Impl::FunctorAnalysis<
-      Kokkos::Impl::FunctorPatternInterface::SCAN, void, Closure>::value_type;
-
-  value_type accum = 0;
+  ValueType accum = ValueType();
 
   // Intra-member scan
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
@@ -883,25 +885,51 @@ KOKKOS_INLINE_FUNCTION
     closure(i, accum, false);
   }
 
+  auto team_member = loop_boundaries.thread;
+
   // 'accum' output is the exclusive prefix sum
-  accum = loop_boundaries.thread.team_scan(accum);
+  accum = team_member.team_scan(accum);
 
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
        i += loop_boundaries.increment) {
     closure(i, accum, true);
   }
+
+  team_member.team_broadcast(accum, team_member.team_size() - 1);
+
+  return_val = accum;
 }
 
-template <typename iType, class ClosureType, class Member>
+template <typename iType, class Closure, class Member>
 KOKKOS_INLINE_FUNCTION
     std::enable_if_t<Impl::is_host_thread_team_member<Member>::value>
+    parallel_scan(Impl::TeamThreadRangeBoundariesStruct<iType, Member> const&
+                      loop_boundaries,
+                  Closure const& closure) {
+  // Extract ValueType from the closure
+  using ValueType = typename Kokkos::Impl::FunctorAnalysis<
+      Kokkos::Impl::FunctorPatternInterface::SCAN, void, Closure,
+      void>::value_type;
+
+  ValueType scan_val;
+  parallel_scan(loop_boundaries, closure, scan_val);
+}
+
+template <typename iType, class ClosureType, class Member, typename ValueType>
+KOKKOS_INLINE_FUNCTION
+    std::enable_if_t<!Kokkos::is_reducer<ValueType>::value &&
+                     Impl::is_host_thread_team_member<Member>::value>
     parallel_scan(Impl::ThreadVectorRangeBoundariesStruct<iType, Member> const&
                       loop_boundaries,
-                  ClosureType const& closure) {
-  using value_type = typename Kokkos::Impl::FunctorAnalysis<
-      Impl::FunctorPatternInterface::SCAN, void, ClosureType>::value_type;
+                  ClosureType const& closure, ValueType& return_val) {
+  // Extract ValueType from the Closure
+  using ClosureValueType = typename Kokkos::Impl::FunctorAnalysis<
+      Kokkos::Impl::FunctorPatternInterface::SCAN, void, ClosureType,
+      void>::value_type;
+  static_assert(std::is_same<ClosureValueType, ValueType>::value,
+                "Non-matching value types of closure and return type");
 
-  value_type scan_val = value_type();
+  ValueType scan_val = ValueType();
 
 #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
 #pragma ivdep
@@ -910,6 +938,22 @@ KOKKOS_INLINE_FUNCTION
        i += loop_boundaries.increment) {
     closure(i, scan_val, true);
   }
+
+  return_val = scan_val;
+}
+
+template <typename iType, class ClosureType, class Member>
+KOKKOS_INLINE_FUNCTION
+    std::enable_if_t<Impl::is_host_thread_team_member<Member>::value>
+    parallel_scan(Impl::ThreadVectorRangeBoundariesStruct<iType, Member> const&
+                      loop_boundaries,
+                  ClosureType const& closure) {
+  // Extract ValueType from the closure
+  using ValueType = typename Kokkos::Impl::FunctorAnalysis<
+      Impl::FunctorPatternInterface::SCAN, void, ClosureType, void>::value_type;
+
+  ValueType scan_val;
+  parallel_scan(loop_boundaries, closure, scan_val);
 }
 
 template <typename iType, class Lambda, typename ReducerType, typename Member>

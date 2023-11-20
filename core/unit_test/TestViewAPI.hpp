@@ -958,8 +958,7 @@ class TestViewAPI {
     using mirror_type = typename view_type::HostMirror;
 
     static_assert(std::is_same<typename view_type::memory_space,
-                               typename mirror_type::memory_space>::value,
-                  "");
+                               typename mirror_type::memory_space>::value);
 
     view_type a("a");
     mirror_type am = Kokkos::create_mirror_view(a);
@@ -1227,7 +1226,7 @@ class TestViewAPI {
       Kokkos::deep_copy(typename hView4::execution_space(), dx, hx);
       Kokkos::deep_copy(typename hView4::execution_space(), dy, dx);
       Kokkos::deep_copy(typename hView4::execution_space(), hy, dy);
-      typename dView4::execution_space().fence();
+      typename hView4::execution_space().fence();
 
       for (size_t ip = 0; ip < N0; ++ip)
         for (size_t i1 = 0; i1 < N1; ++i1)
@@ -1238,7 +1237,7 @@ class TestViewAPI {
 
       Kokkos::deep_copy(typename hView4::execution_space(), dx, T(0));
       Kokkos::deep_copy(typename hView4::execution_space(), hx, dx);
-      typename dView4::execution_space().fence();
+      typename hView4::execution_space().fence();
 
       for (size_t ip = 0; ip < N0; ++ip)
         for (size_t i1 = 0; i1 < N1; ++i1)

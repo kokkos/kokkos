@@ -47,61 +47,6 @@ void OpenMPInternal::release_lock() {
                       desul::MemoryScopeDevice());
 }
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-void OpenMPInternal::validate_partition_impl(const int nthreads,
-                                             int &num_partitions,
-                                             int &partition_size) {
-  if (nthreads == 1) {
-    num_partitions = 1;
-    partition_size = 1;
-  } else if (num_partitions < 1 && partition_size < 1) {
-    int idle = nthreads;
-    for (int np = 2; np <= nthreads; ++np) {
-      for (int ps = 1; ps <= nthreads / np; ++ps) {
-        if (nthreads - np * ps < idle) {
-          idle           = nthreads - np * ps;
-          num_partitions = np;
-          partition_size = ps;
-        }
-        if (idle == 0) {
-          break;
-        }
-      }
-    }
-  } else if (num_partitions < 1 && partition_size > 0) {
-    if (partition_size <= nthreads) {
-      num_partitions = nthreads / partition_size;
-    } else {
-      num_partitions = 1;
-      partition_size = nthreads;
-    }
-  } else if (num_partitions > 0 && partition_size < 1) {
-    if (num_partitions <= nthreads) {
-      partition_size = nthreads / num_partitions;
-    } else {
-      num_partitions = nthreads;
-      partition_size = 1;
-    }
-  } else if (num_partitions * partition_size > nthreads) {
-    int idle     = nthreads;
-    const int NP = num_partitions;
-    const int PS = partition_size;
-    for (int np = NP; np > 0; --np) {
-      for (int ps = PS; ps > 0; --ps) {
-        if ((np * ps <= nthreads) && (nthreads - np * ps < idle)) {
-          idle           = nthreads - np * ps;
-          num_partitions = np;
-          partition_size = ps;
-        }
-        if (idle == 0) {
-          break;
-        }
-      }
-    }
-  }
-}
-#endif
-
 void OpenMPInternal::clear_thread_data() {
   const size_t member_bytes =
       sizeof(int64_t) *
@@ -241,16 +186,20 @@ void OpenMPInternal::initialize(int thread_count) {
   }
 
   {
-    if (Kokkos::show_warnings() && nullptr == std::getenv("OMP_PROC_BIND")) {
+    if (Kokkos::show_warnings() && !std::getenv("OMP_PROC_BIND")) {
       std::cerr
           << R"WARNING(Kokkos::OpenMP::initialize WARNING: OMP_PROC_BIND environment variable not set
   In general, for best performance with OpenMP 4.0 or better set OMP_PROC_BIND=spread and OMP_PLACES=threads
   For best performance with OpenMP 3.1 set OMP_PROC_BIND=true
   For unit testing set OMP_PROC_BIND=false
 )WARNING" << std::endl;
-    }
 
-    OpenMP::memory_space space;
+      if (mpi_detected()) {
+        std::cerr
+            << R"WARNING(MPI detected: For OpenMP binding to work as intended, MPI ranks must be bound to exclusive CPU sets.
+)WARNING" << std::endl;
+      }
+    }
 
     // Before any other call to OMP query the maximum number of threads
     // and save the value for re-initialization unit testing.
@@ -324,8 +273,6 @@ void OpenMPInternal::initialize(int thread_count) {
     std::cerr << "                                    Requested: "
               << thread_count << " threads per process." << std::endl;
   }
-  // Init the array used for arbitrarily sized atomics
-  init_lock_array_host_space();
 
   m_initialized = true;
 }
@@ -384,68 +331,4 @@ bool OpenMPInternal::verify_is_initialized(const char *const label) const {
   return m_initialized;
 }
 }  // namespace Impl
-
-//----------------------------------------------------------------------------
-
-OpenMP::OpenMP()
-    : m_space_instance(&Impl::OpenMPInternal::singleton(),
-                       [](Impl::OpenMPInternal *) {}) {
-  Impl::OpenMPInternal::singleton().verify_is_initialized(
-      "OpenMP instance constructor");
-}
-
-OpenMP::OpenMP(int pool_size)
-    : m_space_instance(new Impl::OpenMPInternal(pool_size),
-                       [](Impl::OpenMPInternal *ptr) {
-                         ptr->finalize();
-                         delete ptr;
-                       }) {
-  Impl::OpenMPInternal::singleton().verify_is_initialized(
-      "OpenMP instance constructor");
-}
-
-int OpenMP::impl_get_current_max_threads() noexcept {
-  return Impl::OpenMPInternal::get_current_max_threads();
-}
-
-void OpenMP::impl_initialize(InitializationSettings const &settings) {
-  Impl::OpenMPInternal::singleton().initialize(
-      settings.has_num_threads() ? settings.get_num_threads() : -1);
-}
-
-void OpenMP::impl_finalize() { Impl::OpenMPInternal::singleton().finalize(); }
-
-void OpenMP::print_configuration(std::ostream &os, bool /*verbose*/) const {
-  os << "Host Parallel Execution Space:\n";
-  os << "  KOKKOS_ENABLE_OPENMP: yes\n";
-
-  os << "OpenMP Atomics:\n";
-  os << "  KOKKOS_ENABLE_OPENMP_ATOMICS: ";
-#ifdef KOKKOS_ENABLE_OPENMP_ATOMICS
-  os << "yes\n";
-#else
-  os << "no\n";
-#endif
-
-  os << "\nOpenMP Runtime Configuration:\n";
-
-  m_space_instance->print_configuration(os);
-}
-
-int OpenMP::concurrency(OpenMP const &instance) {
-  return impl_thread_pool_size(instance);
-}
-
-void OpenMP::fence(const std::string &name) const {
-  Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::OpenMP>(
-      name, Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{1}, []() {});
-}
-
-namespace Impl {
-
-int g_openmp_space_factory_initialized =
-    initialize_space_factory<OpenMP>("050_OpenMP");
-
-}  // namespace Impl
-
 }  // namespace Kokkos

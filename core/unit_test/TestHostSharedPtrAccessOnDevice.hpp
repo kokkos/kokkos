@@ -37,7 +37,7 @@ template <class SmartPtr>
 struct CheckAccessStoredPointerAndDereferenceOnDevice {
   SmartPtr m_device_ptr;
   using ElementType = typename SmartPtr::element_type;
-  static_assert(std::is_same<ElementType, Data>::value, "");
+  static_assert(std::is_same<ElementType, Data>::value);
 
   CheckAccessStoredPointerAndDereferenceOnDevice(SmartPtr device_ptr)
       : m_device_ptr(device_ptr) {
@@ -108,12 +108,6 @@ TEST(TEST_CATEGORY, host_shared_ptr_dereference_on_device) {
       static_cast<T*>(Kokkos::kokkos_malloc<MemorySpace>(sizeof(T))),
       [](T* p) { Kokkos::kokkos_free<MemorySpace>(p); });
 
-#if defined(KOKKOS_ENABLE_CUDA) && \
-    defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC
-  if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>) {
-    GTEST_SKIP() << "FIXME wrong result";
-  }
-#endif
   check_access_stored_pointer_and_dereference_on_device(device_ptr);
 }
 

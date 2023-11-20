@@ -5,6 +5,14 @@
 # Validate options are given with correct case and define an internal
 # upper-case version for use within
 
+set(Kokkos_OPTIONS_NOT_TO_EXPORT
+  Kokkos_ENABLE_BENCHMARKS
+  Kokkos_ENABLE_EXAMPLES
+  Kokkos_ENABLE_TESTS
+  Kokkos_ENABLE_HEADER_SELF_CONTAINMENT_TESTS
+  Kokkos_ENABLE_COMPILER_WARNINGS
+)
+
 #
 #
 # @FUNCTION: kokkos_deprecated_list
@@ -56,6 +64,12 @@ FUNCTION(kokkos_option CAMEL_SUFFIX DEFAULT TYPE DOCSTRING)
 
   # Make sure this appears in the cache with the appropriate DOCSTRING
   SET(${CAMEL_NAME} ${DEFAULT} CACHE ${TYPE} ${DOCSTRING})
+
+  IF (KOKKOS_HAS_TRILINOS)
+    IF (NOT CAMEL_NAME IN_LIST Kokkos_OPTIONS_NOT_TO_EXPORT)
+      TRIBITS_PKG_EXPORT_CACHE_VAR(${CAMEL_NAME})
+    ENDIF()
+  ENDIF()
 
   #I don't love doing it this way because it's N^2 in number options, but c'est la vie
   FOREACH(opt ${KOKKOS_GIVEN_VARIABLES})

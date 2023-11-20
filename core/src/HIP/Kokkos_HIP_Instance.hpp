@@ -22,28 +22,30 @@
 #include <HIP/Kokkos_HIP_Space.hpp>
 #include <HIP/Kokkos_HIP_Error.hpp>
 
+#include <atomic>
 #include <mutex>
 
 namespace Kokkos {
 namespace Impl {
 
 struct HIPTraits {
-#if defined(KOKKOS_ARCH_VEGA)
-  static int constexpr WarpSize       = 64;
-  static int constexpr WarpIndexMask  = 0x003f; /* hexadecimal for 63 */
-  static int constexpr WarpIndexShift = 6;      /* WarpSize == 1 << WarpShift*/
-#elif defined(KOKKOS_ARCH_NAVI)
-  static int constexpr WarpSize       = 32;
-  static int constexpr WarpIndexMask  = 0x001f; /* hexadecimal for 31 */
-  static int constexpr WarpIndexShift = 5;      /* WarpSize == 1 << WarpShift*/
+#if defined(KOKKOS_ARCH_AMD_GFX906) || defined(KOKKOS_ARCH_AMD_GFX908) || \
+    defined(KOKKOS_ARCH_AMD_GFX90A) || defined(KOKKOS_ARCH_AMD_GFX942)
+  static constexpr int WarpSize       = 64;
+  static constexpr int WarpIndexMask  = 0x003f; /* hexadecimal for 63 */
+  static constexpr int WarpIndexShift = 6;      /* WarpSize == 1 << WarpShift*/
+#elif defined(KOKKOS_ARCH_AMD_GFX1030) || defined(KOKKOS_ARCH_AMD_GFX1100)
+  static constexpr int WarpSize       = 32;
+  static constexpr int WarpIndexMask  = 0x001f; /* hexadecimal for 31 */
+  static constexpr int WarpIndexShift = 5;      /* WarpSize == 1 << WarpShift*/
 #endif
-  static int constexpr ConservativeThreadsPerBlock =
+  static constexpr int ConservativeThreadsPerBlock =
       256;  // conservative fallback blocksize in case of spills
-  static int constexpr MaxThreadsPerBlock =
+  static constexpr int MaxThreadsPerBlock =
       1024;  // the maximum we can fit in a block
-  static int constexpr ConstantMemoryUsage        = 0x008000; /* 32k bytes */
-  static int constexpr KernelArgumentLimit        = 0x001000; /*  4k bytes */
-  static int constexpr ConstantMemoryUseThreshold = 0x000200; /* 512 bytes */
+  static constexpr int ConstantMemoryUsage        = 0x008000; /* 32k bytes */
+  static constexpr int KernelArgumentLimit        = 0x001000; /*  4k bytes */
+  static constexpr int ConstantMemoryUseThreshold = 0x000200; /* 512 bytes */
 };
 
 //----------------------------------------------------------------------------
@@ -68,12 +70,10 @@ class HIPInternal {
   using size_type = ::Kokkos::HIP::size_type;
 
   inline static int m_hipDev                        = -1;
-  inline static int m_hipArch                       = -1;
   inline static unsigned m_multiProcCount           = 0;
   inline static unsigned m_maxWarpCount             = 0;
   inline static std::array<size_type, 3> m_maxBlock = {0, 0, 0};
   inline static unsigned m_maxWavesPerCU            = 0;
-  inline static unsigned m_maxSharedWords           = 0;
   inline static int m_shmemPerSM                    = 0;
   inline static int m_maxShmemPerBlock              = 0;
   inline static int m_maxThreadsPerSM               = 0;
@@ -83,11 +83,15 @@ class HIPInternal {
   static int concurrency();
 
   // Scratch Spaces for Reductions
-  std::size_t m_scratchSpaceCount = 0;
-  std::size_t m_scratchFlagsCount = 0;
+  std::size_t m_scratchSpaceCount          = 0;
+  std::size_t m_scratchFlagsCount          = 0;
+  mutable std::size_t m_scratchFunctorSize = 0;
 
-  size_type *m_scratchSpace = nullptr;
-  size_type *m_scratchFlags = nullptr;
+  size_type *m_scratchSpace               = nullptr;
+  size_type *m_scratchFlags               = nullptr;
+  mutable size_type *m_scratchFunctor     = nullptr;
+  mutable size_type *m_scratchFunctorHost = nullptr;
+  inline static std::mutex scratchFunctorMutex;
 
   hipStream_t m_stream = nullptr;
   uint32_t m_instance_id =
@@ -100,7 +104,8 @@ class HIPInternal {
   mutable int64_t m_team_scratch_current_size[10] = {};
   mutable void *m_team_scratch_ptr[10]            = {};
   mutable std::atomic_int m_team_scratch_pool[10] = {};
-  std::int32_t *m_scratch_locks;
+  int32_t *m_scratch_locks                        = nullptr;
+  size_t m_num_scratch_locks                      = 0;
 
   bool was_finalized = false;
 
@@ -131,8 +136,10 @@ class HIPInternal {
   HIPInternal() = default;
 
   // Resizing of reduction related scratch spaces
-  size_type *scratch_space(const std::size_t size);
-  size_type *scratch_flags(const std::size_t size);
+  size_type *scratch_space(std::size_t const size);
+  size_type *scratch_flags(std::size_t const size);
+  size_type *stage_functor_for_execution(void const *driver,
+                                         std::size_t const size) const;
   uint32_t impl_get_instance_id() const noexcept;
   int acquire_team_scratch_space();
   // Resizing of team level 1 scratch
@@ -141,6 +148,7 @@ class HIPInternal {
   void release_team_scratch_space(int scratch_pool_id);
 };
 
+void create_HIP_instances(std::vector<HIP> &instances);
 }  // namespace Impl
 
 namespace Experimental {
@@ -149,16 +157,6 @@ namespace Experimental {
 //   Customization point for backends
 //   Default behavior is to return the passed in instance
 
-namespace Impl {
-inline void create_HIP_instances(std::vector<HIP> &instances) {
-  for (int s = 0; s < int(instances.size()); s++) {
-    hipStream_t stream;
-    KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamCreate(&stream));
-    instances[s] = HIP(stream, true);
-  }
-}
-}  // namespace Impl
-
 template <class... Args>
 std::vector<HIP> partition_space(const HIP &, Args...) {
   static_assert(
@@ -166,18 +164,20 @@ std::vector<HIP> partition_space(const HIP &, Args...) {
       "Kokkos Error: partitioning arguments must be integers or floats");
 
   std::vector<HIP> instances(sizeof...(Args));
-  Impl::create_HIP_instances(instances);
+  Kokkos::Impl::create_HIP_instances(instances);
   return instances;
 }
 
 template <class T>
-std::vector<HIP> partition_space(const HIP &, std::vector<T> &weights) {
+std::vector<HIP> partition_space(const HIP &, std::vector<T> const &weights) {
   static_assert(
       std::is_arithmetic<T>::value,
       "Kokkos Error: partitioning arguments must be integers or floats");
 
+  // We only care about the number of instances to create and ignore weights
+  // otherwise.
   std::vector<HIP> instances(weights.size());
-  Impl::create_HIP_instances(instances);
+  Kokkos::Impl::create_HIP_instances(instances);
   return instances;
 }
 }  // namespace Experimental

@@ -20,7 +20,6 @@
 
 #include <HIP/Kokkos_HIP.hpp>
 #include <HIP/Kokkos_HIP_Instance.hpp>
-#include <HIP/Kokkos_HIP_Locks.hpp>
 
 #include <impl/Kokkos_DeviceManagement.hpp>
 #include <impl/Kokkos_ExecSpaceManager.hpp>
@@ -61,8 +60,6 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
   if (Impl::HIPTraits::WarpSize < Impl::HIPInternal::m_maxWarpCount) {
     Impl::HIPInternal::m_maxWarpCount = Impl::HIPTraits::WarpSize;
   }
-  int constexpr WordSize              = sizeof(size_type);
-  Impl::HIPInternal::m_maxSharedWords = hipProp.sharedMemPerBlock / WordSize;
 
   //----------------------------------
   // Maximum number of blocks
@@ -79,7 +76,7 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
       Impl::HIPInternal::m_maxWavesPerCU * Impl::HIPTraits::WarpSize;
 
   // Init the array for used for arbitrarily sized atomics
-  Impl::initialize_host_hip_lock_arrays();
+  desul::Impl::init_lock_arrays();  // FIXME
 
   // Allocate a staging buffer for constant mem in pinned host memory
   // and an event to avoid overwriting driver for previous kernel launches
@@ -104,15 +101,19 @@ HIP::HIP()
       "HIP instance constructor");
 }
 
-HIP::HIP(hipStream_t const stream, bool manage_stream)
+HIP::HIP(hipStream_t const stream, Impl::ManageStream manage_stream)
     : m_space_instance(new Impl::HIPInternal, [](Impl::HIPInternal* ptr) {
         ptr->finalize();
         delete ptr;
       }) {
   Impl::HIPInternal::singleton().verify_is_initialized(
       "HIP instance constructor");
-  m_space_instance->initialize(stream, manage_stream);
+  m_space_instance->initialize(stream, static_cast<bool>(manage_stream));
 }
+
+KOKKOS_DEPRECATED HIP::HIP(hipStream_t const stream, bool manage_stream)
+    : HIP(stream,
+          manage_stream ? Impl::ManageStream::yes : Impl::ManageStream::no) {}
 
 void HIP::print_configuration(std::ostream& os, bool /*verbose*/) const {
   os << "Device Execution Space:\n";

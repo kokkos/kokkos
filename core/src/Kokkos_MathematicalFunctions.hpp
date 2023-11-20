@@ -92,16 +92,6 @@ using promote_3_t = typename promote_3<T, U, V>::type;
 #endif
 #endif
 
-#if defined(KOKKOS_ENABLE_DEPRECATED_CODE_3)
-#define KOKKOS_IMPL_MATH_FUNCTIONS_DEFINED_IF_DEPRECATED_CODE_ENABLED( \
-    USING_DECLARATIONS_IN_EXPERIMENTAL_NAMESPACE)                      \
-  USING_DECLARATIONS_IN_EXPERIMENTAL_NAMESPACE
-#else
-#define KOKKOS_IMPL_MATH_FUNCTIONS_DEFINED_IF_DEPRECATED_CODE_ENABLED( \
-    USING_DECLARATIONS_IN_EXPERIMENTAL_NAMESPACE)                      \
-  /* nothing */
-#endif
-
 #define KOKKOS_IMPL_MATH_UNARY_FUNCTION(FUNC)                                  \
   KOKKOS_INLINE_FUNCTION float FUNC(float x) {                                 \
     using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                          \
@@ -128,13 +118,7 @@ using promote_3_t = typename promote_3<T, U, V>::type;
       T x) {                                                                   \
     using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                          \
     return FUNC(static_cast<double>(x));                                       \
-  }                                                                            \
-  KOKKOS_IMPL_MATH_FUNCTIONS_DEFINED_IF_DEPRECATED_CODE_ENABLED(               \
-      namespace Experimental {                                                 \
-        using ::Kokkos::FUNC;                                                  \
-        using ::Kokkos::FUNC##f;                                               \
-        using ::Kokkos::FUNC##l;                                               \
-      })
+  }
 
 // isinf, isnan, and isinfinite do not work on Windows with CUDA with std::
 // getting warnings about calling host function in device function then
@@ -151,9 +135,7 @@ using promote_3_t = typename promote_3<T, U, V>::type;
   KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_integral_v<T>, bool> FUNC( \
       T x) {                                                                 \
     return ::FUNC(static_cast<double>(x));                                   \
-  }                                                                          \
-  KOKKOS_IMPL_MATH_FUNCTIONS_DEFINED_IF_DEPRECATED_CODE_ENABLED(             \
-      namespace Experimental { using ::Kokkos::FUNC; })
+  }
 #else
 #define KOKKOS_IMPL_MATH_UNARY_PREDICATE(FUNC)                               \
   KOKKOS_INLINE_FUNCTION bool FUNC(float x) {                                \
@@ -173,9 +155,7 @@ using promote_3_t = typename promote_3<T, U, V>::type;
       T x) {                                                                 \
     using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                        \
     return FUNC(static_cast<double>(x));                                     \
-  }                                                                          \
-  KOKKOS_IMPL_MATH_FUNCTIONS_DEFINED_IF_DEPRECATED_CODE_ENABLED(             \
-      namespace Experimental { using ::Kokkos::FUNC; })
+  }
 #endif
 
 #define KOKKOS_IMPL_MATH_BINARY_FUNCTION(FUNC)                                 \
@@ -218,16 +198,10 @@ using promote_3_t = typename promote_3<T, U, V>::type;
                           long double>                                         \
   FUNC(T1 x, T2 y) {                                                           \
     using Promoted = Kokkos::Impl::promote_2_t<T1, T2>;                        \
-    static_assert(std::is_same_v<Promoted, long double>, "");                  \
+    static_assert(std::is_same_v<Promoted, long double>);                      \
     using std::FUNC;                                                           \
     return FUNC(static_cast<Promoted>(x), static_cast<Promoted>(y));           \
-  }                                                                            \
-  KOKKOS_IMPL_MATH_FUNCTIONS_DEFINED_IF_DEPRECATED_CODE_ENABLED(               \
-      namespace Experimental {                                                 \
-        using ::Kokkos::FUNC;                                                  \
-        using ::Kokkos::FUNC##f;                                               \
-        using ::Kokkos::FUNC##l;                                               \
-      })
+  }
 
 #define KOKKOS_IMPL_MATH_TERNARY_FUNCTION(FUNC)                             \
   KOKKOS_INLINE_FUNCTION float FUNC(float x, float y, float z) {            \
@@ -286,7 +260,7 @@ KOKKOS_INLINE_FUNCTION int abs(int n) {
 }
 KOKKOS_INLINE_FUNCTION long abs(long n) {
 // FIXME_NVHPC ptxas fatal   : unresolved extern function 'labs'
-#ifdef KOKKOS_COMPILER_NVHPC
+#if defined(KOKKOS_COMPILER_NVHPC) && KOKKOS_COMPILER_NVHPC < 230700
   return n > 0 ? n : -n;
 #else
   using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::abs;
@@ -295,7 +269,7 @@ KOKKOS_INLINE_FUNCTION long abs(long n) {
 }
 KOKKOS_INLINE_FUNCTION long long abs(long long n) {
 // FIXME_NVHPC ptxas fatal   : unresolved extern function 'labs'
-#ifdef KOKKOS_COMPILER_NVHPC
+#if defined(KOKKOS_COMPILER_NVHPC) && KOKKOS_COMPILER_NVHPC < 230700
   return n > 0 ? n : -n;
 #else
   using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::abs;
@@ -314,8 +288,6 @@ inline long double abs(long double x) {
   using std::abs;
   return abs(x);
 }
-KOKKOS_IMPL_MATH_FUNCTIONS_DEFINED_IF_DEPRECATED_CODE_ENABLED(
-    namespace Experimental { using ::Kokkos::abs; })
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(fabs)
 KOKKOS_IMPL_MATH_BINARY_FUNCTION(fmod)
 KOKKOS_IMPL_MATH_BINARY_FUNCTION(remainder)
@@ -336,18 +308,10 @@ KOKKOS_INLINE_FUNCTION float nanf(char const*) { return sycl::nan(0u); }
 KOKKOS_INLINE_FUNCTION double nan(char const*) { return sycl::nan(0ul); }
 #endif
 inline long double nanl(char const* arg) { return ::nanl(arg); }
-KOKKOS_IMPL_MATH_FUNCTIONS_DEFINED_IF_DEPRECATED_CODE_ENABLED(
-    namespace Experimental {
-      using ::Kokkos::nan;
-      using ::Kokkos::nanf;
-      using ::Kokkos::nanl;
-    })
 // Exponential functions
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(exp)
 // FIXME_NVHPC nvc++ has issues with exp2
-#ifndef KOKKOS_COMPILER_NVHPC
-KOKKOS_IMPL_MATH_UNARY_FUNCTION(exp2)
-#else
+#if defined(KOKKOS_COMPILER_NVHPC) && KOKKOS_COMPILER_NVHPC < 230700
 KOKKOS_INLINE_FUNCTION float exp2(float val) {
   constexpr float ln2 = 0.693147180559945309417232121458176568L;
   return exp(ln2 * val);
@@ -365,6 +329,8 @@ KOKKOS_INLINE_FUNCTION double exp2(T val) {
   constexpr double ln2 = 0.693147180559945309417232121458176568L;
   return exp(ln2 * static_cast<double>(val));
 }
+#else
+KOKKOS_IMPL_MATH_UNARY_FUNCTION(exp2)
 #endif
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(expm1)
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(log)
@@ -478,12 +444,43 @@ KOKKOS_IMPL_MATH_UNARY_PREDICATE(signbit)
 // islessgreater
 // isunordered
 
-#undef KOKKOS_IMPL_MATH_FUNCTIONS_DEFINED_IF_DEPRECATED_CODE_ENABLED
 #undef KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE
 #undef KOKKOS_IMPL_MATH_UNARY_FUNCTION
 #undef KOKKOS_IMPL_MATH_UNARY_PREDICATE
 #undef KOKKOS_IMPL_MATH_BINARY_FUNCTION
 #undef KOKKOS_IMPL_MATH_TERNARY_FUNCTION
+
+// non-standard math functions provided by CUDA/HIP/SYCL
+KOKKOS_INLINE_FUNCTION float rsqrt(float val) {
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
+  KOKKOS_IF_ON_DEVICE(return ::rsqrtf(val);)
+  KOKKOS_IF_ON_HOST(return 1.0f / Kokkos::sqrt(val);)
+#elif defined(KOKKOS_ENABLE_SYCL)
+  KOKKOS_IF_ON_DEVICE(return sycl::rsqrt(val);)
+  KOKKOS_IF_ON_HOST(return 1.0f / Kokkos::sqrt(val);)
+#else
+  return 1.0f / Kokkos::sqrt(val);
+#endif
+}
+KOKKOS_INLINE_FUNCTION double rsqrt(double val) {
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
+  KOKKOS_IF_ON_DEVICE(return ::rsqrt(val);)
+  KOKKOS_IF_ON_HOST(return 1.0 / Kokkos::sqrt(val);)
+#elif defined(KOKKOS_ENABLE_SYCL)
+  KOKKOS_IF_ON_DEVICE(return sycl::rsqrt(val);)
+  KOKKOS_IF_ON_HOST(return 1.0 / Kokkos::sqrt(val);)
+#else
+  return 1.0 / Kokkos::sqrt(val);
+#endif
+}
+inline long double rsqrt(long double val) { return 1.0l / Kokkos::sqrt(val); }
+KOKKOS_INLINE_FUNCTION float rsqrtf(float x) { return Kokkos::rsqrt(x); }
+inline long double rsqrtl(long double x) { return Kokkos::rsqrt(x); }
+template <class T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_integral_v<T>, double> rsqrt(
+    T x) {
+  return Kokkos::rsqrt(static_cast<double>(x));
+}
 
 }  // namespace Kokkos
 

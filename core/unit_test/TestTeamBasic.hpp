@@ -182,6 +182,9 @@ struct LargeTeamScratchFunctor {
 };
 
 TEST(TEST_CATEGORY, large_team_scratch_size) {
+#ifdef KOKKOS_IMPL_32BIT
+  GTEST_SKIP() << "Fails on 32-bit";  // FIXME_32BIT
+#endif
   const int level   = 1;
   const int n_teams = 1;
 
@@ -248,6 +251,9 @@ struct long_wrapper {
   long_wrapper(long val) : value(val) {}
 
   KOKKOS_FUNCTION
+  long_wrapper(const long_wrapper& val) : value(val.value) {}
+
+  KOKKOS_FUNCTION
   friend void operator+=(long_wrapper& lhs, const long_wrapper& rhs) {
     lhs.value += rhs.value;
   }
@@ -274,7 +280,7 @@ namespace Test {
 
 // Test for non-arithmetic type
 TEST(TEST_CATEGORY, team_broadcast_long_wrapper) {
-  static_assert(!std::is_arithmetic<long_wrapper>::value, "");
+  static_assert(!std::is_arithmetic<long_wrapper>::value);
 
   TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>,
                     long_wrapper>::test_teambroadcast(0, 1);

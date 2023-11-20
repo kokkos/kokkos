@@ -17,8 +17,11 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #ifdef DESUL_HAVE_HIP_ATOMICS
 #include <desul/atomics/Lock_Based_Fetch_Op_HIP.hpp>
 #endif
+#ifdef DESUL_HAVE_OPENACC_ATOMICS
+#include <desul/atomics/Lock_Based_Fetch_Op_OpenACC.hpp>
+#endif
 #ifdef DESUL_HAVE_SYCL_ATOMICS
-#include <desul/atomics/Lock_Based_Fetch_Op_Unimplemented.hpp>
+#include <desul/atomics/Lock_Based_Fetch_Op_SYCL.hpp>
 #endif
 
 #include <desul/atomics/Lock_Based_Fetch_Op_Host.hpp>

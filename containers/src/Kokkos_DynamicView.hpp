@@ -553,6 +553,9 @@ template <class D, class... P>
 struct is_dynamic_view<Kokkos::Experimental::DynamicView<D, P...>>
     : public std::true_type {};
 
+template <class T>
+inline constexpr bool is_dynamic_view_v = is_dynamic_view<T>::value;
+
 }  // namespace Kokkos
 
 namespace Kokkos {
@@ -878,8 +881,8 @@ inline void deep_copy(const View<T, DP...>& dst,
 template <class T, class... DP, class... SP>
 inline void deep_copy(const Kokkos::Experimental::DynamicView<T, DP...>& dst,
                       const View<T, SP...>& src) {
-  using dst_type = Kokkos::Experimental::DynamicView<T, SP...>;
-  using src_type = View<T, DP...>;
+  using dst_type = Kokkos::Experimental::DynamicView<T, DP...>;
+  using src_type = View<T, SP...>;
 
   using dst_execution_space = typename ViewTraits<T, DP...>::execution_space;
   using src_memory_space    = typename ViewTraits<T, SP...>::memory_space;

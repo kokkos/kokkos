@@ -129,30 +129,28 @@ class TaskQueueCommonMixin {
   KOKKOS_INLINE_FUNCTION
   void _increment_ready_count() {
     // TODO @tasking @memory_order DSH memory order
-    Kokkos::Impl::desul_atomic_inc(&this->m_ready_count,
-                                   Kokkos::Impl::MemoryOrderSeqCst(),
-                                   Kokkos::Impl::MemoryScopeDevice());
+    desul::atomic_inc(&this->m_ready_count, desul::MemoryOrderSeqCst(),
+                      desul::MemoryScopeDevice());
   }
 
   KOKKOS_INLINE_FUNCTION
   void _decrement_ready_count() {
     // TODO @tasking @memory_order DSH memory order
-    Kokkos::Impl::desul_atomic_dec(&this->m_ready_count,
-                                   Kokkos::Impl::MemoryOrderSeqCst(),
-                                   Kokkos::Impl::MemoryScopeDevice());
+    desul::atomic_dec(&this->m_ready_count, desul::MemoryOrderSeqCst(),
+                      desul::MemoryScopeDevice());
   }
 
  public:
   KOKKOS_INLINE_FUNCTION
   bool is_done() const noexcept {
-    // TODO @tasking @memory_order DSH Memory order, instead of volatile
-    return (*(volatile int*)(&m_ready_count)) == 0;
+    return desul::atomic_load(&m_ready_count, desul::MemoryOrderAcquire(),
+                              desul::MemoryScopeDevice()) == 0;
   }
 
   KOKKOS_INLINE_FUNCTION
   int32_t ready_count() const noexcept {
-    // TODO @tasking @memory_order DSH Memory order, instead of volatile
-    return (*(volatile int*)(&m_ready_count));
+    return desul::atomic_load(&m_ready_count, desul::MemoryOrderAcquire(),
+                              desul::MemoryScopeDevice());
   }
 
   template <class TaskQueueTraits, class TeamSchedulerInfo>

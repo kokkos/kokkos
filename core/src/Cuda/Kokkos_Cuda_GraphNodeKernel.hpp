@@ -30,8 +30,7 @@
 #include <Kokkos_Parallel_Reduce.hpp>
 #include <Kokkos_PointerOwnership.hpp>
 
-#include <Kokkos_Cuda.hpp>
-#include <cuda_runtime_api.h>
+#include <Cuda/Kokkos_Cuda.hpp>
 
 namespace Kokkos {
 namespace Impl {
@@ -133,8 +132,9 @@ template <class KernelType>
 struct get_graph_node_kernel_type<KernelType, Kokkos::ParallelReduceTag>
     : type_identity<GraphNodeKernelImpl<
           Kokkos::Cuda, typename KernelType::Policy,
-          typename KernelType::functor_type, Kokkos::ParallelReduceTag,
-          typename KernelType::reducer_type>> {};
+          CombinedFunctorReducer<typename KernelType::functor_type,
+                                 typename KernelType::reducer_type>,
+          Kokkos::ParallelReduceTag>> {};
 
 //==============================================================================
 // <editor-fold desc="get_cuda_graph_*() helper functions"> {{{1

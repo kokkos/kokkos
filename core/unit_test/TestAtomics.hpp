@@ -498,7 +498,9 @@ TEST(TEST_CATEGORY, atomics) {
   ASSERT_TRUE((TestAtomic::Loop<float, TEST_EXECSPACE>(100, 2)));
   ASSERT_TRUE((TestAtomic::Loop<float, TEST_EXECSPACE>(100, 3)));
 
-#ifndef KOKKOS_ENABLE_OPENMPTARGET
+  // FIXME_OPENMPTARGET
+  // FIXME_OPENACC: atomic operations on composite types are not supported.
+#if !defined(KOKKOS_ENABLE_OPENMPTARGET) && !defined(KOKKOS_ENABLE_OPENACC)
   ASSERT_TRUE((TestAtomic::Loop<Kokkos::complex<float>, TEST_EXECSPACE>(1, 1)));
   ASSERT_TRUE((TestAtomic::Loop<Kokkos::complex<float>, TEST_EXECSPACE>(1, 2)));
   ASSERT_TRUE((TestAtomic::Loop<Kokkos::complex<float>, TEST_EXECSPACE>(1, 3)));
@@ -510,8 +512,12 @@ TEST(TEST_CATEGORY, atomics) {
   ASSERT_TRUE(
       (TestAtomic::Loop<Kokkos::complex<float>, TEST_EXECSPACE>(100, 3)));
 
-// FIXME_SYCL atomics for large types to be implemented
-#ifndef KOKKOS_ENABLE_SYCL
+// FIXME_SYCL Replace macro by SYCL_EXT_ONEAPI_DEVICE_GLOBAL or remove
+// condition alltogether when possible.
+#if defined(KOKKOS_ENABLE_SYCL) && \
+    !defined(KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED)
+  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::SYCL>) return;
+#endif
   ASSERT_TRUE(
       (TestAtomic::Loop<Kokkos::complex<double>, TEST_EXECSPACE>(1, 1)));
   ASSERT_TRUE(
@@ -536,7 +542,49 @@ TEST(TEST_CATEGORY, atomics) {
       (TestAtomic::Loop<TestAtomic::SuperScalar<4>, TEST_EXECSPACE>(100, 3)));
 #endif
 #endif
-#endif
 }
+
+// see https://github.com/trilinos/Trilinos/pull/11506
+struct TpetraUseCase {
+  template <class Scalar>
+  struct AbsMaxHelper {
+    Scalar value;
+
+    KOKKOS_FUNCTION AbsMaxHelper& operator+=(AbsMaxHelper const& rhs) {
+      Scalar lhs_abs_value = Kokkos::abs(value);
+      Scalar rhs_abs_value = Kokkos::abs(rhs.value);
+      value = lhs_abs_value > rhs_abs_value ? lhs_abs_value : rhs_abs_value;
+      return *this;
+    }
+
+    KOKKOS_FUNCTION AbsMaxHelper operator+(AbsMaxHelper const& rhs) const {
+      AbsMaxHelper ret = *this;
+      ret += rhs;
+      return ret;
+    }
+  };
+
+  using T = int;
+  Kokkos::View<T, TEST_EXECSPACE> d_{"lbl"};
+  KOKKOS_FUNCTION void operator()(int i) const {
+    // 0, -1, 2, -3, ...
+    auto v_i = static_cast<T>(i);
+    if (i % 2 == 1) v_i = -v_i;
+    Kokkos::atomic_add(reinterpret_cast<AbsMaxHelper<T>*>(&d_()),
+                       AbsMaxHelper<T>{v_i});
+  }
+
+  TpetraUseCase() {
+    Kokkos::parallel_for(Kokkos::RangePolicy<TEST_EXECSPACE>(0, 10), *this);
+  }
+
+  void check() {
+    T v;
+    Kokkos::deep_copy(v, d_);
+    ASSERT_EQ(v, 9);
+  }
+};
+
+TEST(TEST_CATEGORY, atomics_tpetra_max_abs) { TpetraUseCase().check(); }
 
 }  // namespace Test

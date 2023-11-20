@@ -29,6 +29,23 @@
 namespace Kokkos {
 namespace Impl {
 
+// same as std::integral_constant but with __host__ __device__ annotations on
+// the implicit conversion function and the call operator
+template <class T, T v>
+struct integral_constant {
+  using value_type         = T;
+  using type               = integral_constant<T, v>;
+  static constexpr T value = v;
+  KOKKOS_FUNCTION constexpr operator value_type() const noexcept {
+    return value;
+  }
+  KOKKOS_FUNCTION constexpr value_type operator()() const noexcept {
+    return value;
+  }
+};
+
+//==============================================================================
+
 template <typename... Is>
 struct always_true : std::true_type {};
 
@@ -62,6 +79,33 @@ template <class T>
 using remove_cvref_t = typename remove_cvref<T>::type;
 #endif
 
+// same as C++23 std::to_underlying but with __host__ __device__ annotations
+template <typename E>
+KOKKOS_FUNCTION constexpr std::underlying_type_t<E> to_underlying(
+    E e) noexcept {
+  return static_cast<std::underlying_type_t<E>>(e);
+}
+
+#if defined(__cpp_lib_is_scoped_enum)
+// since C++23
+using std::is_scoped_enum;
+using std::is_scoped_enum_v;
+#else
+template <typename E, bool = std::is_enum_v<E>>
+struct is_scoped_enum_impl : std::false_type {};
+
+template <typename E>
+struct is_scoped_enum_impl<E, true>
+    : std::bool_constant<!std::is_convertible_v<E, std::underlying_type_t<E>>> {
+};
+
+template <typename E>
+struct is_scoped_enum : is_scoped_enum_impl<E>::type {};
+
+template <typename E>
+inline constexpr bool is_scoped_enum_v = is_scoped_enum<E>::value;
+#endif
+
 //==============================================================================
 // <editor-fold desc="is_specialization_of"> {{{1
 
@@ -72,25 +116,6 @@ template <template <class...> class Template, class... Args>
 struct is_specialization_of<Template<Args...>, Template> : std::true_type {};
 
 // </editor-fold> end is_specialization_of }}}1
-//==============================================================================
-
-//==============================================================================
-// destruct_delete is a unique_ptr deleter for objects
-// created by placement new into already allocated memory
-// by only calling the destructor on the object.
-//
-// Because unique_ptr never calls its deleter with a nullptr value,
-// no need to check if p == nullptr.
-//
-// Note:  This differs in interface from std::default_delete in that the
-// function call operator is templated instead of the class, to make
-// it easier to use and disallow specialization.
-struct destruct_delete {
-  template <typename T>
-  KOKKOS_INLINE_FUNCTION constexpr void operator()(T* p) const noexcept {
-    p->~T();
-  }
-};
 //==============================================================================
 
 //==============================================================================

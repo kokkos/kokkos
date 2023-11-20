@@ -24,7 +24,15 @@
 #include <HIP/Kokkos_HIP_Error.hpp>
 #include <HIP/Kokkos_HIP_Instance.hpp>
 #include <HIP/Kokkos_HIP_Space.hpp>
-#include <HIP/Kokkos_HIP_Locks.hpp>
+
+#if !((HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR == 2))
+#define KOKKOS_IMPL_HIP_GRAPH_ENABLED
+#endif
+
+#ifdef KOKKOS_IMPL_HIP_GRAPH_ENABLED
+#include <HIP/Kokkos_HIP_GraphNodeKernel.hpp>
+#include <impl/Kokkos_GraphImpl_fwd.hpp>
+#endif
 
 // Must use global variable on the device with HIP-Clang
 #ifdef __HIP__
@@ -127,6 +135,9 @@ struct DeduceHIPLaunchMechanism {
       light_weight = Kokkos::Experimental::WorkItemProperty::HintLightWeight;
   static constexpr Kokkos::Experimental::WorkItemProperty::HintHeavyWeight_t
       heavy_weight = Kokkos::Experimental::WorkItemProperty::HintHeavyWeight;
+  static constexpr Kokkos::Experimental::WorkItemProperty::
+      ImplForceGlobalLaunch_t force_global_launch =
+          Kokkos::Experimental::WorkItemProperty::ImplForceGlobalLaunch;
   static constexpr typename DriverType::Policy::work_item_property property =
       typename DriverType::Policy::work_item_property();
 
@@ -160,15 +171,17 @@ struct DeduceHIPLaunchMechanism {
   // Kal<F<CMU     CG  LCG C  C        CG  LG C  G    CG  CG C  C
   // CMU<F          G  LCG G  G         G  LG G  G     G  CG G  G
   static constexpr HIPLaunchMechanism launch_mechanism =
-      ((property & light_weight) == light_weight)
-          ? (sizeof(DriverType) < HIPTraits::KernelArgumentLimit
-                 ? HIPLaunchMechanism::LocalMemory
-                 : HIPLaunchMechanism::GlobalMemory)
-          : (((property & heavy_weight) == heavy_weight)
-                 ? (sizeof(DriverType) < HIPTraits::ConstantMemoryUsage
-                        ? HIPLaunchMechanism::ConstantMemory
-                        : HIPLaunchMechanism::GlobalMemory)
-                 : (default_launch_mechanism));
+      ((property & force_global_launch) == force_global_launch)
+          ? HIPLaunchMechanism::GlobalMemory
+          : ((property & light_weight) == light_weight)
+                ? (sizeof(DriverType) < HIPTraits::KernelArgumentLimit
+                       ? HIPLaunchMechanism::LocalMemory
+                       : HIPLaunchMechanism::GlobalMemory)
+                : (((property & heavy_weight) == heavy_weight)
+                       ? (sizeof(DriverType) < HIPTraits::ConstantMemoryUsage
+                              ? HIPLaunchMechanism::ConstantMemory
+                              : HIPLaunchMechanism::GlobalMemory)
+                       : (default_launch_mechanism));
 };
 
 template <typename DriverType, typename LaunchBounds,
@@ -188,6 +201,13 @@ struct HIPParallelLaunchKernelFuncData {
     return attr;
   }
 };
+
+//---------------------------------------------------------------//
+// Helper function                                               //
+//---------------------------------------------------------------//
+inline bool is_empty_launch(dim3 const &grid, dim3 const &block) {
+  return (grid.x == 0) || ((block.x * block.y * block.z) == 0);
+}
 
 //---------------------------------------------------------------//
 // HIPParallelLaunchKernelFunc structure and its specializations //
@@ -363,6 +383,42 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
     (base_t::get_kernel_func())<<<grid, block, shmem, hip_instance->m_stream>>>(
         driver);
   }
+
+#ifdef KOKKOS_IMPL_HIP_GRAPH_ENABLED
+  static void create_parallel_launch_graph_node(
+      DriverType const &driver, dim3 const &grid, dim3 const &block, int shmem,
+      HIPInternal const * /*hip_instance*/) {
+    auto const &graph = get_hip_graph_from_kernel(driver);
+    KOKKOS_EXPECTS(graph);
+    auto &graph_node = get_hip_graph_node_from_kernel(driver);
+    // Expect node not yet initialized
+    KOKKOS_EXPECTS(!graph_node);
+
+    if (!is_empty_launch(grid, block)) {
+      void const *args[] = {&driver};
+
+      hipKernelNodeParams params = {};
+
+      params.blockDim       = block;
+      params.gridDim        = grid;
+      params.sharedMemBytes = shmem;
+      params.func           = (void *)base_t::get_kernel_func();
+      params.kernelParams   = (void **)args;
+      params.extra          = nullptr;
+
+      KOKKOS_IMPL_HIP_SAFE_CALL(hipGraphAddKernelNode(
+          &graph_node, graph, /* dependencies = */ nullptr,
+          /* numDependencies = */ 0, &params));
+    } else {
+      // We still need an empty node for the dependency structure
+      KOKKOS_IMPL_HIP_SAFE_CALL(
+          hipGraphAddEmptyNode(&graph_node, graph,
+                               /* dependencies = */ nullptr,
+                               /* numDependencies = */ 0));
+    }
+    KOKKOS_ENSURES(graph_node);
+  }
+#endif
 };
 
 // HIPLaunchMechanism::GlobalMemory specialization
@@ -377,9 +433,60 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
   static void invoke_kernel(DriverType const &driver, dim3 const &grid,
                             dim3 const &block, int shmem,
                             HIPInternal const *hip_instance) {
+    // Wait until the previous kernel that uses m_scratchFuntor is done
+    std::lock_guard<std::mutex> lock(HIPInternal::scratchFunctorMutex);
+    DriverType *driver_ptr = reinterpret_cast<DriverType *>(
+        hip_instance->stage_functor_for_execution(
+            reinterpret_cast<void const *>(&driver), sizeof(DriverType)));
     (base_t::get_kernel_func())<<<grid, block, shmem, hip_instance->m_stream>>>(
-        driver);
+        driver_ptr);
   }
+
+#ifdef KOKKOS_IMPL_HIP_GRAPH_ENABLED
+  static void create_parallel_launch_graph_node(
+      DriverType const &driver, dim3 const &grid, dim3 const &block, int shmem,
+      HIPInternal const *hip_instance) {
+    auto const &graph = get_hip_graph_from_kernel(driver);
+    KOKKOS_EXPECTS(graph);
+    auto &graph_node = get_hip_graph_node_from_kernel(driver);
+    // Expect node not yet initialized
+    KOKKOS_EXPECTS(!graph_node);
+
+    if (!Impl::is_empty_launch(grid, block)) {
+      auto *driver_ptr = Impl::allocate_driver_storage_for_kernel(driver);
+
+      // Unlike in the non-graph case, we can get away with doing an async copy
+      // here because the `DriverType` instance is held in the GraphNodeImpl
+      // which is guaranteed to be alive until the graph instance itself is
+      // destroyed, where there should be a fence ensuring that the allocation
+      // associated with this kernel on the device side isn't deleted.
+      hipMemcpyAsync(driver_ptr, &driver, sizeof(DriverType), hipMemcpyDefault,
+                     hip_instance->m_stream);
+
+      void const *args[] = {&driver_ptr};
+
+      hipKernelNodeParams params = {};
+
+      params.blockDim       = block;
+      params.gridDim        = grid;
+      params.sharedMemBytes = shmem;
+      params.func           = (void *)base_t::get_kernel_func();
+      params.kernelParams   = (void **)args;
+      params.extra          = nullptr;
+
+      KOKKOS_IMPL_HIP_SAFE_CALL(hipGraphAddKernelNode(
+          &graph_node, graph, /* dependencies = */ nullptr,
+          /* numDependencies = */ 0, &params));
+    } else {
+      // We still need an empty node for the dependency structure
+      KOKKOS_IMPL_HIP_SAFE_CALL(
+          hipGraphAddEmptyNode(&graph_node, graph,
+                               /* dependencies = */ nullptr,
+                               /* numDependencies = */ 0));
+    }
+    KOKKOS_ENSURES(bool(graph_node))
+  }
+#endif
 };
 
 // HIPLaunchMechanism::ConstantMemory specializations
@@ -405,7 +512,8 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
 
     // Copy functor (synchronously) to staging buffer in pinned host memory
     unsigned long *staging = hip_instance->constantMemHostStaging;
-    std::memcpy(staging, &driver, sizeof(DriverType));
+    std::memcpy(static_cast<void *>(staging),
+                static_cast<const void *>(&driver), sizeof(DriverType));
 
     // Copy functor asynchronously from there to constant memory on the device
     KOKKOS_IMPL_HIP_SAFE_CALL(hipMemcpyToSymbolAsync(
@@ -452,7 +560,7 @@ struct HIPParallelLaunch<
             "HIPParallelLaunch FAILED: shared memory request is too large");
       }
 
-      KOKKOS_ENSURE_HIP_LOCK_ARRAYS_ON_DEVICE();
+      desul::ensure_hip_lock_arrays_on_device();
 
       // Invoke the driver function on the device
       base_t::invoke_kernel(driver, grid, block, shmem, hip_instance);
@@ -471,41 +579,56 @@ struct HIPParallelLaunch<
 // al.
 template <typename DriverType, typename LaunchBounds = Kokkos::LaunchBounds<>,
           HIPLaunchMechanism LaunchMechanism =
-              DeduceHIPLaunchMechanism<DriverType>::launch_mechanism>
+              DeduceHIPLaunchMechanism<DriverType>::launch_mechanism,
+          bool DoGraph = DriverType::Policy::is_graph_kernel::value>
 void hip_parallel_launch(const DriverType &driver, const dim3 &grid,
                          const dim3 &block, const int shmem,
                          const HIPInternal *hip_instance,
                          const bool prefer_shmem) {
+#ifdef KOKKOS_IMPL_HIP_GRAPH_ENABLED
+  if constexpr (DoGraph) {
+    // Graph launch
+    using base_t = HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
+                                                  LaunchMechanism>;
+    base_t::create_parallel_launch_graph_node(driver, grid, block, shmem,
+                                              hip_instance);
+  } else
+#endif
+  {
+    // Regular kernel launch
 #ifndef KOKKOS_ENABLE_HIP_MULTIPLE_KERNEL_INSTANTIATIONS
-  HIPParallelLaunch<DriverType, LaunchBounds, LaunchMechanism>(
-      driver, grid, block, shmem, hip_instance, prefer_shmem);
-#else
-  if constexpr (!HIPParallelLaunch<DriverType, LaunchBounds,
-                                   LaunchMechanism>::default_launchbounds()) {
-    // for user defined, we *always* honor the request
     HIPParallelLaunch<DriverType, LaunchBounds, LaunchMechanism>(
         driver, grid, block, shmem, hip_instance, prefer_shmem);
-  } else {
-    // we can do what we like
-    const unsigned flat_block_size = block.x * block.y * block.z;
-    if (flat_block_size <= HIPTraits::ConservativeThreadsPerBlock) {
-      // we have to use the large blocksize
-      HIPParallelLaunch<
-          DriverType,
-          Kokkos::LaunchBounds<HIPTraits::ConservativeThreadsPerBlock, 1>,
-          LaunchMechanism>(driver, grid, block, shmem, hip_instance,
-                           prefer_shmem);
+#else
+    if constexpr (!HIPParallelLaunch<DriverType, LaunchBounds,
+                                     LaunchMechanism>::default_launchbounds()) {
+      // for user defined, we *always* honor the request
+      HIPParallelLaunch<DriverType, LaunchBounds, LaunchMechanism>(
+          driver, grid, block, shmem, hip_instance, prefer_shmem);
     } else {
-      HIPParallelLaunch<DriverType,
-                        Kokkos::LaunchBounds<HIPTraits::MaxThreadsPerBlock, 1>,
-                        LaunchMechanism>(driver, grid, block, shmem,
-                                         hip_instance, prefer_shmem);
+      // we can do what we like
+      const unsigned flat_block_size = block.x * block.y * block.z;
+      if (flat_block_size <= HIPTraits::ConservativeThreadsPerBlock) {
+        // we have to use the large blocksize
+        HIPParallelLaunch<
+            DriverType,
+            Kokkos::LaunchBounds<HIPTraits::ConservativeThreadsPerBlock, 1>,
+            LaunchMechanism>(driver, grid, block, shmem, hip_instance,
+                             prefer_shmem);
+      } else {
+        HIPParallelLaunch<
+            DriverType, Kokkos::LaunchBounds<HIPTraits::MaxThreadsPerBlock, 1>,
+            LaunchMechanism>(driver, grid, block, shmem, hip_instance,
+                             prefer_shmem);
+      }
     }
-  }
 #endif
+  }
 }
 }  // namespace Impl
 }  // namespace Kokkos
+
+#undef KOKKOS_IMPL_HIP_GRAPH_ENABLED
 
 #endif
 

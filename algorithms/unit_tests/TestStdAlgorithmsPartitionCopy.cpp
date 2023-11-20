@@ -110,11 +110,9 @@ void verify_data(const std::string& name, ResultType my_result,
                  ViewTypeDestFalse view_dest_false, PredType pred) {
   using value_type = typename ViewTypeFrom::value_type;
   static_assert(
-      std::is_same<value_type, typename ViewTypeDestTrue::value_type>::value,
-      "");
+      std::is_same<value_type, typename ViewTypeDestTrue::value_type>::value);
   static_assert(
-      std::is_same<value_type, typename ViewTypeDestFalse::value_type>::value,
-      "");
+      std::is_same<value_type, typename ViewTypeDestFalse::value_type>::value);
 
   const std::size_t ext = view_from.extent(0);
 
@@ -130,12 +128,12 @@ void verify_data(const std::string& name, ResultType my_result,
   const std::size_t my_diff_true = my_result.first - KE::begin(view_dest_true);
   const std::size_t my_diff_false =
       my_result.second - KE::begin(view_dest_false);
-  EXPECT_EQ(std_diff_true, my_diff_true);
-  EXPECT_EQ(std_diff_false, my_diff_false);
+  ASSERT_EQ(std_diff_true, my_diff_true);
+  ASSERT_EQ(std_diff_false, my_diff_false);
 
   auto view_dest_true_h = create_host_space_copy(view_dest_true);
   for (std::size_t i = 0; i < std_diff_true; ++i) {
-    EXPECT_EQ(std_vec_true[i], view_dest_true_h(i));
+    ASSERT_EQ(std_vec_true[i], view_dest_true_h(i));
     // std::cout << "i= " << i << " "
     // 	      << " std_true = " << std_vec_true[i] << " "
     // 	      << " mine     = " << view_dest_true_h(i) << '\n';
@@ -143,45 +141,45 @@ void verify_data(const std::string& name, ResultType my_result,
 
   auto view_dest_false_h = create_host_space_copy(view_dest_false);
   for (std::size_t i = 0; i < std_diff_false; ++i) {
-    EXPECT_EQ(std_vec_false[i], view_dest_false_h(i));
+    ASSERT_EQ(std_vec_false[i], view_dest_false_h(i));
     // std::cout << "i= " << i << " "
     // 	      << " std_false = " << std_vec_false[i] << " "
     // 	      << " mine     = " << view_dest_false_h(i) << '\n';
   }
 
   if (name == "empty") {
-    EXPECT_EQ(my_diff_true, 0u);
-    EXPECT_EQ(my_diff_false, 0u);
+    ASSERT_EQ(my_diff_true, 0u);
+    ASSERT_EQ(my_diff_false, 0u);
   }
 
   else if (name == "one-element-a") {
-    EXPECT_EQ(my_diff_true, 0u);
-    EXPECT_EQ(my_diff_false, 1u);
+    ASSERT_EQ(my_diff_true, 0u);
+    ASSERT_EQ(my_diff_false, 1u);
   }
 
   else if (name == "one-element-b") {
-    EXPECT_EQ(my_diff_true, 1u);
-    EXPECT_EQ(my_diff_false, 0u);
+    ASSERT_EQ(my_diff_true, 1u);
+    ASSERT_EQ(my_diff_false, 0u);
   }
 
   else if (name == "two-elements-a") {
-    EXPECT_EQ(my_diff_true, 1u);
-    EXPECT_EQ(my_diff_false, 1u);
+    ASSERT_EQ(my_diff_true, 1u);
+    ASSERT_EQ(my_diff_false, 1u);
   }
 
   else if (name == "two-elements-b") {
-    EXPECT_EQ(my_diff_true, 1u);
-    EXPECT_EQ(my_diff_false, 1u);
+    ASSERT_EQ(my_diff_true, 1u);
+    ASSERT_EQ(my_diff_false, 1u);
   }
 
   else if (name == "small-b") {
-    EXPECT_EQ(my_diff_true, 13u);
-    EXPECT_EQ(my_diff_false, 0u);
+    ASSERT_EQ(my_diff_true, 13u);
+    ASSERT_EQ(my_diff_false, 0u);
   }
 
   else if (name == "small-c") {
-    EXPECT_EQ(my_diff_true, 0u);
-    EXPECT_EQ(my_diff_false, 15u);
+    ASSERT_EQ(my_diff_true, 0u);
+    ASSERT_EQ(my_diff_false, 15u);
   }
 }
 

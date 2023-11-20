@@ -72,8 +72,10 @@ void OpenMPTargetExec::verify_initialized(const char* const label) {
 void* OpenMPTargetExec::m_scratch_ptr         = nullptr;
 int64_t OpenMPTargetExec::m_scratch_size      = 0;
 int* OpenMPTargetExec::m_lock_array           = nullptr;
-int64_t OpenMPTargetExec::m_lock_size         = 0;
+uint64_t OpenMPTargetExec::m_lock_size        = 0;
 uint32_t* OpenMPTargetExec::m_uniquetoken_ptr = nullptr;
+int OpenMPTargetExec::MAX_ACTIVE_THREADS      = 0;
+std::mutex OpenMPTargetExec::m_mutex_scratch_ptr;
 
 void OpenMPTargetExec::clear_scratch() {
   Kokkos::Experimental::OpenMPTargetSpace space;
@@ -100,11 +102,26 @@ void OpenMPTargetExec::resize_scratch(int64_t team_size, int64_t shmem_size_L0,
   const int64_t shmem_size =
       shmem_size_L0 + shmem_size_L1;  // L0 + L1 scratch memory per team.
   const int64_t padding = shmem_size * 10 / 100;  // Padding per team.
+
+  // Maximum active teams possible.
+  // The number should not exceed the maximum in-flight teams possible or the
+  // league_size.
+  int max_active_teams =
+      std::min(OpenMPTargetExec::MAX_ACTIVE_THREADS / team_size, league_size);
+
+  // max_active_teams is the number of active teams on the given hardware.
+  // We set the number of teams to be twice the number of max_active_teams for
+  // the compiler to pick the right number in its case.
+  // FIXME_OPENMPTARGET: Cray compiler did not yet implement omp_set_num_teams.
+#if !defined(KOKKOS_COMPILER_CRAY_LLVM)
+  omp_set_num_teams(max_active_teams * 2);
+#endif
+
   // Total amount of scratch memory allocated is depenedent
   // on the maximum number of in-flight teams possible.
   int64_t total_size =
       (shmem_size + OpenMPTargetExecTeamMember::TEAM_REDUCE_SIZE + padding) *
-      std::min(MAX_ACTIVE_THREADS / team_size, league_size);
+      max_active_teams * 2;
 
   if (total_size > m_scratch_size) {
     space.deallocate(m_scratch_ptr, m_scratch_size);
@@ -131,9 +148,10 @@ int* OpenMPTargetExec::get_lock_array(int num_teams) {
 
     for (int i = 0; i < lock_array_elem; ++i) h_lock_array[i] = 0;
 
-    OMPT_SAFE_CALL(omp_target_memcpy(m_lock_array, h_lock_array, m_lock_size, 0,
-                                     0, omp_get_default_device(),
-                                     omp_get_initial_device()));
+    if (0 < m_lock_size)
+      KOKKOS_IMPL_OMPT_SAFE_CALL(omp_target_memcpy(
+          m_lock_array, h_lock_array, m_lock_size, 0, 0,
+          omp_get_default_device(), omp_get_initial_device()));
 
     omp_target_free(h_lock_array, omp_get_initial_device());
   }

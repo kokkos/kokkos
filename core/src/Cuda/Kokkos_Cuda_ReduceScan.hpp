@@ -62,31 +62,31 @@ template <class ValueType, class ReducerType>
 __device__ inline void cuda_inter_warp_reduction(
     ValueType& value, const ReducerType& reducer,
     const int max_active_thread = blockDim.y) {
-#define STEP_WIDTH 4
-  // Depending on the ValueType _shared__ memory must be aligned up to 8byte
-  // boundaries The reason not to use ValueType directly is that for types with
+  constexpr int step_width = 4;
+  // Depending on the ValueType, __shared__ memory must be aligned up to 8byte
+  // boundaries. The reason not to use ValueType directly is that for types with
   // constructors it could lead to race conditions
   alignas(alignof(ValueType) > alignof(double) ? alignof(ValueType)
                                                : alignof(double))
-      __shared__ double sh_result[(sizeof(ValueType) + 7) / 8 * STEP_WIDTH];
+      __shared__ double sh_result[(sizeof(ValueType) + 7) / 8 * step_width];
   ValueType* result = (ValueType*)&sh_result;
   const int step    = 32 / blockDim.x;
-  int shift         = STEP_WIDTH;
+  int shift         = step_width;
   const int id      = threadIdx.y % step == 0 ? threadIdx.y / step : 65000;
-  if (id < STEP_WIDTH) {
+  if (id < step_width) {
     result[id] = value;
   }
   __syncthreads();
   while (shift <= max_active_thread / step) {
-    if (shift <= id && shift + STEP_WIDTH > id && threadIdx.x == 0) {
-      reducer.join(&result[id % STEP_WIDTH], &value);
+    if (shift <= id && shift + step_width > id && threadIdx.x == 0) {
+      reducer.join(&result[id % step_width], &value);
     }
     __syncthreads();
-    shift += STEP_WIDTH;
+    shift += step_width;
   }
 
   value = result[0];
-  for (int i = 1; (i * step < max_active_thread) && i < STEP_WIDTH; i++)
+  for (int i = 1; (i * step < max_active_thread) && i < step_width; i++)
     reducer.join(&value, &result[i]);
   __syncthreads();
 }
@@ -315,7 +315,7 @@ struct CudaReductionsFunctor<FunctorType, false, false> {
     __syncwarp(mask);
 
     for (int delta = skip_vector ? blockDim.x : 1; delta < width; delta *= 2) {
-      if (lane_id + delta < 32) {
+      if ((lane_id + delta < 32) && (lane_id % (delta * 2) == 0)) {
         functor.join(value, value + delta);
       }
       __syncwarp(mask);
@@ -399,11 +399,6 @@ struct CudaReductionsFunctor<FunctorType, false, false> {
 // for discussion of
 //   __launch_bounds__(maxThreadsPerBlock,minBlocksPerMultiprocessor)
 // function qualifier which could be used to improve performance.
-//----------------------------------------------------------------------------
-// Maximize shared memory and minimize L1 cache:
-//   cudaFuncSetCacheConfig(MyKernel, cudaFuncCachePreferShared );
-// For 2.0 capability: 48 KB shared and 16 KB L1
-//----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 /*
  *  Algorithmic constraints:
@@ -677,37 +672,37 @@ __device__ bool cuda_single_inter_block_reduce_scan(
 }
 
 // Size in bytes required for inter block reduce or scan
-template <bool DoScan, class FunctorType, class ArgTag>
+template <bool DoScan, class ArgTag, class ValueType, class FunctorType>
 inline std::enable_if_t<DoScan, unsigned>
 cuda_single_inter_block_reduce_scan_shmem(const FunctorType& functor,
                                           const unsigned BlockSize) {
   using Analysis =
       Impl::FunctorAnalysis<Impl::FunctorPatternInterface::SCAN,
-                            RangePolicy<Cuda, ArgTag>, FunctorType>;
+                            RangePolicy<Cuda, ArgTag>, FunctorType, ValueType>;
 
   return (BlockSize + 2) * Analysis::value_size(functor);
 }
 
-template <bool DoScan, class FunctorType, class ArgTag>
+template <bool DoScan, class ArgTag, class ValueType, class FunctorType>
 inline std::enable_if_t<!DoScan, unsigned>
 cuda_single_inter_block_reduce_scan_shmem(const FunctorType& functor,
                                           const unsigned BlockSize) {
   using Analysis =
       Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
-                            RangePolicy<Cuda, ArgTag>, FunctorType>;
+                            RangePolicy<Cuda, ArgTag>, FunctorType, ValueType>;
 
   return (BlockSize + 2) * Analysis::value_size(functor);
 }
 
-template <typename WorkTag, typename Policy, typename FunctorType>
+template <typename WorkTag, typename ValueType, typename Policy,
+          typename FunctorType>
 inline void check_reduced_view_shmem_size(const Policy& policy,
                                           const FunctorType& functor) {
   size_t minBlockSize = CudaTraits::WarpSize * 1;
   unsigned reqShmemSize =
-      cuda_single_inter_block_reduce_scan_shmem<false, FunctorType, WorkTag>(
+      cuda_single_inter_block_reduce_scan_shmem<false, WorkTag, ValueType>(
           functor, minBlockSize);
-  size_t maxShmemPerBlock =
-      policy.space().impl_internal_space_instance()->m_maxShmemPerBlock;
+  size_t maxShmemPerBlock = policy.space().cuda_device_prop().sharedMemPerBlock;
 
   if (reqShmemSize > maxShmemPerBlock) {
     Kokkos::Impl::throw_runtime_exception(

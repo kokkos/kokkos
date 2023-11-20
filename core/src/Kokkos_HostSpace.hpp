@@ -42,37 +42,6 @@ static_assert(false,
 /*--------------------------------------------------------------------------*/
 
 namespace Kokkos {
-
-namespace Impl {
-
-/// \brief Initialize lock array for arbitrary size atomics.
-///
-/// Arbitrary atomics are implemented using a hash table of locks
-/// where the hash value is derived from the address of the
-/// object for which an atomic operation is performed.
-/// This function initializes the locks to zero (unset).
-void init_lock_array_host_space();
-
-/// \brief Acquire a lock for the address
-///
-/// This function tries to acquire the lock for the hash value derived
-/// from the provided ptr. If the lock is successfully acquired the
-/// function returns true. Otherwise it returns false.
-bool lock_address_host_space(void* ptr);
-
-/// \brief Release lock for the address
-///
-/// This function releases the lock for the hash value derived
-/// from the provided ptr. This function should only be called
-/// after previously successfully acquiring a lock with
-/// lock_address.
-void unlock_address_host_space(void* ptr);
-
-}  // namespace Impl
-
-}  // namespace Kokkos
-
-namespace Kokkos {
 /// \class HostSpace
 /// \brief Memory management for host memory.
 ///
@@ -95,25 +64,27 @@ class HostSpace {
   //! This memory space preferred device_type
   using device_type = Kokkos::Device<execution_space, memory_space>;
 
-  /**\brief  Default memory space instance */
-  HostSpace();
+  HostSpace()                     = default;
   HostSpace(HostSpace&& rhs)      = default;
   HostSpace(const HostSpace& rhs) = default;
   HostSpace& operator=(HostSpace&&) = default;
   HostSpace& operator=(const HostSpace&) = default;
   ~HostSpace()                           = default;
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   /**\brief  Non-default memory space instance to choose allocation mechansim,
    * if available */
 
-  enum AllocationMechanism {
+  enum KOKKOS_DEPRECATED AllocationMechanism {
     STD_MALLOC,
     POSIX_MEMALIGN,
     POSIX_MMAP,
     INTEL_MM_ALLOC
   };
 
+  KOKKOS_DEPRECATED
   explicit HostSpace(const AllocationMechanism&);
+#endif
 
   /**\brief  Allocate untracked memory in the space */
   void* allocate(const size_t arg_alloc_size) const;
@@ -145,7 +116,6 @@ class HostSpace {
   static constexpr const char* name() { return m_name; }
 
  private:
-  AllocationMechanism m_alloc_mech;
   static constexpr const char* m_name = "Host";
   friend class Kokkos::Impl::SharedAllocationRecord<Kokkos::HostSpace, void>;
 };
@@ -159,8 +129,7 @@ namespace Kokkos {
 namespace Impl {
 
 static_assert(Kokkos::Impl::MemorySpaceAccess<Kokkos::HostSpace,
-                                              Kokkos::HostSpace>::assignable,
-              "");
+                                              Kokkos::HostSpace>::assignable);
 
 template <typename S>
 struct HostMirror {
@@ -218,7 +187,7 @@ class SharedAllocationRecord<Kokkos::HostSpace, void>
   static RecordBase s_root_record;
 #endif
 
-  const Kokkos::HostSpace m_space;
+  Kokkos::HostSpace m_space;
 
  protected:
   ~SharedAllocationRecord();
@@ -271,27 +240,6 @@ class SharedAllocationRecord<Kokkos::HostSpace, void>
 namespace Kokkos {
 
 namespace Impl {
-
-template <class DT, class... DP>
-struct ZeroMemset<typename HostSpace::execution_space, DT, DP...> {
-  ZeroMemset(const typename HostSpace::execution_space& exec,
-             const View<DT, DP...>& dst,
-             typename View<DT, DP...>::const_value_type&) {
-    // Host spaces, except for HPX, are synchronous and we need to fence for HPX
-    // since we can't properly enqueue a std::memset otherwise.
-    // We can't use exec.fence() directly since we don't have a full definition
-    // of HostSpace here.
-    hostspace_fence(exec);
-    using ValueType = typename View<DT, DP...>::value_type;
-    std::memset(dst.data(), 0, sizeof(ValueType) * dst.size());
-  }
-
-  ZeroMemset(const View<DT, DP...>& dst,
-             typename View<DT, DP...>::const_value_type&) {
-    using ValueType = typename View<DT, DP...>::value_type;
-    std::memset(dst.data(), 0, sizeof(ValueType) * dst.size());
-  }
-};
 
 template <>
 struct DeepCopy<HostSpace, HostSpace, DefaultHostExecutionSpace> {

@@ -1,4 +1,4 @@
-ARG BASE=nvcr.io/nvidia/nvhpc:22.3-devel-cuda11.6-ubuntu20.04
+ARG BASE=nvcr.io/nvidia/nvhpc:23.7-devel-cuda12.2-ubuntu20.04
 FROM $BASE
 
 RUN KEYDUMP_URL=https://cloud.cees.ornl.gov/download && \

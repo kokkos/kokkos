@@ -18,16 +18,20 @@
 #define KOKKOS_DECLARE_SYCL_HPP
 
 #if defined(KOKKOS_ENABLE_SYCL)
-#include <Kokkos_SYCL.hpp>
+#include <SYCL/Kokkos_SYCL.hpp>
 #include <SYCL/Kokkos_SYCL_Half_Impl_Type.hpp>
 #include <SYCL/Kokkos_SYCL_Half_Conversion.hpp>
 #include <SYCL/Kokkos_SYCL_DeepCopy.hpp>
 #include <SYCL/Kokkos_SYCL_MDRangePolicy.hpp>
-#include <SYCL/Kokkos_SYCL_Parallel_Range.hpp>
-#include <SYCL/Kokkos_SYCL_Parallel_Reduce.hpp>
-#include <SYCL/Kokkos_SYCL_Parallel_Scan.hpp>
-#include <SYCL/Kokkos_SYCL_Parallel_Team.hpp>
+#include <SYCL/Kokkos_SYCL_ParallelFor_Range.hpp>
+#include <SYCL/Kokkos_SYCL_ParallelFor_MDRange.hpp>
+#include <SYCL/Kokkos_SYCL_ParallelFor_Team.hpp>
+#include <SYCL/Kokkos_SYCL_ParallelReduce_Range.hpp>
+#include <SYCL/Kokkos_SYCL_ParallelReduce_MDRange.hpp>
+#include <SYCL/Kokkos_SYCL_ParallelReduce_Team.hpp>
+#include <SYCL/Kokkos_SYCL_ParallelScan_Range.hpp>
 #include <SYCL/Kokkos_SYCL_UniqueToken.hpp>
+#include <SYCL/Kokkos_SYCL_ZeroMemset.hpp>
 #endif
 
 #endif

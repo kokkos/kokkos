@@ -451,17 +451,15 @@ TEST(TEST_CATEGORY, complex_issue_3867) {
   ASSERT_FLOAT_EQ(x.real(), y.real());
   ASSERT_FLOAT_EQ(x.imag(), y.imag());
 
-#define CHECK_POW_COMPLEX_PROMOTION(ARGTYPE1, ARGTYPE2, RETURNTYPE)         \
-  static_assert(                                                            \
-      std::is_same<RETURNTYPE,                                              \
-                   decltype(Kokkos::pow(std::declval<ARGTYPE1>(),           \
-                                        std::declval<ARGTYPE2>()))>::value, \
-      "");                                                                  \
-  static_assert(                                                            \
-      std::is_same<RETURNTYPE,                                              \
-                   decltype(Kokkos::pow(std::declval<ARGTYPE2>(),           \
-                                        std::declval<ARGTYPE1>()))>::value, \
-      "");
+#define CHECK_POW_COMPLEX_PROMOTION(ARGTYPE1, ARGTYPE2, RETURNTYPE)          \
+  static_assert(                                                             \
+      std::is_same<RETURNTYPE,                                               \
+                   decltype(Kokkos::pow(std::declval<ARGTYPE1>(),            \
+                                        std::declval<ARGTYPE2>()))>::value); \
+  static_assert(                                                             \
+      std::is_same<RETURNTYPE,                                               \
+                   decltype(Kokkos::pow(std::declval<ARGTYPE2>(),            \
+                                        std::declval<ARGTYPE1>()))>::value);
 
   CHECK_POW_COMPLEX_PROMOTION(Kokkos::complex<long double>, long double,
                               Kokkos::complex<long double>);
@@ -519,9 +517,13 @@ TEST(TEST_CATEGORY, complex_operations_arithmetic_types_overloads) {
   ASSERT_EQ(Kokkos::conj(1), Kokkos::complex<double>(1));
   ASSERT_EQ(Kokkos::conj(2.f), Kokkos::complex<float>(2.f));
   ASSERT_EQ(Kokkos::conj(3.), Kokkos::complex<double>(3.));
+// long double has size 12 but Kokkos::complex requires 2*sizeof(T) to be a
+// power of two.
+#ifndef KOKKOS_IMPL_32BIT
   ASSERT_EQ(Kokkos::conj(4.l), Kokkos::complex<long double>(4.l));
   static_assert((
       std::is_same<decltype(Kokkos::conj(1)), Kokkos::complex<double>>::value));
+#endif
   static_assert((std::is_same<decltype(Kokkos::conj(2.f)),
                               Kokkos::complex<float>>::value));
   static_assert((std::is_same<decltype(Kokkos::conj(3.)),
