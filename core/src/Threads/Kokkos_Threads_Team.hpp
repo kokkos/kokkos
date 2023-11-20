@@ -1001,7 +1001,7 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
     lambda(i, scan_val, false);
   }
 
-  auto & team_member = loop_bounds.thread;
+  auto& team_member = loop_bounds.thread;
 
   // 'scan_val' output is the exclusive prefix sum
   scan_val = team_member.team_scan(scan_val);
