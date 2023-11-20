@@ -2978,29 +2978,25 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
       Kokkos::Profiling::endParallelFor(kpID);
     }
   }
-  else {
-    for (size_t i = 0; i < n; ++i) operator()(Tag{}, i);
-  }
-}
 
-  void construct_shared_allocation() {
-  construct_dispatch();
-}
+  void construct_shared_allocation() { construct_dispatch(); }
 
-void destroy_shared_allocation() { parallel_for_implementation<DestroyTag>(); }
-
-// This function is to ensure that the functor with DestroyTag is instantiated
-// This is a workaround to avoid "cudaErrorInvalidDeviceFunction" error later
-// when the function is queried with cudaFuncGetAttributes
-void functor_instantiate_workaround() {
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
-    defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENMPTARGET)
-  if (false) {
+  void destroy_shared_allocation() {
     parallel_for_implementation<DestroyTag>();
   }
+
+  // This function is to ensure that the functor with DestroyTag is instantiated
+  // This is a workaround to avoid "cudaErrorInvalidDeviceFunction" error later
+  // when the function is queried with cudaFuncGetAttributes
+  void functor_instantiate_workaround() {
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
+    defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENMPTARGET)
+    if (false) {
+      parallel_for_implementation<DestroyTag>();
+    }
 #endif
-}
-};  // namespace Impl
+  }
+};
 
 template <class DeviceType, class ValueType>
 struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
@@ -3117,7 +3113,7 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
 
   void destroy_shared_allocation() {
 }
-};  // namespace Kokkos
+};  // namespace Impl
 
 //----------------------------------------------------------------------------
 /** \brief  View mapping for non-specialized data type and standard layout */
@@ -3937,7 +3933,7 @@ class ViewMapping<
 
 //----------------------------------------------------------------------------
 
-}  // namespace Impl
+}  // namespace Kokkos
 }  // namespace Kokkos
 
 //----------------------------------------------------------------------------
