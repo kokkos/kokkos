@@ -1,4 +1,4 @@
-name: clang-format Check
+name: clang-format check
 on: [push, pull_request]
 jobs:
   formatting-check:
@@ -8,5 +8,4 @@ jobs:
     - name: Run clang-format style check.
       uses: DoozyX/clang-format-lint-action@v0.16.2
       with:
-        exclude: './tpls'
         clangFormatVersion: 8
