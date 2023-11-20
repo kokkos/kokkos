@@ -1,5 +1,13 @@
 name: github-Linux
-on: [push, pull_request]
+
+on:
+  push:
+    branches:
+      - develop
+  pull_request:
+    paths-ignore:
+    - '**/*.md'
+    types: [ opened, reopened, synchronize ]
 
 concurrency:
   group: ${ {github.event_name }}-${{ github.workflow }}-${{ github.ref }}
@@ -72,9 +80,6 @@ jobs:
           path: ~/.cache/ccache
           key: kokkos-${{ matrix.distro }}-${{ matrix.cxx }}-${{ matrix.cmake_build_type }}-${{ matrix.openmp }}-${{ github.ref }}-${{ github.sha }}
           restore-keys: kokkos-${{ matrix.distro }}-${{ matrix.cxx }}-${{ matrix.cmake_build_type }}-${{ matrix.openmp }}-${{ github.ref }}
-      - name: maybe_disable_death_tests
-        if: ${{ matrix.distro == 'fedora:rawhide' }}
-        run: echo "GTEST_FILTER=-*DeathTest*" >> $GITHUB_ENV
       - name: maybe_use_flang_new
         if: ${{ matrix.cxx == 'clang++' && startsWith(matrix.distro,'fedora:') }}
         run: echo "FC=flang-new" >> $GITHUB_ENV
@@ -99,6 +104,7 @@ jobs:
             -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
             -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+            -DKokkos_ENABLE_IMPL_MDSPAN=ON \
             -DCMAKE_CXX_FLAGS="-Werror ${{ matrix.cxx_extra_flags }}" \
             -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
