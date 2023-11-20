@@ -3086,37 +3086,38 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
   }
 
   void parallel_for_implementation() {
-    if (!space.in_parallel()) {
-      PolicyType policy(0, n);
-      uint64_t kpID = 0;
-      if (Kokkos::Profiling::profileLibraryLoaded()) {
-        Kokkos::Profiling::beginParallelFor(
-            "Kokkos::View::initialization [" + name + "]",
-            Kokkos::Profiling::Experimental::device_id(space), &kpID);
-      }
+    PolicyType policy(0, n);
+    uint64_t kpID = 0;
+    if (Kokkos::Profiling::profileLibraryLoaded()) {
+      Kokkos::Profiling::beginParallelFor(
+          "Kokkos::View::initialization [" + name + "]",
+          Kokkos::Profiling::Experimental::device_id(space), &kpID);
+    }
 #ifdef KOKKOS_ENABLE_CUDA
-      if (std::is_same<ExecSpace, Kokkos::Cuda>::value) {
-        Kokkos::Impl::cuda_prefetch_pointer(space, ptr, sizeof(ValueType) * n,
-                                            true);
-      }
+    if (std::is_same<ExecSpace, Kokkos::Cuda>::value) {
+      Kokkos::Impl::cuda_prefetch_pointer(space, ptr, sizeof(ValueType) * n,
+                                          true);
+    }
 #endif
-      const Kokkos::Impl::ParallelFor<ViewValueFunctor, PolicyType> closure(
-          *this, PolicyType(0, n));
-      closure.execute();
-      if (default_exec_space)
-        space.fence(
-            "Kokkos::Impl::ViewValueFunctor: Fence after setting values in "
-            "view");
-      if (Kokkos::Profiling::profileLibraryLoaded()) {
-        Kokkos::Profiling::endParallelFor(kpID);
-      }
-    } else {
-      for (size_t i = 0; i < n; ++i) operator()(i);
+    const Kokkos::Impl::ParallelFor<ViewValueFunctor, PolicyType> closure(
+        *this, PolicyType(0, n));
+    closure.execute();
+    if (default_exec_space)
+      space.fence(
+          "Kokkos::Impl::ViewValueFunctor: Fence after setting values in "
+          "view");
+    if (Kokkos::Profiling::profileLibraryLoaded()) {
+      Kokkos::Profiling::endParallelFor(kpID);
     }
   }
+  else {
+    for (size_t i = 0; i < n; ++i) operator()(i);
+  }
+}
 
-  void destroy_shared_allocation() {}
-};
+  void destroy_shared_allocation() {
+}
+};  // namespace Kokkos
 
 //----------------------------------------------------------------------------
 /** \brief  View mapping for non-specialized data type and standard layout */
