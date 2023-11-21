@@ -149,7 +149,8 @@ void SYCL::impl_initialize(InitializationSettings const& settings) {
   // specified).
 #if !defined(KOKKOS_ARCH_INTEL_GPU) && !defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
   if (!settings.has_device_id() && gpu_devices.empty()) {
-    Impl::SYCLInternal::singleton().initialize(sycl::device());
+    Impl::SYCLInternal::singleton().initialize(
+        sycl::device(sycl::cpu_selector()));
     Impl::SYCLInternal::m_syclDev = 0;
     return;
   }
