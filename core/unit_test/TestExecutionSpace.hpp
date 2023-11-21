@@ -33,7 +33,7 @@ struct CheckClassWithExecutionSpaceAsDataMemberIsCopyable {
       ++e;
     }
 #else
-    e == 0;
+    e = 0;
 #endif
   }
 
