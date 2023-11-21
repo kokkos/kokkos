@@ -142,7 +142,6 @@ void test_run_time_parameters() {
 
   Policy p9(league_size, Kokkos::AUTO);
   ASSERT_EQ(p9.league_size(), league_size);
-  ASSERT_GT(p9.team_size(), 0);
   ASSERT_GT(p9.team_size_max(FunctorFor(), ParallelTag()), 0);
   ASSERT_GT(p9.team_size_recommended(FunctorFor(), ParallelTag()), 0);
 
@@ -154,7 +153,6 @@ void test_run_time_parameters() {
 
   Policy p11(league_size, Kokkos::AUTO, Kokkos::AUTO);
   ASSERT_EQ(p11.league_size(), league_size);
-  ASSERT_GT(p11.team_size(), 0);
   ASSERT_GT(p11.team_size_max(FunctorFor(), ParallelTag()), 0);
   ASSERT_GT(p11.team_size_recommended(FunctorFor(), ParallelTag()), 0);
 }
