@@ -25,6 +25,7 @@
 namespace {
 inline constexpr int n = 1 << 10;
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 TEST(hpx, in_parallel_for_range_policy) {
   Kokkos::View<bool *, Kokkos::Experimental::HPX> a("a", n);
 
@@ -180,4 +181,5 @@ TEST(hpx, in_parallel_scan_range_policy) {
     ASSERT_EQ(a(i), 0);
   }
 }
+#endif
 }  // namespace
