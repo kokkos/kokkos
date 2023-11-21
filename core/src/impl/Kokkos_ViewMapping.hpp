@@ -3104,15 +3104,12 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
           "view");
     if (Kokkos::Profiling::profileLibraryLoaded()) {
       Kokkos::Profiling::endParallelFor(kpID);
+    } else {
+      for (size_t i = 0; i < n; ++i) operator()(i);
     }
   }
-  else {
-    for (size_t i = 0; i < n; ++i) operator()(i);
-  }
-}
 
-  void destroy_shared_allocation() {
-}
+  void destroy_shared_allocation() {}
 };  // namespace Impl
 
 //----------------------------------------------------------------------------
@@ -3933,7 +3930,7 @@ class ViewMapping<
 
 //----------------------------------------------------------------------------
 
-}  // namespace Kokkos
+}  // namespace Impl
 }  // namespace Kokkos
 
 //----------------------------------------------------------------------------
