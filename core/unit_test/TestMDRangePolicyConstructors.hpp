@@ -102,15 +102,17 @@ TEST(TEST_CATEGORY_DEATH, policy_invalid_bounds) {
       {
         (void)Policy({100, 100, 100, 100, 100}, {90, 90, 90, 90, 90});
       },
-      "Kokkos::MDRangePolicy bounds error: One of the lower bounds is greater "
-      "than the upper bound of its rank.");
+      "Kokkos::MDRangePolicy bounds error: The lower bound \\(100\\) is "
+      "greater "
+      "than its upper bound \\(90\\) in rank 5\\.");
 
   ASSERT_DEATH(
       {
         (void)Policy({100, 100, 100, 100, 100}, {105, 95, 100, 110, 105});
       },
-      "Kokkos::MDRangePolicy bounds error: One of the lower bounds is greater "
-      "than the upper bound of its rank.");
+      "Kokkos::MDRangePolicy bounds error: The lower bound \\(100\\) is "
+      "greater "
+      "than its upper bound \\(95\\) in rank 2\\.");
 }
 #endif
 
