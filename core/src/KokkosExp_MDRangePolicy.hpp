@@ -327,6 +327,12 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
     }
     for (int i = rank_start; i != rank_end; i += increment) {
       const index_type length = m_upper[i] - m_lower[i];
+
+      if (m_upper[i] < m_lower[i])
+        Kokkos::abort(
+            "Kokkos::MDRangePolicy bounds error: One of the lower bounds is "
+            "greater than the upper bound of its rank.");
+
       if (m_tile[i] <= 0) {
         m_tune_tile_size = true;
         if ((inner_direction == Iterate::Right && (i < rank - 1)) ||

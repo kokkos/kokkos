@@ -93,6 +93,25 @@ TEST(TEST_CATEGORY_DEATH, policy_bounds_unsafe_narrowing_conversions) {
       },
       "unsafe narrowing conversion");
 }
+
+TEST(TEST_CATEGORY_DEATH, policy_invalid_bounds) {
+  using Policy = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<5>>;
+
+  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+  ASSERT_DEATH(
+      {
+        (void)Policy({100, 100, 100, 100, 100}, {90, 90, 90, 90, 90});
+      },
+      "Kokkos::MDRangePolicy bounds error: One of the lower bounds is greater "
+      "than the upper bound of its rank.");
+
+  ASSERT_DEATH(
+      {
+        (void)Policy({100, 100, 100, 100, 100}, {105, 95, 100, 110, 105});
+      },
+      "Kokkos::MDRangePolicy bounds error: One of the lower bounds is greater "
+      "than the upper bound of its rank.");
+}
 #endif
 
 }  // namespace
