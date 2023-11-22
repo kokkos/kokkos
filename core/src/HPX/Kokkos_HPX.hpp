@@ -201,6 +201,7 @@ class HPX {
     return impl_get_instance_data().m_instance_id;
   }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   static bool &impl_get_in_parallel() noexcept;
 
   struct impl_in_parallel_scope {
@@ -222,6 +223,7 @@ class HPX {
     impl_not_in_parallel_scope &operator=(impl_not_in_parallel_scope const &) =
         delete;
   };
+#endif
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   KOKKOS_DEPRECATED static bool in_parallel(HPX const & = HPX()) noexcept {
@@ -345,7 +347,9 @@ class HPX {
                            hpx::threads::thread_stacksize::default_) const {
     impl_bulk_plain_erased(force_synchronous, is_light_weight_policy,
                            {[functor](Index i) {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
                              impl_in_parallel_scope p;
+#endif
                              functor.execute_range(i);
                            }},
                            n, stacksize);
@@ -407,11 +411,15 @@ class HPX {
           hpx::threads::thread_stacksize::default_) const {
     impl_bulk_setup_finalize_erased(force_synchronous, is_light_weight_policy,
                                     {[functor](Index i) {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
                                       impl_in_parallel_scope p;
+#endif
                                       functor.execute_range(i);
                                     }},
                                     {[functor]() {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
                                       impl_in_parallel_scope p;
+#endif
                                       functor.setup();
                                     }},
                                     {[functor]() {
