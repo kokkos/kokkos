@@ -29,8 +29,7 @@ inline void host_check_conversions() {
     auto from = Kokkos::Experimental::simd<DataTypeA, Abi>(test_val);
     auto to   = Kokkos::Experimental::simd<DataTypeB, Abi>(from);
     EXPECT_EQ(from.size(), to.size());
-    host_check_equality(to, decltype(to)(static_cast<std::int64_t>(test_val)),
-                        to.size());
+    host_check_equality(to, decltype(to)(test_val), to.size());
   }
   {
     auto from = Kokkos::Experimental::simd_mask<DataTypeA, Abi>(test_mask_val);
