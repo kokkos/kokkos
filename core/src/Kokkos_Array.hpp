@@ -382,23 +382,20 @@ KOKKOS_FUNCTION constexpr auto to_array(T(&&a)[N]) {
   return Impl::to_array_impl(std::move(a), std::make_index_sequence<N>{});
 }
 
-template <typename T,
-          size_t LN, typename LP, 
-          size_t RN, typename RP>
-KOKKOS_INLINE_FUNCTION constexpr bool operator==(const Array<T, LN, LP>& lhs, 
-                                                 const Array<T, RN, RP>& rhs) {
-  if (lhs.size() != rhs.size()) return false;
-    for (int i = 0; i < (int)(lhs.size()); ++i) {
-      if (lhs[i] != rhs[i]) return false;
-    }
-    return true;
+template <typename T, size_t N>
+KOKKOS_INLINE_FUNCTION constexpr bool operator==(const Array<T, N, void>& lhs,
+                                                 const Array<T, N, void>& rhs) {
+  // The cast to int is necessary to avoid a warning about a pointless
+  // comparison with zero in the case that an unsigned type is used.
+  for (int i = 0; i < static_cast<int>(lhs.size()); ++i) {
+    if (lhs[i] != rhs[i]) return false;
+  }
+  return true;
 }
 
-template <typename T,
-          size_t LN, typename LP, 
-          size_t RN, typename RP>
-KOKKOS_INLINE_FUNCTION constexpr bool operator!=(const Array<T, LN, LP>& lhs, 
-                                                 const Array<T, RN, RP>& rhs) {
+template <typename T, size_t N>
+KOKKOS_INLINE_FUNCTION constexpr bool operator!=(const Array<T, N, void>& lhs,
+                                                 const Array<T, N, void>& rhs) {
   return !(lhs == rhs);
 }
 
