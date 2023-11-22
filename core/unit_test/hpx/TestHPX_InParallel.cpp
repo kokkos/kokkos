@@ -23,7 +23,6 @@
 // fence fencing the independent instance. In that case these tests will fail.
 
 namespace {
-inline constexpr int n = 1 << 10;
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 TEST(hpx, in_parallel_for_range_policy) {
