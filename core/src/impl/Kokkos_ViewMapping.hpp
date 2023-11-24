@@ -3131,8 +3131,8 @@ class ViewMapping<
 
   using handle_type = typename ViewDataHandle<Traits>::handle_type;
 
-  handle_type m_impl_handle;
-  offset_type m_impl_offset;
+  handle_type m_impl_handle = nullptr;
+  offset_type m_impl_offset {};
 
  private:
   template <class, class...>
@@ -3348,14 +3348,25 @@ class ViewMapping<
   //----------------------------------------
 
   KOKKOS_DEFAULTED_FUNCTION ~ViewMapping() = default;
-  KOKKOS_INLINE_FUNCTION ViewMapping() : m_impl_handle(), m_impl_offset() {}
+  KOKKOS_DEFAULTED_FUNCTION ViewMapping()  = default;
 
   KOKKOS_DEFAULTED_FUNCTION ViewMapping(const ViewMapping&) = default;
   KOKKOS_DEFAULTED_FUNCTION ViewMapping& operator=(const ViewMapping&) =
       default;
 
-  KOKKOS_DEFAULTED_FUNCTION ViewMapping(ViewMapping&&) = default;
-  KOKKOS_DEFAULTED_FUNCTION ViewMapping& operator=(ViewMapping&&) = default;
+  //! Move constructor. Leaves @p other in an empty state.
+  KOKKOS_INLINE_FUNCTION
+  ViewMapping(ViewMapping&& other)
+      : m_impl_handle(std::exchange(other.m_impl_handle, nullptr)),
+        m_impl_offset(std::move(other.m_impl_offset)) {}
+
+  //! Move assignment. Leaves @p other in an empty state.
+  KOKKOS_INLINE_FUNCTION
+  ViewMapping& operator=(ViewMapping&& other) {
+    m_impl_handle = std::exchange(other.m_impl_handle, nullptr);
+    m_impl_offset = std::move(other.m_impl_offset);
+    return *this;
+  }
 
   //----------------------------------------
 
