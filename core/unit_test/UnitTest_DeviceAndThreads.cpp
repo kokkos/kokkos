@@ -68,6 +68,14 @@ int get_max_threads() {
 #endif
 }
 
+int get_hwloc_enabled() {
+#ifdef KOKKOS_ENABLE_HWLOC
+  return 1;
+#else
+  return 0;
+#endif
+}
+
 int get_num_threads() {
   int const num_threads = Kokkos::DefaultHostExecutionSpace().concurrency();
   assert(num_threads == Kokkos::num_threads());
@@ -93,6 +101,7 @@ int print_flag(std::string const& flag) {
   KOKKOS_TEST_PRINT_FLAG(device_count);
   KOKKOS_TEST_PRINT_FLAG(disable_warnings);
   KOKKOS_TEST_PRINT_FLAG(tune_internals);
+  KOKKOS_TEST_PRINT_FLAG(hwloc_enabled);
 
 #undef KOKKOS_TEST_PRINT_FLAG
 
