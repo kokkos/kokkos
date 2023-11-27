@@ -423,7 +423,9 @@ class HPX {
                                       functor.setup();
                                     }},
                                     {[functor]() {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
                                       impl_in_parallel_scope p;
+#endif
                                       functor.finalize();
                                     }},
                                     n, stacksize);
@@ -1294,7 +1296,9 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
       // Since arrive_and_wait may yield and resume on another worker thread we
       // set in_parallel = false on the current thread before suspending and set
       // it again to true when we resume.
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
       Kokkos::Experimental::HPX::impl_not_in_parallel_scope p;
+#endif
       barrier.arrive_and_wait();
     }
 
@@ -1322,7 +1326,9 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
       // Since arrive_and_wait may yield and resume on another worker thread we
       // set in_parallel = false on the current thread before suspending and set
       // it again to true when we resume.
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
       Kokkos::Experimental::HPX::impl_not_in_parallel_scope p;
+#endif
       barrier.arrive_and_wait();
     }
 
@@ -1409,7 +1415,9 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
       // Since arrive_and_wait may yield and resume on another worker thread we
       // set in_parallel = false on the current thread before suspending and set
       // it again to true when we resume.
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
       Kokkos::Experimental::HPX::impl_not_in_parallel_scope p;
+#endif
       barrier.arrive_and_wait();
     }
 
@@ -1437,7 +1445,9 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
       // Since arrive_and_wait may yield and resume on another worker thread we
       // set in_parallel = false on the current thread before suspending and set
       // it again to true when we resume.
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
       Kokkos::Experimental::HPX::impl_not_in_parallel_scope p;
+#endif
       barrier.arrive_and_wait();
     }
 
