@@ -330,8 +330,9 @@ struct sycl::is_device_copyable<
     Kokkos::Experimental::Impl::SYCLFunctionWrapper<Functor, Storage, false>>
     : std::true_type {};
 
-#if defined(KOKKOS_ENABLE_SYCL) && defined(__INTEL_LLVM_COMPILER) && \
-    __INTEL_LLVM_COMPILER < 20240000
+#if defined(KOKKOS_ENABLE_SYCL) &&                                           \
+    ((defined(__INTEL_LLVM_COMPILER) && __INTEL_LLVM_COMPILER < 20240000) || \
+     (defined(__LIBSYCL_MAJOR_VERSION) && __LIBSYCL_MAJOR_VERSION >= 7))
 template <typename>
 struct NonTriviallyCopyableAndDeviceCopyable {
   NonTriviallyCopyableAndDeviceCopyable(
