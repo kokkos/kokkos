@@ -23,7 +23,7 @@
 #define KOKKOS_IMPL_OPENMPTARGET_HIERARCHICAL_INTEL_GPU
 #endif
 
-// Define a macro for llvm compiler greater than version 15 and on NVIDIA and
+// Define a macro for llvm compiler greater than version 17 and on NVIDIA and
 // AMD GPUs. This would be useful in cases where non-OpenMP standard llvm
 // extensions can be used.
 #if defined(KOKKOS_COMPILER_CLANG) && (KOKKOS_COMPILER_CLANG >= 1700) && \
