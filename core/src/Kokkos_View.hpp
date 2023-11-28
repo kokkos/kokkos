@@ -814,15 +814,15 @@ class View : public ViewTraits<DataType, Properties...> {
 
   template <typename... Is>
   static KOKKOS_FUNCTION void check_access_member_function_valid_args(Is...) {
-    static_assert(rank <= sizeof...(Is), "");
-    static_assert(sizeof...(Is) <= 8, "");
-    static_assert(Kokkos::Impl::are_integral<Is...>::value, "");
+    static_assert(rank <= sizeof...(Is));
+    static_assert(sizeof...(Is) <= 8);
+    static_assert(Kokkos::Impl::are_integral<Is...>::value);
   }
 
   template <typename... Is>
   static KOKKOS_FUNCTION void check_operator_parens_valid_args(Is...) {
-    static_assert(rank == sizeof...(Is), "");
-    static_assert(Kokkos::Impl::are_integral<Is...>::value, "");
+    static_assert(rank == sizeof...(Is));
+    static_assert(Kokkos::Impl::are_integral<Is...>::value);
   }
 
  public:

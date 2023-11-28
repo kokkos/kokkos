@@ -75,6 +75,7 @@ int* OpenMPTargetExec::m_lock_array           = nullptr;
 uint64_t OpenMPTargetExec::m_lock_size        = 0;
 uint32_t* OpenMPTargetExec::m_uniquetoken_ptr = nullptr;
 int OpenMPTargetExec::MAX_ACTIVE_THREADS      = 0;
+std::mutex OpenMPTargetExec::m_mutex_scratch_ptr;
 
 void OpenMPTargetExec::clear_scratch() {
   Kokkos::Experimental::OpenMPTargetSpace space;

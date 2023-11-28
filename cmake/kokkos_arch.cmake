@@ -191,9 +191,6 @@ IF (KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
   ELSEIF(CUDAToolkit_BIN_DIR)
     GLOBAL_APPEND(KOKKOS_CUDA_OPTIONS --cuda-path=${CUDAToolkit_BIN_DIR}/..)
   ENDIF()
-  IF (KOKKOS_ENABLE_CUDA)
-     SET(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND ON CACHE BOOL "enable CUDA Clang workarounds" FORCE)
-  ENDIF()
 ELSEIF (KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
   SET(CUDA_ARCH_FLAG "-gpu")
   GLOBAL_APPEND(KOKKOS_CUDA_OPTIONS -cuda)
@@ -588,16 +585,20 @@ IF (KOKKOS_ENABLE_SYCL)
 ENDIF()
 
 # Check support for device_global variables
-# FIXME_SYCL Even if SYCL_EXT_ONEAPI_DEVICE_GLOBAL is defined, we still can't
-#            use device global variables with shared libraries
-IF(KOKKOS_ENABLE_SYCL AND NOT BUILD_SHARED_LIBS)
+# FIXME_SYCL If SYCL_EXT_ONEAPI_DEVICE_GLOBAL is defined, we can use device
+#   global variables with shared libraries using the "non-separable compilation"
+#   implementation. Otherwise, the feature is not supported when building shared
+#   libraries. Thus, we don't even check for support if shared libraries are
+#   requested and SYCL_EXT_ONEAPI_DEVICE_GLOBAL is not defined.
+IF(KOKKOS_ENABLE_SYCL)
   STRING(REPLACE ";" " " CMAKE_REQUIRED_FLAGS "${KOKKOS_COMPILE_OPTIONS}")
   INCLUDE(CheckCXXSymbolExists)
   CHECK_CXX_SYMBOL_EXISTS(SYCL_EXT_ONEAPI_DEVICE_GLOBAL "sycl/sycl.hpp" KOKKOS_IMPL_HAVE_SYCL_EXT_ONEAPI_DEVICE_GLOBAL)
   IF (KOKKOS_IMPL_HAVE_SYCL_EXT_ONEAPI_DEVICE_GLOBAL)
     SET(KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED ON)
+    # Use the non-separable compilation implementation to support shared libraries as well.
     COMPILER_SPECIFIC_FLAGS(DEFAULT -DDESUL_SYCL_DEVICE_GLOBAL_SUPPORTED)
-  ELSE()
+  ELSEIF(NOT BUILD_SHARED_LIBS)
     INCLUDE(CheckCXXSourceCompiles)
     CHECK_CXX_SOURCE_COMPILES("
       #include <sycl/sycl.hpp>
@@ -617,6 +618,7 @@ IF(KOKKOS_ENABLE_SYCL AND NOT BUILD_SHARED_LIBS)
       KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED)
 
     IF(KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED)
+      # Only the separable compilation implementation is supported.
       COMPILER_SPECIFIC_FLAGS(
         DEFAULT -fsycl-device-code-split=off -DDESUL_SYCL_DEVICE_GLOBAL_SUPPORTED
       )

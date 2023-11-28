@@ -129,8 +129,7 @@ namespace Kokkos {
 namespace Impl {
 
 static_assert(Kokkos::Impl::MemorySpaceAccess<Kokkos::HostSpace,
-                                              Kokkos::HostSpace>::assignable,
-              "");
+                                              Kokkos::HostSpace>::assignable);
 
 template <typename S>
 struct HostMirror {

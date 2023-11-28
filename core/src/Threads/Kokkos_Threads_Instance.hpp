@@ -405,11 +405,7 @@ class ThreadsInternal {
   static int in_parallel();
   static void fence();
   static void fence(const std::string &);
-  static void internal_fence(
-      Impl::fence_is_static is_static = Impl::fence_is_static::yes);
-  static void internal_fence(
-      const std::string &,
-      Impl::fence_is_static is_static = Impl::fence_is_static::yes);
+  static void internal_fence();
 
   /* Dynamic Scheduling related functionality */
   // Initialize the work range for this thread
@@ -572,7 +568,11 @@ inline void Threads::print_configuration(std::ostream &os, bool verbose) const {
 }
 
 inline void Threads::impl_static_fence(const std::string &name) {
-  Impl::ThreadsInternal::internal_fence(name, Impl::fence_is_static::yes);
+  Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Threads>(
+      name,
+      Kokkos::Tools::Experimental::SpecialSynchronizationCases::
+          GlobalDeviceSynchronization,
+      Impl::ThreadsInternal::internal_fence);
 }
 } /* namespace Kokkos */
 

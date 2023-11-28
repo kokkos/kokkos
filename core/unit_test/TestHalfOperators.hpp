@@ -975,7 +975,7 @@ struct Functor_TestHalfOperators {
 
 template <class half_type>
 void __test_half_operators(half_type h_lhs, half_type h_rhs) {
-  double epsilon = Kokkos::Experimental::epsilon<half_type>::value;
+  half_type epsilon = Kokkos::Experimental::epsilon<half_type>::value;
 
   Functor_TestHalfOperators<ViewType, half_type> f_device(h_lhs, h_rhs);
   Functor_TestHalfOperators<ViewTypeHost, half_type> f_host(h_lhs, h_rhs);
@@ -990,9 +990,9 @@ void __test_half_operators(half_type h_lhs, half_type h_rhs) {
   for (int op_test = 0; op_test < N_OP_TESTS; op_test++) {
     // printf("op_test = %d\n", op_test);
     ASSERT_NEAR(f_device_actual_lhs(op_test), f_device_expected_lhs(op_test),
-                epsilon);
+                static_cast<double>(epsilon));
     ASSERT_NEAR(f_host.actual_lhs(op_test), f_host.expected_lhs(op_test),
-                epsilon);
+                static_cast<double>(epsilon));
   }
 
 // volatile-qualified parameter type 'volatile half_type' is deprecated
@@ -1015,9 +1015,9 @@ void __test_half_operators(half_type h_lhs, half_type h_rhs) {
         op_test == GE_H_H || op_test == CADD_H_H || op_test == CSUB_H_H ||
         op_test == CMUL_H_H || op_test == CDIV_H_H) {
       ASSERT_NEAR(f_device_actual_lhs(op_test), f_device_expected_lhs(op_test),
-                  epsilon);
+                  static_cast<double>(epsilon));
       ASSERT_NEAR(f_host.actual_lhs(op_test), f_host.expected_lhs(op_test),
-                  epsilon);
+                  static_cast<double>(epsilon));
     }
   }
 #endif

@@ -87,7 +87,7 @@
 #if !defined(KOKKOS_ENABLE_THREADS) && !defined(KOKKOS_ENABLE_CUDA) &&     \
     !defined(KOKKOS_ENABLE_OPENMP) && !defined(KOKKOS_ENABLE_HPX) &&       \
     !defined(KOKKOS_ENABLE_OPENMPTARGET) && !defined(KOKKOS_ENABLE_HIP) && \
-    !defined(KOKKOS_ENABLE_SYCL)
+    !defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ENABLE_OPENACC)
 #define KOKKOS_INTERNAL_NOT_PARALLEL
 #endif
 
@@ -337,12 +337,6 @@
 
 #if !defined(KOKKOS_IMPL_DEVICE_FUNCTION)
 #define KOKKOS_IMPL_DEVICE_FUNCTION
-#endif
-
-// Temporary solution for SYCL not supporting printf in kernels.
-// Might disappear at any point once we have found another solution.
-#if !defined(KOKKOS_IMPL_DO_NOT_USE_PRINTF)
-#define KOKKOS_IMPL_DO_NOT_USE_PRINTF(...) ::printf(__VA_ARGS__)
 #endif
 
 //----------------------------------------------------------------------------

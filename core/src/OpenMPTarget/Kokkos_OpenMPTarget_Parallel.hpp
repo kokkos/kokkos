@@ -750,6 +750,7 @@ class OpenMPTargetExec {
                              int64_t thread_local_bytes, int64_t league_size);
 
   static void* m_scratch_ptr;
+  static std::mutex m_mutex_scratch_ptr;
   static int64_t m_scratch_size;
   static int* m_lock_array;
   static uint64_t m_lock_size;
