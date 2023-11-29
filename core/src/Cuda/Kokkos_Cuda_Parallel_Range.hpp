@@ -244,10 +244,10 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
       if (CudaTraits::WarpSize < word_count.value) {
         __syncthreads();
       } else if (word_count.value > 1) {
-        // Inside cuda_single_inter_block_reduce_scan() above, shared[i] below
-        // might have been updated by a single thread within a warp without
-        // synchronization afterwards. Synchronize threads within warp to avoid
-        // potential racecondition.
+        // Inside cuda_single_inter_block_reduce_scan() and final() above,
+        // shared[i] below might have been updated by a single thread within a
+        // warp without synchronization afterwards. Synchronize threads within
+        // warp to avoid potential race condition.
         __syncwarp(0xffffffff);
       }
 
