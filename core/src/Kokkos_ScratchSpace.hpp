@@ -154,9 +154,9 @@ class ScratchMemorySpace {
                                          int level = -1) const {
     if (level == -1) level = m_default_level;
     if (level == 0)
-      return m_scratch_L0.template get_shmem(size);
+      return m_scratch_L0.get_shmem(size);
     else
-      return m_scratch_L1.template get_shmem(size);
+      return m_scratch_L1.get_shmem(size);
   }
 
   template <typename IntType>
@@ -165,9 +165,9 @@ class ScratchMemorySpace {
                                                  int level = -1) const {
     if (level == -1) level = m_default_level;
     if (level == 0)
-      return m_scratch_L0.template get_shmem_aligned(size, alignment);
+      return m_scratch_L0.get_shmem_aligned(size, alignment);
     else
-      return m_scratch_L1.template get_shmem_aligned(size, alignment);
+      return m_scratch_L1.get_shmem_aligned(size, alignment);
   }
 
   KOKKOS_INLINE_FUNCTION
