@@ -48,7 +48,7 @@ struct MyMovableType {
 TEST(std_algorithms_mod_ops_test, move) {
   MyMovableType a;
   using move_t = decltype(std::move(a));
-  static_assert(std::is_rvalue_reference<move_t>::value, "");
+  static_assert(std::is_rvalue_reference<move_t>::value);
 
   // move constr
   MyMovableType b(std::move(a));
@@ -70,7 +70,7 @@ struct StdAlgoModSeqOpsTestMove {
   void operator()(const int index) const {
     typename ViewType::value_type a{11};
     using move_t = decltype(std::move(a));
-    static_assert(std::is_rvalue_reference<move_t>::value, "");
+    static_assert(std::is_rvalue_reference<move_t>::value);
     m_view(index) = std::move(a);
   }
 

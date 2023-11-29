@@ -188,10 +188,9 @@ namespace Kokkos {
 
 namespace Impl {
 
-static_assert(
-    Kokkos::Impl::MemorySpaceAccess<Kokkos::Experimental::HBWSpace,
-                                    Kokkos::Experimental::HBWSpace>::assignable,
-    "");
+static_assert(Kokkos::Impl::MemorySpaceAccess<
+              Kokkos::Experimental::HBWSpace,
+              Kokkos::Experimental::HBWSpace>::assignable);
 
 template <>
 struct MemorySpaceAccess<Kokkos::HostSpace, Kokkos::Experimental::HBWSpace> {
