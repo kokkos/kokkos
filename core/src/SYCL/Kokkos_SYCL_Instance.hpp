@@ -331,7 +331,7 @@ struct sycl::is_device_copyable<
     : std::true_type {};
 
 #if (defined(__INTEL_LLVM_COMPILER) && __INTEL_LLVM_COMPILER < 20240000) || \
-    (defined(__LIBSYCL_MAJOR_VERSION) && __LIBSYCL_MAJOR_VERSION >= 7)
+    (defined(__LIBSYCL_MAJOR_VERSION) && __LIBSYCL_MAJOR_VERSION < 7)
 template <typename>
 struct NonTriviallyCopyableAndDeviceCopyable {
   NonTriviallyCopyableAndDeviceCopyable(
