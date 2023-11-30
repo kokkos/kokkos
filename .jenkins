@@ -27,32 +27,32 @@ pipeline {
         }
         stage('Build') {
             parallel {
-                stage('OPENACC-NVHPC-CUDA-12.2') {
-                    agent {
-                        dockerfile {
-                            filename 'Dockerfile.nvhpc'
-                            dir 'scripts/docker'
-                            label 'nvidia-docker && volta && large_images'
-                            args '--env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
-                        }
-                    }
-                    environment {
-                        NVHPC_CUDA_HOME = '/opt/nvidia/hpc_sdk/Linux_x86_64/23.7/cuda/12.2'
-                    }
-                    steps {
-                        sh '''rm -rf build && mkdir -p build && cd build && \
-                              /opt/cmake/bin/cmake \
-                                -DCMAKE_CXX_COMPILER=nvc++ \
-                                -DCMAKE_CXX_STANDARD=17 \
-                                -DKokkos_ARCH_NATIVE=ON \
-                                -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
-                                -DKokkos_ENABLE_TESTS=ON \
-                                -DKokkos_ENABLE_OPENACC=ON \
-                                -DKokkos_ARCH_VOLTA70=ON \
-                              .. && \
-                              make -j8 && ctest --verbose'''
-                    }
-                }
+//                stage('OPENACC-NVHPC-CUDA-12.2') {
+//                    agent {
+//                        dockerfile {
+//                            filename 'Dockerfile.nvhpc'
+//                            dir 'scripts/docker'
+//                            label 'nvidia-docker && volta && large_images'
+//                            args '--env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
+//                        }
+//                    }
+//                    environment {
+//                        NVHPC_CUDA_HOME = '/opt/nvidia/hpc_sdk/Linux_x86_64/23.7/cuda/12.2'
+//                    }
+//                    steps {
+//                        sh '''rm -rf build && mkdir -p build && cd build && \
+//                              /opt/cmake/bin/cmake \
+//                                -DCMAKE_CXX_COMPILER=nvc++ \
+//                                -DCMAKE_CXX_STANDARD=17 \
+//                                -DKokkos_ARCH_NATIVE=ON \
+//                                -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+//                                -DKokkos_ENABLE_TESTS=ON \
+//                                -DKokkos_ENABLE_OPENACC=ON \
+//                                -DKokkos_ARCH_VOLTA70=ON \
+//                              .. && \
+//                              make -j8 && ctest --verbose'''
+//                    }
+//                }
                 stage('CUDA-12.2-NVHPC') {
                     agent {
                         dockerfile {
