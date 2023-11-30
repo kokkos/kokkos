@@ -30,10 +30,14 @@ void test_moving_view_does_not_change_use_count(ViewType v) {
   ViewType w(std::move(v));  // move construction
   EXPECT_EQ(w.use_count(), cnt);
   EXPECT_EQ(w.data(), ptr);
+  EXPECT_EQ(v.use_count(), 0);
+  EXPECT_EQ(v.data(), nullptr);
 
   v = std::move(w);  // move assignment
   EXPECT_EQ(v.use_count(), cnt);
   EXPECT_EQ(v.data(), ptr);
+  EXPECT_EQ(w.use_count(), 0);
+  EXPECT_EQ(w.data(), nullptr);
 }
 
 TEST(TEST_CATEGORY, view_move_and_use_count) {
