@@ -243,16 +243,16 @@ class UnorderedMap {
   using const_map_type = UnorderedMap<const_key_type, const_value_type,
                                       device_type, hasher_type, equal_to_type>;
 
-  static const bool is_set = std::is_void<value_type>::value;
-  static const bool has_const_key =
-      std::is_same<const_key_type, declared_key_type>::value;
-  static const bool has_const_value =
-      is_set || std::is_same<const_value_type, declared_value_type>::value;
+  static constexpr bool is_set = std::is_void_v<value_type>;
+  static constexpr bool has_const_key =
+      std::is_same_v<const_key_type, declared_key_type>;
+  static constexpr bool has_const_value =
+      is_set || std::is_same_v<const_value_type, declared_value_type>;
 
-  static const bool is_insertable_map =
+  static constexpr bool is_insertable_map =
       !has_const_key && (is_set || !has_const_value);
-  static const bool is_modifiable_map = has_const_key && !has_const_value;
-  static const bool is_const_map      = has_const_key && has_const_value;
+  static constexpr bool is_modifiable_map = has_const_key && !has_const_value;
+  static constexpr bool is_const_map      = has_const_key && has_const_value;
 
   using insert_result = UnorderedMapInsertResult;
 
