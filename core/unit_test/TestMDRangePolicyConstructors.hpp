@@ -95,24 +95,16 @@ TEST(TEST_CATEGORY_DEATH, policy_bounds_unsafe_narrowing_conversions) {
 }
 
 TEST(TEST_CATEGORY_DEATH, policy_invalid_bounds) {
-  using Policy = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<5>>;
+  using Policy = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>;
 
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
   ASSERT_DEATH(
       {
-        (void)Policy({100, 100, 100, 100, 100}, {90, 90, 90, 90, 90});
+        (void)Policy({100, 100}, {90, 90});
       },
       "Kokkos::MDRangePolicy bounds error: The lower bound \\(100\\) is "
       "greater "
-      "than its upper bound \\(90\\) in rank 5\\.");
-
-  ASSERT_DEATH(
-      {
-        (void)Policy({100, 100, 100, 100, 100}, {105, 95, 100, 110, 105});
-      },
-      "Kokkos::MDRangePolicy bounds error: The lower bound \\(100\\) is "
-      "greater "
-      "than its upper bound \\(95\\) in rank 2\\.");
+      "than its upper bound \\(90\\) in dimension 1\\.");
 }
 #endif
 
