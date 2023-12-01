@@ -30,7 +30,6 @@ static_assert(false,
 #include <impl/KokkosExp_Host_IterateTile.hpp>
 #include <Kokkos_ExecPolicy.hpp>
 #include <type_traits>
-#include <sstream>
 
 namespace Kokkos {
 
@@ -330,11 +329,12 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
       const index_type length = m_upper[i] - m_lower[i];
 
       if (m_upper[i] < m_lower[i]) {
-        std::stringstream msg;
-        msg << "Kokkos::MDRangePolicy bounds error: The lower bound ("
-            << m_lower[i] << ") is greater than its upper bound (" << m_upper[i]
-            << ") in rank " << i + 1 << ".";
-        Kokkos::abort(msg.str().c_str());
+        std::string msg =
+            "Kokkos::MDRangePolicy bounds error: The lower bound (" +
+            std::to_string(m_lower[i]) + ") is greater than its upper bound (" +
+            std::to_string(m_upper[i]) + ") in rank " + std::to_string(i + 1) +
+            ".";
+        Kokkos::abort(msg.c_str());
       }
 
       if (m_tile[i] <= 0) {
