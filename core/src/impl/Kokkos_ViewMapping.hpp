@@ -33,6 +33,7 @@
 #include <impl/Kokkos_Tools.hpp>
 #include <impl/Kokkos_StringManipulation.hpp>
 #include <impl/Kokkos_ZeroMemset_fwd.hpp>
+#include <View/Kokkos_ViewFwd.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
