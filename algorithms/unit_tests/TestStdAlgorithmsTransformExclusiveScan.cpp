@@ -16,6 +16,7 @@
 
 #include <TestStdAlgorithmsCommon.hpp>
 #include <utility>
+#include <iomanip>
 
 namespace Test {
 namespace stdalgos {
