@@ -304,8 +304,6 @@ void OpenMPInternal::finalize() {
   }
 
   m_initialized = false;
-
-  Kokkos::Profiling::finalize();
 }
 
 void OpenMPInternal::print_configuration(std::ostream &s) const {
