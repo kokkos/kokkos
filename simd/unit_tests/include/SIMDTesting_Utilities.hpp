@@ -29,7 +29,7 @@ class gtest_checker {
     EXPECT_EQ(a, b);
   }
   template <class T>
-  void near(T const& a, T const& b, double ulps) const {
+  void near(T const& a, T const& b, int ulps) const {
     EXPECT_NEAR(a, b,
                 std::numeric_limits<T>::epsilon() * ulps *
                     std::max(std::fabs(a), std::fabs(b)));
@@ -52,15 +52,15 @@ template <class T, class Abi>
 inline void host_check_equality(
     Kokkos::Experimental::simd<T, Abi> const& expected_result,
     Kokkos::Experimental::simd<T, Abi> const& computed_result,
-    std::size_t nlanes, double ulps = 0.) {
+    std::size_t nlanes, int ulps = 0) {
   gtest_checker checker;
   for (std::size_t i = 0; i < nlanes; ++i) {
-    if (ulps == 0.)
+    if (ulps == 0)
       checker.equality(expected_result[i], computed_result[i]);
     else
       checker.near(expected_result[i], computed_result[i], ulps);
   }
-  if (ulps == 0.) {
+  if (ulps == 0) {
     using mask_type = typename Kokkos::Experimental::simd<T, Abi>::mask_type;
     mask_type mask(false);
     for (std::size_t i = 0; i < nlanes; ++i) {

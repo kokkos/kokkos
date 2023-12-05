@@ -23,7 +23,7 @@
 template <class Abi, class Loader, class BinaryOp, class T>
 void host_check_math_op_one_loader_binary(BinaryOp binary_op, std::size_t n,
                                           T const* first_args,
-                                          T const* second_args, double ulps) {
+                                          T const* second_args, int ulps) {
   Loader loader;
   using simd_type             = Kokkos::Experimental::simd<T, Abi>;
   constexpr std::size_t width = simd_type::size();
@@ -52,7 +52,7 @@ void host_check_math_op_one_loader_binary(BinaryOp binary_op, std::size_t n,
 
 template <class Abi, class Loader, class UnaryOp, class T>
 void host_check_math_op_one_loader_unary(UnaryOp unary_op, std::size_t n,
-                                         T const* args, double ulps) {
+                                         T const* args, int ulps) {
   Loader loader;
   using simd_type             = Kokkos::Experimental::simd<T, Abi>;
   constexpr std::size_t width = simd_type::size();
@@ -80,7 +80,7 @@ void host_check_math_op_one_loader_unary(UnaryOp unary_op, std::size_t n,
 
 template <class Abi, class Op, class T>
 inline void host_check_math_op_all_loaders_unary(Op op, std::size_t n,
-                                                 T const* arg, double ulps) {
+                                                 T const* arg, int ulps) {
   host_check_math_op_one_loader_unary<Abi, load_element_aligned>(op, n, arg,
                                                                  ulps);
   host_check_math_op_one_loader_unary<Abi, load_masked>(op, n, arg, ulps);
@@ -90,7 +90,7 @@ inline void host_check_math_op_all_loaders_unary(Op op, std::size_t n,
 template <class Abi, class Op, class T>
 inline void host_check_math_op_all_loaders_binary(Op op, std::size_t n,
                                                   T const* arg1, T const* arg2,
-                                                  double ulps) {
+                                                  int ulps) {
   host_check_math_op_one_loader_binary<Abi, load_element_aligned>(op, n, arg1,
                                                                   arg2, ulps);
   host_check_math_op_one_loader_binary<Abi, load_masked>(op, n, arg1, arg2,
@@ -102,7 +102,7 @@ inline void host_check_math_op_all_loaders_binary(Op op, std::size_t n,
 template <typename Abi, typename DataType, size_t n>
 inline void host_check_all_math_ops(const DataType (&first_args)[n],
                                     const DataType (&second_args)[n]) {
-  const double integral_ulps = 0;
+  const int integral_ulps = 0;
   host_check_math_op_all_loaders_binary<Abi>(plus(), n, first_args, second_args,
                                              integral_ulps);
   host_check_math_op_all_loaders_binary<Abi>(minus(), n, first_args,
@@ -123,7 +123,7 @@ inline void host_check_all_math_ops(const DataType (&first_args)[n],
 
   // TODO: Place fallback implementations for all simd integer types
   if constexpr (std::is_floating_point_v<DataType>) {
-    const double floating_ulps = 4;
+    const int floating_ulps = 4;
     host_check_math_op_all_loaders_binary<Abi>(divides(), n, first_args,
                                                second_args, floating_ulps);
 #if (defined(__INTEL_COMPILER) || defined(__INTEL_LLVM_COMPILER)) && \
