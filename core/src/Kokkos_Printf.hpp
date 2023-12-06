@@ -30,15 +30,18 @@ namespace Kokkos {
 // In contrast to std::printf, return void to get a consistent behavior across
 // backends. The GPU backends always return 1 and NVHPC only compiles if we
 // don't ask for the return value.
-template <typename... Args>
-KOKKOS_FUNCTION void printf(const char* format, Args... args) {
 #ifdef KOKKOS_ENABLE_SYCL
+template <typename... Args>
+KOKKOS_FORCEINLINE_FUNCTION void printf(const char* format, Args... args) {
   // Some compilers warn if "args" is empty and format is not a string literal
   if constexpr (sizeof...(Args) == 0)
     sycl::ext::oneapi::experimental::printf("%s", format);
   else
     sycl::ext::oneapi::experimental::printf(format, args...);
+}
 #else
+template <typename... Args>
+KOKKOS_FUNCTION void printf(const char* format, Args... args) {
   if constexpr (sizeof...(Args) == 0) ::printf("%s", format);
     // FIXME_OPENMPTARGET non-string-literal argument used in printf is not
     // supported for spir64
@@ -46,8 +49,8 @@ KOKKOS_FUNCTION void printf(const char* format, Args... args) {
   else
     ::printf(format, args...);
 #endif
-#endif
 }
+#endif
 
 }  // namespace Kokkos
 
