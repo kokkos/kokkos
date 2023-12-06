@@ -33,9 +33,11 @@ T device_atomic_exchange(T* dest, T value, MemoryOrder, MemoryScope /*scope*/) {
     return return_val;
   } else {
     // FIXME_OPENACC
-    printf(
-        "DESUL error in device_atomic_exchange(): Not supported atomic operation in "
-        "the OpenACC backend\n");
+    if (acc_on_device(acc_device_not_host)) {
+      printf(
+          "DESUL error in device_atomic_exchange(): Not supported atomic operation in "
+          "the OpenACC backend\n");
+    }
     //  Acquire a lock for the address
     // while (!lock_address_openacc((void*)dest, scope)) {
     // }
@@ -73,9 +75,11 @@ T device_atomic_compare_exchange(
     return atomicCAS(dest, compare, value);
   } else {
     // FIXME_OPENACC
-    printf(
-        "DESUL error in device_atomic_compare_exchange(): Not supported atomic "
-        "operation in the OpenACC backend\n");
+    if (acc_on_device(acc_device_not_host)) {
+      printf(
+          "DESUL error in device_atomic_compare_exchange(): Not supported atomic "
+          "operation in the OpenACC backend\n");
+    }
     T current_val = *dest;
     // Acquire a lock for the address
     // while (!lock_address_openacc((void*)dest, scope)) {
