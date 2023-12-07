@@ -29,8 +29,7 @@ struct FunctorFor {
 
   KOKKOS_FUNCTION
   void operator()(
-      SomeTag,
-      Kokkos::TeamPolicy<TEST_EXECSPACE>::member_type const&) const {}
+      SomeTag, Kokkos::TeamPolicy<TEST_EXECSPACE>::member_type const&) const {}
 };
 
 template <typename Policy>
