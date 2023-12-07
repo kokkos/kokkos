@@ -29,7 +29,7 @@ struct FunctorFor {
 
   KOKKOS_FUNCTION
   void operator()(
-      SomeTag const&,
+      SomeTag,
       Kokkos::TeamPolicy<TEST_EXECSPACE>::member_type const&) const {}
 };
 
