@@ -98,6 +98,11 @@ void OpenMPTargetExec::resize_scratch(int64_t team_size, int64_t shmem_size_L0,
                                       int64_t shmem_size_L1,
                                       int64_t league_size) {
   Kokkos::Experimental::OpenMPTargetSpace space;
+  // FIXME_OPENMPTATGET - Level-0 scratch when using clang/17 and higher comes
+  // from OpenMP extensions in llvm.
+#if defined(KOKKOS_IMPL_OPENMPTARGET_LLVM_EXTENSIONS)
+  shmem_size_L0 = 0;
+#endif
   const int64_t shmem_size =
       shmem_size_L0 + shmem_size_L1;  // L0 + L1 scratch memory per team.
   const int64_t padding = shmem_size * 10 / 100;  // Padding per team.

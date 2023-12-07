@@ -371,15 +371,8 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     const size_t shmem_size_L0 = p.scratch_size(0, team_size);
     const size_t shmem_size_L1 = p.scratch_size(1, team_size);
 
-    // FIXME_OPENMPTATGET - Level-0 scratch when using clang/17 and higher comes
-    // from OpenMP extensions in llvm.
-#if defined(KOKKOS_IMPL_OPENMPTARGET_LLVM_EXTENSIONS)
-    OpenMPTargetExec::resize_scratch(PolicyType::member_type::TEAM_REDUCE_SIZE,
-                                     0, shmem_size_L1, league_size);
-#else
     OpenMPTargetExec::resize_scratch(PolicyType::member_type::TEAM_REDUCE_SIZE,
                                      shmem_size_L0, shmem_size_L1, league_size);
-#endif
     void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
 
     ValueType result = ValueType();
@@ -471,15 +464,8 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     const size_t shmem_size_L0 = p.scratch_size(0, team_size);
     const size_t shmem_size_L1 = p.scratch_size(1, team_size);
 
-    // FIXME_OPENMPTATGET - Level-0 scratch when using clang/17 and higher comes
-    // from OpenMP extensions in llvm.
-#if defined(KOKKOS_IMPL_OPENMPTARGET_LLVM_EXTENSIONS)
-    OpenMPTargetExec::resize_scratch(PolicyType::member_type::TEAM_REDUCE_SIZE,
-                                     0, shmem_size_L1, league_size);
-#else
     OpenMPTargetExec::resize_scratch(PolicyType::member_type::TEAM_REDUCE_SIZE,
                                      shmem_size_L0, shmem_size_L1, league_size);
-#endif
     void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
 
     // Maximum active teams possible.
