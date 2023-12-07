@@ -1,5 +1,23 @@
 # CHANGELOG
 
+## [4.2.01](https://github.com/kokkos/kokkos/tree/4.2.01) (2023-12-07)
+[Full Changelog](https://github.com/kokkos/kokkos/compare/4.2.00...4.2.01)
+
+### Backend and Architecture Enhancements:
+
+#### CUDA:
+- Add warp sync for `parallel_reduce` to avoid race condition [\#6630](https://github.com/kokkos/kokkos/pull/6630)
+
+#### HIP:
+- Fix Graph compilation error [\#6624](https://github.com/kokkos/kokkos/pull/6624)
+
+#### SYCL:
+- Fix testing with `bfloat16` support [\#6608](https://github.com/kokkos/kokkos/pull/6608)
+
+### Bug Fixes
+- Remove deprecation warning for `AllocationMechanism` for `gcc` <11.0 [\#6653](https://github.com/kokkos/kokkos/pull/6653)
+- Avoid finalizing profiling in execution space instances [\#6635](https://github.com/kokkos/kokkos/pull/6635)
+
 ## [4.2.00](https://github.com/kokkos/kokkos/tree/4.2.00) (2023-11-06)
 [Full Changelog](https://github.com/kokkos/kokkos/compare/4.1.00...4.2.00)
 
