@@ -105,7 +105,6 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     const size_t shmem_size_L0 = m_policy.scratch_size(0, team_size);
     const size_t shmem_size_L1 = m_policy.scratch_size(1, team_size);
-
     OpenMPTargetExec::resize_scratch(team_size, shmem_size_L0, shmem_size_L1,
                                      league_size);
 

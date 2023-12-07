@@ -370,7 +370,6 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
 
     const size_t shmem_size_L0 = p.scratch_size(0, team_size);
     const size_t shmem_size_L1 = p.scratch_size(1, team_size);
-
     OpenMPTargetExec::resize_scratch(PolicyType::member_type::TEAM_REDUCE_SIZE,
                                      shmem_size_L0, shmem_size_L1, league_size);
     void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
@@ -463,7 +462,6 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
 
     const size_t shmem_size_L0 = p.scratch_size(0, team_size);
     const size_t shmem_size_L1 = p.scratch_size(1, team_size);
-
     OpenMPTargetExec::resize_scratch(PolicyType::member_type::TEAM_REDUCE_SIZE,
                                      shmem_size_L0, shmem_size_L1, league_size);
     void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
