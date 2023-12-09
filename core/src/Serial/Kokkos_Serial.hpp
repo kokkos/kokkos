@@ -25,6 +25,7 @@ static_assert(false,
 #ifndef KOKKOS_SERIAL_HPP
 #define KOKKOS_SERIAL_HPP
 
+#include <iterator>
 #include <Kokkos_Macros.hpp>
 #if defined(KOKKOS_ENABLE_SERIAL)
 
