@@ -2404,7 +2404,7 @@ struct ViewDataHandle<
                       Traits::memory_traits::is_atomic)>> {
   using value_type  = typename Traits::value_type;
   using handle_type = typename Kokkos::Impl::AtomicViewDataHandle<Traits>;
-  using return_type = typename Kokkos::Impl::AtomicDataElement<Traits>;
+  using return_type = typename Kokkos::Impl::AtomicDataElement<typename Traits::value_type>;
   using track_type  = Kokkos::Impl::SharedAllocationTracker;
 
   KOKKOS_INLINE_FUNCTION

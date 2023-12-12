@@ -20,6 +20,7 @@
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #define KOKKOS_IMPL_PUBLIC_INCLUDE
 #include <View/Kokkos_BasicView.hpp>
+#endif // KOKKOS_IMPL_PUBLIC_INCLUDE
 
 template <class T, class ExecutionSpace>
 struct TestBasicView
@@ -27,6 +28,8 @@ struct TestBasicView
   template <class ExtentsType>
   static void test_default_constructor() {
     using extents_type = ExtentsType;
+    using layout_type = Kokkos::layout_right_padded
+    using accessor_type = Kokkos::SpaceAwareAccessor<T, 0, false, false, ExecutionSpace, typename ExecutionSpace::memory_space>
     using view_type    = Kokkos::BasicView<T, ExtentsType, ExecutionSpace>;
     view_type view;
 
@@ -161,5 +164,3 @@ TEST(TEST_CATEGORY, basic_view) {
 }
 
 }  // namespace Test
-
-#endif // KOKKOS_IMPL_PUBLIC_INCLUDE

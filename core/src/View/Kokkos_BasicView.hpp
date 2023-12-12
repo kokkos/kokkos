@@ -30,51 +30,30 @@ static_assert(false,
 #include "MDSpan/Kokkos_MDSpan_Header.hpp"
 
 namespace Kokkos {
-namespace Impl {
-template <class L>
-struct kokkos_layout_conversion {
-  using type = L;
-};
+namespace Impl {}  // namespace Impl
 
-template <>
-struct kokkos_layout_conversion<LayoutLeft> {
-  using type = Experimental::layout_left_padded<dynamic_extent>;
-};
-
-template <>
-struct kokkos_layout_conversion<LayoutRight> {
-  using type = Experimental::layout_right_padded<dynamic_extent>;
-};
-
-template <typename ExecutionSpace>
-using preferred_layout_for_exec_space = typename ExecutionSpace::array_layout;
-}  // namespace Impl
-
-template <class ElementType, class Extents,
-          class ExecutionSpace = Kokkos::DefaultExecutionSpace,
-          class MemorySpace    = typename ExecutionSpace::memory_space,
-          class LayoutPolicy =
-              Impl::preferred_layout_for_exec_space<ExecutionSpace>>
+template <class ElementType, class Extents, class LayoutPolicy,
+          class AccessorPolicy>
 class BasicView {
- private:
-  using internal_layout_type =
-      typename Impl::kokkos_layout_conversion<LayoutPolicy>::type;
-
-  using default_alloc_params = Impl::alloc_params<MemorySpace, ExecutionSpace>;
-
  public:
   using extents_type  = Extents;
-  using accessor_type = default_accessor<ElementType>;
+  using layout_type   = LayoutPolicy;
+  using accessor_type = AccessorPolicy;
   using mdspan_type =
-      mdspan<ElementType, extents_type, internal_layout_type, accessor_type>;
+      mdspan<ElementType, extents_type, layout_type, accessor_type>;
   using index_type       = typename extents_type::index_type;
   using rank_type        = typename extents_type::rank_type;
   using data_handle_type = typename mdspan_type::data_handle_type;
   using reference        = typename mdspan_type::reference;
   using mapping_type     = typename mdspan_type::mapping_type;
-  using execution_space  = ExecutionSpace;
-  using memory_space     = MemorySpace;
+  using execution_space  = typename accessor_type::execution_space;
+  using memory_space     = typename accessor_type::memory_space;
 
+ private:
+  using default_alloc_params =
+      Impl::alloc_params<memory_space, execution_space>;
+
+ public:
   static constexpr Impl::integral_constant<rank_type, extents_type::rank()>
       rank = {};
   static constexpr Impl::integral_constant<rank_type,
@@ -85,30 +64,26 @@ class BasicView {
   /// \name Constructors
   ///
   ///@{
-  KOKKOS_INLINE_FUNCTION constexpr BasicView() = default;
-  KOKKOS_INLINE_FUNCTION constexpr BasicView(const BasicView &) = default;
+  KOKKOS_INLINE_FUNCTION constexpr BasicView()                      = default;
+  KOKKOS_INLINE_FUNCTION constexpr BasicView(const BasicView &)     = default;
   KOKKOS_INLINE_FUNCTION constexpr BasicView(BasicView &&) noexcept = default;
 
-  KOKKOS_INLINE_FUNCTION constexpr BasicView &
-  operator=(const BasicView &) = default;
+  KOKKOS_INLINE_FUNCTION constexpr BasicView &operator=(const BasicView &) =
+      default;
 
-  KOKKOS_INLINE_FUNCTION constexpr BasicView &
-  operator=(BasicView &&) = default;
+  KOKKOS_INLINE_FUNCTION constexpr BasicView &operator=(BasicView &&) = default;
 
   ///
   /// Converting constructor
   ///
-  template <class OtherElementType, class OtherExtents,
-            class OtherExecutionSpace, class OtherMemorySpace,
-            class OtherLayoutPolicy,
+  template <class OtherElementType, class OtherExtents, class OtherLayoutPolicy,
+            class OtherAccessor,
             typename = std::enable_if_t<std::is_constructible_v<
-                mdspan_type,
-                const mdspan<OtherElementType, OtherExtents,
-                             typename Impl::kokkos_layout_conversion<OtherLayoutPolicy>::type,
-                             default_accessor<OtherElementType>> &>>>
+                mdspan_type, const mdspan<OtherElementType, OtherExtents,
+                                          OtherLayoutPolicy, OtherAccessor> &>>>
   KOKKOS_INLINE_FUNCTION constexpr BasicView(
-      const BasicView<OtherElementType, OtherExtents, OtherExecutionSpace,
-                      OtherMemorySpace, OtherLayoutPolicy> &other)
+      const BasicView<OtherElementType, OtherExtents, OtherLayoutPolicy,
+                      OtherAccessor> &other)
       : m_tracker(other.m_tracker), m_data(other.m_data) {}
 
   // TODO: subview constructor
@@ -212,12 +187,10 @@ class BasicView {
  private:
   using tracker_type = Impl::SharedAllocationTracker;
 
-  template <typename M, typename E, bool AllowPadding,
-            bool Initialize>
+  template <typename M, typename E, bool AllowPadding, bool Initialize>
   KOKKOS_INLINE_FUNCTION constexpr BasicView(
       const mapping_type &layout_mapping, std::string_view label,
-      const Impl::alloc_params<M, E, AllowPadding,
-                               Initialize> &params)
+      const Impl::alloc_params<M, E, AllowPadding, Initialize> &params)
       : BasicView(layout_mapping, label, params.memory_space,
                   &params.execution_space, params.allow_padding,
                   params.initialize) {}
@@ -225,23 +198,23 @@ class BasicView {
   template <typename E, bool AllowPadding, bool Initialize>
   KOKKOS_INLINE_FUNCTION constexpr BasicView(
       const mapping_type &layout_mapping, std::string_view label,
-      const memory_space &mem_space_instance,
-      const E *exec_space_instance,
+      const memory_space &mem_space_instance, const E *exec_space_instance,
       std::integral_constant<bool, AllowPadding> allow_padding,
       std::integral_constant<bool, Initialize> initialize)
       : m_tracker(allocate_record(layout_mapping, label, mem_space_instance,
                                   exec_space_instance, allow_padding,
                                   initialize)),
-        m_data(static_cast<data_handle_type>(m_tracker.get_record<memory_space>()->data()), layout_mapping) {}
+        m_data(static_cast<data_handle_type>(
+                   m_tracker.get_record<memory_space>()->data()),
+               layout_mapping) {}
 
   template <typename E, bool AllowPadding, bool Initialize>
   static KOKKOS_INLINE_FUNCTION constexpr tracker_type allocate_record(
       const mapping_type &layout_mapping, std::string_view label,
-      const memory_space &mem_space_instance,
-      const E *exec_space_instance,
+      const memory_space &mem_space_instance, const E *exec_space_instance,
       std::integral_constant<bool, AllowPadding> allow_padding,
       std::integral_constant<bool, Initialize> initialize) {
-    static_assert(SpaceAccessibility<ExecutionSpace, memory_space>::accessible);
+    static_assert(SpaceAccessibility<execution_space, memory_space>::accessible);
     auto *rec = Impl::make_shared_allocation_record<ElementType>(
         layout_mapping, label, mem_space_instance, exec_space_instance,
         allow_padding, initialize);
