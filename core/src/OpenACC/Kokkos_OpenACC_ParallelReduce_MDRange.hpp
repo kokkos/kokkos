@@ -31,7 +31,8 @@ template <class Functor, class Reducer, class Policy,
 struct OpenACCParallelReduceMDRangeHelper {
   OpenACCParallelReduceMDRangeHelper(Functor const&, Reducer const&,
                                      Policy const&) {
-    static_assert(std::is_void_v<Functor>, "not implemented");
+    static_assert(Kokkos::Impl::always_false<Functor>::value,
+                  "not implemented");
   }
 };
 }  // namespace Kokkos::Experimental::Impl

@@ -40,7 +40,8 @@ template <class Functor, class Reducer, class Policy,
 struct OpenACCParallelReduceTeamHelper {
   OpenACCParallelReduceTeamHelper(Functor const&, Reducer const&,
                                   Policy const&) {
-    static_assert(std::is_void_v<Functor>, "not implemented");
+    static_assert(Kokkos::Impl::always_false<Functor>::value,
+                  "not implemented");
   }
 };
 
@@ -128,7 +129,8 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
     const Impl::TeamThreadRangeBoundariesStruct<iType, Impl::OpenACCTeamMember>&
         loop_boundaries,
     const Lambda& lambda, const JoinType& join, ValueType& init_result) {
-  static_assert(std::is_void_v<Lambda>, "custom reduction is not implemented");
+  static_assert(Kokkos::Impl::always_false<Lambda>::value,
+                "custom reduction is not implemented");
 }
 
 // Hierarchical Parallelism -> Thread vector level implementation
@@ -138,7 +140,8 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
     const Impl::ThreadVectorRangeBoundariesStruct<
         iType, Impl::OpenACCTeamMember>& loop_boundaries,
     const Lambda& lambda, const JoinType& join, ValueType& init_result) {
-  static_assert(std::is_void_v<Lambda>, "custom reduction is not implemented");
+  static_assert(Kokkos::Impl::always_false<Lambda>::value,
+                "custom reduction is not implemented");
 }
 
 }  // namespace Kokkos
