@@ -26,7 +26,7 @@ namespace Kokkos {
 namespace Experimental {
 
 template <class T>
-KOKKOS_INLINE_FUNCTION void swap(T& a, T& b) noexcept(
+KOKKOS_INLINE_FUNCTION constexpr void swap(T& a, T& b) noexcept(
     std::is_nothrow_move_constructible_v<T>&&
         std::is_nothrow_move_assignable_v<T>) {
   static_assert(
