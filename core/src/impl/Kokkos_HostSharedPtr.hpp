@@ -61,7 +61,9 @@ class HostSharedPtr {
   KOKKOS_FUNCTION HostSharedPtr(const HostSharedPtr& other) noexcept
       : m_element_ptr(other.m_element_ptr), m_control(other.m_control) {
     KOKKOS_IF_ON_HOST(
-        (if (m_control) Kokkos::atomic_add(&(m_control->m_counter), 1);))
+        (if (m_control) desul::atomic_add(&(m_control->m_counter), 1,
+                                          desul::MemoryOrderRelaxed(),
+                                          desul::MemoryScopeDevice());))
     KOKKOS_IF_ON_DEVICE(m_control = nullptr;)
   }
 
@@ -83,7 +85,9 @@ class HostSharedPtr {
       m_element_ptr = other.m_element_ptr;
       m_control     = other.m_control;
       KOKKOS_IF_ON_HOST(
-          (if (m_control) Kokkos::atomic_add(&(m_control->m_counter), 1);))
+          (if (m_control) desul::atomic_add(&(m_control->m_counter), 1,
+                                            desul::MemoryOrderRelaxed(),
+                                            desul::MemoryScopeDevice());))
       KOKKOS_IF_ON_DEVICE(m_control = nullptr;)
     }
     return *this;
@@ -121,11 +125,9 @@ class HostSharedPtr {
         // If m_counter is set, then this instance is responsible for managing
         // the object pointed to by m_counter and m_element_ptr.
         if (m_control) {
-          int const count =
-              Kokkos::atomic_fetch_sub(&(m_control->m_counter), 1);
-          // atomic_fetch_sub might have memory order relaxed, so we need to
-          // force synchronization to avoid multiple threads doing the cleanup.
-          Kokkos::memory_fence();
+          int const count = desul::atomic_fetch_sub(&(m_control->m_counter), 1,
+                                                    desul::MemoryOrderAcqRel(),
+                                                    desul::MemoryScopeDevice());
           if (count == 1) {
             (m_control->m_deleter)(m_element_ptr);
             m_element_ptr = nullptr;

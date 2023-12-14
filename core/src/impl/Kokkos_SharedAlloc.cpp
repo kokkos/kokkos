@@ -36,8 +36,9 @@ bool SharedAllocationRecord<void, void>::is_sane(
     SharedAllocationRecord* root_next             = nullptr;
     static constexpr SharedAllocationRecord* zero = nullptr;
     // Lock the list:
-    while ((root_next = Kokkos::atomic_exchange(&root->m_next, zero)) ==
-           nullptr)
+    while ((root_next = desul::atomic_exchange(
+                &root->m_next, zero, desul::MemoryOrderRelaxed(),
+                desul::MemoryScopeDevice())) == nullptr)
       ;
 
     for (SharedAllocationRecord* rec = root_next; ok && rec != root;
@@ -83,7 +84,9 @@ bool SharedAllocationRecord<void, void>::is_sane(
       }
     }
 
-    if (nullptr != Kokkos::atomic_exchange(&root->m_next, root_next)) {
+    if (nullptr != desul::atomic_exchange(&root->m_next, root_next,
+                                          desul::MemoryOrderRelaxed(),
+                                          desul::MemoryScopeDevice())) {
       Kokkos::Impl::throw_runtime_exception(
           "Kokkos::Impl::SharedAllocationRecord failed is_sane unlocking");
     }
@@ -110,8 +113,9 @@ SharedAllocationRecord<void, void>* SharedAllocationRecord<void, void>::find(
   static constexpr SharedAllocationRecord* zero = nullptr;
 
   // Lock the list:
-  while ((root_next = Kokkos::atomic_exchange(&arg_root->m_next, zero)) ==
-         nullptr)
+  while ((root_next = desul::atomic_exchange(
+              &arg_root->m_next, zero, desul::MemoryOrderRelaxed(),
+              desul::MemoryScopeDevice())) == nullptr)
     ;
 
   // Iterate searching for the record with this data pointer
@@ -126,7 +130,9 @@ SharedAllocationRecord<void, void>* SharedAllocationRecord<void, void>::find(
     r = nullptr;
   }
 
-  if (nullptr != Kokkos::atomic_exchange(&arg_root->m_next, root_next)) {
+  if (nullptr != desul::atomic_exchange(&arg_root->m_next, root_next,
+                                        desul::MemoryOrderRelaxed(),
+                                        desul::MemoryScopeDevice())) {
     Kokkos::Impl::throw_runtime_exception(
         "Kokkos::Impl::SharedAllocationRecord failed locking/unlocking");
   }
@@ -177,7 +183,9 @@ SharedAllocationRecord<void, void>::SharedAllocationRecord(
     static constexpr SharedAllocationRecord* zero = nullptr;
 
     // Read root->m_next and lock by setting to nullptr
-    while ((m_next = Kokkos::atomic_exchange(&m_root->m_next, zero)) == nullptr)
+    while ((m_next = desul::atomic_exchange(
+                &m_root->m_next, zero, desul::MemoryOrderRelaxed(),
+                desul::MemoryScopeDevice())) == nullptr)
       ;
 
     m_next->m_prev = this;
@@ -185,7 +193,9 @@ SharedAllocationRecord<void, void>::SharedAllocationRecord(
     // memory fence before completing insertion into linked list
     Kokkos::memory_fence();
 
-    if (nullptr != Kokkos::atomic_exchange(&m_root->m_next, this)) {
+    if (nullptr != desul::atomic_exchange(&m_root->m_next, this,
+                                          desul::MemoryOrderRelaxed(),
+                                          desul::MemoryScopeDevice())) {
       Kokkos::Impl::throw_runtime_exception(
           "Kokkos::Impl::SharedAllocationRecord failed locking/unlocking");
     }
@@ -199,7 +209,9 @@ SharedAllocationRecord<void, void>::SharedAllocationRecord(
 
 void SharedAllocationRecord<void, void>::increment(
     SharedAllocationRecord<void, void>* arg_record) {
-  const int old_count = Kokkos::atomic_fetch_add(&arg_record->m_count, 1);
+  const int old_count = desul::atomic_fetch_add(&arg_record->m_count, 1,
+                                                desul::MemoryOrderRelaxed(),
+                                                desul::MemoryScopeDevice());
 
   if (old_count < 0) {  // Error
     Kokkos::Impl::throw_runtime_exception(
@@ -209,7 +221,9 @@ void SharedAllocationRecord<void, void>::increment(
 
 SharedAllocationRecord<void, void>* SharedAllocationRecord<
     void, void>::decrement(SharedAllocationRecord<void, void>* arg_record) {
-  const int old_count = Kokkos::atomic_fetch_sub(&arg_record->m_count, 1);
+  const int old_count = desul::atomic_fetch_sub(&arg_record->m_count, 1,
+                                                desul::MemoryOrderRelaxed(),
+                                                desul::MemoryScopeDevice());
 
   if (old_count == 1) {
     if (is_finalized()) {
@@ -232,8 +246,9 @@ SharedAllocationRecord<void, void>* SharedAllocationRecord<
     static constexpr SharedAllocationRecord* zero = nullptr;
 
     // Lock the list:
-    while ((root_next = Kokkos::atomic_exchange(&arg_record->m_root->m_next,
-                                                zero)) == nullptr)
+    while ((root_next = desul::atomic_exchange(
+                &arg_record->m_root->m_next, zero, desul::MemoryOrderRelaxed(),
+                desul::MemoryScopeDevice())) == nullptr)
       ;
     // We need a memory_fence() here so that the following update
     // is properly sequenced
@@ -252,8 +267,10 @@ SharedAllocationRecord<void, void>* SharedAllocationRecord<
     Kokkos::memory_fence();
 
     // Unlock the list:
-    if (nullptr !=
-        Kokkos::atomic_exchange(&arg_record->m_root->m_next, root_next)) {
+    if (nullptr != desul::atomic_exchange(&arg_record->m_root->m_next,
+                                          root_next,
+                                          desul::MemoryOrderRelaxed(),
+                                          desul::MemoryScopeDevice())) {
       Kokkos::Impl::throw_runtime_exception(
           "Kokkos::Impl::SharedAllocationRecord failed decrement unlocking");
     }
