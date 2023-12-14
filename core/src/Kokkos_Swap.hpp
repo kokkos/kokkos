@@ -14,8 +14,8 @@
 //
 //@HEADER
 
-#ifndef KOKKOS_STD_ALGORITHMS_SWAP_HPP
-#define KOKKOS_STD_ALGORITHMS_SWAP_HPP
+#ifndef KOKKOS_SWAP_HPP
+#define KOKKOS_SWAP_HPP
 
 #include <Kokkos_Macros.hpp>
 
