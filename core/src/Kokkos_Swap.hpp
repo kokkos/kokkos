@@ -17,7 +17,10 @@
 #ifndef KOKKOS_STD_ALGORITHMS_SWAP_HPP
 #define KOKKOS_STD_ALGORITHMS_SWAP_HPP
 
-#include <Kokkos_Core.hpp>
+#include <Kokkos_Macros.hpp>
+
+#include <type_traits>
+#include <utility>
 
 namespace Kokkos {
 namespace Experimental {
