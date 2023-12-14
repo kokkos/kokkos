@@ -84,13 +84,6 @@
 
 //----------------------------------------------------------------------------
 
-#if !defined(KOKKOS_ENABLE_THREADS) && !defined(KOKKOS_ENABLE_CUDA) &&     \
-    !defined(KOKKOS_ENABLE_OPENMP) && !defined(KOKKOS_ENABLE_HPX) &&       \
-    !defined(KOKKOS_ENABLE_OPENMPTARGET) && !defined(KOKKOS_ENABLE_HIP) && \
-    !defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ENABLE_OPENACC)
-#define KOKKOS_INTERNAL_NOT_PARALLEL
-#endif
-
 #define KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
 
 #include <KokkosCore_Config_SetupBackend.hpp>

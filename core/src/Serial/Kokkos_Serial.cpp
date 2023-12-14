@@ -153,10 +153,6 @@ void Serial::print_configuration(std::ostream& os, bool /*verbose*/) const {
   os << "Host Serial Execution Space:\n";
   os << "  KOKKOS_ENABLE_SERIAL: yes\n";
 
-#ifdef KOKKOS_INTERNAL_NOT_PARALLEL
-  os << "Kokkos atomics disabled\n";
-#endif
-
   os << "\nSerial Runtime Configuration:\n";
 }
 
