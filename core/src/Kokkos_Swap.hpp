@@ -25,7 +25,6 @@
 namespace Kokkos {
 namespace Experimental {
 
-// swap
 template <class T>
 KOKKOS_INLINE_FUNCTION void swap(T& a, T& b) noexcept {
   static_assert(
