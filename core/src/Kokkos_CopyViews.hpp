@@ -22,6 +22,7 @@ static_assert(false,
 #ifndef KOKKOS_COPYVIEWS_HPP_
 #define KOKKOS_COPYVIEWS_HPP_
 #include <string>
+#include <sstream>
 #include <Kokkos_Parallel.hpp>
 #include <KokkosExp_MDRangePolicy.hpp>
 #include <Kokkos_Layout.hpp>
