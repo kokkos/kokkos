@@ -612,12 +612,17 @@ void view_copy(const DstType& dst, const SrcType& src) {
   };
 
   if (!DstExecCanAccessSrc && !SrcExecCanAccessDst) {
-    std::string message(
-        "Error: Kokkos::deep_copy with no available copy mechanism: ");
-    message += src.label();
-    message += " to ";
-    message += dst.label();
-    Kokkos::Impl::throw_runtime_exception(message);
+    std::ostringstream ss;
+    ss << "Error: Kokkos::deep_copy with no available copy mechanism: ";
+    ss << "from src (\"" << src.label() << "\") to dst (\"" << dst.label()
+       << "\").\n";
+    ss << "There is no common execution space that can access both src's "
+          "space\n";
+    ss << "(" << src_memory_space().name() << ") and dst's space ("
+       << dst_memory_space().name() << "), ";
+    ss << "so src and dst\n";
+    ss << "must be contiguous and have the same layout.\n";
+    Kokkos::Impl::throw_runtime_exception(ss.str());
   }
 
   // Figure out iteration order in case we need it
