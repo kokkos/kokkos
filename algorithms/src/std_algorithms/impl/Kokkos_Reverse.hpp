@@ -38,7 +38,7 @@ struct StdReverseFunctor {
 
   KOKKOS_FUNCTION
   void operator()(index_type i) const {
-    ::Kokkos::Experimental::swap(m_first[i], m_last[-i - 1]);
+    ::Kokkos::swap(m_first[i], m_last[-i - 1]);
   }
 
   KOKKOS_FUNCTION

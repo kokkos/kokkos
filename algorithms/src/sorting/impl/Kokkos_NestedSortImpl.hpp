@@ -98,7 +98,7 @@ KOKKOS_INLINE_FUNCTION void sort_nested_impl(
             keyView(elem1) = key2;
             keyView(elem2) = key1;
             if constexpr (!std::is_same_v<ValueViewType, std::nullptr_t>) {
-              Kokkos::Experimental::swap(valueView(elem1), valueView(elem2));
+              Kokkos::swap(valueView(elem1), valueView(elem2));
             }
           }
         }

@@ -96,7 +96,7 @@ TEST(std_algorithms_mod_ops_test, swap) {
   {
     int a = 1;
     int b = 2;
-    KE::swap(a, b);
+    Kokkos::swap(a, b);
     ASSERT_EQ(a, 2);
     ASSERT_EQ(b, 1);
   }
@@ -104,7 +104,7 @@ TEST(std_algorithms_mod_ops_test, swap) {
   {
     double a = 3.;
     double b = 1.;
-    KE::swap(a, b);
+    Kokkos::swap(a, b);
     EXPECT_DOUBLE_EQ(a, 1.);
     EXPECT_DOUBLE_EQ(b, 3.);
   }
@@ -117,7 +117,7 @@ struct StdAlgoModSeqOpsTestSwap {
   KOKKOS_INLINE_FUNCTION
   void operator()(const int index) const {
     typename ViewType::value_type newval{11};
-    KE::swap(m_view(index), newval);
+    Kokkos::swap(m_view(index), newval);
   }
 
   StdAlgoModSeqOpsTestSwap(ViewType aIn) : m_view(aIn) {}

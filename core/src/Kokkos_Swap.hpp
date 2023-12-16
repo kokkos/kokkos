@@ -23,7 +23,6 @@
 #include <utility>
 
 namespace Kokkos {
-namespace Experimental {
 
 template <class T>
 KOKKOS_FUNCTION constexpr void swap(T& a, T& b) noexcept(
@@ -38,7 +37,6 @@ KOKKOS_FUNCTION constexpr void swap(T& a, T& b) noexcept(
   b     = std::move(tmp);
 }
 
-}  // namespace Experimental
 }  // namespace Kokkos
 
 #endif
