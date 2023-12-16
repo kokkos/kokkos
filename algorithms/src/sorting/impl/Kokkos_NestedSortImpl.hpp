@@ -18,7 +18,6 @@
 #define KOKKOS_NESTED_SORT_IMPL_HPP_
 
 #include <Kokkos_Core.hpp>
-#include <std_algorithms/Kokkos_Swap.hpp>
 
 namespace Kokkos {
 namespace Experimental {

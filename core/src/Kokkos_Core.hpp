@@ -53,6 +53,7 @@
 #include <Kokkos_MathematicalSpecialFunctions.hpp>
 #include <Kokkos_NumericTraits.hpp>
 #include <Kokkos_BitManipulation.hpp>
+#include <Kokkos_Swap.hpp>
 #include <Kokkos_MemoryPool.hpp>
 #include <Kokkos_Array.hpp>
 #include <Kokkos_View.hpp>
