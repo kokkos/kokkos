@@ -43,6 +43,16 @@ struct TestSwap {
         ++err;
       }
     }
+    {
+      int a[3] = {1, 2, 3};
+      int b[3] = {4, 5, 6};
+      Kokkos::swap(a, b);
+      if (!(a[0] == 4 && a[1] == 5 && a[2] == 6 && b[0] == 1 && b[1] == 2 &&
+            b[2] == 3)) {
+        Kokkos::printf("Failed Kokkos::swap(int[3], int[3])\n");
+        ++err;
+      }
+    }
   }
 
   TestSwap() {

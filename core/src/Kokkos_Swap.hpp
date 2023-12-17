@@ -25,16 +25,40 @@
 namespace Kokkos {
 
 template <class T>
-KOKKOS_FUNCTION constexpr void swap(T& a, T& b) noexcept(
-    std::is_nothrow_move_constructible_v<T>&&
-        std::is_nothrow_move_assignable_v<T>) {
-  static_assert(
-      std::is_move_constructible_v<T> && std::is_move_assignable_v<T>,
-      "Kokkos::swap arguments must be move assignable and move constructible");
+KOKKOS_FUNCTION constexpr std::enable_if_t<std::is_move_constructible_v<T> &&
+                                           std::is_move_assignable_v<T>>
+swap(T& a, T& b) noexcept(std::is_nothrow_move_constructible_v<T>&&
+                              std::is_nothrow_move_assignable_v<T>) {
+  T t(std::move(a));
+  a = std::move(b);
+  b = std::move(t);
+}
 
-  T tmp = std::move(a);
-  a     = std::move(b);
-  b     = std::move(tmp);
+namespace Impl {
+
+template <class T>
+struct is_swappable {
+  template <class U>
+  static decltype(swap(std::declval<T&>(), std::declval<T&>())) test_swap(int);
+  struct Nope;
+  template <class U>
+  static Nope test_swap(long);
+  static constexpr bool value =
+      !std::is_same_v<decltype(test_swap<T>(0)), Nope>;
+};
+
+template <class T>
+inline constexpr bool is_nothrow_swappable_v =
+    noexcept(swap(std::declval<T&>(), std::declval<T&>()));
+
+}  // namespace Impl
+
+template <class T, size_t N>
+KOKKOS_FUNCTION constexpr std::enable_if_t<Impl::is_swappable<T>::value> swap(
+    T (&a)[N], T (&b)[N]) noexcept(Impl::is_nothrow_swappable_v<T>) {
+  for (size_t i = 0; i < N; ++i) {
+    swap(a[i], b[i]);
+  }
 }
 
 }  // namespace Kokkos
