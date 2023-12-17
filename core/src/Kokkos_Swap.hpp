@@ -19,6 +19,7 @@
 
 #include <Kokkos_Macros.hpp>
 
+#include <cstddef>
 #include <type_traits>
 #include <utility>
 
@@ -53,10 +54,10 @@ inline constexpr bool is_nothrow_swappable_v =
 
 }  // namespace Impl
 
-template <class T, size_t N>
+template <class T, std::size_t N>
 KOKKOS_FUNCTION constexpr std::enable_if_t<Impl::is_swappable<T>::value> swap(
     T (&a)[N], T (&b)[N]) noexcept(Impl::is_nothrow_swappable_v<T>) {
-  for (size_t i = 0; i < N; ++i) {
+  for (std::size_t i = 0; i < N; ++i) {
     swap(a[i], b[i]);
   }
 }
