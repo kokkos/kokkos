@@ -247,6 +247,18 @@ class shift_right {
   }
 };
 
+class shift_right_eq {
+ public:
+  template <typename T, typename U>
+  auto& on_host(T&& a, U&& b) const {
+    return a >>= b;
+  }
+  template <typename T, typename U>
+  KOKKOS_INLINE_FUNCTION auto& on_device(T&& a, U&& b) const {
+    return a >>= b;
+  }
+};
+
 class shift_left {
  public:
   template <typename T, typename U>
@@ -256,6 +268,18 @@ class shift_left {
   template <typename T, typename U>
   KOKKOS_INLINE_FUNCTION auto on_device(T&& a, U&& b) const {
     return a << b;
+  }
+};
+
+class shift_left_eq {
+ public:
+  template <typename T, typename U>
+  auto& on_host(T&& a, U&& b) const {
+    return a <<= b;
+  }
+  template <typename T, typename U>
+  KOKKOS_INLINE_FUNCTION auto& on_device(T&& a, U&& b) const {
+    return a <<= b;
   }
 };
 

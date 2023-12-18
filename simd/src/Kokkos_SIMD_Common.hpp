@@ -231,8 +231,10 @@ KOKKOS_FORCEINLINE_FUNCTION where_expression<M, T>& operator*=(
 template <class T, class Abi,
           std::enable_if_t<std::is_integral_v<T>, bool> = false>
 [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION auto operator/(
-    Experimental::simd<T, Abi> const& lhs, Experimental::simd<T, Abi> const& rhs) {
-  return Experimental::simd<T,Abi>([&](std::size_t i) { return lhs[i] / rhs[i]; });
+    Experimental::simd<T, Abi> const& lhs,
+    Experimental::simd<T, Abi> const& rhs) {
+  return Experimental::simd<T, Abi>(
+      [&](std::size_t i) { return lhs[i] / rhs[i]; });
 }
 
 template <class T, class U, class Abi,
@@ -264,6 +266,20 @@ template <class M, class T, class U>
 KOKKOS_FORCEINLINE_FUNCTION where_expression<M, T>& operator/=(
     where_expression<M, T>& lhs, U&& rhs) {
   lhs = lhs.value() / std::forward<U>(rhs);
+  return lhs;
+}
+
+template <class T, class U, class Abi>
+KOKKOS_FORCEINLINE_FUNCTION simd<T, Abi>& operator>>=(simd<T, Abi>& lhs,
+                                                      U&& rhs) {
+  lhs = lhs >> std::forward<U>(rhs);
+  return lhs;
+}
+
+template <class T, class U, class Abi>
+KOKKOS_FORCEINLINE_FUNCTION simd<T, Abi>& operator<<=(simd<T, Abi>& lhs,
+                                                      U&& rhs) {
+  lhs = lhs << std::forward<U>(rhs);
   return lhs;
 }
 
