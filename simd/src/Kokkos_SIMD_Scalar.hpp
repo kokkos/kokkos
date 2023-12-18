@@ -119,6 +119,10 @@ class basic_simd<T, simd_abi::scalar> {
                 bool> = false>
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd(G&& gen) noexcept
       : m_value(gen(0)) {}
+  template <typename FlagType>
+  KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd(T const* ptr,
+                                                            FlagType)
+      : m_value(*ptr) {}
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit operator T() const {
     return m_value;
   }
@@ -146,17 +150,37 @@ class basic_simd<T, simd_abi::scalar> {
   operator*(basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd(lhs.m_value * rhs.m_value);
   }
+  template <typename U, std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>
+  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd
+  operator*(basic_simd const& lhs, U rhs) {
+    return lhs.m_value * basic_simd(rhs);
+  }
   [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd
   operator/(basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd(lhs.m_value / rhs.m_value);
+  }
+  template <typename U, std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>
+  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd
+  operator/(basic_simd const& lhs, U rhs) {
+    return lhs.m_value / basic_simd(rhs);
   }
   [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd
   operator+(basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd(lhs.m_value + rhs.m_value);
   }
+  template <typename U, std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>
+  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd
+  operator+(basic_simd const& lhs, U rhs) {
+    return lhs.m_value + basic_simd(rhs);
+  }
   [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd
   operator-(basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd(lhs.m_value - rhs.m_value);
+  }
+  template <typename U, std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>
+  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd
+  operator-(basic_simd const& lhs, U rhs) {
+    return lhs.m_value - basic_simd(rhs);
   }
   [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd
   operator>>(basic_simd const& lhs, int rhs) noexcept {
@@ -181,6 +205,36 @@ class basic_simd<T, simd_abi::scalar> {
   [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd
   operator|(basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return lhs.m_value | rhs.m_value;
+  }
+  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd
+  operator+=(basic_simd& lhs, basic_simd const& rhs) noexcept {
+    lhs = lhs + rhs;
+    return lhs;
+  }
+  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd
+  operator-=(basic_simd& lhs, basic_simd const& rhs) noexcept {
+    lhs = lhs - rhs;
+    return lhs;
+  }
+  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd
+  operator*=(basic_simd& lhs, basic_simd const& rhs) noexcept {
+    lhs = lhs * rhs;
+    return lhs;
+  }
+  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd
+  operator/=(basic_simd& lhs, basic_simd const& rhs) noexcept {
+    lhs = lhs / rhs;
+    return lhs;
+  }
+  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd
+  operator>>=(basic_simd& lhs, basic_simd const& rhs) noexcept {
+    lhs = lhs >> rhs;
+    return lhs;
+  }
+  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd
+  operator<<=(basic_simd& lhs, basic_simd const& rhs) noexcept {
+    lhs = lhs << rhs;
+    return lhs;
   }
   [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr mask_type
   operator<(basic_simd const& lhs, basic_simd const& rhs) noexcept {
@@ -289,6 +343,63 @@ KOKKOS_FORCEINLINE_FUNCTION basic_simd<T, simd_abi::scalar> condition(
     basic_simd<T, simd_abi::scalar> const& c) {
   return basic_simd<T, simd_abi::scalar>(
       static_cast<bool>(a) ? static_cast<T>(b) : static_cast<T>(c));
+}
+
+template <class T, class BinaryOperation>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION T
+reduce(Experimental::basic_simd<T, Experimental::simd_abi::scalar> const& x,
+       Experimental::basic_simd_mask<T, Experimental::simd_abi::scalar> const&
+           mask,
+       T identity, BinaryOperation) noexcept {
+  if (!mask) return identity;
+  return x[0];
+}
+
+template <class T, class BinaryOperation>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION T
+reduce(Experimental::basic_simd<T, Experimental::simd_abi::scalar> const& x,
+       BinaryOperation binary_op) noexcept {
+  return reduce(
+      x,
+      Experimental::basic_simd<T, Experimental::simd_abi::scalar>::mask_type(
+          true),
+      Impl::Identity<T, BinaryOperation>(), binary_op);
+}
+
+template <class T>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION T reduce_min(
+    Experimental::basic_simd<T, Experimental::simd_abi::scalar> const& x,
+    Experimental::basic_simd_mask<T, Experimental::simd_abi::scalar> const&
+        mask) noexcept {
+  if (!mask) return Kokkos::reduction_identity<T>::min();
+  return x[0];
+}
+
+template <class T>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION T
+reduce_min(Experimental::basic_simd<T, Experimental::simd_abi::scalar> const&
+               x) noexcept {
+  return reduce_min(
+      x, Experimental::basic_simd<T, Experimental::simd_abi::scalar>::mask_type(
+             true));
+}
+
+template <class T>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION T reduce_max(
+    Experimental::basic_simd<T, Experimental::simd_abi::scalar> const& x,
+    Experimental::basic_simd_mask<T, Experimental::simd_abi::scalar> const&
+        mask) noexcept {
+  if (!mask) return Kokkos::reduction_identity<T>::max();
+  return x[0];
+}
+
+template <class T>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION T
+reduce_max(Experimental::basic_simd<T, Experimental::simd_abi::scalar> const&
+               x) noexcept {
+  return reduce_max(
+      x, Experimental::basic_simd<T, Experimental::simd_abi::scalar>::mask_type(
+             true));
 }
 
 template <class T>
@@ -412,6 +523,17 @@ template <class T>
   return a == basic_simd_mask<T, Kokkos::Experimental::simd_abi::scalar>(false);
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+template <class T>
+[[nodiscard]] KOKKOS_DEPRECATED KOKKOS_FORCEINLINE_FUNCTION T
+hmax(const_where_expression<basic_simd_mask<T, simd_abi::scalar>,
+                            basic_simd<T, simd_abi::scalar>> const& x) {
+  return static_cast<bool>(x.impl_get_mask())
+             ? static_cast<T>(x.impl_get_value())
+             : Kokkos::reduction_identity<T>::max();
+}
+#endif
+
 template <class T>
 [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION T
 reduce(const_where_expression<basic_simd_mask<T, simd_abi::scalar>,
@@ -424,17 +546,28 @@ reduce(const_where_expression<basic_simd_mask<T, simd_abi::scalar>,
 
 template <class T>
 [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION T
-hmax(const_where_expression<basic_simd_mask<T, simd_abi::scalar>,
-                            basic_simd<T, simd_abi::scalar>> const& x) {
+reduce_max(const_where_expression<basic_simd_mask<T, simd_abi::scalar>,
+                                  basic_simd<T, simd_abi::scalar>> const& x) {
   return static_cast<bool>(x.impl_get_mask())
              ? static_cast<T>(x.impl_get_value())
              : Kokkos::reduction_identity<T>::max();
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 template <class T>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION T
+[[nodiscard]] KOKKOS_DEPRECATED KOKKOS_FORCEINLINE_FUNCTION T
 hmin(const_where_expression<basic_simd_mask<T, simd_abi::scalar>,
                             basic_simd<T, simd_abi::scalar>> const& x) {
+  return static_cast<bool>(x.impl_get_mask())
+             ? static_cast<T>(x.impl_get_value())
+             : Kokkos::reduction_identity<T>::min();
+}
+#endif
+
+template <class T>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION T
+reduce_min(const_where_expression<basic_simd_mask<T, simd_abi::scalar>,
+                                  basic_simd<T, simd_abi::scalar>> const& x) {
   return static_cast<bool>(x.impl_get_mask())
              ? static_cast<T>(x.impl_get_value())
              : Kokkos::reduction_identity<T>::min();
