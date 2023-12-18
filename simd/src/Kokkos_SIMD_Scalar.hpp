@@ -120,6 +120,9 @@ class simd<T, simd_abi::scalar> {
                 bool> = false>
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit simd(G&& gen) noexcept
       : m_value(gen(0)) {}
+  template <typename FlagType>
+  KOKKOS_FORCEINLINE_FUNCTION constexpr explicit simd(T const* ptr, FlagType)
+      : m_value(*ptr) {}
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit operator T() const {
     return m_value;
   }

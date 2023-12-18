@@ -298,6 +298,11 @@ class simd<double, simd_abi::avx512_fixed_size<8>> {
                                gen(std::integral_constant<std::size_t, 6>()),
                                gen(std::integral_constant<std::size_t, 7>()))) {
   }
+  template <typename FlagType>
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(
+      value_type const* ptr, FlagType flag) {
+    copy_from(ptr, flag);
+  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference operator[](std::size_t i) {
     return reinterpret_cast<value_type*>(&m_value)[i];
   }
@@ -587,6 +592,11 @@ class simd<float, simd_abi::avx512_fixed_size<8>> {
                                gen(std::integral_constant<std::size_t, 5>()),
                                gen(std::integral_constant<std::size_t, 6>()),
                                gen(std::integral_constant<std::size_t, 7>()))) {
+  }
+  template <typename FlagType>
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(
+      value_type const* ptr, FlagType flag) {
+    copy_from(ptr, flag);
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference operator[](std::size_t i) {
     return reinterpret_cast<value_type*>(&m_value)[i];
@@ -1134,6 +1144,11 @@ class simd<std::int32_t, simd_abi::avx512_fixed_size<8>> {
                               gen(std::integral_constant<std::size_t, 5>()),
                               gen(std::integral_constant<std::size_t, 6>()),
                               gen(std::integral_constant<std::size_t, 7>()))) {}
+  template <typename FlagType>
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(
+      value_type const* ptr, FlagType flag) {
+    copy_from(ptr, flag);
+  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference operator[](std::size_t i) {
     return reinterpret_cast<value_type*>(&m_value)[i];
   }
@@ -1559,6 +1574,11 @@ class simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> {
                               gen(std::integral_constant<std::size_t, 5>()),
                               gen(std::integral_constant<std::size_t, 6>()),
                               gen(std::integral_constant<std::size_t, 7>()))) {}
+  template <typename FlagType>
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(
+      value_type const* ptr, FlagType flag) {
+    copy_from(ptr, flag);
+  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference operator[](std::size_t i) {
     return reinterpret_cast<value_type*>(&m_value)[i];
   }
@@ -1970,6 +1990,11 @@ class simd<std::int64_t, simd_abi::avx512_fixed_size<8>> {
                               gen(std::integral_constant<std::size_t, 5>()),
                               gen(std::integral_constant<std::size_t, 6>()),
                               gen(std::integral_constant<std::size_t, 7>()))) {}
+  template <typename FlagType>
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(
+      value_type const* ptr, FlagType flag) {
+    copy_from(ptr, flag);
+  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr simd(__m512i const& value_in)
       : m_value(value_in) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference operator[](std::size_t i) {
@@ -2179,6 +2204,11 @@ class simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> {
                               gen(std::integral_constant<std::size_t, 5>()),
                               gen(std::integral_constant<std::size_t, 6>()),
                               gen(std::integral_constant<std::size_t, 7>()))) {}
+  template <typename FlagType>
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(
+      value_type const* ptr, FlagType flag) {
+    copy_from(ptr, flag);
+  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit simd(
       simd<std::int64_t, abi_type> const& other)
       : m_value(static_cast<__m512i>(other)) {}
