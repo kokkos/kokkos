@@ -570,6 +570,16 @@ reduce_min(const_where_expression<basic_simd_mask<T, simd_abi::scalar>,
              ? static_cast<T>(x.impl_get_value())
              : Kokkos::reduction_identity<T>::min();
 }
+#endif
+
+template <class T>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION T
+reduce_min(const_where_expression<basic_simd_mask<T, simd_abi::scalar>,
+                                  basic_simd<T, simd_abi::scalar>> const& x) {
+  return static_cast<bool>(x.impl_get_mask())
+             ? static_cast<T>(x.impl_get_value())
+             : Kokkos::reduction_identity<T>::min();
+}
 
 }  // namespace Experimental
 }  // namespace Kokkos

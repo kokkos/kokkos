@@ -33,6 +33,14 @@ inline void host_check_where_expr_scatter_to() {
     simd_type src;
     src.copy_from(init, Kokkos::Experimental::simd_flag_default);
 
+    // gcc build with cxxflag of -g and -O2 or above doesn't seem to properly
+    // load values into simd vectors until simd values are directly accessed.
+    // Placing a memory fence to ensure that simd values are fully loaded
+    // before executing simd instructions.
+#if defined(KOKKOS_COMPILER_GNU) && defined(NDEBUG)
+    __sync_synchronize();
+#endif
+
     for (std::size_t idx = 0; idx < nlanes; ++idx) {
       if constexpr (std::is_same_v<Abi,
                                    Kokkos::Experimental::simd_abi::scalar>) {
