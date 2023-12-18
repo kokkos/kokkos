@@ -228,6 +228,13 @@ KOKKOS_FORCEINLINE_FUNCTION where_expression<M, T>& operator*=(
   return lhs;
 }
 
+template <class T, class Abi,
+          std::enable_if_t<std::is_integral_v<T>, bool> = false>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION auto operator/(
+    Experimental::simd<T, Abi> const& lhs, Experimental::simd<T, Abi> const& rhs) {
+  return Experimental::simd<T,Abi>([&](std::size_t i) { return lhs[i] / rhs[i]; });
+}
+
 template <class T, class U, class Abi,
           std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>
 [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION auto operator/(

@@ -31,6 +31,18 @@ class plus {
   }
 };
 
+class plus_eq {
+ public:
+  template <class T>
+  auto& on_host(T&& a, T&& b) const {
+    return a += b;
+  }
+  template <class T>
+  KOKKOS_INLINE_FUNCTION auto& on_device(T&& a, T&& b) const {
+    return a += b;
+  }
+};
+
 class minus {
  public:
   template <class T>
@@ -40,6 +52,18 @@ class minus {
   template <class T>
   KOKKOS_INLINE_FUNCTION auto on_device(T const& a, T const& b) const {
     return a - b;
+  }
+};
+
+class minus_eq {
+ public:
+  template <class T>
+  auto& on_host(T&& a, T&& b) const {
+    return a -= b;
+  }
+  template <class T>
+  KOKKOS_INLINE_FUNCTION auto& on_device(T&& a, T&& b) const {
+    return a -= b;
   }
 };
 
@@ -55,6 +79,18 @@ class multiplies {
   }
 };
 
+class multiplies_eq {
+ public:
+  template <class T>
+  auto& on_host(T&& a, T&& b) const {
+    return a *= b;
+  }
+  template <class T>
+  KOKKOS_INLINE_FUNCTION auto& on_device(T&& a, T&& b) const {
+    return a *= b;
+  }
+};
+
 class divides {
  public:
   template <class T>
@@ -64,6 +100,18 @@ class divides {
   template <class T>
   KOKKOS_INLINE_FUNCTION auto on_device(T const& a, T const& b) const {
     return a / b;
+  }
+};
+
+class divides_eq {
+ public:
+  template <class T>
+  auto& on_host(T&& a, T&& b) const {
+    return a /= b;
+  }
+  template <class T>
+  KOKKOS_INLINE_FUNCTION auto& on_device(T&& a, T&& b) const {
+    return a /= b;
   }
 };
 
