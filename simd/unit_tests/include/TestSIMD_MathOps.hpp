@@ -29,6 +29,9 @@ void host_check_math_op_one_loader(BinaryOp binary_op, std::size_t n,
   for (std::size_t i = 0; i < n; i += width) {
     std::size_t const nremaining = n - i;
     std::size_t const nlanes     = Kokkos::min(nremaining, width);
+    if ((std::is_same_v<BinaryOp, divides> ||
+         std::is_same_v<BinaryOp, divides_eq>)&&nremaining < width)
+      continue;
     simd_type first_arg;
     bool const loaded_first_arg =
         loader.host_load(first_args + i, nlanes, first_arg);
@@ -44,6 +47,7 @@ void host_check_math_op_one_loader(BinaryOp binary_op, std::size_t n,
         expected_result[lane] =
             binary_op.on_host(T(first_arg[lane]), T(second_arg[lane]));
     }
+    loader.host_load(first_args + i, nlanes, first_arg);
     simd_type const computed_result = binary_op.on_host(first_arg, second_arg);
     host_check_equality(expected_result, computed_result, nlanes);
   }
@@ -90,8 +94,14 @@ template <typename Abi, typename DataType, size_t n>
 inline void host_check_all_math_ops(const DataType (&first_args)[n],
                                     const DataType (&second_args)[n]) {
   host_check_math_op_all_loaders<Abi>(plus(), n, first_args, second_args);
+  host_check_math_op_all_loaders<Abi>(plus_eq(), n, first_args, second_args);
   host_check_math_op_all_loaders<Abi>(minus(), n, first_args, second_args);
+  host_check_math_op_all_loaders<Abi>(minus_eq(), n, first_args, second_args);
   host_check_math_op_all_loaders<Abi>(multiplies(), n, first_args, second_args);
+  host_check_math_op_all_loaders<Abi>(multiplies_eq(), n, first_args,
+                                      second_args);
+  host_check_math_op_all_loaders<Abi>(divides(), n, first_args, second_args);
+  host_check_math_op_all_loaders<Abi>(divides_eq(), n, first_args, second_args);
   host_check_math_op_all_loaders<Abi>(absolutes(), n, first_args);
 
   host_check_math_op_all_loaders<Abi>(floors(), n, first_args);
@@ -101,8 +111,6 @@ inline void host_check_all_math_ops(const DataType (&first_args)[n],
 
   // TODO: Place fallback implementations for all simd integer types
   if constexpr (std::is_floating_point_v<DataType>) {
-    host_check_math_op_all_loaders<Abi>(divides(), n, first_args, second_args);
-
 #if defined(__INTEL_COMPILER) && \
     (defined(KOKKOS_ARCH_AVX2) || defined(KOKKOS_ARCH_AVX512XEON))
     host_check_math_op_all_loaders<Abi>(cbrt_op(), n, first_args);
@@ -176,6 +184,9 @@ KOKKOS_INLINE_FUNCTION void device_check_math_op_one_loader(
   for (std::size_t i = 0; i < n; i += width) {
     std::size_t const nremaining = n - i;
     std::size_t const nlanes     = Kokkos::min(nremaining, width);
+    if ((std::is_same_v<BinaryOp, divides> ||
+         std::is_same_v<BinaryOp, divides_eq>)&&nremaining < width)
+      continue;
     simd_type first_arg;
     bool const loaded_first_arg =
         loader.device_load(first_args + i, nlanes, first_arg);
@@ -188,6 +199,7 @@ KOKKOS_INLINE_FUNCTION void device_check_math_op_one_loader(
       expected_result[lane] =
           binary_op.on_device(first_arg[lane], second_arg[lane]);
     }
+    loader.device_load(first_args + i, nlanes, first_arg);
     simd_type const computed_result =
         binary_op.on_device(first_arg, second_arg);
     device_check_equality(expected_result, computed_result, nlanes);
@@ -231,8 +243,15 @@ template <typename Abi, typename DataType, size_t n>
 KOKKOS_INLINE_FUNCTION void device_check_all_math_ops(
     const DataType (&first_args)[n], const DataType (&second_args)[n]) {
   device_check_math_op_all_loaders<Abi>(plus(), n, first_args, second_args);
+  device_check_math_op_all_loaders<Abi>(plus_eq(), n, first_args, second_args);
   device_check_math_op_all_loaders<Abi>(minus(), n, first_args, second_args);
+  device_check_math_op_all_loaders<Abi>(minus_eq(), n, first_args, second_args);
   device_check_math_op_all_loaders<Abi>(multiplies(), n, first_args,
+                                        second_args);
+  device_check_math_op_all_loaders<Abi>(multiplies_eq(), n, first_args,
+                                        second_args);
+  device_check_math_op_all_loaders<Abi>(divides(), n, first_args, second_args);
+  device_check_math_op_all_loaders<Abi>(divides_eq(), n, first_args,
                                         second_args);
   device_check_math_op_all_loaders<Abi>(absolutes(), n, first_args);
 
@@ -240,11 +259,6 @@ KOKKOS_INLINE_FUNCTION void device_check_all_math_ops(
   device_check_math_op_all_loaders<Abi>(ceils(), n, first_args);
   device_check_math_op_all_loaders<Abi>(rounds(), n, first_args);
   device_check_math_op_all_loaders<Abi>(truncates(), n, first_args);
-
-  if constexpr (std::is_floating_point_v<DataType>) {
-    device_check_math_op_all_loaders<Abi>(divides(), n, first_args,
-                                          second_args);
-  }
 }
 
 template <typename Abi, typename DataType>
