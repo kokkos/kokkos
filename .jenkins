@@ -177,13 +177,13 @@ pipeline {
                         }
                     }
                 }
-                stage('HIP-ROCm-5.6-C++20') {
+                stage('HIP-ROCm-6.0-C++20') {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.hipcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-20.04:5.6'
-                            label 'rocm-docker && vega'
+                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-20.04:6.0'
+                            label 'rocm-docker'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --device=/dev/kfd --device=/dev/dri --security-opt seccomp=unconfined --group-add video --env HIP_VISIBLE_DEVICES=$HIP_VISIBLE_DEVICES'
                         }
                     }
