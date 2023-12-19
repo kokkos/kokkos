@@ -121,11 +121,10 @@ struct TestFunctorA {
   }
 };
 
-struct InPlace{};
+struct InPlace {};
 
 template <class LayoutTag, class ValueType, class InPlaceOrVoid = void>
-void test_A(std::size_t numTeams, std::size_t numCols, int apiId)
-{
+void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   /* description:
      use a rank-2 view randomly filled with values,
      and run a team-level exclusive_scan
@@ -161,22 +160,24 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId)
   PlusFunctor<ValueType> binaryOp;
 
   // Create view of reduce init values to be used by test cases
-  Kokkos::View<ValueType*, Kokkos::DefaultHostExecutionSpace> initValuesView_h("initValuesView_h", numTeams);
-  using rand_pool = Kokkos::Random_XorShift64_Pool<Kokkos::DefaultHostExecutionSpace>;
+  Kokkos::View<ValueType*, Kokkos::DefaultHostExecutionSpace> initValuesView_h(
+      "initValuesView_h", numTeams);
+  using rand_pool =
+      Kokkos::Random_XorShift64_Pool<Kokkos::DefaultHostExecutionSpace>;
   rand_pool pool(lowerBound * upperBound);
   Kokkos::fill_random(initValuesView_h, pool, lowerBound, upperBound);
 
-  auto initValuesView = Kokkos::create_mirror_view_and_copy(space_t(), initValuesView_h);
+  auto initValuesView =
+      Kokkos::create_mirror_view_and_copy(space_t(), initValuesView_h);
 
   Kokkos::View<ValueType**> destView("destView", numTeams, numCols);
-  if constexpr(std::is_same_v<InPlaceOrVoid, InPlace>){
-    TestFunctorA fnc(sourceView, sourceView, distancesView, intraTeamSentinelView,
-		     initValuesView, binaryOp, apiId);
+  if constexpr (std::is_same_v<InPlaceOrVoid, InPlace>) {
+    TestFunctorA fnc(sourceView, sourceView, distancesView,
+                     intraTeamSentinelView, initValuesView, binaryOp, apiId);
     Kokkos::parallel_for(policy, fnc);
-  }
-  else{
+  } else {
     TestFunctorA fnc(sourceView, destView, distancesView, intraTeamSentinelView,
-                   initValuesView, binaryOp, apiId);
+                     initValuesView, binaryOp, apiId);
     Kokkos::parallel_for(policy, fnc);
   }
 
@@ -185,7 +186,8 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId)
   // -----------------------------------------------
   auto distancesView_h         = create_host_space_copy(distancesView);
   auto intraTeamSentinelView_h = create_host_space_copy(intraTeamSentinelView);
-  Kokkos::View<ValueType**, Kokkos::HostSpace> stdDestView("stdDestView", numTeams, numCols);
+  Kokkos::View<ValueType**, Kokkos::HostSpace> stdDestView("stdDestView",
+                                                           numTeams, numCols);
 
   for (std::size_t i = 0; i < sourceView.extent(0); ++i) {
     auto rowFrom   = Kokkos::subview(sourceViewBeforeOp_h, i, Kokkos::ALL());
@@ -227,11 +229,10 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId)
 #undef exclusive_scan
   }
 
-  if constexpr(std::is_same_v<InPlaceOrVoid, InPlace>){
+  if constexpr (std::is_same_v<InPlaceOrVoid, InPlace>) {
     auto dataViewAfterOp_h = create_host_space_copy(sourceView);
     expect_equal_host_views(stdDestView, dataViewAfterOp_h);
-  }
-  else{
+  } else {
     auto dataViewAfterOp_h = create_host_space_copy(destView);
     expect_equal_host_views(stdDestView, dataViewAfterOp_h);
   }
@@ -260,7 +261,6 @@ TEST(std_algorithms_exclusive_scan_team_test, test) {
   run_all_scenarios<DynamicTag, double, InPlace>();
   run_all_scenarios<StridedTwoRowsTag, int, InPlace>();
   run_all_scenarios<StridedThreeRowsTag, unsigned, InPlace>();
-
 }
 
 }  // namespace TeamExclusiveScan
