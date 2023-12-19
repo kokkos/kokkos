@@ -150,13 +150,13 @@ struct SumFunctor {
 };
 
 
-struct VerifyData{
-
+struct VerifyData
+{
   template <class ViewType1, class ViewType2, class ValueType, class BinaryOp>
   void operator()(ViewType1 data_view,  // contains data
                   ViewType2 test_view,  // the view to test
-                  ValueType init_value, 
-                  BinaryOp bop) 
+                  ValueType init_value,
+                  BinaryOp bop)
   {
     //! always careful because views might not be deep copyable
 
@@ -178,8 +178,8 @@ struct VerifyData{
           ASSERT_EQ(gold_h(i), test_view_h(i));
         } else {
           const auto error = std::abs(static_cast<double>(gold_h(i) - test_view_h(i)));
-          EXPECT_LT(error, 1e-10) << i << " " 
-             << std::setprecision(15) << error << static_cast<double>(test_view_h(i)) 
+          EXPECT_LT(error, 1e-10) << i << " "
+             << std::setprecision(15) << error << static_cast<double>(test_view_h(i))
              << " " << static_cast<double>(gold_h(i));
         }
       }
@@ -192,7 +192,7 @@ struct VerifyData{
                   ValueType init_value)
   {
     (*this)(data_view, test_view, init_value, SumFunctor<ValueType>());
-  } 
+  }
 };
 
 
@@ -203,49 +203,50 @@ std::string value_type_to_string(double) { return "double"; }
 template <class Tag, class ValueType, class InfoType, class ...OpOrEmpty>
 void run_single_scenario(const InfoType& scenario_info,
                           ValueType init_value,
-                          OpOrEmpty ... op_or_empty)
+                          OpOrEmpty ... empty_or_op)
 {
-  // using default_op           = SumFunctor<ValueType>;
   const auto name            = std::get<0>(scenario_info);
   const std::size_t view_ext = std::get<1>(scenario_info);
 
   auto view_dest = create_view<ValueType>(Tag{}, view_ext, "exclusive_scan");
   auto view_from = create_view<ValueType>(Tag{}, view_ext, "exclusive_scan");
   fill_view(view_from, name);
+  // view_dest is filled with zeros before calling the algorithm everytime to
+  // ensure the algorithm does something meaningful
 
   {
     fill_zero(view_dest);
     auto r = KE::exclusive_scan(exespace(), KE::cbegin(view_from),
                                 KE::cend(view_from), KE::begin(view_dest),
-                                init_value, 
-                                std::forward<OpOrEmpty>(op_or_empty)...);
+                                init_value,
+                                std::forward<OpOrEmpty>(empty_or_op)...);
     ASSERT_EQ(r, KE::end(view_dest));
-    VerifyData()(view_from, view_dest, init_value, std::forward<OpOrEmpty>(op_or_empty)...);
+    VerifyData()(view_from, view_dest, init_value, std::forward<OpOrEmpty>(empty_or_op)...);
   }
 
   {
     fill_zero(view_dest);
     auto r = KE::exclusive_scan("label", exespace(), KE::cbegin(view_from),
                                 KE::cend(view_from), KE::begin(view_dest),
-                                init_value, std::forward<OpOrEmpty>(op_or_empty)...);
+                                init_value, std::forward<OpOrEmpty>(empty_or_op)...);
     ASSERT_EQ(r, KE::end(view_dest));
-    VerifyData()(view_from, view_dest, init_value, std::forward<OpOrEmpty>(op_or_empty)...);
+    VerifyData()(view_from, view_dest, init_value, std::forward<OpOrEmpty>(empty_or_op)...);
   }
 
   {
     fill_zero(view_dest);
-    auto r = KE::exclusive_scan(exespace(), view_from, view_dest, init_value, 
-                                std::forward<OpOrEmpty>(op_or_empty)...);
+    auto r = KE::exclusive_scan(exespace(), view_from, view_dest, init_value,
+                                std::forward<OpOrEmpty>(empty_or_op)...);
     ASSERT_EQ(r, KE::end(view_dest));
-    VerifyData()(view_from, view_dest, init_value, std::forward<OpOrEmpty>(op_or_empty)...);
+    VerifyData()(view_from, view_dest, init_value, std::forward<OpOrEmpty>(empty_or_op)...);
   }
 
   {
     fill_zero(view_dest);
     auto r = KE::exclusive_scan("label", exespace(), view_from, view_dest,
-                                init_value, std::forward<OpOrEmpty>(op_or_empty)...);
+                                init_value, std::forward<OpOrEmpty>(empty_or_op)...);
     ASSERT_EQ(r, KE::end(view_dest));
-    VerifyData()(view_from, view_dest, init_value, std::forward<OpOrEmpty>(op_or_empty)...);
+    VerifyData()(view_from, view_dest, init_value, std::forward<OpOrEmpty>(empty_or_op)...);
   }
 
   Kokkos::fence();
@@ -254,73 +255,70 @@ void run_single_scenario(const InfoType& scenario_info,
 template <class Tag, class ValueType, class InfoType, class ...OpOrEmpty>
 void run_single_scenario_inplace(const InfoType& scenario_info,
                                     ValueType init_value,
-                                    OpOrEmpty ... op_or_empty) 
+                                    OpOrEmpty ... empty_or_op)
 {
   const auto name            = std::get<0>(scenario_info);
   const std::size_t view_ext = std::get<1>(scenario_info);
 
-  // since here we call the in-place operation, we need to use two views: 
-  // view1: filled according to what the scenario asks for, and is not modified 
-  // view2: filled according to what the scenario asks for, and used for the in-place op
-  // So after the op is done, view_2 should contain the result of doing exclusive scan
+  // since here we call the in-place operation, we need to use two views:
+  // view1: filled according to what the scenario asks for and is not modified
+  // view2: filled according to what the scenario asks for and used for the in-place op
+  // Therefore, after the op is done, view_2 should contain the result of doing exclusive scan
+  // NOTE: view2 is filled below every time because the algorithm acts in place
 
   auto view1 = create_view<ValueType>(Tag{}, view_ext, "exclusive_scan_inplace_view1");
   fill_view(view1, name);
 
   auto view2 = create_view<ValueType>(Tag{}, view_ext, "exclusive_scan_inplace_view2");
   {
-    // view2 has to be filled every time because it is overwritten
     fill_view(view2, name);
-    auto r = KE::exclusive_scan(exespace(), 
-                                KE::cbegin(view2), KE::cend(view2), KE::begin(view2), 
-                                init_value, 
-                                std::forward<OpOrEmpty>(op_or_empty)...);
+    auto r = KE::exclusive_scan(exespace(),
+                                KE::cbegin(view2), KE::cend(view2), KE::begin(view2),
+                                init_value,
+                                std::forward<OpOrEmpty>(empty_or_op)...);
     ASSERT_EQ(r, KE::end(view2));
-    VerifyData()(view1, view2, init_value, std::forward<OpOrEmpty>(op_or_empty)...);
+    VerifyData()(view1, view2, init_value, std::forward<OpOrEmpty>(empty_or_op)...);
   }
 
   {
-    // view2 has to be filled every time because it is overwritten
     fill_view(view2, name);
-    auto r = KE::exclusive_scan("label", exespace(), 
-                                KE::cbegin(view2), KE::cend(view2), 
+    auto r = KE::exclusive_scan("label", exespace(),
+                                KE::cbegin(view2), KE::cend(view2),
                                 KE::begin(view2),
-                                init_value, 
-                                std::forward<OpOrEmpty>(op_or_empty)...);
+                                init_value,
+                                std::forward<OpOrEmpty>(empty_or_op)...);
     ASSERT_EQ(r, KE::end(view2));
-    VerifyData()(view1, view2, init_value, std::forward<OpOrEmpty>(op_or_empty)...);
+    VerifyData()(view1, view2, init_value, std::forward<OpOrEmpty>(empty_or_op)...);
   }
 
   {
-    // view2 has to be filled every time because it is overwritten
     fill_view(view2, name);
-    auto r = KE::exclusive_scan(exespace(), view2, view2, init_value, 
-                                std::forward<OpOrEmpty>(op_or_empty)...);
+    auto r = KE::exclusive_scan(exespace(), view2, view2, init_value,
+                                std::forward<OpOrEmpty>(empty_or_op)...);
     ASSERT_EQ(r, KE::end(view2));
-    VerifyData()(view1, view2, init_value, std::forward<OpOrEmpty>(op_or_empty)...);
+    VerifyData()(view1, view2, init_value, std::forward<OpOrEmpty>(empty_or_op)...);
   }
 
   {
-    // view2 has to be filled every time because it is overwritten
     fill_view(view2, name);
-    auto r = KE::exclusive_scan("label", exespace(), view2, view2,init_value, 
-                                std::forward<OpOrEmpty>(op_or_empty)...);
+    auto r = KE::exclusive_scan("label", exespace(), view2, view2,init_value,
+                                std::forward<OpOrEmpty>(empty_or_op)...);
     ASSERT_EQ(r, KE::end(view2));
-    VerifyData()(view1, view2, init_value, std::forward<OpOrEmpty>(op_or_empty)...);
+    VerifyData()(view1, view2, init_value, std::forward<OpOrEmpty>(empty_or_op)...);
   }
 
   Kokkos::fence();
 }
 
 template <class Tag, class ValueType>
-void run_exclusive_scan_all_scenarios() 
+void run_exclusive_scan_all_scenarios()
 {
   const std::map<std::string, std::size_t> scenarios = {
       {"empty", 0},          {"one-element", 1}, {"two-elements-a", 2},
       {"two-elements-b", 2}, {"small-a", 9},     {"small-b", 13},
       {"medium", 1103},      {"large", 10513}};
 
-  for (const auto& it : scenarios) 
+  for (const auto& it : scenarios)
   {
     run_single_scenario<Tag, ValueType>(it, ValueType{0});
     run_single_scenario<Tag, ValueType>(it, ValueType{1});
