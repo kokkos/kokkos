@@ -24,26 +24,28 @@
 namespace Kokkos {
 namespace Experimental {
 
-namespace Impl{
+namespace Impl {
 
 template <typename T, typename enable = void>
 struct is_iterable_view : std::false_type {};
 
 template <typename T>
 struct is_iterable_view<
-    T, std::enable_if_t<
-	 ::Kokkos::is_view<T>::value && T::rank() == 1 &&
-	 (std::is_same<typename T::traits::array_layout, Kokkos::LayoutLeft>::value ||
-	  std::is_same<typename T::traits::array_layout, Kokkos::LayoutRight>::value ||
-	  std::is_same<typename T::traits::array_layout, Kokkos::LayoutStride>::value)> >
+    T, std::enable_if_t<::Kokkos::is_view<T>::value && T::rank() == 1 &&
+                        (std::is_same<typename T::traits::array_layout,
+                                      Kokkos::LayoutLeft>::value ||
+                         std::is_same<typename T::traits::array_layout,
+                                      Kokkos::LayoutRight>::value ||
+                         std::is_same<typename T::traits::array_layout,
+                                      Kokkos::LayoutStride>::value)>>
     : std::true_type {};
 
 template <class ViewType>
-KOKKOS_INLINE_FUNCTION constexpr void
-static_assert_is_iterable_view(const ViewType& /* view */)
-{
+KOKKOS_INLINE_FUNCTION constexpr void static_assert_is_iterable_view(
+    const ViewType& /* view */) {
   static_assert(is_iterable_view<ViewType>::value,
-   "Currently, Kokkos::(c)begin, (c)end only accept 1D Views with layout right, left or stride.");
+                "Currently, Kokkos::(c)begin, (c)end only accept 1D Views with "
+                "layout right, left or stride.");
 }
 
 //
@@ -101,14 +103,14 @@ struct are_random_access_iterators<Head, Tail...> {
 template <class... Ts>
 inline constexpr bool are_random_access_iterators_v =
     are_random_access_iterators<Ts...>::value;
-}// Impl
+}  // namespace Impl
 
 //
 // begin, end
 //
 template <class DataType, class... Properties>
-KOKKOS_INLINE_FUNCTION auto begin(const Kokkos::View<DataType, Properties...>& v)
-{
+KOKKOS_INLINE_FUNCTION auto begin(
+    const Kokkos::View<DataType, Properties...>& v) {
   Impl::static_assert_is_iterable_view(v);
 
   using it_t =
@@ -117,8 +119,8 @@ KOKKOS_INLINE_FUNCTION auto begin(const Kokkos::View<DataType, Properties...>& v
 }
 
 template <class DataType, class... Properties>
-KOKKOS_INLINE_FUNCTION auto end(const Kokkos::View<DataType, Properties...>& v)
-{
+KOKKOS_INLINE_FUNCTION auto end(
+    const Kokkos::View<DataType, Properties...>& v) {
   Impl::static_assert_is_iterable_view(v);
 
   using it_t =
@@ -127,8 +129,8 @@ KOKKOS_INLINE_FUNCTION auto end(const Kokkos::View<DataType, Properties...>& v)
 }
 
 template <class DataType, class... Properties>
-KOKKOS_INLINE_FUNCTION auto cbegin(const Kokkos::View<DataType, Properties...>& v)
-{
+KOKKOS_INLINE_FUNCTION auto cbegin(
+    const Kokkos::View<DataType, Properties...>& v) {
   Impl::static_assert_is_iterable_view(v);
 
   using ViewConstType =
@@ -139,8 +141,8 @@ KOKKOS_INLINE_FUNCTION auto cbegin(const Kokkos::View<DataType, Properties...>& 
 }
 
 template <class DataType, class... Properties>
-KOKKOS_INLINE_FUNCTION auto cend(const Kokkos::View<DataType, Properties...>& v)
-{
+KOKKOS_INLINE_FUNCTION auto cend(
+    const Kokkos::View<DataType, Properties...>& v) {
   Impl::static_assert_is_iterable_view(v);
 
   using ViewConstType =
@@ -155,8 +157,7 @@ KOKKOS_INLINE_FUNCTION auto cend(const Kokkos::View<DataType, Properties...>& v)
 //
 template <class IteratorType>
 KOKKOS_INLINE_FUNCTION constexpr typename IteratorType::difference_type
-distance(IteratorType first, IteratorType last)
-{
+distance(IteratorType first, IteratorType last) {
   static_assert(
       ::Kokkos::Experimental::Impl::are_random_access_iterators<
           IteratorType>::value,
