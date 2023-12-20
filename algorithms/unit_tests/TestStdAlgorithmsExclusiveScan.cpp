@@ -176,7 +176,7 @@ struct VerifyData {
         } else {
           const auto error =
               std::abs(static_cast<double>(gold_h(i) - test_view_h(i)));
-          EXPECT_LT(error, 1e-10) << i << " " << std::setprecision(15) << error
+          ASSERT_LT(error, 1e-10) << i << " " << std::setprecision(15) << error
                                   << static_cast<double>(test_view_h(i)) << " "
                                   << static_cast<double>(gold_h(i));
         }
