@@ -210,43 +210,36 @@ void run_single_scenario(const InfoType& scenario_info, ValueType init_value,
 
   {
     fill_zero(view_dest);
-    auto r =
-        KE::exclusive_scan(exespace(), KE::cbegin(view_from),
-                           KE::cend(view_from), KE::begin(view_dest),
-                           init_value, std::forward<OpOrEmpty>(empty_or_op)...);
+    auto r = KE::exclusive_scan(exespace(), KE::cbegin(view_from),
+                                KE::cend(view_from), KE::begin(view_dest),
+                                init_value, empty_or_op...);
     ASSERT_EQ(r, KE::end(view_dest));
-    VerifyData()(view_from, view_dest, init_value,
-                 std::forward<OpOrEmpty>(empty_or_op)...);
+    VerifyData()(view_from, view_dest, init_value, empty_or_op...);
   }
 
   {
     fill_zero(view_dest);
-    auto r =
-        KE::exclusive_scan("label", exespace(), KE::cbegin(view_from),
-                           KE::cend(view_from), KE::begin(view_dest),
-                           init_value, std::forward<OpOrEmpty>(empty_or_op)...);
+    auto r = KE::exclusive_scan("label", exespace(), KE::cbegin(view_from),
+                                KE::cend(view_from), KE::begin(view_dest),
+                                init_value, empty_or_op...);
     ASSERT_EQ(r, KE::end(view_dest));
-    VerifyData()(view_from, view_dest, init_value,
-                 std::forward<OpOrEmpty>(empty_or_op)...);
+    VerifyData()(view_from, view_dest, init_value, empty_or_op...);
   }
 
   {
     fill_zero(view_dest);
     auto r = KE::exclusive_scan(exespace(), view_from, view_dest, init_value,
-                                std::forward<OpOrEmpty>(empty_or_op)...);
+                                empty_or_op...);
     ASSERT_EQ(r, KE::end(view_dest));
-    VerifyData()(view_from, view_dest, init_value,
-                 std::forward<OpOrEmpty>(empty_or_op)...);
+    VerifyData()(view_from, view_dest, init_value, empty_or_op...);
   }
 
   {
     fill_zero(view_dest);
-    auto r =
-        KE::exclusive_scan("label", exespace(), view_from, view_dest,
-                           init_value, std::forward<OpOrEmpty>(empty_or_op)...);
+    auto r = KE::exclusive_scan("label", exespace(), view_from, view_dest,
+                                init_value, empty_or_op...);
     ASSERT_EQ(r, KE::end(view_dest));
-    VerifyData()(view_from, view_dest, init_value,
-                 std::forward<OpOrEmpty>(empty_or_op)...);
+    VerifyData()(view_from, view_dest, init_value, empty_or_op...);
   }
 
   Kokkos::fence();
@@ -275,39 +268,34 @@ void run_single_scenario_inplace(const InfoType& scenario_info,
   {
     fill_view(view2, name);
     auto r = KE::exclusive_scan(exespace(), KE::cbegin(view2), KE::cend(view2),
-                                KE::begin(view2), init_value,
-                                std::forward<OpOrEmpty>(empty_or_op)...);
+                                KE::begin(view2), init_value, empty_or_op...);
     ASSERT_EQ(r, KE::end(view2));
-    VerifyData()(view1, view2, init_value,
-                 std::forward<OpOrEmpty>(empty_or_op)...);
+    VerifyData()(view1, view2, init_value, empty_or_op...);
   }
 
   {
     fill_view(view2, name);
     auto r = KE::exclusive_scan("label", exespace(), KE::cbegin(view2),
                                 KE::cend(view2), KE::begin(view2), init_value,
-                                std::forward<OpOrEmpty>(empty_or_op)...);
+                                empty_or_op...);
     ASSERT_EQ(r, KE::end(view2));
-    VerifyData()(view1, view2, init_value,
-                 std::forward<OpOrEmpty>(empty_or_op)...);
+    VerifyData()(view1, view2, init_value, empty_or_op...);
   }
 
   {
     fill_view(view2, name);
     auto r = KE::exclusive_scan(exespace(), view2, view2, init_value,
-                                std::forward<OpOrEmpty>(empty_or_op)...);
+                                empty_or_op...);
     ASSERT_EQ(r, KE::end(view2));
-    VerifyData()(view1, view2, init_value,
-                 std::forward<OpOrEmpty>(empty_or_op)...);
+    VerifyData()(view1, view2, init_value, empty_or_op...);
   }
 
   {
     fill_view(view2, name);
     auto r = KE::exclusive_scan("label", exespace(), view2, view2, init_value,
-                                std::forward<OpOrEmpty>(empty_or_op)...);
+                                empty_or_op...);
     ASSERT_EQ(r, KE::end(view2));
-    VerifyData()(view1, view2, init_value,
-                 std::forward<OpOrEmpty>(empty_or_op)...);
+    VerifyData()(view1, view2, init_value, empty_or_op...);
   }
 
   Kokkos::fence();
