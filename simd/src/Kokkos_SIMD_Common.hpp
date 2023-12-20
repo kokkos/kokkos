@@ -332,6 +332,89 @@ template <typename T>
   return Kokkos::round(x);
 }
 
+// fallback implementations of simd reductions:
+
+template <class T, class Abi, class BinaryOperation = std::plus<>>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION constexpr T reduce(
+    const simd<T, Abi>& x, BinaryOperation binary_op = {}) {
+  auto v = where(true, x);
+  return reduce(v, binary_op);
+}
+
+template <class T, class Abi, class BinaryOperation>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION constexpr T reduce(
+    const simd<T, Abi>& x, const typename simd<T, Abi>::mask_type& mask,
+    T identity_element, BinaryOperation binary_op) {
+  if (none_of(mask)) return identity_element;
+  auto v = where(mask, x);
+  return reduce(v, binary_op);
+}
+
+template <class T, class Abi>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION constexpr T reduce(
+    const simd<T, Abi>& x, const typename simd<T, Abi>::mask_type& mask,
+    std::plus<> binary_op = {}) noexcept {
+  return reduce(x, mask, T(0), binary_op);
+}
+
+template <class T, class Abi>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION constexpr T reduce(
+    const simd<T, Abi>& x, const typename simd<T, Abi>::mask_type& mask,
+    std::multiplies<> binary_op) noexcept {
+  return reduce(x, mask, T(0), binary_op);
+}
+
+template <class T, class Abi>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION constexpr T reduce(
+    const simd<T, Abi>& x, const typename simd<T, Abi>::mask_type& mask,
+    std::bit_and<> binary_op) noexcept {
+  return reduce(x, mask, 0, binary_op);
+}
+
+template <class T, class Abi>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION constexpr T reduce(
+    const simd<T, Abi>& x, const typename simd<T, Abi>::mask_type& mask,
+    std::bit_or<> binary_op) noexcept {
+  return reduce(x, mask, 0, binary_op);
+}
+
+template <class T, class Abi>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION constexpr T reduce(
+    const simd<T, Abi>& x, const typename simd<T, Abi>::mask_type& mask,
+    std::bit_xor<> binary_op) noexcept {
+  return reduce(x, mask, 0, binary_op);
+}
+
+template <class T, class Abi>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION constexpr T reduce_min(
+    const simd<T, Abi>& x) noexcept {
+  auto v = where(true, x);
+  return hmin(v);
+}
+
+template <class T, class Abi>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION constexpr T reduce_min(
+    const simd<T, Abi>& x,
+    const typename simd<T, Abi>::mask_type& mask) noexcept {
+  auto v = where(mask, x);
+  return hmin(v);
+}
+
+template <class T, class Abi>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION constexpr T reduce_max(
+    const simd<T, Abi>& x) noexcept {
+  auto v = where(true, x);
+  return hmax(v);
+}
+
+template <class T, class Abi>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION constexpr T reduce_max(
+    const simd<T, Abi>& x,
+    const typename simd<T, Abi>::mask_type& mask) noexcept {
+  auto v = where(mask, x);
+  return hmax(v);
+}
+
 }  // namespace Experimental
 }  // namespace Kokkos
 

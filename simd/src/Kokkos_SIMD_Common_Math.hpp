@@ -56,17 +56,24 @@ hmax(const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> const& x) {
   return result;
 }
 
+template <class T, class Abi, class BinaryOperation = std::plus<>>
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
+reduce(const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> const& x,
+       BinaryOperation op = {}) {
+  auto const& v = x.impl_get_value();
+  auto const& m = x.impl_get_mask();
+  auto result   = v[0];
+  for (std::size_t i = 1; i < v.size(); ++i) {
+    if (m[i]) result = op(result, v[i]);
+  }
+  return result;
+}
+
 template <class T, class Abi>
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
 reduce(const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> const& x, T,
        std::plus<>) {
-  auto const& v = x.impl_get_value();
-  auto const& m = x.impl_get_mask();
-  auto result   = Kokkos::reduction_identity<T>::sum();
-  for (std::size_t i = 0; i < v.size(); ++i) {
-    if (m[i]) result += v[i];
-  }
-  return result;
+  return reduce(x, std::plus<>());
 }
 
 }  // namespace Experimental

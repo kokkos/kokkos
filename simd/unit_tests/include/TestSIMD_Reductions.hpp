@@ -39,9 +39,8 @@ inline void host_check_reduction_one_loader(ReductionOp reduce_op,
     for (std::size_t j = 0; j < n; ++j) {
       mask[j] = true;
     }
-    auto value    = where(mask, arg);
-    auto expected = reduce_op.on_host_serial(value);
-    auto computed = reduce_op.on_host(value);
+    auto expected = reduce_op.on_host_serial(arg, mask);
+    auto computed = reduce_op.on_host(arg, mask);
 
     gtest_checker().equality(expected, computed);
   }
@@ -60,7 +59,15 @@ template <typename Abi, typename DataType, size_t n>
 inline void host_check_all_reductions(const DataType (&args)[n]) {
   host_check_reduction_all_loaders<Abi>(hmin(), n, args);
   host_check_reduction_all_loaders<Abi>(hmax(), n, args);
-  host_check_reduction_all_loaders<Abi>(reduce(), n, args);
+  host_check_reduction_all_loaders<Abi>(reduce_where_expr<std::plus<>>(), n,
+                                        args);
+  host_check_reduction_all_loaders<Abi>(reduce_where_expr<std::multiplies<>>(),
+                                        n, args);
+
+  host_check_reduction_all_loaders<Abi>(reduce_min(), n, args);
+  host_check_reduction_all_loaders<Abi>(reduce_max(), n, args);
+  host_check_reduction_all_loaders<Abi>(reduce<std::plus<>>(), n, args);
+  host_check_reduction_all_loaders<Abi>(reduce<std::multiplies<>>(), n, args);
 }
 
 template <typename Abi, typename DataType>
@@ -112,9 +119,8 @@ KOKKOS_INLINE_FUNCTION void device_check_reduction_one_loader(
     for (std::size_t j = 0; j < n; ++j) {
       mask[j] = true;
     }
-    auto value    = where(mask, arg);
-    auto expected = reduce_op.on_device_serial(value);
-    auto computed = reduce_op.on_device(value);
+    auto expected = reduce_op.on_device_serial(arg, mask);
+    auto computed = reduce_op.on_device(arg, mask);
 
     kokkos_checker().equality(expected, computed);
   }
@@ -134,7 +140,15 @@ KOKKOS_INLINE_FUNCTION void device_check_all_reductions(
     const DataType (&args)[n]) {
   device_check_reduction_all_loaders<Abi>(hmin(), n, args);
   device_check_reduction_all_loaders<Abi>(hmax(), n, args);
-  device_check_reduction_all_loaders<Abi>(reduce(), n, args);
+  device_check_reduction_all_loaders<Abi>(reduce_where_expr<std::plus<>>(), n,
+                                          args);
+  device_check_reduction_all_loaders<Abi>(
+      reduce_where_expr<std::multiplies<>>(), n, args);
+
+  device_check_reduction_all_loaders<Abi>(reduce_min(), n, args);
+  device_check_reduction_all_loaders<Abi>(reduce_max(), n, args);
+  device_check_reduction_all_loaders<Abi>(reduce<std::plus<>>(), n, args);
+  device_check_reduction_all_loaders<Abi>(reduce<std::multiplies<>>(), n, args);
 }
 
 template <typename Abi, typename DataType>
