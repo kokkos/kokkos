@@ -170,8 +170,6 @@ void verify_data(ViewType1 data_view,  // contains data
                                 << static_cast<double>(gold_h(i));
       }
     }
-    // std::cout << " last el: " << test_view_h(test_view_h.extent(0)-1) <<
-    // std::endl;
   }
 }
 
@@ -254,49 +252,49 @@ void run_single_scenario_inplace(const InfoType& scenario_info,
   // since here we call the in-place operation, we need to use two views:
   // view1: filled according to what the scenario asks for and is not modified
   // view2: filled according to what the scenario asks for and used for the
-  // in-place op Therefore, after the op is done, view_2 should contain the
+  // in-place op Therefore, after the op is done, view2 should contain the
   // result of doing exclusive scan NOTE: view2 is filled below every time
   // because the algorithm acts in place
 
-  auto view_1 = create_view<ValueType>(Tag{}, view_ext,
-                                       "transform_exclusive_scan_view_1");
-  fill_view(view_1, name);
+  auto view1 =
+      create_view<ValueType>(Tag{}, view_ext, "transform_exclusive_scan_view1");
+  fill_view(view1, name);
 
-  auto view_2 = create_view<ValueType>(Tag{}, view_ext,
-                                       "transform_exclusive_scan_view_2");
+  auto view2 =
+      create_view<ValueType>(Tag{}, view_ext, "transform_exclusive_scan_view2");
 
   {
-    fill_view(view_2, name);
-    auto r = KE::transform_exclusive_scan(exespace(), KE::cbegin(view_2),
-                                          KE::cend(view_2), KE::begin(view_2),
+    fill_view(view2, name);
+    auto r = KE::transform_exclusive_scan(exespace(), KE::cbegin(view2),
+                                          KE::cend(view2), KE::begin(view2),
                                           init_value, bop, uop);
-    ASSERT_EQ(r, KE::end(view_2));
-    verify_data(view_1, view_2, init_value, bop, uop);
+    ASSERT_EQ(r, KE::end(view2));
+    verify_data(view1, view2, init_value, bop, uop);
   }
 
   {
-    fill_view(view_2, name);
+    fill_view(view2, name);
     auto r = KE::transform_exclusive_scan(
-        "label", exespace(), KE::cbegin(view_2), KE::cend(view_2),
-        KE::begin(view_2), init_value, bop, uop);
-    ASSERT_EQ(r, KE::end(view_2));
-    verify_data(view_1, view_2, init_value, bop, uop);
+        "label", exespace(), KE::cbegin(view2), KE::cend(view2),
+        KE::begin(view2), init_value, bop, uop);
+    ASSERT_EQ(r, KE::end(view2));
+    verify_data(view1, view2, init_value, bop, uop);
   }
 
   {
-    fill_view(view_2, name);
-    auto r = KE::transform_exclusive_scan(exespace(), view_2, view_2,
-                                          init_value, bop, uop);
-    ASSERT_EQ(r, KE::end(view_2));
-    verify_data(view_1, view_2, init_value, bop, uop);
+    fill_view(view2, name);
+    auto r = KE::transform_exclusive_scan(exespace(), view2, view2, init_value,
+                                          bop, uop);
+    ASSERT_EQ(r, KE::end(view2));
+    verify_data(view1, view2, init_value, bop, uop);
   }
 
   {
-    fill_view(view_2, name);
-    auto r = KE::transform_exclusive_scan("label", exespace(), view_2, view_2,
+    fill_view(view2, name);
+    auto r = KE::transform_exclusive_scan("label", exespace(), view2, view2,
                                           init_value, bop, uop);
-    ASSERT_EQ(r, KE::end(view_2));
-    verify_data(view_1, view_2, init_value, bop, uop);
+    ASSERT_EQ(r, KE::end(view2));
+    verify_data(view1, view2, init_value, bop, uop);
   }
 
   Kokkos::fence();

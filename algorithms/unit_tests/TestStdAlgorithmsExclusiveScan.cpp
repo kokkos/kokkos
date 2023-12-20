@@ -255,7 +255,7 @@ void run_single_scenario_inplace(const InfoType& scenario_info,
   // since here we call the in-place operation, we need to use two views:
   // view1: filled according to what the scenario asks for and is not modified
   // view2: filled according to what the scenario asks for and used for the
-  // in-place op Therefore, after the op is done, view_2 should contain the
+  // in-place op Therefore, after the op is done, view2 should contain the
   // result of doing exclusive scan NOTE: view2 is filled below every time
   // because the algorithm acts in place
 
