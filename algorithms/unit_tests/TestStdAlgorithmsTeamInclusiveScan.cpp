@@ -185,7 +185,6 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
   rand_pool pool(lowerBound * upperBound);
   Kokkos::fill_random(initValuesView_h, pool, lowerBound, upperBound);
 
-  // use CTAD for functor
   auto initValuesView =
       Kokkos::create_mirror_view_and_copy(space_t(), initValuesView_h);
 
