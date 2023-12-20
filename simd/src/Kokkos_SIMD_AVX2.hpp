@@ -30,9 +30,11 @@
     "Kokkos_SIMD_AVX2.hpp must be included before Kokkos_SIMD_Common_Math.hpp!"
 #endif
 
-// FIXME_HIP ROCm 5.6 and 5.7 can't compile with the intrinsic used here.
-#if defined(__HIPCC__) && (HIP_VERSION_MAJOR == 5) && \
-    ((HIP_VERSION_MINOR == 6) || (HIP_VERSION_MINOR == 7))
+// FIXME_HIP ROCm 5.6, 5.7, and 6.0 can't compile with the intrinsic used here.
+#if defined(__HIPCC__) &&                                        \
+    (((HIP_VERSION_MAJOR == 5) &&                                \
+      ((HIP_VERSION_MINOR == 6) || (HIP_VERSION_MINOR == 7))) || \
+     ((HIP_VERSION_MAJOR == 6) && ((HIP_VERSION_MINOR == 0))))
 #define KOKKOS_IMPL_WORKAROUND_ROCM_AVX2_ISSUE
 #endif
 
@@ -1059,7 +1061,8 @@ class simd<std::int32_t, simd_abi::avx2_fixed_size<4>> {
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
                                                        element_aligned_tag) {
-    // FIXME_HIP ROCm 5.6 can't compile with the intrinsic used here.
+    // FIXME_HIP ROCm 5.6, 5.7, and 6.0 can't compile with the intrinsic used
+    // here.
 #ifdef KOKKOS_IMPL_WORKAROUND_ROCM_AVX2_ISSUE
     m_value = _mm_loadu_si128(reinterpret_cast<__m128i const*>(ptr));
 #else
