@@ -18,7 +18,7 @@
 #define KOKKOS_STD_ALGORITHMS_SWAP_RANGES_HPP
 
 #include "impl/Kokkos_SwapRanges.hpp"
-#include "Kokkos_BeginEnd.hpp"
+#include <Kokkos_Iterator.hpp>
 
 namespace Kokkos {
 namespace Experimental {

@@ -18,7 +18,7 @@
 #define KOKKOS_SORT_PUBLIC_API_HPP_
 
 #include "./impl/Kokkos_SortImpl.hpp"
-#include <std_algorithms/Kokkos_BeginEnd.hpp>
+#include <Kokkos_Iterator.hpp>
 #include <Kokkos_Core.hpp>
 #include <algorithm>
 

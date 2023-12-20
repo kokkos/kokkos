@@ -22,7 +22,6 @@
 #include "Kokkos_HelperPredicates.hpp"
 #include "Kokkos_Reverse.hpp"
 #include <std_algorithms/Kokkos_Move.hpp>
-#include <std_algorithms/Kokkos_Distance.hpp>
 #include <string>
 
 namespace Kokkos {

@@ -20,7 +20,7 @@
 #include <Kokkos_Core.hpp>
 #include "Kokkos_Constraints.hpp"
 #include "Kokkos_HelperPredicates.hpp"
-#include <std_algorithms/Kokkos_Distance.hpp>
+#include <std_algorithms/Kokkos_Swap.hpp>
 #include <string>
 
 namespace Kokkos {
