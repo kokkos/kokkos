@@ -84,7 +84,7 @@ class CudaInternal {
  public:
   using size_type = Cuda::size_type;
 
-  inline static int m_cudaDev = -1;
+  int m_cudaDev = -1;
 
   // Device Properties
   inline static int m_cudaArch = -1;

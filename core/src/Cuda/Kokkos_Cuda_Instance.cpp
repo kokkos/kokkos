@@ -97,21 +97,21 @@ __global__ void query_cuda_kernel_arch(int *d_arch) {
 }
 
 /** Query what compute capability is actually launched to the device: */
-int cuda_kernel_arch() {
+int cuda_kernel_arch(int device_id) {
   int arch    = 0;
   int *d_arch = nullptr;
 
-  KOKKOS_IMPL_CUDA_SAFE_CALL((CudaInternal::singleton().cuda_malloc_wrapper(
-      reinterpret_cast<void **>(&d_arch), sizeof(int))));
-  KOKKOS_IMPL_CUDA_SAFE_CALL((CudaInternal::singleton().cuda_memcpy_wrapper(
-      d_arch, &arch, sizeof(int), cudaMemcpyDefault)));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(device_id));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(
+      cudaMalloc(reinterpret_cast<void **>(&d_arch), sizeof(int)));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(
+      cudaMemcpy(d_arch, &arch, sizeof(int), cudaMemcpyDefault));
 
   query_cuda_kernel_arch<<<1, 1>>>(d_arch);
 
-  KOKKOS_IMPL_CUDA_SAFE_CALL((CudaInternal::singleton().cuda_memcpy_wrapper(
-      &arch, d_arch, sizeof(int), cudaMemcpyDefault)));
   KOKKOS_IMPL_CUDA_SAFE_CALL(
-      (CudaInternal::singleton().cuda_free_wrapper(d_arch)));
+      cudaMemcpy(&arch, d_arch, sizeof(int), cudaMemcpyDefault));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFree(d_arch));
   return arch;
 }
 
@@ -376,6 +376,19 @@ void CudaInternal::initialize(cudaStream_t stream, bool manage_stream) {
   if (was_finalized)
     Kokkos::abort("Calling Cuda::initialize after Cuda::finalize is illegal\n");
   was_initialized = true;
+
+  // Check that the device associated with the stream matches cuda_device
+  CUcontext context;
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaError_t(cuStreamGetCtx(stream, &context)));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaError_t(cuCtxPushCurrent(context)));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaError_t(cuCtxGetDevice(&m_cudaDev)));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
+
+  // FIXME_CUDA multiple devices
+  if (m_cudaDev != Cuda().cuda_device())
+    Kokkos::abort(
+        "Currently, the device id must match the device id used when Kokkos "
+        "was initialized!");
 
   //----------------------------------
   // Multiblock reduction uses scratch flags for counters
@@ -672,15 +685,13 @@ void Cuda::impl_initialize(InitializationSettings const &settings) {
   const auto &dev_info     = Impl::CudaInternalDevices::singleton();
 
   const struct cudaDeviceProp &cudaProp = dev_info.m_cudaProp[cuda_device_id];
+  Impl::CudaInternal::m_deviceProp      = cudaProp;
 
-  Impl::CudaInternal::m_cudaDev    = cuda_device_id;
-  Impl::CudaInternal::m_deviceProp = cudaProp;
-
-  Kokkos::Impl::cuda_device_synchronize(
-      "Kokkos::CudaInternal::initialize: Fence on space initialization");
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(cuda_device_id));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaDeviceSynchronize());
 
   // Query what compute capability architecture a kernel executes:
-  Impl::CudaInternal::m_cudaArch = Impl::cuda_kernel_arch();
+  Impl::CudaInternal::m_cudaArch = Impl::cuda_kernel_arch(cuda_device_id);
 
   if (Impl::CudaInternal::m_cudaArch == 0) {
     std::stringstream ss;
@@ -745,12 +756,11 @@ Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
   //----------------------------------
 
   cudaStream_t singleton_stream;
-  KOKKOS_IMPL_CUDA_SAFE_CALL(
-      (Impl::CudaInternal::singleton().cuda_stream_create_wrapper(
-          &singleton_stream)));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(cuda_device_id));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamCreate(&singleton_stream));
 
-  auto &cuda_singleton = Impl::CudaInternal::singleton();
-  cuda_singleton.initialize(singleton_stream, /*manage*/ true);
+  Impl::CudaInternal::singleton().initialize(singleton_stream,
+                                             /*manage*/ true);
 }
 
 std::vector<unsigned> Cuda::detect_device_arch() {
