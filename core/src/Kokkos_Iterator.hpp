@@ -16,6 +16,10 @@
 
 #ifndef KOKKOS_ITERATOR_HPP
 #define KOKKOS_ITERATOR_HPP
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_ITERATOR
+#endif
 
 #include <Kokkos_View.hpp>
 #include <Kokkos_Macros.hpp>
@@ -170,4 +174,8 @@ distance(IteratorType first, IteratorType last) {
 }  // namespace Experimental
 }  // namespace Kokkos
 
+#ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_ITERATOR
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_ITERATOR
+#endif
 #endif /* #ifndef KOKKOS_ITERATOR_HPP */
