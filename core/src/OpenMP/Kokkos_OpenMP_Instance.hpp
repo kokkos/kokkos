@@ -47,7 +47,7 @@ namespace Impl {
 inline bool execute_in_serial(OpenMP const& space = OpenMP()) {
   // FIXME_OPENMP - `omp_get_max_active_levels` fails with gcc version lower
   // than 11.2.0
-#if KOKKOS_COMPILER_GNU >= 1120
+#if KOKKOS_COMPILER_GNU >= 1110
   return (OpenMP::in_parallel(space) && !(
 #if _OPENMP >= 201511
                                             (omp_get_max_active_levels() > 1)
