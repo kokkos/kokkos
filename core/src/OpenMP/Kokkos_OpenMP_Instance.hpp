@@ -45,13 +45,13 @@ namespace Kokkos {
 namespace Impl {
 
 inline bool execute_in_serial(OpenMP const& space = OpenMP()) {
-// FIXME_OPENMP - `omp_get_max_active_levels` fails with gcc version lower
-// than 11.1.0
+// The default value returned by `omp_get_max_active_levels` with gcc version lower
+// than 11.1.0 is 2147483647 instead of 1.
 #if (!defined(KOKKOS_COMPILER_GNU) || KOKKOS_COMPILER_GNU >= 1110) && \
     _OPENMP >= 201511
-  int is_nested = omp_get_max_active_levels() > 1;
+  bool is_nested = omp_get_max_active_levels() > 1;
 #else
-  int is_nested = omp_get_nested();
+  bool is_nested = static_cast<bool>(omp_get_nested());
 #endif
   return (OpenMP::in_parallel(space) && !(is_nested && (omp_get_level() == 1)));
 }
