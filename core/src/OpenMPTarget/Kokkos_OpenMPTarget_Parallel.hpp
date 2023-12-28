@@ -21,16 +21,10 @@
 #include <sstream>
 #include <Kokkos_Parallel.hpp>
 #include <impl/Kokkos_Traits.hpp>
-#include <impl/Kokkos_Spinwait.hpp>
 
 #include <Kokkos_Atomic.hpp>
 #include "Kokkos_OpenMPTarget_Abort.hpp"
-
-// Intel architectures prefer the classical hierarchical parallelism that relies
-// on OpenMP.
-#if defined(KOKKOS_ARCH_INTEL_GPU)
-#define KOKKOS_IMPL_OPENMPTARGET_HIERARCHICAL_INTEL_GPU
-#endif
+#include <OpenMPTarget/Kokkos_OpenMPTarget_Macros.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -249,15 +243,37 @@ class OpenMPTargetExecTeamMember {
     // and L1 shmem size. TEAM_REDUCE_SIZE = 512 bytes saved per team for
     // hierarchical reduction. There is an additional 10% of the requested
     // scratch memory allocated per team as padding. Hence the product with 0.1.
+    //
+    // Use llvm extensions for dynamic shared memory with compilers/architecture
+    // combinations where it is supported.
+    //
+    // Size allocated in HBM will now change based on whether we use llvm
+    // extensions.
+#if defined(KOKKOS_IMPL_OPENMPTARGET_LLVM_EXTENSIONS)
+    const int total_shmem = shmem_size_L1 + shmem_size_L1 * 0.1;
+#else
+    const int total_shmem =
+        shmem_size_L0 + shmem_size_L1 + (shmem_size_L0 + shmem_size_L1) * 0.1;
+#endif
+
+    // Per team offset for buffer in HBM.
     const int reduce_offset =
-        m_shmem_block_index *
-        (shmem_size_L0 + shmem_size_L1 +
-         ((shmem_size_L0 + shmem_size_L1) * 0.1) + TEAM_REDUCE_SIZE);
+        m_shmem_block_index * (total_shmem + TEAM_REDUCE_SIZE);
+
+#if defined(KOKKOS_IMPL_OPENMPTARGET_LLVM_EXTENSIONS)
+    const int l1_offset = reduce_offset + TEAM_REDUCE_SIZE;
+    char* l0_scratch =
+        static_cast<char*>(llvm_omp_target_dynamic_shared_alloc());
+    m_team_shared = scratch_memory_space(
+        l0_scratch, shmem_size_L0, static_cast<char*>(glb_scratch) + l1_offset,
+        shmem_size_L1);
+#else
     const int l0_offset = reduce_offset + TEAM_REDUCE_SIZE;
     const int l1_offset = l0_offset + shmem_size_L0;
     m_team_shared       = scratch_memory_space(
         (static_cast<char*>(glb_scratch) + l0_offset), shmem_size_L0,
         static_cast<char*>(glb_scratch) + l1_offset, shmem_size_L1);
+#endif
     m_reduce_scratch = static_cast<char*>(glb_scratch) + reduce_offset;
     m_league_rank    = league_rank;
     m_team_rank      = omp_tid;
@@ -751,6 +767,7 @@ class OpenMPTargetExec {
                              int64_t thread_local_bytes, int64_t league_size);
 
   static void* m_scratch_ptr;
+  static std::mutex m_mutex_scratch_ptr;
   static int64_t m_scratch_size;
   static int* m_lock_array;
   static uint64_t m_lock_size;

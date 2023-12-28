@@ -55,27 +55,9 @@ struct CudaTraits {
       unsigned long[ConstantMemoryUsage / sizeof(unsigned long)];
 
   static constexpr int ConstantMemoryUseThreshold = 0x000200 /* 512 bytes */;
-
-  KOKKOS_INLINE_FUNCTION static CudaSpace::size_type warp_count(
-      CudaSpace::size_type i) {
-    return (i + WarpIndexMask) >> WarpIndexShift;
-  }
-
-  KOKKOS_INLINE_FUNCTION static CudaSpace::size_type warp_align(
-      CudaSpace::size_type i) {
-    constexpr CudaSpace::size_type Mask = ~WarpIndexMask;
-    return (i + WarpIndexMask) & Mask;
-  }
 };
 
 //----------------------------------------------------------------------------
-
-CudaSpace::size_type cuda_internal_multiprocessor_count();
-CudaSpace::size_type cuda_internal_maximum_warp_count();
-std::array<CudaSpace::size_type, 3> cuda_internal_maximum_grid_count();
-CudaSpace::size_type cuda_internal_maximum_shared_words();
-
-CudaSpace::size_type cuda_internal_maximum_concurrent_block_count();
 
 CudaSpace::size_type* cuda_internal_scratch_flags(const Cuda&,
                                                   const std::size_t size);
@@ -102,19 +84,10 @@ class CudaInternal {
  public:
   using size_type = Cuda::size_type;
 
-  inline static int m_cudaDev = -1;
+  int m_cudaDev = -1;
 
   // Device Properties
-  inline static int m_cudaArch                      = -1;
-  inline static unsigned m_multiProcCount           = 0;
-  inline static unsigned m_maxWarpCount             = 0;
-  inline static std::array<size_type, 3> m_maxBlock = {0, 0, 0};
-  inline static unsigned m_maxSharedWords           = 0;
-  inline static int m_shmemPerSM                    = 0;
-  inline static int m_maxShmemPerBlock              = 0;
-  inline static int m_maxBlocksPerSM                = 0;
-  inline static int m_maxThreadsPerSM               = 0;
-  inline static int m_maxThreadsPerBlock            = 0;
+  inline static int m_cudaArch = -1;
   static int concurrency();
 
   inline static cudaDeviceProp m_deviceProp;
@@ -125,7 +98,6 @@ class CudaInternal {
   mutable std::size_t m_scratchUnifiedCount;
   mutable std::size_t m_scratchFunctorSize;
 
-  inline static size_type m_scratchUnifiedSupported = 0;
   mutable size_type* m_scratchSpace;
   mutable size_type* m_scratchFlags;
   mutable size_type* m_scratchUnified;
@@ -539,6 +511,7 @@ class CudaInternal {
   void release_team_scratch_space(int scratch_pool_id);
 };
 
+void create_Cuda_instances(std::vector<Cuda>& instances);
 }  // Namespace Impl
 
 namespace Experimental {
@@ -547,25 +520,13 @@ namespace Experimental {
 //   Customization point for backends
 //   Default behavior is to return the passed in instance
 
-namespace Impl {
-inline void create_Cuda_instances(std::vector<Cuda>& instances) {
-  for (int s = 0; s < int(instances.size()); s++) {
-    cudaStream_t stream;
-    KOKKOS_IMPL_CUDA_SAFE_CALL((
-        instances[s].impl_internal_space_instance()->cuda_stream_create_wrapper(
-            &stream)));
-    instances[s] = Cuda(stream, true);
-  }
-}
-}  // namespace Impl
-
 template <class... Args>
 std::vector<Cuda> partition_space(const Cuda&, Args...) {
   static_assert(
       (... && std::is_arithmetic_v<Args>),
       "Kokkos Error: partitioning arguments must be integers or floats");
   std::vector<Cuda> instances(sizeof...(Args));
-  Impl::create_Cuda_instances(instances);
+  Kokkos::Impl::create_Cuda_instances(instances);
   return instances;
 }
 
@@ -578,7 +539,7 @@ std::vector<Cuda> partition_space(const Cuda&, std::vector<T> const& weights) {
   // We only care about the number of instances to create and ignore weights
   // otherwise.
   std::vector<Cuda> instances(weights.size());
-  Impl::create_Cuda_instances(instances);
+  Kokkos::Impl::create_Cuda_instances(instances);
   return instances;
 }
 }  // namespace Experimental

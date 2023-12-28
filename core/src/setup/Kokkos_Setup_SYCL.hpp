@@ -38,12 +38,4 @@
 #include <CL/sycl.hpp>
 #endif
 
-#ifdef __SYCL_DEVICE_ONLY__
-#define KOKKOS_IMPL_DO_NOT_USE_PRINTF(format, ...)                \
-  do {                                                            \
-    const __attribute__((opencl_constant)) char fmt[] = (format); \
-    sycl::ext::oneapi::experimental::printf(fmt, ##__VA_ARGS__);  \
-  } while (0)
-#endif
-
 #endif
