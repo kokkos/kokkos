@@ -23,6 +23,11 @@
 
 #include <Kokkos_SIMD_Common.hpp>
 
+#ifdef KOKKOS_SIMD_COMMON_MATH_HPP
+#error \
+    "Kokkos_SIMD_Scalar.hpp must be included before Kokkos_SIMD_Common_Math.hpp!"
+#endif
+
 namespace Kokkos {
 namespace Experimental {
 
@@ -201,28 +206,77 @@ class simd<T, simd_abi::scalar> {
   }
 };
 
+}  // namespace Experimental
+
 template <class T>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION simd<T, simd_abi::scalar> abs(
-    simd<T, simd_abi::scalar> const& a) {
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
+    Experimental::simd<T, Experimental::simd_abi::scalar>
+    abs(Experimental::simd<T, Experimental::simd_abi::scalar> const& a) {
   if constexpr (std::is_signed_v<T>) {
     return (a < 0 ? -a : a);
   }
   return a;
 }
 
-template <class T>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION simd<T, simd_abi::scalar> sqrt(
-    simd<T, simd_abi::scalar> const& a) {
-  return simd<T, simd_abi::scalar>(std::sqrt(static_cast<T>(a)));
+template <typename T>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION auto floor(
+    Experimental::simd<T, Experimental::simd_abi::scalar> const& a) {
+  using data_type = std::conditional_t<std::is_floating_point_v<T>, T, double>;
+  return Experimental::simd<data_type, Experimental::simd_abi::scalar>(
+      Kokkos::floor(static_cast<data_type>(a[0])));
+}
+
+template <typename T>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION auto ceil(
+    Experimental::simd<T, Experimental::simd_abi::scalar> const& a) {
+  using data_type = std::conditional_t<std::is_floating_point_v<T>, T, double>;
+  return Experimental::simd<data_type, Experimental::simd_abi::scalar>(
+      Kokkos::ceil(static_cast<data_type>(a[0])));
+}
+
+template <typename T>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION auto round(
+    Experimental::simd<T, Experimental::simd_abi::scalar> const& a) {
+  using data_type = std::conditional_t<std::is_floating_point_v<T>, T, double>;
+  return Experimental::simd<data_type, Experimental::simd_abi::scalar>(
+      Experimental::round_half_to_nearest_even(static_cast<data_type>(a[0])));
+}
+
+template <typename T>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION auto trunc(
+    Experimental::simd<T, Experimental::simd_abi::scalar> const& a) {
+  using data_type = std::conditional_t<std::is_floating_point_v<T>, T, double>;
+  return Experimental::simd<data_type, Experimental::simd_abi::scalar>(
+      Kokkos::trunc(static_cast<data_type>(a[0])));
 }
 
 template <class T>
-KOKKOS_FORCEINLINE_FUNCTION simd<T, simd_abi::scalar> fma(
-    simd<T, simd_abi::scalar> const& x, simd<T, simd_abi::scalar> const& y,
-    simd<T, simd_abi::scalar> const& z) {
-  return simd<T, simd_abi::scalar>((static_cast<T>(x) * static_cast<T>(y)) +
-                                   static_cast<T>(z));
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
+    Experimental::simd<T, Experimental::simd_abi::scalar>
+    sqrt(Experimental::simd<T, Experimental::simd_abi::scalar> const& a) {
+  return Experimental::simd<T, Experimental::simd_abi::scalar>(
+      std::sqrt(static_cast<T>(a)));
 }
+
+template <class T>
+KOKKOS_FORCEINLINE_FUNCTION
+    Experimental::simd<T, Experimental::simd_abi::scalar>
+    fma(Experimental::simd<T, Experimental::simd_abi::scalar> const& x,
+        Experimental::simd<T, Experimental::simd_abi::scalar> const& y,
+        Experimental::simd<T, Experimental::simd_abi::scalar> const& z) {
+  return Experimental::simd<T, Experimental::simd_abi::scalar>(
+      (static_cast<T>(x) * static_cast<T>(y)) + static_cast<T>(z));
+}
+
+template <class T>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION
+    Experimental::simd<T, Experimental::simd_abi::scalar>
+    copysign(Experimental::simd<T, Experimental::simd_abi::scalar> const& a,
+             Experimental::simd<T, Experimental::simd_abi::scalar> const& b) {
+  return std::copysign(static_cast<T>(a), static_cast<T>(b));
+}
+
+namespace Experimental {
 
 template <class T>
 KOKKOS_FORCEINLINE_FUNCTION simd<T, simd_abi::scalar> condition(
@@ -231,12 +285,6 @@ KOKKOS_FORCEINLINE_FUNCTION simd<T, simd_abi::scalar> condition(
     simd<T, simd_abi::scalar> const& b, simd<T, simd_abi::scalar> const& c) {
   return simd<T, simd_abi::scalar>(static_cast<bool>(a) ? static_cast<T>(b)
                                                         : static_cast<T>(c));
-}
-
-template <class T, class Abi>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION simd<T, Abi> copysign(
-    simd<T, Abi> const& a, simd<T, Abi> const& b) {
-  return std::copysign(static_cast<T>(a), static_cast<T>(b));
 }
 
 template <class T>
@@ -267,13 +315,13 @@ class const_where_expression<simd_mask<T, simd_abi::scalar>,
       mem[static_cast<Integral>(index)] = static_cast<T>(m_value);
   }
 
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type const&
-  impl_get_value() const {
+  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION value_type const& impl_get_value()
+      const {
     return m_value;
   }
 
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type const&
-  impl_get_mask() const {
+  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION mask_type const& impl_get_mask()
+      const {
     return m_mask;
   }
 };

@@ -807,7 +807,7 @@ parallel_scan(const Impl::ThreadVectorRangeBoundariesStruct<
         // exclusive scan -- the final accumulation
         // of i's val will be included in the second
         // closure call later.
-        if (i < loop_boundaries.end && threadIdx.x > 0) {
+        if (i - 1 < loop_boundaries.end && threadIdx.x > 0) {
           closure(i - 1, val, false);
         }
 
@@ -839,6 +839,8 @@ parallel_scan(const Impl::ThreadVectorRangeBoundariesStruct<
         Impl::in_place_shfl(accum, val, mask, blockDim.x, active_mask);
       }
 
+      reducer.reference() = accum;
+
       ))
 }
 
@@ -862,6 +864,32 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
       void>::value_type;
   value_type dummy;
   parallel_scan(loop_boundaries, closure, Kokkos::Sum<value_type>(dummy));
+}
+
+/** \brief  Intra-thread vector parallel exclusive prefix sum.
+ *
+ *  Executes closure(iType i, ValueType & val, bool final) for each i=[0..N)
+ *
+ *  The range [0..N) is mapped to all vector lanes in the
+ *  thread and a scan operation is performed.
+ *  The last call to closure has final == true.
+ */
+template <typename iType, class Closure, typename ValueType>
+KOKKOS_INLINE_FUNCTION void parallel_scan(
+    const Impl::ThreadVectorRangeBoundariesStruct<iType, Impl::CudaTeamMember>&
+        loop_boundaries,
+    const Closure& closure, ValueType& return_val) {
+  // Extract ValueType from the Closure
+  using closure_value_type = typename Kokkos::Impl::FunctorAnalysis<
+      Kokkos::Impl::FunctorPatternInterface::SCAN, void, Closure,
+      ValueType>::value_type;
+  static_assert(std::is_same<closure_value_type, ValueType>::value,
+                "Non-matching value types of closure and return type");
+
+  ValueType accum;
+  parallel_scan(loop_boundaries, closure, Kokkos::Sum<ValueType>(accum));
+
+  return_val = accum;
 }
 
 }  // namespace Kokkos

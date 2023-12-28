@@ -885,13 +885,17 @@ KOKKOS_INLINE_FUNCTION
     closure(i, accum, false);
   }
 
+  auto& team_member = loop_boundaries.thread;
+
   // 'accum' output is the exclusive prefix sum
-  accum = loop_boundaries.thread.team_scan(accum);
+  accum = team_member.team_scan(accum);
 
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
        i += loop_boundaries.increment) {
     closure(i, accum, true);
   }
+
+  team_member.team_broadcast(accum, team_member.team_size() - 1);
 
   return_val = accum;
 }

@@ -42,10 +42,13 @@ IF(Kokkos_ENABLE_CUDA)
     # If launcher was found and nvcc_wrapper was not specified as
     # compiler and `CMAKE_CXX_COMPILIER_LAUNCHER` is not set, set to use launcher.
     # Will ensure CMAKE_CXX_COMPILER is replaced by nvcc_wrapper
-    IF(Kokkos_COMPILE_LAUNCHER AND NOT INTERNAL_HAVE_COMPILER_NVCC AND NOT KOKKOS_CXX_COMPILER_ID STREQUAL Clang AND NOT KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
+    IF(Kokkos_COMPILE_LAUNCHER AND NOT INTERNAL_HAVE_COMPILER_NVCC AND NOT KOKKOS_CXX_COMPILER_ID STREQUAL Clang
+       AND NOT (Kokkos_ENABLE_IMPL_NVHPC_AS_DEVICE_COMPILER AND KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC))
       IF(CMAKE_CXX_COMPILER_LAUNCHER)
-       MESSAGE(FATAL_ERROR "Cannot use CMAKE_CXX_COMPILER_LAUNCHER if the CMAKE_CXX_COMPILER is not able to compile CUDA code, i.e. nvcc_wrapper or
-clang++!")
+        IF(KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
+          MESSAGE(STATUS "Using nvc++ as device compiler requires Kokkos_ENABLE_IMPL_NVHPC_AS_DEVICE_COMPILER=ON!")
+        ENDIF()
+        MESSAGE(FATAL_ERROR "Cannot use CMAKE_CXX_COMPILER_LAUNCHER if the CMAKE_CXX_COMPILER is not able to compile CUDA code, i.e. nvcc_wrapper or clang++!")
       ENDIF()
       # the first argument to launcher is always the C++ compiler defined by cmake
       # if the second argument matches the C++ compiler, it forwards the rest of the
@@ -149,6 +152,7 @@ ENDIF()
 SET(KOKKOS_MESSAGE_TEXT "Compiler not supported by Kokkos.  Required compiler versions:")
 SET(KOKKOS_MESSAGE_TEXT "${KOKKOS_MESSAGE_TEXT}\n    Clang(CPU)         8.0.0 or higher")
 SET(KOKKOS_MESSAGE_TEXT "${KOKKOS_MESSAGE_TEXT}\n    Clang(CUDA)       10.0.0 or higher")
+SET(KOKKOS_MESSAGE_TEXT "${KOKKOS_MESSAGE_TEXT}\n    Clang(OpenMPTarget) 15.0.0 or higher")
 SET(KOKKOS_MESSAGE_TEXT "${KOKKOS_MESSAGE_TEXT}\n    GCC                8.2.0 or higher")
 SET(KOKKOS_MESSAGE_TEXT "${KOKKOS_MESSAGE_TEXT}\n    Intel             19.0.5 or higher")
 SET(KOKKOS_MESSAGE_TEXT "${KOKKOS_MESSAGE_TEXT}\n    IntelLLVM(CPU)  2021.1.1 or higher")
@@ -207,6 +211,10 @@ ELSEIF(KOKKOS_CXX_COMPILER_ID STREQUAL "MSVC")
   ENDIF()
 ELSEIF(KOKKOS_CXX_COMPILER_ID STREQUAL XL OR KOKKOS_CXX_COMPILER_ID STREQUAL XLClang)
   MESSAGE(FATAL_ERROR "${KOKKOS_MESSAGE_TEXT}")
+ELSEIF(KOKKOS_CXX_COMPILER_ID STREQUAL Clang AND Kokkos_ENABLE_OPENMPTARGET)
+  IF(KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 15.0.0)
+    MESSAGE(FATAL_ERROR "${KOKKOS_MESSAGE_TEXT}")
+  ENDIF()
 ENDIF()
 
 IF(NOT DEFINED KOKKOS_CXX_HOST_COMPILER_ID)

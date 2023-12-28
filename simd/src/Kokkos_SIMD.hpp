@@ -40,7 +40,7 @@
 #include <Kokkos_SIMD_AVX512.hpp>
 #endif
 
-#ifdef __ARM_NEON
+#if defined(KOKKOS_ARCH_ARM_NEON)
 #include <Kokkos_SIMD_NEON.hpp>
 #endif
 #else  // KOKKOS_ENABLE_OPENMPTARGET
@@ -62,7 +62,10 @@
 #include <Kokkos_SIMD_AVX512.hpp>
 #endif
 
-#ifdef __ARM_NEON
+#if defined(KOKKOS_ARCH_ARM_NEON)
+#if !defined(__ARM_NEON)
+#error "__ARM_NEON must be definded for KOKKOS_ARCH_ARM_NEON"
+#endif
 #include <Kokkos_SIMD_NEON.hpp>
 #endif
 #endif
@@ -70,6 +73,8 @@
 #if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC < 1130
 #pragma GCC diagnostic pop
 #endif
+
+#include <Kokkos_SIMD_Common_Math.hpp>
 
 namespace Kokkos {
 namespace Experimental {
@@ -82,7 +87,7 @@ namespace Impl {
 using host_native = avx512_fixed_size<8>;
 #elif defined(KOKKOS_ARCH_AVX2)
 using host_native  = avx2_fixed_size<4>;
-#elif defined(__ARM_NEON)
+#elif defined(KOKKOS_ARCH_ARM_NEON)
 using host_native  = neon_fixed_size<2>;
 #else
 using host_native   = scalar;
@@ -185,7 +190,7 @@ using data_type_set = data_types<std::int32_t, std::uint32_t, std::int64_t,
 using host_abi_set = abi_set<simd_abi::scalar, simd_abi::avx2_fixed_size<4>>;
 using data_type_set =
     data_types<std::int32_t, std::int64_t, std::uint64_t, double, float>;
-#elif defined(__ARM_NEON)
+#elif defined(KOKKOS_ARCH_ARM_NEON)
 using host_abi_set = abi_set<simd_abi::scalar, simd_abi::neon_fixed_size<2>>;
 using data_type_set =
     data_types<std::int32_t, std::int64_t, std::uint64_t, double, float>;

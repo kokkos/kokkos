@@ -17,7 +17,7 @@
 #ifndef KOKKOS_SYCL_ABORT_HPP
 #define KOKKOS_SYCL_ABORT_HPP
 
-#include <impl/Kokkos_Printf.hpp>
+#include <Kokkos_Printf.hpp>
 #if defined(KOKKOS_ENABLE_SYCL)
 // FIXME_SYCL
 #if __has_include(<sycl/sycl.hpp>)

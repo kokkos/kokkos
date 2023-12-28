@@ -115,7 +115,7 @@ bit_cast(From const& from) noexcept {
   return sycl::bit_cast<To>(from);
 #else
   To to;
-  memcpy(&to, &from, sizeof(To));
+  memcpy(static_cast<void*>(&to), static_cast<const void*>(&from), sizeof(To));
   return to;
 #endif
 }
@@ -287,15 +287,13 @@ KOKKOS_IMPL_DEVICE_FUNCTION
     std::enable_if_t<is_standard_unsigned_integer_type_v<T>, int>
     countl_zero_builtin_device(T x) noexcept {
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
-  if constexpr (sizeof(T) == sizeof(long long int)) {
+  if constexpr (sizeof(T) == sizeof(long long int))
     return __clzll(reinterpret_cast<long long int&>(x));
-  } else if constexpr (sizeof(T) == sizeof(int)) {
+  if constexpr (sizeof(T) == sizeof(int))
     return __clz(reinterpret_cast<int&>(x));
-  } else {
-    using ::Kokkos::Experimental::digits_v;
-    constexpr int shift = digits_v<unsigned int> - digits_v<T>;
-    return __clz(x) - shift;
-  }
+  using ::Kokkos::Experimental::digits_v;
+  constexpr int shift = digits_v<unsigned int> - digits_v<T>;
+  return __clz(x) - shift;
 #elif defined(KOKKOS_ENABLE_SYCL)
   return sycl::clz(x);
 #else
@@ -332,11 +330,9 @@ KOKKOS_IMPL_DEVICE_FUNCTION
   using ::Kokkos::Experimental::digits_v;
   if (x == 0) return digits_v<T>;
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
-  if constexpr (sizeof(T) == sizeof(long long int)) {
+  if constexpr (sizeof(T) == sizeof(long long int))
     return __ffsll(reinterpret_cast<long long int&>(x)) - 1;
-  } else {
-    return __ffs(reinterpret_cast<int&>(x)) - 1;
-  }
+  return __ffs(reinterpret_cast<int&>(x)) - 1;
 #elif defined(KOKKOS_ENABLE_SYCL)
   return sycl::ctz(x);
 #else
@@ -368,11 +364,8 @@ KOKKOS_IMPL_DEVICE_FUNCTION
     std::enable_if_t<is_standard_unsigned_integer_type_v<T>, int>
     popcount_builtin_device(T x) noexcept {
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
-  if constexpr (sizeof(T) == sizeof(long long int)) {
-    return __popcll(x);
-  } else {
-    return __popc(x);
-  }
+  if constexpr (sizeof(T) == sizeof(long long int)) return __popcll(x);
+  return __popc(x);
 #elif defined(KOKKOS_ENABLE_SYCL)
   return sycl::popcount(x);
 #else
