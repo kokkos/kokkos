@@ -131,13 +131,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
               reference_type update = reducer.init(results_ptr);
               if (size == 1) {
                 const member_type team_member(
-#if defined(KOKKOS_COMPILER_INTEL_LLVM) && \
-    KOKKOS_COMPILER_INTEL_LLVM >= 20230200
-                    team_scratch_memory_L0
-                        .get_multi_ptr<sycl::access::decorated::yes>(),
-#else
-                    team_scratch_memory_L0.get_pointer(),
-#endif
+                    KOKKOS_IMPL_SYCL_GET_MULTI_PTR(team_scratch_memory_L0),
                     shmem_begin, scratch_size[0], global_scratch_ptr,
                     scratch_size[1], item, item.get_group_linear_id(),
                     item.get_group_range(1));
@@ -208,13 +202,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
                   for (int league_rank = group_id; league_rank < league_size;
                        league_rank += n_wgroups) {
                     const member_type team_member(
-#if defined(KOKKOS_COMPILER_INTEL_LLVM) && \
-    KOKKOS_COMPILER_INTEL_LLVM >= 20230200
-                        team_scratch_memory_L0
-                            .get_multi_ptr<sycl::access::decorated::yes>(),
-#else
-                        team_scratch_memory_L0.get_pointer(),
-#endif
+                        KOKKOS_IMPL_SYCL_GET_MULTI_PTR(team_scratch_memory_L0),
                         shmem_begin, scratch_size[0],
                         global_scratch_ptr +
                             item.get_group(1) * scratch_size[1],
@@ -267,13 +255,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
                   for (int league_rank = group_id; league_rank < league_size;
                        league_rank += n_wgroups) {
                     const member_type team_member(
-#if defined(KOKKOS_COMPILER_INTEL_LLVM) && \
-    KOKKOS_COMPILER_INTEL_LLVM >= 20230200
-                        team_scratch_memory_L0
-                            .get_multi_ptr<sycl::access::decorated::yes>(),
-#else
-                        team_scratch_memory_L0.get_pointer(),
-#endif
+                        KOKKOS_IMPL_SYCL_GET_MULTI_PTR(team_scratch_memory_L0),
                         shmem_begin, scratch_size[0],
                         global_scratch_ptr +
                             item.get_group(1) * scratch_size[1],
