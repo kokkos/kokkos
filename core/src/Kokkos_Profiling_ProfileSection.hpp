@@ -37,7 +37,7 @@ class [[nodiscard]] ProfilingSection {
 #if defined(__has_cpp_attribute) && __has_cpp_attribute(nodiscard) >= 201907
   [[nodiscard]]
 #endif
-  ProfilingSection(const std::string& sectionName) {
+  explicit ProfilingSection(const std::string& sectionName) {
     Kokkos::Profiling::createProfileSection(sectionName, &secID);
   }
 
