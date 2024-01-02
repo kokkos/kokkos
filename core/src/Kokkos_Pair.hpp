@@ -28,6 +28,7 @@
 #endif
 
 #include <Kokkos_Macros.hpp>
+#include <Kokkos_Swap.hpp>
 #include <utility>
 
 namespace Kokkos {
@@ -483,8 +484,16 @@ KOKKOS_FORCEINLINE_FUNCTION constexpr bool operator>=(
   return !(lhs < rhs);
 }
 
-namespace Impl {
+template <class T1, class T2>
+KOKKOS_FUNCTION void swap(pair<T1, T2>& a, pair<T1, T2>& b) noexcept(
+    noexcept(swap(std::declval<T1&>(), std::declval<T1&>())) &&
+    noexcept(swap(std::declval<T2&>(), std::declval<T2&>()))) {
+  using Kokkos::swap;
+  swap(a.first, b.first);
+  swap(a.second, b.second);
+}
 
+namespace Impl {
 template <class T>
 struct is_pair_like : std::false_type {};
 template <class T, class U>

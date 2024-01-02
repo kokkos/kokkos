@@ -979,6 +979,13 @@ struct reduction_identity<Kokkos::complex<T>> {
   }
 };
 
+template <class T>
+KOKKOS_FUNCTION void swap(complex<T>& a, complex<T>& b) {
+  auto t(std::move(a));
+  a = std::move(b);
+  b = std::move(t);
+}
+
 }  // namespace Kokkos
 
 #ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_COMPLEX
