@@ -22,7 +22,6 @@
 #endif
 
 #include <Kokkos_Macros.hpp>
-#include <impl/Kokkos_Profiling_Interface.hpp>
 #include <impl/Kokkos_Profiling.hpp>
 
 #include <string>
@@ -36,28 +35,14 @@ class ProfilingSection {
   ProfilingSection& operator=(ProfilingSection const&) = delete;
 
   ProfilingSection(const std::string& sectionName) {
-    if (Kokkos::Profiling::profileLibraryLoaded()) {
-      Kokkos::Profiling::createProfileSection(sectionName, &secID);
-    }
+    Kokkos::Profiling::createProfileSection(sectionName, &secID);
   }
 
-  void start() {
-    if (Kokkos::Profiling::profileLibraryLoaded()) {
-      Kokkos::Profiling::startSection(secID);
-    }
-  }
+  void start() { Kokkos::Profiling::startSection(secID); }
 
-  void stop() {
-    if (Kokkos::Profiling::profileLibraryLoaded()) {
-      Kokkos::Profiling::stopSection(secID);
-    }
-  }
+  void stop() { Kokkos::Profiling::stopSection(secID); }
 
-  ~ProfilingSection() {
-    if (Kokkos::Profiling::profileLibraryLoaded()) {
-      Kokkos::Profiling::destroyProfileSection(secID);
-    }
-  }
+  ~ProfilingSection() { Kokkos::Profiling::destroyProfileSection(secID); }
 
  protected:
   uint32_t secID;
