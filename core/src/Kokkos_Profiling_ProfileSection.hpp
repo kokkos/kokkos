@@ -22,7 +22,6 @@
 #endif
 
 #include <Kokkos_Macros.hpp>
-#include <impl/Kokkos_Profiling_Interface.hpp>
 #include <impl/Kokkos_Profiling.hpp>
 
 #include <string>
