@@ -1139,3 +1139,14 @@ MESSAGE(STATUS "Architectures:")
 FOREACH(Arch ${KOKKOS_ENABLED_ARCH_LIST})
   MESSAGE(STATUS " ${Arch}")
 ENDFOREACH()
+
+
+IF(KOKKOS_ENABLE_NAME_TBD_UNSAFE_ATOMICS)
+  IF(NOT _HOST_PARALLEL STREQUAL "NoTypeDefined" OR NOT _DEVICE_PARALLEL STREQUAL "NoTypeDefined")
+    MESSAGE(FATAL_ERROR "Not allowed to disable atomics if any host parallel or device backend is enabled")
+  ENDIF()
+  IF(NOT KOKKOS_ENABLE_SERIAL)
+    MESSAGE(FATAL_ERROR "Implementation bug")  # safeguard
+  ENDIF()
+  MESSAGE(STATUS "Atomics: **DISABLED**")
+ENDIF()
