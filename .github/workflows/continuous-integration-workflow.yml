@@ -124,8 +124,6 @@ jobs:
           cmake --build builddir --parallel 2
           ccache -s
       - name: Tests
-        env:
-          ASAN_OPTIONS: allocator_may_return_null=1
         working-directory: builddir
         run: ctest --output-on-failure
       - name: Test linking against build dir
