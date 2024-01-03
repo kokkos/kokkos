@@ -287,7 +287,7 @@ struct FloatingPointComparison {
 
  public:
   template <class FPT>
-  KOKKOS_FUNCTION bool compare_near_zero(FPT const& fpv, double ulp) const {
+  KOKKOS_FUNCTION bool compare_near_zero(FPT const& fpv, int ulp) const {
     auto abs_tol = eps(fpv) * ulp;
 
     bool ar = absolute(fpv) < abs_tol;
@@ -300,8 +300,7 @@ struct FloatingPointComparison {
   }
 
   template <class Lhs, class Rhs>
-  KOKKOS_FUNCTION bool compare(Lhs const& lhs, Rhs const& rhs,
-                               double ulp) const {
+  KOKKOS_FUNCTION bool compare(Lhs const& lhs, Rhs const& rhs, int ulp) const {
     if (lhs == 0) {
       return compare_near_zero(rhs, ulp);
     } else if (rhs == 0) {
@@ -348,7 +347,7 @@ struct math_function_name;
       }                                                                 \
       MATHEMATICAL_FUNCTIONS_TEST_UNREACHABLE                           \
     }                                                                   \
-    static KOKKOS_FUNCTION double ulp_factor() { return ULP_FACTOR; }   \
+    static KOKKOS_FUNCTION int ulp_factor() { return ULP_FACTOR; }      \
   };                                                                    \
   using kk_##FUNC = MathUnaryFunction_##FUNC;                           \
   template <>                                                           \
@@ -373,7 +372,7 @@ struct math_function_name;
                        math_unary_function_return_type_t<T>>::value); \
       return REF_FUNC;                                                \
     }                                                                 \
-    static KOKKOS_FUNCTION double ulp_factor() { return ULP_FACTOR; } \
+    static KOKKOS_FUNCTION int ulp_factor() { return ULP_FACTOR; }    \
   };                                                                  \
   using kk_##FUNC = MathUnaryFunction_##FUNC;                         \
   template <>                                                         \
@@ -477,7 +476,7 @@ DEFINE_UNARY_FUNCTION_EVAL(logb, 2);
       }                                                                        \
       MATHEMATICAL_FUNCTIONS_TEST_UNREACHABLE                                  \
     }                                                                          \
-    static KOKKOS_FUNCTION double ulp_factor() { return ULP_FACTOR; }          \
+    static KOKKOS_FUNCTION int ulp_factor() { return ULP_FACTOR; }             \
   };                                                                           \
   using kk_##FUNC = MathBinaryFunction_##FUNC;                                 \
   template <>                                                                  \
@@ -511,7 +510,7 @@ DEFINE_BINARY_FUNCTION_EVAL(copysign, 1);
                        math_ternary_function_return_type_t<T, U, V>>::value); \
       return std::FUNC(x, y, z);                                              \
     }                                                                         \
-    static KOKKOS_FUNCTION double ulp_factor() { return ULP_FACTOR; }         \
+    static KOKKOS_FUNCTION int ulp_factor() { return ULP_FACTOR; }            \
   };                                                                          \
   using kk3_##FUNC = MathTernaryFunction_##FUNC;                              \
   template <>                                                                 \
