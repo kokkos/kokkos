@@ -84,7 +84,7 @@
 
 //----------------------------------------------------------------------------
 
-#if defined(KOKKOS_ENABLE_NAME_TBD_UNSAFE_ATOMICS)
+#if defined(KOKKOS_ENABLE_ATOMICS_BYPASS)
 
 #if !defined(KOKKOS_ENABLE_THREADS) && !defined(KOKKOS_ENABLE_CUDA) &&     \
     !defined(KOKKOS_ENABLE_OPENMP) && !defined(KOKKOS_ENABLE_HPX) &&       \
