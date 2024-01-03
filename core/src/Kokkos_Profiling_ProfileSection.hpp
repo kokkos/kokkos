@@ -29,12 +29,15 @@
 namespace Kokkos {
 namespace Profiling {
 
-class ProfilingSection {
+class [[nodiscard]] ProfilingSection {
  public:
   ProfilingSection(ProfilingSection const&) = delete;
   ProfilingSection& operator=(ProfilingSection const&) = delete;
 
-  ProfilingSection(const std::string& sectionName) {
+#if defined(__has_cpp_attribute) && __has_cpp_attribute(nodiscard) >= 201907
+  [[nodiscard]]
+#endif
+  explicit ProfilingSection(const std::string& sectionName) {
     Kokkos::Profiling::createProfileSection(sectionName, &secID);
   }
 
