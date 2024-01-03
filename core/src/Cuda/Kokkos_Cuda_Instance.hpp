@@ -22,7 +22,7 @@
 #include <atomic>
 #include <Cuda/Kokkos_Cuda_Error.hpp>
 #include <cuda_runtime_api.h>
-
+#include "Kokkos_CudaSpace.hpp"
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 // These functions fulfill the purpose of allowing to work around
