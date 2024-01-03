@@ -270,21 +270,5 @@ struct reduction_identity<Test::array_reduce<scalar_t, N>> {
     return Test::array_reduce<scalar_t, N>(t_red_ident::prod());
   }
 };
-
-template <>
-struct reduction_identity<Test::point_t> {
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static uint8_t sum() noexcept {
-    return 0;
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static uint8_t prod() noexcept {
-    return 1;
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static uint8_t max() noexcept {
-    return 0xff;
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static uint8_t min() noexcept {
-    return 0x0;
-  }
-};
 }  // namespace Kokkos
 #endif  // TESTNONTRIVIALSCALARTYPES_HPP_
