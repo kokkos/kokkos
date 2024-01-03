@@ -1540,14 +1540,7 @@ class TestViewAPI {
     typename const_multivector_type::const_type ccmvX(cmv);
   }
 
-// The test would fail with AddressSanitizer
-#if defined(__has_feature)
-#if __has_feature(address_sanitizer)
-  __attribute__((no_sanitize("address")))
-#endif
-#endif
-  static void
-  run_test_error() {
+  static void run_test_error() {
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
     if (std::is_same<typename dView1::memory_space,
                      Kokkos::Experimental::OpenMPTargetSpace>::value)
