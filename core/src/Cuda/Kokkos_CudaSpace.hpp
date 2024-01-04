@@ -119,6 +119,10 @@ class CudaSpace {
   /**\brief Return Name of the MemorySpace */
   static constexpr const char* name() { return m_name; }
 
+  int device() const { return m_device; }
+
+  cudaStream_t stream() const { return m_stream; }
+
  private:
   int m_device;
   cudaStream_t m_stream;

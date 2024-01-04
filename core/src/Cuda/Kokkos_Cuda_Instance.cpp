@@ -369,7 +369,9 @@ void CudaInternal::initialize(cudaStream_t stream, bool manage_stream) {
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaError_t(cuCtxGetDevice(&m_cudaDev)));
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
 
-  CudaInternal::cuda_devices.insert(cuda_device);
+  m_stream = stream;
+
+  CudaInternal::cuda_devices.insert(m_cudaDev);
 
   // Make sure the array used for arbitrarily sized atomics is initialized on
   // this device

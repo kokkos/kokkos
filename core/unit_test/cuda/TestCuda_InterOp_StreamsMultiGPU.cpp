@@ -41,10 +41,12 @@ TEST(cuda, raw_cuda_streams) {
   using MemorySpace = typename TEST_EXECSPACE::memory_space;
 
   {
-    TEST_EXECSPACE space0(0, stream0);
+    TEST_EXECSPACE space0(stream0);
+    ASSERT_EQ(space0.cuda_device(), 0);
     Kokkos::View<int *, TEST_EXECSPACE> v0(p0, 100);
     Kokkos::deep_copy(space0, v0, 5);
-    TEST_EXECSPACE space(n_devices - 1, stream);
+    TEST_EXECSPACE space(stream);
+    ASSERT_EQ(space.cuda_device(), n_devices - 1);
     Kokkos::View<int *, TEST_EXECSPACE> v(p, 100);
     Kokkos::deep_copy(space, v, 5);
 

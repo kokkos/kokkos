@@ -514,13 +514,11 @@ SharedAllocationRecord<Kokkos::CudaSpace, void>::SharedAllocationRecord(
   this->base_t::_fill_host_accessible_header_info(header, arg_label);
 
   // Copy to device memory
-  Kokkos::Cuda exec;
-  Kokkos::Impl::DeepCopy<CudaSpace, HostSpace>(
-      exec, RecordBase::m_alloc_ptr, &header, sizeof(SharedAllocationHeader));
-  exec.fence(
-      "SharedAllocationRecord<Kokkos::CudaSpace, "
-      "void>::SharedAllocationRecord(): fence after copying header from "
-      "HostSpace");
+  cudaSetDevice(arg_space.device());
+  cudaMemcpyAsync(RecordBase::m_alloc_ptr, &header,
+                  sizeof(SharedAllocationHeader), cudaMemcpyDefault,
+                  arg_space.stream());
+  cudaStreamSynchronize(arg_space.stream());
 }
 
 SharedAllocationRecord<Kokkos::CudaSpace, void>::SharedAllocationRecord(
