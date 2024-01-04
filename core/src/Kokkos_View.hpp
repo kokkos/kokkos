@@ -96,23 +96,26 @@ KOKKOS_INLINE_FUNCTION void runtime_check_rank(
     const bool n_args_is_dyn_rank = num_passed_args == dyn_rank;
     const bool n_args_is_rank     = num_passed_args == rank;
 
-    if (n_args_is_rank) {
-      size_t new_extents[8] = {i0, i1, i2, i3, i4, i5, i6, i7};
-      for (int i = dyn_rank; i < rank; ++i)
-        if (new_extents[i] != View::static_extent(i)) {
-          KOKKOS_IF_ON_HOST(
-              const std::string message =
-                  "The specified run-time extent for Kokkos::View '" +
-                  std::string(label) +
-                  "' does not match the compile-time extent in dimension " +
-                  std::to_string(i) + ". The given extent is " +
-                  std::to_string(new_extents[i]) + " but should be " +
-                  std::to_string(View::static_extent(i)) + ".\n";
-              Kokkos::abort(message.c_str());)
-          KOKKOS_IF_ON_DEVICE(
-              Kokkos::abort("The specified run-time extents for a Kokkos::View "
-                            "do not match the compile-time extents.");)
-        }
+    if constexpr (rank != dyn_rank) {
+      if (n_args_is_rank) {
+        size_t new_extents[8] = {i0, i1, i2, i3, i4, i5, i6, i7};
+        for (int i = dyn_rank; i < rank; ++i)
+          if (new_extents[i] != View::static_extent(i)) {
+            KOKKOS_IF_ON_HOST(
+                const std::string message =
+                    "The specified run-time extent for Kokkos::View '" +
+                    std::string(label) +
+                    "' does not match the compile-time extent in dimension " +
+                    std::to_string(i) + ". The given extent is " +
+                    std::to_string(new_extents[i]) + " but should be " +
+                    std::to_string(View::static_extent(i)) + ".\n";
+                Kokkos::abort(message.c_str());)
+            KOKKOS_IF_ON_DEVICE(
+                Kokkos::abort(
+                    "The specified run-time extents for a Kokkos::View "
+                    "do not match the compile-time extents.");)
+          }
+      }
     }
 
     if (!n_args_is_dyn_rank && !n_args_is_rank) {
