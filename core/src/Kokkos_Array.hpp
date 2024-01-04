@@ -320,6 +320,9 @@ struct Array<T, KOKKOS_INVALID_INDEX, Array<>::strided> {
       : m_elem(arg_ptr), m_size(arg_size), m_stride(arg_stride) {}
 };
 
+template <typename T, typename... Us>
+Array(T, Us...)->Array<T, 1 + sizeof...(Us)>;
+
 }  // namespace Kokkos
 
 //<editor-fold desc="Support for structured binding">
