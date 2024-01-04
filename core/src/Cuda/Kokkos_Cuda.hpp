@@ -217,12 +217,6 @@ class Cuda {
   Kokkos::Impl::HostSharedPtr<Impl::CudaInternal> m_space_instance;
 };
 
-inline void swap(Cuda& a, Cuda& b) {
-  Cuda t(std::move(a));
-  a = std::move(b);
-  b = std::move(t);
-}
-
 namespace Tools {
 namespace Experimental {
 template <>

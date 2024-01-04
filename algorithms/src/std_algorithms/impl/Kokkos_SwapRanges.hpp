@@ -35,7 +35,7 @@ struct StdSwapRangesFunctor {
 
   KOKKOS_FUNCTION
   void operator()(index_type i) const {
-    ::Kokkos::swap(m_first1[i], m_first2[i]);
+    ::Kokkos::kokkos_swap(m_first1[i], m_first2[i]);
   }
 
   KOKKOS_FUNCTION

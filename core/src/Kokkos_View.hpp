@@ -1666,13 +1666,6 @@ KOKKOS_INLINE_FUNCTION constexpr unsigned rank(const View<D, P...>&) {
   return View<D, P...>::rank();
 }
 
-template <typename D, class... P>
-KOKKOS_FUNCTION void swap(Kokkos::View<D, P...>& a, Kokkos::View<D, P...>& b) {
-  auto t(std::move(a));
-  a = std::move(b);
-  b = std::move(t);
-}
-
 namespace Impl {
 
 template <typename ValueType, unsigned int Rank>

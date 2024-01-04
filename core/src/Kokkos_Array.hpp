@@ -358,19 +358,6 @@ KOKKOS_FUNCTION constexpr T const&& get(Array<T, N> const&& a) noexcept {
 }  // namespace Kokkos
 //</editor-fold>
 
-namespace Kokkos {
-
-template <class T, std::size_t N>
-KOKKOS_FUNCTION void swap(Array<T, N>& a, Array<T, N>& b) noexcept(
-    noexcept(swap(std::declval<T&>()))) {
-  for (std::size_t i = 0; i < N; ++i) {
-    using Kokkos::swap;
-    swap(a[i], b[i]);
-  }
-}
-
-}  // namespace Kokkos
-
 #ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_ARRAY
 #undef KOKKOS_IMPL_PUBLIC_INCLUDE
 #undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_ARRAY

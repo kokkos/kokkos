@@ -32,7 +32,7 @@ struct StdIterSwapFunctor {
   KOKKOS_FUNCTION
   void operator()(int i) const {
     (void)i;
-    ::Kokkos::swap(*m_a, *m_b);
+    ::Kokkos::kokkos_swap(*m_a, *m_b);
   }
 
   KOKKOS_FUNCTION

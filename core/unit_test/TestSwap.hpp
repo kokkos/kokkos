@@ -28,28 +28,28 @@ struct TestSwap {
     {
       int a = 1;
       int b = 2;
-      Kokkos::swap(a, b);
+      Kokkos::kokkos_swap(a, b);
       if (!(a == 2 && b == 1)) {
-        Kokkos::printf("Failed Kokkos::swap(int, int)\n");
+        Kokkos::printf("Failed Kokkos::kokkos_swap(int, int)\n");
         ++err;
       }
     }
     {
       float a = 1;
       float b = 2;
-      Kokkos::swap(a, b);
+      Kokkos::kokkos_swap(a, b);
       if (!(a == 2 && b == 1)) {
-        Kokkos::printf("Failed Kokkos::swap(float, float)\n");
+        Kokkos::printf("Failed Kokkos::kokkos_swap(float, float)\n");
         ++err;
       }
     }
     {
       int a[3] = {1, 2, 3};
       int b[3] = {4, 5, 6};
-      Kokkos::swap(a, b);
+      Kokkos::kokkos_swap(a, b);
       if (!(a[0] == 4 && a[1] == 5 && a[2] == 6 && b[0] == 1 && b[1] == 2 &&
             b[2] == 3)) {
-        Kokkos::printf("Failed Kokkos::swap(int[3], int[3])\n");
+        Kokkos::printf("Failed Kokkos::kokkos_swap(int[3], int[3])\n");
         ++err;
       }
     }
@@ -63,6 +63,6 @@ struct TestSwap {
   }
 };
 
-TEST(TEST_CATEGORY, swap) { TestSwap<TEST_EXECSPACE>(); }
+TEST(TEST_CATEGORY, kokkos_swap) { TestSwap<TEST_EXECSPACE>(); }
 
 }  // namespace
