@@ -521,7 +521,7 @@ void test_duplicate_stream() {
   std::vector<size_t> indices(n_streams);
   std::iota(indices.begin(), indices.end(), 0);
 
-  auto comparator = [&](int i, int j) {
+  auto comparator = [&](size_t i, size_t j) {
     for (int k = 0; k < samples; k++) {
       if (vals_h(i, k) != vals_h(j, k)) return vals_h(i, k) < vals_h(j, k);
     }

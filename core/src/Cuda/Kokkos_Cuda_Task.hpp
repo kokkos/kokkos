@@ -84,8 +84,8 @@ class TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::Cuda, QueueType>> {
   KOKKOS_INLINE_FUNCTION
   static void iff_single_thread_recursive_execute(scheduler_type const&) {}
 
-  static int get_max_team_count(execution_space const&) {
-    return Kokkos::Impl::cuda_internal_multiprocessor_count() * warps_per_block;
+  static int get_max_team_count(execution_space const& space) {
+    return space.cuda_device_prop().multiProcessorCount * warps_per_block;
   }
 
   __device__ static void driver(scheduler_type scheduler,
@@ -225,7 +225,9 @@ class TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::Cuda, QueueType>> {
   // FIXME_CUDA_MULTIPLE_DEVICES
   static void execute(scheduler_type const& scheduler) {
     const int shared_per_warp = 2048;
-    const dim3 grid(Kokkos::Impl::cuda_internal_multiprocessor_count(), 1, 1);
+    const int multi_processor_count =
+        scheduler.get_execution_space().cuda_device_prop().multiProcessorCount;
+    const dim3 grid(multi_processor_count, 1, 1);
     const dim3 block(1, Kokkos::Impl::CudaTraits::WarpSize, warps_per_block);
     const int shared_total    = shared_per_warp * warps_per_block;
     const cudaStream_t stream = nullptr;
@@ -466,7 +468,11 @@ class TaskQueueSpecializationConstrained<
   static void execute(scheduler_type const& scheduler) {
     const int shared_per_warp = 2048;
     const int warps_per_block = 4;
-    const dim3 grid(Kokkos::Impl::cuda_internal_multiprocessor_count(), 1, 1);
+    const int multi_processor_count =
+        // FIXME not sure why this didn't work
+        // scheduler.get_execution_space().cuda_device_prop().multiProcessorCount;
+        CudaInternal::singleton().m_deviceProp.multiProcessorCount;
+    const dim3 grid(multi_processor_count, 1, 1);
     // const dim3 grid( 1 , 1 , 1 );
     const dim3 block(1, Kokkos::Impl::CudaTraits::WarpSize, warps_per_block);
     const int shared_total    = shared_per_warp * warps_per_block;

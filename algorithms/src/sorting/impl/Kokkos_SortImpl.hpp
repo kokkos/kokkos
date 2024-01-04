@@ -195,18 +195,26 @@ void sort_onedpl(const Kokkos::Experimental::SYCL& space,
                 "SYCL execution space is not able to access the memory space "
                 "of the View argument!");
 
-  // Can't use Experimental::begin/end here since the oneDPL then assumes that
-  // the data is on the host.
   static_assert(
-      ViewType::rank == 1 &&
-          (std::is_same<typename ViewType::array_layout, LayoutRight>::value ||
-           std::is_same<typename ViewType::array_layout, LayoutLeft>::value),
-      "SYCL sort only supports contiguous rank-1 Views.");
+      (ViewType::rank == 1) &&
+          (std::is_same_v<typename ViewType::array_layout, LayoutRight> ||
+           std::is_same_v<typename ViewType::array_layout, LayoutLeft> ||
+           std::is_same_v<typename ViewType::array_layout, LayoutStride>),
+      "SYCL sort only supports contiguous rank-1 Views with LayoutLeft, "
+      "LayoutRight or LayoutStride"
+      "For the latter, this means the View must have stride(0) = 1, enforced "
+      "at runtime.");
+
+  if (view.stride(0) != 1) {
+    Kokkos::abort("SYCL sort only supports rank-1 Views with stride(0) = 1.");
+  }
 
   if (view.extent(0) <= 1) {
     return;
   }
 
+  // Can't use Experimental::begin/end here since the oneDPL then assumes that
+  // the data is on the host.
   auto queue  = space.sycl_queue();
   auto policy = oneapi::dpl::execution::make_device_policy(queue);
   const int n = view.extent(0);
@@ -271,7 +279,20 @@ template <class DataType, class... Properties>
 void sort_device_view_without_comparator(
     const Kokkos::Experimental::SYCL& exec,
     const Kokkos::View<DataType, Properties...>& view) {
-  sort_onedpl(exec, view);
+  using ViewType = Kokkos::View<DataType, Properties...>;
+  static_assert(
+      (ViewType::rank == 1) &&
+          (std::is_same_v<typename ViewType::array_layout, LayoutRight> ||
+           std::is_same_v<typename ViewType::array_layout, LayoutLeft> ||
+           std::is_same_v<typename ViewType::array_layout, LayoutStride>),
+      "sort_device_view_without_comparator: supports rank-1 Views "
+      "with LayoutLeft, LayoutRight or LayoutStride");
+
+  if (view.stride(0) == 1) {
+    sort_onedpl(exec, view);
+  } else {
+    copy_to_host_run_stdsort_copy_back(exec, view);
+  }
 }
 #endif
 
@@ -302,17 +323,22 @@ void sort_device_view_with_comparator(
 #if defined(KOKKOS_ENABLE_ONEDPL)
 template <class ComparatorType, class DataType, class... Properties>
 void sort_device_view_with_comparator(
-    const Experimental::SYCL& exec,
+    const Kokkos::Experimental::SYCL& exec,
     const Kokkos::View<DataType, Properties...>& view,
     const ComparatorType& comparator) {
   using ViewType = Kokkos::View<DataType, Properties...>;
-  constexpr bool strided =
-      std::is_same_v<LayoutStride, typename ViewType::array_layout>;
-  if constexpr (strided) {
-    // strided views not supported in dpl so use the most generic case
-    copy_to_host_run_stdsort_copy_back(exec, view, comparator);
-  } else {
+  static_assert(
+      (ViewType::rank == 1) &&
+          (std::is_same_v<typename ViewType::array_layout, LayoutRight> ||
+           std::is_same_v<typename ViewType::array_layout, LayoutLeft> ||
+           std::is_same_v<typename ViewType::array_layout, LayoutStride>),
+      "sort_device_view_with_comparator: supports rank-1 Views "
+      "with LayoutLeft, LayoutRight or LayoutStride");
+
+  if (view.stride(0) == 1) {
     sort_onedpl(exec, view, comparator);
+  } else {
+    copy_to_host_run_stdsort_copy_back(exec, view, comparator);
   }
 }
 #endif

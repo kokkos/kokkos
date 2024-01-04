@@ -498,7 +498,9 @@ TEST(TEST_CATEGORY, atomics) {
   ASSERT_TRUE((TestAtomic::Loop<float, TEST_EXECSPACE>(100, 2)));
   ASSERT_TRUE((TestAtomic::Loop<float, TEST_EXECSPACE>(100, 3)));
 
-#ifndef KOKKOS_ENABLE_OPENMPTARGET
+  // FIXME_OPENMPTARGET
+  // FIXME_OPENACC: atomic operations on composite types are not supported.
+#if !defined(KOKKOS_ENABLE_OPENMPTARGET) && !defined(KOKKOS_ENABLE_OPENACC)
   ASSERT_TRUE((TestAtomic::Loop<Kokkos::complex<float>, TEST_EXECSPACE>(1, 1)));
   ASSERT_TRUE((TestAtomic::Loop<Kokkos::complex<float>, TEST_EXECSPACE>(1, 2)));
   ASSERT_TRUE((TestAtomic::Loop<Kokkos::complex<float>, TEST_EXECSPACE>(1, 3)));
@@ -563,7 +565,7 @@ struct TpetraUseCase {
   };
 
   using T = int;
-  Kokkos::View<T> d_{"lbl"};
+  Kokkos::View<T, TEST_EXECSPACE> d_{"lbl"};
   KOKKOS_FUNCTION void operator()(int i) const {
     // 0, -1, 2, -3, ...
     auto v_i = static_cast<T>(i);
@@ -572,7 +574,9 @@ struct TpetraUseCase {
                        AbsMaxHelper<T>{v_i});
   }
 
-  TpetraUseCase() { Kokkos::parallel_for(10, *this); }
+  TpetraUseCase() {
+    Kokkos::parallel_for(Kokkos::RangePolicy<TEST_EXECSPACE>(0, 10), *this);
+  }
 
   void check() {
     T v;
@@ -581,12 +585,6 @@ struct TpetraUseCase {
   }
 };
 
-TEST(TEST_CATEGORY, atomics_tpetra_max_abs) {
-#ifdef KOKKOS_COMPILER_NVHPC
-  GTEST_SKIP() << "FIXME_NVHPC (?)";
-#endif
-
-  TpetraUseCase().check();
-}
+TEST(TEST_CATEGORY, atomics_tpetra_max_abs) { TpetraUseCase().check(); }
 
 }  // namespace Test

@@ -76,8 +76,6 @@ class HIPSpace {
                   const size_t arg_logical_size = 0) const;
 
  private:
-  template <class, class, class, class>
-  friend class LogicalMemorySpace;
   void* impl_allocate(const char* arg_label, const size_t arg_alloc_size,
                       const size_t arg_logical_size = 0,
                       const Kokkos::Tools::SpaceHandle =
@@ -140,8 +138,6 @@ class HIPHostPinnedSpace {
                   const size_t arg_logical_size = 0) const;
 
  private:
-  template <class, class, class, class>
-  friend class LogicalMemorySpace;
   void* impl_allocate(const char* arg_label, const size_t arg_alloc_size,
                       const size_t arg_logical_size = 0,
                       const Kokkos::Tools::SpaceHandle =
@@ -204,10 +200,11 @@ class HIPManagedSpace {
                   const size_t arg_alloc_size,
                   const size_t arg_logical_size = 0) const;
 
+  //  internal only method to determine whether page migration is supported
+  bool impl_hip_driver_check_page_migration() const;
+
  private:
   int m_device;  ///< Which HIP device
-  template <class, class, class, class>
-  friend class LogicalMemorySpace;
   void* impl_allocate(const char* arg_label, const size_t arg_alloc_size,
                       const size_t arg_logical_size = 0,
                       const Kokkos::Tools::SpaceHandle =
@@ -236,8 +233,7 @@ struct Impl::is_hip_type_space<HIPManagedSpace> : public std::true_type {};
 namespace Kokkos {
 namespace Impl {
 
-static_assert(Kokkos::Impl::MemorySpaceAccess<HIPSpace, HIPSpace>::assignable,
-              "");
+static_assert(Kokkos::Impl::MemorySpaceAccess<HIPSpace, HIPSpace>::assignable);
 
 //----------------------------------------
 

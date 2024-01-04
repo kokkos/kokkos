@@ -139,23 +139,22 @@ namespace Kokkos {
 CudaSpace::CudaSpace()
     : m_device(Kokkos::Cuda().cuda_device()),
       m_stream(Kokkos::Cuda().cuda_stream()) {}
-CudaSpace::CudaSpace(int cuda_device, cudaStream_t cuda_stream)
-    : m_device(cuda_device), m_stream(cuda_stream) {}
+CudaSpace::CudaSpace(int device_id, cudaStream_t stream)
+    : m_device(device_id), m_stream(stream) {}
 
 CudaUVMSpace::CudaUVMSpace()
     : m_device(Kokkos::Cuda().cuda_device()),
       m_stream(Kokkos::Cuda().cuda_stream()) {}
-CudaUVMSpace::CudaUVMSpace(int cuda_device, cudaStream_t cuda_stream)
-    : m_device(cuda_device), m_stream(cuda_stream) {}
+CudaUVMSpace::CudaUVMSpace(int device_id, cudaStream_t stream)
+    : m_device(device_id), m_stream(stream) {}
 
 CudaHostPinnedSpace::CudaHostPinnedSpace()
     : m_device(Kokkos::Cuda().cuda_device()),
       m_stream(Kokkos::Cuda().cuda_stream()) {}
-CudaHostPinnedSpace::CudaHostPinnedSpace(int cuda_device,
-                                         cudaStream_t cuda_stream)
-    : m_device(cuda_device), m_stream(cuda_stream) {}
+CudaHostPinnedSpace::CudaHostPinnedSpace(int device_id, cudaStream_t stream)
+    : m_device(device_id), m_stream(stream) {}
 
-int memory_threshold_g = 40000;  // 40 kB
+size_t memory_threshold_g = 40000;  // 40 kB
 
 //==============================================================================
 // <editor-fold desc="allocate()"> {{{1
@@ -175,31 +174,33 @@ void *CudaSpace::allocate(const char *arg_label, const size_t arg_alloc_size,
 }
 
 namespace {
-void *impl_allocate_common(const int device_id, const cudaStream_t stream,
+void *impl_allocate_common(const int device_id,
+                           [[maybe_unused]] const cudaStream_t stream,
                            const char *arg_label, const size_t arg_alloc_size,
                            const size_t arg_logical_size,
                            const Kokkos::Tools::SpaceHandle arg_handle,
-                           [[maybe_unused]] bool exec_space_provided) {
+                           [[maybe_unused]] bool stream_sync_only) {
   void *ptr = nullptr;
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(device_id));
 
-  cudaError_t error_code;
+  cudaError_t error_code = cudaSuccess;
 #ifndef CUDART_VERSION
 #error CUDART_VERSION undefined!
 #elif (defined(KOKKOS_ENABLE_IMPL_CUDA_MALLOC_ASYNC) && CUDART_VERSION >= 11020)
   if (arg_alloc_size >= memory_threshold_g) {
     error_code = cudaMallocAsync(&ptr, arg_alloc_size, stream);
 
-    if (exec_space_provided) {
-      exec_space.fence("Kokkos::Cuda: backend fence after async malloc");
-    } else {
-      Impl::cuda_device_synchronize(
-          "Kokkos::Cuda: backend fence after async malloc");
+    if (error_code == cudaSuccess) {
+      if (stream_sync_only) {
+        KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamSynchronize(stream));
+      } else {
+        Impl::cuda_device_synchronize(
+            "Kokkos::Cuda: backend fence after async malloc");
+      }
     }
   } else
-#else
-  { error_code = cudaMalloc(&ptr, arg_alloc_size); }
 #endif
+  { error_code = cudaMalloc(&ptr, arg_alloc_size); }
   if (error_code != cudaSuccess) {  // TODO tag as unlikely branch
     // This is the only way to clear the last error, which
     // we should do here since we're turning it into an

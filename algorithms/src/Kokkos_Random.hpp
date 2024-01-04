@@ -849,18 +849,17 @@ class Random_XorShift64 {
     return drand(end - start) + start;
   }
 
-  // Marsaglia polar method for drawing a standard normal distributed random
+  // Box-muller method for drawing a standard normal distributed random
   // number
   KOKKOS_INLINE_FUNCTION
   double normal() {
-    double S = 2.0;
-    double U;
-    while (S >= 1.0) {
-      U              = 2.0 * drand() - 1.0;
-      const double V = 2.0 * drand() - 1.0;
-      S              = U * U + V * V;
-    }
-    return U * std::sqrt(-2.0 * std::log(S) / S);
+    constexpr auto two_pi = 2 * Kokkos::numbers::pi_v<double>;
+
+    const double u     = drand();
+    const double v     = drand();
+    const double r     = Kokkos::sqrt(-2.0 * Kokkos::log(u));
+    const double theta = v * two_pi;
+    return r * Kokkos::cos(theta);
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -1094,18 +1093,17 @@ class Random_XorShift1024 {
     return drand(end - start) + start;
   }
 
-  // Marsaglia polar method for drawing a standard normal distributed random
+  // Box-muller method for drawing a standard normal distributed random
   // number
   KOKKOS_INLINE_FUNCTION
   double normal() {
-    double S = 2.0;
-    double U;
-    while (S >= 1.0) {
-      U              = 2.0 * drand() - 1.0;
-      const double V = 2.0 * drand() - 1.0;
-      S              = U * U + V * V;
-    }
-    return U * std::sqrt(-2.0 * std::log(S) / S);
+    constexpr auto two_pi = 2 * Kokkos::numbers::pi_v<double>;
+
+    const double u     = drand();
+    const double v     = drand();
+    const double r     = Kokkos::sqrt(-2.0 * Kokkos::log(u));
+    const double theta = v * two_pi;
+    return r * Kokkos::cos(theta);
   }
 
   KOKKOS_INLINE_FUNCTION

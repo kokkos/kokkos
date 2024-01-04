@@ -26,20 +26,21 @@
 namespace {
 namespace SortWithComp {
 
-template <class LayoutTagType, class ValueType>
+template <class ExecutionSpace, class LayoutTagType, class ValueType>
 auto create_random_view_and_host_clone(
     LayoutTagType LayoutTag, std::size_t n,
     Kokkos::pair<ValueType, ValueType> bounds, const std::string& label,
     std::size_t seedIn = 12371) {
   using namespace ::Test::stdalgos;
 
-  // construct in memory space associated with default exespace
-  auto dataView = create_view<ValueType>(LayoutTag, n, label);
+  using mem_space = typename ExecutionSpace::memory_space;
+  auto dataView   = create_view<ValueType, mem_space>(LayoutTag, n, label);
 
   // dataView might not be deep copyable (e.g. strided layout) so to
   // randomize it, we make a new view that is for sure deep copyable,
   // modify it on the host, deep copy to device and then launch
   // a kernel to copy to dataView
+
   auto dataView_dc =
       create_deep_copyable_compatible_view_with_same_extent(dataView);
   auto dataView_dc_h = create_mirror_view(Kokkos::HostSpace(), dataView_dc);
@@ -53,7 +54,8 @@ auto create_random_view_and_host_clone(
   Kokkos::deep_copy(dataView_dc, dataView_dc_h);
   // use CTAD
   CopyFunctor F1(dataView_dc, dataView);
-  Kokkos::parallel_for("copy", dataView.extent(0), F1);
+  Kokkos::RangePolicy<ExecutionSpace> policy(0, dataView.extent(0));
+  Kokkos::parallel_for("copy", policy, F1);
 
   return std::make_pair(dataView, dataView_dc_h);
 }
@@ -76,7 +78,7 @@ void run_all_scenarios(int api)
   const std::vector<std::size_t> my_scenarios = {0, 1, 2, 9, 1003, 51513};
   for (std::size_t N : my_scenarios)
   {
-    auto [dataView, dataViewBeforeOp_h] = create_random_view_and_host_clone(
+    auto [dataView, dataViewBeforeOp_h] = create_random_view_and_host_clone<ExecutionSpace>(
         Tag{}, N, Kokkos::pair<ValueType, ValueType>{-1045, 565},
         "dataView");
 

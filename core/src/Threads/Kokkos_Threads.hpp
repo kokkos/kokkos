@@ -39,15 +39,6 @@ static_assert(false,
 /*--------------------------------------------------------------------------*/
 
 namespace Kokkos {
-namespace Impl {
-class ThreadsExec;
-enum class fence_is_static { yes, no };
-}  // namespace Impl
-}  // namespace Kokkos
-
-/*--------------------------------------------------------------------------*/
-
-namespace Kokkos {
 
 /** \brief  Execution space for a pool of C++11 threads on a CPU. */
 class Threads {
@@ -168,22 +159,6 @@ struct MemorySpaceAccess<Kokkos::Threads::memory_space,
 
 }  // namespace Impl
 }  // namespace Kokkos
-
-/*--------------------------------------------------------------------------*/
-
-#include <Kokkos_ExecPolicy.hpp>
-#include <Kokkos_Parallel.hpp>
-#include <Threads/Kokkos_ThreadsExec.hpp>
-#include <Threads/Kokkos_ThreadsTeam.hpp>
-#include <Threads/Kokkos_Threads_Parallel_Range.hpp>
-#include <Threads/Kokkos_Threads_Parallel_MDRange.hpp>
-#include <Threads/Kokkos_Threads_Parallel_Team.hpp>
-#include <Threads/Kokkos_Threads_UniqueToken.hpp>
-
-#include <KokkosExp_MDRangePolicy.hpp>
-
-//----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
 
 #endif /* #if defined( KOKKOS_ENABLE_THREADS ) */
 #endif /* #define KOKKOS_THREADS_HPP */
