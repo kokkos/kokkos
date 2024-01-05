@@ -60,6 +60,8 @@ KOKKOS_FUNCTION constexpr bool is_equal(L const& l, R const& r) {
   return true;
 }
 
+// Disable ctad test for intel versions < 2021, see issue #6702
+#if !defined(KOKKOS_COMPILER_INTEL) || KOKKOS_COMPILER_INTEL >= 2021
 KOKKOS_FUNCTION constexpr bool test_array_ctad() {
   constexpr int x = 10;
   constexpr Kokkos::Array a{1, 2, 3, 5, x};
@@ -69,5 +71,6 @@ KOKKOS_FUNCTION constexpr bool test_array_ctad() {
 }
 
 static_assert(test_array_ctad());
+#endif
 
 }  // namespace
