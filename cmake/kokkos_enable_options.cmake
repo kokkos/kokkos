@@ -73,7 +73,7 @@ KOKKOS_ENABLE_OPTION(HIP_MULTIPLE_KERNEL_INSTANTIATIONS OFF "Whether multiple ke
 
 # This option will go away eventually, but allows fallback to old implementation when needed.
 KOKKOS_ENABLE_OPTION(DESUL_ATOMICS_EXTERNAL OFF "Whether to use an external desul installation")
-KOKKOS_ENABLE_OPTION(ATOMICS_BYPASS OFF "**NOT RECOMMENDED** Whether to disable atomics")
+KOKKOS_ENABLE_OPTION(ATOMICS_BYPASS OFF "**NOT RECOMMENDED** Whether to make atomics non-atomic for non-threaded MPI-only use cases")
 
 KOKKOS_ENABLE_OPTION(IMPL_MDSPAN OFF "Whether to enable experimental mdspan support")
 KOKKOS_ENABLE_OPTION(MDSPAN_EXTERNAL OFF BOOL "Whether to use an external version of mdspan")
