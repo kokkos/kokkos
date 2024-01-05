@@ -293,7 +293,7 @@ struct FloatingPointComparison {
     bool ar = absolute(fpv) < abs_tol;
     if (!ar) {
       Kokkos::printf("absolute value exceeds tolerance [|%e| > %e]\n",
-                     (double)fpv, abs_tol);
+                     (double)fpv, (double)abs_tol);
     }
 
     return ar;
@@ -314,7 +314,7 @@ struct FloatingPointComparison {
       bool ar         = abs_diff == 0 || rel_diff < rel_tol;
       if (!ar) {
         Kokkos::printf("relative difference exceeds tolerance [%e > %e]\n",
-                       (double)rel_diff, rel_tol);
+                       (double)rel_diff, (double)rel_tol);
       }
 
       return ar;
