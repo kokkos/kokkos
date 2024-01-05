@@ -84,18 +84,12 @@
 
 //----------------------------------------------------------------------------
 
-#if defined(KOKKOS_ENABLE_ATOMICS_BYPASS)
-
-#if !defined(KOKKOS_ENABLE_THREADS) && !defined(KOKKOS_ENABLE_CUDA) &&     \
-    !defined(KOKKOS_ENABLE_OPENMP) && !defined(KOKKOS_ENABLE_HPX) &&       \
-    !defined(KOKKOS_ENABLE_OPENMPTARGET) && !defined(KOKKOS_ENABLE_HIP) && \
-    !defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ENABLE_OPENACC)
-// OK no other backend than the Serial one is enabled
-// atomics will be disabled
-#else
-#error Not allowed to disable atomics with a host parallel and/or ar device backend enabled
-#endif
-
+#if defined(KOKKOS_ENABLE_ATOMICS_BYPASS) &&                              \
+    (defined(KOKKOS_ENABLE_THREADS) || defined(KOKKOS_ENABLE_CUDA) ||     \
+     defined(KOKKOS_ENABLE_OPENMP) || defined(KOKKOS_ENABLE_HPX) ||       \
+     defined(KOKKOS_ENABLE_OPENMPTARGET) || defined(KOKKOS_ENABLE_HIP) || \
+     defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENACC))
+#error Atomics may only be disabled if neither a host parallel nor a device backend is enabled
 #endif
 
 #define KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
