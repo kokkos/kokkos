@@ -597,11 +597,14 @@ void CudaInternal::finalize() {
     using RecordHost =
         Kokkos::Impl::SharedAllocationRecord<CudaHostPinnedSpace>;
 
+    int default_device = Impl::CudaInternal::singleton().m_cudaDev;
+    Impl::CudaInternal::singleton().m_cudaDev = m_cudaDev;
     RecordCuda::decrement(RecordCuda::get_record(m_scratchFlags));
     RecordCuda::decrement(RecordCuda::get_record(m_scratchSpace));
     RecordHost::decrement(RecordHost::get_record(m_scratchUnified));
     if (m_scratchFunctorSize > 0)
       RecordCuda::decrement(RecordCuda::get_record(m_scratchFunctor));
+    Impl::CudaInternal::singleton().m_cudaDev = default_device;
   }
 
   for (int i = 0; i < m_n_team_scratch; ++i) {

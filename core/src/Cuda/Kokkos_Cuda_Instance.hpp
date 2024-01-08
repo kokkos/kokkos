@@ -186,6 +186,7 @@ class CudaInternal {
   // m_cudaDev).
   void set_cuda_device() const {
     verify_is_initialized("set_cuda_device");
+    std::cout << "Setting device " << m_cudaDev << std::endl;
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
   }
 
