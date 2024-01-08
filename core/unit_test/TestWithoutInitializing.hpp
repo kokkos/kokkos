@@ -281,6 +281,12 @@ TEST(TEST_CATEGORY, view_allocation_int) {
   if (std::is_same<TEST_EXECSPACE, Kokkos::Experimental::OpenMPTarget>::value)
     GTEST_SKIP() << "skipping since the OpenMPTarget has unexpected fences";
 #endif
+// FIXME_MULTI_GPU support CUDA
+#ifdef KOKKOS_ENABLE_CUDA
+  if (std::is_same<TEST_EXECSPACE, Kokkos::Cuda>::value)
+    GTEST_SKIP() << "skipping since the the desired stream sycnchronization "
+                    "doesn't report to Kokkos' tooling system";
+#endif
 
   using ExecutionSpace = TEST_EXECSPACE;
   if (Kokkos::SpaceAccessibility<
