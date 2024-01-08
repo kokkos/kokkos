@@ -384,11 +384,8 @@ void CudaInternal::initialize(cudaStream_t stream, bool manage_stream) {
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaError_t(cuCtxGetDevice(&m_cudaDev)));
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
 
-  // FIXME_CUDA multiple devices
-  if (m_cudaDev != Cuda().cuda_device())
-    Kokkos::abort(
-        "Currently, the device id must match the device id used when Kokkos "
-        "was initialized!");
+  m_stream        = stream;
+  m_manage_stream = manage_stream;
 
   //----------------------------------
   // Multiblock reduction uses scratch flags for counters
@@ -425,8 +422,6 @@ void CudaInternal::initialize(cudaStream_t stream, bool manage_stream) {
         (cuda_event_create_wrapper(&constantMemReusable)));
   }
 
-  m_stream        = stream;
-  m_manage_stream = manage_stream;
   for (int i = 0; i < m_n_team_scratch; ++i) {
     m_team_scratch_current_size[i] = 0;
     m_team_scratch_ptr[i]          = nullptr;
@@ -610,11 +605,17 @@ void CudaInternal::finalize() {
     using RecordHost =
         Kokkos::Impl::SharedAllocationRecord<CudaHostPinnedSpace>;
 
+    // FIXME multi-GPU support. We need to have a way to figure out the correct
+    // device id for allocations (which we know for the internal ones here
+    // anyway).
+    int default_device = Impl::CudaInternal::singleton().m_cudaDev;
+    Impl::CudaInternal::singleton().m_cudaDev = m_cudaDev;
     RecordCuda::decrement(RecordCuda::get_record(m_scratchFlags));
     RecordCuda::decrement(RecordCuda::get_record(m_scratchSpace));
     RecordHost::decrement(RecordHost::get_record(m_scratchUnified));
     if (m_scratchFunctorSize > 0)
       RecordCuda::decrement(RecordCuda::get_record(m_scratchFunctor));
+    Impl::CudaInternal::singleton().m_cudaDev = default_device;
   }
 
   for (int i = 0; i < m_n_team_scratch; ++i) {
