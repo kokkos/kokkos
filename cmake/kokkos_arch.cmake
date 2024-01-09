@@ -94,9 +94,9 @@ IF(Kokkos_ENABLE_HIP OR Kokkos_ENABLE_OPENMPTARGET OR Kokkos_ENABLE_OPENACC OR K
 ENDIF()
 
 # AMD archs ordered in decreasing priority of autodetection
-LIST(APPEND SUPPORTED_AMD_GPUS       MI300)
-LIST(APPEND SUPPORTED_AMD_ARCHS      AMD_GFX942)
-LIST(APPEND CORRESPONDING_AMD_FLAGS  gfx942)
+LIST(APPEND SUPPORTED_AMD_GPUS       MI300 MI300)
+LIST(APPEND SUPPORTED_AMD_ARCHS      AMD_GFX942 AMD_GFX940)
+LIST(APPEND CORRESPONDING_AMD_FLAGS  gfx942 gfx940)
 LIST(APPEND SUPPORTED_AMD_GPUS       MI200    MI200       MI100    MI100)
 LIST(APPEND SUPPORTED_AMD_ARCHS      VEGA90A  AMD_GFX90A  VEGA908  AMD_GFX908)
 LIST(APPEND CORRESPONDING_AMD_FLAGS  gfx90a   gfx90a      gfx908   gfx908)
@@ -190,9 +190,6 @@ IF (KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
     GLOBAL_APPEND(KOKKOS_CUDA_OPTIONS --cuda-path=${Kokkos_CUDA_DIR})
   ELSEIF(CUDAToolkit_BIN_DIR)
     GLOBAL_APPEND(KOKKOS_CUDA_OPTIONS --cuda-path=${CUDAToolkit_BIN_DIR}/..)
-  ENDIF()
-  IF (KOKKOS_ENABLE_CUDA)
-     SET(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND ON CACHE BOOL "enable CUDA Clang workarounds" FORCE)
   ENDIF()
 ELSEIF (KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
   SET(CUDA_ARCH_FLAG "-gpu")
@@ -588,32 +585,44 @@ IF (KOKKOS_ENABLE_SYCL)
 ENDIF()
 
 # Check support for device_global variables
-# FIXME_SYCL Once the feature test macro SYCL_EXT_ONEAPI_DEVICE_GLOBAL is
-#            available, use that instead.
-IF(KOKKOS_ENABLE_SYCL AND NOT BUILD_SHARED_LIBS)
-  INCLUDE(CheckCXXSourceCompiles)
+# FIXME_SYCL If SYCL_EXT_ONEAPI_DEVICE_GLOBAL is defined, we can use device
+#   global variables with shared libraries using the "non-separable compilation"
+#   implementation. Otherwise, the feature is not supported when building shared
+#   libraries. Thus, we don't even check for support if shared libraries are
+#   requested and SYCL_EXT_ONEAPI_DEVICE_GLOBAL is not defined.
+IF(KOKKOS_ENABLE_SYCL)
   STRING(REPLACE ";" " " CMAKE_REQUIRED_FLAGS "${KOKKOS_COMPILE_OPTIONS}")
-  CHECK_CXX_SOURCE_COMPILES("
-    #include <sycl/sycl.hpp>
-    using namespace sycl::ext::oneapi::experimental;
-    using namespace sycl;
+  INCLUDE(CheckCXXSymbolExists)
+  CHECK_CXX_SYMBOL_EXISTS(SYCL_EXT_ONEAPI_DEVICE_GLOBAL "sycl/sycl.hpp" KOKKOS_IMPL_HAVE_SYCL_EXT_ONEAPI_DEVICE_GLOBAL)
+  IF (KOKKOS_IMPL_HAVE_SYCL_EXT_ONEAPI_DEVICE_GLOBAL)
+    SET(KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED ON)
+    # Use the non-separable compilation implementation to support shared libraries as well.
+    COMPILER_SPECIFIC_FLAGS(DEFAULT -DDESUL_SYCL_DEVICE_GLOBAL_SUPPORTED)
+  ELSEIF(NOT BUILD_SHARED_LIBS)
+    INCLUDE(CheckCXXSourceCompiles)
+    CHECK_CXX_SOURCE_COMPILES("
+      #include <sycl/sycl.hpp>
+      using namespace sycl::ext::oneapi::experimental;
+      using namespace sycl;
 
-    SYCL_EXTERNAL device_global<int, decltype(properties(device_image_scope))> Foo;
+      SYCL_EXTERNAL device_global<int, decltype(properties(device_image_scope))> Foo;
 
-    void bar(queue q) {
-      q.single_task([=] {
-      Foo = 42;
-    });
-    }
+      void bar(queue q) {
+        q.single_task([=] {
+        Foo = 42;
+      });
+      }
 
-    int main(){ return 0; }
-    "
-    KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED)
+      int main(){ return 0; }
+      "
+      KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED)
 
-  IF(KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED)
-    COMPILER_SPECIFIC_FLAGS(
-      DEFAULT -fsycl-device-code-split=off -DDESUL_SYCL_DEVICE_GLOBAL_SUPPORTED
-    )
+    IF(KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED)
+      # Only the separable compilation implementation is supported.
+      COMPILER_SPECIFIC_FLAGS(
+        DEFAULT -fsycl-device-code-split=off -DDESUL_SYCL_DEVICE_GLOBAL_SUPPORTED
+      )
+    ENDIF()
   ENDIF()
 ENDIF()
 

@@ -248,18 +248,6 @@ class HPX {
 #endif
   }
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-  template <typename F>
-  KOKKOS_DEPRECATED static void partition_master(
-      F const &, int requested_num_partitions = 0, int = 0) {
-    if (requested_num_partitions > 1) {
-      Kokkos::abort(
-          "Kokkos::Experimental::HPX::partition_master: can't partition an "
-          "HPX instance\n");
-    }
-  }
-#endif
-
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   static int concurrency();
 #else

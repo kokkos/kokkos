@@ -22,10 +22,11 @@
 #include <cstdio>
 
 #include <utility>
-#include <impl/Kokkos_Spinwait.hpp>
 #include <impl/Kokkos_HostThreadTeam.hpp>
 
 #include <Kokkos_Atomic.hpp>
+#include <Threads/Kokkos_Threads_Spinwait.hpp>
+#include <Threads/Kokkos_Threads_State.hpp>
 
 //----------------------------------------------------------------------------
 
@@ -84,15 +85,13 @@ class ThreadsExecTeamMember {
     for (n = 1;
          (!(m_team_rank_rev & n)) && ((j = m_team_rank_rev + n) < m_team_size);
          n <<= 1) {
-      Impl::spinwait_while_equal<int>(m_team_base[j]->state(),
-                                      ThreadsInternal::Active);
+      spinwait_while_equal(m_team_base[j]->state(), ThreadState::Active);
     }
 
     // If not root then wait for release
     if (m_team_rank_rev) {
-      m_instance->state() = ThreadsInternal::Rendezvous;
-      Impl::spinwait_while_equal<int>(m_instance->state(),
-                                      ThreadsInternal::Rendezvous);
+      m_instance->state() = ThreadState::Rendezvous;
+      spinwait_while_equal(m_instance->state(), ThreadState::Rendezvous);
     }
 
     return !m_team_rank_rev;
@@ -103,7 +102,7 @@ class ThreadsExecTeamMember {
     for (n = 1;
          (!(m_team_rank_rev & n)) && ((j = m_team_rank_rev + n) < m_team_size);
          n <<= 1) {
-      m_team_base[j]->state() = ThreadsInternal::Active;
+      m_team_base[j]->state() = ThreadState::Active;
     }
   }
 
@@ -1002,8 +1001,10 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
     lambda(i, scan_val, false);
   }
 
+  auto& team_member = loop_bounds.thread;
+
   // 'scan_val' output is the exclusive prefix sum
-  scan_val = loop_bounds.thread.team_scan(scan_val);
+  scan_val = team_member.team_scan(scan_val);
 
 #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
 #pragma ivdep
@@ -1012,6 +1013,8 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
        i += loop_bounds.increment) {
     lambda(i, scan_val, true);
   }
+
+  team_member.team_broadcast(scan_val, team_member.team_size() - 1);
 
   return_val = scan_val;
 }

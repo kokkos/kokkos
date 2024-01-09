@@ -115,7 +115,7 @@ bit_cast(From const& from) noexcept {
   return sycl::bit_cast<To>(from);
 #else
   To to;
-  memcpy(&to, &from, sizeof(To));
+  memcpy(static_cast<void*>(&to), static_cast<const void*>(&from), sizeof(To));
   return to;
 #endif
 }

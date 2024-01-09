@@ -18,6 +18,7 @@
 #define KOKKOS_HALF_FLOATING_POINT_WRAPPER_HPP_
 
 #include <Kokkos_Macros.hpp>
+#include <Kokkos_BitManipulation.hpp>  // bit_cast
 
 #include <type_traits>
 #include <iosfwd>  // istream & ostream for extraction and insertion ops
@@ -215,10 +216,70 @@ cast_from_wrapper(const Kokkos::Experimental::bhalf_t& x);
 /************************** END forward declarations **************************/
 
 namespace Impl {
+
+template <typename FloatType>
+struct BitComparisonWrapper {
+  std::uint16_t value;
+
+  template <typename Number>
+  KOKKOS_FUNCTION friend bool operator==(BitComparisonWrapper a, Number b) {
+    return static_cast<FloatType>(a) == b;
+  }
+
+  template <typename Number>
+  KOKKOS_FUNCTION friend bool operator!=(BitComparisonWrapper a, Number b) {
+    return static_cast<FloatType>(a) != b;
+  }
+
+  template <typename Number>
+  KOKKOS_FUNCTION friend bool operator<(BitComparisonWrapper a, Number b) {
+    return static_cast<FloatType>(a) < b;
+  }
+
+  template <typename Number>
+  KOKKOS_FUNCTION friend bool operator<=(BitComparisonWrapper a, Number b) {
+    return static_cast<FloatType>(a) <= b;
+  }
+
+  template <typename Number>
+  KOKKOS_FUNCTION friend bool operator>(BitComparisonWrapper a, Number b) {
+    return static_cast<FloatType>(a) > b;
+  }
+
+  template <typename Number>
+  KOKKOS_FUNCTION friend bool operator>=(BitComparisonWrapper a, Number b) {
+    return static_cast<FloatType>(a) >= b;
+  }
+};
+
+template <typename FloatType>
+inline constexpr BitComparisonWrapper<FloatType> exponent_mask;
+template <typename FloatType>
+inline constexpr BitComparisonWrapper<FloatType> fraction_mask;
+
+#ifdef KOKKOS_IMPL_HALF_TYPE_DEFINED
+template <>
+inline constexpr BitComparisonWrapper<Kokkos::Experimental::half_t>
+    exponent_mask<Kokkos::Experimental::half_t>{0b0'11111'0000000000};
+template <>
+inline constexpr BitComparisonWrapper<Kokkos::Experimental::half_t>
+    fraction_mask<Kokkos::Experimental::half_t>{0b0'00000'1111111111};
+#endif
+
+#ifdef KOKKOS_IMPL_BHALF_TYPE_DEFINED
+template <>
+inline constexpr BitComparisonWrapper<Kokkos::Experimental::bhalf_t>
+    exponent_mask<Kokkos::Experimental::bhalf_t>{0b0'11111111'0000000};
+template <>
+inline constexpr BitComparisonWrapper<Kokkos::Experimental::bhalf_t>
+    fraction_mask<Kokkos::Experimental::bhalf_t>{0b0'00000000'1111111};
+#endif
+
 template <class FloatType>
 class alignas(FloatType) floating_point_wrapper {
  public:
-  using impl_type = FloatType;
+  using impl_type           = FloatType;
+  using bit_comparison_type = BitComparisonWrapper<floating_point_wrapper>;
 
  private:
   impl_type val;
@@ -267,6 +328,11 @@ class alignas(FloatType) floating_point_wrapper {
     const fixed_width_integer_type rv_val = *rv_ptr;
     val       = reinterpret_cast<const impl_type&>(rv_val);
 #endif  // KOKKOS_HALF_IS_FULL_TYPE_ON_ARCH
+  }
+
+  KOKKOS_FUNCTION
+  floating_point_wrapper(bit_comparison_type rhs) {
+    val = Kokkos::bit_cast<impl_type>(rhs);
   }
 
   // Don't support implicit conversion back to impl_type.

@@ -30,9 +30,11 @@
     "Kokkos_SIMD_AVX2.hpp must be included before Kokkos_SIMD_Common_Math.hpp!"
 #endif
 
-// FIXME_HIP ROCm 5.6 and 5.7 can't compile with the intrinsic used here.
-#if defined(__HIPCC__) && (HIP_VERSION_MAJOR == 5) && \
-    ((HIP_VERSION_MINOR == 6) || (HIP_VERSION_MINOR == 7))
+// FIXME_HIP ROCm 5.6, 5.7, and 6.0 can't compile with the intrinsic used here.
+#if defined(__HIPCC__) &&                                        \
+    (((HIP_VERSION_MAJOR == 5) &&                                \
+      ((HIP_VERSION_MINOR == 6) || (HIP_VERSION_MINOR == 7))) || \
+     ((HIP_VERSION_MAJOR == 6) && ((HIP_VERSION_MINOR == 0))))
 #define KOKKOS_IMPL_WORKAROUND_ROCM_AVX2_ISSUE
 #endif
 
@@ -1059,7 +1061,8 @@ class simd<std::int32_t, simd_abi::avx2_fixed_size<4>> {
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
                                                        element_aligned_tag) {
-    // FIXME_HIP ROCm 5.6 can't compile with the intrinsic used here.
+    // FIXME_HIP ROCm 5.6, 5.7, and 6.0 can't compile with the intrinsic used
+    // here.
 #ifdef KOKKOS_IMPL_WORKAROUND_ROCM_AVX2_ISSUE
     m_value = _mm_loadu_si128(reinterpret_cast<__m128i const*>(ptr));
 #else
@@ -1110,6 +1113,11 @@ class simd<std::int32_t, simd_abi::avx2_fixed_size<4>> {
       simd const& lhs, simd const& rhs) noexcept {
     return simd(
         _mm_add_epi32(static_cast<__m128i>(lhs), static_cast<__m128i>(rhs)));
+  }
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd operator*(
+      simd const& lhs, simd const& rhs) noexcept {
+    return simd(
+        _mm_mullo_epi32(static_cast<__m128i>(lhs), static_cast<__m128i>(rhs)));
   }
 
   [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd operator>>(
@@ -1278,6 +1286,13 @@ class simd<std::int64_t, simd_abi::avx2_fixed_size<4>> {
         _mm256_add_epi64(static_cast<__m256i>(lhs), static_cast<__m256i>(rhs)));
   }
 
+  // fallback simd multiplication using generator constructor
+  // multiplying vectors of 64-bit signed integers is not available in AVX2
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd operator*(
+      simd const& lhs, simd const& rhs) noexcept {
+    return simd([&](std::size_t i) { return lhs[i] * rhs[i]; });
+  }
+
   // AVX2 only has eq and gt comparisons for int64
   [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
   operator==(simd const& lhs, simd const& rhs) noexcept {
@@ -1306,17 +1321,19 @@ class simd<std::int64_t, simd_abi::avx2_fixed_size<4>> {
     return !(lhs == rhs);
   }
 
+  // fallback simd shift right arithmetic using generator constructor
   // Shift right arithmetic for 64bit packed ints is not availalbe in AVX2
-  // [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd(
-  //     simd const& lhs, int rhs) noexcept {
-  //   return simd(_mm256_srai_epi64(static_cast<__m256i>(lhs), rhs));
-  // }
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd operator>>(
+      simd const& lhs, int rhs) noexcept {
+    return simd([&](std::size_t i) { return lhs[i] >> rhs; });
+  }
 
-  // [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd(
-  //     simd const& lhs, simd const& rhs) noexcept {
-  //   return simd(_mm256_srav_epi64(static_cast<__m256i>(lhs),
-  //                                 static_cast<__m256i>(rhs))));
-  // }
+  // fallback simd shift right arithmetic using generator constructor
+  // Shift right arithmetic for 64bit packed ints is not availalbe in AVX2
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd operator>>(
+      simd const& lhs, simd const& rhs) noexcept {
+    return simd([&](std::size_t i) { return lhs[i] >> rhs[i]; });
+  }
 
   [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd operator<<(
       simd const& lhs, int rhs) noexcept {
@@ -1460,6 +1477,14 @@ class simd<std::uint64_t, simd_abi::avx2_fixed_size<4>> {
     return simd(
         _mm256_sub_epi64(static_cast<__m256i>(lhs), static_cast<__m256i>(rhs)));
   }
+
+  // fallback simd multiplication using generator constructor
+  // multiplying vectors of 64-bit unsigned integers is not available in AVX2
+  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd operator*(
+      simd const& lhs, simd const& rhs) noexcept {
+    return simd([&](std::size_t i) { return lhs[i] * rhs[i]; });
+  }
+
   [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend simd operator>>(
       simd const& lhs, int rhs) noexcept {
     return _mm256_srli_epi64(static_cast<__m256i>(lhs), rhs);

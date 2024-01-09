@@ -46,7 +46,6 @@
 
 #include <Kokkos_Half.hpp>
 #include <Kokkos_AnonymousSpace.hpp>
-#include <Kokkos_LogicalSpaces.hpp>
 #include <Kokkos_Pair.hpp>
 #include <Kokkos_MinMaxClamp.hpp>
 #include <Kokkos_MathematicalConstants.hpp>

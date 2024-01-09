@@ -22,6 +22,7 @@ static_assert(false,
 #ifndef KOKKOS_COPYVIEWS_HPP_
 #define KOKKOS_COPYVIEWS_HPP_
 #include <string>
+#include <sstream>
 #include <Kokkos_Parallel.hpp>
 #include <KokkosExp_MDRangePolicy.hpp>
 #include <Kokkos_Layout.hpp>
@@ -612,12 +613,17 @@ void view_copy(const DstType& dst, const SrcType& src) {
   };
 
   if (!DstExecCanAccessSrc && !SrcExecCanAccessDst) {
-    std::string message(
-        "Error: Kokkos::deep_copy with no available copy mechanism: ");
-    message += src.label();
-    message += " to ";
-    message += dst.label();
-    Kokkos::Impl::throw_runtime_exception(message);
+    std::ostringstream ss;
+    ss << "Error: Kokkos::deep_copy with no available copy mechanism: "
+       << "from source view (\"" << src.label() << "\") to destination view (\""
+       << dst.label() << "\").\n"
+       << "There is no common execution space that can access both source's "
+          "space\n"
+       << "(" << src_memory_space().name() << ") and destination's space ("
+       << dst_memory_space().name() << "), "
+       << "so source and destination\n"
+       << "must be contiguous and have the same layout.\n";
+    Kokkos::Impl::throw_runtime_exception(ss.str());
   }
 
   // Figure out iteration order in case we need it
@@ -1348,13 +1354,14 @@ inline std::enable_if_t<
 contiguous_fill_or_memset(
     const ExecutionSpace& exec_space, const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value) {
-// On A64FX memset seems to do the wrong thing with regards to first touch
-// leading to the significant performance issues
-#ifndef KOKKOS_ARCH_A64FX
-  if (Impl::is_zero_byte(value))
+  // With OpenMP, using memset has significant performance issues.
+  if (Impl::is_zero_byte(value)
+#ifdef KOKKOS_ENABLE_OPENMP
+      && !std::is_same_v<ExecutionSpace, Kokkos::OpenMP>
+#endif
+  )
     ZeroMemset<ExecutionSpace, View<DT, DP...>>(exec_space, dst, value);
   else
-#endif
     contiguous_fill(exec_space, dst, value);
 }
 

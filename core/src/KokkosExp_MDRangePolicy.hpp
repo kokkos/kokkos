@@ -96,7 +96,7 @@ constexpr Array to_array_potentially_narrowing(const U (&init)[M]) {
   using T = typename Array::value_type;
   Array a{};
   constexpr std::size_t N = a.size();
-  static_assert(M <= N, "");
+  static_assert(M <= N);
   auto* ptr = a.data();
   // NOTE equivalent to
   // std::transform(std::begin(init), std::end(init), a.data(),
@@ -120,7 +120,7 @@ constexpr NVCC_WONT_LET_ME_CALL_YOU_Array to_array_potentially_narrowing(
   using T = typename NVCC_WONT_LET_ME_CALL_YOU_Array::value_type;
   NVCC_WONT_LET_ME_CALL_YOU_Array a{};
   constexpr std::size_t N = a.size();
-  static_assert(M <= N, "");
+  static_assert(M <= N);
   for (std::size_t i = 0; i < M; ++i) {
     a[i] = checked_narrow_cast<T>(other[i]);
     (void)checked_narrow_cast<IndexType>(other[i]);  // see note above
