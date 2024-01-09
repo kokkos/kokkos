@@ -106,8 +106,7 @@ TEST(TEST_CATEGORY_DEATH, policy_invalid_bounds) {
         (void)Policy({100, 100}, {90, 90});
       },
       "Kokkos::MDRangePolicy bounds error: The lower bound \\(100\\) is "
-      "greater "
-      "than its upper bound \\(90\\) in dimension " +
+      "greater than its upper bound \\(90\\) in dimension " +
           std::to_string(dim) + "\\.");
 }
 #endif
