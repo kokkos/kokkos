@@ -118,9 +118,9 @@ class CudaSpace {
   /**\brief Return Name of the MemorySpace */
   static constexpr const char* name() { return m_name; }
 
-  int device() const { return m_device; }
+  int cuda_device() const { return m_device; }
 
-  cudaStream_t stream() const { return m_stream; }
+  cudaStream_t cuda_stream() const { return m_stream; }
 
  private:
   int m_device;
@@ -197,6 +197,10 @@ class CudaUVMSpace {
  public:
   /**\brief Return Name of the MemorySpace */
   static constexpr const char* name() { return m_name; }
+
+  int cuda_device() const { return m_device; }
+
+  cudaStream_t cuda_stream() const { return m_stream; }
 
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_PIN_UVM_TO_HOST
   static bool cuda_pin_uvm_to_host();
@@ -283,6 +287,10 @@ class CudaHostPinnedSpace {
  public:
   /**\brief Return Name of the MemorySpace */
   static constexpr const char* name() { return m_name; }
+
+  int cuda_device() const { return m_device; }
+
+  cudaStream_t cuda_stream() const { return m_stream; }
 
  private:
   int m_device;
