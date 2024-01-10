@@ -983,6 +983,12 @@ template <typename Rank, typename TeamHandle, typename Lambda,
 KOKKOS_INLINE_FUNCTION void parallel_reduce(
     TeamThreadMDRange<Rank, TeamHandle> const& policy, Lambda const& lambda,
     ReducerValueType& val) {
+  static_assert(/*!Kokkos::is_view_v<ReducerValueType> &&*/
+                !std::is_array_v<ReducerValueType> &&
+                    !std::is_pointer_v<ReducerValueType> &&
+                    !Kokkos::is_reducer_v<ReducerValueType>,
+                "Only scalar return types are allowed!");
+
   val = ReducerValueType{};
   Impl::md_parallel_impl<Rank>(policy, lambda, val);
   policy.team.team_reduce(
@@ -1000,6 +1006,12 @@ template <typename Rank, typename TeamHandle, typename Lambda,
 KOKKOS_INLINE_FUNCTION void parallel_reduce(
     ThreadVectorMDRange<Rank, TeamHandle> const& policy, Lambda const& lambda,
     ReducerValueType& val) {
+  static_assert(/*!Kokkos::is_view_v<ReducerValueType> &&*/
+                !std::is_array_v<ReducerValueType> &&
+                    !std::is_pointer_v<ReducerValueType> &&
+                    !Kokkos::is_reducer_v<ReducerValueType>,
+                "Only a scalar return types are allowed!");
+
   val = ReducerValueType{};
   Impl::md_parallel_impl<Rank>(policy, lambda, val);
   if constexpr (false
@@ -1030,6 +1042,12 @@ template <typename Rank, typename TeamHandle, typename Lambda,
 KOKKOS_INLINE_FUNCTION void parallel_reduce(
     TeamVectorMDRange<Rank, TeamHandle> const& policy, Lambda const& lambda,
     ReducerValueType& val) {
+  static_assert(/*!Kokkos::is_view_v<ReducerValueType> &&*/
+                !std::is_array_v<ReducerValueType> &&
+                    !std::is_pointer_v<ReducerValueType> &&
+                    !Kokkos::is_reducer_v<ReducerValueType>,
+                "Only a scalar return types are allowed!");
+
   val = ReducerValueType{};
   Impl::md_parallel_impl<Rank>(policy, lambda, val);
   if constexpr (false
