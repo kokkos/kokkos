@@ -90,11 +90,15 @@ void HIPInternal::print_configuration(std::ostream &s) const {
 #endif
 
   int hipDevCount;
-  KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDeviceCount(&hipDevCount));
+  KOKKOS_IMPL_HIP_SAFE_CALL(
+      (HIPInternal::singleton().hip_get_device_count_wrapper<false>(
+          &hipDevCount)));
 
   for (int i = 0; i < hipDevCount; ++i) {
     hipDeviceProp_t hipProp;
-    KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDeviceProperties(&hipProp, i));
+    KOKKOS_IMPL_HIP_SAFE_CALL(
+        (HIPInternal::singleton().hip_get_device_properties_wrapper<false>(
+            &hipProp, i)));
     std::string gpu_type = hipProp.integrated == 1 ? "APU" : "dGPU";
 
     s << "Kokkos::HIP[ " << i << " ] "
@@ -156,7 +160,7 @@ void HIPInternal::fence(const std::string &name) const {
       name,
       Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{
           impl_get_instance_id()},
-      [&]() { KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamSynchronize(m_stream)); });
+      [&]() { KOKKOS_IMPL_HIP_SAFE_CALL((hip_stream_synchronize_wrapper())); });
 }
 
 void HIPInternal::initialize(hipStream_t stream, bool manage_stream) {
@@ -181,10 +185,10 @@ void HIPInternal::initialize(hipStream_t stream, bool manage_stream) {
   }
 
   m_num_scratch_locks = concurrency();
-  KOKKOS_IMPL_HIP_SAFE_CALL(
-      hipMalloc(&m_scratch_locks, sizeof(int32_t) * m_num_scratch_locks));
-  KOKKOS_IMPL_HIP_SAFE_CALL(
-      hipMemset(m_scratch_locks, 0, sizeof(int32_t) * m_num_scratch_locks));
+  KOKKOS_IMPL_HIP_SAFE_CALL((hip_malloc_wrapper(
+      (void **)&m_scratch_locks, sizeof(int32_t) * m_num_scratch_locks)));
+  KOKKOS_IMPL_HIP_SAFE_CALL((hip_memset_wrapper(
+      m_scratch_locks, 0, sizeof(int32_t) * m_num_scratch_locks)));
 }
 
 //----------------------------------------------------------------------------
@@ -229,7 +233,8 @@ Kokkos::HIP::size_type *HIPInternal::scratch_flags(const std::size_t size) {
 
     m_scratchFlags = reinterpret_cast<size_type *>(r->data());
 
-    KOKKOS_IMPL_HIP_SAFE_CALL(hipMemset(m_scratchFlags, 0, alloc_size));
+    KOKKOS_IMPL_HIP_SAFE_CALL(
+        (hip_memset_wrapper(m_scratchFlags, 0, alloc_size)));
   }
 
   return m_scratchFlags;
@@ -268,11 +273,10 @@ Kokkos::HIP::size_type *HIPInternal::stage_functor_for_execution(
   // Without this fix, all the atomic tests fail. It is not obvious that this
   // problem is limited to HSA_XNACK=1 even if all the tests pass when
   // HSA_XNACK=0. That's why we always copy the driver.
-  KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamSynchronize(m_stream));
+  KOKKOS_IMPL_HIP_SAFE_CALL((hip_stream_synchronize_wrapper()));
   std::memcpy(m_scratchFunctorHost, driver, size);
-  KOKKOS_IMPL_HIP_SAFE_CALL(hipMemcpyAsync(m_scratchFunctor,
-                                           m_scratchFunctorHost, size,
-                                           hipMemcpyDefault, m_stream));
+  KOKKOS_IMPL_HIP_SAFE_CALL((hip_memcpy_async_wrapper(
+      m_scratchFunctor, m_scratchFunctorHost, size, hipMemcpyDefault)));
 
   return m_scratchFunctor;
 }
@@ -327,8 +331,8 @@ void HIPInternal::finalize() {
     (void)Kokkos::Impl::hip_global_unique_token_locks(true);
     desul::Impl::finalize_lock_arrays();  // FIXME
 
-    KOKKOS_IMPL_HIP_SAFE_CALL(hipHostFree(constantMemHostStaging));
-    KOKKOS_IMPL_HIP_SAFE_CALL(hipEventDestroy(constantMemReusable));
+    KOKKOS_IMPL_HIP_SAFE_CALL((hip_host_free_wrapper(constantMemHostStaging)));
+    KOKKOS_IMPL_HIP_SAFE_CALL((hip_event_destroy_wrapper(constantMemReusable)));
   }
 
   if (nullptr != m_scratchSpace || nullptr != m_scratchFlags) {
@@ -348,8 +352,8 @@ void HIPInternal::finalize() {
       Kokkos::kokkos_free<Kokkos::HIPSpace>(m_team_scratch_ptr[i]);
   }
 
-  if (m_manage_stream && m_stream != nullptr)
-    KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamDestroy(m_stream));
+  if (m_manage_stream && get_stream() != nullptr)
+    KOKKOS_IMPL_HIP_SAFE_CALL((hip_stream_destroy_wrapper()));
 
   m_scratchSpaceCount = 0;
   m_scratchFlagsCount = 0;
@@ -361,7 +365,7 @@ void HIPInternal::finalize() {
     m_team_scratch_ptr[i]          = nullptr;
   }
 
-  KOKKOS_IMPL_HIP_SAFE_CALL(hipFree(m_scratch_locks));
+  KOKKOS_IMPL_HIP_SAFE_CALL((hip_free_wrapper(m_scratch_locks)));
   m_scratch_locks     = nullptr;
   m_num_scratch_locks = 0;
 }
@@ -400,8 +404,9 @@ namespace Impl {
 void hip_internal_error_throw(hipError_t e, const char *name, const char *file,
                               const int line) {
   std::ostringstream out;
-  out << name << " error( " << hipGetErrorName(e)
-      << "): " << hipGetErrorString(e);
+  out << name << " error( "
+      << HIPInternal::singleton().hip_get_error_name_wrapper<false>(e) << "): "
+      << HIPInternal::singleton().hip_get_error_string_wrapper<false>(e);
   if (file) {
     out << " " << file << ":" << line;
   }
@@ -415,7 +420,9 @@ void hip_internal_error_throw(hipError_t e, const char *name, const char *file,
 void Kokkos::Impl::create_HIP_instances(std::vector<HIP> &instances) {
   for (int s = 0; s < int(instances.size()); s++) {
     hipStream_t stream;
-    KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamCreate(&stream));
+    KOKKOS_IMPL_HIP_SAFE_CALL(
+        (instances[s].impl_internal_space_instance()->hip_stream_create_wrapper(
+            &stream)));
     instances[s] = HIP(stream, ManageStream::yes);
   }
 }
@@ -425,7 +432,9 @@ void Kokkos::Impl::create_HIP_instances(std::vector<HIP> &instances) {
 namespace Kokkos {
 HIP::size_type HIP::detect_device_count() {
   int hipDevCount;
-  KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDeviceCount(&hipDevCount));
+  KOKKOS_IMPL_HIP_SAFE_CALL(
+      (Impl::HIPInternal::singleton().hip_get_device_count_wrapper<false>(
+          &hipDevCount)));
   return hipDevCount;
 }
 }  // namespace Kokkos
