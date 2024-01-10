@@ -410,9 +410,8 @@ void CudaInternal::initialize(cudaStream_t stream, bool manage_stream) {
   }
 
   // Init the array for used for arbitrarily sized atomics
-  if (this == &singleton()) {
-    desul::Impl::init_lock_arrays();  // FIXME
-  }
+  desul::Impl::init_lock_arrays_host();
+  desul::Impl::init_lock_arrays_cuda(m_cudaDev);
 
   // Allocate a staging buffer for constant mem in pinned host memory
   // and an event to avoid overwriting driver for previous kernel launches

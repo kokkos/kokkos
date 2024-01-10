@@ -129,10 +129,8 @@ void SYCLInternal::initialize(const sycl::queue& q) {
 
 #ifdef KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED
   // Init the array for used for arbitrarily sized atomics
-  if (this == &singleton()) {
-    desul::Impl::init_lock_arrays();
-    desul::Impl::init_lock_arrays_sycl(*m_queue);
-  }
+  desul::Impl::init_lock_arrays_host();
+  desul::Impl::init_lock_arrays_sycl(*m_queue);
 #endif
 }
 

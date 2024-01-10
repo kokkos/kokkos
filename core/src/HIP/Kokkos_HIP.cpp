@@ -76,7 +76,8 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
       Impl::HIPInternal::m_maxWavesPerCU * Impl::HIPTraits::WarpSize;
 
   // Init the array for used for arbitrarily sized atomics
-  desul::Impl::init_lock_arrays();  // FIXME
+  desul::Impl::init_lock_arrays_host();
+  desul::Impl::init_lock_arrays_hip(m_hipDev);
 
   // Allocate a staging buffer for constant mem in pinned host memory
   // and an event to avoid overwriting driver for previous kernel launches
