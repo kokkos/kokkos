@@ -626,7 +626,6 @@ TEST(TEST_CATEGORY, int_combined_reduce_mixed) {
 #endif
 #endif
 
-#if defined(KOKKOS_ENABLE_CUDA)
 struct FunctorIssue6517 {
   KOKKOS_FUNCTION void operator()(const int64_t /*i*/, double& update) const {
     update += 1.0;
@@ -635,12 +634,11 @@ struct FunctorIssue6517 {
 
 TEST(TEST_CATEGORY, issue6517) {
   const int64_t N = pow(2LL, 39LL) - pow(2LL, 8LL) + 1;
-  Kokkos::RangePolicy<Kokkos::Cuda, Kokkos::IndexType<int64_t>> p(0, N);
+  Kokkos::RangePolicy<TEST_EXECSPACE, Kokkos::IndexType<int64_t>> p(0, N);
   double nu = 0;
   EXPECT_NO_THROW(
       Kokkos::parallel_reduce("sample reduction", p, FunctorIssue6517(), nu));
   ASSERT_DOUBLE_EQ(nu, double(N));
 }
-#endif
 
 }  // namespace Test
