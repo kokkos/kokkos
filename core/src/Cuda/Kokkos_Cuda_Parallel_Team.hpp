@@ -32,7 +32,7 @@
 #include <Cuda/Kokkos_Cuda_ReduceScan.hpp>
 #include <Cuda/Kokkos_Cuda_BlockSize_Deduction.hpp>
 #include <Cuda/Kokkos_Cuda_Team.hpp>
-#include <Kokkos_MinMaxClamp.hpp>
+#include <Kokkos_MinMax.hpp>
 #include <Kokkos_Vectorization.hpp>
 
 #include <impl/Kokkos_Tools.hpp>

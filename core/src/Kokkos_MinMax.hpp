@@ -14,8 +14,8 @@
 //
 //@HEADER
 
-#ifndef KOKKOS_MIN_MAX_CLAMP_HPP
-#define KOKKOS_MIN_MAX_CLAMP_HPP
+#ifndef KOKKOS_MIN_MAX_HPP
+#define KOKKOS_MIN_MAX_HPP
 
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Pair.hpp>
@@ -23,22 +23,6 @@
 #include <initializer_list>
 
 namespace Kokkos {
-
-// clamp
-template <class T>
-constexpr KOKKOS_INLINE_FUNCTION const T& clamp(const T& value, const T& lo,
-                                                const T& hi) {
-  KOKKOS_EXPECTS(!(hi < lo));
-  return (value < lo) ? lo : (hi < value) ? hi : value;
-}
-
-template <class T, class ComparatorType>
-constexpr KOKKOS_INLINE_FUNCTION const T& clamp(const T& value, const T& lo,
-                                                const T& hi,
-                                                ComparatorType comp) {
-  KOKKOS_EXPECTS(!comp(hi, lo));
-  return comp(value, lo) ? lo : comp(hi, value) ? hi : value;
-}
 
 // max
 template <class T>
