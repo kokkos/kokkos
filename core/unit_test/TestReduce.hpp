@@ -626,6 +626,23 @@ TEST(TEST_CATEGORY, int_combined_reduce_mixed) {
 #endif
 #endif
 
+#if defined(NDEBUG)
+template <class T>
+struct EnableTestForIssue6517 : std::false_type {};
+
+#ifdef KOKKOS_ENABLE_CUDA
+template <>
+struct EnableTestForIssue6517<Kokkos::Cuda> : std::true_type {};
+#endif
+#ifdef KOKKOS_ENABLE_HIP
+template <>
+struct EnableTestForIssue6517<Kokkos::HIP> : std::true_type {};
+#endif
+#ifdef KOKKOS_ENABLE_SYCL
+template <>
+struct EnableTestForIssue6517<Kokkos::Experimental::SYCL> : std::true_type {};
+#endif
+
 struct FunctorIssue6517 {
   KOKKOS_FUNCTION void operator()(const int64_t /*i*/, double& update) const {
     update += 1.0;
@@ -633,6 +650,10 @@ struct FunctorIssue6517 {
 };
 
 TEST(TEST_CATEGORY, issue6517) {
+  if constexpr (!EnableTestForIssue6517<TEST_EXECSPACE>::value) {
+    GTEST_SKIP() << "Disabling for host backends";
+  }
+
   const int64_t N = pow(2LL, 39LL) - pow(2LL, 8LL) + 1;
   Kokkos::RangePolicy<TEST_EXECSPACE, Kokkos::IndexType<int64_t>> p(0, N);
   double nu = 0;
@@ -640,5 +661,6 @@ TEST(TEST_CATEGORY, issue6517) {
       Kokkos::parallel_reduce("sample reduction", p, FunctorIssue6517(), nu));
   ASSERT_DOUBLE_EQ(nu, double(N));
 }
+#endif
 
 }  // namespace Test
