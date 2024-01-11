@@ -627,7 +627,7 @@ TEST(TEST_CATEGORY, int_combined_reduce_mixed) {
 #endif
 
 #if defined(NDEBUG)
-// the following test is for the following issue:
+// the following test was made for:
 // https://github.com/kokkos/kokkos/issues/6517
 
 template <class T>
