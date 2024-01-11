@@ -638,21 +638,25 @@ template <>
 struct EnableTestForReductionWithLargeIterationCount<Kokkos::Cuda>
     : std::true_type {};
 #endif
+
 #ifdef KOKKOS_ENABLE_HIP
 template <>
 struct EnableTestForReductionWithLargeIterationCount<Kokkos::HIP>
     : std::true_type {};
 #endif
+
 #ifdef KOKKOS_ENABLE_SYCL
 template <>
 struct EnableTestForReductionWithLargeIterationCount<Kokkos::Experimental::SYCL>
     : std::true_type {};
 #endif
+
 #ifdef KOKKOS_ENABLE_OPENACC
 template <>
 struct EnableTestForReductionWithLargeIterationCount<
     Kokkos::Experimental::OpenACC> : std::true_type {};
 #endif
+
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
 template <>
 struct EnableTestForReductionWithLargeIterationCount<
