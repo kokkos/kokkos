@@ -648,6 +648,16 @@ template <>
 struct EnableTestForReductionWithLargeIterationCount<Kokkos::Experimental::SYCL>
     : std::true_type {};
 #endif
+#ifdef KOKKOS_ENABLE_OPENACC
+template <>
+struct EnableTestForReductionWithLargeIterationCount<
+    Kokkos::Experimental::OpenACC> : std::true_type {};
+#endif
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+template <>
+struct EnableTestForReductionWithLargeIterationCount<
+    Kokkos::Experimental::OpenMPTarget> : std::true_type {};
+#endif
 
 struct FunctorReductionWithLargeIterationCount {
   KOKKOS_FUNCTION void operator()(const int64_t /*i*/, double& update) const {
