@@ -28,7 +28,6 @@
 #include <Cuda/Kokkos_Cuda_KernelLaunch.hpp>
 #include <Cuda/Kokkos_Cuda_ReduceScan.hpp>
 #include <Cuda/Kokkos_Cuda_BlockSize_Deduction.hpp>
-#include <Kokkos_MinMaxClamp.hpp>
 
 #include <impl/Kokkos_Tools.hpp>
 #include <typeinfo>
