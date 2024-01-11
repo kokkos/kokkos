@@ -70,4 +70,17 @@ TEST(TEST_CATEGORY, range_policy_runtime_parameters) {
   }
 }
 
+TEST(TEST_CATEGORY_DEATH, range_policy_invalid_bounds) {
+  using Policy    = Kokkos::RangePolicy<TEST_EXECSPACE>;
+  using ChunkSize = Kokkos::ChunkSize;
+
+  ASSERT_DEATH({ (void)Policy(100, 90); },
+               "Kokkos::RangePolicy bounds error: The lower bound \\(100\\) is "
+               "greater than the upper bound \\(90\\)\\.");
+
+  ASSERT_DEATH({ (void)Policy(TEST_EXECSPACE(), 100, 90, ChunkSize(10)); },
+               "Kokkos::RangePolicy bounds error: The lower bound \\(100\\) is "
+               "greater than the upper bound \\(90\\)\\.");
+}
+
 }  // namespace
