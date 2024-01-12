@@ -96,8 +96,6 @@ class HIP {
 
   //  static size_type device_arch();
 
-  static size_type detect_device_count();
-
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   static int concurrency();
 #else

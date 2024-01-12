@@ -666,10 +666,6 @@ Cuda::size_type *cuda_internal_scratch_unified(const Cuda &instance,
 
 namespace Kokkos {
 
-Cuda::size_type Cuda::detect_device_count() {
-  return Impl::CudaInternalDevices::singleton().m_cudaDevCount;
-}
-
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 int Cuda::concurrency() {
 #else

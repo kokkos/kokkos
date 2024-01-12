@@ -184,9 +184,6 @@ class Cuda {
   /// This matches the __CUDA_ARCH__ specification.
   static size_type device_arch();
 
-  //! Query device count.
-  static size_type detect_device_count();
-
   /** \brief  Detect the available devices and their architecture
    *          as defined by the __CUDA_ARCH__ specification.
    */
