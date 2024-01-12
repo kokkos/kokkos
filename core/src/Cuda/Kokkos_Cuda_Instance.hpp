@@ -266,18 +266,6 @@ class CudaInternal {
   }
 
   template <bool setCudaDevice = true>
-  const char* cuda_get_error_name_wrapper(cudaError_t error) const {
-    if constexpr (setCudaDevice) set_cuda_device();
-    return cudaGetErrorName(error);
-  }
-
-  template <bool setCudaDevice = true>
-  const char* cuda_get_error_string_wrapper(cudaError_t error) const {
-    if constexpr (setCudaDevice) set_cuda_device();
-    return cudaGetErrorString(error);
-  }
-
-  template <bool setCudaDevice = true>
   cudaError_t cuda_get_last_error_wrapper() const {
     if constexpr (setCudaDevice) set_cuda_device();
     return cudaGetLastError();

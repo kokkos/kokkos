@@ -183,10 +183,8 @@ void cuda_stream_synchronize(
 void cuda_internal_error_throw(cudaError e, const char *name, const char *file,
                                const int line) {
   std::ostringstream out;
-  out << name << " error( "
-      << CudaInternal::singleton().cuda_get_error_name_wrapper<false>(e)
-      << "): "
-      << CudaInternal::singleton().cuda_get_error_string_wrapper<false>(e);
+  out << name << " error( " << cudaGetErrorName(e)
+      << "): " << cudaGetErrorString(e);
   if (file) {
     out << " " << file << ":" << line;
   }
@@ -196,10 +194,8 @@ void cuda_internal_error_throw(cudaError e, const char *name, const char *file,
 void cuda_internal_error_abort(cudaError e, const char *name, const char *file,
                                const int line) {
   std::ostringstream out;
-  out << name << " error( "
-      << CudaInternal::singleton().cuda_get_error_name_wrapper<false>(e)
-      << "): "
-      << CudaInternal::singleton().cuda_get_error_string_wrapper<false>(e);
+  out << name << " error( " << cudaGetErrorName(e)
+      << "): " << cudaGetErrorString(e);
   if (file) {
     out << " " << file << ":" << line;
   }
