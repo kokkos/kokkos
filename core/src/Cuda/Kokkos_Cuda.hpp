@@ -204,7 +204,7 @@ class Cuda {
     std::vector<unsigned> out;
     for (int i = 0; i < count; ++i) {
       cudaDeviceProp prop;
-      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGetDeviceProperties(prop, i));
+      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGetDeviceProperties(&prop, i));
       out.push_back(prop.major * 100 + prop.minor);
     }
     return out;
