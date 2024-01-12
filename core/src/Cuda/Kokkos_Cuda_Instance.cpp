@@ -217,8 +217,6 @@ int Impl::CudaInternal::concurrency() {
 }
 
 void CudaInternal::print_configuration(std::ostream &s) const {
-  const CudaInternalDevices &dev_info = CudaInternalDevices::singleton();
-
 #if defined(KOKKOS_ENABLE_CUDA)
   s << "macro  KOKKOS_ENABLE_CUDA      : defined\n";
 #endif
@@ -594,11 +592,8 @@ int Cuda::impl_is_initialized() {
 
 void Cuda::impl_initialize(InitializationSettings const &settings) {
   const int cuda_device_id = Impl::get_gpu(settings);
-  const auto &dev_info     = Impl::CudaInternalDevices::singleton();
 
-  const struct cudaDeviceProp &cudaProp = dev_info.m_cudaProp[cuda_device_id];
-  Impl::CudaInternal::m_deviceProp      = cudaProp;
-
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGetDeviceProperties(&Impl::CudaInternal::m_deviceProp, cuda_device_id);
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(cuda_device_id));
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaDeviceSynchronize());
 
@@ -675,31 +670,9 @@ Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
                                              /*manage*/ true);
 }
 
-std::vector<unsigned> Cuda::detect_device_arch() {
-  const Impl::CudaInternalDevices &s = Impl::CudaInternalDevices::singleton();
-
-  std::vector<unsigned> output(s.m_cudaDevCount);
-
-  for (int i = 0; i < s.m_cudaDevCount; ++i) {
-    output[i] = s.m_cudaProp[i].major * 100 + s.m_cudaProp[i].minor;
-  }
-
-  return output;
-}
-
 Cuda::size_type Cuda::device_arch() {
-  const int dev_id = Impl::CudaInternal::singleton().m_cudaDev;
-
-  int dev_arch = 0;
-
-  if (0 <= dev_id) {
-    const struct cudaDeviceProp &cudaProp =
-        Impl::CudaInternalDevices::singleton().m_cudaProp[dev_id];
-
-    dev_arch = cudaProp.major * 100 + cudaProp.minor;
-  }
-
-  return dev_arch;
+  const cudaDeviceProp &cudaProp = cuda_device_prop();
+  return cudaProp.major * 100 + cudaProp.minor;
 }
 
 void Cuda::impl_finalize() { Impl::CudaInternal::singleton().finalize(); }

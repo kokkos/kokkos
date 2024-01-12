@@ -184,11 +184,6 @@ class Cuda {
   /// This matches the __CUDA_ARCH__ specification.
   static size_type device_arch();
 
-  /** \brief  Detect the available devices and their architecture
-   *          as defined by the __CUDA_ARCH__ specification.
-   */
-  static std::vector<unsigned> detect_device_arch();
-
   cudaStream_t cuda_stream() const;
   int cuda_device() const;
   const cudaDeviceProp& cuda_device_prop() const;
