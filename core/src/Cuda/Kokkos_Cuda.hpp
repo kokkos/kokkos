@@ -192,7 +192,7 @@ class Cuda {
   KOKKOS_DEPRECATED static size_type detect_device_count() {
     int count;
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGetDeviceCount(&count));
-    return
+    return count;
   }
 
   /** \brief  Detect the available devices and their architecture
