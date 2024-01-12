@@ -46,7 +46,6 @@ static_assert(false,
 
 namespace Kokkos {
 namespace Impl {
-class CudaExec;
 class CudaInternal;
 }  // namespace Impl
 }  // namespace Kokkos
