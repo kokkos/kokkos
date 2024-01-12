@@ -198,7 +198,7 @@ class Cuda {
   /** \brief  Detect the available devices and their architecture
    *          as defined by the __CUDA_ARCH__ specification.
    */
-  KOKKOS_DEPRECATED static std::vector<unsigned> detect_device_arch() const {
+  KOKKOS_DEPRECATED static std::vector<unsigned> detect_device_arch() {
     int count;
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGetDeviceCount(&count));
     std::vector<unsigned> out;
