@@ -209,96 +209,6 @@ void cuda_internal_error_abort(cudaError e, const char *name, const char *file,
 }
 
 //----------------------------------------------------------------------------
-// Some significant cuda device properties:
-//
-// cudaDeviceProp::name                : Text label for device
-// cudaDeviceProp::major               : Device major number
-// cudaDeviceProp::minor               : Device minor number
-// cudaDeviceProp::warpSize            : number of threads per warp
-// cudaDeviceProp::multiProcessorCount : number of multiprocessors
-// cudaDeviceProp::sharedMemPerBlock   : capacity of shared memory per block
-// cudaDeviceProp::totalConstMem       : capacity of constant memory
-// cudaDeviceProp::totalGlobalMem      : capacity of global memory
-// cudaDeviceProp::maxGridSize[3]      : maximum grid size
-
-//
-//  Section 4.4.2.4 of the CUDA Toolkit Reference Manual
-//
-// struct cudaDeviceProp {
-//   char name[256];
-//   size_t totalGlobalMem;
-//   size_t sharedMemPerBlock;
-//   int regsPerBlock;
-//   int warpSize;
-//   size_t memPitch;
-//   int maxThreadsPerBlock;
-//   int maxThreadsDim[3];
-//   int maxGridSize[3];
-//   size_t totalConstMem;
-//   int major;
-//   int minor;
-//   int clockRate;
-//   size_t textureAlignment;
-//   int deviceOverlap;
-//   int multiProcessorCount;
-//   int kernelExecTimeoutEnabled;
-//   int integrated;
-//   int canMapHostMemory;
-//   int computeMode;
-//   int concurrentKernels;
-//   int ECCEnabled;
-//   int pciBusID;
-//   int pciDeviceID;
-//   int tccDriver;
-//   int asyncEngineCount;
-//   int unifiedAddressing;
-//   int memoryClockRate;
-//   int memoryBusWidth;
-//   int l2CacheSize;
-//   int maxThreadsPerMultiProcessor;
-// };
-
-namespace {
-
-class CudaInternalDevices {
- public:
-  enum { MAXIMUM_DEVICE_COUNT = 64 };
-  struct cudaDeviceProp m_cudaProp[MAXIMUM_DEVICE_COUNT];
-  int m_cudaDevCount;
-
-  CudaInternalDevices();
-
-  static const CudaInternalDevices &singleton();
-};
-
-CudaInternalDevices::CudaInternalDevices() {
-  // See 'cudaSetDeviceFlags' for host-device thread interaction
-  // Section 4.4.2.6 of the CUDA Toolkit Reference Manual
-
-  KOKKOS_IMPL_CUDA_SAFE_CALL(
-      (CudaInternal::singleton().cuda_get_device_count_wrapper<false>(
-          &m_cudaDevCount)));
-
-  if (m_cudaDevCount > MAXIMUM_DEVICE_COUNT) {
-    Kokkos::abort(
-        "Sorry, you have more GPUs per node than we thought anybody would ever "
-        "have. Please report this to github.com/kokkos/kokkos.");
-  }
-  for (int i = 0; i < m_cudaDevCount; ++i) {
-    KOKKOS_IMPL_CUDA_SAFE_CALL(
-        (CudaInternal::singleton().cuda_get_device_properties_wrapper<false>(
-            m_cudaProp + i, i)));
-  }
-}
-
-const CudaInternalDevices &CudaInternalDevices::singleton() {
-  static CudaInternalDevices self;
-  return self;
-}
-
-}  // namespace
-
-//----------------------------------------------------------------------------
 
 int Impl::CudaInternal::concurrency() {
   static int const concurrency = m_deviceProp.maxThreadsPerMultiProcessor *
@@ -317,15 +227,19 @@ void CudaInternal::print_configuration(std::ostream &s) const {
     << CUDA_VERSION / 1000 << "." << (CUDA_VERSION % 1000) / 10 << '\n';
 #endif
 
-  for (int i = 0; i < dev_info.m_cudaDevCount; ++i) {
-    s << "Kokkos::Cuda[ " << i << " ] " << dev_info.m_cudaProp[i].name
-      << " capability " << dev_info.m_cudaProp[i].major << "."
-      << dev_info.m_cudaProp[i].minor << ", Total Global Memory: "
-      << human_memory_size(dev_info.m_cudaProp[i].totalGlobalMem)
+  int count;
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGetDeviceCount(&count));
+
+  for (int i = 0; i < count; ++i) {
+    cudaDeviceProp prop;
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGetDeviceProperties(&prop, i));
+    s << "Kokkos::Cuda[ " << i << " ] " << prop[i].name << " capability "
+      << prop[i].major << "." << prop[i].minor
+      << ", Total Global Memory: " << human_memory_size(prop[i].totalGlobalMem)
       << ", Shared Memory per Block: "
-      << human_memory_size(dev_info.m_cudaProp[i].sharedMemPerBlock);
+      << human_memory_size(prop[i].sharedMemPerBlock);
     if (m_cudaDev == i) s << " : Selected";
-    s << std::endl;
+    s << '\n';
   }
 }
 
