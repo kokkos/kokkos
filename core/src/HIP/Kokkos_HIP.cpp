@@ -92,7 +92,16 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
   Impl::HIPInternal::singleton().initialize(singleton_stream, /*manage*/ true);
 }
 
-void HIP::impl_finalize() { Impl::HIPInternal::singleton().finalize(); }
+void HIP::impl_finalize() {
+  (void)Impl::hip_global_unique_token_locks(true);
+
+  desul::Impl::finalize_lock_arrays();  // FIXME
+
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipEventDestroy(constantMemReusable));
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipHostFree(constantMemHostStaging));
+
+  Impl::HIPInternal::singleton().finalize();
+}
 
 HIP::HIP()
     : m_space_instance(&Impl::HIPInternal::singleton(),

@@ -323,14 +323,6 @@ void HIPInternal::finalize() {
   this->fence("Kokkos::HIPInternal::finalize: fence on finalization");
   was_finalized = true;
 
-  if (this == &singleton()) {
-    (void)Kokkos::Impl::hip_global_unique_token_locks(true);
-    desul::Impl::finalize_lock_arrays();  // FIXME
-
-    KOKKOS_IMPL_HIP_SAFE_CALL(hipHostFree(constantMemHostStaging));
-    KOKKOS_IMPL_HIP_SAFE_CALL(hipEventDestroy(constantMemReusable));
-  }
-
   if (nullptr != m_scratchSpace || nullptr != m_scratchFlags) {
     using RecordHIP = Kokkos::Impl::SharedAllocationRecord<Kokkos::HIPSpace>;
 
