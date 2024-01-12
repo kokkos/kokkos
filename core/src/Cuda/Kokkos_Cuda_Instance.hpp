@@ -266,19 +266,6 @@ class CudaInternal {
   }
 
   template <bool setCudaDevice = true>
-  cudaError_t cuda_get_device_count_wrapper(int* count) const {
-    if constexpr (setCudaDevice) set_cuda_device();
-    return cudaGetDeviceCount(count);
-  }
-
-  template <bool setCudaDevice = true>
-  cudaError_t cuda_get_device_properties_wrapper(cudaDeviceProp* prop,
-                                                 int device) const {
-    if constexpr (setCudaDevice) set_cuda_device();
-    return cudaGetDeviceProperties(prop, device);
-  }
-
-  template <bool setCudaDevice = true>
   const char* cuda_get_error_name_wrapper(cudaError_t error) const {
     if constexpr (setCudaDevice) set_cuda_device();
     return cudaGetErrorName(error);

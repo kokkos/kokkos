@@ -94,9 +94,13 @@ class HIP {
 
   static int impl_is_initialized();
 
-  //  static size_type device_arch();
-
-  static size_type detect_device_count();
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  KOKKOS_DEPRECATED static size_type detect_device_count() {
+    int count;
+    KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDeviceCount(&count));
+    return count;
+  }
+#endif
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   static int concurrency();

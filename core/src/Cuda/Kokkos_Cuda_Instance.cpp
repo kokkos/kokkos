@@ -209,96 +209,6 @@ void cuda_internal_error_abort(cudaError e, const char *name, const char *file,
 }
 
 //----------------------------------------------------------------------------
-// Some significant cuda device properties:
-//
-// cudaDeviceProp::name                : Text label for device
-// cudaDeviceProp::major               : Device major number
-// cudaDeviceProp::minor               : Device minor number
-// cudaDeviceProp::warpSize            : number of threads per warp
-// cudaDeviceProp::multiProcessorCount : number of multiprocessors
-// cudaDeviceProp::sharedMemPerBlock   : capacity of shared memory per block
-// cudaDeviceProp::totalConstMem       : capacity of constant memory
-// cudaDeviceProp::totalGlobalMem      : capacity of global memory
-// cudaDeviceProp::maxGridSize[3]      : maximum grid size
-
-//
-//  Section 4.4.2.4 of the CUDA Toolkit Reference Manual
-//
-// struct cudaDeviceProp {
-//   char name[256];
-//   size_t totalGlobalMem;
-//   size_t sharedMemPerBlock;
-//   int regsPerBlock;
-//   int warpSize;
-//   size_t memPitch;
-//   int maxThreadsPerBlock;
-//   int maxThreadsDim[3];
-//   int maxGridSize[3];
-//   size_t totalConstMem;
-//   int major;
-//   int minor;
-//   int clockRate;
-//   size_t textureAlignment;
-//   int deviceOverlap;
-//   int multiProcessorCount;
-//   int kernelExecTimeoutEnabled;
-//   int integrated;
-//   int canMapHostMemory;
-//   int computeMode;
-//   int concurrentKernels;
-//   int ECCEnabled;
-//   int pciBusID;
-//   int pciDeviceID;
-//   int tccDriver;
-//   int asyncEngineCount;
-//   int unifiedAddressing;
-//   int memoryClockRate;
-//   int memoryBusWidth;
-//   int l2CacheSize;
-//   int maxThreadsPerMultiProcessor;
-// };
-
-namespace {
-
-class CudaInternalDevices {
- public:
-  enum { MAXIMUM_DEVICE_COUNT = 64 };
-  struct cudaDeviceProp m_cudaProp[MAXIMUM_DEVICE_COUNT];
-  int m_cudaDevCount;
-
-  CudaInternalDevices();
-
-  static const CudaInternalDevices &singleton();
-};
-
-CudaInternalDevices::CudaInternalDevices() {
-  // See 'cudaSetDeviceFlags' for host-device thread interaction
-  // Section 4.4.2.6 of the CUDA Toolkit Reference Manual
-
-  KOKKOS_IMPL_CUDA_SAFE_CALL(
-      (CudaInternal::singleton().cuda_get_device_count_wrapper<false>(
-          &m_cudaDevCount)));
-
-  if (m_cudaDevCount > MAXIMUM_DEVICE_COUNT) {
-    Kokkos::abort(
-        "Sorry, you have more GPUs per node than we thought anybody would ever "
-        "have. Please report this to github.com/kokkos/kokkos.");
-  }
-  for (int i = 0; i < m_cudaDevCount; ++i) {
-    KOKKOS_IMPL_CUDA_SAFE_CALL(
-        (CudaInternal::singleton().cuda_get_device_properties_wrapper<false>(
-            m_cudaProp + i, i)));
-  }
-}
-
-const CudaInternalDevices &CudaInternalDevices::singleton() {
-  static CudaInternalDevices self;
-  return self;
-}
-
-}  // namespace
-
-//----------------------------------------------------------------------------
 
 int Impl::CudaInternal::concurrency() {
   static int const concurrency = m_deviceProp.maxThreadsPerMultiProcessor *
@@ -307,8 +217,6 @@ int Impl::CudaInternal::concurrency() {
 }
 
 void CudaInternal::print_configuration(std::ostream &s) const {
-  const CudaInternalDevices &dev_info = CudaInternalDevices::singleton();
-
 #if defined(KOKKOS_ENABLE_CUDA)
   s << "macro  KOKKOS_ENABLE_CUDA      : defined\n";
 #endif
@@ -317,15 +225,19 @@ void CudaInternal::print_configuration(std::ostream &s) const {
     << CUDA_VERSION / 1000 << "." << (CUDA_VERSION % 1000) / 10 << '\n';
 #endif
 
-  for (int i = 0; i < dev_info.m_cudaDevCount; ++i) {
-    s << "Kokkos::Cuda[ " << i << " ] " << dev_info.m_cudaProp[i].name
-      << " capability " << dev_info.m_cudaProp[i].major << "."
-      << dev_info.m_cudaProp[i].minor << ", Total Global Memory: "
-      << human_memory_size(dev_info.m_cudaProp[i].totalGlobalMem)
+  int count;
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGetDeviceCount(&count));
+
+  for (int i = 0; i < count; ++i) {
+    cudaDeviceProp prop;
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGetDeviceProperties(&prop, i));
+    s << "Kokkos::Cuda[ " << i << " ] " << prop.name << " capability "
+      << prop.major << "." << prop.minor
+      << ", Total Global Memory: " << human_memory_size(prop.totalGlobalMem)
       << ", Shared Memory per Block: "
-      << human_memory_size(dev_info.m_cudaProp[i].sharedMemPerBlock);
+      << human_memory_size(prop.sharedMemPerBlock);
     if (m_cudaDev == i) s << " : Selected";
-    s << std::endl;
+    s << '\n';
   }
 }
 
@@ -666,10 +578,6 @@ Cuda::size_type *cuda_internal_scratch_unified(const Cuda &instance,
 
 namespace Kokkos {
 
-Cuda::size_type Cuda::detect_device_count() {
-  return Impl::CudaInternalDevices::singleton().m_cudaDevCount;
-}
-
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 int Cuda::concurrency() {
 #else
@@ -684,11 +592,11 @@ int Cuda::impl_is_initialized() {
 
 void Cuda::impl_initialize(InitializationSettings const &settings) {
   const int cuda_device_id = Impl::get_gpu(settings);
-  const auto &dev_info     = Impl::CudaInternalDevices::singleton();
 
-  const struct cudaDeviceProp &cudaProp = dev_info.m_cudaProp[cuda_device_id];
-  Impl::CudaInternal::m_deviceProp      = cudaProp;
-
+  cudaDeviceProp cudaProp;
+  KOKKOS_IMPL_CUDA_SAFE_CALL(
+      cudaGetDeviceProperties(&cudaProp, cuda_device_id));
+  Impl::CudaInternal::m_deviceProp = cudaProp;
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(cuda_device_id));
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaDeviceSynchronize());
 
@@ -763,33 +671,6 @@ Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
 
   Impl::CudaInternal::singleton().initialize(singleton_stream,
                                              /*manage*/ true);
-}
-
-std::vector<unsigned> Cuda::detect_device_arch() {
-  const Impl::CudaInternalDevices &s = Impl::CudaInternalDevices::singleton();
-
-  std::vector<unsigned> output(s.m_cudaDevCount);
-
-  for (int i = 0; i < s.m_cudaDevCount; ++i) {
-    output[i] = s.m_cudaProp[i].major * 100 + s.m_cudaProp[i].minor;
-  }
-
-  return output;
-}
-
-Cuda::size_type Cuda::device_arch() {
-  const int dev_id = Impl::CudaInternal::singleton().m_cudaDev;
-
-  int dev_arch = 0;
-
-  if (0 <= dev_id) {
-    const struct cudaDeviceProp &cudaProp =
-        Impl::CudaInternalDevices::singleton().m_cudaProp[dev_id];
-
-    dev_arch = cudaProp.major * 100 + cudaProp.minor;
-  }
-
-  return dev_arch;
 }
 
 void Cuda::impl_finalize() { Impl::CudaInternal::singleton().finalize(); }

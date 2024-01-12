@@ -420,12 +420,4 @@ void Kokkos::Impl::create_HIP_instances(std::vector<HIP> &instances) {
   }
 }
 
-//----------------------------------------------------------------------------
-
-namespace Kokkos {
-HIP::size_type HIP::detect_device_count() {
-  int hipDevCount;
-  KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDeviceCount(&hipDevCount));
-  return hipDevCount;
-}
 }  // namespace Kokkos
