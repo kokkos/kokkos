@@ -600,10 +600,8 @@ void Cuda::impl_initialize(InitializationSettings const &settings) {
   Impl::CudaInternal::m_cudaArch = Impl::cuda_kernel_arch(cuda_device_id);
 
   if (Impl::CudaInternal::m_cudaArch == 0) {
-    std::stringstream ss;
-    ss << "Kokkos::Cuda::initialize ERROR: likely mismatch of architecture\n";
-    std::string msg = ss.str();
-    Kokkos::abort(msg.c_str());
+    Kokkos::abort(
+        "Kokkos::Cuda::initialize ERROR: likely mismatch of architecture\n");
   }
 
   int compiled_major = Impl::CudaInternal::m_cudaArch / 100;
