@@ -179,6 +179,38 @@ class Cuda {
   //! Initialize, telling the CUDA run-time library which device to use.
   static void impl_initialize(InitializationSettings const&);
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  /// \brief Cuda device architecture of the selected device.
+  ///
+  /// This matches the __CUDA_ARCH__ specification.
+  KOKKOS_DEPRECATED static size_type device_arch() {
+    const cudaDeviceProp& cudaProp = cuda_device_prop();
+    return cudaProp.major * 100 + cudaProp.minor;
+  }
+
+  //! Query device count.
+  KOKKOS_DEPRECATED static size_type detect_device_count() {
+    int count;
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGetDeviceCount(&count));
+    return
+  }
+
+  /** \brief  Detect the available devices and their architecture
+   *          as defined by the __CUDA_ARCH__ specification.
+   */
+  KOKKOS_DEPRECATED static std::vector<unsigned> detect_device_arch() const {
+    int count;
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGetDeviceCount(&count));
+    std::vector<unsigned> out;
+    for (int i = 0; i < count; ++i) {
+      cudaDeviceProp prop;
+      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGetDeviceProperties(prop, i));
+      out.push_back(prop.major * 100 + prop.minor);
+    }
+    return out;
+  }
+#endif
+
   cudaStream_t cuda_stream() const;
   int cuda_device() const;
   const cudaDeviceProp& cuda_device_prop() const;
