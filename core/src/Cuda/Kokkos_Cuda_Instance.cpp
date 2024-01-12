@@ -670,11 +670,6 @@ Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
                                              /*manage*/ true);
 }
 
-Cuda::size_type Cuda::device_arch() {
-  const cudaDeviceProp &cudaProp = cuda_device_prop();
-  return cudaProp.major * 100 + cudaProp.minor;
-}
-
 void Cuda::impl_finalize() { Impl::CudaInternal::singleton().finalize(); }
 
 Cuda::Cuda()

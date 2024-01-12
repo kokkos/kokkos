@@ -94,8 +94,6 @@ class HIP {
 
   static int impl_is_initialized();
 
-  //  static size_type device_arch();
-
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   static int concurrency();
 #else

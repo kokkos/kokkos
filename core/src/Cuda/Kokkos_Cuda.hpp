@@ -179,11 +179,6 @@ class Cuda {
   //! Initialize, telling the CUDA run-time library which device to use.
   static void impl_initialize(InitializationSettings const&);
 
-  /// \brief Cuda device architecture of the selected device.
-  ///
-  /// This matches the __CUDA_ARCH__ specification.
-  static size_type device_arch();
-
   cudaStream_t cuda_stream() const;
   int cuda_device() const;
   const cudaDeviceProp& cuda_device_prop() const;
