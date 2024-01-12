@@ -593,7 +593,7 @@ int Cuda::impl_is_initialized() {
 void Cuda::impl_initialize(InitializationSettings const &settings) {
   const int cuda_device_id = Impl::get_gpu(settings);
 
-  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGetDeviceProperties(&Impl::CudaInternal::m_deviceProp, cuda_device_id);
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGetDeviceProperties(&Impl::CudaInternal::m_deviceProp, cuda_device_id));
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(cuda_device_id));
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaDeviceSynchronize());
 
