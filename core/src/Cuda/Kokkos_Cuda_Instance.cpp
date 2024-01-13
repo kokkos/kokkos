@@ -665,7 +665,8 @@ void Cuda::impl_finalize() {
   auto &deep_copy_space = Impl::cuda_get_deep_copy_space(/*initialize*/ false);
   if (deep_copy_space)
     deep_copy_space->impl_internal_space_instance()->finalize();
-  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamDestroy(cuda_get_deep_copy_stream()));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(
+      cudaStreamDestroy(Impl::cuda_get_deep_copy_stream()));
 
   Impl::CudaInternal::singleton().finalize();
 }
