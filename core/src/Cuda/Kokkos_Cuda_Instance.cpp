@@ -641,11 +641,12 @@ Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
 
   // Allocate a staging buffer for constant mem in pinned host memory and an
   // event to avoid overwriting driver for previous kernel launches
-  KOKKOS_IMPL_CUDA_SAFE_CALL(
-      cudaMallocHost(reinterpret_cast<void **>(&constantMemHostStaging),
-                     CudaTraits::ConstantMemoryUsage));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMallocHost(
+      reinterpret_cast<void **>(&Impl::CudaInternal::constantMemHostStaging),
+      Impl::CudaTraits::ConstantMemoryUsage));
 
-  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaEventCreate(&constantMemReusable));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(
+      cudaEventCreate(&Impl::CudaInternal::constantMemReusable));
 
   Impl::CudaInternal::singleton().initialize(singleton_stream,
                                              /*manage*/ true);
@@ -656,8 +657,10 @@ void Cuda::impl_finalize() {
 
   desul::Impl::finalize_lock_arrays();  // FIXME
 
-  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaEventDestroy(constantMemReusable));
-  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFreeHost(constantMemHostStaging));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(
+      cudaEventDestroy(Impl::CudaInternal::constantMemReusable));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(
+      cudaFreeHost(Impl::CudaInternal::constantMemHostStaging));
 
   auto &deep_copy_space = Impl::cuda_get_deep_copy_space(/*initialize*/ false);
   if (deep_copy_space)

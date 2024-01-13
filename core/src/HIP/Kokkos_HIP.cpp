@@ -97,8 +97,10 @@ void HIP::impl_finalize() {
 
   desul::Impl::finalize_lock_arrays();  // FIXME
 
-  KOKKOS_IMPL_HIP_SAFE_CALL(hipEventDestroy(constantMemReusable));
-  KOKKOS_IMPL_HIP_SAFE_CALL(hipHostFree(constantMemHostStaging));
+  KOKKOS_IMPL_HIP_SAFE_CALL(
+      hipEventDestroy(Impl::HIPInternal::constantMemReusable));
+  KOKKOS_IMPL_HIP_SAFE_CALL(
+      hipHostFree(Impl::HIPInternal::constantMemHostStaging));
 
   Impl::HIPInternal::singleton().finalize();
 }
