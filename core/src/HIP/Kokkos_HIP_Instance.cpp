@@ -419,5 +419,3 @@ void Kokkos::Impl::create_HIP_instances(std::vector<HIP> &instances) {
     instances[s] = HIP(stream, ManageStream::yes);
   }
 }
-
-}  // namespace Kokkos
