@@ -317,22 +317,6 @@ void CudaInternal::initialize(cudaStream_t stream, bool manage_stream) {
     (void)scratch_space(reduce_block_count * 16 * sizeof(size_type));
   }
 
-  // Init the array for used for arbitrarily sized atomics
-  if (this == &singleton()) {
-    desul::Impl::init_lock_arrays();  // FIXME
-  }
-
-  // Allocate a staging buffer for constant mem in pinned host memory
-  // and an event to avoid overwriting driver for previous kernel launches
-  if (this == &singleton()) {
-    KOKKOS_IMPL_CUDA_SAFE_CALL((cuda_malloc_host_wrapper(
-        reinterpret_cast<void **>(&constantMemHostStaging),
-        CudaTraits::ConstantMemoryUsage)));
-
-    KOKKOS_IMPL_CUDA_SAFE_CALL(
-        (cuda_event_create_wrapper(&constantMemReusable)));
-  }
-
   m_stream        = stream;
   m_manage_stream = manage_stream;
   for (int i = 0; i < m_n_team_scratch; ++i) {
@@ -496,23 +480,6 @@ void CudaInternal::finalize() {
 
   was_finalized = true;
 
-  // Only finalize this if we're the singleton
-  if (this == &singleton()) {
-    (void)Impl::cuda_global_unique_token_locks(true);
-    desul::Impl::finalize_lock_arrays();  // FIXME
-
-    KOKKOS_IMPL_CUDA_SAFE_CALL(
-        (cuda_free_host_wrapper(constantMemHostStaging)));
-    KOKKOS_IMPL_CUDA_SAFE_CALL(
-        (cuda_event_destroy_wrapper(constantMemReusable)));
-    auto &deep_copy_space =
-        Kokkos::Impl::cuda_get_deep_copy_space(/*initialize*/ false);
-    if (deep_copy_space)
-      deep_copy_space->impl_internal_space_instance()->finalize();
-    KOKKOS_IMPL_CUDA_SAFE_CALL(
-        (cuda_stream_destroy_wrapper(cuda_get_deep_copy_stream())));
-  }
-
   if (nullptr != m_scratchSpace || nullptr != m_scratchFlags) {
     using RecordCuda = Kokkos::Impl::SharedAllocationRecord<CudaSpace>;
     using RecordHost =
@@ -663,11 +630,40 @@ Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(cuda_device_id));
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamCreate(&singleton_stream));
 
+  // Init the array for used for arbitrarily sized atomics
+  desul::Impl::init_lock_arrays();  // FIXME
+
+  // Allocate a staging buffer for constant mem in pinned host memory and an
+  // event to avoid overwriting driver for previous kernel launches
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMallocHost(
+      reinterpret_cast<void **>(&Impl::CudaInternal::constantMemHostStaging),
+      Impl::CudaTraits::ConstantMemoryUsage));
+
+  KOKKOS_IMPL_CUDA_SAFE_CALL(
+      cudaEventCreate(&Impl::CudaInternal::constantMemReusable));
+
   Impl::CudaInternal::singleton().initialize(singleton_stream,
                                              /*manage*/ true);
 }
 
-void Cuda::impl_finalize() { Impl::CudaInternal::singleton().finalize(); }
+void Cuda::impl_finalize() {
+  (void)Impl::cuda_global_unique_token_locks(true);
+
+  desul::Impl::finalize_lock_arrays();  // FIXME
+
+  KOKKOS_IMPL_CUDA_SAFE_CALL(
+      cudaEventDestroy(Impl::CudaInternal::constantMemReusable));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(
+      cudaFreeHost(Impl::CudaInternal::constantMemHostStaging));
+
+  auto &deep_copy_space = Impl::cuda_get_deep_copy_space(/*initialize*/ false);
+  if (deep_copy_space)
+    deep_copy_space->impl_internal_space_instance()->finalize();
+  KOKKOS_IMPL_CUDA_SAFE_CALL(
+      cudaStreamDestroy(Impl::cuda_get_deep_copy_stream()));
+
+  Impl::CudaInternal::singleton().finalize();
+}
 
 Cuda::Cuda()
     : m_space_instance(&Impl::CudaInternal::singleton(),
