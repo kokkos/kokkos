@@ -115,13 +115,14 @@ HIP::HIP()
 }
 
 HIP::HIP(hipStream_t const stream, Impl::ManageStream manage_stream)
-    : m_space_instance(new Impl::HIPInternal, [](Impl::HIPInternal* ptr) {
-        ptr->finalize();
-        if (static_cast<bool>(manage_stream)) {
-          KOKKOS_IMPL_HIP_SAFE_CALL(cudaStreamDestroy(ptr->m_stream));
-        }
-        delete ptr;
-      }) {
+    : m_space_instance(
+          new Impl::HIPInternal, [manage_stream](Impl::HIPInternal* ptr) {
+            ptr->finalize();
+            if (static_cast<bool>(manage_stream)) {
+              KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamDestroy(ptr->m_stream));
+            }
+            delete ptr;
+          }) {
   Impl::HIPInternal::singleton().verify_is_initialized(
       "HIP instance constructor");
   m_space_instance->initialize(stream);
