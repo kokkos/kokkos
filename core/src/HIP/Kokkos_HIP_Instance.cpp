@@ -159,14 +159,13 @@ void HIPInternal::fence(const std::string &name) const {
       [&]() { KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamSynchronize(m_stream)); });
 }
 
-void HIPInternal::initialize(hipStream_t stream, bool manage_stream) {
+void HIPInternal::initialize(hipStream_t stream) {
   KOKKOS_EXPECTS(!is_initialized());
 
   if (was_finalized)
     Kokkos::abort("Calling HIP::initialize after HIP::finalize is illegal\n");
 
-  m_stream        = stream;
-  m_manage_stream = manage_stream;
+  m_stream = stream;
 
   //----------------------------------
   // Multiblock reduction uses scratch flags for counters
@@ -339,9 +338,6 @@ void HIPInternal::finalize() {
     if (m_team_scratch_current_size[i] > 0)
       Kokkos::kokkos_free<Kokkos::HIPSpace>(m_team_scratch_ptr[i]);
   }
-
-  if (m_manage_stream && m_stream != nullptr)
-    KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamDestroy(m_stream));
 
   m_scratchSpaceCount = 0;
   m_scratchFlagsCount = 0;
