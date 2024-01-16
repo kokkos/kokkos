@@ -343,7 +343,6 @@ void HIPInternal::finalize() {
   m_scratchFlagsCount = 0;
   m_scratchSpace      = nullptr;
   m_scratchFlags      = nullptr;
-  m_stream            = nullptr;
   for (int i = 0; i < m_n_team_scratch; ++i) {
     m_team_scratch_current_size[i] = 0;
     m_team_scratch_ptr[i]          = nullptr;

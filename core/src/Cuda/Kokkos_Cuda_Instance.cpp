@@ -240,7 +240,7 @@ void CudaInternal::print_configuration(std::ostream &s) const {
 //----------------------------------------------------------------------------
 
 CudaInternal::~CudaInternal() {
-  if (m_stream || m_scratchSpace || m_scratchFlags || m_scratchUnified) {
+  if (m_scratchSpace || m_scratchFlags || m_scratchUnified) {
     std::cerr << "Kokkos::Cuda ERROR: Failed to call Kokkos::Cuda::finalize()"
               << std::endl;
   }
@@ -502,7 +502,6 @@ void CudaInternal::finalize() {
   m_scratchSpace        = nullptr;
   m_scratchFlags        = nullptr;
   m_scratchUnified      = nullptr;
-  m_stream              = nullptr;
   for (int i = 0; i < m_n_team_scratch; ++i) {
     m_team_scratch_current_size[i] = 0;
     m_team_scratch_ptr[i]          = nullptr;
