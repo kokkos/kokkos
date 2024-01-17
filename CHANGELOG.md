@@ -10,6 +10,7 @@
 
 #### HIP:
 - Fix Graph compilation error [\#6624](https://github.com/kokkos/kokkos/pull/6624)
+- Add missing gfx940 [\#6671](https://github.com/kokkos/kokkos/pull/6671)
 
 #### SYCL:
 - Fix testing with `bfloat16` support [\#6608](https://github.com/kokkos/kokkos/pull/6608)
