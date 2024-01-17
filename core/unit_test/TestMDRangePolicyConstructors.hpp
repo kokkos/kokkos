@@ -93,6 +93,22 @@ TEST(TEST_CATEGORY_DEATH, policy_bounds_unsafe_narrowing_conversions) {
       },
       "unsafe narrowing conversion");
 }
+
+TEST(TEST_CATEGORY_DEATH, policy_invalid_bounds) {
+  using Policy = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>;
+
+  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+
+  auto dim = (Policy::inner_direction == Kokkos::Iterate::Right) ? 1 : 0;
+
+  ASSERT_DEATH(
+      {
+        (void)Policy({100, 100}, {90, 90});
+      },
+      "Kokkos::MDRangePolicy bounds error: The lower bound \\(100\\) is "
+      "greater than its upper bound \\(90\\) in dimension " +
+          std::to_string(dim) + "\\.");
+}
 #endif
 
 }  // namespace

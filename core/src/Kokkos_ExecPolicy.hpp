@@ -117,16 +117,18 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
   inline RangePolicy(const typename traits::execution_space& work_space,
                      const member_type work_begin, const member_type work_end)
       : m_space(work_space),
-        m_begin(work_begin < work_end ? work_begin : 0),
-        m_end(work_begin < work_end ? work_end : 0),
+        m_begin(work_begin),
+        m_end(work_end),
         m_granularity(0),
         m_granularity_mask(0) {
+    check_bounds_validity();
     set_auto_chunk_size();
   }
 
   /** \brief  Total range */
   inline RangePolicy(const member_type work_begin, const member_type work_end)
       : RangePolicy(typename traits::execution_space(), work_begin, work_end) {
+    check_bounds_validity();
     set_auto_chunk_size();
   }
 
@@ -136,10 +138,11 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
                      const member_type work_begin, const member_type work_end,
                      Args... args)
       : m_space(work_space),
-        m_begin(work_begin < work_end ? work_begin : 0),
-        m_end(work_begin < work_end ? work_end : 0),
+        m_begin(work_begin),
+        m_end(work_end),
         m_granularity(0),
         m_granularity_mask(0) {
+    check_bounds_validity();
     set_auto_chunk_size();
     set(args...);
   }
@@ -149,6 +152,7 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
   inline RangePolicy(const member_type work_begin, const member_type work_end,
                      Args... args)
       : RangePolicy(typename traits::execution_space(), work_begin, work_end) {
+    check_bounds_validity();
     set_auto_chunk_size();
     set(args...);
   }
@@ -216,6 +220,16 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
     }
     m_granularity      = new_chunk_size;
     m_granularity_mask = m_granularity - 1;
+  }
+
+  inline void check_bounds_validity() {
+    if (m_end < m_begin) {
+      std::string msg = "Kokkos::RangePolicy bounds error: The lower bound (" +
+                        std::to_string(m_begin) +
+                        ") is greater than the upper bound (" +
+                        std::to_string(m_end) + ").";
+      Kokkos::abort(msg.c_str());
+    }
   }
 
  public:
