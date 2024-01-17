@@ -68,6 +68,11 @@ class CudaSpace {
   /*--------------------------------*/
 
   CudaSpace();
+
+ private:
+  CudaSpace(int device_id, cudaStream_t stream);
+
+ public:
   CudaSpace(CudaSpace&& rhs)      = default;
   CudaSpace(const CudaSpace& rhs) = default;
   CudaSpace& operator=(CudaSpace&& rhs) = default;
@@ -89,9 +94,11 @@ class CudaSpace {
                   const size_t arg_alloc_size,
                   const size_t arg_logical_size = 0) const;
 
+  static CudaSpace impl_create(int device_id, cudaStream_t stream) {
+    return CudaSpace(device_id, stream);
+  }
+
  private:
-  template <class, class, class, class>
-  friend class Kokkos::Experimental::LogicalMemorySpace;
   void* impl_allocate(const Cuda& exec_space, const char* arg_label,
                       const size_t arg_alloc_size,
                       const size_t arg_logical_size = 0,
@@ -112,7 +119,8 @@ class CudaSpace {
   static constexpr const char* name() { return m_name; }
 
  private:
-  int m_device;  ///< Which Cuda device
+  int m_device;
+  cudaStream_t m_stream;
 
   static constexpr const char* m_name = "Cuda";
   friend class Kokkos::Impl::SharedAllocationRecord<Kokkos::CudaSpace, void>;
@@ -149,6 +157,11 @@ class CudaUVMSpace {
   /*--------------------------------*/
 
   CudaUVMSpace();
+
+ private:
+  CudaUVMSpace(int device_id, cudaStream_t stream);
+
+ public:
   CudaUVMSpace(CudaUVMSpace&& rhs)      = default;
   CudaUVMSpace(const CudaUVMSpace& rhs) = default;
   CudaUVMSpace& operator=(CudaUVMSpace&& rhs) = default;
@@ -167,8 +180,6 @@ class CudaUVMSpace {
                   const size_t arg_logical_size = 0) const;
 
  private:
-  template <class, class, class, class>
-  friend class Kokkos::Experimental::LogicalMemorySpace;
   void* impl_allocate(const char* arg_label, const size_t arg_alloc_size,
                       const size_t arg_logical_size = 0,
                       const Kokkos::Tools::SpaceHandle =
@@ -189,8 +200,13 @@ class CudaUVMSpace {
 #endif
   /*--------------------------------*/
 
+  static CudaUVMSpace impl_create(int device_id, cudaStream_t stream) {
+    return CudaUVMSpace(device_id, stream);
+  }
+
  private:
-  int m_device;  ///< Which Cuda device
+  int m_device;
+  cudaStream_t m_stream;
 
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_PIN_UVM_TO_HOST
   static bool kokkos_impl_cuda_pin_uvm_to_host_v;
@@ -223,6 +239,11 @@ class CudaHostPinnedSpace {
   /*--------------------------------*/
 
   CudaHostPinnedSpace();
+
+ private:
+  CudaHostPinnedSpace(int device_id, cudaStream_t stream);
+
+ public:
   CudaHostPinnedSpace(CudaHostPinnedSpace&& rhs)      = default;
   CudaHostPinnedSpace(const CudaHostPinnedSpace& rhs) = default;
   CudaHostPinnedSpace& operator=(CudaHostPinnedSpace&& rhs) = default;
@@ -240,9 +261,11 @@ class CudaHostPinnedSpace {
                   const size_t arg_alloc_size,
                   const size_t arg_logical_size = 0) const;
 
+  static CudaHostPinnedSpace impl_create(int device_id, cudaStream_t stream) {
+    return CudaHostPinnedSpace(device_id, stream);
+  }
+
  private:
-  template <class, class, class, class>
-  friend class Kokkos::Experimental::LogicalMemorySpace;
   void* impl_allocate(const char* arg_label, const size_t arg_alloc_size,
                       const size_t arg_logical_size = 0,
                       const Kokkos::Tools::SpaceHandle =
@@ -258,6 +281,9 @@ class CudaHostPinnedSpace {
   static constexpr const char* name() { return m_name; }
 
  private:
+  int m_device;
+  cudaStream_t m_stream;
+
   static constexpr const char* m_name = "CudaHostPinned";
 
   /*--------------------------------*/

@@ -983,7 +983,16 @@ template <typename Rank, typename TeamHandle, typename Lambda,
 KOKKOS_INLINE_FUNCTION void parallel_reduce(
     TeamThreadMDRange<Rank, TeamHandle> const& policy, Lambda const& lambda,
     ReducerValueType& val) {
+  static_assert(/*!Kokkos::is_view_v<ReducerValueType> &&*/
+                !std::is_array_v<ReducerValueType> &&
+                    !std::is_pointer_v<ReducerValueType> &&
+                    !Kokkos::is_reducer_v<ReducerValueType>,
+                "Only scalar return types are allowed!");
+
+  val = ReducerValueType{};
   Impl::md_parallel_impl<Rank>(policy, lambda, val);
+  policy.team.team_reduce(
+      Kokkos::Sum<ReducerValueType, typename TeamHandle::execution_space>{val});
 }
 
 template <typename Rank, typename TeamHandle, typename Lambda>
@@ -997,7 +1006,29 @@ template <typename Rank, typename TeamHandle, typename Lambda,
 KOKKOS_INLINE_FUNCTION void parallel_reduce(
     ThreadVectorMDRange<Rank, TeamHandle> const& policy, Lambda const& lambda,
     ReducerValueType& val) {
+  static_assert(/*!Kokkos::is_view_v<ReducerValueType> &&*/
+                !std::is_array_v<ReducerValueType> &&
+                    !std::is_pointer_v<ReducerValueType> &&
+                    !Kokkos::is_reducer_v<ReducerValueType>,
+                "Only a scalar return types are allowed!");
+
+  val = ReducerValueType{};
   Impl::md_parallel_impl<Rank>(policy, lambda, val);
+  if constexpr (false
+#ifdef KOKKOS_ENABLE_CUDA
+                || std::is_same_v<typename TeamHandle::execution_space,
+                                  Kokkos::Cuda>
+#elif defined(KOKKOS_ENABLE_HIP)
+                || std::is_same_v<typename TeamHandle::execution_space,
+                                  Kokkos::HIP>
+#elif defined(KOKKOS_ENABLE_SYCL)
+                || std::is_same_v<typename TeamHandle::execution_space,
+                                  Kokkos::Experimental::SYCL>
+#endif
+  )
+    policy.team.vector_reduce(
+        Kokkos::Sum<ReducerValueType, typename TeamHandle::execution_space>{
+            val});
 }
 
 template <typename Rank, typename TeamHandle, typename Lambda>
@@ -1011,7 +1042,31 @@ template <typename Rank, typename TeamHandle, typename Lambda,
 KOKKOS_INLINE_FUNCTION void parallel_reduce(
     TeamVectorMDRange<Rank, TeamHandle> const& policy, Lambda const& lambda,
     ReducerValueType& val) {
+  static_assert(/*!Kokkos::is_view_v<ReducerValueType> &&*/
+                !std::is_array_v<ReducerValueType> &&
+                    !std::is_pointer_v<ReducerValueType> &&
+                    !Kokkos::is_reducer_v<ReducerValueType>,
+                "Only a scalar return types are allowed!");
+
+  val = ReducerValueType{};
   Impl::md_parallel_impl<Rank>(policy, lambda, val);
+  if constexpr (false
+#ifdef KOKKOS_ENABLE_CUDA
+                || std::is_same_v<typename TeamHandle::execution_space,
+                                  Kokkos::Cuda>
+#elif defined(KOKKOS_ENABLE_HIP)
+                || std::is_same_v<typename TeamHandle::execution_space,
+                                  Kokkos::HIP>
+#elif defined(KOKKOS_ENABLE_SYCL)
+                || std::is_same_v<typename TeamHandle::execution_space,
+                                  Kokkos::Experimental::SYCL>
+#endif
+  )
+    policy.team.vector_reduce(
+        Kokkos::Sum<ReducerValueType, typename TeamHandle::execution_space>{
+            val});
+  policy.team.team_reduce(
+      Kokkos::Sum<ReducerValueType, typename TeamHandle::execution_space>{val});
 }
 
 template <typename Rank, typename TeamHandle, typename Lambda>

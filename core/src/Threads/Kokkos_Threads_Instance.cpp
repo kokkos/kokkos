@@ -674,8 +674,6 @@ void ThreadsInternal::finalize() {
   s_threads_process.m_pool_size     = 1;
   s_threads_process.m_pool_fan_size = 0;
   s_threads_process.m_pool_state    = ThreadState::Inactive;
-
-  Kokkos::Profiling::finalize();
 }
 
 //----------------------------------------------------------------------------

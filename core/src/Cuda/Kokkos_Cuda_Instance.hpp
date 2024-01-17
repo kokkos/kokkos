@@ -22,7 +22,7 @@
 #include <atomic>
 #include <Cuda/Kokkos_Cuda_Error.hpp>
 #include <cuda_runtime_api.h>
-
+#include "Kokkos_CudaSpace.hpp"
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 // These functions fulfill the purpose of allowing to work around
@@ -84,7 +84,7 @@ class CudaInternal {
  public:
   using size_type = Cuda::size_type;
 
-  inline static int m_cudaDev = -1;
+  int m_cudaDev = -1;
 
   // Device Properties
   inline static int m_cudaArch = -1;
@@ -263,31 +263,6 @@ class CudaInternal {
   cudaError_t cuda_free_host_wrapper(void* ptr) const {
     if constexpr (setCudaDevice) set_cuda_device();
     return cudaFreeHost(ptr);
-  }
-
-  template <bool setCudaDevice = true>
-  cudaError_t cuda_get_device_count_wrapper(int* count) const {
-    if constexpr (setCudaDevice) set_cuda_device();
-    return cudaGetDeviceCount(count);
-  }
-
-  template <bool setCudaDevice = true>
-  cudaError_t cuda_get_device_properties_wrapper(cudaDeviceProp* prop,
-                                                 int device) const {
-    if constexpr (setCudaDevice) set_cuda_device();
-    return cudaGetDeviceProperties(prop, device);
-  }
-
-  template <bool setCudaDevice = true>
-  const char* cuda_get_error_name_wrapper(cudaError_t error) const {
-    if constexpr (setCudaDevice) set_cuda_device();
-    return cudaGetErrorName(error);
-  }
-
-  template <bool setCudaDevice = true>
-  const char* cuda_get_error_string_wrapper(cudaError_t error) const {
-    if constexpr (setCudaDevice) set_cuda_device();
-    return cudaGetErrorString(error);
   }
 
   template <bool setCudaDevice = true>

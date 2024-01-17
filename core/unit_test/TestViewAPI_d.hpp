@@ -27,6 +27,12 @@ TEST(TEST_CATEGORY, view_api_d) {
 }
 
 TEST(TEST_CATEGORY, view_allocation_error) {
+#if defined(__has_feature)
+#if __has_feature(address_sanitizer)
+  GTEST_SKIP() << "AddressSanitzer detects allocating too much memory "
+                  "preventing our checks to run";
+#endif
+#endif
 #if ((HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR == 3))
   GTEST_SKIP() << "ROCm 5.3 segfaults when trying to allocate too much memory";
 #endif

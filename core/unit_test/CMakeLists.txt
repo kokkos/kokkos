@@ -200,6 +200,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
         Reductions
         Reductions_DeviceView
         SharedAlloc
+        Swap
         )
       set(file ${dir}/Test${Tag}_${Name}.cpp)
       # Write to a temporary intermediate file and call configure_file to avoid
@@ -1023,13 +1024,7 @@ KOKKOS_ADD_ADVANCED_TEST( CoreUnitTest_PushFinalizeHook_terminate
       tools/TestCategoricalTuner.cpp
     )
   endif()
-  if((NOT Kokkos_ENABLE_OPENMPTARGET) AND (NOT Kokkos_ENABLE_OPENACC))
-  KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    CoreUnitTest_LogicalSpaces
-    SOURCES
-      tools/TestLogicalSpaces.cpp
-  )
-  endif()
+
   SET(KOKKOSP_SOURCES
     UnitTestMainInit.cpp
     tools/TestEventCorrectness.cpp

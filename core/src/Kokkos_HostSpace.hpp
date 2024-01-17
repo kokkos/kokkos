@@ -75,12 +75,19 @@ class HostSpace {
   /**\brief  Non-default memory space instance to choose allocation mechansim,
    * if available */
 
-  enum KOKKOS_DEPRECATED AllocationMechanism {
-    STD_MALLOC,
-    POSIX_MEMALIGN,
-    POSIX_MMAP,
-    INTEL_MM_ALLOC
-  };
+#if defined(KOKKOS_COMPILER_GNU) && KOKKOS_COMPILER_GNU < 1100
+  // We see deprecation warnings even when not using the deprecated
+  // HostSpace constructor below when using gcc before release 11.
+  enum
+#else
+  enum KOKKOS_DEPRECATED
+#endif
+      AllocationMechanism {
+        STD_MALLOC,
+        POSIX_MEMALIGN,
+        POSIX_MMAP,
+        INTEL_MM_ALLOC
+      };
 
   KOKKOS_DEPRECATED
   explicit HostSpace(const AllocationMechanism&);
@@ -98,9 +105,6 @@ class HostSpace {
                   const size_t arg_logical_size = 0) const;
 
  private:
-  template <class, class, class, class>
-  friend class Kokkos::Experimental::LogicalMemorySpace;
-
   void* impl_allocate(const char* arg_label, const size_t arg_alloc_size,
                       const size_t arg_logical_size = 0,
                       const Kokkos::Tools::SpaceHandle =

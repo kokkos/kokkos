@@ -131,9 +131,13 @@ void combine(Kokkos::Tools::InitArguments& out,
 
 int get_device_count() {
 #if defined(KOKKOS_ENABLE_CUDA)
-  return Kokkos::Cuda::detect_device_count();
+  int count;
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGetDeviceCount(&count));
+  return count;
 #elif defined(KOKKOS_ENABLE_HIP)
-  return Kokkos::HIP::detect_device_count();
+  int count;
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDeviceCount(&count));
+  return count;
 #elif defined(KOKKOS_ENABLE_SYCL)
   return sycl::device::get_devices(sycl::info::device_type::gpu).size();
 #elif defined(KOKKOS_ENABLE_OPENACC)
