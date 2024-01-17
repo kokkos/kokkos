@@ -53,7 +53,9 @@ inline bool execute_in_serial(OpenMP const& space = OpenMP()) {
 #else
   bool is_nested = static_cast<bool>(omp_get_nested());
 #endif
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   return (OpenMP::in_parallel(space) && !(is_nested && (omp_get_level() == 1)));
+#endif
 }
 
 }  // namespace Impl

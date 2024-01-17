@@ -179,11 +179,12 @@ void OpenMPInternal::initialize(int thread_count) {
     Kokkos::abort(
         "Calling OpenMP::initialize after OpenMP::finalize is illegal\n");
   }
-
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   if (omp_in_parallel()) {
     std::string msg("Kokkos::OpenMP::initialize ERROR : in parallel");
     Kokkos::Impl::throw_runtime_exception(msg);
   }
+#endif
 
   {
     if (Kokkos::show_warnings() && !std::getenv("OMP_PROC_BIND")) {
@@ -276,15 +277,15 @@ void OpenMPInternal::initialize(int thread_count) {
 
   m_initialized = true;
 }
-
 void OpenMPInternal::finalize() {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   if (omp_in_parallel()) {
     std::string msg("Kokkos::OpenMP::finalize ERROR ");
     if (this != &singleton()) msg.append(": not initialized");
     if (omp_in_parallel()) msg.append(": in parallel");
     Kokkos::Impl::throw_runtime_exception(msg);
   }
-
+#endif
   if (this == &singleton()) {
     auto const &instance = singleton();
     // Silence Cuda Warning

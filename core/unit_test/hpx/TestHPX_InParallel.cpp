@@ -24,8 +24,6 @@
 
 namespace {
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-
 inline constexpr int n = 1 << 10;
 
 TEST(hpx, in_parallel_for_range_policy) {
@@ -183,5 +181,4 @@ TEST(hpx, in_parallel_scan_range_policy) {
     ASSERT_EQ(a(i), 0);
   }
 }
-#endif
 }  // namespace

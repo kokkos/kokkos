@@ -25,17 +25,7 @@ struct CheckClassWithExecutionSpaceAsDataMemberIsCopyable {
   Kokkos::DefaultExecutionSpace device;
   Kokkos::DefaultHostExecutionSpace host;
 
-  KOKKOS_FUNCTION void operator()(int, int& e) const {
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-    // not actually doing anything useful, mostly checking that
-    // ExecutionSpace::in_parallel() is callable
-    if (static_cast<int>(device.in_parallel()) < 0) {
-      ++e;
-    }
-#else
-    e = 0;
-#endif
-  }
+  KOKKOS_FUNCTION void operator()(int, int& e) const { e += i; }
 
   CheckClassWithExecutionSpaceAsDataMemberIsCopyable() {
     int errors;

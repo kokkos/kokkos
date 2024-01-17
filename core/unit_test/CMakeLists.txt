@@ -709,12 +709,14 @@ if(Kokkos_ENABLE_HPX)
       hpx/TestHPX_IndependentInstancesRefCounting.cpp
       hpx/TestHPX_IndependentInstancesSynchronization.cpp
   )
+if(Kokkos_ENABLE_DEPRECATED_CODE_4)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     CoreUnitTest_HPX_InParallel
     SOURCES
       UnitTestMainInit.cpp
       hpx/TestHPX_InParallel.cpp
   )
+  endif()
 endif()
 
 if(Kokkos_ENABLE_OPENMPTARGET)
