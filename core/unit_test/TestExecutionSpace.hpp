@@ -25,8 +25,6 @@ struct CheckClassWithExecutionSpaceAsDataMemberIsCopyable {
   Kokkos::DefaultExecutionSpace device;
   Kokkos::DefaultHostExecutionSpace host;
 
-  KOKKOS_FUNCTION void operator()(int, int& e) const { e += i; }
-
   CheckClassWithExecutionSpaceAsDataMemberIsCopyable() {
     int errors;
     Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecutionSpace>(0, 1), *this,
