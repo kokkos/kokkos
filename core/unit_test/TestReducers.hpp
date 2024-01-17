@@ -56,6 +56,28 @@ struct TestReducers {
     }
   };
 
+  struct TeamSumNestedFunctor {
+    using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
+
+    SumFunctor f;
+    int M, N;
+    Kokkos::View<Scalar*, ExecSpace> result;
+
+    TeamSumNestedFunctor(SumFunctor& f_, const int M_, const int N_,
+                         Kokkos::View<Scalar*, ExecSpace> result_)
+        : f(f_), M(M_), N(N_), result(result_) {}
+
+    KOKKOS_INLINE_FUNCTION
+    void operator()(const member_type& m) const {
+      const int i = m.league_rank();
+      Scalar local_scalar;
+      Kokkos::Sum<Scalar, typename ExecSpace::memory_space> reducer_scalar(
+          local_scalar);
+      Kokkos::parallel_reduce(Kokkos::TeamThreadRange(m, N), f, reducer_scalar);
+      result(i) = local_scalar;
+    }
+  };
+
   struct ProdFunctor {
     Kokkos::View<const Scalar*, ExecSpace> values;
 
@@ -357,6 +379,7 @@ struct TestReducers {
     Kokkos::View<Scalar, ExecSpace> sum_view("result");
     Kokkos::deep_copy(sum_view, Scalar(1));
 
+    // Test team policy reduction
     constexpr int num_teams = get_num_teams();
     TeamSumFunctor tf;
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
@@ -368,36 +391,42 @@ struct TestReducers {
     Kokkos::deep_copy(sum_scalar, sum_view);
     ASSERT_EQ(sum_scalar, Scalar{num_teams}) << "num_teams: " << num_teams;
 
-    Kokkos::parallel_for(
+    // Test TeamThreadRange level reduction with 0 work produces 0 result
+    {
+      const int league_size = 1;
+      Kokkos::View<Scalar*, ExecSpace> result("result", league_size);
+      TeamSumNestedFunctor tnf(f, league_size, 0, result);
+      auto team_size_max = Kokkos::TeamPolicy<ExecSpace>(league_size, 1)
+                               .team_size_max(tnf, Kokkos::ParallelForTag());
+      auto team_size = std::min(team_size_max, TEST_EXECSPACE().concurrency());
+      Kokkos::parallel_for(
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
-        Kokkos::TeamPolicy<ExecSpace>(1, Kokkos::AUTO),
+          Kokkos::TeamPolicy<ExecSpace>(1, Kokkos::AUTO),
 #else
-        Kokkos::TeamPolicy<ExecSpace>(1, 1),
+          Kokkos::TeamPolicy<ExecSpace>(1, 1),
 #endif
-        KOKKOS_LAMBDA(member_type team_member) {
-          Scalar local_scalar;
-          Kokkos::Sum<Scalar, typename ExecSpace::memory_space> reducer_scalar(
-              local_scalar);
-          Kokkos::parallel_reduce(Kokkos::TeamThreadRange(team_member, 0), f,
-                                  reducer_scalar);
-          sum_view() = local_scalar;
-        });
-    Kokkos::deep_copy(sum_scalar, sum_view);
-    ASSERT_EQ(sum_scalar, Scalar{0}) << "N: " << N;
+          tnf);
+      auto result_h =
+          Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), result);
+      ASSERT_EQ(result_h(0), Scalar{0}) << "N: " << N;
+    }
 
-    auto team_size = std::min(128, TEST_EXECSPACE().concurrency());
-    Kokkos::parallel_for(
-        Kokkos::TeamPolicy<ExecSpace>(10, team_size),
-        KOKKOS_LAMBDA(member_type team_member) {
-          Scalar local_scalar;
-          Kokkos::Sum<Scalar, typename ExecSpace::memory_space> reducer_scalar(
-              local_scalar);
-          Kokkos::parallel_reduce(Kokkos::TeamThreadRange(team_member, N), f,
-                                  reducer_scalar);
-          sum_view() = local_scalar;
-        });
-    Kokkos::deep_copy(sum_scalar, sum_view);
-    ASSERT_EQ(sum_scalar, reference_sum) << "N: " << N;
+    // Same test as above, but with inner reduction over N, and league_size=10
+    {
+      const int league_size = 10;
+      Kokkos::View<Scalar*, ExecSpace> result("result", league_size);
+      TeamSumNestedFunctor tnf(f, league_size, N, result);
+      auto team_size_max = Kokkos::TeamPolicy<ExecSpace>(league_size, 1)
+                               .team_size_max(tnf, Kokkos::ParallelForTag());
+      auto team_size = std::min(team_size_max, TEST_EXECSPACE().concurrency());
+      Kokkos::parallel_for(
+          Kokkos::TeamPolicy<ExecSpace>(league_size, team_size), tnf);
+      auto result_h =
+          Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), result);
+      for (auto i = 0; i < result_h.extent(0); ++i) {
+        ASSERT_EQ(result_h(i), reference_sum) << "N: " << N;
+      }
+    }
   }
 
   static void test_sum(int N) {
