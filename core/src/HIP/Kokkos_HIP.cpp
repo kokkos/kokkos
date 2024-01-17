@@ -89,7 +89,7 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
 
   hipStream_t singleton_stream;
   KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamCreate(&singleton_stream));
-  Impl::HIPInternal::singleton().initialize(singleton_stream, /*manage*/ true);
+  Impl::HIPInternal::singleton().initialize(singleton_stream);
 }
 
 void HIP::impl_finalize() {
