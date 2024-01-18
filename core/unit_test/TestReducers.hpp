@@ -411,8 +411,18 @@ struct TestReducers {
       const int league_size = 10;
       Kokkos::View<Scalar*, ExecSpace> result("result", league_size);
       TeamSumNestedFunctor tnf(f, league_size, N, result);
-      auto team_size_max = Kokkos::TeamPolicy<ExecSpace>(league_size, 1)
-                               .team_size_max(tnf, Kokkos::ParallelForTag());
+      // FIXME_OPENMPTARGET temporary restriction for team size to be at least
+      // 32
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+      int initial_team_size =
+          std::is_same_v<ExecSpace, Kokkos::Experimental::OpenMPTarget> ? 32
+                                                                        : 1;
+#else
+      int initial_team_size = 1;
+#endif
+      auto team_size_max =
+          Kokkos::TeamPolicy<ExecSpace>(league_size, initial_team_size)
+              .team_size_max(tnf, Kokkos::ParallelForTag());
       auto team_size = std::min(team_size_max, TEST_EXECSPACE().concurrency());
       Kokkos::parallel_for(
           Kokkos::TeamPolicy<ExecSpace>(league_size, team_size), tnf);
