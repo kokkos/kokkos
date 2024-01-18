@@ -9,7 +9,7 @@
 - Add warp sync for `parallel_reduce` to avoid race condition [\#6630](https://github.com/kokkos/kokkos/pull/6630)
 
 #### HIP:
-- Fix Graph compilation error [\#6624](https://github.com/kokkos/kokkos/pull/6624)
+- Fix Graph "multiple definition of" linking error (missing `inline` specifier) [\#6624](https://github.com/kokkos/kokkos/pull/6624)
 - Add missing gfx940 [\#6671](https://github.com/kokkos/kokkos/pull/6671)
 
 #### SYCL:
