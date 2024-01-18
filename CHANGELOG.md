@@ -10,7 +10,7 @@
 
 #### HIP:
 - Fix Graph "multiple definition of" linking error (missing `inline` specifier) [\#6624](https://github.com/kokkos/kokkos/pull/6624)
-- Add missing gfx940 [\#6671](https://github.com/kokkos/kokkos/pull/6671)
+- Add support for gfx940 (AMD Instinct MI300 GPU) [\#6671](https://github.com/kokkos/kokkos/pull/6671)
 
 #### SYCL:
 - Fix testing with `bfloat16` support [\#6608](https://github.com/kokkos/kokkos/pull/6608)
