@@ -227,12 +227,13 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
                         std::to_string(m_begin) +
                         ") is greater than the upper bound (" +
                         std::to_string(m_end) + ").\n";
-#if !defined(KOKKOS_ENABLE_DEPRECATED_CODE_4)
+#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_4
       Kokkos::abort(msg.c_str());
-#elif defined(KOKKOS_ENABLE_DEPRECATION_WARNINGS)
-      Kokkos::Impl::log_warning(msg);
+#endif
       m_begin = 0;
       m_end   = 0;
+#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
+      Kokkos::Impl::log_warning(msg);
 #endif
     }
   }
