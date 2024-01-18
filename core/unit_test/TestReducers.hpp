@@ -418,7 +418,7 @@ struct TestReducers {
           Kokkos::TeamPolicy<ExecSpace>(league_size, team_size), tnf);
       auto result_h =
           Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), result);
-      for (auto i = 0; i < result_h.extent(0); ++i) {
+      for (int i = 0; i < result_h.extent_int(0); ++i) {
         ASSERT_EQ(result_h(i), reference_sum) << "N: " << N;
       }
     }
