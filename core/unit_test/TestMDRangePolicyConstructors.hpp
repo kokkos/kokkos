@@ -125,7 +125,8 @@ TEST(TEST_CATEGORY_DEATH, policy_invalid_bounds) {
   ASSERT_EQ(::testing::internal::GetCapturedStderr(), msg1 + msg2);
 #else
   ASSERT_TRUE(::testing::internal::GetCapturedStderr().empty());
-  (void)msg;
+  (void)msg1;
+  (void)msg2;
 #endif
 
 #endif
