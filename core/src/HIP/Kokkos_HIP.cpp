@@ -90,7 +90,7 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
 
   hipStream_t singleton_stream;
   KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamCreate(&singleton_stream));
-  Impl::HIPInternal::singleton().initialize(singleton_stream, /*manage*/ true);
+  Impl::HIPInternal::singleton().initialize(singleton_stream);
 }
 
 void HIP::impl_finalize() {
@@ -104,6 +104,8 @@ void HIP::impl_finalize() {
       hipHostFree(Impl::HIPInternal::constantMemHostStaging));
 
   Impl::HIPInternal::singleton().finalize();
+  KOKKOS_IMPL_HIP_SAFE_CALL(
+      hipStreamDestroy(Impl::HIPInternal::singleton().m_stream));
 }
 
 HIP::HIP()
@@ -114,13 +116,17 @@ HIP::HIP()
 }
 
 HIP::HIP(hipStream_t const stream, Impl::ManageStream manage_stream)
-    : m_space_instance(new Impl::HIPInternal, [](Impl::HIPInternal* ptr) {
-        ptr->finalize();
-        delete ptr;
-      }) {
+    : m_space_instance(
+          new Impl::HIPInternal, [manage_stream](Impl::HIPInternal* ptr) {
+            ptr->finalize();
+            if (static_cast<bool>(manage_stream)) {
+              KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamDestroy(ptr->m_stream));
+            }
+            delete ptr;
+          }) {
   Impl::HIPInternal::singleton().verify_is_initialized(
       "HIP instance constructor");
-  m_space_instance->initialize(stream, static_cast<bool>(manage_stream));
+  m_space_instance->initialize(stream);
 }
 
 KOKKOS_DEPRECATED HIP::HIP(hipStream_t const stream, bool manage_stream)

@@ -240,7 +240,7 @@ void CudaInternal::print_configuration(std::ostream &s) const {
 //----------------------------------------------------------------------------
 
 CudaInternal::~CudaInternal() {
-  if (m_stream || m_scratchSpace || m_scratchFlags || m_scratchUnified) {
+  if (m_scratchSpace || m_scratchFlags || m_scratchUnified) {
     std::cerr << "Kokkos::Cuda ERROR: Failed to call Kokkos::Cuda::finalize()"
               << std::endl;
   }
@@ -278,7 +278,7 @@ void CudaInternal::fence() const {
   fence("Kokkos::CudaInternal::fence(): Unnamed Instance Fence");
 }
 
-void CudaInternal::initialize(cudaStream_t stream, bool manage_stream) {
+void CudaInternal::initialize(cudaStream_t stream) {
   KOKKOS_EXPECTS(!is_initialized());
 
   if (was_finalized)
@@ -317,8 +317,7 @@ void CudaInternal::initialize(cudaStream_t stream, bool manage_stream) {
     (void)scratch_space(reduce_block_count * 16 * sizeof(size_type));
   }
 
-  m_stream        = stream;
-  m_manage_stream = manage_stream;
+  m_stream = stream;
   for (int i = 0; i < m_n_team_scratch; ++i) {
     m_team_scratch_current_size[i] = 0;
     m_team_scratch_ptr[i]          = nullptr;
@@ -497,16 +496,12 @@ void CudaInternal::finalize() {
       Kokkos::kokkos_free<Kokkos::CudaSpace>(m_team_scratch_ptr[i]);
   }
 
-  if (m_manage_stream && get_stream() != nullptr)
-    KOKKOS_IMPL_CUDA_SAFE_CALL((cuda_stream_destroy_wrapper(m_stream)));
-
   m_scratchSpaceCount   = 0;
   m_scratchFlagsCount   = 0;
   m_scratchUnifiedCount = 0;
   m_scratchSpace        = nullptr;
   m_scratchFlags        = nullptr;
   m_scratchUnified      = nullptr;
-  m_stream              = nullptr;
   for (int i = 0; i < m_n_team_scratch; ++i) {
     m_team_scratch_current_size[i] = 0;
     m_team_scratch_ptr[i]          = nullptr;
@@ -642,8 +637,7 @@ Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
   KOKKOS_IMPL_CUDA_SAFE_CALL(
       cudaEventCreate(&Impl::CudaInternal::constantMemReusable));
 
-  Impl::CudaInternal::singleton().initialize(singleton_stream,
-                                             /*manage*/ true);
+  Impl::CudaInternal::singleton().initialize(singleton_stream);
 }
 
 void Cuda::impl_finalize() {
@@ -663,6 +657,8 @@ void Cuda::impl_finalize() {
       cudaStreamDestroy(Impl::cuda_get_deep_copy_stream()));
 
   Impl::CudaInternal::singleton().finalize();
+  KOKKOS_IMPL_CUDA_SAFE_CALL(
+      cudaStreamDestroy(Impl::CudaInternal::singleton().m_stream));
 }
 
 Cuda::Cuda()
@@ -677,13 +673,17 @@ KOKKOS_DEPRECATED Cuda::Cuda(cudaStream_t stream, bool manage_stream)
            manage_stream ? Impl::ManageStream::yes : Impl::ManageStream::no) {}
 
 Cuda::Cuda(cudaStream_t stream, Impl::ManageStream manage_stream)
-    : m_space_instance(new Impl::CudaInternal, [](Impl::CudaInternal *ptr) {
-        ptr->finalize();
-        delete ptr;
-      }) {
+    : m_space_instance(
+          new Impl::CudaInternal, [manage_stream](Impl::CudaInternal *ptr) {
+            ptr->finalize();
+            if (static_cast<bool>(manage_stream)) {
+              KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamDestroy(ptr->m_stream));
+            }
+            delete ptr;
+          }) {
   Impl::CudaInternal::singleton().verify_is_initialized(
       "Cuda instance constructor");
-  m_space_instance->initialize(stream, static_cast<bool>(manage_stream));
+  m_space_instance->initialize(stream);
 }
 
 void Cuda::print_configuration(std::ostream &os, bool /*verbose*/) const {
