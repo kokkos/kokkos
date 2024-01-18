@@ -231,6 +231,8 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
       Kokkos::abort(msg.c_str());
 #elif defined(KOKKOS_ENABLE_DEPRECATION_WARNINGS)
       Kokkos::Impl::log_warning(msg);
+      m_begin = 0;
+      m_end   = 0;
 #endif
     }
   }
