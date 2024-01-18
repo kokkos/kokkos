@@ -128,11 +128,6 @@ class OpenMPInternal {
   void print_configuration(std::ostream& s) const;
 };
 
-inline bool execute_in_serial(OpenMP const& space = OpenMP()) {
-  return (space.impl_internal_space_instance()->get_level() < omp_get_level() &&
-          !(omp_get_nested() && (omp_get_level() == 1)));
-}
-
 }  // namespace Impl
 
 namespace Experimental {
