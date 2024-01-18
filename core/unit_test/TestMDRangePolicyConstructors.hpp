@@ -99,15 +99,34 @@ TEST(TEST_CATEGORY_DEATH, policy_invalid_bounds) {
 
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 
-  auto dim = (Policy::inner_direction == Kokkos::Iterate::Right) ? 1 : 0;
+  auto [dim0, dim1] = (Policy::inner_direction == Kokkos::Iterate::Right)
+                          ? std::make_pair(1, 0)
+                          : std::make_pair(0, 1);
+  std::string msg =
+      "Kokkos::MDRangePolicy bounds error: The lower bound (100) is greater "
+      "than its upper bound (90) in dimension " +
+      std::to_string(dim0) + ".\n" +
+      "Kokkos::MDRangePolicy bounds error: The lower bound (100) is greater "
+      "than its upper bound (90) in dimension " +
+      std::to_string(dim1) + ".\n";
 
-  ASSERT_DEATH(
-      {
-        (void)Policy({100, 100}, {90, 90});
-      },
-      "Kokkos::MDRangePolicy bounds error: The lower bound \\(100\\) is "
-      "greater than its upper bound \\(90\\) in dimension " +
-          std::to_string(dim) + "\\.");
+#if !defined(KOKKOS_ENABLE_DEPRECATED_CODE_4)
+  ASSERT_DEATH({ (void)Policy({100, 100}, {90, 90}); }, msg);
+#else
+  if (!Kokkos::show_warnings()) {
+    GTEST_SKIP() << "Kokkos warning messages are disabled";
+  }
+
+  ::testing::internal::CaptureStderr();
+  (void)Policy({100, 100}, {90, 90});
+#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
+  ASSERT_EQ(::testing::internal::GetCapturedStderr(), msg);
+#else
+  ASSERT_TRUE(::testing::internal::GetCapturedStderr().empty());
+  (void)msg;
+#endif
+
+#endif
 }
 #endif
 

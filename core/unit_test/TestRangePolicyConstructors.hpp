@@ -74,13 +74,38 @@ TEST(TEST_CATEGORY_DEATH, range_policy_invalid_bounds) {
   using Policy    = Kokkos::RangePolicy<TEST_EXECSPACE>;
   using ChunkSize = Kokkos::ChunkSize;
 
-  ASSERT_DEATH({ (void)Policy(100, 90); },
-               "Kokkos::RangePolicy bounds error: The lower bound \\(100\\) is "
-               "greater than the upper bound \\(90\\)\\.");
+  char msg[] =
+      R"WARNING(Kokkos::RangePolicy bounds error: The lower bound (100) is greater than the upper bound (90).
+)WARNING";
+#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  ASSERT_DEATH({ (void)Policy(100, 90); }, msg);
 
   ASSERT_DEATH({ (void)Policy(TEST_EXECSPACE(), 100, 90, ChunkSize(10)); },
-               "Kokkos::RangePolicy bounds error: The lower bound \\(100\\) is "
-               "greater than the upper bound \\(90\\)\\.");
+               msg);
+#else
+  if (!Kokkos::show_warnings()) {
+    GTEST_SKIP() << "Kokkos warning messages are disabled";
+  }
+
+  ::testing::internal::CaptureStderr();
+  (void)Policy(100, 90);
+#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
+  ASSERT_STREQ(::testing::internal::GetCapturedStderr().c_str(), msg);
+#else
+  ASSERT_TRUE(::testing::internal::GetCapturedStderr().empty());
+  (void)msg;
+#endif
+
+  ::testing::internal::CaptureStderr();
+  (void)Policy(TEST_EXECSPACE(), 100, 90, ChunkSize(10));
+#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
+  ASSERT_STREQ(::testing::internal::GetCapturedStderr().c_str(), msg);
+#else
+  ASSERT_TRUE(::testing::internal::GetCapturedStderr().empty());
+  (void)msg;
+#endif
+
+#endif
 }
 
 }  // namespace

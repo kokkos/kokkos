@@ -128,7 +128,6 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
   /** \brief  Total range */
   inline RangePolicy(const member_type work_begin, const member_type work_end)
       : RangePolicy(typename traits::execution_space(), work_begin, work_end) {
-    check_bounds_validity();
     set_auto_chunk_size();
   }
 
@@ -227,8 +226,12 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
       std::string msg = "Kokkos::RangePolicy bounds error: The lower bound (" +
                         std::to_string(m_begin) +
                         ") is greater than the upper bound (" +
-                        std::to_string(m_end) + ").";
+                        std::to_string(m_end) + ").\n";
+#if !defined(KOKKOS_ENABLE_DEPRECATED_CODE_4)
       Kokkos::abort(msg.c_str());
+#elif defined(KOKKOS_ENABLE_DEPRECATION_WARNINGS)
+      Kokkos::Impl::log_warning(msg);
+#endif
     }
   }
 
