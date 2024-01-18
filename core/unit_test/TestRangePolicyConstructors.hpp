@@ -75,8 +75,8 @@ TEST(TEST_CATEGORY_DEATH, range_policy_invalid_bounds) {
   using ChunkSize = Kokkos::ChunkSize;
 
   char msg[] =
-      R"WARNING(Kokkos::RangePolicy bounds error: The lower bound (100) is greater than the upper bound (90).
-)WARNING";
+      "Kokkos::RangePolicy bounds error: The lower bound (100) is greater than "
+      "the upper bound (90).\n";
 #ifndef KOKKOS_ENABLE_DEPRECATED_CODE_4
   ASSERT_DEATH({ (void)Policy(100, 90); }, msg);
 
