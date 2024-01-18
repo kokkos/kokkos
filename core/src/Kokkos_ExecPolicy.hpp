@@ -221,7 +221,7 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
     m_granularity_mask = m_granularity - 1;
   }
 
-  inline void check_bounds_validity() {
+  void check_bounds_validity() {
     if (m_end < m_begin) {
       std::string msg = "Kokkos::RangePolicy bounds error: The lower bound (" +
                         std::to_string(m_begin) +
