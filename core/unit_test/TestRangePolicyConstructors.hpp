@@ -74,7 +74,7 @@ TEST(TEST_CATEGORY_DEATH, range_policy_invalid_bounds) {
   using Policy    = Kokkos::RangePolicy<TEST_EXECSPACE>;
   using ChunkSize = Kokkos::ChunkSize;
 
-  char msg[] =
+  std::string msg =
       "Kokkos::RangePolicy bounds error: The lower bound (100) is greater than "
       "the upper bound (90).\n";
 #ifndef KOKKOS_ENABLE_DEPRECATED_CODE_4
@@ -93,7 +93,7 @@ TEST(TEST_CATEGORY_DEATH, range_policy_invalid_bounds) {
     ASSERT_EQ((int)policy.begin(), 0);
     ASSERT_EQ((int)policy.end(), 0);
 #ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
-    ASSERT_STREQ(::testing::internal::GetCapturedStderr().c_str(), msg);
+    ASSERT_EQ(::testing::internal::GetCapturedStderr(), msg);
 #else
     ASSERT_TRUE(::testing::internal::GetCapturedStderr().empty());
     (void)msg;
@@ -106,7 +106,7 @@ TEST(TEST_CATEGORY_DEATH, range_policy_invalid_bounds) {
     ASSERT_EQ((int)policy.begin(), 0);
     ASSERT_EQ((int)policy.end(), 0);
 #ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
-    ASSERT_STREQ(::testing::internal::GetCapturedStderr().c_str(), msg);
+    ASSERT_EQ(::testing::internal::GetCapturedStderr(), msg);
 #else
     ASSERT_TRUE(::testing::internal::GetCapturedStderr().empty());
     (void)msg;
