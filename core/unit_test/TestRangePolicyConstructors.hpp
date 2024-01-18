@@ -87,23 +87,31 @@ TEST(TEST_CATEGORY_DEATH, range_policy_invalid_bounds) {
     GTEST_SKIP() << "Kokkos warning messages are disabled";
   }
 
-  ::testing::internal::CaptureStderr();
-  (void)Policy(100, 90);
+  {
+    ::testing::internal::CaptureStderr();
+    Policy policy(100, 90);
+    ASSERT_EQ((int)policy.begin(), 0);
+    ASSERT_EQ((int)policy.end(), 0);
 #ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
-  ASSERT_STREQ(::testing::internal::GetCapturedStderr().c_str(), msg);
+    ASSERT_STREQ(::testing::internal::GetCapturedStderr().c_str(), msg);
 #else
-  ASSERT_TRUE(::testing::internal::GetCapturedStderr().empty());
-  (void)msg;
+    ASSERT_TRUE(::testing::internal::GetCapturedStderr().empty());
+    (void)msg;
 #endif
+  }
 
-  ::testing::internal::CaptureStderr();
-  (void)Policy(TEST_EXECSPACE(), 100, 90, ChunkSize(10));
+  {
+    ::testing::internal::CaptureStderr();
+    Policy policy(TEST_EXECSPACE(), 100, 90, ChunkSize(10));
+    ASSERT_EQ((int)policy.begin(), 0);
+    ASSERT_EQ((int)policy.end(), 0);
 #ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
-  ASSERT_STREQ(::testing::internal::GetCapturedStderr().c_str(), msg);
+    ASSERT_STREQ(::testing::internal::GetCapturedStderr().c_str(), msg);
 #else
-  ASSERT_TRUE(::testing::internal::GetCapturedStderr().empty());
-  (void)msg;
+    ASSERT_TRUE(::testing::internal::GetCapturedStderr().empty());
+    (void)msg;
 #endif
+  }
 
 #endif
 }
