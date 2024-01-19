@@ -69,13 +69,15 @@ void *Kokkos::Experimental::OpenACCSpace::impl_allocate(
 
   if (!ptr) {
     size_t alignment = 1;  // OpenACC does not handle alignment
-    using Kokkos::Experimental::RawMemoryAllocationFailure::FailureMode;
-    auto failure_mode = arg_alloc_size > 0 ? FailureMode::OutOfMemoryError
-                                           : FailureMode::InvalidAllocationSize;
-    using Kokkos::Experimental::RawMemoryAllocationFailure::AllocationMechanism;
-    auto alloc_mechanism = AllocationMechanism::OpenACCMalloc;
-    throw Kokkos::Experimental::RawMemoryAllocationFailure(
-        arg_alloc_size, alignment, failure_mode, alloc_mechanism);
+    using Kokkos::Experimental::RawMemoryAllocationFailure;
+    auto failure_mode =
+        arg_alloc_size > 0
+            ? RawMemoryAllocationFailure::FailureMode::OutOfMemoryError
+            : RawMemoryAllocationFailure::FailureMode::InvalidAllocationSize;
+    auto alloc_mechanism =
+        RawMemoryAllocationFailure::AllocationMechanism::OpenACCMalloc;
+    throw RawMemoryAllocationFailure(arg_alloc_size, alignment, failure_mode,
+                                     alloc_mechanism);
   }
 
   if (Kokkos::Profiling::profileLibraryLoaded()) {
