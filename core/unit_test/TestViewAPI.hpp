@@ -1553,6 +1553,7 @@ class TestViewAPI {
                      Kokkos::CudaUVMSpace>::value)
       return;
 #endif
+    bool did_throw  = false;
     auto alloc_size = std::numeric_limits<size_t>::max() - 42;
     try {
       auto should_always_fail = dView1("hello_world_failure", alloc_size);
@@ -1584,7 +1585,9 @@ class TestViewAPI {
                             "because of an unknown error.", msg);
       }
 #endif
+      did_throw = true;
     }
+    ASSERT_TRUE(did_throw);
   }
 };
 
