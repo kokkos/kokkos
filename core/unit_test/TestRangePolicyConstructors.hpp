@@ -18,6 +18,8 @@
 
 #include <Kokkos_Core.hpp>
 
+#include <regex>
+
 namespace {
 
 TEST(TEST_CATEGORY, range_policy_runtime_parameters) {
@@ -76,14 +78,15 @@ TEST(TEST_CATEGORY_DEATH, range_policy_invalid_bounds) {
 
   std::string msg =
       "Kokkos::RangePolicy bounds error: The lower bound (100) is greater than "
-      "the upper bound (90)";
+      "the upper bound (90).\n";
 #ifndef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  // escape the parentheses in the regex to match the error message
+  msg = std::regex_replace(msg, std::regex("\\(|\\)"), "\\$&");
   ASSERT_DEATH({ (void)Policy(100, 90); }, msg);
 
   ASSERT_DEATH({ (void)Policy(TEST_EXECSPACE(), 100, 90, ChunkSize(10)); },
                msg);
 #else
-  msg += ".\n";  // would trip the death test error msg matching in some builds
 
   if (!Kokkos::show_warnings()) {
     GTEST_SKIP() << "Kokkos warning messages are disabled";
