@@ -105,7 +105,7 @@ TEST(TEST_CATEGORY_DEATH, policy_invalid_bounds) {
   std::string msg1 =
       "Kokkos::MDRangePolicy bounds error: The lower bound (100) is greater "
       "than its upper bound (90) in dimension " +
-      std::to_string(dim0) + ".\n";
+      std::to_string(dim0);
 
   std::string msg2 =
       "Kokkos::MDRangePolicy bounds error: The lower bound (100) is greater "
@@ -118,6 +118,8 @@ TEST(TEST_CATEGORY_DEATH, policy_invalid_bounds) {
   if (!Kokkos::show_warnings()) {
     GTEST_SKIP() << "Kokkos warning messages are disabled";
   }
+
+  msg1 += ".\n";  // would trip the death test error msg matching in some builds
 
   ::testing::internal::CaptureStderr();
   (void)Policy({100, 100}, {90, 90});
