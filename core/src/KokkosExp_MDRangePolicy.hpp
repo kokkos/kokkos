@@ -333,8 +333,12 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
             "Kokkos::MDRangePolicy bounds error: The lower bound (" +
             std::to_string(m_lower[i]) + ") is greater than its upper bound (" +
             std::to_string(m_upper[i]) + ") in dimension " + std::to_string(i) +
-            ".";
+            ".\n";
+#if !defined(KOKKOS_ENABLE_DEPRECATED_CODE_4)
         Kokkos::abort(msg.c_str());
+#elif defined(KOKKOS_ENABLE_DEPRECATION_WARNINGS)
+        Kokkos::Impl::log_warning(msg);
+#endif
       }
 
       if (m_tile[i] <= 0) {
