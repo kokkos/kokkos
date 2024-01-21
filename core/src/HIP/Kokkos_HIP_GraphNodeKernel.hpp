@@ -58,7 +58,7 @@ class GraphNodeKernelImpl<Kokkos::HIP, PolicyType, Functor, PatternTag, Args...>
 
   ~GraphNodeKernelImpl() {
     if (m_driver_storage) {
-      Kokkos::kokkos_free<Kokkos::HIPSpace>(m_driver_storage);
+      Kokkos::HIPSpace().deallocate(m_driver_storage, sizeof(base_t));
     }
   }
 
@@ -76,8 +76,8 @@ class GraphNodeKernelImpl<Kokkos::HIP, PolicyType, Functor, PatternTag, Args...>
 
   Kokkos::ObservingRawPtr<base_t> allocate_driver_memory_buffer() const {
     KOKKOS_EXPECTS(m_driver_storage == nullptr);
-    Kokkos::kokkos_malloc<Kokkos::HIPSpace>(
-        "GraphNodeKernel global memory functor storage", sizeof(base_t));
+    m_driver_storage = static_cast<base_t*>(Kokkos::HIPSpace().allocate(
+        "GraphNodeKernel global memory functor storage", sizeof(base_t)));
     KOKKOS_ENSURES(m_driver_storage != nullptr);
     return m_driver_storage;
   }
