@@ -346,8 +346,8 @@ Cuda::size_type *CudaInternal::scratch_flags(const std::size_t size) const {
 
     std::size_t alloc_size =
         multiply_overflow_abort(m_scratchFlagsCount, sizeScratchGrain);
-    m_scratchFlags =
-        mem_space.allocate("Kokkos::InternalScratchFlags", alloc_size);
+    m_scratchFlags = static_cast<size_type *>(
+        mem_space.allocate("Kokkos::InternalScratchFlags", alloc_size));
 
     KOKKOS_IMPL_CUDA_SAFE_CALL(
         (cuda_memset_wrapper(m_scratchFlags, 0, alloc_size)));
@@ -369,8 +369,8 @@ Cuda::size_type *CudaInternal::scratch_space(const std::size_t size) const {
 
     std::size_t alloc_size =
         multiply_overflow_abort(m_scratchSpaceCount, sizeScratchGrain);
-    m_scratchSpace =
-        mem_space.allocate("Kokkos::InternalScratchSpace", alloc_size);
+    m_scratchSpace = static_cast<size_type *>(
+        mem_space.allocate("Kokkos::InternalScratchSpace", alloc_size));
   }
 
   return m_scratchSpace;
@@ -390,8 +390,8 @@ Cuda::size_type *CudaInternal::scratch_unified(const std::size_t size) const {
 
     std::size_t alloc_size =
         multiply_overflow_abort(m_scratchUnifiedCount, sizeScratchGrain);
-    m_scratchUnified =
-        mem_space.allocate("Kokkos::InternalScratchUnified", alloc_size);
+    m_scratchUnified = static_cast<size_type *>(
+        mem_space.allocate("Kokkos::InternalScratchUnified", alloc_size));
   }
 
   return m_scratchUnified;
@@ -407,8 +407,8 @@ Cuda::size_type *CudaInternal::scratch_functor(const std::size_t size) const {
       mem_space.deallocate(m_scratchFunctor, std::size_t(-1));  // FIXME
     }
 
-    m_scratchFunctor = mem_space.allocate("Kokkos::InternalScratchFunctor",
-                                          m_scratchFunctorSize);
+    m_scratchFunctor = static_cast<size_type *>(mem_space.allocate(
+        "Kokkos::InternalScratchFunctor", m_scratchFunctorSize));
   }
 
   return m_scratchFunctor;

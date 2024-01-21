@@ -242,8 +242,8 @@ sycl::device_ptr<void> SYCLInternal::scratch_space(const std::size_t size) {
 
     std::size_t alloc_size = Kokkos::Impl::multiply_overflow_abort(
         m_scratchSpaceCount, sizeScratchGrain);
-    m_scratchSpace = mem_space.allocate(
-        "Kokkos::Experimental::SYCL::InternalScratchSpace", alloc_size);
+    m_scratchSpace = static_cast<size_type*>(mem_space.allocate(
+        "Kokkos::Experimental::SYCL::InternalScratchSpace", alloc_size));
   }
 
   return m_scratchSpace;
@@ -261,8 +261,8 @@ sycl::host_ptr<void> SYCLInternal::scratch_host(const std::size_t size) {
 
     std::size_t alloc_size = Kokkos::Impl::multiply_overflow_abort(
         m_scratchHostCount, sizeScratchGrain);
-    m_scratchHost = mem_space.allocate(
-        "Kokkos::Experimental::SYCL::InternalScratchHost", alloc_size);
+    m_scratchHost = static_cast<size_type*>(mem_space.allocate(
+        "Kokkos::Experimental::SYCL::InternalScratchHost", alloc_size));
   }
 
   return m_scratchHost;
@@ -280,8 +280,8 @@ sycl::device_ptr<void> SYCLInternal::scratch_flags(const std::size_t size) {
 
     std::size_t alloc_size = Kokkos::Impl::multiply_overflow_abort(
         m_scratchFlagsCount, sizeScratchGrain);
-    m_scratchFlags = mem_space.allocate(
-        "Kokkos::Experimental::SYCL::InternalScratchFlags", alloc_size);
+    m_scratchFlags = static_cast<size_type*>(mem_space.allocate(
+        "Kokkos::Experimental::SYCL::InternalScratchFlags", alloc_size));
   }
   auto memset_event = m_queue->memset(m_scratchFlags, 0,
                                       m_scratchFlagsCount * sizeScratchGrain);

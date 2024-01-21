@@ -201,8 +201,8 @@ Kokkos::HIP::size_type *HIPInternal::scratch_space(const std::size_t size) {
 
     std::size_t alloc_size =
         multiply_overflow_abort(m_scratchSpaceCount, sizeScratchGrain);
-    m_scratchSpace =
-        mem_space.allocate("Kokkos::InternalScratchSpace", alloc_size);
+    m_scratchSpace = static_cast<size_type *>(
+        mem_space.allocate("Kokkos::InternalScratchSpace", alloc_size));
   }
 
   return m_scratchSpace;
@@ -221,8 +221,8 @@ Kokkos::HIP::size_type *HIPInternal::scratch_flags(const std::size_t size) {
 
     std::size_t alloc_size =
         multiply_overflow_abort(m_scratchFlagsCount, sizeScratchGrain);
-    m_scratchFlags =
-        mem_space.allocate("Kokkos::InternalScratchFlags", alloc_size);
+    m_scratchFlags = static_cast<size_type *>(
+        mem_space.allocate("Kokkos::InternalScratchFlags", alloc_size));
 
     KOKKOS_IMPL_HIP_SAFE_CALL(hipMemset(m_scratchFlags, 0, alloc_size));
   }
@@ -244,10 +244,10 @@ Kokkos::HIP::size_type *HIPInternal::stage_functor_for_execution(
                                 std::size_t(-1));  // FIXME
     }
 
-    m_scratchFunctor = device_mem_space.allocate(
-        "Kokkos::InternalScratchFunctor", m_scratchFunctorSize);
-    m_scratchFunctorHost = host_mem_space.allocate(
-        "Kokkos::InternalScratchFunctorHost", m_scratchFunctorSize);
+    m_scratchFunctor     = static_cast<size_type *>(device_mem_space.allocate(
+        "Kokkos::InternalScratchFunctor", m_scratchFunctorSize));
+    m_scratchFunctorHost = static_cast<size_type *>(host_mem_space.allocate(
+        "Kokkos::InternalScratchFunctorHost", m_scratchFunctorSize));
   }
 
   // When using HSA_XNACK=1, it is necessary to copy the driver to the host to
