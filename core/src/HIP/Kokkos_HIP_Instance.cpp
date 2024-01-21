@@ -193,18 +193,16 @@ Kokkos::HIP::size_type *HIPInternal::scratch_space(const std::size_t size) {
       m_scratchSpaceCount < scratch_count(size)) {
     m_scratchSpaceCount = scratch_count(size);
 
-    using Record = Kokkos::Impl::SharedAllocationRecord<Kokkos::HIPSpace, void>;
+    Kokkos::HIPSpace mem_space;
 
-    if (m_scratchSpace) Record::decrement(Record::get_record(m_scratchSpace));
+    if (m_scratchSpace) {
+      mem_space.free(m_scratchSpace);
+    }
 
     std::size_t alloc_size =
         multiply_overflow_abort(m_scratchSpaceCount, sizeScratchGrain);
-    Record *const r = Record::allocate(
-        Kokkos::HIPSpace(), "Kokkos::InternalScratchSpace", alloc_size);
-
-    Record::increment(r);
-
-    m_scratchSpace = reinterpret_cast<size_type *>(r->data());
+    m_scratchSpace =
+        mem_space.allocate("Kokkos::InternalScratchSpace", alloc_size);
   }
 
   return m_scratchSpace;
@@ -215,18 +213,16 @@ Kokkos::HIP::size_type *HIPInternal::scratch_flags(const std::size_t size) {
       m_scratchFlagsCount < scratch_count(size)) {
     m_scratchFlagsCount = scratch_count(size);
 
-    using Record = Kokkos::Impl::SharedAllocationRecord<Kokkos::HIPSpace, void>;
+    Kokkos::HIPSpace mem_space;
 
-    if (m_scratchFlags) Record::decrement(Record::get_record(m_scratchFlags));
+    if (m_scratchFlags) {
+      mem_space.free(m_scratchFlags);
+    }
 
     std::size_t alloc_size =
         multiply_overflow_abort(m_scratchFlagsCount, sizeScratchGrain);
-    Record *const r = Record::allocate(
-        Kokkos::HIPSpace(), "Kokkos::InternalScratchFlags", alloc_size);
-
-    Record::increment(r);
-
-    m_scratchFlags = reinterpret_cast<size_type *>(r->data());
+    m_scratchFlags =
+        mem_space.allocate("Kokkos::InternalScratchFlags", alloc_size);
 
     KOKKOS_IMPL_HIP_SAFE_CALL(hipMemset(m_scratchFlags, 0, alloc_size));
   }
@@ -239,27 +235,18 @@ Kokkos::HIP::size_type *HIPInternal::stage_functor_for_execution(
   if (verify_is_initialized("scratch_functor") && m_scratchFunctorSize < size) {
     m_scratchFunctorSize = size;
 
-    using Record = Kokkos::Impl::SharedAllocationRecord<Kokkos::HIPSpace, void>;
-    using RecordHost =
-        Kokkos::Impl::SharedAllocationRecord<Kokkos::HIPHostPinnedSpace, void>;
+    Kokkos::HIPSpace device_mem_space;
+    Kokkos::HIPHostPinnedSpace host_mem_space;
 
     if (m_scratchFunctor) {
-      Record::decrement(Record::get_record(m_scratchFunctor));
-      RecordHost::decrement(RecordHost::get_record(m_scratchFunctorHost));
+      device_mem_space.free(m_scratchFunctor);
+      host_mem_space.free(m_scratchFunctorHost);
     }
 
-    Record *const r =
-        Record::allocate(Kokkos::HIPSpace(), "Kokkos::InternalScratchFunctor",
-                         m_scratchFunctorSize);
-    RecordHost *const r_host = RecordHost::allocate(
-        Kokkos::HIPHostPinnedSpace(), "Kokkos::InternalScratchFunctorHost",
-        m_scratchFunctorSize);
-
-    Record::increment(r);
-    RecordHost::increment(r_host);
-
-    m_scratchFunctor     = reinterpret_cast<size_type *>(r->data());
-    m_scratchFunctorHost = reinterpret_cast<size_type *>(r_host->data());
+    m_scratchFunctor = device_mem_space.allocate(
+        "Kokkos::InternalScratchFunctor", m_scratchFunctorSize);
+    m_scratchFunctorHost = host_mem_space.allocate(
+        "Kokkos::InternalScratchFunctorHost", m_scratchFunctorSize);
   }
 
   // When using HSA_XNACK=1, it is necessary to copy the driver to the host to
@@ -323,14 +310,15 @@ void HIPInternal::finalize() {
   was_finalized = true;
 
   if (nullptr != m_scratchSpace || nullptr != m_scratchFlags) {
-    using RecordHIP = Kokkos::Impl::SharedAllocationRecord<Kokkos::HIPSpace>;
+    Kokkos::HIPSpace device_mem_space;
 
-    RecordHIP::decrement(RecordHIP::get_record(m_scratchFlags));
-    RecordHIP::decrement(RecordHIP::get_record(m_scratchSpace));
+    device_mem_space.free(m_scratchFlags);
+    device_mem_space.free(m_scratchSpace);
 
     if (m_scratchFunctorSize > 0) {
-      RecordHIP::decrement(RecordHIP::get_record(m_scratchFunctor));
-      RecordHIP::decrement(RecordHIP::get_record(m_scratchFunctorHost));
+      device_mem_space.free(m_scratchFunctor);
+      Kokkos::HIPHostPinnedSpace host_mem_space;
+      host_mem_space.free(m_scratchFunctorHost);
     }
   }
 
