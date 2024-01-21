@@ -196,7 +196,7 @@ Kokkos::HIP::size_type *HIPInternal::scratch_space(const std::size_t size) {
     Kokkos::HIPSpace mem_space;
 
     if (m_scratchSpace) {
-      mem_space.free(m_scratchSpace);
+      mem_space.deallocate(m_scratchSpace, std::size_t(-1));  // FIXME
     }
 
     std::size_t alloc_size =
@@ -216,7 +216,7 @@ Kokkos::HIP::size_type *HIPInternal::scratch_flags(const std::size_t size) {
     Kokkos::HIPSpace mem_space;
 
     if (m_scratchFlags) {
-      mem_space.free(m_scratchFlags);
+      mem_space.deallocate(m_scratchFlags, std::size_t(-1));  // FIXME
     }
 
     std::size_t alloc_size =
@@ -239,8 +239,9 @@ Kokkos::HIP::size_type *HIPInternal::stage_functor_for_execution(
     Kokkos::HIPHostPinnedSpace host_mem_space;
 
     if (m_scratchFunctor) {
-      device_mem_space.free(m_scratchFunctor);
-      host_mem_space.free(m_scratchFunctorHost);
+      device_mem_space.deallocate(m_scratchFunctor, std::size_t(-1));  // FIXME
+      host_mem_space.deallocate(m_scratchFunctorHost,
+                                std::size_t(-1));  // FIXME
     }
 
     m_scratchFunctor = device_mem_space.allocate(
@@ -312,13 +313,14 @@ void HIPInternal::finalize() {
   if (nullptr != m_scratchSpace || nullptr != m_scratchFlags) {
     Kokkos::HIPSpace device_mem_space;
 
-    device_mem_space.free(m_scratchFlags);
-    device_mem_space.free(m_scratchSpace);
+    device_mem_space.deallocate(m_scratchFlags, std::size_t(-1));  // FIXME
+    device_mem_space.deallocate(m_scratchSpace, std::size_t(-1));  // FIXME
 
     if (m_scratchFunctorSize > 0) {
-      device_mem_space.free(m_scratchFunctor);
+      device_mem_space.deallocate(m_scratchFunctor, std::size_t(-1));  // FIXME
       Kokkos::HIPHostPinnedSpace host_mem_space;
-      host_mem_space.free(m_scratchFunctorHost);
+      host_mem_space.deallocate(m_scratchFunctorHost,
+                                std::size_t(-1));  // FIXME
     }
   }
 

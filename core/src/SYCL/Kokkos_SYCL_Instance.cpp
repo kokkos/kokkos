@@ -198,9 +198,12 @@ void SYCLInternal::finalize() {
 
   auto device_mem_space = SYCLDeviceUSMSpace(*m_queue);
   auto host_mem_space   = SYCLHostUSMSpace(*m_queue);
-  if (nullptr != m_scratchSpace) device_mem_space.free(m_scratchSpace);
-  if (nullptr != m_scratchHost) host_mem_space.free(m_scratchHost);
-  if (nullptr != m_scratchFlags) device_mem_space.free(m_scratchFlags);
+  if (nullptr != m_scratchSpace)
+    device_mem_space.deallocate(m_scratchSpace, std::size_t(-1));  // FIXME
+  if (nullptr != m_scratchHost)
+    host_mem_space.deallocate(m_scratchHost, std::size_t(-1));  // FIXME
+  if (nullptr != m_scratchFlags)
+    device_mem_space.deallocate(m_scratchFlags, std::size_t(-1));  // FIXME
   m_syclDev           = -1;
   m_scratchSpaceCount = 0;
   m_scratchSpace      = nullptr;
@@ -234,7 +237,8 @@ sycl::device_ptr<void> SYCLInternal::scratch_space(const std::size_t size) {
 
     auto mem_space = Kokkos::Experimental::SYCLDeviceUSMSpace(*m_queue);
 
-    if (nullptr != m_scratchSpace) mem_space.free(m_scratchSpace);
+    if (nullptr != m_scratchSpace)
+      mem_space.deallocate(m_scratchSpace, std::size_t(-1));  // FIXME
 
     std::size_t alloc_size = Kokkos::Impl::multiply_overflow_abort(
         m_scratchSpaceCount, sizeScratchGrain);
@@ -252,7 +256,8 @@ sycl::host_ptr<void> SYCLInternal::scratch_host(const std::size_t size) {
 
     auto mem_space = Kokkos::Experimental::SYCLHostUSMSpace(*m_queue);
 
-    if (nullptr != m_scratchHost) mem_space.free(m_scratchHost);
+    if (nullptr != m_scratchHost)
+      mem_space.deallocate(m_scratchHost, std::size_t(-1));  // FIXME
 
     std::size_t alloc_size = Kokkos::Impl::multiply_overflow_abort(
         m_scratchHostCount, sizeScratchGrain);
@@ -270,7 +275,8 @@ sycl::device_ptr<void> SYCLInternal::scratch_flags(const std::size_t size) {
 
     auto mem_space = Kokkos::Experimental::SYCLDeviceUSMSpace(*m_queue);
 
-    if (nullptr != m_scratchFlags) mem_space.free(m_scratchFlags);
+    if (nullptr != m_scratchFlags)
+      mem_space.deallocate(m_scratchFlags, std::size_t(-1));  // FIXME
 
     std::size_t alloc_size = Kokkos::Impl::multiply_overflow_abort(
         m_scratchFlagsCount, sizeScratchGrain);
@@ -325,7 +331,7 @@ size_t SYCLInternal::USMObjectMem<Kind>::reserve(size_t n) {
 
   if (m_capacity < n) {
     AllocationSpace alloc_space(*m_q);
-    if (m_data) alloc_space.free(m_data);
+    if (m_data) alloc_space.deallocate(m_data, m_capacity);
 
     m_data =
         alloc_space.allocate("Kokkos::Experimental::SYCL::USMObjectMem", n);
@@ -344,7 +350,7 @@ void SYCLInternal::USMObjectMem<Kind>::reset() {
     // This implies a fence since this class is not copyable
     // and deallocating implies a fence across all registered queues.
     AllocationSpace alloc_space(*m_q);
-    alloc_space.free(m_data);
+    alloc_space.deallocate(m_data, m_capacity);
 
     m_capacity = 0;
     m_data     = nullptr;

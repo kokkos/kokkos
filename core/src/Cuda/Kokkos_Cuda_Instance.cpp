@@ -341,7 +341,7 @@ Cuda::size_type *CudaInternal::scratch_flags(const std::size_t size) const {
     auto mem_space = Kokkos::CudaSpace::impl_create(m_cudaDev, m_stream);
 
     if (m_scratchFlags) {
-      mem_space.free(m_scratchFlags);
+      mem_space.deallocate(m_scratchFlags, std::size_t(-1));  // FIXME
     }
 
     std::size_t alloc_size =
@@ -364,7 +364,7 @@ Cuda::size_type *CudaInternal::scratch_space(const std::size_t size) const {
     auto mem_space = Kokkos::CudaSpace::impl_create(m_cudaDev, m_stream);
 
     if (m_scratchSpace) {
-      mem_space.free(m_scratchSpace);
+      mem_space.deallocate(m_scratchSpace, std::size_t(-1));  // FIXME
     }
 
     std::size_t alloc_size =
@@ -385,7 +385,7 @@ Cuda::size_type *CudaInternal::scratch_unified(const std::size_t size) const {
         Kokkos::CudaHostPinnedSpace::impl_create(m_cudaDev, m_stream);
 
     if (m_scratchUnified) {
-      mem_space.free(m_scratchUnified);
+      mem_space.deallocate(m_scratchUnified, std::size_t(-1));  // FIXME
     }
 
     std::size_t alloc_size =
@@ -404,7 +404,7 @@ Cuda::size_type *CudaInternal::scratch_functor(const std::size_t size) const {
     auto mem_space = Kokkos::CudaSpace::impl_create(m_cudaDev, m_stream);
 
     if (m_scratchFunctor) {
-      mem_space.free(m_scratchFunctor);
+      mem_space.deallocate(m_scratchFunctor, std::size_t(-1));  // FIXME
     }
 
     m_scratchFunctor = mem_space.allocate("Kokkos::InternalScratchFunctor",
@@ -466,11 +466,11 @@ void CudaInternal::finalize() {
     auto cuda_mem_space = Kokkos::CudaSpace::impl_create(m_cudaDev, m_stream);
     auto host_mem_space =
         Kokkos::CudaHostPinnedSpace::impl_create(m_cudaDev, m_stream);
-    cuda_mem_space.free(m_scratchFlags);
-    cuda_mem_space.free(m_scratchSpace);
-    host_mem_space.free(m_scratchUnified);
+    cuda_mem_space.deallocate(m_scratchFlags, std::size_t(-1));    // FIXME
+    cuda_mem_space.deallocate(m_scratchSpace, std::size_t(-1));    // FIXME
+    host_mem_space.deallocate(m_scratchUnified, std::size_t(-1));  // FIXME
     if (m_scratchFunctorSize > 0) {
-      cuda_mem_space.free(m_scratchFunctor);
+      cuda_mem_space.deallocate(m_scratchFunctor, std::size_t(-1));  // FIXME
     }
   }
 
