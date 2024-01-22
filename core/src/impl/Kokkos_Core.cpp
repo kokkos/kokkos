@@ -608,6 +608,11 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
 #else
   declare_configuration_metadata("options", "KOKKOS_ENABLE_CXX23", "no");
 #endif
+#ifdef KOKKOS_ENABLE_CXX26
+  declare_configuration_metadata("options", "KOKKOS_ENABLE_CXX26", "yes");
+#else
+  declare_configuration_metadata("options", "KOKKOS_ENABLE_CXX26", "no");
+#endif
 #ifdef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
   declare_configuration_metadata("options", "KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK",
                                  "yes");
