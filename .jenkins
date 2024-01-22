@@ -141,9 +141,8 @@ pipeline {
                             filename 'Dockerfile.hipcc'
                             dir 'scripts/docker'
                             additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-20.04:5.2'
-                            label 'nvidia-docker && ampere'
-                            args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
-//                            args '-v /tmp/ccache.kokkos:/tmp/ccache --device=/dev/kfd --device=/dev/dri --security-opt seccomp=unconfined --group-add video --env HIP_VISIBLE_DEVICES=$HIP_VISIBLE_DEVICES'
+                            label 'rocm-docker '
+                            args '-v /tmp/ccache.kokkos:/tmp/ccache --device=/dev/kfd --device=/dev/dri --security-opt seccomp=unconfined --group-add video --env HIP_VISIBLE_DEVICES=$HIP_VISIBLE_DEVICES'
                         }
                     }
                     environment {
@@ -154,6 +153,7 @@ pipeline {
                     }
                     steps {
                         sh 'ccache --zero-stats'
+                        sh 'echo "/opt/rocm/llvm/lib" > /etc/ld.so.conf.d/llvm.conf && ldconfig'
                         sh '''rm -rf build && mkdir -p build && cd build && \
                               cmake \
                                 -DCMAKE_BUILD_TYPE=Debug \
@@ -161,7 +161,6 @@ pipeline {
                                 -DCMAKE_CXX_FLAGS="-Werror -Wno-unused-command-line-argument -DNDEBUG" \
                                 -DCMAKE_CXX_STANDARD=17 \
                                 -DKokkos_ARCH_NATIVE=ON \
-                                -DKokkos_ARCH_AMD_GFX90A=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
                                 -DKokkos_ENABLE_TESTS=ON \
@@ -170,8 +169,7 @@ pipeline {
                                 -DKokkos_ENABLE_OPENMP=ON \
                                 -DKokkos_ENABLE_HIP_MULTIPLE_KERNEL_INSTANTIATIONS=ON \
                               .. && \
-                              make -j8'''
-//                              make -j8 && ctest --verbose'''
+                              make -j8 && ctest --verbose'''
                     }
                     post {
                         always {
@@ -185,9 +183,8 @@ pipeline {
                             filename 'Dockerfile.hipcc'
                             dir 'scripts/docker'
                             additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-20.04:5.6'
-                            label 'nvidia-docker && ampere'
-                            args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
-//                            args '-v /tmp/ccache.kokkos:/tmp/ccache --device=/dev/kfd --device=/dev/dri --security-opt seccomp=unconfined --group-add video --env HIP_VISIBLE_DEVICES=$HIP_VISIBLE_DEVICES'
+                            label 'rocm-docker'
+                            args '-v /tmp/ccache.kokkos:/tmp/ccache --device=/dev/kfd --device=/dev/dri --security-opt seccomp=unconfined --group-add video --env HIP_VISIBLE_DEVICES=$HIP_VISIBLE_DEVICES'
                         }
                     }
                     steps {
@@ -199,7 +196,6 @@ pipeline {
                                 -DCMAKE_CXX_FLAGS="-Werror -Wno-unused-command-line-argument" \
                                 -DCMAKE_CXX_STANDARD=20 \
                                 -DKokkos_ARCH_NATIVE=ON \
-                                -DKokkos_ARCH_AMD_GFX90A=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
                                 -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
@@ -207,8 +203,7 @@ pipeline {
                                 -DKokkos_ENABLE_BENCHMARKS=ON \
                                 -DKokkos_ENABLE_HIP=ON \
                               .. && \
-                              make -j8'''
-//                              make -j8 && ctest --verbose'''
+                              make -j8 && ctest --verbose'''
                     }
                     post {
                         always {
