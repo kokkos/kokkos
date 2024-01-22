@@ -199,11 +199,14 @@ void SYCLInternal::finalize() {
   auto device_mem_space = SYCLDeviceUSMSpace(*m_queue);
   auto host_mem_space   = SYCLHostUSMSpace(*m_queue);
   if (nullptr != m_scratchSpace)
-    device_mem_space.deallocate(m_scratchSpace, std::size_t(-1));  // FIXME
+    device_mem_space.deallocate(m_scratchSpace,
+                                m_scratchSpaceCount * sizeScratchGrain);
   if (nullptr != m_scratchHost)
-    host_mem_space.deallocate(m_scratchHost, std::size_t(-1));  // FIXME
+    host_mem_space.deallocate(m_scratchHost,
+                              m_scratchHostCount * sizeScratchGrain);
   if (nullptr != m_scratchFlags)
-    device_mem_space.deallocate(m_scratchFlags, std::size_t(-1));  // FIXME
+    device_mem_space.deallocate(m_scratchFlags,
+                                m_scratchFlagsCount * sizeScratchGrain);
   m_syclDev           = -1;
   m_scratchSpaceCount = 0;
   m_scratchSpace      = nullptr;
@@ -233,12 +236,13 @@ void SYCLInternal::finalize() {
 sycl::device_ptr<void> SYCLInternal::scratch_space(const std::size_t size) {
   if (verify_is_initialized("scratch_space") &&
       m_scratchSpaceCount < scratch_count(size)) {
-    m_scratchSpaceCount = scratch_count(size);
-
     auto mem_space = Kokkos::Experimental::SYCLDeviceUSMSpace(*m_queue);
 
     if (nullptr != m_scratchSpace)
-      mem_space.deallocate(m_scratchSpace, std::size_t(-1));  // FIXME
+      mem_space.deallocate(m_scratchSpace,
+                           m_scratchSpaceCount * sizeScratchGrain);
+
+    m_scratchSpaceCount = scratch_count(size);
 
     std::size_t alloc_size = Kokkos::Impl::multiply_overflow_abort(
         m_scratchSpaceCount, sizeScratchGrain);
@@ -252,12 +256,13 @@ sycl::device_ptr<void> SYCLInternal::scratch_space(const std::size_t size) {
 sycl::host_ptr<void> SYCLInternal::scratch_host(const std::size_t size) {
   if (verify_is_initialized("scratch_unified") &&
       m_scratchHostCount < scratch_count(size)) {
-    m_scratchHostCount = scratch_count(size);
-
     auto mem_space = Kokkos::Experimental::SYCLHostUSMSpace(*m_queue);
 
     if (nullptr != m_scratchHost)
-      mem_space.deallocate(m_scratchHost, std::size_t(-1));  // FIXME
+      mem_space.deallocate(m_scratchHost,
+                           m_scratchHostCount * sizeScratchGrain);
+
+    m_scratchHostCount = scratch_count(size);
 
     std::size_t alloc_size = Kokkos::Impl::multiply_overflow_abort(
         m_scratchHostCount, sizeScratchGrain);
@@ -271,12 +276,13 @@ sycl::host_ptr<void> SYCLInternal::scratch_host(const std::size_t size) {
 sycl::device_ptr<void> SYCLInternal::scratch_flags(const std::size_t size) {
   if (verify_is_initialized("scratch_flags") &&
       m_scratchFlagsCount < scratch_count(size)) {
-    m_scratchFlagsCount = scratch_count(size);
-
     auto mem_space = Kokkos::Experimental::SYCLDeviceUSMSpace(*m_queue);
 
     if (nullptr != m_scratchFlags)
-      mem_space.deallocate(m_scratchFlags, std::size_t(-1));  // FIXME
+      mem_space.deallocate(m_scratchFlags,
+                           m_scratchFlagsCount * sizeScratchGrain);
+
+    m_scratchFlagsCount = scratch_count(size);
 
     std::size_t alloc_size = Kokkos::Impl::multiply_overflow_abort(
         m_scratchFlagsCount, sizeScratchGrain);

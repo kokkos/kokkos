@@ -336,13 +336,14 @@ void CudaInternal::initialize(cudaStream_t stream) {
 Cuda::size_type *CudaInternal::scratch_flags(const std::size_t size) const {
   if (verify_is_initialized("scratch_flags") &&
       m_scratchFlagsCount < scratch_count(size)) {
-    m_scratchFlagsCount = scratch_count(size);
-
     auto mem_space = Kokkos::CudaSpace::impl_create(m_cudaDev, m_stream);
 
     if (m_scratchFlags) {
-      mem_space.deallocate(m_scratchFlags, std::size_t(-1));  // FIXME
+      mem_space.deallocate(m_scratchFlags,
+                           m_scratchFlagsCount * sizeScratchGrain);
     }
+
+    m_scratchFlagsCount = scratch_count(size);
 
     std::size_t alloc_size =
         multiply_overflow_abort(m_scratchFlagsCount, sizeScratchGrain);
@@ -359,13 +360,14 @@ Cuda::size_type *CudaInternal::scratch_flags(const std::size_t size) const {
 Cuda::size_type *CudaInternal::scratch_space(const std::size_t size) const {
   if (verify_is_initialized("scratch_space") &&
       m_scratchSpaceCount < scratch_count(size)) {
-    m_scratchSpaceCount = scratch_count(size);
-
     auto mem_space = Kokkos::CudaSpace::impl_create(m_cudaDev, m_stream);
 
     if (m_scratchSpace) {
-      mem_space.deallocate(m_scratchSpace, std::size_t(-1));  // FIXME
+      mem_space.deallocate(m_scratchSpace,
+                           m_scratchSpaceCount * sizeScratchGrain);
     }
+
+    m_scratchSpaceCount = scratch_count(size);
 
     std::size_t alloc_size =
         multiply_overflow_abort(m_scratchSpaceCount, sizeScratchGrain);
@@ -379,14 +381,15 @@ Cuda::size_type *CudaInternal::scratch_space(const std::size_t size) const {
 Cuda::size_type *CudaInternal::scratch_unified(const std::size_t size) const {
   if (verify_is_initialized("scratch_unified") &&
       m_scratchUnifiedCount < scratch_count(size)) {
-    m_scratchUnifiedCount = scratch_count(size);
-
     auto mem_space =
         Kokkos::CudaHostPinnedSpace::impl_create(m_cudaDev, m_stream);
 
     if (m_scratchUnified) {
-      mem_space.deallocate(m_scratchUnified, std::size_t(-1));  // FIXME
+      mem_space.deallocate(m_scratchUnified,
+                           m_scratchUnifiedCount * sizeScratchGrain);
     }
+
+    m_scratchUnifiedCount = scratch_count(size);
 
     std::size_t alloc_size =
         multiply_overflow_abort(m_scratchUnifiedCount, sizeScratchGrain);
@@ -399,13 +402,13 @@ Cuda::size_type *CudaInternal::scratch_unified(const std::size_t size) const {
 
 Cuda::size_type *CudaInternal::scratch_functor(const std::size_t size) const {
   if (verify_is_initialized("scratch_functor") && m_scratchFunctorSize < size) {
-    m_scratchFunctorSize = size;
-
     auto mem_space = Kokkos::CudaSpace::impl_create(m_cudaDev, m_stream);
 
     if (m_scratchFunctor) {
-      mem_space.deallocate(m_scratchFunctor, std::size_t(-1));  // FIXME
+      mem_space.deallocate(m_scratchFunctor, m_scratchFunctorSize);
     }
+
+    m_scratchFunctorSize = size;
 
     m_scratchFunctor = static_cast<size_type *>(mem_space.allocate(
         "Kokkos::InternalScratchFunctor", m_scratchFunctorSize));
@@ -466,11 +469,14 @@ void CudaInternal::finalize() {
     auto cuda_mem_space = Kokkos::CudaSpace::impl_create(m_cudaDev, m_stream);
     auto host_mem_space =
         Kokkos::CudaHostPinnedSpace::impl_create(m_cudaDev, m_stream);
-    cuda_mem_space.deallocate(m_scratchFlags, std::size_t(-1));    // FIXME
-    cuda_mem_space.deallocate(m_scratchSpace, std::size_t(-1));    // FIXME
-    host_mem_space.deallocate(m_scratchUnified, std::size_t(-1));  // FIXME
+    cuda_mem_space.deallocate(m_scratchFlags,
+                              m_scratchFlagsCount * sizeScratchGrain);
+    cuda_mem_space.deallocate(m_scratchSpace,
+                              m_scratchSpaceCount * sizeScratchGrain);
+    host_mem_space.deallocate(m_scratchUnified,
+                              m_scratchUnifiedCount * sizeScratchGrain);
     if (m_scratchFunctorSize > 0) {
-      cuda_mem_space.deallocate(m_scratchFunctor, std::size_t(-1));  // FIXME
+      cuda_mem_space.deallocate(m_scratchFunctor, m_scratchFunctorSize);
     }
   }
 
