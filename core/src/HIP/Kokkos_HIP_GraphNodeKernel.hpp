@@ -26,7 +26,6 @@
 #include <Kokkos_Parallel_Reduce.hpp>
 #include <Kokkos_PointerOwnership.hpp>
 
-#include <HIP/Kokkos_HIP_SharedAllocationRecord.hpp>
 #include <HIP/Kokkos_HIP_GraphNode_Impl.hpp>
 
 namespace Kokkos {
@@ -43,7 +42,6 @@ class GraphNodeKernelImpl<Kokkos::HIP, PolicyType, Functor, PatternTag, Args...>
   using base_t =
       typename PatternImplSpecializationFromTag<PatternTag, Functor, Policy,
                                                 Args..., Kokkos::HIP>::type;
-  using Record = Kokkos::Impl::SharedAllocationRecord<Kokkos::HIPSpace, void>;
 
   // TODO use the name and executionspace
   template <typename PolicyDeduced, typename... ArgsDeduced>
@@ -60,7 +58,7 @@ class GraphNodeKernelImpl<Kokkos::HIP, PolicyType, Functor, PatternTag, Args...>
 
   ~GraphNodeKernelImpl() {
     if (m_driver_storage) {
-      Record::decrement(Record::get_record(m_driver_storage));
+      Kokkos::HIPSpace().deallocate(m_driver_storage, sizeof(base_t));
     }
   }
 
@@ -78,15 +76,9 @@ class GraphNodeKernelImpl<Kokkos::HIP, PolicyType, Functor, PatternTag, Args...>
 
   Kokkos::ObservingRawPtr<base_t> allocate_driver_memory_buffer() const {
     KOKKOS_EXPECTS(m_driver_storage == nullptr);
-
-    auto* record = Record::allocate(
-        Kokkos::HIPSpace{}, "GraphNodeKernel global memory functor storage",
-        sizeof(base_t));
-
-    Record::increment(record);
-    m_driver_storage = reinterpret_cast<base_t*>(record->data());
+    m_driver_storage = static_cast<base_t*>(Kokkos::HIPSpace().allocate(
+        "GraphNodeKernel global memory functor storage", sizeof(base_t)));
     KOKKOS_ENSURES(m_driver_storage != nullptr);
-
     return m_driver_storage;
   }
 

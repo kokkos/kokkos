@@ -131,9 +131,13 @@ void combine(Kokkos::Tools::InitArguments& out,
 
 int get_device_count() {
 #if defined(KOKKOS_ENABLE_CUDA)
-  return Kokkos::Cuda::detect_device_count();
+  int count;
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGetDeviceCount(&count));
+  return count;
 #elif defined(KOKKOS_ENABLE_HIP)
-  return Kokkos::HIP::detect_device_count();
+  int count;
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDeviceCount(&count));
+  return count;
 #elif defined(KOKKOS_ENABLE_SYCL)
   return sycl::device::get_devices(sycl::info::device_type::gpu).size();
 #elif defined(KOKKOS_ENABLE_OPENACC)
@@ -603,6 +607,11 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
   declare_configuration_metadata("options", "KOKKOS_ENABLE_CXX23", "yes");
 #else
   declare_configuration_metadata("options", "KOKKOS_ENABLE_CXX23", "no");
+#endif
+#ifdef KOKKOS_ENABLE_CXX26
+  declare_configuration_metadata("options", "KOKKOS_ENABLE_CXX26", "yes");
+#else
+  declare_configuration_metadata("options", "KOKKOS_ENABLE_CXX26", "no");
 #endif
 #ifdef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
   declare_configuration_metadata("options", "KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK",
