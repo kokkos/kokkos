@@ -336,22 +336,19 @@ void CudaInternal::initialize(cudaStream_t stream) {
 Cuda::size_type *CudaInternal::scratch_flags(const std::size_t size) const {
   if (verify_is_initialized("scratch_flags") &&
       m_scratchFlagsCount < scratch_count(size)) {
+    auto mem_space = Kokkos::CudaSpace::impl_create(m_cudaDev, m_stream);
+
+    if (m_scratchFlags) {
+      mem_space.deallocate(m_scratchFlags,
+                           m_scratchFlagsCount * sizeScratchGrain);
+    }
+
     m_scratchFlagsCount = scratch_count(size);
-
-    using Record =
-        Kokkos::Impl::SharedAllocationRecord<Kokkos::CudaSpace, void>;
-
-    if (m_scratchFlags) Record::decrement(Record::get_record(m_scratchFlags));
 
     std::size_t alloc_size =
         multiply_overflow_abort(m_scratchFlagsCount, sizeScratchGrain);
-    Record *const r =
-        Record::allocate(CudaSpace::impl_create(m_cudaDev, m_stream),
-                         "Kokkos::InternalScratchFlags", alloc_size);
-
-    Record::increment(r);
-
-    m_scratchFlags = reinterpret_cast<size_type *>(r->data());
+    m_scratchFlags = static_cast<size_type *>(
+        mem_space.allocate("Kokkos::InternalScratchFlags", alloc_size));
 
     KOKKOS_IMPL_CUDA_SAFE_CALL(
         (cuda_memset_wrapper(m_scratchFlags, 0, alloc_size)));
@@ -363,22 +360,19 @@ Cuda::size_type *CudaInternal::scratch_flags(const std::size_t size) const {
 Cuda::size_type *CudaInternal::scratch_space(const std::size_t size) const {
   if (verify_is_initialized("scratch_space") &&
       m_scratchSpaceCount < scratch_count(size)) {
+    auto mem_space = Kokkos::CudaSpace::impl_create(m_cudaDev, m_stream);
+
+    if (m_scratchSpace) {
+      mem_space.deallocate(m_scratchSpace,
+                           m_scratchSpaceCount * sizeScratchGrain);
+    }
+
     m_scratchSpaceCount = scratch_count(size);
-
-    using Record =
-        Kokkos::Impl::SharedAllocationRecord<Kokkos::CudaSpace, void>;
-
-    if (m_scratchSpace) Record::decrement(Record::get_record(m_scratchSpace));
 
     std::size_t alloc_size =
         multiply_overflow_abort(m_scratchSpaceCount, sizeScratchGrain);
-    Record *const r =
-        Record::allocate(CudaSpace::impl_create(m_cudaDev, m_stream),
-                         "Kokkos::InternalScratchSpace", alloc_size);
-
-    Record::increment(r);
-
-    m_scratchSpace = reinterpret_cast<size_type *>(r->data());
+    m_scratchSpace = static_cast<size_type *>(
+        mem_space.allocate("Kokkos::InternalScratchSpace", alloc_size));
   }
 
   return m_scratchSpace;
@@ -387,23 +381,20 @@ Cuda::size_type *CudaInternal::scratch_space(const std::size_t size) const {
 Cuda::size_type *CudaInternal::scratch_unified(const std::size_t size) const {
   if (verify_is_initialized("scratch_unified") &&
       m_scratchUnifiedCount < scratch_count(size)) {
+    auto mem_space =
+        Kokkos::CudaHostPinnedSpace::impl_create(m_cudaDev, m_stream);
+
+    if (m_scratchUnified) {
+      mem_space.deallocate(m_scratchUnified,
+                           m_scratchUnifiedCount * sizeScratchGrain);
+    }
+
     m_scratchUnifiedCount = scratch_count(size);
-
-    using Record =
-        Kokkos::Impl::SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>;
-
-    if (m_scratchUnified)
-      Record::decrement(Record::get_record(m_scratchUnified));
 
     std::size_t alloc_size =
         multiply_overflow_abort(m_scratchUnifiedCount, sizeScratchGrain);
-    Record *const r =
-        Record::allocate(CudaHostPinnedSpace::impl_create(m_cudaDev, m_stream),
-                         "Kokkos::InternalScratchUnified", alloc_size);
-
-    Record::increment(r);
-
-    m_scratchUnified = reinterpret_cast<size_type *>(r->data());
+    m_scratchUnified = static_cast<size_type *>(
+        mem_space.allocate("Kokkos::InternalScratchUnified", alloc_size));
   }
 
   return m_scratchUnified;
@@ -411,21 +402,16 @@ Cuda::size_type *CudaInternal::scratch_unified(const std::size_t size) const {
 
 Cuda::size_type *CudaInternal::scratch_functor(const std::size_t size) const {
   if (verify_is_initialized("scratch_functor") && m_scratchFunctorSize < size) {
+    auto mem_space = Kokkos::CudaSpace::impl_create(m_cudaDev, m_stream);
+
+    if (m_scratchFunctor) {
+      mem_space.deallocate(m_scratchFunctor, m_scratchFunctorSize);
+    }
+
     m_scratchFunctorSize = size;
 
-    using Record =
-        Kokkos::Impl::SharedAllocationRecord<Kokkos::CudaSpace, void>;
-
-    if (m_scratchFunctor)
-      Record::decrement(Record::get_record(m_scratchFunctor));
-
-    Record *const r = Record::allocate(
-        CudaSpace::impl_create(m_cudaDev, m_stream),
-        "Kokkos::InternalScratchFunctor", m_scratchFunctorSize);
-
-    Record::increment(r);
-
-    m_scratchFunctor = reinterpret_cast<size_type *>(r->data());
+    m_scratchFunctor = static_cast<size_type *>(mem_space.allocate(
+        "Kokkos::InternalScratchFunctor", m_scratchFunctorSize));
   }
 
   return m_scratchFunctor;
@@ -480,15 +466,18 @@ void CudaInternal::finalize() {
   was_finalized = true;
 
   if (nullptr != m_scratchSpace || nullptr != m_scratchFlags) {
-    using RecordCuda = Kokkos::Impl::SharedAllocationRecord<CudaSpace>;
-    using RecordHost =
-        Kokkos::Impl::SharedAllocationRecord<CudaHostPinnedSpace>;
-
-    RecordCuda::decrement(RecordCuda::get_record(m_scratchFlags));
-    RecordCuda::decrement(RecordCuda::get_record(m_scratchSpace));
-    RecordHost::decrement(RecordHost::get_record(m_scratchUnified));
-    if (m_scratchFunctorSize > 0)
-      RecordCuda::decrement(RecordCuda::get_record(m_scratchFunctor));
+    auto cuda_mem_space = Kokkos::CudaSpace::impl_create(m_cudaDev, m_stream);
+    auto host_mem_space =
+        Kokkos::CudaHostPinnedSpace::impl_create(m_cudaDev, m_stream);
+    cuda_mem_space.deallocate(m_scratchFlags,
+                              m_scratchFlagsCount * sizeScratchGrain);
+    cuda_mem_space.deallocate(m_scratchSpace,
+                              m_scratchSpaceCount * sizeScratchGrain);
+    host_mem_space.deallocate(m_scratchUnified,
+                              m_scratchUnifiedCount * sizeScratchGrain);
+    if (m_scratchFunctorSize > 0) {
+      cuda_mem_space.deallocate(m_scratchFunctor, m_scratchFunctorSize);
+    }
   }
 
   for (int i = 0; i < m_n_team_scratch; ++i) {
