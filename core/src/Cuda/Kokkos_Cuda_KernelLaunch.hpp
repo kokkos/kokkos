@@ -136,9 +136,8 @@ const cudaFuncAttributes& get_cuda_kernel_func_attributes(
   // by leveraging static variable initialization rules
   auto wrap_get_attributes = [&]() -> cudaFuncAttributes {
     cudaFuncAttributes attr;
-    KOKKOS_IMPL_CUDA_SAFE_CALL(
-        (CudaInternal::singleton().cuda_func_get_attributes_wrapper(&attr,
-                                                                    func)));
+    // KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(cuda_device));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFuncGetAttributes(&attr, func));
     return attr;
   };
   static cudaFuncAttributes func_attr = wrap_get_attributes();
@@ -221,9 +220,9 @@ inline void configure_shmem_preference(const KernelFuncPtr& func,
   // Set the carveout, but only call it once per kernel or when it changes
   // FIXME_CUDA_MULTIPLE_DEVICES
   auto set_cache_config = [&] {
-    KOKKOS_IMPL_CUDA_SAFE_CALL(
-        (CudaInternal::singleton().cuda_func_set_attributes_wrapper(
-            func, cudaFuncAttributePreferredSharedMemoryCarveout, carveout)));
+    // KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(cuda_device));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFuncSetAttributes(
+        func, cudaFuncAttributePreferredSharedMemoryCarveout, carveout));
     return carveout;
   };
   // Store the value in a static variable so we only reset if needed

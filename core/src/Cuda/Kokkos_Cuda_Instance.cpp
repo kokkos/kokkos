@@ -145,13 +145,13 @@ void cuda_device_synchronize(const std::string &name) {
       // annotate with __host__ silence a clang warning about using
       // cudaDeviceSynchronize in device code
       [] __host__() {
-        KOKKOS_IMPL_CUDA_SAFE_CALL(
-            (CudaInternal::singleton().cuda_device_synchronize_wrapper()));
+        KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(Cuda().cuda_device()));
+        KOKKOS_IMPL_CUDA_SAFE_CALL(cudaDeviceSynchronize());
       });
 #else
       []() {
-        KOKKOS_IMPL_CUDA_SAFE_CALL(
-            (CudaInternal::singleton().cuda_device_synchronize_wrapper()));
+        KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(Cuda().cuda_device()));
+        KOKKOS_IMPL_CUDA_SAFE_CALL(cudaDeviceSynchronize());
       });
 #endif
 }
@@ -165,18 +165,6 @@ void cuda_stream_synchronize(const cudaStream_t stream, const CudaInternal *ptr,
       [&]() {
         KOKKOS_IMPL_CUDA_SAFE_CALL(
             (ptr->cuda_stream_synchronize_wrapper(stream)));
-      });
-}
-
-void cuda_stream_synchronize(
-    const cudaStream_t stream,
-    Kokkos::Tools::Experimental::SpecialSynchronizationCases reason,
-    const std::string &name) {
-  Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Cuda>(
-      name, reason, [&]() {
-        KOKKOS_IMPL_CUDA_SAFE_CALL(
-            (Impl::CudaInternal::singleton().cuda_stream_synchronize_wrapper(
-                stream)));
       });
 }
 

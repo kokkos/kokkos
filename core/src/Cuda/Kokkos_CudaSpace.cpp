@@ -43,8 +43,8 @@
 cudaStream_t Kokkos::Impl::cuda_get_deep_copy_stream() {
   static cudaStream_t s = nullptr;
   if (s == nullptr) {
-    KOKKOS_IMPL_CUDA_SAFE_CALL(
-        (CudaInternal::singleton().cuda_stream_create_wrapper(&s)));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(Cuda().cuda_device()));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamCreate(&s));
   }
   return s;
 }
@@ -67,8 +67,8 @@ static std::atomic<int> num_uvm_allocations(0);
 }  // namespace
 
 void DeepCopyCuda(void *dst, const void *src, size_t n) {
-  KOKKOS_IMPL_CUDA_SAFE_CALL((CudaInternal::singleton().cuda_memcpy_wrapper(
-      dst, src, n, cudaMemcpyDefault)));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(Cuda().cuda_device()));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMemcpy(dst, src, n, cudaMemcpyDefault));
 }
 
 void DeepCopyAsyncCuda(const Cuda &instance, void *dst, const void *src,
@@ -81,13 +81,12 @@ void DeepCopyAsyncCuda(const Cuda &instance, void *dst, const void *src,
 void DeepCopyAsyncCuda(void *dst, const void *src, size_t n) {
   cudaStream_t s = cuda_get_deep_copy_stream();
   KOKKOS_IMPL_CUDA_SAFE_CALL(
-      (CudaInternal::singleton().cuda_memcpy_async_wrapper(
-          dst, src, n, cudaMemcpyDefault, s)));
-  Impl::cuda_stream_synchronize(
-      s,
+      cudaMemcpyAsync(dst, src, n, cudaMemcpyDefault, s));
+  Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Cuda>(
+      "Kokkos::Impl::DeepCopyAsyncCuda: Deep Copy Stream Sync",
       Kokkos::Tools::Experimental::SpecialSynchronizationCases::
           DeepCopyResourceSynchronization,
-      "Kokkos::Impl::DeepCopyAsyncCuda: Deep Copy Stream Sync");
+      [&]() { KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamSynchronize(s)); });
 }
 
 }  // namespace Impl
@@ -349,18 +348,17 @@ void CudaSpace::impl_deallocate(
     if (arg_alloc_size >= memory_threshold_g) {
       Impl::cuda_device_synchronize(
           "Kokkos::Cuda: backend fence before async free");
-      KOKKOS_IMPL_CUDA_SAFE_CALL(
-          (Impl::CudaInternal::singleton().cuda_free_async_wrapper(
-              arg_alloc_ptr)));
+      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_device));
+      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFreeAsync(arg_alloc_ptr, m_stream));
       Impl::cuda_device_synchronize(
           "Kokkos::Cuda: backend fence after async free");
     } else {
-      KOKKOS_IMPL_CUDA_SAFE_CALL(
-          (Impl::CudaInternal::singleton().cuda_free_wrapper(arg_alloc_ptr)));
+      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_device));
+      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFree(arg_alloc_ptr));
     }
 #else
-    KOKKOS_IMPL_CUDA_SAFE_CALL(
-        (Impl::CudaInternal::singleton().cuda_free_wrapper(arg_alloc_ptr)));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_device));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFree(arg_alloc_ptr));
 #endif
   } catch (...) {
   }
@@ -392,8 +390,8 @@ void CudaUVMSpace::impl_deallocate(
   try {
     if (arg_alloc_ptr != nullptr) {
       Kokkos::Impl::num_uvm_allocations--;
-      KOKKOS_IMPL_CUDA_SAFE_CALL(
-          (Impl::CudaInternal::singleton().cuda_free_wrapper(arg_alloc_ptr)));
+      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_device));
+      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFree(arg_alloc_ptr));
     }
   } catch (...) {
   }
@@ -423,8 +421,8 @@ void CudaHostPinnedSpace::impl_deallocate(
                                       reported_size);
   }
   try {
-    KOKKOS_IMPL_CUDA_SAFE_CALL((
-        Impl::CudaInternal::singleton().cuda_free_host_wrapper(arg_alloc_ptr)));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_device));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFreeHost(arg_alloc_ptr));
   } catch (...) {
   }
 }
