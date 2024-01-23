@@ -32,7 +32,9 @@
 #elif defined(KOKKOS_IMPL_REF_COUNT_BRANCH_UNLIKELY)
 #define KOKKOS_BRANCH_PROB [[unlikely]]
 #endif
-#else
+#endif
+
+#ifndef KOKKOS_BRANCH_PROB
 #define KOKKOS_BRANCH_PROB
 #endif
 
