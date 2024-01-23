@@ -32,7 +32,6 @@
 
 #include <Kokkos_HBWSpace.hpp>
 #include <impl/Kokkos_Error.hpp>
-#include <impl/Kokkos_MemorySpace.hpp>
 #include <Kokkos_Atomic.hpp>
 #ifdef KOKKOS_ENABLE_HBWSPACE
 #include <memkind.h>
@@ -177,137 +176,9 @@ void HBWSpace::impl_deallocate(
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-namespace Kokkos {
-namespace Impl {
+#include <impl/Kokkos_SharedAlloc_timpl.hpp>
 
-#ifdef KOKKOS_ENABLE_DEBUG
-SharedAllocationRecord<void, void>
-    SharedAllocationRecord<Kokkos::Experimental::HBWSpace, void>::s_root_record;
-#endif
-
-void SharedAllocationRecord<Kokkos::Experimental::HBWSpace, void>::deallocate(
-    SharedAllocationRecord<void, void> *arg_rec) {
-  delete static_cast<SharedAllocationRecord *>(arg_rec);
-}
-
-SharedAllocationRecord<Kokkos::Experimental::HBWSpace,
-                       void>::~SharedAllocationRecord() {
-  m_space.deallocate(m_label.c_str(),
-                     SharedAllocationRecord<void, void>::m_alloc_ptr,
-                     SharedAllocationRecord<void, void>::m_alloc_size,
-                     (SharedAllocationRecord<void, void>::m_alloc_size -
-                      sizeof(SharedAllocationHeader)));
-}
-
-SharedAllocationRecord<Kokkos::Experimental::HBWSpace, void>::
-    SharedAllocationRecord(
-        const Kokkos::Experimental::HBWSpace &arg_space,
-        const std::string &arg_label, const size_t arg_alloc_size,
-        const SharedAllocationRecord<void, void>::function_type arg_dealloc)
-    // Pass through allocated [ SharedAllocationHeader , user_memory ]
-    // Pass through deallocation function
-    : SharedAllocationRecord<void, void>(
-#ifdef KOKKOS_ENABLE_DEBUG
-          &SharedAllocationRecord<Kokkos::Experimental::HBWSpace,
-                                  void>::s_root_record,
-#endif
-          Impl::checked_allocation_with_header(arg_space, arg_label,
-                                               arg_alloc_size),
-          sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc,
-          arg_label),
-      m_space(arg_space) {
-  // Fill in the Header information
-  RecordBase::m_alloc_ptr->m_record =
-      static_cast<SharedAllocationRecord<void, void> *>(this);
-
-  strncpy(RecordBase::m_alloc_ptr->m_label, arg_label.c_str(),
-          SharedAllocationHeader::maximum_label_length - 1);
-  // Set last element zero, in case c_str is too long
-  RecordBase::m_alloc_ptr
-      ->m_label[SharedAllocationHeader::maximum_label_length - 1] = '\0';
-}
-
-//----------------------------------------------------------------------------
-
-void *
-SharedAllocationRecord<Kokkos::Experimental::HBWSpace, void>::allocate_tracked(
-    const Kokkos::Experimental::HBWSpace &arg_space,
-    const std::string &arg_alloc_label, const size_t arg_alloc_size) {
-  if (!arg_alloc_size) return nullptr;
-
-  SharedAllocationRecord *const r =
-      allocate(arg_space, arg_alloc_label, arg_alloc_size);
-
-  RecordBase::increment(r);
-
-  return r->data();
-}
-
-void SharedAllocationRecord<Kokkos::Experimental::HBWSpace,
-                            void>::deallocate_tracked(void *const
-                                                          arg_alloc_ptr) {
-  if (arg_alloc_ptr != nullptr) {
-    SharedAllocationRecord *const r = get_record(arg_alloc_ptr);
-
-    RecordBase::decrement(r);
-  }
-}
-
-void *SharedAllocationRecord<Kokkos::Experimental::HBWSpace, void>::
-    reallocate_tracked(void *const arg_alloc_ptr, const size_t arg_alloc_size) {
-  SharedAllocationRecord *const r_old = get_record(arg_alloc_ptr);
-  SharedAllocationRecord *const r_new =
-      allocate(r_old->m_space, r_old->get_label(), arg_alloc_size);
-
-  Kokkos::Impl::DeepCopy<Kokkos::Experimental::HBWSpace,
-                         Kokkos::Experimental::HBWSpace>(
-      r_new->data(), r_old->data(), std::min(r_old->size(), r_new->size()));
-  Kokkos::fence(
-      "SharedAllocationRecord<Kokkos::Experimental::HBWSpace, "
-      "void>::reallocate_tracked(): fence after copying data");
-
-  RecordBase::increment(r_new);
-  RecordBase::decrement(r_old);
-
-  return r_new->data();
-}
-
-SharedAllocationRecord<Kokkos::Experimental::HBWSpace, void>
-    *SharedAllocationRecord<Kokkos::Experimental::HBWSpace, void>::get_record(
-        void *alloc_ptr) {
-  using Header = SharedAllocationHeader;
-  using RecordHost =
-      SharedAllocationRecord<Kokkos::Experimental::HBWSpace, void>;
-
-  SharedAllocationHeader const *const head =
-      alloc_ptr ? Header::get_header(alloc_ptr) : nullptr;
-  RecordHost *const record =
-      head ? static_cast<RecordHost *>(head->m_record) : nullptr;
-
-  if (!alloc_ptr || record->m_alloc_ptr != head) {
-    Kokkos::Impl::throw_runtime_exception(std::string(
-        "Kokkos::Impl::SharedAllocationRecord< Kokkos::Experimental::HBWSpace "
-        ", void >::get_record ERROR"));
-  }
-
-  return record;
-}
-
-// Iterate records to print orphaned memory ...
-void SharedAllocationRecord<Kokkos::Experimental::HBWSpace, void>::
-    print_records(std::ostream &s, const Kokkos::Experimental::HBWSpace &space,
-                  bool detail) {
-#ifdef KOKKOS_ENABLE_DEBUG
-  SharedAllocationRecord<void, void>::print_host_accessible_records(
-      s, "HBWSpace", &s_root_record, detail);
-#else
-  throw_runtime_exception(
-      "SharedAllocationRecord<HBWSpace>::print_records"
-      " only works with KOKKOS_ENABLE_DEBUG enabled");
-#endif
-}
-
-}  // namespace Impl
-}  // namespace Kokkos
+KOKKOS_IMPL_SHARED_ALLOCATION_RECORD_EXPLICIT_INSTANTIATION(
+    Kokkos::Experimental::HBWSpace);
 
 #endif

@@ -33,7 +33,6 @@
 
 //#include <Cuda/Kokkos_Cuda_BlockSize_Deduction.hpp>
 #include <impl/Kokkos_Error.hpp>
-#include <impl/Kokkos_MemorySpace.hpp>
 
 #include <impl/Kokkos_Tools.hpp>
 
@@ -437,160 +436,6 @@ void CudaHostPinnedSpace::impl_deallocate(
 namespace Kokkos {
 namespace Impl {
 
-#ifdef KOKKOS_ENABLE_DEBUG
-SharedAllocationRecord<void, void>
-    SharedAllocationRecord<Kokkos::CudaSpace, void>::s_root_record;
-
-SharedAllocationRecord<void, void>
-    SharedAllocationRecord<Kokkos::CudaUVMSpace, void>::s_root_record;
-
-SharedAllocationRecord<void, void>
-    SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>::s_root_record;
-#endif
-
-//==============================================================================
-// <editor-fold desc="SharedAllocationRecord destructors"> {{{1
-
-SharedAllocationRecord<Kokkos::CudaSpace, void>::~SharedAllocationRecord() {
-  auto alloc_size = SharedAllocationRecord<void, void>::m_alloc_size;
-  m_space.deallocate(m_label.c_str(),
-                     SharedAllocationRecord<void, void>::m_alloc_ptr,
-                     alloc_size, (alloc_size - sizeof(SharedAllocationHeader)));
-}
-
-void SharedAllocationRecord<Kokkos::CudaSpace, void>::deep_copy_header_no_exec(
-    void *ptr, const void *header) {
-  Kokkos::Cuda exec;
-  Kokkos::Impl::DeepCopy<CudaSpace, HostSpace>(exec, ptr, header,
-                                               sizeof(SharedAllocationHeader));
-  exec.fence(
-      "SharedAllocationRecord<Kokkos::CudaSpace, "
-      "void>::SharedAllocationRecord(): fence after copying header from "
-      "HostSpace");
-}
-
-SharedAllocationRecord<Kokkos::CudaUVMSpace, void>::~SharedAllocationRecord() {
-  m_space.deallocate(m_label.c_str(),
-                     SharedAllocationRecord<void, void>::m_alloc_ptr,
-                     SharedAllocationRecord<void, void>::m_alloc_size,
-                     (SharedAllocationRecord<void, void>::m_alloc_size -
-                      sizeof(SharedAllocationHeader)));
-}
-
-SharedAllocationRecord<Kokkos::CudaHostPinnedSpace,
-                       void>::~SharedAllocationRecord() {
-  m_space.deallocate(m_label.c_str(),
-                     SharedAllocationRecord<void, void>::m_alloc_ptr,
-                     SharedAllocationRecord<void, void>::m_alloc_size,
-                     (SharedAllocationRecord<void, void>::m_alloc_size -
-                      sizeof(SharedAllocationHeader)));
-}
-
-// </editor-fold> end SharedAllocationRecord destructors }}}1
-//==============================================================================
-
-//==============================================================================
-// <editor-fold desc="SharedAllocationRecord constructors"> {{{1
-
-SharedAllocationRecord<Kokkos::CudaSpace, void>::SharedAllocationRecord(
-    const Kokkos::CudaSpace &arg_space, const std::string &arg_label,
-    const size_t arg_alloc_size,
-    const SharedAllocationRecord<void, void>::function_type arg_dealloc)
-    // Pass through allocated [ SharedAllocationHeader , user_memory ]
-    // Pass through deallocation function
-    : base_t(
-#ifdef KOKKOS_ENABLE_DEBUG
-          &SharedAllocationRecord<Kokkos::CudaSpace, void>::s_root_record,
-#endif
-          Impl::checked_allocation_with_header(arg_space, arg_label,
-                                               arg_alloc_size),
-          sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc,
-          arg_label),
-      m_space(arg_space) {
-
-  SharedAllocationHeader header;
-
-  this->base_t::_fill_host_accessible_header_info(header, arg_label);
-
-  // Copy to device memory
-  Kokkos::Cuda exec;
-  Kokkos::Impl::DeepCopy<CudaSpace, HostSpace>(
-      exec, RecordBase::m_alloc_ptr, &header, sizeof(SharedAllocationHeader));
-  exec.fence(
-      "SharedAllocationRecord<Kokkos::CudaSpace, "
-      "void>::SharedAllocationRecord(): fence after copying header from "
-      "HostSpace");
-}
-
-SharedAllocationRecord<Kokkos::CudaSpace, void>::SharedAllocationRecord(
-    const Kokkos::Cuda &arg_exec_space, const Kokkos::CudaSpace &arg_space,
-    const std::string &arg_label, const size_t arg_alloc_size,
-    const SharedAllocationRecord<void, void>::function_type arg_dealloc)
-    // Pass through allocated [ SharedAllocationHeader , user_memory ]
-    // Pass through deallocation function
-    : base_t(
-#ifdef KOKKOS_ENABLE_DEBUG
-          &SharedAllocationRecord<Kokkos::CudaSpace, void>::s_root_record,
-#endif
-          Impl::checked_allocation_with_header(arg_exec_space, arg_space,
-                                               arg_label, arg_alloc_size),
-          sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc,
-          arg_label),
-      m_space(arg_space) {
-
-  SharedAllocationHeader header;
-
-  this->base_t::_fill_host_accessible_header_info(header, arg_label);
-
-  // Copy to device memory
-  Kokkos::Impl::DeepCopy<CudaSpace, HostSpace>(arg_exec_space,
-                                               RecordBase::m_alloc_ptr, &header,
-                                               sizeof(SharedAllocationHeader));
-}
-
-SharedAllocationRecord<Kokkos::CudaUVMSpace, void>::SharedAllocationRecord(
-    const Kokkos::CudaUVMSpace &arg_space, const std::string &arg_label,
-    const size_t arg_alloc_size,
-    const SharedAllocationRecord<void, void>::function_type arg_dealloc)
-    // Pass through allocated [ SharedAllocationHeader , user_memory ]
-    // Pass through deallocation function
-    : base_t(
-#ifdef KOKKOS_ENABLE_DEBUG
-          &SharedAllocationRecord<Kokkos::CudaUVMSpace, void>::s_root_record,
-#endif
-          Impl::checked_allocation_with_header(arg_space, arg_label,
-                                               arg_alloc_size),
-          sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc,
-          arg_label),
-      m_space(arg_space) {
-  this->base_t::_fill_host_accessible_header_info(*base_t::m_alloc_ptr,
-                                                  arg_label);
-}
-
-SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>::
-    SharedAllocationRecord(
-        const Kokkos::CudaHostPinnedSpace &arg_space,
-        const std::string &arg_label, const size_t arg_alloc_size,
-        const SharedAllocationRecord<void, void>::function_type arg_dealloc)
-    // Pass through allocated [ SharedAllocationHeader , user_memory ]
-    // Pass through deallocation function
-    : base_t(
-#ifdef KOKKOS_ENABLE_DEBUG
-          &SharedAllocationRecord<Kokkos::CudaHostPinnedSpace,
-                                  void>::s_root_record,
-#endif
-          Impl::checked_allocation_with_header(arg_space, arg_label,
-                                               arg_alloc_size),
-          sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc,
-          arg_label),
-      m_space(arg_space) {
-  this->base_t::_fill_host_accessible_header_info(*base_t::m_alloc_ptr,
-                                                  arg_label);
-}
-
-// </editor-fold> end SharedAllocationRecord constructors }}}1
-//==============================================================================
-
 void cuda_prefetch_pointer(const Cuda &space, const void *ptr, size_t bytes,
                            bool to_device) {
   if ((ptr == nullptr) || (bytes == 0)) return;
@@ -619,19 +464,12 @@ void cuda_prefetch_pointer(const Cuda &space, const void *ptr, size_t bytes,
 
 #include <impl/Kokkos_SharedAlloc_timpl.hpp>
 
-namespace Kokkos {
-namespace Impl {
-
-// To avoid additional compilation cost for something that's (mostly?) not
-// performance sensitive, we explicity instantiate these CRTP base classes here,
-// where we have access to the associated *_timpl.hpp header files.
-template class SharedAllocationRecordCommon<Kokkos::CudaSpace>;
-template class HostInaccessibleSharedAllocationRecordCommon<Kokkos::CudaSpace>;
-template class SharedAllocationRecordCommon<Kokkos::CudaUVMSpace>;
-template class SharedAllocationRecordCommon<Kokkos::CudaHostPinnedSpace>;
-
-}  // end namespace Impl
-}  // end namespace Kokkos
+KOKKOS_IMPL_HOST_INACCESSIBLE_SHARED_ALLOCATION_RECORD_EXPLICIT_INSTANTIATION(
+    Kokkos::CudaSpace);
+KOKKOS_IMPL_SHARED_ALLOCATION_RECORD_EXPLICIT_INSTANTIATION(
+    Kokkos::CudaUVMSpace);
+KOKKOS_IMPL_SHARED_ALLOCATION_RECORD_EXPLICIT_INSTANTIATION(
+    Kokkos::CudaHostPinnedSpace);
 
 // </editor-fold> end Explicit instantiations of CRTP Base classes }}}1
 //==============================================================================
