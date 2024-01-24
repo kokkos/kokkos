@@ -292,11 +292,7 @@ void CudaInternal::initialize(cudaStream_t stream) {
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaError_t(cuCtxGetDevice(&m_cudaDev)));
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
 
-  // FIXME_CUDA multiple devices
-  if (m_cudaDev != Cuda().cuda_device())
-    Kokkos::abort(
-        "Currently, the device id must match the device id used when Kokkos "
-        "was initialized!");
+  m_stream = stream;
 
   //----------------------------------
   // Multiblock reduction uses scratch flags for counters
@@ -317,7 +313,6 @@ void CudaInternal::initialize(cudaStream_t stream) {
     (void)scratch_space(reduce_block_count * 16 * sizeof(size_type));
   }
 
-  m_stream = stream;
   for (int i = 0; i < m_n_team_scratch; ++i) {
     m_team_scratch_current_size[i] = 0;
     m_team_scratch_ptr[i]          = nullptr;
