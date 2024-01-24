@@ -1349,7 +1349,7 @@ class TestViewAPI {
       throw std::bad_alloc();
     }
 
-    KOKKOS_INLINE_FUNCTION void operator()(int i) const {}
+    KOKKOS_INLINE_FUNCTION void operator()(int) const {}
 
     view_type view;
   };
