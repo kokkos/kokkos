@@ -900,10 +900,6 @@ void Kokkos::Impl::parse_command_line_arguments(
   bool print_configuration;
   bool tune_internals;
 
-  auto get_flag = [](std::string s) -> std::string {
-    return s.erase(s.find('='));
-  };
-
   bool help_flag = false;
 
   int iarg = 0;
