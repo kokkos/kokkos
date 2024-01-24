@@ -1490,11 +1490,6 @@ struct ParallelReduceAdaptor {
                                   const FunctorType& functor,
                                   ReturnType& return_value) {
     using PassedReducerType = typename return_value_adapter::reducer_type;
-    uint64_t kpID           = 0;
-
-    PolicyType inner_policy = policy;
-    Kokkos::Tools::Impl::begin_parallel_reduce<PassedReducerType>(
-        inner_policy, functor, label, kpID);
 
     using ReducerSelector =
         Kokkos::Impl::if_c<std::is_same<InvalidType, PassedReducerType>::value,
@@ -1502,6 +1497,17 @@ struct ParallelReduceAdaptor {
     using Analysis = FunctorAnalysis<FunctorPatternInterface::REDUCE,
                                      PolicyType, typename ReducerSelector::type,
                                      typename return_value_adapter::value_type>;
+
+    using ToolsHookType = Kokkos::Tools::Impl::ParallelReduceToolsHook<
+        CombinedFunctorReducer<FunctorType, typename Analysis::Reducer>,
+        PolicyType,
+        typename Impl::FunctorPolicyExecutionSpace<
+            FunctorType, PolicyType>::execution_space>;
+    uint64_t kpID           = 0;
+
+    PolicyType inner_policy = policy;
+    ToolsHookType::begin_parallel_reduce(
+        inner_policy, functor, label, kpID);
     Kokkos::Impl::shared_allocation_tracking_disable();
     CombinedFunctorReducer functor_reducer(
         functor, typename Analysis::Reducer(
@@ -1516,7 +1522,7 @@ struct ParallelReduceAdaptor {
     Kokkos::Impl::shared_allocation_tracking_enable();
     closure.execute();
 
-    Kokkos::Tools::Impl::end_parallel_reduce<PassedReducerType>(
+    ToolsHookType::end_parallel_reduce(
         inner_policy, functor, label, kpID);
   }
 
