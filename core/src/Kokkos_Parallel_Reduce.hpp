@@ -1512,21 +1512,15 @@ struct ParallelReduceAdaptor {
                                      PolicyType, typename ReducerSelector::type,
                                      typename return_value_adapter::value_type>;
 
-    auto closure =
-        Kokkos::Impl::with_shared_allocation_tracking_disabled([&]() {
-          CombinedFunctorReducer functor_reducer(
-              functor, typename Analysis::Reducer(
-                           ReducerSelector::select(functor, return_value)));
-
-          // FIXME Remove "Wrapper" once all backends implement the new
-          // interface
-          return Impl::ParallelReduce<
-              decltype(functor_reducer), PolicyType,
-              typename Impl::FunctorPolicyExecutionSpace<
-                  FunctorType, PolicyType>::execution_space>(
-              functor_reducer, inner_policy,
-              return_value_adapter::return_value(return_value, functor));
-        });
+    CombinedFunctorReducer functor_reducer(
+        functor, typename Analysis::Reducer(
+                      ReducerSelector::select(functor, return_value)));
+    auto closure = construct_with_shared_allocation_tracking_disabled<
+        Impl::ParallelReduce<decltype(functor_reducer), PolicyType,
+                             typename Impl::FunctorPolicyExecutionSpace<
+                                 FunctorType, PolicyType>::execution_space>>(
+        functor_reducer, inner_policy,
+        return_value_adapter::return_value(return_value, functor));
     closure.execute();
 
     Kokkos::Tools::Impl::end_parallel_reduce<PassedReducerType>(

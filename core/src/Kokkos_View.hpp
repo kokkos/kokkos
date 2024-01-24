@@ -27,6 +27,7 @@ static_assert(false,
 #include <algorithm>
 #include <initializer_list>
 #include <functional>
+#include <cassert>
 
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_HostSpace.hpp>
@@ -1920,6 +1921,7 @@ namespace Kokkos {
 namespace Impl {
 struct SharedAllocationDisableTrackingGuard {
   SharedAllocationDisableTrackingGuard() {
+    assert( ( Kokkos::Impl::SharedAllocationRecord< void, void >::tracking_enabled() ) );
     Kokkos::Impl::SharedAllocationRecord<void, void>::tracking_disable();
   }
 
@@ -1928,10 +1930,10 @@ struct SharedAllocationDisableTrackingGuard {
   }
 };
 
-template <class F>
-inline decltype(auto) with_shared_allocation_tracking_disabled(F&& fun) {
+template <class FunctorType, class... Args>
+inline FunctorType construct_with_shared_allocation_tracking_disabled(Args&&... args) {
   [[maybe_unused]] auto guard = SharedAllocationDisableTrackingGuard{};
-  return std::invoke(std::forward<F>(fun));
+  return {std::forward<Args>(args)...};
 }
 
 } /* namespace Impl */
