@@ -354,7 +354,9 @@ inline void parallel_scan(const std::string& str, const ExecutionPolicy& policy,
                           const FunctorType& functor) {
   uint64_t kpID                = 0;
   ExecutionPolicy inner_policy = policy;
-  Kokkos::Tools::Impl::ParallelScanToolsHook< FunctorType, ExecutionPolicy >::begin_parallel_scan(inner_policy, functor, str, kpID);
+  Kokkos::Tools::Impl::ParallelScanToolsHook<
+      FunctorType, ExecutionPolicy>::begin_parallel_scan(inner_policy, functor,
+                                                         str, kpID);
 
   Kokkos::Impl::shared_allocation_tracking_disable();
   Impl::ParallelScan<FunctorType, ExecutionPolicy> closure(functor,
@@ -363,7 +365,9 @@ inline void parallel_scan(const std::string& str, const ExecutionPolicy& policy,
 
   closure.execute();
 
-  Kokkos::Tools::Impl::ParallelScanToolsHook< FunctorType, ExecutionPolicy >::end_parallel_scan(inner_policy, functor, str, kpID);
+  Kokkos::Tools::Impl::ParallelScanToolsHook<
+      FunctorType, ExecutionPolicy>::end_parallel_scan(inner_policy, functor,
+                                                       str, kpID);
 }
 
 template <class ExecutionPolicy, class FunctorType>
@@ -399,7 +403,9 @@ inline void parallel_scan(const std::string& str, const ExecutionPolicy& policy,
                           ReturnType& return_value) {
   uint64_t kpID                = 0;
   ExecutionPolicy inner_policy = policy;
-  Kokkos::Tools::Impl::ParallelScanToolsHook< FunctorType, ExecutionPolicy >::begin_parallel_scan(inner_policy, functor, str, kpID);
+  Kokkos::Tools::Impl::ParallelScanToolsHook<
+      FunctorType, ExecutionPolicy>::begin_parallel_scan(inner_policy, functor,
+                                                         str, kpID);
 
   if constexpr (Kokkos::is_view<ReturnType>::value) {
     Kokkos::Impl::shared_allocation_tracking_disable();
@@ -417,7 +423,9 @@ inline void parallel_scan(const std::string& str, const ExecutionPolicy& policy,
     closure.execute();
   }
 
-  Kokkos::Tools::Impl::ParallelScanToolsHook< FunctorType, ExecutionPolicy >::end_parallel_scan(inner_policy, functor, str, kpID);
+  Kokkos::Tools::Impl::ParallelScanToolsHook<
+      FunctorType, ExecutionPolicy>::end_parallel_scan(inner_policy, functor,
+                                                       str, kpID);
 
   if (!Kokkos::is_view<ReturnType>::value)
     policy.space().fence(

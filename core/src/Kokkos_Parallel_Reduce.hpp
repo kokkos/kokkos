@@ -1503,11 +1503,10 @@ struct ParallelReduceAdaptor {
         PolicyType,
         typename Impl::FunctorPolicyExecutionSpace<
             FunctorType, PolicyType>::execution_space>;
-    uint64_t kpID           = 0;
+    uint64_t kpID = 0;
 
     PolicyType inner_policy = policy;
-    ToolsHookType::begin_parallel_reduce(
-        inner_policy, functor, label, kpID);
+    ToolsHookType::begin_parallel_reduce(inner_policy, functor, label, kpID);
     Kokkos::Impl::shared_allocation_tracking_disable();
     CombinedFunctorReducer functor_reducer(
         functor, typename Analysis::Reducer(
@@ -1522,8 +1521,7 @@ struct ParallelReduceAdaptor {
     Kokkos::Impl::shared_allocation_tracking_enable();
     closure.execute();
 
-    ToolsHookType::end_parallel_reduce(
-        inner_policy, functor, label, kpID);
+    ToolsHookType::end_parallel_reduce(inner_policy, functor, label, kpID);
   }
 
   static constexpr bool is_array_reduction =
