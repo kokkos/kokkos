@@ -225,7 +225,8 @@ class TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::Cuda, QueueType>> {
   // FIXME_CUDA_MULTIPLE_DEVICES
   static void execute(scheduler_type const& scheduler) {
     const int shared_per_warp = 2048;
-    const Kokkos::Cuda exec   = scheduler.get_execution_space();
+    const Kokkos::Cuda& exec  = scheduler.get_execution_space();
+    const auto& impl_instance = exec.impl_internal_space_instance();
     const int multi_processor_count =
         exec.cuda_device_prop().multiProcessorCount;
     const dim3 grid(multi_processor_count, 1, 1);
@@ -248,33 +249,30 @@ class TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::Cuda, QueueType>> {
     // Query the stack size, in bytes:
 
     size_t previous_stack_size = 0;
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(exec.cuda_device()));
-    KOKKOS_IMPL_CUDA_SAFE_CALL(
-        cudaDeviceGetLimit(&previous_stack_size, cudaLimitStackSize));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(impl_instance->cuda_device_get_limit_wrapper(
+        &previous_stack_size, cudaLimitStackSize));
 
     // If not large enough then set the stack size, in bytes:
 
     const size_t larger_stack_size = 1 << 11;
 
     if (previous_stack_size < larger_stack_size) {
-      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(exec.cuda_device()));
-      KOKKOS_IMPL_CUDA_SAFE_CALL(
-          cudaDeviceSetLimit(cudaLimitStackSize, larger_stack_size));
+      KOKKOS_IMPL_CUDA_SAFE_CALL(impl_instance->cuda_device_set_limit_wrapper(
+          cudaLimitStackSize, larger_stack_size));
     }
 
     cuda_task_queue_execute<<<grid, block, shared_total, stream>>>(
         scheduler, shared_per_warp);
 
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGetLastError());
+    KOKKOS_IMPL_CUDA_SAFE_CALL(impl_instance->cuda_get_last_error_wrapper());
 
     Impl::cuda_device_synchronize(
         "Kokkos::Impl::TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::"
         "Cuda>::execute: Post Task Execution");
 
     if (previous_stack_size < larger_stack_size) {
-      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(exec.cuda_device()));
-      KOKKOS_IMPL_CUDA_SAFE_CALL(
-          cudaDeviceSetLimit(cudaLimitStackSize, previous_stack_size));
+      KOKKOS_IMPL_CUDA_SAFE_CALL(impl_instance->cuda_device_set_limit_wrapper(
+          cudaLimitStackSize, previous_stack_size));
     }
   }
 
@@ -468,8 +466,11 @@ class TaskQueueSpecializationConstrained<
     const int shared_per_warp = 2048;
     const int warps_per_block = 4;
     const Kokkos::Cuda exec   = Cuda();  // FIXME_CUDA_MULTIPLE_DEVICES
+    const auto& impl_instance = exec.impl_internal_space_instance();
     const int multi_processor_count =
-        exec.impl_internal_space_instance()->m_deviceProp.multiProcessorCount;
+        // FIXME not sure why this didn't work
+        // exec.cuda_device_prop().multiProcessorCount;
+        impl_instance->m_deviceProp.multiProcessorCount;
     const dim3 grid(multi_processor_count, 1, 1);
     // const dim3 grid( 1 , 1 , 1 );
     const dim3 block(1, Kokkos::Impl::CudaTraits::WarpSize, warps_per_block);
@@ -486,33 +487,30 @@ class TaskQueueSpecializationConstrained<
     // Query the stack size, in bytes:
 
     size_t previous_stack_size = 0;
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(exec.cuda_device()));
-    KOKKOS_IMPL_CUDA_SAFE_CALL(
-        cudaDeviceGetLimit(&previous_stack_size, cudaLimitStackSize));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(impl_instance->cuda_device_get_limit_wrapper(
+        &previous_stack_size, cudaLimitStackSize));
 
     // If not large enough then set the stack size, in bytes:
 
     const size_t larger_stack_size = 2048;
 
     if (previous_stack_size < larger_stack_size) {
-      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(exec.cuda_device()));
-      KOKKOS_IMPL_CUDA_SAFE_CALL(
-          cudaDeviceSetLimit(cudaLimitStackSize, larger_stack_size));
+      KOKKOS_IMPL_CUDA_SAFE_CALL(impl_instance->cuda_device_set_limit_wrapper(
+          cudaLimitStackSize, larger_stack_size));
     }
 
     cuda_task_queue_execute<<<grid, block, shared_total, stream>>>(
         scheduler, shared_per_warp);
 
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGetLastError());
+    KOKKOS_IMPL_CUDA_SAFE_CALL(impl_instance->cuda_get_last_error_wrapper());
 
     Impl::cuda_device_synchronize(
         "Kokkos::Impl::TaskQueueSpecializationConstrained<SimpleTaskScheduler<"
         "Kokkos::Cuda>::execute: Post Execute Task");
 
     if (previous_stack_size < larger_stack_size) {
-      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(exec.cuda_device()));
-      KOKKOS_IMPL_CUDA_SAFE_CALL(
-          cudaDeviceSetLimit(cudaLimitStackSize, previous_stack_size));
+      KOKKOS_IMPL_CUDA_SAFE_CALL(impl_instance->cuda_device_set_limit_wrapper(
+          cudaLimitStackSize, previous_stack_size));
     }
   }
 
