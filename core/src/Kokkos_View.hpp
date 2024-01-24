@@ -1895,10 +1895,13 @@ struct SharedAllocationDisableTrackingGuard {
     Kokkos::Impl::SharedAllocationRecord<void, void>::tracking_enable();
   }
 
+  // clang-format off
+  // The old version of clang format we use is particularly egregious here
   SharedAllocationDisableTrackingGuard& operator=(
       const SharedAllocationDisableTrackingGuard&) = delete;
   SharedAllocationDisableTrackingGuard& operator=(
       SharedAllocationDisableTrackingGuard&&) noexcept = delete;
+  // clang-format on
 };
 
 template <class FunctorType, class... Args>

@@ -1349,7 +1349,7 @@ class TestViewAPI {
       throw std::bad_alloc();
     }
 
-    KOKKOS_INLINE_FUNCTION void operator()(int i) const { view(i) = i; }
+    KOKKOS_INLINE_FUNCTION void operator()(int i) const {}
 
     view_type view;
   };
@@ -1361,7 +1361,9 @@ class TestViewAPI {
 
     // test_refcount_poison_copy_functor throws during copy construction
     try {
-      Kokkos::parallel_for(N0, test_refcount_poison_copy_functor(original));
+      Kokkos::parallel_for(
+          Kokkos::RangePolicy<typename DeviceType::execution_space>(0, N0),
+          test_refcount_poison_copy_functor(original));
     } catch (const std::bad_alloc &) {
     }
 
