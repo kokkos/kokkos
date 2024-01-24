@@ -1921,17 +1921,29 @@ namespace Kokkos {
 namespace Impl {
 struct SharedAllocationDisableTrackingGuard {
   SharedAllocationDisableTrackingGuard() {
-    assert( ( Kokkos::Impl::SharedAllocationRecord< void, void >::tracking_enabled() ) );
+    assert(
+        (Kokkos::Impl::SharedAllocationRecord<void, void>::tracking_enabled()));
     Kokkos::Impl::SharedAllocationRecord<void, void>::tracking_disable();
   }
+
+  SharedAllocationDisableTrackingGuard(
+      const SharedAllocationDisableTrackingGuard&) = delete;
+  SharedAllocationDisableTrackingGuard(
+      SharedAllocationDisableTrackingGuard&&) noexcept = delete;
 
   ~SharedAllocationDisableTrackingGuard() {
     Kokkos::Impl::SharedAllocationRecord<void, void>::tracking_enable();
   }
+
+  SharedAllocationDisableTrackingGuard& operator=(
+      const SharedAllocationDisableTrackingGuard&) = delete;
+  SharedAllocationDisableTrackingGuard& operator=(
+      SharedAllocationDisableTrackingGuard&&) noexcept = delete;
 };
 
 template <class FunctorType, class... Args>
-inline FunctorType construct_with_shared_allocation_tracking_disabled(Args&&... args) {
+inline FunctorType construct_with_shared_allocation_tracking_disabled(
+    Args&&... args) {
   [[maybe_unused]] auto guard = SharedAllocationDisableTrackingGuard{};
   return {std::forward<Args>(args)...};
 }

@@ -1514,7 +1514,7 @@ struct ParallelReduceAdaptor {
 
     CombinedFunctorReducer functor_reducer(
         functor, typename Analysis::Reducer(
-                      ReducerSelector::select(functor, return_value)));
+                     ReducerSelector::select(functor, return_value)));
     auto closure = construct_with_shared_allocation_tracking_disabled<
         Impl::ParallelReduce<decltype(functor_reducer), PolicyType,
                              typename Impl::FunctorPolicyExecutionSpace<
