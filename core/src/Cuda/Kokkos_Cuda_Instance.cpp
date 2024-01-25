@@ -350,7 +350,7 @@ Cuda::size_type *CudaInternal::scratch_flags(const std::size_t size) const {
     m_scratchFlags = static_cast<size_type *>(
         mem_space.allocate("Kokkos::InternalScratchFlags", alloc_size));
 
-    // We only zero-initialiaze the allocation when we actually allocate.
+    // We only zero-initialize the allocation when we actually allocate.
     // It's the responsibility of the features using scratch_flags,
     // namely parallel_reduce and parallel_scan, to reset the used values to 0.
     KOKKOS_IMPL_CUDA_SAFE_CALL(
