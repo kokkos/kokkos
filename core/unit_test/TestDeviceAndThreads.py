@@ -18,6 +18,7 @@
 import unittest
 import subprocess
 import platform
+import os
 
 PREFIX = "$<TARGET_FILE_DIR:Kokkos_CoreUnitTest_DeviceAndThreads>"
 EXECUTABLE = "$<TARGET_FILE_NAME:Kokkos_CoreUnitTest_DeviceAndThreads>"
@@ -65,6 +66,8 @@ class KokkosInitializationTestCase(unittest.TestCase):
                     "--kokkos-num-threads={}".format(num_threads)))
 
     def test_num_devices(self):
+        if "KOKKOS_VISIBLE_DEVICES" in os.environ:
+            self.skipTest("KOKKOS_VISIBLE_DEVICES environment variable is set")
         num_devices = GetFlag("num_devices")
         self.assertNotEqual(num_devices, 0)
         if num_devices == -1:
@@ -75,6 +78,8 @@ class KokkosInitializationTestCase(unittest.TestCase):
         self.assertGreaterEqual(device_id, 0)
 
     def test_device_id(self):
+        if "KOKKOS_VISIBLE_DEVICES" in os.environ:
+            self.skipTest("KOKKOS_VISIBLE_DEVICES environment variable is set")
         num_devices = GetFlag("num_devices")
         if num_devices == -1:
             self.assertEqual(-1, GetFlag("device_id"))
