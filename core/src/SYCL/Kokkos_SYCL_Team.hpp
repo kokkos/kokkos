@@ -133,11 +133,27 @@ class SYCLTeamMember {
     const unsigned int team_rank_ = team_rank();
 
     // First combine the values in the same subgroup
+#if defined(KOKKOS_ARCH_INTEL_GPU) || defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
+    auto shuffle_combine = [&](int shift) {
+      if (vector_range * shift < sub_group_range) {
+        const value_type tmp = sg.shuffle_down(value, vector_range * shift); 
+        if (team_rank_ + shift < team_size_) reducer.join(value, tmp); 
+      }
+    };
+    shuffle_combine(1);
+    shuffle_combine(2);
+    shuffle_combine(4);
+    shuffle_combine(8);
+    shuffle_combine(16);
+    shuffle_combine(32);
+#else
     for (unsigned int shift = 1; vector_range * shift < sub_group_range;
          shift <<= 1) {
       const value_type tmp = sg.shuffle_down(value, vector_range * shift);
       if (team_rank_ + shift < team_size_) reducer.join(value, tmp);
+    
     }
+#endif
     value = sg.shuffle(value, 0);
 
     const int n_subgroups = sg.get_group_range()[0];
