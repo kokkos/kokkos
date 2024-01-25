@@ -200,6 +200,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
         Reductions
         Reductions_DeviceView
         SharedAlloc
+        Swap
         )
       set(file ${dir}/Test${Tag}_${Name}.cpp)
       # Write to a temporary intermediate file and call configure_file to avoid
@@ -780,6 +781,12 @@ if(Kokkos_ENABLE_CUDA)
     SOURCES
       UnitTestMain.cpp
       cuda/TestCuda_InterOp_Streams.cpp
+  )
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    CoreUnitTest_CudaInterOpStreamsMultiGPU
+    SOURCES
+      UnitTestMain.cpp
+      cuda/TestCuda_InterOp_StreamsMultiGPU.cpp
   )
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     CoreUnitTest_CudaGraph

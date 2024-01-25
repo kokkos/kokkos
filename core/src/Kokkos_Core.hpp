@@ -47,12 +47,14 @@
 #include <Kokkos_Half.hpp>
 #include <Kokkos_AnonymousSpace.hpp>
 #include <Kokkos_Pair.hpp>
-#include <Kokkos_MinMaxClamp.hpp>
+#include <Kokkos_Clamp.hpp>
+#include <Kokkos_MinMax.hpp>
 #include <Kokkos_MathematicalConstants.hpp>
 #include <Kokkos_MathematicalFunctions.hpp>
 #include <Kokkos_MathematicalSpecialFunctions.hpp>
 #include <Kokkos_NumericTraits.hpp>
 #include <Kokkos_BitManipulation.hpp>
+#include <Kokkos_Swap.hpp>
 #include <Kokkos_MemoryPool.hpp>
 #include <Kokkos_Array.hpp>
 #include <Kokkos_View.hpp>

@@ -22,7 +22,7 @@
 #include <atomic>
 #include <Cuda/Kokkos_Cuda_Error.hpp>
 #include <cuda_runtime_api.h>
-
+#include "Kokkos_CudaSpace.hpp"
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 // These functions fulfill the purpose of allowing to work around
@@ -104,7 +104,6 @@ class CudaInternal {
   mutable size_type* m_scratchFunctor;
   cudaStream_t m_stream;
   uint32_t m_instance_id;
-  bool m_manage_stream;
 
   // Team Scratch Level 1 Space
   int m_n_team_scratch = 10;
@@ -131,7 +130,7 @@ class CudaInternal {
     return nullptr != m_scratchSpace && nullptr != m_scratchFlags;
   }
 
-  void initialize(cudaStream_t stream, bool manage_stream);
+  void initialize(cudaStream_t stream);
   void finalize();
 
   void print_configuration(std::ostream&) const;
@@ -263,31 +262,6 @@ class CudaInternal {
   cudaError_t cuda_free_host_wrapper(void* ptr) const {
     if constexpr (setCudaDevice) set_cuda_device();
     return cudaFreeHost(ptr);
-  }
-
-  template <bool setCudaDevice = true>
-  cudaError_t cuda_get_device_count_wrapper(int* count) const {
-    if constexpr (setCudaDevice) set_cuda_device();
-    return cudaGetDeviceCount(count);
-  }
-
-  template <bool setCudaDevice = true>
-  cudaError_t cuda_get_device_properties_wrapper(cudaDeviceProp* prop,
-                                                 int device) const {
-    if constexpr (setCudaDevice) set_cuda_device();
-    return cudaGetDeviceProperties(prop, device);
-  }
-
-  template <bool setCudaDevice = true>
-  const char* cuda_get_error_name_wrapper(cudaError_t error) const {
-    if constexpr (setCudaDevice) set_cuda_device();
-    return cudaGetErrorName(error);
-  }
-
-  template <bool setCudaDevice = true>
-  const char* cuda_get_error_string_wrapper(cudaError_t error) const {
-    if constexpr (setCudaDevice) set_cuda_device();
-    return cudaGetErrorString(error);
   }
 
   template <bool setCudaDevice = true>

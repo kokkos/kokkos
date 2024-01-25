@@ -1543,13 +1543,23 @@ template <class ViewType, class RandomPool, class IndexType = int64_t>
 void fill_random(ViewType a, RandomPool g,
                  typename ViewType::const_value_type begin,
                  typename ViewType::const_value_type end) {
-  fill_random(typename ViewType::execution_space{}, a, g, begin, end);
+  Kokkos::fence(
+      "fill_random: fence before since no execution space instance provided");
+  typename ViewType::execution_space exec;
+  fill_random(exec, a, g, begin, end);
+  exec.fence(
+      "fill_random: fence after since no execution space instance provided");
 }
 
 template <class ViewType, class RandomPool, class IndexType = int64_t>
 void fill_random(ViewType a, RandomPool g,
                  typename ViewType::const_value_type range) {
-  fill_random(typename ViewType::execution_space{}, a, g, 0, range);
+  Kokkos::fence(
+      "fill_random: fence before since no execution space instance provided");
+  typename ViewType::execution_space exec;
+  fill_random(exec, a, g, 0, range);
+  exec.fence(
+      "fill_random: fence after since no execution space instance provided");
 }
 
 }  // namespace Kokkos

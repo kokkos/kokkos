@@ -26,30 +26,30 @@
 
 #include <string>
 
-namespace Kokkos {
-namespace Profiling {
+namespace Kokkos::Profiling {
 
-class ProfilingSection {
+class [[nodiscard]] ProfilingSection {
+  uint32_t sectionID;
+
  public:
   ProfilingSection(ProfilingSection const&) = delete;
   ProfilingSection& operator=(ProfilingSection const&) = delete;
 
-  ProfilingSection(const std::string& sectionName) {
-    Kokkos::Profiling::createProfileSection(sectionName, &secID);
+#if defined(__has_cpp_attribute) && __has_cpp_attribute(nodiscard) >= 201907
+  [[nodiscard]]
+#endif
+  explicit ProfilingSection(const std::string& sectionName) {
+    Kokkos::Profiling::createProfileSection(sectionName, &sectionID);
   }
 
-  void start() { Kokkos::Profiling::startSection(secID); }
+  void start() { Kokkos::Profiling::startSection(sectionID); }
 
-  void stop() { Kokkos::Profiling::stopSection(secID); }
+  void stop() { Kokkos::Profiling::stopSection(sectionID); }
 
-  ~ProfilingSection() { Kokkos::Profiling::destroyProfileSection(secID); }
-
- protected:
-  uint32_t secID;
+  ~ProfilingSection() { Kokkos::Profiling::destroyProfileSection(sectionID); }
 };
 
-}  // namespace Profiling
-}  // namespace Kokkos
+}  // namespace Kokkos::Profiling
 
 #ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_CORE
 #undef KOKKOS_IMPL_PUBLIC_INCLUDE
