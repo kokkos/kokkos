@@ -19,22 +19,21 @@
 #include <string>
 #include <thread>
 
-int get_device_count() {
+int get_num_devices() {
+  int num_devices;
 #if defined(KOKKOS_ENABLE_CUDA)
-  int count;
-  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGetDeviceCount(&count));
-  return count;
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGetDeviceCount(&num_devices));
 #elif defined(KOKKOS_ENABLE_HIP)
-  int count;
-  KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDevice(&count));
-  return count;
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDevice(&num_devices));
 #elif defined(KOKKOS_ENABLE_OPENMPTARGET)
-  return omp_get_num_devices();
+  num_devices = omp_get_num_devices();
 #elif defined(KOKKOS_ENABLE_OPENACC)
-  return acc_get_num_devices(acc_get_device_type());
+  num_devices = acc_get_num_devices(acc_get_device_type());
 #else
-  return 0;
+  num_devices = -1;
 #endif
+  assert(num_devices == Kokkos::num_devices());
+  return num_devices;
 }
 
 int get_device_id() {
@@ -44,9 +43,9 @@ int get_device_id() {
 #elif defined(KOKKOS_ENABLE_HIP)
   KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDevice(&device_id));
 #elif defined(KOKKOS_ENABLE_OPENMPTARGET)
-  device_id = omp_get_device_num();
+  device_id   = omp_get_device_num();
 #elif defined(KOKKOS_ENABLE_OPENACC)
-  device_id = acc_get_device_num(acc_get_device_type());
+  device_id   = acc_get_device_num(acc_get_device_type());
 #elif defined(KOKKOS_ENABLE_SYCL)
   // FIXME_SYCL ?
   assert(false);
@@ -98,7 +97,7 @@ int print_flag(std::string const& flag) {
   KOKKOS_TEST_PRINT_FLAG(num_threads);
   KOKKOS_TEST_PRINT_FLAG(max_threads);
   KOKKOS_TEST_PRINT_FLAG(device_id);
-  KOKKOS_TEST_PRINT_FLAG(device_count);
+  KOKKOS_TEST_PRINT_FLAG(num_devices);
   KOKKOS_TEST_PRINT_FLAG(disable_warnings);
   KOKKOS_TEST_PRINT_FLAG(tune_internals);
   KOKKOS_TEST_PRINT_FLAG(hwloc_enabled);
