@@ -197,6 +197,10 @@ std::vector<int> const& Kokkos::Impl::get_visible_devices() {
   return -1;
 }
 
+[[nodiscard]] int Kokkos::num_devices() noexcept {
+  return Impl::get_visible_devices().size();
+}
+
 [[nodiscard]] int Kokkos::num_threads() noexcept {
   return DefaultHostExecutionSpace().concurrency();
 }
