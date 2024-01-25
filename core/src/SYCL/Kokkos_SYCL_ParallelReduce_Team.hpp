@@ -229,6 +229,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
                   }
                   sycl::group_barrier(item.get_group());
                   if (num_teams_done[0] == n_wgroups) {
+                    if (local_id == 0) *scratch_flags = 0;
                     if (local_id >= n_wgroups)
                       reducer.init(&local_mem[local_id * value_count]);
                     else {
@@ -281,6 +282,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
                   }
                   item.barrier(sycl::access::fence_space::local_space);
                   if (num_teams_done[0] == n_wgroups) {
+                    if (local_id == 0) *scratch_flags = 0;
                     if (local_id >= n_wgroups)
                       reducer.init(&local_value);
                     else {

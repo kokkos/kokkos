@@ -288,12 +288,16 @@ sycl::device_ptr<void> SYCLInternal::scratch_flags(const std::size_t size) {
         m_scratchFlagsCount, sizeScratchGrain);
     m_scratchFlags = static_cast<size_type*>(mem_space.allocate(
         "Kokkos::Experimental::SYCL::InternalScratchFlags", alloc_size));
-  }
-  auto memset_event = m_queue->memset(m_scratchFlags, 0,
-                                      m_scratchFlagsCount * sizeScratchGrain);
+
+    // We only zero-initialize the allocation when we actually allocate.
+    // It's the responsibility of the features using scratch_flags,
+    // namely parallel_reduce and parallel_scan, to reset the used values to 0.
+    auto memset_event = m_queue->memset(m_scratchFlags, 0,
+                                        m_scratchFlagsCount * sizeScratchGrain);
 #ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
-  m_queue->ext_oneapi_submit_barrier(std::vector{memset_event});
+    m_queue->ext_oneapi_submit_barrier(std::vector{memset_event});
 #endif
+  }
 
   return m_scratchFlags;
 }

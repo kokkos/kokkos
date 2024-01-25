@@ -187,6 +187,7 @@ class ParallelScanSYCLBase {
             }
             item.barrier(sycl::access::fence_space::global_space);
             if (num_teams_done[0] == n_wgroups) {
+              if (local_id == 0) *scratch_flags = 0;
               value_type total;
               reducer.init(&total);
 
