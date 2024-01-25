@@ -70,13 +70,32 @@ class Bitset {
     block_shift = Kokkos::Impl::integral_power_of_two(block_size)
   };
 
+  //! Type of @ref m_blocks.
+  using block_view_type = View<unsigned*, Device, MemoryTraits<RandomAccess>>;
+
  public:
-  /// constructor
+  Bitset() = default;
+
   /// arg_size := number of bit in set
-  Bitset(unsigned arg_size = 0u)
-      : m_size(arg_size),
-        m_last_block_mask(0u),
-        m_blocks("Bitset", ((m_size + block_mask) >> block_shift)) {
+  Bitset(unsigned arg_size) : Bitset(Kokkos::view_alloc(), arg_size) {}
+
+  template <class... P>
+  Bitset(const Impl::ViewCtorProp<P...>& arg_prop, unsigned arg_size)
+      : m_size(arg_size), m_last_block_mask(0u) {
+    //! Ensure that allocation properties are consistent.
+    using alloc_prop_t = std::decay_t<decltype(arg_prop)>;
+    static_assert(alloc_prop_t::initialize,
+                  "Allocation property 'initialize' should be true.");
+    static_assert(
+        !alloc_prop_t::has_pointer,
+        "Allocation properties should not contain the 'pointer' property.");
+
+    //! Update 'label' property and allocate.
+    const auto prop_copy =
+        Impl::with_properties_if_unset(arg_prop, std::string("Bitset"));
+    m_blocks =
+        block_view_type(prop_copy, ((m_size + block_mask) >> block_shift));
+
     for (int i = 0, end = static_cast<int>(m_size & block_mask); i < end; ++i) {
       m_last_block_mask |= 1u << i;
     }
@@ -105,7 +124,7 @@ class Bitset {
   /// number of bits which are set to 1
   /// can only be called from the host
   unsigned count() const {
-    Impl::BitsetCount<Bitset<Device> > f(*this);
+    Impl::BitsetCount<Bitset<Device>> f(*this);
     return f.apply();
   }
 
@@ -273,9 +292,9 @@ class Bitset {
   }
 
  private:
-  unsigned m_size;
-  unsigned m_last_block_mask;
-  View<unsigned*, Device, MemoryTraits<RandomAccess> > m_blocks;
+  unsigned m_size            = 0;
+  unsigned m_last_block_mask = 0;
+  block_view_type m_blocks;
 
  private:
   template <typename DDevice>
@@ -302,6 +321,7 @@ class ConstBitset {
  public:
   using execution_space = typename Device::execution_space;
   using size_type       = unsigned int;
+  using block_view_type = typename Bitset<Device>::block_view_type::const_type;
 
  private:
   enum { block_size = static_cast<unsigned>(sizeof(unsigned) * CHAR_BIT) };
@@ -340,7 +360,7 @@ class ConstBitset {
   unsigned size() const { return m_size; }
 
   unsigned count() const {
-    Impl::BitsetCount<ConstBitset<Device> > f(*this);
+    Impl::BitsetCount<ConstBitset<Device>> f(*this);
     return f.apply();
   }
 
@@ -356,7 +376,7 @@ class ConstBitset {
 
  private:
   unsigned m_size;
-  View<const unsigned*, Device, MemoryTraits<RandomAccess> > m_blocks;
+  block_view_type m_blocks;
 
  private:
   template <typename DDevice>

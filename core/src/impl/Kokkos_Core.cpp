@@ -131,9 +131,13 @@ void combine(Kokkos::Tools::InitArguments& out,
 
 int get_device_count() {
 #if defined(KOKKOS_ENABLE_CUDA)
-  return Kokkos::Cuda::detect_device_count();
+  int count;
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGetDeviceCount(&count));
+  return count;
 #elif defined(KOKKOS_ENABLE_HIP)
-  return Kokkos::HIP::detect_device_count();
+  int count;
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDeviceCount(&count));
+  return count;
 #elif defined(KOKKOS_ENABLE_SYCL)
   return sycl::device::get_devices(sycl::info::device_type::gpu).size();
 #elif defined(KOKKOS_ENABLE_OPENACC)
@@ -604,6 +608,11 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
 #else
   declare_configuration_metadata("options", "KOKKOS_ENABLE_CXX23", "no");
 #endif
+#ifdef KOKKOS_ENABLE_CXX26
+  declare_configuration_metadata("options", "KOKKOS_ENABLE_CXX26", "yes");
+#else
+  declare_configuration_metadata("options", "KOKKOS_ENABLE_CXX26", "no");
+#endif
 #ifdef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
   declare_configuration_metadata("options", "KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK",
                                  "yes");
@@ -754,20 +763,21 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
 #elif defined(KOKKOS_ARCH_HOPPER90)
   declare_configuration_metadata("architecture", "GPU architecture",
                                  "HOPPER90");
-#elif defined(KOKKOS_ARCH_VEGA900)
-  declare_configuration_metadata("architecture", "GPU architecture", "VEGA900");
-#elif defined(KOKKOS_ARCH_VEGA906)
-  declare_configuration_metadata("architecture", "GPU architecture", "VEGA906");
-#elif defined(KOKKOS_ARCH_VEGA908)
-  declare_configuration_metadata("architecture", "GPU architecture", "VEGA908");
-#elif defined(KOKKOS_ARCH_VEGA90A)
-  declare_configuration_metadata("architecture", "GPU architecture", "VEGA90A");
-#elif defined(KOKKOS_ARCH_NAVI1030)
+#elif defined(KOKKOS_ARCH_AMD_GFX906)
   declare_configuration_metadata("architecture", "GPU architecture",
-                                 "NAVI1030");
-#elif defined(KOKKOS_ARCH_NAVI1100)
+                                 "AMD_GFX906");
+#elif defined(KOKKOS_ARCH_AMD_GFX908)
   declare_configuration_metadata("architecture", "GPU architecture",
-                                 "NAVI1100");
+                                 "AMD_GFX908");
+#elif defined(KOKKOS_ARCH_AMD_GFX90A)
+  declare_configuration_metadata("architecture", "GPU architecture",
+                                 "AMD_GFX90A");
+#elif defined(KOKKOS_ARCH_AMD_GFX1030)
+  declare_configuration_metadata("architecture", "GPU architecture",
+                                 "AMD_GFX1030");
+#elif defined(KOKKOS_ARCH_AMD_GFX1100)
+  declare_configuration_metadata("architecture", "GPU architecture",
+                                 "AMD_GFX1100");
 
 #else
   declare_configuration_metadata("architecture", "GPU architecture", "none");

@@ -117,10 +117,11 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
   inline RangePolicy(const typename traits::execution_space& work_space,
                      const member_type work_begin, const member_type work_end)
       : m_space(work_space),
-        m_begin(work_begin < work_end ? work_begin : 0),
-        m_end(work_begin < work_end ? work_end : 0),
+        m_begin(work_begin),
+        m_end(work_end),
         m_granularity(0),
         m_granularity_mask(0) {
+    check_bounds_validity();
     set_auto_chunk_size();
   }
 
@@ -136,10 +137,11 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
                      const member_type work_begin, const member_type work_end,
                      Args... args)
       : m_space(work_space),
-        m_begin(work_begin < work_end ? work_begin : 0),
-        m_end(work_begin < work_end ? work_end : 0),
+        m_begin(work_begin),
+        m_end(work_end),
         m_granularity(0),
         m_granularity_mask(0) {
+    check_bounds_validity();
     set_auto_chunk_size();
     set(args...);
   }
@@ -149,6 +151,7 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
   inline RangePolicy(const member_type work_begin, const member_type work_end,
                      Args... args)
       : RangePolicy(typename traits::execution_space(), work_begin, work_end) {
+    check_bounds_validity();
     set_auto_chunk_size();
     set(args...);
   }
@@ -216,6 +219,23 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
     }
     m_granularity      = new_chunk_size;
     m_granularity_mask = m_granularity - 1;
+  }
+
+  void check_bounds_validity() {
+    if (m_end < m_begin) {
+      std::string msg = "Kokkos::RangePolicy bounds error: The lower bound (" +
+                        std::to_string(m_begin) +
+                        ") is greater than the upper bound (" +
+                        std::to_string(m_end) + ").\n";
+#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_4
+      Kokkos::abort(msg.c_str());
+#endif
+      m_begin = 0;
+      m_end   = 0;
+#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
+      Kokkos::Impl::log_warning(msg);
+#endif
+    }
   }
 
  public:
@@ -983,7 +1003,16 @@ template <typename Rank, typename TeamHandle, typename Lambda,
 KOKKOS_INLINE_FUNCTION void parallel_reduce(
     TeamThreadMDRange<Rank, TeamHandle> const& policy, Lambda const& lambda,
     ReducerValueType& val) {
+  static_assert(/*!Kokkos::is_view_v<ReducerValueType> &&*/
+                !std::is_array_v<ReducerValueType> &&
+                    !std::is_pointer_v<ReducerValueType> &&
+                    !Kokkos::is_reducer_v<ReducerValueType>,
+                "Only scalar return types are allowed!");
+
+  val = ReducerValueType{};
   Impl::md_parallel_impl<Rank>(policy, lambda, val);
+  policy.team.team_reduce(
+      Kokkos::Sum<ReducerValueType, typename TeamHandle::execution_space>{val});
 }
 
 template <typename Rank, typename TeamHandle, typename Lambda>
@@ -997,7 +1026,29 @@ template <typename Rank, typename TeamHandle, typename Lambda,
 KOKKOS_INLINE_FUNCTION void parallel_reduce(
     ThreadVectorMDRange<Rank, TeamHandle> const& policy, Lambda const& lambda,
     ReducerValueType& val) {
+  static_assert(/*!Kokkos::is_view_v<ReducerValueType> &&*/
+                !std::is_array_v<ReducerValueType> &&
+                    !std::is_pointer_v<ReducerValueType> &&
+                    !Kokkos::is_reducer_v<ReducerValueType>,
+                "Only a scalar return types are allowed!");
+
+  val = ReducerValueType{};
   Impl::md_parallel_impl<Rank>(policy, lambda, val);
+  if constexpr (false
+#ifdef KOKKOS_ENABLE_CUDA
+                || std::is_same_v<typename TeamHandle::execution_space,
+                                  Kokkos::Cuda>
+#elif defined(KOKKOS_ENABLE_HIP)
+                || std::is_same_v<typename TeamHandle::execution_space,
+                                  Kokkos::HIP>
+#elif defined(KOKKOS_ENABLE_SYCL)
+                || std::is_same_v<typename TeamHandle::execution_space,
+                                  Kokkos::Experimental::SYCL>
+#endif
+  )
+    policy.team.vector_reduce(
+        Kokkos::Sum<ReducerValueType, typename TeamHandle::execution_space>{
+            val});
 }
 
 template <typename Rank, typename TeamHandle, typename Lambda>
@@ -1011,7 +1062,31 @@ template <typename Rank, typename TeamHandle, typename Lambda,
 KOKKOS_INLINE_FUNCTION void parallel_reduce(
     TeamVectorMDRange<Rank, TeamHandle> const& policy, Lambda const& lambda,
     ReducerValueType& val) {
+  static_assert(/*!Kokkos::is_view_v<ReducerValueType> &&*/
+                !std::is_array_v<ReducerValueType> &&
+                    !std::is_pointer_v<ReducerValueType> &&
+                    !Kokkos::is_reducer_v<ReducerValueType>,
+                "Only a scalar return types are allowed!");
+
+  val = ReducerValueType{};
   Impl::md_parallel_impl<Rank>(policy, lambda, val);
+  if constexpr (false
+#ifdef KOKKOS_ENABLE_CUDA
+                || std::is_same_v<typename TeamHandle::execution_space,
+                                  Kokkos::Cuda>
+#elif defined(KOKKOS_ENABLE_HIP)
+                || std::is_same_v<typename TeamHandle::execution_space,
+                                  Kokkos::HIP>
+#elif defined(KOKKOS_ENABLE_SYCL)
+                || std::is_same_v<typename TeamHandle::execution_space,
+                                  Kokkos::Experimental::SYCL>
+#endif
+  )
+    policy.team.vector_reduce(
+        Kokkos::Sum<ReducerValueType, typename TeamHandle::execution_space>{
+            val});
+  policy.team.team_reduce(
+      Kokkos::Sum<ReducerValueType, typename TeamHandle::execution_space>{val});
 }
 
 template <typename Rank, typename TeamHandle, typename Lambda>

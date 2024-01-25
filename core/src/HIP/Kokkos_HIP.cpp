@@ -18,6 +18,7 @@
 #define KOKKOS_IMPL_PUBLIC_INCLUDE
 #endif
 
+#include <Kokkos_Core.hpp>
 #include <HIP/Kokkos_HIP.hpp>
 #include <HIP/Kokkos_HIP_Instance.hpp>
 
@@ -60,8 +61,6 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
   if (Impl::HIPTraits::WarpSize < Impl::HIPInternal::m_maxWarpCount) {
     Impl::HIPInternal::m_maxWarpCount = Impl::HIPTraits::WarpSize;
   }
-  int constexpr WordSize              = sizeof(size_type);
-  Impl::HIPInternal::m_maxSharedWords = hipProp.sharedMemPerBlock / WordSize;
 
   //----------------------------------
   // Maximum number of blocks
@@ -91,10 +90,23 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
 
   hipStream_t singleton_stream;
   KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamCreate(&singleton_stream));
-  Impl::HIPInternal::singleton().initialize(singleton_stream, /*manage*/ true);
+  Impl::HIPInternal::singleton().initialize(singleton_stream);
 }
 
-void HIP::impl_finalize() { Impl::HIPInternal::singleton().finalize(); }
+void HIP::impl_finalize() {
+  (void)Impl::hip_global_unique_token_locks(true);
+
+  desul::Impl::finalize_lock_arrays();  // FIXME
+
+  KOKKOS_IMPL_HIP_SAFE_CALL(
+      hipEventDestroy(Impl::HIPInternal::constantMemReusable));
+  KOKKOS_IMPL_HIP_SAFE_CALL(
+      hipHostFree(Impl::HIPInternal::constantMemHostStaging));
+
+  Impl::HIPInternal::singleton().finalize();
+  KOKKOS_IMPL_HIP_SAFE_CALL(
+      hipStreamDestroy(Impl::HIPInternal::singleton().m_stream));
+}
 
 HIP::HIP()
     : m_space_instance(&Impl::HIPInternal::singleton(),
@@ -103,15 +115,23 @@ HIP::HIP()
       "HIP instance constructor");
 }
 
-HIP::HIP(hipStream_t const stream, bool manage_stream)
-    : m_space_instance(new Impl::HIPInternal, [](Impl::HIPInternal* ptr) {
-        ptr->finalize();
-        delete ptr;
-      }) {
+HIP::HIP(hipStream_t const stream, Impl::ManageStream manage_stream)
+    : m_space_instance(
+          new Impl::HIPInternal, [manage_stream](Impl::HIPInternal* ptr) {
+            ptr->finalize();
+            if (static_cast<bool>(manage_stream)) {
+              KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamDestroy(ptr->m_stream));
+            }
+            delete ptr;
+          }) {
   Impl::HIPInternal::singleton().verify_is_initialized(
       "HIP instance constructor");
-  m_space_instance->initialize(stream, manage_stream);
+  m_space_instance->initialize(stream);
 }
+
+KOKKOS_DEPRECATED HIP::HIP(hipStream_t const stream, bool manage_stream)
+    : HIP(stream,
+          manage_stream ? Impl::ManageStream::yes : Impl::ManageStream::no) {}
 
 void HIP::print_configuration(std::ostream& os, bool /*verbose*/) const {
   os << "Device Execution Space:\n";

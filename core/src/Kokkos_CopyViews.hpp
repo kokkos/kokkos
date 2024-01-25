@@ -22,6 +22,7 @@ static_assert(false,
 #ifndef KOKKOS_COPYVIEWS_HPP_
 #define KOKKOS_COPYVIEWS_HPP_
 #include <string>
+#include <sstream>
 #include <Kokkos_Parallel.hpp>
 #include <KokkosExp_MDRangePolicy.hpp>
 #include <Kokkos_Layout.hpp>
@@ -612,12 +613,17 @@ void view_copy(const DstType& dst, const SrcType& src) {
   };
 
   if (!DstExecCanAccessSrc && !SrcExecCanAccessDst) {
-    std::string message(
-        "Error: Kokkos::deep_copy with no available copy mechanism: ");
-    message += src.label();
-    message += " to ";
-    message += dst.label();
-    Kokkos::Impl::throw_runtime_exception(message);
+    std::ostringstream ss;
+    ss << "Error: Kokkos::deep_copy with no available copy mechanism: "
+       << "from source view (\"" << src.label() << "\") to destination view (\""
+       << dst.label() << "\").\n"
+       << "There is no common execution space that can access both source's "
+          "space\n"
+       << "(" << src_memory_space().name() << ") and destination's space ("
+       << dst_memory_space().name() << "), "
+       << "so source and destination\n"
+       << "must be contiguous and have the same layout.\n";
+    Kokkos::Impl::throw_runtime_exception(ss.str());
   }
 
   // Figure out iteration order in case we need it
@@ -1348,13 +1354,14 @@ inline std::enable_if_t<
 contiguous_fill_or_memset(
     const ExecutionSpace& exec_space, const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value) {
-// On A64FX memset seems to do the wrong thing with regards to first touch
-// leading to the significant performance issues
-#ifndef KOKKOS_ARCH_A64FX
-  if (Impl::is_zero_byte(value))
+  // With OpenMP, using memset has significant performance issues.
+  if (Impl::is_zero_byte(value)
+#ifdef KOKKOS_ENABLE_OPENMP
+      && !std::is_same_v<ExecutionSpace, Kokkos::OpenMP>
+#endif
+  )
     ZeroMemset<ExecutionSpace, View<DT, DP...>>(exec_space, dst, value);
   else
-#endif
     contiguous_fill(exec_space, dst, value);
 }
 
@@ -1759,7 +1766,7 @@ inline void deep_copy(
     Kokkos::fence(
         "Kokkos::deep_copy: copy between contiguous views, pre view equality "
         "check");
-    if ((void*)dst.data() != (void*)src.data()) {
+    if ((void*)dst.data() != (void*)src.data() && 0 < nbytes) {
       Kokkos::Impl::DeepCopy<dst_memory_space, src_memory_space>(
           dst.data(), src.data(), nbytes);
       Kokkos::fence(
@@ -2906,7 +2913,7 @@ inline void deep_copy(
       ((dst_type::rank < 7) || (dst.stride_6() == src.stride_6())) &&
       ((dst_type::rank < 8) || (dst.stride_7() == src.stride_7()))) {
     const size_t nbytes = sizeof(typename dst_type::value_type) * dst.span();
-    if ((void*)dst.data() != (void*)src.data()) {
+    if ((void*)dst.data() != (void*)src.data() && 0 < nbytes) {
       Kokkos::Impl::DeepCopy<dst_memory_space, src_memory_space, ExecSpace>(
           exec_space, dst.data(), src.data(), nbytes);
     }
@@ -3437,27 +3444,33 @@ struct MirrorType {
   using view_type = Kokkos::View<data_type, array_layout, Space>;
 };
 
+template <class... ViewCtorArgs>
+void check_view_ctor_args_create_mirror() {
+  using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
+
+  static_assert(
+      !alloc_prop_input::has_label,
+      "The view constructor arguments passed to Kokkos::create_mirror[_view] "
+      "must not include a label!");
+  static_assert(!alloc_prop_input::has_pointer,
+                "The view constructor arguments passed to "
+                "Kokkos::create_mirror[_view] must "
+                "not include a pointer!");
+  static_assert(!alloc_prop_input::allow_padding,
+                "The view constructor arguments passed to "
+                "Kokkos::create_mirror[_view] must "
+                "not explicitly allow padding!");
+}
+
 template <class T, class... P, class... ViewCtorArgs>
 inline std::enable_if_t<!Impl::ViewCtorProp<ViewCtorArgs...>::has_memory_space,
                         typename Kokkos::View<T, P...>::HostMirror>
 create_mirror(const Kokkos::View<T, P...>& src,
               const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
-  using src_type         = View<T, P...>;
-  using dst_type         = typename src_type::HostMirror;
-  using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
+  using src_type = View<T, P...>;
+  using dst_type = typename src_type::HostMirror;
 
-  static_assert(
-      !alloc_prop_input::has_label,
-      "The view constructor arguments passed to Kokkos::create_mirror "
-      "must not include a label!");
-  static_assert(
-      !alloc_prop_input::has_pointer,
-      "The view constructor arguments passed to Kokkos::create_mirror must "
-      "not include a pointer!");
-  static_assert(
-      !alloc_prop_input::allow_padding,
-      "The view constructor arguments passed to Kokkos::create_mirror must "
-      "not explicitly allow padding!");
+  check_view_ctor_args_create_mirror<ViewCtorArgs...>();
 
   auto prop_copy = Impl::with_properties_if_unset(
       arg_prop, std::string(src.label()).append("_mirror"));
@@ -3471,20 +3484,7 @@ template <class T, class... P, class... ViewCtorArgs,
               Impl::ViewCtorProp<ViewCtorArgs...>::has_memory_space>>
 auto create_mirror(const Kokkos::View<T, P...>& src,
                    const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
-  using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
-
-  static_assert(
-      !alloc_prop_input::has_label,
-      "The view constructor arguments passed to Kokkos::create_mirror "
-      "must not include a label!");
-  static_assert(
-      !alloc_prop_input::has_pointer,
-      "The view constructor arguments passed to Kokkos::create_mirror must "
-      "not include a pointer!");
-  static_assert(
-      !alloc_prop_input::allow_padding,
-      "The view constructor arguments passed to Kokkos::create_mirror must "
-      "not explicitly allow padding!");
+  check_view_ctor_args_create_mirror<ViewCtorArgs...>();
 
   auto prop_copy = Impl::with_properties_if_unset(
       arg_prop, std::string(src.label()).append("_mirror"));
@@ -3560,6 +3560,7 @@ inline std::enable_if_t<
     typename Kokkos::View<T, P...>::HostMirror>
 create_mirror_view(const Kokkos::View<T, P...>& src,
                    const Impl::ViewCtorProp<ViewCtorArgs...>&) {
+  check_view_ctor_args_create_mirror<ViewCtorArgs...>();
   return src;
 }
 
@@ -3590,6 +3591,7 @@ std::enable_if_t<Impl::MirrorViewType<
                      T, P...>::view_type>
 create_mirror_view(const Kokkos::View<T, P...>& src,
                    const Impl::ViewCtorProp<ViewCtorArgs...>&) {
+  check_view_ctor_args_create_mirror<ViewCtorArgs...>();
   return src;
 }
 

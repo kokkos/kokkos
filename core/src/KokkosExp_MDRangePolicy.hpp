@@ -96,7 +96,7 @@ constexpr Array to_array_potentially_narrowing(const U (&init)[M]) {
   using T = typename Array::value_type;
   Array a{};
   constexpr std::size_t N = a.size();
-  static_assert(M <= N, "");
+  static_assert(M <= N);
   auto* ptr = a.data();
   // NOTE equivalent to
   // std::transform(std::begin(init), std::end(init), a.data(),
@@ -120,7 +120,7 @@ constexpr NVCC_WONT_LET_ME_CALL_YOU_Array to_array_potentially_narrowing(
   using T = typename NVCC_WONT_LET_ME_CALL_YOU_Array::value_type;
   NVCC_WONT_LET_ME_CALL_YOU_Array a{};
   constexpr std::size_t N = a.size();
-  static_assert(M <= N, "");
+  static_assert(M <= N);
   for (std::size_t i = 0; i < M; ++i) {
     a[i] = checked_narrow_cast<T>(other[i]);
     (void)checked_narrow_cast<IndexType>(other[i]);  // see note above
@@ -327,6 +327,20 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
     }
     for (int i = rank_start; i != rank_end; i += increment) {
       const index_type length = m_upper[i] - m_lower[i];
+
+      if (m_upper[i] < m_lower[i]) {
+        std::string msg =
+            "Kokkos::MDRangePolicy bounds error: The lower bound (" +
+            std::to_string(m_lower[i]) + ") is greater than its upper bound (" +
+            std::to_string(m_upper[i]) + ") in dimension " + std::to_string(i) +
+            ".\n";
+#if !defined(KOKKOS_ENABLE_DEPRECATED_CODE_4)
+        Kokkos::abort(msg.c_str());
+#elif defined(KOKKOS_ENABLE_DEPRECATION_WARNINGS)
+        Kokkos::Impl::log_warning(msg);
+#endif
+      }
+
       if (m_tile[i] <= 0) {
         m_tune_tile_size = true;
         if ((inner_direction == Iterate::Right && (i < rank - 1)) ||

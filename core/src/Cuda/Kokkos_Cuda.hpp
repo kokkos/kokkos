@@ -46,7 +46,6 @@ static_assert(false,
 
 namespace Kokkos {
 namespace Impl {
-class CudaExec;
 class CudaInternal;
 }  // namespace Impl
 }  // namespace Kokkos
@@ -80,6 +79,9 @@ struct CudaDispatchProperties {
   CudaLaunchMechanism launch_mechanism = l;
 };
 }  // namespace Experimental
+
+enum class ManageStream : bool { no, yes };
+
 }  // namespace Impl
 /// \class Cuda
 /// \brief Kokkos Execution Space that uses CUDA to run on GPUs.
@@ -134,26 +136,6 @@ class Cuda {
 #endif
   }
 
-  /** \brief  Set the device in a "sleep" state.
-   *
-   * This function sets the device in a "sleep" state in which it is
-   * not ready for work.  This may consume less resources than if the
-   * device were in an "awake" state, but it may also take time to
-   * bring the device from a sleep state to be ready for work.
-   *
-   * \return True if the device is in the "sleep" state, else false if
-   *   the device is actively working and could not enter the "sleep"
-   *   state.
-   */
-  static bool sleep();
-
-  /// \brief Wake the device from the 'sleep' state so it is ready for work.
-  ///
-  /// \return True if the device is in the "ready" state, else "false"
-  ///  if the device is actively working (which also means that it's
-  ///  awake).
-  static bool wake();
-
   /// \brief Wait until all dispatched functors complete.
   ///
   /// The parallel_for or parallel_reduce dispatch of a functor may
@@ -181,7 +163,10 @@ class Cuda {
 
   Cuda();
 
-  Cuda(cudaStream_t stream, bool manage_stream = false);
+  Cuda(cudaStream_t stream,
+       Impl::ManageStream manage_stream = Impl::ManageStream::no);
+
+  KOKKOS_DEPRECATED Cuda(cudaStream_t stream, bool manage_stream);
 
   //--------------------------------------------------------------------------
   //! Free any resources being consumed by the device.
@@ -193,18 +178,37 @@ class Cuda {
   //! Initialize, telling the CUDA run-time library which device to use.
   static void impl_initialize(InitializationSettings const&);
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   /// \brief Cuda device architecture of the selected device.
   ///
   /// This matches the __CUDA_ARCH__ specification.
-  static size_type device_arch();
+  KOKKOS_DEPRECATED static size_type device_arch() {
+    const cudaDeviceProp& cudaProp = Cuda().cuda_device_prop();
+    return cudaProp.major * 100 + cudaProp.minor;
+  }
 
   //! Query device count.
-  static size_type detect_device_count();
+  KOKKOS_DEPRECATED static size_type detect_device_count() {
+    int count;
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGetDeviceCount(&count));
+    return count;
+  }
 
   /** \brief  Detect the available devices and their architecture
    *          as defined by the __CUDA_ARCH__ specification.
    */
-  static std::vector<unsigned> detect_device_arch();
+  KOKKOS_DEPRECATED static std::vector<unsigned> detect_device_arch() {
+    int count;
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGetDeviceCount(&count));
+    std::vector<unsigned> out;
+    for (int i = 0; i < count; ++i) {
+      cudaDeviceProp prop;
+      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGetDeviceProperties(&prop, i));
+      out.push_back(prop.major * 100 + prop.minor);
+    }
+    return out;
+  }
+#endif
 
   cudaStream_t cuda_stream() const;
   int cuda_device() const;
