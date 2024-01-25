@@ -198,7 +198,12 @@ std::vector<int> const& Kokkos::Impl::get_visible_devices() {
 }
 
 [[nodiscard]] int Kokkos::num_devices() noexcept {
-  return Impl::get_visible_devices().size();
+  if constexpr (std::is_same_v<DefaultExecutionSpace,
+                               DefaultHostExecutionSpace>) {
+    return -1;  // no GPU backend enabled
+  } else {
+    return Impl::get_visible_devices().size();
+  }
 }
 
 [[nodiscard]] int Kokkos::num_threads() noexcept {
