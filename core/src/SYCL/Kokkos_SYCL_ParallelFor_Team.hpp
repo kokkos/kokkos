@@ -76,7 +76,8 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
       auto lambda = [=](sycl::nd_item<2> item) {
         const member_type team_member(
-            team_scratch_memory_L0.get_pointer(), shmem_begin, scratch_size[0],
+            KOKKOS_IMPL_SYCL_GET_MULTI_PTR(team_scratch_memory_L0), shmem_begin,
+            scratch_size[0],
             global_scratch_ptr + item.get_group(1) * scratch_size[1],
             scratch_size[1], item, item.get_group_linear_id(),
             item.get_group_range(1));

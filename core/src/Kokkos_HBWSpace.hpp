@@ -26,6 +26,7 @@ static_assert(false,
 #ifdef KOKKOS_ENABLE_HBWSPACE
 
 #include <Kokkos_HostSpace.hpp>
+#include <impl/Kokkos_SharedAlloc.hpp>
 
 namespace Kokkos {
 
@@ -99,8 +100,6 @@ class HBWSpace {
 
  private:
   AllocationMechanism m_alloc_mech;
-  friend class Kokkos::Impl::SharedAllocationRecord<
-      Kokkos::Experimental::HBWSpace, void>;
 };
 
 }  // namespace Experimental
@@ -109,75 +108,7 @@ class HBWSpace {
 
 //----------------------------------------------------------------------------
 
-namespace Kokkos {
-
-namespace Impl {
-
-template <>
-class SharedAllocationRecord<Kokkos::Experimental::HBWSpace, void>
-    : public SharedAllocationRecord<void, void> {
- private:
-  friend Kokkos::Experimental::HBWSpace;
-
-  using RecordBase = SharedAllocationRecord<void, void>;
-
-  SharedAllocationRecord(const SharedAllocationRecord&) = delete;
-  SharedAllocationRecord& operator=(const SharedAllocationRecord&) = delete;
-
-  static void deallocate(RecordBase*);
-
-#ifdef KOKKOS_ENABLE_DEBUG
-  /**\brief  Root record for tracked allocations from this HBWSpace instance */
-  static RecordBase s_root_record;
-#endif
-
-  const Kokkos::Experimental::HBWSpace m_space;
-
- protected:
-  ~SharedAllocationRecord();
-  SharedAllocationRecord() = default;
-
-  SharedAllocationRecord(
-      const Kokkos::Experimental::HBWSpace& arg_space,
-      const std::string& arg_label, const size_t arg_alloc_size,
-      const RecordBase::function_type arg_dealloc = &deallocate);
-
- public:
-  inline std::string get_label() const {
-    return std::string(RecordBase::head()->m_label);
-  }
-
-  KOKKOS_INLINE_FUNCTION static SharedAllocationRecord* allocate(
-      const Kokkos::Experimental::HBWSpace& arg_space,
-      const std::string& arg_label, const size_t arg_alloc_size) {
-    KOKKOS_IF_ON_HOST((return new SharedAllocationRecord(arg_space, arg_label,
-                                                         arg_alloc_size);))
-    KOKKOS_IF_ON_DEVICE(((void)arg_space; (void)arg_label; (void)arg_alloc_size;
-                         return nullptr;))
-  }
-
-  /**\brief  Allocate tracked memory in the space */
-  static void* allocate_tracked(const Kokkos::Experimental::HBWSpace& arg_space,
-                                const std::string& arg_label,
-                                const size_t arg_alloc_size);
-
-  /**\brief  Reallocate tracked memory in the space */
-  static void* reallocate_tracked(void* const arg_alloc_ptr,
-                                  const size_t arg_alloc_size);
-
-  /**\brief  Deallocate tracked memory in the space */
-  static void deallocate_tracked(void* const arg_alloc_ptr);
-
-  static SharedAllocationRecord* get_record(void* arg_alloc_ptr);
-
-  static void print_records(std::ostream&,
-                            const Kokkos::Experimental::HBWSpace&,
-                            bool detail = false);
-};
-
-}  // namespace Impl
-
-}  // namespace Kokkos
+KOKKOS_IMPL_SHARED_ALLOCATION_SPECIALIZATION(Kokkos::Experimental::HBWSpace);
 
 //----------------------------------------------------------------------------
 

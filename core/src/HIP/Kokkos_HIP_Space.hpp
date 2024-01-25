@@ -92,8 +92,6 @@ class HIPSpace {
 
  private:
   int m_device;  ///< Which HIP device
-
-  friend class Kokkos::Impl::SharedAllocationRecord<HIPSpace, void>;
 };
 
 template <>
