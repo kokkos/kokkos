@@ -82,11 +82,12 @@ void DeepCopyAsyncCuda(void *dst, const void *src, size_t n) {
   KOKKOS_IMPL_CUDA_SAFE_CALL(
       (CudaInternal::singleton().cuda_memcpy_async_wrapper(
           dst, src, n, cudaMemcpyDefault, s)));
-  Impl::cuda_stream_synchronize(
-      s,
+
+  Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Cuda>(
+      "Kokkos::Impl::DeepCopyAsyncCuda: Deep Copy Stream Sync",
       Kokkos::Tools::Experimental::SpecialSynchronizationCases::
           DeepCopyResourceSynchronization,
-      "Kokkos::Impl::DeepCopyAsyncCuda: Deep Copy Stream Sync");
+      [&]() { KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamSynchronize(s)); });
 }
 
 }  // namespace Impl
