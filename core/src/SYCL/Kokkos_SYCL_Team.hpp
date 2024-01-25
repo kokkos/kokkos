@@ -162,7 +162,7 @@ class SYCLTeamMember {
       return;
     }
 
-    constexpr int step_width = 8;
+    constexpr int step_width = 16;
     auto tmp_alloc = sycl::ext::oneapi::group_local_memory_for_overwrite<
         value_type[step_width]>(m_item.get_group());
     auto& reduction_array = *tmp_alloc;
