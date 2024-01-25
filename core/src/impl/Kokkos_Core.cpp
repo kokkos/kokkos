@@ -90,8 +90,6 @@ void combine(Kokkos::InitializationSettings& out,
   KOKKOS_IMPL_COMBINE_SETTING(num_threads);
   KOKKOS_IMPL_COMBINE_SETTING(map_device_id_by);
   KOKKOS_IMPL_COMBINE_SETTING(device_id);
-  KOKKOS_IMPL_COMBINE_SETTING(num_devices);
-  KOKKOS_IMPL_COMBINE_SETTING(skip_device);
   KOKKOS_IMPL_COMBINE_SETTING(disable_warnings);
   KOKKOS_IMPL_COMBINE_SETTING(tune_internals);
   KOKKOS_IMPL_COMBINE_SETTING(tools_help);
@@ -317,8 +315,7 @@ int Kokkos::Impl::get_ctest_gpu(int local_rank) {
   return std::stoi(id.c_str());
 }
 
-std::vector<int> Kokkos::Impl::get_visible_devices(
-    Kokkos::InitializationSettings const& settings, int device_count) {
+std::vector<int> Kokkos::Impl::get_visible_devices(int device_count) {
   std::vector<int> visible_devices;
   char* env_visible_devices = std::getenv("KOKKOS_VISIBLE_DEVICES");
   if (env_visible_devices) {
@@ -345,29 +342,8 @@ std::vector<int> Kokkos::Impl::get_visible_devices(
       }
     }
   } else {
-    int num_devices =
-        settings.has_num_devices() ? settings.get_num_devices() : device_count;
-    if (num_devices > device_count) {
-      std::stringstream ss;
-      ss << "Error: Specified number of devices '" << num_devices
-         << "' exceeds the actual number of GPUs available for execution '"
-         << device_count << "'."
-         << " Raised by Kokkos::initialize().\n";
-      Kokkos::abort(ss.str().c_str());
-    }
-    for (int i = 0; i < num_devices; ++i) {
+    for (int i = 0; i < device_count; ++i) {
       visible_devices.push_back(i);
-    }
-    if (settings.has_skip_device()) {
-      if (visible_devices.size() == 1 && settings.get_skip_device() == 0) {
-        Kokkos::abort(
-            "Error: skipping the only GPU available for execution.\n"
-            " Raised by Kokkos::initialize().\n");
-      }
-      visible_devices.erase(
-          std::remove(visible_devices.begin(), visible_devices.end(),
-                      settings.get_skip_device()),
-          visible_devices.end());
     }
   }
   if (visible_devices.empty()) {
@@ -379,9 +355,8 @@ std::vector<int> Kokkos::Impl::get_visible_devices(
 }
 
 int Kokkos::Impl::get_gpu(const InitializationSettings& settings) {
-  std::vector<int> visible_devices =
-      get_visible_devices(settings, get_device_count());
-  int const num_devices = visible_devices.size();
+  std::vector<int> visible_devices = get_visible_devices(get_device_count());
+  int const num_devices            = visible_devices.size();
   // device_id is provided
   if (settings.has_device_id()) {
     int const id = settings.get_device_id();
@@ -920,16 +895,10 @@ void Kokkos::Impl::parse_command_line_arguments(
 
   int num_threads;
   int device_id;
-  int num_devices;  // deprecated
-  int skip_device;  // deprecated
   std::string map_device_id_by;
   bool disable_warnings;
   bool print_configuration;
   bool tune_internals;
-
-  auto get_flag = [](std::string s) -> std::string {
-    return s.erase(s.find('='));
-  };
 
   bool help_flag = false;
 
@@ -937,19 +906,7 @@ void Kokkos::Impl::parse_command_line_arguments(
   while (iarg < argc) {
     bool remove_flag = false;
 
-    if (check_arg(argv[iarg], "--kokkos-numa") ||
-        check_arg(argv[iarg], "--numa")) {
-      warn_deprecated_command_line_argument(get_flag(argv[iarg]));
-      // remove flag if prefixed with '--kokkos-'
-      remove_flag = std::string(argv[iarg]).find("--kokkos-") == 0;
-    } else if (check_arg_int(argv[iarg], "--kokkos-num-threads", num_threads) ||
-               check_arg_int(argv[iarg], "--num-threads", num_threads) ||
-               check_arg_int(argv[iarg], "--kokkos-threads", num_threads) ||
-               check_arg_int(argv[iarg], "--threads", num_threads)) {
-      if (get_flag(argv[iarg]) != "--kokkos-num-threads") {
-        warn_deprecated_command_line_argument(get_flag(argv[iarg]),
-                                              "--kokkos-num-threads");
-      }
+    if (check_arg_int(argv[iarg], "--kokkos-num-threads", num_threads)) {
       if (!is_valid_num_threads(num_threads)) {
         std::stringstream ss;
         ss << "Error: command line argument '" << argv[iarg] << "' is invalid."
@@ -958,15 +915,8 @@ void Kokkos::Impl::parse_command_line_arguments(
         Kokkos::abort(ss.str().c_str());
       }
       settings.set_num_threads(num_threads);
-      remove_flag = std::string(argv[iarg]).find("--kokkos-") == 0;
-    } else if (check_arg_int(argv[iarg], "--kokkos-device-id", device_id) ||
-               check_arg_int(argv[iarg], "--device-id", device_id) ||
-               check_arg_int(argv[iarg], "--kokkos-device", device_id) ||
-               check_arg_int(argv[iarg], "--device", device_id)) {
-      if (get_flag(argv[iarg]) != "--kokkos-device-id") {
-        warn_deprecated_command_line_argument(get_flag(argv[iarg]),
-                                              "--kokkos-device-id");
-      }
+      remove_flag = true;
+    } else if (check_arg_int(argv[iarg], "--kokkos-device-id", device_id)) {
       if (!is_valid_device_id(device_id)) {
         std::stringstream ss;
         ss << "Error: command line argument '" << argv[iarg] << "' is invalid."
@@ -975,70 +925,7 @@ void Kokkos::Impl::parse_command_line_arguments(
         Kokkos::abort(ss.str().c_str());
       }
       settings.set_device_id(device_id);
-      remove_flag = std::string(argv[iarg]).find("--kokkos-") == 0;
-    } else if (check_arg(argv[iarg], "--kokkos-num-devices") ||
-               check_arg(argv[iarg], "--num-devices") ||
-               check_arg(argv[iarg], "--kokkos-ndevices") ||
-               check_arg(argv[iarg], "--ndevices")) {
-      if (check_arg(argv[iarg], "--num-devices")) {
-        warn_deprecated_command_line_argument("--num-devices",
-                                              "--kokkos-num-devices");
-      }
-      if (check_arg(argv[iarg], "--ndevices")) {
-        warn_deprecated_command_line_argument("--ndevices",
-                                              "--kokkos-num-devices");
-      }
-      if (check_arg(argv[iarg], "--kokkos-ndevices")) {
-        warn_deprecated_command_line_argument("--kokkos-ndevices",
-                                              "--kokkos-num-devices");
-      }
-      warn_deprecated_command_line_argument(
-          "--kokkos-num-devices", "--kokkos-map-device-id-by=mpi_rank");
-      // Find the number of device (expecting --device=XX)
-      if (!((strncmp(argv[iarg], "--kokkos-num-devices=", 21) == 0) ||
-            (strncmp(argv[iarg], "--num-devices=", 14) == 0) ||
-            (strncmp(argv[iarg], "--kokkos-ndevices=", 18) == 0) ||
-            (strncmp(argv[iarg], "--ndevices=", 11) == 0)))
-        throw_runtime_exception(
-            "Error: expecting an '=INT[,INT]' after command line argument "
-            "'--kokkos-num-devices'."
-            " Raised by Kokkos::initialize().");
-
-      char* num1      = strchr(argv[iarg], '=') + 1;
-      char* num2      = strpbrk(num1, ",");
-      int num1_len    = num2 == nullptr ? strlen(num1) : num2 - num1;
-      char* num1_only = new char[num1_len + 1];
-      strncpy(num1_only, num1, num1_len);
-      num1_only[num1_len] = '\0';
-
-      if (!is_unsigned_int(num1_only) || (strlen(num1_only) == 0)) {
-        throw_runtime_exception(
-            "Error: expecting an integer number after command line argument "
-            "'--kokkos-num-devices'."
-            " Raised by Kokkos::initialize().");
-      }
-      if (check_arg(argv[iarg], "--kokkos-num-devices") ||
-          check_arg(argv[iarg], "--kokkos-ndevices")) {
-        num_devices = std::stoi(num1_only);
-        settings.set_num_devices(num_devices);
-        settings.set_map_device_id_by("mpi_rank");
-      }
-      delete[] num1_only;
-
-      if (num2 != nullptr) {
-        if ((!is_unsigned_int(num2 + 1)) || (strlen(num2) == 1))
-          throw_runtime_exception(
-              "Error: expecting an integer number after command line argument "
-              "'--kokkos-num-devices=XX,'."
-              " Raised by Kokkos::initialize().");
-
-        if (check_arg(argv[iarg], "--kokkos-num-devices") ||
-            check_arg(argv[iarg], "--kokkos-ndevices")) {
-          skip_device = std::stoi(num2 + 1);
-          settings.set_skip_device(skip_device);
-        }
-      }
-      remove_flag = std::string(argv[iarg]).find("--kokkos-") == 0;
+      remove_flag = true;
     } else if (check_arg_bool(argv[iarg], "--kokkos-disable-warnings",
                               disable_warnings)) {
       settings.set_disable_warnings(disable_warnings);
@@ -1107,9 +994,6 @@ void Kokkos::Impl::parse_environment_variables(
   }
   combine(settings, tools_init_arguments);
 
-  if (std::getenv("KOKKOS_NUMA")) {
-    warn_deprecated_environment_variable("KOKKOS_NUMA");
-  }
   int num_threads;
   if (check_env_int("KOKKOS_NUM_THREADS", num_threads)) {
     if (!is_valid_num_threads(num_threads)) {
@@ -1133,34 +1017,6 @@ void Kokkos::Impl::parse_environment_variables(
       Kokkos::abort(ss.str().c_str());
     }
     settings.set_device_id(device_id);
-  }
-  int num_devices;
-  int rand_devices;
-  bool has_num_devices  = check_env_int("KOKKOS_NUM_DEVICES", num_devices);
-  bool has_rand_devices = check_env_int("KOKKOS_RAND_DEVICES", rand_devices);
-  if (has_rand_devices && has_num_devices) {
-    Impl::throw_runtime_exception(
-        "Error: cannot specify both KOKKOS_NUM_DEVICES and "
-        "KOKKOS_RAND_DEVICES."
-        " Raised by Kokkos::initialize().");
-  }
-  if (has_num_devices) {
-    warn_deprecated_environment_variable("KOKKOS_NUM_DEVICES",
-                                         "KOKKOS_MAP_DEVICE_ID_BY=mpi_rank");
-    settings.set_map_device_id_by("mpi_rank");
-    settings.set_num_devices(num_devices);
-  }
-  if (has_rand_devices) {
-    warn_deprecated_environment_variable("KOKKOS_RAND_DEVICES",
-                                         "KOKKOS_MAP_DEVICE_ID_BY=random");
-    settings.set_map_device_id_by("random");
-    settings.set_num_devices(rand_devices);
-  }
-  if (has_num_devices || has_rand_devices) {
-    int skip_device;
-    if (check_env_int("KOKKOS_SKIP_DEVICE", skip_device)) {
-      settings.set_skip_device(skip_device);
-    }
   }
   bool disable_warnings;
   if (check_env_bool("KOKKOS_DISABLE_WARNINGS", disable_warnings)) {
