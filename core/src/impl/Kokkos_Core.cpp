@@ -167,6 +167,11 @@ bool is_valid_map_device_id_by(std::string const& x) {
 
 }  // namespace
 
+std::vector<int> const& Kokkos::Impl::get_visible_devices() {
+  static auto devices = get_visible_devices(get_device_count());
+  return devices;
+}
+
 [[nodiscard]] int Kokkos::device_id() noexcept {
 #if defined(KOKKOS_ENABLE_CUDA)
   int device = Cuda().cuda_device();
@@ -190,11 +195,6 @@ bool is_valid_map_device_id_by(std::string const& x) {
   }
   Kokkos::abort("implementation bug");
   return -1;
-}
-
-std::vector<int> const& Kokkos::Impl::get_visible_devices() {
-  static auto devices = get_visible_devices(get_device_count());
-  return devices;
 }
 
 [[nodiscard]] int Kokkos::num_threads() noexcept {
