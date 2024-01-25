@@ -19,6 +19,7 @@
 #include <Kokkos_Core.hpp>
 
 #include <regex>
+#include <limits>
 
 namespace {
 
@@ -118,6 +119,44 @@ TEST(TEST_CATEGORY_DEATH, range_policy_invalid_bounds) {
 #endif
   }
 
+#endif
+}
+
+TEST(TEST_CATEGORY_DEATH, range_policy_implicitly_converted_bounds) {
+  using UIntIndexType = Kokkos::IndexType<unsigned>;
+  using IntIndexType  = Kokkos::IndexType<int>;
+  using UIntPolicy    = Kokkos::RangePolicy<TEST_EXECSPACE, UIntIndexType>;
+  using IntPolicy     = Kokkos::RangePolicy<TEST_EXECSPACE, IntIndexType>;
+
+  std::string msg =
+      "Kokkos::RangePolicy bound type error: unsafe implicit conversion may "
+      "not preserve the original value.\n";
+
+#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  // signed to unsigned
+  ASSERT_DEATH({ (void)UIntPolicy(-1, 10); }, msg);
+  ASSERT_DEATH({ (void)IntPolicy(0u, std::numeric_limits<unsigned>::max()); },
+               msg);
+  ASSERT_DEATH({ (void)IntPolicy(0LL, std::numeric_limits<long long>::max()); },
+               msg);
+  ASSERT_DEATH({ (void)UIntPolicy(-1, 10, Kokkos::ChunkSize(2)); }, msg);
+
+#else
+  if (!Kokkos::show_warnings()) {
+    GTEST_SKIP() << "Kokkos warning messages are disabled";
+  }
+
+  {
+    UIntPolicy policy(-1, 10);
+    ASSERT_EQ(policy.begin(), 0u);
+    ASSERT_EQ(policy.end(), 0u);
+  }
+
+  {
+    IntPolicy policy(0u, std::numeric_limits<unsigned>::max());
+    ASSERT_EQ(policy.begin(), 0u);
+    ASSERT_EQ(policy.end(), 0u);
+  }
 #endif
 }
 
