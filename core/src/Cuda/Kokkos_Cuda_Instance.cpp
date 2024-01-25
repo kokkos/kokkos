@@ -145,13 +145,13 @@ void cuda_device_synchronize(const std::string &name) {
       // annotate with __host__ silence a clang warning about using
       // cudaDeviceSynchronize in device code
       [] __host__() {
-        KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(Cuda().cuda_device()));
-        KOKKOS_IMPL_CUDA_SAFE_CALL(cudaDeviceSynchronize());
+        KOKKOS_IMPL_CUDA_SAFE_CALL(
+            (CudaInternal::singleton().cuda_device_synchronize_wrapper()));
       });
 #else
       []() {
-        KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(Cuda().cuda_device()));
-        KOKKOS_IMPL_CUDA_SAFE_CALL(cudaDeviceSynchronize());
+        KOKKOS_IMPL_CUDA_SAFE_CALL(
+            (CudaInternal::singleton().cuda_device_synchronize_wrapper()));
       });
 #endif
 }
