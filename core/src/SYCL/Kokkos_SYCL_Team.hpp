@@ -213,19 +213,35 @@ class SYCLTeamMember {
     const auto id_in_sg        = sg.get_local_id()[0];
 
     // First combine the values in the same subgroup
+#if defined(KOKKOS_ARCH_INTEL_GPU) || defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
+    auto shuffle_combine = [&](int stride) {
+      if (vector_range * stride < sub_group_range) {
+        auto tmp = sg.shuffle_up(value, vector_range * stride);
+        if (id_in_sg >= vector_range * stride) value += tmp;
+      }
+    };
+    shuffle_combine(1);
+    shuffle_combine(2);
+    shuffle_combine(4);
+    shuffle_combine(8);
+    shuffle_combine(16);
+    shuffle_combine(32);
+#else
     for (unsigned int stride = 1; vector_range * stride < sub_group_range;
          stride <<= 1) {
       auto tmp = sg.shuffle_up(value, vector_range * stride);
       if (id_in_sg >= vector_range * stride) value += tmp;
     }
+#endif
 
     const auto n_active_subgroups = sg.get_group_range()[0];
-    const auto base_data =
-        static_cast<sycl::local_ptr<Type>>(m_team_reduce).get();
-    if (static_cast<int>(n_active_subgroups * sizeof(Type)) >
-        m_team_reduce_size)
-      Kokkos::abort("Not implemented!");
-
+    // For Intel GPUs, there is a maximum of 1024/16=64 subgroups,
+    // this similarly holds for AMD GPUs (1024/64=16), and
+    // NVIDIA GPUs (1024/32=32).
+    auto tmp_alloc = sycl::ext::oneapi::group_local_memory_for_overwrite<
+        Type[64]>(m_item.get_group());
+    auto& base_data = *tmp_alloc;
+    
     const auto group_id = sg.get_group_id()[0];
     if (id_in_sg == sub_group_range - 1) base_data[group_id] = value;
     sycl::group_barrier(m_item.get_group());
@@ -240,6 +256,25 @@ class SYCLTeamMember {
           const auto upper_bound = std::min(
               sub_group_range, n_active_subgroups - round * sub_group_range);
           auto local_value = base_data[idx];
+	  #if defined(KOKKOS_ARCH_INTEL_GPU) || defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
+    auto shuffle_combine = [&](int stride) {
+       if(stride < upper_bound) {
+            auto tmp = sg.shuffle_up(local_value, stride);
+            if (id_in_sg >= stride) {
+              if (idx < n_active_subgroups)
+                local_value += tmp;
+              else
+                local_value = tmp;
+            }
+          }
+    };
+    shuffle_combine(1);
+    shuffle_combine(2);
+    shuffle_combine(4);
+    shuffle_combine(8);
+    shuffle_combine(16);
+    shuffle_combine(32);
+#else
           for (unsigned int stride = 1; stride < upper_bound; stride <<= 1) {
             auto tmp = sg.shuffle_up(local_value, stride);
             if (id_in_sg >= stride) {
@@ -249,6 +284,7 @@ class SYCLTeamMember {
                 local_value = tmp;
             }
           }
+#endif
           base_data[idx] = local_value;
           if (round > 0)
             base_data[idx] += base_data[round * sub_group_range - 1];
