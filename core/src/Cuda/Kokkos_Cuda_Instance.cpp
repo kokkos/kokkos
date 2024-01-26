@@ -623,6 +623,9 @@ Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(cuda_device_id));
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamCreate(&singleton_stream));
 
+  // Init the array for used for arbitrarily sized atomics
+  desul::Impl::init_lock_arrays();  // FIXME
+
   Impl::CudaInternal::singleton().initialize(singleton_stream);
 }
 
