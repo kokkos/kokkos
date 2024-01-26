@@ -171,22 +171,21 @@ class SYCLTeamMember {
     // Load values into the first step_width values of the reduction
     // array in chunks. This means that only sub groups with an id in the
     // corresponding chunk load values.
-    const auto group_id = sg.get_group_id()[0];
+    const int group_id = sg.get_group_id()[0];
     if (id_in_sg == 0 && group_id < step_width)
       reduction_array[group_id] = value;
     sycl::group_barrier(m_item.get_group());
 
-    for (unsigned int start = step_width; start < n_subgroups;
-         start += step_width) {
+    for (int start = step_width; start < n_subgroups; start += step_width) {
       if (id_in_sg == 0 && group_id >= start &&
-          group_id < std::min<unsigned int>(start + step_width, n_subgroups))
+          group_id < std::min(start + step_width, n_subgroups))
         reducer.join(reduction_array[group_id - start], value);
       sycl::group_barrier(m_item.get_group());
     }
 
     // Do the final reduction for all threads redundantly
     value = reduction_array[0];
-    for (unsigned int i = 1; i < std::min(step_width, n_subgroups); ++i)
+    for (int i = 1; i < std::min(step_width, n_subgroups); ++i)
       reducer.join(value, reduction_array[i]);
 
     reducer.reference() = value;
