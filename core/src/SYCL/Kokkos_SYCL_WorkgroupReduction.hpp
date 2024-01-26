@@ -163,19 +163,19 @@ std::enable_if_t<use_shuffle_based_algorithm<ReducerType>> workgroup_reduction(
 
     // Then, we proceed as before.
 #if defined(KOKKOS_ARCH_INTEL_GPU) || defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
-    auto shuffle_combine = [&](int stride) {
+    auto shuffle_combine_sg = [&](int stride) {
       if (stride < local_range) {
         auto tmp = sg.shuffle_down(sg_value, stride);
         if (id_in_sg + stride < n_active_subgroups)
           final_reducer.join(&sg_value, &tmp);
       }
     };
-    shuffle_combine(1);
-    shuffle_combine(2);
-    shuffle_combine(4);
-    shuffle_combine(8);
-    shuffle_combine(16);
-    shuffle_combine(32);
+    shuffle_combine_sg(1);
+    shuffle_combine_sg(2);
+    shuffle_combine_sg(4);
+    shuffle_combine_sg(8);
+    shuffle_combine_sg(16);
+    shuffle_combine_sg(32);
 #else
     for (unsigned int stride = 1; stride < local_range; stride <<= 1) {
       auto tmp = sg.shuffle_down(sg_value, stride);
