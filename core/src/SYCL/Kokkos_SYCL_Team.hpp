@@ -38,9 +38,7 @@ class SYCLTeamMember {
   using team_handle          = SYCLTeamMember;
 
  private:
-  mutable sycl::local_ptr<void> m_team_reduce;
   scratch_memory_space m_team_shared;
-  int m_team_reduce_size;
   sycl::nd_item<2> m_item;
   int m_league_rank;
   int m_league_size;
@@ -95,13 +93,16 @@ class SYCLTeamMember {
       team_broadcast(ValueType& val, const int thread_id) const {
     // Wait for shared data write until all threads arrive here
     sycl::group_barrier(m_item.get_group());
+    auto tmp_alloc = sycl::ext::oneapi::group_local_memory_for_overwrite<
+        ValueType[1]>(m_item.get_group());
+        auto& local_mem = *tmp_alloc;
     if (m_item.get_local_id(1) == 0 &&
         static_cast<int>(m_item.get_local_id(0)) == thread_id) {
-      *static_cast<sycl::local_ptr<ValueType>>(m_team_reduce) = val;
+      local_mem[0] = val;
     }
     // Wait for shared data read until root thread writes
     sycl::group_barrier(m_item.get_group());
-    val = *static_cast<sycl::local_ptr<ValueType>>(m_team_reduce);
+    val = local_mem[0];
   }
 
   template <class Closure, class ValueType>
@@ -368,27 +369,17 @@ class SYCLTeamMember {
   // Private for the driver
 
   KOKKOS_INLINE_FUNCTION
-  SYCLTeamMember(sycl::local_ptr<void> shared, const std::size_t shared_begin,
-                 const std::size_t shared_size,
+  SYCLTeamMember(sycl::local_ptr<void> shared,
+		  const std::size_t shared_size,
                  sycl::device_ptr<void> scratch_level_1_ptr,
                  const std::size_t scratch_level_1_size,
                  const sycl::nd_item<2> item, const int arg_league_rank,
                  const int arg_league_size)
-      : m_team_reduce(shared),
-        m_team_shared(static_cast<sycl::local_ptr<char>>(shared) + shared_begin,
+      : m_team_shared(static_cast<sycl::local_ptr<char>>(shared),
                       shared_size, scratch_level_1_ptr, scratch_level_1_size),
-        m_team_reduce_size(shared_begin),
         m_item(item),
         m_league_rank(arg_league_rank),
         m_league_size(arg_league_size) {}
-
- public:
-  // Declare to avoid unused private member warnings which are trigger
-  // when SFINAE excludes the member function which uses these variables
-  // Making another class a friend also surpresses these warnings
-  bool impl_avoid_sfinae_warning() const noexcept {
-    return m_team_reduce_size > 0 && m_team_reduce != nullptr;
-  }
 };
 
 }  // namespace Impl

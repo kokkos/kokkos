@@ -42,7 +42,6 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   size_type const m_league_size;
   int m_team_size;
   size_type const m_vector_size;
-  int m_shmem_begin;
   int m_shmem_size;
   sycl::device_ptr<char> m_global_scratch_ptr;
   size_t m_scratch_size[2];
@@ -66,17 +65,16 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
       // host queues
       sycl::local_accessor<char, 1> team_scratch_memory_L0(
           sycl::range<1>(
-              std::max(m_scratch_size[0] + m_shmem_begin, size_t(1))),
+              std::max(m_scratch_size[0], size_t(1))),
           cgh);
 
       // Avoid capturing *this since it might not be trivially copyable
-      const auto shmem_begin       = m_shmem_begin;
       const size_t scratch_size[2] = {m_scratch_size[0], m_scratch_size[1]};
       sycl::device_ptr<char> const global_scratch_ptr = m_global_scratch_ptr;
 
       auto lambda = [=](sycl::nd_item<2> item) {
         const member_type team_member(
-            KOKKOS_IMPL_SYCL_GET_MULTI_PTR(team_scratch_memory_L0), shmem_begin,
+            KOKKOS_IMPL_SYCL_GET_MULTI_PTR(team_scratch_memory_L0),
             scratch_size[0],
             global_scratch_ptr + item.get_group(1) * scratch_size[1],
             scratch_size[1], item, item.get_group_linear_id(),
@@ -152,7 +150,6 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
       m_team_size =
           m_policy.team_size_recommended(arg_functor, ParallelForTag{});
 
-    m_shmem_begin = (sizeof(double) * (m_team_size + 2));
     m_shmem_size =
         (m_policy.scratch_size(0, m_team_size) +
          FunctorTeamShmemSize<FunctorType>::value(m_functor, m_team_size));
@@ -169,11 +166,11 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
             static_cast<ptrdiff_t>(m_scratch_size[1]) * m_league_size));
 
     if (static_cast<int>(space.m_maxShmemPerBlock) <
-        m_shmem_size - m_shmem_begin) {
+        m_shmem_size) {
       std::stringstream out;
       out << "Kokkos::Impl::ParallelFor<SYCL> insufficient shared memory! "
              "Requested "
-          << m_shmem_size - m_shmem_begin << " bytes but maximum is "
+          << m_shmem_size << " bytes but maximum is "
           << space.m_maxShmemPerBlock << '\n';
       Kokkos::Impl::throw_runtime_exception(out.str());
     }
