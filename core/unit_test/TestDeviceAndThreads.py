@@ -71,11 +71,8 @@ class KokkosInitializationTestCase(unittest.TestCase):
         num_devices = GetFlag("num_devices")
         self.assertNotEqual(num_devices, 0)
         if num_devices == -1:
-            self.assertEqual(-1, GetFlag("device_id"))
             self.skipTest("no device backend enabled")
-        device_id = GetFlag("device_id")
-        self.assertLess(device_id, num_devices)
-        self.assertGreaterEqual(device_id, 0)
+        self.assertGreaterEqual(num_devices, 1)
 
     def test_device_id(self):
         if "KOKKOS_VISIBLE_DEVICES" in os.environ:

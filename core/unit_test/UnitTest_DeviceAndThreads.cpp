@@ -29,6 +29,8 @@ int get_num_devices() {
   num_devices = omp_get_num_devices();
 #elif defined(KOKKOS_ENABLE_OPENACC)
   num_devices = acc_get_num_devices(acc_get_device_type());
+#elif defined(KOKKOS_ENABLE_SYCL)
+  num_devices = sycl::device::get_devices(sycl::info::device_type::gpu).size();
 #else
   num_devices = -1;
 #endif
@@ -47,11 +49,13 @@ int get_device_id() {
 #elif defined(KOKKOS_ENABLE_OPENACC)
   device_id   = acc_get_device_num(acc_get_device_type());
 #elif defined(KOKKOS_ENABLE_SYCL)
-  // FIXME_SYCL ?
-  assert(false);
-  return -2;
+  // Not able to query the underlying runtime because there is no such thing as
+  // device currently being used with SYCL.  We go through the Kokkos runtime
+  // which makes the assert below pointless but it still let us check that
+  // Kokkos selected the device we asked for from the Python tests.
+  device_id = Kokkos::device_id();
 #else
-  device_id = -1;
+  device_id   = -1;
 #endif
   assert(device_id == Kokkos::device_id());
   return device_id;
