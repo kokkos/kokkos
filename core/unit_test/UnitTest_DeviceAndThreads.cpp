@@ -24,7 +24,7 @@ int get_num_devices() {
 #if defined(KOKKOS_ENABLE_CUDA)
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGetDeviceCount(&num_devices));
 #elif defined(KOKKOS_ENABLE_HIP)
-  KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDevice(&num_devices));
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDeviceCount(&num_devices));
 #elif defined(KOKKOS_ENABLE_OPENMPTARGET)
   num_devices = omp_get_num_devices();
 #elif defined(KOKKOS_ENABLE_OPENACC)
