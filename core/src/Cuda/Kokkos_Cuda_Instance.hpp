@@ -23,6 +23,10 @@
 #include <Cuda/Kokkos_Cuda_Error.hpp>
 #include <cuda_runtime_api.h>
 #include "Kokkos_CudaSpace.hpp"
+
+#include <set>
+#include <map>
+
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 // These functions fulfill the purpose of allowing to work around
@@ -116,6 +120,7 @@ class CudaInternal {
   bool was_initialized = false;
   bool was_finalized   = false;
 
+  inline static std::set<int> cuda_devices = {};
   // FIXME_CUDA: these want to be per-device, not per-stream...  use of 'static'
   //  here will break once there are multiple devices though
   inline static unsigned long* constantMemHostStaging = nullptr;
@@ -219,12 +224,6 @@ class CudaInternal {
                                             size_t value) const {
     if constexpr (setCudaDevice) set_cuda_device();
     return cudaDeviceSetLimit(limit, value);
-  }
-
-  template <bool setCudaDevice = true>
-  cudaError_t cuda_device_synchronize_wrapper() const {
-    if constexpr (setCudaDevice) set_cuda_device();
-    return cudaDeviceSynchronize();
   }
 
   template <bool setCudaDevice = true>

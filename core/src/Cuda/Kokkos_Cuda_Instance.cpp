@@ -135,7 +135,6 @@ Kokkos::View<uint32_t *, Kokkos::CudaSpace> cuda_global_unique_token_locks(
   return locks;
 }
 
-// FIXME_CUDA_MULTIPLE_DEVICES
 void cuda_device_synchronize(const std::string &name) {
   Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Cuda>(
       name,
@@ -144,16 +143,16 @@ void cuda_device_synchronize(const std::string &name) {
 #if defined(KOKKOS_COMPILER_CLANG)
       // annotate with __host__ silence a clang warning about using
       // cudaDeviceSynchronize in device code
-      [] __host__() {
-        KOKKOS_IMPL_CUDA_SAFE_CALL(
-            (CudaInternal::singleton().cuda_device_synchronize_wrapper()));
-      });
+      [] __host__()
 #else
-      []() {
-        KOKKOS_IMPL_CUDA_SAFE_CALL(
-            (CudaInternal::singleton().cuda_device_synchronize_wrapper()));
-      });
+      []()
 #endif
+      {
+        for (int cuda_device : CudaInternal::cuda_devices) {
+          KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(cuda_device));
+          KOKKOS_IMPL_CUDA_SAFE_CALL(cudaDeviceSynchronize());
+        }
+      });
 }
 
 void cuda_stream_synchronize(const cudaStream_t stream, const CudaInternal *ptr,
@@ -293,6 +292,7 @@ void CudaInternal::initialize(cudaStream_t stream) {
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
 
   m_stream = stream;
+  CudaInternal::cuda_devices.insert(m_cudaDev);
 
   //----------------------------------
   // Multiblock reduction uses scratch flags for counters
