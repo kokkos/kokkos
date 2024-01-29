@@ -16,6 +16,7 @@
 - Remove deprecation warning for `AllocationMechanism` for `gcc` <11.0 [\#6653](https://github.com/kokkos/kokkos/pull/6653)
 - Fix bug early tools finalize with non-default host execution instances [\#6635](https://github.com/kokkos/kokkos/pull/6635)
 - Fix various issues for MSVC CUDA builds [\#6659](https://github.com/kokkos/kokkos/pull/6659)
+- Remove extra `;` in Kokkos_SIMD_Scalar.hpp: [\#6510](https://github.com/kokkos/kokkos/pull/6510)
 
 ## [4.2.00](https://github.com/kokkos/kokkos/tree/4.2.00) (2023-11-06)
 [Full Changelog](https://github.com/kokkos/kokkos/compare/4.1.00...4.2.00)
