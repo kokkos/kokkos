@@ -102,6 +102,7 @@ void declare_configuration_metadata(const std::string& category,
 [[nodiscard]] bool is_finalized() noexcept;
 
 [[nodiscard]] int device_id() noexcept;
+[[nodiscard]] int num_devices() noexcept;
 [[nodiscard]] int num_threads() noexcept;
 
 bool show_warnings() noexcept;

@@ -167,20 +167,43 @@ bool is_valid_map_device_id_by(std::string const& x) {
 
 }  // namespace
 
+std::vector<int> const& Kokkos::Impl::get_visible_devices() {
+  static auto devices = get_visible_devices(get_device_count());
+  return devices;
+}
+
 [[nodiscard]] int Kokkos::device_id() noexcept {
 #if defined(KOKKOS_ENABLE_CUDA)
-  return Cuda().cuda_device();
+  int device = Cuda().cuda_device();
 #elif defined(KOKKOS_ENABLE_HIP)
-  return HIP().hip_device();
+  int device = HIP().hip_device();
 #elif defined(KOKKOS_ENABLE_OPENACC)
-  return Experimental::OpenACC().acc_device_number();
+  int device = Experimental::OpenACC().acc_device_number();
 #elif defined(KOKKOS_ENABLE_OPENMPTARGET)
-  return omp_get_default_device();  // FIXME_OPENMPTARGET
+  int device = omp_get_default_device();  // FIXME_OPENMPTARGET
 #elif defined(KOKKOS_ENABLE_SYCL)
-  return Experimental::Impl::SYCLInternal::m_syclDev;
+  int device = Experimental::Impl::SYCLInternal::m_syclDev;
 #else
-  return -1;
+  int device = -1;
+  return device;
 #endif
+  auto const& visible_devices = Impl::get_visible_devices();
+  for (std::size_t i = 0; i < visible_devices.size(); ++i) {
+    if (visible_devices[i] == device) {
+      return i;
+    }
+  }
+  Kokkos::abort("Unexpected error: cannot determine device id");
+  return -1;
+}
+
+[[nodiscard]] int Kokkos::num_devices() noexcept {
+  if constexpr (std::is_same_v<DefaultExecutionSpace,
+                               DefaultHostExecutionSpace>) {
+    return -1;  // no GPU backend enabled
+  } else {
+    return Impl::get_visible_devices().size();
+  }
 }
 
 [[nodiscard]] int Kokkos::num_threads() noexcept {

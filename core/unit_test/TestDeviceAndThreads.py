@@ -18,6 +18,7 @@
 import unittest
 import subprocess
 import platform
+import os
 
 PREFIX = "$<TARGET_FILE_DIR:Kokkos_CoreUnitTest_DeviceAndThreads>"
 EXECUTABLE = "$<TARGET_FILE_NAME:Kokkos_CoreUnitTest_DeviceAndThreads>"
@@ -64,13 +65,25 @@ class KokkosInitializationTestCase(unittest.TestCase):
                     "num_threads",
                     "--kokkos-num-threads={}".format(num_threads)))
 
+    def test_num_devices(self):
+        if "KOKKOS_VISIBLE_DEVICES" in os.environ:
+            self.skipTest("KOKKOS_VISIBLE_DEVICES environment variable is set")
+        num_devices = GetFlag("num_devices")
+        self.assertNotEqual(num_devices, 0)
+        if num_devices == -1:
+            self.skipTest("no device backend enabled")
+        self.assertGreaterEqual(num_devices, 1)
+
     def test_device_id(self):
-        device_count = GetFlag("device_count")
-        if device_count == 0:
-            self.skipTest("no device detected")
+        if "KOKKOS_VISIBLE_DEVICES" in os.environ:
+            self.skipTest("KOKKOS_VISIBLE_DEVICES environment variable is set")
+        num_devices = GetFlag("num_devices")
+        if num_devices == -1:
+            self.assertEqual(-1, GetFlag("device_id"))
+            self.skipTest("no device backend enabled")
         # by default use the first GPU available for execution
         self.assertEqual(0, GetFlag("device_id"))
-        for device_id in range(device_count):
+        for device_id in range(num_devices):
             self.assertEqual(
                 device_id,
                 GetFlag(
