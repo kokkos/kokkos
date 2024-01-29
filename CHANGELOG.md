@@ -6,11 +6,14 @@
 ### Backend and Architecture Enhancements:
 
 #### CUDA:
-- Add warp sync for `parallel_reduce` to avoid race condition [\#6630](https://github.com/kokkos/kokkos/pull/6630)
+- Add warp sync for `parallel_reduce` to avoid race condition [\#6630](https://github.com/kokkos/kokkos/pull/6630), [\#6746](https://github.com/kokkos/kokkos/pull/6746)
 
 #### HIP:
 - Fix Graph "multiple definition of" linking error (missing `inline` specifier) [\#6624](https://github.com/kokkos/kokkos/pull/6624)
 - Add support for gfx940 (AMD Instinct MI300 GPU) [\#6671](https://github.com/kokkos/kokkos/pull/6671)
+
+### Build System
+- CMake: Don't let Kokkos set `CMAKE_CXX_FLAGS` for Trilinos builds [\#6742](https://github.com/kokkos/kokkos/pull/6742)
 
 ### Bug Fixes
 - Remove deprecation warning for `AllocationMechanism` for `gcc` <11.0 [\#6653](https://github.com/kokkos/kokkos/pull/6653)
