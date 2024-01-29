@@ -201,6 +201,8 @@ inline std::vector<sycl::device> get_sycl_devices() {
                                      return d.get_backend() != backend;
                                    }),
                     gpu_devices.end());
+  if (gpu_devices.empty())
+    Kokkos::abort("Error: no GPU available for execution.\n");
 #endif
   return gpu_devices;
 }
