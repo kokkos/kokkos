@@ -289,12 +289,17 @@ class Kokkos::Impl::TeamPolicyInternal<Kokkos::Experimental::SYCL,
  protected:
   template <class FunctorType>
   int internal_team_size_max_for(const FunctorType& /*f*/) const {
-	  const int max_wgroup_size = m_space.impl_internal_space_instance()->m_maxWorkgroupSize;
-    const int max_threads_for_memory = m_thread_scratch_size > 0 ? max_wgroup_size :
-        (space().impl_internal_space_instance()->m_maxShmemPerBlock - m_team_scratch_size[0]) /
-        m_thread_scratch_size[0];
+    // nested_reducer_memsize = (sizeof(double) * (m_team_size + 2)
+    // custom: m_team_scratch_size[0] + m_thread_scratch_size[0] * m_team_size
+    // total:
+    // 2*sizeof(double)+m_team_scratch_size[0]
+    // + m_team_size(sizeof(double)+m_thread_scratch_size[0])
+    const int max_threads_for_memory =
+        (space().impl_internal_space_instance()->m_maxShmemPerBlock -
+         2 * sizeof(double) - m_team_scratch_size[0]) /
+        (sizeof(double) + m_thread_scratch_size[0]);
     return std::min({
-             max_wgroup_size,
+             int(m_space.impl_internal_space_instance()->m_maxWorkgroupSize),
       // FIXME_SYCL Avoid requesting too many registers on NVIDIA GPUs.
 #if defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
                  256,
@@ -312,18 +317,18 @@ class Kokkos::Impl::TeamPolicyInternal<Kokkos::Experimental::SYCL,
     using value_type      = typename Analysis::value_type;
     const int value_count = Analysis::value_count(f);
 
+    // nested_reducer_memsize = (sizeof(double) * (m_team_size + 2)
     // reducer_memsize = sizeof(value_type) * m_team_size * value_count
     // custom: m_team_scratch_size[0] + m_thread_scratch_size[0] * m_team_size
     // total:
-    // m_team_scratch_size[0] + m_team_size(sizeof(value_type)*value_count
-    //   + m_thread_scratch_size[0])
+    // 2*sizeof(double)+m_team_scratch_size[0]
+    // + m_team_size(sizeof(double)+sizeof(value_type)*value_count
+    //               +m_thread_scratch_size[0])
     const int max_threads_for_memory =
-        (space().impl_internal_space_instance()->m_maxShmemPerBlock - m_team_scratch_size[0]) /
-        (sizeof(value_type) * value_count +
+        (space().impl_internal_space_instance()->m_maxShmemPerBlock -
+         2 * sizeof(double) - m_team_scratch_size[0]) /
+        (sizeof(double) + sizeof(value_type) * value_count +
          m_thread_scratch_size[0]);
-    std::cout << "total available: " << space().impl_internal_space_instance()->m_maxShmemPerBlock << '-' <<  m_team_scratch_size[0] << std::endl;
-    std::cout << "per thread: " << sizeof(value_type) * value_count << '+' << m_thread_scratch_size[0] << std::endl;
-    std::cout << "max_threads_for_memory: " << max_threads_for_memory << " max_wgroup_size: " << m_space.impl_internal_space_instance()->m_maxWorkgroupSize << ' ' << impl_vector_length() << std::endl;
     return std::min<int>({
              int(m_space.impl_internal_space_instance()->m_maxWorkgroupSize),
       // FIXME_SYCL Avoid requesting too many registers on NVIDIA GPUs.

@@ -142,8 +142,8 @@ void SYCL::impl_static_fence(const std::string& name) {
 }
 
 void SYCL::impl_initialize(InitializationSettings const& settings) {
-  std::vector<sycl::device> gpu_devices =
-      sycl::device::get_devices(sycl::info::device_type::gpu);
+      	std::vector<sycl::device> gpu_devices = Impl::get_sycl_devices();
+
   // If the device id is not specified and there are no GPUs, sidestep Kokkos
   // device selection and use whatever is available (if no GPU architecture is
   // specified).
