@@ -193,7 +193,7 @@ std::vector<int> const& Kokkos::Impl::get_visible_devices() {
       return i;
     }
   }
-  Kokkos::abort("implementation bug");
+  Kokkos::abort("Unexpected error: cannot determine device id");
   return -1;
 }
 
