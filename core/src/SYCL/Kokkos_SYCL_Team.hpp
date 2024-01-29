@@ -161,6 +161,11 @@ class SYCLTeamMember {
       return;
     }
 
+    // It was found experimentally that 16 is a good value for Intel PVC.
+    // Since there is a maximum number of 1024 threads with subgroup size 16,
+    // we have a maximum of 64 subgroups per workgroup which means 64/16=4
+    // rounds for loading values into the reduction_array, and 16 redundant
+    // reduction steps executed by every thread.
     constexpr int step_width = 16;
     auto tmp_alloc = sycl::ext::oneapi::group_local_memory_for_overwrite<
         value_type[step_width]>(m_item.get_group());
