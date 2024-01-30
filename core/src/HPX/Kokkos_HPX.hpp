@@ -1290,17 +1290,17 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
     const WorkRange range(m_policy, t, num_worker_threads);
     execute_chunk(range.begin(), range.end(), update_sum, false);
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
     {
       // Since arrive_and_wait may yield and resume on another worker thread we
       // set in_parallel = false on the current thread before suspending and set
       // it again to true when we resume.
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
       Kokkos::Experimental::HPX::impl_not_in_parallel_scope p;
       barrier.arrive_and_wait();
-#else
-      barrier.arrive_and_wait();
-#endif
     }
+#else
+    barrier.arrive_and_wait();
+#endif
 
     if (t == 0) {
       final_reducer.init(reinterpret_cast<pointer_type>(
@@ -1322,17 +1322,17 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
       }
     }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
     {
       // Since arrive_and_wait may yield and resume on another worker thread we
       // set in_parallel = false on the current thread before suspending and set
       // it again to true when we resume.
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
       Kokkos::Experimental::HPX::impl_not_in_parallel_scope p;
       barrier.arrive_and_wait();
-#else
-      barrier.arrive_and_wait();
-#endif
     }
+#else
+    barrier.arrive_and_wait();
+#endif
 
     reference_type update_base =
         Analysis::Reducer::reference(reinterpret_cast<pointer_type>(
@@ -1413,17 +1413,17 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
     const WorkRange range(m_policy, t, num_worker_threads);
     execute_chunk(range.begin(), range.end(), update_sum, false);
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
     {
       // Since arrive_and_wait may yield and resume on another worker thread we
       // set in_parallel = false on the current thread before suspending and set
       // it again to true when we resume.
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
       Kokkos::Experimental::HPX::impl_not_in_parallel_scope p;
       barrier.arrive_and_wait();
-#else
-      barrier.arrive_and_wait();
-#endif
     }
+#else
+    barrier.arrive_and_wait();
+#endif
 
     if (t == 0) {
       final_reducer.init(reinterpret_cast<pointer_type>(
@@ -1445,17 +1445,17 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
       }
     }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
     {
       // Since arrive_and_wait may yield and resume on another worker thread we
       // set in_parallel = false on the current thread before suspending and set
       // it again to true when we resume.
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
       Kokkos::Experimental::HPX::impl_not_in_parallel_scope p;
       barrier.arrive_and_wait();
-#else
-      barrier.arrive_and_wait();
-#endif
     }
+#else
+    barrier.arrive_and_wait();
+#endif
 
     reference_type update_base =
         Analysis::Reducer::reference(reinterpret_cast<pointer_type>(
