@@ -1298,6 +1298,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
       // set in_parallel = false on the current thread before suspending and set
       // it again to true when we resume.
       Kokkos::Experimental::HPX::impl_not_in_parallel_scope p;
+      barrier.arrive_and_wait();
 #else
       barrier.arrive_and_wait();
 #endif
@@ -1329,8 +1330,10 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
       // it again to true when we resume.
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
       Kokkos::Experimental::HPX::impl_not_in_parallel_scope p;
-#endif
       barrier.arrive_and_wait();
+#else
+      barrier.arrive_and_wait();
+#endif
     }
 
     reference_type update_base =
@@ -1418,8 +1421,10 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
       // it again to true when we resume.
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
       Kokkos::Experimental::HPX::impl_not_in_parallel_scope p;
-#endif
       barrier.arrive_and_wait();
+#else
+      barrier.arrive_and_wait();
+#endif
     }
 
     if (t == 0) {
@@ -1448,8 +1453,10 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
       // it again to true when we resume.
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
       Kokkos::Experimental::HPX::impl_not_in_parallel_scope p;
-#endif
       barrier.arrive_and_wait();
+#else
+      barrier.arrive_and_wait();
+#endif
     }
 
     reference_type update_base =
