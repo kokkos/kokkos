@@ -265,12 +265,6 @@ class CudaInternal {
   }
 
   template <bool setCudaDevice = true>
-  cudaError_t cuda_get_last_error_wrapper() const {
-    if constexpr (setCudaDevice) set_cuda_device();
-    return cudaGetLastError();
-  }
-
-  template <bool setCudaDevice = true>
   cudaError_t cuda_graph_add_dependencies_wrapper(
       cudaGraph_t graph, const cudaGraphNode_t* from, const cudaGraphNode_t* to,
       size_t numDependencies) const {
