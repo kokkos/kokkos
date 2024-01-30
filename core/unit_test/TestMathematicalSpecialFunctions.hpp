@@ -1970,7 +1970,7 @@ TEST(TEST_CATEGORY, mathspecialfunc_cbesselj0y0) {
 #if defined(KOKKOS_ENABLE_OPENMPTARGET) && defined(KOKKOS_ARCH_INTEL_GPU)
   if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenMPTarget>)
     GTEST_SKIP() << "skipping since test is known to fail with OpenMPTarget on "
-                    "Intel GPUs";
+                    "Intel GPUs";  // FIXME_OPENMPTARGET
 #endif
   TestComplexBesselJ0Y0Function<TEST_EXECSPACE> test;
   test.testit();
@@ -1980,7 +1980,7 @@ TEST(TEST_CATEGORY, mathspecialfunc_cbesselj1y1) {
 #if defined(KOKKOS_ENABLE_OPENMPTARGET) && defined(KOKKOS_ARCH_INTEL_GPU)
   if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenMPTarget>)
     GTEST_SKIP() << "skipping since test is known to fail with OpenMPTarget on "
-                    "Intel GPUs";
+                    "Intel GPUs";  // FIXME_OPENMPTARGET
 #endif
   TestComplexBesselJ1Y1Function<TEST_EXECSPACE> test;
   test.testit();
@@ -1990,7 +1990,7 @@ TEST(TEST_CATEGORY, mathspecialfunc_cbesseli0k0) {
 #if defined(KOKKOS_ENABLE_OPENMPTARGET) && defined(KOKKOS_ARCH_INTEL_GPU)
   if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenMPTarget>)
     GTEST_SKIP() << "skipping since test is known to fail with OpenMPTarget on "
-                    "Intel GPUs";
+                    "Intel GPUs";  // FIXME_OPENMPTARGET
 #endif
   TestComplexBesselI0K0Function<TEST_EXECSPACE> test;
   test.testit();
@@ -2000,7 +2000,7 @@ TEST(TEST_CATEGORY, mathspecialfunc_cbesseli1k1) {
 #if defined(KOKKOS_ENABLE_OPENMPTARGET) && defined(KOKKOS_ARCH_INTEL_GPU)
   if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenMPTarget>)
     GTEST_SKIP() << "skipping since test is known to fail with OpenMPTarget on "
-                    "Intel GPUs";
+                    "Intel GPUs";  // FIXME_OPENMPTARGET
 #endif
   TestComplexBesselI1K1Function<TEST_EXECSPACE> test;
   test.testit();
@@ -2010,7 +2010,7 @@ TEST(TEST_CATEGORY, mathspecialfunc_cbesselh1stkind) {
 #if defined(KOKKOS_ENABLE_OPENMPTARGET) && defined(KOKKOS_ARCH_INTEL_GPU)
   if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenMPTarget>)
     GTEST_SKIP() << "skipping since test is known to fail with OpenMPTarget on "
-                    "Intel GPUs";
+                    "Intel GPUs";  // FIXME_OPENMPTARGET
 #endif
   TestComplexBesselH1Function<TEST_EXECSPACE> test;
   test.testit();
@@ -2020,7 +2020,7 @@ TEST(TEST_CATEGORY, mathspecialfunc_cbesselh2ndkind) {
 #if defined(KOKKOS_ENABLE_OPENMPTARGET) && defined(KOKKOS_ARCH_INTEL_GPU)
   if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenMPTarget>)
     GTEST_SKIP() << "skipping since test is known to fail with OpenMPTarget on "
-                    "Intel GPUs";
+                    "Intel GPUs";  // FIXME_OPENMPTARGET
 #endif
   TestComplexBesselH2Function<TEST_EXECSPACE> test;
   test.testit();
