@@ -146,6 +146,7 @@ class SYCLTeamMember {
     shuffle_combine(8);
     shuffle_combine(16);
     shuffle_combine(32);
+    KOKKOS_ASSERT(sub_group_range <= 32);
 #else
     for (unsigned int shift = 1; vector_range * shift < sub_group_range;
          shift <<= 1) {
