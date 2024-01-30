@@ -1512,14 +1512,16 @@ struct ParallelReduceAdaptor {
                                      PolicyType, typename ReducerSelector::type,
                                      typename return_value_adapter::value_type>;
 
-    CombinedFunctorReducer functor_reducer(
-        functor, typename Analysis::Reducer(
-                     ReducerSelector::select(functor, return_value)));
+    using CombinedFunctorReducerType =
+        CombinedFunctorReducer<FunctorType, typename Analysis::Reducer>;
     auto closure = construct_with_shared_allocation_tracking_disabled<
-        Impl::ParallelReduce<decltype(functor_reducer), PolicyType,
+        Impl::ParallelReduce<CombinedFunctorReducerType, PolicyType,
                              typename Impl::FunctorPolicyExecutionSpace<
                                  FunctorType, PolicyType>::execution_space>>(
-        functor_reducer, inner_policy,
+        CombinedFunctorReducerType(
+            functor, typename Analysis::Reducer(
+                         ReducerSelector::select(functor, return_value))),
+        inner_policy,
         return_value_adapter::return_value(return_value, functor));
     closure.execute();
 
