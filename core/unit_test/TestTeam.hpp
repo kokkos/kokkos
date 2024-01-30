@@ -300,35 +300,27 @@ class ArrayReduceTeamFunctor {
   using value_type      = ScalarType[];
   size_type value_count = 3;
 
-  const size_type nwork;
+  size_type nwork;
 
   KOKKOS_INLINE_FUNCTION
   ArrayReduceTeamFunctor(const size_type &arg_nwork) : nwork(arg_nwork) {}
 
   KOKKOS_INLINE_FUNCTION
-  ArrayReduceTeamFunctor(const ArrayReduceTeamFunctor &rhs)
-      : nwork(rhs.nwork) {}
-
-  KOKKOS_INLINE_FUNCTION
   void init(value_type dst) const {
-    dst[0] = 0;
-    dst[1] = 0;
-    dst[2] = 0;
+    for (int i = 0; i < value_count; ++i) dst[i] = 0;
   }
 
   KOKKOS_INLINE_FUNCTION
   void join(value_type dst, const value_type src) const {
-    dst[0] += src[0];
-    dst[1] += src[1];
-    dst[2] += src[2];
+    for (int i = 0; i < value_count; ++i) dst[i] += src[i];
   }
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const typename policy_type::member_type ind,
+  void operator()(const typename policy_type::member_type &team,
                   value_type dst) const {
     const int thread_rank =
-        ind.team_rank() + ind.team_size() * ind.league_rank();
-    const int thread_size = ind.team_size() * ind.league_size();
+        team.team_rank() + team.team_size() * team.league_rank();
+    const int thread_size = team.team_size() * team.league_size();
     const int chunk       = (nwork + thread_size - 1) / thread_size;
 
     size_type iwork           = chunk * thread_rank;
@@ -420,8 +412,8 @@ class TestReduceTeam {
 
       for (unsigned i = 0; i < Repeat; ++i) {
         for (unsigned j = 0; j < Count; ++j) {
-          const uint64_t correct = 0 == j % 3 ? nw : nsum;
-          ASSERT_EQ((ScalarType)correct, result[i][j]);
+          ASSERT_EQ(j % 3 ? nsum : nw, result[i][j])
+              << "failing at repeat " << i << " and index " << j;
         }
       }
     }
