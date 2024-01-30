@@ -1386,15 +1386,16 @@ contiguous_fill_or_memset(
     typename ViewTraits<DT, DP...>::const_value_type& value) {
   using ViewType        = View<DT, DP...>;
   using exec_space_type = typename ViewType::execution_space;
+  exec_space_type exec;
 
 // On A64FX memset seems to do the wrong thing with regards to first touch
 // leading to the significant performance issues
 #ifndef KOKKOS_ARCH_A64FX
   if (Impl::is_zero_byte(value))
-    ZeroMemset<exec_space_type, View<DT, DP...>>(dst, value);
+    ZeroMemset<exec_space_type, View<DT, DP...>>(exec, dst, value);
   else
 #endif
-    contiguous_fill(exec_space_type(), dst, value);
+    contiguous_fill(exec, dst, value);
 }
 
 template <class DT, class... DP>
