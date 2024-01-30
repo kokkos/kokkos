@@ -36,12 +36,6 @@ struct ZeroMemset<HostSpace::execution_space, View<T, P...>> {
     using ValueType = typename View<T, P...>::value_type;
     std::memset(dst.data(), 0, sizeof(ValueType) * dst.size());
   }
-
-  ZeroMemset(const View<T, P...>& dst,
-             typename View<T, P...>::const_value_type&) {
-    using ValueType = typename View<T, P...>::value_type;
-    std::memset(dst.data(), 0, sizeof(ValueType) * dst.size());
-  }
 };
 
 }  // end namespace Impl

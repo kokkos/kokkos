@@ -34,14 +34,12 @@ template <class T, class... P>
 struct ZeroMemset<
     std::conditional_t<!std::is_same<Serial, DefaultHostExecutionSpace>::value,
                        Serial, DummyExecutionSpace>,
-    View<T, P...>>
-    : public ZeroMemset<DefaultHostExecutionSpace, View<T, P...>> {
-  using Base = ZeroMemset<DefaultHostExecutionSpace, View<T, P...>>;
-  using Base::Base;
-
+    View<T, P...>> {
   ZeroMemset(const Serial&, const View<T, P...>& dst,
-             typename View<T, P...>::const_value_type& value)
-      : Base(dst, value) {}
+             typename View<T, P...>::const_value_type& value) {
+    using ValueType = typename View<T, P...>::value_type;
+    std::memset(dst.data(), 0, sizeof(ValueType) * dst.size());
+  }
 };
 
 }  // namespace Impl

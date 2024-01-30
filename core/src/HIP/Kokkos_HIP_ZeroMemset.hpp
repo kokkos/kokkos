@@ -31,13 +31,6 @@ struct ZeroMemset<HIP, View<T, P...>> {
         dst.data(), 0, dst.size() * sizeof(typename View<T, P...>::value_type),
         exec_space.hip_stream()));
   }
-
-  ZeroMemset(const View<T, P...>& dst,
-             typename View<T, P...>::const_value_type&) {
-    KOKKOS_IMPL_HIP_SAFE_CALL(
-        hipMemset(dst.data(), 0,
-                  dst.size() * sizeof(typename View<T, P...>::value_type)));
-  }
 };
 
 }  // namespace Impl
