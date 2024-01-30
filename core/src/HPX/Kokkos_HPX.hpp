@@ -223,9 +223,7 @@ class HPX {
     impl_not_in_parallel_scope &operator=(impl_not_in_parallel_scope const &) =
         delete;
   };
-#endif
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   KOKKOS_DEPRECATED static bool in_parallel(HPX const & = HPX()) noexcept {
     return impl_get_in_parallel();
   }
@@ -1293,10 +1291,10 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
     execute_chunk(range.begin(), range.end(), update_sum, false);
 
     {
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
       // Since arrive_and_wait may yield and resume on another worker thread we
       // set in_parallel = false on the current thread before suspending and set
       // it again to true when we resume.
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
       Kokkos::Experimental::HPX::impl_not_in_parallel_scope p;
       barrier.arrive_and_wait();
 #else
