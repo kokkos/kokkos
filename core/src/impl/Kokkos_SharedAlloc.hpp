@@ -644,6 +644,34 @@ union SharedAllocationTracker {
 #undef KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT
 };
 
+struct SharedAllocationDisableTrackingGuard {
+  SharedAllocationDisableTrackingGuard() {
+    KOKKOS_ASSERT(
+        (Kokkos::Impl::SharedAllocationRecord<void, void>::tracking_enabled()));
+    Kokkos::Impl::SharedAllocationRecord<void, void>::tracking_disable();
+  }
+
+  SharedAllocationDisableTrackingGuard(
+      const SharedAllocationDisableTrackingGuard&) = delete;
+  SharedAllocationDisableTrackingGuard(SharedAllocationDisableTrackingGuard&&) =
+      delete;
+
+  ~SharedAllocationDisableTrackingGuard() {
+    Kokkos::Impl::SharedAllocationRecord<void, void>::tracking_enable();
+  }
+
+  SharedAllocationDisableTrackingGuard& operator=(
+      const SharedAllocationDisableTrackingGuard&) = delete;
+  SharedAllocationDisableTrackingGuard& operator=(
+      SharedAllocationDisableTrackingGuard&&) = delete;
+};
+
+template <class FunctorType, class... Args>
+inline FunctorType construct_with_shared_allocation_tracking_disabled(
+    Args&&... args) {
+  [[maybe_unused]] auto guard = SharedAllocationDisableTrackingGuard{};
+  return {std::forward<Args>(args)...};
+}
 } /* namespace Impl */
 } /* namespace Kokkos */
 #endif
