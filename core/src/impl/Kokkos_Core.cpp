@@ -690,7 +690,7 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
 #elif defined(KOKKOS_ARCH_AMD_ZEN3)
   declare_configuration_metadata("architecture", "CPU architecture",
                                  "AMD_ZEN3");
-#elif defined(KOKKOS_ARCH_RISCV_rv64imafdcv)
+#elif defined(KOKKOS_ARCH_RISCV_MILKV)
   declare_configuration_metadata("architecture", "CPU architecture", "RISCV")
 #else
   declare_configuration_metadata("architecture", "CPU architecture", "none");
