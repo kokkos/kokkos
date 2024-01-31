@@ -20,7 +20,7 @@
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #define KOKKOS_IMPL_PUBLIC_INCLUDE
 #include <View/Kokkos_BasicView.hpp>
-#endif // KOKKOS_IMPL_PUBLIC_INCLUDE
+#endif  // KOKKOS_IMPL_PUBLIC_INCLUDE
 
 template <class T, class ExecutionSpace>
 struct TestBasicView
@@ -28,9 +28,9 @@ struct TestBasicView
   template <class ExtentsType>
   static void test_default_constructor() {
     using extents_type = ExtentsType;
-    using layout_type = Kokkos::layout_right_padded
-    using accessor_type = Kokkos::SpaceAwareAccessor<T, 0, false, false, ExecutionSpace, typename ExecutionSpace::memory_space>
-    using view_type    = Kokkos::BasicView<T, ExtentsType, ExecutionSpace>;
+    using layout_type = Kokkos::Experimental::layout_right_padded<>;
+    using accessor_type = Kokkos::SpaceAwareAccessor<T, 0, false, false, ExecutionSpace, typename ExecutionSpace::memory_space>;
+    using view_type    = Kokkos::BasicView<T, ExtentsType, layout_type, accessor_type>;
     view_type view;
 
     EXPECT_EQ(view.is_allocated(), false);
@@ -44,7 +44,11 @@ struct TestBasicView
   template <class ExtentsType>
   static void test_extents_constructor(const ExtentsType &extents) {
     using extents_type = ExtentsType;
-    using view_type    = Kokkos::BasicView<T, ExtentsType, ExecutionSpace>;
+    using layout_type  = Kokkos::Experimental::layout_right_padded<>;
+    using accessor_type =
+        Kokkos::SpaceAwareAccessor<T, 0, false, false, ExecutionSpace,
+                                   typename ExecutionSpace::memory_space>;
+    using view_type    = Kokkos::BasicView<T, ExtentsType, layout_type, accessor_type>;
 
     view_type view("test_view", extents);
 
@@ -61,7 +65,10 @@ struct TestBasicView
     using extents_type = ExtentsType;
     using layout_type  = LayoutType<Kokkos::dynamic_extent>;
     using mapping_type = typename layout_type::mapping<ExtentsType>;
-    using view_type = Kokkos::BasicView<T, extents_type, ExecutionSpace, typename ExecutionSpace::memory_space, layout_type>;
+    using accessor_type =
+        Kokkos::SpaceAwareAccessor<T, 0, false, false, ExecutionSpace,
+                                   typename ExecutionSpace::memory_space>;
+    using view_type = Kokkos::BasicView<T, extents_type, layout_type, accessor_type>;
     static_assert(std::is_same_v<typename view_type::mapping_type, mapping_type>);
 
     auto mapping = mapping_type(extents, _padding);
@@ -77,9 +84,15 @@ struct TestBasicView
   }
 
   template <class ExtentsType, class... IndexTypes>
-  static void test_indices_constructor(ExtentsType cmp_extents, IndexTypes... indices) {
+  static void test_indices_constructor(ExtentsType cmp_extents,
+                                       IndexTypes... indices) {
     using extents_type = ExtentsType;
-    using view_type    = Kokkos::BasicView<T, ExtentsType, ExecutionSpace>;
+    using layout_type  = Kokkos::Experimental::layout_right_padded<>;
+    using accessor_type =
+        Kokkos::SpaceAwareAccessor<T, 0, false, false, ExecutionSpace,
+                                   typename ExecutionSpace::memory_space>;
+    using view_type =
+        Kokkos::BasicView<T, ExtentsType, layout_type, accessor_type>;
 
     view_type view("test_view", indices...);
 
@@ -94,7 +107,11 @@ struct TestBasicView
   template <class LayoutType, class Extents>
   static void test_access_with_extents(const Extents &extents) {
     using extents_type = Extents;
-    using view_type = Kokkos::BasicView<T, extents_type, ExecutionSpace>;
+    using layout_type  = Kokkos::Experimental::layout_right_padded<>;
+    using accessor_type =
+        Kokkos::SpaceAwareAccessor<T, 0, false, false, ExecutionSpace,
+                                   typename ExecutionSpace::memory_space>;
+    using view_type = Kokkos::BasicView<T, Extents, layout_type, accessor_type>;
 
     auto view = view_type("test_view", extents);
 

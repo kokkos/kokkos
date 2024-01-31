@@ -186,7 +186,7 @@ template <class ElementType, size_t alignment = 0, bool is_restrict = false,
           class ExecutionSpace = Kokkos::DefaultExecutionSpace,
           class MemorySpace    = typename ExecutionSpace::memory_space,
           class Enabled        = void>
-class SpaceAwareAccessor {
+struct SpaceAwareAccessor {
   using offset_policy = SpaceAwareAccessor;
   using element_type  = ElementType;
   using reference =
@@ -228,9 +228,9 @@ class SpaceAwareAccessor {
  */
 template <class ElementType, size_t alignment, bool is_restrict,
           class ExecutionSpace, class MemorySpace>
-class SpaceAwareAccessor<ElementType, alignment, is_restrict, true,
-                         ExecutionSpace, MemorySpace,
-                         std::enable_if_t<!std::is_const_v<ElementType>>> {
+struct SpaceAwareAccessor<ElementType, alignment, is_restrict, true,
+                          ExecutionSpace, MemorySpace,
+                          std::enable_if_t<!std::is_const_v<ElementType>>> {
   using offset_policy    = SpaceAwareAccessor;
   using element_type     = ElementType;
   using reference        = Impl::AtomicRef<ElementType>;
@@ -268,9 +268,9 @@ class SpaceAwareAccessor<ElementType, alignment, is_restrict, true,
  */
 template <class ElementType, size_t alignment, bool is_restrict,
           class ExecutionSpace, class MemorySpace>
-class SpaceAwareAccessor<ElementType, alignment, is_restrict, false,
-                         ExecutionSpace, MemorySpace,
-                         std::enable_if_t<(alignment != 0)>> {
+struct SpaceAwareAccessor<ElementType, alignment, is_restrict, false,
+                          ExecutionSpace, MemorySpace,
+                          std::enable_if_t<(alignment != 0)>> {
   using offset_policy = SpaceAwareAccessor<ElementType, alignment, is_restrict,
                                            false, ExecutionSpace, MemorySpace>;
   using element_type  = ElementType;
