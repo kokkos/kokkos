@@ -146,7 +146,6 @@ class SYCLTeamMember {
     shuffle_combine(4);
     shuffle_combine(8);
     shuffle_combine(16);
-    shuffle_combine(32);
 #else
     for (unsigned int shift = 1; vector_range * shift < sub_group_range;
          shift <<= 1) {
@@ -226,7 +225,6 @@ class SYCLTeamMember {
     shuffle_combine(4);
     shuffle_combine(8);
     shuffle_combine(16);
-    shuffle_combine(32);
 #else
     for (unsigned int stride = 1; vector_range * stride < sub_group_range;
          stride <<= 1) {
@@ -274,7 +272,6 @@ class SYCLTeamMember {
     shuffle_combine(4);
     shuffle_combine(8);
     shuffle_combine(16);
-    shuffle_combine(32);
 #else
           for (unsigned int stride = 1; stride < upper_bound; stride <<= 1) {
             auto tmp = sg.shuffle_up(local_value, stride);
@@ -348,12 +345,26 @@ class SYCLTeamMember {
     typename ReducerType::value_type tmp(value);
     typename ReducerType::value_type tmp2 = tmp;
 
-    for (int i = grange1; (i >>= 1);) {
+#if defined(KOKKOS_ARCH_INTEL_GPU) || defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
+    auto shuffle_combine = [&](int shift) {
+	if (shift < grange1) {
+       tmp2 = sg.shuffle_down(tmp, shift);
+       if (static_cast<int>(tidx1) < shift)
+         reducer.join(tmp, tmp2);
+     }
+    };
+    shuffle_combine(16);
+    shuffle_combine(8);
+    shuffle_combine(4);
+    shuffle_combine(2);
+    shuffle_combine(1);
+#else
+    for (int i = grange1/2; i >= 1; i>>=1) {
       tmp2 = sg.shuffle_down(tmp, i);
-      if (static_cast<int>(tidx1) < i) {
+      if (static_cast<int>(tidx1) < i)
         reducer.join(tmp, tmp2);
-      }
     }
+#endif
 
     // Broadcast from root lane to all other lanes.
     // Cannot use "butterfly" algorithm to avoid the broadcast
@@ -857,12 +868,26 @@ parallel_scan(const Impl::ThreadVectorRangeBoundariesStruct<
     //  [t] += [t-2] if t >= 2
     //  [t] += [t-4] if t >= 4
     //  ...
+#if defined(KOKKOS_ARCH_INTEL_GPU) || defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
+    auto shuffle_combine = [&](int shift) {
+      if(shift < static_cast<int>(grange1)) {
+        value_type tmp = sg.shuffle_up(val, shift);
+        if (shift <= static_cast<int>(tidx1))
+          reducer.join(val, tmp);
+      }
+    };
+    shuffle_combine(1);      
+    shuffle_combine(2);
+    shuffle_combine(4);
+    shuffle_combine(8);
+    shuffle_combine(16);
+#else
     for (int j = 1; j < static_cast<int>(grange1); j <<= 1) {
       value_type tmp = sg.shuffle_up(val, j);
-      if (j <= static_cast<int>(tidx1)) {
+      if (j <= static_cast<int>(tidx1))
         reducer.join(val, tmp);
-      }
     }
+#endif
 
     // Include accumulation
     reducer.join(val, accum);

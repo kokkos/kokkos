@@ -441,6 +441,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
     const auto max_team_size = m_policy.team_size_max(m_functor_reducer.get_functor(),
                                              m_functor_reducer.get_reducer(),
                                              ParallelReduceTag{});
+    std::cout << "team_size: " << m_team_size << std::endl;
     if (m_team_size > max_team_size) {
       Kokkos::Impl::throw_runtime_exception(
           "Kokkos::Impl::ParallelFor<SYCL> requested too large team size. The "
