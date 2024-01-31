@@ -128,13 +128,16 @@ class Cuda {
 
   /// \brief True if and only if this method is being called in a
   ///   thread-parallel function.
-  KOKKOS_INLINE_FUNCTION static int in_parallel() {
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  KOKKOS_DEPRECATED KOKKOS_INLINE_FUNCTION static int in_parallel() {
 #if defined(__CUDA_ARCH__)
     return true;
 #else
     return false;
 #endif
   }
+#endif
 
   /// \brief Wait until all dispatched functors complete.
   ///

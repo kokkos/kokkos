@@ -2947,37 +2947,33 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
 
   template <typename Tag>
   void parallel_for_implementation() {
-    if (!space.in_parallel()) {
-      using PolicyType =
-          Kokkos::RangePolicy<ExecSpace, Kokkos::IndexType<int64_t>, Tag>;
-      PolicyType policy(space, 0, n);
-      uint64_t kpID = 0;
-      if (Kokkos::Profiling::profileLibraryLoaded()) {
-        const std::string functor_name =
-            (std::is_same_v<Tag, DestroyTag>
-                 ? "Kokkos::View::destruction [" + name + "]"
-                 : "Kokkos::View::initialization [" + name + "]");
-        Kokkos::Profiling::beginParallelFor(
-            functor_name, Kokkos::Profiling::Experimental::device_id(space),
-            &kpID);
-      }
+    using PolicyType =
+        Kokkos::RangePolicy<ExecSpace, Kokkos::IndexType<int64_t>, Tag>;
+    PolicyType policy(space, 0, n);
+    uint64_t kpID = 0;
+    if (Kokkos::Profiling::profileLibraryLoaded()) {
+      const std::string functor_name =
+          (std::is_same_v<Tag, DestroyTag>
+               ? "Kokkos::View::destruction [" + name + "]"
+               : "Kokkos::View::initialization [" + name + "]");
+      Kokkos::Profiling::beginParallelFor(
+          functor_name, Kokkos::Profiling::Experimental::device_id(space),
+          &kpID);
+    }
 
 #ifdef KOKKOS_ENABLE_CUDA
-      if (std::is_same<ExecSpace, Kokkos::Cuda>::value) {
-        Kokkos::Impl::cuda_prefetch_pointer(space, ptr, sizeof(ValueType) * n,
-                                            true);
-      }
+    if (std::is_same<ExecSpace, Kokkos::Cuda>::value) {
+      Kokkos::Impl::cuda_prefetch_pointer(space, ptr, sizeof(ValueType) * n,
+                                          true);
+    }
 #endif
-      const Kokkos::Impl::ParallelFor<ViewValueFunctor, PolicyType> closure(
-          *this, policy);
-      closure.execute();
-      if (default_exec_space || std::is_same_v<Tag, DestroyTag>)
-        space.fence("Kokkos::Impl::ViewValueFunctor: View init/destroy fence");
-      if (Kokkos::Profiling::profileLibraryLoaded()) {
-        Kokkos::Profiling::endParallelFor(kpID);
-      }
-    } else {
-      for (size_t i = 0; i < n; ++i) operator()(Tag{}, i);
+    const Kokkos::Impl::ParallelFor<ViewValueFunctor, PolicyType> closure(
+        *this, policy);
+    closure.execute();
+    if (default_exec_space || std::is_same_v<Tag, DestroyTag>)
+      space.fence("Kokkos::Impl::ViewValueFunctor: View init/destroy fence");
+    if (Kokkos::Profiling::profileLibraryLoaded()) {
+      Kokkos::Profiling::endParallelFor(kpID);
     }
   }
 
@@ -3084,32 +3080,28 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
   }
 
   void parallel_for_implementation() {
-    if (!space.in_parallel()) {
-      PolicyType policy(0, n);
-      uint64_t kpID = 0;
-      if (Kokkos::Profiling::profileLibraryLoaded()) {
-        Kokkos::Profiling::beginParallelFor(
-            "Kokkos::View::initialization [" + name + "]",
-            Kokkos::Profiling::Experimental::device_id(space), &kpID);
-      }
+    PolicyType policy(0, n);
+    uint64_t kpID = 0;
+    if (Kokkos::Profiling::profileLibraryLoaded()) {
+      Kokkos::Profiling::beginParallelFor(
+          "Kokkos::View::initialization [" + name + "]",
+          Kokkos::Profiling::Experimental::device_id(space), &kpID);
+    }
 #ifdef KOKKOS_ENABLE_CUDA
-      if (std::is_same<ExecSpace, Kokkos::Cuda>::value) {
-        Kokkos::Impl::cuda_prefetch_pointer(space, ptr, sizeof(ValueType) * n,
-                                            true);
-      }
+    if (std::is_same<ExecSpace, Kokkos::Cuda>::value) {
+      Kokkos::Impl::cuda_prefetch_pointer(space, ptr, sizeof(ValueType) * n,
+                                          true);
+    }
 #endif
-      const Kokkos::Impl::ParallelFor<ViewValueFunctor, PolicyType> closure(
-          *this, PolicyType(0, n));
-      closure.execute();
-      if (default_exec_space)
-        space.fence(
-            "Kokkos::Impl::ViewValueFunctor: Fence after setting values in "
-            "view");
-      if (Kokkos::Profiling::profileLibraryLoaded()) {
-        Kokkos::Profiling::endParallelFor(kpID);
-      }
-    } else {
-      for (size_t i = 0; i < n; ++i) operator()(i);
+    const Kokkos::Impl::ParallelFor<ViewValueFunctor, PolicyType> closure(
+        *this, PolicyType(0, n));
+    closure.execute();
+    if (default_exec_space)
+      space.fence(
+          "Kokkos::Impl::ViewValueFunctor: Fence after setting values in "
+          "view");
+    if (Kokkos::Profiling::profileLibraryLoaded()) {
+      Kokkos::Profiling::endParallelFor(kpID);
     }
   }
 
