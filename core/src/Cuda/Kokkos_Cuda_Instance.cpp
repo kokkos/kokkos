@@ -161,7 +161,8 @@ void cuda_stream_synchronize(const CudaInternal *ptr, const std::string &name) {
       Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{
           ptr->impl_get_instance_id()},
       [&]() {
-        KOKKOS_IMPL_CUDA_SAFE_CALL((ptr->cuda_stream_synchronize_wrapper()));
+        KOKKOS_IMPL_CUDA_SAFE_CALL(
+            (ptr->cuda_stream_synchronize_wrapper(stream)));
       });
 }
 
@@ -206,10 +207,7 @@ void CudaInternal::print_configuration(std::ostream &s) const {
     << CUDA_VERSION / 1000 << "." << (CUDA_VERSION % 1000) / 10 << '\n';
 #endif
 
-  int count;
-  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGetDeviceCount(&count));
-
-  for (int i = 0; i < count; ++i) {
+  for (int i : get_visible_devices()) {
     cudaDeviceProp prop;
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGetDeviceProperties(&prop, i));
     s << "Kokkos::Cuda[ " << i << " ] " << prop.name << " capability "

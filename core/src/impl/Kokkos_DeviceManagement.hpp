@@ -25,8 +25,8 @@ namespace Impl {
 int get_gpu(const Kokkos::InitializationSettings& settings);
 // This declaration is provided for testing purposes only
 int get_ctest_gpu(int local_rank);
-// ditto
-std::vector<int> get_visible_devices(int device_count);
+std::vector<int> get_visible_devices(int device_count);  // test-only
+std::vector<int> const& get_visible_devices();           // use this instead
 }  // namespace Impl
 }  // namespace Kokkos
 

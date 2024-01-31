@@ -35,12 +35,6 @@ struct ZeroMemset<Kokkos::Experimental::SYCL, View<T, P...>> {
         ->m_queue->ext_oneapi_submit_barrier(std::vector<sycl::event>{event});
 #endif
   }
-
-  ZeroMemset(const View<T, P...>& dst,
-             typename View<T, P...>::const_value_type&) {
-    Experimental::Impl::SYCLInternal::singleton().m_queue->memset(
-        dst.data(), 0, dst.size() * sizeof(typename View<T, P...>::value_type));
-  }
 };
 
 }  // namespace Impl
