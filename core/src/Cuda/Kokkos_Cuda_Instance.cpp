@@ -168,18 +168,6 @@ void cuda_stream_synchronize(const cudaStream_t stream, const CudaInternal *ptr,
       });
 }
 
-void cuda_stream_synchronize(
-    const cudaStream_t stream,
-    Kokkos::Tools::Experimental::SpecialSynchronizationCases reason,
-    const std::string &name) {
-  Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Cuda>(
-      name, reason, [&]() {
-        KOKKOS_IMPL_CUDA_SAFE_CALL(
-            (Impl::CudaInternal::singleton().cuda_stream_synchronize_wrapper(
-                stream)));
-      });
-}
-
 void cuda_internal_error_throw(cudaError e, const char *name, const char *file,
                                const int line) {
   std::ostringstream out;
