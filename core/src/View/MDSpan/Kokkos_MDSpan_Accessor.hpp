@@ -14,14 +14,22 @@
 //
 //@HEADER
 
-#include <TestViewAPI.hpp>
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+static_assert(false,
+              "Including non-public Kokkos header files is not allowed.");
+#endif
 
-namespace Test {
+#ifndef KOKKOS_MDSPAN_ACCESSOR_HPP
+#define KOKKOS_MDSPAN_ACCESSOR_HPP
 
-TEST(TEST_CATEGORY, view_api_c) {
-  TestViewAPI<double, TEST_EXECSPACE>::run_test_refcount_exception();
-  TestViewAPI<double, TEST_EXECSPACE>::run_test_deep_copy_empty();
-  TestViewAPI<double, TEST_EXECSPACE>::run_test_view_operator_b();
-}
+#include <Kokkos_Macros.hpp>
+#include <impl/Kokkos_Utilities.hpp>
+#include <impl/Kokkos_SharedAlloc.hpp>
+#include "Kokkos_MDSpan_Header.hpp"
 
-}  // namespace Test
+namespace Kokkos {
+namespace Impl {
+}  // namespace Impl
+}  // namespace Kokkos
+
+#endif
