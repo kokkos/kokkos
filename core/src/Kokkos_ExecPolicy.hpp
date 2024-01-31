@@ -148,7 +148,8 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
   template <class... Args>
   inline RangePolicy(const member_type work_begin, const member_type work_end,
                      Args... args)
-      : RangePolicy(typename traits::execution_space(), work_begin, work_end) {}
+      : RangePolicy(typename traits::execution_space(), work_begin, work_end,
+                    args...) {}
 
  private:
   inline void set() {}
