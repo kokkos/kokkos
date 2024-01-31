@@ -127,9 +127,7 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
 
   /** \brief  Total range */
   inline RangePolicy(const member_type work_begin, const member_type work_end)
-      : RangePolicy(typename traits::execution_space(), work_begin, work_end) {
-    set_auto_chunk_size();
-  }
+      : RangePolicy(typename traits::execution_space(), work_begin, work_end) {}
 
   /** \brief  Total range */
   template <class... Args>
@@ -150,11 +148,7 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
   template <class... Args>
   inline RangePolicy(const member_type work_begin, const member_type work_end,
                      Args... args)
-      : RangePolicy(typename traits::execution_space(), work_begin, work_end) {
-    check_bounds_validity();
-    set_auto_chunk_size();
-    set(args...);
-  }
+      : RangePolicy(typename traits::execution_space(), work_begin, work_end) {}
 
  private:
   inline void set() {}
