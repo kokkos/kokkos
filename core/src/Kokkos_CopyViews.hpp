@@ -1336,13 +1336,12 @@ inline void contiguous_fill(
 // Default implementation for execution spaces that don't provide a definition
 template <typename ExecutionSpace, class ViewType>
 struct ZeroMemset {
-  ZeroMemset(const ExecutionSpace& exec_space, const ViewType& dst,
-             typename ViewType::const_value_type& value) {
-    contiguous_fill(exec_space, dst, value);
-  }
-
-  ZeroMemset(const ViewType& dst, typename ViewType::const_value_type& value) {
-    contiguous_fill(ExecutionSpace(), dst, value);
+  ZeroMemset(const ExecutionSpace& exec_space, const ViewType& dst) {
+    using ValueType = typename ViewType::value_type;
+    alignas(alignof(
+        ValueType)) char zero_initialized_storage[sizeof(ValueType)] = {};
+    contiguous_fill(exec_space, dst,
+                    *reinterpret_cast<ValueType*>(zero_initialized_storage));
   }
 };
 
@@ -1360,7 +1359,7 @@ contiguous_fill_or_memset(
       && !std::is_same_v<ExecutionSpace, Kokkos::OpenMP>
 #endif
   )
-    ZeroMemset(exec_space, dst, value);
+    ZeroMemset(exec_space, dst);
   else
     contiguous_fill(exec_space, dst, value);
 }
@@ -1392,7 +1391,7 @@ contiguous_fill_or_memset(
 // leading to the significant performance issues
 #ifndef KOKKOS_ARCH_A64FX
   if (Impl::is_zero_byte(value))
-    ZeroMemset(exec, dst, value);
+    ZeroMemset(exec, dst);
   else
 #endif
     contiguous_fill(exec, dst, value);

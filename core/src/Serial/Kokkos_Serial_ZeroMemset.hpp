@@ -36,8 +36,7 @@ struct ZeroMemset<
     std::conditional_t<!std::is_same<Serial, DefaultHostExecutionSpace>::value,
                        Serial, DummyExecutionSpace>,
     View<T, P...>> {
-  ZeroMemset(const Serial&, const View<T, P...>& dst,
-             typename View<T, P...>::const_value_type&) {
+  ZeroMemset(const Serial&, const View<T, P...>& dst) {
     using ValueType = typename View<T, P...>::value_type;
     std::memset(dst.data(), 0, sizeof(ValueType) * dst.size());
   }
