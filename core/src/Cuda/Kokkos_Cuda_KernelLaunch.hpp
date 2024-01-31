@@ -128,21 +128,19 @@ inline void check_shmem_request(CudaInternal const* cuda_instance, int shmem) {
 // These functions need to be templated on DriverType and LaunchBounds
 // so that the static bool is unique for each type combo
 // KernelFuncPtr does not necessarily contain that type information.
-// FIXME_CUDA_MULTIPLE_DEVICES
 template <class DriverType, class LaunchBounds, class KernelFuncPtr>
 const cudaFuncAttributes& get_cuda_kernel_func_attributes(
-    const KernelFuncPtr& func) {
+    int cuda_device, const KernelFuncPtr& func) {
   // Only call cudaFuncGetAttributes once for each unique kernel
   // by leveraging static variable initialization rules
-  auto wrap_get_attributes = [&]() -> cudaFuncAttributes {
+  static std::map<int, cudaFuncAttributes> func_attr;
+  if (func_attr.find(cuda_device) == func_attr.end()) {
     cudaFuncAttributes attr;
-    KOKKOS_IMPL_CUDA_SAFE_CALL(
-        (CudaInternal::singleton().cuda_func_get_attributes_wrapper(&attr,
-                                                                    func)));
-    return attr;
-  };
-  static cudaFuncAttributes func_attr = wrap_get_attributes();
-  return func_attr;
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(cuda_device));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFuncGetAttributes(&attr, func));
+    func_attr.insert(std::pair{cuda_device, attr});
+  }
+  return func_attr[cuda_device];
 }
 
 template <class DriverType, class LaunchBounds, class KernelFuncPtr>
@@ -682,10 +680,10 @@ struct CudaParallelLaunchImpl<
     }
   }
 
-  static cudaFuncAttributes get_cuda_func_attributes() {
+  static cudaFuncAttributes get_cuda_func_attributes(int cuda_device) {
     return get_cuda_kernel_func_attributes<
         DriverType, Kokkos::LaunchBounds<MaxThreadsPerBlock, MinBlocksPerSM>>(
-        base_t::get_kernel_func());
+        cuda_device, base_t::get_kernel_func());
   }
 };
 

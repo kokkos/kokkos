@@ -332,9 +332,9 @@ class ParallelReduce<CombinedFunctorReducerType,
     using closure_type =
         Impl::ParallelReduce<CombinedFunctorReducer<FunctorType, ReducerType>,
                              Policy, Kokkos::Cuda>;
-    cudaFuncAttributes attr =
-        CudaParallelLaunch<closure_type,
-                           LaunchBounds>::get_cuda_func_attributes();
+    cudaFuncAttributes attr = CudaParallelLaunch<closure_type, LaunchBounds>::
+        get_cuda_func_attributes(
+            m_policy.space().impl_internal_space_instance()->m_cudaDev);
     while (
         (n && (maxShmemPerBlock < shmem_size)) ||
         (n >
