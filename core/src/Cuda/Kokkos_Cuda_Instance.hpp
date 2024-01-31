@@ -418,9 +418,9 @@ class CudaInternal {
   }
 
   template <bool setCudaDevice = true>
-  cudaError_t cuda_stream_synchronize_wrapper() const {
+  cudaError_t cuda_stream_synchronize_wrapper(cudaStream_t stream) const {
     if constexpr (setCudaDevice) set_cuda_device();
-    return cudaStreamSynchronize(get_stream<false>());
+    return cudaStreamSynchronize(stream);
   }
 
   // The following are only available for cuda 11.2 and greater
