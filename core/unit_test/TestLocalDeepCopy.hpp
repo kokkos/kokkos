@@ -42,6 +42,52 @@ void impl_test_local_deepcopy_teampolicy_rank_1(const int N) {
   using team_policy = Kokkos::TeamPolicy<ExecSpace>;
   using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
 
+  // Test local_deep_copy_thread
+  // Each thread copies a subview of A into B
+  Kokkos::parallel_for(
+      team_policy(N, Kokkos::AUTO),
+      KOKKOS_LAMBDA(const member_type& teamMember) {
+        int lid = teamMember.league_rank();  // returns a number between 0 and N
+        auto thread_number = teamMember.league_size();
+        auto unitsOfWork   = N / thread_number;
+        if (N % thread_number) {
+          unitsOfWork += 1;
+        }
+        auto numberOfBatches = N / unitsOfWork;
+        Kokkos::parallel_for(
+            Kokkos::TeamThreadRange(teamMember, numberOfBatches),
+            [=](const int indexWithinBatch) {
+              const int idx = indexWithinBatch;
+
+              auto start  = idx * unitsOfWork;
+              auto stop   = (idx + 1) * unitsOfWork;
+              stop        = Kokkos::clamp(stop, 0, N);
+              auto subSrc = Kokkos::subview(A, 1, 1, 1, 1, 1, 1, lid,
+                                            std::pair(start, stop));
+              auto subDst = Kokkos::subview(B, 1, 1, 1, 1, 1, 1, lid,
+                                            std::pair(start, stop));
+              Kokkos::Experimental::local_deep_copy_thread(teamMember, subDst,
+                                                           subSrc);
+              // No wait for local_deep_copy_thread
+            });
+      });
+
+  Kokkos::deep_copy(h_A, A);
+  Kokkos::deep_copy(h_B, B);
+
+  bool test = true;
+  for (size_t i = 0; i < A.span(); i++) {
+    if (h_A.data()[i] != h_B.data()[i]) {
+      test = false;
+      break;
+    }
+  }
+
+  ASSERT_EQ(test, true);
+
+  // Fill
+  Kokkos::deep_copy(B, 0.0);
+
   // Deep Copy
   Kokkos::parallel_for(
       team_policy(N, Kokkos::AUTO),
@@ -55,7 +101,7 @@ void impl_test_local_deepcopy_teampolicy_rank_1(const int N) {
   Kokkos::deep_copy(h_A, A);
   Kokkos::deep_copy(h_B, B);
 
-  bool test = true;
+  test = true;
   for (size_t i = 0; i < A.span(); i++) {
     if (h_A.data()[i] != h_B.data()[i]) {
       test = false;
@@ -104,6 +150,52 @@ void impl_test_local_deepcopy_teampolicy_rank_2(const int N) {
   using team_policy = Kokkos::TeamPolicy<ExecSpace>;
   using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
 
+  // Test local_deep_copy_thread
+  // Each thread copies a subview of A into B
+  Kokkos::parallel_for(
+      team_policy(N, Kokkos::AUTO),
+      KOKKOS_LAMBDA(const member_type& teamMember) {
+        int lid = teamMember.league_rank();  // returns a number between 0 and N
+        auto thread_number = teamMember.league_size();
+        auto unitsOfWork   = N / thread_number;
+        if (N % thread_number) {
+          unitsOfWork += 1;
+        }
+        auto numberOfBatches = N / unitsOfWork;
+        Kokkos::parallel_for(
+            Kokkos::TeamThreadRange(teamMember, numberOfBatches),
+            [=](const int indexWithinBatch) {
+              const int idx = indexWithinBatch;
+
+              auto start  = idx * unitsOfWork;
+              auto stop   = (idx + 1) * unitsOfWork;
+              stop        = Kokkos::clamp(stop, 0, N);
+              auto subSrc = Kokkos::subview(
+                  A, 1, 1, 1, 1, 1, lid, std::pair(start, stop), Kokkos::ALL());
+              auto subDst = Kokkos::subview(
+                  B, 1, 1, 1, 1, 1, lid, std::pair(start, stop), Kokkos::ALL());
+              Kokkos::Experimental::local_deep_copy_thread(teamMember, subDst,
+                                                           subSrc);
+              // No wait for local_deep_copy_thread
+            });
+      });
+
+  Kokkos::deep_copy(h_A, A);
+  Kokkos::deep_copy(h_B, B);
+
+  bool test = true;
+  for (size_t i = 0; i < A.span(); i++) {
+    if (h_A.data()[i] != h_B.data()[i]) {
+      test = false;
+      break;
+    }
+  }
+
+  ASSERT_EQ(test, true);
+
+  // Fill
+  Kokkos::deep_copy(B, 0.0);
+
   // Deep Copy
   Kokkos::parallel_for(
       team_policy(N, Kokkos::AUTO),
@@ -119,7 +211,7 @@ void impl_test_local_deepcopy_teampolicy_rank_2(const int N) {
   Kokkos::deep_copy(h_A, A);
   Kokkos::deep_copy(h_B, B);
 
-  bool test = true;
+  test = true;
   for (size_t i = 0; i < A.span(); i++) {
     if (h_A.data()[i] != h_B.data()[i]) {
       test = false;
@@ -169,6 +261,54 @@ void impl_test_local_deepcopy_teampolicy_rank_3(const int N) {
   using team_policy = Kokkos::TeamPolicy<ExecSpace>;
   using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
 
+  // Test local_deep_copy_thread
+  // Each thread copies a subview of A into B
+  Kokkos::parallel_for(
+      team_policy(N, Kokkos::AUTO),
+      KOKKOS_LAMBDA(const member_type& teamMember) {
+        int lid = teamMember.league_rank();  // returns a number between 0 and N
+        auto thread_number = teamMember.league_size();
+        auto unitsOfWork   = N / thread_number;
+        if (N % thread_number) {
+          unitsOfWork += 1;
+        }
+        auto numberOfBatches = N / unitsOfWork;
+        Kokkos::parallel_for(
+            Kokkos::TeamThreadRange(teamMember, numberOfBatches),
+            [=](const int indexWithinBatch) {
+              const int idx = indexWithinBatch;
+
+              auto start = idx * unitsOfWork;
+              auto stop  = (idx + 1) * unitsOfWork;
+              stop       = Kokkos::clamp(stop, 0, N);
+              auto subSrc =
+                  Kokkos::subview(A, 1, 1, 1, 1, lid, std::pair(start, stop),
+                                  Kokkos::ALL(), Kokkos::ALL());
+              auto subDst =
+                  Kokkos::subview(B, 1, 1, 1, 1, lid, std::pair(start, stop),
+                                  Kokkos::ALL(), Kokkos::ALL());
+              Kokkos::Experimental::local_deep_copy_thread(teamMember, subDst,
+                                                           subSrc);
+              // No wait for local_deep_copy_thread
+            });
+      });
+
+  Kokkos::deep_copy(h_A, A);
+  Kokkos::deep_copy(h_B, B);
+
+  bool test = true;
+  for (size_t i = 0; i < A.span(); i++) {
+    if (h_A.data()[i] != h_B.data()[i]) {
+      test = false;
+      break;
+    }
+  }
+
+  ASSERT_EQ(test, true);
+
+  // Fill
+  Kokkos::deep_copy(B, 0.0);
+
   // Deep Copy
   Kokkos::parallel_for(
       team_policy(N, Kokkos::AUTO),
@@ -184,7 +324,7 @@ void impl_test_local_deepcopy_teampolicy_rank_3(const int N) {
   Kokkos::deep_copy(h_A, A);
   Kokkos::deep_copy(h_B, B);
 
-  bool test = true;
+  test = true;
   for (size_t i = 0; i < A.span(); i++) {
     if (h_A.data()[i] != h_B.data()[i]) {
       test = false;
@@ -234,6 +374,54 @@ void impl_test_local_deepcopy_teampolicy_rank_4(const int N) {
   using team_policy = Kokkos::TeamPolicy<ExecSpace>;
   using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
 
+  // Test local_deep_copy_thread
+  // Each thread copies a subview of A into B
+  Kokkos::parallel_for(
+      team_policy(N, Kokkos::AUTO),
+      KOKKOS_LAMBDA(const member_type& teamMember) {
+        int lid = teamMember.league_rank();  // returns a number between 0 and N
+        auto thread_number = teamMember.league_size();
+        auto unitsOfWork   = N / thread_number;
+        if (N % thread_number) {
+          unitsOfWork += 1;
+        }
+        auto numberOfBatches = N / unitsOfWork;
+        Kokkos::parallel_for(
+            Kokkos::TeamThreadRange(teamMember, numberOfBatches),
+            [=](const int indexWithinBatch) {
+              const int idx = indexWithinBatch;
+
+              auto start = idx * unitsOfWork;
+              auto stop  = (idx + 1) * unitsOfWork;
+              stop       = Kokkos::clamp(stop, 0, N);
+              auto subSrc =
+                  Kokkos::subview(A, 1, 1, 1, lid, std::pair(start, stop),
+                                  Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
+              auto subDst =
+                  Kokkos::subview(B, 1, 1, 1, lid, std::pair(start, stop),
+                                  Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
+              Kokkos::Experimental::local_deep_copy_thread(teamMember, subDst,
+                                                           subSrc);
+              // No wait for local_deep_copy_thread
+            });
+      });
+
+  Kokkos::deep_copy(h_A, A);
+  Kokkos::deep_copy(h_B, B);
+
+  bool test = true;
+  for (size_t i = 0; i < A.span(); i++) {
+    if (h_A.data()[i] != h_B.data()[i]) {
+      test = false;
+      break;
+    }
+  }
+
+  ASSERT_EQ(test, true);
+
+  // Fill
+  Kokkos::deep_copy(B, 0.0);
+
   // Deep Copy
   Kokkos::parallel_for(
       team_policy(N, Kokkos::AUTO),
@@ -251,7 +439,7 @@ void impl_test_local_deepcopy_teampolicy_rank_4(const int N) {
   Kokkos::deep_copy(h_A, A);
   Kokkos::deep_copy(h_B, B);
 
-  bool test = true;
+  test = true;
   for (size_t i = 0; i < A.span(); i++) {
     if (h_A.data()[i] != h_B.data()[i]) {
       test = false;
@@ -303,6 +491,54 @@ void impl_test_local_deepcopy_teampolicy_rank_5(const int N) {
   using team_policy = Kokkos::TeamPolicy<ExecSpace>;
   using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
 
+  // Test local_deep_copy_thread
+  // Each thread copies a subview of A into B
+  Kokkos::parallel_for(
+      team_policy(N, Kokkos::AUTO),
+      KOKKOS_LAMBDA(const member_type& teamMember) {
+        int lid = teamMember.league_rank();  // returns a number between 0 and N
+        auto thread_number = teamMember.league_size();
+        auto unitsOfWork   = N / thread_number;
+        if (N % thread_number) {
+          unitsOfWork += 1;
+        }
+        auto numberOfBatches = N / unitsOfWork;
+        Kokkos::parallel_for(
+            Kokkos::TeamThreadRange(teamMember, numberOfBatches),
+            [=](const int indexWithinBatch) {
+              const int idx = indexWithinBatch;
+
+              auto start  = idx * unitsOfWork;
+              auto stop   = (idx + 1) * unitsOfWork;
+              stop        = Kokkos::clamp(stop, 0, N);
+              auto subSrc = Kokkos::subview(
+                  A, 1, 1, lid, std::pair(start, stop), Kokkos::ALL(),
+                  Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
+              auto subDst = Kokkos::subview(
+                  B, 1, 1, lid, std::pair(start, stop), Kokkos::ALL(),
+                  Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
+              Kokkos::Experimental::local_deep_copy_thread(teamMember, subDst,
+                                                           subSrc);
+              // No wait for local_deep_copy_thread
+            });
+      });
+
+  Kokkos::deep_copy(h_A, A);
+  Kokkos::deep_copy(h_B, B);
+
+  bool test = true;
+  for (size_t i = 0; i < A.span(); i++) {
+    if (h_A.data()[i] != h_B.data()[i]) {
+      test = false;
+      break;
+    }
+  }
+
+  ASSERT_EQ(test, true);
+
+  // Fill
+  Kokkos::deep_copy(B, 0.0);
+
   // Deep Copy
   Kokkos::parallel_for(
       team_policy(N, Kokkos::AUTO),
@@ -320,7 +556,7 @@ void impl_test_local_deepcopy_teampolicy_rank_5(const int N) {
   Kokkos::deep_copy(h_A, A);
   Kokkos::deep_copy(h_B, B);
 
-  bool test = true;
+  test = true;
   for (size_t i = 0; i < A.span(); i++) {
     if (h_A.data()[i] != h_B.data()[i]) {
       test = false;
@@ -372,6 +608,54 @@ void impl_test_local_deepcopy_teampolicy_rank_6(const int N) {
   using team_policy = Kokkos::TeamPolicy<ExecSpace>;
   using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
 
+  // Test local_deep_copy_thread
+  // Each thread copies a subview of A into B
+  Kokkos::parallel_for(
+      team_policy(N, Kokkos::AUTO),
+      KOKKOS_LAMBDA(const member_type& teamMember) {
+        int lid = teamMember.league_rank();  // returns a number between 0 and N
+        auto thread_number = teamMember.league_size();
+        auto unitsOfWork   = N / thread_number;
+        if (N % thread_number) {
+          unitsOfWork += 1;
+        }
+        auto numberOfBatches = N / unitsOfWork;
+        Kokkos::parallel_for(
+            Kokkos::TeamThreadRange(teamMember, numberOfBatches),
+            [=](const int indexWithinBatch) {
+              const int idx = indexWithinBatch;
+
+              auto start  = idx * unitsOfWork;
+              auto stop   = (idx + 1) * unitsOfWork;
+              stop        = Kokkos::clamp(stop, 0, N);
+              auto subSrc = Kokkos::subview(
+                  A, 1, lid, std::pair(start, stop), Kokkos::ALL(),
+                  Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
+              auto subDst = Kokkos::subview(
+                  B, 1, lid, std::pair(start, stop), Kokkos::ALL(),
+                  Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
+              Kokkos::Experimental::local_deep_copy_thread(teamMember, subDst,
+                                                           subSrc);
+              // No wait for local_deep_copy_thread
+            });
+      });
+
+  Kokkos::deep_copy(h_A, A);
+  Kokkos::deep_copy(h_B, B);
+
+  bool test = true;
+  for (size_t i = 0; i < A.span(); i++) {
+    if (h_A.data()[i] != h_B.data()[i]) {
+      test = false;
+      break;
+    }
+  }
+
+  ASSERT_EQ(test, true);
+
+  // Fill
+  Kokkos::deep_copy(B, 0.0);
+
   // Deep Copy
   Kokkos::parallel_for(
       team_policy(N, Kokkos::AUTO),
@@ -389,7 +673,7 @@ void impl_test_local_deepcopy_teampolicy_rank_6(const int N) {
   Kokkos::deep_copy(h_A, A);
   Kokkos::deep_copy(h_B, B);
 
-  bool test = true;
+  test = true;
   for (size_t i = 0; i < A.span(); i++) {
     if (h_A.data()[i] != h_B.data()[i]) {
       test = false;
@@ -438,6 +722,54 @@ void impl_test_local_deepcopy_teampolicy_rank_7(const int N) {
   using team_policy = Kokkos::TeamPolicy<ExecSpace>;
   using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
 
+  // Test local_deep_copy_thread
+  // Each thread copies a subview of A into B
+  Kokkos::parallel_for(
+      team_policy(N, Kokkos::AUTO),
+      KOKKOS_LAMBDA(const member_type& teamMember) {
+        int lid = teamMember.league_rank();  // returns a number between 0 and N
+        auto thread_number = teamMember.league_size();
+        auto unitsOfWork   = N / thread_number;
+        if (N % thread_number) {
+          unitsOfWork += 1;
+        }
+        auto numberOfBatches = N / unitsOfWork;
+        Kokkos::parallel_for(
+            Kokkos::TeamThreadRange(teamMember, numberOfBatches),
+            [=](const int indexWithinBatch) {
+              const int idx = indexWithinBatch;
+
+              auto start  = idx * unitsOfWork;
+              auto stop   = (idx + 1) * unitsOfWork;
+              stop        = Kokkos::clamp(stop, 0, N);
+              auto subSrc = Kokkos::subview(
+                  A, lid, std::pair(start, stop), Kokkos::ALL(), Kokkos::ALL(),
+                  Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
+              auto subDst = Kokkos::subview(
+                  B, lid, std::pair(start, stop), Kokkos::ALL(), Kokkos::ALL(),
+                  Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
+              Kokkos::Experimental::local_deep_copy_thread(teamMember, subDst,
+                                                           subSrc);
+              // No wait for local_deep_copy_thread
+            });
+      });
+
+  Kokkos::deep_copy(h_A, A);
+  Kokkos::deep_copy(h_B, B);
+
+  bool test = true;
+  for (size_t i = 0; i < A.span(); i++) {
+    if (h_A.data()[i] != h_B.data()[i]) {
+      test = false;
+      break;
+    }
+  }
+
+  ASSERT_EQ(test, true);
+
+  // Fill
+  Kokkos::deep_copy(B, 0.0);
+
   // Deep Copy
   Kokkos::parallel_for(
       team_policy(N, Kokkos::AUTO),
@@ -455,7 +787,7 @@ void impl_test_local_deepcopy_teampolicy_rank_7(const int N) {
   Kokkos::deep_copy(h_A, A);
   Kokkos::deep_copy(h_B, B);
 
-  bool test = true;
+  test = true;
   for (size_t i = 0; i < A.span(); i++) {
     if (h_A.data()[i] != h_B.data()[i]) {
       test = false;
