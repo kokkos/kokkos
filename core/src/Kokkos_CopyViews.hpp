@@ -1338,8 +1338,8 @@ template <typename ExecutionSpace, class ViewType>
 struct ZeroMemset {
   ZeroMemset(const ExecutionSpace& exec_space, const ViewType& dst) {
     using ValueType = typename ViewType::value_type;
-    alignas(alignof(
-        ValueType)) char zero_initialized_storage[sizeof(ValueType)] = {};
+    alignas(alignof(ValueType)) unsigned char
+        zero_initialized_storage[sizeof(ValueType)] = {};
     contiguous_fill(exec_space, dst,
                     *reinterpret_cast<ValueType*>(zero_initialized_storage));
   }
