@@ -126,7 +126,7 @@ std::enable_if_t<use_shuffle_based_algorithm<ReducerType>> workgroup_reduction(
   shuffle_combine(4);
   shuffle_combine(8);
   shuffle_combine(16);
-  shuffle_combine(32);
+  KOKKOS_ASSERT(local_range <= 32);
 #else
   for (unsigned int stride = 1; stride < local_range; stride <<= 1) {
     auto tmp = sg.shuffle_down(local_value, stride);
@@ -175,7 +175,7 @@ std::enable_if_t<use_shuffle_based_algorithm<ReducerType>> workgroup_reduction(
     shuffle_combine_sg(4);
     shuffle_combine_sg(8);
     shuffle_combine_sg(16);
-    shuffle_combine_sg(32);
+    KOKKOS_ASSERT(local_range <= 32);
 #else
     for (unsigned int stride = 1; stride < local_range; stride <<= 1) {
       auto tmp = sg.shuffle_down(sg_value, stride);

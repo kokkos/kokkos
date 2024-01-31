@@ -48,7 +48,7 @@ void workgroup_scan(sycl::nd_item<dim> item, const FunctorType& final_reducer,
   shuffle_combine(4);
   shuffle_combine(8);
   shuffle_combine(16);
-  shuffle_combine(32);
+  KOKKOS_ASSERT(global_range <= 32);
 #else
   for (int stride = 1; stride < global_range; stride <<= 1) {
     auto tmp = sg.shuffle_up(local_value, stride);
@@ -93,7 +93,7 @@ void workgroup_scan(sycl::nd_item<dim> item, const FunctorType& final_reducer,
         shuffle_combine_sg(4);
         shuffle_combine_sg(8);
         shuffle_combine_sg(16);
-        shuffle_combine_sg(32);
+        KOKKOS_ASSERT(upper_bound <= 32);
 #else
         for (int stride = 1; stride < upper_bound; stride <<= 1) {
           auto tmp = sg.shuffle_up(local_sg_value, stride);
