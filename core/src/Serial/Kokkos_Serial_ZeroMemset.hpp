@@ -22,6 +22,7 @@
 #include <Serial/Kokkos_Serial.hpp>
 
 #include <type_traits>
+#include <cstring>
 
 namespace Kokkos {
 namespace Impl {
