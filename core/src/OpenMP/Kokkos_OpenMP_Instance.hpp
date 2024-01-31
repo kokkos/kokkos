@@ -100,7 +100,7 @@ class OpenMPInternal {
     return m_pool[i];
   }
 
-  bool get_level() const { return m_level; }
+  int get_level() const { return m_level; }
 
   bool is_initialized() const { return m_initialized; }
 
