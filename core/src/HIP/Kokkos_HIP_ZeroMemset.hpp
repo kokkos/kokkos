@@ -25,8 +25,7 @@ namespace Impl {
 
 template <class T, class... P>
 struct ZeroMemset<HIP, View<T, P...>> {
-  ZeroMemset(const HIP& exec_space, const View<T, P...>& dst,
-             typename View<T, P...>::const_value_type&) {
+  ZeroMemset(const HIP& exec_space, const View<T, P...>& dst) {
     KOKKOS_IMPL_HIP_SAFE_CALL(hipMemsetAsync(
         dst.data(), 0, dst.size() * sizeof(typename View<T, P...>::value_type),
         exec_space.hip_stream()));
