@@ -294,6 +294,17 @@ void CudaInternal::initialize(cudaStream_t stream) {
   m_stream = stream;
   CudaInternal::cuda_devices.insert(m_cudaDev);
 
+  // Allocate a staging buffer for constant mem in pinned host memory
+  // and an event to avoid overwriting driver for previous kernel launches
+  if (!constantMemHostStagingPerDevice[m_cudaDev])
+    KOKKOS_IMPL_CUDA_SAFE_CALL((cuda_malloc_host_wrapper(
+        reinterpret_cast<void **>(&constantMemHostStagingPerDevice[m_cudaDev]),
+        CudaTraits::ConstantMemoryUsage)));
+
+  if (!constantMemReusablePerDevice[m_cudaDev])
+    KOKKOS_IMPL_CUDA_SAFE_CALL(
+        (cuda_event_create_wrapper(&constantMemReusablePerDevice[m_cudaDev])));
+
   //----------------------------------
   // Multiblock reduction uses scratch flags for counters
   // and scratch space for partial reduction values.
@@ -312,17 +323,6 @@ void CudaInternal::initialize(cudaStream_t stream) {
     (void)scratch_flags(reduce_block_count * 2 * sizeof(size_type));
     (void)scratch_space(reduce_block_count * 16 * sizeof(size_type));
   }
-
-  // Allocate a staging buffer for constant mem in pinned host memory
-  // and an event to avoid overwriting driver for previous kernel launches
-  if (!constantMemHostStagingPerDevice[m_cudaDev])
-    KOKKOS_IMPL_CUDA_SAFE_CALL((cuda_malloc_host_wrapper(
-        reinterpret_cast<void **>(&constantMemHostStagingPerDevice[m_cudaDev]),
-        CudaTraits::ConstantMemoryUsage)));
-
-  if (!constantMemReusablePerDevice[m_cudaDev])
-    KOKKOS_IMPL_CUDA_SAFE_CALL(
-        (cuda_event_create_wrapper(&constantMemReusablePerDevice[m_cudaDev])));
 
   for (int i = 0; i < m_n_team_scratch; ++i) {
     m_team_scratch_current_size[i] = 0;
@@ -633,7 +633,7 @@ void Cuda::impl_finalize() {
   (void)Impl::cuda_global_unique_token_locks(true);
   desul::Impl::finalize_lock_arrays();  // FIXME
 
-  for (auto &cuda_device : Kokkos::Impl::CudaInternal::cuda_devices) {
+  for (const auto cuda_device : Kokkos::Impl::CudaInternal::cuda_devices) {
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(cuda_device));
     KOKKOS_IMPL_CUDA_SAFE_CALL(
         cudaFreeHost(Kokkos::Impl::CudaInternal::constantMemHostStagingPerDevice
