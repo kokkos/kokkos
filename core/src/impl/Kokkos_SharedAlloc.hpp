@@ -26,16 +26,11 @@
 
 // Use likely, unlikely attributes from C++20 to improve performance of
 // reference counting when copy constructors are involved.
-#if defined(KOKKOS_ENABLE_CXX20)
-#if defined(KOKKOS_IMPL_REF_COUNT_BRANCH_LIKELY)
+#if defined(KOKKOS_ENABLE_IMPL_REF_COUNT_BRANCH_LIKELY) && \
+    defined(KOKKOS_ENABLE_CXX20)
 #define KOKKOS_BRANCH_PROB [[likely]]
-#elif defined(KOKKOS_IMPL_REF_COUNT_BRANCH_UNLIKELY)
+#else
 #define KOKKOS_BRANCH_PROB [[unlikely]]
-#endif
-#endif
-
-#ifndef KOKKOS_BRANCH_PROB
-#define KOKKOS_BRANCH_PROB
 #endif
 
 namespace Kokkos {
