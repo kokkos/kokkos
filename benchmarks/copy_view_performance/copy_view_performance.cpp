@@ -204,7 +204,7 @@ class ViewCollection {
   }
 };
 
-void test_view_collection(int N, int num_iter, bool execute_kernel) {
+void test_view_collection_kk(int N, int num_iter, bool execute_kernel) {
   ViewCollection view_collection(N);
 
   Kokkos::Timer view_collection_timer;
@@ -232,7 +232,7 @@ void test_view_collection(int N, int num_iter, bool execute_kernel) {
   }
 }
 
-void test_view_collection_2(int N, int num_iter, bool execute_kernel) {
+void test_view_collection_serial(int N, int num_iter, bool execute_kernel) {
   ViewCollection view_collection(N);
 
   Kokkos::Timer view_collection_timer;
