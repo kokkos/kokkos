@@ -124,7 +124,7 @@ class CudaInternal {
   inline static std::map<int, unsigned long*> constantMemHostStagingPerDevice =
       {};
   inline static std::map<int, cudaEvent_t> constantMemReusablePerDevice = {};
-  inline static std::map<int, std::mutex> constantMemMutexPerDevice;
+  inline static std::map<int, std::mutex> constantMemMutexPerDevice     = {};
 
   static CudaInternal& singleton();
 
