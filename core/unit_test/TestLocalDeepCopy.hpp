@@ -24,6 +24,39 @@
 
 namespace Test {
 
+template <typename ViewType>
+bool equals(ViewType lhs, ViewType rhs) {
+  int result = 1;
+
+  auto reducer = Kokkos::LAnd<int>(result);
+  Kokkos::parallel_reduce(
+      "compare arrays", lhs.span(),
+      KOKKOS_LAMBDA(int i, int local_result) {
+        local_result = (lhs.data()[i] == rhs.data()[i]) && local_result;
+      },
+      reducer);
+  return (result);
+}
+
+template <typename ViewType>
+void initialize_array(ViewType& view) {
+  Kokkos::parallel_for(
+      "initialize array", view.span(),
+      KOKKOS_LAMBDA(int i) { view.data()[i] = i; });
+}
+
+template <typename TeamPolicy>
+std::tuple<int, int> compute_thread_work_share(const int N,
+                                               TeamPolicy team_policy) {
+  auto thread_number = team_policy.league_size();
+  auto unitsOfWork   = N / thread_number;
+  if (N % thread_number) {
+    unitsOfWork += 1;
+  }
+  auto numberOfBatches = N / unitsOfWork;
+  return {unitsOfWork, numberOfBatches};
+}
+
 template <typename ExecSpace, typename Layout>
 void impl_test_local_deepcopy_teampolicy_rank_1(const int N) {
   using ViewType = Kokkos::View<double**, Layout, ExecSpace>;
@@ -39,10 +72,7 @@ void impl_test_local_deepcopy_teampolicy_rank_1(const int N) {
   using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
 
   // Initialize A matrix.
-  using mdrange_policy = Kokkos::MDRangePolicy<Kokkos::Rank<2>>;
-  Kokkos::parallel_for(
-      "initialize A", mdrange_policy({0, 0}, {N, N}),
-      KOKKOS_LAMBDA(int i, int j) { A(i, j) = i * N + j; });
+  initialize_array(A);
 
   // Test local_deep_copy_thread
   // Each thread copies a subview of A into B
@@ -50,12 +80,9 @@ void impl_test_local_deepcopy_teampolicy_rank_1(const int N) {
       team_policy(N, Kokkos::AUTO),
       KOKKOS_LAMBDA(const member_type& teamMember) {
         int lid = teamMember.league_rank();  // returns a number between 0 and N
-        auto thread_number = teamMember.league_size();
-        auto unitsOfWork   = N / thread_number;
-        if (N % thread_number) {
-          unitsOfWork += 1;
-        }
-        auto numberOfBatches = N / unitsOfWork;
+        auto [unitsOfWork, numberOfBatches] =
+            compute_thread_work_share(N, teamMember);
+
         Kokkos::parallel_for(
             Kokkos::TeamThreadRange(teamMember, numberOfBatches),
             [=](const int indexWithinBatch) {
@@ -72,18 +99,7 @@ void impl_test_local_deepcopy_teampolicy_rank_1(const int N) {
             });
       });
 
-  Kokkos::deep_copy(h_A, A);
-  Kokkos::deep_copy(h_B, B);
-
-  bool test = true;
-  for (size_t i = 0; i < A.span(); i++) {
-    if (h_A.data()[i] != h_B.data()[i]) {
-      test = false;
-      break;
-    }
-  }
-
-  ASSERT_EQ(test, true);
+  ASSERT_TRUE(equals(A, B));
 
   // Fill
   Kokkos::deep_copy(B, 0.0);
@@ -98,18 +114,7 @@ void impl_test_local_deepcopy_teampolicy_rank_1(const int N) {
         Kokkos::Experimental::local_deep_copy(teamMember, subDst, subSrc);
       });
 
-  Kokkos::deep_copy(h_A, A);
-  Kokkos::deep_copy(h_B, B);
-
-  test = true;
-  for (size_t i = 0; i < A.span(); i++) {
-    if (h_A.data()[i] != h_B.data()[i]) {
-      test = false;
-      break;
-    }
-  }
-
-  ASSERT_EQ(test, true);
+  ASSERT_TRUE(equals(A, B));
 
   // Fill
   Kokkos::deep_copy(B, 0.0);
@@ -144,10 +149,7 @@ void impl_test_local_deepcopy_teampolicy_rank_2(const int N) {
   typename ViewType::HostMirror h_B = Kokkos::create_mirror_view(B);
 
   // Initialize A matrix.
-  using mdrange_policy = Kokkos::MDRangePolicy<Kokkos::Rank<3>>;
-  Kokkos::parallel_for(
-      "initialize A", mdrange_policy({0, 0, 0}, {N, N, N}),
-      KOKKOS_LAMBDA(int i, int j, int k) { A(i, j, k) = (i * N + j) * N + k; });
+  initialize_array(A);
 
   using team_policy = Kokkos::TeamPolicy<ExecSpace>;
   using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
@@ -158,12 +160,8 @@ void impl_test_local_deepcopy_teampolicy_rank_2(const int N) {
       team_policy(N, Kokkos::AUTO),
       KOKKOS_LAMBDA(const member_type& teamMember) {
         int lid = teamMember.league_rank();  // returns a number between 0 and N
-        auto thread_number = teamMember.league_size();
-        auto unitsOfWork   = N / thread_number;
-        if (N % thread_number) {
-          unitsOfWork += 1;
-        }
-        auto numberOfBatches = N / unitsOfWork;
+        auto [unitsOfWork, numberOfBatches] =
+            compute_thread_work_share(N, teamMember);
         Kokkos::parallel_for(
             Kokkos::TeamThreadRange(teamMember, numberOfBatches),
             [=](const int indexWithinBatch) {
@@ -182,18 +180,7 @@ void impl_test_local_deepcopy_teampolicy_rank_2(const int N) {
             });
       });
 
-  Kokkos::deep_copy(h_A, A);
-  Kokkos::deep_copy(h_B, B);
-
-  bool test = true;
-  for (size_t i = 0; i < A.span(); i++) {
-    if (h_A.data()[i] != h_B.data()[i]) {
-      test = false;
-      break;
-    }
-  }
-
-  ASSERT_EQ(test, true);
+  ASSERT_TRUE(equals(A, B));
 
   // Fill
   Kokkos::deep_copy(B, 0.0);
@@ -208,18 +195,7 @@ void impl_test_local_deepcopy_teampolicy_rank_2(const int N) {
         Kokkos::Experimental::local_deep_copy(teamMember, subDst, subSrc);
       });
 
-  Kokkos::deep_copy(h_A, A);
-  Kokkos::deep_copy(h_B, B);
-
-  test = true;
-  for (size_t i = 0; i < A.span(); i++) {
-    if (h_A.data()[i] != h_B.data()[i]) {
-      test = false;
-      break;
-    }
-  }
-
-  ASSERT_EQ(test, true);
+  ASSERT_TRUE(equals(A, B));
 
   // Fill
   Kokkos::deep_copy(B, 0.0);
@@ -254,12 +230,7 @@ void impl_test_local_deepcopy_teampolicy_rank_3(const int N) {
   typename ViewType::HostMirror h_B = Kokkos::create_mirror_view(B);
 
   // Initialize A matrix.
-  using mdrange_policy = Kokkos::MDRangePolicy<Kokkos::Rank<4>>;
-  Kokkos::parallel_for(
-      "initialize A", mdrange_policy({0, 0, 0, 0}, {N, N, N, N}),
-      KOKKOS_LAMBDA(int i, int j, int k, int l) {
-        A(i, j, k, l) = ((i * N + j) * N + k) * N + l;
-      });
+  initialize_array(A);
 
   using team_policy = Kokkos::TeamPolicy<ExecSpace>;
   using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
@@ -270,12 +241,8 @@ void impl_test_local_deepcopy_teampolicy_rank_3(const int N) {
       team_policy(N, Kokkos::AUTO),
       KOKKOS_LAMBDA(const member_type& teamMember) {
         int lid = teamMember.league_rank();  // returns a number between 0 and N
-        auto thread_number = teamMember.league_size();
-        auto unitsOfWork   = N / thread_number;
-        if (N % thread_number) {
-          unitsOfWork += 1;
-        }
-        auto numberOfBatches = N / unitsOfWork;
+        auto [unitsOfWork, numberOfBatches] =
+            compute_thread_work_share(N, teamMember);
         Kokkos::parallel_for(
             Kokkos::TeamThreadRange(teamMember, numberOfBatches),
             [=](const int indexWithinBatch) {
@@ -294,18 +261,7 @@ void impl_test_local_deepcopy_teampolicy_rank_3(const int N) {
             });
       });
 
-  Kokkos::deep_copy(h_A, A);
-  Kokkos::deep_copy(h_B, B);
-
-  bool test = true;
-  for (size_t i = 0; i < A.span(); i++) {
-    if (h_A.data()[i] != h_B.data()[i]) {
-      test = false;
-      break;
-    }
-  }
-
-  ASSERT_EQ(test, true);
+  ASSERT_TRUE(equals(A, B));
 
   // Fill
   Kokkos::deep_copy(B, 0.0);
@@ -322,18 +278,7 @@ void impl_test_local_deepcopy_teampolicy_rank_3(const int N) {
         Kokkos::Experimental::local_deep_copy(teamMember, subDst, subSrc);
       });
 
-  Kokkos::deep_copy(h_A, A);
-  Kokkos::deep_copy(h_B, B);
-
-  test = true;
-  for (size_t i = 0; i < A.span(); i++) {
-    if (h_A.data()[i] != h_B.data()[i]) {
-      test = false;
-      break;
-    }
-  }
-
-  ASSERT_EQ(test, true);
+  ASSERT_TRUE(equals(A, B));
 
   // Fill
   Kokkos::deep_copy(B, 0.0);
@@ -369,12 +314,7 @@ void impl_test_local_deepcopy_teampolicy_rank_4(const int N) {
   typename ViewType::HostMirror h_B = Kokkos::create_mirror_view(B);
 
   // Initialize A matrix.
-  using mdrange_policy = Kokkos::MDRangePolicy<Kokkos::Rank<5>>;
-  Kokkos::parallel_for(
-      "initialize A", mdrange_policy({0, 0, 0, 0, 0}, {N, N, N, N, N}),
-      KOKKOS_LAMBDA(int i, int j, int k, int l, int m) {
-        A(i, j, k, l, m) = (((i * N + j) * N + k) * N + l) * N + m;
-      });
+  initialize_array(A);
 
   using team_policy = Kokkos::TeamPolicy<ExecSpace>;
   using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
@@ -385,12 +325,8 @@ void impl_test_local_deepcopy_teampolicy_rank_4(const int N) {
       team_policy(N, Kokkos::AUTO),
       KOKKOS_LAMBDA(const member_type& teamMember) {
         int lid = teamMember.league_rank();  // returns a number between 0 and N
-        auto thread_number = teamMember.league_size();
-        auto unitsOfWork   = N / thread_number;
-        if (N % thread_number) {
-          unitsOfWork += 1;
-        }
-        auto numberOfBatches = N / unitsOfWork;
+        auto [unitsOfWork, numberOfBatches] =
+            compute_thread_work_share(N, teamMember);
         Kokkos::parallel_for(
             Kokkos::TeamThreadRange(teamMember, numberOfBatches),
             [=](const int indexWithinBatch) {
@@ -411,18 +347,7 @@ void impl_test_local_deepcopy_teampolicy_rank_4(const int N) {
             });
       });
 
-  Kokkos::deep_copy(h_A, A);
-  Kokkos::deep_copy(h_B, B);
-
-  bool test = true;
-  for (size_t i = 0; i < A.span(); i++) {
-    if (h_A.data()[i] != h_B.data()[i]) {
-      test = false;
-      break;
-    }
-  }
-
-  ASSERT_EQ(test, true);
+  ASSERT_TRUE(equals(A, B));
 
   // Fill
   Kokkos::deep_copy(B, 0.0);
@@ -439,18 +364,7 @@ void impl_test_local_deepcopy_teampolicy_rank_4(const int N) {
         Kokkos::Experimental::local_deep_copy(teamMember, subDst, subSrc);
       });
 
-  Kokkos::deep_copy(h_A, A);
-  Kokkos::deep_copy(h_B, B);
-
-  test = true;
-  for (size_t i = 0; i < A.span(); i++) {
-    if (h_A.data()[i] != h_B.data()[i]) {
-      test = false;
-      break;
-    }
-  }
-
-  ASSERT_EQ(test, true);
+  ASSERT_TRUE(equals(A, B));
 
   // Fill
   Kokkos::deep_copy(B, 0.0);
@@ -486,12 +400,7 @@ void impl_test_local_deepcopy_teampolicy_rank_5(const int N) {
   typename ViewType::HostMirror h_B = Kokkos::create_mirror_view(B);
 
   // Initialize A matrix.
-  using mdrange_policy = Kokkos::MDRangePolicy<Kokkos::Rank<6>>;
-  Kokkos::parallel_for(
-      "initialize A", mdrange_policy({0, 0, 0, 0, 0, 0}, {N, N, N, N, N, N}),
-      KOKKOS_LAMBDA(int i, int j, int k, int l, int m, int n) {
-        A(i, j, k, l, m, n) = ((((i * N + j) * N + k) * N + l) * N + m) * N + n;
-      });
+  initialize_array(A);
 
   using team_policy = Kokkos::TeamPolicy<ExecSpace>;
   using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
@@ -502,12 +411,8 @@ void impl_test_local_deepcopy_teampolicy_rank_5(const int N) {
       team_policy(N, Kokkos::AUTO),
       KOKKOS_LAMBDA(const member_type& teamMember) {
         int lid = teamMember.league_rank();  // returns a number between 0 and N
-        auto thread_number = teamMember.league_size();
-        auto unitsOfWork   = N / thread_number;
-        if (N % thread_number) {
-          unitsOfWork += 1;
-        }
-        auto numberOfBatches = N / unitsOfWork;
+        auto [unitsOfWork, numberOfBatches] =
+            compute_thread_work_share(N, teamMember);
         Kokkos::parallel_for(
             Kokkos::TeamThreadRange(teamMember, numberOfBatches),
             [=](const int indexWithinBatch) {
@@ -528,18 +433,7 @@ void impl_test_local_deepcopy_teampolicy_rank_5(const int N) {
             });
       });
 
-  Kokkos::deep_copy(h_A, A);
-  Kokkos::deep_copy(h_B, B);
-
-  bool test = true;
-  for (size_t i = 0; i < A.span(); i++) {
-    if (h_A.data()[i] != h_B.data()[i]) {
-      test = false;
-      break;
-    }
-  }
-
-  ASSERT_EQ(test, true);
+  ASSERT_TRUE(equals(A, B));
 
   // Fill
   Kokkos::deep_copy(B, 0.0);
@@ -558,18 +452,7 @@ void impl_test_local_deepcopy_teampolicy_rank_5(const int N) {
         Kokkos::Experimental::local_deep_copy(teamMember, subDst, subSrc);
       });
 
-  Kokkos::deep_copy(h_A, A);
-  Kokkos::deep_copy(h_B, B);
-
-  test = true;
-  for (size_t i = 0; i < A.span(); i++) {
-    if (h_A.data()[i] != h_B.data()[i]) {
-      test = false;
-      break;
-    }
-  }
-
-  ASSERT_EQ(test, true);
+  ASSERT_TRUE(equals(A, B));
 
   // Fill
   Kokkos::deep_copy(B, 0.0);
@@ -606,9 +489,7 @@ void impl_test_local_deepcopy_teampolicy_rank_6(const int N) {
   typename ViewType::HostMirror h_B = Kokkos::create_mirror_view(B);
 
   // Initialize A matrix.
-  // No MDRangePolicy for Rank 7
-  Kokkos::parallel_for(
-      "initialize A", A.span(), KOKKOS_LAMBDA(int i) { A.data()[i] = i; });
+  initialize_array(A);
 
   using team_policy = Kokkos::TeamPolicy<ExecSpace>;
   using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
@@ -619,12 +500,8 @@ void impl_test_local_deepcopy_teampolicy_rank_6(const int N) {
       team_policy(N, Kokkos::AUTO),
       KOKKOS_LAMBDA(const member_type& teamMember) {
         int lid = teamMember.league_rank();  // returns a number between 0 and N
-        auto thread_number = teamMember.league_size();
-        auto unitsOfWork   = N / thread_number;
-        if (N % thread_number) {
-          unitsOfWork += 1;
-        }
-        auto numberOfBatches = N / unitsOfWork;
+        auto [unitsOfWork, numberOfBatches] =
+            compute_thread_work_share(N, teamMember);
         Kokkos::parallel_for(
             Kokkos::TeamThreadRange(teamMember, numberOfBatches),
             [=](const int indexWithinBatch) {
@@ -645,19 +522,7 @@ void impl_test_local_deepcopy_teampolicy_rank_6(const int N) {
             });
       });
 
-  Kokkos::deep_copy(h_A, A);
-  Kokkos::deep_copy(h_B, B);
-
-  bool test = true;
-  for (size_t i = 0; i < A.span(); i++) {
-    if (h_A.data()[i] != h_B.data()[i]) {
-      ASSERT_EQ(h_A.data()[i], h_B.data()[i]);
-      test = false;
-      break;
-    }
-  }
-
-  ASSERT_EQ(test, true);
+  ASSERT_TRUE(equals(A, B));
 
   // Fill
   Kokkos::deep_copy(B, 0.0);
@@ -679,15 +544,7 @@ void impl_test_local_deepcopy_teampolicy_rank_6(const int N) {
   Kokkos::deep_copy(h_A, A);
   Kokkos::deep_copy(h_B, B);
 
-  test = true;
-  for (size_t i = 0; i < A.span(); i++) {
-    if (h_A.data()[i] != h_B.data()[i]) {
-      test = false;
-      break;
-    }
-  }
-
-  ASSERT_EQ(test, true);
+  ASSERT_TRUE(equals(A, B));
 
   // Fill
   Kokkos::deep_copy(B, 0.0);
@@ -724,9 +581,7 @@ void impl_test_local_deepcopy_teampolicy_rank_7(const int N) {
   typename ViewType::HostMirror h_B = Kokkos::create_mirror_view(B);
 
   // Initialize A matrix.
-  // No MDRangePolicy for Rank 8
-  Kokkos::parallel_for(
-      "initialize A", A.span(), KOKKOS_LAMBDA(int i) { A.data()[i] = i; });
+  initialize_array(A);
 
   using team_policy = Kokkos::TeamPolicy<ExecSpace>;
   using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
@@ -737,12 +592,8 @@ void impl_test_local_deepcopy_teampolicy_rank_7(const int N) {
       team_policy(N, Kokkos::AUTO),
       KOKKOS_LAMBDA(const member_type& teamMember) {
         int lid = teamMember.league_rank();  // returns a number between 0 and N
-        auto thread_number = teamMember.league_size();
-        auto unitsOfWork   = N / thread_number;
-        if (N % thread_number) {
-          unitsOfWork += 1;
-        }
-        auto numberOfBatches = N / unitsOfWork;
+        auto [unitsOfWork, numberOfBatches] =
+            compute_thread_work_share(N, teamMember);
         Kokkos::parallel_for(
             Kokkos::TeamThreadRange(teamMember, numberOfBatches),
             [=](const int indexWithinBatch) {
@@ -763,18 +614,7 @@ void impl_test_local_deepcopy_teampolicy_rank_7(const int N) {
             });
       });
 
-  Kokkos::deep_copy(h_A, A);
-  Kokkos::deep_copy(h_B, B);
-
-  bool test = true;
-  for (size_t i = 0; i < A.span(); i++) {
-    if (h_A.data()[i] != h_B.data()[i]) {
-      test = false;
-      break;
-    }
-  }
-
-  ASSERT_EQ(test, true);
+  ASSERT_TRUE(equals(A, B));
 
   // Fill
   Kokkos::deep_copy(B, 0.0);
@@ -796,15 +636,7 @@ void impl_test_local_deepcopy_teampolicy_rank_7(const int N) {
   Kokkos::deep_copy(h_A, A);
   Kokkos::deep_copy(h_B, B);
 
-  test = true;
-  for (size_t i = 0; i < A.span(); i++) {
-    if (h_A.data()[i] != h_B.data()[i]) {
-      test = false;
-      break;
-    }
-  }
-
-  ASSERT_EQ(test, true);
+  ASSERT_TRUE(equals(A, B));
 
   // Fill
   Kokkos::deep_copy(B, 0.0);
