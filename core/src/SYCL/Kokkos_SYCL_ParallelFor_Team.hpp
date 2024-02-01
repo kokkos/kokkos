@@ -64,9 +64,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
       // FIXME_SYCL accessors seem to need a size greater than zero at least for
       // host queues
       sycl::local_accessor<char, 1> team_scratch_memory_L0(
-          sycl::range<1>(
-              std::max(m_scratch_size[0], size_t(1))),
-          cgh);
+          sycl::range<1>(std::max(m_scratch_size[0], size_t(1))), cgh);
 
       // Avoid capturing *this since it might not be trivially copyable
       const size_t scratch_size[2] = {m_scratch_size[0], m_scratch_size[1]};
@@ -165,8 +163,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
             m_scratch_pool_id,
             static_cast<ptrdiff_t>(m_scratch_size[1]) * m_league_size));
 
-    if (static_cast<int>(space.m_maxShmemPerBlock) <
-        m_shmem_size) {
+    if (static_cast<int>(space.m_maxShmemPerBlock) < m_shmem_size) {
       std::stringstream out;
       out << "Kokkos::Impl::ParallelFor<SYCL> insufficient shared memory! "
              "Requested "

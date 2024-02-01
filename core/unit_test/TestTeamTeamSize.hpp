@@ -85,13 +85,13 @@ void test_team_policy_max_recommended_static_size(int scratch_size) {
   std::cout << "scratch size: " << scratch_size << std::endl;
   Kokkos::parallel_reduce(
       PolicyType(n_leagues, team_size_max_reduce, 4)
-         .set_scratch_size(0, Kokkos::PerTeam(scratch_size)),
+          .set_scratch_size(0, Kokkos::PerTeam(scratch_size)),
       FunctorReduce<T, N, PolicyType, S>(), val);
-  //Kokkos::parallel_reduce(
+  // Kokkos::parallel_reduce(
   //    PolicyType(n_leagues, team_size_rec_reduce, 4)
   //       .set_scratch_size(0, Kokkos::PerTeam(scratch_size)),
   //    FunctorReduce<T, N, PolicyType, S>(), val);
-  //Kokkos::fence();
+  // Kokkos::fence();
 }
 
 template <class T, int N, class PolicyType>
@@ -100,30 +100,32 @@ void test_team_policy_max_recommended(int scratch_size) {
       scratch_size);
   // FIXME_SYCL prevent running out of total kernel argument size limit
 #ifdef KOKKOS_ENABLE_SYCL
-  //test_team_policy_max_recommended_static_size<T, N, PolicyType, 100>(
+  // test_team_policy_max_recommended_static_size<T, N, PolicyType, 100>(
   //    scratch_size);
 #else
- // test_team_policy_max_recommended_static_size<T, N, PolicyType, 1000>(
- //     scratch_size);
+  // test_team_policy_max_recommended_static_size<T, N, PolicyType, 1000>(
+  //     scratch_size);
 #endif
 }
 
 TEST(TEST_CATEGORY, team_policy_max_recommended) {
   int max_scratch_size = policy_type::scratch_size_max(0);
   test_team_policy_max_recommended<double, 16, policy_type>(0);
-  //test_team_policy_max_recommended<double, 16, policy_type>(max_scratch_size /
-//		                                                              3);
-  //test_team_policy_max_recommended<double, 16, policy_type>(max_scratch_size);
-//  test_team_policy_max_recommended<double, 16, policy_type_128_8>(0);
- /*test_team_policy_max_recommended<double, 16, policy_type_128_8>(
-      max_scratch_size / 3 / 8);
-  test_team_policy_max_recommended<double, 16, policy_type_128_8>(
-      max_scratch_size / 8);
-  test_team_policy_max_recommended<double, 16, policy_type_1024_2>(0);
-  test_team_policy_max_recommended<double, 16, policy_type_1024_2>(
-      max_scratch_size / 3 / 2);
-  test_team_policy_max_recommended<double, 16, policy_type_1024_2>(
-      max_scratch_size / 2);*/
+  // test_team_policy_max_recommended<double, 16, policy_type>(max_scratch_size
+  // /
+  //		                                                              3);
+  // test_team_policy_max_recommended<double, 16,
+  // policy_type>(max_scratch_size);
+  //  test_team_policy_max_recommended<double, 16, policy_type_128_8>(0);
+  /*test_team_policy_max_recommended<double, 16, policy_type_128_8>(
+       max_scratch_size / 3 / 8);
+   test_team_policy_max_recommended<double, 16, policy_type_128_8>(
+       max_scratch_size / 8);
+   test_team_policy_max_recommended<double, 16, policy_type_1024_2>(0);
+   test_team_policy_max_recommended<double, 16, policy_type_1024_2>(
+       max_scratch_size / 3 / 2);
+   test_team_policy_max_recommended<double, 16, policy_type_1024_2>(
+       max_scratch_size / 2);*/
 }
 
 template <typename TeamHandleType, typename ReducerValueType>

@@ -25,7 +25,7 @@ namespace Kokkos::Impl::SYCLReduction {
 // memory.
 template <class ReducerType>
 inline constexpr bool use_shuffle_based_algorithm =
-std::is_reference_v<typename ReducerType::reference_type>;
+    std::is_reference_v<typename ReducerType::reference_type>;
 
 template <typename ValueType, typename ReducerType, int dim>
 std::enable_if_t<!use_shuffle_based_algorithm<ReducerType>> workgroup_reduction(
@@ -117,18 +117,18 @@ std::enable_if_t<use_shuffle_based_algorithm<ReducerType>> workgroup_reduction(
   const auto upper_stride_bound =
       std::min<unsigned int>(local_range - id_in_sg, max_size - local_id);
 #if defined(KOKKOS_ARCH_INTEL_GPU) || defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
-    auto shuffle_combine = [&](int stride) {
-      if (stride < local_range) {
-        auto tmp = sg.shuffle_down(local_value, stride);
-        if (stride < upper_stride_bound) final_reducer.join(&local_value, &tmp);
-      }
-    };
-    shuffle_combine(1);
-    shuffle_combine(2);
-    shuffle_combine(4);
-    shuffle_combine(8);
-    shuffle_combine(16);
-    shuffle_combine(32);
+  auto shuffle_combine = [&](int stride) {
+    if (stride < local_range) {
+      auto tmp = sg.shuffle_down(local_value, stride);
+      if (stride < upper_stride_bound) final_reducer.join(&local_value, &tmp);
+    }
+  };
+  shuffle_combine(1);
+  shuffle_combine(2);
+  shuffle_combine(4);
+  shuffle_combine(8);
+  shuffle_combine(16);
+  shuffle_combine(32);
 #else
   for (unsigned int stride = 1; stride < local_range; stride <<= 1) {
     auto tmp = sg.shuffle_down(local_value, stride);
@@ -168,7 +168,8 @@ std::enable_if_t<use_shuffle_based_algorithm<ReducerType>> workgroup_reduction(
     auto shuffle_combine = [&](int stride) {
       if (stride < local_range) {
         auto tmp = sg.shuffle_down(sg_value, stride);
-        if (id_in_sg + stride < n_active_subgroups) final_reducer.join(&sg_value, &tmp);
+        if (id_in_sg + stride < n_active_subgroups)
+          final_reducer.join(&sg_value, &tmp);
       }
     };
     shuffle_combine(1);
