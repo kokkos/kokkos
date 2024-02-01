@@ -45,7 +45,7 @@ int get_device_id() {
 #elif defined(KOKKOS_ENABLE_HIP)
   KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDevice(&device_id));
 #elif defined(KOKKOS_ENABLE_OPENMPTARGET)
-  device_id   = omp_get_device_num();
+  device_id   = omp_get_default_device();
 #elif defined(KOKKOS_ENABLE_OPENACC)
   device_id   = acc_get_device_num(acc_get_device_type());
 #elif defined(KOKKOS_ENABLE_SYCL)
