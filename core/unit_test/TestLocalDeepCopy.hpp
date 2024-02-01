@@ -14,26 +14,23 @@
 //
 //@HEADER
 
-#include "../../algorithms/unit_tests/TestSort.hpp"
+#ifndef TESTLOCALDEEPCOPY_HPP_
+#define TESTLOCALDEEPCOPY_HPP_
 
 #include <gtest/gtest.h>
-
-#include <sstream>
-#include <iostream>
-#include <time.h>
 
 #include <Kokkos_Core.hpp>
 
 namespace Test {
 
 template <typename ViewType>
-bool array_equals(ViewType lhs, ViewType rhs) {
+bool array_equals(const ViewType& lhs, const ViewType& rhs) {
   int result = 1;
 
   auto reducer = Kokkos::LAnd<int>(result);
   Kokkos::parallel_reduce(
       "compare arrays", lhs.span(),
-      KOKKOS_LAMBDA(int i, int local_result) {
+      KOKKOS_LAMBDA(int i, int& local_result) {
         local_result = (lhs.data()[i] == rhs.data()[i]) && local_result;
       },
       reducer);
@@ -45,18 +42,6 @@ void array_init(ViewType& view) {
   Kokkos::parallel_for(
       "initialize array", view.span(),
       KOKKOS_LAMBDA(int i) { view.data()[i] = i; });
-}
-
-template <typename TeamPolicy>
-std::tuple<int, int> compute_thread_work_share(const int N,
-                                               TeamPolicy team_policy) {
-  auto thread_number = team_policy.league_size();
-  auto unitsOfWork   = N / thread_number;
-  if (N % thread_number) {
-    unitsOfWork += 1;
-  }
-  auto numberOfBatches = N / unitsOfWork;
-  return {unitsOfWork, numberOfBatches};
 }
 
 template <typename ViewType>
@@ -116,28 +101,28 @@ ViewType create_array(
 }
 
 template <typename ViewType, typename Bounds>
-auto extract_subview(
+KOKKOS_INLINE_FUNCTION auto extract_subview(
     ViewType& src, int lid, Bounds bounds,
     std::enable_if_t<(unsigned(ViewType::rank) == 2)>* = nullptr) {
   return Kokkos::subview(src, lid, bounds);
 }
 
 template <typename ViewType, typename Bounds>
-auto extract_subview(
+KOKKOS_INLINE_FUNCTION auto extract_subview(
     ViewType& src, int lid, Bounds bounds,
     std::enable_if_t<(unsigned(ViewType::rank) == 3)>* = nullptr) {
   return Kokkos::subview(src, lid, bounds, Kokkos::ALL);
 }
 
 template <typename ViewType, typename Bounds>
-auto extract_subview(
+KOKKOS_INLINE_FUNCTION auto extract_subview(
     ViewType& src, int lid, Bounds bounds,
     std::enable_if_t<(unsigned(ViewType::rank) == 4)>* = nullptr) {
   return Kokkos::subview(src, lid, bounds, Kokkos::ALL, Kokkos::ALL);
 }
 
 template <typename ViewType, typename Bounds>
-auto extract_subview(
+KOKKOS_INLINE_FUNCTION auto extract_subview(
     ViewType& src, int lid, Bounds bounds,
     std::enable_if_t<(unsigned(ViewType::rank) == 5)>* = nullptr) {
   return Kokkos::subview(src, lid, bounds, Kokkos::ALL, Kokkos::ALL,
@@ -145,7 +130,7 @@ auto extract_subview(
 }
 
 template <typename ViewType, typename Bounds>
-auto extract_subview(
+KOKKOS_INLINE_FUNCTION auto extract_subview(
     ViewType& src, int lid, Bounds bounds,
     std::enable_if_t<(unsigned(ViewType::rank) == 6)>* = nullptr) {
   return Kokkos::subview(src, lid, bounds, Kokkos::ALL, Kokkos::ALL,
@@ -153,7 +138,7 @@ auto extract_subview(
 }
 
 template <typename ViewType, typename Bounds>
-auto extract_subview(
+KOKKOS_INLINE_FUNCTION auto extract_subview(
     ViewType& src, int lid, Bounds bounds,
     std::enable_if_t<(unsigned(ViewType::rank) == 7)>* = nullptr) {
   return Kokkos::subview(src, lid, bounds, Kokkos::ALL, Kokkos::ALL,
@@ -161,13 +146,14 @@ auto extract_subview(
 }
 
 template <typename ViewType, typename Bounds>
-auto extract_subview(
+KOKKOS_INLINE_FUNCTION auto extract_subview(
     ViewType& src, int lid, Bounds bounds,
     std::enable_if_t<(unsigned(ViewType::rank) == 8)>* = nullptr) {
   return Kokkos::subview(src, lid, bounds, Kokkos::ALL, Kokkos::ALL,
                          Kokkos::ALL, Kokkos::ALL, Kokkos::ALL, Kokkos::ALL);
 }
 
+// Helper class to run local_deep_copy test
 template <typename ViewType, typename ExecSpace>
 class TestLocalDeepCopyRank {
   using team_policy = Kokkos::TeamPolicy<ExecSpace>;
@@ -205,8 +191,14 @@ class TestLocalDeepCopyRank {
         KOKKOS_LAMBDA(const member_type& teamMember) {
           int lid =
               teamMember.league_rank();  // returns a number between 0 and N
-          auto [unitsOfWork, numberOfBatches] =
-              compute_thread_work_share(N, teamMember);
+
+          // Compute the number of units of work per thread
+          auto thread_number = teamMember.league_size();
+          auto unitsOfWork   = N / thread_number;
+          if (N % thread_number) {
+            unitsOfWork += 1;
+          }
+          auto numberOfBatches = N / unitsOfWork;
 
           Kokkos::parallel_for(
               Kokkos::TeamThreadRange(teamMember, numberOfBatches),
@@ -219,7 +211,7 @@ class TestLocalDeepCopyRank {
                 auto subSrc =
                     extract_subview(A, lid, Kokkos::make_pair(start, stop));
                 auto subDst =
-                    extract_subview(A, lid, Kokkos::make_pair(start, stop));
+                    extract_subview(B, lid, Kokkos::make_pair(start, stop));
                 Kokkos::Experimental::local_deep_copy_thread(teamMember, subDst,
                                                              subSrc);
                 // No wait for local_deep_copy_thread
@@ -237,7 +229,7 @@ class TestLocalDeepCopyRank {
           int lid =
               teamMember.league_rank();  // returns a number between 0 and N
           auto subSrc = extract_subview(A, lid, Kokkos::ALL);
-          auto subDst = extract_subview(A, lid, Kokkos::ALL);
+          auto subDst = extract_subview(B, lid, Kokkos::ALL);
           Kokkos::Experimental::local_deep_copy(teamMember, subDst, subSrc);
         });
 
@@ -249,7 +241,7 @@ class TestLocalDeepCopyRank {
     Kokkos::parallel_for(
         Kokkos::RangePolicy<ExecSpace>(0, N), KOKKOS_LAMBDA(const int& lid) {
           auto subSrc = extract_subview(A, lid, Kokkos::ALL);
-          auto subDst = extract_subview(A, lid, Kokkos::ALL);
+          auto subDst = extract_subview(B, lid, Kokkos::ALL);
           Kokkos::Experimental::local_deep_copy(subDst, subSrc);
         });
 
@@ -300,12 +292,12 @@ class TestLocalDeepCopyRank {
     ASSERT_TRUE(check_sum());
   }
 
-  void reset_b() { Kokkos::deep_copy(B, 0.0); }
+  void reset_b() { Kokkos::deep_copy(B, 0); }
 
   int N;
   ViewType A;
   ViewType B;
-  static constexpr int fill_value = 20;
+  static constexpr typename ViewType::value_type fill_value = 20;
 };
 
 //-------------------------------------------------------------------------------------------------------------
@@ -593,3 +585,5 @@ TEST(TEST_CATEGORY, deep_copy_scratch) {
   }
 }
 }  // namespace Test
+
+#endif  // TESTLOCALDEEPCOPY_HPP_
