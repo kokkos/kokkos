@@ -129,7 +129,7 @@ TEST(TEST_CATEGORY_DEATH, range_policy_implicitly_converted_bounds) {
   using IntPolicy     = Kokkos::RangePolicy<TEST_EXECSPACE, IntIndexType>;
 
 #ifndef KOKKOS_ENABLE_DEBUG
-  gtest_skip();
+  GTEST_SKIP();
 #endif
 
   std::string msg =
@@ -177,6 +177,7 @@ TEST(TEST_CATEGORY_DEATH, range_policy_implicitly_converted_bounds) {
 #else
     ASSERT_TRUE(::testing::internal::GetCapturedStderr().empty());
     (void)msg;
+    (void)get_error_msg;
 #endif
   }
   {
@@ -193,6 +194,7 @@ TEST(TEST_CATEGORY_DEATH, range_policy_implicitly_converted_bounds) {
 #else
     ASSERT_TRUE(::testing::internal::GetCapturedStderr().empty());
     (void)msg;
+    (void)get_error_msg;
 #endif
   }
 #endif
