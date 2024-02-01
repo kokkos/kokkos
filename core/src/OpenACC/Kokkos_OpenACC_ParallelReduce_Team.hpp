@@ -394,6 +394,7 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
                                         vector_length);                    \
       functor(team, val);                                                  \
     }                                                                      \
+    acc_wait(async_arg);                                                   \
     aval = val;                                                            \
   }                                                                        \
   }  // namespace Kokkos::Experimental::Impl
