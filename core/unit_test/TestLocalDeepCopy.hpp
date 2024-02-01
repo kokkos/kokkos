@@ -14,6 +14,8 @@
 //
 //@HEADER
 
+#include "../../algorithms/unit_tests/TestSort.hpp"
+
 #include <gtest/gtest.h>
 
 #include <sstream>
@@ -63,10 +65,6 @@ void impl_test_local_deepcopy_teampolicy_rank_1(const int N) {
   // Allocate matrices on device.
   ViewType A("A", N, N);
   ViewType B("B", N, N);
-
-  // Create host mirrors of device views.
-  typename ViewType::HostMirror h_A = Kokkos::create_mirror_view(A);
-  typename ViewType::HostMirror h_B = Kokkos::create_mirror_view(B);
 
   using team_policy = Kokkos::TeamPolicy<ExecSpace>;
   using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
@@ -127,12 +125,11 @@ void impl_test_local_deepcopy_teampolicy_rank_1(const int N) {
         Kokkos::Experimental::local_deep_copy(teamMember, subDst, 20.0);
       });
 
-  Kokkos::deep_copy(h_B, B);
-
   double sum_all = 0.0;
-  for (size_t i = 0; i < B.span(); i++) {
-    sum_all += h_B.data()[i];
-  }
+  Kokkos::parallel_reduce(
+      "Check B", B.span(),
+      KOKKOS_LAMBDA(int i, double& lsum) { lsum += B.data()[i]; },
+      Kokkos::Sum<double>(sum_all));
 
   ASSERT_EQ(sum_all, 20.0 * N * N);
 }
@@ -143,10 +140,6 @@ void impl_test_local_deepcopy_teampolicy_rank_2(const int N) {
   // Allocate matrices on device.
   ViewType A("A", N, N, N);
   ViewType B("B", N, N, N);
-
-  // Create host mirrors of device views.
-  typename ViewType::HostMirror h_A = Kokkos::create_mirror_view(A);
-  typename ViewType::HostMirror h_B = Kokkos::create_mirror_view(B);
 
   // Initialize A matrix.
   initialize_array(A);
@@ -208,12 +201,11 @@ void impl_test_local_deepcopy_teampolicy_rank_2(const int N) {
         Kokkos::Experimental::local_deep_copy(teamMember, subDst, 20.0);
       });
 
-  Kokkos::deep_copy(h_B, B);
-
   double sum_all = 0.0;
-  for (size_t i = 0; i < B.span(); i++) {
-    sum_all += h_B.data()[i];
-  }
+  Kokkos::parallel_reduce(
+      "Check B", B.span(),
+      KOKKOS_LAMBDA(int i, double& lsum) { lsum += B.data()[i]; },
+      Kokkos::Sum<double>(sum_all));
 
   ASSERT_EQ(sum_all, 20.0 * N * N * N);
 }
@@ -224,10 +216,6 @@ void impl_test_local_deepcopy_teampolicy_rank_3(const int N) {
   // Allocate matrices on device.
   ViewType A("A", N, N, N, N);
   ViewType B("B", N, N, N, N);
-
-  // Create host mirrors of device views.
-  typename ViewType::HostMirror h_A = Kokkos::create_mirror_view(A);
-  typename ViewType::HostMirror h_B = Kokkos::create_mirror_view(B);
 
   // Initialize A matrix.
   initialize_array(A);
@@ -292,12 +280,11 @@ void impl_test_local_deepcopy_teampolicy_rank_3(const int N) {
         Kokkos::Experimental::local_deep_copy(teamMember, subDst, 20.0);
       });
 
-  Kokkos::deep_copy(h_B, B);
-
   double sum_all = 0.0;
-  for (size_t i = 0; i < B.span(); i++) {
-    sum_all += h_B.data()[i];
-  }
+  Kokkos::parallel_reduce(
+      "Check B", B.span(),
+      KOKKOS_LAMBDA(int i, double& lsum) { lsum += B.data()[i]; },
+      Kokkos::Sum<double>(sum_all));
 
   ASSERT_EQ(sum_all, 20.0 * N * N * N * N);
 }
@@ -308,10 +295,6 @@ void impl_test_local_deepcopy_teampolicy_rank_4(const int N) {
   // Allocate matrices on device.
   ViewType A("A", N, N, N, N, N);
   ViewType B("B", N, N, N, N, N);
-
-  // Create host mirrors of device views.
-  typename ViewType::HostMirror h_A = Kokkos::create_mirror_view(A);
-  typename ViewType::HostMirror h_B = Kokkos::create_mirror_view(B);
 
   // Initialize A matrix.
   initialize_array(A);
@@ -378,12 +361,11 @@ void impl_test_local_deepcopy_teampolicy_rank_4(const int N) {
         Kokkos::Experimental::local_deep_copy(teamMember, subDst, 20.0);
       });
 
-  Kokkos::deep_copy(h_B, B);
-
   double sum_all = 0.0;
-  for (size_t i = 0; i < B.span(); i++) {
-    sum_all += h_B.data()[i];
-  }
+  Kokkos::parallel_reduce(
+      "Check B", B.span(),
+      KOKKOS_LAMBDA(int i, double& lsum) { lsum += B.data()[i]; },
+      Kokkos::Sum<double>(sum_all));
 
   ASSERT_EQ(sum_all, 20.0 * N * N * N * N * N);
 }
@@ -394,10 +376,6 @@ void impl_test_local_deepcopy_teampolicy_rank_5(const int N) {
   // Allocate matrices on device.
   ViewType A("A", N, N, N, N, N, N);
   ViewType B("B", N, N, N, N, N, N);
-
-  // Create host mirrors of device views.
-  typename ViewType::HostMirror h_A = Kokkos::create_mirror_view(A);
-  typename ViewType::HostMirror h_B = Kokkos::create_mirror_view(B);
 
   // Initialize A matrix.
   initialize_array(A);
@@ -467,12 +445,11 @@ void impl_test_local_deepcopy_teampolicy_rank_5(const int N) {
         Kokkos::Experimental::local_deep_copy(teamMember, subDst, 20.0);
       });
 
-  Kokkos::deep_copy(h_B, B);
-
   double sum_all = 0.0;
-  for (size_t i = 0; i < B.span(); i++) {
-    sum_all += h_B.data()[i];
-  }
+  Kokkos::parallel_reduce(
+      "Check B", B.span(),
+      KOKKOS_LAMBDA(int i, double& lsum) { lsum += B.data()[i]; },
+      Kokkos::Sum<double>(sum_all));
 
   ASSERT_EQ(sum_all, 20.0 * N * N * N * N * N * N);
 }
@@ -483,10 +460,6 @@ void impl_test_local_deepcopy_teampolicy_rank_6(const int N) {
   // Allocate matrices on device.
   ViewType A("A", N, N, N, N, N, N, N);
   ViewType B("B", N, N, N, N, N, N, N);
-
-  // Create host mirrors of device views.
-  typename ViewType::HostMirror h_A = Kokkos::create_mirror_view(A);
-  typename ViewType::HostMirror h_B = Kokkos::create_mirror_view(B);
 
   // Initialize A matrix.
   initialize_array(A);
@@ -541,9 +514,6 @@ void impl_test_local_deepcopy_teampolicy_rank_6(const int N) {
         Kokkos::Experimental::local_deep_copy(teamMember, subDst, subSrc);
       });
 
-  Kokkos::deep_copy(h_A, A);
-  Kokkos::deep_copy(h_B, B);
-
   ASSERT_TRUE(equals(A, B));
 
   // Fill
@@ -559,12 +529,11 @@ void impl_test_local_deepcopy_teampolicy_rank_6(const int N) {
         Kokkos::Experimental::local_deep_copy(teamMember, subDst, 20.0);
       });
 
-  Kokkos::deep_copy(h_B, B);
-
   double sum_all = 0.0;
-  for (size_t i = 0; i < B.span(); i++) {
-    sum_all += h_B.data()[i];
-  }
+  Kokkos::parallel_reduce(
+      "Check B", B.span(),
+      KOKKOS_LAMBDA(int i, double& lsum) { lsum += B.data()[i]; },
+      Kokkos::Sum<double>(sum_all));
 
   ASSERT_EQ(sum_all, 20.0 * N * N * N * N * N * N * N);
 }
@@ -575,10 +544,6 @@ void impl_test_local_deepcopy_teampolicy_rank_7(const int N) {
   // Allocate matrices on device.
   ViewType A("A", N, N, N, N, N, N, N, N);
   ViewType B("B", N, N, N, N, N, N, N, N);
-
-  // Create host mirrors of device views.
-  typename ViewType::HostMirror h_A = Kokkos::create_mirror_view(A);
-  typename ViewType::HostMirror h_B = Kokkos::create_mirror_view(B);
 
   // Initialize A matrix.
   initialize_array(A);
@@ -633,9 +598,6 @@ void impl_test_local_deepcopy_teampolicy_rank_7(const int N) {
         Kokkos::Experimental::local_deep_copy(teamMember, subDst, subSrc);
       });
 
-  Kokkos::deep_copy(h_A, A);
-  Kokkos::deep_copy(h_B, B);
-
   ASSERT_TRUE(equals(A, B));
 
   // Fill
@@ -651,12 +613,11 @@ void impl_test_local_deepcopy_teampolicy_rank_7(const int N) {
         Kokkos::Experimental::local_deep_copy(teamMember, subDst, 20.0);
       });
 
-  Kokkos::deep_copy(h_B, B);
-
   double sum_all = 0.0;
-  for (size_t i = 0; i < B.span(); i++) {
-    sum_all += h_B.data()[i];
-  }
+  Kokkos::parallel_reduce(
+      "Check B", B.span(),
+      KOKKOS_LAMBDA(int i, double& lsum) { lsum += B.data()[i]; },
+      Kokkos::Sum<double>(sum_all));
 
   ASSERT_EQ(sum_all, 20.0 * N * N * N * N * N * N * N * N);
 }
