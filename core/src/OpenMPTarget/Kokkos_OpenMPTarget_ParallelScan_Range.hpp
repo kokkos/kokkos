@@ -239,7 +239,8 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
       if (!base_t::m_result_ptr_device_accessible) {
         const int size = base_t::m_functor_reducer.get_reducer().value_size();
         DeepCopy<HostSpace, Kokkos::Experimental::OpenMPTargetSpace>(
-            base_t::m_result_ptr, chunk_values.data() + (n_chunks - 1), size);
+            base_t::m_policy.space(), base_t::m_result_ptr,
+            chunk_values.data() + (n_chunks - 1), size);
       }
     } else if (!base_t::m_result_ptr_device_accessible) {
       base_t::m_functor_reducer.get_reducer().init(base_t::m_result_ptr);
