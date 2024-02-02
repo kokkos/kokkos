@@ -135,7 +135,6 @@ Kokkos::View<uint32_t *, Kokkos::CudaSpace> cuda_global_unique_token_locks(
   return locks;
 }
 
-// FIXME_CUDA_MULTIPLE_DEVICES
 void cuda_device_synchronize(const std::string &name) {
   Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Cuda>(
       name,
@@ -144,16 +143,16 @@ void cuda_device_synchronize(const std::string &name) {
 #if defined(KOKKOS_COMPILER_CLANG)
       // annotate with __host__ silence a clang warning about using
       // cudaDeviceSynchronize in device code
-      [] __host__() {
-        KOKKOS_IMPL_CUDA_SAFE_CALL(
-            (CudaInternal::singleton().cuda_device_synchronize_wrapper()));
-      });
+      [] __host__()
 #else
-      []() {
-        KOKKOS_IMPL_CUDA_SAFE_CALL(
-            (CudaInternal::singleton().cuda_device_synchronize_wrapper()));
-      });
+      []()
 #endif
+      {
+        for (int cuda_device : Kokkos::Impl::CudaInternal::cuda_devices) {
+          KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(cuda_device));
+          KOKKOS_IMPL_CUDA_SAFE_CALL(cudaDeviceSynchronize());
+        }
+      });
 }
 
 void cuda_stream_synchronize(const cudaStream_t stream, const CudaInternal *ptr,
@@ -278,6 +277,18 @@ void CudaInternal::initialize(cudaStream_t stream) {
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
 
   m_stream = stream;
+  CudaInternal::cuda_devices.insert(m_cudaDev);
+
+  // Allocate a staging buffer for constant mem in pinned host memory
+  // and an event to avoid overwriting driver for previous kernel launches
+  if (!constantMemHostStagingPerDevice[m_cudaDev])
+    KOKKOS_IMPL_CUDA_SAFE_CALL((cuda_malloc_host_wrapper(
+        reinterpret_cast<void **>(&constantMemHostStagingPerDevice[m_cudaDev]),
+        CudaTraits::ConstantMemoryUsage)));
+
+  if (!constantMemReusablePerDevice[m_cudaDev])
+    KOKKOS_IMPL_CUDA_SAFE_CALL(
+        (cuda_event_create_wrapper(&constantMemReusablePerDevice[m_cudaDev])));
 
   //----------------------------------
   // Multiblock reduction uses scratch flags for counters
@@ -600,27 +611,21 @@ Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
   // Init the array for used for arbitrarily sized atomics
   desul::Impl::init_lock_arrays();  // FIXME
 
-  // Allocate a staging buffer for constant mem in pinned host memory and an
-  // event to avoid overwriting driver for previous kernel launches
-  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMallocHost(
-      reinterpret_cast<void **>(&Impl::CudaInternal::constantMemHostStaging),
-      Impl::CudaTraits::ConstantMemoryUsage));
-
-  KOKKOS_IMPL_CUDA_SAFE_CALL(
-      cudaEventCreate(&Impl::CudaInternal::constantMemReusable));
-
   Impl::CudaInternal::singleton().initialize(singleton_stream);
 }
 
 void Cuda::impl_finalize() {
   (void)Impl::cuda_global_unique_token_locks(true);
-
   desul::Impl::finalize_lock_arrays();  // FIXME
 
-  KOKKOS_IMPL_CUDA_SAFE_CALL(
-      cudaEventDestroy(Impl::CudaInternal::constantMemReusable));
-  KOKKOS_IMPL_CUDA_SAFE_CALL(
-      cudaFreeHost(Impl::CudaInternal::constantMemHostStaging));
+  for (const auto cuda_device : Kokkos::Impl::CudaInternal::cuda_devices) {
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(cuda_device));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(
+        cudaFreeHost(Kokkos::Impl::CudaInternal::constantMemHostStagingPerDevice
+                         [cuda_device]));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaEventDestroy(
+        Kokkos::Impl::CudaInternal::constantMemReusablePerDevice[cuda_device]));
+  }
 
   auto &deep_copy_space = Impl::cuda_get_deep_copy_space(/*initialize*/ false);
   if (deep_copy_space)
