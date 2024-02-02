@@ -24,12 +24,12 @@
 namespace Test {
 
 template <typename ViewType>
-bool array_equals(const ViewType& lhs, const ViewType& rhs) {
+bool view_check_equals(const ViewType& lhs, const ViewType& rhs) {
   int result = 1;
 
   auto reducer = Kokkos::LAnd<int>(result);
   Kokkos::parallel_reduce(
-      "compare arrays", lhs.span(),
+      "view check equals", lhs.span(),
       KOKKOS_LAMBDA(int i, int& local_result) {
         local_result = (lhs.data()[i] == rhs.data()[i]) && local_result;
       },
@@ -38,119 +38,39 @@ bool array_equals(const ViewType& lhs, const ViewType& rhs) {
 }
 
 template <typename ViewType>
-void array_init(ViewType& view) {
+void view_init(ViewType& view) {
   Kokkos::parallel_for(
       "initialize array", view.span(),
       KOKKOS_LAMBDA(int i) { view.data()[i] = i; });
 }
 
-template <typename ViewType>
-ViewType create_array(
-    std::string label, const int N,
-    std::enable_if_t<(unsigned(ViewType::rank) == 1)>* = nullptr) {
-  return ViewType(label, N);
+// Helper function to create a std::array filled with a given value
+template <typename T, size_t Rank>
+constexpr auto make_array(T value) -> std::array<T, Rank> {
+  std::array<T, Rank> a;
+  for (auto& x : a) x = value;
+  return a;
 }
 
-template <typename ViewType>
-ViewType create_array(
-    std::string label, const int N,
-    std::enable_if_t<(unsigned(ViewType::rank) == 2)>* = nullptr) {
-  return ViewType(label, N, N);
+// Create a view with a given label and dimensions
+template <typename ViewType, unsigned Rank = unsigned(ViewType::rank)>
+ViewType view_create(std::string label, const int N) {
+  const auto dimensions =
+      std::tuple_cat(std::make_tuple(label), make_array<int, Rank>(N));
+  return std::make_from_tuple<ViewType>(dimensions);
 }
 
-template <typename ViewType>
-ViewType create_array(
-    std::string label, const int N,
-    std::enable_if_t<(unsigned(ViewType::rank) == 3)>* = nullptr) {
-  return ViewType(label, N, N, N);
-}
-
-template <typename ViewType>
-ViewType create_array(
-    std::string label, const int N,
-    std::enable_if_t<(unsigned(ViewType::rank) == 4)>* = nullptr) {
-  return ViewType(label, N, N, N, N);
-}
-
-template <typename ViewType>
-ViewType create_array(
-    std::string label, const int N,
-    std::enable_if_t<(unsigned(ViewType::rank) == 5)>* = nullptr) {
-  return ViewType(label, N, N, N, N, N);
-}
-
-template <typename ViewType>
-ViewType create_array(
-    std::string label, const int N,
-    std::enable_if_t<(unsigned(ViewType::rank) == 6)>* = nullptr) {
-  return ViewType(label, N, N, N, N, N, N);
-}
-
-template <typename ViewType>
-ViewType create_array(
-    std::string label, const int N,
-    std::enable_if_t<(unsigned(ViewType::rank) == 7)>* = nullptr) {
-  return ViewType(label, N, N, N, N, N, N, N);
-}
-
-template <typename ViewType>
-ViewType create_array(
-    std::string label, const int N,
-    std::enable_if_t<(unsigned(ViewType::rank) == 8)>* = nullptr) {
-  return ViewType(label, N, N, N, N, N, N, N, N);
-}
-
-template <typename ViewType, typename Bounds>
-KOKKOS_INLINE_FUNCTION auto extract_subview(
-    ViewType& src, int lid, Bounds bounds,
-    std::enable_if_t<(unsigned(ViewType::rank) == 2)>* = nullptr) {
-  return Kokkos::subview(src, lid, bounds);
-}
-
-template <typename ViewType, typename Bounds>
-KOKKOS_INLINE_FUNCTION auto extract_subview(
-    ViewType& src, int lid, Bounds bounds,
-    std::enable_if_t<(unsigned(ViewType::rank) == 3)>* = nullptr) {
-  return Kokkos::subview(src, lid, bounds, Kokkos::ALL);
-}
-
-template <typename ViewType, typename Bounds>
-KOKKOS_INLINE_FUNCTION auto extract_subview(
-    ViewType& src, int lid, Bounds bounds,
-    std::enable_if_t<(unsigned(ViewType::rank) == 4)>* = nullptr) {
-  return Kokkos::subview(src, lid, bounds, Kokkos::ALL, Kokkos::ALL);
-}
-
-template <typename ViewType, typename Bounds>
-KOKKOS_INLINE_FUNCTION auto extract_subview(
-    ViewType& src, int lid, Bounds bounds,
-    std::enable_if_t<(unsigned(ViewType::rank) == 5)>* = nullptr) {
-  return Kokkos::subview(src, lid, bounds, Kokkos::ALL, Kokkos::ALL,
-                         Kokkos::ALL);
-}
-
-template <typename ViewType, typename Bounds>
-KOKKOS_INLINE_FUNCTION auto extract_subview(
-    ViewType& src, int lid, Bounds bounds,
-    std::enable_if_t<(unsigned(ViewType::rank) == 6)>* = nullptr) {
-  return Kokkos::subview(src, lid, bounds, Kokkos::ALL, Kokkos::ALL,
-                         Kokkos::ALL, Kokkos::ALL);
-}
-
-template <typename ViewType, typename Bounds>
-KOKKOS_INLINE_FUNCTION auto extract_subview(
-    ViewType& src, int lid, Bounds bounds,
-    std::enable_if_t<(unsigned(ViewType::rank) == 7)>* = nullptr) {
-  return Kokkos::subview(src, lid, bounds, Kokkos::ALL, Kokkos::ALL,
-                         Kokkos::ALL, Kokkos::ALL, Kokkos::ALL);
-}
-
-template <typename ViewType, typename Bounds>
-KOKKOS_INLINE_FUNCTION auto extract_subview(
-    ViewType& src, int lid, Bounds bounds,
-    std::enable_if_t<(unsigned(ViewType::rank) == 8)>* = nullptr) {
-  return Kokkos::subview(src, lid, bounds, Kokkos::ALL, Kokkos::ALL,
-                         Kokkos::ALL, Kokkos::ALL, Kokkos::ALL, Kokkos::ALL);
+// Extract a subview from a view to run our tests
+template <typename ViewType, typename Bounds,
+          unsigned Rank = unsigned(ViewType::rank)>
+KOKKOS_INLINE_FUNCTION auto extract_subview(ViewType& src, int lid,
+                                            Bounds bounds) {
+  static_assert(Rank > 1, "Rank must be greater than 1");
+  const auto dimensions =
+      std::tuple_cat(std::make_tuple(src, lid, bounds),
+                     make_array<Kokkos::ALL_t, Rank - 2>(Kokkos::ALL));
+  return std::apply([](auto&&... xs) { return Kokkos::subview(xs...); },
+                    dimensions);
 }
 
 // Helper class to run local_deep_copy test
@@ -161,11 +81,11 @@ class TestLocalDeepCopyRank {
 
  public:
   TestLocalDeepCopyRank(const int N) : N(N) {
-    A = create_array<ViewType>("A", N);
-    B = create_array<ViewType>("B", N);
+    A = view_create<ViewType>("A", N);
+    B = view_create<ViewType>("B", N);
 
     // Initialize A matrix.
-    array_init(A);
+    view_init(A);
   }
 
   void run_team_policy() {
@@ -177,9 +97,9 @@ class TestLocalDeepCopyRank {
   }
 
   void run_range_policy() {
-    test_local_deepcopy();
+    test_local_deepcopy_range();
     reset_b();
-    test_local_deepcopy_scalar();
+    test_local_deepcopy_scalar_range();
   }
 
  private:
@@ -218,7 +138,7 @@ class TestLocalDeepCopyRank {
               });
         });
 
-    ASSERT_TRUE(array_equals(A, B));
+    ASSERT_TRUE(view_check_equals(A, B));
   }
 
   void test_local_deepcopy() {
@@ -233,7 +153,7 @@ class TestLocalDeepCopyRank {
           Kokkos::Experimental::local_deep_copy(teamMember, subDst, subSrc);
         });
 
-    ASSERT_TRUE(array_equals(A, B));
+    ASSERT_TRUE(view_check_equals(A, B));
   }
 
   void test_local_deepcopy_range() {
@@ -245,7 +165,7 @@ class TestLocalDeepCopyRank {
           Kokkos::Experimental::local_deep_copy(subDst, subSrc);
         });
 
-    ASSERT_TRUE(array_equals(A, B));
+    ASSERT_TRUE(view_check_equals(A, B));
   }
 
   void test_local_deepcopy_scalar() {
@@ -259,21 +179,6 @@ class TestLocalDeepCopyRank {
         });
 
     ASSERT_TRUE(check_sum());
-  }
-
-  bool check_sum() {
-    double sum_all = 0;
-    Kokkos::parallel_reduce(
-        "Check B", B.span(),
-        KOKKOS_LAMBDA(int i, double& lsum) { lsum += B.data()[i]; },
-        Kokkos::Sum<double>(sum_all));
-
-    auto correct_sum = fill_value;
-    for (auto i = 0; i < ViewType::rank; i++) {
-      correct_sum *= N;
-    }
-
-    return sum_all == correct_sum;
   }
 
   void test_local_deepcopy_scalar_range() {
@@ -293,6 +198,21 @@ class TestLocalDeepCopyRank {
   }
 
   void reset_b() { Kokkos::deep_copy(B, 0); }
+
+  bool check_sum() {
+    double sum_all = 0;
+    Kokkos::parallel_reduce(
+        "Check B", B.span(),
+        KOKKOS_LAMBDA(int i, double& lsum) { lsum += B.data()[i]; },
+        Kokkos::Sum<double>(sum_all));
+
+    auto correct_sum = fill_value;
+    for (auto i = 0; i < ViewType::rank; i++) {
+      correct_sum *= N;
+    }
+
+    return sum_all == correct_sum;
+  }
 
   int N;
   ViewType A;
