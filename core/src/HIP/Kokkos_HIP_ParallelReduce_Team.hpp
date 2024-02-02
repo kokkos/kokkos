@@ -271,7 +271,8 @@ class ParallelReduce<CombinedFunctorReducerType,
 
         if (m_result_ptr) {
           const int size = reducer.value_size();
-          DeepCopy<HostSpace, HIPSpace>(m_result_ptr, m_scratch_space, size);
+          DeepCopy<HostSpace, HIPSpace, HIP>(m_policy.space(), m_result_ptr,
+                                             m_scratch_space, size);
         }
       }
     } else {
