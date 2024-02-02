@@ -23,6 +23,10 @@
 
 namespace Test {
 
+//-------------------------------------------------------------------------------------------------------------
+// Utility functions
+//-------------------------------------------------------------------------------------------------------------
+
 template <typename ViewType>
 bool view_check_equals(const ViewType& lhs, const ViewType& rhs) {
   int result = 1;
@@ -73,153 +77,168 @@ KOKKOS_INLINE_FUNCTION auto extract_subview(ViewType& src, int lid,
                     dimensions);
 }
 
-// Helper class to run local_deep_copy test
+template <typename ViewType>
+void reset(ViewType B) {
+  Kokkos::deep_copy(B, 0);
+}
+
+template <typename ViewType>
+bool check_sum(ViewType B, const int N,
+               typename ViewType::value_type fill_value) {
+  double sum_all = 0;
+  Kokkos::parallel_reduce(
+      "Check B", B.span(),
+      KOKKOS_LAMBDA(int i, double& lsum) { lsum += B.data()[i]; },
+      Kokkos::Sum<double>(sum_all));
+
+  auto correct_sum = fill_value;
+  for (auto i = 0; i < ViewType::rank; i++) {
+    correct_sum *= N;
+  }
+
+  return sum_all == correct_sum;
+}
+
 template <typename ViewType, typename ExecSpace>
-class TestLocalDeepCopyRank {
+void test_local_deepcopy_thread(ViewType A, ViewType B, const int N) {
   using team_policy = Kokkos::TeamPolicy<ExecSpace>;
   using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
 
- public:
-  TestLocalDeepCopyRank(const int N) : N(N) {
-    A = view_create<ViewType>("A", N);
-    B = view_create<ViewType>("B", N);
+  // Test local_deep_copy_thread
+  // Each thread copies a subview of A into B
+  Kokkos::parallel_for(
+      team_policy(N, Kokkos::AUTO),
+      KOKKOS_LAMBDA(const member_type& teamMember) {
+        int lid = teamMember.league_rank();  // returns a number between 0 and N
 
-    // Initialize A matrix.
-    view_init(A);
-  }
+        // Compute the number of units of work per thread
+        auto thread_number = teamMember.league_size();
+        auto unitsOfWork   = N / thread_number;
+        if (N % thread_number) {
+          unitsOfWork += 1;
+        }
+        auto numberOfBatches = N / unitsOfWork;
 
-  void run_team_policy() {
-    test_local_deepcopy_thread();
-    reset_b();
-    test_local_deepcopy();
-    reset_b();
-    test_local_deepcopy_scalar();
-  }
+        Kokkos::parallel_for(
+            Kokkos::TeamThreadRange(teamMember, numberOfBatches),
+            [=](const int indexWithinBatch) {
+              const int idx = indexWithinBatch;
 
-  void run_range_policy() {
-    test_local_deepcopy_range();
-    reset_b();
-    test_local_deepcopy_scalar_range();
-  }
+              auto start = idx * unitsOfWork;
+              auto stop  = (idx + 1) * unitsOfWork;
+              stop       = Kokkos::clamp(stop, 0, N);
+              auto subSrc =
+                  extract_subview(A, lid, Kokkos::make_pair(start, stop));
+              auto subDst =
+                  extract_subview(B, lid, Kokkos::make_pair(start, stop));
+              Kokkos::Experimental::local_deep_copy_thread(teamMember, subDst,
+                                                           subSrc);
+              // No wait for local_deep_copy_thread
+            });
+      });
 
- private:
-  void test_local_deepcopy_thread() {
-    // Test local_deep_copy_thread
-    // Each thread copies a subview of A into B
-    Kokkos::parallel_for(
-        team_policy(N, Kokkos::AUTO),
-        KOKKOS_LAMBDA(const member_type& teamMember) {
-          int lid =
-              teamMember.league_rank();  // returns a number between 0 and N
+  ASSERT_TRUE(view_check_equals(A, B));
+}
 
-          // Compute the number of units of work per thread
-          auto thread_number = teamMember.league_size();
-          auto unitsOfWork   = N / thread_number;
-          if (N % thread_number) {
-            unitsOfWork += 1;
-          }
-          auto numberOfBatches = N / unitsOfWork;
+template <typename ViewType, typename ExecSpace>
+void test_local_deepcopy(ViewType A, ViewType B, const int N) {
+  using team_policy = Kokkos::TeamPolicy<ExecSpace>;
+  using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
+  // Deep Copy
+  Kokkos::parallel_for(
+      team_policy(N, Kokkos::AUTO),
+      KOKKOS_LAMBDA(const member_type& teamMember) {
+        int lid = teamMember.league_rank();  // returns a number between 0 and N
+        auto subSrc = extract_subview(A, lid, Kokkos::ALL);
+        auto subDst = extract_subview(B, lid, Kokkos::ALL);
+        Kokkos::Experimental::local_deep_copy(teamMember, subDst, subSrc);
+      });
 
-          Kokkos::parallel_for(
-              Kokkos::TeamThreadRange(teamMember, numberOfBatches),
-              [=](const int indexWithinBatch) {
-                const int idx = indexWithinBatch;
+  ASSERT_TRUE(view_check_equals(A, B));
+}
 
-                auto start = idx * unitsOfWork;
-                auto stop  = (idx + 1) * unitsOfWork;
-                stop       = Kokkos::clamp(stop, 0, N);
-                auto subSrc =
-                    extract_subview(A, lid, Kokkos::make_pair(start, stop));
-                auto subDst =
-                    extract_subview(B, lid, Kokkos::make_pair(start, stop));
-                Kokkos::Experimental::local_deep_copy_thread(teamMember, subDst,
-                                                             subSrc);
-                // No wait for local_deep_copy_thread
-              });
-        });
+template <typename ViewType, typename ExecSpace>
+void test_local_deepcopy_range(ViewType A, ViewType B, const int N) {
+  // Deep Copy
+  Kokkos::parallel_for(
+      Kokkos::RangePolicy<ExecSpace>(0, N), KOKKOS_LAMBDA(const int& lid) {
+        auto subSrc = extract_subview(A, lid, Kokkos::ALL);
+        auto subDst = extract_subview(B, lid, Kokkos::ALL);
+        Kokkos::Experimental::local_deep_copy(subDst, subSrc);
+      });
 
-    ASSERT_TRUE(view_check_equals(A, B));
-  }
+  ASSERT_TRUE(view_check_equals(A, B));
+}
 
-  void test_local_deepcopy() {
-    // Deep Copy
-    Kokkos::parallel_for(
-        team_policy(N, Kokkos::AUTO),
-        KOKKOS_LAMBDA(const member_type& teamMember) {
-          int lid =
-              teamMember.league_rank();  // returns a number between 0 and N
-          auto subSrc = extract_subview(A, lid, Kokkos::ALL);
-          auto subDst = extract_subview(B, lid, Kokkos::ALL);
-          Kokkos::Experimental::local_deep_copy(teamMember, subDst, subSrc);
-        });
+template <typename ViewType, typename ExecSpace>
+void test_local_deepcopy_scalar(ViewType B, const int N,
+                                typename ViewType::value_type fill_value) {
+  using team_policy = Kokkos::TeamPolicy<ExecSpace>;
+  using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
 
-    ASSERT_TRUE(view_check_equals(A, B));
-  }
+  Kokkos::parallel_for(
+      team_policy(N, Kokkos::AUTO),
+      KOKKOS_LAMBDA(const member_type& teamMember) {
+        int lid = teamMember.league_rank();  // returns a number between 0 and N
+        auto subDst = extract_subview(B, lid, Kokkos::ALL);
+        Kokkos::Experimental::local_deep_copy(teamMember, subDst, fill_value);
+      });
 
-  void test_local_deepcopy_range() {
-    // Deep Copy
-    Kokkos::parallel_for(
-        Kokkos::RangePolicy<ExecSpace>(0, N), KOKKOS_LAMBDA(const int& lid) {
-          auto subSrc = extract_subview(A, lid, Kokkos::ALL);
-          auto subDst = extract_subview(B, lid, Kokkos::ALL);
-          Kokkos::Experimental::local_deep_copy(subDst, subSrc);
-        });
+  ASSERT_TRUE(check_sum(B, N, fill_value));
+}
 
-    ASSERT_TRUE(view_check_equals(A, B));
-  }
+template <typename ViewType, typename ExecSpace>
+void test_local_deepcopy_scalar_range(
+    ViewType B, const int N, typename ViewType::value_type fill_value) {
+  Kokkos::parallel_for(
+      Kokkos::RangePolicy<ExecSpace>(0, N), KOKKOS_LAMBDA(const int& lid) {
+        auto subDst = extract_subview(B, lid, Kokkos::ALL);
+        Kokkos::Experimental::local_deep_copy(subDst, fill_value);
+      });
 
-  void test_local_deepcopy_scalar() {
-    Kokkos::parallel_for(
-        team_policy(N, Kokkos::AUTO),
-        KOKKOS_LAMBDA(const member_type& teamMember) {
-          int lid =
-              teamMember.league_rank();  // returns a number between 0 and N
-          auto subDst = extract_subview(B, lid, Kokkos::ALL);
-          Kokkos::Experimental::local_deep_copy(teamMember, subDst, fill_value);
-        });
+  double sum_all = 0.0;
+  Kokkos::parallel_reduce(
+      "Check B", B.span(),
+      KOKKOS_LAMBDA(int i, double& lsum) { lsum += B.data()[i]; },
+      Kokkos::Sum<double>(sum_all));
 
-    ASSERT_TRUE(check_sum());
-  }
+  ASSERT_TRUE(check_sum(B, N, fill_value));
+}
 
-  void test_local_deepcopy_scalar_range() {
-    Kokkos::parallel_for(
-        Kokkos::RangePolicy<ExecSpace>(0, N), KOKKOS_LAMBDA(const int& lid) {
-          auto subDst = extract_subview(B, lid, Kokkos::ALL);
-          Kokkos::Experimental::local_deep_copy(subDst, fill_value);
-        });
+//-------------------------------------------------------------------------------------------------------------
+// Tests scenarii
+//-------------------------------------------------------------------------------------------------------------
 
-    double sum_all = 0.0;
-    Kokkos::parallel_reduce(
-        "Check B", B.span(),
-        KOKKOS_LAMBDA(int i, double& lsum) { lsum += B.data()[i]; },
-        Kokkos::Sum<double>(sum_all));
+template <typename ViewType, typename ExecSpace>
+void run_team_policy(const int N) {
+  auto A = view_create<ViewType>("A", N);
+  auto B = view_create<ViewType>("B", N);
 
-    ASSERT_TRUE(check_sum());
-  }
+  // Initialize A matrix.
+  view_init(A);
 
-  void reset_b() { Kokkos::deep_copy(B, 0); }
+  test_local_deepcopy_thread<ViewType, ExecSpace>(A, B, N);
+  reset(B);
+  test_local_deepcopy<ViewType, ExecSpace>(A, B, N);
+  reset(B);
+  test_local_deepcopy_scalar<ViewType, ExecSpace>(B, N, 20);
+}
 
-  bool check_sum() {
-    double sum_all = 0;
-    Kokkos::parallel_reduce(
-        "Check B", B.span(),
-        KOKKOS_LAMBDA(int i, double& lsum) { lsum += B.data()[i]; },
-        Kokkos::Sum<double>(sum_all));
+template <typename ViewType, typename ExecSpace>
+void run_range_policy(const int N) {
+  auto A = view_create<ViewType>("A", N);
+  auto B = view_create<ViewType>("B", N);
 
-    auto correct_sum = fill_value;
-    for (auto i = 0; i < ViewType::rank; i++) {
-      correct_sum *= N;
-    }
+  // Initialize A matrix.
+  view_init(A);
 
-    return sum_all == correct_sum;
-  }
+  test_local_deepcopy_range<ViewType, ExecSpace>(A, B, N);
+  reset(B);
+  test_local_deepcopy_scalar_range<ViewType, ExecSpace>(B, N, 20);
+}
 
-  int N;
-  ViewType A;
-  ViewType B;
-  static constexpr typename ViewType::value_type fill_value = 20;
-};
-
+//-------------------------------------------------------------------------------------------------------------
+// Test definitions
 //-------------------------------------------------------------------------------------------------------------
 
 #if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
@@ -234,45 +253,28 @@ TEST(TEST_CATEGORY, local_deepcopy_teampolicy_layoutleft) {
   using Layout = Kokkos::LayoutLeft;
 
   {  // Rank-1
-    auto test = TestLocalDeepCopyRank<Kokkos::View<double**, Layout, ExecSpace>,
-                                      ExecSpace>(8);
-    test.run_team_policy();
+    run_team_policy<Kokkos::View<double**, Layout, ExecSpace>, ExecSpace>(8);
   }
   {  // Rank-2
-    auto test =
-        TestLocalDeepCopyRank<Kokkos::View<double***, Layout, ExecSpace>,
-                              ExecSpace>(8);
-    test.run_team_policy();
+    run_team_policy<Kokkos::View<double***, Layout, ExecSpace>, ExecSpace>(8);
   }
   {  // Rank-3
-    auto test =
-        TestLocalDeepCopyRank<Kokkos::View<double****, Layout, ExecSpace>,
-                              ExecSpace>(8);
-    test.run_team_policy();
+    run_team_policy<Kokkos::View<double****, Layout, ExecSpace>, ExecSpace>(8);
   }
   {  // Rank-4
-    auto test =
-        TestLocalDeepCopyRank<Kokkos::View<double*****, Layout, ExecSpace>,
-                              ExecSpace>(8);
-    test.run_team_policy();
+    run_team_policy<Kokkos::View<double*****, Layout, ExecSpace>, ExecSpace>(8);
   }
   {  // Rank-5
-    auto test =
-        TestLocalDeepCopyRank<Kokkos::View<double******, Layout, ExecSpace>,
-                              ExecSpace>(8);
-    test.run_team_policy();
+    run_team_policy<Kokkos::View<double******, Layout, ExecSpace>, ExecSpace>(
+        8);
   }
   {  // Rank-6
-    auto test =
-        TestLocalDeepCopyRank<Kokkos::View<double*******, Layout, ExecSpace>,
-                              ExecSpace>(8);
-    test.run_team_policy();
+    run_team_policy<Kokkos::View<double*******, Layout, ExecSpace>, ExecSpace>(
+        8);
   }
   {  // Rank-7
-    auto test =
-        TestLocalDeepCopyRank<Kokkos::View<double********, Layout, ExecSpace>,
-                              ExecSpace>(8);
-    test.run_team_policy();
+    run_team_policy<Kokkos::View<double********, Layout, ExecSpace>, ExecSpace>(
+        8);
   }
 }
 //-------------------------------------------------------------------------------------------------------------
@@ -287,45 +289,29 @@ TEST(TEST_CATEGORY, local_deepcopy_rangepolicy_layoutleft) {
   using Layout = Kokkos::LayoutLeft;
 
   {  // Rank-1
-    auto test = TestLocalDeepCopyRank<Kokkos::View<double**, Layout, ExecSpace>,
-                                      ExecSpace>(8);
-    test.run_range_policy();
+    run_range_policy<Kokkos::View<double**, Layout, ExecSpace>, ExecSpace>(8);
   }
   {  // Rank-2
-    auto test =
-        TestLocalDeepCopyRank<Kokkos::View<double***, Layout, ExecSpace>,
-                              ExecSpace>(8);
-    test.run_range_policy();
+    run_range_policy<Kokkos::View<double***, Layout, ExecSpace>, ExecSpace>(8);
   }
   {  // Rank-3
-    auto test =
-        TestLocalDeepCopyRank<Kokkos::View<double****, Layout, ExecSpace>,
-                              ExecSpace>(8);
-    test.run_range_policy();
+    run_range_policy<Kokkos::View<double****, Layout, ExecSpace>, ExecSpace>(8);
   }
   {  // Rank-4
-    auto test =
-        TestLocalDeepCopyRank<Kokkos::View<double*****, Layout, ExecSpace>,
-                              ExecSpace>(8);
-    test.run_range_policy();
+    run_range_policy<Kokkos::View<double*****, Layout, ExecSpace>, ExecSpace>(
+        8);
   }
   {  // Rank-5
-    auto test =
-        TestLocalDeepCopyRank<Kokkos::View<double******, Layout, ExecSpace>,
-                              ExecSpace>(8);
-    test.run_range_policy();
+    run_range_policy<Kokkos::View<double******, Layout, ExecSpace>, ExecSpace>(
+        8);
   }
   {  // Rank-6
-    auto test =
-        TestLocalDeepCopyRank<Kokkos::View<double*******, Layout, ExecSpace>,
-                              ExecSpace>(8);
-    test.run_range_policy();
+    run_range_policy<Kokkos::View<double*******, Layout, ExecSpace>, ExecSpace>(
+        8);
   }
   {  // Rank-7
-    auto test =
-        TestLocalDeepCopyRank<Kokkos::View<double********, Layout, ExecSpace>,
-                              ExecSpace>(8);
-    test.run_range_policy();
+    run_range_policy<Kokkos::View<double********, Layout, ExecSpace>,
+                     ExecSpace>(8);
   }
 }
 //-------------------------------------------------------------------------------------------------------------
@@ -340,45 +326,28 @@ TEST(TEST_CATEGORY, local_deepcopy_teampolicy_layoutright) {
   using Layout = Kokkos::LayoutRight;
 
   {  // Rank-1
-    auto test = TestLocalDeepCopyRank<Kokkos::View<double**, Layout, ExecSpace>,
-                                      ExecSpace>(8);
-    test.run_team_policy();
+    run_team_policy<Kokkos::View<double**, Layout, ExecSpace>, ExecSpace>(8);
   }
   {  // Rank-2
-    auto test =
-        TestLocalDeepCopyRank<Kokkos::View<double***, Layout, ExecSpace>,
-                              ExecSpace>(8);
-    test.run_team_policy();
+    run_team_policy<Kokkos::View<double***, Layout, ExecSpace>, ExecSpace>(8);
   }
   {  // Rank-3
-    auto test =
-        TestLocalDeepCopyRank<Kokkos::View<double****, Layout, ExecSpace>,
-                              ExecSpace>(8);
-    test.run_team_policy();
+    run_team_policy<Kokkos::View<double****, Layout, ExecSpace>, ExecSpace>(8);
   }
   {  // Rank-4
-    auto test =
-        TestLocalDeepCopyRank<Kokkos::View<double*****, Layout, ExecSpace>,
-                              ExecSpace>(8);
-    test.run_team_policy();
+    run_team_policy<Kokkos::View<double*****, Layout, ExecSpace>, ExecSpace>(8);
   }
   {  // Rank-5
-    auto test =
-        TestLocalDeepCopyRank<Kokkos::View<double******, Layout, ExecSpace>,
-                              ExecSpace>(8);
-    test.run_team_policy();
+    run_team_policy<Kokkos::View<double******, Layout, ExecSpace>, ExecSpace>(
+        8);
   }
   {  // Rank-6
-    auto test =
-        TestLocalDeepCopyRank<Kokkos::View<double*******, Layout, ExecSpace>,
-                              ExecSpace>(8);
-    test.run_team_policy();
+    run_team_policy<Kokkos::View<double*******, Layout, ExecSpace>, ExecSpace>(
+        8);
   }
   {  // Rank-7
-    auto test =
-        TestLocalDeepCopyRank<Kokkos::View<double********, Layout, ExecSpace>,
-                              ExecSpace>(8);
-    test.run_team_policy();
+    run_team_policy<Kokkos::View<double********, Layout, ExecSpace>, ExecSpace>(
+        8);
   }
 }
 //-------------------------------------------------------------------------------------------------------------
@@ -393,45 +362,29 @@ TEST(TEST_CATEGORY, local_deepcopy_rangepolicy_layoutright) {
   using Layout = Kokkos::LayoutRight;
 
   {  // Rank-1
-    auto test = TestLocalDeepCopyRank<Kokkos::View<double**, Layout, ExecSpace>,
-                                      ExecSpace>(8);
-    test.run_range_policy();
+    run_range_policy<Kokkos::View<double**, Layout, ExecSpace>, ExecSpace>(8);
   }
   {  // Rank-2
-    auto test =
-        TestLocalDeepCopyRank<Kokkos::View<double***, Layout, ExecSpace>,
-                              ExecSpace>(8);
-    test.run_range_policy();
+    run_range_policy<Kokkos::View<double***, Layout, ExecSpace>, ExecSpace>(8);
   }
   {  // Rank-3
-    auto test =
-        TestLocalDeepCopyRank<Kokkos::View<double****, Layout, ExecSpace>,
-                              ExecSpace>(8);
-    test.run_range_policy();
+    run_range_policy<Kokkos::View<double****, Layout, ExecSpace>, ExecSpace>(8);
   }
   {  // Rank-4
-    auto test =
-        TestLocalDeepCopyRank<Kokkos::View<double*****, Layout, ExecSpace>,
-                              ExecSpace>(8);
-    test.run_range_policy();
+    run_range_policy<Kokkos::View<double*****, Layout, ExecSpace>, ExecSpace>(
+        8);
   }
   {  // Rank-5
-    auto test =
-        TestLocalDeepCopyRank<Kokkos::View<double******, Layout, ExecSpace>,
-                              ExecSpace>(8);
-    test.run_range_policy();
+    run_range_policy<Kokkos::View<double******, Layout, ExecSpace>, ExecSpace>(
+        8);
   }
   {  // Rank-6
-    auto test =
-        TestLocalDeepCopyRank<Kokkos::View<double*******, Layout, ExecSpace>,
-                              ExecSpace>(8);
-    test.run_range_policy();
+    run_range_policy<Kokkos::View<double*******, Layout, ExecSpace>, ExecSpace>(
+        8);
   }
   {  // Rank-7
-    auto test =
-        TestLocalDeepCopyRank<Kokkos::View<double********, Layout, ExecSpace>,
-                              ExecSpace>(8);
-    test.run_range_policy();
+    run_range_policy<Kokkos::View<double********, Layout, ExecSpace>,
+                     ExecSpace>(8);
   }
 }
 #endif
