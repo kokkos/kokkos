@@ -133,7 +133,7 @@ bool check_sum(ViewType B, const int N,
       Kokkos::Sum<double>(sum_all));
 
   auto correct_sum = fill_value;
-  for (auto i = 0; i < ViewType::rank; i++) {
+  for (size_t i = 0; i < ViewType::rank; ++i) {
     correct_sum *= N;
   }
 
