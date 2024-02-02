@@ -65,16 +65,57 @@ ViewType view_create(std::string label, const int N) {
 }
 
 // Extract a subview from a view to run our tests
-template <typename ViewType, typename Bounds,
-          unsigned Rank = unsigned(ViewType::rank)>
-KOKKOS_INLINE_FUNCTION auto extract_subview(ViewType& src, int lid,
-                                            Bounds bounds) {
-  static_assert(Rank > 1, "Rank must be greater than 1");
-  const auto dimensions =
-      std::tuple_cat(std::make_tuple(src, lid, bounds),
-                     make_array<Kokkos::ALL_t, Rank - 2>(Kokkos::ALL));
-  return std::apply([](auto&&... xs) { return Kokkos::subview(xs...); },
-                    dimensions);
+template <typename ViewType, typename Bounds>
+KOKKOS_INLINE_FUNCTION auto extract_subview(
+    ViewType& src, int lid, Bounds bounds,
+    std::enable_if_t<unsigned(ViewType::rank) == 2>* = nullptr) {
+  return Kokkos::subview(src, lid, bounds);
+}
+
+template <typename ViewType, typename Bounds>
+KOKKOS_INLINE_FUNCTION auto extract_subview(
+    ViewType& src, int lid, Bounds bounds,
+    std::enable_if_t<unsigned(ViewType::rank) == 3>* = nullptr) {
+  return Kokkos::subview(src, lid, bounds, Kokkos::ALL);
+}
+
+template <typename ViewType, typename Bounds>
+KOKKOS_INLINE_FUNCTION auto extract_subview(
+    ViewType& src, int lid, Bounds bounds,
+    std::enable_if_t<unsigned(ViewType::rank) == 4>* = nullptr) {
+  return Kokkos::subview(src, lid, bounds, Kokkos::ALL, Kokkos::ALL);
+}
+
+template <typename ViewType, typename Bounds>
+KOKKOS_INLINE_FUNCTION auto extract_subview(
+    ViewType& src, int lid, Bounds bounds,
+    std::enable_if_t<unsigned(ViewType::rank) == 5>* = nullptr) {
+  return Kokkos::subview(src, lid, bounds, Kokkos::ALL, Kokkos::ALL,
+                         Kokkos::ALL);
+}
+
+template <typename ViewType, typename Bounds>
+KOKKOS_INLINE_FUNCTION auto extract_subview(
+    ViewType& src, int lid, Bounds bounds,
+    std::enable_if_t<unsigned(ViewType::rank) == 6>* = nullptr) {
+  return Kokkos::subview(src, lid, bounds, Kokkos::ALL, Kokkos::ALL,
+                         Kokkos::ALL, Kokkos::ALL);
+}
+
+template <typename ViewType, typename Bounds>
+KOKKOS_INLINE_FUNCTION auto extract_subview(
+    ViewType& src, int lid, Bounds bounds,
+    std::enable_if_t<unsigned(ViewType::rank) == 7>* = nullptr) {
+  return Kokkos::subview(src, lid, bounds, Kokkos::ALL, Kokkos::ALL,
+                         Kokkos::ALL, Kokkos::ALL, Kokkos::ALL);
+}
+
+template <typename ViewType, typename Bounds>
+KOKKOS_INLINE_FUNCTION auto extract_subview(
+    ViewType& src, int lid, Bounds bounds,
+    std::enable_if_t<unsigned(ViewType::rank) == 8>* = nullptr) {
+  return Kokkos::subview(src, lid, bounds, Kokkos::ALL, Kokkos::ALL,
+                         Kokkos::ALL, Kokkos::ALL, Kokkos::ALL, Kokkos::ALL);
 }
 
 template <typename ViewType>
