@@ -132,10 +132,8 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
         m_end(work_end),
         m_granularity(0),
         m_granularity_mask(0) {
-#ifdef KOKKOS_ENABLE_DEBUG
     check_conversion_safety(work_begin);
     check_conversion_safety(work_end);
-#endif
     check_bounds_validity();
     set_auto_chunk_size();
   }
@@ -175,10 +173,8 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
         m_end(work_end),
         m_granularity(0),
         m_granularity_mask(0) {
-#ifdef KOKKOS_ENABLE_DEBUG
     check_conversion_safety(work_begin);
     check_conversion_safety(work_end);
-#endif
     check_bounds_validity();
     set_auto_chunk_size();
     set(args...);

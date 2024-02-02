@@ -128,10 +128,6 @@ TEST(TEST_CATEGORY_DEATH, range_policy_implicitly_converted_bounds) {
   using UIntPolicy    = Kokkos::RangePolicy<TEST_EXECSPACE, UIntIndexType>;
   using IntPolicy     = Kokkos::RangePolicy<TEST_EXECSPACE, IntIndexType>;
 
-#ifndef KOKKOS_ENABLE_DEBUG
-  GTEST_SKIP();
-#endif
-
   std::string msg =
       "Kokkos::RangePolicy bound type error: an unsafe implicit conversion is "
       "performed on a bound (), which may not preserve its original value.\n";
