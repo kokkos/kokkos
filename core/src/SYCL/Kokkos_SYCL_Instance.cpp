@@ -102,29 +102,22 @@ void SYCLInternal::initialize(const sycl::device& d) {
 void SYCLInternal::initialize(const sycl::queue& q) {
   KOKKOS_EXPECTS(!is_initialized());
 
-  {
-#if defined(KOKKOS_ARCH_INTEL_GPU) || defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU) || \
-    defined(KOKKOS_ARCH_AMD_GPU)
+#define KOKKOS_IMPL_CHECK_SYCL_BACKEND_SUPPORT(BACKEND, REQUIRED)            \
+  if (BACKEND != REQUIRED)                                                   \
+  Kokkos::abort(                                                             \
+      "The SYCL execution space instance was initialized with an "           \
+      "unsupported backend type! For this GPU architecture, only " #REQUIRED \
+      " is supported.")
 #if defined(KOKKOS_ARCH_INTEL_GPU)
-    sycl::backend backend      = sycl::backend::ext_oneapi_level_zero;
-    std::string backend_string = "sycl::backend::ext_oneapi_level_zero";
+  KOKKOS_IMPL_CHECK_SYCL_BACKEND_SUPPORT(q.get_backend(),
+                                         sycl::backend::ext_oneapi_level_zero);
 #elif defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
-    sycl::backend backend      = sycl::backend::ext_oneapi_cuda;
-    std::string backend_string = "sycl::backend::ext_oneapi_cuda";
+  KOKKOS_IMPL_CHECK_SYCL_BACKEND_SUPPORT(q.get_backend(),
+                                         sycl::backend::ext_oneapi_cuda);
 #elif defined(KOKKOS_ARCH_AMD_GPU)
-    sycl::backend backend      = sycl::backend::ext_oneapi_hip;
-    std::string backend_string = "sycl::backend::ext_oneapi_hip";
+  KOKKOS_IMPL_CHECK_SYCL_BACKEND_SUPPORT(q.get_backend(),
+                                         sycl::backend::ext_oneapi_hip);
 #endif
-    if (q.get_backend() != backend) {
-      const std::string error =
-          std::string(
-              "The SYCL execution space instance was initialized with an "
-              "unsupported backend type! For this GPU architecture, only ") +
-          backend_string + " is supported.";
-      Kokkos::abort(error.c_str());
-    }
-#endif
-  }
 
   if (was_finalized)
     Kokkos::abort("Calling SYCL::initialize after SYCL::finalize is illegal\n");
