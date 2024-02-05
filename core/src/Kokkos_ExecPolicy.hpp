@@ -115,18 +115,12 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
         m_granularity_mask(0) {}
 
   /** \brief  Total range */
-#if !defined(KOKKOS_ENABLE_DEPRECATED_CODE_4) || \
-    defined(KOKKOS_ENABLE_DEPRECATION_WARNINGS)
   template <typename IndexType1, typename IndexType2,
             std::enable_if_t<(std::is_convertible_v<IndexType1, member_type> &&
                               std::is_convertible_v<IndexType2, member_type>),
                              bool> = false>
   inline RangePolicy(const typename traits::execution_space& work_space,
                      const IndexType1 work_begin, const IndexType2 work_end)
-#else
-  inline RangePolicy(const typename traits::execution_space& work_space,
-                     const member_type work_begin, const member_type work_end)
-#endif
       : m_space(work_space),
         m_begin(work_begin),
         m_end(work_end),
@@ -139,22 +133,14 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
   }
 
   /** \brief  Total range */
-#if !defined(KOKKOS_ENABLE_DEPRECATED_CODE_4) || \
-    defined(KOKKOS_ENABLE_DEPRECATION_WARNINGS)
   template <typename IndexType1, typename IndexType2,
             std::enable_if_t<(std::is_convertible_v<IndexType1, member_type> &&
                               std::is_convertible_v<IndexType2, member_type>),
                              bool> = false>
   inline RangePolicy(const IndexType1 work_begin, const IndexType2 work_end)
-#else
-  inline RangePolicy(const member_type work_begin, const member_type work_end)
-#endif
-      : RangePolicy(typename traits::execution_space(), work_begin, work_end) {
-  }
+      : RangePolicy(typename traits::execution_space(), work_begin, work_end) {}
 
   /** \brief  Total range */
-#if !defined(KOKKOS_ENABLE_DEPRECATED_CODE_4) || \
-    defined(KOKKOS_ENABLE_DEPRECATION_WARNINGS)
   template <typename IndexType1, typename IndexType2, typename... Args,
             std::enable_if_t<(std::is_convertible_v<IndexType1, member_type> &&
                               std::is_convertible_v<IndexType2, member_type>),
@@ -162,12 +148,6 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
   inline RangePolicy(const typename traits::execution_space& work_space,
                      const IndexType1 work_begin, const IndexType2 work_end,
                      Args... args)
-#else
-  template <class... Args>
-  inline RangePolicy(const typename traits::execution_space& work_space,
-                     const member_type work_begin, const member_type work_end,
-                     Args... args)
-#endif
       : m_space(work_space),
         m_begin(work_begin),
         m_end(work_end),
@@ -181,22 +161,14 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
   }
 
   /** \brief  Total range */
-#if !defined(KOKKOS_ENABLE_DEPRECATED_CODE_4) || \
-    defined(KOKKOS_ENABLE_DEPRECATION_WARNINGS)
   template <typename IndexType1, typename IndexType2, typename... Args,
             std::enable_if_t<(std::is_convertible_v<IndexType1, member_type> &&
                               std::is_convertible_v<IndexType2, member_type>),
                              bool> = false>
   inline RangePolicy(const IndexType1 work_begin, const IndexType2 work_end,
                      Args... args)
-#else
-  template <class... Args>
-  inline RangePolicy(const member_type work_begin, const member_type work_end,
-                     Args... args)
-#endif
       : RangePolicy(typename traits::execution_space(), work_begin, work_end,
-                    args...) {
-  }
+                    args...) {}
 
  private:
   inline void set() {}
