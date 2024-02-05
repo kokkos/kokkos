@@ -28,6 +28,9 @@ KOKKOS_LIB_INCLUDE_DIRECTORIES(kokkoscontainers
   ${CMAKE_CURRENT_BINARY_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}
 )
+
+KOKKOS_LINK_TPL(kokkoscontainers PUBLIC ROCTHRUST)
+
 KOKKOS_LINK_INTERNAL_LIBRARY(kokkoscontainers kokkoscore)
 
 #-----------------------------------------------------------------------------
