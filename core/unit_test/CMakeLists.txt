@@ -184,6 +184,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
         MDSpan
         MinMaxClamp
         NumericTraits
+        OccupancyControlTrait
         Other
         ParallelScanRangePolicy
         Printf

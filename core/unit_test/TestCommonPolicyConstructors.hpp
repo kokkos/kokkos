@@ -45,26 +45,10 @@ static_assert(check_semiregular<Kokkos::TeamPolicy<>>());
 static_assert(check_semiregular<Kokkos::MDRangePolicy<Kokkos::Rank<2>>>());
 
 // Assert that occupancy conversion and hints work properly.
-template <class... Properties>
-void test_policy_execution(const Kokkos::RangePolicy<Properties...>& policy) {
-  Kokkos::parallel_for(policy, KOKKOS_LAMBDA(int){});
-}
-template <class... Properties>
-void test_policy_execution(const Kokkos::TeamPolicy<Properties...>& policy) {
-  Kokkos::parallel_for(
-      policy,
-      KOKKOS_LAMBDA(
-          const typename Kokkos::TeamPolicy<Properties...>::member_type&){});
-}
-template <class... Properties>
-void test_policy_execution(const Kokkos::MDRangePolicy<Properties...>& policy) {
-  Kokkos::parallel_for(policy, KOKKOS_LAMBDA(int, int){});
-}
-template <class... Properties>
-void test_policy_execution(const DummyPolicy<Properties...>&) {}
-
 template <class Policy>
-void test_prefer_desired_occupancy(Policy policy) {
+void test_prefer_desired_occupancy() {
+  Policy policy;
+
   using Kokkos::Experimental::DesiredOccupancy;
   using Kokkos::Experimental::MaximizeOccupancy;
   using Kokkos::Experimental::prefer;
@@ -76,49 +60,36 @@ void test_prefer_desired_occupancy(Policy policy) {
   auto const policy_still_no_occ = prefer(policy, MaximizeOccupancy{});
   static_assert(
       !decltype(policy_still_no_occ)::experimental_contains_desired_occupancy);
-  test_policy_execution(policy_still_no_occ);
 
   // MaximizeOccupancy -> DesiredOccupancy
   auto const policy_with_occ =
       prefer(policy_still_no_occ, DesiredOccupancy{33});
   static_assert(
       decltype(policy_with_occ)::experimental_contains_desired_occupancy);
-  EXPECT_EQ(policy_with_occ.impl_get_desired_occupancy().value(), 33);
-  test_policy_execution(policy_with_occ);
 
   // DesiredOccupancy -> DesiredOccupancy
   auto const policy_change_occ = prefer(policy_with_occ, DesiredOccupancy{24});
   static_assert(
       decltype(policy_change_occ)::experimental_contains_desired_occupancy);
-  EXPECT_EQ(policy_change_occ.impl_get_desired_occupancy().value(), 24);
-  test_policy_execution(policy_change_occ);
 
   // DesiredOccupancy -> DesiredOccupancy w/ hint
   auto policy_with_occ_and_hint = Kokkos::Experimental::require(
       policy_change_occ,
       Kokkos::Experimental::WorkItemProperty::HintLightWeight);
-  EXPECT_EQ(policy_with_occ_and_hint.impl_get_desired_occupancy().value(), 24);
-  test_policy_execution(policy_with_occ_and_hint);
 
   // DesiredOccupancy -> MaximizeOccupancy
   auto const policy_drop_occ =
       prefer(policy_with_occ_and_hint, MaximizeOccupancy{});
   static_assert(
       !decltype(policy_drop_occ)::experimental_contains_desired_occupancy);
-  test_policy_execution(policy_drop_occ);
 }
 
-// FIXME_MSVC_WITH_CUDA
-// This test doesn't compile with CUDA on Windows
-#if !(defined(_WIN32) && defined(KOKKOS_ENABLE_CUDA))
-TEST(TEST_CATEGORY, execution_policy_occupancy_and_hint) {
-  test_prefer_desired_occupancy(DummyPolicy<>{});
-  test_prefer_desired_occupancy(Kokkos::RangePolicy<>(0, 0));
-  test_prefer_desired_occupancy(Kokkos::TeamPolicy<>{0, Kokkos::AUTO});
-  test_prefer_desired_occupancy(
-      Kokkos::MDRangePolicy<Kokkos::Rank<2>>{{0, 0}, {0, 0}});
+void test_execution_policy_occupancy_and_hint() {
+  test_prefer_desired_occupancy<DummyPolicy<>>();
+  test_prefer_desired_occupancy<Kokkos::RangePolicy<>>();
+  test_prefer_desired_occupancy<Kokkos::TeamPolicy<>>();
+  test_prefer_desired_occupancy<Kokkos::MDRangePolicy<Kokkos::Rank<2>>>();
 }
-#endif
 
 // Check that the policy size does not increase if the user does not specify the
 // occupancy (only pay for what you use).
