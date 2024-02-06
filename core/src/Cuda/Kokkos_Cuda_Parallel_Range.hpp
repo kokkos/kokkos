@@ -86,7 +86,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
 
     cudaFuncAttributes attr =
         CudaParallelLaunch<ParallelFor, LaunchBounds>::get_cuda_func_attributes(
-            m_policy.space().impl_internal_space_instance()->m_cudaDev);
+            m_policy.space().cuda_device());
     const int block_size =
         Kokkos::Impl::cuda_get_opt_block_size<FunctorType, LaunchBounds>(
             m_policy.space().impl_internal_space_instance(), attr, m_functor, 1,
@@ -268,8 +268,7 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
         Impl::ParallelReduce<CombinedFunctorReducer<FunctorType, ReducerType>,
                              Policy, Kokkos::Cuda>;
     cudaFuncAttributes attr = CudaParallelLaunch<closure_type, LaunchBounds>::
-        get_cuda_func_attributes(
-            m_policy.space().impl_internal_space_instance()->m_cudaDev);
+        get_cuda_func_attributes(m_policy.space().cuda_device());
     while (
         (n && (maxShmemPerBlock < shmem_size)) ||
         (n >

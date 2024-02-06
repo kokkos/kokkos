@@ -138,7 +138,7 @@ const cudaFuncAttributes& get_cuda_kernel_func_attributes(
     cudaFuncAttributes attr;
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(cuda_device));
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFuncGetAttributes(&attr, func));
-    func_attr.insert(std::pair{cuda_device, attr});
+    func_attr.emplace(cuda_device, attr);
   }
   return func_attr[cuda_device];
 }
