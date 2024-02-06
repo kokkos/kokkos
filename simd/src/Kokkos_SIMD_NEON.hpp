@@ -363,8 +363,16 @@ class simd<double, simd_abi::neon_fixed_size<2>> {
                                                        element_aligned_tag) {
     m_value = vld1q_f64(ptr);
   }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
+                                                       vector_aligned_tag) {
+    m_value = vld1q_f64(ptr);
+  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_to(
       value_type* ptr, element_aligned_tag) const {
+    vst1q_f64(ptr, m_value);
+  }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_to(value_type* ptr,
+                                                     vector_aligned_tag) const {
     vst1q_f64(ptr, m_value);
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit
@@ -844,8 +852,16 @@ class simd<std::int32_t, simd_abi::neon_fixed_size<2>> {
                                                        element_aligned_tag) {
     m_value = vld1_s32(ptr);
   }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
+                                                       vector_aligned_tag) {
+    m_value = vld1_s32(ptr);
+  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_to(
       value_type* ptr, element_aligned_tag) const {
+    vst1_s32(ptr, m_value);
+  }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_to(value_type* ptr,
+                                                     vector_aligned_tag) const {
     vst1_s32(ptr, m_value);
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit operator int32x2_t()
@@ -1048,8 +1064,16 @@ class simd<std::int64_t, simd_abi::neon_fixed_size<2>> {
                                                        element_aligned_tag) {
     m_value = vld1q_s64(ptr);
   }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
+                                                       vector_aligned_tag) {
+    m_value = vld1q_s64(ptr);
+  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_to(
       value_type* ptr, element_aligned_tag) const {
+    vst1q_s64(ptr, m_value);
+  }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_to(value_type* ptr,
+                                                     vector_aligned_tag) const {
     vst1q_s64(ptr, m_value);
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit operator int64x2_t()
@@ -1253,6 +1277,11 @@ class simd<std::uint64_t, simd_abi::neon_fixed_size<2>> {
                                                        element_aligned_tag) {
     m_value = vld1q_u64(ptr);
   }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
+                                                       vector_aligned_tag) {
+    m_value = vld1q_u64(ptr);
+  }
+
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit operator uint64x2_t()
       const {
     return m_value;
@@ -1396,6 +1425,11 @@ class const_where_expression<simd_mask<double, simd_abi::neon_fixed_size<2>>,
     if (m_mask[1]) mem[1] = m_value[1];
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+  void copy_to(double* mem, vector_aligned_tag) const {
+    if (m_mask[0]) mem[0] = m_value[0];
+    if (m_mask[1]) mem[1] = m_value[1];
+  }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   void scatter_to(
       double* mem,
       simd<std::int32_t, simd_abi::neon_fixed_size<2>> const& index) const {
@@ -1427,6 +1461,11 @@ class where_expression<simd_mask<double, simd_abi::neon_fixed_size<2>>,
       : const_where_expression(mask_arg, value_arg) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   void copy_from(double const* mem, element_aligned_tag) {
+    if (m_mask[0]) m_value[0] = mem[0];
+    if (m_mask[1]) m_value[1] = mem[1];
+  }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+  void copy_from(double const* mem, vector_aligned_tag) {
     if (m_mask[0]) m_value[0] = mem[0];
     if (m_mask[1]) m_value[1] = mem[1];
   }
@@ -1553,6 +1592,12 @@ class const_where_expression<
     if (m_mask[1]) mem[1] = m_value[1];
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+  void copy_to(std::int32_t* mem, vector_aligned_tag) const {
+    if (m_mask[0]) mem[0] = m_value[0];
+    if (m_mask[1]) mem[1] = m_value[1];
+  }
+
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   void scatter_to(
       std::int32_t* mem,
       simd<std::int32_t, simd_abi::neon_fixed_size<2>> const& index) const {
@@ -1588,12 +1633,19 @@ class where_expression<simd_mask<std::int32_t, simd_abi::neon_fixed_size<2>>,
     if (m_mask[1]) m_value[1] = mem[1];
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+  void copy_from(std::int32_t const* mem, vector_aligned_tag) {
+    if (m_mask[0]) m_value[0] = mem[0];
+    if (m_mask[1]) m_value[1] = mem[1];
+  }
+
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   void gather_from(
       std::int32_t const* mem,
       simd<std::int32_t, simd_abi::neon_fixed_size<2>> const& index) {
     if (m_mask[0]) m_value[0] = mem[index[0]];
     if (m_mask[1]) m_value[1] = mem[index[1]];
   }
+
   template <
       class U,
       std::enable_if_t<
@@ -1633,6 +1685,12 @@ class const_where_expression<
     if (m_mask[1]) mem[1] = m_value[1];
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+  void copy_to(std::int64_t* mem, vector_aligned_tag) const {
+    if (m_mask[0]) mem[0] = m_value[0];
+    if (m_mask[1]) mem[1] = m_value[1];
+  }
+
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   void scatter_to(
       std::int64_t* mem,
       simd<std::int32_t, simd_abi::neon_fixed_size<2>> const& index) const {
@@ -1668,12 +1726,19 @@ class where_expression<simd_mask<std::int64_t, simd_abi::neon_fixed_size<2>>,
     if (m_mask[1]) m_value[1] = mem[1];
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+  void copy_from(std::int64_t const* mem, vector_aligned_tag) {
+    if (m_mask[0]) m_value[0] = mem[0];
+    if (m_mask[1]) m_value[1] = mem[1];
+  }
+
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   void gather_from(
       std::int64_t const* mem,
       simd<std::int32_t, simd_abi::neon_fixed_size<2>> const& index) {
     if (m_mask[0]) m_value[0] = mem[index[0]];
     if (m_mask[1]) m_value[1] = mem[index[1]];
   }
+
   template <
       class U,
       std::enable_if_t<std::is_convertible_v<
@@ -1713,6 +1778,12 @@ class const_where_expression<
     if (m_mask[1]) mem[1] = m_value[1];
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+  void copy_to(std::uint64_t* mem, vector_aligned_tag) const {
+    if (m_mask[0]) mem[0] = m_value[0];
+    if (m_mask[1]) mem[1] = m_value[1];
+  }
+
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   void scatter_to(
       std::uint64_t* mem,
       simd<std::int32_t, simd_abi::neon_fixed_size<2>> const& index) const {
@@ -1748,12 +1819,19 @@ class where_expression<simd_mask<std::uint64_t, simd_abi::neon_fixed_size<2>>,
     if (m_mask[1]) m_value[1] = mem[1];
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+  void copy_from(std::uint64_t const* mem, vector_aligned_tag) {
+    if (m_mask[0]) m_value[0] = mem[0];
+    if (m_mask[1]) m_value[1] = mem[1];
+  }
+
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   void gather_from(
       std::uint64_t const* mem,
       simd<std::int32_t, simd_abi::neon_fixed_size<2>> const& index) {
     if (m_mask[0]) m_value[0] = mem[index[0]];
     if (m_mask[1]) m_value[1] = mem[index[1]];
   }
+
   template <class U,
             std::enable_if_t<
                 std::is_convertible_v<

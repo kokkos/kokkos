@@ -31,7 +31,16 @@ class simd;
 template <class T, class Abi>
 class simd_mask;
 
-struct element_aligned_tag {};
+class simd_alignment_vector_aligned {};
+
+template <typename... Flags>
+struct simd_flags {};
+
+inline constexpr simd_flags<> simd_flag_default{};
+inline constexpr simd_flags<simd_alignment_vector_aligned> simd_flag_aligned{};
+
+using element_aligned_tag = simd_flags<>;
+using vector_aligned_tag  = simd_flags<simd_alignment_vector_aligned>;
 
 // class template declarations for const_where_expression and where_expression
 
