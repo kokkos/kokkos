@@ -65,14 +65,16 @@ inline void host_check_all_reductions(const DataType (&args)[n]) {
 
 template <typename Abi, typename DataType>
 inline void host_check_reductions() {
-  constexpr size_t n = 11;
+  if constexpr (is_type_v<Kokkos::Experimental::simd<DataType, Abi>>) {
+    constexpr size_t n = 11;
 
-  if constexpr (std::is_signed_v<DataType>) {
-    DataType const args[n] = {1, 2, -1, 10, 0, 1, -2, 10, 0, 1, -2};
-    host_check_all_reductions<Abi>(args);
-  } else {
-    DataType const args[n] = {1, 2, 1, 10, 0, 1, 2, 10, 0, 1, 2};
-    host_check_all_reductions<Abi>(args);
+    if constexpr (std::is_signed_v<DataType>) {
+      DataType const args[n] = {1, 2, -1, 10, 0, 1, -2, 10, 0, 1, -2};
+      host_check_all_reductions<Abi>(args);
+    } else {
+      DataType const args[n] = {1, 2, 1, 10, 0, 1, 2, 10, 0, 1, 2};
+      host_check_all_reductions<Abi>(args);
+    }
   }
 }
 
@@ -135,14 +137,16 @@ KOKKOS_INLINE_FUNCTION void device_check_all_reductions(
 
 template <typename Abi, typename DataType>
 KOKKOS_INLINE_FUNCTION void device_check_reductions() {
-  constexpr size_t n = 11;
+  if constexpr (is_type_v<Kokkos::Experimental::simd<DataType, Abi>>) {
+    constexpr size_t n = 11;
 
-  if constexpr (std::is_signed_v<DataType>) {
-    DataType const args[n] = {1, 2, -1, 10, 0, 1, -2, 10, 0, 1, -2};
-    device_check_all_reductions<Abi>(args);
-  } else {
-    DataType const args[n] = {1, 2, 1, 10, 0, 1, 2, 10, 0, 1, 2};
-    device_check_all_reductions<Abi>(args);
+    if constexpr (std::is_signed_v<DataType>) {
+      DataType const args[n] = {1, 2, -1, 10, 0, 1, -2, 10, 0, 1, -2};
+      device_check_all_reductions<Abi>(args);
+    } else {
+      DataType const args[n] = {1, 2, 1, 10, 0, 1, 2, 10, 0, 1, 2};
+      device_check_all_reductions<Abi>(args);
+    }
   }
 }
 
