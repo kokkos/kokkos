@@ -108,6 +108,9 @@ void test_prefer_desired_occupancy(Policy policy) {
   test_policy_execution(policy_drop_occ);
 }
 
+// FIXME_MSVC_WITH_CUDA
+// This test doesn't compile with CUDA on Windows
+#if !(defined(_WIN32) && defined(KOKKOS_ENABLE_CUDA))
 TEST(TEST_CATEGORY, execution_policy_occupancy_and_hint) {
   test_prefer_desired_occupancy(DummyPolicy<>{});
   test_prefer_desired_occupancy(Kokkos::RangePolicy<>(0, 0));
@@ -115,6 +118,7 @@ TEST(TEST_CATEGORY, execution_policy_occupancy_and_hint) {
   test_prefer_desired_occupancy(
       Kokkos::MDRangePolicy<Kokkos::Rank<2>>{{0, 0}, {0, 0}});
 }
+#endif
 
 // Check that the policy size does not increase if the user does not specify the
 // occupancy (only pay for what you use).
