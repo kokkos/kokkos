@@ -181,4 +181,10 @@ class load_as_scalars {
   }
 };
 
+template <typename T, typename = void>
+constexpr bool is_type_v = false;
+
+template <typename T>
+constexpr bool is_type_v<T, decltype(void(sizeof(T)))> = true;
+
 #endif
