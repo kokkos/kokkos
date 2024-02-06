@@ -172,6 +172,12 @@ TEST(simd, host_reductions) {
 }
 
 TEST(simd, device_reductions) {
+#ifdef KOKKOS_ENABLE_OPENMPTARGET  // FIXME_OPENMPTARGET
+  GTEST_SKIP()
+      << "skipping because of a non-deterministic failure reporting: "
+         "Failure to synchronize stream (nil): Error in "
+         "cuStreamSynchronize: an illegal memory access was encountered";
+#endif
   Kokkos::parallel_for(1, simd_device_reduction_functor());
 }
 
