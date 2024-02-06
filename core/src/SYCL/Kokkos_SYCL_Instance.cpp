@@ -102,6 +102,23 @@ void SYCLInternal::initialize(const sycl::device& d) {
 void SYCLInternal::initialize(const sycl::queue& q) {
   KOKKOS_EXPECTS(!is_initialized());
 
+#define KOKKOS_IMPL_CHECK_SYCL_BACKEND_SUPPORT(BACKEND, REQUIRED)            \
+  if (BACKEND != REQUIRED)                                                   \
+  Kokkos::abort(                                                             \
+      "The SYCL execution space instance was initialized with an "           \
+      "unsupported backend type! For this GPU architecture, only " #REQUIRED \
+      " is supported.")
+#if defined(KOKKOS_ARCH_INTEL_GPU)
+  KOKKOS_IMPL_CHECK_SYCL_BACKEND_SUPPORT(q.get_backend(),
+                                         sycl::backend::ext_oneapi_level_zero);
+#elif defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
+  KOKKOS_IMPL_CHECK_SYCL_BACKEND_SUPPORT(q.get_backend(),
+                                         sycl::backend::ext_oneapi_cuda);
+#elif defined(KOKKOS_ARCH_AMD_GPU)
+  KOKKOS_IMPL_CHECK_SYCL_BACKEND_SUPPORT(q.get_backend(),
+                                         sycl::backend::ext_oneapi_hip);
+#endif
+
   if (was_finalized)
     Kokkos::abort("Calling SYCL::initialize after SYCL::finalize is illegal\n");
 
