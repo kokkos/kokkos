@@ -82,11 +82,11 @@ void test_prefer_desired_occupancy(Policy policy) {
 #if !(defined(_WIN32) && defined(KOKKOS_ENABLE_CUDA))
 TEST(TEST_CATEGORY, occupancy_control) {
   test_prefer_desired_occupancy(DummyPolicy<TEST_EXECSPACE>{});
-  test_prefer_desired_occupancy(Kokkos::RangePolicy<TEST_EXECSPACE>(0, 0));
+  test_prefer_desired_occupancy(Kokkos::RangePolicy<TEST_EXECSPACE>(0, 1));
   test_prefer_desired_occupancy(
-      Kokkos::TeamPolicy<TEST_EXECSPACE>{0, Kokkos::AUTO});
+      Kokkos::TeamPolicy<TEST_EXECSPACE>{1, Kokkos::AUTO});
   test_prefer_desired_occupancy(
-      Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>{{0, 0}, {0, 0}});
+      Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>{{0, 0}, {1, 1}});
 }
 #endif
 }  // namespace
