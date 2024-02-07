@@ -1819,7 +1819,9 @@ template <class TeamType, class iType, class MemberType, class DT, class... DP,
           class ST, class... SP>
 void KOKKOS_INLINE_FUNCTION very_deep_copy(
     const TeamType& team,
-    Kokkos::Impl::ThreadVectorRangeBoundariesStruct<iType, MemberType> member,
+    [[maybe_unused]] Kokkos::Impl::ThreadVectorRangeBoundariesStruct<iType,
+                                                                     MemberType>
+        member,
     const View<DT, DP...>& dst, const View<ST, SP...>& src,
     std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 1 &&
                       unsigned(ViewTraits<ST, SP...>::rank) == 1)>* = nullptr) {
@@ -1847,7 +1849,9 @@ template <class TeamType, class iType, class MemberType, class DT, class... DP,
           class ST, class... SP>
 void KOKKOS_INLINE_FUNCTION very_deep_copy(
     TeamType team,
-    Kokkos::Impl::TeamThreadRangeBoundariesStruct<iType, MemberType> member,
+    [[maybe_unused]] Kokkos::Impl::TeamThreadRangeBoundariesStruct<iType,
+                                                                   MemberType>
+        member,
     const View<DT, DP...>& dst, const View<ST, SP...>& src,
     std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 1 &&
                       unsigned(ViewTraits<ST, SP...>::rank) == 1)>* = nullptr) {
