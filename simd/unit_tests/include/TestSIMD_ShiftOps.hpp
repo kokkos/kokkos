@@ -107,13 +107,14 @@ inline void host_check_shift_ops() {
     if constexpr (std::is_integral_v<DataType>) {
       using simd_type             = Kokkos::Experimental::simd<DataType, Abi>;
       constexpr std::size_t width = simd_type::size();
-      constexpr std::size_t num_cases = 8;
+      constexpr std::size_t num_cases = 16;
       constexpr size_t alignment =
           Kokkos::Experimental::simd<DataType, Abi>::size() * sizeof(DataType);
 
       DataType max = std::numeric_limits<DataType>::max();
 
       alignas(alignment) DataType shift_by[num_cases] = {
+          0, 1, 3, width / 2, width / 2 + 1, width - 1, width, width + 1,
           0, 1, 3, width / 2, width / 2 + 1, width - 1, width, width + 1};
       alignas(alignment) DataType test_vals[width];
       for (std::size_t i = 0; i < width; ++i) {
@@ -230,11 +231,12 @@ KOKKOS_INLINE_FUNCTION void device_check_shift_ops() {
     if constexpr (std::is_integral_v<DataType>) {
       using simd_type             = Kokkos::Experimental::simd<DataType, Abi>;
       constexpr std::size_t width = simd_type::size();
-      constexpr std::size_t num_cases = 8;
+      constexpr std::size_t num_cases = 16;
 
       DataType max = Kokkos::reduction_identity<DataType>::max();
 
       DataType shift_by[num_cases] = {
+          0, 1, 3, width / 2, width / 2 + 1, width - 1, width, width + 1,
           0, 1, 3, width / 2, width / 2 + 1, width - 1, width, width + 1};
       DataType test_vals[width];
 
