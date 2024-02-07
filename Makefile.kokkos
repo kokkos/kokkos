@@ -19,7 +19,7 @@ KOKKOS_DEVICES ?= "Threads"
 KOKKOS_ARCH ?= ""
 # Options: yes,no
 KOKKOS_DEBUG ?= "no"
-# Options: hwloc,librt,experimental_memkind
+# Options: hwloc,librt
 KOKKOS_USE_TPLS ?= ""
 # Options: c++17,c++1z,c++20,c++2a,c++23,c++2b
 KOKKOS_CXX_STANDARD ?= "c++17"
@@ -69,7 +69,6 @@ KOKKOS_INTERNAL_ENABLE_CXX2C := $(call kokkos_has_string,$(KOKKOS_CXX_STANDARD),
 # Check for external libraries.
 KOKKOS_INTERNAL_USE_HWLOC := $(call kokkos_has_string,$(KOKKOS_USE_TPLS),hwloc)
 KOKKOS_INTERNAL_USE_LIBRT := $(call kokkos_has_string,$(KOKKOS_USE_TPLS),librt)
-KOKKOS_INTERNAL_USE_MEMKIND := $(call kokkos_has_string,$(KOKKOS_USE_TPLS),experimental_memkind)
 
 # Check for advanced settings.
 KOKKOS_INTERNAL_ENABLE_COMPILER_WARNINGS := $(call kokkos_has_string,$(KOKKOS_OPTIONS),compiler_warnings)
@@ -618,20 +617,6 @@ ifeq ($(KOKKOS_INTERNAL_USE_LIBRT), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_USE_LIBRT")
   KOKKOS_LIBS += -lrt
   KOKKOS_TPL_LIBRARY_NAMES += rt
-endif
-
-ifeq ($(KOKKOS_INTERNAL_USE_MEMKIND), 1)
-  ifneq ($(KOKKOS_CMAKE), yes)
-    ifneq ($(MEMKIND_PATH),)
-      KOKKOS_CPPFLAGS += -I$(MEMKIND_PATH)/include
-      KOKKOS_LIBDIRS += -L$(MEMKIND_PATH)/lib
-      KOKKOS_CXXLDFLAGS += -L$(MEMKIND_PATH)/lib
-      KOKKOS_TPL_INCLUDE_DIRS += $(MEMKIND_PATH)/include
-      KOKKOS_TPL_LIBRARY_DIRS += $(MEMKIND_PATH)/lib
-    endif
-    KOKKOS_LIBS += -lmemkind -lnuma
-    KOKKOS_TPL_LIBRARY_NAMES += memkind numa
-  endif
 endif
 
 ifeq ($(KOKKOS_INTERNAL_ENABLE_LARGE_MEM_TESTS), 1)
