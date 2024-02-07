@@ -252,14 +252,14 @@ class SharedAllocationRecordCommon : public SharedAllocationRecord<void, void> {
   ~SharedAllocationRecordCommon();
   template <class ExecutionSpace>
   SharedAllocationRecordCommon(
-      ExecutionSpace const&, MemorySpace const& space, std::string const& label,
-      std::size_t alloc_size,
+      ExecutionSpace const& exec, MemorySpace const& space,
+      std::string const& label, std::size_t alloc_size,
       record_base_t::function_type dealloc = &deallocate)
       : SharedAllocationRecord<void, void>(
 #ifdef KOKKOS_ENABLE_DEBUG
             &s_root_record,
 #endif
-            checked_allocation_with_header(space, label, alloc_size),
+            checked_allocation_with_header(exec, space, label, alloc_size),
             sizeof(SharedAllocationHeader) + alloc_size, dealloc, label),
         m_space(space) {
     auto& header = *SharedAllocationRecord<void, void>::m_alloc_ptr;
@@ -315,7 +315,7 @@ class HostInaccessibleSharedAllocationRecordCommon
 #ifdef KOKKOS_ENABLE_DEBUG
             &s_root_record,
 #endif
-            checked_allocation_with_header(space, label, alloc_size),
+            checked_allocation_with_header(exec, space, label, alloc_size),
             sizeof(SharedAllocationHeader) + alloc_size, dealloc, label),
         m_space(space) {
     SharedAllocationHeader header;
