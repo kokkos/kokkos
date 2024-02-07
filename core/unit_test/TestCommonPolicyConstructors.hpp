@@ -84,7 +84,7 @@ void test_prefer_desired_occupancy() {
       !decltype(policy_drop_occ)::experimental_contains_desired_occupancy);
 }
 
-void test_execution_policy_occupancy_and_hint() {
+[[maybe_unused]] void test_execution_policy_occupancy_and_hint() {
   test_prefer_desired_occupancy<DummyPolicy<>>();
   test_prefer_desired_occupancy<Kokkos::RangePolicy<>>();
   test_prefer_desired_occupancy<Kokkos::TeamPolicy<>>();
