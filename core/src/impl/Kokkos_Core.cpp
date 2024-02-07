@@ -16,6 +16,7 @@
 
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #define KOKKOS_IMPL_PUBLIC_INCLUDE
+#include <optional>
 #endif
 
 #include <Kokkos_Core.hpp>
@@ -377,7 +378,8 @@ std::vector<int> Kokkos::Impl::get_visible_devices(int device_count) {
   return visible_devices;
 }
 
-int Kokkos::Impl::get_gpu(const InitializationSettings& settings) {
+std::optional<int> Kokkos::Impl::get_gpu(
+    const InitializationSettings& settings) {
   std::vector<int> visible_devices = get_visible_devices(get_device_count());
   int const num_devices            = visible_devices.size();
   // device_id is provided
@@ -425,14 +427,15 @@ int Kokkos::Impl::get_gpu(const InitializationSettings& settings) {
 
   int const mpi_local_rank = mpi_local_rank_on_node();
 
-  // use first GPU available for execution if unable to detect local MPI rank
+  // if unable to detect local MPI rank return nullopt to delegate device
+  // selection to the backend
   if (mpi_local_rank < 0) {
     if (settings.has_map_device_id_by()) {
       std::cerr << "Warning: unable to detect local MPI rank."
                 << " Falling back to the first GPU available for execution."
                 << " Raised by Kokkos::initialize()." << std::endl;
     }
-    return visible_devices[0];
+    return std::nullopt;
   }
 
   // use device assigned by CTest when resource allocation is activated

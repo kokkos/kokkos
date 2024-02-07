@@ -179,7 +179,7 @@ void OpenMPTarget::impl_static_fence(const std::string& name) {
 
 void OpenMPTarget::impl_initialize(InitializationSettings const& settings) {
   using Kokkos::Impl::get_gpu;
-  const int device_num = get_gpu(settings);
+  const int device_num = get_gpu(settings).value_or(0);
   omp_set_default_device(device_num);
 
   Impl::OpenMPTargetInternal::impl_singleton()->impl_initialize();
