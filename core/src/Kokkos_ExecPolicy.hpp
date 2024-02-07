@@ -28,6 +28,7 @@ static_assert(false,
 #include <impl/Kokkos_AnalyzePolicy.hpp>
 #include <Kokkos_Concepts.hpp>
 #include <typeinfo>
+#include <limits>
 
 //----------------------------------------------------------------------------
 
@@ -114,39 +115,57 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
         m_granularity_mask(0) {}
 
   /** \brief  Total range */
+  template <typename IndexType1, typename IndexType2,
+            std::enable_if_t<(std::is_convertible_v<IndexType1, member_type> &&
+                              std::is_convertible_v<IndexType2, member_type>),
+                             bool> = false>
   inline RangePolicy(const typename traits::execution_space& work_space,
-                     const member_type work_begin, const member_type work_end)
+                     const IndexType1 work_begin, const IndexType2 work_end)
       : m_space(work_space),
         m_begin(work_begin),
         m_end(work_end),
         m_granularity(0),
         m_granularity_mask(0) {
+    check_conversion_safety(work_begin);
+    check_conversion_safety(work_end);
     check_bounds_validity();
     set_auto_chunk_size();
   }
 
   /** \brief  Total range */
-  inline RangePolicy(const member_type work_begin, const member_type work_end)
+  template <typename IndexType1, typename IndexType2,
+            std::enable_if_t<(std::is_convertible_v<IndexType1, member_type> &&
+                              std::is_convertible_v<IndexType2, member_type>),
+                             bool> = false>
+  inline RangePolicy(const IndexType1 work_begin, const IndexType2 work_end)
       : RangePolicy(typename traits::execution_space(), work_begin, work_end) {}
 
   /** \brief  Total range */
-  template <class... Args>
+  template <typename IndexType1, typename IndexType2, typename... Args,
+            std::enable_if_t<(std::is_convertible_v<IndexType1, member_type> &&
+                              std::is_convertible_v<IndexType2, member_type>),
+                             bool> = false>
   inline RangePolicy(const typename traits::execution_space& work_space,
-                     const member_type work_begin, const member_type work_end,
+                     const IndexType1 work_begin, const IndexType2 work_end,
                      Args... args)
       : m_space(work_space),
         m_begin(work_begin),
         m_end(work_end),
         m_granularity(0),
         m_granularity_mask(0) {
+    check_conversion_safety(work_begin);
+    check_conversion_safety(work_end);
     check_bounds_validity();
     set_auto_chunk_size();
     set(args...);
   }
 
   /** \brief  Total range */
-  template <class... Args>
-  inline RangePolicy(const member_type work_begin, const member_type work_end,
+  template <typename IndexType1, typename IndexType2, typename... Args,
+            std::enable_if_t<(std::is_convertible_v<IndexType1, member_type> &&
+                              std::is_convertible_v<IndexType2, member_type>),
+                             bool> = false>
+  inline RangePolicy(const IndexType1 work_begin, const IndexType2 work_end,
                      Args... args)
       : RangePolicy(typename traits::execution_space(), work_begin, work_end,
                     args...) {}
@@ -231,6 +250,50 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
       Kokkos::Impl::log_warning(msg);
 #endif
     }
+  }
+
+  // To be replaced with std::in_range (c++20)
+  template <typename IndexType>
+  static void check_conversion_safety(const IndexType bound) {
+#if !defined(KOKKOS_ENABLE_DEPRECATED_CODE_4) || \
+    defined(KOKKOS_ENABLE_DEPRECATION_WARNINGS)
+
+    std::string msg =
+        "Kokkos::RangePolicy bound type error: an unsafe implicit conversion "
+        "is performed on a bound (" +
+        std::to_string(bound) +
+        "), which may "
+        "not preserve its original value.\n";
+    bool warn = false;
+
+    if constexpr (std::is_signed_v<IndexType> !=
+                  std::is_signed_v<member_type>) {
+      // check signed to unsigned
+      if constexpr (std::is_signed_v<IndexType>)
+        warn |= (bound < static_cast<IndexType>(
+                             std::numeric_limits<member_type>::min()));
+
+      // check unsigned to signed
+      if constexpr (std::is_signed_v<member_type>)
+        warn |= (bound > static_cast<IndexType>(
+                             std::numeric_limits<member_type>::max()));
+    }
+
+    // check narrowing
+    warn |= (static_cast<IndexType>(static_cast<member_type>(bound)) != bound);
+
+    if (warn) {
+#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_4
+      Kokkos::abort(msg.c_str());
+#endif
+
+#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
+      Kokkos::Impl::log_warning(msg);
+#endif
+    }
+#else
+    (void)bound;
+#endif
   }
 
  public:
