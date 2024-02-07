@@ -38,6 +38,8 @@ bool view_check_equals(const ViewType& lhs, const ViewType& rhs) {
         local_result = (lhs.data()[i] == rhs.data()[i]) && local_result;
       },
       reducer);
+
+  Kokkos::fence();
   return (result);
 }
 
@@ -46,6 +48,7 @@ void view_init(ViewType& view) {
   Kokkos::parallel_for(
       "initialize array", view.span(),
       KOKKOS_LAMBDA(int i) { view.data()[i] = i; });
+  Kokkos::fence();
 }
 
 // Helper function to create a std::array filled with a given value
@@ -178,6 +181,7 @@ void test_local_deepcopy_thread(ViewType A, ViewType B, const int N) {
             });
       });
 
+  Kokkos::fence();
   ASSERT_TRUE(view_check_equals(A, B));
 }
 
@@ -195,6 +199,7 @@ void test_local_deepcopy(ViewType A, ViewType B, const int N) {
         Kokkos::Experimental::local_deep_copy(teamMember, subDst, subSrc);
       });
 
+  Kokkos::fence();
   ASSERT_TRUE(view_check_equals(A, B));
 }
 
@@ -208,6 +213,7 @@ void test_local_deepcopy_range(ViewType A, ViewType B, const int N) {
         Kokkos::Experimental::local_deep_copy(subDst, subSrc);
       });
 
+  Kokkos::fence();
   ASSERT_TRUE(view_check_equals(A, B));
 }
 
@@ -225,6 +231,7 @@ void test_local_deepcopy_scalar(ViewType B, const int N,
         Kokkos::Experimental::local_deep_copy(teamMember, subDst, fill_value);
       });
 
+  Kokkos::fence();
   ASSERT_TRUE(check_sum(B, N, fill_value));
 }
 
@@ -243,6 +250,7 @@ void test_local_deepcopy_scalar_range(
       KOKKOS_LAMBDA(int i, double& lsum) { lsum += B.data()[i]; },
       Kokkos::Sum<double>(sum_all));
 
+  Kokkos::fence();
   ASSERT_TRUE(check_sum(B, N, fill_value));
 }
 
