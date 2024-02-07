@@ -58,7 +58,6 @@
 /* TPL Settings */
 #cmakedefine KOKKOS_ENABLE_HWLOC
 #cmakedefine KOKKOS_USE_LIBRT
-#cmakedefine KOKKOS_ENABLE_HBWSPACE
 #cmakedefine KOKKOS_ENABLE_LIBDL
 #cmakedefine KOKKOS_ENABLE_LIBQUADMATH
 #cmakedefine KOKKOS_ENABLE_ONEDPL
