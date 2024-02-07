@@ -92,9 +92,6 @@ class SYCLSharedUSMSpace {
                  const size_t arg_logical_size = 0) const {
     return allocate(arg_label, arg_alloc_size, arg_logical_size);
   }
-  void* allocate(const SYCL& exec_space, const char* arg_label,
-                 const size_t arg_alloc_size,
-                 const size_t arg_logical_size = 0) const;
   void* allocate(const SYCL& exec_space,
                  const std::size_t arg_alloc_size) const;
   void* allocate(const SYCL& exec_space, const char* arg_label,
