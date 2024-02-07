@@ -77,15 +77,19 @@ void test_prefer_desired_occupancy(Policy policy) {
   test_policy_execution(policy_drop_occ);
 }
 
+TEST(TEST_CATEGORY, occupancy_control) {
 // FIXME_MSVC_WITH_CUDA
 // This test doesn't compile with CUDA on Windows
-#if !(defined(_WIN32) && defined(KOKKOS_ENABLE_CUDA))
-TEST(TEST_CATEGORY, occupancy_control) {
-  test_prefer_desired_occupancy(DummyPolicy<>{});
-  test_prefer_desired_occupancy(Kokkos::RangePolicy<>(0, 0));
-  test_prefer_desired_occupancy(Kokkos::TeamPolicy<>{0, Kokkos::AUTO});
-  test_prefer_desired_occupancy(
-      Kokkos::MDRangePolicy<Kokkos::Rank<2>>{{0, 0}, {0, 0}});
-}
+#if defined(_WIN32) && defined(KOKKOS_ENABLE_CUDA)
+  if constexpr (!std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>)
 #endif
+  {
+    test_prefer_desired_occupancy(DummyPolicy<TEST_EXECSPACE>{});
+    test_prefer_desired_occupancy(Kokkos::RangePolicy<TEST_EXECSPACE>(0, 0));
+    test_prefer_desired_occupancy(
+        Kokkos::TeamPolicy<TEST_EXECSPACE>{0, Kokkos::AUTO});
+    test_prefer_desired_occupancy(
+        Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>{{0, 0}, {0, 0}});
+  }
+}
 }  // namespace
