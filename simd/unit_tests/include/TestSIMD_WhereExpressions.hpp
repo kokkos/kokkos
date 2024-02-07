@@ -28,7 +28,8 @@ inline void host_check_where_expr_scatter_to() {
     using mask_type  = typename simd_type::mask_type;
 
     std::size_t nlanes = simd_type::size();
-    DataType init[]    = {11, 13, 17, 19, 23, 29, 31, 37};
+    DataType init[]    = {11, 13, 17, 19, 23, 29, 31, 37,
+                       53, 71, 79, 83, 89, 93, 97, 103};
     simd_type src;
     src.copy_from(init, Kokkos::Experimental::simd_flag_default);
 
@@ -36,7 +37,7 @@ inline void host_check_where_expr_scatter_to() {
       mask_type mask(true);
       mask[idx] = false;
 
-      DataType dst[8] = {0};
+      DataType dst[simd_type::size()] = {0};
       index_type index;
       simd_type expected_result;
       for (std::size_t i = 0; i < nlanes; ++i) {
@@ -62,7 +63,8 @@ inline void host_check_where_expr_gather_from() {
     using mask_type  = typename simd_type::mask_type;
 
     std::size_t nlanes = simd_type::size();
-    DataType src[]     = {11, 13, 17, 19, 23, 29, 31, 37};
+    DataType src[]     = {11, 13, 17, 19, 23, 29, 31, 37,
+                      53, 71, 79, 83, 89, 93, 97, 103};
 
     for (std::size_t idx = 0; idx < nlanes; ++idx) {
       mask_type mask(true);
@@ -110,7 +112,8 @@ KOKKOS_INLINE_FUNCTION void device_check_where_expr_scatter_to() {
     using mask_type  = typename simd_type::mask_type;
 
     std::size_t nlanes = simd_type::size();
-    DataType init[]    = {11, 13, 17, 19, 23, 29, 31, 37};
+    DataType init[]    = {11, 13, 17, 19, 23, 29, 31, 37,
+                       53, 71, 79, 83, 89, 93, 97, 103};
     simd_type src;
     src.copy_from(init, Kokkos::Experimental::simd_flag_default);
 
@@ -118,7 +121,7 @@ KOKKOS_INLINE_FUNCTION void device_check_where_expr_scatter_to() {
       mask_type mask(true);
       mask[idx] = false;
 
-      DataType dst[8] = {0};
+      DataType dst[simd_type::size()] = {0};
       index_type index;
       simd_type expected_result;
       for (std::size_t i = 0; i < nlanes; ++i) {
@@ -143,7 +146,8 @@ KOKKOS_INLINE_FUNCTION void device_check_where_expr_gather_from() {
   using mask_type  = typename simd_type::mask_type;
 
   std::size_t nlanes = simd_type::size();
-  DataType src[]     = {11, 13, 17, 19, 23, 29, 31, 37};
+  DataType src[]     = {11, 13, 17, 19, 23, 29, 31, 37,
+                    53, 71, 79, 83, 89, 93, 97, 103};
 
   for (std::size_t idx = 0; idx < nlanes; ++idx) {
     mask_type mask(true);
