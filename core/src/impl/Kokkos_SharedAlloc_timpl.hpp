@@ -136,9 +136,8 @@ void* SharedAllocationRecordCommon<MemorySpace>::reallocate_tracked(
 
   Kokkos::Impl::DeepCopy<MemorySpace, MemorySpace>(
       r_new->data(), r_old->data(), std::min(r_old->size(), r_new->size()));
-  Kokkos::fence(
-      "SharedAllocationRecord<Kokkos::Experimental::HBWSpace, "
-      "void>::reallocate_tracked(): fence after copying data");
+  Kokkos::fence(std::string("SharedAllocationRecord<") + MemorySpace::name() +
+                ", void>::reallocate_tracked(): fence after copying data");
 
   record_base_t::increment(r_new);
   record_base_t::decrement(r_old);
@@ -193,9 +192,8 @@ void* HostInaccessibleSharedAllocationRecordCommon<
 
   Kokkos::Impl::DeepCopy<MemorySpace, MemorySpace>(
       r_new->data(), r_old->data(), std::min(r_old->size(), r_new->size()));
-  Kokkos::fence(
-      "SharedAllocationRecord<Kokkos::Experimental::HBWSpace, "
-      "void>::reallocate_tracked(): fence after copying data");
+  Kokkos::fence(std::string("SharedAllocationRecord<") + MemorySpace::name() +
+                ", void>::reallocate_tracked(): fence after copying data");
 
   record_base_t::increment(r_new);
   record_base_t::decrement(r_old);
