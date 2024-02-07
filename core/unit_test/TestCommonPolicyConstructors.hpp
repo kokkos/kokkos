@@ -66,16 +66,19 @@ void test_prefer_desired_occupancy() {
       prefer(policy_still_no_occ, DesiredOccupancy{33});
   static_assert(
       decltype(policy_with_occ)::experimental_contains_desired_occupancy);
+  EXPECT_EQ(policy_with_occ.impl_get_desired_occupancy().value(), 33);
 
   // DesiredOccupancy -> DesiredOccupancy
   auto const policy_change_occ = prefer(policy_with_occ, DesiredOccupancy{24});
   static_assert(
       decltype(policy_change_occ)::experimental_contains_desired_occupancy);
+  EXPECT_EQ(policy_change_occ.impl_get_desired_occupancy().value(), 24);
 
   // DesiredOccupancy -> DesiredOccupancy w/ hint
   auto policy_with_occ_and_hint = Kokkos::Experimental::require(
       policy_change_occ,
       Kokkos::Experimental::WorkItemProperty::HintLightWeight);
+  EXPECT_EQ(policy_with_occ_and_hint.impl_get_desired_occupancy().value(), 24);
 
   // DesiredOccupancy -> MaximizeOccupancy
   auto const policy_drop_occ =
@@ -84,7 +87,7 @@ void test_prefer_desired_occupancy() {
       !decltype(policy_drop_occ)::experimental_contains_desired_occupancy);
 }
 
-[[maybe_unused]] void test_execution_policy_occupancy_and_hint() {
+TEST(TEST_CATEGORY, execution_policy_occupancy_and_hint) {
   test_prefer_desired_occupancy<DummyPolicy<>>();
   test_prefer_desired_occupancy<Kokkos::RangePolicy<>>();
   test_prefer_desired_occupancy<Kokkos::TeamPolicy<>>();
