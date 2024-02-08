@@ -1,4 +1,4 @@
-![Kokkos](https://avatars2.githubusercontent.com/u/10199860?s=200&v=4)
+[![Kokkos](https://avatars2.githubusercontent.com/u/10199860?s=200&v=4)](https://kokkos.org)
 
 # Kokkos: Core Libraries
 
@@ -87,19 +87,19 @@ target_link_libraries(myapp Kokkos::kokkos)
 
 For the complete documentation, click below:
 
-# [kokkos.github.io/kokkos-core-wiki](https://kokkos.github.io/kokkos-core-wiki)
+# [kokkos.org/kokkos-core-wiki/](https://kokkos.org/kokkos-core-wiki/)
 
 # Learning about Kokkos
 
 To start learning about Kokkos:
 
-- [Kokkos Lectures](https://kokkos.github.io/kokkos-core-wiki/videolectures.html): they contain a mix of lecture videos and hands-on exercises covering all the important Kokkos Ecosystem capabilities.
+- [Kokkos Lectures](https://kokkos.org/kokkos-core-wiki/videolectures.html): they contain a mix of lecture videos and hands-on exercises covering all the important Kokkos Ecosystem capabilities.
 
-- [Programming guide](https://kokkos.github.io/kokkos-core-wiki/programmingguide.html): contains in "narrative" form a technical description of the programming model, machine model, and the main building blocks like the Views and parallel dispatch.
+- [Programming guide](https://kokkos.org/kokkos-core-wiki/programmingguide.html): contains in "narrative" form a technical description of the programming model, machine model, and the main building blocks like the Views and parallel dispatch.
 
-- [API reference](https://kokkos.github.io/kokkos-core-wiki/): organized by category, i.e., [core](https://kokkos.github.io/kokkos-core-wiki/API/core-index.html), [algorithms](https://kokkos.github.io/kokkos-core-wiki/API/algorithms-index.html) and [containers](https://kokkos.github.io/kokkos-core-wiki/API/containers-index.html) or, if you prefer, in [alphabetical order](https://kokkos.github.io/kokkos-core-wiki/API/alphabetical.html).
+- [API reference](https://kokkos.org/kokkos-core-wiki/): organized by category, i.e., [core](https://kokkos.org/kokkos-core-wiki/API/core-index.html), [algorithms](https://kokkos.org/kokkos-core-wiki/API/algorithms-index.html) and [containers](https://kokkos.org/kokkos-core-wiki/API/containers-index.html) or, if you prefer, in [alphabetical order](https://kokkos.org/kokkos-core-wiki/API/alphabetical.html).
 
-- [Use cases and Examples](https://kokkos.github.io/kokkos-core-wiki/usecases.html): a series of examples ranging from how to use Kokkos with MPI to Fortran interoperability.
+- [Use cases and Examples](https://kokkos.org/kokkos-core-wiki/usecases.html): a series of examples ranging from how to use Kokkos with MPI to Fortran interoperability.
 
 For questions find us on Slack: https://kokkosteam.slack.com or open a GitHub issue.
 
@@ -107,17 +107,17 @@ For non-public questions send an email to: *crtrott(at)sandia.gov*
 
 # Contributing to Kokkos
 
-Please see [this page](https://kokkos.github.io/kokkos-core-wiki/contributing.html) for details on how to contribute.
+Please see [this page](https://kokkos.org/kokkos-core-wiki/contributing.html) for details on how to contribute.
 
 # Requirements, Building and Installing
 
-All requirements including minimum and primary tested compiler versions can be found [here](https://kokkos.github.io/kokkos-core-wiki/requirements.html).
+All requirements including minimum and primary tested compiler versions can be found [here](https://kokkos.org/kokkos-core-wiki/requirements.html).
 
-Building and installation instructions are described [here](https://kokkos.github.io/kokkos-core-wiki/building.html).
+Building and installation instructions are described [here](https://kokkos.org/kokkos-core-wiki/building.html).
 
 # Citing Kokkos
 
-Please see the [following page](https://kokkos.github.io/kokkos-core-wiki/citation.html).
+Please see the [following page](https://kokkos.org/kokkos-core-wiki/citation.html).
 
 # License
 
