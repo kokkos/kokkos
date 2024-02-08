@@ -12,6 +12,79 @@ backends in development.
 
 **Kokkos Core is part of the Kokkos C++ Performance Portability Programming EcoSystem.**
 
+
+# Quick Start
+
+## Obtaining Kokkos
+
+The latest release of Kokkos can be obtained from the [GitHub releases page](https://github.com/kokkos/kokkos/releases/latest)
+or programmatically using curl to get the latest release tarball:
+
+```bash
+
+```bash
+curl -L -OJ https://github.com/kokkos/kokkos/archive/refs/tags/4.2.00.tar.gz
+```
+
+To clone the latest development version of Kokkos from GitHub:
+
+```bash
+git clone https://github.com/kokkos/kokkos.git
+```
+
+## Building Kokkos
+
+To build Kokkos, you will need to have a C++ compiler that supports C++14 or later.
+
+### Building for CPU on Linux or macOS
+
+To use the OpenMP backend, you will need a compiler that supports OpenMP, such as GCC, Clang, or Intel C++ Compiler.
+On MacOS, you will need to install a recent version of `libomp` for example using Homebrew:
+
+```bash
+brew install libomp
+```
+
+To build Kokkos targetting OpenMP for CPU on Linux or macOS, you can use the following commands:
+
+```bash
+cd kokkos
+cmake -B build -S . -DKokkos_ENABLE_OPENMP=On -DCMAKE_INSTALL_PREFIX=/opt/kokkos
+cmake --build build && cmake --install build
+```
+
+Note that you can also use `Kokkos_ENABLE_PTHREAD` to enable the use of threads instead of OpenMP.
+
+### Building for CUDA on Linux
+
+To build Kokkos targetting CUDA on Linux, you can use the following commands:
+
+```bash
+cd kokkos
+cmake -B build -S . -DKokkos_ENABLE_CUDA=On -DCMAKE_INSTALL_PREFIX=/opt/kokkos
+cmake --build build && cmake --install build
+```
+
+### Building for HIP on Linux
+
+To build Kokkos targetting HIP on Linux, you can use the following commands:
+
+```bash
+cd kokkos
+cmake -B build -S . -DKokkos_ENABLE_HIP=On -DCMAKE_INSTALL_PREFIX=/opt/kokkos
+cmake --build build && cmake --install build
+```
+
+## Using Kokkos
+
+To use Kokkos in your CMake project, you can use the following commands in your `CMakeLists.txt`:
+
+```cmake
+find_package(Kokkos REQUIRED)
+add_executable(myapp myapp.cpp)
+target_link_libraries(myapp Kokkos::kokkos)
+```
+
 For the complete documentation, click below:
 
 # [kokkos.github.io/kokkos-core-wiki](https://kokkos.github.io/kokkos-core-wiki)
