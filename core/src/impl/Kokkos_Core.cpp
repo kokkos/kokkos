@@ -16,7 +16,6 @@
 
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #define KOKKOS_IMPL_PUBLIC_INCLUDE
-#include <optional>
 #endif
 
 #include <Kokkos_Core.hpp>
