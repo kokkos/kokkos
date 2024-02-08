@@ -193,7 +193,8 @@ using host_abi_set = abi_set<simd_abi::scalar, simd_abi::avx2_fixed_size<4>,
 using data_type_set =
     data_types<std::int32_t, std::int64_t, std::uint64_t, double, float>;
 #elif defined(KOKKOS_ARCH_ARM_NEON)
-using host_abi_set = abi_set<simd_abi::scalar, simd_abi::neon_fixed_size<2>>;
+using host_abi_set = abi_set<simd_abi::scalar, simd_abi::neon_fixed_size<2>,
+                             simd_abi::neon_fixed_size<4>>;
 using data_type_set =
     data_types<std::int32_t, std::int64_t, std::uint64_t, double, float>;
 #else
