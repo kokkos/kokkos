@@ -61,7 +61,7 @@ cmake -B build -S . -DKokkos_ENABLE_OPENMP=On -DCMAKE_INSTALL_PREFIX=/opt/kokkos
 cmake --build build && cmake --install build
 ```
 
-Note that you can also use `Kokkos_ENABLE_PTHREAD` to enable the use of threads instead of OpenMP.
+Note that you can also use `Kokkos_ENABLE_THREADS` to enable the use of threads instead of OpenMP.
 
 #### Building for CUDA on Linux
 
