@@ -248,9 +248,32 @@ std::ostream& SYCL::impl_sycl_info(std::ostream& os,
 
 namespace Impl {
 
+std::vector<sycl::device> get_sycl_devices() {
+  std::vector<sycl::device> gpu_devices =
+      sycl::device::get_devices(sycl::info::device_type::gpu);
+#if defined(KOKKOS_ARCH_INTEL_GPU) || defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU) || \
+    defined(KOKKOS_ARCH_AMD_GPU)
+#if defined(KOKKOS_ARCH_INTEL_GPU)
+  sycl::backend backend = sycl::backend::ext_oneapi_level_zero;
+#elif defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
+  sycl::backend backend = sycl::backend::ext_oneapi_cuda;
+#elif defined(KOKKOS_ARCH_AMD_GPU)
+  sycl::backend backend = sycl::backend::ext_oneapi_hip;
+#endif
+  gpu_devices.erase(std::remove_if(gpu_devices.begin(), gpu_devices.end(),
+                                   [backend](const sycl::device& d) {
+                                     return d.get_backend() != backend;
+                                   }),
+                    gpu_devices.end());
+  if (gpu_devices.empty())
+    Kokkos::abort("Error: no GPU available for execution.\n");
+#endif
+  return gpu_devices;
+}
+
 int g_sycl_space_factory_initialized =
     Kokkos::Impl::initialize_space_factory<SYCL>("170_SYCL");
 
-}
+}  // namespace Impl
 }  // namespace Experimental
 }  // namespace Kokkos
