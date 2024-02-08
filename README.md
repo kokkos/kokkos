@@ -69,6 +69,11 @@ cmake -B build -S . -DKokkos_ENABLE_HIP=On -DCMAKE_INSTALL_PREFIX=/opt/kokkos
 cmake --build build && cmake --install build
 ```
 
+### Installing Kokkos with Spack
+
+You can also install Kokkos using [Spack](https://spack.io/): `spack install kokkos`. Available options can be found using `spack info kokkos`.
+
+
 ## Using Kokkos
 
 To use Kokkos in your CMake project, you can use the following commands in your `CMakeLists.txt`:
@@ -79,9 +84,13 @@ add_executable(myapp myapp.cpp)
 target_link_libraries(myapp Kokkos::kokkos)
 ```
 
-For the complete documentation, click below:
+To compile your application, you can use the following commands:
 
-# [kokkos.org/kokkos-core-wiki/](https://kokkos.org/kokkos-core-wiki/)
+```bash
+cmake -B build -S . -DCMAKE_INSTALL_PREFIX=/opt/kokkos && cmake --build build
+```
+
+# For the complete documentation: [kokkos.org/kokkos-core-wiki/](https://kokkos.org/kokkos-core-wiki/)
 
 # Learning about Kokkos
 
