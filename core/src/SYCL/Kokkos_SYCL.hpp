@@ -184,6 +184,10 @@ std::vector<SYCL> partition_space(const SYCL& sycl_space,
         sycl::queue(context, device, sycl::property::queue::in_order()));
   return instances;
 }
+
+namespace Impl {
+std::vector<sycl::device> get_sycl_devices();
+}  // namespace Impl
 }  // namespace Experimental
 
 }  // namespace Kokkos
