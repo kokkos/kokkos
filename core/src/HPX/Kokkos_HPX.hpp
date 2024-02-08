@@ -28,14 +28,6 @@ static_assert(false,
 #include <Kokkos_Core_fwd.hpp>
 
 #include <Kokkos_HostSpace.hpp>
-#include <cstddef>
-#include <iosfwd>
-
-#ifdef KOKKOS_ENABLE_HBWSPACE
-#include <Kokkos_HBWSpace.hpp>
-#endif
-
-#include <Kokkos_HostSpace.hpp>
 #include <Kokkos_Layout.hpp>
 #include <Kokkos_MemoryTraits.hpp>
 #include <Kokkos_Parallel.hpp>
@@ -59,6 +51,7 @@ static_assert(false,
 
 #include <Kokkos_UniqueToken.hpp>
 
+#include <cstddef>
 #include <iosfwd>
 #include <functional>
 #include <memory>

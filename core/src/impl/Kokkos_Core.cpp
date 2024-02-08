@@ -447,13 +447,6 @@ int Kokkos::Impl::get_gpu(const InitializationSettings& settings) {
 namespace {
 
 void initialize_backends(const Kokkos::InitializationSettings& settings) {
-// This is an experimental setting
-// For KNL in Flat mode this variable should be set, so that
-// memkind allocates high bandwidth memory correctly.
-#ifdef KOKKOS_ENABLE_HBWSPACE
-  setenv("MEMKIND_HBW_NODES", "1", 0);
-#endif
-
   Kokkos::Impl::ExecSpaceManager::get_instance().initialize_spaces(settings);
 }
 
@@ -573,11 +566,6 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
                                  "no");
 #endif
 
-#ifdef KOKKOS_ENABLE_HBWSPACE
-  declare_configuration_metadata("memory", "KOKKOS_ENABLE_HBWSPACE", "yes");
-#else
-  declare_configuration_metadata("memory", "KOKKOS_ENABLE_HBWSPACE", "no");
-#endif
 #ifdef KOKKOS_ENABLE_INTEL_MM_ALLOC
   declare_configuration_metadata("memory", "KOKKOS_ENABLE_INTEL_MM_ALLOC",
                                  "yes");
