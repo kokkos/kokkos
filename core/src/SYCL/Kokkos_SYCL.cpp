@@ -111,8 +111,28 @@ void SYCL::print_configuration(std::ostream& os, bool verbose) const {
   os << "macro  KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES : undefined\n";
 #endif
 
-  if (verbose)
+#ifdef KOKKOS_ENABLE_ONEDPL
+  os << "macro  KOKKOS_ENABLE_ONEDPL : defined\n";
+#else
+  os << "macro  KOKKOS_ENABLE_ONEDPL : undefined\n";
+#endif
+
+  int counter       = 0;
+  int active_device = Kokkos::device_id();
+  std::cout << "\nAvailable devices: \n";
+  std::vector<sycl::device> devices = Impl::get_sycl_devices();
+  for (const auto& device : devices) {
+    os << "[" << device.get_backend() << "]:gpu:" << counter << "] "
+       << device.get_info<sycl::info::device::name>();
+    if (counter == active_device) os << " : Selected";
+    os << '\n';
+    ++counter;
+  }
+
+  if (verbose) {
+    os << '\n';
     SYCL::impl_sycl_info(os, m_space_instance->m_queue->get_device());
+  }
 }
 
 void SYCL::fence(const std::string& name) const {
