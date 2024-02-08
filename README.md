@@ -18,18 +18,16 @@ backends in development.
 ## Obtaining Kokkos
 
 The latest release of Kokkos can be obtained from the [GitHub releases page](https://github.com/kokkos/kokkos/releases/latest)
-or programmatically using curl to get the latest release tarball:
+or programmatically using curl to get the latest release tarball and extract it into a directory called `kokkos`:
 
 ```bash
-
-```bash
-curl -L -OJ https://github.com/kokkos/kokkos/archive/refs/tags/4.2.00.tar.gz
+mkdir kokkos && curl -s -L https://github.com/kokkos/kokkos/archive/refs/tags/4.2.00.tar.gz | tar xz - -C kokkos --strip-components 1
 ```
 
 To clone the latest development version of Kokkos from GitHub:
 
 ```bash
-git clone https://github.com/kokkos/kokkos.git
+git clone -b develop  https://github.com/kokkos/kokkos.git
 ```
 
 ## Building Kokkos
@@ -39,11 +37,7 @@ To build Kokkos, you will need to have a C++ compiler that supports C++14 or lat
 ### Building for CPU on Linux or macOS
 
 To use the OpenMP backend, you will need a compiler that supports OpenMP, such as GCC, Clang, or Intel C++ Compiler.
-On MacOS, you will need to install a recent version of `libomp` for example using Homebrew:
-
-```bash
-brew install libomp
-```
+On MacOS, you will need to install a recent version of `libomp` for example using Homebrew: `brew install libomp`.
 
 To build Kokkos targetting OpenMP for CPU on Linux or macOS, you can use the following commands:
 
