@@ -17,12 +17,13 @@
 #ifndef KOKKOS_DEVICE_MANAGEMENT_HPP
 #define KOKKOS_DEVICE_MANAGEMENT_HPP
 
+#include <optional>
 #include <vector>
 
 namespace Kokkos {
 class InitializationSettings;
 namespace Impl {
-int get_gpu(const Kokkos::InitializationSettings& settings);
+std::optional<int> get_gpu(const Kokkos::InitializationSettings& settings);
 // This declaration is provided for testing purposes only
 int get_ctest_gpu(int local_rank);
 std::vector<int> get_visible_devices(int device_count);  // test-only

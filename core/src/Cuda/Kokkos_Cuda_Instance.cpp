@@ -532,7 +532,9 @@ int Cuda::impl_is_initialized() {
 }
 
 void Cuda::impl_initialize(InitializationSettings const &settings) {
-  const int cuda_device_id = Impl::get_gpu(settings);
+  const std::vector<int> &visible_devices = Impl::get_visible_devices();
+  const int cuda_device_id =
+      Impl::get_gpu(settings).value_or(visible_devices[0]);
 
   cudaDeviceProp cudaProp;
   KOKKOS_IMPL_CUDA_SAFE_CALL(

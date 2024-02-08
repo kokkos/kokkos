@@ -42,7 +42,9 @@ int HIP::impl_is_initialized() {
 }
 
 void HIP::impl_initialize(InitializationSettings const& settings) {
-  const int hip_device_id = Impl::get_gpu(settings);
+  const std::vector<int>& visible_devices = Impl::get_visible_devices();
+  const int hip_device_id =
+      Impl::get_gpu(settings).value_or(visible_devices[0]);
 
   Impl::HIPInternal::m_hipDev = hip_device_id;
   KOKKOS_IMPL_HIP_SAFE_CALL(

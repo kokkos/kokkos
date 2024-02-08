@@ -154,7 +154,9 @@ void SYCL::impl_initialize(InitializationSettings const& settings) {
     return;
   }
 #endif
-  const auto id = ::Kokkos::Impl::get_gpu(settings);
+  const auto& visible_devices = ::Kokkos::Impl::get_visible_devices();
+  const auto id =
+      ::Kokkos::Impl::get_gpu(settings).value_or(visible_devices[0]);
   Impl::SYCLInternal::singleton().initialize(gpu_devices[id]);
   Impl::SYCLInternal::m_syclDev = id;
 }
