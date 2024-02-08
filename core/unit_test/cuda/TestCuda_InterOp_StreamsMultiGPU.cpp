@@ -31,6 +31,12 @@ std::array<TEST_EXECSPACE, 2> get_execution_spaces(int n_devices) {
   TEST_EXECSPACE exec0(stream0);
   TEST_EXECSPACE exec(stream);
 
+  // Must return void to use ASSERT_EQ
+  [&]() {
+    ASSERT_EQ(exec0.cuda_device(), 0);
+    ASSERT_EQ(exec.cuda_device(), n_devices - 1);
+  }();
+
   return {exec0, exec};
 }
 
@@ -113,10 +119,8 @@ TEST(cuda_multi_gpu, managed_views) {
   {
     std::array<TEST_EXECSPACE, 2> execs = get_execution_spaces(n_devices);
 
-    ASSERT_EQ(execs[0].cuda_device(), 0);
     Kokkos::View<int *, TEST_EXECSPACE> view0(
         Kokkos::view_alloc("v0", execs[0]), 100);
-    ASSERT_EQ(execs[1].cuda_device(), n_devices - 1);
     Kokkos::View<int *, TEST_EXECSPACE> view(Kokkos::view_alloc("v", execs[1]),
                                              100);
 
@@ -139,17 +143,13 @@ TEST(cuda_multi_gpu, unmanaged_views) {
   {
     std::array<TEST_EXECSPACE, 2> execs = get_execution_spaces(n_devices);
 
-    int device0 = execs[0].cuda_device();
-    ASSERT_EQ(device0, 0);
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(device0));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(execs[0].cuda_device()));
     int *p0;
     KOKKOS_IMPL_CUDA_SAFE_CALL(
         cudaMalloc(reinterpret_cast<void **>(&p0), sizeof(int) * 100));
     Kokkos::View<int *, TEST_EXECSPACE> view0(p0, 100);
 
-    int device = execs[1].cuda_device();
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(device));
-    ASSERT_EQ(device, n_devices - 1);
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(execs[1].cuda_device()));
     int *p;
     KOKKOS_IMPL_CUDA_SAFE_CALL(
         cudaMalloc(reinterpret_cast<void **>(&p), sizeof(int) * 100));
