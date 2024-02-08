@@ -144,14 +144,16 @@ const cudaFuncAttributes& get_cuda_kernel_func_attributes(
 }
 
 template <class DriverType, class LaunchBounds, class KernelFuncPtr>
-inline void configure_shmem_preference(const KernelFuncPtr& func,
+inline void configure_shmem_preference(const int cuda_device,
+                                       const KernelFuncPtr& func,
                                        const cudaDeviceProp& device_props,
                                        const size_t block_size, int& shmem,
                                        const size_t occupancy) {
 #ifndef KOKKOS_ARCH_KEPLER
 
   const auto& func_attr =
-      get_cuda_kernel_func_attributes<DriverType, LaunchBounds>(func);
+      get_cuda_kernel_func_attributes<DriverType, LaunchBounds>(cuda_device,
+                                                                func);
 
   // Compute limits for number of blocks due to registers/SM
   const size_t regs_per_sm     = device_props.regsPerMultiprocessor;
@@ -385,8 +387,8 @@ struct CudaParallelLaunchKernelInvoker<
             driver.get_policy().impl_get_desired_occupancy().value();
         size_t block_size = block.x * block.y * block.z;
         Impl::configure_shmem_preference<DriverType, LaunchBounds>(
-            base_t::get_kernel_func(), cuda_instance->m_deviceProp, block_size,
-            shmem, desired_occupancy);
+            cuda_instance->m_cudaDev, base_t::get_kernel_func(),
+            cuda_instance->m_deviceProp, block_size, shmem, desired_occupancy);
       }
 
       void const* args[] = {&driver};
@@ -485,8 +487,8 @@ struct CudaParallelLaunchKernelInvoker<
             driver.get_policy().impl_get_desired_occupancy().value();
         size_t block_size = block.x * block.y * block.z;
         Impl::configure_shmem_preference<DriverType, LaunchBounds>(
-            base_t::get_kernel_func(), cuda_instance->m_deviceProp, block_size,
-            shmem, desired_occupancy);
+            cuda_instance->m_cudaDev, base_t::get_kernel_func(),
+            cuda_instance->m_deviceProp, block_size, shmem, desired_occupancy);
       }
 
       auto* driver_ptr = Impl::allocate_driver_storage_for_kernel(driver);
@@ -663,8 +665,8 @@ struct CudaParallelLaunchImpl<
         Impl::configure_shmem_preference<
             DriverType,
             Kokkos::LaunchBounds<MaxThreadsPerBlock, MinBlocksPerSM>>(
-            base_t::get_kernel_func(), cuda_instance->m_deviceProp, block_size,
-            shmem, desired_occupancy);
+            cuda_instance->m_cudaDev, base_t::get_kernel_func(),
+            cuda_instance->m_deviceProp, block_size, shmem, desired_occupancy);
       }
 
       desul::ensure_cuda_lock_arrays_on_device();
