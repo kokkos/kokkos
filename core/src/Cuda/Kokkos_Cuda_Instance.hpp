@@ -447,10 +447,10 @@ class CudaInternal {
   }
 
   template <typename T, bool setCudaDevice = true>
-  cudaError_t cuda_func_set_attributes_wrapper(T* entry, cudaFuncAttribute attr,
-                                               int value) const {
+  cudaError_t cuda_func_set_attribute_wrapper(T* entry, cudaFuncAttribute attr,
+                                              int value) const {
     if constexpr (setCudaDevice) set_cuda_device();
-    return cudaFuncSetAttributes(entry, attr, value);
+    return cudaFuncSetAttribute(entry, attr, value);
   }
 
   template <bool setCudaDevice = true>

@@ -222,7 +222,7 @@ inline void configure_shmem_preference(const KernelFuncPtr& func,
   // FIXME_CUDA_MULTIPLE_DEVICES
   auto set_cache_config = [&] {
     KOKKOS_IMPL_CUDA_SAFE_CALL(
-        (CudaInternal::singleton().cuda_func_set_attributes_wrapper(
+        (CudaInternal::singleton().cuda_func_set_attribute_wrapper(
             func, cudaFuncAttributePreferredSharedMemoryCarveout, carveout)));
     return carveout;
   };
