@@ -41,8 +41,8 @@ namespace Impl {
 template <typename ParallelType, typename Policy, typename LaunchBounds>
 int max_tile_size_product_helper(const Policy& pol, const LaunchBounds&) {
   cudaFuncAttributes attr =
-      CudaParallelLaunch<ParallelType,
-                         LaunchBounds>::get_cuda_func_attributes();
+      CudaParallelLaunch<ParallelType, LaunchBounds>::get_cuda_func_attributes(
+          pol.space().cuda_device());
   auto const& prop = pol.space().cuda_device_prop();
 
   // Limits due to registers/SM, MDRange doesn't have
