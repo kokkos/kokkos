@@ -20,21 +20,10 @@
 
 #include <Kokkos_Macros.hpp>
 
+#include <Kokkos_Atomic.hpp>
+#include <Kokkos_HostSpace.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_Tools.hpp>
-
-/*--------------------------------------------------------------------------*/
-
-#if (defined(KOKKOS_COMPILER_INTEL) || defined(KOKKOS_COMPILER_INTEL_LLVM)) && \
-    !defined(KOKKOS_ENABLE_CUDA)
-
-// Intel specialized allocator does not interoperate with CUDA memory allocation
-
-#define KOKKOS_ENABLE_INTEL_MM_ALLOC
-
-#endif
-
-/*--------------------------------------------------------------------------*/
 
 #include <cstddef>
 #include <cstdlib>
@@ -48,10 +37,6 @@
 #ifdef KOKKOS_COMPILER_INTEL
 #include <aligned_new>
 #endif
-
-#include <Kokkos_HostSpace.hpp>
-#include <impl/Kokkos_Error.hpp>
-#include <Kokkos_Atomic.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

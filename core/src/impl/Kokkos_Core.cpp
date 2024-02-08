@@ -568,14 +568,6 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
                                  "no");
 #endif
 
-#ifdef KOKKOS_ENABLE_INTEL_MM_ALLOC
-  declare_configuration_metadata("memory", "KOKKOS_ENABLE_INTEL_MM_ALLOC",
-                                 "yes");
-#else
-  declare_configuration_metadata("memory", "KOKKOS_ENABLE_INTEL_MM_ALLOC",
-                                 "no");
-#endif
-
 #ifdef KOKKOS_ENABLE_ASM
   declare_configuration_metadata("options", "KOKKOS_ENABLE_ASM", "yes");
 #else
