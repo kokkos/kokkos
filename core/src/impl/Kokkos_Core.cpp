@@ -137,7 +137,7 @@ int get_device_count() {
   KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDeviceCount(&count));
   return count;
 #elif defined(KOKKOS_ENABLE_SYCL)
-  return sycl::device::get_devices(sycl::info::device_type::gpu).size();
+  return Kokkos::Experimental::Impl::get_sycl_devices().size();
 #elif defined(KOKKOS_ENABLE_OPENACC)
   return acc_get_num_devices(
       Kokkos::Experimental::Impl::OpenACC_Traits::dev_type);

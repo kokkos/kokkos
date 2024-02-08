@@ -38,9 +38,7 @@ class SYCLTeamMember {
   using team_handle          = SYCLTeamMember;
 
  private:
-  mutable sycl::local_ptr<void> m_team_reduce;
   scratch_memory_space m_team_shared;
-  int m_team_reduce_size;
   sycl::nd_item<2> m_item;
   int m_league_rank;
   int m_league_size;
@@ -95,13 +93,17 @@ class SYCLTeamMember {
       team_broadcast(ValueType& val, const int thread_id) const {
     // Wait for shared data write until all threads arrive here
     sycl::group_barrier(m_item.get_group());
+    auto tmp_alloc =
+        sycl::ext::oneapi::group_local_memory_for_overwrite<ValueType[1]>(
+            m_item.get_group());
+    auto& local_mem = *tmp_alloc;
     if (m_item.get_local_id(1) == 0 &&
         static_cast<int>(m_item.get_local_id(0)) == thread_id) {
-      *static_cast<sycl::local_ptr<ValueType>>(m_team_reduce) = val;
+      local_mem[0] = val;
     }
     // Wait for shared data read until root thread writes
     sycl::group_barrier(m_item.get_group());
-    val = *static_cast<sycl::local_ptr<ValueType>>(m_team_reduce);
+    val = local_mem[0];
   }
 
   template <class Closure, class ValueType>
@@ -133,72 +135,62 @@ class SYCLTeamMember {
     const unsigned int team_rank_ = team_rank();
 
     // First combine the values in the same subgroup
+#if defined(KOKKOS_ARCH_INTEL_GPU) || defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
+    auto shuffle_combine = [&](int shift) {
+      if (vector_range * shift < sub_group_range) {
+        const value_type tmp = sg.shuffle_down(value, vector_range * shift);
+        if (team_rank_ + shift < team_size_) reducer.join(value, tmp);
+      }
+    };
+    shuffle_combine(1);
+    shuffle_combine(2);
+    shuffle_combine(4);
+    shuffle_combine(8);
+    shuffle_combine(16);
+#else
     for (unsigned int shift = 1; vector_range * shift < sub_group_range;
          shift <<= 1) {
       const value_type tmp = sg.shuffle_down(value, vector_range * shift);
       if (team_rank_ + shift < team_size_) reducer.join(value, tmp);
     }
+#endif
     value = sg.shuffle(value, 0);
 
-    const auto n_subgroups = sg.get_group_range()[0];
+    const int n_subgroups = sg.get_group_range()[0];
     if (n_subgroups == 1) {
       reducer.reference() = value;
       return;
     }
 
-    // We need to chunk up the whole reduction because we might not have
-    // allocated enough memory.
-    const unsigned int maximum_work_range =
-        std::min<int>(m_team_reduce_size / sizeof(value_type), n_subgroups);
+    constexpr int step_width = 16;
+    auto tmp_alloc = sycl::ext::oneapi::group_local_memory_for_overwrite<
+        value_type[step_width]>(m_item.get_group());
+    auto& reduction_array = *tmp_alloc;
 
     const auto id_in_sg = sg.get_local_id()[0];
-    auto reduction_array =
-        static_cast<sycl::local_ptr<value_type>>(m_team_reduce);
 
-    // Load values into the first maximum_work_range values of the reduction
+    // Load values into the first step_width values of the reduction
     // array in chunks. This means that only sub groups with an id in the
     // corresponding chunk load values.
     const auto group_id = sg.get_group_id()[0];
-    if (id_in_sg == 0 && group_id < maximum_work_range)
+    if (id_in_sg == 0 && group_id < step_width)
       reduction_array[group_id] = value;
     sycl::group_barrier(m_item.get_group());
 
-    for (unsigned int start = maximum_work_range; start < n_subgroups;
-         start += maximum_work_range) {
+    for (unsigned int start = step_width; start < n_subgroups;
+         start += step_width) {
       if (id_in_sg == 0 && group_id >= start &&
-          group_id <
-              std::min<unsigned int>(start + maximum_work_range, n_subgroups))
+          group_id < std::min<unsigned int>(start + step_width, n_subgroups))
         reducer.join(reduction_array[group_id - start], value);
       sycl::group_barrier(m_item.get_group());
     }
 
-    // Let the first subgroup do the final reduction
-    if (group_id == 0) {
-      const auto local_range = sg.get_local_range()[0];
-      auto result =
-          reduction_array[id_in_sg < maximum_work_range ? id_in_sg : 0];
-      // In case the maximum_work_range is larger than the range of the first
-      // subgroup, we first combine the items with a higher index.
-      for (unsigned int offset = local_range; offset < maximum_work_range;
-           offset += local_range)
-        if (id_in_sg + offset < maximum_work_range)
-          reducer.join(result, reduction_array[id_in_sg + offset]);
-      sycl::group_barrier(sg);
+    // Do the final reduction for all threads redundantly
+    value = reduction_array[0];
+    for (unsigned int i = 1; i < std::min(step_width, n_subgroups); ++i)
+      reducer.join(value, reduction_array[i]);
 
-      // Now do the actual subgroup reduction.
-      const auto min_range =
-          std::min<unsigned int>(maximum_work_range, local_range);
-      for (unsigned int stride = 1; stride < min_range; stride <<= 1) {
-        const auto tmp = sg.shuffle_down(result, stride);
-        if (id_in_sg + stride < min_range) reducer.join(result, tmp);
-      }
-      if (id_in_sg == 0) reduction_array[0] = result;
-    }
-    sycl::group_barrier(m_item.get_group());
-
-    reducer.reference() = reduction_array[0];
-    // Make sure that the reduction array hasn't been modified in the meantime.
-    m_item.barrier(sycl::access::fence_space::local_space);
+    reducer.reference() = value;
   }
 
   //--------------------------------------------------------------------------
@@ -221,18 +213,34 @@ class SYCLTeamMember {
     const auto id_in_sg        = sg.get_local_id()[0];
 
     // First combine the values in the same subgroup
+#if defined(KOKKOS_ARCH_INTEL_GPU) || defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
+    auto shuffle_combine = [&](int stride) {
+      if (vector_range * stride < sub_group_range) {
+        auto tmp = sg.shuffle_up(value, vector_range * stride);
+        if (id_in_sg >= vector_range * stride) value += tmp;
+      }
+    };
+    shuffle_combine(1);
+    shuffle_combine(2);
+    shuffle_combine(4);
+    shuffle_combine(8);
+    shuffle_combine(16);
+#else
     for (unsigned int stride = 1; vector_range * stride < sub_group_range;
          stride <<= 1) {
       auto tmp = sg.shuffle_up(value, vector_range * stride);
       if (id_in_sg >= vector_range * stride) value += tmp;
     }
+#endif
 
     const auto n_active_subgroups = sg.get_group_range()[0];
-    const auto base_data =
-        static_cast<sycl::local_ptr<Type>>(m_team_reduce).get();
-    if (static_cast<int>(n_active_subgroups * sizeof(Type)) >
-        m_team_reduce_size)
-      Kokkos::abort("Not implemented!");
+    // For Intel GPUs, there is a maximum of 1024/16=64 subgroups,
+    // this similarly holds for AMD GPUs (1024/64=16), and
+    // NVIDIA GPUs (1024/32=32).
+    auto tmp_alloc =
+        sycl::ext::oneapi::group_local_memory_for_overwrite<Type[64]>(
+            m_item.get_group());
+    auto& base_data = *tmp_alloc;
 
     const auto group_id = sg.get_group_id()[0];
     if (id_in_sg == sub_group_range - 1) base_data[group_id] = value;
@@ -248,6 +256,24 @@ class SYCLTeamMember {
           const auto upper_bound = std::min(
               sub_group_range, n_active_subgroups - round * sub_group_range);
           auto local_value = base_data[idx];
+#if defined(KOKKOS_ARCH_INTEL_GPU) || defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
+          auto shuffle_combine = [&](int stride) {
+            if (stride < upper_bound) {
+              auto tmp = sg.shuffle_up(local_value, stride);
+              if (id_in_sg >= stride) {
+                if (idx < n_active_subgroups)
+                  local_value += tmp;
+                else
+                  local_value = tmp;
+              }
+            }
+          };
+          shuffle_combine(1);
+          shuffle_combine(2);
+          shuffle_combine(4);
+          shuffle_combine(8);
+          shuffle_combine(16);
+#else
           for (unsigned int stride = 1; stride < upper_bound; stride <<= 1) {
             auto tmp = sg.shuffle_up(local_value, stride);
             if (id_in_sg >= stride) {
@@ -257,6 +283,7 @@ class SYCLTeamMember {
                 local_value = tmp;
             }
           }
+#endif
           base_data[idx] = local_value;
           if (round > 0)
             base_data[idx] += base_data[round * sub_group_range - 1];
@@ -319,12 +346,24 @@ class SYCLTeamMember {
     typename ReducerType::value_type tmp(value);
     typename ReducerType::value_type tmp2 = tmp;
 
-    for (int i = grange1; (i >>= 1);) {
-      tmp2 = sg.shuffle_down(tmp, i);
-      if (static_cast<int>(tidx1) < i) {
-        reducer.join(tmp, tmp2);
+#if defined(KOKKOS_ARCH_INTEL_GPU) || defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
+    auto shuffle_combine = [&](int shift) {
+      if (shift < grange1) {
+        tmp2 = sg.shuffle_down(tmp, shift);
+        if (static_cast<int>(tidx1) < shift) reducer.join(tmp, tmp2);
       }
+    };
+    shuffle_combine(16);
+    shuffle_combine(8);
+    shuffle_combine(4);
+    shuffle_combine(2);
+    shuffle_combine(1);
+#else
+    for (int i = grange1 / 2; i >= 1; i >>= 1) {
+      tmp2 = sg.shuffle_down(tmp, i);
+      if (static_cast<int>(tidx1) < i) reducer.join(tmp, tmp2);
     }
+#endif
 
     // Broadcast from root lane to all other lanes.
     // Cannot use "butterfly" algorithm to avoid the broadcast
@@ -340,27 +379,16 @@ class SYCLTeamMember {
   // Private for the driver
 
   KOKKOS_INLINE_FUNCTION
-  SYCLTeamMember(sycl::local_ptr<void> shared, const std::size_t shared_begin,
-                 const std::size_t shared_size,
+  SYCLTeamMember(sycl::local_ptr<void> shared, const std::size_t shared_size,
                  sycl::device_ptr<void> scratch_level_1_ptr,
                  const std::size_t scratch_level_1_size,
                  const sycl::nd_item<2> item, const int arg_league_rank,
                  const int arg_league_size)
-      : m_team_reduce(shared),
-        m_team_shared(static_cast<sycl::local_ptr<char>>(shared) + shared_begin,
-                      shared_size, scratch_level_1_ptr, scratch_level_1_size),
-        m_team_reduce_size(shared_begin),
+      : m_team_shared(static_cast<sycl::local_ptr<char>>(shared), shared_size,
+                      scratch_level_1_ptr, scratch_level_1_size),
         m_item(item),
         m_league_rank(arg_league_rank),
         m_league_size(arg_league_size) {}
-
- public:
-  // Declare to avoid unused private member warnings which are trigger
-  // when SFINAE excludes the member function which uses these variables
-  // Making another class a friend also surpresses these warnings
-  bool impl_avoid_sfinae_warning() const noexcept {
-    return m_team_reduce_size > 0 && m_team_reduce != nullptr;
-  }
 };
 
 }  // namespace Impl
@@ -832,18 +860,30 @@ parallel_scan(const Impl::ThreadVectorRangeBoundariesStruct<
     // the second closure call later.
     if (i - 1 < loop_boundaries.end && tidx1 > 0) closure(i - 1, val, false);
 
-    // Bottom up exclusive scan in triangular pattern where each SYCL thread is
-    // the root of a reduction tree from the zeroth "lane" to itself.
-    //  [t] += [t-1] if t >= 1
-    //  [t] += [t-2] if t >= 2
-    //  [t] += [t-4] if t >= 4
-    //  ...
+      // Bottom up exclusive scan in triangular pattern where each SYCL thread
+      // is the root of a reduction tree from the zeroth "lane" to itself.
+      //  [t] += [t-1] if t >= 1
+      //  [t] += [t-2] if t >= 2
+      //  [t] += [t-4] if t >= 4
+      //  ...
+#if defined(KOKKOS_ARCH_INTEL_GPU) || defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
+    auto shuffle_combine = [&](int shift) {
+      if (shift < static_cast<int>(grange1)) {
+        value_type tmp = sg.shuffle_up(val, shift);
+        if (shift <= static_cast<int>(tidx1)) reducer.join(val, tmp);
+      }
+    };
+    shuffle_combine(1);
+    shuffle_combine(2);
+    shuffle_combine(4);
+    shuffle_combine(8);
+    shuffle_combine(16);
+#else
     for (int j = 1; j < static_cast<int>(grange1); j <<= 1) {
       value_type tmp = sg.shuffle_up(val, j);
-      if (j <= static_cast<int>(tidx1)) {
-        reducer.join(val, tmp);
-      }
+      if (j <= static_cast<int>(tidx1)) reducer.join(val, tmp);
     }
+#endif
 
     // Include accumulation
     reducer.join(val, accum);
