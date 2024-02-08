@@ -48,6 +48,8 @@ void test_policies(TEST_EXECSPACE exec0, Kokkos::View<int *, TEST_EXECSPACE> v0,
   Kokkos::deep_copy(exec, v, 5);
   Kokkos::deep_copy(exec0, v0, 5);
 
+  Kokkos::deep_copy(v, v0);
+
   int sum;
   int sum0;
 
