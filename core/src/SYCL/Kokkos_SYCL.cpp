@@ -88,12 +88,13 @@ bool SYCL::impl_is_initialized() {
 void SYCL::impl_finalize() { Impl::SYCLInternal::singleton().finalize(); }
 
 void SYCL::print_configuration(std::ostream& os, bool verbose) const {
-  os << "Devices:\n";
-  os << "  KOKKOS_ENABLE_SYCL: yes\n";
-
   os << "\nRuntime Configuration:\n";
 
-  os << "macro  KOKKOS_ENABLE_SYCL : defined\n";
+#ifdef KOKKOS_ENABLE_ONEDPL
+  os << "macro  KOKKOS_ENABLE_ONEDPL : defined\n";
+#else
+  os << "macro  KOKKOS_ENABLE_ONEDPL : undefined\n";
+#endif
 #ifdef KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED
   os << "macro  KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED : defined\n";
 #else
@@ -104,17 +105,10 @@ void SYCL::print_configuration(std::ostream& os, bool verbose) const {
 #else
   os << "macro  SYCL_EXT_ONEAPI_DEVICE_GLOBAL : undefined\n";
 #endif
-
 #ifdef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
   os << "macro  KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES : defined\n";
 #else
   os << "macro  KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES : undefined\n";
-#endif
-
-#ifdef KOKKOS_ENABLE_ONEDPL
-  os << "macro  KOKKOS_ENABLE_ONEDPL : defined\n";
-#else
-  os << "macro  KOKKOS_ENABLE_ONEDPL : undefined\n";
 #endif
 
   int counter       = 0;
