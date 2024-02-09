@@ -175,8 +175,9 @@ void test_local_deepcopy_thread(ViewType A, ViewType B, const int N) {
                   extract_subview(A, lid, Kokkos::make_pair(start, stop));
               auto subDst =
                   extract_subview(B, lid, Kokkos::make_pair(start, stop));
-              Kokkos::Experimental::local_deep_copy_thread(teamMember, subDst,
-                                                           subSrc);
+              Kokkos::Experimental::deep_copy(
+                  teamMember, Kokkos::ThreadVectorRange(teamMember, 0), subDst,
+                  subSrc);
               // No wait for local_deep_copy_thread
             });
       });
