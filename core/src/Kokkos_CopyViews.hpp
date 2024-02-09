@@ -1850,9 +1850,10 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy_non_contiguous(
     const View<DT, DP...>& dst, const View<ST, SP...>& src,
     std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 1 &&
                       unsigned(ViewTraits<ST, SP...>::rank) == 1)>* = nullptr) {
-  auto policy = deep_copy_policy_helper(team, asked_policy, src.span());
-  Kokkos::parallel_for(policy,
-                       [&](const int& i) { dst.data()[i] = src.data()[i]; });
+  const size_t N = dst.extent(0);
+
+  auto policy = deep_copy_policy_helper(team, asked_policy, N);
+  Kokkos::parallel_for(policy, [&](const int& i) { dst(i) = src(i); });
 }
 
 template <class TeamType, class iType, class MemberType,
