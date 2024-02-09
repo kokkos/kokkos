@@ -23,7 +23,6 @@
 #cmakedefine KOKKOS_ENABLE_CUDA
 #cmakedefine KOKKOS_ENABLE_HIP
 #cmakedefine KOKKOS_ENABLE_HPX
-#cmakedefine KOKKOS_ENABLE_LIBRT
 #cmakedefine KOKKOS_ENABLE_SYCL
 #cmakedefine KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED
 
@@ -56,7 +55,6 @@
 
 /* TPL Settings */
 #cmakedefine KOKKOS_ENABLE_HWLOC
-#cmakedefine KOKKOS_USE_LIBRT
 #cmakedefine KOKKOS_ENABLE_LIBDL
 #cmakedefine KOKKOS_ENABLE_LIBQUADMATH
 #cmakedefine KOKKOS_ENABLE_ONEDPL

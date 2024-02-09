@@ -605,11 +605,6 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
 #else
   declare_configuration_metadata("options", "KOKKOS_ENABLE_HWLOC", "no");
 #endif
-#ifdef KOKKOS_ENABLE_LIBRT
-  declare_configuration_metadata("options", "KOKKOS_ENABLE_LIBRT", "yes");
-#else
-  declare_configuration_metadata("options", "KOKKOS_ENABLE_LIBRT", "no");
-#endif
 #ifdef KOKKOS_ENABLE_LIBDL
   declare_configuration_metadata("options", "KOKKOS_ENABLE_LIBDL", "yes");
 #else
