@@ -122,8 +122,20 @@ void SYCL::print_configuration(std::ostream& os, bool verbose) const {
   std::cout << "\nAvailable devices: \n";
   std::vector<sycl::device> devices = Impl::get_sycl_devices();
   for (const auto& device : devices) {
-    os << "[" << device.get_backend() << "]:gpu:" << counter << "] "
-       << device.get_info<sycl::info::device::name>();
+    std::string device_type;
+    switch (device.get_info<sycl::info::device::device_type>()) {
+      case sycl::info::device_type::cpu: device_type = "cpu"; break;
+      case sycl::info::device_type::gpu: device_type = "gpu"; break;
+      case sycl::info::device_type::accelerator:
+        device_type = "accelerator";
+        break;
+      case sycl::info::device_type::custom: device_type = "custom"; break;
+      case sycl::info::device_type::automatic: device_type = "automatic"; break;
+      case sycl::info::device_type::host: device_type = "host"; break;
+      case sycl::info::device_type::all: device_type = "all"; break;
+    }
+    os << "[" << device.get_backend() << "]:" << device_type << ':' << counter
+       << "] " << device.get_info<sycl::info::device::name>();
     if (counter == active_device) os << " : Selected";
     os << '\n';
     ++counter;
