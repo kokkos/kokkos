@@ -629,8 +629,6 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
                                  "ARMV8_THUNDERX2");
 #elif defined(KOKKOS_ARCH_BDW)
   declare_configuration_metadata("architecture", "CPU architecture", "BDW");
-#elif defined(KOKKOS_ARCH_BGQ)
-  declare_configuration_metadata("architecture", "CPU architecture", "BGQ");
 #elif defined(KOKKOS_ARCH_HSW)
   declare_configuration_metadata("architecture", "CPU architecture", "HSW");
 #elif defined(KOKKOS_ARCH_ICL)
@@ -643,8 +641,6 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
   declare_configuration_metadata("architecture", "CPU architecture", "KNL");
 #elif defined(KOKKOS_ARCH_NATIVE)
   declare_configuration_metadata("architecture", "CPU architecture", "NATIVE");
-#elif defined(KOKKOS_ARCH_POWER7)
-  declare_configuration_metadata("architecture", "CPU architecture", "POWER7");
 #elif defined(KOKKOS_ARCH_POWER8)
   declare_configuration_metadata("architecture", "CPU architecture", "POWER8");
 #elif defined(KOKKOS_ARCH_POWER9)

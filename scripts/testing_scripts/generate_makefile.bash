@@ -133,8 +133,6 @@ do
       echo "                 ARMv8-ThunderX  = ARMv8 Cavium ThunderX CPU"
       echo "                 ARMv8-TX2       = ARMv8 Cavium ThunderX2 CPU"
       echo "               [IBM]"
-      echo "                 BGQ             = IBM Blue Gene Q"
-      echo "                 Power7          = IBM POWER7 and POWER7+ CPUs"
       echo "                 Power8          = IBM POWER8 CPUs"
       echo "                 Power9          = IBM POWER9 CPUs"
       echo "               [Intel]"

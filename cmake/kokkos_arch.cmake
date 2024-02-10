@@ -60,8 +60,6 @@ DECLARE_AND_CHECK_HOST_ARCH(SKX               "Intel Skylake Xeon Server CPUs (A
 DECLARE_AND_CHECK_HOST_ARCH(KNC               "Intel Knights Corner Xeon Phi")
 DECLARE_AND_CHECK_HOST_ARCH(KNL               "Intel Knights Landing Xeon Phi")
 DECLARE_AND_CHECK_HOST_ARCH(SPR               "Intel Sapphire Rapids Xeon Server CPUs (AVX512)")
-DECLARE_AND_CHECK_HOST_ARCH(BGQ               "IBM Blue Gene Q")
-DECLARE_AND_CHECK_HOST_ARCH(POWER7            "IBM POWER7 CPUs")
 DECLARE_AND_CHECK_HOST_ARCH(POWER8            "IBM POWER8 CPUs")
 DECLARE_AND_CHECK_HOST_ARCH(POWER9            "IBM POWER9 CPUs")
 DECLARE_AND_CHECK_HOST_ARCH(ZEN               "AMD Zen architecture")
