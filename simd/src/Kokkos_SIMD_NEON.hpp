@@ -109,7 +109,8 @@ class neon_mask<Derived, 64, 2> {
     operator[](1) = bool(other[1]);
   }
   template <class U>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION neon_mask(neon_mask<U, 64,2> const& other)
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION neon_mask(
+      neon_mask<U, 64, 2> const& other)
       : neon_mask(static_cast<uint64x2_t>(other)) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION static constexpr std::size_t size() {
     return 2;
@@ -211,10 +212,12 @@ class neon_mask<Derived, 32, 2> {
         m_value, 1);
   }
   template <class U>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION neon_mask(neon_mask<U, 64, 2> const& other)
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION neon_mask(
+      neon_mask<U, 64, 2> const& other)
       : m_value(vqmovn_u64(static_cast<uint64x2_t>(other))) {}
   template <class U>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION neon_mask(neon_mask<U, 32, 2> const& other)
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION neon_mask(
+      neon_mask<U, 32, 2> const& other)
       : m_value(static_cast<uint32x2_t>(other)) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION static constexpr std::size_t size() {
     return 2;
@@ -1013,8 +1016,8 @@ class simd<float, simd_abi::neon_fixed_size<4>> {
       value_type* ptr, element_aligned_tag) const {
     vst1q_f32(ptr, m_value);
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_to(
-      value_type* ptr, vector_aligned_tag) const {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_to(value_type* ptr,
+                                                     vector_aligned_tag) const {
     vst1q_f32(ptr, m_value);
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit
@@ -1258,8 +1261,8 @@ class simd<std::int32_t, simd_abi::neon_fixed_size<2>> {
       value_type* ptr, element_aligned_tag) const {
     vst1_s32(ptr, m_value);
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_to(
-      value_type* ptr, vector_aligned_tag) const {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_to(value_type* ptr,
+                                                     vector_aligned_tag) const {
     vst1_s32(ptr, m_value);
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit operator int32x2_t()

@@ -1755,8 +1755,8 @@ class simd<std::int32_t, simd_abi::avx2_fixed_size<8>> {
       value_type* ptr, element_aligned_tag) const {
     _mm256_maskstore_epi32(ptr, static_cast<__m256i>(mask_type(true)), m_value);
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_to(
-      value_type* ptr, vector_aligned_tag) const {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_to(value_type* ptr,
+                                                     vector_aligned_tag) const {
     _mm256_maskstore_epi32(ptr, static_cast<__m256i>(mask_type(true)), m_value);
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit operator __m256i()
