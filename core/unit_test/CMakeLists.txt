@@ -86,6 +86,7 @@ SET(COMPILE_ONLY_SOURCES
   TestDetectionIdiom.cpp
   TestBitManipulation.cpp
   TestInterOp.cpp
+  TestRangePolicyCTAD.cpp
   TestStringManipulation.cpp
   TestVersionMacros.cpp
   TestViewRank.cpp
