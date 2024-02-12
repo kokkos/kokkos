@@ -1,5 +1,9 @@
 name: clang-format check
+
 on: [push, pull_request]
+
+permissions: read-all
+
 jobs:
   formatting-check:
     runs-on: ubuntu-latest

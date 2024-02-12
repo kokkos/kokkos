@@ -8,6 +8,8 @@ on:
       - '**/*.md'
     types: [ opened, reopened, synchronize ]
 
+permissions: read-all
+
 jobs:
   CI:
     continue-on-error: true
