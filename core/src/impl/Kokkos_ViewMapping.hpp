@@ -2917,9 +2917,19 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
             "Kokkos::View::initialization [" + name + "] via memset",
             Kokkos::Profiling::Experimental::device_id(space), &kpID);
       }
+#if defined(KOKKOS_COMPILER_INTEL) && (KOKKOS_COMPILER_INTEL < 2100)
+      // icpc needs extra ctad help to compile
+      // See https://github.com/kokkos/kokkos/issues/6775
+      using ViewType = Kokkos::View<ValueType*, typename DeviceType::memory_space,
+                              Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+      (void)ZeroMemset<ExecSpace, ViewType>(
+          space, Kokkos::View<ValueType*, typename DeviceType::memory_space,
+                              Kokkos::MemoryTraits<Kokkos::Unmanaged>>(ptr, n));
+#else
       (void)ZeroMemset(
           space, Kokkos::View<ValueType*, typename DeviceType::memory_space,
                               Kokkos::MemoryTraits<Kokkos::Unmanaged>>(ptr, n));
+#endif
 
       if (Kokkos::Profiling::profileLibraryLoaded()) {
         Kokkos::Profiling::endParallelFor(kpID);
@@ -3047,9 +3057,19 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
             Kokkos::Profiling::Experimental::device_id(space), &kpID);
       }
 
+#if defined(KOKKOS_COMPILER_INTEL) && (KOKKOS_COMPILER_INTEL < 2100)
+      // icpc needs extra ctad help to compile
+      // See https://github.com/kokkos/kokkos/issues/6775
+      using ViewType = Kokkos::View<ValueType*, typename DeviceType::memory_space,
+                              Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+      (void)ZeroMemset<ExecSpace, ViewType>(
+          space, Kokkos::View<ValueType*, typename DeviceType::memory_space,
+                              Kokkos::MemoryTraits<Kokkos::Unmanaged>>(ptr, n));
+#else
       (void)ZeroMemset(
           space, Kokkos::View<ValueType*, typename DeviceType::memory_space,
                               Kokkos::MemoryTraits<Kokkos::Unmanaged>>(ptr, n));
+#endif
 
       if (Kokkos::Profiling::profileLibraryLoaded()) {
         Kokkos::Profiling::endParallelFor(kpID);
