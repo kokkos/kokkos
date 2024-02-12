@@ -29,7 +29,7 @@ namespace Kokkos::Experimental {
 
 template <class ExecutionSpace, class KeysDataType, class... KeysProperties,
           class ValuesDataType, class... ValuesProperties>
-void sort_by_key([[maybe_unused]] const ExecutionSpace& exec,
+void sort_by_key(const ExecutionSpace& exec,
                  Kokkos::View<KeysDataType, KeysProperties...>& keys,
                  Kokkos::View<ValuesDataType, ValuesProperties...>& values) {
   // constraints
@@ -48,8 +48,11 @@ void sort_by_key([[maybe_unused]] const ExecutionSpace& exec,
       "Kokkos::sort: execution space instance is not able to access "
       "the memory space of the values View argument!");
 
-  // FIXME: what's the right way to check this condition?
-  assert(values.extent(0) >= keys.extent(0));
+  static_assert(KeysType::static_extent(0) == 0 ||
+                ValuesType::static_extent(0) == 0 ||
+                KeysType::static_extent(0) == ValuesType::static_extent(0));
+  if (values.size() != keys.size())
+    Kokkos::abort("values and keys extents must be the same");
 
   if (keys.extent(0) <= 1) {
     return;
@@ -66,7 +69,7 @@ void sort_by_key([[maybe_unused]] const ExecutionSpace& exec,
 template <class ExecutionSpace, class ComparatorType, class KeysDataType,
           class... KeysProperties, class ValuesDataType,
           class... ValuesProperties>
-void sort_by_key([[maybe_unused]] const ExecutionSpace& exec,
+void sort_by_key(const ExecutionSpace& exec,
                  Kokkos::View<KeysDataType, KeysProperties...>& keys,
                  Kokkos::View<ValuesDataType, ValuesProperties...>& values,
                  const ComparatorType& comparator) {
@@ -86,8 +89,11 @@ void sort_by_key([[maybe_unused]] const ExecutionSpace& exec,
       "Kokkos::sort: execution space instance is not able to access "
       "the memory space of the values View argument!");
 
-  // FIXME: what's the right way to check this condition?
-  assert(values.extent(0) >= keys.extent(0));
+  static_assert(KeysType::static_extent(0) == 0 ||
+                ValuesType::static_extent(0) == 0 ||
+                KeysType::static_extent(0) == ValuesType::static_extent(0));
+  if (values.size() != keys.size())
+    Kokkos::abort("values and keys extents must be the same");
 
   if (keys.extent(0) <= 1) {
     return;

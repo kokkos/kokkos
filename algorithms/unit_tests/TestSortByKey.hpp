@@ -22,6 +22,8 @@
 #include <Kokkos_Random.hpp>
 #include <Kokkos_Sort.hpp>
 
+#include <utility>  // pair
+
 namespace Test {
 namespace SortImpl {
 
@@ -79,22 +81,10 @@ TEST(TEST_CATEGORY, SortByKeyEmptyView) {
 
   // does not matter if we use int or something else
   Kokkos::View<int *, ExecutionSpace> keys("keys", 0);
-  Kokkos::View<float *, ExecutionSpace> values("values", 2);
+  Kokkos::View<float *, ExecutionSpace> values("values", 0);
 
   ASSERT_NO_THROW(
       Kokkos::Experimental::sort_by_key(ExecutionSpace(), keys, values));
-}
-
-TEST(TEST_CATEGORY, SortByKeyKeysLargerThanValues) {
-  using ExecutionSpace = TEST_EXECSPACE;
-
-  // does not matter if we use int or something else
-  Kokkos::View<int *, ExecutionSpace> keys("keys", 3);
-  Kokkos::View<float *, ExecutionSpace> values("values", 1);
-
-  // FIXME depends on how we check (keys.extent(0) <= values.extent(0))
-  // ASSERT_THROW(Kokkos::Experimental::sort_by_key(ExecutionSpace(), keys,
-  // values));
 }
 
 TEST(TEST_CATEGORY, SortByKey) {
@@ -172,6 +162,82 @@ TEST(TEST_CATEGORY, SortByKeyWithComparator) {
     ASSERT_EQ(sort_fails, 0u);
   }
 }
+
+TEST(TEST_CATEGORY, SortByKeyStaticExtents) {
+  using ExecutionSpace = TEST_EXECSPACE;
+
+  ExecutionSpace space{};
+
+  Kokkos::View<int[10], ExecutionSpace> keys("keys");
+
+  Kokkos::View<int[10], ExecutionSpace> values_static("values_static");
+  ASSERT_NO_THROW(
+      Kokkos::Experimental::sort_by_key(space, keys, values_static));
+
+  Kokkos::View<int *, ExecutionSpace> values_dynamic("values_dynamic", 10);
+  ASSERT_NO_THROW(
+      Kokkos::Experimental::sort_by_key(space, keys, values_dynamic));
+}
+
+template <typename ExecutionSpace, typename Keys, typename Values>
+void buildViewsForStrided(ExecutionSpace const &space, int n, Keys &keys,
+                          Values &values) {
+  Kokkos::parallel_for(
+      "create_data",
+      Kokkos::MDRangePolicy<Kokkos::Rank<3>, ExecutionSpace>(space, {0, 0, 0},
+                                                             {n, n, n}),
+      KOKKOS_LAMBDA(int i, int j, int k) {
+        keys(i, j, k)   = n - i;
+        values(i, j, k) = i;
+      });
+}
+
+TEST(TEST_CATEGORY, SortByKeyWithStrides) {
+  using ExecutionSpace = TEST_EXECSPACE;
+
+  ExecutionSpace space{};
+
+  auto const n = 10;
+
+  Kokkos::View<int ***, ExecutionSpace> keys("keys", n, n, n);
+  Kokkos::View<int ***, ExecutionSpace> values("values", n, n, n);
+  buildViewsForStrided(space, n, keys, values);
+
+  auto keys_sub   = Kokkos::subview(keys, Kokkos::ALL(), 0, 0);
+  auto values_sub = Kokkos::subview(values, Kokkos::ALL(), 0, 0);
+
+  auto keys_orig = Kokkos::create_mirror(space, keys_sub);
+  Kokkos::deep_copy(space, keys_orig, keys_sub);
+
+  Kokkos::Experimental::sort_by_key(space, keys_sub, values_sub);
+
+  unsigned int sort_fails = 0;
+  Kokkos::parallel_reduce(
+      Kokkos::RangePolicy<ExecutionSpace>(space, 0, n),
+      SortImpl::is_sorted_by_key_struct<ExecutionSpace, decltype(keys_sub),
+                                        decltype(values_sub)>(
+          keys_sub, keys_orig, values_sub),
+      sort_fails);
+
+  ASSERT_EQ(sort_fails, 0u);
+}
+
+#if !defined(NDEBUG) || defined(KOKKOS_ENABLE_DEBUG)
+TEST(TEST_CATEGORY, SortByKeyKeysLargerThanValues) {
+  using ExecutionSpace = TEST_EXECSPACE;
+
+  // does not matter if we use int or something else
+  Kokkos::View<int *, ExecutionSpace> keys("keys", 3);
+  Kokkos::View<float *, ExecutionSpace> values("values", 1);
+
+  ASSERT_DEATH(
+      Kokkos::Experimental::sort_by_key(ExecutionSpace(), keys, values),
+      "values and keys extents must be the same");
+  ASSERT_DEATH(Kokkos::Experimental::sort_by_key(ExecutionSpace(), keys, values,
+                                                 SortImpl::Greater{}),
+               "values and keys extents must be the same");
+}
+#endif
 
 }  // namespace Test
 #endif

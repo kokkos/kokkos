@@ -17,8 +17,6 @@
 #ifndef KOKKOS_SORT_BY_KEY_FREE_FUNCS_IMPL_HPP_
 #define KOKKOS_SORT_BY_KEY_FREE_FUNCS_IMPL_HPP_
 
-#include "../Kokkos_BinOpsPublicAPI.hpp"
-#include "../Kokkos_BinSortPublicAPI.hpp"
 #include <Kokkos_Core.hpp>
 
 #if defined(KOKKOS_ENABLE_CUDA)
@@ -73,24 +71,20 @@
 
 namespace Kokkos::Impl {
 
-template <typename T, typename enable = void>
-struct is_admissible_to_kokkos_sort_by_key : std::false_type {};
-
 template <typename T>
-struct is_admissible_to_kokkos_sort_by_key<
-    T, std::enable_if_t< ::Kokkos::is_view<T>::value && T::rank() == 1 &&
-                         (std::is_same<typename T::traits::array_layout,
-                                       Kokkos::LayoutLeft>::value ||
-                          std::is_same<typename T::traits::array_layout,
-                                       Kokkos::LayoutRight>::value ||
-                          std::is_same<typename T::traits::array_layout,
-                                       Kokkos::LayoutStride>::value)> >
-    : std::true_type {};
+constexpr inline bool is_admissible_to_kokkos_sort_by_key =
+    ::Kokkos::is_view<T>::value&& T::rank() == 1 &&
+    (std::is_same<typename T::traits::array_layout,
+                  Kokkos::LayoutLeft>::value ||
+     std::is_same<typename T::traits::array_layout,
+                  Kokkos::LayoutRight>::value ||
+     std::is_same<typename T::traits::array_layout,
+                  Kokkos::LayoutStride>::value);
 
 template <class ViewType>
 KOKKOS_INLINE_FUNCTION constexpr void
 static_assert_is_admissible_to_kokkos_sort_by_key(const ViewType& /* view */) {
-  static_assert(is_admissible_to_kokkos_sort_by_key<ViewType>::value,
+  static_assert(is_admissible_to_kokkos_sort_by_key<ViewType>,
                 "Kokkos::sort_by_key only accepts 1D values View with "
                 "LayoutRight, LayoutLeft or LayoutStride.");
 }
@@ -160,7 +154,10 @@ void applyPermutation(ExecutionSpace const& space,
                       ViewType const& view) {
   static_assert(std::is_integral<typename PermutationView::value_type>::value);
 
-  auto view_copy = Kokkos::create_mirror(space, view);
+  auto view_copy = Kokkos::create_mirror(
+      Kokkos::view_alloc(space, typename ExecutionSpace::memory_space{},
+                         Kokkos::WithoutInitializing),
+      view);
   Kokkos::deep_copy(space, view_copy, view);
   Kokkos::parallel_for(
       "Kokkos::sort_by_key_via_sort::permute_" + view.label(),
