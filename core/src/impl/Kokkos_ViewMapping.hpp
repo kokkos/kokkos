@@ -2920,8 +2920,9 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
 #if defined(KOKKOS_COMPILER_INTEL) && (KOKKOS_COMPILER_INTEL < 2100)
       // icpc needs extra ctad help to compile
       // See https://github.com/kokkos/kokkos/issues/6775
-      using ViewType = Kokkos::View<ValueType*, typename DeviceType::memory_space,
-                              Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+      using ViewType =
+          Kokkos::View<ValueType*, typename DeviceType::memory_space,
+                       Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
       (void)ZeroMemset<ExecSpace, ViewType>(
           space, Kokkos::View<ValueType*, typename DeviceType::memory_space,
                               Kokkos::MemoryTraits<Kokkos::Unmanaged>>(ptr, n));
@@ -3060,8 +3061,9 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
 #if defined(KOKKOS_COMPILER_INTEL) && (KOKKOS_COMPILER_INTEL < 2100)
       // icpc needs extra ctad help to compile
       // See https://github.com/kokkos/kokkos/issues/6775
-      using ViewType = Kokkos::View<ValueType*, typename DeviceType::memory_space,
-                              Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+      using ViewType =
+          Kokkos::View<ValueType*, typename DeviceType::memory_space,
+                       Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
       (void)ZeroMemset<ExecSpace, ViewType>(
           space, Kokkos::View<ValueType*, typename DeviceType::memory_space,
                               Kokkos::MemoryTraits<Kokkos::Unmanaged>>(ptr, n));
