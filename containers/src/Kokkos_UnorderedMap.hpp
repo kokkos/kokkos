@@ -856,8 +856,6 @@ class UnorderedMap {
                    std::is_same<std::remove_const_t<SValue>, value_type>::value>
   deep_copy_view(
       UnorderedMap<SKey, SValue, SDevice, Hasher, EqualTo> const &src) {
-    using src_type = UnorderedMap<SKey, SValue, SDevice, Hasher, EqualTo>;
-
     // To deep copy UnorderedMap, capacity must be identical
     KOKKOS_EXPECTS(capacity() == src.capacity());
 
