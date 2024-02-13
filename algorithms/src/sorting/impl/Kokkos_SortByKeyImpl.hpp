@@ -94,8 +94,8 @@ template <class KeysDataType, class... KeysProperties, class ValuesDataType,
           class... ValuesProperties, class... MaybeComparator>
 void sort_by_key_cudathrust(
     const Kokkos::Cuda& exec,
-    Kokkos::View<KeysDataType, KeysProperties...>& keys,
-    Kokkos::View<ValuesDataType, ValuesProperties...>& values,
+    const Kokkos::View<KeysDataType, KeysProperties...>& keys,
+    const Kokkos::View<ValuesDataType, ValuesProperties...>& values,
     MaybeComparator&&... maybeComparator) {
   const auto policy = thrust::cuda::par.on(exec.cuda_stream());
   auto keys_first   = ::Kokkos::Experimental::begin(keys);
@@ -111,8 +111,8 @@ template <class KeysDataType, class... KeysProperties, class ValuesDataType,
           class... ValuesProperties, class... MaybeComparator>
 void sort_by_key_hipthrust(
     const Kokkos::HIP& exec,
-    Kokkos::View<KeysDataType, KeysProperties...>& keys,
-    Kokkos::View<ValuesDataType, ValuesProperties...>& values,
+    const Kokkos::View<KeysDataType, KeysProperties...>& keys,
+    const Kokkos::View<ValuesDataType, ValuesProperties...>& values,
     MaybeComparator&&... maybeComparator) {
   const auto policy = thrust::cuda::par.on(exec.cuda_stream());
   auto keys_first   = ::Kokkos::Experimental::begin(keys);
@@ -130,8 +130,8 @@ template <class KeysDataType, class... KeysProperties, class ValuesDataType,
           class... ValuesProperties, class... MaybeComparator>
 void sort_by_key_onedpl(
     const Kokkos::SYCL& exec,
-    Kokkos::View<KeysDataType, KeysProperties...>& keys,
-    Kokkos::View<ValuesDataType, ValuesProperties...>& values,
+    const Kokkos::View<KeysDataType, KeysProperties...>& keys,
+    const Kokkos::View<ValuesDataType, ValuesProperties...>& values,
     MaybeComparator&&... maybeComparator) {
   if (keys.stride(0) != 1 && values.stride(0) != 1) {
     Kokkos::abort(
@@ -149,9 +149,9 @@ void sort_by_key_onedpl(
 #endif
 
 template <typename ExecutionSpace, typename PermutationView, typename ViewType>
-void applyPermutation(ExecutionSpace const& space,
-                      PermutationView const& permutation,
-                      ViewType const& view) {
+void applyPermutation(const ExecutionSpace& space,
+                      const PermutationView& permutation,
+                      const ViewType& view) {
   static_assert(std::is_integral<typename PermutationView::value_type>::value);
 
   auto view_copy = Kokkos::create_mirror(
@@ -170,8 +170,8 @@ template <class ExecutionSpace, class KeysDataType, class... KeysProperties,
           class... MaybeComparator>
 void sort_by_key_via_sort(
     const ExecutionSpace& exec,
-    Kokkos::View<KeysDataType, KeysProperties...>& keys,
-    Kokkos::View<ValuesDataType, ValuesProperties...>& values,
+    const Kokkos::View<KeysDataType, KeysProperties...>& keys,
+    const Kokkos::View<ValuesDataType, ValuesProperties...>& values,
     MaybeComparator&&... maybeComparator) {
   auto const n = keys.size();
 
@@ -215,8 +215,8 @@ template <class KeysDataType, class... KeysProperties, class ValuesDataType,
           class... ValuesProperties>
 void sort_by_key_device_view_without_comparator(
     const Kokkos::Cuda& exec,
-    Kokkos::View<KeysDataType, KeysProperties...>& keys,
-    Kokkos::View<ValuesDataType, ValuesProperties...>& values) {
+    const Kokkos::View<KeysDataType, KeysProperties...>& keys,
+    const Kokkos::View<ValuesDataType, ValuesProperties...>& values) {
   sort_by_key_cudathrust(exec, keys, values);
 }
 #endif
@@ -226,8 +226,8 @@ template <class KeysDataType, class... KeysProperties, class ValuesDataType,
           class... ValuesProperties>
 void sort_by_key_device_view_without_comparator(
     const Kokkos::HIP& exec,
-    Kokkos::View<KeysDataType, KeysProperties...>& keys,
-    Kokkos::View<ValuesDataType, ValuesProperties...>& values) {
+    const Kokkos::View<KeysDataType, KeysProperties...>& keys,
+    const Kokkos::View<ValuesDataType, ValuesProperties...>& values) {
   sort_by_key_hipthrust(exec, keys, values);
 }
 #endif
@@ -236,8 +236,8 @@ void sort_by_key_device_view_without_comparator(
 template <class DataType, class... Properties>
 void sort_by_key_device_view_without_comparator(
     const Kokkos::Experimental::SYCL& exec,
-    Kokkos::View<KeysDataType, KeysProperties...>& keys,
-    Kokkos::View<ValuesDataType, ValuesProperties...>& values) {
+    const Kokkos::View<KeysDataType, KeysProperties...>& keys,
+    const Kokkos::View<ValuesDataType, ValuesProperties...>& values) {
   if (keys.stride(0) == 1 && values.stride(0) == 1) {
     sort_by_key_onedpl(exec, keys, values);
   } else {
@@ -252,8 +252,8 @@ template <class ExecutionSpace, class KeysDataType, class... KeysProperties,
 std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value>
 sort_by_key_device_view_without_comparator(
     const ExecutionSpace& exec,
-    Kokkos::View<KeysDataType, KeysProperties...>& keys,
-    Kokkos::View<ValuesDataType, ValuesProperties...>& values) {
+    const Kokkos::View<KeysDataType, KeysProperties...>& keys,
+    const Kokkos::View<ValuesDataType, ValuesProperties...>& values) {
   sort_by_key_via_sort(exec, keys, values);
 }
 
@@ -268,8 +268,8 @@ template <class ComparatorType, class KeysDataType, class... KeysProperties,
           class ValuesDataType, class... ValuesProperties>
 void sort_by_key_device_view_with_comparator(
     const Kokkos::Cuda& exec,
-    Kokkos::View<KeysDataType, KeysProperties...>& keys,
-    Kokkos::View<ValuesDataType, ValuesProperties...>& values,
+    const Kokkos::View<KeysDataType, KeysProperties...>& keys,
+    const Kokkos::View<ValuesDataType, ValuesProperties...>& values,
     const ComparatorType& comparator) {
   sort_by_key_cudathrust(exec, keys, values, comparator);
 }
@@ -280,8 +280,8 @@ template <class ComparatorType, class KeysDataType, class... KeysProperties,
           class ValuesDataType, class... ValuesProperties>
 void sort_by_key_device_view_with_comparator(
     const Kokkos::HIP& exec,
-    Kokkos::View<KeysDataType, KeysProperties...>& keys,
-    Kokkos::View<ValuesDataType, ValuesProperties...>& values,
+    const Kokkos::View<KeysDataType, KeysProperties...>& keys,
+    const Kokkos::View<ValuesDataType, ValuesProperties...>& values,
     const ComparatorType& comparator) {
   sort_by_key_hipthrust(exec, keys, values, comparator);
 }
@@ -291,8 +291,8 @@ void sort_by_key_device_view_with_comparator(
 template <class ComparatorType, class DataType, class... Properties>
 void sort_by_key_device_view_with_comparator(
     const Kokkos::Experimental::SYCL& exec,
-    Kokkos::View<KeysDataType, KeysProperties...>& keys,
-    Kokkos::View<ValuesDataType, ValuesProperties...>& values,
+    const Kokkos::View<KeysDataType, KeysProperties...>& keys,
+    const Kokkos::View<ValuesDataType, ValuesProperties...>& values,
     const ComparatorType& comparator) {
   if (keys.stride(0) == 1 && values.stride(0) == 1) {
     sort_by_key_onedpl(exec, keys, values, comparator);
@@ -309,8 +309,8 @@ template <class ComparatorType, class ExecutionSpace, class KeysDataType,
 std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value>
 sort_by_key_device_view_with_comparator(
     const ExecutionSpace& exec,
-    Kokkos::View<KeysDataType, KeysProperties...>& keys,
-    Kokkos::View<ValuesDataType, ValuesProperties...>& values,
+    const Kokkos::View<KeysDataType, KeysProperties...>& keys,
+    const Kokkos::View<ValuesDataType, ValuesProperties...>& values,
     const ComparatorType& comparator) {
   sort_by_key_via_sort(exec, keys, values, comparator);
 }

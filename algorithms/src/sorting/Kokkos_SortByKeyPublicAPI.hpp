@@ -29,9 +29,10 @@ namespace Kokkos::Experimental {
 
 template <class ExecutionSpace, class KeysDataType, class... KeysProperties,
           class ValuesDataType, class... ValuesProperties>
-void sort_by_key(const ExecutionSpace& exec,
-                 Kokkos::View<KeysDataType, KeysProperties...>& keys,
-                 Kokkos::View<ValuesDataType, ValuesProperties...>& values) {
+void sort_by_key(
+    const ExecutionSpace& exec,
+    const Kokkos::View<KeysDataType, KeysProperties...>& keys,
+    const Kokkos::View<ValuesDataType, ValuesProperties...>& values) {
   // constraints
   using KeysType   = Kokkos::View<KeysDataType, KeysProperties...>;
   using ValuesType = Kokkos::View<ValuesDataType, ValuesProperties...>;
@@ -69,10 +70,11 @@ void sort_by_key(const ExecutionSpace& exec,
 template <class ExecutionSpace, class ComparatorType, class KeysDataType,
           class... KeysProperties, class ValuesDataType,
           class... ValuesProperties>
-void sort_by_key(const ExecutionSpace& exec,
-                 Kokkos::View<KeysDataType, KeysProperties...>& keys,
-                 Kokkos::View<ValuesDataType, ValuesProperties...>& values,
-                 const ComparatorType& comparator) {
+void sort_by_key(
+    const ExecutionSpace& exec,
+    const Kokkos::View<KeysDataType, KeysProperties...>& keys,
+    const Kokkos::View<ValuesDataType, ValuesProperties...>& values,
+    const ComparatorType& comparator) {
   // constraints
   using KeysType   = Kokkos::View<KeysDataType, KeysProperties...>;
   using ValuesType = Kokkos::View<ValuesDataType, ValuesProperties...>;
