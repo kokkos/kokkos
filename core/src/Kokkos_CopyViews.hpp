@@ -1360,7 +1360,7 @@ contiguous_fill_or_memset(
 #endif
   )
     // FIXME intel/19 icpc fails to deduce template parameters here,
-    // resulting in compilation errors; explicitly passing the template 
+    // resulting in compilation errors; explicitly passing the template
     // parameters to ZeroMemset helps workaround the issue
     // See https://github.com/kokkos/kokkos/issues/6775
     ZeroMemset<ExecutionSpace, View<DT, DP...>>(exec_space, dst);
@@ -1396,7 +1396,7 @@ contiguous_fill_or_memset(
 #ifndef KOKKOS_ARCH_A64FX
   if (Impl::is_zero_byte(value))
     // FIXME intel/19 icpc fails to deduce template parameters here,
-    // resulting in compilation errors; explicitly passing the template 
+    // resulting in compilation errors; explicitly passing the template
     // parameters to ZeroMemset helps workaround the issue
     // See https://github.com/kokkos/kokkos/issues/6775
     ZeroMemset<exec_space_type, ViewType>(exec, dst);
