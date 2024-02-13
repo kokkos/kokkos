@@ -19,7 +19,7 @@
 namespace {
 
 template <class... Args>
-using PolicyMaker = decltype(Kokkos::RangePolicy(std::declval<Args>()...));
+using PolicyMaker = decltype(::Kokkos::RangePolicy(std::declval<Args>()...));
 
 template <class Policy, class... Args>
 inline constexpr bool IsSamePolicy =
@@ -42,7 +42,12 @@ struct TestRangePolicyCTAD {
 
   // RangePolicy()
 
+  // Guard against GGC 8.4 bug
+  // error: cannot deduce template arguments for ‘RangePolicy’ from ()
+  // error: template argument 2 is invalid
+#if !defined(KOKKOS_COMPILER_GNU) || (KOKKOS_COMPILER_GNU > 900)
   KOKKOS_TEST_RANGE_POLICY(Kokkos::RangePolicy<> /*, no argument */);
+#endif
 
   // RangePolicy(index_type, index_type)
 
