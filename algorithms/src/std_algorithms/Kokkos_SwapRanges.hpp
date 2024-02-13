@@ -43,6 +43,7 @@ auto swap_ranges(const ExecutionSpace& ex,
                  const ::Kokkos::View<DataType2, Properties2...>& dest) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
+  Impl::expect_matching_extents(source, dest);
 
   assert(source.extent(0) == dest.extent(0));
   return Impl::swap_ranges_exespace_impl("Kokkos::swap_ranges_view_api_default",
@@ -67,6 +68,7 @@ auto swap_ranges(const std::string& label, const ExecutionSpace& ex,
                  const ::Kokkos::View<DataType2, Properties2...>& dest) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
+  Impl::expect_matching_extents(source, dest);
 
   assert(source.extent(0) == dest.extent(0));
   return Impl::swap_ranges_exespace_impl(label, ex, begin(source), end(source),
@@ -97,6 +99,7 @@ KOKKOS_FUNCTION auto swap_ranges(
     const ::Kokkos::View<DataType2, Properties2...>& dest) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
+  Impl::expect_matching_extents(source, dest);
 
   assert(source.extent(0) == dest.extent(0));
   return Impl::swap_ranges_team_impl(teamHandle, begin(source), end(source),

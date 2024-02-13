@@ -78,6 +78,8 @@ auto transform_inclusive_scan(
   Impl::static_assert_is_not_openmptarget(ex);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
+  Impl::expect_matching_extents(view_from, view_dest);
+
   namespace KE = ::Kokkos::Experimental;
   return Impl::transform_inclusive_scan_exespace_impl(
       "Kokkos::transform_inclusive_scan_custom_functors_view_api", ex,
@@ -98,6 +100,8 @@ auto transform_inclusive_scan(
   Impl::static_assert_is_not_openmptarget(ex);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
+  Impl::expect_matching_extents(view_from, view_dest);
+
   namespace KE = ::Kokkos::Experimental;
   return Impl::transform_inclusive_scan_exespace_impl(
       label, ex, KE::cbegin(view_from), KE::cend(view_from),
@@ -162,6 +166,7 @@ auto transform_inclusive_scan(
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
   static_assert(std::is_move_constructible_v<ValueType>,
                 "ValueType must be move constructible.");
+  Impl::expect_matching_extents(view_from, view_dest);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::transform_inclusive_scan_exespace_impl(
@@ -185,6 +190,7 @@ auto transform_inclusive_scan(
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
   static_assert(std::is_move_constructible_v<ValueType>,
                 "ValueType must be move constructible.");
+  Impl::expect_matching_extents(view_from, view_dest);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::transform_inclusive_scan_exespace_impl(
@@ -228,6 +234,8 @@ KOKKOS_FUNCTION auto transform_inclusive_scan(
   Impl::static_assert_is_not_openmptarget(teamHandle);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
+  Impl::expect_matching_extents(view_from, view_dest);
+
   namespace KE = ::Kokkos::Experimental;
   return Impl::transform_inclusive_scan_team_impl(
       teamHandle, KE::cbegin(view_from), KE::cend(view_from),
@@ -269,6 +277,7 @@ KOKKOS_FUNCTION auto transform_inclusive_scan(
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
   static_assert(std::is_move_constructible_v<ValueType>,
                 "ValueType must be move constructible.");
+  Impl::expect_matching_extents(view_from, view_dest);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::transform_inclusive_scan_team_impl(

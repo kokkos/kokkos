@@ -262,6 +262,18 @@ KOKKOS_INLINE_FUNCTION void expect_no_overlap(
   }
 }
 
+template <typename DataType1, typename... Properties1, typename DataType2,
+          typename... Properties2>
+KOKKOS_INLINE_FUNCTION void expect_matching_extents(
+    const ::Kokkos::View<DataType1, Properties1...>& a,
+    const ::Kokkos::View<DataType2, Properties2...>& b) {
+  // this is a no-op for release
+  KOKKOS_EXPECTS(a.extent(0) == b.extent(0));
+  // avoid compiler complaining when KOKKOS_EXPECTS is no-op
+  (void)a;
+  (void)b;
+}
+
 }  // namespace Impl
 }  // namespace Experimental
 }  // namespace Kokkos
