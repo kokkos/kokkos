@@ -34,7 +34,9 @@ jobs:
           -DCMAKE_CXX_STANDARD=17
           -DKokkos_ENABLE_COMPILER_WARNINGS=ON
           -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF
-          -DKokkos_ENABLE_TESTS=On
+          -DKokkos_ENABLE_TESTS=ON
+          -DKokkos_ENABLE_EXAMPLES=ON
+          -DKokkos_ENABLE_BENCHMARKS=ON
           -DCMAKE_BUILD_TYPE=Debug
     - name: build
       run:
