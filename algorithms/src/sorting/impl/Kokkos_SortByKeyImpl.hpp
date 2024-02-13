@@ -186,17 +186,28 @@ void sort_by_key_via_sort(
       Kokkos::RangePolicy<ExecutionSpace>(exec, 0, n),
       KOKKOS_LAMBDA(int i) { permute(i) = i; });
 
+// FIXME OPENMPTARGET The sort happens on the host so we have to copy keys there
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+  auto keys_in_comparator = Kokkos::create_mirror_view(
+      Kokkos::view_alloc(Kokkos::HostSpace{}, Kokkos::WithoutInitializing),
+      keys);
+  Kokkos::deep_copy(exec, keys_in_comparator, keys);
+#else
+  auto keys_in_comparator = keys;
+#endif
+
   static_assert(sizeof...(MaybeComparator) <= 1);
   if constexpr (sizeof...(MaybeComparator) == 0) {
     Kokkos::sort(
-        exec, permute,
-        KOKKOS_LAMBDA(int i, int j) { return keys(i) < keys(j); });
+        exec, permute, KOKKOS_LAMBDA(int i, int j) {
+          return keys_in_comparator(i) < keys_in_comparator(j);
+        });
   } else {
     auto keys_comparator =
         std::get<0>(std::tuple<MaybeComparator...>(maybeComparator...));
     Kokkos::sort(
         exec, permute, KOKKOS_LAMBDA(int i, int j) {
-          return keys_comparator(keys(i), keys(j));
+          return keys_comparator(keys_in_comparator(i), keys_in_comparator(j));
         });
   }
 
@@ -241,7 +252,7 @@ void sort_by_key_device_view_without_comparator(
   if (keys.stride(0) == 1 && values.stride(0) == 1) {
     sort_by_key_onedpl(exec, keys, values);
   } else {
-    sort_by_key_via_binsort(exec, keys, values);
+    sort_by_key_via_sort(exec, keys, values);
   }
 }
 #endif
