@@ -1363,9 +1363,7 @@ contiguous_fill_or_memset(
     // resulting in compilation errors; explicitly passing the template 
     // parameters to ZeroMemset helps workaround the issue
     // See https://github.com/kokkos/kokkos/issues/6775
-    using ViewType        = View<DT, DP...>;
-    using exec_space_type = ExecutionSpace;
-    ZeroMemset<exec_space_type, ViewType>(exec_space, dst);
+    ZeroMemset<ExecutionSpace, View<DT, DP...>>(exec_space, dst);
   else
     contiguous_fill(exec_space, dst, value);
 }
