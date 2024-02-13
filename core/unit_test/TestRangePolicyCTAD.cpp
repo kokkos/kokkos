@@ -18,6 +18,15 @@
 
 namespace {
 
+template <class... Args>
+using PolicyMaker = decltype(Kokkos::RangePolicy(std::declval<Args>()...));
+
+template <class Policy, class... Args>
+inline constexpr bool IsSamePolicy =
+    std::is_same_v<Policy, PolicyMaker<Args...>>;
+
+#define KOKKOS_TEST_RANGE_POLICY(...) static_assert(IsSamePolicy<__VA_ARGS__>)
+
 struct TestRangePolicyCTAD {
   struct ImplicitlyConvertibleToDefaultExecutionSpace {
     [[maybe_unused]] operator Kokkos::DefaultExecutionSpace() const;
@@ -25,46 +34,29 @@ struct TestRangePolicyCTAD {
   static_assert(!Kokkos::is_execution_space_v<
                 ImplicitlyConvertibleToDefaultExecutionSpace>);
 
-  [[maybe_unused]] static inline Kokkos::DefaultExecutionSpace des;
-  [[maybe_unused]] static inline ImplicitlyConvertibleToDefaultExecutionSpace
-      nes;
-
-  [[maybe_unused]] static inline int64_t i64;
-  [[maybe_unused]] static inline int32_t i32;
-  [[maybe_unused]] static inline Kokkos::ChunkSize cs{0};
+  using des = Kokkos::DefaultExecutionSpace;
+  using nes = ImplicitlyConvertibleToDefaultExecutionSpace;
+  using i64 = int64_t;
+  using i32 = int32_t;
+  using cs  = Kokkos::ChunkSize;
 
   // RangePolicy()
 
-  // Workaround for gcc 8.4 bug, as
-  //    static_assert(std::is_same_v<Kokkos::RangePolicy<>,
-  //                                 decltype(Kokkos::RangePolicy())>);
-  // gives us:
-  //    error: cannot deduce template arguments for ‘RangePolicy’ from ()
-  //    error: template argument 2 is invalid
-  [[maybe_unused]] static inline Kokkos::RangePolicy rp{};
-  static_assert(std::is_same_v<Kokkos::RangePolicy<>, decltype(rp)>);
+  KOKKOS_TEST_RANGE_POLICY(Kokkos::RangePolicy<> /*, no argument */);
 
   // RangePolicy(index_type, index_type)
 
-  static_assert(std::is_same_v<Kokkos::RangePolicy<>,
-                               decltype(Kokkos::RangePolicy(i64, i64))>);
-  static_assert(std::is_same_v<Kokkos::RangePolicy<>,
-                               decltype(Kokkos::RangePolicy(i32, i32))>);
-  static_assert(std::is_same_v<Kokkos::RangePolicy<>,
-                               decltype(Kokkos::RangePolicy(i32, i64))>);
-  static_assert(std::is_same_v<Kokkos::RangePolicy<>,
-                               decltype(Kokkos::RangePolicy(i64, i32))>);
+  KOKKOS_TEST_RANGE_POLICY(Kokkos::RangePolicy<>, i64, i64);
+  KOKKOS_TEST_RANGE_POLICY(Kokkos::RangePolicy<>, i64, i32);
+  KOKKOS_TEST_RANGE_POLICY(Kokkos::RangePolicy<>, i32, i64);
+  KOKKOS_TEST_RANGE_POLICY(Kokkos::RangePolicy<>, i32, i32);
 
   // RangePolicy(index_type, index_type, Args...)
 
-  static_assert(std::is_same_v<Kokkos::RangePolicy<>,
-                               decltype(Kokkos::RangePolicy(i64, i64, cs))>);
-  static_assert(std::is_same_v<Kokkos::RangePolicy<>,
-                               decltype(Kokkos::RangePolicy(i32, i32, cs))>);
-  static_assert(std::is_same_v<Kokkos::RangePolicy<>,
-                               decltype(Kokkos::RangePolicy(i32, i64, cs))>);
-  static_assert(std::is_same_v<Kokkos::RangePolicy<>,
-                               decltype(Kokkos::RangePolicy(i64, i32, cs))>);
+  KOKKOS_TEST_RANGE_POLICY(Kokkos::RangePolicy<>, i64, i64, cs);
+  KOKKOS_TEST_RANGE_POLICY(Kokkos::RangePolicy<>, i64, i32, cs);
+  KOKKOS_TEST_RANGE_POLICY(Kokkos::RangePolicy<>, i32, i64, cs);
+  KOKKOS_TEST_RANGE_POLICY(Kokkos::RangePolicy<>, i32, i32, cs);
 
   // RangePolicy(execution_space, index_type, index_type)
 
@@ -72,18 +64,10 @@ struct TestRangePolicyCTAD {
 
   // RangePolicy(execution_space, index_type, index_type, Args...)
 
-  static_assert(
-      std::is_same_v<Kokkos::RangePolicy<>,
-                     decltype(Kokkos::RangePolicy(des, i64, i64, cs))>);
-  static_assert(
-      std::is_same_v<Kokkos::RangePolicy<>,
-                     decltype(Kokkos::RangePolicy(des, i32, i32, cs))>);
-  static_assert(
-      std::is_same_v<Kokkos::RangePolicy<>,
-                     decltype(Kokkos::RangePolicy(nes, i64, i64, cs))>);
-  static_assert(
-      std::is_same_v<Kokkos::RangePolicy<>,
-                     decltype(Kokkos::RangePolicy(nes, i32, i32, cs))>);
+  KOKKOS_TEST_RANGE_POLICY(Kokkos::RangePolicy<>, des, i64, i64, cs);
+  KOKKOS_TEST_RANGE_POLICY(Kokkos::RangePolicy<>, des, i32, i32, cs);
+  KOKKOS_TEST_RANGE_POLICY(Kokkos::RangePolicy<>, nes, i64, i64, cs);
+  KOKKOS_TEST_RANGE_POLICY(Kokkos::RangePolicy<>, nes, i32, i32, cs);
 };  // TestRangePolicyCTAD struct
 
 }  // namespace
