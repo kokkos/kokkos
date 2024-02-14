@@ -36,7 +36,6 @@ jobs:
         cmake -B build .
           -DKokkos_ENABLE_OPENMP=ON
           -DCMAKE_CXX_STANDARD=17
-          -DKokkos_ENABLE_COMPILER_WARNINGS=ON
           -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF
           -DKokkos_ENABLE_TESTS=ON
           -DKokkos_ENABLE_EXAMPLES=ON
@@ -45,9 +44,6 @@ jobs:
     - name: build
       run:
         cmake --build build --parallel 2
-    - name: test
-      working-directory: build
-      run: ctest --output-on-failure
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
