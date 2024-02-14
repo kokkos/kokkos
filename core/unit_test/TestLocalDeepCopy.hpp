@@ -31,9 +31,11 @@ template <typename ViewType>
 bool view_check_equals(const ViewType& lhs, const ViewType& rhs) {
   int result = 1;
 
+  using exec_space = typename ViewType::execution_space;
+
   auto reducer = Kokkos::LAnd<int>(result);
   Kokkos::parallel_reduce(
-      "view check equals", lhs.span(),
+      "view check equals", Kokkos::RangePolicy<exec_space>(0, lhs.span()),
       KOKKOS_LAMBDA(int i, int& local_result) {
         local_result = (lhs.data()[i] == rhs.data()[i]) && local_result;
       },
@@ -45,8 +47,10 @@ bool view_check_equals(const ViewType& lhs, const ViewType& rhs) {
 
 template <typename ViewType>
 void view_init(ViewType& view) {
+  using exec_space = typename ViewType::execution_space;
+
   Kokkos::parallel_for(
-      "initialize array", view.span(),
+      "initialize array", Kokkos::RangePolicy<exec_space>(0, view.span()),
       KOKKOS_LAMBDA(int i) { view.data()[i] = i; });
   Kokkos::fence();
 }
@@ -162,9 +166,11 @@ void reset(ViewType B) {
 template <typename ViewType>
 bool check_sum(ViewType B, const int N,
                typename ViewType::value_type fill_value) {
+  using exec_space = typename ViewType::execution_space;
+
   double sum_all = 0;
   Kokkos::parallel_reduce(
-      "Check B", B.span(),
+      "Check B", Kokkos::RangePolicy<exec_space>(0, B.span()),
       KOKKOS_LAMBDA(int i, double& lsum) { lsum += B.data()[i]; },
       Kokkos::Sum<double>(sum_all));
 
@@ -280,7 +286,7 @@ void test_local_deepcopy_scalar_range(
 
   double sum_all = 0.0;
   Kokkos::parallel_reduce(
-      "Check B", B.span(),
+      "Check B", Kokkos::RangePolicy<ExecSpace>(0, B.span()),
       KOKKOS_LAMBDA(int i, double& lsum) { lsum += B.data()[i]; },
       Kokkos::Sum<double>(sum_all));
 
