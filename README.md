@@ -53,7 +53,7 @@ Building and installation instructions are described [here](https://kokkos.org/k
 To use the OpenMP backend, you will need a compiler that supports OpenMP, such as GCC, Clang, or Intel C++ Compiler.
 On MacOS, you will need to install a recent version of `libomp` for example using Homebrew: `brew install libomp`.
 
-To build Kokkos targetting OpenMP for CPU on Linux or macOS, you can use the following commands:
+To build Kokkos targeting OpenMP for CPU on Linux or macOS, you can use the following commands:
 
 ```bash
 cd kokkos
