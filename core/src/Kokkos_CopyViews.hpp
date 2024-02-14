@@ -1814,6 +1814,19 @@ auto KOKKOS_INLINE_FUNCTION deep_copy_policy_helper(
   return Kokkos::ThreadVectorRange(team, length);
 }
 
+template <bool WantTeam, class TeamType, class DT, class... DP>
+auto KOKKOS_INLINE_FUNCTION deep_copy_mdpolicy_helper(
+    TeamType team, const View<DT, DP...>& dst,
+    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 2)>* = nullptr) {
+  if constexpr (WantTeam) {
+    return Kokkos::TeamVectorMDRange<Kokkos::Rank<2>, TeamType>(
+        team, dst.extent(0), dst.extent(1));
+  } else {
+    return Kokkos::ThreadVectorMDRange<Kokkos::Rank<2>, TeamType>(
+        team, dst.extent(0), dst.extent(1));
+  }
+}
+
 // Copy from a view to a view
 
 template <class TeamType, class iType, class MemberType,
@@ -1851,14 +1864,10 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy_non_contiguous(
     const View<DT, DP...>& dst, const View<ST, SP...>& src,
     std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 2 &&
                       unsigned(ViewTraits<ST, SP...>::rank) == 2)>* = nullptr) {
-  const size_t N = dst.extent(0) * dst.extent(1);
-
-  auto policy = deep_copy_policy_helper(team, asked_policy, N);
-  Kokkos::parallel_for(policy, [&](const int& i) {
-    int i0      = i % dst.extent(0);
-    int i1      = i / dst.extent(0);
-    dst(i0, i1) = src(i0, i1);
-  });
+  auto policy = deep_copy_mdpolicy_helper<Kokkos::is_detected_v<
+      boundary_has_team_member, Policy<iType, MemberType>>>(team, dst);
+  Kokkos::parallel_for(
+      policy, [&](const int& i, const int& j) { dst(i, j) = src(i, j); });
 }
 
 template <class TeamType, class iType, class MemberType,
@@ -1990,21 +1999,20 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy_non_contiguous(
 
 template <class TeamType, class iType, class MemberType,
           template <class, class> class Policy, class DT, class... DP>
-void KOKKOS_INLINE_FUNCTION deep_copy_contiguous(const TeamType& team,
-                                                 Policy<iType, MemberType>,
-                                                 const View<DT, DP...>& dst,
-                                                 typename ViewTraits<DT, DP...>::const_value_type& value) {
+void KOKKOS_INLINE_FUNCTION deep_copy_contiguous(
+    const TeamType& team, Policy<iType, MemberType>, const View<DT, DP...>& dst,
+    typename ViewTraits<DT, DP...>::const_value_type& value) {
   auto policy = deep_copy_policy_helper(
       team, Policy<iType, MemberType>(team, 0), dst.span());
-  Kokkos::parallel_for(policy,
-                       [&](const int& i) { dst.data()[i] = value; });
+  Kokkos::parallel_for(policy, [&](const int& i) { dst.data()[i] = value; });
 }
 
 template <class TeamType, class iType, class MemberType,
           template <class, class> class Policy, class DT, class... DP>
 void KOKKOS_INLINE_FUNCTION local_deep_copy_non_contiguous(
     const TeamType& team, Policy<iType, MemberType> asked_policy,
-    const View<DT, DP...>& dst, typename ViewTraits<DT, DP...>::const_value_type& value,
+    const View<DT, DP...>& dst,
+    typename ViewTraits<DT, DP...>::const_value_type& value,
     std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 1)>* = nullptr) {
   const size_t N = dst.extent(0);
 
@@ -2016,7 +2024,8 @@ template <class TeamType, class iType, class MemberType,
           template <class, class> class Policy, class DT, class... DP>
 void KOKKOS_INLINE_FUNCTION local_deep_copy_non_contiguous(
     const TeamType& team, Policy<iType, MemberType> asked_policy,
-    const View<DT, DP...>& dst, typename ViewTraits<DT, DP...>::const_value_type& value,
+    const View<DT, DP...>& dst,
+    typename ViewTraits<DT, DP...>::const_value_type& value,
     std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 2)>* = nullptr) {
   const size_t N = dst.extent(0) * dst.extent(1);
 
@@ -2032,7 +2041,8 @@ template <class TeamType, class iType, class MemberType,
           template <class, class> class Policy, class DT, class... DP>
 void KOKKOS_INLINE_FUNCTION local_deep_copy_non_contiguous(
     const TeamType& team, Policy<iType, MemberType> asked_policy,
-    const View<DT, DP...>& dst, typename ViewTraits<DT, DP...>::const_value_type& value,
+    const View<DT, DP...>& dst,
+    typename ViewTraits<DT, DP...>::const_value_type& value,
     std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 3)>* = nullptr) {
   const size_t N = dst.extent(0) * dst.extent(1) * dst.extent(2);
 
@@ -2050,7 +2060,8 @@ template <class TeamType, class iType, class MemberType,
           template <class, class> class Policy, class DT, class... DP>
 void KOKKOS_INLINE_FUNCTION local_deep_copy_non_contiguous(
     const TeamType& team, Policy<iType, MemberType> asked_policy,
-    const View<DT, DP...>& dst, typename ViewTraits<DT, DP...>::const_value_type& value,
+    const View<DT, DP...>& dst,
+    typename ViewTraits<DT, DP...>::const_value_type& value,
     std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 4)>* = nullptr) {
   const size_t N =
       dst.extent(0) * dst.extent(1) * dst.extent(2) * dst.extent(3);
@@ -2071,7 +2082,8 @@ template <class TeamType, class iType, class MemberType,
           template <class, class> class Policy, class DT, class... DP>
 void KOKKOS_INLINE_FUNCTION local_deep_copy_non_contiguous(
     const TeamType& team, Policy<iType, MemberType> asked_policy,
-    const View<DT, DP...>& dst, typename ViewTraits<DT, DP...>::const_value_type& value,
+    const View<DT, DP...>& dst,
+    typename ViewTraits<DT, DP...>::const_value_type& value,
     std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 5)>* = nullptr) {
   const size_t N = dst.extent(0) * dst.extent(1) * dst.extent(2) *
                    dst.extent(3) * dst.extent(4);
@@ -2094,7 +2106,8 @@ template <class TeamType, class iType, class MemberType,
           template <class, class> class Policy, class DT, class... DP>
 void KOKKOS_INLINE_FUNCTION local_deep_copy_non_contiguous(
     const TeamType& team, Policy<iType, MemberType> asked_policy,
-    const View<DT, DP...>& dst, typename ViewTraits<DT, DP...>::const_value_type& value,
+    const View<DT, DP...>& dst,
+    typename ViewTraits<DT, DP...>::const_value_type& value,
     std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 6)>* = nullptr) {
   const size_t N = dst.extent(0) * dst.extent(1) * dst.extent(2) *
                    dst.extent(3) * dst.extent(4) * dst.extent(5);
@@ -2119,7 +2132,8 @@ template <class TeamType, class iType, class MemberType,
           template <class, class> class Policy, class DT, class... DP>
 void KOKKOS_INLINE_FUNCTION local_deep_copy_non_contiguous(
     const TeamType& team, Policy<iType, MemberType> asked_policy,
-    const View<DT, DP...>& dst, typename ViewTraits<DT, DP...>::const_value_type& value,
+    const View<DT, DP...>& dst,
+    typename ViewTraits<DT, DP...>::const_value_type& value,
     std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 7)>* = nullptr) {
   const size_t N = dst.extent(0) * dst.extent(1) * dst.extent(2) *
                    dst.extent(3) * dst.extent(4) * dst.extent(5) *
@@ -2345,10 +2359,10 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy(
 //----------------------------------------------------------------------------
 template <class TeamType, class iType, class MemberType,
           template <class, class> class Policy, class DT, class... DP>
-void KOKKOS_INLINE_FUNCTION deep_copy(const TeamType& team,
-                                      Policy<iType, MemberType> asked_policy,
-                                      const View<DT, DP...>& dst,
-                                      typename ViewTraits<DT, DP...>::const_value_type& value) {
+void KOKKOS_INLINE_FUNCTION
+deep_copy(const TeamType& team, Policy<iType, MemberType> asked_policy,
+          const View<DT, DP...>& dst,
+          typename ViewTraits<DT, DP...>::const_value_type& value) {
   if (dst.data() == nullptr) {
     return;
   }
@@ -2373,9 +2387,9 @@ void KOKKOS_INLINE_FUNCTION deep_copy(const TeamType& team,
 //----------------------------------------------------------------------------
 // This is the historical local_deep_copy function
 template <class TeamType, class DT, class... DP>
-void KOKKOS_INLINE_FUNCTION local_deep_copy(const TeamType& team,
-                                            const View<DT, DP...>& dst,
-                                            typename ViewTraits<DT, DP...>::const_value_type& value) {
+void KOKKOS_INLINE_FUNCTION
+local_deep_copy(const TeamType& team, const View<DT, DP...>& dst,
+                typename ViewTraits<DT, DP...>::const_value_type& value) {
   Kokkos::Experimental::deep_copy(team, Kokkos::TeamVectorRange(team, 0), dst,
                                   value);
 }
