@@ -15,6 +15,7 @@
 //@HEADER
 
 #include <Kokkos_Core.hpp>
+#include "Kokkos_Core_fwd.hpp"
 
 namespace {
 
@@ -29,7 +30,9 @@ inline constexpr bool IsSamePolicy =
 
 struct TestRangePolicyCTAD {
   struct ImplicitlyConvertibleToDefaultExecutionSpace {
-    [[maybe_unused]] operator Kokkos::DefaultExecutionSpace() const;
+    operator Kokkos::DefaultExecutionSpace() const {
+      return Kokkos::DefaultExecutionSpace();
+    }
   };
   static_assert(!Kokkos::is_execution_space_v<
                 ImplicitlyConvertibleToDefaultExecutionSpace>);
@@ -74,5 +77,9 @@ struct TestRangePolicyCTAD {
   KOKKOS_TEST_RANGE_POLICY(Kokkos::RangePolicy<>, nes, i64, i64, cs);
   KOKKOS_TEST_RANGE_POLICY(Kokkos::RangePolicy<>, nes, i32, i32, cs);
 };  // TestRangePolicyCTAD struct
+
+// To eliminate maybe_unused warning on some compilers
+const Kokkos::DefaultExecutionSpace des =
+    TestRangePolicyCTAD::ImplicitlyConvertibleToDefaultExecutionSpace();
 
 }  // namespace
