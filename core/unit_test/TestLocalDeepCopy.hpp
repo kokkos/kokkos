@@ -51,20 +51,53 @@ void view_init(ViewType& view) {
   Kokkos::fence();
 }
 
-// Helper function to create a std::array filled with a given value
-template <typename T, size_t Rank>
-constexpr auto make_array(T value) -> std::array<T, Rank> {
-  std::array<T, Rank> a;
-  for (auto& x : a) x = value;
-  return a;
+// Create a view with a given label and dimensions
+template <typename ViewType>
+typename std::enable_if<(ViewType::rank == 1), ViewType>::type view_create(
+    std::string label, const int N) {
+  return ViewType(label, N);
 }
 
-// Create a view with a given label and dimensions
-template <typename ViewType, unsigned Rank = unsigned(ViewType::rank)>
-ViewType view_create(std::string label, const int N) {
-  const auto dimensions =
-      std::tuple_cat(std::make_tuple(label), make_array<int, Rank>(N));
-  return std::make_from_tuple<ViewType>(dimensions);
+template <typename ViewType>
+typename std::enable_if<(ViewType::rank == 2), ViewType>::type view_create(
+    std::string label, const int N) {
+  return ViewType(label, N, N);
+}
+
+template <typename ViewType>
+typename std::enable_if<(ViewType::rank == 3), ViewType>::type view_create(
+    std::string label, const int N) {
+  return ViewType(label, N, N, N);
+}
+
+template <typename ViewType>
+typename std::enable_if<(ViewType::rank == 4), ViewType>::type view_create(
+    std::string label, const int N) {
+  return ViewType(label, N, N, N, N);
+}
+
+template <typename ViewType>
+typename std::enable_if<(ViewType::rank == 5), ViewType>::type view_create(
+    std::string label, const int N) {
+  return ViewType(label, N, N, N, N, N);
+}
+
+template <typename ViewType>
+typename std::enable_if<(ViewType::rank == 6), ViewType>::type view_create(
+    std::string label, const int N) {
+  return ViewType(label, N, N, N, N, N, N);
+}
+
+template <typename ViewType>
+typename std::enable_if<(ViewType::rank == 7), ViewType>::type view_create(
+    std::string label, const int N) {
+  return ViewType(label, N, N, N, N, N, N, N);
+}
+
+template <typename ViewType>
+typename std::enable_if<(ViewType::rank == 8), ViewType>::type view_create(
+    std::string label, const int N) {
+  return ViewType(label, N, N, N, N, N, N, N, N);
 }
 
 // Extract a subview from a view to run our tests
