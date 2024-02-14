@@ -1792,6 +1792,7 @@ namespace Experimental {
  * compatible type, same non-zero rank.
  */
 
+namespace Impl {
 template <typename Boundary>
 using boundary_has_team_member = decltype(Boundary::thread);
 
@@ -1824,22 +1825,6 @@ void KOKKOS_INLINE_FUNCTION deep_copy_contiguous(const TeamType& team,
       team, Policy<iType, MemberType>(team, 0), src.span());
   Kokkos::parallel_for(policy,
                        [&](const int& i) { dst.data()[i] = src.data()[i]; });
-}
-//----------------------------------------------------------------------------
-template <class TeamType, class DT, class... DP, class ST, class... SP>
-void KOKKOS_INLINE_FUNCTION
-local_deep_copy_contiguous(const TeamType& team, const View<DT, DP...>& dst,
-                           const View<ST, SP...>& src) {
-  Kokkos::parallel_for(Kokkos::TeamVectorRange(team, src.span()),
-                       [&](const int& i) { dst.data()[i] = src.data()[i]; });
-}
-//----------------------------------------------------------------------------
-template <class DT, class... DP, class ST, class... SP>
-void KOKKOS_INLINE_FUNCTION local_deep_copy_contiguous(
-    const View<DT, DP...>& dst, const View<ST, SP...>& src) {
-  for (size_t i = 0; i < src.span(); ++i) {
-    dst.data()[i] = src.data()[i];
-  }
 }
 
 template <class TeamType, class iType, class MemberType,
@@ -1998,6 +1983,23 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy_non_contiguous(
     dst(i0, i1, i2, i3, i4, i5, i6) = src(i0, i1, i2, i3, i4, i5, i6);
   });
 }
+}  // namespace Impl
+
+//----------------------------------------------------------------------------
+template <class TeamType, class DT, class... DP, class ST, class... SP>
+void KOKKOS_INLINE_FUNCTION
+local_deep_copy_contiguous(const TeamType& team, const View<DT, DP...>& dst,
+                           const View<ST, SP...>& src) {
+  Impl::deep_copy_contiguous(team, Kokkos::TeamVectorRange(team, 0), dst, src);
+}
+//----------------------------------------------------------------------------
+template <class DT, class... DP, class ST, class... SP>
+void KOKKOS_INLINE_FUNCTION local_deep_copy_contiguous(
+    const View<DT, DP...>& dst, const View<ST, SP...>& src) {
+  for (size_t i = 0; i < src.span(); ++i) {
+    dst.data()[i] = src.data()[i];
+  }
+}
 
 //----------------------------------------------------------------------------
 template <class TeamType, class iType, class MemberType,
@@ -2012,13 +2014,17 @@ void KOKKOS_INLINE_FUNCTION deep_copy(const TeamType& team,
   }
 
   constexpr auto need_barrier =
-      Kokkos::is_detected_v<boundary_has_team_member,
+      Kokkos::is_detected_v<Impl::boundary_has_team_member,
                             Policy<iType, MemberType>>;
 
   if constexpr (need_barrier) {
     team.team_barrier();
   }
-  local_deep_copy_non_contiguous(team, asked_policy, dst, src);
+  if (dst.span_is_contiguous() && src.span_is_contiguous()) {
+    Impl::deep_copy_contiguous(team, asked_policy, dst, src);
+  } else {
+    Impl::local_deep_copy_non_contiguous(team, asked_policy, dst, src);
+  }
   if constexpr (need_barrier) {
     team.team_barrier();
   }
