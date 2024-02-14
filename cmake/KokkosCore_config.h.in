@@ -59,7 +59,6 @@
 #cmakedefine KOKKOS_ENABLE_LIBQUADMATH
 #cmakedefine KOKKOS_ENABLE_ONEDPL
 
-#cmakedefine KOKKOS_ARCH_SSE42
 #cmakedefine KOKKOS_ARCH_ARMV80
 #cmakedefine KOKKOS_ARCH_ARMV8_THUNDERX
 #cmakedefine KOKKOS_ARCH_ARMV81

@@ -629,8 +629,6 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
                                  "ARMV8_THUNDERX2");
 #elif defined(KOKKOS_ARCH_BDW)
   declare_configuration_metadata("architecture", "CPU architecture", "BDW");
-#elif defined(KOKKOS_ARCH_BGQ)
-  declare_configuration_metadata("architecture", "CPU architecture", "BGQ");
 #elif defined(KOKKOS_ARCH_HSW)
   declare_configuration_metadata("architecture", "CPU architecture", "HSW");
 #elif defined(KOKKOS_ARCH_ICL)
@@ -643,8 +641,6 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
   declare_configuration_metadata("architecture", "CPU architecture", "KNL");
 #elif defined(KOKKOS_ARCH_NATIVE)
   declare_configuration_metadata("architecture", "CPU architecture", "NATIVE");
-#elif defined(KOKKOS_ARCH_POWER7)
-  declare_configuration_metadata("architecture", "CPU architecture", "POWER7");
 #elif defined(KOKKOS_ARCH_POWER8)
   declare_configuration_metadata("architecture", "CPU architecture", "POWER8");
 #elif defined(KOKKOS_ARCH_POWER9)
@@ -657,8 +653,6 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
   declare_configuration_metadata("architecture", "CPU architecture", "SNB");
 #elif defined(KOKKOS_ARCH_SPR)
   declare_configuration_metadata("architecture", "CPU architecture", "SPR");
-#elif defined(KOKKOS_ARCH_WSM)
-  declare_configuration_metadata("architecture", "CPU architecture", "WSM");
 #elif defined(KOKKOS_ARCH_AMD_ZEN)
   declare_configuration_metadata("architecture", "CPU architecture", "AMD_ZEN");
 #elif defined(KOKKOS_ARCH_AMD_ZEN2)
@@ -739,8 +733,8 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
 #elif defined(KOKKOS_ARCH_ADA89)
   declare_configuration_metadata("architecture", "GPU architecture", "ADA89");
 #elif defined(KOKKOS_ARCH_HOPPER90)
-  declare_configuration_metadata("architecture", "GPU architecture",
-                                 "HOPPER90");
+      declare_configuration_metadata("architecture", "GPU architecture",
+                                     "HOPPER90");
 #elif defined(KOKKOS_ARCH_AMD_GFX906)
   declare_configuration_metadata("architecture", "GPU architecture",
                                  "AMD_GFX906");
@@ -748,8 +742,8 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
   declare_configuration_metadata("architecture", "GPU architecture",
                                  "AMD_GFX908");
 #elif defined(KOKKOS_ARCH_AMD_GFX90A)
-      declare_configuration_metadata("architecture", "GPU architecture",
-                                     "AMD_GFX90A");
+  declare_configuration_metadata("architecture", "GPU architecture",
+                                 "AMD_GFX90A");
 #elif defined(KOKKOS_ARCH_AMD_GFX1030)
   declare_configuration_metadata("architecture", "GPU architecture",
                                  "AMD_GFX1030");
