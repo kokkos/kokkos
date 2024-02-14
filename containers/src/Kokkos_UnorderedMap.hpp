@@ -856,8 +856,20 @@ class UnorderedMap {
                    std::is_same<std::remove_const_t<SValue>, value_type>::value>
   deep_copy_view(
       UnorderedMap<SKey, SValue, SDevice, Hasher, EqualTo> const &src) {
+#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_4
     // To deep copy UnorderedMap, capacity must be identical
     KOKKOS_EXPECTS(capacity() == src.capacity());
+#else
+    if (capacity() != src.capacity()) {
+      allocate_view(src);
+#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
+      Kokkos::Impl::log_warning(
+          "Warning: deep_copy_view() allocating views is deprecated. Must call "
+          "with UnorderedMaps of identical capacity, or use "
+          "create_copy_view().\n");
+#endif
+    }
+#endif
 
     if (m_hash_lists.data() != src.m_hash_lists.data()) {
       Kokkos::deep_copy(m_available_indexes, src.m_available_indexes);
@@ -964,11 +976,7 @@ template <typename DKey, typename DT, typename DDevice, typename SKey,
 inline void deep_copy(
     UnorderedMap<DKey, DT, DDevice, Hasher, EqualTo> &dst,
     const UnorderedMap<SKey, ST, SDevice, Hasher, EqualTo> &src) {
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  dst.create_copy_view(src);
-#else
   dst.deep_copy_view(src);
-#endif
 }
 
 // Specialization of create_mirror() for an UnorderedMap object.
