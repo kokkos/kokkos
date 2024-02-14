@@ -300,8 +300,8 @@ void test_local_deepcopy_scalar_range(
 
 template <typename ViewType, typename ExecSpace>
 void run_team_policy(const int N) {
-  auto A = view_create<ViewType>("A", N);
-  auto B = view_create<ViewType>("B", N);
+  ViewType A = view_create<ViewType>("A", N);
+  ViewType B = view_create<ViewType>("B", N);
 
   // Initialize A matrix.
   view_init(A);
@@ -315,8 +315,8 @@ void run_team_policy(const int N) {
 
 template <typename ViewType, typename ExecSpace>
 void run_range_policy(const int N) {
-  auto A = view_create<ViewType>("A", N);
-  auto B = view_create<ViewType>("B", N);
+  ViewType A = view_create<ViewType>("A", N);
+  ViewType B = view_create<ViewType>("B", N);
 
   // Initialize A matrix.
   view_init(A);
