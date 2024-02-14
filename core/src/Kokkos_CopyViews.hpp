@@ -1860,8 +1860,8 @@ template <class TeamType, class iType, class MemberType,
           template <class, class> class Policy, class DT, class... DP, class ST,
           class... SP>
 void KOKKOS_INLINE_FUNCTION local_deep_copy_non_contiguous(
-    const TeamType& team, Policy<iType, MemberType> asked_policy,
-    const View<DT, DP...>& dst, const View<ST, SP...>& src,
+    const TeamType& team, Policy<iType, MemberType>, const View<DT, DP...>& dst,
+    const View<ST, SP...>& src,
     std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 2 &&
                       unsigned(ViewTraits<ST, SP...>::rank) == 2)>* = nullptr) {
   auto policy = deep_copy_mdpolicy_helper<Kokkos::is_detected_v<
