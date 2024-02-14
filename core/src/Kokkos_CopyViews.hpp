@@ -1814,6 +1814,8 @@ auto KOKKOS_INLINE_FUNCTION deep_copy_policy_helper(
   return Kokkos::ThreadVectorRange(team, length);
 }
 
+// Copy from a view to a view
+
 template <class TeamType, class iType, class MemberType,
           template <class, class> class Policy, class DT, class... DP, class ST,
           class... SP>
@@ -1983,6 +1985,164 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy_non_contiguous(
     dst(i0, i1, i2, i3, i4, i5, i6) = src(i0, i1, i2, i3, i4, i5, i6);
   });
 }
+
+// Copy from a scalar to a view
+
+template <class TeamType, class iType, class MemberType,
+          template <class, class> class Policy, class DT, class... DP>
+void KOKKOS_INLINE_FUNCTION deep_copy_contiguous(const TeamType& team,
+                                                 Policy<iType, MemberType>,
+                                                 const View<DT, DP...>& dst,
+                                                 typename ViewTraits<DT, DP...>::const_value_type& value) {
+  auto policy = deep_copy_policy_helper(
+      team, Policy<iType, MemberType>(team, 0), dst.span());
+  Kokkos::parallel_for(policy,
+                       [&](const int& i) { dst.data()[i] = value; });
+}
+
+template <class TeamType, class iType, class MemberType,
+          template <class, class> class Policy, class DT, class... DP>
+void KOKKOS_INLINE_FUNCTION local_deep_copy_non_contiguous(
+    const TeamType& team, Policy<iType, MemberType> asked_policy,
+    const View<DT, DP...>& dst, typename ViewTraits<DT, DP...>::const_value_type& value,
+    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 1)>* = nullptr) {
+  const size_t N = dst.extent(0);
+
+  auto policy = deep_copy_policy_helper(team, asked_policy, N);
+  Kokkos::parallel_for(policy, [&](const int& i) { dst(i) = value; });
+}
+
+template <class TeamType, class iType, class MemberType,
+          template <class, class> class Policy, class DT, class... DP>
+void KOKKOS_INLINE_FUNCTION local_deep_copy_non_contiguous(
+    const TeamType& team, Policy<iType, MemberType> asked_policy,
+    const View<DT, DP...>& dst, typename ViewTraits<DT, DP...>::const_value_type& value,
+    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 2)>* = nullptr) {
+  const size_t N = dst.extent(0) * dst.extent(1);
+
+  auto policy = deep_copy_policy_helper(team, asked_policy, N);
+  Kokkos::parallel_for(policy, [&](const int& i) {
+    int i0      = i % dst.extent(0);
+    int i1      = i / dst.extent(0);
+    dst(i0, i1) = value;
+  });
+}
+
+template <class TeamType, class iType, class MemberType,
+          template <class, class> class Policy, class DT, class... DP>
+void KOKKOS_INLINE_FUNCTION local_deep_copy_non_contiguous(
+    const TeamType& team, Policy<iType, MemberType> asked_policy,
+    const View<DT, DP...>& dst, typename ViewTraits<DT, DP...>::const_value_type& value,
+    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 3)>* = nullptr) {
+  const size_t N = dst.extent(0) * dst.extent(1) * dst.extent(2);
+
+  auto policy = deep_copy_policy_helper(team, asked_policy, N);
+  Kokkos::parallel_for(policy, [&](const int& i) {
+    int i0          = i % dst.extent(0);
+    int itmp        = i / dst.extent(0);
+    int i1          = itmp % dst.extent(1);
+    int i2          = itmp / dst.extent(1);
+    dst(i0, i1, i2) = value;
+  });
+}
+
+template <class TeamType, class iType, class MemberType,
+          template <class, class> class Policy, class DT, class... DP>
+void KOKKOS_INLINE_FUNCTION local_deep_copy_non_contiguous(
+    const TeamType& team, Policy<iType, MemberType> asked_policy,
+    const View<DT, DP...>& dst, typename ViewTraits<DT, DP...>::const_value_type& value,
+    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 4)>* = nullptr) {
+  const size_t N =
+      dst.extent(0) * dst.extent(1) * dst.extent(2) * dst.extent(3);
+
+  auto policy = deep_copy_policy_helper(team, asked_policy, N);
+  Kokkos::parallel_for(policy, [&](const int& i) {
+    int i0              = i % dst.extent(0);
+    int itmp            = i / dst.extent(0);
+    int i1              = itmp % dst.extent(1);
+    itmp                = itmp / dst.extent(1);
+    int i2              = itmp % dst.extent(2);
+    int i3              = itmp / dst.extent(2);
+    dst(i0, i1, i2, i3) = value;
+  });
+}
+
+template <class TeamType, class iType, class MemberType,
+          template <class, class> class Policy, class DT, class... DP>
+void KOKKOS_INLINE_FUNCTION local_deep_copy_non_contiguous(
+    const TeamType& team, Policy<iType, MemberType> asked_policy,
+    const View<DT, DP...>& dst, typename ViewTraits<DT, DP...>::const_value_type& value,
+    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 5)>* = nullptr) {
+  const size_t N = dst.extent(0) * dst.extent(1) * dst.extent(2) *
+                   dst.extent(3) * dst.extent(4);
+
+  auto policy = deep_copy_policy_helper(team, asked_policy, N);
+  Kokkos::parallel_for(policy, [&](const int& i) {
+    int i0                  = i % dst.extent(0);
+    int itmp                = i / dst.extent(0);
+    int i1                  = itmp % dst.extent(1);
+    itmp                    = itmp / dst.extent(1);
+    int i2                  = itmp % dst.extent(2);
+    itmp                    = itmp / dst.extent(2);
+    int i3                  = itmp % dst.extent(3);
+    int i4                  = itmp / dst.extent(3);
+    dst(i0, i1, i2, i3, i4) = value;
+  });
+}
+
+template <class TeamType, class iType, class MemberType,
+          template <class, class> class Policy, class DT, class... DP>
+void KOKKOS_INLINE_FUNCTION local_deep_copy_non_contiguous(
+    const TeamType& team, Policy<iType, MemberType> asked_policy,
+    const View<DT, DP...>& dst, typename ViewTraits<DT, DP...>::const_value_type& value,
+    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 6)>* = nullptr) {
+  const size_t N = dst.extent(0) * dst.extent(1) * dst.extent(2) *
+                   dst.extent(3) * dst.extent(4) * dst.extent(5);
+
+  auto policy = deep_copy_policy_helper(team, asked_policy, N);
+  Kokkos::parallel_for(policy, [&](const int& i) {
+    int i0                      = i % dst.extent(0);
+    int itmp                    = i / dst.extent(0);
+    int i1                      = itmp % dst.extent(1);
+    itmp                        = itmp / dst.extent(1);
+    int i2                      = itmp % dst.extent(2);
+    itmp                        = itmp / dst.extent(2);
+    int i3                      = itmp % dst.extent(3);
+    itmp                        = itmp / dst.extent(3);
+    int i4                      = itmp % dst.extent(4);
+    int i5                      = itmp / dst.extent(4);
+    dst(i0, i1, i2, i3, i4, i5) = value;
+  });
+}
+
+template <class TeamType, class iType, class MemberType,
+          template <class, class> class Policy, class DT, class... DP>
+void KOKKOS_INLINE_FUNCTION local_deep_copy_non_contiguous(
+    const TeamType& team, Policy<iType, MemberType> asked_policy,
+    const View<DT, DP...>& dst, typename ViewTraits<DT, DP...>::const_value_type& value,
+    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 7)>* = nullptr) {
+  const size_t N = dst.extent(0) * dst.extent(1) * dst.extent(2) *
+                   dst.extent(3) * dst.extent(4) * dst.extent(5) *
+                   dst.extent(6);
+
+  auto policy = deep_copy_policy_helper(team, asked_policy, N);
+  Kokkos::parallel_for(policy, [&](const int& i) {
+    int i0                          = i % dst.extent(0);
+    int itmp                        = i / dst.extent(0);
+    int i1                          = itmp % dst.extent(1);
+    itmp                            = itmp / dst.extent(1);
+    int i2                          = itmp % dst.extent(2);
+    itmp                            = itmp / dst.extent(2);
+    int i3                          = itmp % dst.extent(3);
+    itmp                            = itmp / dst.extent(3);
+    int i4                          = itmp % dst.extent(4);
+    itmp                            = itmp / dst.extent(4);
+    int i5                          = itmp % dst.extent(5);
+    int i6                          = itmp / dst.extent(5);
+    dst(i0, i1, i2, i3, i4, i5, i6) = value;
+  });
+}
+
 }  // namespace Impl
 
 //----------------------------------------------------------------------------
@@ -2182,24 +2342,42 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy(
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 /** \brief  Deep copy a value into a view.  */
-template <class TeamType, class DT, class... DP>
-void KOKKOS_INLINE_FUNCTION local_deep_copy_contiguous(
-    const TeamType& team, const View<DT, DP...>& dst,
-    typename ViewTraits<DT, DP...>::const_value_type& value,
-    std::enable_if_t<std::is_same<typename ViewTraits<DT, DP...>::specialize,
-                                  void>::value>* = nullptr) {
-  Kokkos::parallel_for(Kokkos::TeamVectorRange(team, dst.span()),
-                       [&](const int& i) { dst.data()[i] = value; });
-}
 //----------------------------------------------------------------------------
+template <class TeamType, class iType, class MemberType,
+          template <class, class> class Policy, class DT, class... DP>
+void KOKKOS_INLINE_FUNCTION deep_copy(const TeamType& team,
+                                      Policy<iType, MemberType> asked_policy,
+                                      const View<DT, DP...>& dst,
+                                      typename ViewTraits<DT, DP...>::const_value_type& value) {
+  if (dst.data() == nullptr) {
+    return;
+  }
+
+  constexpr auto need_barrier =
+      Kokkos::is_detected_v<Impl::boundary_has_team_member,
+                            Policy<iType, MemberType>>;
+
+  if constexpr (need_barrier) {
+    team.team_barrier();
+  }
+  if (dst.span_is_contiguous()) {
+    Impl::deep_copy_contiguous(team, asked_policy, dst, value);
+  } else {
+    Impl::local_deep_copy_non_contiguous(team, asked_policy, dst, value);
+  }
+  if constexpr (need_barrier) {
+    team.team_barrier();
+  }
+}
+
+//----------------------------------------------------------------------------
+// This is the historical local_deep_copy function
 template <class TeamType, class DT, class... DP>
-void KOKKOS_INLINE_FUNCTION local_deep_copy_contiguous_thread(
-    const TeamType& team, const View<DT, DP...>& dst,
-    typename ViewTraits<DT, DP...>::const_value_type& value,
-    std::enable_if_t<std::is_same<typename ViewTraits<DT, DP...>::specialize,
-                                  void>::value>* = nullptr) {
-  Kokkos::parallel_for(Kokkos::ThreadVectorRange(team, dst.span()),
-                       [&](const int& i) { dst.data()[i] = value; });
+void KOKKOS_INLINE_FUNCTION local_deep_copy(const TeamType& team,
+                                            const View<DT, DP...>& dst,
+                                            typename ViewTraits<DT, DP...>::const_value_type& value) {
+  Kokkos::Experimental::deep_copy(team, Kokkos::TeamVectorRange(team, 0), dst,
+                                  value);
 }
 //----------------------------------------------------------------------------
 template <class DT, class... DP>
@@ -2210,394 +2388,6 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy_contiguous(
                                   void>::value>* = nullptr) {
   for (size_t i = 0; i < dst.span(); ++i) {
     dst.data()[i] = value;
-  }
-}
-//----------------------------------------------------------------------------
-template <class TeamType, class DT, class... DP>
-void KOKKOS_INLINE_FUNCTION local_deep_copy_thread(
-    const TeamType& team, const View<DT, DP...>& dst,
-    typename ViewTraits<DT, DP...>::const_value_type& value,
-    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 1)>* = nullptr) {
-  if (dst.data() == nullptr) {
-    return;
-  }
-
-  const size_t N = dst.extent(0);
-
-  Kokkos::parallel_for(Kokkos::ThreadVectorRange(team, N),
-                       [&](const int& i) { dst(i) = value; });
-}
-//----------------------------------------------------------------------------
-template <class TeamType, class DT, class... DP>
-void KOKKOS_INLINE_FUNCTION local_deep_copy(
-    const TeamType& team, const View<DT, DP...>& dst,
-    typename ViewTraits<DT, DP...>::const_value_type& value,
-    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 1)>* = nullptr) {
-  if (dst.data() == nullptr) {
-    return;
-  }
-
-  const size_t N = dst.extent(0);
-
-  Kokkos::parallel_for(Kokkos::TeamVectorRange(team, N),
-                       [&](const int& i) { dst(i) = value; });
-}
-//----------------------------------------------------------------------------
-template <class TeamType, class DT, class... DP>
-void KOKKOS_INLINE_FUNCTION local_deep_copy_thread(
-    const TeamType& team, const View<DT, DP...>& dst,
-    typename ViewTraits<DT, DP...>::const_value_type& value,
-    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 2)>* = nullptr) {
-  if (dst.data() == nullptr) {
-    return;
-  }
-
-  const size_t N = dst.extent(0) * dst.extent(1);
-
-  if (dst.span_is_contiguous()) {
-    local_deep_copy_contiguous(team, dst, value);
-  } else {
-    Kokkos::parallel_for(Kokkos::ThreadVectorRange(team, N), [&](const int& i) {
-      int i0      = i % dst.extent(0);
-      int i1      = i / dst.extent(0);
-      dst(i0, i1) = value;
-    });
-  }
-}
-//----------------------------------------------------------------------------
-template <class TeamType, class DT, class... DP>
-void KOKKOS_INLINE_FUNCTION local_deep_copy(
-    const TeamType& team, const View<DT, DP...>& dst,
-    typename ViewTraits<DT, DP...>::const_value_type& value,
-    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 2)>* = nullptr) {
-  if (dst.data() == nullptr) {
-    return;
-  }
-
-  const size_t N = dst.extent(0) * dst.extent(1);
-
-  if (dst.span_is_contiguous()) {
-    team.team_barrier();
-    local_deep_copy_contiguous(team, dst, value);
-    team.team_barrier();
-  } else {
-    team.team_barrier();
-    Kokkos::parallel_for(Kokkos::TeamVectorRange(team, N), [&](const int& i) {
-      int i0      = i % dst.extent(0);
-      int i1      = i / dst.extent(0);
-      dst(i0, i1) = value;
-    });
-    team.team_barrier();
-  }
-}
-//----------------------------------------------------------------------------
-template <class TeamType, class DT, class... DP>
-void KOKKOS_INLINE_FUNCTION local_deep_copy_thread(
-    const TeamType& team, const View<DT, DP...>& dst,
-    typename ViewTraits<DT, DP...>::const_value_type& value,
-    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 3)>* = nullptr) {
-  if (dst.data() == nullptr) {
-    return;
-  }
-
-  const size_t N = dst.extent(0) * dst.extent(1) * dst.extent(2);
-
-  if (dst.span_is_contiguous()) {
-    local_deep_copy_contiguous_thread(team, dst, value);
-  } else {
-    Kokkos::parallel_for(Kokkos::ThreadVectorRange(team, N), [&](const int& i) {
-      int i0          = i % dst.extent(0);
-      int itmp        = i / dst.extent(0);
-      int i1          = itmp % dst.extent(1);
-      int i2          = itmp / dst.extent(1);
-      dst(i0, i1, i2) = value;
-    });
-  }
-}
-//----------------------------------------------------------------------------
-template <class TeamType, class DT, class... DP>
-void KOKKOS_INLINE_FUNCTION local_deep_copy(
-    const TeamType& team, const View<DT, DP...>& dst,
-    typename ViewTraits<DT, DP...>::const_value_type& value,
-    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 3)>* = nullptr) {
-  if (dst.data() == nullptr) {
-    return;
-  }
-
-  const size_t N = dst.extent(0) * dst.extent(1) * dst.extent(2);
-
-  if (dst.span_is_contiguous()) {
-    team.team_barrier();
-    local_deep_copy_contiguous(team, dst, value);
-    team.team_barrier();
-  } else {
-    team.team_barrier();
-    Kokkos::parallel_for(Kokkos::TeamVectorRange(team, N), [&](const int& i) {
-      int i0          = i % dst.extent(0);
-      int itmp        = i / dst.extent(0);
-      int i1          = itmp % dst.extent(1);
-      int i2          = itmp / dst.extent(1);
-      dst(i0, i1, i2) = value;
-    });
-    team.team_barrier();
-  }
-}
-//----------------------------------------------------------------------------
-template <class TeamType, class DT, class... DP>
-void KOKKOS_INLINE_FUNCTION local_deep_copy_thread(
-    const TeamType& team, const View<DT, DP...>& dst,
-    typename ViewTraits<DT, DP...>::const_value_type& value,
-    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 4)>* = nullptr) {
-  if (dst.data() == nullptr) {
-    return;
-  }
-
-  const size_t N =
-      dst.extent(0) * dst.extent(1) * dst.extent(2) * dst.extent(3);
-
-  if (dst.span_is_contiguous()) {
-    local_deep_copy_contiguous_thread(team, dst, value);
-  } else {
-    Kokkos::parallel_for(Kokkos::ThreadVectorRange(team, N), [&](const int& i) {
-      int i0              = i % dst.extent(0);
-      int itmp            = i / dst.extent(0);
-      int i1              = itmp % dst.extent(1);
-      itmp                = itmp / dst.extent(1);
-      int i2              = itmp % dst.extent(2);
-      int i3              = itmp / dst.extent(2);
-      dst(i0, i1, i2, i3) = value;
-    });
-  }
-}
-//----------------------------------------------------------------------------
-template <class TeamType, class DT, class... DP>
-void KOKKOS_INLINE_FUNCTION local_deep_copy(
-    const TeamType& team, const View<DT, DP...>& dst,
-    typename ViewTraits<DT, DP...>::const_value_type& value,
-    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 4)>* = nullptr) {
-  if (dst.data() == nullptr) {
-    return;
-  }
-
-  const size_t N =
-      dst.extent(0) * dst.extent(1) * dst.extent(2) * dst.extent(3);
-
-  if (dst.span_is_contiguous()) {
-    team.team_barrier();
-    local_deep_copy_contiguous(team, dst, value);
-    team.team_barrier();
-  } else {
-    team.team_barrier();
-    Kokkos::parallel_for(Kokkos::TeamVectorRange(team, N), [&](const int& i) {
-      int i0              = i % dst.extent(0);
-      int itmp            = i / dst.extent(0);
-      int i1              = itmp % dst.extent(1);
-      itmp                = itmp / dst.extent(1);
-      int i2              = itmp % dst.extent(2);
-      int i3              = itmp / dst.extent(2);
-      dst(i0, i1, i2, i3) = value;
-    });
-    team.team_barrier();
-  }
-}
-//----------------------------------------------------------------------------
-template <class TeamType, class DT, class... DP>
-void KOKKOS_INLINE_FUNCTION local_deep_copy_thread(
-    const TeamType& team, const View<DT, DP...>& dst,
-    typename ViewTraits<DT, DP...>::const_value_type& value,
-    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 5)>* = nullptr) {
-  if (dst.data() == nullptr) {
-    return;
-  }
-
-  const size_t N = dst.extent(0) * dst.extent(1) * dst.extent(2) *
-                   dst.extent(3) * dst.extent(4);
-
-  if (dst.span_is_contiguous()) {
-    local_deep_copy_contiguous_thread(team, dst, value);
-  } else {
-    Kokkos::parallel_for(Kokkos::ThreadVectorRange(team, N), [&](const int& i) {
-      int i0                  = i % dst.extent(0);
-      int itmp                = i / dst.extent(0);
-      int i1                  = itmp % dst.extent(1);
-      itmp                    = itmp / dst.extent(1);
-      int i2                  = itmp % dst.extent(2);
-      itmp                    = itmp / dst.extent(2);
-      int i3                  = itmp % dst.extent(3);
-      int i4                  = itmp / dst.extent(3);
-      dst(i0, i1, i2, i3, i4) = value;
-    });
-  }
-}
-//----------------------------------------------------------------------------
-template <class TeamType, class DT, class... DP>
-void KOKKOS_INLINE_FUNCTION local_deep_copy(
-    const TeamType& team, const View<DT, DP...>& dst,
-    typename ViewTraits<DT, DP...>::const_value_type& value,
-    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 5)>* = nullptr) {
-  if (dst.data() == nullptr) {
-    return;
-  }
-
-  const size_t N = dst.extent(0) * dst.extent(1) * dst.extent(2) *
-                   dst.extent(3) * dst.extent(4);
-
-  if (dst.span_is_contiguous()) {
-    team.team_barrier();
-    local_deep_copy_contiguous(team, dst, value);
-    team.team_barrier();
-  } else {
-    team.team_barrier();
-    Kokkos::parallel_for(Kokkos::TeamVectorRange(team, N), [&](const int& i) {
-      int i0                  = i % dst.extent(0);
-      int itmp                = i / dst.extent(0);
-      int i1                  = itmp % dst.extent(1);
-      itmp                    = itmp / dst.extent(1);
-      int i2                  = itmp % dst.extent(2);
-      itmp                    = itmp / dst.extent(2);
-      int i3                  = itmp % dst.extent(3);
-      int i4                  = itmp / dst.extent(3);
-      dst(i0, i1, i2, i3, i4) = value;
-    });
-    team.team_barrier();
-  }
-}
-//----------------------------------------------------------------------------
-template <class TeamType, class DT, class... DP>
-void KOKKOS_INLINE_FUNCTION local_deep_copy_thread(
-    const TeamType& team, const View<DT, DP...>& dst,
-    typename ViewTraits<DT, DP...>::const_value_type& value,
-    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 6)>* = nullptr) {
-  if (dst.data() == nullptr) {
-    return;
-  }
-
-  const size_t N = dst.extent(0) * dst.extent(1) * dst.extent(2) *
-                   dst.extent(3) * dst.extent(4) * dst.extent(5);
-
-  if (dst.span_is_contiguous()) {
-    local_deep_copy_contiguous_thread(team, dst, value);
-  } else {
-    Kokkos::parallel_for(Kokkos::ThreadVectorRange(team, N), [&](const int& i) {
-      int i0                      = i % dst.extent(0);
-      int itmp                    = i / dst.extent(0);
-      int i1                      = itmp % dst.extent(1);
-      itmp                        = itmp / dst.extent(1);
-      int i2                      = itmp % dst.extent(2);
-      itmp                        = itmp / dst.extent(2);
-      int i3                      = itmp % dst.extent(3);
-      itmp                        = itmp / dst.extent(3);
-      int i4                      = itmp % dst.extent(4);
-      int i5                      = itmp / dst.extent(4);
-      dst(i0, i1, i2, i3, i4, i5) = value;
-    });
-  }
-}
-//----------------------------------------------------------------------------
-template <class TeamType, class DT, class... DP>
-void KOKKOS_INLINE_FUNCTION local_deep_copy(
-    const TeamType& team, const View<DT, DP...>& dst,
-    typename ViewTraits<DT, DP...>::const_value_type& value,
-    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 6)>* = nullptr) {
-  if (dst.data() == nullptr) {
-    return;
-  }
-
-  const size_t N = dst.extent(0) * dst.extent(1) * dst.extent(2) *
-                   dst.extent(3) * dst.extent(4) * dst.extent(5);
-
-  if (dst.span_is_contiguous()) {
-    team.team_barrier();
-    local_deep_copy_contiguous(team, dst, value);
-    team.team_barrier();
-  } else {
-    team.team_barrier();
-    Kokkos::parallel_for(Kokkos::TeamVectorRange(team, N), [&](const int& i) {
-      int i0                      = i % dst.extent(0);
-      int itmp                    = i / dst.extent(0);
-      int i1                      = itmp % dst.extent(1);
-      itmp                        = itmp / dst.extent(1);
-      int i2                      = itmp % dst.extent(2);
-      itmp                        = itmp / dst.extent(2);
-      int i3                      = itmp % dst.extent(3);
-      itmp                        = itmp / dst.extent(3);
-      int i4                      = itmp % dst.extent(4);
-      int i5                      = itmp / dst.extent(4);
-      dst(i0, i1, i2, i3, i4, i5) = value;
-    });
-    team.team_barrier();
-  }
-}
-//----------------------------------------------------------------------------
-template <class TeamType, class DT, class... DP>
-void KOKKOS_INLINE_FUNCTION local_deep_copy_thread(
-    const TeamType& team, const View<DT, DP...>& dst,
-    typename ViewTraits<DT, DP...>::const_value_type& value,
-    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 7)>* = nullptr) {
-  if (dst.data() == nullptr) {
-    return;
-  }
-
-  const size_t N = dst.extent(0) * dst.extent(1) * dst.extent(2) *
-                   dst.extent(3) * dst.extent(4) * dst.extent(5) *
-                   dst.extent(6);
-
-  if (dst.span_is_contiguous()) {
-    local_deep_copy_contiguous_thread(team, dst, value);
-  } else {
-    Kokkos::parallel_for(Kokkos::ThreadVectorRange(team, N), [&](const int& i) {
-      int i0                          = i % dst.extent(0);
-      int itmp                        = i / dst.extent(0);
-      int i1                          = itmp % dst.extent(1);
-      itmp                            = itmp / dst.extent(1);
-      int i2                          = itmp % dst.extent(2);
-      itmp                            = itmp / dst.extent(2);
-      int i3                          = itmp % dst.extent(3);
-      itmp                            = itmp / dst.extent(3);
-      int i4                          = itmp % dst.extent(4);
-      itmp                            = itmp / dst.extent(4);
-      int i5                          = itmp % dst.extent(5);
-      int i6                          = itmp / dst.extent(5);
-      dst(i0, i1, i2, i3, i4, i5, i6) = value;
-    });
-  }
-}
-//----------------------------------------------------------------------------
-template <class TeamType, class DT, class... DP>
-void KOKKOS_INLINE_FUNCTION local_deep_copy(
-    const TeamType& team, const View<DT, DP...>& dst,
-    typename ViewTraits<DT, DP...>::const_value_type& value,
-    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 7)>* = nullptr) {
-  if (dst.data() == nullptr) {
-    return;
-  }
-
-  const size_t N = dst.extent(0) * dst.extent(1) * dst.extent(2) *
-                   dst.extent(3) * dst.extent(4) * dst.extent(5) *
-                   dst.extent(6);
-
-  if (dst.span_is_contiguous()) {
-    team.team_barrier();
-    local_deep_copy_contiguous(team, dst, value);
-    team.team_barrier();
-  } else {
-    team.team_barrier();
-    Kokkos::parallel_for(Kokkos::TeamVectorRange(team, N), [&](const int& i) {
-      int i0                          = i % dst.extent(0);
-      int itmp                        = i / dst.extent(0);
-      int i1                          = itmp % dst.extent(1);
-      itmp                            = itmp / dst.extent(1);
-      int i2                          = itmp % dst.extent(2);
-      itmp                            = itmp / dst.extent(2);
-      int i3                          = itmp % dst.extent(3);
-      itmp                            = itmp / dst.extent(3);
-      int i4                          = itmp % dst.extent(4);
-      itmp                            = itmp / dst.extent(4);
-      int i5                          = itmp % dst.extent(5);
-      int i6                          = itmp / dst.extent(5);
-      dst(i0, i1, i2, i3, i4, i5, i6) = value;
-    });
-    team.team_barrier();
   }
 }
 //----------------------------------------------------------------------------
