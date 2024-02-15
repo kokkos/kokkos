@@ -63,17 +63,27 @@ struct ViewFill<ViewType, Layout, ExecSpace, 0, iType> {
   }
 };
 
-template <class ViewType, class Layout, class ExecSpace, typename iType>
-struct ViewFill<ViewType, Layout, ExecSpace, 1, iType> {
+template <class ViewType, class Layout, class ExecSpace, typename iType,
+          unsigned Nested>
+struct ViewFill<ViewType, Layout, ExecSpace, 1, iType, Nested> {
   ViewType a;
   typename ViewType::const_value_type val;
-  using policy_type = Kokkos::RangePolicy<ExecSpace, Kokkos::IndexType<iType>>;
 
   ViewFill(const ViewType& a_, typename ViewType::const_value_type& val_,
            const ExecSpace& space)
       : a(a_), val(val_) {
-    Kokkos::parallel_for("Kokkos::ViewFill-1D",
-                         policy_type(space, 0, a.extent(0)), *this);
+    if constexpr (Nested == 0) {
+      Kokkos::parallel_for(
+          "Kokkos::ViewFill-1D",
+          Kokkos::RangePolicy<ExecSpace, Kokkos::IndexType<iType>>(space, 0,
+                                                                   a.extent(0)),
+          *this);
+    } else if constexpr (Nested == 1) {
+      Kokkos::parallel_for(Kokkos::TeamVectorRange(space, a.extent(0)), *this);
+    } else if constexpr (Nested == 2) {
+      Kokkos::parallel_for(Kokkos::ThreadVectorRange(space, a.extent(0)),
+                           *this);
+    }
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -113,23 +123,34 @@ struct ViewFill<ViewType, Layout, ExecSpace, 2, iType, Nested> {
   void operator()(const iType& i0, const iType& i1) const { a(i0, i1) = val; };
 };
 
-template <class ViewType, class Layout, class ExecSpace, typename iType>
-struct ViewFill<ViewType, Layout, ExecSpace, 3, iType> {
+template <class ViewType, class Layout, class ExecSpace, typename iType,
+          unsigned Nested>
+struct ViewFill<ViewType, Layout, ExecSpace, 3, iType, Nested> {
   ViewType a;
   typename ViewType::const_value_type val;
 
   using iterate_type = Kokkos::Rank<3, ViewFillLayoutSelector<Layout>::iterate,
                                     ViewFillLayoutSelector<Layout>::iterate>;
-  using policy_type =
-      Kokkos::MDRangePolicy<ExecSpace, iterate_type, Kokkos::IndexType<iType>>;
 
   ViewFill(const ViewType& a_, typename ViewType::const_value_type& val_,
            const ExecSpace& space)
       : a(a_), val(val_) {
-    Kokkos::parallel_for(
-        "Kokkos::ViewFill-3D",
-        policy_type(space, {0, 0, 0}, {a.extent(0), a.extent(1), a.extent(2)}),
-        *this);
+    if constexpr (Nested == 0) {
+      Kokkos::parallel_for(
+          "Kokkos::ViewFill-3D",
+          Kokkos::MDRangePolicy<ExecSpace, iterate_type,
+                                Kokkos::IndexType<iType>>(
+              space, {0, 0, 0}, {a.extent(0), a.extent(1), a.extent(2)}),
+          *this);
+    } else if constexpr (Nested == 1) {
+      Kokkos::parallel_for(Kokkos::TeamVectorMDRange<iterate_type, ExecSpace>(
+                               space, a.extent(0), a.extent(1), a.extent(2)),
+                           *this);
+    } else if constexpr (Nested == 2) {
+      Kokkos::parallel_for(Kokkos::ThreadVectorMDRange<iterate_type, ExecSpace>(
+                               space, a.extent(0), a.extent(1), a.extent(2)),
+                           *this);
+    }
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -138,24 +159,37 @@ struct ViewFill<ViewType, Layout, ExecSpace, 3, iType> {
   };
 };
 
-template <class ViewType, class Layout, class ExecSpace, typename iType>
-struct ViewFill<ViewType, Layout, ExecSpace, 4, iType> {
+template <class ViewType, class Layout, class ExecSpace, typename iType,
+          unsigned Nested>
+struct ViewFill<ViewType, Layout, ExecSpace, 4, iType, Nested> {
   ViewType a;
   typename ViewType::const_value_type val;
 
   using iterate_type = Kokkos::Rank<4, ViewFillLayoutSelector<Layout>::iterate,
                                     ViewFillLayoutSelector<Layout>::iterate>;
-  using policy_type =
-      Kokkos::MDRangePolicy<ExecSpace, iterate_type, Kokkos::IndexType<iType>>;
 
   ViewFill(const ViewType& a_, typename ViewType::const_value_type& val_,
            const ExecSpace& space)
       : a(a_), val(val_) {
-    Kokkos::parallel_for(
-        "Kokkos::ViewFill-4D",
-        policy_type(space, {0, 0, 0, 0},
-                    {a.extent(0), a.extent(1), a.extent(2), a.extent(3)}),
-        *this);
+    if constexpr (Nested == 0) {
+      Kokkos::parallel_for(
+          "Kokkos::ViewFill-4D",
+          Kokkos::MDRangePolicy<ExecSpace, iterate_type,
+                                Kokkos::IndexType<iType>>(
+              space, {0, 0, 0, 0},
+              {a.extent(0), a.extent(1), a.extent(2), a.extent(3)}),
+          *this);
+    } else if constexpr (Nested == 1) {
+      Kokkos::parallel_for(
+          Kokkos::TeamVectorMDRange<iterate_type, ExecSpace>(
+              space, a.extent(0), a.extent(1), a.extent(2), a.extent(3)),
+          *this);
+    } else if constexpr (Nested == 2) {
+      Kokkos::parallel_for(
+          Kokkos::ThreadVectorMDRange<iterate_type, ExecSpace>(
+              space, a.extent(0), a.extent(1), a.extent(2), a.extent(3)),
+          *this);
+    }
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -165,24 +199,37 @@ struct ViewFill<ViewType, Layout, ExecSpace, 4, iType> {
   };
 };
 
-template <class ViewType, class Layout, class ExecSpace, typename iType>
-struct ViewFill<ViewType, Layout, ExecSpace, 5, iType> {
+template <class ViewType, class Layout, class ExecSpace, typename iType,
+          unsigned Nested>
+struct ViewFill<ViewType, Layout, ExecSpace, 5, iType, Nested> {
   ViewType a;
   typename ViewType::const_value_type val;
 
   using iterate_type = Kokkos::Rank<5, ViewFillLayoutSelector<Layout>::iterate,
                                     ViewFillLayoutSelector<Layout>::iterate>;
-  using policy_type =
-      Kokkos::MDRangePolicy<ExecSpace, iterate_type, Kokkos::IndexType<iType>>;
 
   ViewFill(const ViewType& a_, typename ViewType::const_value_type& val_,
            const ExecSpace& space)
       : a(a_), val(val_) {
-    Kokkos::parallel_for("Kokkos::ViewFill-5D",
-                         policy_type(space, {0, 0, 0, 0, 0},
-                                     {a.extent(0), a.extent(1), a.extent(2),
-                                      a.extent(3), a.extent(4)}),
-                         *this);
+    if constexpr (Nested == 0) {
+      Kokkos::parallel_for("Kokkos::ViewFill-5D",
+                           Kokkos::MDRangePolicy<ExecSpace, iterate_type,
+                                                 Kokkos::IndexType<iType>>(
+                               space, {0, 0, 0, 0, 0},
+                               {a.extent(0), a.extent(1), a.extent(2),
+                                a.extent(3), a.extent(4)}),
+                           *this);
+    } else if constexpr (Nested == 1) {
+      Kokkos::parallel_for(Kokkos::TeamVectorMDRange<iterate_type, ExecSpace>(
+                               space, a.extent(0), a.extent(1), a.extent(2),
+                               a.extent(3), a.extent(4)),
+                           *this);
+    } else if constexpr (Nested == 2) {
+      Kokkos::parallel_for(Kokkos::ThreadVectorMDRange<iterate_type, ExecSpace>(
+                               space, a.extent(0), a.extent(1), a.extent(2),
+                               a.extent(3), a.extent(4)),
+                           *this);
+    }
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -192,24 +239,37 @@ struct ViewFill<ViewType, Layout, ExecSpace, 5, iType> {
   };
 };
 
-template <class ViewType, class Layout, class ExecSpace, typename iType>
-struct ViewFill<ViewType, Layout, ExecSpace, 6, iType> {
+template <class ViewType, class Layout, class ExecSpace, typename iType,
+          unsigned Nested>
+struct ViewFill<ViewType, Layout, ExecSpace, 6, iType, Nested> {
   ViewType a;
   typename ViewType::const_value_type val;
 
   using iterate_type = Kokkos::Rank<6, ViewFillLayoutSelector<Layout>::iterate,
                                     ViewFillLayoutSelector<Layout>::iterate>;
-  using policy_type =
-      Kokkos::MDRangePolicy<ExecSpace, iterate_type, Kokkos::IndexType<iType>>;
 
   ViewFill(const ViewType& a_, typename ViewType::const_value_type& val_,
            const ExecSpace& space)
       : a(a_), val(val_) {
-    Kokkos::parallel_for("Kokkos::ViewFill-6D",
-                         policy_type(space, {0, 0, 0, 0, 0, 0},
-                                     {a.extent(0), a.extent(1), a.extent(2),
-                                      a.extent(3), a.extent(4), a.extent(5)}),
-                         *this);
+    if constexpr (Nested == 0) {
+      Kokkos::parallel_for("Kokkos::ViewFill-6D",
+                           Kokkos::MDRangePolicy<ExecSpace, iterate_type,
+                                                 Kokkos::IndexType<iType>>(
+                               space, {0, 0, 0, 0, 0, 0},
+                               {a.extent(0), a.extent(1), a.extent(2),
+                                a.extent(3), a.extent(4), a.extent(5)}),
+                           *this);
+    } else if constexpr (Nested == 1) {
+      Kokkos::parallel_for(Kokkos::TeamVectorMDRange<iterate_type, ExecSpace>(
+                               space, a.extent(0), a.extent(1), a.extent(2),
+                               a.extent(3), a.extent(4), a.extent(5)),
+                           *this);
+    } else if constexpr (Nested == 2) {
+      Kokkos::parallel_for(Kokkos::ThreadVectorMDRange<iterate_type, ExecSpace>(
+                               space, a.extent(0), a.extent(1), a.extent(2),
+                               a.extent(3), a.extent(4), a.extent(5)),
+                           *this);
+    }
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -219,52 +279,79 @@ struct ViewFill<ViewType, Layout, ExecSpace, 6, iType> {
   };
 };
 
-template <class ViewType, class Layout, class ExecSpace, typename iType>
-struct ViewFill<ViewType, Layout, ExecSpace, 7, iType> {
+template <class ViewType, class Layout, class ExecSpace, typename iType,
+          unsigned Nested>
+struct ViewFill<ViewType, Layout, ExecSpace, 7, iType, Nested> {
   ViewType a;
   typename ViewType::const_value_type val;
 
   using iterate_type = Kokkos::Rank<6, ViewFillLayoutSelector<Layout>::iterate,
                                     ViewFillLayoutSelector<Layout>::iterate>;
-  using policy_type =
-      Kokkos::MDRangePolicy<ExecSpace, iterate_type, Kokkos::IndexType<iType>>;
 
   ViewFill(const ViewType& a_, typename ViewType::const_value_type& val_,
            const ExecSpace& space)
       : a(a_), val(val_) {
-    Kokkos::parallel_for("Kokkos::ViewFill-7D",
-                         policy_type(space, {0, 0, 0, 0, 0, 0},
-                                     {a.extent(0), a.extent(1), a.extent(2),
-                                      a.extent(3), a.extent(5), a.extent(6)}),
-                         *this);
+    if constexpr (Nested == 0) {
+      Kokkos::parallel_for("Kokkos::ViewFill-7D",
+                           Kokkos::MDRangePolicy<ExecSpace, iterate_type,
+                                                 Kokkos::IndexType<iType>>(
+                               space, {0, 0, 0, 0, 0, 0},
+                               {a.extent(0), a.extent(1), a.extent(2),
+                                a.extent(3), a.extent(5), a.extent(6)}),
+                           *this);
+    } else if constexpr (Nested == 1) {
+      Kokkos::parallel_for(Kokkos::TeamVectorMDRange<iterate_type, ExecSpace>(
+                               space, a.extent(0), a.extent(1), a.extent(2),
+                               a.extent(3), a.extent(5), a.extent(6)),
+                           *this);
+    } else if constexpr (Nested == 2) {
+      Kokkos::parallel_for(Kokkos::ThreadVectorMDRange<iterate_type, ExecSpace>(
+                               space, a.extent(0), a.extent(1), a.extent(2),
+                               a.extent(3), a.extent(5), a.extent(6)),
+                           *this);
+    }
   }
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const iType& i0, const iType& i1, const iType& i3,
                   const iType& i4, const iType& i5, const iType& i6) const {
+    // FIXME why extent(2) and not extent(4)?
     for (iType i2 = 0; i2 < iType(a.extent(2)); i2++)
       a(i0, i1, i2, i3, i4, i5, i6) = val;
   };
 };
 
-template <class ViewType, class Layout, class ExecSpace, typename iType>
-struct ViewFill<ViewType, Layout, ExecSpace, 8, iType> {
+template <class ViewType, class Layout, class ExecSpace, typename iType,
+          unsigned Nested>
+struct ViewFill<ViewType, Layout, ExecSpace, 8, iType, Nested> {
   ViewType a;
   typename ViewType::const_value_type val;
 
   using iterate_type = Kokkos::Rank<6, ViewFillLayoutSelector<Layout>::iterate,
                                     ViewFillLayoutSelector<Layout>::iterate>;
-  using policy_type =
-      Kokkos::MDRangePolicy<ExecSpace, iterate_type, Kokkos::IndexType<iType>>;
 
   ViewFill(const ViewType& a_, typename ViewType::const_value_type& val_,
            const ExecSpace& space)
       : a(a_), val(val_) {
-    Kokkos::parallel_for("Kokkos::ViewFill-8D",
-                         policy_type(space, {0, 0, 0, 0, 0, 0},
-                                     {a.extent(0), a.extent(1), a.extent(3),
-                                      a.extent(5), a.extent(6), a.extent(7)}),
-                         *this);
+    if constexpr (Nested == 0) {
+      Kokkos::parallel_for("Kokkos::ViewFill-8D",
+                           Kokkos::MDRangePolicy<ExecSpace, iterate_type,
+                                                 Kokkos::IndexType<iType>>(
+                               space, {0, 0, 0, 0, 0, 0},
+                               {a.extent(0), a.extent(1), a.extent(3),
+                                a.extent(5), a.extent(6), a.extent(7)}),
+                           *this);
+    } else if constexpr (Nested == 1) {
+      Kokkos::parallel_for(Kokkos::TeamVectorMDRange<iterate_type, ExecSpace>(
+                               space, a.extent(0), a.extent(1), a.extent(3),
+                               a.extent(5), a.extent(6), a.extent(7)),
+                           *this);
+    } else if constexpr (Nested == 2) {
+      Kokkos::parallel_for(Kokkos::ThreadVectorMDRange<iterate_type, ExecSpace>(
+                               space, a.extent(0), a.extent(1), a.extent(3),
+                               a.extent(5), a.extent(6), a.extent(7)),
+                           *this);
+    }
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -1963,8 +2050,6 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy_non_contiguous(
                        });
 }
 
-// Copy from a scalar to a view
-
 template <class TeamType, class iType, class MemberType,
           template <class, class> class Policy, class DT, class... DP>
 void KOKKOS_INLINE_FUNCTION deep_copy_contiguous(
@@ -1974,103 +2059,6 @@ void KOKKOS_INLINE_FUNCTION deep_copy_contiguous(
       team, Policy<iType, MemberType>(team, 0), dst.span());
   Kokkos::parallel_for(policy, [&](const int& i) { dst.data()[i] = value; });
 }
-
-template <class TeamType, class iType, class MemberType,
-          template <class, class> class Policy, class DT, class... DP>
-void KOKKOS_INLINE_FUNCTION local_deep_copy_non_contiguous(
-    const TeamType& team, Policy<iType, MemberType> asked_policy,
-    const View<DT, DP...>& dst,
-    typename ViewTraits<DT, DP...>::const_value_type& value,
-    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 1)>* = nullptr) {
-  const size_t N = dst.extent(0);
-
-  auto policy = deep_copy_policy_helper(team, asked_policy, N);
-  Kokkos::parallel_for(policy, [&](const int& i) { dst(i) = value; });
-}
-
-template <class TeamType, class iType, class MemberType,
-          template <class, class> class Policy, class DT, class... DP>
-void KOKKOS_INLINE_FUNCTION local_deep_copy_non_contiguous(
-    const TeamType& team, Policy<iType, MemberType>, const View<DT, DP...>& dst,
-    typename ViewTraits<DT, DP...>::const_value_type& value,
-    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 2)>* = nullptr) {
-  using layout = Kokkos::LayoutRight;
-  if constexpr (Kokkos::is_detected_v<boundary_has_team_member,
-                                      Policy<iType, MemberType>>) {
-    Kokkos::Impl::ViewFill<typename View<DT, DP...>::uniform_runtime_type,
-                           layout, TeamType, View<DT, DP...>::rank, int, 1>(
-        dst, value, team);
-  } else {
-    Kokkos::Impl::ViewFill<typename View<DT, DP...>::uniform_runtime_type,
-                           layout, TeamType, View<DT, DP...>::rank, int, 2>(
-        dst, value, team);
-  }
-}
-
-template <class TeamType, class iType, class MemberType,
-          template <class, class> class Policy, class DT, class... DP>
-void KOKKOS_INLINE_FUNCTION local_deep_copy_non_contiguous(
-    const TeamType& team, Policy<iType, MemberType>, const View<DT, DP...>& dst,
-    typename ViewTraits<DT, DP...>::const_value_type& value,
-    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 3)>* = nullptr) {
-  auto policy = deep_copy_mdpolicy_helper<Kokkos::is_detected_v<
-      boundary_has_team_member, Policy<iType, MemberType>>>(team, dst);
-  Kokkos::parallel_for(policy,
-                       [&](int i, int j, int k) { dst(i, j, k) = value; });
-}
-
-template <class TeamType, class iType, class MemberType,
-          template <class, class> class Policy, class DT, class... DP>
-void KOKKOS_INLINE_FUNCTION local_deep_copy_non_contiguous(
-    const TeamType& team, Policy<iType, MemberType>, const View<DT, DP...>& dst,
-    typename ViewTraits<DT, DP...>::const_value_type& value,
-    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 4)>* = nullptr) {
-  auto policy = deep_copy_mdpolicy_helper<Kokkos::is_detected_v<
-      boundary_has_team_member, Policy<iType, MemberType>>>(team, dst);
-  Kokkos::parallel_for(
-      policy, [&](int i, int j, int k, int l) { dst(i, j, k, l) = value; });
-}
-
-template <class TeamType, class iType, class MemberType,
-          template <class, class> class Policy, class DT, class... DP>
-void KOKKOS_INLINE_FUNCTION local_deep_copy_non_contiguous(
-    const TeamType& team, Policy<iType, MemberType>, const View<DT, DP...>& dst,
-    typename ViewTraits<DT, DP...>::const_value_type& value,
-    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 5)>* = nullptr) {
-  auto policy = deep_copy_mdpolicy_helper<Kokkos::is_detected_v<
-      boundary_has_team_member, Policy<iType, MemberType>>>(team, dst);
-  Kokkos::parallel_for(policy, [&](int i, int j, int k, int l, int m) {
-    dst(i, j, k, l, m) = value;
-  });
-}
-
-template <class TeamType, class iType, class MemberType,
-          template <class, class> class Policy, class DT, class... DP>
-void KOKKOS_INLINE_FUNCTION local_deep_copy_non_contiguous(
-    const TeamType& team, Policy<iType, MemberType>, const View<DT, DP...>& dst,
-    typename ViewTraits<DT, DP...>::const_value_type& value,
-    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 6)>* = nullptr) {
-  auto policy = deep_copy_mdpolicy_helper<Kokkos::is_detected_v<
-      boundary_has_team_member, Policy<iType, MemberType>>>(team, dst);
-  Kokkos::parallel_for(policy, [&](int i, int j, int k, int l, int m, int n) {
-    dst(i, j, k, l, m, n) = value;
-  });
-}
-
-template <class TeamType, class iType, class MemberType,
-          template <class, class> class Policy, class DT, class... DP>
-void KOKKOS_INLINE_FUNCTION local_deep_copy_non_contiguous(
-    const TeamType& team, Policy<iType, MemberType>, const View<DT, DP...>& dst,
-    typename ViewTraits<DT, DP...>::const_value_type& value,
-    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 7)>* = nullptr) {
-  auto policy = deep_copy_mdpolicy_helper<Kokkos::is_detected_v<
-      boundary_has_team_member, Policy<iType, MemberType>>>(team, dst);
-  Kokkos::parallel_for(policy,
-                       [&](int i, int j, int k, int l, int m, int n, int o) {
-                         dst(i, j, k, l, m, n, o) = value;
-                       });
-}
-
 }  // namespace Impl
 
 //----------------------------------------------------------------------------
@@ -2291,7 +2279,55 @@ deep_copy(const TeamType& team, Policy<iType, MemberType> asked_policy,
   if (dst.span_is_contiguous()) {
     Impl::deep_copy_contiguous(team, asked_policy, dst, value);
   } else {
-    Impl::local_deep_copy_non_contiguous(team, asked_policy, dst, value);
+    using ViewType = View<DT, DP...>;
+
+    constexpr unsigned nested = (need_barrier) ? 1 : 2;
+
+    // Figure out iteration order to do the ViewFill
+    int64_t strides[ViewType::rank + 1];
+    dst.stride(strides);
+    Kokkos::Iterate iterate;
+    if (std::is_same_v<typename ViewType::array_layout, Kokkos::LayoutRight>) {
+      iterate = Kokkos::Iterate::Right;
+    } else if (std::is_same_v<typename ViewType::array_layout,
+                              Kokkos::LayoutLeft>) {
+      iterate = Kokkos::Iterate::Left;
+    } else if (std::is_same_v<typename ViewType::array_layout,
+                              Kokkos::LayoutStride>) {
+      if (strides[0] > strides[ViewType::rank > 0 ? ViewType::rank - 1 : 0])
+        iterate = Kokkos::Iterate::Right;
+      else
+        iterate = Kokkos::Iterate::Left;
+    } else {
+      if (std::is_same_v<typename ViewType::execution_space::array_layout,
+                         Kokkos::LayoutRight>)
+        iterate = Kokkos::Iterate::Right;
+      else
+        iterate = Kokkos::Iterate::Left;
+    }
+
+    // Lets call the right ViewFill functor based on integer space needed and
+    // iteration type
+
+    if (dst.span() > static_cast<size_t>(std::numeric_limits<int32_t>::max())) {
+      if (iterate == Kokkos::Iterate::Right)
+        Kokkos::Impl::ViewFill<ViewType, Kokkos::LayoutRight, TeamType,
+                               ViewType::rank, int64_t, nested>(dst, value,
+                                                                team);
+      else
+        Kokkos::Impl::ViewFill<ViewType, Kokkos::LayoutLeft, TeamType,
+                               ViewType::rank, int64_t, nested>(dst, value,
+                                                                team);
+    } else {
+      if (iterate == Kokkos::Iterate::Right)
+        Kokkos::Impl::ViewFill<ViewType, Kokkos::LayoutRight, TeamType,
+                               ViewType::rank, int32_t, nested>(dst, value,
+                                                                team);
+      else
+        Kokkos::Impl::ViewFill<ViewType, Kokkos::LayoutLeft, TeamType,
+                               ViewType::rank, int32_t, nested>(dst, value,
+                                                                team);
+    }
   }
   if constexpr (need_barrier) {
     team.team_barrier();
