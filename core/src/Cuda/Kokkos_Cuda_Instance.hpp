@@ -325,7 +325,13 @@ class CudaInternal {
   template <bool setCudaDevice = true>
   cudaError_t cuda_malloc_wrapper(void** devPtr, size_t size) const {
     if constexpr (setCudaDevice) set_cuda_device();
+#if !defined(KOKKOS_ENABLE_IMPL_CUDA_EMULATE_UNIFIED_MEMORY)
     return cudaMalloc(devPtr, size);
+#else
+    auto ptr = cudaMallocManaged(devPtr, size, cudaMemAttachGlobal);
+    cudaDeviceSynchronize();
+    return ptr;
+#endif
   }
 
   template <bool setCudaDevice = true>
