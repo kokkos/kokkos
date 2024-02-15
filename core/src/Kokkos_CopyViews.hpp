@@ -223,8 +223,8 @@ struct ViewFill<ViewType, Layout, ExecSpace, 7, iType> {
       : a(a_), val(val_) {
     Kokkos::parallel_for("Kokkos::ViewFill-7D",
                          policy_type(space, {0, 0, 0, 0, 0, 0},
-                                     {a.extent(0), a.extent(1), a.extent(2),
-                                      a.extent(3), a.extent(5), a.extent(6)}),
+                                     {a.extent(0), a.extent(1), a.extent(3),
+                                      a.extent(4), a.extent(5), a.extent(6)}),
                          *this);
   }
 
