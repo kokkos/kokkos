@@ -287,7 +287,7 @@ struct DeepCopy;
 
 template <class ViewType, class Layout = typename ViewType::array_layout,
           class ExecSpace = typename ViewType::execution_space,
-          int Rank = ViewType::rank, typename iType = int64_t>
+          int Rank = ViewType::rank, typename iType = int64_t, unsigned Nested = 0>
 struct ViewFill;
 
 template <class ViewTypeA, class ViewTypeB, class Layout, class ExecSpace,

@@ -80,22 +80,41 @@ struct ViewFill<ViewType, Layout, ExecSpace, 1, iType> {
   void operator()(const iType& i) const { a(i) = val; };
 };
 
-template <class ViewType, class Layout, class ExecSpace, typename iType>
-struct ViewFill<ViewType, Layout, ExecSpace, 2, iType> {
+template <typename ExecSpace, typename IterateType, typename IndexType,
+          unsigned Nested, typename LT, std::size_t LN, typename UT,
+          std::size_t UN>
+auto get_nested_policy(ExecSpace space, const LT (&lower)[LN],
+                       const UT (&upper)[UN]) {
+  if constexpr (Nested == 0) {
+    return Kokkos::MDRangePolicy<ExecSpace, IterateType, IndexType>(
+        space, lower, upper);
+  }
+  if constexpr (Nested == 1) {
+    return Kokkos::TeamVectorMDRange<IterateType, ExecSpace>(space, lower,
+                                                             upper);
+  }
+  if constexpr (Nested == 2) {
+    return Kokkos::ThreadVectorMDRange<IterateType, ExecSpace>(space, lower,
+                                                               upper);
+  }
+}
+
+template <class ViewType, class Layout, class ExecSpace, typename iType,
+          unsigned Nested>
+struct ViewFill<ViewType, Layout, ExecSpace, 2, iType, Nested> {
   ViewType a;
   typename ViewType::const_value_type val;
 
   using iterate_type = Kokkos::Rank<2, ViewFillLayoutSelector<Layout>::iterate,
                                     ViewFillLayoutSelector<Layout>::iterate>;
-  using policy_type =
-      Kokkos::MDRangePolicy<ExecSpace, iterate_type, Kokkos::IndexType<iType>>;
 
   ViewFill(const ViewType& a_, typename ViewType::const_value_type& val_,
            const ExecSpace& space)
       : a(a_), val(val_) {
-    Kokkos::parallel_for("Kokkos::ViewFill-2D",
-                         policy_type(space, {0, 0}, {a.extent(0), a.extent(1)}),
-                         *this);
+    auto policy =
+        get_nested_policy<ExecSpace, iterate_type, Kokkos::IndexType<iType>,
+                          Nested>(space, {0, 0}, {a.extent(0), a.extent(1)});
+    Kokkos::parallel_for("Kokkos::ViewFill-2D", policy, *this);
   }
 
   KOKKOS_INLINE_FUNCTION
