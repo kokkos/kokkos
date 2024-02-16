@@ -704,6 +704,14 @@ void Cuda::print_configuration(std::ostream &os, bool /*verbose*/) const {
 #else
   os << "no\n";
 #endif
+#ifdef KOKKOS_ENABLE_IMPL_CUDA_UNIFIED_MEMORY
+  os << "  KOKKOS_ENABLE_IMPL_CUDA_UNIFIED_MEMORY: ";
+  os << "yes\n";
+#endif
+#ifdef KOKKOS_ENABLE_IMPL_CUDA_EMULATE_UNIFIED_MEMORY
+  os << "  KOKKOS_ENABLE_IMPL_CUDA_EMULATE_UNIFIED_MEMORY: ";
+  os << "yes\n";
+#endif
 
   os << "\nCuda Runtime Configuration:\n";
 
