@@ -16,12 +16,11 @@
 
 #include <TestCuda_Category.hpp>
 #include <Test_InterOp_Streams.hpp>
-#include <memory>
 
 namespace {
 
 struct StreamsAndDevices {
-  std::shared_ptr<std::array<cudaStream_t, 2>> streams;
+  std::array<cudaStream_t, 2> streams;
   std::array<int, 2> devices;
 
   StreamsAndDevices() {
@@ -29,26 +28,25 @@ struct StreamsAndDevices {
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGetDeviceCount(&n_devices));
 
     devices = {0, n_devices - 1};
-
-    streams = std::shared_ptr<std::array<cudaStream_t, 2>>(
-        new std::array<cudaStream_t, 2>{},
-        [this](std::array<cudaStream_t, 2> *s) {
-          for (int i = 0; i < 2; ++i) {
-            KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(devices[i]));
-            KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamDestroy((*s)[i]));
-          }
-        });
     for (int i = 0; i < 2; ++i) {
       KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(devices[i]));
-      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamCreate(&((*streams)[i])));
+      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamCreate(&streams[i]));
+    }
+  }
+  StreamsAndDevices(const StreamsAndDevices &) = delete;
+  StreamsAndDevices &operator=(const StreamsAndDevices &) = delete;
+  ~StreamsAndDevices() {
+    for (int i = 0; i < 2; ++i) {
+      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(devices[i]));
+      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamDestroy(streams[i]));
     }
   }
 };
 
 std::array<TEST_EXECSPACE, 2> get_execution_spaces(
     const StreamsAndDevices &streams_and_devices) {
-  TEST_EXECSPACE exec0((*streams_and_devices.streams)[0]);
-  TEST_EXECSPACE exec1((*streams_and_devices.streams)[1]);
+  TEST_EXECSPACE exec0(streams_and_devices.streams[0]);
+  TEST_EXECSPACE exec1(streams_and_devices.streams[1]);
 
   // Must return void to use ASSERT_EQ
   [&]() {
