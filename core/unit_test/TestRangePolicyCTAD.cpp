@@ -54,6 +54,7 @@ struct TestRangePolicyCTAD {
 
   // RangePolicy(index_type, index_type)
 
+#if !defined(KOKKOS_COMPILER_NVCC) || KOKKOS_COMPILER_NVCC >= 1120
   KOKKOS_TEST_RANGE_POLICY(Kokkos::RangePolicy<>, i64, i64);
   KOKKOS_TEST_RANGE_POLICY(Kokkos::RangePolicy<>, i64, i32);
   KOKKOS_TEST_RANGE_POLICY(Kokkos::RangePolicy<>, i32, i64);
@@ -76,6 +77,7 @@ struct TestRangePolicyCTAD {
   KOKKOS_TEST_RANGE_POLICY(Kokkos::RangePolicy<>, des, i32, i32, cs);
   KOKKOS_TEST_RANGE_POLICY(Kokkos::RangePolicy<>, nes, i64, i64, cs);
   KOKKOS_TEST_RANGE_POLICY(Kokkos::RangePolicy<>, nes, i32, i32, cs);
+#endif
 };  // TestRangePolicyCTAD struct
 
 // To eliminate maybe_unused warning on some compilers
