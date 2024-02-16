@@ -31,7 +31,7 @@ jobs:
             cmake_build_type: "Release"
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: configure
         run:
           cmake -B build .
