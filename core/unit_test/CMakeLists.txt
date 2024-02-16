@@ -236,6 +236,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
       ViewAPI_e
       ViewCopy_a
       ViewCopy_b
+      ViewCopy_c
       ViewCtorDimMatch
       ViewEmptyRuntimeUnmanaged
       ViewHooks
@@ -353,6 +354,7 @@ foreach(PairDeviceSpace HIP-HostPinned;HIP-Managed;Cuda-HostPinned;Cuda-UVM;SYCL
       ViewAPI_e
       ViewCopy_a
       ViewCopy_b
+      ViewCopy_c
       ViewMapping_a
       ViewMapping_b
       ViewMapping_subview

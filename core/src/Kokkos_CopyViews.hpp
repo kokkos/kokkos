@@ -221,6 +221,8 @@ struct ViewFill<ViewType, Layout, ExecSpace, 7, iType> {
   ViewFill(const ViewType& a_, typename ViewType::const_value_type& val_,
            const ExecSpace& space)
       : a(a_), val(val_) {
+    // MDRangePolicy is not supported for 7D views
+    // Iterate separately over extent(2)
     Kokkos::parallel_for("Kokkos::ViewFill-7D",
                          policy_type(space, {0, 0, 0, 0, 0, 0},
                                      {a.extent(0), a.extent(1), a.extent(3),
@@ -249,6 +251,8 @@ struct ViewFill<ViewType, Layout, ExecSpace, 8, iType> {
   ViewFill(const ViewType& a_, typename ViewType::const_value_type& val_,
            const ExecSpace& space)
       : a(a_), val(val_) {
+    // MDRangePolicy is not supported for 8D views
+    // Iterate separately over extent(2) and extent(4)
     Kokkos::parallel_for("Kokkos::ViewFill-8D",
                          policy_type(space, {0, 0, 0, 0, 0, 0},
                                      {a.extent(0), a.extent(1), a.extent(3),
@@ -461,6 +465,8 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 7, iType> {
   ViewCopy(const ViewTypeA& a_, const ViewTypeB& b_,
            const ExecSpace space = ExecSpace())
       : a(a_), b(b_) {
+    // MDRangePolicy is not supported for 7D views
+    // Iterate separately over extent(2)
     Kokkos::parallel_for("Kokkos::ViewCopy-7D",
                          policy_type(space, {0, 0, 0, 0, 0, 0},
                                      {a.extent(0), a.extent(1), a.extent(3),
@@ -494,6 +500,8 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 8, iType> {
   ViewCopy(const ViewTypeA& a_, const ViewTypeB& b_,
            const ExecSpace space = ExecSpace())
       : a(a_), b(b_) {
+    // MDRangePolicy is not supported for 8D views
+    // Iterate separately over extent(2) and extent(4)
     Kokkos::parallel_for("Kokkos::ViewCopy-8D",
                          policy_type(space, {0, 0, 0, 0, 0, 0},
                                      {a.extent(0), a.extent(1), a.extent(3),
