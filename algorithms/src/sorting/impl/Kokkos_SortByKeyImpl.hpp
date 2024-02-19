@@ -59,11 +59,6 @@
 
 #endif
 
-#if defined(KOKKOS_ENABLE_ROCTHRUST)
-#include <thrust/device_ptr.h>
-#include <thrust/sort.h>
-#endif
-
 #if defined(KOKKOS_ENABLE_ONEDPL)
 #include <oneapi/dpl/execution>
 #include <oneapi/dpl/algorithm>
@@ -94,23 +89,6 @@ template <class KeysDataType, class... KeysProperties, class ValuesDataType,
           class... ValuesProperties, class... MaybeComparator>
 void sort_by_key_cudathrust(
     const Kokkos::Cuda& exec,
-    const Kokkos::View<KeysDataType, KeysProperties...>& keys,
-    const Kokkos::View<ValuesDataType, ValuesProperties...>& values,
-    MaybeComparator&&... maybeComparator) {
-  const auto policy = thrust::cuda::par.on(exec.cuda_stream());
-  auto keys_first   = ::Kokkos::Experimental::begin(keys);
-  auto keys_last    = ::Kokkos::Experimental::end(keys);
-  auto values_first = ::Kokkos::Experimental::begin(values);
-  thrust::sort_by_key(policy, keys_first, keys_last, values_first,
-                      std::forward<MaybeComparator>(maybeComparator)...);
-}
-#endif
-
-#if defined(KOKKOS_ENABLE_ROCTHRUST)
-template <class KeysDataType, class... KeysProperties, class ValuesDataType,
-          class... ValuesProperties, class... MaybeComparator>
-void sort_by_key_hipthrust(
-    const Kokkos::HIP& exec,
     const Kokkos::View<KeysDataType, KeysProperties...>& keys,
     const Kokkos::View<ValuesDataType, ValuesProperties...>& values,
     MaybeComparator&&... maybeComparator) {
@@ -232,17 +210,6 @@ void sort_by_key_device_view_without_comparator(
 }
 #endif
 
-#if defined(KOKKOS_ENABLE_ROCTHRUST)
-template <class KeysDataType, class... KeysProperties, class ValuesDataType,
-          class... ValuesProperties>
-void sort_by_key_device_view_without_comparator(
-    const Kokkos::HIP& exec,
-    const Kokkos::View<KeysDataType, KeysProperties...>& keys,
-    const Kokkos::View<ValuesDataType, ValuesProperties...>& values) {
-  sort_by_key_hipthrust(exec, keys, values);
-}
-#endif
-
 #if defined(KOKKOS_ENABLE_ONEDPL)
 template <class DataType, class... Properties>
 void sort_by_key_device_view_without_comparator(
@@ -283,18 +250,6 @@ void sort_by_key_device_view_with_comparator(
     const Kokkos::View<ValuesDataType, ValuesProperties...>& values,
     const ComparatorType& comparator) {
   sort_by_key_cudathrust(exec, keys, values, comparator);
-}
-#endif
-
-#if defined(KOKKOS_ENABLE_ROCTHRUST)
-template <class ComparatorType, class KeysDataType, class... KeysProperties,
-          class ValuesDataType, class... ValuesProperties>
-void sort_by_key_device_view_with_comparator(
-    const Kokkos::HIP& exec,
-    const Kokkos::View<KeysDataType, KeysProperties...>& keys,
-    const Kokkos::View<ValuesDataType, ValuesProperties...>& values,
-    const ComparatorType& comparator) {
-  sort_by_key_hipthrust(exec, keys, values, comparator);
 }
 #endif
 
