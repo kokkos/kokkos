@@ -108,7 +108,7 @@ void sort_by_key_cudathrust(
 template <class KeysDataType, class... KeysProperties, class ValuesDataType,
           class... ValuesProperties, class... MaybeComparator>
 void sort_by_key_onedpl(
-    const Kokkos::SYCL& exec,
+    const Kokkos::Experimental::SYCL& exec,
     const Kokkos::View<KeysDataType, KeysProperties...>& keys,
     const Kokkos::View<ValuesDataType, ValuesProperties...>& values,
     MaybeComparator&&... maybeComparator) {
@@ -177,17 +177,37 @@ void sort_by_key_via_sort(
 
   static_assert(sizeof...(MaybeComparator) <= 1);
   if constexpr (sizeof...(MaybeComparator) == 0) {
+#ifdef KOKKOS_ENABLE_SYCL
+    auto* raw_keys_in_comparator = keys_in_comparator.data();
+    auto stride                  = keys_in_comparator.stride(0);
+    Kokkos::sort(
+        exec, permute, KOKKOS_LAMBDA(int i, int j) {
+          return raw_keys_in_comparator[i * stride] <
+                 raw_keys_in_comparator[j * stride];
+        });
+#else
     Kokkos::sort(
         exec, permute, KOKKOS_LAMBDA(int i, int j) {
           return keys_in_comparator(i) < keys_in_comparator(j);
         });
+#endif
   } else {
     auto keys_comparator =
         std::get<0>(std::tuple<MaybeComparator...>(maybeComparator...));
+#ifdef KOKKOS_ENABLE_SYCL
+    auto* raw_keys_in_comparator = keys_in_comparator.data();
+    auto stride                  = keys_in_comparator.stride(0);
+    Kokkos::sort(
+        exec, permute, KOKKOS_LAMBDA(int i, int j) {
+          return keys_comparator(raw_keys_in_comparator[i * stride],
+                                 raw_keys_in_comparator[j * stride]);
+        });
+#else
     Kokkos::sort(
         exec, permute, KOKKOS_LAMBDA(int i, int j) {
           return keys_comparator(keys_in_comparator(i), keys_in_comparator(j));
         });
+#endif
   }
 
   applyPermutation(exec, permute, keys);
@@ -222,9 +242,8 @@ void sort_by_key_device_view_without_comparator(
   if (keys.stride(0) == 1 && values.stride(0) == 1)
     sort_by_key_onedpl(exec, keys, values);
   else
-#else
-  sort_by_key_via_sort(exec, keys, values);
 #endif
+    sort_by_key_via_sort(exec, keys, values);
 }
 #endif
 
@@ -269,9 +288,8 @@ void sort_by_key_device_view_with_comparator(
   if (keys.stride(0) == 1 && values.stride(0) == 1)
     sort_by_key_onedpl(exec, keys, values, comparator);
   else
-#else
-  sort_by_key_via_sort(exec, keys, values, comparator);
 #endif
+    sort_by_key_via_sort(exec, keys, values, comparator);
 }
 #endif
 
