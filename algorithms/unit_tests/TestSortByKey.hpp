@@ -188,7 +188,7 @@ void buildViewsForStrided(ExecutionSpace const &space, int n, Keys &keys,
                                                              {n, n, n}),
       KOKKOS_LAMBDA(int i, int j, int k) {
         keys(i, j, k)   = n - i;
-        values(i, j, k) = i;
+        values(i, j, k) = j;
       });
 }
 
@@ -203,8 +203,8 @@ TEST(TEST_CATEGORY, SortByKeyWithStrides) {
   Kokkos::View<int ***, ExecutionSpace> values("values", n, n, n);
   buildViewsForStrided(space, n, keys, values);
 
-  auto keys_sub   = Kokkos::subview(keys, Kokkos::ALL(), 0, 0);
-  auto values_sub = Kokkos::subview(values, Kokkos::ALL(), 0, 0);
+  auto keys_sub   = Kokkos::subview(keys, Kokkos::ALL(), 1, 2);
+  auto values_sub = Kokkos::subview(values, 4, Kokkos::ALL(), 6);
 
   auto keys_orig = Kokkos::create_mirror(space, keys_sub);
   Kokkos::deep_copy(space, keys_orig, keys_sub);
@@ -222,7 +222,6 @@ TEST(TEST_CATEGORY, SortByKeyWithStrides) {
   ASSERT_EQ(sort_fails, 0u);
 }
 
-#if !defined(NDEBUG) || defined(KOKKOS_ENABLE_DEBUG)
 TEST(TEST_CATEGORY, SortByKeyKeysLargerThanValues) {
   using ExecutionSpace = TEST_EXECSPACE;
 
@@ -237,7 +236,6 @@ TEST(TEST_CATEGORY, SortByKeyKeysLargerThanValues) {
                                                  SortImpl::Greater{}),
                "values and keys extents must be the same");
 }
-#endif
 
 }  // namespace Test
 #endif

@@ -53,7 +53,11 @@ void sort_by_key(
                 ValuesType::static_extent(0) == 0 ||
                 KeysType::static_extent(0) == ValuesType::static_extent(0));
   if (values.size() != keys.size())
-    Kokkos::abort("values and keys extents must be the same");
+    Kokkos::abort((std::string("values and keys extents must be the same. The "
+                               "values extent is ") +
+                   std::to_string(values.size()) + ", and the keys extent is " +
+                   std::to_string(keys.size()) + ".")
+                      .c_str());
 
   if (keys.extent(0) <= 1) {
     return;
@@ -95,7 +99,11 @@ void sort_by_key(
                 ValuesType::static_extent(0) == 0 ||
                 KeysType::static_extent(0) == ValuesType::static_extent(0));
   if (values.size() != keys.size())
-    Kokkos::abort("values and keys extents must be the same");
+    Kokkos::abort((std::string("values and keys extents must be the same. The "
+                               "values extent is ") +
+                   std::to_string(values.size()) + ", and the keys extent is " +
+                   std::to_string(keys.size()) + ".")
+                      .c_str());
 
   if (keys.extent(0) <= 1) {
     return;
