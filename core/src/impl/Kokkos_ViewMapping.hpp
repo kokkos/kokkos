@@ -1935,8 +1935,8 @@ struct ViewOffset<
   }
 
   KOKKOS_INLINE_FUNCTION constexpr bool span_is_contiguous() const {
-    return m_stride == m_dim.N7 * m_dim.N6 * m_dim.N5 * m_dim.N4 * m_dim.N3 *
-                           m_dim.N2 * m_dim.N1;
+    return m_stride == static_cast<size_type>(m_dim.N7) * m_dim.N6 * m_dim.N5 *
+                           m_dim.N4 * m_dim.N3 * m_dim.N2 * m_dim.N1;
   }
 
   /* Strides of dimensions */
