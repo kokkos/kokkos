@@ -107,10 +107,10 @@ struct DataTypeFromExtents {
   using type = typename ::Kokkos::Impl::ViewDataType<T, dimension_type>::type;
 };
 
-/// Convert from a mdspan extent to a Kokkos extent, inserting 0s for static extents
-template<class Extents>
-auto dimension_from_extent(const Extents &e, std::size_t r) noexcept
-{
+/// Convert from a mdspan extent to a Kokkos extent, inserting 0s for static
+/// extents
+template <class Extents>
+auto dimension_from_extent(const Extents &e, std::size_t r) noexcept {
   return Extents::static_extent(r) == dynamic_extent ? e.extent(r) : 0;
 }
 }  // namespace Kokkos::Experimental::Impl
