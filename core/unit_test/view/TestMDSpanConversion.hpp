@@ -20,6 +20,8 @@
 
 #include <Kokkos_Core.hpp>
 
+#ifdef KOKKOS_ENABLE_IMPL_MDSPAN
+
 template <class T, class ExecutionSpace>
 struct TestViewMDSpanConversion {
   using value_type = T;
@@ -114,3 +116,5 @@ TEST(TEST_CATEGORY, view_mdspan_conversion) {
 }
 
 }  // namespace Test
+
+#endif  // KOKKOS_ENABLE_IMPL_MDSPAN
