@@ -6,7 +6,8 @@ on:
     # Weekly on Saturdays.
     - cron: '30 1 * * 6'
   push:
-    branches: [ main, master ]
+    branches: [ master, develop ]
+  pull_request:
 
 # Declare default permissions as read only.
 permissions: read-all
@@ -16,7 +17,6 @@ jobs:
     name: Scorecard analysis
     runs-on: ubuntu-latest
     permissions:
-      # Needed if using Code scanning alerts
       security-events: write
       # Needed for GitHub OIDC token if publish_results is true
       id-token: write
