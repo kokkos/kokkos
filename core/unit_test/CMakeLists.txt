@@ -263,6 +263,21 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
       list(APPEND ${Tag}_SOURCES2A ${file})
     endforeach()
 
+    # View implementation tests
+    foreach(Name
+      MDSpanConversion
+      )
+      set(file ${dir}/view/Test${Tag}_${Name}.cpp)
+      # Write to a temporary intermediate file and call configure_file to avoid
+      # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
+      file(WRITE ${dir}/dummy.cpp
+          "#include <Test${Tag}_Category.hpp>\n"
+          "#include <view/Test${Name}.hpp>\n"
+      )
+      configure_file(${dir}/dummy.cpp ${file})
+      list(APPEND ${Tag}_SOURCES2A ${file})
+    endforeach()
+
     set(TagHostAccessible ${Tag})
     if (Tag STREQUAL "Cuda")
       set(TagHostAccessible CudaUVM)

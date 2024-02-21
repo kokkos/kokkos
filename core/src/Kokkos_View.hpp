@@ -38,6 +38,7 @@ static_assert(false,
 
 #ifdef KOKKOS_ENABLE_IMPL_MDSPAN
 #include <View/MDSpan/Kokkos_MDSpan_Extents.hpp>
+#include <View/MDSpan/Kokkos_MDSpan_Layout.hpp>
 #endif
 #include <Kokkos_MinMax.hpp>
 
@@ -1722,6 +1723,38 @@ class View : public ViewTraits<DataType, Properties...> {
                   "Layout is not constructible from extent arguments. Use "
                   "overload taking a layout object instead.");
   }
+
+  //----------------------------------------
+  // MDSpan converting constructors
+#ifdef KOKKOS_ENABLE_IMPL_MDSPAN
+#ifndef KOKKOS_IMPL_TEST_ACCESS
+ private:
+#endif  // KOKKOS_IMPL_TEST_ACCESS
+  template <class OtherExtents, class OtherLayoutPolicy, class Accessor>
+  static constexpr inline bool mdspan_conversion_constraints =
+      !traits::is_managed &&
+      std::is_constructible_v<typename traits::value_type,
+                              typename Accessor::reference> &&
+      std::is_assignable_v<typename Accessor::reference,
+                           typename traits::value_type> &&
+      std::is_default_constructible_v<typename traits::value_type> &&
+      std::is_constructible_v<
+          typename traits::array_layout,
+          const typename Experimental::Impl::ArrayLayoutFromLayout<
+              OtherLayoutPolicy>::type&>;
+
+ public:
+  template <class OtherElementType, class OtherExtents, class OtherLayoutPolicy,
+            class = std::enable_if_t<mdspan_conversion_constraints<
+                OtherExtents, OtherLayoutPolicy,
+                Kokkos::default_accessor<OtherElementType>>>>
+  MDSPAN_CONDITIONAL_EXPLICIT(
+      !(std::is_convertible_v<Kokkos::default_accessor,
+                              typename traits::value_type>))
+  KOKKOS_INLINE_FUNCTION
+      View(mdspan<OtherElementType, OtherExtents, OtherLayoutPolicy> const& mds)
+      : m_track(), m_map(mds) {}
+#endif  // KOKKOS_ENABLE_IMPL_MDSPAN
 };
 
 template <typename D, class... P>
