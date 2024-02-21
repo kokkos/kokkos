@@ -66,20 +66,14 @@ class HIPSpace {
 
   /**\brief  Allocate untracked memory in the hip space */
   // FIXME_HIP Use execution space instance
-  void* allocate(const HIP&, const size_t arg_alloc_size) const {
-    return allocate(arg_alloc_size);
-  }
-  // FIXME_HIP Use execution space instance
   void* allocate(const HIP&, const char* arg_label, const size_t arg_alloc_size,
                  const size_t arg_logical_size = 0) const {
     return allocate(arg_label, arg_alloc_size, arg_logical_size);
   }
-  void* allocate(const size_t arg_alloc_size) const;
   void* allocate(const char* arg_label, const size_t arg_alloc_size,
                  const size_t arg_logical_size = 0) const;
 
   /**\brief  Deallocate untracked memory in the hip space */
-  void deallocate(void* const arg_alloc_ptr, const size_t arg_alloc_size) const;
   void deallocate(const char* arg_label, void* const arg_alloc_ptr,
                   const size_t arg_alloc_size,
                   const size_t arg_logical_size = 0) const;
@@ -135,21 +129,15 @@ class HIPHostPinnedSpace {
 
   /**\brief  Allocate untracked memory in the space */
   template <typename ExecutionSpace>
-  void* allocate(const ExecutionSpace&, const size_t arg_alloc_size) const {
-    return allocate(arg_alloc_size);
-  }
-  template <typename ExecutionSpace>
   void* allocate(const ExecutionSpace&, const char* arg_label,
                  const size_t arg_alloc_size,
                  const size_t arg_logical_size = 0) const {
     return allocate(arg_label, arg_alloc_size, arg_logical_size);
   }
-  void* allocate(const size_t arg_alloc_size) const;
   void* allocate(const char* arg_label, const size_t arg_alloc_size,
                  const size_t arg_logical_size = 0) const;
 
   /**\brief  Deallocate untracked memory in the space */
-  void deallocate(void* const arg_alloc_ptr, const size_t arg_alloc_size) const;
   void deallocate(const char* arg_label, void* const arg_alloc_ptr,
                   const size_t arg_alloc_size,
                   const size_t arg_logical_size = 0) const;
@@ -208,21 +196,15 @@ class HIPManagedSpace {
 
   /**\brief  Allocate untracked memory in the space */
   template <typename ExecutionSpace>
-  void* allocate(const ExecutionSpace&, const size_t arg_alloc_size) const {
-    return allocate(arg_alloc_size);
-  }
-  template <typename ExecutionSpace>
   void* allocate(const ExecutionSpace&, const char* arg_label,
                  const size_t arg_alloc_size,
                  const size_t arg_logical_size = 0) const {
     return allocate(arg_label, arg_alloc_size, arg_logical_size);
   }
-  void* allocate(const size_t arg_alloc_size) const;
   void* allocate(const char* arg_label, const size_t arg_alloc_size,
                  const size_t arg_logical_size = 0) const;
 
   /**\brief  Deallocate untracked memory in the space */
-  void deallocate(void* const arg_alloc_ptr, const size_t arg_alloc_size) const;
   void deallocate(const char* arg_label, void* const arg_alloc_ptr,
                   const size_t arg_alloc_size,
                   const size_t arg_logical_size = 0) const;

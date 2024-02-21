@@ -162,7 +162,9 @@ class MemoryPool {
     const size_t alloc_size = m_hint_offset * sizeof(uint32_t);
 
     uint32_t *const sb_state_array =
-        accessible ? m_sb_state_array : (uint32_t *)host.allocate(alloc_size);
+        accessible ? m_sb_state_array
+                   : (uint32_t *)host.allocate(
+                         "Kokkos::MemoryPool::state_array", alloc_size);
 
     if (!accessible) {
       Kokkos::Impl::DeepCopy<Kokkos::HostSpace, base_memory_space>(
@@ -203,7 +205,8 @@ class MemoryPool {
     }
 
     if (!accessible) {
-      host.deallocate(sb_state_array, alloc_size);
+      host.deallocate("Kokkos::MemoryPool::state_array", sb_state_array,
+                      alloc_size);
     }
   }
 
@@ -213,7 +216,9 @@ class MemoryPool {
     const size_t alloc_size = m_hint_offset * sizeof(uint32_t);
 
     uint32_t *const sb_state_array =
-        accessible ? m_sb_state_array : (uint32_t *)host.allocate(alloc_size);
+        accessible ? m_sb_state_array
+                   : (uint32_t *)host.allocate(
+                         "Kokkos::MemoryPool::state_array", alloc_size);
 
     if (!accessible) {
       Kokkos::Impl::DeepCopy<Kokkos::HostSpace, base_memory_space>(
@@ -228,7 +233,8 @@ class MemoryPool {
                                    state_used_mask);
 
     if (!accessible) {
-      host.deallocate(sb_state_array, alloc_size);
+      host.deallocate("Kokkos::MemoryPool::state_array", sb_state_array,
+                      alloc_size);
     }
   }
 
@@ -398,7 +404,9 @@ class MemoryPool {
     Kokkos::HostSpace host;
 
     uint32_t *const sb_state_array =
-        accessible ? m_sb_state_array : (uint32_t *)host.allocate(header_size);
+        accessible ? m_sb_state_array
+                   : (uint32_t *)host.allocate(
+                         "Kokkos::MemoryPool::state_array", header_size);
 
     for (int32_t i = 0; i < m_data_offset; ++i) sb_state_array[i] = 0;
 
@@ -434,7 +442,8 @@ class MemoryPool {
           "MemoryPool::MemoryPool(): fence after copying state array from "
           "HostSpace");
 
-      host.deallocate(sb_state_array, header_size);
+      host.deallocate("Kokkos::MemoryPool::state_array", sb_state_array,
+                      header_size);
     } else {
       Kokkos::memory_fence();
     }

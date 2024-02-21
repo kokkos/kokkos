@@ -67,10 +67,6 @@ void* OpenMPTargetSpace::impl_allocate(
   return ptr;
 }
 
-void* OpenMPTargetSpace::allocate(const size_t arg_alloc_size) const {
-  return allocate("[unlabeled]", arg_alloc_size);
-}
-
 void* OpenMPTargetSpace::allocate(const char* arg_label,
                                   const size_t arg_alloc_size,
                                   const size_t arg_logical_size) const {
@@ -90,11 +86,6 @@ void OpenMPTargetSpace::impl_deallocate(
   if (arg_alloc_ptr) {
     omp_target_free(arg_alloc_ptr, omp_get_default_device());
   }
-}
-
-void OpenMPTargetSpace::deallocate(void* const arg_alloc_ptr,
-                                   const size_t arg_alloc_size) const {
-  deallocate("[unlabeled]", arg_alloc_ptr, arg_alloc_size);
 }
 
 void OpenMPTargetSpace::deallocate(const char* arg_label,

@@ -25,17 +25,6 @@
 #include <openacc.h>
 
 void *Kokkos::Experimental::OpenACCSpace::allocate(
-    const Kokkos::Experimental::OpenACC &exec_space,
-    const size_t arg_alloc_size) const {
-  return allocate(exec_space, "[unlabeled]", arg_alloc_size);
-}
-
-void *Kokkos::Experimental::OpenACCSpace::allocate(
-    const size_t arg_alloc_size) const {
-  return allocate("[unlabeled]", arg_alloc_size);
-}
-
-void *Kokkos::Experimental::OpenACCSpace::allocate(
     const Kokkos::Experimental::OpenACC &exec_space, const char *arg_label,
     const size_t arg_alloc_size, const size_t arg_logical_size) const {
   return impl_allocate(exec_space, arg_label, arg_alloc_size, arg_logical_size);
@@ -86,11 +75,6 @@ void *Kokkos::Experimental::OpenACCSpace::impl_allocate(
   }
 
   return ptr;
-}
-
-void Kokkos::Experimental::OpenACCSpace::deallocate(
-    void *const arg_alloc_ptr, const size_t arg_alloc_size) const {
-  deallocate("[unlabeled]", arg_alloc_ptr, arg_alloc_size);
 }
 
 void Kokkos::Experimental::OpenACCSpace::deallocate(

@@ -98,11 +98,6 @@ void* allocate_sycl(
 }
 
 void* SYCLDeviceUSMSpace::allocate(const Kokkos::Experimental::SYCL& exec_space,
-                                   const size_t arg_alloc_size) const {
-  return allocate(exec_space, "[unlabeled]", arg_alloc_size);
-}
-
-void* SYCLDeviceUSMSpace::allocate(const Kokkos::Experimental::SYCL& exec_space,
                                    const char* arg_label,
                                    const size_t arg_alloc_size,
                                    const size_t arg_logical_size) const {
@@ -112,10 +107,6 @@ void* SYCLDeviceUSMSpace::allocate(const Kokkos::Experimental::SYCL& exec_space,
       RawMemoryAllocationFailure::AllocationMechanism::SYCLMallocDevice,
       sycl::usm::alloc::device,
       *exec_space.impl_internal_space_instance()->m_queue);
-}
-
-void* SYCLDeviceUSMSpace::allocate(const size_t arg_alloc_size) const {
-  return allocate("[unlabeled]", arg_alloc_size);
 }
 
 void* SYCLDeviceUSMSpace::allocate(const char* arg_label,
@@ -129,10 +120,6 @@ void* SYCLDeviceUSMSpace::allocate(const char* arg_label,
 }
 
 void* SYCLSharedUSMSpace::allocate(const SYCL& exec_space,
-                                   const size_t arg_alloc_size) const {
-  return allocate(exec_space, "[unlabeled]", arg_alloc_size);
-}
-void* SYCLSharedUSMSpace::allocate(const SYCL& exec_space,
                                    const char* arg_label,
                                    const size_t arg_alloc_size,
                                    const size_t arg_logical_size) const {
@@ -144,9 +131,6 @@ void* SYCLSharedUSMSpace::allocate(const SYCL& exec_space,
       *exec_space.impl_internal_space_instance()->m_queue);
 }
 
-void* SYCLSharedUSMSpace::allocate(const size_t arg_alloc_size) const {
-  return allocate("[unlabeled]", arg_alloc_size);
-}
 void* SYCLSharedUSMSpace::allocate(const char* arg_label,
                                    const size_t arg_alloc_size,
                                    const size_t arg_logical_size) const {
@@ -157,10 +141,6 @@ void* SYCLSharedUSMSpace::allocate(const char* arg_label,
       sycl::usm::alloc::shared, m_queue);
 }
 
-void* SYCLHostUSMSpace::allocate(const SYCL& exec_space,
-                                 const size_t arg_alloc_size) const {
-  return allocate(exec_space, "[unlabeled]", arg_alloc_size);
-}
 void* SYCLHostUSMSpace::allocate(const SYCL& exec_space, const char* arg_label,
                                  const size_t arg_alloc_size,
                                  const size_t arg_logical_size) const {
@@ -172,9 +152,6 @@ void* SYCLHostUSMSpace::allocate(const SYCL& exec_space, const char* arg_label,
       *exec_space.impl_internal_space_instance()->m_queue);
 }
 
-void* SYCLHostUSMSpace::allocate(const size_t arg_alloc_size) const {
-  return allocate("[unlabeled]", arg_alloc_size);
-}
 void* SYCLHostUSMSpace::allocate(const char* arg_label,
                                  const size_t arg_alloc_size,
                                  const size_t arg_logical_size) const {
@@ -197,14 +174,11 @@ void sycl_deallocate(const char* arg_label, void* const arg_alloc_ptr,
   }
 
   SYCL::impl_static_fence(
-      "Kokkos::Impl::sycl_deallocate: fence before deallocate");
+      std::string("Kokkos::Impl::sycl_deallocate: fence before deallocate ") +
+      arg_label);
   sycl::free(arg_alloc_ptr, queue);
 }
 
-void SYCLDeviceUSMSpace::deallocate(void* const arg_alloc_ptr,
-                                    const size_t arg_alloc_size) const {
-  deallocate("[unlabeled]", arg_alloc_ptr, arg_alloc_size);
-}
 void SYCLDeviceUSMSpace::deallocate(const char* arg_label,
                                     void* const arg_alloc_ptr,
                                     const size_t arg_alloc_size,
@@ -213,22 +187,12 @@ void SYCLDeviceUSMSpace::deallocate(const char* arg_label,
                   Kokkos::Tools::make_space_handle(name()), m_queue);
 }
 
-void SYCLSharedUSMSpace::deallocate(void* const arg_alloc_ptr,
-                                    const size_t arg_alloc_size) const {
-  deallocate("[unlabeled]", arg_alloc_ptr, arg_alloc_size);
-}
-
 void SYCLSharedUSMSpace::deallocate(const char* arg_label,
                                     void* const arg_alloc_ptr,
                                     const size_t arg_alloc_size,
                                     const size_t arg_logical_size) const {
   sycl_deallocate(arg_label, arg_alloc_ptr, arg_alloc_size, arg_logical_size,
                   Kokkos::Tools::make_space_handle(name()), m_queue);
-}
-
-void SYCLHostUSMSpace::deallocate(void* const arg_alloc_ptr,
-                                  const size_t arg_alloc_size) const {
-  deallocate("[unlabeled]", arg_alloc_ptr, arg_alloc_size);
 }
 
 void SYCLHostUSMSpace::deallocate(const char* arg_label,

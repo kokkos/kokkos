@@ -56,9 +56,6 @@ HIPHostPinnedSpace::HIPHostPinnedSpace() {}
 
 HIPManagedSpace::HIPManagedSpace() : m_device(HIP().hip_device()) {}
 
-void* HIPSpace::allocate(const size_t arg_alloc_size) const {
-  return allocate("[unlabeled]", arg_alloc_size);
-}
 void* HIPSpace::allocate(
 
     const char* arg_label, const size_t arg_alloc_size,
@@ -91,9 +88,6 @@ void* HIPSpace::impl_allocate(
   return ptr;
 }
 
-void* HIPHostPinnedSpace::allocate(const size_t arg_alloc_size) const {
-  return allocate("[unlabeled]", arg_alloc_size);
-}
 void* HIPHostPinnedSpace::allocate(const char* arg_label,
                                    const size_t arg_alloc_size,
                                    const size_t arg_logical_size) const {
@@ -125,9 +119,6 @@ void* HIPHostPinnedSpace::impl_allocate(
   return ptr;
 }
 
-void* HIPManagedSpace::allocate(const size_t arg_alloc_size) const {
-  return allocate("[unlabeled]", arg_alloc_size);
-}
 void* HIPManagedSpace::allocate(const char* arg_label,
                                 const size_t arg_alloc_size,
                                 const size_t arg_logical_size) const {
@@ -209,10 +200,6 @@ bool HIPManagedSpace::impl_hip_driver_check_page_migration() const {
   return static_cast<bool>(hasPageableMemory);
 }
 
-void HIPSpace::deallocate(void* const arg_alloc_ptr,
-                          const size_t arg_alloc_size) const {
-  deallocate("[unlabeled]", arg_alloc_ptr, arg_alloc_size);
-}
 void HIPSpace::deallocate(const char* arg_label, void* const arg_alloc_ptr,
                           const size_t arg_alloc_size,
                           const size_t arg_logical_size) const {
@@ -229,11 +216,6 @@ void HIPSpace::impl_deallocate(
                                       reported_size);
   }
   KOKKOS_IMPL_HIP_SAFE_CALL(hipFree(arg_alloc_ptr));
-}
-
-void HIPHostPinnedSpace::deallocate(void* const arg_alloc_ptr,
-                                    const size_t arg_alloc_size) const {
-  deallocate("[unlabeled]", arg_alloc_ptr, arg_alloc_size);
 }
 
 void HIPHostPinnedSpace::deallocate(const char* arg_label,
@@ -253,11 +235,6 @@ void HIPHostPinnedSpace::impl_deallocate(
                                       reported_size);
   }
   KOKKOS_IMPL_HIP_SAFE_CALL(hipHostFree(arg_alloc_ptr));
-}
-
-void HIPManagedSpace::deallocate(void* const arg_alloc_ptr,
-                                 const size_t arg_alloc_size) const {
-  deallocate("[unlabeled]", arg_alloc_ptr, arg_alloc_size);
 }
 
 void HIPManagedSpace::deallocate(const char* arg_label,

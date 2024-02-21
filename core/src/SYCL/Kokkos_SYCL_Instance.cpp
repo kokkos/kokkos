@@ -216,14 +216,17 @@ void SYCLInternal::finalize() {
   auto device_mem_space = SYCLDeviceUSMSpace(*m_queue);
   auto host_mem_space   = SYCLHostUSMSpace(*m_queue);
   if (nullptr != m_scratchSpace)
-    device_mem_space.deallocate(m_scratchSpace,
-                                m_scratchSpaceCount * sizeScratchGrain);
+    device_mem_space.deallocate(
+        "Kokkos::Experimental::SYCL::InternalScratchSpace", m_scratchSpace,
+        m_scratchSpaceCount * sizeScratchGrain);
   if (nullptr != m_scratchHost)
-    host_mem_space.deallocate(m_scratchHost,
+    host_mem_space.deallocate("Kokkos::Experimental::SYCL::InternalScratchHost",
+                              m_scratchHost,
                               m_scratchHostCount * sizeScratchGrain);
   if (nullptr != m_scratchFlags)
-    device_mem_space.deallocate(m_scratchFlags,
-                                m_scratchFlagsCount * sizeScratchGrain);
+    device_mem_space.deallocate(
+        "Kokkos::Experimental::SYCL::InternalScratchFlags", m_scratchFlags,
+        m_scratchFlagsCount * sizeScratchGrain);
   m_syclDev           = -1;
   m_scratchSpaceCount = 0;
   m_scratchSpace      = nullptr;
@@ -256,7 +259,8 @@ sycl::device_ptr<void> SYCLInternal::scratch_space(const std::size_t size) {
     auto mem_space = Kokkos::Experimental::SYCLDeviceUSMSpace(*m_queue);
 
     if (nullptr != m_scratchSpace)
-      mem_space.deallocate(m_scratchSpace,
+      mem_space.deallocate("Kokkos::Experimental::SYCL::InternalScratchSpace",
+                           m_scratchSpace,
                            m_scratchSpaceCount * sizeScratchGrain);
 
     m_scratchSpaceCount = scratch_count(size);
@@ -276,7 +280,8 @@ sycl::host_ptr<void> SYCLInternal::scratch_host(const std::size_t size) {
     auto mem_space = Kokkos::Experimental::SYCLHostUSMSpace(*m_queue);
 
     if (nullptr != m_scratchHost)
-      mem_space.deallocate(m_scratchHost,
+      mem_space.deallocate("Kokkos::Experimental::SYCL::InternalScratchHost",
+                           m_scratchHost,
                            m_scratchHostCount * sizeScratchGrain);
 
     m_scratchHostCount = scratch_count(size);
@@ -296,7 +301,8 @@ sycl::device_ptr<void> SYCLInternal::scratch_flags(const std::size_t size) {
     auto mem_space = Kokkos::Experimental::SYCLDeviceUSMSpace(*m_queue);
 
     if (nullptr != m_scratchFlags)
-      mem_space.deallocate(m_scratchFlags,
+      mem_space.deallocate("Kokkos::Experimental::SYCL::InternalScratchFlags",
+                           m_scratchFlags,
                            m_scratchFlagsCount * sizeScratchGrain);
 
     m_scratchFlagsCount = scratch_count(size);
@@ -358,7 +364,9 @@ size_t SYCLInternal::USMObjectMem<Kind>::reserve(size_t n) {
 
   if (m_capacity < n) {
     AllocationSpace alloc_space(*m_q);
-    if (m_data) alloc_space.deallocate(m_data, m_capacity);
+    if (m_data)
+      alloc_space.deallocate("Kokkos::Experimental::SYCL::USMObjectMem", m_data,
+                             m_capacity);
 
     m_data =
         alloc_space.allocate("Kokkos::Experimental::SYCL::USMObjectMem", n);
@@ -377,7 +385,8 @@ void SYCLInternal::USMObjectMem<Kind>::reset() {
     // This implies a fence since this class is not copyable
     // and deallocating implies a fence across all registered queues.
     AllocationSpace alloc_space(*m_q);
-    alloc_space.deallocate(m_data, m_capacity);
+    alloc_space.deallocate("Kokkos::Experimental::SYCL::USMObjectMem", m_data,
+                           m_capacity);
 
     m_capacity = 0;
     m_data     = nullptr;

@@ -48,9 +48,6 @@ KOKKOS_DEPRECATED HostSpace::HostSpace(const HostSpace::AllocationMechanism &)
     : HostSpace() {}
 #endif
 
-void *HostSpace::allocate(const size_t arg_alloc_size) const {
-  return allocate("[unlabeled]", arg_alloc_size);
-}
 void *HostSpace::allocate(const char *arg_label, const size_t arg_alloc_size,
                           const size_t
 
@@ -100,11 +97,6 @@ void *HostSpace::impl_allocate(
     Kokkos::Profiling::allocateData(arg_handle, arg_label, ptr, reported_size);
   }
   return ptr;
-}
-
-void HostSpace::deallocate(void *const arg_alloc_ptr,
-                           const size_t arg_alloc_size) const {
-  deallocate("[unlabeled]", arg_alloc_ptr, arg_alloc_size);
 }
 
 void HostSpace::deallocate(const char *arg_label, void *const arg_alloc_ptr,
