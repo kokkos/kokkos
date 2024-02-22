@@ -630,39 +630,6 @@ TEST(TEST_CATEGORY, int_combined_reduce_mixed) {
 // the following test was made for:
 // https://github.com/kokkos/kokkos/issues/6517
 
-template <class T>
-struct EnableTestForReductionWithLargeIterationCount : std::false_type {};
-
-#ifdef KOKKOS_ENABLE_CUDA
-template <>
-struct EnableTestForReductionWithLargeIterationCount<Kokkos::Cuda>
-    : std::true_type {};
-#endif
-
-#ifdef KOKKOS_ENABLE_HIP
-template <>
-struct EnableTestForReductionWithLargeIterationCount<Kokkos::HIP>
-    : std::true_type {};
-#endif
-
-#ifdef KOKKOS_ENABLE_SYCL
-template <>
-struct EnableTestForReductionWithLargeIterationCount<Kokkos::Experimental::SYCL>
-    : std::true_type {};
-#endif
-
-#ifdef KOKKOS_ENABLE_OPENACC
-template <>
-struct EnableTestForReductionWithLargeIterationCount<
-    Kokkos::Experimental::OpenACC> : std::true_type {};
-#endif
-
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-template <>
-struct EnableTestForReductionWithLargeIterationCount<
-    Kokkos::Experimental::OpenMPTarget> : std::true_type {};
-#endif
-
 struct FunctorReductionWithLargeIterationCount {
   KOKKOS_FUNCTION void operator()(const int64_t /*i*/, double& update) const {
     update += 1.0;
@@ -670,8 +637,8 @@ struct FunctorReductionWithLargeIterationCount {
 };
 
 TEST(TEST_CATEGORY, reduction_with_large_iteration_count) {
-  if constexpr (!EnableTestForReductionWithLargeIterationCount<
-                    TEST_EXECSPACE>::value) {
+  if constexpr (std::is_same_v<TEST_EXECSPACE::memory_space,
+                               Kokkos::HostSpace>::value) {
     GTEST_SKIP() << "Disabling for host backends";
   }
 
