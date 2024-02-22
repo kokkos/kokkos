@@ -16,7 +16,7 @@
 
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Timer.hpp>
-#include <bench.hpp>
+#include "bench.hpp"
 #include <cstdlib>
 
 extern template void run_stride_unroll<float>(int, int, int, int, int, int, int,

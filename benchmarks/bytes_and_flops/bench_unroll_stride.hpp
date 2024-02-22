@@ -26,7 +26,7 @@ struct Run<Scalar, UNROLL, STRIDE> {
     Kokkos::deep_copy(C, Scalar(3.5));
 
     Kokkos::Timer timer;
-    for (int i = 0; i < I; ++i) {
+    for (int iter = 0; iter < I; ++iter) {
       Kokkos::parallel_for(
           "BenchmarkKernel",
           Kokkos::TeamPolicy<>(N, T).set_scratch_size(0, Kokkos::PerTeam(S)),
@@ -87,25 +87,25 @@ struct Run<Scalar, UNROLL, STRIDE> {
                     C(n, i, 0) = a1;
 #endif
 #if (UNROLL == 2)
-                    C(n, i, 0) = a1 + a2;
+                    C(n, iter, 0) = a1 + a2;
 #endif
 #if (UNROLL == 3)
-                    C(n, i, 0) = a1 + a2 + a3;
+                    C(n, iter, 0) = a1 + a2 + a3;
 #endif
 #if (UNROLL == 4)
-                    C(n, i, 0) = a1 + a2 + a3 + a4;
+                    C(n, iter, 0) = a1 + a2 + a3 + a4;
 #endif
 #if (UNROLL == 5)
-                    C(n, i, 0) = a1 + a2 + a3 + a4 + a5;
+                    C(n, iter, 0) = a1 + a2 + a3 + a4 + a5;
 #endif
 #if (UNROLL == 6)
-                    C(n, i, 0) = a1 + a2 + a3 + a4 + a5 + a6;
+                    C(n, iter, 0) = a1 + a2 + a3 + a4 + a5 + a6;
 #endif
 #if (UNROLL == 7)
-                    C(n, i, 0) = a1 + a2 + a3 + a4 + a5 + a6 + a7;
+                    C(n, iter, 0) = a1 + a2 + a3 + a4 + a5 + a6 + a7;
 #endif
 #if (UNROLL == 8)
-                    C(n, i, 0) = a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8;
+                    C(n, iter, 0) = a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8;
 #endif
                   });
             }
