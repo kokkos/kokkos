@@ -106,7 +106,7 @@ int main(int argc, char* argv[]) {
 
   Kokkos::parallel_reduce(
       "parallel_reduce warmup", Kokkos::TeamPolicy<>(10, 1),
-      KOKKOS_LAMBDA(const Kokkos::TeamPolicy<>::member_type team,
+      KOKKOS_LAMBDA(const Kokkos::TeamPolicy<>::member_type&,
                     double& lval) { lval += 1; },
       result);
 
