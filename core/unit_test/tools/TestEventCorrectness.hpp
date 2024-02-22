@@ -464,7 +464,8 @@ TEST(kokkosp, parallel_scan_no_fence_view) {
         if (begin_event.name.find("Debug Only Check for Execution Error") !=
                 std::string::npos ||
             begin_event.name.find("Kokkos Profile Tool Fence") !=
-                std::string::npos)
+                std::string::npos ||
+            begin_event.name.find("fence before deallocate") != std::string::npos)
           return MatchDiagnostic{false};
         else
           return MatchDiagnostic{true};
