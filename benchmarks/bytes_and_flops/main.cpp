@@ -86,7 +86,7 @@ int main(int argc, char* argv[]) {
     printf("D must be one of 1,2,4,8,16,32\n");
     return 0;
   }
-  if ((P < 1) && (P > 2)) {
+  if ((P < 1) || (P > 4)) {
     printf("P must be one of 1,2,3,4\n");
     return 0;
   }
