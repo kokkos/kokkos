@@ -638,7 +638,7 @@ struct FunctorReductionWithLargeIterationCount {
 
 TEST(TEST_CATEGORY, reduction_with_large_iteration_count) {
   if constexpr (std::is_same_v<typename TEST_EXECSPACE::memory_space,
-                               Kokkos::HostSpace>::value) {
+                               Kokkos::HostSpace>) {
     GTEST_SKIP() << "Disabling for host backends";
   }
 
