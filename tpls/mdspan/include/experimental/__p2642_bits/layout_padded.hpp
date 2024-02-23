@@ -110,6 +110,7 @@ struct padded_extent {
       return {find_next_multiple(pv,
                                    exts.extent(_ExtentToPadIdx))};
     } else {
+      (void)pv; // Some compilers complain about pv not being used here
       return {};
     }
   }

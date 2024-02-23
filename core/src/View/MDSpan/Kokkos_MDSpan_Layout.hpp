@@ -59,7 +59,7 @@ struct ViewOffsetFromExtents {
 
 template <class ElementType, class Extents, class LayoutPolicy,
           class AccessorPolicy>
-auto array_layout_from_mdspan(
+KOKKOS_INLINE_FUNCTION auto array_layout_from_mdspan(
     const mdspan<ElementType, Extents, LayoutPolicy, AccessorPolicy> &mds) {
   using layout_type = typename ArrayLayoutFromLayout<LayoutPolicy>::type;
   const auto &ext   = mds.extents();
@@ -81,7 +81,7 @@ auto array_layout_from_mdspan(
 
 template <class ElementType, class Extents, class LayoutPolicy,
           class AccessorPolicy>
-auto view_offset_from_mdspan(
+KOKKOS_INLINE_FUNCTION auto view_offset_from_mdspan(
     const mdspan<ElementType, Extents, LayoutPolicy, AccessorPolicy> &mds) {
   using offset_type =
       typename ViewOffsetFromExtents<ElementType, Extents, LayoutPolicy>::type;

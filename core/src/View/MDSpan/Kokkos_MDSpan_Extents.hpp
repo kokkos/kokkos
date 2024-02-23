@@ -23,6 +23,7 @@ static_assert(false,
 #define KOKKOS_EXPERIMENTAL_MDSPAN_EXTENTS_HPP
 
 #include "Kokkos_MDSpan_Header.hpp"
+#include <Kokkos_Core_fwd.hpp>
 
 namespace Kokkos::Impl {
 
@@ -110,7 +111,7 @@ struct DataTypeFromExtents {
 /// Convert from a mdspan extent to a Kokkos extent, inserting 0s for static
 /// extents
 template <class Extents>
-auto dimension_from_extent(const Extents &e, std::size_t r) noexcept {
+KOKKOS_INLINE_FUNCTION auto dimension_from_extent(const Extents &e, std::size_t r) noexcept {
   return Extents::static_extent(r) == dynamic_extent ? e.extent(r) : 0;
 }
 }  // namespace Kokkos::Experimental::Impl
