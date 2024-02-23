@@ -158,28 +158,25 @@ TEST(TEST_CATEGORY, policy_get_tile_size) {
               policy.tile_size_max_total());
 
     for (std::size_t i = 0; i < rank; ++i) {
-      if (i != last_rank) {
-        EXPECT_EQ(default_size_properties.default_tile_size, rec_tile_size[i]);
-      } else {
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
     defined(KOKKOS_ENABLE_SYCL)
+      EXPECT_EQ(default_size_properties.default_largest_tile_size,
+                policy.tile_size_max_recommended_per_rank(i));
+      if (i == last_rank) {
         if (default_size_properties.default_largest_tile_size == 0)
           EXPECT_EQ(100, rec_tile_size[i]);
         else
           EXPECT_EQ(default_size_properties.default_largest_tile_size,
                     rec_tile_size[i]);
+      }
 #else
-        EXPECT_EQ(policy.tile_length_max_recommended_per_rank(last_rank),
+      EXPECT_EQ(100, policy.tile_size_max_recommended_per_rank(i));
+      if (i == last_rank)
+        EXPECT_EQ(policy.tile_size_max_recommended_per_rank(last_rank),
                   rec_tile_size[i]);
 #endif
-      }
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
-    defined(KOKKOS_ENABLE_SYCL)
-      EXPECT_EQ(default_size_properties.default_largest_tile_size,
-                policy.tile_length_max_recommended_per_rank(i));
-#else
-      EXPECT_EQ(100, policy.tile_length_max_recommended_per_rank(i));
-#endif
+      else
+        EXPECT_EQ(default_size_properties.default_tile_size, rec_tile_size[i]);
     }
   }
 }
