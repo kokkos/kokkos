@@ -573,6 +573,13 @@ SpaceHandle make_space_handle(const char* space_name) {
   return handle;
 }
 
+void markKernelStaticInfo(const uint64_t kernelID,
+                          const KernelStaticInfo& info) {
+  Experimental::invoke_kokkosp_callback(
+      Experimental::MayRequireGlobalFencing::No,
+      Experimental::current_callbacks.mark_kernel_static_info, kernelID, &info);
+}
+
 template <typename Callback>
 void lookup_function(void* dlopen_handle, const std::string& basename,
                      Callback& callback) {
@@ -692,6 +699,8 @@ void initialize(const std::string& profileLibrary) {
 
       lookup_function(firstProfileLibrary, "kokkosp_profile_event",
                       Experimental::current_callbacks.profile_event);
+      lookup_function(firstProfileLibrary, "kokkosp_mark_kernel_static_info",
+                      Experimental::current_callbacks.mark_kernel_static_info);
 #ifdef KOKKOS_ENABLE_TUNING
       lookup_function(firstProfileLibrary, "kokkosp_declare_output_type",
                       Experimental::current_callbacks.declare_output_type);
@@ -955,6 +964,11 @@ void set_declare_optimization_goal_callback(
   current_callbacks.declare_optimization_goal = callback;
 }
 
+void set_mark_kernel_static_info_callback(
+    markKernelStaticInfoFunction callback) {
+  current_callbacks.mark_kernel_static_info = callback;
+}
+
 void pause_tools() {
   backup_callbacks  = current_callbacks;
   current_callbacks = no_profiling;
@@ -1047,6 +1061,7 @@ void parseArgs(int _argc, char** _argv) {
 SpaceHandle make_space_handle(const char* space_name) {
   return Kokkos::Tools::make_space_handle(space_name);
 }
+
 }  // namespace Profiling
 
 // Tuning

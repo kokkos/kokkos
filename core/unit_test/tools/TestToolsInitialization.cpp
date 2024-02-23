@@ -45,6 +45,7 @@ bool end_fence_callback                          = false;
 bool declare_metadata_callback                   = false;
 bool request_tool_settings_callback              = false;
 bool provide_tool_programming_interface_callback = false;
+int mark_kernel_static_info_callback             = 0;
 
 void test_tools_initialization_with_callbacks() {
   Kokkos::Tools::Experimental::set_init_callback(
@@ -123,6 +124,11 @@ void test_tools_initialization_with_callbacks() {
       [](const uint32_t /*num_functions*/,
          Kokkos::Tools::Experimental::ToolProgrammingInterface /*interface*/) {
         provide_tool_programming_interface_callback = true;
+      });
+
+  Kokkos::Tools::Experimental::set_mark_kernel_static_info_callback(
+      [](const uint64_t /*kernel_id*/, const Kokkos::Tools::KernelStaticInfo*) {
+        mark_kernel_static_info_callback += 1;
       });
 
   Kokkos::initialize();
@@ -208,6 +214,9 @@ void test_tools_initialization_with_callbacks() {
     ASSERT_TRUE(declare_metadata_callback);
     ASSERT_TRUE(request_tool_settings_callback);
     ASSERT_TRUE(provide_tool_programming_interface_callback);
+
+    // should have been called one by each parallel region
+    ASSERT_TRUE(3 == mark_kernel_static_info_callback);
   }
 }
 

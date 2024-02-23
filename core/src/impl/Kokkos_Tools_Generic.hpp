@@ -363,6 +363,9 @@ void begin_parallel_for(ExecPolicy& policy, FunctorType& functor,
     Kokkos::Tools::beginParallelFor(
         name.get(), Kokkos::Profiling::Experimental::device_id(policy.space()),
         &kpID);
+    Kokkos::Tools::KernelStaticInfo info;
+    info.functor_size = sizeof(FunctorType);
+    Kokkos::Tools::markKernelStaticInfo(kpID, info);
   }
 #ifdef KOKKOS_ENABLE_TUNING
   size_t context_id = Kokkos::Tools::Experimental::get_new_context_id();
@@ -404,6 +407,9 @@ void begin_parallel_scan(ExecPolicy& policy, FunctorType& functor,
     Kokkos::Tools::beginParallelScan(
         name.get(), Kokkos::Profiling::Experimental::device_id(policy.space()),
         &kpID);
+    Kokkos::Tools::KernelStaticInfo info;
+    info.functor_size = sizeof(FunctorType);
+    Kokkos::Tools::markKernelStaticInfo(kpID, info);
   }
 #ifdef KOKKOS_ENABLE_TUNING
   size_t context_id = Kokkos::Tools::Experimental::get_new_context_id();
@@ -445,6 +451,9 @@ void begin_parallel_reduce(ExecPolicy& policy, FunctorType& functor,
     Kokkos::Tools::beginParallelReduce(
         name.get(), Kokkos::Profiling::Experimental::device_id(policy.space()),
         &kpID);
+    Kokkos::Tools::KernelStaticInfo info;
+    info.functor_size = sizeof(FunctorType);
+    Kokkos::Tools::markKernelStaticInfo(kpID, info);
   }
 #ifdef KOKKOS_ENABLE_TUNING
   size_t context_id = Kokkos::Tools::Experimental::get_new_context_id();

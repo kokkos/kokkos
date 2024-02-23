@@ -122,6 +122,12 @@ using SpaceHandle = Kokkos_Profiling_SpaceHandle;
 
 namespace Tools {
 
+using KernelStaticInfo = Kokkos_Profiling_Kernel_Static_Info;
+
+static_assert(sizeof(KernelStaticInfo) == 512,
+              "Internal kokkos developer error. Please report this error, and "
+              "provide information about your compiler and target platform.");
+
 namespace Experimental {
 using EventSet = Kokkos_Profiling_EventSet;
 static_assert(sizeof(EventSet) / sizeof(Kokkos_Tools_functionPointer) == 275,
@@ -168,6 +174,8 @@ using endFenceFunction        = Kokkos_Profiling_endFenceFunction;
 using dualViewSyncFunction    = Kokkos_Profiling_dualViewSyncFunction;
 using dualViewModifyFunction  = Kokkos_Profiling_dualViewModifyFunction;
 using declareMetadataFunction = Kokkos_Profiling_declareMetadataFunction;
+using markKernelStaticInfoFunction =
+    Kokkos_Profiling_markKernelStaticInfoFunction;
 
 }  // namespace Tools
 

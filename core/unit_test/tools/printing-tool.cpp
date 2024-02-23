@@ -32,6 +32,10 @@ struct SpaceHandle {
   char name[64];
 };
 
+struct Kokkos_Profiling_Kernel_Static_Info {
+  uint64_t functor_size;
+};
+
 const int parallel_for_id    = 0;
 const int parallel_reduce_id = 1;
 const int parallel_scan_id   = 2;
@@ -152,4 +156,10 @@ extern "C" void kokkosp_profile_event(const char* name) {
 }
 extern "C" void kokkosp_declare_metadata(const char* key, const char* value) {
   std::cout << "kokkosp_declare_metadata:" << key << ":" << value << "::";
+}
+
+extern "C" void kokkosp_mark_kernel_static_info(
+    uint64_t kID, const Kokkos_Profiling_Kernel_Static_Info* info) {
+  std::cout << "kokkosp_mark_kernel_static_info:" << kID << ":"
+            << info->functor_size << "::";
 }

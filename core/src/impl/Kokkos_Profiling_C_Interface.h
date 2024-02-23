@@ -40,6 +40,19 @@ struct Kokkos_Profiling_SpaceHandle {
   char name[64];
 };
 
+const static int Kokkos_Profiling_Kernel_Static_Info_Size = 512;
+
+// uses a union to ensure the struct is as large as the target size
+struct Kokkos_Profiling_Kernel_Static_Info {
+  union {
+    struct {
+      uint64_t functor_size;  // sizeof the functor
+    };
+
+    char padding[Kokkos_Profiling_Kernel_Static_Info_Size];
+  };
+};
+
 // NOLINTNEXTLINE(modernize-use-using): C compatibility
 typedef void (*Kokkos_Profiling_initFunction)(
     const int, const uint64_t, const uint32_t,
@@ -55,6 +68,10 @@ typedef void (*Kokkos_Profiling_beginFunction)(const char*, const uint32_t,
                                                uint64_t*);
 // NOLINTNEXTLINE(modernize-use-using): C compatibility
 typedef void (*Kokkos_Profiling_endFunction)(uint64_t);
+
+// NOLINTNEXTLINE(modernize-use-using): C compatibility
+typedef void (*Kokkos_Profiling_markKernelStaticInfoFunction)(
+    uint64_t, const struct Kokkos_Profiling_Kernel_Static_Info*);
 
 // NOLINTNEXTLINE(modernize-use-using): C compatibility
 typedef void (*Kokkos_Profiling_pushFunction)(const char*);
@@ -249,6 +266,7 @@ struct Kokkos_Profiling_EventSet {
   Kokkos_Profiling_dualViewSyncFunction sync_dual_view;
   Kokkos_Profiling_dualViewModifyFunction modify_dual_view;
   Kokkos_Profiling_declareMetadataFunction declare_metadata;
+  Kokkos_Profiling_markKernelStaticInfoFunction mark_kernel_static_info;
   Kokkos_Tools_provideToolProgrammingInterfaceFunction
       provide_tool_programming_interface;
   Kokkos_Tools_requestToolSettingsFunction request_tool_settings;
@@ -259,7 +277,8 @@ struct Kokkos_Profiling_EventSet {
   Kokkos_Tools_contextBeginFunction begin_tuning_context;
   Kokkos_Tools_contextEndFunction end_tuning_context;
   Kokkos_Tools_optimizationGoalDeclarationFunction declare_optimization_goal;
-  char padding[232 *
+
+  char padding[231 *
                sizeof(
                    Kokkos_Tools_functionPointer)];  // allows us to add another
                                                     // 256 events to the Tools
