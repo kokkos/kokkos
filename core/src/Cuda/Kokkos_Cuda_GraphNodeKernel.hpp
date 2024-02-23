@@ -77,7 +77,9 @@ class GraphNodeKernelImpl<Kokkos::Cuda, PolicyType, Functor, PatternTag,
 
   ~GraphNodeKernelImpl() {
     if (m_driver_storage) {
-      Kokkos::CudaSpace().deallocate("GraphNodeKernel global memory functor storage", m_driver_storage, sizeof(base_t));
+      Kokkos::CudaSpace().deallocate(
+          "GraphNodeKernel global memory functor storage", m_driver_storage,
+          sizeof(base_t));
     }
   }
 

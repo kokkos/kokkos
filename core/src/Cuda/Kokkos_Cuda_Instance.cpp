@@ -399,7 +399,8 @@ Cuda::size_type *CudaInternal::scratch_functor(const std::size_t size) const {
     auto mem_space = Kokkos::CudaSpace::impl_create(m_cudaDev, m_stream);
 
     if (m_scratchFunctor) {
-      mem_space.deallocate("Kokkos::InternalScratchFunctor", m_scratchFunctor, m_scratchFunctorSize);
+      mem_space.deallocate("Kokkos::InternalScratchFunctor", m_scratchFunctor,
+                           m_scratchFunctorSize);
     }
 
     m_scratchFunctorSize = size;
@@ -467,10 +468,12 @@ void CudaInternal::finalize() {
                               m_scratchFlagsCount * sizeScratchGrain);
     cuda_mem_space.deallocate("Kokkos::InternalScratchSpace", m_scratchSpace,
                               m_scratchSpaceCount * sizeScratchGrain);
-    host_mem_space.deallocate("Kokkos::InternalScratchUnified", m_scratchUnified,
+    host_mem_space.deallocate("Kokkos::InternalScratchUnified",
+                              m_scratchUnified,
                               m_scratchUnifiedCount * sizeScratchGrain);
     if (m_scratchFunctorSize > 0) {
-      cuda_mem_space.deallocate("Kokkos::InternalScratchFunctor", m_scratchFunctor, m_scratchFunctorSize);
+      cuda_mem_space.deallocate("Kokkos::InternalScratchFunctor",
+                                m_scratchFunctor, m_scratchFunctorSize);
     }
   }
 
