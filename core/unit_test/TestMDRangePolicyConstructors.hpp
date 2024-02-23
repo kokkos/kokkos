@@ -138,4 +138,50 @@ TEST(TEST_CATEGORY_DEATH, policy_invalid_bounds) {
 }
 #endif
 
+TEST(TEST_CATEGORY, policy_get_tile_size) {
+  constexpr int rank = 3;
+  using Policy    = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<rank>>;
+  using tile_type = typename Policy::tile_type;
+
+  std::size_t last_rank =
+      (Policy::inner_direction == Kokkos::Iterate::Right) ? rank - 1 : 0;
+
+  auto default_size_properties =
+      Kokkos::Impl::get_tile_size_properties(TEST_EXECSPACE());
+
+  {
+    Policy policy({0, 0, 0}, {100, 100, 100}, tile_type{{2, 4, 16}});
+
+    auto rec_tile_size = policy.tile_size_recommended();
+
+    EXPECT_EQ(default_size_properties.max_total_tile_size,
+              policy.tile_size_max_total());
+
+    for (std::size_t i = 0; i < rank; ++i) {
+      if (i != last_rank) {
+        EXPECT_EQ(default_size_properties.default_tile_size, rec_tile_size[i]);
+      } else {
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
+    defined(KOKKOS_ENABLE_SYCL)
+        if (default_size_properties.default_largest_tile_size == 0)
+          EXPECT_EQ(100, rec_tile_size[i]);
+        else
+          EXPECT_EQ(default_size_properties.default_largest_tile_size,
+                    rec_tile_size[i]);
+#else
+        EXPECT_EQ(policy.tile_length_max_recommended_per_rank(last_rank),
+                  rec_tile_size[i]);
+#endif
+      }
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
+    defined(KOKKOS_ENABLE_SYCL)
+      EXPECT_EQ(default_size_properties.default_largest_tile_size,
+                policy.tile_length_max_recommended_per_rank(i));
+#else
+      EXPECT_EQ(100, policy.tile_length_max_recommended_per_rank(i));
+#endif
+    }
+  }
+}
+
 }  // namespace

@@ -314,7 +314,38 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
   }
   bool impl_tune_tile_size() const { return m_tune_tile_size; }
 
+  tile_type tile_size_recommended() const {
+    auto properties             = Impl::get_tile_size_properties(m_space);
+    tile_type default_tile_size = {};
+
+    for (std::size_t i = 0; i < default_tile_size.size(); ++i) {
+      default_tile_size[i] = properties.default_tile_size;
+    }
+
+    int last_rank = (inner_direction == Iterate::Right) ? rank - 1 : 0;
+    default_tile_size[last_rank] = tile_length_last_rank(
+        properties, m_upper[last_rank] - m_lower[last_rank]);
+    return default_tile_size;
+  }
+
+  int tile_length_max_recommended_per_rank(const int tile_rank) const {
+    auto properties = Impl::get_tile_size_properties(m_space);
+    return tile_length_last_rank(properties,
+                                 m_upper[tile_rank] - m_lower[tile_rank]);
+  }
+
+  int tile_size_max_total() const {
+    return Impl::get_tile_size_properties(m_space).max_total_tile_size;
+  }
+
  private:
+  int tile_length_last_rank(const Impl::TileSizeProperties properties,
+                            const index_type length) const {
+    return properties.default_largest_tile_size == 0
+               ? std::max<int>(length, 1)
+               : properties.default_largest_tile_size;
+  }
+
   void init_helper(Impl::TileSizeProperties properties) {
     m_prod_tile_dims = 1;
     int increment    = 1;
@@ -352,9 +383,7 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
             m_tile[i] = 1;
           }
         } else {
-          m_tile[i] = properties.default_largest_tile_size == 0
-                          ? std::max<int>(length, 1)
-                          : properties.default_largest_tile_size;
+          m_tile[i] = tile_length_last_rank(properties, length);
         }
       }
       m_tile_end[i] =
