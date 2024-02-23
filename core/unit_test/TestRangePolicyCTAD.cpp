@@ -69,7 +69,10 @@ struct TestRangePolicyCTAD {
 
   // RangePolicy(execution_space, index_type, index_type)
 
-  // none (ambiguous deduction for template arguments)
+  KOKKOS_TEST_RANGE_POLICY(Kokkos::RangePolicy<>, des, i64, i64);
+  KOKKOS_TEST_RANGE_POLICY(Kokkos::RangePolicy<>, des, i32, i32);
+  KOKKOS_TEST_RANGE_POLICY(Kokkos::RangePolicy<>, nes, i64, i64);
+  KOKKOS_TEST_RANGE_POLICY(Kokkos::RangePolicy<>, nes, i32, i32);
 
   // RangePolicy(execution_space, index_type, index_type, Args...)
 
