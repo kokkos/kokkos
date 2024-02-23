@@ -192,7 +192,7 @@ Kokkos::HIP::size_type *HIPInternal::scratch_space(const std::size_t size) {
     Kokkos::HIPSpace mem_space;
 
     if (m_scratchSpace) {
-      mem_space.deallocate(m_scratchSpace,
+      mem_space.deallocate("Kokkos::InternalScratchSpace", m_scratchSpace,
                            m_scratchSpaceCount * sizeScratchGrain);
     }
 
@@ -213,7 +213,7 @@ Kokkos::HIP::size_type *HIPInternal::scratch_flags(const std::size_t size) {
     Kokkos::HIPSpace mem_space;
 
     if (m_scratchFlags) {
-      mem_space.deallocate(m_scratchFlags,
+      mem_space.deallocate("Kokkos::InternalScratchFlags", m_scratchFlags,
                            m_scratchFlagsCount * sizeScratchGrain);
     }
 
@@ -240,8 +240,10 @@ Kokkos::HIP::size_type *HIPInternal::stage_functor_for_execution(
     Kokkos::HIPHostPinnedSpace host_mem_space;
 
     if (m_scratchFunctor) {
-      device_mem_space.deallocate(m_scratchFunctor, m_scratchFunctorSize);
-      host_mem_space.deallocate(m_scratchFunctorHost, m_scratchFunctorSize);
+      device_mem_space.deallocate("Kokkos::InternalScratchFunctor",
+                                  m_scratchFunctor, m_scratchFunctorSize);
+      host_mem_space.deallocate("Kokkos::InternalScratchFunctorHost",
+                                m_scratchFunctorHost, m_scratchFunctorSize);
     }
 
     m_scratchFunctorSize = size;
@@ -315,15 +317,17 @@ void HIPInternal::finalize() {
   if (nullptr != m_scratchSpace || nullptr != m_scratchFlags) {
     Kokkos::HIPSpace device_mem_space;
 
-    device_mem_space.deallocate(m_scratchFlags,
+    device_mem_space.deallocate("Kokkos::InternalScratchFlags", m_scratchFlags,
                                 m_scratchSpaceCount * sizeScratchGrain);
-    device_mem_space.deallocate(m_scratchSpace,
+    device_mem_space.deallocate("Kokkos::InternalScratchSpace", m_scratchSpace,
                                 m_scratchFlagsCount * sizeScratchGrain);
 
     if (m_scratchFunctorSize > 0) {
-      device_mem_space.deallocate(m_scratchFunctor, m_scratchFunctorSize);
+      device_mem_space.deallocate("Kokkos::InternalScratchFunctor",
+                                  m_scratchFunctor, m_scratchFunctorSize);
       Kokkos::HIPHostPinnedSpace host_mem_space;
-      host_mem_space.deallocate(m_scratchFunctorHost, m_scratchFunctorSize);
+      host_mem_space.deallocate("Kokkos::InternalScratchFunctorHost",
+                                m_scratchFunctorHost, m_scratchFunctorSize);
     }
   }
 

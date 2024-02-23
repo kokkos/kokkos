@@ -79,7 +79,8 @@ std::mutex OpenMPTargetExec::m_mutex_scratch_ptr;
 
 void OpenMPTargetExec::clear_scratch() {
   Kokkos::Experimental::OpenMPTargetSpace space;
-  space.deallocate(m_scratch_ptr, m_scratch_size);
+  space.deallocate("Kokkos::OpenMPTarget::scratch_memory", m_scratch_ptr,
+                   m_scratch_size);
   m_scratch_ptr  = nullptr;
   m_scratch_size = 0;
 }
@@ -87,7 +88,8 @@ void OpenMPTargetExec::clear_scratch() {
 void OpenMPTargetExec::clear_lock_array() {
   if (m_lock_array != nullptr) {
     Kokkos::Experimental::OpenMPTargetSpace space;
-    space.deallocate(m_lock_array, m_lock_size);
+    space.deallocate("Kokkos::OpenMPTarget::lock_array", m_lock_array,
+                     m_lock_size);
     m_lock_array = nullptr;
     m_lock_size  = 0;
   }
@@ -129,9 +131,11 @@ void OpenMPTargetExec::resize_scratch(int64_t team_size, int64_t shmem_size_L0,
       max_active_teams * 2;
 
   if (total_size > m_scratch_size) {
-    space.deallocate(m_scratch_ptr, m_scratch_size);
+    space.deallocate("Kokkos::OpenMPTarget::scratch_memory", m_scratch_ptr,
+                     m_scratch_size);
     m_scratch_size = total_size;
-    m_scratch_ptr  = space.allocate(total_size);
+    m_scratch_ptr =
+        space.allocate("Kokkos::OpenMPTarget::scratch_memory", total_size);
   }
 }
 
@@ -141,9 +145,11 @@ int* OpenMPTargetExec::get_lock_array(int num_teams) {
   int lock_array_elem =
       (num_teams > max_active_league_size) ? num_teams : max_active_league_size;
   if (m_lock_size < (lock_array_elem * sizeof(int))) {
-    space.deallocate(m_lock_array, m_lock_size);
+    space.deallocate("Kokkos::OpenMPTarget::lock_array", m_lock_array,
+                     m_lock_size);
     m_lock_size  = lock_array_elem * sizeof(int);
-    m_lock_array = static_cast<int*>(space.allocate(m_lock_size));
+    m_lock_array = static_cast<int*>(
+        space.allocate("Kokkos::OpenMPTarget::lock_array", m_lock_size));
 
     // FIXME_OPENMPTARGET - Creating a target region here to initialize the
     // lock_array with 0's fails. Hence creating an equivalent host array to
