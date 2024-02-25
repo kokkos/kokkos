@@ -571,6 +571,9 @@ IF (KOKKOS_ENABLE_HIP)
     COMPILER_SPECIFIC_FLAGS(
       DEFAULT -fgpu-rdc
     )
+    COMPILER_SPECIFIC_LINK_OPTIONS(
+      DEFAULT --hip-link
+    )
   ELSE()
     COMPILER_SPECIFIC_FLAGS(
       DEFAULT -fno-gpu-rdc
