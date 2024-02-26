@@ -78,8 +78,8 @@ class GraphNodeKernelImpl<Kokkos::Cuda, PolicyType, Functor, PatternTag,
   ~GraphNodeKernelImpl() {
     if (m_driver_storage) {
       Kokkos::CudaSpace().deallocate(
-          "GraphNodeKernel global memory functor storage", m_driver_storage,
-          sizeof(base_t));
+          "Kokkos::Cuda GraphNodeKernel global memory functor storage",
+          m_driver_storage, sizeof(base_t));
     }
   }
 
@@ -95,7 +95,8 @@ class GraphNodeKernelImpl<Kokkos::Cuda, PolicyType, Functor, PatternTag,
   Kokkos::ObservingRawPtr<base_t> allocate_driver_memory_buffer() const {
     KOKKOS_EXPECTS(m_driver_storage == nullptr)
     m_driver_storage = static_cast<base_t*>(Kokkos::CudaSpace().allocate(
-        "GraphNodeKernel global memory functor storage", sizeof(base_t)));
+        "Kokkos::Cuda GraphNodeKernel global memory functor storage",
+        sizeof(base_t)));
     KOKKOS_ENSURES(m_driver_storage != nullptr)
     return m_driver_storage;
   }
