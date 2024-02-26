@@ -57,7 +57,9 @@ class GraphNodeKernelImpl<Kokkos::HIP, PolicyType, Functor, PatternTag, Args...>
 
   ~GraphNodeKernelImpl() {
     if (m_driver_storage) {
-      Kokkos::HIPSpace().deallocate(m_driver_storage, sizeof(base_t));
+      Kokkos::HIPSpace().deallocate(
+          "GraphNodeKernel global memory functor storage", m_driver_storage,
+          sizeof(base_t));
     }
   }
 
