@@ -32,7 +32,7 @@ The latest release of Kokkos can be obtained from the [GitHub releases page](htt
 or programmatically using curl to get the latest release tarball and extract it into a directory called `kokkos`:
 
 ```bash
-mkdir kokkos && curl -s -L https://github.com/kokkos/kokkos/archive/refs/tags/4.2.00.tar.gz | tar xz - -C kokkos --strip-components 1
+mkdir kokkos && curl -s -L https://github.com/kokkos/kokkos/archive/refs/tags/4.2.01.tar.gz | tar xz - -C kokkos --strip-components 1
 ```
 
 To clone the latest development version of Kokkos from GitHub:
@@ -79,7 +79,7 @@ To build Kokkos targetting HIP on Linux, you can use the following commands:
 
 ```bash
 cd kokkos
-cmake -B build -S . -DKokkos_ENABLE_HIP=On -DCMAKE_INSTALL_PREFIX=/opt/kokkos
+cmake -B build -S . -DCMAKE_CXX_COMPILER=hipcc -DKokkos_ENABLE_HIP=On -DCMAKE_INSTALL_PREFIX=/opt/kokkos
 cmake --build build && cmake --install build
 ```
 
@@ -117,10 +117,6 @@ For non-public questions send an email to: *crtrott(at)sandia.gov*
 ## Contributing to Kokkos
 
 Please see [this page](https://kokkos.org/kokkos-core-wiki/contributing.html) for details on how to contribute.
-
-## Requirements, Building and Installing
-
-
 
 ## Citing Kokkos
 
