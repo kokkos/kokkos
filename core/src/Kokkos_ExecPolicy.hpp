@@ -123,13 +123,12 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
       : RangePolicy(typename traits::execution_space(), work_begin, work_end) {}
 
   /** \brief  Total range */
-  template <typename IndexType1, typename IndexType2, typename... Args,
+  template <typename IndexType1, typename IndexType2,
             std::enable_if_t<(std::is_convertible_v<IndexType1, member_type> &&
                               std::is_convertible_v<IndexType2, member_type>),
                              bool> = false>
   inline RangePolicy(const typename traits::execution_space& work_space,
-                     const IndexType1 work_begin, const IndexType2 work_end,
-                     Args... args)
+                     const IndexType1 work_begin, const IndexType2 work_end)
       : m_space(work_space),
         m_begin(work_begin),
         m_end(work_end),
@@ -139,7 +138,23 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
     check_conversion_safety(work_end);
     check_bounds_validity();
     set_auto_chunk_size();
-    set(args...);
+  }
+
+  template <typename IndexType1, typename IndexType2,
+            std::enable_if_t<(std::is_convertible_v<IndexType1, member_type> &&
+                              std::is_convertible_v<IndexType2, member_type>),
+                             bool> = false>
+  inline RangePolicy(const typename traits::execution_space& work_space,
+                     const IndexType1 work_begin, const IndexType2 work_end,
+                     const ChunkSize chunk_size)
+      : m_space(work_space),
+        m_begin(work_begin),
+        m_end(work_end),
+        m_granularity(chunk_size.value),
+        m_granularity_mask(m_granularity - 1) {
+    check_conversion_safety(work_begin);
+    check_conversion_safety(work_end);
+    check_bounds_validity();
   }
 
   /** \brief  Total range */
@@ -148,26 +163,14 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
                               std::is_convertible_v<IndexType2, member_type>),
                              bool> = false>
   inline RangePolicy(const IndexType1 work_begin, const IndexType2 work_end,
-                     Args... args)
+                     const ChunkSize chunk_size)
       : RangePolicy(typename traits::execution_space(), work_begin, work_end,
-                    args...) {}
-
- private:
-  inline void set() {}
+                    chunk_size) {}
 
  public:
-  template <class... Args>
-  inline void set(Args...) {
-    static_assert(
-        0 == sizeof...(Args),
-        "Kokkos::RangePolicy: unhandled constructor arguments encountered.");
-  }
-
-  template <class... Args>
-  inline void set(const ChunkSize& chunksize, Args... args) {
+  inline void set(ChunkSize chunksize) {
     m_granularity      = chunksize.value;
     m_granularity_mask = m_granularity - 1;
-    set(args...);
   }
 
  public:
