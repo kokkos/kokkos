@@ -40,17 +40,11 @@ struct Kokkos_Profiling_SpaceHandle {
   char name[64];
 };
 
-const static int Kokkos_Profiling_Kernel_Static_Info_Size = 512;
-
-// uses a union to ensure the struct is as large as the target size
+#define KOKKOS_PROFILING_KERNEL_STATIC_INFO_SIZE 512
 struct Kokkos_Profiling_Kernel_Static_Info {
-  union {
-    struct {
-      uint64_t functor_size;  // sizeof the functor
-    };
+  uint64_t functor_size;  // sizeof the functor
 
-    char padding[Kokkos_Profiling_Kernel_Static_Info_Size];
-  };
+  char padding[KOKKOS_PROFILING_KERNEL_STATIC_INFO_SIZE - sizeof(uint64_t)];
 };
 
 // NOLINTNEXTLINE(modernize-use-using): C compatibility

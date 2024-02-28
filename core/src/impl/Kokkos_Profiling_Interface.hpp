@@ -124,7 +124,8 @@ namespace Tools {
 
 using KernelStaticInfo = Kokkos_Profiling_Kernel_Static_Info;
 
-static_assert(sizeof(KernelStaticInfo) == 512,
+static_assert(sizeof(KernelStaticInfo) ==
+                  KOKKOS_PROFILING_KERNEL_STATIC_INFO_SIZE,
               "Internal kokkos developer error. Please report this error, and "
               "provide information about your compiler and target platform.");
 
