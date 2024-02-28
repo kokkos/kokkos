@@ -119,24 +119,6 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
             std::enable_if_t<(std::is_convertible_v<IndexType1, member_type> &&
                               std::is_convertible_v<IndexType2, member_type>),
                              bool> = false>
-  inline RangePolicy(const typename traits::execution_space& work_space,
-                     const IndexType1 work_begin, const IndexType2 work_end)
-      : m_space(work_space),
-        m_begin(work_begin),
-        m_end(work_end),
-        m_granularity(0),
-        m_granularity_mask(0) {
-    check_conversion_safety(work_begin);
-    check_conversion_safety(work_end);
-    check_bounds_validity();
-    set_auto_chunk_size();
-  }
-
-  /** \brief  Total range */
-  template <typename IndexType1, typename IndexType2,
-            std::enable_if_t<(std::is_convertible_v<IndexType1, member_type> &&
-                              std::is_convertible_v<IndexType2, member_type>),
-                             bool> = false>
   inline RangePolicy(const IndexType1 work_begin, const IndexType2 work_end)
       : RangePolicy(typename traits::execution_space(), work_begin, work_end) {}
 
