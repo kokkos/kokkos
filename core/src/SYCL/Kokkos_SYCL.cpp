@@ -168,22 +168,11 @@ void SYCL::impl_static_fence(const std::string& name) {
 }
 
 void SYCL::impl_initialize(InitializationSettings const& settings) {
-  std::vector<sycl::device> gpu_devices = Impl::get_sycl_devices();
-
-  // If the device id is not specified and there are no GPUs, sidestep Kokkos
-  // device selection and use whatever is available (if no GPU architecture is
-  // specified).
-#if !defined(KOKKOS_ARCH_INTEL_GPU) && !defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
-  if (!settings.has_device_id() && gpu_devices.empty()) {
-    Impl::SYCLInternal::singleton().initialize(sycl::device());
-    Impl::SYCLInternal::m_syclDev = 0;
-    return;
-  }
-#endif
   const auto& visible_devices = ::Kokkos::Impl::get_visible_devices();
   const auto id =
       ::Kokkos::Impl::get_gpu(settings).value_or(visible_devices[0]);
-  Impl::SYCLInternal::singleton().initialize(gpu_devices[id]);
+  std::vector<sycl::device> sycl_devices = Impl::get_sycl_devices();
+  Impl::SYCLInternal::singleton().initialize(sycl_devices[id]);
   Impl::SYCLInternal::m_syclDev = id;
 }
 
@@ -277,10 +266,10 @@ std::ostream& SYCL::impl_sycl_info(std::ostream& os,
 namespace Impl {
 
 std::vector<sycl::device> get_sycl_devices() {
-  std::vector<sycl::device> gpu_devices =
-      sycl::device::get_devices(sycl::info::device_type::gpu);
 #if defined(KOKKOS_ARCH_INTEL_GPU) || defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU) || \
     defined(KOKKOS_ARCH_AMD_GPU)
+  std::vector<sycl::device> devices =
+      sycl::device::get_devices(sycl::info::device_type::gpu);
 #if defined(KOKKOS_ARCH_INTEL_GPU)
   sycl::backend backend = sycl::backend::ext_oneapi_level_zero;
 #elif defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
@@ -288,13 +277,15 @@ std::vector<sycl::device> get_sycl_devices() {
 #elif defined(KOKKOS_ARCH_AMD_GPU)
   sycl::backend backend = sycl::backend::ext_oneapi_hip;
 #endif
-  gpu_devices.erase(std::remove_if(gpu_devices.begin(), gpu_devices.end(),
-                                   [backend](const sycl::device& d) {
-                                     return d.get_backend() != backend;
-                                   }),
-                    gpu_devices.end());
+  devices.erase(std::remove_if(devices.begin(), devices.end(),
+                               [backend](const sycl::device& d) {
+                                 return d.get_backend() != backend;
+                               }),
+                devices.end());
+#else
+  std::vector<sycl::device> devices = sycl::device::get_devices();
 #endif
-  return gpu_devices;
+  return devices;
 }
 
 int g_sycl_space_factory_initialized =
