@@ -34,7 +34,6 @@
 #include <cstdlib>
 #include <stack>
 #include <functional>
-#include <unordered_set>
 #include <list>
 #include <cerrno>
 #include <random>
@@ -43,14 +42,6 @@
 #include <unistd.h>
 #else
 #include <windows.h>
-#endif
-
-// environ is included in the C runtime on posix platforms.
-// It contains a null-terminated list of existing environment variables.
-// This is used below in validate_prefixed_env_vars().
-#if not(defined(WIN) && (_MSC_VER >= 1900))
-// This declaration needs to be in the global namespace.
-extern char** environ;
 #endif
 
 //----------------------------------------------------------------------------
@@ -494,76 +485,6 @@ std::string version_string_from_int(int version_number) {
   return str_builder.str();
 }
 
-// For each currently set environment variable prefixed with "KOKKOS_" (case
-// insensitive), make sure that:
-// - the variable's name is recognized
-// - the variable's name is in all-caps
-// Print a warning for each variable that is unrecognized or not all-caps.
-void validate_prefixed_env_vars() {
-  // Set of case-insensitive environment variables that might be
-  // set by Kokkos modules or a development workflow.
-  // No warning should be given for these.
-  std::unordered_set<std::string> validKokkosModuleVars = {
-      "KOKKOS_DIR",
-      "KOKKOS_ROOT",
-      "KOKKOS_HOME",
-      "KOKKOS_PATH",
-      "KOKKOS_INSTALL",
-      "KOKKOS_INCLUDE_DIRS",
-      "KOKKOS_INCLUDE_DIRECTORIES",
-      "KOKKOS_LIBRARY_DIRS",
-      "KOKKOS_LIBRARY_DIRECTORIES",
-      "KOKKOS_LIB_DIRS",
-      "KOKKOS_LIB_DIRECTORIES",
-      "KOKKOS_SOURCE",
-      "KOKKOS_SRC"};
-  std::unordered_set<std::string> validPrefixedVars = {
-      "KOKKOS_VISIBLE_DEVICES",     "KOKKOS_NUM_THREADS",
-      "KOKKOS_DEVICE_ID",           "KOKKOS_DISABLE_WARNINGS",
-      "KOKKOS_PRINT_CONFIGURATION", "KOKKOS_TUNE_INTERNALS",
-      "KOKKOS_MAP_DEVICE_ID_BY",    "KOKKOS_PROFILE_LIBRARY",
-      "KOKKOS_TOOLS_LIBS",          "KOKKOS_TOOLS_ARGS",
-      "KOKKOS_TOOLS_TIMER_JSON",    "KOKKOS_PROFILE_EXPORT_JSON",
-      "KOKKOS_TOOLS_GLOBALFENCES",  "KOKKOS_VARIORUM_FUNC_TYPE"};
-  char** env;
-#if defined(_WIN32) && (_MSC_VER >= 1900)
-  env = *__p__environ();
-#else
-  env = environ;  // declared at the top of this file as extern char **environ;
-#endif
-  std::string prefix = "KOKKOS_";
-  for (; *env; ++env) {
-    std::string name = *env;
-    // name now is in the format "KEY=VALUE", but we just want to check KEY.
-    // Split at the "=".
-    size_t endOfKey = name.find("=");
-    if (endOfKey == std::string::npos) continue;
-    name                 = name.substr(0, endOfKey);
-    std::string nameCaps = name;
-    for (char& c : nameCaps) c = std::toupper(c);
-    if (nameCaps.length() < prefix.length()) continue;
-    if (nameCaps.substr(0, prefix.length()) != prefix) continue;
-    // Ignore this variable if it might have been set by a Kokkos module
-    if (validKokkosModuleVars.find(nameCaps) != validKokkosModuleVars.end())
-      continue;
-    // name is a variable prefixed with "KOKKOS_" (or a case insensitive version
-    // of it) If name is both unrecognized and not all caps, just print the
-    // first warning (for unrecognized).
-    if (validPrefixedVars.find(nameCaps) == validPrefixedVars.end()) {
-      std::cerr << "Warning: environment variable \"" << name << "\"\n";
-      std::cerr << "is prefixed like a variable that controls Kokkos,\n";
-      std::cerr << "but is not in the list of valid\n";
-      std::cerr << "Kokkos environment variables.\n" << std::endl;
-    } else if (name != nameCaps) {
-      std::cerr << "Warning: environment variable \"" << name << "\" is\n";
-      std::cerr << "not in all-caps, but is otherwise one of the valid\n";
-      std::cerr << "environment variables used by Kokkos. If you intended\n";
-      std::cerr << "to set \"" << nameCaps << "\", this variable\n";
-      std::cerr << "will not have the same effect.\n" << std::endl;
-    }
-  }
-}
-
 void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
   if (settings.has_disable_warnings() && settings.get_disable_warnings())
     g_show_warnings = false;
@@ -858,7 +779,7 @@ void initialize_internal(const Kokkos::InitializationSettings& settings) {
   // these callbacks are not called inside the backend initialization, before
   // the tool initialization happened.
   Kokkos::Tools::Experimental::pause_tools();
-  validate_prefixed_env_vars();
+  Kokkos::Impl::warn_not_recognized_environment_variables();
   pre_initialize_internal(settings);
   initialize_backends(settings);
   Kokkos::Tools::Experimental::resume_tools();
