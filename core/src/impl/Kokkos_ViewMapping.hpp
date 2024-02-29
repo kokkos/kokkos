@@ -2971,15 +2971,6 @@ class ViewMapping<
       : m_impl_handle(Impl::get_property<Impl::PointerTag>(arg_prop)),
         m_impl_offset(std::integral_constant<unsigned, 0>(), arg_layout) {}
 
-#ifdef KOKKOS_ENABLE_IMPL_MDSPAN
-  template <class OtherElementType, class OtherExtents, class OtherLayoutPolicy>
-  explicit KOKKOS_INLINE_FUNCTION ViewMapping(
-      Kokkos::mdspan<OtherElementType, OtherExtents, OtherLayoutPolicy> const&
-          mds)
-      : m_impl_handle(mds.data_handle()),
-        m_impl_offset(Experimental::Impl::view_offset_from_mdspan(mds)) {}
-#endif
-
   /**\brief  Assign data */
   KOKKOS_INLINE_FUNCTION
   void assign_data(pointer_type arg_ptr) {

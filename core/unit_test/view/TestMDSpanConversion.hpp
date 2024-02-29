@@ -15,6 +15,7 @@
 //@HEADER
 
 #include <gtest/gtest.h>
+#include <type_traits>
 
 #define KOKKOS_IMPL_TEST_ACCESS
 
@@ -32,17 +33,10 @@ struct TestViewMDSpanConversion {
                                           const MDSpanExtents &exts) {
     using view_type   = Kokkos::View<DataType, KokkosLayout,
                                    Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+    using natural_mdspan_type = typename Kokkos::Impl::MDSpanViewTraits<typename view_type::traits>::mdspan_type;
     using mdspan_type = Kokkos::mdspan<value_type, MDSpanExtents, MDSpanLayout>;
 
-    using converted_layout_type =
-        typename Kokkos::Experimental::Impl::ArrayLayoutFromLayout<
-            MDSpanLayout>::type;
-    static_assert(
-        std::is_constructible_v<typename view_type::traits::array_layout,
-                                const converted_layout_type &>);
-    static_assert(
-        view_type::template mdspan_conversion_constraints<
-            MDSpanExtents, MDSpanLayout, Kokkos::default_accessor<value_type>>);
+    static_assert(std::is_convertible_v<mdspan_type, natural_mdspan_type>);
 
     // Manually create an mdspan from ref so we have a valid pointer to play
     // with

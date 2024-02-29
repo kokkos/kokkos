@@ -46,6 +46,24 @@ struct ArrayLayoutFromLayout<Experimental::layout_right_padded<padding_value>> {
       padding = {};
 };
 
+template <class ArrayLayout>
+struct LayoutFromArrayLayout;
+
+template <>
+struct LayoutFromArrayLayout<Kokkos::LayoutLeft> {
+  using type = Experimental::layout_left_padded<dynamic_extent>;
+};
+
+template <>
+struct LayoutFromArrayLayout<Kokkos::LayoutRight> {
+  using type = Experimental::layout_right_padded<dynamic_extent>;
+};
+
+template <>
+struct LayoutFromArrayLayout<Kokkos::LayoutStride> {
+  using type = layout_stride;
+};
+
 template <class T, class Extents, class Layout>
 struct ViewOffsetFromExtents {
   using value_type   = T;
@@ -57,18 +75,17 @@ struct ViewOffsetFromExtents {
       Kokkos::Impl::ViewOffset<typename data_analysis::dimension, array_layout>;
 };
 
-template <class ElementType, class Extents, class LayoutPolicy,
-          class AccessorPolicy>
-KOKKOS_INLINE_FUNCTION auto array_layout_from_mdspan(
-    const mdspan<ElementType, Extents, LayoutPolicy, AccessorPolicy> &mds) {
-  using layout_type = typename ArrayLayoutFromLayout<LayoutPolicy>::type;
-  const auto &ext   = mds.extents();
+template<class ArrayLayout, class MDSpanType>
+KOKKOS_INLINE_FUNCTION auto array_layout_from_mapping(const typename MDSpanType::mapping_type &mapping) {
+  using mapping_type = typename MDSpanType::mapping_type;
+  using extents_type = typename mapping_type::extents_type;
 
-  static constexpr auto rank = Extents::rank();
+  static constexpr auto rank = extents_type::rank();
+  const auto &ext = mapping.extents();
 
   static_assert(rank <= ARRAY_LAYOUT_MAX_RANK,
                 "Unsupported rank for mdspan (must be <= 8)");
-  return layout_type{
+  return ArrayLayout{
       rank > 0 ? dimension_from_extent(ext, 0) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
       rank > 1 ? dimension_from_extent(ext, 1) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
       rank > 2 ? dimension_from_extent(ext, 2) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
