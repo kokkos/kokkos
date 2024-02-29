@@ -17,7 +17,7 @@
 #include <Kokkos_Core.hpp>
 #include "Kokkos_Core_fwd.hpp"
 
-#if !defined(KOKKOS_COMPILER_NVCC) || KOKKOS_COMPILER_NVCC >= 1120
+#if !defined(KOKKOS_COMPILER_NVCC)
 
 namespace {
 
