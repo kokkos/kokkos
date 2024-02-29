@@ -500,6 +500,23 @@ std::string version_string_from_int(int version_number) {
 // - the variable's name is in all-caps
 // Print a warning for each variable that is unrecognized or not all-caps.
 void validate_prefixed_env_vars() {
+  // Set of case-insensitive environment variables that might be
+  // set by Kokkos modules or a development workflow.
+  // No warning should be given for these.
+  std::unordered_set<std::string> validKokkosModuleVars = {
+      "KOKKOS_DIR",
+      "KOKKOS_ROOT",
+      "KOKKOS_HOME",
+      "KOKKOS_PATH",
+      "KOKKOS_INSTALL",
+      "KOKKOS_INCLUDE_DIRS",
+      "KOKKOS_INCLUDE_DIRECTORIES",
+      "KOKKOS_LIBRARY_DIRS",
+      "KOKKOS_LIBRARY_DIRECTORIES",
+      "KOKKOS_LIB_DIRS",
+      "KOKKOS_LIB_DIRECTORIES",
+      "KOKKOS_SOURCE",
+      "KOKKOS_SRC"};
   std::unordered_set<std::string> validPrefixedVars = {
       "KOKKOS_VISIBLE_DEVICES",     "KOKKOS_NUM_THREADS",
       "KOKKOS_DEVICE_ID",           "KOKKOS_DISABLE_WARNINGS",
@@ -526,6 +543,9 @@ void validate_prefixed_env_vars() {
     for (char& c : nameCaps) c = std::toupper(c);
     if (nameCaps.length() < prefix.length()) continue;
     if (nameCaps.substr(0, prefix.length()) != prefix) continue;
+    // Ignore this variable if it might have been set by a Kokkos module
+    if (validKokkosModuleVars.find(nameCaps) != validKokkosModuleVars.end())
+      continue;
     // name is a variable prefixed with "KOKKOS_" (or a case insensitive version
     // of it) If name is both unrecognized and not all caps, just print the
     // first warning (for unrecognized).
