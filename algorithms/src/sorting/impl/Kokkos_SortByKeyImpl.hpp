@@ -165,15 +165,10 @@ void sort_by_key_via_sort(
       Kokkos::RangePolicy<ExecutionSpace>(exec, 0, n),
       KOKKOS_LAMBDA(int i) { permute(i) = i; });
 
-// FIXME OPENMPTARGET The sort happens on the host so we have to copy keys there
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
   auto keys_in_comparator = Kokkos::create_mirror_view(
       Kokkos::view_alloc(Kokkos::HostSpace{}, Kokkos::WithoutInitializing),
       keys);
   Kokkos::deep_copy(exec, keys_in_comparator, keys);
-#else
-  auto keys_in_comparator = keys;
-#endif
 
   static_assert(sizeof...(MaybeComparator) <= 1);
   if constexpr (sizeof...(MaybeComparator) == 0) {
