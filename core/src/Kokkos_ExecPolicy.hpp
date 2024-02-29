@@ -144,9 +144,9 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
             std::enable_if_t<(std::is_convertible_v<IndexType1, member_type> &&
                               std::is_convertible_v<IndexType2, member_type>),
                              bool> = false>
-  inline RangePolicy(const typename traits::execution_space& work_space,
-                     const IndexType1 work_begin, const IndexType2 work_end,
-                     const ChunkSize chunk_size)
+  RangePolicy(const typename traits::execution_space& work_space,
+              const IndexType1 work_begin, const IndexType2 work_end,
+              const ChunkSize chunk_size)
       : m_space(work_space),
         m_begin(work_begin),
         m_end(work_end),
@@ -163,8 +163,8 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
             std::enable_if_t<(std::is_convertible_v<IndexType1, member_type> &&
                               std::is_convertible_v<IndexType2, member_type>),
                              bool> = false>
-  inline RangePolicy(const IndexType1 work_begin, const IndexType2 work_end,
-                     const ChunkSize chunk_size)
+  RangePolicy(const IndexType1 work_begin, const IndexType2 work_end,
+              const ChunkSize chunk_size)
       : RangePolicy(typename traits::execution_space(), work_begin, work_end,
                     chunk_size) {}
 
