@@ -143,15 +143,26 @@ void parseArgs(const std::string&);
 Kokkos_Profiling_SpaceHandle make_space_handle(const char* space_name);
 
 /**
+ * Convenience wrapper around kokkosp_mark_kernel_static_info
+ *
+ * Consider using markKernelStaticInfo<Functor>(kernelID) instead
+ */
+void markKernelStaticInfo(uint64_t kernelID, const KernelStaticInfo& info);
+
+/**
  * Take a kernelID produced by e.g. beginParallelFor
- * and associate compile-time information with it
+ * and associate compile-time information about Functor with it
  *
  * Arguments:
  *
  * kernelID: An ID for a parallel loop registered with e.g. beginParallelFor
- * info:     The static information to associate with the kernel
  */
-void markKernelStaticInfo(uint64_t kernelID, const KernelStaticInfo& info);
+template <typename Functor>
+void markKernelStaticInfo(uint64_t kernelID) {
+  Kokkos::Tools::KernelStaticInfo info;
+  info.functor_size = sizeof(Functor);
+  markKernelStaticInfo(kernelID, info);
+}
 
 namespace Experimental {
 
