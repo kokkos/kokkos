@@ -166,8 +166,7 @@ void sort_by_key_via_sort(
       KOKKOS_LAMBDA(int i) { permute(i) = i; });
 
   auto keys_in_comparator = Kokkos::create_mirror_view(
-      Kokkos::view_alloc(Kokkos::HostSpace{}, Kokkos::WithoutInitializing,
-                         exec),
+      Kokkos::view_alloc(Kokkos::HostSpace{}, Kokkos::WithoutInitializing),
       keys);
   Kokkos::deep_copy(exec, keys_in_comparator, keys);
 
