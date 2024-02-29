@@ -150,11 +150,12 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
       : m_space(work_space),
         m_begin(work_begin),
         m_end(work_end),
-        m_granularity(chunk_size.value),
-        m_granularity_mask(m_granularity - 1) {
+        m_granularity(0),
+        m_granularity_mask(0) {
     check_conversion_safety(work_begin);
     check_conversion_safety(work_end);
     check_bounds_validity();
+    set_chunk_size(chunk_size.value);
   }
 
   /** \brief  Total range */
@@ -168,10 +169,13 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
                     chunk_size) {}
 
  public:
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  KOKKOS_DEPRECATED_WITH_COMMENT("Use set_chunk_size instead")
   inline void set(ChunkSize chunksize) {
     m_granularity      = chunksize.value;
     m_granularity_mask = m_granularity - 1;
   }
+#endif
 
  public:
   /** \brief return chunk_size */
