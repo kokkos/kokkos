@@ -373,6 +373,33 @@ struct ViewTraits {
   //------------------------------------
 };
 
+#ifdef KOKKOS_ENABLE_IMPL_MDSPAN
+namespace Experimental::Impl {
+struct UnsupportedKokkosArrayLayout;
+
+template <class Traits, class Enabled = void>
+struct MDSpanViewTraits {
+  using mdspan_type = UnsupportedKokkosArrayLayout;
+};
+
+/**
+ * "Natural" mdspan for a view if the View's ArrayLayout is supported.
+ */
+template <class Traits>
+struct MDSpanViewTraits<
+    Traits, std::void_t<typename Experimental::Impl::LayoutFromArrayLayout<
+                typename Traits::array_layout>::type>> {
+  using index_type   = typename Traits::execution_space::size_type;
+  using extents_type = typename Experimental::Impl::ExtentsFromDataType<
+      index_type, typename Traits::data_type>::type;
+  using mdspan_layout_type = typename Experimental::Impl::LayoutFromArrayLayout<
+      typename Traits::array_layout>::type;
+  using mdspan_type =
+      mdspan<typename Traits::value_type, extents_type, mdspan_layout_type>;
+};
+}  // namespace Experimental::Impl
+#endif  // KOKKOS_ENABLE_IMPL_MDSPAN
+
 /** \class View
  *  \brief View to an array of data.
  *
@@ -1727,33 +1754,17 @@ class View : public ViewTraits<DataType, Properties...> {
   //----------------------------------------
   // MDSpan converting constructors
 #ifdef KOKKOS_ENABLE_IMPL_MDSPAN
-#ifndef KOKKOS_IMPL_TEST_ACCESS
- private:
-#endif  // KOKKOS_IMPL_TEST_ACCESS
-  template <class OtherExtents, class OtherLayoutPolicy, class Accessor>
-  static constexpr inline bool mdspan_conversion_constraints =
-      !traits::is_managed &&
-      std::is_constructible_v<typename traits::value_type,
-                              typename Accessor::reference> &&
-      std::is_assignable_v<typename Accessor::reference,
-                           typename traits::value_type> &&
-      std::is_default_constructible_v<typename traits::value_type> &&
-      std::is_constructible_v<
-          typename traits::array_layout,
-          const typename Experimental::Impl::ArrayLayoutFromLayout<
-              OtherLayoutPolicy>::type&>;
-
  public:
-  template <class OtherElementType, class OtherExtents, class OtherLayoutPolicy,
-            class = std::enable_if_t<mdspan_conversion_constraints<
-                OtherExtents, OtherLayoutPolicy,
-                Kokkos::default_accessor<OtherElementType>>>>
-  MDSPAN_CONDITIONAL_EXPLICIT(
-      !(std::is_convertible_v<Kokkos::default_accessor,
-                              typename traits::value_type>))
-  KOKKOS_INLINE_FUNCTION
-      View(mdspan<OtherElementType, OtherExtents, OtherLayoutPolicy> const& mds)
-      : m_track(), m_map(mds) {}
+  template <typename U = typename Impl::MDSpanViewTraits<traits>::mdspan_type>
+  KOKKOS_INLINE_FUNCTION MDSPAN_CONDITIONAL_EXPLICIT(traits::is_managed) View(
+      const typename Impl::MDSpanViewTraits<traits>::mdspan_type& mds,
+      std::enable_if_t<
+          !std::is_same_v<Impl::UnsupportedKokkosArrayLayout, U>>* = nullptr)
+      : View(mds.data_handle(),
+             Experimental::Impl::array_layout_from_mapping<
+                 typename traits::array_layout,
+                 typename Impl::MDSpanViewTraits<traits>::mdspan_type>(
+                 mds.mapping())) {}
 #endif  // KOKKOS_ENABLE_IMPL_MDSPAN
 };
 
