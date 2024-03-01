@@ -1339,6 +1339,40 @@ class TestViewAPI {
     ASSERT_EQ(dz.data(), nullptr);
   }
 
+  struct test_refcount_poison_copy_functor {
+    using view_type = Kokkos::View<double *>;
+    explicit test_refcount_poison_copy_functor(view_type v) : view(v) {}
+
+    test_refcount_poison_copy_functor(
+        const test_refcount_poison_copy_functor &other)
+        : view(other.view) {
+      throw std::bad_alloc();
+    }
+
+    KOKKOS_INLINE_FUNCTION void operator()(int) const {}
+
+    view_type view;
+  };
+
+  static void run_test_refcount_exception() {
+    using view_type = typename test_refcount_poison_copy_functor::view_type;
+    view_type original("original", N0);
+    ASSERT_EQ(original.use_count(), 1);
+
+    // test_refcount_poison_copy_functor throws during copy construction
+    try {
+      Kokkos::parallel_for(
+          Kokkos::RangePolicy<typename DeviceType::execution_space>(0, N0),
+          test_refcount_poison_copy_functor(original));
+    } catch (const std::bad_alloc &) {
+    }
+
+    // Ensure refcounting is enabled, we should increment here
+    auto copy = original;
+    ASSERT_EQ(original.use_count(), 2);
+    ASSERT_EQ(copy.use_count(), 2);
+  }
+
   static void run_test_deep_copy_empty() {
     // Check Deep Copy of LayoutLeft to LayoutRight
     {

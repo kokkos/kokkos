@@ -26,6 +26,8 @@ static_assert(false,
 #include <string>
 #include <algorithm>
 #include <initializer_list>
+#include <functional>
+#include <cassert>
 
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_HostSpace.hpp>
@@ -1870,23 +1872,6 @@ KOKKOS_INLINE_FUNCTION bool operator!=(const View<LT, LP...>& lhs,
   return !(operator==(lhs, rhs));
 }
 
-} /* namespace Kokkos */
-
-//----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
-
-namespace Kokkos {
-namespace Impl {
-
-inline void shared_allocation_tracking_disable() {
-  Kokkos::Impl::SharedAllocationRecord<void, void>::tracking_disable();
-}
-
-inline void shared_allocation_tracking_enable() {
-  Kokkos::Impl::SharedAllocationRecord<void, void>::tracking_enable();
-}
-
-} /* namespace Impl */
 } /* namespace Kokkos */
 
 //----------------------------------------------------------------------------
