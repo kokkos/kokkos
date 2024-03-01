@@ -73,7 +73,7 @@ is_less_than_value_initialized_variable(T arg) {
 
 // Checked narrowing conversion that calls abort if the cast changes the value
 template <class To, class From>
-constexpr To checked_narrow_cast(From arg) {
+constexpr To checked_narrow_cast(From arg, std::size_t idx) {
   constexpr const bool is_different_signedness =
       (std::is_signed<To>::value != std::is_signed<From>::value);
   auto const ret = static_cast<To>(arg);
@@ -81,7 +81,12 @@ constexpr To checked_narrow_cast(From arg) {
       (is_different_signedness &&
        is_less_than_value_initialized_variable(arg) !=
            is_less_than_value_initialized_variable(ret))) {
-    Kokkos::abort("unsafe narrowing conversion");
+    std::string msg =
+        "Kokkos::MDRangePolicy bound type error: an unsafe implicit conversion "
+        "is performed on a bound (" +
+        std::to_string(arg) + ") in dimension (" + std::to_string(idx) +
+        "), which may not preserve its original value.\n";
+    Kokkos::abort(msg.c_str());
   }
   return ret;
 }
@@ -102,9 +107,9 @@ constexpr Array to_array_potentially_narrowing(const U (&init)[M]) {
   // std::transform(std::begin(init), std::end(init), a.data(),
   //                [](U x) { return static_cast<T>(x); });
   // except that std::transform is not constexpr.
-  for (auto x : init) {
-    *ptr++ = checked_narrow_cast<T>(x);
-    (void)checked_narrow_cast<IndexType>(x);  // see note above
+  for (std::size_t i = 0; i < M; ++i) {
+    *ptr++ = checked_narrow_cast<T>(init[i], i);
+    (void)checked_narrow_cast<IndexType>(init[i], i);  // see note above
   }
   return a;
 }
@@ -122,8 +127,8 @@ constexpr NVCC_WONT_LET_ME_CALL_YOU_Array to_array_potentially_narrowing(
   constexpr std::size_t N = a.size();
   static_assert(M <= N);
   for (std::size_t i = 0; i < M; ++i) {
-    a[i] = checked_narrow_cast<T>(other[i]);
-    (void)checked_narrow_cast<IndexType>(other[i]);  // see note above
+    a[i] = checked_narrow_cast<T>(other[i], i);
+    (void)checked_narrow_cast<IndexType>(other[i], i);  // see note above
   }
   return a;
 }
