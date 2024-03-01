@@ -779,7 +779,6 @@ void initialize_internal(const Kokkos::InitializationSettings& settings) {
   // these callbacks are not called inside the backend initialization, before
   // the tool initialization happened.
   Kokkos::Tools::Experimental::pause_tools();
-  Kokkos::Impl::warn_not_recognized_environment_variables();
   pre_initialize_internal(settings);
   initialize_backends(settings);
   Kokkos::Tools::Experimental::resume_tools();
@@ -1043,6 +1042,27 @@ void Kokkos::Impl::parse_environment_variables(
       Kokkos::abort(ss.str().c_str());
     }
     settings.set_map_device_id_by(map_device_id_by);
+  }
+
+  for (auto handled_do_not_warn_about_these : {
+           std::regex("KOKKOS_NUM_THREADS=.*", std::regex::egrep),
+           std::regex("KOKKOS_DEVICE_ID=.*", std::regex::egrep),
+           std::regex("KOKKOS_DISABLE_WARNINGS=.*", std::regex::egrep),
+           std::regex("KOKKOS_PRINT_CONFIGURATION=.*", std::regex::egrep),
+           std::regex("KOKKOS_TUNE_INTERNALS=.*", std::regex::egrep),
+           std::regex("KOKKOS_MAP_DEVICE_ID_BY=.*", std::regex::egrep),
+       }) {
+    Kokkos::Impl::do_not_warn_not_recognized_environment_variable(
+        std::regex{handled_do_not_warn_about_these});
+  }
+
+  char** envp = Kokkos::Impl::get_envp();
+  for (; *envp; ++envp) {
+    if (std::regex_match(
+            *envp, std::regex("KOKKOS.*", std::regex::egrep |
+                                              std::regex_constants::icase))) {
+      Kokkos::Impl::warn_not_recognized_environment_variable(*envp);
+    }
   }
 }
 

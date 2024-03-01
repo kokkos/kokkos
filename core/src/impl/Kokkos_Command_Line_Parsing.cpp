@@ -30,14 +30,8 @@
 
 #ifdef _WIN32
 #include <windows.h>
-#endif
-
-// environ is included in the C runtime on posix platforms.
-// It contains a null-terminated list of existing environment variables.
-// This is used below in validate_prefixed_env_vars().
-#if not(defined(WIN) && (_MSC_VER >= 1900))
-// This declaration needs to be in the global namespace.
-extern char** environ;
+#else
+#include <unistd.h>
 #endif
 
 namespace {
@@ -254,19 +248,55 @@ void Kokkos::Impl::warn_deprecated_command_line_argument(
 }
 
 namespace {
-std::vector<std::regex> do_not_warn_regular_expressions{
+
+std::vector<std::regex> do_not_warn_command_line_argument_regular_expressions{
     std::regex{"--kokkos-tool.*", std::regex::egrep},
 };
-}
+
+std::vector<std::regex> do_not_warn_environment_variable_regular_expressions{
+    std::regex{"KOKKOS_TOOLS.*", std::regex::egrep},
+    std::regex{"KOKKOS_DIR=.*",
+               std::regex::egrep | std::regex_constants::icase},
+    std::regex{"KOKKOS_HOME=.*",
+               std::regex::egrep | std::regex_constants::icase},
+    std::regex{"KOKKOS_ROOT=.*",
+               std::regex::egrep | std::regex_constants::icase},
+    std::regex{"KOKKOS_PATH=.*",
+               std::regex::egrep | std::regex_constants::icase},
+    std::regex{"KOKKOS_INCLUDE_DIRS=.*",
+               std::regex::egrep | std::regex_constants::icase},
+    std::regex{"KOKKOS_INCLUDE_DIRECTORIES=.*",
+               std::regex::egrep | std::regex_constants::icase},
+    std::regex{"KOKKOS_LIBRARY_DIRS=.*",
+               std::regex::egrep | std::regex_constants::icase},
+    std::regex{"KOKKOS_LIBRARY_DIRECTORIES=.*",
+               std::regex::egrep | std::regex_constants::icase},
+    std::regex{"KOKKOS_SOURCE=.*",
+               std::regex::egrep | std::regex_constants::icase},
+    std::regex{"KOKKOS_SRC=.*",
+               std::regex::egrep | std::regex_constants::icase},
+    std::regex{"KOKKOS_INSTALL=.*",
+               std::regex::egrep | std::regex_constants::icase},
+};
+
+}  // namespace
 
 void Kokkos::Impl::do_not_warn_not_recognized_command_line_argument(
     std::regex ignore) {
-  do_not_warn_regular_expressions.push_back(std::move(ignore));
+  do_not_warn_command_line_argument_regular_expressions.push_back(
+      std::move(ignore));
+}
+
+void Kokkos::Impl::do_not_warn_not_recognized_environment_variable(
+    std::regex ignore) {
+  do_not_warn_environment_variable_regular_expressions.push_back(
+      std::move(ignore));
 }
 
 void Kokkos::Impl::warn_not_recognized_command_line_argument(
     std::string not_recognized) {
-  for (auto const& ignore : do_not_warn_regular_expressions) {
+  for (auto const& ignore :
+       do_not_warn_command_line_argument_regular_expressions) {
     if (std::regex_match(not_recognized, ignore)) {
       return;
     }
@@ -276,92 +306,29 @@ void Kokkos::Impl::warn_not_recognized_command_line_argument(
             << " Raised by Kokkos::initialize()." << std::endl;
 }
 
-namespace {
-std::vector<std::regex> do_not_warn_environment_variable_regexes;
-}
-
-void Kokkos::Impl::do_not_warn_not_recognized_environment_variable(
-    std::regex ignore) {
-  do_not_warn_environment_variable_regexes.push_back(std::move(ignore));
-}
-
-// For each currently set environment variable prefixed with "KOKKOS_" (case
-// insensitive), make sure that:
-// - the variable's name is recognized
-// - the variable's name is in all-caps
-// Print a warning to stderr for each variable that is unrecognized or not
-// all-caps.
-void Kokkos::Impl::warn_not_recognized_environment_variables() {
-  // Set of case-insensitive environment variables that might be
-  // set by Kokkos modules or a development workflow.
-  // No warning should be given for these.
-  std::unordered_set<std::string> validKokkosModuleVars = {
-      "KOKKOS_DIR",
-      "KOKKOS_ROOT",
-      "KOKKOS_HOME",
-      "KOKKOS_PATH",
-      "KOKKOS_INSTALL",
-      "KOKKOS_INCLUDE_DIRS",
-      "KOKKOS_INCLUDE_DIRECTORIES",
-      "KOKKOS_LIBRARY_DIRS",
-      "KOKKOS_LIBRARY_DIRECTORIES",
-      "KOKKOS_LIB_DIRS",
-      "KOKKOS_LIB_DIRECTORIES",
-      "KOKKOS_SOURCE",
-      "KOKKOS_SRC"};
-  std::unordered_set<std::string> validPrefixedVars = {
-      "KOKKOS_VISIBLE_DEVICES",     "KOKKOS_NUM_THREADS",
-      "KOKKOS_DEVICE_ID",           "KOKKOS_DISABLE_WARNINGS",
-      "KOKKOS_PRINT_CONFIGURATION", "KOKKOS_TUNE_INTERNALS",
-      "KOKKOS_MAP_DEVICE_ID_BY",    "KOKKOS_PROFILE_LIBRARY",
-      "KOKKOS_TOOLS_LIBS",          "KOKKOS_TOOLS_ARGS",
-      "KOKKOS_TOOLS_TIMER_JSON",    "KOKKOS_PROFILE_EXPORT_JSON",
-      "KOKKOS_TOOLS_GLOBALFENCES",  "KOKKOS_VARIORUM_FUNC_TYPE"};
-  char** env;
-#if defined(_WIN32) && (_MSC_VER >= 1900)
-  env = *__p__environ();
-#else
-  env = environ;  // declared at the top of this file as extern char **environ;
-#endif
-  std::string prefix = "KOKKOS_";
-  for (; *env; ++env) {
-    std::string name = *env;
-    // name now is in the format "KEY=VALUE", but we just want to check KEY.
-    // Split at the "=".
-    size_t endOfKey = name.find("=");
-    if (endOfKey == std::string::npos) continue;
-    name                 = name.substr(0, endOfKey);
-    std::string nameCaps = name;
-    for (char& c : nameCaps) c = std::toupper(c);
-    if (nameCaps.length() < prefix.length()) continue;
-    if (nameCaps.substr(0, prefix.length()) != prefix) continue;
-    // Ignore this variable if it might have been set by a Kokkos module
-    if (validKokkosModuleVars.find(nameCaps) != validKokkosModuleVars.end())
-      continue;
-    // Ignore if this matches a regex that was passed to
-    // do_not_warn_not_recognized_environment_variable
-    bool matchesDoNotWarn = false;
-    for (auto const& ignore : do_not_warn_environment_variable_regexes) {
-      if (std::regex_match(name, ignore)) {
-        matchesDoNotWarn = true;
-        break;
-      }
-    }
-    if (matchesDoNotWarn) continue;
-    // name is a variable prefixed with "KOKKOS_" (or a case insensitive version
-    // of it) If name is both unrecognized and not all caps, just print the
-    // first warning (for unrecognized).
-    if (validPrefixedVars.find(nameCaps) == validPrefixedVars.end()) {
-      std::cerr << "Warning: environment variable \"" << name << "\"\n";
-      std::cerr << "is prefixed like a variable that controls Kokkos,\n";
-      std::cerr << "but is not in the list of valid\n";
-      std::cerr << "Kokkos environment variables.\n" << std::endl;
-    } else if (name != nameCaps) {
-      std::cerr << "Warning: environment variable \"" << name << "\" is\n";
-      std::cerr << "not in all-caps, but is otherwise one of the valid\n";
-      std::cerr << "environment variables used by Kokkos. If you intended\n";
-      std::cerr << "to set \"" << nameCaps << "\", this variable\n";
-      std::cerr << "will not have the same effect.\n" << std::endl;
+void Kokkos::Impl::warn_not_recognized_environment_variable(
+    std::string not_recognized) {
+  for (auto const& ignore :
+       do_not_warn_environment_variable_regular_expressions) {
+    if (std::regex_match(not_recognized, ignore)) {
+      return;
     }
   }
+  std::cerr << "Warning: environment variable '" << not_recognized
+            << "' is not recognized."
+            << " Raised by Kokkos::initialize()." << std::endl;
+}
+
+#ifndef _WIN32
+// On POSIX systems, the global variable `environ` points to a null-terminated
+// list of environment variables.
+extern char** environ;
+#endif
+
+char** Kokkos::Impl::get_envp() {
+#ifdef _WIN32
+  return *__p__environ();
+#else
+  return environ;
+#endif
 }
