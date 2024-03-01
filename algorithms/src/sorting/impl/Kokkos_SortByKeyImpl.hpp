@@ -87,7 +87,19 @@ static_assert_is_admissible_to_kokkos_sort_by_key(const ViewType& /* view */) {
                 "LayoutRight, LayoutLeft or LayoutStride.");
 }
 
+// For the fallback sort_by_key implementation we might need to execute
+// Kokkos::sort on the host. This type trait determines at compile-time where we
+// want to execute.
+template <class ExecutionSpace, class Layout>
+struct sort_on_device : std::false_type {};
+
+template <class T, class Layout>
+inline constexpr bool sort_on_device_v = sort_on_device<T, Layout>::value;
+
 #if defined(KOKKOS_ENABLE_CUDA)
+template <class Layout>
+struct sort_on_device<Kokkos::Cuda, Layout> : std::true_type {};
+
 template <class KeysDataType, class... KeysProperties, class ValuesDataType,
           class... ValuesProperties, class... MaybeComparator>
 void sort_by_key_cudathrust(
@@ -103,6 +115,12 @@ void sort_by_key_cudathrust(
                       std::forward<MaybeComparator>(maybeComparator)...);
 }
 #endif
+
+#if defined(KOKKOS_ENABLE_SYCL)
+template <class Layout>
+struct sort_on_device<Kokkos::Experimental::SYCL, Layout>
+    : std::bool_constant<std::is_same_v<Layout, Kokkos::LayoutLeft> ||
+                         std::is_same_v<Layout, Kokkos::LayoutRight>> {};
 
 #ifdef KOKKOS_ONEDPL_HAS_SORT_BY_KEY
 template <class KeysDataType, class... KeysProperties, class ValuesDataType,
@@ -125,6 +143,7 @@ void sort_by_key_onedpl(
   oneapi::dpl::sort_by_key(policy, keys.data(), keys.data() + n, values.data(),
                            std::forward<MaybeComparator>(maybeComparator)...);
 }
+#endif
 #endif
 
 template <typename ExecutionSpace, typename PermutationView, typename ViewType>
@@ -152,6 +171,8 @@ void sort_by_key_via_sort(
     const Kokkos::View<KeysDataType, KeysProperties...>& keys,
     const Kokkos::View<ValuesDataType, ValuesProperties...>& values,
     MaybeComparator&&... maybeComparator) {
+  static_assert(sizeof...(MaybeComparator) <= 1);
+
   auto const n = keys.size();
 
   Kokkos::View<unsigned int*, ExecutionSpace> permute(
@@ -165,48 +186,67 @@ void sort_by_key_via_sort(
       Kokkos::RangePolicy<ExecutionSpace>(exec, 0, n),
       KOKKOS_LAMBDA(int i) { permute(i) = i; });
 
-// FIXME OPENMPTARGET The sort happens on the host so we have to copy keys there
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-  auto keys_in_comparator = Kokkos::create_mirror_view(
-      Kokkos::view_alloc(Kokkos::HostSpace{}, Kokkos::WithoutInitializing),
-      keys);
-  Kokkos::deep_copy(exec, keys_in_comparator, keys);
-#else
-  auto keys_in_comparator = keys;
-#endif
+  using Layout =
+      typename Kokkos::View<unsigned int*, ExecutionSpace>::array_layout;
+  if constexpr (!sort_on_device_v<ExecutionSpace, Layout>) {
+    auto host_keys = Kokkos::create_mirror_view(
+        Kokkos::view_alloc(Kokkos::HostSpace{}, Kokkos::WithoutInitializing),
+        keys);
+    auto host_permute = Kokkos::create_mirror_view(
+        Kokkos::view_alloc(Kokkos::HostSpace{}, Kokkos::WithoutInitializing),
+        permute);
+    Kokkos::deep_copy(exec, host_keys, keys);
+    Kokkos::deep_copy(exec, host_permute, permute);
 
-  static_assert(sizeof...(MaybeComparator) <= 1);
-  if constexpr (sizeof...(MaybeComparator) == 0) {
-#ifdef KOKKOS_ENABLE_SYCL
-    auto* raw_keys_in_comparator = keys_in_comparator.data();
-    auto stride                  = keys_in_comparator.stride(0);
-    Kokkos::sort(
-        exec, permute, KOKKOS_LAMBDA(int i, int j) {
-          return raw_keys_in_comparator[i * stride] <
-                 raw_keys_in_comparator[j * stride];
-        });
-#else
-    Kokkos::sort(
-        exec, permute, KOKKOS_LAMBDA(int i, int j) {
-          return keys_in_comparator(i) < keys_in_comparator(j);
-        });
-#endif
+    exec.fence("Kokkos::Impl::sort_by_key_via_sort: before host sort");
+    Kokkos::DefaultHostExecutionSpace host_exec;
+
+    if constexpr (sizeof...(MaybeComparator) == 0) {
+      Kokkos::sort(
+          host_exec, host_permute,
+          KOKKOS_LAMBDA(int i, int j) { return host_keys(i) < host_keys(j); });
+    } else {
+      auto keys_comparator =
+          std::get<0>(std::tuple<MaybeComparator...>(maybeComparator...));
+      Kokkos::sort(
+          host_exec, host_permute, KOKKOS_LAMBDA(int i, int j) {
+            return keys_comparator(host_keys(i), host_keys(j));
+          });
+    }
+    host_exec.fence("Kokkos::Impl::sort_by_key_via_sort: after host sort");
+    Kokkos::deep_copy(exec, permute, host_permute);
   } else {
-    auto keys_comparator =
-        std::get<0>(std::tuple<MaybeComparator...>(maybeComparator...));
 #ifdef KOKKOS_ENABLE_SYCL
-    auto* raw_keys_in_comparator = keys_in_comparator.data();
-    auto stride                  = keys_in_comparator.stride(0);
-    Kokkos::sort(
-        exec, permute, KOKKOS_LAMBDA(int i, int j) {
-          return keys_comparator(raw_keys_in_comparator[i * stride],
-                                 raw_keys_in_comparator[j * stride]);
-        });
+    auto* raw_keys_in_comparator = keys.data();
+    auto stride                  = keys.stride(0);
+    if constexpr (sizeof...(MaybeComparator) == 0) {
+      Kokkos::sort(
+          exec, permute, KOKKOS_LAMBDA(int i, int j) {
+            return raw_keys_in_comparator[i * stride] <
+                   raw_keys_in_comparator[j * stride];
+          });
+    } else {
+      auto keys_comparator =
+          std::get<0>(std::tuple<MaybeComparator...>(maybeComparator...));
+      Kokkos::sort(
+          exec, permute, KOKKOS_LAMBDA(int i, int j) {
+            return keys_comparator(raw_keys_in_comparator[i * stride],
+                                   raw_keys_in_comparator[j * stride]);
+          });
+    }
 #else
-    Kokkos::sort(
-        exec, permute, KOKKOS_LAMBDA(int i, int j) {
-          return keys_comparator(keys_in_comparator(i), keys_in_comparator(j));
-        });
+    if constexpr (sizeof...(MaybeComparator) == 0) {
+      Kokkos::sort(
+          exec, permute,
+          KOKKOS_LAMBDA(int i, int j) { return keys(i) < keys(j); });
+    } else {
+      auto keys_comparator =
+          std::get<0>(std::tuple<MaybeComparator...>(maybeComparator...));
+      Kokkos::sort(
+          exec, permute, KOKKOS_LAMBDA(int i, int j) {
+            return keys_comparator(keys(i), keys(j));
+          });
+    }
 #endif
   }
 
