@@ -115,6 +115,20 @@ KOKKOS_INLINE_FUNCTION auto dimension_from_extent(const Extents &e,
                                                   std::size_t r) noexcept {
   return Extents::static_extent(r) == dynamic_extent ? e.extent(r) : 0;
 }
+
+template <class Extents, class VM, std::size_t... Indices>
+constexpr KOKKOS_INLINE_FUNCTION auto extents_from_view_mapping_impl(
+    const VM &view_mapping, std::index_sequence<Indices...>) {
+  return Extents{view_mapping.extent(Indices)...};
+}
+
+template <class Extents, class VM>
+constexpr KOKKOS_INLINE_FUNCTION auto extents_from_view_mapping(
+    const VM &view_mapping) {
+  static_assert(Extents::rank() == VM::Rank);
+  return extents_from_view_mapping_impl<Extents>(
+      view_mapping, std::make_index_sequence<Extents::rank()>{});
+}
 }  // namespace Kokkos::Experimental::Impl
 
 #endif  // KOKKOS_EXPERIMENTAL_MDSPAN_EXTENTS_HPP

@@ -1767,6 +1767,26 @@ class View : public ViewTraits<DataType, Properties...> {
                  typename traits::array_layout,
                  typename Experimental::Impl::MDSpanViewTraits<
                      traits>::mdspan_type>(mds.mapping())) {}
+
+  //----------------------------------------
+  // Conversion to MDSpan
+private:
+ template <typename U = typename Experimental::Impl::MDSpanViewTraits<
+               traits>::mdspan_type>
+ constexpr auto make_natural_mdspan(
+     std::enable_if_t<!std::is_same_v<
+         Experimental::Impl::UnsupportedKokkosArrayLayout, U>>* = nullptr) {
+    using mdspan_type =
+        typename Experimental::Impl::MDSpanViewTraits<traits>::mdspan_type;
+    return mdspan_type{data(), Experimental::Impl::mapping_from_view_mapping<mdspan_type>(m_map)};
+ }
+
+public:
+
+  template <class OtherElementType, class OtherExtents, class OtherLayoutPolicy, class OtherAccessor>
+  operator mdspan<OtherElementType, OtherExtents, OtherLayoutPolicy, OtherAccessor> () {
+    return make_natural_mdspan();
+  }
 #endif  // KOKKOS_ENABLE_IMPL_MDSPAN
 };
 
