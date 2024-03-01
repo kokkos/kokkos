@@ -116,7 +116,7 @@ void sort_by_key_cudathrust(
 }
 #endif
 
-#if defined(KOKKOS_ENABLE_SYCL)
+#if defined(KOKKOS_ENABLE_ONEDPL)
 template <class Layout>
 struct sort_on_device<Kokkos::Experimental::SYCL, Layout>
     : std::bool_constant<std::is_same_v<Layout, Kokkos::LayoutLeft> ||
