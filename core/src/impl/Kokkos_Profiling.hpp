@@ -22,6 +22,7 @@
 #include <iosfwd>
 #include <unordered_map>
 #include <map>
+#include <optional>
 #include <string>
 #include <type_traits>
 #include <mutex>
@@ -34,14 +35,9 @@ bool tune_internals() noexcept;
 namespace Tools {
 
 struct InitArguments {
-  // NOTE DZP: PossiblyUnsetOption was introduced
-  // before C++17, std::optional is a better choice
-  // for this long-term
-  static const std::string unset_string_option;
-  enum PossiblyUnsetOption { unset, off, on };
-  PossiblyUnsetOption help = unset;
-  std::string lib          = unset_string_option;
-  std::string args         = unset_string_option;
+  std::optional<bool> help;
+  std::optional<std::string> lib;
+  std::optional<std::string> args;
 };
 
 namespace Impl {
