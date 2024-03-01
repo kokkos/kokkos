@@ -389,6 +389,63 @@ TEST(defaultdevicetype, env_vars_tune_internals) {
   }
 }
 
+TEST(defaultdevicetype, env_vars_unrecognized) {
+  // Case 1: an unrecognized variable produces a warning.
+  {
+    EnvVarsHelper ev = {{
+        {"KOKKOS_NOT_A_VALID_ENV_VAR", "some_value"},
+    }};
+    SKIP_IF_ENVIRONMENT_VARIABLE_ALREADY_SET(ev);
+    ::testing::internal::CaptureStderr();
+
+    Kokkos::Impl::warn_not_recognized_environment_variables();
+
+    auto captured = ::testing::internal::GetCapturedStderr();
+    EXPECT_TRUE(captured.find("Warning: environment variable") !=
+                std::string::npos)
+        << "Unrecognized environment variable not caught";
+    EXPECT_TRUE(captured.find("KOKKOS_NOT_A_VALID_ENV_VAR") !=
+                std::string::npos)
+        << "Unrecognized environment variable name not included in warning";
+  }
+  // Case 2: a recognized variable but with the incorrect case produces a
+  // warning.
+  {
+    EnvVarsHelper ev = {{
+        {"KOKKOS_device_id", "0"},
+    }};
+    SKIP_IF_ENVIRONMENT_VARIABLE_ALREADY_SET(ev);
+    ::testing::internal::CaptureStderr();
+
+    Kokkos::Impl::warn_not_recognized_environment_variables();
+
+    auto captured = ::testing::internal::GetCapturedStderr();
+    EXPECT_TRUE(captured.find("Warning: environment variable") !=
+                std::string::npos)
+        << "Environment variable in wrong case not caught";
+    EXPECT_TRUE(captured.find("all-caps") != std::string::npos)
+        << "Environment variable warning doesn't mention capitalization";
+  }
+  // Case 3: ignoring env vars matching a certain regex can be ignored.
+  {
+    // Making these names very specific as the do_not_warn list is global
+    EnvVarsHelper ev = {{{"KOKKOS_CASE3_NOT_VALID_ENV_VAR_123", "0"},
+                         {"KOKKOS_CASE3_NOT_VALID_ENV_VAR_456", "1"}}};
+    SKIP_IF_ENVIRONMENT_VARIABLE_ALREADY_SET(ev);
+    ::testing::internal::CaptureStderr();
+
+    Kokkos::Impl::do_not_warn_not_recognized_environment_variable(
+        std::regex{"^KOKKOS_CASE3_NOT_VALID_ENV_VAR_.*"});
+    Kokkos::Impl::warn_not_recognized_environment_variables();
+
+    auto captured = ::testing::internal::GetCapturedStderr();
+    EXPECT_TRUE(captured.find("Warning: environment variable") ==
+                std::string::npos)
+        << "do_not_warn_not_recognized_environment_variable(regex) failed to "
+           "silence warning";
+  }
+}
+
 TEST(defaultdevicetype, visible_devices) {
 #define KOKKOS_TEST_VISIBLE_DEVICES(ENV, CNT, DEV)                      \
   do {                                                                  \

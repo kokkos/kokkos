@@ -289,7 +289,8 @@ void Kokkos::Impl::do_not_warn_not_recognized_environment_variable(
 // insensitive), make sure that:
 // - the variable's name is recognized
 // - the variable's name is in all-caps
-// Print a warning for each variable that is unrecognized or not all-caps.
+// Print a warning to stderr for each variable that is unrecognized or not
+// all-caps.
 void Kokkos::Impl::warn_not_recognized_environment_variables() {
   // Set of case-insensitive environment variables that might be
   // set by Kokkos modules or a development workflow.
