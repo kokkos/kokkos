@@ -96,6 +96,14 @@ KOKKOS_INLINE_FUNCTION auto array_layout_from_mapping(const typename MDSpanType:
       rank > 7 ? dimension_from_extent(ext, 7) : KOKKOS_IMPL_CTOR_DEFAULT_ARG};
 }
 
+template<class MDSpanType, class VM>
+KOKKOS_INLINE_FUNCTION auto mapping_from_view_mapping(const VM &view_mapping) {
+  using mapping_type = typename MDSpanType::mapping_type;
+  using extents_type = typename mapping_type::extents_type;
+
+  return mapping_type(extents_from_view_mapping<extents_type>(view_mapping));
+}
+
 template <class ElementType, class Extents, class LayoutPolicy,
           class AccessorPolicy>
 KOKKOS_INLINE_FUNCTION auto view_offset_from_mdspan(

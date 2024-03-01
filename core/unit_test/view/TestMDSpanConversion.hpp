@@ -50,6 +50,8 @@ struct TestViewMDSpanConversion {
       ASSERT_EQ(test_view.extent(r), ref.extent(r));
       ASSERT_EQ(test_view.extent(r), exts.extent(r));
     }
+
+    natural_mdspan_type cvt = test_view;
   }
 
   static void run_test() {
