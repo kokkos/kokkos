@@ -33,7 +33,7 @@ struct TestViewMDSpanConversion {
                                           const MDSpanExtents &exts) {
     using view_type   = Kokkos::View<DataType, KokkosLayout,
                                    Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
-    using natural_mdspan_type = typename Kokkos::Impl::MDSpanViewTraits<typename view_type::traits>::mdspan_type;
+    using natural_mdspan_type = typename Kokkos::Experimental::Impl::MDSpanViewTraits<typename view_type::traits>::mdspan_type;
     using mdspan_type = Kokkos::mdspan<value_type, MDSpanExtents, MDSpanLayout>;
 
     static_assert(std::is_convertible_v<mdspan_type, natural_mdspan_type>);
