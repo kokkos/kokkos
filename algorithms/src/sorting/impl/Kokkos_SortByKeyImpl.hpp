@@ -87,9 +87,11 @@ static_assert_is_admissible_to_kokkos_sort_by_key(const ViewType& /* view */) {
                 "LayoutRight, LayoutLeft or LayoutStride.");
 }
 
-// For the fallback sort_by_key implementation we might need to execute
-// Kokkos::sort on the host. This type trait determines at compile-time where we
-// want to execute.
+// For the fallback implementation for sort_by_key using Kokkos::sort, we need
+// to consider if Kokkos::sort defers to the fallback implementation that copies
+// the array to the host and uses std::sort. This decision is made in
+// impl/Kokkos_SortImpl.hpp and this type trait decides at runtime when it is
+// safe to assume that Kokkos::sort doesn't manually copy to the host.
 template <class ExecutionSpace, class Layout>
 inline constexpr bool sort_on_device_v = false;
 
