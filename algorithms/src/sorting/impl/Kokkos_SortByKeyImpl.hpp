@@ -91,14 +91,11 @@ static_assert_is_admissible_to_kokkos_sort_by_key(const ViewType& /* view */) {
 // Kokkos::sort on the host. This type trait determines at compile-time where we
 // want to execute.
 template <class ExecutionSpace, class Layout>
-struct sort_on_device : std::false_type {};
-
-template <class T, class Layout>
-inline constexpr bool sort_on_device_v = sort_on_device<T, Layout>::value;
+inline constexpr bool sort_on_device_v = false;
 
 #if defined(KOKKOS_ENABLE_CUDA)
 template <class Layout>
-struct sort_on_device<Kokkos::Cuda, Layout> : std::true_type {};
+inline constexpr bool sort_on_device_v<Kokkos::Cuda, Layout> = true;
 
 template <class KeysDataType, class... KeysProperties, class ValuesDataType,
           class... ValuesProperties, class... MaybeComparator>
@@ -118,9 +115,9 @@ void sort_by_key_cudathrust(
 
 #if defined(KOKKOS_ENABLE_ONEDPL)
 template <class Layout>
-struct sort_on_device<Kokkos::Experimental::SYCL, Layout>
-    : std::bool_constant<std::is_same_v<Layout, Kokkos::LayoutLeft> ||
-                         std::is_same_v<Layout, Kokkos::LayoutRight>> {};
+inline constexpr bool sort_on_device_v<Kokkos::Experimental::SYCL, Layout> =
+    std::is_same_v<Layout, Kokkos::LayoutLeft> ||
+    std::is_same_v<Layout, Kokkos::LayoutRight>;
 
 #ifdef KOKKOS_ONEDPL_HAS_SORT_BY_KEY
 template <class KeysDataType, class... KeysProperties, class ValuesDataType,
