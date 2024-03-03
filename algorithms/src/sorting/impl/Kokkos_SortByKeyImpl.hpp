@@ -89,9 +89,11 @@ static_assert_is_admissible_to_kokkos_sort_by_key(const ViewType& /* view */) {
 
 // For the fallback implementation for sort_by_key using Kokkos::sort, we need
 // to consider if Kokkos::sort defers to the fallback implementation that copies
-// the array to the host and uses std::sort. This decision is made in
-// impl/Kokkos_SortImpl.hpp and this type trait decides at runtime when it is
-// safe to assume that Kokkos::sort doesn't manually copy to the host.
+// the array to the host and uses std::sort, see
+// copy_to_host_run_stdsort_copy_back() in impl/Kokkos_SortImpl.hpp. If
+// sort_on_device_v is true, we assume that std::sort doesn't copy data.
+// Otherwise, we manually copy all data to the host and provide Kokkos::sort
+// with a host execution space.
 template <class ExecutionSpace, class Layout>
 inline constexpr bool sort_on_device_v = false;
 
