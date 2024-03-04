@@ -84,7 +84,7 @@ struct TestRangePolicyCTAD {
 };  // TestRangePolicyCTAD struct
 
 // To eliminate maybe_unused warning on some compilers
-const Kokkos::DefaultExecutionSpace des =
+[[maybe_unused]] const Kokkos::DefaultExecutionSpace des =
     TestRangePolicyCTAD::ImplicitlyConvertibleToDefaultExecutionSpace();
 
 }  // namespace
