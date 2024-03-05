@@ -1770,22 +1770,33 @@ class View : public ViewTraits<DataType, Properties...> {
 
   //----------------------------------------
   // Conversion to MDSpan
-private:
- template <typename U = typename Experimental::Impl::MDSpanViewTraits<
-               traits>::mdspan_type>
- constexpr auto make_natural_mdspan(
-     std::enable_if_t<!std::is_same_v<
-         Experimental::Impl::UnsupportedKokkosArrayLayout, U>>* = nullptr) {
+ public:
+  template <class OtherElementType, class OtherExtents, class OtherLayoutPolicy,
+            class OtherAccessor>
+  KOKKOS_INLINE_FUNCTION constexpr operator mdspan<
+      OtherElementType, OtherExtents, OtherLayoutPolicy, OtherAccessor>() {
     using mdspan_type =
         typename Experimental::Impl::MDSpanViewTraits<traits>::mdspan_type;
-    return mdspan_type{data(), Experimental::Impl::mapping_from_view_mapping<mdspan_type>(m_map)};
- }
+    return mdspan_type{
+        data(),
+        Experimental::Impl::mapping_from_view_mapping<mdspan_type>(m_map)};
+  }
 
-public:
-
-  template <class OtherElementType, class OtherExtents, class OtherLayoutPolicy, class OtherAccessor>
-  operator mdspan<OtherElementType, OtherExtents, OtherLayoutPolicy, OtherAccessor> () {
-    return make_natural_mdspan();
+  template <class OtherAccessorType,
+            typename = std::enable_if_t<
+                std::is_assignable_v<typename traits::value_type*&,
+                                     typename OtherAccessorType::data_handle_type>>>
+  KOKKOS_INLINE_FUNCTION constexpr auto to_mdspan(
+      const OtherAccessorType& other_accessor) {
+    using mdspan_type =
+        typename Experimental::Impl::MDSpanViewTraits<traits>::mdspan_type;
+    using ret_mdspan_type =
+        mdspan<typename mdspan_type::element_type, typename mdspan_type::extents_type,
+               typename mdspan_type::layout_type, OtherAccessorType>;
+    return ret_mdspan_type{
+        data(),
+        Experimental::Impl::mapping_from_view_mapping<mdspan_type>(m_map),
+        other_accessor};
   }
 #endif  // KOKKOS_ENABLE_IMPL_MDSPAN
 };
