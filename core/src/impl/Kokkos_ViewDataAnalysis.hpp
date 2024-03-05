@@ -22,7 +22,7 @@ static_assert(false,
 #ifndef KOKKOS_VIEW_DATA_ANALYSIS_HPP
 #define KOKKOS_VIEW_DATA_ANALYSIS_HPP
 
-#include <Kokkos_Core_fwd.hpp>
+#include <Kokkos_Macros.hpp>
 
 namespace Kokkos::Impl {
 
