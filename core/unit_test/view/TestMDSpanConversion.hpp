@@ -52,6 +52,7 @@ struct TestViewMDSpanConversion {
     }
 
     natural_mdspan_type cvt = test_view;
+    auto cvt2 = test_view.to_mdspan(Kokkos::default_accessor<typename view_type::value_type>{});
   }
 
   static void run_test() {
