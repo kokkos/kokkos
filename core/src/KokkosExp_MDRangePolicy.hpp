@@ -81,7 +81,7 @@ constexpr To checked_narrow_cast(From arg, std::size_t idx) {
       (is_different_signedness &&
        is_less_than_value_initialized_variable(arg) !=
            is_less_than_value_initialized_variable(ret))) {
-    std::string msg =
+    auto msg =
         "Kokkos::MDRangePolicy bound type error: an unsafe implicit conversion "
         "is performed on a bound (" +
         std::to_string(arg) + ") in dimension (" + std::to_string(idx) +
