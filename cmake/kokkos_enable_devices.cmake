@@ -40,7 +40,6 @@ ELSE()
 ENDIF()
 KOKKOS_DEVICE_OPTION(OPENMP ${OMP_DEFAULT} HOST "Whether to build OpenMP backend")
 
-
 # We want this to default to OFF for cache reasons, but if no
 # host space is given, then activate serial
 IF (KOKKOS_HAS_TRILINOS)
