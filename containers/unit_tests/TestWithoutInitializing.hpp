@@ -38,14 +38,12 @@
 ///@}
 
 /// Some tests are skipped for unified memory space.
-///@{
 #if defined(KOKKOS_ENABLE_IMPL_CUDA_UNIFIED_MEMORY)
 #define GTEST_SKIP_IF_UNIFIED_MEMORY_SPACE \
   GTEST_SKIP() << "skipping since unified memory requires additional fences";
 #else
 #define GTEST_SKIP_IF_UNIFIED_MEMORY_SPACE
 #endif
-///@}
 
 TEST(TEST_CATEGORY, resize_realloc_no_init_dualview) {
   using namespace Kokkos::Test::Tools;

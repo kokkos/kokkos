@@ -329,7 +329,7 @@ class CudaInternal {
     return cudaMalloc(devPtr, size);
 #else
     auto ptr = cudaMallocManaged(devPtr, size, cudaMemAttachGlobal);
-    cudaDeviceSynchronize();
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaDeviceSynchronize());
     return ptr;
 #endif
   }
