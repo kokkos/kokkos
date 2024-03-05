@@ -43,6 +43,9 @@ TEST(cuda, space_access) {
   static_assert(
       !Kokkos::Impl::MemorySpaceAccess<Kokkos::HostSpace,
                                        Kokkos::CudaSpace>::accessible);
+#else
+  static_assert(Kokkos::Impl::MemorySpaceAccess<Kokkos::HostSpace,
+                                                Kokkos::CudaSpace>::accessible);
 #endif
 
   static_assert(
@@ -152,6 +155,9 @@ TEST(cuda, space_access) {
 #ifndef KOKKOS_ENABLE_IMPL_CUDA_UNIFIED_MEMORY
   static_assert(!Kokkos::SpaceAccessibility<Kokkos::HostSpace,
                                             Kokkos::CudaSpace>::accessible);
+#else
+  static_assert(Kokkos::SpaceAccessibility<Kokkos::HostSpace,
+                                           Kokkos::CudaSpace>::accessible);
 #endif
 
   static_assert(Kokkos::SpaceAccessibility<Kokkos::HostSpace,
