@@ -1783,15 +1783,16 @@ class View : public ViewTraits<DataType, Properties...> {
   }
 
   template <class OtherAccessorType,
-            typename = std::enable_if_t<
-                std::is_assignable_v<typename traits::value_type*&,
-                                     typename OtherAccessorType::data_handle_type>>>
+            typename = std::enable_if_t<std::is_assignable_v<
+                typename traits::value_type*&,
+                typename OtherAccessorType::data_handle_type>>>
   KOKKOS_INLINE_FUNCTION constexpr auto to_mdspan(
       const OtherAccessorType& other_accessor) {
     using mdspan_type =
         typename Experimental::Impl::MDSpanViewTraits<traits>::mdspan_type;
     using ret_mdspan_type =
-        mdspan<typename mdspan_type::element_type, typename mdspan_type::extents_type,
+        mdspan<typename mdspan_type::element_type,
+               typename mdspan_type::extents_type,
                typename mdspan_type::layout_type, OtherAccessorType>;
     return ret_mdspan_type{
         data(),
