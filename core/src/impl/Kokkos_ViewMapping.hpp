@@ -3630,7 +3630,7 @@ KOKKOS_INLINE_FUNCTION void view_verify_operator_bounds(
          int n = snprintf(buffer, LEN, "View bounds error of view %s (",
                           label.c_str());
          view_error_operator_bounds<0>(buffer + n, LEN - n, map, args...);
-         Kokkos::Impl::throw_runtime_exception(std::string(buffer));))
+         Kokkos::abort(buffer);))
 
     KOKKOS_IF_ON_DEVICE((
         /* Check #1: is there a SharedAllocationRecord?
