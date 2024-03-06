@@ -75,13 +75,14 @@ struct ViewOffsetFromExtents {
       Kokkos::Impl::ViewOffset<typename data_analysis::dimension, array_layout>;
 };
 
-template<class ArrayLayout, class MDSpanType>
-KOKKOS_INLINE_FUNCTION auto array_layout_from_mapping(const typename MDSpanType::mapping_type &mapping) {
+template <class ArrayLayout, class MDSpanType>
+KOKKOS_INLINE_FUNCTION auto array_layout_from_mapping(
+    const typename MDSpanType::mapping_type &mapping) {
   using mapping_type = typename MDSpanType::mapping_type;
   using extents_type = typename mapping_type::extents_type;
 
   static constexpr auto rank = extents_type::rank();
-  const auto &ext = mapping.extents();
+  const auto &ext            = mapping.extents();
 
   static_assert(rank <= ARRAY_LAYOUT_MAX_RANK,
                 "Unsupported rank for mdspan (must be <= 8)");
@@ -96,7 +97,7 @@ KOKKOS_INLINE_FUNCTION auto array_layout_from_mapping(const typename MDSpanType:
       rank > 7 ? dimension_from_extent(ext, 7) : KOKKOS_IMPL_CTOR_DEFAULT_ARG};
 }
 
-template<class MDSpanType, class VM>
+template <class MDSpanType, class VM>
 KOKKOS_INLINE_FUNCTION auto mapping_from_view_mapping(const VM &view_mapping) {
   using mapping_type = typename MDSpanType::mapping_type;
   using extents_type = typename mapping_type::extents_type;
