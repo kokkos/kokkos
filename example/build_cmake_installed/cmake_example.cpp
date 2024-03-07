@@ -19,8 +19,6 @@
 #include <cstdio>
 #include <iostream>
 
-extern "C" void print_fortran_();
-
 struct CountFunctor {
   KOKKOS_FUNCTION void operator()(const long i, long& lcount) const {
     lcount += (i % 2) == 0;
@@ -63,7 +61,6 @@ int main(int argc, char* argv[]) {
   count_time = timer.seconds();
   printf("Sequential: %ld    %10.6f\n", seq_count, count_time);
 
-  print_fortran_();
 
   Kokkos::finalize();
 
