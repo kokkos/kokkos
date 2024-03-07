@@ -132,7 +132,7 @@ KOKKOS_INLINE_FUNCTION auto mapping_from_view_mapping(const VM &view_mapping) {
 
   if constexpr (std::is_same_v<typename mapping_type::layout_type,
                                Kokkos::layout_stride>) {
-    std::array<std::size_t, VM::Rank> strides;
+    std::array<std::size_t, VM::Rank + 1> strides;
     view_mapping.stride(strides.data());
     return mapping_type(extents_from_view_mapping<extents_type>(view_mapping),
                         strides);
