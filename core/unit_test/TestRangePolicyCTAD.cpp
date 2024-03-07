@@ -39,7 +39,7 @@ struct TestRangePolicyCTAD {
 
   // RangePolicy()
 
-  [[maybe_unused]] static inline auto rp = Kokkos::RangePolicy();
+  [[maybe_unused]] static inline auto rp = Kokkos::RangePolicy{};
   static_assert(std::is_same_v<Kokkos::RangePolicy<>, decltype(rp)>);
 
   // RangePolicy(index_type, index_type)
