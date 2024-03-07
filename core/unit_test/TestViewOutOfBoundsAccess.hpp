@@ -108,16 +108,21 @@ void test_view_out_of_bounds_access() {
   using V6 = Kokkos::View<int******,   ExecutionSpace>;
   using V7 = Kokkos::View<int*******,  ExecutionSpace>;
   using V8 = Kokkos::View<int********, ExecutionSpace>;
+  constexpr bool is_device =
+      std::is_same_v<ExecutionSpace, Kokkos::DefaultExecutionSpace> &&
+      std::is_same_v<Kokkos::DefaultExecutionSpace,
+                     Kokkos::DefaultHostExecutionSpace>;
   std::string const prefix = "Kokkos::View ERROR: out of bounds access";
-  std::string const lbl = "my_label";
-  TestViewOutOfBoundAccess(make_view<V1>(lbl), exec_space, prefix + ".*" + lbl);
-  TestViewOutOfBoundAccess(make_view<V2>(lbl), exec_space, prefix + ".*" + lbl);
-  TestViewOutOfBoundAccess(make_view<V3>(lbl), exec_space, prefix + ".*" + lbl);
-  TestViewOutOfBoundAccess(make_view<V4>(lbl), exec_space, prefix + ".*" + lbl);
-  TestViewOutOfBoundAccess(make_view<V5>(lbl), exec_space, prefix + ".*" + lbl);
-  TestViewOutOfBoundAccess(make_view<V6>(lbl), exec_space, prefix + ".*" + lbl);
-  TestViewOutOfBoundAccess(make_view<V7>(lbl), exec_space, prefix + ".*" + lbl);
-  TestViewOutOfBoundAccess(make_view<V8>(lbl), exec_space, prefix + ".*" + lbl);
+  std::string const lbl    = "my_label";
+  std::string const sry    = "UNAVAILABLE";
+  TestViewOutOfBoundAccess(make_view<V1>(lbl), exec_space, prefix + ".*" + (is_device ? sry : lbl));
+  TestViewOutOfBoundAccess(make_view<V2>(lbl), exec_space, prefix + ".*" + (is_device ? sry : lbl));
+  TestViewOutOfBoundAccess(make_view<V3>(lbl), exec_space, prefix + ".*" + (is_device ? sry : lbl));
+  TestViewOutOfBoundAccess(make_view<V4>(lbl), exec_space, prefix + ".*" + (is_device ? sry : lbl));
+  TestViewOutOfBoundAccess(make_view<V5>(lbl), exec_space, prefix + ".*" + (is_device ? sry : lbl));
+  TestViewOutOfBoundAccess(make_view<V6>(lbl), exec_space, prefix + ".*" + (is_device ? sry : lbl));
+  TestViewOutOfBoundAccess(make_view<V7>(lbl), exec_space, prefix + ".*" + (is_device ? sry : lbl));
+  TestViewOutOfBoundAccess(make_view<V8>(lbl), exec_space, prefix + ".*" + (is_device ? sry : lbl));
   int* const ptr = nullptr;
   TestViewOutOfBoundAccess(make_view<V1>(ptr), exec_space, prefix + ".*UNMANAGED");
   TestViewOutOfBoundAccess(make_view<V2>(ptr), exec_space, prefix + ".*UNMANAGED");
