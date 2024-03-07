@@ -17,76 +17,105 @@
 #include <Kokkos_Core.hpp>
 #include "Kokkos_Core_fwd.hpp"
 
-#if !defined(KOKKOS_COMPILER_NVCC)
+// #if !defined(KOKKOS_COMPILER_NVCC) || KOKKOS_COMPILER_NVCC >= 1120
 
 namespace {
 
-template <class... Args>
-using PolicyMaker = decltype(::Kokkos::RangePolicy(std::declval<Args>()...));
-
-template <class Policy, class... Args>
-inline constexpr bool IsSamePolicy =
-    std::is_same_v<Policy, PolicyMaker<Args...>>;
-
-#define KOKKOS_TEST_RANGE_POLICY(...) static_assert(IsSamePolicy<__VA_ARGS__>)
-
 struct TestRangePolicyCTAD {
   struct ImplicitlyConvertibleToDefaultExecutionSpace {
-    operator Kokkos::DefaultExecutionSpace() const {
+    [[maybe_unused]] operator Kokkos::DefaultExecutionSpace() const {
       return Kokkos::DefaultExecutionSpace();
     }
   };
   static_assert(!Kokkos::is_execution_space_v<
                 ImplicitlyConvertibleToDefaultExecutionSpace>);
 
-  using des = Kokkos::DefaultExecutionSpace;
-  using nes = ImplicitlyConvertibleToDefaultExecutionSpace;
-  using i64 = int64_t;
-  using i32 = int32_t;
-  using cs  = Kokkos::ChunkSize;
+  [[maybe_unused]] static inline auto i64 = int64_t();
+  [[maybe_unused]] static inline auto i32 = int32_t();
+  [[maybe_unused]] static inline auto cs  = Kokkos::ChunkSize(0);
+  [[maybe_unused]] static inline auto des = Kokkos::DefaultExecutionSpace();
+  [[maybe_unused]] static inline auto nes =
+      ImplicitlyConvertibleToDefaultExecutionSpace();
 
   // RangePolicy()
 
-  // Guard against GGC 8.4 bug
-  // error: cannot deduce template arguments for ‘RangePolicy’ from ()
-  // error: template argument 2 is invalid
-#if !defined(KOKKOS_COMPILER_GNU) || (KOKKOS_COMPILER_GNU > 900)
-  KOKKOS_TEST_RANGE_POLICY(Kokkos::RangePolicy<> /*, no argument */);
-#endif
+  [[maybe_unused]] static inline auto rp = Kokkos::RangePolicy();
+  static_assert(std::is_same_v<Kokkos::RangePolicy<>, decltype(rp)>);
 
   // RangePolicy(index_type, index_type)
 
-  KOKKOS_TEST_RANGE_POLICY(Kokkos::RangePolicy<>, i64, i64);
-  KOKKOS_TEST_RANGE_POLICY(Kokkos::RangePolicy<>, i64, i32);
-  KOKKOS_TEST_RANGE_POLICY(Kokkos::RangePolicy<>, i32, i64);
-  KOKKOS_TEST_RANGE_POLICY(Kokkos::RangePolicy<>, i32, i32);
+  [[maybe_unused]] static inline auto rpi64i64 = Kokkos::RangePolicy(i64, i64);
+  static_assert(std::is_same_v<Kokkos::RangePolicy<>, decltype(rpi64i64)>);
 
-  // RangePolicy(index_type, index_type, Args...)
+  [[maybe_unused]] static inline auto rpi64i32 = Kokkos::RangePolicy(i64, i32);
+  static_assert(std::is_same_v<Kokkos::RangePolicy<>, decltype(rpi64i32)>);
 
-  KOKKOS_TEST_RANGE_POLICY(Kokkos::RangePolicy<>, i64, i64, cs);
-  KOKKOS_TEST_RANGE_POLICY(Kokkos::RangePolicy<>, i64, i32, cs);
-  KOKKOS_TEST_RANGE_POLICY(Kokkos::RangePolicy<>, i32, i64, cs);
-  KOKKOS_TEST_RANGE_POLICY(Kokkos::RangePolicy<>, i32, i32, cs);
+  [[maybe_unused]] static inline auto rpi32i64 = Kokkos::RangePolicy(i32, i64);
+  static_assert(std::is_same_v<Kokkos::RangePolicy<>, decltype(rpi32i64)>);
+
+  [[maybe_unused]] static inline auto rpi32i32 = Kokkos::RangePolicy(i32, i32);
+  static_assert(std::is_same_v<Kokkos::RangePolicy<>, decltype(rpi32i32)>);
+
+  // RangePolicy(index_type, index_type, ChunkSize)
+
+  [[maybe_unused]] static inline auto rpi64i64cs =
+      Kokkos::RangePolicy(i64, i64, cs);
+  static_assert(std::is_same_v<Kokkos::RangePolicy<>, decltype(rpi64i64cs)>);
+
+  [[maybe_unused]] static inline auto rpi64i32cs =
+      Kokkos::RangePolicy(i64, i32, cs);
+  static_assert(std::is_same_v<Kokkos::RangePolicy<>, decltype(rpi64i32cs)>);
+
+  [[maybe_unused]] static inline auto rpi32i64cs =
+      Kokkos::RangePolicy(i32, i64, cs);
+  static_assert(std::is_same_v<Kokkos::RangePolicy<>, decltype(rpi32i64cs)>);
+
+  [[maybe_unused]] static inline auto rpi32i32cs =
+      Kokkos::RangePolicy(i32, i32, cs);
+  static_assert(std::is_same_v<Kokkos::RangePolicy<>, decltype(rpi32i32cs)>);
 
   // RangePolicy(execution_space, index_type, index_type)
 
-  KOKKOS_TEST_RANGE_POLICY(Kokkos::RangePolicy<>, des, i64, i64);
-  KOKKOS_TEST_RANGE_POLICY(Kokkos::RangePolicy<>, des, i32, i32);
-  KOKKOS_TEST_RANGE_POLICY(Kokkos::RangePolicy<>, nes, i64, i64);
-  KOKKOS_TEST_RANGE_POLICY(Kokkos::RangePolicy<>, nes, i32, i32);
+  [[maybe_unused]] static inline auto rpdesi64i64 =
+      Kokkos::RangePolicy(des, i64, i64);
+  static_assert(std::is_same_v<Kokkos::RangePolicy<>, decltype(rpdesi64i64)>);
 
-  // RangePolicy(execution_space, index_type, index_type, Args...)
+  [[maybe_unused]] static inline auto rpdesi32i32 =
+      Kokkos::RangePolicy(des, i32, i32);
+  static_assert(std::is_same_v<Kokkos::RangePolicy<>, decltype(rpdesi32i32)>);
 
-  KOKKOS_TEST_RANGE_POLICY(Kokkos::RangePolicy<>, des, i64, i64, cs);
-  KOKKOS_TEST_RANGE_POLICY(Kokkos::RangePolicy<>, des, i32, i32, cs);
-  KOKKOS_TEST_RANGE_POLICY(Kokkos::RangePolicy<>, nes, i64, i64, cs);
-  KOKKOS_TEST_RANGE_POLICY(Kokkos::RangePolicy<>, nes, i32, i32, cs);
+  [[maybe_unused]] static inline auto rpnesi64i64 =
+      Kokkos::RangePolicy(nes, i64, i64);
+  static_assert(std::is_same_v<Kokkos::RangePolicy<>, decltype(rpnesi64i64)>);
+
+  [[maybe_unused]] static inline auto rpnesi32i32 =
+      Kokkos::RangePolicy(nes, i32, i32);
+  static_assert(std::is_same_v<Kokkos::RangePolicy<>, decltype(rpnesi32i32)>);
+
+  // RangePolicy(execution_space, index_type, index_type, ChunkSize)
+
+  [[maybe_unused]] static inline auto rpdesi64i64cs =
+      Kokkos::RangePolicy(des, i64, i64, cs);
+  static_assert(std::is_same_v<Kokkos::RangePolicy<>, decltype(rpdesi64i64cs)>);
+
+  [[maybe_unused]] static inline auto rpdesi32i32cs =
+      Kokkos::RangePolicy(des, i32, i32, cs);
+  static_assert(std::is_same_v<Kokkos::RangePolicy<>, decltype(rpdesi32i32cs)>);
+
+  [[maybe_unused]] static inline auto rpnesi64i64cs =
+      Kokkos::RangePolicy(nes, i64, i64, cs);
+  static_assert(std::is_same_v<Kokkos::RangePolicy<>, decltype(rpnesi64i64cs)>);
+
+  [[maybe_unused]] static inline auto rpnesi32i32cs =
+      Kokkos::RangePolicy(nes, i32, i32, cs);
+  static_assert(std::is_same_v<Kokkos::RangePolicy<>, decltype(rpnesi32i32cs)>);
+
 };  // TestRangePolicyCTAD struct
 
 // To eliminate maybe_unused warning on some compilers
-[[maybe_unused]] const Kokkos::DefaultExecutionSpace des =
+const Kokkos::DefaultExecutionSpace nestodes =
     TestRangePolicyCTAD::ImplicitlyConvertibleToDefaultExecutionSpace();
 
 }  // namespace
 
-#endif
+//#endif
