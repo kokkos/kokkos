@@ -3612,7 +3612,7 @@ KOKKOS_INLINE_FUNCTION void view_verify_operator_bounds(
           Kokkos::Impl::strcat(err, label);
           return;
         }
-        Kokkos::Impl::strcat(err, "**UNMANAGED**");
+        Kokkos::Impl::strcat(err, "**UNAVAILABLE**");
       }
     }();)
     Kokkos::Impl::strcat(err, "\") with indices ");
