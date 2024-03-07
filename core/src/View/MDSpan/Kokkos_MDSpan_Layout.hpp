@@ -162,8 +162,8 @@ struct ArrayLayoutFromMappingImpl<Kokkos::LayoutStride> {
 template <class ArrayLayout, class MDSpanType>
 KOKKOS_INLINE_FUNCTION auto array_layout_from_mapping(
     const typename MDSpanType::mapping_type &mapping) {
-  return ArrayLayoutFromMappingImpl<ArrayLayout>::template construct<MDSpanType>(
-      mapping);
+  return ArrayLayoutFromMappingImpl<ArrayLayout>::template construct<
+      MDSpanType>(mapping);
 }
 
 template <class MDSpanType, class VM>
