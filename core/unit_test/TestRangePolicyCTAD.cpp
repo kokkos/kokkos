@@ -22,6 +22,14 @@
 namespace {
 
 struct TestRangePolicyCTAD {
+  struct SomeExecutionSpace {
+    using execution_space = SomeExecutionSpace;
+    using size_type       = size_t;
+
+    [[maybe_unused]] static int concurrency() { return 0; }
+  };
+  static_assert(Kokkos::is_execution_space_v<SomeExecutionSpace>);
+
   struct ImplicitlyConvertibleToDefaultExecutionSpace {
     [[maybe_unused]] operator Kokkos::DefaultExecutionSpace() const {
       return Kokkos::DefaultExecutionSpace();
@@ -36,6 +44,7 @@ struct TestRangePolicyCTAD {
   [[maybe_unused]] static inline auto des = Kokkos::DefaultExecutionSpace();
   [[maybe_unused]] static inline auto nes =
       ImplicitlyConvertibleToDefaultExecutionSpace();
+  [[maybe_unused]] static inline auto ses = SomeExecutionSpace();
 
   // RangePolicy()
 
@@ -92,6 +101,16 @@ struct TestRangePolicyCTAD {
       Kokkos::RangePolicy(nes, i32, i32);
   static_assert(std::is_same_v<Kokkos::RangePolicy<>, decltype(rpnesi32i32)>);
 
+  [[maybe_unused]] static inline auto rpsesi64i64 =
+      Kokkos::RangePolicy(ses, i64, i64);
+  static_assert(std::is_same_v<Kokkos::RangePolicy<SomeExecutionSpace>,
+                               decltype(rpsesi64i64)>);
+
+  [[maybe_unused]] static inline auto rpsesi32i32 =
+      Kokkos::RangePolicy(ses, i32, i32);
+  static_assert(std::is_same_v<Kokkos::RangePolicy<SomeExecutionSpace>,
+                               decltype(rpsesi32i32)>);
+
   // RangePolicy(execution_space, index_type, index_type, ChunkSize)
 
   [[maybe_unused]] static inline auto rpdesi64i64cs =
@@ -110,11 +129,25 @@ struct TestRangePolicyCTAD {
       Kokkos::RangePolicy(nes, i32, i32, cs);
   static_assert(std::is_same_v<Kokkos::RangePolicy<>, decltype(rpnesi32i32cs)>);
 
+  [[maybe_unused]] static inline auto rpsesi64i64cs =
+      Kokkos::RangePolicy(ses, i64, i64, cs);
+  static_assert(std::is_same_v<Kokkos::RangePolicy<SomeExecutionSpace>,
+                               decltype(rpsesi64i64cs)>);
+
+  [[maybe_unused]] static inline auto rpsesi32i32cs =
+      Kokkos::RangePolicy(ses, i32, i32, cs);
+  static_assert(std::is_same_v<Kokkos::RangePolicy<SomeExecutionSpace>,
+                               decltype(rpsesi32i32cs)>);
+
 };  // TestRangePolicyCTAD struct
 
 // To eliminate maybe_unused warning on some compilers
-const Kokkos::DefaultExecutionSpace nestodes =
+
+[[maybe_unused]] const Kokkos::DefaultExecutionSpace nestodes =
     TestRangePolicyCTAD::ImplicitlyConvertibleToDefaultExecutionSpace();
+
+[[maybe_unused]] const auto sesconcurrency =
+    TestRangePolicyCTAD::ses.concurrency();
 
 }  // namespace
 
