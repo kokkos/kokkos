@@ -98,8 +98,6 @@ struct TestViewMDSpanConversion {
   static void test_conversion_to_mdspan(
       const MDSpanLayoutMapping &ref_layout_mapping, ViewType v,
       const AccessorType &a) {
-    using view_type = ViewType;
-
     auto cvt = v.to_mdspan(a);
     ASSERT_EQ(cvt.data_handle(), v.data());
     ASSERT_EQ(cvt.mapping(), ref_layout_mapping);
