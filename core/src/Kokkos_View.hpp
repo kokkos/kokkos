@@ -389,7 +389,7 @@ template <class Traits>
 struct MDSpanViewTraits<
     Traits, std::void_t<typename Experimental::Impl::LayoutFromArrayLayout<
                 typename Traits::array_layout>::type>> {
-  using index_type   = typename Traits::execution_space::size_type;
+  using index_type   = std::size_t;
   using extents_type = typename Experimental::Impl::ExtentsFromDataType<
       index_type, typename Traits::data_type>::type;
   using mdspan_layout_type = typename Experimental::Impl::LayoutFromArrayLayout<

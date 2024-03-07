@@ -108,7 +108,7 @@ KOKKOS_INLINE_FUNCTION auto array_layout_leftright_from_mapping_impl(
 template <>
 struct ArrayLayoutFromMappingImpl<Kokkos::LayoutLeft> {
   template <class MDSpanType>
-  static Kokkos::LayoutLeft construct(
+  KOKKOS_INLINE_FUNCTION static Kokkos::LayoutLeft construct(
       const typename MDSpanType::mapping_type &mapping) {
     return array_layout_leftright_from_mapping_impl<Kokkos::LayoutLeft,
                                                     MDSpanType>(mapping);
@@ -118,7 +118,7 @@ struct ArrayLayoutFromMappingImpl<Kokkos::LayoutLeft> {
 template <>
 struct ArrayLayoutFromMappingImpl<Kokkos::LayoutRight> {
   template <class MDSpanType>
-  static Kokkos::LayoutRight construct(
+  KOKKOS_INLINE_FUNCTION static Kokkos::LayoutRight construct(
       const typename MDSpanType::mapping_type &mapping) {
     return array_layout_leftright_from_mapping_impl<Kokkos::LayoutRight,
                                                     MDSpanType>(mapping);
@@ -128,7 +128,7 @@ struct ArrayLayoutFromMappingImpl<Kokkos::LayoutRight> {
 template <>
 struct ArrayLayoutFromMappingImpl<Kokkos::LayoutStride> {
   template <class MDSpanType>
-  static Kokkos::LayoutStride construct(
+  KOKKOS_INLINE_FUNCTION static Kokkos::LayoutStride construct(
       const typename MDSpanType::mapping_type &mapping) {
     using mapping_type = typename MDSpanType::mapping_type;
     using extents_type = typename mapping_type::extents_type;
