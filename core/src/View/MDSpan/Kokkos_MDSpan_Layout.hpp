@@ -80,11 +80,8 @@ struct ViewOffsetFromExtents {
       Kokkos::Impl::ViewOffset<typename data_analysis::dimension, array_layout>;
 };
 
-template <class ArrayLayout>
-struct ArrayLayoutFromMappingImpl;
-
 template <class ArrayLayout, class MDSpanType>
-KOKKOS_INLINE_FUNCTION auto array_layout_leftright_from_mapping_impl(
+KOKKOS_INLINE_FUNCTION auto array_layout_from_mapping(
     const typename MDSpanType::mapping_type &mapping) {
   using mapping_type = typename MDSpanType::mapping_type;
   using extents_type = typename mapping_type::extents_type;
@@ -94,50 +91,8 @@ KOKKOS_INLINE_FUNCTION auto array_layout_leftright_from_mapping_impl(
 
   static_assert(rank <= ARRAY_LAYOUT_MAX_RANK,
                 "Unsupported rank for mdspan (must be <= 8)");
-  return ArrayLayout{
-      rank > 0 ? dimension_from_extent(ext, 0) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-      rank > 1 ? dimension_from_extent(ext, 1) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-      rank > 2 ? dimension_from_extent(ext, 2) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-      rank > 3 ? dimension_from_extent(ext, 3) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-      rank > 4 ? dimension_from_extent(ext, 4) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-      rank > 5 ? dimension_from_extent(ext, 5) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-      rank > 6 ? dimension_from_extent(ext, 6) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-      rank > 7 ? dimension_from_extent(ext, 7) : KOKKOS_IMPL_CTOR_DEFAULT_ARG};
-}
 
-template <>
-struct ArrayLayoutFromMappingImpl<Kokkos::LayoutLeft> {
-  template <class MDSpanType>
-  KOKKOS_INLINE_FUNCTION static Kokkos::LayoutLeft construct(
-      const typename MDSpanType::mapping_type &mapping) {
-    return array_layout_leftright_from_mapping_impl<Kokkos::LayoutLeft,
-                                                    MDSpanType>(mapping);
-  }
-};
-
-template <>
-struct ArrayLayoutFromMappingImpl<Kokkos::LayoutRight> {
-  template <class MDSpanType>
-  KOKKOS_INLINE_FUNCTION static Kokkos::LayoutRight construct(
-      const typename MDSpanType::mapping_type &mapping) {
-    return array_layout_leftright_from_mapping_impl<Kokkos::LayoutRight,
-                                                    MDSpanType>(mapping);
-  }
-};
-
-template <>
-struct ArrayLayoutFromMappingImpl<Kokkos::LayoutStride> {
-  template <class MDSpanType>
-  KOKKOS_INLINE_FUNCTION static Kokkos::LayoutStride construct(
-      const typename MDSpanType::mapping_type &mapping) {
-    using mapping_type = typename MDSpanType::mapping_type;
-    using extents_type = typename mapping_type::extents_type;
-
-    static constexpr auto rank = extents_type::rank();
-    const auto &ext            = mapping.extents();
-
-    static_assert(rank <= ARRAY_LAYOUT_MAX_RANK,
-                  "Unsupported rank for mdspan (must be <= 8)");
+  if constexpr (std::is_same_v<ArrayLayout, LayoutStride>) {
     return Kokkos::LayoutStride{
         rank > 0 ? dimension_from_extent(ext, 0) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
         rank > 0 ? mapping.stride(0) : 0,
@@ -156,14 +111,18 @@ struct ArrayLayoutFromMappingImpl<Kokkos::LayoutStride> {
         rank > 7 ? dimension_from_extent(ext, 7) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
         rank > 7 ? mapping.stride(7) : 0,
     };
+  } else {
+    return ArrayLayout{
+        rank > 0 ? dimension_from_extent(ext, 0) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+        rank > 1 ? dimension_from_extent(ext, 1) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+        rank > 2 ? dimension_from_extent(ext, 2) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+        rank > 3 ? dimension_from_extent(ext, 3) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+        rank > 4 ? dimension_from_extent(ext, 4) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+        rank > 5 ? dimension_from_extent(ext, 5) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+        rank > 6 ? dimension_from_extent(ext, 6) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+        rank > 7 ? dimension_from_extent(ext, 7)
+                 : KOKKOS_IMPL_CTOR_DEFAULT_ARG};
   }
-};
-
-template <class ArrayLayout, class MDSpanType>
-KOKKOS_INLINE_FUNCTION auto array_layout_from_mapping(
-    const typename MDSpanType::mapping_type &mapping) {
-  return ArrayLayoutFromMappingImpl<ArrayLayout>::template construct<
-      MDSpanType>(mapping);
 }
 
 template <class MDSpanType, class VM>
