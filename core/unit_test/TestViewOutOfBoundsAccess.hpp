@@ -35,6 +35,8 @@ TEST(TEST_CATEGORY, append_formated_multidimensional_index) {
   }
 }
 
+#ifdef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
+
 template <class View, class ExecutionSpace>
 struct TestViewOutOfBoundAccess {
   View v;
@@ -162,5 +164,7 @@ TEST(TEST_CATEGORY_DEATH, view_out_of_bounds_access) {
 
   test_view_out_of_bounds_access<ExecutionSpace>();
 }
+
+#endif
 
 }  // namespace
