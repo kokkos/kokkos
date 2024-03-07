@@ -963,7 +963,7 @@ struct ViewOffset<
     }
     if constexpr (6 < dimension_type::rank) {
       s[7] = s[6] * m_dim.N6;
-    }\
+    }
   }
 
   // Stride with [ rank ] value is the total length
