@@ -647,32 +647,37 @@ struct ViewOffset<
            m_dim.N5 * m_dim.N6;
   }
 
+  template <typename iType>
+  KOKKOS_INLINE_FUNCTION void stride_fill(iType* const s) const {
+    s[0] = 1;
+    if constexpr (0 < dimension_type::rank) {
+      s[1] = m_dim.N0;
+    }
+    if constexpr (1 < dimension_type::rank) {
+      s[2] = s[1] * m_dim.N1;
+    }
+    if constexpr (2 < dimension_type::rank) {
+      s[3] = s[2] * m_dim.N2;
+    }
+    if constexpr (3 < dimension_type::rank) {
+      s[4] = s[3] * m_dim.N3;
+    }
+    if constexpr (4 < dimension_type::rank) {
+      s[5] = s[4] * m_dim.N4;
+    }
+    if constexpr (5 < dimension_type::rank) {
+      s[6] = s[5] * m_dim.N5;
+    }
+    if constexpr (6 < dimension_type::rank) {
+      s[7] = s[6] * m_dim.N6;
+    }
+  }
+
   // Stride with [ rank ] value is the total length
   template <typename iType>
   KOKKOS_INLINE_FUNCTION void stride(iType* const s) const {
-    s[0] = 1;
-    if (0 < dimension_type::rank) {
-      s[1] = m_dim.N0;
-    }
-    if (1 < dimension_type::rank) {
-      s[2] = s[1] * m_dim.N1;
-    }
-    if (2 < dimension_type::rank) {
-      s[3] = s[2] * m_dim.N2;
-    }
-    if (3 < dimension_type::rank) {
-      s[4] = s[3] * m_dim.N3;
-    }
-    if (4 < dimension_type::rank) {
-      s[5] = s[4] * m_dim.N4;
-    }
-    if (5 < dimension_type::rank) {
-      s[6] = s[5] * m_dim.N5;
-    }
-    if (6 < dimension_type::rank) {
-      s[7] = s[6] * m_dim.N6;
-    }
-    if (7 < dimension_type::rank) {
+    stride_fill(s);
+    if constexpr (7 < dimension_type::rank) {
       s[8] = s[7] * m_dim.N7;
     }
   }
@@ -935,32 +940,37 @@ struct ViewOffset<
            m_dim.N6;
   }
 
+  template <typename iType>
+  KOKKOS_INLINE_FUNCTION void stride_fill(iType* const s) const {
+    s[0] = 1;
+    if constexpr (0 < dimension_type::rank) {
+      s[1] = m_stride;
+    }
+    if constexpr (1 < dimension_type::rank) {
+      s[2] = s[1] * m_dim.N1;
+    }
+    if constexpr (2 < dimension_type::rank) {
+      s[3] = s[2] * m_dim.N2;
+    }
+    if constexpr (3 < dimension_type::rank) {
+      s[4] = s[3] * m_dim.N3;
+    }
+    if constexpr (4 < dimension_type::rank) {
+      s[5] = s[4] * m_dim.N4;
+    }
+    if constexpr (5 < dimension_type::rank) {
+      s[6] = s[5] * m_dim.N5;
+    }
+    if constexpr (6 < dimension_type::rank) {
+      s[7] = s[6] * m_dim.N6;
+    }\
+  }
+
   // Stride with [ rank ] value is the total length
   template <typename iType>
   KOKKOS_INLINE_FUNCTION void stride(iType* const s) const {
-    s[0] = 1;
-    if (0 < dimension_type::rank) {
-      s[1] = m_stride;
-    }
-    if (1 < dimension_type::rank) {
-      s[2] = s[1] * m_dim.N1;
-    }
-    if (2 < dimension_type::rank) {
-      s[3] = s[2] * m_dim.N2;
-    }
-    if (3 < dimension_type::rank) {
-      s[4] = s[3] * m_dim.N3;
-    }
-    if (4 < dimension_type::rank) {
-      s[5] = s[4] * m_dim.N4;
-    }
-    if (5 < dimension_type::rank) {
-      s[6] = s[5] * m_dim.N5;
-    }
-    if (6 < dimension_type::rank) {
-      s[7] = s[6] * m_dim.N6;
-    }
-    if (7 < dimension_type::rank) {
+    stride_fill(s);
+    if constexpr (7 < dimension_type::rank) {
       s[8] = s[7] * m_dim.N7;
     }
   }
@@ -1286,6 +1296,43 @@ struct ViewOffset<
            m_dim.N1;
   }
 
+  template <typename iType>
+  KOKKOS_INLINE_FUNCTION void stride_fill(iType* const s) const {
+    size_type n = 1;
+    if constexpr (7 < dimension_type::rank) {
+      s[7] = n;
+      n *= m_dim.N7;
+    }
+    if constexpr (6 < dimension_type::rank) {
+      s[6] = n;
+      n *= m_dim.N6;
+    }
+    if constexpr (5 < dimension_type::rank) {
+      s[5] = n;
+      n *= m_dim.N5;
+    }
+    if constexpr (4 < dimension_type::rank) {
+      s[4] = n;
+      n *= m_dim.N4;
+    }
+    if constexpr (3 < dimension_type::rank) {
+      s[3] = n;
+      n *= m_dim.N3;
+    }
+    if constexpr (2 < dimension_type::rank) {
+      s[2] = n;
+      n *= m_dim.N2;
+    }
+    if constexpr (1 < dimension_type::rank) {
+      s[1] = n;
+      n *= m_dim.N1;
+    }
+    if constexpr (0 < dimension_type::rank) {
+      s[0] = n;
+    }
+    s[dimension_type::rank] = n * m_dim.N0;
+  }
+
   // Stride with [ rank ] value is the total length
   template <typename iType>
   KOKKOS_INLINE_FUNCTION void stride(iType* const s) const {
@@ -1573,40 +1620,45 @@ struct ViewOffset<
     return m_stride;
   }
 
-  // Stride with [ rank ] value is the total length
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION void stride(iType* const s) const {
+  KOKKOS_INLINE_FUNCTION void stride_fill(iType* const s) const {
     size_type n = 1;
-    if (7 < dimension_type::rank) {
+    if constexpr (7 < dimension_type::rank) {
       s[7] = n;
       n *= m_dim.N7;
     }
-    if (6 < dimension_type::rank) {
+    if constexpr (6 < dimension_type::rank) {
       s[6] = n;
       n *= m_dim.N6;
     }
-    if (5 < dimension_type::rank) {
+    if constexpr (5 < dimension_type::rank) {
       s[5] = n;
       n *= m_dim.N5;
     }
-    if (4 < dimension_type::rank) {
+    if constexpr (4 < dimension_type::rank) {
       s[4] = n;
       n *= m_dim.N4;
     }
-    if (3 < dimension_type::rank) {
+    if constexpr (3 < dimension_type::rank) {
       s[3] = n;
       n *= m_dim.N3;
     }
-    if (2 < dimension_type::rank) {
+    if constexpr (2 < dimension_type::rank) {
       s[2] = n;
       n *= m_dim.N2;
     }
-    if (1 < dimension_type::rank) {
+    if constexpr (1 < dimension_type::rank) {
       s[1] = n;
     }
-    if (0 < dimension_type::rank) {
+    if constexpr (0 < dimension_type::rank) {
       s[0] = m_stride;
     }
+  }
+
+  // Stride with [ rank ] value is the total length
+  template <typename iType>
+  KOKKOS_INLINE_FUNCTION void stride(iType* const s) const {
+    stride_fill(s);
     s[dimension_type::rank] = m_stride * m_dim.N0;
   }
 
@@ -2133,33 +2185,38 @@ struct ViewOffset<Dimension, Kokkos::LayoutStride, void> {
     return m_stride.S7;
   }
 
+  template <typename iType>
+  KOKKOS_INLINE_FUNCTION void stride_fill(iType* const s) const {
+    if constexpr (0 < dimension_type::rank) {
+      s[0] = m_stride.S0;
+    }
+    if constexpr (1 < dimension_type::rank) {
+      s[1] = m_stride.S1;
+    }
+    if constexpr (2 < dimension_type::rank) {
+      s[2] = m_stride.S2;
+    }
+    if constexpr (3 < dimension_type::rank) {
+      s[3] = m_stride.S3;
+    }
+    if constexpr (4 < dimension_type::rank) {
+      s[4] = m_stride.S4;
+    }
+    if constexpr (5 < dimension_type::rank) {
+      s[5] = m_stride.S5;
+    }
+    if constexpr (6 < dimension_type::rank) {
+      s[6] = m_stride.S6;
+    }
+    if constexpr (7 < dimension_type::rank) {
+      s[7] = m_stride.S7;
+    }
+  }
+
   // Stride with [ rank ] value is the total length
   template <typename iType>
   KOKKOS_INLINE_FUNCTION void stride(iType* const s) const {
-    if (0 < dimension_type::rank) {
-      s[0] = m_stride.S0;
-    }
-    if (1 < dimension_type::rank) {
-      s[1] = m_stride.S1;
-    }
-    if (2 < dimension_type::rank) {
-      s[2] = m_stride.S2;
-    }
-    if (3 < dimension_type::rank) {
-      s[3] = m_stride.S3;
-    }
-    if (4 < dimension_type::rank) {
-      s[4] = m_stride.S4;
-    }
-    if (5 < dimension_type::rank) {
-      s[5] = m_stride.S5;
-    }
-    if (6 < dimension_type::rank) {
-      s[6] = m_stride.S6;
-    }
-    if (7 < dimension_type::rank) {
-      s[7] = m_stride.S7;
-    }
+    stride_fill(s);
     s[dimension_type::rank] = span();
   }
 
@@ -2817,6 +2874,11 @@ class ViewMapping<
   template <typename iType>
   KOKKOS_INLINE_FUNCTION void stride(iType* const s) const {
     m_impl_offset.stride(s);
+  }
+
+  template <typename iType>
+  KOKKOS_INLINE_FUNCTION void stride_fill(iType* const s) const {
+    m_impl_offset.stride_fill(s);
   }
 
   //----------------------------------------
