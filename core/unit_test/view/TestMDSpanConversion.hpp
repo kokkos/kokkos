@@ -120,126 +120,141 @@ struct TestViewMDSpanConversion {
                           value_type)>>::type,
                   Kokkos::LayoutRight>);
 
+    // nvcc doesn't do CTAD properly here, making this way more verbose..
     // LayoutLeft
     test_conversion_from_mdspan<Kokkos::LayoutLeft>(
         Kokkos::View<value_type *, Kokkos::LayoutLeft>("ref", 7),
-        typename layout_left_padded<sizeof(value_type)>::mapping{
-            Kokkos::extents<std::size_t, Kokkos::dynamic_extent>(7)});
+        typename layout_left_padded<sizeof(
+            value_type)>::template mapping<Kokkos::dextents<std::size_t, 1>>{
+            Kokkos::dextents<std::size_t, 1>(7)});
     test_conversion_from_mdspan<Kokkos::LayoutLeft>(
         Kokkos::View<value_type[7], Kokkos::LayoutLeft>("ref"),
-        typename layout_left_padded<sizeof(value_type)>::mapping{
+        typename layout_left_padded<sizeof(
+            value_type)>::template mapping<Kokkos::extents<std::size_t, 7>>{
             Kokkos::extents<std::size_t, 7>()});
     test_conversion_from_mdspan<Kokkos::LayoutLeft>(
         Kokkos::View<value_type[7], Kokkos::LayoutLeft>("ref"),
-        typename layout_left_padded<sizeof(value_type)>::mapping{
-            Kokkos::extents<std::size_t, Kokkos::dynamic_extent>(7)});
+        typename layout_left_padded<sizeof(
+            value_type)>::template mapping<Kokkos::dextents<std::size_t, 1>>{
+            Kokkos::dextents<std::size_t, 1>(7)});
     test_conversion_from_mdspan<Kokkos::LayoutLeft>(
         Kokkos::View<value_type *, Kokkos::LayoutLeft>("ref", 7),
-        typename layout_left_padded<sizeof(value_type)>::mapping{
+        typename layout_left_padded<sizeof(
+            value_type)>::template mapping<Kokkos::extents<std::size_t, 7>>{
             Kokkos::extents<std::size_t, 7>()});
 
     test_conversion_from_mdspan<Kokkos::LayoutLeft>(
         Kokkos::View<value_type **, Kokkos::LayoutLeft>("ref", 7, 3),
-        typename layout_left_padded<sizeof(value_type)>::mapping{
+        typename layout_left_padded<sizeof(
+            value_type)>::template mapping<Kokkos::dextents<std::size_t, 2>>{
             Kokkos::dextents<std::size_t, 2>(7, 3)});
     test_conversion_from_mdspan<Kokkos::LayoutLeft>(
         Kokkos::View<value_type[7][3], Kokkos::LayoutLeft>("ref"),
-        typename layout_left_padded<sizeof(value_type)>::mapping{
+        typename layout_left_padded<sizeof(
+            value_type)>::template mapping<Kokkos::extents<std::size_t, 7, 3>>{
             Kokkos::extents<std::size_t, 7, 3>()});
     test_conversion_from_mdspan<Kokkos::LayoutLeft>(
         Kokkos::View<value_type[7][3], Kokkos::LayoutLeft>("ref"),
-        typename layout_left_padded<sizeof(value_type)>::mapping{
-            Kokkos::extents<std::size_t, Kokkos::dynamic_extent,
-                            Kokkos::dynamic_extent>(7, 3)});
+        typename layout_left_padded<sizeof(
+            value_type)>::template mapping<Kokkos::dextents<std::size_t, 2>>{
+            Kokkos::dextents<std::size_t, 2>(7, 3)});
     test_conversion_from_mdspan<Kokkos::LayoutLeft>(
         Kokkos::View<value_type **, Kokkos::LayoutLeft>("ref", 7, 3),
-        typename layout_left_padded<sizeof(value_type)>::mapping{
+        typename layout_left_padded<sizeof(
+            value_type)>::template mapping<Kokkos::extents<std::size_t, 7, 3>>{
             Kokkos::extents<std::size_t, 7, 3>()});
 
     // LayoutRight
     test_conversion_from_mdspan<Kokkos::LayoutRight>(
         Kokkos::View<value_type *, Kokkos::LayoutRight>("ref", 7),
-        typename layout_right_padded<sizeof(value_type)>::mapping{
-            Kokkos::extents<std::size_t, Kokkos::dynamic_extent>(7)});
+        typename layout_right_padded<sizeof(
+            value_type)>::template mapping<Kokkos::dextents<std::size_t, 1>>{
+            Kokkos::dextents<std::size_t, 1>(7)});
     test_conversion_from_mdspan<Kokkos::LayoutRight>(
         Kokkos::View<value_type[7], Kokkos::LayoutRight>("ref"),
-        typename layout_right_padded<sizeof(value_type)>::mapping{
+        typename layout_right_padded<sizeof(
+            value_type)>::template mapping<Kokkos::extents<std::size_t, 7>>{
             Kokkos::extents<std::size_t, 7>()});
     test_conversion_from_mdspan<Kokkos::LayoutRight>(
         Kokkos::View<value_type[7], Kokkos::LayoutRight>("ref"),
-        typename layout_right_padded<sizeof(value_type)>::mapping{
-            Kokkos::extents<std::size_t, Kokkos::dynamic_extent>(7)});
+        typename layout_right_padded<sizeof(
+            value_type)>::template mapping<Kokkos::dextents<std::size_t, 1>>{
+            Kokkos::dextents<std::size_t, 1>(7)});
     test_conversion_from_mdspan<Kokkos::LayoutRight>(
         Kokkos::View<value_type *, Kokkos::LayoutRight>("ref", 7),
-        typename layout_right_padded<sizeof(value_type)>::mapping{
+        typename layout_right_padded<sizeof(
+            value_type)>::template mapping<Kokkos::extents<std::size_t, 7>>{
             Kokkos::extents<std::size_t, 7>()});
 
     test_conversion_from_mdspan<Kokkos::LayoutRight>(
         Kokkos::View<value_type **, Kokkos::LayoutRight>("ref", 7, 3),
-        typename layout_right_padded<sizeof(value_type)>::mapping{
+        typename layout_right_padded<sizeof(
+            value_type)>::template mapping<Kokkos::dextents<std::size_t, 2>>{
             Kokkos::dextents<std::size_t, 2>(7, 3)});
     test_conversion_from_mdspan<Kokkos::LayoutRight>(
         Kokkos::View<value_type[7][3], Kokkos::LayoutRight>("ref"),
-        typename layout_right_padded<sizeof(value_type)>::mapping{
+        typename layout_right_padded<sizeof(
+            value_type)>::template mapping<Kokkos::extents<std::size_t, 7, 3>>{
             Kokkos::extents<std::size_t, 7, 3>()});
     test_conversion_from_mdspan<Kokkos::LayoutRight>(
         Kokkos::View<value_type[7][3], Kokkos::LayoutRight>("ref"),
-        typename layout_right_padded<sizeof(value_type)>::mapping{
-            Kokkos::extents<std::size_t, Kokkos::dynamic_extent,
-                            Kokkos::dynamic_extent>(7, 3)});
+        typename layout_right_padded<sizeof(
+            value_type)>::template mapping<Kokkos::dextents<std::size_t, 2>>{
+            Kokkos::dextents<std::size_t, 2>(7, 3)});
     test_conversion_from_mdspan<Kokkos::LayoutRight>(
         Kokkos::View<value_type **, Kokkos::LayoutRight>("ref", 7, 3),
-        typename layout_right_padded<sizeof(value_type)>::mapping{
+        typename layout_right_padded<sizeof(
+            value_type)>::template mapping<Kokkos::extents<std::size_t, 7, 3>>{
             Kokkos::extents<std::size_t, 7, 3>()});
 
     // LayoutStride
     test_conversion_from_mdspan<Kokkos::LayoutStride>(
         Kokkos::View<value_type *, Kokkos::LayoutStride>(
             "ref", Kokkos::LayoutStride{7, 2}),
-        Kokkos::layout_stride::mapping{
-            Kokkos::extents<std::size_t, Kokkos::dynamic_extent>(7),
-            std::array{2}});
+        Kokkos::layout_stride::mapping<Kokkos::dextents<std::size_t, 1>>{
+            Kokkos::dextents<std::size_t, 1>{7},
+            std::array<std::size_t, 1>{2}});
     test_conversion_from_mdspan<Kokkos::LayoutStride>(
         Kokkos::View<value_type[7], Kokkos::LayoutStride>(
             "ref", Kokkos::LayoutStride{7, 2}),
-        Kokkos::layout_stride::mapping{Kokkos::extents<std::size_t, 7>(),
-                                       std::array{2}});
+        Kokkos::layout_stride::mapping<Kokkos::extents<std::size_t, 7>>{
+            {}, std::array<std::size_t, 1>{2}});
     test_conversion_from_mdspan<Kokkos::LayoutStride>(
         Kokkos::View<value_type[7], Kokkos::LayoutStride>(
             "ref", Kokkos::LayoutStride{7, 2}),
-        Kokkos::layout_stride::mapping{
-            Kokkos::extents<std::size_t, Kokkos::dynamic_extent>(7),
-            std::array{2}});
+        Kokkos::layout_stride::mapping<Kokkos::dextents<std::size_t, 1>>{
+            Kokkos::dextents<std::size_t, 1>{7},
+            std::array<std::size_t, 1>{2}});
     test_conversion_from_mdspan<Kokkos::LayoutStride>(
         Kokkos::View<value_type *, Kokkos::LayoutStride>(
             "ref", Kokkos::LayoutStride{7, 2}),
-        Kokkos::layout_stride::mapping{Kokkos::extents<std::size_t, 7>(),
-                                       std::array{2}});
+        Kokkos::layout_stride::mapping<Kokkos::extents<std::size_t, 7>>{
+            Kokkos::extents<std::size_t, 7>(), std::array<std::size_t, 1>{2}});
 
     test_conversion_from_mdspan<Kokkos::LayoutStride>(
         Kokkos::View<value_type **, Kokkos::LayoutStride>(
             "ref", Kokkos::LayoutStride{7, 2, 3, 4}),
-        Kokkos::layout_stride::mapping{
+        Kokkos::layout_stride::mapping<Kokkos::dextents<std::size_t, 2>>{
             Kokkos::dextents<std::size_t, 2>(7, 3),
-            std::array{2, 4}});
+            std::array<std::size_t, 2>{2, 4}});
     test_conversion_from_mdspan<Kokkos::LayoutStride>(
         Kokkos::View<value_type[7][3], Kokkos::LayoutStride>(
             "ref", Kokkos::LayoutStride{7, 2, 3, 4}),
-        Kokkos::layout_stride::mapping{
+        Kokkos::layout_stride::mapping<Kokkos::extents<std::size_t, 7, 3>>{
             Kokkos::extents<std::size_t, 7, 3>(),
-            std::array{2, 4}});
+            std::array<std::size_t, 2>{2, 4}});
     test_conversion_from_mdspan<Kokkos::LayoutStride>(
         Kokkos::View<value_type[7][3], Kokkos::LayoutStride>(
             "ref", Kokkos::LayoutStride{7, 2, 3, 4}),
-        Kokkos::layout_stride::mapping{
+        Kokkos::layout_stride::mapping<Kokkos::dextents<std::size_t, 2>>{
             Kokkos::dextents<std::size_t, 2>(7, 3),
-            std::array{2, 4}});
+            std::array<std::size_t, 2>{2, 4}});
     test_conversion_from_mdspan<Kokkos::LayoutStride>(
         Kokkos::View<value_type **, Kokkos::LayoutStride>(
             "ref", Kokkos::LayoutStride{7, 2, 3, 4}),
-        Kokkos::layout_stride::mapping{
+        Kokkos::layout_stride::mapping<Kokkos::extents<std::size_t, 7, 3>>{
             Kokkos::extents<std::size_t, 7, 3>(),
-            std::array{2, 4}});
+            std::array<std::size_t, 2>{2, 4}});
 
     // Conversion to mdspan
     test_conversion_to_mdspan(layout_left_padded<Kokkos::dynamic_extent>::mapping<Kokkos::extents<std::size_t, 4>>({}, 4), Kokkos::View<value_type *, Kokkos::LayoutLeft>("v", 4));
@@ -248,8 +263,8 @@ struct TestViewMDSpanConversion {
     test_conversion_to_mdspan(layout_right_padded<Kokkos::dynamic_extent>::mapping<Kokkos::extents<std::size_t, 4>>({}, 4), Kokkos::View<value_type *, Kokkos::LayoutRight>("v", 4));
     test_conversion_to_mdspan(layout_right_padded<Kokkos::dynamic_extent>::mapping<Kokkos::extents<std::size_t, 4, 7>>({}, 7), Kokkos::View<value_type **, Kokkos::LayoutRight>("v", 4, 7));
 
-    test_conversion_to_mdspan(Kokkos::layout_stride::mapping<Kokkos::extents<std::size_t, 4>>({}, std::array{5}), Kokkos::View<value_type *, Kokkos::LayoutStride>("v", Kokkos::LayoutStride{4, 5}));
-    test_conversion_to_mdspan(Kokkos::layout_stride::mapping<Kokkos::extents<std::size_t, 4, 7>>({}, std::array{5, 9}), Kokkos::View<value_type **, Kokkos::LayoutStride>("v", Kokkos::LayoutStride{4, 5, 7, 9}));
+    test_conversion_to_mdspan(Kokkos::layout_stride::mapping<Kokkos::extents<std::size_t, 4>>({}, std::array<std::size_t, 1>{5}), Kokkos::View<value_type *, Kokkos::LayoutStride>("v", Kokkos::LayoutStride{4, 5}));
+    test_conversion_to_mdspan(Kokkos::layout_stride::mapping<Kokkos::extents<std::size_t, 4, 7>>({}, std::array<std::size_t, 2>{5, 9}), Kokkos::View<value_type **, Kokkos::LayoutStride>("v", Kokkos::LayoutStride{4, 5, 7, 9}));
 
     test_conversion_to_mdspan(layout_left_padded<Kokkos::dynamic_extent>::mapping<Kokkos::extents<std::size_t, 4>>({}, 4), Kokkos::View<value_type *, Kokkos::LayoutLeft>("v", 4), Kokkos::default_accessor<value_type>{});
     test_conversion_to_mdspan(layout_left_padded<Kokkos::dynamic_extent>::mapping<Kokkos::extents<std::size_t, 4, 7>>({}, 4), Kokkos::View<value_type **, Kokkos::LayoutLeft>("v", 4, 7), Kokkos::default_accessor<value_type>{});
@@ -257,8 +272,8 @@ struct TestViewMDSpanConversion {
     test_conversion_to_mdspan(layout_right_padded<Kokkos::dynamic_extent>::mapping<Kokkos::extents<std::size_t, 4>>({}, 4), Kokkos::View<value_type *, Kokkos::LayoutRight>("v", 4), Kokkos::default_accessor<value_type>{});
     test_conversion_to_mdspan(layout_right_padded<Kokkos::dynamic_extent>::mapping<Kokkos::extents<std::size_t, 4, 7>>({}, 7), Kokkos::View<value_type **, Kokkos::LayoutRight>("v", 4, 7), Kokkos::default_accessor<value_type>{});
 
-    test_conversion_to_mdspan(Kokkos::layout_stride::mapping<Kokkos::extents<std::size_t, 4>>({}, std::array{5}), Kokkos::View<value_type *, Kokkos::LayoutStride>("v", Kokkos::LayoutStride{4, 5}));
-    test_conversion_to_mdspan(Kokkos::layout_stride::mapping<Kokkos::extents<std::size_t, 4, 7>>({}, std::array{5, 9}), Kokkos::View<value_type **, Kokkos::LayoutStride>("v", Kokkos::LayoutStride{4, 5, 7, 9}), Kokkos::default_accessor<value_type>{});
+    test_conversion_to_mdspan(Kokkos::layout_stride::mapping<Kokkos::extents<std::size_t, 4>>({}, std::array<std::size_t, 1>{5}), Kokkos::View<value_type *, Kokkos::LayoutStride>("v", Kokkos::LayoutStride{4, 5}));
+    test_conversion_to_mdspan(Kokkos::layout_stride::mapping<Kokkos::extents<std::size_t, 4, 7>>({}, std::array<std::size_t, 2>{5, 9}), Kokkos::View<value_type **, Kokkos::LayoutStride>("v", Kokkos::LayoutStride{4, 5, 7, 9}), Kokkos::default_accessor<value_type>{});
 
     test_conversion_to_mdspan(layout_left_padded<Kokkos::dynamic_extent>::mapping<Kokkos::extents<std::size_t, 4>>({}, 4), Kokkos::View<value_type *, Kokkos::LayoutLeft>("v", 4), test_accessor{});
     test_conversion_to_mdspan(layout_left_padded<Kokkos::dynamic_extent>::mapping<Kokkos::extents<std::size_t, 4, 7>>({}, 4), Kokkos::View<value_type **, Kokkos::LayoutLeft>("v", 4, 7), test_accessor{});
@@ -266,8 +281,8 @@ struct TestViewMDSpanConversion {
     test_conversion_to_mdspan(layout_right_padded<Kokkos::dynamic_extent>::mapping<Kokkos::extents<std::size_t, 4>>({}, 4), Kokkos::View<value_type *, Kokkos::LayoutRight>("v", 4), test_accessor{});
     test_conversion_to_mdspan(layout_right_padded<Kokkos::dynamic_extent>::mapping<Kokkos::extents<std::size_t, 4, 7>>({}, 7), Kokkos::View<value_type **, Kokkos::LayoutRight>("v", 4, 7), test_accessor{});
 
-    test_conversion_to_mdspan(Kokkos::layout_stride::mapping<Kokkos::extents<std::size_t, 4>>({}, std::array{5}), Kokkos::View<value_type *, Kokkos::LayoutStride>("v", Kokkos::LayoutStride{4, 5}));
-    test_conversion_to_mdspan(Kokkos::layout_stride::mapping<Kokkos::extents<std::size_t, 4, 7>>({}, std::array{5, 9}), Kokkos::View<value_type **, Kokkos::LayoutStride>("v", Kokkos::LayoutStride{4, 5, 7, 9}), test_accessor{});
+    test_conversion_to_mdspan(Kokkos::layout_stride::mapping<Kokkos::extents<std::size_t, 4>>({}, std::array<std::size_t, 1>{5}), Kokkos::View<value_type *, Kokkos::LayoutStride>("v", Kokkos::LayoutStride{4, 5}));
+    test_conversion_to_mdspan(Kokkos::layout_stride::mapping<Kokkos::extents<std::size_t, 4, 7>>({}, std::array<std::size_t, 2>{5, 9}), Kokkos::View<value_type **, Kokkos::LayoutStride>("v", Kokkos::LayoutStride{4, 5, 7, 9}), test_accessor{});
   }
 };
 
