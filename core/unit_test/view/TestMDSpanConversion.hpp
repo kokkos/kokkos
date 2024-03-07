@@ -99,9 +99,6 @@ struct TestViewMDSpanConversion {
       const MDSpanLayoutMapping &ref_layout_mapping, ViewType v,
       const AccessorType &a) {
     using view_type = ViewType;
-    using natural_mdspan_type =
-        typename Kokkos::Experimental::Impl::MDSpanViewTraits<
-            typename view_type::traits>::mdspan_type;
 
     auto cvt = v.to_mdspan(a);
     ASSERT_EQ(cvt.data_handle(), v.data());
