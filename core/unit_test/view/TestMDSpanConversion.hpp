@@ -360,6 +360,8 @@ namespace Test {
 
 TEST(TEST_CATEGORY, view_mdspan_conversion) {
   TestViewMDSpanConversion<double, TEST_EXECSPACE>::run_test();
+  TestViewMDSpanConversion<float, TEST_EXECSPACE>::run_test();
+  TestViewMDSpanConversion<int, TEST_EXECSPACE>::run_test();
 }
 
 }  // namespace Test
