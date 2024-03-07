@@ -2737,6 +2737,7 @@ class ViewMapping<
       : m_impl_handle(arg_handle), m_impl_offset(arg_offset) {}
 
  public:
+  using printable_label_typedef = void;
   enum { is_managed = Traits::is_managed };
 
   //----------------------------------------
@@ -3567,6 +3568,9 @@ KOKKOS_FUNCTION void print_extents(char* dest, Map const& map,
   (void)append_formated_multidimensional_index(dest, map.extent(Enumerate)...);
 }
 
+template <class T>
+using printable_label_typedef_t = typename T::printable_label_typedef;
+
 template <class MemorySpace, class ViewType, class MapType, class... Args>
 KOKKOS_INLINE_FUNCTION void view_verify_operator_bounds(
     Kokkos::Impl::ViewTracker<ViewType> const& tracker, const MapType& map,
@@ -3576,14 +3580,41 @@ KOKKOS_INLINE_FUNCTION void view_verify_operator_bounds(
     char err[256] = "";
     Kokkos::Impl::strcat(err, "Kokkos::View ERROR: out of bounds access");
     Kokkos::Impl::strcat(err, " label=(\"");
-    if (tracker.m_tracker.has_record()) {
-      KOKKOS_IF_ON_HOST(
-          Kokkos::Impl::strncat(
-              err, tracker.m_tracker.template get_label<void>().c_str(), 128);)
-      KOKKOS_IF_ON_DEVICE(Kokkos::Impl::strcat(err, "**UNAVAILABLE**");)
-    } else {
+    KOKKOS_IF_ON_HOST([&] {
+      if (tracker.m_tracker.has_record()) {
+        Kokkos::Impl::strncat(
+            err, tracker.m_tracker.template get_label<void>().c_str(), 128);
+        return;
+      }
       Kokkos::Impl::strcat(err, "**UNMANAGED**");
-    }
+    }();)
+    KOKKOS_IF_ON_DEVICE([&] {
+      // Check #1: is there a SharedAllocationRecord?  (we won't use it, but
+      // if its not there then there isn't a corresponding
+      // SharedAllocationHeader containing a label).  This check should cover
+      // the case of Views that don't have the Unmanaged trait but were
+      // initialized by pointer.
+      if (!tracker.m_tracker.has_record()) {
+        Kokkos::Impl::strcat(err, "**UNMANAGED**");
+        return;
+      }
+      // Check #2: does the ViewMapping have the printable_label_typedef
+      // defined? See above that only the non-specialized standard-layout
+      // ViewMapping has this defined by default. The existence of this
+      // alias indicates the existence of MapType::is_managed
+      if constexpr (is_detected_v<printable_label_typedef_t, MapType>) {
+        // Check #3: is the View managed as determined by the MemoryTraits?
+        if constexpr (MapType::is_managed != 0) {
+          SharedAllocationHeader const* const header =
+              SharedAllocationHeader::get_header(
+                  static_cast<void const*>(map.data()));
+          char const* const label = header->label();
+          Kokkos::Impl::strcat(err, label);
+          return;
+        }
+        Kokkos::Impl::strcat(err, "**UNMANAGED**");
+      }
+    }();)
     Kokkos::Impl::strcat(err, "\") with indices ");
     Kokkos::Impl::append_formated_multidimensional_index(err, args...);
     Kokkos::Impl::strcat(err, " but extents ");
