@@ -685,9 +685,8 @@ class View : public ViewTraits<DataType, Properties...> {
                                            traits::dimension::rank_dynamic>
       rank_dynamic = {};
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  enum {
-    Rank KOKKOS_DEPRECATED_WITH_COMMENT("Use rank instead.") = map_type::Rank
-  };
+  enum {Rank KOKKOS_DEPRECATED_WITH_COMMENT("Use rank instead.") =
+            map_type::Rank};
 #endif
 
   template <typename iType>
@@ -827,6 +826,8 @@ class View : public ViewTraits<DataType, Properties...> {
       std::is_void<typename traits::specialize>::value &&
       (is_layout_left || is_layout_right || is_layout_stride);
 
+#if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
+
 #define KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(...)                               \
   Kokkos::Impl::runtime_check_memory_access_violation<                      \
       typename traits::memory_space>(                                       \
@@ -834,6 +835,16 @@ class View : public ViewTraits<DataType, Properties...> {
       __VA_ARGS__);                                                         \
   Kokkos::Impl::view_verify_operator_bounds<typename traits::memory_space>( \
       __VA_ARGS__);
+
+#else
+
+#define KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(...)                            \
+  Kokkos::Impl::runtime_check_memory_access_violation<                   \
+      typename traits::memory_space>(                                    \
+      "Kokkos::View ERROR: attempt to access inaccessible memory space", \
+      __VA_ARGS__);
+
+#endif
 
   template <typename... Is>
   static KOKKOS_FUNCTION void check_access_member_function_valid_args(Is...) {
