@@ -254,6 +254,9 @@ class UnorderedMap {
   static constexpr bool is_modifiable_map = has_const_key && !has_const_value;
   static constexpr bool is_const_map      = has_const_key && has_const_value;
 
+  static constexpr size_type invalid_index =
+      KOKKOS_INVALID_INDEX_TYPE(size_type);
+
   using insert_result = UnorderedMapInsertResult;
 
   using HostMirror =
@@ -263,8 +266,6 @@ class UnorderedMap {
   //@}
 
  private:
-  enum : size_type { invalid_index = ~static_cast<size_type>(0) };
-
   using impl_value_type = std::conditional_t<is_set, int, declared_value_type>;
 
   using key_type_view = std::conditional_t<
@@ -413,23 +414,43 @@ class UnorderedMap {
   /// This is <i>not</i> a device function; it may <i>not</i> be
   /// called in a parallel kernel.
   bool rehash(size_type requested_capacity = 0) {
+    return rehash(execution_space{}, requested_capacity);
+  }
+
+  bool rehash(const execution_space &space, size_type requested_capacity = 0) {
     const bool bounded_insert = (capacity() == 0) || (size() == 0u);
-    return rehash(requested_capacity, bounded_insert);
+    execution_space().fence(
+        "Kokkos::UnorderedMap::rehash: fence before");
+    bool result = rehash(space, requested_capacity, bounded_insert);
+    execution_space().fence(
+        "Kokkos::UnorderedMap::rehash: fence after");
+    return result;
   }
 
   bool rehash(size_type requested_capacity, bool bounded_insert) {
-    if (!is_insertable_map) return false;
+    execution_space().fence(
+        "Kokkos::UnorderedMap::rehash: fence before");
+    bool result = rehash(execution_space{}, requested_capacity, bounded_insert);
+    execution_space().fence(
+        "Kokkos::UnorderedMap::rehash: fence after");
+    return result;
+  }
+
+  bool rehash(const execution_space &space, size_type requested_capacity,
+              bool bounded_insert) {
+    if constexpr (!is_insertable_map) return false;
 
     const size_type curr_size = size();
     requested_capacity =
         (requested_capacity < curr_size) ? curr_size : requested_capacity;
 
-    insertable_map_type tmp(requested_capacity, m_hasher, m_equal_to);
+    insertable_map_type tmp(Kokkos::view_alloc(space, "rehash"), requested_capacity,
+                            m_hasher, m_equal_to);
 
     if (curr_size) {
       tmp.m_bounded_insert = false;
-      Impl::UnorderedMapRehash<insertable_map_type> f(tmp, *this);
-      f.apply();
+      Impl::UnorderedMapRehash<insertable_map_type> f{tmp, *this};
+      f.apply(space);
     }
     tmp.m_bounded_insert = bounded_insert;
 
@@ -466,9 +487,18 @@ class UnorderedMap {
   }
 
   bool begin_erase() {
+    execution_space().fence(
+        "Kokkos::UnorderedMap::begin_erase: fence before");
+    bool result = begin_erase(execution_space{});
+    execution_space().fence(
+        "Kokkos::UnorderedMap::begin_erase: fence after");
+    return result;
+  }
+
+  bool begin_erase(const execution_space &space) {
     bool result = !erasable();
     if (is_insertable_map && result) {
-      execution_space().fence(
+      space.fence(
           "Kokkos::UnorderedMap::begin_erase: fence before setting erasable "
           "flag");
       set_flag(erasable_idx);
@@ -477,14 +507,19 @@ class UnorderedMap {
   }
 
   bool end_erase() {
+    execution_space().fence(
+        "Kokkos::UnorderedMap::end_erase: fence before");
+    bool result = end_erase(execution_space{});
+    execution_space().fence(
+        "Kokkos::UnorderedMap::end_erase: fence after");
+    return result;
+  }
+
+  bool end_erase(const execution_space &space) {
     bool result = erasable();
     if (is_insertable_map && result) {
-      execution_space().fence(
-          "Kokkos::UnorderedMap::end_erase: fence before erasing");
-      Impl::UnorderedMapErase<declared_map_type> f(*this);
-      f.apply();
-      execution_space().fence(
-          "Kokkos::UnorderedMap::end_erase: fence after erasing");
+      Impl::UnorderedMapErase<declared_map_type> f{*this};
+      f.apply(space);
       reset_flag(erasable_idx);
     }
     return result;
