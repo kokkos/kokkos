@@ -77,6 +77,33 @@ struct TestMDRangePolicyCTAD {
           Kokkos::MDRangePolicy<SomeExecutionSpace, Kokkos::Rank<std::size(t)>>,
           decltype(Kokkos::MDRangePolicy(ses, t, t))>);
 
+  // MDRangePolicy with Kokkos::initializer_list parameters
+
+  static_assert(std::is_same_v<Kokkos::MDRangePolicy<Kokkos::Rank<6>>,
+                               decltype(Kokkos::MDRangePolicy(
+                                   {1, 2, 3, 4, 5, 6}, {1, 2, 3, 4, 5, 6}))>);
+
+  [[maybe_unused]] static inline int64_t i64;
+  static_assert(std::is_same_v<Kokkos::MDRangePolicy<Kokkos::Rank<6>>,
+                               decltype(Kokkos::MDRangePolicy(
+                                   {1, 2, 3, 4, 5, 6}, {1, 2, 3, 4, 5, 6},
+                                   {i64, i64, i64, i64, i64, i64}))>);
+
+  static_assert(std::is_same_v<Kokkos::MDRangePolicy<Kokkos::Rank<6>>,
+                               decltype(Kokkos::MDRangePolicy(
+                                   des, {1, 2, 3, 4, 5, 6},
+                                   {i64, i64, i64, i64, i64, i64}))>);
+
+  static_assert(
+      std::is_same_v<Kokkos::MDRangePolicy<Kokkos::Rank<6>>,
+                     decltype(Kokkos::MDRangePolicy(notEs, {1, 2, 3, 4, 5, 6},
+                                                    {1, 2, 3, 4, 5, 6}))>);
+
+  static_assert(
+      std::is_same_v<Kokkos::MDRangePolicy<SomeExecutionSpace, Kokkos::Rank<6>>,
+                     decltype(Kokkos::MDRangePolicy(ses, {1, 2, 3, 4, 5, 6},
+                                                    {1, 2, 3, 4, 5, 6}))>);
+
   // MDRangePolicy with Kokkos::Array parameters
 
   static_assert(

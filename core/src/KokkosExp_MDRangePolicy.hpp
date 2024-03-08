@@ -177,7 +177,7 @@ struct MDRangePolicy<P, Properties...>
                   typename traits::schedule_type, typename traits::index_type>;
 
   using execution_policy =
-      MDRangePolicy<P, Properties...>;  // needed for is_execution_space
+      MDRangePolicy<P, Properties...>;  // needed for is_execution_policy
                                         // interrogation
 
   template <class... OtherProperties>
