@@ -3580,13 +3580,11 @@ KOKKOS_INLINE_FUNCTION void view_verify_operator_bounds(
     char err[256] = "";
     strcat(err, "Kokkos::View ERROR: out of bounds access");
     strcat(err, " label=(\"");
-    KOKKOS_IF_ON_HOST([&] {
-      if (tracker.m_tracker.has_record()) {
-        strncat(err, tracker.m_tracker.template get_label<void>().c_str(), 128);
-        return;
-      }
-      strcat(err, "**UNMANAGED**");
-    }();)
+    KOKKOS_IF_ON_HOST(
+        if (tracker.m_tracker.has_record()) {
+          strncat(err, tracker.m_tracker.template get_label<void>().c_str(),
+                  128);
+        } else { strcat(err, "**UNMANAGED**"); })
     KOKKOS_IF_ON_DEVICE([&] {
       // Check #1: is there a SharedAllocationRecord?  (we won't use it, but
       // if its not there then there isn't a corresponding
