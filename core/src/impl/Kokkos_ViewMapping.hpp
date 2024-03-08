@@ -3538,7 +3538,7 @@ namespace Kokkos {
 namespace Impl {
 
 template <class Map, class... Indices, std::size_t... Enumerate>
-KOKKOS_FUNCTION bool check_bounds(Map const& map,
+KOKKOS_FUNCTION bool within_range(Map const& map,
                                   std::index_sequence<Enumerate...>,
                                   Indices... indices) {
   return (... && ((std::size_t)indices < map.extent(Enumerate)));
@@ -3575,7 +3575,7 @@ template <class MemorySpace, class ViewType, class MapType, class... Args>
 KOKKOS_INLINE_FUNCTION void view_verify_operator_bounds(
     Kokkos::Impl::ViewTracker<ViewType> const& tracker, const MapType& map,
     Args... args) {
-  if (!check_bounds(map, std::make_index_sequence<sizeof...(Args)>(),
+  if (!within_range(map, std::make_index_sequence<sizeof...(Args)>(),
                     args...)) {
     char err[256] = "";
     strcat(err, "Kokkos::View ERROR: out of bounds access");
