@@ -3545,7 +3545,7 @@ KOKKOS_FUNCTION bool check_bounds(Map const& map,
 }
 
 template <class... Indices>
-KOKKOS_FUNCTION constexpr char* append_formated_multidimensional_index(
+KOKKOS_FUNCTION constexpr char* append_formatted_multidimensional_index(
     char* dest, Indices... indices) {
   char* d = dest;
   Kokkos::Impl::strcat(d, "[");
@@ -3565,7 +3565,7 @@ KOKKOS_FUNCTION constexpr char* append_formated_multidimensional_index(
 template <class Map, class... Indices, std::size_t... Enumerate>
 KOKKOS_FUNCTION void print_extents(char* dest, Map const& map,
                                    std::index_sequence<Enumerate...>) {
-  (void)append_formated_multidimensional_index(dest, map.extent(Enumerate)...);
+  (void)append_formatted_multidimensional_index(dest, map.extent(Enumerate)...);
 }
 
 template <class T>
@@ -3616,7 +3616,7 @@ KOKKOS_INLINE_FUNCTION void view_verify_operator_bounds(
       }
     }();)
     Kokkos::Impl::strcat(err, "\") with indices ");
-    Kokkos::Impl::append_formated_multidimensional_index(err, args...);
+    Kokkos::Impl::append_formatted_multidimensional_index(err, args...);
     Kokkos::Impl::strcat(err, " but extents ");
     Kokkos::Impl::print_extents(err, map,
                                 std::make_index_sequence<sizeof...(Args)>());

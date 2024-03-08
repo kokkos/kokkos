@@ -21,16 +21,16 @@
 
 namespace {
 
-TEST(TEST_CATEGORY, append_formated_multidimensional_index) {
-  using Kokkos::Impl::append_formated_multidimensional_index;
+TEST(TEST_CATEGORY, append_formatted_multidimensional_index) {
+  using Kokkos::Impl::append_formatted_multidimensional_index;
   {
     char buffer[64] = "my prefix ";
-    append_formated_multidimensional_index(buffer, 1);
+    append_formatted_multidimensional_index(buffer, 1);
     EXPECT_STREQ(buffer, "my prefix [1]");
   }
   {
     char buffer[64] = "I was here";
-    append_formated_multidimensional_index(buffer, 1, 2, 3);
+    append_formatted_multidimensional_index(buffer, 1, 2, 3);
     EXPECT_STREQ(buffer, "I was here[1,2,3]");
   }
 }
