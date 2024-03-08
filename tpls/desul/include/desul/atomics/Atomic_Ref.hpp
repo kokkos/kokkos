@@ -263,23 +263,23 @@ struct basic_atomic_ref<T, MemoryOrder, MemoryScope, true, false> {
   DESUL_FUNCTION value_type operator--(int) const noexcept { return fetch_sub(1); }
 
   DESUL_FUNCTION value_type operator+=(value_type arg) const noexcept {
-    atomic_add_fetch(_ptr, arg, MemoryOrder(), MemoryScope());
+    return atomic_add_fetch(_ptr, arg, MemoryOrder(), MemoryScope());
   }
 
   DESUL_FUNCTION value_type operator-=(value_type arg) const noexcept {
-    atomic_sub_fetch(_ptr, arg, MemoryOrder(), MemoryScope());
+    return atomic_sub_fetch(_ptr, arg, MemoryOrder(), MemoryScope());
   }
 
   DESUL_FUNCTION value_type operator&=(value_type arg) const noexcept {
-    atomic_and_fetch(_ptr, arg, MemoryOrder(), MemoryScope());
+    return atomic_and_fetch(_ptr, arg, MemoryOrder(), MemoryScope());
   }
 
   DESUL_FUNCTION value_type operator|=(value_type arg) const noexcept {
-    atomic_or_fetch(_ptr, arg, MemoryOrder(), MemoryScope());
+    return atomic_or_fetch(_ptr, arg, MemoryOrder(), MemoryScope());
   }
 
   DESUL_FUNCTION value_type operator^=(value_type arg) const noexcept {
-    atomic_xor_fetch(_ptr, arg, MemoryOrder(), MemoryScope());
+    return atomic_xor_fetch(_ptr, arg, MemoryOrder(), MemoryScope());
   }
 };
 
