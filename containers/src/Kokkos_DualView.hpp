@@ -309,10 +309,14 @@ class DualView : public ViewTraits<DataType, Properties...> {
   ///
   /// \param d_view_ Device View
   /// \param h_view_ Host View (must have type t_host = t_dev::HostMirror)
-  DualView(const t_dev& d_view_, const t_host& h_view_)
-      : modified_flags(t_modified_flags("DualView::modified_flags")),
-        d_view(d_view_),
-        h_view(h_view_) {
+  template <typename dev_t, typename host_t,
+    typename = std::enable_if_t<std::is_same_v<std::decay_t<dev_t>, t_dev>>,
+    typename = std::enable_if_t<std::is_same_v<std::decay_t<host_t>, t_host>>
+  >
+  DualView(dev_t&& d_view_, host_t&& h_view_)
+      : modified_flags("DualView::modified_flags"),
+        d_view(std::forward<dev_t>(d_view_)),
+        h_view(std::forward<host_t>(h_view_)) {
     if (int(d_view.rank) != int(h_view.rank) ||
         d_view.extent(0) != h_view.extent(0) ||
         d_view.extent(1) != h_view.extent(1) ||
