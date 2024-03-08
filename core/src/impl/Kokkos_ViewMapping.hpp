@@ -3548,24 +3548,24 @@ template <class... Indices>
 KOKKOS_FUNCTION constexpr char* append_formatted_multidimensional_index(
     char* dest, Indices... indices) {
   char* d = dest;
-  Kokkos::Impl::strcat(d, "[");
+  strcat(d, "[");
   (
       [&] {
-        d += Kokkos::Impl::strlen(d);
-        (void)Kokkos::Impl::to_chars_i(d,
-                                       d + 20,  // 20 digits ought to be enough
-                                       indices);
-        Kokkos::Impl::strcat(d, ",");
+        d += strlen(d);
+        to_chars_i(d,
+                   d + 20,  // 20 digits ought to be enough
+                   indices);
+        strcat(d, ",");
       }(),
       ...);
-  d[Kokkos::Impl::strlen(d) - 1] = ']';  // overwrite trailing comma
+  d[strlen(d) - 1] = ']';  // overwrite trailing comma
   return dest;
 }
 
 template <class Map, class... Indices, std::size_t... Enumerate>
 KOKKOS_FUNCTION void print_extents(char* dest, Map const& map,
                                    std::index_sequence<Enumerate...>) {
-  (void)append_formatted_multidimensional_index(dest, map.extent(Enumerate)...);
+  append_formatted_multidimensional_index(dest, map.extent(Enumerate)...);
 }
 
 template <class T>
@@ -3578,15 +3578,14 @@ KOKKOS_INLINE_FUNCTION void view_verify_operator_bounds(
   if (!check_bounds(map, std::make_index_sequence<sizeof...(Args)>(),
                     args...)) {
     char err[256] = "";
-    Kokkos::Impl::strcat(err, "Kokkos::View ERROR: out of bounds access");
-    Kokkos::Impl::strcat(err, " label=(\"");
+    strcat(err, "Kokkos::View ERROR: out of bounds access");
+    strcat(err, " label=(\"");
     KOKKOS_IF_ON_HOST([&] {
       if (tracker.m_tracker.has_record()) {
-        Kokkos::Impl::strncat(
-            err, tracker.m_tracker.template get_label<void>().c_str(), 128);
+        strncat(err, tracker.m_tracker.template get_label<void>().c_str(), 128);
         return;
       }
-      Kokkos::Impl::strcat(err, "**UNMANAGED**");
+      strcat(err, "**UNMANAGED**");
     }();)
     KOKKOS_IF_ON_DEVICE([&] {
       // Check #1: is there a SharedAllocationRecord?  (we won't use it, but
@@ -3595,7 +3594,7 @@ KOKKOS_INLINE_FUNCTION void view_verify_operator_bounds(
       // the case of Views that don't have the Unmanaged trait but were
       // initialized by pointer.
       if (!tracker.m_tracker.has_record()) {
-        Kokkos::Impl::strcat(err, "**UNMANAGED**");
+        strcat(err, "**UNMANAGED**");
         return;
       }
       // Check #2: does the ViewMapping have the printable_label_typedef
@@ -3609,17 +3608,16 @@ KOKKOS_INLINE_FUNCTION void view_verify_operator_bounds(
               SharedAllocationHeader::get_header(
                   static_cast<void const*>(map.data()));
           char const* const label = header->label();
-          Kokkos::Impl::strcat(err, label);
+          strcat(err, label);
           return;
         }
-        Kokkos::Impl::strcat(err, "**UNAVAILABLE**");
+        strcat(err, "**UNAVAILABLE**");
       }
     }();)
-    Kokkos::Impl::strcat(err, "\") with indices ");
-    Kokkos::Impl::append_formatted_multidimensional_index(err, args...);
-    Kokkos::Impl::strcat(err, " but extents ");
-    Kokkos::Impl::print_extents(err, map,
-                                std::make_index_sequence<sizeof...(Args)>());
+    strcat(err, "\") with indices ");
+    append_formatted_multidimensional_index(err, args...);
+    strcat(err, " but extents ");
+    print_extents(err, map, std::make_index_sequence<sizeof...(Args)>());
     Kokkos::abort(err);
   }
 }
