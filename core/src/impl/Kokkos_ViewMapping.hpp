@@ -3541,7 +3541,7 @@ template <class Map, class... Indices, std::size_t... Enumerate>
 KOKKOS_FUNCTION bool within_range(Map const& map,
                                   std::index_sequence<Enumerate...>,
                                   Indices... indices) {
-  return (... && ((std::size_t)indices < map.extent(Enumerate)));
+  return (((std::size_t)indices < map.extent(Enumerate)) && ...);
 }
 
 template <class... Indices>
