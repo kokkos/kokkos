@@ -254,6 +254,9 @@ class UnorderedMap {
   static constexpr bool is_modifiable_map = has_const_key && !has_const_value;
   static constexpr bool is_const_map      = has_const_key && has_const_value;
 
+  static constexpr size_type invalid_index =
+      Experimental::finite_max_v<size_type>;
+
   using insert_result = UnorderedMapInsertResult;
 
   using HostMirror =
@@ -263,7 +266,6 @@ class UnorderedMap {
   //@}
 
  private:
-  enum : size_type { invalid_index = ~static_cast<size_type>(0) };
 
   using impl_value_type = std::conditional_t<is_set, int, declared_value_type>;
 
