@@ -19,7 +19,7 @@
 
 #include "../Kokkos_BinOpsPublicAPI.hpp"
 #include "../Kokkos_BinSortPublicAPI.hpp"
-#include <std_algorithms/Kokkos_BeginEnd.hpp>
+#include <Kokkos_Iterator.hpp>
 #include <std_algorithms/Kokkos_Copy.hpp>
 #include <Kokkos_Core.hpp>
 

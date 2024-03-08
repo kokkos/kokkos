@@ -24,7 +24,6 @@
 #include "Kokkos_IdentityReferenceUnaryFunctor.hpp"
 #include "Kokkos_FunctorsForExclusiveScan.hpp"
 #include <std_algorithms/Kokkos_TransformExclusiveScan.hpp>
-#include <std_algorithms/Kokkos_Distance.hpp>
 #include <string>
 
 namespace Kokkos {

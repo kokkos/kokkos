@@ -22,7 +22,6 @@
 #include "Kokkos_HelperPredicates.hpp"
 #include "Kokkos_MustUseKokkosSingleInTeam.hpp"
 #include "Kokkos_CopyCopyN.hpp"
-#include <std_algorithms/Kokkos_Distance.hpp>
 #include <string>
 
 namespace Kokkos {

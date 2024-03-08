@@ -15,7 +15,7 @@
 //@HEADER
 
 #include <TestStdAlgorithmsCommon.hpp>
-#include "std_algorithms/Kokkos_BeginEnd.hpp"
+#include "std_algorithms/Kokkos_InclusiveScan.hpp"
 
 namespace Test {
 namespace stdalgos {

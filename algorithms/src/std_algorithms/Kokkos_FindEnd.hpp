@@ -19,7 +19,7 @@
 
 #include "impl/Kokkos_FindEnd.hpp"
 #include "Kokkos_Equal.hpp"
-#include "Kokkos_BeginEnd.hpp"
+#include <Kokkos_Iterator.hpp>
 
 namespace Kokkos {
 namespace Experimental {

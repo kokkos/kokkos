@@ -21,7 +21,6 @@
 #include "Kokkos_Constraints.hpp"
 #include "Kokkos_HelperPredicates.hpp"
 #include <std_algorithms/Kokkos_Move.hpp>
-#include <std_algorithms/Kokkos_Distance.hpp>
 #include <std_algorithms/Kokkos_AdjacentFind.hpp>
 #include <string>
 

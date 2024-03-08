@@ -18,7 +18,7 @@
 #define KOKKOS_STD_ALGORITHMS_INCLUSIVE_SCAN_HPP
 
 #include "impl/Kokkos_InclusiveScan.hpp"
-#include "Kokkos_BeginEnd.hpp"
+#include <Kokkos_Iterator.hpp>
 
 namespace Kokkos {
 namespace Experimental {
