@@ -33,6 +33,11 @@ TEST(TEST_CATEGORY, append_formatted_multidimensional_index) {
     append_formatted_multidimensional_index(buffer, 1, 2, 3);
     EXPECT_STREQ(buffer, "I was here[1,2,3]");
   }
+  {
+    char buffer[64] = "with mixed integer types ";
+    append_formatted_multidimensional_index(buffer, 1u, -2);
+    EXPECT_STREQ(buffer, "with mixed integer types [1,-2]");
+  }
 }
 
 #ifdef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
