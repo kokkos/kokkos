@@ -756,29 +756,28 @@ class OpenMPTargetExec {
   // teams possible is calculated based on NVIDIA's Volta GPU. In
   // future this value should be based on the chosen architecture for the
   // OpenMPTarget backend.
-  static int MAX_ACTIVE_THREADS;
+  int MAX_ACTIVE_THREADS;
 
  private:
-  static void* scratch_ptr;
+  void* scratch_ptr;
 
  public:
   static void verify_is_process(const char* const);
   static void verify_initialized(const char* const);
 
-  static int* get_lock_array(int num_teams);
-  static void* get_scratch_ptr();
-  static void clear_scratch();
-  static void clear_lock_array();
-  static void resize_scratch(int64_t team_reduce_bytes,
-                             int64_t team_shared_bytes,
-                             int64_t thread_local_bytes, int64_t league_size);
+  int* get_lock_array(int num_teams);
+  void* get_scratch_ptr();
+  void clear_scratch();
+  void clear_lock_array();
+  void resize_scratch(int64_t team_reduce_bytes, int64_t team_shared_bytes,
+                      int64_t thread_local_bytes, int64_t league_size);
 
-  static void* m_scratch_ptr;
-  static std::mutex m_mutex_scratch_ptr;
-  static int64_t m_scratch_size;
-  static int* m_lock_array;
-  static uint64_t m_lock_size;
-  static uint32_t* m_uniquetoken_ptr;
+  void* m_scratch_ptr;
+  std::mutex m_mutex_scratch_ptr;
+  int64_t m_scratch_size;
+  int* m_lock_array;
+  uint64_t m_lock_size;
+  uint32_t* m_uniquetoken_ptr;
 };
 
 }  // namespace Impl

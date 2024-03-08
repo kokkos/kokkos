@@ -522,7 +522,9 @@ class ParallelReduce<CombinedFunctorReducerType,
             arg_policy.scratch_size(0) + arg_policy.scratch_size(1) +
             FunctorTeamShmemSize<FunctorType>::value(
                 arg_functor_reducer.get_functor(), arg_policy.team_size())),
-        m_scratch_memory_lock(OpenMPTargetExec::m_mutex_scratch_ptr) {}
+        m_scratch_memory_lock(m_policy.space()
+                                  .impl_internal_space_instance()
+                                  ->m_ompt_exec.m_mutex_scratch_ptr) {}
 };
 
 }  // namespace Impl
