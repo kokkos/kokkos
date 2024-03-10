@@ -124,7 +124,8 @@ KOKKOS_INLINE_FUNCTION void offsetview_verify_operator_bounds(
                                              args...);
          Kokkos::Impl::throw_runtime_exception(std::string(buffer));))
 
-    KOKKOS_IF_ON_DEVICE((Kokkos::abort("OffsetView bounds error");))
+    KOKKOS_IF_ON_DEVICE(
+        (Kokkos::abort("OffsetView bounds error"); (void)tracker;))
   }
 }
 
