@@ -349,6 +349,11 @@ class simd<double, simd_abi::neon_fixed_size<2>> {
     m_value = vsetq_lane_f64(gen(std::integral_constant<std::size_t, 1>()),
                              m_value, 1);
   }
+  template <typename FlagType>
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(
+      value_type const* ptr, FlagType flag) {
+    copy_from(ptr, flag);
+  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(
       float64x2_t const& value_in)
       : m_value(value_in) {}
@@ -601,6 +606,11 @@ class simd<float, simd_abi::neon_fixed_size<2>> {
     m_value = vset_lane_f32(gen(std::integral_constant<std::size_t, 1>()),
                             m_value, 1);
   }
+  template <typename FlagType>
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(
+      value_type const* ptr, FlagType flag) {
+    copy_from(ptr, flag);
+  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(
       float32x2_t const& value_in)
       : m_value(value_in) {}
@@ -844,6 +854,11 @@ class simd<std::int32_t, simd_abi::neon_fixed_size<2>> {
     m_value = vset_lane_s32(gen(std::integral_constant<std::size_t, 1>()),
                             m_value, 1);
   }
+  template <typename FlagType>
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(
+      value_type const* ptr, FlagType flag) {
+    copy_from(ptr, flag);
+  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(
       int32x2_t const& value_in)
       : m_value(value_in) {}
@@ -1056,6 +1071,11 @@ class simd<std::int64_t, simd_abi::neon_fixed_size<2>> {
     m_value = vsetq_lane_s64(gen(std::integral_constant<std::size_t, 1>()),
                              m_value, 1);
   }
+  template <typename FlagType>
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(
+      value_type const* ptr, FlagType flag) {
+    copy_from(ptr, flag);
+  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(
       int64x2_t const& value_in)
       : m_value(value_in) {}
@@ -1266,6 +1286,11 @@ class simd<std::uint64_t, simd_abi::neon_fixed_size<2>> {
                              m_value, 0);
     m_value = vsetq_lane_u64(gen(std::integral_constant<std::size_t, 1>()),
                              m_value, 1);
+  }
+  template <typename FlagType>
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(
+      value_type const* ptr, FlagType flag) {
+    copy_from(ptr, flag);
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(
       uint64x2_t const& value_in)

@@ -31,6 +31,18 @@ class plus {
   }
 };
 
+class plus_eq {
+ public:
+  template <class T>
+  auto& on_host(T&& a, T&& b) const {
+    return a += b;
+  }
+  template <class T>
+  KOKKOS_INLINE_FUNCTION auto& on_device(T&& a, T&& b) const {
+    return a += b;
+  }
+};
+
 class minus {
  public:
   template <class T>
@@ -40,6 +52,18 @@ class minus {
   template <class T>
   KOKKOS_INLINE_FUNCTION auto on_device(T const& a, T const& b) const {
     return a - b;
+  }
+};
+
+class minus_eq {
+ public:
+  template <class T>
+  auto& on_host(T&& a, T&& b) const {
+    return a -= b;
+  }
+  template <class T>
+  KOKKOS_INLINE_FUNCTION auto& on_device(T&& a, T&& b) const {
+    return a -= b;
   }
 };
 
@@ -55,6 +79,18 @@ class multiplies {
   }
 };
 
+class multiplies_eq {
+ public:
+  template <class T>
+  auto& on_host(T&& a, T&& b) const {
+    return a *= b;
+  }
+  template <class T>
+  KOKKOS_INLINE_FUNCTION auto& on_device(T&& a, T&& b) const {
+    return a *= b;
+  }
+};
+
 class divides {
  public:
   template <class T>
@@ -64,6 +100,18 @@ class divides {
   template <class T>
   KOKKOS_INLINE_FUNCTION auto on_device(T const& a, T const& b) const {
     return a / b;
+  }
+};
+
+class divides_eq {
+ public:
+  template <class T>
+  auto& on_host(T&& a, T&& b) const {
+    return a /= b;
+  }
+  template <class T>
+  KOKKOS_INLINE_FUNCTION auto& on_device(T&& a, T&& b) const {
+    return a /= b;
   }
 };
 
@@ -197,6 +245,18 @@ class shift_right {
   }
 };
 
+class shift_right_eq {
+ public:
+  template <typename T, typename U>
+  auto& on_host(T&& a, U&& b) const {
+    return a >>= b;
+  }
+  template <typename T, typename U>
+  KOKKOS_INLINE_FUNCTION auto& on_device(T&& a, U&& b) const {
+    return a >>= b;
+  }
+};
+
 class shift_left {
  public:
   template <typename T, typename U>
@@ -206,6 +266,18 @@ class shift_left {
   template <typename T, typename U>
   KOKKOS_INLINE_FUNCTION auto on_device(T&& a, U&& b) const {
     return a << b;
+  }
+};
+
+class shift_left_eq {
+ public:
+  template <typename T, typename U>
+  auto& on_host(T&& a, U&& b) const {
+    return a <<= b;
+  }
+  template <typename T, typename U>
+  KOKKOS_INLINE_FUNCTION auto& on_device(T&& a, U&& b) const {
+    return a <<= b;
   }
 };
 
@@ -259,35 +331,38 @@ class log_op {
 
 class hmin {
  public:
-  template <typename T>
-  auto on_host(T const& a) const {
-    return Kokkos::Experimental::hmin(a);
+  template <typename T, typename MaskType = bool>
+  KOKKOS_INLINE_FUNCTION auto on_host(T const& a, MaskType mask = true) const {
+    auto w = Kokkos::Experimental::where(mask, a);
+    return Kokkos::Experimental::hmin(w);
   }
-  template <typename T>
-  auto on_host_serial(T const& a) const {
-    using DataType = typename T::value_type::value_type;
-
-    auto const& v = a.impl_get_value();
-    auto const& m = a.impl_get_mask();
-    auto result   = Kokkos::reduction_identity<DataType>::min();
-    for (std::size_t i = 0; i < v.size(); ++i) {
+  template <typename T, typename MaskType = bool>
+  KOKKOS_INLINE_FUNCTION auto on_host_serial(T const& a,
+                                             MaskType mask = true) const {
+    auto w        = Kokkos::Experimental::where(mask, a);
+    auto const& v = w.impl_get_value();
+    auto const& m = w.impl_get_mask();
+    auto result   = v[0];
+    for (std::size_t i = 1; i < v.size(); ++i) {
       if (m[i]) result = Kokkos::min(result, v[i]);
     }
     return result;
   }
 
-  template <typename T>
-  KOKKOS_INLINE_FUNCTION auto on_device(T const& a) const {
-    return Kokkos::Experimental::hmin(a);
+  template <typename T, typename MaskType = bool>
+  KOKKOS_INLINE_FUNCTION auto on_device(T const& a,
+                                        MaskType mask = true) const {
+    auto w = Kokkos::Experimental::where(mask, a);
+    return Kokkos::Experimental::hmin(w);
   }
-  template <typename T>
-  KOKKOS_INLINE_FUNCTION auto on_device_serial(T const& a) const {
-    using DataType = typename T::value_type::value_type;
-
-    auto const& v = a.impl_get_value();
-    auto const& m = a.impl_get_mask();
-    auto result   = Kokkos::reduction_identity<DataType>::min();
-    for (std::size_t i = 0; i < v.size(); ++i) {
+  template <typename T, typename MaskType = bool>
+  KOKKOS_INLINE_FUNCTION auto on_device_serial(T const& a,
+                                               MaskType mask = true) const {
+    auto w        = Kokkos::Experimental::where(mask, a);
+    auto const& v = w.impl_get_value();
+    auto const& m = w.impl_get_mask();
+    auto result   = v[0];
+    for (std::size_t i = 1; i < v.size(); ++i) {
       if (m[i]) result = Kokkos::min(result, v[i]);
     }
     return result;
@@ -296,77 +371,147 @@ class hmin {
 
 class hmax {
  public:
-  template <typename T>
-  auto on_host(T const& a) const {
-    return Kokkos::Experimental::hmax(a);
+  template <typename T, typename MaskType = bool>
+  KOKKOS_INLINE_FUNCTION auto on_host(T const& a, MaskType mask = true) const {
+    auto w = Kokkos::Experimental::where(mask, a);
+    return Kokkos::Experimental::hmax(w);
   }
-  template <typename T>
-  auto on_host_serial(T const& a) const {
-    using DataType = typename T::value_type::value_type;
-
-    auto const& v = a.impl_get_value();
-    auto const& m = a.impl_get_mask();
-    auto result   = Kokkos::reduction_identity<DataType>::max();
-    for (std::size_t i = 0; i < v.size(); ++i) {
+  template <typename T, typename MaskType = bool>
+  KOKKOS_INLINE_FUNCTION auto on_host_serial(T const& a,
+                                             MaskType mask = true) const {
+    auto w        = Kokkos::Experimental::where(mask, a);
+    auto const& v = w.impl_get_value();
+    auto const& m = w.impl_get_mask();
+    auto result   = v[0];
+    for (std::size_t i = 1; i < v.size(); ++i) {
       if (m[i]) result = Kokkos::max(result, v[i]);
     }
     return result;
   }
 
-  template <typename T>
-  KOKKOS_INLINE_FUNCTION auto on_device(T const& a) const {
-    return Kokkos::Experimental::hmax(a);
+  template <typename T, typename MaskType = bool>
+  KOKKOS_INLINE_FUNCTION auto on_device(T const& a,
+                                        MaskType mask = true) const {
+    auto w = Kokkos::Experimental::where(mask, a);
+    return Kokkos::Experimental::hmax(w);
   }
-  template <typename T>
-  KOKKOS_INLINE_FUNCTION auto on_device_serial(T const& a) const {
-    using DataType = typename T::value_type::value_type;
-
-    auto const& v = a.impl_get_value();
-    auto const& m = a.impl_get_mask();
-    auto result   = Kokkos::reduction_identity<DataType>::max();
-    for (std::size_t i = 0; i < v.size(); ++i) {
+  template <typename T, typename MaskType = bool>
+  KOKKOS_INLINE_FUNCTION auto on_device_serial(T const& a,
+                                               MaskType mask = true) const {
+    auto w        = Kokkos::Experimental::where(mask, a);
+    auto const& v = w.impl_get_value();
+    auto const& m = w.impl_get_mask();
+    auto result   = v[0];
+    for (std::size_t i = 1; i < v.size(); ++i) {
       if (m[i]) result = Kokkos::max(result, v[i]);
     }
     return result;
   }
 };
 
+template <typename BinaryOperation = std::plus<>>
+class reduce_where_expr {
+ public:
+  template <typename T, typename MaskType>
+  KOKKOS_INLINE_FUNCTION auto on_host(T const& a, MaskType mask) const {
+    auto w = Kokkos::Experimental::where(mask, a);
+    return Kokkos::Experimental::reduce(w, BinaryOperation());
+  }
+  template <typename T, typename MaskType>
+  KOKKOS_INLINE_FUNCTION auto on_host_serial(T const& a, MaskType mask) const {
+    auto w        = Kokkos::Experimental::where(mask, a);
+    auto const& v = w.impl_get_value();
+    auto const& m = w.impl_get_mask();
+    auto result   = v[0];
+    for (std::size_t i = 1; i < v.size(); ++i) {
+      if (m[i]) result = BinaryOperation()(result, v[i]);
+    }
+    return result;
+  }
+
+  template <typename T, typename MaskType>
+  KOKKOS_INLINE_FUNCTION auto on_device(T const& a, MaskType mask) const {
+    auto w = Kokkos::Experimental::where(mask, a);
+    return Kokkos::Experimental::reduce(w, BinaryOperation());
+  }
+  template <typename T, typename MaskType>
+  KOKKOS_INLINE_FUNCTION auto on_device_serial(T const& a,
+                                               MaskType mask) const {
+    auto w        = Kokkos::Experimental::where(mask, a);
+    auto const& v = w.impl_get_value();
+    auto const& m = w.impl_get_mask();
+    auto result   = v[0];
+    for (std::size_t i = 1; i < v.size(); ++i) {
+      if (m[i]) result = BinaryOperation()(result, v[i]);
+    }
+    return result;
+  }
+};
+
+class reduce_min {
+ public:
+  template <typename T, typename MaskType>
+  KOKKOS_INLINE_FUNCTION auto on_host(T const& a, MaskType mask) const {
+    return Kokkos::Experimental::reduce_min(a, mask);
+  }
+  template <typename T, typename MaskType>
+  KOKKOS_INLINE_FUNCTION auto on_host_serial(T const& a, MaskType mask) const {
+    return hmin().on_host_serial(a, mask);
+  }
+
+  template <typename T, typename MaskType>
+  KOKKOS_INLINE_FUNCTION auto on_device(T const& a, MaskType mask) const {
+    return Kokkos::Experimental::reduce_min(a, mask);
+  }
+  template <typename T, typename MaskType>
+  KOKKOS_INLINE_FUNCTION auto on_device_serial(T const& a,
+                                               MaskType mask) const {
+    return hmin().on_device_serial(a, mask);
+  }
+};
+
+class reduce_max {
+ public:
+  template <typename T, typename MaskType>
+  KOKKOS_INLINE_FUNCTION auto on_host(T const& a, MaskType mask) const {
+    return Kokkos::Experimental::reduce_max(a, mask);
+  }
+  template <typename T, typename MaskType>
+  KOKKOS_INLINE_FUNCTION auto on_host_serial(T const& a, MaskType mask) const {
+    return hmax().on_host_serial(a, mask);
+  }
+
+  template <typename T, typename MaskType>
+  KOKKOS_INLINE_FUNCTION auto on_device(T const& a, MaskType mask) const {
+    return Kokkos::Experimental::reduce_max(a, mask);
+  }
+  template <typename T, typename MaskType>
+  KOKKOS_INLINE_FUNCTION auto on_device_serial(T const& a,
+                                               MaskType mask) const {
+    return hmax().on_device_serial(a, mask);
+  }
+};
+
+template <typename BinaryOperation = std::plus<>>
 class reduce {
  public:
-  template <typename T>
-  auto on_host(T const& a) const {
-    using DataType = typename T::value_type::value_type;
-    return Kokkos::Experimental::reduce(a, DataType(0), std::plus<>());
+  template <typename T, typename MaskType>
+  KOKKOS_INLINE_FUNCTION auto on_host(T const& a, MaskType mask) const {
+    return Kokkos::Experimental::reduce(a, mask, BinaryOperation());
   }
-  template <typename T>
-  auto on_host_serial(T const& a) const {
-    using DataType = typename T::value_type::value_type;
-
-    auto const& v = a.impl_get_value();
-    auto const& m = a.impl_get_mask();
-    auto result   = Kokkos::reduction_identity<DataType>::sum();
-    for (std::size_t i = 0; i < v.size(); ++i) {
-      if (m[i]) result += v[i];
-    }
-    return result;
+  template <typename T, typename MaskType>
+  KOKKOS_INLINE_FUNCTION auto on_host_serial(T const& a, MaskType mask) const {
+    return reduce_where_expr<BinaryOperation>().on_host_serial(a, mask);
   }
 
-  template <typename T>
-  KOKKOS_INLINE_FUNCTION auto on_device(T const& a) const {
-    using DataType = typename T::value_type::value_type;
-    return Kokkos::Experimental::reduce(a, DataType(0), std::plus<>());
+  template <typename T, typename MaskType>
+  KOKKOS_INLINE_FUNCTION auto on_device(T const& a, MaskType mask) const {
+    return Kokkos::Experimental::reduce(a, mask, BinaryOperation());
   }
-  template <typename T>
-  KOKKOS_INLINE_FUNCTION auto on_device_serial(T const& a) const {
-    using DataType = typename T::value_type::value_type;
-
-    auto const& v = a.impl_get_value();
-    auto const& m = a.impl_get_mask();
-    auto result   = Kokkos::reduction_identity<DataType>::sum();
-    for (std::size_t i = 0; i < v.size(); ++i) {
-      if (m[i]) result += v[i];
-    }
-    return result;
+  template <typename T, typename MaskType>
+  KOKKOS_INLINE_FUNCTION auto on_device_serial(T const& a,
+                                               MaskType mask) const {
+    return reduce_where_expr<BinaryOperation>().on_device_serial(a, mask);
   }
 };
 
