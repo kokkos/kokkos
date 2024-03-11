@@ -350,7 +350,7 @@ template <class ExecutionPolicy, class FunctorType,
               std::enable_if_t<is_execution_policy<ExecutionPolicy>::value>>
 inline void parallel_scan(const std::string& str, const ExecutionPolicy& policy,
                           const FunctorType& functor) {
-  uint64_t kpID                = 0;
+  uint64_t kpID = 0;
   /** Request a tuned policy from the tools subsystem */
   const auto& response =
       Kokkos::Tools::Impl::begin_parallel_scan(policy, functor, str, kpID);
