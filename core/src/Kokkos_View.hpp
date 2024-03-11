@@ -382,9 +382,7 @@ struct MDSpanViewTraits {
   using mdspan_type = UnsupportedKokkosArrayLayout;
 };
 
-/**
- * "Natural" mdspan for a view if the View's ArrayLayout is supported.
- */
+// "Natural" mdspan for a view if the View's ArrayLayout is supported.
 template <class Traits>
 struct MDSpanViewTraits<
     Traits, std::void_t<typename Experimental::Impl::LayoutFromArrayLayout<
@@ -1754,7 +1752,6 @@ class View : public ViewTraits<DataType, Properties...> {
   //----------------------------------------
   // MDSpan converting constructors
 #ifdef KOKKOS_ENABLE_IMPL_MDSPAN
- public:
   template <typename U = typename Experimental::Impl::MDSpanViewTraits<
                 traits>::mdspan_type>
   KOKKOS_INLINE_FUNCTION MDSPAN_CONDITIONAL_EXPLICIT(traits::is_managed) View(
@@ -1770,7 +1767,6 @@ class View : public ViewTraits<DataType, Properties...> {
 
   //----------------------------------------
   // Conversion to MDSpan
- public:
   template <class OtherElementType, class OtherExtents, class OtherLayoutPolicy,
             class OtherAccessor>
   KOKKOS_INLINE_FUNCTION constexpr operator mdspan<

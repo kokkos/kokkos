@@ -86,8 +86,8 @@ KOKKOS_INLINE_FUNCTION auto array_layout_from_mapping(
   using mapping_type = typename MDSpanType::mapping_type;
   using extents_type = typename mapping_type::extents_type;
 
-  static constexpr auto rank = extents_type::rank();
-  const auto &ext            = mapping.extents();
+  constexpr auto rank = extents_type::rank();
+  const auto &ext     = mapping.extents();
 
   static_assert(rank <= ARRAY_LAYOUT_MAX_RANK,
                 "Unsupported rank for mdspan (must be <= 8)");

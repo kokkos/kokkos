@@ -23,7 +23,6 @@ static_assert(false,
 #define KOKKOS_EXPERIMENTAL_MDSPAN_EXTENTS_HPP
 
 #include "Kokkos_MDSpan_Header.hpp"
-#include <Kokkos_Core_fwd.hpp>
 
 namespace Kokkos::Impl {
 
