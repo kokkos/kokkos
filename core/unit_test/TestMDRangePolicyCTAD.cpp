@@ -45,6 +45,7 @@ struct TestMDRangePolicyCTAD {
   [[maybe_unused]] static inline int64_t tt[5];
   [[maybe_unused]] static inline Kokkos::Array<int64_t, 3> a;
   [[maybe_unused]] static inline Kokkos::Array<int64_t, 2> aa;
+  [[maybe_unused]] static inline int64_t i64;
 
   // Workaround for nvc++ (CUDA-11.7-NVHPC) ignoring [[maybe_unused]] on
   // ImplicitlyConvertibleToDefaultExecutionSpace::operator
@@ -54,7 +55,7 @@ struct TestMDRangePolicyCTAD {
 
   // Workaround for HIP-ROCm-5.2 "declared but never referenced"
   TestMDRangePolicyCTAD() {
-    maybe_unused(des, notEs, ses, t, tt, a, aa, notEsToDes);
+    maybe_unused(des, notEs, ses, t, tt, a, aa, notEsToDes, i64);
   }
 
   // MDRangePolicy with C array parameters
@@ -83,7 +84,6 @@ struct TestMDRangePolicyCTAD {
                                decltype(Kokkos::MDRangePolicy(
                                    {1, 2, 3, 4, 5, 6}, {1, 2, 3, 4, 5, 6}))>);
 
-  [[maybe_unused]] static inline int64_t i64;
   static_assert(std::is_same_v<Kokkos::MDRangePolicy<Kokkos::Rank<6>>,
                                decltype(Kokkos::MDRangePolicy(
                                    {1, 2, 3, 4, 5, 6}, {1, 2, 3, 4, 5, 6},
