@@ -3537,110 +3537,86 @@ class ViewMapping<
 namespace Kokkos {
 namespace Impl {
 
-template <unsigned, class MapType>
-KOKKOS_INLINE_FUNCTION bool view_verify_operator_bounds(const MapType&) {
-  return true;
+template <class Map, class... Indices, std::size_t... Enumerate>
+KOKKOS_FUNCTION bool within_range(Map const& map,
+                                  std::index_sequence<Enumerate...>,
+                                  Indices... indices) {
+  return (((std::size_t)indices < map.extent(Enumerate)) && ...);
 }
 
-template <unsigned R, class MapType, class iType, class... Args>
-KOKKOS_INLINE_FUNCTION bool view_verify_operator_bounds(const MapType& map,
-                                                        const iType& i,
-                                                        Args... args) {
-  return (size_t(i) < map.extent(R)) &&
-         view_verify_operator_bounds<R + 1>(map, args...);
+template <class... Indices>
+KOKKOS_FUNCTION constexpr char* append_formatted_multidimensional_index(
+    char* dest, Indices... indices) {
+  char* d = dest;
+  strcat(d, "[");
+  (
+      [&] {
+        d += strlen(d);
+        to_chars_i(d,
+                   d + 20,  // 20 digits ought to be enough
+                   indices);
+        strcat(d, ",");
+      }(),
+      ...);
+  d[strlen(d) - 1] = ']';  // overwrite trailing comma
+  return dest;
 }
 
-template <unsigned, class MapType>
-inline void view_error_operator_bounds(char*, int, const MapType&) {}
-
-template <unsigned R, class MapType, class iType, class... Args>
-inline void view_error_operator_bounds(char* buf, int len, const MapType& map,
-                                       const iType& i, Args... args) {
-  const int n = snprintf(
-      buf, len, " %ld < %ld %c", static_cast<unsigned long>(i),
-      static_cast<unsigned long>(map.extent(R)), (sizeof...(Args) ? ',' : ')'));
-  view_error_operator_bounds<R + 1>(buf + n, len - n, map, args...);
+template <class Map, class... Indices, std::size_t... Enumerate>
+KOKKOS_FUNCTION void print_extents(char* dest, Map const& map,
+                                   std::index_sequence<Enumerate...>) {
+  append_formatted_multidimensional_index(dest, map.extent(Enumerate)...);
 }
 
-/* Check #3: is the View managed as determined by the MemoryTraits? */
-template <class MapType, bool is_managed = (MapType::is_managed != 0)>
-struct OperatorBoundsErrorOnDevice;
-
-template <class MapType>
-struct OperatorBoundsErrorOnDevice<MapType, false> {
-  KOKKOS_INLINE_FUNCTION
-  static void run(MapType const&) { Kokkos::abort("View bounds error"); }
-};
-
-template <class MapType>
-struct OperatorBoundsErrorOnDevice<MapType, true> {
-  KOKKOS_INLINE_FUNCTION
-  static void run(MapType const& map) {
-    SharedAllocationHeader const* const header =
-        SharedAllocationHeader::get_header(
-            static_cast<void const*>(map.data()));
-    char const* const label = header->label();
-    enum { LEN = 128 };
-    char msg[LEN];
-    char const* const first_part = "View bounds error of view ";
-    char* p                      = msg;
-    char* const end              = msg + LEN - 1;
-    for (char const* p2 = first_part; (*p2 != '\0') && (p < end); ++p, ++p2) {
-      *p = *p2;
-    }
-    for (char const* p2 = label; (*p2 != '\0') && (p < end); ++p, ++p2) {
-      *p = *p2;
-    }
-    *p = '\0';
-    Kokkos::abort(msg);
-  }
-};
-
-/* Check #2: does the ViewMapping have the printable_label_typedef defined?
-   See above that only the non-specialized standard-layout ViewMapping has
-   this defined by default.
-   The existence of this alias indicates the existence of MapType::is_managed
- */
 template <class T>
 using printable_label_typedef_t = typename T::printable_label_typedef;
-
-template <class Map>
-KOKKOS_FUNCTION
-    std::enable_if_t<!is_detected<printable_label_typedef_t, Map>::value>
-    operator_bounds_error_on_device(Map const&) {
-  Kokkos::abort("View bounds error");
-}
-
-template <class Map>
-KOKKOS_FUNCTION
-    std::enable_if_t<is_detected<printable_label_typedef_t, Map>::value>
-    operator_bounds_error_on_device(Map const& map) {
-  OperatorBoundsErrorOnDevice<Map>::run(map);
-}
 
 template <class MemorySpace, class ViewType, class MapType, class... Args>
 KOKKOS_INLINE_FUNCTION void view_verify_operator_bounds(
     Kokkos::Impl::ViewTracker<ViewType> const& tracker, const MapType& map,
     Args... args) {
-  if (!view_verify_operator_bounds<0>(map, args...)) {
+  if (!within_range(map, std::make_index_sequence<sizeof...(Args)>(),
+                    args...)) {
+    char err[256] = "";
+    strcat(err, "Kokkos::View ERROR: out of bounds access");
+    strcat(err, " label=(\"");
     KOKKOS_IF_ON_HOST(
-        (enum {LEN = 1024}; char buffer[LEN];
-         const std::string label =
-             tracker.m_tracker.template get_label<MemorySpace>();
-         int n = snprintf(buffer, LEN, "View bounds error of view %s (",
-                          label.c_str());
-         view_error_operator_bounds<0>(buffer + n, LEN - n, map, args...);
-         Kokkos::Impl::throw_runtime_exception(std::string(buffer));))
-
-    KOKKOS_IF_ON_DEVICE((
-        /* Check #1: is there a SharedAllocationRecord?
-           (we won't use it, but if its not there then there isn't
-            a corresponding SharedAllocationHeader containing a label).
-           This check should cover the case of Views that don't
-           have the Unmanaged trait but were initialized by pointer. */
         if (tracker.m_tracker.has_record()) {
-          operator_bounds_error_on_device(map);
-        } else { Kokkos::abort("View bounds error"); }))
+          strncat(err, tracker.m_tracker.template get_label<void>().c_str(),
+                  128);
+        } else { strcat(err, "**UNMANAGED**"); })
+    KOKKOS_IF_ON_DEVICE([&] {
+      // Check #1: is there a SharedAllocationRecord?  (we won't use it, but
+      // if its not there then there isn't a corresponding
+      // SharedAllocationHeader containing a label).  This check should cover
+      // the case of Views that don't have the Unmanaged trait but were
+      // initialized by pointer.
+      if (!tracker.m_tracker.has_record()) {
+        strcat(err, "**UNMANAGED**");
+        return;
+      }
+      // Check #2: does the ViewMapping have the printable_label_typedef
+      // defined? See above that only the non-specialized standard-layout
+      // ViewMapping has this defined by default. The existence of this
+      // alias indicates the existence of MapType::is_managed
+      if constexpr (is_detected_v<printable_label_typedef_t, MapType>) {
+        // Check #3: is the View managed as determined by the MemoryTraits?
+        if constexpr (MapType::is_managed != 0) {
+          SharedAllocationHeader const* const header =
+              SharedAllocationHeader::get_header(
+                  static_cast<void const*>(map.data()));
+          char const* const label = header->label();
+          strcat(err, label);
+          return;
+        }
+        strcat(err, "**UNAVAILABLE**");
+      }
+    }();)
+    strcat(err, "\") with indices ");
+    append_formatted_multidimensional_index(err, args...);
+    strcat(err, " but extents ");
+    print_extents(err, map, std::make_index_sequence<sizeof...(Args)>());
+    Kokkos::abort(err);
   }
 }
 
