@@ -134,8 +134,10 @@ inline void parallel_for(const std::string& str, const ExecPolicy& policy,
                          const FunctorType& functor) {
   uint64_t kpID = 0;
 
-  ExecPolicy inner_policy = policy;
-  Kokkos::Tools::Impl::begin_parallel_for(inner_policy, functor, str, kpID);
+  /** Request a tuned policy from the tools subsystem */
+  const auto& response =
+      Kokkos::Tools::Impl::begin_parallel_for(policy, functor, str, kpID);
+  const auto& inner_policy = response.policy;
 
   auto closure =
       Kokkos::Impl::construct_with_shared_allocation_tracking_disabled<
@@ -349,8 +351,10 @@ template <class ExecutionPolicy, class FunctorType,
 inline void parallel_scan(const std::string& str, const ExecutionPolicy& policy,
                           const FunctorType& functor) {
   uint64_t kpID                = 0;
-  ExecutionPolicy inner_policy = policy;
-  Kokkos::Tools::Impl::begin_parallel_scan(inner_policy, functor, str, kpID);
+  /** Request a tuned policy from the tools subsystem */
+  const auto& response =
+      Kokkos::Tools::Impl::begin_parallel_scan(policy, functor, str, kpID);
+  const auto& inner_policy = response.policy;
 
   auto closure =
       Kokkos::Impl::construct_with_shared_allocation_tracking_disabled<
