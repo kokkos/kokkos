@@ -237,7 +237,7 @@ void test_scratch(TEST_EXECSPACE exec0, TEST_EXECSPACE exec1) {
   ASSERT_EQ(error0, 0);
   ASSERT_EQ(error1, 0);
 
-  // Request larget scratch size to trigger a realloc and test
+  // Request largest scratch size to trigger a realloc and test
   const auto new_scratch_size = scratch_size + 10;
   ScratchFunctor f0_more_scratch(exec0, new_scratch_size, R);
   ScratchFunctor f1_more_scratch(exec1, new_scratch_size, R);
