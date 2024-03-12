@@ -54,9 +54,8 @@ struct TestViewMDSpanConversion {
       const MDSpanLayoutMapping &mapping) {
     using view_type = Kokkos::View<DataType, KokkosLayout, ExecutionSpace,
                                    Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
-    using natural_mdspan_type =
-        typename Kokkos::Experimental::Impl::MDSpanViewTraits<
-            typename view_type::traits>::mdspan_type;
+    using natural_mdspan_type = typename Kokkos::Impl::MDSpanViewTraits<
+        typename view_type::traits>::mdspan_type;
     using mapping_type       = MDSpanLayoutMapping;
     using mdspan_layout_type = typename MDSpanLayoutMapping::layout_type;
     using extents_type       = typename mapping_type::extents_type;
@@ -85,9 +84,8 @@ struct TestViewMDSpanConversion {
   static void test_conversion_to_mdspan(
       const MDSpanLayoutMapping &ref_layout_mapping, ViewType v) {
     using view_type = ViewType;
-    using natural_mdspan_type =
-        typename Kokkos::Experimental::Impl::MDSpanViewTraits<
-            typename view_type::traits>::mdspan_type;
+    using natural_mdspan_type = typename Kokkos::Impl::MDSpanViewTraits<
+        typename view_type::traits>::mdspan_type;
 
     natural_mdspan_type cvt = v;
     ASSERT_EQ(cvt.data_handle(), v.data());
