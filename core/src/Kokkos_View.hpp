@@ -374,7 +374,7 @@ struct ViewTraits {
 };
 
 #ifdef KOKKOS_ENABLE_IMPL_MDSPAN
-namespace Experimental::Impl {
+namespace Impl {
 struct UnsupportedKokkosArrayLayout;
 
 template <class Traits, class Enabled = void>
@@ -385,17 +385,17 @@ struct MDSpanViewTraits {
 // "Natural" mdspan for a view if the View's ArrayLayout is supported.
 template <class Traits>
 struct MDSpanViewTraits<
-    Traits, std::void_t<typename Experimental::Impl::LayoutFromArrayLayout<
+    Traits, std::void_t<typename Impl::LayoutFromArrayLayout<
                 typename Traits::array_layout>::type>> {
   using index_type   = std::size_t;
-  using extents_type = typename Experimental::Impl::ExtentsFromDataType<
+  using extents_type = typename Impl::ExtentsFromDataType<
       index_type, typename Traits::data_type>::type;
-  using mdspan_layout_type = typename Experimental::Impl::LayoutFromArrayLayout<
+  using mdspan_layout_type = typename Impl::LayoutFromArrayLayout<
       typename Traits::array_layout>::type;
   using mdspan_type =
       mdspan<typename Traits::value_type, extents_type, mdspan_layout_type>;
 };
-}  // namespace Experimental::Impl
+}  // namespace Impl
 #endif  // KOKKOS_ENABLE_IMPL_MDSPAN
 
 /** \class View
@@ -1752,17 +1752,17 @@ class View : public ViewTraits<DataType, Properties...> {
   //----------------------------------------
   // MDSpan converting constructors
 #ifdef KOKKOS_ENABLE_IMPL_MDSPAN
-  template <typename U = typename Experimental::Impl::MDSpanViewTraits<
+  template <typename U = typename Impl::MDSpanViewTraits<
                 traits>::mdspan_type>
   KOKKOS_INLINE_FUNCTION MDSPAN_CONDITIONAL_EXPLICIT(traits::is_managed) View(
-      const typename Experimental::Impl::MDSpanViewTraits<traits>::mdspan_type&
+      const typename Impl::MDSpanViewTraits<traits>::mdspan_type&
           mds,
       std::enable_if_t<!std::is_same_v<
-          Experimental::Impl::UnsupportedKokkosArrayLayout, U>>* = nullptr)
+          Impl::UnsupportedKokkosArrayLayout, U>>* = nullptr)
       : View(mds.data_handle(),
-             Experimental::Impl::array_layout_from_mapping<
+             Impl::array_layout_from_mapping<
                  typename traits::array_layout,
-                 typename Experimental::Impl::MDSpanViewTraits<
+                 typename Impl::MDSpanViewTraits<
                      traits>::mdspan_type>(mds.mapping())) {}
 
   //----------------------------------------
@@ -1772,10 +1772,10 @@ class View : public ViewTraits<DataType, Properties...> {
   KOKKOS_INLINE_FUNCTION constexpr operator mdspan<
       OtherElementType, OtherExtents, OtherLayoutPolicy, OtherAccessor>() {
     using mdspan_type =
-        typename Experimental::Impl::MDSpanViewTraits<traits>::mdspan_type;
+        typename Impl::MDSpanViewTraits<traits>::mdspan_type;
     return mdspan_type{
         data(),
-        Experimental::Impl::mapping_from_view_mapping<mdspan_type>(m_map)};
+        Impl::mapping_from_view_mapping<mdspan_type>(m_map)};
   }
 
   template <class OtherAccessorType,
@@ -1785,14 +1785,14 @@ class View : public ViewTraits<DataType, Properties...> {
   KOKKOS_INLINE_FUNCTION constexpr auto to_mdspan(
       const OtherAccessorType& other_accessor) {
     using mdspan_type =
-        typename Experimental::Impl::MDSpanViewTraits<traits>::mdspan_type;
+        typename Impl::MDSpanViewTraits<traits>::mdspan_type;
     using ret_mdspan_type =
         mdspan<typename mdspan_type::element_type,
                typename mdspan_type::extents_type,
                typename mdspan_type::layout_type, OtherAccessorType>;
     return ret_mdspan_type{
         data(),
-        Experimental::Impl::mapping_from_view_mapping<mdspan_type>(m_map),
+        Impl::mapping_from_view_mapping<mdspan_type>(m_map),
         other_accessor};
   }
 #endif  // KOKKOS_ENABLE_IMPL_MDSPAN

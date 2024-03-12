@@ -26,7 +26,7 @@ static_assert(false,
 #include <Kokkos_Core_fwd.hpp>
 #include <impl/Kokkos_ViewDataAnalysis.hpp>
 
-namespace Kokkos::Experimental::Impl {
+namespace Kokkos::Impl {
 template <class Layout>
 struct ArrayLayoutFromLayout;
 
@@ -151,6 +151,6 @@ KOKKOS_INLINE_FUNCTION auto view_offset_from_mdspan(
   static constexpr auto padding = ArrayLayoutFromLayout<LayoutPolicy>::padding;
   return offset_type(padding, array_layout_from_mdspan(mds));
 };
-}  // namespace Kokkos::Experimental::Impl
+}  // namespace Kokkos::Impl
 
 #endif  // KOKKOS_EXPERIMENTAL_MDSPAN_LAYOUT_HPP
