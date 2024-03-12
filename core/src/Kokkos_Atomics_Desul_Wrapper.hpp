@@ -25,6 +25,7 @@ static_assert(false,
 
 #include <Kokkos_Atomics_Desul_Config.hpp>
 #include <desul/atomics.hpp>
+#include <desul/atomics/Atomic_Ref.hpp>
 
 #include <impl/Kokkos_Volatile_Load.hpp>
 
