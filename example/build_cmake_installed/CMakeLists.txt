@@ -6,4 +6,4 @@ find_package(Kokkos REQUIRED)
 
 add_executable(cmake_example cmake_example.cpp)
 
-target_link_libraries(cmake_example PRIVATE Kokkos::kokkos)
+target_link_libraries(cmake_example PUBLIC Kokkos::kokkos)
