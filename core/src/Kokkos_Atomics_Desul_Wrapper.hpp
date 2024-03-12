@@ -55,11 +55,34 @@ inline const char* atomic_query_version() { return "KOKKOS_DESUL_ATOMICS"; }
 #define KOKKOS_DESUL_MEM_SCOPE desul::MemoryScopeDevice()
 #endif
 
-template<class T> KOKKOS_INLINE_FUNCTION
-T atomic_load(T* const dest) { return desul::atomic_load(dest, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
+#define KOKKOS_ENABLE_IMPL_ATOMIC_REF
 
-template<class T> KOKKOS_INLINE_FUNCTION
-void atomic_store(T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) { return desul::atomic_store(dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
+// clang-format on
+template <class T>
+using desul_atomic_ref = desul::AtomicRef<T, desul::MemoryOrderRelaxed,
+                                          decltype(KOKKOS_DESUL_MEM_SCOPE)>;
+
+template <class T>
+KOKKOS_INLINE_FUNCTION T atomic_load(T* const dest) {
+#ifdef KOKKOS_ENABLE_IMPL_ATOMIC_REF
+  return desul_atomic_ref<T>{*dest};
+#else
+  return desul::atomic_load(dest, desul::MemoryOrderRelaxed(),
+                            KOKKOS_DESUL_MEM_SCOPE);
+#endif
+}
+
+template <class T>
+KOKKOS_INLINE_FUNCTION void atomic_store(
+    T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) {
+#ifdef KOKKOS_ENABLE_IMPL_ATOMIC_REF
+  desul_atomic_ref<T>{* dest} = val;
+#else
+  return desul::atomic_store(dest, val, desul::MemoryOrderRelaxed(),
+                             KOKKOS_DESUL_MEM_SCOPE);
+#endif
+}
+// clang-format off
 
 template<class T> KOKKOS_INLINE_FUNCTION
 void atomic_assign(T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) { atomic_store(dest,val); }
@@ -77,34 +100,94 @@ void store_fence() { return desul::atomic_thread_fence(desul::MemoryOrderRelease
 
 // atomic_fetch_op
 template<class T> KOKKOS_INLINE_FUNCTION
-T atomic_fetch_add (T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) { return desul::atomic_fetch_add (dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
+T atomic_fetch_add (T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) {
+#ifdef KOKKOS_ENABLE_IMPL_ATOMIC_REF
+  return desul_atomic_ref<T>{*dest}.fetch_add(val);
+#else
+  return desul::atomic_fetch_add (dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE);
+#endif
+}
 
 template<class T> KOKKOS_INLINE_FUNCTION
-T atomic_fetch_sub (T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) { return desul::atomic_fetch_sub (dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
+T atomic_fetch_sub (T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) {
+#ifdef KOKKOS_ENABLE_IMPL_ATOMIC_REF
+  return desul_atomic_ref<T>{*dest}.fetch_sub(val);
+#else
+  return desul::atomic_fetch_sub (dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE);
+#endif
+}
 
 template<class T> KOKKOS_INLINE_FUNCTION
-T atomic_fetch_max (T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) { return desul::atomic_fetch_max (dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
+T atomic_fetch_max (T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) {
+#ifdef KOKKOS_ENABLE_IMPL_ATOMIC_REF
+  return desul_atomic_ref<T>{*dest}.fetch_max(val);
+#else
+  return desul::atomic_fetch_max (dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE);
+#endif
+}
 
 template<class T> KOKKOS_INLINE_FUNCTION
-T atomic_fetch_min (T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) { return desul::atomic_fetch_min (dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
+T atomic_fetch_min (T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) {
+#ifdef KOKKOS_ENABLE_IMPL_ATOMIC_REF
+  return desul_atomic_ref<T>{*dest}.fetch_min(val);
+#else
+  return desul::atomic_fetch_min (dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE);
+#endif
+}
 
 template<class T> KOKKOS_INLINE_FUNCTION
-T atomic_fetch_mul (T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) { return desul::atomic_fetch_mul (dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
+T atomic_fetch_mul (T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) {
+#ifdef KOKKOS_ENABLE_IMPL_ATOMIC_REF
+  return desul_atomic_ref<T>{*dest}.fetch_mul(val);
+#else
+  return desul::atomic_fetch_mul (dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE);
+#endif
+}
 
 template<class T> KOKKOS_INLINE_FUNCTION
-T atomic_fetch_div (T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) { return desul::atomic_fetch_div (dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
+T atomic_fetch_div (T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) {
+#ifdef KOKKOS_ENABLE_IMPL_ATOMIC_REF
+  return desul_atomic_ref<T>{*dest}.fetch_div(val);
+#else
+  return desul::atomic_fetch_div (dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE);
+#endif
+}
 
 template<class T> KOKKOS_INLINE_FUNCTION
-T atomic_fetch_mod (T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) { return desul::atomic_fetch_mod (dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
+T atomic_fetch_mod (T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) {
+#ifdef KOKKOS_ENABLE_IMPL_ATOMIC_REF
+  return desul_atomic_ref<T>{*dest}.fetch_mod(val);
+#else
+  return desul::atomic_fetch_mod (dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE);
+#endif
+}
 
 template<class T> KOKKOS_INLINE_FUNCTION
-T atomic_fetch_and (T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) { return desul::atomic_fetch_and (dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
+T atomic_fetch_and (T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) {
+#ifdef KOKKOS_ENABLE_IMPL_ATOMIC_REF
+  return desul_atomic_ref<T>{*dest}.fetch_and(val);
+#else
+  return desul::atomic_fetch_and (dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE);
+#endif
+}
 
 template<class T> KOKKOS_INLINE_FUNCTION
-T atomic_fetch_or  (T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) { return desul::atomic_fetch_or  (dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
+T atomic_fetch_or  (T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) {
+#ifdef KOKKOS_ENABLE_IMPL_ATOMIC_REF
+  return desul_atomic_ref<T>{*dest}.fetch_or(val);
+#else
+  return desul::atomic_fetch_or  (dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE);
+#endif
+}
 
 template<class T> KOKKOS_INLINE_FUNCTION
-T atomic_fetch_xor (T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) { return desul::atomic_fetch_xor (dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
+T atomic_fetch_xor (T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) {
+#ifdef KOKKOS_ENABLE_IMPL_ATOMIC_REF
+  return desul_atomic_ref<T>{*dest}.fetch_xor(val);
+#else
+  return desul::atomic_fetch_xor (dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE);
+#endif
+}
 
 template<class T> KOKKOS_INLINE_FUNCTION
 T atomic_fetch_nand(T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) { return desul::atomic_fetch_nand(dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
@@ -116,42 +199,114 @@ template<class T> KOKKOS_INLINE_FUNCTION
 T atomic_fetch_rshift(T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) { return desul::atomic_fetch_rshift(dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
 
 template<class T> KOKKOS_INLINE_FUNCTION
-T atomic_fetch_inc(T* const dest) { return desul::atomic_fetch_inc(dest, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
+T atomic_fetch_inc(T* const dest) {
+#ifdef KOKKOS_ENABLE_IMPL_ATOMIC_REF
+  return desul_atomic_ref<T>{*dest}++;
+#else
+  return desul::atomic_fetch_inc(dest, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE);
+#endif
+}
 
 template<class T> KOKKOS_INLINE_FUNCTION
-T atomic_fetch_dec(T* const dest) { return desul::atomic_fetch_dec(dest, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
+T atomic_fetch_dec(T* const dest) {
+#ifdef KOKKOS_ENABLE_IMPL_ATOMIC_REF
+  return desul_atomic_ref<T>{*dest}--;
+#else
+  return desul::atomic_fetch_dec(dest, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE);
+#endif
+}
 
 
 // atomic_op_fetch
 template<class T> KOKKOS_INLINE_FUNCTION
-T atomic_add_fetch (T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) { return desul::atomic_add_fetch (dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
+T atomic_add_fetch (T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) {
+#ifdef KOKKOS_ENABLE_IMPL_ATOMIC_REF
+  return desul_atomic_ref<T>{*dest} += val;
+#else
+  return desul::atomic_add_fetch (dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE);
+#endif
+}
 
 template<class T> KOKKOS_INLINE_FUNCTION
-T atomic_sub_fetch (T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) { return desul::atomic_sub_fetch (dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
+T atomic_sub_fetch (T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) {
+#ifdef KOKKOS_ENABLE_IMPL_ATOMIC_REF
+  return desul_atomic_ref<T>{*dest} -= val;
+#else
+  return desul::atomic_sub_fetch (dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE);
+#endif
+}
 
 template<class T> KOKKOS_INLINE_FUNCTION
-T atomic_max_fetch (T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) { return desul::atomic_max_fetch (dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
+T atomic_max_fetch (T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) {
+#ifdef KOKKOS_ENABLE_IMPL_ATOMIC_REF
+  return desul_atomic_ref<T>{*dest}.max_fetch(val);
+#else
+  return desul::atomic_max_fetch (dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE);
+#endif
+}
 
 template<class T> KOKKOS_INLINE_FUNCTION
-T atomic_min_fetch (T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) { return desul::atomic_min_fetch (dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
+T atomic_min_fetch (T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) {
+#ifdef KOKKOS_ENABLE_IMPL_ATOMIC_REF
+  return desul_atomic_ref<T>{*dest}.min_fetch(val);
+#else
+  return desul::atomic_min_fetch (dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE);
+#endif
+}
 
 template<class T> KOKKOS_INLINE_FUNCTION
-T atomic_mul_fetch (T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) { return desul::atomic_mul_fetch (dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
+T atomic_mul_fetch (T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) {
+#ifdef KOKKOS_ENABLE_IMPL_ATOMIC_REF
+  return desul_atomic_ref<T>{*dest} *= val;
+#else
+  return desul::atomic_mul_fetch (dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE);
+#endif
+}
 
 template<class T> KOKKOS_INLINE_FUNCTION
-T atomic_div_fetch (T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) { return desul::atomic_div_fetch (dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
+T atomic_div_fetch (T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) {
+#ifdef KOKKOS_ENABLE_IMPL_ATOMIC_REF
+  return desul_atomic_ref<T>{*dest} /= val;
+#else
+  return desul::atomic_div_fetch (dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE);
+#endif
+}
 
 template<class T> KOKKOS_INLINE_FUNCTION
-T atomic_mod_fetch (T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) { return desul::atomic_mod_fetch (dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
+T atomic_mod_fetch (T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) {
+#ifdef KOKKOS_ENABLE_IMPL_ATOMIC_REF
+  return desul_atomic_ref<T>{*dest} %= val;
+#else
+  return desul::atomic_mod_fetch (dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE);
+#endif
+}
 
 template<class T> KOKKOS_INLINE_FUNCTION
-T atomic_and_fetch (T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) { return desul::atomic_and_fetch (dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
+T atomic_and_fetch (T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) {
+#ifdef KOKKOS_ENABLE_IMPL_ATOMIC_REF
+  return desul_atomic_ref<T>{*dest} &= val;
+#else
+  return desul::atomic_and_fetch (dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE);
+#endif
+}
 
 template<class T> KOKKOS_INLINE_FUNCTION
-T atomic_or_fetch  (T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) { return desul::atomic_or_fetch  (dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
+T atomic_or_fetch  (T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) {
+#ifdef KOKKOS_ENABLE_IMPL_ATOMIC_REF
+  return desul_atomic_ref<T>{*dest} |= val;
+#else
+  return desul::atomic_or_fetch  (dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE);
+#endif
+}
 
 template<class T> KOKKOS_INLINE_FUNCTION
-T atomic_xor_fetch (T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) { return desul::atomic_xor_fetch (dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
+T atomic_xor_fetch (T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) {
+#ifdef KOKKOS_ENABLE_IMPL_ATOMIC_REF
+  return desul_atomic_ref<T>{*dest} ^= val;
+#else
+  return desul::atomic_xor_fetch (dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE);
+#endif
+}
 
 template<class T> KOKKOS_INLINE_FUNCTION
 T atomic_nand_fetch(T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) { return desul::atomic_nand_fetch(dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
@@ -163,10 +318,22 @@ template<class T> KOKKOS_INLINE_FUNCTION
 T atomic_rshift_fetch(T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) { return desul::atomic_rshift_fetch(dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
 
 template<class T> KOKKOS_INLINE_FUNCTION
-T atomic_inc_fetch(T* const dest) { return desul::atomic_inc_fetch(dest, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
+T atomic_inc_fetch(T* const dest) {
+#ifdef KOKKOS_ENABLE_IMPL_ATOMIC_REF
+  return ++desul_atomic_ref<T>{*dest};
+#else
+  return desul::atomic_inc_fetch(dest, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE);
+#endif
+}
 
 template<class T> KOKKOS_INLINE_FUNCTION
-T atomic_dec_fetch(T* const dest) { return desul::atomic_dec_fetch(dest, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
+T atomic_dec_fetch(T* const dest) {
+#ifdef KOKKOS_ENABLE_IMPL_ATOMIC_REF
+  return --desul_atomic_ref<T>{*dest};
+#else
+  return desul::atomic_dec_fetch(dest, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE);
+#endif
+}
 
 
 // atomic_op
