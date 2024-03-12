@@ -8,7 +8,7 @@
 # the values are not cached, FIND_PACKAGE(rocthrust) will overwrite them.
 SET(AMDGPU_TARGETS "" CACHE STRING "AMD GPU targets to compile for")
 SET(GPU_TARGETS "" CACHE STRING "GPU targets to compile for")
-FIND_PACKAGE(rocthrust REQUIRED)
+FIND_PACKAGE(ROCTHRUST REQUIRED)
 KOKKOS_CREATE_IMPORTED_TPL(ROCTHRUST INTERFACE LINK_LIBRARIES roc::rocthrust)
 
 # Export ROCTHRUST as a Kokkos dependency
