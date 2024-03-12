@@ -10,7 +10,7 @@ project(Example CXX Fortran)
 find_package(Kokkos REQUIRED)
 
 add_executable(example cmake_example.cpp foo.f)
-MESSAGE(STATUS("XXX COMPILER_ID: ${CMAKE_Fortran_COMPILER_ID}")
+MESSAGE(STATUS "XXX COMPILER_ID: ${CMAKE_Fortran_COMPILER_ID}")
 if(CMAKE_Fortran_COMPILER_ID STREQUAL LLVMFlang)
   set_target_properties(example PROPERTIES LINKER_LANGUAGE Fortran)
   set_target_link_flags(example -fno-fortran-main)
