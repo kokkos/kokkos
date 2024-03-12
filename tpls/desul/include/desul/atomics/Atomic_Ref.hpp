@@ -20,16 +20,18 @@ class AtomicRef {
   T* ptr_;
 
  public:
-  explicit AtomicRef(T& obj) : ptr_(&obj) {}
+  using value_type = T;
+  using memory_order = MemoryOrder;
+  using memory_scope = MemoryScope;
 
-  T operator=(T desired) const noexcept {
+  DESUL_FUNCTION explicit AtomicRef(T& obj) : ptr_(&obj) {}
+
+  DESUL_FUNCTION T operator=(T desired) const noexcept {
     this->store(desired);
     return desired;
   }
 
-  operator T() const noexcept { return this->load(); }
-
-  using value_type = T;
+  DESUL_FUNCTION operator T() const noexcept { return this->load(); }
 
   DESUL_FUNCTION T load() const noexcept {
     return desul::atomic_load(ptr_, MemoryOrder(), MemoryScope());
