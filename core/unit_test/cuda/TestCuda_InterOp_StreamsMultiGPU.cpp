@@ -172,17 +172,13 @@ TEST(cuda_multi_gpu, unmanaged_views) {
 struct ScratchFunctor {
   int scratch_size;
   int R;
-  Kokkos::View<int64_t, Kokkos::Cuda, Kokkos::MemoryTraits<Kokkos::Atomic>>
-      error_count;
 
   ScratchFunctor(Kokkos::Cuda &exec_, int scratch_size_, int R_)
-      : scratch_size(scratch_size_), R(R_) {
-    error_count = decltype(error_count)(Kokkos::view_alloc(exec_));
-  }
+      : scratch_size(scratch_size_), R(R_) {}
 
   KOKKOS_FUNCTION
-  void operator()(
-      const Kokkos::TeamPolicy<Kokkos::Cuda>::member_type &team) const {
+  void operator()(const Kokkos::TeamPolicy<Kokkos::Cuda>::member_type &team,
+                  int &error_accum) const {
     Kokkos::View<int *, Kokkos::Cuda::scratch_memory_space> scratch_mem(
         team.team_scratch(1), scratch_size);
 
@@ -199,12 +195,17 @@ struct ScratchFunctor {
     team.team_barrier();
 
     // Check that each scratch entry has been incremented exactly R times
-    Kokkos::parallel_for(Kokkos::TeamVectorRange(team, 0, scratch_size),
-                         [&](int i) {
-                           if (scratch_mem(i) != R) {
-                             error_count() += 1;
-                           }
-                         });
+    int team_error_accum;
+    Kokkos::parallel_reduce(
+        Kokkos::TeamVectorRange(team, 0, scratch_size),
+        [&](int i, int &tsum) {
+          if (scratch_mem(i) != R) {
+            tsum += 1;
+          }
+        },
+        team_error_accum);
+    Kokkos::single(Kokkos::PerTeam(team),
+                   [&]() { error_accum += team_error_accum; });
   }
 };
 
@@ -227,17 +228,14 @@ void test_scratch(TEST_EXECSPACE exec0, TEST_EXECSPACE exec1) {
           .set_scratch_size(
               1, Kokkos::PerTeam(ScratchType::shmem_size(scratch_size)));
 
-  Kokkos::parallel_for("test_scratch_device_0", policy0, f0);
-  Kokkos::parallel_for("test_scratch_device_1", policy1, f1);
+  int error0, error1;
 
-  Kokkos::fence();
-  int64_t error0, error1;
-  Kokkos::deep_copy(error0, f0.error_count);
-  Kokkos::deep_copy(error1, f1.error_count);
+  Kokkos::parallel_reduce("test_scratch_device_0", policy0, f0, error0);
+  Kokkos::parallel_reduce("test_scratch_device_1", policy1, f1, error1);
   ASSERT_EQ(error0, 0);
   ASSERT_EQ(error1, 0);
 
-  // Request largest scratch size to trigger a realloc and test
+  // Request larger scratch size to trigger a realloc and test
   const auto new_scratch_size = scratch_size + 10;
   ScratchFunctor f0_more_scratch(exec0, new_scratch_size, R);
   ScratchFunctor f1_more_scratch(exec1, new_scratch_size, R);
@@ -251,14 +249,10 @@ void test_scratch(TEST_EXECSPACE exec0, TEST_EXECSPACE exec1) {
           .set_scratch_size(
               1, Kokkos::PerTeam(ScratchType::shmem_size(new_scratch_size)));
 
-  Kokkos::parallel_for("test_realloc_scratch_device_0", policy0_more_scratch,
-                       f0_more_scratch);
-  Kokkos::parallel_for("test_realloc_scratch_device_1", policy1_more_scratch,
-                       f1_more_scratch);
-
-  Kokkos::fence();
-  Kokkos::deep_copy(error0, f0.error_count);
-  Kokkos::deep_copy(error1, f1.error_count);
+  Kokkos::parallel_reduce("test_realloc_scratch_device_0", policy0_more_scratch,
+                          f0_more_scratch, error0);
+  Kokkos::parallel_reduce("test_realloc_scratch_device_1", policy1_more_scratch,
+                          f1_more_scratch, error1);
   ASSERT_EQ(error0, 0);
   ASSERT_EQ(error1, 0);
 }
