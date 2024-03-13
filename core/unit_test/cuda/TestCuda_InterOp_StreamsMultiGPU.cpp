@@ -173,7 +173,7 @@ struct ScratchFunctor {
   int scratch_size;
   int R;
 
-  ScratchFunctor(Kokkos::Cuda &exec_, int scratch_size_, int R_)
+  ScratchFunctor(int scratch_size_, int R_)
       : scratch_size(scratch_size_), R(R_) {}
 
   KOKKOS_FUNCTION
@@ -216,8 +216,7 @@ void test_scratch(TEST_EXECSPACE exec0, TEST_EXECSPACE exec1) {
   using ScratchType = Kokkos::View<int *, Kokkos::Cuda::scratch_memory_space>;
 
   // Test allocating and using scratch space
-  ScratchFunctor f0(exec0, scratch_size, R);
-  ScratchFunctor f1(exec1, scratch_size, R);
+  ScratchFunctor f(scratch_size, R);
 
   auto policy0 =
       Kokkos::TeamPolicy<Kokkos::Cuda>(exec0, N, 10)
@@ -230,15 +229,14 @@ void test_scratch(TEST_EXECSPACE exec0, TEST_EXECSPACE exec1) {
 
   int error0, error1;
 
-  Kokkos::parallel_reduce("test_scratch_device_0", policy0, f0, error0);
-  Kokkos::parallel_reduce("test_scratch_device_1", policy1, f1, error1);
+  Kokkos::parallel_reduce("test_scratch_device_0", policy0, f, error0);
+  Kokkos::parallel_reduce("test_scratch_device_1", policy1, f, error1);
   ASSERT_EQ(error0, 0);
   ASSERT_EQ(error1, 0);
 
   // Request larger scratch size to trigger a realloc and test
   const auto new_scratch_size = scratch_size + 10;
-  ScratchFunctor f0_more_scratch(exec0, new_scratch_size, R);
-  ScratchFunctor f1_more_scratch(exec1, new_scratch_size, R);
+  ScratchFunctor f_more_scratch(new_scratch_size, R);
 
   auto policy0_more_scratch =
       Kokkos::TeamPolicy<Kokkos::Cuda>(exec0, N, 10)
@@ -250,9 +248,9 @@ void test_scratch(TEST_EXECSPACE exec0, TEST_EXECSPACE exec1) {
               1, Kokkos::PerTeam(ScratchType::shmem_size(new_scratch_size)));
 
   Kokkos::parallel_reduce("test_realloc_scratch_device_0", policy0_more_scratch,
-                          f0_more_scratch, error0);
+                          f_more_scratch, error0);
   Kokkos::parallel_reduce("test_realloc_scratch_device_1", policy1_more_scratch,
-                          f1_more_scratch, error1);
+                          f_more_scratch, error1);
   ASSERT_EQ(error0, 0);
   ASSERT_EQ(error1, 0);
 }
