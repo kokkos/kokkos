@@ -196,10 +196,11 @@ struct ScratchFunctor {
 
     // Check that each scratch entry has been incremented exactly R times
     int team_error_accum;
+    auto R_loc = R;  // avoid implicit capture of this
     Kokkos::parallel_reduce(
         Kokkos::TeamVectorRange(team, 0, scratch_size),
         [&](int i, int &tsum) {
-          if (scratch_mem(i) != R) {
+          if (scratch_mem(i) != R_loc) {
             tsum += 1;
           }
         },
