@@ -241,105 +241,32 @@ enum OP_TESTS {
   OR,
   EQ,
   NEQ,
-  LT,
-  GT,
-  LE,
-  GE,  // TODO: TW,
+  LT_H_H,
+  LT_H_S,
+  LT_S_H,
+  LT_H_D,
+  LT_D_H,
+  GT_H_H,
+  GT_H_S,
+  GT_S_H,
+  GT_H_D,
+  GT_D_H,
+  LE_H_H,
+  LE_H_S,
+  LE_S_H,
+  LE_H_D,
+  LE_D_H,
+  GE_H_H,
+  GE_H_S,
+  GE_S_H,
+  GE_H_D,
+  GE_D_H,
+  // TODO: TW,
   PASS_BY_REF,
   AO_IMPL_HALF,
   AO_HALF_T,
   N_OP_TESTS
 };
-
-// volatile-qualified parameter type 'volatile half_type' is deprecated
-#if !defined(KOKKOS_ENABLE_CXX20) && !defined(KOKKOS_ENABLE_CXX23)
-template <class view_type, class half_type>
-struct Functor_TestHalfVolatileOperators {
-  volatile half_type h_lhs, h_rhs;
-  view_type actual_lhs, expected_lhs;
-  double d_lhs, d_rhs;
-  Functor_TestHalfVolatileOperators(volatile half_type lhs = half_type(0),
-                                    volatile half_type rhs = half_type(0))
-      : h_lhs(lhs), h_rhs(rhs) {
-    actual_lhs   = view_type("actual_lhs", N_OP_TESTS);
-    expected_lhs = view_type("expected_lhs", N_OP_TESTS);
-    half_type nv_tmp;
-    nv_tmp = h_lhs;
-    d_lhs  = static_cast<double>(nv_tmp);
-    nv_tmp = h_rhs;
-    d_rhs  = static_cast<double>(nv_tmp);
-    if (std::is_same<view_type, ViewTypeHost>::value) {
-      auto run_on_host = *this;
-      run_on_host(0);
-    } else {
-      Kokkos::parallel_for("Test::Functor_TestHalfVolatileOperators",
-                           Kokkos::RangePolicy<ExecutionSpace>(0, 1), *this);
-    }
-  }
-
-  KOKKOS_FUNCTION
-  void operator()(int) const {
-    volatile half_type tmp_lhs;
-    half_type nv_tmp;
-
-    // Initialze output views to catch missing test invocations
-    for (int i = 0; i < N_OP_TESTS; ++i) {
-      actual_lhs(i)   = 1;
-      expected_lhs(i) = -1;
-    }
-
-    nv_tmp               = h_lhs;
-    actual_lhs(ASSIGN)   = static_cast<double>(nv_tmp);
-    expected_lhs(ASSIGN) = d_lhs;
-
-    actual_lhs(LT)   = h_lhs < h_rhs;
-    expected_lhs(LT) = d_lhs < d_rhs;
-
-    actual_lhs(LE)   = h_lhs <= h_rhs;
-    expected_lhs(LE) = d_lhs <= d_rhs;
-
-    actual_lhs(NEQ)   = h_lhs != h_rhs;
-    expected_lhs(NEQ) = d_lhs != d_rhs;
-
-    actual_lhs(GT)   = h_lhs > h_rhs;
-    expected_lhs(GT) = d_lhs > d_rhs;
-
-    actual_lhs(GE)   = h_lhs >= h_rhs;
-    expected_lhs(GE) = d_lhs >= d_rhs;
-
-    actual_lhs(EQ)   = h_lhs == h_rhs;
-    expected_lhs(EQ) = d_lhs == d_rhs;
-
-    tmp_lhs = h_lhs;
-    tmp_lhs += h_rhs;
-    nv_tmp                 = tmp_lhs;
-    actual_lhs(CADD_H_H)   = static_cast<double>(nv_tmp);
-    expected_lhs(CADD_H_H) = d_lhs;
-    expected_lhs(CADD_H_H) += d_rhs;
-
-    tmp_lhs = h_lhs;
-    tmp_lhs -= h_rhs;
-    nv_tmp                 = tmp_lhs;
-    actual_lhs(CSUB_H_H)   = static_cast<double>(nv_tmp);
-    expected_lhs(CSUB_H_H) = d_lhs;
-    expected_lhs(CSUB_H_H) -= d_rhs;
-
-    tmp_lhs = h_lhs;
-    tmp_lhs *= h_rhs;
-    nv_tmp                 = tmp_lhs;
-    actual_lhs(CMUL_H_H)   = static_cast<double>(nv_tmp);
-    expected_lhs(CMUL_H_H) = d_lhs;
-    expected_lhs(CMUL_H_H) *= d_rhs;
-
-    tmp_lhs = h_lhs;
-    tmp_lhs /= h_rhs;
-    nv_tmp                 = tmp_lhs;
-    actual_lhs(CDIV_H_H)   = static_cast<double>(nv_tmp);
-    expected_lhs(CDIV_H_H) = d_lhs;
-    expected_lhs(CDIV_H_H) /= d_rhs;
-  }
-};
-#endif
 
 template <class view_type, class half_type>
 struct Functor_TestHalfOperators {
@@ -879,17 +806,49 @@ struct Functor_TestHalfOperators {
     actual_lhs(NEQ)   = h_lhs != h_rhs;
     expected_lhs(NEQ) = d_lhs != d_rhs;
 
-    actual_lhs(LT)   = h_lhs < h_rhs;
-    expected_lhs(LT) = d_lhs < d_rhs;
+    actual_lhs(LT_H_H)   = h_lhs < h_rhs;
+    expected_lhs(LT_H_H) = d_lhs < d_rhs;
+    actual_lhs(LT_H_S)   = h_lhs < static_cast<float>(h_rhs);
+    expected_lhs(LT_H_S) = d_lhs < d_rhs;
+    actual_lhs(LT_S_H)   = static_cast<float>(h_lhs) < h_rhs;
+    expected_lhs(LT_S_H) = d_lhs < d_rhs;
+    actual_lhs(LT_H_D)   = h_lhs < static_cast<double>(h_rhs);
+    expected_lhs(LT_H_D) = d_lhs < d_rhs;
+    actual_lhs(LT_D_H)   = static_cast<double>(h_lhs) < h_rhs;
+    expected_lhs(LT_D_H) = d_lhs < d_rhs;
 
-    actual_lhs(GT)   = h_lhs > h_rhs;
-    expected_lhs(GT) = d_lhs > d_rhs;
+    actual_lhs(GT_H_H)   = h_lhs > h_rhs;
+    expected_lhs(GT_H_H) = d_lhs > d_rhs;
+    actual_lhs(GT_H_S)   = h_lhs > static_cast<float>(h_rhs);
+    expected_lhs(GT_H_S) = d_lhs > d_rhs;
+    actual_lhs(GT_S_H)   = static_cast<float>(h_lhs) > h_rhs;
+    expected_lhs(GT_S_H) = d_lhs > d_rhs;
+    actual_lhs(GT_H_D)   = h_lhs > static_cast<double>(h_rhs);
+    expected_lhs(GT_H_D) = d_lhs > d_rhs;
+    actual_lhs(GT_D_H)   = static_cast<double>(h_lhs) > h_rhs;
+    expected_lhs(GT_D_H) = d_lhs > d_rhs;
 
-    actual_lhs(LE)   = h_lhs <= h_rhs;
-    expected_lhs(LE) = d_lhs <= d_rhs;
+    actual_lhs(LE_H_H)   = h_lhs <= h_rhs;
+    expected_lhs(LE_H_H) = d_lhs <= d_rhs;
+    actual_lhs(LE_H_S)   = h_lhs <= static_cast<float>(h_rhs);
+    expected_lhs(LE_H_S) = d_lhs <= d_rhs;
+    actual_lhs(LE_S_H)   = static_cast<float>(h_lhs) <= h_rhs;
+    expected_lhs(LE_S_H) = d_lhs <= d_rhs;
+    actual_lhs(LE_H_D)   = h_lhs <= static_cast<double>(h_rhs);
+    expected_lhs(LE_H_D) = d_lhs <= d_rhs;
+    actual_lhs(LE_D_H)   = static_cast<double>(h_lhs) <= h_rhs;
+    expected_lhs(LE_D_H) = d_lhs <= d_rhs;
 
-    actual_lhs(GE)   = h_lhs >= h_rhs;
-    expected_lhs(GE) = d_lhs >= d_rhs;
+    actual_lhs(GE_H_H)   = h_lhs >= h_rhs;
+    expected_lhs(GE_H_H) = d_lhs >= d_rhs;
+    actual_lhs(GE_H_S)   = h_lhs >= static_cast<float>(h_rhs);
+    expected_lhs(GE_H_S) = d_lhs >= d_rhs;
+    actual_lhs(GE_S_H)   = static_cast<float>(h_lhs) >= h_rhs;
+    expected_lhs(GE_S_H) = d_lhs >= d_rhs;
+    actual_lhs(GE_H_D)   = h_lhs >= static_cast<double>(h_rhs);
+    expected_lhs(GE_H_D) = d_lhs >= d_rhs;
+    actual_lhs(GE_D_H)   = static_cast<double>(h_lhs) >= h_rhs;
+    expected_lhs(GE_D_H) = d_lhs >= d_rhs;
 
     // actual_lhs(TW)   = h_lhs <=> h_rhs;  // Need C++20?
     // expected_lhs(TW) = d_lhs <=> d_rhs;  // Need C++20?
@@ -926,7 +885,7 @@ struct Functor_TestHalfOperators {
 
 template <class half_type>
 void __test_half_operators(half_type h_lhs, half_type h_rhs) {
-  double epsilon = Kokkos::Experimental::epsilon<half_type>::value;
+  half_type epsilon = Kokkos::Experimental::epsilon<half_type>::value;
 
   Functor_TestHalfOperators<ViewType, half_type> f_device(h_lhs, h_rhs);
   Functor_TestHalfOperators<ViewTypeHost, half_type> f_host(h_lhs, h_rhs);
@@ -941,37 +900,10 @@ void __test_half_operators(half_type h_lhs, half_type h_rhs) {
   for (int op_test = 0; op_test < N_OP_TESTS; op_test++) {
     // printf("op_test = %d\n", op_test);
     ASSERT_NEAR(f_device_actual_lhs(op_test), f_device_expected_lhs(op_test),
-                epsilon);
+                static_cast<double>(epsilon));
     ASSERT_NEAR(f_host.actual_lhs(op_test), f_host.expected_lhs(op_test),
-                epsilon);
+                static_cast<double>(epsilon));
   }
-
-// volatile-qualified parameter type 'volatile half_type' is deprecated
-#if !defined(KOKKOS_ENABLE_CXX20) && !defined(KOKKOS_ENABLE_CXX23)
-  // Test partial volatile support
-  volatile half_type _h_lhs = h_lhs;
-  volatile half_type _h_rhs = h_rhs;
-  Functor_TestHalfVolatileOperators<ViewType, half_type> f_volatile_device(
-      _h_lhs, _h_rhs);
-  Functor_TestHalfVolatileOperators<ViewTypeHost, half_type> f_volatile_host(
-      _h_lhs, _h_rhs);
-
-  ExecutionSpace().fence();
-  Kokkos::deep_copy(f_device_actual_lhs, f_device.actual_lhs);
-  Kokkos::deep_copy(f_device_expected_lhs, f_device.expected_lhs);
-  for (int op_test = 0; op_test < N_OP_TESTS; op_test++) {
-    // printf("op_test = %d\n", op_test);
-    if (op_test == ASSIGN || op_test == LT || op_test == LE || op_test == NEQ ||
-        op_test == EQ || op_test == GT || op_test == GE ||
-        op_test == CADD_H_H || op_test == CSUB_H_H || op_test == CMUL_H_H ||
-        op_test == CDIV_H_H) {
-      ASSERT_NEAR(f_device_actual_lhs(op_test), f_device_expected_lhs(op_test),
-                  epsilon);
-      ASSERT_NEAR(f_host.actual_lhs(op_test), f_host.expected_lhs(op_test),
-                  epsilon);
-    }
-  }
-#endif
 
   // is_trivially_copyable is false with the addition of explicit
   // copy constructors that are required for supporting reductions

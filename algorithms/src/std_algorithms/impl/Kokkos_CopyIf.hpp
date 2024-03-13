@@ -20,6 +20,7 @@
 #include <Kokkos_Core.hpp>
 #include "Kokkos_Constraints.hpp"
 #include "Kokkos_HelperPredicates.hpp"
+#include "Kokkos_MustUseKokkosSingleInTeam.hpp"
 #include <std_algorithms/Kokkos_Distance.hpp>
 #include <string>
 
@@ -122,25 +123,37 @@ KOKKOS_FUNCTION OutputIterator copy_if_team_impl(
     return d_first;
   }
 
-  // FIXME: there is no parallel_scan overload that accepts TeamThreadRange and
-  // return_value, so temporarily serial implementation is used here
   const std::size_t num_elements = Kokkos::Experimental::distance(first, last);
-  std::size_t count              = 0;
-  Kokkos::single(
-      Kokkos::PerTeam(teamHandle),
-      [=](std::size_t& lcount) {
-        lcount = 0;
-        for (std::size_t i = 0; i < num_elements; ++i) {
-          const auto& myval = first[i];
-          if (pred(myval)) {
-            d_first[lcount++] = myval;
+  if constexpr (stdalgo_must_use_kokkos_single_for_team_scan_v<
+                    typename TeamHandleType::execution_space>) {
+    std::size_t count = 0;
+    Kokkos::single(
+        Kokkos::PerTeam(teamHandle),
+        [=](std::size_t& lcount) {
+          lcount = 0;
+          for (std::size_t i = 0; i < num_elements; ++i) {
+            const auto& myval = first[i];
+            if (pred(myval)) {
+              d_first[lcount++] = myval;
+            }
           }
-        }
-      },
-      count);
-  // no barrier needed since single above broadcasts to all members
+        },
+        count);
+    // no barrier needed since single above broadcasts to all members
+    return d_first + count;
 
-  return d_first + count;
+  } else {
+    typename InputIterator::difference_type count = 0;
+    ::Kokkos::parallel_scan(TeamThreadRange(teamHandle, 0, num_elements),
+                            StdCopyIfFunctor(first, d_first, pred), count);
+    // no barrier needed because of the scan accumulating into count
+    return d_first + count;
+  }
+
+#if defined KOKKOS_COMPILER_INTEL || \
+    (defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130)
+  __builtin_unreachable();
+#endif
 }
 
 }  // namespace Impl

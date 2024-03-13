@@ -55,3 +55,12 @@ RUN wget https://registrationcenter-download.intel.com/akdlm/irc_nas/19133/l_one
     chmod +x ./l_oneDPL_p_2022.0.0.25335.sh && \
     ./l_oneDPL_p_2022.0.0.25335.sh -a -s --eula accept && \
     rm l_oneDPL_p_2022.0.0.25335.sh
+
+# clang++
+ENV PATH=/opt/intel/oneapi/compiler/latest/linux/bin-llvm/:$PATH
+# sycl-ls, icpx
+ENV PATH=/opt/intel/oneapi/compiler/latest/linux/bin/:$PATH
+# libsycl
+ENV LD_LIBRARY_PATH=/opt/intel/oneapi/compiler/latest/linux/lib:$LD_LIBRARY_PATH
+# libsvml
+ENV LD_LIBRARY_PATH=/opt/intel/oneapi/compiler/latest/linux/compiler/lib/intel64_lin:$LD_LIBRARY_PATH

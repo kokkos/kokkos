@@ -25,8 +25,8 @@
 #include <sstream>
 #include <iomanip>
 #include <stdexcept>
+#include <Kokkos_Core.hpp>  // show_warnings
 #include <impl/Kokkos_Error.hpp>
-#include <impl/Kokkos_Stacktrace.hpp>
 #include <Cuda/Kokkos_Cuda_Error.hpp>
 
 //----------------------------------------------------------------------------
@@ -34,24 +34,15 @@
 
 namespace Kokkos {
 namespace Impl {
-void traceback_callstack(std::ostream &msg) {
-#ifdef KOKKOS_IMPL_ENABLE_STACKTRACE
-  msg << "\nBacktrace:\n";
-  save_stacktrace();
-  print_demangled_saved_stacktrace(msg);
-#else
-  msg << "\nTraceback functionality not available\n";
-#endif
-}
 
 void throw_runtime_exception(const std::string &msg) {
   throw std::runtime_error(msg);
 }
 
-void host_abort(const char *const message) {
-  std::cerr << message;
-  traceback_callstack(std::cerr);
-  ::abort();
+void log_warning(const std::string &msg) {
+  if (show_warnings()) {
+    std::cerr << msg << std::flush;
+  }
 }
 
 std::string human_memory_size(size_t arg_bytes) {
@@ -80,7 +71,8 @@ std::string human_memory_size(size_t arg_bytes) {
 
 void Experimental::RawMemoryAllocationFailure::print_error_message(
     std::ostream &o) const {
-  o << "Allocation of size " << Impl::human_memory_size(m_attempted_size);
+  o << "Allocation of size "
+    << ::Kokkos::Impl::human_memory_size(m_attempted_size);
   o << " failed";
   switch (m_failure_mode) {
     case FailureMode::OutOfMemoryError:

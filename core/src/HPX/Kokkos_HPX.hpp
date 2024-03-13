@@ -28,14 +28,6 @@ static_assert(false,
 #include <Kokkos_Core_fwd.hpp>
 
 #include <Kokkos_HostSpace.hpp>
-#include <cstddef>
-#include <iosfwd>
-
-#ifdef KOKKOS_ENABLE_HBWSPACE
-#include <Kokkos_HBWSpace.hpp>
-#endif
-
-#include <Kokkos_HostSpace.hpp>
 #include <Kokkos_Layout.hpp>
 #include <Kokkos_MemoryTraits.hpp>
 #include <Kokkos_Parallel.hpp>
@@ -59,6 +51,7 @@ static_assert(false,
 
 #include <Kokkos_UniqueToken.hpp>
 
+#include <cstddef>
 #include <iosfwd>
 #include <functional>
 #include <memory>
@@ -201,6 +194,7 @@ class HPX {
     return impl_get_instance_data().m_instance_id;
   }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   static bool &impl_get_in_parallel() noexcept;
 
   struct impl_in_parallel_scope {
@@ -223,9 +217,10 @@ class HPX {
         delete;
   };
 
-  static bool in_parallel(HPX const & = HPX()) noexcept {
+  KOKKOS_DEPRECATED static bool in_parallel(HPX const & = HPX()) noexcept {
     return impl_get_in_parallel();
   }
+#endif
 
   static void impl_decrement_active_parallel_region_count();
   static void impl_increment_active_parallel_region_count();
@@ -247,18 +242,6 @@ class HPX {
     return false;
 #endif
   }
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-  template <typename F>
-  KOKKOS_DEPRECATED static void partition_master(
-      F const &, int requested_num_partitions = 0, int = 0) {
-    if (requested_num_partitions > 1) {
-      Kokkos::abort(
-          "Kokkos::Experimental::HPX::partition_master: can't partition an "
-          "HPX instance\n");
-    }
-  }
-#endif
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   static int concurrency();
@@ -355,7 +338,9 @@ class HPX {
                            hpx::threads::thread_stacksize::default_) const {
     impl_bulk_plain_erased(force_synchronous, is_light_weight_policy,
                            {[functor](Index i) {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
                              impl_in_parallel_scope p;
+#endif
                              functor.execute_range(i);
                            }},
                            n, stacksize);
@@ -417,15 +402,21 @@ class HPX {
           hpx::threads::thread_stacksize::default_) const {
     impl_bulk_setup_finalize_erased(force_synchronous, is_light_weight_policy,
                                     {[functor](Index i) {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
                                       impl_in_parallel_scope p;
+#endif
                                       functor.execute_range(i);
                                     }},
                                     {[functor]() {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
                                       impl_in_parallel_scope p;
+#endif
                                       functor.setup();
                                     }},
                                     {[functor]() {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
                                       impl_in_parallel_scope p;
+#endif
                                       functor.finalize();
                                     }},
                                     n, stacksize);
@@ -1292,6 +1283,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
     const WorkRange range(m_policy, t, num_worker_threads);
     execute_chunk(range.begin(), range.end(), update_sum, false);
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
     {
       // Since arrive_and_wait may yield and resume on another worker thread we
       // set in_parallel = false on the current thread before suspending and set
@@ -1299,6 +1291,9 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
       Kokkos::Experimental::HPX::impl_not_in_parallel_scope p;
       barrier.arrive_and_wait();
     }
+#else
+    barrier.arrive_and_wait();
+#endif
 
     if (t == 0) {
       final_reducer.init(reinterpret_cast<pointer_type>(
@@ -1320,6 +1315,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
       }
     }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
     {
       // Since arrive_and_wait may yield and resume on another worker thread we
       // set in_parallel = false on the current thread before suspending and set
@@ -1327,6 +1323,9 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
       Kokkos::Experimental::HPX::impl_not_in_parallel_scope p;
       barrier.arrive_and_wait();
     }
+#else
+    barrier.arrive_and_wait();
+#endif
 
     reference_type update_base =
         Analysis::Reducer::reference(reinterpret_cast<pointer_type>(
@@ -1407,6 +1406,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
     const WorkRange range(m_policy, t, num_worker_threads);
     execute_chunk(range.begin(), range.end(), update_sum, false);
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
     {
       // Since arrive_and_wait may yield and resume on another worker thread we
       // set in_parallel = false on the current thread before suspending and set
@@ -1414,6 +1414,9 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
       Kokkos::Experimental::HPX::impl_not_in_parallel_scope p;
       barrier.arrive_and_wait();
     }
+#else
+    barrier.arrive_and_wait();
+#endif
 
     if (t == 0) {
       final_reducer.init(reinterpret_cast<pointer_type>(
@@ -1435,6 +1438,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
       }
     }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
     {
       // Since arrive_and_wait may yield and resume on another worker thread we
       // set in_parallel = false on the current thread before suspending and set
@@ -1442,6 +1446,9 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
       Kokkos::Experimental::HPX::impl_not_in_parallel_scope p;
       barrier.arrive_and_wait();
     }
+#else
+    barrier.arrive_and_wait();
+#endif
 
     reference_type update_base =
         Analysis::Reducer::reference(reinterpret_cast<pointer_type>(
@@ -1828,16 +1835,18 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
   }
 }
 
-template <typename iType, class FunctorType>
+template <typename iType, class FunctorType, typename ValueType>
 KOKKOS_INLINE_FUNCTION void parallel_scan(
     Impl::TeamThreadRangeBoundariesStruct<iType, Impl::HPXTeamMember> const
         &loop_boundaries,
-    const FunctorType &lambda) {
-  using value_type = typename Kokkos::Impl::FunctorAnalysis<
+    const FunctorType &lambda, ValueType &return_val) {
+  using functor_value_type = typename Kokkos::Impl::FunctorAnalysis<
       Kokkos::Impl::FunctorPatternInterface::SCAN, void, FunctorType,
       void>::value_type;
+  static_assert(std::is_same_v<functor_value_type, ValueType>,
+                "Non-matching value types of functor and return type");
 
-  value_type scan_val = value_type();
+  ValueType scan_val{};
 
   // Intra-member scan
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
@@ -1852,6 +1861,22 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
        i += loop_boundaries.increment) {
     lambda(i, scan_val, true);
   }
+
+  return_val = scan_val;
+}
+
+template <typename iType, typename FunctorType>
+KOKKOS_INLINE_FUNCTION void parallel_scan(
+    const Impl::TeamThreadRangeBoundariesStruct<iType, Impl::HPXTeamMember>
+        &loop_bounds,
+    const FunctorType &lambda) {
+  // Extract value_type from lambda
+  using value_type = typename Kokkos::Impl::FunctorAnalysis<
+      Kokkos::Impl::FunctorPatternInterface::SCAN, void, FunctorType,
+      void>::value_type;
+
+  value_type scan_val;
+  parallel_scan(loop_bounds, lambda, scan_val);
 }
 
 /** \brief  Intra-thread vector parallel exclusive prefix sum. Executes
@@ -1905,6 +1930,25 @@ parallel_scan(
        i += loop_boundaries.increment) {
     lambda(i, scan_val, true);
   }
+  reducer.reference() = scan_val;
+}
+
+template <typename iType, class FunctorType, typename ValueType>
+KOKKOS_INLINE_FUNCTION void parallel_scan(
+    const Impl::ThreadVectorRangeBoundariesStruct<iType, Impl::HPXTeamMember>
+        &loop_boundaries,
+    const FunctorType &lambda, ValueType &return_val) {
+  // Extract ValueType from FunctorType
+  using closure_value_type = typename Kokkos::Impl::FunctorAnalysis<
+      Kokkos::Impl::FunctorPatternInterface::SCAN, void, FunctorType,
+      void>::value_type;
+  static_assert(std::is_same<closure_value_type, ValueType>::value,
+                "Non-matching value types of closure and return type");
+
+  ValueType accum;
+  parallel_scan(loop_boundaries, lambda, Kokkos::Sum<ValueType>(accum));
+
+  return_val = accum;
 }
 
 template <class FunctorType>

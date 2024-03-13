@@ -58,8 +58,6 @@ void SerialInternal::finalize() {
     m_thread_team_data.scratch_assign(nullptr, 0, 0, 0, 0, 0);
   }
 
-  Kokkos::Profiling::finalize();
-
   m_is_initialized = false;
 }
 
@@ -145,11 +143,17 @@ Serial::Serial()
     : m_space_instance(&Impl::SerialInternal::singleton(),
                        [](Impl::SerialInternal*) {}) {}
 
+Serial::Serial(NewInstance)
+    : m_space_instance(new Impl::SerialInternal, [](Impl::SerialInternal* ptr) {
+        ptr->finalize();
+        delete ptr;
+      }) {}
+
 void Serial::print_configuration(std::ostream& os, bool /*verbose*/) const {
   os << "Host Serial Execution Space:\n";
   os << "  KOKKOS_ENABLE_SERIAL: yes\n";
 
-#ifdef KOKKOS_INTERNAL_NOT_PARALLEL
+#ifdef KOKKOS_ENABLE_ATOMICS_BYPASS
   os << "Kokkos atomics disabled\n";
 #endif
 
