@@ -638,9 +638,6 @@ class TeamPolicyCommon<ExecSpace, Properties...>
 
   using team_policy = TeamPolicy<Properties...>;
 
-  template <class... OtherProperties>
-  friend class TeamPolicy;
-
  public:
   using traits = PolicyTraits<Properties...>;
   static_assert(std::is_same_v<ExecSpace, typename traits::execution_space>);
