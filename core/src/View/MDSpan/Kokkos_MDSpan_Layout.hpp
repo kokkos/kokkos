@@ -80,6 +80,14 @@ struct ViewOffsetFromExtents {
       Kokkos::Impl::ViewOffset<typename data_analysis::dimension, array_layout>;
 };
 
+/// Convert from a mdspan extent to a Kokkos extent, inserting 0s for static
+/// extents
+template <class Extents>
+KOKKOS_INLINE_FUNCTION auto dimension_from_extent(const Extents &e,
+                                                  std::size_t r) noexcept {
+  return Extents::static_extent(r) == dynamic_extent ? e.extent(r) : 0;
+}
+
 template <class ArrayLayout, class MDSpanType>
 KOKKOS_INLINE_FUNCTION auto array_layout_from_mapping(
     const typename MDSpanType::mapping_type &mapping) {
