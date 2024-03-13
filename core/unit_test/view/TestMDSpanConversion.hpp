@@ -83,7 +83,7 @@ struct TestViewMDSpanConversion {
   template <class MDSpanLayoutMapping, class ViewType>
   static void test_conversion_to_mdspan(
       const MDSpanLayoutMapping &ref_layout_mapping, ViewType v) {
-    using view_type = ViewType;
+    using view_type           = ViewType;
     using natural_mdspan_type = typename Kokkos::Impl::MDSpanViewTraits<
         typename view_type::traits>::mdspan_type;
 
