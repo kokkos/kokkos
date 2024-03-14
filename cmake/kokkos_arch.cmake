@@ -590,6 +590,11 @@ IF (KOKKOS_ENABLE_SYCL)
   COMPILER_SPECIFIC_OPTIONS(
     DEFAULT -fsycl-unnamed-lambda
   )
+  IF (KOKKOS_ENABLE_SYCL_RELOCATABLE_DEVICE_CODE)
+    COMPILER_SPECIFIC_FLAGS(DEFAULT -fsycl-rdc)
+  ELSE()
+    COMPILER_SPECIFIC_FLAGS(DEFAULT -fno-sycl-rdc)
+  ENDIF()
 ENDIF()
 
 # Check support for device_global variables
