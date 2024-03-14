@@ -97,6 +97,14 @@ void* allocate_sycl(
   return hostPtr;
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+KOKKOS_DEPRECATED_WITH_COMMENT("Use the overload with a label instead!")
+void* SYCLDeviceUSMSpace::allocate(const Kokkos::Experimental::SYCL& exec_space,
+                                   const size_t arg_alloc_size) const {
+  return allocate(exec_space, "[unlabeled]", arg_alloc_size);
+}
+#endif
+
 void* SYCLDeviceUSMSpace::allocate(const Kokkos::Experimental::SYCL& exec_space,
                                    const char* arg_label,
                                    const size_t arg_alloc_size,
@@ -109,6 +117,13 @@ void* SYCLDeviceUSMSpace::allocate(const Kokkos::Experimental::SYCL& exec_space,
       *exec_space.impl_internal_space_instance()->m_queue);
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+KOKKOS_DEPRECATED_WITH_COMMENT("Use the overload with a label instead!")
+void* SYCLDeviceUSMSpace::allocate(const size_t arg_alloc_size) const {
+  return allocate("[unlabeled]", arg_alloc_size);
+}
+#endif
+
 void* SYCLDeviceUSMSpace::allocate(const char* arg_label,
                                    const size_t arg_alloc_size,
                                    const size_t arg_logical_size) const {
@@ -118,6 +133,14 @@ void* SYCLDeviceUSMSpace::allocate(const char* arg_label,
       RawMemoryAllocationFailure::AllocationMechanism::SYCLMallocDevice,
       sycl::usm::alloc::device, m_queue);
 }
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+KOKKOS_DEPRECATED_WITH_COMMENT("Use the overload with a label instead!")
+void* SYCLSharedUSMSpace::allocate(const SYCL& exec_space,
+                                   const size_t arg_alloc_size) const {
+  return allocate(exec_space, "[unlabeled]", arg_alloc_size);
+}
+#endif
 
 void* SYCLSharedUSMSpace::allocate(const SYCL& exec_space,
                                    const char* arg_label,
@@ -131,6 +154,13 @@ void* SYCLSharedUSMSpace::allocate(const SYCL& exec_space,
       *exec_space.impl_internal_space_instance()->m_queue);
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+KOKKOS_DEPRECATED_WITH_COMMENT("Use the overload with a label instead!")
+void* SYCLSharedUSMSpace::allocate(const size_t arg_alloc_size) const {
+  return allocate("[unlabeled]", arg_alloc_size);
+}
+#endif
+
 void* SYCLSharedUSMSpace::allocate(const char* arg_label,
                                    const size_t arg_alloc_size,
                                    const size_t arg_logical_size) const {
@@ -140,6 +170,14 @@ void* SYCLSharedUSMSpace::allocate(const char* arg_label,
       RawMemoryAllocationFailure::AllocationMechanism::SYCLMallocShared,
       sycl::usm::alloc::shared, m_queue);
 }
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+KOKKOS_DEPRECATED_WITH_COMMENT("Use the overload with a label instead!")
+void* SYCLHostUSMSpace::allocate(const SYCL& exec_space,
+                                 const size_t arg_alloc_size) const {
+  return allocate(exec_space, "[unlabeled]", arg_alloc_size);
+}
+#endif
 
 void* SYCLHostUSMSpace::allocate(const SYCL& exec_space, const char* arg_label,
                                  const size_t arg_alloc_size,
@@ -151,6 +189,13 @@ void* SYCLHostUSMSpace::allocate(const SYCL& exec_space, const char* arg_label,
       sycl::usm::alloc::host,
       *exec_space.impl_internal_space_instance()->m_queue);
 }
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+KOKKOS_DEPRECATED_WITH_COMMENT("Use the overload with a label instead!")
+void* SYCLHostUSMSpace::allocate(const size_t arg_alloc_size) const {
+  return allocate("[unlabeled]", arg_alloc_size);
+}
+#endif
 
 void* SYCLHostUSMSpace::allocate(const char* arg_label,
                                  const size_t arg_alloc_size,
@@ -179,6 +224,14 @@ void sycl_deallocate(const char* arg_label, void* const arg_alloc_ptr,
   sycl::free(arg_alloc_ptr, queue);
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+KOKKOS_DEPRECATED_WITH_COMMENT("Use the overload with a label instead!")
+void SYCLDeviceUSMSpace::deallocate(void* const arg_alloc_ptr,
+                                    const size_t arg_alloc_size) const {
+  deallocate("[unlabeled]", arg_alloc_ptr, arg_alloc_size);
+}
+#endif
+
 void SYCLDeviceUSMSpace::deallocate(const char* arg_label,
                                     void* const arg_alloc_ptr,
                                     const size_t arg_alloc_size,
@@ -187,6 +240,14 @@ void SYCLDeviceUSMSpace::deallocate(const char* arg_label,
                   Kokkos::Tools::make_space_handle(name()), m_queue);
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+KOKKOS_DEPRECATED_WITH_COMMENT("Use the overload with a label instead!")
+void SYCLSharedUSMSpace::deallocate(void* const arg_alloc_ptr,
+                                    const size_t arg_alloc_size) const {
+  deallocate("[unlabeled]", arg_alloc_ptr, arg_alloc_size);
+}
+#endif
+
 void SYCLSharedUSMSpace::deallocate(const char* arg_label,
                                     void* const arg_alloc_ptr,
                                     const size_t arg_alloc_size,
@@ -194,6 +255,14 @@ void SYCLSharedUSMSpace::deallocate(const char* arg_label,
   sycl_deallocate(arg_label, arg_alloc_ptr, arg_alloc_size, arg_logical_size,
                   Kokkos::Tools::make_space_handle(name()), m_queue);
 }
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+KOKKOS_DEPRECATED_WITH_COMMENT("Use the overload with a label instead!")
+void SYCLHostUSMSpace::deallocate(void* const arg_alloc_ptr,
+                                  const size_t arg_alloc_size) const {
+  deallocate("[unlabeled]", arg_alloc_ptr, arg_alloc_size);
+}
+#endif
 
 void SYCLHostUSMSpace::deallocate(const char* arg_label,
                                   void* const arg_alloc_ptr,

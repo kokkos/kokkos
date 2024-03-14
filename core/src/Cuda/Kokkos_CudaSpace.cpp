@@ -157,6 +157,13 @@ size_t memory_threshold_g = 40000;  // 40 kB
 //==============================================================================
 // <editor-fold desc="allocate()"> {{{1
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+KOKKOS_DEPRECATED_WITH_COMMENT("Use the overload with a label instead!")
+void *CudaSpace::allocate(const size_t arg_alloc_size) const {
+  return allocate("[unlabeled]", arg_alloc_size);
+}
+#endif
+
 void *CudaSpace::allocate(const Cuda &exec_space, const char *arg_label,
                           const size_t arg_alloc_size,
                           const size_t arg_logical_size) const {
@@ -233,6 +240,13 @@ void *CudaSpace::impl_allocate(
       arg_alloc_size, arg_logical_size, arg_handle, true);
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+KOKKOS_DEPRECATED_WITH_COMMENT("Use the overload with a label instead!")
+void *CudaUVMSpace::allocate(const size_t arg_alloc_size) const {
+  return allocate("[unlabeled]", arg_alloc_size);
+}
+#endif
+
 void *CudaUVMSpace::allocate(const char *arg_label, const size_t arg_alloc_size,
                              const size_t arg_logical_size) const {
   return impl_allocate(arg_label, arg_alloc_size, arg_logical_size);
@@ -281,6 +295,12 @@ void *CudaUVMSpace::impl_allocate(
   }
   return ptr;
 }
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+KOKKOS_DEPRECATED_WITH_COMMENT("Use the overload with a label instead!")
+void *CudaHostPinnedSpace::allocate(const size_t arg_alloc_size) const {
+  return allocate("[unlabeled]", arg_alloc_size);
+}
+#endif
 void *CudaHostPinnedSpace::allocate(const char *arg_label,
                                     const size_t arg_alloc_size,
                                     const size_t arg_logical_size) const {
@@ -315,6 +335,14 @@ void *CudaHostPinnedSpace::impl_allocate(
 
 // </editor-fold> end allocate() }}}1
 //==============================================================================
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+KOKKOS_DEPRECATED_WITH_COMMENT("Use the overload with a label instead!")
+void CudaSpace::deallocate(void *const arg_alloc_ptr,
+                           const size_t arg_alloc_size) const {
+  deallocate("[unlabeled]", arg_alloc_ptr, arg_alloc_size);
+}
+#endif
 void CudaSpace::deallocate(const char *arg_label, void *const arg_alloc_ptr,
                            const size_t arg_alloc_size,
                            const size_t arg_logical_size) const {
@@ -355,10 +383,16 @@ void CudaSpace::impl_deallocate(
   }
 }
 
-void CudaUVMSpace::deallocate(const char *arg_label, void *const arg_alloc_ptr,
-                              const size_t arg_alloc_size
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+KOKKOS_DEPRECATED_WITH_COMMENT("Use the overload with a label instead!")
+void CudaUVMSpace::deallocate(void *const arg_alloc_ptr,
+                              const size_t arg_alloc_size) const {
+  deallocate("[unlabeled]", arg_alloc_ptr, arg_alloc_size);
+}
+#endif
 
-                              ,
+void CudaUVMSpace::deallocate(const char *arg_label, void *const arg_alloc_ptr,
+                              const size_t arg_alloc_size,
                               const size_t arg_logical_size) const {
   impl_deallocate(arg_label, arg_alloc_ptr, arg_alloc_size, arg_logical_size);
 }
@@ -390,6 +424,13 @@ void CudaUVMSpace::impl_deallocate(
       arg_label);
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+KOKKOS_DEPRECATED_WITH_COMMENT("Use the overload with a label instead!")
+void CudaHostPinnedSpace::deallocate(void *const arg_alloc_ptr,
+                                     const size_t arg_alloc_size) const {
+  deallocate("[unlabeled]", arg_alloc_ptr, arg_alloc_size);
+}
+#endif
 void CudaHostPinnedSpace::deallocate(const char *arg_label,
                                      void *const arg_alloc_ptr,
                                      const size_t arg_alloc_size,

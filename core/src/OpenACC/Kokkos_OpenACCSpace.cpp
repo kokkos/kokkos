@@ -24,6 +24,20 @@
 
 #include <openacc.h>
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+KOKKOS_DEPRECATED_WITH_COMMENT("Use the overload with a label instead!")
+void *Kokkos::Experimental::OpenACCSpace::allocate(
+    const Kokkos::Experimental::OpenACC &exec_space,
+    const size_t arg_alloc_size) const {
+  return allocate(exec_space, "[unlabeled]", arg_alloc_size);
+}
+
+void *Kokkos::Experimental::OpenACCSpace::allocate(
+    const size_t arg_alloc_size) const {
+  return allocate("[unlabeled]", arg_alloc_size);
+}
+#endif
+
 void *Kokkos::Experimental::OpenACCSpace::allocate(
     const Kokkos::Experimental::OpenACC &exec_space, const char *arg_label,
     const size_t arg_alloc_size, const size_t arg_logical_size) const {
@@ -76,6 +90,14 @@ void *Kokkos::Experimental::OpenACCSpace::impl_allocate(
 
   return ptr;
 }
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+KOKKOS_DEPRECATED_WITH_COMMENT("Use the overload with a label instead!")
+void Kokkos::Experimental::OpenACCSpace::deallocate(
+    void *const arg_alloc_ptr, const size_t arg_alloc_size) const {
+  deallocate("[unlabeled]", arg_alloc_ptr, arg_alloc_size);
+}
+#endif
 
 void Kokkos::Experimental::OpenACCSpace::deallocate(
     const char *arg_label, void *const arg_alloc_ptr,

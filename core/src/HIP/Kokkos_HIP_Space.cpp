@@ -56,6 +56,12 @@ HIPHostPinnedSpace::HIPHostPinnedSpace() {}
 
 HIPManagedSpace::HIPManagedSpace() : m_device(HIP().hip_device()) {}
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+KOKKOS_DEPRECATED_WITH_COMMENT("Use the overload with a label instead!")
+void* HIPSpace::allocate(const size_t arg_alloc_size) const {
+  return allocate("[unlabeled]", arg_alloc_size);
+}
+#endif
 void* HIPSpace::allocate(
 
     const char* arg_label, const size_t arg_alloc_size,
@@ -88,6 +94,12 @@ void* HIPSpace::impl_allocate(
   return ptr;
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+KOKKOS_DEPRECATED_WITH_COMMENT("Use the overload with a label instead!")
+void* HIPHostPinnedSpace::allocate(const size_t arg_alloc_size) const {
+  return allocate("[unlabeled]", arg_alloc_size);
+}
+#endif
 void* HIPHostPinnedSpace::allocate(const char* arg_label,
                                    const size_t arg_alloc_size,
                                    const size_t arg_logical_size) const {
@@ -119,6 +131,12 @@ void* HIPHostPinnedSpace::impl_allocate(
   return ptr;
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+KOKKOS_DEPRECATED_WITH_COMMENT("Use the overload with a label instead!")
+void* HIPManagedSpace::allocate(const size_t arg_alloc_size) const {
+  return allocate("[unlabeled]", arg_alloc_size);
+}
+#endif
 void* HIPManagedSpace::allocate(const char* arg_label,
                                 const size_t arg_alloc_size,
                                 const size_t arg_logical_size) const {
@@ -200,6 +218,13 @@ bool HIPManagedSpace::impl_hip_driver_check_page_migration() const {
   return static_cast<bool>(hasPageableMemory);
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+KOKKOS_DEPRECATED_WITH_COMMENT("Use the overload with a label instead!")
+void HIPSpace::deallocate(void* const arg_alloc_ptr,
+                          const size_t arg_alloc_size) const {
+  deallocate("[unlabeled]", arg_alloc_ptr, arg_alloc_size);
+}
+#endif
 void HIPSpace::deallocate(const char* arg_label, void* const arg_alloc_ptr,
                           const size_t arg_alloc_size,
                           const size_t arg_logical_size) const {
@@ -217,6 +242,14 @@ void HIPSpace::impl_deallocate(
   }
   KOKKOS_IMPL_HIP_SAFE_CALL(hipFree(arg_alloc_ptr));
 }
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+KOKKOS_DEPRECATED_WITH_COMMENT("Use the overload with a label instead!")
+void HIPHostPinnedSpace::deallocate(void* const arg_alloc_ptr,
+                                    const size_t arg_alloc_size) const {
+  deallocate("[unlabeled]", arg_alloc_ptr, arg_alloc_size);
+}
+#endif
 
 void HIPHostPinnedSpace::deallocate(const char* arg_label,
                                     void* const arg_alloc_ptr,
@@ -236,6 +269,14 @@ void HIPHostPinnedSpace::impl_deallocate(
   }
   KOKKOS_IMPL_HIP_SAFE_CALL(hipHostFree(arg_alloc_ptr));
 }
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+KOKKOS_DEPRECATED_WITH_COMMENT("Use the overload with a label instead!")
+void HIPManagedSpace::deallocate(void* const arg_alloc_ptr,
+                                 const size_t arg_alloc_size) const {
+  deallocate("[unlabeled]", arg_alloc_ptr, arg_alloc_size);
+}
+#endif
 
 void HIPManagedSpace::deallocate(const char* arg_label,
                                  void* const arg_alloc_ptr,
