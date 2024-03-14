@@ -168,4 +168,101 @@ TEST(cuda_multi_gpu, unmanaged_views) {
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFree(p));
   }
 }
+
+struct ScratchFunctor {
+  int scratch_size;
+  int R;
+
+  ScratchFunctor(int scratch_size_, int R_)
+      : scratch_size(scratch_size_), R(R_) {}
+
+  KOKKOS_FUNCTION
+  void operator()(const Kokkos::TeamPolicy<Kokkos::Cuda>::member_type &team,
+                  int &error_accum) const {
+    Kokkos::View<int *, Kokkos::Cuda::scratch_memory_space> scratch_mem(
+        team.team_scratch(1), scratch_size);
+
+    // Initialize scratch memory
+    Kokkos::parallel_for(Kokkos::TeamVectorRange(team, 0, scratch_size),
+                         [&](int i) { scratch_mem(i) = 0; });
+    team.team_barrier();
+
+    // Increment each entry in scratch memory R times
+    for (int r = 0; r < R; ++r) {
+      Kokkos::parallel_for(Kokkos::TeamVectorRange(team, 0, scratch_size),
+                           [&](int i) { scratch_mem(i) += 1; });
+    }
+    team.team_barrier();
+
+    // Check that each scratch entry has been incremented exactly R times
+    int team_error_accum;
+    auto R_loc = R;  // avoid implicit capture of this
+    Kokkos::parallel_reduce(
+        Kokkos::TeamVectorRange(team, 0, scratch_size),
+        [&](int i, int &tsum) {
+          if (scratch_mem(i) != R_loc) {
+            tsum += 1;
+          }
+        },
+        team_error_accum);
+    Kokkos::single(Kokkos::PerTeam(team),
+                   [&]() { error_accum += team_error_accum; });
+  }
+};
+
+void test_scratch(TEST_EXECSPACE exec0, TEST_EXECSPACE exec1) {
+  constexpr int N            = 10;
+  constexpr int R            = 1000;
+  constexpr int scratch_size = 100;
+  using ScratchType = Kokkos::View<int *, Kokkos::Cuda::scratch_memory_space>;
+
+  // Test allocating and using scratch space
+  ScratchFunctor f(scratch_size, R);
+
+  auto policy0 =
+      Kokkos::TeamPolicy<Kokkos::Cuda>(exec0, N, 10)
+          .set_scratch_size(
+              1, Kokkos::PerTeam(ScratchType::shmem_size(scratch_size)));
+  auto policy1 =
+      Kokkos::TeamPolicy<Kokkos::Cuda>(exec1, N, 10)
+          .set_scratch_size(
+              1, Kokkos::PerTeam(ScratchType::shmem_size(scratch_size)));
+
+  int error0, error1;
+
+  Kokkos::parallel_reduce("test_scratch_device_0", policy0, f, error0);
+  Kokkos::parallel_reduce("test_scratch_device_1", policy1, f, error1);
+  ASSERT_EQ(error0, 0);
+  ASSERT_EQ(error1, 0);
+
+  // Request larger scratch size to trigger a realloc and test
+  const auto new_scratch_size = scratch_size + 10;
+  ScratchFunctor f_more_scratch(new_scratch_size, R);
+
+  auto policy0_more_scratch =
+      Kokkos::TeamPolicy<Kokkos::Cuda>(exec0, N, 10)
+          .set_scratch_size(
+              1, Kokkos::PerTeam(ScratchType::shmem_size(new_scratch_size)));
+  auto policy1_more_scratch =
+      Kokkos::TeamPolicy<Kokkos::Cuda>(exec1, N, 10)
+          .set_scratch_size(
+              1, Kokkos::PerTeam(ScratchType::shmem_size(new_scratch_size)));
+
+  Kokkos::parallel_reduce("test_realloc_scratch_device_0", policy0_more_scratch,
+                          f_more_scratch, error0);
+  Kokkos::parallel_reduce("test_realloc_scratch_device_1", policy1_more_scratch,
+                          f_more_scratch, error1);
+  ASSERT_EQ(error0, 0);
+  ASSERT_EQ(error1, 0);
+}
+
+TEST(cuda_multi_gpu, scratch_space) {
+  StreamsAndDevices streams_and_devices;
+  {
+    std::array<TEST_EXECSPACE, 2> execs =
+        get_execution_spaces(streams_and_devices);
+
+    test_scratch(execs[0], execs[1]);
+  }
+}
 }  // namespace
