@@ -379,7 +379,13 @@ void atomic_decrement(T* const dest) { return desul::atomic_dec(dest, desul::Mem
 // Exchange
 
 template<class T> KOKKOS_INLINE_FUNCTION
-T atomic_exchange(T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) { return desul::atomic_exchange(dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
+T atomic_exchange(T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) {
+#ifdef KOKKOS_ENABLE_IMPL_ATOMIC_REF
+  return desul_atomic_ref<T>{*dest}.exchange(val);
+#else
+  return desul::atomic_exchange(dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE);
+#endif
+}
 
 template<class T> KOKKOS_INLINE_FUNCTION
 bool atomic_compare_exchange_strong(T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> expected, desul::Impl::dont_deduce_this_parameter_t<const T> desired) {

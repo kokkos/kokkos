@@ -36,16 +36,23 @@ class AtomicRef {
   DESUL_FUNCTION T load() const noexcept {
     return desul::atomic_load(ptr_, MemoryOrder(), MemoryScope());
   }
-  DESUL_FUNCTION void store(T val) const noexcept {
-    return desul::atomic_store(ptr_, val, MemoryOrder(), MemoryScope());
+
+  DESUL_FUNCTION void store(T desired) const noexcept {
+    return desul::atomic_store(ptr_, desired, MemoryOrder(), MemoryScope());
   }
 
+  DESUL_FUNCTION T exchange(T desired) const noexcept {
+    return desul::atomic_exchange(ptr_, desired, MemoryOrder(), MemoryScope());
+  }
+
+  // TODO compare_exchange_{weak,strong} and is_lock_free
+
 #define DESUL_IMPL_DEFINE_ATOMIC_FETCH_OP(OP)                                   \
-  DESUL_FUNCTION T fetch_##OP(T val) const noexcept {                           \
-    return desul::atomic_fetch_##OP(ptr_, val, MemoryOrder(), MemoryScope());   \
+  DESUL_FUNCTION T fetch_##OP(T arg) const noexcept {                           \
+    return desul::atomic_fetch_##OP(ptr_, arg, MemoryOrder(), MemoryScope());   \
   }                                                                             \
-  DESUL_FUNCTION T OP##_fetch(T val) const noexcept {                           \
-    return desul::atomic_##OP##_fetch(ptr_, val, MemoryOrder(), MemoryScope()); \
+  DESUL_FUNCTION T OP##_fetch(T arg) const noexcept {                           \
+    return desul::atomic_##OP##_fetch(ptr_, arg, MemoryOrder(), MemoryScope()); \
   }
 
 #define DESUL_IMPL_DEFINE_ATOMIC_COMPOUND_ASSIGNMENT_OP(COMPD_ASGMT, OP) \
