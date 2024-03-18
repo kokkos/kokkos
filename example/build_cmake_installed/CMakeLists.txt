@@ -4,9 +4,9 @@ project(KokkosCMakeExample CXX)
 
 find_package(Kokkos REQUIRED)
 
-add_executable(cmake_example cmake_example.cpp)
+add_executable(example cmake_example.cpp)
 
-target_link_libraries(cmake_example PUBLIC Kokkos::kokkos)
+target_link_libraries(example PUBLIC Kokkos::kokkos)
 
 #Lines below needed for CI testing
 enable_testing()
