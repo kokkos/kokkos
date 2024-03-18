@@ -322,6 +322,11 @@ class ViewMapping<Traits, Kokkos::Array<>> {
         m_impl_offset(std::integral_constant<unsigned, 0>(), args...),
         m_stride(m_impl_offset.span()) {}
 
+  template <class... P, class... Args>
+  KOKKOS_INLINE_FUNCTION ViewMapping(
+      Kokkos::Impl::ViewCtorProp<P...> const &arg_prop, Args... args)
+      : ViewMapping(Impl::get_property<Impl::PointerTag>(arg_prop), args...) {}
+
   //----------------------------------------
 
   template <class... P>
