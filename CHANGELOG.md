@@ -42,7 +42,6 @@
 
 #### OpenMP:
 * Improve performance of view initializations and filling with zeros [\#6573](https://github.com/kokkos/kokkos/pull/6573)
-* Use omp_get_max_active_levels() when supported [\#6666]((https://github.com/kokkos/kokkos/pull/6666) 
 
 ### General Enhancements
 
