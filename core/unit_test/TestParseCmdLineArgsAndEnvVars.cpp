@@ -389,6 +389,64 @@ TEST(defaultdevicetype, env_vars_tune_internals) {
   }
 }
 
+TEST(defaultdevicetype, env_vars_unrecognized) {
+  {
+    EnvVarsHelper ev = {{
+        {"KOKKOS_NOT_A_VALID_ENV_VAR", "some_value"},  // not valid
+    }};
+    SKIP_IF_ENVIRONMENT_VARIABLE_ALREADY_SET(ev);
+    ::testing::internal::CaptureStderr();
+    Kokkos::InitializationSettings settings;
+    Kokkos::Impl::parse_environment_variables(settings);
+    auto captured = ::testing::internal::GetCapturedStderr();
+    EXPECT_TRUE(captured.find("not recognized") != std::string::npos &&
+                captured.find("KOKKOS_NOT_A_VALID_ENV_VAR=some_value") !=
+                    std::string::npos);
+  }
+
+  {
+    EnvVarsHelper ev = {{
+        {"KOKKOS_device_id", "0"},  // wrong case
+    }};
+    SKIP_IF_ENVIRONMENT_VARIABLE_ALREADY_SET(ev);
+    ::testing::internal::CaptureStderr();
+    Kokkos::InitializationSettings settings;
+    Kokkos::Impl::parse_environment_variables(settings);
+    auto captured = ::testing::internal::GetCapturedStderr();
+    EXPECT_TRUE(captured.find("not recognized") != std::string::npos &&
+                captured.find("KOKKOS_device_id=0") != std::string::npos &&
+                !settings.has_device_id());
+  }
+
+  {
+    EnvVarsHelper ev = {{
+        {"KKOKKOS_DEVICE_ID", "0"},  // no warning when prefix is misspelled
+    }};
+    SKIP_IF_ENVIRONMENT_VARIABLE_ALREADY_SET(ev);
+    ::testing::internal::CaptureStderr();
+    Kokkos::InitializationSettings settings;
+    Kokkos::Impl::parse_environment_variables(settings);
+    auto captured = ::testing::internal::GetCapturedStderr();
+    EXPECT_TRUE(captured.find("KKOKKOS_DEVICE_ID") == std::string::npos);
+  }
+
+  {
+    Kokkos::Impl::do_not_warn_not_recognized_environment_variable(
+        std::regex{"^KOKKOS_EXTENSION.*"});
+    EnvVarsHelper ev = {{
+        {"KOKKOS_EXTENSION_WHATEVER", "123"},  // user explicitly asked not to
+                                               // warn about that prefix
+    }};
+    SKIP_IF_ENVIRONMENT_VARIABLE_ALREADY_SET(ev);
+    ::testing::internal::CaptureStderr();
+    Kokkos::InitializationSettings settings;
+    Kokkos::Impl::parse_environment_variables(settings);
+    auto captured = ::testing::internal::GetCapturedStderr();
+    EXPECT_TRUE(captured.find("KOKKOS_EXTENSION_WHATEVER") ==
+                std::string::npos);
+  }
+}
+
 TEST(defaultdevicetype, visible_devices) {
 #define KOKKOS_TEST_VISIBLE_DEVICES(ENV, CNT, DEV)                      \
   do {                                                                  \
