@@ -11,7 +11,7 @@
 #### CUDA:
 * Removed `KOKKOS_IMPL_CUDA_CLANG_WORKAROUND` macro (not needed any more) [\#6576](https://github.com/kokkos/kokkos/pull/6576)
 * Multi-GPU support [\#6782](https://github.com/kokkos/kokkos/pull/6782)
-* Link against CUDA libraries even with KOKKOS_ENABLE_COMPILE_AS_CMAKE_LANGUAGE [\#6701](https://github.com/kokkos/kokkos/pull/6701) 
+* Link against CUDA libraries even with KOKKOS_ENABLE_COMPILE_AS_CMAKE_LANGUAGE [\#6701](https://github.com/kokkos/kokkos/pull/6701)
 * Don't use the compiler launcher script if the compile language is CUDA. [\#6704](https://github.com/kokkos/kokkos/pull/6704)
 * nvcc(wrapper): adding "long" and "short" versions for all flags [\#6615](ttps://github.com/kokkos/kokkos/pull/6704)
 
@@ -22,10 +22,10 @@
 #### SYCL:
 * Error out on initialization if the backend is different from `ext_oneapi_*` [\#6784](https://github.com/kokkos/kokkos/pull/6784)
 * Filter GPU devices for `ext_onapi_*` GPU devices [\#6758](https://github.com/kokkos/kokkos/pull/6784)
-* Avoid unnecessary zero-memset of the scratch flags in SYCL [\#6739](https://github.com/kokkos/kokkos/pull/6739) 
-* Address deprecations after oneAPI 2023.2.0 [\#6577](https://github.com/kokkos/kokkos/pull/6739) 
+* Avoid unnecessary zero-memset of the scratch flags in SYCL [\#6739](https://github.com/kokkos/kokkos/pull/6739)
+* Address deprecations after oneAPI 2023.2.0 [\#6577](https://github.com/kokkos/kokkos/pull/6739)
 * Use host-pinned memory to copy reduction/scan result [\#6500](https://github.com/kokkos/kokkos/pull/6500)
-* Make sure to call find_dependency for oneDPL if necessary [\#6870](https://github.com/kokkos/kokkos/pull/6870) 
+* Make sure to call find_dependency for oneDPL if necessary [\#6870](https://github.com/kokkos/kokkos/pull/6870)
 
 #### OpenMPTarget:
 * Use LLVM extensions for dynamic shared memory [\#6380](https://github.com/kokkos/kokkos/pull/6380)
@@ -59,18 +59,18 @@
 * CTAD (deduction guides) for RangePolicy [\#6850]
 * CTAD (deduction guides) for MDRangePolicy [\#5516]
 
-### Build System Changes 
+### Build System Changes
 * Atomics always enabled by default [\#6692](https://github.com/kokkos/kokkos/pull/6692)
 * Add support for RISCV and the Milk-V's Pioneer [\#6773](https://github.com/kokkos/kokkos/pull/6773)
-* Add C++26 standard to CMake setup [\#6733](https://github.com/kokkos/kokkos/pull/6733) 
+* Add C++26 standard to CMake setup [\#6733](https://github.com/kokkos/kokkos/pull/6733)
 
 ### Incompatibilities (i.e. breaking changes)
 * Remove all `DEPRECATED_CODE_3` option and all code that was guarded by it  [\#6523](https://github.com/kokkos/kokkos/pull/6523)
-* Drop guards to accommodate external code defining `KOKKOS_ASSERT` [\#6665](https://github.com/kokkos/kokkos/pull/6665) 
+* Drop guards to accommodate external code defining `KOKKOS_ASSERT` [\#6665](https://github.com/kokkos/kokkos/pull/6665)
 * `Profiling::ProfilingSection(std::string)` constructor marked explicit and nodiscard [\#6690](https://github.com/kokkos/kokkos/pull/6690)
 * Add bound check preconditions for `RangePolicy` and `MDRangePolicy` [\#6617](https://github.com/kokkos/kokkos/pull/6617) [\#6726](https://github.com/kokkos/kokkos/pull/6726)
 * Add checks for unsafe implicit conversions in RangePolicy [\#6754](https://github.com/kokkos/kokkos/pull/6754)
-* Remove Kokkos::[b]half_t volatile overloads [\#6579](https://github.com/kokkos/kokkos/pull/6579) 
+* Remove Kokkos::[b]half_t volatile overloads [\#6579](https://github.com/kokkos/kokkos/pull/6579)
 * Remove KOKKOS_IMPL_DO_NOT_USE_PRINTF [\#6593](https://github.com/kokkos/kokkos/pull/6593)
 * Check matching static extents in View constructor [\#5190 ](https://github.com/kokkos/kokkos/pull/5190)
 * Tools(profiling): fix typo Kokkos_Tools_Optim[i]zationGoal [\#6642](https://github.com/kokkos/kokkos/pull/6642)
@@ -95,8 +95,8 @@
 * `fill_random` overload that do not take an execution space instance argument should fence [\#6658](https://github.com/kokkos/kokkos/pull/6658)
 * HIP,Cuda,OpenMPTarget: Fixup use provided execution space when copying host inaccessible reduction result [\#6777](https://github.com/kokkos/kokkos/pull/6777)
 * Fix typo in `cuda_func_set_attribute[s]_wrapper` [\#6786](https://github.com/kokkos/kokkos/pull/6786)
-* Fix Makefile when using gnu_generate_makefile.sh and make >= 4.3 [\#6606](https://github.com/kokkos/kokkos/pull/6606) 
-* Clean up shift_{right, left}_team_impl [\#6821](https://github.com/kokkos/kokkos/pull/6821) 
+* Fix Makefile when using gnu_generate_makefile.sh and make >= 4.3 [\#6606](https://github.com/kokkos/kokkos/pull/6606)
+* Clean up shift_{right, left}_team_impl [\#6821](https://github.com/kokkos/kokkos/pull/6821)
 
 ## [4.2.01](https://github.com/kokkos/kokkos/tree/4.2.01) (2023-12-07)
 [Full Changelog](https://github.com/kokkos/kokkos/compare/4.2.00...4.2.01)
