@@ -61,7 +61,7 @@
 * CTAD (deduction guides) for MDRangePolicy [\#5516]
 
 ### Build System Changes 
-* Atomics always enabled by default (bug fix?).  Add `ATOMICS_BYPASS` configuration option to disable atomics [\#6692](https://github.com/kokkos/kokkos/pull/6692)
+* Atomics always enabled by default [\#6692](https://github.com/kokkos/kokkos/pull/6692)
 * Add support for RISCV and the Milk-V's Pioneer [\#6773](https://github.com/kokkos/kokkos/pull/6773)
 * Add C++26 standard to CMake setup [\#6733](https://github.com/kokkos/kokkos/pull/6733) 
 
