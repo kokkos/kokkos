@@ -9,10 +9,10 @@
 ### Backend and Architecture Enhancements:
 
 #### CUDA:
-* Multi-GPU support [\#6782](https://github.com/kokkos/kokkos/pull/6782)
+* Experimental multi-GPU support (from the same process) [\#6782](https://github.com/kokkos/kokkos/pull/6782)
 * Link against CUDA libraries even with KOKKOS_ENABLE_COMPILE_AS_CMAKE_LANGUAGE [\#6701](https://github.com/kokkos/kokkos/pull/6701)
 * Don't use the compiler launcher script if the CMake compile language is CUDA. [\#6704](https://github.com/kokkos/kokkos/pull/6704)
-* nvcc(wrapper): adding "long" and "short" versions for all flags [\#6615](https://github.com/kokkos/kokkos/pull/6704)
+* nvcc(wrapper): adding "long" and "short" versions for all flags [\#6615](https://github.com/kokkos/kokkos/pull/6615)
 
 #### HIP:
  * Fix compilation when using amdclang (with ROCm >= 5.7) and RDC [\#6857](https://github.com/kokkos/kokkos/pull/6857)
@@ -46,7 +46,6 @@
 
 * Improve performance of random number generation when using a normal distribution on GPUs [\#6556](https://github.com/kokkos/kokkos/pull/6556)
 * Allocate temporary view with the user-provided execution space instance and do not initialize in `unique` algorithm [\#6598](https://github.com/kokkos/kokkos/pull/6598)
-* Add stream benchmark to CMake [\#6662](https://github.com/kokkos/kokkos/pull/6662)
 * Add deduction guide for `Kokkos::Array` [\#6373](https://github.com/kokkos/kokkos/pull/6373)
 * Provide new public headers `<Kokkos_Clamp.hpp>` and `<Kokkos_MinMax.hpp>` [\#6687](https://github.com/kokkos/kokkos/pull/6687)
 * Fix/improvement to `remove_if` parallel algorithm: use the provided execution space instance for temporary allocations and drop unnecessaryinitialization + avoid evaluating twice the predicate during final pass [\#6747](https://github.com/kokkos/kokkos/pull/6747)
@@ -55,13 +54,14 @@
 * Prefer defaulted default constructor for Bitset [\#6524](https://github.com/kokkos/kokkos/pull/6524)
 * Fix constness for views in std algorithms [\#6813](https://github.com/kokkos/kokkos/pull/6813)
 * Improve error message on unsafe implicit conversion in MDRangePolicy [\#6855](https://github.com/kokkos/kokkos/pull/6855)
-* CTAD (deduction guides) for RangePolicy [\#6850]
-* CTAD (deduction guides) for MDRangePolicy [\#5516]
+* CTAD (deduction guides) for RangePolicy [\#6850](https://github.com/kokkos/kokkos/pull/6850)
+* CTAD (deduction guides) for MDRangePolicy [\#5516](https://github.com/kokkos/kokkos/pull/5516)
 
 ### Build System Changes
 * Atomics always enabled by default [\#6692](https://github.com/kokkos/kokkos/pull/6692)
 * Add support for RISCV and the Milk-V's Pioneer [\#6773](https://github.com/kokkos/kokkos/pull/6773)
 * Add C++26 standard to CMake setup [\#6733](https://github.com/kokkos/kokkos/pull/6733)
+* Fix Makefile when using gnu_generate_makefile.sh and make >= 4.3 [\#6606](https://github.com/kokkos/kokkos/pull/6606)
 
 ### Incompatibilities (i.e. breaking changes)
 * Remove all `DEPRECATED_CODE_3` option and all code that was guarded by it  [\#6523](https://github.com/kokkos/kokkos/pull/6523)
@@ -75,6 +75,7 @@
 * Tools(profiling): fix typo Kokkos_Tools_Optim[i]zationGoal [\#6642](https://github.com/kokkos/kokkos/pull/6642)
 * Remove variadic range policy constructor (disallow passing multiple trailing chunk size arguments) [\#6845](https://github.com/kokkos/kokkos/pull/6845)
 * Improve message on view out of bounds access and always abort [\#6861](https://github.com/kokkos/kokkos/pull/6861)
+* Drop `KOKKOS_ENABLE_INTEL_MM_ALLOC` macro [\#6797](https://github.com/kokkos/kokkos/pull/6797)
 
 ### Deprecations
 * Remove `Kokkos::Experimental::LogicalMemorySpace` (without going through deprecation) [\#6557](https://github.com/kokkos/kokkos/pull/6557)
@@ -83,7 +84,6 @@
 * Drop support for deprecated command-line arguments and environment variables [\#6744](https://github.com/kokkos/kokkos/pull/6744)
 * Deprecate `ExecutionSpace::in_parallel()` [\#6582](https://github.com/kokkos/kokkos/pull/6582)
 * Remove `Experimental::HBWSpace` and support for linking against memkind [\#6791](https://github.com/kokkos/kokkos/pull/6791)
-* Drop `KOKKOS_ENABLE_INTEL_MM_ALLOC` macro [#6797](https://github.com/kokkos/kokkos/pull/6797)
 * Drop librt TPL and associated `KOKKOS_ENABLE_LIBRT` macro [\#6798](https://github.com/kokkos/kokkos/pull/6798)
 * Drop support for old CPU architectures (`ARCH_BGQ`, `ARCH_POWER7`, `ARCH_WSM` and associated `ARCH_SSE4` macro) [\#6806](https://github.com/kokkos/kokkos/pull/6806)
 
@@ -93,8 +93,7 @@
 * Enable `{transform_}exclusive_scan` in place [\#6667](https://github.com/kokkos/kokkos/pull/6667)
 * `fill_random` overload that do not take an execution space instance argument should fence [\#6658](https://github.com/kokkos/kokkos/pull/6658)
 * HIP,Cuda,OpenMPTarget: Fixup use provided execution space when copying host inaccessible reduction result [\#6777](https://github.com/kokkos/kokkos/pull/6777)
-* Fix typo in `cuda_func_set_attribute[s]_wrapper` [\#6786](https://github.com/kokkos/kokkos/pull/6786)
-* Fix Makefile when using gnu_generate_makefile.sh and make >= 4.3 [\#6606](https://github.com/kokkos/kokkos/pull/6606)
+* Fix typo in `cuda_func_set_attribute[s]_wrapper` preventing proper setting of desired occupancy [\#6786](https://github.com/kokkos/kokkos/pull/6786)
 * Clean up shift_{right, left}_team_impl [\#6821](https://github.com/kokkos/kokkos/pull/6821)
 
 ## [4.2.01](https://github.com/kokkos/kokkos/tree/4.2.01) (2023-12-07)
