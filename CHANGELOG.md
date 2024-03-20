@@ -88,7 +88,7 @@
 * Drop support for old CPU architectures (`ARCH_BGQ`, `ARCH_POWER7`, `ARCH_WSM` and associated `ARCH_SSE4` macro) [\#6806](https://github.com/kokkos/kokkos/pull/6806)
 
 ### Bug Fixes
-* Fix Team level MDRange reductions: [\#6511](https://github.com/kokkos/kokkos/pull/6511)
+* Fix team-level MDRange reductions: [\#6511](https://github.com/kokkos/kokkos/pull/6511)
 * Fix CUDA and SYCL small value type (16bit) team reductions [\#5334](https://github.com/kokkos/kokkos/pull/5334)
 * Enable `{transform_}exclusive_scan` in place [\#6667](https://github.com/kokkos/kokkos/pull/6667)
 * `fill_random` overload that do not take an execution space instance argument should fence [\#6658](https://github.com/kokkos/kokkos/pull/6658)
