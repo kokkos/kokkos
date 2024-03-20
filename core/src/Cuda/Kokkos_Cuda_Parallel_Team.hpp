@@ -904,8 +904,6 @@ class ParallelReduce<CombinedFunctorReducerType,
         m_vector_size(arg_policy.impl_vector_length()) {
     auto internal_space_instance =
         m_policy.space().impl_internal_space_instance();
-    cudaFuncAttributes attr = CudaParallelLaunch<ParallelReduce, LaunchBounds>::
-        get_cuda_func_attributes(internal_space_instance->m_cudaDev);
     m_team_size = m_team_size >= 0 ? m_team_size
                                    : arg_policy.team_size_recommended(
                                          arg_functor_reducer.get_functor(),
