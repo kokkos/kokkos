@@ -539,9 +539,6 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
         m_vector_size(arg_policy.impl_vector_length()) {
     auto internal_space_instance =
         m_policy.space().impl_internal_space_instance();
-    cudaFuncAttributes attr =
-        CudaParallelLaunch<ParallelFor, LaunchBounds>::get_cuda_func_attributes(
-            internal_space_instance->m_cudaDev);
     m_team_size = m_team_size >= 0 ? m_team_size
                                    : arg_policy.team_size_recommended(
                                          arg_functor, ParallelForTag());
@@ -580,13 +577,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
           "Kokkos::Impl::ParallelFor< Cuda > insufficient shared memory"));
     }
 
-    if (int(m_team_size) >
-        int(Kokkos::Impl::cuda_get_max_block_size<FunctorType, LaunchBounds>(
-                internal_space_instance, attr, arg_functor,
-                arg_policy.impl_vector_length(),
-                arg_policy.team_scratch_size(0),
-                arg_policy.thread_scratch_size(0)) /
-            arg_policy.impl_vector_length())) {
+    if (m_team_size > arg_policy.team_size_max(arg_functor, ParallelForTag())) {
       Kokkos::Impl::throw_runtime_exception(std::string(
           "Kokkos::Impl::ParallelFor< Cuda > requested too large team size."));
     }
