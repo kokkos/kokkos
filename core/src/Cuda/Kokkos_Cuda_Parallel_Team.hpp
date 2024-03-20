@@ -906,15 +906,11 @@ class ParallelReduce<CombinedFunctorReducerType,
         m_policy.space().impl_internal_space_instance();
     cudaFuncAttributes attr = CudaParallelLaunch<ParallelReduce, LaunchBounds>::
         get_cuda_func_attributes(internal_space_instance->m_cudaDev);
-    m_team_size =
-        m_team_size >= 0
-            ? m_team_size
-            : Kokkos::Impl::cuda_get_opt_block_size<FunctorType, LaunchBounds>(
-                  internal_space_instance, attr,
-                  m_functor_reducer.get_functor(), m_vector_size,
-                  m_policy.team_scratch_size(0),
-                  m_policy.thread_scratch_size(0)) /
-                  m_vector_size;
+    m_team_size = m_team_size >= 0 ? m_team_size
+                                   : arg_policy.team_size_recommended(
+                                         arg_functor_reducer.get_functor(),
+                                         arg_functor_reducer.get_reducer(),
+                                         ParallelReduceTag());
 
     m_team_begin =
         UseShflReduction
