@@ -3647,8 +3647,8 @@ create_mirror_view(const Kokkos::View<T, P...>& src) {
 
 template <class T, class... P>
 typename Kokkos::View<T, P...>::HostMirror create_mirror_view(
-    Kokkos::Impl::WithoutInitializing_t wi, Kokkos::View<T, P...> const& v) {
-  return Impl::create_mirror_view(v, view_alloc(wi));
+    Kokkos::Impl::WithoutInitializing_t wi, Kokkos::View<T, P...> const& src) {
+  return Impl::create_mirror_view(src, view_alloc(wi));
 }
 
 // FIXME_C++17 Improve SFINAE here.
@@ -3675,15 +3675,15 @@ template <class Space, class T, class... P,
           typename Enable = std::enable_if_t<Kokkos::is_space<Space>::value>>
 typename Impl::MirrorViewType<Space, T, P...>::view_type create_mirror_view(
     Kokkos::Impl::WithoutInitializing_t wi, Space const&,
-    Kokkos::View<T, P...> const& v) {
+    Kokkos::View<T, P...> const& src) {
   return Impl::create_mirror_view(
-      v, view_alloc(typename Space::memory_space{}, wi));
+      src, view_alloc(typename Space::memory_space{}, wi));
 }
 
 template <class T, class... P, class... ViewCtorArgs>
 auto create_mirror_view(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
-                        const Kokkos::View<T, P...>& v) {
-  return Impl::create_mirror_view(v, arg_prop);
+                        const Kokkos::View<T, P...>& src) {
+  return Impl::create_mirror_view(src, arg_prop);
 }
 
 template <class... ViewCtorArgs, class T, class... P>
