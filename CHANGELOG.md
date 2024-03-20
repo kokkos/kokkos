@@ -9,7 +9,6 @@
 ### Backend and Architecture Enhancements:
 
 #### CUDA:
-* Removed `KOKKOS_IMPL_CUDA_CLANG_WORKAROUND` macro (not needed any more) [\#6576](https://github.com/kokkos/kokkos/pull/6576)
 * Multi-GPU support [\#6782](https://github.com/kokkos/kokkos/pull/6782)
 * Link against CUDA libraries even with KOKKOS_ENABLE_COMPILE_AS_CMAKE_LANGUAGE [\#6701](https://github.com/kokkos/kokkos/pull/6701)
 * Don't use the compiler launcher script if the CMake compile language is CUDA. [\#6704](https://github.com/kokkos/kokkos/pull/6704)
