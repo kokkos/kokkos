@@ -542,14 +542,9 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     cudaFuncAttributes attr =
         CudaParallelLaunch<ParallelFor, LaunchBounds>::get_cuda_func_attributes(
             internal_space_instance->m_cudaDev);
-    m_team_size =
-        m_team_size >= 0
-            ? m_team_size
-            : Kokkos::Impl::cuda_get_opt_block_size<FunctorType, LaunchBounds>(
-                  internal_space_instance, attr, m_functor, m_vector_size,
-                  m_policy.team_scratch_size(0),
-                  m_policy.thread_scratch_size(0)) /
-                  m_vector_size;
+    m_team_size = m_team_size >= 0 ? m_team_size
+                                   : arg_policy.team_size_recommended(
+                                         arg_functor, ParallelForTag());
 
     m_shmem_begin = (sizeof(double) * (m_team_size + 2));
     m_shmem_size =
