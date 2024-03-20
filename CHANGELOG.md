@@ -89,7 +89,7 @@
 
 ### Bug Fixes
 * Fix team-level MDRange reductions: [\#6511](https://github.com/kokkos/kokkos/pull/6511)
-* Fix CUDA and SYCL small value type (16bit) team reductions [\#5334](https://github.com/kokkos/kokkos/pull/5334)
+* Fix CUDA and SYCL small value type (16-bit) team reductions [\#5334](https://github.com/kokkos/kokkos/pull/5334)
 * Enable `{transform_}exclusive_scan` in place [\#6667](https://github.com/kokkos/kokkos/pull/6667)
 * `fill_random` overload that do not take an execution space instance argument should fence [\#6658](https://github.com/kokkos/kokkos/pull/6658)
 * HIP,Cuda,OpenMPTarget: Fixup use provided execution space when copying host inaccessible reduction result [\#6777](https://github.com/kokkos/kokkos/pull/6777)
