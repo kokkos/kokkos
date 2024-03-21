@@ -3429,7 +3429,7 @@ struct MirrorViewType {
   // deep_copy to it.
   using data_type = typename src_view_type::non_const_data_type;
   // The destination view type if it is not the same memory space
-  using dest_view_type = Kokkos::View<data_type, array_layout, Space>;
+  using dest_view_type = Kokkos::View<data_type, array_layout, memory_space>;
   // If it is the same memory_space return the existsing view_type
   // This will also keep the unmanaged trait if necessary
   using view_type =
@@ -3453,7 +3453,7 @@ struct MirrorType {
   // deep_copy to it.
   using data_type = typename src_view_type::non_const_data_type;
   // The destination view type if it is not the same memory space
-  using view_type = Kokkos::View<data_type, array_layout, Space>;
+  using view_type = Kokkos::View<data_type, array_layout, memory_space>;
 };
 
 // collection of static asserts for create_mirror and create_mirror_view
