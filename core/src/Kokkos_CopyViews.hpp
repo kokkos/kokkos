@@ -3472,17 +3472,16 @@ void check_view_ctor_args_create_mirror() {
 
 template <class T, class... P, class... ViewCtorArgs>
 auto create_mirror(const Kokkos::View<T, P...>& src,
-              const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
-
+                   const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
   check_view_ctor_args_create_mirror<ViewCtorArgs...>();
 
   auto prop_copy = Impl::with_properties_if_unset(
       arg_prop, std::string(src.label()).append("_mirror"));
 
-  if constexpr (Impl::ViewCtorProp<ViewCtorArgs...>::has_memory_space){
+  if constexpr (Impl::ViewCtorProp<ViewCtorArgs...>::has_memory_space) {
     using memory_space = typename decltype(prop_copy)::memory_space;
-    using dst_type = typename Impl::MirrorType<memory_space, T,
-                                   P...>::view_type;
+    using dst_type =
+        typename Impl::MirrorType<memory_space, T, P...>::view_type;
     return dst_type(prop_copy, src.layout());
   } else {
     using dst_type = typename View<T, P...>::HostMirror;
@@ -3539,7 +3538,8 @@ std::enable_if_t<std::is_void<typename ViewTraits<T, P...>::specialize>::value,
                  typename Impl::MirrorType<Space, T, P...>::view_type>
 create_mirror(Kokkos::Impl::WithoutInitializing_t wi, Space const&,
               Kokkos::View<T, P...> const& src) {
-  return Impl::create_mirror(src, view_alloc(typename Space::memory_space{}, wi));
+  return Impl::create_mirror(src,
+                             view_alloc(typename Space::memory_space{}, wi));
 }
 
 namespace Impl {
