@@ -214,8 +214,7 @@ void test_tools_initialization_with_callbacks() {
     ASSERT_TRUE(declare_metadata_callback);
     ASSERT_TRUE(request_tool_settings_callback);
     ASSERT_TRUE(provide_tool_programming_interface_callback);
-
-    // should have been called one by each parallel region
+    // should have been called once by each parallel region
     ASSERT_TRUE(3 == mark_kernel_static_info_callback);
   }
 }
