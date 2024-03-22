@@ -15,7 +15,7 @@ KOKKOS_DEVICES ?= "Threads"
 # IBM:      Power8,Power9
 # AMD-GPUS: GFX906,GFX908,GFX90A,GFX940,GFX942,GFX1030,GFX1100
 # AMD-CPUS: AMDAVX,Zen,Zen2,Zen3
-# Intel-GPUs: Gen9,Gen11,Gen12LP,DG1,XeHP,PVC
+# Intel-GPUs: Intel_Gen,Intel_Gen9,Intel_Gen11,Intel_Gen12LP,Intel_DG1,Intel_XeHP,Intel_PVC
 KOKKOS_ARCH ?= ""
 # Options: yes,no
 KOKKOS_DEBUG ?= "no"
@@ -318,12 +318,39 @@ KOKKOS_INTERNAL_USE_ARCH_ICL := $(call kokkos_has_string,$(KOKKOS_ARCH),ICL)
 KOKKOS_INTERNAL_USE_ARCH_ICX := $(call kokkos_has_string,$(KOKKOS_ARCH),ICX)
 KOKKOS_INTERNAL_USE_ARCH_SPR := $(call kokkos_has_string,$(KOKKOS_ARCH),SPR)
 
-KOKKOS_INTERNAL_USE_ARCH_INTEL_GEN := $(call kokkos_has_string,$(KOKKOS_ARCH),IntelGen)
 KOKKOS_INTERNAL_USE_ARCH_INTEL_GEN9 := $(call kokkos_has_string,$(KOKKOS_ARCH),IntelGen9)
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_INTEL_GEN9), 0)
+  KOKKOS_INTERNAL_USE_ARCH_INTEL_GEN9 := $(call kokkos_has_string,$(KOKKOS_ARCH),Intel_Gen9)
+endif
 KOKKOS_INTERNAL_USE_ARCH_INTEL_GEN11 := $(call kokkos_has_string,$(KOKKOS_ARCH),IntelGen11)
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_INTEL_GEN11), 0)
+  KOKKOS_INTERNAL_USE_ARCH_INTEL_GEN11 := $(call kokkos_has_string,$(KOKKOS_ARCH),Intel_Gen11)
+endif
 KOKKOS_INTERNAL_USE_ARCH_INTEL_GEN12LP := $(call kokkos_has_string,$(KOKKOS_ARCH),IntelGen12LP)
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_INTEL_GEN12LP), 0)
+  KOKKOS_INTERNAL_USE_ARCH_INTEL_GEN12LP := $(call kokkos_has_string,$(KOKKOS_ARCH),Intel_Gen12LP)
+endif
+KOKKOS_INTERNAL_USE_ARCH_INTEL_GEN := $(call kokkos_has_string,$(KOKKOS_ARCH),IntelGen9)
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_INTEL_GEN9), 0)
+  KOKKOS_INTERNAL_USE_ARCH_INTEL_GEN9 := $(call kokkos_has_string,$(KOKKOS_ARCH),Intel_Gen9)
+endif
+KOKKOS_INTERNAL_USE_ARCH_INTEL_GEN_SET := $(shell expr $(KOKKOS_INTERNAL_USE_ARCH_INTEL_GEN9)  \
+                                                     + $(KOKKOS_INTERNAL_USE_ARCH_INTEL_GEN11) \
+                                                     + $(KOKKOS_INTERNAL_USE_ARCH_INTEL_GEN12LP))
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_INTEL_GEN_SET), 0)
+  KOKKOS_INTERNAL_USE_ARCH_INTEL_GEN := $(call kokkos_has_string,$(KOKKOS_ARCH),IntelGen)
+  ifeq ($(KOKKOS_INTERNAL_USE_ARCH_INTEL_GEN), 0)
+    KOKKOS_INTERNAL_USE_ARCH_INTEL_GEN := $(call kokkos_has_string,$(KOKKOS_ARCH),Intel_Gen)
+  endif
+endif
 KOKKOS_INTERNAL_USE_ARCH_INTEL_DG1 := $(call kokkos_has_string,$(KOKKOS_ARCH),IntelDG1)
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_INTEL_DG1), 0)
+  KOKKOS_INTERNAL_USE_ARCH_INTEL_DG1 := $(call kokkos_has_string,$(KOKKOS_ARCH),Intel_DG1)
+endif
 KOKKOS_INTERNAL_USE_ARCH_INTEL_XEHP := $(call kokkos_has_string,$(KOKKOS_ARCH),IntelXeHP)
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_INTEL_XEHP), 0)
+  KOKKOS_INTERNAL_USE_ARCH_INTEL_XEHP := $(call kokkos_has_string,$(KOKKOS_ARCH),Intel_XeHP)
+endif
 KOKKOS_INTERNAL_USE_ARCH_INTEL_PVC := $(call kokkos_has_string,$(KOKKOS_ARCH),PVC)
 
 # NVIDIA based.
