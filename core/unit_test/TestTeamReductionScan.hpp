@@ -120,5 +120,11 @@ TEST(TEST_CATEGORY, repeated_team_reduce) {
   TestRepeatedTeamReduce<TEST_EXECSPACE>();
 }
 
+TEST(TEST_CATEGORY, nested_team_reduce_functor_as_reducer) {
+  TestTeamNestedFunctorReducer<TEST_EXECSPACE>().run_test_team_thread();
+  TestTeamNestedFunctorReducer<TEST_EXECSPACE>().run_test_thread_vector();
+  TestTeamNestedFunctorReducer<TEST_EXECSPACE>().run_test_team_vector();
+}
+
 }  // namespace Test
 #endif

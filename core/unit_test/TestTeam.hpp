@@ -1753,4 +1753,133 @@ struct TestRepeatedTeamReduce {
 
 }  // namespace Test
 
+namespace Test {
+
+struct SimpleTestValue {
+  int value;
+};
+
+struct SimpleFunctorReducer {
+  using value_type = SimpleTestValue;
+
+  KOKKOS_INLINE_FUNCTION
+  void init(value_type &init) const { init.value = 1; }
+
+  KOKKOS_INLINE_FUNCTION
+  void join(value_type &dst, value_type const &src) const {
+    dst.value *= src.value;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void final(value_type &) const {}
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const int i, value_type &update) const {
+    update.value *= (i + 1);
+  }
+};
+
+struct SimpleReducer {
+  using reducer    = SimpleReducer;
+  using value_type = SimpleTestValue;
+
+  KOKKOS_INLINE_FUNCTION
+  SimpleReducer(value_type &val) : local(val) {}
+
+  KOKKOS_INLINE_FUNCTION
+  void init(value_type &init) const { init.value = 1; }
+
+  KOKKOS_INLINE_FUNCTION
+  void join(value_type &dst, value_type const &src) const {
+    dst.value *= src.value;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void final(value_type &) const {}
+
+  KOKKOS_INLINE_FUNCTION
+  value_type &reference() const { return local; }
+
+  value_type &local;
+};
+
+namespace {
+
+template <typename ExecSpace>
+class TestTeamNestedFunctorReducer {
+ public:
+  using execution_space  = ExecSpace;
+  using team_policy_type = Kokkos::TeamPolicy<execution_space>;
+  using member_type      = typename team_policy_type::member_type;
+  using value_type       = SimpleTestValue;
+  using functor_type     = SimpleFunctorReducer;
+  using reducer_type     = SimpleReducer;
+  using index_type       = int;
+
+  void run_test_team_thread() {
+    auto policy = KOKKOS_LAMBDA(member_type const &member, index_type count) {
+      return Kokkos::TeamThreadRange(member, count);
+    };
+    run_test_team_policies(policy);
+  };
+
+  void run_test_thread_vector() {
+    auto policy = KOKKOS_LAMBDA(member_type const &member, index_type count) {
+      return Kokkos::ThreadVectorRange(member, count);
+    };
+    run_test_team_policies(policy);
+  };
+
+  void run_test_team_vector() {
+    auto policy = KOKKOS_LAMBDA(member_type const &member, index_type count) {
+      return Kokkos::TeamVectorRange(member, count);
+    };
+    run_test_team_policies(policy);
+  };
+
+  template <typename Policy>
+  void run_test_team_policies(Policy &policy) {
+    constexpr index_type league_size = 3;
+    constexpr index_type test_count  = 8;
+
+    Kokkos::View<int[league_size], execution_space> test_result("result");
+    Kokkos::View<int[league_size], execution_space> expected_result("expected");
+
+    Kokkos::parallel_for(
+        team_policy_type(league_size, Kokkos::AUTO),
+        KOKKOS_LAMBDA(member_type const &team) {
+          const int league = team.league_rank();
+          value_type result{};
+
+          Kokkos::parallel_reduce(policy(team, test_count), functor_type{},
+                                  result);
+          test_result(league) = result.value;
+
+          value_type expected{};
+          reducer_type reducer(expected);
+          Kokkos::parallel_reduce(
+              policy(team, test_count),
+              [&](const int i, value_type &update) { update.value *= (i + 1); },
+              reducer);
+
+          Kokkos::single(Kokkos::PerTeam(team),
+                         [=]() { expected_result(league) = expected.value; });
+        });
+    Kokkos::fence();
+
+    auto test = Kokkos::create_mirror_view_and_copy(
+        Kokkos::DefaultHostExecutionSpace{}, test_result);
+    auto check = Kokkos::create_mirror_view_and_copy(
+        Kokkos::DefaultHostExecutionSpace{}, expected_result);
+
+    for (unsigned i = 0; i < test.extent(0); ++i) {
+      ASSERT_EQ(test(i), check(i));
+    }
+  }
+};
+
+}  // namespace
+
+}  // namespace Test
+
 /*--------------------------------------------------------------------------*/

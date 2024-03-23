@@ -542,50 +542,53 @@ class HostThreadTeamMember {
     team_reduce(reducer, reducer.reference());
   }
 
-  template <typename ReducerType>
-  KOKKOS_INLINE_FUNCTION std::enable_if_t<is_reducer<ReducerType>::value>
-  team_reduce(ReducerType const& reducer,
-              typename ReducerType::value_type contribution) const noexcept {
-    KOKKOS_IF_ON_HOST((
-        if (1 < m_data.m_team_size) {
-          using value_type = typename ReducerType::value_type;
+  template <typename ReducerType, typename ValueType>
+  KOKKOS_INLINE_FUNCTION void team_reduce(ReducerType const& reducer,
+                                          ValueType& contribution) const
+      noexcept {
+    KOKKOS_IF_ON_HOST((if (1 < m_data.m_team_size) {
+      using value_type = ValueType;
 
-          if (0 != m_data.m_team_rank) {
-            // Non-root copies to their local buffer:
-            /*reducer.copy( (value_type*) m_data.team_reduce_local()
-                        , reducer.data() );*/
-            *((value_type*)m_data.team_reduce_local()) = contribution;
-          }
+      if (0 != m_data.m_team_rank) {
+        // Non-root copies to their local buffer:
+        /*reducer.copy( (value_type*) m_data.team_reduce_local()
+                    , reducer.data() );*/
+        *((value_type*)m_data.team_reduce_local()) = contribution;
+      }
 
-          // Root does not overwrite shared memory until all threads arrive
-          // and copy to their local buffer.
+      // Root does not overwrite shared memory until all threads arrive
+      // and copy to their local buffer.
 
-          if (m_data.team_rendezvous()) {
-            // All threads have entered 'team_rendezvous'
-            // only this thread returned from 'team_rendezvous'
-            // with a return value of 'true'
-            //
-            // This thread sums contributed values
-            for (int i = 1; i < m_data.m_team_size; ++i) {
-              value_type* const src =
-                  (value_type*)m_data.team_member(i)->team_reduce_local();
+      if (m_data.team_rendezvous()) {
+        // All threads have entered 'team_rendezvous'
+        // only this thread returned from 'team_rendezvous'
+        // with a return value of 'true'
+        //
+        // This thread sums contributed values
+        for (int i = 1; i < m_data.m_team_size; ++i) {
+          value_type* const src =
+              (value_type*)m_data.team_member(i)->team_reduce_local();
 
-              reducer.join(contribution, *src);
-            }
+          reducer.join(contribution, *src);
+        }
 
-            // Copy result to root member's buffer:
-            // reducer.copy( (value_type*) m_data.team_reduce() , reducer.data()
-            // );
-            *((value_type*)m_data.team_reduce()) = contribution;
-            reducer.reference()                  = contribution;
-            m_data.team_rendezvous_release();
-            // This thread released all other threads from 'team_rendezvous'
-            // with a return value of 'false'
-          } else {
-            // Copy from root member's buffer:
-            reducer.reference() = *((value_type*)m_data.team_reduce());
-          }
-        } else { reducer.reference() = contribution; }))
+        // Copy result to root member's buffer:
+        // reducer.copy( (value_type*) m_data.team_reduce() , reducer.data()
+        // );
+        *((value_type*)m_data.team_reduce()) = contribution;
+
+        m_data.team_rendezvous_release();
+        // This thread released all other threads from 'team_rendezvous'
+        // with a return value of 'false'
+      } else {
+        // Copy from root member's buffer:
+        contribution = *((value_type*)m_data.team_reduce());
+      }
+    }))
+
+    if constexpr (is_reducer_v<ReducerType>) {
+      reducer.reference() = contribution;
+    }
 
     KOKKOS_IF_ON_DEVICE(((void)reducer; (void)contribution;
                          Kokkos::abort("HostThreadTeamMember team_reduce\n");))
@@ -786,17 +789,37 @@ KOKKOS_INLINE_FUNCTION
     parallel_reduce(Impl::TeamThreadRangeBoundariesStruct<iType, Member> const&
                         loop_boundaries,
                     Closure const& closure, ValueType& result) {
-  ValueType val;
-  Sum<ValueType> reducer(val);
-  reducer.init(val);
+  using functor_analysis_type = typename Impl::FunctorAnalysis<
+      Impl::FunctorPatternInterface::REDUCE,
+      TeamPolicy<Kokkos::DefaultHostExecutionSpace>, Closure, ValueType>;
 
-  for (iType i = loop_boundaries.start; i < loop_boundaries.end;
-       i += loop_boundaries.increment) {
-    closure(i, reducer.reference());
+  constexpr bool is_reducer_closure =
+      functor_analysis_type::has_join_member_function &&
+      functor_analysis_type::has_init_member_function;
+
+  using ReducerSelector =
+      typename Kokkos::Impl::if_c<is_reducer_closure, Closure,
+                                  Sum<ValueType>>::type;
+
+  auto run_closure = [&](ValueType& value) {
+    for (iType i = loop_boundaries.start; i < loop_boundaries.end;
+         i += loop_boundaries.increment) {
+      closure(i, value);
+    }
+  };
+
+  ValueType val{};
+  if constexpr (is_reducer_closure) {
+    closure.init(val);
+    run_closure(val);
+    loop_boundaries.thread.team_reduce(closure, val);
+  } else {
+    ReducerSelector reducer(val);
+    reducer.init(val);
+    run_closure(val);
+    loop_boundaries.thread.team_reduce(reducer, val);
   }
-
-  loop_boundaries.thread.team_reduce(reducer);
-  result = reducer.reference();
+  result = val;
 }
 
 /*template< typename iType, class Space
@@ -840,7 +863,19 @@ KOKKOS_INLINE_FUNCTION
     parallel_reduce(const Impl::ThreadVectorRangeBoundariesStruct<
                         iType, Member>& loop_boundaries,
                     const Lambda& lambda, ValueType& result) {
+  using wrapped_reducer_type = typename Impl::FunctorAnalysis<
+      Impl::FunctorPatternInterface::REDUCE,
+      TeamPolicy<Kokkos::DefaultHostExecutionSpace>, Lambda,
+      ValueType>::Reducer;
+
+  constexpr bool is_reducer_closure =
+      wrapped_reducer_type::has_join_member_function() &&
+      wrapped_reducer_type::has_init_member_function();
+
   result = ValueType();
+
+  if constexpr (is_reducer_closure) lambda.init(result);
+
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
        i += loop_boundaries.increment) {
     lambda(i, result);
