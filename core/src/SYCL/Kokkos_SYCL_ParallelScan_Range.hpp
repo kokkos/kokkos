@@ -36,10 +36,25 @@ void workgroup_scan(sycl::nd_item<dim> item, const FunctorType& final_reducer,
   const int sg_group_id = sg.get_group_id()[0];
   const int id_in_sg    = sg.get_local_id()[0];
 
+#if defined(KOKKOS_ARCH_INTEL_GPU) || defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
+  auto shuffle_combine = [&](int stride) {
+    if (stride < global_range) {
+      auto tmp = sg.shuffle_up(local_value, stride);
+      if (id_in_sg >= stride) final_reducer.join(&local_value, &tmp);
+    }
+  };
+  shuffle_combine(1);
+  shuffle_combine(2);
+  shuffle_combine(4);
+  shuffle_combine(8);
+  shuffle_combine(16);
+  KOKKOS_ASSERT(global_range <= 32);
+#else
   for (int stride = 1; stride < global_range; stride <<= 1) {
     auto tmp = sg.shuffle_up(local_value, stride);
     if (id_in_sg >= stride) final_reducer.join(&local_value, &tmp);
   }
+#endif
 
   const int max_subgroup_size = sg.get_max_local_range()[0];
   const int n_active_subgroups =
@@ -61,6 +76,25 @@ void workgroup_scan(sycl::nd_item<dim> item, const FunctorType& final_reducer,
         const auto upper_bound =
             std::min(local_range, n_active_subgroups - round * local_range);
         auto local_sg_value = local_mem[idx < n_active_subgroups ? idx : 0];
+#if defined(KOKKOS_ARCH_INTEL_GPU) || defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
+        auto shuffle_combine_sg = [&](int stride) {
+          if (stride < upper_bound) {
+            auto tmp = sg.shuffle_up(local_sg_value, stride);
+            if (id_in_sg >= stride) {
+              if (idx < n_active_subgroups)
+                final_reducer.join(&local_sg_value, &tmp);
+              else
+                local_sg_value = tmp;
+            }
+          }
+        };
+        shuffle_combine_sg(1);
+        shuffle_combine_sg(2);
+        shuffle_combine_sg(4);
+        shuffle_combine_sg(8);
+        shuffle_combine_sg(16);
+        KOKKOS_ASSERT(upper_bound <= 32);
+#else
         for (int stride = 1; stride < upper_bound; stride <<= 1) {
           auto tmp = sg.shuffle_up(local_sg_value, stride);
           if (id_in_sg >= stride) {
@@ -70,6 +104,7 @@ void workgroup_scan(sycl::nd_item<dim> item, const FunctorType& final_reducer,
               local_sg_value = tmp;
           }
         }
+#endif
         if (idx < n_active_subgroups) {
           local_mem[idx] = local_sg_value;
           if (round > 0)
