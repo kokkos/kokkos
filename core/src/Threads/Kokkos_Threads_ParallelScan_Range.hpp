@@ -21,6 +21,34 @@
 
 namespace Kokkos {
 namespace Impl {
+namespace Details {
+template <class TagType, class FunctorType, class Member, class ReferenceType>
+inline std::enable_if_t<std::is_void<TagType>::value> exec_range(
+    FunctorType const &functor, Member const &ibeg, Member const &iend,
+    ReferenceType update, bool const final) {
+#if defined(KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION) && \
+    defined(KOKKOS_ENABLE_PRAGMA_IVDEP)
+#pragma ivdep
+#endif
+  for (Member i = ibeg; i < iend; ++i) {
+    functor(i, update, final);
+  }
+}
+
+template <class TagType, class FunctorType, class Member, class ReferenceType>
+inline std::enable_if_t<!std::is_void<TagType>::value> exec_range(
+    FunctorType const &functor, Member const &ibeg, Member const &iend,
+    ReferenceType update, bool const final) {
+  const TagType t{};
+#if defined(KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION) && \
+    defined(KOKKOS_ENABLE_PRAGMA_IVDEP)
+#pragma ivdep
+#endif
+  for (Member i = ibeg; i < iend; ++i) {
+    functor(t, i, update, final);
+  }
+}
+}  // namespace Details
 
 template <class FunctorType, class... Traits>
 class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
@@ -38,33 +66,6 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
   const FunctorType m_functor;
   const Policy m_policy;
 
-  template <class TagType>
-  inline static std::enable_if_t<std::is_void<TagType>::value> exec_range(
-      const FunctorType &functor, const Member &ibeg, const Member &iend,
-      reference_type update, const bool final) {
-#if defined(KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION) && \
-    defined(KOKKOS_ENABLE_PRAGMA_IVDEP)
-#pragma ivdep
-#endif
-    for (Member i = ibeg; i < iend; ++i) {
-      functor(i, update, final);
-    }
-  }
-
-  template <class TagType>
-  inline static std::enable_if_t<!std::is_void<TagType>::value> exec_range(
-      const FunctorType &functor, const Member &ibeg, const Member &iend,
-      reference_type update, const bool final) {
-    const TagType t{};
-#if defined(KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION) && \
-    defined(KOKKOS_ENABLE_PRAGMA_IVDEP)
-#pragma ivdep
-#endif
-    for (Member i = ibeg; i < iend; ++i) {
-      functor(t, i, update, final);
-    }
-  }
-
   static void exec(ThreadsInternal &instance, const void *arg) {
     const ParallelScan &self = *((const ParallelScan *)arg);
 
@@ -76,13 +77,13 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
     reference_type update =
         final_reducer.init(static_cast<pointer_type>(instance.reduce_memory()));
 
-    ParallelScan::template exec_range<WorkTag>(self.m_functor, range.begin(),
-                                               range.end(), update, false);
+    Details::exec_range<WorkTag>(self.m_functor, range.begin(), range.end(),
+                                 update, false);
 
     instance.scan_small(final_reducer);
 
-    ParallelScan::template exec_range<WorkTag>(self.m_functor, range.begin(),
-                                               range.end(), update, true);
+    Details::exec_range<WorkTag>(self.m_functor, range.begin(), range.end(),
+                                 update, true);
 
     instance.fan_in();
   }
@@ -118,33 +119,6 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   const Policy m_policy;
   const pointer_type m_result_ptr;
 
-  template <class TagType>
-  inline static std::enable_if_t<std::is_void<TagType>::value> exec_range(
-      const FunctorType &functor, const Member &ibeg, const Member &iend,
-      reference_type update, const bool final) {
-#if defined(KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION) && \
-    defined(KOKKOS_ENABLE_PRAGMA_IVDEP)
-#pragma ivdep
-#endif
-    for (Member i = ibeg; i < iend; ++i) {
-      functor(i, update, final);
-    }
-  }
-
-  template <class TagType>
-  inline static std::enable_if_t<!std::is_void<TagType>::value> exec_range(
-      const FunctorType &functor, const Member &ibeg, const Member &iend,
-      reference_type update, const bool final) {
-    const TagType t{};
-#if defined(KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION) && \
-    defined(KOKKOS_ENABLE_PRAGMA_IVDEP)
-#pragma ivdep
-#endif
-    for (Member i = ibeg; i < iend; ++i) {
-      functor(t, i, update, final);
-    }
-  }
-
   static void exec(ThreadsInternal &instance, const void *arg) {
     const ParallelScanWithTotal &self = *((const ParallelScanWithTotal *)arg);
 
@@ -156,13 +130,13 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
     reference_type update =
         final_reducer.init(static_cast<pointer_type>(instance.reduce_memory()));
 
-    ParallelScanWithTotal::template exec_range<WorkTag>(
-        self.m_functor, range.begin(), range.end(), update, false);
+    Details::exec_range<WorkTag>(self.m_functor, range.begin(), range.end(),
+                                 update, false);
 
     instance.scan_small(final_reducer);
 
-    ParallelScanWithTotal::template exec_range<WorkTag>(
-        self.m_functor, range.begin(), range.end(), update, true);
+    Details::exec_range<WorkTag>(self.m_functor, range.begin(), range.end(),
+                                 update, true);
 
     instance.fan_in();
 
