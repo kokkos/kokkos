@@ -29,14 +29,14 @@ void TestViewAggregate() {
                                      value_type>;
 
   static_assert(
-      std::is_same<typename analysis_1d::specialize, Kokkos::Array<> >::value);
+      std::is_same<typename analysis_1d::specialize, Kokkos::Array<>>::value);
 
   using a32_traits = Kokkos::ViewTraits<value_type **, DeviceType>;
   using flat_traits =
       Kokkos::ViewTraits<typename a32_traits::scalar_array_type, DeviceType>;
 
   static_assert(
-      std::is_same<typename a32_traits::specialize, Kokkos::Array<> >::value);
+      std::is_same<typename a32_traits::specialize, Kokkos::Array<>>::value);
   static_assert(
       std::is_same<typename a32_traits::value_type, value_type>::value);
   static_assert(a32_traits::rank == 2);
@@ -58,11 +58,26 @@ void TestViewAggregate() {
   a32_type x("test", 4, 5);
   a32_flat_type y(x);
 
+  a32_type x_unmanaged(x.data(), 4, 5);
+
   ASSERT_EQ(x.extent(0), 4u);
   ASSERT_EQ(x.extent(1), 5u);
+  ASSERT_EQ(x_unmanaged.extent(0), 4u);
+  ASSERT_EQ(x_unmanaged.extent(1), 5u);
   ASSERT_EQ(y.extent(0), 4u);
   ASSERT_EQ(y.extent(1), 5u);
   ASSERT_EQ(y.extent(2), 32u);
+
+  int n_errors;
+  Kokkos::parallel_reduce(
+      Kokkos::MDRangePolicy<Kokkos::Rank<3>>({0, 0, 0}, {3, 4, 5}),
+      KOKKOS_LAMBDA(int i, int j, int k, int &update) {
+        x(j, k)[i] = (i * 3 + j) * 4 + k;
+        if (x_unmanaged(j, k)[i] != (i * 3 + j) * 4 + k) ++update;
+      },
+      n_errors);
+
+  ASSERT_EQ(n_errors, 0);
 
   // Initialize arrays from brace-init-list as for std::array.
   //
