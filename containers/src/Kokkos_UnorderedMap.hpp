@@ -254,6 +254,9 @@ class UnorderedMap {
   static constexpr bool is_modifiable_map = has_const_key && !has_const_value;
   static constexpr bool is_const_map      = has_const_key && has_const_value;
 
+  static constexpr size_type invalid_index =
+      KOKKOS_INVALID_INDEX_TYPE(size_type);
+
   using insert_result = UnorderedMapInsertResult;
 
   using HostMirror =
@@ -263,8 +266,6 @@ class UnorderedMap {
   //@}
 
  private:
-  enum : size_type { invalid_index = ~static_cast<size_type>(0) };
-
   using impl_value_type = std::conditional_t<is_set, int, declared_value_type>;
 
   using key_type_view = std::conditional_t<
@@ -413,23 +414,33 @@ class UnorderedMap {
   /// This is <i>not</i> a device function; it may <i>not</i> be
   /// called in a parallel kernel.
   bool rehash(size_type requested_capacity = 0) {
+    return rehash(execution_space{}, requested_capacity);
+  }
+
+  bool rehash(const execution_space &space, size_type requested_capacity = 0) {
     const bool bounded_insert = (capacity() == 0) || (size() == 0u);
-    return rehash(requested_capacity, bounded_insert);
+    return rehash(space, requested_capacity, bounded_insert);
   }
 
   bool rehash(size_type requested_capacity, bool bounded_insert) {
+    return rehash(execution_space{}, requested_capacity, bounded_insert);
+  }
+
+  bool rehash(const execution_space &space, size_type requested_capacity,
+              bool bounded_insert) {
     if (!is_insertable_map) return false;
 
     const size_type curr_size = size();
     requested_capacity =
         (requested_capacity < curr_size) ? curr_size : requested_capacity;
 
-    insertable_map_type tmp(requested_capacity, m_hasher, m_equal_to);
+    insertable_map_type tmp(Kokkos::view_alloc(space), requested_capacity,
+                            m_hasher, m_equal_to);
 
     if (curr_size) {
       tmp.m_bounded_insert = false;
-      Impl::UnorderedMapRehash<insertable_map_type> f(tmp, *this);
-      f.apply();
+      Impl::UnorderedMapRehash<insertable_map_type> f{tmp, *this};
+      f.apply(space);
     }
     tmp.m_bounded_insert = bounded_insert;
 
@@ -465,10 +476,10 @@ class UnorderedMap {
     return is_insertable_map ? get_flag(erasable_idx) : false;
   }
 
-  bool begin_erase() {
+  bool begin_erase(const execution_space &space = execution_space{}) {
     bool result = !erasable();
     if (is_insertable_map && result) {
-      execution_space().fence(
+      space.fence(
           "Kokkos::UnorderedMap::begin_erase: fence before setting erasable "
           "flag");
       set_flag(erasable_idx);
@@ -476,15 +487,13 @@ class UnorderedMap {
     return result;
   }
 
-  bool end_erase() {
+  bool end_erase(const execution_space &space = execution_space{}) {
     bool result = erasable();
     if (is_insertable_map && result) {
-      execution_space().fence(
-          "Kokkos::UnorderedMap::end_erase: fence before erasing");
-      Impl::UnorderedMapErase<declared_map_type> f(*this);
-      f.apply();
-      execution_space().fence(
-          "Kokkos::UnorderedMap::end_erase: fence after erasing");
+      space.fence("Kokkos::UnorderedMap::end_erase: fence before erasing");
+      Impl::UnorderedMapErase<declared_map_type> f{*this};
+      f.apply(space);
+      space.fence("Kokkos::UnorderedMap::end_erase: fence after erasing");
       reset_flag(erasable_idx);
     }
     return result;
@@ -526,8 +535,9 @@ class UnorderedMap {
   ///                       Kokkos::UnorderedMapInsertOpTypes for more ops.
   template <typename InsertOpType = default_op_type>
   KOKKOS_INLINE_FUNCTION insert_result
-  insert(key_type const &k, impl_value_type const &v = impl_value_type(),
-         [[maybe_unused]] InsertOpType arg_insert_op = InsertOpType()) const {
+  insert(key_type const &key,
+         [[maybe_unused]] impl_value_type const &value = impl_value_type(),
+         [[maybe_unused]] InsertOpType arg_insert_op   = InsertOpType()) const {
     if constexpr (is_set) {
       static_assert(std::is_same_v<InsertOpType, default_op_type>,
                     "Insert Operations are not supported on sets.");
@@ -546,7 +556,7 @@ class UnorderedMap {
 
     int volatile &failed_insert_ref = m_scalars((int)failed_insert_idx);
 
-    const size_type hash_value = m_hasher(k);
+    const size_type hash_value = m_hasher(key);
     const size_type hash_list  = hash_value % m_hash_lists.extent(0);
 
     size_type *curr_ptr = &m_hash_lists[hash_list];
@@ -594,7 +604,7 @@ class UnorderedMap {
                                           volatile_load(&m_keys[curr])
 #endif
                                               ,
-                                          k)) {
+                                          key)) {
         result.increment_list_position();
         index_hint = curr;
         curr_ptr   = &m_next_index[curr];
@@ -621,7 +631,7 @@ class UnorderedMap {
 
         result.set_existing(curr, free_existing);
         if constexpr (!is_set) {
-          arg_insert_op.op(m_values, curr, v);
+          arg_insert_op.op(m_values, curr, value);
         }
         not_done = false;
       }
@@ -649,15 +659,15 @@ class UnorderedMap {
 #ifdef KOKKOS_ENABLE_SYCL
             Kokkos::atomic_store(&m_keys[new_index], k);
 #else
-            m_keys[new_index] = k;
+            m_keys[new_index] = key;
 #endif
 
-            if (!is_set) {
+            if constexpr (!is_set) {
               KOKKOS_NONTEMPORAL_PREFETCH_STORE(&m_values[new_index]);
 #ifdef KOKKOS_ENABLE_SYCL
               Kokkos::atomic_store(&m_values[new_index], v);
 #else
-              m_values[new_index] = v;
+              m_values[new_index] = value;
 #endif
             }
 
@@ -844,7 +854,7 @@ class UnorderedMap {
                     sizeof(size_type) * src.m_next_index.extent(0));
       raw_deep_copy(tmp.m_keys.data(), src.m_keys.data(),
                     sizeof(key_type) * src.m_keys.extent(0));
-      if (!is_set) {
+      if constexpr (!is_set) {
         raw_deep_copy(tmp.m_values.data(), src.m_values.data(),
                       sizeof(impl_value_type) * src.m_values.extent(0));
       }

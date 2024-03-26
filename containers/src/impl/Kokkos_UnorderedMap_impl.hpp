@@ -47,16 +47,15 @@ struct UnorderedMapRehash {
   using const_map_type  = typename map_type::const_map_type;
   using execution_space = typename map_type::execution_space;
   using size_type       = typename map_type::size_type;
+  using policy_type =
+      Kokkos::RangePolicy<execution_space, IndexType<size_type>>;
 
   map_type m_dst;
   const_map_type m_src;
 
-  UnorderedMapRehash(map_type const& dst, const_map_type const& src)
-      : m_dst(dst), m_src(src) {}
-
-  void apply() const {
-    parallel_for("Kokkos::Impl::UnorderedMapRehash::apply", m_src.capacity(),
-                 *this);
+  void apply(const execution_space& space = execution_space{}) const {
+    parallel_for("Kokkos::Impl::UnorderedMapRehash::apply",
+                 policy_type(space, 0, m_src.capacity()), *this);
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -76,19 +75,19 @@ struct UnorderedMapErase {
   using size_type       = typename map_type::size_type;
   using key_type        = typename map_type::key_type;
   using value_type      = typename map_type::impl_value_type;
+  using policy_type =
+      Kokkos::RangePolicy<execution_space, IndexType<size_type>>;
 
   map_type m_map;
 
-  UnorderedMapErase(map_type const& map) : m_map(map) {}
-
-  void apply() const {
+  void apply(const execution_space& space = execution_space{}) const {
     parallel_for("Kokkos::Impl::UnorderedMapErase::apply",
-                 m_map.m_hash_lists.extent(0), *this);
+                 policy_type(space, 0, m_map.m_hash_lists.extent(0)), *this);
   }
 
   KOKKOS_INLINE_FUNCTION
   void operator()(size_type i) const {
-    const size_type invalid_index = map_type::invalid_index;
+    constexpr size_type invalid_index = map_type::invalid_index;
 
     size_type curr = m_map.m_hash_lists(i);
     size_type next = invalid_index;
@@ -98,7 +97,7 @@ struct UnorderedMapErase {
       next                     = m_map.m_next_index[curr];
       m_map.m_next_index[curr] = invalid_index;
       m_map.m_keys[curr]       = key_type();
-      if (m_map.is_set) m_map.m_values[curr] = value_type();
+      if constexpr (!map_type::is_set) m_map.m_values[curr] = value_type();
       curr                  = next;
       m_map.m_hash_lists(i) = next;
     }
@@ -117,7 +116,7 @@ struct UnorderedMapErase {
           m_map.m_next_index[prev] = next;
           m_map.m_next_index[curr] = invalid_index;
           m_map.m_keys[curr]       = key_type();
-          if (map_type::is_set) m_map.m_values[curr] = value_type();
+          if constexpr (!map_type::is_set) m_map.m_values[curr] = value_type();
         }
         curr = next;
       }
@@ -188,7 +187,7 @@ struct UnorderedMapHistogram {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(size_type i) const {
-    const size_type invalid_index = map_type::invalid_index;
+    constexpr size_type invalid_index = map_type::invalid_index;
 
     uint32_t length     = 0;
     size_type min_index = ~0u, max_index = 0;
@@ -223,8 +222,6 @@ struct UnorderedMapPrint {
 
   map_type m_map;
 
-  UnorderedMapPrint(map_type const& map) : m_map(map) {}
-
   void apply() {
     parallel_for("Kokkos::Impl::UnorderedMapPrint::apply",
                  m_map.m_hash_lists.extent(0), *this);
@@ -232,7 +229,7 @@ struct UnorderedMapPrint {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(size_type i) const {
-    const size_type invalid_index = map_type::invalid_index;
+    constexpr size_type invalid_index = map_type::invalid_index;
 
     uint32_t list = m_map.m_hash_lists(i);
     for (size_type curr = list, ii = 0; curr != invalid_index;
