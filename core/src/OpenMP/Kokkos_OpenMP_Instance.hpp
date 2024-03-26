@@ -56,7 +56,13 @@ struct OpenMPTraits {
 class OpenMPInternal {
  private:
   OpenMPInternal(int arg_pool_size)
-      : m_pool_size{arg_pool_size}, m_level{omp_get_level()}, m_pool() {}
+      : m_pool_size{arg_pool_size}, m_level{omp_get_level()}, m_pool() {
+    // guard pushing to all_instances
+    {
+      std::scoped_lock lock(all_instances_mutex);
+      all_instances.push_back(this);
+    }
+  }
 
   ~OpenMPInternal() { clear_thread_data(); }
 
@@ -107,6 +113,11 @@ class OpenMPInternal {
   bool verify_is_initialized(const char* const label) const;
 
   void print_configuration(std::ostream& s) const;
+
+  std::mutex m_instance_mutex;
+
+  static std::vector<OpenMPInternal*> all_instances;
+  static std::mutex all_instances_mutex;
 };
 
 inline bool execute_in_serial(OpenMP const& space = OpenMP()) {

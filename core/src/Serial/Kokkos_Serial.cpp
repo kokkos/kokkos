@@ -35,6 +35,9 @@
 namespace Kokkos {
 namespace Impl {
 
+std::vector<SerialInternal*> SerialInternal::all_instances;
+std::mutex SerialInternal::all_instances_mutex;
+
 bool SerialInternal::is_initialized() { return m_is_initialized; }
 
 void SerialInternal::initialize() {
@@ -43,6 +46,12 @@ void SerialInternal::initialize() {
   Impl::SharedAllocationRecord<void, void>::tracking_enable();
 
   m_is_initialized = true;
+
+  // guard pushing to all_instances
+  {
+    std::scoped_lock lock(all_instances_mutex);
+    all_instances.push_back(this);
+  }
 }
 
 void SerialInternal::finalize() {
@@ -59,6 +68,16 @@ void SerialInternal::finalize() {
   }
 
   m_is_initialized = false;
+
+  // guard erasing from all_instances
+  {
+    std::scoped_lock lock(all_instances_mutex);
+    auto it = std::find(all_instances.begin(), all_instances.end(), this);
+    if (it == all_instances.end())
+      Kokkos::abort(
+          "Execution space instance to be removed couldn't be found!");
+    all_instances.erase(it);
+  }
 }
 
 SerialInternal& SerialInternal::singleton() {
@@ -147,7 +166,9 @@ Serial::Serial(NewInstance)
     : m_space_instance(new Impl::SerialInternal, [](Impl::SerialInternal* ptr) {
         ptr->finalize();
         delete ptr;
-      }) {}
+      }) {
+  m_space_instance->initialize();
+}
 
 void Serial::print_configuration(std::ostream& os, bool /*verbose*/) const {
   os << "Host Serial Execution Space:\n";

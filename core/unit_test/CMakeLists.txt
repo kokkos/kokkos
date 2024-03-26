@@ -148,6 +148,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
         Crs
         DeepCopyAlignment
         ExecSpacePartitioning
+        ExecSpaceThreadSafety
         ExecutionSpace
         FunctorAnalysis
         HostSharedPtr

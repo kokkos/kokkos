@@ -49,6 +49,10 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Serial> {
 
  public:
   inline void execute() const {
+    // Make sure kernels are running sequentially even when using multiple
+    // threads
+    auto* internal_instance = m_policy.space().impl_internal_space_instance();
+    std::lock_guard<std::mutex> lock(internal_instance->m_instance_mutex);
     this->template exec<typename Policy::work_tag>();
   }
 
@@ -109,6 +113,11 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
     internal_instance->resize_thread_team_data(
         pool_reduce_size, team_reduce_size, team_shared_size,
         thread_local_size);
+
+    // Make sure kernels are running sequentially even when using multiple
+    // threads
+    std::lock_guard<std::mutex> instance_lock(
+        internal_instance->m_instance_mutex);
 
     pointer_type ptr =
         m_result_ptr
@@ -191,9 +200,15 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
     auto* internal_instance = m_policy.space().impl_internal_space_instance();
     std::lock_guard<std::mutex> lock(
         internal_instance->m_thread_team_data_mutex);
+
     internal_instance->resize_thread_team_data(
         pool_reduce_size, team_reduce_size, team_shared_size,
         thread_local_size);
+
+    // Make sure kernels are running sequentially even when using multiple
+    // threads
+    std::lock_guard<std::mutex> instance_lock(
+        internal_instance->m_instance_mutex);
 
     reference_type update = final_reducer.init(pointer_type(
         internal_instance->m_thread_team_data.pool_reduce_local()));
@@ -257,9 +272,15 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
     auto* internal_instance = m_policy.space().impl_internal_space_instance();
     std::lock_guard<std::mutex> lock(
         internal_instance->m_thread_team_data_mutex);
+
     internal_instance->resize_thread_team_data(
         pool_reduce_size, team_reduce_size, team_shared_size,
         thread_local_size);
+
+    // Make sure kernels are running sequentially even when using multiple
+    // threads
+    std::lock_guard<std::mutex> instance_lock(
+        internal_instance->m_instance_mutex);
 
     const typename Analysis::Reducer& final_reducer =
         m_functor_reducer.get_reducer();

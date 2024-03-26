@@ -43,7 +43,14 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   }
 
  public:
-  inline void execute() const { this->exec(); }
+  inline void execute() const {
+    // Make sure kernels are running sequentially even when using multiple
+    // threads
+    auto* internal_instance =
+        m_iter.m_rp.space().impl_internal_space_instance();
+    std::lock_guard<std::mutex> lock(internal_instance->m_instance_mutex);
+    this->exec();
+  }
   template <typename Policy, typename Functor>
   static int max_tile_size_product(const Policy&, const Functor&) {
     /**
@@ -110,6 +117,11 @@ class ParallelReduce<CombinedFunctorReducerType,
     internal_instance->resize_thread_team_data(
         pool_reduce_size, team_reduce_size, team_shared_size,
         thread_local_size);
+
+    // Make sure kernels are running sequentially even when using multiple
+    // threads
+    std::lock_guard<std::mutex> instance_lock(
+        internal_instance->m_instance_mutex);
 
     pointer_type ptr =
         m_result_ptr

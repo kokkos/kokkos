@@ -254,6 +254,11 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
         pool_reduce_size, team_reduce_size, team_shared_size,
         thread_local_size);
 
+    // Make sure kernels are running sequentially even when using multiple
+    // threads
+    std::lock_guard<std::mutex> instacnce_lock(
+        internal_instance->m_instance_mutex);
+
     this->template exec<typename Policy::work_tag>(
         internal_instance->m_thread_team_data);
   }
@@ -325,6 +330,11 @@ class ParallelReduce<CombinedFunctorReducerType,
     internal_instance->resize_thread_team_data(
         pool_reduce_size, team_reduce_size, team_shared_size,
         thread_local_size);
+
+    // Make sure kernels are running sequentially even when using multiple
+    // threads
+    std::lock_guard<std::mutex> instance_lock(
+        internal_instance->m_instance_mutex);
 
     pointer_type ptr =
         m_result_ptr
