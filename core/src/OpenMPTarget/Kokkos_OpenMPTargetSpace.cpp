@@ -67,9 +67,12 @@ void* OpenMPTargetSpace::impl_allocate(
   return ptr;
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+KOKKOS_DEPRECATED_WITH_COMMENT("Use the overload with a label instead!")
 void* OpenMPTargetSpace::allocate(const size_t arg_alloc_size) const {
   return allocate("[unlabeled]", arg_alloc_size);
 }
+#endif
 
 void* OpenMPTargetSpace::allocate(const char* arg_label,
                                   const size_t arg_alloc_size,
@@ -92,10 +95,13 @@ void OpenMPTargetSpace::impl_deallocate(
   }
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+KOKKOS_DEPRECATED_WITH_COMMENT("Use the overload with a label instead!")
 void OpenMPTargetSpace::deallocate(void* const arg_alloc_ptr,
                                    const size_t arg_alloc_size) const {
   deallocate("[unlabeled]", arg_alloc_ptr, arg_alloc_size);
 }
+#endif
 
 void OpenMPTargetSpace::deallocate(const char* arg_label,
                                    void* const arg_alloc_ptr,

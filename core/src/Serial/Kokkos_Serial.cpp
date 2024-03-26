@@ -52,7 +52,8 @@ void SerialInternal::finalize() {
 
     Kokkos::HostSpace space;
 
-    space.deallocate(m_thread_team_data.scratch_buffer(),
+    space.deallocate("Kokkos::Serial::scratch_mem",
+                     m_thread_team_data.scratch_buffer(),
                      m_thread_team_data.scratch_bytes());
 
     m_thread_team_data.scratch_assign(nullptr, 0, 0, 0, 0, 0);

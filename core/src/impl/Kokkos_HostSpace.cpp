@@ -48,9 +48,12 @@ KOKKOS_DEPRECATED HostSpace::HostSpace(const HostSpace::AllocationMechanism &)
     : HostSpace() {}
 #endif
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+KOKKOS_DEPRECATED_WITH_COMMENT("Use the overload with a label instead!")
 void *HostSpace::allocate(const size_t arg_alloc_size) const {
   return allocate("[unlabeled]", arg_alloc_size);
 }
+#endif
 void *HostSpace::allocate(const char *arg_label, const size_t arg_alloc_size,
                           const size_t
 
@@ -102,10 +105,13 @@ void *HostSpace::impl_allocate(
   return ptr;
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+KOKKOS_DEPRECATED_WITH_COMMENT("Use the overload with a label instead!")
 void HostSpace::deallocate(void *const arg_alloc_ptr,
                            const size_t arg_alloc_size) const {
   deallocate("[unlabeled]", arg_alloc_ptr, arg_alloc_size);
 }
+#endif
 
 void HostSpace::deallocate(const char *arg_label, void *const arg_alloc_ptr,
                            const size_t arg_alloc_size,

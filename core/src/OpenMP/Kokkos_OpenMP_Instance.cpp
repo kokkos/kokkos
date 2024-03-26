@@ -64,7 +64,8 @@ void OpenMPInternal::clear_thread_data() {
     if (nullptr != m_pool[rank]) {
       m_pool[rank]->disband_pool();
 
-      space.deallocate(m_pool[rank], old_alloc_bytes);
+      space.deallocate("Kokkos::OpenMP::thread_data", m_pool[rank],
+                       old_alloc_bytes);
 
       m_pool[rank] = nullptr;
     }
@@ -123,12 +124,13 @@ void OpenMPInternal::resize_thread_data(size_t pool_reduce_bytes,
       if (nullptr != m_pool[rank]) {
         m_pool[rank]->disband_pool();
 
-        space.deallocate(m_pool[rank], old_alloc_bytes);
+        space.deallocate("Kokkos::OpenMP::thread_data", m_pool[rank],
+                         old_alloc_bytes);
       }
 
       void *ptr = nullptr;
       try {
-        ptr = space.allocate(alloc_bytes);
+        ptr = space.allocate("Kokkos::OpenMP::thread_data", alloc_bytes);
       } catch (
           Kokkos::Experimental::RawMemoryAllocationFailure const &failure) {
         // For now, just rethrow the error message the existing way

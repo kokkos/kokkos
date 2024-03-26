@@ -98,23 +98,32 @@ class OpenMPTargetSpace {
   ~OpenMPTargetSpace()                                   = default;
 
   /**\brief  Allocate untracked memory in the space */
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   // FIXME_OPENMPTARGET Use execution space instance
+  KOKKOS_DEPRECATED_WITH_COMMENT("Use the overload with a label instead!")
   void* allocate(const OpenMPTarget&, const size_t arg_alloc_size) const {
     return allocate(arg_alloc_size);
   }
+#endif
   // FIXME_OPENMPTARGET Use execution space instance
   void* allocate(const OpenMPTarget&, const char* arg_label,
                  const size_t arg_alloc_size,
                  const size_t arg_logical_size = 0) const {
     return allocate(arg_label, arg_alloc_size, arg_logical_size);
   }
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  KOKKOS_DEPRECATED_WITH_COMMENT("Use the overload with a label instead!")
   void* allocate(const size_t arg_alloc_size) const;
+#endif
   void* allocate(const char* arg_label, const size_t arg_alloc_size,
                  const size_t arg_logical_size = 0) const;
 
   /**\brief  Deallocate untracked memory in the space */
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  KOKKOS_DEPRECATED_WITH_COMMENT("Use the overload with a label instead!")
   void deallocate(void* const arg_alloc_ptr,
                   const std::size_t arg_alloc_size) const;
+#endif
   void deallocate(const char* arg_label, void* const arg_alloc_ptr,
                   const size_t arg_alloc_size,
                   const size_t arg_logical_size = 0) const;

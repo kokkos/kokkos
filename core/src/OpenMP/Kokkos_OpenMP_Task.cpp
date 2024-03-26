@@ -54,7 +54,8 @@ HostThreadTeamDataSingleton::HostThreadTeamDataSingleton()
 
   void* ptr = nullptr;
   try {
-    ptr = space.allocate(alloc_bytes);
+    ptr = space.allocate("Kokkos::HostThreadTeamDataSingleton::scratch_mem",
+                         alloc_bytes);
   } catch (Kokkos::Experimental::RawMemoryAllocationFailure const& f) {
     // For now, just rethrow the error message with a note
     // Note that this could, in turn, trigger an out of memory exception,
@@ -72,7 +73,8 @@ HostThreadTeamDataSingleton::HostThreadTeamDataSingleton()
 
 HostThreadTeamDataSingleton::~HostThreadTeamDataSingleton() {
   Kokkos::OpenMP::memory_space space;
-  space.deallocate(HostThreadTeamData::scratch_buffer(),
+  space.deallocate("Kokkos::HostThreadTeamDataSingleton::scratch_mem",
+                   HostThreadTeamData::scratch_buffer(),
                    static_cast<size_t>(HostThreadTeamData::scratch_bytes()));
 }
 

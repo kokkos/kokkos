@@ -157,9 +157,12 @@ size_t memory_threshold_g = 40000;  // 40 kB
 //==============================================================================
 // <editor-fold desc="allocate()"> {{{1
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+KOKKOS_DEPRECATED_WITH_COMMENT("Use the overload with a label instead!")
 void *CudaSpace::allocate(const size_t arg_alloc_size) const {
   return allocate("[unlabeled]", arg_alloc_size);
 }
+#endif
 
 void *CudaSpace::allocate(const Cuda &exec_space, const char *arg_label,
                           const size_t arg_alloc_size,
@@ -193,7 +196,8 @@ void *impl_allocate_common(const int device_id,
         KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamSynchronize(stream));
       } else {
         Impl::cuda_device_synchronize(
-            "Kokkos::Cuda: backend fence after async malloc");
+            std::string("Kokkos::Cuda: backend fence after async malloc ") +
+            arg_label);
       }
     }
   } else
@@ -236,9 +240,13 @@ void *CudaSpace::impl_allocate(
       arg_alloc_size, arg_logical_size, arg_handle, true);
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+KOKKOS_DEPRECATED_WITH_COMMENT("Use the overload with a label instead!")
 void *CudaUVMSpace::allocate(const size_t arg_alloc_size) const {
   return allocate("[unlabeled]", arg_alloc_size);
 }
+#endif
+
 void *CudaUVMSpace::allocate(const char *arg_label, const size_t arg_alloc_size,
                              const size_t arg_logical_size) const {
   return impl_allocate(arg_label, arg_alloc_size, arg_logical_size);
@@ -250,7 +258,8 @@ void *CudaUVMSpace::impl_allocate(
   void *ptr = nullptr;
 
   Cuda::impl_static_fence(
-      "Kokkos::CudaUVMSpace::impl_allocate: Pre UVM Allocation");
+      std::string("Kokkos::CudaUVMSpace::impl_allocate: Pre UVM Allocation") +
+      arg_label);
   if (arg_alloc_size > 0) {
     Kokkos::Impl::num_uvm_allocations++;
 
@@ -277,7 +286,8 @@ void *CudaUVMSpace::impl_allocate(
 #endif
   }
   Cuda::impl_static_fence(
-      "Kokkos::CudaUVMSpace::impl_allocate: Post UVM Allocation");
+      std::string("Kokkos::CudaUVMSpace::impl_allocate: Post UVM Allocation") +
+      arg_label);
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     const size_t reported_size =
         (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
@@ -285,9 +295,12 @@ void *CudaUVMSpace::impl_allocate(
   }
   return ptr;
 }
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+KOKKOS_DEPRECATED_WITH_COMMENT("Use the overload with a label instead!")
 void *CudaHostPinnedSpace::allocate(const size_t arg_alloc_size) const {
   return allocate("[unlabeled]", arg_alloc_size);
 }
+#endif
 void *CudaHostPinnedSpace::allocate(const char *arg_label,
                                     const size_t arg_alloc_size,
                                     const size_t arg_logical_size) const {
@@ -322,10 +335,14 @@ void *CudaHostPinnedSpace::impl_allocate(
 
 // </editor-fold> end allocate() }}}1
 //==============================================================================
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+KOKKOS_DEPRECATED_WITH_COMMENT("Use the overload with a label instead!")
 void CudaSpace::deallocate(void *const arg_alloc_ptr,
                            const size_t arg_alloc_size) const {
   deallocate("[unlabeled]", arg_alloc_ptr, arg_alloc_size);
 }
+#endif
 void CudaSpace::deallocate(const char *arg_label, void *const arg_alloc_ptr,
                            const size_t arg_alloc_size,
                            const size_t arg_logical_size) const {
@@ -347,11 +364,13 @@ void CudaSpace::impl_deallocate(
 #elif (defined(KOKKOS_ENABLE_IMPL_CUDA_MALLOC_ASYNC) && CUDART_VERSION >= 11020)
     if (arg_alloc_size >= memory_threshold_g) {
       Impl::cuda_device_synchronize(
-          "Kokkos::Cuda: backend fence before async free");
+          std::string("Kokkos::Cuda: backend fence before async free") +
+          arg_label);
       KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_device));
       KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFreeAsync(arg_alloc_ptr, m_stream));
       Impl::cuda_device_synchronize(
-          "Kokkos::Cuda: backend fence after async free");
+          std::string("Kokkos::Cuda: backend fence after async free ") +
+          arg_label);
     } else {
       KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_device));
       KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFree(arg_alloc_ptr));
@@ -363,15 +382,17 @@ void CudaSpace::impl_deallocate(
   } catch (...) {
   }
 }
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+KOKKOS_DEPRECATED_WITH_COMMENT("Use the overload with a label instead!")
 void CudaUVMSpace::deallocate(void *const arg_alloc_ptr,
                               const size_t arg_alloc_size) const {
   deallocate("[unlabeled]", arg_alloc_ptr, arg_alloc_size);
 }
+#endif
 
 void CudaUVMSpace::deallocate(const char *arg_label, void *const arg_alloc_ptr,
-                              const size_t arg_alloc_size
-
-                              ,
+                              const size_t arg_alloc_size,
                               const size_t arg_logical_size) const {
   impl_deallocate(arg_label, arg_alloc_ptr, arg_alloc_size, arg_logical_size);
 }
@@ -380,7 +401,9 @@ void CudaUVMSpace::impl_deallocate(
     const size_t arg_alloc_size, const size_t arg_logical_size,
     const Kokkos::Tools::SpaceHandle arg_handle) const {
   Cuda::impl_static_fence(
-      "Kokkos::CudaUVMSpace::impl_deallocate: Pre UVM Deallocation");
+      std::string(
+          "Kokkos::CudaUVMSpace::impl_deallocate: Pre UVM Deallocation ") +
+      arg_label);
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     const size_t reported_size =
         (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
@@ -396,13 +419,18 @@ void CudaUVMSpace::impl_deallocate(
   } catch (...) {
   }
   Cuda::impl_static_fence(
-      "Kokkos::CudaUVMSpace::impl_deallocate: Post UVM Deallocation");
+      std::string(
+          "Kokkos::CudaUVMSpace::impl_deallocate: Post UVM Deallocation") +
+      arg_label);
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+KOKKOS_DEPRECATED_WITH_COMMENT("Use the overload with a label instead!")
 void CudaHostPinnedSpace::deallocate(void *const arg_alloc_ptr,
                                      const size_t arg_alloc_size) const {
   deallocate("[unlabeled]", arg_alloc_ptr, arg_alloc_size);
 }
+#endif
 void CudaHostPinnedSpace::deallocate(const char *arg_label,
                                      void *const arg_alloc_ptr,
                                      const size_t arg_alloc_size,
