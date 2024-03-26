@@ -48,6 +48,9 @@ KOKKOS_ENABLE_OPTION(CUDA_LAMBDA ${CUDA_LAMBDA_DEFAULT} "Whether to allow lambda
 # resolved but we keep the option around a bit longer to be safe.
 KOKKOS_ENABLE_OPTION(IMPL_CUDA_MALLOC_ASYNC ON  "Whether to enable CudaMallocAsync (requires CUDA Toolkit 11.2)")
 KOKKOS_ENABLE_OPTION(IMPL_NVHPC_AS_DEVICE_COMPILER OFF "Whether to allow nvc++ as Cuda device compiler")
+KOKKOS_ENABLE_OPTION(IMPL_CUDA_UNIFIED_MEMORY OFF "Whether to leverage unified memory architectures for CUDA")
+KOKKOS_ENABLE_OPTION(IMPL_CUDA_EMULATE_UNIFIED_MEMORY OFF "Whether to emulate unified memory architectures for CUDA")
+
 KOKKOS_ENABLE_OPTION(DEPRECATED_CODE_4    ON "Whether code deprecated in major release 4 is available" )
 KOKKOS_ENABLE_OPTION(DEPRECATION_WARNINGS ON "Whether to emit deprecation warnings" )
 KOKKOS_ENABLE_OPTION(HIP_RELOCATABLE_DEVICE_CODE  OFF "Whether to enable relocatable device code (RDC) for HIP")
