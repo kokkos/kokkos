@@ -42,12 +42,18 @@ struct ViewTracker {
 
   track_type m_tracker;
 
-  KOKKOS_INLINE_FUNCTION
-  ViewTracker() : m_tracker() {}
+  KOKKOS_DEFAULTED_FUNCTION
+  ViewTracker() = default;
 
   KOKKOS_INLINE_FUNCTION
   ViewTracker(const ViewTracker& vt) noexcept
       : m_tracker(vt.m_tracker, view_traits::is_managed) {}
+
+  KOKKOS_DEFAULTED_FUNCTION
+  ViewTracker(ViewTracker&&) = default;
+
+  KOKKOS_DEFAULTED_FUNCTION
+  ViewTracker& operator=(ViewTracker&&) = default;
 
   KOKKOS_INLINE_FUNCTION
   explicit ViewTracker(const ParentView& vt) noexcept : m_tracker() {
