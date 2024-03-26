@@ -318,6 +318,8 @@ KOKKOS_INTERNAL_USE_ARCH_ICL := $(call kokkos_has_string,$(KOKKOS_ARCH),ICL)
 KOKKOS_INTERNAL_USE_ARCH_ICX := $(call kokkos_has_string,$(KOKKOS_ARCH),ICX)
 KOKKOS_INTERNAL_USE_ARCH_SPR := $(call kokkos_has_string,$(KOKKOS_ARCH),SPR)
 
+# Traditionally, we supported, e.g., IntelGen9 instead of Intel_Gen9. The latter
+# matches the CMake option but we also accept the former for backward-compatibility.
 KOKKOS_INTERNAL_USE_ARCH_INTEL_GEN9 := $(call kokkos_has_string,$(KOKKOS_ARCH),IntelGen9)
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_INTEL_GEN9), 0)
   KOKKOS_INTERNAL_USE_ARCH_INTEL_GEN9 := $(call kokkos_has_string,$(KOKKOS_ARCH),Intel_Gen9)
@@ -351,6 +353,8 @@ KOKKOS_INTERNAL_USE_ARCH_INTEL_XEHP := $(call kokkos_has_string,$(KOKKOS_ARCH),I
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_INTEL_XEHP), 0)
   KOKKOS_INTERNAL_USE_ARCH_INTEL_XEHP := $(call kokkos_has_string,$(KOKKOS_ARCH),Intel_XeHP)
 endif
+# Traditionally the architecture was called PVC instead of Intel_PVC. This
+# version makes us accept IntelPVC and Intel_PVC as well.
 KOKKOS_INTERNAL_USE_ARCH_INTEL_PVC := $(call kokkos_has_string,$(KOKKOS_ARCH),PVC)
 
 # NVIDIA based.
