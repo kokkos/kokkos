@@ -142,6 +142,28 @@ void parseArgs(const std::string&);
 
 Kokkos_Profiling_SpaceHandle make_space_handle(const char* space_name);
 
+/**
+ * Convenience wrapper around kokkosp_mark_kernel_static_info
+ *
+ * Consider using markKernelStaticInfo<Functor>(kernelID) instead
+ */
+void markKernelStaticInfo(uint64_t kernelID, const KernelStaticInfo& info);
+
+/**
+ * Take a kernelID produced by e.g. beginParallelFor
+ * and associate compile-time information about Functor with it
+ *
+ * Arguments:
+ *
+ * kernelID: An ID for a parallel loop registered with e.g. beginParallelFor
+ */
+template <typename Functor>
+void markKernelStaticInfo(uint64_t kernelID) {
+  Kokkos::Tools::KernelStaticInfo info;
+  info.functor_size = sizeof(Functor);
+  markKernelStaticInfo(kernelID, info);
+}
+
 namespace Experimental {
 
 namespace Impl {
@@ -246,6 +268,8 @@ void set_declare_optimization_goal_callback(
     optimizationGoalDeclarationFunction callback);
 void set_end_context_callback(contextEndFunction callback);
 void set_begin_context_callback(contextBeginFunction callback);
+void set_mark_kernel_static_info_callback(
+    markKernelStaticInfoFunction callback);
 
 void pause_tools();
 void resume_tools();
