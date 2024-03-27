@@ -20,7 +20,7 @@ jobs:
     continue-on-error: true
     strategy:
       matrix:
-        distro: ['fedora:latest', 'fedora:rawhide', 'ubuntu:latest']
+        distro: ['fedora:latest', 'ubuntu:latest']
         cxx: ['g++', 'clang++']
         cxx_extra_flags: ['']
         cmake_build_type: ['Release', 'Debug']
