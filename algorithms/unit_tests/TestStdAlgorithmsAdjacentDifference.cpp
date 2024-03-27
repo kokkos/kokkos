@@ -19,6 +19,7 @@
 #include <std_algorithms/Kokkos_AdjacentDifference.hpp>
 #include <utility>
 #include <numeric>
+#include <iostream>
 
 namespace Test {
 namespace stdalgos {
@@ -228,6 +229,31 @@ void run_single_scenario(const InfoType& scenario_info,
     ASSERT_EQ(res4, KE::end(view_dest));
     verify_data(view_dest, gold);
   }
+
+  Kokkos::fence();
+
+  #if !defined(NDEBUG) || defined(KOKKOS_ENFORCE_CONTRACTS) || \
+    defined(KOKKOS_ENABLE_DEBUG)
+  {
+    auto view_dest = view_from;
+    EXPECT_DEATH(
+      {KE::adjacent_difference(exespace(), view_from,
+                               view_dest, args...);
+       Kokkos::fence();
+      },
+      "Kokkos contract violation:.*");
+  }
+
+  {
+    auto view_dest = view_from;
+    EXPECT_DEATH(
+      {KE::adjacent_difference("label", exespace(), view_from,
+                               view_dest, args...);
+       Kokkos::fence();
+      },
+      "Kokkos contract violation:.*");
+  }
+  #endif
 
   Kokkos::fence();
 }

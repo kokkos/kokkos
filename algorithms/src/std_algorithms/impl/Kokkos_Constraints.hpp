@@ -215,6 +215,22 @@ KOKKOS_INLINE_FUNCTION void expect_valid_range(IteratorType first,
   (void)last;
 }
 
+//
+// views are not the same
+//
+template <
+    typename DataType1, typename... Properties1,
+    typename DataType2, typename... Properties2>
+KOKKOS_INLINE_FUNCTION void expect_not_identical(
+    const ::Kokkos::View<DataType1, Properties1...>& view_from,
+    const ::Kokkos::View<DataType2, Properties2...>& view_dest) {
+
+  // this is a no-op for release
+  KOKKOS_EXPECTS( view_dest != view_from );
+  // avoid compiler complaining when KOKKOS_EXPECTS is no-op
+  (void)view_from;
+  (void)view_dest;
+}
 }  // namespace Impl
 }  // namespace Experimental
 }  // namespace Kokkos
