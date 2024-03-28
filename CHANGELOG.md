@@ -36,7 +36,7 @@
 * Add atomics support [\#6446](https://github.com/kokkos/kokkos/pull/6446)
 * Make the OpenACC backend asynchronous [\#6772](https://github.com/kokkos/kokkos/pull/6772)
 
-### Threads:
+#### Threads:
 * Add missing broadcast to TeamThreadRange parallel_scan [\#6601](https://github.com/kokkos/kokkos/pull/6446)
 
 #### OpenMP:
