@@ -507,7 +507,18 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), force_global_launch) {
             false, {"Either the name or pointer or size did not match"}};
       }));
 
+  listen_tool_events(Config::DisableAll());
 #endif
+}
+
+// Ensure that an empty graph on the default host execution space
+// can be submitted.
+TEST_F(TEST_CATEGORY_FIXTURE(graph), empty_graph_default_host_exec) {
+  auto graph =
+      Kokkos::Experimental::create_graph(Kokkos::DefaultHostExecutionSpace{});
+  graph.instantiate();
+  graph.submit();
+  graph.get_execution_space().fence();
 }
 
 template <typename ViewType, size_t TargetIndex, size_t NumIndices = 0>
