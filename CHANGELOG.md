@@ -62,6 +62,7 @@
 * Add support for RISCV and the Milk-V's Pioneer [\#6773](https://github.com/kokkos/kokkos/pull/6773)
 * Add C++26 standard to CMake setup [\#6733](https://github.com/kokkos/kokkos/pull/6733)
 * Fix Makefile when using gnu_generate_makefile.sh and make >= 4.3 [\#6606](https://github.com/kokkos/kokkos/pull/6606)
+* Cuda: Fix configuring with CMake >= 3.28.4 - temporary fallback to internal CudaToolkit.cmake [\#6898](https://github.com/kokkos/kokkos/pull/6898)
 
 ### Incompatibilities (i.e. breaking changes)
 * Remove all `DEPRECATED_CODE_3` option and all code that was guarded by it  [\#6523](https://github.com/kokkos/kokkos/pull/6523)
