@@ -69,6 +69,9 @@ class GraphImpl<Kokkos::HIP> {
   template <class... PredecessorRefs>
   auto create_aggregate_ptr(PredecessorRefs&&...);
 
+  hipGraph_t& get_hip_graph() { return m_graph; }
+  hipGraphExec_t& get_hip_graph_exec() { return m_graph_exec; }
+
  private:
   void instantiate_graph() {
     constexpr size_t error_log_size = 256;
