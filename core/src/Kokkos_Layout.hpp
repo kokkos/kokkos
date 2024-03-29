@@ -217,8 +217,10 @@ enum class Iterate {
   Right  // Right indices stride fastest
 };
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 template <typename Layout, class Enable = void>
-struct is_layouttiled : std::false_type {};
+struct KOKKOS_DEPRECATED is_layouttiled : std::false_type {};
+#endif
 
 // For use with view_copy
 template <typename... Layout>
