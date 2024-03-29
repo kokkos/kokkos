@@ -3555,7 +3555,7 @@ inline auto create_mirror_view(
       check_view_ctor_args_create_mirror<ViewCtorArgs...>();
       return typename Kokkos::View<T, P...>::HostMirror(src);
     } else {
-      return Kokkos::Impl::create_mirror(src, arg_prop);
+      return Impl::create_mirror(src, arg_prop);
     }
   } else {
     if constexpr (Impl::MirrorViewType<typename Impl::ViewCtorProp<
@@ -3566,7 +3566,7 @@ inline auto create_mirror_view(
           typename Impl::ViewCtorProp<ViewCtorArgs...>::memory_space, T,
           P...>::view_type(src);
     } else {
-      return Kokkos::Impl::create_mirror(src, arg_prop);
+      return Impl::create_mirror(src, arg_prop);
     }
   }
 #if defined KOKKOS_COMPILER_INTEL
@@ -3578,14 +3578,14 @@ inline auto create_mirror_view(
 // public interface
 template <class T, class... P>
 auto create_mirror_view(const Kokkos::View<T, P...>& src) {
-  return Kokkos::Impl::create_mirror_view(src, view_alloc());
+  return Impl::create_mirror_view(src, view_alloc());
 }
 
 // public interface that accepts a without initializing flag
 template <class T, class... P>
 auto create_mirror_view(
     Kokkos::Impl::WithoutInitializing_t wi, Kokkos::View<T, P...> const& src) {
-  return Kokkos::Impl::create_mirror_view(src, view_alloc(wi));
+  return Impl::create_mirror_view(src, view_alloc(wi));
 }
 
 // public interface that accepts a space
@@ -3593,7 +3593,7 @@ template <class Space, class T, class... P,
           class Enable = std::enable_if_t<Kokkos::is_space<Space>::value>>
 auto create_mirror_view(
     const Space& space, const Kokkos::View<T, P...>& src) {
-  return Kokkos::Impl::create_mirror_view(src, view_alloc(typename Space::memory_space()));
+  return Impl::create_mirror_view(src, view_alloc(typename Space::memory_space()));
 }
 
 // public interface that accepts a space and a without initializing flag
@@ -3602,7 +3602,7 @@ template <class Space, class T, class... P,
 auto create_mirror_view(
     Kokkos::Impl::WithoutInitializing_t wi, Space const&,
     Kokkos::View<T, P...> const& src) {
-  return Kokkos::Impl::create_mirror_view(
+  return Impl::create_mirror_view(
       src, view_alloc(typename Space::memory_space{}, wi));
 }
 
@@ -3610,7 +3610,7 @@ auto create_mirror_view(
 template <class T, class... P, class... ViewCtorArgs>
 auto create_mirror_view(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
                         const Kokkos::View<T, P...>& src) {
-  return Kokkos::Impl::create_mirror_view(src, arg_prop);
+  return Impl::create_mirror_view(src, arg_prop);
 }
 
 namespace Impl {
