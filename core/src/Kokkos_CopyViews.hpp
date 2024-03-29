@@ -3555,7 +3555,7 @@ inline auto create_mirror_view(
       check_view_ctor_args_create_mirror<ViewCtorArgs...>();
       return typename Kokkos::View<T, P...>::HostMirror(src);
     } else {
-      return Impl::create_mirror(src, arg_prop);
+      return Kokkos::Impl::create_mirror(src, arg_prop);
     }
   } else {
     if constexpr (Impl::MirrorViewType<typename Impl::ViewCtorProp<
@@ -3566,7 +3566,7 @@ inline auto create_mirror_view(
           typename Impl::ViewCtorProp<ViewCtorArgs...>::memory_space, T,
           P...>::view_type(src);
     } else {
-      return Impl::create_mirror(src, arg_prop);
+      return Kokkos::Impl::create_mirror(src, arg_prop);
     }
   }
 #if defined KOKKOS_COMPILER_INTEL
