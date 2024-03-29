@@ -16,7 +16,6 @@
 
 #ifndef KOKKOS_TEST_OTHER_HPP
 #define KOKKOS_TEST_OTHER_HPP
-#include <TestAggregate.hpp>
 #include <TestMemoryPool.hpp>
 #include <TestCXX11.hpp>
 
