@@ -73,4 +73,48 @@ KOKKOS_FUNCTION constexpr bool test_array_ctad() {
 static_assert(test_array_ctad());
 #endif
 
+KOKKOS_FUNCTION constexpr bool test_array_aggregate_initialization() {
+  // Initialize arrays from brace-init-list as for std::array.
+
+  Kokkos::Array<float, 2> aggregate_initialization_syntax_1 = {1.41f, 3.14f};
+  if ((aggregate_initialization_syntax_1[0] != 1.41f) ||
+      (aggregate_initialization_syntax_1[1] != 3.14f))
+    return false;
+
+  Kokkos::Array<int, 3> aggregate_initialization_syntax_2{
+      {0, 1, 2}};  // since C++11
+  if ((aggregate_initialization_syntax_2[0] != 0) ||
+      (aggregate_initialization_syntax_2[1] != 1) ||
+      (aggregate_initialization_syntax_2[2] != 2))
+    return false;
+
+  // Note that this is a valid initialization.
+  Kokkos::Array<double, 3> initialized_with_one_argument_missing = {{255, 255}};
+  if ((initialized_with_one_argument_missing[0] != 255) ||
+      (initialized_with_one_argument_missing[1] != 255) ||
+      (initialized_with_one_argument_missing[2] != 0))
+    return false;
+
+  // But the following line would not compile
+  //  Kokkos::Array< double, 3 > initialized_with_too_many{ { 1, 2, 3, 4 } };
+
+  return true;
+}
+
+static_assert(test_array_aggregate_initialization());
+
+KOKKOS_FUNCTION constexpr bool test_array_zero_sized() {
+  using T = float;
+
+  // The code below must compile for zero-sized arrays.
+  constexpr int N = 0;
+  Kokkos::Array<T, N> a;
+  for (int i = 0; i < N; ++i) {
+    a[i] = T();
+  }
+  return true;
+}
+
+static_assert(test_array_zero_sized());
+
 }  // namespace
