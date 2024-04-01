@@ -80,15 +80,15 @@
 * Improve message on view out of bounds access and always abort [\#6861](https://github.com/kokkos/kokkos/pull/6861)
 * Drop `KOKKOS_ENABLE_INTEL_MM_ALLOC` macro [\#6797](https://github.com/kokkos/kokkos/pull/6797)
 * Remove `Kokkos::Experimental::LogicalMemorySpace` (without going through deprecation) [\#6557](https://github.com/kokkos/kokkos/pull/6557)
+* Remove `Experimental::HBWSpace` and support for linking against memkind [\#6791](https://github.com/kokkos/kokkos/pull/6791)
+* Drop librt TPL and associated `KOKKOS_ENABLE_LIBRT` macro [\#6798](https://github.com/kokkos/kokkos/pull/6798)
+* Drop support for old CPU architectures (`ARCH_BGQ`, `ARCH_POWER7`, `ARCH_WSM` and associated `ARCH_SSE4` macro) [\#6806](https://github.com/kokkos/kokkos/pull/6806)
+* Drop support for deprecated command-line arguments and environment variables [\#6744](https://github.com/kokkos/kokkos/pull/6744)
 
 ### Deprecations
 * Provide kokkos_swap as part of Core and deprecate Experimental::swap in Algorithms [\#6697](https://github.com/kokkos/kokkos/pull/6697)
 * Deprecate {Cuda,HIP}::detect_device_count() and Cuda::[detect_]device_arch() [\#6710](https://github.com/kokkos/kokkos/pull/6710)
-* Drop support for deprecated command-line arguments and environment variables [\#6744](https://github.com/kokkos/kokkos/pull/6744)
 * Deprecate `ExecutionSpace::in_parallel()` [\#6582](https://github.com/kokkos/kokkos/pull/6582)
-* Remove `Experimental::HBWSpace` and support for linking against memkind [\#6791](https://github.com/kokkos/kokkos/pull/6791)
-* Drop librt TPL and associated `KOKKOS_ENABLE_LIBRT` macro [\#6798](https://github.com/kokkos/kokkos/pull/6798)
-* Drop support for old CPU architectures (`ARCH_BGQ`, `ARCH_POWER7`, `ARCH_WSM` and associated `ARCH_SSE4` macro) [\#6806](https://github.com/kokkos/kokkos/pull/6806)
 
 ### Bug Fixes
 * Fix team-level MDRange reductions: [\#6511](https://github.com/kokkos/kokkos/pull/6511)
