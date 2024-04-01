@@ -95,7 +95,7 @@
 * `fill_random` overload that do not take an execution space instance argument should fence [\#6658](https://github.com/kokkos/kokkos/pull/6658)
 * HIP,Cuda,OpenMPTarget: Fixup use provided execution space when copying host inaccessible reduction result [\#6777](https://github.com/kokkos/kokkos/pull/6777)
 * Fix typo in `cuda_func_set_attribute[s]_wrapper` preventing proper setting of desired occupancy [\#6786](https://github.com/kokkos/kokkos/pull/6786)
-* Clean up shift_{right, left}_team_impl [\#6821](https://github.com/kokkos/kokkos/pull/6821)
+* Avoid undefined behavior due to conversion between signed and unsigned integers in shift_{right, left}_team_impl [\#6821](https://github.com/kokkos/kokkos/pull/6821)
 * Fix a bug in Makefile.kokkos when using AMD GPU architectures as `AMD_GFXYYY` [\#6892](https://github.com/kokkos/kokkos/pull/6892) 
 
 ## [4.2.01](https://github.com/kokkos/kokkos/tree/4.2.01) (2023-12-07)
