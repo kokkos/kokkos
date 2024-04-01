@@ -8,7 +8,12 @@ pipeline {
     }
 
     options {
+        disableConcurrentBuilds(abortPrevious: true)
         timeout(time: 6, unit: 'HOURS')
+    }
+
+    triggers {
+        issueCommentTrigger('.*test this please.*')
     }
 
     stages {
@@ -17,7 +22,7 @@ pipeline {
                 dockerfile {
                     filename 'Dockerfile.clang'
                     dir 'scripts/docker'
-                    label 'nvidia-docker || rocm-docker || docker'
+                    label 'nvidia-docker || docker'
                     args '-v /tmp/ccache.kokkos:/tmp/ccache'
                 }
             }
@@ -102,12 +107,11 @@ pipeline {
                     }
                     steps {
                         sh 'ccache --zero-stats'
-                        sh '''. /opt/intel/oneapi/setvars.sh --include-intel-llvm && \
-                              rm -rf build && mkdir -p build && cd build && \
+                        sh '''rm -rf build && mkdir -p build && cd build && \
                               cmake \
                                 -DCMAKE_BUILD_TYPE=Release \
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-                                -DCMAKE_CXX_COMPILER=/opt/intel/oneapi/compiler/2023.0.0/linux/bin-llvm/clang++ \
+                                -DCMAKE_CXX_COMPILER=clang++ \
                                 -DCMAKE_CXX_FLAGS="-fsycl-device-code-split=per_kernel -Wno-deprecated-declarations -Werror -Wno-gnu-zero-variadic-macro-arguments -Wno-unknown-cuda-version -Wno-sycl-target" \
                                 -DKOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED=0 \
                                 -DKokkos_ARCH_NATIVE=ON \
@@ -135,8 +139,8 @@ pipeline {
                         dockerfile {
                             filename 'Dockerfile.hipcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-20.04:5.2'
-                            label 'rocm-docker && vega'
+                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-20.04:5.2-complete'
+                            label 'rocm-docker '
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --device=/dev/kfd --device=/dev/dri --security-opt seccomp=unconfined --group-add video --env HIP_VISIBLE_DEVICES=$HIP_VISIBLE_DEVICES'
                         }
                     }
@@ -177,8 +181,8 @@ pipeline {
                         dockerfile {
                             filename 'Dockerfile.hipcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-20.04:5.6'
-                            label 'rocm-docker && vega'
+                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-20.04:5.6-complete'
+                            label 'rocm-docker'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --device=/dev/kfd --device=/dev/dri --security-opt seccomp=unconfined --group-add video --env HIP_VISIBLE_DEVICES=$HIP_VISIBLE_DEVICES'
                         }
                     }
@@ -390,7 +394,6 @@ pipeline {
                                 -DKokkos_ENABLE_CUDA_LAMBDA=OFF \
                                 -DKokkos_ENABLE_CUDA_UVM=ON \
                                 -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=ON \
-                                -DKokkos_ENABLE_DEPRECATED_CODE_3=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
                                 -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
                                 -DKokkos_ENABLE_IMPL_MDSPAN=ON \
@@ -493,7 +496,6 @@ pipeline {
                                 -DCMAKE_CXX_FLAGS=-Werror \
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
-                                -DKokkos_ENABLE_DEPRECATED_CODE_3=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
                                 -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
                                 -DKokkos_ENABLE_TESTS=ON \
