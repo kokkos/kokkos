@@ -115,10 +115,6 @@ class ParallelScanSYCLBase {
   pointer_type m_result_ptr;
   const bool m_result_ptr_device_accessible;
 
-  // Only let one ParallelScan instance at a time use the host scratch memory.
-  // The constructor acquires the mutex which is released in the destructor.
-  std::scoped_lock<std::mutex> m_scratch_buffers_lock;
-
  private:
   template <typename FunctorWrapper>
   sycl::event sycl_direct_launch(const FunctorWrapper& functor_wrapper,
@@ -334,6 +330,11 @@ class ParallelScanSYCLBase {
 
     auto& instance = *m_policy.space().impl_internal_space_instance();
 
+    // Only let one instance at a time resize the instance's scratch memory
+    // allocations.
+    std::scoped_lock<std::mutex> scratch_buffers_lock(
+        instance.m_mutexScratchSpace);
+
     Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem&
         indirectKernelMem = instance.get_indirect_kernel_mem();
 
@@ -352,10 +353,7 @@ class ParallelScanSYCLBase {
       : m_functor_reducer(arg_functor, typename Analysis::Reducer{arg_functor}),
         m_policy(arg_policy),
         m_result_ptr(arg_result_ptr),
-        m_result_ptr_device_accessible(arg_result_ptr_device_accessible),
-        m_scratch_buffers_lock(m_policy.space()
-                                   .impl_internal_space_instance()
-                                   ->m_mutexScratchSpace) {}
+        m_result_ptr_device_accessible(arg_result_ptr_device_accessible) {}
 };
 
 }  // namespace Kokkos::Impl

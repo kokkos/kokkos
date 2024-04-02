@@ -181,8 +181,8 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     functor_wrapper.register_event(event);
   }
 
-  ParallelFor(const ParallelFor&) = delete;
-  ParallelFor(ParallelFor&&)      = delete;
+  ParallelFor(const ParallelFor&) = default;
+  ParallelFor(ParallelFor&&)      = default;
   ParallelFor& operator=(const ParallelFor&) = delete;
   ParallelFor& operator=(ParallelFor&&) = delete;
   ~ParallelFor()                        = default;
