@@ -15,7 +15,6 @@
 //@HEADER
 
 #include <Kokkos_Core.hpp>
-#include "Kokkos_Core_fwd.hpp"
 
 namespace {
 
