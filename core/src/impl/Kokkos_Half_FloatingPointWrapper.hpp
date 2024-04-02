@@ -316,11 +316,6 @@ class alignas(FloatType) floating_point_wrapper {
     val = Kokkos::bit_cast<impl_type>(rhs);
   }
 
-  KOKKOS_FUNCTION
-  floating_point_wrapper(bit_comparison_type rhs) {
-    val = Kokkos::bit_cast<impl_type>(rhs);
-  }
-
   // Don't support implicit conversion back to impl_type.
   // impl_type is a storage only type on host.
   KOKKOS_FUNCTION
