@@ -22,25 +22,11 @@ namespace {
 std::array<TEST_EXECSPACE, 2> get_execution_spaces() {
   std::vector<sycl::device> gpu_devices =
       sycl::device::get_devices(sycl::info::device_type::gpu);
-  auto exception_handler = [](sycl::exception_list exceptions) {
-    bool asynchronous_error = false;
-    for (std::exception_ptr const &e : exceptions) {
-      try {
-        std::rethrow_exception(e);
-      } catch (sycl::exception const &e) {
-        std::cerr << e.what() << '\n';
-        asynchronous_error = true;
-      }
-    }
-    if (asynchronous_error)
-      Kokkos::Impl::throw_runtime_exception(
-          "There was an asynchronous SYCL error!\n");
-  };
 
-  TEST_EXECSPACE exec0(sycl::queue{gpu_devices.front(), exception_handler,
-                                   sycl::property::queue::in_order()});
-  TEST_EXECSPACE exec1(sycl::queue{gpu_devices.back(), exception_handler,
-                                   sycl::property::queue::in_order()});
+  TEST_EXECSPACE exec0(
+      sycl::queue{gpu_devices.front(), sycl::property::queue::in_order()});
+  TEST_EXECSPACE exec1(
+      sycl::queue{gpu_devices.back(), sycl::property::queue::in_order()});
 
   return {exec0, exec1};
 }
