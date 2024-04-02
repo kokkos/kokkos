@@ -120,7 +120,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
     desul::ensure_sycl_lock_arrays_on_device(q);
 
-    auto parallel_for_event = q.submit([&](sycl::handler& cgh) {
+    auto cgh_lambda = [&](sycl::handler& cgh) {
       const auto range                  = compute_ranges();
       const sycl::range<3> global_range = range.get_global_range();
       const sycl::range<3> local_range  = range.get_local_range();
@@ -153,12 +153,28 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
             {global_x, global_y, global_z}, {local_x, local_y, local_z})
             .exec_range();
       });
-    });
-#ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
-    q.ext_oneapi_submit_barrier(std::vector<sycl::event>{parallel_for_event});
-#endif
+    };
 
-    return parallel_for_event;
+    if constexpr (Policy::is_graph_kernel::value) {
+      sycl::ext::oneapi::experimental::command_graph<
+          sycl::ext::oneapi::experimental::graph_state::modifiable>& graph =
+          Impl::get_sycl_graph_from_kernel(*this);
+      std::optional<sycl::ext::oneapi::experimental::node>& graph_node =
+          Impl::get_sycl_graph_node_from_kernel(*this);
+      KOKKOS_ENSURES(!graph_node);
+      graph_node = graph.add(cgh_lambda);
+      KOKKOS_ENSURES(graph_node);
+      //   KOKKOS_ENSURES(graph_node.get_type() ==
+      //   sycl::ext::oneapi::experimental::node_type::kernel)
+      return {};
+    } else {
+      auto parallel_for_event = q.submit(cgh_lambda);
+
+#ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
+      q.ext_oneapi_submit_barrier(std::vector<sycl::event>{parallel_for_event});
+#endif
+      return parallel_for_event;
+    }
   }
 
  public:

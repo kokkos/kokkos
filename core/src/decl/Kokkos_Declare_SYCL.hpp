@@ -19,6 +19,7 @@
 
 #if defined(KOKKOS_ENABLE_SYCL)
 #include <SYCL/Kokkos_SYCL.hpp>
+#include <SYCL/Kokkos_SYCL_GraphNodeKernel.hpp>
 #include <SYCL/Kokkos_SYCL_Half_Impl_Type.hpp>
 #include <SYCL/Kokkos_SYCL_Half_Conversion.hpp>
 #include <SYCL/Kokkos_SYCL_DeepCopy.hpp>

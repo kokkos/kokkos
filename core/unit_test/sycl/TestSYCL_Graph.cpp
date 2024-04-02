@@ -14,15 +14,5 @@
 //
 //@HEADER
 
-#ifndef KOKKOS_TEST_SYCL_HPP
-#define KOKKOS_TEST_SYCL_HPP
-
-#include <gtest/gtest.h>
-
-#define TEST_CATEGORY sycl
-#define TEST_CATEGORY_NUMBER 7
-#define TEST_CATEGORY_DEATH sycl_DeathTest
-#define TEST_EXECSPACE Kokkos::Experimental::SYCL
-#define TEST_CATEGORY_FIXTURE(name) sycl_##name
-
-#endif
+#include <TestSYCL_Category.hpp>
+#include <TestGraph.hpp>

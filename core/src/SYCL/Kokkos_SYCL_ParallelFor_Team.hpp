@@ -28,7 +28,7 @@ template <typename FunctorType, typename... Properties>
 class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
                                 Kokkos::Experimental::SYCL> {
  public:
-  using Policy = TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>;
+  using Policy       = TeamPolicy<Properties...>;
   using functor_type = FunctorType;
   using size_type    = ::Kokkos::Experimental::SYCL::size_type;
 
@@ -57,7 +57,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     desul::ensure_sycl_lock_arrays_on_device(q);
 
-    auto parallel_for_event = q.submit([&](sycl::handler& cgh) {
+    auto cgh_lambda = [&](sycl::handler& cgh) {
       // FIXME_SYCL accessors seem to need a size greater than zero at least for
       // host queues
       sycl::local_accessor<char, 1> team_scratch_memory_L0(
