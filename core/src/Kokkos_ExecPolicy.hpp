@@ -632,9 +632,7 @@ class TeamPolicyCommon;
 template <typename ExecSpace, typename... Properties>
 class TeamPolicyCommon<ExecSpace, Properties...>
     : public TeamPolicyInternal<ExecSpace, Properties...> {
-  using internal_policy =
-      TeamPolicyInternal<typename PolicyTraits<Properties...>::execution_space,
-                         Properties...>;
+  using internal_policy = TeamPolicyInternal<ExecSpace, Properties...>;
 
   using team_policy = TeamPolicy<Properties...>;
 
