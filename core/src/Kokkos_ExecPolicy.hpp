@@ -575,7 +575,7 @@ struct ScratchRequest {
 // Throws a runtime exception if level is not `0` or `1`
 void team_policy_check_valid_storage_level_argument(int level);
 
-/** \brief  TeamPolicy is the execution policy for parallel work over a league
+/* TeamPolicy is the execution policy for parallel work over a league
  * of teams of threads.
  *
  *  The work functor is called for each thread of each team such that
