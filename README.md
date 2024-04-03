@@ -24,15 +24,16 @@ To start learning about Kokkos:
 
 - [Use cases and Examples](https://kokkos.org/kokkos-core-wiki/usecases.html): a series of examples ranging from how to use Kokkos with MPI to Fortran interoperability.
 
-## Quick Start for the impatient
+## Obtaining Kokkos
 
-### Obtaining Kokkos
+The latest release of Kokkos can be obtained from the [GitHub releases page](https://github.com/kokkos/kokkos/releases/latest).
 
-The latest release of Kokkos can be obtained from the [GitHub releases page](https://github.com/kokkos/kokkos/releases/latest)
-or programmatically using curl to get the latest release tarball and extract it into a directory called `kokkos`:
+The current release is [4.2.01](https://github.com/kokkos/kokkos/releases/tag/4.2.01).
 
 ```bash
-mkdir kokkos && curl -s -L https://github.com/kokkos/kokkos/archive/refs/tags/4.2.01.tar.gz | tar xz - -C kokkos --strip-components 1
+curl -OJ -L https://github.com/kokkos/kokkos/archive/refs/tags/4.2.01.tar.gz
+# Or with wget
+wget https://github.com/kokkos/kokkos/archive/refs/tags/4.2.01.tar.gz
 ```
 
 To clone the latest development version of Kokkos from GitHub:
@@ -48,63 +49,7 @@ All requirements including minimum and primary tested compiler versions can be f
 
 Building and installation instructions are described [here](https://kokkos.org/kokkos-core-wiki/building.html).
 
-#### Building for CPU on Linux or macOS
-
-To use the OpenMP backend, you will need a compiler that supports OpenMP, such as GCC, Clang, or Intel C++ Compiler.
-On MacOS, you will need to install a recent version of `libomp` for example using Homebrew: `brew install libomp`.
-
-To build Kokkos targeting OpenMP for CPU on Linux or macOS, you can use the following commands:
-
-```bash
-cd kokkos
-cmake -B build -S . -DKokkos_ENABLE_OPENMP=On -DCMAKE_INSTALL_PREFIX=/opt/kokkos
-cmake --build build && cmake --install build
-```
-
-Note that you can also use `Kokkos_ENABLE_THREADS` to enable the use of threads instead of OpenMP.
-
-#### Building for CUDA on Linux
-
-To build Kokkos targetting CUDA on Linux, you can use the following commands:
-
-```bash
-cd kokkos
-cmake -B build -S . -DKokkos_ENABLE_CUDA=On -DCMAKE_INSTALL_PREFIX=/opt/kokkos
-cmake --build build && cmake --install build
-```
-
-#### Building for HIP on Linux
-
-To build Kokkos targetting HIP on Linux, you can use the following commands:
-
-```bash
-cd kokkos
-cmake -B build -S . -DCMAKE_CXX_COMPILER=hipcc -DKokkos_ENABLE_HIP=On -DCMAKE_INSTALL_PREFIX=/opt/kokkos
-cmake --build build && cmake --install build
-```
-
-#### Installing Kokkos with Spack
-
 You can also install Kokkos using [Spack](https://spack.io/): `spack install kokkos`. [Available configuration options](https://packages.spack.io/package.html?name=kokkos) can be displayed using `spack info kokkos`.
-
-
-### Using Kokkos
-
-To use Kokkos in your CMake project, you can use the following commands in your `CMakeLists.txt`:
-
-```cmake
-find_package(Kokkos REQUIRED)
-add_executable(myapp myapp.cpp)
-target_link_libraries(myapp Kokkos::kokkos)
-```
-
-To compile your application, you can use the following commands:
-
-```bash
-cmake -B build -S . -DCMAKE_INSTALL_PREFIX=/opt/kokkos && cmake --build build
-```
-
-More examples can be found in the [example](https://github.com/kokkos/kokkos/example) directory of the Kokkos source code.
 
 ## For the complete documentation: [kokkos.org/kokkos-core-wiki/](https://kokkos.org/kokkos-core-wiki/)
 
