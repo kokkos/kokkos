@@ -79,6 +79,10 @@ OutputIteratorType adjacent_difference_exespace_impl(
                                                               first_dest);
   Impl::expect_valid_range(first_from, last_from);
 
+  if (first_from == last_from) {
+    return first_dest;
+  }
+
   // ranges shall not overlap
   const auto num_elements =
       Kokkos::Experimental::distance(first_from, last_from);
@@ -88,10 +92,6 @@ OutputIteratorType adjacent_difference_exespace_impl(
   auto found_first = Kokkos::Experimental::find_first_of(ex, first_from, last_from, first_dest, last_dest);
   KOKKOS_EXPECTS(found_first == last_from);
 #endif
-
-  if (first_from == last_from) {
-    return first_dest;
-  }
 
   // run
   ::Kokkos::parallel_for(
@@ -118,6 +118,11 @@ KOKKOS_FUNCTION OutputIteratorType adjacent_difference_team_impl(
   Impl::static_assert_iterators_have_matching_difference_type(first_from,
                                                               first_dest);
   Impl::expect_valid_range(first_from, last_from);
+
+  if (first_from == last_from) {
+    return first_dest;
+  }
+
   // ranges shall not overlap
   const auto num_elements =
       Kokkos::Experimental::distance(first_from, last_from);
@@ -127,10 +132,6 @@ KOKKOS_FUNCTION OutputIteratorType adjacent_difference_team_impl(
   auto found_first = Kokkos::Experimental::find_first_of(teamHandle, first_from, last_from, first_dest, last_dest);
   KOKKOS_EXPECTS(found_first == last_from);
 #endif
-
-  if (first_from == last_from) {
-    return first_dest;
-  }
 
   // run
   ::Kokkos::parallel_for(
