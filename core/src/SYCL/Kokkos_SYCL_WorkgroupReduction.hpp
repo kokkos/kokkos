@@ -107,13 +107,12 @@ std::enable_if_t<use_shuffle_based_algorithm<ReducerType>> workgroup_reduction(
 
   // Perform the actual workgroup reduction in each subgroup
   // separately.
-  auto sg            = item.get_sub_group();
-  const int id_in_sg = sg.get_local_id()[0];
-  const auto local_range =
-      std::min<unsigned int>(sg.get_local_range()[0], max_size);
+  auto sg               = item.get_sub_group();
+  const int id_in_sg    = sg.get_local_id()[0];
+  const int local_range = std::min<int>(sg.get_local_range()[0], max_size);
 
   const auto upper_stride_bound =
-      std::min<unsigned int>(local_range - id_in_sg, max_size - local_id);
+      std::min<int>(local_range - id_in_sg, max_size - local_id);
 #if defined(KOKKOS_ARCH_INTEL_GPU) || defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
   auto shuffle_combine = [&](int stride) {
     if (stride < local_range) {
@@ -153,7 +152,7 @@ std::enable_if_t<use_shuffle_based_algorithm<ReducerType>> workgroup_reduction(
     // the first subgroup, we first combine the items with a higher
     // index.
     if (n_active_subgroups > local_range) {
-      for (unsigned int offset = local_range; offset < n_active_subgroups;
+      for (int offset = local_range; offset < n_active_subgroups;
            offset += local_range)
         if (id_in_sg + offset < n_active_subgroups) {
           final_reducer.join(&sg_value, &local_mem[(id_in_sg + offset)]);
