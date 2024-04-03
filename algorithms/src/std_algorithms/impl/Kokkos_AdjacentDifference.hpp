@@ -21,6 +21,7 @@
 #include "Kokkos_Constraints.hpp"
 #include "Kokkos_HelperPredicates.hpp"
 #include <std_algorithms/Kokkos_Distance.hpp>
+#include <std_algorithms/Kokkos_FindFirstOf.hpp>
 #include <string>
 
 namespace Kokkos {
@@ -78,13 +79,21 @@ OutputIteratorType adjacent_difference_exespace_impl(
                                                               first_dest);
   Impl::expect_valid_range(first_from, last_from);
 
+  // ranges shall not overlap
+  const auto num_elements =
+      Kokkos::Experimental::distance(first_from, last_from);
+#if !defined(NDEBUG) || defined(KOKKOS_ENFORCE_CONTRACTS) || \
+    defined(KOKKOS_ENABLE_DEBUG)
+  auto last_dest = first_dest + num_elements;
+  auto found_first = Kokkos::Experimental::find_first_of(ex, first_from, last_from, first_dest, last_dest);
+  KOKKOS_EXPECTS(found_first == last_from);
+#endif
+
   if (first_from == last_from) {
     return first_dest;
   }
 
   // run
-  const auto num_elements =
-      Kokkos::Experimental::distance(first_from, last_from);
   ::Kokkos::parallel_for(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
       StdAdjacentDiffFunctor(first_from, first_dest, bin_op));
@@ -109,14 +118,21 @@ KOKKOS_FUNCTION OutputIteratorType adjacent_difference_team_impl(
   Impl::static_assert_iterators_have_matching_difference_type(first_from,
                                                               first_dest);
   Impl::expect_valid_range(first_from, last_from);
+  // ranges shall not overlap
+  const auto num_elements =
+      Kokkos::Experimental::distance(first_from, last_from);
+  auto last_dest = first_dest + num_elements;
+#if !defined(NDEBUG) || defined(KOKKOS_ENFORCE_CONTRACTS) || \
+    defined(KOKKOS_ENABLE_DEBUG)
+  auto found_first = Kokkos::Experimental::find_first_of(teamHandle, first_from, last_from, first_dest, last_dest);
+  KOKKOS_EXPECTS(found_first == last_from);
+#endif
 
   if (first_from == last_from) {
     return first_dest;
   }
 
   // run
-  const auto num_elements =
-      Kokkos::Experimental::distance(first_from, last_from);
   ::Kokkos::parallel_for(
       TeamThreadRange(teamHandle, 0, num_elements),
       StdAdjacentDiffFunctor(first_from, first_dest, bin_op));
