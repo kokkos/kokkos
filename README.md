@@ -10,13 +10,13 @@ hierarchies and multiple types of execution resources. It currently can use
 CUDA, HIP, SYCL, HPX, OpenMP and C++ threads as backend programming models with several other
 backends in development.
 
-**Kokkos Core is part of the [Kokkos C++ Performance Portability Programming EcoSystem](https://kokkos.org/about/abstract/).**
+**Kokkos Core is part of the [Kokkos C++ Performance Portability Programming Ecosystem](https://kokkos.org/about/abstract/).**
 
 ## Learning about Kokkos
 
 To start learning about Kokkos:
 
-- [Kokkos Lectures](https://kokkos.org/kokkos-core-wiki/videolectures.html): they contain a mix of lecture videos and hands-on exercises covering all the important Kokkos Ecosystem capabilities.
+- [Kokkos Lectures](https://kokkos.org/kokkos-core-wiki/videolectures.html): they contain a mix of lecture videos and hands-on exercises covering all the important capabilities.
 
 - [Programming guide](https://kokkos.org/kokkos-core-wiki/programmingguide.html): contains in "narrative" form a technical description of the programming model, machine model, and the main building blocks like the Views and parallel dispatch.
 
@@ -59,7 +59,7 @@ For questions find us on Slack: https://kokkosteam.slack.com or open a GitHub is
 
 For non-public questions send an email to: *crtrott(at)sandia.gov*
 
-## Contributing to Kokkos
+## Contributing
 
 Please see [this page](https://kokkos.org/kokkos-core-wiki/contributing.html) for details on how to contribute.
 
