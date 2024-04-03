@@ -902,14 +902,20 @@ if(Kokkos_ENABLE_SYCL)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     CoreUnitTest_SYCLInterOpInit_Context
     SOURCES
-    UnitTestMainInit.cpp
+      UnitTestMainInit.cpp
       sycl/TestSYCL_InterOp_Init_Context.cpp
   )
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     CoreUnitTest_SYCLInterOpStreams
     SOURCES
-      UnitTestMain.cpp
+     UnitTestMain.cpp
      sycl/TestSYCL_InterOp_Streams.cpp
+  )
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+      CoreUnitTest_SYCLInterOpStreamsMultiGPU
+    SOURCES
+      UnitTestMainInit.cpp
+      sycl/TestSYCL_InterOp_StreamsMultiGPU.cpp
   )
 endif()
 
