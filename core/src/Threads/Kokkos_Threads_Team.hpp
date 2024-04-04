@@ -214,15 +214,13 @@ class ThreadsExecTeamMember {
     team_reduce(reducer, reducer.reference());
   }
 
-  template <typename ReducerType>
-  KOKKOS_INLINE_FUNCTION
-      std::enable_if_t<Kokkos::is_reducer<ReducerType>::value>
-      team_reduce(const ReducerType& reducer,
-                  const typename ReducerType::value_type contribution) const {
+  template <typename ReducerType, typename ValueType>
+  KOKKOS_INLINE_FUNCTION void team_reduce(const ReducerType& reducer,
+                                          ValueType& contribution) const {
     KOKKOS_IF_ON_DEVICE(((void)reducer; (void)contribution;))
 
     KOKKOS_IF_ON_HOST((
-        using value_type = typename ReducerType::value_type;
+        using value_type = ValueType;
         // Make sure there is enough scratch space:
         using type = typename if_c<sizeof(value_type) < TEAM_REDUCE_SIZE,
                                    value_type, void>::type;
@@ -259,8 +257,10 @@ class ThreadsExecTeamMember {
 
         team_fan_out();
 
-        // Value was changed by the team base
-        reducer.reference() = *local_value;))
+        if constexpr (is_reducer_v<ReducerType>) {
+          // Value was changed by the team base
+          reducer.reference() = *local_value;
+        } contribution = *local_value;))
   }
 
   /** \brief  Intra-team exclusive prefix sum with team_rank() ordering
@@ -887,19 +887,38 @@ KOKKOS_INLINE_FUNCTION std::enable_if_t<!Kokkos::is_reducer<ValueType>::value>
 parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
                     iType, Impl::ThreadsExecTeamMember>& loop_boundaries,
                 const Lambda& lambda, ValueType& result) {
+  using functor_analysis_type = typename Impl::FunctorAnalysis<
+      Impl::FunctorPatternInterface::REDUCE,
+      TeamPolicy<typename Impl::ThreadsExecTeamMember::execution_space>, Lambda,
+      ValueType>;
+
+  constexpr bool is_reducer_lambda =
+      functor_analysis_type::has_join_member_function &&
+      functor_analysis_type::has_init_member_function;
+
+  using ReducerSelector = typename Kokkos::Impl::if_c<is_reducer_lambda, Lambda,
+                                                      Sum<ValueType>>::type;
+
+  auto run_lambda = [&](ValueType& value) {
+    for (iType i = loop_boundaries.start; i < loop_boundaries.end;
+         i += loop_boundaries.increment) {
+      lambda(i, value);
+    }
+  };
+
   ValueType intermediate;
-  Sum<ValueType> sum(intermediate);
-  sum.init(intermediate);
-
-  for (iType i = loop_boundaries.start; i < loop_boundaries.end;
-       i += loop_boundaries.increment) {
-    ValueType tmp = ValueType();
-    lambda(i, tmp);
-    intermediate += tmp;
+  if constexpr (is_reducer_lambda) {
+    lambda.init(intermediate);
+    run_lambda(intermediate);
+    loop_boundaries.thread.team_reduce(lambda, intermediate);
+    result = intermediate;
+  } else {
+    ReducerSelector reducer(intermediate);
+    reducer.init(intermediate);
+    run_lambda(intermediate);
+    loop_boundaries.thread.team_reduce(reducer, intermediate);
+    result = reducer.reference();
   }
-
-  loop_boundaries.thread.team_reduce(sum, intermediate);
-  result = sum.reference();
 }
 
 template <typename iType, class Lambda, typename ReducerType>
@@ -950,10 +969,30 @@ KOKKOS_INLINE_FUNCTION std::enable_if_t<!Kokkos::is_reducer<ValueType>::value>
 parallel_reduce(const Impl::ThreadVectorRangeBoundariesStruct<
                     iType, Impl::ThreadsExecTeamMember>& loop_boundaries,
                 const Lambda& lambda, ValueType& result) {
-  result = ValueType();
-  for (iType i = loop_boundaries.start; i < loop_boundaries.end;
-       i += loop_boundaries.increment) {
-    lambda(i, result);
+  using functor_analysis_type = typename Impl::FunctorAnalysis<
+      Impl::FunctorPatternInterface::REDUCE,
+      TeamPolicy<typename Impl::ThreadsExecTeamMember::execution_space>, Lambda,
+      ValueType>;
+
+  constexpr bool is_reducer_lambda =
+      functor_analysis_type::has_join_member_function &&
+      functor_analysis_type::has_init_member_function;
+
+  auto run_lambda = [&](ValueType& value) {
+    for (iType i = loop_boundaries.start; i < loop_boundaries.end;
+         i += loop_boundaries.increment) {
+      lambda(i, value);
+    }
+  };
+
+  if constexpr (is_reducer_lambda) {
+    ValueType val;
+    lambda.init(val);
+    run_lambda(val);
+    result = val;
+  } else {
+    result = ValueType();
+    run_lambda(result);
   }
 }
 
