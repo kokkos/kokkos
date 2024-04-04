@@ -3659,10 +3659,11 @@ void check_view_ctor_args_create_mirror_view_and_copy() {
                 "not explicitly allow padding!");
 }
 
-} // namespace Impl
+}  // namespace Impl
 
 template <class... ViewCtorArgs, class T, class... P,
-         class = std::enable_if<std::is_void<typename ViewTraits<T, P...>::specialize>::value>>
+          class = std::enable_if<
+              std::is_void<typename ViewTraits<T, P...>::specialize>::value>>
 auto create_mirror_view_and_copy(
     const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
     const Kokkos::View<T, P...>& src) {
@@ -3670,11 +3671,13 @@ auto create_mirror_view_and_copy(
 
   Impl::check_view_ctor_args_create_mirror_view_and_copy<ViewCtorArgs...>();
 
-  if constexpr (Impl::MirrorViewType<typename alloc_prop_input::memory_space, T, P...>::is_same_memspace) {
+  if constexpr (Impl::MirrorViewType<typename alloc_prop_input::memory_space, T,
+                                     P...>::is_same_memspace) {
     // same behavior as deep_copy(src, src)
     if constexpr (!alloc_prop_input::has_execution_space)
       fence(
-          "Kokkos::create_mirror_view_and_copy: fence before returning src view");
+          "Kokkos::create_mirror_view_and_copy: fence before returning src "
+          "view");
     return src;
   } else {
     using Space  = typename alloc_prop_input::memory_space;
