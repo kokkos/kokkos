@@ -95,7 +95,10 @@ class CudaSpace {
                  const size_t arg_logical_size = 0) const;
 
   /**\brief  Deallocate untracked memory in the cuda space */
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  KOKKOS_DEPRECATED_WITH_COMMENT("Use the overload with a label instead!")
   void deallocate(void* const arg_alloc_ptr, const size_t arg_alloc_size) const;
+#endif
   void deallocate(const char* arg_label, void* const arg_alloc_ptr,
                   const size_t arg_alloc_size,
                   const size_t arg_logical_size = 0) const;

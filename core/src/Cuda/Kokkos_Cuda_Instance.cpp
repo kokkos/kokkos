@@ -439,7 +439,8 @@ void *CudaInternal::resize_team_scratch_space(int scratch_pool_id,
   if ((bytes > m_team_scratch_current_size[scratch_pool_id]) ||
       ((bytes < m_team_scratch_current_size[scratch_pool_id]) &&
        (force_shrink))) {
-    mem_space.deallocate(m_team_scratch_ptr[scratch_pool_id],
+    mem_space.deallocate("Kokkos::CudaSpace::TeamScratchMemory",
+                         m_team_scratch_ptr[scratch_pool_id],
                          m_team_scratch_current_size[scratch_pool_id]);
     m_team_scratch_current_size[scratch_pool_id] = bytes;
     m_team_scratch_ptr[scratch_pool_id] =
@@ -479,7 +480,8 @@ void CudaInternal::finalize() {
 
   for (int i = 0; i < m_n_team_scratch; ++i) {
     if (m_team_scratch_current_size[i] > 0)
-      cuda_mem_space.deallocate(m_team_scratch_ptr[i],
+      cuda_mem_space.deallocate("Kokkos::CudaSpace::TeamScratchMemory",
+                                m_team_scratch_ptr[i],
                                 m_team_scratch_current_size[i]);
   }
 
