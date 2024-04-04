@@ -181,8 +181,10 @@ sycl::device_ptr<void> SYCLInternal::resize_team_scratch_space(
   if ((bytes > m_team_scratch_current_size[scratch_pool_id]) ||
       ((bytes < m_team_scratch_current_size[scratch_pool_id]) &&
        (force_shrink))) {
-    mem_space.deallocate(m_team_scratch_ptr[scratch_pool_id],
-                         m_team_scratch_current_size[scratch_pool_id]);
+    mem_space.deallocate(
+        "Kokkos::Experimental::SYCL::InternalTeamScratchMemory",
+        m_team_scratch_ptr[scratch_pool_id],
+        m_team_scratch_current_size[scratch_pool_id]);
     m_team_scratch_current_size[scratch_pool_id] = bytes;
     m_team_scratch_ptr[scratch_pool_id]          = mem_space.allocate(
         "Kokkos::Experimental::SYCL::InternalTeamScratchMemory",
@@ -238,8 +240,9 @@ void SYCLInternal::finalize() {
 
   for (int i = 0; i < m_n_team_scratch; ++i) {
     if (m_team_scratch_current_size[i] > 0) {
-      device_mem_space.deallocate(m_team_scratch_ptr[i],
-                                  m_team_scratch_current_size[i]);
+      device_mem_space.deallocate(
+          "Kokkos::Experimental::SYCL::InternalTeamScratchMemory",
+          m_team_scratch_ptr[i], m_team_scratch_current_size[i]);
       m_team_scratch_current_size[i] = 0;
       m_team_scratch_ptr[i]          = nullptr;
     }
