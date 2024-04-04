@@ -3551,7 +3551,8 @@ std::enable_if_t<std::is_void<typename ViewTraits<T, P...>::specialize>::value,
                  typename Impl::MirrorType<Space, T, P...>::view_type>
 create_mirror(Kokkos::Impl::WithoutInitializing_t wi, Space const&,
               Kokkos::View<T, P...> const& src) {
-  return Impl::create_mirror(src, view_alloc(typename Space::memory_space{}, wi));
+  return Impl::create_mirror(src,
+                             view_alloc(typename Space::memory_space{}, wi));
 }
 
 namespace Impl {
