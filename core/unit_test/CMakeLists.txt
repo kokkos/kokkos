@@ -86,11 +86,13 @@ SET(COMPILE_ONLY_SOURCES
   TestDetectionIdiom.cpp
   TestBitManipulation.cpp
   TestInterOp.cpp
+  TestRangePolicyCTAD.cpp
   TestStringManipulation.cpp
   TestVersionMacros.cpp
   TestViewRank.cpp
   TestViewTypeTraits.cpp
   TestTypeList.cpp
+  TestMDRangePolicyCTAD.cpp
   view/TestExtentsDatatypeConversion.cpp
 )
 
@@ -243,6 +245,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
       ViewMapping_subview
       ViewMemoryAccessViolation
       ViewOfClass
+      ViewOutOfBoundsAccess
       ViewResize
       WorkGraph
       WithoutInitializing
@@ -788,7 +791,7 @@ if(Kokkos_ENABLE_CUDA)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     CoreUnitTest_CudaInterOpStreamsMultiGPU
     SOURCES
-      UnitTestMain.cpp
+      UnitTestMainInit.cpp
       cuda/TestCuda_InterOp_StreamsMultiGPU.cpp
   )
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
@@ -899,14 +902,20 @@ if(Kokkos_ENABLE_SYCL)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     CoreUnitTest_SYCLInterOpInit_Context
     SOURCES
-    UnitTestMainInit.cpp
+      UnitTestMainInit.cpp
       sycl/TestSYCL_InterOp_Init_Context.cpp
   )
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     CoreUnitTest_SYCLInterOpStreams
     SOURCES
-      UnitTestMain.cpp
+     UnitTestMain.cpp
      sycl/TestSYCL_InterOp_Streams.cpp
+  )
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+      CoreUnitTest_SYCLInterOpStreamsMultiGPU
+    SOURCES
+      UnitTestMainInit.cpp
+      sycl/TestSYCL_InterOp_StreamsMultiGPU.cpp
   )
 endif()
 

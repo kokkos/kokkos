@@ -119,6 +119,14 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
             std::enable_if_t<(std::is_convertible_v<IndexType1, member_type> &&
                               std::is_convertible_v<IndexType2, member_type>),
                              bool> = false>
+  inline RangePolicy(const IndexType1 work_begin, const IndexType2 work_end)
+      : RangePolicy(typename traits::execution_space(), work_begin, work_end) {}
+
+  /** \brief  Total range */
+  template <typename IndexType1, typename IndexType2,
+            std::enable_if_t<(std::is_convertible_v<IndexType1, member_type> &&
+                              std::is_convertible_v<IndexType2, member_type>),
+                             bool> = false>
   inline RangePolicy(const typename traits::execution_space& work_space,
                      const IndexType1 work_begin, const IndexType2 work_end)
       : m_space(work_space),
@@ -132,22 +140,13 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
     set_auto_chunk_size();
   }
 
-  /** \brief  Total range */
   template <typename IndexType1, typename IndexType2,
             std::enable_if_t<(std::is_convertible_v<IndexType1, member_type> &&
                               std::is_convertible_v<IndexType2, member_type>),
                              bool> = false>
-  inline RangePolicy(const IndexType1 work_begin, const IndexType2 work_end)
-      : RangePolicy(typename traits::execution_space(), work_begin, work_end) {}
-
-  /** \brief  Total range */
-  template <typename IndexType1, typename IndexType2, typename... Args,
-            std::enable_if_t<(std::is_convertible_v<IndexType1, member_type> &&
-                              std::is_convertible_v<IndexType2, member_type>),
-                             bool> = false>
-  inline RangePolicy(const typename traits::execution_space& work_space,
-                     const IndexType1 work_begin, const IndexType2 work_end,
-                     Args... args)
+  RangePolicy(const typename traits::execution_space& work_space,
+              const IndexType1 work_begin, const IndexType2 work_end,
+              const ChunkSize chunk_size)
       : m_space(work_space),
         m_begin(work_begin),
         m_end(work_end),
@@ -156,8 +155,7 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
     check_conversion_safety(work_begin);
     check_conversion_safety(work_end);
     check_bounds_validity();
-    set_auto_chunk_size();
-    set(args...);
+    set_chunk_size(chunk_size.value);
   }
 
   /** \brief  Total range */
@@ -165,28 +163,19 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
             std::enable_if_t<(std::is_convertible_v<IndexType1, member_type> &&
                               std::is_convertible_v<IndexType2, member_type>),
                              bool> = false>
-  inline RangePolicy(const IndexType1 work_begin, const IndexType2 work_end,
-                     Args... args)
+  RangePolicy(const IndexType1 work_begin, const IndexType2 work_end,
+              const ChunkSize chunk_size)
       : RangePolicy(typename traits::execution_space(), work_begin, work_end,
-                    args...) {}
-
- private:
-  inline void set() {}
+                    chunk_size) {}
 
  public:
-  template <class... Args>
-  inline void set(Args...) {
-    static_assert(
-        0 == sizeof...(Args),
-        "Kokkos::RangePolicy: unhandled constructor arguments encountered.");
-  }
-
-  template <class... Args>
-  inline void set(const ChunkSize& chunksize, Args... args) {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  KOKKOS_DEPRECATED_WITH_COMMENT("Use set_chunk_size instead")
+  inline void set(ChunkSize chunksize) {
     m_granularity      = chunksize.value;
     m_granularity_mask = m_granularity - 1;
-    set(args...);
   }
+#endif
 
  public:
   /** \brief return chunk_size */
@@ -338,6 +327,21 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
     WorkRange& operator=(const WorkRange&);
   };
 };
+
+RangePolicy()->RangePolicy<>;
+
+RangePolicy(int64_t, int64_t)->RangePolicy<>;
+RangePolicy(int64_t, int64_t, ChunkSize const&)->RangePolicy<>;
+
+RangePolicy(DefaultExecutionSpace const&, int64_t, int64_t)->RangePolicy<>;
+RangePolicy(DefaultExecutionSpace const&, int64_t, int64_t, ChunkSize const&)
+    ->RangePolicy<>;
+
+template <typename ES, typename = std::enable_if_t<is_execution_space_v<ES>>>
+RangePolicy(ES const&, int64_t, int64_t)->RangePolicy<ES>;
+
+template <typename ES, typename = std::enable_if_t<is_execution_space_v<ES>>>
+RangePolicy(ES const&, int64_t, int64_t, ChunkSize const&)->RangePolicy<ES>;
 
 }  // namespace Kokkos
 

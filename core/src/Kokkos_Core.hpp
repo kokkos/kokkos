@@ -302,9 +302,6 @@ std::vector<ExecSpace> partition_space(ExecSpace const& space,
 // implementation of the RAII wrapper is using Kokkos::single.
 #include <Kokkos_AcquireUniqueTokenImpl.hpp>
 
-// Specializations required after core definitions
-#include <KokkosCore_Config_PostInclude.hpp>
-
 //----------------------------------------------------------------------------
 // Redefinition of the macros min and max if we pushed them at entry of
 // Kokkos_Core.hpp

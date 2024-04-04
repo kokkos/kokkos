@@ -90,6 +90,13 @@ void HIPInternal::print_configuration(std::ostream &s) const {
     << '\n';
 #endif
 
+  s << "macro KOKKOS_ENABLE_ROCTHRUST : "
+#if defined(KOKKOS_ENABLE_ROCTHRUST)
+    << "defined\n";
+#else
+    << "undefined\n";
+#endif
+
   for (int i : get_visible_devices()) {
     hipDeviceProp_t hipProp;
     KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDeviceProperties(&hipProp, i));

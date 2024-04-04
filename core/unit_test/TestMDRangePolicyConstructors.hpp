@@ -88,12 +88,15 @@ TEST(TEST_CATEGORY_DEATH, policy_bounds_unsafe_narrowing_conversions) {
   using Policy = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>,
                                        Kokkos::IndexType<unsigned>>;
 
+  std::string msg =
+      "Kokkos::MDRangePolicy bound type error: an unsafe implicit conversion "
+      "is "
+      "performed on a bound (-1) in dimension (0), which may not preserve its "
+      "original value.\n";
+  std::string expected = std::regex_replace(msg, std::regex("\\(|\\)"), "\\$&");
+
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-  ASSERT_DEATH(
-      {
-        (void)Policy({-1, 0}, {2, 3});
-      },
-      "unsafe narrowing conversion");
+  ASSERT_DEATH({ (void)Policy({-1, 0}, {2, 3}); }, expected);
 }
 
 TEST(TEST_CATEGORY_DEATH, policy_invalid_bounds) {
