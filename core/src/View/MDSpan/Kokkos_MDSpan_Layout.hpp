@@ -27,29 +27,6 @@ static_assert(false,
 #include <impl/Kokkos_ViewDataAnalysis.hpp>
 
 namespace Kokkos::Impl {
-template <class Layout>
-struct ArrayLayoutFromLayout;
-
-template <std::size_t padding_value>
-struct ArrayLayoutFromLayout<Experimental::layout_left_padded<padding_value>> {
-  using type = Kokkos::LayoutLeft;
-  static constexpr std::integral_constant<unsigned,
-                                          static_cast<unsigned>(padding_value)>
-      padding = {};
-};
-
-template <std::size_t padding_value>
-struct ArrayLayoutFromLayout<Experimental::layout_right_padded<padding_value>> {
-  using type = Kokkos::LayoutRight;
-  static constexpr std::integral_constant<unsigned,
-                                          static_cast<unsigned>(padding_value)>
-      padding = {};
-};
-
-template <>
-struct ArrayLayoutFromLayout<layout_stride> {
-  using type = Kokkos::LayoutStride;
-};
 
 template <class ArrayLayout>
 struct LayoutFromArrayLayout;
@@ -67,17 +44,6 @@ struct LayoutFromArrayLayout<Kokkos::LayoutRight> {
 template <>
 struct LayoutFromArrayLayout<Kokkos::LayoutStride> {
   using type = layout_stride;
-};
-
-template <class T, class Extents, class Layout>
-struct ViewOffsetFromExtents {
-  using value_type   = T;
-  using data_type    = typename DataTypeFromExtents<value_type, Extents>::type;
-  using array_layout = typename ArrayLayoutFromLayout<Layout>::type;
-  using data_analysis =
-      Kokkos::Impl::ViewDataAnalysis<data_type, array_layout, value_type>;
-  using type =
-      Kokkos::Impl::ViewOffset<typename data_analysis::dimension, array_layout>;
 };
 
 /// Convert from a mdspan extent to a Kokkos extent, inserting 0s for static
@@ -150,15 +116,6 @@ KOKKOS_INLINE_FUNCTION auto mapping_from_view_mapping(const VM &view_mapping) {
   }
 }
 
-template <class ElementType, class Extents, class LayoutPolicy,
-          class AccessorPolicy>
-KOKKOS_INLINE_FUNCTION auto view_offset_from_mdspan(
-    const mdspan<ElementType, Extents, LayoutPolicy, AccessorPolicy> &mds) {
-  using offset_type =
-      typename ViewOffsetFromExtents<ElementType, Extents, LayoutPolicy>::type;
-  static constexpr auto padding = ArrayLayoutFromLayout<LayoutPolicy>::padding;
-  return offset_type(padding, array_layout_from_mdspan(mds));
-};
 }  // namespace Kokkos::Impl
 
 #endif  // KOKKOS_EXPERIMENTAL_MDSPAN_LAYOUT_HPP
