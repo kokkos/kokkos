@@ -194,7 +194,7 @@ class SYCLTeamMember {
       reducer.join(value, reduction_array[i]);
 
     reducer.reference() = value;
-    // Make sure that the reduction array hasn't been modified in the meantime.
+    // Make sure that every thread is done using the reduction array.
     sycl::group_barrier(m_item.get_group());
   }
 
