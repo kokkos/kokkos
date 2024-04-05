@@ -62,7 +62,9 @@ struct TestViewMDSpanConversion {
     using mdspan_type =
         Kokkos::mdspan<value_type, extents_type, mdspan_layout_type>;
 
-    static_assert(std::is_convertible_v<mdspan_type, natural_mdspan_type>);
+    static_assert(std::is_constructible_v<natural_mdspan_type, mdspan_type>);
+    static_assert(std::is_convertible_v<mdspan_type, natural_mdspan_type> ==
+                  std::is_convertible_v<mdspan_type, view_type>);
 
     // Manually create an mdspan from ref so we have a valid pointer to play
     // with
@@ -86,10 +88,31 @@ struct TestViewMDSpanConversion {
     using view_type           = ViewType;
     using natural_mdspan_type = typename Kokkos::Impl::MDSpanViewTraits<
         typename view_type::traits>::mdspan_type;
+    // test conversion operator to natural mdspan
+    {
+      natural_mdspan_type cvt = v;
+      ASSERT_EQ(cvt.data_handle(), v.data());
+      ASSERT_EQ(cvt.mapping(), ref_layout_mapping);
+    }
+    // test to_mdspan() returning natural mdspan
+    {
+      auto cvt = v.to_mdspan();
+      static_assert(std::is_same_v<natural_mdspan_type, decltype(cvt)>);
+      ASSERT_EQ(cvt.data_handle(), v.data());
+      ASSERT_EQ(cvt.mapping(), ref_layout_mapping);
+    }
+    // test conversion operator to different mdspan type
+    {
+      using mdspan_type = Kokkos::mdspan<
+        const typename natural_mdspan_type::element_type,
+        Kokkos::dextents<typename natural_mdspan_type::index_type, natural_mdspan_type::rank()>,
+        typename natural_mdspan_type::layout_type,
+        typename natural_mdspan_type::accessor_type>;
+      mdspan_type cvt = v;
+      ASSERT_EQ(cvt.data_handle(), v.data());
+      ASSERT_EQ(cvt.mapping(), ref_layout_mapping);
+    }
 
-    natural_mdspan_type cvt = v;
-    ASSERT_EQ(cvt.data_handle(), v.data());
-    ASSERT_EQ(cvt.mapping(), ref_layout_mapping);
   }
 
   template <class MDSpanLayoutMapping, class ViewType, class AccessorType>
