@@ -1758,10 +1758,30 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
     const Impl::TeamThreadRangeBoundariesStruct<iType, Impl::HPXTeamMember>
         &loop_boundaries,
     const Lambda &lambda, ValueType &result) {
-  result = ValueType();
-  for (iType i = loop_boundaries.start; i < loop_boundaries.end;
-       i += loop_boundaries.increment) {
-    lambda(i, result);
+  using functor_analysis_type = typename Impl::FunctorAnalysis<
+      Impl::FunctorPatternInterface::REDUCE,
+      TeamPolicy<typename Impl::HPXTeamMember::execution_space>, Lambda,
+      ValueType>;
+
+  constexpr bool is_reducer_lambda =
+      functor_analysis_type::has_join_member_function &&
+      functor_analysis_type::has_init_member_function;
+
+  auto run_lambda = [&](ValueType &value) {
+    for (iType i = loop_boundaries.start; i < loop_boundaries.end;
+         i += loop_boundaries.increment) {
+      lambda(i, value);
+    }
+  };
+
+  if constexpr (is_reducer_lambda) {
+    ValueType val;
+    lambda.init(val);
+    run_lambda(val);
+    result = val;
+  } else {
+    result = ValueType();
+    run_lambda(result);
   }
 }
 
@@ -1796,13 +1816,35 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
     const Impl::ThreadVectorRangeBoundariesStruct<iType, Impl::HPXTeamMember>
         &loop_boundaries,
     const Lambda &lambda, ValueType &result) {
-  result = ValueType();
+  using functor_analysis_type = typename Impl::FunctorAnalysis<
+      Impl::FunctorPatternInterface::REDUCE,
+      TeamPolicy<typename Impl::HPXTeamMember::execution_space>, Lambda,
+      ValueType>;
+
+  constexpr bool is_reducer_lambda =
+      functor_analysis_type::has_join_member_function &&
+      functor_analysis_type::has_init_member_function;
+
+  if constexpr (is_reducer_lambda) {
+    ValueType val;
+    lambda.init(val);
 #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
 #pragma ivdep
 #endif
-  for (iType i = loop_boundaries.start; i < loop_boundaries.end;
-       i += loop_boundaries.increment) {
-    lambda(i, result);
+    for (iType i = loop_boundaries.start; i < loop_boundaries.end;
+         i += loop_boundaries.increment) {
+      lambda(i, val);
+    }
+    result = val;
+  } else {
+    result = ValueType();
+#ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
+#pragma ivdep
+#endif
+    for (iType i = loop_boundaries.start; i < loop_boundaries.end;
+         i += loop_boundaries.increment) {
+      lambda(i, result);
+    }
   }
 }
 
