@@ -104,15 +104,15 @@ struct TestViewMDSpanConversion {
     // test conversion operator to different mdspan type
     {
       using mdspan_type = Kokkos::mdspan<
-        const typename natural_mdspan_type::element_type,
-        Kokkos::dextents<typename natural_mdspan_type::index_type, natural_mdspan_type::rank()>,
-        typename natural_mdspan_type::layout_type,
-        typename natural_mdspan_type::accessor_type>;
+          const typename natural_mdspan_type::element_type,
+          Kokkos::dextents<typename natural_mdspan_type::index_type,
+                           natural_mdspan_type::rank()>,
+          typename natural_mdspan_type::layout_type,
+          typename natural_mdspan_type::accessor_type>;
       mdspan_type cvt = v;
       ASSERT_EQ(cvt.data_handle(), v.data());
       ASSERT_EQ(cvt.mapping(), ref_layout_mapping);
     }
-
   }
 
   template <class MDSpanLayoutMapping, class ViewType, class AccessorType>
