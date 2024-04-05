@@ -1,0 +1,51 @@
+name: "CodeQL"
+
+on:
+  push:
+    branches: [ "master", "develop", "release-*" ]
+  pull_request:
+    branches: [ "develop" ]
+
+permissions: read-all
+
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    permissions:
+      # required for all workflows
+      security-events: write
+
+      # only required for workflows in private repositories
+      actions: read
+      contents: read
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    # Initializes the CodeQL tools for scanning.
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: c-cpp
+
+    - name: configure
+      run:
+        cmake -B build .
+          -DKokkos_ENABLE_OPENMP=ON
+          -DCMAKE_CXX_STANDARD=17
+          -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF
+          -DKokkos_ENABLE_TESTS=ON
+          -DKokkos_ENABLE_EXAMPLES=ON
+          -DKokkos_ENABLE_BENCHMARKS=ON
+          -DCMAKE_BUILD_TYPE=Debug
+    - name: build
+      run:
+        cmake --build build --parallel 2
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+      with:
+        category: "/language:c-cpp"

@@ -13,6 +13,8 @@ concurrency:
   group: ${ {github.event_name }}-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{github.event_name == 'pull_request'}}
 
+permissions: read-all
+
 jobs:
   CI:
     continue-on-error: true
@@ -25,31 +27,39 @@ jobs:
         backend: ['OPENMP']
         clang-tidy: ['']
         include:
-          - distro: 'fedora:intel'
+          - distro: 'ubuntu:intel'
             cxx: 'icpc'
             cxx_extra_flags: '-diag-disable=177,10441'
             cmake_build_type: 'Release'
             backend: 'OPENMP'
-          - distro: 'fedora:intel'
+          - distro: 'ubuntu:intel'
             cxx: 'icpc'
             cxx_extra_flags: '-diag-disable=177,10441'
             cmake_build_type: 'Debug'
             backend: 'OPENMP'
-          - distro: 'fedora:intel'
+          - distro: 'ubuntu:intel'
             cxx: 'icpx'
             cxx_extra_flags: '-fp-model=precise -Wno-pass-failed'
             cmake_build_type: 'Release'
             backend: 'OPENMP'
-          - distro: 'fedora:intel'
+          - distro: 'ubuntu:intel'
             cxx: 'icpx'
             cxx_extra_flags: '-fp-model=precise -Wno-pass-failed'
             cmake_build_type: 'Debug'
             backend: 'OPENMP'
           - distro: 'ubuntu:latest'
             cxx: 'clang++'
+            cxx_extra_flags: '-fsanitize=address'
+            extra_linker_flags: '-fsanitize=address'
             cmake_build_type: 'RelWithDebInfo'
             backend: 'THREADS'
             clang-tidy: '-DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*"'
+          - distro: 'ubuntu:latest'
+            cxx: 'clang++'
+            cxx_extra_flags: '-fsanitize=address'
+            extra_linker_flags: '-fsanitize=address'
+            cmake_build_type: 'RelWithDebInfo'
+            backend: 'SERIAL'
           - distro: 'ubuntu:latest'
             cxx: 'g++'
             cmake_build_type: 'RelWithDebInfo'
@@ -59,7 +69,7 @@ jobs:
       image: ghcr.io/kokkos/ci-containers/${{ matrix.distro }}
     steps:
       - name: Checkout desul
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: desul/desul
           ref: 477da9c8f40f8db369c28dd3f93a67e376d8511b
@@ -74,8 +84,8 @@ jobs:
           cmake -DDESUL_ENABLE_TESTS=OFF -DCMAKE_INSTALL_PREFIX=/usr/desul-install ..
           sudo cmake --build . --target install --parallel 2
       - name: Checkout code
-        uses: actions/checkout@v3
-      - uses: actions/cache@v3
+        uses: actions/checkout@v4
+      - uses: actions/cache@v4
         with:
           path: ~/.cache/ccache
           key: kokkos-${{ matrix.distro }}-${{ matrix.cxx }}-${{ matrix.cmake_build_type }}-${{ matrix.openmp }}-${{ github.ref }}-${{ github.sha }}
@@ -106,6 +116,7 @@ jobs:
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
             -DKokkos_ENABLE_IMPL_MDSPAN=ON \
             -DCMAKE_CXX_FLAGS="-Werror ${{ matrix.cxx_extra_flags }}" \
+            -DCMAKE_EXE_LINKER_FLAGS="${{ matrix.extra_linker_flags }}" \
             -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
             -DCMAKE_BUILD_TYPE=${{ matrix.cmake_build_type }}
@@ -118,6 +129,7 @@ jobs:
         working-directory: builddir
         run: ctest --output-on-failure
       - name: Test linking against build dir
+        if: ${{ matrix.cxx_extra_flags != '-fsanitize=address' }}
         working-directory: example/build_cmake_installed
         run: |
           cmake -B builddir_buildtree -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} -DKokkos_ROOT=../../builddir
@@ -128,6 +140,7 @@ jobs:
       - name: Install
         run: sudo cmake --build builddir --target install
       - name: Test install
+        if: ${{ matrix.cxx_extra_flags != '-fsanitize=address' }}
         working-directory: example/build_cmake_installed
         run: |
           cmake -B builddir -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}

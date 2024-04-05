@@ -13,6 +13,8 @@ concurrency:
   group: ${ {github.event_name }}-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{github.event_name == 'pull_request'}}
 
+permissions: read-all
+
 jobs:
   osxci:
     name: osx-ci
@@ -31,7 +33,7 @@ jobs:
             cmake_build_type: "Release"
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: configure
         run:
           cmake -B build .
