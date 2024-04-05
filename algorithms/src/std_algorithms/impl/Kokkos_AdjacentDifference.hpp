@@ -21,7 +21,6 @@
 #include "Kokkos_Constraints.hpp"
 #include "Kokkos_HelperPredicates.hpp"
 #include <std_algorithms/Kokkos_Distance.hpp>
-#include <std_algorithms/Kokkos_FindFirstOf.hpp>
 #include <string>
 
 namespace Kokkos {
@@ -86,12 +85,8 @@ OutputIteratorType adjacent_difference_exespace_impl(
   // ranges shall not overlap
   const auto num_elements =
       Kokkos::Experimental::distance(first_from, last_from);
-#if !defined(NDEBUG) || defined(KOKKOS_ENFORCE_CONTRACTS) || \
-    defined(KOKKOS_ENABLE_DEBUG)
   auto last_dest = first_dest + num_elements;
-  auto found_first = Kokkos::Experimental::find_first_of(ex, first_from, last_from, first_dest, last_dest);
-  KOKKOS_EXPECTS(found_first == last_from);
-#endif
+  Impl::expect_no_overlap(first_from, last_from, first_dest, last_dest);
 
   // run
   ::Kokkos::parallel_for(
@@ -127,11 +122,7 @@ KOKKOS_FUNCTION OutputIteratorType adjacent_difference_team_impl(
   const auto num_elements =
       Kokkos::Experimental::distance(first_from, last_from);
   auto last_dest = first_dest + num_elements;
-#if !defined(NDEBUG) || defined(KOKKOS_ENFORCE_CONTRACTS) || \
-    defined(KOKKOS_ENABLE_DEBUG)
-  auto found_first = Kokkos::Experimental::find_first_of(teamHandle, first_from, last_from, first_dest, last_dest);
-  KOKKOS_EXPECTS(found_first == last_from);
-#endif
+  Impl::expect_no_overlap(first_from, last_from, first_dest, last_dest);
 
   // run
   ::Kokkos::parallel_for(
