@@ -1754,7 +1754,7 @@ class View : public ViewTraits<DataType, Properties...> {
   // MDSpan converting constructors
 #ifdef KOKKOS_ENABLE_IMPL_MDSPAN
   template <typename U = typename Impl::MDSpanViewTraits<traits>::mdspan_type>
-  KOKKOS_INLINE_FUNCTION MDSPAN_CONDITIONAL_EXPLICIT(traits::is_managed) View(
+  KOKKOS_INLINE_FUNCTION KOKKOS_IMPL_CONDITIONAL_EXPLICIT(traits::is_managed) View(
       const typename Impl::MDSpanViewTraits<traits>::mdspan_type& mds,
       std::enable_if_t<
           !std::is_same_v<Impl::UnsupportedKokkosArrayLayout, U>>* = nullptr)

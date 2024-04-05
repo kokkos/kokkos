@@ -589,6 +589,12 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 
 #define KOKKOS_ATTRIBUTE_NODISCARD [[nodiscard]]
 
+#ifdef KOKKOS_ENABLE_CXX20
+#  define KOKKOS_IMPL_CONDITIONAL_EXPLICIT(COND) explicit(COND)
+#else
+#  define KOKKOS_IMPL_CONDITIONAL_EXPLICIT(COND)
+#endif
+
 #if (defined(KOKKOS_COMPILER_GNU) || defined(KOKKOS_COMPILER_CLANG) ||        \
      defined(KOKKOS_COMPILER_INTEL) || defined(KOKKOS_COMPILER_INTEL_LLVM) || \
      defined(KOKKOS_COMPILER_NVHPC)) &&                                       \
