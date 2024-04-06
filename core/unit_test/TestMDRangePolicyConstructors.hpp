@@ -150,30 +150,49 @@ TEST(TEST_CATEGORY, policy_get_tile_size) {
       Kokkos::Impl::get_tile_size_properties(TEST_EXECSPACE());
 
   {
-    Policy policy({0, 0, 0}, {100, 100, 100}, tile_type{{2, 4, 16}});
+    int dim_length = 100;
+    Policy policy({0, 0, 0}, {dim_length, dim_length, dim_length},
+                  tile_type{{2, 4, 16}});
 
-    auto rec_tile_size = policy.tile_size_recommended();
+    auto rec_tile_sizes         = policy.tile_size_recommended();
+    auto rec_largest_tile_sizes = policy.largest_tile_size_recommended();
 
     EXPECT_EQ(default_size_properties.max_total_tile_size,
-              policy.tile_size_max_total());
+              policy.max_total_tile_size());
 
+    int prod_rec_tile_size = 1;
     for (std::size_t i = 0; i < rank; ++i) {
+      EXPECT_GT(rec_tile_sizes[i], 0)
+          << " invalid default tile size for rank " << i;
+      EXPECT_LE(rec_tile_sizes[i], rec_largest_tile_sizes[i])
+          << " invalid default tile size for rank " << i;
+
       if (default_size_properties.default_largest_tile_size == 0) {
-        EXPECT_EQ(100, policy.tile_size_max_recommended_per_rank(i));
+        EXPECT_EQ(dim_length, rec_largest_tile_sizes[i])
+            << " incorrect recommended largest tile size returned for rank "
+            << i;
 
         auto expected_rec_tile_size =
-            (i == last_rank) ? 100 : default_size_properties.default_tile_size;
-        EXPECT_EQ(expected_rec_tile_size, rec_tile_size[i]);
+            (i == last_rank) ? dim_length
+                             : default_size_properties.default_tile_size;
+        EXPECT_EQ(expected_rec_tile_size, rec_tile_sizes[i])
+            << " incorrect recommended tile size returned for rank " << i;
       } else {
         EXPECT_EQ(default_size_properties.default_largest_tile_size,
-                  policy.tile_size_max_recommended_per_rank(i));
+                  rec_largest_tile_sizes[i])
+            << " incorrect recommended largest tile size returned for rank "
+            << i;
 
         auto expected_rec_tile_size =
             (i == last_rank) ? default_size_properties.default_largest_tile_size
                              : default_size_properties.default_tile_size;
-        EXPECT_EQ(expected_rec_tile_size, rec_tile_size[i]);
+        EXPECT_EQ(expected_rec_tile_size, rec_tile_sizes[i])
+            << " incorrect recommended tile size returned for rank " << i;
       }
+
+      prod_rec_tile_size *= rec_tile_sizes[i];
     }
+    EXPECT_LT(prod_rec_tile_size, policy.max_total_tile_size());
   }
 }
 

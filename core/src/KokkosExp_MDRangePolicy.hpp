@@ -315,26 +315,42 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
   bool impl_tune_tile_size() const { return m_tune_tile_size; }
 
   tile_type tile_size_recommended() const {
-    auto properties             = Impl::get_tile_size_properties(m_space);
-    tile_type default_tile_size = {};
+    tile_type rec_tile_sizes = {};
 
-    for (std::size_t i = 0; i < default_tile_size.size(); ++i) {
-      default_tile_size[i] = properties.default_tile_size;
+    for (std::size_t i = 0; i < rec_tile_sizes.size(); ++i) {
+      rec_tile_sizes[i] = tile_size_recommended(i);
     }
-
-    int last_rank = (inner_direction == Iterate::Right) ? rank - 1 : 0;
-    default_tile_size[last_rank] = tile_size_last_rank(
-        properties, m_upper[last_rank] - m_lower[last_rank]);
-    return default_tile_size;
+    return rec_tile_sizes;
   }
 
-  int tile_size_max_recommended_per_rank(const int tile_rank) const {
+  int tile_size_recommended(const int tile_rank) const {
+    auto properties   = Impl::get_tile_size_properties(m_space);
+    int last_rank     = (inner_direction == Iterate::Right) ? rank - 1 : 0;
+    int rec_tile_size = properties.default_tile_size;
+
+    if (tile_rank == last_rank) {
+      rec_tile_size = tile_size_last_rank(
+          properties, m_upper[last_rank] - m_lower[last_rank]);
+    }
+    return rec_tile_size;
+  }
+
+  tile_type largest_tile_size_recommended() const {
+    tile_type rec_largest_tile_sizes = {};
+
+    for (std::size_t i = 0; i < rec_largest_tile_sizes.size(); ++i) {
+      rec_largest_tile_sizes[i] = largest_tile_size_recommended(i);
+    }
+    return rec_largest_tile_sizes;
+  }
+
+  int largest_tile_size_recommended(const int tile_rank) const {
     auto properties = Impl::get_tile_size_properties(m_space);
     return tile_size_last_rank(properties,
                                m_upper[tile_rank] - m_lower[tile_rank]);
   }
 
-  int tile_size_max_total() const {
+  int max_total_tile_size() const {
     return Impl::get_tile_size_properties(m_space).max_total_tile_size;
   }
 
