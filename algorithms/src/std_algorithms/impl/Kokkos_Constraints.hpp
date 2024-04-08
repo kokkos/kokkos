@@ -259,6 +259,11 @@ KOKKOS_INLINE_FUNCTION void expect_no_overlap(
                      is_no_overlap);
     }
   }
+  // avoid compiler complaining when KOKKOS_EXPECTS is no-op
+  (void)first;
+  (void)last;
+  (void)s_first;
+  (void)s_last;
 }
 
 }  // namespace Impl
