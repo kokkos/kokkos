@@ -225,10 +225,10 @@ KOKKOS_INLINE_FUNCTION void expect_no_overlap(IteratorType1 first,
                                               IteratorType2 s_last) {
   if constexpr (std::is_constructible_v<IteratorType2, IteratorType1>) {
     IteratorType1 s_first1(s_first), s_last1(s_last);
-    KOKKOS_EXPECTS(first < s_first1 && s_last1 < last);
+    KOKKOS_EXPECTS(first > s_last1 || last < s_last1);
   } else if constexpr (std::is_constructible_v<IteratorType1, IteratorType2>) {
     IteratorType2 first2(first), last2(last);
-    KOKKOS_EXPECTS(first2 < s_first && s_last < last2);
+    KOKKOS_EXPECTS(first2 > s_last || last2 < s_last);
   }
 }
 
