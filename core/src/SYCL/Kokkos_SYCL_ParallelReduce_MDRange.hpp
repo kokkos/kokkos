@@ -32,9 +32,11 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
                                    Kokkos::MDRangePolicy<Traits...>,
                                    Kokkos::Experimental::SYCL> {
  public:
-  using Policy      = Kokkos::MDRangePolicy<Traits...>;
-  using FunctorType = typename CombinedFunctorReducerType::functor_type;
-  using ReducerType = typename CombinedFunctorReducerType::reducer_type;
+  using Policy       = Kokkos::MDRangePolicy<Traits...>;
+  using FunctorType  = typename CombinedFunctorReducerType::functor_type;
+  using ReducerType  = typename CombinedFunctorReducerType::reducer_type;
+  using functor_type = FunctorType;
+  using reducer_type = ReducerType;
 
  private:
   using value_type     = typename ReducerType::value_type;
@@ -106,7 +108,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
     // If n_tiles==0 we only call init() and final() working with the global
     // scratch memory but don't copy back to m_result_ptr yet.
     if (n_tiles == 0) {
-      auto parallel_reduce_event = q.submit([&](sycl::handler& cgh) {
+      auto cgh_lambda = [&](sycl::handler& cgh) {
 #ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
         cgh.depends_on(memcpy_event);
 #else
@@ -127,12 +129,26 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
           if (device_accessible_result_ptr)
             reducer.copy(device_accessible_result_ptr.get(), results_ptr.get());
         });
-      });
+      };
+
+      if constexpr (Policy::is_graph_kernel::value) {
+        sycl::ext::oneapi::experimental::command_graph<
+            sycl::ext::oneapi::experimental::graph_state::modifiable>& graph =
+            Impl::get_sycl_graph_from_kernel(*this);
+        std::optional<sycl::ext::oneapi::experimental::node>& graph_node =
+            Impl::get_sycl_graph_node_from_kernel(*this);
+        KOKKOS_ENSURES(!graph_node);
+        graph_node = graph.add(cgh_lambda);
+        KOKKOS_ENSURES(graph_node);
+        //   KOKKOS_ENSURES(graph_node.get_type() ==
+        //   sycl::ext::oneapi::experimental::node_type::kernel)
+      } else {
+        last_reduction_event = q.submit(cgh_lambda);
 #ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
-      q.ext_oneapi_submit_barrier(
-          std::vector<sycl::event>{parallel_reduce_event});
+        q.ext_oneapi_submit_barrier(
+            std::vector<sycl::event>{last_reduction_event});
 #endif
-      last_reduction_event = parallel_reduce_event;
+      }
     } else {
       // Otherwise (when n_tiles is not zero), we perform a reduction on the
       // values in all workgroups separately, write the workgroup results back
@@ -162,7 +178,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
       auto scratch_flags = static_cast<sycl::device_ptr<unsigned int>>(
           instance.scratch_flags(sizeof(unsigned int)));
 
-      auto parallel_reduce_event = q.submit([&](sycl::handler& cgh) {
+      auto cgh_lambda = [&](sycl::handler& cgh) {
         sycl::local_accessor<value_type> local_mem(
             sycl::range<1>(wgroup_size) * value_count, cgh);
         sycl::local_accessor<unsigned int> num_teams_done(1, cgh);
@@ -296,12 +312,25 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
                 }
               }
             });
-      });
+      };
+      if constexpr (Policy::is_graph_kernel::value) {
+        sycl::ext::oneapi::experimental::command_graph<
+            sycl::ext::oneapi::experimental::graph_state::modifiable>& graph =
+            Impl::get_sycl_graph_from_kernel(*this);
+        std::optional<sycl::ext::oneapi::experimental::node>& graph_node =
+            Impl::get_sycl_graph_node_from_kernel(*this);
+        KOKKOS_ENSURES(!graph_node);
+        graph_node = graph.add(cgh_lambda);
+        KOKKOS_ENSURES(graph_node);
+        //   KOKKOS_ENSURES(graph_node.get_type() ==
+        //   sycl::ext::oneapi::experimental::node_type::kernel)
+      } else {
+        last_reduction_event = q.submit(cgh_lambda);
 #ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
-      q.ext_oneapi_submit_barrier(
-          std::vector<sycl::event>{parallel_reduce_event});
+        q.ext_oneapi_submit_barrier(
+            std::vector<sycl::event>{last_reduction_event});
 #endif
-      last_reduction_event = parallel_reduce_event;
+      }
     }
 
     // At this point, the reduced value is written to the entry in results_ptr
