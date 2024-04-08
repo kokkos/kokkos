@@ -31,8 +31,10 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
                                    Kokkos::Experimental::SYCL> {
  public:
   using Policy = TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>;
-  using FunctorType = typename CombinedFunctorReducerType::functor_type;
-  using ReducerType = typename CombinedFunctorReducerType::reducer_type;
+  using FunctorType  = typename CombinedFunctorReducerType::functor_type;
+  using ReducerType  = typename CombinedFunctorReducerType::reducer_type;
+  using functer_type = FunctorType;
+  using reducer_type = ReducerType;
 
  private:
   using member_type   = typename Policy::member_type;
@@ -102,7 +104,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
               ? static_cast<sycl::global_ptr<value_type>>(m_result_ptr)
               : static_cast<sycl::global_ptr<value_type>>(host_result_ptr);
 
-      auto parallel_reduce_event = q.submit([&](sycl::handler& cgh) {
+      auto cgh_lambda = [&](sycl::handler& cgh) {
         // FIXME_SYCL accessors seem to need a size greater than zero at least
         // for host queues
         sycl::local_accessor<char, 1> team_scratch_memory_L0(
@@ -144,18 +146,32 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
               if (device_accessible_result_ptr)
                 reducer.copy(device_accessible_result_ptr, &results_ptr[0]);
             });
-      });
+      };
+      if constexpr (Policy::is_graph_kernel::value) {
+        sycl::ext::oneapi::experimental::command_graph<
+            sycl::ext::oneapi::experimental::graph_state::modifiable>& graph =
+            Impl::get_sycl_graph_from_kernel(*this);
+        std::optional<sycl::ext::oneapi::experimental::node>& graph_node =
+            Impl::get_sycl_graph_node_from_kernel(*this);
+        KOKKOS_ENSURES(!graph_node);
+        graph_node = graph.add(cgh_lambda);
+        KOKKOS_ENSURES(graph_node);
+        // FIXME_SYCL_GRAPH not yet implemented in the compiler
+        //   KOKKOS_ENSURES(graph_node.get_type() ==
+        //   sycl::ext::oneapi::experimental::node_type::kernel)
+      } else {
+        last_reduction_event = q.submit(cgh_lambda);
 #ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
-      q.ext_oneapi_submit_barrier(
-          std::vector<sycl::event>{parallel_reduce_event});
+        q.ext_oneapi_submit_barrier(
+            std::vector<sycl::event>{last_reduction_event});
 #endif
-      last_reduction_event = parallel_reduce_event;
+      }
     } else {
       // Otherwise, (if the total range has more than one element) we perform a
       // reduction on the values in all workgroups separately, write the
       // workgroup results back to global memory and recurse until only one
       // workgroup does the reduction and thus gets the final value.
-      auto parallel_reduce_event = q.submit([&](sycl::handler& cgh) {
+      auto cgh_lambda = [&](sycl::handler& cgh) {
         auto scratch_flags = static_cast<sycl::device_ptr<unsigned int>>(
             instance.scratch_flags(sizeof(unsigned int)));
 
@@ -359,12 +375,26 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
                 sycl::range<2>(m_team_size, n_wgroups * m_vector_size),
                 sycl::range<2>(m_team_size, m_vector_size)),
             reduction_lambda);
-      });
+      };
+      if constexpr (Policy::is_graph_kernel::value) {
+        sycl::ext::oneapi::experimental::command_graph<
+            sycl::ext::oneapi::experimental::graph_state::modifiable>& graph =
+            Impl::get_sycl_graph_from_kernel(*this);
+        std::optional<sycl::ext::oneapi::experimental::node>& graph_node =
+            Impl::get_sycl_graph_node_from_kernel(*this);
+        KOKKOS_ENSURES(!graph_node);
+        graph_node = graph.add(cgh_lambda);
+        KOKKOS_ENSURES(graph_node);
+        // FIXME_SYCL_GRAPH not yet implemented in the compiler
+        //   KOKKOS_ENSURES(graph_node.get_type() ==
+        //   sycl::ext::oneapi::experimental::node_type::kernel)
+      } else {
+        last_reduction_event = q.submit(cgh_lambda);
 #ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
-      q.ext_oneapi_submit_barrier(
-          std::vector<sycl::event>{parallel_reduce_event});
+        q.ext_oneapi_submit_barrier(
+            std::vector<sycl::event>{last_reduction_event});
 #endif
-      last_reduction_event = parallel_reduce_event;
+      }
     }
 
     // At this point, the reduced value is written to the entry in results_ptr
@@ -372,6 +402,11 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
     // necessary.
     // Using DeepCopy instead of fence+memcpy turned out to be up to 2x slower.
     if (host_result_ptr) {
+      if constexpr (Policy::is_graph_kernel::value)
+        Kokkos::abort(
+            "parallel_reduce not implemented for graph kernels if result is "
+            "not device-accessible!");
+
       space.fence(
           "Kokkos::Impl::ParallelReduce<SYCL, TeamPolicy>::execute: result not "
           "device-accessible");

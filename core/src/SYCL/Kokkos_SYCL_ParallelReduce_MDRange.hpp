@@ -140,6 +140,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
         KOKKOS_ENSURES(!graph_node);
         graph_node = graph.add(cgh_lambda);
         KOKKOS_ENSURES(graph_node);
+        // FIXME_SYCL_GRAPH not yet implemented in the compiler
         //   KOKKOS_ENSURES(graph_node.get_type() ==
         //   sycl::ext::oneapi::experimental::node_type::kernel)
       } else {
@@ -322,6 +323,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
         KOKKOS_ENSURES(!graph_node);
         graph_node = graph.add(cgh_lambda);
         KOKKOS_ENSURES(graph_node);
+        // FIXME_SYCL_GRAPH not yet implemented in the compiler
         //   KOKKOS_ENSURES(graph_node.get_type() ==
         //   sycl::ext::oneapi::experimental::node_type::kernel)
       } else {
@@ -338,6 +340,11 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
     // necessary.
     // Using DeepCopy instead of fence+memcpy turned out to be up to 2x slower.
     if (host_result_ptr) {
+      if constexpr (Policy::is_graph_kernel::value)
+        Kokkos::abort(
+            "parallel_reduce not implemented for graph kernels if result is "
+            "not device-accessible!");
+
       m_space.fence(
           "Kokkos::Impl::ParallelReduce<SYCL, MDRangePolicy>::execute: result "
           "not device-accessible");

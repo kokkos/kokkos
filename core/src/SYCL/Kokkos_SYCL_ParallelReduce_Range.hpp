@@ -125,6 +125,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
         KOKKOS_ENSURES(!graph_node);
         graph_node = graph.add(cgh_lambda);
         KOKKOS_ENSURES(graph_node);
+        // FIXME_SYCL_GRAPH not yet implemented in the compiler
         //   KOKKOS_ENSURES(graph_node.get_type() ==
         //   sycl::ext::oneapi::experimental::node_type::kernel)
       } else {
@@ -345,6 +346,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
         KOKKOS_ENSURES(!graph_node);
         graph_node = graph.add(cgh_lambda);
         KOKKOS_ENSURES(graph_node);
+        // FIXME_SYCL_GRAPH not yet implemented in the compiler
         //   KOKKOS_ENSURES(graph_node.get_type() ==
         //   sycl::ext::oneapi::experimental::node_type::kernel)
       } else {
