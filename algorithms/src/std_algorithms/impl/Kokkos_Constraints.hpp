@@ -219,10 +219,10 @@ KOKKOS_INLINE_FUNCTION void expect_valid_range(IteratorType first,
 // Check if iterators are overlapping
 //
 template <typename IteratorType1, typename IteratorType2>
-KOKKOS_INLINE_FUNCTION void expect_no_overlap([[maybe_unused]] IteratorType1 first,
-                                              [[maybe_unused]] IteratorType1 last,
-                                              [[maybe_unused]] IteratorType2 s_first,
-                                              [[maybe_unused]] IteratorType2 s_last) {
+KOKKOS_INLINE_FUNCTION void expect_no_overlap(
+    [[maybe_unused]] IteratorType1 first, [[maybe_unused]] IteratorType1 last,
+    [[maybe_unused]] IteratorType2 s_first,
+    [[maybe_unused]] IteratorType2 s_last) {
   if constexpr (std::is_constructible_v<IteratorType2, IteratorType1>) {
     IteratorType1 s_first1(s_first), s_last1(s_last);
     KOKKOS_EXPECTS(first > s_last1 || last < s_first1);
