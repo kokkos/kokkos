@@ -230,6 +230,11 @@ KOKKOS_INLINE_FUNCTION void expect_no_overlap(IteratorType1 first,
     IteratorType2 first2(first), last2(last);
     KOKKOS_EXPECTS(first2 > s_last || last2 < s_last);
   }
+  // avoid compiler complaining when KOKKOS_EXPECTS is no-op
+  (void)first;
+  (void)last;
+  (void)s_first;
+  (void)s_last;
 }
 
 }  // namespace Impl
