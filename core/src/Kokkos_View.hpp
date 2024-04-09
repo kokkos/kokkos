@@ -1767,9 +1767,9 @@ class View : public ViewTraits<DataType, Properties...> {
   template <class ElementType, class ExtentsType, class LayoutType,
             class AccessorType>
   KOKKOS_INLINE_FUNCTION KOKKOS_IMPL_CONDITIONAL_EXPLICIT(
-      (!std::is_convertible_v<
+      !std::is_convertible_v<
           Kokkos::mdspan<ElementType, ExtentsType, LayoutType, AccessorType>,
-          typename Impl::MDSpanViewTraits<traits>::mdspan_type>))
+          typename Impl::MDSpanViewTraits<traits>::mdspan_type>)
       View(const Kokkos::mdspan<ElementType, ExtentsType, LayoutType,
                                 AccessorType>& mds)
       : View(typename Impl::MDSpanViewTraits<traits>::mdspan_type(mds)) {}
@@ -1791,8 +1791,7 @@ class View : public ViewTraits<DataType, Properties...> {
                 typename traits::value_type*&,
                 typename OtherAccessorType::data_handle_type>>>
   KOKKOS_INLINE_FUNCTION constexpr auto to_mdspan(
-      const OtherAccessorType& other_accessor =
-          Kokkos::default_accessor<typename traits::value_type>()) {
+      const OtherAccessorType& other_accessor = OtherAccessorType()) {
     using mdspan_type = typename Impl::MDSpanViewTraits<traits>::mdspan_type;
     using ret_mdspan_type =
         mdspan<typename mdspan_type::element_type,
