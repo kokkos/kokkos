@@ -30,7 +30,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
                                    Kokkos::TeamPolicy<Properties...>,
                                    Kokkos::Experimental::SYCL> {
  public:
-  using Policy = TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>;
+  using Policy       = Kokkos::TeamPolicy<Properties...>;
   using FunctorType  = typename CombinedFunctorReducerType::functor_type;
   using ReducerType  = typename CombinedFunctorReducerType::reducer_type;
   using functer_type = FunctorType;
@@ -72,11 +72,6 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
     Kokkos::Experimental::Impl::SYCLInternal& instance =
         *space.impl_internal_space_instance();
     sycl::queue& q = space.sycl_queue();
-
-    // Only let one instance at a time resize the instance's scratch memory
-    // allocations.
-    std::scoped_lock<std::mutex> scratch_buffers_lock(
-        instance.m_mutexScratchSpace);
 
     const unsigned int value_count =
         m_functor_reducer.get_reducer().value_count();
