@@ -123,7 +123,7 @@ class SYCLTeamMember {
   template <typename ReducerType, typename ValueType>
   KOKKOS_INLINE_FUNCTION void team_reduce(ReducerType const& reducer,
                                           ValueType& value) const noexcept {
-    using value_type = typename ValueType;
+    using value_type = ValueType;
 
     auto sg                       = m_item.get_sub_group();
     const auto sub_group_range    = sg.get_local_range()[0];
