@@ -35,10 +35,11 @@ void workgroup_scan(sycl::nd_item<dim> item, const FunctorType& final_reducer,
   auto sg               = item.get_sub_group();
   const int sg_group_id = sg.get_group_id()[0];
   const int id_in_sg    = sg.get_local_id()[0];
+  const int local_range = std::min<int>(sg.get_local_range()[0], global_range);
 
 #if defined(KOKKOS_ARCH_INTEL_GPU) || defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
   auto shuffle_combine = [&](int stride) {
-    if (stride < global_range) {
+    if (stride < local_range) {
       auto tmp = sg.shuffle_up(local_value, stride);
       if (id_in_sg >= stride) final_reducer.join(&local_value, &tmp);
     }
@@ -48,9 +49,9 @@ void workgroup_scan(sycl::nd_item<dim> item, const FunctorType& final_reducer,
   shuffle_combine(4);
   shuffle_combine(8);
   shuffle_combine(16);
-  KOKKOS_ASSERT(global_range <= 32);
+  KOKKOS_ASSERT(local_range <= 32);
 #else
-  for (int stride = 1; stride < global_range; stride <<= 1) {
+  for (int stride = 1; stride < local_range; stride <<= 1) {
     auto tmp = sg.shuffle_up(local_value, stride);
     if (id_in_sg >= stride) final_reducer.join(&local_value, &tmp);
   }
@@ -60,7 +61,6 @@ void workgroup_scan(sycl::nd_item<dim> item, const FunctorType& final_reducer,
   const int n_active_subgroups =
       (global_range + max_subgroup_size - 1) / max_subgroup_size;
 
-  const int local_range = sg.get_local_range()[0];
   if (id_in_sg == local_range - 1 && sg_group_id < n_active_subgroups)
     local_mem[sg_group_id] = local_value;
   local_value = sg.shuffle_up(local_value, 1);
