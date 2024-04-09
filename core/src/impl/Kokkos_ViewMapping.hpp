@@ -647,39 +647,56 @@ struct ViewOffset<
            m_dim.N5 * m_dim.N6;
   }
 
+  // Fill the target unbounded array s with the stride.
+  // This method differs from stride() in that it does not write the total
+  // length to the last index of the array. Preconditions: s must be an array of
+  // dimension_type::rank elements
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION void stride_fill(iType* const s) const {
-    s[0] = 1;
+  KOKKOS_INLINE_FUNCTION iType stride_fill(iType* const s) const {
+    iType n = 1;
     if constexpr (0 < dimension_type::rank) {
-      s[1] = m_dim.N0;
+      s[0] = n;
+      n *= m_dim.N0;
     }
     if constexpr (1 < dimension_type::rank) {
-      s[2] = s[1] * m_dim.N1;
+      s[1] = n;
+      n *= m_dim.N1;
     }
-    if constexpr (2 < dimension_type::rank) {
-      s[3] = s[2] * m_dim.N2;
+    if constexpr (1 < dimension_type::rank) {
+      s[2] = n;
+      n *= m_dim.N2;
     }
     if constexpr (3 < dimension_type::rank) {
-      s[4] = s[3] * m_dim.N3;
+      s[3] = n;
+      n *= m_dim.N3;
     }
     if constexpr (4 < dimension_type::rank) {
-      s[5] = s[4] * m_dim.N4;
+      s[4] = n;
+      n *= m_dim.N4;
     }
     if constexpr (5 < dimension_type::rank) {
-      s[6] = s[5] * m_dim.N5;
+      s[5] = n;
+      n *= m_dim.N5;
     }
     if constexpr (6 < dimension_type::rank) {
-      s[7] = s[6] * m_dim.N6;
+      s[6] = n;
+      n *= m_dim.N6;
     }
+    if constexpr (7 < dimension_type::rank) {
+      s[7] = n;
+      n *= m_dim.N7;
+    }
+    return n;
   }
 
-  // Stride with [ rank ] value is the total length
+  // Fill the target unbounded array s with the stride and the total spanned
+  // size. This method differs from stride_fill() in that it writes the total
+  // spanned size to the last index of the array. Preconditions: s must be an
+  // array of dimension_type::rank + 1 elements Stride with [ rank ] value is
+  // the total length
   template <typename iType>
   KOKKOS_INLINE_FUNCTION void stride(iType* const s) const {
-    stride_fill(s);
-    if constexpr (7 < dimension_type::rank) {
-      s[8] = s[7] * m_dim.N7;
-    }
+    s[dimension_type::rank] = stride_fill(s);
   }
 
   //----------------------------------------
@@ -940,39 +957,55 @@ struct ViewOffset<
            m_dim.N6;
   }
 
+  // Fill the target unbounded array s with the stride.
+  // This method differs from stride() in that it does not write the total
+  // length to the last index of the array. Preconditions: s must be an array of
+  // dimension_type::rank elements
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION void stride_fill(iType* const s) const {
-    s[0] = 1;
+  KOKKOS_INLINE_FUNCTION iType stride_fill(iType* const s) const {
+    iType n = 1;
     if constexpr (0 < dimension_type::rank) {
-      s[1] = m_stride;
+      s[0] = n;
+      n *= m_stride;
     }
     if constexpr (1 < dimension_type::rank) {
-      s[2] = s[1] * m_dim.N1;
+      s[1] = n;
+      n *= m_dim.N1;
     }
     if constexpr (2 < dimension_type::rank) {
-      s[3] = s[2] * m_dim.N2;
+      s[2] = n;
+      n *= m_dim.N2;
     }
     if constexpr (3 < dimension_type::rank) {
-      s[4] = s[3] * m_dim.N3;
+      s[3] = n;
+      n *= m_dim.N3;
     }
     if constexpr (4 < dimension_type::rank) {
-      s[5] = s[4] * m_dim.N4;
+      s[4] = n;
+      n *= m_dim.N4;
     }
     if constexpr (5 < dimension_type::rank) {
-      s[6] = s[5] * m_dim.N5;
+      s[5] = n;
+      n *= m_dim.N5;
     }
     if constexpr (6 < dimension_type::rank) {
-      s[7] = s[6] * m_dim.N6;
+      s[6] = n;
+      n *= m_dim.N6;
     }
+    if constexpr (7 < dimension_type::rank) {
+      s[7] = n;
+      n *= m_dim.N7;
+    }
+    return n;
   }
 
-  // Stride with [ rank ] value is the total length
+  // Fill the target unbounded array s with the stride and the total spanned
+  // size. This method differs from stride_fill() in that it writes the total
+  // spanned size to the last index of the array. Preconditions: s must be an
+  // array of dimension_type::rank + 1 elements
   template <typename iType>
   KOKKOS_INLINE_FUNCTION void stride(iType* const s) const {
-    stride_fill(s);
-    if constexpr (7 < dimension_type::rank) {
-      s[8] = s[7] * m_dim.N7;
-    }
+    s[dimension_type::rank] = stride_fill(s);
   }
 
   //----------------------------------------
@@ -1296,8 +1329,12 @@ struct ViewOffset<
            m_dim.N1;
   }
 
+  // Fill the target unbounded array s with the stride.
+  // This method differs from stride() in that it does not write the total
+  // length to the last index of the array. Preconditions: s must be an array of
+  // dimension_type::rank elements
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION void stride_fill(iType* const s) const {
+  KOKKOS_INLINE_FUNCTION iType stride_fill(iType* const s) const {
     size_type n = 1;
     if constexpr (7 < dimension_type::rank) {
       s[7] = n;
@@ -1330,45 +1367,16 @@ struct ViewOffset<
     if constexpr (0 < dimension_type::rank) {
       s[0] = n;
     }
-    s[dimension_type::rank] = n * m_dim.N0;
+    return n * m_dim.N0;
   }
 
-  // Stride with [ rank ] value is the total length
+  // Fill the target unbounded array s with the stride and the total spanned
+  // size. This method differs from stride_fill() in that it writes the total
+  // spanned size to the last index of the array. Preconditions: s must be an
+  // array of dimension_type::rank + 1 elements
   template <typename iType>
   KOKKOS_INLINE_FUNCTION void stride(iType* const s) const {
-    size_type n = 1;
-    if (7 < dimension_type::rank) {
-      s[7] = n;
-      n *= m_dim.N7;
-    }
-    if (6 < dimension_type::rank) {
-      s[6] = n;
-      n *= m_dim.N6;
-    }
-    if (5 < dimension_type::rank) {
-      s[5] = n;
-      n *= m_dim.N5;
-    }
-    if (4 < dimension_type::rank) {
-      s[4] = n;
-      n *= m_dim.N4;
-    }
-    if (3 < dimension_type::rank) {
-      s[3] = n;
-      n *= m_dim.N3;
-    }
-    if (2 < dimension_type::rank) {
-      s[2] = n;
-      n *= m_dim.N2;
-    }
-    if (1 < dimension_type::rank) {
-      s[1] = n;
-      n *= m_dim.N1;
-    }
-    if (0 < dimension_type::rank) {
-      s[0] = n;
-    }
-    s[dimension_type::rank] = n * m_dim.N0;
+    s[dimension_type::rank] = stride_fill(s);
   }
 
   //----------------------------------------
@@ -1620,8 +1628,12 @@ struct ViewOffset<
     return m_stride;
   }
 
+  // Fill the target unbounded array s with the stride.
+  // This method differs from stride() in that it does not write the total
+  // length to the last index of the array. Preconditions: s must be an array of
+  // dimension_type::rank elements
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION void stride_fill(iType* const s) const {
+  KOKKOS_INLINE_FUNCTION iType stride_fill(iType* const s) const {
     size_type n = 1;
     if constexpr (7 < dimension_type::rank) {
       s[7] = n;
@@ -1653,13 +1665,16 @@ struct ViewOffset<
     if constexpr (0 < dimension_type::rank) {
       s[0] = m_stride;
     }
+    return m_stride * m_dim.N0;
   }
 
-  // Stride with [ rank ] value is the total length
+  // Fill the target unbounded array s with the stride and the total spanned
+  // size. This method differs from stride_fill() in that it writes the total
+  // spanned size to the last index of the array. Preconditions: s must be an
+  // array of dimension_type::rank + 1 elements
   template <typename iType>
   KOKKOS_INLINE_FUNCTION void stride(iType* const s) const {
-    stride_fill(s);
-    s[dimension_type::rank] = m_stride * m_dim.N0;
+    s[dimension_type::rank] = stride_fill(s);
   }
 
   //----------------------------------------
@@ -2185,8 +2200,12 @@ struct ViewOffset<Dimension, Kokkos::LayoutStride, void> {
     return m_stride.S7;
   }
 
+  // Fill the target unbounded array s with the stride.
+  // This method differs from stride() in that it does not write the total
+  // length to the last index of the array. Preconditions: s must be an array of
+  // dimension_type::rank elements
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION void stride_fill(iType* const s) const {
+  KOKKOS_INLINE_FUNCTION iType stride_fill(iType* const s) const {
     if constexpr (0 < dimension_type::rank) {
       s[0] = m_stride.S0;
     }
@@ -2211,13 +2230,16 @@ struct ViewOffset<Dimension, Kokkos::LayoutStride, void> {
     if constexpr (7 < dimension_type::rank) {
       s[7] = m_stride.S7;
     }
+    return span();
   }
 
-  // Stride with [ rank ] value is the total length
+  // Fill the target unbounded array s with the stride and the total spanned
+  // size. This method differs from stride_fill() in that it writes the total
+  // spanned size to the last index of the array. Preconditions: s must be an
+  // array of dimension_type::rank + 1 elements
   template <typename iType>
   KOKKOS_INLINE_FUNCTION void stride(iType* const s) const {
-    stride_fill(s);
-    s[dimension_type::rank] = span();
+    s[dimension_type::rank] = stride_fill(s);
   }
 
   //----------------------------------------
@@ -2871,14 +2893,22 @@ class ViewMapping<
     return m_impl_offset.stride_7();
   }
 
+  // Fill the target unbounded array s with the stride and the total spanned
+  // size. This method differs from stride_fill() in that it writes the total
+  // spanned size to the last index of the array. Preconditions: s must be an
+  // array of dimension_type::rank + 1 elements
   template <typename iType>
   KOKKOS_INLINE_FUNCTION void stride(iType* const s) const {
     m_impl_offset.stride(s);
   }
 
+  // Fill the target unbounded array s with the stride.
+  // This method differs from stride() in that it does not write the total
+  // length to the last index of the array. Preconditions: s must be an array of
+  // dimension_type::rank elements
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION void stride_fill(iType* const s) const {
-    m_impl_offset.stride_fill(s);
+  KOKKOS_INLINE_FUNCTION iType stride_fill(iType* const s) const {
+    return m_impl_offset.stride_fill(s);
   }
 
   //----------------------------------------
