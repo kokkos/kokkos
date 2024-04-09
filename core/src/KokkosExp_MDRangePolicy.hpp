@@ -335,21 +335,6 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
     return rec_tile_size;
   }
 
-  tile_type largest_tile_size_recommended() const {
-    tile_type rec_largest_tile_sizes = {};
-
-    for (std::size_t i = 0; i < rec_largest_tile_sizes.size(); ++i) {
-      rec_largest_tile_sizes[i] = largest_tile_size_recommended(i);
-    }
-    return rec_largest_tile_sizes;
-  }
-
-  int largest_tile_size_recommended(const int tile_rank) const {
-    auto properties = Impl::get_tile_size_properties(m_space);
-    return tile_size_last_rank(properties,
-                               m_upper[tile_rank] - m_lower[tile_rank]);
-  }
-
   int max_total_tile_size() const {
     return Impl::get_tile_size_properties(m_space).max_total_tile_size;
   }
