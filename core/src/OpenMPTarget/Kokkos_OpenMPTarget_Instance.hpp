@@ -28,8 +28,8 @@ enum class openmp_fence_is_static { yes, no };
 class OpenMPTargetInternal {
  private:
   OpenMPTargetInternal()                            = default;
-  OpenMPTargetInternal(const OpenMPTargetInternal&) = default;
-  OpenMPTargetInternal& operator=(const OpenMPTargetInternal&) = default;
+  OpenMPTargetInternal(const OpenMPTargetInternal&) = delete;
+  OpenMPTargetInternal& operator=(const OpenMPTargetInternal&) = delete;
 
  public:
   void fence(openmp_fence_is_static is_static = openmp_fence_is_static::no);
@@ -54,6 +54,8 @@ class OpenMPTargetInternal {
   void impl_initialize();
 
   static OpenMPTargetInternal* impl_singleton();
+
+  Kokkos::Impl::OpenMPTargetExec m_ompt_exec;
 
  private:
   bool m_is_initialized  = false;

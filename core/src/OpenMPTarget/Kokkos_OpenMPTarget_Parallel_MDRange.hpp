@@ -457,7 +457,9 @@ class ParallelReduce<CombinedFunctorReducerType,
         m_result_ptr_on_device(
             MemorySpaceAccess<Kokkos::Experimental::OpenMPTargetSpace,
                               typename ViewType::memory_space>::accessible),
-        m_scratch_memory_lock(OpenMPTargetExec::m_mutex_scratch_ptr) {}
+        m_scratch_memory_lock(m_policy.space()
+                                  .impl_internal_space_instance()
+                                  ->m_ompt_exec.m_mutex_scratch_ptr) {}
 
   template <int Rank, class ValueType>
   inline std::enable_if_t<Rank == 2> execute_tile(const FunctorType& functor,
