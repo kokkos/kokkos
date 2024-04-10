@@ -207,10 +207,10 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
         SharedAlloc
         Swap
         )
+    IF (NOT Kokkos_ENABLE_IMPL_MDSPAN)
+      LIST(REMOVE_ITEM ${Tag}_TESTNAMES1B MDSpanConversion)
+    ENDIF()
     foreach(Name IN LISTS ${Tag}_TESTNAMES1B)
-      IF (NOT Kokkos_ENABLE_IMPL_MDSPAN)
-        LIST(REMOVE_ITEM ${Tag}_TESTNAMES2A MDSpanConversion)
-      ENDIF()
       set(file ${dir}/Test${Tag}_${Name}.cpp)
       # Write to a temporary intermediate file and call configure_file to avoid
       # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
