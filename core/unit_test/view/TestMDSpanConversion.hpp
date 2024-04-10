@@ -21,6 +21,8 @@
 
 #ifdef KOKKOS_ENABLE_IMPL_MDSPAN
 
+namespace Test {
+
 template <class T, class ExecutionSpace>
 struct TestViewMDSpanConversion {
   using value_type = T;
@@ -32,17 +34,17 @@ struct TestViewMDSpanConversion {
   using layout_right_padded =
       Kokkos::Experimental::layout_right_padded<Padding>;
 
-  struct test_accessor {
-    using offset_policy    = test_accessor;
+  struct TestAccessor {
+    using offset_policy    = TestAccessor;
     using element_type     = value_type;
     using reference        = element_type &;
     using data_handle_type = element_type *;
 
-    constexpr test_accessor() noexcept = default;
-    constexpr reference access(data_handle_type p, std::size_t i) {
+    constexpr TestAccessor() noexcept = default;
+    constexpr reference access(data_handle_type p, std::size_t i) noexcept {
       return p[i];
     }
-    constexpr data_handle_type offset(data_handle_type p, std::size_t i) {
+    constexpr data_handle_type offset(data_handle_type p, std::size_t i) noexcept {
       return p + i;
     }
   };
@@ -52,10 +54,10 @@ struct TestViewMDSpanConversion {
   static void test_conversion_from_mdspan(
       Kokkos::View<DataType, RefViewProps...> ref,
       const MDSpanLayoutMapping &mapping) {
-    using view_type = Kokkos::View<DataType, KokkosLayout, ExecutionSpace,
+    using unmanaged_view_view_type = Kokkos::View<DataType, KokkosLayout, ExecutionSpace,
                                    Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
     using natural_mdspan_type = typename Kokkos::Impl::MDSpanViewTraits<
-        typename view_type::traits>::mdspan_type;
+        typename unmanaged_view_view_type::traits>::mdspan_type;
     using mapping_type       = MDSpanLayoutMapping;
     using mdspan_layout_type = typename MDSpanLayoutMapping::layout_type;
     using extents_type       = typename mapping_type::extents_type;
@@ -64,14 +66,14 @@ struct TestViewMDSpanConversion {
 
     static_assert(std::is_constructible_v<natural_mdspan_type, mdspan_type>);
     static_assert(std::is_convertible_v<mdspan_type, natural_mdspan_type> ==
-                  std::is_convertible_v<mdspan_type, view_type>);
+                  std::is_convertible_v<mdspan_type, unmanaged_view_view_type>);
 
     // Manually create an mdspan from ref so we have a valid pointer to play
     // with
     const auto &exts = mapping.extents();
     auto mds         = mdspan_type{ref.data(), mapping};
 
-    auto test_view = view_type(mds);
+    auto test_view = unmanaged_view_view_type(mds);
 
     ASSERT_EQ(test_view.data(), ref.data());
     ASSERT_EQ(test_view.data(), mds.data_handle());
@@ -88,6 +90,9 @@ struct TestViewMDSpanConversion {
     using view_type           = ViewType;
     using natural_mdspan_type = typename Kokkos::Impl::MDSpanViewTraits<
         typename view_type::traits>::mdspan_type;
+
+    static_assert(natural_mdspan_type::rank() == view_type::rank);
+    static_assert(std::is_same_v<typename natural_mdspan_type::value_type, typename view_type::value_type>);
     // test conversion operator to natural mdspan
     {
       natural_mdspan_type cvt = v;
@@ -116,10 +121,13 @@ struct TestViewMDSpanConversion {
   }
 
   template <class MDSpanLayoutMapping, class ViewType, class AccessorType>
-  static void test_conversion_to_mdspan(
+  static void test_conversion_to_mdspan_with_accessor(
       const MDSpanLayoutMapping &ref_layout_mapping, ViewType v,
       const AccessorType &a) {
     auto cvt = v.to_mdspan(a);
+    static_assert(decltype(cvt)::rank() == ViewType::rank);
+    static_assert(std::is_same_v<typename decltype(cvt)::value_type,
+                                 typename ViewType::value_type>);
     ASSERT_EQ(cvt.data_handle(), v.data());
     ASSERT_EQ(cvt.mapping(), ref_layout_mapping);
   }
@@ -306,81 +314,85 @@ struct TestViewMDSpanConversion {
         Kokkos::View<value_type **, Kokkos::LayoutStride, ExecutionSpace>(
             "v", Kokkos::LayoutStride{4, 5, 7, 9}));
 
-    test_conversion_to_mdspan(
+    // Conversion with standard default_accessor
+
+    test_conversion_to_mdspan_with_accessor(
         layout_left_padded<Kokkos::dynamic_extent>::mapping<
             Kokkos::extents<std::size_t, 4>>({}, 4),
         Kokkos::View<value_type *, Kokkos::LayoutLeft, ExecutionSpace>("v", 4),
         Kokkos::default_accessor<value_type>{});
-    test_conversion_to_mdspan(
+    test_conversion_to_mdspan_with_accessor(
         layout_left_padded<Kokkos::dynamic_extent>::mapping<
             Kokkos::extents<std::size_t, 4, 7>>({}, 4),
         Kokkos::View<value_type **, Kokkos::LayoutLeft, ExecutionSpace>("v", 4,
                                                                         7),
         Kokkos::default_accessor<value_type>{});
 
-    test_conversion_to_mdspan(
+    test_conversion_to_mdspan_with_accessor(
         layout_right_padded<Kokkos::dynamic_extent>::mapping<
             Kokkos::extents<std::size_t, 4>>({}, 4),
         Kokkos::View<value_type *, Kokkos::LayoutRight, ExecutionSpace>("v", 4),
         Kokkos::default_accessor<value_type>{});
-    test_conversion_to_mdspan(
+    test_conversion_to_mdspan_with_accessor(
         layout_right_padded<Kokkos::dynamic_extent>::mapping<
             Kokkos::extents<std::size_t, 4, 7>>({}, 7),
         Kokkos::View<value_type **, Kokkos::LayoutRight, ExecutionSpace>("v", 4,
                                                                          7),
         Kokkos::default_accessor<value_type>{});
 
-    test_conversion_to_mdspan(
+    test_conversion_to_mdspan_with_accessor(
         Kokkos::layout_stride::mapping<Kokkos::extents<std::size_t, 4>>(
             {}, std::array<std::size_t, 1>{5}),
         Kokkos::View<value_type *, Kokkos::LayoutStride, ExecutionSpace>(
-            "v", Kokkos::LayoutStride{4, 5}));
-    test_conversion_to_mdspan(
+            "v", Kokkos::LayoutStride{4, 5}),
+        Kokkos::default_accessor<value_type>{});
+    test_conversion_to_mdspan_with_accessor(
         Kokkos::layout_stride::mapping<Kokkos::extents<std::size_t, 4, 7>>(
             {}, std::array<std::size_t, 2>{5, 9}),
         Kokkos::View<value_type **, Kokkos::LayoutStride, ExecutionSpace>(
             "v", Kokkos::LayoutStride{4, 5, 7, 9}),
         Kokkos::default_accessor<value_type>{});
 
-    test_conversion_to_mdspan(
+    // Conversion with a test accessor
+
+    test_conversion_to_mdspan_with_accessor(
         layout_left_padded<Kokkos::dynamic_extent>::mapping<
             Kokkos::extents<std::size_t, 4>>({}, 4),
         Kokkos::View<value_type *, Kokkos::LayoutLeft, ExecutionSpace>("v", 4),
-        test_accessor{});
-    test_conversion_to_mdspan(
+        TestAccessor{});
+    test_conversion_to_mdspan_with_accessor(
         layout_left_padded<Kokkos::dynamic_extent>::mapping<
             Kokkos::extents<std::size_t, 4, 7>>({}, 4),
         Kokkos::View<value_type **, Kokkos::LayoutLeft, ExecutionSpace>("v", 4,
                                                                         7),
-        test_accessor{});
+        TestAccessor{});
 
-    test_conversion_to_mdspan(
+    test_conversion_to_mdspan_with_accessor(
         layout_right_padded<Kokkos::dynamic_extent>::mapping<
             Kokkos::extents<std::size_t, 4>>({}, 4),
         Kokkos::View<value_type *, Kokkos::LayoutRight, ExecutionSpace>("v", 4),
-        test_accessor{});
-    test_conversion_to_mdspan(
+        TestAccessor{});
+    test_conversion_to_mdspan_with_accessor(
         layout_right_padded<Kokkos::dynamic_extent>::mapping<
             Kokkos::extents<std::size_t, 4, 7>>({}, 7),
         Kokkos::View<value_type **, Kokkos::LayoutRight, ExecutionSpace>("v", 4,
                                                                          7),
-        test_accessor{});
+        TestAccessor{});
 
-    test_conversion_to_mdspan(
+    test_conversion_to_mdspan_with_accessor(
         Kokkos::layout_stride::mapping<Kokkos::extents<std::size_t, 4>>(
             {}, std::array<std::size_t, 1>{5}),
         Kokkos::View<value_type *, Kokkos::LayoutStride, ExecutionSpace>(
-            "v", Kokkos::LayoutStride{4, 5}));
-    test_conversion_to_mdspan(
+            "v", Kokkos::LayoutStride{4, 5}),
+        TestAccessor{});
+    test_conversion_to_mdspan_with_accessor(
         Kokkos::layout_stride::mapping<Kokkos::extents<std::size_t, 4, 7>>(
             {}, std::array<std::size_t, 2>{5, 9}),
         Kokkos::View<value_type **, Kokkos::LayoutStride, ExecutionSpace>(
             "v", Kokkos::LayoutStride{4, 5, 7, 9}),
-        test_accessor{});
+        TestAccessor{});
   }
 };
-
-namespace Test {
 
 TEST(TEST_CATEGORY, view_mdspan_conversion) {
   TestViewMDSpanConversion<double, TEST_EXECSPACE>::run_test();
@@ -388,6 +400,6 @@ TEST(TEST_CATEGORY, view_mdspan_conversion) {
   TestViewMDSpanConversion<int, TEST_EXECSPACE>::run_test();
 }
 
-}  // namespace Test
+}
 
 #endif  // KOKKOS_ENABLE_IMPL_MDSPAN
