@@ -21,7 +21,7 @@
 
 #ifdef KOKKOS_ENABLE_IMPL_MDSPAN
 
-namespace Test {
+namespace {
 
 template <class T, class ExecutionSpace>
 struct TestViewMDSpanConversion {
@@ -44,7 +44,8 @@ struct TestViewMDSpanConversion {
     constexpr reference access(data_handle_type p, std::size_t i) noexcept {
       return p[i];
     }
-    constexpr data_handle_type offset(data_handle_type p, std::size_t i) noexcept {
+    constexpr data_handle_type offset(data_handle_type p,
+                                      std::size_t i) noexcept {
       return p + i;
     }
   };
@@ -54,8 +55,9 @@ struct TestViewMDSpanConversion {
   static void test_conversion_from_mdspan(
       Kokkos::View<DataType, RefViewProps...> ref,
       const MDSpanLayoutMapping &mapping) {
-    using unmanaged_view_view_type = Kokkos::View<DataType, KokkosLayout, ExecutionSpace,
-                                   Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+    using unmanaged_view_view_type =
+        Kokkos::View<DataType, KokkosLayout, ExecutionSpace,
+                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
     using natural_mdspan_type = typename Kokkos::Impl::MDSpanViewTraits<
         typename unmanaged_view_view_type::traits>::mdspan_type;
     using mapping_type       = MDSpanLayoutMapping;
@@ -92,7 +94,8 @@ struct TestViewMDSpanConversion {
         typename view_type::traits>::mdspan_type;
 
     static_assert(natural_mdspan_type::rank() == view_type::rank);
-    static_assert(std::is_same_v<typename natural_mdspan_type::value_type, typename view_type::value_type>);
+    static_assert(std::is_same_v<typename natural_mdspan_type::value_type,
+                                 typename view_type::value_type>);
     // test conversion operator to natural mdspan
     {
       natural_mdspan_type cvt = v;
@@ -400,6 +403,6 @@ TEST(TEST_CATEGORY, view_mdspan_conversion) {
   TestViewMDSpanConversion<int, TEST_EXECSPACE>::run_test();
 }
 
-}
+}  // namespace
 
 #endif  // KOKKOS_ENABLE_IMPL_MDSPAN
