@@ -19,8 +19,6 @@
 
 #include <Kokkos_Core.hpp>
 
-#ifdef KOKKOS_ENABLE_IMPL_MDSPAN
-
 namespace {
 
 template <class T, class ExecutionSpace>
@@ -404,5 +402,3 @@ TEST(TEST_CATEGORY, view_mdspan_conversion) {
 }
 
 }  // namespace
-
-#endif  // KOKKOS_ENABLE_IMPL_MDSPAN

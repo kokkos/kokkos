@@ -218,7 +218,8 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
     endforeach()
 
     SET(${Tag}_SOURCES2A)
-    foreach(Name
+    SET(${Tag}_TESTNAMES2A
+      MDSpanConversion
       TeamBasic
       TeamCombinedReducers
       TeamMDRange
@@ -251,28 +252,19 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
       ViewResize
       WorkGraph
       WithoutInitializing
-      )
+    )
+
+    IF (NOT Kokkos_ENABLE_IMPL_MDSPAN)
+      LIST(REMOVE_ITEM ${Tag}_TESTNAMES2A MDSpanConversion)
+    ENDIF()
+
+    foreach(Name IN LISTS ${Tag}_TESTNAMES2A)
       set(file ${dir}/Test${Tag}_${Name}.cpp)
       # Write to a temporary intermediate file and call configure_file to avoid
       # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
       file(WRITE ${dir}/dummy.cpp
           "#include <Test${Tag}_Category.hpp>\n"
           "#include <Test${Name}.hpp>\n"
-      )
-      configure_file(${dir}/dummy.cpp ${file})
-      list(APPEND ${Tag}_SOURCES2A ${file})
-    endforeach()
-
-    # View implementation tests
-    foreach(Name
-      MDSpanConversion
-      )
-      set(file ${dir}/view/Test${Tag}_${Name}.cpp)
-      # Write to a temporary intermediate file and call configure_file to avoid
-      # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
-      file(WRITE ${dir}/dummy.cpp
-          "#include <Test${Tag}_Category.hpp>\n"
-          "#include <view/Test${Name}.hpp>\n"
       )
       configure_file(${dir}/dummy.cpp ${file})
       list(APPEND ${Tag}_SOURCES2A ${file})
