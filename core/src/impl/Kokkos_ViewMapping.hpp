@@ -651,6 +651,8 @@ struct ViewOffset<
   // This method differs from stride() in that it does not write the total
   // length to the last index of the array. Preconditions: s must be an array of
   // dimension_type::rank elements
+  // The version of clang-format in CI fails from maybe_unused
+  // clang-format off
   template <typename iType>
   KOKKOS_INLINE_FUNCTION iType
   stride_fill([[maybe_unused]] iType* const s) const {
@@ -689,6 +691,7 @@ struct ViewOffset<
     }
     return n;
   }
+  // clang-format on
 
   // Fill the target unbounded array s with the stride and the total spanned
   // size. This method differs from stride_fill() in that it writes the total
@@ -962,6 +965,8 @@ struct ViewOffset<
   // This method differs from stride() in that it does not write the total
   // length to the last index of the array. Preconditions: s must be an array of
   // dimension_type::rank elements
+  // The version of clang-format in CI fails from maybe_unused
+  // clang-format off
   template <typename iType>
   KOKKOS_INLINE_FUNCTION iType
   stride_fill([[maybe_unused]] iType* const s) const {
@@ -1000,6 +1005,7 @@ struct ViewOffset<
     }
     return n;
   }
+  // clang-format on
 
   // Fill the target unbounded array s with the stride and the total spanned
   // size. This method differs from stride_fill() in that it writes the total
@@ -1335,6 +1341,8 @@ struct ViewOffset<
   // This method differs from stride() in that it does not write the total
   // length to the last index of the array. Preconditions: s must be an array of
   // dimension_type::rank elements
+  // The version of clang-format in CI fails from maybe_unused
+  // clang-format off
   template <typename iType>
   KOKKOS_INLINE_FUNCTION iType
   stride_fill([[maybe_unused]] iType* const s) const {
@@ -1372,6 +1380,7 @@ struct ViewOffset<
     }
     return n * m_dim.N0;
   }
+  // clang-format on
 
   // Fill the target unbounded array s with the stride and the total spanned
   // size. This method differs from stride_fill() in that it writes the total
@@ -1635,6 +1644,8 @@ struct ViewOffset<
   // This method differs from stride() in that it does not write the total
   // length to the last index of the array. Preconditions: s must be an array of
   // dimension_type::rank elements
+  // The version of clang-format in CI fails from maybe_unused
+  // clang-format off
   template <typename iType>
   KOKKOS_INLINE_FUNCTION iType
   stride_fill([[maybe_unused]] iType* const s) const {
@@ -1671,6 +1682,7 @@ struct ViewOffset<
     }
     return m_stride * m_dim.N0;
   }
+  // clang-format on
 
   // Fill the target unbounded array s with the stride and the total spanned
   // size. This method differs from stride_fill() in that it writes the total
@@ -2208,6 +2220,8 @@ struct ViewOffset<Dimension, Kokkos::LayoutStride, void> {
   // This method differs from stride() in that it does not write the total
   // length to the last index of the array. Preconditions: s must be an array of
   // dimension_type::rank elements
+  // The version of clang-format in CI fails from maybe_unused
+  // clang-format off
   template <typename iType>
   KOKKOS_INLINE_FUNCTION iType
   stride_fill([[maybe_unused]] iType* const s) const {
@@ -2237,6 +2251,7 @@ struct ViewOffset<Dimension, Kokkos::LayoutStride, void> {
     }
     return span();
   }
+  // clang-format on
 
   // Fill the target unbounded array s with the stride and the total spanned
   // size. This method differs from stride_fill() in that it writes the total
