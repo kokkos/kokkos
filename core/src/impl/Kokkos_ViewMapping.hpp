@@ -652,7 +652,8 @@ struct ViewOffset<
   // length to the last index of the array. Preconditions: s must be an array of
   // dimension_type::rank elements
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION iType stride_fill(iType* const s) const {
+  KOKKOS_INLINE_FUNCTION iType
+  stride_fill([[maybe_unused]] iType* const s) const {
     iType n = 1;
     if constexpr (0 < dimension_type::rank) {
       s[0] = n;
@@ -962,7 +963,8 @@ struct ViewOffset<
   // length to the last index of the array. Preconditions: s must be an array of
   // dimension_type::rank elements
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION iType stride_fill(iType* const s) const {
+  KOKKOS_INLINE_FUNCTION iType
+  stride_fill([[maybe_unused]] iType* const s) const {
     iType n = 1;
     if constexpr (0 < dimension_type::rank) {
       s[0] = n;
@@ -1334,7 +1336,8 @@ struct ViewOffset<
   // length to the last index of the array. Preconditions: s must be an array of
   // dimension_type::rank elements
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION iType stride_fill(iType* const s) const {
+  KOKKOS_INLINE_FUNCTION iType
+  stride_fill([[maybe_unused]] iType* const s) const {
     size_type n = 1;
     if constexpr (7 < dimension_type::rank) {
       s[7] = n;
@@ -1633,7 +1636,8 @@ struct ViewOffset<
   // length to the last index of the array. Preconditions: s must be an array of
   // dimension_type::rank elements
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION iType stride_fill(iType* const s) const {
+  KOKKOS_INLINE_FUNCTION iType
+  stride_fill([[maybe_unused]] iType* const s) const {
     size_type n = 1;
     if constexpr (7 < dimension_type::rank) {
       s[7] = n;
@@ -2205,7 +2209,8 @@ struct ViewOffset<Dimension, Kokkos::LayoutStride, void> {
   // length to the last index of the array. Preconditions: s must be an array of
   // dimension_type::rank elements
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION iType stride_fill(iType* const s) const {
+  KOKKOS_INLINE_FUNCTION iType
+  stride_fill([[maybe_unused]] iType* const s) const {
     if constexpr (0 < dimension_type::rank) {
       s[0] = m_stride.S0;
     }
