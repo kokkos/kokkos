@@ -80,16 +80,25 @@ class CudaSpace {
   ~CudaSpace()                               = default;
 
   /**\brief  Allocate untracked memory in the cuda space */
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  KOKKOS_DEPRECATED_WITH_COMMENT("Use the overload with a label instead!")
   void* allocate(const Cuda& exec_space, const size_t arg_alloc_size) const;
+#endif
   void* allocate(const Cuda& exec_space, const char* arg_label,
                  const size_t arg_alloc_size,
                  const size_t arg_logical_size = 0) const;
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  KOKKOS_DEPRECATED_WITH_COMMENT("Use the overload with a label instead!")
   void* allocate(const size_t arg_alloc_size) const;
+#endif
   void* allocate(const char* arg_label, const size_t arg_alloc_size,
                  const size_t arg_logical_size = 0) const;
 
   /**\brief  Deallocate untracked memory in the cuda space */
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  KOKKOS_DEPRECATED_WITH_COMMENT("Use the overload with a label instead!")
   void deallocate(void* const arg_alloc_ptr, const size_t arg_alloc_size) const;
+#endif
   void deallocate(const char* arg_label, void* const arg_alloc_ptr,
                   const size_t arg_alloc_size,
                   const size_t arg_logical_size = 0) const;
@@ -168,22 +177,31 @@ class CudaUVMSpace {
   ~CudaUVMSpace()                                  = default;
 
   /**\brief  Allocate untracked memory in the cuda space */
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   template <typename ExecutionSpace>
+  KOKKOS_DEPRECATED_WITH_COMMENT("Use the overload with a label instead!")
   void* allocate(const ExecutionSpace&, const size_t arg_alloc_size) const {
     return allocate(arg_alloc_size);
   }
+#endif
   template <typename ExecutionSpace>
   void* allocate(const ExecutionSpace&, const char* arg_label,
                  const size_t arg_alloc_size,
                  const size_t arg_logical_size = 0) const {
     return allocate(arg_label, arg_alloc_size, arg_logical_size);
   }
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  KOKKOS_DEPRECATED_WITH_COMMENT("Use the overload with a label instead!")
   void* allocate(const size_t arg_alloc_size) const;
+#endif
   void* allocate(const char* arg_label, const size_t arg_alloc_size,
                  const size_t arg_logical_size = 0) const;
 
-  /**\brief  Deallocate untracked memory in the cuda space */
+/**\brief  Deallocate untracked memory in the cuda space */
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  KOKKOS_DEPRECATED_WITH_COMMENT("Use the overload with a label instead!")
   void deallocate(void* const arg_alloc_ptr, const size_t arg_alloc_size) const;
+#endif
   void deallocate(const char* arg_label, void* const arg_alloc_ptr,
                   const size_t arg_alloc_size,
                   const size_t arg_logical_size = 0) const;
@@ -260,22 +278,31 @@ class CudaHostPinnedSpace {
   ~CudaHostPinnedSpace()                                         = default;
 
   /**\brief  Allocate untracked memory in the space */
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   template <typename ExecutionSpace>
+  KOKKOS_DEPRECATED_WITH_COMMENT("Use the overload with a label instead!")
   void* allocate(const ExecutionSpace&, const size_t arg_alloc_size) const {
     return allocate(arg_alloc_size);
   }
+#endif
   template <typename ExecutionSpace>
   void* allocate(const ExecutionSpace&, const char* arg_label,
                  const size_t arg_alloc_size,
                  const size_t arg_logical_size = 0) const {
     return allocate(arg_label, arg_alloc_size, arg_logical_size);
   }
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  KOKKOS_DEPRECATED_WITH_COMMENT("Use the overload with a label instead!")
   void* allocate(const size_t arg_alloc_size) const;
+#endif
   void* allocate(const char* arg_label, const size_t arg_alloc_size,
                  const size_t arg_logical_size = 0) const;
 
   /**\brief  Deallocate untracked memory in the space */
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  KOKKOS_DEPRECATED_WITH_COMMENT("Use the overload with a label instead!")
   void deallocate(void* const arg_alloc_ptr, const size_t arg_alloc_size) const;
+#endif
   void deallocate(const char* arg_label, void* const arg_alloc_ptr,
                   const size_t arg_alloc_size,
                   const size_t arg_logical_size = 0) const;
