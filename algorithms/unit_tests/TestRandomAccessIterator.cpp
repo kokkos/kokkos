@@ -46,6 +46,58 @@ TEST_F(random_access_iterator_test, constructor) {
   EXPECT_TRUE(true);
 }
 
+TEST_F(random_access_iterator_test, constructiblity) {
+  auto first_d  = KE::begin(m_dynamic_view);
+  auto cfirst_d = KE::cbegin(m_dynamic_view);
+
+  bool cfirst2first_d =
+      std::is_constructible_v<decltype(cfirst_d), decltype(first_d)>;
+  bool first2cfirst_d =
+      std::is_constructible_v<decltype(first_d), decltype(cfirst_d)>;
+  ASSERT_TRUE(cfirst2first_d);
+  ASSERT_FALSE(first2cfirst_d);
+
+  auto first_s  = KE::begin(m_static_view);
+  auto cfirst_s = KE::cbegin(m_static_view);
+
+  bool cfirst2first_s =
+      std::is_constructible_v<decltype(cfirst_s), decltype(first_s)>;
+  bool first2cfirst_s =
+      std::is_constructible_v<decltype(first_s), decltype(cfirst_s)>;
+  ASSERT_TRUE(cfirst2first_s);
+  ASSERT_FALSE(first2cfirst_s);
+
+  auto first_st  = KE::begin(m_strided_view);
+  auto cfirst_st = KE::cbegin(m_strided_view);
+
+  bool cfirst2first_st =
+      std::is_constructible_v<decltype(cfirst_st), decltype(first_st)>;
+  bool first2cfirst_st =
+      std::is_constructible_v<decltype(first_st), decltype(cfirst_st)>;
+  ASSERT_TRUE(cfirst2first_st);
+  ASSERT_FALSE(first2cfirst_st);
+
+  bool first_d2first_s =
+      std::is_constructible_v<decltype(first_d), decltype(first_s)>;
+  bool first_d2first_st =
+      std::is_constructible_v<decltype(first_d), decltype(first_st)>;
+  bool first_s2first_d =
+      std::is_constructible_v<decltype(first_s), decltype(first_d)>;
+  bool first_s2first_st =
+      std::is_constructible_v<decltype(first_s), decltype(first_st)>;
+  bool first_st2first_d =
+      std::is_constructible_v<decltype(first_st), decltype(first_d)>;
+  bool first_st2first_s =
+      std::is_constructible_v<decltype(first_st), decltype(first_s)>;
+
+  ASSERT_TRUE(first_d2first_s);
+  ASSERT_TRUE(first_d2first_st);
+  ASSERT_TRUE(first_s2first_d);
+  ASSERT_TRUE(first_s2first_st);
+  ASSERT_TRUE(first_st2first_d);
+  ASSERT_TRUE(first_st2first_s);
+}
+
 template <class IteratorType, class ValueType>
 void test_random_access_it_verify(IteratorType it, ValueType gold_value) {
   using view_t = Kokkos::View<typename IteratorType::value_type>;

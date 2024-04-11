@@ -59,6 +59,13 @@ class RandomAccessIterator< ::Kokkos::View<DataType, Args...> > {
                                                 ptrdiff_t current_index)
       : m_view(view), m_current_index(current_index) {}
 
+  template <
+      class ViewType,
+      std::enable_if_t<std::is_convertible_v<ViewType, view_type>, int> = 0>
+  KOKKOS_FUNCTION RandomAccessIterator(
+      const RandomAccessIterator<ViewType>& other)
+      : m_view(other.m_view), m_current_index(other.m_current_index) {}
+
   KOKKOS_FUNCTION
   iterator_type& operator++() {
     ++m_current_index;
