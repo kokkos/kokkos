@@ -323,8 +323,6 @@ auto tune_policy(const size_t, const std::string&, const ExecPolicy& policy,
  * you use the simpler 2-arg formulation of team_size_recommended/max.
  */
 
-//namespace Impl {
-
 struct SimpleTeamSizeCalculator {
   template <typename Policy, typename Functor, typename Tag>
   int get_max_team_size(const Policy& policy, const Functor& functor,
@@ -394,8 +392,6 @@ template <typename Policy>
 auto default_tuned_version_of(const Policy& policy) {
   return policy;
 }
-
-//}  // namespace Impl
 
 template <class Tuner, class Functor, class TagType,
           class TuningPermissionFunctor, class Map, class Policy>
@@ -482,7 +478,6 @@ auto tune_policy(const size_t /**tuning_context*/, const std::string& label_in,
       });
 }
 
-//namespace Impl {
 template <class Functor, class TagType, class... Properties>
 auto tune_occupancy_controlled_policy(
     const size_t /**tuning_context*/, const std::string& label_in,
@@ -539,7 +534,7 @@ auto tune_range_policy(const size_t /**tuning_context*/,
                        std::false_type) {
   return policy;
 }
-//}  // namespace Impl
+
 // tune a RangePolicy, without reducer
 template <class Functor, class TagType, class... Properties>
 auto tune_policy(const size_t tuning_context, const std::string& label_in,
