@@ -134,6 +134,7 @@ pipeline {
                         always {
                             sh 'ccache --show-stats'
                         }
+                    }
                 }
             }
         }
