@@ -162,6 +162,9 @@ class RandomAccessIterator< ::Kokkos::View<DataType, Args...> > {
  private:
   view_type m_view;
   ptrdiff_t m_current_index = 0;
+
+  template <class>
+  friend class RandomAccessIterator;
 };
 
 }  // namespace Impl
