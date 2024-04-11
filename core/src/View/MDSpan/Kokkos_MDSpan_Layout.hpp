@@ -50,7 +50,7 @@ struct LayoutFromArrayLayout<Kokkos::LayoutStride> {
 template <class Extents>
 KOKKOS_INLINE_FUNCTION auto dimension_from_extent(const Extents &e,
                                                   std::size_t r) noexcept {
-  return Extents::static_extent(r) == dynamic_extent ? e.extent(r) : 0;
+  return e.extent(r);
 }
 
 template <class ArrayLayout, class MDSpanType>
