@@ -63,7 +63,8 @@ class ParallelReduce<CombinedFunctorReducerType,
  public:
   inline void execute() const {
     execute_tile<Policy::rank, typename ReducerType::value_type>(
-        m_functor_reducer.get_functor(), m_policy, m_result_ptr, std::integral_constant<Iterate, Policy::inner_direction>());
+        m_functor_reducer.get_functor(), m_policy, m_result_ptr,
+        std::integral_constant<Iterate, Policy::inner_direction>());
   }
 
   template <class ViewType>
@@ -78,9 +79,9 @@ class ParallelReduce<CombinedFunctorReducerType,
         m_scratch_memory_lock(OpenMPTargetExec::m_mutex_scratch_ptr) {}
 
   template <int Rank, class ValueType>
-  inline std::enable_if_t<Rank == 2> execute_tile(const FunctorType& functor,
-                                                  const Policy& policy,
-                                                  pointer_type ptr, OpenMPTargetIterateLeft) const {
+  inline std::enable_if_t<Rank == 2> execute_tile(
+      const FunctorType& functor, const Policy& policy, pointer_type ptr,
+      OpenMPTargetIterateLeft) const {
     const Index begin_0 = policy.m_lower[0];
     const Index begin_1 = policy.m_lower[1];
 
@@ -127,9 +128,9 @@ reduction(+:result)
   }
 
   template <int Rank, class ValueType>
-  inline std::enable_if_t<Rank == 3> execute_tile(const FunctorType& functor,
-                                                  const Policy& policy,
-                                                  pointer_type ptr, OpenMPTargetIterateLeft) const {
+  inline std::enable_if_t<Rank == 3> execute_tile(
+      const FunctorType& functor, const Policy& policy, pointer_type ptr,
+      OpenMPTargetIterateLeft) const {
     const Index begin_0 = policy.m_lower[0];
     const Index begin_1 = policy.m_lower[1];
     const Index begin_2 = policy.m_lower[2];
@@ -185,9 +186,9 @@ reduction(+:result)
   }
 
   template <int Rank, class ValueType>
-  inline std::enable_if_t<Rank == 4> execute_tile(const FunctorType& functor,
-                                                  const Policy& policy,
-                                                  pointer_type ptr, OpenMPTargetIterateLeft) const {
+  inline std::enable_if_t<Rank == 4> execute_tile(
+      const FunctorType& functor, const Policy& policy, pointer_type ptr,
+      OpenMPTargetIterateLeft) const {
     const Index begin_0 = policy.m_lower[0];
     const Index begin_1 = policy.m_lower[1];
     const Index begin_2 = policy.m_lower[3];
@@ -248,9 +249,9 @@ reduction(+:result)
   }
 
   template <int Rank, class ValueType>
-  inline std::enable_if_t<Rank == 5> execute_tile(const FunctorType& functor,
-                                                  const Policy& policy,
-                                                  pointer_type ptr, OpenMPTargetIterateLeft) const {
+  inline std::enable_if_t<Rank == 5> execute_tile(
+      const FunctorType& functor, const Policy& policy, pointer_type ptr,
+      OpenMPTargetIterateLeft) const {
     const Index begin_0 = policy.m_lower[0];
     const Index begin_1 = policy.m_lower[1];
     const Index begin_2 = policy.m_lower[2];
@@ -319,9 +320,9 @@ reduction(+:result)
   }
 
   template <int Rank, class ValueType>
-  inline std::enable_if_t<Rank == 6> execute_tile(const FunctorType& functor,
-                                                  const Policy& policy,
-                                                  pointer_type ptr, OpenMPTargetIterateLeft) const {
+  inline std::enable_if_t<Rank == 6> execute_tile(
+      const FunctorType& functor, const Policy& policy, pointer_type ptr,
+      OpenMPTargetIterateLeft) const {
     const Index begin_0 = policy.m_lower[0];
     const Index begin_1 = policy.m_lower[1];
     const Index begin_2 = policy.m_lower[2];
@@ -396,9 +397,9 @@ reduction(+:result)
   }
 
   template <int Rank, class ValueType>
-  inline std::enable_if_t<Rank == 2> execute_tile(const FunctorType& functor,
-                                                  const Policy& policy,
-                                                  pointer_type ptr, OpenMPTargetIterateRight) const {
+  inline std::enable_if_t<Rank == 2> execute_tile(
+      const FunctorType& functor, const Policy& policy, pointer_type ptr,
+      OpenMPTargetIterateRight) const {
     const Index begin_0 = policy.m_lower[0];
     const Index begin_1 = policy.m_lower[1];
 
@@ -419,8 +420,8 @@ reduction(+:result)
                                                                  : functor) \
     reduction(custom                                                        \
               : result)
-        for (auto i0 = begin_0; i0 < end_0; ++i0) {
-      for (auto i1 = begin_1; i1 < end_1; ++i1) {
+      for (auto i0 = begin_0; i0 < end_0; ++i0) {
+        for (auto i1 = begin_1; i1 < end_1; ++i1) {
           if constexpr (std::is_void<typename Policy::work_tag>::value)
             functor(i0, i1, result);
           else
@@ -430,8 +431,8 @@ reduction(+:result)
     } else {
 #pragma omp target teams distribute parallel for collapse(2) map(to : functor) \
 reduction(+:result)
-        for (auto i0 = begin_0; i0 < end_0; ++i0) {
-      for (auto i1 = begin_1; i1 < end_1; ++i1) {
+      for (auto i0 = begin_0; i0 < end_0; ++i0) {
+        for (auto i1 = begin_1; i1 < end_1; ++i1) {
           if constexpr (std::is_void<typename Policy::work_tag>::value)
             functor(i0, i1, result);
           else
@@ -445,9 +446,9 @@ reduction(+:result)
   }
 
   template <int Rank, class ValueType>
-  inline std::enable_if_t<Rank == 3> execute_tile(const FunctorType& functor,
-                                                  const Policy& policy,
-                                                  pointer_type ptr, OpenMPTargetIterateRight) const {
+  inline std::enable_if_t<Rank == 3> execute_tile(
+      const FunctorType& functor, const Policy& policy, pointer_type ptr,
+      OpenMPTargetIterateRight) const {
     const Index begin_0 = policy.m_lower[0];
     const Index begin_1 = policy.m_lower[1];
     const Index begin_2 = policy.m_lower[2];
@@ -473,9 +474,9 @@ reduction(+:result)
                                                                  : functor) \
     reduction(custom                                                        \
               : result)
-          for (auto i0 = begin_0; i0 < end_0; ++i0) {
+      for (auto i0 = begin_0; i0 < end_0; ++i0) {
         for (auto i1 = begin_1; i1 < end_1; ++i1) {
-      for (auto i2 = begin_2; i2 < end_2; ++i2) {
+          for (auto i2 = begin_2; i2 < end_2; ++i2) {
             if constexpr (std::is_void<typename Policy::work_tag>::value)
               functor(i0, i1, i2, result);
             else
@@ -486,9 +487,9 @@ reduction(+:result)
     } else {
 #pragma omp target teams distribute parallel for collapse(3) map(to : functor) \
 reduction(+:result)
-          for (auto i0 = begin_0; i0 < end_0; ++i0) {
+      for (auto i0 = begin_0; i0 < end_0; ++i0) {
         for (auto i1 = begin_1; i1 < end_1; ++i1) {
-      for (auto i2 = begin_2; i2 < end_2; ++i2) {
+          for (auto i2 = begin_2; i2 < end_2; ++i2) {
             if constexpr (std::is_void<typename Policy::work_tag>::value)
               functor(i0, i1, i2, result);
             else
@@ -503,9 +504,9 @@ reduction(+:result)
   }
 
   template <int Rank, class ValueType>
-  inline std::enable_if_t<Rank == 4> execute_tile(const FunctorType& functor,
-                                                  const Policy& policy,
-                                                  pointer_type ptr, OpenMPTargetIterateRight) const {
+  inline std::enable_if_t<Rank == 4> execute_tile(
+      const FunctorType& functor, const Policy& policy, pointer_type ptr,
+      OpenMPTargetIterateRight) const {
     const Index begin_0 = policy.m_lower[0];
     const Index begin_1 = policy.m_lower[1];
     const Index begin_2 = policy.m_lower[3];
@@ -530,10 +531,10 @@ reduction(+:result)
                                                                  : functor) \
     reduction(custom                                                        \
               : result)
-            for (auto i0 = begin_0; i0 < end_0; ++i0) {
-          for (auto i1 = begin_1; i1 < end_1; ++i1) {
-        for (auto i2 = begin_2; i2 < end_2; ++i2) {
-      for (auto i3 = begin_3; i3 < end_3; ++i3) {
+      for (auto i0 = begin_0; i0 < end_0; ++i0) {
+        for (auto i1 = begin_1; i1 < end_1; ++i1) {
+          for (auto i2 = begin_2; i2 < end_2; ++i2) {
+            for (auto i3 = begin_3; i3 < end_3; ++i3) {
               if constexpr (std::is_same<typename Policy::work_tag,
                                          void>::value)
                 functor(i0, i1, i2, i3, result);
@@ -546,10 +547,10 @@ reduction(+:result)
     } else {
 #pragma omp target teams distribute parallel for collapse(4) map(to : functor) \
 reduction(+:result)
-            for (auto i0 = begin_0; i0 < end_0; ++i0) {
-          for (auto i1 = begin_1; i1 < end_1; ++i1) {
-        for (auto i2 = begin_2; i2 < end_2; ++i2) {
-      for (auto i3 = begin_3; i3 < end_3; ++i3) {
+      for (auto i0 = begin_0; i0 < end_0; ++i0) {
+        for (auto i1 = begin_1; i1 < end_1; ++i1) {
+          for (auto i2 = begin_2; i2 < end_2; ++i2) {
+            for (auto i3 = begin_3; i3 < end_3; ++i3) {
               if constexpr (std::is_same<typename Policy::work_tag,
                                          void>::value)
                 functor(i0, i1, i2, i3, result);
@@ -566,9 +567,9 @@ reduction(+:result)
   }
 
   template <int Rank, class ValueType>
-  inline std::enable_if_t<Rank == 5> execute_tile(const FunctorType& functor,
-                                                  const Policy& policy,
-                                                  pointer_type ptr, OpenMPTargetIterateRight) const {
+  inline std::enable_if_t<Rank == 5> execute_tile(
+      const FunctorType& functor, const Policy& policy, pointer_type ptr,
+      OpenMPTargetIterateRight) const {
     const Index begin_0 = policy.m_lower[0];
     const Index begin_1 = policy.m_lower[1];
     const Index begin_2 = policy.m_lower[2];
@@ -595,11 +596,11 @@ reduction(+:result)
                                                                  : functor) \
     reduction(custom                                                        \
               : result)
-              for (auto i0 = begin_0; i0 < end_0; ++i0) {
-            for (auto i1 = begin_1; i1 < end_1; ++i1) {
+      for (auto i0 = begin_0; i0 < end_0; ++i0) {
+        for (auto i1 = begin_1; i1 < end_1; ++i1) {
           for (auto i2 = begin_2; i2 < end_2; ++i2) {
-        for (auto i3 = begin_3; i3 < end_3; ++i3) {
-      for (auto i4 = begin_4; i4 < end_4; ++i4) {
+            for (auto i3 = begin_3; i3 < end_3; ++i3) {
+              for (auto i4 = begin_4; i4 < end_4; ++i4) {
                 if constexpr (std::is_same<typename Policy::work_tag,
                                            void>::value)
                   functor(i0, i1, i2, i3, i4, result);
@@ -614,11 +615,11 @@ reduction(+:result)
     } else {
 #pragma omp target teams distribute parallel for collapse(5) map(to : functor) \
 reduction(+:result)
-              for (auto i0 = begin_0; i0 < end_0; ++i0) {
-            for (auto i1 = begin_1; i1 < end_1; ++i1) {
+      for (auto i0 = begin_0; i0 < end_0; ++i0) {
+        for (auto i1 = begin_1; i1 < end_1; ++i1) {
           for (auto i2 = begin_2; i2 < end_2; ++i2) {
-        for (auto i3 = begin_3; i3 < end_3; ++i3) {
-      for (auto i4 = begin_4; i4 < end_4; ++i4) {
+            for (auto i3 = begin_3; i3 < end_3; ++i3) {
+              for (auto i4 = begin_4; i4 < end_4; ++i4) {
                 if constexpr (std::is_same<typename Policy::work_tag,
                                            void>::value)
                   functor(i0, i1, i2, i3, i4, result);
@@ -637,9 +638,9 @@ reduction(+:result)
   }
 
   template <int Rank, class ValueType>
-  inline std::enable_if_t<Rank == 6> execute_tile(const FunctorType& functor,
-                                                  const Policy& policy,
-                                                  pointer_type ptr, OpenMPTargetIterateRight) const {
+  inline std::enable_if_t<Rank == 6> execute_tile(
+      const FunctorType& functor, const Policy& policy, pointer_type ptr,
+      OpenMPTargetIterateRight) const {
     const Index begin_0 = policy.m_lower[0];
     const Index begin_1 = policy.m_lower[1];
     const Index begin_2 = policy.m_lower[2];
@@ -668,12 +669,12 @@ reduction(+:result)
                                                                  : functor) \
     reduction(custom                                                        \
               : result)
-                for (auto i0 = begin_0; i0 < end_0; ++i0) {
-              for (auto i1 = begin_1; i1 < end_1; ++i1) {
-            for (auto i2 = begin_2; i2 < end_2; ++i2) {
-          for (auto i3 = begin_3; i3 < end_3; ++i3) {
-        for (auto i4 = begin_4; i4 < end_4; ++i4) {
-      for (auto i5 = begin_5; i5 < end_5; ++i5) {
+      for (auto i0 = begin_0; i0 < end_0; ++i0) {
+        for (auto i1 = begin_1; i1 < end_1; ++i1) {
+          for (auto i2 = begin_2; i2 < end_2; ++i2) {
+            for (auto i3 = begin_3; i3 < end_3; ++i3) {
+              for (auto i4 = begin_4; i4 < end_4; ++i4) {
+                for (auto i5 = begin_5; i5 < end_5; ++i5) {
                   if constexpr (std::is_same<typename Policy::work_tag,
                                              void>::value)
                     functor(i0, i1, i2, i3, i4, i5, result);
@@ -689,12 +690,12 @@ reduction(+:result)
     } else {
 #pragma omp target teams distribute parallel for collapse(6) map(to : functor) \
 reduction(+:result)
-                for (auto i0 = begin_0; i0 < end_0; ++i0) {
-              for (auto i1 = begin_1; i1 < end_1; ++i1) {
-            for (auto i2 = begin_2; i2 < end_2; ++i2) {
-          for (auto i3 = begin_3; i3 < end_3; ++i3) {
-        for (auto i4 = begin_4; i4 < end_4; ++i4) {
-      for (auto i5 = begin_5; i5 < end_5; ++i5) {
+      for (auto i0 = begin_0; i0 < end_0; ++i0) {
+        for (auto i1 = begin_1; i1 < end_1; ++i1) {
+          for (auto i2 = begin_2; i2 < end_2; ++i2) {
+            for (auto i3 = begin_3; i3 < end_3; ++i3) {
+              for (auto i4 = begin_4; i4 < end_4; ++i4) {
+                for (auto i5 = begin_5; i5 < end_5; ++i5) {
                   if constexpr (std::is_same<typename Policy::work_tag,
                                              void>::value)
                     functor(i0, i1, i2, i3, i4, i5, result);
