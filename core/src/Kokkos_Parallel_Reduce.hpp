@@ -1492,12 +1492,6 @@ struct ParallelReduceAdaptor {
     using PassedReducerType = typename return_value_adapter::reducer_type;
     uint64_t kpID           = 0;
 
-    /** Request a tuned policy from the tools subsystem */
-    auto response = Kokkos::Tools::Impl::begin_parallel_reduce<
-        typename return_value_adapter::reducer_type>(policy, functor, label,
-                                                     kpID);
-    auto& inner_policy = response.policy;
-
     using ReducerSelector =
         Kokkos::Impl::if_c<std::is_same<InvalidType, PassedReducerType>::value,
                            FunctorType, PassedReducerType>;
@@ -1510,6 +1504,12 @@ struct ParallelReduceAdaptor {
                      ReducerSelector::select(functor, return_value)));
 
     // FIXME Remove "Wrapper" once all backends implement the new interface
+    /** Request a tuned policy from the tools subsystem */
+    const auto& response = Kokkos::Tools::Impl::begin_parallel_reduce<
+        typename return_value_adapter::reducer_type>(policy, functor_reducer, label,
+                                                     kpID);
+    const auto& inner_policy = response.policy;
+
     Impl::ParallelReduce<decltype(functor_reducer), PolicyType,
                          typename Impl::FunctorPolicyExecutionSpace<
                              FunctorType, PolicyType>::execution_space>
