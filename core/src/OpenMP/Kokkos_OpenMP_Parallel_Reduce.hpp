@@ -34,6 +34,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
   using Policy      = Kokkos::RangePolicy<Traits...>;
   using FunctorType = typename CombinedFunctorReducerType::functor_type;
   using ReducerType = typename CombinedFunctorReducerType::reducer_type;
+  //using functor_type   = FunctorType;
+  //using reducer_type   = ReducerType;
 
   using WorkTag = typename Policy::work_tag;
   using Member  = typename Policy::member_type;
@@ -191,6 +193,8 @@ class ParallelReduce<CombinedFunctorReducerType,
   using Policy        = typename MDRangePolicy::impl_range_policy;
   using FunctorType   = typename CombinedFunctorReducerType::functor_type;
   using ReducerType   = typename CombinedFunctorReducerType::reducer_type;
+  //using functor_type   = FunctorType;
+  //using reducer_type   = ReducerType;
 
   using WorkTag = typename MDRangePolicy::work_tag;
   using Member  = typename Policy::member_type;
@@ -340,6 +344,8 @@ class ParallelReduce<CombinedFunctorReducerType,
       Kokkos::Impl::TeamPolicyInternal<Kokkos::OpenMP, Properties...>;
   using FunctorType = typename CombinedFunctorReducerType::functor_type;
   using ReducerType = typename CombinedFunctorReducerType::reducer_type;
+  //using functor_type   = FunctorType;
+  //using reducer_type   = ReducerType;
 
   using WorkTag  = typename Policy::work_tag;
   using SchedTag = typename Policy::schedule_type::type;
