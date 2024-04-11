@@ -105,4 +105,26 @@ TEST(cuda_multi_gpu, scratch_space) {
     test_scratch(execs[0], execs[1]);
   }
 }
+
+TEST(cuda_muti_gpu, mem_space_view_construct) {
+  using ViewType = Kokkos::View<int *, TEST_EXECSPACE>;
+
+  StreamsAndDevices streams_and_devices;
+  {
+    std::array<TEST_EXECSPACE, 2> execs =
+        get_execution_spaces(streams_and_devices);
+
+    std::array<TEST_EXECSPACE::memory_space, 2> memspaces = {
+        TEST_EXECSPACE::memory_space::impl_create(execs[0].cuda_device(),
+                                                  execs[0].cuda_stream()),
+        TEST_EXECSPACE::memory_space::impl_create(execs[1].cuda_device(),
+                                                  execs[1].cuda_stream())};
+
+    std::array<ViewType, 2> views = {
+        ViewType(Kokkos::view_alloc("v0", memspaces[0]), 100),
+        ViewType(Kokkos::view_alloc("v", memspaces[1]), 100)};
+
+    test_policies(execs[0], views[0], execs[1], views[1]);
+  }
+}
 }  // namespace

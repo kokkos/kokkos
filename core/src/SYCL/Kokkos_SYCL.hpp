@@ -65,6 +65,11 @@ class SYCL {
   SYCL();
   explicit SYCL(const sycl::queue&);
 
+  template <class MemSpace>
+  SYCL(const MemSpace&,
+       std::enable_if_t<Kokkos::is_memory_space<MemSpace>::value>* = nullptr)
+      : SYCL() {}
+
   uint32_t impl_instance_id() const noexcept {
     return m_space_instance->impl_get_instance_id();
   }

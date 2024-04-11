@@ -52,6 +52,11 @@ class HIP {
       Impl::ManageStream manage_stream = Impl::ManageStream::no);
   KOKKOS_DEPRECATED HIP(hipStream_t stream, bool manage_stream);
 
+  template <class MemSpace>
+  HIP(const MemSpace&,
+      std::enable_if_t<Kokkos::is_memory_space<MemSpace>::value>* = nullptr)
+      : HIP() {}
+
   //@}
   //------------------------------------
   //! \name Functions that all Kokkos devices must implement.

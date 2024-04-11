@@ -115,6 +115,11 @@ class Serial {
 
   Serial(NewInstance);
 
+  template <class MemSpace>
+  Serial(const MemSpace&,
+         std::enable_if_t<Kokkos::is_memory_space<MemSpace>::value>* = nullptr)
+      : Serial() {}
+
   /// \brief True if and only if this method is being called in a
   ///   thread-parallel function.
   ///

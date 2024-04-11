@@ -69,6 +69,11 @@ class OpenMP {
 
   OpenMP(int pool_size);
 
+  template <class MemSpace>
+  OpenMP(const MemSpace&,
+         std::enable_if_t<Kokkos::is_memory_space<MemSpace>::value>* = nullptr)
+      : OpenMP() {}
+
   /// \brief Print configuration information to the given output stream.
   void print_configuration(std::ostream& os, bool verbose = false) const;
 

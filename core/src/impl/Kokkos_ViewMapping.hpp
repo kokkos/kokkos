@@ -2552,6 +2552,7 @@ struct ViewValueFunctor;
 template <class DeviceType, class ValueType>
 struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
   using ExecSpace = typename DeviceType::execution_space;
+  using MemSpace  = typename DeviceType::memory_space;
 
   struct DestroyTag {};
   struct ConstructTag {};
@@ -2585,6 +2586,16 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
         n(arg_n),
         name(std::move(arg_name)),
         default_exec_space(false) {
+    functor_instantiate_workaround();
+  }
+
+  ViewValueFunctor(MemSpace const& mem_space, ValueType* const arg_ptr,
+                   size_t const arg_n, std::string arg_name)
+      : space(mem_space),
+        ptr(arg_ptr),
+        n(arg_n),
+        name(std::move(arg_name)),
+        default_exec_space(true) {
     functor_instantiate_workaround();
   }
 
@@ -2695,6 +2706,7 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
 template <class DeviceType, class ValueType>
 struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
   using ExecSpace  = typename DeviceType::execution_space;
+  using MemSpace   = typename DeviceType::memory_space;
   using PolicyType = Kokkos::RangePolicy<ExecSpace, Kokkos::IndexType<int64_t>>;
 
   ExecSpace space;
@@ -2717,6 +2729,14 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
         n(arg_n),
         name(std::move(arg_name)),
         default_exec_space(false) {}
+
+  ViewValueFunctor(MemSpace const& mem_space, ValueType* const arg_ptr,
+                   size_t const arg_n, std::string arg_name)
+      : space(mem_space),
+        ptr(arg_ptr),
+        n(arg_n),
+        name(std::move(arg_name)),
+        default_exec_space(true) {}
 
   ViewValueFunctor(ValueType* const arg_ptr, size_t const arg_n,
                    std::string arg_name)
@@ -3089,7 +3109,7 @@ class ViewMapping<
   Kokkos::Impl::SharedAllocationRecord<>* allocate_shared(
       Kokkos::Impl::ViewCtorProp<P...> const& arg_prop,
       typename Traits::array_layout const& arg_layout,
-      bool execution_space_specified) {
+      bool execution_space_specified, bool memory_space_specified) {
     using alloc_prop = Kokkos::Impl::ViewCtorProp<P...>;
 
     using execution_space = typename alloc_prop::execution_space;
@@ -3135,8 +3155,11 @@ class ViewMapping<
         execution_space_specified
             ? functor_type(exec_space, (value_type*)m_impl_handle,
                            m_impl_offset.span(), alloc_name)
-            : functor_type((value_type*)m_impl_handle, m_impl_offset.span(),
-                           alloc_name);
+            : memory_space_specified
+                  ? functor_type(mem_space, (value_type*)m_impl_handle,
+                                 m_impl_offset.span(), alloc_name)
+                  : functor_type((value_type*)m_impl_handle,
+                                 m_impl_offset.span(), alloc_name);
 
     //  Only initialize if the allocation is non-zero.
     //  May be zero if one of the dimensions is zero.

@@ -171,6 +171,11 @@ class Cuda {
 
   KOKKOS_DEPRECATED Cuda(cudaStream_t stream, bool manage_stream);
 
+  template <class MemSpace>
+  Cuda(const MemSpace& mem_space,
+       std::enable_if_t<Kokkos::is_memory_space<MemSpace>::value>* = nullptr)
+      : Cuda(mem_space.get_stream()) {}
+
   //--------------------------------------------------------------------------
   //! Free any resources being consumed by the device.
   static void impl_finalize();

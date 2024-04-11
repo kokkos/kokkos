@@ -1096,7 +1096,8 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
         prop_copy,
         Impl::DynRankDimTraits<typename traits::specialize>::
             template createLayout<traits, P...>(arg_prop, arg_layout),
-        Impl::ViewCtorProp<P...>::has_execution_space);
+        Impl::ViewCtorProp<P...>::has_execution_space,
+        Impl::ViewCtorProp<P...>::has_memory_space);
 
     // Setup and initialization complete, start tracking
     m_track.assign_allocated_record_to_uninitialized(record);

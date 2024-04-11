@@ -81,7 +81,7 @@ HostInaccessibleSharedAllocationRecordCommon<MemorySpace>::
 
   fill_host_accessible_header_info(this, header, label);
 
-  typename MemorySpace::execution_space exec;
+  typename MemorySpace::execution_space exec(space);
   Kokkos::Impl::DeepCopy<MemorySpace, HostSpace>(
       exec, SharedAllocationRecord<void, void>::m_alloc_ptr, &header,
       sizeof(SharedAllocationHeader));
