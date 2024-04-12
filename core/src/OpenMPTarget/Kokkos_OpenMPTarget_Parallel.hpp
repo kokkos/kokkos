@@ -66,7 +66,7 @@ class OpenMPTargetExecTeamMember {
   template <int Level>
   KOKKOS_INLINE_FUNCTION const execution_space::scratch_memory_space&
   team_scratch() const {
-    return m_team_shared.set_team_thread_mode(Level, 1, 0);
+    return team_scratch(Level);
   }
 
   KOKKOS_INLINE_FUNCTION
