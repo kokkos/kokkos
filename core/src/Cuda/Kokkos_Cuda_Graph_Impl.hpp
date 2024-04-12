@@ -51,16 +51,13 @@ struct GraphImpl<Kokkos::Cuda> {
 
   using node_details_t = GraphNodeBackendSpecificDetails<Kokkos::Cuda>;
 
-  void _instantiate_graph() {
-    constexpr size_t error_log_size = 256;
-    cudaGraphNode_t error_node      = nullptr;
-    char error_log[error_log_size];
+public:
+  template <typename... Args>
+  void instantiate_graph(Args&&... args) {
     KOKKOS_IMPL_CUDA_SAFE_CALL(
         (m_execution_space.impl_internal_space_instance()
              ->cuda_graph_instantiate_wrapper(&m_graph_exec, m_graph,
-                                              &error_node, error_log,
-                                              error_log_size)));
-    // TODO @graphs print out errors
+                                              std::forward<Args>(args)...)));
   }
 
  public:
@@ -163,7 +160,7 @@ struct GraphImpl<Kokkos::Cuda> {
 
   void submit() {
     if (!bool(m_graph_exec)) {
-      _instantiate_graph();
+      instantiate_graph();
     }
     KOKKOS_IMPL_CUDA_SAFE_CALL(
         (m_execution_space.impl_internal_space_instance()
@@ -201,8 +198,8 @@ struct GraphImpl<Kokkos::Cuda> {
         aggregate_kernel_impl_t{});
   }
 
-  cudaGraph_t& get_cuda_graph() { return m_graph; }
-  cudaGraphExec_t& get_cuda_graph_exec() { return m_graph_exec; }
+  cudaGraph_t get_cuda_graph() const { return m_graph; }
+  cudaGraphExec_t get_cuda_graph_exec() const { return m_graph_exec; }
 };
 
 }  // end namespace Impl

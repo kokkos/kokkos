@@ -49,13 +49,7 @@ TEST(TEST_CATEGORY, cuda_graph_instantiate_and_debug_dot_print) {
   ASSERT_EQ(graph_ptr_impl->get_cuda_graph_exec(), nullptr);
 
   //! Instantiate the graph manually.
-  constexpr size_t error_log_size = 256;
-  cudaGraphNode_t error_node      = nullptr;
-  char error_log[error_log_size];
-  cudaGraphInstantiate(&graph_ptr_impl->get_cuda_graph_exec(),
-                       graph_ptr_impl->get_cuda_graph(), &error_node, error_log,
-                       error_log_size);
-  ASSERT_EQ(error_node, nullptr) << error_log;
+  graph_ptr_impl->instantiate_graph(cudaGraphInstantiateFlagAutoFreeOnLaunch);
 
   /// At this stage, the @c Cuda "executable" graph should not be null,
   /// because it has been instantiated.

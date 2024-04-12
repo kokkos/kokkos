@@ -453,15 +453,37 @@ class CudaInternal {
     return cudaFuncSetAttribute(entry, attr, value);
   }
 
-  template <bool setCudaDevice = true>
+  /// The @c CUDA graph API changed in @c CUDA 12.
+  /// All signatures now take 3 arguments:
+  ///   - cudaGraphExec_t*
+  ///   - cudaGraph_t
+  ///   - either some flag as an unsigned long long or a cudaGraphInstantiateParams*
+  ///
+  /// Note that my implementation is just to illustrate the idea developed in
+  /// https://github.com/kokkos/kokkos/pull/6904#discussion_r1562293918.
+  /// It is ugly and not converged.
+  template <bool setCudaDevice = true, typename... Args>
   cudaError_t cuda_graph_instantiate_wrapper(cudaGraphExec_t* pGraphExec,
                                              cudaGraph_t graph,
-                                             cudaGraphNode_t* pErrorNode,
-                                             char* pLogBuffer,
-                                             size_t bufferSize) const {
+                                             Args&&... args) const {
+    static_assert(sizeof...(Args) == 0 || sizeof...(Args) == 1, "Only one optional parameter supported.");
+
     if constexpr (setCudaDevice) set_cuda_device();
-    return cudaGraphInstantiate(pGraphExec, graph, pErrorNode, pLogBuffer,
-                                bufferSize);
+
+    if constexpr (sizeof...(Args) == 0) {
+      printf("> Calling cudaGraphInstantiate.\n");
+      return cudaGraphInstantiate(pGraphExec, graph);
+    } else if (sizeof...(Args) == 1) {
+      if constexpr (std::is_pointer_v<Args...>) {
+        printf("> Calling cudaGraphInstantiateWithParams.\n");
+        return cudaGraphInstantiateWithParams(pGraphExec, graph, std::forward<Args>(args)...);
+      } else {
+        printf("> Calling cudaGraphInstantiateWithFlags %d.\n", std::forward<Args>(args)...);
+        return cudaGraphInstantiateWithFlags(pGraphExec, graph, std::forward<Args>(args)...);
+      }
+    } else {
+      Kokkos::abort("oups not 0 or 1 arg");
+    }
   }
 
   // Resizing of reduction related scratch spaces
