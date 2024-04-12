@@ -188,6 +188,7 @@ class ScratchMemorySpace {
     if constexpr (Level == 0) {
       return m_scratch_L0.set_team_thread_mode(multiplier, offset);
     } else {
+      static_assert(Level == 1);
       return m_scratch_L1.set_team_thread_mode(multiplier, offset);
     }
   }
