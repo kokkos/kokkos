@@ -20,7 +20,6 @@
 #include <omp.h>
 #include <Kokkos_Parallel.hpp>
 #include "Kokkos_OpenMPTarget_MDRangePolicy.hpp"
-#include <OpenMPTarget/Kokkos_OpenMPTarget_Parallel.hpp>
 #include <OpenMPTarget/Kokkos_OpenMPTarget_Parallel_Common.hpp>
 
 //----------------------------------------------------------------------------
