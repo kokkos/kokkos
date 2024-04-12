@@ -330,6 +330,13 @@ struct SimpleTeamSizeCalculator {
     auto max = policy.team_size_max(functor, tag);
     return max;
   }
+  template <typename Policy, typename FunctorReducer>
+  int get_max_team_size(const Policy& policy, const FunctorReducer& functor_reducer,
+                        const Kokkos::ParallelReduceTag tag) {
+    auto max = policy.team_size_max(functor_reducer.get_functor(),
+                                    functor_reducer.get_reducer(), tag);
+    return max;
+  }
   template <typename Policy, typename Functor, typename Tag>
   int get_recommended_team_size(const Policy& policy, const Functor& functor,
                                 const Tag tag) {
@@ -344,13 +351,13 @@ struct SimpleTeamSizeCalculator {
     using driver     = Kokkos::Impl::ParallelFor<Functor, Policy, exec_space>;
     return driver::max_tile_size_product(policy, functor);
   }
-  template <typename Policy, typename Functor>
+  template <typename Policy, typename FunctorReducer>
   int get_mdrange_max_tile_size_product(const Policy& policy,
-                                        const Functor& functor,
+                                        const FunctorReducer& functor_reducer,
                                         const Kokkos::ParallelReduceTag&) {
     using exec_space = typename Policy::execution_space;
-    using driver = Kokkos::Impl::ParallelReduce<Functor, Policy, exec_space>;
-    return driver::max_tile_size_product(policy, functor);
+    using driver = Kokkos::Impl::ParallelReduce<FunctorReducer, Policy, exec_space>;
+    return driver::max_tile_size_product(policy, functor_reducer.get_functor());
   }
 };
 
@@ -360,31 +367,26 @@ struct SimpleTeamSizeCalculator {
 // constructible from a reference to an
 // instance of their value_type so we construct
 // a value_type and temporary reducer here
-template <typename ReducerType>
 struct ComplexReducerSizeCalculator {
-  template <typename Policy, typename Functor, typename Tag>
-  int get_max_team_size(const Policy& policy, const Functor& functor,
+  template <typename Policy, typename FunctorReducer, typename Tag>
+  int get_max_team_size(const Policy& policy, const FunctorReducer& functor_reducer,
                         const Tag tag) {
-    using value_type = typename ReducerType::value_type;
-    value_type value;
-    ReducerType reducer_example = ReducerType(value);
-    return policy.team_size_max(functor, reducer_example, tag);
+    return policy.team_size_max(functor_reducer.get_functor(),
+                                functor_reducer.get_reducer(), tag);
   }
-  template <typename Policy, typename Functor, typename Tag>
-  int get_recommended_team_size(const Policy& policy, const Functor& functor,
+  template <typename Policy, typename FunctorReducer, typename Tag>
+  int get_recommended_team_size(const Policy& policy, const FunctorReducer& functor_reducer,
                                 const Tag tag) {
-    using value_type = typename ReducerType::value_type;
-    value_type value;
-    ReducerType reducer_example = ReducerType(value);
-    return policy.team_size_recommended(functor, reducer_example, tag);
+    return policy.team_size_recommended(functor_reducer.get_functor(),
+                                        functor_reducer.get_reducer(), tag);
   }
-  template <typename Policy, typename Functor>
+  template <typename Policy, typename FunctorReducer>
   int get_mdrange_max_tile_size_product(const Policy& policy,
-                                        const Functor& functor,
+                                        const FunctorReducer& functor_reducer,
                                         const Kokkos::ParallelReduceTag&) {
     using exec_space = typename Policy::execution_space;
-    using driver = Kokkos::Impl::ParallelReduce<Functor, Policy, exec_space>;
-    return driver::max_tile_size_product(policy, functor);
+    using driver = Kokkos::Impl::ParallelReduce<FunctorReducer, Policy, exec_space>;
+    return driver::max_tile_size_product(policy, functor_reducer.get_functor());
   }
 };
 
@@ -442,7 +444,7 @@ auto generic_tune_policy(const std::string& label_in, Map& map,
         return (map.emplace(
                        label,
                        Tuner(label, policy, functor, tag,
-                             Impl::ComplexReducerSizeCalculator<ReducerType>{}))
+                             Impl::ComplexReducerSizeCalculator{}))
                     .first);
       }
       return my_tuner;
