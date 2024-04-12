@@ -17,7 +17,7 @@
 #ifndef KOKKOS_STD_ALGORITHMS_TRASFORM_EXCLUSIVE_SCAN_HPP
 #define KOKKOS_STD_ALGORITHMS_TRASFORM_EXCLUSIVE_SCAN_HPP
 
-// IWYU pragma: private; include <Kokkos_StdAlgorithms.hpp>
+// IWYU pragma: private, include "Kokkos_StdAlgorithms.hpp"
 #include "impl/Kokkos_TransformExclusiveScan.hpp"
 #include "Kokkos_BeginEnd.hpp"
 

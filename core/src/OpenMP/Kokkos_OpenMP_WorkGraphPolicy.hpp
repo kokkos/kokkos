@@ -17,7 +17,7 @@
 #ifndef KOKKOS_OPENMP_WORKGRAPHPOLICY_HPP
 #define KOKKOS_OPENMP_WORKGRAPHPOLICY_HPP
 
-// IWYU pragma: private; include <Kokkos_Core.hpp>
+// IWYU pragma: private, include "Kokkos_Core.hpp"
 #include <OpenMP/Kokkos_OpenMP.hpp>
 
 namespace Kokkos {

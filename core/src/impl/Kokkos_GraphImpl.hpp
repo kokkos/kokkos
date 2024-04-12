@@ -17,7 +17,7 @@
 #ifndef KOKKOS_IMPL_KOKKOS_GRAPHIMPL_HPP
 #define KOKKOS_IMPL_KOKKOS_GRAPHIMPL_HPP
 
-// IWYU pragma: private; include <Kokkos_Core.hpp>
+// IWYU pragma: private, include "Kokkos_Core.hpp"
 #include <Kokkos_Macros.hpp>
 
 #include <Kokkos_Core_fwd.hpp>

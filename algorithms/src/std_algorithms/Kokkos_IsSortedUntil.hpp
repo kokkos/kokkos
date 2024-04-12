@@ -17,7 +17,7 @@
 #ifndef KOKKOS_STD_ALGORITHMS_IS_SORTED_UNTIL_HPP
 #define KOKKOS_STD_ALGORITHMS_IS_SORTED_UNTIL_HPP
 
-// IWYU pragma: private; include <Kokkos_StdAlgorithms.hpp>
+// IWYU pragma: private, include "Kokkos_StdAlgorithms.hpp"
 #include "impl/Kokkos_IsSortedUntil.hpp"
 #include "Kokkos_BeginEnd.hpp"
 

@@ -17,7 +17,7 @@
 #ifndef KOKKOS_SORT_PUBLIC_API_HPP_
 #define KOKKOS_SORT_PUBLIC_API_HPP_
 
-// IWYU pragma: private; include <Kokkos_Sort.hpp>
+// IWYU pragma: private, include "Kokkos_Sort.hpp"
 #include "./impl/Kokkos_SortImpl.hpp"
 #include <std_algorithms/Kokkos_BeginEnd.hpp>
 #include <Kokkos_Core.hpp>

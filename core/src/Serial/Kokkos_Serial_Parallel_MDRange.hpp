@@ -17,7 +17,7 @@
 #ifndef KOKKOS_SERIAL_PARALLEL_MDRANGE_HPP
 #define KOKKOS_SERIAL_PARALLEL_MDRANGE_HPP
 
-// IWYU pragma: private; include <Kokkos_Graph.hpp>
+// IWYU pragma: private, include "Kokkos_Graph.hpp"
 #include <Kokkos_Parallel.hpp>
 #include <KokkosExp_MDRangePolicy.hpp>
 

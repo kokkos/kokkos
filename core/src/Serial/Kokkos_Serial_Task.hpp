@@ -17,7 +17,7 @@
 #ifndef KOKKOS_IMPL_SERIAL_TASK_HPP
 #define KOKKOS_IMPL_SERIAL_TASK_HPP
 
-// IWYU pragma: private; include <Kokkos_Graph.hpp>
+// IWYU pragma: private, include "Kokkos_Graph.hpp"
 #include <Kokkos_Macros.hpp>
 #if defined(KOKKOS_ENABLE_TASKDAG)
 

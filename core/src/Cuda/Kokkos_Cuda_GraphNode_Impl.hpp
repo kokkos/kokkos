@@ -17,7 +17,7 @@
 #ifndef KOKKOS_KOKKOS_CUDA_GRAPHNODE_IMPL_HPP
 #define KOKKOS_KOKKOS_CUDA_GRAPHNODE_IMPL_HPP
 
-// IWYU pragma: private; include <Kokkos_Graph.hpp>
+// IWYU pragma: private, include "Kokkos_Graph.hpp"
 #include <Kokkos_Macros.hpp>
 
 #if defined(KOKKOS_ENABLE_CUDA)

@@ -17,7 +17,7 @@
 #ifndef KOKKOS_THREADS_WORKGRAPHPOLICY_HPP
 #define KOKKOS_THREADS_WORKGRAPHPOLICY_HPP
 
-// IWYU pragma: private; include <Kokkos_Core.hpp>
+// IWYU pragma: private, include "Kokkos_Core.hpp"
 #include <Kokkos_Core_fwd.hpp>
 #include <Threads/Kokkos_Threads_Instance.hpp>
 

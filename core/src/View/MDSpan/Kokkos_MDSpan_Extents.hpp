@@ -22,7 +22,7 @@ static_assert(false,
 #ifndef KOKKOS_EXPERIMENTAL_MDSPAN_EXTENTS_HPP
 #define KOKKOS_EXPERIMENTAL_MDSPAN_EXTENTS_HPP
 
-// IWYU pragma: private; include <Kokkos_Core.hpp>
+// IWYU pragma: private, include "Kokkos_Core.hpp"
 #include "Kokkos_MDSpan_Header.hpp"
 
 namespace Kokkos::Impl {

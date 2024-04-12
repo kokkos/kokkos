@@ -17,7 +17,7 @@
 #ifndef KOKKOS_HIP_WORKGRAPHPOLICY_HPP
 #define KOKKOS_HIP_WORKGRAPHPOLICY_HPP
 
-// IWYU pragma: private; include <Kokkos_Core.hpp>
+// IWYU pragma: private, include "Kokkos_Core.hpp"
 #include <HIP/Kokkos_HIP.hpp>
 #include <HIP/Kokkos_HIP_Instance.hpp>
 #include <HIP/Kokkos_HIP_KernelLaunch.hpp>

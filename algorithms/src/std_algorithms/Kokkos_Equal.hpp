@@ -17,7 +17,7 @@
 #ifndef KOKKOS_STD_ALGORITHMS_EQUAL_HPP
 #define KOKKOS_STD_ALGORITHMS_EQUAL_HPP
 
-// IWYU pragma: private; include <Kokkos_StdAlgorithms.hpp>
+// IWYU pragma: private, include "Kokkos_StdAlgorithms.hpp"
 #include "impl/Kokkos_Equal.hpp"
 #include "Kokkos_BeginEnd.hpp"
 

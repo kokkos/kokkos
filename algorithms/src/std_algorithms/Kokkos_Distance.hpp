@@ -17,7 +17,7 @@
 #ifndef KOKKOS_STD_ALGORITHMS_DISTANCE_HPP
 #define KOKKOS_STD_ALGORITHMS_DISTANCE_HPP
 
-// IWYU pragma: private; include <Kokkos_StdAlgorithms.hpp>
+// IWYU pragma: private, include "Kokkos_StdAlgorithms.hpp"
 #include "impl/Kokkos_Constraints.hpp"
 #include "impl/Kokkos_RandomAccessIterator.hpp"
 

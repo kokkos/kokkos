@@ -17,7 +17,7 @@
 #ifndef KOKKOS_IMPL_TASKQUEUEMEMORYMANAGER_HPP
 #define KOKKOS_IMPL_TASKQUEUEMEMORYMANAGER_HPP
 
-// IWYU pragma: private; include <Kokkos_Core.hpp>
+// IWYU pragma: private, include "Kokkos_Core.hpp"
 #include <Kokkos_Macros.hpp>
 #if defined(KOKKOS_ENABLE_TASKDAG)
 

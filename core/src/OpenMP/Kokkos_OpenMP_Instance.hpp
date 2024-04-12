@@ -17,7 +17,7 @@
 #ifndef KOKKOS_OPENMP_INSTANCE_HPP
 #define KOKKOS_OPENMP_INSTANCE_HPP
 
-// IWYU pragma: private; include <Kokkos_Core.hpp>
+// IWYU pragma: private, include "Kokkos_Core.hpp"
 #include <Kokkos_Macros.hpp>
 #if !defined(_OPENMP) && !defined(__CUDA_ARCH__) && \
     !defined(__HIP_DEVICE_COMPILE__) && !defined(__SYCL_DEVICE_ONLY__)

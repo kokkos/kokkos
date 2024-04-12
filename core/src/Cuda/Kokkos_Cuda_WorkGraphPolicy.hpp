@@ -17,7 +17,7 @@
 #ifndef KOKKOS_CUDA_WORKGRAPHPOLICY_HPP
 #define KOKKOS_CUDA_WORKGRAPHPOLICY_HPP
 
-// IWYU pragma: private; include <Kokkos_Core.hpp>
+// IWYU pragma: private, include "Kokkos_Core.hpp"
 #include <Cuda/Kokkos_Cuda.hpp>
 #include <Cuda/Kokkos_Cuda_KernelLaunch.hpp>
 
