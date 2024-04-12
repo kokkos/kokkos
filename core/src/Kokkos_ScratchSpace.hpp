@@ -15,6 +15,7 @@
 //@HEADER
 
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+// IWYU pragma: private; include <Kokkos_Core.hpp>
 #include <Kokkos_Macros.hpp>
 static_assert(false,
               "Including non-public Kokkos header files is not allowed.");

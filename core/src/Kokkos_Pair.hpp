@@ -27,8 +27,8 @@
 #define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_PAIR
 #endif
 
-#include <Kokkos_Macros.hpp>
-#include <Kokkos_Swap.hpp>
+#include <Kokkos_Macros.hpp> // IWYU pragma: export
+#include <Kokkos_Swap.hpp> // IWYU pragma: export
 #include <utility>
 
 namespace Kokkos {

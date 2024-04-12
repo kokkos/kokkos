@@ -17,6 +17,7 @@
 #ifndef KOKKOS_STD_ALGORITHMS_SEARCH_N_HPP
 #define KOKKOS_STD_ALGORITHMS_SEARCH_N_HPP
 
+// IWYU pragma: private; include <Kokkos_StdAlgorithms.hpp>
 #include "impl/Kokkos_SearchN.hpp"
 #include "Kokkos_BeginEnd.hpp"
 

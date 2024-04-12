@@ -17,6 +17,7 @@
 #ifndef KOKKOS_CUDA_TEAM_HPP
 #define KOKKOS_CUDA_TEAM_HPP
 
+// IWYU pragma: private
 #include <algorithm>
 
 #include <Kokkos_Macros.hpp>

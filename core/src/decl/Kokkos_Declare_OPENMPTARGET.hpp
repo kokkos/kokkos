@@ -18,6 +18,7 @@
 #define KOKKOS_DECLARE_OPENMPTARGET_HPP
 
 #if defined(KOKKOS_ENABLE_OPENMPTARGET)
+// IWYU pragma: private
 #include <OpenMPTarget/Kokkos_OpenMPTarget.hpp>
 #include <OpenMPTarget/Kokkos_OpenMPTargetSpace.hpp>
 #include <OpenMPTarget/Kokkos_OpenMPTarget_Reducer.hpp>

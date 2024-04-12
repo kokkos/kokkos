@@ -17,6 +17,7 @@
 #ifndef KOKKOS_STD_ALGORITHMS_IS_PARTITIONED_HPP
 #define KOKKOS_STD_ALGORITHMS_IS_PARTITIONED_HPP
 
+// IWYU pragma: private; include <Kokkos_StdAlgorithms.hpp>
 #include "impl/Kokkos_IsPartitioned.hpp"
 #include "Kokkos_BeginEnd.hpp"
 

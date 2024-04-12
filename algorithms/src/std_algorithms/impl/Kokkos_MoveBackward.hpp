@@ -17,6 +17,7 @@
 #ifndef KOKKOS_STD_ALGORITHMS_MOVE_BACKWARD_IMPL_HPP
 #define KOKKOS_STD_ALGORITHMS_MOVE_BACKWARD_IMPL_HPP
 
+// IWYU pragma: private; include <Kokkos_StdAlgorithms.hpp>
 #include <Kokkos_Core.hpp>
 #include "Kokkos_Constraints.hpp"
 #include "Kokkos_HelperPredicates.hpp"

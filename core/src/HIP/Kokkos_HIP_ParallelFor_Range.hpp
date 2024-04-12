@@ -17,6 +17,7 @@
 #ifndef KOKKOS_HIP_PARALLEL_FOR_RANGE_HPP
 #define KOKKOS_HIP_PARALLEL_FOR_RANGE_HPP
 
+// IWYU pragma: private
 #include <Kokkos_Parallel.hpp>
 
 #include <HIP/Kokkos_HIP_BlockSize_Deduction.hpp>

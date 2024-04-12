@@ -17,6 +17,7 @@
 #ifndef KOKKOS_IMPL_HOSTTHREADTEAM_HPP
 #define KOKKOS_IMPL_HOSTTHREADTEAM_HPP
 
+// IWYU pragma: private; include <Kokkos_Core.hpp>
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_Pair.hpp>
 #include <Kokkos_Atomic.hpp>

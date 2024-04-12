@@ -17,6 +17,7 @@
 #ifndef KOKKOS_IMPL_KOKKOS_TOOLS_GENERIC_HPP
 #define KOKKOS_IMPL_KOKKOS_TOOLS_GENERIC_HPP
 
+// IWYU pragma: private; include <Kokkos_Core.hpp>
 #include <impl/Kokkos_Profiling.hpp>
 #include <impl/Kokkos_FunctorAnalysis.hpp>
 

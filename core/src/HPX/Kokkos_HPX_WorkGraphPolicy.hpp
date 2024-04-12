@@ -17,6 +17,7 @@
 #ifndef KOKKOS_HPX_WORKGRAPHPOLICY_HPP
 #define KOKKOS_HPX_WORKGRAPHPOLICY_HPP
 
+// IWYU pragma: private; include <Kokkos_Core.hpp>
 #include <HPX/Kokkos_HPX.hpp>
 
 #include <hpx/execution.hpp>

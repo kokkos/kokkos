@@ -18,6 +18,7 @@
 #define KOKKOS_DECLARE_HIP_HPP
 
 #if defined(KOKKOS_ENABLE_HIP)
+// IWYU pragma: private
 #include <HIP/Kokkos_HIP.hpp>
 #include <HIP/Kokkos_HIP_Space.hpp>
 #include <HIP/Kokkos_HIP_DeepCopy.hpp>

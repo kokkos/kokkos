@@ -17,6 +17,7 @@
 #ifndef KOKKOS_STD_ALGORITHMS_MOVE_HPP
 #define KOKKOS_STD_ALGORITHMS_MOVE_HPP
 
+// IWYU pragma: private; include <Kokkos_StdAlgorithms.hpp>
 #include "impl/Kokkos_Move.hpp"
 #include "Kokkos_BeginEnd.hpp"
 

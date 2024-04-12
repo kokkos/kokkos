@@ -17,6 +17,7 @@
 #ifndef KOKKOS_OPENMP_PARALLEL_SCAN_HPP
 #define KOKKOS_OPENMP_PARALLEL_SCAN_HPP
 
+// IWYU pragma: private
 #include <omp.h>
 #include <OpenMP/Kokkos_OpenMP_Instance.hpp>
 

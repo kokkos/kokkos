@@ -18,6 +18,7 @@
 #define KOKKOS_DECLARE_OPENMP_HPP
 
 #if defined(KOKKOS_ENABLE_OPENMP)
+// IWYU pragma: private
 #include <OpenMP/Kokkos_OpenMP.hpp>
 #include <OpenMP/Kokkos_OpenMP_MDRangePolicy.hpp>
 #include <OpenMP/Kokkos_OpenMP_UniqueToken.hpp>

@@ -17,6 +17,7 @@
 #ifndef KOKKOS_STD_ALGORITHMS_GENERATE_HPP
 #define KOKKOS_STD_ALGORITHMS_GENERATE_HPP
 
+// IWYU pragma: private; include <Kokkos_StdAlgorithms.hpp>
 #include "impl/Kokkos_GenerateGenerateN.hpp"
 #include "Kokkos_BeginEnd.hpp"
 

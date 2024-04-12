@@ -21,8 +21,8 @@
 #define KOKKOS_IMPL_PUBLIC_INCLUDE_PROFILING_SCOPEDREGION
 #endif
 
-#include <Kokkos_Macros.hpp>
-#include <impl/Kokkos_Profiling.hpp>
+#include <Kokkos_Macros.hpp> // IWYU pragma: export
+#include <impl/Kokkos_Profiling.hpp> // IWYU pragma: export
 
 #include <string>
 

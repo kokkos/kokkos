@@ -21,7 +21,7 @@
 #define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_MATHSPECFUNCTIONS
 #endif
 
-#include <Kokkos_Macros.hpp>
+#include <Kokkos_Macros.hpp> // IWYU pragma: export
 #include <cmath>
 #include <algorithm>
 #include <type_traits>

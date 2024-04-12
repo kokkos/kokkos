@@ -19,6 +19,7 @@
 #ifndef KOKKOS_IMPL_LINKEDLISTNODE_HPP
 #define KOKKOS_IMPL_LINKEDLISTNODE_HPP
 
+// IWYU pragma: private; include <Kokkos_Core.hpp>
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_TASKDAG
 

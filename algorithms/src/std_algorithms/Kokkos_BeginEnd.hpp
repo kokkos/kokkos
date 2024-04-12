@@ -17,6 +17,7 @@
 #ifndef KOKKOS_BEGIN_END_HPP
 #define KOKKOS_BEGIN_END_HPP
 
+// IWYU pragma: private
 #include <Kokkos_View.hpp>
 #include "impl/Kokkos_RandomAccessIterator.hpp"
 #include "impl/Kokkos_Constraints.hpp"

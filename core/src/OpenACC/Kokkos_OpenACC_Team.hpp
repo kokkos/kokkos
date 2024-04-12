@@ -17,6 +17,7 @@
 #ifndef KOKKOS_OPENACC_TEAM_HPP
 #define KOKKOS_OPENACC_TEAM_HPP
 
+// IWYU pragma: private
 #include <openacc.h>
 #include <impl/Kokkos_Traits.hpp>
 #include <OpenACC/Kokkos_OpenACC.hpp>

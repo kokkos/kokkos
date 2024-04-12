@@ -21,7 +21,7 @@
 #define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_NESTED_SORT
 #endif
 
-#include "sorting/Kokkos_NestedSortPublicAPI.hpp"
+#include "sorting/Kokkos_NestedSortPublicAPI.hpp" // IWYU pragma: export
 
 #ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_NESTED_SORT
 #undef KOKKOS_IMPL_PUBLIC_INCLUDE

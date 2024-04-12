@@ -17,6 +17,7 @@
 #ifndef KOKKOS_SYCL_PARALLEL_REDUCE_RANGE_HPP
 #define KOKKOS_SYCL_PARALLEL_REDUCE_RANGE_HPP
 
+// IWYU pragma: private
 #include <Kokkos_Macros.hpp>
 
 #include <Kokkos_BitManipulation.hpp>

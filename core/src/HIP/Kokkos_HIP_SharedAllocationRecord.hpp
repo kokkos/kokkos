@@ -17,6 +17,7 @@
 #ifndef KOKKOS_HIP_SHARED_ALLOCATION_RECORD_HPP
 #define KOKKOS_HIP_SHARED_ALLOCATION_RECORD_HPP
 
+// IWYU pragma: private
 #include <HIP/Kokkos_HIP_Space.hpp>
 #include <impl/Kokkos_SharedAlloc.hpp>
 

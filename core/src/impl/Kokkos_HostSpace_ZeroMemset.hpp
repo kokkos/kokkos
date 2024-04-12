@@ -17,6 +17,7 @@
 #ifndef KOKKOS_HOSTSPACE_ZEROMEMSET_HPP
 #define KOKKOS_HOSTSPACE_ZEROMEMSET_HPP
 
+// IWYU pragma: private; include <Kokkos_Core.hpp>
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_HostSpace.hpp>
 #include <impl/Kokkos_ZeroMemset_fwd.hpp>

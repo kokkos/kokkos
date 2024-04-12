@@ -23,7 +23,7 @@
 
 #include <vector>
 #include <Kokkos_Core.hpp>
-#include <Kokkos_View.hpp>
+#include <Kokkos_View.hpp> // IWYU pragma: export
 #include <Kokkos_DualView.hpp>
 
 namespace Kokkos {

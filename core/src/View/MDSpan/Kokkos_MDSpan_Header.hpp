@@ -24,6 +24,7 @@ static_assert(false,
 
 // Look for the right mdspan
 #if __cplusplus >= 202002L
+// IWYU pragma: private; include <Kokkos_Core.hpp>
 #include <version>
 #endif
 

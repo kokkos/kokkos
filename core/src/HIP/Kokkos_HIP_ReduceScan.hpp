@@ -17,6 +17,7 @@
 #ifndef KOKKOS_HIP_REDUCESCAN_HPP
 #define KOKKOS_HIP_REDUCESCAN_HPP
 
+// IWYU pragma: private
 #include <Kokkos_Macros.hpp>
 
 #if defined(__HIPCC__)

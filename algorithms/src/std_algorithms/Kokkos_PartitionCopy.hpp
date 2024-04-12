@@ -17,6 +17,7 @@
 #ifndef KOKKOS_STD_ALGORITHMS_PARTITION_COPY_HPP
 #define KOKKOS_STD_ALGORITHMS_PARTITION_COPY_HPP
 
+// IWYU pragma: private; include <Kokkos_StdAlgorithms.hpp>
 #include "impl/Kokkos_PartitionCopy.hpp"
 #include "Kokkos_BeginEnd.hpp"
 

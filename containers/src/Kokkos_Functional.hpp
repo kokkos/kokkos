@@ -21,8 +21,8 @@
 #define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_FUNCTIONAL
 #endif
 
-#include <Kokkos_Macros.hpp>
-#include <impl/Kokkos_Functional_impl.hpp>
+#include <Kokkos_Macros.hpp> // IWYU pragma: export
+#include <impl/Kokkos_Functional_impl.hpp> // IWYU pragma: export
 
 namespace Kokkos {
 

@@ -17,6 +17,7 @@
 #ifndef KOKKOS_STD_ALGORITHMS_COPY_BACKWARD_HPP
 #define KOKKOS_STD_ALGORITHMS_COPY_BACKWARD_HPP
 
+// IWYU pragma: private; include <Kokkos_StdAlgorithms.hpp>
 #include "impl/Kokkos_CopyBackward.hpp"
 #include "Kokkos_BeginEnd.hpp"
 

@@ -17,6 +17,7 @@
 #ifndef KOKKOS_STD_ALGORITHMS_ITER_SWAP_HPP
 #define KOKKOS_STD_ALGORITHMS_ITER_SWAP_HPP
 
+// IWYU pragma: private; include <Kokkos_StdAlgorithms.hpp>
 #include <Kokkos_Core.hpp>
 #include "impl/Kokkos_Constraints.hpp"
 

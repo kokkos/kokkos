@@ -17,6 +17,7 @@
 #ifndef KOKKOS_HIP_DEEP_COPY_HPP
 #define KOKKOS_HIP_DEEP_COPY_HPP
 
+// IWYU pragma: private
 #include <HIP/Kokkos_HIP_Space.hpp>
 #include <HIP/Kokkos_HIP_Error.hpp>  // HIP_SAFE_CALL
 

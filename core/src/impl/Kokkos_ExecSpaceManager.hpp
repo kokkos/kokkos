@@ -17,6 +17,7 @@
 #ifndef KOKKOS_EXEC_SPACE_MANAGER_HPP
 #define KOKKOS_EXEC_SPACE_MANAGER_HPP
 
+// IWYU pragma: private
 #include <impl/Kokkos_InitializationSettings.hpp>
 #include <Kokkos_DetectionIdiom.hpp>
 #include <Kokkos_Concepts.hpp>

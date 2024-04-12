@@ -16,6 +16,7 @@
 #ifndef KOKKOS_CUDA_ZEROMEMSET_HPP
 #define KOKKOS_CUDA_ZEROMEMSET_HPP
 
+// IWYU pragma: private
 #include <Kokkos_Macros.hpp>
 #include <Cuda/Kokkos_Cuda.hpp>
 #include <impl/Kokkos_ZeroMemset_fwd.hpp>

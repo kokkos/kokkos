@@ -19,6 +19,7 @@
 
 //----------------------------------------------------------------------------
 
+// IWYU pragma: private; include <Kokkos_Core.hpp>
 #include <Kokkos_Macros.hpp>
 #if defined(KOKKOS_ENABLE_TASKDAG)
 

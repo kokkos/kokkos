@@ -17,6 +17,7 @@
 #ifndef KOKKOS_COMBINED_REDUCER_HPP
 #define KOKKOS_COMBINED_REDUCER_HPP
 
+// IWYU pragma: private; include <Kokkos_Core.hpp>
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Core_fwd.hpp>
 

@@ -25,10 +25,10 @@
 // Kokkos_Macros.hpp does introspection on configuration options
 // and compiler environment then sets a collection of #define macros.
 
-#include <Kokkos_Macros.hpp>
-#include <Kokkos_Printf.hpp>
-#include <impl/Kokkos_Error.hpp>
-#include <impl/Kokkos_Utilities.hpp>
+#include <Kokkos_Macros.hpp> // IWYU pragma: export
+#include <Kokkos_Printf.hpp> // IWYU pragma: export
+#include <impl/Kokkos_Error.hpp> // IWYU pragma: export
+#include <impl/Kokkos_Utilities.hpp> // IWYU pragma: export
 
 //----------------------------------------------------------------------------
 // Have assumed a 64-bit build (8-byte pointers) throughout the code base.

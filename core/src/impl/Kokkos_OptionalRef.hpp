@@ -19,6 +19,7 @@
 #ifndef KOKKOS_IMPL_OPTIONALREF_HPP
 #define KOKKOS_IMPL_OPTIONALREF_HPP
 
+// IWYU pragma: private; include <Kokkos_Core.hpp>
 #include <Kokkos_Macros.hpp>
 
 #include <Kokkos_Core_fwd.hpp>

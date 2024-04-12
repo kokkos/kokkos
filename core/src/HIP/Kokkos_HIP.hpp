@@ -17,6 +17,7 @@
 #ifndef KOKKOS_HIP_HPP
 #define KOKKOS_HIP_HPP
 
+// IWYU pragma: private; include <Kokkos_Core.hpp>
 #include <Kokkos_Core_fwd.hpp>
 
 #include <Kokkos_Layout.hpp>

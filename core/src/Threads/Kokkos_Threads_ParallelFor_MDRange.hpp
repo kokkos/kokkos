@@ -17,6 +17,7 @@
 #ifndef KOKKOS_THREADS_PARALLEL_FOR_MDRANGE_HPP
 #define KOKKOS_THREADS_PARALLEL_FOR_MDRANGE_HPP
 
+// IWYU pragma: private
 #include <Kokkos_Parallel.hpp>
 
 #include <KokkosExp_MDRangePolicy.hpp>

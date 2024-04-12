@@ -17,6 +17,7 @@
 #ifndef KOKKOS_OPENMP_TEAM_HPP
 #define KOKKOS_OPENMP_TEAM_HPP
 
+// IWYU pragma: private; include <Kokkos_Core.hpp>
 #include <Kokkos_Macros.hpp>
 #if defined(KOKKOS_ENABLE_OPENMP)
 

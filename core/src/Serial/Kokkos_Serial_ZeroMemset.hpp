@@ -17,6 +17,7 @@
 #ifndef KOKKOS_SERIAL_ZEROMEMSET_HPP
 #define KOKKOS_SERIAL_ZEROMEMSET_HPP
 
+// IWYU pragma: private
 #include <Kokkos_Macros.hpp>
 #include <impl/Kokkos_ZeroMemset_fwd.hpp>
 #include <Serial/Kokkos_Serial.hpp>

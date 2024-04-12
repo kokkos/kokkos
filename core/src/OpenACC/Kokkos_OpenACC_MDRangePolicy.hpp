@@ -17,6 +17,7 @@
 #ifndef KOKKOS_OPENACC_MDRANGE_POLICY_HPP_
 #define KOKKOS_OPENACC_MDRANGE_POLICY_HPP_
 
+// IWYU pragma: private
 #include <KokkosExp_MDRangePolicy.hpp>
 
 template <>

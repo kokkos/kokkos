@@ -17,6 +17,7 @@
 #ifndef KOKKOS_HOST_GRAPH_IMPL_HPP
 #define KOKKOS_HOST_GRAPH_IMPL_HPP
 
+// IWYU pragma: private; include <Kokkos_Graph.hpp>
 #include <Kokkos_ExecPolicy.hpp>
 #include <Kokkos_Graph.hpp>
 

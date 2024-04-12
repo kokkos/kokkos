@@ -18,6 +18,7 @@
 #define KOKKOS_DECLARE_OPENACC_HPP
 
 #if defined(KOKKOS_ENABLE_OPENACC)
+// IWYU pragma: private
 #include <OpenACC/Kokkos_OpenACC.hpp>
 #include <OpenACC/Kokkos_OpenACCSpace.hpp>
 #include <OpenACC/Kokkos_OpenACC_DeepCopy.hpp>

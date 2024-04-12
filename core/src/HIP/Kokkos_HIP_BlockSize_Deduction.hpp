@@ -17,6 +17,7 @@
 #ifndef KOKKOS_HIP_BLOCKSIZE_DEDUCTION_HPP
 #define KOKKOS_HIP_BLOCKSIZE_DEDUCTION_HPP
 
+// IWYU pragma: private
 #include <functional>
 #include <Kokkos_Macros.hpp>
 

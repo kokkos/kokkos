@@ -24,91 +24,91 @@
 /// \file Kokkos_StdAlgorithms.hpp
 /// \brief Kokkos counterparts for Standard C++ Library algorithms
 
-#include "std_algorithms/impl/Kokkos_Constraints.hpp"
-#include "std_algorithms/impl/Kokkos_RandomAccessIterator.hpp"
-#include "std_algorithms/Kokkos_BeginEnd.hpp"
+#include "std_algorithms/impl/Kokkos_Constraints.hpp" // IWYU pragma: export
+#include "std_algorithms/impl/Kokkos_RandomAccessIterator.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_BeginEnd.hpp" // IWYU pragma: export
 
 // distance
-#include "std_algorithms/Kokkos_Distance.hpp"
+#include "std_algorithms/Kokkos_Distance.hpp" // IWYU pragma: export
 
 // note that we categorize below the headers
 // following the std classification.
 
 // modifying ops
-#include "std_algorithms/Kokkos_IterSwap.hpp"
+#include "std_algorithms/Kokkos_IterSwap.hpp" // IWYU pragma: export
 
 // non-modifying sequence
-#include "std_algorithms/Kokkos_AdjacentFind.hpp"
-#include "std_algorithms/Kokkos_Count.hpp"
-#include "std_algorithms/Kokkos_CountIf.hpp"
-#include "std_algorithms/Kokkos_AllOf.hpp"
-#include "std_algorithms/Kokkos_AnyOf.hpp"
-#include "std_algorithms/Kokkos_NoneOf.hpp"
-#include "std_algorithms/Kokkos_Equal.hpp"
-#include "std_algorithms/Kokkos_Find.hpp"
-#include "std_algorithms/Kokkos_FindIf.hpp"
-#include "std_algorithms/Kokkos_FindIfNot.hpp"
-#include "std_algorithms/Kokkos_FindEnd.hpp"
-#include "std_algorithms/Kokkos_FindFirstOf.hpp"
-#include "std_algorithms/Kokkos_ForEach.hpp"
-#include "std_algorithms/Kokkos_ForEachN.hpp"
-#include "std_algorithms/Kokkos_LexicographicalCompare.hpp"
-#include "std_algorithms/Kokkos_Mismatch.hpp"
-#include "std_algorithms/Kokkos_Search.hpp"
-#include "std_algorithms/Kokkos_SearchN.hpp"
+#include "std_algorithms/Kokkos_AdjacentFind.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_Count.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_CountIf.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_AllOf.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_AnyOf.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_NoneOf.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_Equal.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_Find.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_FindIf.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_FindIfNot.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_FindEnd.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_FindFirstOf.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_ForEach.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_ForEachN.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_LexicographicalCompare.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_Mismatch.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_Search.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_SearchN.hpp" // IWYU pragma: export
 
 // modifying sequence
-#include "std_algorithms/Kokkos_Fill.hpp"
-#include "std_algorithms/Kokkos_FillN.hpp"
-#include "std_algorithms/Kokkos_Replace.hpp"
-#include "std_algorithms/Kokkos_ReplaceIf.hpp"
-#include "std_algorithms/Kokkos_ReplaceCopyIf.hpp"
-#include "std_algorithms/Kokkos_ReplaceCopy.hpp"
-#include "std_algorithms/Kokkos_Copy.hpp"
-#include "std_algorithms/Kokkos_CopyN.hpp"
-#include "std_algorithms/Kokkos_CopyBackward.hpp"
-#include "std_algorithms/Kokkos_CopyIf.hpp"
-#include "std_algorithms/Kokkos_Transform.hpp"
-#include "std_algorithms/Kokkos_Generate.hpp"
-#include "std_algorithms/Kokkos_GenerateN.hpp"
-#include "std_algorithms/Kokkos_Reverse.hpp"
-#include "std_algorithms/Kokkos_ReverseCopy.hpp"
-#include "std_algorithms/Kokkos_Move.hpp"
-#include "std_algorithms/Kokkos_MoveBackward.hpp"
-#include "std_algorithms/Kokkos_SwapRanges.hpp"
-#include "std_algorithms/Kokkos_Unique.hpp"
-#include "std_algorithms/Kokkos_UniqueCopy.hpp"
-#include "std_algorithms/Kokkos_Rotate.hpp"
-#include "std_algorithms/Kokkos_RotateCopy.hpp"
-#include "std_algorithms/Kokkos_Remove.hpp"
-#include "std_algorithms/Kokkos_RemoveIf.hpp"
-#include "std_algorithms/Kokkos_RemoveCopy.hpp"
-#include "std_algorithms/Kokkos_RemoveCopyIf.hpp"
-#include "std_algorithms/Kokkos_ShiftLeft.hpp"
-#include "std_algorithms/Kokkos_ShiftRight.hpp"
+#include "std_algorithms/Kokkos_Fill.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_FillN.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_Replace.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_ReplaceIf.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_ReplaceCopyIf.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_ReplaceCopy.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_Copy.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_CopyN.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_CopyBackward.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_CopyIf.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_Transform.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_Generate.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_GenerateN.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_Reverse.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_ReverseCopy.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_Move.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_MoveBackward.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_SwapRanges.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_Unique.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_UniqueCopy.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_Rotate.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_RotateCopy.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_Remove.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_RemoveIf.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_RemoveCopy.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_RemoveCopyIf.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_ShiftLeft.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_ShiftRight.hpp" // IWYU pragma: export
 
 // sorting
-#include "std_algorithms/Kokkos_IsSortedUntil.hpp"
-#include "std_algorithms/Kokkos_IsSorted.hpp"
+#include "std_algorithms/Kokkos_IsSortedUntil.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_IsSorted.hpp" // IWYU pragma: export
 
 // min/max element
-#include "std_algorithms/Kokkos_MinElement.hpp"
-#include "std_algorithms/Kokkos_MaxElement.hpp"
-#include "std_algorithms/Kokkos_MinMaxElement.hpp"
+#include "std_algorithms/Kokkos_MinElement.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_MaxElement.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_MinMaxElement.hpp" // IWYU pragma: export
 
 // partitioning
-#include "std_algorithms/Kokkos_IsPartitioned.hpp"
-#include "std_algorithms/Kokkos_PartitionCopy.hpp"
-#include "std_algorithms/Kokkos_PartitionPoint.hpp"
+#include "std_algorithms/Kokkos_IsPartitioned.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_PartitionCopy.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_PartitionPoint.hpp" // IWYU pragma: export
 
 // numeric
-#include "std_algorithms/Kokkos_AdjacentDifference.hpp"
-#include "std_algorithms/Kokkos_Reduce.hpp"
-#include "std_algorithms/Kokkos_TransformReduce.hpp"
-#include "std_algorithms/Kokkos_ExclusiveScan.hpp"
-#include "std_algorithms/Kokkos_TransformExclusiveScan.hpp"
-#include "std_algorithms/Kokkos_InclusiveScan.hpp"
-#include "std_algorithms/Kokkos_TransformInclusiveScan.hpp"
+#include "std_algorithms/Kokkos_AdjacentDifference.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_Reduce.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_TransformReduce.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_ExclusiveScan.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_TransformExclusiveScan.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_InclusiveScan.hpp" // IWYU pragma: export
+#include "std_algorithms/Kokkos_TransformInclusiveScan.hpp" // IWYU pragma: export
 
 #ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_STD_ALGORITHMS
 #undef KOKKOS_IMPL_PUBLIC_INCLUDE

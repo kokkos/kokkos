@@ -17,6 +17,7 @@
 #ifndef KOKKOS_STD_ALGORITHMS_CONSTRAINTS_HPP_
 #define KOKKOS_STD_ALGORITHMS_CONSTRAINTS_HPP_
 
+// IWYU pragma: private
 #include <Kokkos_DetectionIdiom.hpp>
 #include <Kokkos_View.hpp>
 

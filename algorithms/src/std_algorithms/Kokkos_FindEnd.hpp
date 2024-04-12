@@ -17,6 +17,7 @@
 #ifndef KOKKOS_STD_ALGORITHMS_FIND_END_HPP
 #define KOKKOS_STD_ALGORITHMS_FIND_END_HPP
 
+// IWYU pragma: private; include <Kokkos_StdAlgorithms.hpp>
 #include "impl/Kokkos_FindEnd.hpp"
 #include "Kokkos_Equal.hpp"
 #include "Kokkos_BeginEnd.hpp"

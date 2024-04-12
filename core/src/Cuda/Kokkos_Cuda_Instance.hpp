@@ -17,6 +17,7 @@
 #ifndef KOKKOS_CUDA_INSTANCE_HPP_
 #define KOKKOS_CUDA_INSTANCE_HPP_
 
+// IWYU pragma: private; include <Kokkos_Core.hpp>
 #include <vector>
 #include <impl/Kokkos_Tools.hpp>
 #include <atomic>

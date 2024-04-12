@@ -17,6 +17,7 @@
 #ifndef KOKKOS_SYCL_PARALLEL_REDUCE_TEAM_HPP
 #define KOKKOS_SYCL_PARALLEL_REDUCE_TEAM_HPP
 
+// IWYU pragma: private
 #include <Kokkos_Parallel.hpp>
 
 #include <SYCL/Kokkos_SYCL_Team.hpp>

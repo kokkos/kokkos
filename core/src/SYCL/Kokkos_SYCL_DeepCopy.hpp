@@ -17,6 +17,7 @@
 #ifndef KOKKOS_SYCLDEEPCOPY_HPP
 #define KOKKOS_SYCLDEEPCOPY_HPP
 
+// IWYU pragma: private
 #include <Kokkos_Core_fwd.hpp>
 #include <SYCL/Kokkos_SYCL.hpp>
 

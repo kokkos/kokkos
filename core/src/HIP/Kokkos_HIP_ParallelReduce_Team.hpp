@@ -17,6 +17,7 @@
 #ifndef KOKKOS_HIP_PARALLEL_REDUCE_TEAM_HPP
 #define KOKKOS_HIP_PARALLEL_REDUCE_TEAM_HPP
 
+// IWYU pragma: private
 #include <Kokkos_Parallel.hpp>
 
 #include <HIP/Kokkos_HIP_KernelLaunch.hpp>

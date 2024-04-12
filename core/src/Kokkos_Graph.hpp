@@ -21,14 +21,14 @@
 #define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_GRAPH
 #endif
 
-#include <Kokkos_Macros.hpp>
+#include <Kokkos_Macros.hpp> // IWYU pragma: export
 #include <impl/Kokkos_Error.hpp>  // KOKKOS_EXPECTS
 
 #include <Kokkos_Graph_fwd.hpp>
-#include <impl/Kokkos_GraphImpl_fwd.hpp>
+#include <impl/Kokkos_GraphImpl_fwd.hpp> // IWYU pragma: export
 
 // GraphAccess needs to be defined, not just declared
-#include <impl/Kokkos_GraphImpl.hpp>
+#include <impl/Kokkos_GraphImpl.hpp> // IWYU pragma: export
 
 #include <functional>
 #include <memory>
@@ -156,15 +156,15 @@ Graph<ExecutionSpace> create_graph(Closure&& arg_closure) {
 
 // Even though these things are separable, include them here for now so that
 // the user only needs to include Kokkos_Graph.hpp to get the whole facility.
-#include <Kokkos_GraphNode.hpp>
+#include <Kokkos_GraphNode.hpp> // IWYU pragma: export
 
-#include <impl/Kokkos_GraphNodeImpl.hpp>
-#include <impl/Kokkos_Default_Graph_Impl.hpp>
-#include <Cuda/Kokkos_Cuda_Graph_Impl.hpp>
+#include <impl/Kokkos_GraphNodeImpl.hpp> // IWYU pragma: export
+#include <impl/Kokkos_Default_Graph_Impl.hpp> // IWYU pragma: export
+#include <Cuda/Kokkos_Cuda_Graph_Impl.hpp> // IWYU pragma: export
 #if defined(KOKKOS_ENABLE_HIP)
 // The implementation of hipGraph in ROCm 5.2 is bugged, so we cannot use it.
 #if !((HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR == 2))
-#include <HIP/Kokkos_HIP_Graph_Impl.hpp>
+#include <HIP/Kokkos_HIP_Graph_Impl.hpp> // IWYU pragma: export
 #endif
 #endif
 #ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_GRAPH

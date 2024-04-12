@@ -16,4 +16,5 @@
 
 // Deprecated file for backward compatibility
 
+// IWYU pragma: private
 #include <impl/Kokkos_ViewMapping.hpp>

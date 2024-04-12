@@ -17,6 +17,7 @@
 #ifndef KOKKOS_THREADSTEAM_HPP
 #define KOKKOS_THREADSTEAM_HPP
 
+// IWYU pragma: private
 #include <Kokkos_Macros.hpp>
 
 #include <cstdio>

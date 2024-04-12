@@ -21,9 +21,9 @@
 #define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_HALF
 #endif
 
-#include <impl/Kokkos_Half_FloatingPointWrapper.hpp>
-#include <impl/Kokkos_Half_NumericTraits.hpp>
-#include <impl/Kokkos_Half_MathematicalFunctions.hpp>
+#include <impl/Kokkos_Half_FloatingPointWrapper.hpp> // IWYU pragma: export
+#include <impl/Kokkos_Half_NumericTraits.hpp> // IWYU pragma: export
+#include <impl/Kokkos_Half_MathematicalFunctions.hpp> // IWYU pragma: export
 
 #ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_HALF
 #undef KOKKOS_IMPL_PUBLIC_INCLUDE

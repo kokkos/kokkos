@@ -17,6 +17,7 @@
 #ifndef KOKKOS_OPENMP_UNIQUE_TOKEN_HPP
 #define KOKKOS_OPENMP_UNIQUE_TOKEN_HPP
 
+// IWYU pragma: private
 #include <Kokkos_UniqueToken.hpp>
 
 namespace Kokkos::Experimental {

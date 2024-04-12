@@ -17,6 +17,7 @@
 #ifndef KOKKOS_RANDOM_ACCESS_ITERATOR_IMPL_HPP
 #define KOKKOS_RANDOM_ACCESS_ITERATOR_IMPL_HPP
 
+// IWYU pragma: private
 #include <iterator>
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_View.hpp>

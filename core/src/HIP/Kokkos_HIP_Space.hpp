@@ -17,6 +17,7 @@
 #ifndef KOKKOS_HIPSPACE_HPP
 #define KOKKOS_HIPSPACE_HPP
 
+// IWYU pragma: private; include <Kokkos_Core.hpp>
 #include <Kokkos_Core_fwd.hpp>
 
 #include <iosfwd>

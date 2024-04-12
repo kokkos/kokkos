@@ -17,6 +17,7 @@
 #ifndef KOKKOS_IMPL_KOKKOS_FIXEDBUFFERMEMORYPOOL_HPP
 #define KOKKOS_IMPL_KOKKOS_FIXEDBUFFERMEMORYPOOL_HPP
 
+// IWYU pragma: private
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_Atomic.hpp>
 

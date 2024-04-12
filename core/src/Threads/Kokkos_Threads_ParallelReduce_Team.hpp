@@ -17,6 +17,7 @@
 #ifndef KOKKOS_THREADS_PARALLEL_REDUCE_TEAM_HPP
 #define KOKKOS_THREADS_PARALLEL_REDUCE_TEAM_HPP
 
+// IWYU pragma: private
 #include <Kokkos_Parallel.hpp>
 
 namespace Kokkos {

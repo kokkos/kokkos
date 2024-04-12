@@ -17,6 +17,7 @@
 #ifndef KOKKOS_SYCL_ZEROMEMSET_HPP
 #define KOKKOS_SYCL_ZEROMEMSET_HPP
 
+// IWYU pragma: private
 #include <impl/Kokkos_ZeroMemset_fwd.hpp>
 #include <SYCL/Kokkos_SYCL.hpp>
 

@@ -17,6 +17,7 @@
 #ifndef KOKKOS_STD_ALGORITHMS_ROTATE_HPP
 #define KOKKOS_STD_ALGORITHMS_ROTATE_HPP
 
+// IWYU pragma: private; include <Kokkos_StdAlgorithms.hpp>
 #include "impl/Kokkos_Rotate.hpp"
 #include "Kokkos_BeginEnd.hpp"
 

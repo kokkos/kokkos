@@ -17,6 +17,7 @@
 #ifndef KOKKOS_STD_ALGORITHMS_SHIFT_LEFT_HPP
 #define KOKKOS_STD_ALGORITHMS_SHIFT_LEFT_HPP
 
+// IWYU pragma: private; include <Kokkos_StdAlgorithms.hpp>
 #include "impl/Kokkos_ShiftLeft.hpp"
 #include "Kokkos_BeginEnd.hpp"
 

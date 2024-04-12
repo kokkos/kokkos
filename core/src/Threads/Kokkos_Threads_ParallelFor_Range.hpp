@@ -17,6 +17,7 @@
 #ifndef KOKKOS_THREADS_PARALLEL_FOR_RANGE_HPP
 #define KOKKOS_THREADS_PARALLEL_FOR_RANGE_HPP
 
+// IWYU pragma: private
 #include <Kokkos_Parallel.hpp>
 
 namespace Kokkos {

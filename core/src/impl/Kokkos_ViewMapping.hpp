@@ -17,6 +17,7 @@
 #ifndef KOKKOS_EXPERIMENTAL_VIEW_MAPPING_HPP
 #define KOKKOS_EXPERIMENTAL_VIEW_MAPPING_HPP
 
+// IWYU pragma: private; include <Kokkos_Core.hpp>
 #include <type_traits>
 #include <initializer_list>
 

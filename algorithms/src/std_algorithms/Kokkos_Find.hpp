@@ -17,6 +17,7 @@
 #ifndef KOKKOS_STD_ALGORITHMS_FIND_HPP
 #define KOKKOS_STD_ALGORITHMS_FIND_HPP
 
+// IWYU pragma: private; include <Kokkos_StdAlgorithms.hpp>
 #include "impl/Kokkos_FindIfOrNot.hpp"
 #include "Kokkos_BeginEnd.hpp"
 

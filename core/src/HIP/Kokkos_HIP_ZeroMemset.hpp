@@ -16,6 +16,7 @@
 #ifndef KOKKOS_HIP_ZEROMEMSET_HPP
 #define KOKKOS_HIP_ZEROMEMSET_HPP
 
+// IWYU pragma: private
 #include <Kokkos_Macros.hpp>
 #include <HIP/Kokkos_HIP.hpp>
 #include <impl/Kokkos_ZeroMemset_fwd.hpp>

@@ -17,6 +17,7 @@
 #ifndef KOKKOS_STD_ALGORITHMS_NONE_OF_HPP
 #define KOKKOS_STD_ALGORITHMS_NONE_OF_HPP
 
+// IWYU pragma: private; include <Kokkos_StdAlgorithms.hpp>
 #include "impl/Kokkos_AllOfAnyOfNoneOf.hpp"
 #include "Kokkos_BeginEnd.hpp"
 

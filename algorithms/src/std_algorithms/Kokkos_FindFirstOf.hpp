@@ -17,6 +17,7 @@
 #ifndef KOKKOS_STD_ALGORITHMS_FIND_FIRST_OF_HPP
 #define KOKKOS_STD_ALGORITHMS_FIND_FIRST_OF_HPP
 
+// IWYU pragma: private; include <Kokkos_StdAlgorithms.hpp>
 #include "impl/Kokkos_FindFirstOf.hpp"
 #include "Kokkos_BeginEnd.hpp"
 

@@ -24,9 +24,9 @@
 #include <string>
 #include <vector>
 
-#include <Kokkos_View.hpp>
-#include <Kokkos_Parallel.hpp>
-#include <Kokkos_Parallel_Reduce.hpp>
+#include <Kokkos_View.hpp> // IWYU pragma: export
+#include <Kokkos_Parallel.hpp> // IWYU pragma: export
+#include <Kokkos_Parallel_Reduce.hpp> // IWYU pragma: export
 
 namespace Kokkos {
 
@@ -420,7 +420,7 @@ create_mirror(const StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type,
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-#include <impl/Kokkos_StaticCrsGraph_factory.hpp>
+#include <impl/Kokkos_StaticCrsGraph_factory.hpp> // IWYU pragma: export
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

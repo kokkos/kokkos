@@ -17,6 +17,7 @@
 #ifndef KOKKOS_SORT_FREE_FUNCS_IMPL_HPP_
 #define KOKKOS_SORT_FREE_FUNCS_IMPL_HPP_
 
+// IWYU pragma: private
 #include "../Kokkos_BinOpsPublicAPI.hpp"
 #include "../Kokkos_BinSortPublicAPI.hpp"
 #include <std_algorithms/Kokkos_BeginEnd.hpp>

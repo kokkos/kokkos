@@ -17,6 +17,7 @@
 #ifndef KOKKOS_THREADS_UNIQUETOKEN_HPP
 #define KOKKOS_THREADS_UNIQUETOKEN_HPP
 
+// IWYU pragma: private
 #include <Kokkos_UniqueToken.hpp>
 
 namespace Kokkos {

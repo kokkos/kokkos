@@ -18,6 +18,7 @@
 #define KOKKOS_DECLARE_THREADS_HPP
 
 #if defined(KOKKOS_ENABLE_THREADS)
+// IWYU pragma: private
 #include <Threads/Kokkos_Threads.hpp>
 #include <Threads/Kokkos_Threads_Instance.hpp>
 #include <Threads/Kokkos_Threads_MDRangePolicy.hpp>

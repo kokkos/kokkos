@@ -17,6 +17,7 @@
 #ifndef KOKKOS_CUDA_UNIQUE_TOKEN_HPP
 #define KOKKOS_CUDA_UNIQUE_TOKEN_HPP
 
+// IWYU pragma: private
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_CUDA
 

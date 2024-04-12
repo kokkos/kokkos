@@ -17,6 +17,7 @@
 #ifndef KOKKOS_OPENMPTARGET_PARALLEL_FOR_TEAM_HPP
 #define KOKKOS_OPENMPTARGET_PARALLEL_FOR_TEAM_HPP
 
+// IWYU pragma: private
 #include <omp.h>
 #include <sstream>
 #include <OpenMPTarget/Kokkos_OpenMPTarget_Macros.hpp>

@@ -17,6 +17,7 @@
 #ifndef KOKKOS_SYCL_UNIQUE_TOKEN_HPP
 #define KOKKOS_SYCL_UNIQUE_TOKEN_HPP
 
+// IWYU pragma: private
 #include <impl/Kokkos_ConcurrentBitset.hpp>
 #include <SYCL/Kokkos_SYCL_Space.hpp>
 #include <Kokkos_UniqueToken.hpp>

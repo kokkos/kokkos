@@ -17,6 +17,7 @@
 #ifndef KOKKOS_THREADS_INSTANCE_HPP
 #define KOKKOS_THREADS_INSTANCE_HPP
 
+// IWYU pragma: private; include <Kokkos_Core.hpp>
 #include <Kokkos_Macros.hpp>
 
 #include <cstdio>

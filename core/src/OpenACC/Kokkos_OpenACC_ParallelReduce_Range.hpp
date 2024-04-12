@@ -17,6 +17,7 @@
 #ifndef KOKKOS_OPENACC_PARALLEL_REDUCE_RANGE_HPP
 #define KOKKOS_OPENACC_PARALLEL_REDUCE_RANGE_HPP
 
+// IWYU pragma: private
 #include <OpenACC/Kokkos_OpenACC.hpp>
 #include <OpenACC/Kokkos_OpenACC_Macros.hpp>
 #include <OpenACC/Kokkos_OpenACC_FunctorAdapter.hpp>

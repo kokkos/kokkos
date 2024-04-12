@@ -17,6 +17,7 @@
 #ifndef KOKKOS_OPENACC_SCHEDULE_TYPE_HPP
 #define KOKKOS_OPENACC_SCHEDULE_TYPE_HPP
 
+// IWYU pragma: private
 #include <Kokkos_Concepts.hpp>
 #include <type_traits>
 

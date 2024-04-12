@@ -17,6 +17,7 @@
 #ifndef KOKKOS_SYCL_MDRANGEPOLICY_HPP_
 #define KOKKOS_SYCL_MDRANGEPOLICY_HPP_
 
+// IWYU pragma: private
 #include <KokkosExp_MDRangePolicy.hpp>
 
 namespace Kokkos {

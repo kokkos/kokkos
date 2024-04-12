@@ -17,6 +17,7 @@
 #ifndef KOKKOS_CUDA_PARALLEL_RANGE_HPP
 #define KOKKOS_CUDA_PARALLEL_RANGE_HPP
 
+// IWYU pragma: private
 #include <Kokkos_Macros.hpp>
 #if defined(KOKKOS_ENABLE_CUDA)
 

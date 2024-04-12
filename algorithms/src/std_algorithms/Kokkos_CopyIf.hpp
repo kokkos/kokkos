@@ -17,6 +17,7 @@
 #ifndef KOKKOS_STD_ALGORITHMS_COPY_IF_HPP
 #define KOKKOS_STD_ALGORITHMS_COPY_IF_HPP
 
+// IWYU pragma: private; include <Kokkos_StdAlgorithms.hpp>
 #include "impl/Kokkos_CopyIf.hpp"
 #include "Kokkos_BeginEnd.hpp"
 

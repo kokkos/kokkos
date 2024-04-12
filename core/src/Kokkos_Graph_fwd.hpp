@@ -21,7 +21,7 @@
 #define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_GRAPH_FWD
 #endif
 
-#include <Kokkos_Macros.hpp>
+#include <Kokkos_Macros.hpp> // IWYU pragma: export
 
 namespace Kokkos {
 namespace Experimental {

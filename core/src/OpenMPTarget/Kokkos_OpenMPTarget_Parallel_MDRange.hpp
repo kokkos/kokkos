@@ -17,6 +17,7 @@
 #ifndef KOKKOS_OPENMPTARGET_PARALLEL_MDRANGE_HPP
 #define KOKKOS_OPENMPTARGET_PARALLEL_MDRANGE_HPP
 
+// IWYU pragma: private
 #include <omp.h>
 #include <Kokkos_Parallel.hpp>
 #include <OpenMPTarget/Kokkos_OpenMPTarget_Parallel.hpp>

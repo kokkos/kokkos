@@ -18,6 +18,7 @@
 #define KOKKOS_DECLARE_SYCL_HPP
 
 #if defined(KOKKOS_ENABLE_SYCL)
+// IWYU pragma: private
 #include <SYCL/Kokkos_SYCL.hpp>
 #include <SYCL/Kokkos_SYCL_Half_Impl_Type.hpp>
 #include <SYCL/Kokkos_SYCL_Half_Conversion.hpp>

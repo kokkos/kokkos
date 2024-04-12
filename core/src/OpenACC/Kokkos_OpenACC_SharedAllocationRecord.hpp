@@ -17,6 +17,7 @@
 #ifndef KOKKOS_OPENACC_SHARED_ALLOCATION_RECORD_HPP
 #define KOKKOS_OPENACC_SHARED_ALLOCATION_RECORD_HPP
 
+// IWYU pragma: private
 #include <OpenACC/Kokkos_OpenACCSpace.hpp>
 #include <impl/Kokkos_SharedAlloc.hpp>
 

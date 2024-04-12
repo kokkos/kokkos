@@ -17,6 +17,7 @@
 #ifndef KOKKOS_HIP_KERNEL_LAUNCH_HPP
 #define KOKKOS_HIP_KERNEL_LAUNCH_HPP
 
+// IWYU pragma: private; include <Kokkos_Core.hpp>
 #include <Kokkos_Macros.hpp>
 
 #if defined(__HIPCC__)

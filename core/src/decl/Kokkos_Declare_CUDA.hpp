@@ -18,6 +18,7 @@
 #define KOKKOS_DECLARE_CUDA_HPP
 
 #if defined(KOKKOS_ENABLE_CUDA)
+// IWYU pragma: private
 #include <Cuda/Kokkos_Cuda.hpp>
 #include <Cuda/Kokkos_Cuda_Half_Impl_Type.hpp>
 #include <Cuda/Kokkos_Cuda_Half_Conversion.hpp>

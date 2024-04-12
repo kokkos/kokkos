@@ -20,7 +20,7 @@
 #define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_MATHCONSTANTS
 #endif
 
-#include <Kokkos_Macros.hpp>
+#include <Kokkos_Macros.hpp> // IWYU pragma: export
 #include <type_traits>
 
 namespace Kokkos::numbers {

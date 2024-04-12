@@ -17,6 +17,7 @@
 #ifndef KOKKOS_IMPL_CUDA_TASK_HPP
 #define KOKKOS_IMPL_CUDA_TASK_HPP
 
+// IWYU pragma: private
 #include <Kokkos_Macros.hpp>
 #if defined(KOKKOS_ENABLE_TASKDAG)
 

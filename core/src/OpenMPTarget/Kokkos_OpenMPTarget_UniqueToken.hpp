@@ -17,6 +17,7 @@
 #ifndef KOKKOS_OPENMPTARGET_UNIQUE_TOKEN_HPP
 #define KOKKOS_OPENMPTARGET_UNIQUE_TOKEN_HPP
 
+// IWYU pragma: private
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
 
