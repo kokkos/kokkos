@@ -24,7 +24,7 @@
 #include <Kokkos_MathematicalFunctions.hpp>
 #include <Kokkos_NumericTraits.hpp>
 #include <Kokkos_ReductionIdentity.hpp>
-#include <impl/Kokkos_Error.hpp> // IWYU pragma: export
+#include <impl/Kokkos_Error.hpp>  // IWYU pragma: export
 #include <complex>
 #include <type_traits>
 #include <iosfwd>

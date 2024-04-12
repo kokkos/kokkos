@@ -21,7 +21,7 @@
 #define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_NUMERIC_TRAITS
 #endif
 
-#include <Kokkos_Macros.hpp> // IWYU pragma: export
+#include <Kokkos_Macros.hpp>  // IWYU pragma: export
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 #include <Kokkos_ReductionIdentity.hpp>
 #endif

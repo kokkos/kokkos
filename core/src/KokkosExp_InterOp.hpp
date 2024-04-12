@@ -22,10 +22,10 @@
 #endif
 
 #include <Kokkos_Core_fwd.hpp>
-#include <Kokkos_Layout.hpp> // IWYU pragma: export
-#include <Kokkos_MemoryTraits.hpp> // IWYU pragma: export
-#include <Kokkos_View.hpp> // IWYU pragma: export
-#include <impl/Kokkos_Utilities.hpp> // IWYU pragma: export
+#include <Kokkos_Layout.hpp>          // IWYU pragma: export
+#include <Kokkos_MemoryTraits.hpp>    // IWYU pragma: export
+#include <Kokkos_View.hpp>            // IWYU pragma: export
+#include <impl/Kokkos_Utilities.hpp>  // IWYU pragma: export
 #include <type_traits>
 
 namespace Kokkos {

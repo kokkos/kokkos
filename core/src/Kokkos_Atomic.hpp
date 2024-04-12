@@ -44,10 +44,10 @@
 #define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_ATOMIC
 #endif
 
-#include <Kokkos_Macros.hpp> // IWYU pragma: export
+#include <Kokkos_Macros.hpp>  // IWYU pragma: export
 
-#include <Kokkos_Atomics_Desul_Wrapper.hpp> // IWYU pragma: export
-#include <Kokkos_Atomics_Desul_Volatile_Wrapper.hpp> // IWYU pragma: export
+#include <Kokkos_Atomics_Desul_Wrapper.hpp>           // IWYU pragma: export
+#include <Kokkos_Atomics_Desul_Volatile_Wrapper.hpp>  // IWYU pragma: export
 
 #ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_ATOMIC
 #undef KOKKOS_IMPL_PUBLIC_INCLUDE

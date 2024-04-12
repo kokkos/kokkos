@@ -21,7 +21,7 @@
 #define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_REDUCTION_IDENTITY
 #endif
 
-#include <Kokkos_Macros.hpp> // IWYU pragma: export
+#include <Kokkos_Macros.hpp>  // IWYU pragma: export
 #include <cfloat>
 #include <climits>
 

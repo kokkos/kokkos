@@ -21,7 +21,7 @@
 #define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_TIMER
 #endif
 
-#include <Kokkos_Macros.hpp> // IWYU pragma: export
+#include <Kokkos_Macros.hpp>  // IWYU pragma: export
 // gcc 10.3.0 with CUDA doesn't support std::chrono,
 // see https://github.com/kokkos/kokkos/issues/4334
 #if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU == 1030) && \

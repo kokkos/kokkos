@@ -24,7 +24,7 @@
 #include <cstdio>
 
 #include <Kokkos_Core.hpp>
-#include <impl/Kokkos_Error.hpp> // IWYU pragma: export
+#include <impl/Kokkos_Error.hpp>  // IWYU pragma: export
 
 namespace Kokkos {
 namespace Experimental {

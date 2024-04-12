@@ -21,10 +21,10 @@
 #define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_ARRAY
 #endif
 
-#include <Kokkos_Macros.hpp> // IWYU pragma: export
-#include <Kokkos_Swap.hpp> // IWYU pragma: export
-#include <impl/Kokkos_Error.hpp> // IWYU pragma: export
-#include <impl/Kokkos_StringManipulation.hpp> // IWYU pragma: export
+#include <Kokkos_Macros.hpp>                   // IWYU pragma: export
+#include <Kokkos_Swap.hpp>                     // IWYU pragma: export
+#include <impl/Kokkos_Error.hpp>               // IWYU pragma: export
+#include <impl/Kokkos_StringManipulation.hpp>  // IWYU pragma: export
 
 #include <type_traits>
 #include <algorithm>

@@ -23,7 +23,7 @@
 
 #include <Kokkos_Core.hpp>
 
-#include <Kokkos_View.hpp> // IWYU pragma: export
+#include <Kokkos_View.hpp>  // IWYU pragma: export
 
 namespace Kokkos {
 

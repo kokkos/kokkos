@@ -45,29 +45,29 @@
 #include <KokkosCore_Config_DeclareBackend.hpp>
 
 #include <Kokkos_Half.hpp>
-#include <Kokkos_AnonymousSpace.hpp> // IWYU pragma: export
+#include <Kokkos_AnonymousSpace.hpp>  // IWYU pragma: export
 #include <Kokkos_Pair.hpp>
-#include <Kokkos_Clamp.hpp> // IWYU pragma: export
-#include <Kokkos_MinMax.hpp> // IWYU pragma: export
+#include <Kokkos_Clamp.hpp>   // IWYU pragma: export
+#include <Kokkos_MinMax.hpp>  // IWYU pragma: export
 #include <Kokkos_MathematicalConstants.hpp>
 #include <Kokkos_MathematicalFunctions.hpp>
 #include <Kokkos_MathematicalSpecialFunctions.hpp>
 #include <Kokkos_NumericTraits.hpp>
-#include <Kokkos_BitManipulation.hpp> // IWYU pragma: export
-#include <Kokkos_Swap.hpp> // IWYU pragma: export
-#include <Kokkos_MemoryPool.hpp> // IWYU pragma: export
+#include <Kokkos_BitManipulation.hpp>  // IWYU pragma: export
+#include <Kokkos_Swap.hpp>             // IWYU pragma: export
+#include <Kokkos_MemoryPool.hpp>       // IWYU pragma: export
 #include <Kokkos_Array.hpp>
-#include <Kokkos_View.hpp> // IWYU pragma: export
-#include <Kokkos_Vectorization.hpp> // IWYU pragma: export
+#include <Kokkos_View.hpp>           // IWYU pragma: export
+#include <Kokkos_Vectorization.hpp>  // IWYU pragma: export
 #include <Kokkos_Atomic.hpp>
-#include <Kokkos_hwloc.hpp> // IWYU pragma: export
+#include <Kokkos_hwloc.hpp>  // IWYU pragma: export
 #include <Kokkos_Timer.hpp>
-#include <Kokkos_Tuners.hpp> // IWYU pragma: export
-#include <Kokkos_TaskScheduler.hpp> // IWYU pragma: export
+#include <Kokkos_Tuners.hpp>         // IWYU pragma: export
+#include <Kokkos_TaskScheduler.hpp>  // IWYU pragma: export
 #include <Kokkos_Complex.hpp>
-#include <Kokkos_CopyViews.hpp> // IWYU pragma: export
-#include <impl/Kokkos_TeamMDPolicy.hpp> // IWYU pragma: export
-#include <impl/Kokkos_InitializationSettings.hpp> // IWYU pragma: export
+#include <Kokkos_CopyViews.hpp>                    // IWYU pragma: export
+#include <impl/Kokkos_TeamMDPolicy.hpp>            // IWYU pragma: export
+#include <impl/Kokkos_InitializationSettings.hpp>  // IWYU pragma: export
 #include <functional>
 #include <iosfwd>
 #include <memory>
@@ -291,16 +291,16 @@ std::vector<ExecSpace> partition_space(ExecSpace const& space,
 }  // namespace Experimental
 }  // namespace Kokkos
 
-#include <Kokkos_Crs.hpp> // IWYU pragma: export
-#include <Kokkos_WorkGraphPolicy.hpp> // IWYU pragma: export
+#include <Kokkos_Crs.hpp>              // IWYU pragma: export
+#include <Kokkos_WorkGraphPolicy.hpp>  // IWYU pragma: export
 // Including this in Kokkos_Parallel_Reduce.hpp led to a circular dependency
 // because Kokkos::Sum is used in Kokkos_Combined_Reducer.hpp and the default.
 // The real answer is to finally break up Kokkos_Parallel_Reduce.hpp into
 // smaller parts...
-#include <impl/Kokkos_Combined_Reducer.hpp> // IWYU pragma: export
+#include <impl/Kokkos_Combined_Reducer.hpp>  // IWYU pragma: export
 // Yet another workaround to deal with circular dependency issues because the
 // implementation of the RAII wrapper is using Kokkos::single.
-#include <Kokkos_AcquireUniqueTokenImpl.hpp> // IWYU pragma: export
+#include <Kokkos_AcquireUniqueTokenImpl.hpp>  // IWYU pragma: export
 
 //----------------------------------------------------------------------------
 // Redefinition of the macros min and max if we pushed them at entry of

@@ -32,9 +32,9 @@
 
 #include <Kokkos_Bitset.hpp>
 
-#include <impl/Kokkos_Traits.hpp> // IWYU pragma: export
-#include <impl/Kokkos_UnorderedMap_impl.hpp> // IWYU pragma: export
-#include <impl/Kokkos_ViewCtor.hpp> // IWYU pragma: export
+#include <impl/Kokkos_Traits.hpp>             // IWYU pragma: export
+#include <impl/Kokkos_UnorderedMap_impl.hpp>  // IWYU pragma: export
+#include <impl/Kokkos_ViewCtor.hpp>           // IWYU pragma: export
 
 #include <cstdint>
 
