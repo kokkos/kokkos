@@ -446,7 +446,7 @@ auto generic_tune_policy(const std::string& label_in, Map& map,
       auto my_tuner = map.find(label);
       if (my_tuner == map.end()) {
         return (map.emplace(label, Tuner(label, policy, functor, tag,
-                            Impl::ComplexReducerSizeCalculator{}))
+                                         Impl::ComplexReducerSizeCalculator{}))
                     .first);
       }
       return my_tuner;
