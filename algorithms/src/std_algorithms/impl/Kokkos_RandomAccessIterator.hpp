@@ -163,6 +163,7 @@ class RandomAccessIterator< ::Kokkos::View<DataType, Args...> > {
   view_type m_view;
   ptrdiff_t m_current_index = 0;
 
+  // Needed for the converting constructor accepting another iterator
   template <class>
   friend class RandomAccessIterator;
 };
