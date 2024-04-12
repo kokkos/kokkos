@@ -331,7 +331,8 @@ struct SimpleTeamSizeCalculator {
     return max;
   }
   template <typename Policy, typename FunctorReducer>
-  int get_max_team_size(const Policy& policy, const FunctorReducer& functor_reducer,
+  int get_max_team_size(const Policy& policy,
+                        const FunctorReducer& functor_reducer,
                         const Kokkos::ParallelReduceTag tag) {
     auto max = policy.team_size_max(functor_reducer.get_functor(),
                                     functor_reducer.get_reducer(), tag);
@@ -356,7 +357,8 @@ struct SimpleTeamSizeCalculator {
                                         const FunctorReducer& functor_reducer,
                                         const Kokkos::ParallelReduceTag&) {
     using exec_space = typename Policy::execution_space;
-    using driver = Kokkos::Impl::ParallelReduce<FunctorReducer, Policy, exec_space>;
+    using driver =
+        Kokkos::Impl::ParallelReduce<FunctorReducer, Policy, exec_space>;
     return driver::max_tile_size_product(policy, functor_reducer.get_functor());
   }
 };
@@ -369,13 +371,14 @@ struct SimpleTeamSizeCalculator {
 // a value_type and temporary reducer here
 struct ComplexReducerSizeCalculator {
   template <typename Policy, typename FunctorReducer, typename Tag>
-  int get_max_team_size(const Policy& policy, const FunctorReducer& functor_reducer,
-                        const Tag tag) {
+  int get_max_team_size(const Policy& policy,
+                        const FunctorReducer& functor_reducer, const Tag tag) {
     return policy.team_size_max(functor_reducer.get_functor(),
                                 functor_reducer.get_reducer(), tag);
   }
   template <typename Policy, typename FunctorReducer, typename Tag>
-  int get_recommended_team_size(const Policy& policy, const FunctorReducer& functor_reducer,
+  int get_recommended_team_size(const Policy& policy,
+                                const FunctorReducer& functor_reducer,
                                 const Tag tag) {
     return policy.team_size_recommended(functor_reducer.get_functor(),
                                         functor_reducer.get_reducer(), tag);
@@ -385,7 +388,8 @@ struct ComplexReducerSizeCalculator {
                                         const FunctorReducer& functor_reducer,
                                         const Kokkos::ParallelReduceTag&) {
     using exec_space = typename Policy::execution_space;
-    using driver = Kokkos::Impl::ParallelReduce<FunctorReducer, Policy, exec_space>;
+    using driver =
+        Kokkos::Impl::ParallelReduce<FunctorReducer, Policy, exec_space>;
     return driver::max_tile_size_product(policy, functor_reducer.get_functor());
   }
 };
@@ -441,10 +445,8 @@ auto generic_tune_policy(const std::string& label_in, Map& map,
     auto tuner_iter = [&]() {
       auto my_tuner = map.find(label);
       if (my_tuner == map.end()) {
-        return (map.emplace(
-                       label,
-                       Tuner(label, policy, functor, tag,
-                             Impl::ComplexReducerSizeCalculator{}))
+        return (map.emplace(label, Tuner(label, policy, functor, tag,
+                            Impl::ComplexReducerSizeCalculator{}))
                     .first);
       }
       return my_tuner;
