@@ -50,58 +50,38 @@ TEST_F(random_access_iterator_test, constructiblity) {
   auto first_d  = KE::begin(m_dynamic_view);
   auto cfirst_d = KE::cbegin(m_dynamic_view);
 
-  bool first_d2cfirst_d =
-      std::is_constructible_v<decltype(cfirst_d), decltype(first_d)>;
-  bool cfirst_d2first_d =
-      std::is_constructible_v<decltype(first_d), decltype(cfirst_d)>;
+  static_assert(std::is_constructible_v<decltype(cfirst_d), decltype(first_d)>);
+  static_assert(
+      !std::is_constructible_v<decltype(first_d), decltype(cfirst_d)>);
   [[maybe_unused]] decltype(cfirst_d) tmp_cfirst_d(first_d);
-
-  ASSERT_TRUE(first_d2cfirst_d);
-  ASSERT_FALSE(cfirst_d2first_d);
 
   auto first_s  = KE::begin(m_static_view);
   auto cfirst_s = KE::cbegin(m_static_view);
 
-  bool first_s2cfirst_s =
-      std::is_constructible_v<decltype(cfirst_s), decltype(first_s)>;
-  bool cfirst_s2first_s =
-      std::is_constructible_v<decltype(first_s), decltype(cfirst_s)>;
+  static_assert(std::is_constructible_v<decltype(cfirst_s), decltype(first_s)>);
+  static_assert(
+      !std::is_constructible_v<decltype(first_s), decltype(cfirst_s)>);
   [[maybe_unused]] decltype(cfirst_s) tmp_cfirst_s(first_s);
-
-  ASSERT_TRUE(first_s2cfirst_s);
-  ASSERT_FALSE(cfirst_s2first_s);
 
   auto first_st  = KE::begin(m_strided_view);
   auto cfirst_st = KE::cbegin(m_strided_view);
 
-  bool first_st2cfirst_st =
-      std::is_constructible_v<decltype(cfirst_st), decltype(first_st)>;
-  bool cfirst_st2first_st =
-      std::is_constructible_v<decltype(first_st), decltype(cfirst_st)>;
+  static_assert(
+      std::is_constructible_v<decltype(cfirst_st), decltype(first_st)>);
+  static_assert(
+      !std::is_constructible_v<decltype(first_st), decltype(cfirst_st)>);
   [[maybe_unused]] decltype(cfirst_st) tmp_cfirst_st(first_st);
 
-  ASSERT_TRUE(first_st2cfirst_st);
-  ASSERT_FALSE(cfirst_st2first_st);
-
-  bool first_d2first_s =
-      std::is_constructible_v<decltype(first_s), decltype(first_d)>;
-  bool first_d2first_st =
-      std::is_constructible_v<decltype(first_st), decltype(first_d)>;
-  bool first_s2first_d =
-      std::is_constructible_v<decltype(first_d), decltype(first_s)>;
-  bool first_s2first_st =
-      std::is_constructible_v<decltype(first_st), decltype(first_s)>;
-  bool first_st2first_d =
-      std::is_constructible_v<decltype(first_d), decltype(first_st)>;
-  bool first_st2first_s =
-      std::is_constructible_v<decltype(first_s), decltype(first_st)>;
-
-  ASSERT_TRUE(first_d2first_s);
-  ASSERT_TRUE(first_d2first_st);
-  ASSERT_TRUE(first_s2first_d);
-  ASSERT_TRUE(first_s2first_st);
-  ASSERT_TRUE(first_st2first_d);
-  ASSERT_TRUE(first_st2first_s);
+  // [FIXME] Better to have tests for the explicit specifier with an expression.
+  // As soon as View converting constructors are re-implemented with a
+  // conditional explicit, we may add those tests.
+  static_assert(std::is_constructible_v<decltype(first_s), decltype(first_d)>);
+  static_assert(std::is_constructible_v<decltype(first_st), decltype(first_d)>);
+  static_assert(std::is_constructible_v<decltype(first_d), decltype(first_s)>);
+  static_assert(std::is_constructible_v<decltype(first_st), decltype(first_s)>);
+  static_assert(std::is_constructible_v<decltype(first_d), decltype(first_st)>);
+  static_assert(std::is_constructible_v<decltype(first_s), decltype(first_st)>);
+  EXPECT_TRUE(true);
 }
 
 template <class IteratorType, class ValueType>
