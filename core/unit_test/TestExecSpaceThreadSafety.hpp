@@ -98,11 +98,6 @@ void run_exec_space_thread_safety_range() {
 }
 
 TEST(TEST_CATEGORY, exec_space_thread_safety_range) {
-// FIXME_OPENACC
-#ifdef KOKKOS_ENABLE_OPENACC
-  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenACC>)
-    GTEST_SKIP() << "skipping since test is known to fail for OpenACC";
-#endif
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
   if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenMPTarget>)
     GTEST_SKIP() << "skipping since test is known to fail for OpenMPTarget";
@@ -166,11 +161,6 @@ void run_exec_space_thread_safety_mdrange() {
 }
 
 TEST(TEST_CATEGORY, exec_space_thread_safety_mdrange) {
-// FIXME_OPENACC
-#ifdef KOKKOS_ENABLE_OPENACC
-  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenACC>)
-    GTEST_SKIP() << "skipping since test is known to fail for OpenACC";
-#endif
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
   if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenMPTarget>)
     GTEST_SKIP() << "skipping since test is known to fail for OpenMPTarget";
@@ -232,11 +222,6 @@ void run_exec_space_thread_safety_team_policy() {
 }
 
 TEST(TEST_CATEGORY, exec_space_thread_safety_team_policy) {
-// FIXME_OPENACC
-#ifdef KOKKOS_ENABLE_OPENACC
-  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenACC>)
-    GTEST_SKIP() << "skipping since test is known to fail for OpenACC";
-#endif
 // FIXME_OPENMPTARGET
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
   if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenMPTarget>)
@@ -302,11 +287,6 @@ void run_exec_space_thread_safety_range_reduce() {
 }
 
 TEST(TEST_CATEGORY, exec_space_thread_safety_range_reduce) {
-// FIXME_OPENACC
-#ifdef KOKKOS_ENABLE_OPENACC
-  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenACC>)
-    GTEST_SKIP() << "skipping since test is known to fail for OpenACC";
-#endif
   run_exec_space_thread_safety_range_reduce();
 }
 
@@ -370,11 +350,6 @@ void run_exec_space_thread_safety_mdrange_reduce() {
 }
 
 TEST(TEST_CATEGORY, exec_space_thread_safety_mdrange_reduce) {
-// FIXME_OPENACC
-#ifdef KOKKOS_ENABLE_OPENACC
-  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenACC>)
-    GTEST_SKIP() << "skipping since test is known to fail for OpenACC";
-#endif
 // FIXME_INTEL
 #ifdef KOKKOS_COMPILER_INTEL
   if (std::is_same_v<TEST_EXECSPACE, Kokkos::OpenMP>)
@@ -444,11 +419,6 @@ void run_exec_space_thread_safety_team_policy_reduce() {
 }
 
 TEST(TEST_CATEGORY, exec_space_thread_safety_team_policy_reduce) {
-// FIXME_OPENACC
-#ifdef KOKKOS_ENABLE_OPENACC
-  GTEST_SKIP() << "skipping since test is known to fail when compiling with "
-                  "the OpenACC backend";
-#endif
 // FIXME_OPENMPTARGET
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
   if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenMPTarget>)
