@@ -45,14 +45,6 @@ struct LayoutFromArrayLayout<Kokkos::LayoutStride> {
   using type = layout_stride;
 };
 
-/// Convert from a mdspan extent to a Kokkos extent, inserting 0s for static
-/// extents
-template <class Extents>
-KOKKOS_INLINE_FUNCTION auto dimension_from_extent(const Extents &e,
-                                                  std::size_t r) noexcept {
-  return e.extent(r);
-}
-
 template <class ArrayLayout, class MDSpanType>
 KOKKOS_INLINE_FUNCTION auto array_layout_from_mapping(
     const typename MDSpanType::mapping_type &mapping) {
@@ -67,33 +59,33 @@ KOKKOS_INLINE_FUNCTION auto array_layout_from_mapping(
 
   if constexpr (std::is_same_v<ArrayLayout, LayoutStride>) {
     return Kokkos::LayoutStride{
-        rank > 0 ? dimension_from_extent(ext, 0) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+        rank > 0 ? ext.extent(0) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
         rank > 0 ? mapping.stride(0) : 0,
-        rank > 1 ? dimension_from_extent(ext, 1) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+        rank > 1 ? ext.extent(1) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
         rank > 1 ? mapping.stride(1) : 0,
-        rank > 2 ? dimension_from_extent(ext, 2) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+        rank > 2 ? ext.extent(2) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
         rank > 2 ? mapping.stride(2) : 0,
-        rank > 3 ? dimension_from_extent(ext, 3) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+        rank > 3 ? ext.extent(3) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
         rank > 3 ? mapping.stride(3) : 0,
-        rank > 4 ? dimension_from_extent(ext, 4) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+        rank > 4 ? ext.extent(4) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
         rank > 4 ? mapping.stride(4) : 0,
-        rank > 5 ? dimension_from_extent(ext, 5) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+        rank > 5 ? ext.extent(5) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
         rank > 5 ? mapping.stride(5) : 0,
-        rank > 6 ? dimension_from_extent(ext, 6) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+        rank > 6 ? ext.extent(6) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
         rank > 6 ? mapping.stride(6) : 0,
-        rank > 7 ? dimension_from_extent(ext, 7) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+        rank > 7 ? ext.extent(7) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
         rank > 7 ? mapping.stride(7) : 0,
     };
   } else {
     return ArrayLayout{
-        rank > 0 ? dimension_from_extent(ext, 0) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-        rank > 1 ? dimension_from_extent(ext, 1) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-        rank > 2 ? dimension_from_extent(ext, 2) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-        rank > 3 ? dimension_from_extent(ext, 3) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-        rank > 4 ? dimension_from_extent(ext, 4) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-        rank > 5 ? dimension_from_extent(ext, 5) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-        rank > 6 ? dimension_from_extent(ext, 6) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-        rank > 7 ? dimension_from_extent(ext, 7)
+        rank > 0 ? ext.extent(0) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+        rank > 1 ? ext.extent(1) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+        rank > 2 ? ext.extent(2) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+        rank > 3 ? ext.extent(3) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+        rank > 4 ? ext.extent(4) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+        rank > 5 ? ext.extent(5) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+        rank > 6 ? ext.extent(6) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+        rank > 7 ? ext.extent(7)
                  : KOKKOS_IMPL_CTOR_DEFAULT_ARG};
   }
 }
