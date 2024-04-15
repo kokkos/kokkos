@@ -14,18 +14,10 @@
 //
 //@HEADER
 
-#include <cstdio>
-#include <sstream>
-#include <iostream>
+#include <Kokkos_Core.hpp>
 #include <thread>
 
-#include <Kokkos_Core.hpp>
-
-namespace Test {
-
-#include <Kokkos_Core.hpp>
-#include <iostream>
-#include <thread>
+namespace {
 
 #ifdef KOKKOS_ENABLE_OPENMP
 template <class Lambda1, class Lambda2>
@@ -534,4 +526,4 @@ TEST(TEST_CATEGORY, exec_space_thread_safety_range_scan) {
   run_exec_space_thread_safety_range_scan();
 }
 
-}  // namespace Test
+}  // namespace
