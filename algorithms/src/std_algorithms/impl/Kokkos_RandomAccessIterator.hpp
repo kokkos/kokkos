@@ -59,13 +59,29 @@ class RandomAccessIterator< ::Kokkos::View<DataType, Args...> > {
                                                 ptrdiff_t current_index)
       : m_view(view), m_current_index(current_index) {}
 
-  template <class OtherViewType,
-            std::enable_if_t<std::is_constructible_v<view_type, OtherViewType>,
-                             int> = 0>
-  KOKKOS_FUNCTION KOKKOS_IMPL_CONDITIONAL_EXPLICIT(
-      !std::is_convertible_v<OtherViewType, view_type>)
-      RandomAccessIterator(const RandomAccessIterator<OtherViewType>& other)
+#ifndef KOKKOS_ENABLE_CXX17  // C++20 and beyond
+  template <class OtherViewType>
+  requires(std::is_constructible_v<view_type, OtherViewType>) KOKKOS_FUNCTION
+      explicit(!std::is_convertible_v<OtherViewType, view_type>)
+          RandomAccessIterator(const RandomAccessIterator<OtherViewType>& other)
       : m_view(other.m_view), m_current_index(other.m_current_index) {}
+#else
+  template <
+      class OtherViewType,
+      std::enable_if_t<std::is_constructible_v<view_type, OtherViewType> &&
+                           !std::is_convertible_v<OtherViewType, view_type>,
+                       int> = 0>
+  KOKKOS_FUNCTION explicit RandomAccessIterator(
+      const RandomAccessIterator<OtherViewType>& other)
+      : m_view(other.m_view), m_current_index(other.m_current_index) {}
+
+  template <class OtherViewType,
+            std::enable_if_t<std::is_convertible_v<OtherViewType, view_type>,
+                             int> = 0>
+  KOKKOS_FUNCTION RandomAccessIterator(
+      const RandomAccessIterator<OtherViewType>& other)
+      : m_view(other.m_view), m_current_index(other.m_current_index) {}
+#endif
 
   KOKKOS_FUNCTION
   iterator_type& operator++() {
