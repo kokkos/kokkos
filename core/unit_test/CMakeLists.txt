@@ -638,6 +638,8 @@ IF(KOKKOS_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
 endif()
 
 if(Kokkos_ENABLE_SERIAL)
+  list(REMOVE_ITEM Serial_SOURCES1
+    ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_ExecSpaceThreadSafety.cpp)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     CoreUnitTest_Serial1
     SOURCES
@@ -668,6 +670,9 @@ if(Kokkos_ENABLE_THREADS)
 endif()
 
 if (Kokkos_ENABLE_OPENMP)
+  list(REMOVE_ITEM OpenMP_SOURCES
+    ${CMAKE_CURRENT_BINARY_DIR}/openmp/TestOpenMP_ExecSpaceThreadSafety.cpp)
+
   set(OpenMP_EXTRA_SOURCES
     openmp/TestOpenMP_Task.cpp
   )
