@@ -80,7 +80,11 @@ struct ArrayBoundsCheck<Integral, false> {
 /**\brief  Derived from the C++17 'std::array'.
  *         Dropping the iterator interface.
  */
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 template <class T = void, size_t N = KOKKOS_INVALID_INDEX, class Proxy = void>
+#else
+template <class T, size_t N>
+#endif
 struct Array {
  public:
   /**
@@ -131,8 +135,13 @@ struct Array {
   }
 };
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 template <class T, class Proxy>
 struct Array<T, 0, Proxy> {
+#else
+template <class T>
+struct Array<T, 0> {
+#endif
  public:
   using reference       = T&;
   using const_reference = std::add_const_t<T>&;
@@ -178,14 +187,15 @@ struct Array<T, 0, Proxy> {
   // Array & operator = ( Array && ) = default ;
 };
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 template <>
-struct Array<void, KOKKOS_INVALID_INDEX, void> {
+struct KOKKOS_DEPRECATED Array<void, KOKKOS_INVALID_INDEX, void> {
   struct contiguous {};
   struct strided {};
 };
 
 template <class T>
-struct Array<T, KOKKOS_INVALID_INDEX, Array<>::contiguous> {
+struct KOKKOS_DEPRECATED Array<T, KOKKOS_INVALID_INDEX, Array<>::contiguous> {
  private:
   T* m_elem;
   size_t m_size;
@@ -253,7 +263,7 @@ struct Array<T, KOKKOS_INVALID_INDEX, Array<>::contiguous> {
 };
 
 template <class T>
-struct Array<T, KOKKOS_INVALID_INDEX, Array<>::strided> {
+struct KOKKOS_DEPRECATED Array<T, KOKKOS_INVALID_INDEX, Array<>::strided> {
  private:
   T* m_elem;
   size_t m_size;
@@ -320,6 +330,7 @@ struct Array<T, KOKKOS_INVALID_INDEX, Array<>::strided> {
                                          size_type arg_stride)
       : m_elem(arg_ptr), m_size(arg_size), m_stride(arg_stride) {}
 };
+#endif
 
 template <typename T, typename... Us>
 Array(T, Us...)->Array<T, 1 + sizeof...(Us)>;
