@@ -133,6 +133,17 @@ struct Array {
   KOKKOS_INLINE_FUNCTION constexpr const_pointer data() const {
     return &m_internal_implementation_private_member_data[0];
   }
+
+ private:
+  template <class U = T>
+  friend KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<
+      Impl::is_swappable<T>::value>
+  kokkos_swap(Array<T, N>& a,
+              Array<T, N>& b) noexcept(Impl::is_nothrow_swappable_v<T>) {
+    for (std::size_t i = 0; i < N; ++i) {
+      kokkos_swap(a[i], b[i]);
+    }
+  }
 };
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
@@ -185,6 +196,10 @@ struct Array<T, 0> {
   // for default move constructor and move assignment operator.
   // Array( Array && ) = default ;
   // Array & operator = ( Array && ) = default ;
+
+ private:
+  friend KOKKOS_INLINE_FUNCTION constexpr void kokkos_swap(
+      Array<T, 0>&, Array<T, 0>&) noexcept(Impl::is_nothrow_swappable_v<T>) {}
 };
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
