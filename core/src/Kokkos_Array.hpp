@@ -188,7 +188,7 @@ struct Array<T, 0> {
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 template <>
-struct KOKKOS_DEPRECATED Array<void, KOKKOS_INVALID_INDEX, void> {
+struct Array<void, KOKKOS_INVALID_INDEX, void> {
   struct contiguous {};
   struct strided {};
 };
