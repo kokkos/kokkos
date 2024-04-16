@@ -29,7 +29,6 @@
 #include <type_traits>
 #include <algorithm>
 #include <utility>
-#include <limits>
 #include <cstddef>
 
 namespace Kokkos {
