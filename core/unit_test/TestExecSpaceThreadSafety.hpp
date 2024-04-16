@@ -46,6 +46,11 @@ void run_threaded_test(const Lambda1 l1, const Lambda2 l2) {
 }
 #endif
 
+// The idea for all of these tests is to access a View from kernels submitted by
+// two different threads to the same execution space instance. If the kernels
+// are executed concurrently, we expect to detect some indices in the View that
+// have unexpected values. We map the View element to work items in reversefor
+// for one of the threaads to try triggering problems better.
 void run_exec_space_thread_safety_range() {
   constexpr int N = 1000;
   constexpr int M = 1000;
@@ -61,6 +66,9 @@ void run_exec_space_thread_safety_range() {
           Kokkos::parallel_for(
               "bar", Kokkos::RangePolicy<TEST_EXECSPACE>(exec, 0, N),
               KOKKOS_LAMBDA(int i) {
+                // check that values in the View don't differ by more than one
+                // which would indicate that the other kernel has written to it
+                // while this one is running.
                 if (i < N - 1 &&
                     (Kokkos::atomic_load(view.data() + (i + 1)) - view(i)) > 1)
                   Kokkos::atomic_store(error_index.data(),
@@ -76,6 +84,9 @@ void run_exec_space_thread_safety_range() {
           Kokkos::parallel_for(
               "foo", Kokkos::RangePolicy<TEST_EXECSPACE>(exec, 0, N),
               KOKKOS_LAMBDA(int i) {
+                // check that values in the View don't differ by more than one
+                // which would indicate that the other kernel has written to it
+                // while this one is running.
                 if (i < N - 1 &&
                     (Kokkos::atomic_load(view.data() + (N - 2 - i)) -
                      view(N - 1 - i)) > 1)
@@ -122,6 +133,9 @@ void run_exec_space_thread_safety_mdrange() {
               Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>(
                   exec, {0, 0}, {N, 1}),
               KOKKOS_LAMBDA(int i, int) {
+                // check that values in the View don't differ by more than one
+                // which would indicate that the other kernel has written to it
+                // while this one is running.
                 if (i < N - 1 &&
                     (Kokkos::atomic_load(view.data() + (i + 1)) - view(i)) > 1)
                   Kokkos::atomic_store(error_index.data(),
@@ -139,6 +153,9 @@ void run_exec_space_thread_safety_mdrange() {
               Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>(
                   exec, {0, 0}, {N, 1}),
               KOKKOS_LAMBDA(int i, int) {
+                // check that values in the View don't differ by more than one
+                // which would indicate that the other kernel has written to it
+                // while this one is running.
                 if (i < N - 1 &&
                     (Kokkos::atomic_load(view.data() + (N - 2 - i)) -
                      view(N - 1 - i)) > 1)
@@ -185,6 +202,9 @@ void run_exec_space_thread_safety_team_policy() {
                   const Kokkos::TeamPolicy<TEST_EXECSPACE>::member_type
                       &team_member) {
                 int i = team_member.league_rank();
+                // check that values in the View don't differ by more than one
+                // which would indicate that the other kernel has written to it
+                // while this one is running.
                 if (i < N - 1 &&
                     (Kokkos::atomic_load(view.data() + (i + 1)) - view(i)) > 1)
                   Kokkos::atomic_store(error_index.data(), 1);
@@ -202,6 +222,9 @@ void run_exec_space_thread_safety_team_policy() {
                   const Kokkos::TeamPolicy<TEST_EXECSPACE>::member_type
                       &team_member) {
                 int i = team_member.league_rank();
+                // check that values in the View don't differ by more than one
+                // which would indicate that the other kernel has written to it
+                // while this one is running.
                 if (i < N - 1 &&
                     (Kokkos::atomic_load(view.data() + (N - 2 - i)) -
                      view(N - 1 - i)) > 1)
@@ -247,6 +270,9 @@ void run_exec_space_thread_safety_range_reduce() {
           Kokkos::parallel_reduce(
               "bar", Kokkos::RangePolicy<TEST_EXECSPACE>(exec, 0, N),
               KOKKOS_LAMBDA(int i, int &) {
+                // check that values in the View don't differ by more than one
+                // which would indicate that the other kernel has written to it
+                // while this one is running.
                 if (i < N - 1 &&
                     (Kokkos::atomic_load(view.data() + (i + 1)) - view(i)) > 1)
                   Kokkos::atomic_store(error_index.data(),
@@ -264,6 +290,9 @@ void run_exec_space_thread_safety_range_reduce() {
           Kokkos::parallel_reduce(
               "foo", Kokkos::RangePolicy<TEST_EXECSPACE>(exec, 0, N),
               KOKKOS_LAMBDA(int i, int &) {
+                // check that values in the View don't differ by more than one
+                // which would indicate that the other kernel has written to it
+                // while this one is running.
                 if (i < N - 1 &&
                     (Kokkos::atomic_load(view.data() + (N - 2 - i)) -
                      view(N - 1 - i)) > 1)
@@ -308,6 +337,9 @@ void run_exec_space_thread_safety_mdrange_reduce() {
               Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>(
                   exec, {0, 0}, {N, 1}),
               KOKKOS_LAMBDA(int i, int, int &) {
+                // check that values in the View don't differ by more than one
+                // which would indicate that the other kernel has written to it
+                // while this one is running.
                 if (i < N - 1 &&
                     (Kokkos::atomic_load(view.data() + (i + 1)) - view(i)) > 1)
                   Kokkos::atomic_store(error_index.data(),
@@ -327,6 +359,9 @@ void run_exec_space_thread_safety_mdrange_reduce() {
               Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>(
                   exec, {0, 0}, {N, 1}),
               KOKKOS_LAMBDA(int i, int, int &) {
+                // check that values in the View don't differ by more than one
+                // which would indicate that the other kernel has written to it
+                // while this one is running.
                 if (i < N - 1 &&
                     (Kokkos::atomic_load(view.data() + (N - 2 - i)) -
                      view(N - 1 - i)) > 1)
@@ -378,6 +413,9 @@ void run_exec_space_thread_safety_team_policy_reduce() {
                       &team_member,
                   int &) {
                 int i = team_member.league_rank();
+                // check that values in the View don't differ by more than one
+                // which would indicate that the other kernel has written to it
+                // while this one is running.
                 if (i < N - 1 &&
                     (Kokkos::atomic_load(view.data() + (i + 1)) - view(i)) > 1)
                   Kokkos::atomic_store(error_index.data(), 1);
@@ -398,6 +436,9 @@ void run_exec_space_thread_safety_team_policy_reduce() {
                       &team_member,
                   int &) {
                 int i = team_member.league_rank();
+                // check that values in the View don't differ by more than one
+                // which would indicate that the other kernel has written to it
+                // while this one is running.
                 if (i < N - 1 &&
                     (Kokkos::atomic_load(view.data() + (N - 2 - i)) -
                      view(N - 1 - i)) > 1)
@@ -450,6 +491,9 @@ void run_exec_space_thread_safety_range_scan() {
               "bar", Kokkos::RangePolicy<TEST_EXECSPACE>(exec, 0, N),
               KOKKOS_LAMBDA(const int i, int &, const bool final) {
                 if (final) {
+                  // check that values in the View don't differ by more than one
+                  // which would indicate that the other kernel has written to
+                  // it while this one is running.
                   if (i < N - 1 && (Kokkos::atomic_load(view.data() + (i + 1)) -
                                     view(i)) > 1)
                     Kokkos::atomic_store(error_index.data(),
@@ -469,6 +513,9 @@ void run_exec_space_thread_safety_range_scan() {
               "foo", Kokkos::RangePolicy<TEST_EXECSPACE>(exec, 0, N),
               KOKKOS_LAMBDA(const int i, int &, const bool final) {
                 if (final) {
+                  // check that values in the View don't differ by more than one
+                  // which would indicate that the other kernel has written to
+                  // it while this one is running.
                   if (i < N - 1 &&
                       (Kokkos::atomic_load(view.data() + (N - 2 - i)) -
                        view(N - 1 - i)) > 1)
