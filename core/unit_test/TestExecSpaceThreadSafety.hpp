@@ -69,11 +69,11 @@ void run_exec_space_thread_safety_range() {
                 // check that values in the View don't differ by more than one
                 // which would indicate that the other kernel has written to it
                 // while this one is running.
-                if (i < N - 1 &&
-                    (Kokkos::atomic_load(view.data() + (i + 1)) - view(i)) > 1)
+                if (i < N - 1 && (Kokkos::atomic_load(&view(i + 1)) -
+                                  Kokkos::atomic_load(&view(i))) > 1)
                   Kokkos::atomic_store(error_index.data(),
                                        Kokkos::pair{j + 1, i});
-                ++view(i);
+                Kokkos::atomic_inc(&view(i));
               });
         }
         exec.fence();
@@ -87,12 +87,11 @@ void run_exec_space_thread_safety_range() {
                 // check that values in the View don't differ by more than one
                 // which would indicate that the other kernel has written to it
                 // while this one is running.
-                if (i < N - 1 &&
-                    (Kokkos::atomic_load(view.data() + (N - 2 - i)) -
-                     view(N - 1 - i)) > 1)
+                if (i < N - 1 && (Kokkos::atomic_load(&view(N - 2 - i)) -
+                                  Kokkos::atomic_load(&view(N - 1 - i))) > 1)
                   Kokkos::atomic_store(error_index.data(),
                                        Kokkos::pair{j + 1, N - 1 - i});
-                ++view(N - 1 - i);
+                Kokkos::atomic_inc(&view(N - i - 1));
               });
         }
         exec.fence();
@@ -136,11 +135,11 @@ void run_exec_space_thread_safety_mdrange() {
                 // check that values in the View don't differ by more than one
                 // which would indicate that the other kernel has written to it
                 // while this one is running.
-                if (i < N - 1 &&
-                    (Kokkos::atomic_load(view.data() + (i + 1)) - view(i)) > 1)
+                if (i < N - 1 && (Kokkos::atomic_load(&view(i + 1)) -
+                                  Kokkos::atomic_load(&view(i))) > 1)
                   Kokkos::atomic_store(error_index.data(),
                                        Kokkos::pair{j + 1, i});
-                ++view(i);
+                Kokkos::atomic_inc(&view(i));
               });
         }
         exec.fence();
@@ -156,12 +155,11 @@ void run_exec_space_thread_safety_mdrange() {
                 // check that values in the View don't differ by more than one
                 // which would indicate that the other kernel has written to it
                 // while this one is running.
-                if (i < N - 1 &&
-                    (Kokkos::atomic_load(view.data() + (N - 2 - i)) -
-                     view(N - 1 - i)) > 1)
+                if (i < N - 1 && (Kokkos::atomic_load(&view(N - 2 - i)) -
+                                  Kokkos::atomic_load(&view(N - 1 - i))) > 1)
                   Kokkos::atomic_store(error_index.data(),
                                        Kokkos::pair{j + 1, N - 1 - i});
-                ++view(N - 1 - i);
+                Kokkos::atomic_inc(&view(N - i - 1));
               });
         }
         exec.fence();
@@ -205,10 +203,10 @@ void run_exec_space_thread_safety_team_policy() {
                 // check that values in the View don't differ by more than one
                 // which would indicate that the other kernel has written to it
                 // while this one is running.
-                if (i < N - 1 &&
-                    (Kokkos::atomic_load(view.data() + (i + 1)) - view(i)) > 1)
+                if (i < N - 1 && (Kokkos::atomic_load(&view(i + 1)) -
+                                  Kokkos::atomic_load(&view(i))) > 1)
                   Kokkos::atomic_store(error_index.data(), 1);
-                ++view(i);
+                Kokkos::atomic_inc(&view(i));
               });
         }
         exec.fence();
@@ -225,11 +223,10 @@ void run_exec_space_thread_safety_team_policy() {
                 // check that values in the View don't differ by more than one
                 // which would indicate that the other kernel has written to it
                 // while this one is running.
-                if (i < N - 1 &&
-                    (Kokkos::atomic_load(view.data() + (N - 2 - i)) -
-                     view(N - 1 - i)) > 1)
+                if (i < N - 1 && (Kokkos::atomic_load(&view(N - 2 - i)) -
+                                  Kokkos::atomic_load(&view(N - 1 - i))) > 1)
                   Kokkos::atomic_store(error_index.data(), 1);
-                ++view(N - 1 - i);
+                Kokkos::atomic_inc(&view(N - i - 1));
               });
         }
         exec.fence();
@@ -273,11 +270,11 @@ void run_exec_space_thread_safety_range_reduce() {
                 // check that values in the View don't differ by more than one
                 // which would indicate that the other kernel has written to it
                 // while this one is running.
-                if (i < N - 1 &&
-                    (Kokkos::atomic_load(view.data() + (i + 1)) - view(i)) > 1)
+                if (i < N - 1 && (Kokkos::atomic_load(&view(i + 1)) -
+                                  Kokkos::atomic_load(&view(i))) > 1)
                   Kokkos::atomic_store(error_index.data(),
                                        Kokkos::pair{j + 1, i});
-                ++view(i);
+                Kokkos::atomic_inc(&view(i));
               },
               dummy);
         }
@@ -293,12 +290,11 @@ void run_exec_space_thread_safety_range_reduce() {
                 // check that values in the View don't differ by more than one
                 // which would indicate that the other kernel has written to it
                 // while this one is running.
-                if (i < N - 1 &&
-                    (Kokkos::atomic_load(view.data() + (N - 2 - i)) -
-                     view(N - 1 - i)) > 1)
+                if (i < N - 1 && (Kokkos::atomic_load(&view(N - 2 - i)) -
+                                  Kokkos::atomic_load(&view(N - 1 - i))) > 1)
                   Kokkos::atomic_store(error_index.data(),
                                        Kokkos::pair{j + 1, N - 1 - i});
-                ++view(N - 1 - i);
+                Kokkos::atomic_inc(&view(N - i - 1));
               },
               dummy);
         }
@@ -340,11 +336,11 @@ void run_exec_space_thread_safety_mdrange_reduce() {
                 // check that values in the View don't differ by more than one
                 // which would indicate that the other kernel has written to it
                 // while this one is running.
-                if (i < N - 1 &&
-                    (Kokkos::atomic_load(view.data() + (i + 1)) - view(i)) > 1)
+                if (i < N - 1 && (Kokkos::atomic_load(&view(i + 1)) -
+                                  Kokkos::atomic_load(&view(i))) > 1)
                   Kokkos::atomic_store(error_index.data(),
                                        Kokkos::pair{j + 1, i});
-                ++view(i);
+                Kokkos::atomic_inc(&view(i));
               },
               dummy);
         }
@@ -362,12 +358,11 @@ void run_exec_space_thread_safety_mdrange_reduce() {
                 // check that values in the View don't differ by more than one
                 // which would indicate that the other kernel has written to it
                 // while this one is running.
-                if (i < N - 1 &&
-                    (Kokkos::atomic_load(view.data() + (N - 2 - i)) -
-                     view(N - 1 - i)) > 1)
+                if (i < N - 1 && (Kokkos::atomic_load(&view(N - 2 - i)) -
+                                  Kokkos::atomic_load(&view(N - 1 - i))) > 1)
                   Kokkos::atomic_store(error_index.data(),
                                        Kokkos::pair{j + 1, N - 1 - i});
-                ++view(N - 1 - i);
+                Kokkos::atomic_inc(&view(N - i - 1));
               },
               dummy);
         }
@@ -416,10 +411,10 @@ void run_exec_space_thread_safety_team_policy_reduce() {
                 // check that values in the View don't differ by more than one
                 // which would indicate that the other kernel has written to it
                 // while this one is running.
-                if (i < N - 1 &&
-                    (Kokkos::atomic_load(view.data() + (i + 1)) - view(i)) > 1)
+                if (i < N - 1 && (Kokkos::atomic_load(&view(i + 1)) -
+                                  Kokkos::atomic_load(&view(i))) > 1)
                   Kokkos::atomic_store(error_index.data(), 1);
-                ++view(i);
+                Kokkos::atomic_inc(&view(i));
               },
               dummy);
         }
@@ -439,11 +434,10 @@ void run_exec_space_thread_safety_team_policy_reduce() {
                 // check that values in the View don't differ by more than one
                 // which would indicate that the other kernel has written to it
                 // while this one is running.
-                if (i < N - 1 &&
-                    (Kokkos::atomic_load(view.data() + (N - 2 - i)) -
-                     view(N - 1 - i)) > 1)
+                if (i < N - 1 && (Kokkos::atomic_load(&view(N - 2 - i)) -
+                                  Kokkos::atomic_load(&view(N - 1 - i))) > 1)
                   Kokkos::atomic_store(error_index.data(), 1);
-                ++view(N - 1 - i);
+                Kokkos::atomic_inc(&view(N - i - 1));
               },
               dummy);
         }
@@ -494,11 +488,11 @@ void run_exec_space_thread_safety_range_scan() {
                   // check that values in the View don't differ by more than one
                   // which would indicate that the other kernel has written to
                   // it while this one is running.
-                  if (i < N - 1 && (Kokkos::atomic_load(view.data() + (i + 1)) -
-                                    view(i)) > 1)
+                  if (i < N - 1 && (Kokkos::atomic_load(&view(i + 1)) -
+                                    Kokkos::atomic_load(&view(i))) > 1)
                     Kokkos::atomic_store(error_index.data(),
                                          Kokkos::pair{j + 1, i});
-                  ++view(i);
+                  Kokkos::atomic_inc(&view(i));
                 }
               },
               dummy);
@@ -516,12 +510,11 @@ void run_exec_space_thread_safety_range_scan() {
                   // check that values in the View don't differ by more than one
                   // which would indicate that the other kernel has written to
                   // it while this one is running.
-                  if (i < N - 1 &&
-                      (Kokkos::atomic_load(view.data() + (N - 2 - i)) -
-                       view(N - 1 - i)) > 1)
+                  if (i < N - 1 && (Kokkos::atomic_load(&view(N - 2 - i)) -
+                                    Kokkos::atomic_load(&view(N - 1 - i))) > 1)
                     Kokkos::atomic_store(error_index.data(),
                                          Kokkos::pair{j + 1, N - 1 - i});
-                  ++view(N - 1 - i);
+                  Kokkos::atomic_inc(&view(N - i - 1));
                 }
               },
               dummy);
