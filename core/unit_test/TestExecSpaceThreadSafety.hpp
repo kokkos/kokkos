@@ -48,63 +48,32 @@ void run_threaded_test(const Lambda1 l1, const Lambda2 l2) {
 
 // The idea for all of these tests is to access a View from kernels submitted by
 // two different threads to the same execution space instance. If the kernels
-// are executed concurrently, we expect to detect some indices in the View that
-// have unexpected values. We map the View element to work items in reversefor
-// for one of the threaads to try triggering problems better.
+// are executed concurrently, we expect to count too many increments.
 void run_exec_space_thread_safety_range() {
-  constexpr int N = 1000;
-  constexpr int M = 1000;
+  constexpr int N = 10000000;
+  constexpr int M = 10;
 
-  Kokkos::View<int *, TEST_EXECSPACE> view("view", N);
-  Kokkos::View<Kokkos::pair<int, int>, TEST_EXECSPACE> error_index(
-      "error_index");
+  Kokkos::View<int, TEST_EXECSPACE> view("view");
+  Kokkos::View<int, TEST_EXECSPACE> error("error");
 
-  run_threaded_test(
-      [=]() {
-        TEST_EXECSPACE exec;
-        for (int j = 0; j < M; ++j) {
-          Kokkos::parallel_for(
-              "bar", Kokkos::RangePolicy<TEST_EXECSPACE>(exec, 0, N),
-              KOKKOS_LAMBDA(int i) {
-                // check that values in the View don't differ by more than one
-                // which would indicate that the other kernel has written to it
-                // while this one is running.
-                if (i < N - 1 && (Kokkos::atomic_load(&view(i + 1)) -
-                                  Kokkos::atomic_load(&view(i))) > 1)
-                  Kokkos::atomic_store(error_index.data(),
-                                       Kokkos::pair{j + 1, i});
-                Kokkos::atomic_inc(&view(i));
-              });
-        }
-        exec.fence();
-      },
-      [=]() {
-        TEST_EXECSPACE exec;
-        for (int j = 0; j < M; ++j) {
-          Kokkos::parallel_for(
-              "foo", Kokkos::RangePolicy<TEST_EXECSPACE>(exec, 0, N),
-              KOKKOS_LAMBDA(int i) {
-                // check that values in the View don't differ by more than one
-                // which would indicate that the other kernel has written to it
-                // while this one is running.
-                if (i < N - 1 && (Kokkos::atomic_load(&view(N - 2 - i)) -
-                                  Kokkos::atomic_load(&view(N - 1 - i))) > 1)
-                  Kokkos::atomic_store(error_index.data(),
-                                       Kokkos::pair{j + 1, N - 1 - i});
-                Kokkos::atomic_inc(&view(N - i - 1));
-              });
-        }
-        exec.fence();
-      });
+  auto lambda = [=]() {
+    TEST_EXECSPACE exec;
+    for (int j = 0; j < M; ++j) {
+      Kokkos::parallel_for(
+          Kokkos::RangePolicy<TEST_EXECSPACE>(exec, 0, 1), KOKKOS_LAMBDA(int) {
+            Kokkos::atomic_store(view.data(), 0);
+            for (int i = 0; i < N; ++i) Kokkos::atomic_inc(view.data());
+            if (Kokkos::atomic_load(view.data()) != N)
+              Kokkos::atomic_store(error.data(), 1);
+          });
+    }
+  };
 
-  auto host_error_index =
-      Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, error_index);
-  auto [iteration, element] = Kokkos::pair<int, int>(host_error_index());
-  ASSERT_EQ(iteration, 0) << " failing at " << iteration << ", " << element;
-  auto host_view =
-      Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, view);
-  for (int i = 0; i < N; ++i)
-    ASSERT_EQ(host_view(i), 2 * M) << " failing at " << i;
+  run_threaded_test(lambda, lambda);
+
+  auto host_error =
+      Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, error);
+  ASSERT_EQ(host_error(), 0);
 }
 
 TEST(TEST_CATEGORY, exec_space_thread_safety_range) {
@@ -116,63 +85,32 @@ TEST(TEST_CATEGORY, exec_space_thread_safety_range) {
 }
 
 void run_exec_space_thread_safety_mdrange() {
-  constexpr int N = 1000;
-  constexpr int M = 1000;
+  constexpr int N = 1000000;
+  constexpr int M = 10;
 
-  Kokkos::View<int *, TEST_EXECSPACE> view("view", N);
-  Kokkos::View<Kokkos::pair<int, int>, TEST_EXECSPACE> error_index(
-      "error_index");
+  Kokkos::View<int, TEST_EXECSPACE> view("view");
+  Kokkos::View<int, TEST_EXECSPACE> error("error");
 
-  run_threaded_test(
-      [=]() {
-        TEST_EXECSPACE exec;
-        for (int j = 0; j < M; ++j) {
-          Kokkos::parallel_for(
-              "bar",
-              Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>(
-                  exec, {0, 0}, {N, 1}),
-              KOKKOS_LAMBDA(int i, int) {
-                // check that values in the View don't differ by more than one
-                // which would indicate that the other kernel has written to it
-                // while this one is running.
-                if (i < N - 1 && (Kokkos::atomic_load(&view(i + 1)) -
-                                  Kokkos::atomic_load(&view(i))) > 1)
-                  Kokkos::atomic_store(error_index.data(),
-                                       Kokkos::pair{j + 1, i});
-                Kokkos::atomic_inc(&view(i));
-              });
-        }
-        exec.fence();
-      },
-      [=]() {
-        TEST_EXECSPACE exec;
-        for (int j = 0; j < M; ++j) {
-          Kokkos::parallel_for(
-              "foo",
-              Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>(
-                  exec, {0, 0}, {N, 1}),
-              KOKKOS_LAMBDA(int i, int) {
-                // check that values in the View don't differ by more than one
-                // which would indicate that the other kernel has written to it
-                // while this one is running.
-                if (i < N - 1 && (Kokkos::atomic_load(&view(N - 2 - i)) -
-                                  Kokkos::atomic_load(&view(N - 1 - i))) > 1)
-                  Kokkos::atomic_store(error_index.data(),
-                                       Kokkos::pair{j + 1, N - 1 - i});
-                Kokkos::atomic_inc(&view(N - i - 1));
-              });
-        }
-        exec.fence();
-      });
+  auto lambda = [=]() {
+    TEST_EXECSPACE exec;
+    for (int j = 0; j < M; ++j) {
+      Kokkos::parallel_for(
+          Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>(exec, {0, 0},
+                                                                 {1, 1}),
+          KOKKOS_LAMBDA(int, int) {
+            Kokkos::atomic_store(view.data(), 0);
+            for (int i = 0; i < N; ++i) Kokkos::atomic_inc(view.data());
+            if (Kokkos::atomic_load(view.data()) != N)
+              Kokkos::atomic_store(error.data(), 1);
+          });
+    }
+  };
 
-  auto host_error_index =
-      Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, error_index);
-  auto [iteration, element] = Kokkos::pair<int, int>(host_error_index());
-  ASSERT_EQ(iteration, 0) << " failing at " << iteration << ", " << element;
-  auto host_view =
-      Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, view);
-  for (int i = 0; i < N; ++i)
-    ASSERT_EQ(host_view(i), 2 * M) << " failing at " << i;
+  run_threaded_test(lambda, lambda);
+
+  auto host_error =
+      Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, error);
+  ASSERT_EQ(host_error(), 0);
 }
 
 TEST(TEST_CATEGORY, exec_space_thread_safety_mdrange) {
@@ -184,61 +122,34 @@ TEST(TEST_CATEGORY, exec_space_thread_safety_mdrange) {
 }
 
 void run_exec_space_thread_safety_team_policy() {
-  constexpr int N = 1000;
-  constexpr int M = 1000;
+  constexpr int N = 1000000;
+  constexpr int M = 10;
 
-  Kokkos::View<int *, TEST_EXECSPACE> view("view", N);
-  Kokkos::View<int, TEST_EXECSPACE> error_index("error_index");
+  Kokkos::View<int, TEST_EXECSPACE> view("view");
+  Kokkos::View<int, TEST_EXECSPACE> error("error");
 
-  run_threaded_test(
-      [=]() {
-        TEST_EXECSPACE exec;
-        for (int j = 0; j < M; ++j) {
-          Kokkos::parallel_for(
-              "bar", Kokkos::TeamPolicy<TEST_EXECSPACE>(exec, N, 1, 1),
-              KOKKOS_LAMBDA(
-                  const Kokkos::TeamPolicy<TEST_EXECSPACE>::member_type
-                      &team_member) {
-                int i = team_member.league_rank();
-                // check that values in the View don't differ by more than one
-                // which would indicate that the other kernel has written to it
-                // while this one is running.
-                if (i < N - 1 && (Kokkos::atomic_load(&view(i + 1)) -
-                                  Kokkos::atomic_load(&view(i))) > 1)
-                  Kokkos::atomic_store(error_index.data(), 1);
-                Kokkos::atomic_inc(&view(i));
-              });
-        }
-        exec.fence();
-      },
-      [=]() {
-        TEST_EXECSPACE exec;
-        for (int j = 0; j < M; ++j) {
-          Kokkos::parallel_for(
-              "foo", Kokkos::TeamPolicy<TEST_EXECSPACE>(exec, N, 1, 1),
-              KOKKOS_LAMBDA(
-                  const Kokkos::TeamPolicy<TEST_EXECSPACE>::member_type
-                      &team_member) {
-                int i = team_member.league_rank();
-                // check that values in the View don't differ by more than one
-                // which would indicate that the other kernel has written to it
-                // while this one is running.
-                if (i < N - 1 && (Kokkos::atomic_load(&view(N - 2 - i)) -
-                                  Kokkos::atomic_load(&view(N - 1 - i))) > 1)
-                  Kokkos::atomic_store(error_index.data(), 1);
-                Kokkos::atomic_inc(&view(N - i - 1));
-              });
-        }
-        exec.fence();
-      });
+  auto lambda = [=]() {
+    TEST_EXECSPACE exec;
+    for (int j = 0; j < M; ++j) {
+      Kokkos::parallel_for(
+          Kokkos::TeamPolicy<TEST_EXECSPACE>(exec, 1, 1, 1),
+          KOKKOS_LAMBDA(const Kokkos::TeamPolicy<TEST_EXECSPACE>::member_type
+                            &team_member) {
+            Kokkos::single(Kokkos::PerTeam(team_member), [=]() {
+              Kokkos::atomic_store(view.data(), 0);
+              for (int i = 0; i < N; ++i) Kokkos::atomic_inc(view.data());
+              if (Kokkos::atomic_load(view.data()) != N)
+                Kokkos::atomic_store(error.data(), 1);
+            });
+          });
+    }
+  };
 
-  auto host_error_index =
-      Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, error_index);
-  ASSERT_EQ(host_error_index(), 0);
-  auto host_view =
-      Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, view);
-  for (int i = 0; i < N; ++i)
-    ASSERT_EQ(host_view(i), 2 * M) << " failing at " << i;
+  run_threaded_test(lambda, lambda);
+
+  auto host_error =
+      Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, error);
+  ASSERT_EQ(host_error(), 0);
 }
 
 TEST(TEST_CATEGORY, exec_space_thread_safety_team_policy) {
@@ -252,63 +163,32 @@ TEST(TEST_CATEGORY, exec_space_thread_safety_team_policy) {
 }
 
 void run_exec_space_thread_safety_range_reduce() {
-  constexpr int N = 1000;
-  constexpr int M = 1000;
+  constexpr int N = 1000000;
+  constexpr int M = 10;
 
-  Kokkos::View<int *, TEST_EXECSPACE> view("view", N);
-  Kokkos::View<Kokkos::pair<int, int>, TEST_EXECSPACE> error_index(
-      "error_index");
+  Kokkos::View<int, TEST_EXECSPACE> view("view");
+  Kokkos::View<int, TEST_EXECSPACE> error("error");
 
-  run_threaded_test(
-      [=]() {
-        int dummy;
-        TEST_EXECSPACE exec;
-        for (int j = 0; j < M; ++j) {
-          Kokkos::parallel_reduce(
-              "bar", Kokkos::RangePolicy<TEST_EXECSPACE>(exec, 0, N),
-              KOKKOS_LAMBDA(int i, int &) {
-                // check that values in the View don't differ by more than one
-                // which would indicate that the other kernel has written to it
-                // while this one is running.
-                if (i < N - 1 && (Kokkos::atomic_load(&view(i + 1)) -
-                                  Kokkos::atomic_load(&view(i))) > 1)
-                  Kokkos::atomic_store(error_index.data(),
-                                       Kokkos::pair{j + 1, i});
-                Kokkos::atomic_inc(&view(i));
-              },
-              dummy);
-        }
-        exec.fence();
-      },
-      [=]() {
-        int dummy;
-        TEST_EXECSPACE exec;
-        for (int j = 0; j < M; ++j) {
-          Kokkos::parallel_reduce(
-              "foo", Kokkos::RangePolicy<TEST_EXECSPACE>(exec, 0, N),
-              KOKKOS_LAMBDA(int i, int &) {
-                // check that values in the View don't differ by more than one
-                // which would indicate that the other kernel has written to it
-                // while this one is running.
-                if (i < N - 1 && (Kokkos::atomic_load(&view(N - 2 - i)) -
-                                  Kokkos::atomic_load(&view(N - 1 - i))) > 1)
-                  Kokkos::atomic_store(error_index.data(),
-                                       Kokkos::pair{j + 1, N - 1 - i});
-                Kokkos::atomic_inc(&view(N - i - 1));
-              },
-              dummy);
-        }
-        exec.fence();
-      });
+  auto lambda = [=]() {
+    TEST_EXECSPACE exec;
+    for (int j = 0; j < M; ++j) {
+      Kokkos::parallel_reduce(
+          Kokkos::RangePolicy<TEST_EXECSPACE>(exec, 0, 1),
+          KOKKOS_LAMBDA(int, int &update) {
+            Kokkos::atomic_store(view.data(), 0);
+            for (int i = 0; i < N; ++i) Kokkos::atomic_inc(view.data());
+            if (Kokkos::atomic_load(view.data()) != N) ++update;
+          },
+          error);
+    }
+    exec.fence();
+  };
 
-  auto host_error_index =
-      Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, error_index);
-  auto [iteration, element] = Kokkos::pair<int, int>(host_error_index());
-  ASSERT_EQ(iteration, 0) << " failing at " << iteration << ", " << element;
-  auto host_view =
-      Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, view);
-  for (int i = 0; i < N; ++i)
-    ASSERT_EQ(host_view(i), 2 * M) << " failing at " << i;
+  run_threaded_test(lambda, lambda);
+
+  auto host_error =
+      Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, error);
+  ASSERT_EQ(host_error(), 0);
 }
 
 TEST(TEST_CATEGORY, exec_space_thread_safety_range_reduce) {
@@ -316,67 +196,33 @@ TEST(TEST_CATEGORY, exec_space_thread_safety_range_reduce) {
 }
 
 void run_exec_space_thread_safety_mdrange_reduce() {
-  constexpr int N = 1000;
-  constexpr int M = 1000;
+  constexpr int N = 1000000;
+  constexpr int M = 10;
 
-  Kokkos::View<int *, TEST_EXECSPACE> view("view", N);
-  Kokkos::View<Kokkos::pair<int, int>, TEST_EXECSPACE> error_index(
-      "error_index");
+  Kokkos::View<int, TEST_EXECSPACE> view("view");
+  Kokkos::View<int, TEST_EXECSPACE> error("error");
 
-  run_threaded_test(
-      [=]() {
-        int dummy;
-        TEST_EXECSPACE exec;
-        for (int j = 0; j < M; ++j) {
-          Kokkos::parallel_reduce(
-              "bar",
-              Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>(
-                  exec, {0, 0}, {N, 1}),
-              KOKKOS_LAMBDA(int i, int, int &) {
-                // check that values in the View don't differ by more than one
-                // which would indicate that the other kernel has written to it
-                // while this one is running.
-                if (i < N - 1 && (Kokkos::atomic_load(&view(i + 1)) -
-                                  Kokkos::atomic_load(&view(i))) > 1)
-                  Kokkos::atomic_store(error_index.data(),
-                                       Kokkos::pair{j + 1, i});
-                Kokkos::atomic_inc(&view(i));
-              },
-              dummy);
-        }
-        exec.fence();
-      },
-      [=]() {
-        int dummy;
-        TEST_EXECSPACE exec;
-        for (int j = 0; j < M; ++j) {
-          Kokkos::parallel_reduce(
-              "foo",
-              Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>(
-                  exec, {0, 0}, {N, 1}),
-              KOKKOS_LAMBDA(int i, int, int &) {
-                // check that values in the View don't differ by more than one
-                // which would indicate that the other kernel has written to it
-                // while this one is running.
-                if (i < N - 1 && (Kokkos::atomic_load(&view(N - 2 - i)) -
-                                  Kokkos::atomic_load(&view(N - 1 - i))) > 1)
-                  Kokkos::atomic_store(error_index.data(),
-                                       Kokkos::pair{j + 1, N - 1 - i});
-                Kokkos::atomic_inc(&view(N - i - 1));
-              },
-              dummy);
-        }
-        exec.fence();
-      });
+  auto lambda = [=]() {
+    TEST_EXECSPACE exec;
+    for (int j = 0; j < M; ++j) {
+      Kokkos::parallel_reduce(
+          Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>(exec, {0, 0},
+                                                                 {1, 1}),
+          KOKKOS_LAMBDA(int, int, int &update) {
+            Kokkos::atomic_store(view.data(), 0);
+            for (int i = 0; i < N; ++i) Kokkos::atomic_inc(view.data());
+            if (Kokkos::atomic_load(view.data()) != N) ++update;
+          },
+          error);
+    }
+    exec.fence();
+  };
 
-  auto host_error_index =
-      Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, error_index);
-  auto [iteration, element] = Kokkos::pair<int, int>(host_error_index());
-  ASSERT_EQ(iteration, 0) << " failing at " << iteration << ", " << element;
-  auto host_view =
-      Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, view);
-  for (int i = 0; i < N; ++i)
-    ASSERT_EQ(host_view(i), 2 * M) << " failing at " << i;
+  run_threaded_test(lambda, lambda);
+
+  auto host_error =
+      Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, error);
+  ASSERT_EQ(host_error(), 0);
 }
 
 TEST(TEST_CATEGORY, exec_space_thread_safety_mdrange_reduce) {
@@ -390,67 +236,34 @@ TEST(TEST_CATEGORY, exec_space_thread_safety_mdrange_reduce) {
 }
 
 void run_exec_space_thread_safety_team_policy_reduce() {
-  constexpr int N = 1000;
-  constexpr int M = 1000;
+  constexpr int N = 1000000;
+  constexpr int M = 10;
 
-  Kokkos::View<int *, TEST_EXECSPACE> view("view", N);
-  Kokkos::View<int, TEST_EXECSPACE> error_index("error_index");
+  Kokkos::View<int, TEST_EXECSPACE> view("view");
+  Kokkos::View<int, TEST_EXECSPACE> error("error");
 
-  run_threaded_test(
-      [=]() {
-        int dummy;
-        TEST_EXECSPACE exec;
-        for (int j = 0; j < M; ++j) {
-          Kokkos::parallel_reduce(
-              "bar", Kokkos::TeamPolicy<TEST_EXECSPACE>(exec, N, 1, 1),
-              KOKKOS_LAMBDA(
-                  const Kokkos::TeamPolicy<TEST_EXECSPACE>::member_type
-                      &team_member,
-                  int &) {
-                int i = team_member.league_rank();
-                // check that values in the View don't differ by more than one
-                // which would indicate that the other kernel has written to it
-                // while this one is running.
-                if (i < N - 1 && (Kokkos::atomic_load(&view(i + 1)) -
-                                  Kokkos::atomic_load(&view(i))) > 1)
-                  Kokkos::atomic_store(error_index.data(), 1);
-                Kokkos::atomic_inc(&view(i));
-              },
-              dummy);
-        }
-        exec.fence();
-      },
-      [=]() {
-        int dummy;
-        TEST_EXECSPACE exec;
-        for (int j = 0; j < M; ++j) {
-          Kokkos::parallel_reduce(
-              "foo", Kokkos::TeamPolicy<TEST_EXECSPACE>(exec, N, 1, 1),
-              KOKKOS_LAMBDA(
-                  const Kokkos::TeamPolicy<TEST_EXECSPACE>::member_type
-                      &team_member,
-                  int &) {
-                int i = team_member.league_rank();
-                // check that values in the View don't differ by more than one
-                // which would indicate that the other kernel has written to it
-                // while this one is running.
-                if (i < N - 1 && (Kokkos::atomic_load(&view(N - 2 - i)) -
-                                  Kokkos::atomic_load(&view(N - 1 - i))) > 1)
-                  Kokkos::atomic_store(error_index.data(), 1);
-                Kokkos::atomic_inc(&view(N - i - 1));
-              },
-              dummy);
-        }
-        exec.fence();
-      });
+  auto lambda = [=]() {
+    TEST_EXECSPACE exec;
+    for (int j = 0; j < M; ++j) {
+      Kokkos::parallel_reduce(
+          Kokkos::TeamPolicy<TEST_EXECSPACE>(exec, 1, 1, 1),
+          KOKKOS_LAMBDA(const Kokkos::TeamPolicy<TEST_EXECSPACE>::member_type
+                            &team_member,
+                        int &update) {
+            Kokkos::single(Kokkos::PerTeam(team_member), [=, &update]() {
+              Kokkos::atomic_store(view.data(), 0);
+              for (int i = 0; i < N; ++i) Kokkos::atomic_inc(view.data());
+              if (Kokkos::atomic_load(view.data()) != N) ++update;
+            });
+          },
+          error);
+    }
+  };
+  run_threaded_test(lambda, lambda);
 
-  auto host_error_index =
-      Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, error_index);
-  ASSERT_EQ(host_error_index(), 0);
-  auto host_view =
-      Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, view);
-  for (int i = 0; i < N; ++i)
-    ASSERT_EQ(host_view(i), 2 * M) << " failing at " << i;
+  auto host_error =
+      Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, error);
+  ASSERT_EQ(host_error(), 0);
 }
 
 TEST(TEST_CATEGORY, exec_space_thread_safety_team_policy_reduce) {
@@ -469,67 +282,34 @@ TEST(TEST_CATEGORY, exec_space_thread_safety_team_policy_reduce) {
 }
 
 void run_exec_space_thread_safety_range_scan() {
-  constexpr int N = 1000;
-  constexpr int M = 1000;
+  constexpr int N = 1000000;
+  constexpr int M = 10;
 
-  Kokkos::View<int *, TEST_EXECSPACE> view("view", N);
-  Kokkos::View<Kokkos::pair<int, int>, TEST_EXECSPACE> error_index(
-      "error_index");
+  Kokkos::View<int, TEST_EXECSPACE> view("view");
+  Kokkos::View<int, TEST_EXECSPACE> error("error");
 
-  run_threaded_test(
-      [=]() {
-        int dummy;
-        TEST_EXECSPACE exec;
-        for (int j = 0; j < M; ++j) {
-          Kokkos::parallel_scan(
-              "bar", Kokkos::RangePolicy<TEST_EXECSPACE>(exec, 0, N),
-              KOKKOS_LAMBDA(const int i, int &, const bool final) {
-                if (final) {
-                  // check that values in the View don't differ by more than one
-                  // which would indicate that the other kernel has written to
-                  // it while this one is running.
-                  if (i < N - 1 && (Kokkos::atomic_load(&view(i + 1)) -
-                                    Kokkos::atomic_load(&view(i))) > 1)
-                    Kokkos::atomic_store(error_index.data(),
-                                         Kokkos::pair{j + 1, i});
-                  Kokkos::atomic_inc(&view(i));
-                }
-              },
-              dummy);
-        }
-        exec.fence();
-      },
-      [=]() {
-        int dummy;
-        TEST_EXECSPACE exec;
-        for (int j = 0; j < M; ++j) {
-          Kokkos::parallel_scan(
-              "foo", Kokkos::RangePolicy<TEST_EXECSPACE>(exec, 0, N),
-              KOKKOS_LAMBDA(const int i, int &, const bool final) {
-                if (final) {
-                  // check that values in the View don't differ by more than one
-                  // which would indicate that the other kernel has written to
-                  // it while this one is running.
-                  if (i < N - 1 && (Kokkos::atomic_load(&view(N - 2 - i)) -
-                                    Kokkos::atomic_load(&view(N - 1 - i))) > 1)
-                    Kokkos::atomic_store(error_index.data(),
-                                         Kokkos::pair{j + 1, N - 1 - i});
-                  Kokkos::atomic_inc(&view(N - i - 1));
-                }
-              },
-              dummy);
-        }
-        exec.fence();
-      });
+  auto lambda = [=]() {
+    TEST_EXECSPACE exec;
+    for (int j = 0; j < M; ++j) {
+      Kokkos::parallel_scan(
+          Kokkos::RangePolicy<TEST_EXECSPACE>(exec, 0, 1),
+          KOKKOS_LAMBDA(int, int &, const bool final) {
+            if (final) {
+              Kokkos::atomic_store(view.data(), 0);
+              for (int i = 0; i < N; ++i) Kokkos::atomic_inc(view.data());
+              if (Kokkos::atomic_load(view.data()) != N)
+                Kokkos::atomic_store(error.data(), 1);
+            }
+          });
+    }
+    exec.fence();
+  };
 
-  auto host_error_index =
-      Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, error_index);
-  auto [iteration, element] = Kokkos::pair<int, int>(host_error_index());
-  ASSERT_EQ(iteration, 0) << " failing at " << iteration << ", " << element;
-  auto host_view =
-      Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, view);
-  for (int i = 0; i < N; ++i)
-    ASSERT_EQ(host_view(i), 2 * M) << " failing at " << i;
+  run_threaded_test(lambda, lambda);
+
+  auto host_error =
+      Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, error);
+  ASSERT_EQ(host_error(), 0);
 }
 
 TEST(TEST_CATEGORY, exec_space_thread_safety_range_scan) {
