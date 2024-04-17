@@ -187,14 +187,20 @@ struct Array<T, 0> {
 };
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+namespace Impl {
+struct KokkosArrayContiguous {};
+struct KokkosArrayStrided {};
+}  // namespace Impl
+
 template <>
 struct KOKKOS_DEPRECATED Array<void, KOKKOS_INVALID_INDEX, void> {
-  struct contiguous {};
-  struct strided {};
+  using contiguous = Impl::KokkosArrayContiguous;
+  using strided    = Impl::KokkosArrayStrided;
 };
 
 template <class T>
-struct KOKKOS_DEPRECATED Array<T, KOKKOS_INVALID_INDEX, Array<>::contiguous> {
+struct KOKKOS_DEPRECATED
+    Array<T, KOKKOS_INVALID_INDEX, Impl::KokkosArrayContiguous> {
  private:
   T* m_elem;
   size_t m_size;
@@ -262,7 +268,8 @@ struct KOKKOS_DEPRECATED Array<T, KOKKOS_INVALID_INDEX, Array<>::contiguous> {
 };
 
 template <class T>
-struct KOKKOS_DEPRECATED Array<T, KOKKOS_INVALID_INDEX, Array<>::strided> {
+struct KOKKOS_DEPRECATED
+    Array<T, KOKKOS_INVALID_INDEX, Impl::KokkosArrayStrided> {
  private:
   T* m_elem;
   size_t m_size;
