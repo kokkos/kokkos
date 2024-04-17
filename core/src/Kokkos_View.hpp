@@ -1348,22 +1348,18 @@ class View : public ViewTraits<DataType, Properties...> {
     using SrcTraits = typename View<RT, RP...>::traits;
     using Mapping   = Kokkos::Impl::ViewMapping<traits, SrcTraits,
                                               typename traits::specialize>;
-    static_assert(Mapping::is_assignable,
-                  "Incompatible View copy construction");
     Mapping::assign(m_map, rhs.m_map, rhs.m_track.m_tracker);
   }
 
   template <class RT, class... RP>
   KOKKOS_INLINE_FUNCTION std::enable_if_t<
-      Kokkos::Impl::ViewMapping<
-          traits, typename View<RT, RP...>::traits,
-          typename traits::specialize>::is_assignable,
+      Kokkos::Impl::ViewMapping<traits, typename View<RT, RP...>::traits,
+                                typename traits::specialize>::is_assignable,
       View>&
   operator=(const View<RT, RP...>& rhs) {
     using SrcTraits = typename View<RT, RP...>::traits;
     using Mapping   = Kokkos::Impl::ViewMapping<traits, SrcTraits,
                                               typename traits::specialize>;
-    static_assert(Mapping::is_assignable, "Incompatible View copy assignment");
     Mapping::assign(m_map, rhs.m_map, rhs.m_track.m_tracker);
     m_track.assign(rhs);
     return *this;
