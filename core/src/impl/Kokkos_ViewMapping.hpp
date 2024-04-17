@@ -3115,10 +3115,6 @@ class ViewMapping<
 
  public:
   enum {
-    is_assignable_data_type =
-        is_assignable_value_type && is_assignable_dimension
-  };
-  enum {
     is_assignable = is_assignable_space && is_assignable_value_type &&
                     is_assignable_dimension && is_assignable_layout
   };
@@ -3236,10 +3232,6 @@ class ViewMapping<
   };
 
  public:
-  enum {
-    is_assignable_data_type =
-        is_assignable_value_type && is_assignable_dimension
-  };
   enum {
     is_assignable = is_assignable_space && is_assignable_value_type &&
                     is_assignable_dimension

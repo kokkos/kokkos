@@ -58,7 +58,6 @@ struct ViewDataAnalysis;
 template <class, class...>
 class ViewMapping {
  public:
-  enum : bool { is_assignable_data_type = false };
   enum : bool { is_assignable = false };
 };
 
@@ -1344,7 +1343,7 @@ class View : public ViewTraits<DataType, Properties...> {
       const View<RT, RP...>& rhs,
       std::enable_if_t<Kokkos::Impl::ViewMapping<
           traits, typename View<RT, RP...>::traits,
-          typename traits::specialize>::is_assignable_data_type>* = nullptr)
+          typename traits::specialize>::is_assignable>* = nullptr)
       : m_track(rhs), m_map() {
     using SrcTraits = typename View<RT, RP...>::traits;
     using Mapping   = Kokkos::Impl::ViewMapping<traits, SrcTraits,
@@ -1358,7 +1357,7 @@ class View : public ViewTraits<DataType, Properties...> {
   KOKKOS_INLINE_FUNCTION std::enable_if_t<
       Kokkos::Impl::ViewMapping<
           traits, typename View<RT, RP...>::traits,
-          typename traits::specialize>::is_assignable_data_type,
+          typename traits::specialize>::is_assignable,
       View>&
   operator=(const View<RT, RP...>& rhs) {
     using SrcTraits = typename View<RT, RP...>::traits;
