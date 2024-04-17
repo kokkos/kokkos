@@ -94,6 +94,7 @@ SET(COMPILE_ONLY_SOURCES
   TestTypeList.cpp
   TestMDRangePolicyCTAD.cpp
   view/TestExtentsDatatypeConversion.cpp
+  view/TestViewConstructibilityTraits.cpp
 )
 
 #testing if windows.h and Kokkos_Core.hpp can be included
