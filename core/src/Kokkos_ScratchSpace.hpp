@@ -134,7 +134,6 @@ class ScratchMemorySpace {
   mutable int m_default_level = 0;
 
  public:
- public:
   // Minimal overalignment used by view scratch allocations
   constexpr static int ALIGN = 8;
 

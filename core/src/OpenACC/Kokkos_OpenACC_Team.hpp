@@ -57,8 +57,7 @@ class OpenACCTeamMember {
   template <int Level>
   KOKKOS_FUNCTION const execution_space::scratch_memory_space& team_scratch()
       const {
-    return m_team_shared.set_team_thread_mode(Level, 1,
-                                              m_team_scratch_size[level]);
+    return team_scratch(Level);
   }
 
   KOKKOS_FUNCTION
@@ -70,7 +69,7 @@ class OpenACCTeamMember {
   template <int Level>
   KOKKOS_FUNCTION const execution_space::scratch_memory_space& thread_scratch()
       const {
-    return m_team_shared.set_team_thread_mode(Level, team_size(), team_rank());
+    return thread_scratch(Level);
   }
 
   KOKKOS_FUNCTION
