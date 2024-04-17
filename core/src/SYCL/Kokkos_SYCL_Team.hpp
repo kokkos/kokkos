@@ -47,8 +47,8 @@ class SYCLTeamMember {
 
  public:
   KOKKOS_INLINE_FUNCTION
-  const execution_space::scratch_memory_space& team_shmem() const {
-    return m_team_shared.set_team_thread_mode(0, 1, 0);
+  const auto& team_shmem() const {
+    return m_team_shared.set_team_thread_mode<0>(1, 0);
   }
 
   template <int Level>
