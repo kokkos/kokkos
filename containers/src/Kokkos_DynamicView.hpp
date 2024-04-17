@@ -591,6 +591,7 @@ struct MirrorDynamicViewType {
 
 namespace Impl {
 
+// collection of static asserts for create_mirror
 template <class... ViewCtorArgs>
 void check_view_ctor_args_create_mirror_dynamic() {
   using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
@@ -609,6 +610,9 @@ void check_view_ctor_args_create_mirror_dynamic() {
       "not explicitly allow padding!");
 }
 
+// create a mirror
+// private interface that accepts arbitrary view constructor args passed by a
+// view_alloc
 template <class T, class... P, class... ViewCtorArgs>
 auto create_mirror(const Kokkos::Experimental::DynamicView<T, P...>& src,
                    const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
@@ -681,6 +685,9 @@ inline auto create_mirror(
 
 namespace Impl {
 
+// create a mirror view
+// private interface that accepts arbitrary view constructor args passed by a
+// view_alloc
 template <class T, class... P, class... ViewCtorArgs>
 auto create_mirror_view(const Kokkos::Experimental::DynamicView<T, P...>& src,
                         const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
@@ -959,7 +966,10 @@ void check_view_ctor_args_create_mirror_view_and_copy_dynamic() {
 }
 
 } // namespace Impl
-  //
+
+// create a mirror view and deep copy it
+// public interface that accepts arbitrary view constructor args passed by a
+// view_alloc
 template <class... ViewCtorArgs, class T, class... P,
           class = std::enable_if<
               std::is_void<typename ViewTraits<T, P...>::specialize>::value>>

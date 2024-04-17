@@ -1842,6 +1842,7 @@ struct MirrorOffsetType {
 
 namespace Impl {
 
+// collection of static asserts for create_mirror
 template <class... ViewCtorArgs>
 void check_view_ctor_args_create_mirror_offset() {
   using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
@@ -1860,6 +1861,9 @@ void check_view_ctor_args_create_mirror_offset() {
       "not explicitly allow padding!");
 }
 
+// create a mirror
+// private interface that accepts arbitrary view constructor args passed by a
+// view_alloc
 template <class T, class... P, class... ViewCtorArgs>
 auto create_mirror(const Kokkos::Experimental::OffsetView<T, P...>& src,
                    const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
@@ -1923,6 +1927,9 @@ inline auto create_mirror(
 
 namespace Impl {
 
+// create a mirror view
+// private interface that accepts arbitrary view constructor args passed by a
+// view_alloc
 template <class T, class... P, class... ViewCtorArgs>
 auto create_mirror_view(const Kokkos::Experimental::OffsetView<T, P...>& src,
                         const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
