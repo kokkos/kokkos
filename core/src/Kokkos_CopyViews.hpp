@@ -3475,7 +3475,7 @@ void check_view_ctor_args_create_mirror() {
 // private interface that accepts arbitrary view constructor args passed by a
 // view_alloc
 template <class T, class... P, class... ViewCtorArgs>
-auto create_mirror(const Kokkos::View<T, P...>& src,
+inline auto create_mirror(const Kokkos::View<T, P...>& src,
                    const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
   check_view_ctor_args_create_mirror<ViewCtorArgs...>();
 
@@ -3552,7 +3552,7 @@ namespace Impl {
 // private interface that accepts arbitrary view constructor args passed by a
 // view_alloc
 template <class T, class... P, class... ViewCtorArgs>
-auto create_mirror_view(const Kokkos::View<T, P...>& src,
+inline auto create_mirror_view(const Kokkos::View<T, P...>& src,
                         const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
   if constexpr (!Impl::ViewCtorProp<ViewCtorArgs...>::has_memory_space) {
     if constexpr (std::is_same<typename Kokkos::View<T, P...>::memory_space,
