@@ -602,7 +602,7 @@ class RangePolicyOccupancyTuner {
   TunerType tuner;
 
  public:
-  RangePolicyOccupancyTuner()        = default;
+  RangePolicyOccupancyTuner() = default;
   template <typename ViableConfigurationCalculator, typename Functor,
             typename TagType, typename... Properties>
   RangePolicyOccupancyTuner(const std::string& name,
