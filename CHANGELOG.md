@@ -39,7 +39,7 @@
 * Make the OpenACC backend asynchronous [\#6772](https://github.com/kokkos/kokkos/pull/6772)
 
 #### Threads:
-* Add missing broadcast to TeamThreadRange parallel_scan [\#6601](https://github.com/kokkos/kokkos/pull/6446)
+* Add missing broadcast to TeamThreadRange parallel_scan [\#6601](https://github.com/kokkos/kokkos/pull/6601)
 
 #### OpenMP:
 * Improve performance of view initializations and filling with zeros [\#6573](https://github.com/kokkos/kokkos/pull/6573)
