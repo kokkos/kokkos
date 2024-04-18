@@ -304,24 +304,6 @@ auto tune_policy(const size_t, const std::string&, const ExecPolicy& policy,
   return policy;
 }
 
-/**
- * Tuning for parallel_fors and parallel_scans is a fairly simple process.
- *
- * Tuning for a parallel_reduce turns out to be a little more complicated.
- *
- * If you're tuning a reducer, it might be a complex or a simple reducer
- * (an example of simple would be one where the join is just "+".
- *
- * Unfortunately these two paths are very different in terms of which classes
- * get instantiated. Thankfully, all of this complexity is encoded in the
- * ReducerType. If it's a "simple" reducer, this will be Kokkos::InvalidType,
- * otherwise it'll be something else.
- *
- * If the type is complex, for the code to be generally right you _must_
- * pass an instance of that ReducerType to functions that determine
- * eligible team sizes. If the type is simple, you can't construct one,
- * you use the simpler 2-arg formulation of team_size_recommended/max.
- */
 
 struct SimpleTeamSizeCalculator {
   template <typename Policy, typename Functor, typename Tag>
