@@ -198,7 +198,7 @@ struct Array<T, 0> {
 
  private:
   friend KOKKOS_INLINE_FUNCTION constexpr void kokkos_swap(
-      Array<T, 0>&, Array<T, 0>&) noexcept(Impl::is_nothrow_swappable_v<T>) {}
+      Array<T, 0>&, Array<T, 0>&) noexcept {}
 };
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
