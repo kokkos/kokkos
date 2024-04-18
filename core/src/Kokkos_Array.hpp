@@ -135,7 +135,6 @@ struct Array {
   }
 
  private:
-  template <class U = T>
   friend KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<
       Impl::is_swappable<T>::value>
   kokkos_swap(Array<T, N>& a,
