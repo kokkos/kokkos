@@ -604,12 +604,6 @@ class RangePolicyOccupancyTuner {
 
  public:
   RangePolicyOccupancyTuner()        = default;
-  RangePolicyOccupancyTuner& operator=(const RangePolicyOccupancyTuner& other) =
-      default;
-  RangePolicyOccupancyTuner(const RangePolicyOccupancyTuner& other) = default;
-  RangePolicyOccupancyTuner& operator=(RangePolicyOccupancyTuner&& other) =
-      default;
-  RangePolicyOccupancyTuner(RangePolicyOccupancyTuner&& other) = default;
   template <typename ViableConfigurationCalculator, typename Functor,
             typename TagType, typename... Properties>
   RangePolicyOccupancyTuner(const std::string& name,
