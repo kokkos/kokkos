@@ -304,7 +304,6 @@ auto tune_policy(const size_t, const std::string&, const ExecPolicy& policy,
   return policy;
 }
 
-
 struct SimpleTeamSizeCalculator {
   template <typename Policy, typename Functor, typename Tag>
   int get_max_team_size(const Policy& policy, const Functor& functor,
