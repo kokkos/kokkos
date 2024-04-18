@@ -35,7 +35,7 @@ void check_space_member_for_policies(const ExecSpace& exec) {
   Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<2>> mdrange_policy(exec, {0, 0},
                                                                    {1, 1});
   ASSERT_EQ(mdrange_policy.space(), exec);
-  Kokkos::TeamPolicy<ExecSpace> team_policy(exec, 1, 1);
+  Kokkos::TeamPolicy<ExecSpace> team_policy(exec, 1, Kokkos::AUTO);
   ASSERT_EQ(team_policy.space(), exec);
 }
 
