@@ -94,6 +94,8 @@ SET(COMPILE_ONLY_SOURCES
   TestTypeList.cpp
   TestMDRangePolicyCTAD.cpp
   TestTeamPolicyCTAD.cpp
+  TestTeamMDRangePolicyCTAD.cpp
+  TestNestedReducerCTAD.cpp
   view/TestExtentsDatatypeConversion.cpp
 )
 
