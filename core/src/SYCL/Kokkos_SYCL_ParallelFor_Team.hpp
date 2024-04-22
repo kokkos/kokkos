@@ -44,7 +44,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   size_type const m_vector_size;
   int m_shmem_begin;
   int m_shmem_size;
-  sycl::ext::intel::device_ptr<char> m_global_scratch_ptr;
+  Kokkos::Impl::SYCLTypes::device_ptr<char> m_global_scratch_ptr;
   size_t m_scratch_size[2];
   // Only let one ParallelFor instance at a time use the team scratch memory.
   // The constructor acquires the mutex which is released in the destructor.
@@ -72,7 +72,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
       // Avoid capturing *this since it might not be trivially copyable
       const auto shmem_begin       = m_shmem_begin;
       const size_t scratch_size[2] = {m_scratch_size[0], m_scratch_size[1]};
-      sycl::ext::intel::device_ptr<char> const global_scratch_ptr =
+      Kokkos::Impl::SYCLTypes::device_ptr<char> const global_scratch_ptr =
           m_global_scratch_ptr;
 
       auto lambda = [=](sycl::nd_item<2> item) {
@@ -162,12 +162,13 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     // Functor's reduce memory, team scan memory, and team shared memory depend
     // upon team size.
-    auto& space          = *m_policy.space().impl_internal_space_instance();
-    m_scratch_pool_id    = space.acquire_team_scratch_space();
-    m_global_scratch_ptr = static_cast<sycl::ext::intel::device_ptr<char>>(
-        space.resize_team_scratch_space(
-            m_scratch_pool_id,
-            static_cast<ptrdiff_t>(m_scratch_size[1]) * m_league_size));
+    auto& space       = *m_policy.space().impl_internal_space_instance();
+    m_scratch_pool_id = space.acquire_team_scratch_space();
+    m_global_scratch_ptr =
+        static_cast<Kokkos::Impl::SYCLTypes::device_ptr<char>>(
+            space.resize_team_scratch_space(
+                m_scratch_pool_id,
+                static_cast<ptrdiff_t>(m_scratch_size[1]) * m_league_size));
 
     if (static_cast<int>(space.m_maxShmemPerBlock) <
         m_shmem_size - m_shmem_begin) {
