@@ -2050,7 +2050,7 @@ namespace Impl {
 // view_alloc
 template <class T, class... P, class... ViewCtorArgs>
 inline auto create_mirror_view(const DynRankView<T, P...>& src,
-                        const typename Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
+                        [[maybe_unused]] const typename Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
   if constexpr (!Impl::ViewCtorProp<ViewCtorArgs...>::has_memory_space) {
     if constexpr (
         std::is_same<
@@ -2179,7 +2179,7 @@ template <class... ViewCtorArgs, class T, class... P,
           class = std::enable_if<
               std::is_void<typename ViewTraits<T, P...>::specialize>::value>>
 auto create_mirror_view_and_copy(
-    const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
+    [[maybe_unused]] const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
     const Kokkos::DynRankView<T, P...>& src) {
   using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
 

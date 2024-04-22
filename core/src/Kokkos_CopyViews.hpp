@@ -3553,7 +3553,7 @@ namespace Impl {
 // view_alloc
 template <class T, class... P, class... ViewCtorArgs>
 inline auto create_mirror_view(const Kokkos::View<T, P...>& src,
-                        const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
+                        [[maybe_unused]] const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
   if constexpr (!Impl::ViewCtorProp<ViewCtorArgs...>::has_memory_space) {
     if constexpr (std::is_same<typename Kokkos::View<T, P...>::memory_space,
                                typename Kokkos::View<
@@ -3676,7 +3676,7 @@ template <class... ViewCtorArgs, class T, class... P,
           class = std::enable_if<
               std::is_void<typename ViewTraits<T, P...>::specialize>::value>>
 auto create_mirror_view_and_copy(
-    const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
+    [[maybe_unused]] const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
     const Kokkos::View<T, P...>& src) {
   using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
 

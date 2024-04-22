@@ -690,7 +690,7 @@ namespace Impl {
 // view_alloc
 template <class T, class... P, class... ViewCtorArgs>
 inline auto create_mirror_view(const Kokkos::Experimental::DynamicView<T, P...>& src,
-                        const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
+                        [[maybe_unused]] const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
   if constexpr (!Impl::ViewCtorProp<ViewCtorArgs...>::has_memory_space) {
     if constexpr (
         std::is_same<
