@@ -936,7 +936,7 @@ template <class... ViewCtorArgs, class T, class... P,
           class = std::enable_if<
               std::is_void<typename ViewTraits<T, P...>::specialize>::value>>
 auto create_mirror_view_and_copy(
-    const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
+    [[maybe_unused]] const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
     const Kokkos::Experimental::DynamicView<T, P...>& src) {
   using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
 
