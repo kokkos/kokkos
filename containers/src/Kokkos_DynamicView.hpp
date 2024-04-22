@@ -591,25 +591,6 @@ struct MirrorDynamicViewType {
 
 namespace Impl {
 
-// collection of static asserts for create_mirror
-template <class... ViewCtorArgs>
-void check_view_ctor_args_create_mirror_dynamic() {
-  using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
-
-  static_assert(
-      !alloc_prop_input::has_label,
-      "The view constructor arguments passed to Kokkos::create_mirror "
-      "must not include a label!");
-  static_assert(
-      !alloc_prop_input::has_pointer,
-      "The view constructor arguments passed to Kokkos::create_mirror must "
-      "not include a pointer!");
-  static_assert(
-      !alloc_prop_input::allow_padding,
-      "The view constructor arguments passed to Kokkos::create_mirror must "
-      "not explicitly allow padding!");
-}
-
 // create a mirror
 // private interface that accepts arbitrary view constructor args passed by a
 // view_alloc
@@ -617,7 +598,7 @@ template <class T, class... P, class... ViewCtorArgs>
 inline auto create_mirror(const Kokkos::Experimental::DynamicView<T, P...>& src,
                    const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
   using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
-  check_view_ctor_args_create_mirror_dynamic<ViewCtorArgs...>();
+  check_view_ctor_args_create_mirror<ViewCtorArgs...>();
 
   if constexpr (Impl::ViewCtorProp<ViewCtorArgs...>::has_memory_space) {
     using MemorySpace = typename alloc_prop_input::memory_space;
@@ -947,24 +928,6 @@ struct ViewCopy<Kokkos::Experimental::DynamicView<DP...>,
 
 namespace Impl {
 
-template <class... ViewCtorArgs>
-void check_view_ctor_args_create_mirror_view_and_copy_dynamic() {
-  using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
-
-  static_assert(
-      alloc_prop_input::has_memory_space,
-      "The view constructor arguments passed to "
-      "Kokkos::create_mirror_view_and_copy must include a memory space!");
-  static_assert(!alloc_prop_input::has_pointer,
-                "The view constructor arguments passed to "
-                "Kokkos::create_mirror_view_and_copy must "
-                "not include a pointer!");
-  static_assert(!alloc_prop_input::allow_padding,
-                "The view constructor arguments passed to "
-                "Kokkos::create_mirror_view_and_copy must "
-                "not explicitly allow padding!");
-}
-
 } // namespace Impl
 
 // create a mirror view and deep copy it
@@ -978,7 +941,7 @@ auto create_mirror_view_and_copy(
     const Kokkos::Experimental::DynamicView<T, P...>& src) {
   using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
 
-  Impl::check_view_ctor_args_create_mirror_view_and_copy_dynamic<ViewCtorArgs...>();
+  Impl::check_view_ctor_args_create_mirror_view_and_copy<ViewCtorArgs...>();
 
   if constexpr (Impl::MirrorDynamicViewType<
             typename Impl::ViewCtorProp<ViewCtorArgs...>::memory_space, T,

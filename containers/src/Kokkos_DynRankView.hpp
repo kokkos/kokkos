@@ -1934,25 +1934,6 @@ struct MirrorDRVType {
 
 namespace Impl {
 
-// collection of static asserts for create_mirror
-template <class... ViewCtorArgs>
-void check_view_ctor_args_create_mirror_drv() {
-  using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
-
-  static_assert(
-      !alloc_prop_input::has_label,
-      "The view constructor arguments passed to Kokkos::create_mirror "
-      "must not include a label!");
-  static_assert(
-      !alloc_prop_input::has_pointer,
-      "The view constructor arguments passed to Kokkos::create_mirror must "
-      "not include a pointer!");
-  static_assert(
-      !alloc_prop_input::allow_padding,
-      "The view constructor arguments passed to Kokkos::create_mirror must "
-      "not explicitly allow padding!");
-}
-
 // create a mirror
 // private interface that accepts arbitrary view constructor args passed by a
 // view_alloc
@@ -1961,7 +1942,7 @@ inline auto create_mirror(
     const DynRankView<T, P...>& src,
     const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
 
-  check_view_ctor_args_create_mirror_drv<ViewCtorArgs...>();
+  check_view_ctor_args_create_mirror<ViewCtorArgs...>();
 
   auto prop_copy = Impl::with_properties_if_unset(
       arg_prop, std::string(src.label()).append("_mirror"));
@@ -2151,25 +2132,6 @@ inline auto create_mirror_view(
 
 namespace Impl {
 
-// collection of static asserts for create_mirror_view_and_copy
-template <class... ViewCtorArgs>
-void check_view_ctor_args_create_mirror_view_and_copy_drv() {
-  using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
-
-  static_assert(
-      alloc_prop_input::has_memory_space,
-      "The view constructor arguments passed to "
-      "Kokkos::create_mirror_view_and_copy must include a memory space!");
-  static_assert(!alloc_prop_input::has_pointer,
-                "The view constructor arguments passed to "
-                "Kokkos::create_mirror_view_and_copy must "
-                "not include a pointer!");
-  static_assert(!alloc_prop_input::allow_padding,
-                "The view constructor arguments passed to "
-                "Kokkos::create_mirror_view_and_copy must "
-                "not explicitly allow padding!");
-}
-
 } // namespace Impl
 
 // create a mirror view and deep copy it
@@ -2183,7 +2145,7 @@ auto create_mirror_view_and_copy(
     const Kokkos::DynRankView<T, P...>& src) {
   using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
 
-  Impl::check_view_ctor_args_create_mirror_view_and_copy_drv<ViewCtorArgs...>();
+  Impl::check_view_ctor_args_create_mirror_view_and_copy<ViewCtorArgs...>();
 
   if constexpr (Impl::MirrorDRViewType<
             typename Impl::ViewCtorProp<ViewCtorArgs...>::memory_space, T,
