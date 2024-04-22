@@ -146,7 +146,7 @@ class ParallelScanSYCLBase {
   const CombinedFunctorReducer<FunctorType, typename Analysis::Reducer>
       m_functor_reducer;
   const Policy m_policy;
-  sycl::host_ptr<value_type> m_scratch_host = nullptr;
+  sycl::ext::intel::host_ptr<value_type> m_scratch_host = nullptr;
   pointer_type m_result_ptr;
   const bool m_result_ptr_device_accessible;
 
@@ -166,8 +166,9 @@ class ParallelScanSYCLBase {
 
     const auto size = m_policy.end() - m_policy.begin();
 
-    auto scratch_flags = static_cast<sycl::device_ptr<unsigned int>>(
-        instance.scratch_flags(sizeof(unsigned int)));
+    auto scratch_flags =
+        static_cast<sycl::ext::intel::device_ptr<unsigned int>>(
+            instance.scratch_flags(sizeof(unsigned int)));
 
     const auto begin = m_policy.begin();
 
@@ -175,8 +176,8 @@ class ParallelScanSYCLBase {
     auto scan_lambda_factory =
         [&](sycl::local_accessor<value_type> local_mem,
             sycl::local_accessor<unsigned int> num_teams_done,
-            sycl::device_ptr<value_type> global_mem_,
-            sycl::device_ptr<value_type> group_results_) {
+            sycl::ext::intel::device_ptr<value_type> global_mem_,
+            sycl::ext::intel::device_ptr<value_type> group_results_) {
           auto lambda = [=](sycl::nd_item<1> item) {
             auto global_mem    = global_mem_;
             auto group_results = group_results_;
@@ -253,8 +254,8 @@ class ParallelScanSYCLBase {
 
     size_t wgroup_size;
     size_t n_wgroups;
-    sycl::device_ptr<value_type> global_mem;
-    sycl::device_ptr<value_type> group_results;
+    sycl::ext::intel::device_ptr<value_type> global_mem;
+    sycl::ext::intel::device_ptr<value_type> group_results;
 
     desul::ensure_sycl_lock_arrays_on_device(q);
 
@@ -288,10 +289,10 @@ class ParallelScanSYCLBase {
       // that will contain the sum of the previous workgroups totals.
       // FIXME_SYCL consider only storing one value per block and recreate
       // initial results in the end before doing the final pass
-      global_mem =
-          static_cast<sycl::device_ptr<value_type>>(instance.scratch_space(
-              n_wgroups * (wgroup_size + 1) * sizeof(value_type)));
-      m_scratch_host = static_cast<sycl::host_ptr<value_type>>(
+      global_mem = static_cast<sycl::ext::intel::device_ptr<value_type>>(
+          instance.scratch_space(n_wgroups * (wgroup_size + 1) *
+                                 sizeof(value_type)));
+      m_scratch_host = static_cast<sycl::ext::intel::host_ptr<value_type>>(
           instance.scratch_host(sizeof(value_type)));
 
       group_results = global_mem + n_wgroups * wgroup_size;
