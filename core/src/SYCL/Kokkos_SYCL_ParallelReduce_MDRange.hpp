@@ -94,10 +94,10 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
     const typename Policy::index_type n_tiles = m_policy.m_num_tiles;
     const unsigned int value_count =
         m_functor_reducer.get_reducer().value_count();
-    Kokkos::Impl::SYCLTypes::device_ptr<value_type> results_ptr;
+    sycl_device_ptr<value_type> results_ptr;
     auto host_result_ptr =
         (m_result_ptr && !m_result_ptr_device_accessible)
-            ? static_cast<Kokkos::Impl::SYCLTypes::host_ptr<value_type>>(
+            ? static_cast<sycl_host_ptr<value_type>>(
                   instance.scratch_host(sizeof(value_type) * value_count))
             : nullptr;
 
@@ -114,9 +114,8 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
 #else
         (void)memcpy_event;
 #endif
-        results_ptr =
-            static_cast<Kokkos::Impl::SYCLTypes::device_ptr<value_type>>(
-                instance.scratch_space(sizeof(value_type) * value_count));
+        results_ptr = static_cast<sycl_device_ptr<value_type>>(
+            instance.scratch_space(sizeof(value_type) * value_count));
         auto device_accessible_result_ptr =
             m_result_ptr_device_accessible
                 ? static_cast<sycl::global_ptr<value_type>>(m_result_ptr)
@@ -156,17 +155,14 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
         n_wgroups = (n_tiles + values_per_thread - 1) / values_per_thread;
       }
 
-      results_ptr =
-          static_cast<Kokkos::Impl::SYCLTypes::device_ptr<value_type>>(
-              instance.scratch_space(sizeof(value_type) * value_count *
-                                     n_wgroups));
+      results_ptr = static_cast<sycl_device_ptr<value_type>>(
+          instance.scratch_space(sizeof(value_type) * value_count * n_wgroups));
       auto device_accessible_result_ptr =
           m_result_ptr_device_accessible
               ? static_cast<sycl::global_ptr<value_type>>(m_result_ptr)
               : static_cast<sycl::global_ptr<value_type>>(host_result_ptr);
-      auto scratch_flags =
-          static_cast<Kokkos::Impl::SYCLTypes::device_ptr<unsigned int>>(
-              instance.scratch_flags(sizeof(unsigned int)));
+      auto scratch_flags = static_cast<sycl_device_ptr<unsigned int>>(
+          instance.scratch_flags(sizeof(unsigned int)));
 
       auto parallel_reduce_event = q.submit([&](sycl::handler& cgh) {
         sycl::local_accessor<value_type> local_mem(

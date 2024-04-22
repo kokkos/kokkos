@@ -166,9 +166,8 @@ int SYCLInternal::acquire_team_scratch_space() {
   return current_team_scratch;
 }
 
-Kokkos::Impl::SYCLTypes::device_ptr<void>
-SYCLInternal::resize_team_scratch_space(int scratch_pool_id, std::int64_t bytes,
-                                        bool force_shrink) {
+Kokkos::Impl::sycl_device_ptr<void> SYCLInternal::resize_team_scratch_space(
+    int scratch_pool_id, std::int64_t bytes, bool force_shrink) {
   // Multiple ParallelFor/Reduce Teams can call this function at the same time
   // and invalidate the m_team_scratch_ptr. We use a pool to avoid any race
   // condition.
@@ -252,7 +251,7 @@ void SYCLInternal::finalize() {
   m_queue.reset();
 }
 
-Kokkos::Impl::SYCLTypes::device_ptr<void> SYCLInternal::scratch_space(
+Kokkos::Impl::sycl_device_ptr<void> SYCLInternal::scratch_space(
     const std::size_t size) {
   if (verify_is_initialized("scratch_space") &&
       m_scratchSpaceCount < scratch_count(size)) {
@@ -273,7 +272,7 @@ Kokkos::Impl::SYCLTypes::device_ptr<void> SYCLInternal::scratch_space(
   return m_scratchSpace;
 }
 
-Kokkos::Impl::SYCLTypes::host_ptr<void> SYCLInternal::scratch_host(
+Kokkos::Impl::sycl_host_ptr<void> SYCLInternal::scratch_host(
     const std::size_t size) {
   if (verify_is_initialized("scratch_unified") &&
       m_scratchHostCount < scratch_count(size)) {
@@ -294,7 +293,7 @@ Kokkos::Impl::SYCLTypes::host_ptr<void> SYCLInternal::scratch_host(
   return m_scratchHost;
 }
 
-Kokkos::Impl::SYCLTypes::device_ptr<void> SYCLInternal::scratch_flags(
+Kokkos::Impl::sycl_device_ptr<void> SYCLInternal::scratch_flags(
     const std::size_t size) {
   if (verify_is_initialized("scratch_flags") &&
       m_scratchFlagsCount < scratch_count(size)) {

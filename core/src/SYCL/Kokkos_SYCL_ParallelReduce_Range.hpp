@@ -69,10 +69,10 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
     std::size_t size = policy.end() - policy.begin();
     const unsigned int value_count =
         m_functor_reducer.get_reducer().value_count();
-    Kokkos::Impl::SYCLTypes::device_ptr<value_type> results_ptr = nullptr;
+    sycl_device_ptr<value_type> results_ptr = nullptr;
     auto host_result_ptr =
         (m_result_ptr && !m_result_ptr_device_accessible)
-            ? static_cast<Kokkos::Impl::SYCLTypes::host_ptr<value_type>>(
+            ? static_cast<sycl_host_ptr<value_type>>(
                   instance.scratch_host(sizeof(value_type) * value_count))
             : nullptr;
     auto device_accessible_result_ptr =
@@ -88,9 +88,8 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
     // working with the global scratch memory but don't copy back to
     // m_result_ptr yet.
     if (size <= 1) {
-      results_ptr =
-          static_cast<Kokkos::Impl::SYCLTypes::device_ptr<value_type>>(
-              instance.scratch_space(sizeof(value_type) * value_count));
+      results_ptr = static_cast<sycl_device_ptr<value_type>>(
+          instance.scratch_space(sizeof(value_type) * value_count));
 
       auto parallel_reduce_event = q.submit([&](sycl::handler& cgh) {
         const auto begin = policy.begin();
@@ -126,15 +125,13 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
       // workgroups separately, write the workgroup results back to global
       // memory and recurse until only one workgroup does the reduction and thus
       // gets the final value.
-      auto scratch_flags =
-          static_cast<Kokkos::Impl::SYCLTypes::device_ptr<unsigned int>>(
-              instance.scratch_flags(sizeof(unsigned int)));
+      auto scratch_flags = static_cast<sycl_device_ptr<unsigned int>>(
+          instance.scratch_flags(sizeof(unsigned int)));
 
       auto reduction_lambda_factory =
           [&](sycl::local_accessor<value_type> local_mem,
               sycl::local_accessor<unsigned int> num_teams_done,
-              Kokkos::Impl::SYCLTypes::device_ptr<value_type> results_ptr,
-              int values_per_thread) {
+              sycl_device_ptr<value_type> results_ptr, int values_per_thread) {
             const auto begin = policy.begin();
 
             auto lambda = [=](sycl::nd_item<1> item) {
@@ -305,9 +302,8 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
         }
 
         results_ptr =
-            static_cast<Kokkos::Impl::SYCLTypes::device_ptr<value_type>>(
-                instance.scratch_space(sizeof(value_type) * value_count *
-                                       n_wgroups));
+            static_cast<sycl_device_ptr<value_type>>(instance.scratch_space(
+                sizeof(value_type) * value_count * n_wgroups));
 
         sycl::local_accessor<value_type> local_mem(
             sycl::range<1>(wgroup_size) * value_count, cgh);
