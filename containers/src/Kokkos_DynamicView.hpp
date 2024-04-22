@@ -600,10 +600,11 @@ inline auto create_mirror(const Kokkos::Experimental::DynamicView<T, P...>& src,
   using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
   check_view_ctor_args_create_mirror<ViewCtorArgs...>();
 
+  auto prop_copy = Impl::with_properties_if_unset(
+      arg_prop, std::string(src.label()).append("_mirror"));
+
   if constexpr (Impl::ViewCtorProp<ViewCtorArgs...>::has_memory_space) {
     using MemorySpace = typename alloc_prop_input::memory_space;
-    auto prop_copy    = Impl::with_properties_if_unset(
-        arg_prop, std::string(src.label()).append("_mirror"));
 
     auto ret = typename Kokkos::Impl::MirrorDynamicViewType<
         MemorySpace, T, P...>::view_type(prop_copy, src.chunk_size(),
@@ -613,8 +614,6 @@ inline auto create_mirror(const Kokkos::Experimental::DynamicView<T, P...>& src,
 
     return ret;
   } else {
-    auto prop_copy = Impl::with_properties_if_unset(
-        arg_prop, std::string(src.label()).append("_mirror"));
 
     auto ret = typename Kokkos::Experimental::DynamicView<T, P...>::HostMirror(
         prop_copy, src.chunk_size(), src.chunk_max() * src.chunk_size());
