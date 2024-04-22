@@ -133,7 +133,40 @@ struct TestViewMDSpanConversion {
     ASSERT_EQ(cvt.mapping(), ref_layout_mapping);
   }
 
+  template <typename ViewType>
+  using natural_mdspan_type_for_view = typename Kokkos::Impl::MDSpanViewTraits<
+      typename ViewType::traits>::mdspan_type;
+
   static void run_test() {
+    // Verify we can only convert to compatible mdspans
+    static_assert(std::is_convertible_v<
+                  Kokkos::View<value_type *>,
+                  natural_mdspan_type_for_view<Kokkos::View<value_type *>>>);
+    static_assert(
+        std::is_convertible_v<
+            Kokkos::View<value_type *>,
+            natural_mdspan_type_for_view<Kokkos::View<const value_type *>>>);
+
+    // Do not cast const away
+    static_assert(!std::is_convertible_v<
+                  Kokkos::View<const value_type *>,
+                  natural_mdspan_type_for_view<Kokkos::View<value_type *>>>);
+
+    // Mismatched dim
+    static_assert(!std::is_convertible_v<
+                  Kokkos::View<value_type *>,
+                  natural_mdspan_type_for_view<Kokkos::View<value_type **>>>);
+
+    // Mismatched layouts
+    static_assert(
+        !std::is_convertible_v<Kokkos::View<value_type **, Kokkos::LayoutLeft>,
+                               natural_mdspan_type_for_view<Kokkos::View<
+                                   value_type **, Kokkos::LayoutRight>>>);
+    static_assert(
+        !std::is_convertible_v<Kokkos::View<value_type **, Kokkos::LayoutRight>,
+                               natural_mdspan_type_for_view<Kokkos::View<
+                                   value_type **, Kokkos::LayoutLeft>>>);
+
     // nvcc doesn't do CTAD properly here, making this way more verbose..
     // LayoutLeft
     test_conversion_from_mdspan<Kokkos::LayoutLeft>(
