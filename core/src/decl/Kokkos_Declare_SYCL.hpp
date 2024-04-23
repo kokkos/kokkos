@@ -32,6 +32,7 @@
 #include <SYCL/Kokkos_SYCL_ParallelScan_Range.hpp>
 #include <SYCL/Kokkos_SYCL_UniqueToken.hpp>
 #include <SYCL/Kokkos_SYCL_ZeroMemset.hpp>
+#include <SYCL/Kokkos_SYCL_View.hpp>
 #endif
 
 #endif

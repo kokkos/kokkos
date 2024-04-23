@@ -62,6 +62,8 @@ class SYCL {
 
   using scratch_memory_space =
       ScratchMemorySpace<SYCL, sycl::local_ptr<char>, sycl::device_ptr<char>>;
+  using scratch_memory_space_l0 = ScratchMemorySpaceBase<SYCL, sycl::local_ptr<char>>;
+  using scratch_memory_space_l1 = ScratchMemorySpaceBase<SYCL, sycl::device_ptr<char>>;
 
   SYCL();
   explicit SYCL(const sycl::queue&);
