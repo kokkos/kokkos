@@ -339,7 +339,7 @@ class SYCLTeamMember {
   KOKKOS_INLINE_FUNCTION
   SYCLTeamMember(sycl::local_ptr<void> shared, const std::size_t shared_begin,
                  const std::size_t shared_size,
-                 sycl::device_ptr<void> scratch_level_1_ptr,
+                 sycl_device_ptr<void> scratch_level_1_ptr,
                  const std::size_t scratch_level_1_size,
                  const sycl::nd_item<2> item, const int arg_league_rank,
                  const int arg_league_size)

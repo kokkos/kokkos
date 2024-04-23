@@ -54,7 +54,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
   const bool m_result_ptr_device_accessible;
   size_type m_shmem_begin;
   size_type m_shmem_size;
-  sycl::device_ptr<char> m_global_scratch_ptr;
+  sycl_device_ptr<char> m_global_scratch_ptr;
   size_t m_scratch_size[2];
   const size_type m_league_size;
   int m_team_size;
@@ -82,7 +82,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
     value_type* results_ptr = nullptr;
     auto host_result_ptr =
         (m_result_ptr && !m_result_ptr_device_accessible)
-            ? static_cast<sycl::host_ptr<value_type>>(
+            ? static_cast<sycl_host_ptr<value_type>>(
                   instance.scratch_host(sizeof(value_type) * value_count))
             : nullptr;
 
@@ -95,7 +95,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
     // m_result_ptr yet.
     if (size <= 1) {
       results_ptr =
-          static_cast<sycl::device_ptr<value_type>>(instance.scratch_space(
+          static_cast<sycl_device_ptr<value_type>>(instance.scratch_space(
               sizeof(value_type) * std::max(value_count, 1u)));
       auto device_accessible_result_ptr =
           m_result_ptr_device_accessible
@@ -113,7 +113,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
         // Avoid capturing *this since it might not be trivially copyable
         const auto shmem_begin       = m_shmem_begin;
         const size_t scratch_size[2] = {m_scratch_size[0], m_scratch_size[1]};
-        sycl::device_ptr<char> const global_scratch_ptr = m_global_scratch_ptr;
+        sycl_device_ptr<char> const global_scratch_ptr = m_global_scratch_ptr;
 
 #ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
         cgh.depends_on(memcpy_event);
@@ -156,7 +156,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
       // workgroup results back to global memory and recurse until only one
       // workgroup does the reduction and thus gets the final value.
       auto parallel_reduce_event = q.submit([&](sycl::handler& cgh) {
-        auto scratch_flags = static_cast<sycl::device_ptr<unsigned int>>(
+        auto scratch_flags = static_cast<sycl_device_ptr<unsigned int>>(
             instance.scratch_flags(sizeof(unsigned int)));
 
         // FIXME_SYCL accessors seem to need a size greater than zero at least
@@ -170,12 +170,12 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
         const auto shmem_begin       = m_shmem_begin;
         const auto league_size       = m_league_size;
         const size_t scratch_size[2] = {m_scratch_size[0], m_scratch_size[1]};
-        sycl::device_ptr<char> const global_scratch_ptr = m_global_scratch_ptr;
+        sycl_device_ptr<char> const global_scratch_ptr = m_global_scratch_ptr;
         sycl::local_accessor<unsigned int> num_teams_done(1, cgh);
 
         auto team_reduction_factory =
             [&](sycl::local_accessor<value_type, 1> local_mem,
-                sycl::device_ptr<value_type> results_ptr) {
+                sycl_device_ptr<value_type> results_ptr) {
               auto device_accessible_result_ptr =
                   m_result_ptr_device_accessible
                       ? static_cast<sycl::global_ptr<value_type>>(m_result_ptr)
@@ -331,7 +331,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
         const auto init_size =
             std::max<std::size_t>((size + wgroup_size - 1) / wgroup_size, 1);
         results_ptr =
-            static_cast<sycl::device_ptr<value_type>>(instance.scratch_space(
+            static_cast<sycl_device_ptr<value_type>>(instance.scratch_space(
                 sizeof(value_type) * std::max(value_count, 1u) * init_size));
 
         size_t max_work_groups =
@@ -428,7 +428,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
     auto& space       = *m_policy.space().impl_internal_space_instance();
     m_scratch_pool_id = space.acquire_team_scratch_space();
     m_global_scratch_ptr =
-        static_cast<sycl::device_ptr<char>>(space.resize_team_scratch_space(
+        static_cast<sycl_device_ptr<char>>(space.resize_team_scratch_space(
             m_scratch_pool_id,
             static_cast<ptrdiff_t>(m_scratch_size[1]) * m_league_size));
 

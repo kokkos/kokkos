@@ -166,7 +166,7 @@ int SYCLInternal::acquire_team_scratch_space() {
   return current_team_scratch;
 }
 
-sycl::device_ptr<void> SYCLInternal::resize_team_scratch_space(
+Kokkos::Impl::sycl_device_ptr<void> SYCLInternal::resize_team_scratch_space(
     int scratch_pool_id, std::int64_t bytes, bool force_shrink) {
   // Multiple ParallelFor/Reduce Teams can call this function at the same time
   // and invalidate the m_team_scratch_ptr. We use a pool to avoid any race
@@ -251,7 +251,8 @@ void SYCLInternal::finalize() {
   m_queue.reset();
 }
 
-sycl::device_ptr<void> SYCLInternal::scratch_space(const std::size_t size) {
+Kokkos::Impl::sycl_device_ptr<void> SYCLInternal::scratch_space(
+    const std::size_t size) {
   if (verify_is_initialized("scratch_space") &&
       m_scratchSpaceCount < scratch_count(size)) {
     auto mem_space = Kokkos::Experimental::SYCLDeviceUSMSpace(*m_queue);
@@ -271,7 +272,8 @@ sycl::device_ptr<void> SYCLInternal::scratch_space(const std::size_t size) {
   return m_scratchSpace;
 }
 
-sycl::host_ptr<void> SYCLInternal::scratch_host(const std::size_t size) {
+Kokkos::Impl::sycl_host_ptr<void> SYCLInternal::scratch_host(
+    const std::size_t size) {
   if (verify_is_initialized("scratch_unified") &&
       m_scratchHostCount < scratch_count(size)) {
     auto mem_space = Kokkos::Experimental::SYCLHostUSMSpace(*m_queue);
@@ -291,7 +293,8 @@ sycl::host_ptr<void> SYCLInternal::scratch_host(const std::size_t size) {
   return m_scratchHost;
 }
 
-sycl::device_ptr<void> SYCLInternal::scratch_flags(const std::size_t size) {
+Kokkos::Impl::sycl_device_ptr<void> SYCLInternal::scratch_flags(
+    const std::size_t size) {
   if (verify_is_initialized("scratch_flags") &&
       m_scratchFlagsCount < scratch_count(size)) {
     auto mem_space = Kokkos::Experimental::SYCLDeviceUSMSpace(*m_queue);
