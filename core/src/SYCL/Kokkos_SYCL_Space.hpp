@@ -301,10 +301,10 @@ struct MemorySpaceAccess<Kokkos::Experimental::SYCLHostUSMSpace,
   enum : bool { deepcopy = true };
 };
 
-template <>
+template <typename LocalPointerType, typename GlobalPointerType>
 struct MemorySpaceAccess<
     Kokkos::Experimental::SYCLDeviceUSMSpace,
-    Kokkos::ScratchMemorySpace<Kokkos::Experimental::SYCL>> {
+    Kokkos::ScratchMemorySpace<Kokkos::Experimental::SYCL, LocalPointerType, GlobalPointerType>> {
   enum : bool { assignable = false };
   enum : bool { accessible = true };
   enum : bool { deepcopy = false };

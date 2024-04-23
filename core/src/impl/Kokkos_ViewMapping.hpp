@@ -3638,7 +3638,7 @@ struct RuntimeCheckViewMemoryAccessViolation<MemorySpace, AccessSpace, false> {
   KOKKOS_FUNCTION RuntimeCheckViewMemoryAccessViolation(char const* const msg,
                                                         Track const& track,
                                                         Map const&) {
-    char err[256] = "";
+	  char err[256] = "";
     strncat(err, msg, 64);
     strcat(err, " (label=\"");
 
