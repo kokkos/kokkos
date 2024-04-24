@@ -413,7 +413,7 @@ KOKKOS_FORCEINLINE_FUNCTION pair<T1&, T2&> tie(T1& x, T2& y) {
   return (pair<T1&, T2&>(x, y));
 }
 
-#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_4
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 //
 // Specialization of Kokkos::pair for a \c void second argument.  This
 // is not actually a "pair"; it only contains one element, the first.
