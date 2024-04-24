@@ -117,8 +117,24 @@ struct is_team_handle_complete_trait_check {
       decltype(std::declval<U const &>().team_scratch(0));
 
   template <class U>
-  using ThreadScracthArchetypeExpr =
+  using TeamScratchL0ArchetypeExpr =
+      decltype(std::declval<U const &>().template team_scratch<0>());
+
+  template <class U>
+  using TeamScratchL1ArchetypeExpr =
+      decltype(std::declval<U const &>().template team_scratch<1>());
+
+  template <class U>
+  using ThreadScratchArchetypeExpr =
       decltype(std::declval<U const &>().thread_scratch(0));
+
+  template <class U>
+  using ThreadScratchL0ArchetypeExpr =
+      decltype(std::declval<U const &>().template thread_scratch<0>());
+
+  template <class U>
+  using ThreadScratchL1ArchetypeExpr =
+      decltype(std::declval<U const &>().template thread_scratch<1>());
 
   // collectives
   template <class U>
@@ -162,9 +178,21 @@ struct is_team_handle_complete_trait_check {
       Kokkos::is_detected_exact_v<
           Kokkos::detected_t<ScratchMemorySpaceArchetypeAlias, T> const &,
           TeamScratchArchetypeExpr, T> &&
+ Kokkos::is_detected_exact_v<
+          Kokkos::detected_t<ScratchMemorySpaceL0ArchetypeAlias, T> const &,
+          TeamScratchL0ArchetypeExpr, T> &&
+ Kokkos::is_detected_exact_v<
+          Kokkos::detected_t<ScratchMemorySpaceL1ArchetypeAlias, T> const &,
+          TeamScratchL1ArchetypeExpr, T> &&
       Kokkos::is_detected_exact_v<
           Kokkos::detected_t<ScratchMemorySpaceArchetypeAlias, T> const &,
-          ThreadScracthArchetypeExpr, T> &&
+          ThreadScratchArchetypeExpr, T> &&
+		  Kokkos::is_detected_exact_v<
+          Kokkos::detected_t<ScratchMemorySpaceL0ArchetypeAlias, T> const &,
+          ThreadScratchL0ArchetypeExpr, T> &&
+	Kokkos::is_detected_exact_v<
+          Kokkos::detected_t<ScratchMemorySpaceL1ArchetypeAlias, T> const &,
+          ThreadScratchL1ArchetypeExpr, T> &&
       //
       Kokkos::is_detected_exact_v<void, TeamBarrierArchetypeExpr, T> &&
       Kokkos::is_detected_exact_v<void, TeamBroadcastArchetypeExpr, T> &&
