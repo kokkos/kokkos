@@ -1056,7 +1056,7 @@ struct DeepCopyScratchFunctor {
       Kokkos::TeamPolicy<TEST_EXECSPACE,
                          Kokkos::Schedule<Kokkos::Dynamic>>::member_type team)
       const {
-    using ShmemType = TEST_EXECSPACE::scratch_memory_space;
+    using ShmemType = TEST_EXECSPACE::scratch_memory_space_l1;
     auto shview     = Impl::ShMemView<double**, ShmemType>(
         team.template team_scratch<1>(), N_, 1);
 

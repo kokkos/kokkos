@@ -318,7 +318,7 @@ struct MemorySpaceAccess<
   enum : bool { accessible = true };
   enum : bool { deepcopy = false };
 };
-
+/*
 template <typename LocalPointerType, typename GlobalPointerType, typename PointerType>
 struct MemorySpaceAccess<
     Kokkos::ScratchMemorySpace<Kokkos::Experimental::SYCL, LocalPointerType, GlobalPointerType>,
@@ -326,7 +326,7 @@ struct MemorySpaceAccess<
   enum : bool { assignable = true };
   enum : bool { accessible = true };
   enum : bool { deepcopy = false };
-};
+};*/
 
 }  // namespace Impl
 

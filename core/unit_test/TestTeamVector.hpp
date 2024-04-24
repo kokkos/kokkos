@@ -35,7 +35,7 @@ struct functor_team_for {
   functor_team_for(Kokkos::View<int, Kokkos::LayoutLeft, ExecutionSpace> flag_)
       : flag(flag_) {}
 
-  using shmem_space = typename ExecutionSpace::scratch_memory_space;
+  using shmem_space = typename ExecutionSpace::scratch_memory_space_l0;
   using shared_int =
       Kokkos::View<Scalar *, shmem_space, Kokkos::MemoryUnmanaged>;
   unsigned team_shmem_size(int team_size) const {
@@ -102,7 +102,7 @@ struct functor_team_reduce {
       Kokkos::View<int, Kokkos::LayoutLeft, ExecutionSpace> flag_)
       : flag(flag_) {}
 
-  using shmem_space = typename ExecutionSpace::scratch_memory_space;
+  using shmem_space = typename ExecutionSpace::scratch_memory_space_l0;
   using shared_scalar_t =
       Kokkos::View<Scalar *, shmem_space, Kokkos::MemoryUnmanaged>;
   unsigned team_shmem_size(int team_size) const {
@@ -174,7 +174,7 @@ struct functor_team_reduce_reducer {
       Kokkos::View<int, Kokkos::LayoutLeft, ExecutionSpace> flag_)
       : flag(flag_) {}
 
-  using shmem_space = typename ExecutionSpace::scratch_memory_space;
+  using shmem_space = typename ExecutionSpace::scratch_memory_space_l0;
   using shared_scalar_t =
       Kokkos::View<Scalar *, shmem_space, Kokkos::MemoryUnmanaged>;
   unsigned team_shmem_size(int team_size) const {
@@ -241,7 +241,7 @@ struct functor_team_vector_for {
       Kokkos::View<int, Kokkos::LayoutLeft, ExecutionSpace> flag_)
       : flag(flag_) {}
 
-  using shmem_space = typename ExecutionSpace::scratch_memory_space;
+  using shmem_space = typename ExecutionSpace::scratch_memory_space_l0;
   using shared_int =
       Kokkos::View<Scalar *, shmem_space, Kokkos::MemoryUnmanaged>;
   unsigned team_shmem_size(int team_size) const {
@@ -308,7 +308,7 @@ struct functor_team_vector_reduce {
       Kokkos::View<int, Kokkos::LayoutLeft, ExecutionSpace> flag_)
       : flag(flag_) {}
 
-  using shmem_space = typename ExecutionSpace::scratch_memory_space;
+  using shmem_space = typename ExecutionSpace::scratch_memory_space_l0;
   using shared_int =
       Kokkos::View<Scalar *, shmem_space, Kokkos::MemoryUnmanaged>;
   unsigned team_shmem_size(int team_size) const {
@@ -361,7 +361,7 @@ struct functor_team_vector_reduce_reducer {
       Kokkos::View<int, Kokkos::LayoutLeft, ExecutionSpace> flag_)
       : flag(flag_) {}
 
-  using shmem_space = typename ExecutionSpace::scratch_memory_space;
+  using shmem_space = typename ExecutionSpace::scratch_memory_space_l0;
   using shared_int =
       Kokkos::View<Scalar *, shmem_space, Kokkos::MemoryUnmanaged>;
   unsigned team_shmem_size(int team_size) const {
@@ -455,7 +455,7 @@ struct functor_vec_for {
   functor_vec_for(Kokkos::View<int, Kokkos::LayoutLeft, ExecutionSpace> flag_)
       : flag(flag_) {}
 
-  using shmem_space = typename ExecutionSpace::scratch_memory_space;
+  using shmem_space = typename ExecutionSpace::scratch_memory_space_l0;
   using shared_int =
       Kokkos::View<Scalar *, shmem_space, Kokkos::MemoryUnmanaged>;
   unsigned team_shmem_size(int team_size) const {

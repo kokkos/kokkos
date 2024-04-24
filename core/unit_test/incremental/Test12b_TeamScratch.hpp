@@ -32,7 +32,7 @@ struct TeamScratch {
     using data_t   = Kokkos::View<size_t **, ExecSpace>;
     data_t v("Matrix", pN, sX);
 
-    using scratch_t = Kokkos::View<size_t **, typename ExecSpace::scratch_memory_space,
+    using scratch_t = Kokkos::View<size_t **, typename ExecSpace::scratch_memory_space_l1,
                                    Kokkos::MemoryTraits<Kokkos::Unmanaged> >;
     int scratchSize = scratch_t::shmem_size(sX, sY);
 

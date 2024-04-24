@@ -494,7 +494,7 @@ struct SharedTeamFunctor {
 
   enum { SHARED_COUNT = 1000 };
 
-  using shmem_space = typename ExecSpace::scratch_memory_space;
+  using shmem_space = typename ExecSpace::scratch_memory_space_l0;
 
   // TBD: MemoryUnmanaged should be the default for shared memory space.
   using shared_int_array_type =
@@ -605,7 +605,7 @@ struct TestLambdaSharedTeam {
     using result_type = Kokkos::View<typename Functor::value_type, MemorySpace,
                                      Kokkos::MemoryUnmanaged>;
 
-    using shmem_space = typename ExecSpace::scratch_memory_space;
+    using shmem_space = typename ExecSpace::scratch_memory_space_l0;
 
     // TBD: MemoryUnmanaged should be the default for shared memory space.
     using shared_int_array_type =
@@ -691,7 +691,7 @@ struct ScratchTeamFunctor {
   enum { SHARED_TEAM_COUNT = 100 };
   enum { SHARED_THREAD_COUNT = 10 };
 
-  using shmem_space = typename ExecSpace::scratch_memory_space;
+  using shmem_space = typename ExecSpace::scratch_memory_space_l1;
 
   // TBD: MemoryUnmanaged should be the default for shared memory space.
   using shared_int_array_type =
@@ -833,31 +833,31 @@ namespace Test {
 template <class ExecSpace>
 KOKKOS_INLINE_FUNCTION int test_team_mulit_level_scratch_loop_body(
     const typename Kokkos::TeamPolicy<ExecSpace>::member_type &team) {
-  Kokkos::View<double *, typename ExecSpace::scratch_memory_space, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+  Kokkos::View<double *, typename ExecSpace::scratch_memory_space_l0, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
       a_team1(team.template team_scratch<0>(), 128);
-  Kokkos::View<double *, typename ExecSpace::scratch_memory_space, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+  Kokkos::View<double *, typename ExecSpace::scratch_memory_space_l0, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
       a_thread1(team.template thread_scratch<0>(), 16);
-  Kokkos::View<double *, typename ExecSpace::scratch_memory_space, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+  Kokkos::View<double *, typename ExecSpace::scratch_memory_space_l0, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
       a_team2(team.template team_scratch<0>(), 128);
-  Kokkos::View<double *, typename ExecSpace::scratch_memory_space, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+  Kokkos::View<double *, typename ExecSpace::scratch_memory_space_l0, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
       a_thread2(team.template thread_scratch<0>(), 16);
 
-  Kokkos::View<double *, typename ExecSpace::scratch_memory_space, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+  Kokkos::View<double *, typename ExecSpace::scratch_memory_space_l1, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
       b_team1(team.template team_scratch<1>(), 12800);
-  Kokkos::View<double *, typename ExecSpace::scratch_memory_space, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+  Kokkos::View<double *, typename ExecSpace::scratch_memory_space_l1, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
       b_thread1(team.template thread_scratch<1>(), 1600);
-  Kokkos::View<double *, typename ExecSpace::scratch_memory_space, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+  Kokkos::View<double *, typename ExecSpace::scratch_memory_space_l1, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
       b_team2(team.template team_scratch<1>(), 12800);
-  Kokkos::View<double *, typename ExecSpace::scratch_memory_space, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+  Kokkos::View<double *, typename ExecSpace::scratch_memory_space_l1, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
       b_thread2(team.template thread_scratch<1>(), 1600);
 
-  Kokkos::View<double *, typename ExecSpace::scratch_memory_space, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+  Kokkos::View<double *, typename ExecSpace::scratch_memory_space_l0, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
       a_team3(team.template team_scratch<0>(), 128);
-  Kokkos::View<double *, typename ExecSpace::scratch_memory_space, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+  Kokkos::View<double *, typename ExecSpace::scratch_memory_space_l0, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
       a_thread3(team.template thread_scratch<0>(), 16);
-  Kokkos::View<double *, typename ExecSpace::scratch_memory_space, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+  Kokkos::View<double *, typename ExecSpace::scratch_memory_space_l1, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
       b_team3(team.template team_scratch<1>(), 12800);
-  Kokkos::View<double *, typename ExecSpace::scratch_memory_space, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+  Kokkos::View<double *, typename ExecSpace::scratch_memory_space_l1, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
       b_thread3(team.template thread_scratch<1>(), 1600);
 
   // The explicit types for 0 and 128 are here to test TeamThreadRange accepting
@@ -1528,9 +1528,9 @@ struct TestScratchAlignment {
     test_raw();
   }
   using ScratchView =
-      Kokkos::View<TestScalar *, typename ExecSpace::scratch_memory_space>;
+      Kokkos::View<TestScalar *, typename ExecSpace::scratch_memory_space_l0>;
   using ScratchViewInt =
-      Kokkos::View<int *, typename ExecSpace::scratch_memory_space>;
+      Kokkos::View<int *, typename ExecSpace::scratch_memory_space_l0>;
   void test_view(bool allocate_small) {
     int shmem_size = ScratchView::shmem_size(11);
     // FIXME_OPENMPTARGET temporary restriction for team size to be at least 32
