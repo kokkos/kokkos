@@ -98,9 +98,9 @@ struct TestViewMDSpanConversion {
     constexpr bool is_strided_layout =
         std::is_same_v<typename MDSpanLayoutMapping::layout_type,
                        Kokkos::layout_stride>;
-    if constexpr ( !is_strided_layout )
-    {
-        static_assert(natural_mdspan_type::mapping_type::padding_value == Kokkos::dynamic_extent);
+    if constexpr (!is_strided_layout) {
+      static_assert(natural_mdspan_type::mapping_type::padding_value ==
+                    Kokkos::dynamic_extent);
     }
     // test conversion operator to natural mdspan
     {
