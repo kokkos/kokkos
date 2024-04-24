@@ -629,3 +629,8 @@ struct __bools;
 
 // </editor-fold> end Pre-C++14 constexpr }}}1
 //==============================================================================
+
+namespace MDSPAN_IMPL_STANDARD_NAMESPACE {
+constexpr struct mdspan_non_standard_tag {
+} mdspan_non_standard;
+} // namespace MDSPAN_IMPL_STANDARD_NAMESPACE
