@@ -120,6 +120,13 @@ static_assert(test_array_aggregate_initialization());
   }
 }
 
+constexpr bool test_array_const_qualified_element_type() {
+  Kokkos::Array<int const, 1> a{255};
+  return a[0] == 255;
+}
+
+static_assert(test_array_const_qualified_element_type());
+
 // User-defined type providing a sepcialization of kokkos_swap
 struct MyInt {
   int i;

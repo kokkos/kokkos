@@ -134,8 +134,9 @@ struct Array {
   }
 
  private:
+  template <class U = T>
   friend KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<
-      Impl::is_swappable<T>::value>
+      Impl::is_swappable<U>::value>
   kokkos_swap(Array<T, N>& a,
               Array<T, N>& b) noexcept(Impl::is_nothrow_swappable_v<T>) {
     for (std::size_t i = 0; i < N; ++i) {
