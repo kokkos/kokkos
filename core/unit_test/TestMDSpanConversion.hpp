@@ -18,6 +18,7 @@
 #include <type_traits>
 
 #include <Kokkos_Core.hpp>
+#include "experimental/__p0009_bits/layout_stride.hpp"
 
 namespace {
 
@@ -94,11 +95,22 @@ struct TestViewMDSpanConversion {
     static_assert(natural_mdspan_type::rank() == view_type::rank);
     static_assert(std::is_same_v<typename natural_mdspan_type::value_type,
                                  typename view_type::value_type>);
+    constexpr bool is_strided_layout =
+        std::is_same_v<typename MDSpanLayoutMapping::layout_type,
+                       Kokkos::layout_stride>;
+    if constexpr ( !is_strided_layout )
+    {
+        static_assert(natural_mdspan_type::mapping_type::padding_value == Kokkos::dynamic_extent);
+    }
     // test conversion operator to natural mdspan
     {
       natural_mdspan_type cvt = v;
       ASSERT_EQ(cvt.data_handle(), v.data());
       ASSERT_EQ(cvt.mapping(), ref_layout_mapping);
+
+      if constexpr (!is_strided_layout && natural_mdspan_type::rank() > 1) {
+        ASSERT_EQ(cvt.mapping().stride(1), ref_layout_mapping.stride(1));
+      }
     }
     // test to_mdspan() returning natural mdspan
     {
@@ -347,6 +359,19 @@ struct TestViewMDSpanConversion {
             {}, std::array<std::size_t, 2>{5, 9}),
         Kokkos::View<value_type **, Kokkos::LayoutStride, ExecutionSpace>(
             "v", Kokkos::LayoutStride{4, 5, 7, 9}));
+
+    // Aligned types (for padded layouts)
+    test_conversion_to_mdspan(
+        layout_left_padded<Kokkos::dynamic_extent>::mapping<
+            Kokkos::extents<std::size_t, 31, 7>>({}, 32),
+        Kokkos::View<value_type **, Kokkos::LayoutLeft, ExecutionSpace>(
+            Kokkos::view_alloc("v", Kokkos::AllowPadding), 31, 7));
+
+    test_conversion_to_mdspan(
+        layout_right_padded<Kokkos::dynamic_extent>::mapping<
+            Kokkos::extents<std::size_t, 7, 31>>({}, 32),
+        Kokkos::View<value_type **, Kokkos::LayoutRight, ExecutionSpace>(
+            Kokkos::view_alloc("v", Kokkos::AllowPadding), 7, 31));
 
     // Conversion with standard default_accessor
 
