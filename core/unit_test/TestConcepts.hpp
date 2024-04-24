@@ -87,6 +87,10 @@ struct is_team_handle_complete_trait_check {
   using ExecutionSpaceArchetypeAlias = typename U::execution_space;
   template <class U>
   using ScratchMemorySpaceArchetypeAlias = typename U::scratch_memory_space;
+  template <class U>
+  using ScratchMemorySpaceL0ArchetypeAlias = typename U::scratch_memory_space_l0;
+  template <class U>
+  using ScratchMemorySpaceL1ArchetypeAlias = typename U::scratch_memory_space_l1;
 
   // "indices" methods
   template <class U>
@@ -143,6 +147,9 @@ struct is_team_handle_complete_trait_check {
   static constexpr bool value =
       Kokkos::is_detected_v<ExecutionSpaceArchetypeAlias, T> &&
       Kokkos::is_detected_v<ScratchMemorySpaceArchetypeAlias, T> &&
+      Kokkos::is_detected_v<ScratchMemorySpaceArchetypeAlias, T> &&
+      Kokkos::is_detected_v<ScratchMemorySpaceL0ArchetypeAlias, T> &&
+      Kokkos::is_detected_v<ScratchMemorySpaceL1ArchetypeAlias, T> &&
       //
       Kokkos::is_detected_exact_v<int, TeamRankArchetypeExpr, T> &&
       Kokkos::is_detected_exact_v<int, TeamSizeArchetypeExpr, T> &&
@@ -150,7 +157,7 @@ struct is_team_handle_complete_trait_check {
       Kokkos::is_detected_exact_v<int, LeagueSizeArchetypeExpr, T> &&
       //
       Kokkos::is_detected_exact_v<
-          Kokkos::detected_t<ScratchMemorySpaceArchetypeAlias, T> const &,
+          Kokkos::detected_t<ScratchMemorySpaceL0ArchetypeAlias, T> const &,
           TeamShmemArchetypeExpr, T> &&
       Kokkos::is_detected_exact_v<
           Kokkos::detected_t<ScratchMemorySpaceArchetypeAlias, T> const &,

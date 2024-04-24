@@ -388,6 +388,9 @@ template <class HostExecSpace>
 class HostThreadTeamMember {
  public:
   using scratch_memory_space    = typename HostExecSpace::scratch_memory_space;
+  using scratch_memory_space_l0 = typename HostExecSpace::scratch_memory_space_l0;
+  using scratch_memory_space_l1 = typename HostExecSpace::scratch_memory_space_l1;
+
   using execution_space         = HostExecSpace;
   using thread_team_member      = HostThreadTeamMember;
   using host_thread_team_member = HostThreadTeamMember;
@@ -439,7 +442,7 @@ class HostThreadTeamMember {
   //----------------------------------------
 
   KOKKOS_INLINE_FUNCTION
-  const scratch_memory_space& team_shmem() const {
+  const scratch_memory_space_l0& team_shmem() const {
     return m_scratch.set_team_thread_mode(0, 1, 0);
   }
 

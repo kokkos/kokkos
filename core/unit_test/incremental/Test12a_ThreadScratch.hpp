@@ -30,17 +30,20 @@ struct ThreadScratch {
   using team_t   = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
   using data_t   = Kokkos::View<size_t **, ExecSpace>;
 
-  using scratch_t = Kokkos::View<size_t *, ExecSpace,
-                                 Kokkos::MemoryTraits<Kokkos::Unmanaged> >;
+  using scratch_t =
+      Kokkos::View<size_t *, typename ExecSpace::scratch_memory_space_l0 /* Kokkos::HostSpace ScratchMemorySpace<ExecSpace>*/,
+                   Kokkos::MemoryTraits<Kokkos::Unmanaged> >;
 
   int sX, sY;
   data_t v;
 
-  const int scratch_level = 1;
+  static constexpr int scratch_level = 0;
   KOKKOS_FUNCTION
   void operator()(const team_t &team) const {
     // Allocate and use scratch pad memory
-    scratch_t v_S(team.thread_scratch(scratch_level), sY);
+    auto scratch_memory_space = team.template thread_scratch<scratch_level>();
+    //scratch_memory_space = "";
+    scratch_t v_S (scratch_memory_space, sY);
     int n = team.league_rank();
 
     for (int i = 0; i < sY; ++i) v_S(i) = 0;

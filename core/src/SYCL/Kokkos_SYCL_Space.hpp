@@ -319,6 +319,15 @@ struct MemorySpaceAccess<
   enum : bool { deepcopy = false };
 };
 
+template <typename LocalPointerType, typename GlobalPointerType, typename PointerType>
+struct MemorySpaceAccess<
+    Kokkos::ScratchMemorySpace<Kokkos::Experimental::SYCL, LocalPointerType, GlobalPointerType>,
+    Kokkos::ScratchMemorySpaceBase<Kokkos::Experimental::SYCL, PointerType>> {
+  enum : bool { assignable = true };
+  enum : bool { accessible = true };
+  enum : bool { deepcopy = false };
+};
+
 }  // namespace Impl
 
 }  // namespace Kokkos

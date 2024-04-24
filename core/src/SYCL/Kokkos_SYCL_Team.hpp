@@ -35,6 +35,8 @@ class SYCLTeamMember {
  public:
   using execution_space      = Kokkos::Experimental::SYCL;
   using scratch_memory_space = execution_space::scratch_memory_space;
+  using scratch_memory_space_l0 = execution_space::scratch_memory_space_l0;
+  using scratch_memory_space_l1 = execution_space::scratch_memory_space_l1;
   using team_handle          = SYCLTeamMember;
 
  private:
@@ -47,7 +49,7 @@ class SYCLTeamMember {
 
  public:
   KOKKOS_INLINE_FUNCTION
-  const auto& team_shmem() const {
+  const scratch_memory_space_l0& team_shmem() const {
     return m_team_shared.set_team_thread_mode<0>(1, 0);
   }
 
