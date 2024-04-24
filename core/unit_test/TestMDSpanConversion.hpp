@@ -75,8 +75,6 @@ struct TestViewMDSpanConversion {
 
     auto test_view = unmanaged_view_type(mds);
 
-        #if 0
-
     ASSERT_EQ(test_view.data(), ref.data());
     ASSERT_EQ(test_view.data(), mds.data_handle());
     ASSERT_EQ(test_view.layout(), ref.layout());
@@ -84,7 +82,6 @@ struct TestViewMDSpanConversion {
       ASSERT_EQ(test_view.extent(r), ref.extent(r));
       ASSERT_EQ(test_view.extent(r), exts.extent(r));
     }
-    #endif
   }
 
   template <class MDSpanLayoutMapping, class ViewType>
