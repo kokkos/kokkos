@@ -56,7 +56,7 @@
 #define KOKKOS_LAMBDA [=] __host__ __device__
 #define KOKKOS_CLASS_LAMBDA [ =, *this ] __host__ __device__
 
-#if defined(__clang__)
+#ifdef KOKKOS_COMPILER_CLANG
 #define KOKKOS_DEDUCTION_GUIDE __host__ __device__
 #endif
 
