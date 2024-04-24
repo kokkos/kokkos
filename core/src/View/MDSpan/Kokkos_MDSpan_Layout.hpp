@@ -93,15 +93,21 @@ KOKKOS_INLINE_FUNCTION auto mapping_from_view_mapping(const VM &view_mapping) {
   using mapping_type = typename MDSpanType::mapping_type;
   using extents_type = typename mapping_type::extents_type;
 
+  // std::span is not available in C++17 (our current requirements),
+  // so we need to use the std::array constructor for layout mappings.
+  // When C++20 is available, we can use std::span here instead
+  std::array<std::size_t, VM::Rank> strides;
+  view_mapping.stride_fill(strides.data());
   if constexpr (std::is_same_v<typename mapping_type::layout_type,
                                Kokkos::layout_stride>) {
-    // std::span is not available in C++17 (our current requirements),
-    // so we need to use the std::array constructor for layout mappings.
-    // When C++20 is available, we can use std::span here instead
-    std::array<std::size_t, VM::Rank> strides;
-    view_mapping.stride_fill(strides.data());
     return mapping_type(extents_from_view_mapping<extents_type>(view_mapping),
                         strides);
+  } else if constexpr (VM::Rank > 1 && std::is_same_v<typename mapping_type::layout_type,
+                                      Kokkos::Experimental::layout_left_padded<Kokkos::dynamic_extent>>) {
+    return mapping_type(extents_from_view_mapping<extents_type>(view_mapping), strides[1]);
+  } else if constexpr (VM::Rank > 1 && std::is_same_v<typename mapping_type::layout_type,
+                                      Kokkos::Experimental::layout_right_padded<Kokkos::dynamic_extent>>) {
+    return mapping_type(extents_from_view_mapping<extents_type>(view_mapping), strides[VM::Rank - 2]);
   } else {
     return mapping_type(extents_from_view_mapping<extents_type>(view_mapping));
   }
