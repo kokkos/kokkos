@@ -37,26 +37,6 @@ kokkos_swap(T& a, T& b) noexcept(std::is_nothrow_move_constructible_v<T>&&
 
 namespace Impl {
 
-// Workaround for the definition of is_nothrow_swappable_v
-#if defined(KOKKOS_COMPILER_NVCC) && (KOKKOS_COMPILER_NVCC < 1140)
-template <class T>
-struct is_swappable {
-  template <class U>
-  static decltype(kokkos_swap(std::declval<T&>(), std::declval<T&>()))
-  test_swap(int) noexcept(noexcept(kokkos_swap(std::declval<T&>(),
-                                               std::declval<T&>())));
-  struct Nope {};  // test_swap must return a complete type for the definition
-                   // of nothrow below
-  template <class U>
-  static Nope test_swap(long);
-  static constexpr bool value =
-      !std::is_same_v<decltype(test_swap<T>(0)), Nope>;
-  static constexpr bool nothrow = noexcept(test_swap<T>(0));
-};
-
-template <class T>
-inline constexpr bool is_nothrow_swappable_v = is_swappable<T>::nothrow;
-#else
 template <class T>
 struct is_swappable {
   template <class U>
@@ -69,6 +49,13 @@ struct is_swappable {
       !std::is_same_v<decltype(test_swap<T>(0)), Nope>;
 };
 
+#if defined(KOKKOS_COMPILER_NVCC) && (KOKKOS_COMPILER_NVCC < 1140)
+template <class T>
+inline constexpr bool is_nothrow_swappable_v =
+    is_swappable<T>::value&& noexcept(
+        kokkos_swap(std::declval<std::remove_const_t<T>&>(),
+                    std::declval<std::remove_const_t<T>&>()));
+#else
 template <class T>
 inline constexpr bool is_nothrow_swappable_v =
     noexcept(kokkos_swap(std::declval<T&>(), std::declval<T&>()));
