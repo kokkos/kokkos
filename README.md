@@ -12,6 +12,8 @@ backends in development.
 
 **Kokkos Core is part of the [Kokkos C++ Performance Portability Programming Ecosystem](https://kokkos.org/about/abstract/).**
 
+Kokkos is a [Linux Foundation](https://linuxfoundation.org) project.
+
 ## Learning about Kokkos
 
 To start learning about Kokkos:
@@ -44,7 +46,7 @@ git clone -b develop  https://github.com/kokkos/kokkos.git
 
 ### Building Kokkos
 
-To build Kokkos, you will need to have a C++ compiler that supports C++14 or later.
+To build Kokkos, you will need to have a C++ compiler that supports C++17 or later.
 All requirements including minimum and primary tested compiler versions can be found [here](https://kokkos.org/kokkos-core-wiki/requirements.html).
 
 Building and installation instructions are described [here](https://kokkos.org/kokkos-core-wiki/building.html).
