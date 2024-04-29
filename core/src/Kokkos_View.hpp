@@ -522,7 +522,6 @@ constexpr bool is_assignable(const Kokkos::View<ViewTDst...>& dst,
 //----------------------------------------------------------------------------
 
 #include <impl/Kokkos_ViewMapping.hpp>
-#include <impl/Kokkos_ViewArray.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -1442,8 +1441,7 @@ class View : public ViewTraits<DataType, Properties...> {
                   std::is_same_v<typename traits::array_layout,
                                  Kokkos::LayoutRight> ||
                   std::is_same_v<typename traits::array_layout,
-                                 Kokkos::LayoutStride> ||
-                  is_layouttiled<typename traits::array_layout>::value) {
+                                 Kokkos::LayoutStride>) {
       size_t i0 = arg_layout.dimension[0];
       size_t i1 = arg_layout.dimension[1];
       size_t i2 = arg_layout.dimension[2];
@@ -1495,8 +1493,7 @@ class View : public ViewTraits<DataType, Properties...> {
                   std::is_same_v<typename traits::array_layout,
                                  Kokkos::LayoutRight> ||
                   std::is_same_v<typename traits::array_layout,
-                                 Kokkos::LayoutStride> ||
-                  is_layouttiled<typename traits::array_layout>::value) {
+                                 Kokkos::LayoutStride>) {
       size_t i0 = arg_layout.dimension[0];
       size_t i1 = arg_layout.dimension[1];
       size_t i2 = arg_layout.dimension[2];
