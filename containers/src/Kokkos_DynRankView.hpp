@@ -1938,10 +1938,8 @@ namespace Impl {
 // private interface that accepts arbitrary view constructor args passed by a
 // view_alloc
 template <class T, class... P, class... ViewCtorArgs>
-inline auto create_mirror(
-    const DynRankView<T, P...>& src,
-    const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
-
+inline auto create_mirror(const DynRankView<T, P...>& src,
+                          const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
   check_view_ctor_args_create_mirror<ViewCtorArgs...>();
 
   auto prop_copy = Impl::with_properties_if_unset(
@@ -1952,12 +1950,14 @@ inline auto create_mirror(
         typename Impl::ViewCtorProp<ViewCtorArgs...>::memory_space, T,
         P...>::view_type;
 
-    return dst_type(prop_copy, Impl::reconstructLayout(src.layout(), src.rank()));
+    return dst_type(prop_copy,
+                    Impl::reconstructLayout(src.layout(), src.rank()));
   } else {
     using src_type = DynRankView<T, P...>;
     using dst_type = typename src_type::HostMirror;
 
-    return dst_type(prop_copy, Impl::reconstructLayout(src.layout(), src.rank()));
+    return dst_type(prop_copy,
+                    Impl::reconstructLayout(src.layout(), src.rank()));
   }
 }
 
@@ -2030,30 +2030,28 @@ namespace Impl {
 // private interface that accepts arbitrary view constructor args passed by a
 // view_alloc
 template <class T, class... P, class... ViewCtorArgs>
-inline auto create_mirror_view(const DynRankView<T, P...>& src,
-                        [[maybe_unused]] const typename Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
+inline auto create_mirror_view(
+    const DynRankView<T, P...>& src,
+    [[maybe_unused]] const typename Impl::ViewCtorProp<ViewCtorArgs...>&
+        arg_prop) {
   if constexpr (!Impl::ViewCtorProp<ViewCtorArgs...>::has_memory_space) {
-    if constexpr (
-        std::is_same<
-            typename DynRankView<T, P...>::memory_space,
-            typename DynRankView<T, P...>::HostMirror::memory_space>::value &&
-        std::is_same<
-            typename DynRankView<T, P...>::data_type,
-            typename DynRankView<T, P...>::HostMirror::data_type>::value
-        ) {
+    if constexpr (std::is_same<typename DynRankView<T, P...>::memory_space,
+                               typename DynRankView<
+                                   T, P...>::HostMirror::memory_space>::value &&
+                  std::is_same<typename DynRankView<T, P...>::data_type,
+                               typename DynRankView<
+                                   T, P...>::HostMirror::data_type>::value) {
       return typename DynRankView<T, P...>::HostMirror(src);
     } else {
       return Kokkos::Impl::create_mirror(src, arg_prop);
     }
   } else {
-    if constexpr (
-        Impl::MirrorDRViewType<
-            typename Impl::ViewCtorProp<ViewCtorArgs...>::memory_space, T,
-            P...>::is_same_memspace
-        ) {
+    if constexpr (Impl::MirrorDRViewType<typename Impl::ViewCtorProp<
+                                             ViewCtorArgs...>::memory_space,
+                                         T, P...>::is_same_memspace) {
       return typename Impl::MirrorDRViewType<
-        typename Impl::ViewCtorProp<ViewCtorArgs...>::memory_space, T,
-        P...>::view_type(src);
+          typename Impl::ViewCtorProp<ViewCtorArgs...>::memory_space, T,
+          P...>::view_type(src);
     } else {
       return Kokkos::Impl::create_mirror(src, arg_prop);
     }
@@ -2132,9 +2130,7 @@ inline auto create_mirror_view(
   return Impl::create_mirror_view(src, arg_prop);
 }
 
-namespace Impl {
-
-} // namespace Impl
+namespace Impl {}  // namespace Impl
 
 // create a mirror view and deep copy it
 // public interface that accepts arbitrary view constructor args passed by a
@@ -2150,12 +2146,13 @@ auto create_mirror_view_and_copy(
   Impl::check_view_ctor_args_create_mirror_view_and_copy<ViewCtorArgs...>();
 
   if constexpr (Impl::MirrorDRViewType<
-            typename Impl::ViewCtorProp<ViewCtorArgs...>::memory_space, T,
-            P...>::is_same_memspace) {
+                    typename Impl::ViewCtorProp<ViewCtorArgs...>::memory_space,
+                    T, P...>::is_same_memspace) {
     // same behavior as deep_copy(src, src)
     if constexpr (!alloc_prop_input::has_execution_space)
       fence(
-          "Kokkos::create_mirror_view_and_copy: fence before returning src view");
+          "Kokkos::create_mirror_view_and_copy: fence before returning src "
+          "view");
     return src;
   } else {
     using Space  = typename alloc_prop_input::memory_space;
