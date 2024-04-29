@@ -3562,7 +3562,7 @@ inline auto create_mirror_view(const Kokkos::View<T, P...>& src,
                                typename Kokkos::View<
                                    T, P...>::HostMirror::data_type>::value) {
       check_view_ctor_args_create_mirror<ViewCtorArgs...>();
-      return src;
+      return typename Kokkos::View<T, P...>::HostMirror(src);
     } else {
       return Kokkos::Impl::create_mirror(src, arg_prop);
     }
@@ -3571,7 +3571,9 @@ inline auto create_mirror_view(const Kokkos::View<T, P...>& src,
                                            ViewCtorArgs...>::memory_space,
                                        T, P...>::is_same_memspace) {
       check_view_ctor_args_create_mirror<ViewCtorArgs...>();
-      return src;
+      return typename Impl::MirrorViewType<
+                     typename Impl::ViewCtorProp<ViewCtorArgs...>::memory_space,
+                     T, P...>::view_type(src);
     } else {
       return Kokkos::Impl::create_mirror(src, arg_prop);
     }

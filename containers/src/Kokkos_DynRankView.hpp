@@ -2041,7 +2041,7 @@ inline auto create_mirror_view(const DynRankView<T, P...>& src,
             typename DynRankView<T, P...>::data_type,
             typename DynRankView<T, P...>::HostMirror::data_type>::value
         ) {
-      return src;
+      return typename DynRankView<T, P...>::HostMirror(src);
     } else {
       return Kokkos::Impl::create_mirror(src, arg_prop);
     }
@@ -2051,7 +2051,9 @@ inline auto create_mirror_view(const DynRankView<T, P...>& src,
             typename Impl::ViewCtorProp<ViewCtorArgs...>::memory_space, T,
             P...>::is_same_memspace
         ) {
-      return src;
+      return typename Impl::MirrorDRViewType<
+        typename Impl::ViewCtorProp<ViewCtorArgs...>::memory_space, T,
+        P...>::view_type(src);
     } else {
       return Kokkos::Impl::create_mirror(src, arg_prop);
     }
