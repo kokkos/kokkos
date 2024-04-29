@@ -2130,8 +2130,6 @@ inline auto create_mirror_view(
   return Impl::create_mirror_view(src, arg_prop);
 }
 
-namespace Impl {}  // namespace Impl
-
 // create a mirror view and deep copy it
 // public interface that accepts arbitrary view constructor args passed by a
 // view_alloc
