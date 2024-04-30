@@ -340,6 +340,10 @@
 #define KOKKOS_IMPL_DEVICE_FUNCTION
 #endif
 
+#if !defined(KOKKOS_IMPL_EXTERNAL_FUNCTION)
+#define KOKKOS_IMPL_EXTERNAL_FUNCTION
+#endif
+
 //----------------------------------------------------------------------------
 // Define final version of functions. This is so that clang tidy can find these
 // macros more easily
@@ -352,10 +356,14 @@
 #define KOKKOS_FORCEINLINE_FUNCTION \
   KOKKOS_IMPL_FORCEINLINE_FUNCTION  \
   __attribute__((annotate("KOKKOS_FORCEINLINE_FUNCTION")))
+#define KOKKOS_EXTERNAL_FUNCTION \
+  KOKKOS_IMPL_EXTERNAL_FUNCTION  \
+  __attribute__((annotate("KOKKOS_EXTERNAL_FUNCTION")))
 #else
 #define KOKKOS_FUNCTION KOKKOS_IMPL_FUNCTION
 #define KOKKOS_INLINE_FUNCTION KOKKOS_IMPL_INLINE_FUNCTION
 #define KOKKOS_FORCEINLINE_FUNCTION KOKKOS_IMPL_FORCEINLINE_FUNCTION
+#define KOKKOS_EXTERNAL_FUNCTION KOKKOS_IMPL_EXTERNAL_FUNCTION
 #endif
 
 //----------------------------------------------------------------------------
