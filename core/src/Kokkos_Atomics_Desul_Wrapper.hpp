@@ -171,7 +171,16 @@ T atomic_dec_fetch(T* const dest) { return desul::atomic_dec_fetch(dest, desul::
 
 // atomic_op
 template<class T> KOKKOS_INLINE_FUNCTION
-void atomic_add(T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) { return desul::atomic_add (dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
+void atomic_add(T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) {
+    // FIXME_OPENMPTARGET - Calling desul::atomic_add is causing segfaults with the llvm/18 and its variants.
+    // It works with llvm/17 and llvm/19 (which is still in upstream as of this change)
+#if defined(KOKKOS_ENABLE_OPENMPTARGET) && defined(KOKKOS_COMPILER_CLANG) && (KOKKOS_COMPILER_CLANG >= 1800) && (KOKKOS_COMPILER_CLANG <= 1900)
+#pragma omp atomic relaxed
+    *dest += val;
+#else
+    return desul::atomic_add (dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE);
+#endif
+}
 
 template<class T> KOKKOS_INLINE_FUNCTION
 void atomic_sub(T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) { return desul::atomic_sub (dest, val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
