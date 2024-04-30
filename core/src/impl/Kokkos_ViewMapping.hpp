@@ -651,7 +651,7 @@ struct ViewOffset<
   // This method differs from stride() in that it does not write the total
   // length to the last index of the array. Preconditions: s must be an array of
   // dimension_type::rank elements
-  // The version of clang-format in CI fails from maybe_unused
+  // FIXME: The version of clang-format in CI fails from maybe_unused
   // clang-format off
   template <typename iType>
   KOKKOS_INLINE_FUNCTION iType
@@ -665,7 +665,7 @@ struct ViewOffset<
       s[1] = n;
       n *= m_dim.N1;
     }
-    if constexpr (1 < dimension_type::rank) {
+    if constexpr (2 < dimension_type::rank) {
       s[2] = n;
       n *= m_dim.N2;
     }
