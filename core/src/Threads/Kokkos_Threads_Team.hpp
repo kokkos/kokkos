@@ -352,6 +352,7 @@ class ThreadsExecTeamMember {
         m_chunk_size(team.chunk_size()),
         m_league_chunk_end(0),
         m_team_alloc(team.team_alloc()) {
+    KOKKOS_ASSERT(m_instance != nullptr);
     if (team.league_size()) {
       // Execution is using device-team interface:
 
