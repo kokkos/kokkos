@@ -29,7 +29,6 @@
 #include <type_traits>
 #include <algorithm>
 #include <utility>
-#include <limits>
 #include <cstddef>
 
 namespace Kokkos {
@@ -80,7 +79,11 @@ struct ArrayBoundsCheck<Integral, false> {
 /**\brief  Derived from the C++17 'std::array'.
  *         Dropping the iterator interface.
  */
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 template <class T = void, size_t N = KOKKOS_INVALID_INDEX, class Proxy = void>
+#else
+template <class T, size_t N>
+#endif
 struct Array {
  public:
   /**
@@ -129,10 +132,25 @@ struct Array {
   KOKKOS_INLINE_FUNCTION constexpr const_pointer data() const {
     return &m_internal_implementation_private_member_data[0];
   }
+
+ private:
+  friend KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<
+      Impl::is_swappable<T>::value>
+  kokkos_swap(Array<T, N>& a,
+              Array<T, N>& b) noexcept(Impl::is_nothrow_swappable_v<T>) {
+    for (std::size_t i = 0; i < N; ++i) {
+      kokkos_swap(a[i], b[i]);
+    }
+  }
 };
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 template <class T, class Proxy>
 struct Array<T, 0, Proxy> {
+#else
+template <class T>
+struct Array<T, 0> {
+#endif
  public:
   using reference       = T&;
   using const_reference = std::add_const_t<T>&;
@@ -176,16 +194,27 @@ struct Array<T, 0, Proxy> {
   // for default move constructor and move assignment operator.
   // Array( Array && ) = default ;
   // Array & operator = ( Array && ) = default ;
+
+ private:
+  friend KOKKOS_INLINE_FUNCTION constexpr void kokkos_swap(
+      Array<T, 0>&, Array<T, 0>&) noexcept {}
 };
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+namespace Impl {
+struct KokkosArrayContiguous {};
+struct KokkosArrayStrided {};
+}  // namespace Impl
+
 template <>
-struct Array<void, KOKKOS_INVALID_INDEX, void> {
-  struct contiguous {};
-  struct strided {};
+struct KOKKOS_DEPRECATED Array<void, KOKKOS_INVALID_INDEX, void> {
+  using contiguous = Impl::KokkosArrayContiguous;
+  using strided    = Impl::KokkosArrayStrided;
 };
 
 template <class T>
-struct Array<T, KOKKOS_INVALID_INDEX, Array<>::contiguous> {
+struct KOKKOS_DEPRECATED
+    Array<T, KOKKOS_INVALID_INDEX, Impl::KokkosArrayContiguous> {
  private:
   T* m_elem;
   size_t m_size;
@@ -253,7 +282,8 @@ struct Array<T, KOKKOS_INVALID_INDEX, Array<>::contiguous> {
 };
 
 template <class T>
-struct Array<T, KOKKOS_INVALID_INDEX, Array<>::strided> {
+struct KOKKOS_DEPRECATED
+    Array<T, KOKKOS_INVALID_INDEX, Impl::KokkosArrayStrided> {
  private:
   T* m_elem;
   size_t m_size;
@@ -320,6 +350,7 @@ struct Array<T, KOKKOS_INVALID_INDEX, Array<>::strided> {
                                          size_type arg_stride)
       : m_elem(arg_ptr), m_size(arg_size), m_stride(arg_stride) {}
 };
+#endif
 
 template <typename T, typename... Us>
 Array(T, Us...)->Array<T, 1 + sizeof...(Us)>;

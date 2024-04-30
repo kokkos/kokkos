@@ -413,12 +413,13 @@ KOKKOS_FORCEINLINE_FUNCTION pair<T1&, T2&> tie(T1& x, T2& y) {
   return (pair<T1&, T2&>(x, y));
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 //
 // Specialization of Kokkos::pair for a \c void second argument.  This
 // is not actually a "pair"; it only contains one element, the first.
 //
 template <class T1>
-struct pair<T1, void> {
+struct KOKKOS_DEPRECATED pair<T1, void> {
   using first_type  = T1;
   using second_type = void;
 
@@ -483,6 +484,7 @@ KOKKOS_FORCEINLINE_FUNCTION constexpr bool operator>=(
     const pair<T1, void>& lhs, const pair<T1, void>& rhs) {
   return !(lhs < rhs);
 }
+#endif
 
 namespace Impl {
 template <class T>

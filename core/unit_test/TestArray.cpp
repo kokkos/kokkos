@@ -120,4 +120,37 @@ static_assert(test_array_aggregate_initialization());
   }
 }
 
+// User-defined type providing a sepcialization of kokkos_swap
+struct MyInt {
+  int i;
+
+ private:
+  friend constexpr void kokkos_swap(MyInt& lhs, MyInt& rhs) noexcept {
+    lhs.i = 255;
+    rhs.i = 127;
+  }
+};
+
+constexpr bool test_array_specialization_kokkos_swap() {
+  Kokkos::Array<MyInt, 2> a{MyInt{1}, MyInt{2}};
+  Kokkos::Array<MyInt, 2> b{MyInt{11}, MyInt{22}};
+
+  // sanity check
+  if (a[0].i != 1 || a[1].i != 2 || b[0].i != 11 || b[1].i != 22) {
+    return false;
+  }
+
+  using Kokkos::kokkos_swap;
+  kokkos_swap(a, b);
+
+  // check that the user-definied kokkos_swap(MyInt) overload was called
+  if (a[0].i != 255 || a[1].i != 255 || b[0].i != 127 || b[1].i != 127) {
+    return false;
+  }
+
+  return true;
+}
+
+static_assert(test_array_specialization_kokkos_swap());
+
 }  // namespace
