@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [4.3.01](https://github.com/kokkos/kokkos/tree/4.3.01)
+[Full Changelog](https://github.com/kokkos/kokkos/compare/4.3.00...4.3.01)
+
+### Bug Fixes
+
 ## [4.3.00](https://github.com/kokkos/kokkos/tree/4.3.00) (2024-03-19)
 [Full Changelog](https://github.com/kokkos/kokkos/compare/4.2.01...4.3.00)
 
@@ -39,7 +44,7 @@
 * Make the OpenACC backend asynchronous [\#6772](https://github.com/kokkos/kokkos/pull/6772)
 
 #### Threads:
-* Add missing broadcast to TeamThreadRange parallel_scan [\#6601](https://github.com/kokkos/kokkos/pull/6446)
+* Add missing broadcast to TeamThreadRange parallel_scan [\#6601](https://github.com/kokkos/kokkos/pull/6601)
 
 #### OpenMP:
 * Improve performance of view initializations and filling with zeros [\#6573](https://github.com/kokkos/kokkos/pull/6573)
