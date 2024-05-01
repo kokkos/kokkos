@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [4.3.01](https://github.com/kokkos/kokkos/tree/4.3.01)
+[Full Changelog](https://github.com/kokkos/kokkos/compare/4.3.00...4.3.01)
+
+### Bug Fixes
+
 ## [4.3.00](https://github.com/kokkos/kokkos/tree/4.3.00) (2024-03-19)
 [Full Changelog](https://github.com/kokkos/kokkos/compare/4.2.01...4.3.00)
 
