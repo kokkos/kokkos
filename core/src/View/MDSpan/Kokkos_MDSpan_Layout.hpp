@@ -77,6 +77,29 @@ KOKKOS_INLINE_FUNCTION auto array_layout_from_mapping(
         rank > 7 ? mapping.stride(7) : 0,
     };
   } else {
+    // FIXME: Kokkos Layouts don't store stride (it's in the mapping)
+    // We could conceivably fix this by adding an extra ViewCtorProp for
+    // an abritrary padding. For now we will check for this.
+    if constexpr (rank > 1 &&
+                  (std::is_same_v<
+                       typename mapping_type::layout_type,
+                       Experimental::layout_left_padded<dynamic_extent>> ||
+                   std::is_same_v<
+                       typename mapping_type::layout_type,
+                       Experimental::layout_right_padded<dynamic_extent>>)) {
+      constexpr size_t strided_index =
+          std::is_same_v<typename mapping_type::layout_type,
+                         Experimental::layout_left_padded<dynamic_extent>>
+              ? 1
+              : rank - 2;
+      constexpr size_t extent_index =
+          std::is_same_v<typename mapping_type::layout_type,
+                         Experimental::layout_left_padded<dynamic_extent>>
+              ? 0
+              : rank - 1;
+      KOKKOS_ASSERT(mapping.stride(strided_index) == ext.extent(extent_index));
+    }
+
     return ArrayLayout{rank > 0 ? ext.extent(0) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
                        rank > 1 ? ext.extent(1) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
                        rank > 2 ? ext.extent(2) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
