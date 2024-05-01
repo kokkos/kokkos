@@ -3,7 +3,15 @@
 ## [4.3.01](https://github.com/kokkos/kokkos/tree/4.3.01)
 [Full Changelog](https://github.com/kokkos/kokkos/compare/4.3.00...4.3.01)
 
+### Backend and Architecture Enhancements:
+
+#### HIP:
+* MI300 support unified memory support [\#6877](https://github.com/kokkos/kokkos/pull/6877)
+
 ### Bug Fixes
+* Serial: Use the provided execution space instance in TeamPolicy [\#6951](https://github.com/kokkos/kokkos/pull/6951)
+* `nvcc_wrapper`: bring back support for `--fmad` option [\#6931](https://github.com/kokkos/kokkos/pull/6931)
+* Fix CUDA reduction overflow for `RangePolicy` [\#6578](https://github.com/kokkos/kokkos/pull/6578)
 
 ## [4.3.00](https://github.com/kokkos/kokkos/tree/4.3.00) (2024-03-19)
 [Full Changelog](https://github.com/kokkos/kokkos/compare/4.2.01...4.3.00)
