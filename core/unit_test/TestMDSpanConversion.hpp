@@ -182,83 +182,99 @@ struct TestViewMDSpanConversion {
     test_conversion_from_mdspan<Kokkos::LayoutLeft>(
         Kokkos::View<value_type *, Kokkos::LayoutLeft, ExecutionSpace>("ref",
                                                                        7),
-        typename layout_left_padded<7>::template mapping<Kokkos::dextents<std::size_t, 1>>{
+        typename layout_left_padded<7>::template mapping<
+            Kokkos::dextents<std::size_t, 1>>{
             Kokkos::dextents<std::size_t, 1>(7)});
 
     test_conversion_from_mdspan<Kokkos::LayoutLeft>(
         Kokkos::View<value_type[7], Kokkos::LayoutLeft, ExecutionSpace>("ref"),
-        typename layout_left_padded<7>::template mapping<Kokkos::extents<std::size_t, 7>>{
+        typename layout_left_padded<7>::template mapping<
+            Kokkos::extents<std::size_t, 7>>{
             Kokkos::extents<std::size_t, 7>()});
     test_conversion_from_mdspan<Kokkos::LayoutLeft>(
         Kokkos::View<value_type[7], Kokkos::LayoutLeft, ExecutionSpace>("ref"),
-        typename layout_left_padded<7>::template mapping<Kokkos::dextents<std::size_t, 1>>{
+        typename layout_left_padded<7>::template mapping<
+            Kokkos::dextents<std::size_t, 1>>{
             Kokkos::dextents<std::size_t, 1>(7)});
     test_conversion_from_mdspan<Kokkos::LayoutLeft>(
         Kokkos::View<value_type *, Kokkos::LayoutLeft, ExecutionSpace>("ref",
                                                                        7),
-        typename layout_left_padded<7>::template mapping<Kokkos::extents<std::size_t, 7>>{
+        typename layout_left_padded<7>::template mapping<
+            Kokkos::extents<std::size_t, 7>>{
             Kokkos::extents<std::size_t, 7>()});
 
     test_conversion_from_mdspan<Kokkos::LayoutLeft>(
         Kokkos::View<value_type **, Kokkos::LayoutLeft, ExecutionSpace>("ref",
                                                                         7, 3),
-        typename layout_left_padded<7>::template mapping<Kokkos::dextents<std::size_t, 2>>{
+        typename layout_left_padded<7>::template mapping<
+            Kokkos::dextents<std::size_t, 2>>{
             Kokkos::dextents<std::size_t, 2>(7, 3)});
     test_conversion_from_mdspan<Kokkos::LayoutLeft>(
         Kokkos::View<value_type[7][3], Kokkos::LayoutLeft, ExecutionSpace>(
             "ref"),
-        typename layout_left_padded<7>::template mapping<Kokkos::extents<std::size_t, 7, 3>>{
+        typename layout_left_padded<7>::template mapping<
+            Kokkos::extents<std::size_t, 7, 3>>{
             Kokkos::extents<std::size_t, 7, 3>()});
     test_conversion_from_mdspan<Kokkos::LayoutLeft>(
         Kokkos::View<value_type[7][3], Kokkos::LayoutLeft, ExecutionSpace>(
             "ref"),
-        typename layout_left_padded<7>::template mapping<Kokkos::dextents<std::size_t, 2>>{
+        typename layout_left_padded<7>::template mapping<
+            Kokkos::dextents<std::size_t, 2>>{
             Kokkos::dextents<std::size_t, 2>(7, 3)});
     test_conversion_from_mdspan<Kokkos::LayoutLeft>(
         Kokkos::View<value_type **, Kokkos::LayoutLeft, ExecutionSpace>("ref",
                                                                         7, 3),
-        typename layout_left_padded<7>::template mapping<Kokkos::extents<std::size_t, 7, 3>>{
+        typename layout_left_padded<7>::template mapping<
+            Kokkos::extents<std::size_t, 7, 3>>{
             Kokkos::extents<std::size_t, 7, 3>()});
 
     // LayoutRight
     test_conversion_from_mdspan<Kokkos::LayoutRight>(
         Kokkos::View<value_type *, Kokkos::LayoutRight, ExecutionSpace>("ref",
                                                                         7),
-        typename layout_right_padded<7>::template mapping<Kokkos::dextents<std::size_t, 1>>{
+        typename layout_right_padded<7>::template mapping<
+            Kokkos::dextents<std::size_t, 1>>{
             Kokkos::dextents<std::size_t, 1>(7)});
     test_conversion_from_mdspan<Kokkos::LayoutRight>(
         Kokkos::View<value_type[7], Kokkos::LayoutRight, ExecutionSpace>("ref"),
-        typename layout_right_padded<7>::template mapping<Kokkos::extents<std::size_t, 7>>{
+        typename layout_right_padded<7>::template mapping<
+            Kokkos::extents<std::size_t, 7>>{
             Kokkos::extents<std::size_t, 7>()});
     test_conversion_from_mdspan<Kokkos::LayoutRight>(
         Kokkos::View<value_type[7], Kokkos::LayoutRight, ExecutionSpace>("ref"),
-        typename layout_right_padded<7>::template mapping<Kokkos::dextents<std::size_t, 1>>{
+        typename layout_right_padded<7>::template mapping<
+            Kokkos::dextents<std::size_t, 1>>{
             Kokkos::dextents<std::size_t, 1>(7)});
     test_conversion_from_mdspan<Kokkos::LayoutRight>(
         Kokkos::View<value_type *, Kokkos::LayoutRight, ExecutionSpace>("ref",
                                                                         7),
-        typename layout_right_padded<7>::template mapping<Kokkos::extents<std::size_t, 7>>{
+        typename layout_right_padded<7>::template mapping<
+            Kokkos::extents<std::size_t, 7>>{
             Kokkos::extents<std::size_t, 7>()});
 
     test_conversion_from_mdspan<Kokkos::LayoutRight>(
         Kokkos::View<value_type **, Kokkos::LayoutRight, ExecutionSpace>("ref",
                                                                          3, 7),
-        typename layout_right_padded<7>::template mapping<Kokkos::dextents<std::size_t, 2>>{
+        typename layout_right_padded<7>::template mapping<
+            Kokkos::dextents<std::size_t, 2>>{
             Kokkos::dextents<std::size_t, 2>(3, 7)});
     test_conversion_from_mdspan<Kokkos::LayoutRight>(
         Kokkos::View<value_type[3][7], Kokkos::LayoutRight, ExecutionSpace>(
             "ref"),
-        typename layout_right_padded<7>::template mapping<Kokkos::extents<std::size_t, 3, 7>>{
+        typename layout_right_padded<7>::template mapping<
+            Kokkos::extents<std::size_t, 3, 7>>{
             Kokkos::extents<std::size_t, 3, 7>()});
     test_conversion_from_mdspan<Kokkos::LayoutRight>(
         Kokkos::View<value_type[3][7], Kokkos::LayoutRight, ExecutionSpace>(
             "ref"),
-        typename layout_right_padded<7>::template mapping<Kokkos::dextents<std::size_t, 2>>{
+        typename layout_right_padded<7>::template mapping<
+            Kokkos::dextents<std::size_t, 2>>{
             Kokkos::dextents<std::size_t, 2>(3, 7)});
     test_conversion_from_mdspan<Kokkos::LayoutRight>(
         Kokkos::View<value_type **, Kokkos::LayoutRight, ExecutionSpace>("ref",
                                                                          3, 7),
-        typename layout_right_padded<7>::template mapping<Kokkos::extents<std::size_t, 3, 7>>{
+        typename layout_right_padded<7>::template mapping<
+            Kokkos::extents<std::size_t, 3, 7>>{
             Kokkos::extents<std::size_t, 3, 7>()});
 
     // LayoutStride
