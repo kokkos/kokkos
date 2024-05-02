@@ -87,12 +87,12 @@ KOKKOS_INLINE_FUNCTION auto array_layout_from_mapping(
                    std::is_same_v<
                        typename mapping_type::layout_type,
                        Experimental::layout_right_padded<dynamic_extent>>)) {
-      constexpr size_t strided_index =
+      [[maybe_unused]] constexpr size_t strided_index =
           std::is_same_v<typename mapping_type::layout_type,
                          Experimental::layout_left_padded<dynamic_extent>>
               ? 1
               : rank - 2;
-      constexpr size_t extent_index =
+      [[maybe_unused]] constexpr size_t extent_index =
           std::is_same_v<typename mapping_type::layout_type,
                          Experimental::layout_left_padded<dynamic_extent>>
               ? 0
