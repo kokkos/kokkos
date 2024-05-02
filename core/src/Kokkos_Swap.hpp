@@ -49,18 +49,9 @@ struct is_swappable {
       !std::is_same_v<decltype(test_swap<T>(0)), Nope>;
 };
 
-#if (defined(KOKKOS_COMPILER_NVCC) && (KOKKOS_COMPILER_NVCC < 1140)) || \
-    defined(KOKKOS_COMPILER_INTEL)
-template <class T>
-inline constexpr bool is_nothrow_swappable_v =
-    is_swappable<T>::value&& noexcept(
-        kokkos_swap(std::declval<std::remove_const_t<T>&>(),
-                    std::declval<std::remove_const_t<T>&>()));
-#else
 template <class T>
 inline constexpr bool is_nothrow_swappable_v =
     noexcept(kokkos_swap(std::declval<T&>(), std::declval<T&>()));
-#endif
 
 }  // namespace Impl
 
