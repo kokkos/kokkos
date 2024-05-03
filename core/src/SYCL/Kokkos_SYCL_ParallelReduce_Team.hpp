@@ -59,11 +59,6 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
   const size_type m_league_size;
   int m_team_size;
   const size_type m_vector_size;
-  // Only let one ParallelReduce instance at a time use the team scratch memory
-  // and the host scratch memory. The constructor acquires the mutex which is
-  // released in the destructor.
-  std::scoped_lock<std::mutex> m_scratch_buffers_lock;
-  int m_scratch_pool_id = -1;
 
   template <typename PolicyType, typename CombinedFunctorReducerWrapper>
   sycl::event sycl_direct_launch(
@@ -386,6 +381,22 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
   inline void execute() {
     Kokkos::Experimental::Impl::SYCLInternal& instance =
         *m_policy.space().impl_internal_space_instance();
+
+    // Only let one instance at a time resize the instance's scratch memory
+    // allocations.
+    std::scoped_lock<std::mutex> scratch_buffers_lock(
+        instance.m_mutexScratchSpace);
+    std::scoped_lock<std::mutex> team_scratch_block(
+        instance.m_team_scratch_mutex);
+
+    // Functor's reduce memory, team scan memory, and team shared memory depend
+    // upon team size.
+    int scratch_pool_id = instance.acquire_team_scratch_space();
+    m_global_scratch_ptr =
+        static_cast<sycl_device_ptr<char>>(instance.resize_team_scratch_space(
+            scratch_pool_id,
+            static_cast<ptrdiff_t>(m_scratch_size[1]) * m_league_size));
+
     using IndirectKernelMem =
         Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem;
     IndirectKernelMem& indirectKernelMem = instance.get_indirect_kernel_mem();
@@ -398,11 +409,21 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
         sycl_direct_launch(m_policy, functor_reducer_wrapper,
                            functor_reducer_wrapper.get_copy_event());
     functor_reducer_wrapper.register_event(event);
-    instance.register_team_scratch_event(m_scratch_pool_id, event);
+    instance.register_team_scratch_event(scratch_pool_id, event);
   }
 
- private:
-  void initialize() {
+  template <class ViewType>
+  ParallelReduce(CombinedFunctorReducerType const& arg_functor_reducer,
+                 Policy const& arg_policy, ViewType const& arg_result)
+      : m_functor_reducer(arg_functor_reducer),
+        m_policy(arg_policy),
+        m_result_ptr(arg_result.data()),
+        m_result_ptr_device_accessible(
+            MemorySpaceAccess<Kokkos::Experimental::SYCLDeviceUSMSpace,
+                              typename ViewType::memory_space>::accessible),
+        m_league_size(arg_policy.league_size()),
+        m_team_size(arg_policy.team_size()),
+        m_vector_size(arg_policy.impl_vector_length()) {
     // FIXME_SYCL optimize
     if (m_team_size < 0)
       m_team_size = m_policy.team_size_recommended(
@@ -423,22 +444,15 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
     m_scratch_size[0] = m_shmem_size;
     m_scratch_size[1] = m_policy.scratch_size(1, m_team_size);
 
-    // Functor's reduce memory, team scan memory, and team shared memory depend
-    // upon team size.
-    auto& space       = *m_policy.space().impl_internal_space_instance();
-    m_scratch_pool_id = space.acquire_team_scratch_space();
-    m_global_scratch_ptr =
-        static_cast<sycl_device_ptr<char>>(space.resize_team_scratch_space(
-            m_scratch_pool_id,
-            static_cast<ptrdiff_t>(m_scratch_size[1]) * m_league_size));
-
-    if (static_cast<int>(space.m_maxShmemPerBlock) <
+    Kokkos::Experimental::Impl::SYCLInternal& instance =
+        *m_policy.space().impl_internal_space_instance();
+    if (static_cast<int>(instance.m_maxShmemPerBlock) <
         m_shmem_size - m_shmem_begin) {
       std::stringstream out;
       out << "Kokkos::Impl::ParallelFor<SYCL> insufficient shared memory! "
              "Requested "
           << m_shmem_size - m_shmem_begin << " bytes but maximum is "
-          << space.m_maxShmemPerBlock << '\n';
+          << instance.m_maxShmemPerBlock << '\n';
       Kokkos::Impl::throw_runtime_exception(out.str());
     }
 
@@ -447,25 +461,6 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
                                              ParallelReduceTag{}))
       Kokkos::Impl::throw_runtime_exception(
           "Kokkos::Impl::ParallelFor<SYCL> requested too large team size.");
-  }
-
- public:
-  template <class ViewType>
-  ParallelReduce(CombinedFunctorReducerType const& arg_functor_reducer,
-                 Policy const& arg_policy, ViewType const& arg_result)
-      : m_functor_reducer(arg_functor_reducer),
-        m_policy(arg_policy),
-        m_result_ptr(arg_result.data()),
-        m_result_ptr_device_accessible(
-            MemorySpaceAccess<Kokkos::Experimental::SYCLDeviceUSMSpace,
-                              typename ViewType::memory_space>::accessible),
-        m_league_size(arg_policy.league_size()),
-        m_team_size(arg_policy.team_size()),
-        m_vector_size(arg_policy.impl_vector_length()),
-        m_scratch_buffers_lock(arg_policy.space()
-                                   .impl_internal_space_instance()
-                                   ->m_team_scratch_mutex) {
-    initialize();
   }
 };
 
