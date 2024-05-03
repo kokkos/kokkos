@@ -221,10 +221,12 @@ struct ViewFill<ViewType, Layout, ExecSpace, 7, iType> {
   ViewFill(const ViewType& a_, typename ViewType::const_value_type& val_,
            const ExecSpace& space)
       : a(a_), val(val_) {
+    // MDRangePolicy is not supported for 7D views
+    // Iterate separately over extent(2)
     Kokkos::parallel_for("Kokkos::ViewFill-7D",
                          policy_type(space, {0, 0, 0, 0, 0, 0},
-                                     {a.extent(0), a.extent(1), a.extent(2),
-                                      a.extent(3), a.extent(5), a.extent(6)}),
+                                     {a.extent(0), a.extent(1), a.extent(3),
+                                      a.extent(4), a.extent(5), a.extent(6)}),
                          *this);
   }
 
@@ -249,6 +251,8 @@ struct ViewFill<ViewType, Layout, ExecSpace, 8, iType> {
   ViewFill(const ViewType& a_, typename ViewType::const_value_type& val_,
            const ExecSpace& space)
       : a(a_), val(val_) {
+    // MDRangePolicy is not supported for 8D views
+    // Iterate separately over extent(2) and extent(4)
     Kokkos::parallel_for("Kokkos::ViewFill-8D",
                          policy_type(space, {0, 0, 0, 0, 0, 0},
                                      {a.extent(0), a.extent(1), a.extent(3),
@@ -461,6 +465,8 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 7, iType> {
   ViewCopy(const ViewTypeA& a_, const ViewTypeB& b_,
            const ExecSpace space = ExecSpace())
       : a(a_), b(b_) {
+    // MDRangePolicy is not supported for 7D views
+    // Iterate separately over extent(2)
     Kokkos::parallel_for("Kokkos::ViewCopy-7D",
                          policy_type(space, {0, 0, 0, 0, 0, 0},
                                      {a.extent(0), a.extent(1), a.extent(3),
@@ -494,6 +500,8 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 8, iType> {
   ViewCopy(const ViewTypeA& a_, const ViewTypeB& b_,
            const ExecSpace space = ExecSpace())
       : a(a_), b(b_) {
+    // MDRangePolicy is not supported for 8D views
+    // Iterate separately over extent(2) and extent(4)
     Kokkos::parallel_for("Kokkos::ViewCopy-8D",
                          policy_type(space, {0, 0, 0, 0, 0, 0},
                                      {a.extent(0), a.extent(1), a.extent(3),
@@ -539,11 +547,8 @@ void view_copy(const ExecutionSpace& space, const DstType& dst,
     int64_t strides[DstType::rank + 1];
     dst.stride(strides);
     Kokkos::Iterate iterate;
-    if (Kokkos::is_layouttiled<typename DstType::array_layout>::value) {
-      iterate = Kokkos::layout_iterate_type_selector<
-          typename DstType::array_layout>::outer_iteration_pattern;
-    } else if (std::is_same<typename DstType::array_layout,
-                            Kokkos::LayoutRight>::value) {
+    if (std::is_same<typename DstType::array_layout,
+                     Kokkos::LayoutRight>::value) {
       iterate = Kokkos::Iterate::Right;
     } else if (std::is_same<typename DstType::array_layout,
                             Kokkos::LayoutLeft>::value) {
@@ -630,11 +635,8 @@ void view_copy(const DstType& dst, const SrcType& src) {
   int64_t strides[DstType::rank + 1];
   dst.stride(strides);
   Kokkos::Iterate iterate;
-  if (Kokkos::is_layouttiled<typename DstType::array_layout>::value) {
-    iterate = Kokkos::layout_iterate_type_selector<
-        typename DstType::array_layout>::outer_iteration_pattern;
-  } else if (std::is_same<typename DstType::array_layout,
-                          Kokkos::LayoutRight>::value) {
+  if (std::is_same<typename DstType::array_layout,
+                   Kokkos::LayoutRight>::value) {
     iterate = Kokkos::Iterate::Right;
   } else if (std::is_same<typename DstType::array_layout,
                           Kokkos::LayoutLeft>::value) {
@@ -3092,8 +3094,7 @@ inline std::enable_if_t<
     std::is_same<typename Kokkos::View<T, P...>::array_layout,
                  Kokkos::LayoutRight>::value ||
     std::is_same<typename Kokkos::View<T, P...>::array_layout,
-                 Kokkos::LayoutStride>::value ||
-    is_layouttiled<typename Kokkos::View<T, P...>::array_layout>::value>
+                 Kokkos::LayoutStride>::value>
 impl_resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
             Kokkos::View<T, P...>& v,
             const typename Kokkos::View<T, P...>::array_layout& layout) {
@@ -3139,8 +3140,7 @@ inline std::enable_if_t<
       std::is_same<typename Kokkos::View<T, P...>::array_layout,
                    Kokkos::LayoutRight>::value ||
       std::is_same<typename Kokkos::View<T, P...>::array_layout,
-                   Kokkos::LayoutStride>::value ||
-      is_layouttiled<typename Kokkos::View<T, P...>::array_layout>::value)>
+                   Kokkos::LayoutStride>::value)>
 impl_resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
             Kokkos::View<T, P...>& v,
             const typename Kokkos::View<T, P...>::array_layout& layout) {
@@ -3308,8 +3308,7 @@ inline std::enable_if_t<
     std::is_same<typename Kokkos::View<T, P...>::array_layout,
                  Kokkos::LayoutRight>::value ||
     std::is_same<typename Kokkos::View<T, P...>::array_layout,
-                 Kokkos::LayoutStride>::value ||
-    is_layouttiled<typename Kokkos::View<T, P...>::array_layout>::value>
+                 Kokkos::LayoutStride>::value>
 impl_realloc(Kokkos::View<T, P...>& v,
              const typename Kokkos::View<T, P...>::array_layout& layout,
              const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
@@ -3351,8 +3350,7 @@ inline std::enable_if_t<
       std::is_same<typename Kokkos::View<T, P...>::array_layout,
                    Kokkos::LayoutRight>::value ||
       std::is_same<typename Kokkos::View<T, P...>::array_layout,
-                   Kokkos::LayoutStride>::value ||
-      is_layouttiled<typename Kokkos::View<T, P...>::array_layout>::value)>
+                   Kokkos::LayoutStride>::value)>
 impl_realloc(Kokkos::View<T, P...>& v,
              const typename Kokkos::View<T, P...>::array_layout& layout,
              const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
@@ -3506,24 +3504,24 @@ auto create_mirror(const Kokkos::View<T, P...>& src,
 template <class T, class... P>
 std::enable_if_t<std::is_void<typename ViewTraits<T, P...>::specialize>::value,
                  typename Kokkos::View<T, P...>::HostMirror>
-create_mirror(Kokkos::View<T, P...> const& v) {
-  return Impl::create_mirror(v, Impl::ViewCtorProp<>{});
+create_mirror(Kokkos::View<T, P...> const& src) {
+  return Impl::create_mirror(src, Impl::ViewCtorProp<>{});
 }
 
 template <class T, class... P>
 std::enable_if_t<std::is_void<typename ViewTraits<T, P...>::specialize>::value,
                  typename Kokkos::View<T, P...>::HostMirror>
 create_mirror(Kokkos::Impl::WithoutInitializing_t wi,
-              Kokkos::View<T, P...> const& v) {
-  return Impl::create_mirror(v, view_alloc(wi));
+              Kokkos::View<T, P...> const& src) {
+  return Impl::create_mirror(src, view_alloc(wi));
 }
 
 template <class Space, class T, class... P,
           typename Enable = std::enable_if_t<Kokkos::is_space<Space>::value>>
 std::enable_if_t<std::is_void<typename ViewTraits<T, P...>::specialize>::value,
                  typename Impl::MirrorType<Space, T, P...>::view_type>
-create_mirror(Space const&, Kokkos::View<T, P...> const& v) {
-  return Impl::create_mirror(v, view_alloc(typename Space::memory_space{}));
+create_mirror(Space const&, Kokkos::View<T, P...> const& src) {
+  return Impl::create_mirror(src, view_alloc(typename Space::memory_space{}));
 }
 
 template <class T, class... P, class... ViewCtorArgs,
@@ -3531,8 +3529,8 @@ template <class T, class... P, class... ViewCtorArgs,
               std::is_void<typename ViewTraits<T, P...>::specialize>::value &&
               Impl::ViewCtorProp<ViewCtorArgs...>::has_memory_space>>
 auto create_mirror(Impl::ViewCtorProp<ViewCtorArgs...> const& arg_prop,
-                   Kokkos::View<T, P...> const& v) {
-  return Impl::create_mirror(v, arg_prop);
+                   Kokkos::View<T, P...> const& src) {
+  return Impl::create_mirror(src, arg_prop);
 }
 
 template <class T, class... P, class... ViewCtorArgs>
@@ -3541,8 +3539,8 @@ std::enable_if_t<
         !Impl::ViewCtorProp<ViewCtorArgs...>::has_memory_space,
     typename Kokkos::View<T, P...>::HostMirror>
 create_mirror(Impl::ViewCtorProp<ViewCtorArgs...> const& arg_prop,
-              Kokkos::View<T, P...> const& v) {
-  return Impl::create_mirror(v, arg_prop);
+              Kokkos::View<T, P...> const& src) {
+  return Impl::create_mirror(src, arg_prop);
 }
 
 template <class Space, class T, class... P,
@@ -3550,8 +3548,9 @@ template <class Space, class T, class... P,
 std::enable_if_t<std::is_void<typename ViewTraits<T, P...>::specialize>::value,
                  typename Impl::MirrorType<Space, T, P...>::view_type>
 create_mirror(Kokkos::Impl::WithoutInitializing_t wi, Space const&,
-              Kokkos::View<T, P...> const& v) {
-  return Impl::create_mirror(v, view_alloc(typename Space::memory_space{}, wi));
+              Kokkos::View<T, P...> const& src) {
+  return Impl::create_mirror(src,
+                             view_alloc(typename Space::memory_space{}, wi));
 }
 
 namespace Impl {
@@ -3647,8 +3646,8 @@ create_mirror_view(const Kokkos::View<T, P...>& src) {
 
 template <class T, class... P>
 typename Kokkos::View<T, P...>::HostMirror create_mirror_view(
-    Kokkos::Impl::WithoutInitializing_t wi, Kokkos::View<T, P...> const& v) {
-  return Impl::create_mirror_view(v, view_alloc(wi));
+    Kokkos::Impl::WithoutInitializing_t wi, Kokkos::View<T, P...> const& src) {
+  return Impl::create_mirror_view(src, view_alloc(wi));
 }
 
 // FIXME_C++17 Improve SFINAE here.
@@ -3675,15 +3674,15 @@ template <class Space, class T, class... P,
           typename Enable = std::enable_if_t<Kokkos::is_space<Space>::value>>
 typename Impl::MirrorViewType<Space, T, P...>::view_type create_mirror_view(
     Kokkos::Impl::WithoutInitializing_t wi, Space const&,
-    Kokkos::View<T, P...> const& v) {
+    Kokkos::View<T, P...> const& src) {
   return Impl::create_mirror_view(
-      v, view_alloc(typename Space::memory_space{}, wi));
+      src, view_alloc(typename Space::memory_space{}, wi));
 }
 
 template <class T, class... P, class... ViewCtorArgs>
 auto create_mirror_view(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
-                        const Kokkos::View<T, P...>& v) {
-  return Impl::create_mirror_view(v, arg_prop);
+                        const Kokkos::View<T, P...>& src) {
+  return Impl::create_mirror_view(src, arg_prop);
 }
 
 template <class... ViewCtorArgs, class T, class... P>

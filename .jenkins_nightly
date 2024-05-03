@@ -95,11 +95,46 @@ pipeline {
                             -DKokkos_ENABLE_BENCHMARKS=ON \
                             -DKokkos_ENABLE_EXAMPLES=ON \
                             -DKokkos_ENABLE_TESTS=ON \
-                            -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
+                            -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
+                            -DKokkos_ENABLE_DEPRECATION_WARNINGS=ON \
                             -DKokkos_ENABLE_SERIAL=ON \
                           .. && \
                           make -j8 && ctest --verbose
                           '''
+                    }
+                }
+                stage('HIP-ROCM-6.0') {
+                    agent {
+                        dockerfile {
+                            filename 'Dockerfile.hipcc'
+                            dir 'scripts/docker'
+                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-20.04:6.0.2-complete'
+                            label 'rocm-docker && AMD_Radeon_Instinct_MI210'
+                            args '-v /tmp/ccache.kokkos:/tmp/ccache --device=/dev/kfd --device=/dev/dri --security-opt seccomp=unconfined --group-add video --env HIP_VISIBLE_DEVICES=$HIP_VISIBLE_DEVICES'
+                        }
+                    }
+                    steps {
+                        sh 'ccache --zero-stats'
+                        sh '''rm -rf build && mkdir -p build && cd build && \
+                              cmake \
+                                -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+                                -DCMAKE_CXX_COMPILER=hipcc \
+                                -DCMAKE_CXX_FLAGS="-Werror -Wno-unused-command-line-argument" \
+                                -DCMAKE_CXX_STANDARD=20 \
+                                -DKokkos_ARCH_NATIVE=ON \
+                                -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+                                -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
+                                -DKokkos_ENABLE_DEPRECATION_WARNINGS=ON \
+                                -DKokkos_ENABLE_TESTS=ON \
+                                -DKokkos_ENABLE_BENCHMARKS=ON \
+                                -DKokkos_ENABLE_HIP=ON \
+                              .. && \
+                              make -j8 && ctest --verbose'''
+                    }
+                    post {
+                        always {
+                            sh 'ccache --show-stats'
+                        }
                     }
                 }
             }

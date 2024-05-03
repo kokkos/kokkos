@@ -1657,8 +1657,7 @@ KOKKOS_FUNCTION auto as_view_of_rank_n(
 
   if constexpr (std::is_same_v<decltype(layout), Kokkos::LayoutLeft> ||
                 std::is_same_v<decltype(layout), Kokkos::LayoutRight> ||
-                std::is_same_v<decltype(layout), Kokkos::LayoutStride> ||
-                is_layouttiled<decltype(layout)>::value) {
+                std::is_same_v<decltype(layout), Kokkos::LayoutStride>) {
     for (int i = N; i < 7; ++i)
       layout.dimension[i] = KOKKOS_IMPL_CTOR_DEFAULT_ARG;
   }

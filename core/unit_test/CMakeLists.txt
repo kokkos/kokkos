@@ -148,6 +148,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
         Crs
         DeepCopyAlignment
         ExecSpacePartitioning
+        ExecSpaceThreadSafety
         ExecutionSpace
         FunctorAnalysis
         HostSharedPtr
@@ -236,6 +237,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
       ViewAPI_e
       ViewCopy_a
       ViewCopy_b
+      ViewCopy_c
       ViewCtorDimMatch
       ViewEmptyRuntimeUnmanaged
       ViewHooks
@@ -353,6 +355,7 @@ foreach(PairDeviceSpace HIP-HostPinned;HIP-Managed;Cuda-HostPinned;Cuda-UVM;SYCL
       ViewAPI_e
       ViewCopy_a
       ViewCopy_b
+      ViewCopy_c
       ViewMapping_a
       ViewMapping_b
       ViewMapping_subview
@@ -424,6 +427,7 @@ if(Kokkos_ENABLE_OPENACC)
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_AtomicOperations_complexdouble.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_AtomicOperations_complexfloat.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_Crs.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_ExecSpaceThreadSafety.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_JoinBackwardCompatibility.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_LocalDeepCopy.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_Other.cpp
@@ -635,6 +639,8 @@ IF(KOKKOS_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
 endif()
 
 if(Kokkos_ENABLE_SERIAL)
+  list(REMOVE_ITEM Serial_SOURCES1
+    ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_ExecSpaceThreadSafety.cpp)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     CoreUnitTest_Serial1
     SOURCES
@@ -665,6 +671,9 @@ if(Kokkos_ENABLE_THREADS)
 endif()
 
 if (Kokkos_ENABLE_OPENMP)
+  list(REMOVE_ITEM OpenMP_SOURCES
+    ${CMAKE_CURRENT_BINARY_DIR}/openmp/TestOpenMP_ExecSpaceThreadSafety.cpp)
+
   set(OpenMP_EXTRA_SOURCES
     openmp/TestOpenMP_Task.cpp
   )
@@ -828,7 +837,7 @@ if(Kokkos_ENABLE_HIP)
       hip/TestHIP_InterOp_Streams.cpp
   )
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_HIPGraph
+    CoreUnitTest_HIPGraph
     SOURCES
       UnitTestMainInit.cpp
       hip/TestHIP_Graph.cpp
@@ -912,7 +921,13 @@ if(Kokkos_ENABLE_SYCL)
      sycl/TestSYCL_InterOp_Streams.cpp
   )
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_SYCLGraph
+    CoreUnitTest_SYCLInterOpStreamsMultiGPU
+    SOURCES
+      UnitTestMainInit.cpp
+      sycl/TestSYCL_InterOp_StreamsMultiGPU.cpp
+  )
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    CoreUnitTest_SYCLGraph
     SOURCES
       UnitTestMainInit.cpp
       sycl/TestSYCL_Graph.cpp
