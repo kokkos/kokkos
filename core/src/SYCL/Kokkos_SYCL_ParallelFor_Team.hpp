@@ -44,15 +44,14 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   size_type const m_vector_size;
   int m_shmem_begin;
   int m_shmem_size;
-  mutable sycl_device_ptr<char> m_global_scratch_ptr;
   size_t m_scratch_size[2];
 
   template <typename FunctorWrapper>
-  sycl::event sycl_direct_launch(const Policy& policy,
+  sycl::event sycl_direct_launch(const sycl_device_ptr<char> global_scratch_ptr,
                                  const FunctorWrapper& functor_wrapper,
                                  const sycl::event& memcpy_event) const {
     // Convenience references
-    const Kokkos::Experimental::SYCL& space = policy.space();
+    const Kokkos::Experimental::SYCL& space = m_policy.space();
     sycl::queue& q                          = space.sycl_queue();
 
     desul::ensure_sycl_lock_arrays_on_device(q);
@@ -68,7 +67,6 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
       // Avoid capturing *this since it might not be trivially copyable
       const auto shmem_begin       = m_shmem_begin;
       const size_t scratch_size[2] = {m_scratch_size[0], m_scratch_size[1]};
-      sycl_device_ptr<char> const global_scratch_ptr = m_global_scratch_ptr;
 
       auto lambda = [=](sycl::nd_item<2> item) {
         const member_type team_member(
@@ -131,7 +129,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     // Functor's reduce memory, team scan memory, and team shared memory depend
     // upon team size.
     int scratch_pool_id = instance.acquire_team_scratch_space();
-    m_global_scratch_ptr =
+    const sycl_device_ptr<char> global_scratch_ptr =
         static_cast<sycl_device_ptr<char>>(instance.resize_team_scratch_space(
             scratch_pool_id,
             static_cast<ptrdiff_t>(m_scratch_size[1]) * m_league_size));
@@ -142,7 +140,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
         m_functor, indirectKernelMem);
 
-    sycl::event event = sycl_direct_launch(m_policy, functor_wrapper,
+    sycl::event event = sycl_direct_launch(global_scratch_ptr, functor_wrapper,
                                            functor_wrapper.get_copy_event());
     functor_wrapper.register_event(event);
     instance.register_team_scratch_event(scratch_pool_id, event);
