@@ -125,7 +125,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     // Only let one instance at a time resize the instance's scratch memory
     // allocations.
-    std::scoped_lock<std::mutex> team_scratch_block(
+    std::scoped_lock<std::mutex> team_scratch_lock(
         instance.m_team_scratch_mutex);
 
     // Functor's reduce memory, team scan memory, and team shared memory depend
@@ -166,7 +166,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     m_scratch_size[0] = m_shmem_size;
     m_scratch_size[1] = m_policy.scratch_size(1, m_team_size);
 
-    auto& instance = *m_policy.space().impl_internal_space_instance();
+    const auto& instance = *m_policy.space().impl_internal_space_instance();
     if (static_cast<int>(instance.m_maxShmemPerBlock) <
         m_shmem_size - m_shmem_begin) {
       std::stringstream out;

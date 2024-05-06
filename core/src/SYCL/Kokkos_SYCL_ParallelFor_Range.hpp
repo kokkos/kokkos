@@ -74,8 +74,9 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
   const Policy m_policy;
 
   template <typename Functor>
-  sycl::event sycl_direct_launch(const Policy& policy, const Functor& functor,
-                                 const sycl::event& memcpy_event) const {
+  static sycl::event sycl_direct_launch(const Policy& policy,
+                                        const Functor& functor,
+                                        const sycl::event& memcpy_event) {
     // Convenience references
     const Kokkos::Experimental::SYCL& space = policy.space();
     sycl::queue& q                          = space.sycl_queue();
@@ -135,12 +136,6 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
                                            functor_wrapper.get_copy_event());
     functor_wrapper.register_event(event);
   }
-
-  ParallelFor(const ParallelFor&) = default;
-  ParallelFor(ParallelFor&&)      = default;
-  ParallelFor& operator=(const ParallelFor&) = delete;
-  ParallelFor& operator=(ParallelFor&&) = delete;
-  ~ParallelFor()                        = default;
 
   ParallelFor(const FunctorType& arg_functor, const Policy& arg_policy)
       : m_functor(arg_functor), m_policy(arg_policy) {}
