@@ -282,15 +282,20 @@ struct test_dualview_resize {
     const unsigned int m      = 5;
     const unsigned int factor = 2;
 
-    ViewType a("A", n, m);
+    ViewType a;
+    if constexpr (Initialize)
+      a = ViewType("A", n, m);
+    else
+      a = ViewType(Kokkos::view_alloc(Kokkos::WithoutInitializing, "A"), n, m);
+
     Kokkos::deep_copy(a.d_view, 1);
 
     /* Covers case "Resize on Device" */
     a.modify_device();
-    if (Initialize)
-      Kokkos::resize(Kokkos::WithoutInitializing, a, factor * n, factor * m);
-    else
+    if constexpr (Initialize)
       Kokkos::resize(a, factor * n, factor * m);
+    else
+      Kokkos::resize(Kokkos::WithoutInitializing, a, factor * n, factor * m);
     ASSERT_EQ(a.extent(0), n * factor);
     ASSERT_EQ(a.extent(1), m * factor);
 
@@ -305,7 +310,7 @@ struct test_dualview_resize {
     Kokkos::parallel_reduce(
         Kokkos::RangePolicy<t_dev_exec_space>(0, a.d_view.extent(0)),
         SumViewEntriesFunctor<scalar_type, typename ViewType::t_dev>(a.d_view),
-        a_d_sum);
+        Kokkos::Sum<Scalar, Kokkos::HostSpace>(a_d_sum));
 
     // Check host view is synced as expected
     scalar_type a_h_sum = 0;
@@ -321,10 +326,10 @@ struct test_dualview_resize {
     /* Covers case "Resize on Host" */
     a.modify_host();
 
-    if (Initialize)
-      Kokkos::resize(Kokkos::WithoutInitializing, a, n / factor, m / factor);
-    else
+    if constexpr (Initialize)
       Kokkos::resize(a, n / factor, m / factor);
+    else
+      Kokkos::resize(Kokkos::WithoutInitializing, a, n / factor, m / factor);
     ASSERT_EQ(a.extent(0), n / factor);
     ASSERT_EQ(a.extent(1), m / factor);
 
@@ -339,7 +344,7 @@ struct test_dualview_resize {
     Kokkos::parallel_reduce(
         Kokkos::RangePolicy<t_dev_exec_space>(0, a.d_view.extent(0)),
         SumViewEntriesFunctor<scalar_type, typename ViewType::t_dev>(a.d_view),
-        a_d_sum);
+        Kokkos::Sum<Scalar, Kokkos::HostSpace>(a_d_sum));
 
     // Check host view is synced as expected
     a_h_sum = 0;
@@ -369,13 +374,17 @@ struct test_dualview_realloc {
     const unsigned int n = 10;
     const unsigned int m = 5;
 
-    ViewType a("A", n, m);
-    if (Initialize)
-      Kokkos::realloc(Kokkos::WithoutInitializing, a, n, m);
-    else
+    ViewType a;
+    if constexpr (Initialize) {
+      a = ViewType("A", n, m);
       Kokkos::realloc(a, n, m);
+    } else {
+      a = ViewType(Kokkos::view_alloc(Kokkos::WithoutInitializing, "A"), n, m);
+      Kokkos::realloc(Kokkos::WithoutInitializing, a, n, m);
+    }
 
     Kokkos::deep_copy(a.d_view, 1);
+
     a.modify_device();
     a.sync_host();
 
@@ -387,7 +396,7 @@ struct test_dualview_realloc {
     Kokkos::parallel_reduce(
         Kokkos::RangePolicy<t_dev_exec_space>(0, a.d_view.extent(0)),
         SumViewEntriesFunctor<scalar_type, typename ViewType::t_dev>(a.d_view),
-        a_d_sum);
+        Kokkos::Sum<Scalar, Kokkos::HostSpace>(a_d_sum));
 
     // Check host view is synced as expected
     scalar_type a_h_sum = 0;
@@ -463,12 +472,36 @@ TEST(TEST_CATEGORY, dualview_deep_copy) {
   test_dualview_deep_copy<double, TEST_EXECSPACE>();
 }
 
+struct NoDefaultConstructor {
+  NoDefaultConstructor(int i_) : i(i_) {}
+
+  operator int() const { return i; }
+  NoDefaultConstructor& operator+=(const NoDefaultConstructor& other) {
+    i += other.i;
+    return *this;
+  }
+
+  int i;
+};
+}  // namespace Test
+
+template <>
+struct Kokkos::reduction_identity<Test::NoDefaultConstructor> {
+  static Test::NoDefaultConstructor sum() { return {0}; }
+};
+
+namespace Test {
+
 TEST(TEST_CATEGORY, dualview_realloc) {
   test_dualview_realloc<int, TEST_EXECSPACE>();
+  Impl::test_dualview_realloc<NoDefaultConstructor, TEST_EXECSPACE,
+                              /* Initialize */ false>();
 }
 
 TEST(TEST_CATEGORY, dualview_resize) {
   test_dualview_resize<int, TEST_EXECSPACE>();
+  Impl::test_dualview_resize<NoDefaultConstructor, TEST_EXECSPACE,
+                             /* Initialize */ false>();
 }
 
 namespace {
