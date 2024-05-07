@@ -158,6 +158,7 @@ void testRealloc() {
   {
     struct NoDefaultConstructor {
       int value;
+      KOKKOS_FUNCTION
       NoDefaultConstructor(int x) : value(x) {}
     };
     using view_type = Kokkos::View<NoDefaultConstructor*, DeviceType>;
