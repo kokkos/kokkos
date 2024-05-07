@@ -441,7 +441,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
     m_scratch_size[0] = m_shmem_size;
     m_scratch_size[1] = m_policy.scratch_size(1, m_team_size);
 
-    Kokkos::Experimental::Impl::SYCLInternal& instance =
+    const Kokkos::Experimental::Impl::SYCLInternal& instance =
         *m_policy.space().impl_internal_space_instance();
     if (static_cast<int>(instance.m_maxShmemPerBlock) <
         m_shmem_size - m_shmem_begin) {
