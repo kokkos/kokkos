@@ -23,9 +23,6 @@ namespace TestViewResize {
 
 struct Default {};
 struct WithoutInitializing {};
-struct NoDefaultConstructor {
-  NoDefaultConstructor(int) {}
-};
 
 template <typename View, typename... Args>
 inline void resize_dispatch(Default, View& v, Args&&... args) {
@@ -369,6 +366,17 @@ void testResize() {
   {
     impl_testResize<DeviceType,
                     WithoutInitializing>();  // without data initialization
+  }
+  {
+    struct NoDefaultConstructor {
+      int value;
+      NoDefaultConstructor(int x) : value(x) {}
+    };
+    using view_type = Kokkos::View<NoDefaultConstructor*, DeviceType>;
+    view_type view_1d_no_default(
+        Kokkos::view_alloc(Kokkos::WithoutInitializing, "view_1d_no_default"),
+        5);
+    resize_dispatch(WithoutInitializing{}, view_1d_no_default, 3);
   }
 }
 
