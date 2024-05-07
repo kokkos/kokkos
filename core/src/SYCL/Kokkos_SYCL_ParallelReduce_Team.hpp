@@ -59,7 +59,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
   int m_team_size;
   const size_type m_vector_size;
 
-  template <typename PolicyType, typename CombinedFunctorReducerWrapper>
+  template <typename CombinedFunctorReducerWrapper>
   sycl::event sycl_direct_launch(
       const sycl_device_ptr<char> global_scratch_ptr,
       const CombinedFunctorReducerWrapper& functor_reducer_wrapper,
