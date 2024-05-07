@@ -23,6 +23,9 @@ namespace TestViewRealloc {
 
 struct Default {};
 struct WithoutInitializing {};
+struct NoDefaultConstructor {
+  NoDefaultConstructor(int) {}
+};
 
 template <typename View, typename... Args>
 inline void realloc_dispatch(Default, View& v, Args&&... args) {
@@ -50,6 +53,14 @@ void impl_testRealloc() {
     EXPECT_EQ(oldLabel, newLabel);
     const int* newPointer = view_1d.data();
     EXPECT_EQ(oldPointer, newPointer);
+  }
+  // Check #6992 fix (no default initialization in realloc without initializing)
+  {
+    using view_type = Kokkos::View<NoDefaultConstructor*, DeviceType>;
+    view_type view_1d_no_default(
+        Kokkos::view_alloc(Kokkos::WithoutInitializing, "view_1d_no_default"),
+        sizes[0]);
+    realloc_dispatch(WithoutInitializing{}, view_1d_no_default, 3);
   }
   {
     using view_type = Kokkos::View<int**, DeviceType>;

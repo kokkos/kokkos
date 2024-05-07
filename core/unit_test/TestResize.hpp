@@ -23,6 +23,9 @@ namespace TestViewResize {
 
 struct Default {};
 struct WithoutInitializing {};
+struct NoDefaultConstructor {
+  NoDefaultConstructor(int) {}
+};
 
 template <typename View, typename... Args>
 inline void resize_dispatch(Default, View& v, Args&&... args) {
