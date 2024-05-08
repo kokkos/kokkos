@@ -48,6 +48,10 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
   value_type* m_result_ptr;
   const bool m_result_ptr_device_accessible;
 
+  // Only let one ParallelScan instance at a time use the scratch memory.
+  // The constructor acquires the mutex which is released in the destructor.
+  std::scoped_lock<std::mutex> m_scratch_memory_lock;
+
   template <class TagType>
   std::enable_if_t<std::is_void<TagType>::value> call_with_tag(
       const FunctorType& f, const idx_type& idx, value_type& val,
@@ -197,7 +201,8 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
       : m_functor_reducer(arg_functor, typename Analysis::Reducer{arg_functor}),
         m_policy(arg_policy),
         m_result_ptr(arg_result_ptr),
-        m_result_ptr_device_accessible(arg_result_ptr_device_accessible) {}
+        m_result_ptr_device_accessible(arg_result_ptr_device_accessible),
+        m_scratch_memory_lock(OpenMPTargetExec::m_mutex_scratch_ptr) {}
 
   //----------------------------------------
 };
