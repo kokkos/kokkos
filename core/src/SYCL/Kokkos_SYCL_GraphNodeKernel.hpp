@@ -127,8 +127,8 @@ template <typename KernelType>
 struct get_graph_node_kernel_type<KernelType, Kokkos::ParallelReduceTag>
     : type_identity<GraphNodeKernelImpl<
           Kokkos::Experimental::SYCL, typename KernelType::Policy,
-          CombinedFunctorReducer<typename KernelType::functor_type,
-                                 typename KernelType::reducer_type>,
+          CombinedFunctorReducer<typename KernelType::FunctorType,
+                                 typename KernelType::ReducerType>,
           Kokkos::ParallelReduceTag>> {};
 
 template <typename KernelType>

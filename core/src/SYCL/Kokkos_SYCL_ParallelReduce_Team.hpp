@@ -30,11 +30,9 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
                                    Kokkos::TeamPolicy<Properties...>,
                                    Kokkos::Experimental::SYCL> {
  public:
-  using Policy       = Kokkos::TeamPolicy<Properties...>;
-  using FunctorType  = typename CombinedFunctorReducerType::functor_type;
-  using ReducerType  = typename CombinedFunctorReducerType::reducer_type;
-  using functer_type = FunctorType;
-  using reducer_type = ReducerType;
+  using Policy      = TeamPolicy<Properties...>;
+  using FunctorType = typename CombinedFunctorReducerType::functor_type;
+  using ReducerType = typename CombinedFunctorReducerType::reducer_type;
 
  private:
   using member_type   = typename Policy::member_type;
@@ -56,19 +54,18 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
   const bool m_result_ptr_device_accessible;
   size_type m_shmem_begin;
   size_type m_shmem_size;
-  sycl_device_ptr<char> m_global_scratch_ptr;
   size_t m_scratch_size[2];
   const size_type m_league_size;
   int m_team_size;
   const size_type m_vector_size;
 
-  template <typename PolicyType, typename CombinedFunctorReducerWrapper>
+  template <typename CombinedFunctorReducerWrapper>
   sycl::event sycl_direct_launch(
-      const PolicyType& policy,
+      const sycl_device_ptr<char> global_scratch_ptr,
       const CombinedFunctorReducerWrapper& functor_reducer_wrapper,
       const sycl::event& memcpy_event) const {
     // Convenience references
-    const Kokkos::Experimental::SYCL& space = policy.space();
+    const Kokkos::Experimental::SYCL& space = m_policy.space();
     Kokkos::Experimental::Impl::SYCLInternal& instance =
         *space.impl_internal_space_instance();
     sycl::queue& q = space.sycl_queue();
@@ -110,7 +107,6 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
         // Avoid capturing *this since it might not be trivially copyable
         const auto shmem_begin       = m_shmem_begin;
         const size_t scratch_size[2] = {m_scratch_size[0], m_scratch_size[1]};
-        sycl_device_ptr<char> const global_scratch_ptr = m_global_scratch_ptr;
 
 #ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
         cgh.depends_on(memcpy_event);
@@ -181,7 +177,6 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
         const auto shmem_begin       = m_shmem_begin;
         const auto league_size       = m_league_size;
         const size_t scratch_size[2] = {m_scratch_size[0], m_scratch_size[1]};
-        sycl_device_ptr<char> const global_scratch_ptr = m_global_scratch_ptr;
         sycl::local_accessor<unsigned int> num_teams_done(1, cgh);
 
         auto team_reduction_factory =
@@ -421,13 +416,13 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
     // allocations.
     std::scoped_lock<std::mutex> scratch_buffers_lock(
         instance.m_mutexScratchSpace);
-    std::scoped_lock<std::mutex> team_scratch_block(
+    std::scoped_lock<std::mutex> team_scratch_lock(
         instance.m_team_scratch_mutex);
 
     // Functor's reduce memory, team scan memory, and team shared memory depend
     // upon team size.
     int scratch_pool_id = instance.acquire_team_scratch_space();
-    m_global_scratch_ptr =
+    const sycl_device_ptr<char> global_scratch_ptr =
         static_cast<sycl_device_ptr<char>>(instance.resize_team_scratch_space(
             scratch_pool_id,
             static_cast<ptrdiff_t>(m_scratch_size[1]) * m_league_size));
@@ -441,7 +436,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
                                                        indirectKernelMem);
 
     sycl::event event =
-        sycl_direct_launch(m_policy, functor_reducer_wrapper,
+        sycl_direct_launch(global_scratch_ptr, functor_reducer_wrapper,
                            functor_reducer_wrapper.get_copy_event());
     functor_reducer_wrapper.register_event(event);
     instance.register_team_scratch_event(scratch_pool_id, event);
@@ -479,7 +474,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
     m_scratch_size[0] = m_shmem_size;
     m_scratch_size[1] = m_policy.scratch_size(1, m_team_size);
 
-    Kokkos::Experimental::Impl::SYCLInternal& instance =
+    const Kokkos::Experimental::Impl::SYCLInternal& instance =
         *m_policy.space().impl_internal_space_instance();
     if (static_cast<int>(instance.m_maxShmemPerBlock) <
         m_shmem_size - m_shmem_begin) {

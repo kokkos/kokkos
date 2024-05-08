@@ -32,11 +32,9 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
                                    Kokkos::MDRangePolicy<Traits...>,
                                    Kokkos::Experimental::SYCL> {
  public:
-  using Policy       = Kokkos::MDRangePolicy<Traits...>;
-  using FunctorType  = typename CombinedFunctorReducerType::functor_type;
-  using ReducerType  = typename CombinedFunctorReducerType::reducer_type;
-  using functor_type = FunctorType;
-  using reducer_type = ReducerType;
+  using Policy      = Kokkos::MDRangePolicy<Traits...>;
+  using FunctorType = typename CombinedFunctorReducerType::functor_type;
+  using ReducerType = typename CombinedFunctorReducerType::reducer_type;
 
  private:
   using value_type     = typename ReducerType::value_type;

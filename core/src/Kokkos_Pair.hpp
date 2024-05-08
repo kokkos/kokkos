@@ -450,37 +450,37 @@ struct KOKKOS_DEPRECATED pair<T1, void> {
 //
 
 template <class T1>
-KOKKOS_FORCEINLINE_FUNCTION constexpr bool operator==(
+KOKKOS_DEPRECATED KOKKOS_FORCEINLINE_FUNCTION constexpr bool operator==(
     const pair<T1, void>& lhs, const pair<T1, void>& rhs) {
   return lhs.first == rhs.first;
 }
 
 template <class T1>
-KOKKOS_FORCEINLINE_FUNCTION constexpr bool operator!=(
+KOKKOS_DEPRECATED KOKKOS_FORCEINLINE_FUNCTION constexpr bool operator!=(
     const pair<T1, void>& lhs, const pair<T1, void>& rhs) {
   return !(lhs == rhs);
 }
 
 template <class T1>
-KOKKOS_FORCEINLINE_FUNCTION constexpr bool operator<(
+KOKKOS_DEPRECATED KOKKOS_FORCEINLINE_FUNCTION constexpr bool operator<(
     const pair<T1, void>& lhs, const pair<T1, void>& rhs) {
   return lhs.first < rhs.first;
 }
 
 template <class T1>
-KOKKOS_FORCEINLINE_FUNCTION constexpr bool operator<=(
+KOKKOS_DEPRECATED KOKKOS_FORCEINLINE_FUNCTION constexpr bool operator<=(
     const pair<T1, void>& lhs, const pair<T1, void>& rhs) {
   return !(rhs < lhs);
 }
 
 template <class T1>
-KOKKOS_FORCEINLINE_FUNCTION constexpr bool operator>(
+KOKKOS_DEPRECATED KOKKOS_FORCEINLINE_FUNCTION constexpr bool operator>(
     const pair<T1, void>& lhs, const pair<T1, void>& rhs) {
   return rhs < lhs;
 }
 
 template <class T1>
-KOKKOS_FORCEINLINE_FUNCTION constexpr bool operator>=(
+KOKKOS_DEPRECATED KOKKOS_FORCEINLINE_FUNCTION constexpr bool operator>=(
     const pair<T1, void>& lhs, const pair<T1, void>& rhs) {
   return !(lhs < rhs);
 }
