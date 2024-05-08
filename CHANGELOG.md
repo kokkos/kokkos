@@ -6,7 +6,7 @@
 ### Backend and Architecture Enhancements:
 
 #### HIP:
-* MI300 support unified memory support [\#6877](https://github.com/kokkos/kokkos/pull/6877)
+* MI300 support unified memory [\#6877](https://github.com/kokkos/kokkos/pull/6877)
 
 ### Bug Fixes
 * Serial: Use the provided execution space instance in TeamPolicy [\#6951](https://github.com/kokkos/kokkos/pull/6951)
