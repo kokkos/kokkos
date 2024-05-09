@@ -90,23 +90,10 @@ void SYCLInternal::initialize(const sycl::device& d) {
       Kokkos::Impl::throw_runtime_exception(
           "There was an asynchronous SYCL error!\n");
   };
-  initialize(sycl::queue{
-      d,
-      exception_handler
-#ifdef KOKKOS_ENABLE_IMPL_SYCL_NO_IMMEDIATE_COMMAND_LISTS
+  initialize(sycl::queue{d, exception_handler
 #ifdef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
-      ,
-      {sycl::property::queue::in_order(),
-       sycl::ext::intel::property::queue::no_immediate_command_list()}
-#else
-      ,
-      sycl::ext::intel::property::queue::no_immediate_command_list()
-#endif
-#else
-#ifdef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
-      ,
-      sycl::property::queue::in_order()
-#endif
+                         ,
+                         sycl::property::queue::in_order()
 #endif
   });
 }
