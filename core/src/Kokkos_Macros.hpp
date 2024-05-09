@@ -565,10 +565,10 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 // clang-format off
 #if defined(__EDG__)
   #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH() \
-    _Pragma("push")                                      \
-    _Pragma("diag_suppress 1223")
+    _Pragma("warning push")                              \
+    _Pragma("warning disable 1478")
   #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP() \
-    _Pragma("pop")
+    _Pragma("warning pop")
 #elif defined(__GNUC__) || defined(__clang__)
   #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH() \
     _Pragma("GCC diagnostic push")                       \
@@ -581,6 +581,9 @@ static constexpr bool kokkos_omp_on_host() { return false; }
     _Pragma("warning(disable: 4996)")
   #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP() \
     _Pragma("warning(pop)")
+#else
+  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
+  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
 #endif
 // clang-format on
 
