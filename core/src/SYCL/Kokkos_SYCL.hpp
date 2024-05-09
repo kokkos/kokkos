@@ -159,8 +159,14 @@ std::vector<SYCL> partition_space(const SYCL& sycl_space, Args...) {
   std::vector<SYCL> instances;
   instances.reserve(sizeof...(Args));
   for (unsigned int i = 0; i < sizeof...(Args); ++i)
-    instances.emplace_back(
-        sycl::queue(context, device, sycl::property::queue::in_order()));
+    instances.emplace_back(sycl::queue(
+        context, device,
+        {sycl::property::queue::in_order()
+#ifdef KOKKOS_ENABLE_SYCL_NO_IMMEDIATE_COMMAND_LISTS
+             ,
+         sycl::ext::intel::property::queue::no_immediate_command_list()
+#endif
+        }));
   return instances;
 }
 
@@ -180,8 +186,14 @@ std::vector<SYCL> partition_space(const SYCL& sycl_space,
   // otherwise.
   instances.reserve(weights.size());
   for (unsigned int i = 0; i < weights.size(); ++i)
-    instances.emplace_back(
-        sycl::queue(context, device, sycl::property::queue::in_order()));
+    instances.emplace_back(sycl::queue(
+        context, device,
+        {sycl::property::queue::in_order()
+#ifdef KOKKOS_ENABLE_SYCL_NO_IMMEDIATE_COMMAND_LISTS
+             ,
+         sycl::ext::intel::property::queue::no_immediate_command_list()
+#endif
+        }));
   return instances;
 }
 

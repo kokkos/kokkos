@@ -110,6 +110,11 @@ void SYCL::print_configuration(std::ostream& os, bool verbose) const {
 #else
   os << "macro  KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES : undefined\n";
 #endif
+#ifdef KOKKOS_ENABLE_SYCL_NO_IMMEDIATE_COMMAND_LISTS
+  os << "macro  KOKKOS_ENABLE_SYCL_NO_IMMEDIATE_COMMAND_LISTS : defined\n";
+#else
+  os << "macro  KOKKOS_ENABLE_SYCL_NO_IMMEDIATE_COMMAND_LISTS : undefined\n";
+#endif
 
   int counter       = 0;
   int active_device = Kokkos::device_id();
