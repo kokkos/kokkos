@@ -122,12 +122,13 @@ void SYCL::print_configuration(std::ostream& os, bool verbose) const {
   else
 #endif
   {
-    os << "Immediate command lists and standard command queue allowed. "
-          "SYCL_PI_LEVEL_ZERO_USE_IMMEDIATE_COMMANDLISTS takes precedence.\n";
+    os << "Immediate command lists and standard command queue allowed.\n";
     if (const char* environment_setting =
             std::getenv("SYCL_PI_LEVEL_ZERO_USE_IMMEDIATE_COMMANDLISTS"))
-      os << "SYCL_PI_LEVEL_ZERO_USE_IMMEDIATE_COMMANDLISTS: "
-         << environment_setting << '\n';
+      os << "SYCL_PI_LEVEL_ZERO_USE_IMMEDIATE_COMMANDLISTS="
+         << environment_setting << " takes precedence.\n";
+    else
+      os << "SYCL_PI_LEVEL_ZERO_USE_IMMEDIATE_COMMANDLISTS not defined.\n";
   }
 
   int counter       = 0;
