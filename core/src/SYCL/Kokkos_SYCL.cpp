@@ -121,8 +121,14 @@ void SYCL::print_configuration(std::ostream& os, bool verbose) const {
     os << "Standard command queue enforced\n";
   else
 #endif
+  {
     os << "Immediate command lists and standard command queue allowed. "
           "SYCL_PI_LEVEL_ZERO_USE_IMMEDIATE_COMMANDLISTS takes precedence.\n";
+    if (const char* environment_setting =
+            std::getenv("SYCL_PI_LEVEL_ZERO_USE_IMMEDIATE_COMMANDLISTS"))
+      os << "SYCL_PI_LEVEL_ZERO_USE_IMMEDIATE_COMMANDLISTS: "
+         << environment_setting << '\n';
+  }
 
   int counter       = 0;
   int active_device = Kokkos::device_id();
