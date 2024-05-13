@@ -1,10 +1,20 @@
 cff-version: 1.2.0
 title: Kokkos
 message: >-
-  If you use this software, please cite it using the
-  metadata from this file.
+  If you use this software, please cite the overview paper
 type: software
 authors:
+  - name: The Kokkos authors
+    wesite: https://kokkos.org/community/team/
+identifiers:
+  - type: url
+    wesite: https://kokkos.org/kokkos-core-wiki/citation.html
+repository-code: 'https://github.com/kokkos/kokkos'
+url: 'https://kokkos.org/'
+license: Apache-2.0
+preferred-citation:
+  type: article
+  authors:
   - given-names: Christian R.
     family-names: Trott
   - given-names: Damien
@@ -45,33 +55,10 @@ authors:
     family-names: Turcksin
   - given-names: Jeremiah
     family-names: Wilke
-identifiers:
-  - type: doi
-    value: 10.1109/TPDS.2021.3097283
-    description: >-
-      Kokkos 3: Programming Model Extensions for the
-      Exascale Era
-repository-code: 'https://github.com/kokkos/kokkos'
-url: 'https://kokkos.org/'
-abstract: >-
-  As the push towards exascale hardware has increased the
-  diversity of system architectures, performance portability
-  has become a critical aspect for scientific software. We
-  describe the Kokkos Performance Portable Programming Model
-  that allows developers to write single source applications
-  for diverse high-performance computing architectures.
-  Kokkos provides key abstractions for both the compute and
-  memory hierarchy of modern hardware. We describe the novel
-  abstractions that have been added to Kokkos version 3 such
-  as hierarchical parallelism, containers, task graphs, and
-  arbitrary-sized atomic operations to prepare for exascale
-  era architectures. We demonstrate the performance of these
-  new features with reproducible benchmarks on CPUs and
-  GPUs.
-keywords:
-  - Performance portability
-  - Programming models
-  - High-performance computing
-  - Heterogeneous computing
-  - Exascale
-license: Apache-2.0
+  doi: 10.1109/TPDS.2021.3097283
+  journal: IEEE Transactions on Parallel and Distributed Systems
+  start: 805
+  end: 817
+  title: "Kokkos 3: Programming Model Extensions for the Exascale Era"
+  volume: 33
+  year: 2022
