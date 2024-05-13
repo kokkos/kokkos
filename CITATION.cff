@@ -1,0 +1,77 @@
+cff-version: 1.2.0
+title: Kokkos
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Christian R.
+    family-names: Trott
+  - given-names: Damien
+    family-names: Lebrun-Grandié
+  - given-names: Daniel
+    family-names: Arndt
+  - family-names: Ciesko
+    given-names: Jan
+  - given-names: Vinh
+    family-names: Dang
+  - family-names: Ellingwood
+    given-names: Nathan
+  - given-names: Rahulkumar
+    family-names: Gayatri
+  - given-names: Evan
+    family-names: Harvey
+  - given-names: Daisy S.
+    family-names: Hollman
+  - given-names: Dan
+    family-names: Ibanez
+  - given-names: Nevin
+    family-names: Liber
+  - given-names: Jonathan
+    family-names: Madsen
+  - given-names: Jeff
+    family-names: Miles
+  - given-names: David
+    family-names: Poliakoff
+  - given-names: Amy
+    family-names: Powell
+  - given-names: Sivasankaran
+    family-names: Rajamanickam
+  - given-names: Mikael
+    family-names: Simberg
+  - given-names: Dan
+    family-names: Sunderland
+  - given-names: Bruno
+    family-names: Turcksin
+  - given-names: Jeremiah
+    family-names: Wilke
+identifiers:
+  - type: doi
+    value: 10.1109/TPDS.2021.3097283
+    description: >-
+      Kokkos 3: Programming Model Extensions for the
+      Exascale Era
+repository-code: 'https://github.com/kokkos/kokkos'
+url: 'https://kokkos.org/'
+abstract: >-
+  As the push towards exascale hardware has increased the
+  diversity of system architectures, performance portability
+  has become a critical aspect for scientific software. We
+  describe the Kokkos Performance Portable Programming Model
+  that allows developers to write single source applications
+  for diverse high-performance computing architectures.
+  Kokkos provides key abstractions for both the compute and
+  memory hierarchy of modern hardware. We describe the novel
+  abstractions that have been added to Kokkos version 3 such
+  as hierarchical parallelism, containers, task graphs, and
+  arbitrary-sized atomic operations to prepare for exascale
+  era architectures. We demonstrate the performance of these
+  new features with reproducible benchmarks on CPUs and
+  GPUs.
+keywords:
+  - Performance portability
+  - Programming models
+  - High-performance computing
+  - Heterogeneous computing
+  - Exascale
+license: Apache-2.0
