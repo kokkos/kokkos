@@ -21,9 +21,11 @@
 
 namespace Kokkos::Impl::SYCLReduction {
 
+// FIXME_SYCL It appears that using shuffles is slower than going through local
+// memory.
 template <class ReducerType>
-inline constexpr bool use_shuffle_based_algorithm =
-    std::is_reference_v<typename ReducerType::reference_type>;
+inline constexpr bool use_shuffle_based_algorithm = false;
+// std::is_reference_v<typename ReducerType::reference_type>;
 
 template <typename ValueType, typename ReducerType, int dim>
 std::enable_if_t<!use_shuffle_based_algorithm<ReducerType>> workgroup_reduction(
