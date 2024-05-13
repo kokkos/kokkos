@@ -21,8 +21,8 @@ namespace Impl {
 template <class T>
 struct atomic_exchange_available_hip {
   constexpr static bool value =
-  ((sizeof(T) == 1 && alignof(T) == 1) || (sizeof(T) == 4 && alignof(T) == 4) ||
-   (sizeof(T) == 8 && alignof(T) == 8)) &&
+      ((sizeof(T) == 1 && alignof(T) == 1) || (sizeof(T) == 4 && alignof(T) == 4) ||
+       (sizeof(T) == 8 && alignof(T) == 8)) &&
       std::is_trivially_copyable<T>::value;
 };
 
@@ -40,35 +40,22 @@ device_atomic_compare_exchange(
   return compare;
 }
 
-template <class T, class MemoryScope>
+template <class T, class MemoryOrder, class MemoryScope>
 __device__ std::enable_if_t<atomic_exchange_available_hip<T>::value, T>
-device_atomic_exchange(T* const dest, T value, MemoryOrderRelaxed, MemoryScope) {
+device_atomic_exchange(T* const dest, T value, MemoryOrder, MemoryScope) {
   T return_val = __hip_atomic_exchange(dest,
                                        value,
-                                       HIPMemoryOrder<MemoryOrderRelaxed>::value,
+                                       HIPMemoryOrder<MemoryOrder>::value,
                                        HIPMemoryScope<MemoryScope>::value);
   return return_val;
 }
 
-template <class T, class MemoryScope>
+template <class T, class MemoryOrder, class MemoryScope>
 __device__ std::enable_if_t<atomic_exchange_available_hip<T>::value, T>
-device_atomic_exchange(
-    T* const dest, T compare, T value, MemoryOrderRelease, MemoryScope) {
+device_atomic_exchange(T* const dest, T compare, T value, MemoryOrder, MemoryScope) {
   T return_val = device_atomic_compare_exchange(
-      dest, compare, value, MemoryOrderRelease(), MemoryScope());
+      dest, compare, value, MemoryOrder(), MemoryScope());
   return reinterpret_cast<T&>(return_val);
-}
-
-template <class T, class MemoryScope>
-__device__ std::enable_if_t<atomic_exchange_available_hip<T>::value, T>
-device_atomic_exchange(
-    T* const dest, T /*compare*/, T value, MemoryOrderAcquire, MemoryScope) {
-  T return_val = __hip_atomic_exchange(dest,
-                                       value,
-                                       HIPMemoryOrder<MemoryOrderAcquire>::value,
-                                       HIPMemoryScope<MemoryScope>::value);
-  device_atomic_exchange(dest, value, MemoryOrderRelaxed(), MemoryScope());
-  return return_val;
 }
 
 template <class T, class MemoryOrder, class MemoryScope>
