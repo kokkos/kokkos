@@ -184,13 +184,15 @@ void *impl_allocate_common(const int device_id,
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaDeviceSynchronize());
 #elif defined(KOKKOS_ENABLE_IMPL_CUDA_UNIFIED_MEMORY)
   // This is intended for Grace-Hopper (and future unified memory architectures)
-  // The idea is to use host allocator and then adivce to keep it in HBM on
+  // The idea is to use host allocator and then advise to keep it in HBM on
   // device, but that requires CUDA 12.2
   static_assert(CUDART_VERSION >= 12020);
-  if (arg_alloc_size) { // cudaMemAdvise_v2 does not work with nullptr
+  if (arg_alloc_size) {  // cudaMemAdvise_v2 does not work with nullptr
     ptr = malloc(arg_alloc_size);
-    // TODO: what error do we want to throw here if it fails, i.e. ptr == nullptr? One would thing cudaMemLocation{device_id, cudaMemLocationTypeDeivce} would
-    // work but it doesn't. I.e. the order of members doesn't seem to be defined.
+    // TODO: what error do we want to throw here if it fails, i.e. ptr ==
+    // nullptr? One would thing cudaMemLocation{device_id,
+    // cudaMemLocationTypeDeivce} would work but it doesn't. I.e. the order of
+    // members doesn't seem to be defined.
     cudaMemLocation loc;
     loc.id   = device_id;
     loc.type = cudaMemLocationTypeDevice;
