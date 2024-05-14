@@ -3235,7 +3235,10 @@ impl_realloc(Kokkos::View<T, P...>& v, const size_t n0, const size_t n1,
     v = view_type();  // Best effort to deallocate in case no other view refers
                       // to the shared allocation
     v = view_type(arg_prop_copy, n0, n1, n2, n3, n4, n5, n6, n7);
-  } else if (alloc_prop_input::initialize) {
+    return;
+  }
+
+  if constexpr (alloc_prop_input::initialize) {
     if constexpr (alloc_prop_input::has_execution_space) {
       const auto& exec_space =
           Impl::get_property<Impl::ExecutionSpaceTag>(arg_prop);
@@ -3330,7 +3333,10 @@ impl_realloc(Kokkos::View<T, P...>& v,
   if (v.layout() != layout) {
     v = view_type();  // Deallocate first, if the only view to allocation
     v = view_type(arg_prop, layout);
-  } else if (alloc_prop_input::initialize) {
+    return;
+  }
+
+  if constexpr (alloc_prop_input::initialize) {
     if constexpr (alloc_prop_input::has_execution_space) {
       const auto& exec_space =
           Impl::get_property<Impl::ExecutionSpaceTag>(arg_prop);

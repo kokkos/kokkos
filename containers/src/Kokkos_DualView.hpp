@@ -944,13 +944,13 @@ class DualView : public ViewTraits<DataType, Properties...> {
 
     if (sizeMismatch) {
       ::Kokkos::realloc(arg_prop, d_view, n0, n1, n2, n3, n4, n5, n6, n7);
-      if (alloc_prop_input::initialize) {
+      if constexpr (alloc_prop_input::initialize) {
         h_view = create_mirror_view(typename t_host::memory_space(), d_view);
       } else {
         h_view = create_mirror_view(Kokkos::WithoutInitializing,
                                     typename t_host::memory_space(), d_view);
       }
-    } else if (alloc_prop_input::initialize) {
+    } else if constexpr (alloc_prop_input::initialize) {
       if constexpr (alloc_prop_input::has_execution_space) {
         const auto& exec_space =
             Impl::get_property<Impl::ExecutionSpaceTag>(arg_prop);
@@ -1038,7 +1038,7 @@ class DualView : public ViewTraits<DataType, Properties...> {
       /* Resize on Device */
       if (sizeMismatch) {
         ::Kokkos::resize(properties, d_view, n0, n1, n2, n3, n4, n5, n6, n7);
-        if (alloc_prop_input::initialize) {
+        if constexpr (alloc_prop_input::initialize) {
           h_view = create_mirror_view(typename t_host::memory_space(), d_view);
         } else {
           h_view = create_mirror_view(Kokkos::WithoutInitializing,
@@ -1054,7 +1054,7 @@ class DualView : public ViewTraits<DataType, Properties...> {
       /* Resize on Host */
       if (sizeMismatch) {
         ::Kokkos::resize(properties, h_view, n0, n1, n2, n3, n4, n5, n6, n7);
-        if (alloc_prop_input::initialize) {
+        if constexpr (alloc_prop_input::initialize) {
           d_view = create_mirror_view(typename t_dev::memory_space(), h_view);
 
         } else {
