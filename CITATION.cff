@@ -8,7 +8,7 @@ authors:
     wesite: https://kokkos.org/community/team/
 identifiers:
   - type: url
-    wesite: https://kokkos.org/kokkos-core-wiki/citation.html
+    website: https://kokkos.org/kokkos-core-wiki/citation.html
 repository-code: 'https://github.com/kokkos/kokkos'
 url: 'https://kokkos.org/'
 license: Apache-2.0
