@@ -66,7 +66,7 @@ struct SetResultToViewFunctor {
   }
 };
 
-struct TEST_CATEGORY_FIXTURE(count_bugs) : public ::testing::Test {
+struct TEST_CATEGORY_FIXTURE(graph) : public ::testing::Test {
  public:
   using count_functor      = CountTestFunctor<TEST_EXECSPACE>;
   using set_functor        = SetViewToValueFunctor<TEST_EXECSPACE, int>;
@@ -88,7 +88,7 @@ struct TEST_CATEGORY_FIXTURE(count_bugs) : public ::testing::Test {
   }
 };
 
-TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), launch_one) {
+TEST_F(TEST_CATEGORY_FIXTURE(graph), launch_one) {
   auto graph =
       Kokkos::Experimental::create_graph<TEST_EXECSPACE>([&](auto root) {
         root.then_parallel_for(1, count_functor{count, bugs, 0, 0});
@@ -101,7 +101,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), launch_one) {
   ASSERT_EQ(0, bugs_host());
 }
 
-TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), launch_one_rvalue) {
+TEST_F(TEST_CATEGORY_FIXTURE(graph), launch_one_rvalue) {
   Kokkos::Experimental::create_graph(ex, [&](auto root) {
     root.then_parallel_for(1, count_functor{count, bugs, 0, 0});
   }).submit();
@@ -112,7 +112,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), launch_one_rvalue) {
   ASSERT_EQ(0, bugs_host());
 }
 
-TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), launch_six) {
+TEST_F(TEST_CATEGORY_FIXTURE(graph), launch_six) {
   auto graph = Kokkos::Experimental::create_graph(ex, [&](auto root) {
     auto f_setup_count = root.then_parallel_for(1, set_functor{count, 0});
     auto f_setup_bugs  = root.then_parallel_for(1, set_functor{bugs, 0});
@@ -145,7 +145,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), launch_six) {
   ASSERT_EQ(0, bugs_host());
 }
 
-TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), when_all_cycle) {
+TEST_F(TEST_CATEGORY_FIXTURE(graph), when_all_cycle) {
   view_type reduction_out{"reduction_out"};
   view_host reduction_host{"reduction_host"};
   Kokkos::Experimental::create_graph(ex, [&](auto root) {
@@ -172,7 +172,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), when_all_cycle) {
 
 // This test is disabled because we don't currently support copying to host,
 // even asynchronously. We _may_ want to do that eventually?
-TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), DISABLED_repeat_chain) {
+TEST_F(TEST_CATEGORY_FIXTURE(graph), DISABLED_repeat_chain) {
   auto graph = Kokkos::Experimental::create_graph(
       ex, [&, count_host = count_host](auto root) {
         //----------------------------------------
@@ -198,7 +198,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), DISABLED_repeat_chain) {
   //----------------------------------------
 }
 
-TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), zero_work_reduce) {
+TEST_F(TEST_CATEGORY_FIXTURE(graph), zero_work_reduce) {
   auto graph = Kokkos::Experimental::create_graph(ex, [&](auto root) {
     root.then_parallel_reduce(0, set_result_functor{bugs}, count);
   });
