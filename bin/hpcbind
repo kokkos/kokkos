@@ -635,7 +635,9 @@ if [[ ${HPCBIND_TEE} -eq 0 || ${HPCBIND_VERBOSE} -eq 0 ]]; then
 
   if [[ ${HPCBIND_HAS_HWLOC} -eq 1 ]]; then
     echo "[BINDINGS]" >> ${HPCBIND_LOG}
-    hwloc-ls --restrict "${HPCBIND_HWLOC_CPUSET}" >> ${HPCBIND_LOG}
+    if [[ ${HPCBIND_LSTOPO} -eq 1 && ! -z ${DISPLAY} ]]; then
+      hwloc-ls --restrict "${HPCBIND_HWLOC_CPUSET}" >> ${HPCBIND_LOG}
+    fi
   else
     echo "Unable to show bindings, hwloc not available." >> ${HPCBIND_LOG}
   fi
@@ -660,7 +662,9 @@ else
 
   if [[ ${HPCBIND_HAS_HWLOC} -eq 1 ]]; then
     echo "[BINDINGS]" > >(tee -a ${HPCBIND_LOG})
-    hwloc-ls --restrict "${HPCBIND_HWLOC_CPUSET}" --no-io --no-bridges > >(tee -a ${HPCBIND_LOG})
+    if [[ ${HPCBIND_LSTOPO} -eq 1 && ! -z ${DISPLAY} ]]; then
+      hwloc-ls --restrict "${HPCBIND_HWLOC_CPUSET}" --no-io --no-bridges > >(tee -a ${HPCBIND_LOG})
+    fi
   else
     echo "Unable to show bindings, hwloc not available." > >(tee -a ${HPCBIND_LOG})
   fi
