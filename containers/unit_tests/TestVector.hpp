@@ -21,6 +21,8 @@
 #include <iostream>
 #include <cstdlib>
 #include <cstdio>
+#include <Kokkos_Macros.hpp>
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
 #include <Kokkos_Vector.hpp>
 
 namespace Test {
