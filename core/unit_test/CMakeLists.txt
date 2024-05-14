@@ -837,7 +837,7 @@ if(Kokkos_ENABLE_HIP)
       hip/TestHIP_InterOp_Streams.cpp
   )
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_HIPGraph
+    CoreUnitTest_HIPGraph
     SOURCES
       UnitTestMainInit.cpp
       hip/TestHIP_Graph.cpp
