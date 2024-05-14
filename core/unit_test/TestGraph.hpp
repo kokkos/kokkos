@@ -21,7 +21,6 @@
 
 namespace Test {
 
-#if !defined(KOKKOS_ENABLE_SYCL) || defined(SYCL_EXT_ONEAPI_GRAPH)
 template <class ExecSpace>
 struct CountTestFunctor {
   using value_type = int;
@@ -233,5 +232,4 @@ TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), zero_work_reduce) {
   ASSERT_EQ(count_host(), 0);
 }
 
-#endif  // !defined(KOKKOS_ENABLE_SYCL) || defined(SYCL_EXT_ONEAPI_GRAPH)
 }  // end namespace Test
