@@ -110,6 +110,11 @@ void SYCL::print_configuration(std::ostream& os, bool verbose) const {
 #else
   os << "macro  KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES : undefined\n";
 #endif
+#ifdef SYCL_EXT_ONEAPI_GRAPH
+  os << "macro  SYCL_EXT_ONEAPI_GRAPH : defined\n";
+#else
+  os << "macro  SYCL_EXT_ONEAPI_GRAPH : undefined\n";
+#endif
 
   int counter       = 0;
   int active_device = Kokkos::device_id();
