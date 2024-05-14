@@ -5,7 +5,7 @@ message: >-
 type: software
 authors:
   - name: The Kokkos authors
-    wesite: https://kokkos.org/community/team/
+    website: https://kokkos.org/community/team/
 identifiers:
   - type: url
     website: https://kokkos.org/kokkos-core-wiki/citation.html
