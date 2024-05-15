@@ -214,9 +214,14 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), zero_work_reduce) {
 // UVM works on pre pascal cards.
 #if defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_ENABLE_CUDA_UVM) && \
     (defined(KOKKOS_ARCH_KEPLER) || defined(KOKKOS_ARCH_MAXWELL))
-  Kokkos::fence();
+  if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>) Kokkos::fence();
 #endif
-  graph.submit();  // should reset to 0, but doesn't
+// FIXME_HPX graph.submit() isn't properly enqueued
+#ifdef KOKKOS_ENABLE_HPX
+  if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::HPX>)
+    Kokkos::fence();
+#endif
+  graph.submit();
   Kokkos::deep_copy(ex, count_host, count);
   ex.fence();
   ASSERT_EQ(count_host(), 0);
