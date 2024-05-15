@@ -21,6 +21,11 @@
 
 namespace Test {
 
+struct NoOpFunctor {
+  template <class... Ts>
+  KOKKOS_FUNCTION void operator()(Ts&&...) const noexcept {}
+};
+
 template <class ExecSpace>
 struct CountTestFunctor {
   using value_type = int;
@@ -199,19 +204,17 @@ TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), DISABLED_repeat_chain) {
 }
 
 TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), zero_work_reduce) {
-  auto graph = Kokkos::Experimental::create_graph(ex, [&](auto root) {
-    root.then_parallel_reduce(Kokkos::RangePolicy<TEST_EXECSPACE>(0, 0),
-                              KOKKOS_LAMBDA(int, int&){}, count)
-        .then_parallel_reduce(
-            Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>{{0, 0},
-                                                                   {0, 0}},
-            KOKKOS_LAMBDA(int, int, int&){}, count)
-        .then_parallel_reduce(
-            Kokkos::TeamPolicy<TEST_EXECSPACE>{0, 1},
-            KOKKOS_LAMBDA(Kokkos::TeamPolicy<TEST_EXECSPACE>::member_type,
-                          int&){},
-            count);
-  });
+  auto graph = Kokkos::Experimental::create_graph(
+      ex, [&](Kokkos::Experimental::GraphNodeRef<TEST_EXECSPACE> root) {
+        root.then_parallel_reduce(Kokkos::RangePolicy<TEST_EXECSPACE>(0, 0),
+                                  NoOpFunctor{}, count)
+            .then_parallel_reduce(
+                Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>{{0, 0},
+                                                                       {0, 0}},
+                NoOpFunctor{}, count)
+            .then_parallel_reduce(Kokkos::TeamPolicy<TEST_EXECSPACE>{0, 1},
+                                  NoOpFunctor{}, count);
+      });
 // These fences are only necessary because of the weirdness of how CUDA
 // UVM works on pre pascal cards.
 #if defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_ENABLE_CUDA_UVM) && \
@@ -231,5 +234,4 @@ TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), zero_work_reduce) {
   ex.fence();
   ASSERT_EQ(count_host(), 0);
 }
-
 }  // end namespace Test
