@@ -37,9 +37,7 @@ __device__ [[noreturn]] void __assertfail(const void *message, const void *file,
 namespace Kokkos {
 namespace Impl {
 
-// required to workaround failures in random number generator unit tests with
-// pre-volta architectures
-__device__ __noinline__ [[noreturn]] static void cuda_abort(
+[[noreturn]] __device__ __noinline__ static void cuda_abort(
     const char *const message) {
   const char empty[] = "";
 
