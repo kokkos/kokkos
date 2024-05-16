@@ -29,8 +29,9 @@ extern "C" {
  *  Requires capability 2.x or better.
  */
 __device__ [[noreturn]] void __assertfail(const void *message, const void *file,
-                                    unsigned int line, const void *function,
-                                    size_t charsize);
+                                          unsigned int line,
+                                          const void *function,
+                                          size_t charsize);
 }
 
 namespace Kokkos {
@@ -38,7 +39,8 @@ namespace Impl {
 
 // required to workaround failures in random number generator unit tests with
 // pre-volta architectures
-__device__ __noinline__ [[noreturn]] static  void cuda_abort(const char *const message) {
+__device__ __noinline__ [[noreturn]] static void cuda_abort(
+    const char *const message) {
   const char empty[] = "";
 
   __assertfail((const void *)message, (const void *)empty, (unsigned int)0,
