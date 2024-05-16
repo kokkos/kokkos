@@ -51,14 +51,6 @@ device_atomic_exchange(T* const dest, T value, MemoryOrder, MemoryScope) {
 }
 
 template <class T, class MemoryOrder, class MemoryScope>
-__device__ std::enable_if_t<atomic_exchange_available_hip<T>::value, T>
-device_atomic_exchange(T* const dest, T compare, T value, MemoryOrder, MemoryScope) {
-  T return_val = device_atomic_compare_exchange(
-      dest, compare, value, MemoryOrder(), MemoryScope());
-  return reinterpret_cast<T&>(return_val);
-}
-
-template <class T, class MemoryOrder, class MemoryScope>
 __device__ std::enable_if_t<!atomic_exchange_available_hip<T>::value, T>
 device_atomic_compare_exchange(
     T* const dest, T compare, T value, MemoryOrder, MemoryScope scope) {
