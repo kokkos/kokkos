@@ -21,7 +21,6 @@
 #include "Kokkos_Constraints.hpp"
 #include "Kokkos_HelperPredicates.hpp"
 #include <std_algorithms/Kokkos_Distance.hpp>
-#include <std_algorithms/Kokkos_FindFirstOf.hpp>
 #include <string>
 
 namespace Kokkos {
