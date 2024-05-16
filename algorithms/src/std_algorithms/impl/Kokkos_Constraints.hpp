@@ -24,6 +24,9 @@ namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
+template <class T>
+class RandomAccessIterator;
+
 template <typename T, typename enable = void>
 struct is_admissible_to_kokkos_std_algorithms : std::false_type {};
 
@@ -57,6 +60,18 @@ using is_iterator = Kokkos::is_detected<iterator_category_t, T>;
 
 template <class T>
 inline constexpr bool is_iterator_v = is_iterator<T>::value;
+
+template <typename ViewType>
+struct is_kokkos_iterator : std::false_type {};
+
+template <typename ViewType>
+struct is_kokkos_iterator<RandomAccessIterator<ViewType>> {
+  static constexpr bool value =
+      is_admissible_to_kokkos_std_algorithms<ViewType>::value;
+};
+
+template <class T>
+inline constexpr bool is_kokkos_iterator_v = is_kokkos_iterator<T>::value;
 
 //
 // are_iterators
@@ -216,19 +231,33 @@ KOKKOS_INLINE_FUNCTION void expect_valid_range(IteratorType first,
 }
 
 //
-// Check if iterators are overlapping
+// Check if kokkos iterators are overlapping
 //
 template <typename IteratorType1, typename IteratorType2>
 KOKKOS_INLINE_FUNCTION void expect_no_overlap(
     [[maybe_unused]] IteratorType1 first, [[maybe_unused]] IteratorType1 last,
     [[maybe_unused]] IteratorType2 s_first,
     [[maybe_unused]] IteratorType2 s_last) {
-  if constexpr (std::is_constructible_v<IteratorType2, IteratorType1>) {
-    IteratorType1 s_first1(s_first), s_last1(s_last);
-    KOKKOS_EXPECTS(first > s_last1 || last < s_first1);
-  } else if constexpr (std::is_constructible_v<IteratorType1, IteratorType2>) {
-    IteratorType2 first2(first), last2(last);
-    KOKKOS_EXPECTS(first2 > s_last || last2 < s_first);
+  if constexpr (is_kokkos_iterator_v<IteratorType1> &&
+                is_kokkos_iterator_v<IteratorType2>) {
+    if constexpr (std::is_constructible_v<IteratorType2, IteratorType1>) {
+      IteratorType2 first2(first), last2(last);
+      IteratorType2 next_first2 = first2;
+      ptrdiff_t stride          = &*(++next_first2) - &*first2;
+      ptrdiff_t first_diff      = &*first2 - &*s_first;
+      bool is_no_overlap        = first_diff % stride;
+      KOKKOS_EXPECTS((&*first2 >= &*s_last || &*last2 <= &*s_first) ||
+                     is_no_overlap);
+    } else if constexpr (std::is_constructible_v<IteratorType1,
+                                                 IteratorType2>) {
+      IteratorType1 s_first1(s_first), s_last1(s_last);
+      IteratorType1 next_first = first;
+      ptrdiff_t stride         = &*(++next_first) - &*first;
+      ptrdiff_t first_diff     = &*first - &*s_first1;
+      bool is_no_overlap       = first_diff % stride;
+      KOKKOS_EXPECTS((&*first >= &*s_last1 || &*last <= &*s_first1) ||
+                     is_no_overlap);
+    }
   }
 }
 
