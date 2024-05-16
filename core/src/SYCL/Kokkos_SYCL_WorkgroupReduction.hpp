@@ -21,8 +21,9 @@
 
 namespace Kokkos::Impl::SYCLReduction {
 
-// FIXME_SYCL It appears that using shuffles is slower than going through local
-// memory.
+// FIXME_SYCL For some types, shuffle reductions are competitive with local
+// memory reductions but they are significantly slower for the value type used
+// in combined reductions with multiple double arguments.
 template <class ReducerType>
 inline constexpr bool use_shuffle_based_algorithm = false;
 // std::is_reference_v<typename ReducerType::reference_type>;
