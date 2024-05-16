@@ -240,10 +240,13 @@ KOKKOS_INLINE_FUNCTION void expect_no_overlap(
     [[maybe_unused]] IteratorType2 s_last) {
   if constexpr (is_kokkos_iterator_v<IteratorType1> &&
                 is_kokkos_iterator_v<IteratorType2>) {
-    IteratorType1 next_first = first;
-    ptrdiff_t stride         = &*(++next_first) - &*first;
-    ptrdiff_t first_diff     = &*first - &*s_first;
-    bool is_no_overlap       = first_diff % stride;
+    IteratorType1 next_first   = first;
+    IteratorType2 next_s_first = s_first;
+    ptrdiff_t stride1          = &*(++next_first) - &*first;
+    ptrdiff_t stride2          = &*(++next_s_first) - &*s_first;
+    ptrdiff_t first_diff       = &*first - &*s_first;
+    [[maybe_unused]] bool is_no_overlap =
+        (first_diff % stride1) + (first_diff % stride2);
     KOKKOS_EXPECTS((&*first >= &*s_last || &*last <= &*s_first) ||
                    is_no_overlap);
   }
