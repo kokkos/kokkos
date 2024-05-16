@@ -79,9 +79,9 @@ OutputIteratorType adjacent_difference_exespace_impl(
                                                               first_dest);
   Impl::expect_valid_range(first_from, last_from);
 
-  // ranges shall not overlap
-  const auto num_elements =
-      Kokkos::Experimental::distance(first_from, last_from);
+  if (first_from == last_from) {
+    return first_dest;
+  }
 
   // ranges shall not overlap
   const auto num_elements =
@@ -114,10 +114,10 @@ KOKKOS_FUNCTION OutputIteratorType adjacent_difference_team_impl(
   Impl::static_assert_iterators_have_matching_difference_type(first_from,
                                                               first_dest);
   Impl::expect_valid_range(first_from, last_from);
-  // ranges shall not overlap
-  const auto num_elements =
-      Kokkos::Experimental::distance(first_from, last_from);
-  auto last_dest = first_dest + num_elements;
+
+  if (first_from == last_from) {
+    return first_dest;
+  }
 
   // ranges shall not overlap
   const auto num_elements =
