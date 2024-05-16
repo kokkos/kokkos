@@ -82,11 +82,11 @@ OutputIteratorType adjacent_difference_exespace_impl(
     return first_dest;
   }
 
-  // ranges shall not overlap
   const auto num_elements =
       Kokkos::Experimental::distance(first_from, last_from);
 
 #ifdef KOKKOS_ENABLE_DEBUG
+  // check for overlapping iterators
   auto last_dest = first_dest + num_elements;
   // Iterators must be accessed from Execution space
   ::Kokkos::parallel_for(
@@ -126,11 +126,11 @@ KOKKOS_FUNCTION OutputIteratorType adjacent_difference_team_impl(
     return first_dest;
   }
 
-  // ranges shall not overlap
   const auto num_elements =
       Kokkos::Experimental::distance(first_from, last_from);
 
 #ifdef KOKKOS_ENABLE_DEBUG
+  // check for overlapping iterators
   auto last_dest = first_dest + num_elements;
   Impl::expect_no_overlap(first_from, last_from, first_dest, last_dest);
 #endif
