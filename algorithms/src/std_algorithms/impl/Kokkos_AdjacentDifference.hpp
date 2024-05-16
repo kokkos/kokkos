@@ -86,7 +86,11 @@ OutputIteratorType adjacent_difference_exespace_impl(
   const auto num_elements =
       Kokkos::Experimental::distance(first_from, last_from);
   auto last_dest = first_dest + num_elements;
-  Impl::expect_no_overlap(first_from, last_from, first_dest, last_dest);
+  // Iterators must be accessed from Execution space
+  ::Kokkos::parallel_for(
+      "Check", RangePolicy<ExecutionSpace>(ex, 0, 1), KOKKOS_LAMBDA(int) {
+        Impl::expect_no_overlap(first_from, last_from, first_dest, last_dest);
+      });
 
   // run
   ::Kokkos::parallel_for(
