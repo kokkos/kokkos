@@ -55,8 +55,8 @@ struct test_dualview_alloc {
   bool result = false;
 
   test_dualview_alloc(unsigned int size) {
-    result = run_me<Kokkos::DualView<Scalar**, Kokkos::LayoutLeft, Device> >(
-        size, 3);
+    result =
+        run_me<Kokkos::DualView<Scalar**, Kokkos::LayoutLeft, Device>>(size, 3);
   }
 };
 
@@ -154,7 +154,7 @@ struct test_dualview_combinations {
   }
 
   test_dualview_combinations(unsigned int size, bool with_init) {
-    result = run_me<Kokkos::DualView<Scalar**, Kokkos::LayoutLeft, Device> >(
+    result = run_me<Kokkos::DualView<Scalar**, Kokkos::LayoutLeft, Device>>(
         size, 3, with_init);
   }
 };
@@ -253,21 +253,18 @@ struct test_dual_view_deep_copy {
   }  // end run_me
 
   test_dual_view_deep_copy() {
-    run_me<Kokkos::DualView<Scalar**, Kokkos::LayoutLeft, Device> >(10, 5,
-                                                                    true);
-    run_me<Kokkos::DualView<Scalar**, Kokkos::LayoutLeft, Device> >(10, 5,
-                                                                    false);
+    run_me<Kokkos::DualView<Scalar**, Kokkos::LayoutLeft, Device>>(10, 5, true);
+    run_me<Kokkos::DualView<Scalar**, Kokkos::LayoutLeft, Device>>(10, 5,
+                                                                   false);
     // Test zero length but allocated (a.d_view.data!=nullptr but
     // a.d_view.span()==0)
-    run_me<Kokkos::DualView<Scalar**, Kokkos::LayoutLeft, Device> >(0, 5, true);
-    run_me<Kokkos::DualView<Scalar**, Kokkos::LayoutLeft, Device> >(0, 5,
-                                                                    false);
+    run_me<Kokkos::DualView<Scalar**, Kokkos::LayoutLeft, Device>>(0, 5, true);
+    run_me<Kokkos::DualView<Scalar**, Kokkos::LayoutLeft, Device>>(0, 5, false);
 
     // Test default constructed view
-    run_me<Kokkos::DualView<Scalar**, Kokkos::LayoutLeft, Device> >(-1, 5,
-                                                                    true);
-    run_me<Kokkos::DualView<Scalar**, Kokkos::LayoutLeft, Device> >(-1, 5,
-                                                                    false);
+    run_me<Kokkos::DualView<Scalar**, Kokkos::LayoutLeft, Device>>(-1, 5, true);
+    run_me<Kokkos::DualView<Scalar**, Kokkos::LayoutLeft, Device>>(-1, 5,
+                                                                   false);
   }
 };
 
@@ -303,25 +300,30 @@ struct test_dualview_resize {
     a.sync_host();
 
     // Check device view is initialized as expected
-    scalar_type a_d_sum = 0;
     // Execute on the execution_space associated with t_dev's memory space
     using t_dev_exec_space =
         typename ViewType::t_dev::memory_space::execution_space;
-    Kokkos::parallel_reduce(
-        Kokkos::RangePolicy<t_dev_exec_space>(0, a.d_view.extent(0)),
-        SumViewEntriesFunctor<scalar_type, typename ViewType::t_dev>(a.d_view),
-        Kokkos::Sum<Scalar, Kokkos::HostSpace>(a_d_sum));
+    Kokkos::View<int, typename ViewType::t_dev::memory_space> errors_d(
+        "errors");
+    Kokkos::parallel_for(
+        Kokkos::MDRangePolicy<t_dev_exec_space, Kokkos::Rank<2>>(
+            {0, 0}, {a.d_view.extent(0), a.d_view.extent(1)}),
+        KOKKOS_LAMBDA(int i, int j) {
+          if (a.d_view(i, j) != 1) Kokkos::atomic_inc(errors_d.data());
+        });
+    int errors_d_scalar;
+    Kokkos::deep_copy(errors_d_scalar, errors_d);
 
     // Check host view is synced as expected
-    scalar_type a_h_sum = 0;
+    int errors_h_scalar = 0;
     for (size_t i = 0; i < a.h_view.extent(0); ++i)
       for (size_t j = 0; j < a.h_view.extent(1); ++j) {
-        a_h_sum += a.h_view(i, j);
+        if (a.h_view(i, j) != 1) ++errors_h_scalar;
       }
 
     // Check
-    ASSERT_EQ(a_h_sum, a_d_sum);
-    ASSERT_EQ(a_h_sum, scalar_type(a.extent(0) * a.extent(1)));
+    ASSERT_EQ(errors_d_scalar, 0);
+    ASSERT_EQ(errors_h_scalar, 0);
 
     /* Covers case "Resize on Host" */
     a.modify_host();
@@ -337,30 +339,33 @@ struct test_dualview_resize {
     a.sync_device(Kokkos::DefaultExecutionSpace{});
 
     // Check device view is initialized as expected
-    a_d_sum = 0;
+    Kokkos::deep_copy(errors_d, 0);
     // Execute on the execution_space associated with t_dev's memory space
     using t_dev_exec_space =
         typename ViewType::t_dev::memory_space::execution_space;
-    Kokkos::parallel_reduce(
-        Kokkos::RangePolicy<t_dev_exec_space>(0, a.d_view.extent(0)),
-        SumViewEntriesFunctor<scalar_type, typename ViewType::t_dev>(a.d_view),
-        Kokkos::Sum<Scalar, Kokkos::HostSpace>(a_d_sum));
+    Kokkos::parallel_for(
+        Kokkos::MDRangePolicy<t_dev_exec_space, Kokkos::Rank<2>>(
+            {0, 0}, {a.d_view.extent(0), a.d_view.extent(1)}),
+        KOKKOS_LAMBDA(int i, int j) {
+          if (a.d_view(i, j) != 1) Kokkos::atomic_inc(errors_d.data());
+        });
+    Kokkos::deep_copy(errors_d_scalar, errors_d);
 
     // Check host view is synced as expected
-    a_h_sum = 0;
+    errors_h_scalar = 0;
     for (size_t i = 0; i < a.h_view.extent(0); ++i)
       for (size_t j = 0; j < a.h_view.extent(1); ++j) {
-        a_h_sum += a.h_view(i, j);
+        if (a.h_view(i, j) != 1) ++errors_h_scalar;
       }
 
     // Check
-    ASSERT_EQ(a_h_sum, scalar_type(a.extent(0) * a.extent(1)));
-    ASSERT_EQ(a_h_sum, a_d_sum);
+    ASSERT_EQ(errors_d_scalar, 0);
+    ASSERT_EQ(errors_h_scalar, 0);
 
   }  // end run_me
 
   test_dualview_resize() {
-    run_me<Kokkos::DualView<Scalar**, Kokkos::LayoutLeft, Device> >();
+    run_me<Kokkos::DualView<Scalar**, Kokkos::LayoutLeft, Device>>();
   }
 };
 
@@ -382,6 +387,8 @@ struct test_dualview_realloc {
       a = ViewType(Kokkos::view_alloc(Kokkos::WithoutInitializing, "A"), n, m);
       Kokkos::realloc(Kokkos::WithoutInitializing, a, n, m);
     }
+    ASSERT_EQ(a.extent(0), n);
+    ASSERT_EQ(a.extent(1), m);
 
     Kokkos::deep_copy(a.d_view, 1);
 
@@ -389,29 +396,34 @@ struct test_dualview_realloc {
     a.sync_host();
 
     // Check device view is initialized as expected
-    scalar_type a_d_sum = 0;
     // Execute on the execution_space associated with t_dev's memory space
     using t_dev_exec_space =
         typename ViewType::t_dev::memory_space::execution_space;
-    Kokkos::parallel_reduce(
-        Kokkos::RangePolicy<t_dev_exec_space>(0, a.d_view.extent(0)),
-        SumViewEntriesFunctor<scalar_type, typename ViewType::t_dev>(a.d_view),
-        Kokkos::Sum<Scalar, Kokkos::HostSpace>(a_d_sum));
+    Kokkos::View<int, typename ViewType::t_dev::memory_space> errors_d(
+        "errors");
+    Kokkos::parallel_for(
+        Kokkos::MDRangePolicy<t_dev_exec_space, Kokkos::Rank<2>>(
+            {0, 0}, {a.d_view.extent(0), a.d_view.extent(1)}),
+        KOKKOS_LAMBDA(int i, int j) {
+          if (a.d_view(i, j) != 1) Kokkos::atomic_inc(errors_d.data());
+        });
+    int errors_d_scalar;
+    Kokkos::deep_copy(errors_d_scalar, errors_d);
 
     // Check host view is synced as expected
-    scalar_type a_h_sum = 0;
+    int errors_h_scalar = 0;
     for (size_t i = 0; i < a.h_view.extent(0); ++i)
       for (size_t j = 0; j < a.h_view.extent(1); ++j) {
-        a_h_sum += a.h_view(i, j);
+        if (a.h_view(i, j) != 1) ++errors_h_scalar;
       }
 
     // Check
-    ASSERT_EQ(a_h_sum, scalar_type(a.extent(0) * a.extent(1)));
-    ASSERT_EQ(a_h_sum, a_d_sum);
+    ASSERT_EQ(errors_d_scalar, 0);
+    ASSERT_EQ(errors_h_scalar, 0);
   }  // end run_me
 
   test_dualview_realloc() {
-    run_me<Kokkos::DualView<Scalar**, Kokkos::LayoutLeft, Device> >();
+    run_me<Kokkos::DualView<Scalar**, Kokkos::LayoutLeft, Device>>();
   }
 };
 
@@ -474,23 +486,10 @@ TEST(TEST_CATEGORY, dualview_deep_copy) {
 
 struct NoDefaultConstructor {
   NoDefaultConstructor(int i_) : i(i_) {}
-
-  operator int() const { return i; }
-  NoDefaultConstructor& operator+=(const NoDefaultConstructor& other) {
-    i += other.i;
-    return *this;
-  }
+  KOKKOS_FUNCTION operator int() const { return i; }
 
   int i;
 };
-}  // namespace Test
-
-template <>
-struct Kokkos::reduction_identity<Test::NoDefaultConstructor> {
-  static Test::NoDefaultConstructor sum() { return {0}; }
-};
-
-namespace Test {
 
 TEST(TEST_CATEGORY, dualview_realloc) {
   test_dualview_realloc<int, TEST_EXECSPACE>();
