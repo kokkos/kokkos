@@ -20,6 +20,8 @@
 #include <type_traits>
 #include <initializer_list>
 
+#include <Kokkos_Array.hpp>            // is_zero_byte
+#include <Kokkos_BitManipulation.hpp>  // is_zero_byte
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_DetectionIdiom.hpp>
 #include <Kokkos_Pair.hpp>
@@ -2439,9 +2441,10 @@ inline bool is_zero_byte(const T& t) {
               sizeof(T) % sizeof(int) == 0, int,
               std::conditional_t<sizeof(T) % sizeof(short int) == 0, short int,
                                  char>>>>;
-  const auto* const ptr = reinterpret_cast<const comparison_type*>(&t);
+  auto bit_values = Kokkos::bit_cast<
+      Kokkos::Array<comparison_type, sizeof(T) / sizeof(comparison_type)>>(t);
   for (std::size_t i = 0; i < sizeof(T) / sizeof(comparison_type); ++i)
-    if (ptr[i] != 0) return false;
+    if (bit_values[i] != 0) return false;
   return true;
 }
 
