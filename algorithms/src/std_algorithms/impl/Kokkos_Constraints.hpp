@@ -249,10 +249,13 @@ KOKKOS_INLINE_FUNCTION void expect_no_overlap(
     // with the cost of O(1)
     // Currently, checks are made only if strides are identical
     // If first_diff == 0, there is already an overlap
+    // If one of strides is 1, first_diff is always divisible
     if (stride1 == stride2 || first_diff == 0) {
       [[maybe_unused]] bool is_no_overlap = (first_diff % stride1);
       KOKKOS_EXPECTS((&*first >= &*s_last || &*last <= &*s_first) ||
                      is_no_overlap);
+    } else if (stride1 == 1 || stride2 == 1) {
+      KOKKOS_EXPECTS(&*first >= &*s_last || &*last <= &*s_first);
     }
   }
 }
