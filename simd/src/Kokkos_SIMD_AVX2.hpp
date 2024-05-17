@@ -237,7 +237,13 @@ class simd_mask<float, simd_abi::avx2_fixed_size<8>> {
     __m256& m_mask;
     int m_lane;
     KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION __m256 bit_mask() const {
+      // FIXME_HIP ROCm 5.6, 5.7, and 6.0 can't compile with the intrinsic used
+      // here.
+#ifdef KOKKOS_IMPL_WORKAROUND_ROCM_AVX2_ISSUE
+      return _mm256_cvtepi32_ps(_mm256_setr_epi32(
+#else
       return _mm256_castsi256_ps(_mm256_setr_epi32(
+#endif
           -std::int32_t(m_lane == 0), -std::int32_t(m_lane == 1),
           -std::int32_t(m_lane == 2), -std::int32_t(m_lane == 3),
           -std::int32_t(m_lane == 4), -std::int32_t(m_lane == 5),
