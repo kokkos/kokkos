@@ -245,10 +245,15 @@ KOKKOS_INLINE_FUNCTION void expect_no_overlap(
     ptrdiff_t stride1          = &*(++next_first) - &*first;
     ptrdiff_t stride2          = &*(++next_s_first) - &*s_first;
     ptrdiff_t first_diff       = &*first - &*s_first;
-    [[maybe_unused]] bool is_no_overlap =
-        (first_diff % stride1) + (first_diff % stride2);
-    KOKKOS_EXPECTS((&*first >= &*s_last || &*last <= &*s_first) ||
-                   is_no_overlap);
+    // FIXME If strides are not identical, checks may not be made
+    // with the cost of O(1)
+    // Currently, checks are made only if strides are identical
+    // If first_diff == 0, there is already an overlap
+    if (stride1 == stride2 || first_diff == 0) {
+      [[maybe_unused]] bool is_no_overlap = (first_diff % stride1);
+      KOKKOS_EXPECTS((&*first >= &*s_last || &*last <= &*s_first) ||
+                     is_no_overlap);
+    }
   }
 }
 
