@@ -199,6 +199,12 @@ struct layout_stride {
         return __strides_storage_t{static_cast<index_type>(s[Idxs])...};
       }
 
+      template<class IntegralType>
+      MDSPAN_INLINE_FUNCTION
+      static constexpr const __strides_storage_t fill_strides(mdspan_non_standard_tag, const IntegralType (&s)[extents_type::rank()]) {
+        return __strides_storage_t{static_cast<index_type>(s[Idxs])...};
+      }
+
 #ifdef __cpp_lib_span
       template<class IntegralType>
       MDSPAN_INLINE_FUNCTION
@@ -293,6 +299,44 @@ struct layout_stride {
       : __base_t(__base_t{__member_pair_t(
 #endif
           e, __strides_storage_t(__impl::fill_strides(s))
+#if defined(_MDSPAN_USE_ATTRIBUTE_NO_UNIQUE_ADDRESS)
+        }
+#else
+        )})
+#endif
+    {
+      /*
+       * TODO: check preconditions
+       * - s[i] > 0 is true for all i in the range [0, rank_ ).
+       * - REQUIRED-SPAN-SIZE(e, s) is a representable value of type index_type ([basic.fundamental]).
+       * - If rank_ is greater than 0, then there exists a permutation P of the integers in the
+       *   range [0, rank_), such that s[ pi ] >= s[ pi − 1 ] * e.extent( pi − 1 ) is true for
+       *   all i in the range [1, rank_ ), where pi is the ith element of P.
+       */
+    }
+
+    MDSPAN_TEMPLATE_REQUIRES(
+      class IntegralTypes,
+      /* requires */ (
+        // MSVC 19.32 does not like using index_type here, requires the typename Extents::index_type
+        // error C2641: cannot deduce template arguments for 'MDSPAN_IMPL_STANDARD_NAMESPACE::layout_stride::mapping'
+        _MDSPAN_TRAIT(std::is_convertible, const std::remove_const_t<IntegralTypes>&, typename Extents::index_type) &&
+        _MDSPAN_TRAIT(std::is_nothrow_constructible, typename Extents::index_type, const std::remove_const_t<IntegralTypes>&)
+      )
+    )
+    MDSPAN_INLINE_FUNCTION
+    constexpr
+    mapping(
+      mdspan_non_standard_tag,
+      extents_type const& e,
+      IntegralTypes (&s)[extents_type::rank()]
+    ) noexcept
+#if defined(_MDSPAN_USE_ATTRIBUTE_NO_UNIQUE_ADDRESS)
+      : __members{
+#else
+      : __base_t(__base_t{__member_pair_t(
+#endif
+          e, __strides_storage_t(__impl::fill_strides(mdspan_non_standard, s))
 #if defined(_MDSPAN_USE_ATTRIBUTE_NO_UNIQUE_ADDRESS)
         }
 #else

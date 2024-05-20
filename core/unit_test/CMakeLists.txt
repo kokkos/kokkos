@@ -174,7 +174,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
     endforeach()
 
     set(${Tag}_SOURCES1B)
-    foreach(Name
+    set(${Tag}_TESTNAMES1B
         MDRange_a
         MDRange_b
         MDRange_c
@@ -185,6 +185,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
         MDRangePolicyConstructors
         MDRangeReduce
         MDSpan
+        MDSpanConversion
         MinMaxClamp
         NumericTraits
         OccupancyControlTrait
@@ -206,6 +207,10 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
         SharedAlloc
         Swap
         )
+    IF (NOT Kokkos_ENABLE_IMPL_MDSPAN)
+      LIST(REMOVE_ITEM ${Tag}_TESTNAMES1B MDSpanConversion)
+    ENDIF()
+    foreach(Name IN LISTS ${Tag}_TESTNAMES1B)
       set(file ${dir}/Test${Tag}_${Name}.cpp)
       # Write to a temporary intermediate file and call configure_file to avoid
       # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
