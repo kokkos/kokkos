@@ -10,7 +10,7 @@ file(GLOB KOKKOS_CONTAINERS_HEADERS RELATIVE ${BASE_DIR}/containers/src
 file(GLOB KOKKOS_ALGORITHMS_HEADERS RELATIVE  ${BASE_DIR}/algorithms/src
      ${BASE_DIR}/algorithms/src/*.hpp)
 
-# erroring out when deprecated code is disaled and raising warnings that are treated as errors in the CI otherwise
+# erroring out when deprecated code is disabled and raising warnings that are treated as errors in the CI otherwise
 if(NOT Kokkos_ENABLE_DEPRECATED_CODE_4 OR Kokkos_ENABLE_DEPRECATION_WARNINGS)
   list(REMOVE_ITEM KOKKOS_CONTAINERS_HEADERS "Kokkos_Vector.hpp")
 endif()
