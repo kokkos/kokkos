@@ -20,8 +20,8 @@
 #include <type_traits>
 #include <initializer_list>
 
-#include <Kokkos_Array.hpp>            // is_zero_byte
-#include <Kokkos_BitManipulation.hpp>  // is_zero_byte
+#include <Kokkos_Array.hpp>
+#include <Kokkos_BitManipulation.hpp>
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_DetectionIdiom.hpp>
 #include <Kokkos_Pair.hpp>
