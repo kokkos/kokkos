@@ -151,6 +151,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
         ExecSpaceThreadSafety
         ExecutionSpace
         FunctorAnalysis
+        Graph
         HostSharedPtr
         HostSharedPtrAccessOnDevice
         Init
@@ -658,12 +659,6 @@ if(Kokkos_ENABLE_SERIAL)
     UnitTestMainInit.cpp
     ${Serial_SOURCES2}
   )
-  KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    CoreUnitTest_SerialGraph
-    SOURCES
-    UnitTestMainInit.cpp
-    serial/TestSerial_Graph.cpp
-  )
 endif()
 
 if(Kokkos_ENABLE_THREADS)
@@ -693,12 +688,6 @@ if (Kokkos_ENABLE_OPENMP)
     SOURCES
       UnitTestMain.cpp
       openmp/TestOpenMP_InterOp.cpp
-  )
-  KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    CoreUnitTest_OpenMPGraph
-    SOURCES
-      UnitTestMainInit.cpp
-      openmp/TestOpenMP_Graph.cpp
   )
 endif()
 
@@ -807,12 +796,6 @@ if(Kokkos_ENABLE_CUDA)
       UnitTestMainInit.cpp
       cuda/TestCuda_InterOp_StreamsMultiGPU.cpp
   )
-  KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    CoreUnitTest_CudaGraph
-    SOURCES
-      UnitTestMainInit.cpp
-      cuda/TestCuda_Graph.cpp
-  )
 endif()
 
 if(Kokkos_ENABLE_HIP)
@@ -839,12 +822,6 @@ if(Kokkos_ENABLE_HIP)
     SOURCES
       UnitTestMain.cpp
       hip/TestHIP_InterOp_Streams.cpp
-  )
-  KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_HIPGraph
-    SOURCES
-      UnitTestMainInit.cpp
-      hip/TestHIP_Graph.cpp
   )
 endif()
 
