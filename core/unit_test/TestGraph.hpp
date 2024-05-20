@@ -216,8 +216,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), zero_work_reduce) {
     (defined(KOKKOS_ARCH_KEPLER) || defined(KOKKOS_ARCH_MAXWELL))
   if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>) Kokkos::fence();
 #endif
-// FIXME_HPX graph.submit() isn't properly enqueued
-#ifdef KOKKOS_ENABLE_HPX
+#ifdef KOKKOS_ENABLE_HPX  // FIXME_HPX graph.submit() isn't properly enqueued
   if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::HPX>)
     Kokkos::fence();
 #endif
