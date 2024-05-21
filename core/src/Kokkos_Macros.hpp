@@ -563,7 +563,12 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 #endif
 
 // clang-format off
-#if defined(__EDG__)
+#if defined(__NVCOMPILER)
+  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH() \
+    _Pragma("diag_suppress 1216")
+  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP() \
+    _Pragma("diag_default 1216")
+#elif defined(__EDG__)
   #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH() \
     _Pragma("warning push")                              \
     _Pragma("warning disable 1478")
