@@ -421,23 +421,6 @@ class CudaInternal {
     return cudaStreamSynchronize(stream);
   }
 
-  // The following are only available for cuda 11.2 and greater
-#if (defined(KOKKOS_ENABLE_IMPL_CUDA_MALLOC_ASYNC) && CUDART_VERSION >= 11020)
-  template <bool setCudaDevice = true>
-  cudaError_t cuda_malloc_async_wrapper(void** devPtr, size_t size,
-                                        cudaStream_t hStream = nullptr) const {
-    if constexpr (setCudaDevice) set_cuda_device();
-    return cudaMallocAsync(devPtr, size, get_input_stream(hStream));
-  }
-
-  template <bool setCudaDevice = true>
-  cudaError_t cuda_free_async_wrapper(void* devPtr,
-                                      cudaStream_t hStream = nullptr) const {
-    if constexpr (setCudaDevice) set_cuda_device();
-    return cudaFreeAsync(devPtr, get_input_stream(hStream));
-  }
-#endif
-
   // C++ API routines
   template <typename T, bool setCudaDevice = true>
   cudaError_t cuda_func_get_attributes_wrapper(cudaFuncAttributes* attr,
