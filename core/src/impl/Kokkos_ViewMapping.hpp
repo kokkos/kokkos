@@ -2529,11 +2529,9 @@ struct ViewDataHandle<
 namespace Kokkos {
 namespace Impl {
 
-inline static constexpr std::byte all_zeroes[256] = {};
-
 template <typename T>
 bool is_zero_byte(const T& x) {
-  if (sizeof(T) > sizeof(all_zeroes)) return false;  // out of luck
+  constexpr std::byte all_zeroes[sizeof(T)] = {};
   return std::memcmp(&x, all_zeroes, sizeof(T)) == 0;
 }
 
