@@ -17,11 +17,10 @@
 #ifndef KOKKOS_EXPERIMENTAL_VIEW_MAPPING_HPP
 #define KOKKOS_EXPERIMENTAL_VIEW_MAPPING_HPP
 
+#include <cstring>
 #include <type_traits>
 #include <initializer_list>
 
-#include <Kokkos_Array.hpp>
-#include <Kokkos_BitManipulation.hpp>
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_DetectionIdiom.hpp>
 #include <Kokkos_Pair.hpp>
@@ -2530,21 +2529,12 @@ struct ViewDataHandle<
 namespace Kokkos {
 namespace Impl {
 
+inline static constexpr std::byte all_zeroes[256] = {};
+
 template <typename T>
-inline bool is_zero_byte(const T& t) {
-  using comparison_type = std::conditional_t<
-      sizeof(T) % sizeof(long long int) == 0, long long int,
-      std::conditional_t<
-          sizeof(T) % sizeof(long int) == 0, long int,
-          std::conditional_t<
-              sizeof(T) % sizeof(int) == 0, int,
-              std::conditional_t<sizeof(T) % sizeof(short int) == 0, short int,
-                                 char>>>>;
-  auto bit_values = Kokkos::bit_cast<
-      Kokkos::Array<comparison_type, sizeof(T) / sizeof(comparison_type)>>(t);
-  for (std::size_t i = 0; i < sizeof(T) / sizeof(comparison_type); ++i)
-    if (bit_values[i] != 0) return false;
-  return true;
+bool is_zero_byte(const T& x) {
+  if (sizeof(T) > sizeof(all_zeroes)) return false;  // out of luck
+  return std::memcmp(&x, all_zeroes, sizeof(T)) == 0;
 }
 
 //----------------------------------------------------------------------------
