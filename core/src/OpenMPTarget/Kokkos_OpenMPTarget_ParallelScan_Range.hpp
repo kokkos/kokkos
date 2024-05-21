@@ -48,10 +48,6 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
   value_type* m_result_ptr;
   const bool m_result_ptr_device_accessible;
 
-  // Only let one ParallelScan instance at a time use the scratch memory.
-  // The constructor acquires the mutex which is released in the destructor.
-  std::scoped_lock<std::mutex> m_scratch_memory_lock;
-
   template <class TagType>
   std::enable_if_t<std::is_void<TagType>::value> call_with_tag(
       const FunctorType& f, const idx_type& idx, value_type& val,
@@ -181,6 +177,10 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
     const idx_type chunk_size = 128;
     const idx_type n_chunks   = (N + chunk_size - 1) / chunk_size;
 
+    // Only let one ParallelReduce instance at a time use the scratch memory.
+    std::scoped_lock<std::mutex> scratch_memory_lock(
+        OpenMPTargetExec::m_mutex_scratch_ptr);
+
     // This could be scratch memory per team
     Kokkos::View<value_type**, Kokkos::LayoutRight,
                  Kokkos::Experimental::OpenMPTargetSpace>
@@ -201,8 +201,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
       : m_functor_reducer(arg_functor, typename Analysis::Reducer{arg_functor}),
         m_policy(arg_policy),
         m_result_ptr(arg_result_ptr),
-        m_result_ptr_device_accessible(arg_result_ptr_device_accessible),
-        m_scratch_memory_lock(OpenMPTargetExec::m_mutex_scratch_ptr) {}
+        m_result_ptr_device_accessible(arg_result_ptr_device_accessible) {}
 
   //----------------------------------------
 };
@@ -230,6 +229,10 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
     const int64_t n_chunks = (N + chunk_size - 1) / chunk_size;
 
     if (N > 0) {
+      // Only let one ParallelReduce instance at a time use the scratch memory.
+      std::scoped_lock<std::mutex> scratch_memory_lock(
+          OpenMPTargetExec::m_mutex_scratch_ptr);
+
       // This could be scratch memory per team
       Kokkos::View<value_type**, Kokkos::LayoutRight,
                    Kokkos::Experimental::OpenMPTargetSpace>
