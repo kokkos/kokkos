@@ -113,6 +113,10 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), launch_one_rvalue) {
 }
 
 TEST_F(TEST_CATEGORY_FIXTURE(graph), launch_six) {
+#ifdef KOKKOS_ENABLE_OPENMPTARGET  // FIXME_OPENMPTARGET team_size incompatible
+  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenMPTarget>)
+    GTEST_SKIP() << "skipping since OpenMPTarget can't use team_size 1";
+#endif
   auto graph = Kokkos::Experimental::create_graph(ex, [&](auto root) {
     auto f_setup_count = root.then_parallel_for(1, set_functor{count, 0});
     auto f_setup_bugs  = root.then_parallel_for(1, set_functor{bugs, 0});
@@ -130,12 +134,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), launch_six) {
         Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>{{0, 0}, {1, 1}},
         count_functor{count, bugs, 0, 6});
     //----------------------------------------
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-    int team_size = 32;
-#else
-    int team_size = 1;
-#endif
-    ready.then_parallel_for(Kokkos::TeamPolicy<TEST_EXECSPACE>{1, team_size},
+    ready.then_parallel_for(Kokkos::TeamPolicy<TEST_EXECSPACE>{1, 1},
                             count_functor{count, bugs, 0, 6});
     //----------------------------------------
     ready.then_parallel_for(2, count_functor{count, bugs, 0, 6});
