@@ -151,6 +151,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
         ExecSpaceThreadSafety
         ExecutionSpace
         FunctorAnalysis
+        Graph
         HostSharedPtr
         HostSharedPtrAccessOnDevice
         Init
@@ -174,7 +175,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
     endforeach()
 
     set(${Tag}_SOURCES1B)
-    foreach(Name
+    set(${Tag}_TESTNAMES1B
         MDRange_a
         MDRange_b
         MDRange_c
@@ -185,6 +186,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
         MDRangePolicyConstructors
         MDRangeReduce
         MDSpan
+        MDSpanConversion
         MinMaxClamp
         NumericTraits
         OccupancyControlTrait
@@ -206,6 +208,10 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
         SharedAlloc
         Swap
         )
+    IF (NOT Kokkos_ENABLE_IMPL_MDSPAN)
+      LIST(REMOVE_ITEM ${Tag}_TESTNAMES1B MDSpanConversion)
+    ENDIF()
+    foreach(Name IN LISTS ${Tag}_TESTNAMES1B)
       set(file ${dir}/Test${Tag}_${Name}.cpp)
       # Write to a temporary intermediate file and call configure_file to avoid
       # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
@@ -427,7 +433,6 @@ if(Kokkos_ENABLE_OPENACC)
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_AtomicOperations_complexdouble.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_AtomicOperations_complexfloat.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_Crs.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_ExecSpaceThreadSafety.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_JoinBackwardCompatibility.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_LocalDeepCopy.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_Other.cpp
@@ -654,12 +659,6 @@ if(Kokkos_ENABLE_SERIAL)
     UnitTestMainInit.cpp
     ${Serial_SOURCES2}
   )
-  KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    CoreUnitTest_SerialGraph
-    SOURCES
-    UnitTestMainInit.cpp
-    serial/TestSerial_Graph.cpp
-  )
 endif()
 
 if(Kokkos_ENABLE_THREADS)
@@ -689,12 +688,6 @@ if (Kokkos_ENABLE_OPENMP)
     SOURCES
       UnitTestMain.cpp
       openmp/TestOpenMP_InterOp.cpp
-  )
-  KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    CoreUnitTest_OpenMPGraph
-    SOURCES
-      UnitTestMainInit.cpp
-      openmp/TestOpenMP_Graph.cpp
   )
 endif()
 
@@ -803,12 +796,6 @@ if(Kokkos_ENABLE_CUDA)
       UnitTestMainInit.cpp
       cuda/TestCuda_InterOp_StreamsMultiGPU.cpp
   )
-  KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    CoreUnitTest_CudaGraph
-    SOURCES
-      UnitTestMainInit.cpp
-      cuda/TestCuda_Graph.cpp
-  )
 endif()
 
 if(Kokkos_ENABLE_HIP)
@@ -835,12 +822,6 @@ if(Kokkos_ENABLE_HIP)
     SOURCES
       UnitTestMain.cpp
       hip/TestHIP_InterOp_Streams.cpp
-  )
-  KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    CoreUnitTest_HIPGraph
-    SOURCES
-      UnitTestMainInit.cpp
-      hip/TestHIP_Graph.cpp
   )
 endif()
 

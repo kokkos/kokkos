@@ -38,6 +38,7 @@ static_assert(false,
 
 #ifdef KOKKOS_ENABLE_IMPL_MDSPAN
 #include <View/MDSpan/Kokkos_MDSpan_Extents.hpp>
+#include <View/MDSpan/Kokkos_MDSpan_Layout.hpp>
 #endif
 #include <Kokkos_MinMax.hpp>
 
@@ -371,6 +372,32 @@ struct ViewTraits {
 
   //------------------------------------
 };
+
+#ifdef KOKKOS_ENABLE_IMPL_MDSPAN
+namespace Impl {
+struct UnsupportedKokkosArrayLayout;
+
+template <class Traits, class Enabled = void>
+struct MDSpanViewTraits {
+  using mdspan_type = UnsupportedKokkosArrayLayout;
+};
+
+// "Natural" mdspan for a view if the View's ArrayLayout is supported.
+template <class Traits>
+struct MDSpanViewTraits<Traits,
+                        std::void_t<typename Impl::LayoutFromArrayLayout<
+                            typename Traits::array_layout>::type>> {
+  using index_type = std::size_t;
+  using extents_type =
+      typename Impl::ExtentsFromDataType<index_type,
+                                         typename Traits::data_type>::type;
+  using mdspan_layout_type =
+      typename Impl::LayoutFromArrayLayout<typename Traits::array_layout>::type;
+  using mdspan_type =
+      mdspan<typename Traits::value_type, extents_type, mdspan_layout_type>;
+};
+}  // namespace Impl
+#endif  // KOKKOS_ENABLE_IMPL_MDSPAN
 
 /** \class View
  *  \brief View to an array of data.
@@ -1722,6 +1749,76 @@ class View : public ViewTraits<DataType, Properties...> {
                   "Layout is not constructible from extent arguments. Use "
                   "overload taking a layout object instead.");
   }
+
+  //----------------------------------------
+  // MDSpan converting constructors
+#ifdef KOKKOS_ENABLE_IMPL_MDSPAN
+  template <typename U = typename Impl::MDSpanViewTraits<traits>::mdspan_type>
+  KOKKOS_INLINE_FUNCTION
+#if defined(__cpp_conditional_explicit) && \
+    (__cpp_conditional_explicit >= 201806L)
+      // FIXME C++20 reevaluate after determining minium compiler versions
+      explicit(traits::is_managed)
+#endif
+          View(const typename Impl::MDSpanViewTraits<traits>::mdspan_type& mds,
+               std::enable_if_t<
+                   !std::is_same_v<Impl::UnsupportedKokkosArrayLayout, U>>* =
+                   nullptr)
+      : View(mds.data_handle(),
+             Impl::array_layout_from_mapping<
+                 typename traits::array_layout,
+                 typename Impl::MDSpanViewTraits<traits>::mdspan_type>(
+                 mds.mapping())) {
+  }
+
+  template <class ElementType, class ExtentsType, class LayoutType,
+            class AccessorType>
+  KOKKOS_INLINE_FUNCTION
+#if defined(__cpp_conditional_explicit) && \
+    (__cpp_conditional_explicit >= 201806L)
+      // FIXME C++20 reevaluate after determining minium compiler versions
+      explicit(!std::is_convertible_v<
+               Kokkos::mdspan<ElementType, ExtentsType, LayoutType,
+                              AccessorType>,
+               typename Impl::MDSpanViewTraits<traits>::mdspan_type>)
+#endif
+          View(const Kokkos::mdspan<ElementType, ExtentsType, LayoutType,
+                                    AccessorType>& mds)
+      : View(typename Impl::MDSpanViewTraits<traits>::mdspan_type(mds)) {
+  }
+
+  //----------------------------------------
+  // Conversion to MDSpan
+  template <class OtherElementType, class OtherExtents, class OtherLayoutPolicy,
+            class OtherAccessor,
+            typename = std::enable_if_t<std::is_assignable_v<
+                mdspan<OtherElementType, OtherExtents, OtherLayoutPolicy,
+                       OtherAccessor>,
+                typename Impl::MDSpanViewTraits<traits>::mdspan_type>>>
+  KOKKOS_INLINE_FUNCTION constexpr operator mdspan<
+      OtherElementType, OtherExtents, OtherLayoutPolicy, OtherAccessor>() {
+    using mdspan_type = typename Impl::MDSpanViewTraits<traits>::mdspan_type;
+    return mdspan_type{data(),
+                       Impl::mapping_from_view_mapping<mdspan_type>(m_map)};
+  }
+
+  template <class OtherAccessorType =
+                Kokkos::default_accessor<typename traits::value_type>,
+            typename = std::enable_if_t<std::is_assignable_v<
+                typename traits::value_type*&,
+                typename OtherAccessorType::data_handle_type>>>
+  KOKKOS_INLINE_FUNCTION constexpr auto to_mdspan(
+      const OtherAccessorType& other_accessor = OtherAccessorType()) {
+    using mdspan_type = typename Impl::MDSpanViewTraits<traits>::mdspan_type;
+    using ret_mdspan_type =
+        mdspan<typename mdspan_type::element_type,
+               typename mdspan_type::extents_type,
+               typename mdspan_type::layout_type, OtherAccessorType>;
+    return ret_mdspan_type{data(),
+                           Impl::mapping_from_view_mapping<mdspan_type>(m_map),
+                           other_accessor};
+  }
+#endif  // KOKKOS_ENABLE_IMPL_MDSPAN
 };
 
 template <typename D, class... P>

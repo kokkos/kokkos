@@ -21,9 +21,12 @@
 
 namespace Kokkos::Impl::SYCLReduction {
 
+// FIXME_SYCL For some types, shuffle reductions are competitive with local
+// memory reductions but they are significantly slower for the value type used
+// in combined reductions with multiple double arguments.
 template <class ReducerType>
-inline constexpr bool use_shuffle_based_algorithm =
-    std::is_reference_v<typename ReducerType::reference_type>;
+inline constexpr bool use_shuffle_based_algorithm = false;
+// std::is_reference_v<typename ReducerType::reference_type>;
 
 template <typename ValueType, typename ReducerType, int dim>
 std::enable_if_t<!use_shuffle_based_algorithm<ReducerType>> workgroup_reduction(
