@@ -130,7 +130,12 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), launch_six) {
         Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>{{0, 0}, {1, 1}},
         count_functor{count, bugs, 0, 6});
     //----------------------------------------
-    ready.then_parallel_for(Kokkos::TeamPolicy<TEST_EXECSPACE>{1, 1},
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+    int team_size = 32;
+#else
+    int team_size = 1;
+#endif
+    ready.then_parallel_for(Kokkos::TeamPolicy<TEST_EXECSPACE>{1, team_size},
                             count_functor{count, bugs, 0, 6});
     //----------------------------------------
     ready.then_parallel_for(2, count_functor{count, bugs, 0, 6});
