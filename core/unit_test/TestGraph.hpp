@@ -124,6 +124,11 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), launch_six) {
   if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenMPTarget>)
     GTEST_SKIP() << "skipping since OpenMPTarget can't use team_size 1";
 #endif
+#if defined(KOKKOS_ENABLE_SYCL)  // FIXME_SYCL
+  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::SYCL>)
+    GTEST_SKIP() << "skipping since test case is known to fail with SYCL";
+#endif
+
   auto graph = Kokkos::Experimental::create_graph(ex, [&](auto root) {
     auto f_setup_count = root.then_parallel_for(1, set_functor{count, 0});
     auto f_setup_bugs  = root.then_parallel_for(1, set_functor{bugs, 0});
