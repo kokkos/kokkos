@@ -25,6 +25,7 @@ foreach(Tag Threads;Serial;OpenMP;HPX;Cuda;HIP;SYCL)
         StaticCrsGraph
         WithoutInitializing
         UnorderedMap
+        UnorderedSet
         Vector
         ViewCtorPropEmbeddedDim
         )

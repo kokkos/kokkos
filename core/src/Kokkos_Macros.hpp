@@ -533,7 +533,11 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 #define KOKKOS_ENABLE_CUDA_LDG_INTRINSIC
 #endif
 
+//! Invalid index.
 #define KOKKOS_INVALID_INDEX (~std::size_t(0))
+
+//! Invalid index of a given @p __type__.
+#define KOKKOS_INVALID_INDEX_TYPE(__type__) ~static_cast<__type__>(0)
 
 #define KOKKOS_IMPL_CTOR_DEFAULT_ARG KOKKOS_INVALID_INDEX
 
