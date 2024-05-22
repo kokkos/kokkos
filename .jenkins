@@ -345,7 +345,7 @@ pipeline {
                         sh '''rm -rf build && mkdir -p build && cd build && \
                               ../gnu_generate_makefile.bash \
                                 --with-options=compiler_warnings \
-                                --cxxflags="-Werror -Werror all-warnings " \
+                                --cxxflags="-Werror -Werror all-warnings" \
                                 --cxxstandard=c++17 \
                                 --with-cuda \
                                 --with-cuda-options=enable_lambda \
