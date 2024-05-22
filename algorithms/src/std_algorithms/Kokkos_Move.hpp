@@ -53,6 +53,7 @@ auto move(const ExecutionSpace& ex,
           const ::Kokkos::View<DataType2, Properties2...>& dest) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
+  Impl::expect_matching_extents(source, dest);
 
   return Impl::move_exespace_impl("Kokkos::move_view_api_default", ex,
                                   begin(source), end(source), begin(dest));
@@ -67,6 +68,7 @@ auto move(const std::string& label, const ExecutionSpace& ex,
           const ::Kokkos::View<DataType2, Properties2...>& dest) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
+  Impl::expect_matching_extents(source, dest);
 
   return Impl::move_exespace_impl(label, ex, begin(source), end(source),
                                   begin(dest));
@@ -95,6 +97,7 @@ KOKKOS_FUNCTION auto move(
     const ::Kokkos::View<DataType2, Properties2...>& dest) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
+  Impl::expect_matching_extents(source, dest);
 
   return Impl::move_team_impl(teamHandle, begin(source), end(source),
                               begin(dest));
