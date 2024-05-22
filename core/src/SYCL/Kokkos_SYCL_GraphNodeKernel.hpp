@@ -97,10 +97,10 @@ class GraphNodeKernelImpl<Kokkos::Experimental::SYCL, PolicyType, Functor,
   }
 
  private:
-  Kokkos::OwningRawPtr<sycl::ext::oneapi::experimental::command_graph<
+  Kokkos::ObservingRawPtr<sycl::ext::oneapi::experimental::command_graph<
       sycl::ext::oneapi::experimental::graph_state::modifiable>>
       m_graph_ptr = nullptr;
-  Kokkos::OwningRawPtr<std::optional<sycl::ext::oneapi::experimental::node>>
+  Kokkos::ObservingRawPtr<std::optional<sycl::ext::oneapi::experimental::node>>
       m_graph_node_ptr                          = nullptr;
   Kokkos::OwningRawPtr<base_t> m_driver_storage = nullptr;
 };
