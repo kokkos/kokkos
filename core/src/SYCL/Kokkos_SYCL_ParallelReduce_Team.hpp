@@ -141,7 +141,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
 #ifdef SYCL_EXT_ONEAPI_GRAPH
       if constexpr (Policy::is_graph_kernel::value) {
         sycl_attach_kernel_to_node(*this, cgh_lambda);
-      } else 
+      } else
 #endif
       {
         last_reduction_event = q.submit(cgh_lambda);
@@ -361,8 +361,8 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
       };
 #ifdef SYCL_EXT_ONEAPI_GRAPH
       if constexpr (Policy::is_graph_kernel::value) {
-       sycl_attach_kernel_to_node(*this, cgh_lambda);
-      } else 
+        sycl_attach_kernel_to_node(*this, cgh_lambda);
+      } else
 #endif
       {
         last_reduction_event = q.submit(cgh_lambda);

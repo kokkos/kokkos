@@ -155,9 +155,9 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
       });
     };
 
-  #ifdef SYCL_EXT_ONEAPI_GRAPH
+#ifdef SYCL_EXT_ONEAPI_GRAPH
     if constexpr (Policy::is_graph_kernel::value) {
-          sycl_attach_kernel_to_node(*this, cgh_lambda);       
+      sycl_attach_kernel_to_node(*this, cgh_lambda);
       return {};
     } else
 #endif
