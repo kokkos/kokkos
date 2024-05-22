@@ -124,7 +124,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), launch_six) {
   if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenMPTarget>)
     GTEST_SKIP() << "skipping since OpenMPTarget can't use team_size 1";
 #endif
-#if defined(KOKKOS_ENABLE_SYCL)  // FIXME_SYCL
+#if defined(KOKKOS_ENABLE_SYCL) && !defined(SYCL_EXT_ONEAPI_GRAPH)  // FIXME_SYCL
   if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::SYCL>)
     GTEST_SKIP() << "skipping since test case is known to fail with SYCL";
 #endif
@@ -219,17 +219,20 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), zero_work_reduce) {
       ex, [&](Kokkos::Experimental::GraphNodeRef<TEST_EXECSPACE> root) {
         root.then_parallel_reduce(Kokkos::RangePolicy<TEST_EXECSPACE>(0, 0),
                                   NoOpFunctor{}, count)
-            .then_parallel_reduce(
+#if !defined(KOKKOS_ENABLE_SYCL) || defined(SYCL_EXT_ONEAPI_GRAPH)  // FIXME_SYCL
+	.then_parallel_reduce(
                 Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>{{0, 0},
                                                                        {0, 0}},
                 NoOpFunctor{}, count)
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
             .then_parallel_reduce(Kokkos::TeamPolicy<TEST_EXECSPACE>{0, 32},
-                                  NoOpFunctor{}, count);
+                                  NoOpFunctor{}, count)
 #else
            .then_parallel_reduce(Kokkos::TeamPolicy<TEST_EXECSPACE>{0, 1},
-                                  NoOpFunctor{}, count);
+                                  NoOpFunctor{}, count)
 #endif
+#endif
+	    ;
       });
 // These fences are only necessary because of the weirdness of how CUDA
 // UVM works on pre pascal cards.
