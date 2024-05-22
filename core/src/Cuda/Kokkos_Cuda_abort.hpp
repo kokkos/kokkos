@@ -28,7 +28,7 @@ extern "C" {
 /*  Cuda runtime function, declared in <crt/device_runtime.h>
  *  Requires capability 2.x or better.
  */
-__device__ [[noreturn]] void __assertfail(const void *message, const void *file,
+[[noreturn]] __device__ void __assertfail(const void *message, const void *file,
                                           unsigned int line,
                                           const void *function,
                                           size_t charsize);
