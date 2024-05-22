@@ -137,7 +137,8 @@ struct MyInt {
   int i;
 
  private:
-  friend constexpr void kokkos_swap(MyInt& lhs, MyInt& rhs) noexcept {
+  friend constexpr KOKKOS_FUNCTION void kokkos_swap(MyInt& lhs,
+                                                    MyInt& rhs) noexcept {
     lhs.i = 255;
     rhs.i = 127;
   }
