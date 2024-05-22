@@ -152,6 +152,22 @@ auto& get_sycl_graph_node_from_kernel(KernelType const& kernel) {
 
   return graph_node;
 }
+
+template <typename Kernel, typename Lambda>
+void sycl_attach_kernel_to_node(Kernel& kernel, const Lambda& lambda) {
+  sycl::ext::oneapi::experimental::command_graph<
+          sycl::ext::oneapi::experimental::graph_state::modifiable>& graph =
+          Impl::get_sycl_graph_from_kernel(kernel);
+      std::optional<sycl::ext::oneapi::experimental::node>& graph_node =
+          Impl::get_sycl_graph_node_from_kernel(kernel);
+      KOKKOS_ENSURES(!graph_node);
+      graph_node = graph.add(lambda);
+      KOKKOS_ENSURES(graph_node);
+      // FIXME_SYCL_GRAPH not yet implemented in the compiler
+      //   KOKKOS_ENSURES(graph_node.get_type() ==
+      //   sycl::ext::oneapi::experimental::node_type::kernel)
+}
+
 }  // namespace Impl
 }  // namespace Kokkos
 

@@ -113,17 +113,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
     };
 
     if constexpr (Policy::is_graph_kernel::value) {
-      sycl::ext::oneapi::experimental::command_graph<
-          sycl::ext::oneapi::experimental::graph_state::modifiable>& graph =
-          Impl::get_sycl_graph_from_kernel(*this);
-      std::optional<sycl::ext::oneapi::experimental::node>& graph_node =
-          Impl::get_sycl_graph_node_from_kernel(*this);
-      KOKKOS_ENSURES(!graph_node);
-      graph_node = graph.add(cgh_lambda);
-      KOKKOS_ENSURES(graph_node);
-      // FIXME_SYCL_GRAPH not yet implemented in the compiler
-      //   KOKKOS_ENSURES(graph_node.get_type() ==
-      //   sycl::ext::oneapi::experimental::node_type::kernel)
+      sycl_attach_kernel_to_node(*this, cgh_lambda);	    
       return {};
     } else {
       auto parallel_for_event = q.submit(cgh_lambda);
