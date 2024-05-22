@@ -23,7 +23,7 @@ namespace Test {
 
 struct NoOpFunctor {
   template <class... Ts>
-  KOKKOS_FUNCTION void operator()(Ts&&...) const noexcept {}
+  KOKKOS_FUNCTION void operator()(Ts&&...) const noexcept { Kokkos::abort("Should never be called!");}
 };
 
 template <class ExecSpace>
