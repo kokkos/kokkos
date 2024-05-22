@@ -23,6 +23,8 @@
 
 #include <SYCL/Kokkos_SYCL.hpp>
 
+#include <optional>
+
 namespace Kokkos {
 namespace Impl {
 template <>
