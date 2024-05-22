@@ -74,7 +74,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
   const Policy m_policy;
 
   template <typename Functor>
-  static sycl::event sycl_direct_launch(const Policy& policy, const Functor& functor,
+  sycl::event sycl_direct_launch(const Policy& policy, const Functor& functor,
                                  const sycl::event& memcpy_event) const {
     // Convenience references
     const Kokkos::Experimental::SYCL& space = policy.space();
