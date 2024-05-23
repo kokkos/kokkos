@@ -989,6 +989,13 @@ KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_PushFinalizeHook.cpp
 )
 
+KOKKOS_ADD_EXECUTABLE_AND_TEST(
+  CoreUnitTest_ScopeGuard
+  SOURCES
+    UnitTestMain.cpp
+    UnitTest_ScopeGuard.cpp
+)
+
 # This test is intended for development and debugging by putting code
 # into TestDefaultDeviceDevelop.cpp. By default its empty.
 KOKKOS_ADD_EXECUTABLE_AND_TEST(
