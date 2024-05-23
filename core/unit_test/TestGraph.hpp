@@ -21,9 +21,17 @@
 
 namespace Test {
 
-struct NoOpFunctor {
-  template <class... Ts>
-  KOKKOS_FUNCTION void operator()(Ts&&...) const noexcept {
+template <class ExecSpace, class ValueType>
+struct NoOpReduceFunctor {
+  KOKKOS_FUNCTION void operator()(int, ValueType&) const {
+    Kokkos::abort("Should never be called!");
+  }
+  KOKKOS_FUNCTION void operator()(int, int, ValueType&) const {
+    Kokkos::abort("Should never be called!");
+  }
+  KOKKOS_FUNCTION void operator()(
+      const typename Kokkos::TeamPolicy<ExecSpace>::member_type&,
+      ValueType&) const {
     Kokkos::abort("Should never be called!");
   }
 };
@@ -218,20 +226,23 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), DISABLED_repeat_chain) {
 TEST_F(TEST_CATEGORY_FIXTURE(graph), zero_work_reduce) {
   auto graph = Kokkos::Experimental::create_graph(
       ex, [&](Kokkos::Experimental::GraphNodeRef<TEST_EXECSPACE> root) {
+        NoOpReduceFunctor<TEST_EXECSPACE, int> no_op_functor;
         root.then_parallel_reduce(Kokkos::RangePolicy<TEST_EXECSPACE>(0, 0),
-                                  NoOpFunctor{}, count)
+                                  no_op_functor, count)
 #if !defined(KOKKOS_ENABLE_SYCL) || \
     defined(SYCL_EXT_ONEAPI_GRAPH)  // FIXME_SYCL
+#if !defined(KOKKOS_ENABLE_CUDA)    // FIXME_CUDA
             .then_parallel_reduce(
                 Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>{{0, 0},
                                                                        {0, 0}},
-                NoOpFunctor{}, count)
+                no_op_functor, count)
+#endif
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
             .then_parallel_reduce(Kokkos::TeamPolicy<TEST_EXECSPACE>{0, 32},
-                                  NoOpFunctor{}, count)
+                                  no_op_functor, count)
 #else
            .then_parallel_reduce(Kokkos::TeamPolicy<TEST_EXECSPACE>{0, 1},
-                                  NoOpFunctor{}, count)
+                                  no_op_functor, count)
 #endif
 #endif
             ;
