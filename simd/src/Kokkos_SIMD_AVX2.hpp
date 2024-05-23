@@ -1004,7 +1004,7 @@ class simd<float, simd_abi::avx2_fixed_size<4>> {
     return 4;
   }
   template <class U, std::enable_if_t<std::is_convertible_v<U, value_type>,
-                                         bool> = false>
+                                      bool> = false>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd(U&& value)
       : m_value(_mm_set1_ps(value_type(value))) {}
   template <class G,
@@ -1251,7 +1251,7 @@ class simd<float, simd_abi::avx2_fixed_size<8>> {
     return 8;
   }
   template <class U, std::enable_if_t<std::is_convertible_v<U, value_type>,
-                                         bool> = false>
+                                      bool> = false>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd(U&& value)
       : m_value(_mm256_set1_ps(value_type(value))) {}
   template <class G,
