@@ -29,6 +29,19 @@
 #include <type_traits>
 #include <iosfwd>
 
+// Suppress "'long double' is treated as 'double' in device code"
+#ifdef KOKKOS_COMPILER_NVCC
+#ifdef __NVCC_DIAG_PRAGMA_SUPPORT__
+#pragma nv_diagnostic push
+#pragma nv_diag_suppress 20208
+#else
+#ifdef __CUDA_ARCH__
+#pragma diagnostic push
+#pragma diag_suppress 20208
+#endif
+#endif
+#endif
+
 namespace Kokkos {
 
 /// \class complex
@@ -980,6 +993,16 @@ struct reduction_identity<Kokkos::complex<T>> {
 };
 
 }  // namespace Kokkos
+
+#ifdef KOKKOS_COMPILER_NVCC
+#ifdef __NVCC_DIAG_PRAGMA_SUPPORT__
+#pragma nv_diagnostic pop
+#else
+#ifdef __CUDA_ARCH__
+#pragma diagnostic pop
+#endif
+#endif
+#endif
 
 #ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_COMPLEX
 #undef KOKKOS_IMPL_PUBLIC_INCLUDE
