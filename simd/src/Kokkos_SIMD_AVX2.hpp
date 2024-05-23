@@ -1003,11 +1003,11 @@ class simd<float, simd_abi::avx2_fixed_size<4>> {
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION static constexpr std::size_t size() {
     return 4;
   }
-  template <typename U, std::enable_if_t<std::is_convertible_v<U, value_type>,
+  template <class U, std::enable_if_t<std::is_convertible_v<U, value_type>,
                                          bool> = false>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd(U&& value)
       : m_value(_mm_set1_ps(value_type(value))) {}
-  template <typename G,
+  template <class G,
             std::enable_if_t<
                 std::is_invocable_r_v<value_type, G,
                                       std::integral_constant<std::size_t, 0>>,
@@ -1250,11 +1250,11 @@ class simd<float, simd_abi::avx2_fixed_size<8>> {
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION static constexpr std::size_t size() {
     return 8;
   }
-  template <typename U, std::enable_if_t<std::is_convertible_v<U, value_type>,
+  template <class U, std::enable_if_t<std::is_convertible_v<U, value_type>,
                                          bool> = false>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd(U&& value)
       : m_value(_mm256_set1_ps(value_type(value))) {}
-  template <typename G,
+  template <class G,
             std::enable_if_t<
                 std::is_invocable_r_v<value_type, G,
                                       std::integral_constant<std::size_t, 0>>,
