@@ -62,6 +62,23 @@ TEST_F(scope_guard, create) {
 }
 
 /**
+ * Test to create a scope guard with an argument.
+ */
+TEST_F(scope_guard, create_argument) {
+  // run it in a different process so side effects are not kept
+  EXPECT_EXIT(
+      {
+        {
+          Kokkos::InitializationSettings settings{};
+          Kokkos::ScopeGuard guard{settings};
+        }
+
+        std::exit(EXIT_SUCCESS);
+      },
+      testing::ExitedWithCode(0), "");
+}
+
+/**
  * Test to create another scope guard when one has been created.
  */
 TEST_F(scope_guard, create_while_initialize) {
