@@ -240,22 +240,26 @@ KOKKOS_INLINE_FUNCTION void expect_no_overlap(
     [[maybe_unused]] IteratorType2 s_last) {
   if constexpr (is_kokkos_iterator_v<IteratorType1> &&
                 is_kokkos_iterator_v<IteratorType2>) {
-    auto const view   = first.view();
-    auto const s_view = s_first.view();
+    auto const view1 = first.view();
+    auto const view2 = s_first.view();
 
-    std::size_t stride1  = view.stride(0);
-    std::size_t stride2  = s_view.stride(0);
-    ptrdiff_t first_diff = view.data() - s_view.data();
+    std::size_t stride1  = view1.stride(0);
+    std::size_t stride2  = view2.stride(0);
+    ptrdiff_t first_diff = view1.data() - view2.data();
 
     // FIXME If strides are not identical, checks may not be made
     // with the cost of O(1)
     // Currently, checks are made only if strides are identical
     // If first_diff == 0, there is already an overlap
     if (stride1 == stride2 || first_diff == 0) {
-      [[maybe_unused]] bool is_no_overlap = (first_diff % stride1);
-      KOKKOS_EXPECTS((first.view().data() >= s_last.view().data() ||
-                      last.view().data() <= s_first.view().data()) ||
-                     is_no_overlap);
+      [[maybe_unused]] bool is_no_overlap  = (first_diff % stride1);
+      auto* first_pointer1                 = view1.data();
+      auto* first_pointer2                 = view2.data();
+      [[maybe_unused]] auto* last_pointer1 = first_pointer1 + (last - first);
+      [[maybe_unused]] auto* last_pointer2 =
+          first_pointer2 + (s_last - s_first);
+      KOKKOS_EXPECTS(first_pointer1 >= last_pointer2 ||
+                     last_pointer1 <= first_pointer2 || is_no_overlap);
     }
   }
 }

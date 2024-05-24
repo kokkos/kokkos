@@ -185,11 +185,7 @@ class RandomAccessIterator< ::Kokkos::View<DataType, Args...> > {
   reference operator*() const { return m_view(m_current_index); }
 
   KOKKOS_FUNCTION
-  auto view() const {
-    Kokkos::pair<ptrdiff_t, ptrdiff_t> offset(m_current_index,
-                                              m_current_index + m_view.size());
-    return Kokkos::subview(m_view, offset);
-  }
+  auto view() const { return m_view; }
 
  private:
   view_type m_view;
