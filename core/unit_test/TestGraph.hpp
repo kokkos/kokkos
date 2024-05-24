@@ -237,13 +237,9 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), zero_work_reduce) {
                                                                        {0, 0}},
                 no_op_functor, count)
 #endif
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-            .then_parallel_reduce(Kokkos::TeamPolicy<TEST_EXECSPACE>{0, 32},
-                                  no_op_functor, count)
-#else
-           .then_parallel_reduce(Kokkos::TeamPolicy<TEST_EXECSPACE>{0, 1},
-                                  no_op_functor, count)
-#endif
+            .then_parallel_reduce(
+                Kokkos::TeamPolicy<TEST_EXECSPACE>{0, Kokkos::AUTO},
+                no_op_functor, count)
 #endif
             ;
       });
