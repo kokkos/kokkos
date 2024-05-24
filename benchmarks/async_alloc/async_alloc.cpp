@@ -5,6 +5,8 @@
 // Kokkos Headers
 #include "Kokkos_Core.hpp"
 
+using MemorySpace = Kokkos::DefaultExecutionSpace::memory_space;
+
 // Store the individual timings
 std::vector<std::pair<size_t, double>> inner_loop_times;
 
@@ -24,7 +26,7 @@ std::pair<double, double> test(bool up) {
 
   Kokkos::Timer first_alloc_timer;
   {  // Prime the pump - first long alloc -- Time it.
-    Kokkos::View<float *, Kokkos::CudaSpace> dummy("unlabeled", 64);
+    Kokkos::View<float *, MemorySpace> dummy("unlabeled", 64);
   }
   double first_alloc_time = first_alloc_timer.seconds();
 
@@ -36,7 +38,7 @@ std::pair<double, double> test(bool up) {
   for (size_t num : sizes) {
     inner_loop_timer.reset();
     for (int i = 0; i < iters; i++) {
-      Kokkos::View<float *, Kokkos::CudaSpace> a("unlabeled", num);
+      Kokkos::View<float *, MemorySpace> a("unlabeled", num);
     }
     double inner_loop_time = inner_loop_timer.seconds();
 
