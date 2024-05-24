@@ -18,15 +18,31 @@
 #include <gtest/gtest.h>
 #include <Kokkos_Core.hpp>
 
+/**
+ * Fixture that checks Kokkos is neither initialized nor finalized before and
+ * after the test.
+ */
+class AssertEnvironmentTest : public ::testing::Test {
+ protected:
+  void SetUp() override {
+    ASSERT_FALSE(Kokkos::is_initialized());
+    ASSERT_FALSE(Kokkos::is_finalized());
+  }
+
+  void TearDown() override {
+    ASSERT_FALSE(Kokkos::is_initialized());
+    ASSERT_FALSE(Kokkos::is_finalized());
+  }
+};
+
 namespace Test {
+
+using scope_guard = AssertEnvironmentTest;
 
 /**
  * Test to create a scope guard normally.
  */
-TEST(scope_guard, create) {
-  ASSERT_FALSE(Kokkos::is_initialized());
-  ASSERT_FALSE(Kokkos::is_finalized());
-
+TEST_F(scope_guard, create) {
   // run it in a different process so side effects are not kept
   EXPECT_EXIT(
       {
@@ -43,18 +59,12 @@ TEST(scope_guard, create) {
         std::exit(EXIT_SUCCESS);
       },
       testing::ExitedWithCode(0), "");
-
-  ASSERT_FALSE(Kokkos::is_initialized());
-  ASSERT_FALSE(Kokkos::is_finalized());
 }
 
 /**
  * Test to create another scope guard when one has been created.
  */
-TEST(scope_guard, create_while_initialize) {
-  ASSERT_FALSE(Kokkos::is_initialized());
-  ASSERT_FALSE(Kokkos::is_finalized());
-
+TEST_F(scope_guard, create_while_initialize) {
   EXPECT_DEATH(
       {
         Kokkos::ScopeGuard guard1{};
@@ -63,18 +73,12 @@ TEST(scope_guard, create_while_initialize) {
         Kokkos::ScopeGuard guard2{};
       },
       "Creating a ScopeGuard while Kokkos is initialized");
-
-  ASSERT_FALSE(Kokkos::is_initialized());
-  ASSERT_FALSE(Kokkos::is_finalized());
 }
 
 /**
  * Test to create another scope guard when one has been destroyed.
  */
-TEST(scope_guard, create_after_finalize) {
-  ASSERT_FALSE(Kokkos::is_initialized());
-  ASSERT_FALSE(Kokkos::is_finalized());
-
+TEST_F(scope_guard, create_after_finalize) {
   EXPECT_DEATH(
       {
         { Kokkos::ScopeGuard guard1{}; }
@@ -84,18 +88,12 @@ TEST(scope_guard, create_after_finalize) {
         Kokkos::ScopeGuard guard2{};
       },
       "Creating a ScopeGuard after Kokkos was finalized");
-
-  ASSERT_FALSE(Kokkos::is_initialized());
-  ASSERT_FALSE(Kokkos::is_finalized());
 }
 
 /**
  * Test to destroy a scope guard when finalization has been done manually.
  */
-TEST(scope_guard, destroy_after_finalize) {
-  ASSERT_FALSE(Kokkos::is_initialized());
-  ASSERT_FALSE(Kokkos::is_finalized());
-
+TEST_F(scope_guard, destroy_after_finalize) {
   EXPECT_DEATH(
       {
         // create a scope guard and finalize it manually
@@ -103,9 +101,6 @@ TEST(scope_guard, destroy_after_finalize) {
         Kokkos::finalize();
       },
       "Destroying a ScopeGuard after Kokkos was finalized");
-
-  ASSERT_FALSE(Kokkos::is_initialized());
-  ASSERT_FALSE(Kokkos::is_finalized());
 }
 
 }  // namespace Test
