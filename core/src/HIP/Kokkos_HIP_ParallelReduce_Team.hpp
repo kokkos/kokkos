@@ -46,6 +46,7 @@ class ParallelReduce<CombinedFunctorReducerType,
 
  public:
   using functor_type = FunctorType;
+  using reducer_type = ReducerType;
   using size_type    = HIP::size_type;
 
   // static int constexpr UseShflReduction = false;
