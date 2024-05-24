@@ -18,6 +18,9 @@
 
 namespace {
 
+template <typename... Ts>
+KOKKOS_FUNCTION constexpr void maybe_unused(Ts&&...) {}
+
 KOKKOS_FUNCTION constexpr bool test_array() {
   constexpr Kokkos::Array<int, 3> a{{1, 2}};
 
@@ -173,6 +176,8 @@ constexpr bool test_to_array() {
   // implicit conversion happens
   auto a3 = Kokkos::to_Array<long>({0, 1, 3});
   static_assert(std::is_same_v<decltype(a3), Kokkos::Array<long, 3>>);
+
+  maybe_unused(a1, a2, a3);
 
   return true;
 }
