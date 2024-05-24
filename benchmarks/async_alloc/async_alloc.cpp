@@ -15,7 +15,12 @@ std::vector<std::pair<size_t, double>> inner_loop_times;
 std::pair<double, double> test(bool up) {
   int iters      = 50;
   size_t minimum = 8 / sizeof(float);  // 64K
-  size_t maximum = (16l * 1024l * 1024l * 1024l) / sizeof(float);
+
+  size_t gb = 1024 * 1024 * 1024 / sizeof(float);  // number of floats per GiB
+  size_t maximum = gb;  // on 32 bit, we make 1GiB the max
+
+  // On 64-bit we make 16 GiB the max
+  if constexpr (sizeof(size_t) == 8) maximum *= 16;
 
   std::vector<size_t> sizes;
   if (up) {
@@ -64,7 +69,7 @@ int main(int argc, char *argv[]) {
   char *env_string = getenv("KOKKOS_CUDA_MEMPOOL_SIZE");
   std::cout << "Async Malloc Benchmark: KOKKOS_CUDA_MEMPOOL_SIZE is ";
 
-  if (env_string == nullptr || env_string == 0x0)
+  if (env_string == nullptr)
     std::cout << "not set,";
   else
     std::cout << " " << env_string << ",";
