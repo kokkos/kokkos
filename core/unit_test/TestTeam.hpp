@@ -1755,47 +1755,64 @@ struct TestRepeatedTeamReduce {
 
 namespace Test {
 
-struct SimpleTestValue {
-  int value;
+struct SimpleTestValueType {
+  using ScalarType = int;
+
+  ScalarType value[2];
 };
 
-struct SimpleFunctorReducer {
-  using value_type = SimpleTestValue;
+struct TestTeamReducerFunctor {
+  using value_type = SimpleTestValueType;
 
   KOKKOS_INLINE_FUNCTION
-  void init(value_type &init) const { init.value = 1; }
-
-  KOKKOS_INLINE_FUNCTION
-  void join(value_type &dst, value_type const &src) const {
-    dst.value *= src.value;
+  void init(value_type &init) const {
+    init.value[0] = 1;
+    init.value[1] = 2;
   }
 
   KOKKOS_INLINE_FUNCTION
-  void final(value_type &) const {}
+  void join(value_type &dst, value_type const &src) const {
+    dst.value[0] *= src.value[0];
+    dst.value[1] *= src.value[1];
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void final(value_type &dst) const {
+    dst.value[0] = -dst.value[0];
+    dst.value[1] = -dst.value[1];
+  }
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const int i, value_type &update) const {
-    update.value *= (i + 1);
+    update.value[0] *= (i + 1);
+    update.value[1] *= (i + 2);
   }
 };
 
-struct SimpleReducer {
-  using reducer    = SimpleReducer;
-  using value_type = SimpleTestValue;
+struct TestTeamReducer {
+  using reducer    = TestTeamReducer;
+  using value_type = SimpleTestValueType;
 
   KOKKOS_INLINE_FUNCTION
-  SimpleReducer(value_type &val) : local(val) {}
+  TestTeamReducer(value_type &val) : local(val) {}
 
   KOKKOS_INLINE_FUNCTION
-  void init(value_type &init) const { init.value = 1; }
-
-  KOKKOS_INLINE_FUNCTION
-  void join(value_type &dst, value_type const &src) const {
-    dst.value *= src.value;
+  void init(value_type &init) const {
+    init.value[0] = 1;
+    init.value[1] = 2;
   }
 
   KOKKOS_INLINE_FUNCTION
-  void final(value_type &) const {}
+  void join(value_type &dst, value_type const &src) const {
+    dst.value[0] *= src.value[0];
+    dst.value[1] *= src.value[1];
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void final(value_type &dst) const {
+    dst.value[0] = -dst.value[0];
+    dst.value[1] = -dst.value[1];
+  }
 
   KOKKOS_INLINE_FUNCTION
   value_type &reference() const { return local; }
@@ -1806,14 +1823,14 @@ struct SimpleReducer {
 namespace {
 
 template <typename ExecSpace>
-class TestTeamNestedFunctorReducer {
+class TestTeamNestedReducerFunctor {
  public:
   using execution_space  = ExecSpace;
   using team_policy_type = Kokkos::TeamPolicy<execution_space>;
   using member_type      = typename team_policy_type::member_type;
-  using value_type       = SimpleTestValue;
-  using functor_type     = SimpleFunctorReducer;
-  using reducer_type     = SimpleReducer;
+  using value_type       = SimpleTestValueType;
+  using functor_type     = TestTeamReducerFunctor;
+  using reducer_type     = TestTeamReducer;
   using index_type       = int;
 
   void run_test_team_thread() {
@@ -1842,8 +1859,10 @@ class TestTeamNestedFunctorReducer {
     constexpr index_type league_size = 3;
     constexpr index_type test_count  = 8;
 
-    Kokkos::View<int[league_size], execution_space> test_result("result");
-    Kokkos::View<int[league_size], execution_space> expected_result("expected");
+    Kokkos::View<value_type[league_size], execution_space> test_result(
+        "result");
+    Kokkos::View<value_type[league_size], execution_space> expected_result(
+        "expected");
 
     Kokkos::parallel_for(
         team_policy_type(league_size, Kokkos::AUTO),
@@ -1853,17 +1872,24 @@ class TestTeamNestedFunctorReducer {
 
           Kokkos::parallel_reduce(policy(team, test_count), functor_type{},
                                   result);
-          test_result(league) = result.value;
 
           value_type expected{};
           reducer_type reducer(expected);
           Kokkos::parallel_reduce(
               policy(team, test_count),
-              [&](const int i, value_type &update) { update.value *= (i + 1); },
+              [&](const int i, value_type &update) {
+                update.value[0] *= (i + 1);
+                update.value[1] *= (i + 2);
+              },
               reducer);
 
-          Kokkos::single(Kokkos::PerTeam(team),
-                         [=]() { expected_result(league) = expected.value; });
+          Kokkos::single(Kokkos::PerTeam(team), [=]() {
+            test_result(league).value[0] = result.value[0];
+            test_result(league).value[1] = result.value[1];
+
+            expected_result(league).value[0] = expected.value[0];
+            expected_result(league).value[1] = expected.value[1];
+          });
         });
     Kokkos::fence();
 
@@ -1873,7 +1899,8 @@ class TestTeamNestedFunctorReducer {
         Kokkos::DefaultHostExecutionSpace{}, expected_result);
 
     for (unsigned i = 0; i < test.extent(0); ++i) {
-      ASSERT_EQ(test(i), check(i));
+      ASSERT_EQ(test(i).value[0], check(i).value[0]);
+      ASSERT_EQ(test(i).value[1], check(i).value[1]);
     }
   }
 };

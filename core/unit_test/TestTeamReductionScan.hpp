@@ -122,13 +122,14 @@ TEST(TEST_CATEGORY, repeated_team_reduce) {
 
 TEST(TEST_CATEGORY, nested_team_reduce_functor_as_reducer) {
 #ifdef KOKKOS_ENABLE_OPENMPTARGET  // FIXME_OPENMPTARGET: Not implemented
-  if constexpr (!std::is_same<TEST_EXECSPACE,
-                              Kokkos::Experimental::OpenMPTarget>::value)
+  if (std::is_same<TEST_EXECSPACE, Kokkos::Experimental::OpenMPTarget>::value)
+    GTEST_SKIP() << "skipping since team_reduce for OpenMPTarget is not "
+                    "properly implemented";
 #endif
   {
-    TestTeamNestedFunctorReducer<TEST_EXECSPACE>().run_test_team_thread();
-    TestTeamNestedFunctorReducer<TEST_EXECSPACE>().run_test_thread_vector();
-    TestTeamNestedFunctorReducer<TEST_EXECSPACE>().run_test_team_vector();
+    TestTeamNestedReducerFunctor<TEST_EXECSPACE>().run_test_team_thread();
+    TestTeamNestedReducerFunctor<TEST_EXECSPACE>().run_test_thread_vector();
+    TestTeamNestedReducerFunctor<TEST_EXECSPACE>().run_test_team_vector();
   }
 }
 
