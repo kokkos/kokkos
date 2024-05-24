@@ -373,12 +373,12 @@ KOKKOS_FUNCTION constexpr Array<std::remove_cv_t<T>, N> to_Array_impl(
 }  // namespace Impl
 
 template <typename T, size_t N>
-KOKKOS_INLINE_FUNCTION constexpr auto to_Array(T (&a)[N]) {
+KOKKOS_FUNCTION constexpr auto to_Array(T (&a)[N]) {
   return Impl::to_Array_impl(a, std::make_index_sequence<N>{});
 }
 
 template <typename T, size_t N>
-KOKKOS_INLINE_FUNCTION constexpr auto to_Array(T(&&a)[N]) {
+KOKKOS_FUNCTION constexpr auto to_Array(T(&&a)[N]) {
   return Impl::to_Array_impl(std::move(a), std::make_index_sequence<N>{});
 }
 

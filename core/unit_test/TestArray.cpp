@@ -160,7 +160,7 @@ constexpr bool test_array_specialization_kokkos_swap() {
 
 static_assert(test_array_specialization_kokkos_swap());
 
-KOKKOS_FUNCTION constexpr bool test_to_array() {
+constexpr bool test_to_array() {
   // copies a string literal
   auto a1 = Kokkos::to_Array("foo");
   static_assert(a1.size() == 4);
