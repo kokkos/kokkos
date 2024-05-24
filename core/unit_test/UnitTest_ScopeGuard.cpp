@@ -49,12 +49,12 @@ TEST_F(scope_guard, create) {
         {
           Kokkos::ScopeGuard guard{};
 
-          ASSERT_TRUE(Kokkos::is_initialized());
-          ASSERT_FALSE(Kokkos::is_finalized());
+          if (!Kokkos::is_initialized()) std::exit(EXIT_FAILURE);
+          if (Kokkos::is_finalized()) std::exit(EXIT_FAILURE);
         }
 
-        ASSERT_FALSE(Kokkos::is_initialized());
-        ASSERT_TRUE(Kokkos::is_finalized());
+        if (Kokkos::is_initialized()) std::exit(EXIT_FAILURE);
+        if (!Kokkos::is_finalized()) std::exit(EXIT_FAILURE);
 
         std::exit(EXIT_SUCCESS);
       },
