@@ -1864,6 +1864,9 @@ inline auto create_mirror(const Kokkos::Experimental::OffsetView<T, P...>& src,
     return typename Kokkos::Experimental::OffsetView<T, P...>::HostMirror(
         Kokkos::create_mirror(arg_prop, src.view()), src.begins());
   }
+#if defined KOKKOS_COMPILER_INTEL
+  __builtin_unreachable();
+#endif
 }
 
 }  // namespace Impl
@@ -1940,6 +1943,9 @@ inline auto create_mirror_view(
       return Kokkos::Impl::create_mirror(src, arg_prop);
     }
   }
+#if defined KOKKOS_COMPILER_INTEL
+  __builtin_unreachable();
+#endif
 }
 
 }  // namespace Impl

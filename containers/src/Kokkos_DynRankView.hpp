@@ -1958,6 +1958,9 @@ inline auto create_mirror(const DynRankView<T, P...>& src,
     return dst_type(prop_copy,
                     Impl::reconstructLayout(src.layout(), src.rank()));
   }
+#if defined KOKKOS_COMPILER_INTEL
+  __builtin_unreachable();
+#endif
 }
 
 }  // namespace Impl
@@ -2055,6 +2058,9 @@ inline auto create_mirror_view(
       return Kokkos::Impl::create_mirror(src, arg_prop);
     }
   }
+#if defined KOKKOS_COMPILER_INTEL
+  __builtin_unreachable();
+#endif
 }
 
 }  // namespace Impl
