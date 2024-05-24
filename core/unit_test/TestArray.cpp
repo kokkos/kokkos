@@ -167,12 +167,12 @@ static_assert(test_array_specialization_kokkos_swap());
 
 constexpr bool test_to_array() {
   // copies a string literal
-  [[maybe_unused]] auto a1 = Kokkos::to_Array("foo");
+  [[maybe_unused]] auto a1 = Kokkos::to_array("foo");
   static_assert(a1.size() == 4);
   maybe_unused(a1);
 
   // deduces both element type and length
-  [[maybe_unused]] auto a2 = Kokkos::to_Array({0, 2, 1, 3});
+  [[maybe_unused]] auto a2 = Kokkos::to_array({0, 2, 1, 3});
   static_assert(std::is_same_v<decltype(a2), Kokkos::Array<int, 4>>);
   maybe_unused(a2);
 
@@ -180,7 +180,7 @@ constexpr bool test_to_array() {
 #if !defined(KOKKOS_COMPILER_GNU) || (KOKKOS_COMPILER_GNU >= 910)
   // deduces length with element type specified
   // implicit conversion happens
-  [[maybe_unused]] auto a3 = Kokkos::to_Array<long>({0, 1, 3});
+  [[maybe_unused]] auto a3 = Kokkos::to_array<long>({0, 1, 3});
   static_assert(std::is_same_v<decltype(a3), Kokkos::Array<long, 3>>);
   maybe_unused(a3);
 #endif
