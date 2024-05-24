@@ -53,6 +53,8 @@ class RawMemoryAllocationFailure : public std::bad_alloc {
     IntelMMAlloc KOKKOS_DEPRECATED,
 #endif
     CudaMalloc,
+    CudaMallocAligned,
+    CudaMallocAlignedPoolSetup,
     CudaMallocManaged,
     CudaHostAlloc,
     HIPMalloc,

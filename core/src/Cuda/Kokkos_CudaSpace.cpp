@@ -30,8 +30,10 @@
 #include <sstream>
 #include <algorithm>
 #include <atomic>
+#include <cctype>
+#include <unordered_set>
 
-//#include <Cuda/Kokkos_Cuda_BlockSize_Deduction.hpp>
+// #include <Cuda/Kokkos_Cuda_BlockSize_Deduction.hpp>
 #include <impl/Kokkos_Error.hpp>
 
 #include <impl/Kokkos_Tools.hpp>
@@ -172,6 +174,115 @@ void *CudaSpace::allocate(const char *arg_label, const size_t arg_alloc_size,
 }
 
 namespace {
+
+#ifndef CUDART_VERSION
+#error CUDART_VERSION undefined!
+#elif (defined(KOKKOS_ENABLE_IMPL_CUDA_MALLOC_ASYNC) && CUDART_VERSION >= 11020)
+
+/**
+ *  If a device has been initialized we will drop it in the set
+ * so we don't initialize it again
+ */
+std::unordered_set<int> _mem_pool_initialized;
+
+/**
+ * This is the initializer. It currently gets the device_id and stream
+ * that impl_alloc gets
+ *    @param device_id  The device id on which to alter the default mempool
+ *    @param stream     A specific stream for cudaMallocAsync
+ * 		@param error_code return any failure codes for cuda APIs
+ *    @return  				  true for success, false for failure
+ */
+bool initializeMempool(const int device_id, const cudaStream_t stream,
+                       cudaError_t &error_code) {
+  error_code = cudaSuccess;
+
+  std::cout << "Initializing Default Memory Pool for device " << device_id
+            << "\n";
+
+  // Interpret env var
+  char *env_string = getenv("KOKKOS_CUDA_MEMPOOL_SIZE");
+  if (!env_string) return true;  // Nothing to set, initialization is complete
+
+  // Env var can be a decimal e.g. 2.4g
+  double factor = 1;  // bytes
+
+  // Interpret the string
+  std::string mempool_size_string(env_string);
+  char last_letter = mempool_size_string.back();
+
+  // We can deal with the last letter being units.
+  if (std::isalpha(last_letter)) {
+    mempool_size_string.pop_back();
+    char last_letter_cap = std::toupper(last_letter);
+    switch (last_letter_cap) {
+      case 'K': factor = 1024; break;
+      case 'M': factor = 1024 * 1024; break;
+      case 'G': factor = 1024 * 1024 * 1024; break;
+      default:
+        // Not permitted
+        return false;
+        break;
+    }
+  }
+
+  // At this point we removed the last letter (or there was not a last letter)
+  // convert what is left to a number.
+  double requested_size = 0;
+
+  // Handle exception in case the string is unconvertible
+  try {
+    requested_size = static_cast<size_t>(std::stod(mempool_size_string));
+  } catch (...) {
+    std::cerr << "Unable to convert " << mempool_size_string
+              << " to a number\n";
+    return false;
+  }
+
+  requested_size *= factor;
+  size_t n_bytes = static_cast<size_t>(std::ceil(requested_size));
+  if (!(n_bytes > 0)) return false;
+
+  std::cout << "Allocating " << n_bytes << " bytes for mempool\n";
+
+  // We set up the default memory pool
+  // This requires us to a) grab the default memory pool for the device
+  // b) set a property to retain our desired amount of memory on a free
+  // c) allocate our desired poolsize amount plus a little more
+  // d) free the memory, ensuring the pool retains what we asked for
+  // All the API calls need to return cudaSuccess or we fail
+
+  // First get the default memory pool
+  error_code = cudaSuccess;
+  cudaMemPool_t default_mempool;  // The memory pool handle
+
+  // Cuda API call to get the memory pool for device with device_id
+  error_code = cudaDeviceGetDefaultMemPool(&default_mempool, device_id);
+  if (error_code != cudaSuccess) return false;  // handle failure
+
+  // Here we set the size of the retained memory in the pool after a
+  // free by setting the cudaMemPoolAttrReleaseThresold property of the mempool
+  error_code = cudaMemPoolSetAttribute(
+      default_mempool, cudaMemPoolAttrReleaseThreshold, &n_bytes);
+  if (error_code != cudaSuccess) return false;  // handle failure
+
+  // Now we allocate the pool size amount + a little more (64 bytes is arbitrary
+  // it just needs to be more than the retention size.
+  void *dummy_ptr = nullptr;
+  error_code      = cudaMallocAsync(&dummy_ptr, n_bytes + 64, stream);
+  if (error_code != cudaSuccess) return false;  // handle failure
+
+  // Now we free the memory, and our poolsize amount will be retained in the
+  // pool
+  error_code = cudaFreeAsync(dummy_ptr, stream);
+  if (error_code != cudaSuccess) return false;  // handle failure
+
+  // We are successful
+  return true;
+}
+
+#endif
+
 void *impl_allocate_common(const int device_id,
                            [[maybe_unused]] const cudaStream_t stream,
                            const char *arg_label, const size_t arg_alloc_size,
@@ -185,20 +296,54 @@ void *impl_allocate_common(const int device_id,
 #ifndef CUDART_VERSION
 #error CUDART_VERSION undefined!
 #elif (defined(KOKKOS_ENABLE_IMPL_CUDA_MALLOC_ASYNC) && CUDART_VERSION >= 11020)
-  if (arg_alloc_size >= memory_threshold_g) {
-    error_code = cudaMallocAsync(&ptr, arg_alloc_size, stream);
+  // Always use the Async. Don't use the 40K Lower limit- may well be arch
+  // dependent.
 
-    if (error_code == cudaSuccess) {
-      if (stream_sync_only) {
-        KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamSynchronize(stream));
+  // Check the set of allocated devices, to check if our device is already
+  // allocate it
+  if (_mem_pool_initialized.find(device_id) == _mem_pool_initialized.end()) {
+    // Not found: so initialize it
+    //
+    if (initializeMempool(device_id, stream, error_code)) {
+      _mem_pool_initialized.insert(device_id);  // Success: add device to set
+    } else {
+      // Failure: report the error code with an Exception
+      if (error_code != cudaSuccess) {
+        cudaGetLastError();
+        throw Experimental::CudaRawMemoryAllocationFailure(
+            arg_alloc_size, error_code,
+            Experimental::RawMemoryAllocationFailure::AllocationMechanism::
+                CudaMallocAlignedPoolSetup);
       } else {
-        Impl::cuda_device_synchronize(
-            "Kokkos::Cuda: backend fence after async malloc");
+        // if the API calls all returned cudaSuccess, the strtod() could
+        // have thrown an exception which we caught. In this case we
+        // throw a dumb exception ehere
+        throw "Memory Pool Size was incorrectly formatted or unsuitable size";
       }
     }
-  } else
-#endif
-  { error_code = cudaMalloc(&ptr, arg_alloc_size); }
+  }
+
+  // Pool is definitely initialized (Potentially still zero bytes which is
+  // default) do the originally intended allocation
+  error_code = cudaMallocAsync(&ptr, arg_alloc_size, stream);
+  if (error_code == cudaSuccess) {
+    if (stream_sync_only) {
+      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamSynchronize(stream));
+    } else {
+      Impl::cuda_device_synchronize(
+          "Kokkos::Cuda: backend fence after async malloc");
+    }
+  } else {
+    cudaGetLastError();
+    throw Experimental::CudaRawMemoryAllocationFailure(
+        arg_alloc_size, error_code,
+        Experimental::RawMemoryAllocationFailure::AllocationMechanism::
+            CudaMallocAligned);
+  }
+#else
+  // If cudaMallocAsync is not available (either turned off, or too early CUDA
+  // version) go with cudaMalloc()
+  error_code = cudaMalloc(&ptr, arg_alloc_size);
   if (error_code != cudaSuccess) {  // TODO tag as unlikely branch
     // This is the only way to clear the last error, which
     // we should do here since we're turning it into an
@@ -209,7 +354,7 @@ void *impl_allocate_common(const int device_id,
         Experimental::RawMemoryAllocationFailure::AllocationMechanism::
             CudaMalloc);
   }
-
+#endif
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     const size_t reported_size =
         (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
