@@ -159,7 +159,7 @@ TEST(std_algorithms, expect_no_overlap) {
 
   // Iterating over the same range without overlapping
   Kokkos::View<value_type[2][extent0], Kokkos::LayoutLeft> static_view_2d{
-      "std-algo-test-2d-contiguous-view-static", extent0};
+      "std-algo-test-2d-contiguous-view-static"};
   auto sub_static_view_1d_0 = Kokkos::subview(static_view_2d, 0, Kokkos::ALL);
   auto sub_static_view_1d_1 = Kokkos::subview(static_view_2d, 1, Kokkos::ALL);
   auto sub_first_s0         = KE::begin(sub_static_view_1d_0);  // 0, 2, 4, ...
