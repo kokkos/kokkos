@@ -243,7 +243,6 @@ bool initializeMempool(const int device_id, const cudaStream_t stream,
   size_t n_bytes = static_cast<size_t>(std::ceil(requested_size));
   if (!(n_bytes > 0)) return false;
 
-  std::cout << "Allocating " << n_bytes << " bytes for mempool\n";
 
   // We set up the default memory pool
   // This requires us to a) grab the default memory pool for the device
