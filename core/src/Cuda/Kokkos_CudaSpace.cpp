@@ -221,7 +221,7 @@ bool initializeMempool(const int device_id, const cudaStream_t stream,
       case 'M': factor = 1024 * 1024; break;
       case 'G': factor = 1024 * 1024 * 1024; break;
       default:
-        // Not permitted
+        std::cerr << "Unknown units for requested size " << last_letter << "\n";
         return false;
         break;
     }
