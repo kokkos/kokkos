@@ -302,7 +302,6 @@ void *impl_allocate_common(const int device_id,
   // allocate it
   if (_mem_pool_initialized.find(device_id) == _mem_pool_initialized.end()) {
     // Not found: so initialize it
-    //
     if (initializeMempool(device_id, stream, error_code)) {
       _mem_pool_initialized.insert(device_id);  // Success: add device to set
     } else {
