@@ -180,7 +180,7 @@ namespace {
 #elif (defined(KOKKOS_ENABLE_IMPL_CUDA_MALLOC_ASYNC) && CUDART_VERSION >= 11020)
 
 /**
- *  If a device has been initialized we will drop it in the set
+ * If a device has been initialized we will drop it in the set
  * so we don't initialize it again
  */
 std::unordered_set<int> _mem_pool_initialized;
