@@ -80,16 +80,6 @@ TEST_F(scope_guard, create_argument) {
 }
 
 /**
- * Test scope guard is not copyable.
- */
-TEST_F(scope_guard, not_copyable) {
-  static_assert(!std::is_copy_assignable<Kokkos::ScopeGuard>());
-  static_assert(!std::is_copy_constructible<Kokkos::ScopeGuard>());
-
-  SUCCEED();
-}
-
-/**
  * Test to create another scope guard when one has been created.
  */
 TEST_F(scope_guard_DeathTest, create_while_initialize) {
@@ -130,5 +120,13 @@ TEST_F(scope_guard_DeathTest, destroy_after_finalize) {
       },
       "Destroying a ScopeGuard after Kokkos was finalized");
 }
+
+/**
+ * Static tests
+ */
+
+// Test scope guard is not copyable.
+static_assert(!std::is_copy_assignable<Kokkos::ScopeGuard>());
+static_assert(!std::is_copy_constructible<Kokkos::ScopeGuard>());
 
 }  // namespace
