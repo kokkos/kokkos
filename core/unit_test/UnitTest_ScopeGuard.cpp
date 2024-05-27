@@ -95,6 +95,21 @@ TEST_F(scope_guard_DeathTest, create_while_initialize) {
 }
 
 /**
+ * Test to create a scope guard when initialization has been done manually.
+ */
+TEST_F(scope_guard_DeathTest, create_after_initialize) {
+  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+  EXPECT_DEATH(
+      {
+        Kokkos::initialize();
+
+        // create a scope guard after manual initialization
+        Kokkos::ScopeGuard guard{};
+      },
+      "Creating a ScopeGuard while Kokkos is initialized");
+}
+
+/**
  * Test to create another scope guard when one has been destroyed.
  */
 TEST_F(scope_guard_DeathTest, create_after_finalize) {
