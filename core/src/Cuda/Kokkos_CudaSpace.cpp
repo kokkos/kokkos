@@ -32,6 +32,7 @@
 #include <atomic>
 #include <cctype>
 #include <unordered_set>
+#include <limits>
 
 // #include <Cuda/Kokkos_Cuda_BlockSize_Deduction.hpp>
 #include <impl/Kokkos_Error.hpp>
@@ -239,10 +240,28 @@ bool initializeMempool(const int device_id, const cudaStream_t stream,
     return false;
   }
 
-  requested_size *= factor;
-  size_t n_bytes = static_cast<size_t>(std::ceil(requested_size));
-  if (!(n_bytes > 0)) return false;
+  // Check for non-positive size memory requests
+  if (requested_size <= 0) {
+    std::cerr << "Negative amount of memory requested in allocation\n";
+    return false;
+  }
 
+  // Multiply in units
+  requested_size *= factor;
+
+  // Check we are not asking for memory that is greater than what size_t can
+  // hold. Since requested can be the larger I convert the maximum of size_t
+  // to a double and compare those
+  double max_size_t = static_cast<double>(std::numeric_limits<size_t>::max());
+  if (requested_size > max_size_t) {
+    std::cerr << "Requested amount of memory " << requested_size << " exceeds "
+              << "maximum alloatable size " << max_size_t << "\n";
+    return false;
+  }
+
+  // At this point requested_size should be appropriate
+  // neither too big nor negative.
+  size_t n_bytes = static_cast<size_t>(std::ceil(requested_size));
 
   // We set up the default memory pool
   // This requires us to a) grab the default memory pool for the device
