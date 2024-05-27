@@ -37,7 +37,7 @@ class AssertEnvironmentTest : public ::testing::Test {
   }
 };
 
-using scope_guard = AssertEnvironmentTest;
+using scope_guard           = AssertEnvironmentTest;
 using scope_guard_DeathTest = AssertEnvironmentTest;
 
 /**
