@@ -79,6 +79,14 @@ TEST_F(scope_guard, create_argument) {
 }
 
 /**
+ * Test scope guard is not copyable.
+ */
+void static_test_not_copyable() {
+  static_assert(!std::is_copy_assignable<Kokkos::ScopeGuard>());
+  static_assert(!std::is_copy_constructible<Kokkos::ScopeGuard>());
+}
+
+/**
  * Test to create another scope guard when one has been created.
  */
 TEST_F(scope_guard, create_while_initialize) {
