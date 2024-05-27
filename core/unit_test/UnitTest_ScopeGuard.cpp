@@ -18,6 +18,8 @@
 #include <gtest/gtest.h>
 #include <Kokkos_Core.hpp>
 
+namespace {
+
 /**
  * Fixture that checks Kokkos is neither initialized nor finalized before and
  * after the test.
@@ -35,9 +37,8 @@ class AssertEnvironmentTest : public ::testing::Test {
   }
 };
 
-namespace Test {
-
 using scope_guard = AssertEnvironmentTest;
+using scope_guard_DeathTest = AssertEnvironmentTest;
 
 /**
  * Test to create a scope guard normally.
@@ -81,15 +82,17 @@ TEST_F(scope_guard, create_argument) {
 /**
  * Test scope guard is not copyable.
  */
-void static_test_not_copyable() {
+TEST_F(scope_guard, not_copyable) {
   static_assert(!std::is_copy_assignable<Kokkos::ScopeGuard>());
   static_assert(!std::is_copy_constructible<Kokkos::ScopeGuard>());
+
+  SUCCEED();
 }
 
 /**
  * Test to create another scope guard when one has been created.
  */
-TEST_F(scope_guard, create_while_initialize) {
+TEST_F(scope_guard_DeathTest, create_while_initialize) {
   EXPECT_DEATH(
       {
         Kokkos::ScopeGuard guard1{};
@@ -103,7 +106,7 @@ TEST_F(scope_guard, create_while_initialize) {
 /**
  * Test to create another scope guard when one has been destroyed.
  */
-TEST_F(scope_guard, create_after_finalize) {
+TEST_F(scope_guard_DeathTest, create_after_finalize) {
   EXPECT_DEATH(
       {
         { Kokkos::ScopeGuard guard1{}; }
@@ -118,7 +121,7 @@ TEST_F(scope_guard, create_after_finalize) {
 /**
  * Test to destroy a scope guard when finalization has been done manually.
  */
-TEST_F(scope_guard, destroy_after_finalize) {
+TEST_F(scope_guard_DeathTest, destroy_after_finalize) {
   EXPECT_DEATH(
       {
         // create a scope guard and finalize it manually
@@ -128,4 +131,4 @@ TEST_F(scope_guard, destroy_after_finalize) {
       "Destroying a ScopeGuard after Kokkos was finalized");
 }
 
-}  // namespace Test
+}  // namespace
