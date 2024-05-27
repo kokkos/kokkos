@@ -83,6 +83,7 @@ TEST_F(scope_guard, create_argument) {
  * Test to create another scope guard when one has been created.
  */
 TEST_F(scope_guard_DeathTest, create_while_initialize) {
+  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
   EXPECT_DEATH(
       {
         Kokkos::ScopeGuard guard1{};
@@ -97,6 +98,7 @@ TEST_F(scope_guard_DeathTest, create_while_initialize) {
  * Test to create another scope guard when one has been destroyed.
  */
 TEST_F(scope_guard_DeathTest, create_after_finalize) {
+  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
   EXPECT_DEATH(
       {
         { Kokkos::ScopeGuard guard1{}; }
@@ -112,6 +114,7 @@ TEST_F(scope_guard_DeathTest, create_after_finalize) {
  * Test to destroy a scope guard when finalization has been done manually.
  */
 TEST_F(scope_guard_DeathTest, destroy_after_finalize) {
+  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
   EXPECT_DEATH(
       {
         // create a scope guard and finalize it manually
