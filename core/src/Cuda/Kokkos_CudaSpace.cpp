@@ -295,7 +295,7 @@ void *impl_allocate_common(const int device_id,
 #ifndef CUDART_VERSION
 #error CUDART_VERSION undefined!
 #elif (defined(KOKKOS_ENABLE_IMPL_CUDA_MALLOC_ASYNC) && CUDART_VERSION >= 11020)
-  // Always use the Async. Don't use the 40K Lower limit- may well be arch
+  // Always use the Async. Don't use the 40K Lower limit - may well be arch
   // dependent.
 
   // Check the set of allocated devices, to check if our device is already
