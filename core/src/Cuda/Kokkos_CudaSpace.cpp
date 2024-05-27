@@ -315,7 +315,7 @@ void *impl_allocate_common(const int device_id,
       } else {
         // if the API calls all returned cudaSuccess, the strtod() could
         // have thrown an exception which we caught. In this case we
-        // throw a dumb exception ehere
+        // throw a dumb exception here
         throw "Memory Pool Size was incorrectly formatted or unsuitable size";
       }
     }
