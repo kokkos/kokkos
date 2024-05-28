@@ -57,6 +57,13 @@ class Threads {
 
   using scratch_memory_space = ScratchMemorySpace<Threads>;
 
+  Threads() = default;
+
+  template <class MemSpace>
+  Threads(const MemSpace&,
+          std::enable_if_t<Kokkos::is_memory_space<MemSpace>::value>* = nullptr)
+      : Threads() {}
+
   //@}
   /*------------------------------------------------------------------------*/
   //! \name Static functions that all Kokkos devices must implement.
