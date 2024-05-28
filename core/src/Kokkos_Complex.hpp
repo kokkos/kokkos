@@ -31,6 +31,18 @@
 
 namespace Kokkos {
 
+// complex_get is a helper for tuple protocol
+// Needs to be declared before complex because complex grants it friendship
+namespace Impl {
+template <size_t I, typename ComplexForwardingRef>
+KOKKOS_FUNCTION constexpr auto&& complex_get(
+    ComplexForwardingRef&& z) noexcept {
+  static_assert(I < 2);
+  if constexpr (I == 0) return static_cast<ComplexForwardingRef&&>(z).re_;
+  if constexpr (I == 1) return static_cast<ComplexForwardingRef&&>(z).im_;
+}
+}  // namespace Impl
+
 /// \class complex
 /// \brief Partial reimplementation of std::complex that works as the
 ///   result of a Kokkos::parallel_reduce.
@@ -52,6 +64,9 @@ class
  private:
   RealType re_{};
   RealType im_{};
+
+  template <size_t I, typename ComplexForwardingRef>
+  friend constexpr auto&& Impl::complex_get(ComplexForwardingRef&&) noexcept;
 
  public:
   //! The type of the real or imaginary parts of this complex number.
@@ -422,6 +437,43 @@ class
   }
 #endif  // KOKKOS_ENABLE_DEPRECATED_CODE_4
 };
+
+}  // namespace Kokkos
+
+// Tuple protocol for complex based on https://wg21.link/p2819r2
+template <typename RealType>
+struct std::tuple_size<Kokkos::complex<RealType>>
+    : std::integral_constant<size_t, 2> {};
+
+template <size_t I, typename RealType>
+struct std::tuple_element<I, Kokkos::complex<RealType>> {
+  static_assert(I < 2);
+  using type = RealType;
+};
+
+namespace Kokkos {
+
+template <size_t I, typename RealType>
+KOKKOS_FUNCTION constexpr RealType& get(complex<RealType>& z) noexcept {
+  return Impl::complex_get<I>(z);
+}
+
+template <size_t I, typename RealType>
+KOKKOS_FUNCTION constexpr RealType&& get(complex<RealType>&& z) noexcept {
+  return Impl::complex_get<I>(std::move(z));
+}
+
+template <size_t I, typename RealType>
+KOKKOS_FUNCTION constexpr const RealType& get(
+    const complex<RealType>& z) noexcept {
+  return Impl::complex_get<I>(z);
+}
+
+template <size_t I, typename RealType>
+KOKKOS_FUNCTION constexpr const RealType&& get(
+    const complex<RealType>&& z) noexcept {
+  return Impl::complex_get<I>(std::move(z));
+}
 
 //==============================================================================
 // <editor-fold desc="Equality and inequality"> {{{1
