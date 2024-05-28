@@ -352,9 +352,9 @@ class UnorderedMap {
     m_keys = key_type_view(Kokkos::Impl::append_to_label(prop_copy, " - keys"),
                            capacity());
 
-    m_values =
-        value_type_view(Kokkos::Impl::append_to_label(prop_copy, " - values"),
-                        is_set ? 0 : capacity());
+    if constexpr (!is_set)
+      m_values = value_type_view(
+          Kokkos::Impl::append_to_label(prop_copy, " - values"), capacity());
 
     m_scalars =
         scalars_view(Kokkos::Impl::append_to_label(prop_copy, " - scalars"));
@@ -526,7 +526,8 @@ class UnorderedMap {
   ///                       Kokkos::UnorderedMapInsertOpTypes for more ops.
   template <typename InsertOpType = default_op_type>
   KOKKOS_INLINE_FUNCTION insert_result
-  insert(key_type const &k, impl_value_type const &v = impl_value_type(),
+  insert(key_type const &k,
+         [[maybe_unused]] impl_value_type const &v   = impl_value_type(),
          [[maybe_unused]] InsertOpType arg_insert_op = InsertOpType()) const {
     if constexpr (is_set) {
       static_assert(std::is_same_v<InsertOpType, default_op_type>,
@@ -652,7 +653,7 @@ class UnorderedMap {
             m_keys[new_index] = k;
 #endif
 
-            if (!is_set) {
+            if constexpr (!is_set) {
               KOKKOS_NONTEMPORAL_PREFETCH_STORE(&m_values[new_index]);
 #ifdef KOKKOS_ENABLE_SYCL
               Kokkos::atomic_store(&m_values[new_index], v);
@@ -844,7 +845,7 @@ class UnorderedMap {
                     sizeof(size_type) * src.m_next_index.extent(0));
       raw_deep_copy(tmp.m_keys.data(), src.m_keys.data(),
                     sizeof(key_type) * src.m_keys.extent(0));
-      if (!is_set) {
+      if constexpr (!is_set) {
         raw_deep_copy(tmp.m_values.data(), src.m_values.data(),
                       sizeof(impl_value_type) * src.m_values.extent(0));
       }
