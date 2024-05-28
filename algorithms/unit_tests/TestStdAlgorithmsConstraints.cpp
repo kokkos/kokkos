@@ -127,26 +127,26 @@ TEST(std_algorithms, expect_no_overlap) {
 #if defined(KOKKOS_ENABLE_DEBUG)
   auto static_view_1d_0 = Kokkos::subview(static_view_1d, range0);
   auto static_view_1d_1 = Kokkos::subview(static_view_1d, range1);
-  auto first_s0         = KE::begin(static_view_1d_0);  // [0, 6]
+  auto first_s0         = KE::begin(static_view_1d_0);  // [0, 6)
   auto last_s0          = first_s0 + static_view_1d_0.extent(0);
-  auto first_s1         = KE::begin(static_view_1d_1);  // [3, 9]
+  auto first_s1         = KE::begin(static_view_1d_1);  // [3, 9)
   EXPECT_DEATH({ KE::Impl::expect_no_overlap(first_s0, last_s0, first_s1); },
                "Kokkos contract violation:.*");
 
   auto dynamic_view_1d_0 = Kokkos::subview(dynamic_view_1d, range0);
   auto dynamic_view_1d_1 = Kokkos::subview(dynamic_view_1d, range1);
-  auto first_d0          = KE::begin(dynamic_view_1d_0);  // [0, 6]
+  auto first_d0          = KE::begin(dynamic_view_1d_0);  // [0, 6)
   auto last_d0           = first_d0 + dynamic_view_1d_0.extent(0);
-  auto first_d1          = KE::begin(dynamic_view_1d_1);  // [3, 9]
+  auto first_d1          = KE::begin(dynamic_view_1d_1);  // [3, 9)
   EXPECT_DEATH({ KE::Impl::expect_no_overlap(first_d0, last_d0, first_d1); },
                "Kokkos contract violation:.*");
 #endif
 
   auto strided_view_1d_0 = Kokkos::subview(strided_view_1d, range0);
   auto strided_view_1d_1 = Kokkos::subview(strided_view_1d, range1);
-  auto first_st0         = KE::begin(strided_view_1d_0);  // [0, 12]
+  auto first_st0         = KE::begin(strided_view_1d_0);  // [0, 12)
   auto last_st0          = first_st0 + strided_view_1d_0.extent(0);
-  auto first_st1         = KE::begin(strided_view_1d_1);  // [3, 15]
+  auto first_st1         = KE::begin(strided_view_1d_1);  // [3, 15)
   // Does not overlap since offset (=3) is not divisible by stride (=2)
   EXPECT_NO_THROW(
       { KE::Impl::expect_no_overlap(first_st0, last_st0, first_st1); });
