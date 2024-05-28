@@ -59,7 +59,7 @@ TEST_F(scope_guard, create) {
 
         std::exit(EXIT_SUCCESS);
       },
-      testing::ExitedWithCode(0), "");
+      testing::ExitedWithCode(EXIT_SUCCESS), "");
 }
 
 /**
@@ -76,7 +76,7 @@ TEST_F(scope_guard, create_argument) {
 
         std::exit(EXIT_SUCCESS);
       },
-      testing::ExitedWithCode(0), "");
+      testing::ExitedWithCode(EXIT_SUCCESS), "");
 }
 
 /**
