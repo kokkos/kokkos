@@ -185,7 +185,7 @@ class RandomAccessIterator< ::Kokkos::View<DataType, Args...> > {
   reference operator*() const { return m_view(m_current_index); }
 
   KOKKOS_FUNCTION
-  auto view() const { return m_view; }
+  view_type view() const { return m_view; }
 
  private:
   view_type m_view;

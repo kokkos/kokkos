@@ -236,8 +236,7 @@ KOKKOS_INLINE_FUNCTION void expect_valid_range(IteratorType first,
 template <typename IteratorType1, typename IteratorType2>
 KOKKOS_INLINE_FUNCTION void expect_no_overlap(
     [[maybe_unused]] IteratorType1 first, [[maybe_unused]] IteratorType1 last,
-    [[maybe_unused]] IteratorType2 s_first,
-    [[maybe_unused]] IteratorType2 s_last) {
+    [[maybe_unused]] IteratorType2 s_first) {
   if constexpr (is_kokkos_iterator_v<IteratorType1> &&
                 is_kokkos_iterator_v<IteratorType2>) {
     auto const view1 = first.view();
@@ -256,8 +255,7 @@ KOKKOS_INLINE_FUNCTION void expect_no_overlap(
       auto* first_pointer1                 = view1.data();
       auto* first_pointer2                 = view2.data();
       [[maybe_unused]] auto* last_pointer1 = first_pointer1 + (last - first);
-      [[maybe_unused]] auto* last_pointer2 =
-          first_pointer2 + (s_last - s_first);
+      [[maybe_unused]] auto* last_pointer2 = first_pointer2 + (last - first);
       KOKKOS_EXPECTS(first_pointer1 >= last_pointer2 ||
                      last_pointer1 <= first_pointer2 || is_no_overlap);
     }

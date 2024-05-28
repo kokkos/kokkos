@@ -82,16 +82,14 @@ OutputIteratorType adjacent_difference_exespace_impl(
     return first_dest;
   }
 
-  const auto num_elements =
-      Kokkos::Experimental::distance(first_from, last_from);
-
 #ifdef KOKKOS_ENABLE_DEBUG
   // check for overlapping iterators
-  auto last_dest = first_dest + num_elements;
-  Impl::expect_no_overlap(first_from, last_from, first_dest, last_dest);
+  Impl::expect_no_overlap(first_from, last_from, first_dest);
 #endif
 
   // run
+  const auto num_elements =
+      Kokkos::Experimental::distance(first_from, last_from);
   ::Kokkos::parallel_for(
       label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
       StdAdjacentDiffFunctor(first_from, first_dest, bin_op));
@@ -121,16 +119,14 @@ KOKKOS_FUNCTION OutputIteratorType adjacent_difference_team_impl(
     return first_dest;
   }
 
-  const auto num_elements =
-      Kokkos::Experimental::distance(first_from, last_from);
-
 #ifdef KOKKOS_ENABLE_DEBUG
   // check for overlapping iterators
-  auto last_dest = first_dest + num_elements;
-  Impl::expect_no_overlap(first_from, last_from, first_dest, last_dest);
+  Impl::expect_no_overlap(first_from, last_from, first_dest);
 #endif
 
   // run
+  const auto num_elements =
+      Kokkos::Experimental::distance(first_from, last_from);
   ::Kokkos::parallel_for(
       TeamThreadRange(teamHandle, 0, num_elements),
       StdAdjacentDiffFunctor(first_from, first_dest, bin_op));
