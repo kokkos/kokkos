@@ -3541,7 +3541,7 @@ namespace Impl {
 // create a mirror view
 // private interface that accepts arbitrary view constructor args passed by a
 // view_alloc
-template <class T, class... P, class... ViewCtorArgs>
+template <class T, class... P, class... ViewCtorArgs, class = std::enable_if<std::is_void<typename ViewTraits<T, P...>::specialize>::value>>
 inline auto create_mirror_view(
     const Kokkos::View<T, P...>& src,
     [[maybe_unused]] const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
