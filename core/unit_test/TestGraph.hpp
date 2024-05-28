@@ -21,6 +21,21 @@
 
 namespace Test {
 
+template <class ExecSpace, class ValueType>
+struct NoOpReduceFunctor {
+  KOKKOS_FUNCTION void operator()(int, ValueType&) const {
+    Kokkos::abort("Should never be called!");
+  }
+  KOKKOS_FUNCTION void operator()(int, int, ValueType&) const {
+    Kokkos::abort("Should never be called!");
+  }
+  KOKKOS_FUNCTION void operator()(
+      const typename Kokkos::TeamPolicy<ExecSpace>::member_type&,
+      ValueType&) const {
+    Kokkos::abort("Should never be called!");
+  }
+};
+
 template <class ExecSpace>
 struct CountTestFunctor {
   using value_type = int;
@@ -208,9 +223,24 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), DISABLED_repeat_chain) {
 }
 
 TEST_F(TEST_CATEGORY_FIXTURE(graph), zero_work_reduce) {
-  auto graph = Kokkos::Experimental::create_graph(ex, [&](auto root) {
-    root.then_parallel_reduce(0, set_result_functor{bugs}, count);
-  });
+  auto graph = Kokkos::Experimental::create_graph(
+      ex, [&](Kokkos::Experimental::GraphNodeRef<TEST_EXECSPACE> root) {
+        NoOpReduceFunctor<TEST_EXECSPACE, int> no_op_functor;
+        root.then_parallel_reduce(Kokkos::RangePolicy<TEST_EXECSPACE>(0, 0),
+                                  no_op_functor, count)
+#if !defined(KOKKOS_ENABLE_SYCL)  // FIXME_SYCL
+#if !defined(KOKKOS_ENABLE_CUDA)  // FIXME_CUDA
+            .then_parallel_reduce(
+                Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>{{0, 0},
+                                                                       {0, 0}},
+                no_op_functor, count)
+#endif
+            .then_parallel_reduce(
+                Kokkos::TeamPolicy<TEST_EXECSPACE>{0, Kokkos::AUTO},
+                no_op_functor, count)
+#endif
+            ;
+      });
 // These fences are only necessary because of the weirdness of how CUDA
 // UVM works on pre pascal cards.
 #if defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_ENABLE_CUDA_UVM) && \
