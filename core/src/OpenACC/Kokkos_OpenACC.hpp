@@ -73,6 +73,11 @@ class OpenACC {
 
   OpenACC();
 
+  template <class MemSpace>
+  OpenACC(const MemSpace&,
+          std::enable_if_t<Kokkos::is_memory_space<MemSpace>::value>* = nullptr)
+      : OpenACC() {}
+
   explicit OpenACC(int async_arg);
 
   static void impl_initialize(InitializationSettings const& settings);

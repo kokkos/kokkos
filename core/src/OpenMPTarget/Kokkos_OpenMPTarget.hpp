@@ -102,6 +102,13 @@ class OpenMPTarget {
   }
 
   OpenMPTarget();
+
+  template <class MemSpace>
+  OpenMPTarget(
+      const MemSpace&,
+      std::enable_if_t<Kokkos::is_memory_space<MemSpace>::value>* = nullptr)
+      : OpenMPTarget() {}
+
   uint32_t impl_instance_id() const noexcept;
 
  private:
