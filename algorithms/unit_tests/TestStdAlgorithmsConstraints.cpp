@@ -103,7 +103,7 @@ TEST(std_algorithms, expect_no_overlap) {
   strided_view_1d_t strided_view_1d{"std-algo-test-1d-strided-view", layout1d};
 
 // Overlapping because iterators are identical
-#if defined(KOKKOS_ENABLE_DEBUG) && !defined(NDEBUG)
+#if defined(KOKKOS_ENABLE_DEBUG)
   auto first_s = KE::begin(static_view_1d);
   auto last_s  = first_s + extent0;
   EXPECT_DEATH({ KE::Impl::expect_no_overlap(first_s, last_s, first_s); },
@@ -124,7 +124,7 @@ TEST(std_algorithms, expect_no_overlap) {
   static constexpr size_t sub_extent0 = 6, offset0 = 3;
   std::pair<size_t, size_t> range0(0, sub_extent0),
       range1(offset0, offset0 + sub_extent0);
-#if defined(KOKKOS_ENABLE_DEBUG) && !defined(NDEBUG)
+#if defined(KOKKOS_ENABLE_DEBUG)
   auto static_view_1d_0 = Kokkos::subview(static_view_1d, range0);
   auto static_view_1d_1 = Kokkos::subview(static_view_1d, range1);
   auto first_s0         = KE::begin(static_view_1d_0);  // [0, 6]
