@@ -3503,6 +3503,7 @@ inline auto create_mirror(const Kokkos::View<T, P...>& src,
 }
 }  // namespace Impl
 
+// public interface
 template <class T, class... P>
 auto create_mirror(Kokkos::View<T, P...> const& src) {
   return Impl::create_mirror(src, Impl::ViewCtorProp<>{});

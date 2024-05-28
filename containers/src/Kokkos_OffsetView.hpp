@@ -1871,13 +1871,14 @@ inline auto create_mirror(const Kokkos::Experimental::OffsetView<T, P...>& src,
 
 }  // namespace Impl
 
-// Create a mirror in host space
+// public interface
 template <class T, class... P>
 inline auto create_mirror(
     const Kokkos::Experimental::OffsetView<T, P...>& src) {
   return Impl::create_mirror(src, Impl::ViewCtorProp<>{});
 }
 
+// public interface that accepts a without initializing flag
 template <class T, class... P>
 inline auto create_mirror(
     Kokkos::Impl::WithoutInitializing_t wi,
@@ -1885,7 +1886,7 @@ inline auto create_mirror(
   return Impl::create_mirror(src, Kokkos::view_alloc(wi));
 }
 
-// Create a mirror in a new space
+// public interface that accepts a space
 template <class Space, class T, class... P,
           typename Enable = std::enable_if_t<Kokkos::is_space<Space>::value>>
 inline auto create_mirror(
@@ -1894,6 +1895,7 @@ inline auto create_mirror(
       src, Kokkos::view_alloc(typename Space::memory_space{}));
 }
 
+// public interface that accepts a space and a without initializing flag
 template <class Space, class T, class... P,
           typename Enable = std::enable_if_t<Kokkos::is_space<Space>::value>>
 typename Kokkos::Impl::MirrorOffsetType<Space, T, P...>::view_type
@@ -1903,6 +1905,8 @@ create_mirror(Kokkos::Impl::WithoutInitializing_t wi, const Space&,
       src, Kokkos::view_alloc(typename Space::memory_space{}, wi));
 }
 
+// public interface that accepts arbitrary view constructor args passed by a
+// view_alloc
 template <class T, class... P, class... ViewCtorArgs>
 inline auto create_mirror(
     const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
@@ -1951,13 +1955,14 @@ inline auto create_mirror_view(
 
 }  // namespace Impl
 
-// Create a mirror view in host space
+// public interface
 template <class T, class... P>
 inline auto create_mirror_view(
     const typename Kokkos::Experimental::OffsetView<T, P...>& src) {
   return Impl::create_mirror_view(src, Impl::ViewCtorProp<>{});
 }
 
+// public interface that accepts a without initializing flag
 template <class T, class... P>
 inline auto create_mirror_view(
     Kokkos::Impl::WithoutInitializing_t wi,
@@ -1965,7 +1970,7 @@ inline auto create_mirror_view(
   return Impl::create_mirror_view(src, Kokkos::view_alloc(wi));
 }
 
-// Create a mirror view in a new space
+// public interface that accepts a space
 template <class Space, class T, class... P,
           typename Enable = std::enable_if_t<Kokkos::is_space<Space>::value>>
 inline auto create_mirror_view(
@@ -1974,6 +1979,7 @@ inline auto create_mirror_view(
       src, Kokkos::view_alloc(typename Space::memory_space{}));
 }
 
+// public interface that accepts a space and a without initializing flag
 template <class Space, class T, class... P,
           typename Enable = std::enable_if_t<Kokkos::is_space<Space>::value>>
 inline auto create_mirror_view(
@@ -1983,6 +1989,8 @@ inline auto create_mirror_view(
       src, Kokkos::view_alloc(typename Space::memory_space{}, wi));
 }
 
+// public interface that accepts arbitrary view constructor args passed by a
+// view_alloc
 template <class T, class... P, class... ViewCtorArgs>
 inline auto create_mirror_view(
     const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
@@ -1990,7 +1998,9 @@ inline auto create_mirror_view(
   return Impl::create_mirror_view(src, arg_prop);
 }
 
-// Create a mirror view and deep_copy in a new space
+// create a mirror view and deep copy it
+// public interface that accepts arbitrary view constructor args passed by a
+// view_alloc
 template <class... ViewCtorArgs, class T, class... P>
 typename Kokkos::Impl::MirrorOffsetViewType<
     typename Impl::ViewCtorProp<ViewCtorArgs...>::memory_space, T,
