@@ -603,7 +603,6 @@ TEST(TEST_CATEGORY, complex_structured_bindings) {
   ASSERT_EQ(li, z0.real());
   ASSERT_EQ(l.real(), z0.imag());
   ASSERT_EQ(l.imag(), z0.real());
-
 }
 
 }  // namespace Test
