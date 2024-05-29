@@ -37,13 +37,13 @@ class AssertEnvironmentTest : public ::testing::Test {
   }
 };
 
-using scope_guard           = AssertEnvironmentTest;
 using scope_guard_DeathTest = AssertEnvironmentTest;
 
 /**
  * Test to create a scope guard normally.
  */
-TEST_F(scope_guard, create) {
+TEST_F(scope_guard_DeathTest, create) {
+  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
   // run it in a different process so side effects are not kept
   EXPECT_EXIT(
       {
@@ -65,7 +65,8 @@ TEST_F(scope_guard, create) {
 /**
  * Test to create a scope guard with an argument.
  */
-TEST_F(scope_guard, create_argument) {
+TEST_F(scope_guard_DeathTest, create_argument) {
+  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
   // run it in a different process so side effects are not kept
   EXPECT_EXIT(
       {
