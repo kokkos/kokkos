@@ -31,7 +31,6 @@
 #include <algorithm>
 #include <atomic>
 
-// #include <Cuda/Kokkos_Cuda_BlockSize_Deduction.hpp>
 #include <impl/Kokkos_Error.hpp>
 
 #include <impl/Kokkos_Tools.hpp>
@@ -181,12 +180,16 @@ void *impl_allocate_common(const int device_id,
 #elif defined(KOKKOS_ENABLE_IMPL_CUDA_EMULATE_UNIFIED_MEMORY)
   // This is inteded to simulate Grace-Hopper like behavior
   error_code = cudaMallocManaged(&ptr, arg_alloc_size, cudaMemAttachGlobal);
-  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaDeviceSynchronize());
+  if (error_code == cudaSuccess) {
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaDeviceSynchronize());
+  }
 #elif defined(KOKKOS_ENABLE_IMPL_CUDA_UNIFIED_MEMORY)
   // This is intended for Grace-Hopper (and future unified memory architectures)
   // The idea is to use host allocator and then advise to keep it in HBM on
   // device, but that requires CUDA 12.2
-  static_assert(CUDART_VERSION >= 12020);
+  static_assert(CUDART_VERSION >= 12020,
+                "CUDA runtime version >=12.2 required when "
+                "Kokkos_ENABLE_IMPL_CUDA_UNIFIED_MEMORY is set");
   if (arg_alloc_size) {  // cudaMemAdvise_v2 does not work with nullptr
     ptr = malloc(arg_alloc_size);
     if (ptr != nullptr) {
