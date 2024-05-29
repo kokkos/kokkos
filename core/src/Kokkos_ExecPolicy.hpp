@@ -1224,7 +1224,7 @@ struct ParallelConstructName<FunctorType, TagType, true> {
     if (label.empty()) {
 #ifndef KOKKOS_COMPILER_INTEL
       default_name = std::string(TypeInfo<FunctorType>::name()) + "/" +
-                     TypeInfo<TagType>::name();
+                     std::string(TypeInfo<TagType>::name());
 #else
       default_name = std::string(typeid(FunctorType).name()) + "/" +
                      typeid(TagType).name();
