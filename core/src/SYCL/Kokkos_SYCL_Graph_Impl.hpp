@@ -96,6 +96,7 @@ inline GraphImpl<Kokkos::Experimental::SYCL>::GraphImpl(
 
 inline void GraphImpl<Kokkos::Experimental::SYCL>::add_node(
     std::shared_ptr<aggregate_node_impl_t> const& arg_node_ptr) {
+  // add an empty node that needs to be set up before finalizing the graph
   arg_node_ptr->node_details_t::node = m_graph.add();
 }
 
