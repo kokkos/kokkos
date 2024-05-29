@@ -39,8 +39,11 @@
 
 /// Some tests are skipped for unified memory space.
 #if defined(KOKKOS_ENABLE_IMPL_CUDA_UNIFIED_MEMORY)
-#define GTEST_SKIP_IF_UNIFIED_MEMORY_SPACE \
-  GTEST_SKIP() << "skipping since unified memory requires additional fences";
+#define GTEST_SKIP_IF_UNIFIED_MEMORY_SPACE                               \
+  if constexpr (std::is_same_v<typename TEST_EXECSPACE::memory_space,    \
+                               Kokkos::CudaSpace>)                       \
+    GTEST_SKIP() << "skipping since unified memory requires additional " \
+                    "fences";
 #else
 #define GTEST_SKIP_IF_UNIFIED_MEMORY_SPACE
 #endif
