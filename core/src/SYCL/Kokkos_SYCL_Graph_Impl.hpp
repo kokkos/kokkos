@@ -154,7 +154,6 @@ inline auto GraphImpl<Kokkos::Experimental::SYCL>::create_root_node_ptr() {
   auto rv = std::make_shared<root_node_impl_t>(get_execution_space(),
                                                _graph_node_is_root_ctor_tag{});
   rv->node_details_t::node = m_graph.add();
-  KOKKOS_ENSURES(rv->node_details_t::node);
   return rv;
 }
 
