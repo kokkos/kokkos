@@ -57,13 +57,6 @@ class GraphNodeKernelImpl<Kokkos::Experimental::SYCL, PolicyType, Functor,
       : GraphNodeKernelImpl("", exec_space, std::move(arg_functor),
                             (PolicyDeduced &&) arg_policy) {}
 
-  ~GraphNodeKernelImpl() {
-    if (m_driver_storage) {
-      Kokkos::Experimental::SYCLDeviceUSMSpace().deallocate(m_driver_storage,
-                                                            sizeof(base_t));
-    }
-  }
-
   void set_sycl_graph_ptr(
       sycl::ext::oneapi::experimental::command_graph<
           sycl::ext::oneapi::experimental::graph_state::modifiable>*
@@ -87,22 +80,12 @@ class GraphNodeKernelImpl<Kokkos::Experimental::SYCL, PolicyType, Functor,
     return *m_graph_ptr;
   }
 
-  Kokkos::ObservingRawPtr<base_t> allocate_driver_memory_buffer() const {
-    KOKKOS_EXPECTS(m_driver_storage == nullptr);
-    m_driver_storage = static_cast<base_t*>(
-        Kokkos::Experimental::SYCLDeviceUSMSpace().allocate(
-            "GraphNodeKernel global memory functor storage", sizeof(base_t)));
-    KOKKOS_ENSURES(m_driver_storage != nullptr);
-    return m_driver_storage;
-  }
-
  private:
   Kokkos::ObservingRawPtr<sycl::ext::oneapi::experimental::command_graph<
       sycl::ext::oneapi::experimental::graph_state::modifiable>>
       m_graph_ptr = nullptr;
   Kokkos::ObservingRawPtr<std::optional<sycl::ext::oneapi::experimental::node>>
-      m_graph_node_ptr                          = nullptr;
-  Kokkos::OwningRawPtr<base_t> m_driver_storage = nullptr;
+      m_graph_node_ptr = nullptr;
 };
 
 struct SYCLGraphNodeAggregateKernel {
