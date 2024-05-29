@@ -72,7 +72,7 @@ struct GraphImpl<Kokkos::Cuda> {
       GraphNodeImpl<Kokkos::Cuda, aggregate_kernel_impl_t,
                     Kokkos::Experimental::TypeErasedTag>;
 
-  // Not moveable or copyable; it spends its whole life as a shared_ptr in the
+  // Not movable or copyable; it spends its whole life as a shared_ptr in the
   // Graph object
   GraphImpl()                 = delete;
   GraphImpl(GraphImpl const&) = delete;
@@ -115,7 +115,7 @@ struct GraphImpl<Kokkos::Cuda> {
 
   template <class NodeImpl>
   //  requires NodeImplPtr is a shared_ptr to specialization of GraphNodeImpl
-  //  Also requires that the kernel has the graph node tag in it's policy
+  //  Also requires that the kernel has the graph node tag in its policy
   void add_node(std::shared_ptr<NodeImpl> const& arg_node_ptr) {
     static_assert(NodeImpl::kernel_type::Policy::is_graph_kernel::value);
     KOKKOS_EXPECTS(bool(arg_node_ptr));

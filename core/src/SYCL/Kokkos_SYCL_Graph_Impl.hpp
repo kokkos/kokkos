@@ -43,7 +43,7 @@ class GraphImpl<Kokkos::Experimental::SYCL> {
       GraphNodeImpl<Kokkos::Experimental::SYCL, aggregate_kernel_impl_t,
                     Kokkos::Experimental::TypeErasedTag>;
 
-  // Not moveable or copyable; it spends its whole life as a shared_ptr in the
+  // Not movable or copyable; it spends its whole life as a shared_ptr in the
   // Graph object.
   GraphImpl()                 = delete;
   GraphImpl(GraphImpl const&) = delete;
@@ -100,7 +100,7 @@ inline void GraphImpl<Kokkos::Experimental::SYCL>::add_node(
 }
 
 // Requires NodeImplPtr is a shared_ptr to specialization of GraphNodeImpl
-// Also requires that the kernel has the graph node tag in it's policy
+// Also requires that the kernel has the graph node tag in its policy
 template <class NodeImpl>
 inline void GraphImpl<Kokkos::Experimental::SYCL>::add_node(
     std::shared_ptr<NodeImpl> const& arg_node_ptr) {
