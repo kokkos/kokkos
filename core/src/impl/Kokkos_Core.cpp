@@ -611,7 +611,7 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
   declare_configuration_metadata("options", "KOKKOS_ENABLE_LIBDL", "no");
 #endif
   declare_configuration_metadata("architecture", "Default Device",
-                                 typeid(Kokkos::DefaultExecutionSpace).name());
+                                 Kokkos::DefaultExecutionSpace::name());
 
 #if defined(KOKKOS_ARCH_A64FX)
   declare_configuration_metadata("architecture", "CPU architecture", "A64FX");
