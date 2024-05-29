@@ -39,8 +39,11 @@
 
 /// Some tests are skipped for unified memory space.
 #if defined(KOKKOS_ENABLE_IMPL_CUDA_UNIFIED_MEMORY)
-#define GTEST_SKIP_IF_UNIFIED_MEMORY_SPACE \
-  GTEST_SKIP() << "skipping since unified memory requires additional fences";
+#define GTEST_SKIP_IF_UNIFIED_MEMORY_SPACE                               \
+  if constexpr (std::is_same_v<typename TEST_EXECSPACE::memory_space,    \
+                               Kokkos::CudaSpace>)                       \
+    GTEST_SKIP() << "skipping since unified memory requires additional " \
+                    "fences";
 #else
 #define GTEST_SKIP_IF_UNIFIED_MEMORY_SPACE
 #endif
@@ -277,7 +280,7 @@ TEST(TEST_CATEGORY, resize_realloc_no_init_scatterview) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableKernels());
   Kokkos::Experimental::ScatterView<
-      int*** * [1][2][3], typename TEST_EXECSPACE::array_layout, TEST_EXECSPACE>
+      int**** [1][2][3], typename TEST_EXECSPACE::array_layout, TEST_EXECSPACE>
       bla("bla", 4, 5, 6, 7);
 
   auto success = validate_absence(
@@ -309,7 +312,7 @@ TEST(TEST_CATEGORY, resize_realloc_no_alloc_scatterview) {
   listen_tool_events(Config::DisableAll(), Config::EnableKernels(),
                      Config::EnableAllocs());
   Kokkos::Experimental::ScatterView<
-      int*** * [1][2][3], typename TEST_EXECSPACE::array_layout, TEST_EXECSPACE>
+      int**** [1][2][3], typename TEST_EXECSPACE::array_layout, TEST_EXECSPACE>
       bla("bla", 7, 6, 5, 4);
 
   auto success = validate_absence(
@@ -340,7 +343,7 @@ TEST(TEST_CATEGORY, resize_exec_space_scatterview) {
   listen_tool_events(Config::DisableAll(), Config::EnableFences(),
                      Config::EnableKernels());
   Kokkos::Experimental::ScatterView<
-      int*** * [1][2][3], typename TEST_EXECSPACE::array_layout, TEST_EXECSPACE>
+      int**** [1][2][3], typename TEST_EXECSPACE::array_layout, TEST_EXECSPACE>
       bla("bla", 7, 6, 5, 4);
 
   auto success = validate_absence(
