@@ -37,7 +37,7 @@ extern "C" {
 namespace Kokkos {
 namespace Impl {
 
-[[noreturn]] __device__ __noinline__ static void cuda_abort(
+[[noreturn]] __device__ static void cuda_abort(
     const char *const message) {
   const char empty[] = "";
 
