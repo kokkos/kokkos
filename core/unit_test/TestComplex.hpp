@@ -586,15 +586,18 @@ TEST(TEST_CATEGORY, complex_structured_bindings) {
   ASSERT_EQ(ri, 7.);
 
   // get const rvalue
-  static_assert(std::is_same_v<decltype(Kokkos::get<0>(
-                                   const_cast<Z const &&>(Z(11., 13.)))),
-                               Z::value_type const &&>);
-  static_assert(std::is_same_v<decltype(Kokkos::get<1>(
-                                   const_cast<Z const &&>(Z(11., 13.)))),
-                               Z::value_type const &&>);
-  auto &&[crr, cri] = const_cast<Z const &&>(Z(11., 13.));
-  ASSERT_EQ(crr, 11.);
-  ASSERT_EQ(cri, 13.);
+  auto rc = []() -> Z const && {
+    static const Z zz(11., 13.);
+    return std::move(zz);
+  };
+  static_assert(
+      std::is_same_v<decltype(Kokkos::get<0>(rc())), Z::value_type const &&>);
+  static_assert(
+      std::is_same_v<decltype(Kokkos::get<1>(rc())), Z::value_type const &&>);
+
+  auto &&[crr, cri] = rc();
+  ASSERT_EQ(crr, rc().real());
+  ASSERT_EQ(cri, rc().imag());
 
   // swap real and imaginary
   const Z z0 = l;
