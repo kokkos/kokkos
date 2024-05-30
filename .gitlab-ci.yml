@@ -1,0 +1,13 @@
+test:
+  stage: test
+  tags: [frontier, shell]
+  id_tokens:
+    OLCF_ID_TOKEN:
+      aud: https://code.olcf.ornl.gov
+  script:
+    - module load rocm/6.0
+    - mkdir build
+    - cd build
+    - cmake -DCMAKE_CXX_COMPILER=hipcc -DKokkos_ENABLE_HIP=ON -DKokkos_ENABLE_TESTS=ON ..
+    - make -j16
+    - ctest -E Kokkos_CoreUnitTest_DeviceAndThreads -V
