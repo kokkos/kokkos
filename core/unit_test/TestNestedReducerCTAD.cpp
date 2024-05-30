@@ -36,23 +36,20 @@ struct TestNestedReducerCTAD {
     KOKKOS_FUNCTION void operator()(int, ValueType&) const {}
   };
 
-  template <class ReducerTypeExpected, class TeamHandle,
-            class ReducerTypeToCheck>
-  KOKKOS_FUNCTION static void check_types(TeamHandle const& team_handle,
-                                          ReducerTypeToCheck const& reducer) {
+  template <class ReducerTypeExpected, class ReducerTypeToCheck>
+  KOKKOS_FUNCTION static void check_types([
+      [maybe_unused]] ReducerTypeToCheck const& reducer) {
     static_assert(std::is_same_v<ReducerTypeExpected, ReducerTypeToCheck>);
-    Kokkos::parallel_reduce(
-        Kokkos::TeamVectorRange(team_handle, 0, 0),
-        FakeFunctor<typename ReducerTypeExpected::value_type>(), reducer);
   }
 
-  KOKKOS_FUNCTION void operator()(TeamHandle const& team_handle) const {
+  KOKKOS_FUNCTION void operator()([
+      [maybe_unused]] TeamHandle const& team_handle) const {
     {
       using ReducerTypeExpected = Kokkos::Sum<ScalarType, MemorySpace>;
       using ValueType           = ReducerTypeExpected::value_type;
       Kokkos::View<ValueType, MemorySpace> view;
       Kokkos::Sum reducer(view);
-      check_types<ReducerTypeExpected>(team_handle, reducer);
+      check_types<ReducerTypeExpected>(reducer);
     }
 
     {
@@ -60,7 +57,7 @@ struct TestNestedReducerCTAD {
       using ValueType           = ReducerTypeExpected::value_type;
       Kokkos::View<ValueType, MemorySpace> view;
       Kokkos::Prod reducer(view);
-      check_types<ReducerTypeExpected>(team_handle, reducer);
+      check_types<ReducerTypeExpected>(reducer);
     }
 
     {
@@ -68,7 +65,7 @@ struct TestNestedReducerCTAD {
       using ValueType           = ReducerTypeExpected::value_type;
       Kokkos::View<ValueType, MemorySpace> view;
       Kokkos::Min reducer(view);
-      check_types<ReducerTypeExpected>(team_handle, reducer);
+      check_types<ReducerTypeExpected>(reducer);
     }
 
     {
@@ -76,7 +73,7 @@ struct TestNestedReducerCTAD {
       using ValueType           = ReducerTypeExpected::value_type;
       Kokkos::View<ValueType, MemorySpace> view;
       Kokkos::Max reducer(view);
-      check_types<ReducerTypeExpected>(team_handle, reducer);
+      check_types<ReducerTypeExpected>(reducer);
     }
 
     {
@@ -84,7 +81,7 @@ struct TestNestedReducerCTAD {
       using ValueType           = ReducerTypeExpected::value_type;
       Kokkos::View<ValueType, MemorySpace> view;
       Kokkos::LAnd reducer(view);
-      check_types<ReducerTypeExpected>(team_handle, reducer);
+      check_types<ReducerTypeExpected>(reducer);
     }
 
     {
@@ -92,7 +89,7 @@ struct TestNestedReducerCTAD {
       using ValueType           = ReducerTypeExpected::value_type;
       Kokkos::View<ValueType, MemorySpace> view;
       Kokkos::LOr reducer(view);
-      check_types<ReducerTypeExpected>(team_handle, reducer);
+      check_types<ReducerTypeExpected>(reducer);
     }
 
     {
@@ -100,7 +97,7 @@ struct TestNestedReducerCTAD {
       using ValueType           = ReducerTypeExpected::value_type;
       Kokkos::View<ValueType, MemorySpace> view;
       Kokkos::BAnd reducer(view);
-      check_types<ReducerTypeExpected>(team_handle, reducer);
+      check_types<ReducerTypeExpected>(reducer);
     }
 
     {
@@ -108,7 +105,7 @@ struct TestNestedReducerCTAD {
       using ValueType           = ReducerTypeExpected::value_type;
       Kokkos::View<ValueType, MemorySpace> view;
       Kokkos::BOr reducer(view);
-      check_types<ReducerTypeExpected>(team_handle, reducer);
+      check_types<ReducerTypeExpected>(reducer);
     }
 
     {
@@ -117,7 +114,7 @@ struct TestNestedReducerCTAD {
       using ValueType = ReducerTypeExpected::value_type;
       Kokkos::View<ValueType, MemorySpace> view;
       Kokkos::MinLoc reducer(view);
-      check_types<ReducerTypeExpected>(team_handle, reducer);
+      check_types<ReducerTypeExpected>(reducer);
     }
 
     {
@@ -126,7 +123,7 @@ struct TestNestedReducerCTAD {
       using ValueType = ReducerTypeExpected::value_type;
       Kokkos::View<ValueType, MemorySpace> view;
       Kokkos::MaxLoc reducer(view);
-      check_types<ReducerTypeExpected>(team_handle, reducer);
+      check_types<ReducerTypeExpected>(reducer);
     }
 
     {
@@ -134,7 +131,7 @@ struct TestNestedReducerCTAD {
       using ValueType           = ReducerTypeExpected::value_type;
       Kokkos::View<ValueType, MemorySpace> view;
       Kokkos::MinMax reducer(view);
-      check_types<ReducerTypeExpected>(team_handle, reducer);
+      check_types<ReducerTypeExpected>(reducer);
     }
 
     {
@@ -143,7 +140,7 @@ struct TestNestedReducerCTAD {
       using ValueType = ReducerTypeExpected::value_type;
       Kokkos::View<ValueType, MemorySpace> view;
       Kokkos::MinMaxLoc reducer(view);
-      check_types<ReducerTypeExpected>(team_handle, reducer);
+      check_types<ReducerTypeExpected>(reducer);
     }
 
     {
@@ -152,7 +149,7 @@ struct TestNestedReducerCTAD {
       using ValueType = ReducerTypeExpected::value_type;
       Kokkos::View<ValueType, MemorySpace> view;
       Kokkos::MaxFirstLoc reducer(view);
-      check_types<ReducerTypeExpected>(team_handle, reducer);
+      check_types<ReducerTypeExpected>(reducer);
     }
 
     {
@@ -163,7 +160,7 @@ struct TestNestedReducerCTAD {
       Kokkos::View<ValueType, MemorySpace> view;
       FakeComparator comparator;
       Kokkos::MaxFirstLocCustomComparator reducer(view, comparator);
-      check_types<ReducerTypeExpected>(team_handle, reducer);
+      check_types<ReducerTypeExpected>(reducer);
     }
 
     {
@@ -172,7 +169,7 @@ struct TestNestedReducerCTAD {
       using ValueType = ReducerTypeExpected::value_type;
       Kokkos::View<ValueType, MemorySpace> view;
       Kokkos::MinFirstLoc reducer(view);
-      check_types<ReducerTypeExpected>(team_handle, reducer);
+      check_types<ReducerTypeExpected>(reducer);
     }
 
     {
@@ -183,7 +180,7 @@ struct TestNestedReducerCTAD {
       Kokkos::View<ValueType, MemorySpace> view;
       FakeComparator comparator;
       Kokkos::MinFirstLocCustomComparator reducer(view, comparator);
-      check_types<ReducerTypeExpected>(team_handle, reducer);
+      check_types<ReducerTypeExpected>(reducer);
     }
 
     {
@@ -192,7 +189,7 @@ struct TestNestedReducerCTAD {
       using ValueType = ReducerTypeExpected::value_type;
       Kokkos::View<ValueType, MemorySpace> view;
       Kokkos::MinMaxFirstLastLoc reducer(view);
-      check_types<ReducerTypeExpected>(team_handle, reducer);
+      check_types<ReducerTypeExpected>(reducer);
     }
 
     {
@@ -202,7 +199,7 @@ struct TestNestedReducerCTAD {
       Kokkos::View<ValueType, MemorySpace> view;
       FakeComparator comparator;
       Kokkos::MinMaxFirstLastLocCustomComparator reducer(view, comparator);
-      check_types<ReducerTypeExpected>(team_handle, reducer);
+      check_types<ReducerTypeExpected>(reducer);
     }
 
     {
@@ -210,7 +207,7 @@ struct TestNestedReducerCTAD {
       using ValueType           = ReducerTypeExpected::value_type;
       Kokkos::View<ValueType, MemorySpace> view;
       Kokkos::FirstLoc reducer(view);
-      check_types<ReducerTypeExpected>(team_handle, reducer);
+      check_types<ReducerTypeExpected>(reducer);
     }
 
     {
@@ -218,7 +215,7 @@ struct TestNestedReducerCTAD {
       using ValueType           = ReducerTypeExpected::value_type;
       Kokkos::View<ValueType, MemorySpace> view;
       Kokkos::LastLoc reducer(view);
-      check_types<ReducerTypeExpected>(team_handle, reducer);
+      check_types<ReducerTypeExpected>(reducer);
     }
 
     {
@@ -227,7 +224,7 @@ struct TestNestedReducerCTAD {
       using ValueType = ReducerTypeExpected::value_type;
       Kokkos::View<ValueType, MemorySpace> view;
       Kokkos::StdIsPartitioned reducer(view);
-      check_types<ReducerTypeExpected>(team_handle, reducer);
+      check_types<ReducerTypeExpected>(reducer);
     }
 
     {
@@ -236,7 +233,7 @@ struct TestNestedReducerCTAD {
       using ValueType = ReducerTypeExpected::value_type;
       Kokkos::View<ValueType, MemorySpace> view;
       Kokkos::StdPartitionPoint reducer(view);
-      check_types<ReducerTypeExpected>(team_handle, reducer);
+      check_types<ReducerTypeExpected>(reducer);
     }
   }
 
