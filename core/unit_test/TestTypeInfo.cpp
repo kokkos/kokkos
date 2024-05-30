@@ -16,6 +16,8 @@
 
 #include <Kokkos_TypeInfo.hpp>
 
+#include <type_traits>
+
 namespace {
 
 struct Foo {};
@@ -46,5 +48,8 @@ static_assert(Kokkos::TypeInfo<Baz>::name()      == "union `anonymous-namespace'
 #error how did I ended up here?
 #endif
 // clang-format on
+
+using T = void;
+static_assert(!std::is_default_constructible_v<Kokkos::TypeInfo<T>>);
 
 }  // namespace
