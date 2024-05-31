@@ -6,8 +6,7 @@ test:
       aud: https://code.olcf.ornl.gov
   script:
     - module load rocm/6.0
-    - mkdir build
+    - cmake -B build -DCMAKE_CXX_COMPILER=hipcc -DKokkos_ENABLE_HIP=ON -DKokkos_ENABLE_TESTS=ON
+    - cmake --build build -j48
     - cd build
-    - cmake -DCMAKE_CXX_COMPILER=hipcc -DKokkos_ENABLE_HIP=ON -DKokkos_ENABLE_TESTS=ON ..
-    - make -j16
     - ctest -E Kokkos_CoreUnitTest_DeviceAndThreads -V
