@@ -442,7 +442,8 @@ class
 
 }  // namespace Kokkos
 
-// Tuple protocol for complex based on https://wg21.link/p2819r2
+// Tuple protocol for complex based on https://wg21.link/p2819r2 (voted into
+// the C++26 working draft on 2023-11)
 template <typename RealType>
 struct std::tuple_size<Kokkos::complex<RealType>>
     : std::integral_constant<size_t, 2> {};
