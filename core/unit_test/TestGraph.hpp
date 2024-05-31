@@ -229,7 +229,6 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), zero_work_reduce) {
         NoOpReduceFunctor<TEST_EXECSPACE, int> no_op_functor;
         root.then_parallel_reduce(Kokkos::RangePolicy<TEST_EXECSPACE>(0, 0),
                                   no_op_functor, count)
-#if !defined(KOKKOS_ENABLE_SYCL)  // FIXME_SYCL
 #if !defined(KOKKOS_ENABLE_SYCL) || \
     defined(SYCL_EXT_ONEAPI_GRAPH)  // FIXME_SYCL
 #if !defined(KOKKOS_ENABLE_CUDA) && \
