@@ -39,9 +39,9 @@ KOKKOS_FUNCTION constexpr auto&& complex_get(
     ComplexForwardingRef&& z) noexcept {
   static_assert(I < 2);
   if constexpr (I == 0)
-    return static_cast<ComplexForwardingRef&&>(z).re_;
+    return std::forward<ComplexForwardingRef>(z).re_;
   else
-    return static_cast<ComplexForwardingRef&&>(z).im_;
+    return std::forward<ComplexForwardingRef>(z).im_;
 }
 }  // namespace Impl
 
