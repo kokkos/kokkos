@@ -391,6 +391,7 @@ struct std::tuple_size<Kokkos::Array<T, N>>
 
 template <std::size_t I, class T, std::size_t N>
 struct std::tuple_element<I, Kokkos::Array<T, N>> {
+  static_assert(I < N);
   using type = T;
 };
 
@@ -398,21 +399,25 @@ namespace Kokkos {
 
 template <std::size_t I, class T, std::size_t N>
 KOKKOS_FUNCTION constexpr T& get(Array<T, N>& a) noexcept {
+  static_assert(I < N);
   return a[I];
 }
 
 template <std::size_t I, class T, std::size_t N>
 KOKKOS_FUNCTION constexpr T const& get(Array<T, N> const& a) noexcept {
+  static_assert(I < N);
   return a[I];
 }
 
 template <std::size_t I, class T, std::size_t N>
 KOKKOS_FUNCTION constexpr T&& get(Array<T, N>&& a) noexcept {
+  static_assert(I < N);
   return std::move(a[I]);
 }
 
 template <std::size_t I, class T, std::size_t N>
 KOKKOS_FUNCTION constexpr T const&& get(Array<T, N> const&& a) noexcept {
+  static_assert(I < N);
   return std::move(a[I]);
 }
 
