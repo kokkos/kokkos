@@ -184,6 +184,9 @@ class RandomAccessIterator< ::Kokkos::View<DataType, Args...> > {
   KOKKOS_FUNCTION
   reference operator*() const { return m_view(m_current_index); }
 
+  KOKKOS_FUNCTION
+  view_type view() const { return m_view; }
+
  private:
   view_type m_view;
   ptrdiff_t m_current_index = 0;

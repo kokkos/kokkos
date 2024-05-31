@@ -93,6 +93,7 @@ SET(COMPILE_ONLY_SOURCES
   TestViewTypeTraits.cpp
   TestTypeList.cpp
   TestMDRangePolicyCTAD.cpp
+  TestTeamPolicyCTAD.cpp
   view/TestExtentsDatatypeConversion.cpp
 )
 
@@ -987,6 +988,13 @@ KOKKOS_ADD_EXECUTABLE_AND_TEST(
   CoreUnitTest_PushFinalizeHook
   SOURCES
     UnitTest_PushFinalizeHook.cpp
+)
+
+KOKKOS_ADD_EXECUTABLE_AND_TEST(
+  CoreUnitTest_ScopeGuard
+  SOURCES
+    UnitTestMain.cpp
+    UnitTest_ScopeGuard.cpp
 )
 
 # This test is intended for development and debugging by putting code

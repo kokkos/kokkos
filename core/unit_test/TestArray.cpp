@@ -18,6 +18,11 @@
 
 namespace {
 
+// nvcc errors on variables only used in static_asserts
+// Passing those variables to this function should eliminate the warning
+template <typename... Ts>
+KOKKOS_FUNCTION constexpr void maybe_unused(Ts&&...) {}
+
 KOKKOS_FUNCTION constexpr bool test_array() {
   constexpr Kokkos::Array<int, 3> a{{1, 2}};
 
@@ -159,5 +164,31 @@ constexpr bool test_array_specialization_kokkos_swap() {
 }
 
 static_assert(test_array_specialization_kokkos_swap());
+
+constexpr bool test_to_array() {
+  // copies a string literal
+  [[maybe_unused]] auto a1 = Kokkos::to_array("foo");
+  static_assert(a1.size() == 4);
+  maybe_unused(a1);
+
+  // deduces both element type and length
+  [[maybe_unused]] auto a2 = Kokkos::to_array({0, 2, 1, 3});
+  static_assert(std::is_same_v<decltype(a2), Kokkos::Array<int, 4>>);
+  maybe_unused(a2);
+
+// gcc8 and icc do not support the implicit conversion
+#if !(defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU < 910)) && \
+    !(defined(KOKKOS_COMPILER_INTEL) && (KOKKOS_COMPILER_INTEL < 2021))
+  // deduces length with element type specified
+  // implicit conversion happens
+  [[maybe_unused]] auto a3 = Kokkos::to_array<long>({0, 1, 3});
+  static_assert(std::is_same_v<decltype(a3), Kokkos::Array<long, 3>>);
+  maybe_unused(a3);
+#endif
+
+  return true;
+}
+
+static_assert(test_to_array());
 
 }  // namespace
