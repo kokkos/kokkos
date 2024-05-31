@@ -1035,7 +1035,7 @@ struct TeamThreadMDRange<Rank<N, OuterDir, InnerDir>, TeamHandle> {
 };
 
 template <typename TeamHandle, typename... Args>
-TeamThreadMDRange(TeamHandle const&, Args&&...)
+KOKKOS_DEDUCTION_GUIDE TeamThreadMDRange(TeamHandle const&, Args&&...)
     ->TeamThreadMDRange<Rank<sizeof...(Args), Iterate::Default>, TeamHandle>;
 
 template <typename Rank, typename TeamHandle>
@@ -1072,7 +1072,7 @@ struct ThreadVectorMDRange<Rank<N, OuterDir, InnerDir>, TeamHandle> {
 };
 
 template <typename TeamHandle, typename... Args>
-ThreadVectorMDRange(TeamHandle const&, Args&&...)
+KOKKOS_DEDUCTION_GUIDE ThreadVectorMDRange(TeamHandle const&, Args&&...)
     ->ThreadVectorMDRange<Rank<sizeof...(Args), Iterate::Default>, TeamHandle>;
 
 template <typename Rank, typename TeamHandle>
@@ -1109,7 +1109,7 @@ struct TeamVectorMDRange<Rank<N, OuterDir, InnerDir>, TeamHandle> {
 };
 
 template <typename TeamHandle, typename... Args>
-TeamVectorMDRange(TeamHandle const&, Args&&...)
+KOKKOS_DEDUCTION_GUIDE TeamVectorMDRange(TeamHandle const&, Args&&...)
     ->TeamVectorMDRange<Rank<sizeof...(Args), Iterate::Default>, TeamHandle>;
 
 template <typename Rank, typename TeamHandle, typename Lambda,
