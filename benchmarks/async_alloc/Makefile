@@ -1,5 +1,3 @@
-#KOKKOS_DEVICES=OpenMP
-#KOKKOS_ARCH="ZEN2"
 KOKKOS_DEVICES=Cuda
 KOKKOS_CUDA_OPTIONS=enable_lambda
 KOKKOS_ARCH = "ZEN2,Ada89"
@@ -24,7 +22,7 @@ CXX = ${KOKKOS_PATH}/bin/nvcc_wrapper
 EXE = async_alloc.cuda
 else
 CXX = g++
-EXE = bytes_and_flops.exe
+EXE = async_alloc.exe
 endif
 
 CXXFLAGS ?= -O3 -g
