@@ -22,6 +22,17 @@
 
 namespace {
 
+template <class Accessor>
+struct MakeConstAccessorImpl;
+
+template <template <class> class Accessor, class T>
+struct MakeConstAccessorImpl<Accessor<T>> {
+  using type = Accessor<const T>;
+};
+
+template <class Accessor>
+using make_const_accessor = typename MakeConstAccessorImpl<Accessor>::type;
+
 template <class T, class ExecutionSpace>
 struct TestViewMDSpanConversion {
   using value_type = T;
@@ -125,7 +136,7 @@ struct TestViewMDSpanConversion {
           Kokkos::dextents<typename natural_mdspan_type::index_type,
                            natural_mdspan_type::rank()>,
           typename natural_mdspan_type::layout_type,
-          typename natural_mdspan_type::accessor_type>;
+          make_const_accessor<typename natural_mdspan_type::accessor_type>>;
       mdspan_type cvt = v;
       ASSERT_EQ(cvt.data_handle(), v.data());
       ASSERT_EQ(cvt.mapping(), ref_layout_mapping);
