@@ -34,6 +34,8 @@ class mdspan
 private:
   static_assert(detail::__is_extents_v<Extents>,
                 MDSPAN_IMPL_STANDARD_NAMESPACE_STRING "::mdspan's Extents template parameter must be a specialization of " MDSPAN_IMPL_STANDARD_NAMESPACE_STRING "::extents.");
+  static_assert(std::is_same<ElementType, typename AccessorPolicy::element_type>::value,
+                MDSPAN_IMPL_STANDARD_NAMESPACE_STRING "::mdspan's ElementType template parameter must be the same as its AccessorPolicy::element_type.");
 
   // Workaround for non-deducibility of the index sequence template parameter if it's given at the top level
   template <class>
