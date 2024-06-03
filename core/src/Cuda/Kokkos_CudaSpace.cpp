@@ -34,7 +34,6 @@
 #include <unordered_set>
 #include <limits>
 
-// #include <Cuda/Kokkos_Cuda_BlockSize_Deduction.hpp>
 #include <impl/Kokkos_Error.hpp>
 
 #include <impl/Kokkos_Tools.hpp>
@@ -233,15 +232,15 @@ bool initializeMempool(const int device_id, const cudaStream_t stream,
 
   // Handle exception in case the string is unconvertible
   try {
-    requested_size = static_cast<size_t>(std::stod(mempool_size_string));
+    requested_size = std::stod(mempool_size_string);
   } catch (...) {
     std::cerr << "Unable to convert " << mempool_size_string
               << " to a number\n";
     return false;
   }
 
-  // Check for non-positive size memory requests
-  if (requested_size <= 0) {
+  // Check for negative size memory requests (zero is allowed)
+  if (requested_size < 0) {
     std::cerr << "Negative amount of memory requested in allocation\n";
     return false;
   }
@@ -250,17 +249,18 @@ bool initializeMempool(const int device_id, const cudaStream_t stream,
   requested_size *= factor;
 
   // Check we are not asking for memory that is greater than what size_t can
-  // hold. Since requested can be the larger I convert the maximum of size_t
-  // to a double and compare those
+  // hold. Since the requested size can be the larger I convert the maximum of
+  // size_t to a double and compare those
   double max_size_t = static_cast<double>(std::numeric_limits<size_t>::max());
   if (requested_size > max_size_t) {
     std::cerr << "Requested amount of memory " << requested_size << " exceeds "
-              << "maximum alloatable size " << max_size_t << "\n";
+              << "maximum allocatable size " << max_size_t << "\n";
     return false;
   }
 
   // At this point requested_size should be appropriate
-  // neither too big nor negative.
+  // neither too big nor negative - even with the ceiling it should
+  // not be bigger than max_size_t. Safe to cast
   size_t n_bytes = static_cast<size_t>(std::ceil(requested_size));
 
   // We set up the default memory pool
