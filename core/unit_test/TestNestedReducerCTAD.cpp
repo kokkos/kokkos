@@ -26,9 +26,10 @@ struct TestNestedReducerCTAD {
   using TeamHandle  = TeamPolicy::member_type;
 
   struct FakeComparator {
-    KOKKOS_FUNCTION bool operator()(ScalarType, ScalarType) const {
+    template <class T>
+    KOKKOS_FUNCTION bool operator()(T const&, T const&) const {
       return true;
-    };
+    }
   };
 
   template <class ValueType>
@@ -237,8 +238,8 @@ struct TestNestedReducerCTAD {
     }
   }
 
-  static void test_ctad_inside_parallel_for() {
-    Kokkos::parallel_for(TeamPolicy(0, Kokkos::AUTO), TestNestedReducerCTAD());
+  TestNestedReducerCTAD() {
+    Kokkos::parallel_for(TeamPolicy(0, Kokkos::AUTO), *this);
   }
 };
 
