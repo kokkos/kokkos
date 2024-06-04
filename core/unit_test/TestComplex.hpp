@@ -544,70 +544,6 @@ TEST(TEST_CATEGORY, complex_operations_arithmetic_types_overloads) {
                               Kokkos::complex<long double>>::value));
 }
 
-TEST(TEST_CATEGORY, complex_structured_bindings_ORIG) {
-  using Z = Kokkos::complex<double>;
-
-  // tuple_size
-  static_assert(std::is_same_v<std::tuple_size<Z>::type,
-                               std::integral_constant<size_t, 2>>);
-
-  // tuple_element
-  static_assert(std::is_same_v<std::tuple_element_t<0, Z>, Z::value_type>);
-  static_assert(std::is_same_v<std::tuple_element_t<1, Z>, Z::value_type>);
-
-  Z z(2., 3.);
-
-  // get lvalue
-  Z &l = z;
-  static_assert(std::is_same_v<decltype(Kokkos::get<0>(l)), Z::value_type &>);
-  static_assert(std::is_same_v<decltype(Kokkos::get<1>(l)), Z::value_type &>);
-  auto &[lr, li] = l;
-  ASSERT_EQ(lr, l.real());
-  ASSERT_EQ(li, l.imag());
-
-  // get const lvalue
-  Z const &c = z;
-  static_assert(
-      std::is_same_v<decltype(Kokkos::get<0>(c)), Z::value_type const &>);
-  static_assert(
-      std::is_same_v<decltype(Kokkos::get<1>(c)), Z::value_type const &>);
-  auto &[cr, ci] = c;
-  ASSERT_EQ(cr, c.real());
-  ASSERT_EQ(ci, c.imag());
-
-  // get rvalue
-  static_assert(
-      std::is_same_v<decltype(Kokkos::get<0>(Z(5., 7.))), Z::value_type &&>);
-  static_assert(
-      std::is_same_v<decltype(Kokkos::get<1>(Z(5., 7.))), Z::value_type &&>);
-
-  auto &&[rr, ri] = Z(5., 7.);
-  ASSERT_EQ(rr, 5.);
-  ASSERT_EQ(ri, 7.);
-
-  // get const rvalue
-  auto rc = []() -> Z const && {
-    static const Z zz(11., 13.);
-    return std::move(zz);
-  };
-  static_assert(
-      std::is_same_v<decltype(Kokkos::get<0>(rc())), Z::value_type const &&>);
-  static_assert(
-      std::is_same_v<decltype(Kokkos::get<1>(rc())), Z::value_type const &&>);
-
-  auto &&[crr, cri] = rc();
-  ASSERT_EQ(crr, rc().real());
-  ASSERT_EQ(cri, rc().imag());
-
-  // swap real and imaginary
-  const Z z0 = l;
-  std::swap(lr, li);
-  ASSERT_EQ(lr, z0.imag());
-  ASSERT_EQ(li, z0.real());
-  ASSERT_EQ(l.real(), z0.imag());
-  ASSERT_EQ(l.imag(), z0.real());
-}
-
 template <class ExecSpace>
 struct TestComplexStructuredBindings {
   using exec_space       = ExecSpace;
@@ -630,7 +566,7 @@ struct TestComplexStructuredBindings {
   host_view_type h_results;
 
   void testit() {
-    d_results = device_view_type("DeviceComplexStructuredBindings", 10);
+    d_results = device_view_type("TestComplexStructuredBindings", 6);
     h_results = Kokkos::create_mirror_view(d_results);
 
     Kokkos::parallel_for(Kokkos::RangePolicy<ExecSpace>(0, 1), *this);
