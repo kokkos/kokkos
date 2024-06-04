@@ -73,9 +73,8 @@ struct TestTeamThreadMDRangeCTAD {
     }
   }
 
-  static void test_ctad_inside_parallel_for() {
-    Kokkos::parallel_for(TeamPolicy(0, Kokkos::AUTO),
-                         TestTeamThreadMDRangeCTAD());
+  TestTeamThreadMDRangeCTAD() {
+    Kokkos::parallel_for(TeamPolicy(0, Kokkos::AUTO), *this);
   }
 };
 
@@ -133,9 +132,8 @@ struct TestTeamVectorMDRangeCTAD {
     }
   }
 
-  static void test_ctad_inside_parallel_for() {
-    Kokkos::parallel_for(TeamPolicy(0, Kokkos::AUTO),
-                         TestTeamVectorMDRangeCTAD());
+  TestTeamVectorMDRangeCTAD() {
+    Kokkos::parallel_for(TeamPolicy(0, Kokkos::AUTO), *this);
   }
 };
 
@@ -193,9 +191,8 @@ struct TestThreadVectorMDRangeCTAD {
     }
   }
 
-  static void test_ctad_inside_parallel_for() {
-    Kokkos::parallel_for(TeamPolicy(0, Kokkos::AUTO),
-                         TestThreadVectorMDRangeCTAD());
+  TestThreadVectorMDRangeCTAD() {
+    Kokkos::parallel_for(TeamPolicy(0, Kokkos::AUTO), *this);
   }
 };
 
