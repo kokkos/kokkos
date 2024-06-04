@@ -544,7 +544,7 @@ TEST(TEST_CATEGORY, complex_operations_arithmetic_types_overloads) {
                               Kokkos::complex<long double>>::value));
 }
 
-TEST(TEST_CATEGORY, complex_structured_bindings) {
+TEST(TEST_CATEGORY, complex_structured_bindings_ORIG) {
   using Z = Kokkos::complex<double>;
 
   // tuple_size
@@ -606,6 +606,113 @@ TEST(TEST_CATEGORY, complex_structured_bindings) {
   ASSERT_EQ(li, z0.real());
   ASSERT_EQ(l.real(), z0.imag());
   ASSERT_EQ(l.imag(), z0.real());
+}
+
+template <class ExecSpace>
+struct TestComplexStructuredBindings {
+  using exec_space       = ExecSpace;
+  using value_type       = double;
+  using complex_type     = Kokkos::complex<double>;
+  using device_view_type = Kokkos::View<complex_type *, exec_space>;
+  using host_view_type   = typename device_view_type::HostMirror;
+
+  // tuple_size
+  static_assert(std::is_same_v<std::tuple_size<complex_type>::type,
+                               std::integral_constant<size_t, 2>>);
+
+  // tuple_element
+  static_assert(
+      std::is_same_v<std::tuple_element_t<0, complex_type>, value_type>);
+  static_assert(
+      std::is_same_v<std::tuple_element_t<1, complex_type>, value_type>);
+
+  device_view_type d_results;
+  host_view_type h_results;
+
+  void testit() {
+    d_results = device_view_type("DeviceComplexStructuredBindings", 10);
+    h_results = Kokkos::create_mirror_view(d_results);
+
+    Kokkos::parallel_for(Kokkos::RangePolicy<ExecSpace>(0, 1), *this);
+    Kokkos::fence();
+    Kokkos::deep_copy(h_results, d_results);
+
+    // get lvalue
+    ASSERT_FLOAT_EQ(d_results[0].real(), 2.);
+    ASSERT_FLOAT_EQ(d_results[0].imag(), 3.);
+
+    // get const lvalue
+    ASSERT_FLOAT_EQ(d_results[1].real(), 2.);
+    ASSERT_FLOAT_EQ(d_results[1].imag(), 3.);
+
+    // get rvalue
+    ASSERT_FLOAT_EQ(d_results[2].real(), 5.);
+    ASSERT_FLOAT_EQ(d_results[2].imag(), 7.);
+
+    // get const rvalue
+    ASSERT_FLOAT_EQ(d_results[3].real(), 11.);
+    ASSERT_FLOAT_EQ(d_results[3].imag(), 13.);
+
+    // swap real and imaginary
+    ASSERT_FLOAT_EQ(d_results[4].real(), 2.);
+    ASSERT_FLOAT_EQ(d_results[4].imag(), 3.);
+    ASSERT_FLOAT_EQ(d_results[5].real(), 3.);
+    ASSERT_FLOAT_EQ(d_results[5].imag(), 2.);
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(int) const {
+    complex_type z(2., 3.);
+
+    // get lvalue
+    complex_type &l = z;
+    static_assert(std::is_same_v<decltype(Kokkos::get<0>(l)), value_type &>);
+    static_assert(std::is_same_v<decltype(Kokkos::get<1>(l)), value_type &>);
+    auto &[lr, li] = l;
+    d_results[0]   = complex_type(lr, li);
+
+    // get const lvalue
+    complex_type const &c = z;
+    static_assert(
+        std::is_same_v<decltype(Kokkos::get<0>(c)), value_type const &>);
+    static_assert(
+        std::is_same_v<decltype(Kokkos::get<1>(c)), value_type const &>);
+    auto &[cr, ci] = c;
+    d_results[1]   = complex_type(cr, ci);
+
+    // get rvalue
+    static_assert(std::is_same_v<decltype(Kokkos::get<0>(complex_type(5., 7.))),
+                                 value_type &&>);
+    static_assert(std::is_same_v<decltype(Kokkos::get<1>(complex_type(5., 7.))),
+                                 value_type &&>);
+
+    auto &&[rr, ri] = complex_type(5., 7.);
+    d_results[2]    = complex_type(rr, ri);
+
+    // get const rvalue
+    auto rc = []() -> complex_type const && {
+      static const complex_type zz(11., 13.);
+      return std::move(zz);
+    };
+    static_assert(
+        std::is_same_v<decltype(Kokkos::get<0>(rc())), value_type const &&>);
+    static_assert(
+        std::is_same_v<decltype(Kokkos::get<1>(rc())), value_type const &&>);
+
+    auto &&[crr, cri] = rc();
+    d_results[3]      = complex_type(crr, cri);
+
+    // swap real and imaginary
+    const complex_type l0 = l;
+    Kokkos::kokkos_swap(lr, li);
+    d_results[4] = l0;
+    d_results[5] = l;
+  }
+};
+
+TEST(TEST_CATEGORY, complex_structured_bindings) {
+  TestComplexStructuredBindings<TEST_EXECSPACE> test;
+  test.testit();
 }
 
 }  // namespace Test
