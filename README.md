@@ -30,12 +30,12 @@ To start learning about Kokkos:
 
 The latest release of Kokkos can be obtained from the [GitHub releases page](https://github.com/kokkos/kokkos/releases/latest).
 
-The current release is [4.3.00](https://github.com/kokkos/kokkos/releases/tag/4.3.00).
+The current release is [4.3.01](https://github.com/kokkos/kokkos/releases/tag/4.3.01).
 
 ```bash
-curl -OJ -L https://github.com/kokkos/kokkos/archive/refs/tags/4.3.00.tar.gz
+curl -OJ -L https://github.com/kokkos/kokkos/archive/refs/tags/4.3.01.tar.gz
 # Or with wget
-wget https://github.com/kokkos/kokkos/archive/refs/tags/4.3.00.tar.gz
+wget https://github.com/kokkos/kokkos/archive/refs/tags/4.3.01.tar.gz
 ```
 
 To clone the latest development version of Kokkos from GitHub:
