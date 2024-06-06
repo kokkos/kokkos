@@ -1038,7 +1038,7 @@ class DualView : public ViewTraits<DataType, Properties...> {
       /* Resize on Device */
       if (sizeMismatch) {
         ::Kokkos::resize(properties, d_view, n0, n1, n2, n3, n4, n5, n6, n7);
-        resync_host<ViewCtorArgs...>();
+        resync_host(properties);
 
         /* Mark Device copy as modified */
         ++modified_flags(1);
@@ -1049,7 +1049,7 @@ class DualView : public ViewTraits<DataType, Properties...> {
       /* Resize on Host */
       if (sizeMismatch) {
         ::Kokkos::resize(properties, h_view, n0, n1, n2, n3, n4, n5, n6, n7);
-        resync_device<ViewCtorArgs...>();
+        resync_device(properties);
 
         /* Mark Host copy as modified */
         ++modified_flags(0);
@@ -1088,11 +1088,13 @@ class DualView : public ViewTraits<DataType, Properties...> {
     }
   }
 
+  private:
+
+  // resync host mirror from device
   template <class... ViewCtorArgs>
-  inline void resync_host() {
+  inline void resync_host(Impl::ViewCtorProp<ViewCtorArgs...> const &) {
     using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
 
-    // resync host mirror from device
     if constexpr (alloc_prop_input::initialize) {
       h_view = create_mirror_view(typename t_host::memory_space(), d_view);
     } else {
@@ -1101,11 +1103,11 @@ class DualView : public ViewTraits<DataType, Properties...> {
     }
   }
 
+  // resync device mirror from host
   template <class... ViewCtorArgs>
-  inline void resync_device() {
+  inline void resync_device(Impl::ViewCtorProp<ViewCtorArgs...> const &) {
     using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
 
-    // resync device mirror from host
     if constexpr (alloc_prop_input::initialize) {
       d_view = create_mirror_view(typename t_dev::memory_space(), h_view);
 
@@ -1114,6 +1116,8 @@ class DualView : public ViewTraits<DataType, Properties...> {
                                   typename t_dev::memory_space(), h_view);
     }
   }
+
+  public:
 
   void resize(const size_t n0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
               const size_t n1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
