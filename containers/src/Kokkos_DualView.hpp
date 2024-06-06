@@ -1088,11 +1088,10 @@ class DualView : public ViewTraits<DataType, Properties...> {
     }
   }
 
-  private:
-
+ private:
   // resync host mirror from device
   template <class... ViewCtorArgs>
-  inline void resync_host(Impl::ViewCtorProp<ViewCtorArgs...> const &) {
+  inline void resync_host(Impl::ViewCtorProp<ViewCtorArgs...> const&) {
     using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
 
     if constexpr (alloc_prop_input::initialize) {
@@ -1105,7 +1104,7 @@ class DualView : public ViewTraits<DataType, Properties...> {
 
   // resync device mirror from host
   template <class... ViewCtorArgs>
-  inline void resync_device(Impl::ViewCtorProp<ViewCtorArgs...> const &) {
+  inline void resync_device(Impl::ViewCtorProp<ViewCtorArgs...> const&) {
     using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
 
     if constexpr (alloc_prop_input::initialize) {
@@ -1117,8 +1116,7 @@ class DualView : public ViewTraits<DataType, Properties...> {
     }
   }
 
-  public:
-
+ public:
   void resize(const size_t n0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
               const size_t n1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
               const size_t n2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,

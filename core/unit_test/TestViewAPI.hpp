@@ -842,7 +842,7 @@ struct TestViewMirror {
     View a_d;
 
     KOKKOS_INLINE_FUNCTION
-    explicit CopyUnInit(View const & a_d_) : a_d(a_d_) {}
+    explicit CopyUnInit(View const &a_d_) : a_d(a_d_) {}
 
     KOKKOS_INLINE_FUNCTION
     void operator()(const typename View::size_type i) const {
