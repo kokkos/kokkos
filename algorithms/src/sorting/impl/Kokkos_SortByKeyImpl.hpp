@@ -189,8 +189,8 @@ void applyPermutation(const ExecutionSpace& space,
       KOKKOS_LAMBDA(int i) { view(i) = view_copy(permutation(i)); });
 }
 
-// Use functors as nvcc errors out on trying to get the address of a function
-// with variadic template arguments
+// FIXME_NVCC: nvcc has trouble compiling lambdas inside a function with
+// variadic templates (sort_by_key_via_sort). Switch to using functors instead.
 template <typename Permute>
 struct IotaFunctor {
   Permute _permute;
