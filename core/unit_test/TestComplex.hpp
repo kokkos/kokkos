@@ -578,71 +578,80 @@ struct TestComplexStructuredBindings {
     ASSERT_FLOAT_EQ(d_results[0].imag(), 3.);
 
     // get const lvalue
-    ASSERT_FLOAT_EQ(d_results[1].real(), 2.);
-    ASSERT_FLOAT_EQ(d_results[1].imag(), 3.);
+    ASSERT_FLOAT_EQ(d_results[1].real(), 5.);
+    ASSERT_FLOAT_EQ(d_results[1].imag(), 7.);
 
     // get rvalue
-    ASSERT_FLOAT_EQ(d_results[2].real(), 5.);
-    ASSERT_FLOAT_EQ(d_results[2].imag(), 7.);
+    ASSERT_FLOAT_EQ(d_results[2].real(), 2.);
+    ASSERT_FLOAT_EQ(d_results[2].imag(), 3.);
 
     // get const rvalue
-    ASSERT_FLOAT_EQ(d_results[3].real(), 11.);
-    ASSERT_FLOAT_EQ(d_results[3].imag(), 13.);
+    ASSERT_FLOAT_EQ(d_results[3].real(), 5.);
+    ASSERT_FLOAT_EQ(d_results[3].imag(), 7.);
 
     // swap real and imaginary
-    ASSERT_FLOAT_EQ(d_results[4].real(), 2.);
-    ASSERT_FLOAT_EQ(d_results[4].imag(), 3.);
-    ASSERT_FLOAT_EQ(d_results[5].real(), 3.);
-    ASSERT_FLOAT_EQ(d_results[5].imag(), 2.);
+    ASSERT_FLOAT_EQ(d_results[4].real(), 11.);
+    ASSERT_FLOAT_EQ(d_results[4].imag(), 13.);
+    ASSERT_FLOAT_EQ(d_results[5].real(), 13.);
+    ASSERT_FLOAT_EQ(d_results[5].imag(), 11.);
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   void operator()(int) const {
-    complex_type z(2., 3.);
+    complex_type m(2., 3.);
+    const complex_type c(5., 7.);
 
     // get lvalue
-    complex_type &l = z;
-    static_assert(std::is_same_v<decltype(Kokkos::get<0>(l)), value_type &>);
-    static_assert(std::is_same_v<decltype(Kokkos::get<1>(l)), value_type &>);
-    auto &[lr, li] = l;
-    d_results[0]   = complex_type(lr, li);
+    {
+      complex_type &ml = m;
+      static_assert(std::is_same_v<decltype(Kokkos::get<0>(ml)), value_type &>);
+      static_assert(std::is_same_v<decltype(Kokkos::get<1>(ml)), value_type &>);
+      auto &[mlr, mli] = ml;
+      d_results[0]     = complex_type(mlr, mli);
+    }
 
     // get const lvalue
-    complex_type const &c = z;
-    static_assert(
-        std::is_same_v<decltype(Kokkos::get<0>(c)), value_type const &>);
-    static_assert(
-        std::is_same_v<decltype(Kokkos::get<1>(c)), value_type const &>);
-    auto &[cr, ci] = c;
-    d_results[1]   = complex_type(cr, ci);
+    {
+      const complex_type &cl = c;
+      static_assert(
+          std::is_same_v<decltype(Kokkos::get<0>(cl)), value_type const &>);
+      static_assert(
+          std::is_same_v<decltype(Kokkos::get<1>(cl)), value_type const &>);
+      auto &[clr, cli] = cl;
+      d_results[1]     = complex_type(clr, cli);
+    }
 
     // get rvalue
-    static_assert(std::is_same_v<decltype(Kokkos::get<0>(complex_type(5., 7.))),
-                                 value_type &&>);
-    static_assert(std::is_same_v<decltype(Kokkos::get<1>(complex_type(5., 7.))),
-                                 value_type &&>);
-
-    auto &&[rr, ri] = complex_type(5., 7.);
-    d_results[2]    = complex_type(rr, ri);
+    {
+      complex_type &&mr = std::move(m);
+      static_assert(std::is_same_v<decltype(Kokkos::get<0>(std::move(mr))),
+                                   value_type &&>);
+      static_assert(std::is_same_v<decltype(Kokkos::get<1>(std::move(mr))),
+                                   value_type &&>);
+      auto &&[mrr, mri] = std::move(mr);
+      d_results[2]      = complex_type(mrr, mri);
+    }
 
     // get const rvalue
-    auto rc = []() -> complex_type const && {
-      static const complex_type zz(11., 13.);
-      return std::move(zz);
-    };
-    static_assert(
-        std::is_same_v<decltype(Kokkos::get<0>(rc())), value_type const &&>);
-    static_assert(
-        std::is_same_v<decltype(Kokkos::get<1>(rc())), value_type const &&>);
-
-    auto &&[crr, cri] = rc();
-    d_results[3]      = complex_type(crr, cri);
+    {
+      complex_type const &&cr = std::move(c);
+      static_assert(std::is_same_v<decltype(Kokkos::get<0>(std::move(cr))),
+                                   value_type const &&>);
+      static_assert(std::is_same_v<decltype(Kokkos::get<1>(std::move(cr))),
+                                   value_type const &&>);
+      auto &&[crr, cri] = std::move(cr);
+      d_results[3]      = complex_type(crr, cri);
+    }
 
     // swap real and imaginary
-    const complex_type l0 = l;
-    Kokkos::kokkos_swap(lr, li);
-    d_results[4] = l0;
-    d_results[5] = l;
+    {
+      complex_type z(11., 13.);
+      d_results[4] = z;
+
+      auto &[zr, zi] = z;
+      Kokkos::kokkos_swap(zr, zi);
+      d_results[5] = z;
+    }
   }
 };
 
