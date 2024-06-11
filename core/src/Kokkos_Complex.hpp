@@ -31,19 +31,38 @@
 
 namespace Kokkos {
 
-// complex_get is a helper for tuple protocol
-// Needs to be declared before complex because complex grants it friendship
-namespace Impl {
-template <size_t I, typename ComplexForwardingRef>
-KOKKOS_FUNCTION constexpr auto&& complex_get(
-    ComplexForwardingRef&& z) noexcept {
+template <typename RealType>
+class complex;
+
+// Tuple protocol for complex based on https://wg21.link/p2819r2 (voted into
+// the C++26 working draft on 2023-11)
+
+// get<...>(...) forward declared so as not to be hidden friends
+template <size_t I, typename RealType>
+constexpr RealType& get(complex<RealType>& z) noexcept;
+
+template <size_t I, typename RealType>
+constexpr RealType&& get(complex<RealType>&& z) noexcept;
+
+template <size_t I, typename RealType>
+constexpr const RealType& get(const complex<RealType>& z) noexcept;
+
+template <size_t I, typename RealType>
+constexpr const RealType&& get(const complex<RealType>&& z) noexcept;
+
+}  // namespace Kokkos
+
+template <typename RealType>
+struct std::tuple_size<Kokkos::complex<RealType>>
+    : std::integral_constant<size_t, 2> {};
+
+template <size_t I, typename RealType>
+struct std::tuple_element<I, Kokkos::complex<RealType>> {
   static_assert(I < 2);
-  if constexpr (I == 0)
-    return std::forward<ComplexForwardingRef>(z).re_;
-  else
-    return std::forward<ComplexForwardingRef>(z).im_;
-}
-}  // namespace Impl
+  using type = RealType;
+};
+
+namespace Kokkos {
 
 /// \class complex
 /// \brief Partial reimplementation of std::complex that works as the
@@ -63,12 +82,19 @@ class
                 "Kokkos::complex can only be instantiated for a cv-unqualified "
                 "floating point type");
 
+  template <size_t I, typename ComplexForwardingRef>
+  KOKKOS_FUNCTION static constexpr auto&& get_ref(
+      ComplexForwardingRef&& z) noexcept {
+    static_assert(I < 2);
+    if constexpr (I == 0)
+      return std::forward<ComplexForwardingRef>(z).re_;
+    else
+      return std::forward<ComplexForwardingRef>(z).im_;
+  }
+
  private:
   RealType re_{};
   RealType im_{};
-
-  template <size_t I, typename ComplexForwardingRef>
-  friend constexpr auto&& Impl::complex_get(ComplexForwardingRef&&) noexcept;
 
  public:
   //! The type of the real or imaginary parts of this complex number.
@@ -273,6 +299,28 @@ class
     return *this;
   }
 
+  template <size_t I>
+  KOKKOS_FUNCTION friend constexpr RealType& get(complex& z) noexcept {
+    return get_ref<I>(z);
+  }
+
+  template <size_t I>
+  KOKKOS_FUNCTION friend constexpr RealType&& get(complex&& z) noexcept {
+    return get_ref<I>(std::move(z));
+  }
+
+  template <size_t I>
+  KOKKOS_FUNCTION friend constexpr const RealType& get(
+      const complex& z) noexcept {
+    return get_ref<I>(z);
+  }
+
+  template <size_t I>
+  KOKKOS_FUNCTION friend constexpr const RealType&& get(
+      const complex&& z) noexcept {
+    return get_ref<I>(std::move(z));
+  }
+
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   //! Copy constructor from volatile.
   template <
@@ -442,41 +490,7 @@ class
 
 }  // namespace Kokkos
 
-// Tuple protocol for complex based on https://wg21.link/p2819r2 (voted into
-// the C++26 working draft on 2023-11)
-template <typename RealType>
-struct std::tuple_size<Kokkos::complex<RealType>>
-    : std::integral_constant<size_t, 2> {};
-
-template <size_t I, typename RealType>
-struct std::tuple_element<I, Kokkos::complex<RealType>> {
-  static_assert(I < 2);
-  using type = RealType;
-};
-
 namespace Kokkos {
-
-template <size_t I, typename RealType>
-KOKKOS_FUNCTION constexpr RealType& get(complex<RealType>& z) noexcept {
-  return Impl::complex_get<I>(z);
-}
-
-template <size_t I, typename RealType>
-KOKKOS_FUNCTION constexpr RealType&& get(complex<RealType>&& z) noexcept {
-  return Impl::complex_get<I>(std::move(z));
-}
-
-template <size_t I, typename RealType>
-KOKKOS_FUNCTION constexpr const RealType& get(
-    const complex<RealType>& z) noexcept {
-  return Impl::complex_get<I>(z);
-}
-
-template <size_t I, typename RealType>
-KOKKOS_FUNCTION constexpr const RealType&& get(
-    const complex<RealType>&& z) noexcept {
-  return Impl::complex_get<I>(std::move(z));
-}
 
 //==============================================================================
 // <editor-fold desc="Equality and inequality"> {{{1
