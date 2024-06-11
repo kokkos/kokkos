@@ -574,26 +574,26 @@ struct TestComplexStructuredBindings {
     Kokkos::deep_copy(h_results, d_results);
 
     // get lvalue
-    ASSERT_FLOAT_EQ(d_results[0].real(), 2.);
-    ASSERT_FLOAT_EQ(d_results[0].imag(), 3.);
+    ASSERT_FLOAT_EQ(h_results[0].real(), 2.);
+    ASSERT_FLOAT_EQ(h_results[0].imag(), 3.);
 
     // get const lvalue
-    ASSERT_FLOAT_EQ(d_results[1].real(), 5.);
-    ASSERT_FLOAT_EQ(d_results[1].imag(), 7.);
+    ASSERT_FLOAT_EQ(h_results[1].real(), 5.);
+    ASSERT_FLOAT_EQ(h_results[1].imag(), 7.);
 
     // get rvalue
-    ASSERT_FLOAT_EQ(d_results[2].real(), 2.);
-    ASSERT_FLOAT_EQ(d_results[2].imag(), 3.);
+    ASSERT_FLOAT_EQ(h_results[2].real(), 2.);
+    ASSERT_FLOAT_EQ(h_results[2].imag(), 3.);
 
     // get const rvalue
-    ASSERT_FLOAT_EQ(d_results[3].real(), 5.);
-    ASSERT_FLOAT_EQ(d_results[3].imag(), 7.);
+    ASSERT_FLOAT_EQ(h_results[3].real(), 5.);
+    ASSERT_FLOAT_EQ(h_results[3].imag(), 7.);
 
     // swap real and imaginary
-    ASSERT_FLOAT_EQ(d_results[4].real(), 11.);
-    ASSERT_FLOAT_EQ(d_results[4].imag(), 13.);
-    ASSERT_FLOAT_EQ(d_results[5].real(), 13.);
-    ASSERT_FLOAT_EQ(d_results[5].imag(), 11.);
+    ASSERT_FLOAT_EQ(h_results[4].real(), 11.);
+    ASSERT_FLOAT_EQ(h_results[4].imag(), 13.);
+    ASSERT_FLOAT_EQ(h_results[5].real(), 13.);
+    ASSERT_FLOAT_EQ(h_results[5].imag(), 11.);
   }
 
   KOKKOS_FUNCTION
