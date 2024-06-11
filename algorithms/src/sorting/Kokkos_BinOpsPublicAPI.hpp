@@ -70,60 +70,62 @@ struct BinOp1D {
   }
 };
 
-template <class KeyViewType>
-struct BinOp3D {
-  int max_bins_[3] = {};
-  double mul_[3]   = {};
-  double min_[3]   = {};
+namespace Experimental {
+
+template <int DIM, class KeyViewType>
+struct BinOpND {
+  static_assert(DIM > 1);
+
+  int max_bins_[DIM] = {};
+  double mul_[DIM]   = {};
+  double min_[DIM]   = {};
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  KOKKOS_DEPRECATED BinOp3D() = default;
+  KOKKOS_DEPRECATED BinOpND() = default;
 #else
-  BinOp3D() = delete;
+  BinOpND() = delete;
 #endif
 
-  BinOp3D(int max_bins__[], typename KeyViewType::const_value_type min[],
+  BinOpND(int max_bins__[], typename KeyViewType::const_value_type min[],
           typename KeyViewType::const_value_type max[]) {
-    max_bins_[0] = max_bins__[0];
-    max_bins_[1] = max_bins__[1];
-    max_bins_[2] = max_bins__[2];
-    mul_[0]      = static_cast<double>(max_bins__[0]) /
-              (static_cast<double>(max[0]) - static_cast<double>(min[0]));
-    mul_[1] = static_cast<double>(max_bins__[1]) /
-              (static_cast<double>(max[1]) - static_cast<double>(min[1]));
-    mul_[2] = static_cast<double>(max_bins__[2]) /
-              (static_cast<double>(max[2]) - static_cast<double>(min[2]));
-    min_[0] = static_cast<double>(min[0]);
-    min_[1] = static_cast<double>(min[1]);
-    min_[2] = static_cast<double>(min[2]);
+    for (int d = 0; d < DIM; ++d) {
+      max_bins_[d] = max_bins__[d];
+      mul_[d]      = static_cast<double>(max_bins__[d]) /
+                (static_cast<double>(max[d]) - static_cast<double>(min[d]));
+      min_[d] = static_cast<double>(min[d]);
+    }
   }
 
   template <class ViewType>
   KOKKOS_INLINE_FUNCTION int bin(ViewType& keys, const int& i) const {
-    return int((((int(mul_[0] * (keys(i, 0) - min_[0])) * max_bins_[1]) +
-                 int(mul_[1] * (keys(i, 1) - min_[1]))) *
-                max_bins_[2]) +
-               int(mul_[2] * (keys(i, 2) - min_[2])));
+    int n = static_cast<int>(mul_[0] * (keys(i, 0) - min_[0]));
+    for (int d = 1; d < DIM; ++d)
+      n = n * max_bins_[d] + static_cast<int>(mul_[d] * (keys(i, d) - min_[d]));
+    return n;
   }
 
   KOKKOS_INLINE_FUNCTION
-  int max_bins() const { return max_bins_[0] * max_bins_[1] * max_bins_[2]; }
+  int max_bins() const {
+    int n = max_bins_[0];
+    for (int d = 1; d < DIM; ++d) n *= max_bins_[d];
+    return n;
+  }
 
   template <class ViewType, typename iType1, typename iType2>
   KOKKOS_INLINE_FUNCTION bool operator()(ViewType& keys, iType1& i1,
                                          iType2& i2) const {
-    if (keys(i1, 0) > keys(i2, 0))
-      return true;
-    else if (keys(i1, 0) == keys(i2, 0)) {
-      if (keys(i1, 1) > keys(i2, 1))
-        return true;
-      else if (keys(i1, 1) == keys(i2, 1)) {
-        if (keys(i1, 2) > keys(i2, 2)) return true;
-      }
+    for (int d = 0; d < DIM; ++d) {
+      if (keys(i1, d) > keys(i2, d)) return true;
+      if (!(keys(i1, d) == keys(i2, d))) break;
     }
     return false;
   }
 };
+
+}  // namespace Experimental
+
+template <class KeyViewType>
+using BinOp3D = Experimental::BinOpND<3, KeyViewType>;
 
 }  // namespace Kokkos
 #endif
