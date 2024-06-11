@@ -125,6 +125,9 @@ struct BinOpND {
 }  // namespace Experimental
 
 template <class KeyViewType>
+using BinOp2D = Experimental::BinOpND<2, KeyViewType>;
+
+template <class KeyViewType>
 using BinOp3D = Experimental::BinOpND<3, KeyViewType>;
 
 }  // namespace Kokkos
