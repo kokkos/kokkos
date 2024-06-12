@@ -1814,7 +1814,7 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
       TeamPolicy<typename Impl::HPXTeamMember::execution_space>, Lambda,
       ValueType>;
   using wrapped_reducer_type = typename functor_analysis_type::Reducer;
-  using value_type           = typename wrapped_reducer::value_type;
+  using value_type           = typename wrapped_reducer_type::value_type;
 
   wrapped_reducer_type wrapped_reducer(lambda);
   value_type value{};
@@ -1825,7 +1825,7 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
 #endif
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
        i += loop_boundaries.increment) {
-    lambda(i, val);
+    lambda(i, value);
   }
   wrapped_reducer.final(&value);
   result = value;
