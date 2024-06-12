@@ -56,9 +56,9 @@ static_assert(test_array_structured_binding_support());
 
 template <typename L, typename R>
 KOKKOS_FUNCTION constexpr bool is_equal(L const& l, R const& r) {
-  if (std::size(l) != std::size(r)) return false;
+  if (l.size() != r.size()) return false;
 
-  for (size_t i = 0; i != std::size(l); ++i) {
+  for (size_t i = 0; i != l.size(); ++i) {
     if (l[i] != r[i]) return false;
   }
 
@@ -137,7 +137,8 @@ struct MyInt {
   int i;
 
  private:
-  friend constexpr void kokkos_swap(MyInt& lhs, MyInt& rhs) noexcept {
+  friend constexpr KOKKOS_FUNCTION void kokkos_swap(MyInt& lhs,
+                                                    MyInt& rhs) noexcept {
     lhs.i = 255;
     rhs.i = 127;
   }

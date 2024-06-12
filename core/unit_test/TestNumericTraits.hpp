@@ -21,6 +21,19 @@
 #include <limits>
 #include "Kokkos_NumericTraits.hpp"
 
+// Suppress "'long double' is treated as 'double' in device code"
+#ifdef KOKKOS_COMPILER_NVCC
+#ifdef __NVCC_DIAG_PRAGMA_SUPPORT__
+#pragma nv_diagnostic push
+#pragma nv_diag_suppress 20208
+#else
+#ifdef __CUDA_ARCH__
+#pragma diagnostic push
+#pragma diag_suppress 20208
+#endif
+#endif
+#endif
+
 struct extrema {
 #define DEFINE_EXTREMA(T, m, M)                 \
   KOKKOS_FUNCTION static T min(T) { return m; } \
@@ -736,3 +749,13 @@ CHECK_NAN_INSTANTIATED_ON_CV_QUALIFIED_TYPES_FLOATING_POINT(signaling_NaN);
 
 #undef CHECK_NAN_INSTANTIATED_ON_CV_QUALIFIED_TYPES_FLOATING_POINT
 #undef CHECK_NAN_INSTANTIATED_ON_CV_QUALIFIED_TYPES
+
+#ifdef KOKKOS_COMPILER_NVCC
+#ifdef __NVCC_DIAG_PRAGMA_SUPPORT__
+#pragma nv_diagnostic pop
+#else
+#ifdef __CUDA_ARCH__
+#pragma diagnostic pop
+#endif
+#endif
+#endif
