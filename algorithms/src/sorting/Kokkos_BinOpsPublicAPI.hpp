@@ -22,54 +22,6 @@
 
 namespace Kokkos {
 
-template <class KeyViewType>
-struct BinOp1D {
-  int max_bins_ = {};
-  double mul_   = {};
-  double min_   = {};
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  KOKKOS_DEPRECATED BinOp1D() = default;
-#else
-  BinOp1D() = delete;
-#endif
-
-  // Construct BinOp with number of bins, minimum value and maximum value
-  BinOp1D(int max_bins__, typename KeyViewType::const_value_type min,
-          typename KeyViewType::const_value_type max)
-      : max_bins_(max_bins__ + 1),
-        // Cast to double to avoid possible overflow when using integer
-        mul_(static_cast<double>(max_bins__) /
-             (static_cast<double>(max) - static_cast<double>(min))),
-        min_(static_cast<double>(min)) {
-    // For integral types the number of bins may be larger than the range
-    // in which case we can exactly have one unique value per bin
-    // and then don't need to sort bins.
-    if (std::is_integral<typename KeyViewType::const_value_type>::value &&
-        (static_cast<double>(max) - static_cast<double>(min)) <=
-            static_cast<double>(max_bins__)) {
-      mul_ = 1.;
-    }
-  }
-
-  // Determine bin index from key value
-  template <class ViewType>
-  KOKKOS_INLINE_FUNCTION int bin(ViewType& keys, const int& i) const {
-    return static_cast<int>(mul_ * (static_cast<double>(keys(i)) - min_));
-  }
-
-  // Return maximum bin index + 1
-  KOKKOS_INLINE_FUNCTION
-  int max_bins() const { return max_bins_; }
-
-  // Compare to keys within a bin if true new_val will be put before old_val
-  template <class ViewType, typename iType1, typename iType2>
-  KOKKOS_INLINE_FUNCTION bool operator()(ViewType& keys, iType1& i1,
-                                         iType2& i2) const {
-    return keys(i1) < keys(i2);
-  }
-};
-
 namespace Experimental {
 
 template <int DIM, class KeyViewType>
@@ -122,7 +74,58 @@ struct BinOpND {
   }
 };
 
+template <class KeyViewType>
+struct BinOpND<1, KeyViewType> {
+  int max_bins_ = {};
+  double mul_   = {};
+  double min_   = {};
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  KOKKOS_DEPRECATED BinOpND() = default;
+#else
+  BinOpND() = delete;
+#endif
+
+  // Construct BinOp with number of bins, minimum value and maximum value
+  BinOpND(int max_bins__, typename KeyViewType::const_value_type min,
+          typename KeyViewType::const_value_type max)
+      : max_bins_(max_bins__ + 1),
+        // Cast to double to avoid possible overflow when using integer
+        mul_(static_cast<double>(max_bins__) /
+             (static_cast<double>(max) - static_cast<double>(min))),
+        min_(static_cast<double>(min)) {
+    // For integral types the number of bins may be larger than the range
+    // in which case we can exactly have one unique value per bin
+    // and then don't need to sort bins.
+    if (std::is_integral<typename KeyViewType::const_value_type>::value &&
+        (static_cast<double>(max) - static_cast<double>(min)) <=
+            static_cast<double>(max_bins__)) {
+      mul_ = 1.;
+    }
+  }
+
+  // Determine bin index from key value
+  template <class ViewType>
+  KOKKOS_INLINE_FUNCTION int bin(ViewType& keys, const int& i) const {
+    return static_cast<int>(mul_ * (static_cast<double>(keys(i)) - min_));
+  }
+
+  // Return maximum bin index + 1
+  KOKKOS_INLINE_FUNCTION
+  int max_bins() const { return max_bins_; }
+
+  // Compare to keys within a bin if true new_val will be put before old_val
+  template <class ViewType, typename iType1, typename iType2>
+  KOKKOS_INLINE_FUNCTION bool operator()(ViewType& keys, iType1& i1,
+                                         iType2& i2) const {
+    return keys(i1) < keys(i2);
+  }
+};
+
 }  // namespace Experimental
+
+template <class KeyViewType>
+using BinOp1D = Experimental::BinOpND<1, KeyViewType>;
 
 template <class KeyViewType>
 using BinOp2D = Experimental::BinOpND<2, KeyViewType>;
