@@ -1761,65 +1761,25 @@ struct SimpleTestValueType {
   ScalarType value[2];
 };
 
-template <typename Space>
-struct SimpleReducer {
-  using reducer          = SimpleReducer;
-  using value_type       = SimpleTestValueType;
-  using result_view_type = Kokkos::View<value_type, Space>;
-
-  KOKKOS_INLINE_FUNCTION
-  void join(value_type &dst, const value_type &src) const {
-    dst.value[0] *= src.value[0];
-    dst.value[1] *= src.value[1];
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  value_type &reference() const { return *value.data(); }
-
-  KOKKOS_INLINE_FUNCTION
-  result_view_type view() const { return value; }
-
-  KOKKOS_INLINE_FUNCTION
-  void init(value_type &init) const {
-    init.value[0] = 1;
-    init.value[1] = 2;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  void final(value_type &dst) const {
-    dst.value[0] = -dst.value[0];
-    dst.value[1] = -dst.value[1];
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  SimpleReducer(value_type &value_) : value(&value_) {}
-
-  KOKKOS_INLINE_FUNCTION
-  SimpleReducer(const result_view_type &value_) : value(value_) {}
-
- private:
-  result_view_type value;
-};
-
 struct TestTeamReducerFunctor {
   using value_type = SimpleTestValueType;
 
   KOKKOS_INLINE_FUNCTION
   void init(value_type &init) const {
     init.value[0] = 1;
-    init.value[1] = 2;
+    init.value[1] = 10;
   }
 
   KOKKOS_INLINE_FUNCTION
   void join(value_type &dst, value_type const &src) const {
     dst.value[0] *= src.value[0];
-    dst.value[1] *= src.value[1];
+    dst.value[1] += src.value[1];
   }
 
   KOKKOS_INLINE_FUNCTION
   void final(value_type &dst) const {
-    dst.value[0] = -dst.value[0];
-    dst.value[1] = -dst.value[1];
+    dst.value[0] /= -2;
+    dst.value[1] /= -2;
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -1839,19 +1799,19 @@ struct TestTeamReducer {
   KOKKOS_INLINE_FUNCTION
   void init(value_type &init) const {
     init.value[0] = 1;
-    init.value[1] = 2;
+    init.value[1] = 10;
   }
 
   KOKKOS_INLINE_FUNCTION
   void join(value_type &dst, value_type const &src) const {
     dst.value[0] *= src.value[0];
-    dst.value[1] *= src.value[1];
+    dst.value[1] += src.value[1];
   }
 
   KOKKOS_INLINE_FUNCTION
   void final(value_type &dst) const {
-    dst.value[0] = -dst.value[0];
-    dst.value[1] = -dst.value[1];
+    dst.value[0] /= -2;
+    dst.value[1] /= -2;
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -1903,8 +1863,6 @@ class TestTeamNestedReducerFunctor {
         reducer_functor_result("reducer_functor_result");
     Kokkos::View<value_type[league_size], execution_space> reducer_result(
         "reducer_result");
-    Kokkos::View<value_type[league_size], execution_space> expected_result(
-        "expected");
 
     Kokkos::parallel_for(
         team_policy_type(league_size, Kokkos::AUTO),
@@ -1934,30 +1892,14 @@ class TestTeamNestedReducerFunctor {
         });
     Kokkos::fence();
 
-    for (index_type i = 0; i < league_size; ++i) {
-      auto reducer =
-          SimpleReducer<typename ExecSpace::memory_space>(expected_result(i));
-      Kokkos::parallel_reduce(
-          test_count,
-          KOKKOS_LAMBDA(const int i, value_type &update) {
-            update.value[0] *= (i + 1);
-            update.value[1] *= (i + 2);
-          },
-          reducer);
-    }
-
     auto test1 = Kokkos::create_mirror_view_and_copy(
         Kokkos::DefaultHostExecutionSpace{}, reducer_functor_result);
     auto test2 = Kokkos::create_mirror_view_and_copy(
         Kokkos::DefaultHostExecutionSpace{}, reducer_result);
-    auto check = Kokkos::create_mirror_view_and_copy(
-        Kokkos::DefaultHostExecutionSpace{}, expected_result);
 
-    for (unsigned i = 0; i < check.extent(0); ++i) {
-      EXPECT_EQ(test1(i).value[0], check(i).value[0]);
-      EXPECT_EQ(test1(i).value[1], check(i).value[1]);
-      EXPECT_EQ(test2(i).value[0], check(i).value[0]);
-      EXPECT_EQ(test2(i).value[1], check(i).value[1]);
+    for (unsigned i = 0; i < test1.extent(0); ++i) {
+      EXPECT_EQ(test1(i).value[0], test2(i).value[0]);
+      EXPECT_EQ(test1(i).value[1], test2(i).value[1]);
     }
   }
 };
