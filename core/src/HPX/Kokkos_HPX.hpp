@@ -1762,27 +1762,20 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
       Impl::FunctorPatternInterface::REDUCE,
       TeamPolicy<typename Impl::HPXTeamMember::execution_space>, Lambda,
       ValueType>;
+  using wrapped_reducer_type = typename functor_analysis_type::Reducer;
+  using value_type           = typename wrapped_reducer_type::value_type;
 
-  constexpr bool is_reducer_lambda =
-      functor_analysis_type::has_join_member_function &&
-      functor_analysis_type::has_init_member_function;
+  wrapped_reducer_type wrapped_reducer(lambda);
+  value_type value{};
+  wrapped_reducer.init(&value);
 
-  auto run_lambda = [&](ValueType &value) {
-    for (iType i = loop_boundaries.start; i < loop_boundaries.end;
-         i += loop_boundaries.increment) {
-      lambda(i, value);
-    }
-  };
-
-  if constexpr (is_reducer_lambda) {
-    ValueType val;
-    lambda.init(val);
-    run_lambda(val);
-    result = val;
-  } else {
-    result = ValueType();
-    run_lambda(result);
+  for (iType i = loop_boundaries.start; i < loop_boundaries.end;
+       i += loop_boundaries.increment) {
+    lambda(i, value);
   }
+
+  wrapped_reducer.final(&value);
+  result = value;
 }
 
 /** \brief  Intra-thread vector parallel_for. Executes lambda(iType i) for each
@@ -1820,32 +1813,22 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
       Impl::FunctorPatternInterface::REDUCE,
       TeamPolicy<typename Impl::HPXTeamMember::execution_space>, Lambda,
       ValueType>;
+  using wrapped_reducer_type = typename functor_analysis_type::Reducer;
+  using value_type           = typename wrapped_reducer::value_type;
 
-  constexpr bool is_reducer_lambda =
-      functor_analysis_type::has_join_member_function &&
-      functor_analysis_type::has_init_member_function;
+  wrapped_reducer_type wrapped_reducer(lambda);
+  value_type value{};
+  wrapped_reducer.init(&value);
 
-  if constexpr (is_reducer_lambda) {
-    ValueType val;
-    lambda.init(val);
 #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
 #pragma ivdep
 #endif
-    for (iType i = loop_boundaries.start; i < loop_boundaries.end;
-         i += loop_boundaries.increment) {
-      lambda(i, val);
-    }
-    result = val;
-  } else {
-    result = ValueType();
-#ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
-#pragma ivdep
-#endif
-    for (iType i = loop_boundaries.start; i < loop_boundaries.end;
-         i += loop_boundaries.increment) {
-      lambda(i, result);
-    }
+  for (iType i = loop_boundaries.start; i < loop_boundaries.end;
+       i += loop_boundaries.increment) {
+    lambda(i, val);
   }
+  wrapped_reducer.final(&value);
+  result = value;
 }
 
 template <typename iType, class Lambda, typename ReducerType,
@@ -1854,11 +1837,24 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
     const Impl::TeamThreadRangeBoundariesStruct<iType, Impl::HPXTeamMember>
         &loop_boundaries,
     const Lambda &lambda, const ReducerType &reducer) {
-  reducer.init(reducer.reference());
+  using value_type            = typename ReducerType::value_type;
+  using functor_analysis_type = typename Impl::FunctorAnalysis<
+      Impl::FunctorPatternInterface::REDUCE,
+      TeamPolicy<typename Impl::HPXTeamMember::execution_space>, ReducerType,
+      value_type>;
+  using wrapped_reducer_type = typename functor_analysis_type::Reducer;
+
+  wrapped_reducer_type wrapped_reducer(reducer);
+  value_type value{};
+  wrapped_reducer.init(&value);
+
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
        i += loop_boundaries.increment) {
     lambda(i, reducer.reference());
   }
+
+  wrapped_reducer.final(&value);
+  reducer.reference() = value;
 }
 
 template <typename iType, class Lambda, typename ReducerType,
@@ -1867,14 +1863,27 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
     const Impl::ThreadVectorRangeBoundariesStruct<iType, Impl::HPXTeamMember>
         &loop_boundaries,
     const Lambda &lambda, const ReducerType &reducer) {
-  reducer.init(reducer.reference());
+  using value_type            = typename ReducerType::value_type;
+  using functor_analysis_type = typename Impl::FunctorAnalysis<
+      Impl::FunctorPatternInterface::REDUCE,
+      TeamPolicy<typename Impl::HPXTeamMember::execution_space>, ReducerType,
+      value_type>;
+  using wrapped_reducer_type = typename functor_analysis_type::Reducer;
+
+  wrapped_reducer_type wrapped_reducer(reducer);
+  value_type value{};
+  wrapped_reducer.init(&value);
+
 #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
 #pragma ivdep
 #endif
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
        i += loop_boundaries.increment) {
-    lambda(i, reducer.reference());
+    lambda(i, value);
   }
+
+  wrapped_reducer.final(&value);
+  reducer.reference() = value;
 }
 
 template <typename iType, class FunctorType, typename ValueType>
