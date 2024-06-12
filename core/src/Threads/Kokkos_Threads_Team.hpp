@@ -211,12 +211,17 @@ class ThreadsExecTeamMember {
   template <typename ReducerType>
   KOKKOS_INLINE_FUNCTION std::enable_if_t<is_reducer<ReducerType>::value>
   team_reduce(ReducerType const& reducer) const noexcept {
-    team_reduce(reducer, reducer.reference());
+    using value_type = typename ReducerType::value_type;
+    using wrapped_reducer_type =
+        typename Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
+                                       TeamPolicy<Threads>, ReducerType,
+                                       value_type>::Reducer;
+    team_reduce(wrapped_reducer_type(reducer), reducer.reference());
   }
 
   template <typename ReducerType, typename ValueType>
-  KOKKOS_INLINE_FUNCTION void team_reduce(const ReducerType& reducer,
-                                          ValueType& contribution) const {
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<is_reducer<ReducerType>::value>
+  team_reduce(const ReducerType& reducer, ValueType& contribution) const {
     KOKKOS_IF_ON_DEVICE(((void)reducer; (void)contribution;))
 
     KOKKOS_IF_ON_HOST((
@@ -241,8 +246,7 @@ class ThreadsExecTeamMember {
           *team_value = contribution;
           // Join to the team value:
           for (int i = 1; i < m_team_size; ++i) {
-            reducer.join(*team_value,
-                         *((type*)m_team_base[i]->scratch_memory()));
+            reducer.join(team_value, ((type*)m_team_base[i]->scratch_memory()));
           }
 
           // Team base thread may "lap" member threads so copy out to their
@@ -257,10 +261,7 @@ class ThreadsExecTeamMember {
 
         team_fan_out();
 
-        if constexpr (is_reducer_v<ReducerType>) {
-          // Value was changed by the team base
-          reducer.reference() = *local_value;
-        } contribution = *local_value;))
+        contribution = *local_value;))
   }
 
   /** \brief  Intra-team exclusive prefix sum with team_rank() ordering
@@ -891,34 +892,21 @@ parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
       Impl::FunctorPatternInterface::REDUCE,
       TeamPolicy<typename Impl::ThreadsExecTeamMember::execution_space>, Lambda,
       ValueType>;
+  using wrapped_reducer_type = typename functor_analysis_type::Reducer;
+  using value_type           = typename wrapped_reducer_type::value_type;
 
-  constexpr bool is_reducer_lambda =
-      functor_analysis_type::has_join_member_function &&
-      functor_analysis_type::has_init_member_function;
+  wrapped_reducer_type wrapped_reducer(lambda);
+  value_type value{};
+  wrapped_reducer.init(&value);
 
-  using ReducerSelector = typename Kokkos::Impl::if_c<is_reducer_lambda, Lambda,
-                                                      Sum<ValueType>>::type;
-
-  auto run_lambda = [&](ValueType& value) {
-    for (iType i = loop_boundaries.start; i < loop_boundaries.end;
-         i += loop_boundaries.increment) {
-      lambda(i, value);
-    }
-  };
-
-  ValueType intermediate;
-  if constexpr (is_reducer_lambda) {
-    lambda.init(intermediate);
-    run_lambda(intermediate);
-    loop_boundaries.thread.team_reduce(lambda, intermediate);
-    result = intermediate;
-  } else {
-    ReducerSelector reducer(intermediate);
-    reducer.init(intermediate);
-    run_lambda(intermediate);
-    loop_boundaries.thread.team_reduce(reducer, intermediate);
-    result = reducer.reference();
+  for (iType i = loop_boundaries.start; i < loop_boundaries.end;
+       i += loop_boundaries.increment) {
+    lambda(i, value);
   }
+
+  loop_boundaries.thread.team_reduce(wrapped_reducer, value);
+  wrapped_reducer.final(&value);
+  result = value;
 }
 
 template <typename iType, class Lambda, typename ReducerType>
@@ -926,15 +914,25 @@ KOKKOS_INLINE_FUNCTION std::enable_if_t<Kokkos::is_reducer<ReducerType>::value>
 parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
                     iType, Impl::ThreadsExecTeamMember>& loop_boundaries,
                 const Lambda& lambda, const ReducerType& reducer) {
-  typename ReducerType::value_type value;
-  reducer.init(value);
+  using value_type            = typename ReducerType::value_type;
+  using functor_analysis_type = typename Impl::FunctorAnalysis<
+      Impl::FunctorPatternInterface::REDUCE,
+      TeamPolicy<typename Impl::ThreadsExecTeamMember::execution_space>,
+      ReducerType, value_type>;
+  using wrapped_reducer_type = typename functor_analysis_type::Reducer;
+
+  wrapped_reducer_type wrapped_reducer(reducer);
+  value_type value{};
+  wrapped_reducer.init(&value);
 
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
        i += loop_boundaries.increment) {
     lambda(i, value);
   }
 
-  loop_boundaries.thread.team_reduce(reducer, value);
+  loop_boundaries.thread.team_reduce(wrapped_reducer, value);
+  wrapped_reducer.final(&value);
+  reducer.reference() = value;
 }
 
 }  // namespace Kokkos
@@ -973,27 +971,20 @@ parallel_reduce(const Impl::ThreadVectorRangeBoundariesStruct<
       Impl::FunctorPatternInterface::REDUCE,
       TeamPolicy<typename Impl::ThreadsExecTeamMember::execution_space>, Lambda,
       ValueType>;
+  using wrapped_reducer_type = typename functor_analysis_type::Reducer;
+  using value_type           = typename wrapped_reducer_type::value_type;
 
-  constexpr bool is_reducer_lambda =
-      functor_analysis_type::has_join_member_function &&
-      functor_analysis_type::has_init_member_function;
+  wrapped_reducer_type wrapped_reducer(lambda);
+  value_type value{};
+  wrapped_reducer.init(&value);
 
-  auto run_lambda = [&](ValueType& value) {
-    for (iType i = loop_boundaries.start; i < loop_boundaries.end;
-         i += loop_boundaries.increment) {
-      lambda(i, value);
-    }
-  };
-
-  if constexpr (is_reducer_lambda) {
-    ValueType val;
-    lambda.init(val);
-    run_lambda(val);
-    result = val;
-  } else {
-    result = ValueType();
-    run_lambda(result);
+  for (iType i = loop_boundaries.start; i < loop_boundaries.end;
+       i += loop_boundaries.increment) {
+    lambda(i, value);
   }
+
+  wrapped_reducer.final(&value);
+  result = value;
 }
 
 template <typename iType, class Lambda, typename ReducerType>
@@ -1001,11 +992,24 @@ KOKKOS_INLINE_FUNCTION std::enable_if_t<Kokkos::is_reducer<ReducerType>::value>
 parallel_reduce(const Impl::ThreadVectorRangeBoundariesStruct<
                     iType, Impl::ThreadsExecTeamMember>& loop_boundaries,
                 const Lambda& lambda, const ReducerType& reducer) {
-  reducer.init(reducer.reference());
+  using value_type            = typename ReducerType::value_type;
+  using functor_analysis_type = typename Impl::FunctorAnalysis<
+      Impl::FunctorPatternInterface::REDUCE,
+      TeamPolicy<typename Impl::ThreadsExecTeamMember::execution_space>,
+      ReducerType, value_type>;
+  using wrapped_reducer_type = typename functor_analysis_type::Reducer;
+
+  wrapped_reducer_type wrapped_reducer(reducer);
+  value_type value{};
+  wrapped_reducer.init(&value);
+
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
        i += loop_boundaries.increment) {
-    lambda(i, reducer.reference());
+    lambda(i, value);
   }
+
+  wrapped_reducer.final(&value);
+  reducer.reference() = value;
 }
 
 /** \brief  Inter-thread parallel exclusive prefix sum. Executes
