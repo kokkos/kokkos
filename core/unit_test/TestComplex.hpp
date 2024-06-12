@@ -30,6 +30,11 @@
 #endif
 #endif
 
+namespace {
+template <typename... Ts>
+KOKKOS_FUNCTION constexpr void maybe_unused(Ts &&...) noexcept {}
+}  // namespace
+
 namespace Test {
 
 // Test construction and assignment
@@ -562,10 +567,38 @@ struct TestComplexStructuredBindings {
   static_assert(
       std::is_same_v<std::tuple_element_t<1, complex_type>, value_type>);
 
+  // get<...>(...) return reference types
+  inline static complex_type mm;
+  inline static const complex_type cc;
+
+  inline static complex_type &mml = mm;
+  static_assert(std::is_same_v<decltype(Kokkos::get<0>(mml)), value_type &>);
+  static_assert(std::is_same_v<decltype(Kokkos::get<1>(mml)), value_type &>);
+
+  inline static complex_type &&mmr = std::move(mm);
+  static_assert(
+      std::is_same_v<decltype(Kokkos::get<0>(std::move(mmr))), value_type &&>);
+  static_assert(
+      std::is_same_v<decltype(Kokkos::get<1>(std::move(mmr))), value_type &&>);
+
+  inline static const complex_type &ccl = cc;
+  static_assert(
+      std::is_same_v<decltype(Kokkos::get<0>(ccl)), value_type const &>);
+  static_assert(
+      std::is_same_v<decltype(Kokkos::get<1>(ccl)), value_type const &>);
+
+  inline static complex_type const &&ccr = std::move(cc);
+  static_assert(std::is_same_v<decltype(Kokkos::get<0>(std::move(ccr))),
+                               value_type const &&>);
+  static_assert(std::is_same_v<decltype(Kokkos::get<1>(std::move(ccr))),
+                               value_type const &&>);
+
   device_view_type d_results;
   host_view_type h_results;
 
   void testit() {
+    maybe_unused(mm, cc, mml, mmr, ccl, ccr);
+
     d_results = device_view_type("TestComplexStructuredBindings", 6);
     h_results = Kokkos::create_mirror_view(d_results);
 
@@ -577,13 +610,13 @@ struct TestComplexStructuredBindings {
     ASSERT_FLOAT_EQ(h_results[0].real(), 2.);
     ASSERT_FLOAT_EQ(h_results[0].imag(), 3.);
 
-    // get const lvalue
-    ASSERT_FLOAT_EQ(h_results[1].real(), 5.);
-    ASSERT_FLOAT_EQ(h_results[1].imag(), 7.);
-
     // get rvalue
-    ASSERT_FLOAT_EQ(h_results[2].real(), 2.);
-    ASSERT_FLOAT_EQ(h_results[2].imag(), 3.);
+    ASSERT_FLOAT_EQ(h_results[1].real(), 2.);
+    ASSERT_FLOAT_EQ(h_results[1].imag(), 3.);
+
+    // get const lvalue
+    ASSERT_FLOAT_EQ(h_results[2].real(), 5.);
+    ASSERT_FLOAT_EQ(h_results[2].imag(), 7.);
 
     // get const rvalue
     ASSERT_FLOAT_EQ(h_results[3].real(), 5.);
@@ -604,43 +637,29 @@ struct TestComplexStructuredBindings {
     // get lvalue
     {
       complex_type &ml = m;
-      static_assert(std::is_same_v<decltype(Kokkos::get<0>(ml)), value_type &>);
-      static_assert(std::is_same_v<decltype(Kokkos::get<1>(ml)), value_type &>);
       auto &[mlr, mli] = ml;
       d_results[0]     = complex_type(mlr, mli);
-    }
-
-    // get const lvalue
-    {
-      const complex_type &cl = c;
-      static_assert(
-          std::is_same_v<decltype(Kokkos::get<0>(cl)), value_type const &>);
-      static_assert(
-          std::is_same_v<decltype(Kokkos::get<1>(cl)), value_type const &>);
-      auto &[clr, cli] = cl;
-      d_results[1]     = complex_type(clr, cli);
     }
 
     // get rvalue
     {
       complex_type &&mr = std::move(m);
-      static_assert(std::is_same_v<decltype(Kokkos::get<0>(std::move(mr))),
-                                   value_type &&>);
-      static_assert(std::is_same_v<decltype(Kokkos::get<1>(std::move(mr))),
-                                   value_type &&>);
       auto &&[mrr, mri] = std::move(mr);
-      d_results[2]      = complex_type(mrr, mri);
+      d_results[1]      = complex_type(mrr, mri);
+    }
+
+    // get const lvalue
+    {
+      const complex_type &cl = c;
+      auto &[clr, cli]       = cl;
+      d_results[2]           = complex_type(clr, cli);
     }
 
     // get const rvalue
     {
       complex_type const &&cr = std::move(c);
-      static_assert(std::is_same_v<decltype(Kokkos::get<0>(std::move(cr))),
-                                   value_type const &&>);
-      static_assert(std::is_same_v<decltype(Kokkos::get<1>(std::move(cr))),
-                                   value_type const &&>);
-      auto &&[crr, cri] = std::move(cr);
-      d_results[3]      = complex_type(crr, cri);
+      auto &&[crr, cri]       = std::move(cr);
+      d_results[3]            = complex_type(crr, cri);
     }
 
     // swap real and imaginary
