@@ -189,6 +189,21 @@ void applyPermutation(const ExecutionSpace& space,
       KOKKOS_LAMBDA(int i) { view(i) = view_copy(permutation(i)); });
 }
 
+// FIXME_NVCC: nvcc has trouble compiling lambdas inside a function with
+// variadic templates (sort_by_key_via_sort). Switch to using functors instead.
+template <typename Permute>
+struct IotaFunctor {
+  Permute _permute;
+  KOKKOS_FUNCTION void operator()(int i) const { _permute(i) = i; }
+};
+template <typename Keys>
+struct LessFunctor {
+  Keys _keys;
+  KOKKOS_FUNCTION bool operator()(int i, int j) const {
+    return _keys(i) < _keys(j);
+  }
+};
+
 template <class ExecutionSpace, class KeysDataType, class... KeysProperties,
           class ValuesDataType, class... ValuesProperties,
           class... MaybeComparator>
@@ -207,10 +222,9 @@ void sort_by_key_via_sort(
       n);
 
   // iota
-  Kokkos::parallel_for(
-      "Kokkos::sort_by_key_via_sort::iota",
-      Kokkos::RangePolicy<ExecutionSpace>(exec, 0, n),
-      KOKKOS_LAMBDA(int i) { permute(i) = i; });
+  Kokkos::parallel_for("Kokkos::sort_by_key_via_sort::iota",
+                       Kokkos::RangePolicy<ExecutionSpace>(exec, 0, n),
+                       IotaFunctor<decltype(permute)>{permute});
 
   using Layout =
       typename Kokkos::View<unsigned int*, ExecutionSpace>::array_layout;
@@ -228,9 +242,8 @@ void sort_by_key_via_sort(
     Kokkos::DefaultHostExecutionSpace host_exec;
 
     if constexpr (sizeof...(MaybeComparator) == 0) {
-      Kokkos::sort(
-          host_exec, host_permute,
-          KOKKOS_LAMBDA(int i, int j) { return host_keys(i) < host_keys(j); });
+      Kokkos::sort(host_exec, host_permute,
+                   LessFunctor<decltype(host_keys)>{host_keys});
     } else {
       auto keys_comparator =
           std::get<0>(std::tuple<MaybeComparator...>(maybeComparator...));
