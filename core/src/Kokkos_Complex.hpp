@@ -301,24 +301,24 @@ class
 
   template <size_t I>
   KOKKOS_FUNCTION friend constexpr RealType& get(complex& z) noexcept {
-    return get_ref<I>(z);
+    return complex::get_ref<I>(z);
   }
 
   template <size_t I>
   KOKKOS_FUNCTION friend constexpr RealType&& get(complex&& z) noexcept {
-    return get_ref<I>(std::move(z));
+    return complex::get_ref<I>(std::move(z));
   }
 
   template <size_t I>
   KOKKOS_FUNCTION friend constexpr const RealType& get(
       const complex& z) noexcept {
-    return get_ref<I>(z);
+    return complex::get_ref<I>(z);
   }
 
   template <size_t I>
   KOKKOS_FUNCTION friend constexpr const RealType&& get(
       const complex&& z) noexcept {
-    return get_ref<I>(std::move(z));
+    return complex::get_ref<I>(std::move(z));
   }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
