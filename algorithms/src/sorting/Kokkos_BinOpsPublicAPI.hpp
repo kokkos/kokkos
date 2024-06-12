@@ -22,7 +22,7 @@
 
 namespace Kokkos {
 
-namespace Experimental {
+namespace Impl {
 
 template <int DIM, class KeyViewType>
 struct BinOpND {
@@ -122,16 +122,16 @@ struct BinOpND<1, KeyViewType> {
   }
 };
 
-}  // namespace Experimental
+}  // namespace Impl
 
 template <class KeyViewType>
-using BinOp1D = Experimental::BinOpND<1, KeyViewType>;
+using BinOp1D = Impl::BinOpND<1, KeyViewType>;
 
 template <class KeyViewType>
-using BinOp2D = Experimental::BinOpND<2, KeyViewType>;
+using BinOp2D = Impl::BinOpND<2, KeyViewType>;
 
 template <class KeyViewType>
-using BinOp3D = Experimental::BinOpND<3, KeyViewType>;
+using BinOp3D = Impl::BinOpND<3, KeyViewType>;
 
 }  // namespace Kokkos
 #endif
