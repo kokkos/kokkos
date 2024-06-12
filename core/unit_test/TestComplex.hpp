@@ -557,6 +557,9 @@ struct TestComplexStructuredBindings {
   using device_view_type = Kokkos::View<complex_type *, exec_space>;
   using host_view_type   = typename device_view_type::HostMirror;
 
+  device_view_type d_results;
+  host_view_type h_results;
+
   // tuple_size
   static_assert(std::is_same_v<std::tuple_size<complex_type>::type,
                                std::integral_constant<size_t, 2>>);
@@ -567,37 +570,41 @@ struct TestComplexStructuredBindings {
   static_assert(
       std::is_same_v<std::tuple_element_t<1, complex_type>, value_type>);
 
-  // get<...>(...) return reference types
-  inline static complex_type mm;
-  inline static const complex_type cc;
+  static void testgetreturnreferencetypes() {
+    complex_type m;
+    const complex_type c;
 
-  inline static complex_type &mml = mm;
-  static_assert(std::is_same_v<decltype(Kokkos::get<0>(mml)), value_type &>);
-  static_assert(std::is_same_v<decltype(Kokkos::get<1>(mml)), value_type &>);
+    // get lvalue
+    complex_type &ml = m;
+    static_assert(std::is_same_v<decltype(Kokkos::get<0>(ml)), value_type &>);
+    static_assert(std::is_same_v<decltype(Kokkos::get<1>(ml)), value_type &>);
 
-  inline static complex_type &&mmr = std::move(mm);
-  static_assert(
-      std::is_same_v<decltype(Kokkos::get<0>(std::move(mmr))), value_type &&>);
-  static_assert(
-      std::is_same_v<decltype(Kokkos::get<1>(std::move(mmr))), value_type &&>);
+    // get rvalue
+    complex_type &&mr = std::move(m);
+    static_assert(
+        std::is_same_v<decltype(Kokkos::get<0>(std::move(mr))), value_type &&>);
+    static_assert(
+        std::is_same_v<decltype(Kokkos::get<1>(std::move(mr))), value_type &&>);
 
-  inline static const complex_type &ccl = cc;
-  static_assert(
-      std::is_same_v<decltype(Kokkos::get<0>(ccl)), value_type const &>);
-  static_assert(
-      std::is_same_v<decltype(Kokkos::get<1>(ccl)), value_type const &>);
+    // get const lvalue
+    const complex_type &cl = c;
+    static_assert(
+        std::is_same_v<decltype(Kokkos::get<0>(cl)), value_type const &>);
+    static_assert(
+        std::is_same_v<decltype(Kokkos::get<1>(cl)), value_type const &>);
 
-  inline static complex_type const &&ccr = std::move(cc);
-  static_assert(std::is_same_v<decltype(Kokkos::get<0>(std::move(ccr))),
-                               value_type const &&>);
-  static_assert(std::is_same_v<decltype(Kokkos::get<1>(std::move(ccr))),
-                               value_type const &&>);
+    // get const rvalue
+    complex_type const &&cr = std::move(c);
+    static_assert(std::is_same_v<decltype(Kokkos::get<0>(std::move(cr))),
+                                 value_type const &&>);
+    static_assert(std::is_same_v<decltype(Kokkos::get<1>(std::move(cr))),
+                                 value_type const &&>);
 
-  device_view_type d_results;
-  host_view_type h_results;
+    maybe_unused(m, c, ml, mr, cl, cr);
+  }
 
   void testit() {
-    maybe_unused(mm, cc, mml, mmr, ccl, ccr);
+    testgetreturnreferencetypes();
 
     d_results = device_view_type("TestComplexStructuredBindings", 6);
     h_results = Kokkos::create_mirror_view(d_results);
