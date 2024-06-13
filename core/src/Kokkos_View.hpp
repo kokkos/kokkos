@@ -39,6 +39,7 @@ static_assert(false,
 #ifdef KOKKOS_ENABLE_IMPL_MDSPAN
 #include <View/MDSpan/Kokkos_MDSpan_Extents.hpp>
 #include <View/MDSpan/Kokkos_MDSpan_Layout.hpp>
+#include <View/MDSpan/Kokkos_MDSpan_Accessor.hpp>
 #endif
 #include <Kokkos_MinMax.hpp>
 
@@ -393,8 +394,11 @@ struct MDSpanViewTraits<Traits,
                                          typename Traits::data_type>::type;
   using mdspan_layout_type =
       typename Impl::LayoutFromArrayLayout<typename Traits::array_layout>::type;
-  using mdspan_type =
-      mdspan<typename Traits::value_type, extents_type, mdspan_layout_type>;
+  using accessor_type = Impl::SpaceAwareAccessor<
+      typename Traits::memory_space,
+      Kokkos::default_accessor<typename Traits::value_type>>;
+  using mdspan_type = mdspan<typename Traits::value_type, extents_type,
+                             mdspan_layout_type, accessor_type>;
 };
 }  // namespace Impl
 #endif  // KOKKOS_ENABLE_IMPL_MDSPAN
@@ -1748,13 +1752,15 @@ class View : public ViewTraits<DataType, Properties...> {
                        Impl::mapping_from_view_mapping<mdspan_type>(m_map)};
   }
 
-  template <class OtherAccessorType =
-                Kokkos::default_accessor<typename traits::value_type>,
+  template <class OtherAccessorType = Impl::SpaceAwareAccessor<
+                typename traits::memory_space,
+                Kokkos::default_accessor<typename traits::value_type>>,
             typename = std::enable_if_t<std::is_assignable_v<
                 typename traits::value_type*&,
                 typename OtherAccessorType::data_handle_type>>>
   KOKKOS_INLINE_FUNCTION constexpr auto to_mdspan(
-      const OtherAccessorType& other_accessor = OtherAccessorType()) {
+      const OtherAccessorType& other_accessor =
+          typename Impl::MDSpanViewTraits<traits>::accessor_type()) {
     using mdspan_type = typename Impl::MDSpanViewTraits<traits>::mdspan_type;
     using ret_mdspan_type =
         mdspan<typename mdspan_type::element_type,

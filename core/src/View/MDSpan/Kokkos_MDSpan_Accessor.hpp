@@ -56,7 +56,7 @@ struct SpaceAwareAccessor {
   KOKKOS_FUNCTION constexpr SpaceAwareAccessor(
       const SpaceAwareAccessor<MemorySpace, OtherNestedAccessorType>&
           other) noexcept
-      : nested_acc(other) {}
+      : nested_acc(other.nested_acc) {}
 
   KOKKOS_FUNCTION
   SpaceAwareAccessor(const NestedAccessor& acc) : nested_acc(acc) {}
@@ -78,8 +78,11 @@ struct SpaceAwareAccessor {
     return nested_acc.offset(p, i);
   }
 
+
  private:
   [[no_unique_address]] NestedAccessor nested_acc;
+  template<class, class>
+  friend struct SpaceAwareAccessor;
 };
 
 }  // namespace Impl
