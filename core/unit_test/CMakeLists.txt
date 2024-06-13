@@ -231,6 +231,8 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
 
     SET(${Tag}_SOURCES2A)
     foreach(Name
+      SpaceAwareAccessorAccessViolation
+      SpaceAwareAccessor
       TeamBasic
       TeamCombinedReducers
       TeamMDRange
