@@ -204,6 +204,18 @@ struct LessFunctor {
   }
 };
 
+// FIXME_NVCC+MSVC: We can't use a lambda instead of a functor which gave us
+// "For this host platform/dialect, an extended lambda cannot be defined inside
+// the 'if' or 'else' block of a constexpr if statement"
+template <typename Keys, typename Comparator>
+struct KeyComparisonFunctor {
+  Keys m_keys;
+  Comparator m_comparator;
+  KOKKOS_FUNCTION bool operator()(int i, int j) const {
+    return m_comparator(m_keys(i), m_keys(j));
+  }
+};
+
 template <class ExecutionSpace, class KeysDataType, class... KeysProperties,
           class ValuesDataType, class... ValuesProperties,
           class... MaybeComparator>
@@ -248,9 +260,9 @@ void sort_by_key_via_sort(
       auto keys_comparator =
           std::get<0>(std::tuple<MaybeComparator...>(maybeComparator...));
       Kokkos::sort(
-          host_exec, host_permute, KOKKOS_LAMBDA(int i, int j) {
-            return keys_comparator(host_keys(i), host_keys(j));
-          });
+          host_exec, host_permute,
+          KeyComparisonFunctor<decltype(host_keys), decltype(keys_comparator)>{
+              host_keys, keys_comparator});
     }
     host_exec.fence("Kokkos::Impl::sort_by_key_via_sort: after host sort");
     Kokkos::deep_copy(exec, permute, host_permute);
@@ -275,16 +287,14 @@ void sort_by_key_via_sort(
     }
 #else
     if constexpr (sizeof...(MaybeComparator) == 0) {
-      Kokkos::sort(
-          exec, permute,
-          KOKKOS_LAMBDA(int i, int j) { return keys(i) < keys(j); });
+      Kokkos::sort(exec, permute, LessFunctor<decltype(keys)>{keys});
     } else {
       auto keys_comparator =
           std::get<0>(std::tuple<MaybeComparator...>(maybeComparator...));
       Kokkos::sort(
-          exec, permute, KOKKOS_LAMBDA(int i, int j) {
-            return keys_comparator(keys(i), keys(j));
-          });
+          exec, permute,
+          KeyComparisonFunctor<decltype(keys), decltype(keys_comparator)>{
+              keys, keys_comparator});
     }
 #endif
   }
