@@ -471,62 +471,28 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
   template <typename I0, typename I1>
   KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
       (Kokkos::Impl::are_integral<I0, I1>::value && (2 == Rank) &&
-       is_default_map && is_layout_left && (traits::rank_dynamic == 0)),
+       is_default_map &&
+       (is_layout_left || is_layout_right || is_layout_stride)),
       reference_type>
   operator()(const I0& i0, const I1& i1) const {
     KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY((m_track, m_map, m_begins, i0, i1))
     const size_t j0 = i0 - m_begins[0];
     const size_t j1 = i1 - m_begins[1];
-    return m_map.m_impl_handle[j0 + m_map.m_impl_offset.m_dim.N0 * j1];
-  }
-
-  template <typename I0, typename I1>
-  KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
-      (Kokkos::Impl::are_integral<I0, I1>::value && (2 == Rank) &&
-       is_default_map && is_layout_left && (traits::rank_dynamic != 0)),
-      reference_type>
-  operator()(const I0& i0, const I1& i1) const {
-    KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY((m_track, m_map, m_begins, i0, i1))
-    const size_t j0 = i0 - m_begins[0];
-    const size_t j1 = i1 - m_begins[1];
-    return m_map.m_impl_handle[j0 + m_map.m_impl_offset.m_stride * j1];
-  }
-
-  template <typename I0, typename I1>
-  KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
-      (Kokkos::Impl::are_integral<I0, I1>::value && (2 == Rank) &&
-       is_default_map && is_layout_right && (traits::rank_dynamic == 0)),
-      reference_type>
-  operator()(const I0& i0, const I1& i1) const {
-    KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY((m_track, m_map, m_begins, i0, i1))
-    const size_t j0 = i0 - m_begins[0];
-    const size_t j1 = i1 - m_begins[1];
-    return m_map.m_impl_handle[j1 + m_map.m_impl_offset.m_dim.N1 * j0];
-  }
-
-  template <typename I0, typename I1>
-  KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
-      (Kokkos::Impl::are_integral<I0, I1>::value && (2 == Rank) &&
-       is_default_map && is_layout_right && (traits::rank_dynamic != 0)),
-      reference_type>
-  operator()(const I0& i0, const I1& i1) const {
-    KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY((m_track, m_map, m_begins, i0, i1))
-    const size_t j0 = i0 - m_begins[0];
-    const size_t j1 = i1 - m_begins[1];
-    return m_map.m_impl_handle[j1 + m_map.m_impl_offset.m_stride * j0];
-  }
-
-  template <typename I0, typename I1>
-  KOKKOS_FORCEINLINE_FUNCTION
-      std::enable_if_t<(Kokkos::Impl::are_integral<I0, I1>::value &&
-                        (2 == Rank) && is_default_map && is_layout_stride),
-                       reference_type>
-      operator()(const I0& i0, const I1& i1) const {
-    KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY((m_track, m_map, m_begins, i0, i1))
-    const size_t j0 = i0 - m_begins[0];
-    const size_t j1 = i1 - m_begins[1];
-    return m_map.m_impl_handle[j0 * m_map.m_impl_offset.m_stride.S0 +
-                               j1 * m_map.m_impl_offset.m_stride.S1];
+    if constexpr (is_layout_left) {
+      if constexpr (traits::rank_dynamic == 0)
+        return m_map.m_impl_handle[j0 + m_map.m_impl_offset.m_dim.N0 * j1];
+      else
+        return m_map.m_impl_handle[j0 + m_map.m_impl_offset.m_stride * j1];
+    } else if constexpr (is_layout_right) {
+      if constexpr (traits::rank_dynamic == 0)
+        return m_map.m_impl_handle[j1 + m_map.m_impl_offset.m_dim.N1 * j0];
+      else
+        return m_map.m_impl_handle[j1 + m_map.m_impl_offset.m_stride * j0];
+    } else {
+      static_assert(is_layout_stride);
+      return m_map.m_impl_handle[j0 * m_map.m_impl_offset.m_stride.S0 +
+                                 j1 * m_map.m_impl_offset.m_stride.S1];
+    }
   }
 
   //------------------------------
