@@ -62,4 +62,12 @@ using sycl_host_ptr = sycl::host_ptr<T>;
 #endif
 }  // namespace Kokkos::Impl
 
+#ifdef KOKKOS_ENABLE_SYCL_RELOCATABLE_DEVICE_CODE
+#define KOKKOS_IMPL_EXTERNAL_FUNCTION SYCL_EXTERNAL
+#else
+#define KOKKOS_IMPL_EXTERNAL_FUNCTION   \
+  @"KOKKOS_EXTERNAL_FUNCTION requires " \
+   "Kokkos_ENABLE_SYCL_RELOCATABLE_DEVICE_CODE=ON"
+#endif
+
 #endif

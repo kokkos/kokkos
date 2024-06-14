@@ -123,7 +123,16 @@ pipeline {
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_BENCHMARKS=ON \
                                 -DKokkos_ENABLE_SYCL=ON \
+                                -DKokkos_ENABLE_SYCL_RELOCATABLE_DEVICE_CODE=ON \
                                 -DKokkos_ENABLE_UNSUPPORTED_ARCHS=ON \
+                                -DCMAKE_CXX_STANDARD=17 \
+                              .. && \
+                              make -j8 && ctest --verbose && \
+                              cd ../example/build_cmake_rdc && \
+                              rm -rf build && mkdir -p build && cd build && \
+                              cmake \
+                                -DCMAKE_CXX_COMPILER=clang++ \
+                                -DCMAKE_CXX_FLAGS=-Werror \
                                 -DCMAKE_CXX_STANDARD=17 \
                               .. && \
                               make -j8 && ctest --verbose'''
@@ -413,6 +422,14 @@ pipeline {
                               .. && \
                               make -j8 && ctest --verbose && \
                               cd ../example/build_cmake_installed && \
+                              rm -rf build && mkdir -p build && cd build && \
+                              cmake \
+                                -DCMAKE_CXX_COMPILER=g++-8 \
+                                -DCMAKE_CXX_FLAGS=-Werror \
+                                -DCMAKE_CXX_STANDARD=17 \
+                              .. && \
+                              make -j8 && ctest --verbose && \
+                              cd ../example/build_cmake_rdc && \
                               rm -rf build && mkdir -p build && cd build && \
                               cmake \
                                 -DCMAKE_CXX_COMPILER=g++-8 \
