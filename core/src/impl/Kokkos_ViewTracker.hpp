@@ -42,9 +42,10 @@ struct ViewTracker {
 
   track_type m_tracker;
 
-  KOKKOS_INLINE_FUNCTION
-  ViewTracker() : m_tracker() {}
+  KOKKOS_DEFAULTED_FUNCTION
+  ViewTracker() = default;
 
+  //! Copy constructor.
   KOKKOS_INLINE_FUNCTION
   ViewTracker(const ViewTracker& vt) noexcept
       : m_tracker(vt.m_tracker, view_traits::is_managed) {}
@@ -73,6 +74,7 @@ struct ViewTracker {
     KOKKOS_IF_ON_DEVICE((m_tracker.assign_force_disable(vt.m_track.m_tracker);))
   }
 
+  //! Copy assignment.
   KOKKOS_INLINE_FUNCTION ViewTracker& operator=(
       const ViewTracker& rhs) noexcept {
     if (this == &rhs) return *this;
@@ -89,6 +91,14 @@ struct ViewTracker {
   KOKKOS_INLINE_FUNCTION
   explicit ViewTracker(const track_type& tt) noexcept
       : m_tracker(tt, view_traits::is_managed) {}
+
+  //! Move constructor.
+  KOKKOS_DEFAULTED_FUNCTION
+  ViewTracker(ViewTracker&&) = default;
+
+  //! Move assignment.
+  KOKKOS_DEFAULTED_FUNCTION
+  ViewTracker& operator=(ViewTracker&& other) = default;
 };
 
 }  // namespace Impl
