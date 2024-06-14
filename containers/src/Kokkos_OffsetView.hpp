@@ -493,6 +493,9 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
       return m_map.m_impl_handle[j0 * m_map.m_impl_offset.m_stride.S0 +
                                  j1 * m_map.m_impl_offset.m_stride.S1];
     }
+#if defined KOKKOS_COMPILER_INTEL
+    __builtin_unreachable();
+#endif
   }
 
   //------------------------------
