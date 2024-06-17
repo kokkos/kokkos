@@ -33,6 +33,7 @@ namespace detail {
 // Function used to check compatibility of extents in converting constructor
 // can't be a private member function for some reason.
 template <size_t... Extents, size_t... OtherExtents>
+MDSPAN_INLINE_FUNCTION
 static constexpr std::integral_constant<bool, false> __check_compatible_extents(
     std::integral_constant<bool, false>,
     std::integer_sequence<size_t, Extents...>,
@@ -49,6 +50,7 @@ struct __compare_extent_compatible : std::integral_constant<bool,
 {};
 
 template <size_t... Extents, size_t... OtherExtents>
+MDSPAN_INLINE_FUNCTION
 static constexpr std::integral_constant<
     bool, _MDSPAN_FOLD_AND(__compare_extent_compatible<Extents, OtherExtents>::value)>
 __check_compatible_extents(

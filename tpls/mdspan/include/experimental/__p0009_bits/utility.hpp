@@ -14,6 +14,7 @@ template <std::size_t N>
 using with_rank = std::integral_constant<std::size_t, N>;
 
 template <class I1, class I2>
+MDSPAN_INLINE_FUNCTION
 constexpr bool common_integral_compare(I1 x, I2 y)
 {
   static_assert(std::is_integral<I1>::value &&
@@ -24,11 +25,14 @@ constexpr bool common_integral_compare(I1 x, I2 y)
 }
 
 template <class T1, class T2, class F>
+MDSPAN_INLINE_FUNCTION
 constexpr bool rankwise_equal(with_rank<0>, const T1&, const T2&, F)
 {
   return true;
 }
+
 template <std::size_t N, class T1, class T2, class F>
+MDSPAN_INLINE_FUNCTION
 constexpr bool rankwise_equal(with_rank<N>, const T1& x, const T2& y, F func)
 {
   bool match = true;
@@ -43,6 +47,7 @@ constexpr bool rankwise_equal(with_rank<N>, const T1& x, const T2& y, F func)
 constexpr struct
 {
   template <class T, class I>
+  MDSPAN_INLINE_FUNCTION
   constexpr auto operator()(const T& x, I i) const
   {
     return x.extent(i);
@@ -52,6 +57,7 @@ constexpr struct
 constexpr struct
 {
   template <class T, class I>
+  MDSPAN_INLINE_FUNCTION
   constexpr auto operator()(const T& x, I i) const
   {
     return x.stride(i);

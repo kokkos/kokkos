@@ -284,8 +284,19 @@ MDSPAN_IMPL_PROPOSED_NAMESPACE::layout_left_padded<PaddingValue>::mapping<Extent
         out_of_bounds ? this->required_span_size()
                     : this->operator()(MDSPAN_IMPL_STANDARD_NAMESPACE::detail::first_of(slices)...));
     if constexpr (dst_ext_t::rank() == 0) { // result rank-0
-      using dst_mapping_t = typename layout_left::template mapping<dst_ext_t>;
-      return submdspan_mapping_result<dst_mapping_t>{dst_mapping_t{dst_ext}, offset};
+      // The following for some reasons leads to compiler error later, while not using a typedef works:
+      // Compilers: CUDA 11.2 with GCC 9.1
+      //
+      // using dst_mapping_t = typename layout_left::template mapping<dst_ext_t>;
+      // return submdspan_mapping_result<dst_mapping_t>{dst_mapping_t{dst_ext}, offset};
+      //
+      // Error: submdspan_mapping.hpp:299:23: error: 'dst_mapping_t' does not name a type
+      //         299 |         using dst_mapping_t = typename layout_left::template mapping<dst_ext_t>;
+      // The same error is given (about dst_mapping_t not naming type) when a different name is used in 299:
+      //        using dst_mapping_t2 = typename layout_left::template mapping<dst_ext_t>;
+
+      return submdspan_mapping_result<typename layout_left::template mapping<dst_ext_t>>
+             {typename layout_left::template mapping<dst_ext_t>{dst_ext}, offset};
     } else { // general case
       // Figure out if any slice's lower bound equals the corresponding extent.
       // If so, bypass evaluating the layout mapping.  This fixes LWG Issue 4060.
@@ -509,8 +520,11 @@ MDSPAN_IMPL_PROPOSED_NAMESPACE::layout_right_padded<PaddingValue>::mapping<Exten
         out_of_bounds ? this->required_span_size()
                     : this->operator()(MDSPAN_IMPL_STANDARD_NAMESPACE::detail::first_of(slices)...));
     if constexpr (dst_ext_t::rank() == 0) { // result rank-0
-      using dst_mapping_t = typename layout_right::template mapping<dst_ext_t>;
-      return submdspan_mapping_result<dst_mapping_t>{dst_mapping_t{dst_ext}, offset};
+      // Same issue as in layout_left_padded: see comment there
+      // using dst_mapping_t = typename layout_right::template mapping<dst_ext_t>;
+      // return submdspan_mapping_result<dst_mapping_t>{dst_mapping_t{dst_ext}, offset};
+      return submdspan_mapping_result<typename layout_right::template mapping<dst_ext_t>>
+        {typename layout_right::template mapping<dst_ext_t>{dst_ext}, offset};
     } else { // general case
       using deduce_layout = MDSPAN_IMPL_STANDARD_NAMESPACE::detail::deduce_layout_right_submapping<
         typename dst_ext_t::index_type, dst_ext_t::rank(),
