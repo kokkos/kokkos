@@ -114,7 +114,6 @@ jobs:
             -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
             -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
-            -DKokkos_ENABLE_IMPL_MDSPAN=ON \
             -DCMAKE_CXX_FLAGS="-Werror ${{ matrix.cxx_extra_flags }}" \
             -DCMAKE_EXE_LINKER_FLAGS="${{ matrix.extra_linker_flags }}" \
             -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} \

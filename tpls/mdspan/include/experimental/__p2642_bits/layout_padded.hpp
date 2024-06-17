@@ -59,6 +59,10 @@ MDSPAN_INLINE_FUNCTION constexpr size_t get_actual_static_padding_value() {
   } else {
     return dynamic_extent;
   }
+  // Missing return statement warning from NVCC
+#ifdef __NVCC__
+  return 0;
+#endif
 }
 
 template <size_t _PaddingValue, typename _Extents, size_t _ExtentToPadIdx, size_t _Rank, typename Enabled = void>
@@ -69,7 +73,7 @@ struct static_array_type_for_padded_extent
   using extents_type = _Extents;
   using type = ::MDSPAN_IMPL_STANDARD_NAMESPACE::detail::maybe_static_array<
       index_type, size_t, dynamic_extent,
-      detail::get_actual_static_padding_value<extents_type, padding_value,
+      ::MDSPAN_IMPL_STANDARD_NAMESPACE::MDSPAN_IMPL_PROPOSED_NAMESPACE::detail::get_actual_static_padding_value<extents_type, _PaddingValue,
                                                 _ExtentToPadIdx>()>;
 };
 
@@ -101,6 +105,10 @@ struct padded_extent {
     } else {
       return init_padding(exts, padding_value);
     }
+  // Missing return statement warning from NVCC
+#ifdef __NVCC__
+  return {};
+#endif
   }
 
   MDSPAN_INLINE_FUNCTION static constexpr static_array_type
@@ -112,6 +120,10 @@ struct padded_extent {
     } else {
       return {};
     }
+  // Missing return statement warning from NVCC
+#ifdef __NVCC__
+  return {};
+#endif
   }
 
   template <typename _Mapping, size_t _PaddingStrideIdx>
@@ -123,6 +135,10 @@ struct padded_extent {
     } else {
       return {};
     }
+  // Missing return statement warning from NVCC
+#ifdef __NVCC__
+  return {};
+#endif
   }
 };
 } // namespace detail
@@ -205,7 +221,7 @@ public:
 #endif
 
   MDSPAN_INLINE_FUNCTION_DEFAULTED constexpr mapping(const mapping&) noexcept = default;
-  MDSPAN_INLINE_FUNCTION_DEFAULTED mapping& operator=(const mapping&) noexcept = default;
+  MDSPAN_INLINE_FUNCTION_DEFAULTED constexpr mapping& operator=(const mapping&) noexcept = default;
 
   /**
    * Initializes the mapping with the given extents.
@@ -391,6 +407,10 @@ public:
                            are_valid_indices<index_type, _Indices...>())))
   MDSPAN_INLINE_FUNCTION constexpr size_t
   operator()(_Indices... idxs) const noexcept {
+#if !defined(NDEBUG)
+    ::MDSPAN_IMPL_STANDARD_NAMESPACE::detail::check_all_indices(this->extents(),
+                                                                idxs...);
+#endif // ! NDEBUG
     return compute_offset(std::index_sequence_for<_Indices...>{}, idxs...);
   }
 
@@ -474,6 +494,19 @@ public:
     return !(left == right);
   }
 #endif
+
+   // [mdspan.submdspan.mapping], submdspan mapping specialization
+   template<class... SliceSpecifiers>
+   MDSPAN_INLINE_FUNCTION
+     constexpr auto submdspan_mapping_impl(
+       SliceSpecifiers... slices) const;
+
+   template<class... SliceSpecifiers>
+   MDSPAN_INLINE_FUNCTION
+     friend constexpr auto submdspan_mapping(
+       const mapping& src, SliceSpecifiers... slices) {
+         return src.submdspan_mapping_impl(slices...);
+     }
 };
 
 template <size_t PaddingValue>
@@ -551,7 +584,7 @@ public:
 #endif
 
   MDSPAN_INLINE_FUNCTION_DEFAULTED constexpr mapping(const mapping&) noexcept = default;
-  MDSPAN_INLINE_FUNCTION_DEFAULTED mapping& operator=(const mapping&) noexcept = default;
+  MDSPAN_INLINE_FUNCTION_DEFAULTED constexpr mapping& operator=(const mapping&) noexcept = default;
 
   /**
    * Initializes the mapping with the given extents.
@@ -816,6 +849,19 @@ public:
     return !(left == right);
   }
 #endif
+
+   // [mdspan.submdspan.mapping], submdspan mapping specialization
+   template<class... SliceSpecifiers>
+   MDSPAN_INLINE_FUNCTION
+     constexpr auto submdspan_mapping_impl(
+       SliceSpecifiers... slices) const;
+
+   template<class... SliceSpecifiers>
+   MDSPAN_INLINE_FUNCTION
+     friend constexpr auto submdspan_mapping(
+       const mapping& src, SliceSpecifiers... slices) {
+         return src.submdspan_mapping_impl(slices...);
+     }
 };
 }
 }

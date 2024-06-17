@@ -32,12 +32,12 @@ struct LayoutFromArrayLayout;
 
 template <>
 struct LayoutFromArrayLayout<Kokkos::LayoutLeft> {
-  using type = Experimental::layout_left_padded<dynamic_extent>;
+  using type = Kokkos::Experimental::layout_left_padded<dynamic_extent>;
 };
 
 template <>
 struct LayoutFromArrayLayout<Kokkos::LayoutRight> {
-  using type = Experimental::layout_right_padded<dynamic_extent>;
+  using type = Kokkos::Experimental::layout_right_padded<dynamic_extent>;
 };
 
 template <>
@@ -81,20 +81,22 @@ KOKKOS_INLINE_FUNCTION auto array_layout_from_mapping(
     // We could conceivably fix this by adding an extra ViewCtorProp for
     // an abritrary padding. For now we will check for this.
     if constexpr (rank > 1 &&
-                  (std::is_same_v<
-                       typename mapping_type::layout_type,
-                       Experimental::layout_left_padded<dynamic_extent>> ||
-                   std::is_same_v<
-                       typename mapping_type::layout_type,
-                       Experimental::layout_right_padded<dynamic_extent>>)) {
+                  (std::is_same_v<typename mapping_type::layout_type,
+                                  Kokkos::Experimental::layout_left_padded<
+                                      dynamic_extent>> ||
+                   std::is_same_v<typename mapping_type::layout_type,
+                                  Kokkos::Experimental::layout_right_padded<
+                                      dynamic_extent>>)) {
       [[maybe_unused]] constexpr size_t strided_index =
-          std::is_same_v<typename mapping_type::layout_type,
-                         Experimental::layout_left_padded<dynamic_extent>>
+          std::is_same_v<
+              typename mapping_type::layout_type,
+              Kokkos::Experimental::layout_left_padded<dynamic_extent>>
               ? 1
               : rank - 2;
       [[maybe_unused]] constexpr size_t extent_index =
-          std::is_same_v<typename mapping_type::layout_type,
-                         Experimental::layout_left_padded<dynamic_extent>>
+          std::is_same_v<
+              typename mapping_type::layout_type,
+              Kokkos::Experimental::layout_left_padded<dynamic_extent>>
               ? 0
               : rank - 1;
       KOKKOS_ASSERT(mapping.stride(strided_index) == ext.extent(extent_index));
