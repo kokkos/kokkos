@@ -151,7 +151,7 @@ namespace detail {
 template <bool check = MDSPAN_IMPL_CHECK_PRECONDITION>
 MDSPAN_FUNCTION constexpr void precondition(const char* cond, const char* file, unsigned line)
 {
-  if (not check) { return; }
+  if (!check) { return; }
   // in case the macro doesn't use the arguments for custom macros
   (void) cond;
   (void) file;
@@ -164,7 +164,7 @@ MDSPAN_FUNCTION constexpr void precondition(const char* cond, const char* file, 
 
 #define MDSPAN_IMPL_PRECONDITION(...) \
   do { \
-    if (not (__VA_ARGS__)) { \
+    if (!(__VA_ARGS__)) { \
       MDSPAN_IMPL_STANDARD_NAMESPACE::detail::precondition(#__VA_ARGS__, __FILE__, __LINE__); \
     } \
   } while (0)

@@ -102,7 +102,7 @@ constexpr void check_padded_layout_converting_constructor_mandates(MDSPAN_IMPL_S
     (extents_type::static_extent(idx) != dynamic_extent) &&
     (padding_value != dynamic_extent);
 
-  static_assert(not statically_determinable or
+  static_assert(!statically_determinable ||
                 (padding_value == 0
                  ? _LayoutExtentsType::static_extent(idx) == 0
                  : _LayoutExtentsType::static_extent(idx) % padding_value == 0),

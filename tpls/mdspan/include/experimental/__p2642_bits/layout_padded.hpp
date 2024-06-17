@@ -73,7 +73,7 @@ struct static_array_type_for_padded_extent
   using extents_type = _Extents;
   using type = ::MDSPAN_IMPL_STANDARD_NAMESPACE::detail::maybe_static_array<
       index_type, size_t, dynamic_extent,
-      detail::get_actual_static_padding_value<extents_type, padding_value,
+      ::MDSPAN_IMPL_STANDARD_NAMESPACE::MDSPAN_IMPL_PROPOSED_NAMESPACE::detail::get_actual_static_padding_value<extents_type, _PaddingValue,
                                                 _ExtentToPadIdx>()>;
 };
 
@@ -221,7 +221,7 @@ public:
 #endif
 
   MDSPAN_INLINE_FUNCTION_DEFAULTED constexpr mapping(const mapping&) noexcept = default;
-  MDSPAN_INLINE_FUNCTION_DEFAULTED mapping& operator=(const mapping&) noexcept = default;
+  MDSPAN_INLINE_FUNCTION_DEFAULTED constexpr mapping& operator=(const mapping&) noexcept = default;
 
   /**
    * Initializes the mapping with the given extents.
@@ -497,10 +497,12 @@ public:
 
    // [mdspan.submdspan.mapping], submdspan mapping specialization
    template<class... SliceSpecifiers>
+   MDSPAN_INLINE_FUNCTION
      constexpr auto submdspan_mapping_impl(
        SliceSpecifiers... slices) const;
 
    template<class... SliceSpecifiers>
+   MDSPAN_INLINE_FUNCTION
      friend constexpr auto submdspan_mapping(
        const mapping& src, SliceSpecifiers... slices) {
          return src.submdspan_mapping_impl(slices...);
@@ -582,7 +584,7 @@ public:
 #endif
 
   MDSPAN_INLINE_FUNCTION_DEFAULTED constexpr mapping(const mapping&) noexcept = default;
-  MDSPAN_INLINE_FUNCTION_DEFAULTED mapping& operator=(const mapping&) noexcept = default;
+  MDSPAN_INLINE_FUNCTION_DEFAULTED constexpr mapping& operator=(const mapping&) noexcept = default;
 
   /**
    * Initializes the mapping with the given extents.
@@ -847,6 +849,19 @@ public:
     return !(left == right);
   }
 #endif
+
+   // [mdspan.submdspan.mapping], submdspan mapping specialization
+   template<class... SliceSpecifiers>
+   MDSPAN_INLINE_FUNCTION
+     constexpr auto submdspan_mapping_impl(
+       SliceSpecifiers... slices) const;
+
+   template<class... SliceSpecifiers>
+   MDSPAN_INLINE_FUNCTION
+     friend constexpr auto submdspan_mapping(
+       const mapping& src, SliceSpecifiers... slices) {
+         return src.submdspan_mapping_impl(slices...);
+     }
 };
 }
 }

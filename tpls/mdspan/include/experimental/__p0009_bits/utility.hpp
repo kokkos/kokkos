@@ -16,7 +16,7 @@ using with_rank = std::integral_constant<std::size_t, N>;
 template <class I1, class I2>
 constexpr bool common_integral_compare(I1 x, I2 y)
 {
-  static_assert(std::is_integral<I1>::value and
+  static_assert(std::is_integral<I1>::value &&
                 std::is_integral<I2>::value, "");
 
   using I = std::common_type_t<I1, I2>;

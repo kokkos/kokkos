@@ -323,7 +323,7 @@ public:
   #endif // MDSPAN_USE_PAREN_OPERATOR
 
   MDSPAN_INLINE_FUNCTION constexpr size_type size() const noexcept {
-    return __impl::__size(*this);
+    return static_cast<size_type>(__impl::__size(*this));
   };
 
   MDSPAN_INLINE_FUNCTION constexpr bool empty() const noexcept {

@@ -182,6 +182,21 @@ struct deduce_layout_left_submapping<
   }
 };
 
+// We are reusing the same thing for layout_left and layout_left_padded
+// For layout_left as source StaticStride is static_extent(0)
+template<class Extents, size_t NumGaps, size_t StaticStride>
+struct compute_s_static_layout_left {
+  // Neither StaticStride nor any of the provided extents can be zero.
+  // StaticStride can never be zero, the static_extents we are looking at are associated with
+  // integral slice specifiers - which wouldn't be valid for zero extent
+  template<size_t ... Idx>
+  MDSPAN_INLINE_FUNCTION
+  static constexpr size_t value(std::index_sequence<Idx...>) {
+    size_t val = ((Idx>0 && Idx<=NumGaps ? (Extents::static_extent(Idx) == dynamic_extent?0:Extents::static_extent(Idx)) : 1) * ... * (StaticStride == dynamic_extent?0:StaticStride));
+    return val == 0?dynamic_extent:val;
+  }
+};
+
 } // namespace detail
 
 // Actual submdspan mapping call
@@ -202,14 +217,6 @@ layout_left::mapping<Extents>::submdspan_mapping_impl(
       std::make_index_sequence<src_ext_t::rank()>,
       SliceSpecifiers...>;
 
-  using dst_layout_t = std::conditional_t<
-      deduce_layout::layout_left_value(), layout_left,
-      std::conditional_t<
-          deduce_layout::layout_left_padded_value(),
-          MDSPAN_IMPL_PROPOSED_NAMESPACE::layout_left_padded<dynamic_extent>,
-          layout_stride>>;
-  using dst_mapping_t = typename dst_layout_t::template mapping<dst_ext_t>;
-
   // Figure out if any slice's lower bound equals the corresponding extent.
   // If so, bypass evaluating the layout mapping.  This fixes LWG Issue 4060.
   const bool out_of_bounds =
@@ -218,17 +225,19 @@ layout_left::mapping<Extents>::submdspan_mapping_impl(
       out_of_bounds ? this->required_span_size()
                     : this->operator()(detail::first_of(slices)...));
 
-  if constexpr (std::is_same_v<dst_layout_t, layout_left>) {
+  if constexpr (deduce_layout::layout_left_value()) {
     // layout_left case
+    using dst_mapping_t = typename layout_left::template mapping<dst_ext_t>;
     return submdspan_mapping_result<dst_mapping_t>{dst_mapping_t(dst_ext),
                                                    offset};
-  } else if constexpr (std::is_same_v<dst_layout_t,
-                                      MDSPAN_IMPL_PROPOSED_NAMESPACE::
-                                          layout_left_padded<dynamic_extent>>) {
+  } else if constexpr (deduce_layout::layout_left_padded_value()) {
+    constexpr size_t S_static = MDSPAN_IMPL_STANDARD_NAMESPACE::detail::compute_s_static_layout_left<Extents, deduce_layout::gap_len, Extents::static_extent(0)>::value(std::make_index_sequence<Extents::rank()>());
+    using dst_mapping_t = typename MDSPAN_IMPL_PROPOSED_NAMESPACE::layout_left_padded<S_static>::template mapping<dst_ext_t>;
     return submdspan_mapping_result<dst_mapping_t>{
         dst_mapping_t(dst_ext, stride(1 + deduce_layout::gap_len)), offset};
   } else {
     // layout_stride case
+    using dst_mapping_t = typename layout_stride::mapping<dst_ext_t>;
     auto inv_map = detail::inv_map_rank(std::integral_constant<size_t, 0>(),
                                         std::index_sequence<>(), slices...);
     return submdspan_mapping_result<dst_mapping_t> {
@@ -248,6 +257,77 @@ layout_left::mapping<Extents>::submdspan_mapping_impl(
           offset
     };
   }
+#if defined(__NVCC__) && !defined(__CUDA_ARCH__) && defined(__GNUC__)
+  __builtin_unreachable();
+#endif
+}
+
+template <size_t PaddingValue>
+template <class Extents>
+template <class... SliceSpecifiers>
+MDSPAN_INLINE_FUNCTION constexpr auto
+MDSPAN_IMPL_PROPOSED_NAMESPACE::layout_left_padded<PaddingValue>::mapping<Extents>::submdspan_mapping_impl(
+    SliceSpecifiers... slices) const {
+
+  // compute sub extents
+  using src_ext_t = Extents;
+  auto dst_ext = submdspan_extents(extents(), slices...);
+  using dst_ext_t = decltype(dst_ext);
+
+  if constexpr (Extents::rank() == 0) { // rank-0 case
+    using dst_mapping_t = typename MDSPAN_IMPL_PROPOSED_NAMESPACE::layout_left_padded<PaddingValue>::template mapping<Extents>;
+    return submdspan_mapping_result<dst_mapping_t>{*this, 0};
+  } else {
+    const bool out_of_bounds =
+        MDSPAN_IMPL_STANDARD_NAMESPACE::detail::any_slice_out_of_bounds(this->extents(), slices...);
+    auto offset = static_cast<size_t>(
+        out_of_bounds ? this->required_span_size()
+                    : this->operator()(MDSPAN_IMPL_STANDARD_NAMESPACE::detail::first_of(slices)...));
+    if constexpr (dst_ext_t::rank() == 0) { // result rank-0
+      using dst_mapping_t = typename layout_left::template mapping<dst_ext_t>;
+      return submdspan_mapping_result<dst_mapping_t>{dst_mapping_t{dst_ext}, offset};
+    } else { // general case
+      // Figure out if any slice's lower bound equals the corresponding extent.
+      // If so, bypass evaluating the layout mapping.  This fixes LWG Issue 4060.
+      // figure out sub layout type
+      using deduce_layout = MDSPAN_IMPL_STANDARD_NAMESPACE::detail::deduce_layout_left_submapping<
+        typename dst_ext_t::index_type, dst_ext_t::rank(),
+        decltype(std::make_index_sequence<src_ext_t::rank()>()),
+        SliceSpecifiers...>;
+
+      if constexpr (deduce_layout::layout_left_value() && dst_ext_t::rank() == 1) { // getting rank-1 from leftmost
+        using dst_mapping_t = typename layout_left::template mapping<dst_ext_t>;
+        return submdspan_mapping_result<dst_mapping_t>{dst_mapping_t{dst_ext}, offset};
+      } else if constexpr (deduce_layout::layout_left_padded_value()) { // can keep layout_left_padded
+        constexpr size_t S_static = MDSPAN_IMPL_STANDARD_NAMESPACE::detail::compute_s_static_layout_left<Extents, deduce_layout::gap_len, static_padding_stride>::value(std::make_index_sequence<Extents::rank()>());
+        using dst_mapping_t = typename MDSPAN_IMPL_PROPOSED_NAMESPACE::layout_left_padded<S_static>::template mapping<dst_ext_t>;
+        return submdspan_mapping_result<dst_mapping_t>{
+        dst_mapping_t(dst_ext, stride(1 + deduce_layout::gap_len)), offset};
+      } else { // layout_stride
+    auto inv_map = MDSPAN_IMPL_STANDARD_NAMESPACE::detail::inv_map_rank(std::integral_constant<size_t, 0>(),
+                                        std::index_sequence<>(), slices...);
+      using dst_mapping_t = typename layout_stride::template mapping<dst_ext_t>;
+    return submdspan_mapping_result<dst_mapping_t> {
+      dst_mapping_t(dst_ext,
+                    MDSPAN_IMPL_STANDARD_NAMESPACE::detail::construct_sub_strides(
+                        *this, inv_map,
+// HIP needs deduction guides to have markups so we need to be explicit
+// NVCC 11.0 has a bug with deduction guide here, tested that 11.2 does not have
+// the issue But Clang-CUDA also doesn't accept the use of deduction guide so
+// disable it for CUDA alltogether
+#if defined(_MDSPAN_HAS_HIP) || defined(_MDSPAN_HAS_CUDA)
+                        std::tuple<decltype(MDSPAN_IMPL_STANDARD_NAMESPACE::detail::stride_of(slices))...>{
+                            MDSPAN_IMPL_STANDARD_NAMESPACE::detail::stride_of(slices)...})),
+#else
+                        std::tuple{MDSPAN_IMPL_STANDARD_NAMESPACE::detail::stride_of(slices)...})),
+#endif
+          offset
+    };
+      }
+    }
+  }
+
+
 #if defined(__NVCC__) && !defined(__CUDA_ARCH__) && defined(__GNUC__)
   __builtin_unreachable();
 #endif
@@ -322,6 +402,21 @@ struct deduce_layout_right_submapping<
   }
 };
 
+// We are reusing the same thing for layout_right and layout_right_padded
+// For layout_right as source StaticStride is static_extent(Rank-1)
+template<class Extents, size_t NumGaps, size_t StaticStride>
+struct compute_s_static_layout_right {
+  // Neither StaticStride nor any of the provided extents can be zero.
+  // StaticStride can never be zero, the static_extents we are looking at are associated with
+  // integral slice specifiers - which wouldn't be valid for zero extent
+  template<size_t ... Idx>
+  MDSPAN_INLINE_FUNCTION
+  static constexpr size_t value(std::index_sequence<Idx...>) {
+    size_t val = ((Idx >= Extents::rank() - 1 - NumGaps && Idx < Extents::rank() - 1 ? (Extents::static_extent(Idx) == dynamic_extent?0:Extents::static_extent(Idx)) : 1) * ... * (StaticStride == dynamic_extent?0:StaticStride));
+    return val == 0?dynamic_extent:val;
+  }
+};
+
 } // namespace detail
 
 // Actual submdspan mapping call
@@ -342,14 +437,6 @@ layout_right::mapping<Extents>::submdspan_mapping_impl(
       std::make_index_sequence<src_ext_t::rank()>,
       SliceSpecifiers...>;
 
-  using dst_layout_t = std::conditional_t<
-      deduce_layout::layout_right_value(), layout_right,
-      std::conditional_t<
-          deduce_layout::layout_right_padded_value(),
-          MDSPAN_IMPL_PROPOSED_NAMESPACE::layout_right_padded<dynamic_extent>,
-          layout_stride>>;
-  using dst_mapping_t = typename dst_layout_t::template mapping<dst_ext_t>;
-
   // Figure out if any slice's lower bound equals the corresponding extent.
   // If so, bypass evaluating the layout mapping.  This fixes LWG Issue 4060.
   const bool out_of_bounds =
@@ -358,20 +445,21 @@ layout_right::mapping<Extents>::submdspan_mapping_impl(
       out_of_bounds ? this->required_span_size()
                     : this->operator()(detail::first_of(slices)...));
 
-  if constexpr (std::is_same_v<dst_layout_t, layout_right>) {
+  if constexpr (deduce_layout::layout_right_value()) {
     // layout_right case
+    using dst_mapping_t = typename layout_right::mapping<dst_ext_t>;
     return submdspan_mapping_result<dst_mapping_t>{dst_mapping_t(dst_ext),
                                                    offset};
-  } else if constexpr (std::is_same_v<
-                           dst_layout_t,
-                           MDSPAN_IMPL_PROPOSED_NAMESPACE::layout_right_padded<
-                               dynamic_extent>>) {
+  } else if constexpr (deduce_layout::layout_right_padded_value()) {
+    constexpr size_t S_static = MDSPAN_IMPL_STANDARD_NAMESPACE::detail::compute_s_static_layout_left<Extents, deduce_layout::gap_len, Extents::static_extent(Extents::rank() - 1)>::value(std::make_index_sequence<Extents::rank()>());
+    using dst_mapping_t = typename MDSPAN_IMPL_PROPOSED_NAMESPACE::layout_right_padded<S_static>::template mapping<dst_ext_t>;
     return submdspan_mapping_result<dst_mapping_t>{
         dst_mapping_t(dst_ext,
                       stride(src_ext_t::rank() - 2 - deduce_layout::gap_len)),
         offset};
   } else {
     // layout_stride case
+    using dst_mapping_t = typename layout_stride::mapping<dst_ext_t>;
     auto inv_map = detail::inv_map_rank(std::integral_constant<size_t, 0>(),
                                         std::index_sequence<>(), slices...);
     return submdspan_mapping_result<dst_mapping_t> {
@@ -391,6 +479,77 @@ layout_right::mapping<Extents>::submdspan_mapping_impl(
           offset
     };
   }
+#if defined(__NVCC__) && !defined(__CUDA_ARCH__) && defined(__GNUC__)
+  __builtin_unreachable();
+#endif
+}
+
+template <size_t PaddingValue>
+template <class Extents>
+template <class... SliceSpecifiers>
+MDSPAN_INLINE_FUNCTION constexpr auto
+MDSPAN_IMPL_PROPOSED_NAMESPACE::layout_right_padded<PaddingValue>::mapping<Extents>::submdspan_mapping_impl(
+    SliceSpecifiers... slices) const {
+
+  // compute sub extents
+  using src_ext_t = Extents;
+  auto dst_ext = submdspan_extents(extents(), slices...);
+  using dst_ext_t = decltype(dst_ext);
+
+  if constexpr (Extents::rank() == 0) { // rank-0 case
+    using dst_mapping_t = typename MDSPAN_IMPL_PROPOSED_NAMESPACE::layout_right_padded<PaddingValue>::template mapping<Extents>;
+    return submdspan_mapping_result<dst_mapping_t>{*this, 0};
+  } else {
+    // Figure out if any slice's lower bound equals the corresponding extent.
+    // If so, bypass evaluating the layout mapping.  This fixes LWG Issue 4060.
+    // figure out sub layout type
+    const bool out_of_bounds =
+        MDSPAN_IMPL_STANDARD_NAMESPACE::detail::any_slice_out_of_bounds(this->extents(), slices...);
+    auto offset = static_cast<size_t>(
+        out_of_bounds ? this->required_span_size()
+                    : this->operator()(MDSPAN_IMPL_STANDARD_NAMESPACE::detail::first_of(slices)...));
+    if constexpr (dst_ext_t::rank() == 0) { // result rank-0
+      using dst_mapping_t = typename layout_right::template mapping<dst_ext_t>;
+      return submdspan_mapping_result<dst_mapping_t>{dst_mapping_t{dst_ext}, offset};
+    } else { // general case
+      using deduce_layout = MDSPAN_IMPL_STANDARD_NAMESPACE::detail::deduce_layout_right_submapping<
+        typename dst_ext_t::index_type, dst_ext_t::rank(),
+        decltype(std::make_index_sequence<src_ext_t::rank()>()),
+        SliceSpecifiers...>;
+
+      if constexpr (deduce_layout::layout_right_value() && dst_ext_t::rank() == 1) { // getting rank-1 from rightmost
+        using dst_mapping_t = typename layout_right::template mapping<dst_ext_t>;
+        return submdspan_mapping_result<dst_mapping_t>{dst_mapping_t{dst_ext}, offset};
+      } else if constexpr (deduce_layout::layout_right_padded_value()) { // can keep layout_right_padded
+        constexpr size_t S_static = MDSPAN_IMPL_STANDARD_NAMESPACE::detail::compute_s_static_layout_right<Extents, deduce_layout::gap_len, static_padding_stride>::value(std::make_index_sequence<Extents::rank()>());
+        using dst_mapping_t = typename MDSPAN_IMPL_PROPOSED_NAMESPACE::layout_right_padded<S_static>::template mapping<dst_ext_t>;
+        return submdspan_mapping_result<dst_mapping_t>{
+        dst_mapping_t(dst_ext, stride(Extents::rank() - 2 - deduce_layout::gap_len)), offset};
+      } else { // layout_stride
+    auto inv_map = MDSPAN_IMPL_STANDARD_NAMESPACE::detail::inv_map_rank(std::integral_constant<size_t, 0>(),
+                                        std::index_sequence<>(), slices...);
+      using dst_mapping_t = typename layout_stride::template mapping<dst_ext_t>;
+    return submdspan_mapping_result<dst_mapping_t> {
+      dst_mapping_t(dst_ext,
+                    MDSPAN_IMPL_STANDARD_NAMESPACE::detail::construct_sub_strides(
+                        *this, inv_map,
+// HIP needs deduction guides to have markups so we need to be explicit
+// NVCC 11.0 has a bug with deduction guide here, tested that 11.2 does not have
+// the issue But Clang-CUDA also doesn't accept the use of deduction guide so
+// disable it for CUDA alltogether
+#if defined(_MDSPAN_HAS_HIP) || defined(_MDSPAN_HAS_CUDA)
+                        std::tuple<decltype(MDSPAN_IMPL_STANDARD_NAMESPACE::detail::stride_of(slices))...>{
+                            MDSPAN_IMPL_STANDARD_NAMESPACE::detail::stride_of(slices)...})),
+#else
+                        std::tuple{MDSPAN_IMPL_STANDARD_NAMESPACE::detail::stride_of(slices)...})),
+#endif
+          offset
+    };
+      }
+    }
+  }
+
+
 #if defined(__NVCC__) && !defined(__CUDA_ARCH__) && defined(__GNUC__)
   __builtin_unreachable();
 #endif
