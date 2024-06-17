@@ -657,6 +657,8 @@ struct SharedAllocationDisableTrackingGuard {
       delete;
 
   ~SharedAllocationDisableTrackingGuard() {
+    KOKKOS_ASSERT((
+        !Kokkos::Impl::SharedAllocationRecord<void, void>::tracking_enabled()));
     Kokkos::Impl::SharedAllocationRecord<void, void>::tracking_enable();
   }
   // clang-format off
