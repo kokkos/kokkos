@@ -58,6 +58,15 @@ struct SpaceAwareAccessor {
           other) noexcept
       : nested_acc(other.nested_acc) {}
 
+  template <class OtherNestedAccessorType,
+            std::enable_if_t<std::is_constructible_v<NestedAccessor,
+                                                     OtherNestedAccessorType>,
+                             int> = 0>
+  KOKKOS_FUNCTION constexpr SpaceAwareAccessor(
+      const SpaceAwareAccessor<AnonymousSpace, OtherNestedAccessorType>&
+          other) noexcept
+      : nested_acc(other.nested_acc) {}
+
   KOKKOS_FUNCTION
   SpaceAwareAccessor(const NestedAccessor& acc) : nested_acc(acc) {}
 
@@ -73,15 +82,61 @@ struct SpaceAwareAccessor {
   }
 
   KOKKOS_FUNCTION
-  constexpr data_handle_type offset(data_handle_type p,
-                                    size_t i) const noexcept {
+  constexpr data_handle_type offset(data_handle_type p, size_t i) const
+      noexcept {
     return nested_acc.offset(p, i);
   }
 
+ private:
+  [[no_unique_address]] NestedAccessor nested_acc;
+  template <class, class>
+  friend struct SpaceAwareAccessor;
+};
+
+template <class NestedAccessor>
+struct SpaceAwareAccessor<AnonymousSpace, NestedAccessor> {
+  using element_type     = typename NestedAccessor::element_type;
+  using reference        = typename NestedAccessor::reference;
+  using data_handle_type = typename NestedAccessor::data_handle_type;
+
+  using offset_policy =
+      SpaceAwareAccessor<AnonymousSpace,
+                         typename NestedAccessor::offset_policy>;
+
+  using memory_space = AnonymousSpace;
+
+  KOKKOS_DEFAULTED_FUNCTION
+  constexpr SpaceAwareAccessor() = default;
+
+  template <class OtherMemorySpace, class OtherNestedAccessorType,
+            std::enable_if_t<std::is_constructible_v<NestedAccessor,
+                                                     OtherNestedAccessorType>,
+                             int> = 0>
+  KOKKOS_FUNCTION constexpr SpaceAwareAccessor(
+      const SpaceAwareAccessor<OtherMemorySpace, OtherNestedAccessorType>&
+          other) noexcept
+      : nested_acc(other.nested_acc) {}
+
+  KOKKOS_FUNCTION
+  SpaceAwareAccessor(const NestedAccessor& acc) : nested_acc(acc) {}
+
+  KOKKOS_FUNCTION
+  explicit operator NestedAccessor() const { return nested_acc; }
+
+  KOKKOS_FUNCTION
+  constexpr reference access(data_handle_type p, size_t i) const noexcept {
+    return nested_acc.access(p, i);
+  }
+
+  KOKKOS_FUNCTION
+  constexpr data_handle_type offset(data_handle_type p, size_t i) const
+      noexcept {
+    return nested_acc.offset(p, i);
+  }
 
  private:
   [[no_unique_address]] NestedAccessor nested_acc;
-  template<class, class>
+  template <class, class>
   friend struct SpaceAwareAccessor;
 };
 
