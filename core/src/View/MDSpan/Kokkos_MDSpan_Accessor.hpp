@@ -75,9 +75,9 @@ struct SpaceAwareAccessor {
 
   KOKKOS_FUNCTION
   constexpr reference access(data_handle_type p, size_t i) const noexcept {
-    // Same error as Kokkos view in case anyone greps for this in their tools
     Kokkos::Impl::runtime_check_memory_access_violation<memory_space>(
-        "Kokkos::View ERROR: attempt to access inaccessible memory space");
+        "Kokkos::SpaceAwareAccessor ERROR: attempt to access inaccessible "
+        "memory space");
     return nested_acc.access(p, i);
   }
 

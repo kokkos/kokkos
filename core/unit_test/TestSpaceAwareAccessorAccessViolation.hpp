@@ -57,7 +57,8 @@ void test_memory_access_violations_from_host() {
   using exec_space_t   = Kokkos::DefaultHostExecutionSpace;
   const exec_space_t exec_space{};
   std::string const message =
-      "Kokkos::View ERROR: attempt to access inaccessible memory space";
+      "Kokkos::SpaceAwareAccessor ERROR: attempt to access inaccessible memory "
+      "space";
   test_memory_access_violation<memory_space_t, exec_space_t>(exec_space,
                                                              message);
 }
@@ -68,14 +69,15 @@ void test_memory_access_violations_from_device() {
   using exec_space_t   = ExecutionSpace;
   const exec_space_t exec_space{};
   std::string const message =
-      "Kokkos::View ERROR: attempt to access inaccessible memory space";
+      "Kokkos::SpaceAwareAccessor ERROR: attempt to access inaccessible memory "
+      "space";
   test_memory_access_violation<memory_space_t, exec_space_t>(exec_space,
                                                              message);
 }
 
 // FIXME_SYCL
 #if !(defined(KOKKOS_COMPILER_INTEL_LLVM) && defined(KOKKOS_ENABLE_SYCL))
-TEST(TEST_CATEGORY_DEATH, memory_access_violations_from_host) {
+TEST(TEST_CATEGORY_DEATH, space_aware_accessor_invalid_access_from_host) {
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 
   using ExecutionSpace = TEST_EXECSPACE;
@@ -90,7 +92,7 @@ TEST(TEST_CATEGORY_DEATH, memory_access_violations_from_host) {
 }
 #endif
 
-TEST(TEST_CATEGORY_DEATH, memory_access_violations_from_device) {
+TEST(TEST_CATEGORY_DEATH, space_aware_accessor_invalid_access_from_device) {
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 
   using ExecutionSpace = TEST_EXECSPACE;
