@@ -45,7 +45,10 @@ void test_space_aware_accessor() {
         static_assert(std::is_same_v<typename acc_t::offset_policy, acc_t>);
         static_assert(
             std::is_same_v<typename acc_t::memory_space, memory_space_t>);
+#if defined(KOKKOS_ENABLE_CXX20) || defined(KOKKOS_ENABLE_CXX23) || \
+    defined(KOKKOS_ENABLE_CXX26)
         static_assert(std::is_empty_v<acc_t>);
+#endif
       },
       errors);
   ASSERT_EQ(errors, 0);

@@ -1,4 +1,3 @@
-
 //@HEADER
 // ************************************************************************
 //
@@ -88,7 +87,15 @@ struct SpaceAwareAccessor {
   }
 
  private:
-  [[no_unique_address]] NestedAccessor nested_acc;
+// We either compile with our custom mdspan impl
+// in which case we discover inside it whether no_unique_address
+// works, or we use C++23 in which case it better be available
+#ifdef _MDSPAN_NO_UNIQUE_ADDRESS
+  _MDSPAN_NO_UNIQUE_ADDRESS
+#else
+  [[no_unique_address]]
+#endif
+  NestedAccessor nested_acc;
   template <class, class>
   friend struct SpaceAwareAccessor;
 };
@@ -135,7 +142,15 @@ struct SpaceAwareAccessor<AnonymousSpace, NestedAccessor> {
   }
 
  private:
-  [[no_unique_address]] NestedAccessor nested_acc;
+// We either compile with our custom mdspan impl
+// in which case we discover inside it whether no_unique_address
+// works, or we use C++23 in which case it better be available
+#ifdef _MDSPAN_NO_UNIQUE_ADDRESS
+  _MDSPAN_NO_UNIQUE_ADDRESS
+#else
+  [[no_unique_address]]
+#endif
+  NestedAccessor nested_acc;
   template <class, class>
   friend struct SpaceAwareAccessor;
 };
