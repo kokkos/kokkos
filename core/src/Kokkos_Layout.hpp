@@ -222,38 +222,6 @@ template <typename Layout, class Enable = void>
 struct KOKKOS_DEPRECATED is_layouttiled : std::false_type {};
 #endif
 
-// The layout_iterate_type_selector is now deprecated.
-// Please use the Kokkos::Impl::layout_iterate_type_selector instead.
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-template <typename... Layout>
-struct KOKKOS_DEPRECATED layout_iterate_type_selector {
-  static const Kokkos::Iterate outer_iteration_pattern =
-      Kokkos::Iterate::Default;
-  static const Kokkos::Iterate inner_iteration_pattern =
-      Kokkos::Iterate::Default;
-};
-
-template <>
-struct KOKKOS_DEPRECATED layout_iterate_type_selector<Kokkos::LayoutRight> {
-  static const Kokkos::Iterate outer_iteration_pattern = Kokkos::Iterate::Right;
-  static const Kokkos::Iterate inner_iteration_pattern = Kokkos::Iterate::Right;
-};
-
-template <>
-struct KOKKOS_DEPRECATED layout_iterate_type_selector<Kokkos::LayoutLeft> {
-  static const Kokkos::Iterate outer_iteration_pattern = Kokkos::Iterate::Left;
-  static const Kokkos::Iterate inner_iteration_pattern = Kokkos::Iterate::Left;
-};
-
-template <>
-struct KOKKOS_DEPRECATED layout_iterate_type_selector<Kokkos::LayoutStride> {
-  static const Kokkos::Iterate outer_iteration_pattern =
-      Kokkos::Iterate::Default;
-  static const Kokkos::Iterate inner_iteration_pattern =
-      Kokkos::Iterate::Default;
-};
-#endif
-
 namespace Impl {
 // For use with view_copy
 template <typename... Layout>
@@ -284,6 +252,14 @@ struct layout_iterate_type_selector<Kokkos::LayoutStride> {
       Kokkos::Iterate::Default;
 };
 }  // namespace Impl
+
+// The layout_iterate_type_selector is now deprecated.
+// Please use the Kokkos::Impl::layout_iterate_type_selector instead.
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+template <typename... Layout>
+using layout_iterate_type_selector KOKKOS_DEPRECATED =
+    Impl::layout_iterate_type_selector<Layout...>;
+#endif
 
 }  // namespace Kokkos
 
