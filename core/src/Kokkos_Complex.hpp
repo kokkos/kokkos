@@ -31,39 +31,6 @@
 
 namespace Kokkos {
 
-template <typename RealType>
-class complex;
-
-// Tuple protocol for complex based on https://wg21.link/p2819r2 (voted into
-// the C++26 working draft on 2023-11)
-
-// get<...>(...) forward declared so as not to be hidden friends
-template <size_t I, typename RealType>
-constexpr RealType& get(complex<RealType>& z) noexcept;
-
-template <size_t I, typename RealType>
-constexpr RealType&& get(complex<RealType>&& z) noexcept;
-
-template <size_t I, typename RealType>
-constexpr const RealType& get(const complex<RealType>& z) noexcept;
-
-template <size_t I, typename RealType>
-constexpr const RealType&& get(const complex<RealType>&& z) noexcept;
-
-}  // namespace Kokkos
-
-template <typename RealType>
-struct std::tuple_size<Kokkos::complex<RealType>>
-    : std::integral_constant<size_t, 2> {};
-
-template <size_t I, typename RealType>
-struct std::tuple_element<I, Kokkos::complex<RealType>> {
-  static_assert(I < 2);
-  using type = RealType;
-};
-
-namespace Kokkos {
-
 /// \class complex
 /// \brief Partial reimplementation of std::complex that works as the
 ///   result of a Kokkos::parallel_reduce.
@@ -81,16 +48,6 @@ class
                     std::is_same_v<RealType, std::remove_cv_t<RealType>>,
                 "Kokkos::complex can only be instantiated for a cv-unqualified "
                 "floating point type");
-
-  template <size_t I, typename ComplexForwardingRef>
-  KOKKOS_FUNCTION static constexpr auto&& get_ref(
-      ComplexForwardingRef&& z) noexcept {
-    static_assert(I < 2);
-    if constexpr (I == 0)
-      return std::forward<ComplexForwardingRef>(z).re_;
-    else
-      return std::forward<ComplexForwardingRef>(z).im_;
-  }
 
  private:
   RealType re_{};
@@ -299,27 +256,11 @@ class
     return *this;
   }
 
-  template <size_t I>
-  KOKKOS_FUNCTION friend constexpr RealType& get(complex& z) noexcept {
-    return complex::get_ref<I>(z);
-  }
+  template <size_t I, typename RT>
+  friend constexpr const RT& get(const complex<RT>&) noexcept;
 
-  template <size_t I>
-  KOKKOS_FUNCTION friend constexpr RealType&& get(complex&& z) noexcept {
-    return complex::get_ref<I>(std::move(z));
-  }
-
-  template <size_t I>
-  KOKKOS_FUNCTION friend constexpr const RealType& get(
-      const complex& z) noexcept {
-    return complex::get_ref<I>(z);
-  }
-
-  template <size_t I>
-  KOKKOS_FUNCTION friend constexpr const RealType&& get(
-      const complex&& z) noexcept {
-    return complex::get_ref<I>(std::move(z));
-  }
+  template <size_t I, typename RT>
+  friend constexpr const RT&& get(const complex<RT>&&) noexcept;
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   //! Copy constructor from volatile.
@@ -490,7 +431,60 @@ class
 
 }  // namespace Kokkos
 
+// Tuple protocol for complex based on https://wg21.link/P2819R2 (voted into
+// the C++26 working draft on 2023-11)
+
+template <typename RealType>
+struct std::tuple_size<Kokkos::complex<RealType>>
+    : std::integral_constant<size_t, 2> {};
+
+template <size_t I, typename RealType>
+struct std::tuple_element<I, Kokkos::complex<RealType>> {
+  static_assert(I < 2);
+  using type = RealType;
+};
+
 namespace Kokkos {
+
+// get<...>(...) defined here so as not to be hidden friends, as per P2819R2
+
+template <size_t I, typename RealType>
+KOKKOS_FUNCTION constexpr RealType& get(complex<RealType>& z) noexcept {
+  static_assert(I < 2);
+  if constexpr (I == 0)
+    return z.real();
+  else
+    return z.imag();
+}
+
+template <size_t I, typename RealType>
+KOKKOS_FUNCTION constexpr RealType&& get(complex<RealType>&& z) noexcept {
+  static_assert(I < 2);
+  if constexpr (I == 0)
+    return std::move(z.real());
+  else
+    return std::move(z.imag());
+}
+
+template <size_t I, typename RealType>
+KOKKOS_FUNCTION constexpr const RealType& get(
+    const complex<RealType>& z) noexcept {
+  static_assert(I < 2);
+  if constexpr (I == 0)
+    return z.re_;
+  else
+    return z.im_;
+}
+
+template <size_t I, typename RealType>
+KOKKOS_FUNCTION constexpr const RealType&& get(
+    const complex<RealType>&& z) noexcept {
+  static_assert(I < 2);
+  if constexpr (I == 0)
+    return std::move(z.re_);
+  else
+    return std::move(z.im_);
+}
 
 //==============================================================================
 // <editor-fold desc="Equality and inequality"> {{{1
