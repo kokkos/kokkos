@@ -160,6 +160,12 @@ FUNCTION(KOKKOS_ADD_EXECUTABLE_AND_TEST ROOT_NAME)
             )
         ENDIF()
     ENDIF()
+    # We noticed problems with -fvisibility=hidden for inline static variables
+    # if Kokkos was built as shared library.
+    IF(BUILD_SHARED_LIBS)
+      SET_PROPERTY(TARGET ${PACKAGE_NAME}_${ROOT_NAME} PROPERTY VISIBILITY_INLINES_HIDDEN ON)
+      SET_PROPERTY(TARGET ${PACKAGE_NAME}_${ROOT_NAME} PROPERTY CXX_VISIBILITY_PRESET hidden)
+    ENDIF()
 ENDFUNCTION()
 
 FUNCTION(KOKKOS_SET_EXE_PROPERTY ROOT_NAME)
