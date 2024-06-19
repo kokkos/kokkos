@@ -212,10 +212,16 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
         Reductions
         Reductions_DeviceView
         SharedAlloc
+        SpaceAwareAccessorAccessViolation
+        SpaceAwareAccessor
         Swap
         )
     IF (NOT Kokkos_ENABLE_IMPL_MDSPAN)
-      LIST(REMOVE_ITEM ${Tag}_TESTNAMES1B MDSpanConversion)
+      LIST(REMOVE_ITEM ${Tag}_TESTNAMES1B
+         MDSpanConversion
+         SpaceAwareAccessorAccessViolation
+         SpaceAwareAccessor
+      )
     ENDIF()
     foreach(Name IN LISTS ${Tag}_TESTNAMES1B)
       set(file ${dir}/Test${Tag}_${Name}.cpp)
