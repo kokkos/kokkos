@@ -70,10 +70,10 @@ pipeline {
                           '''
                     }      
                 }   
-                stage('GCC-13') {
+                stage('GCC-14') {
                     agent {
                         docker {
-                            image 'gcc:13.1'
+                            image 'gcc:14.1'
                             label 'docker'
                         }
                     }
@@ -88,7 +88,7 @@ pipeline {
                           mkdir -p build && cd build && \
                           cmake \
                             -DCMAKE_BUILD_TYPE=Release \
-                            -DCMAKE_CXX_STANDARD=23 \
+                            -DCMAKE_CXX_STANDARD=26 \
                             -DCMAKE_CXX_FLAGS=-Werror \
                             -DKokkos_ARCH_NATIVE=ON \
                             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
