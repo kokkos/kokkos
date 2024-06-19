@@ -76,7 +76,8 @@ void SerialInternal::finalize() {
     if (it == all_instances.end())
       Kokkos::abort(
           "Execution space instance to be removed couldn't be found!");
-    all_instances.erase(it);
+    std::swap(*it, all_instances.back());
+    all_instances.pop_back();
   }
 }
 
