@@ -92,6 +92,9 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
                                    0  // thread_local_bytes
     );
 
+    // Serialize kernels on the same execution space instance
+    std::lock_guard<std::mutex> lock(m_instance->m_instance_mutex);
+
     if (execute_in_serial(m_policy.space())) {
       const pointer_type ptr =
           m_result_ptr
@@ -106,6 +109,9 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
           update);
 
       reducer.final(ptr);
+
+      m_instance->release_lock();
+
       return;
     }
     const int pool_size = m_instance->thread_pool_size();
@@ -226,6 +232,9 @@ class ParallelReduce<CombinedFunctorReducerType,
                                    ,
                                    0  // thread_local_bytes
     );
+
+    // Serialize kernels on the same execution space instance
+    std::lock_guard<std::mutex> lock(m_instance->m_instance_mutex);
 
 #ifndef KOKKOS_COMPILER_INTEL
     if (execute_in_serial(m_iter.m_rp.space())) {
@@ -419,6 +428,9 @@ class ParallelReduce<CombinedFunctorReducerType,
 
     m_instance->resize_thread_data(pool_reduce_size, team_reduce_size,
                                    team_shared_size, thread_local_size);
+
+    // Serialize kernels on the same execution space instance
+    std::lock_guard<std::mutex> lock(m_instance->m_instance_mutex);
 
     if (execute_in_serial(m_policy.space())) {
       HostThreadTeamData& data = *(m_instance->get_thread_data());

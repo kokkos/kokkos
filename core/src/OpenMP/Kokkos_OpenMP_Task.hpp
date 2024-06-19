@@ -84,6 +84,9 @@ class TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::OpenMP, QueueType>> {
     );
     assert(pool_size % team_size == 0);
 
+    // Serialize kernels on the same execution space instance
+    std::lock_guard<std::mutex> lock(instance->m_instance_mutex);
+
     auto& queue = scheduler.queue();
 
     // queue.initialize_team_queues(pool_size / team_size);
@@ -250,6 +253,10 @@ class TaskQueueSpecializationConstrained<
                                  0 /* thread local buffer */
     );
     assert(pool_size % team_size == 0);
+
+    // Serialize kernels on the same execution space instance
+    std::lock_guard<std::mutex> lock(instance->m_instance_mutex);
+
     auto& queue = scheduler.queue();
     queue.initialize_team_queues(pool_size / team_size);
 
