@@ -26,27 +26,32 @@ jobs:
         cmake_build_type: ['Release', 'Debug']
         backend: ['OPENMP']
         clang-tidy: ['']
+        stdcxx: [17, 20]
         include:
           - distro: 'ubuntu:intel'
             cxx: 'icpc'
             cxx_extra_flags: '-diag-disable=177,10441'
             cmake_build_type: 'Release'
             backend: 'OPENMP'
+            stdcxx: '17'
           - distro: 'ubuntu:intel'
             cxx: 'icpc'
             cxx_extra_flags: '-diag-disable=177,10441'
             cmake_build_type: 'Debug'
             backend: 'OPENMP'
+            stdcxx: '17'
           - distro: 'ubuntu:intel'
             cxx: 'icpx'
             cxx_extra_flags: '-fp-model=precise -Wno-pass-failed'
             cmake_build_type: 'Release'
             backend: 'OPENMP'
+            stdcxx: '17'
           - distro: 'ubuntu:intel'
             cxx: 'icpx'
             cxx_extra_flags: '-fp-model=precise -Wno-pass-failed'
             cmake_build_type: 'Debug'
             backend: 'OPENMP'
+            stdcxx: '20'
           - distro: 'ubuntu:latest'
             cxx: 'clang++'
             cxx_extra_flags: '-fsanitize=address'
@@ -54,16 +59,19 @@ jobs:
             cmake_build_type: 'RelWithDebInfo'
             backend: 'THREADS'
             clang-tidy: '-DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*"'
+            stdcxx: '23'
           - distro: 'ubuntu:latest'
             cxx: 'clang++'
             cxx_extra_flags: '-fsanitize=address'
             extra_linker_flags: '-fsanitize=address'
             cmake_build_type: 'RelWithDebInfo'
             backend: 'SERIAL'
+            stdcxx: '20'
           - distro: 'ubuntu:latest'
             cxx: 'g++'
             cmake_build_type: 'RelWithDebInfo'
             backend: 'THREADS'
+            stdcxx: '23'
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/kokkos/ci-containers/${{ matrix.distro }}
@@ -115,6 +123,7 @@ jobs:
             -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
             -DCMAKE_CXX_FLAGS="-Werror ${{ matrix.cxx_extra_flags }}" \
+            -DCMAKE_CXX_STANDARD="${{ matrix.stdcxx }}" \
             -DCMAKE_EXE_LINKER_FLAGS="${{ matrix.extra_linker_flags }}" \
             -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
