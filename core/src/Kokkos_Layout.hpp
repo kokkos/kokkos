@@ -253,8 +253,6 @@ struct layout_iterate_type_selector<Kokkos::LayoutStride> {
 };
 }  // namespace Impl
 
-// The layout_iterate_type_selector is now deprecated.
-// Please use the Kokkos::Impl::layout_iterate_type_selector instead.
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 template <typename... Layout>
 using layout_iterate_type_selector KOKKOS_DEPRECATED =
