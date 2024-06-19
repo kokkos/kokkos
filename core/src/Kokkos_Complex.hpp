@@ -28,6 +28,7 @@
 #include <complex>
 #include <type_traits>
 #include <iosfwd>
+#include <tuple>
 
 namespace Kokkos {
 
