@@ -24,11 +24,11 @@ static_assert(false,
 
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Concepts.hpp>
-#include <impl/Kokkos_Utilities.hpp>
+#include <Kokkos_Core_fwd.hpp>
 
 namespace Kokkos {
 
-// For now use the accessors in IMPL namespace, as an
+// For now use the accessors in Impl namespace, as an
 // implementation detail for rebasing View on mdspan
 namespace Impl {
 
@@ -43,7 +43,7 @@ struct SpaceAwareAccessor {
 
   using memory_space = MemorySpace;
 
-  static_assert(is_memory_space<memory_space>::value);
+  static_assert(is_memory_space_v<memory_space>);
 
   KOKKOS_DEFAULTED_FUNCTION
   constexpr SpaceAwareAccessor() = default;
