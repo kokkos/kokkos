@@ -52,9 +52,6 @@ class SerialInternal {
  public:
   SerialInternal() = default;
 
-  SerialInternal(const SerialInternal&) = delete;
-  SerialInternal& operator=(const SerialInternal&) = delete;
-
   bool is_initialized();
 
   void initialize();
