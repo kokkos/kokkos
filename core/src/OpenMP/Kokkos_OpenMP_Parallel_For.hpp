@@ -108,6 +108,8 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::OpenMP> {
 
  public:
   inline void execute() const {
+    // Serialize kernels on the same execution space instance
+    std::lock_guard<std::mutex> lock(m_instance->m_instance_mutex);
     if (execute_in_serial(m_policy.space())) {
       exec_range(m_functor, m_policy.begin(), m_policy.end());
       return;
@@ -202,6 +204,9 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
  public:
   inline void execute() const {
+    // Serialize kernels on the same execution space instance
+    std::lock_guard<std::mutex> lock(m_instance->m_instance_mutex);
+
 #ifndef KOKKOS_COMPILER_INTEL
     if (execute_in_serial(m_iter.m_rp.space())) {
       exec_range(0, m_iter.m_rp.m_num_tiles);
@@ -337,6 +342,9 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     m_instance->resize_thread_data(pool_reduce_size, team_reduce_size,
                                    team_shared_size, thread_local_size);
+
+    // Serialize kernels on the same execution space instance
+    std::lock_guard<std::mutex> lock(m_instance->m_instance_mutex);
 
     if (execute_in_serial(m_policy.space())) {
       ParallelFor::template exec_team<WorkTag>(

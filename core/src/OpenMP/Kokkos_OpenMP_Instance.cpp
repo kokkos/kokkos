@@ -34,6 +34,9 @@
 namespace Kokkos {
 namespace Impl {
 
+std::vector<OpenMPInternal *> OpenMPInternal::all_instances;
+std::mutex OpenMPInternal::all_instances_mutex;
+
 void OpenMPInternal::acquire_lock() {
   while (1 == desul::atomic_compare_exchange(&m_pool_mutex, 0, 1,
                                              desul::MemoryOrderAcquire(),
@@ -304,6 +307,17 @@ void OpenMPInternal::finalize() {
   }
 
   m_initialized = false;
+
+  // guard erasing from all_instances
+  {
+    std::scoped_lock lock(all_instances_mutex);
+
+    auto it = std::find(all_instances.begin(), all_instances.end(), this);
+    if (it == all_instances.end())
+      Kokkos::abort(
+          "Execution space instance to be removed couldn't be found!");
+    all_instances.erase(it);
+  }
 }
 
 void OpenMPInternal::print_configuration(std::ostream &s) const {
