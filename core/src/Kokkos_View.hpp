@@ -1918,23 +1918,6 @@ KOKKOS_INLINE_FUNCTION bool operator!=(const View<LT, LP...>& lhs,
 namespace Kokkos {
 namespace Impl {
 
-inline void shared_allocation_tracking_disable() {
-  Kokkos::Impl::SharedAllocationRecord<void, void>::tracking_disable();
-}
-
-inline void shared_allocation_tracking_enable() {
-  Kokkos::Impl::SharedAllocationRecord<void, void>::tracking_enable();
-}
-
-} /* namespace Impl */
-} /* namespace Kokkos */
-
-//----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
-
-namespace Kokkos {
-namespace Impl {
-
 template <class Specialize, typename A, typename B>
 struct CommonViewValueType;
 
