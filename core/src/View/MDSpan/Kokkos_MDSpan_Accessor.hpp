@@ -25,6 +25,7 @@ static_assert(false,
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Concepts.hpp>
 #include <Kokkos_Core_fwd.hpp>
+#include <desul/atomics.hpp>
 
 namespace Kokkos {
 
@@ -167,6 +168,36 @@ struct SpaceAwareAccessor<AnonymousSpace, NestedAccessor> {
   NestedAccessor nested_acc;
   template <class, class>
   friend struct SpaceAwareAccessor;
+};
+
+// Like atomic_accessor_relaxed proposed for ISO C++26 but with
+// defaulted memory scope - similar how desuls AtomicRef has a memory scope
+template <class ElementType, class MemoryScope = desul::MemoryScopeDevice>
+struct AtomicAccessorRelaxed {
+  using element_type = ElementType;
+  using reference =
+      desul::AtomicRef<ElementType, desul::MemoryOrderRelaxed, MemoryScope>;
+  using data_handle_type = ElementType*;
+  using offset_policy    = AtomicAccessorRelaxed;
+
+  static_assert(
+      std::is_same_v<std::remove_cv_t<element_type>, element_type>,
+      "AtomicAccessorRelaxed can only be used for non-const element types");
+  KOKKOS_FUNCTION
+  explicit operator default_accessor<element_type>() const {
+    return default_accessor<element_type>{};
+  }
+
+  KOKKOS_FUNCTION
+  constexpr reference access(data_handle_type p, size_t i) const noexcept {
+    return reference(p[i]);
+  }
+
+  KOKKOS_FUNCTION
+  constexpr data_handle_type offset(data_handle_type p, size_t i) const
+      noexcept {
+    return p + i;
+  }
 };
 
 }  // namespace Impl
