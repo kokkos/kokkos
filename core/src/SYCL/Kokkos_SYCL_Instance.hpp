@@ -197,7 +197,7 @@ class SYCLInternal {
 
   static SYCLInternal& singleton();
 
-  int verify_is_initialized(const char* const label) const;
+  bool verify_is_initialized(const char* const label) const;
 
   void initialize(const sycl::device& d);
 
