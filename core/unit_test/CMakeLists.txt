@@ -91,6 +91,7 @@ SET(COMPILE_ONLY_SOURCES
   TestVersionMacros.cpp
   TestViewRank.cpp
   TestViewTypeTraits.cpp
+  TestTypeInfo.cpp
   TestTypeList.cpp
   TestMDRangePolicyCTAD.cpp
   TestTeamPolicyCTAD.cpp
@@ -102,6 +103,9 @@ SET(COMPILE_ONLY_SOURCES
 #testing if windows.h and Kokkos_Core.hpp can be included
 if(WIN32)
   LIST(APPEND COMPILE_ONLY_SOURCES TestWindowsInclude.cpp)
+endif()
+if(KOKKOS_CXX_COMPILER_ID STREQUAL "Intel")
+  LIST(REMOVE_ITEM COMPILE_ONLY_SOURCES TestTypeInfo.cpp)
 endif()
 
 #TestInterOp has a dependency on containers
