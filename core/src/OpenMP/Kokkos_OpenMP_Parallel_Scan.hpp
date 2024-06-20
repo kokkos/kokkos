@@ -70,7 +70,8 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
     const int value_count          = Analysis::value_count(m_functor);
     const size_t pool_reduce_bytes = 2 * Analysis::value_size(m_functor);
 
-    m_instance->acquire_lock();
+    // Serialize kernels on the same execution space instance
+    std::lock_guard<std::mutex> lock(m_instance->m_instance_mutex);
 
     m_instance->resize_thread_data(pool_reduce_bytes, 0  // team_reduce_bytes
                                    ,
@@ -78,9 +79,6 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
                                    ,
                                    0  // thread_local_bytes
     );
-
-    // Serialize kernels on the same execution space instance
-    std::lock_guard<std::mutex> lock(m_instance->m_instance_mutex);
 
     if (execute_in_serial(m_policy.space())) {
       typename Analysis::Reducer final_reducer(m_functor);
@@ -90,8 +88,6 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
 
       ParallelScan::template exec_range<WorkTag>(m_functor, m_policy.begin(),
                                                  m_policy.end(), update, true);
-
-      m_instance->release_lock();
 
       return;
     }
@@ -141,7 +137,6 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
       ParallelScan::template exec_range<WorkTag>(
           m_functor, range.begin(), range.end(), update_base, true);
     }
-    m_instance->release_lock();
   }
 
   //----------------------------------------
@@ -201,7 +196,8 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
     const int value_count          = Analysis::value_count(m_functor);
     const size_t pool_reduce_bytes = 2 * Analysis::value_size(m_functor);
 
-    m_instance->acquire_lock();
+    // Serialize kernels on the same execution space instance
+    std::lock_guard<std::mutex> lock(m_instance->m_instance_mutex);
 
     m_instance->resize_thread_data(pool_reduce_bytes, 0  // team_reduce_bytes
                                    ,
@@ -209,9 +205,6 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
                                    ,
                                    0  // thread_local_bytes
     );
-
-    // Serialize kernels on the same execution space instance
-    std::lock_guard<std::mutex> lock(m_instance->m_instance_mutex);
 
     if (execute_in_serial(m_policy.space())) {
       typename Analysis::Reducer final_reducer(m_functor);
@@ -223,8 +216,6 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
                                          m_policy.end(), update, true);
 
       *m_result_ptr = update;
-
-      m_instance->release_lock();
 
       return;
     }
@@ -277,8 +268,6 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
         *m_result_ptr = update_base;
       }
     }
-
-    m_instance->release_lock();
   }
 
   //----------------------------------------
