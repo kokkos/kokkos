@@ -643,6 +643,30 @@ TEST(TEST_CATEGORY,
                hvt::device_type::execution_space::name());
 }
 
+/**
+ * @test This test checks the construction of a dual view from its host and device views.
+ *
+ * More specifically, it prepares host and device views, and then move them to a new dual view.
+ */
+TEST(TEST_CATEGORY, dualview_from_host_and_device_views) {
+  using dual_view_t = Kokkos::DualView<int*, ExecSpace>;
+  using t_dev       = typename dual_view_t::t_dev;
+  using t_host      = typename dual_view_t::t_host;
+
+  t_dev  d_view("device view", 5);
+  t_host h_view("host view", 5);
+
+  dual_view_t dual(std::move(d_view), std::move(h_view));
+
+  EXPECT_TRUE(dual.is_allocated());
+
+  EXPECT_FALSE(d_view.is_allocated());
+  EXPECT_FALSE(h_view.is_allocated());
+
+  EXPECT_EQ(dual.h_view.use_count(), 1);
+  EXPECT_EQ(dual.d_view.use_count(), 1);
+}
+
 }  // anonymous namespace
 }  // namespace Test
 
