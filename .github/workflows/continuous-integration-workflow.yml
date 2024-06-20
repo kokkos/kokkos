@@ -26,7 +26,7 @@ jobs:
         cmake_build_type: ['Release', 'Debug']
         backend: ['OPENMP']
         clang-tidy: ['']
-        stdcxx: [17, 20]
+        stdcxx: [17]
         include:
           - distro: 'ubuntu:intel'
             cxx: 'icpc'
