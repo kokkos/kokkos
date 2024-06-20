@@ -1020,9 +1020,9 @@ struct TeamThreadMDRange<Rank<N, OuterDir, InnerDir>, TeamHandle> {
   static constexpr auto par_vector = Impl::TeamMDRangeParVector::NotParVector;
 
   static constexpr Iterate direction =
-      OuterDir == Iterate::Default
-          ? layout_iterate_type_selector<ArrayLayout>::outer_iteration_pattern
-          : iter;
+      OuterDir == Iterate::Default ? Impl::layout_iterate_type_selector<
+                                         ArrayLayout>::outer_iteration_pattern
+                                   : iter;
 
   template <class... Args>
   KOKKOS_FUNCTION TeamThreadMDRange(TeamHandleType const& team_, Args&&... args)
@@ -1056,9 +1056,9 @@ struct ThreadVectorMDRange<Rank<N, OuterDir, InnerDir>, TeamHandle> {
   static constexpr auto par_vector = Impl::TeamMDRangeParVector::ParVector;
 
   static constexpr Iterate direction =
-      OuterDir == Iterate::Default
-          ? layout_iterate_type_selector<ArrayLayout>::outer_iteration_pattern
-          : iter;
+      OuterDir == Iterate::Default ? Impl::layout_iterate_type_selector<
+                                         ArrayLayout>::outer_iteration_pattern
+                                   : iter;
 
   template <class... Args>
   KOKKOS_INLINE_FUNCTION ThreadVectorMDRange(TeamHandleType const& team_,
@@ -1093,9 +1093,9 @@ struct TeamVectorMDRange<Rank<N, OuterDir, InnerDir>, TeamHandle> {
   static constexpr auto par_vector = Impl::TeamMDRangeParVector::ParVector;
 
   static constexpr Iterate direction =
-      iter == Iterate::Default
-          ? layout_iterate_type_selector<ArrayLayout>::outer_iteration_pattern
-          : iter;
+      iter == Iterate::Default ? Impl::layout_iterate_type_selector<
+                                     ArrayLayout>::outer_iteration_pattern
+                               : iter;
 
   template <class... Args>
   KOKKOS_INLINE_FUNCTION TeamVectorMDRange(TeamHandleType const& team_,

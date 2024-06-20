@@ -3463,7 +3463,7 @@ struct SubViewDataTypeImpl<void, ValueType, Kokkos::Experimental::Extents<>> {
 };
 
 /* for integral args, subview doesn't have that dimension */
-template <class ValueType, ptrdiff_t Ext, ptrdiff_t... Exts, class Integral,
+template <class ValueType, size_t Ext, size_t... Exts, class Integral,
           class... Args>
 struct SubViewDataTypeImpl<
     std::enable_if_t<std::is_integral<std::decay_t<Integral>>::value>,
@@ -3472,7 +3472,7 @@ struct SubViewDataTypeImpl<
                           Kokkos::Experimental::Extents<Exts...>, Args...> {};
 
 /* for ALL slice, subview has the same dimension */
-template <class ValueType, ptrdiff_t Ext, ptrdiff_t... Exts, class... Args>
+template <class ValueType, size_t Ext, size_t... Exts, class... Args>
 struct SubViewDataTypeImpl<void, ValueType,
                            Kokkos::Experimental::Extents<Ext, Exts...>,
                            Kokkos::ALL_t, Args...>
@@ -3483,7 +3483,7 @@ struct SubViewDataTypeImpl<void, ValueType,
  * static sizes */
 /* Since we don't allow interleaving of dynamic and static extents, make all of
  * the dimensions to the left dynamic  */
-template <class ValueType, ptrdiff_t Ext, ptrdiff_t... Exts, class PairLike,
+template <class ValueType, size_t Ext, size_t... Exts, class PairLike,
           class... Args>
 struct SubViewDataTypeImpl<
     std::enable_if_t<is_pair_like<PairLike>::value>, ValueType,

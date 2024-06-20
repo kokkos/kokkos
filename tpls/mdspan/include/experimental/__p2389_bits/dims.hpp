@@ -14,14 +14,15 @@
 //
 //@HEADER
 
-#include <TestViewAPI.hpp>
+#pragma once
 
-namespace Test {
+// backward compatibility import into experimental
+namespace MDSPAN_IMPL_STANDARD_NAMESPACE {
+namespace MDSPAN_IMPL_PROPOSED_NAMESPACE {
 
-TEST(TEST_CATEGORY, view_api_c) {
-  TestViewAPI<double, TEST_EXECSPACE>::run_test_refcount_exception();
-  TestViewAPI<double, TEST_EXECSPACE>::run_test_deep_copy_empty();
-  TestViewAPI<double, TEST_EXECSPACE>::run_test_view_operator_b();
-}
+template< ::std::size_t Rank, class IndexType = std::size_t>
+using dims =
+  :: MDSPAN_IMPL_STANDARD_NAMESPACE :: dextents<IndexType, Rank>;
 
-}  // namespace Test
+} // namespace MDSPAN_IMPL_PROPOSED_NAMESPACE
+} // namespace MDSPAN_IMPL_STANDARD_NAMESPACE

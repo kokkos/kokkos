@@ -91,10 +91,10 @@ class CudaInternal {
   int m_cudaDev = -1;
 
   // Device Properties
-  inline static int m_cudaArch = -1;
+  static int m_cudaArch;
   static int concurrency();
 
-  inline static cudaDeviceProp m_deviceProp;
+  static cudaDeviceProp m_deviceProp;
 
   // Scratch Spaces for Reductions
   mutable std::size_t m_scratchSpaceCount;
@@ -120,11 +120,10 @@ class CudaInternal {
   bool was_initialized = false;
   bool was_finalized   = false;
 
-  inline static std::set<int> cuda_devices = {};
-  inline static std::map<int, unsigned long*> constantMemHostStagingPerDevice =
-      {};
-  inline static std::map<int, cudaEvent_t> constantMemReusablePerDevice = {};
-  inline static std::map<int, std::mutex> constantMemMutexPerDevice     = {};
+  static std::set<int> cuda_devices;
+  static std::map<int, unsigned long*> constantMemHostStagingPerDevice;
+  static std::map<int, cudaEvent_t> constantMemReusablePerDevice;
+  static std::map<int, std::mutex> constantMemMutexPerDevice;
 
   static CudaInternal& singleton();
 

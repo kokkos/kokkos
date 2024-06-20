@@ -297,9 +297,11 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 2, iType> {
   ViewTypeA a;
   ViewTypeB b;
   static const Kokkos::Iterate outer_iteration_pattern =
-      Kokkos::layout_iterate_type_selector<Layout>::outer_iteration_pattern;
+      Kokkos::Impl::layout_iterate_type_selector<
+          Layout>::outer_iteration_pattern;
   static const Kokkos::Iterate inner_iteration_pattern =
-      Kokkos::layout_iterate_type_selector<Layout>::inner_iteration_pattern;
+      Kokkos::Impl::layout_iterate_type_selector<
+          Layout>::inner_iteration_pattern;
   using iterate_type =
       Kokkos::Rank<2, outer_iteration_pattern, inner_iteration_pattern>;
   using policy_type =
@@ -327,9 +329,11 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 3, iType> {
   ViewTypeB b;
 
   static const Kokkos::Iterate outer_iteration_pattern =
-      Kokkos::layout_iterate_type_selector<Layout>::outer_iteration_pattern;
+      Kokkos::Impl::layout_iterate_type_selector<
+          Layout>::outer_iteration_pattern;
   static const Kokkos::Iterate inner_iteration_pattern =
-      Kokkos::layout_iterate_type_selector<Layout>::inner_iteration_pattern;
+      Kokkos::Impl::layout_iterate_type_selector<
+          Layout>::inner_iteration_pattern;
   using iterate_type =
       Kokkos::Rank<3, outer_iteration_pattern, inner_iteration_pattern>;
   using policy_type =
@@ -358,9 +362,11 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 4, iType> {
   ViewTypeB b;
 
   static const Kokkos::Iterate outer_iteration_pattern =
-      Kokkos::layout_iterate_type_selector<Layout>::outer_iteration_pattern;
+      Kokkos::Impl::layout_iterate_type_selector<
+          Layout>::outer_iteration_pattern;
   static const Kokkos::Iterate inner_iteration_pattern =
-      Kokkos::layout_iterate_type_selector<Layout>::inner_iteration_pattern;
+      Kokkos::Impl::layout_iterate_type_selector<
+          Layout>::inner_iteration_pattern;
   using iterate_type =
       Kokkos::Rank<4, outer_iteration_pattern, inner_iteration_pattern>;
   using policy_type =
@@ -390,9 +396,11 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 5, iType> {
   ViewTypeB b;
 
   static const Kokkos::Iterate outer_iteration_pattern =
-      Kokkos::layout_iterate_type_selector<Layout>::outer_iteration_pattern;
+      Kokkos::Impl::layout_iterate_type_selector<
+          Layout>::outer_iteration_pattern;
   static const Kokkos::Iterate inner_iteration_pattern =
-      Kokkos::layout_iterate_type_selector<Layout>::inner_iteration_pattern;
+      Kokkos::Impl::layout_iterate_type_selector<
+          Layout>::inner_iteration_pattern;
   using iterate_type =
       Kokkos::Rank<5, outer_iteration_pattern, inner_iteration_pattern>;
   using policy_type =
@@ -422,9 +430,11 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 6, iType> {
   ViewTypeB b;
 
   static const Kokkos::Iterate outer_iteration_pattern =
-      Kokkos::layout_iterate_type_selector<Layout>::outer_iteration_pattern;
+      Kokkos::Impl::layout_iterate_type_selector<
+          Layout>::outer_iteration_pattern;
   static const Kokkos::Iterate inner_iteration_pattern =
-      Kokkos::layout_iterate_type_selector<Layout>::inner_iteration_pattern;
+      Kokkos::Impl::layout_iterate_type_selector<
+          Layout>::inner_iteration_pattern;
   using iterate_type =
       Kokkos::Rank<6, outer_iteration_pattern, inner_iteration_pattern>;
   using policy_type =
@@ -454,9 +464,11 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 7, iType> {
   ViewTypeB b;
 
   static const Kokkos::Iterate outer_iteration_pattern =
-      Kokkos::layout_iterate_type_selector<Layout>::outer_iteration_pattern;
+      Kokkos::Impl::layout_iterate_type_selector<
+          Layout>::outer_iteration_pattern;
   static const Kokkos::Iterate inner_iteration_pattern =
-      Kokkos::layout_iterate_type_selector<Layout>::inner_iteration_pattern;
+      Kokkos::Impl::layout_iterate_type_selector<
+          Layout>::inner_iteration_pattern;
   using iterate_type =
       Kokkos::Rank<6, outer_iteration_pattern, inner_iteration_pattern>;
   using policy_type =
@@ -489,9 +501,11 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 8, iType> {
   ViewTypeB b;
 
   static const Kokkos::Iterate outer_iteration_pattern =
-      Kokkos::layout_iterate_type_selector<Layout>::outer_iteration_pattern;
+      Kokkos::Impl::layout_iterate_type_selector<
+          Layout>::outer_iteration_pattern;
   static const Kokkos::Iterate inner_iteration_pattern =
-      Kokkos::layout_iterate_type_selector<Layout>::inner_iteration_pattern;
+      Kokkos::Impl::layout_iterate_type_selector<
+          Layout>::inner_iteration_pattern;
   using iterate_type =
       Kokkos::Rank<6, outer_iteration_pattern, inner_iteration_pattern>;
   using policy_type =

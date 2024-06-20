@@ -222,6 +222,7 @@ template <typename Layout, class Enable = void>
 struct KOKKOS_DEPRECATED is_layouttiled : std::false_type {};
 #endif
 
+namespace Impl {
 // For use with view_copy
 template <typename... Layout>
 struct layout_iterate_type_selector {
@@ -250,6 +251,13 @@ struct layout_iterate_type_selector<Kokkos::LayoutStride> {
   static const Kokkos::Iterate inner_iteration_pattern =
       Kokkos::Iterate::Default;
 };
+}  // namespace Impl
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+template <typename... Layout>
+using layout_iterate_type_selector KOKKOS_DEPRECATED =
+    Impl::layout_iterate_type_selector<Layout...>;
+#endif
 
 }  // namespace Kokkos
 
