@@ -47,7 +47,9 @@ class simd_mask<T, simd_abi::scalar> {
   using abi_type                        = simd_abi::scalar;
   using reference                       = value_type&;
   KOKKOS_DEFAULTED_FUNCTION simd_mask() = default;
-  KOKKOS_FORCEINLINE_FUNCTION static constexpr std::size_t size() { return 1; }
+  KOKKOS_FORCEINLINE_FUNCTION static constexpr simd_size_type size() {
+    return 1;
+  }
   KOKKOS_FORCEINLINE_FUNCTION explicit simd_mask(value_type value)
       : m_value(value) {}
   template <
@@ -64,10 +66,10 @@ class simd_mask<T, simd_abi::scalar> {
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit operator bool() const {
     return m_value;
   }
-  KOKKOS_FORCEINLINE_FUNCTION reference operator[](std::size_t) {
+  KOKKOS_FORCEINLINE_FUNCTION reference operator[](simd_size_type) {
     return m_value;
   }
-  KOKKOS_FORCEINLINE_FUNCTION value_type operator[](std::size_t) const {
+  KOKKOS_FORCEINLINE_FUNCTION value_type operator[](simd_size_type) const {
     return m_value;
   }
   KOKKOS_FORCEINLINE_FUNCTION simd_mask
@@ -103,7 +105,9 @@ class simd<T, simd_abi::scalar> {
   KOKKOS_DEFAULTED_FUNCTION simd(simd&&)      = default;
   KOKKOS_DEFAULTED_FUNCTION simd& operator=(simd const&) = default;
   KOKKOS_DEFAULTED_FUNCTION simd& operator=(simd&&) = default;
-  KOKKOS_FORCEINLINE_FUNCTION static constexpr std::size_t size() { return 1; }
+  KOKKOS_FORCEINLINE_FUNCTION static constexpr simd_size_type size() {
+    return 1;
+  }
   template <class U, std::enable_if_t<std::is_convertible_v<U, value_type>,
                                       bool> = false>
   KOKKOS_FORCEINLINE_FUNCTION simd(U&& value) : m_value(value) {}
@@ -114,9 +118,9 @@ class simd<T, simd_abi::scalar> {
   template <class G,
             std::enable_if_t<
                 // basically, can you do { value_type r =
-                // gen(std::integral_constant<std::size_t, i>()); }
-                std::is_invocable_r_v<value_type, G,
-                                      std::integral_constant<std::size_t, 0>>,
+                // gen(std::integral_constant<simd_size_type, i>()); }
+                std::is_invocable_r_v<
+                    value_type, G, std::integral_constant<simd_size_type, 0>>,
                 bool> = false>
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit simd(G&& gen) noexcept
       : m_value(gen(0)) {}
@@ -137,10 +141,10 @@ class simd<T, simd_abi::scalar> {
     *ptr = m_value;
   }
 
-  KOKKOS_FORCEINLINE_FUNCTION reference operator[](std::size_t) {
+  KOKKOS_FORCEINLINE_FUNCTION reference operator[](simd_size_type) {
     return m_value;
   }
-  KOKKOS_FORCEINLINE_FUNCTION value_type operator[](std::size_t) const {
+  KOKKOS_FORCEINLINE_FUNCTION value_type operator[](simd_size_type) const {
     return m_value;
   }
   KOKKOS_FORCEINLINE_FUNCTION simd operator-() const noexcept {
@@ -164,7 +168,7 @@ class simd<T, simd_abi::scalar> {
     return simd(lhs.m_value - rhs.m_value);
   }
   [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr simd operator>>(
-      simd const& lhs, int rhs) noexcept {
+      simd const& lhs, simd_size_type rhs) noexcept {
     return simd(lhs.m_value >> rhs);
   }
   [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr simd operator>>(
@@ -172,7 +176,7 @@ class simd<T, simd_abi::scalar> {
     return simd(lhs.m_value >> rhs.m_value);
   }
   [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr simd operator<<(
-      simd const& lhs, int rhs) noexcept {
+      simd const& lhs, simd_size_type rhs) noexcept {
     return simd(lhs.m_value << rhs);
   }
   [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr simd operator<<(
