@@ -89,12 +89,6 @@ class OpenMPInternal {
 
   int thread_pool_size() const { return m_pool_size; }
 
-  // Acquire lock used to protect access to m_pool
-  void acquire_lock();
-
-  // Release lock used to protect access to m_pool
-  void release_lock();
-
   void resize_thread_data(size_t pool_reduce_bytes, size_t team_reduce_bytes,
                           size_t team_shared_bytes, size_t thread_local_bytes);
 

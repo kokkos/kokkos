@@ -37,19 +37,6 @@ namespace Impl {
 std::vector<OpenMPInternal *> OpenMPInternal::all_instances;
 std::mutex OpenMPInternal::all_instances_mutex;
 
-void OpenMPInternal::acquire_lock() {
-  while (1 == desul::atomic_compare_exchange(&m_pool_mutex, 0, 1,
-                                             desul::MemoryOrderAcquire(),
-                                             desul::MemoryScopeDevice())) {
-    // do nothing
-  }
-}
-
-void OpenMPInternal::release_lock() {
-  desul::atomic_store(&m_pool_mutex, 0, desul::MemoryOrderRelease(),
-                      desul::MemoryScopeDevice());
-}
-
 void OpenMPInternal::clear_thread_data() {
   const size_t member_bytes =
       sizeof(int64_t) *
@@ -126,7 +113,8 @@ void OpenMPInternal::resize_thread_data(size_t pool_reduce_bytes,
       if (nullptr != m_pool[rank]) {
         m_pool[rank]->disband_pool();
 
-        space.deallocate(m_pool[rank], old_alloc_bytes);
+        // impl_deallocate to not fence here
+        space.impl_deallocate("[unlabeled]", m_pool[rank], old_alloc_bytes);
       }
 
       void *ptr = nullptr;
