@@ -59,9 +59,6 @@ MDSPAN_INLINE_FUNCTION constexpr size_t get_actual_static_padding_value() {
   } else {
     return dynamic_extent;
   }
-#ifdef __INTEL_COMPILER
-  __builtin_unreachable();
-#endif
   // Missing return statement warning from NVCC
 #ifdef __NVCC__
   return 0;
@@ -108,9 +105,6 @@ struct padded_extent {
     } else {
       return init_padding(exts, padding_value);
     }
-#ifdef __INTEL_COMPILER
-  __builtin_unreachable();
-#endif
   // Missing return statement warning from NVCC
 #ifdef __NVCC__
   return {};
@@ -126,9 +120,6 @@ struct padded_extent {
     } else {
       return {};
     }
-#ifdef __INTEL_COMPILER
-  __builtin_unreachable();
-#endif
   // Missing return statement warning from NVCC
 #ifdef __NVCC__
   return {};
@@ -144,9 +135,6 @@ struct padded_extent {
     } else {
       return {};
     }
-#ifdef __INTEL_COMPILER
-  __builtin_unreachable();
-#endif
   // Missing return statement warning from NVCC
 #ifdef __NVCC__
   return {};

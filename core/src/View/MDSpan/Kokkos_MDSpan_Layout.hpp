@@ -111,7 +111,7 @@ KOKKOS_INLINE_FUNCTION auto array_layout_from_mapping(
                        rank > 6 ? ext.extent(6) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
                        rank > 7 ? ext.extent(7) : KOKKOS_IMPL_CTOR_DEFAULT_ARG};
   }
-#if defined KOKKOS_COMPILER_INTEL
+#ifdef KOKKOS_COMPILER_INTEL
   __builtin_unreachable();
 #endif
 }
@@ -146,7 +146,7 @@ KOKKOS_INLINE_FUNCTION auto mapping_from_view_mapping(const VM &view_mapping) {
   } else {
     return mapping_type(extents_from_view_mapping<extents_type>(view_mapping));
   }
-#if defined KOKKOS_COMPILER_INTEL
+#ifdef KOKKOS_COMPILER_INTEL
   __builtin_unreachable();
 #endif
 }
