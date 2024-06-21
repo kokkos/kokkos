@@ -2772,7 +2772,7 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
   }
 
   void parallel_for_implementation() {
-    PolicyType policy(0, n);
+    PolicyType policy(space, 0, n);
     uint64_t kpID = 0;
     if (Kokkos::Profiling::profileLibraryLoaded()) {
       Kokkos::Profiling::beginParallelFor(
@@ -2786,7 +2786,7 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
     }
 #endif
     const Kokkos::Impl::ParallelFor<ViewValueFunctor, PolicyType> closure(
-        *this, PolicyType(0, n));
+        *this, policy);
     closure.execute();
     if (default_exec_space)
       space.fence(
