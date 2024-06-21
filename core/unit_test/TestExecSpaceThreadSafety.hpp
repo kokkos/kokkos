@@ -231,7 +231,7 @@ void run_exec_space_thread_safety_mdrange_reduce() {
 
 TEST(TEST_CATEGORY, exec_space_thread_safety_mdrange_reduce) {
 // FIXME_INTEL
-#ifdef KOKKOS_COMPILER_INTEL
+#if defined(KOKKOS_COMPILER_INTEL) && defined(KOKKOS_ENABLE_OPENMP)
   if (std::is_same_v<TEST_EXECSPACE, Kokkos::OpenMP>)
     GTEST_SKIP() << "skipping since test is known to fail for OpenMP using the "
                     "legacy Intel compiler";
