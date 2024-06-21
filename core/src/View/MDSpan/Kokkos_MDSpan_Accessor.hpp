@@ -50,21 +50,14 @@ struct SpaceAwareAccessor {
   KOKKOS_DEFAULTED_FUNCTION
   constexpr SpaceAwareAccessor() = default;
 
-  template <class OtherNestedAccessorType,
-            std::enable_if_t<std::is_constructible_v<NestedAccessor,
-                                                     OtherNestedAccessorType>,
-                             int> = 0>
+  template <
+      class OtherMemorySpace, class OtherNestedAccessorType,
+      std::enable_if_t<
+          MemorySpaceAccess<MemorySpace, OtherMemorySpace>::assignable &&
+              std::is_constructible_v<NestedAccessor, OtherNestedAccessorType>,
+          int> = 0>
   KOKKOS_FUNCTION constexpr SpaceAwareAccessor(
-      const SpaceAwareAccessor<MemorySpace, OtherNestedAccessorType>&
-          other) noexcept
-      : nested_acc(other.nested_acc) {}
-
-  template <class OtherNestedAccessorType,
-            std::enable_if_t<std::is_constructible_v<NestedAccessor,
-                                                     OtherNestedAccessorType>,
-                             int> = 0>
-  KOKKOS_FUNCTION constexpr SpaceAwareAccessor(
-      const SpaceAwareAccessor<AnonymousSpace, OtherNestedAccessorType>&
+      const SpaceAwareAccessor<OtherMemorySpace, OtherNestedAccessorType>&
           other) noexcept
       : nested_acc(other.nested_acc) {}
 
