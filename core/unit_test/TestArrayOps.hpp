@@ -92,6 +92,31 @@ TEST(TEST_CATEGORY, array_element_access) {
   ASSERT_EQ(ca.data()[index], a[index]);
 }
 
+TEST(TEST_CATEGORY, array_operator_equal) {
+  using A = Kokkos::Array<int, 2>;
+  constexpr A a{{3, 5}};
+  constexpr A b{{3, 5}};
+  constexpr A c{{5, 3}};
+
+  static_assert(a == b);
+  static_assert(!(a == c));
+  static_assert(a != c);
+
+  ASSERT_TRUE(a == b);
+  ASSERT_FALSE(a == c);
+  ASSERT_TRUE(a != c);
+
+  using E = Kokkos::Array<int, 0>;
+  constexpr E e;
+  constexpr E f;
+
+  static_assert(e == f);
+  static_assert(!(e != f));
+
+  ASSERT_TRUE(e == f);
+  ASSERT_FALSE(e != f);
+}
+
 TEST(TEST_CATEGORY, array_zero_capacity) {
   using A = Kokkos::Array<int, 0>;
   A e;
