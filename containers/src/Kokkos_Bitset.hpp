@@ -130,10 +130,11 @@ class Bitset {
 
   /// set all bits to 1
   /// can only be called from the host
-  void set() {
-    Kokkos::deep_copy(m_blocks, ~0u);
+  void set(const execution_space& exec) {
+    Kokkos::deep_copy(exec, m_blocks, ~0u);
 
     if (m_last_block_mask) {
+      exec.fence("todo message");
       // clear the unused bits in the last block
       Kokkos::Impl::DeepCopy<typename Device::memory_space, Kokkos::HostSpace>(
           m_blocks.data() + (m_blocks.extent(0) - 1u), &m_last_block_mask,
@@ -146,11 +147,11 @@ class Bitset {
 
   /// set all bits to 0
   /// can only be called from the host
-  void reset() { Kokkos::deep_copy(m_blocks, 0u); }
+  void reset(const execution_space& exec) { Kokkos::deep_copy(exec, m_blocks, 0u); }
 
   /// set all bits to 0
   /// can only be called from the host
-  void clear() { Kokkos::deep_copy(m_blocks, 0u); }
+  void clear(const execution_space& exec) { Kokkos::deep_copy(exec, m_blocks, 0u); }
 
   /// set i'th bit to 1
   /// can only be called from the device

@@ -380,21 +380,30 @@ class UnorderedMap {
   histogram_type get_histogram() { return histogram_type(*this); }
 
   //! Clear all entries in the table.
-  void clear() {
+  void clear(const execution_space& exec) {
     m_bounded_insert = true;
 
     if (capacity() == 0) return;
 
-    m_available_indexes.clear();
+    m_available_indexes.clear(exec);
 
-    Kokkos::deep_copy(m_hash_lists, invalid_index);
-    Kokkos::deep_copy(m_next_index, invalid_index);
+    Kokkos::deep_copy(exec, m_hash_lists, invalid_index);
+    Kokkos::deep_copy(exec, m_next_index, invalid_index);
     {
       const key_type tmp = key_type();
-      Kokkos::deep_copy(m_keys, tmp);
+      Kokkos::deep_copy(exec, m_keys, tmp);
     }
-    Kokkos::deep_copy(m_scalars, 0);
+    Kokkos::deep_copy(exec, m_scalars, 0);
     m_size() = 0;
+  }
+
+  //! @overload
+  void clear() {
+    Kokkos::fence(
+        "Kokkos::UnorderedMap::clear: fence before");
+    execution_space exec {};
+    clear(exec);
+    exec.fence("Kokkos::UnorderedMap::clear: fence after");
   }
 
   KOKKOS_INLINE_FUNCTION constexpr bool is_allocated() const {
@@ -412,24 +421,44 @@ class UnorderedMap {
   ///
   /// This is <i>not</i> a device function; it may <i>not</i> be
   /// called in a parallel kernel.
-  bool rehash(size_type requested_capacity = 0) {
+  bool rehash(const size_type requested_capacity = 0) {
+    Kokkos::fence(
+        "Kokkos::UnorderedMap::rehash: fence before since no execution space instance provided");
+    execution_space exec {};
+    bool result = rehash(exec, requested_capacity);
+    exec.fence("Kokkos::UnorderedMap::rehash: fence after since no execution space instance provided");
+    return result;
+  }
+
+  bool rehash(const execution_space &exec, const size_type requested_capacity = 0) {
     const bool bounded_insert = (capacity() == 0) || (size() == 0u);
-    return rehash(requested_capacity, bounded_insert);
+    return rehash(exec, requested_capacity, bounded_insert);
   }
 
   bool rehash(size_type requested_capacity, bool bounded_insert) {
-    if (!is_insertable_map) return false;
+    Kokkos::fence(
+        "Kokkos::UnorderedMap::rehash: fence before since no execution space instance provided");
+    execution_space exec{};
+    bool result = rehash(exec, requested_capacity, bounded_insert);
+    exec.fence("Kokkos::UnorderedMap::rehash: fence after since no execution space instance provided");
+    return result;
+  }
+
+  bool rehash(const execution_space &exec, size_type requested_capacity,
+              bool bounded_insert) {
+    if constexpr (!is_insertable_map) return false;
 
     const size_type curr_size = size();
     requested_capacity =
         (requested_capacity < curr_size) ? curr_size : requested_capacity;
 
-    insertable_map_type tmp(requested_capacity, m_hasher, m_equal_to);
+    insertable_map_type tmp(Kokkos::view_alloc(exec, "Kokkos::UnorderedMap::rehash: temporary view"), requested_capacity,
+                            m_hasher, m_equal_to);
 
     if (curr_size) {
       tmp.m_bounded_insert = false;
-      Impl::UnorderedMapRehash<insertable_map_type> f(tmp, *this);
-      f.apply();
+      Impl::UnorderedMapRehash<insertable_map_type> f{tmp, *this};
+      f.apply(exec);
     }
     tmp.m_bounded_insert = bounded_insert;
 
@@ -466,26 +495,37 @@ class UnorderedMap {
   }
 
   bool begin_erase() {
+    Kokkos::fence(
+        "Kokkos::UnorderedMap::begin_erase: fence before since no execution space instance provided");
+    execution_space exec {};
+    bool result = begin_erase(exec);
+    exec.fence("Kokkos::UnorderedMap::begin_erase: fence after since no execution space instance provided");
+    return result;
+  }
+
+  bool begin_erase(const execution_space &exec) {
     bool result = !erasable();
     if (is_insertable_map && result) {
-      execution_space().fence(
-          "Kokkos::UnorderedMap::begin_erase: fence before setting erasable "
-          "flag");
-      set_flag(erasable_idx);
+      set_flag(exec, erasable_idx);
     }
     return result;
   }
 
   bool end_erase() {
+    Kokkos::fence(
+        "Kokkos::UnorderedMap::end_erase: fence before");
+    execution_space exec {};
+    bool result = end_erase(exec);
+    exec.fence("Kokkos::UnorderedMap::end_erase: fence after");
+    return result;
+  }
+
+  bool end_erase(const execution_space &exec) {
     bool result = erasable();
     if (is_insertable_map && result) {
-      execution_space().fence(
-          "Kokkos::UnorderedMap::end_erase: fence before erasing");
-      Impl::UnorderedMapErase<declared_map_type> f(*this);
-      f.apply();
-      execution_space().fence(
-          "Kokkos::UnorderedMap::end_erase: fence after erasing");
-      reset_flag(erasable_idx);
+      Impl::UnorderedMapErase<declared_map_type> f{*this};
+      f.apply(exec);
+      reset_flag(exec, erasable_idx);
     }
     return result;
   }
@@ -900,29 +940,38 @@ class UnorderedMap {
  private:  // private member functions
   bool modified() const { return get_flag(modified_idx); }
 
-  void set_flag(int flag) const {
+  //! Set the flag at index @c flag in the device view @ref m_scalars.
+  void set_flag(const execution_space& exec, const int flag) const {
     using raw_deep_copy =
         Kokkos::Impl::DeepCopy<typename device_type::memory_space,
                                Kokkos::HostSpace>;
     const int true_ = true;
-    raw_deep_copy(m_scalars.data() + flag, &true_, sizeof(int));
-    Kokkos::fence(
-        "Kokkos::UnorderedMap::set_flag: fence after copying flag from "
-        "HostSpace");
+    raw_deep_copy(exec, m_scalars.data() + flag, &true_, sizeof(int));
   }
 
-  void reset_flag(int flag) const {
+  void reset_flag(const int flag) const {
+    Kokkos::fence(
+        "Kokkos::UnorderedMap::reset_flag: fence before");
+    execution_space exec {};
+    reset_flag(exec, flag);
+    exec.fence("Kokkos::UnorderedMap::reset_flag: fence after");
+  }
+
+  //! Reset the flag at index @p flag in the device view @ref m_scalars.
+  void reset_flag(const execution_space& exec, const int flag) const {
     using raw_deep_copy =
         Kokkos::Impl::DeepCopy<typename device_type::memory_space,
                                Kokkos::HostSpace>;
     const int false_ = false;
-    raw_deep_copy(m_scalars.data() + flag, &false_, sizeof(int));
-    Kokkos::fence(
-        "Kokkos::UnorderedMap::reset_flag: fence after copying flag from "
-        "HostSpace");
+    raw_deep_copy(exec, m_scalars.data() + flag, &false_, sizeof(int));
   }
 
-  bool get_flag(int flag) const {
+  /// Not sure how to best modified this function.
+  /// It reads a flag from the device view @ref m_scalars.
+  /// It is used in @ref erasable for instance, and @ref erasable is used in @ref begin_erase
+  /// that takes an execution space instance argument.
+  /// So... what should we expect @ref get_flag takes as argument?
+  bool get_flag(const int flag) const {
     using raw_deep_copy =
         Kokkos::Impl::DeepCopy<Kokkos::HostSpace,
                                typename device_type::memory_space>;
