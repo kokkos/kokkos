@@ -267,6 +267,9 @@ namespace Profiling {
 // clang-format off
 using Kokkos::Tools::profileLibraryLoaded;
 
+using Kokkos::Tools::printHelp;
+using Kokkos::Tools::parseArgs;
+
 using Kokkos::Tools::initialize;
 using Kokkos::Tools::finalize;
 

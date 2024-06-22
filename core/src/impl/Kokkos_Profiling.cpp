@@ -971,18 +971,6 @@ void set_callbacks(Kokkos::Tools::Experimental::EventSet new_events) {
 }  // namespace Experimental
 }  // namespace Tools
 
-namespace Profiling {
-
-bool printHelp(const std::string& args) {
-  return Kokkos::Tools::printHelp(args);
-}
-void parseArgs(const std::string& args) { Kokkos::Tools::parseArgs(args); }
-void parseArgs(int _argc, char** _argv) {
-  Kokkos::Tools::parseArgs(_argc, _argv);
-}
-
-}  // namespace Profiling
-
 // Tuning
 
 namespace Tools {
