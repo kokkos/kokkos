@@ -468,6 +468,9 @@ KOKKOS_FUNCTION constexpr RealType&& get(complex<RealType>&& z) noexcept {
     return std::move(z.real());
   else
     return std::move(z.imag());
+#ifdef KOKKOS_COMPILER_INTEL
+  __builtin_unreachable();
+#endif
 }
 
 template <size_t I, typename RealType>
@@ -491,6 +494,9 @@ KOKKOS_FUNCTION constexpr const RealType&& get(
     return std::move(z.re_);
   else
     return std::move(z.im_);
+#ifdef KOKKOS_COMPILER_INTEL
+  __builtin_unreachable();
+#endif
 }
 
 //==============================================================================
