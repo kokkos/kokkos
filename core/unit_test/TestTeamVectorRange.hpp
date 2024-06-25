@@ -225,7 +225,7 @@ struct functor_teamvector_reduce {
   KOKKOS_INLINE_FUNCTION
   void operator()(typename policy_type::member_type team) const {
     Scalar value = Scalar();
-    shared_scalar_t shared_value(team.team_scratch(0), 1);
+    shared_scalar_t shared_value(team.template team_scratch<0>(), 1);
 
     Kokkos::parallel_reduce(
         Kokkos::TeamVectorRange(team, 131),
@@ -307,7 +307,7 @@ struct functor_teamvector_reduce_reducer {
   KOKKOS_INLINE_FUNCTION
   void operator()(typename policy_type::member_type team) const {
     Scalar value = 0;
-    shared_scalar_t shared_value(team.team_scratch(0), 1);
+    shared_scalar_t shared_value(team.template team_scratch<0>(), 1);
 
     Kokkos::parallel_reduce(
         Kokkos::TeamVectorRange(team, 131),

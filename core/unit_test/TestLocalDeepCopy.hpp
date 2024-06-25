@@ -1057,8 +1057,8 @@ struct DeepCopyScratchFunctor {
                          Kokkos::Schedule<Kokkos::Dynamic>>::member_type team)
       const {
     using ShmemType = TEST_EXECSPACE::scratch_memory_space;
-    auto shview =
-        Impl::ShMemView<double**, ShmemType>(team.team_scratch(1), N_, 1);
+    auto shview     = Impl::ShMemView<double**, ShmemType>(
+        team.template team_scratch<1>(), N_, 1);
 
     Kokkos::parallel_for(
         Kokkos::TeamThreadRange(team, N_), KOKKOS_LAMBDA(const size_t& index) {
