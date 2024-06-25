@@ -42,9 +42,10 @@ struct FunkyAcc {
   element_type* offset(data_handle_type p, size_t i) const { return p.val + i; }
 };
 
-template <class T, class ExecutionSpace>
+template <class T, class ExecutionSpace,
+          class MemorySpace = typename ExecutionSpace::memory_space>
 void test_space_aware_accessor() {
-  using memory_space_t = typename ExecutionSpace::memory_space;
+  using memory_space_t = MemorySpace;
   using value_type     = std::remove_const_t<T>;
   Kokkos::View<value_type*, ExecutionSpace> v("V", 100);
 
@@ -81,6 +82,8 @@ void test_space_aware_accessor() {
           static_assert(std::is_same_v<decltype(acc.access(ptr, i)), T&>);
         }
         static_assert(std::is_same_v<decltype(acc.offset(ptr, i)), T*>);
+        static_assert(std::is_same_v<decltype(acc.nested_accessor()),
+                                     const FunkyAcc<T>&>);
         static_assert(std::is_nothrow_move_constructible_v<acc_t>);
         static_assert(std::is_nothrow_move_assignable_v<acc_t>);
         static_assert(std::is_nothrow_swappable_v<acc_t>);
@@ -138,11 +141,14 @@ void test_space_aware_accessor_conversion() {
       });
 }
 
-TEST(TEST_CATEGORY, space_aware_accessor) {
+TEST(TEST_CATEGORY, mdspan_space_aware_accessor) {
   using ExecutionSpace = TEST_EXECSPACE;
   test_space_aware_accessor<int, ExecutionSpace>();
   test_space_aware_accessor<double, ExecutionSpace>();
   test_space_aware_accessor<const int, ExecutionSpace>();
   test_space_aware_accessor<const double, ExecutionSpace>();
+  test_space_aware_accessor<double, ExecutionSpace, Kokkos::AnonymousSpace>();
+  test_space_aware_accessor<const int, ExecutionSpace,
+                            Kokkos::AnonymousSpace>();
   test_space_aware_accessor_conversion();
 }

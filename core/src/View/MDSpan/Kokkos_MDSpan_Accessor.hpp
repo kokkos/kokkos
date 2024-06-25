@@ -76,8 +76,17 @@ struct SpaceAwareAccessor {
   }
 
   KOKKOS_FUNCTION
-  constexpr auto offset(data_handle_type p, size_t i) const noexcept {
+  constexpr typename offset_policy::data_handle_type offset(data_handle_type p,
+                                                            size_t i) const
+      noexcept {
     return nested_acc.offset(p, i);
+  }
+
+  // Canonical way for accessing nested accessor see ISO C++
+  // [linalg.scaled.scaledaccessor]
+  KOKKOS_FUNCTION
+  constexpr const NestedAccessor& nested_accessor() const noexcept {
+    return nested_acc;
   }
 
  private:
@@ -133,8 +142,17 @@ struct SpaceAwareAccessor<AnonymousSpace, NestedAccessor> {
   }
 
   KOKKOS_FUNCTION
-  constexpr auto offset(data_handle_type p, size_t i) const noexcept {
+  constexpr typename offset_policy::data_handle_type offset(data_handle_type p,
+                                                            size_t i) const
+      noexcept {
     return nested_acc.offset(p, i);
+  }
+
+  // Canonical way for accessing nested accessor see ISO C++
+  // [linalg.scaled.scaledaccessor]
+  KOKKOS_FUNCTION
+  constexpr const NestedAccessor& nested_accessor() const noexcept {
+    return nested_acc;
   }
 
  private:

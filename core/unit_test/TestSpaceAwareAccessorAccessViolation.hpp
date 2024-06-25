@@ -77,7 +77,8 @@ void test_memory_access_violations_from_device() {
 
 // FIXME_SYCL
 #if !(defined(KOKKOS_COMPILER_INTEL_LLVM) && defined(KOKKOS_ENABLE_SYCL))
-TEST(TEST_CATEGORY_DEATH, space_aware_accessor_invalid_access_from_host) {
+TEST(TEST_CATEGORY_DEATH,
+     mdspan_space_aware_accessor_invalid_access_from_host) {
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 
   using ExecutionSpace = TEST_EXECSPACE;
@@ -92,7 +93,8 @@ TEST(TEST_CATEGORY_DEATH, space_aware_accessor_invalid_access_from_host) {
 }
 #endif
 
-TEST(TEST_CATEGORY_DEATH, space_aware_accessor_invalid_access_from_device) {
+TEST(TEST_CATEGORY_DEATH,
+     mdspan_space_aware_accessor_invalid_access_from_device) {
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 
   using ExecutionSpace = TEST_EXECSPACE;
