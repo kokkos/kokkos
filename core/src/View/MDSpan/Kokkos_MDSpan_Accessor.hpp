@@ -34,35 +34,30 @@ namespace Impl {
 
 template <class MemorySpace, class NestedAccessor>
 struct SpaceAwareAccessor {
+  // Part of Accessor Requirements
   using element_type     = typename NestedAccessor::element_type;
   using reference        = typename NestedAccessor::reference;
   using data_handle_type = typename NestedAccessor::data_handle_type;
-
   using offset_policy =
       SpaceAwareAccessor<MemorySpace, typename NestedAccessor::offset_policy>;
 
-  using memory_space = MemorySpace;
+  // Specific to SpaceAwareAccessor
+  using memory_space         = MemorySpace;
+  using nested_accessor_type = NestedAccessor;
 
   static_assert(is_memory_space_v<memory_space>);
 
   KOKKOS_DEFAULTED_FUNCTION
   constexpr SpaceAwareAccessor() = default;
 
-  template <class OtherNestedAccessorType,
-            std::enable_if_t<std::is_constructible_v<NestedAccessor,
-                                                     OtherNestedAccessorType>,
-                             int> = 0>
+  template <
+      class OtherMemorySpace, class OtherNestedAccessorType,
+      std::enable_if_t<
+          MemorySpaceAccess<MemorySpace, OtherMemorySpace>::assignable &&
+              std::is_constructible_v<NestedAccessor, OtherNestedAccessorType>,
+          int> = 0>
   KOKKOS_FUNCTION constexpr SpaceAwareAccessor(
-      const SpaceAwareAccessor<MemorySpace, OtherNestedAccessorType>&
-          other) noexcept
-      : nested_acc(other.nested_acc) {}
-
-  template <class OtherNestedAccessorType,
-            std::enable_if_t<std::is_constructible_v<NestedAccessor,
-                                                     OtherNestedAccessorType>,
-                             int> = 0>
-  KOKKOS_FUNCTION constexpr SpaceAwareAccessor(
-      const SpaceAwareAccessor<AnonymousSpace, OtherNestedAccessorType>&
+      const SpaceAwareAccessor<OtherMemorySpace, OtherNestedAccessorType>&
           other) noexcept
       : nested_acc(other.nested_acc) {}
 
@@ -81,9 +76,17 @@ struct SpaceAwareAccessor {
   }
 
   KOKKOS_FUNCTION
-  constexpr data_handle_type offset(data_handle_type p, size_t i) const
+  constexpr typename offset_policy::data_handle_type offset(data_handle_type p,
+                                                            size_t i) const
       noexcept {
     return nested_acc.offset(p, i);
+  }
+
+  // Canonical way for accessing nested accessor see ISO C++
+  // [linalg.scaled.scaledaccessor]
+  KOKKOS_FUNCTION
+  constexpr const NestedAccessor& nested_accessor() const noexcept {
+    return nested_acc;
   }
 
  private:
@@ -102,6 +105,7 @@ struct SpaceAwareAccessor {
 
 template <class NestedAccessor>
 struct SpaceAwareAccessor<AnonymousSpace, NestedAccessor> {
+  // Part of Accessor Requirements
   using element_type     = typename NestedAccessor::element_type;
   using reference        = typename NestedAccessor::reference;
   using data_handle_type = typename NestedAccessor::data_handle_type;
@@ -110,7 +114,9 @@ struct SpaceAwareAccessor<AnonymousSpace, NestedAccessor> {
       SpaceAwareAccessor<AnonymousSpace,
                          typename NestedAccessor::offset_policy>;
 
-  using memory_space = AnonymousSpace;
+  // Specific to SpaceAwareAccessor
+  using memory_space         = AnonymousSpace;
+  using nested_accessor_type = NestedAccessor;
 
   KOKKOS_DEFAULTED_FUNCTION
   constexpr SpaceAwareAccessor() = default;
@@ -136,9 +142,17 @@ struct SpaceAwareAccessor<AnonymousSpace, NestedAccessor> {
   }
 
   KOKKOS_FUNCTION
-  constexpr data_handle_type offset(data_handle_type p, size_t i) const
+  constexpr typename offset_policy::data_handle_type offset(data_handle_type p,
+                                                            size_t i) const
       noexcept {
     return nested_acc.offset(p, i);
+  }
+
+  // Canonical way for accessing nested accessor see ISO C++
+  // [linalg.scaled.scaledaccessor]
+  KOKKOS_FUNCTION
+  constexpr const NestedAccessor& nested_accessor() const noexcept {
+    return nested_acc;
   }
 
  private:
