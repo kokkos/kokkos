@@ -28,6 +28,7 @@ KOKKOS_CHECK_DEPRECATED_OPTIONS(
 #-------------------------------------------------------------------------------
 SET(KOKKOS_ARCH_LIST)
 
+include(CheckCXXCompilerFlag)
 
 KOKKOS_DEPRECATED_LIST(ARCH ARCH)
 
@@ -49,6 +50,7 @@ DECLARE_AND_CHECK_HOST_ARCH(ARMV81            "ARMv8.1 Compatible CPU")
 DECLARE_AND_CHECK_HOST_ARCH(ARMV8_THUNDERX    "ARMv8 Cavium ThunderX CPU")
 DECLARE_AND_CHECK_HOST_ARCH(ARMV8_THUNDERX2   "ARMv8 Cavium ThunderX2 CPU")
 DECLARE_AND_CHECK_HOST_ARCH(A64FX             "ARMv8.2 with SVE Support")
+DECLARE_AND_CHECK_HOST_ARCH(ARMV9_GRACE       "ARMv9 NVIDIA Grace CPU")
 DECLARE_AND_CHECK_HOST_ARCH(SNB               "Intel Sandy/Ivy Bridge CPUs")
 DECLARE_AND_CHECK_HOST_ARCH(HSW               "Intel Haswell CPUs")
 DECLARE_AND_CHECK_HOST_ARCH(BDW               "Intel Broadwell Xeon E-class CPUs")
@@ -299,6 +301,20 @@ IF (KOKKOS_ARCH_A64FX)
     NVHPC   NO-VALUE-SPECIFIED
     DEFAULT -march=armv8.2-a+sve
   )
+ENDIF()
+
+IF (KOKKOS_ARCH_ARMV9_GRACE)
+  SET(KOKKOS_ARCH_ARM_NEON ON)
+  check_cxx_compiler_flag("-mcpu=neoverse-n2" COMPILER_SUPPORTS_NEOVERSE_N2)
+  check_cxx_compiler_flag("-msve-vector-bits=128" COMPILER_SUPPORTS_SVE_VECTOR_BITS)
+  IF (COMPILER_SUPPORTS_NEOVERSE_N2 AND COMPILER_SUPPORTS_SVE_VECTOR_BITS)
+    COMPILER_SPECIFIC_FLAGS(
+      COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
+      DEFAULT -mcpu=neoverse-n2 -msve-vector-bits=128
+    )
+  ELSE()
+    MESSAGE(WARNING "Compiler does not support ARMv9 Grace architecture")
+  ENDIF()
 ENDIF()
 
 IF (KOKKOS_ARCH_ZEN)
