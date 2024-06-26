@@ -385,11 +385,9 @@ SharedAllocationRecord<void, void>
   template class Kokkos::Impl::HostInaccessibleSharedAllocationRecordCommon<           \
       MEMORY_SPACE>
 
-namespace {
-
 /* Taking the address of this function so make sure it is unique */
 template <class MemorySpace, class DestroyFunctor>
-void deallocate(SharedAllocationRecord<void, void>* record_ptr) {
+inline void deallocate(SharedAllocationRecord<void, void>* record_ptr) {
   using base_type = SharedAllocationRecord<MemorySpace, void>;
   using this_type = SharedAllocationRecord<MemorySpace, DestroyFunctor>;
 
@@ -400,8 +398,6 @@ void deallocate(SharedAllocationRecord<void, void>* record_ptr) {
 
   delete ptr;
 }
-
-}  // namespace
 
 /*
  *  Memory space specialization of SharedAllocationRecord< Space , void >
