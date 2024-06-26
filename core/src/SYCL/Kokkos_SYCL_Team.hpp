@@ -117,14 +117,18 @@ class SYCLTeamMember {
   template <typename ReducerType>
   KOKKOS_INLINE_FUNCTION std::enable_if_t<is_reducer<ReducerType>::value>
   team_reduce(ReducerType const& reducer) const noexcept {
-    team_reduce(reducer, reducer.reference());
+    using value_type = typename ReducerType::value_type;
+    using wrapped_reducer_type =
+        typename Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
+                                       TeamPolicy<SYCL>, ReducerType,
+                                       value_type>::Reducer;
+    team_reduce(wrapped_reducer_type(reducer), reducer.reference());
   }
 
-  template <typename ReducerType>
+  template <typename ReducerType, typename ValueType>
   KOKKOS_INLINE_FUNCTION std::enable_if_t<is_reducer<ReducerType>::value>
-  team_reduce(ReducerType const& reducer,
-              typename ReducerType::value_type& value) const noexcept {
-    using value_type = typename ReducerType::value_type;
+  team_reduce(ReducerType const& reducer, ValueType& value) const noexcept {
+    using value_type = ValueType;
 
     auto sg                       = m_item.get_sub_group();
     const auto sub_group_range    = sg.get_local_range()[0];
@@ -157,7 +161,6 @@ class SYCLTeamMember {
 
     const int n_subgroups = sg.get_group_range()[0];
     if (n_subgroups == 1) {
-      reducer.reference() = value;
       return;
     }
 
@@ -184,16 +187,15 @@ class SYCLTeamMember {
     for (int start = step_width; start < n_subgroups; start += step_width) {
       if (id_in_sg == 0 && group_id >= start &&
           group_id < std::min(start + step_width, n_subgroups))
-        reducer.join(reduction_array[group_id - start], value);
+        reducer.join(&reduction_array[group_id - start], &value);
       sycl::group_barrier(m_item.get_group());
     }
 
     // Do the final reduction for all threads redundantly
     value = reduction_array[0];
     for (int i = 1; i < std::min(step_width, n_subgroups); ++i)
-      reducer.join(value, reduction_array[i]);
+      reducer.join(&value, &reduction_array[i]);
 
-    reducer.reference() = value;
     // Make sure that every thread is done using the reduction array.
     sycl::group_barrier(m_item.get_group());
   }
@@ -298,13 +300,17 @@ class SYCLTeamMember {
   template <typename ReducerType>
   KOKKOS_INLINE_FUNCTION std::enable_if_t<is_reducer<ReducerType>::value>
   vector_reduce(ReducerType const& reducer) const {
-    vector_reduce(reducer, reducer.reference());
+    using value_type = typename ReducerType::value_type;
+    using wrapped_reducer_type =
+        typename Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
+                                       TeamPolicy<SYCL>, ReducerType,
+                                       value_type>::Reducer;
+    vector_reduce(wrapped_reducer_type(reducer), reducer.reference());
   }
 
-  template <typename ReducerType>
+  template <typename ReducerType, typename ValueType>
   KOKKOS_INLINE_FUNCTION std::enable_if_t<is_reducer<ReducerType>::value>
-  vector_reduce(ReducerType const& reducer,
-                typename ReducerType::value_type& value) const {
+  vector_reduce(ReducerType const& reducer, ValueType& value) const {
     const auto tidx1   = m_item.get_local_id(1);
     const auto grange1 = m_item.get_local_range(1);
 
@@ -319,7 +325,7 @@ class SYCLTeamMember {
     for (int i = grange1; (i >>= 1);) {
       tmp2 = sg.shuffle_down(tmp, i);
       if (static_cast<int>(tidx1) < i) {
-        reducer.join(tmp, tmp2);
+        reducer.join(&tmp, &tmp2);
       }
     }
 
@@ -330,7 +336,6 @@ class SYCLTeamMember {
 
     tmp2  = sg.shuffle(tmp, (sg.get_local_id() / grange1) * grange1);
     value = tmp2;
-    reducer.reference() = tmp2;
   }
 
   //----------------------------------------
@@ -524,8 +529,16 @@ KOKKOS_INLINE_FUNCTION std::enable_if_t<Kokkos::is_reducer<ReducerType>::value>
 parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
                     iType, Impl::SYCLTeamMember>& loop_boundaries,
                 const Closure& closure, const ReducerType& reducer) {
-  typename ReducerType::value_type value;
-  reducer.init(value);
+  using value_type            = typename ReducerType::value_type;
+  using functor_analysis_type = typename Impl::FunctorAnalysis<
+      Impl::FunctorPatternInterface::REDUCE,
+      TeamPolicy<typename Impl::SYCLTeamMember::execution_space>, ReducerType,
+      value_type>;
+  using wrapped_reducer_type = typename functor_analysis_type::Reducer;
+
+  wrapped_reducer_type wrapped_reducer(reducer);
+  value_type value{};
+  wrapped_reducer.init(&value);
 
   for (iType i = loop_boundaries.start +
                  loop_boundaries.member.item().get_local_id(0);
@@ -534,7 +547,9 @@ parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
     closure(i, value);
   }
 
-  loop_boundaries.member.team_reduce(reducer, value);
+  loop_boundaries.member.team_reduce(wrapped_reducer, value);
+  wrapped_reducer.final(&value);
+  reducer.reference() = value;
 }
 
 /** \brief  Inter-thread parallel_reduce assuming summation.
@@ -550,20 +565,28 @@ KOKKOS_INLINE_FUNCTION std::enable_if_t<!Kokkos::is_reducer<ValueType>::value>
 parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
                     iType, Impl::SYCLTeamMember>& loop_boundaries,
                 const Closure& closure, ValueType& result) {
-  ValueType val;
-  Kokkos::Sum<ValueType> reducer(val);
+  using functor_analysis_type = typename Impl::FunctorAnalysis<
+      Impl::FunctorPatternInterface::REDUCE,
+      TeamPolicy<typename Impl::SYCLTeamMember::execution_space>, Closure,
+      ValueType>;
+  using wrapped_reducer_type = typename functor_analysis_type::Reducer;
+  using value_type           = typename wrapped_reducer_type::value_type;
 
-  reducer.init(reducer.reference());
+  wrapped_reducer_type wrapped_reducer(closure);
+  value_type value{};
+  wrapped_reducer.init(&value);
 
   for (iType i = loop_boundaries.start +
                  loop_boundaries.member.item().get_local_id(0);
        i < loop_boundaries.end;
        i += loop_boundaries.member.item().get_local_range(0)) {
-    closure(i, val);
+    closure(i, value);
   }
 
-  loop_boundaries.member.team_reduce(reducer, val);
-  result = reducer.reference();
+  loop_boundaries.member.team_reduce(wrapped_reducer, value);
+
+  wrapped_reducer.final(&value);
+  result = value;
 }
 
 /** \brief  Inter-thread parallel exclusive prefix sum.
@@ -650,8 +673,16 @@ KOKKOS_INLINE_FUNCTION std::enable_if_t<Kokkos::is_reducer<ReducerType>::value>
 parallel_reduce(const Impl::TeamVectorRangeBoundariesStruct<
                     iType, Impl::SYCLTeamMember>& loop_boundaries,
                 const Closure& closure, const ReducerType& reducer) {
-  typename ReducerType::value_type value;
-  reducer.init(value);
+  using value_type            = typename ReducerType::value_type;
+  using functor_analysis_type = typename Impl::FunctorAnalysis<
+      Impl::FunctorPatternInterface::REDUCE,
+      TeamPolicy<typename Impl::SYCLTeamMember::execution_space>, ReducerType,
+      value_type>;
+  using wrapped_reducer_type = typename functor_analysis_type::Reducer;
+
+  wrapped_reducer_type wrapped_reducer(reducer);
+  value_type value{};
+  wrapped_reducer.init(&value);
 
   const iType tidx0 = loop_boundaries.member.item().get_local_id(0);
   const iType tidx1 = loop_boundaries.member.item().get_local_id(1);
@@ -663,8 +694,11 @@ parallel_reduce(const Impl::TeamVectorRangeBoundariesStruct<
        i < loop_boundaries.end; i += grange0 * grange1)
     closure(i, value);
 
-  loop_boundaries.member.vector_reduce(reducer, value);
-  loop_boundaries.member.team_reduce(reducer, value);
+  loop_boundaries.member.vector_reduce(wrapped_reducer, value);
+  loop_boundaries.member.team_reduce(wrapped_reducer, value);
+
+  wrapped_reducer.final(&value);
+  reducer.reference() = value;
 }
 
 template <typename iType, class Closure, typename ValueType>
@@ -672,10 +706,16 @@ KOKKOS_INLINE_FUNCTION std::enable_if_t<!Kokkos::is_reducer<ValueType>::value>
 parallel_reduce(const Impl::TeamVectorRangeBoundariesStruct<
                     iType, Impl::SYCLTeamMember>& loop_boundaries,
                 const Closure& closure, ValueType& result) {
-  ValueType val;
-  Kokkos::Sum<ValueType> reducer(val);
+  using functor_analysis_type = typename Impl::FunctorAnalysis<
+      Impl::FunctorPatternInterface::REDUCE,
+      TeamPolicy<typename Impl::SYCLTeamMember::execution_space>, Closure,
+      ValueType>;
+  using wrapped_reducer_type = typename functor_analysis_type::Reducer;
+  using value_type           = typename wrapped_reducer_type::value_type;
 
-  reducer.init(reducer.reference());
+  wrapped_reducer_type wrapped_reducer(closure);
+  value_type value{};
+  wrapped_reducer.init(&value);
 
   const iType tidx0 = loop_boundaries.member.item().get_local_id(0);
   const iType tidx1 = loop_boundaries.member.item().get_local_id(1);
@@ -685,11 +725,13 @@ parallel_reduce(const Impl::TeamVectorRangeBoundariesStruct<
 
   for (iType i = loop_boundaries.start + tidx0 * grange1 + tidx1;
        i < loop_boundaries.end; i += grange0 * grange1)
-    closure(i, val);
+    closure(i, value);
 
-  loop_boundaries.member.vector_reduce(reducer);
-  loop_boundaries.member.team_reduce(reducer);
-  result = reducer.reference();
+  loop_boundaries.member.vector_reduce(wrapped_reducer, value);
+  loop_boundaries.member.team_reduce(wrapped_reducer, value);
+
+  wrapped_reducer.final(&value);
+  result = value;
 }
 
 //----------------------------------------------------------------------------
@@ -739,16 +781,27 @@ KOKKOS_INLINE_FUNCTION std::enable_if_t<is_reducer<ReducerType>::value>
 parallel_reduce(Impl::ThreadVectorRangeBoundariesStruct<
                     iType, Impl::SYCLTeamMember> const& loop_boundaries,
                 Closure const& closure, ReducerType const& reducer) {
-  reducer.init(reducer.reference());
+  using value_type            = typename ReducerType::value_type;
+  using functor_analysis_type = typename Impl::FunctorAnalysis<
+      Impl::FunctorPatternInterface::REDUCE,
+      TeamPolicy<typename Impl::SYCLTeamMember::execution_space>, ReducerType,
+      value_type>;
+  using wrapped_reducer_type = typename functor_analysis_type::Reducer;
+
+  wrapped_reducer_type wrapped_reducer(reducer);
+  value_type value{};
+  wrapped_reducer.init(&value);
 
   const iType tidx1   = loop_boundaries.member.item().get_local_id(1);
   const iType grange1 = loop_boundaries.member.item().get_local_range(1);
 
   for (iType i = loop_boundaries.start + tidx1; i < loop_boundaries.end;
        i += grange1)
-    closure(i, reducer.reference());
+    closure(i, value);
 
-  loop_boundaries.member.vector_reduce(reducer);
+  loop_boundaries.member.vector_reduce(wrapped_reducer, value);
+  wrapped_reducer.final(&value);
+  reducer.reference() = value;
 }
 
 /** \brief  Intra-thread vector parallel_reduce.
@@ -767,16 +820,27 @@ KOKKOS_INLINE_FUNCTION std::enable_if_t<!is_reducer<ValueType>::value>
 parallel_reduce(Impl::ThreadVectorRangeBoundariesStruct<
                     iType, Impl::SYCLTeamMember> const& loop_boundaries,
                 Closure const& closure, ValueType& result) {
-  result = ValueType();
+  using functor_analysis_type = typename Impl::FunctorAnalysis<
+      Impl::FunctorPatternInterface::REDUCE,
+      TeamPolicy<typename Impl::SYCLTeamMember::execution_space>, Closure,
+      ValueType>;
+  using wrapped_reducer_type = typename functor_analysis_type::Reducer;
+  using value_type           = typename wrapped_reducer_type::value_type;
+
+  wrapped_reducer_type wrapped_reducer(closure);
+  value_type value{};
+  wrapped_reducer.init(&value);
 
   const iType tidx1 = loop_boundaries.member.item().get_local_id(1);
   const int grange1 = loop_boundaries.member.item().get_local_range(1);
 
   for (iType i = loop_boundaries.start + tidx1; i < loop_boundaries.end;
        i += grange1)
-    closure(i, result);
+    closure(i, value);
 
-  loop_boundaries.member.vector_reduce(Kokkos::Sum<ValueType>(result));
+  loop_boundaries.member.vector_reduce(wrapped_reducer, value);
+  wrapped_reducer.final(&value);
+  result = value;
 }
 
 //----------------------------------------------------------------------------
