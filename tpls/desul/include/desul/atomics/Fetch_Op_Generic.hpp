@@ -86,10 +86,13 @@ DESUL_IMPL_ATOMIC_FETCH_OP_SHIFT_HOST_AND_DEVICE(rshift)
         load_operator<T, const T>(), const_cast<T*>(dest), T(), order, scope); \
   }                                                                            \
                                                                                \
+  /* NOTE: using atomic_oper_fetch in the fallback implementation of           \
+   * atomic_store to avoid reading potentially uninitialized values            \
+   * which would yield undefined behavior. */                                  \
   template <class T, class MemoryOrder, class MemoryScope>                     \
   ANNOTATION void HOST_OR_DEVICE##_atomic_store(                               \
       T* const dest, const T val, MemoryOrder order, MemoryScope scope) {      \
-    (void)HOST_OR_DEVICE##_atomic_fetch_oper(                                  \
+    (void)HOST_OR_DEVICE##_atomic_oper_fetch(                                  \
         store_operator<T, const T>(), dest, val, order, scope);                \
   }
 
