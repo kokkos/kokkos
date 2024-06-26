@@ -166,6 +166,9 @@ IF (Kokkos_ENABLE_IMPL_MDSPAN)
       kokkoscore
       ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/mdspan/include
     )
+    if(KOKKOS_HAS_TRILINOS)
+      TARGET_INCLUDE_DIRECTORIES(kokkoscore PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/mdspan/include>")
+    endif()
 
     APPEND_GLOB(KOKKOS_CORE_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/mdspan/include/experimental/__p0009_bits/*.hpp)
     APPEND_GLOB(KOKKOS_CORE_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/mdspan/include/experimental/mdspan)
