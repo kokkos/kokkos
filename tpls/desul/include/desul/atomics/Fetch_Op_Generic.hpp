@@ -89,6 +89,7 @@ DESUL_IMPL_ATOMIC_FETCH_OP_SHIFT_HOST_AND_DEVICE(rshift)
   template <class T, class MemoryOrder, class MemoryScope>                     \
   ANNOTATION void HOST_OR_DEVICE##_atomic_store(                               \
       T* const dest, const T val, MemoryOrder order, MemoryScope scope) {      \
+    *dest = val; /* dest might point to uninitialized memory */                \
     (void)HOST_OR_DEVICE##_atomic_fetch_oper(                                  \
         store_operator<T, const T>(), dest, val, order, scope);                \
   }
