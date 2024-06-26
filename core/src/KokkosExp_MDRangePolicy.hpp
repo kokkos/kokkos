@@ -330,7 +330,39 @@ struct MDRangePolicy<P, Properties...>
   }
   bool impl_tune_tile_size() const { return m_tune_tile_size; }
 
+  tile_type tile_size_recommended() const {
+    tile_type rec_tile_sizes = {};
+
+    for (std::size_t i = 0; i < rec_tile_sizes.size(); ++i) {
+      rec_tile_sizes[i] = tile_size_recommended(i);
+    }
+    return rec_tile_sizes;
+  }
+
+  int tile_size_recommended(const int tile_rank) const {
+    auto properties   = Impl::get_tile_size_properties(m_space);
+    int last_rank     = (inner_direction == Iterate::Right) ? rank - 1 : 0;
+    int rec_tile_size = properties.default_tile_size;
+
+    if (tile_rank == last_rank) {
+      rec_tile_size = tile_size_last_rank(
+          properties, m_upper[last_rank] - m_lower[last_rank]);
+    }
+    return rec_tile_size;
+  }
+
+  int max_total_tile_size() const {
+    return Impl::get_tile_size_properties(m_space).max_total_tile_size;
+  }
+
  private:
+  int tile_size_last_rank(const Impl::TileSizeProperties properties,
+                          const index_type length) const {
+    return properties.default_largest_tile_size == 0
+               ? std::max<int>(length, 1)
+               : properties.default_largest_tile_size;
+  }
+
   void init_helper(Impl::TileSizeProperties properties) {
     m_prod_tile_dims = 1;
     int increment    = 1;
@@ -368,9 +400,7 @@ struct MDRangePolicy<P, Properties...>
             m_tile[i] = 1;
           }
         } else {
-          m_tile[i] = properties.default_largest_tile_size == 0
-                          ? std::max<int>(length, 1)
-                          : properties.default_largest_tile_size;
+          m_tile[i] = tile_size_last_rank(properties, length);
         }
       }
       m_tile_end[i] =
