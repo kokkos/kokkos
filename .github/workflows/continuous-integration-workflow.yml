@@ -39,7 +39,8 @@ jobs:
             backend: 'OPENMP'
           - distro: 'ubuntu:intel'
             cxx: 'icpx'
-            cxx_extra_flags: '-fp-model=precise -Wno-pass-failed'
+            cxx_extra_flags: '-fp-model=precise -Wno-pass-failed -fsanitize=address,undefined -fno-sanitize=function -fno-sanitize-recover=all'
+            extra_linker_flags: '-fsanitize=address,undefined -fno-sanitize=function -fno-sanitize-recover=all'
             cmake_build_type: 'Release'
             backend: 'OPENMP'
           - distro: 'ubuntu:intel'
@@ -49,15 +50,15 @@ jobs:
             backend: 'OPENMP'
           - distro: 'ubuntu:latest'
             cxx: 'clang++'
-            cxx_extra_flags: '-fsanitize=address'
-            extra_linker_flags: '-fsanitize=address'
+            cxx_extra_flags: '-fsanitize=address,undefined -fno-sanitize=function -fno-sanitize-recover=all'
+            extra_linker_flags: '-fsanitize=address,undefined -fno-sanitize=function -fno-sanitize-recover=all'
             cmake_build_type: 'RelWithDebInfo'
             backend: 'THREADS'
             clang-tidy: '-DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*"'
           - distro: 'ubuntu:latest'
             cxx: 'clang++'
-            cxx_extra_flags: '-fsanitize=address'
-            extra_linker_flags: '-fsanitize=address'
+            cxx_extra_flags: '-fsanitize=address,undefined -fno-sanitize=function -fno-sanitize-recover=all'
+            extra_linker_flags: '-fsanitize=address,undefined -fno-sanitize=function -fno-sanitize-recover=all'
             cmake_build_type: 'RelWithDebInfo'
             backend: 'SERIAL'
           - distro: 'ubuntu:latest'
@@ -128,7 +129,7 @@ jobs:
         working-directory: builddir
         run: ctest --output-on-failure
       - name: Test linking against build dir
-        if: ${{ matrix.cxx_extra_flags != '-fsanitize=address' }}
+        if: ${{ !contains(matrix.cxx_extra_flags, '-fsanitize=address') }}
         working-directory: example/build_cmake_installed
         run: |
           cmake -B builddir_buildtree -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} -DKokkos_ROOT=../../builddir
@@ -139,7 +140,7 @@ jobs:
       - name: Install
         run: sudo cmake --build builddir --target install
       - name: Test install
-        if: ${{ matrix.cxx_extra_flags != '-fsanitize=address' }}
+        if: ${{ !contains(matrix.cxx_extra_flags, '-fsanitize=address') }}
         working-directory: example/build_cmake_installed
         run: |
           cmake -B builddir -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
