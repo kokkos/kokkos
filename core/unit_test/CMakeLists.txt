@@ -219,6 +219,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
         )
     IF (NOT Kokkos_ENABLE_IMPL_MDSPAN)
       LIST(REMOVE_ITEM ${Tag}_TESTNAMES1B
+         AtomicAccessor
          MDSpanConversion
          SpaceAwareAccessorAccessViolation
          SpaceAwareAccessor
