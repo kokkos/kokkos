@@ -171,7 +171,7 @@ struct SpaceAwareAccessor<AnonymousSpace, NestedAccessor> {
 };
 
 // Like atomic_accessor_relaxed proposed for ISO C++26 but with
-// defaulted memory scope - similar how desuls AtomicRef has a memory scope
+// defaulted memory scope - similar to how desul's AtomicRef has a memory scope
 template <class ElementType, class MemoryScope = desul::MemoryScopeDevice>
 struct AtomicAccessorRelaxed {
   using element_type = ElementType;
@@ -183,13 +183,14 @@ struct AtomicAccessorRelaxed {
   static_assert(
       std::is_same_v<std::remove_cv_t<element_type>, element_type>,
       "AtomicAccessorRelaxed can only be used for non-const element types");
+
   KOKKOS_FUNCTION
   explicit operator default_accessor<element_type>() const {
     return default_accessor<element_type>{};
   }
 
   KOKKOS_FUNCTION
-  constexpr reference access(data_handle_type p, size_t i) const noexcept {
+  reference access(data_handle_type p, size_t i) const noexcept {
     return reference(p[i]);
   }
 
