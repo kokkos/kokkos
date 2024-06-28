@@ -476,6 +476,47 @@ pipeline {
                         }
                     }
                 }
+                stage('CUDA-12.5-NVCC-DEBUG') {
+                    agent {
+                        dockerfile {
+                            filename 'Dockerfile.nvcc'
+                            dir 'scripts/docker'
+                            additionalBuildArgs '--build-arg BASE=nvidia/cuda:12.5.0-devel-ubuntu22.04 --build-arg CMAKE_VERSION=3.29.6'
+                            label 'nvidia-docker && hopper'
+                            args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
+                        }
+                    }
+                    steps {
+                        sh 'ccache --zero-stats'
+                        sh '''rm -rf build && mkdir -p build && cd build && \
+                              cmake \
+                                -DBUILD_SHARED_LIBS=ON \
+                                -DCMAKE_BUILD_TYPE=Debug \
+                                -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+                                -DCMAKE_CXX_COMPILER=$WORKSPACE/bin/nvcc_wrapper \
+                                -DCMAKE_CXX_FLAGS="-Werror -Werror all-warnings -Xcudafe --diag_suppress=20208" \
+                                -DCMAKE_CXX_STANDARD=20 \
+                                -DKokkos_ARCH_NATIVE=ON \
+                                -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+                                -DKokkos_ENABLE_DEBUG=ON \
+                                -DKokkos_ENABLE_DEBUG_BOUNDS_CHECK=ON \
+                                -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
+                                -DKokkos_ENABLE_TESTS=ON \
+                                -DKokkos_ENABLE_BENCHMARKS=ON \
+                                -DKokkos_ENABLE_CUDA=ON \
+                                -DKokkos_ENABLE_CUDA_CONSTEXPR=ON \
+                              .. && \
+                              make -j8 && ctest --verbose && \
+                              cd ../example/build_cmake_in_tree && \
+                              rm -rf build && mkdir -p build && cd build && \
+                              cmake -DCMAKE_CXX_STANDARD=20 .. && make -j8 && ctest --verbose'''
+                    }
+                    post {
+                        always {
+                            sh 'ccache --show-stats'
+                        }
+                    }
+                }
                 stage('GCC-8.4.0') {
                     agent {
                         dockerfile {
