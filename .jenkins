@@ -483,7 +483,7 @@ pipeline {
                             dir 'scripts/docker'
                             additionalBuildArgs '--build-arg BASE=nvidia/cuda:12.5.0-devel-ubuntu22.04 --build-arg CMAKE_VERSION=3.29.6'
                             label 'nvidia-docker && hopper'
-                            args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
+                            args '-v /tmp/ccache.kokkos:/tmp/ccache'
                         }
                     }
                     steps {
