@@ -40,6 +40,10 @@
 #include <Kokkos_SIMD_AVX512.hpp>
 #endif
 
+#if defined(KOKKOS_ARCH_ARM_SVE)
+#include <Kokkos_SIMD_SVE.hpp>
+#endif
+
 #if defined(KOKKOS_ARCH_ARM_NEON)
 #include <Kokkos_SIMD_NEON.hpp>
 #endif
@@ -258,6 +262,11 @@ using host_abi_set    = abi_set<simd_abi::scalar, simd_abi::neon_fixed_size<2>,
                              simd_abi::neon_fixed_size<4>>;
 using data_type_set =
     data_types<std::int32_t, std::int64_t, std::uint64_t, double, float>;
+#elif defined(KOKKOS_ARCH_ARM_SVE)
+using host_abi_set  = abi_set<simd_abi::scalar, simd_abi::sve_fixed_size<8>,
+                             simd::ave_fixed_size<16>>;
+using data_type_set = data_types<std::int32_t, std::int64_t, std::uint32_t,
+                                 std::uint64_t, double, float>;
 #else
 using host_abi_set    = abi_set<simd_abi::scalar>;
 using data_type_set   = data_types<std::int32_t, std::uint32_t, std::int64_t,
