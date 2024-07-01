@@ -270,15 +270,20 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
       WorkGraph
       WithoutInitializing
       )
-      set(file ${dir}/Test${Tag}_${Name}.cpp)
-      # Write to a temporary intermediate file and call configure_file to avoid
-      # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
-      file(WRITE ${dir}/dummy.cpp
-          "#include <Test${Tag}_Category.hpp>\n"
-          "#include <Test${Name}.hpp>\n"
-      )
-      configure_file(${dir}/dummy.cpp ${file})
-      list(APPEND ${Tag}_SOURCES2A ${file})
+      # Workaround to internal compiler error with intel classic compilers
+      # when using -no-ip flag in ViewCopy_c
+      # See issue: https://github.com/kokkos/kokkos/issues/7084
+      if(KOKKOS_CXX_COMPILER_ID STREQUAL Intel AND NOT (Name STREQUAL "ViewCopy_c"))
+        set(file ${dir}/Test${Tag}_${Name}.cpp)
+        # Write to a temporary intermediate file and call configure_file to avoid
+        # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
+        file(WRITE ${dir}/dummy.cpp
+            "#include <Test${Tag}_Category.hpp>\n"
+            "#include <Test${Name}.hpp>\n"
+        )
+        configure_file(${dir}/dummy.cpp ${file})
+        list(APPEND ${Tag}_SOURCES2A ${file})
+      endif()
     endforeach()
 
     set(TagHostAccessible ${Tag})
