@@ -180,13 +180,38 @@ struct AtomicAccessorRelaxed {
   using data_handle_type = ElementType*;
   using offset_policy    = AtomicAccessorRelaxed;
 
+  KOKKOS_DEFAULTED_FUNCTION
+  AtomicAccessorRelaxed() = default;
+
+  // TODO:  Kokkos allows atomic views of const element types right now,
+  //        but for the future we might to deprecated it and do this:
+#if 0
+  KOKKOS_FUNCTION
+  AtomicAccessorRelaxed(const default_accessor<element_type>&) {}
+
   static_assert(
       std::is_same_v<std::remove_cv_t<element_type>, element_type>,
       "AtomicAccessorRelaxed can only be used for non-const element types");
+#endif
 
-  KOKKOS_FUNCTION
-  explicit operator default_accessor<element_type>() const {
-    return default_accessor<element_type>{};
+  // Conversions from non-const to const element type
+  template <class OtherElementType,
+            std::enable_if_t<std::is_convertible_v<
+                OtherElementType (*)[], element_type (*)[]>>* = nullptr>
+  KOKKOS_FUNCTION constexpr AtomicAccessorRelaxed(
+      Kokkos::default_accessor<OtherElementType>) noexcept {}
+
+  template <class OtherElementType,
+            std::enable_if_t<std::is_convertible_v<
+                OtherElementType (*)[], element_type (*)[]>>* = nullptr>
+  KOKKOS_FUNCTION constexpr AtomicAccessorRelaxed(
+      AtomicAccessorRelaxed<OtherElementType, MemoryScope>) noexcept {}
+
+  template <class OtherElementType,
+            std::enable_if_t<std::is_convertible_v<
+                element_type (*)[], OtherElementType (*)[]>>* = nullptr>
+  KOKKOS_FUNCTION explicit operator default_accessor<OtherElementType>() const {
+    return default_accessor<OtherElementType>{};
   }
 
   KOKKOS_FUNCTION

@@ -51,6 +51,12 @@ void test_atomic_accessor() {
         static_assert(std::is_nothrow_move_constructible_v<acc_t>);
         static_assert(std::is_nothrow_move_assignable_v<acc_t>);
         static_assert(std::is_nothrow_swappable_v<acc_t>);
+        static_assert(std::is_trivially_copyable_v<acc_t>);
+        static_assert(std::is_trivially_default_constructible_v<acc_t>);
+        static_assert(std::is_trivially_constructible_v<acc_t>);
+        static_assert(std::is_trivially_move_constructible_v<acc_t>);
+        static_assert(std::is_trivially_assignable_v<acc_t, acc_t>);
+        static_assert(std::is_trivially_move_assignable_v<acc_t>);
 #ifndef KOKKOS_ENABLE_CXX17
         static_assert(std::copyable<acc_t>);
         static_assert(std::is_empty_v<acc_t>);
@@ -58,6 +64,42 @@ void test_atomic_accessor() {
       },
       errors);
   ASSERT_EQ(errors, 0);
+}
+
+void test_atomic_accessor_conversion() {
+  using ExecutionSpace = TEST_EXECSPACE;
+  using T              = float;
+  using acc_t          = Kokkos::Impl::AtomicAccessorRelaxed<T>;
+  using const_acc_t    = Kokkos::Impl::AtomicAccessorRelaxed<const T>;
+  using int_acc_t      = Kokkos::Impl::AtomicAccessorRelaxed<int>;
+  using defacc_t       = Kokkos::default_accessor<T>;
+  using const_defacc_t = Kokkos::default_accessor<const T>;
+  using int_defacc_t   = Kokkos::default_accessor<int>;
+
+  Kokkos::parallel_for(
+      Kokkos::RangePolicy<ExecutionSpace>(0, 1), KOKKOS_LAMBDA(int) {
+        static_assert(std::is_constructible_v<const_acc_t, acc_t>);
+        static_assert(std::is_convertible_v<acc_t, const_acc_t>);
+        static_assert(!std::is_constructible_v<acc_t, const_acc_t>);
+        static_assert(!std::is_constructible_v<acc_t, int_acc_t>);
+        static_assert(std::is_constructible_v<defacc_t, acc_t>);
+        static_assert(std::is_constructible_v<acc_t, defacc_t>);
+        static_assert(!std::is_constructible_v<int_defacc_t, acc_t>);
+        static_assert(!std::is_constructible_v<int_acc_t, defacc_t>);
+        static_assert(std::is_constructible_v<const_defacc_t, const_acc_t>);
+        static_assert(std::is_constructible_v<const_acc_t, const_defacc_t>);
+        static_assert(std::is_constructible_v<const_defacc_t, acc_t>);
+        static_assert(std::is_constructible_v<const_acc_t, defacc_t>);
+        static_assert(!std::is_constructible_v<defacc_t, const_acc_t>);
+        static_assert(!std::is_constructible_v<acc_t, const_defacc_t>);
+        static_assert(std::is_convertible_v<acc_t, const_acc_t>);
+        static_assert(std::is_convertible_v<defacc_t, acc_t>);
+        static_assert(std::is_convertible_v<defacc_t, const_acc_t>);
+        static_assert(std::is_convertible_v<const_defacc_t, const_acc_t>);
+        static_assert(!std::is_convertible_v<acc_t, defacc_t>);
+        static_assert(!std::is_convertible_v<acc_t, const_defacc_t>);
+        static_assert(!std::is_convertible_v<const_acc_t, const_defacc_t>);
+      });
 }
 
 TEST(TEST_CATEGORY, mdspan_atomic_accessor) {
