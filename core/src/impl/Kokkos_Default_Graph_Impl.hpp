@@ -56,7 +56,7 @@ struct GraphImpl : private ExecutionSpaceInstanceStorage<ExecutionSpace> {
   //----------------------------------------------------------------------------
   // <editor-fold desc="Constructors, destructor, and assignment"> {{{2
 
-  // Not moveable or copyable; it spends its whole live as a shared_ptr in the
+  // Not movable or copyable; it spends its whole live as a shared_ptr in the
   // Graph object
   GraphImpl()                 = default;
   GraphImpl(GraphImpl const&) = delete;

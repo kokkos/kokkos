@@ -14,8 +14,8 @@
 //
 //@HEADER
 
-#ifndef KOKKOS_HIP_GRAPH_IMPL_HPP
-#define KOKKOS_HIP_GRAPH_IMPL_HPP
+#ifndef KOKKOS_SYCL_GRAPH_IMPL_HPP
+#define KOKKOS_SYCL_GRAPH_IMPL_HPP
 
 #include <Kokkos_Macros.hpp>
 
@@ -24,20 +24,23 @@
 #include <impl/Kokkos_GraphImpl.hpp>
 #include <impl/Kokkos_GraphNodeImpl.hpp>
 
-#include <HIP/Kokkos_HIP_GraphNodeKernel.hpp>
+#include <SYCL/Kokkos_SYCL_GraphNodeKernel.hpp>
+
+#include <optional>
 
 namespace Kokkos {
 namespace Impl {
 template <>
-class GraphImpl<Kokkos::HIP> {
+class GraphImpl<Kokkos::Experimental::SYCL> {
  public:
-  using node_details_t = GraphNodeBackendSpecificDetails<Kokkos::HIP>;
-  using root_node_impl_t =
-      GraphNodeImpl<Kokkos::HIP, Kokkos::Experimental::TypeErasedTag,
-                    Kokkos::Experimental::TypeErasedTag>;
-  using aggregate_kernel_impl_t = HIPGraphNodeAggregateKernel;
+  using node_details_t =
+      GraphNodeBackendSpecificDetails<Kokkos::Experimental::SYCL>;
+  using root_node_impl_t        = GraphNodeImpl<Kokkos::Experimental::SYCL,
+                                         Kokkos::Experimental::TypeErasedTag,
+                                         Kokkos::Experimental::TypeErasedTag>;
+  using aggregate_kernel_impl_t = SYCLGraphNodeAggregateKernel;
   using aggregate_node_impl_t =
-      GraphNodeImpl<Kokkos::HIP, aggregate_kernel_impl_t,
+      GraphNodeImpl<Kokkos::Experimental::SYCL, aggregate_kernel_impl_t,
                     Kokkos::Experimental::TypeErasedTag>;
 
   // Not movable or copyable; it spends its whole life as a shared_ptr in the
@@ -50,7 +53,7 @@ class GraphImpl<Kokkos::HIP> {
 
   ~GraphImpl();
 
-  explicit GraphImpl(Kokkos::HIP instance);
+  explicit GraphImpl(Kokkos::Experimental::SYCL instance);
 
   void add_node(std::shared_ptr<aggregate_node_impl_t> const& arg_node_ptr);
 
@@ -62,7 +65,7 @@ class GraphImpl<Kokkos::HIP> {
 
   void submit();
 
-  Kokkos::HIP const& get_execution_space() const noexcept;
+  Kokkos::Experimental::SYCL const& get_execution_space() const noexcept;
 
   auto create_root_node_ptr();
 
@@ -70,47 +73,37 @@ class GraphImpl<Kokkos::HIP> {
   auto create_aggregate_ptr(PredecessorRefs&&...);
 
  private:
-  void instantiate_graph() {
-    constexpr size_t error_log_size = 256;
-    hipGraphNode_t error_node       = nullptr;
-    char error_log[error_log_size];
-    KOKKOS_IMPL_HIP_SAFE_CALL(hipGraphInstantiate(
-        &m_graph_exec, m_graph, &error_node, error_log, error_log_size));
-  }
+  void instantiate_graph() { m_graph_exec = m_graph.finalize(); }
 
-  Kokkos::HIP m_execution_space;
-  hipGraph_t m_graph          = nullptr;
-  hipGraphExec_t m_graph_exec = nullptr;
+  Kokkos::Experimental::SYCL m_execution_space;
+  sycl::ext::oneapi::experimental::command_graph<
+      sycl::ext::oneapi::experimental::graph_state::modifiable>
+      m_graph;
+  std::optional<sycl::ext::oneapi::experimental::command_graph<
+      sycl::ext::oneapi::experimental::graph_state::executable>>
+      m_graph_exec;
 };
 
-inline GraphImpl<Kokkos::HIP>::~GraphImpl() {
+inline GraphImpl<Kokkos::Experimental::SYCL>::~GraphImpl() {
   m_execution_space.fence("Kokkos::GraphImpl::~GraphImpl: Graph Destruction");
-  KOKKOS_EXPECTS(m_graph);
-  if (m_graph_exec) {
-    KOKKOS_IMPL_HIP_SAFE_CALL(hipGraphExecDestroy(m_graph_exec));
-  }
-  KOKKOS_IMPL_HIP_SAFE_CALL(hipGraphDestroy(m_graph));
 }
 
-inline GraphImpl<Kokkos::HIP>::GraphImpl(Kokkos::HIP instance)
-    : m_execution_space(std::move(instance)) {
-  KOKKOS_IMPL_HIP_SAFE_CALL(hipGraphCreate(&m_graph, 0));
-}
+inline GraphImpl<Kokkos::Experimental::SYCL>::GraphImpl(
+    Kokkos::Experimental::SYCL instance)
+    : m_execution_space(std::move(instance)),
+      m_graph(m_execution_space.sycl_queue().get_context(),
+              m_execution_space.sycl_queue().get_device()) {}
 
-inline void GraphImpl<Kokkos::HIP>::add_node(
+inline void GraphImpl<Kokkos::Experimental::SYCL>::add_node(
     std::shared_ptr<aggregate_node_impl_t> const& arg_node_ptr) {
-  // All of the predecessors are just added as normal, so all we need to
-  // do here is add an empty node
-  KOKKOS_IMPL_HIP_SAFE_CALL(
-      hipGraphAddEmptyNode(&(arg_node_ptr->node_details_t::node), m_graph,
-                           /* dependencies = */ nullptr,
-                           /* numDependencies = */ 0));
+  // add an empty node that needs to be set up before finalizing the graph
+  arg_node_ptr->node_details_t::node = m_graph.add();
 }
 
 // Requires NodeImplPtr is a shared_ptr to specialization of GraphNodeImpl
 // Also requires that the kernel has the graph node tag in its policy
 template <class NodeImpl>
-inline void GraphImpl<Kokkos::HIP>::add_node(
+inline void GraphImpl<Kokkos::Experimental::SYCL>::add_node(
     std::shared_ptr<NodeImpl> const& arg_node_ptr) {
   static_assert(NodeImpl::kernel_type::Policy::is_graph_kernel::value);
   KOKKOS_EXPECTS(arg_node_ptr);
@@ -119,8 +112,8 @@ inline void GraphImpl<Kokkos::HIP>::add_node(
   auto& kernel = arg_node_ptr->get_kernel();
   auto& node   = static_cast<node_details_t*>(arg_node_ptr.get())->node;
   KOKKOS_EXPECTS(!node);
-  kernel.set_hip_graph_ptr(&m_graph);
-  kernel.set_hip_graph_node_ptr(&node);
+  kernel.set_sycl_graph_ptr(&m_graph);
+  kernel.set_sycl_graph_node_ptr(&node);
   kernel.execute();
   KOKKOS_ENSURES(node);
 }
@@ -129,50 +122,44 @@ inline void GraphImpl<Kokkos::HIP>::add_node(
 // already been added to this graph and NodeImpl is a specialization of
 // GraphNodeImpl that has already been added to this graph.
 template <class NodeImplPtr, class PredecessorRef>
-inline void GraphImpl<Kokkos::HIP>::add_predecessor(
+inline void GraphImpl<Kokkos::Experimental::SYCL>::add_predecessor(
     NodeImplPtr arg_node_ptr, PredecessorRef arg_pred_ref) {
   KOKKOS_EXPECTS(arg_node_ptr);
   auto pred_ptr = GraphAccess::get_node_ptr(arg_pred_ref);
   KOKKOS_EXPECTS(pred_ptr);
 
-  auto const& pred_node = pred_ptr->node_details_t::node;
+  auto& pred_node = pred_ptr->node_details_t::node;
   KOKKOS_EXPECTS(pred_node);
 
-  auto const& node = arg_node_ptr->node_details_t::node;
+  auto& node = arg_node_ptr->node_details_t::node;
   KOKKOS_EXPECTS(node);
 
-  KOKKOS_IMPL_HIP_SAFE_CALL(
-      hipGraphAddDependencies(m_graph, &pred_node, &node, 1));
+  m_graph.make_edge(*pred_node, *node);
 }
 
-inline void GraphImpl<Kokkos::HIP>::submit() {
+inline void GraphImpl<Kokkos::Experimental::SYCL>::submit() {
   if (!m_graph_exec) {
     instantiate_graph();
   }
-  KOKKOS_IMPL_HIP_SAFE_CALL(
-      hipGraphLaunch(m_graph_exec, m_execution_space.hip_stream()));
+  m_execution_space.sycl_queue().ext_oneapi_graph(*m_graph_exec);
 }
 
-inline Kokkos::HIP const& GraphImpl<Kokkos::HIP>::get_execution_space() const
-    noexcept {
+inline Kokkos::Experimental::SYCL const&
+GraphImpl<Kokkos::Experimental::SYCL>::get_execution_space() const noexcept {
   return m_execution_space;
 }
 
-inline auto GraphImpl<Kokkos::HIP>::create_root_node_ptr() {
-  KOKKOS_EXPECTS(m_graph);
+inline auto GraphImpl<Kokkos::Experimental::SYCL>::create_root_node_ptr() {
   KOKKOS_EXPECTS(!m_graph_exec);
   auto rv = std::make_shared<root_node_impl_t>(get_execution_space(),
                                                _graph_node_is_root_ctor_tag{});
-  KOKKOS_IMPL_HIP_SAFE_CALL(hipGraphAddEmptyNode(&(rv->node_details_t::node),
-                                                 m_graph,
-                                                 /* dependencies = */ nullptr,
-                                                 /* numDependencies = */ 0));
-  KOKKOS_ENSURES(rv->node_details_t::node);
+  rv->node_details_t::node = m_graph.add();
   return rv;
 }
 
 template <class... PredecessorRefs>
-inline auto GraphImpl<Kokkos::HIP>::create_aggregate_ptr(PredecessorRefs&&...) {
+inline auto GraphImpl<Kokkos::Experimental::SYCL>::create_aggregate_ptr(
+    PredecessorRefs&&...) {
   // The attachment to predecessors, which is all we really need, happens
   // in the generic layer, which calls through to add_predecessor for
   // each predecessor ref, so all we need to do here is create the (trivial)
