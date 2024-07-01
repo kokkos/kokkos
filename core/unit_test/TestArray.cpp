@@ -176,8 +176,9 @@ constexpr bool test_to_array() {
   static_assert(std::is_same_v<decltype(a2), Kokkos::Array<int, 4>>);
   maybe_unused(a2);
 
-// gcc8 doesn't support the implicit conversion
-#if !defined(KOKKOS_COMPILER_GNU) || (KOKKOS_COMPILER_GNU >= 910)
+// gcc8 and icc do not support the implicit conversion
+#if !(defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU < 910)) && \
+    !(defined(KOKKOS_COMPILER_INTEL) && (KOKKOS_COMPILER_INTEL < 2021))
   // deduces length with element type specified
   // implicit conversion happens
   [[maybe_unused]] auto a3 = Kokkos::to_array<long>({0, 1, 3});
