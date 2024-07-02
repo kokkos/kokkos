@@ -212,8 +212,8 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
   KOKKOS_INLINE_FUNCTION
   void operator()(const size_t i) const { ptr[i] = ValueType(); }
 
-  ViewValueFunctor()                                   = default;
-  ViewValueFunctor(const ViewValueFunctor&)            = default;
+  ViewValueFunctor()                        = default;
+  ViewValueFunctor(const ViewValueFunctor&) = default;
   ViewValueFunctor& operator=(const ViewValueFunctor&) = default;
 
   ViewValueFunctor(ExecSpace const& arg_space, ValueType* const arg_ptr,
