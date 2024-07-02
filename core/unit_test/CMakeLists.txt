@@ -236,7 +236,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
     endforeach()
 
     SET(${Tag}_SOURCES2A)
-    foreach(Name
+    SET(${TAG}_TESTNAMES2A
       TeamBasic
       TeamCombinedReducers
       TeamMDRange
@@ -270,6 +270,15 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
       WorkGraph
       WithoutInitializing
       )
+    # Workaround to internal compiler error with intel classic compilers
+    # when using -no-ip flag in ViewCopy_c
+    # See issue: https://github.com/kokkos/kokkos/issues/7084
+    IF(KOKKOS_CXX_COMPILER_ID STREQUAL Intel)
+      LIST(REMOVE_ITEM ${Tag}_TESTNAMES2A
+        ViewCopy_c
+      )
+    endif()
+    foreach(Name IN LISTS ${Tag}_TESTNAMES2A)
       set(file ${dir}/Test${Tag}_${Name}.cpp)
       # Write to a temporary intermediate file and call configure_file to avoid
       # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
