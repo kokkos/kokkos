@@ -4,6 +4,7 @@ KOKKOS_ADD_BENCHMARK_DIRECTORIES(gather)
 KOKKOS_ADD_BENCHMARK_DIRECTORIES(gups)
 KOKKOS_ADD_BENCHMARK_DIRECTORIES(launch_latency)
 KOKKOS_ADD_BENCHMARK_DIRECTORIES(stream)
+KOKKOS_ADD_BENCHMARK_DIRECTORIES(async_alloc)
 
 #FIXME_OPENMPTARGET - These two benchmarks cause ICE. Commenting them for now but a deeper analysis on the cause and a possible fix will follow.
 IF(NOT Kokkos_ENABLE_OPENMPTARGET)
