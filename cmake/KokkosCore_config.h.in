@@ -70,6 +70,7 @@
 #cmakedefine KOKKOS_ARCH_AVX2
 #cmakedefine KOKKOS_ARCH_AVX512XEON
 #cmakedefine KOKKOS_ARCH_ARM_NEON
+#cmakedefine KOKKOS_ARCH_ARM_SVE
 #cmakedefine KOKKOS_ARCH_KNC
 #cmakedefine KOKKOS_ARCH_AVX512MIC
 #cmakedefine KOKKOS_ARCH_POWER7
