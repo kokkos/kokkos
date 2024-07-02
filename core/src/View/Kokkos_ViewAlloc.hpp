@@ -80,8 +80,8 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
     (ptr + i)->~ValueType();
   }
 
-  ViewValueFunctor()                                   = default;
-  ViewValueFunctor(const ViewValueFunctor&)            = default;
+  ViewValueFunctor()                        = default;
+  ViewValueFunctor(const ViewValueFunctor&) = default;
   ViewValueFunctor& operator=(const ViewValueFunctor&) = default;
 
   ViewValueFunctor(ExecSpace const& arg_space, ValueType* const arg_ptr,
