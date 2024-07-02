@@ -1038,12 +1038,7 @@ class DualView : public ViewTraits<DataType, Properties...> {
       /* Resize on Device */
       if (sizeMismatch) {
         ::Kokkos::resize(properties, d_view, n0, n1, n2, n3, n4, n5, n6, n7);
-        if constexpr (alloc_prop_input::initialize) {
-          h_view = create_mirror_view(typename t_host::memory_space(), d_view);
-        } else {
-          h_view = create_mirror_view(Kokkos::WithoutInitializing,
-                                      typename t_host::memory_space(), d_view);
-        }
+        resync_host(properties);
 
         /* Mark Device copy as modified */
         ++modified_flags(1);
@@ -1054,13 +1049,7 @@ class DualView : public ViewTraits<DataType, Properties...> {
       /* Resize on Host */
       if (sizeMismatch) {
         ::Kokkos::resize(properties, h_view, n0, n1, n2, n3, n4, n5, n6, n7);
-        if constexpr (alloc_prop_input::initialize) {
-          d_view = create_mirror_view(typename t_dev::memory_space(), h_view);
-
-        } else {
-          d_view = create_mirror_view(Kokkos::WithoutInitializing,
-                                      typename t_dev::memory_space(), h_view);
-        }
+        resync_device(properties);
 
         /* Mark Host copy as modified */
         ++modified_flags(0);
@@ -1099,6 +1088,35 @@ class DualView : public ViewTraits<DataType, Properties...> {
     }
   }
 
+ private:
+  // resync host mirror from device
+  template <class... ViewCtorArgs>
+  inline void resync_host(Impl::ViewCtorProp<ViewCtorArgs...> const&) {
+    using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
+
+    if constexpr (alloc_prop_input::initialize) {
+      h_view = create_mirror_view(typename t_host::memory_space(), d_view);
+    } else {
+      h_view = create_mirror_view(Kokkos::WithoutInitializing,
+                                  typename t_host::memory_space(), d_view);
+    }
+  }
+
+  // resync device mirror from host
+  template <class... ViewCtorArgs>
+  inline void resync_device(Impl::ViewCtorProp<ViewCtorArgs...> const&) {
+    using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
+
+    if constexpr (alloc_prop_input::initialize) {
+      d_view = create_mirror_view(typename t_dev::memory_space(), h_view);
+
+    } else {
+      d_view = create_mirror_view(Kokkos::WithoutInitializing,
+                                  typename t_dev::memory_space(), h_view);
+    }
+  }
+
+ public:
   void resize(const size_t n0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
               const size_t n1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
               const size_t n2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
