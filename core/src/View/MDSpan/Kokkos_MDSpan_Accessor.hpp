@@ -25,6 +25,9 @@ static_assert(false,
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Concepts.hpp>
 #include <Kokkos_Core_fwd.hpp>
+#include <impl/Kokkos_SharedAlloc.hpp>
+
+#include <iostream>
 
 namespace Kokkos {
 
@@ -76,9 +79,8 @@ struct SpaceAwareAccessor {
   }
 
   KOKKOS_FUNCTION
-  constexpr typename offset_policy::data_handle_type offset(data_handle_type p,
-                                                            size_t i) const
-      noexcept {
+  constexpr typename offset_policy::data_handle_type offset(
+      data_handle_type p, size_t i) const noexcept {
     return nested_acc.offset(p, i);
   }
 
@@ -142,9 +144,8 @@ struct SpaceAwareAccessor<AnonymousSpace, NestedAccessor> {
   }
 
   KOKKOS_FUNCTION
-  constexpr typename offset_policy::data_handle_type offset(data_handle_type p,
-                                                            size_t i) const
-      noexcept {
+  constexpr typename offset_policy::data_handle_type offset(
+      data_handle_type p, size_t i) const noexcept {
     return nested_acc.offset(p, i);
   }
 
@@ -169,9 +170,82 @@ struct SpaceAwareAccessor<AnonymousSpace, NestedAccessor> {
   friend struct SpaceAwareAccessor;
 };
 
+template <class ElementType, class MemorySpace>
+class ReferenceCountedDataHandle {
+ public:
+  using value_type = ElementType;
+  using pointer    = value_type*;
+  using reference  = value_type&;
+
+  ReferenceCountedDataHandle() = default;
+  explicit ReferenceCountedDataHandle(SharedAllocationRecord<void, void>* rec) {
+    m_tracker.assign_allocated_record_to_uninitialized(rec);
+  }
+
+  ReferenceCountedDataHandle(const ReferenceCountedDataHandle&)     = default;
+  ReferenceCountedDataHandle(ReferenceCountedDataHandle&&) noexcept = default;
+  ReferenceCountedDataHandle& operator=(const ReferenceCountedDataHandle&) =
+      default;
+  ReferenceCountedDataHandle& operator=(ReferenceCountedDataHandle&&) = default;
+
+  ReferenceCountedDataHandle with_offset(size_t offset) const {
+    auto ret     = *this;
+    ret.m_offset = m_offset + offset;
+    std::cerr << "making pointer " << ret.get() << " with offset "
+              << ret.m_offset << '\n';
+    std::cerr << "from " << get() << " with offset "
+              << m_offset << '\n';
+    return ret;
+  }
+
+  reference operator*() const { return *get(); }
+  pointer operator->() const { return get(); }
+
+  explicit operator bool() const { return get_record() != nullptr; }
+
+  pointer get() const {
+    auto* rec = get_record();
+    return rec ? static_cast<pointer>(rec->data()) + m_offset : nullptr;
+  }
+
+  reference operator[](size_t i) const {return *with_offset(i); }
+
+  bool has_record() const { return m_tracker.has_record(); }
+  auto* get_record() const { return m_tracker.get_record<MemorySpace>(); }
+  size_t use_count() const noexcept { return m_tracker.use_count(); }
+
+  std::string get_label() const { return m_tracker.get_label<MemorySpace>(); }
+
+ private:
+  SharedAllocationTracker m_tracker;
+  size_t m_offset = 0;  // Offset in number of elements, not bytes
+};
+
+template <class ElementType, class MemorySpace>
+class ReferenceCountedAccessor {
+ public:
+  using element_type     = ElementType;
+  using data_handle_type = ReferenceCountedDataHandle<ElementType, MemorySpace>;
+  using reference        = typename data_handle_type::reference;
+  using offset_policy    = ReferenceCountedAccessor;
+
+  constexpr ReferenceCountedAccessor() noexcept = default;
+
+  constexpr reference access(data_handle_type p, size_t i) const {
+    return p[i];
+  }
+
+  constexpr data_handle_type offset(data_handle_type p, size_t i) const {
+    return p.with_offset(i);
+  }
+};
+
+template <class ElementType, class MemorySpace>
+using checked_reference_counted_accessor =
+    SpaceAwareAccessor<MemorySpace,
+                       ReferenceCountedAccessor<ElementType, MemorySpace>>;
+
 }  // namespace Impl
 }  // namespace Kokkos
 
-#undef KOKKOS_DESUL_MEM_SCOPE
-
-#endif
+#endif  // KOKKOS_MDSPAN_ACCESSOR_HPP

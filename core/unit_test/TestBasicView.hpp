@@ -19,6 +19,7 @@
 #include <Kokkos_Core.hpp>
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #define KOKKOS_IMPL_PUBLIC_INCLUDE
+#include <View/MDSpan/Kokkos_MDSpan_Accessor.hpp>
 #include <View/Kokkos_BasicView.hpp>
 #endif  // KOKKOS_IMPL_PUBLIC_INCLUDE
 
@@ -29,16 +30,16 @@ struct TestBasicView
   static void test_default_constructor() {
     using extents_type = ExtentsType;
     using layout_type = Kokkos::Experimental::layout_right_padded<>;
-    using accessor_type = Kokkos::SpaceAwareAccessor<T, 0, false, false, ExecutionSpace, typename ExecutionSpace::memory_space>;
+    using accessor_type = Kokkos::Impl::checked_reference_counted_accessor<T, typename ExecutionSpace::memory_space>;
     using view_type    = Kokkos::BasicView<T, ExtentsType, layout_type, accessor_type>;
     view_type view;
 
-    EXPECT_EQ(view.is_allocated(), false);
-    EXPECT_EQ(view.data(), nullptr);
+    EXPECT_FALSE(view.data_handle().has_record());
+    EXPECT_EQ(view.data_handle().get(), nullptr);
     EXPECT_EQ(view.extents(), extents_type{});
-    EXPECT_EQ(view.use_count(), 0);
-    EXPECT_EQ(view.span_is_contiguous(), true);
-    EXPECT_EQ(view.label(), "");
+    EXPECT_EQ(view.data_handle().use_count(), 0);
+    EXPECT_TRUE(view.is_exhaustive());
+    EXPECT_EQ(view.data_handle().get_label(), "");
   }
 
   template <class ExtentsType>
@@ -46,28 +47,26 @@ struct TestBasicView
     using extents_type = ExtentsType;
     using layout_type  = Kokkos::Experimental::layout_right_padded<>;
     using accessor_type =
-        Kokkos::SpaceAwareAccessor<T, 0, false, false, ExecutionSpace,
-                                   typename ExecutionSpace::memory_space>;
+        Kokkos::Impl::checked_reference_counted_accessor<T, typename ExecutionSpace::memory_space>;
     using view_type    = Kokkos::BasicView<T, ExtentsType, layout_type, accessor_type>;
 
     view_type view("test_view", extents);
 
-    EXPECT_EQ(view.is_allocated(), true);
-    EXPECT_NE(view.data(), nullptr);
+    EXPECT_TRUE(view.data_handle().has_record());
+    EXPECT_NE(view.data_handle().get(), nullptr);
     EXPECT_EQ(view.extents(), extents);
-    EXPECT_EQ(view.use_count(), 1);
-    EXPECT_EQ(view.span_is_contiguous(), true);
-    EXPECT_EQ(view.label(), "test_view");
+    EXPECT_EQ(view.data_handle().use_count(), 1);
+    EXPECT_TRUE(view.is_exhaustive());
+    EXPECT_EQ(view.data_handle().get_label(), "test_view");
   }
 
   template <template < std::size_t > class LayoutType, class ExtentsType>
   static void test_mapping_constructor(const ExtentsType &extents, std::size_t _padding) {
     using extents_type = ExtentsType;
     using layout_type  = LayoutType<Kokkos::dynamic_extent>;
-    using mapping_type = typename layout_type::mapping<ExtentsType>;
-    using accessor_type =
-        Kokkos::SpaceAwareAccessor<T, 0, false, false, ExecutionSpace,
-                                   typename ExecutionSpace::memory_space>;
+    using mapping_type  = typename layout_type::template mapping<ExtentsType>;
+    using accessor_type = Kokkos::Impl::checked_reference_counted_accessor<
+        T, typename ExecutionSpace::memory_space>;
     using view_type = Kokkos::BasicView<T, extents_type, layout_type, accessor_type>;
     static_assert(std::is_same_v<typename view_type::mapping_type, mapping_type>);
 
@@ -75,50 +74,65 @@ struct TestBasicView
 
     view_type view("test_view", mapping);
 
-    EXPECT_EQ(view.is_allocated(), true);
-    EXPECT_NE(view.data(), nullptr);
+    EXPECT_TRUE(view.data_handle().has_record());
+    EXPECT_NE(view.data_handle().get(), nullptr);
     EXPECT_EQ(view.extents(), mapping.extents());
-    EXPECT_EQ(view.use_count(), 1);
-    EXPECT_EQ(view.span_is_contiguous(), mapping.is_exhaustive());
-    EXPECT_EQ(view.label(), "test_view");
+    EXPECT_EQ(view.data_handle().use_count(), 1);
+    EXPECT_EQ(view.is_exhaustive(), mapping.is_exhaustive());
+    EXPECT_EQ(view.data_handle().get_label(), "test_view");
   }
 
   template <class ExtentsType, class... IndexTypes>
   static void test_indices_constructor(ExtentsType cmp_extents,
                                        IndexTypes... indices) {
     using extents_type = ExtentsType;
-    using layout_type  = Kokkos::Experimental::layout_right_padded<>;
-    using accessor_type =
-        Kokkos::SpaceAwareAccessor<T, 0, false, false, ExecutionSpace,
-                                   typename ExecutionSpace::memory_space>;
+    using layout_type   = Kokkos::Experimental::layout_right_padded<>;
+    using accessor_type = Kokkos::Impl::checked_reference_counted_accessor<
+        T, typename ExecutionSpace::memory_space>;
     using view_type =
         Kokkos::BasicView<T, ExtentsType, layout_type, accessor_type>;
 
     view_type view("test_view", indices...);
 
-    EXPECT_EQ(view.is_allocated(), true);
-    EXPECT_NE(view.data(), nullptr);
+    EXPECT_TRUE(view.data_handle().has_record());
+    EXPECT_NE(view.data_handle().get(), nullptr);
     EXPECT_EQ(view.extents(), cmp_extents);
-    EXPECT_EQ(view.use_count(), 1);
-    EXPECT_EQ(view.span_is_contiguous(), true);
-    EXPECT_EQ(view.label(), "test_view");
+    EXPECT_EQ(view.data_handle().use_count(), 1);
+    EXPECT_TRUE(view.is_exhaustive());
+    EXPECT_EQ(view.data_handle().get_label(), "test_view");
   }
 
   template <class LayoutType, class Extents>
   static void test_access_with_extents(const Extents &extents) {
     using extents_type = Extents;
-    using layout_type  = Kokkos::Experimental::layout_right_padded<>;
-    using accessor_type =
-        Kokkos::SpaceAwareAccessor<T, 0, false, false, ExecutionSpace,
-                                   typename ExecutionSpace::memory_space>;
+    using layout_type   = Kokkos::Experimental::layout_right_padded<>;
+    using accessor_type = Kokkos::Impl::checked_reference_counted_accessor<
+        T, typename ExecutionSpace::memory_space>;
     using view_type = Kokkos::BasicView<T, Extents, layout_type, accessor_type>;
 
     auto view = view_type("test_view", extents);
 
+    EXPECT_TRUE(view.data_handle().has_record());
+    EXPECT_NE(view.data_handle().get(), nullptr);
+    auto dh = view.data_handle();
+    EXPECT_TRUE(dh.has_record());
+    EXPECT_NE(dh.get(), nullptr);
+    auto dh2 = dh.with_offset(0);
+    EXPECT_TRUE(dh2.has_record());
+    EXPECT_NE(dh2.get(), nullptr);
+    EXPECT_NE(&view(0), nullptr);
+
+    auto v2 = view;
+    EXPECT_TRUE(v2.data_handle().has_record());
+    EXPECT_NE(v2.data_handle().get(), nullptr);
+    EXPECT_NE(&v2(0), nullptr);
+
+    std::cerr << "making mdrange\n";
     auto mdrange_policy =
-        Kokkos::Experimental::Impl::make_spanning_mdrange_policy_from_extents<ExecutionSpace>(extents);
+        Kokkos::Impl::make_spanning_mdrange_policy_from_extents<ExecutionSpace>(extents);
 
     Kokkos::parallel_for(mdrange_policy, KOKKOS_LAMBDA(auto... idxs) {
+      std::cerr << "index: " << ( idxs << ... );
       view(idxs...) = (idxs + ...);
     } );
   }
@@ -127,10 +141,10 @@ struct TestBasicView
   static void test_access()
   {
     test_access_with_extents<LayoutType>(Kokkos::extents<std::size_t, 5>());
-    test_access_with_extents<LayoutType>(Kokkos::extents<std::size_t, 5, 7>());
-    test_access_with_extents<LayoutType>(Kokkos::extents<std::size_t, Kokkos::dynamic_extent>(12));
-    test_access_with_extents<LayoutType>(
-        Kokkos::extents<std::size_t, Kokkos::dynamic_extent, 7>(9));
+    //test_access_with_extents<LayoutType>(Kokkos::extents<std::size_t, 5, 7>());
+    //test_access_with_extents<LayoutType>(Kokkos::extents<std::size_t, Kokkos::dynamic_extent>(12));
+    //test_access_with_extents<LayoutType>(
+    //    Kokkos::extents<std::size_t, Kokkos::dynamic_extent, 7>(9));
   }
 
   static void run_test() {

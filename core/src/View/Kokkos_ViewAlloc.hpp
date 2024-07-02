@@ -348,10 +348,9 @@ Kokkos::Impl::SharedAllocationRecord<void, void>* make_shared_allocation_record(
 
   auto functor =
       exec_space
-          ? alloc_functor_type(*exec_space, ptr, mapping.required_span_size(),
-                               std::string{label})
-          : alloc_functor_type(ptr, mapping.required_span_size(),
-                               std::string{label});
+          ? functor_type(*exec_space, ptr, mapping.required_span_size(),
+                         std::string{label})
+          : functor_type(ptr, mapping.required_span_size(), std::string{label});
 
   //  Only initialize if the allocation is non-zero.
   //  May be zero if one of the dimensions is zero.

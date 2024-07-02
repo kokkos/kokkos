@@ -144,6 +144,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
         AtomicOperations_unsignedlongint
         Atomics
         AtomicViews
+        BasicView
         BitManipulationBuiltins
         BlockSizeDeduction
         CheckedIntegerOps
