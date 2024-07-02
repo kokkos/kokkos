@@ -277,6 +277,10 @@ namespace Kokkos {
 
 template <class DataType, class... Properties>
 class View;
+#ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
+template <class DataType, class... Properties>
+class BasicView;
+#endif
 
 namespace Impl {
 

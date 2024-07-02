@@ -1295,6 +1295,8 @@ ifneq ($(KOKKOS_INTERNAL_NEW_CONFIG), 0)
 endif
 
 KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/*.hpp)
+KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/View/*.hpp)
+KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/View/MDSpan/*.hpp)
 KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/impl/*.hpp)
 KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/containers/src/*.hpp)
 KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/containers/src/impl/*.hpp)

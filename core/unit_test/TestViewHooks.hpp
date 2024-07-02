@@ -30,7 +30,12 @@ struct TestViewHooks {
       "Must be a hooks policy");
 
   using test_view_type =
+#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
       Kokkos::View<double **,
+#else
+      Kokkos::BasicView<
+          double **,
+#endif
                    Kokkos::Experimental::SubscribableViewHooks<TestSubscriber>,
                    DeviceType>;
 

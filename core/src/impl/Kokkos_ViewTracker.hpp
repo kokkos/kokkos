@@ -56,42 +56,51 @@ struct ViewTracker {
 
   template <class RT, class... RP>
   KOKKOS_INLINE_FUNCTION explicit ViewTracker(
+#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
       const View<RT, RP...>& vt) noexcept
+#else
+      const BasicView<RT, RP...>& vt) noexcept
+#endif
       : m_tracker() {
     assign(vt);
   }
 
   template <class RT, class... RP>
-  KOKKOS_INLINE_FUNCTION void assign(const View<RT, RP...>& vt) noexcept {
-    if (this == reinterpret_cast<const ViewTracker*>(&vt.m_track)) return;
-    KOKKOS_IF_ON_HOST((
-        if (view_traits::is_managed && Kokkos::Impl::SharedAllocationRecord<
-                                           void, void>::tracking_enabled()) {
-          m_tracker.assign_direct(vt.m_track.m_tracker);
-        } else { m_tracker.assign_force_disable(vt.m_track.m_tracker); }))
+  KOKKOS_INLINE_FUNCTION void assign(
+#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
+      const View<RT, RP...>& vt) noexcept {
+#else
+      const BasicView<RT, RP...>& vt) noexcept {
+#endif
+      if (this == reinterpret_cast<const ViewTracker*>(&vt.m_track)) return;
+  KOKKOS_IF_ON_HOST((
+      if (view_traits::is_managed && Kokkos::Impl::SharedAllocationRecord<
+                                         void, void>::tracking_enabled()) {
+        m_tracker.assign_direct(vt.m_track.m_tracker);
+      } else { m_tracker.assign_force_disable(vt.m_track.m_tracker); }))
 
-    KOKKOS_IF_ON_DEVICE((m_tracker.assign_force_disable(vt.m_track.m_tracker);))
-  }
+  KOKKOS_IF_ON_DEVICE((m_tracker.assign_force_disable(vt.m_track.m_tracker);))
+}
 
-  KOKKOS_INLINE_FUNCTION ViewTracker& operator=(
-      const ViewTracker& rhs) noexcept {
-    if (this == &rhs) return *this;
-    KOKKOS_IF_ON_HOST((
-        if (view_traits::is_managed && Kokkos::Impl::SharedAllocationRecord<
-                                           void, void>::tracking_enabled()) {
-          m_tracker.assign_direct(rhs.m_tracker);
-        } else { m_tracker.assign_force_disable(rhs.m_tracker); }))
+KOKKOS_INLINE_FUNCTION ViewTracker&
+operator=(const ViewTracker& rhs) noexcept {
+  if (this == &rhs) return *this;
+  KOKKOS_IF_ON_HOST((
+      if (view_traits::is_managed && Kokkos::Impl::SharedAllocationRecord<
+                                         void, void>::tracking_enabled()) {
+        m_tracker.assign_direct(rhs.m_tracker);
+      } else { m_tracker.assign_force_disable(rhs.m_tracker); }))
 
-    KOKKOS_IF_ON_DEVICE((m_tracker.assign_force_disable(rhs.m_tracker);))
-    return *this;
-  }
+  KOKKOS_IF_ON_DEVICE((m_tracker.assign_force_disable(rhs.m_tracker);))
+  return *this;
+}
 
-  KOKKOS_INLINE_FUNCTION
-  explicit ViewTracker(const track_type& tt) noexcept
-      : m_tracker(tt, view_traits::is_managed) {}
-};
+KOKKOS_INLINE_FUNCTION
+explicit ViewTracker(const track_type& tt) noexcept
+    : m_tracker(tt, view_traits::is_managed) {}
+};  // namespace Impl
 
-}  // namespace Impl
+}  // namespace Kokkos
 
 }  // namespace Kokkos
 
