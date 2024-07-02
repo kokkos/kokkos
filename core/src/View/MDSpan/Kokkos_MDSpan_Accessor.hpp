@@ -220,8 +220,7 @@ struct AtomicAccessorRelaxed {
   }
 
   KOKKOS_FUNCTION
-  constexpr data_handle_type offset(data_handle_type p, size_t i) const
-      noexcept {
+  data_handle_type offset(data_handle_type p, size_t i) const noexcept {
     return p + i;
   }
 };
