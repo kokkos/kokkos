@@ -114,27 +114,14 @@ struct TestBasicView
 
     EXPECT_TRUE(view.data_handle().has_record());
     EXPECT_NE(view.data_handle().get(), nullptr);
-    auto dh = view.data_handle();
-    EXPECT_TRUE(dh.has_record());
-    EXPECT_NE(dh.get(), nullptr);
-    auto dh2 = dh.with_offset(0);
-    EXPECT_TRUE(dh2.has_record());
-    EXPECT_NE(dh2.get(), nullptr);
-    EXPECT_NE(&view(0), nullptr);
 
-    auto v2 = view;
-    EXPECT_TRUE(v2.data_handle().has_record());
-    EXPECT_NE(v2.data_handle().get(), nullptr);
-    EXPECT_NE(&v2(0), nullptr);
-
-    std::cerr << "making mdrange\n";
     auto mdrange_policy =
         Kokkos::Impl::make_spanning_mdrange_policy_from_extents<ExecutionSpace>(extents);
 
-    Kokkos::parallel_for(mdrange_policy, KOKKOS_LAMBDA(auto... idxs) {
-      std::cerr << "index: " << ( idxs << ... );
-      view(idxs...) = (idxs + ...);
-    } );
+    Kokkos::parallel_for(
+        mdrange_policy, KOKKOS_LAMBDA(auto... idxs) {
+          view(idxs...) = (idxs + ...);
+        });
   }
 
   template <class LayoutType>

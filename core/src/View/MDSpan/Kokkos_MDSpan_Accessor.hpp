@@ -180,6 +180,7 @@ class ReferenceCountedDataHandle {
   ReferenceCountedDataHandle() = default;
   explicit ReferenceCountedDataHandle(SharedAllocationRecord<void, void>* rec) {
     m_tracker.assign_allocated_record_to_uninitialized(rec);
+    m_handle = static_cast<pointer>(get_record()->data());
   }
 
   ReferenceCountedDataHandle(const ReferenceCountedDataHandle&)     = default;
@@ -190,25 +191,11 @@ class ReferenceCountedDataHandle {
 
   ReferenceCountedDataHandle with_offset(size_t offset) const {
     auto ret     = *this;
-    ret.m_offset = m_offset + offset;
-    std::cerr << "making pointer " << ret.get() << " with offset "
-              << ret.m_offset << '\n';
-    std::cerr << "from " << get() << " with offset "
-              << m_offset << '\n';
+    ret.m_handle += offset;
     return ret;
   }
 
-  reference operator*() const { return *get(); }
-  pointer operator->() const { return get(); }
-
-  explicit operator bool() const { return get_record() != nullptr; }
-
-  pointer get() const {
-    auto* rec = get_record();
-    return rec ? static_cast<pointer>(rec->data()) + m_offset : nullptr;
-  }
-
-  reference operator[](size_t i) const {return *with_offset(i); }
+  pointer get() const noexcept { return m_handle; }
 
   bool has_record() const { return m_tracker.has_record(); }
   auto* get_record() const { return m_tracker.get_record<MemorySpace>(); }
@@ -218,7 +205,7 @@ class ReferenceCountedDataHandle {
 
  private:
   SharedAllocationTracker m_tracker;
-  size_t m_offset = 0;  // Offset in number of elements, not bytes
+  pointer m_handle = nullptr;
 };
 
 template <class ElementType, class MemorySpace>
@@ -232,7 +219,7 @@ class ReferenceCountedAccessor {
   constexpr ReferenceCountedAccessor() noexcept = default;
 
   constexpr reference access(data_handle_type p, size_t i) const {
-    return p[i];
+    return p.get()[i];
   }
 
   constexpr data_handle_type offset(data_handle_type p, size_t i) const {
