@@ -254,10 +254,6 @@
 #define KOKKOS_IMPL_ALIGN_PTR(size) __attribute__((aligned(size)))
 #endif
 
-#ifndef KOKKOS_IMPL_ASSUME_ALIGNED
-#define KOKKOS_IMPL_ASSUME_ALIGNED(element_type, pointer, byte_alignment) reinterpret_cast<element_type *>(__builtin_assume_aligned(pointer, byte_alignment))
-#endif
-
 #endif
 
 //----------------------------------------------------------------------------
@@ -281,10 +277,6 @@
     (defined(__amd64) || defined(__amd64__) || defined(__x86_64) || \
      defined(__x86_64__) || defined(__PPC64__))
 #define KOKKOS_ENABLE_ASM 1
-#endif
-
-#ifndef KOKKOS_IMPL_ASSUME_ALIGNED
-#define KOKKOS_IMPL_ASSUME_ALIGNED(element_type, pointer, byte_alignment) reinterpret_cast<element_type *>(__builtin_assume_aligned(pointer, byte_alignment))
 #endif
 #endif
 
@@ -390,10 +382,6 @@
 
 #if !defined(KOKKOS_IMPL_ALIGN_PTR)
 #define KOKKOS_IMPL_ALIGN_PTR(size) /* */
-#endif
-
-#if !defined(KOKKOS_IMPL_ASSUME_ALIGNED)
-#define KOKKOS_IMPL_ASSUME_ALIGNED(element_type, pointer, byte_alignment) pointer
 #endif
 
 //----------------------------------------------------------------------------
