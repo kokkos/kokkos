@@ -18,6 +18,9 @@
 #include <type_traits>
 
 #include <gtest/gtest.h>
+#ifndef KOKKOS_ENABLE_CXX17
+#include <concepts>
+#endif
 
 template <class T, class ExecutionSpace>
 void test_atomic_accessor() {
