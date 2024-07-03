@@ -183,17 +183,6 @@ struct AtomicAccessorRelaxed {
   KOKKOS_DEFAULTED_FUNCTION
   AtomicAccessorRelaxed() = default;
 
-  // TODO:  Kokkos allows atomic views of const element types right now,
-  //        but for the future we might to deprecated it and do this:
-#if 0
-  KOKKOS_FUNCTION
-  AtomicAccessorRelaxed(const default_accessor<element_type>&) {}
-
-  static_assert(
-      std::is_same_v<std::remove_cv_t<element_type>, element_type>,
-      "AtomicAccessorRelaxed can only be used for non-const element types");
-#endif
-
   // Conversions from non-const to const element type
   template <class OtherElementType,
             std::enable_if_t<std::is_convertible_v<
