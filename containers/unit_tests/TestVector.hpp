@@ -207,7 +207,6 @@ struct test_vector_combinations {
     Scalar test3 = 0;
     for (unsigned int i = 0; i < a.size(); i++) test3 += a[i];
 
-    std::cout << test1 << ' ' << test2 << ' ' << test3 << '\n';
     return (test1 * test2 + test3) * test2 + test1 * test3;
   }
 
@@ -234,7 +233,7 @@ void test_vector_allocate(unsigned int size) {
 TEST(TEST_CATEGORY, vector_combination) {
   test_vector_allocate<int, TEST_EXECSPACE>(10);
   test_vector_combinations<int, TEST_EXECSPACE>(10);
-  test_vector_combinations<long, TEST_EXECSPACE>(3057);
+  test_vector_combinations<long long int, TEST_EXECSPACE>(3057);
 }
 
 TEST(TEST_CATEGORY, vector_insert) {
