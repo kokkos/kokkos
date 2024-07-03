@@ -26,12 +26,12 @@ namespace Impl {
 // trying to assign a literal 0 int ( = 0 );
 struct AtomicViewConstTag {};
 
-template <class T>
+template <class ViewTraits>
 class AtomicDataElement {
  public:
-  using value_type           = T;
-  using const_value_type     = std::add_const_t< T >;
-  using non_const_value_type = std::remove_const_t< T >;
+  using value_type           = typename ViewTraits::value_type;
+  using const_value_type     = typename ViewTraits::const_value_type;
+  using non_const_value_type = typename ViewTraits::non_const_value_type;
   value_type* const ptr;
 
   KOKKOS_INLINE_FUNCTION
@@ -209,9 +209,9 @@ class AtomicViewDataHandle {
   AtomicViewDataHandle(typename ViewTraits::value_type* ptr_) : ptr(ptr_) {}
 
   template <class iType>
-  KOKKOS_INLINE_FUNCTION AtomicDataElement<typename ViewTraits::value_type> operator[](
+  KOKKOS_INLINE_FUNCTION AtomicDataElement<ViewTraits> operator[](
       const iType& i) const {
-    return AtomicDataElement<typename ViewTraits::value_type>(ptr + i, AtomicViewConstTag());
+    return AtomicDataElement<ViewTraits>(ptr + i, AtomicViewConstTag());
   }
 
   KOKKOS_INLINE_FUNCTION

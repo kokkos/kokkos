@@ -27,8 +27,6 @@ static_assert(false,
 #include <Kokkos_Core_fwd.hpp>
 #include <impl/Kokkos_SharedAlloc.hpp>
 
-#include <iostream>
-
 namespace Kokkos {
 
 // For now use the accessors in Impl namespace, as an

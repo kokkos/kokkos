@@ -23,8 +23,6 @@ static_assert(false,
 #define KOKKOS_EXPERIMENTAL_MDSPAN_EXTENTS_HPP
 
 #include "Kokkos_MDSpan_Header.hpp"
-#include <KokkosExp_MDRangePolicy.hpp>
-#include <Kokkos_ExecPolicy.hpp>
 
 namespace Kokkos::Impl {
 
@@ -105,33 +103,6 @@ struct DataTypeFromExtents {
   // Will cause a compile error if it is malformed (i.e. dynamic after static)
   using type = typename ::Kokkos::Impl::ViewDataType<T, dimension_type>::type;
 };
-
-template <class IndexType, std::size_t>
-IndexType fill_zero()
-{
-  return IndexType(0);
-}
-
-template <class ExecutionSpace, class Extents>
-auto make_spanning_mdrange_policy_from_extents_impl(
-    const Extents &extents, std::index_sequence<0>) {
-  using index_type = typename Extents::index_type;
-  return RangePolicy<ExecutionSpace>{0, extents.extent(0)};
-}
-
-template <class ExecutionSpace, class Extents, std::size_t... Indices>
-auto make_spanning_mdrange_policy_from_extents_impl(
-    const Extents &extents, std::index_sequence<Indices...>) {
-  using index_type = typename Extents::index_type;
-  constexpr auto rank = Extents::rank();
-  return MDRangePolicy<ExecutionSpace, Rank<rank>>{{fill_zero<index_type, Indices>()...}, {extents.extent(Indices)...}};
-}
-
-template <class ExecutionSpace, class Extents>
-auto make_spanning_mdrange_policy_from_extents(const Extents &extents) {
-  return make_spanning_mdrange_policy_from_extents_impl<ExecutionSpace>(extents, std::make_index_sequence<Extents::rank()>{});
-}
-
 
 template <class Extents, class VM, std::size_t... Indices>
 constexpr KOKKOS_INLINE_FUNCTION auto extents_from_view_mapping_impl(

@@ -30,8 +30,8 @@ static_assert(false,
 // Only use standard library mdspan if we are not running Cuda or HIP.
 // Likely these implementations won't be supported on device, so we should use
 // our own device-compatible version for now.
-#if (__cpp_lib_mdspan >= 202207L) && (__cpp_multidimensional_subscript >= 202110L) \
-    && !defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_HIP)
+#if (__cpp_lib_mdspan >= 202207L) && !defined(KOKKOS_ENABLE_CUDA) && \
+    !defined(KOKKOS_ENABLE_HIP)
 #include <mdspan>
 namespace Kokkos {
 using std::default_accessor;
@@ -43,15 +43,8 @@ using std::layout_right;
 using std::layout_stride;
 using std::mdspan;
 }  // namespace Kokkos
-#define KOKKOS_IMPL_USE_MDSPAN_BRACKET 1
-#pragma message "Using standard mdspan"
 #else
 #include <mdspan/mdspan.hpp>
-#if defined(MDSPAN_USE_BRACKET_OPERATOR) && MDSPAN_USE_BRACKET_OPERATOR
-#define KOKKOS_IMPL_USE_MDSPAN_BRACKET 1
-#else
-#define KOKKOS_IMPL_USE_MDSPAN_BRACKET 0
-#endif
 #endif
 
 #endif  // KOKKOS_EXPERIMENTAL_MDSPAN_HPP

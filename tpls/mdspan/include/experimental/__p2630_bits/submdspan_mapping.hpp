@@ -176,7 +176,7 @@ struct deduce_layout_left_submapping<
     // e.g. R I I I F F F R I I for obtaining a rank-5 from a rank-10
     return ((((Idx == 0)                                       && is_range_slice_v<SliceSpecifiers, IndexType>) ||
              ((Idx > 0 && Idx <= gap_len)                     && is_index_slice_v<SliceSpecifiers, IndexType>) ||
-             ((Idx > gap_len && Idx < gap_len + SubRank - 1) && std::is_same_v<SliceSpecifiers, full_extent_t>) ||
+             ((Idx > gap_len && Idx < gap_len + SubRank - 1) && std::is_same_v<SliceSpecifiers, full_extent_t>) || 
              ((Idx == gap_len + SubRank - 1)                  && is_range_slice_v<SliceSpecifiers, IndexType>) ||
              ((Idx >  gap_len + SubRank - 1)                  && is_index_slice_v<SliceSpecifiers, IndexType>)) && ... );
   }
