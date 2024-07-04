@@ -25,6 +25,7 @@ static_assert(false,
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Concepts.hpp>
 #include <Kokkos_Core_fwd.hpp>
+#include <desul/atomics.hpp>
 
 namespace Kokkos {
 
@@ -167,6 +168,50 @@ struct SpaceAwareAccessor<AnonymousSpace, NestedAccessor> {
   NestedAccessor nested_acc;
   template <class, class>
   friend struct SpaceAwareAccessor;
+};
+
+// Like atomic_accessor_relaxed proposed for ISO C++26 but with
+// defaulted memory scope - similar to how desul's AtomicRef has a memory scope
+template <class ElementType, class MemoryScope = desul::MemoryScopeDevice>
+struct AtomicAccessorRelaxed {
+  using element_type = ElementType;
+  using reference =
+      desul::AtomicRef<ElementType, desul::MemoryOrderRelaxed, MemoryScope>;
+  using data_handle_type = ElementType*;
+  using offset_policy    = AtomicAccessorRelaxed;
+
+  KOKKOS_DEFAULTED_FUNCTION
+  AtomicAccessorRelaxed() = default;
+
+  // Conversions from non-const to const element type
+  template <class OtherElementType,
+            std::enable_if_t<std::is_convertible_v<
+                OtherElementType (*)[], element_type (*)[]>>* = nullptr>
+  KOKKOS_FUNCTION constexpr AtomicAccessorRelaxed(
+      Kokkos::default_accessor<OtherElementType>) noexcept {}
+
+  template <class OtherElementType,
+            std::enable_if_t<std::is_convertible_v<
+                OtherElementType (*)[], element_type (*)[]>>* = nullptr>
+  KOKKOS_FUNCTION constexpr AtomicAccessorRelaxed(
+      AtomicAccessorRelaxed<OtherElementType, MemoryScope>) noexcept {}
+
+  template <class OtherElementType,
+            std::enable_if_t<std::is_convertible_v<
+                element_type (*)[], OtherElementType (*)[]>>* = nullptr>
+  KOKKOS_FUNCTION explicit operator default_accessor<OtherElementType>() const {
+    return default_accessor<OtherElementType>{};
+  }
+
+  KOKKOS_FUNCTION
+  reference access(data_handle_type p, size_t i) const noexcept {
+    return reference(p[i]);
+  }
+
+  KOKKOS_FUNCTION
+  data_handle_type offset(data_handle_type p, size_t i) const noexcept {
+    return p + i;
+  }
 };
 
 }  // namespace Impl
