@@ -642,7 +642,7 @@ __fold_left_assign_impl(Args&&... args) {
 
 
 template <class... Args>
-constexpr __mdspan_enable_fold_comma __fold_comma_impl(Args&&... args) noexcept { return { }; }
+constexpr __mdspan_enable_fold_comma __fold_comma_impl(Args&&...) noexcept { return { }; }
 
 template <bool... Bs>
 struct __bools;

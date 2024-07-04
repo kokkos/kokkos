@@ -131,7 +131,7 @@ struct deduce_layout_left_submapping<
     IndexType, SubRank, std::index_sequence<Idx...>, SliceSpecifiers...> {
 
   using count_range = index_sequence_scan_impl<
-      0, (is_index_slice_v<SliceSpecifiers, IndexType> ? 0 : 1)...>;
+      0u, (is_index_slice_v<SliceSpecifiers, IndexType> ? 0u : 1u)...>;
 
   constexpr static int gap_len =
       (((Idx > 0 && count_range::get(Idx) == 1 &&
@@ -361,7 +361,7 @@ struct deduce_layout_right_submapping<
 
   static constexpr size_t Rank = sizeof...(Idx);
   using count_range = index_sequence_scan_impl<
-      0, (std::is_convertible_v<SliceSpecifiers, IndexType> ? 0 : 1)...>;
+      0u, (std::is_convertible_v<SliceSpecifiers, IndexType> ? 0u : 1u)...>;
   //__static_partial_sums<!std::is_convertible_v<SliceSpecifiers,
   // IndexType>...>;
   constexpr static int gap_len =
