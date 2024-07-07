@@ -42,7 +42,9 @@ class RawMemoryAllocationFailure : public std::bad_alloc {
     OutOfMemoryError,
     AllocationNotAligned,
     InvalidAllocationSize,
-    MaximumCudaUVMAllocationsExceeded,
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+    MaximumCudaUVMAllocationsExceeded KOKKOS_DEPRECATED,
+#endif
     Unknown
   };
   enum class AllocationMechanism {

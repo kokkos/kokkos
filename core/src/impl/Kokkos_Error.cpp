@@ -85,10 +85,6 @@ void Experimental::RawMemoryAllocationFailure::print_error_message(
       o << " because the requested allocation size is not a valid size for the"
            " requested allocation mechanism (it's probably too large).";
       break;
-    // TODO move this to the subclass for Cuda-related things
-    case FailureMode::MaximumCudaUVMAllocationsExceeded:
-      o << " because the maximum Cuda UVM allocations was exceeded.";
-      break;
     case FailureMode::Unknown: o << " because of an unknown error."; break;
   }
   o << "  (The allocation mechanism was ";
