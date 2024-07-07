@@ -86,6 +86,10 @@ void Experimental::RawMemoryAllocationFailure::print_error_message(
            " requested allocation mechanism (it's probably too large).";
       break;
     case FailureMode::Unknown: o << " because of an unknown error."; break;
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+    default:  // silent warnings enumeration value
+      break;  // 'MaximumCudaUVMAllocationsExceeded' not handled in switch
+#endif
   }
   o << "  (The allocation mechanism was ";
   switch (m_mechanism) {
