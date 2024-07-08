@@ -374,14 +374,15 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
   static void invoke_kernel(DriverType const &driver, dim3 const &grid,
                             dim3 const &block, int shmem,
                             HIPInternal const *hip_instance) {
-    (base_t::get_kernel_func())<<<grid, block, shmem, hip_instance->m_stream>>>(
+    (base_t::
+         get_kernel_func())<<<grid, block, shmem, hip_instance->get_stream()>>>(
         driver);
   }
 
 #ifdef KOKKOS_IMPL_HIP_NATIVE_GRAPH
   static void create_parallel_launch_graph_node(
       DriverType const &driver, dim3 const &grid, dim3 const &block, int shmem,
-      HIPInternal const * /*hip_instance*/) {
+      HIPInternal const *hip_instance) {
     auto const &graph = get_hip_graph_from_kernel(driver);
     KOKKOS_EXPECTS(graph);
     auto &graph_node = get_hip_graph_node_from_kernel(driver);
@@ -401,15 +402,16 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
       params.kernelParams = const_cast<void **>(args);
       params.extra        = nullptr;
 
-      KOKKOS_IMPL_HIP_SAFE_CALL(hipGraphAddKernelNode(
-          &graph_node, graph, /* dependencies = */ nullptr,
-          /* numDependencies = */ 0, &params));
+      KOKKOS_IMPL_HIP_SAFE_CALL(
+          (hip_instance->hip_graph_add_kernel_node_wrapper(
+              &graph_node, graph, /* dependencies = */ nullptr,
+              /* numDependencies = */ 0, &params)));
     } else {
       // We still need an empty node for the dependency structure
-      KOKKOS_IMPL_HIP_SAFE_CALL(
-          hipGraphAddEmptyNode(&graph_node, graph,
-                               /* dependencies = */ nullptr,
-                               /* numDependencies = */ 0));
+      KOKKOS_IMPL_HIP_SAFE_CALL((hip_instance->hip_graph_add_empty_node_wrapper(
+          &graph_node, graph,
+          /* dependencies = */ nullptr,
+          /* numDependencies = */ 0)));
     }
     KOKKOS_ENSURES(graph_node);
   }
@@ -433,7 +435,8 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
     DriverType *driver_ptr = reinterpret_cast<DriverType *>(
         hip_instance->stage_functor_for_execution(
             reinterpret_cast<void const *>(&driver), sizeof(DriverType)));
-    (base_t::get_kernel_func())<<<grid, block, shmem, hip_instance->m_stream>>>(
+    (base_t::
+         get_kernel_func())<<<grid, block, shmem, hip_instance->get_stream()>>>(
         driver_ptr);
   }
 
@@ -449,16 +452,15 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
 
     if (!Impl::is_empty_launch(grid, block)) {
       auto *driver_ptr = Impl::allocate_driver_storage_for_kernel(
-          HIP(hip_instance->m_stream, ManageStream::no), driver);
+          HIP(hip_instance->get_stream(), ManageStream::no), driver);
 
       // Unlike in the non-graph case, we can get away with doing an async copy
       // here because the `DriverType` instance is held in the GraphNodeImpl
       // which is guaranteed to be alive until the graph instance itself is
       // destroyed, where there should be a fence ensuring that the allocation
       // associated with this kernel on the device side isn't deleted.
-      KOKKOS_IMPL_HIP_SAFE_CALL(
-          hipMemcpyAsync(driver_ptr, &driver, sizeof(DriverType),
-                         hipMemcpyDefault, hip_instance->m_stream));
+      KOKKOS_IMPL_HIP_SAFE_CALL((hip_instance->hip_memcpy_async_wrapper(
+          driver_ptr, &driver, sizeof(DriverType), hipMemcpyDefault)));
 
       void const *args[] = {&driver_ptr};
 
@@ -472,15 +474,16 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
       params.kernelParams = const_cast<void **>(args);
       params.extra        = nullptr;
 
-      KOKKOS_IMPL_HIP_SAFE_CALL(hipGraphAddKernelNode(
-          &graph_node, graph, /* dependencies = */ nullptr,
-          /* numDependencies = */ 0, &params));
+      KOKKOS_IMPL_HIP_SAFE_CALL(
+          (hip_instance->hip_graph_add_kernel_node_wrapper(
+              &graph_node, graph, /* dependencies = */ nullptr,
+              /* numDependencies = */ 0, &params)));
     } else {
       // We still need an empty node for the dependency structure
-      KOKKOS_IMPL_HIP_SAFE_CALL(
-          hipGraphAddEmptyNode(&graph_node, graph,
-                               /* dependencies = */ nullptr,
-                               /* numDependencies = */ 0));
+      KOKKOS_IMPL_HIP_SAFE_CALL((hip_instance->hip_graph_add_empty_node_wrapper(
+          &graph_node, graph,
+          /* dependencies = */ nullptr,
+          /* numDependencies = */ 0)));
     }
     KOKKOS_ENSURES(bool(graph_node))
   }
@@ -505,8 +508,8 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
                             HIPInternal const *hip_instance) {
     // Wait until the previous kernel that uses the constant buffer is done
     std::lock_guard<std::mutex> lock(HIPInternal::constantMemMutex);
-    KOKKOS_IMPL_HIP_SAFE_CALL(
-        hipEventSynchronize(HIPInternal::constantMemReusable));
+    KOKKOS_IMPL_HIP_SAFE_CALL((hip_instance->hip_event_synchronize_wrapper(
+        HIPInternal::constantMemReusable)));
 
     // Copy functor (synchronously) to staging buffer in pinned host memory
     unsigned long *staging = hip_instance->constantMemHostStaging;
@@ -514,17 +517,17 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
                 static_cast<const void *>(&driver), sizeof(DriverType));
 
     // Copy functor asynchronously from there to constant memory on the device
-    KOKKOS_IMPL_HIP_SAFE_CALL(hipMemcpyToSymbolAsync(
+    KOKKOS_IMPL_HIP_SAFE_CALL(hip_instance->hip_memcpy_to_symbol_async_wrapper(
         HIP_SYMBOL(kokkos_impl_hip_constant_memory_buffer), staging,
-        sizeof(DriverType), 0, hipMemcpyHostToDevice, hip_instance->m_stream));
+        sizeof(DriverType), 0, hipMemcpyHostToDevice));
 
     // Invoke the driver function on the device
-    (base_t::
-         get_kernel_func())<<<grid, block, shmem, hip_instance->m_stream>>>();
+    (base_t::get_kernel_func())<<<grid, block, shmem,
+                                  hip_instance->get_stream()>>>();
 
     // Record an event that says when the constant buffer can be reused
-    KOKKOS_IMPL_HIP_SAFE_CALL(hipEventRecord(HIPInternal::constantMemReusable,
-                                             hip_instance->m_stream));
+    KOKKOS_IMPL_HIP_SAFE_CALL((hip_instance->hip_event_record_wrapper(
+        HIPInternal::constantMemReusable)));
   }
 };
 
