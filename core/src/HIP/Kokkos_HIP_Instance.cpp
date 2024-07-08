@@ -172,11 +172,28 @@ void HIPInternal::fence(const std::string &name) const {
       [&]() { KOKKOS_IMPL_HIP_SAFE_CALL(hip_stream_synchronize_wrapper()); });
 }
 
-void HIPInternal::initialize(hipStream_t stream) {
+void HIPInternal::initialize(const int hip_device, hipStream_t stream) {
   KOKKOS_EXPECTS(!is_initialized());
 
   if (was_finalized)
     Kokkos::abort("Calling HIP::initialize after HIP::finalize is illegal\n");
+
+#if (HIP_VERSION_MAJOR > 5 || \
+     (HIP_VERSION_MAJOR == 5 && HIP_VERSION_MINOR >= 6))
+  // Query device ID from stream and require it matches given device id (only
+  // available for rocm versions 5.6 and later)
+  int dev_id;
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamGetDevice(stream, &dev_id));
+  if (hip_device != dev_id)
+    Kokkos::abort(
+        std::string("Kokkos::HIPInternal::initialize: ERROR device id provided "
+                    "in HIP() constructor does not match device used to "
+                    "initialized the stream provided.\n")
+            .c_str());
+#endif
+
+  m_hipDev = hip_device;
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipSetDevice(m_hipDev));
 
   m_stream = stream;
 
@@ -371,7 +388,6 @@ void HIPInternal::finalize() {
   m_num_scratch_locks = 0;
 }
 
-int HIPInternal::m_hipDev          = -1;
 int HIPInternal::m_maxThreadsPerSM = 0;
 
 hipDeviceProp_t HIPInternal::m_deviceProp;

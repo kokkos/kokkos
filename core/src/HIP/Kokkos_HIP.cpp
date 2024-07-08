@@ -48,7 +48,6 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
   const int hip_device_id =
       Impl::get_gpu(settings).value_or(visible_devices[0]);
 
-  Impl::HIPInternal::m_hipDev = hip_device_id;
   KOKKOS_IMPL_HIP_SAFE_CALL(
       hipGetDeviceProperties(&Impl::HIPInternal::m_deviceProp, hip_device_id));
   KOKKOS_IMPL_HIP_SAFE_CALL(hipSetDevice(hip_device_id));
@@ -119,7 +118,7 @@ Kokkos::HIP::initialize WARNING: Could not determine that xnack is enabled.
 
   hipStream_t singleton_stream;
   KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamCreate(&singleton_stream));
-  Impl::HIPInternal::singleton().initialize(singleton_stream);
+  Impl::HIPInternal::singleton().initialize(hip_device_id, singleton_stream);
 }
 
 void HIP::impl_finalize() {
@@ -155,12 +154,28 @@ HIP::HIP(hipStream_t const stream, Impl::ManageStream manage_stream)
           }) {
   Impl::HIPInternal::singleton().verify_is_initialized(
       "HIP instance constructor");
-  m_space_instance->initialize(stream);
+  m_space_instance->initialize(Impl::HIPInternal::singleton().m_hipDev, stream);
 }
 
 KOKKOS_DEPRECATED HIP::HIP(hipStream_t const stream, bool manage_stream)
     : HIP(stream,
           manage_stream ? Impl::ManageStream::yes : Impl::ManageStream::no) {}
+
+HIP::HIP(const int hip_device, hipStream_t const stream,
+         Impl::ManageStream manage_stream)
+    : m_space_instance(
+          new Impl::HIPInternal, [manage_stream](Impl::HIPInternal* ptr) {
+            ptr->finalize();
+            if (static_cast<bool>(manage_stream)) {
+              KOKKOS_IMPL_HIP_SAFE_CALL(hipSetDevice(ptr->m_hipDev));
+              KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamDestroy(ptr->m_stream));
+            }
+            delete ptr;
+          }) {
+  Impl::HIPInternal::singleton().verify_is_initialized(
+      "HIP instance constructor");
+  m_space_instance->initialize(hip_device, stream);
+}
 
 void HIP::print_configuration(std::ostream& os, bool /*verbose*/) const {
   os << "Device Execution Space:\n";

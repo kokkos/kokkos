@@ -72,7 +72,7 @@ class HIPInternal {
  public:
   using size_type = ::Kokkos::HIP::size_type;
 
-  static int m_hipDev;
+  int m_hipDev = -1;
   static int m_maxThreadsPerSM;
 
   static hipDeviceProp_t m_deviceProp;
@@ -119,7 +119,7 @@ class HIPInternal {
     return nullptr != m_scratchSpace && nullptr != m_scratchFlags;
   }
 
-  void initialize(hipStream_t stream);
+  void initialize(const int hip_device, hipStream_t stream);
   void finalize();
 
   void print_configuration(std::ostream &) const;
