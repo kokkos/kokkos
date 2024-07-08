@@ -53,10 +53,18 @@ namespace Kokkos {
 
 HIPSpace::HIPSpace()
     : m_device(HIP().hip_device()), m_stream(HIP().hip_stream()) {}
+HIPSpace::HIPSpace(int device_id, hipStream_t stream)
+    : m_device(device_id), m_stream(stream) {}
 
-HIPHostPinnedSpace::HIPHostPinnedSpace() {}
+HIPHostPinnedSpace::HIPHostPinnedSpace()
+    : m_device(HIP().hip_device()), m_stream(HIP().hip_stream()) {}
+HIPHostPinnedSpace::HIPHostPinnedSpace(int device_id, hipStream_t stream)
+    : m_device(device_id), m_stream(stream) {}
 
-HIPManagedSpace::HIPManagedSpace() : m_device(HIP().hip_device()) {}
+HIPManagedSpace::HIPManagedSpace()
+    : m_device(HIP().hip_device()), m_stream(HIP().hip_stream()) {}
+HIPManagedSpace::HIPManagedSpace(int device_id, hipStream_t stream)
+    : m_device(device_id), m_stream(stream) {}
 
 #ifndef KOKKOS_IMPL_HIP_UNIFIED_MEMORY
 void* HIPSpace::allocate(const HIP& exec_space,
@@ -67,8 +75,7 @@ void* HIPSpace::allocate(const HIP& exec_space,
 void* HIPSpace::allocate(const HIP& exec_space, const char* arg_label,
                          const size_t arg_alloc_size,
                          const size_t arg_logical_size) const {
-  return impl_allocate(exec_space.hip_stream(), arg_label, arg_alloc_size,
-                       arg_logical_size, true);
+  return impl_allocate(exec_space, arg_label, arg_alloc_size, arg_logical_size);
 }
 #endif
 
@@ -78,15 +85,18 @@ void* HIPSpace::allocate(const size_t arg_alloc_size) const {
 
 void* HIPSpace::allocate(const char* arg_label, const size_t arg_alloc_size,
                          const size_t arg_logical_size) const {
-  return impl_allocate(m_stream, arg_label, arg_alloc_size, arg_logical_size,
-                       false);
+  return impl_allocate(arg_label, arg_alloc_size, arg_logical_size);
 }
 
-void* HIPSpace::impl_allocate(
-    [[maybe_unused]] const hipStream_t stream, const char* arg_label,
-    const size_t arg_alloc_size, const size_t arg_logical_size,
-    [[maybe_unused]] const bool stream_sync_only) const {
+namespace {
+void* impl_allocate_common(const int device_id,
+                           [[maybe_unused]] const hipStream_t stream,
+                           const char* arg_label, const size_t arg_alloc_size,
+                           const size_t arg_logical_size,
+                           const Kokkos::Tools::SpaceHandle arg_handle,
+                           [[maybe_unused]] bool stream_sync_only) {
   void* ptr = nullptr;
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipSetDevice(device_id));
 
 #ifdef KOKKOS_ENABLE_IMPL_HIP_MALLOC_ASYNC
   auto const error_code = hipMallocAsync(&ptr, arg_alloc_size, stream);
@@ -103,17 +113,32 @@ void* HIPSpace::impl_allocate(
     // This is the only way to clear the last error, which we should do here
     // since we're turning it into an exception here
     (void)hipGetLastError();
-    Kokkos::Impl::throw_bad_alloc(name(), arg_alloc_size, arg_label);
+    Kokkos::Impl::throw_bad_alloc(arg_handle.name, arg_alloc_size, arg_label);
   }
   if (Kokkos::Profiling::profileLibraryLoaded()) {
-    const Kokkos::Tools::SpaceHandle arg_handle =
-        Kokkos::Tools::make_space_handle(name());
     const size_t reported_size =
         (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
     Kokkos::Profiling::allocateData(arg_handle, arg_label, ptr, reported_size);
   }
 
   return ptr;
+}
+}  // namespace
+
+void* HIPSpace::impl_allocate(
+    const HIP& exec_space, const char* arg_label, const size_t arg_alloc_size,
+    const size_t arg_logical_size,
+    const Kokkos::Tools::SpaceHandle arg_handle) const {
+  return impl_allocate_common(exec_space.hip_device(), exec_space.hip_stream(),
+                              arg_label, arg_alloc_size, arg_logical_size,
+                              arg_handle, true);
+}
+void* HIPSpace::impl_allocate(
+    const char* arg_label, const size_t arg_alloc_size,
+    const size_t arg_logical_size,
+    const Kokkos::Tools::SpaceHandle arg_handle) const {
+  return impl_allocate_common(m_device, m_stream, arg_label, arg_alloc_size,
+                              arg_logical_size, arg_handle, false);
 }
 
 void* HIPHostPinnedSpace::allocate(const size_t arg_alloc_size) const {
@@ -130,6 +155,7 @@ void* HIPHostPinnedSpace::impl_allocate(
     const Kokkos::Tools::SpaceHandle arg_handle) const {
   void* ptr = nullptr;
 
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipSetDevice(m_device));
   auto const error_code =
       hipHostMalloc(&ptr, arg_alloc_size, hipHostMallocNonCoherent);
   if (error_code != hipSuccess) {
@@ -162,6 +188,7 @@ void* HIPManagedSpace::impl_allocate(
   void* ptr = nullptr;
 
   if (arg_alloc_size > 0) {
+    KOKKOS_IMPL_HIP_SAFE_CALL(hipSetDevice(m_device));
     if (is_first_hip_managed_allocation.exchange(false) &&
         Kokkos::show_warnings()) {
       do {  // hack to avoid spamming users with too many warnings
@@ -238,9 +265,11 @@ void HIPSpace::impl_deallocate(
                                       reported_size);
   }
 #ifdef KOKKOS_ENABLE_IMPL_HIP_MALLOC_ASYNC
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipSetDevice(m_device));
   KOKKOS_IMPL_HIP_SAFE_CALL(hipFreeAsync(arg_alloc_ptr, m_stream));
   KOKKOS_IMPL_HIP_SAFE_CALL(hipDeviceSynchronize());
 #else
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipSetDevice(m_device));
   KOKKOS_IMPL_HIP_SAFE_CALL(hipFree(arg_alloc_ptr));
 #endif
 }
@@ -266,6 +295,7 @@ void HIPHostPinnedSpace::impl_deallocate(
     Kokkos::Profiling::deallocateData(arg_handle, arg_label, arg_alloc_ptr,
                                       reported_size);
   }
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipSetDevice(m_device));
   KOKKOS_IMPL_HIP_SAFE_CALL(hipHostFree(arg_alloc_ptr));
 }
 
@@ -295,6 +325,7 @@ void HIPManagedSpace::impl_deallocate(
   // kernel mem page table.
   KOKKOS_IMPL_HIP_SAFE_CALL(hipMemAdvise(
       arg_alloc_ptr, arg_alloc_size, hipMemAdviseUnsetCoarseGrain, m_device));
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipSetDevice(m_device));
   KOKKOS_IMPL_HIP_SAFE_CALL(hipFree(arg_alloc_ptr));
 }
 
