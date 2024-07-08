@@ -42,7 +42,6 @@ class RawMemoryAllocationFailure : public std::bad_alloc {
     OutOfMemoryError,
     AllocationNotAligned,
     InvalidAllocationSize,
-    MaximumCudaUVMAllocationsExceeded,
     Unknown
   };
   enum class AllocationMechanism {
