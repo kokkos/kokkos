@@ -231,7 +231,7 @@ void HIPInternal::initialize(const int hip_device, hipStream_t stream) {
 Kokkos::HIP::size_type *HIPInternal::scratch_space(const std::size_t size) {
   if (verify_is_initialized("scratch_space") &&
       m_scratchSpaceCount < scratch_count(size)) {
-    Kokkos::HIPSpace mem_space;
+    auto mem_space = Kokkos::HIPSpace::impl_create(m_hipDev, m_stream);
 
     if (m_scratchSpace) {
       mem_space.deallocate(m_scratchSpace,
@@ -252,7 +252,7 @@ Kokkos::HIP::size_type *HIPInternal::scratch_space(const std::size_t size) {
 Kokkos::HIP::size_type *HIPInternal::scratch_flags(const std::size_t size) {
   if (verify_is_initialized("scratch_flags") &&
       m_scratchFlagsCount < scratch_count(size)) {
-    Kokkos::HIPSpace mem_space;
+    auto mem_space = Kokkos::HIPSpace::impl_create(m_hipDev, m_stream);
 
     if (m_scratchFlags) {
       mem_space.deallocate(m_scratchFlags,
@@ -279,8 +279,9 @@ Kokkos::HIP::size_type *HIPInternal::scratch_flags(const std::size_t size) {
 Kokkos::HIP::size_type *HIPInternal::stage_functor_for_execution(
     void const *driver, std::size_t const size) const {
   if (verify_is_initialized("scratch_functor") && m_scratchFunctorSize < size) {
-    Kokkos::HIPSpace device_mem_space;
-    Kokkos::HIPHostPinnedSpace host_mem_space;
+    auto device_mem_space = Kokkos::HIPSpace::impl_create(m_hipDev, m_stream);
+    auto host_mem_space =
+        Kokkos::HIPHostPinnedSpace::impl_create(m_hipDev, m_stream);
 
     if (m_scratchFunctor) {
       device_mem_space.deallocate(m_scratchFunctor, m_scratchFunctorSize);
@@ -325,21 +326,22 @@ void *HIPInternal::resize_team_scratch_space(int scratch_pool_id,
   // Multiple ParallelFor/Reduce Teams can call this function at the same time
   // and invalidate the m_team_scratch_ptr. We use a pool to avoid any race
   // condition.
+  auto mem_space = Kokkos::HIPSpace::impl_create(m_hipDev, m_stream);
   if (m_team_scratch_current_size[scratch_pool_id] == 0) {
     m_team_scratch_current_size[scratch_pool_id] = bytes;
     m_team_scratch_ptr[scratch_pool_id] =
-        Kokkos::kokkos_malloc<Kokkos::HIPSpace>(
-            "Kokkos::HIPSpace::TeamScratchMemory",
-            m_team_scratch_current_size[scratch_pool_id]);
+        mem_space.allocate("Kokkos::HIPSpace::TeamScratchMemory",
+                           m_team_scratch_current_size[scratch_pool_id]);
   }
   if ((bytes > m_team_scratch_current_size[scratch_pool_id]) ||
       ((bytes < m_team_scratch_current_size[scratch_pool_id]) &&
        (force_shrink))) {
+    mem_space.deallocate("Kokkos::HIPSpace::TeamScratchMemory",
+                         m_team_scratch_ptr[scratch_pool_id],
+                         m_team_scratch_current_size[scratch_pool_id]);
     m_team_scratch_current_size[scratch_pool_id] = bytes;
     m_team_scratch_ptr[scratch_pool_id] =
-        Kokkos::kokkos_realloc<Kokkos::HIPSpace>(
-            m_team_scratch_ptr[scratch_pool_id],
-            m_team_scratch_current_size[scratch_pool_id]);
+        mem_space.allocate("Kokkos::HIPSpace::TeamScratchMemory", bytes);
   }
   return m_team_scratch_ptr[scratch_pool_id];
 }
@@ -354,9 +356,8 @@ void HIPInternal::finalize() {
   this->fence("Kokkos::HIPInternal::finalize: fence on finalization");
   was_finalized = true;
 
+  auto device_mem_space = Kokkos::HIPSpace::impl_create(m_hipDev, m_stream);
   if (nullptr != m_scratchSpace || nullptr != m_scratchFlags) {
-    Kokkos::HIPSpace device_mem_space;
-
     device_mem_space.deallocate(m_scratchFlags,
                                 m_scratchSpaceCount * sizeScratchGrain);
     device_mem_space.deallocate(m_scratchSpace,
@@ -364,14 +365,16 @@ void HIPInternal::finalize() {
 
     if (m_scratchFunctorSize > 0) {
       device_mem_space.deallocate(m_scratchFunctor, m_scratchFunctorSize);
-      Kokkos::HIPHostPinnedSpace host_mem_space;
+      auto host_mem_space =
+          Kokkos::HIPHostPinnedSpace::impl_create(m_hipDev, m_stream);
       host_mem_space.deallocate(m_scratchFunctorHost, m_scratchFunctorSize);
     }
   }
 
   for (int i = 0; i < m_n_team_scratch; ++i) {
     if (m_team_scratch_current_size[i] > 0)
-      Kokkos::kokkos_free<Kokkos::HIPSpace>(m_team_scratch_ptr[i]);
+      device_mem_space.deallocate(m_team_scratch_ptr[i],
+                                  m_team_scratch_current_size[i]);
   }
 
   m_scratchSpaceCount = 0;
