@@ -63,6 +63,9 @@ class HIP {
 
   KOKKOS_DEPRECATED HIP(hipStream_t stream, bool manage_stream);
 
+  HIP(const int hip_device, hipStream_t stream,
+      Impl::ManageStream manage_stream = Impl::ManageStream::no);
+
   //@}
   //------------------------------------
   //! \name Functions that all Kokkos devices must implement.
