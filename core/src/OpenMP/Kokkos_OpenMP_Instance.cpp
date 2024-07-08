@@ -304,7 +304,8 @@ void OpenMPInternal::finalize() {
     if (it == all_instances.end())
       Kokkos::abort(
           "Execution space instance to be removed couldn't be found!");
-    all_instances.erase(it);
+    *it = all_instances.back();
+    all_instances.pop_back();
   }
 }
 
