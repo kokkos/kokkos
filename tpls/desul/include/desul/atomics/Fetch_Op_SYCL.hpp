@@ -16,43 +16,43 @@ namespace desul {
 namespace Impl {
 
 // clang-format off
-#define DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER(FETCH_OPER, TYPE)                                     \
+#define DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER(OPER, TYPE)                                     \
   template <class MemoryOrder>                                                            \
-  TYPE device_atomic_##FETCH_OPER(TYPE* dest, TYPE val, MemoryOrder, MemoryScopeDevice) { \
+  TYPE device_atomic_fetch_##OPER(TYPE* dest, TYPE val, MemoryOrder, MemoryScopeDevice) { \
     sycl_atomic_ref<TYPE, MemoryOrder, MemoryScopeDevice> dest_ref(*dest);                \
-    return dest_ref.##FETCH_OPER(val);                                                    \
+    return dest_ref.fetch_##OPER(val);                                                    \
   }                                                                                       \
   template <class MemoryOrder>                                                            \
-  TYPE device_atomic_##FETCH_OPER(TYPE* dest, TYPE val, MemoryOrder, MemoryScopeCore  ) { \
+  TYPE device_atomic_fetch_##OPER(TYPE* dest, TYPE val, MemoryOrder, MemoryScopeCore  ) { \
     sycl_atomic_ref<TYPE, MemoryOrder, MemoryScopeCore> dest_ref(*dest);                  \
-    return dest_ref.##FETCH_OPER(val);                                                    \
+    return dest_ref.fetch_##OPER(val);                                                    \
   }
 // clang-format on
 
-#define DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_INTEGRAL(FETCH_OPER) \
-  DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER(FETCH_OPER, int)           \
-  DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER(FETCH_OPER, unsigned int)  \
-  DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER(FETCH_OPER, long)          \
-  DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER(FETCH_OPER, unsigned long) \
-  DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER(FETCH_OPER, long long)     \
-  DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER(FETCH_OPER, unsigned long long)
+#define DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_INTEGRAL(OPER) \
+  DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER(OPER, int)           \
+  DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER(OPER, unsigned int)  \
+  DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER(OPER, long)          \
+  DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER(OPER, unsigned long) \
+  DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER(OPER, long long)     \
+  DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER(OPER, unsigned long long)
 
-#define DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_FLOATING_POINT(FETCH_OPER) \
-  DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER(FETCH_OPER, float)               \
-  DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER(FETCH_OPER, double)
+#define DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_FLOATING_POINT(OPER) \
+  DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER(OPER, float)               \
+  DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER(OPER, double)
 
-DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_INTEGRAL(fetch_add)
-DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_INTEGRAL(fetch_sub)
-DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_INTEGRAL(fetch_and)
-DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_INTEGRAL(fetch_or)
-DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_INTEGRAL(fetch_xor)
-DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_INTEGRAL(fetch_min)
-DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_INTEGRAL(fetch_max)
+DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_INTEGRAL(add)
+DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_INTEGRAL(sub)
+DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_INTEGRAL(and)
+DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_INTEGRAL(or)
+DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_INTEGRAL(xor)
+DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_INTEGRAL(min)
+DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_INTEGRAL(max)
 
-DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_FLOATING_POINT(fetch_add)
-DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_FLOATING_POINT(fetch_sub)
-DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_FLOATING_POINT(fetch_min)
-DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_FLOATING_POINT(fetch_max)
+DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_FLOATING_POINT(add)
+DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_FLOATING_POINT(sub)
+DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_FLOATING_POINT(min)
+DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_FLOATING_POINT(max)
 
 #undef DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_FLOATING_POINT
 #undef DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_INTEGRAL

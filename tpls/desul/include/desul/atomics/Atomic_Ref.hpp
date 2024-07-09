@@ -47,18 +47,16 @@ class AtomicRef {
 
   // TODO compare_exchange_{weak,strong} and is_lock_free
 
-#define DESUL_IMPL_DEFINE_ATOMIC_FETCH_OP(FETCH_OP, OP_FETCH)                        \
-  DESUL_FUNCTION T FETCH_OP(T arg) const noexcept {                             \
-    return desul::atomic_##FETCH_OP(ptr_, arg, MemoryOrder(), MemoryScope());    \
-  }                                                                              \
+#define DESUL_IMPL_DEFINE_ATOMIC_FETCH_OP(FETCH_OP, OP_FETCH)                 \
+  DESUL_FUNCTION T FETCH_OP(T arg) const noexcept {                           \
+    return desul::atomic_##FETCH_OP(ptr_, arg, MemoryOrder(), MemoryScope()); \
+  }                                                                           \
   DESUL_FUNCTION T OP_FETCH(T arg) const noexcept {                           \
     return desul::atomic_##OP_FETCH(ptr_, arg, MemoryOrder(), MemoryScope()); \
   }
 
 #define DESUL_IMPL_DEFINE_ATOMIC_COMPOUND_ASSIGNMENT_OP(COMPD_ASGMT, OP_FETCH) \
-  DESUL_FUNCTION T operator COMPD_ASGMT(T arg) const noexcept {            \
-    return OP_FETCH(arg);                                               \
-  }
+  DESUL_FUNCTION T operator COMPD_ASGMT(T arg) const noexcept { return OP_FETCH(arg); }
 
   DESUL_IMPL_DEFINE_ATOMIC_FETCH_OP(fetch_add, add_fetch)
   DESUL_IMPL_DEFINE_ATOMIC_COMPOUND_ASSIGNMENT_OP(+=, add_fetch)

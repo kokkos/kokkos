@@ -14,36 +14,36 @@ SPDX-License-Identifier: (BSD-3-Clause)
 namespace desul {
 namespace Impl {
 
-#define DESUL_IMPL_HIP_ATOMIC_FETCH_OP(FETCH_OP, T)                     \
+#define DESUL_IMPL_HIP_ATOMIC_FETCH_OP(OP, T)                           \
   template <class MemoryOrder, class MemoryScope>                       \
-  __device__ inline T device_atomic_##FETCH_OP(                         \
+  __device__ inline T device_atomic_fetch_##OP(                         \
       T* ptr, T val, MemoryOrder, MemoryScope) {                        \
-    return __hip_atomic_##FETCH_OP(ptr,                                 \
+    return __hip_atomic_fetch_##OP(ptr,                                 \
                                    val,                                 \
                                    HIPMemoryOrder<MemoryOrder>::value,  \
                                    HIPMemoryScope<MemoryScope>::value); \
   }
 
-#define DESUL_IMPL_HIP_ATOMIC_FETCH_OP_INTEGRAL(FETCH_OP) \
-  DESUL_IMPL_HIP_ATOMIC_FETCH_OP(FETCH_OP, int)           \
-  DESUL_IMPL_HIP_ATOMIC_FETCH_OP(FETCH_OP, long long)     \
-  DESUL_IMPL_HIP_ATOMIC_FETCH_OP(FETCH_OP, unsigned int)  \
-  DESUL_IMPL_HIP_ATOMIC_FETCH_OP(FETCH_OP, unsigned long long)
+#define DESUL_IMPL_HIP_ATOMIC_FETCH_OP_INTEGRAL(OP) \
+  DESUL_IMPL_HIP_ATOMIC_FETCH_OP(OP, int)           \
+  DESUL_IMPL_HIP_ATOMIC_FETCH_OP(OP, long long)     \
+  DESUL_IMPL_HIP_ATOMIC_FETCH_OP(OP, unsigned int)  \
+  DESUL_IMPL_HIP_ATOMIC_FETCH_OP(OP, unsigned long long)
 
-#define DESUL_IMPL_HIP_ATOMIC_FETCH_OP_FLOATING_POINT(FETCH_OP) \
-  DESUL_IMPL_HIP_ATOMIC_FETCH_OP(FETCH_OP, float)               \
-  DESUL_IMPL_HIP_ATOMIC_FETCH_OP(FETCH_OP, double)
+#define DESUL_IMPL_HIP_ATOMIC_FETCH_OP_FLOATING_POINT(OP) \
+  DESUL_IMPL_HIP_ATOMIC_FETCH_OP(OP, float)               \
+  DESUL_IMPL_HIP_ATOMIC_FETCH_OP(OP, double)
 
-DESUL_IMPL_HIP_ATOMIC_FETCH_OP_INTEGRAL(fetch_add)
-DESUL_IMPL_HIP_ATOMIC_FETCH_OP_INTEGRAL(fetch_min)
-DESUL_IMPL_HIP_ATOMIC_FETCH_OP_INTEGRAL(fetch_max)
-DESUL_IMPL_HIP_ATOMIC_FETCH_OP_INTEGRAL(fetch_and)
-DESUL_IMPL_HIP_ATOMIC_FETCH_OP_INTEGRAL(fetch_or)
-DESUL_IMPL_HIP_ATOMIC_FETCH_OP_INTEGRAL(fetch_xor)
-DESUL_IMPL_HIP_ATOMIC_FETCH_OP_FLOATING_POINT(fetch_add)
+DESUL_IMPL_HIP_ATOMIC_FETCH_OP_INTEGRAL(add)
+DESUL_IMPL_HIP_ATOMIC_FETCH_OP_INTEGRAL(min)
+DESUL_IMPL_HIP_ATOMIC_FETCH_OP_INTEGRAL(max)
+DESUL_IMPL_HIP_ATOMIC_FETCH_OP_INTEGRAL(and)
+DESUL_IMPL_HIP_ATOMIC_FETCH_OP_INTEGRAL(or)
+DESUL_IMPL_HIP_ATOMIC_FETCH_OP_INTEGRAL(xor)
+DESUL_IMPL_HIP_ATOMIC_FETCH_OP_FLOATING_POINT(add)
 // atomic min/max gives the wrong results (tested with ROCm 6.0 on Frontier)
-// DESUL_IMPL_HIP_ATOMIC_FETCH_OP_FLOATING_POINT(_min)
-// DESUL_IMPL_HIP_ATOMIC_FETCH_OP_FLOATING_POINT(_max)
+// DESUL_IMPL_HIP_ATOMIC_FETCH_OP_FLOATING_POINT(min)
+// DESUL_IMPL_HIP_ATOMIC_FETCH_OP_FLOATING_POINT(max)
 
 #undef DESUL_IMPL_HIP_ATOMIC_FETCH_OP_FLOATING_POINT
 #undef DESUL_IMPL_HIP_ATOMIC_FETCH_OP_INTEGRAL
