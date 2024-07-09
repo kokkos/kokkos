@@ -194,8 +194,19 @@ void HIPInternal::initialize(const int hip_device, hipStream_t stream) {
 
   m_hipDev = hip_device;
   KOKKOS_IMPL_HIP_SAFE_CALL(hipSetDevice(m_hipDev));
+  hip_devices.insert(m_hipDev);
 
   m_stream = stream;
+
+  // Allocate a staging buffer for constant mem in pinned host memory
+  // and an event to avoid overwriting driver for previous kernel launches
+  if (not constantMemHostStaging[m_hipDev])
+    KOKKOS_IMPL_HIP_SAFE_CALL((hip_host_malloc_wrapper(
+        reinterpret_cast<void **>(&constantMemHostStaging[m_hipDev]),
+        Impl::HIPTraits::ConstantMemoryUsage)));
+  if (not constantMemReusable[m_hipDev])
+    KOKKOS_IMPL_HIP_SAFE_CALL(
+        (hip_event_create_wrapper(&constantMemReusable[m_hipDev])));
 
   //----------------------------------
   // Multiblock reduction uses scratch flags for counters
@@ -394,9 +405,11 @@ int HIPInternal::m_maxThreadsPerSM = 0;
 hipDeviceProp_t HIPInternal::m_deviceProp;
 
 std::mutex HIPInternal::scratchFunctorMutex;
-unsigned long *HIPInternal::constantMemHostStaging = nullptr;
-hipEvent_t HIPInternal::constantMemReusable        = nullptr;
-std::mutex HIPInternal::constantMemMutex;
+
+std::set<int> HIPInternal::hip_devices                             = {};
+std::map<int, unsigned long *> HIPInternal::constantMemHostStaging = {};
+std::map<int, hipEvent_t> HIPInternal::constantMemReusable         = {};
+std::map<int, std::mutex> HIPInternal::constantMemMutex            = {};
 
 //----------------------------------------------------------------------------
 
