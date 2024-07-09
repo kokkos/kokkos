@@ -188,13 +188,21 @@ struct HIPParallelLaunchKernelFuncData {
     return hip_func_attributes.localSizeBytes;
   }
 
-  static hipFuncAttributes get_hip_func_attributes(void const *kernel_func) {
-    static hipFuncAttributes attr = [=]() {
+  // These functions need to be templated on DriverType and LaunchBounds
+  // so that the static bool is unique for each type combo
+  // KernelFuncPtr does not necessarily contain that type information.
+  static hipFuncAttributes get_hip_func_attributes(const int hip_device,
+                                                   void const *kernel_func) {
+    // Only call hipFuncGetAttributes once for each unique kernel
+    // and device by leveraging static variable initialization rules
+    static std::map<int, hipFuncAttributes> func_attr;
+    if (func_attr.find(hip_device) == func_attr.end()) {
       hipFuncAttributes attr;
+      KOKKOS_IMPL_HIP_SAFE_CALL(hipSetDevice(hip_device));
       KOKKOS_IMPL_HIP_SAFE_CALL(hipFuncGetAttributes(&attr, kernel_func));
-      return attr;
-    }();
-    return attr;
+      func_attr.emplace(hip_device, attr);
+    }
+    return func_attr[hip_device];
   }
 };
 
@@ -228,13 +236,13 @@ struct HIPParallelLaunchKernelFunc<
 
   static constexpr auto default_launchbounds() { return false; }
 
-  static auto get_scratch_size() {
-    return funcdata_t::get_scratch_size(get_hip_func_attributes());
+  static auto get_scratch_size(const int hip_device) {
+    return funcdata_t::get_scratch_size(get_hip_func_attributes(hip_device));
   }
 
-  static hipFuncAttributes get_hip_func_attributes() {
+  static hipFuncAttributes get_hip_func_attributes(const int hip_device) {
     return funcdata_t::get_hip_func_attributes(
-        reinterpret_cast<void const *>(get_kernel_func()));
+        hip_device, reinterpret_cast<void const *>(get_kernel_func()));
   }
 };
 
@@ -250,13 +258,13 @@ struct HIPParallelLaunchKernelFunc<DriverType, Kokkos::LaunchBounds<0, 0>,
 
   static constexpr auto default_launchbounds() { return true; }
 
-  static auto get_scratch_size() {
-    return funcdata_t::get_scratch_size(get_hip_func_attributes());
+  static auto get_scratch_size(const int hip_device) {
+    return funcdata_t::get_scratch_size(get_hip_func_attributes(hip_device));
   }
 
-  static hipFuncAttributes get_hip_func_attributes() {
+  static hipFuncAttributes get_hip_func_attributes(const int hip_device) {
     return funcdata_t::get_hip_func_attributes(
-        reinterpret_cast<void const *>(get_kernel_func()));
+        hip_device, reinterpret_cast<void const *>(get_kernel_func()));
   }
 };
 
@@ -276,13 +284,13 @@ struct HIPParallelLaunchKernelFunc<
 
   static constexpr auto default_launchbounds() { return false; }
 
-  static auto get_scratch_size() {
-    return funcdata_t::get_scratch_size(get_hip_func_attributes());
+  static auto get_scratch_size(const int hip_device) {
+    return funcdata_t::get_scratch_size(get_hip_func_attributes(hip_device));
   }
 
-  static hipFuncAttributes get_hip_func_attributes() {
+  static hipFuncAttributes get_hip_func_attributes(const int hip_device) {
     return funcdata_t::get_hip_func_attributes(
-        reinterpret_cast<void const *>(get_kernel_func()));
+        hip_device, reinterpret_cast<void const *>(get_kernel_func()));
   }
 };
 
@@ -298,13 +306,13 @@ struct HIPParallelLaunchKernelFunc<DriverType, Kokkos::LaunchBounds<0, 0>,
 
   static constexpr auto default_launchbounds() { return true; }
 
-  static auto get_scratch_size() {
-    return funcdata_t::get_scratch_size(get_hip_func_attributes());
+  static auto get_scratch_size(const int hip_device) {
+    return funcdata_t::get_scratch_size(get_hip_func_attributes(hip_device));
   }
 
-  static hipFuncAttributes get_hip_func_attributes() {
+  static hipFuncAttributes get_hip_func_attributes(const int hip_device) {
     return funcdata_t::get_hip_func_attributes(
-        reinterpret_cast<void const *>(get_kernel_func()));
+        hip_device, reinterpret_cast<void const *>(get_kernel_func()));
   }
 };
 
@@ -324,13 +332,13 @@ struct HIPParallelLaunchKernelFunc<
 
   static constexpr auto default_launchbounds() { return false; }
 
-  static auto get_scratch_size() {
-    return funcdata_t::get_scratch_size(get_hip_func_attributes());
+  static auto get_scratch_size(const int hip_device) {
+    return funcdata_t::get_scratch_size(get_hip_func_attributes(hip_device));
   }
 
-  static hipFuncAttributes get_hip_func_attributes() {
+  static hipFuncAttributes get_hip_func_attributes(const int hip_device) {
     return funcdata_t::get_hip_func_attributes(
-        reinterpret_cast<void const *>(get_kernel_func()));
+        hip_device, reinterpret_cast<void const *>(get_kernel_func()));
   }
 };
 
@@ -345,13 +353,13 @@ struct HIPParallelLaunchKernelFunc<DriverType, Kokkos::LaunchBounds<0, 0>,
   }
   static constexpr auto default_launchbounds() { return true; }
 
-  static auto get_scratch_size() {
-    return funcdata_t::get_scratch_size(get_hip_func_attributes());
+  static auto get_scratch_size(const int hip_device) {
+    return funcdata_t::get_scratch_size(get_hip_func_attributes(hip_device));
   }
 
-  static hipFuncAttributes get_hip_func_attributes() {
+  static hipFuncAttributes get_hip_func_attributes(const int hip_device) {
     return funcdata_t::get_hip_func_attributes(
-        reinterpret_cast<void const *>(get_kernel_func()));
+        hip_device, reinterpret_cast<void const *>(get_kernel_func()));
   }
 };
 

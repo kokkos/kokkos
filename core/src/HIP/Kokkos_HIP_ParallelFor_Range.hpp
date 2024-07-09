@@ -75,7 +75,8 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::HIP> {
 
     using DriverType = ParallelFor<FunctorType, Policy, Kokkos::HIP>;
     const int block_size =
-        Kokkos::Impl::hip_get_preferred_blocksize<DriverType, LaunchBounds>();
+        Kokkos::Impl::hip_get_preferred_blocksize<DriverType, LaunchBounds>(
+            m_policy.space().hip_device());
     const dim3 block(1, block_size, 1);
     const dim3 grid(
         typename Policy::index_type((nwork + block.y - 1) / block.y), 1, 1);
