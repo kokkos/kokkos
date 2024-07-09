@@ -1039,7 +1039,7 @@ class DualView : public ViewTraits<DataType, Properties...> {
       if (sizeMismatch) {
         ::Kokkos::resize(properties, d_view, n0, n1, n2, n3, n4, n5, n6, n7);
         // this part of the lambda was relocated in a method as it contains a
-        // `if constexpr` whose, in some cases, both branches can be evaluated,
+        // `if constexpr`. In some cases, both branches were evaluated
         // leading to a compile error
         resync_host(properties);
 
@@ -1053,7 +1053,7 @@ class DualView : public ViewTraits<DataType, Properties...> {
       if (sizeMismatch) {
         ::Kokkos::resize(properties, h_view, n0, n1, n2, n3, n4, n5, n6, n7);
         // this part of the lambda was relocated in a method as it contains a
-        // `if constexpr` whose, in some cases, both branches can be evaluated,
+        // `if constexpr`. In some cases, both branches were evaluated
         // leading to a compile error
         resync_device(properties);
 
@@ -1096,9 +1096,8 @@ class DualView : public ViewTraits<DataType, Properties...> {
 
  private:
   // resync host mirror from device
-  // this code was relocated from a lambda as it contains a `if constexpr`
-  // whose, in some cases, both branches can be evaluated, leading to a compile
-  // error
+  // this code was relocated from a lambda as it contains a `if constexpr`.
+  // In some cases, both branches were evaluated, leading to a compile error
   template <class... ViewCtorArgs>
   inline void resync_host(Impl::ViewCtorProp<ViewCtorArgs...> const&) {
     using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
@@ -1113,8 +1112,7 @@ class DualView : public ViewTraits<DataType, Properties...> {
 
   // resync device mirror from host
   // this code was relocated from a lambda as it contains a `if constexpr`
-  // whose, in some cases, both branches can be evaluated, leading to a compile
-  // error
+  // In some cases, both branches were evaluated leading to a compile error
   template <class... ViewCtorArgs>
   inline void resync_device(Impl::ViewCtorProp<ViewCtorArgs...> const&) {
     using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
