@@ -27,12 +27,25 @@ static_assert(false,
 #define KOKKOS_VIEW_HPP
 
 #include <View/Kokkos_BasicView.hpp>
+#include <View/Kokkos_ViewTraits.hpp>
+#include <Kokkos_MemoryTraits.hpp>
+
+// This will eventually be removed
+namespace Kokkos::Impl {
+template <class, class...>
+class ViewMapping;
+}
+#include <impl/Kokkos_ViewMapping.hpp>
+#include <Kokkos_MinMax.hpp>
 
 // Class to provide a uniform type
 namespace Kokkos {
 namespace Impl {
 template <class ViewType, int Traits = 0>
 struct ViewUniformType;
+
+template <class ParentView>
+struct ViewTracker;
 } /* namespace Impl */
 
 template <class T1, class T2>
@@ -41,13 +54,11 @@ struct is_always_assignable_impl;
 template <class... ViewTDst, class... ViewTSrc>
 struct is_always_assignable_impl<Kokkos::View<ViewTDst...>,
                                  Kokkos::View<ViewTSrc...> > {
-  using mapping_type = Kokkos::Impl::ViewMapping<
-      typename Kokkos::View<ViewTDst...>::traits,
-      typename Kokkos::View<ViewTSrc...>::traits,
-      typename Kokkos::View<ViewTDst...>::traits::specialize>;
+  using dst_mdspan   = typename Kokkos::View<ViewTDst...>::traits::mdspan_type;
+  using src_mdspan   = typename Kokkos::View<ViewTSrc...>::traits::mdspan_type;
 
   constexpr static bool value =
-      mapping_type::is_assignable &&
+      std::is_assignable_v<dst_mdspan, src_mdspan> &&
       static_cast<int>(Kokkos::View<ViewTDst...>::rank_dynamic) >=
           static_cast<int>(Kokkos::View<ViewTSrc...>::rank_dynamic);
 };
@@ -64,32 +75,102 @@ inline constexpr bool is_always_assignable_v =
 template <class... ViewTDst, class... ViewTSrc>
 constexpr bool is_assignable(const Kokkos::View<ViewTDst...>& dst,
                              const Kokkos::View<ViewTSrc...>& src) {
-  using DstTraits = typename Kokkos::View<ViewTDst...>::traits;
-  using SrcTraits = typename Kokkos::View<ViewTSrc...>::traits;
-  using mapping_type =
-      Kokkos::Impl::ViewMapping<DstTraits, SrcTraits,
-                                typename DstTraits::specialize>;
+  using dst_mdspan = typename Kokkos::View<ViewTDst...>::traits::mdspan_type;
+  using src_mdspan = typename Kokkos::View<ViewTSrc...>::traits::mdspan_type;
 
   return is_always_assignable_v<Kokkos::View<ViewTDst...>,
                                 Kokkos::View<ViewTSrc...> > ||
-         (mapping_type::is_assignable &&
-          ((DstTraits::dimension::rank_dynamic >= 1) ||
+         (std::is_assignable_v<dst_mdspan, src_mdspan> &&
+          ((dst_mdspan::rank_dynamic() >= 1) ||
            (dst.static_extent(0) == src.extent(0))) &&
-          ((DstTraits::dimension::rank_dynamic >= 2) ||
+          ((dst_mdspan::rank_dynamic() >= 2) ||
            (dst.static_extent(1) == src.extent(1))) &&
-          ((DstTraits::dimension::rank_dynamic >= 3) ||
+          ((dst_mdspan::rank_dynamic() >= 3) ||
            (dst.static_extent(2) == src.extent(2))) &&
-          ((DstTraits::dimension::rank_dynamic >= 4) ||
+          ((dst_mdspan::rank_dynamic() >= 4) ||
            (dst.static_extent(3) == src.extent(3))) &&
-          ((DstTraits::dimension::rank_dynamic >= 5) ||
+          ((dst_mdspan::rank_dynamic() >= 5) ||
            (dst.static_extent(4) == src.extent(4))) &&
-          ((DstTraits::dimension::rank_dynamic >= 6) ||
+          ((dst_mdspan::rank_dynamic() >= 6) ||
            (dst.static_extent(5) == src.extent(5))) &&
-          ((DstTraits::dimension::rank_dynamic >= 7) ||
+          ((dst_mdspan::rank_dynamic() >= 7) ||
            (dst.static_extent(6) == src.extent(6))) &&
-          ((DstTraits::dimension::rank_dynamic >= 8) ||
+          ((dst_mdspan::rank_dynamic() >= 8) ||
            (dst.static_extent(7) == src.extent(7))));
 }
+
+namespace Impl {
+template <class Enabled, class... Properties>
+struct ViewTraitsImpl;
+
+template <>
+struct ViewTraitsImpl<void> {
+  using execution_space = void;
+  using memory_space    = void;
+  using HostMirrorSpace = void;
+  using array_layout    = void;
+  using memory_traits   = void;
+  using specialize      = void;
+  using hooks_policy    = void;
+};
+
+template <class HooksPolicy, class... Prop>
+struct ViewTraitsImpl<
+    std::enable_if_t<Kokkos::Experimental::is_hooks_policy<HooksPolicy>::value>,
+    HooksPolicy, Prop...> {
+  using execution_space = typename ViewTraits<void, Prop...>::execution_space;
+  using memory_space    = typename ViewTraits<void, Prop...>::memory_space;
+  using HostMirrorSpace = typename ViewTraits<void, Prop...>::HostMirrorSpace;
+  using array_layout    = typename ViewTraits<void, Prop...>::array_layout;
+  using memory_traits   = typename ViewTraits<void, Prop...>::memory_traits;
+  using specialize      = typename ViewTraits<void, Prop...>::specialize;
+  using hooks_policy    = HooksPolicy;
+};
+
+template <class ArrayLayout, class... Prop>
+struct ViewTraitsImpl<
+    std::enable_if_t<Kokkos::is_array_layout<ArrayLayout>::value>, ArrayLayout,
+    Prop...> {
+  // Specify layout, keep subsequent space and memory traits arguments
+
+  using execution_space = typename ViewTraits<void, Prop...>::execution_space;
+  using memory_space    = typename ViewTraits<void, Prop...>::memory_space;
+  using HostMirrorSpace = typename ViewTraits<void, Prop...>::HostMirrorSpace;
+  using array_layout    = ArrayLayout;
+  using memory_traits   = typename ViewTraits<void, Prop...>::memory_traits;
+  using specialize      = typename ViewTraits<void, Prop...>::specialize;
+  using hooks_policy    = typename ViewTraits<void, Prop...>::hooks_policy;
+};
+
+template <class Space, class... Prop>
+struct ViewTraitsImpl<std::enable_if_t<Kokkos::is_space<Space>::value>, Space,
+                      Prop...> {
+  // Specify Space, memory traits should be the only subsequent argument.
+
+  static_assert(
+      std::is_same<typename ViewTraits<void, Prop...>::execution_space,
+                   void>::value &&
+          std::is_same<typename ViewTraits<void, Prop...>::memory_space,
+                       void>::value &&
+          std::is_same<typename ViewTraits<void, Prop...>::HostMirrorSpace,
+                       void>::value &&
+          std::is_same<typename ViewTraits<void, Prop...>::array_layout,
+                       void>::value,
+      "Only one View Execution or Memory Space template argument");
+
+  using execution_space = typename Space::execution_space;
+  using memory_space    = typename Space::memory_space;
+  using HostMirrorSpace =
+      typename Kokkos::Impl::HostMirror<Space>::Space::memory_space;
+  using array_layout  = typename execution_space::array_layout;
+  using memory_traits = typename ViewTraits<void, Prop...>::memory_traits;
+  using specialize    = typename ViewTraits<void, Prop...>::specialize;
+  using hooks_policy  = typename ViewTraits<void, Prop...>::hooks_policy;
+};
+}  // namespace Impl
+
+template <class DataType, class... Properties>
+struct ViewTraits;
 
 } /* namespace Kokkos */
 
@@ -117,8 +198,6 @@ class View : public BasicView<DataType, Properties...> {
   friend class View;
   template <class, class...>
   friend class BasicView;
-  template <class, class...>
-  friend class Kokkos::Impl::ViewMapping;
   template <typename V>
   friend struct Kokkos::Impl::ViewTracker;
 
