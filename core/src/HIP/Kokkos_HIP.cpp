@@ -92,15 +92,6 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
   // Init the array for used for arbitrarily sized atomics
   desul::Impl::init_lock_arrays();  // FIXME
 
-  // Allocate a staging buffer for constant mem in pinned host memory
-  // and an event to avoid overwriting driver for previous kernel launches
-  KOKKOS_IMPL_HIP_SAFE_CALL(hipHostMalloc(
-      reinterpret_cast<void**>(&Impl::HIPInternal::constantMemHostStaging),
-      Impl::HIPTraits::ConstantMemoryUsage));
-
-  KOKKOS_IMPL_HIP_SAFE_CALL(
-      hipEventCreate(&Impl::HIPInternal::constantMemReusable));
-
   hipStream_t singleton_stream;
   KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamCreate(&singleton_stream));
   Impl::HIPInternal::singleton().initialize(hip_device_id, singleton_stream);
@@ -111,12 +102,17 @@ void HIP::impl_finalize() {
 
   desul::Impl::finalize_lock_arrays();  // FIXME
 
-  KOKKOS_IMPL_HIP_SAFE_CALL(
-      hipEventDestroy(Impl::HIPInternal::constantMemReusable));
-  KOKKOS_IMPL_HIP_SAFE_CALL(
-      hipHostFree(Impl::HIPInternal::constantMemHostStaging));
+  for (const auto hip_device : Impl::HIPInternal::hip_devices) {
+    KOKKOS_IMPL_HIP_SAFE_CALL(hipSetDevice(hip_device));
+    KOKKOS_IMPL_HIP_SAFE_CALL(
+        hipEventDestroy(Impl::HIPInternal::constantMemReusable[hip_device]));
+    KOKKOS_IMPL_HIP_SAFE_CALL(
+        hipHostFree(Impl::HIPInternal::constantMemHostStaging[hip_device]));
+  }
 
   Impl::HIPInternal::singleton().finalize();
+  KOKKOS_IMPL_HIP_SAFE_CALL(
+      hipSetDevice(Impl::HIPInternal::singleton().m_hipDev));
   KOKKOS_IMPL_HIP_SAFE_CALL(
       hipStreamDestroy(Impl::HIPInternal::singleton().m_stream));
 }
@@ -187,7 +183,12 @@ void HIP::impl_static_fence(const std::string& name) {
       name,
       Kokkos::Tools::Experimental::SpecialSynchronizationCases::
           GlobalDeviceSynchronization,
-      [&]() { KOKKOS_IMPL_HIP_SAFE_CALL(hipDeviceSynchronize()); });
+      [&]() {
+        for (const auto hip_device : Impl::HIPInternal::hip_devices) {
+          KOKKOS_IMPL_HIP_SAFE_CALL(hipSetDevice(hip_device));
+          KOKKOS_IMPL_HIP_SAFE_CALL(hipDeviceSynchronize());
+        }
+      });
 }
 
 void HIP::fence(const std::string& name) const {
