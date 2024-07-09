@@ -26,7 +26,9 @@
 #include <hip/hip_runtime_api.h>
 
 #include <atomic>
+#include <map>
 #include <mutex>
+#include <set>
 
 namespace Kokkos {
 namespace Impl {
@@ -105,11 +107,10 @@ class HIPInternal {
 
   bool was_finalized = false;
 
-  // FIXME_HIP: these want to be per-device, not per-stream...  use of 'static'
-  // here will break once there are multiple devices though
-  static unsigned long *constantMemHostStaging;
-  static hipEvent_t constantMemReusable;
-  static std::mutex constantMemMutex;
+  static std::set<int> hip_devices;
+  static std::map<int, unsigned long *> constantMemHostStaging;
+  static std::map<int, hipEvent_t> constantMemReusable;
+  static std::map<int, std::mutex> constantMemMutex;
 
   static HIPInternal &singleton();
 
@@ -164,6 +165,11 @@ class HIPInternal {
   }
 
   // API wrappers
+  hipError_t hip_event_create_wrapper(hipEvent_t *event) const {
+    set_hip_device();
+    return hipEventCreate(event);
+  }
+
   hipError_t hip_event_record_wrapper(hipEvent_t event,
                                       hipStream_t stream = nullptr) const {
     set_hip_device();
@@ -235,6 +241,13 @@ class HIPInternal {
                                       hipStream_t stream = nullptr) const {
     set_hip_device();
     return hipGraphLaunch(graphExec, get_input_stream(stream));
+  }
+
+  hipError_t hip_host_malloc_wrapper(
+      void **ptr, size_t size,
+      unsigned int flags = hipHostMallocDefault) const {
+    set_hip_device();
+    return hipHostMalloc(ptr, size, flags);
   }
 
   hipError_t hip_memcpy_async_wrapper(void *dst, const void *src,
