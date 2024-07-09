@@ -47,38 +47,38 @@ class AtomicRef {
 
   // TODO compare_exchange_{weak,strong} and is_lock_free
 
-#define DESUL_IMPL_DEFINE_ATOMIC_FETCH_OP(U_OP, OP_U)                                   \
-  DESUL_FUNCTION T fetch##U_OP(T arg) const noexcept {                           \
-    return desul::atomic_fetch##U_OP(ptr_, arg, MemoryOrder(), MemoryScope());   \
-  }                                                                             \
+#define DESUL_IMPL_DEFINE_ATOMIC_FETCH_OP(FETCH_OP, OP_U)                        \
+  DESUL_FUNCTION T##FETCH_OP(T arg) const noexcept {                             \
+    return desul::atomic_##FETCH_OP(ptr_, arg, MemoryOrder(), MemoryScope());    \
+  }                                                                              \
   DESUL_FUNCTION T OP_U##fetch(T arg) const noexcept {                           \
-    return desul::atomic##U_OP##_fetch(ptr_, arg, MemoryOrder(), MemoryScope()); \
+    return desul::atomic_##OP_U##fetch(ptr_, arg, MemoryOrder(), MemoryScope()); \
   }
 
 #define DESUL_IMPL_DEFINE_ATOMIC_COMPOUND_ASSIGNMENT_OP(COMPD_ASGMT, OP_U) \
-  DESUL_FUNCTION T operator COMPD_ASGMT(T arg) const noexcept {          \
-    return OP_U##fetch(arg);                                              \
+  DESUL_FUNCTION T operator COMPD_ASGMT(T arg) const noexcept {            \
+    return OP_U##fetch(arg);                                               \
   }
 
-  DESUL_IMPL_DEFINE_ATOMIC_FETCH_OP(_add, add_)
+  DESUL_IMPL_DEFINE_ATOMIC_FETCH_OP(fetch_add, add_)
   DESUL_IMPL_DEFINE_ATOMIC_COMPOUND_ASSIGNMENT_OP(+=, add_)
-  DESUL_IMPL_DEFINE_ATOMIC_FETCH_OP(_sub, sub_)
+  DESUL_IMPL_DEFINE_ATOMIC_FETCH_OP(fetch_sub, sub_)
   DESUL_IMPL_DEFINE_ATOMIC_COMPOUND_ASSIGNMENT_OP(-=, sub_)
-  DESUL_IMPL_DEFINE_ATOMIC_FETCH_OP(_min, min_)
-  DESUL_IMPL_DEFINE_ATOMIC_FETCH_OP(_max, max_)
-  DESUL_IMPL_DEFINE_ATOMIC_FETCH_OP(_mul, mul_)
+  DESUL_IMPL_DEFINE_ATOMIC_FETCH_OP(fetch_min, min_)
+  DESUL_IMPL_DEFINE_ATOMIC_FETCH_OP(fetch_max, max_)
+  DESUL_IMPL_DEFINE_ATOMIC_FETCH_OP(fetch_mul, mul_)
   DESUL_IMPL_DEFINE_ATOMIC_COMPOUND_ASSIGNMENT_OP(*=, mul_)
-  DESUL_IMPL_DEFINE_ATOMIC_FETCH_OP(_div, div_)
+  DESUL_IMPL_DEFINE_ATOMIC_FETCH_OP(fetch_div, div_)
   DESUL_IMPL_DEFINE_ATOMIC_COMPOUND_ASSIGNMENT_OP(/=, div_)
-  DESUL_IMPL_DEFINE_ATOMIC_FETCH_OP(_mod, mod_)
+  DESUL_IMPL_DEFINE_ATOMIC_FETCH_OP(fetch_mod, mod_)
   DESUL_IMPL_DEFINE_ATOMIC_COMPOUND_ASSIGNMENT_OP(%=, mod_)
-  DESUL_IMPL_DEFINE_ATOMIC_FETCH_OP(_and, and_)
+  DESUL_IMPL_DEFINE_ATOMIC_FETCH_OP(fetch_and, and_)
   DESUL_IMPL_DEFINE_ATOMIC_COMPOUND_ASSIGNMENT_OP(&=, and_)
-  DESUL_IMPL_DEFINE_ATOMIC_FETCH_OP(_or, or_)
+  DESUL_IMPL_DEFINE_ATOMIC_FETCH_OP(fetch_or, or_)
   DESUL_IMPL_DEFINE_ATOMIC_COMPOUND_ASSIGNMENT_OP(|=, or_)
-  DESUL_IMPL_DEFINE_ATOMIC_FETCH_OP(_xor, xor_)
+  DESUL_IMPL_DEFINE_ATOMIC_FETCH_OP(fetch_xor, xor_)
   DESUL_IMPL_DEFINE_ATOMIC_COMPOUND_ASSIGNMENT_OP(^=, xor_)
-  DESUL_IMPL_DEFINE_ATOMIC_FETCH_OP(_nand, nand_)
+  DESUL_IMPL_DEFINE_ATOMIC_FETCH_OP(fetch_nand, nand_)
 
 #undef DESUL_IMPL_DEFINE_ATOMIC_COMPOUND_ASSIGNMENT_OP
 #undef DESUL_IMPL_DEFINE_ATOMIC_FETCH_OP

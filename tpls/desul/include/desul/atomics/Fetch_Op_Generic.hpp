@@ -18,38 +18,38 @@ SPDX-License-Identifier: (BSD-3-Clause)
 namespace desul {
 namespace Impl {
 
-#define DESUL_IMPL_ATOMIC_FETCH_OP(ANNOTATION, HOST_OR_DEVICE, U_OP, OP_U)        \
-  template <class T, class MemoryOrder, class MemoryScope>                \
-  ANNOTATION T HOST_OR_DEVICE##_atomic_fetch##U_OP(                        \
-      T* const dest, const T val, MemoryOrder order, MemoryScope scope) { \
-    return HOST_OR_DEVICE##_atomic_fetch_oper(                            \
-        OP_U##operator<T, const T>(), dest, val, order, scope);            \
-  }                                                                       \
-  template <class T, class MemoryOrder, class MemoryScope>                \
-  ANNOTATION T HOST_OR_DEVICE##_atomic##U_OP##_fetch(                      \
-      T* const dest, const T val, MemoryOrder order, MemoryScope scope) { \
-    return HOST_OR_DEVICE##_atomic_oper_fetch(                            \
-        OP_U##operator<T, const T>(), dest, val, order, scope);            \
+#define DESUL_IMPL_ATOMIC_FETCH_OP(ANNOTATION, HOST_OR_DEVICE, FETCH_OP, OP_U) \
+  template <class T, class MemoryOrder, class MemoryScope>                     \
+  ANNOTATION T HOST_OR_DEVICE##_atomic_##FETCH_OP(                             \
+      T* const dest, const T val, MemoryOrder order, MemoryScope scope) {      \
+    return HOST_OR_DEVICE##_atomic_fetch_oper(                                 \
+        OP_U##operator<T, const T>(), dest, val, order, scope);                \
+  }                                                                            \
+  template <class T, class MemoryOrder, class MemoryScope>                     \
+  ANNOTATION T HOST_OR_DEVICE##_atomic_##OP_U##fetch(                          \
+      T* const dest, const T val, MemoryOrder order, MemoryScope scope) {      \
+    return HOST_OR_DEVICE##_atomic_oper_fetch(                                 \
+        OP_U##operator<T, const T>(), dest, val, order, scope);                \
   }
 
-#define DESUL_IMPL_ATOMIC_FETCH_OP_HOST_AND_DEVICE(U_OP, OP_U)           \
-  DESUL_IMPL_ATOMIC_FETCH_OP(DESUL_IMPL_HOST_FUNCTION, host, U_OP, OP_U) \
-  DESUL_IMPL_ATOMIC_FETCH_OP(DESUL_IMPL_DEVICE_FUNCTION, device, U_OP, OP_U)
+#define DESUL_IMPL_ATOMIC_FETCH_OP_HOST_AND_DEVICE(FETCH_OP, OP_U)           \
+  DESUL_IMPL_ATOMIC_FETCH_OP(DESUL_IMPL_HOST_FUNCTION, host, FETCH_OP, OP_U) \
+  DESUL_IMPL_ATOMIC_FETCH_OP(DESUL_IMPL_DEVICE_FUNCTION, device, FETCH_OP, OP_U)
 
-DESUL_IMPL_ATOMIC_FETCH_OP_HOST_AND_DEVICE(_add, add_)
-DESUL_IMPL_ATOMIC_FETCH_OP_HOST_AND_DEVICE(_sub, sub_)
-DESUL_IMPL_ATOMIC_FETCH_OP_HOST_AND_DEVICE(_max, max_)
-DESUL_IMPL_ATOMIC_FETCH_OP_HOST_AND_DEVICE(_min, min_)
-DESUL_IMPL_ATOMIC_FETCH_OP_HOST_AND_DEVICE(_mul, mul_)
-DESUL_IMPL_ATOMIC_FETCH_OP_HOST_AND_DEVICE(_div, div_)
-DESUL_IMPL_ATOMIC_FETCH_OP_HOST_AND_DEVICE(_mod, mod_)
-DESUL_IMPL_ATOMIC_FETCH_OP_HOST_AND_DEVICE(_and, and_)
-DESUL_IMPL_ATOMIC_FETCH_OP_HOST_AND_DEVICE(_or, or_)
-DESUL_IMPL_ATOMIC_FETCH_OP_HOST_AND_DEVICE(_xor, xor_)
-DESUL_IMPL_ATOMIC_FETCH_OP_HOST_AND_DEVICE(_nand, nand_)
+DESUL_IMPL_ATOMIC_FETCH_OP_HOST_AND_DEVICE(fetch_add, add_)
+DESUL_IMPL_ATOMIC_FETCH_OP_HOST_AND_DEVICE(fetch_sub, sub_)
+DESUL_IMPL_ATOMIC_FETCH_OP_HOST_AND_DEVICE(fetch_max, max_)
+DESUL_IMPL_ATOMIC_FETCH_OP_HOST_AND_DEVICE(fetch_min, min_)
+DESUL_IMPL_ATOMIC_FETCH_OP_HOST_AND_DEVICE(fetch_mul, mul_)
+DESUL_IMPL_ATOMIC_FETCH_OP_HOST_AND_DEVICE(fetch_div, div_)
+DESUL_IMPL_ATOMIC_FETCH_OP_HOST_AND_DEVICE(fetch_mod, mod_)
+DESUL_IMPL_ATOMIC_FETCH_OP_HOST_AND_DEVICE(fetch_and, and_)
+DESUL_IMPL_ATOMIC_FETCH_OP_HOST_AND_DEVICE(fetch_or, or_)
+DESUL_IMPL_ATOMIC_FETCH_OP_HOST_AND_DEVICE(fetch_xor, xor_)
+DESUL_IMPL_ATOMIC_FETCH_OP_HOST_AND_DEVICE(fetch_nand, nand_)
 
-DESUL_IMPL_ATOMIC_FETCH_OP_HOST_AND_DEVICE(_inc_mod, inc_mod_)
-DESUL_IMPL_ATOMIC_FETCH_OP_HOST_AND_DEVICE(_dec_mod, dec_mod_)
+DESUL_IMPL_ATOMIC_FETCH_OP_HOST_AND_DEVICE(fetch_inc_mod, inc_mod_)
+DESUL_IMPL_ATOMIC_FETCH_OP_HOST_AND_DEVICE(fetch_dec_mod, dec_mod_)
 
 #undef DESUL_IMPL_ATOMIC_FETCH_OP_HOST_AND_DEVICE
 #undef DESUL_IMPL_ATOMIC_FETCH_OP

@@ -16,31 +16,31 @@ namespace desul {
 namespace Impl {
 
 // clang-format off
-#define DESUL_IMPL_GCC_HOST_ATOMIC_FETCH_OP_INTEGRAL_ORDER_SCOPE(U_OP, MEMORY_ORDER, MEMORY_SCOPE)                                 \
+#define DESUL_IMPL_GCC_HOST_ATOMIC_FETCH_OP_INTEGRAL_ORDER_SCOPE(FETCH_OP, MEMORY_ORDER, MEMORY_SCOPE)                                 \
   template <class T>                                                                                                          \
-  std::enable_if_t<std::is_integral<T>::value, T> host_atomic_fetch##U_OP  (T* const dest, T value, MEMORY_ORDER, MEMORY_SCOPE) { \
-    return __atomic_fetch##U_OP  (dest, value, GCCMemoryOrder<MEMORY_ORDER>::value);                                              \
+  std::enable_if_t<std::is_integral<T>::value, T> host_atomic_##FETCH_OP  (T* const dest, T value, MEMORY_ORDER, MEMORY_SCOPE) { \
+    return __atomic_##FETCH_OP  (dest, value, GCCMemoryOrder<MEMORY_ORDER>::value);                                              \
   }                                                                                                                              \
   template <class T>                                                                                                          \
-  std::enable_if_t<std::is_integral<T>::value, T> host_atomic##U_OP##_fetch(T* const dest, T value, MEMORY_ORDER, MEMORY_SCOPE) { \
-    return __atomic##U_OP##_fetch(dest, value, GCCMemoryOrder<MEMORY_ORDER>::value);                                              \
+  std::enable_if_t<std::is_integral<T>::value, T> host_atomic_##OP_U##fetch(T* const dest, T value, MEMORY_ORDER, MEMORY_SCOPE) { \
+    return __atomic_##OP_U##fetch(dest, value, GCCMemoryOrder<MEMORY_ORDER>::value);                                              \
   }
 
-#define DESUL_IMPL_GCC_HOST_ATOMIC_FETCH_OP_INTEGRAL(U_OP) \
-   DESUL_IMPL_GCC_HOST_ATOMIC_FETCH_OP_INTEGRAL_ORDER_SCOPE(U_OP, MemoryOrderRelaxed, MemoryScopeNode  ) \
-   DESUL_IMPL_GCC_HOST_ATOMIC_FETCH_OP_INTEGRAL_ORDER_SCOPE(U_OP, MemoryOrderRelaxed, MemoryScopeDevice) \
-   DESUL_IMPL_GCC_HOST_ATOMIC_FETCH_OP_INTEGRAL_ORDER_SCOPE(U_OP, MemoryOrderRelaxed, MemoryScopeCore  ) \
-   DESUL_IMPL_GCC_HOST_ATOMIC_FETCH_OP_INTEGRAL_ORDER_SCOPE(U_OP, MemoryOrderSeqCst , MemoryScopeNode  ) \
-   DESUL_IMPL_GCC_HOST_ATOMIC_FETCH_OP_INTEGRAL_ORDER_SCOPE(U_OP, MemoryOrderSeqCst , MemoryScopeDevice) \
-   DESUL_IMPL_GCC_HOST_ATOMIC_FETCH_OP_INTEGRAL_ORDER_SCOPE(U_OP, MemoryOrderSeqCst , MemoryScopeCore  )
+#define DESUL_IMPL_GCC_HOST_ATOMIC_FETCH_OP_INTEGRAL(FETCH_OP) \
+   DESUL_IMPL_GCC_HOST_ATOMIC_FETCH_OP_INTEGRAL_ORDER_SCOPE(FETCH_OP, MemoryOrderRelaxed, MemoryScopeNode  ) \
+   DESUL_IMPL_GCC_HOST_ATOMIC_FETCH_OP_INTEGRAL_ORDER_SCOPE(FETCH_OP, MemoryOrderRelaxed, MemoryScopeDevice) \
+   DESUL_IMPL_GCC_HOST_ATOMIC_FETCH_OP_INTEGRAL_ORDER_SCOPE(FETCH_OP, MemoryOrderRelaxed, MemoryScopeCore  ) \
+   DESUL_IMPL_GCC_HOST_ATOMIC_FETCH_OP_INTEGRAL_ORDER_SCOPE(FETCH_OP, MemoryOrderSeqCst , MemoryScopeNode  ) \
+   DESUL_IMPL_GCC_HOST_ATOMIC_FETCH_OP_INTEGRAL_ORDER_SCOPE(FETCH_OP, MemoryOrderSeqCst , MemoryScopeDevice) \
+   DESUL_IMPL_GCC_HOST_ATOMIC_FETCH_OP_INTEGRAL_ORDER_SCOPE(FETCH_OP, MemoryOrderSeqCst , MemoryScopeCore  )
 // clang-format on
 
-DESUL_IMPL_GCC_HOST_ATOMIC_FETCH_OP_INTEGRAL(_add)
-DESUL_IMPL_GCC_HOST_ATOMIC_FETCH_OP_INTEGRAL(_sub)
-DESUL_IMPL_GCC_HOST_ATOMIC_FETCH_OP_INTEGRAL(_and)
-DESUL_IMPL_GCC_HOST_ATOMIC_FETCH_OP_INTEGRAL(_xor)
-DESUL_IMPL_GCC_HOST_ATOMIC_FETCH_OP_INTEGRAL(_or)
-DESUL_IMPL_GCC_HOST_ATOMIC_FETCH_OP_INTEGRAL(_nand)
+DESUL_IMPL_GCC_HOST_ATOMIC_FETCH_OP_INTEGRAL(fetch_add)
+DESUL_IMPL_GCC_HOST_ATOMIC_FETCH_OP_INTEGRAL(fetch_sub)
+DESUL_IMPL_GCC_HOST_ATOMIC_FETCH_OP_INTEGRAL(fetch_and)
+DESUL_IMPL_GCC_HOST_ATOMIC_FETCH_OP_INTEGRAL(fetch_xor)
+DESUL_IMPL_GCC_HOST_ATOMIC_FETCH_OP_INTEGRAL(fetch_or)
+DESUL_IMPL_GCC_HOST_ATOMIC_FETCH_OP_INTEGRAL(fetch_nand)
 
 #undef DESUL_IMPL_GCC_HOST_ATOMIC_FETCH_OP_INTEGRAL
 #undef DESUL_IMPL_GCC_HOST_ATOMIC_FETCH_OP_INTEGRAL_ORDER_SCOPE
