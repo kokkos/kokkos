@@ -69,56 +69,56 @@ inline __device__       unsigned int device_atomic_fetch_inc_mod(  unsigned int*
 inline __device__       unsigned int device_atomic_fetch_dec_mod(  unsigned int* ptr,       unsigned int val, MemoryOrderRelaxed, MemoryScopeDevice) { return atomicDec(ptr,  val); }
 // clang-format on
 
-#define DESUL_IMPL_CUDA_DEVICE_ATOMIC_FETCH_OP(OP, TYPE)                               \
+#define DESUL_IMPL_CUDA_DEVICE_ATOMIC_FETCH_OP(U_OP, TYPE)                               \
   template <class MemoryOrder>                                                         \
-  __device__ TYPE device_atomic_fetch_##OP(                                            \
+  __device__ TYPE device_atomic_fetch##U_OP(                                            \
       TYPE* ptr, TYPE val, MemoryOrder, MemoryScopeDevice) {                           \
     __threadfence();                                                                   \
     TYPE return_val =                                                                  \
-        device_atomic_fetch_##OP(ptr, val, MemoryOrderRelaxed(), MemoryScopeDevice()); \
+        device_atomic_fetch##U_OP(ptr, val, MemoryOrderRelaxed(), MemoryScopeDevice()); \
     __threadfence();                                                                   \
     return return_val;                                                                 \
   }                                                                                    \
   template <class MemoryOrder>                                                         \
-  __device__ TYPE device_atomic_fetch_##OP(                                            \
+  __device__ TYPE device_atomic_fetch##U_OP(                                            \
       TYPE* ptr, TYPE val, MemoryOrder, MemoryScopeCore) {                             \
-    return device_atomic_fetch_##OP(ptr, val, MemoryOrder(), MemoryScopeDevice());     \
+    return device_atomic_fetch##U_OP(ptr, val, MemoryOrder(), MemoryScopeDevice());     \
   }
 
-#define DESUL_IMPL_CUDA_DEVICE_ATOMIC_FETCH_OP_INTEGRAL(OP) \
-  DESUL_IMPL_CUDA_DEVICE_ATOMIC_FETCH_OP(OP, int)           \
-  DESUL_IMPL_CUDA_DEVICE_ATOMIC_FETCH_OP(OP, unsigned int)  \
-  DESUL_IMPL_CUDA_DEVICE_ATOMIC_FETCH_OP(OP, unsigned long long)
+#define DESUL_IMPL_CUDA_DEVICE_ATOMIC_FETCH_OP_INTEGRAL(U_OP) \
+  DESUL_IMPL_CUDA_DEVICE_ATOMIC_FETCH_OP(U_OP, int)           \
+  DESUL_IMPL_CUDA_DEVICE_ATOMIC_FETCH_OP(U_OP, unsigned int)  \
+  DESUL_IMPL_CUDA_DEVICE_ATOMIC_FETCH_OP(U_OP, unsigned long long)
 
 #ifdef DESUL_CUDA_ARCH_IS_PRE_PASCAL
 
-#define DESUL_IMPL_CUDA_DEVICE_ATOMIC_FETCH_OP_FLOATING_POINT(OP) \
-  DESUL_IMPL_CUDA_DEVICE_ATOMIC_FETCH_OP(OP, float)
+#define DESUL_IMPL_CUDA_DEVICE_ATOMIC_FETCH_OP_FLOATING_POINT(U_OP) \
+  DESUL_IMPL_CUDA_DEVICE_ATOMIC_FETCH_OP(U_OP, float)
 
 #else
 
-#define DESUL_IMPL_CUDA_DEVICE_ATOMIC_FETCH_OP_FLOATING_POINT(OP) \
-  DESUL_IMPL_CUDA_DEVICE_ATOMIC_FETCH_OP(OP, float)               \
-  DESUL_IMPL_CUDA_DEVICE_ATOMIC_FETCH_OP(OP, double)
+#define DESUL_IMPL_CUDA_DEVICE_ATOMIC_FETCH_OP_FLOATING_POINT(U_OP) \
+  DESUL_IMPL_CUDA_DEVICE_ATOMIC_FETCH_OP(U_OP, float)               \
+  DESUL_IMPL_CUDA_DEVICE_ATOMIC_FETCH_OP(U_OP, double)
 
 #endif
 
-DESUL_IMPL_CUDA_DEVICE_ATOMIC_FETCH_OP_INTEGRAL(min)
-DESUL_IMPL_CUDA_DEVICE_ATOMIC_FETCH_OP_INTEGRAL(max)
-DESUL_IMPL_CUDA_DEVICE_ATOMIC_FETCH_OP_INTEGRAL(and)
-DESUL_IMPL_CUDA_DEVICE_ATOMIC_FETCH_OP_INTEGRAL(or)
-DESUL_IMPL_CUDA_DEVICE_ATOMIC_FETCH_OP_INTEGRAL(xor)
+DESUL_IMPL_CUDA_DEVICE_ATOMIC_FETCH_OP_INTEGRAL(_min)
+DESUL_IMPL_CUDA_DEVICE_ATOMIC_FETCH_OP_INTEGRAL(_max)
+DESUL_IMPL_CUDA_DEVICE_ATOMIC_FETCH_OP_INTEGRAL(_and)
+DESUL_IMPL_CUDA_DEVICE_ATOMIC_FETCH_OP_INTEGRAL(_or)
+DESUL_IMPL_CUDA_DEVICE_ATOMIC_FETCH_OP_INTEGRAL(_xor)
 
-DESUL_IMPL_CUDA_DEVICE_ATOMIC_FETCH_OP_FLOATING_POINT(add)
-DESUL_IMPL_CUDA_DEVICE_ATOMIC_FETCH_OP_INTEGRAL(add)
-DESUL_IMPL_CUDA_DEVICE_ATOMIC_FETCH_OP_FLOATING_POINT(sub)
-DESUL_IMPL_CUDA_DEVICE_ATOMIC_FETCH_OP_INTEGRAL(sub)
+DESUL_IMPL_CUDA_DEVICE_ATOMIC_FETCH_OP_FLOATING_POINT(_add)
+DESUL_IMPL_CUDA_DEVICE_ATOMIC_FETCH_OP_INTEGRAL(_add)
+DESUL_IMPL_CUDA_DEVICE_ATOMIC_FETCH_OP_FLOATING_POINT(_sub)
+DESUL_IMPL_CUDA_DEVICE_ATOMIC_FETCH_OP_INTEGRAL(_sub)
 
-DESUL_IMPL_CUDA_DEVICE_ATOMIC_FETCH_OP_INTEGRAL(inc)
-DESUL_IMPL_CUDA_DEVICE_ATOMIC_FETCH_OP_INTEGRAL(dec)
+DESUL_IMPL_CUDA_DEVICE_ATOMIC_FETCH_OP_INTEGRAL(_inc)
+DESUL_IMPL_CUDA_DEVICE_ATOMIC_FETCH_OP_INTEGRAL(_dec)
 
-DESUL_IMPL_CUDA_DEVICE_ATOMIC_FETCH_OP(inc_mod, unsigned int)
-DESUL_IMPL_CUDA_DEVICE_ATOMIC_FETCH_OP(dec_mod, unsigned int)
+DESUL_IMPL_CUDA_DEVICE_ATOMIC_FETCH_OP(_inc_mod, unsigned int)
+DESUL_IMPL_CUDA_DEVICE_ATOMIC_FETCH_OP(_dec_mod, unsigned int)
 
 #undef DESUL_IMPL_CUDA_DEVICE_ATOMIC_FETCH_OP_FLOATING_POINT
 #undef DESUL_IMPL_CUDA_DEVICE_ATOMIC_FETCH_OP_INTEGRAL
