@@ -1984,7 +1984,8 @@ inline auto create_mirror(Kokkos::Impl::WithoutInitializing_t wi,
 
 // public interface that accepts a space
 template <class Space, class T, class... P,
-          class Enable = std::enable_if_t<Kokkos::is_space<Space>::value &&
+          class Enable = std::enable_if_t<
+              Kokkos::is_space<Space>::value &&
               std::is_void_v<typename ViewTraits<T, P...>::specialize>>>
 auto create_mirror(const Space&, const Kokkos::DynRankView<T, P...>& src) {
   return Impl::create_mirror(
@@ -1993,7 +1994,8 @@ auto create_mirror(const Space&, const Kokkos::DynRankView<T, P...>& src) {
 
 // public interface that accepts a space and a without initializing flag
 template <class Space, class T, class... P,
-          class Enable = std::enable_if_t<Kokkos::is_space<Space>::value &&
+          class Enable = std::enable_if_t<
+              Kokkos::is_space<Space>::value &&
               std::is_void_v<typename ViewTraits<T, P...>::specialize>>>
 auto create_mirror(Kokkos::Impl::WithoutInitializing_t wi, const Space&,
                    const Kokkos::DynRankView<T, P...>& src) {
