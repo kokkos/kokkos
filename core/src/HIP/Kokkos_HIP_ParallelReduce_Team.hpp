@@ -31,7 +31,7 @@ template <class CombinedFunctorReducerType, class... Properties>
 class ParallelReduce<CombinedFunctorReducerType,
                      Kokkos::TeamPolicy<Properties...>, HIP> {
  public:
-  using Policy      = TeamPolicyInternal<HIP, Properties...>;
+  using Policy      = TeamPolicy<Properties...>;
   using FunctorType = typename CombinedFunctorReducerType::functor_type;
   using ReducerType = typename CombinedFunctorReducerType::reducer_type;
 
@@ -46,6 +46,7 @@ class ParallelReduce<CombinedFunctorReducerType,
 
  public:
   using functor_type = FunctorType;
+  using reducer_type = ReducerType;
   using size_type    = HIP::size_type;
 
   // static int constexpr UseShflReduction = false;
@@ -271,7 +272,8 @@ class ParallelReduce<CombinedFunctorReducerType,
 
         if (m_result_ptr) {
           const int size = reducer.value_size();
-          DeepCopy<HostSpace, HIPSpace>(m_result_ptr, m_scratch_space, size);
+          DeepCopy<HostSpace, HIPSpace, HIP>(m_policy.space(), m_result_ptr,
+                                             m_scratch_space, size);
         }
       }
     } else {

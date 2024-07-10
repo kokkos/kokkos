@@ -172,14 +172,9 @@ ThreadsInternal::ThreadsInternal()
 ThreadsInternal::~ThreadsInternal() {
   const unsigned entry = m_pool_size - (m_pool_rank + 1);
 
-  using Record = Kokkos::Impl::SharedAllocationRecord<Kokkos::HostSpace, void>;
-
   if (m_scratch) {
-    Record *const r = Record::get_record(m_scratch);
-
+    Kokkos::kokkos_free<Kokkos::HostSpace>(m_scratch);
     m_scratch = nullptr;
-
-    Record::decrement(r);
   }
 
   m_pool_base          = nullptr;
@@ -246,13 +241,15 @@ void ThreadsInternal::verify_is_process(const std::string &name,
   }
 }
 
-int ThreadsInternal::in_parallel() {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+KOKKOS_DEPRECATED int ThreadsInternal::in_parallel() {
   // A thread function is in execution and
   // the function argument is not the special threads process argument and
   // the master process is a worker or is not the master process.
   return s_current_function && (&s_threads_process != s_current_function_arg) &&
          (s_threads_process.m_pool_base || !is_process());
 }
+#endif
 void ThreadsInternal::fence() {
   fence("Kokkos::ThreadsInternal::fence: Unnamed Instance Fence");
 }
@@ -315,11 +312,8 @@ void ThreadsInternal::execute_resize_scratch_in_serial() {
 
   auto deallocate_scratch_memory = [](ThreadsInternal &exec) {
     if (exec.m_scratch) {
-      using Record =
-          Kokkos::Impl::SharedAllocationRecord<Kokkos::HostSpace, void>;
-      Record *const r = Record::get_record(exec.m_scratch);
-      exec.m_scratch  = nullptr;
-      Record::decrement(r);
+      Kokkos::kokkos_free<Kokkos::HostSpace>(exec.m_scratch);
+      exec.m_scratch = nullptr;
     }
   };
   if (s_threads_process.m_pool_base) {
@@ -370,15 +364,8 @@ void ThreadsInternal::first_touch_allocate_thread_private_scratch(
   if (s_threads_process.m_scratch_thread_end) {
     // Allocate tracked memory:
     {
-      using Record =
-          Kokkos::Impl::SharedAllocationRecord<Kokkos::HostSpace, void>;
-      Record *const r =
-          Record::allocate(Kokkos::HostSpace(), "Kokkos::thread_scratch",
-                           s_threads_process.m_scratch_thread_end);
-
-      Record::increment(r);
-
-      exec.m_scratch = r->data();
+      exec.m_scratch = Kokkos::kokkos_malloc<Kokkos::HostSpace>(
+          "Kokkos::thread_scratch", s_threads_process.m_scratch_thread_end);
     }
 
     unsigned *ptr = reinterpret_cast<unsigned *>(exec.m_scratch);

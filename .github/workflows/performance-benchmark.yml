@@ -8,6 +8,8 @@ on:
       - '**/*.md'
     types: [ opened, reopened, synchronize ]
 
+permissions: read-all
+
 jobs:
   CI:
     continue-on-error: true
@@ -23,8 +25,8 @@ jobs:
       BUILD_ID: ${{ matrix.distro }}-${{ matrix.cxx }}-${{ matrix.backend }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
-      - uses: actions/cache@v3
+        uses: actions/checkout@v4
+      - uses: actions/cache@v4
         with:
           path: ~/.cache/ccache
           key: kokkos-${{ matrix.distro }}-${{ matrix.cxx }}-${{ matrix.backend }}-${{ github.ref }}-${{ github.sha }}

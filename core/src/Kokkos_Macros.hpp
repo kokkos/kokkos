@@ -332,6 +332,10 @@
 #define KOKKOS_DEFAULTED_FUNCTION
 #endif
 
+#if !defined(KOKKOS_DEDUCTION_GUIDE)
+#define KOKKOS_DEDUCTION_GUIDE
+#endif
+
 #if !defined(KOKKOS_IMPL_HOST_FUNCTION)
 #define KOKKOS_IMPL_HOST_FUNCTION
 #endif
@@ -561,6 +565,36 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 #define KOKKOS_IMPL_DO_PRAGMA(x) _Pragma(#x)
 #define KOKKOS_IMPL_WARNING(desc) KOKKOS_IMPL_DO_PRAGMA(message(#desc))
 #endif
+
+// clang-format off
+#if defined(__NVCOMPILER)
+  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH() \
+    _Pragma("diag_suppress 1216")
+  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP() \
+    _Pragma("diag_default 1216")
+#elif defined(__EDG__)
+  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH() \
+    _Pragma("warning push")                              \
+    _Pragma("warning disable 1478")
+  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP() \
+    _Pragma("warning pop")
+#elif defined(__GNUC__) || defined(__clang__)
+  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH() \
+    _Pragma("GCC diagnostic push")                       \
+    _Pragma("GCC diagnostic ignored \"-Wdeprecated-declarations\"")
+  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP() \
+    _Pragma("GCC diagnostic pop")
+#elif defined(_MSC_VER)
+  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH() \
+    _Pragma("warning(push)")                             \
+    _Pragma("warning(disable: 4996)")
+  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP() \
+    _Pragma("warning(pop)")
+#else
+  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
+  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
+#endif
+// clang-format on
 
 #define KOKKOS_ATTRIBUTE_NODISCARD [[nodiscard]]
 

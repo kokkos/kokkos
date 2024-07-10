@@ -13,6 +13,8 @@ concurrency:
   group: ${ {github.event_name }}-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{github.event_name == 'pull_request'}}
 
+permissions: read-all
+
 jobs:
   hpx:
     name: hpx
@@ -20,7 +22,7 @@ jobs:
 
     steps:
       - name: checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: kokkos
       - name: setup hpx dependencies
@@ -33,12 +35,12 @@ jobs:
             libboost-all-dev \
             ninja-build
       - name: checkout hpx
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: STELLAR-GROUP/hpx
           ref: v1.9.0
           path: hpx
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         id:   cache-hpx
         with:
           path:         ./hpx/install

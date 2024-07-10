@@ -43,8 +43,8 @@ template <typename FunctorWrapper, typename Policy>
 struct FunctorWrapperRangePolicyParallelForCustom {
   using WorkTag = typename Policy::work_tag;
 
-  void operator()(sycl::item<1> item) const {
-    const typename Policy::index_type id = item.get_linear_id();
+  void operator()(sycl::nd_item<1> item) const {
+    const typename Policy::index_type id = item.get_global_linear_id();
     if (id < m_work_size) {
       const auto shifted_id = id + m_begin;
       if constexpr (std::is_void_v<WorkTag>)
@@ -136,12 +136,6 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
                                            functor_wrapper.get_copy_event());
     functor_wrapper.register_event(event);
   }
-
-  ParallelFor(const ParallelFor&) = delete;
-  ParallelFor(ParallelFor&&)      = delete;
-  ParallelFor& operator=(const ParallelFor&) = delete;
-  ParallelFor& operator=(ParallelFor&&) = delete;
-  ~ParallelFor()                        = default;
 
   ParallelFor(const FunctorType& arg_functor, const Policy& arg_policy)
       : m_functor(arg_functor), m_policy(arg_policy) {}

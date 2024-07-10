@@ -51,7 +51,25 @@ RUN wget https://cloud.cees.ornl.gov/download/oneapi-for-nvidia-gpus-2023.0.0-li
     ./oneapi-for-nvidia-gpus-2023.0.0-linux.sh -y && \
     rm oneapi-for-nvidia-gpus-2023.0.0-linux.sh
 
-RUN wget https://registrationcenter-download.intel.com/akdlm/irc_nas/19133/l_oneDPL_p_2022.0.0.25335.sh &&\
-    chmod +x ./l_oneDPL_p_2022.0.0.25335.sh && \
-    ./l_oneDPL_p_2022.0.0.25335.sh -a -s --eula accept && \
-    rm l_oneDPL_p_2022.0.0.25335.sh
+ENV ONE_DPL_DIR=/opt/onedpl
+RUN . /opt/intel/oneapi/setvars.sh --include-intel-llvm && \
+    ONE_DPL_VERSION=oneDPL-2022.2.0 && \
+    ONE_DPL_URL=https://github.com/oneapi-src/oneDPL/archive && \
+    ONE_DPL_ARCHIVE=${ONE_DPL_VERSION}-rc1.tar.gz && \
+    SCRATCH_DIR=/scratch && mkdir -p ${SCRATCH_DIR} && cd ${SCRATCH_DIR} && \
+    wget --quiet ${ONE_DPL_URL}/${ONE_DPL_ARCHIVE} && \
+    mkdir onedpl && \
+    tar -xf ${ONE_DPL_ARCHIVE} -C onedpl --strip-components=1 && cd onedpl && \
+    mkdir build && cd build && \
+    cmake -DCMAKE_CXX_COMPILER=icpx -DCMAKE_CXX_FLAGS="-w" -DCMAKE_INSTALL_PREFIX=${ONE_DPL_DIR} -DCMAKE_SKIP_INSTALL_ALL_DEPENDENCY=TRUE -DONEDPL_BACKEND="dpcpp_only" .. && \
+    make -j${NPROCS} install && \
+    rm -rf ${SCRATCH_DIR}
+
+# clang++
+ENV PATH=/opt/intel/oneapi/compiler/latest/linux/bin-llvm/:$PATH
+# sycl-ls, icpx
+ENV PATH=/opt/intel/oneapi/compiler/latest/linux/bin/:$PATH
+# libsycl
+ENV LD_LIBRARY_PATH=/opt/intel/oneapi/compiler/latest/linux/lib:$LD_LIBRARY_PATH
+# libsvml
+ENV LD_LIBRARY_PATH=/opt/intel/oneapi/compiler/latest/linux/compiler/lib/intel64_lin:$LD_LIBRARY_PATH

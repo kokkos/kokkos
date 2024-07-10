@@ -77,9 +77,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
         m_result_ptr(v.data()),
         m_result_ptr_device_accessible(
             MemorySpaceAccess<Kokkos::Experimental::SYCLDeviceUSMSpace,
-                              typename View::memory_space>::accessible),
-        m_scratch_buffers_lock(
-            m_space.impl_internal_space_instance()->m_mutexScratchSpace) {}
+                              typename View::memory_space>::accessible) {}
 
  private:
   template <typename CombinedFunctorReducerWrapper>
@@ -94,10 +92,10 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
     const typename Policy::index_type n_tiles = m_policy.m_num_tiles;
     const unsigned int value_count =
         m_functor_reducer.get_reducer().value_count();
-    sycl::device_ptr<value_type> results_ptr;
+    sycl_device_ptr<value_type> results_ptr;
     auto host_result_ptr =
         (m_result_ptr && !m_result_ptr_device_accessible)
-            ? static_cast<sycl::host_ptr<value_type>>(
+            ? static_cast<sycl_host_ptr<value_type>>(
                   instance.scratch_host(sizeof(value_type) * value_count))
             : nullptr;
 
@@ -114,7 +112,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
 #else
         (void)memcpy_event;
 #endif
-        results_ptr = static_cast<sycl::device_ptr<value_type>>(
+        results_ptr = static_cast<sycl_device_ptr<value_type>>(
             instance.scratch_space(sizeof(value_type) * value_count));
         auto device_accessible_result_ptr =
             m_result_ptr_device_accessible
@@ -155,13 +153,13 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
         n_wgroups = (n_tiles + values_per_thread - 1) / values_per_thread;
       }
 
-      results_ptr = static_cast<sycl::device_ptr<value_type>>(
+      results_ptr = static_cast<sycl_device_ptr<value_type>>(
           instance.scratch_space(sizeof(value_type) * value_count * n_wgroups));
       auto device_accessible_result_ptr =
           m_result_ptr_device_accessible
               ? static_cast<sycl::global_ptr<value_type>>(m_result_ptr)
               : static_cast<sycl::global_ptr<value_type>>(host_result_ptr);
-      auto scratch_flags = static_cast<sycl::device_ptr<unsigned int>>(
+      auto scratch_flags = static_cast<sycl_device_ptr<unsigned int>>(
           instance.scratch_flags(sizeof(unsigned int)));
 
       auto parallel_reduce_event = q.submit([&](sycl::handler& cgh) {
@@ -234,6 +232,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
                 }
                 item.barrier(sycl::access::fence_space::local_space);
                 if (num_teams_done[0] == n_wgroups) {
+                  if (local_id == 0) *scratch_flags = 0;
                   if (local_id >= static_cast<int>(n_wgroups))
                     reducer.init(&local_mem[local_id * value_count]);
                   else {
@@ -279,6 +278,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
                 }
                 item.barrier(sycl::access::fence_space::local_space);
                 if (num_teams_done[0] == n_wgroups) {
+                  if (local_id == 0) *scratch_flags = 0;
                   if (local_id >= static_cast<int>(n_wgroups))
                     reducer.init(&local_value);
                   else {
@@ -328,6 +328,12 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
   void execute() const {
     Kokkos::Experimental::Impl::SYCLInternal& instance =
         *m_space.impl_internal_space_instance();
+
+    // Only let one instance at a time resize the instance's scratch memory
+    // allocations.
+    std::scoped_lock<std::mutex> scratch_buffers_lock(
+        instance.m_mutexScratchSpace);
+
     using IndirectKernelMem =
         Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem;
     IndirectKernelMem& indirectKernelMem = instance.get_indirect_kernel_mem();
@@ -347,10 +353,6 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
   const Kokkos::Experimental::SYCL& m_space;
   const pointer_type m_result_ptr;
   const bool m_result_ptr_device_accessible;
-
-  // Only let one ParallelReduce instance at a time use the host scratch memory.
-  // The constructor acquires the mutex which is released in the destructor.
-  std::scoped_lock<std::mutex> m_scratch_buffers_lock;
 };
 
 #endif /* KOKKOS_SYCL_PARALLEL_REDUCE_MDRANGE_HPP */

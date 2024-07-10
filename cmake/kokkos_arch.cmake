@@ -49,7 +49,6 @@ DECLARE_AND_CHECK_HOST_ARCH(ARMV81            "ARMv8.1 Compatible CPU")
 DECLARE_AND_CHECK_HOST_ARCH(ARMV8_THUNDERX    "ARMv8 Cavium ThunderX CPU")
 DECLARE_AND_CHECK_HOST_ARCH(ARMV8_THUNDERX2   "ARMv8 Cavium ThunderX2 CPU")
 DECLARE_AND_CHECK_HOST_ARCH(A64FX             "ARMv8.2 with SVE Support")
-DECLARE_AND_CHECK_HOST_ARCH(WSM               "Intel Westmere CPU")
 DECLARE_AND_CHECK_HOST_ARCH(SNB               "Intel Sandy/Ivy Bridge CPUs")
 DECLARE_AND_CHECK_HOST_ARCH(HSW               "Intel Haswell CPUs")
 DECLARE_AND_CHECK_HOST_ARCH(BDW               "Intel Broadwell Xeon E-class CPUs")
@@ -60,13 +59,12 @@ DECLARE_AND_CHECK_HOST_ARCH(SKX               "Intel Skylake Xeon Server CPUs (A
 DECLARE_AND_CHECK_HOST_ARCH(KNC               "Intel Knights Corner Xeon Phi")
 DECLARE_AND_CHECK_HOST_ARCH(KNL               "Intel Knights Landing Xeon Phi")
 DECLARE_AND_CHECK_HOST_ARCH(SPR               "Intel Sapphire Rapids Xeon Server CPUs (AVX512)")
-DECLARE_AND_CHECK_HOST_ARCH(BGQ               "IBM Blue Gene Q")
-DECLARE_AND_CHECK_HOST_ARCH(POWER7            "IBM POWER7 CPUs")
 DECLARE_AND_CHECK_HOST_ARCH(POWER8            "IBM POWER8 CPUs")
 DECLARE_AND_CHECK_HOST_ARCH(POWER9            "IBM POWER9 CPUs")
 DECLARE_AND_CHECK_HOST_ARCH(ZEN               "AMD Zen architecture")
 DECLARE_AND_CHECK_HOST_ARCH(ZEN2              "AMD Zen2 architecture")
 DECLARE_AND_CHECK_HOST_ARCH(ZEN3              "AMD Zen3 architecture")
+DECLARE_AND_CHECK_HOST_ARCH(RISCV_SG2042      "SG2042 (RISC-V) CPUs")
 
 IF(Kokkos_ENABLE_CUDA OR Kokkos_ENABLE_OPENMPTARGET OR Kokkos_ENABLE_OPENACC OR Kokkos_ENABLE_SYCL)
   SET(KOKKOS_SHOW_CUDA_ARCHS ON)
@@ -339,18 +337,6 @@ IF (KOKKOS_ARCH_ZEN3)
   SET(KOKKOS_ARCH_AVX2 ON)
 ENDIF()
 
-IF (KOKKOS_ARCH_WSM)
-  COMPILER_SPECIFIC_FLAGS(
-    COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
-    Cray    NO-VALUE-SPECIFIED
-    Intel   -xSSE4.2
-    MSVC    NO-VALUE-SPECIFIED
-    NVHPC   -tp=px
-    DEFAULT -msse4.2
-  )
-  SET(KOKKOS_ARCH_SSE42 ON)
-ENDIF()
-
 IF (KOKKOS_ARCH_SNB OR KOKKOS_ARCH_AMDAVX)
   SET(KOKKOS_ARCH_AVX ON)
   COMPILER_SPECIFIC_FLAGS(
@@ -374,6 +360,23 @@ IF (KOKKOS_ARCH_HSW)
     DEFAULT -march=core-avx2 -mtune=core-avx2
   )
 ENDIF()
+
+IF (KOKKOS_ARCH_RISCV_SG2042)
+  IF(NOT
+  (KOKKOS_CXX_COMPILER_ID STREQUAL GNU
+    AND KOKKOS_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 12)
+  OR
+  (KOKKOS_CXX_COMPILER_ID STREQUAL Clang
+    AND KOKKOS_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 14)
+  )
+  MESSAGE(SEND_ERROR "Only gcc >= 12 and clang >= 14 support RISC-V.")
+  ENDIF()
+  COMPILER_SPECIFIC_FLAGS(
+    COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
+        DEFAULT -march=rv64imafdcv
+      )
+ENDIF()
+
 
 IF (KOKKOS_ARCH_BDW)
   SET(KOKKOS_ARCH_AVX2 ON)
@@ -568,6 +571,11 @@ IF (KOKKOS_ENABLE_HIP)
     COMPILER_SPECIFIC_FLAGS(
       DEFAULT -fgpu-rdc
     )
+    IF (NOT KOKKOS_CXX_COMPILER_ID STREQUAL HIPCC)
+      COMPILER_SPECIFIC_LINK_OPTIONS(
+        DEFAULT --hip-link
+      )
+    ENDIF()
   ELSE()
     COMPILER_SPECIFIC_FLAGS(
       DEFAULT -fno-gpu-rdc
@@ -776,30 +784,35 @@ IF (KOKKOS_ENABLE_OPENMPTARGET)
     COMPILER_SPECIFIC_FLAGS(
       IntelLLVM -fopenmp-targets=spir64 -D__STRICT_ANSI__
     )
-  ELSEIF(KOKKOS_ARCH_INTEL_GEN9)
-    COMPILER_SPECIFIC_FLAGS(
-      IntelLLVM -fopenmp-targets=spir64_gen -Xopenmp-target-backend "-device gen9" -D__STRICT_ANSI__
+  ELSE()
+    COMPILER_SPECIFIC_OPTIONS(
+      IntelLLVM -fopenmp-targets=spir64_gen -D__STRICT_ANSI__
     )
-  ELSEIF(KOKKOS_ARCH_INTEL_GEN11)
-    COMPILER_SPECIFIC_FLAGS(
-      IntelLLVM -fopenmp-targets=spir64_gen -Xopenmp-target-backend "-device gen11" -D__STRICT_ANSI__
+    IF(KOKKOS_ARCH_INTEL_GEN9)
+      COMPILER_SPECIFIC_LINK_OPTIONS(
+        IntelLLVM -fopenmp-targets=spir64_gen -Xopenmp-target-backend "-device gen9"
+      )
+    ELSEIF(KOKKOS_ARCH_INTEL_GEN11)
+      COMPILER_SPECIFIC_LINK_OPTIONS(
+        IntelLLVM -fopenmp-targets=spir64_gen -Xopenmp-target-backend "-device gen11"
+      )
+    ELSEIF(KOKKOS_ARCH_INTEL_GEN12LP)
+      COMPILER_SPECIFIC_LINK_OPTIONS(
+        IntelLLVM -fopenmp-targets=spir64_gen -Xopenmp-target-backend "-device gen12lp"
+      )
+    ELSEIF(KOKKOS_ARCH_INTEL_DG1)
+      COMPILER_SPECIFIC_LINK_OPTIONS(
+        IntelLLVM -fopenmp-targets=spir64_gen -Xopenmp-target-backend "-device dg1"
+      )
+    ELSEIF(KOKKOS_ARCH_INTEL_XEHP)
+      COMPILER_SPECIFIC_LINK_OPTIONS(
+        IntelLLVM -fopenmp-targets=spir64_gen -Xopenmp-target-backend "-device 12.50.4"
+      )
+    ELSEIF(KOKKOS_ARCH_INTEL_PVC)
+      COMPILER_SPECIFIC_LINK_OPTIONS(
+        IntelLLVM -fopenmp-targets=spir64_gen -Xopenmp-target-backend "-device 12.60.7"
     )
-  ELSEIF(KOKKOS_ARCH_INTEL_GEN12LP)
-    COMPILER_SPECIFIC_FLAGS(
-      IntelLLVM -fopenmp-targets=spir64_gen -Xopenmp-target-backend "-device gen12lp" -D__STRICT_ANSI__
-    )
-  ELSEIF(KOKKOS_ARCH_INTEL_DG1)
-    COMPILER_SPECIFIC_FLAGS(
-      IntelLLVM -fopenmp-targets=spir64_gen -Xopenmp-target-backend "-device dg1" -D__STRICT_ANSI__
-    )
-  ELSEIF(KOKKOS_ARCH_INTEL_XEHP)
-    COMPILER_SPECIFIC_FLAGS(
-      IntelLLVM -fopenmp-targets=spir64_gen -Xopenmp-target-backend "-device 12.50.4" -D__STRICT_ANSI__
-    )
-  ELSEIF(KOKKOS_ARCH_INTEL_PVC)
-    COMPILER_SPECIFIC_FLAGS(
-      IntelLLVM -fopenmp-targets=spir64_gen -Xopenmp-target-backend "-device 12.60.7" -D__STRICT_ANSI__
-    )
+    ENDIF()
   ENDIF()
 ENDIF()
 

@@ -28,8 +28,6 @@ TEST(defaultdevicetype, initialization_settings) {
   EXPECT_TRUE(settings.has_num_threads());
   EXPECT_EQ(settings.get_num_threads(), 255);
   EXPECT_FALSE(settings.has_device_id());
-  EXPECT_FALSE(settings.has_num_devices());
-  EXPECT_FALSE(settings.has_skip_device());
   EXPECT_TRUE(settings.has_disable_warnings());
   EXPECT_FALSE(settings.get_disable_warnings());
   EXPECT_FALSE(settings.has_tune_internals());
@@ -51,8 +49,6 @@ constexpr bool test_initialization_settings_getter() {
                 TYPE>::value);
   CHECK_INITIALIZATION_SETTINGS_GETTER_RETURN_TYPE(num_threads, int);
   CHECK_INITIALIZATION_SETTINGS_GETTER_RETURN_TYPE(device_id, int);
-  CHECK_INITIALIZATION_SETTINGS_GETTER_RETURN_TYPE(num_devices, int);
-  CHECK_INITIALIZATION_SETTINGS_GETTER_RETURN_TYPE(skip_device, int);
   CHECK_INITIALIZATION_SETTINGS_GETTER_RETURN_TYPE(disable_warnings, bool);
   CHECK_INITIALIZATION_SETTINGS_GETTER_RETURN_TYPE(tune_internals, bool);
   CHECK_INITIALIZATION_SETTINGS_GETTER_RETURN_TYPE(tools_help, bool);

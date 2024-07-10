@@ -837,18 +837,15 @@ struct TestViewMirror {
                                                     view_const_cast(v));
   }
 
-  template <class MemoryTraits, class Space>
+  template <class View>
   struct CopyUnInit {
-    using mirror_view_type = typename Kokkos::Impl::MirrorViewType<
-        Space, double *, Layout, Kokkos::HostSpace, MemoryTraits>::view_type;
-
-    mirror_view_type a_d;
+    View a_d;
 
     KOKKOS_INLINE_FUNCTION
-    CopyUnInit(mirror_view_type &a_d_) : a_d(a_d_) {}
+    explicit CopyUnInit(View const &a_d_) : a_d(a_d_) {}
 
     KOKKOS_INLINE_FUNCTION
-    void operator()(const typename Space::size_type i) const {
+    void operator()(const typename View::size_type i) const {
       a_d(i) = (double)(10 - i);
     }
   };
@@ -875,7 +872,8 @@ struct TestViewMirror {
 
     Kokkos::parallel_for(
         Kokkos::RangePolicy<typename DeviceType::execution_space>(0, int(10)),
-        CopyUnInit<MemoryTraits, DeviceType>(a_d));
+        // decltype required for Intel classics, that doesn't recognize the CTAD
+        CopyUnInit<decltype(a_d)>(a_d));
 
     Kokkos::deep_copy(a_h, a_d);
 
@@ -1339,6 +1337,40 @@ class TestViewAPI {
     ASSERT_EQ(dz.data(), nullptr);
   }
 
+  struct test_refcount_poison_copy_functor {
+    using view_type = Kokkos::View<double *>;
+    explicit test_refcount_poison_copy_functor(view_type v) : view(v) {}
+
+    test_refcount_poison_copy_functor(
+        const test_refcount_poison_copy_functor &other)
+        : view(other.view) {
+      throw std::bad_alloc();
+    }
+
+    KOKKOS_INLINE_FUNCTION void operator()(int) const {}
+
+    view_type view;
+  };
+
+  static void run_test_refcount_exception() {
+    using view_type = typename test_refcount_poison_copy_functor::view_type;
+    view_type original("original", N0);
+    ASSERT_EQ(original.use_count(), 1);
+
+    // test_refcount_poison_copy_functor throws during copy construction
+    try {
+      Kokkos::parallel_for(
+          Kokkos::RangePolicy<typename DeviceType::execution_space>(0, N0),
+          test_refcount_poison_copy_functor(original));
+    } catch (const std::bad_alloc &) {
+    }
+
+    // Ensure refcounting is enabled, we should increment here
+    auto copy = original;
+    ASSERT_EQ(original.use_count(), 2);
+    ASSERT_EQ(copy.use_count(), 2);
+  }
+
   static void run_test_deep_copy_empty() {
     // Check Deep Copy of LayoutLeft to LayoutRight
     {
@@ -1553,6 +1585,7 @@ class TestViewAPI {
                      Kokkos::CudaUVMSpace>::value)
       return;
 #endif
+    bool did_throw  = false;
     auto alloc_size = std::numeric_limits<size_t>::max() - 42;
     try {
       auto should_always_fail = dView1("hello_world_failure", alloc_size);
@@ -1584,7 +1617,9 @@ class TestViewAPI {
                             "because of an unknown error.", msg);
       }
 #endif
+      did_throw = true;
     }
+    ASSERT_TRUE(did_throw);
   }
 };
 
