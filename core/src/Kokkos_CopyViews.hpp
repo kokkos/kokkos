@@ -3616,8 +3616,7 @@ auto create_mirror_view(Kokkos::Impl::WithoutInitializing_t wi,
 
 // public interface that accepts a space
 template <class Space, class T, class... P,
-          class Enable = std::enable_if_t<
-              Kokkos::is_space<Space>::value>>
+          class Enable = std::enable_if_t<Kokkos::is_space<Space>::value>>
 auto create_mirror_view(const Space&, const Kokkos::View<T, P...>& src) {
   return Impl::create_mirror_view(src,
                                   view_alloc(typename Space::memory_space()));
@@ -3625,8 +3624,7 @@ auto create_mirror_view(const Space&, const Kokkos::View<T, P...>& src) {
 
 // public interface that accepts a space and a without initializing flag
 template <class Space, class T, class... P,
-          typename Enable = std::enable_if_t<
-              Kokkos::is_space<Space>::value>>
+          typename Enable = std::enable_if_t<Kokkos::is_space<Space>::value>>
 auto create_mirror_view(Kokkos::Impl::WithoutInitializing_t wi, Space const&,
                         Kokkos::View<T, P...> const& src) {
   return Impl::create_mirror_view(
