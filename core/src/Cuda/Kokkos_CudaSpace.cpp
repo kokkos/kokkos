@@ -59,12 +59,6 @@ const std::unique_ptr<Kokkos::Cuda> &Kokkos::Impl::cuda_get_deep_copy_space(
 namespace Kokkos {
 namespace Impl {
 
-namespace {
-
-static std::atomic<int> num_uvm_allocations(0);
-
-}  // namespace
-
 void DeepCopyCuda(void *dst, const void *src, size_t n) {
   KOKKOS_IMPL_CUDA_SAFE_CALL((CudaInternal::singleton().cuda_memcpy_wrapper(
       dst, src, n, cudaMemcpyDefault)));
@@ -252,8 +246,6 @@ void *CudaUVMSpace::impl_allocate(
   Cuda::impl_static_fence(
       "Kokkos::CudaUVMSpace::impl_allocate: Pre UVM Allocation");
   if (arg_alloc_size > 0) {
-    Kokkos::Impl::num_uvm_allocations++;
-
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_device));
     cudaError_t error_code =
         cudaMallocManaged(&ptr, arg_alloc_size, cudaMemAttachGlobal);
@@ -389,7 +381,6 @@ void CudaUVMSpace::impl_deallocate(
   }
   try {
     if (arg_alloc_ptr != nullptr) {
-      Kokkos::Impl::num_uvm_allocations--;
       KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_device));
       KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFree(arg_alloc_ptr));
     }
