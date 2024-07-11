@@ -3583,18 +3583,24 @@ inline auto choose_create_mirror(
       // if there are no view constructor args, call the specific public
       // function
       return Kokkos::create_mirror(src);
-    } else if constexpr (sizeof...(ViewCtorArgs) == 1 && ViewProp::has_memory_space) {
+    } else if constexpr (sizeof...(ViewCtorArgs) == 1 &&
+                         ViewProp::has_memory_space) {
       // if there is one view constructor arg and it has a memory space, call
       // the specific public function
-      return Kokkos::create_mirror(typename ViewProp::memory_space {}, src);
-    } else if constexpr (sizeof...(ViewCtorArgs) == 1 && !ViewProp::initialize) {
+      return Kokkos::create_mirror(typename ViewProp::memory_space{}, src);
+    } else if constexpr (sizeof...(ViewCtorArgs) == 1 &&
+                         !ViewProp::initialize) {
       // if there is one view constructor arg and it has a without initializing
       // mark, call the specific public function
-      return Kokkos::create_mirror(typename Kokkos::Impl::WithoutInitializing_t {}, src);
-    } else if constexpr (sizeof...(ViewCtorArgs) == 2 && ViewProp::has_memory_space && !ViewProp::initialize) {
+      return Kokkos::create_mirror(
+          typename Kokkos::Impl::WithoutInitializing_t{}, src);
+    } else if constexpr (sizeof...(ViewCtorArgs) == 2 &&
+                         ViewProp::has_memory_space && !ViewProp::initialize) {
       // if there is two view constructor args and they have a memory space and
       // a without initializing mark, call the specific public function
-      return Kokkos::create_mirror(typename Kokkos::Impl::WithoutInitializing_t {}, typename ViewProp::memory_space {}, src);
+      return Kokkos::create_mirror(
+          typename Kokkos::Impl::WithoutInitializing_t{},
+          typename ViewProp::memory_space{}, src);
     } else {
       // if there are other constructor args, call the generic public function
       return Kokkos::create_mirror(arg_prop, src);
