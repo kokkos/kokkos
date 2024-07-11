@@ -3564,6 +3564,48 @@ auto create_mirror(Kokkos::Impl::WithoutInitializing_t wi, Space const&,
 
 namespace Impl {
 
+template <class T, class... P, class... ViewCtorArgs>
+inline auto choose_create_mirror(
+    const Kokkos::View<T, P...>& src,
+    const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
+  // Due to the fact that users can overload `Kokkos::create_mirror`, but also
+  // that they may not have implemented all of its different possible
+  // variations, this function chooses the correct private or public version of
+  // it to call.
+
+  if constexpr (std::is_void_v<typename ViewTraits<T, P...>::specialize>) {
+    // if the view is not specialized, just call the Impl function
+    return Kokkos::Impl::create_mirror(src, arg_prop);
+  } else {
+    // otherwise, recreate the public call
+    using ViewProp = Impl::ViewCtorProp<ViewCtorArgs...>;
+    if constexpr (sizeof...(ViewCtorArgs) == 0) {
+      // if there are no view constructor args, call the specific public
+      // function
+      return Kokkos::create_mirror(src);
+    } else if constexpr (sizeof...(ViewCtorArgs) == 1 && ViewProp::has_memory_space) {
+      // if there is one view constructor arg and it has a memory space, call
+      // the specific public function
+      return Kokkos::create_mirror(typename ViewProp::memory_space {}, src);
+    } else if constexpr (sizeof...(ViewCtorArgs) == 1 && !ViewProp::initialize) {
+      // if there is one view constructor arg and it has a without initializing
+      // mark, call the specific public function
+      return Kokkos::create_mirror(typename Kokkos::Impl::WithoutInitializing_t {}, src);
+    } else if constexpr (sizeof...(ViewCtorArgs) == 2 && ViewProp::has_memory_space && !ViewProp::initialize) {
+      // if there is two view constructor args and they have a memory space and
+      // a without initializing mark, call the specific public function
+      return Kokkos::create_mirror(typename Kokkos::Impl::WithoutInitializing_t {}, typename ViewProp::memory_space {}, src);
+    } else {
+      // if there are other constructor args, call the generic public function
+      return Kokkos::create_mirror(arg_prop, src);
+    }
+  }
+
+#if defined KOKKOS_COMPILER_INTEL
+  __builtin_unreachable();
+#endif
+}
+
 // create a mirror view
 // private interface that accepts arbitrary view constructor args passed by a
 // view_alloc
@@ -3581,7 +3623,7 @@ inline auto create_mirror_view(
       check_view_ctor_args_create_mirror<ViewCtorArgs...>();
       return typename Kokkos::View<T, P...>::HostMirror(src);
     } else {
-      return Kokkos::create_mirror(arg_prop, src);
+      return Kokkos::Impl::choose_create_mirror(src, arg_prop);
     }
   } else {
     if constexpr (Impl::MirrorViewType<typename Impl::ViewCtorProp<
@@ -3592,7 +3634,7 @@ inline auto create_mirror_view(
           typename Impl::ViewCtorProp<ViewCtorArgs...>::memory_space, T,
           P...>::view_type(src);
     } else {
-      return Kokkos::create_mirror(arg_prop, src);
+      return Kokkos::Impl::choose_create_mirror(src, arg_prop);
     }
   }
 #if defined KOKKOS_COMPILER_INTEL
