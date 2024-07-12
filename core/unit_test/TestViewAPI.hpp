@@ -837,18 +837,15 @@ struct TestViewMirror {
                                                     view_const_cast(v));
   }
 
-  template <class MemoryTraits, class Space>
+  template <class View>
   struct CopyUnInit {
-    using mirror_view_type = typename Kokkos::Impl::MirrorViewType<
-        Space, double *, Layout, Kokkos::HostSpace, MemoryTraits>::view_type;
-
-    mirror_view_type a_d;
+    View a_d;
 
     KOKKOS_INLINE_FUNCTION
-    CopyUnInit(mirror_view_type &a_d_) : a_d(a_d_) {}
+    explicit CopyUnInit(View const &a_d_) : a_d(a_d_) {}
 
     KOKKOS_INLINE_FUNCTION
-    void operator()(const typename Space::size_type i) const {
+    void operator()(const typename View::size_type i) const {
       a_d(i) = (double)(10 - i);
     }
   };
@@ -875,7 +872,8 @@ struct TestViewMirror {
 
     Kokkos::parallel_for(
         Kokkos::RangePolicy<typename DeviceType::execution_space>(0, int(10)),
-        CopyUnInit<MemoryTraits, DeviceType>(a_d));
+        // decltype required for Intel classics, that doesn't recognize the CTAD
+        CopyUnInit<decltype(a_d)>(a_d));
 
     Kokkos::deep_copy(a_h, a_d);
 

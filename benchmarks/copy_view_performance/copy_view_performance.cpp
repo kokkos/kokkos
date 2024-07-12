@@ -40,7 +40,6 @@ class ViewCollection {
   double m_side_effect;
   int m_N;
 
-  KOKKOS_INLINE_FUNCTION
   ViewCollection(int N)
       : v1("v1", N),
         v2("v2", N),
