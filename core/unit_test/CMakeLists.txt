@@ -1030,19 +1030,27 @@ KOKKOS_ADD_EXECUTABLE_AND_TEST(
 # message "PASSED: I am the custom std::terminate handler.", AND calls
 # std::terminate.  This means that we can't use
 # KOKKOS_ADD_EXECUTABLE_AND_TEST.  See GitHub issue #2147.
-
-KOKKOS_ADD_TEST_EXECUTABLE( push_finalize_hook_terminate
+KOKKOS_ADD_TEST_EXECUTABLE(
+  CoreUnitTest_PushFinalizeHookTerminate
   SOURCES UnitTest_PushFinalizeHook_terminate.cpp
 )
-
-KOKKOS_ADD_ADVANCED_TEST( CoreUnitTest_PushFinalizeHook_terminate
-  TEST_0
-    EXEC push_finalize_hook_terminate
-    NUM_MPI_PROCS 1
-    PASS_REGULAR_EXPRESSION
-      "PASSED: I am the custom std::terminate handler."
-    ALWAYS_FAIL_ON_ZERO_RETURN
+add_test(
+  NAME Kokkos_CoreUnitTest_PushFinalizeHookTerminateRegex
+  COMMAND ${CMAKE_COMMAND} -E env $<TARGET_FILE:Kokkos_CoreUnitTest_PushFinalizeHookTerminate>
 )
+set_property(
+  TEST Kokkos_CoreUnitTest_PushFinalizeHookTerminateRegex
+  PROPERTY PASS_REGULAR_EXPRESSION "PASSED: I am the custom std::terminate handler."
+)
+add_test(
+  NAME Kokkos_CoreUnitTest_PushFinalizeHookTerminateFails
+  COMMAND ${CMAKE_COMMAND} -E env $<TARGET_FILE:Kokkos_CoreUnitTest_PushFinalizeHookTerminate>
+)
+set_property(
+  TEST Kokkos_CoreUnitTest_PushFinalizeHookTerminateFails
+  PROPERTY WILL_FAIL TRUE
+)
+
   if(KOKKOS_ENABLE_TUNING)
     KOKKOS_ADD_EXECUTABLE_AND_TEST(
       CoreUnitTest_TuningBuiltins
