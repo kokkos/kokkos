@@ -58,7 +58,7 @@
 #include <impl/Kokkos_NvidiaGpuArchitectures.hpp>
 #endif
 
-#include <ciso646>
+#include <iso646.h>
 #if !defined(KOKKOS_ENABLE_CXX17) && defined(_GLIBCXX_RELEASE) && \
     _GLIBCXX_RELEASE < 10
 #error \
