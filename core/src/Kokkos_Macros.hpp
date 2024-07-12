@@ -625,4 +625,13 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 #define KOKKOS_IMPL_ENFORCE_EMPTY_BASE_OPTIMIZATION
 #endif
 
+// Use unlikely attribute from C++20 to improve performance of
+// reference counting when copy constructors are involved.
+#if defined(KOKKOS_ENABLE_IMPL_UNLIKELY_ATTRIBUTE) && \
+    !defined(KOKKOS_ENABLE_CXX17)
+#define KOKKOS_IMPL_BRANCH_PROB [[unlikely]]
+#else
+#define KOKKOS_IMPL_BRANCH_PROB
+#endif
+
 #endif  // #ifndef KOKKOS_MACROS_HPP

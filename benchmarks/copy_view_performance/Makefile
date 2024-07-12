@@ -19,7 +19,7 @@ default: build
 CXX = clang++
 EXE = copy_view_performance.exe
 
-CXXFLAGS ?= -Ofast -DKOKKOS_ENABLE_IMPL_REF_COUNT_BRANCH_UNLIKELY
+CXXFLAGS ?= -Ofast
 override CXXFLAGS += -I$(MAKEFILE_PATH)
 
 DEPFLAGS = -M

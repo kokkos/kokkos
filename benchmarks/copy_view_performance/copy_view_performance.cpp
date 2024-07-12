@@ -257,8 +257,10 @@ void test_view_collection_serial(int N, int num_iter, bool execute_kernel) {
   }
 }
 
-// Based on kokkos-tutorials/Exercises/02/Solution/exercise_2_solution.cpp
 int main(int argc, char* argv[]) {
+  // The benchmark is only testing reference counting for views on host.
+#if defined(KOKKOS_ENABLE_OPENMP) || defined(KOKKOS_ENABLE_SERIAL) || \
+    defined(KOKKOS_ENABLE_THREADS) || defined(KOKKOS_ENABLE_HPX)
   int N               = 1;
   int num_iter        = 1 << 27;
   bool execute_kernel = false;
@@ -301,6 +303,7 @@ int main(int argc, char* argv[]) {
   test_view_collection_serial(N, num_iter, execute_kernel);
 
   Kokkos::finalize();
+#endif
 
   return 0;
 }

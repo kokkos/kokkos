@@ -24,15 +24,6 @@
 #include <cstdint>
 #include <string>
 
-// Use unlikely attribute from C++20 to improve performance of
-// reference counting when copy constructors are involved.
-#if defined(KOKKOS_ENABLE_IMPL_REF_COUNT_BRANCH_UNLIKELY) && \
-    !defined(KOKKOS_ENABLE_CXX17)
-#define KOKKOS_BRANCH_PROB [[unlikely]]
-#else
-#define KOKKOS_BRANCH_PROB
-#endif
-
 namespace Kokkos {
 namespace Impl {
 
@@ -492,13 +483,15 @@ union SharedAllocationTracker {
   // pressure on compiler optimization by reducing
   // number of symbols and inline functions.
 
-#define KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_INCREMENT        \
-  KOKKOS_IF_ON_HOST((if (!(m_record_bits & DO_NOT_DEREF_FLAG)) \
-                         KOKKOS_BRANCH_PROB { Record::increment(m_record); }))
+#define KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_INCREMENT \
+  KOKKOS_IF_ON_HOST(                                    \
+      (if (!(m_record_bits & DO_NOT_DEREF_FLAG))        \
+           KOKKOS_IMPL_BRANCH_PROB { Record::increment(m_record); }))
 
-#define KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT        \
-  KOKKOS_IF_ON_HOST((if (!(m_record_bits & DO_NOT_DEREF_FLAG)) \
-                         KOKKOS_BRANCH_PROB { Record::decrement(m_record); }))
+#define KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT \
+  KOKKOS_IF_ON_HOST(                                    \
+      (if (!(m_record_bits & DO_NOT_DEREF_FLAG))        \
+           KOKKOS_IMPL_BRANCH_PROB { Record::decrement(m_record); }))
 
 #define KOKKOS_IMPL_SHARED_ALLOCATION_CARRY_RECORD_BITS(rhs,               \
                                                         override_tracking) \

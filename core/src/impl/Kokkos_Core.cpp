@@ -761,6 +761,11 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
 #else
   declare_configuration_metadata("architecture", "platform", "64bit");
 #endif
+
+#ifdef KOKKOS_ENABLE_IMPL_UNLIKELY_ATTRIBUT
+  declare_configuration_metadata(
+      "options", "KOKKOS_ENABLE_IMPL_UNLIKELY_ATTRIBUTE", "yes");
+#endif
 }
 
 void post_initialize_internal(const Kokkos::InitializationSettings& settings) {

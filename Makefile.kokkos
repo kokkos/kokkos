@@ -1231,6 +1231,9 @@ ifeq ($(KOKKOS_INTERNAL_DISABLE_BUNDLED_MDSPAN), 0)
 endif
 tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_IMPL_MDSPAN")
 
+# Unlikely attribute from C++20.
+tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_IMPL_UNLIKELY_ATTRIBUTE")
+
 KOKKOS_INTERNAL_LS_CONFIG := $(shell ls KokkosCore_config.h 2>&1)
 
 ifeq ($(KOKKOS_INTERNAL_LS_CONFIG), KokkosCore_config.h)
