@@ -120,7 +120,7 @@ class HIPInternal {
     return nullptr != m_scratchSpace && nullptr != m_scratchFlags;
   }
 
-  void initialize(const int hip_device, hipStream_t stream);
+  void initialize(hipStream_t stream);
   void finalize();
 
   void print_configuration(std::ostream &) const;
