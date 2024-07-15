@@ -135,8 +135,8 @@ class load_masked {
     for (std::size_t i = 0; i < n; ++i) {
       mask[i] = true;
     }
+    result  = T(0);
     where(mask, result).copy_from(mem, Kokkos::Experimental::simd_flag_default);
-    where(!mask, result) = 0;
     return true;
   }
   template <class T, class Abi>
