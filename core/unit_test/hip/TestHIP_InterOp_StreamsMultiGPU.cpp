@@ -45,10 +45,8 @@ struct StreamsAndDevices {
 
 std::array<TEST_EXECSPACE, 2> get_execution_spaces(
     const StreamsAndDevices &streams_and_devices) {
-  TEST_EXECSPACE exec0(streams_and_devices.devices[0],
-                       streams_and_devices.streams[0]);
-  TEST_EXECSPACE exec1(streams_and_devices.devices[1],
-                       streams_and_devices.streams[1]);
+  TEST_EXECSPACE exec0(streams_and_devices.streams[0]);
+  TEST_EXECSPACE exec1(streams_and_devices.streams[1]);
 
   // Must return void to use ASSERT_EQ
   [&]() {
