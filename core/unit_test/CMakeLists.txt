@@ -691,9 +691,6 @@ if(Kokkos_ENABLE_THREADS)
 endif()
 
 if (Kokkos_ENABLE_OPENMP)
-  list(REMOVE_ITEM OpenMP_SOURCES
-    ${CMAKE_CURRENT_BINARY_DIR}/openmp/TestOpenMP_ExecSpaceThreadSafety.cpp)
-
   set(OpenMP_EXTRA_SOURCES
     openmp/TestOpenMP_Task.cpp
   )
