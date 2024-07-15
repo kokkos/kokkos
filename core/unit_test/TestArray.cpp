@@ -56,9 +56,9 @@ static_assert(test_array_structured_binding_support());
 
 template <typename L, typename R>
 KOKKOS_FUNCTION constexpr bool is_equal(L const& l, R const& r) {
-  if (std::size(l) != std::size(r)) return false;
+  if (l.size() != r.size()) return false;
 
-  for (size_t i = 0; i != std::size(l); ++i) {
+  for (size_t i = 0; i != l.size(); ++i) {
     if (l[i] != r[i]) return false;
   }
 
@@ -137,7 +137,8 @@ struct MyInt {
   int i;
 
  private:
-  friend constexpr void kokkos_swap(MyInt& lhs, MyInt& rhs) noexcept {
+  friend constexpr KOKKOS_FUNCTION void kokkos_swap(MyInt& lhs,
+                                                    MyInt& rhs) noexcept {
     lhs.i = 255;
     rhs.i = 127;
   }
@@ -176,9 +177,10 @@ constexpr bool test_to_array() {
   static_assert(std::is_same_v<decltype(a2), Kokkos::Array<int, 4>>);
   maybe_unused(a2);
 
-// gcc8 and icc do not support the implicit conversion
-#if !(defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU < 910)) && \
-    !(defined(KOKKOS_COMPILER_INTEL) && (KOKKOS_COMPILER_INTEL < 2021))
+// gcc8, icc, and nvcc 11.3 do not support the implicit conversion
+#if !(defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU < 910)) &&      \
+    !(defined(KOKKOS_COMPILER_INTEL) && (KOKKOS_COMPILER_INTEL < 2021)) && \
+    !(defined(KOKKOS_COMPILER_NVCC) && (KOKKOS_COMPILER_NVCC < 1140))
   // deduces length with element type specified
   // implicit conversion happens
   [[maybe_unused]] auto a3 = Kokkos::to_array<long>({0, 1, 3});

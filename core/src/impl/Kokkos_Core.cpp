@@ -91,6 +91,7 @@ void combine(Kokkos::InitializationSettings& out,
   KOKKOS_IMPL_COMBINE_SETTING(map_device_id_by);
   KOKKOS_IMPL_COMBINE_SETTING(device_id);
   KOKKOS_IMPL_COMBINE_SETTING(disable_warnings);
+  KOKKOS_IMPL_COMBINE_SETTING(print_configuration);
   KOKKOS_IMPL_COMBINE_SETTING(tune_internals);
   KOKKOS_IMPL_COMBINE_SETTING(tools_help);
   KOKKOS_IMPL_COMBINE_SETTING(tools_libs);

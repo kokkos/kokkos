@@ -17,10 +17,10 @@ jobs:
     runs-on: windows-2022
 
     steps:
-    - uses: Jimver/cuda-toolkit@v0.2.14
+    - uses: Jimver/cuda-toolkit@v0.2.16
       id: cuda-toolkit
       with:
-        cuda: '12.1.0'
+        cuda: '12.4.1'
     - uses: actions/checkout@v4
     - name: configure
       shell: bash

@@ -233,7 +233,7 @@ void test_vector_allocate(unsigned int size) {
 TEST(TEST_CATEGORY, vector_combination) {
   test_vector_allocate<int, TEST_EXECSPACE>(10);
   test_vector_combinations<int, TEST_EXECSPACE>(10);
-  test_vector_combinations<int, TEST_EXECSPACE>(3057);
+  test_vector_combinations<long long int, TEST_EXECSPACE>(3057);
 }
 
 TEST(TEST_CATEGORY, vector_insert) {

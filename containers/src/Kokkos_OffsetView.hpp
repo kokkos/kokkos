@@ -471,62 +471,31 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
   template <typename I0, typename I1>
   KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
       (Kokkos::Impl::are_integral<I0, I1>::value && (2 == Rank) &&
-       is_default_map && is_layout_left && (traits::rank_dynamic == 0)),
+       is_default_map &&
+       (is_layout_left || is_layout_right || is_layout_stride)),
       reference_type>
   operator()(const I0& i0, const I1& i1) const {
     KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY((m_track, m_map, m_begins, i0, i1))
     const size_t j0 = i0 - m_begins[0];
     const size_t j1 = i1 - m_begins[1];
-    return m_map.m_impl_handle[j0 + m_map.m_impl_offset.m_dim.N0 * j1];
-  }
-
-  template <typename I0, typename I1>
-  KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
-      (Kokkos::Impl::are_integral<I0, I1>::value && (2 == Rank) &&
-       is_default_map && is_layout_left && (traits::rank_dynamic != 0)),
-      reference_type>
-  operator()(const I0& i0, const I1& i1) const {
-    KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY((m_track, m_map, m_begins, i0, i1))
-    const size_t j0 = i0 - m_begins[0];
-    const size_t j1 = i1 - m_begins[1];
-    return m_map.m_impl_handle[j0 + m_map.m_impl_offset.m_stride * j1];
-  }
-
-  template <typename I0, typename I1>
-  KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
-      (Kokkos::Impl::are_integral<I0, I1>::value && (2 == Rank) &&
-       is_default_map && is_layout_right && (traits::rank_dynamic == 0)),
-      reference_type>
-  operator()(const I0& i0, const I1& i1) const {
-    KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY((m_track, m_map, m_begins, i0, i1))
-    const size_t j0 = i0 - m_begins[0];
-    const size_t j1 = i1 - m_begins[1];
-    return m_map.m_impl_handle[j1 + m_map.m_impl_offset.m_dim.N1 * j0];
-  }
-
-  template <typename I0, typename I1>
-  KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
-      (Kokkos::Impl::are_integral<I0, I1>::value && (2 == Rank) &&
-       is_default_map && is_layout_right && (traits::rank_dynamic != 0)),
-      reference_type>
-  operator()(const I0& i0, const I1& i1) const {
-    KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY((m_track, m_map, m_begins, i0, i1))
-    const size_t j0 = i0 - m_begins[0];
-    const size_t j1 = i1 - m_begins[1];
-    return m_map.m_impl_handle[j1 + m_map.m_impl_offset.m_stride * j0];
-  }
-
-  template <typename I0, typename I1>
-  KOKKOS_FORCEINLINE_FUNCTION
-      std::enable_if_t<(Kokkos::Impl::are_integral<I0, I1>::value &&
-                        (2 == Rank) && is_default_map && is_layout_stride),
-                       reference_type>
-      operator()(const I0& i0, const I1& i1) const {
-    KOKKOS_IMPL_OFFSETVIEW_OPERATOR_VERIFY((m_track, m_map, m_begins, i0, i1))
-    const size_t j0 = i0 - m_begins[0];
-    const size_t j1 = i1 - m_begins[1];
-    return m_map.m_impl_handle[j0 * m_map.m_impl_offset.m_stride.S0 +
-                               j1 * m_map.m_impl_offset.m_stride.S1];
+    if constexpr (is_layout_left) {
+      if constexpr (traits::rank_dynamic == 0)
+        return m_map.m_impl_handle[j0 + m_map.m_impl_offset.m_dim.N0 * j1];
+      else
+        return m_map.m_impl_handle[j0 + m_map.m_impl_offset.m_stride * j1];
+    } else if constexpr (is_layout_right) {
+      if constexpr (traits::rank_dynamic == 0)
+        return m_map.m_impl_handle[j1 + m_map.m_impl_offset.m_dim.N1 * j0];
+      else
+        return m_map.m_impl_handle[j1 + m_map.m_impl_offset.m_stride * j0];
+    } else {
+      static_assert(is_layout_stride);
+      return m_map.m_impl_handle[j0 * m_map.m_impl_offset.m_stride.S0 +
+                                 j1 * m_map.m_impl_offset.m_stride.S1];
+    }
+#if defined KOKKOS_COMPILER_INTEL
+    __builtin_unreachable();
+#endif
   }
 
   //------------------------------
@@ -1871,30 +1840,41 @@ inline auto create_mirror(const Kokkos::Experimental::OffsetView<T, P...>& src,
 
 }  // namespace Impl
 
-// Create a mirror in host space
-template <class T, class... P>
+// public interface
+template <class T, class... P,
+          typename = std::enable_if_t<
+              std::is_void_v<typename ViewTraits<T, P...>::specialize>>>
 inline auto create_mirror(
     const Kokkos::Experimental::OffsetView<T, P...>& src) {
   return Impl::create_mirror(src, Impl::ViewCtorProp<>{});
 }
 
-template <class T, class... P>
+// public interface that accepts a without initializing flag
+template <class T, class... P,
+          typename = std::enable_if_t<
+              std::is_void_v<typename ViewTraits<T, P...>::specialize>>>
 inline auto create_mirror(
     Kokkos::Impl::WithoutInitializing_t wi,
     const Kokkos::Experimental::OffsetView<T, P...>& src) {
   return Impl::create_mirror(src, Kokkos::view_alloc(wi));
 }
 
-// Create a mirror in a new space
+// public interface that accepts a space
 template <class Space, class T, class... P,
-          typename Enable = std::enable_if_t<Kokkos::is_space<Space>::value>>
+          typename Enable = std::enable_if_t<
+              Kokkos::is_space<Space>::value &&
+              std::is_void_v<typename ViewTraits<T, P...>::specialize>>>
 inline auto create_mirror(
     const Space&, const Kokkos::Experimental::OffsetView<T, P...>& src) {
   return Impl::create_mirror(
       src, Kokkos::view_alloc(typename Space::memory_space{}));
 }
 
-template <class Space, class T, class... P>
+// public interface that accepts a space and a without initializing flag
+template <class Space, class T, class... P,
+          typename Enable = std::enable_if_t<
+              Kokkos::is_space<Space>::value &&
+              std::is_void_v<typename ViewTraits<T, P...>::specialize>>>
 typename Kokkos::Impl::MirrorOffsetType<Space, T, P...>::view_type
 create_mirror(Kokkos::Impl::WithoutInitializing_t wi, const Space&,
               const Kokkos::Experimental::OffsetView<T, P...>& src) {
@@ -1902,7 +1882,11 @@ create_mirror(Kokkos::Impl::WithoutInitializing_t wi, const Space&,
       src, Kokkos::view_alloc(typename Space::memory_space{}, wi));
 }
 
-template <class T, class... P, class... ViewCtorArgs>
+// public interface that accepts arbitrary view constructor args passed by a
+// view_alloc
+template <class T, class... P, class... ViewCtorArgs,
+          typename = std::enable_if_t<
+              std::is_void_v<typename ViewTraits<T, P...>::specialize>>>
 inline auto create_mirror(
     const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
     const Kokkos::Experimental::OffsetView<T, P...>& src) {
@@ -1930,7 +1914,7 @@ inline auto create_mirror_view(
       return
           typename Kokkos::Experimental::OffsetView<T, P...>::HostMirror(src);
     } else {
-      return Kokkos::Impl::create_mirror(src, arg_prop);
+      return Kokkos::create_mirror(arg_prop, src);
     }
   } else {
     if constexpr (Impl::MirrorOffsetViewType<typename Impl::ViewCtorProp<
@@ -1940,7 +1924,7 @@ inline auto create_mirror_view(
           typename Impl::ViewCtorProp<ViewCtorArgs...>::memory_space, T,
           P...>::view_type(src);
     } else {
-      return Kokkos::Impl::create_mirror(src, arg_prop);
+      return Kokkos::create_mirror(arg_prop, src);
     }
   }
 #if defined KOKKOS_COMPILER_INTEL
@@ -1950,13 +1934,14 @@ inline auto create_mirror_view(
 
 }  // namespace Impl
 
-// Create a mirror view in host space
+// public interface
 template <class T, class... P>
 inline auto create_mirror_view(
     const typename Kokkos::Experimental::OffsetView<T, P...>& src) {
   return Impl::create_mirror_view(src, Impl::ViewCtorProp<>{});
 }
 
+// public interface that accepts a without initializing flag
 template <class T, class... P>
 inline auto create_mirror_view(
     Kokkos::Impl::WithoutInitializing_t wi,
@@ -1964,7 +1949,7 @@ inline auto create_mirror_view(
   return Impl::create_mirror_view(src, Kokkos::view_alloc(wi));
 }
 
-// Create a mirror view in a new space
+// public interface that accepts a space
 template <class Space, class T, class... P,
           typename Enable = std::enable_if_t<Kokkos::is_space<Space>::value>>
 inline auto create_mirror_view(
@@ -1973,7 +1958,9 @@ inline auto create_mirror_view(
       src, Kokkos::view_alloc(typename Space::memory_space{}));
 }
 
-template <class Space, class T, class... P>
+// public interface that accepts a space and a without initializing flag
+template <class Space, class T, class... P,
+          typename Enable = std::enable_if_t<Kokkos::is_space<Space>::value>>
 inline auto create_mirror_view(
     Kokkos::Impl::WithoutInitializing_t wi, const Space&,
     const Kokkos::Experimental::OffsetView<T, P...>& src) {
@@ -1981,6 +1968,8 @@ inline auto create_mirror_view(
       src, Kokkos::view_alloc(typename Space::memory_space{}, wi));
 }
 
+// public interface that accepts arbitrary view constructor args passed by a
+// view_alloc
 template <class T, class... P, class... ViewCtorArgs>
 inline auto create_mirror_view(
     const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
@@ -1988,7 +1977,9 @@ inline auto create_mirror_view(
   return Impl::create_mirror_view(src, arg_prop);
 }
 
-// Create a mirror view and deep_copy in a new space
+// create a mirror view and deep copy it
+// public interface that accepts arbitrary view constructor args passed by a
+// view_alloc
 template <class... ViewCtorArgs, class T, class... P>
 typename Kokkos::Impl::MirrorOffsetViewType<
     typename Impl::ViewCtorProp<ViewCtorArgs...>::memory_space, T,

@@ -186,7 +186,7 @@ class Cuda {
   ///
   /// This matches the __CUDA_ARCH__ specification.
   KOKKOS_DEPRECATED static size_type device_arch() {
-    const cudaDeviceProp& cudaProp = Cuda().cuda_device_prop();
+    const cudaDeviceProp cudaProp = Cuda().cuda_device_prop();
     return cudaProp.major * 100 + cudaProp.minor;
   }
 

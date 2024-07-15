@@ -94,6 +94,8 @@ SET(COMPILE_ONLY_SOURCES
   TestTypeList.cpp
   TestMDRangePolicyCTAD.cpp
   TestTeamPolicyCTAD.cpp
+  TestTeamMDRangePolicyCTAD.cpp
+  TestNestedReducerCTAD.cpp
   view/TestExtentsDatatypeConversion.cpp
 )
 
@@ -106,6 +108,9 @@ endif()
 IF(KOKKOS_HAS_TRILINOS)
   LIST(REMOVE_ITEM COMPILE_ONLY_SOURCES TestInterOp.cpp)
 ENDIF()
+if(Kokkos_ENABLE_OPENMPTARGET)
+  list(REMOVE_ITEM COMPILE_ONLY_SOURCES TestNestedReducerCTAD.cpp)
+endif()
 KOKKOS_ADD_EXECUTABLE(
   CoreTestCompileOnly
   SOURCES
@@ -187,6 +192,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
         MDRangePolicyConstructors
         MDRangeReduce
         MDSpan
+        MDSpanAtomicAccessor
         MDSpanConversion
         MinMaxClamp
         NumericTraits
@@ -207,10 +213,17 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
         Reductions
         Reductions_DeviceView
         SharedAlloc
+        SpaceAwareAccessorAccessViolation
+        SpaceAwareAccessor
         Swap
         )
     IF (NOT Kokkos_ENABLE_IMPL_MDSPAN)
-      LIST(REMOVE_ITEM ${Tag}_TESTNAMES1B MDSpanConversion)
+      LIST(REMOVE_ITEM ${Tag}_TESTNAMES1B
+         MDSpanAtomicAccessor
+         MDSpanConversion
+         SpaceAwareAccessorAccessViolation
+         SpaceAwareAccessor
+      )
     ENDIF()
     foreach(Name IN LISTS ${Tag}_TESTNAMES1B)
       set(file ${dir}/Test${Tag}_${Name}.cpp)
@@ -225,7 +238,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
     endforeach()
 
     SET(${Tag}_SOURCES2A)
-    foreach(Name
+    SET(${TAG}_TESTNAMES2A
       TeamBasic
       TeamCombinedReducers
       TeamMDRange
@@ -259,6 +272,15 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
       WorkGraph
       WithoutInitializing
       )
+    # Workaround to internal compiler error with intel classic compilers
+    # when using -no-ip flag in ViewCopy_c
+    # See issue: https://github.com/kokkos/kokkos/issues/7084
+    IF(KOKKOS_CXX_COMPILER_ID STREQUAL Intel)
+      LIST(REMOVE_ITEM ${Tag}_TESTNAMES2A
+        ViewCopy_c
+      )
+    endif()
+    foreach(Name IN LISTS ${Tag}_TESTNAMES2A)
       set(file ${dir}/Test${Tag}_${Name}.cpp)
       # Write to a temporary intermediate file and call configure_file to avoid
       # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
@@ -645,8 +667,6 @@ IF(KOKKOS_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
 endif()
 
 if(Kokkos_ENABLE_SERIAL)
-  list(REMOVE_ITEM Serial_SOURCES1
-    ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_ExecSpaceThreadSafety.cpp)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     CoreUnitTest_Serial1
     SOURCES

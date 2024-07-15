@@ -385,11 +385,9 @@ SharedAllocationRecord<void, void>
   template class Kokkos::Impl::HostInaccessibleSharedAllocationRecordCommon<           \
       MEMORY_SPACE>
 
-namespace {
-
 /* Taking the address of this function so make sure it is unique */
 template <class MemorySpace, class DestroyFunctor>
-void deallocate(SharedAllocationRecord<void, void>* record_ptr) {
+inline void deallocate(SharedAllocationRecord<void, void>* record_ptr) {
   using base_type = SharedAllocationRecord<MemorySpace, void>;
   using this_type = SharedAllocationRecord<MemorySpace, DestroyFunctor>;
 
@@ -400,8 +398,6 @@ void deallocate(SharedAllocationRecord<void, void>* record_ptr) {
 
   delete ptr;
 }
-
-}  // namespace
 
 /*
  *  Memory space specialization of SharedAllocationRecord< Space , void >
@@ -644,6 +640,38 @@ union SharedAllocationTracker {
 #undef KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT
 };
 
+struct SharedAllocationDisableTrackingGuard {
+  SharedAllocationDisableTrackingGuard() {
+    KOKKOS_ASSERT(
+        (Kokkos::Impl::SharedAllocationRecord<void, void>::tracking_enabled()));
+    Kokkos::Impl::SharedAllocationRecord<void, void>::tracking_disable();
+  }
+
+  SharedAllocationDisableTrackingGuard(
+      const SharedAllocationDisableTrackingGuard&) = delete;
+  SharedAllocationDisableTrackingGuard(SharedAllocationDisableTrackingGuard&&) =
+      delete;
+
+  ~SharedAllocationDisableTrackingGuard() {
+    KOKKOS_ASSERT((
+        !Kokkos::Impl::SharedAllocationRecord<void, void>::tracking_enabled()));
+    Kokkos::Impl::SharedAllocationRecord<void, void>::tracking_enable();
+  }
+  // clang-format off
+  // The old version of clang format we use is particularly egregious here
+  SharedAllocationDisableTrackingGuard& operator=(
+      const SharedAllocationDisableTrackingGuard&) = delete;
+  SharedAllocationDisableTrackingGuard& operator=(
+      SharedAllocationDisableTrackingGuard&&) = delete;
+  // clang-format on
+};
+
+template <class FunctorType, class... Args>
+inline FunctorType construct_with_shared_allocation_tracking_disabled(
+    Args&&... args) {
+  [[maybe_unused]] auto guard = SharedAllocationDisableTrackingGuard{};
+  return {std::forward<Args>(args)...};
+}
 } /* namespace Impl */
 } /* namespace Kokkos */
 #endif

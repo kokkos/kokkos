@@ -10,6 +10,6 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Run clang-format style check.
-      uses: DoozyX/clang-format-lint-action@v0.16.2
+      uses: DoozyX/clang-format-lint-action@v0.17
       with:
         clangFormatVersion: 8

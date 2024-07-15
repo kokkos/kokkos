@@ -59,12 +59,6 @@ const std::unique_ptr<Kokkos::Cuda> &Kokkos::Impl::cuda_get_deep_copy_space(
 namespace Kokkos {
 namespace Impl {
 
-namespace {
-
-static std::atomic<int> num_uvm_allocations(0);
-
-}  // namespace
-
 void DeepCopyCuda(void *dst, const void *src, size_t n) {
   KOKKOS_IMPL_CUDA_SAFE_CALL((CudaInternal::singleton().cuda_memcpy_wrapper(
       dst, src, n, cudaMemcpyDefault)));
@@ -252,8 +246,6 @@ void *CudaUVMSpace::impl_allocate(
   Cuda::impl_static_fence(
       "Kokkos::CudaUVMSpace::impl_allocate: Pre UVM Allocation");
   if (arg_alloc_size > 0) {
-    Kokkos::Impl::num_uvm_allocations++;
-
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_device));
     cudaError_t error_code =
         cudaMallocManaged(&ptr, arg_alloc_size, cudaMemAttachGlobal);
@@ -341,27 +333,24 @@ void CudaSpace::impl_deallocate(
     Kokkos::Profiling::deallocateData(arg_handle, arg_label, arg_alloc_ptr,
                                       reported_size);
   }
-  try {
 #ifndef CUDART_VERSION
 #error CUDART_VERSION undefined!
 #elif (defined(KOKKOS_ENABLE_IMPL_CUDA_MALLOC_ASYNC) && CUDART_VERSION >= 11020)
-    if (arg_alloc_size >= memory_threshold_g) {
-      Impl::cuda_device_synchronize(
-          "Kokkos::Cuda: backend fence before async free");
-      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_device));
-      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFreeAsync(arg_alloc_ptr, m_stream));
-      Impl::cuda_device_synchronize(
-          "Kokkos::Cuda: backend fence after async free");
-    } else {
-      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_device));
-      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFree(arg_alloc_ptr));
-    }
-#else
+  if (arg_alloc_size >= memory_threshold_g) {
+    Impl::cuda_device_synchronize(
+        "Kokkos::Cuda: backend fence before async free");
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_device));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFreeAsync(arg_alloc_ptr, m_stream));
+    Impl::cuda_device_synchronize(
+        "Kokkos::Cuda: backend fence after async free");
+  } else {
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_device));
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFree(arg_alloc_ptr));
-#endif
-  } catch (...) {
   }
+#else
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_device));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFree(arg_alloc_ptr));
+#endif
 }
 void CudaUVMSpace::deallocate(void *const arg_alloc_ptr,
                               const size_t arg_alloc_size) const {
@@ -387,13 +376,9 @@ void CudaUVMSpace::impl_deallocate(
     Kokkos::Profiling::deallocateData(arg_handle, arg_label, arg_alloc_ptr,
                                       reported_size);
   }
-  try {
-    if (arg_alloc_ptr != nullptr) {
-      Kokkos::Impl::num_uvm_allocations--;
-      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_device));
-      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFree(arg_alloc_ptr));
-    }
-  } catch (...) {
+  if (arg_alloc_ptr != nullptr) {
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_device));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFree(arg_alloc_ptr));
   }
   Cuda::impl_static_fence(
       "Kokkos::CudaUVMSpace::impl_deallocate: Post UVM Deallocation");
@@ -420,11 +405,8 @@ void CudaHostPinnedSpace::impl_deallocate(
     Kokkos::Profiling::deallocateData(arg_handle, arg_label, arg_alloc_ptr,
                                       reported_size);
   }
-  try {
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_device));
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFreeHost(arg_alloc_ptr));
-  } catch (...) {
-  }
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_device));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFreeHost(arg_alloc_ptr));
 }
 
 }  // namespace Kokkos
