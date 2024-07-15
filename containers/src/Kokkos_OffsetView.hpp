@@ -1816,7 +1816,7 @@ namespace Impl {
 // view_alloc
 template <class T, class... P, class... ViewCtorArgs>
 inline auto create_mirror(const Kokkos::Experimental::OffsetView<T, P...>& src,
-                          const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
+                          const ViewCtorProp<ViewCtorArgs...>& arg_prop) {
   check_view_ctor_args_create_mirror<ViewCtorArgs...>();
 
   if constexpr (Impl::ViewCtorProp<ViewCtorArgs...>::has_memory_space) {
@@ -1914,7 +1914,7 @@ inline auto create_mirror_view(
       return
           typename Kokkos::Experimental::OffsetView<T, P...>::HostMirror(src);
     } else {
-      return Kokkos::create_mirror(arg_prop, src);
+      return Kokkos::Impl::choose_create_mirror(src, arg_prop);
     }
   } else {
     if constexpr (Impl::MirrorOffsetViewType<typename Impl::ViewCtorProp<
@@ -1924,7 +1924,7 @@ inline auto create_mirror_view(
           typename Impl::ViewCtorProp<ViewCtorArgs...>::memory_space, T,
           P...>::view_type(src);
     } else {
-      return Kokkos::create_mirror(arg_prop, src);
+      return Kokkos::Impl::choose_create_mirror(src, arg_prop);
     }
   }
 #if defined KOKKOS_COMPILER_INTEL
