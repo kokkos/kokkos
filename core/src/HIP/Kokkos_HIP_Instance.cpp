@@ -172,27 +172,22 @@ void HIPInternal::fence(const std::string &name) const {
       [&]() { KOKKOS_IMPL_HIP_SAFE_CALL(hip_stream_synchronize_wrapper()); });
 }
 
-void HIPInternal::initialize(const int hip_device, hipStream_t stream) {
+void HIPInternal::initialize(hipStream_t stream) {
   KOKKOS_EXPECTS(!is_initialized());
 
   if (was_finalized)
     Kokkos::abort("Calling HIP::initialize after HIP::finalize is illegal\n");
 
+    // Get the device ID. If this is rocm5.6 or later, we can query this from
+    // the provided stream and potentially use multiple GPU devices, if rocm5.5
+    // or earlier, we must use the singleton device id and there are no checks
+    // possible for the device id matching the device the stream was created on.
 #if (HIP_VERSION_MAJOR > 5 || \
      (HIP_VERSION_MAJOR == 5 && HIP_VERSION_MINOR >= 6))
-  // Query device ID from stream and require it matches given device id (only
-  // available for rocm versions 5.6 and later)
-  int dev_id;
-  KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamGetDevice(stream, &dev_id));
-  if (hip_device != dev_id)
-    Kokkos::abort(
-        std::string("Kokkos::HIPInternal::initialize: ERROR device id provided "
-                    "in HIP() constructor does not match device used to "
-                    "initialized the stream provided.\n")
-            .c_str());
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamGetDevice(stream, &m_hipDev));
+#else
+  m_hipDev = singleton().m_hipDev;
 #endif
-
-  m_hipDev = hip_device;
   KOKKOS_IMPL_HIP_SAFE_CALL(hipSetDevice(m_hipDev));
   hip_devices.insert(m_hipDev);
 
