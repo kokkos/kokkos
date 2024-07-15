@@ -1816,7 +1816,7 @@ namespace Impl {
 // view_alloc
 template <class T, class... P, class... ViewCtorArgs>
 inline auto create_mirror(const Kokkos::Experimental::OffsetView<T, P...>& src,
-                          const ViewCtorProp<ViewCtorArgs...>& arg_prop) {
+                          const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
   check_view_ctor_args_create_mirror<ViewCtorArgs...>();
 
   if constexpr (Impl::ViewCtorProp<ViewCtorArgs...>::has_memory_space) {
