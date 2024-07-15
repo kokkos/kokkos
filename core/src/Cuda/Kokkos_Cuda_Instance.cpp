@@ -702,6 +702,14 @@ void Cuda::print_configuration(std::ostream &os, bool /*verbose*/) const {
   os << "  KOKKOS_ENABLE_IMPL_CUDA_MALLOC_ASYNC: ";
 #ifdef KOKKOS_ENABLE_IMPL_CUDA_MALLOC_ASYNC
   os << "yes\n";
+  {
+    char *env_string = getenv("EXPERIMENTAL_CUDA_ASYNC_MEMPOOL_SIZE");
+    os << "  EXPERIMENTAL_CUDA_ASYNC_MEMPOOL_SIZE: ";
+    if (!env_string)
+      os << "no\n";
+    else
+      os << env_string << "\n";
+  }
 #else
   os << "no\n";
 #endif
