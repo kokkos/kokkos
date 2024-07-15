@@ -197,9 +197,9 @@ bool initializeMempool(const int device_id, const cudaStream_t stream,
                        cudaError_t &error_code) {
   error_code = cudaSuccess;
 
-  // Interpret env var
-  char *env_string = getenv("KOKKOS_CUDA_MEMPOOL_SIZE");
-  if (!env_string) return true;  // Nothing to set, initialization is complete
+  // Interpret env var 
+  char *env_string = getenv("EXPERIMENTAL_CUDA_ASYNC_MEMPOOL_SIZE");
+  if (! env_string ) return true; // Nothing to set, initialization is complete
 
   // Env var can be a decimal e.g. 2.4g
   double factor = 1;  // bytes
