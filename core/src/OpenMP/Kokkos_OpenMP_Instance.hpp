@@ -72,7 +72,6 @@ class OpenMPInternal {
 
   int m_pool_size;
   int m_level;
-  int m_pool_mutex = 0;
 
   HostThreadTeamData* m_pool[OpenMPTraits::MAX_THREAD_COUNT];
 
