@@ -1026,30 +1026,34 @@ KOKKOS_ADD_EXECUTABLE_AND_TEST(
     default/TestDefaultDeviceDevelop.cpp
 )
 
-# This test is special, because it passes exactly when it prints the
-# message "PASSED: I am the custom std::terminate handler.", AND calls
-# std::terminate.  This means that we can't use
-# KOKKOS_ADD_EXECUTABLE_AND_TEST.  See GitHub issue #2147.
-KOKKOS_ADD_TEST_EXECUTABLE(
-  CoreUnitTest_PushFinalizeHookTerminate
-  SOURCES UnitTest_PushFinalizeHook_terminate.cpp
-)
-add_test(
-  NAME Kokkos_CoreUnitTest_PushFinalizeHookTerminateRegex
-  COMMAND ${CMAKE_COMMAND} -E env $<TARGET_FILE:Kokkos_CoreUnitTest_PushFinalizeHookTerminate>
-)
-set_property(
-  TEST Kokkos_CoreUnitTest_PushFinalizeHookTerminateRegex
-  PROPERTY PASS_REGULAR_EXPRESSION "PASSED: I am the custom std::terminate handler."
-)
-add_test(
-  NAME Kokkos_CoreUnitTest_PushFinalizeHookTerminateFails
-  COMMAND ${CMAKE_COMMAND} -E env $<TARGET_FILE:Kokkos_CoreUnitTest_PushFinalizeHookTerminate>
-)
-set_property(
-  TEST Kokkos_CoreUnitTest_PushFinalizeHookTerminateFails
-  PROPERTY WILL_FAIL TRUE
-)
+# With MSVC, the terminate handler is called and prints the message but the
+# program does not seem to exit and we get a timeout with ctest.
+if (NOT WIN32)
+  # This test is special, because it passes exactly when it prints the
+  # message "PASSED: I am the custom std::terminate handler.", AND calls
+  # std::terminate.  This means that we can't use
+  # KOKKOS_ADD_EXECUTABLE_AND_TEST.  See GitHub issue #2147.
+  KOKKOS_ADD_TEST_EXECUTABLE(
+    CoreUnitTest_PushFinalizeHookTerminate
+    SOURCES UnitTest_PushFinalizeHook_terminate.cpp
+  )
+  add_test(
+    NAME Kokkos_CoreUnitTest_PushFinalizeHookTerminateRegex
+    COMMAND ${CMAKE_COMMAND} -E env $<TARGET_FILE:Kokkos_CoreUnitTest_PushFinalizeHookTerminate>
+  )
+  set_property(
+    TEST Kokkos_CoreUnitTest_PushFinalizeHookTerminateRegex
+    PROPERTY PASS_REGULAR_EXPRESSION "PASSED: I am the custom std::terminate handler."
+  )
+  add_test(
+    NAME Kokkos_CoreUnitTest_PushFinalizeHookTerminateFails
+    COMMAND ${CMAKE_COMMAND} -E env $<TARGET_FILE:Kokkos_CoreUnitTest_PushFinalizeHookTerminate>
+  )
+  set_property(
+    TEST Kokkos_CoreUnitTest_PushFinalizeHookTerminateFails
+    PROPERTY WILL_FAIL TRUE
+  )
+endif()
 
   if(KOKKOS_ENABLE_TUNING)
     KOKKOS_ADD_EXECUTABLE_AND_TEST(
