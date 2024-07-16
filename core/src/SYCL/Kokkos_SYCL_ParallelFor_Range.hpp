@@ -74,16 +74,15 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
   const Policy m_policy;
 
   template <typename Functor>
-  static sycl::event sycl_direct_launch(const Policy& policy,
-                                        const Functor& functor,
-                                        const sycl::event& memcpy_event) {
+  sycl::event sycl_direct_launch(const Policy& policy, const Functor& functor,
+                                 const sycl::event& memcpy_event) const {
     // Convenience references
     const Kokkos::Experimental::SYCL& space = policy.space();
     sycl::queue& q                          = space.sycl_queue();
 
     desul::ensure_sycl_lock_arrays_on_device(q);
 
-    auto parallel_for_event = q.submit([&](sycl::handler& cgh) {
+    auto cgh_lambda = [&](sycl::handler& cgh) {
 #ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
       cgh.depends_on(memcpy_event);
 #else
@@ -111,12 +110,22 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
             FunctorWrapperRangePolicyParallelForCustom<Functor, Policy>>(range,
                                                                          f);
       }
-    });
-#ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
-    q.ext_oneapi_submit_barrier(std::vector<sycl::event>{parallel_for_event});
-#endif
+    };
 
-    return parallel_for_event;
+#ifdef SYCL_EXT_ONEAPI_GRAPH
+    if constexpr (Policy::is_graph_kernel::value) {
+      sycl_attach_kernel_to_node(*this, cgh_lambda);
+      return {};
+    } else
+#endif
+    {
+      auto parallel_for_event = q.submit(cgh_lambda);
+
+#ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
+      q.ext_oneapi_submit_barrier(std::vector<sycl::event>{parallel_for_event});
+#endif
+      return parallel_for_event;
+    }
   }
 
  public:
