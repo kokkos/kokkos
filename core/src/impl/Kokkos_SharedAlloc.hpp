@@ -483,6 +483,12 @@ union SharedAllocationTracker {
   // pressure on compiler optimization by reducing
   // number of symbols and inline functions.
 
+#ifdef KOKKOS_IMPL_REF_COUNT_BRANCH_UNLIKELY
+#define KOKKOS_IMPL_BRANCH_PROB KOKKOS_IMPL_ATTRIBUTE_UNLIKELY
+#else
+#define KOKKOS_IMPL_BRANCH_PROB
+#endif
+
 #define KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_INCREMENT \
   KOKKOS_IF_ON_HOST(                                    \
       (if (!(m_record_bits & DO_NOT_DEREF_FLAG))        \
@@ -638,6 +644,7 @@ union SharedAllocationTracker {
 
 #undef KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_INCREMENT
 #undef KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT
+#undef KOKKOS_IMPL_BRANCH_PROB
 };
 
 struct SharedAllocationDisableTrackingGuard {

@@ -1232,7 +1232,7 @@ endif
 tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_IMPL_MDSPAN")
 
 # Unlikely attribute from C++20.
-tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_IMPL_UNLIKELY_ATTRIBUTE")
+tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_IMPL_REF_COUNT_BRANCH_UNLIKELY")
 
 KOKKOS_INTERNAL_LS_CONFIG := $(shell ls KokkosCore_config.h 2>&1)
 
