@@ -105,4 +105,3 @@ std::string Experimental::RawMemoryAllocationFailure::get_error_message()
 }
 
 }  // namespace Kokkos
-
