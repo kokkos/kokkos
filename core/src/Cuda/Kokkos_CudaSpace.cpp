@@ -73,8 +73,8 @@ void throw_cuda_allocation_failure(size_t alloc_size, cudaError_t error_code,
   msg += " returned error code \"";
   msg += cudaGetErrorName(error_code);
   msg += "\"";
-  throw_bad_alloc(alloc_size, std::align_val_t{1}, get_failure_mode(error_code),
-                  std::move(msg));
+  Kokkos::Impl::throw_bad_alloc(alloc_size, std::align_val_t{1},
+                                get_failure_mode(error_code), std::move(msg));
 }
 
 }  // namespace
@@ -221,7 +221,7 @@ void *impl_allocate_common(const int device_id,
     // we should do here since we're turning it into an
     // exception here
     cudaGetLastError();
-    throw_cuda_allocation_failure(arg_alloc_size, errot_code, "cudaMalloc()");
+    throw_cuda_allocation_failure(arg_alloc_size, error_code, "cudaMalloc()");
   }
 
   if (Kokkos::Profiling::profileLibraryLoaded()) {
@@ -275,7 +275,7 @@ void *CudaUVMSpace::impl_allocate(
       // we should do here since we're turning it into an
       // exception here
       cudaGetLastError();
-      throw_cuda_allocation_failure(arg_alloc_size, errot_code,
+      throw_cuda_allocation_failure(arg_alloc_size, error_code,
                                     "cudaMallocManaged()");
     }
 
@@ -317,7 +317,7 @@ void *CudaHostPinnedSpace::impl_allocate(
     // we should do here since we're turning it into an
     // exception here
     cudaGetLastError();
-    throw_cuda_allocation_failure(arg_alloc_size, errot_code,
+    throw_cuda_allocation_failure(arg_alloc_size, error_code,
                                   "cudaHostMalloc()");
   }
   if (Kokkos::Profiling::profileLibraryLoaded()) {

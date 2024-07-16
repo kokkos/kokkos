@@ -58,7 +58,7 @@ void DeepCopyAsyncSYCL(void* dst, const void* src, size_t n) {
 /*--------------------------------------------------------------------------*/
 namespace {
 
-std::string_view get_usm_alloc_function_name(sycl::usm::alloc kind) {
+std::string_view get_usm_alloc_function_name(sycl::usm::alloc allocation_kind) {
   switch (allocation_kind) {
     case sycl::usm::alloc::host: return "sycl::malloc_host()";
     case sycl::usm::alloc::device: return "sycl::malloc_device()";
@@ -99,9 +99,9 @@ void* allocate_sycl(const char* arg_label, const size_t arg_alloc_size,
   if (hostPtr == nullptr) {
     using FailureMode =
         Kokkos::Experimental::RawMemoryAllocationFailure::FailureMode;
-    Kokkos::Impl::throw_bad_alloc(arg_alloc_size, std::align_val_t{1},
-                                  FailureMode::Unknown,
-                                  get_usm_alloc_function_name(allocation_kind));
+    Kokkos::Impl::throw_bad_alloc(
+        arg_alloc_size, std::align_val_t{1}, FailureMode::Unknown,
+        std::string(get_usm_alloc_function_name(allocation_kind)));
   }
 
   if (Kokkos::Profiling::profileLibraryLoaded()) {
