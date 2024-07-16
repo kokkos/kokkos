@@ -58,7 +58,7 @@ pipeline {
                               make -j8 && ctest --verbose'''
                     }
                 }
-                stage('CUDA-12.2-NVHPC') {
+                stage('CUDA-12.2-NVHPC-AS-HOST-COMPILER') {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.nvhpc'
