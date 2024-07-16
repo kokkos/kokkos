@@ -58,15 +58,16 @@
 #include <impl/Kokkos_NvidiaGpuArchitectures.hpp>
 #endif
 
+#if !defined(KOKKOS_ENABLE_CXX17)
 #if __has_include(<version>)
 #include <version>
 #else
 #include <iso646.h>
 #endif
-#if !defined(KOKKOS_ENABLE_CXX17) && defined(_GLIBCXX_RELEASE) && \
-    _GLIBCXX_RELEASE < 10
+#if defined(_GLIBCXX_RELEASE) && _GLIBCXX_RELEASE < 10
 #error \
     "Compiling with support for C++20 or later requires a libstdc++ version later than 9"
+#endif
 #endif
 
 //----------------------------------------------------------------------------
