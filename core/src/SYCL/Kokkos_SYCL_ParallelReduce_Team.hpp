@@ -23,6 +23,7 @@
 #include <SYCL/Kokkos_SYCL_TeamPolicy.hpp>
 #include <SYCL/Kokkos_SYCL_WorkgroupReduction.hpp>
 
+#include <sstream>
 #include <vector>
 
 template <class CombinedFunctorReducerType, class... Properties>
