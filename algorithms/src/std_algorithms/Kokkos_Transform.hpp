@@ -62,7 +62,7 @@ auto transform(const ExecutionSpace& ex,
                UnaryOperation unary_op) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
-  Impl::expect_matching_extents(source, dest);
+  Impl::expect_dest_large_enough(source, dest);
 
   return Impl::transform_exespace_impl("Kokkos::transform_view_api_default", ex,
                                        begin(source), end(source), begin(dest),
@@ -78,7 +78,7 @@ auto transform(const std::string& label, const ExecutionSpace& ex,
                UnaryOperation unary_op) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
-  Impl::expect_matching_extents(source, dest);
+  Impl::expect_dest_large_enough(source, dest);
 
   return Impl::transform_exespace_impl(label, ex, begin(source), end(source),
                                        begin(dest), std::move(unary_op));
@@ -126,8 +126,8 @@ auto transform(const ExecutionSpace& ex,
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source1);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source2);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
-  Impl::expect_matching_extents(source1, dest);
-  Impl::expect_matching_extents(source2, dest);
+  Impl::expect_dest_large_enough(source1, dest);
+  Impl::expect_dest_large_enough(source2, dest);
 
   return Impl::transform_exespace_impl(
       "Kokkos::transform_view_api_default", ex, begin(source1), end(source1),
@@ -146,8 +146,8 @@ auto transform(const std::string& label, const ExecutionSpace& ex,
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source1);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source2);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
-  Impl::expect_matching_extents(source1, dest);
-  Impl::expect_matching_extents(source2, dest);
+  Impl::expect_dest_large_enough(source1, dest);
+  Impl::expect_dest_large_enough(source2, dest);
 
   return Impl::transform_exespace_impl(label, ex, begin(source1), end(source1),
                                        begin(source2), begin(dest),
@@ -184,7 +184,7 @@ KOKKOS_FUNCTION auto transform(
     UnaryOperation unary_op) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
-  Impl::expect_matching_extents(source, dest);
+  Impl::expect_dest_large_enough(source, dest);
 
   return Impl::transform_team_impl(teamHandle, begin(source), end(source),
                                    begin(dest), std::move(unary_op));
@@ -220,8 +220,8 @@ KOKKOS_FUNCTION auto transform(
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source1);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source2);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
-  Impl::expect_matching_extents(source1, dest);
-  Impl::expect_matching_extents(source2, dest);
+  Impl::expect_dest_large_enough(source1, dest);
+  Impl::expect_dest_large_enough(source2, dest);
 
   return Impl::transform_team_impl(teamHandle, begin(source1), end(source1),
                                    begin(source2), begin(dest),

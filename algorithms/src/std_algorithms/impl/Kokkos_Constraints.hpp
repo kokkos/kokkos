@@ -264,14 +264,29 @@ KOKKOS_INLINE_FUNCTION void expect_no_overlap(
 
 template <typename DataType1, typename... Properties1, typename DataType2,
           typename... Properties2>
-KOKKOS_INLINE_FUNCTION void expect_matching_extents(
-    const ::Kokkos::View<DataType1, Properties1...>& a,
-    const ::Kokkos::View<DataType2, Properties2...>& b) {
-  // this is a no-op for release
-  KOKKOS_EXPECTS(a.extent(0) == b.extent(0));
+KOKKOS_INLINE_FUNCTION void expect_equal_extents(
+    const ::Kokkos::View<DataType1, Properties1...>& from,
+    const ::Kokkos::View<DataType2, Properties2...>& dest) {
+  // this is from no-op for release
+  KOKKOS_EXPECTS(from.extent(0) == dest.extent(0));
   // avoid compiler complaining when KOKKOS_EXPECTS is no-op
-  (void)a;
-  (void)b;
+  (void)from;
+  (void)dest;
+}
+
+//
+// Check if the destination view is large enough to hold the data from the source
+//
+template <typename DataType1, typename... Properties1, typename DataType2,
+          typename... Properties2>
+KOKKOS_INLINE_FUNCTION void expect_dest_large_enough(
+    const ::Kokkos::View<DataType1, Properties1...>& from,
+    const ::Kokkos::View<DataType2, Properties2...>& dest) {
+  // this is from no-op for release
+  KOKKOS_EXPECTS(from.extent(0) <= dest.extent(0));
+  // avoid compiler complaining when KOKKOS_EXPECTS is no-op
+  (void)from;
+  (void)dest;
 }
 
 }  // namespace Impl
