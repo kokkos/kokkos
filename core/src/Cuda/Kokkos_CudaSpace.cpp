@@ -191,8 +191,8 @@ void *impl_allocate_common(const int device_id,
                 "CUDA runtime version >=12.2 required when "
                 "Kokkos_ENABLE_IMPL_CUDA_UNIFIED_MEMORY is set");
   if (arg_alloc_size) {  // cudaMemAdvise_v2 does not work with nullptr
-    ptr = malloc(arg_alloc_size);
-    if (ptr != nullptr) {
+    error_code = cudaMallocManaged(&ptr, arg_alloc_size, cudaMemAttachGlobal);
+    if (error_code == cudaSuccess) {
       // One would think cudaMemLocation{device_id,
       // cudaMemLocationTypeDeivce} would work but it doesn't. I.e. the order of
       // members doesn't seem to be defined.
@@ -201,10 +201,6 @@ void *impl_allocate_common(const int device_id,
       loc.type = cudaMemLocationTypeDevice;
       KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMemAdvise_v2(
           ptr, arg_alloc_size, cudaMemAdviseSetPreferredLocation, loc));
-    } else {
-      // I think this is the most logical error to return unless we
-      // want a different mechanism for this code path
-      error_code = cudaErrorMemoryAllocation;
     }
   }
 #elif (defined(KOKKOS_ENABLE_IMPL_CUDA_MALLOC_ASYNC) && CUDART_VERSION >= 11020)
@@ -367,12 +363,11 @@ void CudaSpace::impl_deallocate(
 #ifndef CUDART_VERSION
 #error CUDART_VERSION undefined!
 #elif defined(KOKKOS_ENABLE_IMPL_CUDA_EMULATE_UNIFIED_MEMORY)
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_device));
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFree(arg_alloc_ptr));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_device));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFree(arg_alloc_ptr));
 #elif defined(KOKKOS_ENABLE_IMPL_CUDA_UNIFIED_MEMORY)
-    Impl::cuda_device_synchronize(
-        "Kokkos::Cuda: backend fence before unified memory free");
-    free(arg_alloc_ptr);
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_device));
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFree(arg_alloc_ptr));
 #elif (defined(KOKKOS_ENABLE_IMPL_CUDA_MALLOC_ASYNC) && CUDART_VERSION >= 11020)
   if (arg_alloc_size >= memory_threshold_g) {
     Impl::cuda_device_synchronize(
