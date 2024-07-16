@@ -22,6 +22,7 @@
 #include <SYCL/Kokkos_SYCL_Team.hpp>
 #include <SYCL/Kokkos_SYCL_TeamPolicy.hpp>
 
+#include <sstream>
 #include <vector>
 
 template <typename FunctorType, typename... Properties>
