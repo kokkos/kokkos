@@ -483,7 +483,7 @@ union SharedAllocationTracker {
   // pressure on compiler optimization by reducing
   // number of symbols and inline functions.
 
-#ifdef KOKKOS_IMPL_REF_COUNT_BRANCH_UNLIKELY
+#ifdef KOKKOS_ENABLE_IMPL_REF_COUNT_BRANCH_UNLIKELY
 #define KOKKOS_IMPL_BRANCH_PROB KOKKOS_IMPL_ATTRIBUTE_UNLIKELY
 #else
 #define KOKKOS_IMPL_BRANCH_PROB
