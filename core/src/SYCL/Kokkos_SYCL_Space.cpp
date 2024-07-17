@@ -97,10 +97,8 @@ void* allocate_sycl(const char* arg_label, const size_t arg_alloc_size,
   void* const hostPtr = sycl::malloc(arg_alloc_size, queue, allocation_kind);
 
   if (hostPtr == nullptr) {
-    using FailureMode =
-        Kokkos::Experimental::RawMemoryAllocationFailure::FailureMode;
     Kokkos::Impl::throw_bad_alloc(
-        arg_alloc_size, std::align_val_t{1}, FailureMode::Unknown,
+        arg_alloc_size, std::align_val_t{1},
         std::string(get_usm_alloc_function_name(allocation_kind)));
   }
 

@@ -331,13 +331,6 @@ void safe_throw_allocation_with_header_failure(
       << "\".  Allocation using MemorySpace named \"" << space_name
       << "\" failed with the following error:  ";
     failure.print_error_message(o);
-    if (failure.failure_mode() ==
-        Kokkos::Experimental::RawMemoryAllocationFailure::FailureMode::
-            AllocationNotAligned) {
-      // TODO: delete the misaligned memory?
-      o << "Warning: Allocation failed due to misalignment; memory may "
-           "be leaked.\n";
-    }
     o.flush();
   };
   try {

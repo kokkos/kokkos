@@ -79,15 +79,9 @@ void *HostSpace::impl_allocate(
     ptr = operator new (arg_alloc_size, std::align_val_t(alignment),
                         std::nothrow_t{});
 
-  using FailureMode = Experimental::RawMemoryAllocationFailure::FailureMode;
-  if (!ptr) {
-    Impl::throw_bad_alloc(arg_alloc_size, std::align_val_t{alignment},
-                          FailureMode::OutOfMemoryError, "standard malloc()");
-  }
-  if ((reinterpret_cast<uintptr_t>(ptr) == ~uintptr_t(0)) ||
+  if (!ptr || (reinterpret_cast<uintptr_t>(ptr) == ~uintptr_t(0)) ||
       (reinterpret_cast<uintptr_t>(ptr) & alignment_mask)) {
     Impl::throw_bad_alloc(arg_alloc_size, std::align_val_t{alignment},
-                          FailureMode::AllocationNotAligned,
                           "standard malloc()");
   }
   if (Kokkos::Profiling::profileLibraryLoaded()) {

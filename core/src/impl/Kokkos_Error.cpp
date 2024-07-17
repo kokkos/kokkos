@@ -31,12 +31,10 @@
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-void Kokkos::Impl::throw_bad_alloc(
-    std::size_t size, std::align_val_t alignment,
-    Kokkos::Experimental::RawMemoryAllocationFailure::FailureMode failure_mode,
-    std::string what) {
+void Kokkos::Impl::throw_bad_alloc(std::size_t size, std::align_val_t alignment,
+                                   std::string what) {
   throw Kokkos::Experimental::RawMemoryAllocationFailure(
-      size, static_cast<size_t>(alignment), failure_mode, std::move(what));
+      size, static_cast<size_t>(alignment), std::move(what));
 }
 
 namespace Kokkos {
@@ -80,20 +78,7 @@ void Experimental::RawMemoryAllocationFailure::print_error_message(
     std::ostream &o) const {
   o << "Allocation of size "
     << ::Kokkos::Impl::human_memory_size(m_attempted_size);
-  o << " failed";
-  switch (m_failure_mode) {
-    case FailureMode::OutOfMemoryError:
-      o << ", likely due to insufficient memory.";
-      break;
-    case FailureMode::AllocationNotAligned:
-      o << " because the allocation was improperly aligned.";
-      break;
-    case FailureMode::InvalidAllocationSize:
-      o << " because the requested allocation size is not a valid size for the"
-           " requested allocation mechanism (it's probably too large).";
-      break;
-    case FailureMode::Unknown: o << " because of an unknown error."; break;
-  }
+  o << " failed.";
   o << "  (The allocation mechanism was " << m_msg << ")\n";
 }
 

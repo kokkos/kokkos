@@ -39,27 +39,26 @@ namespace Experimental {
 
 class RawMemoryAllocationFailure : public std::bad_alloc {
  public:
-  enum class FailureMode {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  enum class KOKKOS_DEPRECATED FailureMode {
     OutOfMemoryError,
     AllocationNotAligned,
     InvalidAllocationSize,
     Unknown
   };
+#endif
 
  private:
   std::string m_msg;
   size_t m_attempted_size;
   size_t m_attempted_alignment;
-  FailureMode m_failure_mode;
 
  public:
   RawMemoryAllocationFailure(size_t size, size_t alignment,
-                             FailureMode failure_mode,
                              std::string what) noexcept
       : m_msg(std::move(what)),
         m_attempted_size(size),
-        m_attempted_alignment(alignment),
-        m_failure_mode(failure_mode) {}
+        m_attempted_alignment(alignment) {}
 
   RawMemoryAllocationFailure() noexcept = delete;
 
@@ -75,13 +74,7 @@ class RawMemoryAllocationFailure : public std::bad_alloc {
   ~RawMemoryAllocationFailure() noexcept override = default;
 
   [[nodiscard]] const char *what() const noexcept override {
-    if (m_failure_mode == FailureMode::OutOfMemoryError) {
-      return "Memory allocation error: out of memory";
-    } else if (m_failure_mode == FailureMode::AllocationNotAligned) {
-      return "Memory allocation error: allocation result was under-aligned";
-    }
-
-    return nullptr;  // unreachable
+    return "Memory allocation error";
   }
 
   [[nodiscard]] size_t attempted_size() const noexcept {
@@ -92,22 +85,16 @@ class RawMemoryAllocationFailure : public std::bad_alloc {
     return m_attempted_alignment;
   }
 
-  [[nodiscard]] FailureMode failure_mode() const noexcept {
-    return m_failure_mode;
-  }
-
   void print_error_message(std::ostream &o) const;
   [[nodiscard]] std::string get_error_message() const;
 };
 
-}  // end namespace Experimental
+}  // namespace Experimental
 
 namespace Impl {
 
-[[noreturn]] void throw_bad_alloc(
-    std::size_t size, std::align_val_t alignment,
-    Kokkos::Experimental::RawMemoryAllocationFailure::FailureMode failure_mode,
-    std::string what);
+[[noreturn]] void throw_bad_alloc(std::size_t size, std::align_val_t alignment,
+                                  std::string what);
 
 }  // namespace Impl
 }  // namespace Kokkos

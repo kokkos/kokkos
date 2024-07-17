@@ -67,12 +67,8 @@ void *Kokkos::Experimental::OpenACCSpace::impl_allocate(
   ptr = acc_malloc(arg_alloc_size);
 
   if (!ptr) {
-    using FailureMode =
-        Kokkos::Experimental::RawMemoryAllocationFailure::FailureMode;
-    auto failure_mode = arg_alloc_size > 0 ? FailureMode::OutOfMemoryError
-                                           : FailureMode::InvalidAllocationSize;
     Kokkos::Impl::throw_bad_alloc(arg_alloc_size, std::align_val_t{1},
-                                  failure_mode, "acc_malloc()");
+                                  "acc_malloc()");
   }
 
   if (Kokkos::Profiling::profileLibraryLoaded()) {
