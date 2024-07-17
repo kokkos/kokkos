@@ -80,11 +80,4 @@ void Experimental::RawMemoryAllocationFailure::print_error_message(
   o << "  (The allocation mechanism was " << m_msg << ")\n";
 }
 
-std::string Experimental::RawMemoryAllocationFailure::get_error_message()
-    const {
-  std::ostringstream out;
-  print_error_message(out);
-  return out.str();
-}
-
 }  // namespace Kokkos
