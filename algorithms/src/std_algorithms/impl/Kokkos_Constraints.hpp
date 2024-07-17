@@ -275,7 +275,8 @@ KOKKOS_INLINE_FUNCTION void expect_equal_extents(
 }
 
 //
-// Check if the destination view is large enough to hold the data from the source
+// Check if the destination view is large enough to hold the data from the
+// source
 //
 template <typename DataType1, typename... Properties1, typename DataType2,
           typename... Properties2>
