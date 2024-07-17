@@ -354,8 +354,11 @@ void report_policy_results(const size_t /**tuning_context*/,
 namespace Impl {
 
 template <class ExecPolicy, class FunctorType>
-void begin_parallel_for(ExecPolicy& policy, FunctorType& functor,
+auto begin_parallel_for(const ExecPolicy& policy, FunctorType& functor,
                         const std::string& label, uint64_t& kpID) {
+  using response_type =
+      Kokkos::Tools::Impl::ToolResponse<ExecPolicy, FunctorType>;
+  response_type response{policy};
   if (Kokkos::Tools::profileLibraryLoaded()) {
     Kokkos::Impl::ParallelConstructName<FunctorType,
                                         typename ExecPolicy::work_tag>
@@ -365,18 +368,19 @@ void begin_parallel_for(ExecPolicy& policy, FunctorType& functor,
         &kpID);
   }
 #ifdef KOKKOS_ENABLE_TUNING
-  size_t context_id = Kokkos::Tools::Experimental::get_new_context_id();
+  size_t context_id = Kokkos::Tools::Experimental::get_current_context_id();
   if (Kokkos::tune_internals()) {
-    Experimental::Impl::tune_policy(context_id, label, policy, functor,
-                                    Kokkos::ParallelForTag{});
+    return response_type{tune_policy(context_id, label, policy, functor,
+                                     Kokkos::ParallelForTag{})};
   }
 #else
   (void)functor;
 #endif
+  return response;
 }
 
 template <class ExecPolicy, class FunctorType>
-void end_parallel_for(ExecPolicy& policy, FunctorType& functor,
+void end_parallel_for(const ExecPolicy& policy, FunctorType& functor,
                       const std::string& label, uint64_t& kpID) {
   if (Kokkos::Tools::profileLibraryLoaded()) {
     Kokkos::Tools::endParallelFor(kpID);
@@ -384,8 +388,8 @@ void end_parallel_for(ExecPolicy& policy, FunctorType& functor,
 #ifdef KOKKOS_ENABLE_TUNING
   size_t context_id = Kokkos::Tools::Experimental::get_current_context_id();
   if (Kokkos::tune_internals()) {
-    Experimental::Impl::report_policy_results(
-        context_id, label, policy, functor, Kokkos::ParallelForTag{});
+    report_policy_results(context_id, label, policy, functor,
+                          Kokkos::ParallelForTag{});
   }
 #else
   (void)policy;
@@ -395,8 +399,11 @@ void end_parallel_for(ExecPolicy& policy, FunctorType& functor,
 }
 
 template <class ExecPolicy, class FunctorType>
-void begin_parallel_scan(ExecPolicy& policy, FunctorType& functor,
+auto begin_parallel_scan(const ExecPolicy& policy, FunctorType& functor,
                          const std::string& label, uint64_t& kpID) {
+  using response_type =
+      Kokkos::Tools::Impl::ToolResponse<ExecPolicy, FunctorType>;
+  response_type response{policy};
   if (Kokkos::Tools::profileLibraryLoaded()) {
     Kokkos::Impl::ParallelConstructName<FunctorType,
                                         typename ExecPolicy::work_tag>
@@ -406,18 +413,19 @@ void begin_parallel_scan(ExecPolicy& policy, FunctorType& functor,
         &kpID);
   }
 #ifdef KOKKOS_ENABLE_TUNING
-  size_t context_id = Kokkos::Tools::Experimental::get_new_context_id();
+  size_t context_id = Kokkos::Tools::Experimental::get_current_context_id();
   if (Kokkos::tune_internals()) {
-    Experimental::Impl::tune_policy(context_id, label, policy, functor,
-                                    Kokkos::ParallelScanTag{});
+    return response_type{tune_policy(context_id, label, policy, functor,
+                                     Kokkos::ParallelScanTag{})};
   }
 #else
   (void)functor;
 #endif
+  return response;
 }
 
 template <class ExecPolicy, class FunctorType>
-void end_parallel_scan(ExecPolicy& policy, FunctorType& functor,
+void end_parallel_scan(const ExecPolicy& policy, FunctorType& functor,
                        const std::string& label, uint64_t& kpID) {
   if (Kokkos::Tools::profileLibraryLoaded()) {
     Kokkos::Tools::endParallelScan(kpID);
@@ -425,8 +433,8 @@ void end_parallel_scan(ExecPolicy& policy, FunctorType& functor,
 #ifdef KOKKOS_ENABLE_TUNING
   size_t context_id = Kokkos::Tools::Experimental::get_current_context_id();
   if (Kokkos::tune_internals()) {
-    Experimental::Impl::report_policy_results(
-        context_id, label, policy, functor, Kokkos::ParallelScanTag{});
+    report_policy_results(context_id, label, policy, functor,
+                          Kokkos::ParallelScanTag{});
   }
 #else
   (void)policy;
@@ -436,8 +444,11 @@ void end_parallel_scan(ExecPolicy& policy, FunctorType& functor,
 }
 
 template <class ReducerType, class ExecPolicy, class FunctorType>
-void begin_parallel_reduce(ExecPolicy& policy, FunctorType& functor,
+auto begin_parallel_reduce(const ExecPolicy& policy, FunctorType& functor,
                            const std::string& label, uint64_t& kpID) {
+  using response_type =
+      Kokkos::Tools::Impl::ToolResponse<ExecPolicy, FunctorType>;
+  response_type response{policy};
   if (Kokkos::Tools::profileLibraryLoaded()) {
     Kokkos::Impl::ParallelConstructName<FunctorType,
                                         typename ExecPolicy::work_tag>
@@ -447,16 +458,17 @@ void begin_parallel_reduce(ExecPolicy& policy, FunctorType& functor,
         &kpID);
   }
 #ifdef KOKKOS_ENABLE_TUNING
-  size_t context_id = Kokkos::Tools::Experimental::get_new_context_id();
-  Experimental::Impl::ReductionSwitcher<ReducerType>::tune(
-      context_id, label, policy, functor, Kokkos::ParallelReduceTag{});
+  size_t context_id = Kokkos::Tools::Experimental::get_current_context_id();
+  return response_type{ReductionSwitcher<ReducerType>::tune(
+      context_id, label, policy, functor, Kokkos::ParallelReduceTag{})};
 #else
   (void)functor;
 #endif
+  return response;
 }
 
 template <class ReducerType, class ExecPolicy, class FunctorType>
-void end_parallel_reduce(ExecPolicy& policy, FunctorType& functor,
+void end_parallel_reduce(const ExecPolicy& policy, FunctorType& functor,
                          const std::string& label, uint64_t& kpID) {
   if (Kokkos::Tools::profileLibraryLoaded()) {
     Kokkos::Tools::endParallelReduce(kpID);
@@ -464,8 +476,8 @@ void end_parallel_reduce(ExecPolicy& policy, FunctorType& functor,
 #ifdef KOKKOS_ENABLE_TUNING
   size_t context_id = Kokkos::Tools::Experimental::get_current_context_id();
   if (Kokkos::tune_internals()) {
-    Experimental::Impl::report_policy_results(
-        context_id, label, policy, functor, Kokkos::ParallelReduceTag{});
+    report_policy_results(context_id, label, policy, functor,
+                          Kokkos::ParallelReduceTag{});
   }
 #else
   (void)policy;
