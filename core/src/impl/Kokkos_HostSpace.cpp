@@ -79,22 +79,16 @@ void *HostSpace::impl_allocate(
     ptr = operator new (arg_alloc_size, std::align_val_t(alignment),
                         std::nothrow_t{});
 
-  if ((ptr == nullptr) || (reinterpret_cast<uintptr_t>(ptr) == ~uintptr_t(0)) ||
+  using FailureMode = Experimental::RawMemoryAllocationFailure::FailureMode;
+  if (!ptr) {
+    Impl::throw_bad_alloc(arg_alloc_size, std::align_val_t{alignment},
+                          FailureMode::OutOfMemoryError, "standard malloc()");
+  }
+  if ((reinterpret_cast<uintptr_t>(ptr) == ~uintptr_t(0)) ||
       (reinterpret_cast<uintptr_t>(ptr) & alignment_mask)) {
-    Experimental::RawMemoryAllocationFailure::FailureMode failure_mode =
-        Experimental::RawMemoryAllocationFailure::FailureMode::
-            AllocationNotAligned;
-    if (ptr == nullptr) {
-      failure_mode = Experimental::RawMemoryAllocationFailure::FailureMode::
-          OutOfMemoryError;
-    }
-
-    Experimental::RawMemoryAllocationFailure::AllocationMechanism alloc_mec =
-        Experimental::RawMemoryAllocationFailure::AllocationMechanism::
-            StdMalloc;
-
-    throw Kokkos::Experimental::RawMemoryAllocationFailure(
-        arg_alloc_size, alignment, failure_mode, alloc_mec);
+    Impl::throw_bad_alloc(arg_alloc_size, std::align_val_t{alignment},
+                          FailureMode::AllocationNotAligned,
+                          "standard malloc()");
   }
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::allocateData(arg_handle, arg_label, ptr, reported_size);

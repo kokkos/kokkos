@@ -27,10 +27,17 @@
 #include <stdexcept>
 #include <Kokkos_Core.hpp>  // show_warnings
 #include <impl/Kokkos_Error.hpp>
-#include <Cuda/Kokkos_Cuda_Error.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
+
+void Kokkos::Impl::throw_bad_alloc(
+    std::size_t size, std::align_val_t alignment,
+    Kokkos::Experimental::RawMemoryAllocationFailure::FailureMode failure_mode,
+    std::string what) {
+  throw Kokkos::Experimental::RawMemoryAllocationFailure(
+      size, static_cast<size_t>(alignment), failure_mode, std::move(what));
+}
 
 namespace Kokkos {
 namespace Impl {
@@ -87,32 +94,7 @@ void Experimental::RawMemoryAllocationFailure::print_error_message(
       break;
     case FailureMode::Unknown: o << " because of an unknown error."; break;
   }
-  o << "  (The allocation mechanism was ";
-  switch (m_mechanism) {
-    case AllocationMechanism::StdMalloc: o << "standard malloc()."; break;
-    case AllocationMechanism::CudaMalloc: o << "cudaMalloc()."; break;
-    case AllocationMechanism::CudaMallocManaged:
-      o << "cudaMallocManaged().";
-      break;
-    case AllocationMechanism::CudaHostAlloc: o << "cudaHostAlloc()."; break;
-    case AllocationMechanism::HIPMalloc: o << "hipMalloc()."; break;
-    case AllocationMechanism::HIPHostMalloc: o << "hipHostMalloc()."; break;
-    case AllocationMechanism::HIPMallocManaged:
-      o << "hipMallocManaged().";
-      break;
-    case AllocationMechanism::SYCLMallocDevice:
-      o << "sycl::malloc_device().";
-      break;
-    case AllocationMechanism::SYCLMallocShared:
-      o << "sycl::malloc_shared().";
-      break;
-    case AllocationMechanism::SYCLMallocHost:
-      o << "sycl::malloc_host().";
-      break;
-    default: o << "unsupported.";
-  }
-  append_additional_error_information(o);
-  o << ")" << std::endl;
+  o << "  (The allocation mechanism was " << m_msg << ")\n";
 }
 
 std::string Experimental::RawMemoryAllocationFailure::get_error_message()
@@ -121,26 +103,5 @@ std::string Experimental::RawMemoryAllocationFailure::get_error_message()
   print_error_message(out);
   return out.str();
 }
-
-}  // namespace Kokkos
-
-//----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
-
-namespace Kokkos {
-
-#ifdef KOKKOS_ENABLE_CUDA
-namespace Experimental {
-
-void CudaRawMemoryAllocationFailure::append_additional_error_information(
-    std::ostream &o) const {
-  if (m_error_code != cudaSuccess) {
-    o << "  The Cuda allocation returned the error code \""
-      << cudaGetErrorName(m_error_code) << "\".";
-  }
-}
-
-}  // end namespace Experimental
-#endif
 
 }  // namespace Kokkos
