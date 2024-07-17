@@ -17,7 +17,7 @@ default: build
 	echo "Start Build"
 
 CXX = clang++
-EXE = copy_view_performance.exe
+EXE = view_copy_constructor.exe
 
 CXXFLAGS ?= -Ofast
 override CXXFLAGS += -I$(MAKEFILE_PATH)

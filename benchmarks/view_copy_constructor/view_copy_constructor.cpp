@@ -225,6 +225,7 @@ void test_view_collection_kk(int N, int num_iter, bool execute_kernel) {
   std::cout << "View Time = " << view_collection_time << " seconds"
             << std::endl;
   if (success) {
+    std::cout << "Kokkos run:" << std::endl;
     std::cout << "SUCCESS" << std::endl;
   } else {
     std::cout << "FAILURE" << std::endl;
@@ -250,6 +251,7 @@ void test_view_collection_serial(int N, int num_iter, bool execute_kernel) {
   std::cout << "View Time 2 = " << view_collection_time << " seconds"
             << std::endl;
   if (success) {
+    std::cout << "Serial run:" << std::endl;
     std::cout << "SUCCESS" << std::endl;
   } else {
     std::cout << "FAILURE" << std::endl;
