@@ -79,10 +79,6 @@ pipeline {
                     }
                     steps {
                         sh '''
-                          DEBIAN_FRONTEND=noninteractive && \
-                          apt-get update && apt-get upgrade -y && \
-                          apt-get clean && rm -rf /var/lib/apt/lists/*
-
                           wget https://github.com/Kitware/CMake/releases/download/v3.30.0/cmake-3.30.0-linux-x86_64.sh && \
                           chmod +x cmake-3.30.0-linux-x86_64.sh && ./cmake-3.30.0-linux-x86_64.sh --skip-license --prefix=/usr
 
