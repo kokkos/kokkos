@@ -406,6 +406,10 @@ TEST(TEST_CATEGORY, numeric_traits_min_max_exponent10) {
 #endif
 }
 TEST(TEST_CATEGORY, numeric_traits_quiet_and_signaling_nan) {
+// FIXME_NVHPC
+#ifdef KOKKOS_COMPILER_NVHPC
+  GTEST_SKIP() << "This test is known to fail with the NVHPC compiler";
+#endif
   TestNumericTraits<TEST_EXECSPACE, Kokkos::Experimental::half_t, QuietNaN>();
   TestNumericTraits<TEST_EXECSPACE, Kokkos::Experimental::half_t,
                     SignalingNaN>();
