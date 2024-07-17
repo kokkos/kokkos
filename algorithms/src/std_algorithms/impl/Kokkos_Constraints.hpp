@@ -279,7 +279,7 @@ KOKKOS_INLINE_FUNCTION void expect_equal_extents(
 //
 template <typename DataType1, typename... Properties1, typename DataType2,
           typename... Properties2>
-KOKKOS_INLINE_FUNCTION void expect_dest_large_enough(
+KOKKOS_INLINE_FUNCTION void expect_larger_than_extents(
     const ::Kokkos::View<DataType1, Properties1...>& from,
     const ::Kokkos::View<DataType2, Properties2...>& dest) {
   // this is from no-op for release
