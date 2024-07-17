@@ -37,17 +37,6 @@ std::string human_memory_size(size_t arg_bytes);
 namespace Experimental {
 
 class RawMemoryAllocationFailure : public std::bad_alloc {
- public:
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  enum class KOKKOS_DEPRECATED FailureMode {
-    OutOfMemoryError,
-    AllocationNotAligned,
-    InvalidAllocationSize,
-    Unknown
-  };
-#endif
-
- private:
   std::string m_msg;
   size_t m_attempted_size;
 
