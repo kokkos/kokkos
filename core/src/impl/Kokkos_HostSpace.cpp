@@ -81,8 +81,7 @@ void *HostSpace::impl_allocate(
 
   if (!ptr || (reinterpret_cast<uintptr_t>(ptr) == ~uintptr_t(0)) ||
       (reinterpret_cast<uintptr_t>(ptr) & alignment_mask)) {
-    Impl::throw_bad_alloc(arg_alloc_size, std::align_val_t{alignment},
-                          "standard malloc()");
+    Impl::throw_bad_alloc(arg_alloc_size, "standard malloc()");
   }
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::allocateData(arg_handle, arg_label, ptr, reported_size);

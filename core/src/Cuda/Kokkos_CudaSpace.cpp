@@ -63,8 +63,7 @@ void throw_cuda_allocation_failure(size_t alloc_size, cudaError_t error_code,
   msg += " returned error code \"";
   msg += cudaGetErrorName(error_code);
   msg += "\"";
-  Kokkos::Impl::throw_bad_alloc(alloc_size, std::align_val_t{1},
-                                std::move(msg));
+  Kokkos::Impl::throw_bad_alloc(alloc_size, std::move(msg));
 }
 
 }  // namespace

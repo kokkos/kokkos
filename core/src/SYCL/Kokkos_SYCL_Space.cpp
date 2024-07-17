@@ -98,7 +98,7 @@ void* allocate_sycl(const char* arg_label, const size_t arg_alloc_size,
 
   if (hostPtr == nullptr) {
     Kokkos::Impl::throw_bad_alloc(
-        arg_alloc_size, std::align_val_t{1},
+        arg_alloc_size,
         std::string(get_usm_alloc_function_name(allocation_kind)));
   }
 

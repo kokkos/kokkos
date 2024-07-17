@@ -67,8 +67,7 @@ void *Kokkos::Experimental::OpenACCSpace::impl_allocate(
   ptr = acc_malloc(arg_alloc_size);
 
   if (!ptr) {
-    Kokkos::Impl::throw_bad_alloc(arg_alloc_size, std::align_val_t{1},
-                                  "acc_malloc()");
+    Kokkos::Impl::throw_bad_alloc(arg_alloc_size, "acc_malloc()");
   }
 
   if (Kokkos::Profiling::profileLibraryLoaded()) {

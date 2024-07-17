@@ -17,7 +17,6 @@
 #ifndef KOKKOS_IMPL_ERROR_HPP
 #define KOKKOS_IMPL_ERROR_HPP
 
-#include <new>  // align_val_t
 #include <string>
 #include <iosfwd>
 #include <Kokkos_Macros.hpp>
@@ -51,14 +50,10 @@ class RawMemoryAllocationFailure : public std::bad_alloc {
  private:
   std::string m_msg;
   size_t m_attempted_size;
-  size_t m_attempted_alignment;
 
  public:
-  RawMemoryAllocationFailure(size_t size, size_t alignment,
-                             std::string what) noexcept
-      : m_msg(std::move(what)),
-        m_attempted_size(size),
-        m_attempted_alignment(alignment) {}
+  RawMemoryAllocationFailure(size_t size, std::string what) noexcept
+      : m_msg(std::move(what)), m_attempted_size(size) {}
 
   RawMemoryAllocationFailure() noexcept = delete;
 
@@ -81,10 +76,6 @@ class RawMemoryAllocationFailure : public std::bad_alloc {
     return m_attempted_size;
   }
 
-  [[nodiscard]] size_t attempted_alignment() const noexcept {
-    return m_attempted_alignment;
-  }
-
   void print_error_message(std::ostream &o) const;
   [[nodiscard]] std::string get_error_message() const;
 };
@@ -93,8 +84,7 @@ class RawMemoryAllocationFailure : public std::bad_alloc {
 
 namespace Impl {
 
-[[noreturn]] void throw_bad_alloc(std::size_t size, std::align_val_t alignment,
-                                  std::string what);
+[[noreturn]] void throw_bad_alloc(std::size_t size, std::string what);
 
 }  // namespace Impl
 }  // namespace Kokkos

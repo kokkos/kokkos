@@ -31,10 +31,8 @@
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-void Kokkos::Impl::throw_bad_alloc(std::size_t size, std::align_val_t alignment,
-                                   std::string what) {
-  throw Kokkos::Experimental::RawMemoryAllocationFailure(
-      size, static_cast<size_t>(alignment), std::move(what));
+void Kokkos::Impl::throw_bad_alloc(std::size_t size, std::string what) {
+  throw Kokkos::Experimental::RawMemoryAllocationFailure(size, std::move(what));
 }
 
 namespace Kokkos {
