@@ -483,15 +483,21 @@ union SharedAllocationTracker {
   // pressure on compiler optimization by reducing
   // number of symbols and inline functions.
 
-#define KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_INCREMENT          \
-  KOKKOS_IF_ON_HOST((if (!(m_record_bits & DO_NOT_DEREF_FLAG)) { \
-    Record::increment(m_record);                                 \
-  }))
+#ifdef KOKKOS_ENABLE_IMPL_REF_COUNT_BRANCH_UNLIKELY
+#define KOKKOS_IMPL_BRANCH_PROB KOKKOS_IMPL_ATTRIBUTE_UNLIKELY
+#else
+#define KOKKOS_IMPL_BRANCH_PROB
+#endif
 
-#define KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT          \
-  KOKKOS_IF_ON_HOST((if (!(m_record_bits & DO_NOT_DEREF_FLAG)) { \
-    Record::decrement(m_record);                                 \
-  }))
+#define KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_INCREMENT \
+  KOKKOS_IF_ON_HOST(                                    \
+      (if (!(m_record_bits & DO_NOT_DEREF_FLAG))        \
+           KOKKOS_IMPL_BRANCH_PROB { Record::increment(m_record); }))
+
+#define KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT \
+  KOKKOS_IF_ON_HOST(                                    \
+      (if (!(m_record_bits & DO_NOT_DEREF_FLAG))        \
+           KOKKOS_IMPL_BRANCH_PROB { Record::decrement(m_record); }))
 
 #define KOKKOS_IMPL_SHARED_ALLOCATION_CARRY_RECORD_BITS(rhs,               \
                                                         override_tracking) \
@@ -638,6 +644,7 @@ union SharedAllocationTracker {
 
 #undef KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_INCREMENT
 #undef KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT
+#undef KOKKOS_IMPL_BRANCH_PROB
 };
 
 struct SharedAllocationDisableTrackingGuard {
