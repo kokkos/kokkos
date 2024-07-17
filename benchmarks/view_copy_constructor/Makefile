@@ -38,7 +38,7 @@ $(EXE): $(OBJ) $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(KOKKOS_LDFLAGS) $(LINKFLAGS) $(EXTRA_PATH) $(OBJ) $(KOKKOS_LIBS) $(LIB) -o $(EXE)
 
 clean: kokkos-clean
-	rm -f *.o copy_view_performance.cuda copy_view_performance.exe
+	rm -f *.o view_copy_constructor.cuda view_copy_constructor.exe
 
 # Compilation rules
 
