@@ -142,13 +142,7 @@ void SerialInternal::resize_thread_team_data(size_t pool_reduce_bytes,
         HostThreadTeamData::scratch_size(pool_reduce_bytes, team_reduce_bytes,
                                          team_shared_bytes, thread_local_bytes);
 
-    void* ptr = nullptr;
-    try {
-      ptr = space.allocate("Kokkos::Serial::scratch_mem", alloc_bytes);
-    } catch (Kokkos::Experimental::RawMemoryAllocationFailure const& failure) {
-      // For now, just rethrow the error message the existing way
-      Kokkos::Impl::throw_runtime_exception(failure.get_error_message());
-    }
+    void* ptr = space.allocate("Kokkos::Serial::scratch_mem", alloc_bytes);
 
     m_thread_team_data.scratch_assign(static_cast<char*>(ptr), alloc_bytes,
                                       pool_reduce_bytes, team_reduce_bytes,

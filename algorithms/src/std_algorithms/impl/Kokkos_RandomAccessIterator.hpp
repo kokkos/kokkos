@@ -59,15 +59,7 @@ class RandomAccessIterator< ::Kokkos::View<DataType, Args...> > {
                                                 ptrdiff_t current_index)
       : m_view(view), m_current_index(current_index) {}
 
-// FIXME The C++20 requires expression is not supported with Clang 9 and GCC 9
-// The following guards is unsufficient until we increase our minimum CXX20
-// compiler requirements.
-//   #ifndef KOKKOS_ENABLE_CXX17  // C++20 and beyond
-// We replace the Kokkos guards with standard C++ feature testing in the
-// meantime.
-#if (defined(__cpp_concepts) && (__cpp_concepts >= 201907L)) && \
-    (defined(__cpp_conditional_explicit) &&                     \
-     (__cpp_conditional_explicit >= 201806L))
+#ifndef KOKKOS_ENABLE_CXX17  // C++20 and beyond
   template <class OtherViewType>
   requires(std::is_constructible_v<view_type, OtherViewType>) KOKKOS_FUNCTION
       explicit(!std::is_convertible_v<OtherViewType, view_type>)

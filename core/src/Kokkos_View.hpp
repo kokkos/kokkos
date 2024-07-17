@@ -1705,9 +1705,7 @@ class View : public ViewTraits<DataType, Properties...> {
 #ifdef KOKKOS_ENABLE_IMPL_MDSPAN
   template <typename U = typename Impl::MDSpanViewTraits<traits>::mdspan_type>
   KOKKOS_INLINE_FUNCTION
-#if defined(__cpp_conditional_explicit) && \
-    (__cpp_conditional_explicit >= 201806L)
-      // FIXME C++20 reevaluate after determining minium compiler versions
+#ifndef KOKKOS_ENABLE_CXX17
       explicit(traits::is_managed)
 #endif
           View(const typename Impl::MDSpanViewTraits<traits>::mdspan_type& mds,
@@ -1724,9 +1722,7 @@ class View : public ViewTraits<DataType, Properties...> {
   template <class ElementType, class ExtentsType, class LayoutType,
             class AccessorType>
   KOKKOS_INLINE_FUNCTION
-#if defined(__cpp_conditional_explicit) && \
-    (__cpp_conditional_explicit >= 201806L)
-      // FIXME C++20 reevaluate after determining minium compiler versions
+#ifndef KOKKOS_ENABLE_CXX17
       explicit(!std::is_convertible_v<
                Kokkos::mdspan<ElementType, ExtentsType, LayoutType,
                               AccessorType>,

@@ -17,6 +17,7 @@
 #ifndef KOKKOS_IMPL_ERROR_HPP
 #define KOKKOS_IMPL_ERROR_HPP
 
+#include <new>  // align_val_t
 #include <string>
 #include <iosfwd>
 #include <Kokkos_Macros.hpp>
@@ -44,41 +45,21 @@ class RawMemoryAllocationFailure : public std::bad_alloc {
     InvalidAllocationSize,
     Unknown
   };
-  enum class AllocationMechanism {
-    StdMalloc,
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-    PosixMemAlign KOKKOS_DEPRECATED,
-    PosixMMap KOKKOS_DEPRECATED,
-    IntelMMAlloc KOKKOS_DEPRECATED,
-#endif
-    CudaMalloc,
-    CudaMallocManaged,
-    CudaHostAlloc,
-    HIPMalloc,
-    HIPHostMalloc,
-    HIPMallocManaged,
-    SYCLMallocDevice,
-    SYCLMallocShared,
-    SYCLMallocHost,
-    OpenACCMalloc,
-  };
 
  private:
+  std::string m_msg;
   size_t m_attempted_size;
   size_t m_attempted_alignment;
   FailureMode m_failure_mode;
-  AllocationMechanism m_mechanism;
 
  public:
-  RawMemoryAllocationFailure(
-      size_t arg_attempted_size, size_t arg_attempted_alignment,
-      FailureMode arg_failure_mode = FailureMode::OutOfMemoryError,
-      AllocationMechanism arg_mechanism =
-          AllocationMechanism::StdMalloc) noexcept
-      : m_attempted_size(arg_attempted_size),
-        m_attempted_alignment(arg_attempted_alignment),
-        m_failure_mode(arg_failure_mode),
-        m_mechanism(arg_mechanism) {}
+  RawMemoryAllocationFailure(size_t size, size_t alignment,
+                             FailureMode failure_mode,
+                             std::string what) noexcept
+      : m_msg(std::move(what)),
+        m_attempted_size(size),
+        m_attempted_alignment(alignment),
+        m_failure_mode(failure_mode) {}
 
   RawMemoryAllocationFailure() noexcept = delete;
 
@@ -111,22 +92,24 @@ class RawMemoryAllocationFailure : public std::bad_alloc {
     return m_attempted_alignment;
   }
 
-  [[nodiscard]] AllocationMechanism allocation_mechanism() const noexcept {
-    return m_mechanism;
-  }
-
   [[nodiscard]] FailureMode failure_mode() const noexcept {
     return m_failure_mode;
   }
 
   void print_error_message(std::ostream &o) const;
   [[nodiscard]] std::string get_error_message() const;
-
-  virtual void append_additional_error_information(std::ostream &) const {}
 };
 
 }  // end namespace Experimental
 
+namespace Impl {
+
+[[noreturn]] void throw_bad_alloc(
+    std::size_t size, std::align_val_t alignment,
+    Kokkos::Experimental::RawMemoryAllocationFailure::FailureMode failure_mode,
+    std::string what);
+
+}  // namespace Impl
 }  // namespace Kokkos
 
 #endif /* #ifndef KOKKOS_IMPL_ERROR_HPP */

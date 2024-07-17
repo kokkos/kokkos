@@ -79,22 +79,16 @@ void *HostSpace::impl_allocate(
     ptr = operator new (arg_alloc_size, std::align_val_t(alignment),
                         std::nothrow_t{});
 
-  if ((ptr == nullptr) || (reinterpret_cast<uintptr_t>(ptr) == ~uintptr_t(0)) ||
+  using FailureMode = Experimental::RawMemoryAllocationFailure::FailureMode;
+  if (!ptr) {
+    Impl::throw_bad_alloc(arg_alloc_size, std::align_val_t{alignment},
+                          FailureMode::OutOfMemoryError, "standard malloc()");
+  }
+  if ((reinterpret_cast<uintptr_t>(ptr) == ~uintptr_t(0)) ||
       (reinterpret_cast<uintptr_t>(ptr) & alignment_mask)) {
-    Experimental::RawMemoryAllocationFailure::FailureMode failure_mode =
-        Experimental::RawMemoryAllocationFailure::FailureMode::
-            AllocationNotAligned;
-    if (ptr == nullptr) {
-      failure_mode = Experimental::RawMemoryAllocationFailure::FailureMode::
-          OutOfMemoryError;
-    }
-
-    Experimental::RawMemoryAllocationFailure::AllocationMechanism alloc_mec =
-        Experimental::RawMemoryAllocationFailure::AllocationMechanism::
-            StdMalloc;
-
-    throw Kokkos::Experimental::RawMemoryAllocationFailure(
-        arg_alloc_size, alignment, failure_mode, alloc_mec);
+    Impl::throw_bad_alloc(arg_alloc_size, std::align_val_t{alignment},
+                          FailureMode::AllocationNotAligned,
+                          "standard malloc()");
   }
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::allocateData(arg_handle, arg_label, ptr, reported_size);
@@ -109,9 +103,7 @@ void HostSpace::deallocate(void *const arg_alloc_ptr,
 
 void HostSpace::deallocate(const char *arg_label, void *const arg_alloc_ptr,
                            const size_t arg_alloc_size,
-                           const size_t
-
-                               arg_logical_size) const {
+                           const size_t arg_logical_size) const {
   if (arg_alloc_ptr) Kokkos::fence("HostSpace::impl_deallocate before free");
   impl_deallocate(arg_label, arg_alloc_ptr, arg_alloc_size, arg_logical_size);
 }
