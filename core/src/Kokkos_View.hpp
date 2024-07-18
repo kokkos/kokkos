@@ -1737,10 +1737,15 @@ class View : public ViewTraits<DataType, Properties...> {
   // Conversion to MDSpan
   template <class OtherElementType, class OtherExtents, class OtherLayoutPolicy,
             class OtherAccessor,
-            typename = std::enable_if_t<std::is_assignable_v<
-                mdspan<OtherElementType, OtherExtents, OtherLayoutPolicy,
-                       OtherAccessor>,
-                typename Impl::MDSpanViewTraits<traits>::mdspan_type>>>
+            class ImplNaturalMDSpanType =
+                typename Impl::MDSpanViewTraits<traits>::mdspan_type,
+            typename = std::enable_if_t<std::conditional_t<
+                std::is_same_v<Impl::UnsupportedKokkosArrayLayout,
+                               ImplNaturalMDSpanType>,
+                std::false_type,
+                std::is_assignable<mdspan<OtherElementType, OtherExtents,
+                                          OtherLayoutPolicy, OtherAccessor>,
+                                   ImplNaturalMDSpanType>>::value>>
   KOKKOS_INLINE_FUNCTION constexpr operator mdspan<
       OtherElementType, OtherExtents, OtherLayoutPolicy, OtherAccessor>() {
     using mdspan_type = typename Impl::MDSpanViewTraits<traits>::mdspan_type;
