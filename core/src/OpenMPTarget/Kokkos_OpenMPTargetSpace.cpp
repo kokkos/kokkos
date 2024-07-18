@@ -57,7 +57,11 @@ void* OpenMPTargetSpace::impl_allocate(
   void* ptr = omp_target_alloc(arg_alloc_size, omp_get_default_device());
 
   if (!ptr) {
-    Kokkos::Impl::throw_bad_alloc(arg_alloc_size, "omp_target_alloc()");
+    using FailureMode =
+        Kokkos::Experimental::RawMemoryAllocationFailure::FailureMode;
+    Kokkos::Impl::throw_bad_alloc(arg_alloc_size, std::align_val_t{1},
+                                  FailureMode::OutOfMemoryError,
+                                  "omp_target_alloc()");
   }
 
   if (Kokkos::Profiling::profileLibraryLoaded()) {
