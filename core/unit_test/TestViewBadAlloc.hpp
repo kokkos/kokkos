@@ -49,7 +49,7 @@ TEST(TEST_CATEGORY, view_bad_alloc) {
 #if defined(__has_feature)
 #if __has_feature(address_sanitizer)
   if (std::is_same_v<MemorySpace, Kokkos::HostSpace>) {
-    GTEST_SKIP() << "AddressSanitzer detects allocating too much memory "
+    GTEST_SKIP() << "AddressSanitizer detects allocating too much memory "
                     "preventing our checks to run";
   }
 #endif
