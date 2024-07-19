@@ -198,7 +198,7 @@ void *impl_allocate_common(const int device_id,
     // we should do here since we're turning it into an
     // exception here
     cudaGetLastError();
-    Kokkos::Impl::throw_bad_alloc(name(), arg_alloc_size, arg_label);
+    Kokkos::Impl::throw_bad_alloc(arg_handle.name, arg_alloc_size, arg_label);
   }
 
   if (Kokkos::Profiling::profileLibraryLoaded()) {
