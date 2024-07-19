@@ -18,12 +18,9 @@
 #define KOKKOS_IMPL_PUBLIC_INCLUDE
 #endif
 
-#include <cstring>
-#include <cstdlib>
-
 #include <iostream>
-#include <sstream>
 #include <iomanip>
+#include <sstream>
 #include <stdexcept>
 #include <Kokkos_Core.hpp>  // show_warnings
 #include <impl/Kokkos_Error.hpp>
@@ -62,15 +59,12 @@ std::string human_memory_size(size_t arg_bytes) {
 }  // namespace
 
 void Kokkos::Impl::throw_bad_alloc(std::string_view memory_space_name,
-                                   std::size_t size, std::string label) {
-  std::string msg = "Kokkos ERROR: memory space \"";
-  msg += memory_space_name;
-  msg += "\" failed to allocate ";
-  msg += human_memory_size(size);
-  msg += " (label=\"";
-  msg += label;
-  msg += "\").";
-  throw std::runtime_error(msg);
+                                   std::size_t size, std::string_view label) {
+  std::stringstream ss;
+  ss << "Kokkos ERROR: " << memory_space_name
+     << " memory space failed to allocate " << human_memory_size(size)
+     << " (label=\"" << label << "\").";
+  throw std::runtime_error(ss.str());
 }
 
 namespace Kokkos {
