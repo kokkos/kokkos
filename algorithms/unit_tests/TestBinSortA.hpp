@@ -26,22 +26,39 @@
 namespace Test {
 namespace BinSortSetA {
 
-template <class ExecutionSpace, class Scalar>
-struct bin3d_is_sorted_struct {
+template <class ExecutionSpace, class Scalar, int DIM>
+struct binnd_is_sorted_struct {
+  static_assert(DIM == 2 || DIM == 3);
+
   using value_type      = unsigned int;
   using execution_space = ExecutionSpace;
 
-  Kokkos::View<Scalar * [3], ExecutionSpace> keys;
+  Kokkos::View<Scalar * [DIM], ExecutionSpace> keys;
 
   int max_bins;
   Scalar min;
   Scalar max;
 
-  bin3d_is_sorted_struct(Kokkos::View<Scalar * [3], ExecutionSpace> keys_,
+  binnd_is_sorted_struct(Kokkos::View<Scalar * [DIM], ExecutionSpace> keys_,
                          int max_bins_, Scalar min_, Scalar max_)
       : keys(keys_), max_bins(max_bins_), min(min_), max(max_) {}
-  KOKKOS_INLINE_FUNCTION
-  void operator()(int i, unsigned int& count) const {
+
+  template <int D = DIM, std::enable_if_t<D == 2>* = nullptr>
+  KOKKOS_INLINE_FUNCTION void operator()(int i, unsigned int& count) const {
+    int ix1 = int((keys(i, 0) - min) / max * max_bins);
+    int iy1 = int((keys(i, 1) - min) / max * max_bins);
+    int ix2 = int((keys(i + 1, 0) - min) / max * max_bins);
+    int iy2 = int((keys(i + 1, 1) - min) / max * max_bins);
+
+    if (ix1 > ix2)
+      count++;
+    else if (ix1 == ix2) {
+      if (iy1 > iy2) count++;
+    }
+  }
+
+  template <int D = DIM, std::enable_if_t<D == 3>* = nullptr>
+  KOKKOS_INLINE_FUNCTION void operator()(int i, unsigned int& count) const {
     int ix1 = int((keys(i, 0) - min) / max * max_bins);
     int iy1 = int((keys(i, 1) - min) / max * max_bins);
     int iz1 = int((keys(i, 2) - min) / max * max_bins);
@@ -60,27 +77,29 @@ struct bin3d_is_sorted_struct {
   }
 };
 
-template <class ExecutionSpace, class Scalar>
-struct sum3D {
+template <class ExecutionSpace, class Scalar, int DIM>
+struct sumND {
   using value_type      = double;
   using execution_space = ExecutionSpace;
 
-  Kokkos::View<Scalar * [3], ExecutionSpace> keys;
+  Kokkos::View<Scalar * [DIM], ExecutionSpace> keys;
 
-  sum3D(Kokkos::View<Scalar * [3], ExecutionSpace> keys_) : keys(keys_) {}
+  sumND(Kokkos::View<Scalar * [DIM], ExecutionSpace> keys_) : keys(keys_) {}
+
   KOKKOS_INLINE_FUNCTION
   void operator()(int i, double& count) const {
-    count += keys(i, 0);
-    count += keys(i, 1);
-    count += keys(i, 2);
+    for (int d = 0; d < DIM; ++d) count += keys(i, d);
   }
 };
 
-template <class ExecutionSpace, typename KeyType>
-void test_3D_sort_impl(unsigned int n) {
-  using KeyViewType = Kokkos::View<KeyType * [3], ExecutionSpace>;
+template <class ExecutionSpace, typename KeyType, int DIM>
+void test_ND_sort_impl(unsigned int n) {
+  static_assert(DIM == 2 || DIM == 3);
 
-  KeyViewType keys("Keys", n * n * n);
+  using KeyViewType = Kokkos::View<KeyType * [DIM], ExecutionSpace>;
+
+  const int N = std::pow(n, DIM);
+  KeyViewType keys("Keys", N);
 
   Kokkos::Random_XorShift64_Pool<ExecutionSpace> g(1931);
   Kokkos::fill_random(keys, g, 100.0);
@@ -92,15 +111,22 @@ void test_3D_sort_impl(unsigned int n) {
   ExecutionSpace exec;
   Kokkos::parallel_reduce(
       Kokkos::RangePolicy<ExecutionSpace>(exec, 0, keys.extent(0)),
-      sum3D<ExecutionSpace, KeyType>(keys), sum_before);
+      sumND<ExecutionSpace, KeyType, DIM>(keys), sum_before);
 
   int bin_1d = 1;
-  while (bin_1d * bin_1d * bin_1d * 4 < (int)keys.extent(0)) bin_1d *= 2;
-  int bin_max[3]                          = {bin_1d, bin_1d, bin_1d};
-  typename KeyViewType::value_type min[3] = {0, 0, 0};
-  typename KeyViewType::value_type max[3] = {100, 100, 100};
+  while (std::pow(bin_1d, DIM) * 4 < (int)keys.extent(0)) bin_1d *= 2;
+  int bin_max[DIM];
+  typename KeyViewType::value_type min[DIM];
+  typename KeyViewType::value_type max[DIM];
+  for (int d = 0; d < DIM; ++d) {
+    bin_max[d] = bin_1d;
+    min[d]     = 0;
+    max[d]     = 100;
+  }
 
-  using BinOp = Kokkos::BinOp3D<KeyViewType>;
+  using BinOp = std::conditional_t<DIM == 2, Kokkos::BinOp2D<KeyViewType>,
+                                   Kokkos::BinOp3D<KeyViewType>>;
+
   BinOp bin_op(bin_max, min, max);
   Kokkos::BinSort<KeyViewType, BinOp> Sorter(keys, bin_op, false);
   Sorter.create_permute_vector(exec);
@@ -108,11 +134,11 @@ void test_3D_sort_impl(unsigned int n) {
 
   Kokkos::parallel_reduce(
       Kokkos::RangePolicy<ExecutionSpace>(exec, 0, keys.extent(0)),
-      sum3D<ExecutionSpace, KeyType>(keys), sum_after);
+      sumND<ExecutionSpace, KeyType, DIM>(keys), sum_after);
   Kokkos::parallel_reduce(
       Kokkos::RangePolicy<ExecutionSpace>(exec, 0, keys.extent(0) - 1),
-      bin3d_is_sorted_struct<ExecutionSpace, KeyType>(keys, bin_1d, min[0],
-                                                      max[0]),
+      binnd_is_sorted_struct<ExecutionSpace, KeyType, DIM>(keys, bin_1d, min[0],
+                                                           max[0]),
       sort_fails);
 
   double ratio   = sum_before / sum_after;
@@ -121,7 +147,8 @@ void test_3D_sort_impl(unsigned int n) {
       (ratio > (1.0 - epsilon)) && (ratio < (1.0 + epsilon)) ? 1 : 0;
 
   if (sort_fails)
-    printf("3D Sort Sum: %f %f Fails: %u\n", sum_before, sum_after, sort_fails);
+    printf("%dD Sort Sum: %f %f Fails: %u\n", DIM, sum_before, sum_after,
+           sort_fails);
 
   ASSERT_EQ(sort_fails, 0u);
   ASSERT_EQ(equal_sum, 1u);
@@ -223,7 +250,8 @@ TEST(TEST_CATEGORY, BinSortGenericTests) {
   using key_type       = unsigned;
   constexpr int N      = 171;
 
-  BinSortSetA::test_3D_sort_impl<ExecutionSpace, key_type>(N);
+  BinSortSetA::test_ND_sort_impl<ExecutionSpace, key_type, 2>(N);
+  BinSortSetA::test_ND_sort_impl<ExecutionSpace, key_type, 3>(N);
   BinSortSetA::test_issue_1160_impl<ExecutionSpace>();
   BinSortSetA::test_sort_integer_overflow<ExecutionSpace, long long>();
   BinSortSetA::test_sort_integer_overflow<ExecutionSpace, unsigned long long>();
