@@ -63,4 +63,3 @@ TEST(TEST_CATEGORY, view_bad_alloc) {
 }
 
 }  // namespace
-
