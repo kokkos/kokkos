@@ -25,8 +25,24 @@
 #include <Kokkos_Core.hpp>  // show_warnings
 #include <impl/Kokkos_Error.hpp>
 
-//----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
+void Kokkos::Impl::throw_runtime_exception(const std::string &msg) {
+  throw std::runtime_error(msg);
+}
+
+void Kokkos::Impl::throw_bad_alloc(std::string_view memory_space_name,
+                                   std::size_t size, std::string_view label) {
+  std::stringstream ss;
+  ss << "Kokkos ERROR: " << memory_space_name
+     << " memory space failed to allocate " << human_memory_size(size)
+     << " (label=\"" << label << "\").";
+  throw std::runtime_error(ss.str());
+}
+
+void Kokkos::Impl::log_warning(const std::string &msg) {
+  if (show_warnings()) {
+    std::cerr << msg << std::flush;
+  }
+}
 
 std::string Kokkos::Impl::human_memory_size(size_t arg_bytes) {
   double bytes   = arg_bytes;
@@ -52,23 +68,4 @@ std::string Kokkos::Impl::human_memory_size(size_t arg_bytes) {
     out << std::setprecision(4) << bytes << " TiB";
   }
   return out.str();
-}
-
-void Kokkos::Impl::throw_bad_alloc(std::string_view memory_space_name,
-                                   std::size_t size, std::string_view label) {
-  std::stringstream ss;
-  ss << "Kokkos ERROR: " << memory_space_name
-     << " memory space failed to allocate " << human_memory_size(size)
-     << " (label=\"" << label << "\").";
-  throw std::runtime_error(ss.str());
-}
-
-void Kokkos::Impl::throw_runtime_exception(const std::string &msg) {
-  throw std::runtime_error(msg);
-}
-
-void Kokkos::Impl::log_warning(const std::string &msg) {
-  if (show_warnings()) {
-    std::cerr << msg << std::flush;
-  }
 }
