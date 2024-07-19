@@ -1990,7 +1990,8 @@ template <class Space, class T, class... P,
           class Enable = std::enable_if_t<
               Kokkos::is_space<Space>::value &&
               std::is_void_v<typename ViewTraits<T, P...>::specialize>>>
-auto create_mirror(const Space&, const Kokkos::DynRankView<T, P...>& src) {
+inline auto create_mirror(const Space&,
+                          const Kokkos::DynRankView<T, P...>& src) {
   return Impl::create_mirror(
       src, Kokkos::view_alloc(typename Space::memory_space{}));
 }
@@ -2000,8 +2001,8 @@ template <class Space, class T, class... P,
           class Enable = std::enable_if_t<
               Kokkos::is_space<Space>::value &&
               std::is_void_v<typename ViewTraits<T, P...>::specialize>>>
-auto create_mirror(Kokkos::Impl::WithoutInitializing_t wi, const Space&,
-                   const Kokkos::DynRankView<T, P...>& src) {
+inline auto create_mirror(Kokkos::Impl::WithoutInitializing_t wi, const Space&,
+                          const Kokkos::DynRankView<T, P...>& src) {
   return Impl::create_mirror(
       src, Kokkos::view_alloc(wi, typename Space::memory_space{}));
 }
