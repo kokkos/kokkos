@@ -58,11 +58,14 @@ void DeepCopyAsyncSYCL(void* dst, const void* src, size_t n) {
 /*--------------------------------------------------------------------------*/
 namespace {
 
-std::string_view get_usm_alloc_function_name(sycl::usm::alloc allocation_kind) {
+std::string_view get_memory_space_name(sycl::usm::alloc allocation_kind) {
   switch (allocation_kind) {
-    case sycl::usm::alloc::host: return "sycl::malloc_host()";
-    case sycl::usm::alloc::device: return "sycl::malloc_device()";
-    case sycl::usm::alloc::shared: return "sycl::malloc_shared()";
+    case sycl::usm::alloc::host:
+      return Kokkos::Experimental::SYCLHostUSMSpace::name();
+    case sycl::usm::alloc::device:
+      return Kokkos::Experimental::SYCLDeviceUSMSpace::name();
+    case sycl::usm::alloc::shared:
+      return Kokkos::Experimental::SYCLSharedUSMSpace::name();
     default:
       Kokkos::abort("bug: unknown sycl allocation type");
       return "unreachable";
@@ -97,9 +100,8 @@ void* allocate_sycl(const char* arg_label, const size_t arg_alloc_size,
   void* const hostPtr = sycl::malloc(arg_alloc_size, queue, allocation_kind);
 
   if (hostPtr == nullptr) {
-    Kokkos::Impl::throw_bad_alloc(
-        arg_alloc_size,
-        std::string(get_usm_alloc_function_name(allocation_kind)));
+    Kokkos::Impl::throw_bad_alloc(get_memory_space_name(allocation_kind),
+                                  arg_alloc_size, arg_label);
   }
 
   if (Kokkos::Profiling::profileLibraryLoaded()) {

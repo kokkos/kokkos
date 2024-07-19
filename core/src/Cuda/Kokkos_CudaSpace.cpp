@@ -56,18 +56,6 @@ const std::unique_ptr<Kokkos::Cuda> &Kokkos::Impl::cuda_get_deep_copy_space(
   return space;
 }
 
-namespace {
-
-void throw_cuda_allocation_failure(size_t alloc_size, cudaError_t error_code,
-                                   std::string msg) {
-  msg += " returned error code \"";
-  msg += cudaGetErrorName(error_code);
-  msg += "\"";
-  Kokkos::Impl::throw_bad_alloc(alloc_size, std::move(msg));
-}
-
-}  // namespace
-
 namespace Kokkos {
 namespace Impl {
 
@@ -210,7 +198,7 @@ void *impl_allocate_common(const int device_id,
     // we should do here since we're turning it into an
     // exception here
     cudaGetLastError();
-    throw_cuda_allocation_failure(arg_alloc_size, error_code, "cudaMalloc()");
+    throw_bad_alloc(name(), arg_alloc_size, arg_label);
   }
 
   if (Kokkos::Profiling::profileLibraryLoaded()) {
@@ -264,8 +252,7 @@ void *CudaUVMSpace::impl_allocate(
       // we should do here since we're turning it into an
       // exception here
       cudaGetLastError();
-      throw_cuda_allocation_failure(arg_alloc_size, error_code,
-                                    "cudaMallocManaged()");
+      throw_bad_alloc(name(), arg_alloc_size, arg_label);
     }
 
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_PIN_UVM_TO_HOST
@@ -306,8 +293,7 @@ void *CudaHostPinnedSpace::impl_allocate(
     // we should do here since we're turning it into an
     // exception here
     cudaGetLastError();
-    throw_cuda_allocation_failure(arg_alloc_size, error_code,
-                                  "cudaHostMalloc()");
+    throw_bad_alloc(name(), arg_alloc_size, arg_label);
   }
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     const size_t reported_size =

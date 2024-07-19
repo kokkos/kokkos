@@ -57,7 +57,7 @@ void* OpenMPTargetSpace::impl_allocate(
   void* ptr = omp_target_alloc(arg_alloc_size, omp_get_default_device());
 
   if (!ptr) {
-    Kokkos::Impl::throw_bad_alloc(arg_alloc_size, "omp_target_alloc()");
+    Kokkos::Impl::throw_bad_alloc(name(), arg_alloc_size, arg_label);
   }
 
   if (Kokkos::Profiling::profileLibraryLoaded()) {

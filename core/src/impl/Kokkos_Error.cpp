@@ -31,8 +31,46 @@
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-void Kokkos::Impl::throw_bad_alloc(std::size_t size, std::string what) {
-  throw Kokkos::Experimental::RawMemoryAllocationFailure(size, std::move(what));
+namespace {
+
+std::string human_memory_size(size_t arg_bytes) {
+  double bytes   = arg_bytes;
+  const double K = 1024;
+  const double M = K * 1024;
+  const double G = M * 1024;
+  const double T = G * 1024;
+
+  std::ostringstream out;
+  if (bytes < K) {
+    out << std::setprecision(4) << bytes << " B";
+  } else if (bytes < M) {
+    bytes /= K;
+    out << std::setprecision(4) << bytes << " KiB";
+  } else if (bytes < G) {
+    bytes /= M;
+    out << std::setprecision(4) << bytes << " MiB";
+  } else if (bytes < T) {
+    bytes /= G;
+    out << std::setprecision(4) << bytes << " GiB";
+  } else {
+    bytes /= T;
+    out << std::setprecision(4) << bytes << " TiB";
+  }
+  return out.str();
+}
+
+}  // namespace
+
+void Kokkos::Impl::throw_bad_alloc(std::string_view memory_space_name,
+                                   std::size_t size, std::string label) {
+  std::string msg = "Kokkos ERROR: memory space \"";
+  msg += memory_space_name;
+  msg += "\" failed to allocate ";
+  msg += human_memory_size(size);
+  msg += " (label=\"";
+  msg += label;
+  msg += "\").";
+  throw Kokkos::Experimental::RawMemoryAllocationFailure(std::move(msg));
 }
 
 namespace Kokkos {
@@ -48,36 +86,5 @@ void log_warning(const std::string &msg) {
   }
 }
 
-std::string human_memory_size(size_t arg_bytes) {
-  double bytes   = arg_bytes;
-  const double K = 1024;
-  const double M = K * 1024;
-  const double G = M * 1024;
-
-  std::ostringstream out;
-  if (bytes < K) {
-    out << std::setprecision(4) << bytes << " B";
-  } else if (bytes < M) {
-    bytes /= K;
-    out << std::setprecision(4) << bytes << " K";
-  } else if (bytes < G) {
-    bytes /= M;
-    out << std::setprecision(4) << bytes << " M";
-  } else {
-    bytes /= G;
-    out << std::setprecision(4) << bytes << " G";
-  }
-  return out.str();
-}
-
 }  // namespace Impl
-
-void Experimental::RawMemoryAllocationFailure::print_error_message(
-    std::ostream &o) const {
-  o << "Allocation of size "
-    << ::Kokkos::Impl::human_memory_size(m_attempted_size);
-  o << " failed.";
-  o << "  (The allocation mechanism was " << m_msg << ")\n";
-}
-
 }  // namespace Kokkos
