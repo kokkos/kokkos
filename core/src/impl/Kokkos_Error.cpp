@@ -28,9 +28,7 @@
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-namespace {
-
-std::string human_memory_size(size_t arg_bytes) {
+std::string Kokkos::Impl::human_memory_size(size_t arg_bytes) {
   double bytes   = arg_bytes;
   const double K = 1024;
   const double M = K * 1024;
@@ -55,8 +53,6 @@ std::string human_memory_size(size_t arg_bytes) {
   }
   return out.str();
 }
-
-}  // namespace
 
 void Kokkos::Impl::throw_bad_alloc(std::string_view memory_space_name,
                                    std::size_t size, std::string_view label) {

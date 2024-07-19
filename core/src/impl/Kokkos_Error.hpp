@@ -28,6 +28,7 @@ namespace Kokkos::Impl {
 [[noreturn]] void throw_bad_alloc(std::string_view memory_space_name,
                                   std::size_t size, std::string_view label);
 void log_warning(const std::string &msg);
+std::string Kokkos::Impl::human_memory_size(size_t bytes);
 
 }  // namespace Kokkos::Impl
 
