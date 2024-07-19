@@ -45,21 +45,43 @@ void test_view_bad_alloc() {
 }
 
 TEST(TEST_CATEGORY, view_bad_alloc) {
+  using ExecutionSpace = TEST_EXECSPACE;
+  using MemorySpace    = ExecutionSpace::memory_space;
 #if defined(__has_feature)
 #if __has_feature(address_sanitizer)
-  GTEST_SKIP() << "AddressSanitzer detects allocating too much memory "
-                  "preventing our checks to run";
+  if (std::is_same_v<MemorySpace, Kokkos::HostSpace>) {
+    GTEST_SKIP() << "AddressSanitzer detects allocating too much memory "
+                    "preventing our checks to run";
+  }
 #endif
 #endif
 #if ((HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR == 3))
-  GTEST_SKIP() << "ROCm 5.3 segfaults when trying to allocate too much memory";
+  if (std::is_same_v<ExecutionSpace, Kokkos::HIP>) {
+    GTEST_SKIP()
+        << "ROCm 5.3 segfaults when trying to allocate too much memory";
+  }
 #endif
 #if defined(KOKKOS_ENABLE_OPENACC)  // FIXME_OPENACC
-  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenACC>) {
+  if (std::is_same_v<ExecutionSpace, Kokkos::Experimental::OpenACC>) {
     GTEST_SKIP() << "acc_malloc() not properly returning nullptr";
   }
 #endif
-  test_view_bad_alloc<TEST_EXECSPACE::memory_space>();
+
+  test_view_bad_alloc<MemorySpace>();
+
+  constexpr bool execution_space_is_device =
+      std::is_same_v<ExecutionSpace, Kokkos::DefaultExecutionSpace> &&
+      !std::is_same_v<Kokkos::DefaultExecutionSpace,
+                      Kokkos::DefaultHostExecutionSpace>;
+
+  if constexpr (execution_space_is_device) {
+    if constexpr (Kokkos::has_shared_space) {
+      test_view_bad_alloc<Kokkos::SharedSpace>();
+    }
+    if constexpr (Kokkos::has_shared_host_pinned_space) {
+      test_view_bad_alloc<Kokkos::SharedHostPinnedSpace>();
+    }
+  }
 }
 
 }  // namespace
