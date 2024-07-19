@@ -67,18 +67,12 @@ void Kokkos::Impl::throw_bad_alloc(std::string_view memory_space_name,
   throw std::runtime_error(ss.str());
 }
 
-namespace Kokkos {
-namespace Impl {
-
-void throw_runtime_exception(const std::string &msg) {
+void Kokkos::Impl::throw_runtime_exception(const std::string &msg) {
   throw std::runtime_error(msg);
 }
 
-void log_warning(const std::string &msg) {
+void Kokkos::Impl::log_warning(const std::string &msg) {
   if (show_warnings()) {
     std::cerr << msg << std::flush;
   }
 }
-
-}  // namespace Impl
-}  // namespace Kokkos
