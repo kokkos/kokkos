@@ -17,7 +17,6 @@
 #ifndef KOKKOS_IMPL_ERROR_HPP
 #define KOKKOS_IMPL_ERROR_HPP
 
-#include <new>  // bad_alloc
 #include <string>
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Abort.hpp>
@@ -31,19 +30,5 @@ namespace Kokkos::Impl {
 void log_warning(const std::string &msg);
 
 }  // namespace Kokkos::Impl
-
-namespace Kokkos::Experimental {
-
-class RawMemoryAllocationFailure : public std::bad_alloc {
-  std::string m_msg;
-
- public:
-  explicit RawMemoryAllocationFailure(std::string msg) noexcept
-      : m_msg(std::move(msg)) {}
-
-  const char *what() const noexcept override { return m_msg.c_str(); }
-};
-
-}  // namespace Kokkos::Experimental
 
 #endif
