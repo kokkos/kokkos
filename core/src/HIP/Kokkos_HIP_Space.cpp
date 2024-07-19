@@ -68,7 +68,7 @@ void* HIPSpace::impl_allocate(
     // This is the only way to clear the last error, which we should do here
     // since we're turning it into an exception here
     (void)hipGetLastError();
-    throw_bad_alloc(name(), arg_alloc_size, arg_label);
+    Kokkos::Impl::throw_bad_alloc(name(), arg_alloc_size, arg_label);
   }
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     const size_t reported_size =
@@ -99,7 +99,7 @@ void* HIPHostPinnedSpace::impl_allocate(
     // This is the only way to clear the last error, which we should do here
     // since we're turning it into an exception here
     (void)hipGetLastError();
-    throw_bad_alloc(name(), arg_alloc_size, arg_label);
+    Kokkos::Impl::throw_bad_alloc(name(), arg_alloc_size, arg_label);
   }
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     const size_t reported_size =
@@ -163,7 +163,8 @@ Kokkos::HIP::runtime WARNING: Kokkos did not find an environment variable 'HSA_X
       // This is the only way to clear the last error, which we should do here
       // since we're turning it into an exception here
       (void)hipGetLastError();
-      throw_bad_alloc(name(), arg_alloc_size, arg_label);
+      Kokkos::Impl::Kokkos::Impl::throw_bad_alloc(name(), arg_alloc_size,
+                                                  arg_label);
     }
     KOKKOS_IMPL_HIP_SAFE_CALL(hipMemAdvise(
         ptr, arg_alloc_size, hipMemAdviseSetCoarseGrain, m_device));

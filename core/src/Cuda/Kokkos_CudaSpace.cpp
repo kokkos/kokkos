@@ -198,7 +198,7 @@ void *impl_allocate_common(const int device_id,
     // we should do here since we're turning it into an
     // exception here
     cudaGetLastError();
-    throw_bad_alloc(name(), arg_alloc_size, arg_label);
+    Kokkos::Impl::throw_bad_alloc(name(), arg_alloc_size, arg_label);
   }
 
   if (Kokkos::Profiling::profileLibraryLoaded()) {
@@ -252,7 +252,7 @@ void *CudaUVMSpace::impl_allocate(
       // we should do here since we're turning it into an
       // exception here
       cudaGetLastError();
-      throw_bad_alloc(name(), arg_alloc_size, arg_label);
+      Kokkos::Impl::throw_bad_alloc(name(), arg_alloc_size, arg_label);
     }
 
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_PIN_UVM_TO_HOST
@@ -293,7 +293,7 @@ void *CudaHostPinnedSpace::impl_allocate(
     // we should do here since we're turning it into an
     // exception here
     cudaGetLastError();
-    throw_bad_alloc(name(), arg_alloc_size, arg_label);
+    Kokkos::Impl::throw_bad_alloc(name(), arg_alloc_size, arg_label);
   }
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     const size_t reported_size =
