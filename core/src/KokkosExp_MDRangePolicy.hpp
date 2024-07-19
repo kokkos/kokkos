@@ -30,6 +30,7 @@ static_assert(false,
 #include <impl/KokkosExp_Host_IterateTile.hpp>
 #include <Kokkos_ExecPolicy.hpp>
 #include <type_traits>
+#include <cmath>
 
 namespace Kokkos {
 
@@ -326,7 +327,10 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
   int tile_size_recommended(const int tile_rank) const {
     auto properties   = Impl::get_tile_size_properties(m_space);
     int last_rank     = (inner_direction == Iterate::Right) ? rank - 1 : 0;
-    int rec_tile_size = properties.default_tile_size;
+    int rec_tile_size = (std::pow(properties.default_tile_size, tile_rank + 1) <
+                         properties.max_total_tile_size)
+                            ? properties.default_tile_size
+                            : 1;
 
     if (tile_rank == last_rank) {
       rec_tile_size = tile_size_last_rank(
