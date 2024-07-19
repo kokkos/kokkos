@@ -70,7 +70,7 @@ void Kokkos::Impl::throw_bad_alloc(std::string_view memory_space_name,
   msg += " (label=\"";
   msg += label;
   msg += "\").";
-  throw Kokkos::Experimental::RawMemoryAllocationFailure(std::move(msg));
+  throw std::runtime_error(msg);
 }
 
 namespace Kokkos {

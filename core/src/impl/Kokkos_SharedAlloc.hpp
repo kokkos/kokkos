@@ -196,36 +196,21 @@ class SharedAllocationRecord<void, void> {
       const SharedAllocationRecord* const root, const bool detail);
 };
 
-void safe_throw_allocation_with_header_failure(
-    std::string const& space_name, std::string const& label,
-    Kokkos::Experimental::RawMemoryAllocationFailure const& failure);
-
 template <class MemorySpace>
 SharedAllocationHeader* checked_allocation_with_header(MemorySpace const& space,
                                                        std::string const& label,
                                                        size_t alloc_size) {
-  try {
-    return reinterpret_cast<SharedAllocationHeader*>(space.allocate(
-        label.c_str(), alloc_size + sizeof(SharedAllocationHeader),
-        alloc_size));
-  } catch (Kokkos::Experimental::RawMemoryAllocationFailure const& failure) {
-    safe_throw_allocation_with_header_failure(space.name(), label, failure);
-  }
-  return nullptr;  // unreachable
+  return reinterpret_cast<SharedAllocationHeader*>(space.allocate(
+      label.c_str(), alloc_size + sizeof(SharedAllocationHeader), alloc_size));
 }
 
 template <class ExecutionSpace, class MemorySpace>
 SharedAllocationHeader* checked_allocation_with_header(
     ExecutionSpace const& exec_space, MemorySpace const& space,
     std::string const& label, size_t alloc_size) {
-  try {
-    return reinterpret_cast<SharedAllocationHeader*>(space.allocate(
-        exec_space, label.c_str(), alloc_size + sizeof(SharedAllocationHeader),
-        alloc_size));
-  } catch (Kokkos::Experimental::RawMemoryAllocationFailure const& failure) {
-    safe_throw_allocation_with_header_failure(space.name(), label, failure);
-  }
-  return nullptr;  // unreachable
+  return reinterpret_cast<SharedAllocationHeader*>(
+      space.allocate(exec_space, label.c_str(),
+                     alloc_size + sizeof(SharedAllocationHeader), alloc_size));
 }
 
 void fill_host_accessible_header_info(SharedAllocationHeader& arg_header,
