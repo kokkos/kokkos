@@ -255,6 +255,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
       ViewAPI_c
       ViewAPI_d
       ViewAPI_e
+      ViewBadAlloc
       ViewCopy_a
       ViewCopy_b
       ViewCopy_c
