@@ -30,7 +30,6 @@ void test_view_bad_alloc() {
         Kokkos::View<double *, MemorySpace>(label, too_large);
   } catch (std::runtime_error const &error) {
     std::string msg = error.what();
-    std::cout << msg << '\n';
     ASSERT_PRED_FORMAT2(
         ::testing::IsSubstring,
         std::string(MemorySpace::name()) + " memory space failed to allocate",
