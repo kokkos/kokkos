@@ -28,10 +28,13 @@
 namespace Kokkos {
 namespace Impl {
 
-template <std::size_t... Is>
-constexpr auto string_view_to_char_array(std::string_view s,
-                                         std::index_sequence<Is...>) {
-  return std::array{s[Is]...};
+template <size_t N>
+constexpr std::array<char, N> to_array(std::string_view src) {
+  std::array<char, N> dst;
+  for (size_t i = 0; i < N; ++i) {
+    dst[i] = src[i];
+  }
+  return dst;
 }
 
 template <class T>
@@ -53,12 +56,7 @@ constexpr auto type_name() {
 #endif
   constexpr auto beg = func.find(prefix) + prefix.size();
   constexpr auto end = func.rfind(suffix);
-  static_assert(beg != std::string_view::npos);
-  static_assert(end != std::string_view::npos);
-  static_assert(beg < end);
-  constexpr auto name = func.substr(beg, end - beg);
-  return string_view_to_char_array(name,
-                                   std::make_index_sequence<name.size()>());
+  return to_array<end - beg>(func.substr(beg, end));
 }
 
 }  // namespace Impl
