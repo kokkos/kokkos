@@ -30,7 +30,7 @@ namespace Impl {
 
 template <size_t N>
 constexpr std::array<char, N> to_array(std::string_view src) {
-  std::array<char, N> dst;
+  std::array<char, N> dst{};
   for (size_t i = 0; i < N; ++i) {
     dst[i] = src[i];
   }
