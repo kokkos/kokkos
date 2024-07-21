@@ -34,11 +34,16 @@ static_assert(Kokkos::TypeInfo<Foo>::name()      == "(anonymous namespace)::Foo"
 static_assert(Kokkos::TypeInfo<FooAlias>::name() == "(anonymous namespace)::Foo");
 static_assert(Kokkos::TypeInfo<Bar>::name()      == "(anonymous namespace)::Bar");
 static_assert(Kokkos::TypeInfo<Baz>::name()      == "(anonymous namespace)::Baz");
+#elif defined(__EDG__)
+static_assert(Kokkos::TypeInfo<Foo>::name()      == "<unnamed>::Foo");
+static_assert(Kokkos::TypeInfo<FooAlias>::name() == "<unnamed>::Foo");
+static_assert(Kokkos::TypeInfo<Bar>::name()      == "<unnamed>::Bar");
+static_assert(Kokkos::TypeInfo<Baz>::name()      == "<unnamed>::Baz");
 #elif defined(__GNUC__)
-static_assert(Kokkos::TypeInfo<Foo>::name()      == "(anonymous)::Foo");
-static_assert(Kokkos::TypeInfo<FooAlias>::name() == "(anonymous)::Foo");
-static_assert(Kokkos::TypeInfo<Bar>::name()      == "(anonymous)::Bar");
-static_assert(Kokkos::TypeInfo<Baz>::name()      == "(anonymous)::Baz");
+static_assert(Kokkos::TypeInfo<Foo>::name()      == "{anonymous}::Foo");
+static_assert(Kokkos::TypeInfo<FooAlias>::name() == "{anonymous}::Foo");
+static_assert(Kokkos::TypeInfo<Bar>::name()      == "{anonymous}::Bar");
+static_assert(Kokkos::TypeInfo<Baz>::name()      == "{anonymous}::Baz");
 #elif defined(_MSC_VER)
 static_assert(Kokkos::TypeInfo<Foo>::name()      == "class `anonymous-namespace'::Foo");
 static_assert(Kokkos::TypeInfo<FooAlias>::name() == "class `anonymous-namespace'::Foo");
