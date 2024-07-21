@@ -27,7 +27,6 @@
 #include <impl/Kokkos_Error.hpp>
 #include <complex>
 #include <type_traits>
-#include <iosfwd>
 #include <tuple>
 
 namespace Kokkos {
@@ -755,6 +754,24 @@ KOKKOS_INLINE_FUNCTION complex<T> polar(const T& r, const T& theta = T()) {
 template <class RealType>
 KOKKOS_INLINE_FUNCTION RealType abs(const complex<RealType>& x) {
   return hypot(x.real(), x.imag());
+}
+
+//! The phase angle of a complex number.
+template <typename RealType>
+KOKKOS_FUNCTION constexpr RealType arg(const complex<RealType>& x) noexcept {
+  return atan2(x.imag(), x.real());
+}
+
+template <typename RealType,
+          typename = std::enable_if_t<std::is_floating_point_v<RealType>>>
+KOKKOS_FUNCTION constexpr RealType arg(RealType f) noexcept {
+  return atan2(static_cast<RealType>(0), f);
+}
+
+template <typename IntegerType,
+          typename = std::enable_if_t<std::is_integral_v<IntegerType>>>
+KOKKOS_FUNCTION constexpr double arg(IntegerType i) noexcept {
+  return atan2(0., static_cast<double>(i));
 }
 
 //! Power of a complex number
