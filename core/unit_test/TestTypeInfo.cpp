@@ -45,8 +45,8 @@ static_assert(Kokkos::TypeInfo<FooAlias>::name() == "{anonymous}::Foo");
 static_assert(Kokkos::TypeInfo<Bar>::name()      == "{anonymous}::Bar");
 static_assert(Kokkos::TypeInfo<Baz>::name()      == "{anonymous}::Baz");
 #elif defined(_MSC_VER)
-static_assert(Kokkos::TypeInfo<Foo>::name()      == "class `anonymous-namespace'::Foo");
-static_assert(Kokkos::TypeInfo<FooAlias>::name() == "class `anonymous-namespace'::Foo");
+static_assert(Kokkos::TypeInfo<Foo>::name()      == "struct `anonymous-namespace'::Foo");
+static_assert(Kokkos::TypeInfo<FooAlias>::name() == "struct `anonymous-namespace'::Foo");
 static_assert(Kokkos::TypeInfo<Bar>::name()      == "enum `anonymous-namespace'::Bar");
 static_assert(Kokkos::TypeInfo<Baz>::name()      == "union `anonymous-namespace'::Baz");
 #else
