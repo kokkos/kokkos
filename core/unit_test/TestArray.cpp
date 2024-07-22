@@ -15,6 +15,7 @@
 //@HEADER
 
 #include <Kokkos_Array.hpp>
+#include <Kokkos_DetectionIdiom.hpp>
 
 namespace {
 
@@ -22,6 +23,9 @@ namespace {
 // Passing those variables to this function should eliminate the warning
 template <typename... Ts>
 KOKKOS_FUNCTION constexpr void maybe_unused(Ts&&...) {}
+
+template <typename T, typename U = T>
+using equality_comparable = decltype(std::declval<T&>() == std::declval<U&>());
 
 KOKKOS_FUNCTION constexpr bool test_array() {
   constexpr Kokkos::Array<int, 3> a{{1, 2}};
@@ -181,5 +185,60 @@ constexpr bool test_to_array() {
 }
 
 static_assert(test_to_array());
+
+constexpr bool test_array_equality_comparable() {
+  using C0 = Kokkos::Array<char, 0>;
+  using C2 = Kokkos::Array<char, 2>;
+  using C3 = Kokkos::Array<char, 3>;
+  using I0 = Kokkos::Array<int, 0>;
+  using I2 = Kokkos::Array<int, 2>;
+  using I3 = Kokkos::Array<int, 3>;
+
+  static_assert(Kokkos::is_detected_v<equality_comparable, C0, C0>);
+  static_assert(!Kokkos::is_detected_v<equality_comparable, C0, C2>);
+  static_assert(!Kokkos::is_detected_v<equality_comparable, C0, C3>);
+  static_assert(!Kokkos::is_detected_v<equality_comparable, C0, I0>);
+  static_assert(!Kokkos::is_detected_v<equality_comparable, C0, I2>);
+  static_assert(!Kokkos::is_detected_v<equality_comparable, C0, I3>);
+
+  static_assert(!Kokkos::is_detected_v<equality_comparable, C2, C0>);
+  static_assert(Kokkos::is_detected_v<equality_comparable, C2, C2>);
+  static_assert(!Kokkos::is_detected_v<equality_comparable, C2, C3>);
+  static_assert(!Kokkos::is_detected_v<equality_comparable, C2, I0>);
+  static_assert(!Kokkos::is_detected_v<equality_comparable, C2, I2>);
+  static_assert(!Kokkos::is_detected_v<equality_comparable, C2, I3>);
+
+  static_assert(!Kokkos::is_detected_v<equality_comparable, C3, C0>);
+  static_assert(!Kokkos::is_detected_v<equality_comparable, C3, C2>);
+  static_assert(Kokkos::is_detected_v<equality_comparable, C3, C3>);
+  static_assert(!Kokkos::is_detected_v<equality_comparable, C3, I0>);
+  static_assert(!Kokkos::is_detected_v<equality_comparable, C3, I2>);
+  static_assert(!Kokkos::is_detected_v<equality_comparable, C3, I3>);
+
+  static_assert(!Kokkos::is_detected_v<equality_comparable, I0, C0>);
+  static_assert(!Kokkos::is_detected_v<equality_comparable, I0, C2>);
+  static_assert(!Kokkos::is_detected_v<equality_comparable, I0, C3>);
+  static_assert(Kokkos::is_detected_v<equality_comparable, I0, I0>);
+  static_assert(!Kokkos::is_detected_v<equality_comparable, I0, I2>);
+  static_assert(!Kokkos::is_detected_v<equality_comparable, I0, I3>);
+
+  static_assert(!Kokkos::is_detected_v<equality_comparable, I2, C0>);
+  static_assert(!Kokkos::is_detected_v<equality_comparable, I2, C2>);
+  static_assert(!Kokkos::is_detected_v<equality_comparable, I2, C3>);
+  static_assert(!Kokkos::is_detected_v<equality_comparable, I2, I0>);
+  static_assert(Kokkos::is_detected_v<equality_comparable, I2, I2>);
+  static_assert(!Kokkos::is_detected_v<equality_comparable, I2, I3>);
+
+  static_assert(!Kokkos::is_detected_v<equality_comparable, I3, C0>);
+  static_assert(!Kokkos::is_detected_v<equality_comparable, I3, C2>);
+  static_assert(!Kokkos::is_detected_v<equality_comparable, I3, C3>);
+  static_assert(!Kokkos::is_detected_v<equality_comparable, I3, I0>);
+  static_assert(!Kokkos::is_detected_v<equality_comparable, I3, I2>);
+  static_assert(Kokkos::is_detected_v<equality_comparable, I3, I3>);
+
+  return true;
+}
+
+static_assert(test_array_equality_comparable());
 
 }  // namespace
