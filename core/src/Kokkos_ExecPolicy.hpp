@@ -40,7 +40,7 @@ struct ParallelReduceTag {};
 
 struct ChunkSize {
   int value;
-  ChunkSize(int value_) : value(value_) {}
+  explicit ChunkSize(int value_) : value(value_) {}
 };
 
 /** \brief  Execution policy for work over a range of an integral type.
