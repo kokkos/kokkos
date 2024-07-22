@@ -307,12 +307,12 @@ class ArrayReduceTeamFunctor {
 
   KOKKOS_INLINE_FUNCTION
   void init(value_type dst) const {
-    for (int i = 0; i < value_count; ++i) dst[i] = 0;
+    for (size_type i = 0; i < value_count; ++i) dst[i] = 0;
   }
 
   KOKKOS_INLINE_FUNCTION
   void join(value_type dst, const value_type src) const {
-    for (int i = 0; i < value_count; ++i) dst[i] += src[i];
+    for (size_type i = 0; i < value_count; ++i) dst[i] += src[i];
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -412,7 +412,7 @@ class TestReduceTeam {
 
       for (unsigned i = 0; i < Repeat; ++i) {
         for (unsigned j = 0; j < Count; ++j) {
-          ASSERT_EQ(j % 3 ? nsum : nw, result[i][j])
+          ASSERT_EQ(j % 3 ? nsum : nw, static_cast<uint64_t>(result[i][j]))
               << "failing at repeat " << i << " and index " << j;
         }
       }
