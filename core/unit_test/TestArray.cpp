@@ -54,17 +54,6 @@ KOKKOS_FUNCTION constexpr bool test_array_structured_binding_support() {
 
 static_assert(test_array_structured_binding_support());
 
-template <typename L, typename R>
-KOKKOS_FUNCTION constexpr bool is_equal(L const& l, R const& r) {
-  if (l.size() != r.size()) return false;
-
-  for (size_t i = 0; i != l.size(); ++i) {
-    if (l[i] != r[i]) return false;
-  }
-
-  return true;
-}
-
 // Disable ctad test for intel versions < 2021, see issue #6702
 #if !defined(KOKKOS_COMPILER_INTEL) || KOKKOS_COMPILER_INTEL >= 2021
 KOKKOS_FUNCTION constexpr bool test_array_ctad() {
@@ -72,7 +61,7 @@ KOKKOS_FUNCTION constexpr bool test_array_ctad() {
   constexpr Kokkos::Array a{1, 2, 3, 5, x};
   constexpr Kokkos::Array<int, 5> b{1, 2, 3, 5, x};
 
-  return std::is_same_v<decltype(a), decltype(b)> && is_equal(a, b);
+  return std::is_same_v<decltype(a), decltype(b)> && a == b;
 }
 
 static_assert(test_array_ctad());
