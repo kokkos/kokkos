@@ -841,12 +841,27 @@ KOKKOS_INLINE_FUNCTION complex<RealType> conj(
   return complex<RealType>(real(x), -imag(x));
 }
 
+#if 1
+template <typename RealType,
+          typename = std::enable_if_t<std::is_floating_point_v<RealType>>>
+KOKKOS_FUNCTION constexpr complex<RealType> conj(RealType f) noexcept {
+  return complex<RealType>(f);
+}
+
+template <typename IntegerType,
+          typename = std::enable_if_t<std::is_integral_v<IntegerType>>>
+KOKKOS_FUNCTION constexpr complex<double> conj(IntegerType i) noexcept {
+  return complex<double>(static_cast<double>(i));
+}
+
+#else
 template <class ArithmeticType>
 KOKKOS_INLINE_FUNCTION constexpr complex<Impl::promote_t<ArithmeticType>> conj(
     ArithmeticType x) {
   using type = Impl::promote_t<ArithmeticType>;
   return complex<type>(x, -type());
 }
+#endif
 
 //! Exponential of a complex number.
 template <class RealType>
