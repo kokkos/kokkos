@@ -27,14 +27,7 @@ static_assert(false,
 
 #include <Kokkos_Core_fwd.hpp>
 
-#include <cstddef>
-#include <iosfwd>
 #include <Kokkos_HostSpace.hpp>
-
-#ifdef KOKKOS_ENABLE_HBWSPACE
-#include <Kokkos_HBWSpace.hpp>
-#endif
-
 #include <Kokkos_ScratchSpace.hpp>
 #include <Kokkos_Parallel.hpp>
 #include <Kokkos_TaskScheduler.hpp>
@@ -45,6 +38,8 @@ static_assert(false,
 
 #include <omp.h>
 
+#include <cstddef>
+#include <iosfwd>
 #include <vector>
 
 /*--------------------------------------------------------------------------*/
@@ -62,12 +57,7 @@ class OpenMP {
   //! Tag this class as a kokkos execution space
   using execution_space = OpenMP;
 
-  using memory_space =
-#ifdef KOKKOS_ENABLE_HBWSPACE
-      Experimental::HBWSpace;
-#else
-      HostSpace;
-#endif
+  using memory_space = HostSpace;
 
   //! This execution space preferred device_type
   using device_type          = Kokkos::Device<execution_space, memory_space>;
@@ -82,8 +72,10 @@ class OpenMP {
   /// \brief Print configuration information to the given output stream.
   void print_configuration(std::ostream& os, bool verbose = false) const;
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   /// \brief is the instance running a parallel algorithm
-  static bool in_parallel(OpenMP const& = OpenMP()) noexcept;
+  KOKKOS_DEPRECATED static bool in_parallel(OpenMP const& = OpenMP()) noexcept;
+#endif
 
   /// \brief Wait until all dispatched functors complete on the given instance
   ///
@@ -152,14 +144,6 @@ inline int OpenMP::impl_thread_pool_rank() noexcept {
   KOKKOS_IF_ON_HOST((return omp_get_thread_num();))
 
   KOKKOS_IF_ON_DEVICE((return -1;))
-}
-
-inline void OpenMP::impl_static_fence(std::string const& name) {
-  Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::OpenMP>(
-      name,
-      Kokkos::Tools::Experimental::SpecialSynchronizationCases::
-          GlobalDeviceSynchronization,
-      []() {});
 }
 
 inline bool OpenMP::is_asynchronous(OpenMP const& /*instance*/) noexcept {

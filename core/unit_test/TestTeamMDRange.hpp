@@ -1416,15 +1416,14 @@ struct TestThreadVectorMDRangeParallelReduce : public TestTeamMDParallelReduce {
 #endif
                                       ),
         KOKKOS_LAMBDA(TeamType const& team, DataType& leagueSum) {
-          auto leagueRank  = team.league_rank();
-          DataType teamSum = 0;
+          auto leagueRank = team.league_rank();
 
           auto teamThreadRange = Kokkos::TeamThreadRange(team, n0);
           auto threadVectorRange =
               Kokkos::ThreadVectorMDRange<Kokkos::Rank<2, Direction>, TeamType>(
                   team, n1, n2);
 
-          Kokkos::parallel_for(teamThreadRange, [=, &teamSum](const int& i) {
+          Kokkos::parallel_for(teamThreadRange, [=, &leagueSum](const int& i) {
             DataType threadSum = 0;
             Kokkos::parallel_reduce(
                 threadVectorRange,
@@ -1432,11 +1431,9 @@ struct TestThreadVectorMDRangeParallelReduce : public TestTeamMDParallelReduce {
                   vectorSum += v(leagueRank, i, j, k);
                 },
                 threadSum);
-
-            teamSum += threadSum;
+            Kokkos::single(Kokkos::PerThread(team),
+                           [&]() { leagueSum += threadSum; });
           });
-
-          leagueSum += teamSum;
         },
         finalSum);
 
@@ -1479,15 +1476,14 @@ struct TestThreadVectorMDRangeParallelReduce : public TestTeamMDParallelReduce {
 #endif
                                       ),
         KOKKOS_LAMBDA(TeamType const& team, DataType& leagueSum) {
-          auto leagueRank  = team.league_rank();
-          DataType teamSum = 0;
+          auto leagueRank = team.league_rank();
 
           auto teamThreadRange = Kokkos::TeamThreadRange(team, n0);
           auto threadVectorRange =
               Kokkos::ThreadVectorMDRange<Kokkos::Rank<3, Direction>, TeamType>(
                   team, n1, n2, n3);
 
-          Kokkos::parallel_for(teamThreadRange, [=, &teamSum](const int& i) {
+          Kokkos::parallel_for(teamThreadRange, [=, &leagueSum](const int& i) {
             DataType threadSum = 0;
             Kokkos::parallel_reduce(
                 threadVectorRange,
@@ -1497,10 +1493,9 @@ struct TestThreadVectorMDRangeParallelReduce : public TestTeamMDParallelReduce {
                 },
                 threadSum);
 
-            teamSum += threadSum;
+            Kokkos::single(Kokkos::PerThread(team),
+                           [&]() { leagueSum += threadSum; });
           });
-
-          leagueSum += teamSum;
         },
         finalSum);
 
@@ -1544,15 +1539,14 @@ struct TestThreadVectorMDRangeParallelReduce : public TestTeamMDParallelReduce {
 #endif
                                       ),
         KOKKOS_LAMBDA(TeamType const& team, DataType& leagueSum) {
-          auto leagueRank  = team.league_rank();
-          DataType teamSum = 0;
+          auto leagueRank = team.league_rank();
 
           auto teamThreadRange = Kokkos::TeamThreadRange(team, n0);
           auto threadVectorRange =
               Kokkos::ThreadVectorMDRange<Kokkos::Rank<4, Direction>, TeamType>(
                   team, n1, n2, n3, n4);
 
-          Kokkos::parallel_for(teamThreadRange, [=, &teamSum](const int& i) {
+          Kokkos::parallel_for(teamThreadRange, [=, &leagueSum](const int& i) {
             DataType threadSum = 0;
             Kokkos::parallel_reduce(
                 threadVectorRange,
@@ -1562,10 +1556,9 @@ struct TestThreadVectorMDRangeParallelReduce : public TestTeamMDParallelReduce {
                 },
                 threadSum);
 
-            teamSum += threadSum;
+            Kokkos::single(Kokkos::PerThread(team),
+                           [&]() { leagueSum += threadSum; });
           });
-
-          leagueSum += teamSum;
         },
         finalSum);
 
@@ -1614,15 +1607,14 @@ struct TestThreadVectorMDRangeParallelReduce : public TestTeamMDParallelReduce {
 #endif
                                       ),
         KOKKOS_LAMBDA(TeamType const& team, DataType& leagueSum) {
-          auto leagueRank  = team.league_rank();
-          DataType teamSum = 0;
+          auto leagueRank = team.league_rank();
 
           auto teamThreadRange = Kokkos::TeamThreadRange(team, n0);
           auto threadVectorRange =
               Kokkos::ThreadVectorMDRange<Kokkos::Rank<5, Direction>, TeamType>(
                   team, n1, n2, n3, n4, n5);
 
-          Kokkos::parallel_for(teamThreadRange, [=, &teamSum](const int& i) {
+          Kokkos::parallel_for(teamThreadRange, [=, &leagueSum](const int& i) {
             DataType threadSum = 0;
             Kokkos::parallel_reduce(
                 threadVectorRange,
@@ -1632,10 +1624,9 @@ struct TestThreadVectorMDRangeParallelReduce : public TestTeamMDParallelReduce {
                 },
                 threadSum);
 
-            teamSum += threadSum;
+            Kokkos::single(Kokkos::PerThread(team),
+                           [&]() { leagueSum += threadSum; });
           });
-
-          leagueSum += teamSum;
         },
         finalSum);
 
@@ -1688,15 +1679,14 @@ struct TestThreadVectorMDRangeParallelReduce : public TestTeamMDParallelReduce {
 #endif
                                       ),
         KOKKOS_LAMBDA(TeamType const& team, DataType& leagueSum) {
-          auto leagueRank  = team.league_rank();
-          DataType teamSum = 0;
+          auto leagueRank = team.league_rank();
 
           auto teamThreadRange = Kokkos::TeamThreadRange(team, n0);
           auto threadVectorRange =
               Kokkos::ThreadVectorMDRange<Kokkos::Rank<6, Direction>, TeamType>(
                   team, n1, n2, n3, n4, n5, n6);
 
-          Kokkos::parallel_for(teamThreadRange, [=, &teamSum](const int& i) {
+          Kokkos::parallel_for(teamThreadRange, [=, &leagueSum](const int& i) {
             DataType threadSum = 0;
             Kokkos::parallel_reduce(
                 threadVectorRange,
@@ -1706,10 +1696,9 @@ struct TestThreadVectorMDRangeParallelReduce : public TestTeamMDParallelReduce {
                 },
                 threadSum);
 
-            teamSum += threadSum;
+            Kokkos::single(Kokkos::PerThread(team),
+                           [&]() { leagueSum += threadSum; });
           });
-
-          leagueSum += teamSum;
         },
         finalSum);
 

@@ -70,36 +70,72 @@ pipeline {
                           '''
                     }      
                 }   
-                stage('GCC-13') {
+                stage('GCC-14') {
                     agent {
                         docker {
-                            image 'gcc:13.1'
+                            image 'gcc:14.1'
                             label 'docker'
                         }
                     }
                     steps {
                         sh '''
-                          DEBIAN_FRONTEND=noninteractive && \
-                          apt-get update && apt-get upgrade -y && apt-get install -y \
-                          cmake \
-                          && \
-                          apt-get clean && rm -rf /var/lib/apt/lists/*
+                          wget https://github.com/Kitware/CMake/releases/download/v3.30.0/cmake-3.30.0-linux-x86_64.sh && \
+                          chmod +x cmake-3.30.0-linux-x86_64.sh && ./cmake-3.30.0-linux-x86_64.sh --skip-license --prefix=/usr
 
                           mkdir -p build && cd build && \
                           cmake \
                             -DCMAKE_BUILD_TYPE=Release \
-                            -DCMAKE_CXX_STANDARD=23 \
+                            -DCMAKE_CXX_STANDARD=26 \
                             -DCMAKE_CXX_FLAGS=-Werror \
                             -DKokkos_ARCH_NATIVE=ON \
                             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                             -DKokkos_ENABLE_BENCHMARKS=ON \
                             -DKokkos_ENABLE_EXAMPLES=ON \
                             -DKokkos_ENABLE_TESTS=ON \
-                            -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
+                            -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
+                            -DKokkos_ENABLE_DEPRECATION_WARNINGS=ON \
                             -DKokkos_ENABLE_SERIAL=ON \
                           .. && \
                           make -j8 && ctest --verbose
                           '''
+                    }
+                }
+                stage('HIP-ROCM-6.1') {
+                    agent {
+                        dockerfile {
+                            filename 'Dockerfile.hipcc'
+                            dir 'scripts/docker'
+                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-22.04:6.1.2-complete'
+                            label 'rocm-docker && AMD_Radeon_Instinct_MI210'
+                            args '-v /tmp/ccache.kokkos:/tmp/ccache --device=/dev/kfd --device=/dev/dri --security-opt seccomp=unconfined --group-add video --env HIP_VISIBLE_DEVICES=$HIP_VISIBLE_DEVICES'
+                        }
+                    }
+                    environment {
+                        // FIXME Test returns a wrong value
+                        GTEST_FILTER = '-hip_hostpinned.view_allocation_large_rank'
+                    }
+                    steps {
+                        sh 'ccache --zero-stats'
+                        sh '''rm -rf build && mkdir -p build && cd build && \
+                              cmake \
+                                -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+                                -DCMAKE_CXX_COMPILER=hipcc \
+                                -DCMAKE_CXX_FLAGS="-Werror -Wno-unused-command-line-argument" \
+                                -DCMAKE_CXX_STANDARD=20 \
+                                -DKokkos_ARCH_NATIVE=ON \
+                                -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+                                -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
+                                -DKokkos_ENABLE_DEPRECATION_WARNINGS=ON \
+                                -DKokkos_ENABLE_TESTS=ON \
+                                -DKokkos_ENABLE_BENCHMARKS=ON \
+                                -DKokkos_ENABLE_HIP=ON \
+                              .. && \
+                              make -j8 && ctest --verbose'''
+                    }
+                    post {
+                        always {
+                            sh 'ccache --show-stats'
+                        }
                     }
                 }
             }

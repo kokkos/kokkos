@@ -27,6 +27,7 @@
 #include <HIP/Kokkos_HIP.hpp>
 #include <HIP/Kokkos_HIP_Space.hpp>
 #include <impl/Kokkos_CheckedIntegerOps.hpp>
+#include <impl/Kokkos_DeviceManagement.hpp>
 #include <impl/Kokkos_Error.hpp>
 
 /*--------------------------------------------------------------------------*/
@@ -89,10 +90,14 @@ void HIPInternal::print_configuration(std::ostream &s) const {
     << '\n';
 #endif
 
-  int hipDevCount;
-  KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDeviceCount(&hipDevCount));
+  s << "macro KOKKOS_ENABLE_ROCTHRUST : "
+#if defined(KOKKOS_ENABLE_ROCTHRUST)
+    << "defined\n";
+#else
+    << "undefined\n";
+#endif
 
-  for (int i = 0; i < hipDevCount; ++i) {
+  for (int i : get_visible_devices()) {
     hipDeviceProp_t hipProp;
     KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDeviceProperties(&hipProp, i));
     std::string gpu_type = hipProp.integrated == 1 ? "APU" : "dGPU";
@@ -226,6 +231,9 @@ Kokkos::HIP::size_type *HIPInternal::scratch_flags(const std::size_t size) {
     m_scratchFlags = static_cast<size_type *>(
         mem_space.allocate("Kokkos::InternalScratchFlags", alloc_size));
 
+    // We only zero-initialize the allocation when we actually allocate.
+    // It's the responsibility of the features using scratch_flags,
+    // namely parallel_reduce and parallel_scan, to reset the used values to 0.
     KOKKOS_IMPL_HIP_SAFE_CALL(hipMemset(m_scratchFlags, 0, alloc_size));
   }
 
@@ -344,6 +352,22 @@ void HIPInternal::finalize() {
   m_scratch_locks     = nullptr;
   m_num_scratch_locks = 0;
 }
+
+int HIPInternal::m_hipDev                                     = -1;
+unsigned HIPInternal::m_multiProcCount                        = 0;
+unsigned HIPInternal::m_maxWarpCount                          = 0;
+std::array<HIPInternal::size_type, 3> HIPInternal::m_maxBlock = {0, 0, 0};
+unsigned HIPInternal::m_maxWavesPerCU                         = 0;
+int HIPInternal::m_shmemPerSM                                 = 0;
+int HIPInternal::m_maxShmemPerBlock                           = 0;
+int HIPInternal::m_maxThreadsPerSM                            = 0;
+
+hipDeviceProp_t HIPInternal::m_deviceProp;
+
+std::mutex HIPInternal::scratchFunctorMutex;
+unsigned long *HIPInternal::constantMemHostStaging = nullptr;
+hipEvent_t HIPInternal::constantMemReusable        = nullptr;
+std::mutex HIPInternal::constantMemMutex;
 
 //----------------------------------------------------------------------------
 

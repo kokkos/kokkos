@@ -85,8 +85,8 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
     const typename Policy::index_type nwork = m_policy.end() - m_policy.begin();
 
     cudaFuncAttributes attr =
-        CudaParallelLaunch<ParallelFor,
-                           LaunchBounds>::get_cuda_func_attributes();
+        CudaParallelLaunch<ParallelFor, LaunchBounds>::get_cuda_func_attributes(
+            m_policy.space().cuda_device());
     const int block_size =
         Kokkos::Impl::cuda_get_opt_block_size<FunctorType, LaunchBounds>(
             m_policy.space().impl_internal_space_instance(), attr, m_functor, 1,
@@ -242,6 +242,12 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
 
       if (CudaTraits::WarpSize < word_count.value) {
         __syncthreads();
+      } else if (word_count.value > 1) {
+        // Inside cuda_single_inter_block_reduce_scan() and final() above,
+        // shared[i] below might have been updated by a single thread within a
+        // warp without synchronization afterwards. Synchronize threads within
+        // warp to avoid potential race condition.
+        __syncwarp(0xffffffff);
       }
 
       for (unsigned i = threadIdx.y; i < word_count.value; i += blockDim.y) {
@@ -261,9 +267,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
     using closure_type =
         Impl::ParallelReduce<CombinedFunctorReducer<FunctorType, ReducerType>,
                              Policy, Kokkos::Cuda>;
-    cudaFuncAttributes attr =
-        CudaParallelLaunch<closure_type,
-                           LaunchBounds>::get_cuda_func_attributes();
+    cudaFuncAttributes attr = CudaParallelLaunch<closure_type, LaunchBounds>::
+        get_cuda_func_attributes(m_policy.space().cuda_device());
     while (
         (n && (maxShmemPerBlock < shmem_size)) ||
         (n >
@@ -307,8 +312,9 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
       // REQUIRED ( 1 , N , 1 )
       dim3 block(1, block_size, 1);
       // Required grid.x <= block.y
-      dim3 grid(std::min(int(block.y), int((nwork + block.y - 1) / block.y)), 1,
-                1);
+      dim3 grid(std::min(index_type(block.y),
+                         index_type((nwork + block.y - 1) / block.y)),
+                1, 1);
 
       // TODO @graph We need to effectively insert this in to the graph
       const int shmem =

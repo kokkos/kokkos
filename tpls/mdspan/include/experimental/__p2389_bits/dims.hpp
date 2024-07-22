@@ -14,11 +14,15 @@
 //
 //@HEADER
 
-#ifndef KOKKOS_DECLARE_HBWSPACE_HPP
-#define KOKKOS_DECLARE_HBWSPACE_HPP
+#pragma once
 
-#ifdef KOKKOS_ENABLE_HBWSPACE
-#include <Kokkos_HBWSpace.hpp>
-#endif
+// backward compatibility import into experimental
+namespace MDSPAN_IMPL_STANDARD_NAMESPACE {
+namespace MDSPAN_IMPL_PROPOSED_NAMESPACE {
 
-#endif
+template< ::std::size_t Rank, class IndexType = std::size_t>
+using dims =
+  :: MDSPAN_IMPL_STANDARD_NAMESPACE :: dextents<IndexType, Rank>;
+
+} // namespace MDSPAN_IMPL_PROPOSED_NAMESPACE
+} // namespace MDSPAN_IMPL_STANDARD_NAMESPACE

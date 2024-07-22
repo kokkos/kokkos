@@ -20,7 +20,6 @@
 #include <Kokkos_Graph_fwd.hpp>
 
 #include <impl/Kokkos_GraphImpl.hpp>
-#include <impl/Kokkos_SharedAlloc.hpp>
 
 #include <Kokkos_Parallel.hpp>
 #include <Kokkos_Parallel_Reduce.hpp>

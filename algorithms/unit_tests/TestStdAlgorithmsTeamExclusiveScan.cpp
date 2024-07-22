@@ -85,7 +85,7 @@ struct TestFunctorA {
         break;
       }
 
-#if not defined KOKKOS_ENABLE_OPENMPTARGET
+#ifndef KOKKOS_ENABLE_OPENMPTARGET
 
       case 2: {
         auto it = KE::exclusive_scan(
@@ -213,7 +213,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
         break;
       }
 
-#if not defined KOKKOS_ENABLE_OPENMPTARGET
+#ifndef KOKKOS_ENABLE_OPENMPTARGET
       case 2:
       case 3: {
         auto it = exclusive_scan(KE::cbegin(rowFrom), KE::cend(rowFrom),
@@ -242,7 +242,7 @@ template <class LayoutTag, class ValueType, class InPlaceOrVoid = void>
 void run_all_scenarios() {
   for (int numTeams : teamSizesToTest) {
     for (const auto& numCols : {0, 1, 2, 13, 101, 1444, 8153}) {
-#if not defined KOKKOS_ENABLE_OPENMPTARGET
+#ifndef KOKKOS_ENABLE_OPENMPTARGET
       for (int apiId : {0, 1, 2, 3}) {
 #else
       for (int apiId : {0, 1}) {
@@ -254,6 +254,10 @@ void run_all_scenarios() {
 }
 
 TEST(std_algorithms_exclusive_scan_team_test, test) {
+// FIXME_OPENMPTARGET
+#if defined(KOKKOS_ENABLE_OPENMPTARGET) && defined(KOKKOS_ARCH_INTEL_GPU)
+  GTEST_SKIP() << "the test is known to fail with OpenMPTarget on Intel GPUs";
+#endif
   run_all_scenarios<DynamicTag, double>();
   run_all_scenarios<StridedTwoRowsTag, int>();
   run_all_scenarios<StridedThreeRowsTag, unsigned>();

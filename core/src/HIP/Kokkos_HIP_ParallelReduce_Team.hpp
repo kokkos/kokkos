@@ -31,7 +31,7 @@ template <class CombinedFunctorReducerType, class... Properties>
 class ParallelReduce<CombinedFunctorReducerType,
                      Kokkos::TeamPolicy<Properties...>, HIP> {
  public:
-  using Policy      = TeamPolicyInternal<HIP, Properties...>;
+  using Policy      = TeamPolicy<Properties...>;
   using FunctorType = typename CombinedFunctorReducerType::functor_type;
   using ReducerType = typename CombinedFunctorReducerType::reducer_type;
 
@@ -62,7 +62,8 @@ class ParallelReduce<CombinedFunctorReducerType,
       sizeof(value_type) < sizeof(Kokkos::HIP::size_type),
       std::conditional_t<sizeof(value_type) == 2, int16_t, int8_t>,
       Kokkos::HIP::size_type>;
-  using size_type = HIP::size_type;
+  using reducer_type = ReducerType;
+  using size_type    = HIP::size_type;
 
   // static int constexpr UseShflReduction = false;
   // FIXME_HIP This should be disabled unconditionally for best performance, but
@@ -288,7 +289,8 @@ class ParallelReduce<CombinedFunctorReducerType,
 
         if (m_result_ptr) {
           const int size = reducer.value_size();
-          DeepCopy<HostSpace, HIPSpace>(m_result_ptr, m_scratch_space, size);
+          DeepCopy<HostSpace, HIPSpace, HIP>(m_policy.space(), m_result_ptr,
+                                             m_scratch_space, size);
         }
       }
     } else {

@@ -41,8 +41,8 @@ namespace Impl {
 template <typename ParallelType, typename Policy, typename LaunchBounds>
 int max_tile_size_product_helper(const Policy& pol, const LaunchBounds&) {
   cudaFuncAttributes attr =
-      CudaParallelLaunch<ParallelType,
-                         LaunchBounds>::get_cuda_func_attributes();
+      CudaParallelLaunch<ParallelType, LaunchBounds>::get_cuda_func_attributes(
+          pol.space().cuda_device());
   auto const& prop = pol.space().cuda_device_prop();
 
   // Limits due to registers/SM, MDRange doesn't have
@@ -308,6 +308,11 @@ class ParallelReduce<CombinedFunctorReducerType,
 
       if (CudaTraits::WarpSize < word_count.value) {
         __syncthreads();
+      } else {
+        // In the above call to final(), shared might have been updated by a
+        // single thread within a warp without synchronization. Synchronize
+        // threads within warp to avoid potential race condition.
+        __syncwarp(0xffffffff);
       }
 
       for (unsigned i = threadIdx.y; i < word_count.value; i += blockDim.y) {
@@ -327,9 +332,8 @@ class ParallelReduce<CombinedFunctorReducerType,
     using closure_type =
         Impl::ParallelReduce<CombinedFunctorReducer<FunctorType, ReducerType>,
                              Policy, Kokkos::Cuda>;
-    cudaFuncAttributes attr =
-        CudaParallelLaunch<closure_type,
-                           LaunchBounds>::get_cuda_func_attributes();
+    cudaFuncAttributes attr = CudaParallelLaunch<closure_type, LaunchBounds>::
+        get_cuda_func_attributes(m_policy.space().cuda_device());
     while (
         (n && (maxShmemPerBlock < shmem_size)) ||
         (n >

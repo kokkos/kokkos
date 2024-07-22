@@ -23,6 +23,10 @@
 #include <Cuda/Kokkos_Cuda_Error.hpp>
 #include <cuda_runtime_api.h>
 #include "Kokkos_CudaSpace.hpp"
+
+#include <set>
+#include <map>
+
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 // These functions fulfill the purpose of allowing to work around
@@ -87,10 +91,10 @@ class CudaInternal {
   int m_cudaDev = -1;
 
   // Device Properties
-  inline static int m_cudaArch = -1;
+  static int m_cudaArch;
   static int concurrency();
 
-  inline static cudaDeviceProp m_deviceProp;
+  static cudaDeviceProp m_deviceProp;
 
   // Scratch Spaces for Reductions
   mutable std::size_t m_scratchSpaceCount;
@@ -116,11 +120,10 @@ class CudaInternal {
   bool was_initialized = false;
   bool was_finalized   = false;
 
-  // FIXME_CUDA: these want to be per-device, not per-stream...  use of 'static'
-  //  here will break once there are multiple devices though
-  inline static unsigned long* constantMemHostStaging = nullptr;
-  inline static cudaEvent_t constantMemReusable       = nullptr;
-  inline static std::mutex constantMemMutex;
+  static std::set<int> cuda_devices;
+  static std::map<int, unsigned long*> constantMemHostStagingPerDevice;
+  static std::map<int, cudaEvent_t> constantMemReusablePerDevice;
+  static std::map<int, std::mutex> constantMemMutexPerDevice;
 
   static CudaInternal& singleton();
 
@@ -222,12 +225,6 @@ class CudaInternal {
   }
 
   template <bool setCudaDevice = true>
-  cudaError_t cuda_device_synchronize_wrapper() const {
-    if constexpr (setCudaDevice) set_cuda_device();
-    return cudaDeviceSynchronize();
-  }
-
-  template <bool setCudaDevice = true>
   cudaError_t cuda_event_create_wrapper(cudaEvent_t* event) const {
     if constexpr (setCudaDevice) set_cuda_device();
     return cudaEventCreate(event);
@@ -262,12 +259,6 @@ class CudaInternal {
   cudaError_t cuda_free_host_wrapper(void* ptr) const {
     if constexpr (setCudaDevice) set_cuda_device();
     return cudaFreeHost(ptr);
-  }
-
-  template <bool setCudaDevice = true>
-  cudaError_t cuda_get_last_error_wrapper() const {
-    if constexpr (setCudaDevice) set_cuda_device();
-    return cudaGetLastError();
   }
 
   template <bool setCudaDevice = true>
@@ -429,23 +420,6 @@ class CudaInternal {
     return cudaStreamSynchronize(stream);
   }
 
-  // The following are only available for cuda 11.2 and greater
-#if (defined(KOKKOS_ENABLE_IMPL_CUDA_MALLOC_ASYNC) && CUDART_VERSION >= 11020)
-  template <bool setCudaDevice = true>
-  cudaError_t cuda_malloc_async_wrapper(void** devPtr, size_t size,
-                                        cudaStream_t hStream = nullptr) const {
-    if constexpr (setCudaDevice) set_cuda_device();
-    return cudaMallocAsync(devPtr, size, get_input_stream(hStream));
-  }
-
-  template <bool setCudaDevice = true>
-  cudaError_t cuda_free_async_wrapper(void* devPtr,
-                                      cudaStream_t hStream = nullptr) const {
-    if constexpr (setCudaDevice) set_cuda_device();
-    return cudaFreeAsync(devPtr, get_input_stream(hStream));
-  }
-#endif
-
   // C++ API routines
   template <typename T, bool setCudaDevice = true>
   cudaError_t cuda_func_get_attributes_wrapper(cudaFuncAttributes* attr,
@@ -455,10 +429,10 @@ class CudaInternal {
   }
 
   template <typename T, bool setCudaDevice = true>
-  cudaError_t cuda_func_set_attributes_wrapper(T* entry, cudaFuncAttribute attr,
-                                               int value) const {
+  cudaError_t cuda_func_set_attribute_wrapper(T* entry, cudaFuncAttribute attr,
+                                              int value) const {
     if constexpr (setCudaDevice) set_cuda_device();
-    return cudaFuncSetAttributes(entry, attr, value);
+    return cudaFuncSetAttribute(entry, attr, value);
   }
 
   template <bool setCudaDevice = true>
