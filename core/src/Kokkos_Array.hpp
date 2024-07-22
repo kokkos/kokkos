@@ -133,6 +133,18 @@ struct Array {
     return &m_internal_implementation_private_member_data[0];
   }
 
+  friend KOKKOS_FUNCTION constexpr bool operator==(Array const& lhs,
+                                                   Array const& rhs) noexcept {
+    for (size_t i = 0; i != N; ++i)
+      if (lhs[i] != rhs[i]) return false;
+    return true;
+  }
+
+  friend KOKKOS_FUNCTION constexpr bool operator!=(Array const& lhs,
+                                                   Array const& rhs) noexcept {
+    return !(lhs == rhs);
+  }
+
  private:
   template <class U = T>
   friend KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<
@@ -185,6 +197,15 @@ struct Array<T, 0> {
 
   KOKKOS_INLINE_FUNCTION pointer data() { return nullptr; }
   KOKKOS_INLINE_FUNCTION const_pointer data() const { return nullptr; }
+
+  friend KOKKOS_FUNCTION constexpr bool operator==(Array const&,
+                                                   Array const&) noexcept {
+    return true;
+  }
+  friend KOKKOS_FUNCTION constexpr bool operator!=(Array const&,
+                                                   Array const&) noexcept {
+    return false;
+  }
 
   KOKKOS_DEFAULTED_FUNCTION ~Array()            = default;
   KOKKOS_DEFAULTED_FUNCTION Array()             = default;
@@ -380,23 +401,6 @@ KOKKOS_FUNCTION constexpr auto to_array(T (&a)[N]) {
 template <typename T, size_t N>
 KOKKOS_FUNCTION constexpr auto to_array(T(&&a)[N]) {
   return Impl::to_array_impl(std::move(a), std::make_index_sequence<N>{});
-}
-
-template <typename T, size_t N>
-KOKKOS_INLINE_FUNCTION constexpr bool operator==(const Array<T, N, void>& lhs,
-                                                 const Array<T, N, void>& rhs) {
-  // The cast to int is necessary to avoid a warning about a pointless
-  // comparison with zero in the case that an unsigned type is used.
-  for (int i = 0; i < static_cast<int>(lhs.size()); ++i) {
-    if (lhs[i] != rhs[i]) return false;
-  }
-  return true;
-}
-
-template <typename T, size_t N>
-KOKKOS_INLINE_FUNCTION constexpr bool operator!=(const Array<T, N, void>& lhs,
-                                                 const Array<T, N, void>& rhs) {
-  return !(lhs == rhs);
 }
 
 }  // namespace Kokkos
