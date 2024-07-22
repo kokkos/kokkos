@@ -244,7 +244,8 @@ class ParallelReduce<CombinedFunctorReducerType,
       reducer.final(&value);
       *result = value;
     } else if (Impl::hip_inter_block_shuffle_reduction(
-                   value, init, reducer, m_scratch_space, result,
+                   value, init, reducer,
+                   reinterpret_cast<pointer_type>(m_scratch_space), result,
                    m_scratch_flags, blockDim.y)) {
       unsigned int const id = threadIdx.y * blockDim.x + threadIdx.x;
       if (id == 0) {
@@ -266,8 +267,9 @@ class ParallelReduce<CombinedFunctorReducerType,
     if (!is_empty_range || need_device_set) {
       int const block_count = compute_block_count();
 
-      m_scratch_space = hip_internal_scratch_space(
-          m_policy.space(), reducer.value_size() * block_count);
+      m_scratch_space =
+          reinterpret_cast<word_size_type*>(hip_internal_scratch_space(
+              m_policy.space(), reducer.value_size() * block_count));
       m_scratch_flags =
           hip_internal_scratch_flags(m_policy.space(), sizeof(size_type));
 
