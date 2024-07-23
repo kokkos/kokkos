@@ -324,10 +324,17 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
     return rec_tile_sizes;
   }
 
+  int max_total_tile_size() const {
+    return Impl::get_tile_size_properties(m_space).max_total_tile_size;
+  }
+
+ private:
   int tile_size_recommended(const int tile_rank) const {
-    auto properties   = Impl::get_tile_size_properties(m_space);
-    int last_rank     = (inner_direction == Iterate::Right) ? rank - 1 : 0;
-    int rec_tile_size = (std::pow(properties.default_tile_size, tile_rank + 1) <
+    auto properties = Impl::get_tile_size_properties(m_space);
+    int last_rank   = (inner_direction == Iterate::Right) ? rank - 1 : 0;
+    int rank_acc =
+        (inner_direction == Iterate::Right) ? tile_rank + 1 : tile_rank - 1;
+    int rec_tile_size = (std::pow(properties.default_tile_size, rank_acc) <
                          properties.max_total_tile_size)
                             ? properties.default_tile_size
                             : 1;
@@ -339,11 +346,6 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
     return rec_tile_size;
   }
 
-  int max_total_tile_size() const {
-    return Impl::get_tile_size_properties(m_space).max_total_tile_size;
-  }
-
- private:
   int tile_size_last_rank(const Impl::TileSizeProperties properties,
                           const index_type length) const {
     return properties.default_largest_tile_size == 0
@@ -361,6 +363,8 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
       rank_start = rank - 1;
       rank_end   = -1;
     }
+    auto recommended_tile_size = tile_size_recommended();
+
     for (int i = rank_start; i != rank_end; i += increment) {
       const index_type length = m_upper[i] - m_lower[i];
 
@@ -379,16 +383,11 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
 
       if (m_tile[i] <= 0) {
         m_tune_tile_size = true;
-        if ((inner_direction == Iterate::Right && (i < rank - 1)) ||
-            (inner_direction == Iterate::Left && (i > 0))) {
-          if (m_prod_tile_dims * properties.default_tile_size <
-              static_cast<index_type>(properties.max_total_tile_size)) {
-            m_tile[i] = properties.default_tile_size;
-          } else {
-            m_tile[i] = 1;
-          }
+        if (m_prod_tile_dims * properties.default_tile_size <
+            static_cast<index_type>(properties.max_total_tile_size)) {
+          m_tile[i] = recommended_tile_size[i];
         } else {
-          m_tile[i] = tile_size_last_rank(properties, length);
+          m_tile[i] = 1;
         }
       }
       m_tile_end[i] =
