@@ -38,9 +38,22 @@ struct ParallelForTag {};
 struct ParallelScanTag {};
 struct ParallelReduceTag {};
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+namespace Impl {
+struct OverloadHelper {};
+}  // namespace Impl
+#endif
+
 struct ChunkSize {
   int value;
   explicit ChunkSize(int value_) : value(value_) {}
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  KOKKOS_DEPRECATED_WITH_COMMENT(
+      "In RangePolicy constructor, ChunkSize struct was constructed implicitly "
+      "from a convertable type. Instead, pass Kokkos::ChunkSize(int).")
+  ChunkSize(int value_, Impl::OverloadHelper = {}) : value(value_) {}
+#endif
 };
 
 /** \brief  Execution policy for work over a range of an integral type.
