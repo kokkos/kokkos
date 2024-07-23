@@ -18,6 +18,7 @@
 #define KOKKOS_SYCL_PARALLEL_SCAN_RANGE_HPP
 
 #include <Kokkos_Macros.hpp>
+#include <SYCL/Kokkos_SYCL_WorkgroupReduction.hpp>
 #include <memory>
 #include <vector>
 
@@ -40,7 +41,8 @@ void workgroup_scan(sycl::nd_item<dim> item, const FunctorType& final_reducer,
 #if defined(KOKKOS_ARCH_INTEL_GPU) || defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
   auto shuffle_combine = [&](int stride) {
     if (stride < local_range) {
-      auto tmp = sg.shuffle_up(local_value, stride);
+      auto tmp = Kokkos::Impl::SYCLReduction::shift_group_right(sg, local_value,
+                                                                stride);
       if (id_in_sg >= stride) final_reducer.join(&local_value, &tmp);
     }
   };
@@ -52,7 +54,8 @@ void workgroup_scan(sycl::nd_item<dim> item, const FunctorType& final_reducer,
   KOKKOS_ASSERT(local_range <= 32);
 #else
   for (int stride = 1; stride < local_range; stride <<= 1) {
-    auto tmp = sg.shuffle_up(local_value, stride);
+    auto tmp =
+        Kokkos::Impl::SYCLReduction::shift_group_right(sg, local_value, stride);
     if (id_in_sg >= stride) final_reducer.join(&local_value, &tmp);
   }
 #endif
@@ -63,7 +66,8 @@ void workgroup_scan(sycl::nd_item<dim> item, const FunctorType& final_reducer,
 
   if (id_in_sg == local_range - 1 && sg_group_id < n_active_subgroups)
     local_mem[sg_group_id] = local_value;
-  local_value = sg.shuffle_up(local_value, 1);
+  local_value =
+      Kokkos::Impl::SYCLReduction::shift_group_right(sg, local_value, 1);
   if (id_in_sg == 0) final_reducer.init(&local_value);
   sycl::group_barrier(item.get_group());
 
@@ -79,7 +83,8 @@ void workgroup_scan(sycl::nd_item<dim> item, const FunctorType& final_reducer,
 #if defined(KOKKOS_ARCH_INTEL_GPU) || defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
         auto shuffle_combine_sg = [&](int stride) {
           if (stride < upper_bound) {
-            auto tmp = sg.shuffle_up(local_sg_value, stride);
+            auto tmp = Kokkos::Impl::SYCLReduction::shift_group_right(
+                sg, local_sg_value, stride);
             if (id_in_sg >= stride) {
               if (idx < n_active_subgroups)
                 final_reducer.join(&local_sg_value, &tmp);
@@ -96,7 +101,8 @@ void workgroup_scan(sycl::nd_item<dim> item, const FunctorType& final_reducer,
         KOKKOS_ASSERT(upper_bound <= 32);
 #else
         for (int stride = 1; stride < upper_bound; stride <<= 1) {
-          auto tmp = sg.shuffle_up(local_sg_value, stride);
+          auto tmp = Kokkos::Impl::SYCLReduction::shift_group_right(
+              sg, local_sg_value, stride);
           if (id_in_sg >= stride) {
             if (idx < n_active_subgroups)
               final_reducer.join(&local_sg_value, &tmp);
