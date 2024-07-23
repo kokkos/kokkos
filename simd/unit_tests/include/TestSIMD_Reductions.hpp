@@ -57,8 +57,6 @@ inline void host_check_reduction_all_loaders(ReductionOp reduce_op,
 
 template <typename Abi, typename DataType, size_t n>
 inline void host_check_all_reductions(const DataType (&args)[n]) {
-  host_check_reduction_all_loaders<Abi>(hmin(), n, args);
-  host_check_reduction_all_loaders<Abi>(hmax(), n, args);
   host_check_reduction_all_loaders<Abi>(reduce_where_expr<std::plus<>>(), n,
                                         args);
   host_check_reduction_all_loaders<Abi>(reduce_where_expr<std::multiplies<>>(),
@@ -138,8 +136,6 @@ KOKKOS_INLINE_FUNCTION void device_check_reduction_all_loaders(
 template <typename Abi, typename DataType, size_t n>
 KOKKOS_INLINE_FUNCTION void device_check_all_reductions(
     const DataType (&args)[n]) {
-  device_check_reduction_all_loaders<Abi>(hmin(), n, args);
-  device_check_reduction_all_loaders<Abi>(hmax(), n, args);
   device_check_reduction_all_loaders<Abi>(reduce_where_expr<std::plus<>>(), n,
                                           args);
   device_check_reduction_all_loaders<Abi>(

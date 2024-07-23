@@ -389,7 +389,7 @@ template <class T, class Abi>
 [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION constexpr T reduce_min(
     const simd<T, Abi>& x) noexcept {
   auto v = where(true, x);
-  return hmin(v);
+  return reduce_min(v);
 }
 
 template <class T, class Abi>
@@ -397,14 +397,14 @@ template <class T, class Abi>
     const simd<T, Abi>& x,
     const typename simd<T, Abi>::mask_type& mask) noexcept {
   auto v = where(mask, x);
-  return hmin(v);
+  return reduce_min(v);
 }
 
 template <class T, class Abi>
 [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION constexpr T reduce_max(
     const simd<T, Abi>& x) noexcept {
   auto v = where(true, x);
-  return hmax(v);
+  return reduce_max(v);
 }
 
 template <class T, class Abi>
@@ -412,7 +412,7 @@ template <class T, class Abi>
     const simd<T, Abi>& x,
     const typename simd<T, Abi>::mask_type& mask) noexcept {
   auto v = where(mask, x);
-  return hmax(v);
+  return reduce_max(v);
 }
 
 }  // namespace Experimental

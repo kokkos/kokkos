@@ -1533,6 +1533,11 @@ class simd<std::int32_t, simd_abi::avx2_fixed_size<4>> {
                                gen(std::integral_constant<std::size_t, 2>()),
                                gen(std::integral_constant<std::size_t, 3>()))) {
   }
+  template <typename FlagType>
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(
+      value_type const* ptr, FlagType flag) {
+    copy_from(ptr, flag);
+  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(
       __m128i const& value_in)
       : m_value(value_in) {}
@@ -1736,6 +1741,11 @@ class simd<std::int32_t, simd_abi::avx2_fixed_size<8>> {
                               gen(std::integral_constant<std::size_t, 5>()),
                               gen(std::integral_constant<std::size_t, 6>()),
                               gen(std::integral_constant<std::size_t, 7>()))) {}
+  template <typename FlagType>
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(
+      value_type const* ptr, FlagType flag) {
+    copy_from(ptr, flag);
+  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit simd(
       __m256i const& value_in)
       : m_value(value_in) {}
