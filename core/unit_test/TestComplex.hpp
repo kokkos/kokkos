@@ -684,6 +684,33 @@ TEST(TEST_CATEGORY, complex_structured_bindings) {
   test.testit();
 }
 
+
+// http://eel.is/c++draft/cmplx.over
+template<typename ExecSpace>
+struct TestComplexAdditionalOverloads {
+    void testit() {
+        Kokkos::complex<float> cf(2.f, 3.f);
+        Kokkos::complex<double> cd(5., 7.);
+        //float f(11.f);
+        //double d(13.);
+        //int i(17);
+
+        // arg - The phase angle of x
+        auto argcf = Kokkos::arg(cf);
+        static_assert(std::is_same_v<float, decltype(argcf)>);
+        ASSERT_FLOAT_EQ(argcf, std::atan2f(cf.imag(), cf.real()));
+
+        auto argcd = Kokkos::arg(cd);
+        static_assert(std::is_same_v<double, decltype(argcd)>);
+        ASSERT_FLOAT_EQ(argcd, std::atan2(cd.imag(), cd.real()));
+    }
+};
+
+TEST(TEST_CATEGORY, complex_additional_overloads) {
+    TestComplexAdditionalOverloads<TEST_EXECSPACE> test;
+    test.testit();
+}
+
 }  // namespace Test
 
 #ifdef KOKKOS_COMPILER_NVCC
