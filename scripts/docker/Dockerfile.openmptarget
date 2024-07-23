@@ -55,7 +55,7 @@ RUN LLVM_URL=https://github.com/llvm/llvm-project/archive &&\
       -DCMAKE_CXX_COMPILER=g++ \
       -DLLVM_ENABLE_PROJECTS="clang" \
       -DLLVM_ENABLE_RUNTIMES="openmp" \
-      -DLIBOMPTARGET_NVPTX_COMPUTE_CAPABILITIES=70 \
+      -DLIBOMPTARGET_DEVICE_ARCHITECTURES=sm_70 \
     ../llvm && \
     make -j${NPROC} && \
     make install && \
