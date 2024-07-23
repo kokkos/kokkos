@@ -18,6 +18,7 @@
 #define KOKKOS_SYCL_PARALLEL_SCAN_RANGE_HPP
 
 #include <Kokkos_Macros.hpp>
+#include <SYCL/Kokkos_SYCL_WorkgroupReduction.hpp>
 #include <memory>
 #include <vector>
 
