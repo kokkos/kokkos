@@ -26,6 +26,7 @@ struct TrivialWrapper {
   std::byte array[N];
 };
 
+// shuffle down
 template <typename T>
 T shift_group_left(sycl::sub_group sg, T x,
                    sycl::sub_group::linear_id_type delta) {
@@ -38,6 +39,7 @@ T shift_group_left(sycl::sub_group sg, T x,
   }
 }
 
+// shuffle up
 template <typename T>
 T shift_group_right(sycl::sub_group sg, T x,
                     sycl::sub_group::linear_id_type delta) {
@@ -50,6 +52,7 @@ T shift_group_right(sycl::sub_group sg, T x,
   }
 }
 
+// shuffle
 template <typename T>
 T select_from_group(sycl::sub_group sg, T x,
                     sycl::sub_group::id_type remote_local_id) {
