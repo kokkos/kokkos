@@ -25,7 +25,8 @@ template <typename... Ts>
 KOKKOS_FUNCTION constexpr void maybe_unused(Ts&&...) {}
 
 template <typename T, typename U = T>
-using equality_comparable = decltype(std::declval<const T&>() == std::declval<const U&>());
+using equality_comparable =
+    decltype(std::declval<T const&>() == std::declval<U const&>());
 
 KOKKOS_FUNCTION constexpr bool test_array() {
   constexpr Kokkos::Array<int, 3> a{{1, 2}};
