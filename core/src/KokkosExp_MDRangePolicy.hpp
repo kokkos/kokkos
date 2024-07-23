@@ -363,7 +363,6 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
       rank_start = rank - 1;
       rank_end   = -1;
     }
-    auto recommended_tile_size = tile_size_recommended();
 
     for (int i = rank_start; i != rank_end; i += increment) {
       const index_type length = m_upper[i] - m_lower[i];
@@ -383,11 +382,16 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
 
       if (m_tile[i] <= 0) {
         m_tune_tile_size = true;
-        if (m_prod_tile_dims * properties.default_tile_size <
-            static_cast<index_type>(properties.max_total_tile_size)) {
-          m_tile[i] = recommended_tile_size[i];
+        if ((inner_direction == Iterate::Right && (i < rank - 1)) ||
+            (inner_direction == Iterate::Left && (i > 0))) {
+          if (m_prod_tile_dims * properties.default_tile_size <
+              static_cast<index_type>(properties.max_total_tile_size)) {
+            m_tile[i] = properties.default_tile_size;
+          } else {
+            m_tile[i] = 1;
+          }
         } else {
-          m_tile[i] = 1;
+          m_tile[i] = tile_size_last_rank(properties, length);
         }
       }
       m_tile_end[i] =
