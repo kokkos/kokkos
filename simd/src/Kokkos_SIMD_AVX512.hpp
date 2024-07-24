@@ -3231,6 +3231,7 @@ class where_expression<simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>>,
   }
 };
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 [[nodiscard]] KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     std::int32_t
     hmax(const_where_expression<
@@ -3240,6 +3241,7 @@ class where_expression<simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>>,
       static_cast<__mmask8>(x.impl_get_mask()),
       _mm512_castsi256_si512(static_cast<__m256i>(x.impl_get_value())));
 }
+#endif
 
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int32_t reduce_max(
     const_where_expression<
@@ -3250,6 +3252,7 @@ class where_expression<simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>>,
       _mm512_castsi256_si512(static_cast<__m256i>(x.impl_get_value())));
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 [[nodiscard]] KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     std::int32_t
     hmin(const_where_expression<
@@ -3259,6 +3262,7 @@ class where_expression<simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>>,
       static_cast<__mmask8>(x.impl_get_mask()),
       _mm512_castsi256_si512(static_cast<__m256i>(x.impl_get_value())));
 }
+#endif
 
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int32_t reduce_min(
     const_where_expression<
@@ -3285,6 +3289,7 @@ class where_expression<simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>>,
                                       static_cast<__m512i>(x.impl_get_value()));
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 [[nodiscard]] KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     std::uint32_t
     hmax(const_where_expression<
@@ -3294,6 +3299,7 @@ class where_expression<simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>>,
       static_cast<__mmask8>(x.impl_get_mask()),
       _mm512_castsi256_si512(static_cast<__m256i>(x.impl_get_value())));
 }
+#endif
 
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::uint32_t reduce_max(
     const_where_expression<
@@ -3304,6 +3310,7 @@ class where_expression<simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>>,
       _mm512_castsi256_si512(static_cast<__m256i>(x.impl_get_value())));
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 [[nodiscard]] KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     std::uint32_t
     hmin(const_where_expression<
@@ -3313,6 +3320,7 @@ class where_expression<simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>>,
       static_cast<__mmask8>(x.impl_get_mask()),
       _mm512_castsi256_si512(static_cast<__m256i>(x.impl_get_value())));
 }
+#endif
 
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::uint32_t reduce_min(
     const_where_expression<
@@ -3339,6 +3347,7 @@ class where_expression<simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>>,
                                       static_cast<__m512i>(x.impl_get_value()));
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 [[nodiscard]] KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     std::int64_t
     hmax(const_where_expression<
@@ -3347,6 +3356,7 @@ class where_expression<simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>>,
   return _mm512_mask_reduce_max_epi64(static_cast<__mmask8>(x.impl_get_mask()),
                                       static_cast<__m512i>(x.impl_get_value()));
 }
+#endif
 
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int64_t reduce_max(
     const_where_expression<
@@ -3356,6 +3366,7 @@ class where_expression<simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>>,
                                       static_cast<__m512i>(x.impl_get_value()));
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 [[nodiscard]] KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     std::int64_t
     hmin(const_where_expression<
@@ -3364,6 +3375,7 @@ class where_expression<simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>>,
   return _mm512_mask_reduce_min_epi64(static_cast<__mmask8>(x.impl_get_mask()),
                                       static_cast<__m512i>(x.impl_get_value()));
 }
+#endif
 
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int64_t reduce_min(
     const_where_expression<
@@ -3373,6 +3385,7 @@ class where_expression<simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>>,
                                       static_cast<__m512i>(x.impl_get_value()));
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 [[nodiscard]] KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     std::uint64_t
     hmax(const_where_expression<
@@ -3381,6 +3394,7 @@ class where_expression<simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>>,
   return _mm512_mask_reduce_max_epu64(static_cast<__mmask8>(x.impl_get_mask()),
                                       static_cast<__m512i>(x.impl_get_value()));
 }
+#endif
 
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::uint64_t reduce_max(
     const_where_expression<
@@ -3390,6 +3404,7 @@ class where_expression<simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>>,
                                       static_cast<__m512i>(x.impl_get_value()));
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 [[nodiscard]] KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     std::uint64_t
     hmin(const_where_expression<
@@ -3398,6 +3413,7 @@ class where_expression<simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>>,
   return _mm512_mask_reduce_min_epu64(static_cast<__mmask8>(x.impl_get_mask()),
                                       static_cast<__m512i>(x.impl_get_value()));
 }
+#endif
 
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::uint64_t reduce_min(
     const_where_expression<
@@ -3407,6 +3423,7 @@ class where_expression<simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>>,
                                       static_cast<__m512i>(x.impl_get_value()));
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 [[nodiscard]] KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION double
 hmax(const_where_expression<simd_mask<double, simd_abi::avx512_fixed_size<8>>,
                             simd<double, simd_abi::avx512_fixed_size<8>>> const&
@@ -3414,6 +3431,7 @@ hmax(const_where_expression<simd_mask<double, simd_abi::avx512_fixed_size<8>>,
   return _mm512_mask_reduce_max_pd(static_cast<__mmask8>(x.impl_get_mask()),
                                    static_cast<__m512d>(x.impl_get_value()));
 }
+#endif
 
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION double reduce_max(
     const_where_expression<simd_mask<double, simd_abi::avx512_fixed_size<8>>,
@@ -3423,6 +3441,7 @@ hmax(const_where_expression<simd_mask<double, simd_abi::avx512_fixed_size<8>>,
                                    static_cast<__m512d>(x.impl_get_value()));
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 [[nodiscard]] KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION double
 hmin(const_where_expression<simd_mask<double, simd_abi::avx512_fixed_size<8>>,
                             simd<double, simd_abi::avx512_fixed_size<8>>> const&
@@ -3430,6 +3449,7 @@ hmin(const_where_expression<simd_mask<double, simd_abi::avx512_fixed_size<8>>,
   return _mm512_mask_reduce_min_pd(static_cast<__mmask8>(x.impl_get_mask()),
                                    static_cast<__m512d>(x.impl_get_value()));
 }
+#endif
 
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION double reduce_min(
     const_where_expression<simd_mask<double, simd_abi::avx512_fixed_size<8>>,
@@ -3439,6 +3459,7 @@ hmin(const_where_expression<simd_mask<double, simd_abi::avx512_fixed_size<8>>,
                                    static_cast<__m512d>(x.impl_get_value()));
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 [[nodiscard]] KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION float
 hmax(const_where_expression<simd_mask<float, simd_abi::avx512_fixed_size<8>>,
                             simd<float, simd_abi::avx512_fixed_size<8>>> const&
@@ -3447,6 +3468,7 @@ hmax(const_where_expression<simd_mask<float, simd_abi::avx512_fixed_size<8>>,
       static_cast<__mmask8>(x.impl_get_mask()),
       _mm512_castps256_ps512(static_cast<__m256>(x.impl_get_value())));
 }
+#endif
 
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION float reduce_max(
     const_where_expression<simd_mask<float, simd_abi::avx512_fixed_size<8>>,
@@ -3457,6 +3479,7 @@ hmax(const_where_expression<simd_mask<float, simd_abi::avx512_fixed_size<8>>,
       _mm512_castps256_ps512(static_cast<__m256>(x.impl_get_value())));
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 [[nodiscard]] KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION float
 hmin(const_where_expression<simd_mask<float, simd_abi::avx512_fixed_size<8>>,
                             simd<float, simd_abi::avx512_fixed_size<8>>> const&
@@ -3465,6 +3488,7 @@ hmin(const_where_expression<simd_mask<float, simd_abi::avx512_fixed_size<8>>,
       static_cast<__mmask8>(x.impl_get_mask()),
       _mm512_castps256_ps512(static_cast<__m256>(x.impl_get_value())));
 }
+#endif
 
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION float reduce_min(
     const_where_expression<simd_mask<float, simd_abi::avx512_fixed_size<8>>,

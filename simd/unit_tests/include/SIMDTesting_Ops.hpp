@@ -335,12 +335,12 @@ template <typename BinaryOperation = std::plus<>>
 class reduce_where_expr {
  public:
   template <typename T, typename MaskType>
-  KOKKOS_INLINE_FUNCTION auto on_host(T const& a, MaskType mask) const {
+  auto on_host(T const& a, MaskType mask) const {
     auto w = Kokkos::Experimental::where(mask, a);
     return Kokkos::Experimental::reduce(w, BinaryOperation());
   }
   template <typename T, typename MaskType>
-  KOKKOS_INLINE_FUNCTION auto on_host_serial(T const& a, MaskType mask) const {
+  auto on_host_serial(T const& a, MaskType mask) const {
     auto w        = Kokkos::Experimental::where(mask, a);
     auto const& v = w.impl_get_value();
     auto const& m = w.impl_get_mask();
@@ -373,11 +373,11 @@ class reduce_where_expr {
 class reduce_min {
  public:
   template <typename T, typename MaskType>
-  KOKKOS_INLINE_FUNCTION auto on_host(T const& a, MaskType mask) const {
+  auto on_host(T const& a, MaskType mask) const {
     return Kokkos::Experimental::reduce_min(a, mask);
   }
   template <typename T, typename MaskType>
-  KOKKOS_INLINE_FUNCTION auto on_host_serial(T const& a, MaskType mask) const {
+  auto on_host_serial(T const& a, MaskType mask) const {
     auto w        = Kokkos::Experimental::where(mask, a);
     auto const& v = w.impl_get_value();
     auto const& m = w.impl_get_mask();
@@ -409,11 +409,11 @@ class reduce_min {
 class reduce_max {
  public:
   template <typename T, typename MaskType>
-  KOKKOS_INLINE_FUNCTION auto on_host(T const& a, MaskType mask) const {
+  auto on_host(T const& a, MaskType mask) const {
     return Kokkos::Experimental::reduce_max(a, mask);
   }
   template <typename T, typename MaskType>
-  KOKKOS_INLINE_FUNCTION auto on_host_serial(T const& a, MaskType mask) const {
+  auto on_host_serial(T const& a, MaskType mask) const {
     auto w        = Kokkos::Experimental::where(mask, a);
     auto const& v = w.impl_get_value();
     auto const& m = w.impl_get_mask();
@@ -446,11 +446,11 @@ template <typename BinaryOperation = std::plus<>>
 class reduce {
  public:
   template <typename T, typename MaskType>
-  KOKKOS_INLINE_FUNCTION auto on_host(T const& a, MaskType mask) const {
+  auto on_host(T const& a, MaskType mask) const {
     return Kokkos::Experimental::reduce(a, mask, BinaryOperation());
   }
   template <typename T, typename MaskType>
-  KOKKOS_INLINE_FUNCTION auto on_host_serial(T const& a, MaskType mask) const {
+  auto on_host_serial(T const& a, MaskType mask) const {
     return reduce_where_expr<BinaryOperation>().on_host_serial(a, mask);
   }
 

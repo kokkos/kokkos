@@ -32,6 +32,7 @@ class simd_mask;
 template <class M, class T>
 class const_where_expression;
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 template <typename T, typename Abi>
 [[nodiscard]] KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
 hmin(const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> const& x) {
@@ -55,6 +56,7 @@ hmax(const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> const& x) {
   }
   return result;
 }
+#endif
 
 template <typename T, typename Abi>
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
