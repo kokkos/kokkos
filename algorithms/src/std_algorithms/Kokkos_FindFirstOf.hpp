@@ -59,8 +59,6 @@ auto find_first_of(const ExecutionSpace& ex,
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(s_view);
 
-  Impl::expect_larger_than_extents(s_view, view);
-
   namespace KE = ::Kokkos::Experimental;
   return Impl::find_first_of_exespace_impl(
       "Kokkos::find_first_of_view_api_default", ex, KE::begin(view),
@@ -76,8 +74,6 @@ auto find_first_of(const std::string& label, const ExecutionSpace& ex,
                    const ::Kokkos::View<DataType2, Properties2...>& s_view) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(s_view);
-
-  Impl::expect_larger_than_extents(s_view, view);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::find_first_of_exespace_impl(label, ex, KE::begin(view),
@@ -122,8 +118,6 @@ auto find_first_of(const ExecutionSpace& ex,
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(s_view);
 
-  Impl::expect_larger_than_extents(s_view, view);
-
   namespace KE = ::Kokkos::Experimental;
   return Impl::find_first_of_exespace_impl(
       "Kokkos::find_first_of_view_api_default", ex, KE::begin(view),
@@ -140,8 +134,6 @@ auto find_first_of(const std::string& label, const ExecutionSpace& ex,
                    const BinaryPredicateType& pred) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(s_view);
-
-  Impl::expect_larger_than_extents(s_view, view);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::find_first_of_exespace_impl(label, ex, KE::begin(view),
@@ -178,8 +170,6 @@ KOKKOS_FUNCTION auto find_first_of(
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(s_view);
 
-  Impl::expect_larger_than_extents(s_view, view);
-
   namespace KE = ::Kokkos::Experimental;
   return Impl::find_first_of_team_impl(teamHandle, KE::begin(view),
                                        KE::end(view), KE::begin(s_view),
@@ -212,8 +202,6 @@ KOKKOS_FUNCTION auto find_first_of(
     const BinaryPredicateType& pred) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(s_view);
-
-  Impl::expect_larger_than_extents(s_view, view);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::find_first_of_team_impl(teamHandle, KE::begin(view),
