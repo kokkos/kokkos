@@ -207,16 +207,6 @@ struct Array<T, 0> {
     return false;
   }
 
-  KOKKOS_DEFAULTED_FUNCTION ~Array()            = default;
-  KOKKOS_DEFAULTED_FUNCTION Array()             = default;
-  KOKKOS_DEFAULTED_FUNCTION Array(const Array&) = default;
-  KOKKOS_DEFAULTED_FUNCTION Array& operator=(const Array&) = default;
-
-  // Some supported compilers are not sufficiently C++11 compliant
-  // for default move constructor and move assignment operator.
-  // Array( Array && ) = default ;
-  // Array & operator = ( Array && ) = default ;
-
  private:
   friend KOKKOS_INLINE_FUNCTION constexpr void kokkos_swap(
       Array<T, 0>&, Array<T, 0>&) noexcept {}
