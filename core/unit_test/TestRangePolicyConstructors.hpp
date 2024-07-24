@@ -20,6 +20,7 @@
 
 #include <regex>
 #include <limits>
+#include <type_traits>
 
 namespace {
 
@@ -195,5 +196,41 @@ TEST(TEST_CATEGORY_DEATH, range_policy_implicitly_converted_bounds) {
   }
 #endif
 }
+
+constexpr bool test_chunk_size_explicit() {
+  using ExecutionSpace = TEST_EXECSPACE;
+  using Kokkos::ChunkSize;
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  static_assert(std::is_convertible_v<int, ChunkSize>);
+  static_assert(std::is_constructible_v<ChunkSize, int>);
+  static_assert(
+      std::is_constructible_v<
+          Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>, int, int, int>);
+  static_assert(std::is_constructible_v<
+                Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>, int, int,
+                ChunkSize>);
+  static_assert(std::is_constructible_v<Kokkos::RangePolicy<ExecutionSpace>,
+                                        ExecutionSpace, int, int, int>);
+  static_assert(std::is_constructible_v<Kokkos::RangePolicy<ExecutionSpace>,
+                                        ExecutionSpace, int, int, ChunkSize>);
+#else
+  static_assert(!std::is_convertible_v<int, ChunkSize>);
+  static_assert(std::is_constructible_v<ChunkSize, int>);
+  static_assert(
+      !std::is_constructible_v<
+          Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>, int, int, int>);
+  static_assert(std::is_constructible_v<
+                Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>, int, int,
+                ChunkSize>);
+  static_assert(!std::is_constructible_v<Kokkos::RangePolicy<ExecutionSpace>,
+                                         ExecutionSpace, int, int, int>);
+  static_assert(std::is_constructible_v<Kokkos::RangePolicy<ExecutionSpace>,
+                                        ExecutionSpace, int, int, ChunkSize>);
+#endif
+  return true;
+}
+
+static_assert(test_chunk_size_explicit());
 
 }  // namespace
