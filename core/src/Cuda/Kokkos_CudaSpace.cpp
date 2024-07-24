@@ -194,7 +194,7 @@ void *impl_allocate_common(const int device_id,
     error_code = cudaMallocManaged(&ptr, arg_alloc_size, cudaMemAttachGlobal);
     if (error_code == cudaSuccess) {
       // One would think cudaMemLocation{device_id,
-      // cudaMemLocationTypeDeivce} would work but it doesn't. I.e. the order of
+      // cudaMemLocationTypeDevice} would work but it doesn't. I.e. the order of
       // members doesn't seem to be defined.
       cudaMemLocation loc;
       loc.id   = device_id;
