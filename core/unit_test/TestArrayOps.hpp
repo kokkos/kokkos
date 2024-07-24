@@ -16,6 +16,7 @@
 
 #include <gtest/gtest.h>
 #include <Kokkos_Core.hpp>
+#include <numeric>
 
 namespace {
 
@@ -106,8 +107,8 @@ TEST(TEST_CATEGORY, array_operator_equal) {
   ASSERT_TRUE(a != c);
 
   using E = Kokkos::Array<int, 0>;
-  constexpr E e{};
-  constexpr E f{};
+  constexpr E e;
+  constexpr E f;
 
   static_assert(e == f);
   static_assert(!(e != f));
@@ -118,7 +119,7 @@ TEST(TEST_CATEGORY, array_operator_equal) {
 
 TEST(TEST_CATEGORY, array_zero_capacity) {
   using A = Kokkos::Array<int, 0>;
-  A e{};
+  A e;
 
   ASSERT_TRUE(e.empty());
   ASSERT_EQ(e.size(), 0u);
@@ -128,7 +129,7 @@ TEST(TEST_CATEGORY, array_zero_capacity) {
 TEST(TEST_CATEGORY, array_zero_data_nullptr) {
   using A = Kokkos::Array<int, 0>;
 
-  A e{};
+  A e;
   ASSERT_EQ(e.data(), nullptr);
 
   const A& ce = e;
