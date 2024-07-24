@@ -40,7 +40,12 @@ struct ParallelReduceTag {};
 
 struct ChunkSize {
   int value;
+  explicit ChunkSize(int value_) : value(value_) {}
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  template <typename T = void>
+  KOKKOS_DEPRECATED_WITH_COMMENT("ChunkSize should be constructed explicitly.")
   ChunkSize(int value_) : value(value_) {}
+#endif
 };
 
 /** \brief  Execution policy for work over a range of an integral type.
