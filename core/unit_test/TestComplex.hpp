@@ -691,9 +691,9 @@ struct TestComplexAdditionalOverloads {
     void testit() {
         Kokkos::complex<float> cf(2.f, 3.f);
         Kokkos::complex<double> cd(5., 7.);
-        //float f(11.f);
-        //double d(13.);
-        //int i(17);
+        float f(11.f);
+        double d(13.);
+        int i(17);
 
         // arg - The phase angle of x
         auto argcf = Kokkos::arg(cf);
@@ -702,7 +702,19 @@ struct TestComplexAdditionalOverloads {
 
         auto argcd = Kokkos::arg(cd);
         static_assert(std::is_same_v<double, decltype(argcd)>);
-        ASSERT_FLOAT_EQ(argcd, std::atan2(cd.imag(), cd.real()));
+        ASSERT_DOUBLE_EQ(argcd, std::atan2(cd.imag(), cd.real()));
+
+        auto argf = Kokkos::arg(f);
+        static_assert(std::is_same_v<float, decltype(argf)>);
+        ASSERT_FLOAT_EQ(argf, std::atan2f(0.f, f));
+
+        auto argd = Kokkos::arg(d);
+        static_assert(std::is_same_v<double, decltype(argd)>);
+        ASSERT_DOUBLE_EQ(argd, std::atan2(0., d));
+
+        auto argi = Kokkos::arg(i);
+        static_assert(std::is_same_v<double, decltype(argi)>);
+        ASSERT_DOUBLE_EQ(argd, std::atan2(0., static_cast<double>(i)));
     }
 };
 
