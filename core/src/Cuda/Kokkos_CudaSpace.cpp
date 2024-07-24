@@ -178,7 +178,7 @@ void *impl_allocate_common(const int device_id,
 #ifndef CUDART_VERSION
 #error CUDART_VERSION undefined!
 #elif defined(KOKKOS_ENABLE_IMPL_CUDA_EMULATE_UNIFIED_MEMORY)
-  // This is inteded to simulate Grace-Hopper like behavior
+  // This is intended to simulate Grace-Hopper-like behavior
   error_code = cudaMallocManaged(&ptr, arg_alloc_size, cudaMemAttachGlobal);
   if (error_code == cudaSuccess) {
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaDeviceSynchronize());
