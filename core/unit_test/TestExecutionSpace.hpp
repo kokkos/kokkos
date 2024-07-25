@@ -56,6 +56,9 @@ constexpr bool test_execspace_explicit() {
 #ifdef KOKKOS_ENABLE_CUDA
   static_assert(std::is_convertible_v<cudaStream_t, Kokkos::Cuda>);
 #endif
+#ifdef KOKKOS_ENABLE_HIP
+  static_assert(std::is_convertible_v<hipStream_t, Kokkos::HIP>);
+#endif
 
 #else
 
@@ -67,6 +70,9 @@ constexpr bool test_execspace_explicit() {
 #endif
 #ifdef KOKKOS_ENABLE_CUDA
   static_assert(!std::is_convertible_v<cudaStream_t, Kokkos::Cuda>);
+#endif
+#ifdef KOKKOS_ENABLE_HIP
+  static_assert(!std::is_convertible_v<hipStream_t, Kokkos::HIP>);
 #endif
 
 #endif
