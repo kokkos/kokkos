@@ -38,8 +38,7 @@
 ///@}
 
 /// Some tests are skipped for unified memory space
-#if defined(KOKKOS_ENABLE_IMPL_CUDA_UNIFIED_MEMORY) || \
-    defined(KOKKOS_ENABLE_IMPL_CUDA_EMULATE_UNIFIED_MEMORY)
+#if defined(KOKKOS_ENABLE_IMPL_CUDA_UNIFIED_MEMORY)
 #define GTEST_SKIP_IF_UNIFIED_MEMORY_SPACE                               \
   if constexpr (std::is_same_v<typename TEST_EXECSPACE::memory_space,    \
                                Kokkos::CudaSpace>)                       \
