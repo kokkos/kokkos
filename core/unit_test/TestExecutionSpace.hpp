@@ -50,11 +50,17 @@ constexpr bool test_execspace_explicit() {
 #ifdef KOKKOS_ENABLE_SERIAL
   static_assert(std::is_convertible_v<Kokkos::NewInstance, Kokkos::Serial>);
 #endif
+#ifdef KOKKOS_ENABLE_OPENMP
+  static_assert(std::is_convertible_v<int, Kokkos::OpenMP>);
+#endif
 
 #else
 
 #ifdef KOKKOS_ENABLE_SERIAL
   static_assert(!std::is_convertible_v<Kokkos::NewInstance, Kokkos::Serial>);
+#endif
+#ifdef KOKKOS_ENABLE_OPENMP
+  static_assert(!std::is_convertible_v<int, Kokkos::OpenMP>);
 #endif
 
 #endif

@@ -204,8 +204,6 @@ constexpr bool test_chunk_size_explicit() {
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   static_assert(std::is_convertible_v<int, ChunkSize>);
   static_assert(std::is_constructible_v<ChunkSize, int>);
-  // FIXME some execution spaces are implicitly constructible from int
-  // which makes the constructor call ambiguous.
   static_assert(
       std::is_constructible_v<Kokkos::DefaultExecutionSpace, int> ||
       std::is_constructible_v<
@@ -220,10 +218,7 @@ constexpr bool test_chunk_size_explicit() {
 #else
   static_assert(!std::is_convertible_v<int, ChunkSize>);
   static_assert(std::is_constructible_v<ChunkSize, int>);
-  // FIXME some execution spaces are implicitly constructible from int
-  // which makes the constructor call work.
   static_assert(
-      std::is_constructible_v<Kokkos::DefaultExecutionSpace, int> ||
       !std::is_constructible_v<
           Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>, int, int, int>);
   static_assert(std::is_constructible_v<
