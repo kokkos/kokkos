@@ -53,6 +53,9 @@ constexpr bool test_execspace_explicit() {
 #ifdef KOKKOS_ENABLE_OPENMP
   static_assert(std::is_convertible_v<int, Kokkos::OpenMP>);
 #endif
+#ifdef KOKKOS_ENABLE_CUDA
+  static_assert(std::is_convertible_v<cudaStream_t, Kokkos::Cuda>);
+#endif
 
 #else
 
@@ -61,6 +64,9 @@ constexpr bool test_execspace_explicit() {
 #endif
 #ifdef KOKKOS_ENABLE_OPENMP
   static_assert(!std::is_convertible_v<int, Kokkos::OpenMP>);
+#endif
+#ifdef KOKKOS_ENABLE_CUDA
+  static_assert(!std::is_convertible_v<cudaStream_t, Kokkos::Cuda>);
 #endif
 
 #endif
