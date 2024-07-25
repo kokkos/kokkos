@@ -775,11 +775,11 @@ struct TestComplexAdditionalOverloads {
 
       auto normf = Kokkos::norm(f);
       static_assert(std::is_same_v<float, decltype(normf)>);
-      ASSERT_FLOAT_EQ(normf, f*f);
+      ASSERT_FLOAT_EQ(normf, f * f);
 
       auto normd = Kokkos::norm(d);
       static_assert(std::is_same_v<double, decltype(normd)>);
-      ASSERT_DOUBLE_EQ(normd, d*d);
+      ASSERT_DOUBLE_EQ(normd, d * d);
 
       auto normi = Kokkos::norm(i);
       static_assert(std::is_same_v<double, decltype(normi)>);
