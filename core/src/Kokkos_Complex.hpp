@@ -774,6 +774,24 @@ KOKKOS_FUNCTION constexpr double arg(IntegerType i) noexcept {
   return atan2(0., static_cast<double>(i));
 }
 
+//! The squared magnitude of a complex number.
+template <typename RealType>
+KOKKOS_FUNCTION constexpr RealType norm(const complex<RealType>& x) noexcept {
+  return x.real() * x.real() + x.imag() * x.imag();
+}
+
+template <typename RealType,
+          typename = std::enable_if_t<std::is_floating_point_v<RealType>>>
+KOKKOS_FUNCTION constexpr RealType norm(RealType f) noexcept {
+  return f * f;
+}
+
+template <typename IntegerType,
+          typename = std::enable_if_t<std::is_integral_v<IntegerType>>>
+KOKKOS_FUNCTION constexpr double norm(IntegerType i) noexcept {
+  return static_cast<double>(i) * static_cast<double>(i);
+}
+
 //! Power of a complex number
 template <class T>
 KOKKOS_INLINE_FUNCTION complex<T> pow(const complex<T>& x, const T& y) {

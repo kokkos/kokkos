@@ -684,43 +684,113 @@ TEST(TEST_CATEGORY, complex_structured_bindings) {
   test.testit();
 }
 
-
 // http://eel.is/c++draft/cmplx.over
-template<typename ExecSpace>
+template <typename ExecSpace>
 struct TestComplexAdditionalOverloads {
-    void testit() {
-        Kokkos::complex<float> cf(2.f, 3.f);
-        Kokkos::complex<double> cd(5., 7.);
-        float f(11.f);
-        double d(13.);
-        int i(17);
+  void testit() {
+    Kokkos::complex<float> cf(2.f, 3.f);
+    Kokkos::complex<double> cd(5., 7.);
+    float f(11.f);
+    double d(13.);
+    int i(17);
 
-        // arg - The phase angle of x
-        auto argcf = Kokkos::arg(cf);
-        static_assert(std::is_same_v<float, decltype(argcf)>);
-        ASSERT_FLOAT_EQ(argcf, std::atan2f(cf.imag(), cf.real()));
+    // arg - The phase angle of x
+    {
+      auto argcf = Kokkos::arg(cf);
+      static_assert(std::is_same_v<float, decltype(argcf)>);
+      ASSERT_FLOAT_EQ(argcf, std::atan2f(cf.imag(), cf.real()));
 
-        auto argcd = Kokkos::arg(cd);
-        static_assert(std::is_same_v<double, decltype(argcd)>);
-        ASSERT_DOUBLE_EQ(argcd, std::atan2(cd.imag(), cd.real()));
+      auto argcd = Kokkos::arg(cd);
+      static_assert(std::is_same_v<double, decltype(argcd)>);
+      ASSERT_DOUBLE_EQ(argcd, std::atan2(cd.imag(), cd.real()));
 
-        auto argf = Kokkos::arg(f);
-        static_assert(std::is_same_v<float, decltype(argf)>);
-        ASSERT_FLOAT_EQ(argf, std::atan2f(0.f, f));
+      auto argf = Kokkos::arg(f);
+      static_assert(std::is_same_v<float, decltype(argf)>);
+      ASSERT_FLOAT_EQ(argf, std::atan2f(0.f, f));
 
-        auto argd = Kokkos::arg(d);
-        static_assert(std::is_same_v<double, decltype(argd)>);
-        ASSERT_DOUBLE_EQ(argd, std::atan2(0., d));
+      auto argd = Kokkos::arg(d);
+      static_assert(std::is_same_v<double, decltype(argd)>);
+      ASSERT_DOUBLE_EQ(argd, std::atan2(0., d));
 
-        auto argi = Kokkos::arg(i);
-        static_assert(std::is_same_v<double, decltype(argi)>);
-        ASSERT_DOUBLE_EQ(argd, std::atan2(0., static_cast<double>(i)));
+      auto argi = Kokkos::arg(i);
+      static_assert(std::is_same_v<double, decltype(argi)>);
+      ASSERT_DOUBLE_EQ(argd, std::atan2(0., static_cast<double>(i)));
     }
+
+    // conj - complex conjugate
+    {
+      auto conjcf = Kokkos::conj(cf);
+      static_assert(std::is_same_v<Kokkos::complex<float>, decltype(conjcf)>);
+      ASSERT_EQ(conjcf, Kokkos::complex(cf.real(), -cf.imag()));
+
+      auto conjcd = Kokkos::conj(cd);
+      static_assert(std::is_same_v<Kokkos::complex<double>, decltype(conjcd)>);
+      ASSERT_EQ(conjcd, Kokkos::complex(cd.real(), -cd.imag()));
+
+      auto conjf = Kokkos::conj(f);
+      static_assert(std::is_same_v<Kokkos::complex<float>, decltype(conjf)>);
+      ASSERT_EQ(conjf, Kokkos::complex(f));
+
+      auto conjd = Kokkos::conj(d);
+      static_assert(std::is_same_v<Kokkos::complex<double>, decltype(conjd)>);
+      ASSERT_EQ(conjd, Kokkos::complex(d));
+
+      auto conji = Kokkos::conj(i);
+      static_assert(std::is_same_v<Kokkos::complex<double>, decltype(conji)>);
+      ASSERT_EQ(conji, Kokkos::complex(static_cast<double>(i)));
+    }
+
+    // imag
+    {
+      auto imagcf = Kokkos::imag(cf);
+      static_assert(std::is_same_v<float, decltype(imagcf)>);
+      ASSERT_FLOAT_EQ(imagcf, cf.imag());
+
+      auto imagcd = Kokkos::imag(cd);
+      static_assert(std::is_same_v<double, decltype(imagcd)>);
+      ASSERT_DOUBLE_EQ(imagcd, cd.imag());
+
+      auto imagf = Kokkos::imag(f);
+      static_assert(std::is_same_v<float, decltype(imagf)>);
+      ASSERT_FLOAT_EQ(imagf, 0.f);
+
+      auto imagd = Kokkos::imag(d);
+      static_assert(std::is_same_v<double, decltype(imagd)>);
+      ASSERT_DOUBLE_EQ(imagd, 0.);
+
+      auto imagi = Kokkos::imag(i);
+      static_assert(std::is_same_v<double, decltype(imagi)>);
+      ASSERT_DOUBLE_EQ(imagd, 0.);
+    }
+
+    // norm - squared magnitude
+    {
+      auto normcf = Kokkos::norm(cf);
+      static_assert(std::is_same_v<float, decltype(normcf)>);
+      ASSERT_FLOAT_EQ(normcf, cf.real() * cf.real() + cf.imag() * cf.imag());
+
+      auto normcd = Kokkos::norm(cd);
+      static_assert(std::is_same_v<double, decltype(normcd)>);
+      ASSERT_DOUBLE_EQ(normcd, cd.real() * cd.real() + cd.imag() * cd.imag());
+
+      auto normf = Kokkos::norm(f);
+      static_assert(std::is_same_v<float, decltype(normf)>);
+      ASSERT_FLOAT_EQ(normf, f*f);
+
+      auto normd = Kokkos::norm(d);
+      static_assert(std::is_same_v<double, decltype(normd)>);
+      ASSERT_DOUBLE_EQ(normd, d*d);
+
+      auto normi = Kokkos::norm(i);
+      static_assert(std::is_same_v<double, decltype(normi)>);
+      ASSERT_DOUBLE_EQ(normd, static_cast<double>(i * i));
+    }
+  }
 };
 
 TEST(TEST_CATEGORY, complex_additional_overloads) {
-    TestComplexAdditionalOverloads<TEST_EXECSPACE> test;
-    test.testit();
+  TestComplexAdditionalOverloads<TEST_EXECSPACE> test;
+  test.testit();
 }
 
 }  // namespace Test
