@@ -185,7 +185,7 @@ void *impl_allocate_common(const int device_id,
   }
 #elif defined(KOKKOS_ENABLE_IMPL_CUDA_UNIFIED_MEMORY)
   // This is intended for Grace-Hopper (and future unified memory architectures)
-  // The idea is to use host allocator and then advise to keep it in HBM on
+  // The idea is to use host allocator and then advise to keep it in HBM on the
   // device, but that requires CUDA 12.2
   static_assert(CUDART_VERSION >= 12020,
                 "CUDA runtime version >=12.2 required when "
