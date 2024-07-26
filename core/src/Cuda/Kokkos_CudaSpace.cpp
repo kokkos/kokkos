@@ -189,7 +189,10 @@ void *impl_allocate_common(const int device_id,
   // device, but that requires CUDA 12.2
   static_assert(CUDART_VERSION >= 12020,
                 "CUDA runtime version >=12.2 required when "
-                "Kokkos_ENABLE_IMPL_CUDA_UNIFIED_MEMORY is set");
+                "Kokkos_ENABLE_IMPL_CUDA_UNIFIED_MEMORY is set. "
+                "Please update your CUDA runtime version or "
+                "reconfigure with with "
+                "-D Kokkos_ENABLE_IMPL_CUDA_UNIFIED_MEMORY=OFF");
   if (arg_alloc_size) {  // cudaMemAdvise_v2 does not work with nullptr
     error_code = cudaMallocManaged(&ptr, arg_alloc_size, cudaMemAttachGlobal);
     if (error_code == cudaSuccess) {
