@@ -358,9 +358,6 @@ void CudaSpace::impl_deallocate(
   }
 #ifndef CUDART_VERSION
 #error CUDART_VERSION undefined!
-#elif defined(KOKKOS_ENABLE_IMPL_CUDA_EMULATE_UNIFIED_MEMORY)
-  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_device));
-  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFree(arg_alloc_ptr));
 #elif defined(KOKKOS_ENABLE_IMPL_CUDA_UNIFIED_MEMORY)
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_device));
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFree(arg_alloc_ptr));
