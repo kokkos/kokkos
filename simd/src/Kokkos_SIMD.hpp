@@ -88,7 +88,7 @@ namespace Impl {
 using host_native = avx512_fixed_size<8>;
 #elif defined(KOKKOS_ARCH_AVX2)
 using host_native  = avx2_fixed_size<4>;
-#elif defined(KOKKOS_ARCH_ARM_NEON) 
+#elif defined(KOKKOS_ARCH_ARM_NEON)
 using host_native  = neon_fixed_size<2>;
 #else
 using host_native   = scalar;
