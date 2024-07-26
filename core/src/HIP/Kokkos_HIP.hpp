@@ -60,7 +60,7 @@ class HIP {
 #endif
 
   HIP(hipStream_t stream, Impl::ManageStream manage_stream);
-  
+
   KOKKOS_DEPRECATED HIP(hipStream_t stream, bool manage_stream);
 
   //@}
