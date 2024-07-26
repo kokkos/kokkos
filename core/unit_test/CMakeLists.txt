@@ -1277,7 +1277,7 @@ if (NOT KOKKOS_HAS_TRILINOS)
     )
     add_test(
       NAME Kokkos_CoreUnitTest_DeviceAndThreads
-      COMMAND ${Python3_EXECUTABLE} -m unittest -v $<TARGET_FILE_DIR:Kokkos_CoreUnitTest_DeviceAndThreads>/TestDeviceAndThreads.py
+      COMMAND ${Python3_EXECUTABLE} $<TARGET_FILE_DIR:Kokkos_CoreUnitTest_DeviceAndThreads>/TestDeviceAndThreads.py
     )
   endif()
 endif()
