@@ -792,6 +792,29 @@ KOKKOS_FUNCTION constexpr double norm(IntegerType i) noexcept {
   return static_cast<double>(i) * static_cast<double>(i);
 }
 
+//! The projection onto the Riemann sphere
+// based on libc++ implementation
+template <typename RealType>
+constexpr complex<RealType> proj(const complex<RealType>& x) noexcept {
+  return isinf(x.real()) || isinf(x.imag())
+             ? complex<RealType>(
+                   static_cast<RealType>(INFINITY),
+                   std::copysign(static_cast<RealType>(0), x.imag()))
+             : x;
+}
+
+template <typename RealType,
+          typename = std::enable_if_t<std::is_floating_point_v<RealType>>>
+constexpr complex<RealType> proj(RealType f) noexcept {
+  return complex<RealType>(isinf(f) ? std::abs(f) : f);
+}
+
+template <typename IntegerType,
+          typename = std::enable_if_t<std::is_integral_v<IntegerType>>>
+constexpr complex<double> proj(IntegerType i) noexcept {
+  return complex<double>(static_cast<double>(i));
+}
+
 //! Power of a complex number
 template <class T>
 KOKKOS_INLINE_FUNCTION complex<T> pow(const complex<T>& x, const T& y) {
@@ -859,7 +882,7 @@ KOKKOS_INLINE_FUNCTION complex<RealType> conj(
   return complex<RealType>(real(x), -imag(x));
 }
 
-#if 1
+#if 0
 template <typename RealType,
           typename = std::enable_if_t<std::is_floating_point_v<RealType>>>
 KOKKOS_FUNCTION constexpr complex<RealType> conj(RealType f) noexcept {
