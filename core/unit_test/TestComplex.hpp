@@ -760,7 +760,7 @@ struct TestComplexAdditionalOverloads {
 
       auto imagi = Kokkos::imag(i);
       static_assert(std::is_same_v<double, decltype(imagi)>);
-      ASSERT_DOUBLE_EQ(imagd, 0.);
+      ASSERT_DOUBLE_EQ(imagi, 0.);
     }
 
     // norm - squared magnitude
@@ -783,7 +783,53 @@ struct TestComplexAdditionalOverloads {
 
       auto normi = Kokkos::norm(i);
       static_assert(std::is_same_v<double, decltype(normi)>);
-      ASSERT_DOUBLE_EQ(normd, static_cast<double>(i * i));
+      ASSERT_DOUBLE_EQ(normi, static_cast<double>(i * i));
+    }
+
+    // proj - The projection onto the Riemann sphere
+    {
+      auto projcf = Kokkos::proj(cf);
+      static_assert(std::is_same_v<Kokkos::complex<float>, decltype(projcf)>);
+      ASSERT_EQ(projcf, Kokkos::complex(cf.real(), -cf.imag()));
+
+      auto projcd = Kokkos::proj(cd);
+      static_assert(std::is_same_v<Kokkos::complex<double>, decltype(projcd)>);
+      ASSERT_EQ(projcd, Kokkos::complex(cd.real(), -cd.imag()));
+
+      auto projf = Kokkos::proj(f);
+      static_assert(std::is_same_v<Kokkos::complex<float>, decltype(projf)>);
+      ASSERT_EQ(projf, Kokkos::complex(f));
+
+      auto projd = Kokkos::proj(d);
+      static_assert(std::is_same_v<Kokkos::complex<double>, decltype(projd)>);
+      ASSERT_EQ(projd, Kokkos::complex(d));
+
+      auto proji = Kokkos::proj(i);
+      static_assert(std::is_same_v<Kokkos::complex<double>, decltype(proji)>);
+      ASSERT_EQ(proji, Kokkos::complex(static_cast<double>(i)));
+    }
+
+    // real
+    {
+      auto realcf = Kokkos::real(cf);
+      static_assert(std::is_same_v<float, decltype(realcf)>);
+      ASSERT_FLOAT_EQ(realcf, cf.real());
+
+      auto realcd = Kokkos::real(cd);
+      static_assert(std::is_same_v<double, decltype(realcd)>);
+      ASSERT_DOUBLE_EQ(realcd, cd.real());
+
+      auto realf = Kokkos::real(f);
+      static_assert(std::is_same_v<float, decltype(realf)>);
+      ASSERT_FLOAT_EQ(realf, f);
+
+      auto reald = Kokkos::real(d);
+      static_assert(std::is_same_v<double, decltype(reald)>);
+      ASSERT_DOUBLE_EQ(reald, d);
+
+      auto reali = Kokkos::real(i);
+      static_assert(std::is_same_v<double, decltype(reali)>);
+      ASSERT_DOUBLE_EQ(reali, static_cast<double>(i));
     }
   }
 };
