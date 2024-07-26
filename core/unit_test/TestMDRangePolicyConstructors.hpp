@@ -151,6 +151,18 @@ TEST(TEST_CATEGORY, policy_get_tile_size) {
 
   {
     int dim_length = 100;
+    Policy policy_default({0, 0, 0}, {dim_length, dim_length, dim_length});
+
+    auto rec_tile_sizes      = policy_default.tile_size_recommended();
+    auto internal_tile_sizes = policy_default.m_tile;
+
+    for (std::size_t i = 0; i < rank; ++i) {
+      EXPECT_EQ(rec_tile_sizes[i], internal_tile_sizes[i])
+          << " incorrect recommended tile size returned for rank " << i;
+    }
+  }
+  {
+    int dim_length = 100;
     Policy policy({0, 0, 0}, {dim_length, dim_length, dim_length},
                   tile_type{{2, 4, 16}});
 
