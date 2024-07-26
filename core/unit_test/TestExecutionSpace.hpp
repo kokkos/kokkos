@@ -87,6 +87,9 @@ constexpr bool test_execspace_explicit_construction() {
 #endif
 #endif
 
+#ifdef KOKKOS_ENABLE_OPENACC
+  static_assert(!std::is_convertible_v<int, Kokkos::Experimental::OpenACC>);
+#endif
 #ifdef KOKKOS_ENABLE_SYCL
   static_assert(
       !std::is_convertible_v<sycl::queue, Kokkos::Experimental::SYCL>);
