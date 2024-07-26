@@ -685,6 +685,152 @@ TEST(TEST_CATEGORY, complex_structured_bindings) {
 }
 
 // http://eel.is/c++draft/cmplx.over
+
+template <typename ExecSpace>
+struct TestComplexArg {
+  using execution_space = ExecSpace;
+
+  struct Source {
+    Kokkos::complex<double> cds[5];
+    double ds[1];
+    int is[1];
+  };
+
+  using source_device_view_type = Kokkos::View<Source[1], ExecSpace>;
+  using source_host_view_type   = typename source_device_view_type::HostMirror;
+
+  source_host_view_type h_source;
+  source_device_view_type d_source;
+
+  struct Results {
+    double argcds[5];
+    double argds[1];
+    double argis[1];
+  };
+
+  using results_device_view_type = Kokkos::View<Results[1], ExecSpace>;
+  using results_host_view_type = typename results_device_view_type::HostMirror;
+
+  results_device_view_type d_results;
+  results_host_view_type h_results;
+
+  KOKKOS_FUNCTION
+  void operator()(int) const {
+    {
+      auto &cds    = d_source[0].cds;
+      auto &argcds = d_results[0].argcds;
+      for (size_t s = 0; s != std::size(cds); ++s) {
+        auto &cd  = cds[s];
+        argcds[s] = Kokkos::arg(cd);
+      }
+    }
+
+    {
+      auto &ds    = d_source[0].ds;
+      auto &argds = d_results[0].argds;
+      for (size_t s = 0; s != std::size(ds); ++s) {
+        auto &d  = ds[s];
+        argds[s] = Kokkos::arg(d);
+      }
+    }
+  }
+
+  void testit() {
+    Source source{{
+                      Kokkos::complex<double>(1, 0),
+                      Kokkos::complex<double>(0, 0),
+                      Kokkos::complex<double>(0, 1),
+                      Kokkos::complex<double>(-1, 0),
+                      Kokkos::complex<double>(-1, -0.0),
+                  },
+                  {
+                      1.,
+                  },
+                  {
+                      -1,
+                  }
+
+    };
+
+    h_source = source_host_view_type(&source);
+    d_source = Kokkos::create_mirror_view(h_source);
+    Kokkos::deep_copy(d_source, h_source);
+
+    d_results = results_device_view_type("arg");
+    h_results = Kokkos::create_mirror_view(d_results);
+
+    Kokkos::parallel_for(Kokkos::RangePolicy<ExecSpace>(0, 1), *this);
+    Kokkos::fence();
+    Kokkos::deep_copy(h_results, d_results);
+
+    {
+      auto &cds    = h_source[0].cds;
+      auto &argcds = h_results[0].argcds;
+      for (size_t i = 0; i != std::size(cds); ++i) {
+        auto &cd    = cds[i];
+        auto &argcd = argcds[i];
+
+        std::complex<double> scd(cd);
+        double sargcd = std::arg(scd);
+
+        ASSERT_DOUBLE_EQ(argcd, sargcd);
+      }
+    }
+
+    {
+      auto &ds    = h_source[0].ds;
+      auto &argds = h_results[0].argds;
+      for (size_t s = 0; s != std::size(ds); ++s) {
+        auto &d    = ds[s];
+        auto &argd = argds[s];
+
+        double sargd = std::arg(d);
+
+        ASSERT_DOUBLE_EQ(argd, sargd);
+      }
+    }
+  }
+};
+
+TEST(TEST_CATEGORY, complex_arg) {
+  TestComplexArg<TEST_EXECSPACE> test;
+  test.testit();
+}
+
+void testcomplexarghost() {
+  Kokkos::complex<double> ks[] = {
+      Kokkos::complex<double>(1, 0),     Kokkos::complex<double>(0, 0),
+      Kokkos::complex<double>(0, 1),     Kokkos::complex<double>(-1, 0),
+      Kokkos::complex<double>(-1, -0.0),
+  };
+
+  for (auto &k : ks) {
+    double karg = Kokkos::arg(k);
+    double sarg = std::arg(std::complex<double>(k.real(), k.imag()));
+    ASSERT_DOUBLE_EQ(karg, sarg);
+  }
+
+  double fs[] = {
+      1.,
+  };
+
+  for (auto &f : fs) {
+    double kargf = Kokkos::arg(f);
+    double sargf = std::arg(f);
+    ASSERT_DOUBLE_EQ(kargf, sargf);
+  }
+
+  int is[]{
+      -1,
+  };
+
+  for (auto &i : is) {
+    double kargi = Kokkos::arg(i);
+    double sargi = std::arg(i);
+    ASSERT_DOUBLE_EQ(kargi, sargi);
+  }
+}
+
 template <typename ExecSpace>
 struct TestComplexAdditionalOverloads {
   void testit() {
@@ -835,6 +981,7 @@ struct TestComplexAdditionalOverloads {
 };
 
 TEST(TEST_CATEGORY, complex_additional_overloads) {
+  testcomplexarghost();
   TestComplexAdditionalOverloads<TEST_EXECSPACE> test;
   test.testit();
 }
