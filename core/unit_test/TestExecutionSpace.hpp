@@ -44,9 +44,8 @@ TEST(TEST_CATEGORY, execution_space_as_class_data_member) {
 }
 #endif
 
-constexpr bool test_execspace_explicit() {
+constexpr bool test_execspace_explicit_construction() {
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-
 #ifdef KOKKOS_ENABLE_SERIAL
   static_assert(std::is_convertible_v<Kokkos::NewInstance, Kokkos::Serial>);
 #endif
@@ -88,10 +87,14 @@ constexpr bool test_execspace_explicit() {
 #endif
 #endif
 
+#ifdef KOKKOS_ENABLE_SYCL
+  static_assert(
+      !std::is_convertible_v<sycl::queue, Kokkos::Experimental::SYCL>);
 #endif
+
   return true;
 }
 
-static_assert(test_execspace_explicit());
+static_assert(test_execspace_explicit_construction());
 
 }  // namespace
