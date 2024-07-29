@@ -665,10 +665,9 @@ struct Random_UniqueIndex<
 
 #ifdef KOKKOS_ENABLE_SYCL
 template <class MemorySpace>
-struct Random_UniqueIndex<
-    Kokkos::Device<Kokkos::Experimental::SYCL, MemorySpace>> {
+struct Random_UniqueIndex<Kokkos::Device<Kokkos::SYCL, MemorySpace>> {
   using locks_view_type =
-      View<int**, Kokkos::Device<Kokkos::Experimental::SYCL, MemorySpace>>;
+      View<int**, Kokkos::Device<Kokkos::SYCL, MemorySpace>>;
   KOKKOS_FUNCTION
   static int get_state_idx(const locks_view_type& locks_) {
     auto item = sycl::ext::oneapi::experimental::this_nd_item<3>();

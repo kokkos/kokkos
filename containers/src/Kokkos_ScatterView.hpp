@@ -184,16 +184,16 @@ struct DefaultContribution<Kokkos::HIP,
 
 #ifdef KOKKOS_ENABLE_SYCL
 template <>
-struct DefaultDuplication<Kokkos::Experimental::SYCL> {
+struct DefaultDuplication<Kokkos::SYCL> {
   using type = Kokkos::Experimental::ScatterNonDuplicated;
 };
 template <>
-struct DefaultContribution<Kokkos::Experimental::SYCL,
+struct DefaultContribution<Kokkos::SYCL,
                            Kokkos::Experimental::ScatterNonDuplicated> {
   using type = Kokkos::Experimental::ScatterAtomic;
 };
 template <>
-struct DefaultContribution<Kokkos::Experimental::SYCL,
+struct DefaultContribution<Kokkos::SYCL,
                            Kokkos::Experimental::ScatterDuplicated> {
   using type = Kokkos::Experimental::ScatterAtomic;
 };

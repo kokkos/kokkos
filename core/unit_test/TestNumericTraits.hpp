@@ -191,7 +191,7 @@ struct TestNumericTraits<
 #if defined(KOKKOS_ENABLE_CUDA)
     Kokkos::Cuda,
 #elif defined(KOKKOS_ENABLE_SYCL)
-    Kokkos::Experimental::SYCL,
+    Kokkos::SYCL,
 #else
     Kokkos::Experimental::OpenMPTarget,
 #endif

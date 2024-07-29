@@ -539,8 +539,8 @@ struct UVMSpaceFor<Kokkos::Cuda> {
 
 #ifdef KOKKOS_ENABLE_SYCL  // specific to SYCL
 template <>
-struct UVMSpaceFor<Kokkos::Experimental::SYCL> {
-  using type = Kokkos::Experimental::SYCLSharedUSMSpace;
+struct UVMSpaceFor<Kokkos::SYCL> {
+  using type = Kokkos::SYCLSharedUSMSpace;
 };
 #endif
 

@@ -279,7 +279,7 @@ TEST(TEST_CATEGORY, exec_space_thread_safety_team_policy_reduce) {
 #endif
     // FIXME_SYCL
 #if defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
-  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::SYCL>)
+  if (std::is_same_v<TEST_EXECSPACE, Kokkos::SYCL>)
     GTEST_SKIP() << "skipping since test is know to fail with SYCL+Cuda";
 #endif
   run_exec_space_thread_safety_team_policy_reduce();

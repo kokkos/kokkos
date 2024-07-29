@@ -243,10 +243,9 @@ TEST(TEST_CATEGORY, host_shared_ptr_tracking) {
                                             Kokkos::CudaUVMSpace>();
 #endif
 #ifdef KOKKOS_ENABLE_SYCL
-  if (std::is_same<TEST_EXECSPACE, Kokkos::Experimental::SYCL>::value)
-    host_shared_ptr_test_reference_counting<
-        Kokkos::Experimental::SYCLSharedUSMSpace,
-        Kokkos::Experimental::SYCLSharedUSMSpace>();
+  if (std::is_same<TEST_EXECSPACE, Kokkos::SYCL>::value)
+    host_shared_ptr_test_reference_counting<Kokkos::SYCLSharedUSMSpace,
+                                            Kokkos::SYCLSharedUSMSpace>();
 #endif
 #ifdef KOKKOS_ENABLE_HIP
   if (std::is_same<TEST_EXECSPACE, Kokkos::HIP>::value) {
