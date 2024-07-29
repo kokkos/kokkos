@@ -798,8 +798,8 @@ template <typename RealType>
 constexpr complex<RealType> proj(const complex<RealType>& x) noexcept {
   return isinf(x.real()) || isinf(x.imag())
              ? complex<RealType>(
-                   static_cast<RealType>(INFINITY),
-                   std::copysign(static_cast<RealType>(0), x.imag()))
+                   std::numeric_limits<RealType>::infinity(),
+                   Kokkos::copysign(static_cast<RealType>(0), x.imag()))
              : x;
 }
 
