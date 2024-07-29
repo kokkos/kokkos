@@ -280,7 +280,7 @@ KOKKOS_INLINE_FUNCTION void expect_equal_extents(
 //
 template <typename DataType1, typename... Properties1, typename DataType2,
           typename... Properties2>
-KOKKOS_INLINE_FUNCTION void expect_larger_than_extents(
+KOKKOS_INLINE_FUNCTION void expect_less_than_extents(
     const ::Kokkos::View<DataType1, Properties1...>& a,
     const ::Kokkos::View<DataType2, Properties2...>& b) {
   // this is from no-op for release

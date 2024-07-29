@@ -58,7 +58,7 @@ auto find_end(const ExecutionSpace& ex,
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(s_view);
 
-  Impl::expect_larger_than_extents(s_view, view);
+  Impl::expect_less_than_extents(s_view, view);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::find_end_exespace_impl("Kokkos::find_end_view_api_default", ex,
@@ -76,7 +76,7 @@ auto find_end(const std::string& label, const ExecutionSpace& ex,
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(s_view);
 
-  Impl::expect_larger_than_extents(s_view, view);
+  Impl::expect_less_than_extents(s_view, view);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::find_end_exespace_impl(label, ex, KE::begin(view), KE::end(view),
@@ -118,7 +118,7 @@ auto find_end(const ExecutionSpace& ex,
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(s_view);
 
-  Impl::expect_larger_than_extents(s_view, view);
+  Impl::expect_less_than_extents(s_view, view);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::find_end_exespace_impl("Kokkos::find_end_view_api_default", ex,
@@ -137,7 +137,7 @@ auto find_end(const std::string& label, const ExecutionSpace& ex,
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(s_view);
 
-  Impl::expect_larger_than_extents(s_view, view);
+  Impl::expect_less_than_extents(s_view, view);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::find_end_exespace_impl(label, ex, KE::begin(view), KE::end(view),
@@ -171,7 +171,7 @@ KOKKOS_FUNCTION auto find_end(
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(s_view);
 
-  Impl::expect_larger_than_extents(s_view, view);
+  Impl::expect_less_than_extents(s_view, view);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::find_end_team_impl(teamHandle, KE::begin(view), KE::end(view),
@@ -204,7 +204,7 @@ KOKKOS_FUNCTION auto find_end(
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(s_view);
 
-  Impl::expect_larger_than_extents(s_view, view);
+  Impl::expect_less_than_extents(s_view, view);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::find_end_team_impl(teamHandle, KE::begin(view), KE::end(view),

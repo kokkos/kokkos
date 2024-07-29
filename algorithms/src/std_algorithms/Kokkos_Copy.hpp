@@ -53,7 +53,7 @@ auto copy(const ExecutionSpace& ex,
           const ::Kokkos::View<DataType2, Properties2...>& dest) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
-  Impl::expect_larger_than_extents(source, dest);
+  Impl::expect_less_than_extents(source, dest);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::copy_exespace_impl("Kokkos::copy_view_api_default", ex,
@@ -70,7 +70,7 @@ auto copy(const std::string& label, const ExecutionSpace& ex,
           const ::Kokkos::View<DataType2, Properties2...>& dest) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
-  Impl::expect_larger_than_extents(source, dest);
+  Impl::expect_less_than_extents(source, dest);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::copy_exespace_impl(label, ex, KE::cbegin(source),
@@ -98,7 +98,7 @@ KOKKOS_FUNCTION auto copy(
     const ::Kokkos::View<DataType2, Properties2...>& dest) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
-  Impl::expect_larger_than_extents(source, dest);
+  Impl::expect_less_than_extents(source, dest);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::copy_team_impl(teamHandle, KE::cbegin(source), KE::cend(source),

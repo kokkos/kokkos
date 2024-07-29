@@ -62,7 +62,7 @@ auto replace_copy(const ExecutionSpace& ex,
                   const ValueType& old_value, const ValueType& new_value) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
-  Impl::expect_larger_than_extents(view_from, view_dest);
+  Impl::expect_less_than_extents(view_from, view_dest);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::replace_copy_exespace_impl(
@@ -80,7 +80,7 @@ auto replace_copy(const std::string& label, const ExecutionSpace& ex,
                   const ValueType& old_value, const ValueType& new_value) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
-  Impl::expect_larger_than_extents(view_from, view_dest);
+  Impl::expect_less_than_extents(view_from, view_dest);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::replace_copy_exespace_impl(
