@@ -57,6 +57,7 @@ auto rotate_copy(const ExecutionSpace& ex,
                  const ::Kokkos::View<DataType2, Properties2...>& dest) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
+  Impl::expect_larger_than_extents(source, dest);
 
   return Impl::rotate_copy_exespace_impl(
       "Kokkos::rotate_copy_view_api_default", ex, cbegin(source),
@@ -73,6 +74,7 @@ auto rotate_copy(const std::string& label, const ExecutionSpace& ex,
                  const ::Kokkos::View<DataType2, Properties2...>& dest) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
+  Impl::expect_larger_than_extents(source, dest);
 
   return Impl::rotate_copy_exespace_impl(label, ex, cbegin(source),
                                          cbegin(source) + n_location,
@@ -105,6 +107,7 @@ KOKKOS_FUNCTION auto rotate_copy(
     const ::Kokkos::View<DataType2, Properties2...>& dest) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
+  Impl::expect_larger_than_extents(source, dest);
 
   return Impl::rotate_copy_team_impl(teamHandle, cbegin(source),
                                      cbegin(source) + n_location, cend(source),
