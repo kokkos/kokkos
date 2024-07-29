@@ -826,7 +826,7 @@ struct TestComplexNorm {
   using execution_space = ExecSpace;
 
   struct Source {
-    Kokkos::Array<Kokkos::complex<double>, 6> cds;
+    Kokkos::Array<Kokkos::complex<double>, 8> cds;
     Kokkos::Array<double, 1> ds;
     Kokkos::Array<int, 1> is;
   };
@@ -838,7 +838,7 @@ struct TestComplexNorm {
   source_device_view_type d_source;
 
   struct Results {
-    Kokkos::Array<double, 6> normcds;
+    Kokkos::Array<double, 8> normcds;
     Kokkos::Array<double, 1> normds;
     Kokkos::Array<double, 1> normis;
   };
@@ -886,7 +886,12 @@ struct TestComplexNorm {
                       Kokkos::complex<double>(0, 1),
                       Kokkos::complex<double>(-1, 0),
                       Kokkos::complex<double>(-1, -0.0),
-                      Kokkos::complex<double>(3., 4.),
+                      Kokkos::complex<double>(1, 2),
+                      Kokkos::complex<double>(
+                          std::numeric_limits<double>::infinity(), -1),
+                      Kokkos::complex<double>(
+                          0, -std::numeric_limits<double>::infinity()),
+
                   },
                   {
                       1.,
