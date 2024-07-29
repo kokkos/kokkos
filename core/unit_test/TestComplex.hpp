@@ -821,6 +821,142 @@ TEST(TEST_CATEGORY, complex_arg) {
   test.testit();
 }
 
+template <typename ExecSpace>
+struct TestComplexNorm {
+  using execution_space = ExecSpace;
+
+  struct Source {
+    Kokkos::Array<Kokkos::complex<double>, 6> cds;
+    Kokkos::Array<double, 1> ds;
+    Kokkos::Array<int, 1> is;
+  };
+
+  using source_device_view_type = Kokkos::View<Source[1], ExecSpace>;
+  using source_host_view_type   = typename source_device_view_type::HostMirror;
+
+  source_host_view_type h_source;
+  source_device_view_type d_source;
+
+  struct Results {
+    Kokkos::Array<double, 6> normcds;
+    Kokkos::Array<double, 1> normds;
+    Kokkos::Array<double, 1> normis;
+  };
+
+  using results_device_view_type = Kokkos::View<Results[1], ExecSpace>;
+  using results_host_view_type = typename results_device_view_type::HostMirror;
+
+  results_device_view_type d_results;
+  results_host_view_type h_results;
+
+  KOKKOS_FUNCTION
+  void operator()(int) const {
+    {
+      auto &cds     = d_source[0].cds;
+      auto &normcds = d_results[0].normcds;
+      for (size_t s = 0; s != cds.size(); ++s) {
+        auto &cd   = cds[s];
+        normcds[s] = Kokkos::norm(cd);
+      }
+    }
+
+    {
+      auto &ds     = d_source[0].ds;
+      auto &normds = d_results[0].normds;
+      for (size_t s = 0; s != ds.size(); ++s) {
+        auto &d   = ds[s];
+        normds[s] = Kokkos::norm(d);
+      }
+    }
+
+    {
+      auto &is     = d_source[0].is;
+      auto &normis = d_results[0].normis;
+      for (size_t s = 0; s != is.size(); ++s) {
+        auto &i   = is[s];
+        normis[s] = Kokkos::norm(i);
+      }
+    }
+  }
+
+  void testit() {
+    Source source{{
+                      Kokkos::complex<double>(1, 0),
+                      Kokkos::complex<double>(0, 0),
+                      Kokkos::complex<double>(0, 1),
+                      Kokkos::complex<double>(-1, 0),
+                      Kokkos::complex<double>(-1, -0.0),
+                      Kokkos::complex<double>(3., 4.),
+                  },
+                  {
+                      1.,
+                  },
+                  {
+                      -1,
+                  }
+
+    };
+
+    h_source = source_host_view_type(&source);
+    d_source = Kokkos::create_mirror_view(h_source);
+    Kokkos::deep_copy(d_source, h_source);
+
+    d_results = results_device_view_type("norm");
+    h_results = Kokkos::create_mirror_view(d_results);
+
+    Kokkos::parallel_for(Kokkos::RangePolicy<ExecSpace>(0, 1), *this);
+    Kokkos::fence();
+    Kokkos::deep_copy(h_results, d_results);
+
+    {
+      auto &cds     = h_source[0].cds;
+      auto &normcds = h_results[0].normcds;
+      ASSERT_EQ(cds.size(), normcds.size());
+      for (size_t i = 0; i != cds.size(); ++i) {
+        auto &cd     = cds[i];
+        auto &normcd = normcds[i];
+
+        std::complex<double> scd(cd);
+        double stdnormcd = std::norm(scd);
+
+        ASSERT_DOUBLE_EQ(normcd, stdnormcd);
+      }
+    }
+
+    {
+      auto &ds     = h_source[0].ds;
+      auto &normds = h_results[0].normds;
+      ASSERT_EQ(ds.size(), normds.size());
+      for (size_t s = 0; s != ds.size(); ++s) {
+        auto &d     = ds[s];
+        auto &normd = normds[s];
+
+        double stdnormd = std::norm(d);
+
+        ASSERT_DOUBLE_EQ(normd, stdnormd);
+      }
+    }
+
+    {
+      auto &is     = h_source[0].is;
+      auto &normis = h_results[0].normis;
+      ASSERT_EQ(is.size(), normis.size());
+      for (size_t s = 0; s != is.size(); ++s) {
+        auto &i     = is[s];
+        auto &normi = normis[s];
+
+        double stdnormi = std::norm(i);
+        ASSERT_DOUBLE_EQ(normi, stdnormi);
+      }
+    }
+  }
+};
+
+TEST(TEST_CATEGORY, complex_norm) {
+  TestComplexNorm<TEST_EXECSPACE> test;
+  test.testit();
+}
+
 void testcomplexarghost() {
   Kokkos::complex<double> ks[] = {
       Kokkos::complex<double>(1, 0),     Kokkos::complex<double>(0, 0),
