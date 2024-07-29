@@ -957,6 +957,146 @@ TEST(TEST_CATEGORY, complex_norm) {
   test.testit();
 }
 
+template <typename ExecSpace>
+struct TestComplexProj {
+  using execution_space = ExecSpace;
+
+  struct Source {
+    Kokkos::Array<Kokkos::complex<double>, 6> cds;
+    Kokkos::Array<double, 1> ds;
+    Kokkos::Array<int, 1> is;
+  };
+
+  using source_device_view_type = Kokkos::View<Source[1], ExecSpace>;
+  using source_host_view_type   = typename source_device_view_type::HostMirror;
+
+  source_host_view_type h_source;
+  source_device_view_type d_source;
+
+  struct Results {
+    Kokkos::Array<Kokkos::complex<double>, 6> projcds;
+    Kokkos::Array<Kokkos::complex<double>, 1> projds;
+    Kokkos::Array<Kokkos::complex<double>, 1> projis;
+  };
+
+  using results_device_view_type = Kokkos::View<Results[1], ExecSpace>;
+  using results_host_view_type = typename results_device_view_type::HostMirror;
+
+  results_device_view_type d_results;
+  results_host_view_type h_results;
+
+  KOKKOS_FUNCTION
+  void operator()(int) const {
+    {
+      auto &cds     = d_source[0].cds;
+      auto &projcds = d_results[0].projcds;
+      for (size_t s = 0; s != cds.size(); ++s) {
+        auto &cd   = cds[s];
+        projcds[s] = Kokkos::proj(cd);
+      }
+    }
+
+    {
+      auto &ds     = d_source[0].ds;
+      auto &projds = d_results[0].projds;
+      for (size_t s = 0; s != ds.size(); ++s) {
+        auto &d   = ds[s];
+        projds[s] = Kokkos::proj(d);
+      }
+    }
+
+    {
+      auto &is     = d_source[0].is;
+      auto &projis = d_results[0].projis;
+      for (size_t s = 0; s != is.size(); ++s) {
+        auto &i   = is[s];
+        projis[s] = Kokkos::proj(i);
+      }
+    }
+  }
+
+  void testit() {
+    Source source{{
+                      Kokkos::complex<double>(1, 0),
+                      Kokkos::complex<double>(0, 0),
+                      Kokkos::complex<double>(0, 1),
+                      Kokkos::complex<double>(-1, 0),
+                      Kokkos::complex<double>(-1, -0.0),
+                      Kokkos::complex<double>(3., 4.),
+                  },
+                  {
+                      1.,
+                  },
+                  {
+                      -1,
+                  }
+
+    };
+
+    h_source = source_host_view_type(&source);
+    d_source = Kokkos::create_mirror_view(h_source);
+    Kokkos::deep_copy(d_source, h_source);
+
+    d_results = results_device_view_type("proj");
+    h_results = Kokkos::create_mirror_view(d_results);
+
+    Kokkos::parallel_for(Kokkos::RangePolicy<ExecSpace>(0, 1), *this);
+    Kokkos::fence();
+    Kokkos::deep_copy(h_results, d_results);
+
+    {
+      auto &cds     = h_source[0].cds;
+      auto &projcds = h_results[0].projcds;
+      ASSERT_EQ(cds.size(), projcds.size());
+      for (size_t i = 0; i != cds.size(); ++i) {
+        auto &cd     = cds[i];
+        auto &projcd = projcds[i];
+
+        std::complex<double> scd(cd);
+        auto stdprojcd = std::proj(scd);
+
+        ASSERT_DOUBLE_EQ(projcd.real(), stdprojcd.real());
+        ASSERT_DOUBLE_EQ(projcd.imag(), stdprojcd.imag());
+      }
+    }
+
+    {
+      auto &ds     = h_source[0].ds;
+      auto &projds = h_results[0].projds;
+      ASSERT_EQ(ds.size(), projds.size());
+      for (size_t s = 0; s != ds.size(); ++s) {
+        auto &d     = ds[s];
+        auto &projd = projds[s];
+
+        auto stdprojd = std::proj(d);
+
+        ASSERT_DOUBLE_EQ(projd.real(), stdprojd.real());
+        ASSERT_DOUBLE_EQ(projd.imag(), stdprojd.imag());
+      }
+    }
+
+    {
+      auto &is     = h_source[0].is;
+      auto &projis = h_results[0].projis;
+      ASSERT_EQ(is.size(), projis.size());
+      for (size_t s = 0; s != is.size(); ++s) {
+        auto &i     = is[s];
+        auto &proji = projis[s];
+
+        auto stdproji = std::proj(i);
+
+        ASSERT_DOUBLE_EQ(proji.real(), stdproji.real());
+        ASSERT_DOUBLE_EQ(proji.imag(), stdproji.imag());
+      }
+    }
+  }
+};
+
+TEST(TEST_CATEGORY, complex_proj) {
+  TestComplexProj<TEST_EXECSPACE> test;
+  test.testit();
+}
+
 void testcomplexarghost() {
   Kokkos::complex<double> ks[] = {
       Kokkos::complex<double>(1, 0),     Kokkos::complex<double>(0, 0),
