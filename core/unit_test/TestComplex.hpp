@@ -691,9 +691,9 @@ struct TestComplexArg {
   using execution_space = ExecSpace;
 
   struct Source {
-    Kokkos::complex<double> cds[5];
-    double ds[1];
-    int is[1];
+    Kokkos::Array<Kokkos::complex<double>, 5> cds;
+    Kokkos::Array<double, 1> ds;
+    Kokkos::Array<int, 1> is;
   };
 
   using source_device_view_type = Kokkos::View<Source[1], ExecSpace>;
@@ -703,9 +703,9 @@ struct TestComplexArg {
   source_device_view_type d_source;
 
   struct Results {
-    double argcds[5];
-    double argds[1];
-    double argis[1];
+    Kokkos::Array<double, 5> argcds;
+    Kokkos::Array<double, 1> argds;
+    Kokkos::Array<double, 1> argis;
   };
 
   using results_device_view_type = Kokkos::View<Results[1], ExecSpace>;
@@ -719,7 +719,7 @@ struct TestComplexArg {
     {
       auto &cds    = d_source[0].cds;
       auto &argcds = d_results[0].argcds;
-      for (size_t s = 0; s != std::size(cds); ++s) {
+      for (size_t s = 0; s != cds.size(); ++s) {
         auto &cd  = cds[s];
         argcds[s] = Kokkos::arg(cd);
       }
@@ -728,9 +728,18 @@ struct TestComplexArg {
     {
       auto &ds    = d_source[0].ds;
       auto &argds = d_results[0].argds;
-      for (size_t s = 0; s != std::size(ds); ++s) {
+      for (size_t s = 0; s != ds.size(); ++s) {
         auto &d  = ds[s];
         argds[s] = Kokkos::arg(d);
+      }
+    }
+
+    {
+      auto &is    = d_source[0].is;
+      auto &argis = d_results[0].argis;
+      for (size_t s = 0; s != is.size(); ++s) {
+        auto &i  = is[s];
+        argis[s] = Kokkos::arg(i);
       }
     }
   }
@@ -766,27 +775,42 @@ struct TestComplexArg {
     {
       auto &cds    = h_source[0].cds;
       auto &argcds = h_results[0].argcds;
-      for (size_t i = 0; i != std::size(cds); ++i) {
+      ASSERT_EQ(cds.size(), argcds.size());
+      for (size_t i = 0; i != cds.size(); ++i) {
         auto &cd    = cds[i];
         auto &argcd = argcds[i];
 
         std::complex<double> scd(cd);
-        double sargcd = std::arg(scd);
+        double stdargcd = std::arg(scd);
 
-        ASSERT_DOUBLE_EQ(argcd, sargcd);
+        ASSERT_DOUBLE_EQ(argcd, stdargcd);
       }
     }
 
     {
       auto &ds    = h_source[0].ds;
       auto &argds = h_results[0].argds;
-      for (size_t s = 0; s != std::size(ds); ++s) {
+      ASSERT_EQ(ds.size(), argds.size());
+      for (size_t s = 0; s != ds.size(); ++s) {
         auto &d    = ds[s];
         auto &argd = argds[s];
 
-        double sargd = std::arg(d);
+        double stdargd = std::arg(d);
 
-        ASSERT_DOUBLE_EQ(argd, sargd);
+        ASSERT_DOUBLE_EQ(argd, stdargd);
+      }
+    }
+
+    {
+      auto &is    = h_source[0].is;
+      auto &argis = h_results[0].argis;
+      ASSERT_EQ(is.size(), argis.size());
+      for (size_t s = 0; s != is.size(); ++s) {
+        auto &i    = is[s];
+        auto &argi = argis[s];
+
+        double stdargi = std::arg(i);
+        ASSERT_DOUBLE_EQ(argi, stdargi);
       }
     }
   }
