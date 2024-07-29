@@ -62,8 +62,7 @@
 #include <Kokkos_SIMD_AVX512.hpp>
 #endif
 
-// FIXME: If and when NVCC supports NEON intrinsics reenable
-#if defined(KOKKOS_ARCH_ARM_NEON) && !defined(__NVCC__)
+#if defined(KOKKOS_ARCH_ARM_NEON)
 #if !defined(__ARM_NEON)
 #error "__ARM_NEON must be definded for KOKKOS_ARCH_ARM_NEON"
 #endif
