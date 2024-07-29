@@ -756,9 +756,8 @@ class OpenMPTargetExec {
   // teams possible is calculated based on NVIDIA's Volta GPU. In
   // future this value should be based on the chosen architecture for the
   // OpenMPTarget backend.
-  int MAX_ACTIVE_THREADS;
+  int MAX_ACTIVE_THREADS = 0;
 
- public:
   static void verify_is_process(const char* const);
   static void verify_initialized(const char* const);
 
@@ -767,10 +766,10 @@ class OpenMPTargetExec {
   void resize_scratch(int64_t team_reduce_bytes, int64_t team_shared_bytes,
                       int64_t thread_local_bytes, int64_t league_size);
 
-  void* m_scratch_ptr;
+  void* m_scratch_ptr = nullptr;
   std::mutex m_mutex_scratch_ptr;
-  int64_t m_scratch_size;
-  uint32_t* m_uniquetoken_ptr;
+  int64_t m_scratch_size      = 0;
+  uint32_t* m_uniquetoken_ptr = nullptr;
 };
 
 }  // namespace Impl
