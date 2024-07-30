@@ -25,10 +25,9 @@
 //      using a C++11 lambda to define the loop body
 //   3. Shut down Kokkos
 //
-// This example only builds if C++11 is enabled.  Compare this example
-// to 01_hello_world, which uses functors (explicitly defined classes)
-// to define the loop body of the parallel_for.  Both functors and
-// lambdas have their places.
+// Compare this example to 01_hello_world, which uses functors
+// (explicitly defined classes) to define the loop body of the
+// parallel_for. Both functors and lambdas have their places.
 //
 
 int main(int argc, char* argv[]) {
