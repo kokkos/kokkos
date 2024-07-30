@@ -76,7 +76,8 @@ KOKKOS_ENABLE_OPTION(IMPL_HIP_UNIFIED_MEMORY OFF "Whether to leverage unified me
 # This option will go away eventually, but allows fallback to old implementation when needed.
 KOKKOS_ENABLE_OPTION(DESUL_ATOMICS_EXTERNAL OFF "Whether to use an external desul installation")
 KOKKOS_ENABLE_OPTION(ATOMICS_BYPASS OFF "**NOT RECOMMENDED** Whether to make atomics non-atomic for non-threaded MPI-only use cases")
-KOKKOS_ENABLE_OPTION(IMPL_VIEW_OF_VIEWS_DESTRUCTOR_PRECONDITION_VIOLATION_WORKAROUND OFF "**NOT RECOMMENDED** Whether to enable a workaround for invalid View of Views code.")
+KOKKOS_ENABLE_OPTION(IMPL_VIEW_OF_VIEWS_DESTRUCTOR_PRECONDITION_VIOLATION_WORKAROUND OFF "Whether to enable a workaround for invalid use of View of Views that causes program hang on destruction.")
+mark_as_advanced(Kokkos_ENABLE_IMPL_VIEW_OF_VIEWS_DESTRUCTOR_PRECONDITION_VIOLATION_WORKAROUND)
 
 KOKKOS_ENABLE_OPTION(IMPL_MDSPAN ON "Whether to enable experimental mdspan support")
 KOKKOS_ENABLE_OPTION(MDSPAN_EXTERNAL OFF BOOL "Whether to use an external version of mdspan")
