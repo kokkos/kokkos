@@ -191,7 +191,7 @@ void *impl_allocate_common(const int device_id,
                 "CUDA runtime version >=12.2 required when "
                 "Kokkos_ENABLE_IMPL_CUDA_UNIFIED_MEMORY is set. "
                 "Please update your CUDA runtime version or "
-                "reconfigure with with "
+                "reconfigure with "
                 "-D Kokkos_ENABLE_IMPL_CUDA_UNIFIED_MEMORY=OFF");
   if (arg_alloc_size) {  // cudaMemAdvise_v2 does not work with nullptr
     error_code = cudaMallocManaged(&ptr, arg_alloc_size, cudaMemAttachGlobal);
