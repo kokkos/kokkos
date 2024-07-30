@@ -762,8 +762,7 @@ struct TestComplexArg {
     };
 
     h_source = source_host_view_type(&source);
-    d_source = Kokkos::create_mirror_view(h_source);
-    Kokkos::deep_copy(d_source, h_source);
+    d_source = Kokkos::create_mirror_view_and_copy(execution_space{}, h_source);
 
     d_results = results_device_view_type("arg");
     h_results = Kokkos::create_mirror_view(d_results);
@@ -903,8 +902,7 @@ struct TestComplexNorm {
     };
 
     h_source = source_host_view_type(&source);
-    d_source = Kokkos::create_mirror_view(h_source);
-    Kokkos::deep_copy(d_source, h_source);
+    d_source = Kokkos::create_mirror_view_and_copy(execution_space{}, h_source);
 
     d_results = results_device_view_type("norm");
     h_results = Kokkos::create_mirror_view(d_results);
@@ -1043,8 +1041,7 @@ struct TestComplexProj {
     };
 
     h_source = source_host_view_type(&source);
-    d_source = Kokkos::create_mirror_view(h_source);
-    Kokkos::deep_copy(d_source, h_source);
+    d_source = Kokkos::create_mirror_view_and_copy(execution_space{}, h_source);
 
     d_results = results_device_view_type("proj");
     h_results = Kokkos::create_mirror_view(d_results);
