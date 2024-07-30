@@ -182,7 +182,15 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
   void construct_shared_allocation() { construct_dispatch(); }
 
   void destroy_shared_allocation() {
-    parallel_for_implementation<DestroyTag>();
+#ifdef KOKKOS_ENABLE_IMPL_VIEW_OF_VIEWS_DESTRUCTOR_PRECONDITION_VIOLATION_WORKAROUND
+    if constexpr (std::is_same_v<typename ExecSpace::memory_space,
+                                 Kokkos::HostSpace>)
+      for (int64_t i = 0; i < n; ++i) (ptr + i)->~ValueType();
+    else
+#endif
+    {
+      parallel_for_implementation<DestroyTag>();
+    }
   }
 
   // This function is to ensure that the functor with DestroyTag is instantiated
