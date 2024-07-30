@@ -268,6 +268,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
       ViewMapping_subview
       ViewMemoryAccessViolation
       ViewOfClass
+      ViewOfViews
       ViewOutOfBoundsAccess
       ViewResize
       WorkGraph
