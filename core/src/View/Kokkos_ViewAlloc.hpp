@@ -185,7 +185,7 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
 #ifdef KOKKOS_ENABLE_IMPL_VIEW_OF_VIEWS_DESTRUCTOR_PRECONDITION_VIOLATION_WORKAROUND
     if constexpr (std::is_same_v<typename ExecSpace::memory_space,
                                  Kokkos::HostSpace>)
-      for (int64_t i = 0; i < n; ++i) (ptr + i)->~ValueType();
+      for (size_t i = 0; i < n; ++i) (ptr + i)->~ValueType();
     else
 #endif
     {
