@@ -289,13 +289,6 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
 #else
       (void)bound;
 #endif
-    } else {
-#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
-      std::string msg =
-          "Kokkos RangePolicy bound type warning: Two-way convertibility requirement on policy index type and input bound type is not met.
-          Conversion safety check is skipped."
-          Kokkos::Impl::log_warning(msg);
-#endif
     }
   }
 
