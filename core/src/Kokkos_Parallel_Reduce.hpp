@@ -54,13 +54,13 @@ struct Sum {
       return reduction_identity<Scalar>::sum();
     else if constexpr (Kokkos::is_detected_v<reduction_identity_sum_type>)
       static_assert(
-          false,
+          Kokkos::is_detected_v<reduction_identity_sum_type>,
           "incorrect return type for reduction_identity<value_type>::sum(); "
           "should be convertible to value_type");
     else if constexpr (std::is_default_constructible_v<Scalar>)
       return value_type{};
     else
-      static_assert(false,
+      static_assert(!std::is_default_constructible_v<Scalar>,
                     "value_type is neither default constructible nor is "
                     "Kokkos::reduction_identity<value_type>::sum() defined");
   }
