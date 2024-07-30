@@ -47,7 +47,7 @@ void test_view_of_views() {
     vov(0, 1) = V();
 #endif
   }
-  {  // using placement new to construct the innver objects and explicitly
+  {  // using placement new to construct the inner objects and explicitly
      // calling the destructor
     VoV vov(Kokkos::view_alloc("vov", Kokkos::WithoutInitializing), 2, 3);
     V a("a");
@@ -59,6 +59,8 @@ void test_view_of_views() {
     vov(0, 0).~V();
     vov(1, 0).~V();
     vov(0, 1).~V();
+#else
+    // leaks memory
 #endif
   }
 }
@@ -66,7 +68,7 @@ void test_view_of_views() {
 TEST(TEST_CATEGORY, view_of_views) {
   test_view_of_views<Kokkos::View<int, TEST_EXECSPACE>>();
   test_view_of_views<Kokkos::View<int[4], TEST_EXECSPACE>>();
-  // UDT with View data member
+  // User-defined type with View data member
   test_view_of_views<S<Kokkos::View<float, TEST_EXECSPACE>>>();
 }
 
