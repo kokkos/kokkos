@@ -25,12 +25,12 @@
 //      using a functor to define the loop body
 //   3. Shut down Kokkos
 //
-// If Kokkos was built with C++11 enabled, try comparing this example
-// to 01_hello_world_lambda.  The latter uses C++11 lambdas (anonymous
-// functions) to define the loop body of the parallel_for.  That makes
-// the code much more concise and readable.  On the other hand,
-// breaking out the loop body into an explicit functor makes it easier
-// to test the loop independently of the parallel pattern.
+// Try comparing this example to 01_hello_world_lambda, which uses
+// C++11 lambdas (anonymous functions) to define the loop body of the
+// parallel_for.  That makes the code much more concise and readable.
+// On the other hand, breaking out the loop body into an explicit
+// functor makes it easier to test the loop independently of the
+// parallel pattern.
 //
 
 // Functor that defines the parallel_for's loop body.
