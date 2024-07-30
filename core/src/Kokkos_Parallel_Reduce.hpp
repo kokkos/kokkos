@@ -44,6 +44,27 @@ struct Sum {
   result_view_type value;
   bool references_scalar_v;
 
+  template <typename T = value_type>
+  using reduction_identity_sum_type = decltype(reduction_identity<T>::sum());
+
+  KOKKOS_FUNCTION
+  static constexpr value_type init() {
+    if constexpr (Kokkos::is_detected_convertible_v<
+                      value_type, reduction_identity_sum_type>)
+      return reduction_identity<Scalar>::sum();
+    else if constexpr (Kokkos::is_detected_v<reduction_identity_sum_type>)
+      static_assert(
+          false,
+          "incorrect return type for reduction_identity<value_type>::sum(); "
+          "should be convertible to value_type");
+    else if constexpr (std::is_default_constructible_v<Scalar>)
+      return value_type{};
+    else
+      static_assert(false,
+                    "value_type is neither default constructible nor is "
+                    "Kokkos::reduction_identity<value_type>::sum() defined");
+  }
+
  public:
   KOKKOS_INLINE_FUNCTION
   Sum(value_type& value_) : value(&value_), references_scalar_v(true) {}
@@ -57,9 +78,7 @@ struct Sum {
   void join(value_type& dest, const value_type& src) const { dest += src; }
 
   KOKKOS_INLINE_FUNCTION
-  void init(value_type& val) const {
-    val = reduction_identity<value_type>::sum();
-  }
+  void init(value_type& val) const { val = init(); }
 
   KOKKOS_INLINE_FUNCTION
   value_type& reference() const { return *value.data(); }
