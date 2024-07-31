@@ -1833,7 +1833,7 @@ inline auto create_mirror(const Kokkos::Experimental::OffsetView<T, P...>& src,
     return typename Kokkos::Experimental::OffsetView<T, P...>::HostMirror(
         Kokkos::create_mirror(arg_prop, src.view()), src.begins());
   }
-#if defined(KOKKOS_COMPILER_INTEL) || defined(KOKKOS_COMPILER_NVCC)
+#if defined(KOKKOS_COMPILER_INTEL) || (defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130)
   __builtin_unreachable();
 #endif
 }
