@@ -57,11 +57,12 @@ struct Sum {
   void join(value_type& dest, const value_type& src) const { dest += src; }
 
   KOKKOS_INLINE_FUNCTION
-  void init(value_type& val) const {val = reduction_identity<value_type>::sum()}
-
-  KOKKOS_INLINE_FUNCTION value_type& reference() const {
-    return *value.data();
+  void init(value_type& val) const {
+    val = reduction_identity<value_type>::sum();
   }
+
+  KOKKOS_INLINE_FUNCTION
+  value_type& reference() const { return *value.data(); }
 
   KOKKOS_INLINE_FUNCTION
   result_view_type view() const { return value; }
