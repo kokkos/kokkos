@@ -20,6 +20,7 @@
 #include <omp.h>
 #include <sstream>
 #include <Kokkos_Parallel.hpp>
+#include "Kokkos_OpenMPTarget_Instance.hpp"
 
 namespace Kokkos {
 namespace Impl {
@@ -40,9 +41,9 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
 
   template <class TagType>
   void execute_impl() const {
-    OpenMPTargetExec::verify_is_process(
+    Experimental::Impl::OpenMPTargetInternal::verify_is_process(
         "Kokkos::Experimental::OpenMPTarget parallel_for");
-    OpenMPTargetExec::verify_initialized(
+    Experimental::Impl::OpenMPTargetInternal::verify_initialized(
         "Kokkos::Experimental::OpenMPTarget parallel_for");
     const auto begin = m_policy.begin();
     const auto end   = m_policy.end();

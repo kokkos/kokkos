@@ -85,9 +85,9 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
  public:
   void execute() const {
-    OpenMPTargetExec::verify_is_process(
+    Experimental::Impl::OpenMPTargetInternal::verify_is_process(
         "Kokkos::Experimental::OpenMPTarget parallel_for");
-    OpenMPTargetExec::verify_initialized(
+    Experimental::Impl::OpenMPTargetInternal::verify_initialized(
         "Kokkos::Experimental::OpenMPTarget parallel_for");
     execute_impl<WorkTag>();
   }
@@ -95,9 +95,9 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
  private:
   template <class TagType>
   void execute_impl() const {
-    OpenMPTargetExec::verify_is_process(
+    Experimental::Impl::OpenMPTargetInternal::verify_is_process(
         "Kokkos::Experimental::OpenMPTarget parallel_for");
-    OpenMPTargetExec::verify_initialized(
+    Experimental::Impl::OpenMPTargetInternal::verify_initialized(
         "Kokkos::Experimental::OpenMPTarget parallel_for");
     const auto league_size   = m_policy.league_size();
     const auto team_size     = m_policy.team_size();
@@ -105,12 +105,11 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     const size_t shmem_size_L0 = m_policy.scratch_size(0, team_size);
     const size_t shmem_size_L1 = m_policy.scratch_size(1, team_size);
-    m_policy.space().impl_internal_space_instance()->m_ompt_exec.resize_scratch(
+    m_policy.space().impl_internal_space_instance()->resize_scratch(
         team_size, shmem_size_L0, shmem_size_L1, league_size);
 
-    void* scratch_ptr = m_policy.space()
-                            .impl_internal_space_instance()
-                            ->m_ompt_exec.get_scratch_ptr();
+    void* scratch_ptr =
+        m_policy.space().impl_internal_space_instance()->get_scratch_ptr();
     FunctorType a_functor(m_functor);
 
     // FIXME_OPENMPTARGET - If the team_size is not a multiple of 32, the

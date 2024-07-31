@@ -17,8 +17,6 @@
 #ifndef KOKKOS_OPENMPTARGET_INSTANCE_HPP
 #define KOKKOS_OPENMPTARGET_INSTANCE_HPP
 
-#include <Kokkos_Core.hpp>
-
 namespace Kokkos {
 namespace Experimental {
 namespace Impl {
@@ -55,7 +53,24 @@ class OpenMPTargetInternal {
 
   static OpenMPTargetInternal* impl_singleton();
 
-  Kokkos::Impl::OpenMPTargetExec m_ompt_exec;
+  // FIXME_OPENMPTARGET - Currently the maximum number of
+  // teams possible is calculated based on NVIDIA's Volta GPU. In
+  // future this value should be based on the chosen architecture for the
+  // OpenMPTarget backend.
+  int MAX_ACTIVE_THREADS = 0;
+
+  static void verify_is_process(const char* const);
+  static void verify_initialized(const char* const);
+
+  void* get_scratch_ptr();
+  void clear_scratch();
+  void resize_scratch(int64_t team_reduce_bytes, int64_t team_shared_bytes,
+                      int64_t thread_local_bytes, int64_t league_size);
+
+  void* m_scratch_ptr = nullptr;
+  std::mutex m_mutex_scratch_ptr;
+  int64_t m_scratch_size      = 0;
+  uint32_t* m_uniquetoken_ptr = nullptr;
 
  private:
   bool m_is_initialized  = false;

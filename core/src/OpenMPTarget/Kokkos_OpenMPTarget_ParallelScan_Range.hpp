@@ -169,9 +169,9 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
   }
 
   void execute() const {
-    OpenMPTargetExec::verify_is_process(
+    Experimental::Impl::OpenMPTargetInternal::verify_is_process(
         "Kokkos::Experimental::OpenMPTarget parallel_for");
-    OpenMPTargetExec::verify_initialized(
+    Experimental::Impl::OpenMPTargetInternal::verify_initialized(
         "Kokkos::Experimental::OpenMPTarget parallel_for");
     const idx_type N          = m_policy.end() - m_policy.begin();
     const idx_type chunk_size = 128;
@@ -179,9 +179,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
 
     // Only let one ParallelReduce instance at a time use the scratch memory.
     std::scoped_lock<std::mutex> scratch_memory_lock(
-        m_policy.space()
-            .impl_internal_space_instance()
-            ->m_ompt_exec.m_mutex_scratch_ptr);
+        m_policy.space().impl_internal_space_instance()->m_mutex_scratch_ptr);
 
     // This could be scratch memory per team
     Kokkos::View<value_type**, Kokkos::LayoutRight,
@@ -222,9 +220,9 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
 
  public:
   void execute() const {
-    OpenMPTargetExec::verify_is_process(
+    Experimental::Impl::OpenMPTargetInternal::verify_is_process(
         "Kokkos::Experimental::OpenMPTarget parallel_for");
-    OpenMPTargetExec::verify_initialized(
+    Experimental::Impl::OpenMPTargetInternal::verify_initialized(
         "Kokkos::Experimental::OpenMPTarget parallel_for");
     const int64_t N        = base_t::m_policy.end() - base_t::m_policy.begin();
     const int chunk_size   = 128;
@@ -235,7 +233,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
       std::scoped_lock<std::mutex> scratch_memory_lock(
           base_t::m_policy.space()
               .impl_internal_space_instance()
-              ->m_ompt_exec.m_mutex_scratch_ptr);
+              ->m_mutex_scratch_ptr);
 
       // This could be scratch memory per team
       Kokkos::View<value_type**, Kokkos::LayoutRight,
