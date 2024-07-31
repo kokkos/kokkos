@@ -152,7 +152,6 @@ inline void test_anonymous_space() {
     host_anon_assign_view(i)                       = 142;
   }
   Kokkos::View<int**, Kokkos::LayoutRight, ExecSpace> d_view("d_view", 100, 10);
-#ifdef KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
   Kokkos::parallel_for(
       Kokkos::RangePolicy<ExecSpace, int>(0, 100), KOKKOS_LAMBDA(int i) {
         int* ptr = &(d_view(i, 0));
@@ -167,7 +166,6 @@ inline void test_anonymous_space() {
         }
       });
   Kokkos::fence();
-#endif
 }
 
 TEST(TEST_CATEGORY, anonymous_space) { test_anonymous_space(); }
