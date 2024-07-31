@@ -3509,7 +3509,7 @@ inline auto create_mirror(const Kokkos::View<T, P...>& src,
     using dst_type = typename View<T, P...>::HostMirror;
     return dst_type(prop_copy, src.layout());
   }
-#if defined(KOKKOS_COMPILER_INTEL) || defined(KOKKOS_COMPILER_NVCC)
+#if defined(KOKKOS_COMPILER_INTEL) || (defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130)
   __builtin_unreachable();
 #endif
 }
