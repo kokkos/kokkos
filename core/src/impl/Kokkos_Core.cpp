@@ -611,13 +611,6 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
 #else
   declare_configuration_metadata("options", "KOKKOS_ENABLE_LIBDL", "no");
 #endif
-#ifdef KOKKOS_ENABLE_IMPL_REF_COUNT_BRANCH_UNLIKELY
-  declare_configuration_metadata(
-      "options", "KOKKOS_ENABLE_IMPL_REF_COUNT_BRANCH_UNLIKELY", "yes");
-#else
-  declare_configuration_metadata(
-      "options", "KOKKOS_ENABLE_IMPL_REF_COUNT_BRANCH_UNLIKELY", "no");
-#endif
 
   declare_configuration_metadata("architecture", "Default Device",
                                  typeid(Kokkos::DefaultExecutionSpace).name());
