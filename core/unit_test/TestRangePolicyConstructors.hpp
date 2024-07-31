@@ -125,10 +125,10 @@ TEST(TEST_CATEGORY_DEATH, range_policy_invalid_bounds) {
 
 template <typename T>
 struct TestIndexConversionCheck {
-  explicit TestIndexConversionCheck(T value_) : value(value_) {}
-  operator T() const { return value; }
+  explicit TestIndexConversionCheck(T* value_) : value(value_) {}
+  operator T() const { return *value; }
 
-  T value;
+  T* const value;
 };
 
 TEST(TEST_CATEGORY_DEATH, range_policy_implicitly_converted_bounds) {
@@ -167,12 +167,13 @@ TEST(TEST_CATEGORY_DEATH, range_policy_implicitly_converted_bounds) {
                  get_error_msg(expected, test_val));
   }
   {
+    using test_type = TestIndexConversionCheck<typename IntPolicy::index_type>;
+
+    static_assert(std::is_convertible_v<test_type, IntPolicy::index_type>);
+    static_assert(!std::is_convertible_v<IntPolicy::index_type, test_type>);
+
     typename IntIndexType::type test_val = -1;
-    ASSERT_NO_THROW((void)IntPolicy(
-        -2,
-        TestIndexConversionCheck<typename IntPolicy::index_type>(test_val)));
-    ASSERT_NO_THROW((void)UIntPolicy(
-        0, TestIndexConversionCheck<typename IntPolicy::index_type>(test_val)));
+    ASSERT_NO_THROW((void)IntPolicy(-2, test_type(&test_val)));
   }
 
 #else
