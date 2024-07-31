@@ -693,12 +693,6 @@ void Cuda::print_configuration(std::ostream &os, bool /*verbose*/) const {
 #else
   os << "no\n";
 #endif
-  os << "  KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA: ";
-#ifdef KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
-  os << "yes\n";
-#else
-  os << "no\n";
-#endif
   os << "  KOKKOS_ENABLE_IMPL_CUDA_MALLOC_ASYNC: ";
 #ifdef KOKKOS_ENABLE_IMPL_CUDA_MALLOC_ASYNC
   os << "yes\n";
