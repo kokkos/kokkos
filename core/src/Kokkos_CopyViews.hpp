@@ -3619,7 +3619,7 @@ inline auto choose_create_mirror(
     }
   }
 
-#if defined(KOKKOS_COMPILER_INTEL) || defined(KOKKOS_COMPILER_NVCC)
+#if defined(KOKKOS_COMPILER_INTEL) || (defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130)
   __builtin_unreachable();
 #endif
 }
