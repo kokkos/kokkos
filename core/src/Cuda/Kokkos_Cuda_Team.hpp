@@ -862,7 +862,8 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
   using value_type = typename Kokkos::Impl::FunctorAnalysis<
       Kokkos::Impl::FunctorPatternInterface::SCAN, void, Closure,
       void>::value_type;
-  value_type dummy = Kokkos::Sum<value_type>::init();
+  value_type dummy;
+  Impl::reduction_identity_sum_or_value_initialize(dummy);
   parallel_scan(loop_boundaries, closure, Kokkos::Sum<value_type>(dummy));
 }
 
@@ -886,7 +887,8 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
   static_assert(std::is_same<closure_value_type, ValueType>::value,
                 "Non-matching value types of closure and return type");
 
-  ValueType accum = Kokkos::Sum<ValueType>::init();
+  ValueType accum;
+  Impl::reduction_identity_sum_or_value_initialize(accum);
   parallel_scan(loop_boundaries, closure, Kokkos::Sum<ValueType>(accum));
 
   return_val = accum;
