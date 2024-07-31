@@ -3509,7 +3509,8 @@ inline auto create_mirror(const Kokkos::View<T, P...>& src,
     using dst_type = typename View<T, P...>::HostMirror;
     return dst_type(prop_copy, src.layout());
   }
-#if defined(KOKKOS_COMPILER_INTEL) || (defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130)
+#if defined(KOKKOS_COMPILER_INTEL) || \
+    (defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130)
   __builtin_unreachable();
 #endif
 }
@@ -3619,7 +3620,8 @@ inline auto choose_create_mirror(
     }
   }
 
-#if defined(KOKKOS_COMPILER_INTEL) || (defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130)
+#if defined(KOKKOS_COMPILER_INTEL) || \
+    (defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130)
   __builtin_unreachable();
 #endif
 }
@@ -3655,7 +3657,8 @@ inline auto create_mirror_view(
       return Kokkos::Impl::choose_create_mirror(src, arg_prop);
     }
   }
-#if defined(KOKKOS_COMPILER_INTEL) || (defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130)
+#if defined(KOKKOS_COMPILER_INTEL) || \
+    (defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130)
   __builtin_unreachable();
 #endif
 }
