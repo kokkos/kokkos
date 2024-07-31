@@ -621,7 +621,7 @@ inline auto create_mirror(const Kokkos::Experimental::DynamicView<T, P...>& src,
 
     return ret;
   }
-#if defined KOKKOS_COMPILER_INTEL
+#if defined(KOKKOS_COMPILER_INTEL) || defined(KOKKOS_COMPILER_NVCC)
   __builtin_unreachable();
 #endif
 }
@@ -716,7 +716,7 @@ inline auto create_mirror_view(
       return Kokkos::Impl::choose_create_mirror(src, arg_prop);
     }
   }
-#if defined KOKKOS_COMPILER_INTEL
+#if defined(KOKKOS_COMPILER_INTEL) || defined(KOKKOS_COMPILER_NVCC)
   __builtin_unreachable();
 #endif
 }
