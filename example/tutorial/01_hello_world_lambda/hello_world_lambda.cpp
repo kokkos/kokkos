@@ -16,7 +16,6 @@
 
 #include <Kokkos_Core.hpp>
 #include <cstdio>
-#include <typeinfo>
 
 //
 // "Hello world" parallel_for example:
@@ -40,11 +39,9 @@ int main(int argc, char* argv[]) {
   // start with "--kokkos-".
   Kokkos::initialize(argc, argv);
 
-  // Print the name of Kokkos' default execution space.  We're using
-  // typeid here, so the name might get a bit mangled by the linker,
-  // but you should still be able to figure out what it is.
+  // Print the name of Kokkos' default execution space.
   printf("Hello World on Kokkos execution space %s\n",
-         typeid(Kokkos::DefaultExecutionSpace).name());
+         Kokkos::DefaultExecutionSpace::name());
 
   // Run lambda on the default Kokkos execution space in parallel,
   // with a parallel for loop count of 15.  The lambda's argument is
