@@ -41,29 +41,11 @@ struct Sum {
   using result_view_type = Kokkos::View<value_type, Space>;
 
  private:
-  result_view_type value;
-  bool references_scalar_v;
-
   template <typename T = value_type>
   using reduction_identity_sum_type = decltype(reduction_identity<T>::sum());
 
-  KOKKOS_FUNCTION
-  static constexpr value_type init() {
-    if constexpr (Kokkos::is_detected_convertible_v<
-                      value_type, reduction_identity_sum_type>)
-      return reduction_identity<Scalar>::sum();
-    else if constexpr (Kokkos::is_detected_v<reduction_identity_sum_type>)
-      static_assert(
-          Kokkos::is_detected_v<reduction_identity_sum_type>,
-          "incorrect return type for reduction_identity<value_type>::sum(); "
-          "should be convertible to value_type");
-    else if constexpr (std::is_default_constructible_v<Scalar>)
-      return value_type{};
-    else
-      static_assert(!std::is_default_constructible_v<Scalar>,
-                    "value_type is neither default constructible nor is "
-                    "Kokkos::reduction_identity<value_type>::sum() defined");
-  }
+  result_view_type value;
+  bool references_scalar_v;
 
  public:
   KOKKOS_INLINE_FUNCTION
@@ -76,6 +58,24 @@ struct Sum {
   // Required
   KOKKOS_INLINE_FUNCTION
   void join(value_type& dest, const value_type& src) const { dest += src; }
+
+  KOKKOS_FUNCTION
+  static constexpr value_type init() {
+    if constexpr (Kokkos::is_detected_convertible_v<
+                      value_type, reduction_identity_sum_type>)
+      return reduction_identity<Scalar>::sum();
+    else if constexpr (Kokkos::is_detected_v<reduction_identity_sum_type>)
+      static_assert(
+          Kokkos::is_detected_v<reduction_identity_sum_type>,
+          "incorrect return type for reduction_identity<value_type>::sum(); "
+          "should be convertible to value_type");
+    else if constexpr (std::is_default_constructible_v<value_type>)
+      return value_type{};
+    else
+      static_assert(!std::is_default_constructible_v<value_type>,
+                    "value_type is neither default constructible nor is "
+                    "Kokkos::reduction_identity<value_type>::sum() defined");
+  }
 
   KOKKOS_INLINE_FUNCTION
   void init(value_type& val) const { val = init(); }
