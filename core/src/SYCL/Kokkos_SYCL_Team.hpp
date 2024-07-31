@@ -774,7 +774,7 @@ KOKKOS_INLINE_FUNCTION std::enable_if_t<!is_reducer<ValueType>::value>
 parallel_reduce(Impl::ThreadVectorRangeBoundariesStruct<
                     iType, Impl::SYCLTeamMember> const& loop_boundaries,
                 Closure const& closure, ValueType& result) {
-  result = ValueType();
+  result = Kokkos::Sum<ValueType>::init();
 
   const iType tidx1 = loop_boundaries.member.item().get_local_id(1);
   const int grange1 = loop_boundaries.member.item().get_local_range(1);
@@ -877,7 +877,7 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
   using value_type = typename Kokkos::Impl::FunctorAnalysis<
       Kokkos::Impl::FunctorPatternInterface::SCAN, void, Closure,
       void>::value_type;
-  value_type dummy;
+  value_type dummy = Kokkos::Sum<value_type>::init();
   parallel_scan(loop_boundaries, closure, Kokkos::Sum<value_type>{dummy});
 }
 
@@ -901,7 +901,7 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
   static_assert(std::is_same<closure_value_type, ValueType>::value,
                 "Non-matching value types of closure and return type");
 
-  ValueType accum;
+  ValueType accum = Kokkos::Sum<ValueType>::init();
   parallel_scan(loop_boundaries, closure, Kokkos::Sum<ValueType>{accum});
 
   return_val = accum;

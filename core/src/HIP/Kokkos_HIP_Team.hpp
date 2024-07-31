@@ -738,7 +738,7 @@ parallel_reduce(Impl::ThreadVectorRangeBoundariesStruct<
                     iType, Impl::HIPTeamMember> const& loop_boundaries,
                 Closure const& closure, ValueType& result) {
 #ifdef __HIP_DEVICE_COMPILE__
-  result = ValueType();
+  result = Kokkos::Sum<ValueType>::init();
 
   for (iType i = loop_boundaries.start + threadIdx.x; i < loop_boundaries.end;
        i += blockDim.x) {
