@@ -2134,6 +2134,9 @@ auto create_mirror_view_and_copy(
       deep_copy(mirror, src);
     return mirror;
   }
+#if defined(KOKKOS_COMPILER_NVCC)
+  __builtin_unreachable();
+#endif
 }
 
 template <class Space, class T, class... P>

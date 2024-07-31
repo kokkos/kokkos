@@ -3763,6 +3763,9 @@ auto create_mirror_view_and_copy(
       deep_copy(mirror, src);
     return mirror;
   }
+#if defined(KOKKOS_COMPILER_NVCC)
+  __builtin_unreachable();
+#endif
 }
 
 // Previously when using auto here, the intel compiler 19.3 would
