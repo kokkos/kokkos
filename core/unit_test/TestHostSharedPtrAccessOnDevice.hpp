@@ -127,8 +127,7 @@ TEST(TEST_CATEGORY, host_shared_ptr_special_members_on_device) {
 #endif
 
 // FIXME_OPENMPTARGET
-#if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA) && \
-    !defined(KOKKOS_ENABLE_OPENMPTARGET)
+#if !defined(KOKKOS_ENABLE_OPENMPTARGET)
 namespace {
 
 struct Bar {
@@ -258,4 +257,4 @@ TEST(TEST_CATEGORY, host_shared_ptr_tracking) {
 #endif
 }
 
-#endif  // KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
+#endif
