@@ -131,7 +131,7 @@ struct TestIndexConversionCheck {
   T* const value;
 };
 
-TEST(TEST_CATEGORAY, range_policy_one_way_convertible_bounds) {
+TEST(TEST_CATEGORY, range_policy_one_way_convertible_bounds) {
   using UIntIndexType = Kokkos::IndexType<unsigned>;
   using UIntPolicy    = Kokkos::RangePolicy<TEST_EXECSPACE, UIntIndexType>;
 
