@@ -59,7 +59,7 @@ class ParallelReduce<CombinedFunctorReducerType,
   inline void execute() const {
     // Only let one ParallelReduce instance at a time use the scratch memory.
     std::scoped_lock<std::mutex> scratch_memory_lock(
-        OpenMPTargetExec::m_mutex_scratch_ptr);
+        m_policy.space().impl_internal_space_instance()->m_mutex_scratch_ptr);
     execute_tile<Policy::rank, typename ReducerType::value_type>(
         m_functor_reducer.get_functor(), m_policy, m_result_ptr,
         std::integral_constant<Iterate, Policy::inner_direction>());

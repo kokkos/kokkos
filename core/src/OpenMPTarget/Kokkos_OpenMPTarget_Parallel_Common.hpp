@@ -84,10 +84,10 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
 
   static void execute_reducer(const FunctorType& f, const PolicyType& p,
                               PointerType result_ptr, bool ptr_on_device) {
-    OpenMPTargetExec::verify_is_process(
+    Experimental::Impl::OpenMPTargetInternal::verify_is_process(
         "Kokkos::Experimental::OpenMPTarget RangePolicy "
         "parallel_reduce:reducer");
-    OpenMPTargetExec::verify_initialized(
+    Experimental::Impl::OpenMPTargetInternal::verify_initialized(
         "Kokkos::Experimental::OpenMPTarget RangePolicy "
         "parallel_reduce:reducer");
     const auto begin = p.begin();
@@ -127,10 +127,10 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
   template <class TagType, int NumReductions>
   static void execute_array(const FunctorType& f, const PolicyType& p,
                             PointerType result_ptr, bool ptr_on_device) {
-    OpenMPTargetExec::verify_is_process(
+    Experimental::Impl::OpenMPTargetInternal::verify_is_process(
         "Kokkos::Experimental::OpenMPTarget RangePolicy "
         "parallel_reduce:array_reduction");
-    OpenMPTargetExec::verify_initialized(
+    Experimental::Impl::OpenMPTargetInternal::verify_initialized(
         "Kokkos::Experimental::OpenMPTarget RangePolicy "
         "parallel_reduce:array_reduction");
     const auto begin = p.begin();
@@ -202,10 +202,10 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
 
   static void execute_init_join(const FunctorType& f, const PolicyType& p,
                                 PointerType ptr, const bool ptr_on_device) {
-    OpenMPTargetExec::verify_is_process(
+    Experimental::Impl::OpenMPTargetInternal::verify_is_process(
         "Kokkos::Experimental::OpenMPTarget RangePolicy "
         "parallel_reduce:init_join");
-    OpenMPTargetExec::verify_initialized(
+    Experimental::Impl::OpenMPTargetInternal::verify_initialized(
         "Kokkos::Experimental::OpenMPTarget RangePolicy "
         "parallel_reduce:init_join");
     const auto begin = p.begin();
@@ -224,16 +224,18 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
     // architecture in the future.
     const int max_team_threads = 32;
     const int max_teams =
-        OpenMPTargetExec::MAX_ACTIVE_THREADS / max_team_threads;
+        p.space().impl_internal_space_instance()->MAX_ACTIVE_THREADS /
+        max_team_threads;
     // Number of elements in the reduction
     const auto value_count = FunctorAnalysis::value_count(f);
 
     // Allocate scratch per active thread. Achieved by setting the first
     // parameter of `resize_scratch=1`.
-    OpenMPTargetExec::resize_scratch(1, 0, value_count * sizeof(ValueType),
-                                     std::numeric_limits<int64_t>::max());
-    ValueType* scratch_ptr =
-        static_cast<ValueType*>(OpenMPTargetExec::get_scratch_ptr());
+    p.space().impl_internal_space_instance()->resize_scratch(
+        1, 0, value_count * sizeof(ValueType),
+        std::numeric_limits<int64_t>::max());
+    ValueType* scratch_ptr = static_cast<ValueType*>(
+        p.space().impl_internal_space_instance()->get_scratch_ptr());
 
     typename FunctorAnalysis::Reducer final_reducer(f);
 
@@ -357,10 +359,10 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
 
   static void execute_reducer(const FunctorType& f, const PolicyType& p,
                               PointerType result_ptr, bool ptr_on_device) {
-    OpenMPTargetExec::verify_is_process(
+    Experimental::Impl::OpenMPTargetInternal::verify_is_process(
         "Kokkos::Experimental::OpenMPTarget TeamPolicy "
         "parallel_reduce:reducer");
-    OpenMPTargetExec::verify_initialized(
+    Experimental::Impl::OpenMPTargetInternal::verify_initialized(
         "Kokkos::Experimental::OpenMPTarget TeamPolicy "
         "parallel_reduce:reducer");
 
@@ -370,9 +372,11 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
 
     const size_t shmem_size_L0 = p.scratch_size(0, team_size);
     const size_t shmem_size_L1 = p.scratch_size(1, team_size);
-    OpenMPTargetExec::resize_scratch(PolicyType::member_type::TEAM_REDUCE_SIZE,
-                                     shmem_size_L0, shmem_size_L1, league_size);
-    void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
+    p.space().impl_internal_space_instance()->resize_scratch(
+        PolicyType::member_type::TEAM_REDUCE_SIZE, shmem_size_L0, shmem_size_L1,
+        league_size);
+    void* scratch_ptr =
+        p.space().impl_internal_space_instance()->get_scratch_ptr();
 
     ValueType result = ValueType();
 
@@ -383,7 +387,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     int max_active_teams = omp_get_max_teams();
 #else
     int max_active_teams =
-        std::min(OpenMPTargetExec::MAX_ACTIVE_THREADS / team_size, league_size);
+        std::min(p.space().MAX_ACTIVE_THREADS / team_size, league_size);
 #endif
 
     // If the league size is <=0, do not launch the kernel.
@@ -449,10 +453,10 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
   template <int NumReductions>
   static void execute_array(const FunctorType& f, const PolicyType& p,
                             PointerType result_ptr, bool ptr_on_device) {
-    OpenMPTargetExec::verify_is_process(
+    Experimental::Impl::OpenMPTargetInternal::verify_is_process(
         "Kokkos::Experimental::OpenMPTarget TeamPolicy "
         "parallel_reduce:array_reduction");
-    OpenMPTargetExec::verify_initialized(
+    Experimental::Impl::OpenMPTargetInternal::verify_initialized(
         "Kokkos::Experimental::OpenMPTarget TeamPolicy "
         "parallel_reduce:array_reduction");
 
@@ -462,9 +466,11 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
 
     const size_t shmem_size_L0 = p.scratch_size(0, team_size);
     const size_t shmem_size_L1 = p.scratch_size(1, team_size);
-    OpenMPTargetExec::resize_scratch(PolicyType::member_type::TEAM_REDUCE_SIZE,
-                                     shmem_size_L0, shmem_size_L1, league_size);
-    void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
+    p.space().impl_internal_space_instance()->resize_scratch(
+        PolicyType::member_type::TEAM_REDUCE_SIZE, shmem_size_L0, shmem_size_L1,
+        league_size);
+    void* scratch_ptr =
+        p.space().impl_internal_space_instance()->get_scratch_ptr();
 
     // Maximum active teams possible.
     // FIXME_OPENMPTARGET: Cray compiler did not yet implement
@@ -473,7 +479,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     int max_active_teams = omp_get_max_teams();
 #else
     int max_active_teams =
-        std::min(OpenMPTargetExec::MAX_ACTIVE_THREADS / team_size, league_size);
+        std::min(p.space().MAX_ACTIVE_THREADS / team_size, league_size);
 #endif
 
     // If the league size is <=0, do not launch the kernel.
@@ -579,10 +585,10 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
   // RangePolicy. Need a new implementation.
   static void execute_init_join(const FunctorType& f, const PolicyType& p,
                                 PointerType ptr, const bool ptr_on_device) {
-    OpenMPTargetExec::verify_is_process(
+    Experimental::Impl::OpenMPTargetInternal::verify_is_process(
         "Kokkos::Experimental::OpenMPTarget TeamPolicy "
         "parallel_reduce:init_join ");
-    OpenMPTargetExec::verify_initialized(
+    Experimental::Impl::OpenMPTargetInternal::verify_initialized(
         "Kokkos::Experimental::OpenMPTarget TeamPolicy "
         "parallel_reduce:init_join");
     using FunctorAnalysis =
@@ -614,9 +620,10 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     const auto value_count = FunctorAnalysis::value_count(f);
 
     // Allocate scratch per active thread.
-    OpenMPTargetExec::resize_scratch(1, 0, value_count * sizeof(ValueType),
-                                     league_size);
-    void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
+    p.space().impl_internal_space_instance()->resize_scratch(
+        1, 0, value_count * sizeof(ValueType), league_size);
+    void* scratch_ptr =
+        p.space().impl_internal_space_instance()->get_scratch_ptr();
     typename FunctorAnalysis::Reducer final_reducer(f);
 
     if (end <= begin) {

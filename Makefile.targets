@@ -101,8 +101,6 @@ Kokkos_HPX_Task.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/HPX/Kokkos_HPX_
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
-Kokkos_OpenMPTarget_Exec.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/OpenMPTarget/Kokkos_OpenMPTarget_Exec.cpp
-	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) -c $(KOKKOS_PATH)/core/src/OpenMPTarget/Kokkos_OpenMPTarget_Exec.cpp
 Kokkos_OpenMPTarget_Instance.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/OpenMPTarget/Kokkos_OpenMPTarget_Instance.cpp
 	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) -c $(KOKKOS_PATH)/core/src/OpenMPTarget/Kokkos_OpenMPTarget_Instance.cpp
 Kokkos_OpenMPTargetSpace.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/OpenMPTarget/Kokkos_OpenMPTargetSpace.cpp
