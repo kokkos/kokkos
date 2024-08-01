@@ -131,6 +131,19 @@ struct TestIndexConversionCheck {
   T* const value;
 };
 
+TEST(TEST_CATEGORAY, range_policy_one_way_convertible_bounds) {
+  using UIntIndexType = Kokkos::IndexType<unsigned>;
+  using UIntPolicy    = Kokkos::RangePolicy<TEST_EXECSPACE, UIntIndexType>;
+
+  using test_type = TestIndexConversionCheck<UIntPolicy::index_type>;
+
+  static_assert(std::is_convertible_v<test_type, UIntPolicy::index_type>);
+  static_assert(!std::is_convertible_v<UIntPolicy::index_type, test_type>);
+
+  UIntIndexType::type test_val = -1;
+  ASSERT_NO_THROW((void)UIntPolicy(0, test_type(&test_val)));
+}
+
 TEST(TEST_CATEGORY_DEATH, range_policy_implicitly_converted_bounds) {
   using UIntIndexType = Kokkos::IndexType<unsigned>;
   using IntIndexType  = Kokkos::IndexType<int>;
@@ -165,15 +178,6 @@ TEST(TEST_CATEGORY_DEATH, range_policy_implicitly_converted_bounds) {
     int test_val = -1;
     ASSERT_DEATH({ (void)UIntPolicy(test_val, 10, Kokkos::ChunkSize(2)); },
                  get_error_msg(expected, test_val));
-  }
-  {
-    using test_type = TestIndexConversionCheck<typename IntPolicy::index_type>;
-
-    static_assert(std::is_convertible_v<test_type, IntPolicy::index_type>);
-    static_assert(!std::is_convertible_v<IntPolicy::index_type, test_type>);
-
-    typename IntIndexType::type test_val = -1;
-    ASSERT_NO_THROW((void)IntPolicy(-2, test_type(&test_val)));
   }
 
 #else
