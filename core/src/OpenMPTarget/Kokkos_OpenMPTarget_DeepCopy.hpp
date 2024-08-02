@@ -98,4 +98,4 @@ struct DeepCopy<HostSpace, Kokkos::Experimental::OpenMPTargetSpace,
 }  // namespace Impl
 }  // namespace Kokkos
 
-#endif // KOKKOS_OPENMPTARGET_DEEP_COPY_HPP
+#endif  // KOKKOS_OPENMPTARGET_DEEP_COPY_HPP
