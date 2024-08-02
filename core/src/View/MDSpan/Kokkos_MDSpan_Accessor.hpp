@@ -25,6 +25,8 @@ static_assert(false,
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Concepts.hpp>
 #include <Kokkos_Core_fwd.hpp>
+
+#include <Kokkos_Atomics_Desul_Config.hpp>
 #include <desul/atomics.hpp>
 
 namespace Kokkos {
