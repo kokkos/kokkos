@@ -70,7 +70,7 @@
 * Deprecate implicit conversions for execution space which previously allowed them (Serial, OpenMP, Cuda, HIP, HPX) [\#7156](https://github.com/kokkos/kokkos/pull/7156)
 
 ### Bug Fixes
-* Do not return a copy of the input functor  in `Experimental::for_each` [\#6910](https://github.com/kokkos/kokkos/pull/6910)
+* Do not return a copy of the input functor in `Experimental::for_each` [\#6910](https://github.com/kokkos/kokkos/pull/6910)
 * Fix Makefile.kokkos for Threads [\#6896](https://github.com/kokkos/kokkos/pull/6896)
 * Fix `realloc` on views of non-default constructible element types [\#6993](https://github.com/kokkos/kokkos/pull/6993)
 * Fix undefined behavior in `View` initialization or fill with zeros [\#7014](https://github.com/kokkos/kokkos/pull/7014)
