@@ -103,5 +103,12 @@ void test_abort_from_device() {
 
 TEST(TEST_CATEGORY_DEATH, abort_from_device) {
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+// FIXME_OPENACC FIXME_NVHPC: NVHPC fails when targetting CPUs.
+#if defined(KOKKOS_ENABLE_OPENACC) && defined(KOKKOS_COMPILER_NVHPC) && \
+    defined(KOKKOS_OPENACC_WITHOUT_GPU)
+  GTEST_SKIP()
+      << "skipping since the OpenACC backend compiled by NVHPC for CPU "
+         "crashes at runtime.";
+#endif
   test_abort_from_device<TEST_EXECSPACE>();
 }
