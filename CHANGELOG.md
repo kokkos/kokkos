@@ -74,7 +74,7 @@
 * Do not return a copy of the input functor  in `Experimental::for_each` [\#6910](https://github.com/kokkos/kokkos/pull/6910)
 * Fix Makefile.kokkos for Threads [\#6896](https://github.com/kokkos/kokkos/pull/6896)
 * Fix `realloc` on views of non-default constructible element types [\#6993](https://github.com/kokkos/kokkos/pull/6993)
-* Fix undefined behavior in is_zero_byte [\#7014](https://github.com/kokkos/kokkos/pull/7014)
+* Fix undefined behavior in `View` initialization or fill with zeros [\#7014](https://github.com/kokkos/kokkos/pull/7014)
 * Fix sort_by_key_via_sort for nvcc with host execution spaces [\#7059](https://github.com/kokkos/kokkos/pull/7059)
 * Fix using CUDAToolkit for CMake 3.28.4 and higher [\#7062](https://github.com/kokkos/kokkos/pull/7062)
 * Fix using shared libraries and -fvisibility=hidden [\#7065](https://github.com/kokkos/kokkos/pull/7065)
