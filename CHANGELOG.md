@@ -15,7 +15,7 @@
 #### HIP:
 * MI300 support unified memory support [\#6877](https://github.com/kokkos/kokkos/pull/6877) **PATCH RELEASE 4.3.1**
 * Use builtin atomics in the HIP backend [\#6882](https://github.com/kokkos/kokkos/pull/6882) [\#7000](https://github.com/kokkos/kokkos/pull/7000)
-*  Add expert CMake options to control compilation flags for AMD GPUs [\#7127](https://github.com/kokkos/kokkos/pull/7127)
+* Add advanced CMake options to control compilation flags for AMD GPUs [\#7127](https://github.com/kokkos/kokkos/pull/7127)
 
 #### SYCL:
 * Fix multi-GPU support [\#6887](https://github.com/kokkos/kokkos/pull/6887)
