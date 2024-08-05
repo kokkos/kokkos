@@ -4,7 +4,7 @@
 [Full Changelog](https://github.com/kokkos/kokkos/compare/4.3.01...4.4.00)
 
 ### Features:
-* Add converting constructors from and conversion operators to [`std::mdspan`](https://en.cppreference.com/w/cpp/container/mdspan) [\#6830](https://github.com/kokkos/kokkos/pull/6830) [\#7069](https://github.com/kokkos/kokkos/pull/7069)
+* Add `Kokkos::view` conversions from and to [`std::mdspan`](https://en.cppreference.com/w/cpp/container/mdspan) [\#6830](https://github.com/kokkos/kokkos/pull/6830) [\#7069](https://github.com/kokkos/kokkos/pull/7069)
 
 ### Backend and Architecture Enhancements:
 
