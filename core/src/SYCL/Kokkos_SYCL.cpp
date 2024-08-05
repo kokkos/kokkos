@@ -261,8 +261,6 @@ std::ostream& SYCL::impl_sycl_info(std::ostream& os,
             << device.get_info<device::image3d_max_depth>()
             << "\nImage Max Buffer Size: "
             << device.get_info<device::image_max_buffer_size>()
-            << "\nImage Max Array Size: "
-            << device.get_info<device::image_max_array_size>()
             << "\nMax Samplers: " << device.get_info<device::max_samplers>()
             << "\nMax Parameter Size: "
             << device.get_info<device::max_parameter_size>()
