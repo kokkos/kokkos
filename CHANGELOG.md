@@ -78,7 +78,7 @@
 * Fix using CUDAToolkit for CMake 3.28.4 and higher [\#7062](https://github.com/kokkos/kokkos/pull/7062)
 * Fix using shared libraries and -fvisibility=hidden [\#7065](https://github.com/kokkos/kokkos/pull/7065)
 * Fix view reference counting when functor copy constructor throws in parallel dispatch [\#6289](https://github.com/kokkos/kokkos/pull/6289)
-* Fix `print_configuration` initialization setting not properly handled with `initialize(InitializationSetting)` [\#7098](https://github.com/kokkos/kokkos/pull/7098)
+* Fix `initialize(InitializationSetting)` for handling `print_configuration` setting [\#7098](https://github.com/kokkos/kokkos/pull/7098)
 * Fix thread-safety for the Serial and OpenMP backend [\#7080](https://github.com/kokkos/kokkos/pull/7080), [\#6151](https://github.com/kokkos/kokkos/pull/6151)
 
 ## [4.3.01](https://github.com/kokkos/kokkos/tree/4.3.01)
