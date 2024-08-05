@@ -824,14 +824,35 @@ IF (KOKKOS_ENABLE_OPENACC)
       Clang -Xopenmp-target=nvptx64-nvidia-cuda -march=${CLANG_CUDA_ARCH}
             -fopenmp-targets=nvptx64-nvidia-cuda
     )
+    IF(DEFINED ENV{CUDA_PATH})
+      COMPILER_SPECIFIC_LINK_OPTIONS(Clang -L$ENV{CUDA_PATH}/lib64)
+    ENDIF()
+    COMPILER_SPECIFIC_LIBS(
+      Clang -lcudart
+      NVHPC -cuda
+    )
   ELSEIF(KOKKOS_AMDGPU_ARCH_FLAG)
     COMPILER_SPECIFIC_FLAGS(
       Clang -Xopenmp-target=amdgcn-amd-amdhsa -march=${KOKKOS_AMDGPU_ARCH_FLAG}
             -fopenmp-targets=amdgcn-amd-amdhsa
     )
+    IF(DEFINED ENV{ROCM_PATH})
+      COMPILER_SPECIFIC_FLAGS(Clang -I$ENV{ROCM_PATH}/include)
+      COMPILER_SPECIFIC_LINK_OPTIONS(Clang -L$ENV{ROCM_PATH}/lib)
+    ENDIF()
+    COMPILER_SPECIFIC_LIBS(Clang -lamdhip64)
   ELSE()
+    # When not compiling for offload to any GPU, we're compiling for kernel
+    # execution on the host.  In that case, memory is shared between the OpenACC
+    # space and the host space.
     COMPILER_SPECIFIC_FLAGS(
-      NVHPC -acc
+      NVHPC -acc=multicore
+    )
+    COMPILER_SPECIFIC_DEFS(
+      NVHPC KOKKOS_OPENACC_WITHOUT_GPU
+    )
+    COMPILER_SPECIFIC_DEFS(
+      Clang KOKKOS_OPENACC_WITHOUT_GPU
     )
   ENDIF()
 ENDIF()

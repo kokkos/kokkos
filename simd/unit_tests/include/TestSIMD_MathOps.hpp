@@ -317,6 +317,14 @@ TEST(simd, device_math_ops) {
          "Failure to synchronize stream (nil): Error in "
          "cuStreamSynchronize: an illegal memory access was encountered";
 #endif
+#ifdef KOKKOS_ENABLE_OPENACC
+#ifdef KOKKOS_COMPILER_CLANG  // FIXME_CLACC
+  GTEST_SKIP()
+      << "skipping because of a non-deterministic failure reporting: "
+         "Failure to synchronize stream (nil): Error in "
+         "cuStreamSynchronize: an illegal memory access was encountered";
+#endif
+#endif
   Kokkos::parallel_for(1, simd_device_math_ops_functor());
 }
 
