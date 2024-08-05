@@ -14,7 +14,7 @@
 
 #### HIP:
 * Use builtin atomics in the HIP backend [\#6882](https://github.com/kokkos/kokkos/pull/6882) [\#7000](https://github.com/kokkos/kokkos/pull/7000)
-* Add advanced CMake options to control compilation flags for AMD GPUs [\#7127](https://github.com/kokkos/kokkos/pull/7127)
+* Enable user-specified compiler and linker flags for AMD GPUs [\#7127](https://github.com/kokkos/kokkos/pull/7127)
 
 #### SYCL:
 * Fix multi-GPU support [\#6887](https://github.com/kokkos/kokkos/pull/6887)
