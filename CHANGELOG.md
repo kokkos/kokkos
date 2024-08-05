@@ -72,8 +72,6 @@
 
 ### Bug Fixes
 * Do not return a copy of the input functor  in `Experimental::for_each` [\#6910](https://github.com/kokkos/kokkos/pull/6910)
-* Fix CUDA reduction overflow for `RangePolicy` [\#6578](https://github.com/kokkos/kokkos/pull/6578) **PATCH RELEASE 4.3.1**
-* `nvcc_wrapper`: bring back support for `--fmad` option [\#6931](https://github.com/kokkos/kokkos/pull/6931) **PATCH RELEASE 4.3.1**
 * Fix Makefile.kokkos for Threads [\#6896](https://github.com/kokkos/kokkos/pull/6896)
 * Fix `realloc` on views of non-default constructible element types [\#6993](https://github.com/kokkos/kokkos/pull/6993)
 * Fix undefined behavior in is_zero_byte [\#7014](https://github.com/kokkos/kokkos/pull/7014)
