@@ -13,7 +13,6 @@
 *  Use recommended/max team size functions in Cuda ParallelFor and Reduce constructors [\#6891](https://github.com/kokkos/kokkos/issues/6891)
 
 #### HIP:
-* MI300 support unified memory support [\#6877](https://github.com/kokkos/kokkos/pull/6877) **PATCH RELEASE 4.3.1**
 * Use builtin atomics in the HIP backend [\#6882](https://github.com/kokkos/kokkos/pull/6882) [\#7000](https://github.com/kokkos/kokkos/pull/7000)
 * Add advanced CMake options to control compilation flags for AMD GPUs [\#7127](https://github.com/kokkos/kokkos/pull/7127)
 
