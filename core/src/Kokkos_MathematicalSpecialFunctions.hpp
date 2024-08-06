@@ -22,9 +22,6 @@
 #endif
 
 #include <Kokkos_Macros.hpp>
-#include <cmath>
-#include <algorithm>
-#include <type_traits>
 #include <Kokkos_MathematicalConstants.hpp>
 #include <Kokkos_MathematicalFunctions.hpp>
 #include <Kokkos_NumericTraits.hpp>

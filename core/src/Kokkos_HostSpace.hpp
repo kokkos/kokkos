@@ -23,9 +23,6 @@ static_assert(false,
 #define KOKKOS_HOSTSPACE_HPP
 
 #include <cstring>
-#include <string>
-#include <iosfwd>
-#include <typeinfo>
 
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_Concepts.hpp>

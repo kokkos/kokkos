@@ -37,8 +37,6 @@ static_assert(false,
 #include <impl/Kokkos_FunctorAnalysis.hpp>
 
 #include <cstddef>
-#include <type_traits>
-#include <typeinfo>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

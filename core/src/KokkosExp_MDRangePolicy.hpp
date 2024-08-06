@@ -22,8 +22,6 @@ static_assert(false,
 #ifndef KOKKOS_CORE_EXP_MD_RANGE_POLICY_HPP
 #define KOKKOS_CORE_EXP_MD_RANGE_POLICY_HPP
 
-#include <initializer_list>
-
 #include <Kokkos_Layout.hpp>
 #include <Kokkos_Rank.hpp>
 #include <Kokkos_Array.hpp>

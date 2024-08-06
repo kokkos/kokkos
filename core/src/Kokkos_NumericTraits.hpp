@@ -28,7 +28,6 @@
 #include <cfloat>
 #include <climits>
 #include <cmath>
-#include <cstdint>
 #include <type_traits>
 
 namespace Kokkos::Experimental {

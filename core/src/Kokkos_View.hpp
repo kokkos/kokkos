@@ -25,7 +25,6 @@ static_assert(false,
 #include <type_traits>
 #include <string>
 #include <algorithm>
-#include <initializer_list>
 
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_HostSpace.hpp>

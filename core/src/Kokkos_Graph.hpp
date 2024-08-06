@@ -30,7 +30,6 @@
 // GraphAccess needs to be defined, not just declared
 #include <impl/Kokkos_GraphImpl.hpp>
 
-#include <functional>
 #include <memory>
 
 namespace Kokkos {
