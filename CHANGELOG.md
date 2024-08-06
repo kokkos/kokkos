@@ -54,7 +54,7 @@
 * Define and enforce new minimum compiler versions for C++20 support [\#7128](https://github.com/kokkos/kokkos/pull/7128), [\#7123](https://github.com/kokkos/kokkos/pull/7123)
 
 ### Incompatibilities (i.e. breaking changes)
-* Drop `Kokkos::Array` specialization of `Impl::ViewMapping` [\#6906](https://github.com/kokkos/kokkos/pull/6906)
+* Drop `Kokkos::Array` special treatment in `View`s [\#6906](https://github.com/kokkos/kokkos/pull/6906)
 * Remove support for NVHPC as CUDA device compiler [\#6987](https://github.com/kokkos/kokkos/pull/6987)
 * Drop `Experimental::RawMemoryAllocationFailure` [\#7145](https://github.com/kokkos/kokkos/pull/7145)
 
