@@ -10,41 +10,34 @@
 
 #### CUDA:
 * `nvcc_wrapper`: Adding ability to process `--disable-warnings` flag [\#6936](https://github.com/kokkos/kokkos/issues/6936)
-*  Use recommended/max team size functions in Cuda ParallelFor and Reduce constructors [\#6891](https://github.com/kokkos/kokkos/issues/6891)
+* Use recommended/max team size functions in Cuda ParallelFor and Reduce constructors [\#6891](https://github.com/kokkos/kokkos/issues/6891)
+* Improve compile-times when building with `Kokkos_ENABLE_DEBUG_BOUNDS_CHECK` in Cuda [\#7013](https://github.com/kokkos/kokkos/pull/7013)
 
 #### HIP:
 * Use HIP builtin atomics [\#6882](https://github.com/kokkos/kokkos/pull/6882) [\#7000](https://github.com/kokkos/kokkos/pull/7000)
 * Enable user-specified compiler and linker flags for AMD GPUs [\#7127](https://github.com/kokkos/kokkos/pull/7127)
 
 #### SYCL:
+* Add support for Graphs [\#6912](https://github.com/kokkos/kokkos/pull/6912)
 * Fix multi-GPU support [\#6887](https://github.com/kokkos/kokkos/pull/6887)
-* Improve `team_reduce` performance [\#6562](https://github.com/kokkos/kokkos/pull/6562)
-* Unroll shuffle loops for top-level `parallel_reduce` and `parallel_scan` [\#6750](https://github.com/kokkos/kokkos/pull/6750)
+* Improve performance of reduction and scan operations [\#6562](https://github.com/kokkos/kokkos/pull/6562), [\#6750](https://github.com/kokkos/kokkos/pull/6750)
 * Fix lock for guarding scratch space in `TeamPolicy` `parallel_reduce` [\#6988](https://github.com/kokkos/kokkos/pull/6988)
 * Include submission command queue property information into `SYCL::print_configuration()` [\#7004](https://github.com/kokkos/kokkos/pull/7004)
-* SYCL: Add support for Graphs [\#6912](https://github.com/kokkos/kokkos/pull/6912)
 
 #### OpenMPTarget:
 * Honor user requested loop ordering in `MDRange` policy [\#6925](https://github.com/kokkos/kokkos/pull/6925)
 * Prevent data races by guarding the scratch space used in `parallel_scan` [\#6998](https://github.com/kokkos/kokkos/pull/6998)
 
-#### OpenACC:
-* Change the default execution behavior of the parallel_for(team-policy) constructs in the OpenACC backend [\#7012](https://github.com/kokkos/kokkos/pull/7012)
-
 #### HPX:
 * Workaround issue with template argument deduction to support compilation with NVCC [\#7015](https://github.com/kokkos/kokkos/pull/7015)
 
 ### General Enhancements
+* Improve performance of view copies in host parallel regions [\#6730](https://github.com/kokkos/kokkos/pull/6730)
 * Harmonize convertibility rules of `Kokkos::RandomAccessIterator` with `View`s [\#6929](https://github.com/kokkos/kokkos/pull/6929)
-* Add `kokkos_swap(Array<T, N>)` specialization [\#6943](https://github.com/kokkos/kokkos/pull/6943)
+* Updates for `Kokkos::Array`: add `kokkos_swap(Array<T, N>)` specialization [\#6943](https://github.com/kokkos/kokkos/pull/6943), add `Kokkos::to_array` [\#6375](https://github.com/kokkos/kokkos/pull/6375),  make `Kokkos::Array` equality-comparable [\#7148](https://github.com/kokkos/kokkos/pull/7148)
 * Add a check precondition non-overlapping ranges for the `adjacent_difference` algorithm in debug mode [\#6922](https://github.com/kokkos/kokkos/pull/6922)
-* Improve compile-times when building with `Kokkos_ENABLE_DEBUG_BOUNDS_CHECK` in Cuda [\#7013](https://github.com/kokkos/kokkos/pull/7013)
-* Adding `Kokkos::to_array` [\#6375](https://github.com/kokkos/kokkos/pull/6375)
 * Add deduction guides for `TeamPolicy` [\#7030](https://github.com/kokkos/kokkos/pull/7030)
 * SIMD: Allow flexible vector width for 32 bit types [\#6802](https://github.com/kokkos/kokkos/pull/6802)
-* Host: Use `unlikely` attribute when reference counting views on host backends.[\#6730](https://github.com/kokkos/kokkos/pull/6730)
-* Make `Kokkos::Array` equality-comparable [\#7148](https://github.com/kokkos/kokkos/pull/7148)
-* Add nvidia Grace CPU architecture: `Kokkos_ARCH_ARMV9_GRACE` [\#7158](https://github.com/kokkos/kokkos/pull/7158)
 * Structured binding support for `Kokkos::complex` [\#7040](https://github.com/kokkos/kokkos/pull/7040)
 
 ### Build System Changes
@@ -52,10 +45,13 @@
 * Update Intel GPU architectures in Makefile [\#6895](https://github.com/kokkos/kokkos/pull/6895)
 * Fix use of OpenMP with Cuda or HIP as compile language [\#6972](https://github.com/kokkos/kokkos/pull/6972)
 * Define and enforce new minimum compiler versions for C++20 support [\#7128](https://github.com/kokkos/kokkos/pull/7128), [\#7123](https://github.com/kokkos/kokkos/pull/7123)
+* Add nvidia Grace CPU architecture: `Kokkos_ARCH_ARMV9_GRACE` [\#7158](https://github.com/kokkos/kokkos/pull/7158)
+* Fix Makefile.kokkos for Threads [\#6896](https://github.com/kokkos/kokkos/pull/6896)
+* Remove support for NVHPC as CUDA device compiler [\#6987](https://github.com/kokkos/kokkos/pull/6987)
+* Fix using CUDAToolkit for CMake 3.28.4 and higher [\#7062](https://github.com/kokkos/kokkos/pull/7062)
 
 ### Incompatibilities (i.e. breaking changes)
 * Drop `Kokkos::Array` special treatment in `View`s [\#6906](https://github.com/kokkos/kokkos/pull/6906)
-* Remove support for NVHPC as CUDA device compiler [\#6987](https://github.com/kokkos/kokkos/pull/6987)
 * Drop `Experimental::RawMemoryAllocationFailure` [\#7145](https://github.com/kokkos/kokkos/pull/7145)
 
 ### Deprecations
@@ -69,15 +65,14 @@
 
 ### Bug Fixes
 * Do not return a copy of the input functor in `Experimental::for_each` [\#6910](https://github.com/kokkos/kokkos/pull/6910)
-* Fix Makefile.kokkos for Threads [\#6896](https://github.com/kokkos/kokkos/pull/6896)
 * Fix `realloc` on views of non-default constructible element types [\#6993](https://github.com/kokkos/kokkos/pull/6993)
 * Fix undefined behavior in `View` initialization or fill with zeros [\#7014](https://github.com/kokkos/kokkos/pull/7014)
 * Fix `sort_by_key` on host execution spaces when building with NVCC [\#7059](https://github.com/kokkos/kokkos/pull/7059)
-* Fix using CUDAToolkit for CMake 3.28.4 and higher [\#7062](https://github.com/kokkos/kokkos/pull/7062)
 * Fix using shared libraries and -fvisibility=hidden [\#7065](https://github.com/kokkos/kokkos/pull/7065)
 * Fix view reference counting when functor copy constructor throws in parallel dispatch [\#6289](https://github.com/kokkos/kokkos/pull/6289)
 * Fix `initialize(InitializationSetting)` for handling `print_configuration` setting [\#7098](https://github.com/kokkos/kokkos/pull/7098)
 * Thread safety fixes for the Serial and OpenMP backend [\#7080](https://github.com/kokkos/kokkos/pull/7080), [\#6151](https://github.com/kokkos/kokkos/pull/6151)
+* Make `TeamPolicy` `parallel_for` execute on the correct async queue for OpenACC backend [\#7012](https://github.com/kokkos/kokkos/pull/7012)
 
 ## [4.3.01](https://github.com/kokkos/kokkos/tree/4.3.01)
 [Full Changelog](https://github.com/kokkos/kokkos/compare/4.3.00...4.3.01)
