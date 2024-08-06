@@ -35,7 +35,7 @@
 * Workaround issue with template argument deduction to support compilation with NVCC [\#7015](https://github.com/kokkos/kokkos/pull/7015)
 
 ### General Enhancements
-* Add converting constructor in `Kokkos::RandomAccessIterator` [\#6929](https://github.com/kokkos/kokkos/pull/6929)
+* Harmonize convertibility rules of `Kokkos::RandomAccessIterator` with `View`s [\#6929](https://github.com/kokkos/kokkos/pull/6929)
 * Add `kokkos_swap(Array<T, N>)` specialization [\#6943](https://github.com/kokkos/kokkos/pull/6943)
 * Add a check precondition non-overlapping ranges for the `adjacent_difference` algorithm in debug mode [\#6922](https://github.com/kokkos/kokkos/pull/6922)
 * Improve compile-times when building with `Kokkos_ENABLE_DEBUG_BOUNDS_CHECK` in Cuda [\#7013](https://github.com/kokkos/kokkos/pull/7013)
