@@ -62,7 +62,7 @@
 * Remove `Experimental::LayoutTiled` class template and deprecate `is_layouttiled` trait [\#6907](https://github.com/kokkos/kokkos/pull/6907)
 * Deprecate `Kokkos::layout_iterate_type_selector` [\#7076](https://github.com/kokkos/kokkos/pull/7076)
 * Deprecate specialization of `Kokkos::pair` for a single element [\#6947](https://github.com/kokkos/kokkos/pull/6947)
-* Deprecate allocation step inside `deep_copy(UnorderedMap,UnorderedMap)`, require map capacities are identical instead [\#6812](https://github.com/kokkos/kokkos/pull/6812)
+* Deprecate `deep_copy` of `UnorderedMap` of different size [\#6812](https://github.com/kokkos/kokkos/pull/6812)
 * Deprecate trailing `Proxy` template argument in `Kokkos::Array` [\#6934](https://github.com/kokkos/kokkos/pull/6934)
 * Deprecate implicit conversions for `ChunkSize` arg in `RangePolicy` constructor [\#7151](https://github.com/kokkos/kokkos/pull/7151)
 * Deprecate implicit conversions for execution space which previously allowed them (Serial, OpenMP, Cuda, HIP, HPX) [\#7156](https://github.com/kokkos/kokkos/pull/7156)
