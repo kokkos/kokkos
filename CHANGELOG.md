@@ -13,7 +13,7 @@
 *  Use recommended/max team size functions in Cuda ParallelFor and Reduce constructors [\#6891](https://github.com/kokkos/kokkos/issues/6891)
 
 #### HIP:
-* Use builtin atomics in the HIP backend [\#6882](https://github.com/kokkos/kokkos/pull/6882) [\#7000](https://github.com/kokkos/kokkos/pull/7000)
+* Use HIP builtin atomics [\#6882](https://github.com/kokkos/kokkos/pull/6882) [\#7000](https://github.com/kokkos/kokkos/pull/7000)
 * Enable user-specified compiler and linker flags for AMD GPUs [\#7127](https://github.com/kokkos/kokkos/pull/7127)
 
 #### SYCL:
