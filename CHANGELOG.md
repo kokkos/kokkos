@@ -26,7 +26,7 @@
 
 #### OpenMPTarget:
 * Honor user requested loop ordering in MDRange policy [\#6925](https://github.com/kokkos/kokkos/pull/6925)
-* Use mutex lock for guarding scratch space in parallel_scan. [\#6998](https://github.com/kokkos/kokkos/pull/6998)
+* Prevent data races by guarding the scratch space used in `parallel_scan` [\#6998](https://github.com/kokkos/kokkos/pull/6998)
 
 #### OpenACC:
 * Change the default execution behavior of the parallel_for(team-policy) constructs in the OpenACC backend [\#7012](https://github.com/kokkos/kokkos/pull/7012)
