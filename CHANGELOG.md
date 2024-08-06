@@ -51,7 +51,7 @@
 * Do not require OpenMP support for languages other than CXX [\#6965](https://github.com/kokkos/kokkos/pull/6965)
 * Update Intel GPU architectures in Makefile [\#6895](https://github.com/kokkos/kokkos/pull/6895)
 * Fix use of OpenMP with Cuda or HIP as compile language [\#6972](https://github.com/kokkos/kokkos/pull/6972)
-* Define minimum compiler versions for C++20 support [\#7128](https://github.com/kokkos/kokkos/pull/7128), [\#7123](https://github.com/kokkos/kokkos/pull/7123)
+* Define and enforce new minimum compiler versions for C++20 support [\#7128](https://github.com/kokkos/kokkos/pull/7128), [\#7123](https://github.com/kokkos/kokkos/pull/7123)
 
 ### Incompatibilities (i.e. breaking changes)
 * Drop `Kokkos::Array` specialization of `Impl::ViewMapping` [\#6906](https://github.com/kokkos/kokkos/pull/6906)
