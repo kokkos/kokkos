@@ -40,7 +40,7 @@
 * Add a check precondition non-overlapping ranges for the `adjacent_difference` algorithm in debug mode [\#6922](https://github.com/kokkos/kokkos/pull/6922)
 * Improve compile-times when building with `Kokkos_ENABLE_DEBUG_BOUNDS_CHECK` in Cuda [\#7013](https://github.com/kokkos/kokkos/pull/7013)
 * Adding `Kokkos::to_array` [\#6375](https://github.com/kokkos/kokkos/pull/6375)
-* CTAD deduction guides for TeamPolicy [\#7030](https://github.com/kokkos/kokkos/pull/7030)
+* Add deduction guides for `TeamPolicy` [\#7030](https://github.com/kokkos/kokkos/pull/7030)
 * SIMD: Allow flexible vector width for 32 bit types [\#6802](https://github.com/kokkos/kokkos/pull/6802)
 * Host: Use `unlikely` attribute when reference counting views on host backends.[\#6730](https://github.com/kokkos/kokkos/pull/6730)
 * Make `Kokkos::Array` equality-comparable [\#7148](https://github.com/kokkos/kokkos/pull/7148)
