@@ -25,7 +25,7 @@
 * SYCL: Add support for Graphs [\#6912](https://github.com/kokkos/kokkos/pull/6912)
 
 #### OpenMPTarget:
-* Honor user requested loop ordering in MDRange policy [\#6925](https://github.com/kokkos/kokkos/pull/6925)
+* Honor user requested loop ordering in `MDRange` policy [\#6925](https://github.com/kokkos/kokkos/pull/6925)
 * Prevent data races by guarding the scratch space used in `parallel_scan` [\#6998](https://github.com/kokkos/kokkos/pull/6998)
 
 #### OpenACC:
