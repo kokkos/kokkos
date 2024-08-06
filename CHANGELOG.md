@@ -65,7 +65,7 @@
 * Deprecate `deep_copy` of `UnorderedMap` of different size [\#6812](https://github.com/kokkos/kokkos/pull/6812)
 * Deprecate trailing `Proxy` template argument of `Kokkos::Array` [\#6934](https://github.com/kokkos/kokkos/pull/6934)
 * Deprecate implicit conversions of integers to `ChunkSize` [\#7151](https://github.com/kokkos/kokkos/pull/7151)
-* Deprecate implicit conversions for execution space which previously allowed them (Serial, OpenMP, Cuda, HIP, HPX) [\#7156](https://github.com/kokkos/kokkos/pull/7156)
+* Deprecate implicit conversions to execution spaces [\#7156](https://github.com/kokkos/kokkos/pull/7156)
 
 ### Bug Fixes
 * Do not return a copy of the input functor in `Experimental::for_each` [\#6910](https://github.com/kokkos/kokkos/pull/6910)
