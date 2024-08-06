@@ -9,7 +9,7 @@
 ### Backend and Architecture Enhancements:
 
 #### CUDA:
-* nvcc(wrapper): Adding ability to process `--disable-warnings` flag [6936](https://github.com/kokkos/kokkos/issues/6936)
+* `nvcc_wrapper`: Adding ability to process `--disable-warnings` flag [\#6936](https://github.com/kokkos/kokkos/issues/6936)
 *  Use recommended/max team size functions in Cuda ParallelFor and Reduce constructors [\#6891](https://github.com/kokkos/kokkos/issues/6891)
 
 #### HIP:
