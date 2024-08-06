@@ -19,12 +19,9 @@
 
 #include <Kokkos_Macros.hpp>
 
-#include <algorithm>
-
 #include <utility>
 
 #include <impl/Kokkos_Profiling_Interface.hpp>
-#include <typeinfo>
 
 namespace Kokkos {
 namespace Impl {

@@ -18,7 +18,6 @@
 #define KOKKOS_BITOPS_HPP
 
 #include <Kokkos_Macros.hpp>
-#include <cstdint>
 #include <climits>
 
 #if defined(KOKKOS_COMPILER_INTEL) || defined(KOKKOS_COMPILER_INTEL_LLVM)

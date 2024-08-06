@@ -26,7 +26,6 @@
 #include <impl/Kokkos_ExecSpaceManager.hpp>
 #include <impl/Kokkos_CPUDiscovery.hpp>
 
-#include <algorithm>
 #include <cctype>
 #include <cstring>
 #include <iostream>
