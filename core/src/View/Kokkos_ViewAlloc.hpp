@@ -172,11 +172,11 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
     const Kokkos::Impl::ParallelFor<ViewValueFunctor, PolicyType> closure(
         *this, policy);
     closure.execute();
-    if (default_exec_space || std::is_same_v<Tag, DestroyTag>)
-      space.fence("Kokkos::Impl::ViewValueFunctor: View init/destroy fence");
     if (Kokkos::Profiling::profileLibraryLoaded()) {
       Kokkos::Profiling::endParallelFor(kpID);
     }
+    if (default_exec_space || std::is_same_v<Tag, DestroyTag>)
+      space.fence("Kokkos::Impl::ViewValueFunctor: View init/destroy fence");
   }
 
   void construct_shared_allocation() { construct_dispatch(); }
@@ -302,13 +302,13 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
     const Kokkos::Impl::ParallelFor<ViewValueFunctor, PolicyType> closure(
         *this, policy);
     closure.execute();
+    if (Kokkos::Profiling::profileLibraryLoaded()) {
+      Kokkos::Profiling::endParallelFor(kpID);
+    }
     if (default_exec_space)
       space.fence(
           "Kokkos::Impl::ViewValueFunctor: Fence after setting values in "
           "view");
-    if (Kokkos::Profiling::profileLibraryLoaded()) {
-      Kokkos::Profiling::endParallelFor(kpID);
-    }
   }
 
   void destroy_shared_allocation() {}
