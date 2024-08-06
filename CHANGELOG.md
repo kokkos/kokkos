@@ -19,7 +19,7 @@
 #### SYCL:
 * Fix multi-GPU support [\#6887](https://github.com/kokkos/kokkos/pull/6887)
 * Improve team_reduce performance [\#6562](https://github.com/kokkos/kokkos/pull/6562)
-* Unroll shuffle loops for top-level parallel_reduce and parallel_scan [\#6750](https://github.com/kokkos/kokkos/pull/6750)
+* Unroll shuffle loops for top-level `parallel_reduce` and `parallel_scan` [\#6750](https://github.com/kokkos/kokkos/pull/6750)
 * Fix lock for guarding scratch space in `TeamPolicy` `parallel_reduce` [\#6988](https://github.com/kokkos/kokkos/pull/6988)
 * Print submission command queue property [\#7004](https://github.com/kokkos/kokkos/pull/7004)
 * SYCL: Add support for Graphs [\#6912](https://github.com/kokkos/kokkos/pull/6912)
