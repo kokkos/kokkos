@@ -728,9 +728,6 @@ parallel_reduce(Impl::ThreadVectorRangeBoundariesStruct<
  *  The range [0..N) is mapped to all vector lanes of
  *  the calling thread and a reduction of val is performed using +=
  *  and output into result.
- *
- *  The identity value for the += operator is assumed to be the default
- *  constructed value.
  */
 template <typename iType, class Closure, typename ValueType>
 KOKKOS_INLINE_FUNCTION std::enable_if_t<!is_reducer<ValueType>::value>
