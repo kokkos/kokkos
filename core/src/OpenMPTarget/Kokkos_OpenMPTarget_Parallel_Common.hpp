@@ -22,6 +22,7 @@
 #include <Kokkos_Parallel.hpp>
 #include <OpenMPTarget/Kokkos_OpenMPTarget_Reducer.hpp>
 #include <OpenMPTarget/Kokkos_OpenMPTarget_Macros.hpp>
+#include <OpenMPTarget/Kokkos_OpenMPTarget_FunctorAdapter.hpp>
 
 namespace Kokkos {
 namespace Impl {
@@ -72,7 +73,6 @@ template <class FunctorType, class ReducerType, class PointerType,
 struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
                                 ReducerType, PointerType, ValueType> {
   using PolicyType = Kokkos::RangePolicy<PolicyArgs...>;
-  using TagType    = typename PolicyType::work_tag;
   using ReducerTypeFwd =
       std::conditional_t<std::is_same<InvalidType, ReducerType>::value,
                          FunctorType, ReducerType>;
@@ -82,7 +82,10 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
 
   using ParReduceCopy = ParallelReduceCopy<PointerType>;
 
-  static void execute_reducer(const FunctorType& f, const PolicyType& p,
+  using FunctorAdapter =
+      Kokkos::Experimental::Impl::FunctorAdapter<FunctorType, PolicyType>;
+
+  static void execute_reducer(const FunctorAdapter& f, const PolicyType& p,
                               PointerType result_ptr, bool ptr_on_device) {
     Experimental::Impl::OpenMPTargetInternal::verify_is_process(
         "Kokkos::Experimental::OpenMPTarget RangePolicy "
@@ -113,19 +116,15 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
                                                      : f) reduction(custom \
                                                                     : result)
     for (auto i = begin; i < end; ++i) {
-      if constexpr (std::is_void_v<TagType>) {
-        f(i, result);
-      } else {
-        f(TagType(), i, result);
-      }
+      f(i, result);
     }
 
     ParReduceCopy::memcpy_result(result_ptr, &result, sizeof(ValueType),
                                  ptr_on_device);
   }
 
-  template <class TagType, int NumReductions>
-  static void execute_array(const FunctorType& f, const PolicyType& p,
+  template <int NumReductions>
+  static void execute_array(const FunctorAdapter& f, const PolicyType& p,
                             PointerType result_ptr, bool ptr_on_device) {
     Experimental::Impl::OpenMPTargetInternal::verify_is_process(
         "Kokkos::Experimental::OpenMPTarget RangePolicy "
@@ -152,25 +151,13 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
       if constexpr (std::is_arithmetic<ValueType>::value) {
 #pragma omp target teams distribute parallel for \
          map(to:f) reduction(+: result)
-        for (auto i = begin; i < end; ++i)
-
-          if constexpr (std::is_void_v<TagType>) {
-            f(i, result);
-          } else {
-            f(TagType(), i, result);
-          }
+        for (auto i = begin; i < end; ++i) f(i, result);
       } else {
 #pragma omp declare reduction(custom:ValueType : omp_out += omp_in)
 #pragma omp target teams distribute parallel for map(to                    \
                                                      : f) reduction(custom \
                                                                     : result)
-        for (auto i = begin; i < end; ++i)
-
-          if constexpr (std::is_void_v<TagType>) {
-            f(i, result);
-          } else {
-            f(TagType(), i, result);
-          }
+        for (auto i = begin; i < end; ++i) f(i, result);
       }
 
       ParReduceCopy::memcpy_result(result_ptr, &result, sizeof(ValueType),
@@ -188,11 +175,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
       }
 #pragma omp target teams distribute parallel for map(to:f) reduction(+:result[:NumReductions])
       for (auto i = begin; i < end; ++i) {
-        if constexpr (std::is_void_v<TagType>) {
-          f(i, result);
-        } else {
-          f(TagType(), i, result);
-        }
+        f(i, result);
       }
 
       ParReduceCopy::memcpy_result(
@@ -200,7 +183,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
     }
   }
 
-  static void execute_init_join(const FunctorType& f, const PolicyType& p,
+  static void execute_init_join(const FunctorAdapter& f, const PolicyType& p,
                                 PointerType ptr, const bool ptr_on_device) {
     Experimental::Impl::OpenMPTargetInternal::verify_is_process(
         "Kokkos::Experimental::OpenMPTarget RangePolicy "
@@ -227,7 +210,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
         p.space().impl_internal_space_instance()->MAX_ACTIVE_THREADS /
         max_team_threads;
     // Number of elements in the reduction
-    const auto value_count = FunctorAnalysis::value_count(f);
+    const auto value_count = FunctorAnalysis::value_count(f.get_functor());
 
     // Allocate scratch per active thread. Achieved by setting the first
     // parameter of `resize_scratch=1`.
@@ -237,7 +220,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
     ValueType* scratch_ptr = static_cast<ValueType*>(
         p.space().impl_internal_space_instance()->get_scratch_ptr());
 
-    typename FunctorAnalysis::Reducer final_reducer(f);
+    typename FunctorAnalysis::Reducer final_reducer(f.get_functor());
 
     if (end <= begin) {
 #pragma omp target map(to : final_reducer) is_device_ptr(scratch_ptr)
@@ -281,11 +264,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
         // Accumulate partial results in thread specific storage.
 #pragma omp for simd
         for (auto i = team_begin; i < team_end; ++i) {
-          if constexpr (std::is_void_v<TagType>) {
-            f(i, result);
-          } else {
-            f(TagType(), i, result);
-          }
+          f(i, result);
         }
 
         // Reduce all paritial results within a team.
@@ -346,7 +325,6 @@ template <class FunctorType, class ReducerType, class PointerType,
 struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
                                 ReducerType, PointerType, ValueType> {
   using PolicyType = TeamPolicyInternal<PolicyArgs...>;
-  using TagType    = typename PolicyType::work_tag;
   using ReducerTypeFwd =
       std::conditional_t<std::is_same<InvalidType, ReducerType>::value,
                          FunctorType, ReducerType>;
@@ -357,7 +335,10 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
 
   using ParReduceCopy = ParallelReduceCopy<PointerType>;
 
-  static void execute_reducer(const FunctorType& f, const PolicyType& p,
+  using FunctorAdapter =
+      Kokkos::Experimental::Impl::FunctorAdapter<FunctorType, PolicyType>;
+
+  static void execute_reducer(const FunctorAdapter& f, const PolicyType& p,
                               PointerType result_ptr, bool ptr_on_device) {
     Experimental::Impl::OpenMPTargetInternal::verify_is_process(
         "Kokkos::Experimental::OpenMPTarget TeamPolicy "
@@ -418,10 +399,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
         typename PolicyType::member_type team(
             league_id, league_size, team_size, vector_length, scratch_ptr,
             blockIdx, shmem_size_L0, shmem_size_L1);
-        if constexpr (std::is_void_v<TagType>)
-          f(team, result);
-        else
-          f(TagType(), team, result);
+        f(team, result);
       }
     }
 #else
@@ -437,10 +415,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
         typename PolicyType::member_type team(i, league_size, team_size,
                                               vector_length, scratch_ptr, i,
                                               shmem_size_L0, shmem_size_L1);
-        if constexpr (std::is_void_v<TagType>)
-          f(team, result);
-        else
-          f(TagType(), team, result);
+        f(team, result);
       }
     }
 #endif
@@ -451,7 +426,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
   }
 
   template <int NumReductions>
-  static void execute_array(const FunctorType& f, const PolicyType& p,
+  static void execute_array(const FunctorAdapter& f, const PolicyType& p,
                             PointerType result_ptr, bool ptr_on_device) {
     Experimental::Impl::OpenMPTargetInternal::verify_is_process(
         "Kokkos::Experimental::OpenMPTarget TeamPolicy "
@@ -510,10 +485,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
             typename PolicyType::member_type team(
                 league_id, league_size, team_size, vector_length, scratch_ptr,
                 blockIdx, shmem_size_L0, shmem_size_L1);
-            if constexpr (std::is_void_v<TagType>)
-              f(team, result);
-            else
-              f(TagType(), team, result);
+            f(team, result);
           }
         }
       } else {
@@ -537,10 +509,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
             typename PolicyType::member_type team(
                 league_id, league_size, team_size, vector_length, scratch_ptr,
                 blockIdx, shmem_size_L0, shmem_size_L1);
-            if constexpr (std::is_void_v<TagType>)
-              f(team, result);
-            else
-              f(TagType(), team, result);
+            f(team, result);
           }
         }
       }
@@ -568,10 +537,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
           typename PolicyType::member_type team(
               league_id, league_size, team_size, vector_length, scratch_ptr,
               blockIdx, shmem_size_L0, shmem_size_L1);
-          if constexpr (std::is_void_v<TagType>)
-            f(team, result);
-          else
-            f(TagType(), team, result);
+          f(team, result);
         }
       }
 
@@ -583,7 +549,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
 
   // FIXME_OPENMPTARGET : This routine is a copy from `parallel_reduce` over
   // RangePolicy. Need a new implementation.
-  static void execute_init_join(const FunctorType& f, const PolicyType& p,
+  static void execute_init_join(const FunctorAdapter& f, const PolicyType& p,
                                 PointerType ptr, const bool ptr_on_device) {
     Experimental::Impl::OpenMPTargetInternal::verify_is_process(
         "Kokkos::Experimental::OpenMPTarget TeamPolicy "
@@ -617,14 +583,14 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     const auto nteams = league_size;
 
     // Number of elements in the reduction
-    const auto value_count = FunctorAnalysis::value_count(f);
+    const auto value_count = FunctorAnalysis::value_count(f.get_functor());
 
     // Allocate scratch per active thread.
     p.space().impl_internal_space_instance()->resize_scratch(
         1, 0, value_count * sizeof(ValueType), league_size);
     void* scratch_ptr =
         p.space().impl_internal_space_instance()->get_scratch_ptr();
-    typename FunctorAnalysis::Reducer final_reducer(f);
+    typename FunctorAnalysis::Reducer final_reducer(f.get_functor());
 
     if (end <= begin) {
 // If there is no work to be done, copy back the initialized values and
@@ -668,11 +634,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
           typename PolicyType::member_type team(
               league_id, league_size, team_size, vector_length, scratch_ptr,
               team_num, shmem_size_L0, shmem_size_L1);
-          if constexpr (std::is_void_v<TagType>) {
-            f(team, result);
-          } else {
-            f(TagType(), team, result);
-          }
+          f(team, result);
         }
       }  // end parallel
     }    // end target
