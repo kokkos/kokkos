@@ -1025,13 +1025,16 @@ void test_view_mapping() {
     Kokkos::parallel_reduce(
         Kokkos::RangePolicy<host_exec_space>(0, 10),
         KOKKOS_LAMBDA(int, int& e) {
-          // an unmanaged copy.  When the parallel dispatch accepts a move for
-          // the lambda, this count should become 1.
+          // for parallel_reduce we copy the functor into a combined
+          // functor-reducer object (with reference-counting on) before
+          // constructing the ParallelReduce object (with reference-counting
+          // turned off). When the parallel dispatch accepts a move for the
+          // lambda, this count should become 2.
 
-          if (a.use_count() != 2) ++e;
+          if (a.use_count() != 3) ++e;
           V x = a;
-          if (a.use_count() != 2) ++e;
-          if (x.use_count() != 2) ++e;
+          if (a.use_count() != 3) ++e;
+          if (x.use_count() != 3) ++e;
         },
         errors);
     ASSERT_EQ(errors, 0);
