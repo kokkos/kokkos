@@ -24,6 +24,9 @@
 * Fix lock for guarding scratch space in `TeamPolicy` `parallel_reduce` [\#6988](https://github.com/kokkos/kokkos/pull/6988)
 * Include submission command queue property information into `SYCL::print_configuration()` [\#7004](https://github.com/kokkos/kokkos/pull/7004)
 
+#### OpenACC:
+* Make `TeamPolicy` `parallel_for` execute on the correct async queue [\#7012](https://github.com/kokkos/kokkos/pull/7012)
+
 #### OpenMPTarget:
 * Honor user requested loop ordering in `MDRange` policy [\#6925](https://github.com/kokkos/kokkos/pull/6925)
 * Prevent data races by guarding the scratch space used in `parallel_scan` [\#6998](https://github.com/kokkos/kokkos/pull/6998)
@@ -34,10 +37,10 @@
 ### General Enhancements
 * Improve performance of view copies in host parallel regions [\#6730](https://github.com/kokkos/kokkos/pull/6730)
 * Harmonize convertibility rules of `Kokkos::RandomAccessIterator` with `View`s [\#6929](https://github.com/kokkos/kokkos/pull/6929)
-* Updates for `Kokkos::Array`: add `kokkos_swap(Array<T, N>)` specialization [\#6943](https://github.com/kokkos/kokkos/pull/6943), add `Kokkos::to_array` [\#6375](https://github.com/kokkos/kokkos/pull/6375),  make `Kokkos::Array` equality-comparable [\#7148](https://github.com/kokkos/kokkos/pull/7148)
 * Add a check precondition non-overlapping ranges for the `adjacent_difference` algorithm in debug mode [\#6922](https://github.com/kokkos/kokkos/pull/6922)
 * Add deduction guides for `TeamPolicy` [\#7030](https://github.com/kokkos/kokkos/pull/7030)
 * SIMD: Allow flexible vector width for 32 bit types [\#6802](https://github.com/kokkos/kokkos/pull/6802)
+* Updates for `Kokkos::Array`: add `kokkos_swap(Array<T, N>)` specialization [\#6943](https://github.com/kokkos/kokkos/pull/6943), add `Kokkos::to_array` [\#6375](https://github.com/kokkos/kokkos/pull/6375),  make `Kokkos::Array` equality-comparable [\#7148](https://github.com/kokkos/kokkos/pull/7148)
 * Structured binding support for `Kokkos::complex` [\#7040](https://github.com/kokkos/kokkos/pull/7040)
 
 ### Build System Changes
@@ -72,7 +75,6 @@
 * Fix view reference counting when functor copy constructor throws in parallel dispatch [\#6289](https://github.com/kokkos/kokkos/pull/6289)
 * Fix `initialize(InitializationSetting)` for handling `print_configuration` setting [\#7098](https://github.com/kokkos/kokkos/pull/7098)
 * Thread safety fixes for the Serial and OpenMP backend [\#7080](https://github.com/kokkos/kokkos/pull/7080), [\#6151](https://github.com/kokkos/kokkos/pull/6151)
-* Make `TeamPolicy` `parallel_for` execute on the correct async queue for OpenACC backend [\#7012](https://github.com/kokkos/kokkos/pull/7012)
 
 ## [4.3.01](https://github.com/kokkos/kokkos/tree/4.3.01)
 [Full Changelog](https://github.com/kokkos/kokkos/compare/4.3.00...4.3.01)
