@@ -197,8 +197,7 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
   /** \brief finalize chunk_size if it was set to AUTO*/
   inline void set_auto_chunk_size() {
 #ifdef KOKKOS_ENABLE_SYCL
-    if (std::is_same_v<typename traits::execution_space,
-                       Kokkos::Experimental::SYCL>) {
+    if (std::is_same_v<typename traits::execution_space, Kokkos::SYCL>) {
       // chunk_size <=1 lets the compiler choose the workgroup size when
       // launching kernels
       m_granularity      = 1;
@@ -1162,7 +1161,7 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
                                   Kokkos::HIP>
 #elif defined(KOKKOS_ENABLE_SYCL)
                 || std::is_same_v<typename TeamHandle::execution_space,
-                                  Kokkos::Experimental::SYCL>
+                                  Kokkos::SYCL>
 #endif
   )
     policy.team.vector_reduce(
@@ -1198,7 +1197,7 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
                                   Kokkos::HIP>
 #elif defined(KOKKOS_ENABLE_SYCL)
                 || std::is_same_v<typename TeamHandle::execution_space,
-                                  Kokkos::Experimental::SYCL>
+                                  Kokkos::SYCL>
 #endif
   )
     policy.team.vector_reduce(

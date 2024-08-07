@@ -34,10 +34,9 @@ TEST(TEST_CATEGORY, view_remap) {
   std::conditional<std::is_same<TEST_EXECSPACE, Kokkos::HIP>::value, \
                    Kokkos::HIPHostPinnedSpace, TEST_EXECSPACE>::type
 #elif defined(KOKKOS_ENABLE_SYCL)
-#define EXECSPACE                                                      \
-  std::conditional<                                                    \
-      std::is_same<TEST_EXECSPACE, Kokkos::Experimental::SYCL>::value, \
-      Kokkos::Experimental::SYCLHostUSMSpace, TEST_EXECSPACE>::type
+#define EXECSPACE                                                     \
+  std::conditional<std::is_same<TEST_EXECSPACE, Kokkos::SYCL>::value, \
+                   Kokkos::SYCLHostUSMSpace, TEST_EXECSPACE>::type
 #elif defined(KOKKOS_ENABLE_OPENMPTARGET)
 #define EXECSPACE Kokkos::HostSpace
 #else
