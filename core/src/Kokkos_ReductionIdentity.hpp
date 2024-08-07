@@ -407,15 +407,15 @@ KOKKOS_FUNCTION constexpr T reduction_identity_sum_or_value_initialize() {
   else if constexpr (std::is_default_constructible_v<T>)
     return T{};
   else
-    static_assert(!std::is_default_constructible_v<T>,
+    static_assert(std::is_default_constructible_v<T>,
                   "Kokkos::reduction_identity<T>::sum() is not defined nor is "
                   "T default constructible");
 }
 
 template <typename T>
-KOKKOS_FUNCTION constexpr T& reduction_identity_sum_or_value_initialize(T& t) {
+KOKKOS_FUNCTION constexpr void reduction_identity_sum_or_value_initialize(
+    T& t) {
   t = reduction_identity_sum_or_value_initialize<T>();
-  return t;
 }
 
 }  // namespace Impl
