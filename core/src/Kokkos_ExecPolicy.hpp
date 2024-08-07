@@ -290,6 +290,8 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
 #else
       (void)bound;
 #endif
+    } else {
+      (void)bound;
     }
   }
 

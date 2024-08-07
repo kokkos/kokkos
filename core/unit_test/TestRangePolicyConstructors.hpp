@@ -133,14 +133,16 @@ struct TestIndexConversionCheck {
 
 TEST(TEST_CATEGORY, range_policy_one_way_convertible_bounds) {
   using UIntIndexType = Kokkos::IndexType<unsigned>;
+  using IntIndexType  = Kokkos::IndexType<int>;
   using UIntPolicy    = Kokkos::RangePolicy<TEST_EXECSPACE, UIntIndexType>;
+  using IntPolicy     = Kokkos::RangePolicy<TEST_EXECSPACE, IntIndexType>;
 
-  using test_type = TestIndexConversionCheck<UIntPolicy::index_type>;
+  using test_type = TestIndexConversionCheck<IntPolicy::index_type>;
 
   static_assert(std::is_convertible_v<test_type, UIntPolicy::index_type>);
   static_assert(!std::is_convertible_v<UIntPolicy::index_type, test_type>);
 
-  UIntIndexType::type test_val = -1;
+  IntIndexType::type test_val = -1;
   ASSERT_NO_THROW((void)UIntPolicy(0, test_type(&test_val)));
 }
 
