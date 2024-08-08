@@ -1958,7 +1958,9 @@ inline auto create_mirror(const DynRankView<T, P...>& src,
     return dst_type(prop_copy,
                     Impl::reconstructLayout(src.layout(), src.rank()));
   }
-#if defined KOKKOS_COMPILER_INTEL
+#if defined(KOKKOS_COMPILER_INTEL) ||                                 \
+    (defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
+     !defined(KOKKOS_COMPILER_MSVC))
   __builtin_unreachable();
 #endif
 }
@@ -2032,7 +2034,7 @@ inline auto create_mirror_view(
                                    T, P...>::HostMirror::data_type>::value) {
       return typename DynRankView<T, P...>::HostMirror(src);
     } else {
-      return Kokkos::create_mirror(arg_prop, src);
+      return Kokkos::Impl::choose_create_mirror(src, arg_prop);
     }
   } else {
     if constexpr (Impl::MirrorDRViewType<typename Impl::ViewCtorProp<
@@ -2042,10 +2044,12 @@ inline auto create_mirror_view(
           typename Impl::ViewCtorProp<ViewCtorArgs...>::memory_space, T,
           P...>::view_type(src);
     } else {
-      return Kokkos::create_mirror(arg_prop, src);
+      return Kokkos::Impl::choose_create_mirror(src, arg_prop);
     }
   }
-#if defined KOKKOS_COMPILER_INTEL
+#if defined(KOKKOS_COMPILER_INTEL) ||                                 \
+    (defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
+     !defined(KOKKOS_COMPILER_MSVC))
   __builtin_unreachable();
 #endif
 }
@@ -2134,6 +2138,10 @@ auto create_mirror_view_and_copy(
       deep_copy(mirror, src);
     return mirror;
   }
+#if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
+    !defined(KOKKOS_COMPILER_MSVC)
+  __builtin_unreachable();
+#endif
 }
 
 template <class Space, class T, class... P>

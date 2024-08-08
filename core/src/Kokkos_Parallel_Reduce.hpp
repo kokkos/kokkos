@@ -73,7 +73,7 @@ struct Sum {
 
 template <typename Scalar, typename... Properties>
 KOKKOS_DEDUCTION_GUIDE Sum(View<Scalar, Properties...> const&)
-    ->Sum<Scalar, typename View<Scalar, Properties...>::memory_space>;
+    -> Sum<Scalar, typename View<Scalar, Properties...>::memory_space>;
 
 template <class Scalar, class Space>
 struct Prod {
@@ -118,7 +118,7 @@ struct Prod {
 
 template <typename Scalar, typename... Properties>
 KOKKOS_DEDUCTION_GUIDE Prod(View<Scalar, Properties...> const&)
-    ->Prod<Scalar, typename View<Scalar, Properties...>::memory_space>;
+    -> Prod<Scalar, typename View<Scalar, Properties...>::memory_space>;
 
 template <class Scalar, class Space>
 struct Min {
@@ -165,7 +165,7 @@ struct Min {
 
 template <typename Scalar, typename... Properties>
 KOKKOS_DEDUCTION_GUIDE Min(View<Scalar, Properties...> const&)
-    ->Min<Scalar, typename View<Scalar, Properties...>::memory_space>;
+    -> Min<Scalar, typename View<Scalar, Properties...>::memory_space>;
 
 template <class Scalar, class Space>
 struct Max {
@@ -213,7 +213,7 @@ struct Max {
 
 template <typename Scalar, typename... Properties>
 KOKKOS_DEDUCTION_GUIDE Max(View<Scalar, Properties...> const&)
-    ->Max<Scalar, typename View<Scalar, Properties...>::memory_space>;
+    -> Max<Scalar, typename View<Scalar, Properties...>::memory_space>;
 
 template <class Scalar, class Space>
 struct LAnd {
@@ -259,7 +259,7 @@ struct LAnd {
 
 template <typename Scalar, typename... Properties>
 KOKKOS_DEDUCTION_GUIDE LAnd(View<Scalar, Properties...> const&)
-    ->LAnd<Scalar, typename View<Scalar, Properties...>::memory_space>;
+    -> LAnd<Scalar, typename View<Scalar, Properties...>::memory_space>;
 
 template <class Scalar, class Space>
 struct LOr {
@@ -306,7 +306,7 @@ struct LOr {
 
 template <typename Scalar, typename... Properties>
 KOKKOS_DEDUCTION_GUIDE LOr(View<Scalar, Properties...> const&)
-    ->LOr<Scalar, typename View<Scalar, Properties...>::memory_space>;
+    -> LOr<Scalar, typename View<Scalar, Properties...>::memory_space>;
 
 template <class Scalar, class Space>
 struct BAnd {
@@ -353,7 +353,7 @@ struct BAnd {
 
 template <typename Scalar, typename... Properties>
 KOKKOS_DEDUCTION_GUIDE BAnd(View<Scalar, Properties...> const&)
-    ->BAnd<Scalar, typename View<Scalar, Properties...>::memory_space>;
+    -> BAnd<Scalar, typename View<Scalar, Properties...>::memory_space>;
 
 template <class Scalar, class Space>
 struct BOr {
@@ -400,7 +400,7 @@ struct BOr {
 
 template <typename Scalar, typename... Properties>
 KOKKOS_DEDUCTION_GUIDE BOr(View<Scalar, Properties...> const&)
-    ->BOr<Scalar, typename View<Scalar, Properties...>::memory_space>;
+    -> BOr<Scalar, typename View<Scalar, Properties...>::memory_space>;
 
 template <class Scalar, class Index>
 struct ValLocScalar {
@@ -458,11 +458,10 @@ struct MinLoc {
 };
 
 template <typename Scalar, typename Index, typename... Properties>
-KOKKOS_DEDUCTION_GUIDE MinLoc(
-    View<ValLocScalar<Scalar, Index>, Properties...> const&)
-    ->MinLoc<Scalar, Index,
-             typename View<ValLocScalar<Scalar, Index>,
-                           Properties...>::memory_space>;
+KOKKOS_DEDUCTION_GUIDE
+MinLoc(View<ValLocScalar<Scalar, Index>, Properties...> const&) -> MinLoc<
+    Scalar, Index,
+    typename View<ValLocScalar<Scalar, Index>, Properties...>::memory_space>;
 
 template <class Scalar, class Index, class Space>
 struct MaxLoc {
@@ -514,11 +513,10 @@ struct MaxLoc {
 };
 
 template <typename Scalar, typename Index, typename... Properties>
-KOKKOS_DEDUCTION_GUIDE MaxLoc(
-    View<ValLocScalar<Scalar, Index>, Properties...> const&)
-    ->MaxLoc<Scalar, Index,
-             typename View<ValLocScalar<Scalar, Index>,
-                           Properties...>::memory_space>;
+KOKKOS_DEDUCTION_GUIDE
+MaxLoc(View<ValLocScalar<Scalar, Index>, Properties...> const&) -> MaxLoc<
+    Scalar, Index,
+    typename View<ValLocScalar<Scalar, Index>, Properties...>::memory_space>;
 
 template <class Scalar>
 struct MinMaxScalar {
@@ -580,8 +578,8 @@ struct MinMax {
 
 template <typename Scalar, typename... Properties>
 KOKKOS_DEDUCTION_GUIDE MinMax(View<MinMaxScalar<Scalar>, Properties...> const&)
-    ->MinMax<Scalar,
-             typename View<MinMaxScalar<Scalar>, Properties...>::memory_space>;
+    -> MinMax<Scalar,
+              typename View<MinMaxScalar<Scalar>, Properties...>::memory_space>;
 
 template <class Scalar, class Index>
 struct MinMaxLocScalar {
@@ -650,9 +648,9 @@ struct MinMaxLoc {
 template <typename Scalar, typename Index, typename... Properties>
 KOKKOS_DEDUCTION_GUIDE MinMaxLoc(
     View<MinMaxLocScalar<Scalar, Index>, Properties...> const&)
-    ->MinMaxLoc<Scalar, Index,
-                typename View<MinMaxLocScalar<Scalar, Index>,
-                              Properties...>::memory_space>;
+    -> MinMaxLoc<Scalar, Index,
+                 typename View<MinMaxLocScalar<Scalar, Index>,
+                               Properties...>::memory_space>;
 
 // --------------------------------------------------
 // reducers added to support std algorithms
@@ -718,9 +716,9 @@ struct MaxFirstLoc {
 template <typename Scalar, typename Index, typename... Properties>
 KOKKOS_DEDUCTION_GUIDE MaxFirstLoc(
     View<ValLocScalar<Scalar, Index>, Properties...> const&)
-    ->MaxFirstLoc<Scalar, Index,
-                  typename View<ValLocScalar<Scalar, Index>,
-                                Properties...>::memory_space>;
+    -> MaxFirstLoc<Scalar, Index,
+                   typename View<ValLocScalar<Scalar, Index>,
+                                 Properties...>::memory_space>;
 
 //
 // MaxFirstLocCustomComparator
@@ -788,9 +786,9 @@ template <typename Scalar, typename Index, typename ComparatorType,
           typename... Properties>
 KOKKOS_DEDUCTION_GUIDE MaxFirstLocCustomComparator(
     View<ValLocScalar<Scalar, Index>, Properties...> const&, ComparatorType)
-    ->MaxFirstLocCustomComparator<Scalar, Index, ComparatorType,
-                                  typename View<ValLocScalar<Scalar, Index>,
-                                                Properties...>::memory_space>;
+    -> MaxFirstLocCustomComparator<Scalar, Index, ComparatorType,
+                                   typename View<ValLocScalar<Scalar, Index>,
+                                                 Properties...>::memory_space>;
 
 //
 // MinFirstLoc
@@ -852,9 +850,9 @@ struct MinFirstLoc {
 template <typename Scalar, typename Index, typename... Properties>
 KOKKOS_DEDUCTION_GUIDE MinFirstLoc(
     View<ValLocScalar<Scalar, Index>, Properties...> const&)
-    ->MinFirstLoc<Scalar, Index,
-                  typename View<ValLocScalar<Scalar, Index>,
-                                Properties...>::memory_space>;
+    -> MinFirstLoc<Scalar, Index,
+                   typename View<ValLocScalar<Scalar, Index>,
+                                 Properties...>::memory_space>;
 
 //
 // MinFirstLocCustomComparator
@@ -922,9 +920,9 @@ template <typename Scalar, typename Index, typename ComparatorType,
           typename... Properties>
 KOKKOS_DEDUCTION_GUIDE MinFirstLocCustomComparator(
     View<ValLocScalar<Scalar, Index>, Properties...> const&, ComparatorType)
-    ->MinFirstLocCustomComparator<Scalar, Index, ComparatorType,
-                                  typename View<ValLocScalar<Scalar, Index>,
-                                                Properties...>::memory_space>;
+    -> MinFirstLocCustomComparator<Scalar, Index, ComparatorType,
+                                   typename View<ValLocScalar<Scalar, Index>,
+                                                 Properties...>::memory_space>;
 
 //
 // MinMaxFirstLastLoc
@@ -997,9 +995,9 @@ struct MinMaxFirstLastLoc {
 template <typename Scalar, typename Index, typename... Properties>
 KOKKOS_DEDUCTION_GUIDE MinMaxFirstLastLoc(
     View<MinMaxLocScalar<Scalar, Index>, Properties...> const&)
-    ->MinMaxFirstLastLoc<Scalar, Index,
-                         typename View<MinMaxLocScalar<Scalar, Index>,
-                                       Properties...>::memory_space>;
+    -> MinMaxFirstLastLoc<Scalar, Index,
+                          typename View<MinMaxLocScalar<Scalar, Index>,
+                                        Properties...>::memory_space>;
 
 //
 // MinMaxFirstLastLocCustomComparator
@@ -1077,7 +1075,7 @@ template <typename Scalar, typename Index, typename ComparatorType,
           typename... Properties>
 KOKKOS_DEDUCTION_GUIDE MinMaxFirstLastLocCustomComparator(
     View<MinMaxLocScalar<Scalar, Index>, Properties...> const&, ComparatorType)
-    ->MinMaxFirstLastLocCustomComparator<
+    -> MinMaxFirstLastLocCustomComparator<
         Scalar, Index, ComparatorType,
         typename View<MinMaxLocScalar<Scalar, Index>,
                       Properties...>::memory_space>;
@@ -1139,10 +1137,9 @@ struct FirstLoc {
 };
 
 template <typename Index, typename... Properties>
-KOKKOS_DEDUCTION_GUIDE FirstLoc(
-    View<FirstLocScalar<Index>, Properties...> const&)
-    ->FirstLoc<Index, typename View<FirstLocScalar<Index>,
-                                    Properties...>::memory_space>;
+KOKKOS_DEDUCTION_GUIDE
+FirstLoc(View<FirstLocScalar<Index>, Properties...> const&) -> FirstLoc<
+    Index, typename View<FirstLocScalar<Index>, Properties...>::memory_space>;
 
 //
 // LastLoc
@@ -1202,8 +1199,8 @@ struct LastLoc {
 
 template <typename Index, typename... Properties>
 KOKKOS_DEDUCTION_GUIDE LastLoc(View<LastLocScalar<Index>, Properties...> const&)
-    ->LastLoc<Index,
-              typename View<LastLocScalar<Index>, Properties...>::memory_space>;
+    -> LastLoc<Index, typename View<LastLocScalar<Index>,
+                                    Properties...>::memory_space>;
 
 template <class Index>
 struct StdIsPartScalar {
@@ -1270,8 +1267,8 @@ struct StdIsPartitioned {
 template <typename Index, typename... Properties>
 KOKKOS_DEDUCTION_GUIDE StdIsPartitioned(
     View<StdIsPartScalar<Index>, Properties...> const&)
-    ->StdIsPartitioned<Index, typename View<StdIsPartScalar<Index>,
-                                            Properties...>::memory_space>;
+    -> StdIsPartitioned<Index, typename View<StdIsPartScalar<Index>,
+                                             Properties...>::memory_space>;
 
 template <class Index>
 struct StdPartPointScalar {
@@ -1333,8 +1330,8 @@ struct StdPartitionPoint {
 template <typename Index, typename... Properties>
 KOKKOS_DEDUCTION_GUIDE StdPartitionPoint(
     View<StdPartPointScalar<Index>, Properties...> const&)
-    ->StdPartitionPoint<Index, typename View<StdPartPointScalar<Index>,
-                                             Properties...>::memory_space>;
+    -> StdPartitionPoint<Index, typename View<StdPartPointScalar<Index>,
+                                              Properties...>::memory_space>;
 
 }  // namespace Kokkos
 namespace Kokkos {
@@ -1612,7 +1609,7 @@ struct ParallelReduceFence {
   template <class... ArgsDeduced>
   static void fence(const ExecutionSpace& ex, const std::string& name,
                     ArgsDeduced&&... args) {
-    if (Impl::parallel_reduce_needs_fence(ex, (ArgsDeduced &&) args...)) {
+    if (Impl::parallel_reduce_needs_fence(ex, (ArgsDeduced&&)args...)) {
       ex.fence(name);
     }
   }

@@ -943,8 +943,6 @@ class TestDynViewAPI {
 
     dView0 d("d");
 
-#if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
-
     // Rank 0
     Kokkos::resize(d);
 
@@ -1121,8 +1119,6 @@ class TestDynViewAPI {
     Kokkos::deep_copy(error_flag_host, error_flag);
     ASSERT_EQ(error_flag_host(), 0);
 #endif  // MDRangePolict Rank < 7
-
-#endif  // defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
   }
 
   static void run_test_scalar() {

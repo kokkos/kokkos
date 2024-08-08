@@ -40,10 +40,10 @@ struct ChunkedArrayManager {
   using pointer_type = ValueType*;
   using track_type   = Kokkos::Impl::SharedAllocationTracker;
 
-  ChunkedArrayManager()                           = default;
-  ChunkedArrayManager(ChunkedArrayManager const&) = default;
-  ChunkedArrayManager(ChunkedArrayManager&&)      = default;
-  ChunkedArrayManager& operator=(ChunkedArrayManager&&) = default;
+  ChunkedArrayManager()                                      = default;
+  ChunkedArrayManager(ChunkedArrayManager const&)            = default;
+  ChunkedArrayManager(ChunkedArrayManager&&)                 = default;
+  ChunkedArrayManager& operator=(ChunkedArrayManager&&)      = default;
   ChunkedArrayManager& operator=(const ChunkedArrayManager&) = default;
 
   template <typename Space, typename Value>
@@ -129,10 +129,10 @@ struct ChunkedArrayManager {
   /// allocation
   template <typename Space>
   struct Destroy {
-    Destroy()               = default;
-    Destroy(Destroy&&)      = default;
-    Destroy(const Destroy&) = default;
-    Destroy& operator=(Destroy&&) = default;
+    Destroy()                          = default;
+    Destroy(Destroy&&)                 = default;
+    Destroy(const Destroy&)            = default;
+    Destroy& operator=(Destroy&&)      = default;
     Destroy& operator=(const Destroy&) = default;
 
     Destroy(std::string label, value_type** arg_chunk,
@@ -463,11 +463,11 @@ class DynamicView : public Kokkos::ViewTraits<DataType, P...> {
 
   //----------------------------------------------------------------------
 
-  ~DynamicView()                  = default;
-  DynamicView()                   = default;
-  DynamicView(DynamicView&&)      = default;
-  DynamicView(const DynamicView&) = default;
-  DynamicView& operator=(DynamicView&&) = default;
+  ~DynamicView()                             = default;
+  DynamicView()                              = default;
+  DynamicView(DynamicView&&)                 = default;
+  DynamicView(const DynamicView&)            = default;
+  DynamicView& operator=(DynamicView&&)      = default;
   DynamicView& operator=(const DynamicView&) = default;
 
   template <class RT, class... RP>
@@ -621,7 +621,9 @@ inline auto create_mirror(const Kokkos::Experimental::DynamicView<T, P...>& src,
 
     return ret;
   }
-#if defined KOKKOS_COMPILER_INTEL
+#if defined(KOKKOS_COMPILER_INTEL) ||                                 \
+    (defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
+     !defined(KOKKOS_COMPILER_MSVC))
   __builtin_unreachable();
 #endif
 }
@@ -702,7 +704,7 @@ inline auto create_mirror_view(
       return
           typename Kokkos::Experimental::DynamicView<T, P...>::HostMirror(src);
     } else {
-      return Kokkos::create_mirror(arg_prop, src);
+      return Kokkos::Impl::choose_create_mirror(src, arg_prop);
     }
   } else {
     if constexpr (Impl::MirrorDynamicViewType<
@@ -713,10 +715,12 @@ inline auto create_mirror_view(
           typename Impl::ViewCtorProp<ViewCtorArgs...>::memory_space, T,
           P...>::view_type(src);
     } else {
-      return Kokkos::create_mirror(arg_prop, src);
+      return Kokkos::Impl::choose_create_mirror(src, arg_prop);
     }
   }
-#if defined KOKKOS_COMPILER_INTEL
+#if defined(KOKKOS_COMPILER_INTEL) ||                                 \
+    (defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
+     !defined(KOKKOS_COMPILER_MSVC))
   __builtin_unreachable();
 #endif
 }
@@ -998,6 +1002,10 @@ auto create_mirror_view_and_copy(
       deep_copy(mirror, src);
     return mirror;
   }
+#if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
+    !defined(KOKKOS_COMPILER_MSVC)
+  __builtin_unreachable();
+#endif
 }
 
 template <class Space, class T, class... P,

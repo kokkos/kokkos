@@ -3509,7 +3509,9 @@ inline auto create_mirror(const Kokkos::View<T, P...>& src,
     using dst_type = typename View<T, P...>::HostMirror;
     return dst_type(prop_copy, src.layout());
   }
-#if defined KOKKOS_COMPILER_INTEL
+#if defined(KOKKOS_COMPILER_INTEL) ||                                 \
+    (defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
+     !defined(KOKKOS_COMPILER_MSVC))
   __builtin_unreachable();
 #endif
 }
@@ -3564,6 +3566,68 @@ auto create_mirror(Kokkos::Impl::WithoutInitializing_t wi, Space const&,
 
 namespace Impl {
 
+// choose a `Kokkos::create_mirror` adapted for the provided view and the
+// provided arguments
+template <class View, class... ViewCtorArgs>
+inline auto choose_create_mirror(
+    const View& src, const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
+  // Due to the fact that users can overload `Kokkos::create_mirror`, but also
+  // that they may not have implemented all of its different possible
+  // variations, this function chooses the correct private or public version of
+  // it to call.
+  // This helper should be used by any overload of
+  // `Kokkos::Impl::create_mirror_view`.
+
+  if constexpr (std::is_void_v<typename View::traits::specialize>) {
+    // if the view is not specialized, just call the Impl function
+
+    // using ADL to find the later defined overload of the function
+    using namespace Kokkos::Impl;
+
+    return create_mirror(src, arg_prop);
+  } else {
+    // otherwise, recreate the public call
+    using ViewProp = Impl::ViewCtorProp<ViewCtorArgs...>;
+
+    // using ADL to find the later defined overload of the function
+    using namespace Kokkos;
+
+    if constexpr (sizeof...(ViewCtorArgs) == 0) {
+      // if there are no view constructor args, call the specific public
+      // function
+      return create_mirror(src);
+    } else if constexpr (sizeof...(ViewCtorArgs) == 1 &&
+                         ViewProp::has_memory_space) {
+      // if there is one view constructor arg and it has a memory space, call
+      // the specific public function
+      return create_mirror(typename ViewProp::memory_space{}, src);
+    } else if constexpr (sizeof...(ViewCtorArgs) == 1 &&
+                         !ViewProp::initialize) {
+      // if there is one view constructor arg and it has a without initializing
+      // mark, call the specific public function
+      return create_mirror(typename Kokkos::Impl::WithoutInitializing_t{}, src);
+    } else if constexpr (sizeof...(ViewCtorArgs) == 2 &&
+                         ViewProp::has_memory_space && !ViewProp::initialize) {
+      // if there is two view constructor args and they have a memory space and
+      // a without initializing mark, call the specific public function
+      return create_mirror(typename Kokkos::Impl::WithoutInitializing_t{},
+                           typename ViewProp::memory_space{}, src);
+    } else {
+      // if there are other constructor args, call the generic public function
+
+      // Beware, there are some libraries using Kokkos that don't implement
+      // this overload (hence the reason for this present function to exist).
+      return create_mirror(arg_prop, src);
+    }
+  }
+
+#if defined(KOKKOS_COMPILER_INTEL) ||                                 \
+    (defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
+     !defined(KOKKOS_COMPILER_MSVC))
+  __builtin_unreachable();
+#endif
+}
+
 // create a mirror view
 // private interface that accepts arbitrary view constructor args passed by a
 // view_alloc
@@ -3581,7 +3645,7 @@ inline auto create_mirror_view(
       check_view_ctor_args_create_mirror<ViewCtorArgs...>();
       return typename Kokkos::View<T, P...>::HostMirror(src);
     } else {
-      return Kokkos::create_mirror(arg_prop, src);
+      return Kokkos::Impl::choose_create_mirror(src, arg_prop);
     }
   } else {
     if constexpr (Impl::MirrorViewType<typename Impl::ViewCtorProp<
@@ -3592,27 +3656,25 @@ inline auto create_mirror_view(
           typename Impl::ViewCtorProp<ViewCtorArgs...>::memory_space, T,
           P...>::view_type(src);
     } else {
-      return Kokkos::create_mirror(arg_prop, src);
+      return Kokkos::Impl::choose_create_mirror(src, arg_prop);
     }
   }
-#if defined KOKKOS_COMPILER_INTEL
+#if defined(KOKKOS_COMPILER_INTEL) ||                                 \
+    (defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
+     !defined(KOKKOS_COMPILER_MSVC))
   __builtin_unreachable();
 #endif
 }
 }  // namespace Impl
 
 // public interface
-template <class T, class... P,
-          typename = std::enable_if_t<
-              std::is_void_v<typename ViewTraits<T, P...>::specialize>>>
+template <class T, class... P>
 auto create_mirror_view(const Kokkos::View<T, P...>& src) {
   return Impl::create_mirror_view(src, view_alloc());
 }
 
 // public interface that accepts a without initializing flag
-template <class T, class... P,
-          typename = std::enable_if_t<
-              std::is_void_v<typename ViewTraits<T, P...>::specialize>>>
+template <class T, class... P>
 auto create_mirror_view(Kokkos::Impl::WithoutInitializing_t wi,
                         Kokkos::View<T, P...> const& src) {
   return Impl::create_mirror_view(src, view_alloc(wi));
@@ -3620,9 +3682,7 @@ auto create_mirror_view(Kokkos::Impl::WithoutInitializing_t wi,
 
 // public interface that accepts a space
 template <class Space, class T, class... P,
-          class Enable = std::enable_if_t<
-              Kokkos::is_space<Space>::value &&
-              std::is_void_v<typename ViewTraits<T, P...>::specialize>>>
+          class Enable = std::enable_if_t<Kokkos::is_space<Space>::value>>
 auto create_mirror_view(const Space&, const Kokkos::View<T, P...>& src) {
   return Impl::create_mirror_view(src,
                                   view_alloc(typename Space::memory_space()));
@@ -3630,9 +3690,7 @@ auto create_mirror_view(const Space&, const Kokkos::View<T, P...>& src) {
 
 // public interface that accepts a space and a without initializing flag
 template <class Space, class T, class... P,
-          typename Enable = std::enable_if_t<
-              Kokkos::is_space<Space>::value &&
-              std::is_void_v<typename ViewTraits<T, P...>::specialize>>>
+          typename Enable = std::enable_if_t<Kokkos::is_space<Space>::value>>
 auto create_mirror_view(Kokkos::Impl::WithoutInitializing_t wi, Space const&,
                         Kokkos::View<T, P...> const& src) {
   return Impl::create_mirror_view(
@@ -3711,6 +3769,10 @@ auto create_mirror_view_and_copy(
       deep_copy(mirror, src);
     return mirror;
   }
+#if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
+    !defined(KOKKOS_COMPILER_MSVC)
+  __builtin_unreachable();
+#endif
 }
 
 // Previously when using auto here, the intel compiler 19.3 would

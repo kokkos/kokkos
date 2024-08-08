@@ -77,8 +77,8 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
     idx_type team_size        = 128;
 
     auto a_functor_reducer = m_functor_reducer;
-#pragma omp target teams distribute map(to \
-                                        : a_functor_reducer) num_teams(nteams)
+#pragma omp target teams distribute map(to : a_functor_reducer) \
+    num_teams(nteams)
     for (idx_type team_id = 0; team_id < n_chunks; ++team_id) {
       const typename Analysis::Reducer& reducer =
           a_functor_reducer.get_reducer();
@@ -120,9 +120,8 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
       }
     }
 
-#pragma omp target teams distribute map(to                                     \
-                                        : a_functor_reducer) num_teams(nteams) \
-    thread_limit(team_size)
+#pragma omp target teams distribute map(to : a_functor_reducer) \
+    num_teams(nteams) thread_limit(team_size)
     for (idx_type team_id = 0; team_id < n_chunks; ++team_id) {
       const typename Analysis::Reducer& reducer =
           a_functor_reducer.get_reducer();
@@ -143,7 +142,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
             local_offset_value = element_values(team_id, i - 1);
             // FIXME_OPENMPTARGET We seem to access memory illegaly on AMD GPUs
 #if defined(KOKKOS_ARCH_AMD_GPU) && !defined(KOKKOS_ARCH_AMD_GFX1030) && \
-    !defined(KOKKOS_ARCH_AMD_GFX1100)
+    !defined(KOKKOS_ARCH_AMD_GFX1100) && !defined(KOKKOS_ARCH_AMD_GFX1103)
             if constexpr (Analysis::Reducer::has_join_member_function()) {
               if constexpr (std::is_void_v<WorkTag>)
                 a_functor_reducer.get_functor().join(local_offset_value,
@@ -169,9 +168,9 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
   }
 
   void execute() const {
-    OpenMPTargetExec::verify_is_process(
+    Experimental::Impl::OpenMPTargetInternal::verify_is_process(
         "Kokkos::Experimental::OpenMPTarget parallel_for");
-    OpenMPTargetExec::verify_initialized(
+    Experimental::Impl::OpenMPTargetInternal::verify_initialized(
         "Kokkos::Experimental::OpenMPTarget parallel_for");
     const idx_type N          = m_policy.end() - m_policy.begin();
     const idx_type chunk_size = 128;
@@ -179,7 +178,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
 
     // Only let one ParallelReduce instance at a time use the scratch memory.
     std::scoped_lock<std::mutex> scratch_memory_lock(
-        OpenMPTargetExec::m_mutex_scratch_ptr);
+        m_policy.space().impl_internal_space_instance()->m_mutex_scratch_ptr);
 
     // This could be scratch memory per team
     Kokkos::View<value_type**, Kokkos::LayoutRight,
@@ -220,9 +219,9 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
 
  public:
   void execute() const {
-    OpenMPTargetExec::verify_is_process(
+    Experimental::Impl::OpenMPTargetInternal::verify_is_process(
         "Kokkos::Experimental::OpenMPTarget parallel_for");
-    OpenMPTargetExec::verify_initialized(
+    Experimental::Impl::OpenMPTargetInternal::verify_initialized(
         "Kokkos::Experimental::OpenMPTarget parallel_for");
     const int64_t N        = base_t::m_policy.end() - base_t::m_policy.begin();
     const int chunk_size   = 128;
@@ -231,7 +230,9 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
     if (N > 0) {
       // Only let one ParallelReduce instance at a time use the scratch memory.
       std::scoped_lock<std::mutex> scratch_memory_lock(
-          OpenMPTargetExec::m_mutex_scratch_ptr);
+          base_t::m_policy.space()
+              .impl_internal_space_instance()
+              ->m_mutex_scratch_ptr);
 
       // This could be scratch memory per team
       Kokkos::View<value_type**, Kokkos::LayoutRight,

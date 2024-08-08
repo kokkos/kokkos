@@ -13,15 +13,9 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //@HEADER
-#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
-#include <Kokkos_Macros.hpp>
-static_assert(false,
-              "Including non-public Kokkos header files is not allowed.");
-#endif
-#ifndef KOKKOS_ATOMICS_DESUL_CONFIG_HPP
-#define KOKKOS_ATOMICS_DESUL_CONFIG_HPP
 
-#include <Kokkos_Macros.hpp>
+#ifndef KOKKOS_DESUL_ATOMICS_CONFIG_HPP
+#define KOKKOS_DESUL_ATOMICS_CONFIG_HPP
 
 #if defined(KOKKOS_ARCH_KEPLER) || defined(KOKKOS_ARCH_MAXWELL)
 #define DESUL_CUDA_ARCH_IS_PRE_PASCAL
@@ -32,4 +26,4 @@ static_assert(false,
 #define DESUL_CUDA_ARCH_IS_PRE_VOLTA
 #endif
 
-#endif  // KOKKOS_ATOMICS_DESUL_CONFIG_HPP
+#endif

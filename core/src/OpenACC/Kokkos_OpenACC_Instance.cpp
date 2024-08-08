@@ -78,8 +78,8 @@ void Kokkos::Experimental::Impl::OpenACCInternal::fence(
       [&]() { acc_wait(m_async_arg); });
 }
 
-uint32_t Kokkos::Experimental::Impl::OpenACCInternal::instance_id() const
-    noexcept {
+uint32_t Kokkos::Experimental::Impl::OpenACCInternal::instance_id()
+    const noexcept {
   return Kokkos::Tools::Experimental::Impl::idForInstance<OpenACC>(
       reinterpret_cast<uintptr_t>(this));
 }

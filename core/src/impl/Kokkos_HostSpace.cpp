@@ -76,19 +76,12 @@ void *HostSpace::impl_allocate(
   void *ptr = nullptr;
 
   if (arg_alloc_size)
-    ptr = operator new (arg_alloc_size, std::align_val_t(alignment),
-                        std::nothrow_t{});
+    ptr = operator new(arg_alloc_size, std::align_val_t(alignment),
+                       std::nothrow_t{});
 
-  using FailureMode = Experimental::RawMemoryAllocationFailure::FailureMode;
-  if (!ptr) {
-    Impl::throw_bad_alloc(arg_alloc_size, std::align_val_t{alignment},
-                          FailureMode::OutOfMemoryError, "standard malloc()");
-  }
-  if ((reinterpret_cast<uintptr_t>(ptr) == ~uintptr_t(0)) ||
+  if (!ptr || (reinterpret_cast<uintptr_t>(ptr) == ~uintptr_t(0)) ||
       (reinterpret_cast<uintptr_t>(ptr) & alignment_mask)) {
-    Impl::throw_bad_alloc(arg_alloc_size, std::align_val_t{alignment},
-                          FailureMode::AllocationNotAligned,
-                          "standard malloc()");
+    Impl::throw_bad_alloc(name(), arg_alloc_size, arg_label);
   }
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::allocateData(arg_handle, arg_label, ptr, reported_size);
@@ -119,8 +112,8 @@ void HostSpace::impl_deallocate(
                                         reported_size);
     }
     constexpr uintptr_t alignment = Kokkos::Impl::MEMORY_ALIGNMENT;
-    operator delete (arg_alloc_ptr, std::align_val_t(alignment),
-                     std::nothrow_t{});
+    operator delete(arg_alloc_ptr, std::align_val_t(alignment),
+                    std::nothrow_t{});
   }
 }
 

@@ -69,10 +69,10 @@ struct GraphNodeBackendSpecificDetails {
   GraphNodeBackendSpecificDetails(GraphNodeBackendSpecificDetails&&) noexcept =
       delete;
 
-  GraphNodeBackendSpecificDetails& operator   =(
+  GraphNodeBackendSpecificDetails& operator=(
       GraphNodeBackendSpecificDetails const&) = delete;
 
-  GraphNodeBackendSpecificDetails& operator       =(
+  GraphNodeBackendSpecificDetails& operator=(
       GraphNodeBackendSpecificDetails&&) noexcept = delete;
 
   ~GraphNodeBackendSpecificDetails() = default;

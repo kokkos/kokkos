@@ -134,7 +134,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), launch_six) {
 #endif
 #if defined(KOKKOS_ENABLE_SYCL) && \
     !defined(SYCL_EXT_ONEAPI_GRAPH)  // FIXME_SYCL
-  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::SYCL>)
+  if (std::is_same_v<TEST_EXECSPACE, Kokkos::SYCL>)
     GTEST_SKIP() << "skipping since test case is known to fail with SYCL";
 #endif
 

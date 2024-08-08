@@ -595,7 +595,6 @@ struct TestSharedTeam {
 
 namespace Test {
 
-#if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
 template <class MemorySpace, class ExecSpace, class ScheduleType>
 struct TestLambdaSharedTeam {
   TestLambdaSharedTeam() { run(); }
@@ -617,7 +616,7 @@ struct TestLambdaSharedTeam {
         std::is_same<ExecSpace, Kokkos::Experimental::OpenMPTarget>::value ? 32
                                                                            : 1;
 #else
-    int team_size = 1;
+    int team_size    = 1;
 #endif
 
 #ifdef KOKKOS_ENABLE_CUDA
@@ -676,7 +675,6 @@ struct TestLambdaSharedTeam {
     ASSERT_EQ(error_count, 0);
   }
 };
-#endif
 
 }  // namespace Test
 
@@ -807,7 +805,7 @@ struct TestScratchTeam {
             ? p_type(64 / team_size, team_size)
             : p_type(8192 / team_size, team_size);
 #else
-    team_exec          = p_type(8192 / team_size, team_size);
+    team_exec     = p_type(8192 / team_size, team_size);
 #endif
 
     Kokkos::parallel_reduce(
@@ -993,7 +991,7 @@ struct ClassNoShmemSizeFunction {
 #ifdef KOKKOS_ENABLE_SYCL
     int team_size = 4;
 #else
-    int team_size      = 8;
+    int team_size = 8;
 #endif
     int const concurrency = ExecSpace().concurrency();
     if (team_size > concurrency) team_size = concurrency;
@@ -1117,7 +1115,6 @@ struct ClassWithShmemSizeFunction {
 
 template <class ExecSpace, class ScheduleType>
 void test_team_mulit_level_scratch_test_lambda() {
-#ifdef KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
   Kokkos::View<int, ExecSpace, Kokkos::MemoryTraits<Kokkos::Atomic>> errors;
   Kokkos::View<int, ExecSpace> d_errors("Errors");
   errors = d_errors;
@@ -1181,7 +1178,6 @@ void test_team_mulit_level_scratch_test_lambda() {
       },
       error);
   ASSERT_EQ(error, 0);
-#endif
 }
 
 }  // namespace Test
@@ -1193,9 +1189,7 @@ struct TestMultiLevelScratchTeam {
   TestMultiLevelScratchTeam() { run(); }
 
   void run() {
-#ifdef KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
     Test::test_team_mulit_level_scratch_test_lambda<ExecSpace, ScheduleType>();
-#endif
     Test::ClassNoShmemSizeFunction<ExecSpace, ScheduleType> c1;
     c1.run();
 
@@ -1663,7 +1657,6 @@ struct TestTeamPolicyHandleByValue {
   TestTeamPolicyHandleByValue() { test(); }
 
   void test() {
-#if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
     const int M = 1, N = 1;
     Kokkos::View<scalar **, mem_space> a("a", M, N);
     Kokkos::View<scalar **, mem_space> b("b", M, N);
@@ -1678,7 +1671,6 @@ struct TestTeamPolicyHandleByValue {
           Kokkos::parallel_for(Kokkos::TeamThreadRange(team, 0, N),
                                [&](const int j) { a(i, j) += b(i, j); });
         });
-#endif
   }
 };
 

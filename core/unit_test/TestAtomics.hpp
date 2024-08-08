@@ -516,7 +516,7 @@ TEST(TEST_CATEGORY, atomics) {
 // condition alltogether when possible.
 #if defined(KOKKOS_ENABLE_SYCL) && \
     !defined(KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED)
-  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::SYCL>) return;
+  if (std::is_same_v<TEST_EXECSPACE, Kokkos::SYCL>) return;
 #endif
   ASSERT_TRUE(
       (TestAtomic::Loop<Kokkos::complex<double>, TEST_EXECSPACE>(1, 1)));

@@ -101,9 +101,9 @@ class SharedAllocationRecord<void, void> {
   int m_count;
   std::string m_label;
 
-  SharedAllocationRecord(SharedAllocationRecord&&)      = delete;
-  SharedAllocationRecord(const SharedAllocationRecord&) = delete;
-  SharedAllocationRecord& operator=(SharedAllocationRecord&&) = delete;
+  SharedAllocationRecord(SharedAllocationRecord&&)                 = delete;
+  SharedAllocationRecord(const SharedAllocationRecord&)            = delete;
+  SharedAllocationRecord& operator=(SharedAllocationRecord&&)      = delete;
   SharedAllocationRecord& operator=(const SharedAllocationRecord&) = delete;
 
   /**\brief  Construct and insert into 'arg_root' tracking set.
@@ -196,36 +196,21 @@ class SharedAllocationRecord<void, void> {
       const SharedAllocationRecord* const root, const bool detail);
 };
 
-void safe_throw_allocation_with_header_failure(
-    std::string const& space_name, std::string const& label,
-    Kokkos::Experimental::RawMemoryAllocationFailure const& failure);
-
 template <class MemorySpace>
 SharedAllocationHeader* checked_allocation_with_header(MemorySpace const& space,
                                                        std::string const& label,
                                                        size_t alloc_size) {
-  try {
-    return reinterpret_cast<SharedAllocationHeader*>(space.allocate(
-        label.c_str(), alloc_size + sizeof(SharedAllocationHeader),
-        alloc_size));
-  } catch (Kokkos::Experimental::RawMemoryAllocationFailure const& failure) {
-    safe_throw_allocation_with_header_failure(space.name(), label, failure);
-  }
-  return nullptr;  // unreachable
+  return reinterpret_cast<SharedAllocationHeader*>(space.allocate(
+      label.c_str(), alloc_size + sizeof(SharedAllocationHeader), alloc_size));
 }
 
 template <class ExecutionSpace, class MemorySpace>
 SharedAllocationHeader* checked_allocation_with_header(
     ExecutionSpace const& exec_space, MemorySpace const& space,
     std::string const& label, size_t alloc_size) {
-  try {
-    return reinterpret_cast<SharedAllocationHeader*>(space.allocate(
-        exec_space, label.c_str(), alloc_size + sizeof(SharedAllocationHeader),
-        alloc_size));
-  } catch (Kokkos::Experimental::RawMemoryAllocationFailure const& failure) {
-    safe_throw_allocation_with_header_failure(space.name(), label, failure);
-  }
-  return nullptr;  // unreachable
+  return reinterpret_cast<SharedAllocationHeader*>(
+      space.allocate(exec_space, label.c_str(),
+                     alloc_size + sizeof(SharedAllocationHeader), alloc_size));
 }
 
 void fill_host_accessible_header_info(SharedAllocationHeader& arg_header,
@@ -433,8 +418,8 @@ class SharedAllocationRecord
             &Kokkos::Impl::deallocate<MemorySpace, DestroyFunctor>),
         m_destroy() {}
 
-  SharedAllocationRecord()                              = delete;
-  SharedAllocationRecord(const SharedAllocationRecord&) = delete;
+  SharedAllocationRecord()                                         = delete;
+  SharedAllocationRecord(const SharedAllocationRecord&)            = delete;
   SharedAllocationRecord& operator=(const SharedAllocationRecord&) = delete;
 
  public:
@@ -483,15 +468,21 @@ union SharedAllocationTracker {
   // pressure on compiler optimization by reducing
   // number of symbols and inline functions.
 
-#define KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_INCREMENT          \
-  KOKKOS_IF_ON_HOST((if (!(m_record_bits & DO_NOT_DEREF_FLAG)) { \
-    Record::increment(m_record);                                 \
-  }))
+#ifdef KOKKOS_ENABLE_IMPL_REF_COUNT_BRANCH_UNLIKELY
+#define KOKKOS_IMPL_BRANCH_PROB KOKKOS_IMPL_ATTRIBUTE_UNLIKELY
+#else
+#define KOKKOS_IMPL_BRANCH_PROB
+#endif
 
-#define KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT          \
-  KOKKOS_IF_ON_HOST((if (!(m_record_bits & DO_NOT_DEREF_FLAG)) { \
-    Record::decrement(m_record);                                 \
-  }))
+#define KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_INCREMENT \
+  KOKKOS_IF_ON_HOST(                                    \
+      (if (!(m_record_bits & DO_NOT_DEREF_FLAG))        \
+           KOKKOS_IMPL_BRANCH_PROB { Record::increment(m_record); }))
+
+#define KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT \
+  KOKKOS_IF_ON_HOST(                                    \
+      (if (!(m_record_bits & DO_NOT_DEREF_FLAG))        \
+           KOKKOS_IMPL_BRANCH_PROB { Record::decrement(m_record); }))
 
 #define KOKKOS_IMPL_SHARED_ALLOCATION_CARRY_RECORD_BITS(rhs,               \
                                                         override_tracking) \
@@ -510,8 +501,8 @@ union SharedAllocationTracker {
   }
 
   template <class MemorySpace>
-  constexpr SharedAllocationRecord<MemorySpace, void>* get_record() const
-      noexcept {
+  constexpr SharedAllocationRecord<MemorySpace, void>* get_record()
+      const noexcept {
     return (m_record_bits & DO_NOT_DEREF_FLAG)
                ? nullptr
                : static_cast<SharedAllocationRecord<MemorySpace, void>*>(
@@ -638,6 +629,7 @@ union SharedAllocationTracker {
 
 #undef KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_INCREMENT
 #undef KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT
+#undef KOKKOS_IMPL_BRANCH_PROB
 };
 
 struct SharedAllocationDisableTrackingGuard {

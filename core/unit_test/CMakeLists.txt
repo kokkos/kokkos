@@ -58,7 +58,7 @@ SET(KOKKOS_OPENMPTARGET_NAME Experimental::OpenMPTarget)
 SET(KOKKOS_SERIAL_FEATURE_LEVEL 999)
 SET(KOKKOS_SERIAL_NAME Serial)
 SET(KOKKOS_SYCL_FEATURE_LEVEL 999)
-SET(KOKKOS_SYCL_NAME Experimental::SYCL)
+SET(KOKKOS_SYCL_NAME SYCL)
 SET(KOKKOS_THREADS_FEATURE_LEVEL 999)
 SET(KOKKOS_THREADS_NAME Threads)
 # FIXME_OPENACC - The Clang compiler only compiles the first 9 incremental tests for the OpenACC backend.
@@ -255,6 +255,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
       ViewAPI_c
       ViewAPI_d
       ViewAPI_e
+      ViewBadAlloc
       ViewCopy_a
       ViewCopy_b
       ViewCopy_c
@@ -267,6 +268,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
       ViewMapping_subview
       ViewMemoryAccessViolation
       ViewOfClass
+      ViewOfViews
       ViewOutOfBoundsAccess
       ViewResize
       WorkGraph
@@ -1276,7 +1278,7 @@ if (NOT KOKKOS_HAS_TRILINOS)
     )
     add_test(
       NAME Kokkos_CoreUnitTest_DeviceAndThreads
-      COMMAND ${Python3_EXECUTABLE} -m unittest -v $<TARGET_FILE_DIR:Kokkos_CoreUnitTest_DeviceAndThreads>/TestDeviceAndThreads.py
+      COMMAND ${Python3_EXECUTABLE} $<TARGET_FILE_DIR:Kokkos_CoreUnitTest_DeviceAndThreads>/TestDeviceAndThreads.py -v
     )
   endif()
 endif()

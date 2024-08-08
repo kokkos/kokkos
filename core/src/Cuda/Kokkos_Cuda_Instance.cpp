@@ -26,10 +26,10 @@
 
 #include <Kokkos_Core.hpp>
 
-//#include <Cuda/Kokkos_Cuda_Error.hpp>
-//#include <Cuda/Kokkos_Cuda_BlockSize_Deduction.hpp>
-//#include <Cuda/Kokkos_Cuda_Instance.hpp>
-//#include <Cuda/Kokkos_Cuda_UniqueToken.hpp>
+// #include <Cuda/Kokkos_Cuda_Error.hpp>
+// #include <Cuda/Kokkos_Cuda_BlockSize_Deduction.hpp>
+// #include <Cuda/Kokkos_Cuda_Instance.hpp>
+// #include <Cuda/Kokkos_Cuda_UniqueToken.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_Tools.hpp>
 #include <impl/Kokkos_CheckedIntegerOps.hpp>
@@ -689,12 +689,6 @@ void Cuda::print_configuration(std::ostream &os, bool /*verbose*/) const {
 #endif
   os << "  KOKKOS_ENABLE_CUDA_UVM: ";
 #ifdef KOKKOS_ENABLE_CUDA_UVM
-  os << "yes\n";
-#else
-  os << "no\n";
-#endif
-  os << "  KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA: ";
-#ifdef KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
   os << "yes\n";
 #else
   os << "no\n";

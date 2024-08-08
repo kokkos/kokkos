@@ -133,6 +133,18 @@ struct Array {
     return &m_internal_implementation_private_member_data[0];
   }
 
+  friend KOKKOS_FUNCTION constexpr bool operator==(Array const& lhs,
+                                                   Array const& rhs) noexcept {
+    for (size_t i = 0; i != N; ++i)
+      if (lhs[i] != rhs[i]) return false;
+    return true;
+  }
+
+  friend KOKKOS_FUNCTION constexpr bool operator!=(Array const& lhs,
+                                                   Array const& rhs) noexcept {
+    return !(lhs == rhs);
+  }
+
  private:
   template <class U = T>
   friend KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<
@@ -186,15 +198,14 @@ struct Array<T, 0> {
   KOKKOS_INLINE_FUNCTION pointer data() { return nullptr; }
   KOKKOS_INLINE_FUNCTION const_pointer data() const { return nullptr; }
 
-  KOKKOS_DEFAULTED_FUNCTION ~Array()            = default;
-  KOKKOS_DEFAULTED_FUNCTION Array()             = default;
-  KOKKOS_DEFAULTED_FUNCTION Array(const Array&) = default;
-  KOKKOS_DEFAULTED_FUNCTION Array& operator=(const Array&) = default;
-
-  // Some supported compilers are not sufficiently C++11 compliant
-  // for default move constructor and move assignment operator.
-  // Array( Array && ) = default ;
-  // Array & operator = ( Array && ) = default ;
+  friend KOKKOS_FUNCTION constexpr bool operator==(Array const&,
+                                                   Array const&) noexcept {
+    return true;
+  }
+  friend KOKKOS_FUNCTION constexpr bool operator!=(Array const&,
+                                                   Array const&) noexcept {
+    return false;
+  }
 
  private:
   friend KOKKOS_INLINE_FUNCTION constexpr void kokkos_swap(
@@ -354,7 +365,7 @@ struct KOKKOS_DEPRECATED
 #endif
 
 template <typename T, typename... Us>
-Array(T, Us...)->Array<T, 1 + sizeof...(Us)>;
+Array(T, Us...) -> Array<T, 1 + sizeof...(Us)>;
 
 namespace Impl {
 
@@ -366,7 +377,7 @@ KOKKOS_FUNCTION constexpr Array<std::remove_cv_t<T>, N> to_array_impl(
 
 template <typename T, size_t N, size_t... I>
 KOKKOS_FUNCTION constexpr Array<std::remove_cv_t<T>, N> to_array_impl(
-    T(&&a)[N], std::index_sequence<I...>) {
+    T (&&a)[N], std::index_sequence<I...>) {
   return {{std::move(a[I])...}};
 }
 
@@ -378,7 +389,7 @@ KOKKOS_FUNCTION constexpr auto to_array(T (&a)[N]) {
 }
 
 template <typename T, size_t N>
-KOKKOS_FUNCTION constexpr auto to_array(T(&&a)[N]) {
+KOKKOS_FUNCTION constexpr auto to_array(T (&&a)[N]) {
   return Impl::to_array_impl(std::move(a), std::make_index_sequence<N>{});
 }
 

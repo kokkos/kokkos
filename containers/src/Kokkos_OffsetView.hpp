@@ -118,8 +118,8 @@ KOKKOS_INLINE_FUNCTION void offsetview_verify_operator_bounds(
         (enum {LEN = 1024}; char buffer[LEN];
          const std::string label = tracker.template get_label<MemorySpace>();
          int n                   = snprintf(buffer, LEN,
-                          "OffsetView bounds error of view labeled %s (",
-                          label.c_str());
+                                            "OffsetView bounds error of view labeled %s (",
+                                            label.c_str());
          offsetview_error_operator_bounds<0>(buffer + n, LEN - n, map, begins,
                                              args...);
          Kokkos::Impl::throw_runtime_exception(std::string(buffer));))
@@ -493,7 +493,7 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
       return m_map.m_impl_handle[j0 * m_map.m_impl_offset.m_stride.S0 +
                                  j1 * m_map.m_impl_offset.m_stride.S1];
     }
-#if defined KOKKOS_COMPILER_INTEL
+#if defined(KOKKOS_COMPILER_INTEL)
     __builtin_unreachable();
 #endif
   }
@@ -1833,7 +1833,9 @@ inline auto create_mirror(const Kokkos::Experimental::OffsetView<T, P...>& src,
     return typename Kokkos::Experimental::OffsetView<T, P...>::HostMirror(
         Kokkos::create_mirror(arg_prop, src.view()), src.begins());
   }
-#if defined KOKKOS_COMPILER_INTEL
+#if defined(KOKKOS_COMPILER_INTEL) ||                                 \
+    (defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
+     !defined(KOKKOS_COMPILER_MSVC))
   __builtin_unreachable();
 #endif
 }
@@ -1914,7 +1916,7 @@ inline auto create_mirror_view(
       return
           typename Kokkos::Experimental::OffsetView<T, P...>::HostMirror(src);
     } else {
-      return Kokkos::create_mirror(arg_prop, src);
+      return Kokkos::Impl::choose_create_mirror(src, arg_prop);
     }
   } else {
     if constexpr (Impl::MirrorOffsetViewType<typename Impl::ViewCtorProp<
@@ -1924,10 +1926,12 @@ inline auto create_mirror_view(
           typename Impl::ViewCtorProp<ViewCtorArgs...>::memory_space, T,
           P...>::view_type(src);
     } else {
-      return Kokkos::create_mirror(arg_prop, src);
+      return Kokkos::Impl::choose_create_mirror(src, arg_prop);
     }
   }
-#if defined KOKKOS_COMPILER_INTEL
+#if defined(KOKKOS_COMPILER_INTEL) ||                                 \
+    (defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
+     !defined(KOKKOS_COMPILER_MSVC))
   __builtin_unreachable();
 #endif
 }
