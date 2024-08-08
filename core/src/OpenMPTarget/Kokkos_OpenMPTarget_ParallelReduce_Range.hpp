@@ -21,6 +21,7 @@
 #include <sstream>
 #include <Kokkos_Parallel.hpp>
 #include <OpenMPTarget/Kokkos_OpenMPTarget_Parallel_Common.hpp>
+#include <OpenMPTarget/Kokkos_OpenMPTarget_Instance.hpp>
 
 namespace Kokkos {
 namespace Impl {
@@ -55,13 +56,13 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
   const pointer_type m_result_ptr;
   bool m_result_ptr_on_device;
   const int m_result_ptr_num_elems;
-  // Only let one ParallelReduce instance at a time use the scratch memory.
-  // The constructor acquires the mutex which is released in the destructor.
-  std::scoped_lock<std::mutex> m_scratch_memory_lock;
   using TagType = typename Policy::work_tag;
 
  public:
   void execute() const {
+    // Only let one ParallelReduce instance at a time use the scratch memory.
+    std::scoped_lock<std::mutex> scratch_memory_lock(
+        m_policy.space().impl_internal_space_instance()->m_mutex_scratch_ptr);
     const FunctorType& functor = m_functor_reducer.get_functor();
     if constexpr (FunctorHasJoin) {
       // Enter this loop if the Functor has a init-join.
@@ -108,8 +109,7 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
         m_result_ptr_on_device(
             MemorySpaceAccess<Kokkos::Experimental::OpenMPTargetSpace,
                               typename ViewType::memory_space>::accessible),
-        m_result_ptr_num_elems(arg_result_view.size()),
-        m_scratch_memory_lock(OpenMPTargetExec::m_mutex_scratch_ptr) {}
+        m_result_ptr_num_elems(arg_result_view.size()) {}
 };
 
 }  // namespace Impl

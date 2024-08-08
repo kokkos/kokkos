@@ -21,7 +21,7 @@
 TEST(TEST_CATEGORY, resize_realloc_no_init) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableKernels());
-  Kokkos::View<int*** * [1][2][3][4], TEST_EXECSPACE> bla("bla", 5, 6, 7, 8);
+  Kokkos::View<int**** [1][2][3][4], TEST_EXECSPACE> bla("bla", 5, 6, 7, 8);
 
   auto success = validate_absence(
       [&]() {
@@ -48,7 +48,7 @@ TEST(TEST_CATEGORY, resize_realloc_no_alloc) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableKernels(),
                      Config::EnableAllocs());
-  Kokkos::View<int*** * [1][2][3][4], TEST_EXECSPACE> bla("bla", 8, 7, 6, 5);
+  Kokkos::View<int**** [1][2][3][4], TEST_EXECSPACE> bla("bla", 8, 7, 6, 5);
 
   auto success = validate_absence(
       [&]() {
@@ -241,7 +241,7 @@ TEST(TEST_CATEGORY, resize_exec_space) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableFences(),
                      Config::EnableKernels());
-  Kokkos::View<int*** * [1][2][3][4], TEST_EXECSPACE> bla("bla", 8, 7, 6, 5);
+  Kokkos::View<int**** [1][2][3][4], TEST_EXECSPACE> bla("bla", 8, 7, 6, 5);
 
   auto success = validate_absence(
       [&]() {

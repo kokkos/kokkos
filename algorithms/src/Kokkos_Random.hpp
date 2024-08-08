@@ -665,17 +665,16 @@ struct Random_UniqueIndex<
 
 #ifdef KOKKOS_ENABLE_SYCL
 template <class MemorySpace>
-struct Random_UniqueIndex<
-    Kokkos::Device<Kokkos::Experimental::SYCL, MemorySpace>> {
+struct Random_UniqueIndex<Kokkos::Device<Kokkos::SYCL, MemorySpace>> {
   using locks_view_type =
-      View<int**, Kokkos::Device<Kokkos::Experimental::SYCL, MemorySpace>>;
+      View<int**, Kokkos::Device<Kokkos::SYCL, MemorySpace>>;
   KOKKOS_FUNCTION
   static int get_state_idx(const locks_view_type& locks_) {
     auto item = sycl::ext::oneapi::experimental::this_nd_item<3>();
     std::size_t threadIdx[3] = {item.get_local_id(2), item.get_local_id(1),
                                 item.get_local_id(0)};
     std::size_t blockIdx[3]  = {item.get_group(2), item.get_group(1),
-                               item.get_group(0)};
+                                item.get_group(0)};
     std::size_t blockDim[3] = {item.get_local_range(2), item.get_local_range(1),
                                item.get_local_range(0)};
     std::size_t gridDim[3]  = {
@@ -1121,7 +1120,7 @@ class Random_XorShift1024_Pool {
   using execution_space = typename device_type::execution_space;
   using locks_type      = View<int**, device_type>;
   using int_view_type   = View<int**, device_type>;
-  using state_data_type = View<uint64_t * [16], device_type>;
+  using state_data_type = View<uint64_t* [16], device_type>;
 
   locks_type locks_      = {};
   state_data_type state_ = {};
@@ -1543,13 +1542,23 @@ template <class ViewType, class RandomPool, class IndexType = int64_t>
 void fill_random(ViewType a, RandomPool g,
                  typename ViewType::const_value_type begin,
                  typename ViewType::const_value_type end) {
-  fill_random(typename ViewType::execution_space{}, a, g, begin, end);
+  Kokkos::fence(
+      "fill_random: fence before since no execution space instance provided");
+  typename ViewType::execution_space exec;
+  fill_random(exec, a, g, begin, end);
+  exec.fence(
+      "fill_random: fence after since no execution space instance provided");
 }
 
 template <class ViewType, class RandomPool, class IndexType = int64_t>
 void fill_random(ViewType a, RandomPool g,
                  typename ViewType::const_value_type range) {
-  fill_random(typename ViewType::execution_space{}, a, g, 0, range);
+  Kokkos::fence(
+      "fill_random: fence before since no execution space instance provided");
+  typename ViewType::execution_space exec;
+  fill_random(exec, a, g, 0, range);
+  exec.fence(
+      "fill_random: fence after since no execution space instance provided");
 }
 
 }  // namespace Kokkos

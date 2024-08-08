@@ -19,7 +19,6 @@
 
 namespace Test {
 
-#ifdef KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
 namespace Impl {
 template <class MemorySpaceA, class MemorySpaceB>
 struct TestDeepCopy {
@@ -228,7 +227,6 @@ TEST(TEST_CATEGORY, deep_copy_alignment) {
                        Kokkos::HostSpace>::run_test(100000);
   }
 }
-#endif
 
 namespace Impl {
 template <class Scalar1, class Scalar2, class Layout1, class Layout2>

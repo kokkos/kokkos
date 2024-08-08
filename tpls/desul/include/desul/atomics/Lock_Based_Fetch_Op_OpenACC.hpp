@@ -29,9 +29,11 @@ inline T device_atomic_fetch_oper(const Oper& op,
                                   dont_deduce_this_parameter_t<const T> val,
                                   MemoryOrder /*order*/,
                                   MemoryScope scope) {
-  printf(
-      "DESUL error in device_atomic_fetch_oper(): Not supported atomic operation in "
-      "the OpenACC backend\n");
+  if (acc_on_device(acc_device_not_host)) {
+    printf(
+        "DESUL error in device_atomic_fetch_oper(): Not supported atomic operation in "
+        "the OpenACC backend\n");
+  }
   // Acquire a lock for the address
   while (!lock_address((void*)dest, scope)) {
   }
@@ -56,9 +58,11 @@ inline T device_atomic_oper_fetch(const Oper& op,
                                   dont_deduce_this_parameter_t<const T> val,
                                   MemoryOrder /*order*/,
                                   MemoryScope scope) {
-  printf(
-      "DESUL error in device_atomic_oper_fetch(): Not supported atomic operation in "
-      "the OpenACC backend\n");
+  if (acc_on_device(acc_device_not_host)) {
+    printf(
+        "DESUL error in device_atomic_oper_fetch(): Not supported atomic operation in "
+        "the OpenACC backend\n");
+  }
   // Acquire a lock for the address
   while (!lock_address((void*)dest, scope)) {
   }

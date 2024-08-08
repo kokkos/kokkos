@@ -38,12 +38,32 @@ class InitializationSettings {
   TYPE get_##NAME() const noexcept { return *m_##NAME; }                   \
   static_assert(true, "no-op to require trailing semicolon")
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+#define KOKKOS_IMPL_DECLARE_DEPRECATED(TYPE, NAME)                         \
+ private:                                                                  \
+  std::optional<TYPE> m_##NAME;                                            \
+                                                                           \
+ public:                                                                   \
+  KOKKOS_DEPRECATED InitializationSettings& set_##NAME(TYPE NAME) {        \
+    m_##NAME = NAME;                                                       \
+    return *this;                                                          \
+  }                                                                        \
+  KOKKOS_DEPRECATED bool has_##NAME() const noexcept {                     \
+    return static_cast<bool>(m_##NAME);                                    \
+  }                                                                        \
+  KOKKOS_DEPRECATED TYPE get_##NAME() const noexcept { return *m_##NAME; } \
+  static_assert(true, "no-op to require trailing semicolon")
+#else
+#define KOKKOS_IMPL_DECLARE_DEPRECATED(TYPE, NAME) \
+  static_assert(true, "no-op to require trailing semicolon")
+#endif
+
  public:
   KOKKOS_IMPL_DECLARE(int, num_threads);
   KOKKOS_IMPL_DECLARE(int, device_id);
   KOKKOS_IMPL_DECLARE(std::string, map_device_id_by);
-  KOKKOS_IMPL_DECLARE(int, num_devices);  // deprecated
-  KOKKOS_IMPL_DECLARE(int, skip_device);  // deprecated
+  KOKKOS_IMPL_DECLARE_DEPRECATED(int, num_devices);
+  KOKKOS_IMPL_DECLARE_DEPRECATED(int, skip_device);
   KOKKOS_IMPL_DECLARE(bool, disable_warnings);
   KOKKOS_IMPL_DECLARE(bool, print_configuration);
   KOKKOS_IMPL_DECLARE(bool, tune_internals);

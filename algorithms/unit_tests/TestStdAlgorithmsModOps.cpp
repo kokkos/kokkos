@@ -90,50 +90,6 @@ TEST(std_algorithms_mod_ops_test, move_within_parfor) {
 }
 
 // ------------
-// swap
-// ------------
-TEST(std_algorithms_mod_ops_test, swap) {
-  {
-    int a = 1;
-    int b = 2;
-    KE::swap(a, b);
-    ASSERT_EQ(a, 2);
-    ASSERT_EQ(b, 1);
-  }
-
-  {
-    double a = 3.;
-    double b = 1.;
-    KE::swap(a, b);
-    EXPECT_DOUBLE_EQ(a, 1.);
-    EXPECT_DOUBLE_EQ(b, 3.);
-  }
-}
-
-template <class ViewType>
-struct StdAlgoModSeqOpsTestSwap {
-  ViewType m_view;
-
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const int index) const {
-    typename ViewType::value_type newval{11};
-    KE::swap(m_view(index), newval);
-  }
-
-  StdAlgoModSeqOpsTestSwap(ViewType aIn) : m_view(aIn) {}
-};
-
-TEST(std_algorithms_mod_ops_test, swap_within_parfor) {
-  auto a = create_view<double>(stdalgos::DynamicTag{}, 10, "a");
-  StdAlgoModSeqOpsTestSwap<decltype(a)> fnc(a);
-  Kokkos::parallel_for(a.extent(0), fnc);
-  auto a_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), a);
-  for (std::size_t i = 0; i < a.extent(0); ++i) {
-    EXPECT_DOUBLE_EQ(a_h(0), 11.);
-  }
-}
-
-// ------------
 // iter_swap
 // ------------
 template <class ViewType>

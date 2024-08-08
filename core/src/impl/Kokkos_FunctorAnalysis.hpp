@@ -906,14 +906,14 @@ struct FunctorAnalysis {
     Functor m_functor;
 
     template <bool IsArray>
-    KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<IsArray, int> len() const
-        noexcept {
+    KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<IsArray, int> len()
+        const noexcept {
       return m_functor.value_count;
     }
 
     template <bool IsArray>
-    KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<!IsArray, int> len() const
-        noexcept {
+    KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<!IsArray, int> len()
+        const noexcept {
       return candidate_is_void ? 0 : 1;
     }
 
@@ -973,8 +973,8 @@ struct FunctorAnalysis {
       DeduceJoin<>::join(&m_functor, dst, src);
     }
 
-    KOKKOS_INLINE_FUNCTION reference_type init(ValueType* const dst) const
-        noexcept {
+    KOKKOS_INLINE_FUNCTION reference_type
+    init(ValueType* const dst) const noexcept {
       DeduceInit<>::init(&m_functor, dst);
       return reference(dst);
     }
@@ -987,11 +987,11 @@ struct FunctorAnalysis {
     KOKKOS_INLINE_FUNCTION
     const Functor& get_functor() const { return m_functor; }
 
-    Reducer(Reducer const&) = default;
-    Reducer(Reducer&&)      = default;
+    Reducer(Reducer const&)            = default;
+    Reducer(Reducer&&)                 = default;
     Reducer& operator=(Reducer const&) = delete;
-    Reducer& operator=(Reducer&&) = delete;
-    ~Reducer()                    = default;
+    Reducer& operator=(Reducer&&)      = delete;
+    ~Reducer()                         = default;
 
     KOKKOS_INLINE_FUNCTION explicit constexpr Reducer(
         Functor const& arg_functor) noexcept

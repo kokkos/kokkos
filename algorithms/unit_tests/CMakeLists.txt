@@ -25,6 +25,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
     set(ALGO_SORT_SOURCES)
     foreach(SOURCE_Input
 	TestSort
+	TestSortByKey
 	TestSortCustomComp
 	TestBinSortA
 	TestBinSortB

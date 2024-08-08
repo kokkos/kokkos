@@ -30,8 +30,9 @@
 #define MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
 #endif
 
-#if defined KOKKOS_COMPILER_INTEL || \
-    (defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130)
+#if defined KOKKOS_COMPILER_INTEL ||                                  \
+    (defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
+     !defined(KOKKOS_COMPILER_MSVC))
 #define MATHEMATICAL_FUNCTIONS_TEST_UNREACHABLE __builtin_unreachable();
 #else
 #define MATHEMATICAL_FUNCTIONS_TEST_UNREACHABLE
@@ -286,21 +287,20 @@ struct FloatingPointComparison {
 
  public:
   template <class FPT>
-  KOKKOS_FUNCTION bool compare_near_zero(FPT const& fpv, double ulp) const {
+  KOKKOS_FUNCTION bool compare_near_zero(FPT const& fpv, int ulp) const {
     auto abs_tol = eps(fpv) * ulp;
 
     bool ar = absolute(fpv) < abs_tol;
     if (!ar) {
       Kokkos::printf("absolute value exceeds tolerance [|%e| > %e]\n",
-                     (double)fpv, abs_tol);
+                     (double)fpv, (double)abs_tol);
     }
 
     return ar;
   }
 
   template <class Lhs, class Rhs>
-  KOKKOS_FUNCTION bool compare(Lhs const& lhs, Rhs const& rhs,
-                               double ulp) const {
+  KOKKOS_FUNCTION bool compare(Lhs const& lhs, Rhs const& rhs, int ulp) const {
     if (lhs == 0) {
       return compare_near_zero(rhs, ulp);
     } else if (rhs == 0) {
@@ -314,7 +314,7 @@ struct FloatingPointComparison {
       bool ar         = abs_diff == 0 || rel_diff < rel_tol;
       if (!ar) {
         Kokkos::printf("relative difference exceeds tolerance [%e > %e]\n",
-                       (double)rel_diff, rel_tol);
+                       (double)rel_diff, (double)rel_tol);
       }
 
       return ar;
@@ -347,7 +347,7 @@ struct math_function_name;
       }                                                                 \
       MATHEMATICAL_FUNCTIONS_TEST_UNREACHABLE                           \
     }                                                                   \
-    static KOKKOS_FUNCTION double ulp_factor() { return ULP_FACTOR; }   \
+    static KOKKOS_FUNCTION int ulp_factor() { return ULP_FACTOR; }      \
   };                                                                    \
   using kk_##FUNC = MathUnaryFunction_##FUNC;                           \
   template <>                                                           \
@@ -372,7 +372,7 @@ struct math_function_name;
                        math_unary_function_return_type_t<T>>::value); \
       return REF_FUNC;                                                \
     }                                                                 \
-    static KOKKOS_FUNCTION double ulp_factor() { return ULP_FACTOR; } \
+    static KOKKOS_FUNCTION int ulp_factor() { return ULP_FACTOR; }    \
   };                                                                  \
   using kk_##FUNC = MathUnaryFunction_##FUNC;                         \
   template <>                                                         \
@@ -394,10 +394,12 @@ DEFINE_UNARY_FUNCTION_EVAL(log2, 2);
 DEFINE_UNARY_FUNCTION_EVAL(log1p, 2);
 #endif
 
-#ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_1
+#ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_2
 DEFINE_UNARY_FUNCTION_EVAL(sqrt, 2);
 DEFINE_UNARY_FUNCTION_EVAL(cbrt, 2);
+#endif
 
+#ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_1
 DEFINE_UNARY_FUNCTION_EVAL(sin, 2);
 DEFINE_UNARY_FUNCTION_EVAL(cos, 2);
 DEFINE_UNARY_FUNCTION_EVAL(tan, 2);
@@ -474,7 +476,7 @@ DEFINE_UNARY_FUNCTION_EVAL(logb, 2);
       }                                                                        \
       MATHEMATICAL_FUNCTIONS_TEST_UNREACHABLE                                  \
     }                                                                          \
-    static KOKKOS_FUNCTION double ulp_factor() { return ULP_FACTOR; }          \
+    static KOKKOS_FUNCTION int ulp_factor() { return ULP_FACTOR; }             \
   };                                                                           \
   using kk_##FUNC = MathBinaryFunction_##FUNC;                                 \
   template <>                                                                  \
@@ -483,11 +485,9 @@ DEFINE_UNARY_FUNCTION_EVAL(logb, 2);
   };                                                                           \
   constexpr char math_function_name<MathBinaryFunction_##FUNC>::name[]
 
-#ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_1
+#ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_2
 DEFINE_BINARY_FUNCTION_EVAL(pow, 2);
 DEFINE_BINARY_FUNCTION_EVAL(hypot, 2);
-#endif
-#ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_2
 DEFINE_BINARY_FUNCTION_EVAL(nextafter, 1);
 DEFINE_BINARY_FUNCTION_EVAL(copysign, 1);
 #endif
@@ -510,7 +510,7 @@ DEFINE_BINARY_FUNCTION_EVAL(copysign, 1);
                        math_ternary_function_return_type_t<T, U, V>>::value); \
       return std::FUNC(x, y, z);                                              \
     }                                                                         \
-    static KOKKOS_FUNCTION double ulp_factor() { return ULP_FACTOR; }         \
+    static KOKKOS_FUNCTION int ulp_factor() { return ULP_FACTOR; }            \
   };                                                                          \
   using kk3_##FUNC = MathTernaryFunction_##FUNC;                              \
   template <>                                                                 \
@@ -519,7 +519,7 @@ DEFINE_BINARY_FUNCTION_EVAL(copysign, 1);
   };                                                                          \
   constexpr char math_function_name<MathTernaryFunction_##FUNC>::name[]
 
-#ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_1
+#ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_2
 DEFINE_TERNARY_FUNCTION_EVAL(hypot, 2);
 DEFINE_TERNARY_FUNCTION_EVAL(fma, 2);
 #endif
@@ -787,7 +787,9 @@ TEST(TEST_CATEGORY, mathematical_functions_trigonometric_functions) {
 
   // TODO atan2
 }
+#endif
 
+#ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_2
 TEST(TEST_CATEGORY, mathematical_functions_power_functions) {
   TEST_MATH_FUNCTION(sqrt)({0, 1, 2, 3, 5, 7, 11});
   TEST_MATH_FUNCTION(sqrt)({0l, 1l, 2l, 3l, 5l, 7l, 11l});
@@ -1558,6 +1560,7 @@ TEST(TEST_CATEGORY, mathematical_functions_ieee_remainder_function) {
 
 // TODO: TestFpClassify, see https://github.com/kokkos/kokkos/issues/6279
 
+#ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_2
 template <class Space>
 struct TestIsFinite {
   TestIsFinite() { run(); }
@@ -1581,33 +1584,25 @@ struct TestIsFinite {
       ++e;
       Kokkos::printf("failed isfinite(float)\n");
     }
-    if (!isfinite(static_cast<KE::half_t>(2.f))
-#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC 23.7
-        || isfinite(quiet_NaN<KE::half_t>::value) ||
+#if !(defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_COMPILER_MSVC))
+    if (!isfinite(static_cast<KE::half_t>(2.f)) ||
+        isfinite(quiet_NaN<KE::half_t>::value) ||
         isfinite(signaling_NaN<KE::half_t>::value) ||
-        isfinite(infinity<KE::half_t>::value)
-#endif
-    ) {
+        isfinite(infinity<KE::half_t>::value)) {
       ++e;
       Kokkos::printf("failed isfinite(KE::half_t)\n");
     }
-    if (!isfinite(static_cast<KE::bhalf_t>(2.f))
-#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC 23.7
-        || isfinite(quiet_NaN<KE::bhalf_t>::value) ||
+    if (!isfinite(static_cast<KE::bhalf_t>(2.f)) ||
+        isfinite(quiet_NaN<KE::bhalf_t>::value) ||
         isfinite(signaling_NaN<KE::bhalf_t>::value) ||
-        isfinite(infinity<KE::bhalf_t>::value)
-#endif
-    ) {
+        isfinite(infinity<KE::bhalf_t>::value)) {
       ++e;
       Kokkos::printf("failed isfinite(KE::bhalf_t)\n");
     }
-    if (!isfinite(3.)
-#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC 23.7
-        || isfinite(quiet_NaN<double>::value) ||
-        isfinite(signaling_NaN<double>::value) ||
-        isfinite(infinity<double>::value)
 #endif
-    ) {
+    if (!isfinite(3.) || isfinite(quiet_NaN<double>::value) ||
+        isfinite(signaling_NaN<double>::value) ||
+        isfinite(infinity<double>::value)) {
       ++e;
       Kokkos::printf("failed isfinite(double)\n");
     }
@@ -1660,32 +1655,25 @@ struct TestIsInf {
       ++e;
       Kokkos::printf("failed isinf(float)\n");
     }
-    if (isinf(static_cast<KE::half_t>(2.f))
-#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC 23.7
-        || isinf(quiet_NaN<KE::half_t>::value) ||
+#if !(defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_COMPILER_MSVC))
+    if (isinf(static_cast<KE::half_t>(2.f)) ||
+        isinf(quiet_NaN<KE::half_t>::value) ||
         isinf(signaling_NaN<KE::half_t>::value) ||
-        !isinf(infinity<KE::half_t>::value)
-#endif
-    ) {
+        !isinf(infinity<KE::half_t>::value)) {
       ++e;
       Kokkos::printf("failed isinf(KE::half_t)\n");
     }
-    if (isinf(static_cast<KE::bhalf_t>(2.f))
-#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC 23.7
-        || isinf(quiet_NaN<KE::bhalf_t>::value) ||
+    if (isinf(static_cast<KE::bhalf_t>(2.f)) ||
+        isinf(quiet_NaN<KE::bhalf_t>::value) ||
         isinf(signaling_NaN<KE::bhalf_t>::value) ||
-        !isinf(infinity<KE::bhalf_t>::value)
-#endif
-    ) {
+        !isinf(infinity<KE::bhalf_t>::value)) {
       ++e;
       Kokkos::printf("failed isinf(KE::bhalf_t)\n");
     }
-    if (isinf(3.)
-#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC 23.7
-        || isinf(quiet_NaN<double>::value) ||
-        isinf(signaling_NaN<double>::value) || !isinf(infinity<double>::value)
 #endif
-    ) {
+    if (isinf(3.) || isinf(quiet_NaN<double>::value) ||
+        isinf(signaling_NaN<double>::value) ||
+        !isinf(infinity<double>::value)) {
       ++e;
       Kokkos::printf("failed isinf(double)\n");
     }
@@ -1738,35 +1726,28 @@ struct TestIsNaN {
       ++e;
       Kokkos::printf("failed isnan(float)\n");
     }
-    if (isnan(static_cast<KE::half_t>(2.f))
-#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC 23.7
-        || !isnan(quiet_NaN<KE::half_t>::value) ||
+#if !(defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_COMPILER_MSVC))
+    if (isnan(static_cast<KE::half_t>(2.f)) ||
+        !isnan(quiet_NaN<KE::half_t>::value) ||
         !isnan(signaling_NaN<KE::half_t>::value) ||
-        isnan(infinity<KE::half_t>::value)
-#endif
-    ) {
+        isnan(infinity<KE::half_t>::value)) {
       ++e;
       Kokkos::printf("failed isnan(KE::half_t)\n");
     }
-    if (isnan(static_cast<KE::bhalf_t>(2.f))
-#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC 23.7
-        || !isnan(quiet_NaN<KE::bhalf_t>::value) ||
+    if (isnan(static_cast<KE::bhalf_t>(2.f)) ||
+        !isnan(quiet_NaN<KE::bhalf_t>::value) ||
         !isnan(signaling_NaN<KE::bhalf_t>::value) ||
-        isnan(infinity<KE::bhalf_t>::value)
-#endif
-    ) {
+        isnan(infinity<KE::bhalf_t>::value)) {
       ++e;
       Kokkos::printf("failed isnan(KE::bhalf_t)\n");
     }
-    if (isnan(3.)
-#ifndef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC 23.7
-        || !isnan(quiet_NaN<double>::value) ||
-        !isnan(signaling_NaN<double>::value) || isnan(infinity<double>::value)
-#endif
-    ) {
+    if (isnan(3.) || !isnan(quiet_NaN<double>::value) ||
+        !isnan(signaling_NaN<double>::value) ||
+        isnan(infinity<double>::value)) {
       ++e;
       Kokkos::printf("failed isnan(double)\n");
     }
+#endif
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
     if (isnan(4.l) || !isnan(quiet_NaN<long double>::value) ||
         !isnan(signaling_NaN<long double>::value) ||
@@ -1793,6 +1774,7 @@ struct TestIsNaN {
 TEST(TEST_CATEGORY, mathematical_functions_isnan) {
   TestIsNaN<TEST_EXECSPACE>();
 }
+#endif
 
 // TODO: TestSignBit, see https://github.com/kokkos/kokkos/issues/6279
 #endif

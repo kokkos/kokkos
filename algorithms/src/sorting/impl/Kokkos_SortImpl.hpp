@@ -63,6 +63,11 @@
 
 #endif
 
+#if defined(KOKKOS_ENABLE_ROCTHRUST)
+#include <thrust/device_ptr.h>
+#include <thrust/sort.h>
+#endif
+
 #if defined(KOKKOS_ENABLE_ONEDPL)
 #include <oneapi/dpl/execution>
 #include <oneapi/dpl/algorithm>
@@ -184,13 +189,33 @@ void sort_cudathrust(const Cuda& space,
 }
 #endif
 
+#if defined(KOKKOS_ENABLE_ROCTHRUST)
+template <class DataType, class... Properties, class... MaybeComparator>
+void sort_rocthrust(const HIP& space,
+                    const Kokkos::View<DataType, Properties...>& view,
+                    MaybeComparator&&... maybeComparator) {
+  using ViewType = Kokkos::View<DataType, Properties...>;
+  static_assert(ViewType::rank == 1,
+                "Kokkos::sort: currently only supports rank-1 Views.");
+
+  if (view.extent(0) <= 1) {
+    return;
+  }
+  const auto exec = thrust::hip::par.on(space.hip_stream());
+  auto first      = ::Kokkos::Experimental::begin(view);
+  auto last       = ::Kokkos::Experimental::end(view);
+  thrust::sort(exec, first, last,
+               std::forward<MaybeComparator>(maybeComparator)...);
+}
+#endif
+
 #if defined(KOKKOS_ENABLE_ONEDPL)
 template <class DataType, class... Properties, class... MaybeComparator>
-void sort_onedpl(const Kokkos::Experimental::SYCL& space,
+void sort_onedpl(const Kokkos::SYCL& space,
                  const Kokkos::View<DataType, Properties...>& view,
                  MaybeComparator&&... maybeComparator) {
   using ViewType = Kokkos::View<DataType, Properties...>;
-  static_assert(SpaceAccessibility<Kokkos::Experimental::SYCL,
+  static_assert(SpaceAccessibility<Kokkos::SYCL,
                                    typename ViewType::memory_space>::accessible,
                 "SYCL execution space is not able to access the memory space "
                 "of the View argument!");
@@ -274,10 +299,18 @@ void sort_device_view_without_comparator(
 }
 #endif
 
+#if defined(KOKKOS_ENABLE_ROCTHRUST)
+template <class DataType, class... Properties>
+void sort_device_view_without_comparator(
+    const HIP& exec, const Kokkos::View<DataType, Properties...>& view) {
+  sort_rocthrust(exec, view);
+}
+#endif
+
 #if defined(KOKKOS_ENABLE_ONEDPL)
 template <class DataType, class... Properties>
 void sort_device_view_without_comparator(
-    const Kokkos::Experimental::SYCL& exec,
+    const Kokkos::SYCL& exec,
     const Kokkos::View<DataType, Properties...>& view) {
   using ViewType = Kokkos::View<DataType, Properties...>;
   static_assert(
@@ -320,11 +353,19 @@ void sort_device_view_with_comparator(
 }
 #endif
 
+#if defined(KOKKOS_ENABLE_ROCTHRUST)
+template <class ComparatorType, class DataType, class... Properties>
+void sort_device_view_with_comparator(
+    const HIP& exec, const Kokkos::View<DataType, Properties...>& view,
+    const ComparatorType& comparator) {
+  sort_rocthrust(exec, view, comparator);
+}
+#endif
+
 #if defined(KOKKOS_ENABLE_ONEDPL)
 template <class ComparatorType, class DataType, class... Properties>
 void sort_device_view_with_comparator(
-    const Kokkos::Experimental::SYCL& exec,
-    const Kokkos::View<DataType, Properties...>& view,
+    const Kokkos::SYCL& exec, const Kokkos::View<DataType, Properties...>& view,
     const ComparatorType& comparator) {
   using ViewType = Kokkos::View<DataType, Properties...>;
   static_assert(
@@ -357,9 +398,14 @@ sort_device_view_with_comparator(
 
   using ViewType = Kokkos::View<DataType, Properties...>;
   using MemSpace = typename ViewType::memory_space;
+// Note with HIP unified memory this code path is still the right thing to do
+// if we end up here when RocThrust is not enabled.
+// The create_mirror_view_and_copy will do the right thing (no copy).
+#ifndef KOKKOS_ENABLE_IMPL_HIP_UNIFIED_MEMORY
   static_assert(!SpaceAccessibility<HostSpace, MemSpace>::accessible,
                 "Impl::sort_device_view_with_comparator: should not be called "
                 "on a view that is already accessible on the host");
+#endif
 
   copy_to_host_run_stdsort_copy_back(exec, view, comparator);
 }

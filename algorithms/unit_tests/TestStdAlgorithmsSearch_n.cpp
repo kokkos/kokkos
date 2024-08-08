@@ -208,7 +208,7 @@ void run_single_scenario(const InfoType& scenario_info, std::size_t count,
 
   {
     auto myrit        = KE::search_n("label", exespace(), KE::cbegin(view),
-                              KE::cend(view), count, value, args...);
+                                     KE::cend(view), count, value, args...);
     const auto mydiff = myrit - KE::cbegin(view);
     ASSERT_EQ(mydiff, stddiff);
   }

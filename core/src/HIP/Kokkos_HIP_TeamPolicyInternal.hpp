@@ -17,7 +17,7 @@
 #ifndef KOKKOS_HIP_TEAM_POLICY_INTERNAL_HPP
 #define KOKKOS_HIP_TEAM_POLICY_INTERNAL_HPP
 
-#include <Kokkos_MinMaxClamp.hpp>
+#include <Kokkos_MinMax.hpp>
 
 namespace Kokkos {
 namespace Impl {
