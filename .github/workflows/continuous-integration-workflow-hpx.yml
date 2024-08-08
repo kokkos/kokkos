@@ -22,7 +22,7 @@ jobs:
 
     steps:
       - name: checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
           path: kokkos
       - name: setup hpx dependencies
@@ -35,12 +35,12 @@ jobs:
             libboost-all-dev \
             ninja-build
       - name: checkout hpx
-        uses: actions/checkout@v4
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
           repository: STELLAR-GROUP/hpx
           ref: v1.9.0
           path: hpx
-      - uses: actions/cache@v4
+      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
         id:   cache-hpx
         with:
           path:         ./hpx/install
