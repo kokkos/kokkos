@@ -69,8 +69,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
     auto a_functor_reducer = m_functor_reducer;
     auto a_functor         = FunctorAdapter(m_functor_reducer.get_functor());
 
-#pragma omp target teams distribute map(to                              \
-                                        : a_functor_reducer, a_functor) \
+#pragma omp target teams distribute map(to : a_functor_reducer, a_functor) \
     num_teams(nteams)
     for (idx_type team_id = 0; team_id < n_chunks; ++team_id) {
       const typename Analysis::Reducer& reducer =
@@ -112,8 +111,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
       }
     }
 
-#pragma omp target teams distribute map(to                              \
-                                        : a_functor_reducer, a_functor) \
+#pragma omp target teams distribute map(to : a_functor_reducer, a_functor) \
     num_teams(nteams) thread_limit(team_size)
     for (idx_type team_id = 0; team_id < n_chunks; ++team_id) {
       const typename Analysis::Reducer& reducer =

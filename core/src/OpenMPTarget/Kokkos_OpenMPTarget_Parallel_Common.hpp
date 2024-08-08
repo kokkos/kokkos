@@ -147,14 +147,13 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
 
       // Case where reduction is on a native data type.
       if constexpr (std::is_arithmetic<ValueType>::value) {
-#pragma omp target teams distribute parallel for \
-         map(to:f) reduction(+: result)
+#pragma omp target teams distribute parallel for map(to : f) \
+    reduction(+ : result)
         for (auto i = begin; i < end; ++i) f(i, result);
       } else {
 #pragma omp declare reduction(custom:ValueType : omp_out += omp_in)
-#pragma omp target teams distribute parallel for map(to                    \
-                                                     : f) reduction(custom \
-                                                                    : result)
+#pragma omp target teams distribute parallel for map(to : f) \
+    reduction(custom : result)
         for (auto i = begin; i < end; ++i) f(i, result);
       }
 
