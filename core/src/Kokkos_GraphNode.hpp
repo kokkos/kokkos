@@ -151,7 +151,7 @@ class GraphNodeRef {
             typename return_t::node_impl_t>(
             m_node_impl->execution_space_instance(),
             Kokkos::Impl::_graph_node_kernel_ctor_tag{},
-            (NextKernelDeduced &&) arg_kernel,
+            (NextKernelDeduced&&)arg_kernel,
             // *this is the predecessor
             Kokkos::Impl::_graph_node_predecessor_ctor_tag{}, *this));
 
@@ -184,10 +184,10 @@ class GraphNodeRef {
   // <editor-fold desc="rule of 6 ctors"> {{{3
 
   // Copyable and movable (basically just shared_ptr semantics
-  GraphNodeRef() noexcept               = default;
-  GraphNodeRef(GraphNodeRef const&)     = default;
-  GraphNodeRef(GraphNodeRef&&) noexcept = default;
-  GraphNodeRef& operator=(GraphNodeRef const&) = default;
+  GraphNodeRef() noexcept                          = default;
+  GraphNodeRef(GraphNodeRef const&)                = default;
+  GraphNodeRef(GraphNodeRef&&) noexcept            = default;
+  GraphNodeRef& operator=(GraphNodeRef const&)     = default;
   GraphNodeRef& operator=(GraphNodeRef&&) noexcept = default;
   ~GraphNodeRef()                                  = default;
 
@@ -257,7 +257,7 @@ class GraphNodeRef {
         //|| policy_t::execution_space_is_defaulted,
         "Execution Space mismatch between execution policy and graph");
 
-    auto policy = Experimental::require((Policy &&) arg_policy,
+    auto policy = Experimental::require((Policy&&)arg_policy,
                                         Kokkos::Impl::KernelInGraphProperty{});
 
     using next_policy_t = decltype(policy);
@@ -266,8 +266,8 @@ class GraphNodeRef {
                                           std::decay_t<Functor>,
                                           Kokkos::ParallelForTag>;
     return this->_then_kernel(next_kernel_t{std::move(arg_name), policy.space(),
-                                            (Functor &&) functor,
-                                            (Policy &&) policy});
+                                            (Functor&&)functor,
+                                            (Policy&&)policy});
   }
 
   template <
@@ -280,8 +280,7 @@ class GraphNodeRef {
           int> = 0>
   auto then_parallel_for(Policy&& policy, Functor&& functor) const {
     // needs to static assert constraint: DataParallelFunctor<Functor>
-    return this->then_parallel_for("", (Policy &&) policy,
-                                   (Functor &&) functor);
+    return this->then_parallel_for("", (Policy&&)policy, (Functor&&)functor);
   }
 
   template <class Functor>
@@ -290,13 +289,13 @@ class GraphNodeRef {
     // needs to static assert constraint: DataParallelFunctor<Functor>
     return this->then_parallel_for(std::move(name),
                                    Kokkos::RangePolicy<execution_space>(0, n),
-                                   (Functor &&) functor);
+                                   (Functor&&)functor);
   }
 
   template <class Functor>
   auto then_parallel_for(std::size_t n, Functor&& functor) const {
     // needs to static assert constraint: DataParallelFunctor<Functor>
-    return this->then_parallel_for("", n, (Functor &&) functor);
+    return this->then_parallel_for("", n, (Functor&&)functor);
   }
 
   // </editor-fold> end then_parallel_for }}}2
@@ -373,7 +372,7 @@ class GraphNodeRef {
     // End of Kokkos reducer disaster
     //----------------------------------------
 
-    auto policy = Experimental::require((Policy &&) arg_policy,
+    auto policy = Experimental::require((Policy&&)arg_policy,
                                         Kokkos::Impl::KernelInGraphProperty{});
 
     using passed_reducer_type = typename return_value_adapter::reducer_type;
@@ -399,7 +398,7 @@ class GraphNodeRef {
 
     return this->_then_kernel(next_kernel_t{
         std::move(arg_name), graph_impl_ptr->get_execution_space(),
-        functor_reducer, (Policy &&) policy,
+        functor_reducer, (Policy&&)policy,
         return_value_adapter::return_value(return_value, functor)});
   }
 
@@ -413,9 +412,9 @@ class GraphNodeRef {
           int> = 0>
   auto then_parallel_reduce(Policy&& arg_policy, Functor&& functor,
                             ReturnType&& return_value) const {
-    return this->then_parallel_reduce("", (Policy &&) arg_policy,
-                                      (Functor &&) functor,
-                                      (ReturnType &&) return_value);
+    return this->then_parallel_reduce("", (Policy&&)arg_policy,
+                                      (Functor&&)functor,
+                                      (ReturnType&&)return_value);
   }
 
   template <class Functor, class ReturnType>
@@ -425,15 +424,15 @@ class GraphNodeRef {
                             ReturnType&& return_value) const {
     return this->then_parallel_reduce(
         std::move(label), Kokkos::RangePolicy<execution_space>{0, idx_end},
-        (Functor &&) functor, (ReturnType &&) return_value);
+        (Functor&&)functor, (ReturnType&&)return_value);
   }
 
   template <class Functor, class ReturnType>
   auto then_parallel_reduce(typename execution_space::size_type idx_end,
                             Functor&& functor,
                             ReturnType&& return_value) const {
-    return this->then_parallel_reduce("", idx_end, (Functor &&) functor,
-                                      (ReturnType &&) return_value);
+    return this->then_parallel_reduce("", idx_end, (Functor&&)functor,
+                                      (ReturnType&&)return_value);
   }
 
   // </editor-fold> end then_parallel_reduce }}}2

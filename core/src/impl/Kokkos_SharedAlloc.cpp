@@ -102,7 +102,7 @@ bool SharedAllocationRecord<void, void>::is_sane(
       "KOKKOS_ENABLE_DEBUG enabled");
   return false;
 }
-#endif  //#ifdef KOKKOS_ENABLE_DEBUG
+#endif  // #ifdef KOKKOS_ENABLE_DEBUG
 
 #ifdef KOKKOS_ENABLE_DEBUG
 SharedAllocationRecord<void, void>* SharedAllocationRecord<void, void>::find(

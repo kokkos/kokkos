@@ -31,7 +31,7 @@
 #include <algorithm>
 #include <atomic>
 
-//#include <Cuda/Kokkos_Cuda_BlockSize_Deduction.hpp>
+// #include <Cuda/Kokkos_Cuda_BlockSize_Deduction.hpp>
 #include <impl/Kokkos_Error.hpp>
 
 #include <impl/Kokkos_Tools.hpp>

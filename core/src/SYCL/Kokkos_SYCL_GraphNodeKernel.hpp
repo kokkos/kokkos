@@ -47,14 +47,14 @@ class GraphNodeKernelImpl<Kokkos::SYCL, PolicyType, Functor, PatternTag,
   template <typename PolicyDeduced, typename... ArgsDeduced>
   GraphNodeKernelImpl(std::string, Kokkos::SYCL const&, Functor arg_functor,
                       PolicyDeduced&& arg_policy, ArgsDeduced&&... args)
-      : base_t(std::move(arg_functor), (PolicyDeduced &&) arg_policy,
-               (ArgsDeduced &&) args...) {}
+      : base_t(std::move(arg_functor), (PolicyDeduced&&)arg_policy,
+               (ArgsDeduced&&)args...) {}
 
   template <typename PolicyDeduced>
   GraphNodeKernelImpl(Kokkos::SYCL const& exec_space, Functor arg_functor,
                       PolicyDeduced&& arg_policy)
       : GraphNodeKernelImpl("", exec_space, std::move(arg_functor),
-                            (PolicyDeduced &&) arg_policy) {}
+                            (PolicyDeduced&&)arg_policy) {}
 
   void set_sycl_graph_ptr(
       sycl::ext::oneapi::experimental::command_graph<

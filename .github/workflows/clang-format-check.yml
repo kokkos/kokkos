@@ -12,4 +12,4 @@ jobs:
     - name: Run clang-format style check.
       uses: DoozyX/clang-format-lint-action@v0.17
       with:
-        clangFormatVersion: 8
+        clangFormatVersion: 16

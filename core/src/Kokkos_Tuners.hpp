@@ -412,11 +412,11 @@ class TeamSizeTuner : public ExtendableTunerMixin<TeamSizeTuner> {
   TunerType tuner;
 
  public:
-  TeamSizeTuner()        = default;
+  TeamSizeTuner()                                      = default;
   TeamSizeTuner& operator=(const TeamSizeTuner& other) = default;
   TeamSizeTuner(const TeamSizeTuner& other)            = default;
-  TeamSizeTuner& operator=(TeamSizeTuner&& other) = default;
-  TeamSizeTuner(TeamSizeTuner&& other)            = default;
+  TeamSizeTuner& operator=(TeamSizeTuner&& other)      = default;
+  TeamSizeTuner(TeamSizeTuner&& other)                 = default;
   template <typename ViableConfigurationCalculator, typename Functor,
             typename TagType, typename... Properties>
   TeamSizeTuner(const std::string& name,

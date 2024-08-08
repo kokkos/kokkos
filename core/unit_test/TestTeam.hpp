@@ -1533,7 +1533,7 @@ struct TestScratchAlignment {
         std::is_same<ExecSpace, Kokkos::Experimental::OpenMPTarget>::value ? 32
                                                                            : 1;
 #else
-    int team_size = 1;
+    int team_size      = 1;
 #endif
     if (allocate_small) shmem_size += ScratchViewInt::shmem_size(1);
     Kokkos::parallel_for(
@@ -1558,7 +1558,7 @@ struct TestScratchAlignment {
         std::is_same<ExecSpace, Kokkos::Experimental::OpenMPTarget>::value ? 32
                                                                            : 1;
 #else
-    int team_size = 1;
+    int team_size      = 1;
 #endif
     Kokkos::TeamPolicy<ExecSpace> policy(1, team_size);
     size_t scratch_size = sizeof(int);
@@ -1584,7 +1584,7 @@ struct TestScratchAlignment {
         std::is_same<ExecSpace, Kokkos::Experimental::OpenMPTarget>::value ? 32
                                                                            : 1;
 #else
-    int team_size = 1;
+    int team_size      = 1;
 #endif
     Kokkos::TeamPolicy<ExecSpace> policy(1, team_size);
     Kokkos::View<int, ExecSpace> flag("Flag");

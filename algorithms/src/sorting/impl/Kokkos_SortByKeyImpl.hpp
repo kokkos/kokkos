@@ -76,7 +76,7 @@ namespace Kokkos::Impl {
 
 template <typename T>
 constexpr inline bool is_admissible_to_kokkos_sort_by_key =
-    ::Kokkos::is_view<T>::value&& T::rank() == 1 &&
+    ::Kokkos::is_view<T>::value && T::rank() == 1 &&
     (std::is_same<typename T::traits::array_layout,
                   Kokkos::LayoutLeft>::value ||
      std::is_same<typename T::traits::array_layout,

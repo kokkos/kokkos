@@ -90,18 +90,18 @@ TEST(TEST_CATEGORY, view_is_assignable) {
                           View<int[10], left, d_exec>>::test(false, false);
   Impl::TestAssignability<View<int**, left, d_exec>,
                           View<int**, left, d_exec>>::test(true, true, 10, 10);
-  Impl::TestAssignability<View<int * [10], left, d_exec>,
+  Impl::TestAssignability<View<int* [10], left, d_exec>,
                           View<int**, left, d_exec>>::test(false, true, 10, 10);
-  Impl::TestAssignability<View<int * [5], left, d_exec>,
+  Impl::TestAssignability<View<int* [5], left, d_exec>,
                           View<int**, left, d_exec>>::test(false, false, 10,
                                                            10);
   Impl::TestAssignability<View<int**, left, d_exec>,
-                          View<int * [10], left, d_exec>>::test(true, true, 10);
-  Impl::TestAssignability<View<int * [10], left, d_exec>,
-                          View<int * [10], left, d_exec>>::test(true, true, 10);
-  Impl::TestAssignability<View<int * [5], left, d_exec>,
-                          View<int * [10], left, d_exec>>::test(false, false,
-                                                                10);
+                          View<int* [10], left, d_exec>>::test(true, true, 10);
+  Impl::TestAssignability<View<int* [10], left, d_exec>,
+                          View<int* [10], left, d_exec>>::test(true, true, 10);
+  Impl::TestAssignability<View<int* [5], left, d_exec>,
+                          View<int* [10], left, d_exec>>::test(false, false,
+                                                               10);
 
   // Mismatch value_type
   Impl::TestAssignability<View<int*, left, d_exec>,

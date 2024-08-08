@@ -44,11 +44,11 @@ class GraphImpl<Kokkos::SYCL> {
 
   // Not movable or copyable; it spends its whole life as a shared_ptr in the
   // Graph object.
-  GraphImpl()                 = delete;
-  GraphImpl(GraphImpl const&) = delete;
-  GraphImpl(GraphImpl&&)      = delete;
+  GraphImpl()                            = delete;
+  GraphImpl(GraphImpl const&)            = delete;
+  GraphImpl(GraphImpl&&)                 = delete;
   GraphImpl& operator=(GraphImpl const&) = delete;
-  GraphImpl& operator=(GraphImpl&&) = delete;
+  GraphImpl& operator=(GraphImpl&&)      = delete;
 
   ~GraphImpl();
 
@@ -142,8 +142,8 @@ inline void GraphImpl<Kokkos::SYCL>::submit() {
   m_execution_space.sycl_queue().ext_oneapi_graph(*m_graph_exec);
 }
 
-inline Kokkos::SYCL const& GraphImpl<Kokkos::SYCL>::get_execution_space() const
-    noexcept {
+inline Kokkos::SYCL const& GraphImpl<Kokkos::SYCL>::get_execution_space()
+    const noexcept {
   return m_execution_space;
 }
 

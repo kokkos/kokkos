@@ -38,7 +38,7 @@
 //
 // The first dimension of the View is the dimension over which it is
 // efficient for Kokkos to parallelize.
-using view_type = Kokkos::View<double * [3]>;
+using view_type = Kokkos::View<double* [3]>;
 
 int main(int argc, char* argv[]) {
   Kokkos::initialize(argc, argv);
