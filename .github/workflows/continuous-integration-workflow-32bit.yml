@@ -36,7 +36,7 @@ jobs:
             -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
             -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
-            -DCMAKE_CXX_FLAGS="-Werror -m32 -DKOKKOS_IMPL_32BIT" \
+            -DCMAKE_CXX_FLAGS="-Werror -m32" \
             -DCMAKE_CXX_COMPILER=g++ \
             -DCMAKE_BUILD_TYPE=RelWithDebInfo
       - name: Build
