@@ -58,12 +58,12 @@ struct GraphImpl : private ExecutionSpaceInstanceStorage<ExecutionSpace> {
 
   // Not movable or copyable; it spends its whole live as a shared_ptr in the
   // Graph object
-  GraphImpl()                 = default;
-  GraphImpl(GraphImpl const&) = delete;
-  GraphImpl(GraphImpl&&)      = delete;
+  GraphImpl()                            = default;
+  GraphImpl(GraphImpl const&)            = delete;
+  GraphImpl(GraphImpl&&)                 = delete;
   GraphImpl& operator=(GraphImpl const&) = delete;
-  GraphImpl& operator=(GraphImpl&&) = delete;
-  ~GraphImpl()                      = default;
+  GraphImpl& operator=(GraphImpl&&)      = delete;
+  ~GraphImpl()                           = default;
 
   explicit GraphImpl(ExecutionSpace arg_space)
       : execution_space_instance_storage_base_t(std::move(arg_space)) {}

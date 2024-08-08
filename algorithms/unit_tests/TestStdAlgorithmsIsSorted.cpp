@@ -154,7 +154,7 @@ void run_single_scenario(const InfoType& scenario_info) {
   resultsB[0] =
       KE::is_sorted(exespace(), KE::cbegin(view), KE::cend(view), comp);
   resultsB[1]     = KE::is_sorted("label", exespace(), KE::cbegin(view),
-                              KE::cend(view), comp);
+                                  KE::cend(view), comp);
   resultsB[2]     = KE::is_sorted(exespace(), view, comp);
   resultsB[3]     = KE::is_sorted("label", exespace(), view, comp);
   const auto allB = std::all_of(resultsB.cbegin(), resultsB.cend(),

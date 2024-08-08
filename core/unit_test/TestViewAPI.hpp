@@ -47,7 +47,7 @@ struct TestViewOperator {
   enum { N = 1000 };
   enum { D = 3 };
 
-  using view_type = Kokkos::View<T * [D], execution_space>;
+  using view_type = Kokkos::View<T *[D], execution_space>;
 
   const view_type v1;
   const view_type v2;
@@ -907,10 +907,10 @@ class TestViewAPI {
 
   using dView0       = Kokkos::View<T, device>;
   using dView1       = Kokkos::View<T *, device>;
-  using dView2       = Kokkos::View<T * [N1], device>;
-  using dView3       = Kokkos::View<T * [N1][N2], device>;
-  using dView4       = Kokkos::View<T * [N1][N2][N3], device>;
-  using const_dView4 = Kokkos::View<const T * [N1][N2][N3], device>;
+  using dView2       = Kokkos::View<T *[N1], device>;
+  using dView3       = Kokkos::View<T *[N1][N2], device>;
+  using dView4       = Kokkos::View<T *[N1][N2][N3], device>;
+  using const_dView4 = Kokkos::View<const T *[N1][N2][N3], device>;
   using dView4_unmanaged =
       Kokkos::View<T ****, device, Kokkos::MemoryUnmanaged>;
   using host = typename dView0::host_mirror_space;
@@ -1020,8 +1020,8 @@ class TestViewAPI {
 
   static void run_test_contruction_from_layout_2() {
     using dView3_0 = Kokkos::View<T ***, device>;
-    using dView3_1 = Kokkos::View<T * * [N2], device>;
-    using dView3_2 = Kokkos::View<T * [N1][N2], device>;
+    using dView3_1 = Kokkos::View<T **[N2], device>;
+    using dView3_2 = Kokkos::View<T *[N1][N2], device>;
     using dView3_3 = Kokkos::View<T[N0][N1][N2], device>;
 
     dView3_0 v_0("v_0", N0, N1, N2);
@@ -1391,8 +1391,8 @@ class TestViewAPI {
 
     // Check Deep Copy of two empty 2D views
     {
-      Kokkos::View<double * [3], Kokkos::LayoutRight> d;
-      Kokkos::View<double * [3], Kokkos::LayoutRight, Kokkos::HostSpace> h;
+      Kokkos::View<double *[3], Kokkos::LayoutRight> d;
+      Kokkos::View<double *[3], Kokkos::LayoutRight, Kokkos::HostSpace> h;
       Kokkos::deep_copy(d, h);
       Kokkos::deep_copy(h, d);
     }

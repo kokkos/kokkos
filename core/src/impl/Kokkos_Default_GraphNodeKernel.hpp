@@ -58,20 +58,20 @@ class GraphNodeKernelImpl
 
   // TODO @graph kernel name info propagation
   template <class PolicyDeduced, class... ArgsDeduced>
-  GraphNodeKernelImpl(std::string const&, ExecutionSpace const&,
-                      Functor arg_functor, PolicyDeduced&& arg_policy,
-                      ArgsDeduced&&... args)
-      : base_t(std::move(arg_functor), (PolicyDeduced &&) arg_policy,
-               (ArgsDeduced &&) args...),
+  GraphNodeKernelImpl(std::string const &, ExecutionSpace const &,
+                      Functor arg_functor, PolicyDeduced &&arg_policy,
+                      ArgsDeduced &&...args)
+      : base_t(std::move(arg_functor), (PolicyDeduced &&)arg_policy,
+               (ArgsDeduced &&)args...),
         execute_kernel_vtable_base_t() {}
 
   // FIXME @graph Forward through the instance once that works in the backends
   template <class PolicyDeduced, class... ArgsDeduced>
-  GraphNodeKernelImpl(ExecutionSpace const& ex, Functor arg_functor,
-                      PolicyDeduced&& arg_policy, ArgsDeduced&&... args)
+  GraphNodeKernelImpl(ExecutionSpace const &ex, Functor arg_functor,
+                      PolicyDeduced &&arg_policy, ArgsDeduced &&...args)
       : GraphNodeKernelImpl("", ex, std::move(arg_functor),
-                            (PolicyDeduced &&) arg_policy,
-                            (ArgsDeduced &&) args...) {}
+                            (PolicyDeduced &&)arg_policy,
+                            (ArgsDeduced &&)args...) {}
 
   void execute_kernel() final { this->base_t::execute(); }
 };

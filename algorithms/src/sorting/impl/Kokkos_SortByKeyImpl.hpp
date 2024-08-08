@@ -76,7 +76,7 @@ namespace Kokkos::Impl {
 
 template <typename T>
 constexpr inline bool is_admissible_to_kokkos_sort_by_key =
-    ::Kokkos::is_view<T>::value&& T::rank() == 1 &&
+    ::Kokkos::is_view<T>::value && T::rank() == 1 &&
     (std::is_same<typename T::traits::array_layout,
                   Kokkos::LayoutLeft>::value ||
      std::is_same<typename T::traits::array_layout,
@@ -144,7 +144,7 @@ void sort_by_key_rocthrust(
 
 #if defined(KOKKOS_ENABLE_ONEDPL)
 template <class Layout>
-inline constexpr bool sort_on_device_v<Kokkos::Experimental::SYCL, Layout> =
+inline constexpr bool sort_on_device_v<Kokkos::SYCL, Layout> =
     std::is_same_v<Layout, Kokkos::LayoutLeft> ||
     std::is_same_v<Layout, Kokkos::LayoutRight>;
 
@@ -152,7 +152,7 @@ inline constexpr bool sort_on_device_v<Kokkos::Experimental::SYCL, Layout> =
 template <class KeysDataType, class... KeysProperties, class ValuesDataType,
           class... ValuesProperties, class... MaybeComparator>
 void sort_by_key_onedpl(
-    const Kokkos::Experimental::SYCL& exec,
+    const Kokkos::SYCL& exec,
     const Kokkos::View<KeysDataType, KeysProperties...>& keys,
     const Kokkos::View<ValuesDataType, ValuesProperties...>& values,
     MaybeComparator&&... maybeComparator) {
@@ -335,7 +335,7 @@ void sort_by_key_device_view_without_comparator(
 template <class KeysDataType, class... KeysProperties, class ValuesDataType,
           class... ValuesProperties>
 void sort_by_key_device_view_without_comparator(
-    const Kokkos::Experimental::SYCL& exec,
+    const Kokkos::SYCL& exec,
     const Kokkos::View<KeysDataType, KeysProperties...>& keys,
     const Kokkos::View<ValuesDataType, ValuesProperties...>& values) {
 #ifdef KOKKOS_ONEDPL_HAS_SORT_BY_KEY
@@ -392,7 +392,7 @@ void sort_by_key_device_view_with_comparator(
 template <class ComparatorType, class KeysDataType, class... KeysProperties,
           class ValuesDataType, class... ValuesProperties>
 void sort_by_key_device_view_with_comparator(
-    const Kokkos::Experimental::SYCL& exec,
+    const Kokkos::SYCL& exec,
     const Kokkos::View<KeysDataType, KeysProperties...>& keys,
     const Kokkos::View<ValuesDataType, ValuesProperties...>& values,
     const ComparatorType& comparator) {

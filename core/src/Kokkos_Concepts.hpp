@@ -309,10 +309,8 @@ struct is_space {
           || std::is_same<memory_space, Kokkos::HIPHostPinnedSpace>::value ||
           std::is_same<memory_space, Kokkos::HIPManagedSpace>::value
 #elif defined(KOKKOS_ENABLE_SYCL)
-          || std::is_same<memory_space,
-                          Kokkos::Experimental::SYCLSharedUSMSpace>::value ||
-          std::is_same<memory_space,
-                       Kokkos::Experimental::SYCLHostUSMSpace>::value
+          || std::is_same<memory_space, Kokkos::SYCLSharedUSMSpace>::value ||
+          std::is_same<memory_space, Kokkos::SYCLHostUSMSpace>::value
 #endif
       ,
       memory_space, Kokkos::HostSpace>;
@@ -323,7 +321,7 @@ struct is_space {
 #elif defined(KOKKOS_ENABLE_HIP)
       std::is_same<execution_space, Kokkos::HIP>::value ||
 #elif defined(KOKKOS_ENABLE_SYCL)
-      std::is_same<execution_space, Kokkos::Experimental::SYCL>::value ||
+      std::is_same<execution_space, Kokkos::SYCL>::value ||
 #elif defined(KOKKOS_ENABLE_OPENMPTARGET)
       std::is_same<execution_space,
                    Kokkos::Experimental::OpenMPTarget>::value ||

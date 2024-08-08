@@ -138,7 +138,7 @@ int get_device_count() {
   KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDeviceCount(&count));
   return count;
 #elif defined(KOKKOS_ENABLE_SYCL)
-  return Kokkos::Experimental::Impl::get_sycl_devices().size();
+  return Kokkos::Impl::get_sycl_devices().size();
 #elif defined(KOKKOS_ENABLE_OPENACC)
   return acc_get_num_devices(
       Kokkos::Experimental::Impl::OpenACC_Traits::dev_type);
@@ -183,7 +183,7 @@ std::vector<int> const& Kokkos::Impl::get_visible_devices() {
 #elif defined(KOKKOS_ENABLE_OPENMPTARGET)
   int device = omp_get_default_device();  // FIXME_OPENMPTARGET
 #elif defined(KOKKOS_ENABLE_SYCL)
-  int device = Experimental::Impl::SYCLInternal::m_syclDev;
+  int device = Impl::SYCLInternal::m_syclDev;
 #else
   int device = -1;
   return device;

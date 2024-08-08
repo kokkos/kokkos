@@ -95,12 +95,12 @@ struct non_owning_variable_size_circular_buffer {
   non_owning_variable_size_circular_buffer(
       non_owning_variable_size_circular_buffer const&) = delete;
   non_owning_variable_size_circular_buffer(
-      non_owning_variable_size_circular_buffer&&)      = default;
-  non_owning_variable_size_circular_buffer& operator   =(
-      non_owning_variable_size_circular_buffer const&) = delete;
-  non_owning_variable_size_circular_buffer& operator   =(
       non_owning_variable_size_circular_buffer&&) = default;
-  ~non_owning_variable_size_circular_buffer()          = default;
+  non_owning_variable_size_circular_buffer& operator=(
+      non_owning_variable_size_circular_buffer const&) = delete;
+  non_owning_variable_size_circular_buffer& operator=(
+      non_owning_variable_size_circular_buffer&&) = default;
+  ~non_owning_variable_size_circular_buffer()     = default;
 
   KOKKOS_FORCEINLINE_FUNCTION
   constexpr size_type size() const noexcept { return m_size; }

@@ -116,8 +116,8 @@ class OpenMPTargetExecTeamMember {
   // FIXME_OPENMPTARGET this function currently ignores the reducer passed.
   template <typename ReducerType>
   KOKKOS_INLINE_FUNCTION std::enable_if_t<is_reducer<ReducerType>::value>
-  team_reduce(ReducerType const&, typename ReducerType::value_type& value) const
-      noexcept {
+  team_reduce(ReducerType const&,
+              typename ReducerType::value_type& value) const noexcept {
 #pragma omp barrier
 
     using value_type = typename ReducerType::value_type;

@@ -173,15 +173,15 @@ struct DeduceHIPLaunchMechanism {
   static constexpr HIPLaunchMechanism launch_mechanism =
       ((property & force_global_launch) == force_global_launch)
           ? HIPLaunchMechanism::GlobalMemory
-          : ((property & light_weight) == light_weight)
-                ? (sizeof(DriverType) < HIPTraits::KernelArgumentLimit
-                       ? HIPLaunchMechanism::LocalMemory
-                       : HIPLaunchMechanism::GlobalMemory)
-                : (((property & heavy_weight) == heavy_weight)
-                       ? (sizeof(DriverType) < HIPTraits::ConstantMemoryUsage
-                              ? HIPLaunchMechanism::ConstantMemory
-                              : HIPLaunchMechanism::GlobalMemory)
-                       : (default_launch_mechanism));
+      : ((property & light_weight) == light_weight)
+          ? (sizeof(DriverType) < HIPTraits::KernelArgumentLimit
+                 ? HIPLaunchMechanism::LocalMemory
+                 : HIPLaunchMechanism::GlobalMemory)
+          : (((property & heavy_weight) == heavy_weight)
+                 ? (sizeof(DriverType) < HIPTraits::ConstantMemoryUsage
+                        ? HIPLaunchMechanism::ConstantMemory
+                        : HIPLaunchMechanism::GlobalMemory)
+                 : (default_launch_mechanism));
 };
 
 template <typename DriverType, typename LaunchBounds,

@@ -1635,12 +1635,11 @@ struct HostIterateTile<RP, Functor, Tag, ValueType,
       } else {
         is_full_tile = false;
         partial_tile[i] =
-            (m_rp.m_upper[i] - 1 - offset[i]) == 0
-                ? 1
-                : (m_rp.m_upper[i] - m_rp.m_tile[i]) > 0
-                      ? (m_rp.m_upper[i] - offset[i])
-                      : (m_rp.m_upper[i] -
-                         m_rp.m_lower[i]);  // when single tile encloses range
+            (m_rp.m_upper[i] - 1 - offset[i]) == 0 ? 1
+            : (m_rp.m_upper[i] - m_rp.m_tile[i]) > 0
+                ? (m_rp.m_upper[i] - offset[i])
+                : (m_rp.m_upper[i] -
+                   m_rp.m_lower[i]);  // when single tile encloses range
       }
     }
 
@@ -2050,12 +2049,11 @@ struct HostIterateTile<RP, Functor, Tag, ValueType,
       } else {
         is_full_tile = false;
         partial_tile[i] =
-            (m_rp.m_upper[i] - 1 - offset[i]) == 0
-                ? 1
-                : (m_rp.m_upper[i] - m_rp.m_tile[i]) > 0
-                      ? (m_rp.m_upper[i] - offset[i])
-                      : (m_rp.m_upper[i] -
-                         m_rp.m_lower[i]);  // when single tile encloses range
+            (m_rp.m_upper[i] - 1 - offset[i]) == 0 ? 1
+            : (m_rp.m_upper[i] - m_rp.m_tile[i]) > 0
+                ? (m_rp.m_upper[i] - offset[i])
+                : (m_rp.m_upper[i] -
+                   m_rp.m_lower[i]);  // when single tile encloses range
       }
     }
 
@@ -2463,12 +2461,11 @@ struct HostIterateTile<RP, Functor, Tag, ValueType,
       } else {
         is_full_tile = false;
         partial_tile[i] =
-            (m_rp.m_upper[i] - 1 - offset[i]) == 0
-                ? 1
-                : (m_rp.m_upper[i] - m_rp.m_tile[i]) > 0
-                      ? (m_rp.m_upper[i] - offset[i])
-                      : (m_rp.m_upper[i] -
-                         m_rp.m_lower[i]);  // when single tile encloses range
+            (m_rp.m_upper[i] - 1 - offset[i]) == 0 ? 1
+            : (m_rp.m_upper[i] - m_rp.m_tile[i]) > 0
+                ? (m_rp.m_upper[i] - offset[i])
+                : (m_rp.m_upper[i] -
+                   m_rp.m_lower[i]);  // when single tile encloses range
       }
     }
 

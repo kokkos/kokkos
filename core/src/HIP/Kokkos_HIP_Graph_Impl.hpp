@@ -42,11 +42,11 @@ class GraphImpl<Kokkos::HIP> {
 
   // Not movable or copyable; it spends its whole life as a shared_ptr in the
   // Graph object.
-  GraphImpl()                 = delete;
-  GraphImpl(GraphImpl const&) = delete;
-  GraphImpl(GraphImpl&&)      = delete;
+  GraphImpl()                            = delete;
+  GraphImpl(GraphImpl const&)            = delete;
+  GraphImpl(GraphImpl&&)                 = delete;
   GraphImpl& operator=(GraphImpl const&) = delete;
-  GraphImpl& operator=(GraphImpl&&) = delete;
+  GraphImpl& operator=(GraphImpl&&)      = delete;
 
   ~GraphImpl();
 
@@ -153,8 +153,8 @@ inline void GraphImpl<Kokkos::HIP>::submit() {
       hipGraphLaunch(m_graph_exec, m_execution_space.hip_stream()));
 }
 
-inline Kokkos::HIP const& GraphImpl<Kokkos::HIP>::get_execution_space() const
-    noexcept {
+inline Kokkos::HIP const& GraphImpl<Kokkos::HIP>::get_execution_space()
+    const noexcept {
   return m_execution_space;
 }
 
