@@ -1233,8 +1233,8 @@ class ScatterView<DataType, Kokkos::LayoutLeft, DeviceType, Op,
     arg_N[internal_view_type::rank - 1] = unique_token.size();
     internal_view                       = internal_view_type(
         view_alloc(WithoutInitializing,
-                   std::string("duplicated_") + original_view.label(),
-                   exec_space),
+                                         std::string("duplicated_") + original_view.label(),
+                                         exec_space),
         arg_N[0], arg_N[1], arg_N[2], arg_N[3], arg_N[4], arg_N[5], arg_N[6],
         arg_N[7]);
     reset(exec_space);
@@ -1470,9 +1470,9 @@ class ScatterAccess<DataType, Op, DeviceType, Layout, ScatterDuplicated,
   view_type const& view;
 
   // simplify RAII by disallowing copies
-  ScatterAccess(ScatterAccess const& other) = delete;
+  ScatterAccess(ScatterAccess const& other)            = delete;
   ScatterAccess& operator=(ScatterAccess const& other) = delete;
-  ScatterAccess& operator=(ScatterAccess&& other) = delete;
+  ScatterAccess& operator=(ScatterAccess&& other)      = delete;
 
  public:
   // do need to allow moves though, for the common

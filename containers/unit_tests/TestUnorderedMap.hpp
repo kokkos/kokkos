@@ -460,7 +460,7 @@ struct UnorderedMapInsert {
 
   //! Insert multiple values.
   template <typename... Args>
-  void insert(Args &&... args) const {
+  void insert(Args &&...args) const {
     static_assert(sizeof...(Args) > 1, "Prefer the single value version");
     constexpr size_t size = sizeof...(Args);
     Kokkos::Array<typename map_type::key_type, size> values{

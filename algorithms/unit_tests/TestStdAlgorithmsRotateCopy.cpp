@@ -175,7 +175,7 @@ void run_single_scenario(const InfoType& scenario_info,
         create_view<ValueType>(Tag{}, view_ext, "rotate_copy_dest");
     auto n_it = KE::cbegin(view_from) + rotation_point;
     auto rit  = KE::rotate_copy(exespace(), KE::cbegin(view_from), n_it,
-                               KE::cend(view_from), KE::begin(view_dest));
+                                KE::cend(view_from), KE::begin(view_dest));
     verify_data(view_from, view_dest, rotation_point);
     ASSERT_EQ(rit, (KE::begin(view_dest) + view_ext));
   }

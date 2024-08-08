@@ -889,7 +889,7 @@ template <typename ScalarType, class DeviceType>
 class TestTripleNestedReduce {
  public:
   using execution_space = DeviceType;
-  using size_type = typename execution_space::size_type;
+  using size_type       = typename execution_space::size_type;
 
   TestTripleNestedReduce(const size_type &, const size_type, const size_type &,
                          const size_type) {}

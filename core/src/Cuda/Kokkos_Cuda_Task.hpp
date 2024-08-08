@@ -584,9 +584,9 @@ class TaskExec<Kokkos::Cuda, Scheduler> {
  private:
   enum : int { WarpSize = Kokkos::Impl::CudaTraits::WarpSize };
 
-  TaskExec(TaskExec&&)      = delete;
-  TaskExec(TaskExec const&) = delete;
-  TaskExec& operator=(TaskExec&&) = delete;
+  TaskExec(TaskExec&&)                 = delete;
+  TaskExec(TaskExec const&)            = delete;
+  TaskExec& operator=(TaskExec&&)      = delete;
   TaskExec& operator=(TaskExec const&) = delete;
 
   friend class Kokkos::Impl::TaskQueue<

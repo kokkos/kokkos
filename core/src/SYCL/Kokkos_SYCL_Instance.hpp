@@ -37,10 +37,10 @@ class SYCLInternal {
   SYCLInternal() = default;
   ~SYCLInternal();
 
-  SYCLInternal(const SYCLInternal&) = delete;
+  SYCLInternal(const SYCLInternal&)            = delete;
   SYCLInternal& operator=(const SYCLInternal&) = delete;
-  SYCLInternal& operator=(SYCLInternal&&) = delete;
-  SYCLInternal(SYCLInternal&&)            = delete;
+  SYCLInternal& operator=(SYCLInternal&&)      = delete;
+  SYCLInternal(SYCLInternal&&)                 = delete;
 
   Kokkos::Impl::sycl_device_ptr<void> scratch_space(const std::size_t size);
   Kokkos::Impl::sycl_device_ptr<void> scratch_flags(const std::size_t size);
@@ -102,9 +102,9 @@ class SYCLInternal {
     explicit USMObjectMem(sycl::queue q, uint32_t instance_id) noexcept
         : m_q(std::move(q)), m_instance_id(instance_id) {}
 
-    USMObjectMem(USMObjectMem const&) = delete;
-    USMObjectMem(USMObjectMem&&)      = delete;
-    USMObjectMem& operator=(USMObjectMem&&) = delete;
+    USMObjectMem(USMObjectMem const&)            = delete;
+    USMObjectMem(USMObjectMem&&)                 = delete;
+    USMObjectMem& operator=(USMObjectMem&&)      = delete;
     USMObjectMem& operator=(USMObjectMem const&) = delete;
 
     ~USMObjectMem() { reset(); };

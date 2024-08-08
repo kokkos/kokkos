@@ -389,58 +389,55 @@ struct MDRangePolicy<P, Properties...>
 };
 
 template <typename LT, size_t N, typename UT>
-MDRangePolicy(const LT (&)[N], const UT (&)[N])->MDRangePolicy<Rank<N>>;
+MDRangePolicy(const LT (&)[N], const UT (&)[N]) -> MDRangePolicy<Rank<N>>;
 
 template <typename LT, size_t N, typename UT, typename TT, size_t TN>
 MDRangePolicy(const LT (&)[N], const UT (&)[N], const TT (&)[TN])
-    ->MDRangePolicy<Rank<N>>;
+    -> MDRangePolicy<Rank<N>>;
 
 template <typename LT, size_t N, typename UT>
 MDRangePolicy(DefaultExecutionSpace const&, const LT (&)[N], const UT (&)[N])
-    ->MDRangePolicy<Rank<N>>;
+    -> MDRangePolicy<Rank<N>>;
 
 template <typename LT, size_t N, typename UT, typename TT, size_t TN>
 MDRangePolicy(DefaultExecutionSpace const&, const LT (&)[N], const UT (&)[N],
-              const TT (&)[TN])
-    ->MDRangePolicy<Rank<N>>;
+              const TT (&)[TN]) -> MDRangePolicy<Rank<N>>;
 
 template <typename ES, typename LT, size_t N, typename UT,
           typename = std::enable_if_t<is_execution_space_v<ES>>>
 MDRangePolicy(ES const&, const LT (&)[N], const UT (&)[N])
-    ->MDRangePolicy<ES, Rank<N>>;
+    -> MDRangePolicy<ES, Rank<N>>;
 
 template <typename ES, typename LT, size_t N, typename UT, typename TT,
           size_t TN, typename = std::enable_if_t<is_execution_space_v<ES>>>
 MDRangePolicy(ES const&, const LT (&)[N], const UT (&)[N], const TT (&)[TN])
-    ->MDRangePolicy<ES, Rank<N>>;
+    -> MDRangePolicy<ES, Rank<N>>;
 
 template <typename T, size_t N>
-MDRangePolicy(Array<T, N> const&, Array<T, N> const&)->MDRangePolicy<Rank<N>>;
+MDRangePolicy(Array<T, N> const&, Array<T, N> const&) -> MDRangePolicy<Rank<N>>;
 
 template <typename T, size_t N, size_t NT>
 MDRangePolicy(Array<T, N> const&, Array<T, N> const&, Array<T, NT> const&)
-    ->MDRangePolicy<Rank<N>>;
+    -> MDRangePolicy<Rank<N>>;
 
 template <typename T, size_t N>
 MDRangePolicy(DefaultExecutionSpace const&, Array<T, N> const&,
-              Array<T, N> const&)
-    ->MDRangePolicy<Rank<N>>;
+              Array<T, N> const&) -> MDRangePolicy<Rank<N>>;
 
 template <typename T, size_t N, size_t NT>
 MDRangePolicy(DefaultExecutionSpace const&, Array<T, N> const&,
               Array<T, N> const&, Array<T, NT> const&)
-    ->MDRangePolicy<Rank<N>>;
+    -> MDRangePolicy<Rank<N>>;
 
 template <typename ES, typename T, size_t N,
           typename = std::enable_if_t<is_execution_space_v<ES>>>
 MDRangePolicy(ES const&, Array<T, N> const&, Array<T, N> const&)
-    ->MDRangePolicy<ES, Rank<N>>;
+    -> MDRangePolicy<ES, Rank<N>>;
 
 template <typename ES, typename T, size_t N, size_t NT,
           typename = std::enable_if_t<is_execution_space_v<ES>>>
 MDRangePolicy(ES const&, Array<T, N> const&, Array<T, N> const&,
-              Array<T, NT> const&)
-    ->MDRangePolicy<ES, Rank<N>>;
+              Array<T, NT> const&) -> MDRangePolicy<ES, Rank<N>>;
 
 }  // namespace Kokkos
 

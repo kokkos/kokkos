@@ -248,9 +248,9 @@ class KOKKOS_ATTRIBUTE_NODISCARD ScopeGuard {
   }
 
   ScopeGuard& operator=(const ScopeGuard&) = delete;
-  ScopeGuard& operator=(ScopeGuard&&) = delete;
-  ScopeGuard(const ScopeGuard&)       = delete;
-  ScopeGuard(ScopeGuard&&)            = delete;
+  ScopeGuard& operator=(ScopeGuard&&)      = delete;
+  ScopeGuard(const ScopeGuard&)            = delete;
+  ScopeGuard(ScopeGuard&&)                 = delete;
 };
 
 }  // namespace Kokkos

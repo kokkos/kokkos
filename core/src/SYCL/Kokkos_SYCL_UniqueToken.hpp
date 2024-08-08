@@ -80,7 +80,7 @@ class UniqueToken<SYCL, UniqueTokenScope::Global> {
     std::size_t threadIdx[3] = {item.get_local_id(2), item.get_local_id(1),
                                 item.get_local_id(0)};
     std::size_t blockIdx[3]  = {item.get_group(2), item.get_group(1),
-                               item.get_group(0)};
+                                item.get_group(0)};
     std::size_t blockDim[3] = {item.get_local_range(2), item.get_local_range(1),
                                item.get_local_range(0)};
 

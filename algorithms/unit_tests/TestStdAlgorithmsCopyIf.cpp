@@ -224,7 +224,7 @@ void run_single_scenario(const InfoType& scenario_info) {
     auto n         = fill_view(view_from, name, pred);
     auto view_dest = create_view<ValueType>(Tag{}, view_ext, "copy_if_dest");
     auto rit       = KE::copy_if(exespace(), KE::cbegin(view_from),
-                           KE::cend(view_from), KE::begin(view_dest), pred);
+                                 KE::cend(view_from), KE::begin(view_dest), pred);
     verify_data(name, view_from, view_dest, pred);
     ASSERT_EQ(rit, (KE::begin(view_dest) + n));
   }
@@ -233,7 +233,7 @@ void run_single_scenario(const InfoType& scenario_info) {
     auto n         = fill_view(view_from, name, pred);
     auto view_dest = create_view<ValueType>(Tag{}, view_ext, "copy_if_dest");
     auto rit       = KE::copy_if("label", exespace(), KE::cbegin(view_from),
-                           KE::cend(view_from), KE::begin(view_dest), pred);
+                                 KE::cend(view_from), KE::begin(view_dest), pred);
     verify_data(name, view_from, view_dest, pred);
     ASSERT_EQ(rit, (KE::begin(view_dest) + n));
   }

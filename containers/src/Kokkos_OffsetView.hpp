@@ -118,8 +118,8 @@ KOKKOS_INLINE_FUNCTION void offsetview_verify_operator_bounds(
         (enum {LEN = 1024}; char buffer[LEN];
          const std::string label = tracker.template get_label<MemorySpace>();
          int n                   = snprintf(buffer, LEN,
-                          "OffsetView bounds error of view labeled %s (",
-                          label.c_str());
+                                            "OffsetView bounds error of view labeled %s (",
+                                            label.c_str());
          offsetview_error_operator_bounds<0>(buffer + n, LEN - n, map, begins,
                                              args...);
          Kokkos::Impl::throw_runtime_exception(std::string(buffer));))

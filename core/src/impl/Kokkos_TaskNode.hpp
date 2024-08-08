@@ -174,11 +174,11 @@ class TaskNode
         m_priority(static_cast<priority_type>(priority)),
         m_is_respawning(false) {}
 
-  TaskNode()                = delete;
-  TaskNode(TaskNode const&) = delete;
-  TaskNode(TaskNode&&)      = delete;
+  TaskNode()                           = delete;
+  TaskNode(TaskNode const&)            = delete;
+  TaskNode(TaskNode&&)                 = delete;
   TaskNode& operator=(TaskNode const&) = delete;
-  TaskNode& operator=(TaskNode&&) = delete;
+  TaskNode& operator=(TaskNode&&)      = delete;
 
   KOKKOS_INLINE_FUNCTION
   bool is_aggregate() const noexcept {

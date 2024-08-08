@@ -40,10 +40,10 @@ struct ChunkedArrayManager {
   using pointer_type = ValueType*;
   using track_type   = Kokkos::Impl::SharedAllocationTracker;
 
-  ChunkedArrayManager()                           = default;
-  ChunkedArrayManager(ChunkedArrayManager const&) = default;
-  ChunkedArrayManager(ChunkedArrayManager&&)      = default;
-  ChunkedArrayManager& operator=(ChunkedArrayManager&&) = default;
+  ChunkedArrayManager()                                      = default;
+  ChunkedArrayManager(ChunkedArrayManager const&)            = default;
+  ChunkedArrayManager(ChunkedArrayManager&&)                 = default;
+  ChunkedArrayManager& operator=(ChunkedArrayManager&&)      = default;
   ChunkedArrayManager& operator=(const ChunkedArrayManager&) = default;
 
   template <typename Space, typename Value>
@@ -129,10 +129,10 @@ struct ChunkedArrayManager {
   /// allocation
   template <typename Space>
   struct Destroy {
-    Destroy()               = default;
-    Destroy(Destroy&&)      = default;
-    Destroy(const Destroy&) = default;
-    Destroy& operator=(Destroy&&) = default;
+    Destroy()                          = default;
+    Destroy(Destroy&&)                 = default;
+    Destroy(const Destroy&)            = default;
+    Destroy& operator=(Destroy&&)      = default;
     Destroy& operator=(const Destroy&) = default;
 
     Destroy(std::string label, value_type** arg_chunk,
@@ -463,11 +463,11 @@ class DynamicView : public Kokkos::ViewTraits<DataType, P...> {
 
   //----------------------------------------------------------------------
 
-  ~DynamicView()                  = default;
-  DynamicView()                   = default;
-  DynamicView(DynamicView&&)      = default;
-  DynamicView(const DynamicView&) = default;
-  DynamicView& operator=(DynamicView&&) = default;
+  ~DynamicView()                             = default;
+  DynamicView()                              = default;
+  DynamicView(DynamicView&&)                 = default;
+  DynamicView(const DynamicView&)            = default;
+  DynamicView& operator=(DynamicView&&)      = default;
   DynamicView& operator=(const DynamicView&) = default;
 
   template <class RT, class... RP>

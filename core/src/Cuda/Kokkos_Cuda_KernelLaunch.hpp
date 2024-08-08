@@ -209,8 +209,8 @@ inline void configure_shmem_preference(const int cuda_device,
   // Use multiples of 8kB
   const size_t max_shmem_per_sm = device_props.sharedMemPerMultiprocessor;
   size_t carveout               = shmem_per_block == 0
-                        ? 0
-                        : 100 *
+                                      ? 0
+                                      : 100 *
                               (((num_blocks_desired * shmem_per_block +
                                  min_shmem_size_per_sm - 1) /
                                 min_shmem_size_per_sm) *
@@ -714,7 +714,7 @@ struct CudaParallelLaunch<DriverType, LaunchBounds, LaunchMechanism,
       CudaParallelLaunchImpl<DriverType, LaunchBounds, LaunchMechanism>;
   template <class... Args>
   CudaParallelLaunch(Args&&... args) {
-    base_t::launch_kernel((Args &&) args...);
+    base_t::launch_kernel((Args&&)args...);
   }
 };
 
@@ -728,7 +728,7 @@ struct CudaParallelLaunch<DriverType, LaunchBounds, LaunchMechanism,
       CudaParallelLaunchImpl<DriverType, LaunchBounds, LaunchMechanism>;
   template <class... Args>
   CudaParallelLaunch(Args&&... args) {
-    base_t::create_parallel_launch_graph_node((Args &&) args...);
+    base_t::create_parallel_launch_graph_node((Args&&)args...);
   }
 };
 
