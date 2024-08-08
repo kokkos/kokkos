@@ -718,8 +718,8 @@ struct ViewOffset<
     return *this;
   }
 #else
-  ViewOffset()                  = default;
-  ViewOffset(const ViewOffset&) = default;
+  ViewOffset()                             = default;
+  ViewOffset(const ViewOffset&)            = default;
   ViewOffset& operator=(const ViewOffset&) = default;
 #endif
 
@@ -1071,8 +1071,8 @@ struct ViewOffset<
   }
 #else
 
-  ViewOffset()                  = default;
-  ViewOffset(const ViewOffset&) = default;
+  ViewOffset()                             = default;
+  ViewOffset(const ViewOffset&)            = default;
   ViewOffset& operator=(const ViewOffset&) = default;
 #endif
 
@@ -1407,8 +1407,8 @@ struct ViewOffset<
   }
 #else
 
-  ViewOffset()                  = default;
-  ViewOffset(const ViewOffset&) = default;
+  ViewOffset()                             = default;
+  ViewOffset(const ViewOffset&)            = default;
   ViewOffset& operator=(const ViewOffset&) = default;
 #endif
 
@@ -1749,8 +1749,8 @@ struct ViewOffset<
   }
 #else
 
-  ViewOffset()                  = default;
-  ViewOffset(const ViewOffset&) = default;
+  ViewOffset()                             = default;
+  ViewOffset(const ViewOffset&)            = default;
   ViewOffset& operator=(const ViewOffset&) = default;
 #endif
 
@@ -1886,8 +1886,8 @@ struct ViewStride<0> {
   static constexpr size_t S0 = 0, S1 = 0, S2 = 0, S3 = 0, S4 = 0, S5 = 0,
                           S6 = 0, S7 = 0;
 
-  ViewStride()                  = default;
-  ViewStride(const ViewStride&) = default;
+  ViewStride()                             = default;
+  ViewStride(const ViewStride&)            = default;
   ViewStride& operator=(const ViewStride&) = default;
 
   KOKKOS_INLINE_FUNCTION
@@ -1901,8 +1901,8 @@ struct ViewStride<1> {
   static constexpr size_t S1 = 0, S2 = 0, S3 = 0, S4 = 0, S5 = 0, S6 = 0,
                           S7 = 0;
 
-  ViewStride()                  = default;
-  ViewStride(const ViewStride&) = default;
+  ViewStride()                             = default;
+  ViewStride(const ViewStride&)            = default;
   ViewStride& operator=(const ViewStride&) = default;
 
   KOKKOS_INLINE_FUNCTION
@@ -1916,8 +1916,8 @@ struct ViewStride<2> {
   size_t S0, S1;
   static constexpr size_t S2 = 0, S3 = 0, S4 = 0, S5 = 0, S6 = 0, S7 = 0;
 
-  ViewStride()                  = default;
-  ViewStride(const ViewStride&) = default;
+  ViewStride()                             = default;
+  ViewStride(const ViewStride&)            = default;
   ViewStride& operator=(const ViewStride&) = default;
 
   KOKKOS_INLINE_FUNCTION
@@ -1931,8 +1931,8 @@ struct ViewStride<3> {
   size_t S0, S1, S2;
   static constexpr size_t S3 = 0, S4 = 0, S5 = 0, S6 = 0, S7 = 0;
 
-  ViewStride()                  = default;
-  ViewStride(const ViewStride&) = default;
+  ViewStride()                             = default;
+  ViewStride(const ViewStride&)            = default;
   ViewStride& operator=(const ViewStride&) = default;
 
   KOKKOS_INLINE_FUNCTION
@@ -1946,8 +1946,8 @@ struct ViewStride<4> {
   size_t S0, S1, S2, S3;
   static constexpr size_t S4 = 0, S5 = 0, S6 = 0, S7 = 0;
 
-  ViewStride()                  = default;
-  ViewStride(const ViewStride&) = default;
+  ViewStride()                             = default;
+  ViewStride(const ViewStride&)            = default;
   ViewStride& operator=(const ViewStride&) = default;
 
   KOKKOS_INLINE_FUNCTION
@@ -1961,8 +1961,8 @@ struct ViewStride<5> {
   size_t S0, S1, S2, S3, S4;
   static constexpr size_t S5 = 0, S6 = 0, S7 = 0;
 
-  ViewStride()                  = default;
-  ViewStride(const ViewStride&) = default;
+  ViewStride()                             = default;
+  ViewStride(const ViewStride&)            = default;
   ViewStride& operator=(const ViewStride&) = default;
 
   KOKKOS_INLINE_FUNCTION
@@ -1976,8 +1976,8 @@ struct ViewStride<6> {
   size_t S0, S1, S2, S3, S4, S5;
   static constexpr size_t S6 = 0, S7 = 0;
 
-  ViewStride()                  = default;
-  ViewStride(const ViewStride&) = default;
+  ViewStride()                             = default;
+  ViewStride(const ViewStride&)            = default;
   ViewStride& operator=(const ViewStride&) = default;
 
   KOKKOS_INLINE_FUNCTION
@@ -1991,8 +1991,8 @@ struct ViewStride<7> {
   size_t S0, S1, S2, S3, S4, S5, S6;
   static constexpr size_t S7 = 0;
 
-  ViewStride()                  = default;
-  ViewStride(const ViewStride&) = default;
+  ViewStride()                             = default;
+  ViewStride(const ViewStride&)            = default;
   ViewStride& operator=(const ViewStride&) = default;
 
   KOKKOS_INLINE_FUNCTION
@@ -2005,8 +2005,8 @@ template <>
 struct ViewStride<8> {
   size_t S0, S1, S2, S3, S4, S5, S6, S7;
 
-  ViewStride()                  = default;
-  ViewStride(const ViewStride&) = default;
+  ViewStride()                             = default;
+  ViewStride(const ViewStride&)            = default;
   ViewStride& operator=(const ViewStride&) = default;
 
   KOKKOS_INLINE_FUNCTION
@@ -2283,8 +2283,8 @@ struct ViewOffset<Dimension, Kokkos::LayoutStride, void> {
   }
 #else
 
-  ViewOffset()                  = default;
-  ViewOffset(const ViewOffset&) = default;
+  ViewOffset()                             = default;
+  ViewOffset(const ViewOffset&)            = default;
   ViewOffset& operator=(const ViewOffset&) = default;
 #endif
 
@@ -2780,7 +2780,7 @@ class ViewMapping<
   KOKKOS_DEFAULTED_FUNCTION ViewMapping& operator=(const ViewMapping&) =
       default;
 
-  KOKKOS_DEFAULTED_FUNCTION ViewMapping(ViewMapping&&) = default;
+  KOKKOS_DEFAULTED_FUNCTION ViewMapping(ViewMapping&&)            = default;
   KOKKOS_DEFAULTED_FUNCTION ViewMapping& operator=(ViewMapping&&) = default;
 
   //----------------------------------------

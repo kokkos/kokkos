@@ -74,11 +74,11 @@ struct GraphImpl<Kokkos::Cuda> {
 
   // Not movable or copyable; it spends its whole life as a shared_ptr in the
   // Graph object
-  GraphImpl()                 = delete;
-  GraphImpl(GraphImpl const&) = delete;
-  GraphImpl(GraphImpl&&)      = delete;
+  GraphImpl()                            = delete;
+  GraphImpl(GraphImpl const&)            = delete;
+  GraphImpl(GraphImpl&&)                 = delete;
   GraphImpl& operator=(GraphImpl const&) = delete;
-  GraphImpl& operator=(GraphImpl&&) = delete;
+  GraphImpl& operator=(GraphImpl&&)      = delete;
   ~GraphImpl() {
     // TODO @graphs we need to somehow indicate the need for a fence in the
     //              destructor of the GraphImpl object (so that we don't have to

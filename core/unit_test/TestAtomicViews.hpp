@@ -124,10 +124,10 @@ class TestAtomicViewAPI {
 
   using dView0           = Kokkos::View<T, device>;
   using dView1           = Kokkos::View<T*, device>;
-  using dView2           = Kokkos::View<T * [N1], device>;
-  using dView3           = Kokkos::View<T * [N1][N2], device>;
-  using dView4           = Kokkos::View<T * [N1][N2][N3], device>;
-  using const_dView4     = Kokkos::View<const T * [N1][N2][N3], device>;
+  using dView2           = Kokkos::View<T* [N1], device>;
+  using dView3           = Kokkos::View<T* [N1][N2], device>;
+  using dView4           = Kokkos::View<T* [N1][N2][N3], device>;
+  using const_dView4     = Kokkos::View<const T* [N1][N2][N3], device>;
   using dView4_unmanaged = Kokkos::View<T****, device, Kokkos::MemoryUnmanaged>;
   using host             = typename dView0::host_mirror_space;
 
@@ -135,12 +135,12 @@ class TestAtomicViewAPI {
   using aView1 =
       Kokkos::View<T*, device, Kokkos::MemoryTraits<Kokkos::Atomic> >;
   using aView2 =
-      Kokkos::View<T * [N1], device, Kokkos::MemoryTraits<Kokkos::Atomic> >;
+      Kokkos::View<T* [N1], device, Kokkos::MemoryTraits<Kokkos::Atomic> >;
   using aView3 =
-      Kokkos::View<T * [N1][N2], device, Kokkos::MemoryTraits<Kokkos::Atomic> >;
-  using aView4       = Kokkos::View<T * [N1][N2][N3], device,
+      Kokkos::View<T* [N1][N2], device, Kokkos::MemoryTraits<Kokkos::Atomic> >;
+  using aView4       = Kokkos::View<T* [N1][N2][N3], device,
                               Kokkos::MemoryTraits<Kokkos::Atomic> >;
-  using const_aView4 = Kokkos::View<const T * [N1][N2][N3], device,
+  using const_aView4 = Kokkos::View<const T* [N1][N2][N3], device,
                                     Kokkos::MemoryTraits<Kokkos::Atomic> >;
 
   using aView4_unmanaged =

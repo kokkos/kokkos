@@ -138,7 +138,7 @@ int get_device_count() {
   KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDeviceCount(&count));
   return count;
 #elif defined(KOKKOS_ENABLE_SYCL)
-  return Kokkos::Experimental::Impl::get_sycl_devices().size();
+  return Kokkos::Impl::get_sycl_devices().size();
 #elif defined(KOKKOS_ENABLE_OPENACC)
   return acc_get_num_devices(
       Kokkos::Experimental::Impl::OpenACC_Traits::dev_type);
@@ -183,7 +183,7 @@ std::vector<int> const& Kokkos::Impl::get_visible_devices() {
 #elif defined(KOKKOS_ENABLE_OPENMPTARGET)
   int device = omp_get_default_device();  // FIXME_OPENMPTARGET
 #elif defined(KOKKOS_ENABLE_SYCL)
-  int device = Experimental::Impl::SYCLInternal::m_syclDev;
+  int device = Impl::SYCLInternal::m_syclDev;
 #else
   int device = -1;
   return device;
@@ -611,13 +611,6 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
 #else
   declare_configuration_metadata("options", "KOKKOS_ENABLE_LIBDL", "no");
 #endif
-#ifdef KOKKOS_ENABLE_IMPL_REF_COUNT_BRANCH_UNLIKELY
-  declare_configuration_metadata(
-      "options", "KOKKOS_ENABLE_IMPL_REF_COUNT_BRANCH_UNLIKELY", "yes");
-#else
-  declare_configuration_metadata(
-      "options", "KOKKOS_ENABLE_IMPL_REF_COUNT_BRANCH_UNLIKELY", "no");
-#endif
 
   declare_configuration_metadata("architecture", "Default Device",
                                  typeid(Kokkos::DefaultExecutionSpace).name());
@@ -759,6 +752,9 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
 #elif defined(KOKKOS_ARCH_AMD_GFX1100)
   declare_configuration_metadata("architecture", "GPU architecture",
                                  "AMD_GFX1100");
+#elif defined(KOKKOS_ARCH_AMD_GFX1103)
+  declare_configuration_metadata("architecture", "GPU architecture",
+                                 "AMD_GFX1103");
 
 #else
   declare_configuration_metadata("architecture", "GPU architecture", "none");

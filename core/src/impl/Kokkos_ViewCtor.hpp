@@ -68,8 +68,8 @@ struct ViewCtorProp<void> {};
  */
 template <typename Specialize, typename T>
 struct ViewCtorProp<void, CommonViewAllocProp<Specialize, T>> {
-  ViewCtorProp()                     = default;
-  ViewCtorProp(const ViewCtorProp &) = default;
+  ViewCtorProp()                                = default;
+  ViewCtorProp(const ViewCtorProp &)            = default;
   ViewCtorProp &operator=(const ViewCtorProp &) = default;
 
   using type = CommonViewAllocProp<Specialize, T>;
@@ -88,8 +88,8 @@ struct ViewCtorProp<
     std::enable_if_t<std::is_same<P, AllowPadding_t>::value ||
                      std::is_same<P, WithoutInitializing_t>::value>,
     P> {
-  ViewCtorProp()                     = default;
-  ViewCtorProp(const ViewCtorProp &) = default;
+  ViewCtorProp()                                = default;
+  ViewCtorProp(const ViewCtorProp &)            = default;
   ViewCtorProp &operator=(const ViewCtorProp &) = default;
 
   using type = P;
@@ -102,8 +102,8 @@ struct ViewCtorProp<
 /* Map input label type to std::string */
 template <typename Label>
 struct ViewCtorProp<std::enable_if_t<is_view_label<Label>::value>, Label> {
-  ViewCtorProp()                     = default;
-  ViewCtorProp(const ViewCtorProp &) = default;
+  ViewCtorProp()                                = default;
+  ViewCtorProp(const ViewCtorProp &)            = default;
   ViewCtorProp &operator=(const ViewCtorProp &) = default;
 
   using type = std::string;
@@ -118,8 +118,8 @@ template <typename Space>
 struct ViewCtorProp<std::enable_if_t<Kokkos::is_memory_space<Space>::value ||
                                      Kokkos::is_execution_space<Space>::value>,
                     Space> {
-  ViewCtorProp()                     = default;
-  ViewCtorProp(const ViewCtorProp &) = default;
+  ViewCtorProp()                                = default;
+  ViewCtorProp(const ViewCtorProp &)            = default;
   ViewCtorProp &operator=(const ViewCtorProp &) = default;
 
   using type = Space;
@@ -131,8 +131,8 @@ struct ViewCtorProp<std::enable_if_t<Kokkos::is_memory_space<Space>::value ||
 
 template <typename T>
 struct ViewCtorProp<void, T *> {
-  ViewCtorProp()                     = default;
-  ViewCtorProp(const ViewCtorProp &) = default;
+  ViewCtorProp()                                = default;
+  ViewCtorProp(const ViewCtorProp &)            = default;
   ViewCtorProp &operator=(const ViewCtorProp &) = default;
 
   using type = T *;
@@ -208,10 +208,10 @@ struct ViewCtorProp : public ViewCtorProp<void, P>... {
    *  Requires  std::is_same< P , ViewCtorProp< void , Args >::value ...
    */
   template <typename... Args>
-  inline ViewCtorProp(Args const &... args) : ViewCtorProp<void, P>(args)... {}
+  inline ViewCtorProp(Args const &...args) : ViewCtorProp<void, P>(args)... {}
 
   template <typename... Args>
-  KOKKOS_FUNCTION ViewCtorProp(pointer_type arg0, Args const &... args)
+  KOKKOS_FUNCTION ViewCtorProp(pointer_type arg0, Args const &...args)
       : ViewCtorProp<void, pointer_type>(arg0),
         ViewCtorProp<void, typename ViewCtorProp<void, Args>::type>(args)... {}
 
@@ -243,7 +243,7 @@ auto with_properties_if_unset(const ViewCtorProp<P...> &view_ctor_prop) {
 template <typename... P, typename Property, typename... Properties>
 auto with_properties_if_unset(const ViewCtorProp<P...> &view_ctor_prop,
                               [[maybe_unused]] const Property &property,
-                              const Properties &... properties) {
+                              const Properties &...properties) {
   if constexpr ((is_execution_space<Property>::value &&
                  !ViewCtorProp<P...>::has_execution_space) ||
                 (is_memory_space<Property>::value &&
@@ -291,7 +291,7 @@ template <class... P, class Property, class... Properties>
 struct WithPropertiesIfUnset<ViewCtorProp<P...>, Property, Properties...> {
   static constexpr auto apply_prop(const ViewCtorProp<P...> &view_ctor_prop,
                                    const Property &prop,
-                                   const Properties &... properties) {
+                                   const Properties &...properties) {
     if constexpr ((is_execution_space<Property>::value &&
                    !ViewCtorProp<P...>::has_execution_space) ||
                   (is_memory_space<Property>::value &&
@@ -315,7 +315,7 @@ struct WithPropertiesIfUnset<ViewCtorProp<P...>, Property, Properties...> {
 
 template <typename... P, class... Properties>
 auto with_properties_if_unset(const ViewCtorProp<P...> &view_ctor_prop,
-                              const Properties &... properties) {
+                              const Properties &...properties) {
   return WithPropertiesIfUnset<ViewCtorProp<P...>, Properties...>::apply_prop(
       view_ctor_prop, properties...);
 }

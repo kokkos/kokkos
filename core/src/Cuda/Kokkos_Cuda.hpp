@@ -166,8 +166,17 @@ class Cuda {
 
   Cuda();
 
-  Cuda(cudaStream_t stream,
-       Impl::ManageStream manage_stream = Impl::ManageStream::no);
+  explicit Cuda(cudaStream_t stream) : Cuda(stream, Impl::ManageStream::no) {}
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  template <typename T = void>
+  KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Cuda execution space should be constructed explicitly.")
+  Cuda(cudaStream_t stream)
+      : Cuda(stream) {}
+#endif
+
+  Cuda(cudaStream_t stream, Impl::ManageStream manage_stream);
 
   KOKKOS_DEPRECATED Cuda(cudaStream_t stream, bool manage_stream);
 

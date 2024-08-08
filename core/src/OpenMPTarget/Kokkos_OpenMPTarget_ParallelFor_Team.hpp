@@ -85,9 +85,9 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
  public:
   void execute() const {
-    OpenMPTargetExec::verify_is_process(
+    Experimental::Impl::OpenMPTargetInternal::verify_is_process(
         "Kokkos::Experimental::OpenMPTarget parallel_for");
-    OpenMPTargetExec::verify_initialized(
+    Experimental::Impl::OpenMPTargetInternal::verify_initialized(
         "Kokkos::Experimental::OpenMPTarget parallel_for");
     execute_impl<WorkTag>();
   }
@@ -95,9 +95,9 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
  private:
   template <class TagType>
   void execute_impl() const {
-    OpenMPTargetExec::verify_is_process(
+    Experimental::Impl::OpenMPTargetInternal::verify_is_process(
         "Kokkos::Experimental::OpenMPTarget parallel_for");
-    OpenMPTargetExec::verify_initialized(
+    Experimental::Impl::OpenMPTargetInternal::verify_initialized(
         "Kokkos::Experimental::OpenMPTarget parallel_for");
     const auto league_size   = m_policy.league_size();
     const auto team_size     = m_policy.team_size();
@@ -105,10 +105,11 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     const size_t shmem_size_L0 = m_policy.scratch_size(0, team_size);
     const size_t shmem_size_L1 = m_policy.scratch_size(1, team_size);
-    OpenMPTargetExec::resize_scratch(team_size, shmem_size_L0, shmem_size_L1,
-                                     league_size);
+    m_policy.space().impl_internal_space_instance()->resize_scratch(
+        team_size, shmem_size_L0, shmem_size_L1, league_size);
 
-    void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
+    void* scratch_ptr =
+        m_policy.space().impl_internal_space_instance()->get_scratch_ptr();
     FunctorType a_functor(m_functor);
 
     // FIXME_OPENMPTARGET - If the team_size is not a multiple of 32, the
@@ -122,7 +123,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     int max_active_teams = omp_get_max_teams();
 #else
     int max_active_teams =
-        std::min(OpenMPTargetExec::MAX_ACTIVE_THREADS / team_size, league_size);
+        std::min(m_policy.space().MAX_ACTIVE_THREADS / team_size, league_size);
 #endif
 
     // FIXME_OPENMPTARGET: Although the maximum number of teams is set using the
@@ -170,7 +171,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 #else
 #pragma omp target teams distribute firstprivate(a_functor) \
     is_device_ptr(scratch_ptr) num_teams(max_active_teams)  \
-        thread_limit(team_size)
+    thread_limit(team_size)
     for (int i = 0; i < league_size; i++) {
 #pragma omp parallel
       {

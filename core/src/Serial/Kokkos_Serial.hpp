@@ -116,7 +116,15 @@ class Serial {
 
   Serial();
 
-  Serial(NewInstance);
+  explicit Serial(NewInstance);
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  template <typename T = void>
+  KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Serial execution space should be constructed explicitly.")
+  Serial(NewInstance)
+      : Serial(NewInstance{}) {}
+#endif
 
   /// \brief True if and only if this method is being called in a
   ///   thread-parallel function.

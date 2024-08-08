@@ -67,7 +67,15 @@ class OpenMP {
 
   OpenMP();
 
-  OpenMP(int pool_size);
+  explicit OpenMP(int pool_size);
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  template <typename T = void>
+  KOKKOS_DEPRECATED_WITH_COMMENT(
+      "OpenMP execution space should be constructed explicitly.")
+  OpenMP(int pool_size)
+      : OpenMP(pool_size) {}
+#endif
 
   /// \brief Print configuration information to the given output stream.
   void print_configuration(std::ostream& os, bool verbose = false) const;

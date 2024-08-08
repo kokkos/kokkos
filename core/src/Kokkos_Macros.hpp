@@ -27,7 +27,7 @@
  *  KOKKOS_ENABLE_OPENMPTARGET        Kokkos::Experimental::OpenMPTarget
  *                                    execution space
  *  KOKKOS_ENABLE_HIP                 Kokkos::HIP execution space
- *  KOKKOS_ENABLE_SYCL                Kokkos::Experimental::SYCL execution space
+ *  KOKKOS_ENABLE_SYCL                Kokkos::SYCL execution space
  *  KOKKOS_ENABLE_HWLOC               HWLOC library is available.
  *  KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK  Insert array bounds checks, is expensive!
  *  KOKKOS_ENABLE_CUDA_UVM            Use CUDA UVM for Cuda memory space.
@@ -55,6 +55,7 @@
 
 #ifndef KOKKOS_DONT_INCLUDE_CORE_CONFIG_H
 #include <KokkosCore_config.h>
+#include <impl/Kokkos_DesulAtomicsConfig.hpp>
 #include <impl/Kokkos_NvidiaGpuArchitectures.hpp>
 #endif
 
@@ -131,7 +132,7 @@
 #define KOKKOS_CLASS_LAMBDA [ =, *this ]
 #endif
 
-//#if !defined( __CUDA_ARCH__ ) // Not compiling Cuda code to 'ptx'.
+// #if !defined( __CUDA_ARCH__ ) // Not compiling Cuda code to 'ptx'.
 
 // Intel compiler for host code.
 
@@ -251,10 +252,10 @@
 // CLANG compiler macros
 
 #if defined(KOKKOS_COMPILER_CLANG)
-//#define KOKKOS_ENABLE_PRAGMA_UNROLL 1
-//#define KOKKOS_ENABLE_PRAGMA_IVDEP 1
-//#define KOKKOS_ENABLE_PRAGMA_LOOPCOUNT 1
-//#define KOKKOS_ENABLE_PRAGMA_VECTOR 1
+// #define KOKKOS_ENABLE_PRAGMA_UNROLL 1
+// #define KOKKOS_ENABLE_PRAGMA_IVDEP 1
+// #define KOKKOS_ENABLE_PRAGMA_LOOPCOUNT 1
+// #define KOKKOS_ENABLE_PRAGMA_VECTOR 1
 
 #if !defined(KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION)
 #define KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION \
@@ -272,10 +273,10 @@
 // GNU Compiler macros
 
 #if defined(KOKKOS_COMPILER_GNU)
-//#define KOKKOS_ENABLE_PRAGMA_UNROLL 1
-//#define KOKKOS_ENABLE_PRAGMA_IVDEP 1
-//#define KOKKOS_ENABLE_PRAGMA_LOOPCOUNT 1
-//#define KOKKOS_ENABLE_PRAGMA_VECTOR 1
+// #define KOKKOS_ENABLE_PRAGMA_UNROLL 1
+// #define KOKKOS_ENABLE_PRAGMA_IVDEP 1
+// #define KOKKOS_ENABLE_PRAGMA_LOOPCOUNT 1
+// #define KOKKOS_ENABLE_PRAGMA_VECTOR 1
 
 #if !defined(KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION)
 #define KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION \
@@ -297,7 +298,7 @@
 #if defined(KOKKOS_COMPILER_NVHPC)
 #define KOKKOS_ENABLE_PRAGMA_UNROLL 1
 #define KOKKOS_ENABLE_PRAGMA_IVDEP 1
-//#define KOKKOS_ENABLE_PRAGMA_LOOPCOUNT 1
+// #define KOKKOS_ENABLE_PRAGMA_LOOPCOUNT 1
 #define KOKKOS_ENABLE_PRAGMA_VECTOR 1
 #endif
 

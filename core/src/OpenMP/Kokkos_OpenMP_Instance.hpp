@@ -161,7 +161,7 @@ inline std::vector<OpenMP> create_OpenMP_instances(
         "Kokkos::abort: Partition not enough resources left to create the last "
         "instance.");
   }
-  instances[weights.size() - 1] = resources_left;
+  instances[weights.size() - 1] = OpenMP(resources_left);
 
   return instances;
 }

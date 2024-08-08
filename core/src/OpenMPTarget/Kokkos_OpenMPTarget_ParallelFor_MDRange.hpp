@@ -20,6 +20,7 @@
 #include <omp.h>
 #include <Kokkos_Parallel.hpp>
 #include "Kokkos_OpenMPTarget_MDRangePolicy.hpp"
+#include "Kokkos_OpenMPTarget_Instance.hpp"
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -41,9 +42,9 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
  public:
   inline void execute() const {
-    OpenMPTargetExec::verify_is_process(
+    Experimental::Impl::OpenMPTargetInternal::verify_is_process(
         "Kokkos::Experimental::OpenMPTarget parallel_for");
-    OpenMPTargetExec::verify_initialized(
+    Experimental::Impl::OpenMPTargetInternal::verify_initialized(
         "Kokkos::Experimental::OpenMPTarget parallel_for");
     FunctorType functor(m_functor);
     Policy policy = m_policy;

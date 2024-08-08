@@ -80,8 +80,8 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
     (ptr + i)->~ValueType();
   }
 
-  ViewValueFunctor()                        = default;
-  ViewValueFunctor(const ViewValueFunctor&) = default;
+  ViewValueFunctor()                                   = default;
+  ViewValueFunctor(const ViewValueFunctor&)            = default;
   ViewValueFunctor& operator=(const ViewValueFunctor&) = default;
 
   ViewValueFunctor(ExecSpace const& arg_space, ValueType* const arg_ptr,
@@ -172,17 +172,25 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
     const Kokkos::Impl::ParallelFor<ViewValueFunctor, PolicyType> closure(
         *this, policy);
     closure.execute();
-    if (default_exec_space || std::is_same_v<Tag, DestroyTag>)
-      space.fence("Kokkos::Impl::ViewValueFunctor: View init/destroy fence");
     if (Kokkos::Profiling::profileLibraryLoaded()) {
       Kokkos::Profiling::endParallelFor(kpID);
     }
+    if (default_exec_space || std::is_same_v<Tag, DestroyTag>)
+      space.fence("Kokkos::Impl::ViewValueFunctor: View init/destroy fence");
   }
 
   void construct_shared_allocation() { construct_dispatch(); }
 
   void destroy_shared_allocation() {
-    parallel_for_implementation<DestroyTag>();
+#ifdef KOKKOS_ENABLE_IMPL_VIEW_OF_VIEWS_DESTRUCTOR_PRECONDITION_VIOLATION_WORKAROUND
+    if constexpr (std::is_same_v<typename ExecSpace::memory_space,
+                                 Kokkos::HostSpace>)
+      for (size_t i = 0; i < n; ++i) (ptr + i)->~ValueType();
+    else
+#endif
+    {
+      parallel_for_implementation<DestroyTag>();
+    }
   }
 
   // This function is to ensure that the functor with DestroyTag is instantiated
@@ -212,8 +220,8 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
   KOKKOS_INLINE_FUNCTION
   void operator()(const size_t i) const { ptr[i] = ValueType(); }
 
-  ViewValueFunctor()                        = default;
-  ViewValueFunctor(const ViewValueFunctor&) = default;
+  ViewValueFunctor()                                   = default;
+  ViewValueFunctor(const ViewValueFunctor&)            = default;
   ViewValueFunctor& operator=(const ViewValueFunctor&) = default;
 
   ViewValueFunctor(ExecSpace const& arg_space, ValueType* const arg_ptr,
@@ -294,13 +302,13 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
     const Kokkos::Impl::ParallelFor<ViewValueFunctor, PolicyType> closure(
         *this, policy);
     closure.execute();
+    if (Kokkos::Profiling::profileLibraryLoaded()) {
+      Kokkos::Profiling::endParallelFor(kpID);
+    }
     if (default_exec_space)
       space.fence(
           "Kokkos::Impl::ViewValueFunctor: Fence after setting values in "
           "view");
-    if (Kokkos::Profiling::profileLibraryLoaded()) {
-      Kokkos::Profiling::endParallelFor(kpID);
-    }
   }
 
   void destroy_shared_allocation() {}

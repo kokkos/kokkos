@@ -18,6 +18,7 @@
 #define KOKKOS_SYCL_PARALLEL_SCAN_RANGE_HPP
 
 #include <Kokkos_Macros.hpp>
+#include <SYCL/Kokkos_SYCL_WorkgroupReduction.hpp>
 #include <memory>
 #include <vector>
 
@@ -40,7 +41,8 @@ void workgroup_scan(sycl::nd_item<dim> item, const FunctorType& final_reducer,
 #if defined(KOKKOS_ARCH_INTEL_GPU) || defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
   auto shuffle_combine = [&](int stride) {
     if (stride < local_range) {
-      auto tmp = sg.shuffle_up(local_value, stride);
+      auto tmp = Kokkos::Impl::SYCLReduction::shift_group_right(sg, local_value,
+                                                                stride);
       if (id_in_sg >= stride) final_reducer.join(&local_value, &tmp);
     }
   };
@@ -52,7 +54,8 @@ void workgroup_scan(sycl::nd_item<dim> item, const FunctorType& final_reducer,
   KOKKOS_ASSERT(local_range <= 32);
 #else
   for (int stride = 1; stride < local_range; stride <<= 1) {
-    auto tmp = sg.shuffle_up(local_value, stride);
+    auto tmp =
+        Kokkos::Impl::SYCLReduction::shift_group_right(sg, local_value, stride);
     if (id_in_sg >= stride) final_reducer.join(&local_value, &tmp);
   }
 #endif
@@ -63,7 +66,8 @@ void workgroup_scan(sycl::nd_item<dim> item, const FunctorType& final_reducer,
 
   if (id_in_sg == local_range - 1 && sg_group_id < n_active_subgroups)
     local_mem[sg_group_id] = local_value;
-  local_value = sg.shuffle_up(local_value, 1);
+  local_value =
+      Kokkos::Impl::SYCLReduction::shift_group_right(sg, local_value, 1);
   if (id_in_sg == 0) final_reducer.init(&local_value);
   sycl::group_barrier(item.get_group());
 
@@ -79,7 +83,8 @@ void workgroup_scan(sycl::nd_item<dim> item, const FunctorType& final_reducer,
 #if defined(KOKKOS_ARCH_INTEL_GPU) || defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
         auto shuffle_combine_sg = [&](int stride) {
           if (stride < upper_bound) {
-            auto tmp = sg.shuffle_up(local_sg_value, stride);
+            auto tmp = Kokkos::Impl::SYCLReduction::shift_group_right(
+                sg, local_sg_value, stride);
             if (id_in_sg >= stride) {
               if (idx < n_active_subgroups)
                 final_reducer.join(&local_sg_value, &tmp);
@@ -96,7 +101,8 @@ void workgroup_scan(sycl::nd_item<dim> item, const FunctorType& final_reducer,
         KOKKOS_ASSERT(upper_bound <= 32);
 #else
         for (int stride = 1; stride < upper_bound; stride <<= 1) {
-          auto tmp = sg.shuffle_up(local_sg_value, stride);
+          auto tmp = Kokkos::Impl::SYCLReduction::shift_group_right(
+              sg, local_sg_value, stride);
           if (id_in_sg >= stride) {
             if (idx < n_active_subgroups)
               final_reducer.join(&local_sg_value, &tmp);
@@ -139,7 +145,7 @@ class ParallelScanSYCLBase {
   using value_type     = typename Analysis::value_type;
   using reference_type = typename Analysis::reference_type;
   using functor_type   = FunctorType;
-  using size_type      = Kokkos::Experimental::SYCL::size_type;
+  using size_type      = Kokkos::SYCL::size_type;
   using index_type     = typename Policy::index_type;
 
  protected:
@@ -155,8 +161,8 @@ class ParallelScanSYCLBase {
   sycl::event sycl_direct_launch(const FunctorWrapper& functor_wrapper,
                                  sycl::event memcpy_event) {
     // Convenience references
-    const Kokkos::Experimental::SYCL& space = m_policy.space();
-    Kokkos::Experimental::Impl::SYCLInternal& instance =
+    const Kokkos::SYCL& space = m_policy.space();
+    Kokkos::Impl::SYCLInternal& instance =
         *space.impl_internal_space_instance();
     sycl::queue& q = space.sycl_queue();
 
@@ -368,11 +374,11 @@ class ParallelScanSYCLBase {
     std::scoped_lock<std::mutex> scratch_buffers_lock(
         instance.m_mutexScratchSpace);
 
-    Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem&
-        indirectKernelMem = instance.get_indirect_kernel_mem();
+    Kokkos::Impl::SYCLInternal::IndirectKernelMem& indirectKernelMem =
+        instance.get_indirect_kernel_mem();
 
-    auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
-        m_functor_reducer, indirectKernelMem);
+    auto functor_wrapper =
+        Impl::make_sycl_function_wrapper(m_functor_reducer, indirectKernelMem);
 
     sycl::event event =
         sycl_direct_launch(functor_wrapper, functor_wrapper.get_copy_event());
@@ -393,7 +399,7 @@ class ParallelScanSYCLBase {
 
 template <class FunctorType, class... Traits>
 class Kokkos::Impl::ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
-                                 Kokkos::Experimental::SYCL>
+                                 Kokkos::SYCL>
     : private ParallelScanSYCLBase<FunctorType, void, Traits...> {
  public:
   using Base = ParallelScanSYCLBase<FunctorType, void, Traits...>;
@@ -411,13 +417,12 @@ class Kokkos::Impl::ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
 
 template <class FunctorType, class ReturnType, class... Traits>
 class Kokkos::Impl::ParallelScanWithTotal<
-    FunctorType, Kokkos::RangePolicy<Traits...>, ReturnType,
-    Kokkos::Experimental::SYCL>
+    FunctorType, Kokkos::RangePolicy<Traits...>, ReturnType, Kokkos::SYCL>
     : public ParallelScanSYCLBase<FunctorType, ReturnType, Traits...> {
  public:
   using Base = ParallelScanSYCLBase<FunctorType, ReturnType, Traits...>;
 
-  const Kokkos::Experimental::SYCL& m_exec;
+  const Kokkos::SYCL& m_exec;
 
   inline void execute() {
     Base::impl_execute([&]() {
@@ -439,7 +444,7 @@ class Kokkos::Impl::ParallelScanWithTotal<
                         const typename Base::Policy& arg_policy,
                         const ViewType& arg_result_view)
       : Base(arg_functor, arg_policy, arg_result_view.data(),
-             MemorySpaceAccess<Experimental::SYCLDeviceUSMSpace,
+             MemorySpaceAccess<SYCLDeviceUSMSpace,
                                typename ViewType::memory_space>::accessible),
         m_exec(arg_policy.space()) {}
 };

@@ -147,7 +147,7 @@ void run_single_scenario(const InfoType& scenario_info) {
     // make host copy BEFORE running algo
     auto data_h = create_host_space_copy(view);
     auto rit    = KE::remove(exespace(), KE::begin(view), KE::end(view),
-                          (ValueType)match_value);
+                             (ValueType)match_value);
     verify_data(data_h, view, rit);
   }
 
