@@ -50,8 +50,6 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     Experimental::Impl::OpenMPTargetInternal::verify_initialized(
         "Kokkos::Experimental::OpenMPTarget parallel_for");
 
-    auto const functor(m_functor);
-
     Policy policy = m_policy;
 
     typename Policy::point_type unused;
@@ -60,13 +58,13 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
                   Policy::inner_direction == Iterate::Right);
 
     execute_tile<Policy::rank>(
-        unused, functor, policy,
+        unused, m_functor, policy,
         std::integral_constant<Iterate, Policy::inner_direction>());
   }
 
   template <int Rank>
   inline std::enable_if_t<Rank == 2> execute_tile(
-      typename Policy::point_type offset, const FunctorAdapter& functor,
+      typename Policy::point_type offset, const FunctorAdapter& m_functor,
       const Policy& policy, OpenMPTargetIterateRight) const {
     (void)offset;
     const Index begin_0 = policy.m_lower[0];
@@ -75,16 +73,16 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     const Index end_0 = policy.m_upper[0];
     const Index end_1 = policy.m_upper[1];
 
-#pragma omp target teams distribute parallel for collapse(2) map(to : functor)
+#pragma omp target teams distribute parallel for collapse(2) map(to : m_functor)
     for (auto i0 = begin_0; i0 < end_0; ++i0)
       for (auto i1 = begin_1; i1 < end_1; ++i1) {
-        functor(i0, i1);
+        m_functor(i0, i1);
       }
   }
 
   template <int Rank>
   inline std::enable_if_t<Rank == 3> execute_tile(
-      typename Policy::point_type offset, const FunctorAdapter& functor,
+      typename Policy::point_type offset, const FunctorAdapter& m_functor,
       const Policy& policy, OpenMPTargetIterateRight) const {
     (void)offset;
     const Index begin_0 = policy.m_lower[0];
@@ -95,11 +93,11 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     const Index end_1 = policy.m_upper[1];
     const Index end_2 = policy.m_upper[2];
 
-#pragma omp target teams distribute parallel for collapse(3) map(to : functor)
+#pragma omp target teams distribute parallel for collapse(3) map(to : m_functor)
     for (auto i0 = begin_0; i0 < end_0; ++i0) {
       for (auto i1 = begin_1; i1 < end_1; ++i1) {
         for (auto i2 = begin_2; i2 < end_2; ++i2) {
-          functor(i0, i1, i2);
+          m_functor(i0, i1, i2);
         }
       }
     }
@@ -107,7 +105,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
   template <int Rank>
   inline std::enable_if_t<Rank == 4> execute_tile(
-      typename Policy::point_type offset, const FunctorAdapter& functor,
+      typename Policy::point_type offset, const FunctorAdapter& m_functor,
       const Policy& policy, OpenMPTargetIterateRight) const {
     (void)offset;
     const Index begin_0 = policy.m_lower[0];
@@ -120,12 +118,12 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     const Index end_2 = policy.m_upper[2];
     const Index end_3 = policy.m_upper[3];
 
-#pragma omp target teams distribute parallel for collapse(4) map(to : functor)
+#pragma omp target teams distribute parallel for collapse(4) map(to : m_functor)
     for (auto i0 = begin_0; i0 < end_0; ++i0) {
       for (auto i1 = begin_1; i1 < end_1; ++i1) {
         for (auto i2 = begin_2; i2 < end_2; ++i2) {
           for (auto i3 = begin_3; i3 < end_3; ++i3) {
-            functor(i0, i1, i2, i3);
+            m_functor(i0, i1, i2, i3);
           }
         }
       }
@@ -134,7 +132,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
   template <int Rank>
   inline std::enable_if_t<Rank == 5> execute_tile(
-      typename Policy::point_type offset, const FunctorAdapter& functor,
+      typename Policy::point_type offset, const FunctorAdapter& m_functor,
       const Policy& policy, OpenMPTargetIterateRight) const {
     (void)offset;
     const Index begin_0 = policy.m_lower[0];
@@ -149,13 +147,13 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     const Index end_3 = policy.m_upper[3];
     const Index end_4 = policy.m_upper[4];
 
-#pragma omp target teams distribute parallel for collapse(5) map(to : functor)
+#pragma omp target teams distribute parallel for collapse(5) map(to : m_functor)
     for (auto i0 = begin_0; i0 < end_0; ++i0) {
       for (auto i1 = begin_1; i1 < end_1; ++i1) {
         for (auto i2 = begin_2; i2 < end_2; ++i2) {
           for (auto i3 = begin_3; i3 < end_3; ++i3) {
             for (auto i4 = begin_4; i4 < end_4; ++i4) {
-              functor(i0, i1, i2, i3, i4);
+              m_functor(i0, i1, i2, i3, i4);
             }
           }
         }
@@ -165,7 +163,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
   template <int Rank>
   inline std::enable_if_t<Rank == 6> execute_tile(
-      typename Policy::point_type offset, const FunctorAdapter& functor,
+      typename Policy::point_type offset, const FunctorAdapter& m_functor,
       const Policy& policy, OpenMPTargetIterateRight) const {
     (void)offset;
     const Index begin_0 = policy.m_lower[0];
@@ -182,7 +180,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     const Index end_4 = policy.m_upper[4];
     const Index end_5 = policy.m_upper[5];
 
-#pragma omp target teams distribute parallel for collapse(6) map(to : functor)
+#pragma omp target teams distribute parallel for collapse(6) map(to : m_functor)
     for (auto i0 = begin_0; i0 < end_0; ++i0) {
       for (auto i1 = begin_1; i1 < end_1; ++i1) {
         for (auto i2 = begin_2; i2 < end_2; ++i2) {
@@ -190,7 +188,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
             for (auto i4 = begin_4; i4 < end_4; ++i4) {
               for (auto i5 = begin_5; i5 < end_5; ++i5) {
                 {
-                  functor(i0, i1, i2, i3, i4, i5);
+                  m_functor(i0, i1, i2, i3, i4, i5);
                 }
               }
             }
@@ -202,7 +200,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
   template <int Rank>
   inline std::enable_if_t<Rank == 2> execute_tile(
-      typename Policy::point_type offset, const FunctorAdapter& functor,
+      typename Policy::point_type offset, const FunctorAdapter& m_functor,
       const Policy& policy, OpenMPTargetIterateLeft) const {
     (void)offset;
     const Index begin_0 = policy.m_lower[0];
@@ -211,16 +209,16 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     const Index end_0 = policy.m_upper[0];
     const Index end_1 = policy.m_upper[1];
 
-#pragma omp target teams distribute parallel for collapse(2) map(to : functor)
+#pragma omp target teams distribute parallel for collapse(2) map(to : m_functor)
     for (auto i1 = begin_1; i1 < end_1; ++i1)
       for (auto i0 = begin_0; i0 < end_0; ++i0) {
-        functor(i0, i1);
+        m_functor(i0, i1);
       }
   }
 
   template <int Rank>
   inline std::enable_if_t<Rank == 3> execute_tile(
-      typename Policy::point_type offset, const FunctorAdapter& functor,
+      typename Policy::point_type offset, const FunctorAdapter& m_functor,
       const Policy& policy, OpenMPTargetIterateLeft) const {
     (void)offset;
     const Index begin_0 = policy.m_lower[0];
@@ -231,11 +229,11 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     const Index end_1 = policy.m_upper[1];
     const Index end_2 = policy.m_upper[2];
 
-#pragma omp target teams distribute parallel for collapse(3) map(to : functor)
+#pragma omp target teams distribute parallel for collapse(3) map(to : m_functor)
     for (auto i2 = begin_2; i2 < end_2; ++i2) {
       for (auto i1 = begin_1; i1 < end_1; ++i1) {
         for (auto i0 = begin_0; i0 < end_0; ++i0) {
-          functor(i0, i1, i2);
+          m_functor(i0, i1, i2);
         }
       }
     }
@@ -243,7 +241,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
   template <int Rank>
   inline std::enable_if_t<Rank == 4> execute_tile(
-      typename Policy::point_type offset, const FunctorAdapter& functor,
+      typename Policy::point_type offset, const FunctorAdapter& m_functor,
       const Policy& policy, OpenMPTargetIterateLeft) const {
     (void)offset;
     const Index begin_0 = policy.m_lower[0];
@@ -256,12 +254,12 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     const Index end_2 = policy.m_upper[2];
     const Index end_3 = policy.m_upper[3];
 
-#pragma omp target teams distribute parallel for collapse(4) map(to : functor)
+#pragma omp target teams distribute parallel for collapse(4) map(to : m_functor)
     for (auto i3 = begin_3; i3 < end_3; ++i3) {
       for (auto i2 = begin_2; i2 < end_2; ++i2) {
         for (auto i1 = begin_1; i1 < end_1; ++i1) {
           for (auto i0 = begin_0; i0 < end_0; ++i0) {
-            functor(i0, i1, i2, i3);
+            m_functor(i0, i1, i2, i3);
           }
         }
       }
@@ -270,7 +268,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
   template <int Rank>
   inline std::enable_if_t<Rank == 5> execute_tile(
-      typename Policy::point_type offset, const FunctorAdapter& functor,
+      typename Policy::point_type offset, const FunctorAdapter& m_functor,
       const Policy& policy, OpenMPTargetIterateLeft) const {
     (void)offset;
     const Index begin_0 = policy.m_lower[0];
@@ -285,13 +283,13 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     const Index end_3 = policy.m_upper[3];
     const Index end_4 = policy.m_upper[4];
 
-#pragma omp target teams distribute parallel for collapse(5) map(to : functor)
+#pragma omp target teams distribute parallel for collapse(5) map(to : m_functor)
     for (auto i4 = begin_4; i4 < end_4; ++i4) {
       for (auto i3 = begin_3; i3 < end_3; ++i3) {
         for (auto i2 = begin_2; i2 < end_2; ++i2) {
           for (auto i1 = begin_1; i1 < end_1; ++i1) {
             for (auto i0 = begin_0; i0 < end_0; ++i0) {
-              functor(i0, i1, i2, i3, i4);
+              m_functor(i0, i1, i2, i3, i4);
             }
           }
         }
@@ -301,7 +299,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
   template <int Rank>
   inline std::enable_if_t<Rank == 6> execute_tile(
-      typename Policy::point_type offset, const FunctorAdapter& functor,
+      typename Policy::point_type offset, const FunctorAdapter& m_functor,
       const Policy& policy, OpenMPTargetIterateLeft) const {
     (void)offset;
     const Index begin_0 = policy.m_lower[0];
@@ -318,7 +316,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     const Index end_4 = policy.m_upper[4];
     const Index end_5 = policy.m_upper[5];
 
-#pragma omp target teams distribute parallel for collapse(6) map(to : functor)
+#pragma omp target teams distribute parallel for collapse(6) map(to : m_functor)
     for (auto i5 = begin_5; i5 < end_5; ++i5) {
       for (auto i4 = begin_4; i4 < end_4; ++i4) {
         for (auto i3 = begin_3; i3 < end_3; ++i3) {
@@ -326,7 +324,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
             for (auto i1 = begin_1; i1 < end_1; ++i1) {
               for (auto i0 = begin_0; i0 < end_0; ++i0) {
                 {
-                  functor(i0, i1, i2, i3, i4, i5);
+                  m_functor(i0, i1, i2, i3, i4, i5);
                 }
               }
             }
