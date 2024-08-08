@@ -1,0 +1,6 @@
+.clang* export-ignore
+.git* export-ignore
+.jenkins* export-ignore
+.appveyor.yml export-ignore
+.*gitlab-ci.yml export-ignore
+scripts/ export-ignore
