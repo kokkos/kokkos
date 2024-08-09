@@ -135,7 +135,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
 #if defined(KOKKOS_ARCH_AMD_GPU) && !defined(KOKKOS_ARCH_AMD_GFX1030) && \
     !defined(KOKKOS_ARCH_AMD_GFX1100) && !defined(KOKKOS_ARCH_AMD_GFX1103)
             if constexpr (Analysis::Reducer::has_join_member_function()) {
-              a_functor.join(local_offset_value, offset_value);
+              a_functor.get_functor().join(local_offset_value, offset_value);
             } else
               local_offset_value += offset_value;
 #else
