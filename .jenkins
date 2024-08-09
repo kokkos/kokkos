@@ -138,7 +138,7 @@ pipeline {
                         dockerfile {
                             filename 'Dockerfile.hipcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-20.04:5.2-complete'
+                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-20.04:5.2-complete@sha256:4030c8af0c06c286174758523dabe4b3850bf72d4a8c1ef275d3ec69aa475f65'
                             label 'rocm-docker '
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --device=/dev/kfd --device=/dev/dri --security-opt seccomp=unconfined --group-add video --env HIP_VISIBLE_DEVICES=$HIP_VISIBLE_DEVICES'
                         }
@@ -181,7 +181,7 @@ pipeline {
                         dockerfile {
                             filename 'Dockerfile.hipcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-22.04:5.6-complete'
+                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-20.04:5.6-complete@sha256:69f9a8c786ebc09df7f1d260a55beecd13dffa9b9246f230c87a9c1fd18450ca'
                             label 'rocm-docker'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --device=/dev/kfd --device=/dev/dri --security-opt seccomp=unconfined --group-add video --env HIP_VISIBLE_DEVICES=$HIP_VISIBLE_DEVICES'
                         }
