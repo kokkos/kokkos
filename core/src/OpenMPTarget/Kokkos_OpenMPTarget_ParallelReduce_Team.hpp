@@ -440,8 +440,7 @@ class ParallelReduce<CombinedFunctorReducerType,
   using FunctorType = typename CombinedFunctorReducerType::functor_type;
   using ReducerType = typename CombinedFunctorReducerType::reducer_type;
 
-  using WorkTag = typename Policy::work_tag;
-  using Member  = typename Policy::member_type;
+  using Member = typename Policy::member_type;
 
   using pointer_type   = typename ReducerType::pointer_type;
   using reference_type = typename ReducerType::reference_type;
@@ -472,7 +471,9 @@ class ParallelReduce<CombinedFunctorReducerType,
     // Only let one ParallelReduce instance at a time use the scratch memory.
     std::scoped_lock<std::mutex> scratch_memory_lock(
         m_policy.space().impl_internal_space_instance()->m_mutex_scratch_ptr);
-    const FunctorType& functor = m_functor_reducer.get_functor();
+    auto const functor =
+        Kokkos::Experimental::Impl::FunctorAdapter<FunctorType, Policy>(
+            m_functor_reducer.get_functor());
     if constexpr (FunctorHasJoin) {
       ParReduceSpecialize::execute_init_join(functor, m_policy, m_result_ptr,
                                              m_result_ptr_on_device);

@@ -37,9 +37,8 @@ class ParallelReduce<CombinedFunctorReducerType,
   using FunctorType = typename CombinedFunctorReducerType::functor_type;
   using ReducerType = typename CombinedFunctorReducerType::reducer_type;
 
-  using WorkTag = typename Policy::work_tag;
-  using Member  = typename Policy::member_type;
-  using Index   = typename Policy::index_type;
+  using Member = typename Policy::member_type;
+  using Index  = typename Policy::index_type;
 
   using pointer_type   = typename ReducerType::pointer_type;
   using reference_type = typename ReducerType::reference_type;
@@ -55,13 +54,18 @@ class ParallelReduce<CombinedFunctorReducerType,
 
   bool m_result_ptr_on_device;
 
+  using FunctorAdapter =
+      Kokkos::Experimental::Impl::FunctorAdapter<FunctorType, Policy>;
+
  public:
   inline void execute() const {
     // Only let one ParallelReduce instance at a time use the scratch memory.
     std::scoped_lock<std::mutex> scratch_memory_lock(
         m_policy.space().impl_internal_space_instance()->m_mutex_scratch_ptr);
+
+    auto const functor = FunctorAdapter(m_functor_reducer.get_functor());
     execute_tile<Policy::rank, typename ReducerType::value_type>(
-        m_functor_reducer.get_functor(), m_policy, m_result_ptr,
+        functor, m_policy, m_result_ptr,
         std::integral_constant<Iterate, Policy::inner_direction>());
   }
 
@@ -77,7 +81,7 @@ class ParallelReduce<CombinedFunctorReducerType,
 
   template <int Rank, class ValueType>
   inline std::enable_if_t<Rank == 2> execute_tile(
-      const FunctorType& functor, const Policy& policy, pointer_type ptr,
+      const FunctorAdapter& functor, const Policy& policy, pointer_type ptr,
       OpenMPTargetIterateLeft) const {
     const Index begin_0 = policy.m_lower[0];
     const Index begin_1 = policy.m_lower[1];
@@ -98,10 +102,7 @@ class ParallelReduce<CombinedFunctorReducerType,
     reduction(custom : result)
       for (auto i1 = begin_1; i1 < end_1; ++i1) {
         for (auto i0 = begin_0; i0 < end_0; ++i0) {
-          if constexpr (std::is_void<typename Policy::work_tag>::value)
-            functor(i0, i1, result);
-          else
-            functor(typename Policy::work_tag(), i0, i1, result);
+          functor(i0, i1, result);
         }
       }
     } else {
@@ -109,10 +110,7 @@ class ParallelReduce<CombinedFunctorReducerType,
     reduction(+ : result)
       for (auto i1 = begin_1; i1 < end_1; ++i1) {
         for (auto i0 = begin_0; i0 < end_0; ++i0) {
-          if constexpr (std::is_void<typename Policy::work_tag>::value)
-            functor(i0, i1, result);
-          else
-            functor(typename Policy::work_tag(), i0, i1, result);
+          functor(i0, i1, result);
         }
       }
     }
@@ -123,7 +121,7 @@ class ParallelReduce<CombinedFunctorReducerType,
 
   template <int Rank, class ValueType>
   inline std::enable_if_t<Rank == 3> execute_tile(
-      const FunctorType& functor, const Policy& policy, pointer_type ptr,
+      const FunctorAdapter& functor, const Policy& policy, pointer_type ptr,
       OpenMPTargetIterateLeft) const {
     const Index begin_0 = policy.m_lower[0];
     const Index begin_1 = policy.m_lower[1];
@@ -150,10 +148,7 @@ class ParallelReduce<CombinedFunctorReducerType,
       for (auto i2 = begin_2; i2 < end_2; ++i2) {
         for (auto i1 = begin_1; i1 < end_1; ++i1) {
           for (auto i0 = begin_0; i0 < end_0; ++i0) {
-            if constexpr (std::is_void<typename Policy::work_tag>::value)
-              functor(i0, i1, i2, result);
-            else
-              functor(typename Policy::work_tag(), i0, i1, i2, result);
+            functor(i0, i1, i2, result);
           }
         }
       }
@@ -163,10 +158,7 @@ class ParallelReduce<CombinedFunctorReducerType,
       for (auto i2 = begin_2; i2 < end_2; ++i2) {
         for (auto i1 = begin_1; i1 < end_1; ++i1) {
           for (auto i0 = begin_0; i0 < end_0; ++i0) {
-            if constexpr (std::is_void<typename Policy::work_tag>::value)
-              functor(i0, i1, i2, result);
-            else
-              functor(typename Policy::work_tag(), i0, i1, i2, result);
+            functor(i0, i1, i2, result);
           }
         }
       }
@@ -178,7 +170,7 @@ class ParallelReduce<CombinedFunctorReducerType,
 
   template <int Rank, class ValueType>
   inline std::enable_if_t<Rank == 4> execute_tile(
-      const FunctorType& functor, const Policy& policy, pointer_type ptr,
+      const FunctorAdapter& functor, const Policy& policy, pointer_type ptr,
       OpenMPTargetIterateLeft) const {
     const Index begin_0 = policy.m_lower[0];
     const Index begin_1 = policy.m_lower[1];
@@ -205,11 +197,7 @@ class ParallelReduce<CombinedFunctorReducerType,
         for (auto i2 = begin_2; i2 < end_2; ++i2) {
           for (auto i1 = begin_1; i1 < end_1; ++i1) {
             for (auto i0 = begin_0; i0 < end_0; ++i0) {
-              if constexpr (std::is_same<typename Policy::work_tag,
-                                         void>::value)
-                functor(i0, i1, i2, i3, result);
-              else
-                functor(typename Policy::work_tag(), i0, i1, i2, i3, result);
+              functor(i0, i1, i2, i3, result);
             }
           }
         }
@@ -221,11 +209,7 @@ class ParallelReduce<CombinedFunctorReducerType,
         for (auto i2 = begin_2; i2 < end_2; ++i2) {
           for (auto i1 = begin_1; i1 < end_1; ++i1) {
             for (auto i0 = begin_0; i0 < end_0; ++i0) {
-              if constexpr (std::is_same<typename Policy::work_tag,
-                                         void>::value)
-                functor(i0, i1, i2, i3, result);
-              else
-                functor(typename Policy::work_tag(), i0, i1, i2, i3, result);
+              functor(i0, i1, i2, i3, result);
             }
           }
         }
@@ -238,7 +222,7 @@ class ParallelReduce<CombinedFunctorReducerType,
 
   template <int Rank, class ValueType>
   inline std::enable_if_t<Rank == 5> execute_tile(
-      const FunctorType& functor, const Policy& policy, pointer_type ptr,
+      const FunctorAdapter& functor, const Policy& policy, pointer_type ptr,
       OpenMPTargetIterateLeft) const {
     const Index begin_0 = policy.m_lower[0];
     const Index begin_1 = policy.m_lower[1];
@@ -268,12 +252,7 @@ class ParallelReduce<CombinedFunctorReducerType,
           for (auto i2 = begin_2; i2 < end_2; ++i2) {
             for (auto i1 = begin_1; i1 < end_1; ++i1) {
               for (auto i0 = begin_0; i0 < end_0; ++i0) {
-                if constexpr (std::is_same<typename Policy::work_tag,
-                                           void>::value)
-                  functor(i0, i1, i2, i3, i4, result);
-                else
-                  functor(typename Policy::work_tag(), i0, i1, i2, i3, i4,
-                          result);
+                functor(i0, i1, i2, i3, i4, result);
               }
             }
           }
@@ -287,12 +266,7 @@ class ParallelReduce<CombinedFunctorReducerType,
           for (auto i2 = begin_2; i2 < end_2; ++i2) {
             for (auto i1 = begin_1; i1 < end_1; ++i1) {
               for (auto i0 = begin_0; i0 < end_0; ++i0) {
-                if constexpr (std::is_same<typename Policy::work_tag,
-                                           void>::value)
-                  functor(i0, i1, i2, i3, i4, result);
-                else
-                  functor(typename Policy::work_tag(), i0, i1, i2, i3, i4,
-                          result);
+                functor(i0, i1, i2, i3, i4, result);
               }
             }
           }
@@ -306,7 +280,7 @@ class ParallelReduce<CombinedFunctorReducerType,
 
   template <int Rank, class ValueType>
   inline std::enable_if_t<Rank == 6> execute_tile(
-      const FunctorType& functor, const Policy& policy, pointer_type ptr,
+      const FunctorAdapter& functor, const Policy& policy, pointer_type ptr,
       OpenMPTargetIterateLeft) const {
     const Index begin_0 = policy.m_lower[0];
     const Index begin_1 = policy.m_lower[1];
@@ -339,12 +313,7 @@ class ParallelReduce<CombinedFunctorReducerType,
             for (auto i2 = begin_2; i2 < end_2; ++i2) {
               for (auto i1 = begin_1; i1 < end_1; ++i1) {
                 for (auto i0 = begin_0; i0 < end_0; ++i0) {
-                  if constexpr (std::is_same<typename Policy::work_tag,
-                                             void>::value)
-                    functor(i0, i1, i2, i3, i4, i5, result);
-                  else
-                    functor(typename Policy::work_tag(), i0, i1, i2, i3, i4, i5,
-                            result);
+                  functor(i0, i1, i2, i3, i4, i5, result);
                 }
               }
             }
@@ -360,12 +329,7 @@ class ParallelReduce<CombinedFunctorReducerType,
             for (auto i2 = begin_2; i2 < end_2; ++i2) {
               for (auto i1 = begin_1; i1 < end_1; ++i1) {
                 for (auto i0 = begin_0; i0 < end_0; ++i0) {
-                  if constexpr (std::is_same<typename Policy::work_tag,
-                                             void>::value)
-                    functor(i0, i1, i2, i3, i4, i5, result);
-                  else
-                    functor(typename Policy::work_tag(), i0, i1, i2, i3, i4, i5,
-                            result);
+                  functor(i0, i1, i2, i3, i4, i5, result);
                 }
               }
             }
@@ -380,7 +344,7 @@ class ParallelReduce<CombinedFunctorReducerType,
 
   template <int Rank, class ValueType>
   inline std::enable_if_t<Rank == 2> execute_tile(
-      const FunctorType& functor, const Policy& policy, pointer_type ptr,
+      const FunctorAdapter& functor, const Policy& policy, pointer_type ptr,
       OpenMPTargetIterateRight) const {
     const Index begin_0 = policy.m_lower[0];
     const Index begin_1 = policy.m_lower[1];
@@ -401,10 +365,7 @@ class ParallelReduce<CombinedFunctorReducerType,
     reduction(custom : result)
       for (auto i0 = begin_0; i0 < end_0; ++i0) {
         for (auto i1 = begin_1; i1 < end_1; ++i1) {
-          if constexpr (std::is_void<typename Policy::work_tag>::value)
-            functor(i0, i1, result);
-          else
-            functor(typename Policy::work_tag(), i0, i1, result);
+          functor(i0, i1, result);
         }
       }
     } else {
@@ -412,10 +373,7 @@ class ParallelReduce<CombinedFunctorReducerType,
     reduction(+ : result)
       for (auto i0 = begin_0; i0 < end_0; ++i0) {
         for (auto i1 = begin_1; i1 < end_1; ++i1) {
-          if constexpr (std::is_void<typename Policy::work_tag>::value)
-            functor(i0, i1, result);
-          else
-            functor(typename Policy::work_tag(), i0, i1, result);
+          functor(i0, i1, result);
         }
       }
     }
@@ -426,7 +384,7 @@ class ParallelReduce<CombinedFunctorReducerType,
 
   template <int Rank, class ValueType>
   inline std::enable_if_t<Rank == 3> execute_tile(
-      const FunctorType& functor, const Policy& policy, pointer_type ptr,
+      const FunctorAdapter& functor, const Policy& policy, pointer_type ptr,
       OpenMPTargetIterateRight) const {
     const Index begin_0 = policy.m_lower[0];
     const Index begin_1 = policy.m_lower[1];
@@ -453,10 +411,7 @@ class ParallelReduce<CombinedFunctorReducerType,
       for (auto i0 = begin_0; i0 < end_0; ++i0) {
         for (auto i1 = begin_1; i1 < end_1; ++i1) {
           for (auto i2 = begin_2; i2 < end_2; ++i2) {
-            if constexpr (std::is_void<typename Policy::work_tag>::value)
-              functor(i0, i1, i2, result);
-            else
-              functor(typename Policy::work_tag(), i0, i1, i2, result);
+            functor(i0, i1, i2, result);
           }
         }
       }
@@ -466,10 +421,7 @@ class ParallelReduce<CombinedFunctorReducerType,
       for (auto i0 = begin_0; i0 < end_0; ++i0) {
         for (auto i1 = begin_1; i1 < end_1; ++i1) {
           for (auto i2 = begin_2; i2 < end_2; ++i2) {
-            if constexpr (std::is_void<typename Policy::work_tag>::value)
-              functor(i0, i1, i2, result);
-            else
-              functor(typename Policy::work_tag(), i0, i1, i2, result);
+            functor(i0, i1, i2, result);
           }
         }
       }
@@ -481,7 +433,7 @@ class ParallelReduce<CombinedFunctorReducerType,
 
   template <int Rank, class ValueType>
   inline std::enable_if_t<Rank == 4> execute_tile(
-      const FunctorType& functor, const Policy& policy, pointer_type ptr,
+      const FunctorAdapter& functor, const Policy& policy, pointer_type ptr,
       OpenMPTargetIterateRight) const {
     const Index begin_0 = policy.m_lower[0];
     const Index begin_1 = policy.m_lower[1];
@@ -508,11 +460,7 @@ class ParallelReduce<CombinedFunctorReducerType,
         for (auto i1 = begin_1; i1 < end_1; ++i1) {
           for (auto i2 = begin_2; i2 < end_2; ++i2) {
             for (auto i3 = begin_3; i3 < end_3; ++i3) {
-              if constexpr (std::is_same<typename Policy::work_tag,
-                                         void>::value)
-                functor(i0, i1, i2, i3, result);
-              else
-                functor(typename Policy::work_tag(), i0, i1, i2, i3, result);
+              functor(i0, i1, i2, i3, result);
             }
           }
         }
@@ -524,11 +472,7 @@ class ParallelReduce<CombinedFunctorReducerType,
         for (auto i1 = begin_1; i1 < end_1; ++i1) {
           for (auto i2 = begin_2; i2 < end_2; ++i2) {
             for (auto i3 = begin_3; i3 < end_3; ++i3) {
-              if constexpr (std::is_same<typename Policy::work_tag,
-                                         void>::value)
-                functor(i0, i1, i2, i3, result);
-              else
-                functor(typename Policy::work_tag(), i0, i1, i2, i3, result);
+              functor(i0, i1, i2, i3, result);
             }
           }
         }
@@ -541,7 +485,7 @@ class ParallelReduce<CombinedFunctorReducerType,
 
   template <int Rank, class ValueType>
   inline std::enable_if_t<Rank == 5> execute_tile(
-      const FunctorType& functor, const Policy& policy, pointer_type ptr,
+      const FunctorAdapter& functor, const Policy& policy, pointer_type ptr,
       OpenMPTargetIterateRight) const {
     const Index begin_0 = policy.m_lower[0];
     const Index begin_1 = policy.m_lower[1];
@@ -571,12 +515,7 @@ class ParallelReduce<CombinedFunctorReducerType,
           for (auto i2 = begin_2; i2 < end_2; ++i2) {
             for (auto i3 = begin_3; i3 < end_3; ++i3) {
               for (auto i4 = begin_4; i4 < end_4; ++i4) {
-                if constexpr (std::is_same<typename Policy::work_tag,
-                                           void>::value)
-                  functor(i0, i1, i2, i3, i4, result);
-                else
-                  functor(typename Policy::work_tag(), i0, i1, i2, i3, i4,
-                          result);
+                functor(i0, i1, i2, i3, i4, result);
               }
             }
           }
@@ -590,12 +529,7 @@ class ParallelReduce<CombinedFunctorReducerType,
           for (auto i2 = begin_2; i2 < end_2; ++i2) {
             for (auto i3 = begin_3; i3 < end_3; ++i3) {
               for (auto i4 = begin_4; i4 < end_4; ++i4) {
-                if constexpr (std::is_same<typename Policy::work_tag,
-                                           void>::value)
-                  functor(i0, i1, i2, i3, i4, result);
-                else
-                  functor(typename Policy::work_tag(), i0, i1, i2, i3, i4,
-                          result);
+                functor(i0, i1, i2, i3, i4, result);
               }
             }
           }
@@ -609,7 +543,7 @@ class ParallelReduce<CombinedFunctorReducerType,
 
   template <int Rank, class ValueType>
   inline std::enable_if_t<Rank == 6> execute_tile(
-      const FunctorType& functor, const Policy& policy, pointer_type ptr,
+      const FunctorAdapter& functor, const Policy& policy, pointer_type ptr,
       OpenMPTargetIterateRight) const {
     const Index begin_0 = policy.m_lower[0];
     const Index begin_1 = policy.m_lower[1];
@@ -642,12 +576,7 @@ class ParallelReduce<CombinedFunctorReducerType,
             for (auto i3 = begin_3; i3 < end_3; ++i3) {
               for (auto i4 = begin_4; i4 < end_4; ++i4) {
                 for (auto i5 = begin_5; i5 < end_5; ++i5) {
-                  if constexpr (std::is_same<typename Policy::work_tag,
-                                             void>::value)
-                    functor(i0, i1, i2, i3, i4, i5, result);
-                  else
-                    functor(typename Policy::work_tag(), i0, i1, i2, i3, i4, i5,
-                            result);
+                  functor(i0, i1, i2, i3, i4, i5, result);
                 }
               }
             }
@@ -663,12 +592,7 @@ class ParallelReduce<CombinedFunctorReducerType,
             for (auto i3 = begin_3; i3 < end_3; ++i3) {
               for (auto i4 = begin_4; i4 < end_4; ++i4) {
                 for (auto i5 = begin_5; i5 < end_5; ++i5) {
-                  if constexpr (std::is_same<typename Policy::work_tag,
-                                             void>::value)
-                    functor(i0, i1, i2, i3, i4, i5, result);
-                  else
-                    functor(typename Policy::work_tag(), i0, i1, i2, i3, i4, i5,
-                            result);
+                  functor(i0, i1, i2, i3, i4, i5, result);
                 }
               }
             }
