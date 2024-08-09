@@ -126,7 +126,7 @@ inline void host_check_all_math_ops(const DataType (&first_args)[n],
     const int floating_ulps = 4;
     host_check_math_op_all_loaders_binary<Abi>(divides(), n, first_args,
                                                second_args, floating_ulps);
-#if (defined(__INTEL_COMPILER) || defined(__INTEL_LLVM_COMPILER)) && \
+#if defined(KOKKOS_HAVE_INTEL_SVML) && \
     (defined(KOKKOS_ARCH_AVX2) || defined(KOKKOS_ARCH_AVX512XEON))
     host_check_math_op_all_loaders_unary<Abi>(cbrt_op(), n, first_args,
                                               floating_ulps);
