@@ -225,6 +225,12 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
          SpaceAwareAccessor
       )
     ENDIF()
+    # This test case causes MSVC to fail with "number of sections exceeded object file format limit"
+    IF (MSVC)
+      LIST(REMOVE_ITEM ${Tag}_TESTNAMES1B
+        Reducers_d
+      )
+    ENDIF()
     foreach(Name IN LISTS ${Tag}_TESTNAMES1B)
       set(file ${dir}/Test${Tag}_${Name}.cpp)
       # Write to a temporary intermediate file and call configure_file to avoid
