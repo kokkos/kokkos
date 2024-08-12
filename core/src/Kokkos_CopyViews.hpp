@@ -1363,9 +1363,7 @@ struct ZeroMemset {
 
 template <typename ExecutionSpace, class DT, class... DP>
 inline std::enable_if_t<
-    std::is_trivial<typename ViewTraits<DT, DP...>::value_type>::value &&
-    std::is_trivially_copy_assignable<
-        typename ViewTraits<DT, DP...>::value_type>::value>
+    std::is_trivial_v<typename ViewTraits<DT, DP...>::value_type>>
 contiguous_fill_or_memset(
     const ExecutionSpace& exec_space, const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value) {
@@ -1386,9 +1384,7 @@ contiguous_fill_or_memset(
 
 template <typename ExecutionSpace, class DT, class... DP>
 inline std::enable_if_t<
-    !(std::is_trivial<typename ViewTraits<DT, DP...>::value_type>::value &&
-      std::is_trivially_copy_assignable<
-          typename ViewTraits<DT, DP...>::value_type>::value)>
+    !std::is_trivial_v<typename ViewTraits<DT, DP...>::value_type>>
 contiguous_fill_or_memset(
     const ExecutionSpace& exec_space, const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value) {
@@ -1397,9 +1393,7 @@ contiguous_fill_or_memset(
 
 template <class DT, class... DP>
 inline std::enable_if_t<
-    std::is_trivial<typename ViewTraits<DT, DP...>::value_type>::value &&
-    std::is_trivially_copy_assignable<
-        typename ViewTraits<DT, DP...>::value_type>::value>
+    std::is_trivial_v<typename ViewTraits<DT, DP...>::value_type>>
 contiguous_fill_or_memset(
     const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value) {
@@ -1423,9 +1417,7 @@ contiguous_fill_or_memset(
 
 template <class DT, class... DP>
 inline std::enable_if_t<
-    !(std::is_trivial<typename ViewTraits<DT, DP...>::value_type>::value &&
-      std::is_trivially_copy_assignable<
-          typename ViewTraits<DT, DP...>::value_type>::value)>
+    !std::is_trivial_v<typename ViewTraits<DT, DP...>::value_type>>
 contiguous_fill_or_memset(
     const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value) {
