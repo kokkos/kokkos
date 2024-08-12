@@ -22,42 +22,59 @@
 #include <cstdint>
 #include <cinttypes>
 #include <TestNonTrivialScalarTypes.hpp>
+#include "Kokkos_ReductionIdentity.hpp"
 
 namespace TestTeamVector {
 
-struct NoReductionIdentitySum {
-  KOKKOS_DEFAULTED_FUNCTION NoReductionIdentitySum() = default;
+struct RIInt {
+  KOKKOS_DEFAULTED_FUNCTION
+  constexpr RIInt() = default;
 
-  KOKKOS_FUNCTION NoReductionIdentitySum(int i_) : i{i_} {}
-  KOKKOS_FUNCTION NoReductionIdentitySum &operator=(int i_) {
+  KOKKOS_FUNCTION
+  constexpr RIInt(int i_) : i{i_} {}
+  KOKKOS_FUNCTION constexpr RIInt &operator=(int i_) {
     i = i_;
     return *this;
   }
 
-  KOKKOS_FUNCTION friend NoReductionIdentitySum &operator+=(
-      NoReductionIdentitySum &lhs, int i_) {
+  KOKKOS_FUNCTION
+  friend constexpr RIInt &operator+=(RIInt &lhs, int i_) {
     lhs.i = i_;
     return lhs;
   }
-  KOKKOS_FUNCTION friend NoReductionIdentitySum &operator+=(
-      NoReductionIdentitySum &lhs, NoReductionIdentitySum const &rhs) {
+  KOKKOS_FUNCTION
+  friend constexpr RIInt &operator+=(RIInt &lhs, RIInt const &rhs) {
     return lhs += rhs.i;
   }
 
-  KOKKOS_FUNCTION friend bool operator==(NoReductionIdentitySum const &lhs,
-                                         NoReductionIdentitySum const &rhs) {
+  KOKKOS_FUNCTION friend constexpr bool operator==(RIInt const &lhs,
+                                                   RIInt const &rhs) {
     return lhs.i == rhs.i;
   }
-  KOKKOS_FUNCTION friend bool operator!=(NoReductionIdentitySum const &lhs,
-                                         NoReductionIdentitySum const &rhs) {
+  KOKKOS_FUNCTION friend constexpr bool operator!=(RIInt const &lhs,
+                                                   RIInt const &rhs) {
     return !(lhs == rhs);
   }
 
-  KOKKOS_FUNCTION int get() const { return i; }
-  KOKKOS_FUNCTION operator int() const { return get(); }
+  KOKKOS_FUNCTION constexpr int get() const { return i; }
+  KOKKOS_FUNCTION constexpr operator int() const { return get(); }
 
-  int i = 0;
-};  // namespace TestTeamVector
+  int i = 2;
+};
+
+}  // namespace TestTeamVector
+
+template <>
+struct Kokkos::reduction_identity<TestTeamVector::RIInt> {
+  using value_type = TestTeamVector::RIInt;
+
+  KOKKOS_FUNCTION constexpr static value_type sum() { return value_type{0}; }
+};
+
+static_assert(Kokkos::reduction_identity<TestTeamVector::RIInt>::sum() !=
+              TestTeamVector::RIInt{});
+
+namespace TestTeamVector {
 
 template <typename Scalar, class ExecutionSpace>
 struct functor_team_for {
