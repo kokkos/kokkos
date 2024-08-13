@@ -266,5 +266,19 @@ TEST(TEST_CATEGORY, BinSortEmptyKeysView) {
   ASSERT_NO_THROW(Sorter.create_permute_vector(ExecutionSpace{}));
 }
 
+TEST(TEST_CATEGORY, BinSort_issue_7221) {
+  using ExecutionSpace = TEST_EXECSPACE;
+
+  using KeyViewType = Kokkos::View<int*, ExecutionSpace>;
+  KeyViewType kv("kv", 11);
+
+  using BinOp_t = Kokkos::BinOp1D<KeyViewType>;
+  BinOp_t binOp(1, -10, 10);
+  Kokkos::BinSort<KeyViewType, BinOp_t> Sorter(ExecutionSpace{}, kv, binOp,
+                                               /*sort_within_bins*/ true);
+
+  ASSERT_NO_THROW(Sorter.create_permute_vector(ExecutionSpace{}));
+}
+
 }  // namespace Test
 #endif
