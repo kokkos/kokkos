@@ -105,9 +105,7 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
   }
 
   template <typename Dummy = ValueType>
-  std::enable_if_t<std::is_trivial<Dummy>::value &&
-                   std::is_trivially_copy_assignable<ValueType>::value>
-  construct_dispatch() {
+  std::enable_if_t<std::is_trivial_v<Dummy>> construct_dispatch() {
     ValueType value{};
 // On A64FX memset seems to do the wrong thing with regards to first touch
 // leading to the significant performance issues
@@ -141,9 +139,7 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
   }
 
   template <typename Dummy = ValueType>
-  std::enable_if_t<!(std::is_trivial<Dummy>::value &&
-                     std::is_trivially_copy_assignable<ValueType>::value)>
-  construct_dispatch() {
+  std::enable_if_t<!std::is_trivial_v<Dummy>> construct_dispatch() {
     parallel_for_implementation<ConstructTag>();
   }
 
@@ -241,9 +237,7 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
         default_exec_space(true) {}
 
   template <typename Dummy = ValueType>
-  std::enable_if_t<std::is_trivial<Dummy>::value &&
-                   std::is_trivially_copy_assignable<Dummy>::value>
-  construct_shared_allocation() {
+  std::enable_if_t<std::is_trivial_v<Dummy>> construct_shared_allocation() {
     // Shortcut for zero initialization
 // On A64FX memset seems to do the wrong thing with regards to first touch
 // leading to the significant performance issues
@@ -279,9 +273,7 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
   }
 
   template <typename Dummy = ValueType>
-  std::enable_if_t<!(std::is_trivial<Dummy>::value &&
-                     std::is_trivially_copy_assignable<Dummy>::value)>
-  construct_shared_allocation() {
+  std::enable_if_t<!std::is_trivial_v<Dummy>> construct_shared_allocation() {
     parallel_for_implementation();
   }
 
