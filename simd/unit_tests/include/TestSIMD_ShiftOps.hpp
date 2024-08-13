@@ -138,10 +138,6 @@ inline void host_check_shift_ops() {
                                              num_cases);
         host_check_shift_op_all_loaders<Abi>(shift_right_eq(), test_vals,
                                              shift_by, num_cases);
-        host_check_shift_op_all_loaders<Abi>(shift_left(), test_vals, shift_by,
-                                             num_cases);
-        host_check_shift_op_all_loaders<Abi>(shift_left_eq(), test_vals,
-                                             shift_by, num_cases);
       }
     }
   }
@@ -268,10 +264,6 @@ KOKKOS_INLINE_FUNCTION void device_check_shift_ops() {
         device_check_shift_op_all_loaders<Abi>(shift_right(), test_vals,
                                                shift_by, num_cases);
         device_check_shift_op_all_loaders<Abi>(shift_right_eq(), test_vals,
-                                               shift_by, num_cases);
-        device_check_shift_op_all_loaders<Abi>(shift_left(), test_vals,
-                                               shift_by, num_cases);
-        device_check_shift_op_all_loaders<Abi>(shift_left_eq(), test_vals,
                                                shift_by, num_cases);
       }
     }

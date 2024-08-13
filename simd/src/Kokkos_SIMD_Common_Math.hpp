@@ -23,6 +23,10 @@ namespace Kokkos {
 
 namespace Experimental {
 
+namespace simd_abi {
+class scalar;
+}
+
 template <class T, class Abi>
 class simd;
 
@@ -58,7 +62,9 @@ hmax(const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> const& x) {
 }
 #endif
 
-template <typename T, typename Abi>
+template <
+    typename T, typename Abi,
+    std::enable_if_t<!std::is_same_v<Abi, simd_abi::scalar>, bool> = false>
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
 reduce_min(const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> const& x) {
   auto const& v = x.impl_get_value();
@@ -70,7 +76,9 @@ reduce_min(const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> const& x) {
   return result;
 }
 
-template <class T, class Abi>
+template <
+    class T, class Abi,
+    std::enable_if_t<!std::is_same_v<Abi, simd_abi::scalar>, bool> = false>
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
 reduce_max(const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> const& x) {
   auto const& v = x.impl_get_value();
@@ -82,7 +90,9 @@ reduce_max(const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> const& x) {
   return result;
 }
 
-template <class T, class Abi, class BinaryOperation = std::plus<>>
+template <
+    class T, class Abi, class BinaryOperation = std::plus<>,
+    std::enable_if_t<!std::is_same_v<Abi, simd_abi::scalar>, bool> = false>
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
 reduce(const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> const& x,
        BinaryOperation op = {}) {
@@ -95,7 +105,9 @@ reduce(const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> const& x,
   return result;
 }
 
-template <class T, class Abi>
+template <
+    class T, class Abi,
+    std::enable_if_t<!std::is_same_v<Abi, simd_abi::scalar>, bool> = false>
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
 reduce(const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> const& x, T,
        std::plus<>) {

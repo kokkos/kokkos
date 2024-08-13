@@ -34,11 +34,11 @@ class plus {
 class plus_eq {
  public:
   template <class T>
-  auto& on_host(T&& a, T&& b) const {
+  auto on_host(T&& a, T&& b) const {
     return a += b;
   }
   template <class T>
-  KOKKOS_INLINE_FUNCTION auto& on_device(T&& a, T&& b) const {
+  KOKKOS_INLINE_FUNCTION auto on_device(T&& a, T&& b) const {
     return a += b;
   }
 };
@@ -58,11 +58,11 @@ class minus {
 class minus_eq {
  public:
   template <class T>
-  auto& on_host(T&& a, T&& b) const {
+  auto on_host(T&& a, T&& b) const {
     return a -= b;
   }
   template <class T>
-  KOKKOS_INLINE_FUNCTION auto& on_device(T&& a, T&& b) const {
+  KOKKOS_INLINE_FUNCTION auto on_device(T&& a, T&& b) const {
     return a -= b;
   }
 };
@@ -82,11 +82,11 @@ class multiplies {
 class multiplies_eq {
  public:
   template <class T>
-  auto& on_host(T&& a, T&& b) const {
+  auto on_host(T&& a, T&& b) const {
     return a *= b;
   }
   template <class T>
-  KOKKOS_INLINE_FUNCTION auto& on_device(T&& a, T&& b) const {
+  KOKKOS_INLINE_FUNCTION auto on_device(T&& a, T&& b) const {
     return a *= b;
   }
 };
@@ -106,11 +106,11 @@ class divides {
 class divides_eq {
  public:
   template <class T>
-  auto& on_host(T&& a, T&& b) const {
+  auto on_host(T&& a, T&& b) const {
     return a /= b;
   }
   template <class T>
-  KOKKOS_INLINE_FUNCTION auto& on_device(T&& a, T&& b) const {
+  KOKKOS_INLINE_FUNCTION auto on_device(T&& a, T&& b) const {
     return a /= b;
   }
 };
@@ -250,11 +250,11 @@ class shift_right {
 class shift_right_eq {
  public:
   template <typename T, typename U>
-  auto& on_host(T&& a, U&& b) const {
+  auto on_host(T&& a, U&& b) const {
     return a >>= b;
   }
   template <typename T, typename U>
-  KOKKOS_INLINE_FUNCTION auto& on_device(T&& a, U&& b) const {
+  KOKKOS_INLINE_FUNCTION auto on_device(T&& a, U&& b) const {
     return a >>= b;
   }
 };
@@ -274,11 +274,11 @@ class shift_left {
 class shift_left_eq {
  public:
   template <typename T, typename U>
-  auto& on_host(T&& a, U&& b) const {
+  auto on_host(T&& a, U&& b) const {
     return a <<= b;
   }
   template <typename T, typename U>
-  KOKKOS_INLINE_FUNCTION auto& on_device(T&& a, U&& b) const {
+  KOKKOS_INLINE_FUNCTION auto on_device(T&& a, U&& b) const {
     return a <<= b;
   }
 };
@@ -364,7 +364,19 @@ class reduce_where_expr {
     auto const& m = w.impl_get_mask();
     auto result   = v[0];
     for (std::size_t i = 1; i < v.size(); ++i) {
-      if (m[i]) result = BinaryOperation()(result, v[i]);
+      if constexpr (std::is_same_v<BinaryOperation, std::plus<>>) {
+        if (m[i]) result = result + v[i];
+      } else if constexpr (std::is_same_v<BinaryOperation, std::multiplies<>>) {
+        if (m[i]) result = result * v[i];
+      } else if constexpr (std::is_same_v<BinaryOperation, std::bit_and<>>) {
+        if (m[i]) result = result & v[i];
+      } else if constexpr (std::is_same_v<BinaryOperation, std::bit_or<>>) {
+        if (m[i]) result = result | v[i];
+      } else if constexpr (std::is_same_v<BinaryOperation, std::bit_xor<>>) {
+        if (m[i]) result = result ^ v[i];
+      } else {
+        Kokkos::abort("Unsupported reduce operation");
+      }
     }
     return result;
   }
