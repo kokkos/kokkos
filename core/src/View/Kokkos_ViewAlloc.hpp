@@ -236,8 +236,7 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
         name(std::move(arg_name)),
         default_exec_space(true) {}
 
-  template <typename Dummy = ValueType>
-  std::enable_if_t<std::is_trivial_v<Dummy>> construct_shared_allocation() {
+  void construct_shared_allocation() {
     // Shortcut for zero initialization
 // On A64FX memset seems to do the wrong thing with regards to first touch
 // leading to the significant performance issues
@@ -270,11 +269,6 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
 #ifndef KOKKOS_ARCH_A64FX
     }
 #endif
-  }
-
-  template <typename Dummy = ValueType>
-  std::enable_if_t<!std::is_trivial_v<Dummy>> construct_shared_allocation() {
-    parallel_for_implementation();
   }
 
   void parallel_for_implementation() {
