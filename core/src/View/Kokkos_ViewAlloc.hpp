@@ -52,11 +52,11 @@ bool is_zero_byte(const T& x) {
  *  Secondarily to have two fewer partial specializations.
  */
 template <class DeviceType, class ValueType,
-          bool IsScalar = std::is_scalar<ValueType>::value>
+          bool IsTrivial = std::is_trivial_v<ValueType>>
 struct ViewValueFunctor;
 
 template <class DeviceType, class ValueType>
-struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
+struct ViewValueFunctor<DeviceType, ValueType, /*IsTrivial=*/false> {
   using ExecSpace = typename DeviceType::execution_space;
 
   struct DestroyTag {};
@@ -104,45 +104,6 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
     functor_instantiate_workaround();
   }
 
-  template <typename Dummy = ValueType>
-  std::enable_if_t<std::is_trivial_v<Dummy>> construct_dispatch() {
-    ValueType value{};
-// On A64FX memset seems to do the wrong thing with regards to first touch
-// leading to the significant performance issues
-#ifndef KOKKOS_ARCH_A64FX
-    if (Impl::is_zero_byte(value)) {
-      uint64_t kpID = 0;
-      if (Kokkos::Profiling::profileLibraryLoaded()) {
-        // We are not really using parallel_for here but using beginParallelFor
-        // instead of begin_parallel_for (and adding "via memset") is the best
-        // we can do to indicate that this is not supposed to be tunable (and
-        // doesn't really execute a parallel_for).
-        Kokkos::Profiling::beginParallelFor(
-            "Kokkos::View::initialization [" + name + "] via memset",
-            Kokkos::Profiling::Experimental::device_id(space), &kpID);
-      }
-      (void)ZeroMemset(
-          space, Kokkos::View<ValueType*, typename DeviceType::memory_space,
-                              Kokkos::MemoryTraits<Kokkos::Unmanaged>>(ptr, n));
-
-      if (Kokkos::Profiling::profileLibraryLoaded()) {
-        Kokkos::Profiling::endParallelFor(kpID);
-      }
-      if (default_exec_space)
-        space.fence("Kokkos::Impl::ViewValueFunctor: View init/destroy fence");
-    } else {
-#endif
-      parallel_for_implementation<ConstructTag>();
-#ifndef KOKKOS_ARCH_A64FX
-    }
-#endif
-  }
-
-  template <typename Dummy = ValueType>
-  std::enable_if_t<!std::is_trivial_v<Dummy>> construct_dispatch() {
-    parallel_for_implementation<ConstructTag>();
-  }
-
   template <typename Tag>
   void parallel_for_implementation() {
     using PolicyType =
@@ -175,7 +136,9 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
       space.fence("Kokkos::Impl::ViewValueFunctor: View init/destroy fence");
   }
 
-  void construct_shared_allocation() { construct_dispatch(); }
+  void construct_shared_allocation() {
+    parallel_for_implementation<ConstructTag>();
+  }
 
   void destroy_shared_allocation() {
 #ifdef KOKKOS_ENABLE_IMPL_VIEW_OF_VIEWS_DESTRUCTOR_PRECONDITION_VIOLATION_WORKAROUND
@@ -203,7 +166,7 @@ struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
 };
 
 template <class DeviceType, class ValueType>
-struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
+struct ViewValueFunctor<DeviceType, ValueType, /*IsTrivial=*/true> {
   using ExecSpace  = typename DeviceType::execution_space;
   using PolicyType = Kokkos::RangePolicy<ExecSpace, Kokkos::IndexType<int64_t>>;
 
@@ -236,8 +199,7 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
         name(std::move(arg_name)),
         default_exec_space(true) {}
 
-  template <typename Dummy = ValueType>
-  std::enable_if_t<std::is_trivial_v<Dummy>> construct_shared_allocation() {
+  void construct_shared_allocation() {
     // Shortcut for zero initialization
 // On A64FX memset seems to do the wrong thing with regards to first touch
 // leading to the significant performance issues
@@ -270,11 +232,6 @@ struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
 #ifndef KOKKOS_ARCH_A64FX
     }
 #endif
-  }
-
-  template <typename Dummy = ValueType>
-  std::enable_if_t<!std::is_trivial_v<Dummy>> construct_shared_allocation() {
-    parallel_for_implementation();
   }
 
   void parallel_for_implementation() {
