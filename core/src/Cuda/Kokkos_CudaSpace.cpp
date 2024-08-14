@@ -185,7 +185,7 @@ void *impl_allocate_common(const int device_id,
                              cudaDevAttrMemoryPoolsSupported, device_id));
 
   if (arg_alloc_size >= memory_threshold_g &&
-      device_supports_cuda_malloc_async) {
+      device_supports_cuda_malloc_async == 1) {
     error_code = cudaMallocAsync(&ptr, arg_alloc_size, stream);
 
     if (error_code == cudaSuccess) {
