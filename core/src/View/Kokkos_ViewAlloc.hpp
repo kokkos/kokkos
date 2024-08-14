@@ -132,8 +132,11 @@ struct ViewValueFunctor<DeviceType, ValueType, /*IsTrivial=*/false> {
     if (Kokkos::Profiling::profileLibraryLoaded()) {
       Kokkos::Profiling::endParallelFor(kpID);
     }
-    if (default_exec_space || std::is_same_v<Tag, DestroyTag>)
-      space.fence("Kokkos::Impl::ViewValueFunctor: View init/destroy fence");
+    if (default_exec_space || std::is_same_v<Tag, DestroyTag>) {
+      space.fence(std::is_same_v<Tag, DestroyTag>
+                      ? "Kokkos::View::destruction before deallocate"
+                      : "Kokkos::View::initialization");
+    }
   }
 
   void construct_shared_allocation() {
@@ -224,8 +227,9 @@ struct ViewValueFunctor<DeviceType, ValueType, /*IsTrivial=*/true> {
       if (Kokkos::Profiling::profileLibraryLoaded()) {
         Kokkos::Profiling::endParallelFor(kpID);
       }
-      if (default_exec_space)
-        space.fence("Kokkos::Impl::ViewValueFunctor: View init/destroy fence");
+      if (default_exec_space) {
+        space.fence("Kokkos::View::initialization via memset");
+      }
     } else {
 #endif
       parallel_for_implementation();
@@ -254,10 +258,9 @@ struct ViewValueFunctor<DeviceType, ValueType, /*IsTrivial=*/true> {
     if (Kokkos::Profiling::profileLibraryLoaded()) {
       Kokkos::Profiling::endParallelFor(kpID);
     }
-    if (default_exec_space)
-      space.fence(
-          "Kokkos::Impl::ViewValueFunctor: Fence after setting values in "
-          "view");
+    if (default_exec_space) {
+      space.fence("Kokkos::View::initialization");
+    }
   }
 
   void destroy_shared_allocation() {}
