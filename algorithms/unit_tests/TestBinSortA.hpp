@@ -266,6 +266,11 @@ TEST(TEST_CATEGORY, BinSortEmptyKeysView) {
   ASSERT_NO_THROW(Sorter.create_permute_vector(ExecutionSpace{}));
 }
 
+// BinSort may delegate sorting within bins to std::sort when running on host
+// and having a sufficiently large number of items within a single bin (10 by
+// default). Test that this is done without undefined behavior when accessing
+// the boundaries of the bin. Should be used in conjunction with a memory
+// sanitizer or bounds check.
 TEST(TEST_CATEGORY, BinSort_issue_7221) {
   using ExecutionSpace = TEST_EXECSPACE;
 
