@@ -68,9 +68,9 @@ struct ViewValueFunctor<DeviceType, ValueType, /*IsTrivial=*/false> {
   std::string name;
   bool default_exec_space;
 
-  template <class _ValueType = ValueType>
+  template <class SameValueType = ValueType>
   KOKKOS_INLINE_FUNCTION
-      std::enable_if_t<std::is_default_constructible<_ValueType>::value>
+      std::enable_if_t<std::is_default_constructible<SameValueType>::value>
       operator()(ConstructTag const&, const size_t i) const {
     new (ptr + i) ValueType();
   }
