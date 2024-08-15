@@ -201,10 +201,11 @@ struct ViewValueFunctorHostSerialInit {
   ViewValueFunctorHostSerialInit& operator=(
       const ViewValueFunctorHostSerialInit&) = default;
 
-  ViewValueFunctorHostSerialInit([[maybe_unused]] ExecSpace const& arg_space,
+  ViewValueFunctorHostSerialInit(ExecSpace const& arg_space,
                                  ValueType* const arg_ptr, size_t const arg_n,
                                  std::string /*arg_name*/)
       : ptr(arg_ptr), n(arg_n) {
+    (void)arg_space;
     KOKKOS_ASSERT(arg_space == ExecSpace() &&
                   "FIXME if attached better be the default instance");
   }
