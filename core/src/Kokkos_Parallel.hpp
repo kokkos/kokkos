@@ -72,19 +72,19 @@ struct FunctorPolicyExecutionSpace {
   static_assert(
       !is_detected<execution_space_t, Policy>::value ||
           !is_detected<execution_space_t, Functor>::value ||
-          std::is_same<policy_execution_space, functor_execution_space>::value,
+          std::is_same_v<policy_execution_space, functor_execution_space>,
       "A policy with an execution space and a functor with an execution space "
       "are given but the execution space types do not match!");
   static_assert(!is_detected<execution_space_t, Policy>::value ||
                     !is_detected<device_type_t, Functor>::value ||
-                    std::is_same<policy_execution_space,
-                                 functor_device_type_execution_space>::value,
+                    std::is_same_v<policy_execution_space,
+                                   functor_device_type_execution_space>,
                 "A policy with an execution space and a functor with a device "
                 "type are given but the execution space types do not match!");
   static_assert(!is_detected<device_type_t, Functor>::value ||
                     !is_detected<execution_space_t, Functor>::value ||
-                    std::is_same<functor_device_type_execution_space,
-                                 functor_execution_space>::value,
+                    std::is_same_v<functor_device_type_execution_space,
+                                   functor_execution_space>,
                 "A functor with both an execution space and device type is "
                 "given but their execution space types do not match!");
 

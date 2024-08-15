@@ -455,10 +455,9 @@ class TaskQueueCommonMixin {
   //            && Same<MemoryPool, typename Derived::memory_pool>
   {
     static_assert(
-        std::is_same<ExecutionSpace,
-                     typename Derived::execution_space>::value &&
-            std::is_same<MemorySpace, typename Derived::memory_space>::value &&
-            std::is_same<MemoryPool, typename Derived::memory_pool>::value,
+        std::is_same_v<ExecutionSpace, typename Derived::execution_space> &&
+            std::is_same_v<MemorySpace, typename Derived::memory_space> &&
+            std::is_same_v<MemoryPool, typename Derived::memory_pool>,
         "Type mismatch in task_queue_allocation_size customization point");
 
     return sizeof(Derived);

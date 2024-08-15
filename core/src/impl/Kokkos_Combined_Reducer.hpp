@@ -369,7 +369,7 @@ struct CombinedReductionFunctorWrapperImpl<
   template <class... IdxOrMemberTypes, class IdxOrMemberType1,
             class... IdxOrMemberTypesThenValueType>
   KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
-      !std::is_same<remove_cvref_t<IdxOrMemberType1>, value_type>::value>
+      !std::is_same_v<remove_cvref_t<IdxOrMemberType1>, value_type>>
   _call_op_impl(IdxOrMemberTypes&&... idxs, IdxOrMemberType1&& idx,
                 IdxOrMemberTypesThenValueType&&... args) const {
     this->template _call_op_impl<IdxOrMemberTypes&&..., IdxOrMemberType1&&>(

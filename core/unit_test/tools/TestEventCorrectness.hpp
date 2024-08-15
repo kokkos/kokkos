@@ -107,7 +107,7 @@ struct TestScanFunctor {
 
 template <typename Lambda>
 void test_wrapper(const Lambda& lambda) {
-  if (!std::is_same<Kokkos::DefaultExecutionSpace, Kokkos::Serial>::value) {
+  if (!std::is_same_v<Kokkos::DefaultExecutionSpace, Kokkos::Serial>) {
     lambda();
   }
 }

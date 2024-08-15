@@ -514,24 +514,24 @@ struct PerThreadValue {
 template <class iType, class... Args>
 struct ExtractVectorLength {
   static inline iType value(
-      std::enable_if_t<std::is_integral<iType>::value, iType> val, Args...) {
+      std::enable_if_t<std::is_integral_v<iType>, iType> val, Args...) {
     return val;
   }
-  static inline std::enable_if_t<!std::is_integral<iType>::value, int> value(
-      std::enable_if_t<!std::is_integral<iType>::value, iType>, Args...) {
+  static inline std::enable_if_t<!std::is_integral_v<iType>, int> value(
+      std::enable_if_t<!std::is_integral_v<iType>, iType>, Args...) {
     return 1;
   }
 };
 
 template <class iType, class... Args>
-inline std::enable_if_t<std::is_integral<iType>::value, iType>
-extract_vector_length(iType val, Args...) {
+inline std::enable_if_t<std::is_integral_v<iType>, iType> extract_vector_length(
+    iType val, Args...) {
   return val;
 }
 
 template <class iType, class... Args>
-inline std::enable_if_t<!std::is_integral<iType>::value, int>
-extract_vector_length(iType, Args...) {
+inline std::enable_if_t<!std::is_integral_v<iType>, int> extract_vector_length(
+    iType, Args...) {
   return 1;
 }
 
@@ -1215,7 +1215,7 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
 namespace Impl {
 
 template <typename FunctorType, typename TagType,
-          bool HasTag = !std::is_void<TagType>::value>
+          bool HasTag = !std::is_void_v<TagType>>
 struct ParallelConstructName;
 
 template <typename FunctorType, typename TagType>

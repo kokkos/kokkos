@@ -33,7 +33,7 @@ namespace Impl {
 struct DummyExecutionSpace;
 template <class T, class... P>
 struct ZeroMemset<
-    std::conditional_t<!std::is_same<Serial, DefaultHostExecutionSpace>::value,
+    std::conditional_t<!std::is_same_v<Serial, DefaultHostExecutionSpace>,
                        Serial, DummyExecutionSpace>,
     View<T, P...>> {
   ZeroMemset(const Serial&, const View<T, P...>& dst) {
