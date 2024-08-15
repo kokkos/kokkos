@@ -905,7 +905,7 @@ class ScatterAccess<DataType, Op, DeviceType, Layout, ScatterNonDuplicated,
 
   template <typename Arg>
   KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
-      view_type::original_view_type::rank == 1 && std::is_integral_v<Arg>,
+      std::is_integral_v<Arg> && view_type::original_view_type::rank == 1,
       value_type>
   operator[](Arg arg) const {
     return view.at(arg);
@@ -1460,7 +1460,7 @@ class ScatterAccess<DataType, Op, DeviceType, Layout, ScatterDuplicated,
 
   template <typename Arg>
   KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
-      view_type::original_view_type::rank == 1 && std::is_integral_v<Arg>,
+      std::is_integral_v<Arg> && view_type::original_view_type::rank == 1,
       value_type>
   operator[](Arg arg) const {
     return view.at(thread_id, arg);

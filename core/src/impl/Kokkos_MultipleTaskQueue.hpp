@@ -112,8 +112,8 @@ struct MultipleTaskQueueTeamEntry {
   template <class _always_void = void>
   KOKKOS_INLINE_FUNCTION OptionalRef<task_base_type> _pop_failed_insertion(
       int /*priority*/, TaskType /*type*/,
-      std::enable_if_t<!task_queue_traits::ready_queue_insertion_may_fail &&
-                           std::is_void_v<_always_void>,
+      std::enable_if_t<std::is_void_v<_always_void> &&
+                           !task_queue_traits::ready_queue_insertion_may_fail,
                        void*> = nullptr) {
     return OptionalRef<task_base_type>{nullptr};
   }
@@ -185,8 +185,8 @@ struct MultipleTaskQueueTeamEntry {
   template <class _always_void = void>
   KOKKOS_INLINE_FUNCTION void do_handle_failed_insertion(
       runnable_task_base_type&& /*task*/,
-      std::enable_if_t<!task_queue_traits::ready_queue_insertion_may_fail &&
-                           std::is_void_v<_always_void>,
+      std::enable_if_t<std::is_void_v<_always_void> &&
+                           !task_queue_traits::ready_queue_insertion_may_fail,
                        void*> = nullptr) {
     Kokkos::abort("should be unreachable!");
   }
@@ -221,10 +221,8 @@ struct MultipleTaskQueueTeamEntry {
   template <class _always_void = void>
   KOKKOS_INLINE_FUNCTION void flush_failed_insertions(
       int, int,
-      std::enable_if_t<!task_queue_traits::ready_queue_insertion_may_fail &&
-                           std::is_void_v<_always_void>,  // just to make this
-                                                          // dependent on
-                                                          // template parameter
+      std::enable_if_t<std::is_void_v<_always_void> &&
+                           !task_queue_traits::ready_queue_insertion_may_fail,
                        int> = 0) {}
 
   KOKKOS_INLINE_FUNCTION
