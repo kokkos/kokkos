@@ -41,22 +41,8 @@ bool is_zero_byte(const T& x) {
   return std::memcmp(&x, all_zeroes, sizeof(T)) == 0;
 }
 
-//----------------------------------------------------------------------------
-
-/*
- *  The construction, assignment to default, and destruction
- *  are merged into a single functor.
- *  Primarily to work around an unresolved CUDA back-end bug
- *  that would lose the destruction cuda device function when
- *  called from the shared memory tracking destruction.
- *  Secondarily to have two fewer partial specializations.
- */
-template <class DeviceType, class ValueType,
-          bool IsTrivial = std::is_trivial_v<ValueType>>
-struct ViewValueFunctor;
-
 template <class DeviceType, class ValueType>
-struct ViewValueFunctor<DeviceType, ValueType, /*IsTrivial=*/false> {
+struct ViewValueFunctor {
   using ExecSpace = typename DeviceType::execution_space;
 
   struct DestroyTag {};
@@ -69,14 +55,13 @@ struct ViewValueFunctor<DeviceType, ValueType, /*IsTrivial=*/false> {
   bool default_exec_space;
 
   template <class SameValueType = ValueType>
-  KOKKOS_INLINE_FUNCTION
-      std::enable_if_t<std::is_default_constructible<SameValueType>::value>
-      operator()(ConstructTag const&, const size_t i) const {
+  KOKKOS_FUNCTION
+      std::enable_if_t<std::is_default_constructible_v<SameValueType>>
+      operator()(ConstructTag, const size_t i) const {
     new (ptr + i) ValueType();
   }
 
-  KOKKOS_INLINE_FUNCTION void operator()(DestroyTag const&,
-                                         const size_t i) const {
+  KOKKOS_FUNCTION void operator()(DestroyTag, const size_t i) const {
     (ptr + i)->~ValueType();
   }
 
@@ -139,19 +124,54 @@ struct ViewValueFunctor<DeviceType, ValueType, /*IsTrivial=*/false> {
     }
   }
 
+  // Shortcut for zero initialization
+  void zero_memset_implementation() {
+    uint64_t kpID = 0;
+    if (Kokkos::Profiling::profileLibraryLoaded()) {
+      // We are not really using parallel_for here but using beginParallelFor
+      // instead of begin_parallel_for (and adding "via memset") is the best
+      // we can do to indicate that this is not supposed to be tunable (and
+      // doesn't really execute a parallel_for).
+      Kokkos::Profiling::beginParallelFor(
+          "Kokkos::View::initialization [" + name + "] via memset",
+          Kokkos::Profiling::Experimental::device_id(space), &kpID);
+    }
+
+    (void)ZeroMemset(
+        space, Kokkos::View<ValueType*, typename DeviceType::memory_space,
+                            Kokkos::MemoryTraits<Kokkos::Unmanaged>>(ptr, n));
+
+    if (Kokkos::Profiling::profileLibraryLoaded()) {
+      Kokkos::Profiling::endParallelFor(kpID);
+    }
+    if (default_exec_space) {
+      space.fence("Kokkos::View::initialization via memset");
+    }
+  }
+
   void construct_shared_allocation() {
-    parallel_for_implementation<ConstructTag>();
+// On A64FX memset seems to do the wrong thing with regards to first touch
+// leading to the significant performance issues
+#ifndef KOKKOS_ARCH_A64FX
+    if constexpr (std::is_trivial_v<ValueType>) {
+      // value-initialization is equivalent to filling with zeros
+      zero_memset_implementation();
+    } else
+#endif
+      parallel_for_implementation<ConstructTag>();
   }
 
   void destroy_shared_allocation() {
+    if constexpr (std::is_trivially_destructible_v<ValueType>) {
+      // do nothing, don't bother calling the destructor
+    } else {
 #ifdef KOKKOS_ENABLE_IMPL_VIEW_OF_VIEWS_DESTRUCTOR_PRECONDITION_VIOLATION_WORKAROUND
-    if constexpr (std::is_same_v<typename ExecSpace::memory_space,
-                                 Kokkos::HostSpace>)
-      for (size_t i = 0; i < n; ++i) (ptr + i)->~ValueType();
-    else
+      if constexpr (std::is_same_v<typename ExecSpace::memory_space,
+                                   Kokkos::HostSpace>)
+        for (size_t i = 0; i < n; ++i) (ptr + i)->~ValueType();
+      else
 #endif
-    {
-      parallel_for_implementation<DestroyTag>();
+        parallel_for_implementation<DestroyTag>();
     }
   }
 
@@ -168,103 +188,6 @@ struct ViewValueFunctor<DeviceType, ValueType, /*IsTrivial=*/false> {
   }
 };
 
-template <class DeviceType, class ValueType>
-struct ViewValueFunctor<DeviceType, ValueType, /*IsTrivial=*/true> {
-  using ExecSpace  = typename DeviceType::execution_space;
-  using PolicyType = Kokkos::RangePolicy<ExecSpace, Kokkos::IndexType<int64_t>>;
-
-  ExecSpace space;
-  ValueType* ptr;
-  size_t n;
-  std::string name;
-  bool default_exec_space;
-
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const size_t i) const { ptr[i] = ValueType(); }
-
-  ViewValueFunctor()                                   = default;
-  ViewValueFunctor(const ViewValueFunctor&)            = default;
-  ViewValueFunctor& operator=(const ViewValueFunctor&) = default;
-
-  ViewValueFunctor(ExecSpace const& arg_space, ValueType* const arg_ptr,
-                   size_t const arg_n, std::string arg_name)
-      : space(arg_space),
-        ptr(arg_ptr),
-        n(arg_n),
-        name(std::move(arg_name)),
-        default_exec_space(false) {}
-
-  ViewValueFunctor(ValueType* const arg_ptr, size_t const arg_n,
-                   std::string arg_name)
-      : space(ExecSpace{}),
-        ptr(arg_ptr),
-        n(arg_n),
-        name(std::move(arg_name)),
-        default_exec_space(true) {}
-
-  void construct_shared_allocation() {
-    // Shortcut for zero initialization
-// On A64FX memset seems to do the wrong thing with regards to first touch
-// leading to the significant performance issues
-#ifndef KOKKOS_ARCH_A64FX
-    ValueType value{};
-    if (Impl::is_zero_byte(value)) {
-      uint64_t kpID = 0;
-      if (Kokkos::Profiling::profileLibraryLoaded()) {
-        // We are not really using parallel_for here but using beginParallelFor
-        // instead of begin_parallel_for (and adding "via memset") is the best
-        // we can do to indicate that this is not supposed to be tunable (and
-        // doesn't really execute a parallel_for).
-        Kokkos::Profiling::beginParallelFor(
-            "Kokkos::View::initialization [" + name + "] via memset",
-            Kokkos::Profiling::Experimental::device_id(space), &kpID);
-      }
-
-      (void)ZeroMemset(
-          space, Kokkos::View<ValueType*, typename DeviceType::memory_space,
-                              Kokkos::MemoryTraits<Kokkos::Unmanaged>>(ptr, n));
-
-      if (Kokkos::Profiling::profileLibraryLoaded()) {
-        Kokkos::Profiling::endParallelFor(kpID);
-      }
-      if (default_exec_space) {
-        space.fence("Kokkos::View::initialization via memset");
-      }
-    } else {
-#endif
-      parallel_for_implementation();
-#ifndef KOKKOS_ARCH_A64FX
-    }
-#endif
-  }
-
-  void parallel_for_implementation() {
-    PolicyType policy(space, 0, n);
-    uint64_t kpID = 0;
-    if (Kokkos::Profiling::profileLibraryLoaded()) {
-      Kokkos::Profiling::beginParallelFor(
-          "Kokkos::View::initialization [" + name + "]",
-          Kokkos::Profiling::Experimental::device_id(space), &kpID);
-    }
-#ifdef KOKKOS_ENABLE_CUDA
-    if (std::is_same<ExecSpace, Kokkos::Cuda>::value) {
-      Kokkos::Impl::cuda_prefetch_pointer(space, ptr, sizeof(ValueType) * n,
-                                          true);
-    }
-#endif
-    const Kokkos::Impl::ParallelFor<ViewValueFunctor, PolicyType> closure(
-        *this, policy);
-    closure.execute();
-    if (Kokkos::Profiling::profileLibraryLoaded()) {
-      Kokkos::Profiling::endParallelFor(kpID);
-    }
-    if (default_exec_space) {
-      space.fence("Kokkos::View::initialization");
-    }
-  }
-
-  void destroy_shared_allocation() {}
-};
 }  // namespace Kokkos::Impl
 
 #endif  // KOKKOS_VIEW_ALLOC_HPP
