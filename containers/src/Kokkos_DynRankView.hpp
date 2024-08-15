@@ -599,12 +599,12 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   // This assumes a contiguous underlying memory (i.e. no padding, no
   // striding... AND a Trilinos/Sacado scalar type )
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION
-      std::enable_if_t<!std::is_same_v<typename drvtraits::value_type,
-                                       typename drvtraits::scalar_array_type> &&
-                           std::is_integral_v<iType>,
-                       reference_type>
-      operator[](const iType& i0) const {
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
+      std::is_integral_v<iType> &&
+          !std::is_same_v<typename drvtraits::value_type,
+                          typename drvtraits::scalar_array_type>,
+      reference_type>
+  operator[](const iType& i0) const {
     //      auto map = impl_map();
     const size_t dim_scalar = m_map.dimension_scalar();
     const size_t bytes      = this->span() / dim_scalar;
