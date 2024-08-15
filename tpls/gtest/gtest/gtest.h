@@ -4770,11 +4770,10 @@ class NeverThrown {
 #endif  // GTEST_HAS_RTTI
 
 #define GTEST_TEST_THROW_CATCH_STD_EXCEPTION_(statement, expected_exception)   \
-  catch (typename std::conditional<                                            \
-         std::is_same<typename std::remove_cv<typename std::remove_reference<  \
-                          expected_exception>::type>::type,                    \
-                      std::exception>::value,                                  \
-         const ::testing::internal::NeverThrown&, const std::exception&>::type \
+  catch (std::conditional_t<                                                   \
+         std::is_same_v<std::remove_cv_t<std::remove_reference_t<              \
+                          expected_exception>>, std::exception>,               \
+         const ::testing::internal::NeverThrown&, const std::exception&>       \
              e) {                                                              \
     gtest_msg.value = "Expected: " #statement                                  \
                       " throws an exception of type " #expected_exception      \
