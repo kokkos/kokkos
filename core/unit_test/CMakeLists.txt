@@ -58,7 +58,7 @@ SET(KOKKOS_OPENMPTARGET_NAME Experimental::OpenMPTarget)
 SET(KOKKOS_SERIAL_FEATURE_LEVEL 999)
 SET(KOKKOS_SERIAL_NAME Serial)
 SET(KOKKOS_SYCL_FEATURE_LEVEL 999)
-SET(KOKKOS_SYCL_NAME Experimental::SYCL)
+SET(KOKKOS_SYCL_NAME SYCL)
 SET(KOKKOS_THREADS_FEATURE_LEVEL 999)
 SET(KOKKOS_THREADS_NAME Threads)
 # FIXME_OPENACC - The Clang compiler only compiles the first 9 incremental tests for the OpenACC backend.
@@ -93,6 +93,9 @@ SET(COMPILE_ONLY_SOURCES
   TestViewTypeTraits.cpp
   TestTypeList.cpp
   TestMDRangePolicyCTAD.cpp
+  TestTeamPolicyCTAD.cpp
+  TestTeamMDRangePolicyCTAD.cpp
+  TestNestedReducerCTAD.cpp
   view/TestExtentsDatatypeConversion.cpp
 )
 
@@ -101,10 +104,9 @@ if(WIN32)
   LIST(APPEND COMPILE_ONLY_SOURCES TestWindowsInclude.cpp)
 endif()
 
-#TestInterOp has a dependency on containers
-IF(KOKKOS_HAS_TRILINOS)
-  LIST(REMOVE_ITEM COMPILE_ONLY_SOURCES TestInterOp.cpp)
-ENDIF()
+if(Kokkos_ENABLE_OPENMPTARGET)
+  list(REMOVE_ITEM COMPILE_ONLY_SOURCES TestNestedReducerCTAD.cpp)
+endif()
 KOKKOS_ADD_EXECUTABLE(
   CoreTestCompileOnly
   SOURCES
@@ -148,8 +150,10 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
         Crs
         DeepCopyAlignment
         ExecSpacePartitioning
+        ExecSpaceThreadSafety
         ExecutionSpace
         FunctorAnalysis
+        Graph
         HostSharedPtr
         HostSharedPtrAccessOnDevice
         Init
@@ -173,7 +177,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
     endforeach()
 
     set(${Tag}_SOURCES1B)
-    foreach(Name
+    set(${Tag}_TESTNAMES1B
         MDRange_a
         MDRange_b
         MDRange_c
@@ -184,6 +188,8 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
         MDRangePolicyConstructors
         MDRangeReduce
         MDSpan
+        MDSpanAtomicAccessor
+        MDSpanConversion
         MinMaxClamp
         NumericTraits
         OccupancyControlTrait
@@ -203,8 +209,19 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
         Reductions
         Reductions_DeviceView
         SharedAlloc
+        SpaceAwareAccessorAccessViolation
+        SpaceAwareAccessor
         Swap
         )
+    IF (NOT Kokkos_ENABLE_IMPL_MDSPAN)
+      LIST(REMOVE_ITEM ${Tag}_TESTNAMES1B
+         MDSpanAtomicAccessor
+         MDSpanConversion
+         SpaceAwareAccessorAccessViolation
+         SpaceAwareAccessor
+      )
+    ENDIF()
+    foreach(Name IN LISTS ${Tag}_TESTNAMES1B)
       set(file ${dir}/Test${Tag}_${Name}.cpp)
       # Write to a temporary intermediate file and call configure_file to avoid
       # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
@@ -217,7 +234,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
     endforeach()
 
     SET(${Tag}_SOURCES2A)
-    foreach(Name
+    SET(${TAG}_TESTNAMES2A
       TeamBasic
       TeamCombinedReducers
       TeamMDRange
@@ -234,8 +251,10 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
       ViewAPI_c
       ViewAPI_d
       ViewAPI_e
+      ViewBadAlloc
       ViewCopy_a
       ViewCopy_b
+      ViewCopy_c
       ViewCtorDimMatch
       ViewEmptyRuntimeUnmanaged
       ViewHooks
@@ -245,11 +264,21 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
       ViewMapping_subview
       ViewMemoryAccessViolation
       ViewOfClass
+      ViewOfViews
       ViewOutOfBoundsAccess
       ViewResize
       WorkGraph
       WithoutInitializing
       )
+    # Workaround to internal compiler error with intel classic compilers
+    # when using -no-ip flag in ViewCopy_c
+    # See issue: https://github.com/kokkos/kokkos/issues/7084
+    IF(KOKKOS_CXX_COMPILER_ID STREQUAL Intel)
+      LIST(REMOVE_ITEM ${Tag}_TESTNAMES2A
+        ViewCopy_c
+      )
+    endif()
+    foreach(Name IN LISTS ${Tag}_TESTNAMES2A)
       set(file ${dir}/Test${Tag}_${Name}.cpp)
       # Write to a temporary intermediate file and call configure_file to avoid
       # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
@@ -353,6 +382,7 @@ foreach(PairDeviceSpace HIP-HostPinned;HIP-Managed;Cuda-HostPinned;Cuda-UVM;SYCL
       ViewAPI_e
       ViewCopy_a
       ViewCopy_b
+      ViewCopy_c
       ViewMapping_a
       ViewMapping_b
       ViewMapping_subview
@@ -648,12 +678,6 @@ if(Kokkos_ENABLE_SERIAL)
     UnitTestMainInit.cpp
     ${Serial_SOURCES2}
   )
-  KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    CoreUnitTest_SerialGraph
-    SOURCES
-    UnitTestMainInit.cpp
-    serial/TestSerial_Graph.cpp
-  )
 endif()
 
 if(Kokkos_ENABLE_THREADS)
@@ -680,12 +704,6 @@ if (Kokkos_ENABLE_OPENMP)
     SOURCES
       UnitTestMain.cpp
       openmp/TestOpenMP_InterOp.cpp
-  )
-  KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    CoreUnitTest_OpenMPGraph
-    SOURCES
-      UnitTestMainInit.cpp
-      openmp/TestOpenMP_Graph.cpp
   )
 endif()
 
@@ -794,12 +812,6 @@ if(Kokkos_ENABLE_CUDA)
       UnitTestMainInit.cpp
       cuda/TestCuda_InterOp_StreamsMultiGPU.cpp
   )
-  KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    CoreUnitTest_CudaGraph
-    SOURCES
-      UnitTestMainInit.cpp
-      cuda/TestCuda_Graph.cpp
-  )
 endif()
 
 if(Kokkos_ENABLE_HIP)
@@ -826,12 +838,6 @@ if(Kokkos_ENABLE_HIP)
     SOURCES
       UnitTestMain.cpp
       hip/TestHIP_InterOp_Streams.cpp
-  )
-  KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_HIPGraph
-    SOURCES
-      UnitTestMainInit.cpp
-      hip/TestHIP_Graph.cpp
   )
 endif()
 
@@ -902,14 +908,20 @@ if(Kokkos_ENABLE_SYCL)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     CoreUnitTest_SYCLInterOpInit_Context
     SOURCES
-    UnitTestMainInit.cpp
+      UnitTestMainInit.cpp
       sycl/TestSYCL_InterOp_Init_Context.cpp
   )
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     CoreUnitTest_SYCLInterOpStreams
     SOURCES
-      UnitTestMain.cpp
+     UnitTestMain.cpp
      sycl/TestSYCL_InterOp_Streams.cpp
+  )
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+      CoreUnitTest_SYCLInterOpStreamsMultiGPU
+    SOURCES
+      UnitTestMainInit.cpp
+      sycl/TestSYCL_InterOp_StreamsMultiGPU.cpp
   )
 endif()
 
@@ -993,6 +1005,13 @@ KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_PushFinalizeHook.cpp
 )
 
+KOKKOS_ADD_EXECUTABLE_AND_TEST(
+  CoreUnitTest_ScopeGuard
+  SOURCES
+    UnitTestMain.cpp
+    UnitTest_ScopeGuard.cpp
+)
+
 # This test is intended for development and debugging by putting code
 # into TestDefaultDeviceDevelop.cpp. By default its empty.
 KOKKOS_ADD_EXECUTABLE_AND_TEST(
@@ -1002,24 +1021,35 @@ KOKKOS_ADD_EXECUTABLE_AND_TEST(
     default/TestDefaultDeviceDevelop.cpp
 )
 
-# This test is special, because it passes exactly when it prints the
-# message "PASSED: I am the custom std::terminate handler.", AND calls
-# std::terminate.  This means that we can't use
-# KOKKOS_ADD_EXECUTABLE_AND_TEST.  See GitHub issue #2147.
+# With MSVC, the terminate handler is called and prints the message but the
+# program does not seem to exit and we get a timeout with ctest.
+if (NOT WIN32)
+  # This test is special, because it passes exactly when it prints the
+  # message "PASSED: I am the custom std::terminate handler.", AND calls
+  # std::terminate.  This means that we can't use
+  # KOKKOS_ADD_EXECUTABLE_AND_TEST.  See GitHub issue #2147.
+  KOKKOS_ADD_TEST_EXECUTABLE(
+    CoreUnitTest_PushFinalizeHookTerminate
+    SOURCES UnitTest_PushFinalizeHook_terminate.cpp
+  )
+  add_test(
+    NAME Kokkos_CoreUnitTest_PushFinalizeHookTerminateRegex
+    COMMAND ${CMAKE_COMMAND} -E env $<TARGET_FILE:Kokkos_CoreUnitTest_PushFinalizeHookTerminate>
+  )
+  set_property(
+    TEST Kokkos_CoreUnitTest_PushFinalizeHookTerminateRegex
+    PROPERTY PASS_REGULAR_EXPRESSION "PASSED: I am the custom std::terminate handler."
+  )
+  add_test(
+    NAME Kokkos_CoreUnitTest_PushFinalizeHookTerminateFails
+    COMMAND ${CMAKE_COMMAND} -E env $<TARGET_FILE:Kokkos_CoreUnitTest_PushFinalizeHookTerminate>
+  )
+  set_property(
+    TEST Kokkos_CoreUnitTest_PushFinalizeHookTerminateFails
+    PROPERTY WILL_FAIL TRUE
+  )
+endif()
 
-KOKKOS_ADD_TEST_EXECUTABLE( push_finalize_hook_terminate
-  SOURCES UnitTest_PushFinalizeHook_terminate.cpp
-)
-
-# FIXME_REFACTOR_TRIBITS
-#KOKKOS_ADD_ADVANCED_TEST( CoreUnitTest_PushFinalizeHook_terminate
-#  TEST_0
-#    EXEC push_finalize_hook_terminate
-#    NUM_MPI_PROCS 1
-#    PASS_REGULAR_EXPRESSION
-#      "PASSED: I am the custom std::terminate handler."
-#    ALWAYS_FAIL_ON_ZERO_RETURN
-#)
   if(KOKKOS_ENABLE_TUNING)
     KOKKOS_ADD_EXECUTABLE_AND_TEST(
       CoreUnitTest_TuningBuiltins
@@ -1138,7 +1168,6 @@ KOKKOS_ADD_TEST_EXECUTABLE( push_finalize_hook_terminate
       PASS_REGULAR_EXPRESSION "kokkosp_init_library::kokkosp_parse_args:4:Kokkos_ProfilingAllCalls:-c:test:delimit::.*::kokkosp_allocate_data:${MEMSPACE_REGEX}:source:${ADDRESS_REGEX}:40::kokkosp_begin_parallel_for:Kokkos::View::initialization [[]source] via memset:[0-9]+:0::kokkosp_end_parallel_for:0::kokkosp_allocate_data:${MEMSPACE_REGEX}:destination:${ADDRESS_REGEX}:40::kokkosp_begin_parallel_for:Kokkos::View::initialization [[]destination] via memset:[0-9]+:0::kokkosp_end_parallel_for:0::kokkosp_begin_deep_copy:${MEMSPACE_REGEX}:destination:${ADDRESS_REGEX}:${MEMSPACE_REGEX}:source:${ADDRESS_REGEX}:40::.*kokkosp_end_deep_copy::kokkosp_begin_parallel_for:parallel_for:${SIZE_REGEX}:0::kokkosp_end_parallel_for:0::kokkosp_begin_parallel_reduce:parallel_reduce:${SIZE_REGEX}:1${SKIP_SCRATCH_INITIALIZATION_REGEX}::kokkosp_end_parallel_reduce:1::kokkosp_begin_parallel_scan:parallel_scan:${SIZE_REGEX}:2::kokkosp_end_parallel_scan:2::kokkosp_push_profile_region:push_region::kokkosp_pop_profile_region::kokkosp_create_profile_section:created_section:3::kokkosp_start_profile_section:3::kokkosp_stop_profile_section:3::kokkosp_destroy_profile_section:3::kokkosp_profile_event:profiling_event::kokkosp_declare_metadata:dogs:good::kokkosp_deallocate_data:${MEMSPACE_REGEX}:destination:${ADDRESS_REGEX}:40::kokkosp_deallocate_data:${MEMSPACE_REGEX}:source:${ADDRESS_REGEX}:40::kokkosp_finalize_library::"
     )
   endif() #KOKKOS_ENABLE_LIBDL
-if(NOT KOKKOS_HAS_TRILINOS)
 KOKKOS_ADD_TEST_EXECUTABLE(
   StackTraceTestExec
   SOURCES
@@ -1157,7 +1186,6 @@ KOKKOS_ADD_TEST( NAME CoreUnitTest_StackTraceTest
                  EXE  StackTraceTestExec
                  FAIL_REGULAR_EXPRESSION "FAILED"
                )
-endif()
 
 if (KOKKOS_ENABLE_HWLOC)
 KOKKOS_ADD_EXECUTABLE_AND_TEST(
@@ -1203,7 +1231,7 @@ FUNCTION (KOKKOS_ADD_INCREMENTAL_TEST DEVICE)
     SOURCES ${${DEVICE}_SOURCES}
   )
 
-  SET(EXE_NAME Kokkos_IncrementalTest_${DEVICE})
+  SET(EXE_NAME ${PACKAGE_NAME}_IncrementalTest_${DEVICE})
   # Check that the target was actually created because in a TribITS build
   # where only tests marked as PERFORMANCE enabled it would not be.
   IF(TARGET ${EXE_NAME})
@@ -1227,28 +1255,25 @@ KOKKOS_ADD_EXECUTABLE_AND_TEST(
   ARGS "one 2 THREE"
 )
 
-# This test is not properly set up to run within Trilinos
-if (NOT KOKKOS_HAS_TRILINOS)
-  SET_SOURCE_FILES_PROPERTIES(UnitTest_DeviceAndThreads.cpp PROPERTIES LANGUAGE ${KOKKOS_COMPILE_LANGUAGE})
-  add_executable(Kokkos_CoreUnitTest_DeviceAndThreads UnitTest_DeviceAndThreads.cpp)
-  target_link_libraries(Kokkos_CoreUnitTest_DeviceAndThreads Kokkos::kokkoscore)
-  find_package(Python3 COMPONENTS Interpreter)
-  if(Python3_Interpreter_FOUND AND Python3_VERSION VERSION_GREATER_EQUAL 3.7)
-    if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.20)
-      set(USE_SOURCE_PERMISSIONS_WHEN_SUPPORTED USE_SOURCE_PERMISSIONS)
-    endif()
-    file(GENERATE
-      OUTPUT $<TARGET_FILE_DIR:Kokkos_CoreUnitTest_DeviceAndThreads>/TestDeviceAndThreads.py
-      INPUT TestDeviceAndThreads.py
-      ${USE_SOURCE_PERMISSIONS_WHEN_SUPPORTED}
-    )
-    add_test(
-      NAME Kokkos_CoreUnitTest_DeviceAndThreads
-      COMMAND ${Python3_EXECUTABLE} -m unittest -v $<TARGET_FILE_DIR:Kokkos_CoreUnitTest_DeviceAndThreads>/TestDeviceAndThreads.py
-    )
+SET_SOURCE_FILES_PROPERTIES(UnitTest_DeviceAndThreads.cpp PROPERTIES LANGUAGE ${KOKKOS_COMPILE_LANGUAGE})
+add_executable(Kokkos_CoreUnitTest_DeviceAndThreads UnitTest_DeviceAndThreads.cpp)
+target_link_libraries(Kokkos_CoreUnitTest_DeviceAndThreads Kokkos::kokkoscore)
+find_package(Python3 COMPONENTS Interpreter)
+if(Python3_Interpreter_FOUND AND Python3_VERSION VERSION_GREATER_EQUAL 3.7)
+  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.20)
+    set(USE_SOURCE_PERMISSIONS_WHEN_SUPPORTED USE_SOURCE_PERMISSIONS)
   endif()
+  file(GENERATE
+    OUTPUT $<TARGET_FILE_DIR:Kokkos_CoreUnitTest_DeviceAndThreads>/TestDeviceAndThreads.py
+    INPUT TestDeviceAndThreads.py
+    ${USE_SOURCE_PERMISSIONS_WHEN_SUPPORTED}
+  )
+  add_test(
+    NAME Kokkos_CoreUnitTest_DeviceAndThreads
+    COMMAND ${Python3_EXECUTABLE} $<TARGET_FILE_DIR:Kokkos_CoreUnitTest_DeviceAndThreads>/TestDeviceAndThreads.py -v
+  )
 endif()
 
-if (KOKKOS_ENABLE_HEADER_SELF_CONTAINMENT_TESTS AND NOT KOKKOS_HAS_TRILINOS AND NOT WIN32)
+if (KOKKOS_ENABLE_HEADER_SELF_CONTAINMENT_TESTS AND NOT WIN32)
   add_subdirectory(headers_self_contained)
 endif()

@@ -28,6 +28,9 @@ SET(KOKKOS_SRC_PATH      ${Kokkos_SOURCE_DIR})
 SET(KOKKOS_PATH          ${Kokkos_SOURCE_DIR})
 SET(KOKKOS_TOP_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR})
 
+SET(PACKAGE_NAME Kokkos)
+SET(PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+
 # Is this build a subdirectory of another project
 GET_DIRECTORY_PROPERTY(HAS_PARENT PARENT_DIRECTORY)
 
@@ -134,7 +137,7 @@ ENDIF()
 
 
 set(Kokkos_VERSION_MAJOR 4)
-set(Kokkos_VERSION_MINOR 2)
+set(Kokkos_VERSION_MINOR 4)
 set(Kokkos_VERSION_PATCH 99)
 set(Kokkos_VERSION "${Kokkos_VERSION_MAJOR}.${Kokkos_VERSION_MINOR}.${Kokkos_VERSION_PATCH}")
 message(STATUS "Kokkos version: ${Kokkos_VERSION}")

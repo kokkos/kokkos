@@ -33,10 +33,6 @@ IF(NOT Kokkos_ENABLE_BENCHMARKS)
   RETURN()
 ENDIF()
 
-IF (KOKKOS_HAS_TRILINOS)
-  message(FATAL_ERROR "Benchmarks are not supported when building as part of Trilinos")
-ENDIF()
-
 # Find or download google/benchmark library
 find_package(benchmark QUIET 1.5.6)
 IF(benchmark_FOUND)

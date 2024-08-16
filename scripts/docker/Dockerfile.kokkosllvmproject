@@ -1,4 +1,4 @@
-FROM nvidia/cuda:11.0.3-devel
+FROM nvcr.io/nvidia/cuda:11.0.3-devel-ubuntu18.04@sha256:02d08888085d98c3c41b4db46e0f6b9e22671a70c1a2ff035ea91023effabff5
 
 RUN apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/3bf863cc.pub
 

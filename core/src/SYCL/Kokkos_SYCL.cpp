@@ -46,7 +46,6 @@ struct Container {
 }  // namespace
 
 namespace Kokkos {
-namespace Experimental {
 SYCL::SYCL()
     : m_space_instance(&Impl::SYCLInternal::singleton(),
                        [](Impl::SYCLInternal*) {}) {
@@ -110,6 +109,31 @@ void SYCL::print_configuration(std::ostream& os, bool verbose) const {
 #else
   os << "macro  KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES : undefined\n";
 #endif
+#ifdef SYCL_EXT_ONEAPI_GRAPH
+  os << "macro  SYCL_EXT_ONEAPI_GRAPH : defined\n";
+#else
+  os << "macro  SYCL_EXT_ONEAPI_GRAPH : undefined\n";
+#endif
+#ifdef SYCL_EXT_INTEL_QUEUE_IMMEDIATE_COMMAND_LIST
+  if (sycl_queue()
+          .has_property<
+              sycl::ext::intel::property::queue::immediate_command_list>())
+    os << "Immediate command lists enforced\n";
+  else if (sycl_queue()
+               .has_property<sycl::ext::intel::property::queue::
+                                 no_immediate_command_list>())
+    os << "Standard command queue enforced\n";
+  else
+#endif
+  {
+    os << "Immediate command lists and standard command queue allowed.\n";
+    if (const char* environment_setting =
+            std::getenv("SYCL_PI_LEVEL_ZERO_USE_IMMEDIATE_COMMANDLISTS"))
+      os << "SYCL_PI_LEVEL_ZERO_USE_IMMEDIATE_COMMANDLISTS="
+         << environment_setting << " takes precedence.\n";
+    else
+      os << "SYCL_PI_LEVEL_ZERO_USE_IMMEDIATE_COMMANDLISTS not defined.\n";
+  }
 
   int counter       = 0;
   int active_device = Kokkos::device_id();
@@ -147,8 +171,7 @@ void SYCL::fence(const std::string& name) const {
 }
 
 void SYCL::impl_static_fence(const std::string& name) {
-  Kokkos::Tools::Experimental::Impl::profile_fence_event<
-      Kokkos::Experimental::SYCL>(
+  Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::SYCL>(
       name,
       Kokkos::Tools::Experimental::SpecialSynchronizationCases::
           GlobalDeviceSynchronization,
@@ -292,5 +315,4 @@ int g_sycl_space_factory_initialized =
     Kokkos::Impl::initialize_space_factory<SYCL>("170_SYCL");
 
 }  // namespace Impl
-}  // namespace Experimental
 }  // namespace Kokkos

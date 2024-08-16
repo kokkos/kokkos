@@ -28,8 +28,8 @@ class OpenMP;
 class Cuda;
 class Threads;
 class HIP;
-namespace Experimental {
 class SYCL;
+namespace Experimental {
 class OpenMPTarget;
 class HPX;
 }  // namespace Experimental

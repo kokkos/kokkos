@@ -63,10 +63,10 @@ class HostSpace {
   //! This memory space preferred device_type
   using device_type = Kokkos::Device<execution_space, memory_space>;
 
-  HostSpace()                     = default;
-  HostSpace(HostSpace&& rhs)      = default;
-  HostSpace(const HostSpace& rhs) = default;
-  HostSpace& operator=(HostSpace&&) = default;
+  HostSpace()                            = default;
+  HostSpace(HostSpace&& rhs)             = default;
+  HostSpace(const HostSpace& rhs)        = default;
+  HostSpace& operator=(HostSpace&&)      = default;
   HostSpace& operator=(const HostSpace&) = default;
   ~HostSpace()                           = default;
 
@@ -113,7 +113,6 @@ class HostSpace {
                   const size_t arg_alloc_size,
                   const size_t arg_logical_size = 0) const;
 
- private:
   void* impl_allocate(const char* arg_label, const size_t arg_alloc_size,
                       const size_t arg_logical_size = 0,
                       const Kokkos::Tools::SpaceHandle =
@@ -124,7 +123,6 @@ class HostSpace {
                        const Kokkos::Tools::SpaceHandle =
                            Kokkos::Tools::make_space_handle(name())) const;
 
- public:
   /**\brief Return Name of the MemorySpace */
   static constexpr const char* name() { return m_name; }
 

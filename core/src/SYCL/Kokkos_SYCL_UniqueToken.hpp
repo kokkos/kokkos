@@ -22,12 +22,13 @@
 #include <Kokkos_UniqueToken.hpp>
 
 namespace Kokkos {
-namespace Experimental {
 
 namespace Impl {
 Kokkos::View<uint32_t*, SYCLDeviceUSMSpace> sycl_global_unique_token_locks(
     bool deallocate = false);
 }
+
+namespace Experimental {
 
 // both global and instance Unique Tokens are implemented in the same way
 // the global version has one shared static lock array underneath
@@ -42,7 +43,7 @@ class UniqueToken<SYCL, UniqueTokenScope::Global> {
   using size_type       = int32_t;
 
   explicit UniqueToken(execution_space const& = execution_space())
-      : m_locks(Impl::sycl_global_unique_token_locks()) {}
+      : m_locks(Kokkos::Impl::sycl_global_unique_token_locks()) {}
 
   KOKKOS_DEFAULTED_FUNCTION
   UniqueToken(const UniqueToken&) = default;
@@ -79,7 +80,7 @@ class UniqueToken<SYCL, UniqueTokenScope::Global> {
     std::size_t threadIdx[3] = {item.get_local_id(2), item.get_local_id(1),
                                 item.get_local_id(0)};
     std::size_t blockIdx[3]  = {item.get_group(2), item.get_group(1),
-                               item.get_group(0)};
+                                item.get_group(0)};
     std::size_t blockDim[3] = {item.get_local_range(2), item.get_local_range(1),
                                item.get_local_range(0)};
 
@@ -122,11 +123,11 @@ class UniqueToken<SYCL, UniqueTokenScope::Instance>
  public:
   UniqueToken()
       : UniqueToken<SYCL, UniqueTokenScope::Global>(
-            Kokkos::Experimental::SYCL().concurrency()) {}
+            Kokkos::SYCL().concurrency()) {}
 
   explicit UniqueToken(execution_space const& arg)
       : UniqueToken<SYCL, UniqueTokenScope::Global>(
-            Kokkos::Experimental::SYCL().concurrency(), arg) {}
+            Kokkos::SYCL().concurrency(), arg) {}
 
   explicit UniqueToken(size_type max_size)
       : UniqueToken<SYCL, UniqueTokenScope::Global>(max_size) {}

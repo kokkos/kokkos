@@ -20,59 +20,68 @@ jobs:
     continue-on-error: true
     strategy:
       matrix:
-        distro: ['fedora:latest', 'fedora:rawhide', 'ubuntu:latest']
+        distro: ['fedora:latest', 'ubuntu:latest']
         cxx: ['g++', 'clang++']
         cxx_extra_flags: ['']
         cmake_build_type: ['Release', 'Debug']
         backend: ['OPENMP']
         clang-tidy: ['']
+        stdcxx: [17]
         include:
           - distro: 'ubuntu:intel'
             cxx: 'icpc'
             cxx_extra_flags: '-diag-disable=177,10441'
             cmake_build_type: 'Release'
             backend: 'OPENMP'
+            stdcxx: '17'
           - distro: 'ubuntu:intel'
             cxx: 'icpc'
             cxx_extra_flags: '-diag-disable=177,10441'
             cmake_build_type: 'Debug'
             backend: 'OPENMP'
+            stdcxx: '17'
           - distro: 'ubuntu:intel'
             cxx: 'icpx'
-            cxx_extra_flags: '-fp-model=precise -Wno-pass-failed'
+            cxx_extra_flags: '-fp-model=precise -Wno-pass-failed -fsanitize=address,undefined -fno-sanitize=function -fno-sanitize-recover=all'
+            extra_linker_flags: '-fsanitize=address,undefined -fno-sanitize=function -fno-sanitize-recover=all'
             cmake_build_type: 'Release'
             backend: 'OPENMP'
+            stdcxx: '17'
           - distro: 'ubuntu:intel'
             cxx: 'icpx'
             cxx_extra_flags: '-fp-model=precise -Wno-pass-failed'
             cmake_build_type: 'Debug'
             backend: 'OPENMP'
+            stdcxx: '20'
           - distro: 'ubuntu:latest'
             cxx: 'clang++'
-            cxx_extra_flags: '-fsanitize=address'
-            extra_linker_flags: '-fsanitize=address'
+            cxx_extra_flags: '-fsanitize=address,undefined -fno-sanitize=function -fno-sanitize-recover=all'
+            extra_linker_flags: '-fsanitize=address,undefined -fno-sanitize=function -fno-sanitize-recover=all'
             cmake_build_type: 'RelWithDebInfo'
             backend: 'THREADS'
             clang-tidy: '-DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*"'
+            stdcxx: '23'
           - distro: 'ubuntu:latest'
             cxx: 'clang++'
-            cxx_extra_flags: '-fsanitize=address'
-            extra_linker_flags: '-fsanitize=address'
+            cxx_extra_flags: '-fsanitize=address,undefined -fno-sanitize=function -fno-sanitize-recover=all'
+            extra_linker_flags: '-fsanitize=address,undefined -fno-sanitize=function -fno-sanitize-recover=all'
             cmake_build_type: 'RelWithDebInfo'
             backend: 'SERIAL'
+            stdcxx: '20'
           - distro: 'ubuntu:latest'
             cxx: 'g++'
             cmake_build_type: 'RelWithDebInfo'
             backend: 'THREADS'
+            stdcxx: '23'
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/kokkos/ci-containers/${{ matrix.distro }}
     steps:
       - name: Checkout desul
-        uses: actions/checkout@v4
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
           repository: desul/desul
-          ref: 477da9c8f40f8db369c28dd3f93a67e376d8511b
+          ref: 779d0441a778c7088a36d38c4cbf8df3cfa182cc
           path: desul
       - name: Install desul
         working-directory: desul
@@ -84,8 +93,8 @@ jobs:
           cmake -DDESUL_ENABLE_TESTS=OFF -DCMAKE_INSTALL_PREFIX=/usr/desul-install ..
           sudo cmake --build . --target install --parallel 2
       - name: Checkout code
-        uses: actions/checkout@v4
-      - uses: actions/cache@v4
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
         with:
           path: ~/.cache/ccache
           key: kokkos-${{ matrix.distro }}-${{ matrix.cxx }}-${{ matrix.cmake_build_type }}-${{ matrix.openmp }}-${{ github.ref }}-${{ github.sha }}
@@ -114,8 +123,8 @@ jobs:
             -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
             -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
-            -DKokkos_ENABLE_IMPL_MDSPAN=ON \
             -DCMAKE_CXX_FLAGS="-Werror ${{ matrix.cxx_extra_flags }}" \
+            -DCMAKE_CXX_STANDARD="${{ matrix.stdcxx }}" \
             -DCMAKE_EXE_LINKER_FLAGS="${{ matrix.extra_linker_flags }}" \
             -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
@@ -129,7 +138,7 @@ jobs:
         working-directory: builddir
         run: ctest --output-on-failure
       - name: Test linking against build dir
-        if: ${{ matrix.cxx_extra_flags != '-fsanitize=address' }}
+        if: ${{ !contains(matrix.cxx_extra_flags, '-fsanitize=address') }}
         working-directory: example/build_cmake_installed
         run: |
           cmake -B builddir_buildtree -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} -DKokkos_ROOT=../../builddir
@@ -140,7 +149,7 @@ jobs:
       - name: Install
         run: sudo cmake --build builddir --target install
       - name: Test install
-        if: ${{ matrix.cxx_extra_flags != '-fsanitize=address' }}
+        if: ${{ !contains(matrix.cxx_extra_flags, '-fsanitize=address') }}
         working-directory: example/build_cmake_installed
         run: |
           cmake -B builddir -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}

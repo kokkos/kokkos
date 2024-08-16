@@ -8,8 +8,8 @@ jobs:
   formatting-check:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
     - name: Run clang-format style check.
-      uses: DoozyX/clang-format-lint-action@v0.16.2
+      uses: DoozyX/clang-format-lint-action@d7f6a5bada32b7ea520b5918416e92997678e3fd # v0.18
       with:
-        clangFormatVersion: 8
+        clangFormatVersion: 16
