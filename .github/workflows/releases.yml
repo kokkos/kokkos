@@ -25,7 +25,9 @@ jobs:
         run: |
           # sha256sum generates sha256 hash for all artifacts.
           # base64 -w0 encodes to base64 and outputs on a single line.
-          echo "hashes=$(sha256sum kokkos-${{ github.ref_name }}.zip kokkos-${{ github.ref_name }}.tar.gz | base64 -w0)" >> "$GITHUB_OUTPUT"
+          sha256sum kokkos-${{ github.ref_name }}.zip > kokkos-${{ github.ref_name }}-SHA-256.txt
+          sha256sum kokkos-${{ github.ref_name }}.tar.gz >> kokkos-${{ github.ref_name }}-SHA-256.txt
+          echo "hashes=$(base64 -w0 kokkos-${{ github.ref_name }}-SHA-256.txt)" >> "$GITHUB_OUTPUT"
 
       - name: Upload source code (zip)
         uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
