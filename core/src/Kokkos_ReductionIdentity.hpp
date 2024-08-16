@@ -413,9 +413,9 @@ KOKKOS_FUNCTION constexpr T reduction_identity_sum_or_value_initialize() {
 }
 
 template <typename T>
-KOKKOS_FUNCTION constexpr void reduction_identity_sum_or_value_initialize(
-    T& t) {
+KOKKOS_FUNCTION constexpr T& reduction_identity_sum_or_value_initialize(T& t) {
   t = reduction_identity_sum_or_value_initialize<T>();
+  return t;
 }
 
 }  // namespace Impl

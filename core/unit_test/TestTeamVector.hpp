@@ -106,9 +106,9 @@ struct Kokkos::reduction_identity<TestTeamVector::SumNotEqualToValueInit> {
   KOKKOS_FUNCTION constexpr static value_type prod() { return value_type{1}; }
 };
 
-// static_assert(
-// Kokkos::reduction_identity<TestTeamVector::SumNotEqualToValueInit>::sum() !=
-// TestTeamVector::SumNotEqualToValueInit{});
+static_assert(
+    Kokkos::reduction_identity<TestTeamVector::SumNotEqualToValueInit>::sum() !=
+    TestTeamVector::SumNotEqualToValueInit{});
 
 namespace TestTeamVector {
 
@@ -677,7 +677,7 @@ struct functor_vec_scan {
       val += i;
 
       if (final) {
-        Scalar test = 0;
+        auto test = Kokkos::reduction_identity<Scalar>::sum();
         for (int k = 0; k <= i; k++) test += k;
 
         if (test != val) {
@@ -743,7 +743,7 @@ struct functor_vec_scan_ret_val {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(typename policy_type::member_type team) const {
-    Scalar return_val;
+    auto return_val = Kokkos::reduction_identity<Scalar>::sum();
     int upper_bound = 13;
 
     Kokkos::parallel_scan(
@@ -752,7 +752,7 @@ struct functor_vec_scan_ret_val {
           val += i;
 
           if (final) {
-            Scalar test = 0;
+            auto test = Kokkos::reduction_identity<Scalar>::sum();
             for (int k = 0; k <= i; k++) test += k;
 
             if (test != val) {
@@ -912,6 +912,34 @@ bool TestParallelScanUsesSum() {
 #endif
   int const concurrency = ExecutionSpace().concurrency();
   if (team_size > concurrency) team_size = concurrency;
+#if 0
+  passed = passed && test_scalar<SumNotEqualToValueInit, ExecutionSpace>(
+                         317, team_size, 0);
+#endif
+  passed = passed && test_scalar<SumNotEqualToValueInit, ExecutionSpace>(
+                         317, team_size, 1);
+  passed = passed && test_scalar<SumNotEqualToValueInit, ExecutionSpace>(
+                         317, team_size, 2);
+  passed = passed && test_scalar<SumNotEqualToValueInit, ExecutionSpace>(
+                         317, team_size, 3);
+  passed = passed && test_scalar<SumNotEqualToValueInit, ExecutionSpace>(
+                         317, team_size, 5);
+  passed = passed && test_scalar<SumNotEqualToValueInit, ExecutionSpace>(
+                         317, team_size, 6);
+  passed = passed && test_scalar<SumNotEqualToValueInit, ExecutionSpace>(
+                         317, team_size, 7);
+  passed = passed && test_scalar<SumNotEqualToValueInit, ExecutionSpace>(
+                         317, team_size, 8);
+  passed = passed && test_scalar<SumNotEqualToValueInit, ExecutionSpace>(
+                         317, team_size, 9);
+  passed = passed && test_scalar<SumNotEqualToValueInit, ExecutionSpace>(
+                         317, team_size, 10);
+#if 0
+  passed = passed && test_scalar<SumNotEqualToValueInit, ExecutionSpace>(
+                         317, team_size, 11);
+#endif
+  passed = passed && test_scalar<SumNotEqualToValueInit, ExecutionSpace>(
+                         317, team_size, 12);
   passed = passed && test_scalar<SumNotEqualToValueInit, ExecutionSpace>(
                          317, team_size, 13);
 
