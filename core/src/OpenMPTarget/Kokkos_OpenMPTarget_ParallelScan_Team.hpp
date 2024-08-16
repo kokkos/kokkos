@@ -21,6 +21,7 @@
 #include <sstream>
 #include <Kokkos_Parallel.hpp>
 #include <OpenMPTarget/Kokkos_OpenMPTarget_Parallel.hpp>
+#include <Kokkos_ReductionIdentity.hpp>
 
 // FIXME_OPENMPTARGET - Using this macro to implement a workaround for
 // hierarchical scan. It avoids hitting the code path which we wanted to
@@ -52,7 +53,8 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
   const auto team_rank = member.team_rank();
 
 #if defined(KOKKOS_IMPL_TEAM_SCAN_WORKAROUND)
-  ValueType scan_val = {};
+  ValueType scan_val;
+  Impl::reduction_identity_sum_or_value_initialize(scan_val);
 
   if (team_rank == 0) {
     for (iType i = start; i < end; ++i) {
@@ -66,19 +68,21 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
 #else
   const auto team_size = member.team_size();
   const auto nchunk    = (end - start + team_size - 1) / team_size;
-  ValueType accum      = {};
+  ValueType accum;
+  Impl::reduction_identity_sum_or_value_initialize(accum);
   // each team has to process one or
   //      more chunks of the prefix scan
   for (iType i = 0; i < nchunk; ++i) {
     auto ii = start + i * team_size + team_rank;
     // local accumulation for this chunk
-    ValueType local_accum = {};
+    ValueType local_accum;
+    Impl::reduction_identity_sum_or_value_initialize(local_accum);
     // user updates value with prefix value
     if (ii < loop_bounds.end) lambda(ii, local_accum, false);
     // perform team scan
     local_accum = member.team_scan(local_accum);
     // add this blocks accum to total accumulation
-    auto val = accum + local_accum;
+    ValueType val = accum + local_accum;
     // user updates their data with total accumulation
     if (ii < loop_bounds.end) lambda(ii, val, true);
     // the last value needs to be propogated to next chunk
@@ -101,6 +105,7 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
                                          FunctorType, void>;
   using value_type = typename Analysis::value_type;
   value_type scan_val;
+  Impl::reduction_identity_sum_or_value_initialize(scan_val);
   parallel_scan(loop_bounds, lambda, scan_val);
 }
 }  // namespace Kokkos
@@ -131,7 +136,8 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
   static_assert(std::is_same_v<analysis_value_type, ValueType>,
                 "Non-matching value types of functor and return type");
 
-  ValueType scan_val = {};
+  ValueType scan_val;
+  Impl::reduction_identity_sum_or_value_initialize(scan_val);
 
 #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
 #pragma ivdep
@@ -153,7 +159,8 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
                                          FunctorType, void>;
   using value_type = typename Analysis::value_type;
 
-  value_type scan_val = value_type();
+  value_type scan_val;
+  Impl::reduction_identity_sum_or_value_initialize(scan_val);
   parallel_scan(loop_boundaries, lambda, scan_val);
 }
 
