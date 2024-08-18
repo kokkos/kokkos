@@ -87,9 +87,9 @@ class OpenACC {
 
   static char const* name() { return "OpenACC"; }
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  static int concurrency() { return 256000; }  // FIXME_OPENACC
+  static int concurrency();
 #else
-  int concurrency() const { return 256000; }  // FIXME_OPENACC
+  int concurrency() const;
 #endif
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   KOKKOS_DEPRECATED static bool in_parallel() {

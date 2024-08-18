@@ -40,6 +40,9 @@ KOKKOS_HIP_OPTIONS ?= ""
 # Options: enable_async_dispatch
 KOKKOS_HPX_OPTIONS ?= ""
 
+#Options : force_host_as_device
+KOKKOS_OPENACC_OPTIONS ?= ""
+
 # Helper functions for conversion to upper case
 uppercase_TABLE:=a,A b,B c,C d,D e,E f,F g,G h,H i,I j,J k,K l,L m,M n,N o,O p,P q,Q r,R s,S t,T u,U v,V w,W x,X y,Y z,Z
 uppercase_internal=$(if $1,$$(subst $(firstword $1),$(call uppercase_internal,$(wordlist 2,$(words $1),$1),$2)),$2)
@@ -93,6 +96,7 @@ KOKKOS_INTERNAL_DISABLE_DEPRECATED_CODE := $(call kokkos_has_string,$(KOKKOS_OPT
 KOKKOS_INTERNAL_ENABLE_DEPRECATION_WARNINGS := $(call kokkos_has_string,$(KOKKOS_OPTIONS),enable_deprecation_warnings)
 
 KOKKOS_INTERNAL_HIP_USE_RELOC := $(call kokkos_has_string,$(KOKKOS_HIP_OPTIONS),rdc)
+KOKKOS_INTERNAL_OPENACC_FORCE_HOST_AS_DEVICE := $(call kokkos_has_string,$(KOKKOS_OPENACC_OPTIONS),force_host_as_device)
 
 # Check for Kokkos Host Execution Spaces one of which must be on.
 KOKKOS_INTERNAL_USE_OPENMP := $(call kokkos_has_string,$(subst OpenMPTarget,,$(KOKKOS_DEVICES)),OpenMP)
@@ -272,8 +276,6 @@ ifeq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
     KOKKOS_INTERNAL_OPENMPTARGET_FLAG := -fiopenmp -Wno-openmp-mapping
   else ifeq ($(KOKKOS_INTERNAL_COMPILER_NVHPC), 1)
     KOKKOS_INTERNAL_OPENMPTARGET_FLAG := -mp=gpu 
-  else ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
-    KOKKOS_INTERNAL_OPENMPTARGET_FLAG := -fopenmp -Xopenmp-target
   else ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 0)
     #Assume GCC
     KOKKOS_INTERNAL_OPENMPTARGET_FLAG := -fopenmp -foffload=nvptx-none
@@ -1462,15 +1464,20 @@ ifeq ($(KOKKOS_INTERNAL_USE_OPENACC), 1)
       endif
       KOKKOS_LIBS += -lamdhip64
     endif
-  else
-    # When not compiling for offload to any GPU, we're compiling for kernel
-    # execution on the host.  In that case, memory is shared between the OpenACC
-    # space and the host space.
+  else ifeq ($(KOKKOS_INTERNAL_OPENACC_FORCE_HOST_AS_DEVICE), 1)
+    # Compile for kernel execution on the host. In that case, 
+	# memory is shared between the OpenACC space and the host space.
     ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
-      KOKKOS_CXXFLAGS += -DKOKKOS_OPENACC_WITHOUT_GPU
+      KOKKOS_CXXFLAGS += -DKOKKOS_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE
     endif
     ifeq ($(KOKKOS_INTERNAL_COMPILER_NVHPC), 1)
-      KOKKOS_CXXFLAGS += -DKOKKOS_OPENACC_WITHOUT_GPU -acc=multicore
+      KOKKOS_CXXFLAGS += -DKOKKOS_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE -acc=multicore
+    endif
+  else
+    # Automatic fallback mode; try to offload any available GPU, and fall back
+	# to the host CPU if no available GPU is found.
+    ifeq ($(KOKKOS_INTERNAL_COMPILER_NVHPC), 1)
+      KOKKOS_CXXFLAGS += -acc=gpu,multicore
     endif
   endif
 endif
