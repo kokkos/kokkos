@@ -1466,7 +1466,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_OPENACC), 1)
     endif
   else ifeq ($(KOKKOS_INTERNAL_OPENACC_FORCE_HOST_AS_DEVICE), 1)
     # Compile for kernel execution on the host. In that case, 
-	# memory is shared between the OpenACC space and the host space.
+    # memory is shared between the OpenACC space and the host space.
     ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
       KOKKOS_CXXFLAGS += -DKOKKOS_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE
     endif
@@ -1475,7 +1475,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_OPENACC), 1)
     endif
   else
     # Automatic fallback mode; try to offload any available GPU, and fall back
-	# to the host CPU if no available GPU is found.
+    # to the host CPU if no available GPU is found.
     ifeq ($(KOKKOS_INTERNAL_COMPILER_NVHPC), 1)
       KOKKOS_CXXFLAGS += -acc=gpu,multicore
     endif
