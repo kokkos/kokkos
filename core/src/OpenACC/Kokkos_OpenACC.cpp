@@ -77,7 +77,7 @@ void Kokkos::Experimental::OpenACC::impl_initialize(
     acc_set_device_num(dev_num, Impl::OpenACC_Traits::dev_type);
     Impl::OpenACCInternal::m_acc_device_num = dev_num;
 #if defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
-    struct cudaDeviceProp deviceProp;
+    cudaDeviceProp deviceProp;
     cudaError error = cudaGetDeviceProperties(&deviceProp, dev_num);
     if (error != cudaSuccess) {
       std::ostringstream msg;
@@ -102,11 +102,10 @@ void Kokkos::Experimental::OpenACC::impl_initialize(
         deviceProp.maxThreadsPerMultiProcessor * deviceProp.multiProcessorCount;
 #elif defined(KOKKOS_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE)
     Impl::OpenACCInternal::m_concurrency = std::thread::hardware_concurrency();
-    if (!Impl::OpenACCInternal::m_concurrency) {
+    if (Impl::OpenACCInternal::m_concurrency == 0) {
       Kokkos::Impl::host_abort(
           "Error: During OpenACC backend initialization, failed to retrieve "
-          "CPU "
-          "hardware concurrency");
+          "CPU hardware concurrency");
     }
 #else
     // FIXME_OPENACC: Compute Impl::OpenACCInternal::m_concurrency correctly.
