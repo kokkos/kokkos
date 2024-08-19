@@ -56,7 +56,8 @@ Kokkos::Experimental::OpenACC::OpenACC(int async_arg)
 
 void Kokkos::Experimental::OpenACC::impl_initialize(
     InitializationSettings const& settings) {
-  Impl::OpenACCInternal::m_concurrency = 256000;  // guess when cannot compute
+  Impl::OpenACCInternal::m_concurrency =
+      256000;  // FIXME_OPENACC - random guess when cannot compute
   if (Impl::OpenACC_Traits::may_fallback_to_host &&
       acc_get_num_devices(Impl::OpenACC_Traits::dev_type) == 0 &&
       !settings.has_device_id()) {
