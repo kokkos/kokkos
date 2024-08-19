@@ -16,8 +16,8 @@ jobs:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - name: Build artifacts
         run: |
-          git archive -o kokkos-${{ github.ref_name }}.zip HEAD
-          git archive -o kokkos-${{ github.ref_name }}.tar.gz HEAD
+          git archive --prefix=kokkos-${{ github.ref_name }}/ -o kokkos-${{ github.ref_name }}.zip HEAD
+          git archive --prefix=kokkos-${{ github.ref_name }}/ -o kokkos-${{ github.ref_name }}.tar.gz HEAD
 
       - name: Generate hashes
         shell: bash
