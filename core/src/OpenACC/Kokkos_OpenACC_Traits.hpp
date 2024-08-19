@@ -35,7 +35,7 @@ struct OpenACC_Traits {
   static constexpr acc_device_t dev_type     = acc_device_host;
   static constexpr bool may_fallback_to_host = true;
 #else
-  static constexpr acc_device_t dev_type     = acc_device_not_host;
+  static constexpr acc_device_t dev_type     = acc_device_default;
   static constexpr bool may_fallback_to_host = true;
 #endif
 };
