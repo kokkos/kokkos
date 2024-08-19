@@ -26,6 +26,8 @@
 #if defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
 #include <cuda_runtime.h>
 #elif defined(KOKKOS_ARCH_AMD_GPU)
+// FIXME_OPENACC - hip_runtime_api.h contains two implementations: one for AMD
+// GPUs and the other for NVIDIA GPUs; below macro is needed to choose AMD GPUs.
 #define __HIP_PLATFORM_AMD__
 #include <hip/hip_runtime_api.h>
 #elif defined(KOKKOS_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE)
@@ -110,11 +112,6 @@ void Kokkos::Experimental::OpenACC::impl_initialize(
     }
 #else
     // FIXME_OPENACC: Compute Impl::OpenACCInternal::m_concurrency correctly.
-    if (show_warnings()) {
-      std::cerr << "Warning: OpenACC backend concurrency detection not "
-                   "implemented for target architecture"
-                << std::endl;
-    }
 #endif
   }
   Impl::OpenACCInternal::singleton().initialize();

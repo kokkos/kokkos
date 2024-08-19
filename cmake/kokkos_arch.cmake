@@ -880,6 +880,7 @@ IF (KOKKOS_ENABLE_OPENACC)
     COMPILER_SPECIFIC_FLAGS(
       NVHPC -acc=gpu,multicore
     )
+    MESSAGE(STATUS "No OpenACC target device is specificed; the OpenACC backend will be executed in an automatic fallback mode.")
   ENDIF()
 ENDIF()
 
