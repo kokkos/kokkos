@@ -795,23 +795,24 @@ KOKKOS_FUNCTION constexpr double norm(IntegerType i) noexcept {
 //! The projection onto the Riemann sphere
 // based on libc++ implementation
 template <typename RealType>
-constexpr complex<RealType> proj(const complex<RealType>& x) noexcept {
-  return isinf(x.real()) || isinf(x.imag())
+KOKKOS_FUNCTION constexpr complex<RealType> proj(
+    const complex<RealType>& x) noexcept {
+  return Kokkos::isinf(x.real()) || Kokkos::isinf(x.imag())
              ? complex<RealType>(
-                   std::numeric_limits<RealType>::infinity(),
+                   INFINITY,
                    Kokkos::copysign(static_cast<RealType>(0), x.imag()))
              : x;
 }
 
 template <typename RealType,
           typename = std::enable_if_t<std::is_floating_point_v<RealType>>>
-constexpr complex<RealType> proj(RealType f) noexcept {
-  return complex<RealType>(isinf(f) ? std::abs(f) : f);
+KOKKOS_FUNCTION constexpr complex<RealType> proj(RealType f) noexcept {
+  return complex<RealType>(Kokkos::isinf(f) ? Kokkos::abs(f) : f);
 }
 
 template <typename IntegerType,
           typename = std::enable_if_t<std::is_integral_v<IntegerType>>>
-constexpr complex<double> proj(IntegerType i) noexcept {
+KOKKOS_FUNCTION constexpr complex<double> proj(IntegerType i) noexcept {
   return complex<double>(static_cast<double>(i));
 }
 
