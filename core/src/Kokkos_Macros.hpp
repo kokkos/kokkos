@@ -555,9 +555,9 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 #endif
 
 // TODO: enable the following when we are sure it is the right thing to do
-//#if defined(KOKKOS_ARCH_ARMV9_GRACE) && defined(KOKKOS_ARCH_HOPPER90)
-//#define KOKKOS_ENABLE_IMPL_CUDA_UNIFIED_MEMORY
-//#endif
+// #if defined(KOKKOS_ARCH_ARMV9_GRACE) && defined(KOKKOS_ARCH_HOPPER90)
+// #define KOKKOS_ENABLE_IMPL_CUDA_UNIFIED_MEMORY
+// #endif
 
 #define KOKKOS_INVALID_INDEX (~std::size_t(0))
 
