@@ -94,6 +94,18 @@ FUNCTION(KOKKOS_ADD_TEST)
     # Prepend package name to the test name
     # These should be the full target name
     SET(TEST_NAME ${PACKAGE_NAME}_${TEST_NAME})
+
+    # For compatibility with Trilinos testing
+    IF(${TEST_NAME}_DISABLE)
+      RETURN()
+    ENDIF()
+    IF(${TEST_NAME}_SET_RUN_SERIAL)
+      SET_TESTS_PROPERTIES(${TEST_NAME} PROPERTIES RUN_SERIAL ON)
+    ENDIF()
+    IF(${TEST_NAME}_ENVIRONMENT)
+      SET_TESTS_PROPERTIES(${TEST_NAME} PROPERTIES ENVIRONMENT "${${TEST_NAME}_ENVIRONMENT}")
+    ENDIF()
+
     SET(EXE ${PACKAGE_NAME}_${EXE_ROOT})
     IF(WIN32)
       ADD_TEST(NAME ${TEST_NAME} WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH}
