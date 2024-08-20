@@ -238,7 +238,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
     endforeach()
 
     SET(${Tag}_SOURCES2A)
-    SET(${TAG}_TESTNAMES2A
+    SET(${Tag}_TESTNAMES2A
       TeamBasic
       TeamCombinedReducers
       TeamMDRange
