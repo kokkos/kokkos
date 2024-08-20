@@ -195,28 +195,23 @@ struct ViewValueFunctorSequentialHostInit {
   static_assert(SpaceAccessibility<HostSpace, MemSpace>::accessible);
   static_assert(std::is_same_v<ExecSpace, typename MemSpace::execution_space>);
 
-  ExecSpace space;
   ValueType* ptr;
   size_t n;
-  bool default_exec_space;
 
   ViewValueFunctorSequentialHostInit() = default;
 
-  ViewValueFunctorSequentialHostInit(ExecSpace const& arg_space,
+  ViewValueFunctorSequentialHostInit(ExecSpace const& /*arg_space*/,
                                      ValueType* const arg_ptr,
                                      size_t const arg_n,
                                      std::string /*arg_name*/)
-      : space(arg_space), ptr(arg_ptr), n(arg_n), default_exec_space(false) {}
+      : ptr(arg_ptr), n(arg_n) {}
 
   ViewValueFunctorSequentialHostInit(ValueType* const arg_ptr,
                                      size_t const arg_n,
                                      std::string /*arg_name*/)
-      : space(ExecSpace{}), ptr(arg_ptr), n(arg_n), default_exec_space(true) {}
+      : ptr(arg_ptr), n(arg_n) {}
 
   void construct_shared_allocation() {
-    if (!default_exec_space) {
-      space.fence("Kokkos::View::initialization after allocate");
-    }
     if constexpr (std::is_trivial_v<ValueType>) {
       // value-initialization is equivalent to filling with zeros
       std::memset(static_cast<void*>(ptr), 0, n * sizeof(ValueType));
