@@ -1290,6 +1290,7 @@ class View : public ViewTraits<DataType, Properties...> {
   View(View&& other)
       : m_track{std::move(other.m_track)}, m_map{std::move(other.m_map)} {
     KOKKOS_IF_ON_HOST((hooks_policy::move_construct(*this, other);))
+    other.m_map = {};
   }
 
   KOKKOS_FUNCTION
@@ -1308,6 +1309,7 @@ class View : public ViewTraits<DataType, Properties...> {
     m_track = std::move(other.m_track);
 
     KOKKOS_IF_ON_HOST((hooks_policy::move_assign(*this, other);))
+    other.m_map = {};
 
     return *this;
   }
