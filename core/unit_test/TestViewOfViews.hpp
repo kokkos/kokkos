@@ -63,8 +63,8 @@ void test_view_of_views() {
     // leaks memory
 #endif
   }
-  {  // inner views value-initialized on the host in serial and also destructed
-     // in serial on the host, without the need to cleanup
+  {  // inner views value-initialized sequentially on the host, and also
+     // sequentially destructed on the host, without the need to cleanup
     VoV vov(Kokkos::view_alloc("vov", Kokkos::SequentialHostInit), 2, 3);
     V a("a");
     V b("b");
