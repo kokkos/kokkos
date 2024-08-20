@@ -208,11 +208,6 @@ struct ViewCtorProp : public ViewCtorProp<void, P>... {
   static_assert(initialize || !sequential_host_init,
                 "Incompatible WithoutInitializing and SequentialHostInit view "
                 "alloc properties");
-  // FIXME can't quite do that to validate user input because we sometimes
-  // attach default instances ourselves
-  // static_assert(!sequential_host_init || !has_execution_space,
-  //              "Incompatible SequentialHostInit view "
-  //              "alloc property with execution space argument");
 
   using memory_space    = typename var_memory_space::type;
   using execution_space = typename var_execution_space::type;
