@@ -208,16 +208,15 @@ struct ViewCtorProp : public ViewCtorProp<void, P>... {
   static_assert(initialize || !sequential_host_init,
                 "Incompatible WithoutInitializing and SequentialHostInit view "
                 "alloc properties");
-
-  using memory_space    = typename var_memory_space::type;
-  using execution_space = typename var_execution_space::type;
-  using pointer_type    = typename var_pointer::type;
-
-  // FIXME can't quite do that to validate user in[ut because we sometimes
+  // FIXME can't quite do that to validate user input because we sometimes
   // attach default instances ourselves
   // static_assert(!sequential_host_init || !has_execution_space,
   //              "Incompatible SequentialHostInit view "
   //              "alloc property with execution space argument");
+
+  using memory_space    = typename var_memory_space::type;
+  using execution_space = typename var_execution_space::type;
+  using pointer_type    = typename var_pointer::type;
 
   /*  Copy from a matching argument list.
    *  Requires  std::is_same< P , ViewCtorProp< void , Args >::value ...

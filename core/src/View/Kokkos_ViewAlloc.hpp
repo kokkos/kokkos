@@ -191,6 +191,8 @@ struct ViewValueFunctor {
 template <class DeviceType, class ValueType>
 struct ViewValueFunctorSequentialHostInit {
   using ExecSpace = typename DeviceType::execution_space;
+  using MemSpace  = typename DeviceType::memory_space;
+  static_assert(SpaceAccessibility<HostSpace, MemSpace>::accessible);
 
   ValueType* ptr;
   size_t n;
@@ -203,8 +205,7 @@ struct ViewValueFunctorSequentialHostInit {
                                      std::string /*arg_name*/)
       : ptr(arg_ptr), n(arg_n) {
     (void)arg_space;
-    KOKKOS_ASSERT(arg_space == ExecSpace() &&
-                  "FIXME if attached better be the default instance");
+    KOKKOS_ASSERT(arg_space == ExecSpace());
   }
 
   ViewValueFunctorSequentialHostInit(ValueType* const arg_ptr,
