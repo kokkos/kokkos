@@ -196,10 +196,6 @@ struct ViewValueFunctorSequentialHostInit {
   size_t n;
 
   ViewValueFunctorSequentialHostInit() = default;
-  ViewValueFunctorSequentialHostInit(
-      const ViewValueFunctorSequentialHostInit&) = default;
-  ViewValueFunctorSequentialHostInit& operator=(
-      const ViewValueFunctorSequentialHostInit&) = default;
 
   ViewValueFunctorSequentialHostInit(ExecSpace const& arg_space,
                                      ValueType* const arg_ptr,
