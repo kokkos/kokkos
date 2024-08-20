@@ -23,7 +23,7 @@
 namespace Kokkos {
 namespace Impl {
 
-struct HostSerialInit_t {};
+struct SequentialHostInit_t {};
 struct WithoutInitializing_t {};
 struct AllowPadding_t {};
 
@@ -31,7 +31,7 @@ template <typename>
 struct is_view_ctor_property : public std::false_type {};
 
 template <>
-struct is_view_ctor_property<HostSerialInit_t> : public std::true_type {};
+struct is_view_ctor_property<SequentialHostInit_t> : public std::true_type {};
 
 template <>
 struct is_view_ctor_property<WithoutInitializing_t> : public std::true_type {};
@@ -90,7 +90,7 @@ struct ViewCtorProp<void, CommonViewAllocProp<Specialize, T>> {
 template <typename P>
 struct ViewCtorProp<std::enable_if_t<std::is_same_v<P, AllowPadding_t> ||
                                      std::is_same_v<P, WithoutInitializing_t> ||
-                                     std::is_same_v<P, HostSerialInit_t>>,
+                                     std::is_same_v<P, SequentialHostInit_t>>,
                     P> {
   ViewCtorProp()                                = default;
   ViewCtorProp(const ViewCtorProp &)            = default;
@@ -203,10 +203,10 @@ struct ViewCtorProp : public ViewCtorProp<void, P>... {
       Kokkos::Impl::has_type<AllowPadding_t, P...>::value;
   static constexpr bool initialize =
       !Kokkos::Impl::has_type<WithoutInitializing_t, P...>::value;
-  static constexpr bool host_serial_init =
-      Kokkos::Impl::has_type<HostSerialInit_t, P...>::value;
-  static_assert(initialize || !host_serial_init,
-                "Incompatible WithoutInitializing and HostSerialInit view "
+  static constexpr bool sequential_host_init =
+      Kokkos::Impl::has_type<SequentialHostInit_t, P...>::value;
+  static_assert(initialize || !sequential_host_init,
+                "Incompatible WithoutInitializing and SequentialHostInit view "
                 "alloc properties");
 
   using memory_space    = typename var_memory_space::type;
@@ -215,8 +215,8 @@ struct ViewCtorProp : public ViewCtorProp<void, P>... {
 
   // FIXME can't quite do that to validate user in[ut because we sometimes
   // attach default instances ourselves
-  // static_assert(!host_serial_init || !has_execution_space,
-  //              "Incompatible HostSerialInit view "
+  // static_assert(!sequential_host_init || !has_execution_space,
+  //              "Incompatible SequentialHostInit view "
   //              "alloc property with execution space argument");
 
   /*  Copy from a matching argument list.
@@ -267,8 +267,8 @@ auto with_properties_if_unset(const ViewCtorProp<P...> &view_ctor_prop,
                  !ViewCtorProp<P...>::has_label) ||
                 (std::is_same_v<Property, WithoutInitializing_t> &&
                  ViewCtorProp<P...>::initialize) ||
-                (std::is_same_v<Property, HostSerialInit_t> &&
-                 !ViewCtorProp<P...>::host_serial_init)) {
+                (std::is_same_v<Property, SequentialHostInit_t> &&
+                 !ViewCtorProp<P...>::sequential_host_init)) {
     using NewViewCtorProp = ViewCtorProp<P..., Property>;
     NewViewCtorProp new_view_ctor_prop(view_ctor_prop);
     static_cast<ViewCtorProp<void, Property> &>(new_view_ctor_prop).value =
@@ -317,8 +317,8 @@ struct WithPropertiesIfUnset<ViewCtorProp<P...>, Property, Properties...> {
                    !ViewCtorProp<P...>::has_label) ||
                   (std::is_same_v<Property, WithoutInitializing_t> &&
                    ViewCtorProp<P...>::initialize) ||
-                  (std::is_same_v<Property, HostSerialInit_t> &&
-                   !ViewCtorProp<P...>::host_serial_init)) {
+                  (std::is_same_v<Property, SequentialHostInit_t> &&
+                   !ViewCtorProp<P...>::sequential_host_init)) {
       using NewViewCtorProp = ViewCtorProp<P..., Property>;
       NewViewCtorProp new_view_ctor_prop(view_ctor_prop);
       static_cast<ViewCtorProp<void, Property> &>(new_view_ctor_prop).value =

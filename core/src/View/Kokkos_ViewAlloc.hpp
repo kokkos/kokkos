@@ -189,29 +189,31 @@ struct ViewValueFunctor {
 };
 
 template <class DeviceType, class ValueType>
-struct ViewValueFunctorHostSerialInit {
+struct ViewValueFunctorSequentialHostInit {
   using ExecSpace = typename DeviceType::execution_space;
 
   ValueType* ptr;
   size_t n;
 
-  ViewValueFunctorHostSerialInit() = default;
-  ViewValueFunctorHostSerialInit(const ViewValueFunctorHostSerialInit&) =
-      default;
-  ViewValueFunctorHostSerialInit& operator=(
-      const ViewValueFunctorHostSerialInit&) = default;
+  ViewValueFunctorSequentialHostInit() = default;
+  ViewValueFunctorSequentialHostInit(
+      const ViewValueFunctorSequentialHostInit&) = default;
+  ViewValueFunctorSequentialHostInit& operator=(
+      const ViewValueFunctorSequentialHostInit&) = default;
 
-  ViewValueFunctorHostSerialInit(ExecSpace const& arg_space,
-                                 ValueType* const arg_ptr, size_t const arg_n,
-                                 std::string /*arg_name*/)
+  ViewValueFunctorSequentialHostInit(ExecSpace const& arg_space,
+                                     ValueType* const arg_ptr,
+                                     size_t const arg_n,
+                                     std::string /*arg_name*/)
       : ptr(arg_ptr), n(arg_n) {
     (void)arg_space;
     KOKKOS_ASSERT(arg_space == ExecSpace() &&
                   "FIXME if attached better be the default instance");
   }
 
-  ViewValueFunctorHostSerialInit(ValueType* const arg_ptr, size_t const arg_n,
-                                 std::string /*arg_name*/)
+  ViewValueFunctorSequentialHostInit(ValueType* const arg_ptr,
+                                     size_t const arg_n,
+                                     std::string /*arg_name*/)
       : ptr(arg_ptr), n(arg_n) {}
 
   void construct_shared_allocation() {

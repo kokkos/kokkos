@@ -2828,8 +2828,8 @@ class ViewMapping<
     using device_type  = Kokkos::Device<execution_space, memory_space>;
     using value_type   = typename Traits::value_type;
     using functor_type = std::conditional_t<
-        alloc_prop::host_serial_init,
-        ViewValueFunctorHostSerialInit<device_type, value_type>,
+        alloc_prop::sequential_host_init,
+        ViewValueFunctorSequentialHostInit<device_type, value_type>,
         ViewValueFunctor<device_type, value_type>>;
     using record_type =
         Kokkos::Impl::SharedAllocationRecord<memory_space, functor_type>;

@@ -571,7 +571,7 @@ inline constexpr Kokkos::ALL_t ALL{};
 #pragma omp end declare target
 #endif
 
-inline constexpr Kokkos::Impl::HostSerialInit_t HostSerialInit{};
+inline constexpr Kokkos::Impl::SequentialHostInit_t SequentialHostInit{};
 
 inline constexpr Kokkos::Impl::WithoutInitializing_t WithoutInitializing{};
 
