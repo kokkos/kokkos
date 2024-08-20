@@ -105,7 +105,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
     };
     // make sure the block dimensions don't exceed the max number of threads
     // allowed
-    const auto check_block_sizes = [&](const dim3& block) {
+    const auto check_block_sizes = [&]([[maybe_unused]] const dim3& block) {
       KOKKOS_ASSERT(block.x > 0 && block.x <= maxthreads[0]);
       KOKKOS_ASSERT(block.y > 0 && block.y <= maxthreads[1]);
       KOKKOS_ASSERT(block.z > 0 && block.z <= maxthreads[2]);
@@ -113,7 +113,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
     };
     // make sure the grid dimensions don't exceed the max number of blocks
     // allowed
-    const auto check_grid_sizes = [&](const dim3& grid) {
+    const auto check_grid_sizes = [&]([[maybe_unused]] const dim3& grid) {
       KOKKOS_ASSERT(grid.x > 0 && grid.x <= maxblocks[0]);
       KOKKOS_ASSERT(grid.y > 0 && grid.y <= maxblocks[1]);
       KOKKOS_ASSERT(grid.z > 0 && grid.z <= maxblocks[2]);
