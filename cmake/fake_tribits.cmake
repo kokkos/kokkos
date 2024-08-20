@@ -47,6 +47,12 @@ FUNCTION(KOKKOS_ADD_TEST)
   # Prepend package name to the test name
   # These should be the full target name
   SET(TEST_NAME ${PACKAGE_NAME}_${TEST_NAME})
+  
+  # Don't do anything if the user disabled the test
+  IF(${TEST_NAME}_DISABLE)
+    RETURN()
+  ENDIF()
+  
   SET(EXE ${PACKAGE_NAME}_${EXE_ROOT})
   IF(WIN32)
     ADD_TEST(NAME ${TEST_NAME} WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH}
