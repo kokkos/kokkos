@@ -193,7 +193,6 @@ struct ViewValueFunctorSequentialHostInit {
   using ExecSpace = typename DeviceType::execution_space;
   using MemSpace  = typename DeviceType::memory_space;
   static_assert(SpaceAccessibility<HostSpace, MemSpace>::accessible);
-  static_assert(std::is_same_v<ExecSpace, typename MemSpace::execution_space>);
 
   ValueType* ptr;
   size_t n;
