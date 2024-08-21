@@ -177,12 +177,6 @@ void *impl_allocate_common(const int device_id,
   cudaError_t error_code = cudaSuccess;
 #ifndef CUDART_VERSION
 #error CUDART_VERSION undefined!
-#elif defined(KOKKOS_ENABLE_IMPL_CUDA_EMULATE_UNIFIED_MEMORY)
-  // This is intended to simulate Grace-Hopper-like behavior
-  error_code = cudaMallocManaged(&ptr, arg_alloc_size, cudaMemAttachGlobal);
-  if (error_code == cudaSuccess) {
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaDeviceSynchronize());
-  }
 #elif defined(KOKKOS_ENABLE_IMPL_CUDA_UNIFIED_MEMORY)
   // This is intended for Grace-Hopper (and future unified memory architectures)
   // The idea is to use host allocator and then advise to keep it in HBM on the
