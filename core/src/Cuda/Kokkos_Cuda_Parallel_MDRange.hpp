@@ -97,7 +97,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
     if (m_rp.m_num_tiles == 0) return;
     const auto maxblocks  = m_rp.space().cuda_device_prop().maxGridSize;
     const auto maxthreads = m_rp.space().cuda_device_prop().maxThreadsDim;
-    const auto maxThreadsPerBlock =
+    [[maybe_unused]] const auto maxThreadsPerBlock =
         m_rp.space().cuda_device_prop().maxThreadsPerBlock;
     // make sure the Z dimension (it is less than x,y limits) isn't exceeded
     const auto validateZ = [&](const int input) {
