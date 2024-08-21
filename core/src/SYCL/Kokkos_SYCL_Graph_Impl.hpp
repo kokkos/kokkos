@@ -71,9 +71,12 @@ class GraphImpl<Kokkos::SYCL> {
   template <class... PredecessorRefs>
   auto create_aggregate_ptr(PredecessorRefs&&...);
 
- private:
-  void instantiate_graph() { m_graph_exec = m_graph.finalize(); }
+  void instantiate() {
+    KOKKOS_EXPECTS(!m_graph_exec.has_value());
+    m_graph_exec = m_graph.finalize();
+  }
 
+ private:
   Kokkos::SYCL m_execution_space;
   sycl::ext::oneapi::experimental::command_graph<
       sycl::ext::oneapi::experimental::graph_state::modifiable>
@@ -137,7 +140,7 @@ inline void GraphImpl<Kokkos::SYCL>::add_predecessor(
 
 inline void GraphImpl<Kokkos::SYCL>::submit() {
   if (!m_graph_exec) {
-    instantiate_graph();
+    instantiate();
   }
   m_execution_space.sycl_queue().ext_oneapi_graph(*m_graph_exec);
 }

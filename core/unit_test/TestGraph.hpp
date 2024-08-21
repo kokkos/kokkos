@@ -103,7 +103,7 @@ struct TEST_CATEGORY_FIXTURE(graph) : public ::testing::Test {
   }
 };
 
-TEST_F(TEST_CATEGORY_FIXTURE(graph), launch_one) {
+TEST_F(TEST_CATEGORY_FIXTURE(graph), submit_once) {
   auto graph =
       Kokkos::Experimental::create_graph<TEST_EXECSPACE>([&](auto root) {
         root.then_parallel_for(1, count_functor{count, bugs, 0, 0});
@@ -116,7 +116,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), launch_one) {
   ASSERT_EQ(0, bugs_host());
 }
 
-TEST_F(TEST_CATEGORY_FIXTURE(graph), launch_one_rvalue) {
+TEST_F(TEST_CATEGORY_FIXTURE(graph), submit_once_rvalue) {
   Kokkos::Experimental::create_graph(ex, [&](auto root) {
     root.then_parallel_for(1, count_functor{count, bugs, 0, 0});
   }).submit();
@@ -127,7 +127,54 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), launch_one_rvalue) {
   ASSERT_EQ(0, bugs_host());
 }
 
-TEST_F(TEST_CATEGORY_FIXTURE(graph), launch_six) {
+// Ensure that Kokkos::Graph::instantiate works.
+// For now, Kokkos::Graph::submit will instantiate if needed,
+// so this test is not very strong.
+TEST_F(TEST_CATEGORY_FIXTURE(graph), instantiate_and_submit_once) {
+  auto graph = Kokkos::Experimental::create_graph(ex, [&](auto root) {
+    root.then_parallel_for(1, count_functor{count, bugs, 0, 0});
+  });
+  graph.instantiate();
+  graph.submit();
+  Kokkos::deep_copy(ex, count_host, count);
+  Kokkos::deep_copy(ex, bugs_host, bugs);
+  ex.fence();
+  ASSERT_EQ(1, count_host());
+  ASSERT_EQ(0, bugs_host());
+}
+
+// Ensure that Kokkos::Graph::instantiate can be called only once.
+// This test checks 2 cases:
+//   1. Instantiating after submission is invalid (this also implicitly
+//      checks that submission instantiates if need be).
+//   2. Instantiating twice in a row is invalid.
+TEST_F(TEST_CATEGORY_FIXTURE(graph), can_instantiate_only_once) {
+  {
+    bool checked_assertions = false;
+    KOKKOS_ASSERT(checked_assertions = true);
+    if (!checked_assertions) {
+      GTEST_SKIP() << "Preconditions are not checked.";
+    }
+  }
+  {
+    auto graph = Kokkos::Experimental::create_graph(ex, [&](auto root) {
+      root.then_parallel_for(1, count_functor{count, bugs, 0, 0});
+    });
+    graph.submit();
+    ASSERT_DEATH(graph.instantiate(),
+                 "Expected precondition `.*` evaluated false.");
+  }
+  {
+    auto graph = Kokkos::Experimental::create_graph(ex, [&](auto root) {
+      root.then_parallel_for(1, count_functor{count, bugs, 0, 0});
+    });
+    graph.instantiate();
+    ASSERT_DEATH(graph.instantiate(),
+                 "Expected precondition `.*` evaluated false.");
+  }
+}
+
+TEST_F(TEST_CATEGORY_FIXTURE(graph), submit_six) {
 #ifdef KOKKOS_ENABLE_OPENMPTARGET  // FIXME_OPENMPTARGET team_size incompatible
   if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenMPTarget>)
     GTEST_SKIP() << "skipping since OpenMPTarget can't use team_size 1";
