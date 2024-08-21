@@ -58,9 +58,7 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #endif
 
 #if defined(DESUL_ATOMICS_ENABLE_OPENACC)
-#ifdef __NVCOMPILER
 #define DESUL_HAVE_OPENACC_ATOMICS
-#endif
 #endif
 
 // ONLY use GNUC atomics if not explicitly say to use OpenMP atomics

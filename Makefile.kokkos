@@ -1584,7 +1584,11 @@ else
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_OPENACC), 1)
-  tmp := $(call desul_append_header,"$H""define DESUL_ATOMICS_ENABLE_OPENACC")
+  ifeq ($(KOKKOS_INTERNAL_COMPILER_NVHPC), 1)
+    tmp := $(call desul_append_header,"$H""define DESUL_ATOMICS_ENABLE_OPENACC")
+  else
+    tmp := $(call desul_append_header,"/* $H""undef DESUL_ATOMICS_ENABLE_OPENACC */")
+  endif
 else
   tmp := $(call desul_append_header,"/* $H""undef DESUL_ATOMICS_ENABLE_OPENACC */")
 endif
