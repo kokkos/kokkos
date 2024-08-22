@@ -96,12 +96,9 @@ struct ThreadScratch {
   }
 };
 
+#ifndef KOKKOS_ENABLE_OPENACC  // FIXME_OPENACC, scratch memory not implemented
 TEST(TEST_CATEGORY, IncrTest_12a_ThreadScratch) {
   ThreadScratch<TEST_EXECSPACE> test;
-#ifdef KOKKOS_ENABLE_OPENACC  // FIXME_OPENACC
-  GTEST_SKIP() << "skipping since scratch memory is not yet implemented in the "
-                  "OpenACC backend";
-#endif
   // FIXME_OPENMPTARGET - team_size has to be a multiple of 32 for the tests to
   // pass in the Release and RelWithDebInfo builds. Does not need the team_size
   // to be a multiple of 32 for the Debug builds.
@@ -115,5 +112,6 @@ TEST(TEST_CATEGORY, IncrTest_12a_ThreadScratch) {
   test.run(14, 277, 321);
 #endif
 }
+#endif
 
 }  // namespace Test
