@@ -217,6 +217,48 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph),
   ASSERT_TRUE(contains(execution_space_instances.at(1), bugs, 0));
 }
 
+// This test ensures that it's possible to build a Kokkos::Graph using
+// Kokkos::Experimental::create_graph without providing a closure, but giving an
+// execution space instance.
+TEST_F(TEST_CATEGORY_FIXTURE(graph), create_graph_no_closure_with_exec) {
+  auto graph = Kokkos::Experimental::create_graph(ex);
+
+  auto root = Kokkos::Impl::GraphAccess::create_root_ref(graph);
+
+  auto node = root.then_parallel_for(1, count_functor{count, bugs, 0, 0});
+
+  graph.submit(ex);
+
+  ASSERT_TRUE(contains(ex, count, 1));
+  ASSERT_TRUE(contains(ex, bugs, 0));
+}
+
+// This test ensures that it's possible to build a Kokkos::Graph using
+// Kokkos::Experimental::create_graph without any argument.
+// The test has to be skipped if the test fixture is
+// not instantiated for the default execution space.
+TEST_F(TEST_CATEGORY_FIXTURE(graph), create_graph_no_arg) {
+  if constexpr (!std::is_same_v<TEST_EXECSPACE,
+                                Kokkos::DefaultExecutionSpace>) {
+    GTEST_SKIP() << "Skipping since useless if the test fixture is not on the "
+                    "default execution space.";
+  }
+
+  auto graph = Kokkos::Experimental::create_graph();
+
+  static_assert(std::is_same_v<typename decltype(graph)::execution_space,
+                               Kokkos::DefaultExecutionSpace>);
+
+  auto root = Kokkos::Impl::GraphAccess::create_root_ref(graph);
+
+  auto node = root.then_parallel_for(1, count_functor{count, bugs, 0, 0});
+
+  graph.submit(graph.get_execution_space());
+
+  ASSERT_TRUE(contains(graph.get_execution_space(), count, 1));
+  ASSERT_TRUE(contains(graph.get_execution_space(), bugs, 0));
+}
+
 TEST_F(TEST_CATEGORY_FIXTURE(graph), submit_six) {
 #ifdef KOKKOS_ENABLE_OPENMPTARGET  // FIXME_OPENMPTARGET team_size incompatible
   if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenMPTarget>)
