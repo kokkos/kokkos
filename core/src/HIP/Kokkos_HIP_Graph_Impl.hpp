@@ -60,7 +60,7 @@ class GraphImpl<Kokkos::HIP> {
   template <class NodeImplPtr, class PredecessorRef>
   void add_predecessor(NodeImplPtr arg_node_ptr, PredecessorRef arg_pred_ref);
 
-  void submit();
+  void submit(const Kokkos::HIP& exec);
 
   Kokkos::HIP const& get_execution_space() const noexcept;
 
@@ -147,12 +147,11 @@ inline void GraphImpl<Kokkos::HIP>::add_predecessor(
       hipGraphAddDependencies(m_graph, &pred_node, &node, 1));
 }
 
-inline void GraphImpl<Kokkos::HIP>::submit() {
+inline void GraphImpl<Kokkos::HIP>::submit(const Kokkos::HIP& exec) {
   if (!m_graph_exec) {
     instantiate();
   }
-  KOKKOS_IMPL_HIP_SAFE_CALL(
-      hipGraphLaunch(m_graph_exec, m_execution_space.hip_stream()));
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipGraphLaunch(m_graph_exec, exec.hip_stream()));
 }
 
 inline Kokkos::HIP const& GraphImpl<Kokkos::HIP>::get_execution_space()

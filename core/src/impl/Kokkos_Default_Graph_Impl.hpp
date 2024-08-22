@@ -141,7 +141,8 @@ struct GraphImpl : private ExecutionSpaceInstanceStorage<ExecutionSpace> {
     m_has_been_instantiated = true;
   }
 
-  void submit() {
+  // FIXME The execution space instance should be passed to the nodes.
+  void submit(const ExecutionSpace& /* exec */) {
     if (!m_has_been_instantiated) instantiate();
     // This reset is gross, but for the purposes of our simple host
     // implementation...

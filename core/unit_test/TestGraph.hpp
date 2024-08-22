@@ -174,6 +174,40 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), can_instantiate_only_once) {
   }
 }
 
+// This test submits on an execution space instance different from the
+// one passed to the Kokkos::Graph constructor.
+TEST_F(TEST_CATEGORY_FIXTURE(graph),
+       submit_onto_another_execution_space_instance) {
+// FIXME For ROCm 5.2, the graph implementation is bugged, and Kokkos
+//       therefore uses the default implementation. The kernels of the
+//       graph will thus run on the default stream.
+#if defined(KOKKOS_ENABLE_HIP)
+#if HIP_VERSION_MAJOR == 5 && HIP_VERSION_MINOR == 2
+  if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::HIP>)
+    GTEST_SKIP() << "Graph is not properly enqueued.";
+#endif
+#endif
+  const auto execution_space_instances =
+      Kokkos::Experimental::partition_space(ex, 1, 1);
+
+  auto graph = Kokkos::Experimental::create_graph(
+      execution_space_instances.at(0), [&](auto root) {
+        root.then_parallel_for(1, count_functor{count, bugs, 0, 0});
+      });
+  graph.instantiate();
+
+  execution_space_instances.at(0).fence(
+      "The graph might make async copies to device.");
+
+  graph.submit(execution_space_instances.at(1));
+
+  Kokkos::deep_copy(execution_space_instances.at(1), count_host, count);
+  Kokkos::deep_copy(execution_space_instances.at(1), bugs_host, bugs);
+  execution_space_instances.at(1).fence();
+  ASSERT_EQ(1, count_host());
+  ASSERT_EQ(0, bugs_host());
+}
+
 TEST_F(TEST_CATEGORY_FIXTURE(graph), submit_six) {
 #ifdef KOKKOS_ENABLE_OPENMPTARGET  // FIXME_OPENMPTARGET team_size incompatible
   if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenMPTarget>)
