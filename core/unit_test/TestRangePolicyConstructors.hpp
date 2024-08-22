@@ -123,27 +123,21 @@ TEST(TEST_CATEGORY_DEATH, range_policy_invalid_bounds) {
 #endif
 }
 
-template <typename T>
-struct TestIndexConversionCheck {
-  explicit TestIndexConversionCheck(T* value_) : value(value_) {}
-  operator T() const { return *value; }
+struct ConvertibleToInt {  // not constructible from int
+  explicit ConvertibleToInt(int const* value_) : value(value_) {}
+  operator int() const { return *value; }
 
-  T* const value;
+  int const* value;
 };
 
 TEST(TEST_CATEGORY, range_policy_one_way_convertible_bounds) {
-  using UIntIndexType = Kokkos::IndexType<unsigned>;
-  using IntIndexType  = Kokkos::IndexType<int>;
-  using UIntPolicy    = Kokkos::RangePolicy<TEST_EXECSPACE, UIntIndexType>;
-  using IntPolicy     = Kokkos::RangePolicy<TEST_EXECSPACE, IntIndexType>;
+  using Policy = Kokkos::RangePolicy<>;
 
-  using test_type = TestIndexConversionCheck<IntPolicy::index_type>;
+  static_assert(std::is_convertible_v<ConvertibleToInt, Policy::index_type>);
+  static_assert(!std::is_convertible_v<Policy::index_type, ConvertibleToInt>);
 
-  static_assert(std::is_convertible_v<test_type, UIntPolicy::index_type>);
-  static_assert(!std::is_convertible_v<UIntPolicy::index_type, test_type>);
-
-  IntIndexType::type test_val = -1;
-  ASSERT_NO_THROW((void)UIntPolicy(0, test_type(&test_val)));
+  int const n = 1;
+  ASSERT_NO_THROW((void)Policy(0, ConvertibleToInt(&n)));
 }
 
 TEST(TEST_CATEGORY_DEATH, range_policy_implicitly_converted_bounds) {
