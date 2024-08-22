@@ -202,12 +202,12 @@ struct DeepCopy<HostSpace, HostSpace, ExecutionSpace> {
   }
 
   DeepCopy(const ExecutionSpace& exec, void* dst, const void* src, size_t n) {
-    exec.fence(
-        "Kokkos::Impl::DeepCopy<HostSpace, HostSpace, "
-        "ExecutionSpace>::DeepCopy: fence before copy");
     // If ExecutionSpace is a Device ExecutionSpace, we should call
     // this from DefaultHostExecutionSpace
     if constexpr (std::is_same_v<ExecutionSpace, DefaultExecutionSpace>) {
+      exec.fence(
+          "Kokkos::Impl::DeepCopy<HostSpace, HostSpace, "
+          "ExecutionSpace>::DeepCopy: fence before copy");
       hostspace_parallel_deepcopy_async(dst, src, n);
     } else {
       hostspace_parallel_deepcopy_async(exec, dst, src, n);
