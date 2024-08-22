@@ -106,18 +106,24 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
     // make sure the block dimensions don't exceed the max number of threads
     // allowed
     const auto check_block_sizes = [&]([[maybe_unused]] const dim3& block) {
-      KOKKOS_ASSERT(block.x > 0 && block.x <= (unsigned int)maxthreads[0]);
-      KOKKOS_ASSERT(block.y > 0 && block.y <= (unsigned int)maxthreads[1]);
-      KOKKOS_ASSERT(block.z > 0 && block.z <= (unsigned int)maxthreads[2]);
+      KOKKOS_ASSERT(block.x > 0 &&
+                    block.x <= static_cast<unsigned int>(maxthreads[0]));
+      KOKKOS_ASSERT(block.y > 0 &&
+                    block.y <= static_cast<unsigned int>(maxthreads[1]));
+      KOKKOS_ASSERT(block.z > 0 &&
+                    block.z <= static_cast<unsigned int>(maxthreads[2]));
       KOKKOS_ASSERT(block.x * block.y * block.z <=
-                    (unsigned int)maxThreadsPerBlock);
+                    static_cast<unsigned int>(maxThreadsPerBlock));
     };
     // make sure the grid dimensions don't exceed the max number of blocks
     // allowed
     const auto check_grid_sizes = [&]([[maybe_unused]] const dim3& grid) {
-      KOKKOS_ASSERT(grid.x > 0 && grid.x <= (unsigned int)maxblocks[0]);
-      KOKKOS_ASSERT(grid.y > 0 && grid.y <= (unsigned int)maxblocks[1]);
-      KOKKOS_ASSERT(grid.z > 0 && grid.z <= (unsigned int)maxblocks[2]);
+      KOKKOS_ASSERT(grid.x > 0 &&
+                    grid.x <= static_cast<unsigned int>(maxblocks[0]));
+      KOKKOS_ASSERT(grid.y > 0 &&
+                    grid.y <= static_cast<unsigned int>(maxblocks[1]));
+      KOKKOS_ASSERT(grid.z > 0 &&
+                    grid.z <= static_cast<unsigned int>(maxblocks[2]));
     };
     if (RP::rank == 2) {
       const dim3 block(m_rp.m_tile[0], m_rp.m_tile[1], 1);
