@@ -136,7 +136,13 @@ struct GraphImpl : private ExecutionSpaceInstanceStorage<ExecutionSpace> {
     return rv;
   }
 
+  void instantiate() {
+    KOKKOS_EXPECTS(!m_has_been_instantiated);
+    m_has_been_instantiated = true;
+  }
+
   void submit() {
+    if (!m_has_been_instantiated) instantiate();
     // This reset is gross, but for the purposes of our simple host
     // implementation...
     for (auto& sink : m_sinks) {
@@ -146,6 +152,9 @@ struct GraphImpl : private ExecutionSpaceInstanceStorage<ExecutionSpace> {
       sink->execute_node();
     }
   }
+
+ private:
+  bool m_has_been_instantiated = false;
 
   // </editor-fold> end required customizations }}}2
   //----------------------------------------------------------------------------
