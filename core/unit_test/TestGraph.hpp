@@ -103,28 +103,40 @@ struct TEST_CATEGORY_FIXTURE(graph) : public ::testing::Test {
   }
 };
 
+// Check if a rank-0 view contains a given value.
+template <typename Exec, typename ViewType>
+::testing::AssertionResult contains(
+    const Exec& exec, const ViewType& view,
+    const typename ViewType::value_type& expected) {
+  static_assert(ViewType::rank() == 0);
+  typename ViewType::non_const_value_type value;
+  Kokkos::deep_copy(exec, value, view);
+  exec.fence();
+  if (value != expected)
+    return ::testing::AssertionFailure()
+           << expected << " is not in " << view.label() << ", got " << value;
+  else
+    return ::testing::AssertionSuccess();
+}
+
 TEST_F(TEST_CATEGORY_FIXTURE(graph), submit_once) {
   auto graph =
       Kokkos::Experimental::create_graph<TEST_EXECSPACE>([&](auto root) {
         root.then_parallel_for(1, count_functor{count, bugs, 0, 0});
       });
   graph.submit();
-  Kokkos::deep_copy(graph.get_execution_space(), count_host, count);
-  Kokkos::deep_copy(graph.get_execution_space(), bugs_host, bugs);
-  graph.get_execution_space().fence();
-  ASSERT_EQ(1, count_host());
-  ASSERT_EQ(0, bugs_host());
+
+  ASSERT_TRUE(contains(graph.get_execution_space(), count, 1));
+  ASSERT_TRUE(contains(graph.get_execution_space(), bugs, 0));
 }
 
 TEST_F(TEST_CATEGORY_FIXTURE(graph), submit_once_rvalue) {
   Kokkos::Experimental::create_graph(ex, [&](auto root) {
     root.then_parallel_for(1, count_functor{count, bugs, 0, 0});
   }).submit();
-  Kokkos::deep_copy(ex, count_host, count);
-  Kokkos::deep_copy(ex, bugs_host, bugs);
-  ex.fence();
-  ASSERT_EQ(1, count_host());
-  ASSERT_EQ(0, bugs_host());
+
+  ASSERT_TRUE(contains(ex, count, 1));
+  ASSERT_TRUE(contains(ex, bugs, 0));
 }
 
 // Ensure that Kokkos::Graph::instantiate works.
@@ -136,11 +148,9 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), instantiate_and_submit_once) {
   });
   graph.instantiate();
   graph.submit();
-  Kokkos::deep_copy(ex, count_host, count);
-  Kokkos::deep_copy(ex, bugs_host, bugs);
-  ex.fence();
-  ASSERT_EQ(1, count_host());
-  ASSERT_EQ(0, bugs_host());
+
+  ASSERT_TRUE(contains(ex, count, 1));
+  ASSERT_TRUE(contains(ex, bugs, 0));
 }
 
 // FIXME death tests and fixtures
@@ -203,11 +213,8 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph),
 
   graph.submit(execution_space_instances.at(1));
 
-  Kokkos::deep_copy(execution_space_instances.at(1), count_host, count);
-  Kokkos::deep_copy(execution_space_instances.at(1), bugs_host, bugs);
-  execution_space_instances.at(1).fence();
-  ASSERT_EQ(1, count_host());
-  ASSERT_EQ(0, bugs_host());
+  ASSERT_TRUE(contains(execution_space_instances.at(1), count, 1));
+  ASSERT_TRUE(contains(execution_space_instances.at(1), bugs, 0));
 }
 
 TEST_F(TEST_CATEGORY_FIXTURE(graph), submit_six) {
@@ -245,12 +252,9 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), submit_six) {
     //----------------------------------------
   });
   graph.submit();
-  Kokkos::deep_copy(ex, count_host, count);
-  Kokkos::deep_copy(ex, bugs_host, bugs);
-  ex.fence();
 
-  ASSERT_EQ(6, count_host());
-  ASSERT_EQ(0, bugs_host());
+  ASSERT_TRUE(contains(ex, count, 6));
+  ASSERT_TRUE(contains(ex, bugs, 0));
 }
 
 TEST_F(TEST_CATEGORY_FIXTURE(graph), when_all_cycle) {
@@ -268,13 +272,10 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), when_all_cycle) {
         .then_parallel_reduce(6, set_result_functor{count}, reduction_out);
     //----------------------------------------
   }).submit();
-  Kokkos::deep_copy(ex, bugs_host, bugs);
-  Kokkos::deep_copy(ex, count_host, count);
-  Kokkos::deep_copy(ex, reduction_host, reduction_out);
-  ex.fence();
-  ASSERT_EQ(0, bugs_host());
-  ASSERT_EQ(7, count_host());
-  ASSERT_EQ(42, reduction_host());
+
+  ASSERT_TRUE(contains(ex, bugs, 0));
+  ASSERT_TRUE(contains(ex, count, 7));
+  ASSERT_TRUE(contains(ex, reduction_out, 42));
   //----------------------------------------
 }
 
@@ -342,9 +343,8 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), zero_work_reduce) {
   if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>) Kokkos::fence();
 #endif
   graph.submit();
-  Kokkos::deep_copy(ex, count_host, count);
-  ex.fence();
-  ASSERT_EQ(count_host(), 0);
+
+  ASSERT_TRUE(contains(ex, count, 0));
 }
 
 // Ensure that an empty graph can be submitted.
