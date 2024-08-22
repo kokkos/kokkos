@@ -955,6 +955,9 @@ class TestViewAPI {
     using view_type   = Kokkos::View<int, host>;
     using mirror_type = typename view_type::HostMirror;
 
+    static_assert(std::is_same_v<typename view_type::HostMirror,
+                                 typename view_type::host_mirror_type>);
+
     static_assert(std::is_same<typename view_type::memory_space,
                                typename mirror_type::memory_space>::value);
 

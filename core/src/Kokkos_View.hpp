@@ -679,17 +679,15 @@ class View : public ViewTraits<DataType, Properties...> {
            typename traits::device_type, typename traits::hooks_policy,
            typename traits::memory_traits>;
 
-  /** \brief  Compatible HostMirror view */
-  using HostMirror =
+  /** \brief  Compatible host mirror view */
+  using host_mirror_type =
       View<typename traits::non_const_data_type, typename traits::array_layout,
            Device<DefaultHostExecutionSpace,
                   typename traits::host_mirror_space::memory_space>,
            typename traits::hooks_policy>;
 
-  /** \brief  Compatible HostMirror view */
-  using host_mirror_type =
-      View<typename traits::non_const_data_type, typename traits::array_layout,
-           typename traits::host_mirror_space, typename traits::hooks_policy>;
+  /** \brief  Compatible host mirror view */
+  using HostMirror = host_mirror_type;
 
   /** \brief Unified types */
   using uniform_type = typename Impl::ViewUniformType<View, 0>::type;
