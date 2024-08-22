@@ -31,7 +31,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Serial> {
   const Policy m_policy;
 
   template <class TagType>
-  std::enable_if_t<std::is_void<TagType>::value> exec() const {
+  std::enable_if_t<std::is_void_v<TagType>> exec() const {
     const typename Policy::member_type e = m_policy.end();
     for (typename Policy::member_type i = m_policy.begin(); i < e; ++i) {
       m_functor(i);
@@ -39,7 +39,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Serial> {
   }
 
   template <class TagType>
-  std::enable_if_t<!std::is_void<TagType>::value> exec() const {
+  std::enable_if_t<!std::is_void_v<TagType>> exec() const {
     const TagType t{};
     const typename Policy::member_type e = m_policy.end();
     for (typename Policy::member_type i = m_policy.begin(); i < e; ++i) {
@@ -79,7 +79,7 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
   const pointer_type m_result_ptr;
 
   template <class TagType>
-  inline std::enable_if_t<std::is_void<TagType>::value> exec(
+  inline std::enable_if_t<std::is_void_v<TagType>> exec(
       reference_type update) const {
     const typename Policy::member_type e = m_policy.end();
     for (typename Policy::member_type i = m_policy.begin(); i < e; ++i) {
@@ -88,7 +88,7 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
   }
 
   template <class TagType>
-  inline std::enable_if_t<!std::is_void<TagType>::value> exec(
+  inline std::enable_if_t<!std::is_void_v<TagType>> exec(
       reference_type update) const {
     const TagType t{};
 
@@ -166,7 +166,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
   const Policy m_policy;
 
   template <class TagType>
-  inline std::enable_if_t<std::is_void<TagType>::value> exec(
+  inline std::enable_if_t<std::is_void_v<TagType>> exec(
       reference_type update) const {
     const typename Policy::member_type e = m_policy.end();
     for (typename Policy::member_type i = m_policy.begin(); i < e; ++i) {
@@ -175,7 +175,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
   }
 
   template <class TagType>
-  inline std::enable_if_t<!std::is_void<TagType>::value> exec(
+  inline std::enable_if_t<!std::is_void_v<TagType>> exec(
       reference_type update) const {
     const TagType t{};
     const typename Policy::member_type e = m_policy.end();
@@ -235,7 +235,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   const pointer_type m_result_ptr;
 
   template <class TagType>
-  inline std::enable_if_t<std::is_void<TagType>::value> exec(
+  inline std::enable_if_t<std::is_void_v<TagType>> exec(
       reference_type update) const {
     const typename Policy::member_type e = m_policy.end();
     for (typename Policy::member_type i = m_policy.begin(); i < e; ++i) {
@@ -244,7 +244,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   }
 
   template <class TagType>
-  inline std::enable_if_t<!std::is_void<TagType>::value> exec(
+  inline std::enable_if_t<!std::is_void_v<TagType>> exec(
       reference_type update) const {
     const TagType t{};
     const typename Policy::member_type e = m_policy.end();

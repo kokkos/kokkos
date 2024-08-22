@@ -50,9 +50,9 @@ inline constexpr bool is_offset_view_v = is_offset_view<T>::value;
 #define KOKKOS_INVALID_INDEX_RANGE \
   { KOKKOS_INVALID_OFFSET, KOKKOS_INVALID_OFFSET }
 
-template <typename iType, std::enable_if_t<std::is_integral<iType>::value &&
-                                               std::is_signed<iType>::value,
-                                           iType> = 0>
+template <typename iType,
+          std::enable_if_t<std::is_integral_v<iType> && std::is_signed_v<iType>,
+                           iType> = 0>
 using IndexRange = Kokkos::Array<iType, 2>;
 
 using index_list_type = std::initializer_list<int64_t>;
@@ -200,7 +200,7 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
   using begins_type = Kokkos::Array<int64_t, Rank>;
 
   template <typename iType,
-            std::enable_if_t<std::is_integral<iType>::value, iType> = 0>
+            std::enable_if_t<std::is_integral_v<iType>, iType> = 0>
   KOKKOS_FUNCTION int64_t begin(const iType local_dimension) const {
     return local_dimension < Rank ? m_begins[local_dimension]
                                   : KOKKOS_INVALID_OFFSET;
@@ -210,7 +210,7 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
   begins_type begins() const { return m_begins; }
 
   template <typename iType,
-            std::enable_if_t<std::is_integral<iType>::value, iType> = 0>
+            std::enable_if_t<std::is_integral_v<iType>, iType> = 0>
   KOKKOS_FUNCTION int64_t end(const iType local_dimension) const {
     return begin(local_dimension) + m_map.extent(local_dimension);
   }
@@ -255,15 +255,13 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
   // constexpr unsigned rank() { return map_type::Rank; }
 
   template <typename iType>
-  KOKKOS_FUNCTION constexpr std::enable_if_t<std::is_integral<iType>::value,
-                                             size_t>
+  KOKKOS_FUNCTION constexpr std::enable_if_t<std::is_integral_v<iType>, size_t>
   extent(const iType& r) const {
     return m_map.extent(r);
   }
 
   template <typename iType>
-  KOKKOS_FUNCTION constexpr std::enable_if_t<std::is_integral<iType>::value,
-                                             int>
+  KOKKOS_FUNCTION constexpr std::enable_if_t<std::is_integral_v<iType>, int>
   extent_int(const iType& r) const {
     return static_cast<int>(m_map.extent(r));
   }
@@ -288,8 +286,7 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
   KOKKOS_FUNCTION constexpr size_t stride_7() const { return m_map.stride_7(); }
 
   template <typename iType>
-  KOKKOS_FUNCTION constexpr std::enable_if_t<std::is_integral<iType>::value,
-                                             size_t>
+  KOKKOS_FUNCTION constexpr std::enable_if_t<std::is_integral_v<iType>, size_t>
   stride(iType r) const {
     return (
         r == 0
@@ -322,7 +319,7 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
 
   enum {
     reference_type_is_lvalue_reference =
-        std::is_lvalue_reference<reference_type>::value
+        std::is_lvalue_reference_v<reference_type>
   };
 
   KOKKOS_FUNCTION constexpr size_t span() const { return m_map.span(); }
@@ -346,16 +343,16 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
 
  private:
   static constexpr bool is_layout_left =
-      std::is_same<typename traits::array_layout, Kokkos::LayoutLeft>::value;
+      std::is_same_v<typename traits::array_layout, Kokkos::LayoutLeft>;
 
   static constexpr bool is_layout_right =
-      std::is_same<typename traits::array_layout, Kokkos::LayoutRight>::value;
+      std::is_same_v<typename traits::array_layout, Kokkos::LayoutRight>;
 
   static constexpr bool is_layout_stride =
-      std::is_same<typename traits::array_layout, Kokkos::LayoutStride>::value;
+      std::is_same_v<typename traits::array_layout, Kokkos::LayoutStride>;
 
   static constexpr bool is_default_map =
-      std::is_void<typename traits::specialize>::value &&
+      std::is_void_v<typename traits::specialize> &&
       (is_layout_left || is_layout_right || is_layout_stride);
 
 #if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
@@ -1185,8 +1182,8 @@ KOKKOS_INLINE_FUNCTION constexpr unsigned rank(const OffsetView<D, P...>& V) {
 namespace Impl {
 
 template <class T>
-KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_integral<T>::value, T>
-shift_input(const T arg, const int64_t offset) {
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_integral_v<T>, T> shift_input(
+    const T arg, const int64_t offset) {
   return arg - offset;
 }
 
@@ -1197,13 +1194,13 @@ Kokkos::ALL_t shift_input(const Kokkos::ALL_t arg, const int64_t /*offset*/) {
 
 template <class T>
 KOKKOS_INLINE_FUNCTION
-    std::enable_if_t<std::is_integral<T>::value, Kokkos::pair<T, T>>
+    std::enable_if_t<std::is_integral_v<T>, Kokkos::pair<T, T>>
     shift_input(const Kokkos::pair<T, T> arg, const int64_t offset) {
   return Kokkos::make_pair<T, T>(arg.first - offset, arg.second - offset);
 }
 template <class T>
-inline std::enable_if_t<std::is_integral<T>::value, std::pair<T, T>>
-shift_input(const std::pair<T, T> arg, const int64_t offset) {
+inline std::enable_if_t<std::is_integral_v<T>, std::pair<T, T>> shift_input(
+    const std::pair<T, T> arg, const int64_t offset) {
   return std::make_pair<T, T>(arg.first - offset, arg.second - offset);
 }
 
@@ -1212,7 +1209,7 @@ KOKKOS_INLINE_FUNCTION void map_arg_to_new_begin(
     const size_t i, Kokkos::Array<int64_t, N>& subviewBegins,
     std::enable_if_t<N != 0, const Arg> shiftedArg, const Arg arg,
     const A viewBegins, size_t& counter) {
-  if (!std::is_integral<Arg>::value) {
+  if (!std::is_integral_v<Arg>) {
     subviewBegins[counter] = shiftedArg == arg ? viewBegins[i] : 0;
     counter++;
   }
@@ -1641,12 +1638,12 @@ KOKKOS_INLINE_FUNCTION bool operator==(const OffsetView<LT, LP...>& lhs,
   using lhs_traits = ViewTraits<LT, LP...>;
   using rhs_traits = ViewTraits<RT, RP...>;
 
-  return std::is_same<typename lhs_traits::const_value_type,
-                      typename rhs_traits::const_value_type>::value &&
-         std::is_same<typename lhs_traits::array_layout,
-                      typename rhs_traits::array_layout>::value &&
-         std::is_same<typename lhs_traits::memory_space,
-                      typename rhs_traits::memory_space>::value &&
+  return std::is_same_v<typename lhs_traits::const_value_type,
+                        typename rhs_traits::const_value_type> &&
+         std::is_same_v<typename lhs_traits::array_layout,
+                        typename rhs_traits::array_layout> &&
+         std::is_same_v<typename lhs_traits::memory_space,
+                        typename rhs_traits::memory_space> &&
          unsigned(lhs_traits::rank) == unsigned(rhs_traits::rank) &&
          lhs.data() == rhs.data() && lhs.span() == rhs.span() &&
          lhs.extent(0) == rhs.extent(0) && lhs.extent(1) == rhs.extent(1) &&
@@ -1672,12 +1669,12 @@ KOKKOS_INLINE_FUNCTION bool operator==(const View<LT, LP...>& lhs,
   using lhs_traits = ViewTraits<LT, LP...>;
   using rhs_traits = ViewTraits<RT, RP...>;
 
-  return std::is_same<typename lhs_traits::const_value_type,
-                      typename rhs_traits::const_value_type>::value &&
-         std::is_same<typename lhs_traits::array_layout,
-                      typename rhs_traits::array_layout>::value &&
-         std::is_same<typename lhs_traits::memory_space,
-                      typename rhs_traits::memory_space>::value &&
+  return std::is_same_v<typename lhs_traits::const_value_type,
+                        typename rhs_traits::const_value_type> &&
+         std::is_same_v<typename lhs_traits::array_layout,
+                        typename rhs_traits::array_layout> &&
+         std::is_same_v<typename lhs_traits::memory_space,
+                        typename rhs_traits::memory_space> &&
          unsigned(lhs_traits::rank) == unsigned(rhs_traits::rank) &&
          lhs.data() == rhs.data() && lhs.span() == rhs.span() &&
          lhs.extent(0) == rhs.extent(0) && lhs.extent(1) == rhs.extent(1) &&
@@ -1704,11 +1701,11 @@ template <class DT, class... DP>
 inline void deep_copy(
     const Experimental::OffsetView<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value,
-    std::enable_if_t<std::is_same<typename ViewTraits<DT, DP...>::specialize,
-                                  void>::value>* = nullptr) {
+    std::enable_if_t<std::is_same_v<typename ViewTraits<DT, DP...>::specialize,
+                                    void>>* = nullptr) {
   static_assert(
-      std::is_same<typename ViewTraits<DT, DP...>::non_const_value_type,
-                   typename ViewTraits<DT, DP...>::value_type>::value,
+      std::is_same_v<typename ViewTraits<DT, DP...>::non_const_value_type,
+                     typename ViewTraits<DT, DP...>::value_type>,
       "deep_copy requires non-const type");
 
   auto dstView = dst.view();
@@ -1719,11 +1716,11 @@ template <class DT, class... DP, class ST, class... SP>
 inline void deep_copy(
     const Experimental::OffsetView<DT, DP...>& dst,
     const Experimental::OffsetView<ST, SP...>& value,
-    std::enable_if_t<std::is_same<typename ViewTraits<DT, DP...>::specialize,
-                                  void>::value>* = nullptr) {
+    std::enable_if_t<std::is_same_v<typename ViewTraits<DT, DP...>::specialize,
+                                    void>>* = nullptr) {
   static_assert(
-      std::is_same<typename ViewTraits<DT, DP...>::value_type,
-                   typename ViewTraits<ST, SP...>::non_const_value_type>::value,
+      std::is_same_v<typename ViewTraits<DT, DP...>::value_type,
+                     typename ViewTraits<ST, SP...>::non_const_value_type>,
       "deep_copy requires matching non-const destination type");
 
   auto dstView = dst.view();
@@ -1733,11 +1730,11 @@ template <class DT, class... DP, class ST, class... SP>
 inline void deep_copy(
     const Experimental::OffsetView<DT, DP...>& dst,
     const View<ST, SP...>& value,
-    std::enable_if_t<std::is_same<typename ViewTraits<DT, DP...>::specialize,
-                                  void>::value>* = nullptr) {
+    std::enable_if_t<std::is_same_v<typename ViewTraits<DT, DP...>::specialize,
+                                    void>>* = nullptr) {
   static_assert(
-      std::is_same<typename ViewTraits<DT, DP...>::value_type,
-                   typename ViewTraits<ST, SP...>::non_const_value_type>::value,
+      std::is_same_v<typename ViewTraits<DT, DP...>::value_type,
+                     typename ViewTraits<ST, SP...>::non_const_value_type>,
       "deep_copy requires matching non-const destination type");
 
   auto dstView = dst.view();
@@ -1748,11 +1745,11 @@ template <class DT, class... DP, class ST, class... SP>
 inline void deep_copy(
     const View<DT, DP...>& dst,
     const Experimental::OffsetView<ST, SP...>& value,
-    std::enable_if_t<std::is_same<typename ViewTraits<DT, DP...>::specialize,
-                                  void>::value>* = nullptr) {
+    std::enable_if_t<std::is_same_v<typename ViewTraits<DT, DP...>::specialize,
+                                    void>>* = nullptr) {
   static_assert(
-      std::is_same<typename ViewTraits<DT, DP...>::value_type,
-                   typename ViewTraits<ST, SP...>::non_const_value_type>::value,
+      std::is_same_v<typename ViewTraits<DT, DP...>::value_type,
+                     typename ViewTraits<ST, SP...>::non_const_value_type>,
       "deep_copy requires matching non-const destination type");
 
   Kokkos::deep_copy(dst, value.view());
@@ -1770,7 +1767,7 @@ struct MirrorOffsetViewType {
   // Check whether it is the same memory space
   enum {
     is_same_memspace =
-        std::is_same<memory_space, typename src_view_type::memory_space>::value
+        std::is_same_v<memory_space, typename src_view_type::memory_space>
   };
   // The array_layout
   using array_layout = typename src_view_type::array_layout;
@@ -1795,7 +1792,7 @@ struct MirrorOffsetType {
   // Check whether it is the same memory space
   enum {
     is_same_memspace =
-        std::is_same<memory_space, typename src_view_type::memory_space>::value
+        std::is_same_v<memory_space, typename src_view_type::memory_space>
   };
   // The array_layout
   using array_layout = typename src_view_type::array_layout;
@@ -1905,14 +1902,14 @@ inline auto create_mirror_view(
     const Kokkos::Experimental::OffsetView<T, P...>& src,
     [[maybe_unused]] const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
   if constexpr (!Impl::ViewCtorProp<ViewCtorArgs...>::has_memory_space) {
-    if constexpr (std::is_same<typename Kokkos::Experimental::OffsetView<
-                                   T, P...>::memory_space,
-                               typename Kokkos::Experimental::OffsetView<
-                                   T, P...>::HostMirror::memory_space>::value &&
-                  std::is_same<typename Kokkos::Experimental::OffsetView<
-                                   T, P...>::data_type,
-                               typename Kokkos::Experimental::OffsetView<
-                                   T, P...>::HostMirror::data_type>::value) {
+    if constexpr (std::is_same_v<typename Kokkos::Experimental::OffsetView<
+                                     T, P...>::memory_space,
+                                 typename Kokkos::Experimental::OffsetView<
+                                     T, P...>::HostMirror::memory_space> &&
+                  std::is_same_v<typename Kokkos::Experimental::OffsetView<
+                                     T, P...>::data_type,
+                                 typename Kokkos::Experimental::OffsetView<
+                                     T, P...>::HostMirror::data_type>) {
       return
           typename Kokkos::Experimental::OffsetView<T, P...>::HostMirror(src);
     } else {

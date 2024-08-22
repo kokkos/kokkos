@@ -714,7 +714,7 @@ void test_scatter_view(int64_t n) {
     test_sv_config.run_test(n);
   }
 #ifdef KOKKOS_ENABLE_SERIAL
-  if (!std::is_same<DeviceType, Kokkos::Serial>::value) {
+  if (!std::is_same_v<DeviceType, Kokkos::Serial>) {
 #endif
     test_scatter_view_config<DeviceType, Kokkos::LayoutRight,
                              Kokkos::Experimental::ScatterNonDuplicated,

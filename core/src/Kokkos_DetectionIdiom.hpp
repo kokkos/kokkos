@@ -81,7 +81,7 @@ inline constexpr bool is_detected_v = is_detected<Op, Args...>::value;
 
 template <class Expected, template <class...> class Op, class... Args>
 inline constexpr bool is_detected_exact_v =
-    is_detected_exact<Expected, Op, Args...>::value;
+    is_detected_exact<Expected, Op, Args...>::value;  // NOLINT
 
 template <class Expected, template <class...> class Op, class... Args>
 inline constexpr bool is_detected_convertible_v =

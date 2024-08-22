@@ -59,7 +59,7 @@ class ParallelReduce<CombinedFunctorReducerType,
   }
 
   template <class Schedule>
-  static std::enable_if_t<std::is_same<Schedule, Kokkos::Static>::value>
+  static std::enable_if_t<std::is_same_v<Schedule, Kokkos::Static>>
   exec_schedule(ThreadsInternal &instance, const void *arg) {
     const ParallelReduce &self = *((const ParallelReduce *)arg);
 
@@ -76,7 +76,7 @@ class ParallelReduce<CombinedFunctorReducerType,
   }
 
   template <class Schedule>
-  static std::enable_if_t<std::is_same<Schedule, Kokkos::Dynamic>::value>
+  static std::enable_if_t<std::is_same_v<Schedule, Kokkos::Dynamic>>
   exec_schedule(ThreadsInternal &instance, const void *arg) {
     const ParallelReduce &self = *((const ParallelReduce *)arg);
 

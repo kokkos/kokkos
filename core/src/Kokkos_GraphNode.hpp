@@ -48,7 +48,7 @@ class GraphNodeRef {
   //       intended to be SFINAE-safe, so do validation before you instantiate.
 
   static_assert(
-      std::is_same<Predecessor, TypeErasedTag>::value ||
+      std::is_same_v<Predecessor, TypeErasedTag> ||
           Kokkos::Impl::is_specialization_of<Predecessor, GraphNodeRef>::value,
       "Invalid predecessor template parameter given to GraphNodeRef");
 
@@ -56,7 +56,7 @@ class GraphNodeRef {
       Kokkos::is_execution_space<ExecutionSpace>::value,
       "Invalid execution space template parameter given to GraphNodeRef");
 
-  static_assert(std::is_same<Predecessor, TypeErasedTag>::value ||
+  static_assert(std::is_same_v<Predecessor, TypeErasedTag> ||
                     Kokkos::Impl::is_graph_kernel<Kernel>::value,
                 "Invalid kernel template parameter given to GraphNodeRef");
 
@@ -197,19 +197,19 @@ class GraphNodeRef {
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // <editor-fold desc="Type-erasing converting ctor and assignment"> {{{3
 
-  template <
-      class OtherKernel, class OtherPredecessor,
-      std::enable_if_t<
-          // Not a copy/move constructor
-          !std::is_same<GraphNodeRef, GraphNodeRef<execution_space, OtherKernel,
-                                                   OtherPredecessor>>::value &&
-              // must be an allowed type erasure of the kernel
-              Kokkos::Impl::is_compatible_type_erasure<OtherKernel,
-                                                       graph_kernel>::value &&
-              // must be an allowed type erasure of the predecessor
-              Kokkos::Impl::is_compatible_type_erasure<
-                  OtherPredecessor, graph_predecessor>::value,
-          int> = 0>
+  template <class OtherKernel, class OtherPredecessor,
+            std::enable_if_t<
+                // Not a copy/move constructor
+                !std::is_same_v<GraphNodeRef,
+                                GraphNodeRef<execution_space, OtherKernel,
+                                             OtherPredecessor>> &&
+                    // must be an allowed type erasure of the kernel
+                    Kokkos::Impl::is_compatible_type_erasure<
+                        OtherKernel, graph_kernel>::value &&
+                    // must be an allowed type erasure of the predecessor
+                    Kokkos::Impl::is_compatible_type_erasure<
+                        OtherPredecessor, graph_predecessor>::value,
+                int> = 0>
   /* implicit */
   GraphNodeRef(
       GraphNodeRef<execution_space, OtherKernel, OtherPredecessor> const& other)

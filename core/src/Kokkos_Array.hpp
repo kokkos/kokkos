@@ -35,7 +35,7 @@ namespace Kokkos {
 
 #ifdef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
 namespace Impl {
-template <typename Integral, bool Signed = std::is_signed<Integral>::value>
+template <typename Integral, bool Signed = std::is_signed_v<Integral>>
 struct ArrayBoundsCheck;
 
 template <typename Integral>

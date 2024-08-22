@@ -63,10 +63,10 @@ TEST(defaultdevicetype, scoped_profile_region) {
 }
 
 using Kokkos::Profiling::ScopedRegion;
-static_assert(!std::is_default_constructible<ScopedRegion>::value);
-static_assert(!std::is_copy_constructible<ScopedRegion>::value);
-static_assert(!std::is_move_constructible<ScopedRegion>::value);
-static_assert(!std::is_copy_assignable<ScopedRegion>::value);
-static_assert(!std::is_move_assignable<ScopedRegion>::value);
+static_assert(!std::is_default_constructible_v<ScopedRegion>);
+static_assert(!std::is_copy_constructible_v<ScopedRegion>);
+static_assert(!std::is_move_constructible_v<ScopedRegion>);
+static_assert(!std::is_copy_assignable_v<ScopedRegion>);
+static_assert(!std::is_move_assignable_v<ScopedRegion>);
 
 }  // namespace

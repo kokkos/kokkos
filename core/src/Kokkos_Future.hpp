@@ -418,8 +418,8 @@ struct is_future : public std::false_type {};
 template <typename ValueType, typename Scheduler, typename ExecSpace>
 struct is_future<BasicFuture<ValueType, Scheduler>, ExecSpace>
     : std::bool_constant<
-          std::is_same<ExecSpace, typename Scheduler::execution_space>::value ||
-          std::is_void<ExecSpace>::value> {};
+          std::is_same_v<ExecSpace, typename Scheduler::execution_space> ||
+          std::is_void_v<ExecSpace>> {};
 
 ////////////////////////////////////////////////////////////////////////////////
 // END OLD CODE
@@ -432,8 +432,8 @@ class ResolveFutureArgOrder {
  private:
   enum { Arg1_is_space = Kokkos::is_space<Arg1>::value };
   enum { Arg2_is_space = Kokkos::is_space<Arg2>::value };
-  enum { Arg1_is_value = !Arg1_is_space && !std::is_void<Arg1>::value };
-  enum { Arg2_is_value = !Arg2_is_space && !std::is_void<Arg2>::value };
+  enum { Arg1_is_value = !Arg1_is_space && !std::is_void_v<Arg1> };
+  enum { Arg2_is_value = !Arg2_is_space && !std::is_void_v<Arg2> };
 
   static_assert(!(Arg1_is_space && Arg2_is_space),
                 "Future cannot be given two spaces");

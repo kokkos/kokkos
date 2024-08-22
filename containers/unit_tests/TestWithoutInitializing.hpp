@@ -231,7 +231,7 @@ TEST(TEST_CATEGORY, realloc_exec_space_dynrankview) {
 
 // FIXME_THREADS The Threads backend fences every parallel_for
 #ifdef KOKKOS_ENABLE_THREADS
-  if (std::is_same<TEST_EXECSPACE, Kokkos::Threads>::value)
+  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Threads>)
     GTEST_SKIP() << "skipping since the Threads backend isn't asynchronous";
 #endif
 
@@ -370,13 +370,12 @@ TEST(TEST_CATEGORY, realloc_exec_space_scatterview) {
 
 // FIXME_THREADS The Threads backend fences every parallel_for
 #ifdef KOKKOS_ENABLE_THREADS
-  if (std::is_same<typename TEST_EXECSPACE, Kokkos::Threads>::value)
+  if (std::is_same_v<typename TEST_EXECSPACE, Kokkos::Threads>)
     GTEST_SKIP() << "skipping since the Threads backend isn't asynchronous";
 #endif
 #if defined(KOKKOS_ENABLE_HPX) && \
     !defined(KOKKOS_ENABLE_IMPL_HPX_ASYNC_DISPATCH)
-  if (std::is_same<Kokkos::DefaultExecutionSpace,
-                   Kokkos::Experimental::HPX>::value)
+  if (std::is_same_v<Kokkos::DefaultExecutionSpace, Kokkos::Experimental::HPX>)
     GTEST_SKIP() << "skipping since the HPX backend always fences with async "
                     "dispatch disabled";
 #endif
