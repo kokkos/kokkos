@@ -86,7 +86,7 @@ struct TeamScratch {
   }
 };
 
-#ifdef KOKKOS_ENABLE_OPENACC  // FIXME_OPENACC, scratch memory not implemented
+#ifndef KOKKOS_ENABLE_OPENACC  // FIXME_OPENACC, scratch memory not implemented
 TEST(TEST_CATEGORY, IncrTest_12b_TeamScratch) {
   TeamScratch<TEST_EXECSPACE> test;
   // FIXME_OPENMPTARGET - team_size has to be a multiple of 32 for the tests to
