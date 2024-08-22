@@ -75,13 +75,13 @@ struct TestAbortCausingAbnormalProgramTerminationAndPrinting {
 template <class ExecutionSpace>
 void test_abort_from_device() {
 #if defined(KOKKOS_ENABLE_OPENMPTARGET)  // FIXME_OPENMPTARGET
-  if (std::is_same_v<ExecutionSpace, Kokkos::Experimental::OpenMPTarget>) {
+  if (std::is_same<ExecutionSpace, Kokkos::Experimental::OpenMPTarget>::value) {
     TestAbortPrintingToStdout<ExecutionSpace>();
   } else {
     TestAbortCausingAbnormalProgramTerminationAndPrinting<ExecutionSpace>();
   }
 #elif defined(KOKKOS_ENABLE_OPENACC)  // FIXME_OPENACC
-  if (std::is_same_v<ExecutionSpace, Kokkos::Experimental::OpenACC>) {
+  if (std::is_same<ExecutionSpace, Kokkos::Experimental::OpenACC>::value) {
     TestAbortPrintingToStdout<ExecutionSpace>();
   } else {
     TestAbortCausingAbnormalProgramTerminationAndPrinting<ExecutionSpace>();
