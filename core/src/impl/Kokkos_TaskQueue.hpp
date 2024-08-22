@@ -87,10 +87,10 @@ class TaskQueue : public TaskQueueBase {
   //----------------------------------------
 
   ~TaskQueue();
-  TaskQueue()                 = delete;
-  TaskQueue(TaskQueue&&)      = delete;
-  TaskQueue(TaskQueue const&) = delete;
-  TaskQueue& operator=(TaskQueue&&) = delete;
+  TaskQueue()                            = delete;
+  TaskQueue(TaskQueue&&)                 = delete;
+  TaskQueue(TaskQueue const&)            = delete;
+  TaskQueue& operator=(TaskQueue&&)      = delete;
   TaskQueue& operator=(TaskQueue const&) = delete;
 
   TaskQueue(const memory_pool& arg_memory_pool);

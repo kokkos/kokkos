@@ -207,7 +207,7 @@ void run_test_graph4() {
   const ordinal_type nnz     = 24;
   ptr_row_map_type ptrRaw[]  = {0, 4, 8, 10, 12, 14, 16, 20, 24};
   ptr_entries_type indRaw[]  = {0, 1, 4, 5, 0, 1, 4, 5, 2, 3, 2, 3,
-                               4, 5, 4, 5, 2, 3, 6, 7, 2, 3, 6, 7};
+                                4, 5, 4, 5, 2, 3, 6, 7, 2, 3, 6, 7};
 
   // Wrap pointers in unmanaged host views
   using local_row_map_type = typename hView::row_map_type;

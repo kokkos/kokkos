@@ -58,7 +58,7 @@ SET(KOKKOS_OPENMPTARGET_NAME Experimental::OpenMPTarget)
 SET(KOKKOS_SERIAL_FEATURE_LEVEL 999)
 SET(KOKKOS_SERIAL_NAME Serial)
 SET(KOKKOS_SYCL_FEATURE_LEVEL 999)
-SET(KOKKOS_SYCL_NAME Experimental::SYCL)
+SET(KOKKOS_SYCL_NAME SYCL)
 SET(KOKKOS_THREADS_FEATURE_LEVEL 999)
 SET(KOKKOS_THREADS_NAME Threads)
 # FIXME_OPENACC - The Clang compiler only compiles the first 9 incremental tests for the OpenACC backend.
@@ -223,6 +223,12 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
          MDSpanConversion
          SpaceAwareAccessorAccessViolation
          SpaceAwareAccessor
+      )
+    ENDIF()
+    # This test case causes MSVC to fail with "number of sections exceeded object file format limit"
+    IF (MSVC)
+      LIST(REMOVE_ITEM ${Tag}_TESTNAMES1B
+        Reducers_d
       )
     ENDIF()
     foreach(Name IN LISTS ${Tag}_TESTNAMES1B)

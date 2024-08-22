@@ -75,12 +75,12 @@ class hpx_thread_buffer {
   }
 
  public:
-  hpx_thread_buffer()                          = default;
-  ~hpx_thread_buffer()                         = default;
-  hpx_thread_buffer(const hpx_thread_buffer &) = delete;
-  hpx_thread_buffer(hpx_thread_buffer &&)      = delete;
+  hpx_thread_buffer()                                     = default;
+  ~hpx_thread_buffer()                                    = default;
+  hpx_thread_buffer(const hpx_thread_buffer &)            = delete;
+  hpx_thread_buffer(hpx_thread_buffer &&)                 = delete;
   hpx_thread_buffer &operator=(const hpx_thread_buffer &) = delete;
-  hpx_thread_buffer &operator=(hpx_thread_buffer) = delete;
+  hpx_thread_buffer &operator=(hpx_thread_buffer)         = delete;
 
   void resize(const std::size_t num_threads, const std::size_t size_per_thread,
               const std::size_t extra_space = 0) noexcept;
@@ -140,10 +140,10 @@ class HPX {
                   hpx::execution::experimental::unique_any_sender<> &&sender)
         : m_instance_id(instance_id), m_sender{std::move(sender)} {}
 
-    instance_data(const instance_data &) = delete;
-    instance_data(instance_data &&)      = delete;
+    instance_data(const instance_data &)            = delete;
+    instance_data(instance_data &&)                 = delete;
     instance_data &operator=(const instance_data &) = delete;
-    instance_data &operator=(instance_data) = delete;
+    instance_data &operator=(instance_data)         = delete;
 
     uint32_t m_instance_id{HPX::impl_default_instance_id()};
     hpx::execution::experimental::unique_any_sender<> m_sender{
@@ -196,7 +196,7 @@ class HPX {
   HPX(HPX &&other)      = default;
   HPX(const HPX &other) = default;
 
-  HPX &operator=(HPX &&) = default;
+  HPX &operator=(HPX &&)      = default;
   HPX &operator=(const HPX &) = default;
 
   void print_configuration(std::ostream &os, bool /*verbose*/ = false) const;
@@ -214,9 +214,9 @@ class HPX {
   struct impl_in_parallel_scope {
     impl_in_parallel_scope() noexcept;
     ~impl_in_parallel_scope() noexcept;
-    impl_in_parallel_scope(impl_in_parallel_scope &&)      = delete;
-    impl_in_parallel_scope(impl_in_parallel_scope const &) = delete;
-    impl_in_parallel_scope &operator=(impl_in_parallel_scope &&) = delete;
+    impl_in_parallel_scope(impl_in_parallel_scope &&)                 = delete;
+    impl_in_parallel_scope(impl_in_parallel_scope const &)            = delete;
+    impl_in_parallel_scope &operator=(impl_in_parallel_scope &&)      = delete;
     impl_in_parallel_scope &operator=(impl_in_parallel_scope const &) = delete;
   };
 
@@ -281,8 +281,8 @@ class HPX {
     return impl_get_instance_data().m_buffer;
   }
 
-  hpx::execution::experimental::unique_any_sender<> &impl_get_sender() const
-      noexcept {
+  hpx::execution::experimental::unique_any_sender<> &impl_get_sender()
+      const noexcept {
     return impl_get_instance_data().m_sender;
   }
 

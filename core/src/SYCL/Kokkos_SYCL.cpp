@@ -46,7 +46,6 @@ struct Container {
 }  // namespace
 
 namespace Kokkos {
-namespace Experimental {
 SYCL::SYCL()
     : m_space_instance(&Impl::SYCLInternal::singleton(),
                        [](Impl::SYCLInternal*) {}) {
@@ -172,8 +171,7 @@ void SYCL::fence(const std::string& name) const {
 }
 
 void SYCL::impl_static_fence(const std::string& name) {
-  Kokkos::Tools::Experimental::Impl::profile_fence_event<
-      Kokkos::Experimental::SYCL>(
+  Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::SYCL>(
       name,
       Kokkos::Tools::Experimental::SpecialSynchronizationCases::
           GlobalDeviceSynchronization,
@@ -261,8 +259,6 @@ std::ostream& SYCL::impl_sycl_info(std::ostream& os,
             << device.get_info<device::image3d_max_depth>()
             << "\nImage Max Buffer Size: "
             << device.get_info<device::image_max_buffer_size>()
-            << "\nImage Max Array Size: "
-            << device.get_info<device::image_max_array_size>()
             << "\nMax Samplers: " << device.get_info<device::max_samplers>()
             << "\nMax Parameter Size: "
             << device.get_info<device::max_parameter_size>()
@@ -317,5 +313,4 @@ int g_sycl_space_factory_initialized =
     Kokkos::Impl::initialize_space_factory<SYCL>("170_SYCL");
 
 }  // namespace Impl
-}  // namespace Experimental
 }  // namespace Kokkos

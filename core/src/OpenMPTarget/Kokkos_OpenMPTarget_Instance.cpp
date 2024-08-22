@@ -296,8 +296,7 @@ UniqueToken<Kokkos::Experimental::OpenMPTarget,
 // Version 1 - Creating a target region and filling the
 // pointer Error - CUDA error: named symbol not found
 #pragma omp target teams distribute parallel for is_device_ptr(ptr) \
-    map(to                                                          \
-        : size)
+    map(to : size)
   for (int i = 0; i < count; ++i) ptr[i] = 0;
 
   // Version 2 : Allocating a view on the device and filling it with a scalar

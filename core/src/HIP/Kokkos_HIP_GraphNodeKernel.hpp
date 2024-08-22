@@ -46,14 +46,14 @@ class GraphNodeKernelImpl<Kokkos::HIP, PolicyType, Functor, PatternTag, Args...>
   template <typename PolicyDeduced, typename... ArgsDeduced>
   GraphNodeKernelImpl(std::string, Kokkos::HIP const&, Functor arg_functor,
                       PolicyDeduced&& arg_policy, ArgsDeduced&&... args)
-      : base_t(std::move(arg_functor), (PolicyDeduced &&) arg_policy,
-               (ArgsDeduced &&) args...) {}
+      : base_t(std::move(arg_functor), (PolicyDeduced&&)arg_policy,
+               (ArgsDeduced&&)args...) {}
 
   template <typename PolicyDeduced>
   GraphNodeKernelImpl(Kokkos::HIP const& exec_space, Functor arg_functor,
                       PolicyDeduced&& arg_policy)
       : GraphNodeKernelImpl("", exec_space, std::move(arg_functor),
-                            (PolicyDeduced &&) arg_policy) {}
+                            (PolicyDeduced&&)arg_policy) {}
 
   ~GraphNodeKernelImpl() {
     if (m_driver_storage) {

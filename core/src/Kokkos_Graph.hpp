@@ -135,7 +135,7 @@ Graph<ExecutionSpace> create_graph(ExecutionSpace ex, Closure&& arg_closure) {
   // function template injection works.
   auto rv = Kokkos::Impl::GraphAccess::construct_graph(std::move(ex));
   // Invoke the user's graph construction closure
-  ((Closure &&) arg_closure)(Kokkos::Impl::GraphAccess::create_root_ref(rv));
+  ((Closure&&)arg_closure)(Kokkos::Impl::GraphAccess::create_root_ref(rv));
   // and given them back the graph
   // KOKKOS_ENSURES(rv.m_impl_ptr.use_count() == 1)
   return rv;
@@ -145,7 +145,7 @@ template <
     class ExecutionSpace = DefaultExecutionSpace,
     class Closure = Kokkos::Impl::DoNotExplicitlySpecifyThisTemplateParameter>
 Graph<ExecutionSpace> create_graph(Closure&& arg_closure) {
-  return create_graph(ExecutionSpace{}, (Closure &&) arg_closure);
+  return create_graph(ExecutionSpace{}, (Closure&&)arg_closure);
 }
 
 // </editor-fold> end create_graph }}}1

@@ -365,7 +365,7 @@ struct KOKKOS_DEPRECATED
 #endif
 
 template <typename T, typename... Us>
-Array(T, Us...)->Array<T, 1 + sizeof...(Us)>;
+Array(T, Us...) -> Array<T, 1 + sizeof...(Us)>;
 
 namespace Impl {
 
@@ -377,7 +377,7 @@ KOKKOS_FUNCTION constexpr Array<std::remove_cv_t<T>, N> to_array_impl(
 
 template <typename T, size_t N, size_t... I>
 KOKKOS_FUNCTION constexpr Array<std::remove_cv_t<T>, N> to_array_impl(
-    T(&&a)[N], std::index_sequence<I...>) {
+    T (&&a)[N], std::index_sequence<I...>) {
   return {{std::move(a[I])...}};
 }
 
@@ -389,7 +389,7 @@ KOKKOS_FUNCTION constexpr auto to_array(T (&a)[N]) {
 }
 
 template <typename T, size_t N>
-KOKKOS_FUNCTION constexpr auto to_array(T(&&a)[N]) {
+KOKKOS_FUNCTION constexpr auto to_array(T (&&a)[N]) {
   return Impl::to_array_impl(std::move(a), std::make_index_sequence<N>{});
 }
 

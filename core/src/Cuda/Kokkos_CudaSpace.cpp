@@ -31,7 +31,7 @@
 #include <algorithm>
 #include <atomic>
 
-//#include <Cuda/Kokkos_Cuda_BlockSize_Deduction.hpp>
+// #include <Cuda/Kokkos_Cuda_BlockSize_Deduction.hpp>
 #include <impl/Kokkos_Error.hpp>
 
 #include <impl/Kokkos_Tools.hpp>
@@ -179,7 +179,14 @@ void *impl_allocate_common(const int device_id,
 #ifndef CUDART_VERSION
 #error CUDART_VERSION undefined!
 #elif (defined(KOKKOS_ENABLE_IMPL_CUDA_MALLOC_ASYNC) && CUDART_VERSION >= 11020)
-  if (arg_alloc_size >= memory_threshold_g) {
+  // FIXME_KEPLER Everything after Kepler should support cudaMallocAsync
+  int device_supports_cuda_malloc_async;
+  KOKKOS_IMPL_CUDA_SAFE_CALL(
+      cudaDeviceGetAttribute(&device_supports_cuda_malloc_async,
+                             cudaDevAttrMemoryPoolsSupported, device_id));
+
+  if (arg_alloc_size >= memory_threshold_g &&
+      device_supports_cuda_malloc_async == 1) {
     error_code = cudaMallocAsync(&ptr, arg_alloc_size, stream);
 
     if (error_code == cudaSuccess) {

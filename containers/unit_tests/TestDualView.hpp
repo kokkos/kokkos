@@ -71,7 +71,7 @@ struct test_dualview_copy_construction_and_assignment {
 
     using SrcViewType = Kokkos::DualView<Scalar**, Kokkos::LayoutLeft, Device>;
     using DstViewType =
-        Kokkos::DualView<const Scalar * [m], Kokkos::LayoutLeft, Device>;
+        Kokkos::DualView<const Scalar* [m], Kokkos::LayoutLeft, Device>;
 
     SrcViewType a("A", n, m);
 
@@ -539,8 +539,8 @@ struct UVMSpaceFor<Kokkos::Cuda> {
 
 #ifdef KOKKOS_ENABLE_SYCL  // specific to SYCL
 template <>
-struct UVMSpaceFor<Kokkos::Experimental::SYCL> {
-  using type = Kokkos::Experimental::SYCLSharedUSMSpace;
+struct UVMSpaceFor<Kokkos::SYCL> {
+  using type = Kokkos::SYCLSharedUSMSpace;
 };
 #endif
 

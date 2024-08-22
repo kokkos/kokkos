@@ -26,10 +26,10 @@
 
 #include <Kokkos_Core.hpp>
 
-//#include <Cuda/Kokkos_Cuda_Error.hpp>
-//#include <Cuda/Kokkos_Cuda_BlockSize_Deduction.hpp>
-//#include <Cuda/Kokkos_Cuda_Instance.hpp>
-//#include <Cuda/Kokkos_Cuda_UniqueToken.hpp>
+// #include <Cuda/Kokkos_Cuda_Error.hpp>
+// #include <Cuda/Kokkos_Cuda_BlockSize_Deduction.hpp>
+// #include <Cuda/Kokkos_Cuda_Instance.hpp>
+// #include <Cuda/Kokkos_Cuda_UniqueToken.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_Tools.hpp>
 #include <impl/Kokkos_CheckedIntegerOps.hpp>

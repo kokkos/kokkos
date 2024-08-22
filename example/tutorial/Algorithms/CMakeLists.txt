@@ -1,0 +1,1 @@
+KOKKOS_ADD_EXAMPLE_DIRECTORIES(01_random_numbers)

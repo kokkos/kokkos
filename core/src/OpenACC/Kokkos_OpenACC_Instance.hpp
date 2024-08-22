@@ -30,7 +30,7 @@ namespace Kokkos::Experimental::Impl {
 class OpenACCInternal {
   bool m_is_initialized = false;
 
-  OpenACCInternal(const OpenACCInternal&) = default;
+  OpenACCInternal(const OpenACCInternal&)            = default;
   OpenACCInternal& operator=(const OpenACCInternal&) = default;
 
  public:
