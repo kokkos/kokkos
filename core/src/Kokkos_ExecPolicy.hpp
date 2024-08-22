@@ -247,7 +247,7 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
 
   // To be replaced with std::in_range (c++20)
   template <typename IndexType>
-  static void check_conversion_safety(const IndexType bound) {
+  static void check_conversion_safety([[maybe_unused]] const IndexType bound) {
     // Checking that the round-trip conversion preserves input index value
     if constexpr (std::is_convertible_v<member_type, IndexType>) {
 #if !defined(KOKKOS_ENABLE_DEPRECATED_CODE_4) || \
@@ -287,11 +287,7 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
         Kokkos::Impl::log_warning(msg);
 #endif
       }
-#else
-      (void)bound;
 #endif
-    } else {
-      (void)bound;
     }
   }
 
