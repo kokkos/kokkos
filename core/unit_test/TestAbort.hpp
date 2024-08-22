@@ -106,7 +106,7 @@ TEST(TEST_CATEGORY_DEATH, abort_from_device) {
 // FIXME_OPENACC FIXME_NVHPC: NVHPC fails when targetting CPUs.
 #if defined(KOKKOS_ENABLE_OPENACC) && defined(KOKKOS_COMPILER_NVHPC) && \
     defined(KOKKOS_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE)
-  if (std::is_same_v<ExecutionSpace, Kokkos::Experimental::OpenACC>) {
+  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenACC>) {
     GTEST_SKIP()
         << "skipping since the OpenACC backend compiled by NVHPC for CPU "
            "crashes at runtime.";

@@ -838,6 +838,9 @@ ENDIF()
 
 IF (KOKKOS_ENABLE_OPENACC)
   IF(KOKKOS_CUDA_ARCH_FLAG)
+    IF(KOKKOS_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE)
+      MESSAGE(WARNING "If a GPU architecture is specified, Kokkos_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE option will be ignored.")
+    ENDIF()
     SET(CLANG_CUDA_ARCH ${KOKKOS_CUDA_ARCH_FLAG})
     STRING(REPLACE "sm_" "cc" NVHPC_CUDA_ARCH ${KOKKOS_CUDA_ARCH_FLAG})
     COMPILER_SPECIFIC_FLAGS(
@@ -853,6 +856,9 @@ IF (KOKKOS_ENABLE_OPENACC)
       NVHPC -cuda
     )
   ELSEIF(KOKKOS_AMDGPU_ARCH_FLAG)
+    IF(KOKKOS_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE)
+      MESSAGE(WARNING "If a GPU architecture is specified, Kokkos_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE option will be ignored.")
+    ENDIF()
     COMPILER_SPECIFIC_FLAGS(
       Clang -Xopenmp-target=amdgcn-amd-amdhsa -march=${KOKKOS_AMDGPU_ARCH_FLAG}
             -fopenmp-targets=amdgcn-amd-amdhsa
@@ -867,12 +873,6 @@ IF (KOKKOS_ENABLE_OPENACC)
     # memory is shared between the OpenACC space and the host space.
     COMPILER_SPECIFIC_FLAGS(
       NVHPC -acc=multicore
-    )
-    COMPILER_SPECIFIC_DEFS(
-      NVHPC KOKKOS_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE
-    )
-    COMPILER_SPECIFIC_DEFS(
-      Clang KOKKOS_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE
     )
   ELSE()
     # Automatic fallback mode; try to offload any available GPU, and fall back

@@ -137,7 +137,8 @@ void Kokkos::Experimental::OpenACC::print_configuration(std::ostream& os,
   os << "no\n";
 #endif
   os << "  KOKKOS_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE: ";
-#ifdef KOKKOS_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE
+#if defined(KOKKOS_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE) && \
+    !defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU) && !defined(KOKKOS_ARCH_AMD_GPU)
   os << "yes\n";
 #else
   os << "no\n";

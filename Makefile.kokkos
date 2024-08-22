@@ -565,6 +565,9 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_OPENACC), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_OPENACC")
+  ifeq ($(KOKKOS_INTERNAL_OPENACC_FORCE_HOST_AS_DEVICE), 1)
+    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE")
+  endif
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)
@@ -1461,11 +1464,8 @@ ifeq ($(KOKKOS_INTERNAL_USE_OPENACC), 1)
   else ifeq ($(KOKKOS_INTERNAL_OPENACC_FORCE_HOST_AS_DEVICE), 1)
     # Compile for kernel execution on the host. In that case, 
     # memory is shared between the OpenACC space and the host space.
-    ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
-      KOKKOS_CXXFLAGS += -DKOKKOS_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE
-    endif
     ifeq ($(KOKKOS_INTERNAL_COMPILER_NVHPC), 1)
-      KOKKOS_CXXFLAGS += -DKOKKOS_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE -acc=multicore
+      KOKKOS_CXXFLAGS += -acc=multicore
     endif
   else
     # Automatic fallback mode; try to offload any available GPU, and fall back
