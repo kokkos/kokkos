@@ -205,7 +205,7 @@ struct DeepCopy<HostSpace, HostSpace, ExecutionSpace> {
     exec.fence(
         "Kokkos::Impl::DeepCopy<HostSpace, HostSpace, "
         "ExecutionSpace>::DeepCopy: fence before copy");
-    hostspace_parallel_deepcopy_async(dst, src, n);
+    hostspace_parallel_deepcopy_async(exec, dst, src, n);
   }
 };
 
