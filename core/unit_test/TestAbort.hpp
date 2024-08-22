@@ -75,19 +75,19 @@ struct TestAbortCausingAbnormalProgramTerminationAndPrinting {
 template <class ExecutionSpace>
 void test_abort_from_device() {
 #if defined(KOKKOS_ENABLE_OPENMPTARGET)  // FIXME_OPENMPTARGET
-  if (std::is_same<ExecutionSpace, Kokkos::Experimental::OpenMPTarget>::value) {
+  if (std::is_same_v<ExecutionSpace, Kokkos::Experimental::OpenMPTarget>) {
     TestAbortPrintingToStdout<ExecutionSpace>();
   } else {
     TestAbortCausingAbnormalProgramTerminationAndPrinting<ExecutionSpace>();
   }
 #elif defined(KOKKOS_ENABLE_OPENACC)  // FIXME_OPENACC
-  if (std::is_same<ExecutionSpace, Kokkos::Experimental::OpenACC>::value) {
+  if (std::is_same_v<ExecutionSpace, Kokkos::Experimental::OpenACC>) {
     TestAbortPrintingToStdout<ExecutionSpace>();
   } else {
     TestAbortCausingAbnormalProgramTerminationAndPrinting<ExecutionSpace>();
   }
 #elif defined(KOKKOS_ENABLE_SYCL)     // FIXME_SYCL
-  if (std::is_same<ExecutionSpace, Kokkos::Experimental::SYCL>::value) {
+  if (std::is_same_v<ExecutionSpace, Kokkos::Experimental::SYCL>) {
 #ifdef NDEBUG
     TestAbortPrintingToStdout<ExecutionSpace>();
 #else
@@ -106,7 +106,7 @@ TEST(TEST_CATEGORY_DEATH, abort_from_device) {
 // FIXME_OPENACC FIXME_NVHPC: NVHPC fails when targetting CPUs.
 #if defined(KOKKOS_ENABLE_OPENACC) && defined(KOKKOS_COMPILER_NVHPC) && \
     defined(KOKKOS_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE)
-  if (std::is_same<ExecutionSpace, Kokkos::Experimental::OpenACC>::value) {
+  if (std::is_same_v<ExecutionSpace, Kokkos::Experimental::OpenACC>) {
     GTEST_SKIP()
         << "skipping since the OpenACC backend compiled by NVHPC for CPU "
            "crashes at runtime.";
