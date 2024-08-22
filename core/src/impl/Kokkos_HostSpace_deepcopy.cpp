@@ -144,7 +144,7 @@ template void hostspace_parallel_deepcopy_async<DefaultHostExecutionSpace>(
 #if defined(KOKKOS_ENABLE_SERIAL) &&                                    \
     (defined(KOKKOS_ENABLE_OPENMP) || defined(KOKKOS_ENABLE_THREADS) || \
      defined(KOKKOS_ENABLE_HPX))
-// Instanciate only if both the Serial backend and some other host parallel
+// Instantiate only if both the Serial backend and some other host parallel
 // backend are enabled
 template void hostspace_parallel_deepcopy_async<Kokkos::Serial>(
     const Kokkos::Serial&, void*, const void*, ptrdiff_t);
