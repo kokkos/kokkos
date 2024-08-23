@@ -13,8 +13,8 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //@HEADER
-#ifndef KOKKOS_ATOMIC_VIEW_HPP
-#define KOKKOS_ATOMIC_VIEW_HPP
+#ifndef KOKKOS_VIEWATOMIC_HPP
+#define KOKKOS_VIEWATOMIC_HPP
 
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Atomic.hpp>
