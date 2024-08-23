@@ -381,7 +381,7 @@ class TestReduceTeam {
 
       for (unsigned i = 0; i < Repeat; ++i) {
         for (unsigned j = 0; j < Count; ++j) {
-          const uint64_t correct = 0 == j % 3 ? nw : nsum;
+          const uint64_t correct = (j == 0) ? nw : nsum;
           ASSERT_EQ((ScalarType)correct, result[i].value[j]);
         }
       }
@@ -412,7 +412,7 @@ class TestReduceTeam {
 
       for (unsigned i = 0; i < Repeat; ++i) {
         for (unsigned j = 0; j < Count; ++j) {
-          ASSERT_EQ(j % 3 ? nsum : nw, static_cast<uint64_t>(result[i][j]))
+          ASSERT_EQ(j == 0 ? nsum : nw, static_cast<uint64_t>(result[i][j]))
               << "failing at repeat " << i << " and index " << j;
         }
       }
