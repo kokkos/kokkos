@@ -261,8 +261,10 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
           "not preserve its original value.\n";
       bool warn = false;
 
-      if constexpr (std::is_signed_v<IndexType> !=
-                    std::is_signed_v<member_type>) {
+      if constexpr (std::is_arithmetic_v<IndexType> &&
+                    std::is_arithmetic_v<member_type> &&
+                    (std::is_signed_v<IndexType> !=
+                     std::is_signed_v<member_type>)) {
         // check signed to unsigned
         if constexpr (std::is_signed_v<IndexType>)
           warn |= (bound < static_cast<IndexType>(
@@ -334,20 +336,20 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
   };
 };
 
-RangePolicy() -> RangePolicy<>;
+RangePolicy()->RangePolicy<>;
 
-RangePolicy(int64_t, int64_t) -> RangePolicy<>;
-RangePolicy(int64_t, int64_t, ChunkSize const&) -> RangePolicy<>;
+RangePolicy(int64_t, int64_t)->RangePolicy<>;
+RangePolicy(int64_t, int64_t, ChunkSize const&)->RangePolicy<>;
 
-RangePolicy(DefaultExecutionSpace const&, int64_t, int64_t) -> RangePolicy<>;
+RangePolicy(DefaultExecutionSpace const&, int64_t, int64_t)->RangePolicy<>;
 RangePolicy(DefaultExecutionSpace const&, int64_t, int64_t, ChunkSize const&)
-    -> RangePolicy<>;
+    ->RangePolicy<>;
 
 template <typename ES, typename = std::enable_if_t<is_execution_space_v<ES>>>
-RangePolicy(ES const&, int64_t, int64_t) -> RangePolicy<ES>;
+RangePolicy(ES const&, int64_t, int64_t)->RangePolicy<ES>;
 
 template <typename ES, typename = std::enable_if_t<is_execution_space_v<ES>>>
-RangePolicy(ES const&, int64_t, int64_t, ChunkSize const&) -> RangePolicy<ES>;
+RangePolicy(ES const&, int64_t, int64_t, ChunkSize const&)->RangePolicy<ES>;
 
 }  // namespace Kokkos
 
@@ -722,54 +724,55 @@ class TeamPolicy
 
 // Execution space not provided deduces to TeamPolicy<>
 
-TeamPolicy() -> TeamPolicy<>;
+TeamPolicy()->TeamPolicy<>;
 
-TeamPolicy(int, int) -> TeamPolicy<>;
-TeamPolicy(int, int, int) -> TeamPolicy<>;
-TeamPolicy(int, Kokkos::AUTO_t const&) -> TeamPolicy<>;
-TeamPolicy(int, Kokkos::AUTO_t const&, int) -> TeamPolicy<>;
-TeamPolicy(int, Kokkos::AUTO_t const&, Kokkos::AUTO_t const&) -> TeamPolicy<>;
-TeamPolicy(int, int, Kokkos::AUTO_t const&) -> TeamPolicy<>;
+TeamPolicy(int, int)->TeamPolicy<>;
+TeamPolicy(int, int, int)->TeamPolicy<>;
+TeamPolicy(int, Kokkos::AUTO_t const&)->TeamPolicy<>;
+TeamPolicy(int, Kokkos::AUTO_t const&, int)->TeamPolicy<>;
+TeamPolicy(int, Kokkos::AUTO_t const&, Kokkos::AUTO_t const&)->TeamPolicy<>;
+TeamPolicy(int, int, Kokkos::AUTO_t const&)->TeamPolicy<>;
 
 // DefaultExecutionSpace deduces to TeamPolicy<>
 
-TeamPolicy(DefaultExecutionSpace const&, int, int) -> TeamPolicy<>;
-TeamPolicy(DefaultExecutionSpace const&, int, int, int) -> TeamPolicy<>;
+TeamPolicy(DefaultExecutionSpace const&, int, int)->TeamPolicy<>;
+TeamPolicy(DefaultExecutionSpace const&, int, int, int)->TeamPolicy<>;
 TeamPolicy(DefaultExecutionSpace const&, int, Kokkos::AUTO_t const&)
-    -> TeamPolicy<>;
+    ->TeamPolicy<>;
 TeamPolicy(DefaultExecutionSpace const&, int, Kokkos::AUTO_t const&, int)
-    -> TeamPolicy<>;
+    ->TeamPolicy<>;
 TeamPolicy(DefaultExecutionSpace const&, int, Kokkos::AUTO_t const&,
-           Kokkos::AUTO_t const&) -> TeamPolicy<>;
+           Kokkos::AUTO_t const&)
+    ->TeamPolicy<>;
 TeamPolicy(DefaultExecutionSpace const&, int, int, Kokkos::AUTO_t const&)
-    -> TeamPolicy<>;
+    ->TeamPolicy<>;
 
 // ES != DefaultExecutionSpace deduces to TeamPolicy<ES>
 
 template <typename ES,
           typename = std::enable_if_t<Kokkos::is_execution_space_v<ES>>>
-TeamPolicy(ES const&, int, int) -> TeamPolicy<ES>;
+TeamPolicy(ES const&, int, int)->TeamPolicy<ES>;
 
 template <typename ES,
           typename = std::enable_if_t<Kokkos::is_execution_space_v<ES>>>
-TeamPolicy(ES const&, int, int, int) -> TeamPolicy<ES>;
+TeamPolicy(ES const&, int, int, int)->TeamPolicy<ES>;
 
 template <typename ES,
           typename = std::enable_if_t<Kokkos::is_execution_space_v<ES>>>
-TeamPolicy(ES const&, int, Kokkos::AUTO_t const&) -> TeamPolicy<ES>;
+TeamPolicy(ES const&, int, Kokkos::AUTO_t const&)->TeamPolicy<ES>;
 
 template <typename ES,
           typename = std::enable_if_t<Kokkos::is_execution_space_v<ES>>>
-TeamPolicy(ES const&, int, Kokkos::AUTO_t const&, int) -> TeamPolicy<ES>;
+TeamPolicy(ES const&, int, Kokkos::AUTO_t const&, int)->TeamPolicy<ES>;
 
 template <typename ES,
           typename = std::enable_if_t<Kokkos::is_execution_space_v<ES>>>
 TeamPolicy(ES const&, int, Kokkos::AUTO_t const&, Kokkos::AUTO_t const&)
-    -> TeamPolicy<ES>;
+    ->TeamPolicy<ES>;
 
 template <typename ES,
           typename = std::enable_if_t<Kokkos::is_execution_space_v<ES>>>
-TeamPolicy(ES const&, int, int, Kokkos::AUTO_t const&) -> TeamPolicy<ES>;
+TeamPolicy(ES const&, int, int, Kokkos::AUTO_t const&)->TeamPolicy<ES>;
 
 namespace Impl {
 
@@ -1041,7 +1044,7 @@ struct TeamThreadMDRange<Rank<N, OuterDir, InnerDir>, TeamHandle> {
 
 template <typename TeamHandle, typename... Args>
 KOKKOS_DEDUCTION_GUIDE TeamThreadMDRange(TeamHandle const&, Args&&...)
-    -> TeamThreadMDRange<Rank<sizeof...(Args), Iterate::Default>, TeamHandle>;
+    ->TeamThreadMDRange<Rank<sizeof...(Args), Iterate::Default>, TeamHandle>;
 
 template <typename Rank, typename TeamHandle>
 struct ThreadVectorMDRange;
@@ -1078,7 +1081,7 @@ struct ThreadVectorMDRange<Rank<N, OuterDir, InnerDir>, TeamHandle> {
 
 template <typename TeamHandle, typename... Args>
 KOKKOS_DEDUCTION_GUIDE ThreadVectorMDRange(TeamHandle const&, Args&&...)
-    -> ThreadVectorMDRange<Rank<sizeof...(Args), Iterate::Default>, TeamHandle>;
+    ->ThreadVectorMDRange<Rank<sizeof...(Args), Iterate::Default>, TeamHandle>;
 
 template <typename Rank, typename TeamHandle>
 struct TeamVectorMDRange;
@@ -1115,7 +1118,7 @@ struct TeamVectorMDRange<Rank<N, OuterDir, InnerDir>, TeamHandle> {
 
 template <typename TeamHandle, typename... Args>
 KOKKOS_DEDUCTION_GUIDE TeamVectorMDRange(TeamHandle const&, Args&&...)
-    -> TeamVectorMDRange<Rank<sizeof...(Args), Iterate::Default>, TeamHandle>;
+    ->TeamVectorMDRange<Rank<sizeof...(Args), Iterate::Default>, TeamHandle>;
 
 template <typename Rank, typename TeamHandle, typename Lambda,
           typename ReducerValueType>

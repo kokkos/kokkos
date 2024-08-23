@@ -173,6 +173,48 @@ TEST(TEST_CATEGORY, range_policy_one_way_convertible_bounds) {
   ASSERT_NO_THROW((void)Policy(0, B(&n)));
 }
 
+TEST(TEST_CATEGORY, range_policy_check_sign_changes) {
+  using UInt32Policy =
+      Kokkos::RangePolicy<TEST_EXECSPACE, Kokkos::IndexType<std::uint32_t>>;
+
+  [[maybe_unused]] std::string msg =
+      "Kokkos::RangePolicy bound type error: an unsafe implicit conversion is "
+      "performed";
+#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  {
+    std::int64_t n = std::numeric_limits<std::int64_t>::max();
+    ASSERT_DEATH((void)UInt32Policy(0, n), msg);
+  }
+  {
+    std::int64_t n = std::numeric_limits<std::int64_t>::min();
+    ASSERT_DEATH((void)UInt32Policy(n, 0), msg);
+  }
+#else
+  {
+    ::testing::internal::CaptureStderr();
+    std::int64_t n = std::numeric_limits<std::int64_t>::max();
+    ASSERT_NO_THROW((void)UInt32Policy(0, n));
+    auto s = std::string(::testing::internal::GetCapturedStderr());
+#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
+    if (Kokkos::show_warnings()) {
+      ASSERT_NE(s.find(msg), std::string::npos) << msg;
+    }
+#endif
+  }
+  {
+    ::testing::internal::CaptureStderr();
+    std::int64_t n = std::numeric_limits<std::int64_t>::min();
+    ASSERT_NO_THROW((void)UInt32Policy(n, 0));
+    auto s = std::string(::testing::internal::GetCapturedStderr());
+#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
+    if (Kokkos::show_warnings()) {
+      ASSERT_NE(s.find(msg), std::string::npos) << msg;
+    }
+#endif
+  }
+#endif
+}
+
 TEST(TEST_CATEGORY_DEATH, range_policy_implicitly_converted_bounds) {
   using UIntIndexType = Kokkos::IndexType<unsigned>;
   using IntIndexType  = Kokkos::IndexType<int>;
