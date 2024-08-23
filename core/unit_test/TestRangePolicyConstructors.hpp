@@ -152,7 +152,7 @@ TEST(TEST_CATEGORY, range_policy_round_trip_conversion_fires) {
     ASSERT_NE(s.find(msg), std::string::npos) << msg;
   } else
 #endif
-    ASSERT_TRUE(::testing::internal::GetCapturedStderr().empty());
+    ASSERT_TRUE(s.empty());
 #endif
 }
 
