@@ -584,12 +584,12 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   // This assumes a contiguous underlying memory (i.e. no padding, no
   // striding...)
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION
-      std::enable_if_t<std::is_same_v<typename drvtraits::value_type,
-                                      typename drvtraits::scalar_array_type> &&
-                           std::is_integral_v<iType>,
-                       reference_type>
-      operator[](const iType& i0) const {
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
+      std::is_integral_v<iType> &&
+          std::is_same_v<typename drvtraits::value_type,
+                         typename drvtraits::scalar_array_type>,
+      reference_type>
+  operator[](const iType& i0) const {
     // Phalanx is violating this, since they use the operator to access ALL
     // elements in the allocation KOKKOS_IMPL_VIEW_OPERATOR_VERIFY( (1 ,
     // this->rank(), m_track, m_map) )
@@ -620,21 +620,19 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
 
   // Rank 1 parenthesis
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION
-      std::enable_if_t<(std::is_void_v<typename traits::specialize> &&
-                        std::is_integral_v<iType>),
-                       reference_type>
-      operator()(const iType& i0) const {
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
+      std::is_integral_v<iType> && std::is_void_v<typename traits::specialize>,
+      reference_type>
+  operator()(const iType& i0) const {
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY((1, this->rank(), m_track, m_map, i0))
     return m_map.reference(i0);
   }
 
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION
-      std::enable_if_t<!(std::is_void_v<typename traits::specialize> &&
-                         std::is_integral_v<iType>),
-                       reference_type>
-      operator()(const iType& i0) const {
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
+      std::is_integral_v<iType> && !std::is_void_v<typename traits::specialize>,
+      reference_type>
+  operator()(const iType& i0) const {
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY((1, this->rank(), m_track, m_map, i0))
     return m_map.reference(i0, 0, 0, 0, 0, 0, 0);
   }
@@ -642,8 +640,8 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   // Rank 2
   template <typename iType0, typename iType1>
   KOKKOS_INLINE_FUNCTION std::enable_if_t<
-      (std::is_void_v<typename traits::specialize> &&
-       std::is_integral_v<iType0> && std::is_integral_v<iType1>),
+      std::is_integral_v<iType0> && std::is_integral_v<iType1> &&
+          std::is_void_v<typename traits::specialize>,
       reference_type>
   operator()(const iType0& i0, const iType1& i1) const {
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY((2, this->rank(), m_track, m_map, i0, i1))
@@ -651,11 +649,11 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   }
 
   template <typename iType0, typename iType1>
-  KOKKOS_INLINE_FUNCTION
-      std::enable_if_t<!(std::is_void_v<typename drvtraits::specialize> &&
-                         std::is_integral_v<iType0>),
-                       reference_type>
-      operator()(const iType0& i0, const iType1& i1) const {
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
+      std::is_integral_v<iType0> && std::is_integral_v<iType1> &&
+          !std::is_void_v<typename drvtraits::specialize>,
+      reference_type>
+  operator()(const iType0& i0, const iType1& i1) const {
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY((2, this->rank(), m_track, m_map, i0, i1))
     return m_map.reference(i0, i1, 0, 0, 0, 0, 0);
   }
@@ -663,9 +661,9 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   // Rank 3
   template <typename iType0, typename iType1, typename iType2>
   KOKKOS_INLINE_FUNCTION std::enable_if_t<
-      (std::is_void_v<typename traits::specialize> &&
-       std::is_integral_v<iType0> && std::is_integral_v<iType1> &&
-       std::is_integral_v<iType2>),
+      std::is_integral_v<iType0> && std::is_integral_v<iType1> &&
+          std::is_integral_v<iType2> &&
+          std::is_void_v<typename traits::specialize>,
       reference_type>
   operator()(const iType0& i0, const iType1& i1, const iType2& i2) const {
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
@@ -674,11 +672,12 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   }
 
   template <typename iType0, typename iType1, typename iType2>
-  KOKKOS_INLINE_FUNCTION
-      std::enable_if_t<!(std::is_void_v<typename drvtraits::specialize> &&
-                         std::is_integral_v<iType0>),
-                       reference_type>
-      operator()(const iType0& i0, const iType1& i1, const iType2& i2) const {
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
+      std::is_integral_v<iType0> && std::is_integral_v<iType1> &&
+          std::is_integral_v<iType2> &&
+          !std::is_void_v<typename drvtraits::specialize>,
+      reference_type>
+  operator()(const iType0& i0, const iType1& i1, const iType2& i2) const {
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
         (3, this->rank(), m_track, m_map, i0, i1, i2))
     return m_map.reference(i0, i1, i2, 0, 0, 0, 0);
@@ -687,9 +686,9 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   // Rank 4
   template <typename iType0, typename iType1, typename iType2, typename iType3>
   KOKKOS_INLINE_FUNCTION std::enable_if_t<
-      (std::is_void_v<typename traits::specialize> &&
-       std::is_integral_v<iType0> && std::is_integral_v<iType1> &&
-       std::is_integral_v<iType2> && std::is_integral_v<iType3>),
+      std::is_integral_v<iType0> && std::is_integral_v<iType1> &&
+          std::is_integral_v<iType2> && std::is_integral_v<iType3> &&
+          std::is_void_v<typename traits::specialize>,
       reference_type>
   operator()(const iType0& i0, const iType1& i1, const iType2& i2,
              const iType3& i3) const {
@@ -699,12 +698,13 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   }
 
   template <typename iType0, typename iType1, typename iType2, typename iType3>
-  KOKKOS_INLINE_FUNCTION
-      std::enable_if_t<!(std::is_void_v<typename drvtraits::specialize> &&
-                         std::is_integral_v<iType0>),
-                       reference_type>
-      operator()(const iType0& i0, const iType1& i1, const iType2& i2,
-                 const iType3& i3) const {
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
+      std::is_integral_v<iType0> && std::is_integral_v<iType1> &&
+          std::is_integral_v<iType2> && std::is_integral_v<iType3> &&
+          !std::is_void_v<typename traits::specialize>,
+      reference_type>
+  operator()(const iType0& i0, const iType1& i1, const iType2& i2,
+             const iType3& i3) const {
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
         (4, this->rank(), m_track, m_map, i0, i1, i2, i3))
     return m_map.reference(i0, i1, i2, i3, 0, 0, 0);
@@ -714,10 +714,10 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   template <typename iType0, typename iType1, typename iType2, typename iType3,
             typename iType4>
   KOKKOS_INLINE_FUNCTION std::enable_if_t<
-      (std::is_void_v<typename traits::specialize> &&
-       std::is_integral_v<iType0> && std::is_integral_v<iType1> &&
-       std::is_integral_v<iType2> && std::is_integral_v<iType3> &&
-       std::is_integral_v<iType4>),
+      std::is_integral_v<iType0> && std::is_integral_v<iType1> &&
+          std::is_integral_v<iType2> && std::is_integral_v<iType3> &&
+          std::is_integral_v<iType4> &&
+          std::is_void_v<typename traits::specialize>,
       reference_type>
   operator()(const iType0& i0, const iType1& i1, const iType2& i2,
              const iType3& i3, const iType4& i4) const {
@@ -728,12 +728,14 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
 
   template <typename iType0, typename iType1, typename iType2, typename iType3,
             typename iType4>
-  KOKKOS_INLINE_FUNCTION
-      std::enable_if_t<!(std::is_void_v<typename drvtraits::specialize> &&
-                         std::is_integral_v<iType0>),
-                       reference_type>
-      operator()(const iType0& i0, const iType1& i1, const iType2& i2,
-                 const iType3& i3, const iType4& i4) const {
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
+      std::is_integral_v<iType0> && std::is_integral_v<iType1> &&
+          std::is_integral_v<iType2> && std::is_integral_v<iType3> &&
+          std::is_integral_v<iType4> &&
+          !std::is_void_v<typename traits::specialize>,
+      reference_type>
+  operator()(const iType0& i0, const iType1& i1, const iType2& i2,
+             const iType3& i3, const iType4& i4) const {
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
         (5, this->rank(), m_track, m_map, i0, i1, i2, i3, i4))
     return m_map.reference(i0, i1, i2, i3, i4, 0, 0);
@@ -743,10 +745,10 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   template <typename iType0, typename iType1, typename iType2, typename iType3,
             typename iType4, typename iType5>
   KOKKOS_INLINE_FUNCTION std::enable_if_t<
-      (std::is_void_v<typename traits::specialize> &&
-       std::is_integral_v<iType0> && std::is_integral_v<iType1> &&
-       std::is_integral_v<iType2> && std::is_integral_v<iType3> &&
-       std::is_integral_v<iType4> && std::is_integral_v<iType5>),
+      std::is_integral_v<iType0> && std::is_integral_v<iType1> &&
+          std::is_integral_v<iType2> && std::is_integral_v<iType3> &&
+          std::is_integral_v<iType4> && std::is_integral_v<iType5> &&
+          std::is_void_v<typename traits::specialize>,
       reference_type>
   operator()(const iType0& i0, const iType1& i1, const iType2& i2,
              const iType3& i3, const iType4& i4, const iType5& i5) const {
@@ -757,12 +759,14 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
 
   template <typename iType0, typename iType1, typename iType2, typename iType3,
             typename iType4, typename iType5>
-  KOKKOS_INLINE_FUNCTION
-      std::enable_if_t<!(std::is_void_v<typename drvtraits::specialize> &&
-                         std::is_integral_v<iType0>),
-                       reference_type>
-      operator()(const iType0& i0, const iType1& i1, const iType2& i2,
-                 const iType3& i3, const iType4& i4, const iType5& i5) const {
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
+      std::is_integral_v<iType0> && std::is_integral_v<iType1> &&
+          std::is_integral_v<iType2> && std::is_integral_v<iType3> &&
+          std::is_integral_v<iType4> && std::is_integral_v<iType5> &&
+          !std::is_void_v<typename traits::specialize>,
+      reference_type>
+  operator()(const iType0& i0, const iType1& i1, const iType2& i2,
+             const iType3& i3, const iType4& i4, const iType5& i5) const {
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
         (6, this->rank(), m_track, m_map, i0, i1, i2, i3, i4, i5))
     return m_map.reference(i0, i1, i2, i3, i4, i5, 0);
@@ -796,21 +800,19 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   // Rank 1
   // Rank 1 parenthesis
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION
-      std::enable_if_t<(std::is_void_v<typename traits::specialize> &&
-                        std::is_integral_v<iType>),
-                       reference_type>
-      access(const iType& i0) const {
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
+      std::is_integral_v<iType> && std::is_void_v<typename traits::specialize>,
+      reference_type>
+  access(const iType& i0) const {
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY((1, this->rank(), m_track, m_map, i0))
     return m_map.reference(i0);
   }
 
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION
-      std::enable_if_t<!(std::is_void_v<typename traits::specialize> &&
-                         std::is_integral_v<iType>),
-                       reference_type>
-      access(const iType& i0) const {
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
+      std::is_integral_v<iType> && !std::is_void_v<typename traits::specialize>,
+      reference_type>
+  access(const iType& i0) const {
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY((1, this->rank(), m_track, m_map, i0))
     return m_map.reference(i0, 0, 0, 0, 0, 0, 0);
   }
@@ -818,8 +820,8 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   // Rank 2
   template <typename iType0, typename iType1>
   KOKKOS_INLINE_FUNCTION std::enable_if_t<
-      (std::is_void_v<typename traits::specialize> &&
-       std::is_integral_v<iType0> && std::is_integral_v<iType1>),
+      std::is_integral_v<iType0> && std::is_integral_v<iType1> &&
+          std::is_void_v<typename traits::specialize>,
       reference_type>
   access(const iType0& i0, const iType1& i1) const {
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY((2, this->rank(), m_track, m_map, i0, i1))
@@ -827,11 +829,11 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   }
 
   template <typename iType0, typename iType1>
-  KOKKOS_INLINE_FUNCTION
-      std::enable_if_t<!(std::is_void_v<typename drvtraits::specialize> &&
-                         std::is_integral_v<iType0>),
-                       reference_type>
-      access(const iType0& i0, const iType1& i1) const {
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
+      std::is_integral_v<iType0> && std::is_integral_v<iType1> &&
+          !std::is_void_v<typename traits::specialize>,
+      reference_type>
+  access(const iType0& i0, const iType1& i1) const {
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY((2, this->rank(), m_track, m_map, i0, i1))
     return m_map.reference(i0, i1, 0, 0, 0, 0, 0);
   }
@@ -839,9 +841,9 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   // Rank 3
   template <typename iType0, typename iType1, typename iType2>
   KOKKOS_INLINE_FUNCTION std::enable_if_t<
-      (std::is_void_v<typename traits::specialize> &&
-       std::is_integral_v<iType0> && std::is_integral_v<iType1> &&
-       std::is_integral_v<iType2>),
+      std::is_integral_v<iType0> && std::is_integral_v<iType1> &&
+          std::is_integral_v<iType2> &&
+          std::is_void_v<typename traits::specialize>,
       reference_type>
   access(const iType0& i0, const iType1& i1, const iType2& i2) const {
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
@@ -850,11 +852,12 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   }
 
   template <typename iType0, typename iType1, typename iType2>
-  KOKKOS_INLINE_FUNCTION
-      std::enable_if_t<!(std::is_void_v<typename drvtraits::specialize> &&
-                         std::is_integral_v<iType0>),
-                       reference_type>
-      access(const iType0& i0, const iType1& i1, const iType2& i2) const {
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
+      std::is_integral_v<iType0> && std::is_integral_v<iType1> &&
+          std::is_integral_v<iType2> &&
+          !std::is_void_v<typename traits::specialize>,
+      reference_type>
+  access(const iType0& i0, const iType1& i1, const iType2& i2) const {
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
         (3, this->rank(), m_track, m_map, i0, i1, i2))
     return m_map.reference(i0, i1, i2, 0, 0, 0, 0);
@@ -863,9 +866,9 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   // Rank 4
   template <typename iType0, typename iType1, typename iType2, typename iType3>
   KOKKOS_INLINE_FUNCTION std::enable_if_t<
-      (std::is_void_v<typename traits::specialize> &&
-       std::is_integral_v<iType0> && std::is_integral_v<iType1> &&
-       std::is_integral_v<iType2> && std::is_integral_v<iType3>),
+      std::is_integral_v<iType0> && std::is_integral_v<iType1> &&
+          std::is_integral_v<iType2> && std::is_integral_v<iType3> &&
+          std::is_void_v<typename traits::specialize>,
       reference_type>
   access(const iType0& i0, const iType1& i1, const iType2& i2,
          const iType3& i3) const {
@@ -875,12 +878,13 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   }
 
   template <typename iType0, typename iType1, typename iType2, typename iType3>
-  KOKKOS_INLINE_FUNCTION
-      std::enable_if_t<!(std::is_void_v<typename drvtraits::specialize> &&
-                         std::is_integral_v<iType0>),
-                       reference_type>
-      access(const iType0& i0, const iType1& i1, const iType2& i2,
-             const iType3& i3) const {
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
+      std::is_integral_v<iType0> && std::is_integral_v<iType1> &&
+          std::is_integral_v<iType2> && std::is_integral_v<iType3> &&
+          !std::is_void_v<typename traits::specialize>,
+      reference_type>
+  access(const iType0& i0, const iType1& i1, const iType2& i2,
+         const iType3& i3) const {
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
         (4, this->rank(), m_track, m_map, i0, i1, i2, i3))
     return m_map.reference(i0, i1, i2, i3, 0, 0, 0);
@@ -890,10 +894,10 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   template <typename iType0, typename iType1, typename iType2, typename iType3,
             typename iType4>
   KOKKOS_INLINE_FUNCTION std::enable_if_t<
-      (std::is_void_v<typename traits::specialize> &&
-       std::is_integral_v<iType0> && std::is_integral_v<iType1> &&
-       std::is_integral_v<iType2> && std::is_integral_v<iType3> &&
-       std::is_integral_v<iType4>),
+      std::is_integral_v<iType0> && std::is_integral_v<iType1> &&
+          std::is_integral_v<iType2> && std::is_integral_v<iType3> &&
+          std::is_integral_v<iType4> &&
+          std::is_void_v<typename traits::specialize>,
       reference_type>
   access(const iType0& i0, const iType1& i1, const iType2& i2, const iType3& i3,
          const iType4& i4) const {
@@ -904,12 +908,14 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
 
   template <typename iType0, typename iType1, typename iType2, typename iType3,
             typename iType4>
-  KOKKOS_INLINE_FUNCTION
-      std::enable_if_t<!(std::is_void_v<typename drvtraits::specialize> &&
-                         std::is_integral_v<iType0>),
-                       reference_type>
-      access(const iType0& i0, const iType1& i1, const iType2& i2,
-             const iType3& i3, const iType4& i4) const {
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
+      std::is_integral_v<iType0> && std::is_integral_v<iType1> &&
+          std::is_integral_v<iType2> && std::is_integral_v<iType3> &&
+          std::is_integral_v<iType4> &&
+          !std::is_void_v<typename traits::specialize>,
+      reference_type>
+  access(const iType0& i0, const iType1& i1, const iType2& i2, const iType3& i3,
+         const iType4& i4) const {
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
         (5, this->rank(), m_track, m_map, i0, i1, i2, i3, i4))
     return m_map.reference(i0, i1, i2, i3, i4, 0, 0);
@@ -919,10 +925,10 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   template <typename iType0, typename iType1, typename iType2, typename iType3,
             typename iType4, typename iType5>
   KOKKOS_INLINE_FUNCTION std::enable_if_t<
-      (std::is_void_v<typename traits::specialize> &&
-       std::is_integral_v<iType0> && std::is_integral_v<iType1> &&
-       std::is_integral_v<iType2> && std::is_integral_v<iType3> &&
-       std::is_integral_v<iType4> && std::is_integral_v<iType5>),
+      std::is_integral_v<iType0> && std::is_integral_v<iType1> &&
+          std::is_integral_v<iType2> && std::is_integral_v<iType3> &&
+          std::is_integral_v<iType4> && std::is_integral_v<iType5> &&
+          std::is_void_v<typename traits::specialize>,
       reference_type>
   access(const iType0& i0, const iType1& i1, const iType2& i2, const iType3& i3,
          const iType4& i4, const iType5& i5) const {
@@ -933,12 +939,14 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
 
   template <typename iType0, typename iType1, typename iType2, typename iType3,
             typename iType4, typename iType5>
-  KOKKOS_INLINE_FUNCTION
-      std::enable_if_t<!(std::is_void_v<typename drvtraits::specialize> &&
-                         std::is_integral_v<iType0>),
-                       reference_type>
-      access(const iType0& i0, const iType1& i1, const iType2& i2,
-             const iType3& i3, const iType4& i4, const iType5& i5) const {
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<
+      std::is_integral_v<iType0> && std::is_integral_v<iType1> &&
+          std::is_integral_v<iType2> && std::is_integral_v<iType3> &&
+          std::is_integral_v<iType4> && std::is_integral_v<iType5> &&
+          !std::is_void_v<typename traits::specialize>,
+      reference_type>
+  access(const iType0& i0, const iType1& i1, const iType2& i2, const iType3& i3,
+         const iType4& i4, const iType5& i5) const {
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
         (6, this->rank(), m_track, m_map, i0, i1, i2, i3, i4, i5))
     return m_map.reference(i0, i1, i2, i3, i4, i5, 0);
