@@ -455,7 +455,7 @@ inline constexpr Kokkos::Impl::AllowPadding_t AllowPadding{};
  */
 template <class... Args>
 inline Impl::ViewCtorProp<typename Impl::ViewCtorProp<void, Args>::type...>
-view_alloc(Args const&... args) {
+view_alloc(Args const &...args) {
   using return_type =
       Impl::ViewCtorProp<typename Impl::ViewCtorProp<void, Args>::type...>;
 
@@ -468,7 +468,7 @@ view_alloc(Args const&... args) {
 template <class... Args>
 KOKKOS_INLINE_FUNCTION
     Impl::ViewCtorProp<typename Impl::ViewCtorProp<void, Args>::type...>
-    view_wrap(Args const&... args) {
+    view_wrap(Args const &...args) {
   using return_type =
       Impl::ViewCtorProp<typename Impl::ViewCtorProp<void, Args>::type...>;
 
