@@ -741,8 +741,7 @@ struct TestViewMirror {
     int equal_ptr_h2_d = a_h2.data() == a_d.data() ? 1 : 0;
 
     int is_same_memspace =
-        std::is_same<Kokkos::HostSpace,
-                     typename DeviceType::memory_space>::value
+        std::is_same_v<Kokkos::HostSpace, typename DeviceType::memory_space>
             ? 1
             : 0;
     ASSERT_EQ(equal_ptr_h_h2, 1);
@@ -768,8 +767,7 @@ struct TestViewMirror {
     int equal_ptr_h3_d = a_h3.data() == a_d.data() ? 1 : 0;
 
     int is_same_memspace =
-        std::is_same<Kokkos::HostSpace,
-                     typename DeviceType::memory_space>::value
+        std::is_same_v<Kokkos::HostSpace, typename DeviceType::memory_space>
             ? 1
             : 0;
     ASSERT_EQ(equal_ptr_h_h2, 1);
@@ -863,8 +861,7 @@ struct TestViewMirror {
 
     int equal_ptr_h_d = (a_h.data() == a_d.data()) ? 1 : 0;
     constexpr int is_same_memspace =
-        std::is_same<Kokkos::HostSpace,
-                     typename DeviceType::memory_space>::value
+        std::is_same_v<Kokkos::HostSpace, typename DeviceType::memory_space>
             ? 1
             : 0;
 
@@ -955,8 +952,11 @@ class TestViewAPI {
     using view_type   = Kokkos::View<int, host>;
     using mirror_type = typename view_type::HostMirror;
 
-    static_assert(std::is_same<typename view_type::memory_space,
-                               typename mirror_type::memory_space>::value);
+    static_assert(std::is_same_v<typename view_type::HostMirror,
+                                 typename view_type::host_mirror_type>);
+
+    static_assert(std::is_same_v<typename view_type::memory_space,
+                                 typename mirror_type::memory_space>);
 
     view_type a("a");
     mirror_type am = Kokkos::create_mirror_view(a);

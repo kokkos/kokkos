@@ -866,10 +866,10 @@ struct FillView_3D {
   using view_t = Kokkos::View<int***, Layout, Space>;
   using rank_t = Kokkos::Rank<
       view_t::rank,
-      std::is_same<Layout, Kokkos::LayoutLeft>::value ? Kokkos::Iterate::Left
-                                                      : Kokkos::Iterate::Right,
-      std::is_same<Layout, Kokkos::LayoutLeft>::value ? Kokkos::Iterate::Left
-                                                      : Kokkos::Iterate::Right>;
+      std::is_same_v<Layout, Kokkos::LayoutLeft> ? Kokkos::Iterate::Left
+                                                 : Kokkos::Iterate::Right,
+      std::is_same_v<Layout, Kokkos::LayoutLeft> ? Kokkos::Iterate::Left
+                                                 : Kokkos::Iterate::Right>;
   using policy_t = Kokkos::MDRangePolicy<exec_t, rank_t>;
 
   view_t a;
@@ -894,10 +894,10 @@ struct FillView_4D {
   using view_t = Kokkos::View<int****, Layout, Space>;
   using rank_t = Kokkos::Rank<
       view_t::rank,
-      std::is_same<Layout, Kokkos::LayoutLeft>::value ? Kokkos::Iterate::Left
-                                                      : Kokkos::Iterate::Right,
-      std::is_same<Layout, Kokkos::LayoutLeft>::value ? Kokkos::Iterate::Left
-                                                      : Kokkos::Iterate::Right>;
+      std::is_same_v<Layout, Kokkos::LayoutLeft> ? Kokkos::Iterate::Left
+                                                 : Kokkos::Iterate::Right,
+      std::is_same_v<Layout, Kokkos::LayoutLeft> ? Kokkos::Iterate::Left
+                                                 : Kokkos::Iterate::Right>;
   using policy_t = Kokkos::MDRangePolicy<exec_t, rank_t>;
 
   view_t a;
@@ -923,10 +923,10 @@ struct FillView_5D {
   using view_t = Kokkos::View<int*****, Layout, Space>;
   using rank_t = Kokkos::Rank<
       view_t::rank,
-      std::is_same<Layout, Kokkos::LayoutLeft>::value ? Kokkos::Iterate::Left
-                                                      : Kokkos::Iterate::Right,
-      std::is_same<Layout, Kokkos::LayoutLeft>::value ? Kokkos::Iterate::Left
-                                                      : Kokkos::Iterate::Right>;
+      std::is_same_v<Layout, Kokkos::LayoutLeft> ? Kokkos::Iterate::Left
+                                                 : Kokkos::Iterate::Right,
+      std::is_same_v<Layout, Kokkos::LayoutLeft> ? Kokkos::Iterate::Left
+                                                 : Kokkos::Iterate::Right>;
   using policy_t = Kokkos::MDRangePolicy<exec_t, rank_t>;
 
   view_t a;

@@ -466,10 +466,9 @@ struct TestReducers {
       // This mask addresses #4719 for N <= 51.
       // The mask is not needed for N <= 25.
       // clang-format on
-      int mask =
-          std::is_same<Scalar, Kokkos::Experimental::bhalf_t>::value && N > 25
-              ? (int)0xfffffffe
-              : (int)0xffffffff;
+      int mask = std::is_same_v<Scalar, Kokkos::Experimental::bhalf_t> && N > 25
+                     ? (int)0xfffffffe
+                     : (int)0xffffffff;
       h_values(i) = (Scalar)((rand() % denom) & mask);
       reference_sum += h_values(i);
     }

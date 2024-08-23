@@ -492,23 +492,21 @@ struct TestReduceCombinatoricalInstantiation {
   template <class... Args>
   static void AddFunctorLambdaRange(int N, Args... args) {
     AddFunctor<0, Args...>(N, args...);
-    AddLambdaRange(
-        N,
-        std::conditional_t<
-            std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value,
-            void*, Kokkos::InvalidType>(),
-        args...);
+    AddLambdaRange(N,
+                   std::conditional_t<
+                       std::is_same_v<ExecSpace, Kokkos::DefaultExecutionSpace>,
+                       void*, Kokkos::InvalidType>(),
+                   args...);
   }
 
   template <class... Args>
   static void AddFunctorLambdaTeam(int N, Args... args) {
     AddFunctor<1, Args...>(N, args...);
-    AddLambdaTeam(
-        N,
-        std::conditional_t<
-            std::is_same<ExecSpace, Kokkos::DefaultExecutionSpace>::value,
-            void*, Kokkos::InvalidType>(),
-        args...);
+    AddLambdaTeam(N,
+                  std::conditional_t<
+                      std::is_same_v<ExecSpace, Kokkos::DefaultExecutionSpace>,
+                      void*, Kokkos::InvalidType>(),
+                  args...);
   }
 
   template <class... Args>

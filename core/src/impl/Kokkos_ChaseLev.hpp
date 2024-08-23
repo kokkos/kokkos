@@ -138,7 +138,7 @@ struct ChaseLevDeque {
  public:
   template <class _ignore = void,
             class         = std::enable_if_t<
-                std::is_default_constructible<CircularBufferT>::value>>
+                std::is_default_constructible_v<CircularBufferT>>>
   ChaseLevDeque() : m_array() {}
 
   explicit ChaseLevDeque(CircularBufferT buffer) : m_array(std::move(buffer)) {}

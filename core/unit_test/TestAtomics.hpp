@@ -377,9 +377,9 @@ T ExchLoop(int loop) {
 }
 
 template <class T>
-T ExchLoopSerial(std::conditional_t<
-                 !std::is_same<T, Kokkos::complex<double> >::value, int, void>
-                     loop) {
+T ExchLoopSerial(
+    std::conditional_t<!std::is_same_v<T, Kokkos::complex<double> >, int, void>
+        loop) {
   T* data  = new T[1];
   T* data2 = new T[1];
   data[0]  = 0;
@@ -399,9 +399,9 @@ T ExchLoopSerial(std::conditional_t<
 }
 
 template <class T>
-T ExchLoopSerial(std::conditional_t<
-                 std::is_same<T, Kokkos::complex<double> >::value, int, void>
-                     loop) {
+T ExchLoopSerial(
+    std::conditional_t<std::is_same_v<T, Kokkos::complex<double> >, int, void>
+        loop) {
   T* data  = new T[1];
   T* data2 = new T[1];
   data[0]  = 0;

@@ -781,7 +781,7 @@ T ModEqualAtomicViewCheck(const int64_t input_length, const int64_t remainder) {
 
 template <class T, class DeviceType>
 bool ModEqualAtomicViewTest(const int64_t input_length) {
-  static_assert(std::is_integral<T>::value,
+  static_assert(std::is_integral_v<T>,
                 "ModEqualAtomicView Error: Type must be integral type for this "
                 "unit test");
 
@@ -909,7 +909,7 @@ T RSEqualAtomicViewCheck(const int64_t input_length, const int64_t value,
 
 template <class T, class DeviceType>
 bool RSEqualAtomicViewTest(const int64_t input_length) {
-  static_assert(std::is_integral<T>::value,
+  static_assert(std::is_integral_v<T>,
                 "RSEqualAtomicViewTest: Must be integral type for test");
 
   const int64_t remainder = 61042;       // prime - 1
@@ -1036,7 +1036,7 @@ T LSEqualAtomicViewCheck(const int64_t input_length, const int64_t value,
 
 template <class T, class DeviceType>
 bool LSEqualAtomicViewTest(const int64_t input_length) {
-  static_assert(std::is_integral<T>::value,
+  static_assert(std::is_integral_v<T>,
                 "LSEqualAtomicViewTest: Must be integral type for test");
 
   const int64_t remainder = 61042;  // prime - 1
@@ -1131,7 +1131,7 @@ T AndEqualAtomicViewCheck(const int64_t input_length) {
 
 template <class T, class DeviceType>
 bool AndEqualAtomicViewTest(int64_t input_length) {
-  static_assert(std::is_integral<T>::value,
+  static_assert(std::is_integral_v<T>,
                 "AndEqualAtomicViewTest: Must be integral type for test");
 
   T res       = AndEqualAtomicView<T, DeviceType>(input_length);
@@ -1223,7 +1223,7 @@ T OrEqualAtomicViewCheck(const int64_t input_length) {
 
 template <class T, class DeviceType>
 bool OrEqualAtomicViewTest(int64_t input_length) {
-  static_assert(std::is_integral<T>::value,
+  static_assert(std::is_integral_v<T>,
                 "OrEqualAtomicViewTest: Must be integral type for test");
 
   T res       = OrEqualAtomicView<T, DeviceType>(input_length);
@@ -1315,7 +1315,7 @@ T XOrEqualAtomicViewCheck(const int64_t input_length) {
 
 template <class T, class DeviceType>
 bool XOrEqualAtomicViewTest(int64_t input_length) {
-  static_assert(std::is_integral<T>::value,
+  static_assert(std::is_integral_v<T>,
                 "XOrEqualAtomicViewTest: Must be integral type for test");
 
   T res       = XOrEqualAtomicView<T, DeviceType>(input_length);
@@ -1342,7 +1342,7 @@ bool XOrEqualAtomicViewTest(int64_t input_length) {
 
 template <class T, class DeviceType>
 bool AtomicViewsTestIntegralType(const int length, int test) {
-  static_assert(std::is_integral<T>::value,
+  static_assert(std::is_integral_v<T>,
                 "TestAtomicViews Error: Non-integral type passed into "
                 "IntegralType tests");
 

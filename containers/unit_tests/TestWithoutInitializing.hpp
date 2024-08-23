@@ -37,6 +37,17 @@
 #endif
 ///@}
 
+/// Some tests are skipped for unified memory space
+#if defined(KOKKOS_ENABLE_IMPL_CUDA_UNIFIED_MEMORY)
+#define GTEST_SKIP_IF_UNIFIED_MEMORY_SPACE                               \
+  if constexpr (std::is_same_v<typename TEST_EXECSPACE::memory_space,    \
+                               Kokkos::CudaSpace>)                       \
+    GTEST_SKIP() << "skipping since unified memory requires additional " \
+                    "fences";
+#else
+#define GTEST_SKIP_IF_UNIFIED_MEMORY_SPACE
+#endif
+
 TEST(TEST_CATEGORY, resize_realloc_no_init_dualview) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableKernels());
@@ -231,7 +242,7 @@ TEST(TEST_CATEGORY, realloc_exec_space_dynrankview) {
 
 // FIXME_THREADS The Threads backend fences every parallel_for
 #ifdef KOKKOS_ENABLE_THREADS
-  if (std::is_same<TEST_EXECSPACE, Kokkos::Threads>::value)
+  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Threads>)
     GTEST_SKIP() << "skipping since the Threads backend isn't asynchronous";
 #endif
 
@@ -370,13 +381,12 @@ TEST(TEST_CATEGORY, realloc_exec_space_scatterview) {
 
 // FIXME_THREADS The Threads backend fences every parallel_for
 #ifdef KOKKOS_ENABLE_THREADS
-  if (std::is_same<typename TEST_EXECSPACE, Kokkos::Threads>::value)
+  if (std::is_same_v<typename TEST_EXECSPACE, Kokkos::Threads>)
     GTEST_SKIP() << "skipping since the Threads backend isn't asynchronous";
 #endif
 #if defined(KOKKOS_ENABLE_HPX) && \
     !defined(KOKKOS_ENABLE_IMPL_HPX_ASYNC_DISPATCH)
-  if (std::is_same<Kokkos::DefaultExecutionSpace,
-                   Kokkos::Experimental::HPX>::value)
+  if (std::is_same_v<Kokkos::DefaultExecutionSpace, Kokkos::Experimental::HPX>)
     GTEST_SKIP() << "skipping since the HPX backend always fences with async "
                     "dispatch disabled";
 #endif
@@ -654,6 +664,7 @@ TEST(TEST_CATEGORY, create_mirror_no_init_dynamicview) {
 
 TEST(TEST_CATEGORY, create_mirror_view_and_copy_dynamicview) {
   GTEST_SKIP_IF_CUDAUVM_MEMORY_SPACE
+  GTEST_SKIP_IF_UNIFIED_MEMORY_SPACE
 
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableKernels(),

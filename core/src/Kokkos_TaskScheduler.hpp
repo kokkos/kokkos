@@ -520,10 +520,10 @@ Impl::TaskPolicyWithScheduler<Kokkos::Impl::TaskType::TaskTeam, Scheduler,
                                   Kokkos::is_future<PredecessorFuture>::value,
                               TaskPriority>
                  arg_priority = TaskPriority::Regular) {
-  static_assert(std::is_same<typename PredecessorFuture::scheduler_type,
-                             Scheduler>::value,
-                "Can't create a task policy from a scheduler and a future from "
-                "a different scheduler");
+  static_assert(
+      std::is_same_v<typename PredecessorFuture::scheduler_type, Scheduler>,
+      "Can't create a task policy from a scheduler and a future from "
+      "a different scheduler");
 
   return {std::move(arg_scheduler), std::move(arg_future), arg_priority};
 }
@@ -557,10 +557,10 @@ Impl::TaskPolicyWithScheduler<Kokkos::Impl::TaskType::TaskSingle, Scheduler,
                                     Kokkos::is_future<PredecessorFuture>::value,
                                 TaskPriority>
                    arg_priority = TaskPriority::Regular) {
-  static_assert(std::is_same<typename PredecessorFuture::scheduler_type,
-                             Scheduler>::value,
-                "Can't create a task policy from a scheduler and a future from "
-                "a different scheduler");
+  static_assert(
+      std::is_same_v<typename PredecessorFuture::scheduler_type, Scheduler>,
+      "Can't create a task policy from a scheduler and a future from "
+      "a different scheduler");
 
   return {std::move(arg_scheduler), std::move(arg_future), arg_priority};
 }

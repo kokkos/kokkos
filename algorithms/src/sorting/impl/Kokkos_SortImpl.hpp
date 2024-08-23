@@ -146,7 +146,7 @@ void sort_via_binsort(const ExecutionSpace& exec,
   bool sort_in_bins = true;
   // TODO: figure out better max_bins then this ...
   int64_t max_bins = view.extent(0) / 2;
-  if (std::is_integral<typename ViewType::non_const_value_type>::value) {
+  if (std::is_integral_v<typename ViewType::non_const_value_type>) {
     // Cast to double to avoid possible overflow when using integer
     auto const max_val = static_cast<double>(result.max_val);
     auto const min_val = static_cast<double>(result.min_val);
@@ -157,7 +157,7 @@ void sort_via_binsort(const ExecutionSpace& exec,
       sort_in_bins = false;
     }
   }
-  if (std::is_floating_point<typename ViewType::non_const_value_type>::value) {
+  if (std::is_floating_point_v<typename ViewType::non_const_value_type>) {
     KOKKOS_ASSERT(std::isfinite(static_cast<double>(result.max_val) -
                                 static_cast<double>(result.min_val)));
   }

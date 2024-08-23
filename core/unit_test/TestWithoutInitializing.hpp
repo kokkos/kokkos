@@ -133,8 +133,7 @@ TEST(TEST_CATEGORY, view_alloc) {
       },
       [&](BeginFenceEvent event) {
         return MatchDiagnostic{
-            event.descriptor().find(
-                "Kokkos::Impl::ViewValueFunctor: View init/destroy fence") !=
+            event.descriptor().find("Kokkos::View::initialization") !=
             std::string::npos};
       });
   ASSERT_TRUE(success);
@@ -155,8 +154,7 @@ TEST(TEST_CATEGORY, view_alloc_exec_space) {
       },
       [&](BeginFenceEvent event) {
         return MatchDiagnostic{
-            event.descriptor().find(
-                "Kokkos::Impl::ViewValueFunctor: View init/destroy fence") !=
+            event.descriptor().find("Kokkos::View::initialization") !=
             std::string::npos};
       });
   ASSERT_TRUE(success);
@@ -177,8 +175,7 @@ TEST(TEST_CATEGORY, view_alloc_int) {
       },
       [&](BeginFenceEvent event) {
         return MatchDiagnostic{
-            event.descriptor().find(
-                "Kokkos::Impl::ViewValueFunctor: View init/destroy fence") !=
+            event.descriptor().find("Kokkos::View::initialization") !=
             std::string::npos};
       });
   ASSERT_TRUE(success);
@@ -199,8 +196,7 @@ TEST(TEST_CATEGORY, view_alloc_exec_space_int) {
       },
       [&](BeginFenceEvent event) {
         return MatchDiagnostic{
-            event.descriptor().find(
-                "Kokkos::Impl::ViewValueFunctor: View init/destroy fence") !=
+            event.descriptor().find("Kokkos::View::initialization") !=
             std::string::npos};
       });
   ASSERT_TRUE(success);

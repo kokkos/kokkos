@@ -338,23 +338,21 @@ class DualView : public ViewTraits<DataType, Properties...> {
   // does the DualView have only one device
   struct impl_dualview_is_single_device {
     enum : bool {
-      value = std::is_same<typename t_dev::device_type,
-                           typename t_host::device_type>::value
+      value = std::is_same_v<typename t_dev::device_type,
+                             typename t_host::device_type>
     };
   };
 
   // does the given device match the device of t_dev?
   template <typename Device>
   struct impl_device_matches_tdev_device {
-    enum : bool {
-      value = std::is_same<typename t_dev::device_type, Device>::value
-    };
+    enum : bool { value = std::is_same_v<typename t_dev::device_type, Device> };
   };
   // does the given device match the device of t_host?
   template <typename Device>
   struct impl_device_matches_thost_device {
     enum : bool {
-      value = std::is_same<typename t_host::device_type, Device>::value
+      value = std::is_same_v<typename t_host::device_type, Device>
     };
   };
 
@@ -362,7 +360,7 @@ class DualView : public ViewTraits<DataType, Properties...> {
   template <typename Device>
   struct impl_device_matches_thost_exec {
     enum : bool {
-      value = std::is_same<typename t_host::execution_space, Device>::value
+      value = std::is_same_v<typename t_host::execution_space, Device>
     };
   };
 
@@ -370,7 +368,7 @@ class DualView : public ViewTraits<DataType, Properties...> {
   template <typename Device>
   struct impl_device_matches_tdev_exec {
     enum : bool {
-      value = std::is_same<typename t_dev::execution_space, Device>::value
+      value = std::is_same_v<typename t_dev::execution_space, Device>
     };
   };
 
@@ -378,8 +376,8 @@ class DualView : public ViewTraits<DataType, Properties...> {
   template <typename Device>
   struct impl_device_matches_tdev_memory_space {
     enum : bool {
-      value = std::is_same<typename t_dev::memory_space,
-                           typename Device::memory_space>::value
+      value = std::is_same_v<typename t_dev::memory_space,
+                             typename Device::memory_space>
     };
   };
 
@@ -475,27 +473,27 @@ class DualView : public ViewTraits<DataType, Properties...> {
   template <class Device>
   static int get_device_side() {
     constexpr bool device_is_memspace =
-        std::is_same<Device, typename Device::memory_space>::value;
+        std::is_same_v<Device, typename Device::memory_space>;
     constexpr bool device_is_execspace =
-        std::is_same<Device, typename Device::execution_space>::value;
+        std::is_same_v<Device, typename Device::execution_space>;
     constexpr bool device_exec_is_t_dev_exec =
-        std::is_same<typename Device::execution_space,
-                     typename t_dev::execution_space>::value;
+        std::is_same_v<typename Device::execution_space,
+                       typename t_dev::execution_space>;
     constexpr bool device_mem_is_t_dev_mem =
-        std::is_same<typename Device::memory_space,
-                     typename t_dev::memory_space>::value;
+        std::is_same_v<typename Device::memory_space,
+                       typename t_dev::memory_space>;
     constexpr bool device_exec_is_t_host_exec =
-        std::is_same<typename Device::execution_space,
-                     typename t_host::execution_space>::value;
+        std::is_same_v<typename Device::execution_space,
+                       typename t_host::execution_space>;
     constexpr bool device_mem_is_t_host_mem =
-        std::is_same<typename Device::memory_space,
-                     typename t_host::memory_space>::value;
+        std::is_same_v<typename Device::memory_space,
+                       typename t_host::memory_space>;
     constexpr bool device_is_t_host_device =
-        std::is_same<typename Device::execution_space,
-                     typename t_host::device_type>::value;
+        std::is_same_v<typename Device::execution_space,
+                       typename t_host::device_type>;
     constexpr bool device_is_t_dev_device =
-        std::is_same<typename Device::memory_space,
-                     typename t_host::device_type>::value;
+        std::is_same_v<typename Device::memory_space,
+                       typename t_host::device_type>;
 
     static_assert(
         device_is_t_dev_device || device_is_t_host_device ||
@@ -627,9 +625,9 @@ class DualView : public ViewTraits<DataType, Properties...> {
 
   template <class Device>
   void sync(const std::enable_if_t<
-                (std::is_same<typename traits::data_type,
-                              typename traits::non_const_data_type>::value) ||
-                    (std::is_same<Device, int>::value),
+                (std::is_same_v<typename traits::data_type,
+                                typename traits::non_const_data_type>) ||
+                    (std::is_same_v<Device, int>),
                 int>& = 0) {
     sync_impl<Device>(std::true_type{});
   }
@@ -637,9 +635,9 @@ class DualView : public ViewTraits<DataType, Properties...> {
   template <class Device, class ExecutionSpace>
   void sync(const ExecutionSpace& exec,
             const std::enable_if_t<
-                (std::is_same<typename traits::data_type,
-                              typename traits::non_const_data_type>::value) ||
-                    (std::is_same<Device, int>::value),
+                (std::is_same_v<typename traits::data_type,
+                                typename traits::non_const_data_type>) ||
+                    (std::is_same_v<Device, int>),
                 int>& = 0) {
     sync_impl<Device>(std::true_type{}, exec);
   }
@@ -669,18 +667,18 @@ class DualView : public ViewTraits<DataType, Properties...> {
 
   template <class Device>
   void sync(const std::enable_if_t<
-                (!std::is_same<typename traits::data_type,
-                               typename traits::non_const_data_type>::value) ||
-                    (std::is_same<Device, int>::value),
+                (!std::is_same_v<typename traits::data_type,
+                                 typename traits::non_const_data_type>) ||
+                    (std::is_same_v<Device, int>),
                 int>& = 0) {
     sync_impl<Device>(std::false_type{});
   }
   template <class Device, class ExecutionSpace>
   void sync(const ExecutionSpace& exec,
             const std::enable_if_t<
-                (!std::is_same<typename traits::data_type,
-                               typename traits::non_const_data_type>::value) ||
-                    (std::is_same<Device, int>::value),
+                (!std::is_same_v<typename traits::data_type,
+                                 typename traits::non_const_data_type>) ||
+                    (std::is_same_v<Device, int>),
                 int>& = 0) {
     sync_impl<Device>(std::false_type{}, exec);
   }
@@ -1182,15 +1180,15 @@ class DualView : public ViewTraits<DataType, Properties...> {
   }
 
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<
-      std::is_integral<iType>::value, size_t>
+  KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<std::is_integral_v<iType>,
+                                                    size_t>
   extent(const iType& r) const {
     return d_view.extent(r);
   }
 
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<
-      std::is_integral<iType>::value, int>
+  KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<std::is_integral_v<iType>,
+                                                    int>
   extent_int(const iType& r) const {
     return static_cast<int>(d_view.extent(r));
   }
