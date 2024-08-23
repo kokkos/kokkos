@@ -169,9 +169,8 @@ auto generic_tune_policy(const std::string& label_in, Map& map,
   if (should_tune(policy)) {
     std::string label = label_in;
     if (label_in.empty()) {
-      using policy_type =
-          typename std::remove_reference<decltype(policy)>::type;
-      using work_tag = typename policy_type::work_tag;
+      using policy_type = std::remove_reference_t<decltype(policy)>;
+      using work_tag    = typename policy_type::work_tag;
       Kokkos::Impl::ParallelConstructName<Functor, work_tag> name(label);
       label = name.get();
     }
@@ -197,9 +196,8 @@ auto generic_tune_policy(const std::string& label_in, Map& map,
   if (should_tune(policy)) {
     std::string label = label_in;
     if (label_in.empty()) {
-      using policy_type =
-          typename std::remove_reference<decltype(policy)>::type;
-      using work_tag = typename policy_type::work_tag;
+      using policy_type = std::remove_reference_t<decltype(policy)>;
+      using work_tag    = typename policy_type::work_tag;
       Kokkos::Impl::ParallelConstructName<Functor, work_tag> name(label);
       label = name.get();
     }
@@ -390,9 +388,8 @@ void generic_report_results(const std::string& label_in, Map& map,
   if (should_tune(policy)) {
     std::string label = label_in;
     if (label_in.empty()) {
-      using policy_type =
-          typename std::remove_reference<decltype(policy)>::type;
-      using work_tag = typename policy_type::work_tag;
+      using policy_type = std::remove_reference_t<decltype(policy)>;
+      using work_tag    = typename policy_type::work_tag;
       Kokkos::Impl::ParallelConstructName<Functor, work_tag> name(label);
       label = name.get();
     }

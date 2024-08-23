@@ -1434,10 +1434,10 @@ struct TestTeamBroadcast<ExecSpace, ScheduleType, T,
   }
 
   template <class ScalarType>
-  static inline std::enable_if_t<!std::is_integral<ScalarType>::value, void>
+  static inline std::enable_if_t<!std::is_integral_v<ScalarType>, void>
   compare_test(ScalarType A, ScalarType B, double epsilon_factor) {
-    if (std::is_same<ScalarType, double>::value ||
-        std::is_same<ScalarType, float>::value) {
+    if (std::is_same_v<ScalarType, double> ||
+        std::is_same_v<ScalarType, float>) {
       ASSERT_NEAR((double)A, (double)B,
                   epsilon_factor * std::abs(A) *
                       std::numeric_limits<ScalarType>::epsilon());
@@ -1447,7 +1447,7 @@ struct TestTeamBroadcast<ExecSpace, ScheduleType, T,
   }
 
   template <class ScalarType>
-  static inline std::enable_if_t<std::is_integral<ScalarType>::value, void>
+  static inline std::enable_if_t<std::is_integral_v<ScalarType>, void>
   compare_test(ScalarType A, ScalarType B, double) {
     ASSERT_EQ(A, B);
   }
