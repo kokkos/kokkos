@@ -199,7 +199,7 @@ constexpr bool is_assignable(const Kokkos::View<ViewTDst...>& dst,
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-#include <impl/Kokkos_ViewMapping.hpp>
+#include <View/Kokkos_ViewMapping.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -1674,8 +1674,8 @@ KOKKOS_INLINE_FUNCTION DeducedCommonPropsType<Views...> common_view_alloc_prop(
 
 }  // namespace Kokkos
 
-#include <impl/Kokkos_ViewUniformType.hpp>
-#include <impl/Kokkos_Atomic_View.hpp>
+#include <View/Kokkos_ViewUniformType.hpp>
+#include <View/Kokkos_ViewAtomic.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

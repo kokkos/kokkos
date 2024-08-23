@@ -28,13 +28,13 @@
 #include <Kokkos_Extents.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_Traits.hpp>
-#include <impl/Kokkos_ViewTracker.hpp>
-#include <impl/Kokkos_ViewCtor.hpp>
-#include <impl/Kokkos_Atomic_View.hpp>
+#include <View/Kokkos_ViewTracker.hpp>
+#include <View/Kokkos_ViewCtor.hpp>
+#include <View/Kokkos_ViewAtomic.hpp>
 #include <impl/Kokkos_Tools.hpp>
 #include <impl/Kokkos_StringManipulation.hpp>
 #include <impl/Kokkos_ZeroMemset_fwd.hpp>
-#include <impl/Kokkos_ViewDataAnalysis.hpp>
+#include <View/Kokkos_ViewDataAnalysis.hpp>
 #include <View/Kokkos_ViewAlloc.hpp>
 
 //----------------------------------------------------------------------------
