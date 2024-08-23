@@ -1466,38 +1466,6 @@ void apply_to_view_of_static_rank(Function&& f, View<Args...> a) {
 }
 
 }  // namespace Impl
-//----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
-
-namespace Impl {
-template <class ValueType, class TypeList>
-struct TypeListToViewTraits;
-
-template <class ValueType, class... Properties>
-struct TypeListToViewTraits<ValueType, Kokkos::Impl::type_list<Properties...>> {
-  using type = ViewTraits<ValueType, Properties...>;
-};
-
-// It is not safe to assume that subviews of views with the Aligned memory trait
-// are also aligned. Hence, just remove that attribute for subviews.
-template <class D, class... P>
-struct RemoveAlignedMemoryTrait {
- private:
-  using type_list_in  = Kokkos::Impl::type_list<P...>;
-  using memory_traits = typename ViewTraits<D, P...>::memory_traits;
-  using type_list_in_wo_memory_traits =
-      typename Kokkos::Impl::type_list_remove_first<memory_traits,
-                                                    type_list_in>::type;
-  using new_memory_traits =
-      Kokkos::MemoryTraits<memory_traits::impl_value & ~Kokkos::Aligned>;
-  using new_type_list = typename Kokkos::Impl::concat_type_list<
-      type_list_in_wo_memory_traits,
-      Kokkos::Impl::type_list<new_memory_traits>>::type;
-
- public:
-  using type = typename TypeListToViewTraits<D, new_type_list>::type;
-};
-}  // namespace Impl
 
 template <class D, class... P, class... Args>
 KOKKOS_INLINE_FUNCTION auto subview(const View<D, P...>& src, Args... args) {
