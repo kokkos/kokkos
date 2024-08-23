@@ -50,35 +50,6 @@ static_assert(false,
 
 namespace Kokkos {
 
-#ifdef KOKKOS_ENABLE_IMPL_MDSPAN
-namespace Impl {
-struct UnsupportedKokkosArrayLayout;
-
-template <class Traits, class Enabled = void>
-struct MDSpanViewTraits {
-  using mdspan_type = UnsupportedKokkosArrayLayout;
-};
-
-// "Natural" mdspan for a view if the View's ArrayLayout is supported.
-template <class Traits>
-struct MDSpanViewTraits<Traits,
-                        std::void_t<typename Impl::LayoutFromArrayLayout<
-                            typename Traits::array_layout>::type>> {
-  using index_type = std::size_t;
-  using extents_type =
-      typename Impl::ExtentsFromDataType<index_type,
-                                         typename Traits::data_type>::type;
-  using mdspan_layout_type =
-      typename Impl::LayoutFromArrayLayout<typename Traits::array_layout>::type;
-  using accessor_type = Impl::SpaceAwareAccessor<
-      typename Traits::memory_space,
-      Kokkos::default_accessor<typename Traits::value_type>>;
-  using mdspan_type = mdspan<typename Traits::value_type, extents_type,
-                             mdspan_layout_type, accessor_type>;
-};
-}  // namespace Impl
-#endif  // KOKKOS_ENABLE_IMPL_MDSPAN
-
 /** \class View
  *  \brief View to an array of data.
  *
