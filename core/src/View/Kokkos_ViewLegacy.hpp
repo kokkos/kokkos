@@ -19,8 +19,8 @@
 static_assert(false,
               "Including non-public Kokkos header files is not allowed.");
 #endif
-#ifndef KOKKOS_VIEW_HPP
-#define KOKKOS_VIEW_HPP
+#ifndef KOKKOS_VIEWLEGACY_HPP
+#define KOKKOS_VIEWLEGACY_HPP
 
 #include <type_traits>
 #include <string>
@@ -2033,4 +2033,4 @@ KOKKOS_INLINE_FUNCTION DeducedCommonPropsType<Views...> common_view_alloc_prop(
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-#endif /* #ifndef KOKKOS_VIEW_HPP */
+#endif /* #ifndef KOKKOS_VIEWLEGACY_HPP */
