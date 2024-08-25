@@ -412,7 +412,7 @@ class TestReduceTeam {
 
       for (unsigned i = 0; i < Repeat; ++i) {
         for (unsigned j = 0; j < Count; ++j) {
-          ASSERT_EQ(j == 0 ? nsum : nw, static_cast<uint64_t>(result[i][j]))
+          ASSERT_EQ(j ? nsum : nw, static_cast<uint64_t>(result[i][j]))
               << "failing at repeat " << i << " and index " << j;
         }
       }
