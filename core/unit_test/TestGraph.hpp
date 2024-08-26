@@ -143,12 +143,23 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), instantiate_and_submit_once) {
   ASSERT_EQ(0, bugs_host());
 }
 
+// FIXME death tests an fixtures
+#define TEST_CATEGORY_FIXTURE_DEATH_HELPER(category, name) \
+  category##_##name##_DeathTest
+#define TEST_CATEGORY_FIXTURE_DEATH_HELPER_EXPAND(category, name) \
+  TEST_CATEGORY_FIXTURE_DEATH_HELPER(category, name)
+#define TEST_CATEGORY_FIXTURE_DEATH(name) \
+  TEST_CATEGORY_FIXTURE_DEATH_HELPER_EXPAND(TEST_CATEGORY, name)
+
+struct TEST_CATEGORY_FIXTURE_DEATH(graph)
+    : public TEST_CATEGORY_FIXTURE(graph) {};
+
 // Ensure that Kokkos::Graph::instantiate can be called only once.
 // This test checks 2 cases:
 //   1. Instantiating after submission is invalid (this also implicitly
 //      checks that submission instantiates if need be).
 //   2. Instantiating twice in a row is invalid.
-TEST_F(TEST_CATEGORY_FIXTURE(graph), can_instantiate_only_once) {
+TEST_F(TEST_CATEGORY_FIXTURE_DEATH(graph), can_instantiate_only_once) {
   {
     bool checked_assertions = false;
     KOKKOS_ASSERT(checked_assertions = true);
