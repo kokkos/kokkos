@@ -143,7 +143,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), instantiate_and_submit_once) {
   ASSERT_EQ(0, bugs_host());
 }
 
-// FIXME death tests an fixtures
+// FIXME death tests and fixtures
 #define TEST_CATEGORY_FIXTURE_DEATH_HELPER(category, name) \
   category##_##name##_DeathTest
 #define TEST_CATEGORY_FIXTURE_DEATH_HELPER_EXPAND(category, name) \
