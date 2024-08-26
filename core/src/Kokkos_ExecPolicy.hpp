@@ -261,8 +261,7 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
           "not preserve its original value.\n";
       bool warn = false;
 
-      if constexpr (std::is_arithmetic_v<IndexType> &&
-                    std::is_arithmetic_v<member_type> &&
+      if constexpr (std::is_arithmetic_v<member_type> &&
                     (std::is_signed_v<IndexType> !=
                      std::is_signed_v<member_type>)) {
         // check signed to unsigned
