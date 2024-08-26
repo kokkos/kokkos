@@ -34,7 +34,7 @@
 
 #include <impl/Kokkos_Traits.hpp>
 #include <impl/Kokkos_UnorderedMap_impl.hpp>
-#include <impl/Kokkos_ViewCtor.hpp>
+#include <View/Kokkos_ViewCtor.hpp>
 
 #include <cstdint>
 

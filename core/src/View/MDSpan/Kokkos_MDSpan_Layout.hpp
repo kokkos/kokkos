@@ -23,7 +23,7 @@ static_assert(false,
 #define KOKKOS_EXPERIMENTAL_MDSPAN_LAYOUT_HPP
 
 #include "Kokkos_MDSpan_Extents.hpp"
-#include <impl/Kokkos_ViewDataAnalysis.hpp>
+#include <View/Kokkos_ViewDataAnalysis.hpp>
 
 namespace Kokkos::Impl {
 
