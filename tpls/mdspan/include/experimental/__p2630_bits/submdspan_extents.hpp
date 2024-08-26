@@ -17,6 +17,7 @@
 #pragma once
 
 #include <tuple>
+#include <complex>
 
 #include "strided_slice.hpp"
 namespace MDSPAN_IMPL_STANDARD_NAMESPACE {
@@ -52,6 +53,33 @@ template <class OffsetType, class ExtentType, class StrideType>
 struct is_strided_slice<
     strided_slice<OffsetType, ExtentType, StrideType>> : std::true_type {};
 
+// Helper for identifying valid pair like things
+template <class T, class IndexType> struct index_pair_like : std::false_type {};
+
+template <class IdxT1, class IdxT2, class IndexType>
+struct index_pair_like<std::pair<IdxT1, IdxT2>, IndexType> {
+  static constexpr bool value = std::is_convertible_v<IdxT1, IndexType> &&
+                                std::is_convertible_v<IdxT2, IndexType>;
+};
+
+template <class IdxT1, class IdxT2, class IndexType>
+struct index_pair_like<std::tuple<IdxT1, IdxT2>, IndexType> {
+  static constexpr bool value = std::is_convertible_v<IdxT1, IndexType> &&
+                                std::is_convertible_v<IdxT2, IndexType>;
+};
+
+template <class IdxT, class IndexType>
+struct index_pair_like<std::complex<IdxT>, IndexType> {
+  static constexpr bool value = std::is_convertible_v<IdxT, IndexType>;
+};
+
+template <class IdxT, class IndexType>
+struct index_pair_like<std::array<IdxT, 2>, IndexType> {
+  static constexpr bool value = std::is_convertible_v<IdxT, IndexType>;
+};
+
+// FIXME: we actually need to pass IndexType into all of these
+
 // first_of(slice): getting begin of slice specifier range
 MDSPAN_TEMPLATE_REQUIRES(
   class Integral,
@@ -70,7 +98,7 @@ first_of(const ::MDSPAN_IMPL_STANDARD_NAMESPACE::full_extent_t &) {
 
 MDSPAN_TEMPLATE_REQUIRES(
   class Slice,
-  /* requires */(std::is_convertible_v<Slice, std::tuple<size_t, size_t>>)
+  /* requires */(index_pair_like<Slice, size_t>::value)
 )
 MDSPAN_INLINE_FUNCTION
 constexpr auto first_of(const Slice &i) {
@@ -100,7 +128,7 @@ constexpr Integral
 
 MDSPAN_TEMPLATE_REQUIRES(
   size_t k, class Extents, class Slice,
-  /* requires */(std::is_convertible_v<Slice, std::tuple<size_t, size_t>>)
+  /* requires */(index_pair_like<Slice, size_t>::value)
 )
 MDSPAN_INLINE_FUNCTION
 constexpr auto last_of(std::integral_constant<size_t, k>, const Extents &,
