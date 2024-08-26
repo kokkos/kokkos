@@ -98,8 +98,7 @@ template<class SliceSpecifier, class IndexType>
 struct is_range_slice {
   constexpr static bool value =
     std::is_same_v<SliceSpecifier, full_extent_t> ||
-    std::is_convertible_v<SliceSpecifier,
-                          std::tuple<IndexType, IndexType>>;
+    index_pair_like<SliceSpecifier, IndexType>::value;
 };
 
 template<class SliceSpecifier, class IndexType>
