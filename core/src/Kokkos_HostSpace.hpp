@@ -183,18 +183,6 @@ namespace Kokkos {
 
 namespace Impl {
 
-template <>
-struct DeepCopy<HostSpace, HostSpace, DefaultHostExecutionSpace> {
-  DeepCopy(void* dst, const void* src, size_t n) {
-    hostspace_parallel_deepcopy(dst, src, n);
-  }
-
-  DeepCopy(const DefaultHostExecutionSpace& exec, void* dst, const void* src,
-           size_t n) {
-    hostspace_parallel_deepcopy_async(exec, dst, src, n);
-  }
-};
-
 template <class ExecutionSpace>
 struct DeepCopy<HostSpace, HostSpace, ExecutionSpace> {
   DeepCopy(void* dst, const void* src, size_t n) {
