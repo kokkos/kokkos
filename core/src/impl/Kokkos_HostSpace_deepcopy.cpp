@@ -137,7 +137,7 @@ void hostspace_parallel_deepcopy_async(const ExecutionSpace& exec, void* dst,
   }
 }
 
-// Explicit instanciation
+// Explicit instantiation
 template void hostspace_parallel_deepcopy_async<DefaultHostExecutionSpace>(
     const DefaultHostExecutionSpace&, void*, const void*, ptrdiff_t);
 
