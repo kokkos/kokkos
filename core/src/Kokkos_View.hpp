@@ -23,5 +23,6 @@ static_assert(false,
 #define KOKKOS_VIEW_HPP
 
 #include <View/Kokkos_ViewLegacy.hpp>
+#include <View/Kokkos_BasicView.hpp>
 
 #endif /* KOKKOS_VIEW_HPP */

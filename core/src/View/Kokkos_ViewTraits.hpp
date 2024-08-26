@@ -137,6 +137,43 @@ namespace Kokkos {
 
 #ifdef KOKKOS_ENABLE_IMPL_MDSPAN
 namespace Impl {
+
+template <class Traits, class Enabled = void>
+struct AccessorFromViewTraits {
+  using type =
+      SpaceAwareAccessor<typename Traits::memory_space,
+                         default_accessor<typename Traits::value_type>>;
+};
+
+template <class Traits>
+struct AccessorFromViewTraits<
+    Traits,
+    std::enable_if_t<Traits::is_managed && !Traits::memory_traits::is_atomic>> {
+  using type =
+      checked_reference_counted_accessor<typename Traits::value_type,
+                                         typename Traits::memory_space>;
+};
+
+template <class Traits>
+struct AccessorFromViewTraits<
+    Traits,
+    std::enable_if_t<Traits::is_managed && Traits::memory_traits::is_atomic>> {
+  using type = checked_reference_counted_atomic_accessor_relaxed<
+      typename Traits::value_type, typename Traits::memory_space>;
+};
+
+template <class Traits>
+struct AccessorFromViewTraits<
+    Traits,
+    std::enable_if_t<!Traits::is_managed && Traits::memory_traits::is_atomic>> {
+  using type = checked_atomic_accessor_relaxed<typename Traits::value_type,
+                                               typename Traits::memory_space>;
+};
+
+template <class Traits>
+using accessor_from_view_traits_t =
+    typename AccessorFromViewTraits<Traits>::type;
+
 struct UnsupportedKokkosArrayLayout;
 
 template <class Traits, class Enabled = void>
@@ -150,14 +187,12 @@ struct MDSpanViewTraits<Traits, std::void_t<typename LayoutFromArrayLayout<
                                     typename Traits::array_layout>::type>> {
   using index_type = std::size_t;
   using extents_type =
-      typename Impl::ExtentsFromDataType<index_type,
-                                         typename Traits::data_type>::type;
+      typename ExtentsFromDataType<index_type,
+                                   typename Traits::data_type>::type;
   using mdspan_layout_type =
       typename LayoutFromArrayLayout<typename Traits::array_layout>::type;
-  using accessor_type =
-      SpaceAwareAccessor<typename Traits::memory_space,
-                         Kokkos::default_accessor<typename Traits::value_type>>;
-  using mdspan_type = mdspan<typename Traits::value_type, extents_type,
+  using accessor_type = accessor_from_view_traits_t<Traits>;
+  using mdspan_type   = mdspan<typename Traits::value_type, extents_type,
                              mdspan_layout_type, accessor_type>;
 };
 }  // namespace Impl

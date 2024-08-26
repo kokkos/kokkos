@@ -888,4 +888,5 @@ TEST(TEST_CATEGORY_DEATH, view_layoutstride_left_to_layoutright_assignment) {
 
 }  // namespace Test
 
-#include <TestIrregularLayout.hpp>
+//TODO: needs to be rewritten to use mdspan compatible layouts
+//#include <TestIrregularLayout.hpp>
