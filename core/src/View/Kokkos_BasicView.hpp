@@ -29,8 +29,10 @@ static_assert(false,
 #include "MDSpan/Kokkos_MDSpan_Accessor.hpp"
 #include "MDSpan/Kokkos_MDSpan_Header.hpp"
 #include <View/Kokkos_ViewCtor.hpp>
+#include <View/Kokkos_ViewTraits.hpp>
 
 namespace Kokkos {
+
 namespace Impl {
 constexpr inline struct subview_ctor_tag_t {
 } subview_ctor_tag;
