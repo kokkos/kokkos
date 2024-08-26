@@ -23,7 +23,7 @@ struct TestAssignability {
   using mapping_type =
       Kokkos::Impl::ViewMapping<typename ViewTypeDst::traits,
                                 typename ViewTypeSrc::traits,
-                                typename ViewTypeDst::specialize>;
+                                void>;
 
   template <class MappingType>
   static void try_assign(
