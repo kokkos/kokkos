@@ -291,42 +291,6 @@ struct is_space {
 
   using execution_space = typename is_exe::space;
   using memory_space    = typename is_mem::space;
-
-  // For backward compatibility, deprecated in favor of
-  // Kokkos::Impl::HostMirror<S>::host_mirror_space
-
- private:
-  // The actual definitions for host_memory_space and host_execution_spaces are
-  // in do_not_use_host_memory_space and do_not_use_host_execution_space to be
-  // able to use them within this class without deprecation warnings.
-  using do_not_use_host_memory_space = std::conditional_t<
-      std::is_same_v<memory_space, Kokkos::HostSpace>
-#if defined(KOKKOS_ENABLE_CUDA)
-          || std::is_same<memory_space, Kokkos::CudaUVMSpace>::value ||
-          std::is_same<memory_space, Kokkos::CudaHostPinnedSpace>::value
-#elif defined(KOKKOS_ENABLE_HIP)
-          || std::is_same<memory_space, Kokkos::HIPHostPinnedSpace>::value ||
-          std::is_same<memory_space, Kokkos::HIPManagedSpace>::value
-#elif defined(KOKKOS_ENABLE_SYCL)
-          || std::is_same<memory_space, Kokkos::SYCLSharedUSMSpace>::value ||
-          std::is_same<memory_space, Kokkos::SYCLHostUSMSpace>::value
-#endif
-      ,
-      memory_space, Kokkos::HostSpace>;
-
-  using do_not_use_host_execution_space = std::conditional_t<
-#if defined(KOKKOS_ENABLE_CUDA)
-      std::is_same<execution_space, Kokkos::Cuda>::value ||
-#elif defined(KOKKOS_ENABLE_HIP)
-      std::is_same<execution_space, Kokkos::HIP>::value ||
-#elif defined(KOKKOS_ENABLE_SYCL)
-      std::is_same<execution_space, Kokkos::SYCL>::value ||
-#elif defined(KOKKOS_ENABLE_OPENMPTARGET)
-      std::is_same<execution_space,
-                   Kokkos::Experimental::OpenMPTarget>::value ||
-#endif
-          false,
-      Kokkos::DefaultHostExecutionSpace, execution_space>;
 };
 
 }  // namespace Kokkos
