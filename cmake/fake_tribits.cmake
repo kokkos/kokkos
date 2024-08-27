@@ -95,14 +95,17 @@ FUNCTION(KOKKOS_ADD_TEST)
     # These should be the full target name
     SET(TEST_NAME ${PACKAGE_NAME}_${TEST_NAME})
 
-    # For compatibility with Trilinos testing
+    # For compatibility with Trilinos testing, we support:
+    #  * `-D <fullTestName>_EXTRA_ARGS="<arg0>;<arg1>;<arg2>;..."`
+    #  * `-D <fullTestName>_SET_RUN_SERIAL=ON`
     IF(${TEST_NAME}_DISABLE)
       RETURN()
     ENDIF()
     IF(${TEST_NAME}_SET_RUN_SERIAL)
       SET_TESTS_PROPERTIES(${TEST_NAME} PROPERTIES RUN_SERIAL ON)
     ENDIF()
-    # Trilinos doesn't have this option but only ${${TEST_NAME}_EXTRA_ARGS}, see below.
+    # TriBITS doesn't actually currently support `-D <fullTestName>_ENVIRONMENT`
+    # but we decided to add it anyway
     IF(${TEST_NAME}_ENVIRONMENT)
       SET_TESTS_PROPERTIES(${TEST_NAME} PROPERTIES ENVIRONMENT "${${TEST_NAME}_ENVIRONMENT}")
     ENDIF()
