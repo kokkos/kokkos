@@ -190,8 +190,6 @@ struct DeepCopy<HostSpace, HostSpace, ExecutionSpace> {
   }
 
   DeepCopy(const ExecutionSpace& exec, void* dst, const void* src, size_t n) {
-    // If ExecutionSpace is a Device ExecutionSpace, we should call
-    // this from DefaultHostExecutionSpace
     if constexpr (!Kokkos::SpaceAccessibility<ExecutionSpace,
                                               Kokkos::HostSpace>::accessible) {
       exec.fence(
