@@ -345,8 +345,6 @@ class TestReduceTeam {
   using policy_type     = Kokkos::TeamPolicy<ScheduleType, execution_space>;
   using size_type       = typename execution_space::size_type;
 
-  TestReduceTeam(const size_type &nwork) { run_test(nwork); }
-
   void run_test(const size_type &nwork) {
     enum { Count = 3 };
     enum { Repeat = 100 };
@@ -356,7 +354,6 @@ class TestReduceTeam {
 
     policy_type team_exec(nw, 1);
 
-    // non-array reduction
     {
       using functor_type =
           Test::ReduceTeamFunctor<ScalarType, execution_space, ScheduleType>;
@@ -386,10 +383,17 @@ class TestReduceTeam {
         }
       }
     }
+  }
 
-// FIXME_MSVC FIXME_32BIT Test is known to fail
-#if !defined(KOKKOS_COMPILER_MSVC) && !defined(KOKKOS_IMPL_32BIT)
-    // array reduction
+  void run_array_test(const size_type &nwork) {
+    enum { Count = 3 };
+    enum { Repeat = 100 };
+
+    const uint64_t nw   = nwork;
+    const uint64_t nsum = nw % 2 ? nw * ((nw + 1) / 2) : (nw / 2) * (nw + 1);
+
+    policy_type team_exec(nw, 1);
+
     {
       using functor_type =
           Test::ArrayReduceTeamFunctor<ScalarType, execution_space,
@@ -419,7 +423,6 @@ class TestReduceTeam {
         }
       }
     }
-#endif
   }
 };
 
