@@ -603,8 +603,8 @@ TEST(TEST_CATEGORY,
      dualview_template_views_return_correct_executionspace_views) {
   DualViewType dv("myView", 100);
   dv.clear_sync_state();
-  using hvt = decltype(dv.view<typename Kokkos::DefaultHostExecutionSpace>());
-  using dvt = decltype(dv.view<typename Kokkos::DefaultExecutionSpace>());
+  using hvt = decltype(dv.view<Kokkos::DefaultHostExecutionSpace>());
+  using dvt = decltype(dv.view<Kokkos::DefaultExecutionSpace>());
   ASSERT_STREQ(Kokkos::DefaultExecutionSpace::name(),
                dvt::device_type::execution_space::name());
   ASSERT_STREQ(Kokkos::DefaultHostExecutionSpace::name(),
@@ -616,10 +616,10 @@ TEST(TEST_CATEGORY,
   DualViewType dv("myView", 100);
   ConstDualViewType const_dv = dv;
   dv.clear_sync_state();
-  ASSERT_EQ(dv.view<typename Kokkos::DefaultHostExecutionSpace>(),
-            const_dv.view<typename Kokkos::DefaultHostExecutionSpace>());
-  ASSERT_EQ(dv.view<typename Kokkos::DefaultExecutionSpace>(),
-            const_dv.view<typename Kokkos::DefaultExecutionSpace>());
+  ASSERT_EQ(dv.view<Kokkos::DefaultHostExecutionSpace>(),
+            const_dv.view<Kokkos::DefaultHostExecutionSpace>());
+  ASSERT_EQ(dv.view<Kokkos::DefaultExecutionSpace>(),
+            const_dv.view<Kokkos::DefaultExecutionSpace>());
 }
 
 }  // anonymous namespace
