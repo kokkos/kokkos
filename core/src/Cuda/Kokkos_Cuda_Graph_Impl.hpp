@@ -160,13 +160,13 @@ struct GraphImpl<Kokkos::Cuda> {
                                                    &cuda_node, 1)));
   }
 
-  void submit() {
+  void submit(const execution_space& exec) {
     if (!bool(m_graph_exec)) {
       instantiate();
     }
     KOKKOS_IMPL_CUDA_SAFE_CALL(
-        (m_execution_space.impl_internal_space_instance()
-             ->cuda_graph_launch_wrapper(m_graph_exec)));
+        (exec.impl_internal_space_instance()->cuda_graph_launch_wrapper(
+            m_graph_exec)));
   }
 
   execution_space const& get_execution_space() const noexcept {
