@@ -523,14 +523,14 @@ namespace {
 
 #ifdef KOKKOS_HAS_SHARED_SPACE
 template <typename ExecutionSpace>
-using SharedTestSpace = Kokkos::SharedSpace;
+using TestSharedSpace = Kokkos::SharedSpace;
 #else
 template <typename ExecutionSpace>
-using SharedTestSpace = typename ExecutionSpace::memory_space;
+using TestSharedSpace = typename ExecutionSpace::memory_space;
 #endif
 
 using ExecSpace  = Kokkos::DefaultExecutionSpace;
-using MemSpace   = SharedTestSpace<Kokkos::DefaultExecutionSpace>;
+using MemSpace   = TestSharedSpace<Kokkos::DefaultExecutionSpace>;
 using DeviceType = Kokkos::Device<ExecSpace, MemSpace>;
 
 using DualViewType = Kokkos::DualView<double*, Kokkos::LayoutLeft, DeviceType>;
@@ -539,7 +539,7 @@ using ConstDualViewType =
 using d_device = DeviceType;
 using h_device =
     Kokkos::Device<Kokkos::DefaultHostExecutionSpace,
-                   SharedTestSpace<Kokkos::DefaultHostExecutionSpace>>;
+                   TestSharedSpace<Kokkos::DefaultHostExecutionSpace>>;
 
 TEST(TEST_CATEGORY, dualview_device_correct_kokkos_device) {
   DualViewType dv("myView", 100);
