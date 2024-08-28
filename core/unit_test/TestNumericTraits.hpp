@@ -406,9 +406,12 @@ TEST(TEST_CATEGORY, numeric_traits_min_max_exponent10) {
 #endif
 }
 
-// FIXME_NVHPC
-#ifndef KOKKOS_COMPILER_NVHPC
+KOKKOS_IMPL_DISABLE_UNREACHABLE_WARNINGS_PUSH()
 TEST(TEST_CATEGORY, numeric_traits_quiet_and_signaling_nan) {
+#ifdef KOKKOS_COMPILER_NVHPC  // FIXME_NVHPC
+  GTEST_SKIP() << "This test is known to fail with the NVHPC compiler";
+#endif
+
   TestNumericTraits<TEST_EXECSPACE, Kokkos::Experimental::half_t, QuietNaN>();
   TestNumericTraits<TEST_EXECSPACE, Kokkos::Experimental::half_t,
                     SignalingNaN>();
@@ -425,7 +428,7 @@ TEST(TEST_CATEGORY, numeric_traits_quiet_and_signaling_nan) {
   TestNumericTraits<TEST_EXECSPACE, long double, SignalingNaN>();
 #endif
 }
-#endif
+KOKKOS_IMPL_DISABLE_UNREACHABLE_WARNINGS_POP()
 
 namespace NumericTraitsSFINAE {
 
