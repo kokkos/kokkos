@@ -80,6 +80,7 @@
 #cmakedefine KOKKOS_ARCH_POWER8
 #cmakedefine KOKKOS_ARCH_POWER9
 #cmakedefine KOKKOS_ARCH_RISCV_SG2042
+#cmakedefine KOKKOS_ARCH_RISCV_RVA22V
 #cmakedefine KOKKOS_ARCH_INTEL_GEN
 #cmakedefine KOKKOS_ARCH_INTEL_DG1
 #cmakedefine KOKKOS_ARCH_INTEL_GEN9
