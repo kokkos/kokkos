@@ -1082,6 +1082,7 @@ endif()
     UnitTestMainInit.cpp
     tools/TestEventCorrectness.cpp
     tools/TestWithoutInitializing.cpp
+    tools/TestKernelNames.cpp
     tools/TestProfilingSection.cpp
     tools/TestScopedRegion.cpp
     )
