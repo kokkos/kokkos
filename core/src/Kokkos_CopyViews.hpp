@@ -1351,10 +1351,11 @@ inline void contiguous_fill(
 template <typename ExecutionSpace>
 struct ZeroMemset {
   ZeroMemset(const ExecutionSpace& exec_space, void* dst, size_t cnt) {
-    contiguous_fill(exec_space,
-                    Kokkos::View<std::byte*, Kokkos::MemoryManaged>(
-                        static_cast<std::byte*>(dst), cnt),
-                    std::byte{});
+    contiguous_fill(
+        exec_space,
+        Kokkos::View<std::byte*, ExecutionSpace, Kokkos::MemoryUnmanaged>(
+            static_cast<std::byte*>(dst), cnt),
+        std::byte{});
   }
 };
 
