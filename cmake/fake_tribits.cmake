@@ -47,18 +47,29 @@ FUNCTION(KOKKOS_ADD_TEST)
   # Prepend package name to the test name
   # These should be the full target name
   SET(TEST_NAME ${PACKAGE_NAME}_${TEST_NAME})
-  
-  # Don't do anything if the user disabled the test
+
+  # For compatibility with Trilinos testing, we support:
+  #  * `-D <fullTestName>_DISABLE=ON` 
+  #  * `-D <fullTestName>_EXTRA_ARGS="<arg0>;<arg1>;<arg2>;..."`
+  #  * `-D <fullTestName>_SET_RUN_SERIAL=ON`
   IF(${TEST_NAME}_DISABLE)
     RETURN()
   ENDIF()
-  
+
   SET(EXE ${PACKAGE_NAME}_${EXE_ROOT})
   IF(WIN32)
     ADD_TEST(NAME ${TEST_NAME} WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH}
-      COMMAND ${EXE}${CMAKE_EXECUTABLE_SUFFIX} ${TEST_ARGS})
+      COMMAND ${EXE}${CMAKE_EXECUTABLE_SUFFIX} ${TEST_ARGS} ${${TEST_NAME}_EXTRA_ARGS})
   ELSE()
-    ADD_TEST(NAME ${TEST_NAME} COMMAND ${EXE} ${TEST_ARGS})
+    ADD_TEST(NAME ${TEST_NAME} COMMAND ${EXE} ${TEST_ARGS} ${${TEST_NAME}_EXTRA_ARGS})
+  ENDIF()
+  IF(${TEST_NAME}_SET_RUN_SERIAL)
+    SET_TESTS_PROPERTIES(${TEST_NAME} PROPERTIES RUN_SERIAL ON)
+  ENDIF()
+  # TriBITS doesn't actually currently support `-D <fullTestName>_ENVIRONMENT`
+  # but we decided to add it anyway
+  IF(${TEST_NAME}_ENVIRONMENT)
+    SET_TESTS_PROPERTIES(${TEST_NAME} PROPERTIES ENVIRONMENT "${${TEST_NAME}_ENVIRONMENT}")
   ENDIF()
   IF(TEST_WILL_FAIL)
     SET_TESTS_PROPERTIES(${TEST_NAME} PROPERTIES WILL_FAIL ${TEST_WILL_FAIL})
