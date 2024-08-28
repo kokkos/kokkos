@@ -1453,6 +1453,9 @@ ifeq ($(KOKKOS_INTERNAL_USE_OPENACC), 1)
     ifeq ($(KOKKOS_INTERNAL_COMPILER_NVHPC), 1)
       KOKKOS_LIBS += -cuda
     endif
+    ifeq ($(KOKKOS_INTERNAL_OPENACC_FORCE_HOST_AS_DEVICE), 1)
+      $(error If a GPU architecture is specified,  KOKKOS_OPENACC_OPTIONS = force_host_as_device cannot be used. Disable the force_host_as_device option)
+    endif
   else ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AMD), 1)
     ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
       ifneq ($(ROCM_PATH),)
@@ -1460,6 +1463,9 @@ ifeq ($(KOKKOS_INTERNAL_USE_OPENACC), 1)
         KOKKOS_LDFLAGS += -L$(ROCM_PATH)/lib
       endif
       KOKKOS_LIBS += -lamdhip64
+    endif
+    ifeq ($(KOKKOS_INTERNAL_OPENACC_FORCE_HOST_AS_DEVICE), 1)
+      $(error If a GPU architecture is specified,  KOKKOS_OPENACC_OPTIONS = force_host_as_device cannot be used. Disable the force_host_as_device option)
     endif
   else ifeq ($(KOKKOS_INTERNAL_OPENACC_FORCE_HOST_AS_DEVICE), 1)
     # Compile for kernel execution on the host. In that case, 

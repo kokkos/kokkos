@@ -85,8 +85,7 @@ class OpenACCSpace {
 template <>
 struct Kokkos::Impl::MemorySpaceAccess<Kokkos::HostSpace,
                                        Kokkos::Experimental::OpenACCSpace> {
-#if defined(KOKKOS_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE) && \
-    !defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU) && !defined(KOKKOS_ARCH_AMD_GPU)
+#if defined(KOKKOS_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE)
   enum : bool{assignable = true};
   enum : bool{accessible = true};
 #else
@@ -99,8 +98,7 @@ struct Kokkos::Impl::MemorySpaceAccess<Kokkos::HostSpace,
 template <>
 struct Kokkos::Impl::MemorySpaceAccess<Kokkos::Experimental::OpenACCSpace,
                                        Kokkos::HostSpace> {
-#if defined(KOKKOS_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE) && \
-    !defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU) && !defined(KOKKOS_ARCH_AMD_GPU)
+#if defined(KOKKOS_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE)
   enum : bool{assignable = true};
   enum : bool{accessible = true};
 #else
