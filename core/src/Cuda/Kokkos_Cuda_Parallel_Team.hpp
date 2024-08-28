@@ -631,7 +631,7 @@ class ParallelReduce<CombinedFunctorReducerType,
   using reducer_type = ReducerType;
 
   static constexpr bool UseShflReduction =
-      (true && (ReducerType::static_value_size() != 0));
+      ReducerType::static_value_size() != 0;
 
  private:
   struct ShflReductionTag {};
@@ -697,16 +697,17 @@ class ParallelReduce<CombinedFunctorReducerType,
     }
   }
 
-  __device__ inline void run(SHMEMReductionTag&, const int& threadid) const {
+  __device__ inline void run(SHMEMReductionTag, const int& threadid) const {
     const integral_nonzero_constant<word_size_type,
                                     ReducerType::static_value_size() /
                                         sizeof(word_size_type)>
         word_count(m_functor_reducer.get_reducer().value_size() /
                    sizeof(word_size_type));
 
-    reference_type value = m_functor_reducer.get_reducer().init(
-        kokkos_impl_cuda_shared_memory<word_size_type>() +
-        threadIdx.y * word_count.value);
+    reference_type value =
+        m_functor_reducer.get_reducer().init(reinterpret_cast<pointer_type>(
+            kokkos_impl_cuda_shared_memory<word_size_type>() +
+            threadIdx.y * word_count.value));
 
     // Iterate this block through the league
     const int int_league_size = (int)m_league_size;
