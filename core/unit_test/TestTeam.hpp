@@ -410,7 +410,7 @@ class TestReduceTeam {
       team_exec = policy_type(league_size, team_size);
 
       for (unsigned i = 0; i < Repeat; ++i) {
-        result_type tmp(&result[i][0]);
+        result_type tmp(&result[i][0], 3);
         Kokkos::parallel_reduce(team_exec, functor_type(nwork), tmp);
       }
 
