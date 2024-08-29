@@ -50,9 +50,9 @@ void test_kernel_name_parallel_for() {
   using ExecutionSpace = Kokkos::DefaultExecutionSpace;
 
   {
-    std::string my_label = "my_parallel_for_range_policy";
+    std::string const my_label = "my_parallel_for_range_policy";
 
-    auto my_lambda = KOKKOS_LAMBDA(int){};
+    auto const my_lambda = KOKKOS_LAMBDA(int){};
     Kokkos::parallel_for(my_label, Kokkos::RangePolicy<ExecutionSpace>(0, 1),
                          my_lambda);
     ASSERT_EQ(last_parallel_for, my_label);
@@ -60,7 +60,7 @@ void test_kernel_name_parallel_for() {
     Kokkos::parallel_for(Kokkos::RangePolicy<ExecutionSpace>(0, 1), my_lambda);
     ASSERT_EQ(last_parallel_for, typeid(my_lambda).name());
 
-    auto my_lambda_with_tag = KOKKOS_LAMBDA(WorkTag, int){};
+    auto const my_lambda_with_tag = KOKKOS_LAMBDA(WorkTag, int){};
     Kokkos::parallel_for(my_label,
                          Kokkos::RangePolicy<ExecutionSpace, WorkTag>(0, 1),
                          my_lambda_with_tag);
@@ -83,10 +83,10 @@ void test_kernel_name_parallel_reduce() {
   using ExecutionSpace = Kokkos::DefaultExecutionSpace;
 
   {
-    std::string my_label = "my_parallel_reduce_range_policy";
+    std::string const my_label = "my_parallel_reduce_range_policy";
     float my_result;
 
-    auto my_lambda = KOKKOS_LAMBDA(int, float&){};
+    auto const my_lambda = KOKKOS_LAMBDA(int, float&){};
     Kokkos::parallel_reduce(my_label, Kokkos::RangePolicy<ExecutionSpace>(0, 1),
                             my_lambda, my_result);
     ASSERT_EQ(last_parallel_reduce, my_label);
@@ -101,7 +101,7 @@ void test_kernel_name_parallel_reduce() {
                          // Impl::CombinedFunctorReducer but the name should
                          // still include the lambda as template parameter
 
-    auto my_lambda_with_tag = KOKKOS_LAMBDA(WorkTag, int, float&){};
+    auto const my_lambda_with_tag = KOKKOS_LAMBDA(WorkTag, int, float&){};
     Kokkos::parallel_reduce(my_label,
                             Kokkos::RangePolicy<ExecutionSpace, WorkTag>(0, 1),
                             my_lambda_with_tag, my_result);
@@ -109,7 +109,7 @@ void test_kernel_name_parallel_reduce() {
 
     Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecutionSpace, WorkTag>(0, 1),
                             my_lambda_with_tag, my_result);
-    auto suffix = std::string("/") + typeid(WorkTag).name();
+    auto const suffix = std::string("/") + typeid(WorkTag).name();
     ASSERT_EQ(last_parallel_reduce.find(suffix),
               last_parallel_reduce.length() - suffix.length());
   }
@@ -124,9 +124,9 @@ void test_kernel_name_parallel_scan() {
   using ExecutionSpace = Kokkos::DefaultExecutionSpace;
 
   {
-    std::string my_label = "my_parallel_scan_range_policy";
+    std::string const my_label = "my_parallel_scan_range_policy";
 
-    auto my_lambda = KOKKOS_LAMBDA(int, float&, bool){};
+    auto const my_lambda = KOKKOS_LAMBDA(int, float&, bool){};
     Kokkos::parallel_scan(my_label, Kokkos::RangePolicy<ExecutionSpace>(0, 1),
                           my_lambda);
     ASSERT_EQ(last_parallel_scan, my_label);
@@ -134,7 +134,7 @@ void test_kernel_name_parallel_scan() {
     Kokkos::parallel_scan(Kokkos::RangePolicy<ExecutionSpace>(0, 1), my_lambda);
     ASSERT_EQ(last_parallel_scan, typeid(my_lambda).name());
 
-    auto my_lambda_with_tag = KOKKOS_LAMBDA(WorkTag, int, float&, bool){};
+    auto const my_lambda_with_tag = KOKKOS_LAMBDA(WorkTag, int, float&, bool){};
     Kokkos::parallel_scan(my_label,
                           Kokkos::RangePolicy<ExecutionSpace, WorkTag>(0, 1),
                           my_lambda_with_tag);
