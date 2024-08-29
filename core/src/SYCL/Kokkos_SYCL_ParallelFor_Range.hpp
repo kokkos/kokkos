@@ -145,12 +145,18 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
     } else
 #endif
     {
+#if defined(SYCL_EXT_ONEAPI_ENQUEUE_FUNCTIONS) && \
+    defined(KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES)
+      sycl::ext::oneapi::experimental::submit(q, cgh_lambda);
+      return {};
+#else
       auto parallel_for_event = q.submit(cgh_lambda);
 
 #ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
       q.ext_oneapi_submit_barrier(std::vector<sycl::event>{parallel_for_event});
 #endif
       return parallel_for_event;
+#endif
     }
   }
 
