@@ -1348,14 +1348,14 @@ inline void contiguous_fill(
 }
 
 // Default implementation for execution spaces that don't provide a definition
-template <typename ExecutionSpace, class ViewType>
+template <typename ExecutionSpace>
 struct ZeroMemset {
-  ZeroMemset(const ExecutionSpace& exec_space, const ViewType& dst) {
-    using ValueType = typename ViewType::value_type;
-    alignas(alignof(ValueType)) unsigned char
-        zero_initialized_storage[sizeof(ValueType)] = {};
-    contiguous_fill(exec_space, dst,
-                    *reinterpret_cast<ValueType*>(zero_initialized_storage));
+  ZeroMemset(const ExecutionSpace& exec_space, void* dst, size_t cnt) {
+    contiguous_fill(
+        exec_space,
+        Kokkos::View<std::byte*, ExecutionSpace, Kokkos::MemoryUnmanaged>(
+            static_cast<std::byte*>(dst), cnt),
+        std::byte{});
   }
 };
 
@@ -1371,11 +1371,8 @@ contiguous_fill_or_memset(
       && !std::is_same_v<ExecutionSpace, Kokkos::OpenMP>
 #endif
   )
-    // FIXME intel/19 icpc fails to deduce template parameters here,
-    // resulting in compilation errors; explicitly passing the template
-    // parameters to ZeroMemset helps workaround the issue
-    // See https://github.com/kokkos/kokkos/issues/6775
-    ZeroMemset<ExecutionSpace, View<DT, DP...>>(exec_space, dst);
+    ZeroMemset(exec_space, dst.data(),
+               dst.size() * sizeof(typename ViewTraits<DT, DP...>::value_type));
   else
     contiguous_fill(exec_space, dst, value);
 }
@@ -1403,11 +1400,8 @@ contiguous_fill_or_memset(
 // leading to the significant performance issues
 #ifndef KOKKOS_ARCH_A64FX
   if (Impl::is_zero_byte(value))
-    // FIXME intel/19 icpc fails to deduce template parameters here,
-    // resulting in compilation errors; explicitly passing the template
-    // parameters to ZeroMemset helps workaround the issue
-    // See https://github.com/kokkos/kokkos/issues/6775
-    ZeroMemset<exec_space_type, ViewType>(exec, dst);
+    ZeroMemset(exec, dst.data(),
+               dst.size() * sizeof(typename ViewType::value_type));
   else
 #endif
     contiguous_fill(exec, dst, value);
