@@ -189,15 +189,6 @@ TEST_F(TEST_CATEGORY_FIXTURE_DEATH(graph), can_instantiate_only_once) {
 // one passed to the Kokkos::Graph constructor.
 TEST_F(TEST_CATEGORY_FIXTURE(graph),
        submit_onto_another_execution_space_instance) {
-// FIXME For ROCm 5.2, the graph implementation is bugged, and Kokkos
-//       therefore uses the default implementation. The kernels of the
-//       graph will thus run on the default stream.
-#if defined(KOKKOS_ENABLE_HIP)
-#if HIP_VERSION_MAJOR == 5 && HIP_VERSION_MINOR == 2
-  if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::HIP>)
-    GTEST_SKIP() << "Graph is not properly enqueued.";
-#endif
-#endif
   const auto execution_space_instances =
       Kokkos::Experimental::partition_space(ex, 1, 1);
 
@@ -350,13 +341,209 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), zero_work_reduce) {
     (defined(KOKKOS_ARCH_KEPLER) || defined(KOKKOS_ARCH_MAXWELL))
   if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>) Kokkos::fence();
 #endif
-#ifdef KOKKOS_ENABLE_HPX  // FIXME_HPX graph.submit() isn't properly enqueued
-  if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::HPX>)
-    Kokkos::fence();
-#endif
   graph.submit();
   Kokkos::deep_copy(ex, count_host, count);
   ex.fence();
   ASSERT_EQ(count_host(), 0);
 }
+
+// Ensure that an empty graph can be submitted.
+TEST_F(TEST_CATEGORY_FIXTURE(graph), empty_graph) {
+  auto graph = Kokkos::Experimental::create_graph(ex, [](auto) {});
+  ASSERT_NO_THROW({
+    graph.instantiate();
+    graph.submit(ex);
+  });
+  ex.fence();
+}
+
+template <typename ViewType, size_t TargetIndex, size_t NumIndices = 0>
+struct FetchValuesAndContribute {
+  static_assert(std::is_same_v<typename ViewType::value_type,
+                               typename ViewType::non_const_value_type>);
+
+  ViewType data;
+  typename ViewType::value_type value;
+  Kokkos::Array<size_t, NumIndices> indices{};
+
+  FetchValuesAndContribute(ViewType data_,
+                           std::integral_constant<size_t, TargetIndex>,
+                           typename ViewType::value_type value_)
+      : data(std::move(data_)), value(value_) {}
+
+  FetchValuesAndContribute(ViewType data_,
+                           Kokkos::Array<size_t, NumIndices> indices_,
+                           std::integral_constant<size_t, TargetIndex>,
+                           typename ViewType::value_type value_)
+      : data(std::move(data_)), value(value_), indices(std::move(indices_)) {}
+
+  template <typename T>
+  KOKKOS_FUNCTION void operator()(const T) const {
+    if constexpr (NumIndices > 0) {
+      /// FIXME @c Kokkos::Array should work with range-based for loop.
+      for (size_t index = 0; index < indices.size(); ++index)
+        data(TargetIndex) += data(indices[index]);
+    }
+    data(TargetIndex) += value;
+  }
+};
+
+template <typename ViewType, size_t TargetIndex, size_t NumIndices>
+FetchValuesAndContribute(ViewType, const size_t (&)[NumIndices],
+                         std::integral_constant<size_t, TargetIndex>,
+                         typename ViewType::non_const_value_type)
+    -> FetchValuesAndContribute<ViewType, TargetIndex, NumIndices>;
+
+// Ensure that we can handle the simple diamond use case.
+//
+// topology     stream-based approach       graph-based
+//
+//   A          A(exec_0)                   Using the API to add nodes, no
+//  / \         fence(exec_0)               user-facing fence anymore because
+// B   C        B(exec_0)   C(exec_1)       we'd like to rely on the graph to
+//  \ /         fence(exec_1)               enforce dependencies.
+//   D          D(exec_0)
+TEST_F(TEST_CATEGORY_FIXTURE(graph), diamond) {
+  const auto execution_space_instances =
+      Kokkos::Experimental::partition_space(ex, 1, 1, 1, 1);
+
+  const auto exec_0 = execution_space_instances.at(0);
+  const auto exec_1 = execution_space_instances.at(1);
+  const auto exec_2 = execution_space_instances.at(2);
+  const auto exec_3 = execution_space_instances.at(3);
+
+  using policy_t = Kokkos::RangePolicy<TEST_EXECSPACE>;
+  using view_t   = Kokkos::View<int*, TEST_EXECSPACE>;
+  using view_h_t = Kokkos::View<int*, Kokkos::HostSpace>;
+
+  view_t data(Kokkos::view_alloc(ex, "diamond - data"), 4);
+
+  constexpr int value_A = 42, value_B = 27, value_C = 13, value_D = 147;
+  std::integral_constant<size_t, 0> index_A;
+  std::integral_constant<size_t, 1> index_B;
+  std::integral_constant<size_t, 2> index_C;
+  std::integral_constant<size_t, 3> index_D;
+
+  auto graph = Kokkos::Experimental::create_graph(exec_2, [&](auto root) {
+    auto node_A = root.then_parallel_for(
+        policy_t(exec_0, 0, 1),
+        FetchValuesAndContribute(data, index_A, value_A));
+
+    auto node_B = node_A.then_parallel_for(
+        policy_t(exec_0, 0, 1),
+        FetchValuesAndContribute(data, {index_A()}, index_B, value_B));
+    auto node_C = node_A.then_parallel_for(
+        policy_t(exec_1, 0, 1),
+        FetchValuesAndContribute(data, {index_A()}, index_C, value_C));
+
+    auto node_D = Kokkos::Experimental::when_all(node_B, node_C)
+                      .then_parallel_for(
+                          policy_t(exec_0, 0, 1),
+                          FetchValuesAndContribute(data, {index_B(), index_C()},
+                                                   index_D, value_D));
+  });
+  graph.instantiate();
+
+  // TODO Check that kernels are running on the execution space instance of
+  //      their policy if the defaulted graph implementation is used.
+  graph.submit(exec_3);
+
+  view_h_t data_host(
+      Kokkos::view_alloc(Kokkos::WithoutInitializing, "diamond - data - host"),
+      4);
+  Kokkos::deep_copy(exec_3, data_host, data);
+
+  exec_3.fence();
+
+  ASSERT_EQ(data_host(index_A()), value_A);
+  ASSERT_EQ(data_host(index_B()), value_A + value_B);
+  ASSERT_EQ(data_host(index_C()), value_A + value_C);
+  ASSERT_EQ(data_host(index_D()), 2 * value_A + value_B + value_C + value_D);
+}
+
+// Test a configuration that has more than one end node. Ensure that we wait for
+// them all by adding a manual kernel after the graph.
+// This test mainly is there to ensure that the defaulted graph implementation
+// enforces a semantically consistent control flow.
+//
+// topology         stream-based approach
+//
+//    A       B     A(exec_0)   B(exec_1)
+//      \   / |     fence(exec_1)
+//        C   |     C(exec_0)
+//      /     E                 E(exec_1)
+//    D             D(exec_0)
+//                  fence(exec_1)
+//    F             F(exec_0)
+TEST_F(TEST_CATEGORY_FIXTURE(graph), end_of_submit_control_flow) {
+  const auto execution_space_instances =
+      Kokkos::Experimental::partition_space(ex, 1, 1, 1, 1);
+
+  const auto exec_0 = execution_space_instances.at(0);
+  const auto exec_1 = execution_space_instances.at(1);
+  const auto exec_2 = execution_space_instances.at(2);
+  const auto exec_3 = execution_space_instances.at(3);
+
+  using policy_t = Kokkos::RangePolicy<TEST_EXECSPACE>;
+  using view_t   = Kokkos::View<int*, TEST_EXECSPACE>;
+  using view_h_t = Kokkos::View<int*, Kokkos::HostSpace>;
+
+  view_t data(Kokkos::view_alloc(ex, "data"), 6);
+
+  constexpr int value_A = 42, value_B = 27, value_C = 13, value_D = 147,
+                value_E = 496, value_F = 123;
+  std::integral_constant<size_t, 0> index_A;
+  std::integral_constant<size_t, 1> index_B;
+  std::integral_constant<size_t, 2> index_C;
+  std::integral_constant<size_t, 3> index_D;
+  std::integral_constant<size_t, 4> index_E;
+  std::integral_constant<size_t, 5> index_F;
+
+  auto graph = Kokkos::Experimental::create_graph(exec_2, [&](auto root) {
+    auto node_A = root.then_parallel_for(
+        policy_t(exec_0, 0, 1),
+        FetchValuesAndContribute(data, index_A, value_A));
+    auto node_B = root.then_parallel_for(
+        policy_t(exec_1, 0, 1),
+        FetchValuesAndContribute(data, index_B, value_B));
+
+    auto node_C = Kokkos::Experimental::when_all(node_A, node_B)
+                      .then_parallel_for(
+                          policy_t(exec_0, 0, 1),
+                          FetchValuesAndContribute(data, {index_A(), index_B()},
+                                                   index_C, value_C));
+
+    auto node_D = node_C.then_parallel_for(
+        policy_t(exec_0, 0, 1),
+        FetchValuesAndContribute(data, {index_C()}, index_D, value_D));
+    auto node_E = node_B.then_parallel_for(
+        policy_t(exec_1, 0, 1),
+        FetchValuesAndContribute(data, {index_B()}, index_E, value_E));
+  });
+  graph.instantiate();
+
+  // TODO Check that kernels are running on the execution space instance of
+  //      their policy if the defaulted graph implementation is used.
+  graph.submit(exec_3);
+
+  Kokkos::parallel_for(
+      policy_t(exec_3, 0, 1),
+      FetchValuesAndContribute(data, {index_D(), index_E()}, index_F, value_F));
+
+  view_h_t data_host(
+      Kokkos::view_alloc(Kokkos::WithoutInitializing, "data - host"), 6);
+
+  Kokkos::deep_copy(exec_3, data_host, data);
+
+  exec_3.fence();
+
+  ASSERT_EQ(data_host(index_A()), value_A);
+  ASSERT_EQ(data_host(index_B()), value_B);
+  ASSERT_EQ(data_host(index_C()), value_A + value_B + value_C);
+  ASSERT_EQ(data_host(index_D()), value_A + value_B + value_C + value_D);
+  ASSERT_EQ(data_host(index_E()), value_B + value_E);
+  ASSERT_EQ(data_host(index_F()),
+            value_A + 2 * value_B + value_C + value_D + value_E + value_F);
+}
+
 }  // end namespace Test

@@ -141,16 +141,29 @@ struct GraphImpl : private ExecutionSpaceInstanceStorage<ExecutionSpace> {
     m_has_been_instantiated = true;
   }
 
-  // FIXME The execution space instance should be passed to the nodes.
-  void submit(const ExecutionSpace& /* exec */) {
+  void submit(const ExecutionSpace& exec) {
     if (!m_has_been_instantiated) instantiate();
     // This reset is gross, but for the purposes of our simple host
     // implementation...
     for (auto& sink : m_sinks) {
       sink->reset_has_executed();
     }
+
+    // We don't know where the nodes will execute, so we need to fence the given
+    // execution space instance before proceeding. This is the simplest way
+    // of guaranteeing that the kernels in the graph are correctly "enqueued".
+    exec.fence(
+        "Kokkos::DefaultGraph::submit: fencing before launching graph nodes");
+
     for (auto& sink : m_sinks) {
-      sink->execute_node();
+      sink->execute_node(exec);
+    }
+
+    // Once all sinks have been executed, we need to fence them.
+    for (const auto& sink : m_sinks) {
+      if (sink->awaitable() && sink->get_execution_space() != exec)
+        sink->get_execution_space().fence(
+            "Kokkos::DefaultGraph::submit: fencing before ending graph submit");
     }
   }
 
