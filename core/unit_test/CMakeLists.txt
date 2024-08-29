@@ -300,6 +300,12 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
       list(APPEND ${Tag}_SOURCES2A ${file})
     endforeach()
 
+    # disable a warning about calling a host-only destructor in the ViewOfView test
+    # if we use nvcc_wrapper directly.
+    if(KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA AND NOT INTERNAL_USE_COMPILER_LAUNCHER)
+      set_source_files_properties(${dir}/Test${Tag}_ViewOfViews.cpp PROPERTIES COMPILE_FLAGS "-Xcudafe --diag_suppress=20014")
+    endif()
+
     set(TagHostAccessible ${Tag})
     if (Tag STREQUAL "Cuda")
       set(TagHostAccessible CudaUVM)
