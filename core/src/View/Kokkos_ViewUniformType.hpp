@@ -48,16 +48,15 @@ struct ViewUniformLayout<Kokkos::LayoutRight, 1> {
 
 template <class ViewType, int Traits>
 struct ViewUniformType {
-  #ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
+#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
   static constexpr size_t rank = ViewType::rank;
-  #else
+#else
   static constexpr size_t rank = ViewType::rank();
-  #endif
+#endif
   using data_type       = typename ViewType::data_type;
   using const_data_type = std::add_const_t<typename ViewType::data_type>;
   using runtime_data_type =
-      typename ViewScalarToDataType<typename ViewType::value_type,
-                                    rank>::type;
+      typename ViewScalarToDataType<typename ViewType::value_type, rank>::type;
   using runtime_const_data_type = typename ViewScalarToDataType<
       std::add_const_t<typename ViewType::value_type>, rank>::type;
 

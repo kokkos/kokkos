@@ -529,9 +529,11 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
                        const size_t arg_N5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
                        const size_t arg_N6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
                        const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG)
-      : View(arg_prop,
-             typename traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3,
-                                           arg_N4, arg_N5, arg_N6, arg_N7)) {
+      : base_t(arg_prop,
+               Impl::mapping_from_ctor_and_8sizes<
+                   typename mdspan_type::mapping_type, sizeof(value_type)>(
+                   arg_prop, arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5,
+                   arg_N6, arg_N7)) {
     static_assert(traits::array_layout::is_extent_constructible,
                   "Layout is not constructible from extent arguments. Use "
                   "overload taking a layout object instead.");

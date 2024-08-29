@@ -94,7 +94,7 @@ class BasicView
   KOKKOS_INLINE_FUNCTION explicit constexpr BasicView(
       const std::string &label, const mapping_type &mapping)
       : BasicView(mapping, label, memory_space{}, execution_space{},
-                  std::false_type{}, std::false_type{}) {}
+                  std::false_type{}, std::false_type{}, std::false_type{}) {}
 
   ///
   /// Construct from a given extents
@@ -112,11 +112,11 @@ class BasicView
       : BasicView(label, extents_type{indices...}) {}
   ///@}
 
+ private:
   template <class... P>
-  explicit inline BasicView(
+  data_handle_type create_data_handle(
       const Impl::ViewCtorProp<P...> &arg_prop,
-      std::enable_if_t<!Impl::ViewCtorProp<P...>::has_pointer,
-                       typename mdspan_type::mapping_type> const &arg_mapping) {
+      const typename mdspan_type::mapping_type &arg_mapping) {
     // Copy the input allocation properties with possibly defaulted properties
     // We need to split it in two to avoid MSVC compiler errors
     auto prop_copy_tmp =
@@ -133,15 +133,22 @@ class BasicView
           "Constructing View and initializing data with uninitialized "
           "execution space");
     }
-    mdspan_type(
-        data_handle_type(Impl::make_shared_allocation_record<ElementType>(
-            arg_mapping, Impl::get_property<Impl::LabelTag>(prop_copy),
-            Impl::get_property<Impl::MemorySpaceTag>(prop_copy),
-            &Impl::get_property<Impl::ExecutionSpaceTag>(prop_copy),
-            std::integral_constant<bool, alloc_prop::allow_padding>(),
-            std::integral_constant<bool, alloc_prop::initialize>())),
-        arg_mapping);
+    return data_handle_type(Impl::make_shared_allocation_record<ElementType>(
+        arg_mapping, Impl::get_property<Impl::LabelTag>(prop_copy),
+        Impl::get_property<Impl::MemorySpaceTag>(prop_copy),
+        &Impl::get_property<Impl::ExecutionSpaceTag>(prop_copy),
+        std::integral_constant<bool, alloc_prop::allow_padding>(),
+        std::integral_constant<bool, alloc_prop::initialize>(),
+        std::integral_constant<bool, alloc_prop::sequential_host_init>()));
   }
+
+ public:
+  template <class... P>
+  explicit inline BasicView(
+      const Impl::ViewCtorProp<P...> &arg_prop,
+      std::enable_if_t<!Impl::ViewCtorProp<P...>::has_pointer,
+                       typename mdspan_type::mapping_type> const &arg_mapping)
+      : mdspan_type(create_data_handle(arg_prop, arg_mapping), arg_mapping) {}
 
   template <class... P>
   explicit inline BasicView(
@@ -220,16 +227,18 @@ class BasicView
   }
 
  private:
-  template <typename E, bool AllowPadding, bool Initialize>
+  template <typename E, bool AllowPadding, bool Initialize,
+            bool SequentialHostInit>
   KOKKOS_INLINE_FUNCTION constexpr BasicView(
       const mapping_type &layout_mapping, std::string_view label,
       const memory_space &mem_space_instance, const E &exec_space_instance,
       std::integral_constant<bool, AllowPadding> allow_padding,
-      std::integral_constant<bool, Initialize> initialize)
+      std::integral_constant<bool, Initialize> initialize,
+      std::integral_constant<bool, SequentialHostInit> sequential_host_init)
       : mdspan_type(
             data_handle_type(Impl::make_shared_allocation_record<ElementType>(
                 layout_mapping, label, mem_space_instance, &exec_space_instance,
-                allow_padding, initialize)),
+                allow_padding, initialize, sequential_host_init)),
             layout_mapping) {}
 };
 }  // namespace Kokkos

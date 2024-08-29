@@ -994,14 +994,14 @@ void test_view_mapping() {
 
       ASSERT_EQ(a.use_count(), 2);
       ASSERT_EQ(b.use_count(), 2);
-      ASSERT_EQ(c.use_count(), 2);
+      ASSERT_EQ(c.use_count(), 0);
 
       V d = c;  // 'd' is run-time unmanaged.
 
       ASSERT_EQ(a.use_count(), 2);
       ASSERT_EQ(b.use_count(), 2);
-      ASSERT_EQ(c.use_count(), 2);
-      ASSERT_EQ(d.use_count(), 2);
+      ASSERT_EQ(c.use_count(), 0);
+      ASSERT_EQ(d.use_count(), 0);
     }
 
     ASSERT_EQ(a.use_count(), 2);
@@ -1147,6 +1147,9 @@ struct TestViewMapOperator {
   }
 
   void run() {
+    if (v.extent(0) != TestViewMapOperator<ViewType>::N0)
+      printf("%s %i %i %i\n", typeid(ViewType).name(), (int)ViewType::rank,
+             (int)v.extent(0), (int)TestViewMapOperator<ViewType>::N0);
     ASSERT_EQ(
         v.extent(0),
         (size_t)(0 < ViewType::rank ? TestViewMapOperator<ViewType>::N0 : 1));

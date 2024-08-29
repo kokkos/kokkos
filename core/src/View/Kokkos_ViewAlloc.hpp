@@ -234,18 +234,23 @@ struct ViewValueFunctorSequentialHostInit {
 };
 
 template <class ElementType, class MappingType, class MemorySpace,
-          class ExecutionSpace, bool AllowPadding, bool Initialize>
+          class ExecutionSpace, bool AllowPadding, bool Initialize,
+          bool SequentialInit>
 Kokkos::Impl::SharedAllocationRecord<void, void>* make_shared_allocation_record(
     const MappingType& mapping, std::string_view label,
     const MemorySpace& memory_space, const ExecutionSpace* exec_space,
     [[maybe_unused]] std::integral_constant<bool, AllowPadding> allow_padding,
-    [[maybe_unused]] std::integral_constant<bool, Initialize> initialize) {
+    [[maybe_unused]] std::integral_constant<bool, Initialize> initialize,
+    [[maybe_unused]] std::integral_constant<bool, SequentialInit>
+        sequential_init) {
   static_assert(SpaceAccessibility<ExecutionSpace, MemorySpace>::accessible);
 
   // Use this for constructing and destroying the view
-  using functor_type =
-      ViewValueFunctor<Kokkos::Device<ExecutionSpace, MemorySpace>,
-                       ElementType>;
+  using device_type  = Kokkos::Device<ExecutionSpace, MemorySpace>;
+  using functor_type = std::conditional_t<
+      SequentialInit,
+      ViewValueFunctorSequentialHostInit<device_type, ElementType>,
+      ViewValueFunctor<device_type, ElementType>>;
   using record_type =
       Kokkos::Impl::SharedAllocationRecord<MemorySpace, functor_type>;
 
