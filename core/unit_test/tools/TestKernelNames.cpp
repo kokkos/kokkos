@@ -41,12 +41,13 @@ void get_parallel_scan_kernel_name(char const* kernelName,
   last_parallel_scan = kernelName;
 }
 
+struct WorkTag {};
+
 void test_kernel_name_parallel_for() {
   Kokkos::Tools::Experimental::set_begin_parallel_for_callback(
       get_parallel_for_kernel_name);
 
   using ExecutionSpace = Kokkos::DefaultExecutionSpace;
-  struct WorkTag {};
 
   {
     std::string my_label = "my_parallel_for_range_policy";
@@ -80,7 +81,6 @@ void test_kernel_name_parallel_reduce() {
       get_parallel_reduce_kernel_name);
 
   using ExecutionSpace = Kokkos::DefaultExecutionSpace;
-  struct WorkTag {};
 
   {
     std::string my_label = "my_parallel_reduce_range_policy";
@@ -127,7 +127,6 @@ void test_kernel_name_parallel_scan() {
       get_parallel_scan_kernel_name);
 
   using ExecutionSpace = Kokkos::DefaultExecutionSpace;
-  struct WorkTag {};
 
   {
     std::string my_label = "my_parallel_scan_range_policy";
