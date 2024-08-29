@@ -401,7 +401,7 @@ class TestReduceTeam {
       using result_type = Kokkos::View<ScalarType *, Kokkos::HostSpace,
                                        Kokkos::MemoryUnmanaged>;
 
-      ScalarType result[Repeat][3];
+      ScalarType result[Repeat][Count];
 
       const unsigned team_size = team_exec.team_size_recommended(
           functor_type(nwork), Kokkos::ParallelReduceTag());
@@ -410,7 +410,7 @@ class TestReduceTeam {
       team_exec = policy_type(league_size, team_size);
 
       for (unsigned i = 0; i < Repeat; ++i) {
-        result_type tmp(&result[i][0], 3);
+        result_type tmp(&result[i][0], Count);
         Kokkos::parallel_reduce(team_exec, functor_type(nwork), tmp);
       }
 
