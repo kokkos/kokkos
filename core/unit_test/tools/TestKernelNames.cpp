@@ -93,11 +93,13 @@ void test_kernel_name_parallel_reduce() {
 
     Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecutionSpace>(0, 1),
                             my_lambda, my_result);
-    ASSERT_NE(
-        last_parallel_reduce.find(typeid(my_lambda).name()),
-        std::string::npos);  // internally using
-                             // Impl::CombinedFunctorReducer but the name should
-                             // still include the lambda as template parameter
+    ASSERT_NE(last_parallel_reduce.find(typeid(my_lambda).name()),
+              std::string::npos)
+        << last_parallel_reduce << " does not contain "
+        << typeid(my_lambda)
+               .name();  // internally using
+                         // Impl::CombinedFunctorReducer but the name should
+                         // still include the lambda as template parameter
 
     auto my_lambda_with_tag = KOKKOS_LAMBDA(WorkTag, int, float&){};
     Kokkos::parallel_reduce(my_label,
@@ -108,8 +110,10 @@ void test_kernel_name_parallel_reduce() {
     Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecutionSpace, WorkTag>(0, 1),
                             my_lambda_with_tag, my_result);
     ASSERT_NE(last_parallel_reduce.find(typeid(my_lambda_with_tag).name()),
-              std::string::npos);  // ditto and below check that it ends with
-                                   // the WorkTag
+              std::string::npos)
+        << last_parallel_reduce << " does not contain "
+        << typeid(my_lambda_with_tag).name();  // ditto and below check that it
+                                               // ends with the WorkTag
     auto suffix = std::string("/") + typeid(WorkTag).name();
     ASSERT_EQ(last_parallel_reduce.find(suffix),
               last_parallel_reduce.length() - suffix.length());
