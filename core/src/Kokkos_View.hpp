@@ -790,6 +790,12 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
       return 0;
     }
   }
+
+  KOKKOS_FUNCTION
+  typename mdspan_type::index_type extent(size_t r) const noexcept {
+    if(r >= mdspan_type::extents_type::rank()) return 1;
+    return mdspan_type::extent(r);
+  }
 };
 
 template <typename D, class... P>

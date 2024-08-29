@@ -1147,9 +1147,6 @@ struct TestViewMapOperator {
   }
 
   void run() {
-    if (v.extent(0) != TestViewMapOperator<ViewType>::N0)
-      printf("%s %i %i %i\n", typeid(ViewType).name(), (int)ViewType::rank,
-             (int)v.extent(0), (int)TestViewMapOperator<ViewType>::N0);
     ASSERT_EQ(
         v.extent(0),
         (size_t)(0 < ViewType::rank ? TestViewMapOperator<ViewType>::N0 : 1));
