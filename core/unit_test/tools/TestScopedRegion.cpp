@@ -31,7 +31,7 @@ void test_push_region(char const *label) { test_region_stack.push(label); }
 
 void test_pop_region() { test_region_stack.pop(); }
 
-TEST(defaultdevicetype, scoped_profile_region) {
+TEST(kokkosp, scoped_profile_region) {
   Kokkos::Tools::Experimental::set_push_region_callback(test_push_region);
   Kokkos::Tools::Experimental::set_pop_region_callback(test_pop_region);
 

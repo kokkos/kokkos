@@ -57,7 +57,7 @@ void kokkosp_test_destroy_section(std::uint32_t id) {
 
 }  // namespace
 
-TEST(defaultdevicetype, profiling_section) {
+TEST(kokkosp, profiling_section) {
   Kokkos::Profiling::Experimental::set_create_profile_section_callback(
       kokkosp_test_create_section);
   Kokkos::Profiling::Experimental::set_destroy_profile_section_callback(

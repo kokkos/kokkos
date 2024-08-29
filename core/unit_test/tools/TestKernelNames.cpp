@@ -150,16 +150,12 @@ void test_kernel_name_parallel_scan() {
   Kokkos::Tools::Experimental::set_begin_parallel_scan_callback(nullptr);
 }
 
-TEST(defaultdevicetype, kernel_name_parallel_for) {
-  test_kernel_name_parallel_for();
-}
+TEST(kokkosp, kernel_name_parallel_for) { test_kernel_name_parallel_for(); }
 
-TEST(defaultdevicetype, kernel_name_parallel_reduce) {
+TEST(kokkosp, kernel_name_parallel_reduce) {
   test_kernel_name_parallel_reduce();
 }
 
-TEST(defaultdevicetype, kernel_name_parallel_scan) {
-  test_kernel_name_parallel_scan();
-}
+TEST(kokkosp, kernel_name_parallel_scan) { test_kernel_name_parallel_scan(); }
 
 }  // namespace

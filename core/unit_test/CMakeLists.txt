@@ -1081,10 +1081,10 @@ endif()
   SET(KOKKOSP_SOURCES
     UnitTestMainInit.cpp
     tools/TestEventCorrectness.cpp
-    tools/TestWithoutInitializing.cpp
     tools/TestKernelNames.cpp
     tools/TestProfilingSection.cpp
     tools/TestScopedRegion.cpp
+    tools/TestWithoutInitializing.cpp
     )
 
   # FIXME_OPENMPTARGET This test causes internal compiler errors as of 09/01/22
