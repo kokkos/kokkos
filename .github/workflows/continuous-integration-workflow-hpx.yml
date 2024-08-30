@@ -13,59 +13,64 @@ concurrency:
   group: ${ {github.event_name }}-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{github.event_name == 'pull_request'}}
 
-permissions: read-all
+env:
+  HPX_REF: v1.9.0
 
 jobs:
-  hpx:
-    name: hpx
-    runs-on: [ubuntu-latest]
 
+  # The 'env' context is not available for job.container.image, so we need this job.
+  set-vars:
+    runs-on: [ubuntu-latest]
+    outputs:
+        CI_IMAGE_HPX : ${{ steps.common.outputs.CI_IMAGE_HPX }}
+    steps:
+        - id  : common
+          run : |
+              # TODO: We should determine where this image goes.
+              echo "CI_IMAGE_HPX=ghcr.io/kokkos/kokkos/hpx:${{ env.HPX_REF }}" >> $GITHUB_OUTPUT
+
+  hpx-image:
+    needs: [set-vars]
+    runs-on: [ubuntu-latest]
+    container:
+      image: docker:latest
+    permissions:
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64
+          file: scripts/docker/Dockerfile.hpx
+          # Before merging this PR, revert this line to ${{ github.ref == 'refs/heads/develop' }}.
+          push: true
+          tags: ${{ needs.set-vars.outputs.CI_IMAGE_HPX }}
+          cache-from: type=registry,ref=${{ needs.set-vars.outputs.CI_IMAGE_HPX }}
+          cache-to: type=inline
+          build-args: |
+            HPX_REF=${{ env.HPX_REF }}
+          labels: "org.opencontainers.image.source=${{ github.repositoryUrl }}"
+
+  hpx-test:
+    needs: [set-vars, hpx-image]
+    runs-on: [ubuntu-latest]
+    container:
+      image: ${{ needs.set-vars.outputs.CI_IMAGE_HPX }}
     steps:
       - name: checkout code
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
           path: kokkos
-      - name: setup hpx dependencies
-        run: |
-          sudo apt update
-          sudo apt install \
-            clang \
-            hwloc \
-            libasio-dev \
-            libboost-all-dev \
-            ninja-build
-      - name: checkout hpx
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
-        with:
-          repository: STELLAR-GROUP/hpx
-          ref: v1.9.0
-          path: hpx
-      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
-        id:   cache-hpx
-        with:
-          path:         ./hpx/install
-          key:          kokkos-hwloc-${{ github.ref }}-${{ github.sha }}
-          restore-keys: kokkos-hwloc-${{ github.ref }}
-      - name: configure hpx
-        if: steps.cache-hpx.outputs.cache-hit != 'true'
-        run: |
-          mkdir -p hpx/{build,install}
-          cd hpx/build
-          cmake \
-            -GNinja \
-            -DCMAKE_BUILD_TYPE=Debug \
-            -DCMAKE_INSTALL_PREFIX=$PWD/../install \
-            -DCMAKE_CXX_COMPILER=clang++ \
-            -DHPX_WITH_UNITY_BUILD=ON \
-            -DHPX_WITH_MALLOC=system \
-            -DHPX_WITH_NETWORKING=OFF \
-            -DHPX_WITH_EXAMPLES=OFF \
-            -DHPX_WITH_TESTS=OFF \
-            ..
-      - name: build and install hpx
-        if: steps.cache-hpx.outputs.cache-hit != 'true'
-        working-directory: hpx/build
-        run: ninja -j2 install
 
       - name: configure kokkos
         run: |
@@ -77,7 +82,7 @@ jobs:
             -DCMAKE_INSTALL_PREFIX=$PWD/../install \
             -DCMAKE_CXX_COMPILER=clang++ \
             -DCMAKE_CXX_FLAGS="-Werror" \
-            -DHPX_ROOT=$PWD/../../hpx/install \
+            -DHPX_ROOT=${HPX_ROOT} \
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
             -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
             -DKokkos_ENABLE_EXAMPLES=ON \
