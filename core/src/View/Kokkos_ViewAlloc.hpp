@@ -68,9 +68,9 @@ struct ViewValueFunctor {
     // for host from host-device
 #ifdef KOKKOS_ENABLE_CUDA
     if constexpr (std::is_same_v<ExecSpace, Cuda>) {
-      KOKKOS_IF_ON_DEVICE((ptr + i)->~ValueType();)
+      KOKKOS_IF_ON_DEVICE(((ptr + i)->~ValueType();))
     } else {
-      KOKKOS_IF_ON_HOST((ptr + i)->~ValueType();)
+      KOKKOS_IF_ON_HOST(((ptr + i)->~ValueType();))
     }
 #else
     (ptr + i)->~ValueType();
