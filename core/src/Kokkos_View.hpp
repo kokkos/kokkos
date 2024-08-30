@@ -96,7 +96,7 @@ constexpr bool is_assignable(const Kokkos::View<ViewTDst...>& dst,
            (dst.static_extent(5) == src.extent(5))) &&
           ((dst_mdspan::rank_dynamic() >= 7) ||
            (dst.static_extent(6) == src.extent(6))) &&
-          ((dst_mdspan::rank_dynamic() >= 8) ||
+          ((dst_mdspan::rank_dynamic() == 8) ||
            (dst.static_extent(7) == src.extent(7))));
 }
 
@@ -792,9 +792,14 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   }
 
   KOKKOS_FUNCTION
-  typename mdspan_type::index_type extent(size_t r) const noexcept {
-    if(r >= mdspan_type::extents_type::rank()) return 1;
+  constexpr typename mdspan_type::index_type extent(size_t r) const noexcept {
+    if (r >= mdspan_type::extents_type::rank()) return 1;
     return mdspan_type::extent(r);
+  }
+  KOKKOS_FUNCTION
+  static constexpr size_t static_extent(size_t r) noexcept {
+    if (r >= mdspan_type::extents_type::rank()) return 1;
+    return mdspan_type::static_extent(r);
   }
 };
 
