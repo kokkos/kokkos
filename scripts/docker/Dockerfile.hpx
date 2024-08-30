@@ -1,0 +1,63 @@
+FROM ubuntu:22.04 AS base
+
+# Setup HPX dependencies (and others for the CI action).
+RUN <<EOF
+
+    set -ex
+
+    apt update
+
+    apt --yes --no-install-recommends install \
+        ca-certificates \
+        cmake \
+        clang \
+        git \
+        hwloc \
+        libasio-dev \
+        libboost-all-dev \
+        ninja-build
+
+    apt-get clean
+    rm -rf /var/lib/apt/lists/*
+EOF
+
+ARG HPX_REF
+ARG HPX_SOURCE_DIR=/opt/hpx-${HPX_REF}/
+
+FROM base AS prepare-hpx
+
+# Fetch HPX sources.
+RUN git clone --depth=1 --branch=${HPX_REF} -- https://github.com/STELLAR-GROUP/hpx.git ${HPX_SOURCE_DIR}
+
+# Configure, build and install HPX.
+RUN <<EOF
+
+    set -ex
+
+    cd ${HPX_SOURCE_DIR}
+
+    mkdir -p build
+    mkdir -p install
+
+    cd build
+
+    cmake \
+        -GNinja \
+        -DCMAKE_BUILD_TYPE=Debug \
+        -DCMAKE_INSTALL_PREFIX=$PWD/../install \
+        -DCMAKE_CXX_COMPILER=clang++ \
+        -DHPX_WITH_UNITY_BUILD=ON \
+        -DHPX_WITH_MALLOC=system \
+        -DHPX_WITH_NETWORKING=OFF \
+        -DHPX_WITH_EXAMPLES=OFF \
+        -DHPX_WITH_TESTS=OFF \
+        ..
+
+    ninja install
+EOF
+
+FROM base AS final
+
+COPY --from=prepare-hpx ${HPX_SOURCE_DIR}/install ${HPX_SOURCE_DIR}/install
+
+ENV HPX_ROOT=${HPX_SOURCE_DIR}/install
