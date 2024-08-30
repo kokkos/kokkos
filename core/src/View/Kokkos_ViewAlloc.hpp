@@ -62,7 +62,19 @@ struct ViewValueFunctor {
   }
 
   KOKKOS_FUNCTION void operator()(DestroyTag, const size_t i) const {
+    // When instantiating a View on host execution space with a host only
+    // destructor the workaround for CUDA device symbol instantiation tries to
+    // still compile a destruction kernel for the device, and issues a warning
+    // for host from host-device
+#ifdef KOKKOS_ENABLE_CUDA
+    if constexpr (std::is_same_v<ExecSpace, Cuda>) {
+      KOKKOS_IF_ON_DEVICE(((ptr + i)->~ValueType();))
+    } else {
+      KOKKOS_IF_ON_HOST(((ptr + i)->~ValueType();))
+    }
+#else
     (ptr + i)->~ValueType();
+#endif
   }
 
   ViewValueFunctor()                                   = default;
