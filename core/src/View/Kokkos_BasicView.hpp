@@ -88,6 +88,84 @@ class BasicView
   ///@{
   using mdspan_type::mdspan;
 
+ private:
+  template <class RT, class RE, class RL, class RA>
+  KOKKOS_INLINE_FUNCTION void check_basic_view_constructibility(
+      const BasicView<RT, RE, RL, RA> &rhs) {
+    using src_t          = typename BasicView<RT, RE, RL, RA>::layout_type;
+    using dst_t          = layout_type;
+    constexpr size_t rnk = mdspan_type::rank();
+    if constexpr (!std::is_same_v<src_t, dst_t>) {
+      if constexpr (Impl::is_layout_left_padded<dst_t>::value) {
+        if constexpr (std::is_same_v<src_t, layout_stride>) {
+          index_type stride = 1;
+          for (size_t r = 0; r < rnk; r++) {
+            if (rhs.stride(r) != stride)
+              Kokkos::abort("View assignment must have compatible layouts");
+            if constexpr (rnk > 1)
+              stride *= (r == 0 ? rhs.stride(1) : rhs.extent(r));
+          }
+        }
+      }
+      if constexpr (Impl::is_layout_right_padded<dst_t>::value) {
+        if constexpr (std::is_same_v<src_t, layout_stride>) {
+          index_type stride = 1;
+          if constexpr (rnk > 0) {
+            for (size_t r = rnk; r > 0; r--) {
+              if (rhs.stride(r - 1) != stride)
+                Kokkos::abort("View assignment must have compatible layouts");
+              if constexpr (rnk > 1)
+                stride *= (r == rnk ? rhs.stride(r - 2) : rhs.extent(r - 1));
+            }
+          }
+        }
+      }
+      if constexpr (std::is_same_v<dst_t, layout_left>) {
+        if constexpr (std::is_same_v<src_t, layout_stride>) {
+          index_type stride = 1;
+          for (size_t r = 0; r < rnk; r++) {
+            if (rhs.stride(r) != stride)
+              Kokkos::abort("View assignment must have compatible layouts");
+            stride *= rhs.extent(r);
+          }
+        } else if constexpr (Impl::is_layout_left_padded<src_t>::value &&
+                             rnk > 1) {
+          if (rhs.stride(1) != rhs.extent(0))
+            Kokkos::abort("View assignment must have compatible layouts");
+        }
+      }
+      if constexpr (std::is_same_v<dst_t, layout_right>) {
+        if constexpr (std::is_same_v<src_t, layout_stride>) {
+          index_type stride = 1;
+          if constexpr (rnk > 0) {
+            for (size_t r = rnk; r > 0; r--) {
+              if (rhs.stride(r - 1) != stride)
+                Kokkos::abort("View assignment must have compatible layouts");
+              stride *= rhs.extent(r - 1);
+            }
+          }
+        } else if constexpr (Impl::is_layout_right_padded<src_t>::value &&
+                             rnk > 1) {
+          if (rhs.stride(rnk - 2) != rhs.extent(rnk - 1))
+            Kokkos::abort("View assignment must have compatible layouts");
+        }
+      }
+    }
+  }
+
+ public:
+  template <class RT, class RE, class RL, class RA>
+  KOKKOS_INLINE_FUNCTION BasicView(
+      const BasicView<RT, RE, RL, RA> &rhs,
+      std::enable_if_t<
+          std::is_constructible_v<
+              mdspan_type, typename BasicView<RT, RE, RL, RA>::mdspan_type>,
+          void *> = nullptr)
+      : mdspan_type(rhs) {
+    // Kokkos View precondition checks happen in release builds
+    check_basic_view_constructibility(rhs);
+  }
+
   ///
   /// Construct from a given mapping
   ///
