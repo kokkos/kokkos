@@ -158,4 +158,26 @@ TEST(kokkosp, kernel_name_parallel_reduce) {
 
 TEST(kokkosp, kernel_name_parallel_scan) { test_kernel_name_parallel_scan(); }
 
+TEST(kokkosp, kernel_name_internal) {
+  struct ThisType {};
+  {
+    std::string const label("my_label");
+    Kokkos::Impl::ParallelConstructName<ThisType, void> pcn(label);
+    ASSERT_EQ(pcn.get(), label);
+    std::string const empty_label("");
+    Kokkos::Impl::ParallelConstructName<ThisType, void> empty_pcn(empty_label);
+    ASSERT_EQ(empty_pcn.get(), typeid(ThisType).name());
+  }
+  {
+    std::string const label("my_label");
+    Kokkos::Impl::ParallelConstructName<ThisType, WorkTag> pcn(label);
+    ASSERT_EQ(pcn.get(), label);
+    std::string const empty_label("");
+    Kokkos::Impl::ParallelConstructName<ThisType, WorkTag> empty_pcn(
+        empty_label);
+    ASSERT_EQ(empty_pcn.get(), std::string(typeid(ThisType).name()) + "/" +
+                                   typeid(WorkTag).name());
+  }
+}
+
 }  // namespace
