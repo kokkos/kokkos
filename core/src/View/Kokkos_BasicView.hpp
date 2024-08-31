@@ -304,21 +304,6 @@ class BasicView
         mdspan_type{typename mdspan_type::data_handle_type(ptr),
                     mdspan_type::mapping(), mdspan_type::accessor()});
   }
-
- private:
-  template <typename E, bool AllowPadding, bool Initialize,
-            bool SequentialHostInit>
-  KOKKOS_INLINE_FUNCTION constexpr BasicView(
-      const mapping_type &layout_mapping, std::string_view label,
-      const memory_space &mem_space_instance, const E &exec_space_instance,
-      std::integral_constant<bool, AllowPadding> allow_padding,
-      std::integral_constant<bool, Initialize> initialize,
-      std::integral_constant<bool, SequentialHostInit> sequential_host_init)
-      : mdspan_type(
-            data_handle_type(Impl::make_shared_allocation_record<ElementType>(
-                layout_mapping, label, mem_space_instance, &exec_space_instance,
-                allow_padding, initialize, sequential_host_init)),
-            layout_mapping) {}
 };
 }  // namespace Kokkos
 
