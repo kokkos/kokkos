@@ -799,7 +799,8 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   KOKKOS_FUNCTION
   static constexpr size_t static_extent(size_t r) noexcept {
     if (r >= mdspan_type::extents_type::rank()) return 1;
-    return mdspan_type::static_extent(r);
+    size_t value = mdspan_type::static_extent(r);
+    return value == Kokkos::dynamic_extent ? 0 : value;
   }
 };
 
