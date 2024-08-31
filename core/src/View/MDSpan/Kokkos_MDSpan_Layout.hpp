@@ -120,9 +120,11 @@ KOKKOS_INLINE_FUNCTION auto array_layout_from_mapping(
 template <class MappingType, class ArrayLayout, size_t... Idx>
 KOKKOS_INLINE_FUNCTION auto mapping_from_array_layout_impl(
     ArrayLayout layout, std::index_sequence<Idx...>) {
-  using index_type = typename MappingType::index_type;
-  return MappingType{dextents<index_type, MappingType::extents_type::rank()>{
-      layout.dimension[Idx]...}};
+  using index_type   = typename MappingType::index_type;
+  using extents_type = typename MappingType::extents_type;
+  return MappingType{
+      extents_type{dextents<index_type, MappingType::extents_type::rank()>{
+          layout.dimension[Idx]...}}};
 }
 template <class MappingType, size_t... Idx>
 KOKKOS_INLINE_FUNCTION auto mapping_from_array_layout_impl(
@@ -132,10 +134,12 @@ KOKKOS_INLINE_FUNCTION auto mapping_from_array_layout_impl(
   using index_type = typename MappingType::index_type;
   index_type strides[MappingType::extents_type::rank()] = {
       layout.stride[Idx]...};
-  return MappingType{mdspan_non_standard_tag(),
-                     dextents<index_type, MappingType::extents_type::rank()>{
-                         layout.dimension[Idx]...},
-                     strides};
+  return MappingType{
+      mdspan_non_standard_tag(),
+      static_cast<typename MappingType::extents_type>(
+          dextents<index_type, MappingType::extents_type::rank()>{
+              layout.dimension[Idx]...}),
+      strides};
 }
 
 template <class MappingType, class ArrayLayout>
