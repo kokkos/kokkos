@@ -347,7 +347,7 @@ public:
   MDSPAN_INLINE_FUNCTION
   constexpr mapping(const _Mapping &other_mapping) noexcept
       : padded_stride(padded_stride_type::init_padding(
-            other_mapping.extents(),
+            static_cast<extents_type>(other_mapping.extents()),
             other_mapping.extents().extent(extent_to_pad_idx))),
         exts(other_mapping.extents()) {}
 
@@ -707,7 +707,7 @@ public:
   MDSPAN_INLINE_FUNCTION
   constexpr mapping(const _Mapping &other_mapping) noexcept
       : padded_stride(padded_stride_type::init_padding(
-            other_mapping.extents(),
+            static_cast<extents_type>(other_mapping.extents()),
             other_mapping.extents().extent(extent_to_pad_idx))),
         exts(other_mapping.extents()) {}
 
