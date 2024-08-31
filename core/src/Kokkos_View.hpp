@@ -59,7 +59,7 @@ struct is_always_assignable_impl<Kokkos::View<ViewTDst...>,
   using src_mdspan = typename Kokkos::View<ViewTSrc...>::mdspan_type;
 
   constexpr static bool value =
-      std::is_assignable_v<dst_mdspan, src_mdspan> &&
+      std::is_constructible_v<dst_mdspan, src_mdspan> &&
       static_cast<int>(Kokkos::View<ViewTDst...>::rank_dynamic) >=
           static_cast<int>(Kokkos::View<ViewTSrc...>::rank_dynamic);
 };
@@ -81,7 +81,7 @@ constexpr bool is_assignable(const Kokkos::View<ViewTDst...>& dst,
 
   return is_always_assignable_v<Kokkos::View<ViewTDst...>,
                                 Kokkos::View<ViewTSrc...> > ||
-         (std::is_assignable_v<dst_mdspan, src_mdspan> &&
+         (std::is_constructible_v<dst_mdspan, src_mdspan> &&
           ((dst_mdspan::rank_dynamic() >= 1) ||
            (dst.static_extent(0) == src.extent(0))) &&
           ((dst_mdspan::rank_dynamic() >= 2) ||
@@ -300,6 +300,13 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
     return base_t::data_handle().tracker();
   }
   //----------------------------------------
+  // Operators always provided by View
+
+  template <class OtherIndexType>
+  KOKKOS_FUNCTION constexpr reference_type operator[](
+      const OtherIndexType& idx) const {
+    return base_t::operator()(idx);
+  }
 
  private:
 
@@ -475,22 +482,16 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   // Compatible view copy constructor and assignment
   // may assign unmanaged from managed.
 
-  template <class RT, class... RP>
-  KOKKOS_INLINE_FUNCTION View(
-      const View<RT, RP...>& rhs,
-      std::enable_if_t<std::is_constructible_v<
-                           mdspan_type, typename View<RT, RP...>::mdspan_type>,
-                       void*> = nullptr)
-      : base_t(rhs) {}
-
-  template <class RT, class... RP>
-  KOKKOS_INLINE_FUNCTION
-      std::enable_if_t<std::is_constructible_v<
-                           mdspan_type, typename View<RT, RP...>::mdspan_type>,
-                       View>&
-      operator=(const View<RT, RP...>& rhs) {
-    base_t::operator=(rhs);
-    return *this;
+  template <class OtherT, class... OtherArgs>
+    requires(std::is_constructible_v<
+             mdspan_type, typename View<OtherT, OtherArgs...>::mdspan_type>)
+  KOKKOS_INLINE_FUNCTION View(const View<OtherT, OtherArgs...>& other)
+      : base_t(static_cast<typename mdspan_type::data_handle_type>(
+                   other.data_handle()),
+               static_cast<typename mdspan_type::mapping_type>(other.mapping()),
+               static_cast<typename mdspan_type::accessor_type>(
+                   other.accessor())) {
+    base_t::check_basic_view_constructibility(other.mapping());
   }
 
   //----------------------------------------
@@ -792,14 +793,14 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   }
 
   KOKKOS_FUNCTION
-  constexpr typename mdspan_type::index_type extent(size_t r) const noexcept {
-    if (r >= mdspan_type::extents_type::rank()) return 1;
-    return mdspan_type::extent(r);
+  constexpr typename base_t::index_type extent(size_t r) const noexcept {
+    if (r >= base_t::extents_type::rank()) return 1;
+    return base_t::extent(r);
   }
   KOKKOS_FUNCTION
   static constexpr size_t static_extent(size_t r) noexcept {
-    if (r >= mdspan_type::extents_type::rank()) return 1;
-    size_t value = mdspan_type::static_extent(r);
+    if (r >= base_t::extents_type::rank()) return 1;
+    size_t value = base_t::extents_type::static_extent(r);
     return value == Kokkos::dynamic_extent ? 0 : value;
   }
 };
