@@ -171,15 +171,14 @@ class BasicView
   ///
   KOKKOS_INLINE_FUNCTION explicit constexpr BasicView(
       const std::string &label, const mapping_type &mapping)
-      : BasicView(mapping, label, memory_space{}, execution_space{},
-                  std::false_type{}, std::false_type{}, std::false_type{}) {}
+      : BasicView(view_alloc(label), mapping) {}
 
   ///
   /// Construct from a given extents
   ///
   KOKKOS_INLINE_FUNCTION explicit constexpr BasicView(const std::string &label,
                                                       const extents_type &ext)
-      : BasicView(label, mapping_type{ext}) {}
+      : BasicView(view_alloc(label), mapping_type{ext}) {}
 
   template <typename... OtherIndexTypes>
   KOKKOS_INLINE_FUNCTION explicit constexpr BasicView(
@@ -195,6 +194,7 @@ class BasicView
   data_handle_type create_data_handle(
       const Impl::ViewCtorProp<P...> &arg_prop,
       const typename mdspan_type::mapping_type &arg_mapping) {
+    constexpr bool has_exec = Impl::ViewCtorProp<P...>::has_execution_space;
     // Copy the input allocation properties with possibly defaulted properties
     // We need to split it in two to avoid MSVC compiler errors
     auto prop_copy_tmp =
@@ -214,7 +214,8 @@ class BasicView
     return data_handle_type(Impl::make_shared_allocation_record<ElementType>(
         arg_mapping, Impl::get_property<Impl::LabelTag>(prop_copy),
         Impl::get_property<Impl::MemorySpaceTag>(prop_copy),
-        &Impl::get_property<Impl::ExecutionSpaceTag>(prop_copy),
+        has_exec ? &Impl::get_property<Impl::ExecutionSpaceTag>(prop_copy)
+                 : nullptr,
         std::integral_constant<bool, alloc_prop::allow_padding>(),
         std::integral_constant<bool, alloc_prop::initialize>(),
         std::integral_constant<bool, alloc_prop::sequential_host_init>()));
