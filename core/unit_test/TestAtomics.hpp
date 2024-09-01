@@ -16,7 +16,7 @@
 
 #include <Kokkos_Core.hpp>
 
-namespace TestAtomic {
+namespace {
 
 // Struct for testing arbitrary size atomics.
 
@@ -444,73 +444,55 @@ T LoopVariantSerial(int loop, int test) {
 }
 
 template <class T, class DeviceType>
-bool Loop(int loop, int test) {
+void Loop(int loop, int test) {
   T res       = LoopVariant<T, DeviceType>(loop, test);
   T resSerial = LoopVariantSerial<T>(loop, test);
 
-  bool passed = true;
-
-  if (resSerial != res) {
-    passed = false;
-
-    std::cout << "Loop<" << typeid(T).name() << ">( test = " << test
-              << " FAILED : " << resSerial << " != " << res << std::endl;
-  }
-
-  return passed;
+  ASSERT_EQ(res, resSerial) << "Loop<" << typeid(T).name() << ">(loop=" << loop
+                            << ",test=" << test << ")";
 }
-
-}  // namespace TestAtomic
-
-namespace Test {
 
 TEST(TEST_CATEGORY, atomics) {
   const int loop_count = 1e4;
 
-  ASSERT_TRUE((TestAtomic::Loop<int, TEST_EXECSPACE>(loop_count, 1)));
-  ASSERT_TRUE((TestAtomic::Loop<int, TEST_EXECSPACE>(loop_count, 2)));
-  ASSERT_TRUE((TestAtomic::Loop<int, TEST_EXECSPACE>(loop_count, 3)));
+  Loop<int, TEST_EXECSPACE>(loop_count, 1);
+  Loop<int, TEST_EXECSPACE>(loop_count, 2);
+  Loop<int, TEST_EXECSPACE>(loop_count, 3);
 
-  ASSERT_TRUE((TestAtomic::Loop<unsigned int, TEST_EXECSPACE>(loop_count, 1)));
-  ASSERT_TRUE((TestAtomic::Loop<unsigned int, TEST_EXECSPACE>(loop_count, 2)));
-  ASSERT_TRUE((TestAtomic::Loop<unsigned int, TEST_EXECSPACE>(loop_count, 3)));
+  Loop<unsigned int, TEST_EXECSPACE>(loop_count, 1);
+  Loop<unsigned int, TEST_EXECSPACE>(loop_count, 2);
+  Loop<unsigned int, TEST_EXECSPACE>(loop_count, 3);
 
-  ASSERT_TRUE((TestAtomic::Loop<long int, TEST_EXECSPACE>(loop_count, 1)));
-  ASSERT_TRUE((TestAtomic::Loop<long int, TEST_EXECSPACE>(loop_count, 2)));
-  ASSERT_TRUE((TestAtomic::Loop<long int, TEST_EXECSPACE>(loop_count, 3)));
+  Loop<long int, TEST_EXECSPACE>(loop_count, 1);
+  Loop<long int, TEST_EXECSPACE>(loop_count, 2);
+  Loop<long int, TEST_EXECSPACE>(loop_count, 3);
 
-  ASSERT_TRUE(
-      (TestAtomic::Loop<unsigned long int, TEST_EXECSPACE>(loop_count, 1)));
-  ASSERT_TRUE(
-      (TestAtomic::Loop<unsigned long int, TEST_EXECSPACE>(loop_count, 2)));
-  ASSERT_TRUE(
-      (TestAtomic::Loop<unsigned long int, TEST_EXECSPACE>(loop_count, 3)));
+  Loop<unsigned long int, TEST_EXECSPACE>(loop_count, 1);
+  Loop<unsigned long int, TEST_EXECSPACE>(loop_count, 2);
+  Loop<unsigned long int, TEST_EXECSPACE>(loop_count, 3);
 
-  ASSERT_TRUE((TestAtomic::Loop<long long int, TEST_EXECSPACE>(loop_count, 1)));
-  ASSERT_TRUE((TestAtomic::Loop<long long int, TEST_EXECSPACE>(loop_count, 2)));
-  ASSERT_TRUE((TestAtomic::Loop<long long int, TEST_EXECSPACE>(loop_count, 3)));
+  Loop<long long int, TEST_EXECSPACE>(loop_count, 1);
+  Loop<long long int, TEST_EXECSPACE>(loop_count, 2);
+  Loop<long long int, TEST_EXECSPACE>(loop_count, 3);
 
-  ASSERT_TRUE((TestAtomic::Loop<double, TEST_EXECSPACE>(loop_count, 1)));
-  ASSERT_TRUE((TestAtomic::Loop<double, TEST_EXECSPACE>(loop_count, 2)));
-  ASSERT_TRUE((TestAtomic::Loop<double, TEST_EXECSPACE>(loop_count, 3)));
+  Loop<double, TEST_EXECSPACE>(loop_count, 1);
+  Loop<double, TEST_EXECSPACE>(loop_count, 2);
+  Loop<double, TEST_EXECSPACE>(loop_count, 3);
 
-  ASSERT_TRUE((TestAtomic::Loop<float, TEST_EXECSPACE>(100, 1)));
-  ASSERT_TRUE((TestAtomic::Loop<float, TEST_EXECSPACE>(100, 2)));
-  ASSERT_TRUE((TestAtomic::Loop<float, TEST_EXECSPACE>(100, 3)));
+  Loop<float, TEST_EXECSPACE>(100, 1);
+  Loop<float, TEST_EXECSPACE>(100, 2);
+  Loop<float, TEST_EXECSPACE>(100, 3);
 
   // FIXME_OPENMPTARGET
   // FIXME_OPENACC: atomic operations on composite types are not supported.
 #if !defined(KOKKOS_ENABLE_OPENMPTARGET) && !defined(KOKKOS_ENABLE_OPENACC)
-  ASSERT_TRUE((TestAtomic::Loop<Kokkos::complex<float>, TEST_EXECSPACE>(1, 1)));
-  ASSERT_TRUE((TestAtomic::Loop<Kokkos::complex<float>, TEST_EXECSPACE>(1, 2)));
-  ASSERT_TRUE((TestAtomic::Loop<Kokkos::complex<float>, TEST_EXECSPACE>(1, 3)));
+  Loop<Kokkos::complex<float>, TEST_EXECSPACE>(1, 1);
+  Loop<Kokkos::complex<float>, TEST_EXECSPACE>(1, 2);
+  Loop<Kokkos::complex<float>, TEST_EXECSPACE>(1, 3);
 
-  ASSERT_TRUE(
-      (TestAtomic::Loop<Kokkos::complex<float>, TEST_EXECSPACE>(100, 1)));
-  ASSERT_TRUE(
-      (TestAtomic::Loop<Kokkos::complex<float>, TEST_EXECSPACE>(100, 2)));
-  ASSERT_TRUE(
-      (TestAtomic::Loop<Kokkos::complex<float>, TEST_EXECSPACE>(100, 3)));
+  Loop<Kokkos::complex<float>, TEST_EXECSPACE>(100, 1);
+  Loop<Kokkos::complex<float>, TEST_EXECSPACE>(100, 2);
+  Loop<Kokkos::complex<float>, TEST_EXECSPACE>(100, 3);
 
 // FIXME_SYCL Replace macro by SYCL_EXT_ONEAPI_DEVICE_GLOBAL or remove
 // condition alltogether when possible.
@@ -518,28 +500,19 @@ TEST(TEST_CATEGORY, atomics) {
     !defined(KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED)
   if (std::is_same_v<TEST_EXECSPACE, Kokkos::SYCL>) return;
 #endif
-  ASSERT_TRUE(
-      (TestAtomic::Loop<Kokkos::complex<double>, TEST_EXECSPACE>(1, 1)));
-  ASSERT_TRUE(
-      (TestAtomic::Loop<Kokkos::complex<double>, TEST_EXECSPACE>(1, 2)));
-  ASSERT_TRUE(
-      (TestAtomic::Loop<Kokkos::complex<double>, TEST_EXECSPACE>(1, 3)));
+  Loop<Kokkos::complex<double>, TEST_EXECSPACE>(1, 1);
+  Loop<Kokkos::complex<double>, TEST_EXECSPACE>(1, 2);
+  Loop<Kokkos::complex<double>, TEST_EXECSPACE>(1, 3);
 
-  ASSERT_TRUE(
-      (TestAtomic::Loop<Kokkos::complex<double>, TEST_EXECSPACE>(100, 1)));
-  ASSERT_TRUE(
-      (TestAtomic::Loop<Kokkos::complex<double>, TEST_EXECSPACE>(100, 2)));
-  ASSERT_TRUE(
-      (TestAtomic::Loop<Kokkos::complex<double>, TEST_EXECSPACE>(100, 3)));
+  Loop<Kokkos::complex<double>, TEST_EXECSPACE>(100, 1);
+  Loop<Kokkos::complex<double>, TEST_EXECSPACE>(100, 2);
+  Loop<Kokkos::complex<double>, TEST_EXECSPACE>(100, 3);
 
 // WORKAROUND MSVC
 #ifndef _WIN32
-  ASSERT_TRUE(
-      (TestAtomic::Loop<TestAtomic::SuperScalar<4>, TEST_EXECSPACE>(100, 1)));
-  ASSERT_TRUE(
-      (TestAtomic::Loop<TestAtomic::SuperScalar<4>, TEST_EXECSPACE>(100, 2)));
-  ASSERT_TRUE(
-      (TestAtomic::Loop<TestAtomic::SuperScalar<4>, TEST_EXECSPACE>(100, 3)));
+  Loop<SuperScalar<4>, TEST_EXECSPACE>(100, 1);
+  Loop<SuperScalar<4>, TEST_EXECSPACE>(100, 2);
+  Loop<SuperScalar<4>, TEST_EXECSPACE>(100, 3);
 #endif
 #endif
 }
@@ -587,4 +560,4 @@ struct TpetraUseCase {
 
 TEST(TEST_CATEGORY, atomics_tpetra_max_abs) { TpetraUseCase().check(); }
 
-}  // namespace Test
+}  // namespace
