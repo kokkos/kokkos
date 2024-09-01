@@ -118,26 +118,6 @@ struct TestBasicView {
     EXPECT_EQ(view.data_handle().get_label(), "test_view");
   }
 
-  template <class ExtentsType, class... IndexTypes>
-  static void test_indices_constructor(ExtentsType cmp_extents,
-                                       IndexTypes... indices) {
-    using extents_type  = ExtentsType;
-    using layout_type   = Kokkos::Experimental::layout_right_padded<>;
-    using accessor_type = Kokkos::Impl::checked_reference_counted_accessor<
-        T, typename ExecutionSpace::memory_space>;
-    using view_type =
-        Kokkos::BasicView<T, ExtentsType, layout_type, accessor_type>;
-
-    view_type view("test_view", indices...);
-
-    EXPECT_TRUE(view.data_handle().has_record());
-    EXPECT_NE(view.data_handle().get(), nullptr);
-    EXPECT_EQ(view.extents(), cmp_extents);
-    EXPECT_EQ(view.data_handle().use_count(), 1);
-    EXPECT_TRUE(view.is_exhaustive());
-    EXPECT_EQ(view.data_handle().get_label(), "test_view");
-  }
-
   template <class LayoutType, class Extents>
   static void test_access_with_extents(const Extents &extents) {
     using extents_type  = Extents;
@@ -192,20 +172,6 @@ struct TestBasicView {
         Kokkos::extents<std::size_t, 2, Kokkos::dynamic_extent, 4>(8));
     test_extents_constructor(Kokkos::extents<std::size_t, 2, 4>());
     test_extents_constructor(Kokkos::extents<std::size_t>());
-
-    test_indices_constructor(
-        Kokkos::extents<std::size_t, 2, Kokkos::dynamic_extent, 4>{2, 3, 4}, 3);
-    test_indices_constructor(
-        Kokkos::extents<std::size_t, 2, Kokkos::dynamic_extent, 4>{2, 3, 4}, 2,
-        3, 4);
-    test_indices_constructor(Kokkos::extents<std::size_t, 2, 4>{2, 4});
-    test_indices_constructor(Kokkos::extents<std::size_t, 2, 4>{2, 4}, 2, 4);
-    test_indices_constructor(Kokkos::extents<std::size_t>{});
-    test_indices_constructor(
-        Kokkos::extents<std::size_t, Kokkos::dynamic_extent,
-                        Kokkos::dynamic_extent, Kokkos::dynamic_extent>{5, 6,
-                                                                        7},
-        5, 6.3, 7ULL);
 
     test_mapping_constructor<Kokkos::Experimental::layout_left_padded>(
         Kokkos::extents<std::size_t, 2, Kokkos::dynamic_extent>(2, 5), 8);

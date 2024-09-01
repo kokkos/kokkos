@@ -282,15 +282,6 @@ class BasicView {
                                                       const extents_type &ext)
       : BasicView(view_alloc(label), mapping_type{ext}) {}
 
-  template <typename... OtherIndexTypes>
-  KOKKOS_INLINE_FUNCTION explicit constexpr BasicView(
-      const std::enable_if_t<
-          std::is_constructible_v<extents_type, OtherIndexTypes...>,
-          std::string> &label,
-      OtherIndexTypes... indices)
-      : BasicView(label, extents_type{indices...}) {}
-  ///@}
-
  private:
   template <class... P>
   data_handle_type create_data_handle(
