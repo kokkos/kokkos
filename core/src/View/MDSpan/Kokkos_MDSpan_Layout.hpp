@@ -26,10 +26,23 @@ static_assert(false,
 #include "Kokkos_MDSpan_Extents.hpp"
 #include <View/Kokkos_ViewDataAnalysis.hpp>
 
+namespace Kokkos {
+template <>
+struct is_array_layout<layout_stride> : std::true_type {};
+template <size_t Pad>
+struct is_array_layout<Experimental::layout_left_padded<Pad>> : std::true_type {
+};
+template <size_t Pad>
+struct is_array_layout<Experimental::layout_right_padded<Pad>>
+    : std::true_type {};
+}  // namespace Kokkos
+
 namespace Kokkos::Impl {
 
 template <class ArrayLayout>
-struct LayoutFromArrayLayout;
+struct LayoutFromArrayLayout {
+  using type = ArrayLayout;
+};
 
 template <>
 struct LayoutFromArrayLayout<Kokkos::LayoutLeft> {
@@ -58,7 +71,8 @@ KOKKOS_INLINE_FUNCTION auto array_layout_from_mapping(
   static_assert(rank <= ARRAY_LAYOUT_MAX_RANK,
                 "Unsupported rank for mdspan (must be <= 8)");
 
-  if constexpr (std::is_same_v<ArrayLayout, LayoutStride>) {
+  if constexpr (std::is_same_v<ArrayLayout, LayoutStride> ||
+                std::is_same_v<ArrayLayout, layout_stride>) {
     return Kokkos::LayoutStride{
         rank > 0 ? ext.extent(0) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
         rank > 0 ? mapping.stride(0) : 0,

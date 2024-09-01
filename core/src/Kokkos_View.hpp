@@ -149,6 +149,8 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
       typename Impl::BasicViewFromTraits<DataType, Properties...>::type;
 
  public:
+  using base_t::base_t;
+
   // typedefs originally from ViewTraits
   using traits               = ViewTraits<DataType, Properties...>;
   using value_type           = typename traits::value_type;
@@ -512,6 +514,56 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
                        typename traits::array_layout const& arg_layout)
       : base_t(
             arg_prop,
+            Impl::mapping_from_array_layout<typename mdspan_type::mapping_type>(
+                arg_layout)) {}
+
+  template <class... P>
+  explicit inline View(const base_t::data_handle_type& handle,
+                       typename traits::array_layout const& arg_layout)
+      : base_t(
+            handle,
+            Impl::mapping_from_array_layout<typename mdspan_type::mapping_type>(
+                arg_layout)) {}
+
+  explicit inline View(const base_t::data_handle_type& handle,
+                       const LayoutStride& arg_layout)
+    requires(std::is_same_v<typename base_t::layout_type, layout_stride>)
+      : base_t(
+            handle,
+            Impl::mapping_from_array_layout<typename mdspan_type::mapping_type>(
+                arg_layout)) {}
+
+  explicit inline View(const base_t::data_handle_type& handle,
+                       const LayoutLeft& arg_layout)
+    requires(std::is_same_v<typename base_t::layout_type,
+                            Experimental::layout_left_padded<> >)
+      : base_t(
+            handle,
+            Impl::mapping_from_array_layout<typename mdspan_type::mapping_type>(
+                arg_layout)) {}
+
+  explicit inline View(const base_t::data_handle_type& handle,
+                       const LayoutRight& arg_layout)
+    requires(std::is_same_v<typename base_t::layout_type,
+                            Experimental::layout_right_padded<> >)
+      : base_t(
+            handle,
+            Impl::mapping_from_array_layout<typename mdspan_type::mapping_type>(
+                arg_layout)) {}
+
+  explicit inline View(const base_t::data_handle_type& handle,
+                       const LayoutLeft& arg_layout)
+    requires(std::is_same_v<typename base_t::layout_type, layout_left>)
+      : base_t(
+            handle,
+            Impl::mapping_from_array_layout<typename mdspan_type::mapping_type>(
+                arg_layout)) {}
+
+  explicit inline View(const base_t::data_handle_type& handle,
+                       const LayoutRight& arg_layout)
+    requires(std::is_same_v<typename base_t::layout_type, layout_right>)
+      : base_t(
+            handle,
             Impl::mapping_from_array_layout<typename mdspan_type::mapping_type>(
                 arg_layout)) {}
 
