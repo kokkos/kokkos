@@ -429,6 +429,7 @@ T LoopVariant(int loop, int test) {
     case 3: return ExchLoop<T, DeviceType>(loop);
   }
 
+  Kokkos::abort("unreachable");
   return 0;
 }
 
@@ -440,6 +441,7 @@ T LoopVariantSerial(int loop, int test) {
     case 3: return ExchLoopSerial<T>(loop);
   }
 
+  Kokkos::abort("unreachable");
   return 0;
 }
 
