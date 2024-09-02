@@ -103,14 +103,17 @@ struct DynRankDimTraits {
        std::is_same_v<Layout, Kokkos::LayoutLeft>),
       Layout>
   createLayout(const Layout& layout) {
-    return Layout(layout.dimension[0] != unspecified ? layout.dimension[0] : 1,
-                  layout.dimension[1] != unspecified ? layout.dimension[1] : 1,
-                  layout.dimension[2] != unspecified ? layout.dimension[2] : 1,
-                  layout.dimension[3] != unspecified ? layout.dimension[3] : 1,
-                  layout.dimension[4] != unspecified ? layout.dimension[4] : 1,
-                  layout.dimension[5] != unspecified ? layout.dimension[5] : 1,
-                  layout.dimension[6] != unspecified ? layout.dimension[6] : 1,
-                  layout.dimension[7] != unspecified ? layout.dimension[7] : 1);
+    Layout new_layout(
+        layout.dimension[0] != unspecified ? layout.dimension[0] : 1,
+        layout.dimension[1] != unspecified ? layout.dimension[1] : 1,
+        layout.dimension[2] != unspecified ? layout.dimension[2] : 1,
+        layout.dimension[3] != unspecified ? layout.dimension[3] : 1,
+        layout.dimension[4] != unspecified ? layout.dimension[4] : 1,
+        layout.dimension[5] != unspecified ? layout.dimension[5] : 1,
+        layout.dimension[6] != unspecified ? layout.dimension[6] : 1,
+        layout.dimension[7] != unspecified ? layout.dimension[7] : 1);
+    new_layout.stride = layout.stride;
+    return new_layout;
   }
 
   // LayoutStride
