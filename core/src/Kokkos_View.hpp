@@ -476,6 +476,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
     return *this;
   }
 
+  KOKKOS_FUNCTION
   View(typename base_t::data_handle_type p,
        const typename base_t::mapping_type& m)
       : base_t(p, m){};
@@ -510,21 +511,28 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   // Allocation according to allocation properties and array layout
 
   template <class... P>
-  explicit inline View(const Impl::ViewCtorProp<P...>& arg_prop,
-                       typename traits::array_layout const& arg_layout)
+  KOKKOS_FUNCTION explicit inline View(
+      const Impl::ViewCtorProp<P...>& arg_prop,
+      typename traits::array_layout const& arg_layout)
       : base_t(
             arg_prop,
             Impl::mapping_from_array_layout<typename mdspan_type::mapping_type>(
                 arg_layout)) {}
 
   template <class... P>
-  explicit inline View(const base_t::data_handle_type& handle,
-                       typename traits::array_layout const& arg_layout)
+  KOKKOS_FUNCTION explicit inline View(
+      const base_t::data_handle_type& handle,
+      typename traits::array_layout const& arg_layout)
       : base_t(
             handle,
             Impl::mapping_from_array_layout<typename mdspan_type::mapping_type>(
                 arg_layout)) {}
 
+  // Constructors from legacy layouts when using Views of the new layouts
+  // LayoutLeft -> layout_left, layout_left_padded
+  // LayoutRight -> layout_right, layout_right_padded
+  // LayoutStride -> layout_stride
+  KOKKOS_FUNCTION
   explicit inline View(const base_t::data_handle_type& handle,
                        const LayoutStride& arg_layout)
     requires(std::is_same_v<typename base_t::layout_type, layout_stride>)
@@ -533,6 +541,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
             Impl::mapping_from_array_layout<typename mdspan_type::mapping_type>(
                 arg_layout)) {}
 
+  KOKKOS_FUNCTION
   explicit inline View(const base_t::data_handle_type& handle,
                        const LayoutLeft& arg_layout)
     requires(std::is_same_v<typename base_t::layout_type,
@@ -542,6 +551,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
             Impl::mapping_from_array_layout<typename mdspan_type::mapping_type>(
                 arg_layout)) {}
 
+  KOKKOS_FUNCTION
   explicit inline View(const base_t::data_handle_type& handle,
                        const LayoutRight& arg_layout)
     requires(std::is_same_v<typename base_t::layout_type,
@@ -551,6 +561,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
             Impl::mapping_from_array_layout<typename mdspan_type::mapping_type>(
                 arg_layout)) {}
 
+  KOKKOS_FUNCTION
   explicit inline View(const base_t::data_handle_type& handle,
                        const LayoutLeft& arg_layout)
     requires(std::is_same_v<typename base_t::layout_type, layout_left>)
@@ -559,6 +570,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
             Impl::mapping_from_array_layout<typename mdspan_type::mapping_type>(
                 arg_layout)) {}
 
+  KOKKOS_FUNCTION
   explicit inline View(const base_t::data_handle_type& handle,
                        const LayoutRight& arg_layout)
     requires(std::is_same_v<typename base_t::layout_type, layout_right>)
@@ -568,20 +580,21 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
                 arg_layout)) {}
 
   template <class... Args>
-  View(pointer_type ptr, Args... args)
+  KOKKOS_FUNCTION View(pointer_type ptr, Args... args)
       : View(Kokkos::view_wrap(ptr), args...) {}
 
   // Constructor which allows always 8 sizes should be deprecated
   template <class... P>
-  explicit inline View(const Impl::ViewCtorProp<P...>& arg_prop,
-                       const size_t arg_N0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                       const size_t arg_N1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                       const size_t arg_N2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                       const size_t arg_N3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                       const size_t arg_N4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                       const size_t arg_N5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                       const size_t arg_N6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                       const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG)
+  KOKKOS_FUNCTION explicit inline View(
+      const Impl::ViewCtorProp<P...>& arg_prop,
+      const size_t arg_N0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      const size_t arg_N1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      const size_t arg_N2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      const size_t arg_N3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      const size_t arg_N4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      const size_t arg_N5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      const size_t arg_N6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG)
       : base_t(arg_prop,
                Impl::mapping_from_ctor_and_8sizes<
                    typename mdspan_type::mapping_type, sizeof(value_type)>(

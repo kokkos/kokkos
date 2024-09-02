@@ -41,12 +41,14 @@ constexpr inline struct subview_ctor_tag_t {
 template <class T>
 struct KokkosSliceToMDSpanSliceImpl {
   using type = T;
+  KOKKOS_FUNCTION
   static constexpr decltype(auto) transform(const T &s) { return s; }
 };
 
 template <>
 struct KokkosSliceToMDSpanSliceImpl<Kokkos::ALL_t> {
   using type = full_extent_t;
+  KOKKOS_FUNCTION
   static constexpr decltype(auto) transform(Kokkos::ALL_t) {
     return full_extent;
   }
@@ -57,7 +59,8 @@ using kokkos_slice_to_mdspan_slice =
     typename KokkosSliceToMDSpanSliceImpl<T>::type;
 
 template <class T>
-constexpr decltype(auto) transform_kokkos_slice_to_mdspan_slice(const T &s) {
+KOKKOS_INLINE_FUNCTION constexpr decltype(auto)
+transform_kokkos_slice_to_mdspan_slice(const T &s) {
   return KokkosSliceToMDSpanSliceImpl<T>::transform(s);
 }
 }  // namespace Impl
@@ -164,11 +167,11 @@ class BasicView {
   }
 
  public:
-  KOKKOS_FUNCTION constexpr BasicView() = default;
+  KOKKOS_DEFAULTED_FUNCTION constexpr BasicView() = default;
 
   // Constructors from mdspan
-  KOKKOS_FUNCTION constexpr BasicView(const BasicView &) = default;
-  KOKKOS_FUNCTION constexpr BasicView(BasicView &&)      = default;
+  KOKKOS_DEFAULTED_FUNCTION constexpr BasicView(const BasicView &) = default;
+  KOKKOS_DEFAULTED_FUNCTION constexpr BasicView(BasicView &&)      = default;
 
   KOKKOS_FUNCTION constexpr BasicView(const mdspan_type &other)
       : ptr(other.data_handle()), map(other.mapping()), acc(other.accessor()){};
@@ -264,22 +267,24 @@ class BasicView {
                   "Kokkos::View: incompatible extents for View construction");
   }
 
-  KOKKOS_FUNCTION constexpr BasicView &operator=(const BasicView &) = default;
-  KOKKOS_FUNCTION constexpr BasicView &operator=(BasicView &&)      = default;
+  KOKKOS_DEFAULTED_FUNCTION constexpr BasicView &operator=(const BasicView &) =
+      default;
+  KOKKOS_DEFAULTED_FUNCTION constexpr BasicView &operator=(BasicView &&) =
+      default;
 
   // Allocating constructors specific to BasicView
   ///
   /// Construct from a given mapping
   ///
-  KOKKOS_INLINE_FUNCTION explicit constexpr BasicView(
-      const std::string &label, const mapping_type &mapping)
+  explicit constexpr BasicView(const std::string &label,
+                               const mapping_type &mapping)
       : BasicView(view_alloc(label), mapping) {}
 
   ///
   /// Construct from a given extents
   ///
-  KOKKOS_INLINE_FUNCTION explicit constexpr BasicView(const std::string &label,
-                                                      const extents_type &ext)
+  explicit constexpr BasicView(const std::string &label,
+                               const extents_type &ext)
       : BasicView(view_alloc(label), mapping_type{ext}) {}
 
  private:
@@ -323,7 +328,7 @@ class BasicView {
       : BasicView(create_data_handle(arg_prop, arg_mapping), arg_mapping) {}
 
   template <class... P>
-  explicit inline BasicView(
+  KOKKOS_FUNCTION explicit inline BasicView(
       const Impl::ViewCtorProp<P...> &arg_prop,
       std::enable_if_t<Impl::ViewCtorProp<P...>::has_pointer,
                        typename mdspan_type::mapping_type> const &arg_mapping)
@@ -525,9 +530,15 @@ class BasicView {
   };
 
  protected:
+#ifndef __NVCC__
   KOKKOS_NO_UNIQUE_ADDRESS data_handle_type ptr{};
   KOKKOS_NO_UNIQUE_ADDRESS mapping_type map{};
   KOKKOS_NO_UNIQUE_ADDRESS accessor_type acc{};
+#else
+  data_handle_type ptr{};
+  mapping_type map{};
+  accessor_type acc{};
+#endif
 
   template <class, class, class, class>
   friend class BasicView;
