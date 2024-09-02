@@ -95,6 +95,15 @@ KOKKOS_INLINE_FUNCTION auto array_layout_from_mapping(
     // FIXME: Kokkos Layouts don't store stride (it's in the mapping)
     // We could conceivably fix this by adding an extra ViewCtorProp for
     // an abritrary padding. For now we will check for this.
+    ArrayLayout layout{rank > 0 ? ext.extent(0) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                       rank > 1 ? ext.extent(1) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                       rank > 2 ? ext.extent(2) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                       rank > 3 ? ext.extent(3) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                       rank > 4 ? ext.extent(4) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                       rank > 5 ? ext.extent(5) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                       rank > 6 ? ext.extent(6) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                       rank > 7 ? ext.extent(7) : KOKKOS_IMPL_CTOR_DEFAULT_ARG};
+
     if constexpr (rank > 1 &&
                   (std::is_same_v<typename mapping_type::layout_type,
                                   Kokkos::Experimental::layout_left_padded<
@@ -108,23 +117,9 @@ KOKKOS_INLINE_FUNCTION auto array_layout_from_mapping(
               Kokkos::Experimental::layout_left_padded<dynamic_extent>>
               ? 1
               : rank - 2;
-      [[maybe_unused]] constexpr size_t extent_index =
-          std::is_same_v<
-              typename mapping_type::layout_type,
-              Kokkos::Experimental::layout_left_padded<dynamic_extent>>
-              ? 0
-              : rank - 1;
-      KOKKOS_ASSERT(mapping.stride(strided_index) == ext.extent(extent_index));
+      layout.stride = mapping.stride(strided_index);
     }
-
-    return ArrayLayout{rank > 0 ? ext.extent(0) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                       rank > 1 ? ext.extent(1) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                       rank > 2 ? ext.extent(2) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                       rank > 3 ? ext.extent(3) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                       rank > 4 ? ext.extent(4) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                       rank > 5 ? ext.extent(5) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                       rank > 6 ? ext.extent(6) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                       rank > 7 ? ext.extent(7) : KOKKOS_IMPL_CTOR_DEFAULT_ARG};
+    return layout;
   }
 #ifdef KOKKOS_COMPILER_INTEL
   __builtin_unreachable();
@@ -136,9 +131,23 @@ KOKKOS_INLINE_FUNCTION auto mapping_from_array_layout_impl(
     ArrayLayout layout, std::index_sequence<Idx...>) {
   using index_type   = typename MappingType::index_type;
   using extents_type = typename MappingType::extents_type;
-  return MappingType{
-      extents_type{dextents<index_type, MappingType::extents_type::rank()>{
-          layout.dimension[Idx]...}}};
+  if constexpr (std::is_same_v<ArrayLayout, layout_left> ||
+                std::is_same_v<ArrayLayout, layout_right>) {
+    return MappingType{
+        extents_type{dextents<index_type, MappingType::extents_type::rank()>{
+            layout.dimension[Idx]...}}};
+  } else {
+    if (layout.stride == dynamic_extent) {
+      return MappingType{
+          extents_type{dextents<index_type, MappingType::extents_type::rank()>{
+              layout.dimension[Idx]...}}};
+    } else {
+      return MappingType{
+          extents_type{dextents<index_type, MappingType::extents_type::rank()>{
+              layout.dimension[Idx]...}},
+          layout.stride};
+    }
+  }
 }
 template <class MappingType, size_t... Idx>
 KOKKOS_INLINE_FUNCTION auto mapping_from_array_layout_impl(
