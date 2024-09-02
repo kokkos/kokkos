@@ -31,6 +31,10 @@ foreach(Tag Threads;Serial;OpenMP;HPX;Cuda;HIP;SYCL)
       if(NOT Kokkos_ENABLE_DEPRECATED_CODE_4 AND Name STREQUAL "Vector")
         continue() # skip Kokkos::vector test if deprecated code 4 is not enabled
       endif()
+      if(NOT Kokkos_ENABLE_IMPL_VIEW_LEGACY AND Name STREQUAL "ViewCtorPropEmbeddedDim")
+        continue() # skip embedded dimension test with new view implementation
+      endif()
+
       # Write to a temporary intermediate file and call configure_file to avoid
       # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
       set(file ${dir}/Test${Tag}_${Name}.cpp)
