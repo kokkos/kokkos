@@ -143,7 +143,7 @@ struct TestBasicView {
     auto mdrange_policy =
         make_spanning_mdrange_policy_from_extents<ExecutionSpace>(extents);
 
-    Kokkos::parallel_for(mdrange_policy, MDRangeTestFunctor{view});
+    Kokkos::parallel_for(mdrange_policy, MDRangeTestFunctor<view_type>{view});
   }
 
 #if 0  // TODO: this test should be active after View is put on top of BasicView
