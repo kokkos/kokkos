@@ -118,6 +118,15 @@ struct TestBasicView {
     EXPECT_EQ(view.data_handle().get_label(), "test_view");
   }
 
+  template <class ViewType>
+  struct MDRangeTestFunctor {
+    ViewType view;
+    template <class... Idxs>
+    KOKKOS_FUNCTION void operator()(Idxs... idxs) const {
+      view(idxs...) = (idxs + ...);
+    }
+  };
+
   template <class LayoutType, class Extents>
   static void test_access_with_extents(const Extents &extents) {
     using extents_type  = Extents;
@@ -134,9 +143,7 @@ struct TestBasicView {
     auto mdrange_policy =
         make_spanning_mdrange_policy_from_extents<ExecutionSpace>(extents);
 
-    Kokkos::parallel_for(
-        mdrange_policy,
-        KOKKOS_LAMBDA(auto... idxs) { view(idxs...) = (idxs + ...); });
+    Kokkos::parallel_for(mdrange_policy, MDRangeTestFunctor{view});
   }
 
 #if 0  // TODO: this test should be active after View is put on top of BasicView
