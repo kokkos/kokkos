@@ -579,9 +579,25 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
             Impl::mapping_from_array_layout<typename mdspan_type::mapping_type>(
                 arg_layout)) {}
 
+  template <class P, class... Args>
+    requires(std::is_convertible_v<P, pointer_type>)
+  KOKKOS_FUNCTION View(P ptr, Args... args)
+      : View(Kokkos::view_wrap(static_cast<pointer_type>(ptr)), args...) {}
+
+  // Special function to be preferred over the above for string literals
+  // when pointer type is char*
+  template <class L, class... Args>
+    requires(std::is_same_v<pointer_type, char*> &&
+             std::is_same_v<const char*, L>)
+  explicit View(L label, Args... args)
+      : View(Kokkos::view_alloc(std::string(label)), args...) {}
+
+  // Special function to be preferred over the above for passing in 0, NULL or
+  // nullptr when pointer type is char*
   template <class... Args>
-  KOKKOS_FUNCTION View(pointer_type ptr, Args... args)
-      : View(Kokkos::view_wrap(ptr), args...) {}
+  // requires(std::is_same_v<pointer_type, char*>)
+  explicit View(decltype(nullptr) n, Args... args)
+      : View(Kokkos::view_wrap(pointer_type(nullptr)), args...) {}
 
   // Constructor which allows always 8 sizes should be deprecated
   template <class... P>
@@ -643,18 +659,15 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
       : View(Impl::ViewCtorProp<std::string>(arg_label), arg_layout) {}
 
   // Allocate label and layout, must disambiguate from subview constructor.
-  template <typename Label>
-  explicit inline View(
-      const Label& arg_label,
-      std::enable_if_t<Kokkos::Impl::is_view_label<Label>::value, const size_t>
-          arg_N0          = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-      const size_t arg_N1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-      const size_t arg_N2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-      const size_t arg_N3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-      const size_t arg_N4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-      const size_t arg_N5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-      const size_t arg_N6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-      const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG)
+  explicit inline View(const std::string& arg_label,
+                       const size_t arg_N0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                       const size_t arg_N1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                       const size_t arg_N2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                       const size_t arg_N3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                       const size_t arg_N4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                       const size_t arg_N5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                       const size_t arg_N6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                       const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG)
       : View(Impl::ViewCtorProp<std::string>(arg_label),
              typename traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3,
                                            arg_N4, arg_N5, arg_N6, arg_N7)) {
