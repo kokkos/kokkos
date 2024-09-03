@@ -95,6 +95,7 @@ struct padded_extent {
   using static_array_type = typename static_array_type_for_padded_extent<
       padding_value, _Extents, _ExtentToPadIdx, _Extents::rank()>::type;
 
+  MDSPAN_INLINE_FUNCTION
   static constexpr auto static_value() { return static_array_type::static_value(0); }
 
   MDSPAN_INLINE_FUNCTION
@@ -203,7 +204,7 @@ private:
   }
 
 public:
-#if !MDSPAN_HAS_CXX_20
+#if !MDSPAN_HAS_CXX_20 || defined(__NVCC__)
   MDSPAN_INLINE_FUNCTION_DEFAULTED
   constexpr mapping()
       : mapping(extents_type{})
@@ -566,7 +567,7 @@ public:
   }
 
 public:
-#if !MDSPAN_HAS_CXX_20
+#if !MDSPAN_HAS_CXX_20 || defined(__NVCC__)
   MDSPAN_INLINE_FUNCTION_DEFAULTED
       constexpr mapping()
       : mapping(extents_type{})
