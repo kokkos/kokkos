@@ -165,6 +165,13 @@ KOKKOS_INLINE_FUNCTION auto mapping_from_array_layout_impl(
       strides};
 }
 
+// specialization for rank 0 to avoid empty array
+template <class MappingType>
+KOKKOS_INLINE_FUNCTION auto mapping_from_array_layout_impl(
+    LayoutStride layout, std::index_sequence<>) {
+  return MappingType{};
+}
+
 template <class MappingType, class ArrayLayout>
 KOKKOS_INLINE_FUNCTION auto mapping_from_array_layout(ArrayLayout layout) {
   return mapping_from_array_layout_impl<MappingType>(
@@ -261,7 +268,7 @@ KOKKOS_INLINE_FUNCTION auto mapping_from_ctor_and_sizes(
   }
 }
 
-template <class MappingType, size_t ScalarSize, class... P, class... Sizes>
+template <class MappingType, size_t ScalarSize, class... P>
 KOKKOS_INLINE_FUNCTION auto mapping_from_ctor_and_8sizes(
     const ViewCtorProp<P...> &arg_prop, const size_t arg_N0,
     const size_t arg_N1, const size_t arg_N2, const size_t arg_N3,
