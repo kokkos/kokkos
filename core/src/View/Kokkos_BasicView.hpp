@@ -426,7 +426,7 @@ class BasicView {
     }(std::make_index_sequence<rank()>()));
   }
 
-  template <class _OtherIndexType>
+  template <class OtherIndexType>
     requires(
         std::is_convertible_v<const OtherIndexType &, index_type> &&
         std::is_nothrow_constructible_v<index_type, const OtherIndexType &>)
@@ -437,6 +437,7 @@ class BasicView {
     }(std::make_index_sequence<rank()>()));
   }
 #endif
+
   // C++20 operator()
   template <class... OtherIndexTypes>
     requires((std::is_convertible_v<OtherIndexTypes, index_type> && ...) &&
