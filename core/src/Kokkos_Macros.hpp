@@ -15,7 +15,8 @@
 //@HEADER
 
 #ifndef KOKKOS_MACROS_HPP
-#define KOKKOS_MACROS_HPP
+  // Screw up clang-format so we fail at least the ORNL builds early
+  #define KOKKOS_MACROS_HPP
 
 //----------------------------------------------------------------------------
 /** Pick up configure / build options via #define macros:
