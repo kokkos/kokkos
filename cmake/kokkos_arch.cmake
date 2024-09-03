@@ -622,6 +622,11 @@ IF (KOKKOS_ENABLE_SYCL)
   COMPILER_SPECIFIC_OPTIONS(
     DEFAULT -fsycl-unnamed-lambda
   )
+  IF (KOKKOS_ENABLE_IMPL_SYCL_RELOCATABLE_DEVICE_CODE)
+    COMPILER_SPECIFIC_OPTIONS(DEFAULT -fsycl-rdc)
+  ELSE()
+    COMPILER_SPECIFIC_OPTIONS(DEFAULT -fno-sycl-rdc)
+  ENDIF()
 ENDIF()
 
 # Check support for device_global variables
@@ -896,33 +901,27 @@ IF (KOKKOS_ENABLE_SYCL)
       DEFAULT -fsycl-targets=spir64
     )
   ELSE()
-    COMPILER_SPECIFIC_OPTIONS(
-      DEFAULT -fsycl-targets=spir64_gen
-    )
+    SET(SYCL_TARGET_FLAG -fsycl-targets=spir64_gen)
+
     IF(KOKKOS_ARCH_INTEL_GEN9)
-      COMPILER_SPECIFIC_LINK_OPTIONS(
-        DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device gen9"
-      )
+     SET(SYCL_TARGET_BACKEND_FLAG -Xsycl-target-backend "-device gen9")
     ELSEIF(KOKKOS_ARCH_INTEL_GEN11)
-      COMPILER_SPECIFIC_LINK_OPTIONS(
-        DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device gen11"
-      )
+      SET(SYCL_TARGET_BACKEND_FLAG -Xsycl-target-backend "-device gen11")
     ELSEIF(KOKKOS_ARCH_INTEL_GEN12LP)
-      COMPILER_SPECIFIC_LINK_OPTIONS(
-        DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device gen12lp"
-      )
+      SET(SYCL_TARGET_BACKEND_FLAG -Xsycl-target-backend "-device gen12lp")
     ELSEIF(KOKKOS_ARCH_INTEL_DG1)
-      COMPILER_SPECIFIC_LINK_OPTIONS(
-        DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device dg1"
-      )
+      SET(SYCL_TARGET_BACKEND_FLAG -Xsycl-target-backend "-device dg1")
     ELSEIF(KOKKOS_ARCH_INTEL_XEHP)
-      COMPILER_SPECIFIC_LINK_OPTIONS(
-        DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device 12.50.4"
-      )
+      SET(SYCL_TARGET_BACKEND_FLAG -Xsycl-target-backend "-device 12.50.4")
     ELSEIF(KOKKOS_ARCH_INTEL_PVC)
-      COMPILER_SPECIFIC_LINK_OPTIONS(
-        DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device 12.60.7"
-      )
+      SET(SYCL_TARGET_BACKEND_FLAG -Xsycl-target-backend "-device 12.60.7")
+    ENDIF()
+
+    IF(Kokkos_ENABLE_IMPL_SYCL_RELOCATABLE_DEVICE_CODE)
+      COMPILER_SPECIFIC_OPTIONS(DEFAULT ${SYCL_TARGET_FLAG})
+      COMPILER_SPECIFIC_LINK_OPTIONS(DEFAULT ${SYCL_TARGET_FLAG} ${SYCL_TARGET_BACKEND_FLAG})
+    ELSE()
+      COMPILER_SPECIFIC_OPTIONS(DEFAULT ${SYCL_TARGET_FLAG} ${SYCL_TARGET_BACKEND_FLAG})
     ENDIF()
   ENDIF()
 ENDIF()
