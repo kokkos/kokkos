@@ -109,7 +109,9 @@ TEST(defaultdevicetype, shared_space) {
     GTEST_SKIP()
         << "skipping because specified arch does not support page migration";
 #endif
-#if defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ARCH_INTEL_GPU)
+#if defined(KOKKOS_ENABLE_SYCL) &&      \
+    (!defined(KOKKOS_ARCH_INTEL_GPU) || \
+     !defined(KOKKOS_ENABLE_IMPL_SYCL_RELOCATABLE_DEVICE_CODE))
   GTEST_SKIP()
       << "skipping because clock_tic is only defined for sycl+intel gpu";
 #endif
