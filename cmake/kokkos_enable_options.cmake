@@ -59,6 +59,7 @@ KOKKOS_ENABLE_OPTION(DEPRECATED_CODE_4    ON "Whether code deprecated in major r
 KOKKOS_ENABLE_OPTION(DEPRECATION_WARNINGS ON "Whether to emit deprecation warnings" )
 KOKKOS_ENABLE_OPTION(HIP_RELOCATABLE_DEVICE_CODE  OFF "Whether to enable relocatable device code (RDC) for HIP")
 KOKKOS_ENABLE_OPTION(IMPL_SYCL_RELOCATABLE_DEVICE_CODE  ON "Whether to enable relocatable device code (RDC) for SYCL")
+MARK_AS_ADVANCED(Kokkos_ENABLE_IMPL_SYCL_RELOCATABLE_DEVICE_CODE)
 KOKKOS_ENABLE_OPTION(TESTS         OFF  "Whether to build the unit tests")
 KOKKOS_ENABLE_OPTION(BENCHMARKS    OFF  "Whether to build the benchmarks")
 KOKKOS_ENABLE_OPTION(EXAMPLES      OFF  "Whether to build the examples")
