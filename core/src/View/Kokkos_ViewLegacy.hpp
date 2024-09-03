@@ -206,25 +206,6 @@ constexpr bool is_assignable(const Kokkos::View<ViewTDst...>& dst,
 
 namespace Kokkos {
 
-// FIXME_OPENMPTARGET - The `declare target` is needed for the Intel GPUs with
-// the OpenMPTarget backend
-#if defined(KOKKOS_ENABLE_OPENMPTARGET) && defined(KOKKOS_COMPILER_INTEL_LLVM)
-#pragma omp declare target
-#endif
-
-inline constexpr Kokkos::ALL_t ALL{};
-
-#if defined(KOKKOS_ENABLE_OPENMPTARGET) && defined(KOKKOS_COMPILER_INTEL_LLVM)
-#pragma omp end declare target
-#endif
-
-} /* namespace Kokkos */
-
-//----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
-
-namespace Kokkos {
-
 template <class DataType, class... Properties>
 class View;
 
@@ -1359,9 +1340,12 @@ class View : public ViewTraits<DataType, Properties...> {
 
   template <class OtherAccessorType = Impl::SpaceAwareAccessor<
                 typename traits::memory_space,
-                Kokkos::default_accessor<typename traits::value_type>>,
+                Kokkos::Impl::ReferenceCountedAccessor<
+                    typename traits::value_type, Kokkos::HostSpace,
+                    Kokkos::default_accessor<typename traits::value_type>>>,
             typename = std::enable_if_t<std::is_assignable_v<
-                typename traits::value_type*&,
+                typename Impl::MDSpanViewTraits<
+                    traits>::mdspan_type::data_handle_type,
                 typename OtherAccessorType::data_handle_type>>>
   KOKKOS_INLINE_FUNCTION constexpr auto to_mdspan(
       const OtherAccessorType& other_accessor =

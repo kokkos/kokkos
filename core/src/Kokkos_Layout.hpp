@@ -27,6 +27,7 @@ static_assert(false,
 
 #include <cstddef>
 #include <impl/Kokkos_Traits.hpp>
+#include <View/MDSpan/Kokkos_MDSpan_Header.hpp>
 
 namespace Kokkos {
 
@@ -52,6 +53,7 @@ struct LayoutLeft {
   using array_layout = LayoutLeft;
 
   size_t dimension[ARRAY_LAYOUT_MAX_RANK];
+  size_t stride;
 
   enum : bool { is_extent_constructible = true };
 
@@ -69,7 +71,7 @@ struct LayoutLeft {
                                 size_t N5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
                                 size_t N6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
                                 size_t N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG)
-      : dimension{N0, N1, N2, N3, N4, N5, N6, N7} {}
+      : dimension{N0, N1, N2, N3, N4, N5, N6, N7}, stride(dynamic_extent) {}
 
   friend bool operator==(const LayoutLeft& left, const LayoutLeft& right) {
     for (unsigned int rank = 0; rank < ARRAY_LAYOUT_MAX_RANK; ++rank)
@@ -101,6 +103,7 @@ struct LayoutRight {
   using array_layout = LayoutRight;
 
   size_t dimension[ARRAY_LAYOUT_MAX_RANK];
+  size_t stride;
 
   enum : bool { is_extent_constructible = true };
 
@@ -118,7 +121,7 @@ struct LayoutRight {
                                  size_t N5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
                                  size_t N6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
                                  size_t N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG)
-      : dimension{N0, N1, N2, N3, N4, N5, N6, N7} {}
+      : dimension{N0, N1, N2, N3, N4, N5, N6, N7}, stride{dynamic_extent} {}
 
   friend bool operator==(const LayoutRight& left, const LayoutRight& right) {
     for (unsigned int rank = 0; rank < ARRAY_LAYOUT_MAX_RANK; ++rank)

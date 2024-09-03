@@ -994,14 +994,14 @@ void test_view_mapping() {
 
       ASSERT_EQ(a.use_count(), 2);
       ASSERT_EQ(b.use_count(), 2);
-      ASSERT_EQ(c.use_count(), 2);
+      ASSERT_EQ(c.use_count(), 0);
 
       V d = c;  // 'd' is run-time unmanaged.
 
       ASSERT_EQ(a.use_count(), 2);
       ASSERT_EQ(b.use_count(), 2);
-      ASSERT_EQ(c.use_count(), 2);
-      ASSERT_EQ(d.use_count(), 2);
+      ASSERT_EQ(c.use_count(), 0);
+      ASSERT_EQ(d.use_count(), 0);
     }
 
     ASSERT_EQ(a.use_count(), 2);
