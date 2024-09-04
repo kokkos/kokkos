@@ -77,10 +77,6 @@ class AtomicRef {
   DESUL_IMPL_DEFINE_ATOMIC_FETCH_OP(fetch_xor, xor_fetch)
   DESUL_IMPL_DEFINE_ATOMIC_COMPOUND_ASSIGNMENT_OP(^=, xor_fetch)
   DESUL_IMPL_DEFINE_ATOMIC_FETCH_OP(fetch_nand, nand_fetch)
-  DESUL_IMPL_DEFINE_ATOMIC_FETCH_OP(fetch_lshift, lshift_fetch)
-  DESUL_IMPL_DEFINE_ATOMIC_COMPOUND_ASSIGNMENT_OP(<<=, lshift_fetch)
-  DESUL_IMPL_DEFINE_ATOMIC_FETCH_OP(fetch_rshift, rshift_fetch)
-  DESUL_IMPL_DEFINE_ATOMIC_COMPOUND_ASSIGNMENT_OP(>>=, rshift_fetch)
 
 #undef DESUL_IMPL_DEFINE_ATOMIC_COMPOUND_ASSIGNMENT_OP
 #undef DESUL_IMPL_DEFINE_ATOMIC_FETCH_OP
@@ -99,6 +95,22 @@ class AtomicRef {
   DESUL_IMPL_DEFINE_ATOMIC_INCREMENT_DECREMENT(--, dec)
 
 #undef DESUL_IMPL_DEFINE_ATOMIC_INCREMENT_DECREMENT
+
+#define DESUL_IMPL_DEFINE_ATOMIC_BITWISE_SHIFT(COMPD_ASGMT, SHFT)                 \
+  DESUL_FUNCTION T fetch_##SHFT(unsigned int arg) const noexcept {                \
+    return desul::atomic_fetch_##SHFT(ptr_, arg, MemoryOrder(), MemoryScope());   \
+  }                                                                               \
+  DESUL_FUNCTION T SHFT##_fetch(unsigned int arg) const noexcept {                \
+    return desul::atomic_##SHFT##_fetch(ptr_, arg, MemoryOrder(), MemoryScope()); \
+  }                                                                               \
+  DESUL_FUNCTION T operator COMPD_ASGMT(unsigned int arg) const noexcept {        \
+    return SHFT##_fetch(arg);                                                     \
+  }
+
+  DESUL_IMPL_DEFINE_ATOMIC_BITWISE_SHIFT(<<=, lshift)
+  DESUL_IMPL_DEFINE_ATOMIC_BITWISE_SHIFT(>>=, rshift)
+
+#undef DESUL_IMPL_DEFINE_ATOMIC_BITWISE_SHIFT
 };
 
 }  // namespace desul
