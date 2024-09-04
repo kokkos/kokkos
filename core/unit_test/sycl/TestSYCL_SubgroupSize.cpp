@@ -39,12 +39,9 @@ TEST(sycl, subgroup_size) {
   GTEST_SKIP() << " test is designed for PVC architecture";
 #endif
 
+  {
 	Kokkos::RangePolicy<Kokkos::SYCL,Kokkos::SubGroupSize<16>> range_policy_16(0,10);
         Kokkos::RangePolicy<Kokkos::SYCL,Kokkos::SubGroupSize<32>> range_policy_32(0,10);
-        Kokkos::MDRangePolicy<Kokkos::SYCL,Kokkos::SubGroupSize<16>, Kokkos::Rank<2>> mdrange_policy_16({0,0}, {10,10});
-        Kokkos::MDRangePolicy<Kokkos::SYCL,Kokkos::SubGroupSize<32>, Kokkos::Rank<2>> mdrange_policy_32({0,0}, {10,10});
-        Kokkos::TeamPolicy<Kokkos::SYCL,Kokkos::SubGroupSize<16>> team_policy_16(1, Kokkos::AUTO);
-        Kokkos::TeamPolicy<Kokkos::SYCL,Kokkos::SubGroupSize<32>> team_policy_32(1, Kokkos::AUTO);
 
 	Kokkos::parallel_for(range_policy_16, KOKKOS_LAMBDA(int) { KOKKOS_SYCL_CHECK_SUBGROUP_SIZE(16) });
 	        Kokkos::parallel_for(range_policy_32, KOKKOS_LAMBDA(int) { KOKKOS_SYCL_CHECK_SUBGROUP_SIZE(32) }); 
@@ -60,4 +57,33 @@ double dummy;
                         }, dummy);
 }
 
+{
+   Kokkos::MDRangePolicy<Kokkos::SYCL,Kokkos::SubGroupSize<16>, Kokkos::Rank<2>> mdrange_policy_16({0,0}, {10,10});
+        Kokkos::MDRangePolicy<Kokkos::SYCL,Kokkos::SubGroupSize<32>, Kokkos::Rank<2>> mdrange_policy_32({0,0}, {10,10});
+
+        Kokkos::parallel_for(mdrange_policy_16, KOKKOS_LAMBDA(int, int) { KOKKOS_SYCL_CHECK_SUBGROUP_SIZE(16) });
+                Kokkos::parallel_for(mdrange_policy_32, KOKKOS_LAMBDA(int, int) { KOKKOS_SYCL_CHECK_SUBGROUP_SIZE(32) });
+
+double dummy;
+                        Kokkos::parallel_reduce(mdrange_policy_16, KOKKOS_LAMBDA(int, int, double) {KOKKOS_SYCL_CHECK_SUBGROUP_SIZE(16)
+                        }, dummy);
+                Kokkos::parallel_reduce(mdrange_policy_32, KOKKOS_LAMBDA(int, int, double) { KOKKOS_SYCL_CHECK_SUBGROUP_SIZE(32)
+                        }, dummy);
+}
+
+{
+        Kokkos::TeamPolicy<Kokkos::SYCL,Kokkos::SubGroupSize<16>> team_policy_16(1, Kokkos::AUTO);
+        Kokkos::TeamPolicy<Kokkos::SYCL,Kokkos::SubGroupSize<32>> team_policy_32(1, Kokkos::AUTO);
+	using member_type = Kokkos::TeamPolicy<Kokkos::SYCL>::member_type;
+
+        Kokkos::parallel_for(team_policy_16, KOKKOS_LAMBDA(member_type) { KOKKOS_SYCL_CHECK_SUBGROUP_SIZE(16) });
+                Kokkos::parallel_for(team_policy_32, KOKKOS_LAMBDA(member_type) { KOKKOS_SYCL_CHECK_SUBGROUP_SIZE(32) });
+
+double dummy;
+                        Kokkos::parallel_reduce(team_policy_16, KOKKOS_LAMBDA(member_type, double) {KOKKOS_SYCL_CHECK_SUBGROUP_SIZE(16)
+                        }, dummy);
+                Kokkos::parallel_reduce(team_policy_32, KOKKOS_LAMBDA(member_type, double) { KOKKOS_SYCL_CHECK_SUBGROUP_SIZE(32)
+                        }, dummy);
+}
+}
 }
