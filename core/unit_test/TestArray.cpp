@@ -241,6 +241,40 @@ constexpr bool test_range_based_for_loop() {
 
 static_assert(test_range_based_for_loop());
 
+constexpr bool test_begin_end() {
+  constexpr Kokkos::Array<float, 0> a0{};
+  static_assert(begin(a0) == nullptr);
+  static_assert(end(a0) == nullptr);
+
+  constexpr Kokkos::Array<float, 1> a1{};
+  static_assert(begin(a1) == &a1[0]);
+  static_assert(end(a1) == &a1[0] + a1.size());
+
+  Kokkos::Array<double, 0> n0{};
+  static_assert(std::is_same_v<decltype(begin(n0)), double*>);
+  static_assert(std::is_same_v<decltype(end(n0)), double*>);
+  static_assert(std::is_same_v<double*, decltype(n0)::pointer>);
+
+  Kokkos::Array<double, 0> const c0{};
+  static_assert(std::is_same_v<decltype(begin(c0)), double const*>);
+  static_assert(std::is_same_v<decltype(end(c0)), double const*>);
+  static_assert(std::is_same_v<double const*, decltype(c0)::const_pointer>);
+
+  Kokkos::Array<double, 1> n1{};
+  static_assert(std::is_same_v<decltype(begin(n1)), double*>);
+  static_assert(std::is_same_v<decltype(end(n1)), double*>);
+  static_assert(std::is_same_v<double*, decltype(n1)::pointer>);
+
+  Kokkos::Array<double, 1> const c1{};
+  static_assert(std::is_same_v<decltype(begin(c1)), double const*>);
+  static_assert(std::is_same_v<decltype(end(c1)), double const*>);
+  static_assert(std::is_same_v<double const*, decltype(c1)::const_pointer>);
+
+  return true;
+}
+
+static_assert(test_begin_end());
+
 constexpr bool test_array_equality_comparable() {
   using C0 = Kokkos::Array<char, 0>;
   using C2 = Kokkos::Array<char, 2>;
