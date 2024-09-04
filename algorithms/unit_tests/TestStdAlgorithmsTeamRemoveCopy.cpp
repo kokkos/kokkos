@@ -67,8 +67,8 @@ struct TestFunctorA {
 
     if (m_apiPick == 0) {
       auto it    = KE::remove_copy(member, KE::cbegin(myRowViewFrom),
-                                KE::cend(myRowViewFrom),
-                                KE::begin(myRowViewDest), m_targetValue);
+                                   KE::cend(myRowViewFrom),
+                                   KE::begin(myRowViewDest), m_targetValue);
       resultDist = KE::distance(KE::begin(myRowViewDest), it);
       Kokkos::single(Kokkos::PerTeam(member), [=, *this]() {
         m_distancesView(myRowIndex) = resultDist;
@@ -212,6 +212,10 @@ void run_all_scenarios() {
 }
 
 TEST(std_algorithms_remove_copy_team_test, test) {
+// FIXME_OPENMPTARGET
+#if defined(KOKKOS_ENABLE_OPENMPTARGET) && defined(KOKKOS_ARCH_INTEL_GPU)
+  GTEST_SKIP() << "the test is known to fail with OpenMPTarget on Intel GPUs";
+#endif
   run_all_scenarios<DynamicTag, double>();
   run_all_scenarios<StridedTwoRowsTag, int>();
   run_all_scenarios<StridedThreeRowsTag, unsigned>();

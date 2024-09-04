@@ -184,16 +184,16 @@ struct DefaultContribution<Kokkos::HIP,
 
 #ifdef KOKKOS_ENABLE_SYCL
 template <>
-struct DefaultDuplication<Kokkos::Experimental::SYCL> {
+struct DefaultDuplication<Kokkos::SYCL> {
   using type = Kokkos::Experimental::ScatterNonDuplicated;
 };
 template <>
-struct DefaultContribution<Kokkos::Experimental::SYCL,
+struct DefaultContribution<Kokkos::SYCL,
                            Kokkos::Experimental::ScatterNonDuplicated> {
   using type = Kokkos::Experimental::ScatterAtomic;
 };
 template <>
-struct DefaultContribution<Kokkos::Experimental::SYCL,
+struct DefaultContribution<Kokkos::SYCL,
                            Kokkos::Experimental::ScatterDuplicated> {
   using type = Kokkos::Experimental::ScatterAtomic;
 };
@@ -905,7 +905,7 @@ class ScatterAccess<DataType, Op, DeviceType, Layout, ScatterNonDuplicated,
 
   template <typename Arg>
   KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
-      view_type::original_view_type::rank == 1 && std::is_integral<Arg>::value,
+      std::is_integral_v<Arg> && view_type::original_view_type::rank == 1,
       value_type>
   operator[](Arg arg) const {
     return view.at(arg);
@@ -1233,8 +1233,8 @@ class ScatterView<DataType, Kokkos::LayoutLeft, DeviceType, Op,
     arg_N[internal_view_type::rank - 1] = unique_token.size();
     internal_view                       = internal_view_type(
         view_alloc(WithoutInitializing,
-                   std::string("duplicated_") + original_view.label(),
-                   exec_space),
+                                         std::string("duplicated_") + original_view.label(),
+                                         exec_space),
         arg_N[0], arg_N[1], arg_N[2], arg_N[3], arg_N[4], arg_N[5], arg_N[6],
         arg_N[7]);
     reset(exec_space);
@@ -1460,7 +1460,7 @@ class ScatterAccess<DataType, Op, DeviceType, Layout, ScatterDuplicated,
 
   template <typename Arg>
   KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
-      view_type::original_view_type::rank == 1 && std::is_integral<Arg>::value,
+      std::is_integral_v<Arg> && view_type::original_view_type::rank == 1,
       value_type>
   operator[](Arg arg) const {
     return view.at(thread_id, arg);
@@ -1470,9 +1470,9 @@ class ScatterAccess<DataType, Op, DeviceType, Layout, ScatterDuplicated,
   view_type const& view;
 
   // simplify RAII by disallowing copies
-  ScatterAccess(ScatterAccess const& other) = delete;
+  ScatterAccess(ScatterAccess const& other)            = delete;
   ScatterAccess& operator=(ScatterAccess const& other) = delete;
-  ScatterAccess& operator=(ScatterAccess&& other) = delete;
+  ScatterAccess& operator=(ScatterAccess&& other)      = delete;
 
  public:
   // do need to allow moves though, for the common
@@ -1497,16 +1497,16 @@ ScatterView<
     RT, typename ViewTraits<RT, RP...>::array_layout,
     typename ViewTraits<RT, RP...>::device_type, Op,
     std::conditional_t<
-        std::is_void<Duplication>::value,
+        std::is_void_v<Duplication>,
         typename Kokkos::Impl::Experimental::DefaultDuplication<
             typename ViewTraits<RT, RP...>::execution_space>::type,
         Duplication>,
     std::conditional_t<
-        std::is_void<Contribution>::value,
+        std::is_void_v<Contribution>,
         typename Kokkos::Impl::Experimental::DefaultContribution<
             typename ViewTraits<RT, RP...>::execution_space,
             typename std::conditional_t<
-                std::is_void<Duplication>::value,
+                std::is_void_v<Duplication>,
                 typename Kokkos::Impl::Experimental::DefaultDuplication<
                     typename ViewTraits<RT, RP...>::execution_space>::type,
                 Duplication>>::type,

@@ -8,7 +8,12 @@ pipeline {
     }
 
     options {
+        disableConcurrentBuilds(abortPrevious: true)
         timeout(time: 6, unit: 'HOURS')
+    }
+
+    triggers {
+        issueCommentTrigger('.*test this please.*')
     }
 
     stages {
@@ -17,7 +22,7 @@ pipeline {
                 dockerfile {
                     filename 'Dockerfile.clang'
                     dir 'scripts/docker'
-                    label 'nvidia-docker || rocm-docker || docker'
+                    label 'nvidia-docker || docker'
                     args '-v /tmp/ccache.kokkos:/tmp/ccache'
                 }
             }
@@ -44,6 +49,7 @@ pipeline {
                               /opt/cmake/bin/cmake \
                                 -DCMAKE_CXX_COMPILER=nvc++ \
                                 -DCMAKE_CXX_STANDARD=17 \
+                                -DCMAKE_CXX_FLAGS=-Werror \
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
@@ -53,7 +59,7 @@ pipeline {
                               make -j8 && ctest --verbose'''
                     }
                 }
-                stage('CUDA-12.2-NVHPC') {
+                stage('CUDA-12.2-NVHPC-AS-HOST-COMPILER') {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.nvhpc'
@@ -77,7 +83,7 @@ pipeline {
                                 -DCMAKE_BUILD_TYPE=RelWithDebInfo \
                                 -DCMAKE_CXX_COMPILER=nvc++ \
                                 -DCMAKE_CXX_STANDARD=17 \
-                                -DCMAKE_CXX_FLAGS="--diag_suppress=implicit_return_from_non_void_function,no_device_stack" \
+                                -DCMAKE_CXX_FLAGS="-Werror --diag_suppress=implicit_return_from_non_void_function" \
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
@@ -85,8 +91,6 @@ pipeline {
                                 -DKokkos_ENABLE_CUDA=ON \
                                 -DKokkos_ENABLE_CUDA_LAMBDA=ON \
                                 -DKokkos_ENABLE_OPENMP=ON \
-                                -DKokkos_ENABLE_IMPL_MDSPAN=ON \
-                                -DKokkos_ENABLE_IMPL_NVHPC_AS_DEVICE_COMPILER=ON \
                               .. && \
                               make -j8 && ctest --verbose'''
                     }
@@ -102,13 +106,13 @@ pipeline {
                     }
                     steps {
                         sh 'ccache --zero-stats'
-                        sh '''. /opt/intel/oneapi/setvars.sh --include-intel-llvm && \
-                              rm -rf build && mkdir -p build && cd build && \
+                        sh '''rm -rf build && mkdir -p build && cd build && \
                               cmake \
                                 -DCMAKE_BUILD_TYPE=Release \
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-                                -DCMAKE_CXX_COMPILER=/opt/intel/oneapi/compiler/2023.0.0/linux/bin-llvm/clang++ \
+                                -DCMAKE_CXX_COMPILER=clang++ \
                                 -DCMAKE_CXX_FLAGS="-fsycl-device-code-split=per_kernel -Wno-deprecated-declarations -Werror -Wno-gnu-zero-variadic-macro-arguments -Wno-unknown-cuda-version -Wno-sycl-target" \
+                                -DCMAKE_PREFIX_PATH="$ONE_DPL_DIR" \
                                 -DKOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED=0 \
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ARCH_AMPERE80=ON \
@@ -135,8 +139,8 @@ pipeline {
                         dockerfile {
                             filename 'Dockerfile.hipcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-20.04:5.2'
-                            label 'rocm-docker && vega'
+                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-20.04:5.2-complete@sha256:4030c8af0c06c286174758523dabe4b3850bf72d4a8c1ef275d3ec69aa475f65'
+                            label 'rocm-docker '
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --device=/dev/kfd --device=/dev/dri --security-opt seccomp=unconfined --group-add video --env HIP_VISIBLE_DEVICES=$HIP_VISIBLE_DEVICES'
                         }
                     }
@@ -162,6 +166,7 @@ pipeline {
                                 -DKokkos_ENABLE_BENCHMARKS=ON \
                                 -DKokkos_ENABLE_HIP=ON \
                                 -DKokkos_ENABLE_OPENMP=ON \
+                                -DKokkos_ENABLE_IMPL_MDSPAN=OFF \
                                 -DKokkos_ENABLE_HIP_MULTIPLE_KERNEL_INSTANTIATIONS=ON \
                               .. && \
                               make -j8 && ctest --verbose'''
@@ -177,8 +182,8 @@ pipeline {
                         dockerfile {
                             filename 'Dockerfile.hipcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-20.04:5.6'
-                            label 'rocm-docker && vega'
+                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-22.04:5.6-complete@sha256:578a310fb1037d9c5e23fded2564f239acf6dc7231ff4742d2e7279fe7cc5c4a'
+                            label 'rocm-docker'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --device=/dev/kfd --device=/dev/dri --security-opt seccomp=unconfined --group-add video --env HIP_VISIBLE_DEVICES=$HIP_VISIBLE_DEVICES'
                         }
                     }
@@ -186,6 +191,7 @@ pipeline {
                         sh 'ccache --zero-stats'
                         sh '''rm -rf build && mkdir -p build && cd build && \
                               cmake \
+                                -DBUILD_SHARED_LIBS=ON \
                                 -DCMAKE_BUILD_TYPE=RelWithDebInfo \
                                 -DCMAKE_CXX_COMPILER=hipcc \
                                 -DCMAKE_CXX_FLAGS="-Werror -Wno-unused-command-line-argument" \
@@ -331,7 +337,7 @@ pipeline {
                         dockerfile {
                             filename 'Dockerfile.nvcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--build-arg BASE=nvidia/cuda:11.7.1-devel-ubuntu20.04'
+                            additionalBuildArgs '--build-arg BASE=nvcr.io/nvidia/cuda:11.7.1-devel-ubuntu20.04@sha256:fc997521e612899a01dce92820f5f5a201dd943ebfdc3e49ba0706d491a39d2d'
                             label 'nvidia-docker && volta'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
                         }
@@ -341,7 +347,7 @@ pipeline {
                         sh '''rm -rf build && mkdir -p build && cd build && \
                               ../gnu_generate_makefile.bash \
                                 --with-options=compiler_warnings \
-                                --cxxflags="-Werror" \
+                                --cxxflags="-Werror -Werror all-warnings -Xcudafe --diag_suppress=20208" \
                                 --cxxstandard=c++17 \
                                 --with-cuda \
                                 --with-cuda-options=enable_lambda \
@@ -360,8 +366,8 @@ pipeline {
                         dockerfile {
                             filename 'Dockerfile.nvcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--build-arg BASE=nvidia/cuda:11.0.3-devel-ubuntu18.04 --build-arg ADDITIONAL_PACKAGES="g++-8 gfortran clang" --build-arg CMAKE_VERSION=3.17.3'
-                            label 'nvidia-docker'
+                            additionalBuildArgs '--build-arg BASE=nvcr.io/nvidia/cuda:11.0.3-devel-ubuntu20.04@sha256:10ab0f09fcdc796b4a2325ef1bce8f766f4a3500eab5a83780f80475ae26c7a6 --build-arg ADDITIONAL_PACKAGES="g++-8 gfortran clang" --build-arg CMAKE_VERSION=3.17.3'
+                            label 'nvidia-docker && (volta || ampere)'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
                         }
                     }
@@ -390,10 +396,8 @@ pipeline {
                                 -DKokkos_ENABLE_CUDA_LAMBDA=OFF \
                                 -DKokkos_ENABLE_CUDA_UVM=ON \
                                 -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=ON \
-                                -DKokkos_ENABLE_DEPRECATED_CODE_3=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
                                 -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
-                                -DKokkos_ENABLE_IMPL_MDSPAN=ON \
                                 -DCMAKE_INSTALL_PREFIX=${PWD}/../install \
                               .. && \
                               make -j8 install && \
@@ -433,8 +437,8 @@ pipeline {
                         dockerfile {
                             filename 'Dockerfile.nvcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--build-arg BASE=nvidia/cuda:11.6.2-devel-ubuntu20.04'
-                            label 'nvidia-docker'
+                            additionalBuildArgs '--build-arg BASE=nvcr.io/nvidia/cuda:11.6.2-devel-ubuntu20.04@sha256:d95d54bc231f8aea7fda79f60da620324584b20ed31a8ebdb0686cffd34dd405'
+                            label 'nvidia-docker && (volta || ampere)'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
                         }
                     }
@@ -442,10 +446,11 @@ pipeline {
                         sh 'ccache --zero-stats'
                         sh '''rm -rf build && mkdir -p build && cd build && \
                               cmake \
+                                -DBUILD_SHARED_LIBS=ON \
                                 -DCMAKE_BUILD_TYPE=Debug \
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
                                 -DCMAKE_CXX_COMPILER=$WORKSPACE/bin/nvcc_wrapper \
-                                -DCMAKE_CXX_FLAGS=-Werror \
+                                -DCMAKE_CXX_FLAGS="-Werror -Werror all-warnings -Xcudafe --diag_suppress=20208" \
                                 -DCMAKE_CXX_STANDARD=17 \
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
@@ -457,7 +462,7 @@ pipeline {
                                 -DKokkos_ENABLE_CUDA=ON \
                                 -DKokkos_ENABLE_CUDA_LAMBDA=ON \
                                 -DKokkos_ENABLE_LIBDL=OFF \
-                                -DKokkos_ENABLE_IMPL_MDSPAN=ON \
+                                -DKokkos_ENABLE_IMPL_MDSPAN=OFF \
                                 -DKokkos_ENABLE_IMPL_CUDA_MALLOC_ASYNC=OFF \
                               .. && \
                               make -j8 && ctest --verbose && \
@@ -493,9 +498,8 @@ pipeline {
                                 -DCMAKE_CXX_FLAGS=-Werror \
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
-                                -DKokkos_ENABLE_DEPRECATED_CODE_3=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
-                                -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
+                                -DKokkos_ENABLE_DEPRECATION_WARNINGS=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_BENCHMARKS=ON \
                                 -DKokkos_ENABLE_OPENMP=ON \

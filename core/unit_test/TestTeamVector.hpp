@@ -889,7 +889,7 @@ template <typename ScalarType, class DeviceType>
 class TestTripleNestedReduce {
  public:
   using execution_space = DeviceType;
-  using size_type = typename execution_space::size_type;
+  using size_type       = typename execution_space::size_type;
 
   TestTripleNestedReduce(const size_type &, const size_type, const size_type &,
                          const size_type) {}
@@ -1012,7 +1012,6 @@ struct checkScan {
 };
 }  // namespace VectorScanReducer
 
-#if !defined(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND)
 TEST(TEST_CATEGORY, team_vector) {
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(0)));
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(1)));
@@ -1028,9 +1027,7 @@ TEST(TEST_CATEGORY, team_vector) {
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(11)));
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(12)));
 }
-#endif
 
-#if !defined(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND)
 TEST(TEST_CATEGORY, triple_nested_parallelism) {
 // With KOKKOS_ENABLE_DEBUG enabled, the functor uses too many registers to run
 // with a team size of 32 on GPUs, 16 is the max possible (at least on a K80
@@ -1039,14 +1036,14 @@ TEST(TEST_CATEGORY, triple_nested_parallelism) {
 #if defined(KOKKOS_ENABLE_DEBUG) && defined(KOKKOS_ENABLE_CUDA)
   if (!std::is_same<TEST_EXECSPACE, Kokkos::Cuda>::value)
 #elif defined(KOKKOS_ENABLE_SYCL)
-  if (!std::is_same<TEST_EXECSPACE, Kokkos::Experimental::SYCL>::value)
+  if (!std::is_same<TEST_EXECSPACE, Kokkos::SYCL>::value)
 #endif
   {
     TestTripleNestedReduce<double, TEST_EXECSPACE>(8192, 2048, 32, 32);
     TestTripleNestedReduce<double, TEST_EXECSPACE>(8192, 2048, 32, 16);
   }
 #if defined(KOKKOS_ENABLE_SYCL)
-  if (!std::is_same<TEST_EXECSPACE, Kokkos::Experimental::SYCL>::value)
+  if (!std::is_same<TEST_EXECSPACE, Kokkos::SYCL>::value)
 #endif
   {
     TestTripleNestedReduce<double, TEST_EXECSPACE>(8192, 2048, 16, 33);
@@ -1055,7 +1052,6 @@ TEST(TEST_CATEGORY, triple_nested_parallelism) {
   TestTripleNestedReduce<double, TEST_EXECSPACE>(8192, 2048, 16, 16);
   TestTripleNestedReduce<double, TEST_EXECSPACE>(8192, 2048, 7, 16);
 }
-#endif
 
 TEST(TEST_CATEGORY, parallel_scan_with_reducers) {
   using T = double;
@@ -1064,11 +1060,8 @@ TEST(TEST_CATEGORY, parallel_scan_with_reducers) {
   constexpr int n              = 1000000;
   constexpr int n_vector_range = 100;
 
-#if defined(KOKKOS_ENABLE_CUDA) && \
-    defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC 23.7
-  if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>) {
-    GTEST_SKIP() << "All but max inclusive scan differ at index 101";
-  }
+#ifdef KOKKOS_IMPL_32BIT
+  GTEST_SKIP() << "Failing KOKKOS_IMPL_32BIT";  // FIXME_32BIT
 #endif
 
   checkScan<TEST_EXECSPACE, ScanType::Exclusive, n, n_vector_range,

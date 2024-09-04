@@ -25,20 +25,18 @@ namespace Test {
 
 void test_is_specialization_of() {
   using Kokkos::Impl::is_specialization_of;
-  static_assert(is_specialization_of<Kokkos::pair<float, int>, Kokkos::pair>{},
-                "");
-  static_assert(!is_specialization_of<Kokkos::View<int*>, Kokkos::pair>{}, "");
-  static_assert(is_specialization_of<Kokkos::View<int*>, Kokkos::View>{}, "");
+  static_assert(is_specialization_of<Kokkos::pair<float, int>, Kokkos::pair>{});
+  static_assert(!is_specialization_of<Kokkos::View<int*>, Kokkos::pair>{});
+  static_assert(is_specialization_of<Kokkos::View<int*>, Kokkos::View>{});
   // NOTE Not removing cv-qualifiers
-  static_assert(!is_specialization_of<Kokkos::View<int*> const, Kokkos::View>{},
-                "");
+  static_assert(
+      !is_specialization_of<Kokkos::View<int*> const, Kokkos::View>{});
   // NOTE Would not compile because Kokkos::Array takes a non-type template
   // parameter
-  // static_assert(is_specialization_of<Kokkos::Array<int, 4>, Kokkos::Array>{},
-  // "");
+  // static_assert(is_specialization_of<Kokkos::Array<int, 4>,
+  //               Kokkos::Array>{});
   // But this is fine of course
-  static_assert(!is_specialization_of<Kokkos::Array<float, 2>, Kokkos::pair>{},
-                "");
+  static_assert(!is_specialization_of<Kokkos::Array<float, 2>, Kokkos::pair>{});
 }
 
 namespace {
@@ -94,37 +92,37 @@ void test_is_scoped_enum() {
   using Kokkos::Impl::is_scoped_enum_v;
 
   static_assert(!is_scoped_enum<int>{});
-  static_assert(!is_scoped_enum<int>::value);
+  static_assert(!is_scoped_enum<int>::value);  // NOLINT
   static_assert(!is_scoped_enum_v<int>);
   static_assert(
       is_public_unambiguous_base_of_v<std::false_type, is_scoped_enum<int>>);
 
   static_assert(!is_scoped_enum<Class>{});
-  static_assert(!is_scoped_enum<Class>::value);
+  static_assert(!is_scoped_enum<Class>::value);  // NOLINT
   static_assert(!is_scoped_enum_v<Class>);
   static_assert(
       is_public_unambiguous_base_of_v<std::false_type, is_scoped_enum<Class>>);
 
   static_assert(!is_scoped_enum<Enum>{});
-  static_assert(!is_scoped_enum<Enum>::value);
+  static_assert(!is_scoped_enum<Enum>::value);  // NOLINT
   static_assert(!is_scoped_enum_v<Enum>);
   static_assert(
       is_public_unambiguous_base_of_v<std::false_type, is_scoped_enum<Enum>>);
 
   static_assert(!is_scoped_enum<EnumBool>{});
-  static_assert(!is_scoped_enum<EnumBool>::value);
+  static_assert(!is_scoped_enum<EnumBool>::value);  // NOLINT
   static_assert(!is_scoped_enum_v<EnumBool>);
   static_assert(is_public_unambiguous_base_of_v<std::false_type,
                                                 is_scoped_enum<EnumBool>>);
 
   static_assert(is_scoped_enum<ScopedEnum>{});
-  static_assert(is_scoped_enum<ScopedEnum>::value);
+  static_assert(is_scoped_enum<ScopedEnum>::value);  // NOLINT
   static_assert(is_scoped_enum_v<ScopedEnum>);
   static_assert(is_public_unambiguous_base_of_v<std::true_type,
                                                 is_scoped_enum<ScopedEnum>>);
 
   static_assert(is_scoped_enum<ScopedEnumShort>{});
-  static_assert(is_scoped_enum<ScopedEnumShort>::value);
+  static_assert(is_scoped_enum<ScopedEnumShort>::value);  // NOLINT
   static_assert(is_scoped_enum_v<ScopedEnumShort>);
   static_assert(
       is_public_unambiguous_base_of_v<std::true_type,

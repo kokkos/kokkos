@@ -144,7 +144,7 @@ void run_single_scenario(const InfoType& scenario_info) {
     // make host copy BEFORE running algo
     auto data_h = create_host_space_copy(view);
     auto rit    = KE::remove_if(exespace(), KE::begin(view), KE::end(view),
-                             remove_if_even);
+                                remove_if_even);
     verify_data(data_h, view, rit, remove_if_even);
   }
 
@@ -154,7 +154,7 @@ void run_single_scenario(const InfoType& scenario_info) {
     // make host copy BEFORE running algo
     auto data_h = create_host_space_copy(view);
     auto rit    = KE::remove_if("label", exespace(), KE::begin(view),
-                             KE::end(view), remove_if_even);
+                                KE::end(view), remove_if_even);
     verify_data(data_h, view, rit, remove_if_even);
   }
 

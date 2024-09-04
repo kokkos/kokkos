@@ -86,10 +86,17 @@ struct [[nodiscard]] Graph {
     return m_impl_ptr->get_execution_space();
   }
 
-  void submit() const {
+  void instantiate() {
     KOKKOS_EXPECTS(bool(m_impl_ptr))
-    (*m_impl_ptr).submit();
+    (*m_impl_ptr).instantiate();
   }
+
+  void submit(const execution_space& exec) const {
+    KOKKOS_EXPECTS(bool(m_impl_ptr))
+    (*m_impl_ptr).submit(exec);
+  }
+
+  void submit() const { submit(get_execution_space()); }
 };
 
 // </editor-fold> end Graph }}}1
@@ -135,7 +142,7 @@ Graph<ExecutionSpace> create_graph(ExecutionSpace ex, Closure&& arg_closure) {
   // function template injection works.
   auto rv = Kokkos::Impl::GraphAccess::construct_graph(std::move(ex));
   // Invoke the user's graph construction closure
-  ((Closure &&) arg_closure)(Kokkos::Impl::GraphAccess::create_root_ref(rv));
+  ((Closure&&)arg_closure)(Kokkos::Impl::GraphAccess::create_root_ref(rv));
   // and given them back the graph
   // KOKKOS_ENSURES(rv.m_impl_ptr.use_count() == 1)
   return rv;
@@ -145,7 +152,7 @@ template <
     class ExecutionSpace = DefaultExecutionSpace,
     class Closure = Kokkos::Impl::DoNotExplicitlySpecifyThisTemplateParameter>
 Graph<ExecutionSpace> create_graph(Closure&& arg_closure) {
-  return create_graph(ExecutionSpace{}, (Closure &&) arg_closure);
+  return create_graph(ExecutionSpace{}, (Closure&&)arg_closure);
 }
 
 // </editor-fold> end create_graph }}}1
@@ -166,6 +173,9 @@ Graph<ExecutionSpace> create_graph(Closure&& arg_closure) {
 #if !((HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR == 2))
 #include <HIP/Kokkos_HIP_Graph_Impl.hpp>
 #endif
+#endif
+#ifdef SYCL_EXT_ONEAPI_GRAPH
+#include <SYCL/Kokkos_SYCL_Graph_Impl.hpp>
 #endif
 #ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_GRAPH
 #undef KOKKOS_IMPL_PUBLIC_INCLUDE

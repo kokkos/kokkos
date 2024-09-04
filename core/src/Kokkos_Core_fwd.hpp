@@ -30,10 +30,6 @@
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_Utilities.hpp>
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-#include <Kokkos_MasterLock.hpp>
-#endif
-
 //----------------------------------------------------------------------------
 // Have assumed a 64-bit build (8-byte pointers) throughout the code base.
 // 32-bit build allowed but unsupported.
@@ -75,9 +71,6 @@ template <class ExecutionSpace, class MemorySpace>
 struct Device;
 
 // forward declare here so that backend initializer calls can use it.
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
-struct InitArguments;
-#endif
 class InitializationSettings;
 
 }  // namespace Kokkos
@@ -113,8 +106,7 @@ using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION =
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HIP)
 using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION = HIP;
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SYCL)
-using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION =
-    Experimental::SYCL;
+using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION = SYCL;
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENACC)
 using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION =
     Experimental::OpenACC;
@@ -129,7 +121,7 @@ using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION =
 using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION = Serial;
 #else
 #error \
-    "At least one of the following execution spaces must be defined in order to use Kokkos: Kokkos::Cuda, Kokkos::HIP, Kokkos::Experimental::SYCL, Kokkos::Experimental::OpenMPTarget, Kokkos::Experimental::OpenACC, Kokkos::OpenMP, Kokkos::Threads, Kokkos::Experimental::HPX, or Kokkos::Serial."
+    "At least one of the following execution spaces must be defined in order to use Kokkos: Kokkos::Cuda, Kokkos::HIP, Kokkos::SYCL, Kokkos::Experimental::OpenMPTarget, Kokkos::Experimental::OpenACC, Kokkos::OpenMP, Kokkos::Threads, Kokkos::Experimental::HPX, or Kokkos::Serial."
 #endif
 
 #if defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP)
@@ -169,7 +161,7 @@ using SharedSpace = CudaUVMSpace;
 using SharedSpace = HIPManagedSpace;
 #define KOKKOS_HAS_SHARED_SPACE
 #elif defined(KOKKOS_ENABLE_SYCL)
-using SharedSpace = Experimental::SYCLSharedUSMSpace;
+using SharedSpace = SYCLSharedUSMSpace;
 #define KOKKOS_HAS_SHARED_SPACE
 // if only host compile point to HostSpace
 #elif !defined(KOKKOS_ENABLE_OPENACC) && !defined(KOKKOS_ENABLE_OPENMPTARGET)
@@ -191,7 +183,7 @@ using SharedHostPinnedSpace = CudaHostPinnedSpace;
 using SharedHostPinnedSpace = HIPHostPinnedSpace;
 #define KOKKOS_HAS_SHARED_HOST_PINNED_SPACE
 #elif defined(KOKKOS_ENABLE_SYCL)
-    using SharedHostPinnedSpace = Experimental::SYCLHostUSMSpace;
+    using SharedHostPinnedSpace = SYCLHostUSMSpace;
 #define KOKKOS_HAS_SHARED_HOST_PINNED_SPACE
 #elif !defined(KOKKOS_ENABLE_OPENACC) && !defined(KOKKOS_ENABLE_OPENMPTARGET)
     using SharedHostPinnedSpace = HostSpace;
@@ -262,12 +254,6 @@ KOKKOS_FUNCTION void runtime_check_memory_access_violation(
 }
 
 }  // namespace Impl
-
-namespace Experimental {
-template <class, class, class, class>
-class LogicalMemorySpace;
-}
-
 }  // namespace Kokkos
 
 //----------------------------------------------------------------------------

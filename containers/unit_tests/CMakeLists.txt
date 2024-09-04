@@ -46,6 +46,11 @@ foreach(Tag Threads;Serial;OpenMP;HPX;Cuda;HIP;SYCL)
      LIST(REMOVE_ITEM UnitTestSources ${dir}/TestCuda_DynViewAPI_generic.cpp)
     endif()
 
+    # FIXME_NVHPC: NVC++-S-0000-Internal compiler error. extractor: bad opc       0
+    if(KOKKOS_ENABLE_CUDA AND KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
+     LIST(REMOVE_ITEM UnitTestSources ${dir}/TestCuda_WithoutInitializing.cpp)
+    endif()
+
     KOKKOS_ADD_EXECUTABLE_AND_TEST(ContainersUnitTest_${Tag} SOURCES ${UnitTestSources})
   endif()
 endforeach()

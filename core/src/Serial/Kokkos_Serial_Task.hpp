@@ -102,9 +102,8 @@ class TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::Serial, QueueType>> {
 
 template <class Scheduler>
 class TaskQueueSpecializationConstrained<
-    Scheduler,
-    std::enable_if_t<std::is_same<typename Scheduler::execution_space,
-                                  Kokkos::Serial>::value>> {
+    Scheduler, std::enable_if_t<std::is_same_v<
+                   typename Scheduler::execution_space, Kokkos::Serial>>> {
  public:
   // Note: Scheduler may be an incomplete type at class scope (but not inside
   // of the methods, obviously)
@@ -121,7 +120,7 @@ class TaskQueueSpecializationConstrained<
     using task_base_type = TaskBase;
     using queue_type     = typename scheduler_type::queue_type;
 
-    task_base_type* const end = (task_base_type*)task_base_type::EndTag;
+    auto* const end = reinterpret_cast<task_base_type*>(task_base_type::EndTag);
 
     execution_space serial_execution_space;
     auto& data = serial_execution_space.impl_internal_space_instance()
@@ -157,7 +156,7 @@ class TaskQueueSpecializationConstrained<
     using task_base_type = TaskBase;
     using queue_type     = typename scheduler_type::queue_type;
 
-    task_base_type* const end = (task_base_type*)task_base_type::EndTag;
+    auto* const end = reinterpret_cast<task_base_type*>(task_base_type::EndTag);
 
     execution_space serial_execution_space;
 

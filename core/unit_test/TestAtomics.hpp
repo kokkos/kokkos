@@ -377,9 +377,9 @@ T ExchLoop(int loop) {
 }
 
 template <class T>
-T ExchLoopSerial(std::conditional_t<
-                 !std::is_same<T, Kokkos::complex<double> >::value, int, void>
-                     loop) {
+T ExchLoopSerial(
+    std::conditional_t<!std::is_same_v<T, Kokkos::complex<double> >, int, void>
+        loop) {
   T* data  = new T[1];
   T* data2 = new T[1];
   data[0]  = 0;
@@ -399,9 +399,9 @@ T ExchLoopSerial(std::conditional_t<
 }
 
 template <class T>
-T ExchLoopSerial(std::conditional_t<
-                 std::is_same<T, Kokkos::complex<double> >::value, int, void>
-                     loop) {
+T ExchLoopSerial(
+    std::conditional_t<std::is_same_v<T, Kokkos::complex<double> >, int, void>
+        loop) {
   T* data  = new T[1];
   T* data2 = new T[1];
   data[0]  = 0;
@@ -498,7 +498,9 @@ TEST(TEST_CATEGORY, atomics) {
   ASSERT_TRUE((TestAtomic::Loop<float, TEST_EXECSPACE>(100, 2)));
   ASSERT_TRUE((TestAtomic::Loop<float, TEST_EXECSPACE>(100, 3)));
 
-#ifndef KOKKOS_ENABLE_OPENMPTARGET
+  // FIXME_OPENMPTARGET
+  // FIXME_OPENACC: atomic operations on composite types are not supported.
+#if !defined(KOKKOS_ENABLE_OPENMPTARGET) && !defined(KOKKOS_ENABLE_OPENACC)
   ASSERT_TRUE((TestAtomic::Loop<Kokkos::complex<float>, TEST_EXECSPACE>(1, 1)));
   ASSERT_TRUE((TestAtomic::Loop<Kokkos::complex<float>, TEST_EXECSPACE>(1, 2)));
   ASSERT_TRUE((TestAtomic::Loop<Kokkos::complex<float>, TEST_EXECSPACE>(1, 3)));
@@ -514,7 +516,7 @@ TEST(TEST_CATEGORY, atomics) {
 // condition alltogether when possible.
 #if defined(KOKKOS_ENABLE_SYCL) && \
     !defined(KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED)
-  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::SYCL>) return;
+  if (std::is_same_v<TEST_EXECSPACE, Kokkos::SYCL>) return;
 #endif
   ASSERT_TRUE(
       (TestAtomic::Loop<Kokkos::complex<double>, TEST_EXECSPACE>(1, 1)));

@@ -18,6 +18,7 @@
 #define KOKKOS_HALF_MATHEMATICAL_FUNCTIONS_HPP_
 
 #include <Kokkos_MathematicalFunctions.hpp>  // For the float overloads
+#include <Kokkos_BitManipulation.hpp>        // bit_cast
 
 // clang-format off
 namespace Kokkos {
@@ -74,7 +75,7 @@ namespace Kokkos {
   KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF_MIXED(FUNC, HALF_TYPE, unsigned long) \
   KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF_MIXED(FUNC, HALF_TYPE, long long) \
   KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF_MIXED(FUNC, HALF_TYPE, unsigned long long)
-  
+
 
 #define KOKKOS_IMPL_MATH_UNARY_PREDICATE_HALF(FUNC, HALF_TYPE) \
   KOKKOS_INLINE_FUNCTION bool FUNC(HALF_TYPE x) {              \
@@ -155,10 +156,77 @@ KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF, nextaf
 KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF, copysign)
 // Classification and comparison functions
 // fpclassify
-KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_UNARY_PREDICATE_HALF, isfinite)
-KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_UNARY_PREDICATE_HALF, isinf)
-#if !defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ENABLE_HIP) // FIXME_SYCL, FIXME_HIP
-KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_UNARY_PREDICATE_HALF, isnan)
+
+#if defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
+KOKKOS_INLINE_FUNCTION bool isfinite(Kokkos::Experimental::half_t x) {
+  using bit_type = Kokkos::Experimental::half_t::bit_comparison_type;
+  constexpr bit_type exponent_mask = Kokkos::Experimental::Impl::exponent_mask<Kokkos::Experimental::half_t>;
+  const bit_type bit_pattern_x = bit_cast<bit_type>(
+      static_cast<Kokkos::Experimental::half_t::impl_type>(x));
+  return (bit_pattern_x.value & exponent_mask.value) != exponent_mask.value;
+}
+#endif
+
+#if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
+KOKKOS_INLINE_FUNCTION bool isfinite(Kokkos::Experimental::bhalf_t x) {
+  using bit_type = Kokkos::Experimental::bhalf_t::bit_comparison_type;
+  constexpr bit_type exponent_mask = Kokkos::Experimental::Impl::exponent_mask<Kokkos::Experimental::bhalf_t>;
+  const bit_type bit_pattern_x = bit_cast<bit_type>(
+      static_cast<Kokkos::Experimental::bhalf_t::impl_type>(x));
+  return (bit_pattern_x.value & exponent_mask.value) != exponent_mask.value;
+}
+#endif
+
+#if defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
+KOKKOS_INLINE_FUNCTION bool isinf(Kokkos::Experimental::half_t x) {
+  using bit_type = Kokkos::Experimental::half_t::bit_comparison_type;
+  constexpr bit_type exponent_mask = Kokkos::Experimental::Impl::exponent_mask<Kokkos::Experimental::half_t>;
+  constexpr bit_type fraction_mask = Kokkos::Experimental::Impl::fraction_mask<Kokkos::Experimental::half_t>;
+  const bit_type bit_pattern_x = bit_cast<bit_type>(
+      static_cast<Kokkos::Experimental::half_t::impl_type>(x));
+  return (
+      ((bit_pattern_x.value & exponent_mask.value) == exponent_mask.value) &&
+      ((bit_pattern_x.value & fraction_mask.value) == 0));
+}
+#endif
+
+#if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
+KOKKOS_INLINE_FUNCTION bool isinf(Kokkos::Experimental::bhalf_t x) {
+  using bit_type = Kokkos::Experimental::bhalf_t::bit_comparison_type;
+  constexpr bit_type exponent_mask = Kokkos::Experimental::Impl::exponent_mask<Kokkos::Experimental::bhalf_t>;
+  constexpr bit_type fraction_mask = Kokkos::Experimental::Impl::fraction_mask<Kokkos::Experimental::bhalf_t>;
+  const bit_type bit_pattern_x = bit_cast<bit_type>(
+      static_cast<Kokkos::Experimental::bhalf_t::impl_type>(x));
+  return (
+      ((bit_pattern_x.value & exponent_mask.value) == exponent_mask.value) &&
+      ((bit_pattern_x.value & fraction_mask.value) == 0));
+}
+#endif
+
+#if defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
+KOKKOS_INLINE_FUNCTION bool isnan(Kokkos::Experimental::half_t x) {
+  using bit_type = Kokkos::Experimental::half_t::bit_comparison_type;
+  constexpr bit_type exponent_mask = Kokkos::Experimental::Impl::exponent_mask<Kokkos::Experimental::half_t>;
+  constexpr bit_type fraction_mask = Kokkos::Experimental::Impl::fraction_mask<Kokkos::Experimental::half_t>;
+  const bit_type bit_pattern_x = bit_cast<bit_type>(
+      static_cast<Kokkos::Experimental::half_t::impl_type>(x));
+  return (
+      ((bit_pattern_x.value & exponent_mask.value) == exponent_mask.value) &&
+      ((bit_pattern_x.value & fraction_mask.value) != 0));
+}
+#endif
+
+#if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
+KOKKOS_INLINE_FUNCTION bool isnan(Kokkos::Experimental::bhalf_t x) {
+  using bit_type = Kokkos::Experimental::bhalf_t::bit_comparison_type;
+  constexpr bit_type exponent_mask = Kokkos::Experimental::Impl::exponent_mask<Kokkos::Experimental::bhalf_t>;
+  constexpr bit_type fraction_mask = Kokkos::Experimental::Impl::fraction_mask<Kokkos::Experimental::bhalf_t>;
+  const bit_type bit_pattern_x = bit_cast<bit_type>(
+      static_cast<Kokkos::Experimental::bhalf_t::impl_type>(x));
+  return (
+      ((bit_pattern_x.value & exponent_mask.value) == exponent_mask.value) &&
+      ((bit_pattern_x.value & fraction_mask.value) != 0));
+}
 #endif
 // isnormal
 KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_UNARY_PREDICATE_HALF, signbit)

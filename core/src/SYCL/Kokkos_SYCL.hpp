@@ -39,7 +39,6 @@ static_assert(false,
 #include <impl/Kokkos_InitializationSettings.hpp>
 
 namespace Kokkos {
-namespace Experimental {
 namespace Impl {
 class SYCLInternal;
 }
@@ -78,26 +77,21 @@ class SYCL {
   //! \name Functions that all Kokkos devices must implement.
   //@{
 
-  KOKKOS_INLINE_FUNCTION static int in_parallel() {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  KOKKOS_DEPRECATED KOKKOS_INLINE_FUNCTION static int in_parallel() {
 #if defined(__SYCL_DEVICE_ONLY__)
     return true;
 #else
     return false;
 #endif
   }
-
-  /** \brief  Set the device in a "sleep" state. */
-  static bool sleep();
-
-  /** \brief Wake the device from the 'sleep' state. A noop for OpenMP. */
-  static bool wake();
+#endif
 
   /** \brief Wait until all dispatched functors complete. A noop for OpenMP. */
   static void impl_static_fence(const std::string& name);
 
-  void fence(
-      const std::string& name =
-          "Kokkos::Experimental::SYCL::fence: Unnamed Instance Fence") const;
+  void fence(const std::string& name =
+                 "Kokkos::SYCL::fence: Unnamed Instance Fence") const;
 
   /// \brief Print configuration information to the given output stream.
   void print_configuration(std::ostream& os, bool verbose = false) const;
@@ -135,15 +129,13 @@ class SYCL {
   Kokkos::Impl::HostSharedPtr<Impl::SYCLInternal> m_space_instance;
 };
 
-}  // namespace Experimental
-
 namespace Tools {
 namespace Experimental {
 template <>
-struct DeviceTypeTraits<Kokkos::Experimental::SYCL> {
+struct DeviceTypeTraits<Kokkos::SYCL> {
   /// \brief An ID to differentiate (for example) Serial from OpenMP in Tooling
   static constexpr DeviceType id = DeviceType::SYCL;
-  static int device_id(const Kokkos::Experimental::SYCL& exec) {
+  static int device_id(const Kokkos::SYCL& exec) {
     return exec.impl_internal_space_instance()->m_syclDev;
   }
 };
@@ -188,7 +180,12 @@ std::vector<SYCL> partition_space(const SYCL& sycl_space,
         sycl::queue(context, device, sycl::property::queue::in_order()));
   return instances;
 }
+
 }  // namespace Experimental
+
+namespace Impl {
+std::vector<sycl::device> get_sycl_devices();
+}  // namespace Impl
 
 }  // namespace Kokkos
 

@@ -21,6 +21,21 @@
 
 namespace Test {
 
+template <class ExecSpace, class ValueType>
+struct NoOpReduceFunctor {
+  KOKKOS_FUNCTION void operator()(int, ValueType&) const {
+    Kokkos::abort("Should never be called!");
+  }
+  KOKKOS_FUNCTION void operator()(int, int, ValueType&) const {
+    Kokkos::abort("Should never be called!");
+  }
+  KOKKOS_FUNCTION void operator()(
+      const typename Kokkos::TeamPolicy<ExecSpace>::member_type&,
+      ValueType&) const {
+    Kokkos::abort("Should never be called!");
+  }
+};
+
 template <class ExecSpace>
 struct CountTestFunctor {
   using value_type = int;
@@ -66,7 +81,7 @@ struct SetResultToViewFunctor {
   }
 };
 
-struct TEST_CATEGORY_FIXTURE(count_bugs) : public ::testing::Test {
+struct TEST_CATEGORY_FIXTURE(graph) : public ::testing::Test {
  public:
   using count_functor      = CountTestFunctor<TEST_EXECSPACE>;
   using set_functor        = SetViewToValueFunctor<TEST_EXECSPACE, int>;
@@ -88,7 +103,7 @@ struct TEST_CATEGORY_FIXTURE(count_bugs) : public ::testing::Test {
   }
 };
 
-TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), launch_one) {
+TEST_F(TEST_CATEGORY_FIXTURE(graph), submit_once) {
   auto graph =
       Kokkos::Experimental::create_graph<TEST_EXECSPACE>([&](auto root) {
         root.then_parallel_for(1, count_functor{count, bugs, 0, 0});
@@ -101,7 +116,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), launch_one) {
   ASSERT_EQ(0, bugs_host());
 }
 
-TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), launch_one_rvalue) {
+TEST_F(TEST_CATEGORY_FIXTURE(graph), submit_once_rvalue) {
   Kokkos::Experimental::create_graph(ex, [&](auto root) {
     root.then_parallel_for(1, count_functor{count, bugs, 0, 0});
   }).submit();
@@ -112,7 +127,109 @@ TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), launch_one_rvalue) {
   ASSERT_EQ(0, bugs_host());
 }
 
-TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), launch_six) {
+// Ensure that Kokkos::Graph::instantiate works.
+// For now, Kokkos::Graph::submit will instantiate if needed,
+// so this test is not very strong.
+TEST_F(TEST_CATEGORY_FIXTURE(graph), instantiate_and_submit_once) {
+  auto graph = Kokkos::Experimental::create_graph(ex, [&](auto root) {
+    root.then_parallel_for(1, count_functor{count, bugs, 0, 0});
+  });
+  graph.instantiate();
+  graph.submit();
+  Kokkos::deep_copy(ex, count_host, count);
+  Kokkos::deep_copy(ex, bugs_host, bugs);
+  ex.fence();
+  ASSERT_EQ(1, count_host());
+  ASSERT_EQ(0, bugs_host());
+}
+
+// FIXME death tests and fixtures
+#define TEST_CATEGORY_FIXTURE_DEATH_HELPER(category, name) \
+  category##_##name##_DeathTest
+#define TEST_CATEGORY_FIXTURE_DEATH_HELPER_EXPAND(category, name) \
+  TEST_CATEGORY_FIXTURE_DEATH_HELPER(category, name)
+#define TEST_CATEGORY_FIXTURE_DEATH(name) \
+  TEST_CATEGORY_FIXTURE_DEATH_HELPER_EXPAND(TEST_CATEGORY, name)
+
+struct TEST_CATEGORY_FIXTURE_DEATH(graph)
+    : public TEST_CATEGORY_FIXTURE(graph) {};
+
+// Ensure that Kokkos::Graph::instantiate can be called only once.
+// This test checks 2 cases:
+//   1. Instantiating after submission is invalid (this also implicitly
+//      checks that submission instantiates if need be).
+//   2. Instantiating twice in a row is invalid.
+TEST_F(TEST_CATEGORY_FIXTURE_DEATH(graph), can_instantiate_only_once) {
+  {
+    bool checked_assertions = false;
+    KOKKOS_ASSERT(checked_assertions = true);
+    if (!checked_assertions) {
+      GTEST_SKIP() << "Preconditions are not checked.";
+    }
+  }
+  {
+    auto graph = Kokkos::Experimental::create_graph(ex, [&](auto root) {
+      root.then_parallel_for(1, count_functor{count, bugs, 0, 0});
+    });
+    graph.submit();
+    ASSERT_DEATH(graph.instantiate(),
+                 "Expected precondition `.*` evaluated false.");
+  }
+  {
+    auto graph = Kokkos::Experimental::create_graph(ex, [&](auto root) {
+      root.then_parallel_for(1, count_functor{count, bugs, 0, 0});
+    });
+    graph.instantiate();
+    ASSERT_DEATH(graph.instantiate(),
+                 "Expected precondition `.*` evaluated false.");
+  }
+}
+
+// This test submits on an execution space instance different from the
+// one passed to the Kokkos::Graph constructor.
+TEST_F(TEST_CATEGORY_FIXTURE(graph),
+       submit_onto_another_execution_space_instance) {
+// FIXME For ROCm 5.2, the graph implementation is bugged, and Kokkos
+//       therefore uses the default implementation. The kernels of the
+//       graph will thus run on the default stream.
+#if defined(KOKKOS_ENABLE_HIP)
+#if HIP_VERSION_MAJOR == 5 && HIP_VERSION_MINOR == 2
+  if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::HIP>)
+    GTEST_SKIP() << "Graph is not properly enqueued.";
+#endif
+#endif
+  const auto execution_space_instances =
+      Kokkos::Experimental::partition_space(ex, 1, 1);
+
+  auto graph = Kokkos::Experimental::create_graph(
+      execution_space_instances.at(0), [&](auto root) {
+        root.then_parallel_for(1, count_functor{count, bugs, 0, 0});
+      });
+  graph.instantiate();
+
+  execution_space_instances.at(0).fence(
+      "The graph might make async copies to device.");
+
+  graph.submit(execution_space_instances.at(1));
+
+  Kokkos::deep_copy(execution_space_instances.at(1), count_host, count);
+  Kokkos::deep_copy(execution_space_instances.at(1), bugs_host, bugs);
+  execution_space_instances.at(1).fence();
+  ASSERT_EQ(1, count_host());
+  ASSERT_EQ(0, bugs_host());
+}
+
+TEST_F(TEST_CATEGORY_FIXTURE(graph), submit_six) {
+#ifdef KOKKOS_ENABLE_OPENMPTARGET  // FIXME_OPENMPTARGET team_size incompatible
+  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenMPTarget>)
+    GTEST_SKIP() << "skipping since OpenMPTarget can't use team_size 1";
+#endif
+#if defined(KOKKOS_ENABLE_SYCL) && \
+    !defined(SYCL_EXT_ONEAPI_GRAPH)  // FIXME_SYCL
+  if (std::is_same_v<TEST_EXECSPACE, Kokkos::SYCL>)
+    GTEST_SKIP() << "skipping since test case is known to fail with SYCL";
+#endif
+
   auto graph = Kokkos::Experimental::create_graph(ex, [&](auto root) {
     auto f_setup_count = root.then_parallel_for(1, set_functor{count, 0});
     auto f_setup_bugs  = root.then_parallel_for(1, set_functor{bugs, 0});
@@ -145,7 +262,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), launch_six) {
   ASSERT_EQ(0, bugs_host());
 }
 
-TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), when_all_cycle) {
+TEST_F(TEST_CATEGORY_FIXTURE(graph), when_all_cycle) {
   view_type reduction_out{"reduction_out"};
   view_host reduction_host{"reduction_host"};
   Kokkos::Experimental::create_graph(ex, [&](auto root) {
@@ -172,7 +289,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), when_all_cycle) {
 
 // This test is disabled because we don't currently support copying to host,
 // even asynchronously. We _may_ want to do that eventually?
-TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), DISABLED_repeat_chain) {
+TEST_F(TEST_CATEGORY_FIXTURE(graph), DISABLED_repeat_chain) {
   auto graph = Kokkos::Experimental::create_graph(
       ex, [&, count_host = count_host](auto root) {
         //----------------------------------------
@@ -198,10 +315,27 @@ TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), DISABLED_repeat_chain) {
   //----------------------------------------
 }
 
-TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), zero_work_reduce) {
-  auto graph = Kokkos::Experimental::create_graph(ex, [&](auto root) {
-    root.then_parallel_reduce(0, set_result_functor{bugs}, count);
-  });
+TEST_F(TEST_CATEGORY_FIXTURE(graph), zero_work_reduce) {
+  auto graph = Kokkos::Experimental::create_graph(
+      ex, [&](Kokkos::Experimental::GraphNodeRef<TEST_EXECSPACE> root) {
+        NoOpReduceFunctor<TEST_EXECSPACE, int> no_op_functor;
+        root.then_parallel_reduce(Kokkos::RangePolicy<TEST_EXECSPACE>(0, 0),
+                                  no_op_functor, count)
+#if !defined(KOKKOS_ENABLE_SYCL) || \
+    defined(SYCL_EXT_ONEAPI_GRAPH)  // FIXME_SYCL
+#if !defined(KOKKOS_ENABLE_CUDA) && \
+    !defined(KOKKOS_ENABLE_HIP)  // FIXME_CUDA FIXME_HIP
+            .then_parallel_reduce(
+                Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>{{0, 0},
+                                                                       {0, 0}},
+                no_op_functor, count)
+#endif
+            .then_parallel_reduce(
+                Kokkos::TeamPolicy<TEST_EXECSPACE>{0, Kokkos::AUTO},
+                no_op_functor, count)
+#endif
+            ;
+      });
 // These fences are only necessary because of the weirdness of how CUDA
 // UVM works on pre pascal cards.
 #if defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_ENABLE_CUDA_UVM) && \
@@ -214,12 +348,15 @@ TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), zero_work_reduce) {
 // UVM works on pre pascal cards.
 #if defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_ENABLE_CUDA_UVM) && \
     (defined(KOKKOS_ARCH_KEPLER) || defined(KOKKOS_ARCH_MAXWELL))
-  Kokkos::fence();
+  if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>) Kokkos::fence();
 #endif
-  graph.submit();  // should reset to 0, but doesn't
+#ifdef KOKKOS_ENABLE_HPX  // FIXME_HPX graph.submit() isn't properly enqueued
+  if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::HPX>)
+    Kokkos::fence();
+#endif
+  graph.submit();
   Kokkos::deep_copy(ex, count_host, count);
   ex.fence();
   ASSERT_EQ(count_host(), 0);
 }
-
 }  // end namespace Test

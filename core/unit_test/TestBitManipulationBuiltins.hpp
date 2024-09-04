@@ -228,7 +228,7 @@ TEST(TEST_CATEGORY, bit_manip_countr_zero) {
 #endif
 #if defined(KOKKOS_ENABLE_SYCL) && \
     !defined(KOKKOS_ARCH_INTEL_GPU)  // FIXME_SYCL returns wrong result
-    if (!std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::SYCL>)
+    if (!std::is_same_v<TEST_EXECSPACE, Kokkos::SYCL>)
 #endif
       test_bit_manip_countr_zero<unsigned char>();
     test_bit_manip_countr_zero<unsigned short>();
@@ -274,7 +274,7 @@ TEST(TEST_CATEGORY, bit_manip_countr_one) {
 #endif
 #if defined(KOKKOS_ENABLE_SYCL) && \
     !defined(KOKKOS_ARCH_INTEL_GPU)  // FIXME_SYCL returns wrong result
-    if (!std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::SYCL>)
+    if (!std::is_same_v<TEST_EXECSPACE, Kokkos::SYCL>)
 #endif
       test_bit_manip_countr_one<unsigned char>();
     test_bit_manip_countr_one<unsigned short>();
@@ -804,35 +804,29 @@ struct TestBitCastFunction {
     using Kokkos::bit_cast;
     if (bit_cast<int>(123) != 123) {
       ++e;
-      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed check #1\n");
+      Kokkos::printf("failed check #1\n");
     }
     if (bit_cast<int>(123u) != 123) {
       ++e;
-      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed check #2\n");
+      Kokkos::printf("failed check #2\n");
     }
     if (bit_cast<int>(~0u) != ~0) {
       ++e;
-      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed check #3\n");
+      Kokkos::printf("failed check #3\n");
     }
     if constexpr (sizeof(int) == sizeof(float)) {
       if (!check<int>(12.34f)) {
         ++e;
-        KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed check #4\n");
+        Kokkos::printf("failed check #4\n");
       }
     }
     if constexpr (sizeof(unsigned long long) == sizeof(double)) {
       if (!check<unsigned long long>(123.456)) {
         ++e;
-        KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed check #5\n");
+        Kokkos::printf("failed check #5\n");
       }
     }
 
-#if defined(KOKKOS_ENABLE_CUDA) && \
-    defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC 23.7
-    if constexpr (std::is_same_v<Space, Kokkos::Cuda>) {
-      return;
-    }
-#endif
     struct S {
       int i;
 
@@ -848,11 +842,11 @@ struct TestBitCastFunction {
     }
     if (!(bit_cast<S>(arr) == arr)) {
       ++e;
-      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed check #6\n");
+      Kokkos::printf("failed check #6\n");
     }
     if (!(bit_cast<S>(arr2) == arr2)) {
       ++e;
-      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed check #7\n");
+      Kokkos::printf("failed check #7\n");
     }
   }
 };

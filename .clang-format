@@ -1,4 +1,4 @@
-#Official Tool: clang-format version 8.0.0
+#Official Tool: clang-format version 16.0.0
 BasedOnStyle: google
 SortIncludes: false
 AlignConsecutiveAssignments: true
