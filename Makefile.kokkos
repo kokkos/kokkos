@@ -1033,8 +1033,7 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_OPENACC), 1)
   ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
-      KOKKOS_INTERNAL_CUDA_ARCH_FLAG=-fopenmp-targets=nvptx64-nvidia-cuda -Xopenmp-target=nvptx64-nvidia-cuda -march
-      KOKKOS_INTERNAL_AMD_ARCH_FLAG=-fopenmp-targets=amdgcn-amd-amdhsa -Xopenmp-target=amdgcn-amd-amdhsa -march
+      KOKKOS_INTERNAL_CUDA_ARCH_FLAG=--offload-arch
   endif
 endif
 
@@ -1174,50 +1173,42 @@ endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX906), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GFX906")
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU")
-  KOKKOS_INTERNAL_HIP_ARCH_FLAG := --offload-arch=gfx906
-  KOKKOS_INTERNAL_AMD_ARCH_FLAG := $(KOKKOS_INTERNAL_AMD_ARCH_FLAG)=gfx906
+  KOKKOS_INTERNAL_AMD_ARCH_FLAG := --offload-arch=gfx906
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX908), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GFX908")
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU")
-  KOKKOS_INTERNAL_HIP_ARCH_FLAG := --offload-arch=gfx908
-  KOKKOS_INTERNAL_AMD_ARCH_FLAG := $(KOKKOS_INTERNAL_AMD_ARCH_FLAG)=gfx908
+  KOKKOS_INTERNAL_AMD_ARCH_FLAG := --offload-arch=gfx908
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX90A), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GFX90A")
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU")
-  KOKKOS_INTERNAL_HIP_ARCH_FLAG := --offload-arch=gfx90a
-  KOKKOS_INTERNAL_AMD_ARCH_FLAG := $(KOKKOS_INTERNAL_AMD_ARCH_FLAG)=gfx90a
+  KOKKOS_INTERNAL_AMD_ARCH_FLAG := --offload-arch=gfx90a
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX940), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GFX940")
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU")
-  KOKKOS_INTERNAL_HIP_ARCH_FLAG := --offload-arch=gfx940
-  KOKKOS_INTERNAL_AMD_ARCH_FLAG := $(KOKKOS_INTERNAL_AMD_ARCH_FLAG)=gfx940
+  KOKKOS_INTERNAL_AMD_ARCH_FLAG := --offload-arch=gfx940
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX942), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GFX942")
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU")
-  KOKKOS_INTERNAL_HIP_ARCH_FLAG := --offload-arch=gfx942
-  KOKKOS_INTERNAL_AMD_ARCH_FLAG := $(KOKKOS_INTERNAL_AMD_ARCH_FLAG)=gfx942
+  KOKKOS_INTERNAL_AMD_ARCH_FLAG := --offload-arch=gfx942
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX1030), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GFX1030")
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU")
-  KOKKOS_INTERNAL_HIP_ARCH_FLAG := --offload-arch=gfx1030
-  KOKKOS_INTERNAL_AMD_ARCH_FLAG := $(KOKKOS_INTERNAL_AMD_ARCH_FLAG)=gfx1030
+  KOKKOS_INTERNAL_AMD_ARCH_FLAG := --offload-arch=gfx1030
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX1100), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GFX1100")
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU")
-  KOKKOS_INTERNAL_HIP_ARCH_FLAG := --offload-arch=gfx1100
-  KOKKOS_INTERNAL_AMD_ARCH_FLAG := $(KOKKOS_INTERNAL_AMD_ARCH_FLAG)=gfx1100
+  KOKKOS_INTERNAL_AMD_ARCH_FLAG := --offload-arch=gfx1100
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX1103), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GFX1103")
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU")
-  KOKKOS_INTERNAL_HIP_ARCH_FLAG := --offload-arch=gfx1103
-  KOKKOS_INTERNAL_AMD_ARCH_FLAG := $(KOKKOS_INTERNAL_AMD_ARCH_FLAG)=gfx1103
+  KOKKOS_INTERNAL_AMD_ARCH_FLAG := --offload-arch=gfx1103
 endif
 
 
@@ -1226,8 +1217,8 @@ ifeq ($(KOKKOS_INTERNAL_USE_HIP), 1)
   KOKKOS_SRC += $(KOKKOS_PATH)/tpls/desul/src/Lock_Array_HIP.cpp
   KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/HIP/*.hpp)
 
-  KOKKOS_CXXFLAGS+=$(KOKKOS_INTERNAL_HIP_ARCH_FLAG)
-  KOKKOS_LDFLAGS+=$(KOKKOS_INTERNAL_HIP_ARCH_FLAG)
+  KOKKOS_CXXFLAGS+=$(KOKKOS_INTERNAL_AMD_ARCH_FLAG)
+  KOKKOS_LDFLAGS+=$(KOKKOS_INTERNAL_AMD_ARCH_FLAG)
 
   ifeq ($(KOKKOS_INTERNAL_HIP_USE_RELOC), 1)
     tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_HIP_RELOCATABLE_DEVICE_CODE")
