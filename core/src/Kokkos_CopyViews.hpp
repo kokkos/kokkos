@@ -1371,8 +1371,13 @@ contiguous_fill_or_memset(
       && !std::is_same_v<ExecutionSpace, Kokkos::OpenMP>
 #endif
   )
-    ZeroMemset(exec_space, dst.data(),
-               dst.size() * sizeof(typename ViewTraits<DT, DP...>::value_type));
+    // FIXME intel/19 icpc fails to deduce template parameter here,
+    // resulting in compilation errors; explicitly passing the template
+    // parameter to ZeroMemset helps workaround the issue.
+    // See https://github.com/kokkos/kokkos/issues/7273.
+    ZeroMemset<ExecutionSpace>(
+        exec_space, dst.data(),
+        dst.size() * sizeof(typename ViewTraits<DT, DP...>::value_type));
   else
     contiguous_fill(exec_space, dst, value);
 }
@@ -1400,8 +1405,12 @@ contiguous_fill_or_memset(
 // leading to the significant performance issues
 #ifndef KOKKOS_ARCH_A64FX
   if (Impl::is_zero_byte(value))
-    ZeroMemset(exec, dst.data(),
-               dst.size() * sizeof(typename ViewType::value_type));
+    // FIXME intel/19 icpc fails to deduce template parameter here,
+    // resulting in compilation errors; explicitly passing the template
+    // parameter to ZeroMemset helps workaround the issue.
+    // See https://github.com/kokkos/kokkos/issues/7273.
+    ZeroMemset<exec_space_type>(
+        exec, dst.data(), dst.size() * sizeof(typename ViewType::value_type));
   else
 #endif
     contiguous_fill(exec, dst, value);
