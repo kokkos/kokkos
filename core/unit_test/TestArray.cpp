@@ -187,6 +187,60 @@ constexpr bool test_to_array() {
 
 static_assert(test_to_array());
 
+// making sure we cover both const and non-const cases by having a function that
+// writes to an array and another one that reads from it
+// also checking that it supports host device annotations
+template <class T, size_t N>
+KOKKOS_FUNCTION constexpr void iota(Kokkos::Array<T, N>& a, T value) {
+  for (auto& e : a) {
+    e = value++;
+  }
+}
+
+template <class T, size_t N>
+KOKKOS_FUNCTION constexpr T accumulate(Kokkos::Array<T, N> const& a, T init) {
+  T acc = init;
+  for (auto const& e : a) {
+    acc = acc + e;
+  }
+  return acc;
+}
+
+constexpr bool test_range_based_for_loop() {
+  // making sure zero-sized arrays are supported
+  constexpr Kokkos::Array<int, 0> a0 = [] {
+    Kokkos::Array<int, 0> a{};
+    iota(a, 1);
+    return a;
+  }();
+  static_assert(accumulate(a0, 0) == 0);
+
+  constexpr Kokkos::Array<int, 1> a1 = [] {
+    Kokkos::Array<int, 1> a{};
+    iota(a, 1);
+    return a;
+  }();
+  static_assert(accumulate(a1, 0) == 1);
+
+  constexpr Kokkos::Array<int, 2> a2 = [] {
+    Kokkos::Array<int, 2> a{};
+    iota(a, 1);
+    return a;
+  }();
+  static_assert(accumulate(a2, 0) == 3);
+
+  constexpr Kokkos::Array<int, 3> a3 = [] {
+    Kokkos::Array<int, 3> a{};
+    iota(a, 1);
+    return a;
+  }();
+  static_assert(accumulate(a3, 0) == 6);
+
+  return true;
+}
+
+static_assert(test_range_based_for_loop());
+
 constexpr bool test_array_equality_comparable() {
   using C0 = Kokkos::Array<char, 0>;
   using C2 = Kokkos::Array<char, 2>;

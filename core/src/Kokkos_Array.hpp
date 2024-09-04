@@ -435,6 +435,44 @@ KOKKOS_FUNCTION constexpr T const&& get(Array<T, N> const&& a) noexcept {
 }  // namespace Kokkos
 //</editor-fold>
 
+//<editor-fold desc="Support for range-based for loop">
+namespace Kokkos {
+
+template <class T, std::size_t N>
+constexpr T const* begin(Array<T, N> const& a) {
+  if constexpr (N == 0)
+    return nullptr;
+  else
+    return &a[0];
+}
+
+template <class T, std::size_t N>
+constexpr T* begin(Array<T, N>& a) {
+  if constexpr (N == 0)
+    return nullptr;
+  else
+    return &a[0];
+}
+
+template <class T, std::size_t N>
+constexpr T const* end(Array<T, N> const& a) {
+  if constexpr (N == 0)
+    return nullptr;
+  else
+    return &a[0] + N;
+}
+
+template <class T, std::size_t N>
+constexpr T* end(Array<T, N>& a) {
+  if constexpr (N == 0)
+    return nullptr;
+  else
+    return &a[0] + N;
+}
+
+}  // namespace Kokkos
+//</editor-fold>
+
 #ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_ARRAY
 #undef KOKKOS_IMPL_PUBLIC_INCLUDE
 #undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_ARRAY
