@@ -19,6 +19,18 @@
 
 namespace {
 
+	        #if defined(__INTEL_LLVM_COMPILER) && __INTEL_LLVM_COMPILER >= 20250000
+#define KOKKOS_SYCL_CHECK_SUBGROUP_SIZE(SG_SIZE) \
+  auto sg = sycl::ext::oneapi::this_work_item::get_sub_group(); \
+                        if(sg.get_max_local_range() != SG_SIZE) \
+                Kokkos::abort("Expected subgroup size " ## SG_SIZE);
+#else
+#define KOKKOS_SYCL_CHECK_SUBGROUP_SIZE(SG_SIZE) \
+  auto sg = sycl::ext::oneapi::experimental::this_sub_group(); \
+                        if(sg.get_max_local_range() != SG_SIZE) \
+                Kokkos::abort("Expected subgroup size SG_SIZE");
+#endif
+
 TEST(sycl, subgroup_size) {
 #ifndef	SYCL_EXT_ONEAPI_KERNEL_PROPERTIES
   GTEST_SKIP() << " test requires SYCL_EXT_ONEAPI_KERNEL_PROPERTIES to be defined";
@@ -34,15 +46,54 @@ TEST(sycl, subgroup_size) {
         Kokkos::TeamPolicy<Kokkos::SYCL,Kokkos::SubGroupSize<16>> team_policy_16(1, Kokkos::AUTO);
         Kokkos::TeamPolicy<Kokkos::SYCL,Kokkos::SubGroupSize<32>> team_policy_32(1, Kokkos::AUTO);
 
-	Kokkos::parallel_for(range_policy_16, KOKKOS_LAMBDA(int) {
+	Kokkos::parallel_for(range_policy_16, KOKKOS_LAMBDA(int) { KOKKOS_SYCL_CHECK_SUBGROUP_SIZE(16) });
+	        Kokkos::parallel_for(range_policy_32, KOKKOS_LAMBDA(int) {
 #if defined(__INTEL_LLVM_COMPILER) && __INTEL_LLVM_COMPILER >= 20250000
   auto sg = sycl::ext::oneapi::this_work_item::get_sub_group();
 #else
   auto sg = sycl::ext::oneapi::experimental::this_sub_group();
 #endif
-			if(sg.get_max_local_range() != 16)
-		Kokkos::abort("Expected subgroup size 16 for RangePolicy parallel_for");	
-			});
+                        if(sg.get_max_local_range() != 32)
+                Kokkos::abort("Expected subgroup size 32 for RangePolicy parallel_for");
+                        });
+
+double dummy;
+		        Kokkos::parallel_reduce(range_policy_16, KOKKOS_LAMBDA(int, double) {
+#if defined(__INTEL_LLVM_COMPILER) && __INTEL_LLVM_COMPILER >= 20250000
+  auto sg = sycl::ext::oneapi::this_work_item::get_sub_group();
+#else
+  auto sg = sycl::ext::oneapi::experimental::this_sub_group();
+#endif
+                        if(sg.get_max_local_range() != 16)
+                Kokkos::abort("Expected subgroup size 16 for RangePolicy parallel_for");
+                        }, dummy);
+                Kokkos::parallel_reduce(range_policy_32, KOKKOS_LAMBDA(int, double) {
+#if defined(__INTEL_LLVM_COMPILER) && __INTEL_LLVM_COMPILER >= 20250000
+  auto sg = sycl::ext::oneapi::this_work_item::get_sub_group();
+#else
+  auto sg = sycl::ext::oneapi::experimental::this_sub_group();
+#endif
+                        if(sg.get_max_local_range() != 32)
+                Kokkos::abort("Expected subgroup size 32 for RangePolicy parallel_for");
+                        }, dummy);
+		        Kokkos::parallel_scan(range_policy_16, KOKKOS_LAMBDA(int, double, bool) {
+#if defined(__INTEL_LLVM_COMPILER) && __INTEL_LLVM_COMPILER >= 20250000
+  auto sg = sycl::ext::oneapi::this_work_item::get_sub_group();
+#else
+  auto sg = sycl::ext::oneapi::experimental::this_sub_group();
+#endif
+                        if(sg.get_max_local_range() != 16)
+                Kokkos::abort("Expected subgroup size 16 for RangePolicy parallel_for");
+                        }, dummy);
+                Kokkos::parallel_scan(range_policy_32, KOKKOS_LAMBDA(int, double, bool) {
+#if defined(__INTEL_LLVM_COMPILER) && __INTEL_LLVM_COMPILER >= 20250000
+  auto sg = sycl::ext::oneapi::this_work_item::get_sub_group();
+#else
+  auto sg = sycl::ext::oneapi::experimental::this_sub_group();
+#endif
+                        if(sg.get_max_local_range() != 32)
+                Kokkos::abort("Expected subgroup size 32 for RangePolicy parallel_for");
+                        }, dummy);
 }
 
 }
