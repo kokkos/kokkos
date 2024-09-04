@@ -365,11 +365,11 @@ class ParallelScanSYCLBase {
           else
             functor(WorkTag(), global_id + begin, update, true);
 
-              if (global_id == size - 1) *result_ptr = update;
-            }
-          };
+          if (global_id == size - 1) *result_ptr = update;
+        }
+      };
 
-      #if defined(__INTEL_LLVM_COMPILER) && __INTEL_LLVM_COMPILER >= 20230100
+#if defined(__INTEL_LLVM_COMPILER) && __INTEL_LLVM_COMPILER >= 20230100
       cgh.parallel_for(sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
                        get_properties(), lambda);
 #else

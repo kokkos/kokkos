@@ -121,11 +121,11 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
         sycl::nd_range<1> range(
             launch_range, sycl::ext::oneapi::experimental::auto_range<1>());
 #if defined(__INTEL_LLVM_COMPILER) && __INTEL_LLVM_COMPILER >= 20230100
-cgh.parallel_for<
-            FunctorWrapperRangePolicyParallelForCustom<Functor, Policy>>(range, get_properties(),
-                                                                         f);
+        cgh.parallel_for<
+            FunctorWrapperRangePolicyParallelForCustom<Functor, Policy>>(
+            range, get_properties(), f);
 #else
-     	cgh.parallel_for<
+        cgh.parallel_for<
             FunctorWrapperRangePolicyParallelForCustom<Functor, Policy>>(range,
                                                                          f);
 #endif
