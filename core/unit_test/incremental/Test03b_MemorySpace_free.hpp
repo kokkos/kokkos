@@ -28,8 +28,8 @@ namespace Test {
 using value_type = double;
 
 // Allocate M number of value_type elements N number of times.
-const int N = 100;
-const int M = 100;
+const int N = 100000;
+const int M = 100000;
 
 template <class ExecSpace>
 struct TestIncrMemorySpace_free {

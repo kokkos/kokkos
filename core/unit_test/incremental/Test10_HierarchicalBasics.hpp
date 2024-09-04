@@ -26,7 +26,7 @@ namespace Test {
 
 template <class ExecSpace>
 struct HierarchicalBasics {
-  using policy_t = Kokkos::TeamPolicy<ExecSpace, Kokkos::SubGroupSize<16>>;
+  using policy_t = Kokkos::TeamPolicy<ExecSpace>;
   using team_t   = typename policy_t::member_type;
 
   void run(const int nP, int nT) {

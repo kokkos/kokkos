@@ -27,10 +27,8 @@ namespace Test {
 template <class ExecSpace>
 struct Hierarchical_ForLoop_C {
   void run(const int pN, const int sX, const int sY, const int sZ) {
-    using team_policy = Kokkos::TeamPolicy<ExecSpace, Kokkos::SubGroupSize<16>>;
-    using member_type =
-        typename Kokkos::TeamPolicy<ExecSpace,
-                                    Kokkos::SubGroupSize<16>>::member_type;
+    using team_policy = Kokkos::TeamPolicy<ExecSpace>;
+    using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
 
     using viewDataType = Kokkos::View<size_t ***, ExecSpace>;
     viewDataType v("Matrix", sX, sY, sZ);

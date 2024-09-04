@@ -29,10 +29,8 @@ namespace Test {
 template <class ExecSpace>
 struct Hierarchical_Red_B {
   void run(const int pN, const int sX) {
-    using team_policy = Kokkos::TeamPolicy<ExecSpace, Kokkos::SubGroupSize<16>>;
-    using member_type =
-        typename Kokkos::TeamPolicy<ExecSpace,
-                                    Kokkos::SubGroupSize<16>>::member_type;
+    using team_policy = Kokkos::TeamPolicy<ExecSpace>;
+    using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
 
     using viewDataType = Kokkos::View<SCALAR_TYPE *, ExecSpace>;
     viewDataType v("Vector", pN);

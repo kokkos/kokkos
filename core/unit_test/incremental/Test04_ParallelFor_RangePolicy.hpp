@@ -99,12 +99,9 @@ struct TestParallel_For {
     init();
 
     // parallel-for functor called for num_elements number of iterations.
-    Kokkos::parallel_for(
-        "parallel_for",
-        Kokkos::RangePolicy<ExecSpace, Kokkos::SubGroupSize<16>>(0,
-                                                                 num_elements)
-            .set_chunk_size(10),
-        ParallelForFunctor(deviceData, value));
+    Kokkos::parallel_for("parallel_for",
+                         Kokkos::RangePolicy<ExecSpace>(0, num_elements),
+                         ParallelForFunctor(deviceData, value));
 
     Kokkos::fence();
     // Checks if parallel_for gave the correct results.
@@ -120,12 +117,11 @@ struct TestParallel_For {
 
     // Creates a range policy that uses dynamic scheduling.
     using range_policy_t =
-        Kokkos::RangePolicy<ExecSpace, Kokkos::Schedule<Kokkos::Dynamic>,
-                            Kokkos::SubGroupSize<32>>;
+        Kokkos::RangePolicy<ExecSpace, Kokkos::Schedule<Kokkos::Dynamic> >;
 
     // parallel-for functor with range-policy from 0 to num_elements iterations.
     Kokkos::parallel_for("RangePolicy_ParallelFor",
-                         range_policy_t(0, num_elements).set_chunk_size(100),
+                         range_policy_t(0, num_elements),
                          ParallelForFunctor(deviceData, value));
 
     // Checks if parallel_for gave the correct results.

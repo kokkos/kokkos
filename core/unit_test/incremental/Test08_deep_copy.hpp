@@ -56,18 +56,15 @@ struct TestMDRangePolicy {
 
   // An MDRangePolicy for 2 nested loops
   using MDPolicyType_2D =
-      Kokkos::MDRangePolicy<ExecSpace, Kokkos::SubGroupSize<16>,
-                            Kokkos::Rank<2>, int_index>;
+      Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<2>, int_index>;
 
   // An MDRangePolicy for 3 nested loops
   using MDPolicyType_3D =
-      Kokkos::MDRangePolicy<ExecSpace, Kokkos::SubGroupSize<16>,
-                            Kokkos::Rank<3>, int_index>;
+      Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>, int_index>;
 
   // An MDRangePolicy for 4 nested loops
   using MDPolicyType_4D =
-      Kokkos::MDRangePolicy<ExecSpace, Kokkos::SubGroupSize<16>,
-                            Kokkos::Rank<4>, int_index>;
+      Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<4>, int_index>;
 
   // compare and equal
   void compare_equal_2D() {
