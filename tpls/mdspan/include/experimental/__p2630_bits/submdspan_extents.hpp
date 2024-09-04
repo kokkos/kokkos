@@ -105,6 +105,12 @@ constexpr auto first_of(const Slice &i) {
   return std::get<0>(i);
 }
 
+template<class T>
+MDSPAN_INLINE_FUNCTION
+constexpr auto first_of(const std::complex<T> &i) {
+  return i.real();
+}
+
 template <class OffsetType, class ExtentType, class StrideType>
 MDSPAN_INLINE_FUNCTION
 constexpr OffsetType
@@ -134,6 +140,12 @@ MDSPAN_INLINE_FUNCTION
 constexpr auto last_of(std::integral_constant<size_t, k>, const Extents &,
                        const Slice &i) {
   return std::get<1>(i);
+}
+
+template<size_t k, class Extents, class T>
+MDSPAN_INLINE_FUNCTION
+constexpr auto last_of(std::integral_constant<size_t, k>, const Extents &, const std::complex<T> &i) {
+  return i.imag();
 }
 
 // Suppress spurious warning with NVCC about no return statement.
