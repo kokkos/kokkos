@@ -120,9 +120,15 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
                                   wgroup_size_multiple * wgroup_size_multiple;
         sycl::nd_range<1> range(
             launch_range, sycl::ext::oneapi::experimental::auto_range<1>());
-        cgh.parallel_for<
+#if defined(__INTEL_LLVM_COMPILER) && __INTEL_LLVM_COMPILER >= 20230100
+cgh.parallel_for<
+            FunctorWrapperRangePolicyParallelForCustom<Functor, Policy>>(range, get_properties(),
+                                                                         f);
+#else
+     	cgh.parallel_for<
             FunctorWrapperRangePolicyParallelForCustom<Functor, Policy>>(range,
                                                                          f);
+#endif
 #else
         FunctorWrapperRangePolicyParallelFor<Functor, Policy> f{policy.begin(),
                                                                 functor};
@@ -133,6 +139,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
 #else
         cgh.parallel_for<FunctorWrapperRangePolicyParallelFor<Functor, Policy>>(
             range, f);
+#endif
 #endif
       } else {
         // Use the chunk size as workgroup size. We need to make sure that the

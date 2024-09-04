@@ -127,8 +127,6 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
           lambda);
 #endif
     };
-#ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
-    q.ext_oneapi_submit_barrier(std::vector<sycl::event>{parallel_for_event});
 
 #ifdef SYCL_EXT_ONEAPI_GRAPH
     if constexpr (Policy::is_graph_kernel::value) {
