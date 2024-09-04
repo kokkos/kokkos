@@ -94,7 +94,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
       (void)memcpy_event;
 #endif
 
-#if defined(__INTEL_LLVM_COMPILER) && __INTEL_LLVM_COMPILER >= 20230100
+#ifdef SYCL_EXT_ONEAPI_KERNEL_PROPERTIES
       auto get_properties = [&]() {
         if constexpr (Policy::subgroup_size > 0)
           return sycl::ext::oneapi::experimental::properties{
@@ -120,7 +120,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
                                   wgroup_size_multiple * wgroup_size_multiple;
         sycl::nd_range<1> range(
             launch_range, sycl::ext::oneapi::experimental::auto_range<1>());
-#if defined(__INTEL_LLVM_COMPILER) && __INTEL_LLVM_COMPILER >= 20230100
+#ifdef SYCL_EXT_ONEAPI_KERNEL_PROPERTIES
         cgh.parallel_for<
             FunctorWrapperRangePolicyParallelForCustom<Functor, Policy>>(
             range, get_properties(), f);
@@ -133,7 +133,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
         FunctorWrapperRangePolicyParallelFor<Functor, Policy> f{policy.begin(),
                                                                 functor};
         sycl::range<1> range(policy.end() - policy.begin());
-#if defined(__INTEL_LLVM_COMPILER) && __INTEL_LLVM_COMPILER >= 20230100
+#ifdef SYCL_EXT_ONEAPI_KERNEL_PROPERTIES
         cgh.parallel_for<FunctorWrapperRangePolicyParallelFor<Functor, Policy>>(
             range, get_properties(), f);
 #else
@@ -153,7 +153,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
         FunctorWrapperRangePolicyParallelForCustom<Functor, Policy> f{
             policy.begin(), functor, actual_range};
         sycl::nd_range<1> range(launch_range, wgroup_size);
-#if defined(__INTEL_LLVM_COMPILER) && __INTEL_LLVM_COMPILER >= 20230100
+#ifdef SYCL_EXT_ONEAPI_KERNEL_PROPERTIES
         cgh.parallel_for<
             FunctorWrapperRangePolicyParallelForCustom<Functor, Policy>>(
             range, get_properties(), f);

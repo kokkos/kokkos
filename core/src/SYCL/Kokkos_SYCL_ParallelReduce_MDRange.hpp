@@ -301,7 +301,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
           }
         };
 
-#if defined(__INTEL_LLVM_COMPILER) && __INTEL_LLVM_COMPILER >= 20230100
+#ifdef SYCL_EXT_ONEAPI_KERNEL_PROPERTIES
         auto get_properties = [&]() {
           if constexpr (Policy::subgroup_size > 0)
             return sycl::ext::oneapi::experimental::properties{
