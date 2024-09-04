@@ -46,7 +46,7 @@ TEST(sycl, subgroup_size) {
         Kokkos::TeamPolicy<Kokkos::SYCL,Kokkos::SubGroupSize<16>> team_policy_16(1, Kokkos::AUTO);
         Kokkos::TeamPolicy<Kokkos::SYCL,Kokkos::SubGroupSize<32>> team_policy_32(1, Kokkos::AUTO);
 
-	Kokkos::parallel_for(range_policy_16, KOKKOS_LAMBDA(int) { KOKKOS_SYCL_CHECK_SUBGROUP_SIZE(16) });
+	Kokkos::parallel_for(range_policy_16, KOKKOS_LAMBDA(int) { KOKKOS_SYCL_CHECK_SUBGROUP_SIZE(15) });
 	        Kokkos::parallel_for(range_policy_32, KOKKOS_LAMBDA(int) {
 #if defined(__INTEL_LLVM_COMPILER) && __INTEL_LLVM_COMPILER >= 20250000
   auto sg = sycl::ext::oneapi::this_work_item::get_sub_group();
