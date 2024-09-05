@@ -195,8 +195,10 @@ struct Array<T, 0> {
     return *reinterpret_cast<const_pointer>(-1);
   }
 
-  KOKKOS_INLINE_FUNCTION pointer data() { return nullptr; }
-  KOKKOS_INLINE_FUNCTION const_pointer data() const { return nullptr; }
+  KOKKOS_INLINE_FUNCTION constexpr pointer data() { return nullptr; }
+  KOKKOS_INLINE_FUNCTION constexpr const_pointer data() const {
+    return nullptr;
+  }
 
   friend KOKKOS_FUNCTION constexpr bool operator==(Array const&,
                                                    Array const&) noexcept {
@@ -439,37 +441,23 @@ KOKKOS_FUNCTION constexpr T const&& get(Array<T, N> const&& a) noexcept {
 namespace Kokkos {
 
 template <class T, std::size_t N>
-KOKKOS_FUNCTION constexpr T const* begin(
-    [[maybe_unused]] Array<T, N> const& a) noexcept {
-  if constexpr (N == 0)
-    return nullptr;
-  else
-    return &a[0];
+KOKKOS_FUNCTION constexpr T const* begin(Array<T, N> const& a) noexcept {
+  return a.data();
 }
 
 template <class T, std::size_t N>
-KOKKOS_FUNCTION constexpr T* begin([[maybe_unused]] Array<T, N>& a) noexcept {
-  if constexpr (N == 0)
-    return nullptr;
-  else
-    return &a[0];
+KOKKOS_FUNCTION constexpr T* begin(Array<T, N>& a) noexcept {
+  return a.data();
 }
 
 template <class T, std::size_t N>
-KOKKOS_FUNCTION constexpr T const* end(
-    [[maybe_unused]] Array<T, N> const& a) noexcept {
-  if constexpr (N == 0)
-    return nullptr;
-  else
-    return &a[0] + N;
+KOKKOS_FUNCTION constexpr T const* end(Array<T, N> const& a) noexcept {
+  return a.data() + a.size();
 }
 
 template <class T, std::size_t N>
-KOKKOS_FUNCTION constexpr T* end([[maybe_unused]] Array<T, N>& a) noexcept {
-  if constexpr (N == 0)
-    return nullptr;
-  else
-    return &a[0] + N;
+KOKKOS_FUNCTION constexpr T* end(Array<T, N>& a) noexcept {
+  return a.data() + a.size();
 }
 
 }  // namespace Kokkos
