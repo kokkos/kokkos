@@ -379,11 +379,7 @@ struct FetchValuesAndContribute {
 
   template <typename T>
   KOKKOS_FUNCTION void operator()(const T) const {
-    if constexpr (NumIndices > 0) {
-      /// FIXME @c Kokkos::Array should work with range-based for loop.
-      for (size_t index = 0; index < indices.size(); ++index)
-        data(TargetIndex) += data(indices[index]);
-    }
+    for (const auto index : indices) data(TargetIndex) += data(index);
     data(TargetIndex) += value;
   }
 };
