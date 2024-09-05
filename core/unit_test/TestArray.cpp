@@ -254,21 +254,29 @@ constexpr bool test_begin_end() {
   static_assert(std::is_same_v<decltype(begin(n0)), double*>);
   static_assert(std::is_same_v<decltype(end(n0)), double*>);
   static_assert(std::is_same_v<double*, decltype(n0)::pointer>);
+  static_assert(noexcept(begin(n0)));
+  static_assert(noexcept(end(n0)));
 
   Kokkos::Array<double, 0> const c0{};
   static_assert(std::is_same_v<decltype(begin(c0)), double const*>);
   static_assert(std::is_same_v<decltype(end(c0)), double const*>);
   static_assert(std::is_same_v<double const*, decltype(c0)::const_pointer>);
+  static_assert(noexcept(begin(c0)));
+  static_assert(noexcept(end(c0)));
 
   Kokkos::Array<double, 1> n1{};
   static_assert(std::is_same_v<decltype(begin(n1)), double*>);
   static_assert(std::is_same_v<decltype(end(n1)), double*>);
   static_assert(std::is_same_v<double*, decltype(n1)::pointer>);
+  static_assert(noexcept(begin(n1)));
+  static_assert(noexcept(end(n1)));
 
   Kokkos::Array<double, 1> const c1{};
   static_assert(std::is_same_v<decltype(begin(c1)), double const*>);
   static_assert(std::is_same_v<decltype(end(c1)), double const*>);
   static_assert(std::is_same_v<double const*, decltype(c1)::const_pointer>);
+  static_assert(noexcept(begin(c1)));
+  static_assert(noexcept(end(c1)));
 
   return true;
 }
