@@ -28,27 +28,41 @@ union Baz {
   float f;
 };
 
+[[maybe_unused]] auto func = [](int) {};  // < line 31
+//                           ^  column 30
+
+using Lambda = decltype(func);
+
 // clang-format off
 #if defined(__clang__)
 static_assert(Kokkos::TypeInfo<Foo>::name()      == "(anonymous namespace)::Foo");
 static_assert(Kokkos::TypeInfo<FooAlias>::name() == "(anonymous namespace)::Foo");
 static_assert(Kokkos::TypeInfo<Bar>::name()      == "(anonymous namespace)::Bar");
 static_assert(Kokkos::TypeInfo<Baz>::name()      == "(anonymous namespace)::Baz");
+static_assert(Kokkos::TypeInfo<Lambda>::name()   == "(anonymous namespace)::(lambda at "  __FILE__  ":31:30)");
 #elif defined(__EDG__)
 static_assert(Kokkos::TypeInfo<Foo>::name()      == "<unnamed>::Foo");
 static_assert(Kokkos::TypeInfo<FooAlias>::name() == "<unnamed>::Foo");
 static_assert(Kokkos::TypeInfo<Bar>::name()      == "<unnamed>::Bar");
 static_assert(Kokkos::TypeInfo<Baz>::name()      == "<unnamed>::Baz");
+static_assert(Kokkos::TypeInfo<Lambda>::name()   == "lambda [](int)->void");
 #elif defined(__GNUC__)
 static_assert(Kokkos::TypeInfo<Foo>::name()      == "{anonymous}::Foo");
 static_assert(Kokkos::TypeInfo<FooAlias>::name() == "{anonymous}::Foo");
 static_assert(Kokkos::TypeInfo<Bar>::name()      == "{anonymous}::Bar");
 static_assert(Kokkos::TypeInfo<Baz>::name()      == "{anonymous}::Baz");
+static_assert(Kokkos::TypeInfo<Lambda>::name()   == "{anonymous}::<lambda(int)>");
+
 #elif defined(_MSC_VER)
 static_assert(Kokkos::TypeInfo<Foo>::name()      == "struct `anonymous-namespace'::Foo");
 static_assert(Kokkos::TypeInfo<FooAlias>::name() == "struct `anonymous-namespace'::Foo");
 static_assert(Kokkos::TypeInfo<Bar>::name()      == "enum `anonymous-namespace'::Bar");
 static_assert(Kokkos::TypeInfo<Baz>::name()      == "union `anonymous-namespace'::Baz");
+#ifndef KOKKOS_ENABLE_CXX17
+static_assert(Kokkos::TypeInfo<Lambda>::name().starts_with("class `anonymous-namespace'::<lambda_");
+// underscore followed by some 32-bit hash that seems sensitive to the content of the current source code file
+static_assert(Kokkos::TypeInfo<Lambda>::name().ends_with(">");
+#endif
 #else
 #error how did I ended up here?
 #endif
