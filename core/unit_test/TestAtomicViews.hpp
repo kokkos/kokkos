@@ -419,8 +419,9 @@ void PlusEqualAtomicViewTest(int64_t input_length) {
   T res       = PlusEqualAtomicView<T, DeviceType>(input_length);
   T resSerial = PlusEqualAtomicViewCheck<T>(input_length);
 
-  ASSERT_EQ(res, resSerial) << "PlusEqualAtomicViewTest<" << typeid(T).name()
-                            << ">(length=" << input_length << ")";
+  ASSERT_EQ(res, resSerial)
+      << "PlusEqualAtomicViewTest<" << Kokkos::TypeInfo<T>::name()
+      << ">(length=" << input_length << ")";
 }
 
 //---------------------------------------------------
@@ -507,8 +508,9 @@ void MinusEqualAtomicViewTest(int64_t input_length) {
   T res       = MinusEqualAtomicView<T, DeviceType>(input_length);
   T resSerial = MinusEqualAtomicViewCheck<T>(input_length);
 
-  ASSERT_EQ(res, resSerial) << "MinusEqualAtomicViewTest<" << typeid(T).name()
-                            << ">(length=" << input_length << ")";
+  ASSERT_EQ(res, resSerial)
+      << "MinusEqualAtomicViewTest<" << Kokkos::TypeInfo<T>::name()
+      << ">(length=" << input_length << ")";
 }
 
 //---------------------------------------------------
@@ -588,8 +590,9 @@ void TimesEqualAtomicViewTest(const int64_t input_length) {
   T res       = TimesEqualAtomicView<T, DeviceType>(input_length, remainder);
   T resSerial = TimesEqualAtomicViewCheck<T>(input_length, remainder);
 
-  ASSERT_EQ(res, resSerial) << "TimesEqualAtomicViewTest<" << typeid(T).name()
-                            << ">(length=" << input_length << ")";
+  ASSERT_EQ(res, resSerial)
+      << "TimesEqualAtomicViewTest<" << Kokkos::TypeInfo<T>::name()
+      << ">(length=" << input_length << ")";
 }
 
 //---------------------------------------------------
@@ -670,7 +673,7 @@ void DivEqualAtomicViewTest(const int64_t input_length) {
   T resSerial = DivEqualAtomicViewCheck<T>(input_length, remainder);
 
   ASSERT_EQ(res, resSerial)
-      << "DivEqualAtomicViewTest<" << typeid(T).name()
+      << "DivEqualAtomicViewTest<" << Kokkos::TypeInfo<T>::name()
       << ">(length=" << input_length << ",remainder=" << remainder << ")";
 }
 
@@ -756,7 +759,7 @@ void ModEqualAtomicViewTest(const int64_t input_length) {
   T resSerial = ModEqualAtomicViewCheck<T>(input_length, remainder);
 
   ASSERT_EQ(res, resSerial)
-      << "ModEqualAtomicViewTest<" << typeid(T).name()
+      << "ModEqualAtomicViewTest<" << Kokkos::TypeInfo<T>::name()
       << ">(length=" << input_length << ",remainder=" << remainder << ")";
 }
 
@@ -874,9 +877,10 @@ void RSEqualAtomicViewTest(const int64_t input_length) {
   T res = RSEqualAtomicView<T, DeviceType>(input_length, value, remainder);
   T resSerial = RSEqualAtomicViewCheck<T>(input_length, value, remainder);
 
-  ASSERT_EQ(res, resSerial) << "RSEqualAtomicViewTest<" << typeid(T).name()
-                            << ">(length=" << input_length << ",value=" << value
-                            << ",remainder=" << remainder << ")";
+  ASSERT_EQ(res, resSerial)
+      << "RSEqualAtomicViewTest<" << Kokkos::TypeInfo<T>::name()
+      << ">(length=" << input_length << ",value=" << value
+      << ",remainder=" << remainder << ")";
 }
 
 //---------------------------------------------------
@@ -993,9 +997,10 @@ void LSEqualAtomicViewTest(const int64_t input_length) {
   T res = LSEqualAtomicView<T, DeviceType>(input_length, value, remainder);
   T resSerial = LSEqualAtomicViewCheck<T>(input_length, value, remainder);
 
-  ASSERT_EQ(res, resSerial) << "LSEqualAtomicViewTest<" << typeid(T).name()
-                            << ">(length=" << input_length << ",value=" << value
-                            << ",remainder=" << remainder << ")";
+  ASSERT_EQ(res, resSerial)
+      << "LSEqualAtomicViewTest<" << Kokkos::TypeInfo<T>::name()
+      << ">(length=" << input_length << ",value=" << value
+      << ",remainder=" << remainder << ")";
 }
 
 //---------------------------------------------------
@@ -1078,8 +1083,9 @@ void AndEqualAtomicViewTest(int64_t input_length) {
   T res       = AndEqualAtomicView<T, DeviceType>(input_length);
   T resSerial = AndEqualAtomicViewCheck<T>(input_length);
 
-  ASSERT_EQ(res, resSerial) << "AndEqualAtomicViewTest<" << typeid(T).name()
-                            << ">(length=" << input_length << ")";
+  ASSERT_EQ(res, resSerial)
+      << "AndEqualAtomicViewTest<" << Kokkos::TypeInfo<T>::name()
+      << ">(length=" << input_length << ")";
 }
 
 //---------------------------------------------------
@@ -1161,8 +1167,9 @@ void OrEqualAtomicViewTest(int64_t input_length) {
   T res       = OrEqualAtomicView<T, DeviceType>(input_length);
   T resSerial = OrEqualAtomicViewCheck<T>(input_length);
 
-  ASSERT_EQ(res, resSerial) << "OrEqualAtomicViewTest<" << typeid(T).name()
-                            << ">(length=" << input_length << ")";
+  ASSERT_EQ(res, resSerial)
+      << "OrEqualAtomicViewTest<" << Kokkos::TypeInfo<T>::name()
+      << ">(length=" << input_length << ")";
 }
 
 //---------------------------------------------------
@@ -1244,8 +1251,9 @@ void XOrEqualAtomicViewTest(int64_t input_length) {
   T res       = XOrEqualAtomicView<T, DeviceType>(input_length);
   T resSerial = XOrEqualAtomicViewCheck<T>(input_length);
 
-  ASSERT_EQ(res, resSerial) << "XOrEqualAtomicViewTest<" << typeid(T).name()
-                            << ">(length=" << input_length << ")";
+  ASSERT_EQ(res, resSerial)
+      << "XOrEqualAtomicViewTest<" << Kokkos::TypeInfo<T>::name()
+      << ">(length=" << input_length << ")";
 }
 
 // inc/dec?
