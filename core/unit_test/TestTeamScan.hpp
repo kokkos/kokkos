@@ -55,7 +55,7 @@ struct TestTeamScan {
 
   auto operator()(int32_t M_, int32_t N_) {
     std::stringstream ss;
-    ss << Kokkos::TypeInfo<decltype(*this)>::name();
+    ss << Kokkos::Impl::TypeInfo<decltype(*this)>::name();
     ss << "(/*M=*/" << M_ << ", /*N=*/" << N_ << ")";
     std::string const test_id = ss.str();
 
@@ -173,7 +173,7 @@ struct TestTeamScanRetVal {
 
   auto operator()(int32_t M_, int32_t N_) {
     std::stringstream ss;
-    ss << Kokkos::TypeInfo<decltype(*this)>::name();
+    ss << Kokkos::Impl::TypeInfo<decltype(*this)>::name();
     ss << "(/*M=*/" << M_ << ", /*N=*/" << N_ << ")";
     std::string const test_id = ss.str();
 

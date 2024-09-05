@@ -20,7 +20,7 @@
 
 namespace {
 
-using Kokkos::TypeInfo;
+using Kokkos::Impl::TypeInfo;
 
 struct Foo {};
 using FooAlias = Foo;

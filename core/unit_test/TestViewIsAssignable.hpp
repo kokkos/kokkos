@@ -53,11 +53,11 @@ struct TestAssignability {
       ASSERT_NO_THROW(try_assign<mapping_type>(dst, src));
     }
     ASSERT_EQ(always, is_always_assignable)
-        << Kokkos::TypeInfo<ViewTypeSrc>::name() << " to "
-        << Kokkos::TypeInfo<ViewTypeDst>::name();
+        << Kokkos::Impl::TypeInfo<ViewTypeSrc>::name() << " to "
+        << Kokkos::Impl::TypeInfo<ViewTypeDst>::name();
     ASSERT_EQ(sometimes, is_assignable)
-        << Kokkos::TypeInfo<ViewTypeSrc>::name() << " to "
-        << Kokkos::TypeInfo<ViewTypeDst>::name();
+        << Kokkos::Impl::TypeInfo<ViewTypeSrc>::name() << " to "
+        << Kokkos::Impl::TypeInfo<ViewTypeDst>::name();
   }
 };
 

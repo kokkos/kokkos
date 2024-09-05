@@ -25,8 +25,7 @@
 
 #ifndef KOKKOS_COMPILER_INTEL
 
-namespace Kokkos {
-namespace Impl {
+namespace Kokkos::Impl {
 
 template <size_t N>
 constexpr std::array<char, N> to_array(std::string_view src) {
@@ -59,11 +58,9 @@ constexpr auto type_name() {
   return to_array<end - beg>(func.substr(beg, end));
 }
 
-}  // namespace Impl
-
 template <class T>
 class TypeInfo {
-  static constexpr auto value_ = Impl::type_name<T>();
+  static constexpr auto value_ = type_name<T>();
 
  public:
   static constexpr std::string_view name() noexcept {
@@ -72,11 +69,11 @@ class TypeInfo {
   TypeInfo() = delete;
 };
 
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 #else  // out of luck, using Intel C++ Compiler Classic
 
-namespace Kokkos {
+namespace Kokkos::Impl {
 
 template <class T>
 class TypeInfo {
@@ -85,7 +82,7 @@ class TypeInfo {
   TypeInfo() = delete;
 };
 
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 #endif
 

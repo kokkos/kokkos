@@ -420,7 +420,7 @@ void PlusEqualAtomicViewTest(int64_t input_length) {
   T resSerial = PlusEqualAtomicViewCheck<T>(input_length);
 
   ASSERT_EQ(res, resSerial)
-      << "PlusEqualAtomicViewTest<" << Kokkos::TypeInfo<T>::name()
+      << "PlusEqualAtomicViewTest<" << Kokkos::Impl::TypeInfo<T>::name()
       << ">(length=" << input_length << ")";
 }
 
@@ -509,7 +509,7 @@ void MinusEqualAtomicViewTest(int64_t input_length) {
   T resSerial = MinusEqualAtomicViewCheck<T>(input_length);
 
   ASSERT_EQ(res, resSerial)
-      << "MinusEqualAtomicViewTest<" << Kokkos::TypeInfo<T>::name()
+      << "MinusEqualAtomicViewTest<" << Kokkos::Impl::TypeInfo<T>::name()
       << ">(length=" << input_length << ")";
 }
 
@@ -591,7 +591,7 @@ void TimesEqualAtomicViewTest(const int64_t input_length) {
   T resSerial = TimesEqualAtomicViewCheck<T>(input_length, remainder);
 
   ASSERT_EQ(res, resSerial)
-      << "TimesEqualAtomicViewTest<" << Kokkos::TypeInfo<T>::name()
+      << "TimesEqualAtomicViewTest<" << Kokkos::Impl::TypeInfo<T>::name()
       << ">(length=" << input_length << ")";
 }
 
@@ -673,7 +673,7 @@ void DivEqualAtomicViewTest(const int64_t input_length) {
   T resSerial = DivEqualAtomicViewCheck<T>(input_length, remainder);
 
   ASSERT_EQ(res, resSerial)
-      << "DivEqualAtomicViewTest<" << Kokkos::TypeInfo<T>::name()
+      << "DivEqualAtomicViewTest<" << Kokkos::Impl::TypeInfo<T>::name()
       << ">(length=" << input_length << ",remainder=" << remainder << ")";
 }
 
@@ -759,7 +759,7 @@ void ModEqualAtomicViewTest(const int64_t input_length) {
   T resSerial = ModEqualAtomicViewCheck<T>(input_length, remainder);
 
   ASSERT_EQ(res, resSerial)
-      << "ModEqualAtomicViewTest<" << Kokkos::TypeInfo<T>::name()
+      << "ModEqualAtomicViewTest<" << Kokkos::Impl::TypeInfo<T>::name()
       << ">(length=" << input_length << ",remainder=" << remainder << ")";
 }
 
@@ -878,7 +878,7 @@ void RSEqualAtomicViewTest(const int64_t input_length) {
   T resSerial = RSEqualAtomicViewCheck<T>(input_length, value, remainder);
 
   ASSERT_EQ(res, resSerial)
-      << "RSEqualAtomicViewTest<" << Kokkos::TypeInfo<T>::name()
+      << "RSEqualAtomicViewTest<" << Kokkos::Impl::TypeInfo<T>::name()
       << ">(length=" << input_length << ",value=" << value
       << ",remainder=" << remainder << ")";
 }
@@ -998,7 +998,7 @@ void LSEqualAtomicViewTest(const int64_t input_length) {
   T resSerial = LSEqualAtomicViewCheck<T>(input_length, value, remainder);
 
   ASSERT_EQ(res, resSerial)
-      << "LSEqualAtomicViewTest<" << Kokkos::TypeInfo<T>::name()
+      << "LSEqualAtomicViewTest<" << Kokkos::Impl::TypeInfo<T>::name()
       << ">(length=" << input_length << ",value=" << value
       << ",remainder=" << remainder << ")";
 }
@@ -1084,7 +1084,7 @@ void AndEqualAtomicViewTest(int64_t input_length) {
   T resSerial = AndEqualAtomicViewCheck<T>(input_length);
 
   ASSERT_EQ(res, resSerial)
-      << "AndEqualAtomicViewTest<" << Kokkos::TypeInfo<T>::name()
+      << "AndEqualAtomicViewTest<" << Kokkos::Impl::TypeInfo<T>::name()
       << ">(length=" << input_length << ")";
 }
 
@@ -1168,7 +1168,7 @@ void OrEqualAtomicViewTest(int64_t input_length) {
   T resSerial = OrEqualAtomicViewCheck<T>(input_length);
 
   ASSERT_EQ(res, resSerial)
-      << "OrEqualAtomicViewTest<" << Kokkos::TypeInfo<T>::name()
+      << "OrEqualAtomicViewTest<" << Kokkos::Impl::TypeInfo<T>::name()
       << ">(length=" << input_length << ")";
 }
 
@@ -1252,7 +1252,7 @@ void XOrEqualAtomicViewTest(int64_t input_length) {
   T resSerial = XOrEqualAtomicViewCheck<T>(input_length);
 
   ASSERT_EQ(res, resSerial)
-      << "XOrEqualAtomicViewTest<" << Kokkos::TypeInfo<T>::name()
+      << "XOrEqualAtomicViewTest<" << Kokkos::Impl::TypeInfo<T>::name()
       << ">(length=" << input_length << ")";
 }
 
