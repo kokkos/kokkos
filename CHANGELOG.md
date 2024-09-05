@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [4.4.01](https://github.com/kokkos/kokkos/tree/4.4.01)
+[Full Changelog](https://github.com/kokkos/kokkos/compare/4.0.00...4.4.01)
+
+### Feature:
+* Introduce new SequentialHostInit view allocation property [\#7229](https://github.com/kokkos/kokkos/pull/7229)
+
+### Bug Fix
+* Fix issue related to the visibility of an internal symbol with shared libraries that affected `ScatterView` in particular [\#7284](https://github.com/kokkos/kokkos/pull/7284)
+
 ## [4.4.00](https://github.com/kokkos/kokkos/tree/4.4.00)
 [Full Changelog](https://github.com/kokkos/kokkos/compare/4.3.01...4.4.00)
 
