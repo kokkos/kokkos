@@ -7,12 +7,6 @@ IF(CMAKE_PROJECT_NAME STREQUAL "Trilinos")
     set(Kokkos_ENABLE_OPENMP                       OFF CACHE BOOL "Whether to build OpenMP backend" FORCE)
   endif()
 
-  if(NOT ${TPL_ENABLE_Pthread} STREQUAL "")
-    set(Kokkos_ENABLE_THREADS ${TPL_ENABLE_Pthread} CACHE BOOL "Whether to build C++ threads backend" FORCE)
-  else()
-    set(Kokkos_ENABLE_THREADS                   OFF CACHE BOOL "Whether to build C++ threads backend" FORCE)
-  endif()
-
   if(NOT ${TPL_ENABLE_CUDA} STREQUAL "")
     set(Kokkos_ENABLE_CUDA ${TPL_ENABLE_CUDA} CACHE BOOL "Whether to build CUDA backend" FORCE)
   else()
