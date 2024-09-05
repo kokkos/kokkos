@@ -439,7 +439,8 @@ KOKKOS_FUNCTION constexpr T const&& get(Array<T, N> const&& a) noexcept {
 namespace Kokkos {
 
 template <class T, std::size_t N>
-KOKKOS_FUNCTION constexpr T const* begin(Array<T, N> const& a) noexcept {
+KOKKOS_FUNCTION constexpr T const* begin(
+    [[maybe_unused]] Array<T, N> const& a) noexcept {
   if constexpr (N == 0)
     return nullptr;
   else
@@ -447,7 +448,7 @@ KOKKOS_FUNCTION constexpr T const* begin(Array<T, N> const& a) noexcept {
 }
 
 template <class T, std::size_t N>
-KOKKOS_FUNCTION constexpr T* begin(Array<T, N>& a) noexcept {
+KOKKOS_FUNCTION constexpr T* begin([[maybe_unused]] Array<T, N>& a) noexcept {
   if constexpr (N == 0)
     return nullptr;
   else
@@ -455,7 +456,8 @@ KOKKOS_FUNCTION constexpr T* begin(Array<T, N>& a) noexcept {
 }
 
 template <class T, std::size_t N>
-KOKKOS_FUNCTION constexpr T const* end(Array<T, N> const& a) noexcept {
+KOKKOS_FUNCTION constexpr T const* end(
+    [[maybe_unused]] Array<T, N> const& a) noexcept {
   if constexpr (N == 0)
     return nullptr;
   else
@@ -463,7 +465,7 @@ KOKKOS_FUNCTION constexpr T const* end(Array<T, N> const& a) noexcept {
 }
 
 template <class T, std::size_t N>
-KOKKOS_FUNCTION constexpr T* end(Array<T, N>& a) noexcept {
+KOKKOS_FUNCTION constexpr T* end([[maybe_unused]] Array<T, N>& a) noexcept {
   if constexpr (N == 0)
     return nullptr;
   else
