@@ -858,6 +858,9 @@ ENDIF()
 
 IF (KOKKOS_ENABLE_OPENACC)
   IF(KOKKOS_CUDA_ARCH_FLAG)
+    IF(KOKKOS_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE)
+      MESSAGE(FATAL_ERROR "If a GPU architecture is specified, Kokkos_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE option cannot be used. Disable the Kokkos_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE option.")
+    ENDIF()
     SET(CLANG_CUDA_ARCH ${KOKKOS_CUDA_ARCH_FLAG})
     STRING(REPLACE "sm_" "cc" NVHPC_CUDA_ARCH ${KOKKOS_CUDA_ARCH_FLAG})
     COMPILER_SPECIFIC_FLAGS(
@@ -865,15 +868,39 @@ IF (KOKKOS_ENABLE_OPENACC)
       Clang -Xopenmp-target=nvptx64-nvidia-cuda -march=${CLANG_CUDA_ARCH}
             -fopenmp-targets=nvptx64-nvidia-cuda
     )
+    IF(DEFINED ENV{CUDA_PATH})
+      COMPILER_SPECIFIC_LINK_OPTIONS(Clang -L$ENV{CUDA_PATH}/lib64)
+    ENDIF()
+    COMPILER_SPECIFIC_LIBS(
+      Clang -lcudart
+      NVHPC -cuda
+    )
   ELSEIF(KOKKOS_AMDGPU_ARCH_FLAG)
+    IF(KOKKOS_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE)
+      MESSAGE(FATAL_ERROR "If a GPU architecture is specified, Kokkos_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE option cannot be used. Disable the Kokkos_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE option.")
+    ENDIF()
     COMPILER_SPECIFIC_FLAGS(
       Clang -Xopenmp-target=amdgcn-amd-amdhsa -march=${KOKKOS_AMDGPU_ARCH_FLAG}
             -fopenmp-targets=amdgcn-amd-amdhsa
     )
-  ELSE()
+    IF(DEFINED ENV{ROCM_PATH})
+      COMPILER_SPECIFIC_FLAGS(Clang -I$ENV{ROCM_PATH}/include)
+      COMPILER_SPECIFIC_LINK_OPTIONS(Clang -L$ENV{ROCM_PATH}/lib)
+    ENDIF()
+    COMPILER_SPECIFIC_LIBS(Clang -lamdhip64)
+  ELSEIF(KOKKOS_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE)
+    # Compile for kernel execution on the host. In that case,
+    # memory is shared between the OpenACC space and the host space.
     COMPILER_SPECIFIC_FLAGS(
-      NVHPC -acc
+      NVHPC -acc=multicore
     )
+  ELSE()
+    # Automatic fallback mode; try to offload any available GPU, and fall back
+    # to the host CPU if no available GPU is found.
+    COMPILER_SPECIFIC_FLAGS(
+      NVHPC -acc=gpu,multicore
+    )
+    MESSAGE(STATUS "No OpenACC target device is specificed; the OpenACC backend will be executed in an automatic fallback mode.")
   ENDIF()
 ENDIF()
 

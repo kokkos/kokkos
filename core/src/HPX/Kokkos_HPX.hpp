@@ -447,6 +447,20 @@ class HPX {
   }
 };
 
+template <typename... Args>
+std::vector<HPX> partition_space(HPX const &, Args... args) {
+  std::vector<HPX> instances(sizeof...(args));
+  for (auto &in : instances) in = HPX(HPX::instance_mode::independent);
+  return instances;
+}
+
+template <typename T>
+std::vector<HPX> partition_space(HPX const &, std::vector<T> const &weights) {
+  std::vector<HPX> instances(weights.size());
+  for (auto &in : instances) in = HPX(HPX::instance_mode::independent);
+  return instances;
+}
+
 extern template void HPX::impl_bulk_plain_erased<int>(
     bool, bool, std::function<void(int)> &&, int const,
     hpx::threads::thread_stacksize stacksize) const;

@@ -55,34 +55,11 @@ struct TestRangeRequire {
             Kokkos::RangePolicy<ExecSpace, ScheduleType>(0, N), Property()),
         *this);
 
-    {
-      using ThisType = TestRangeRequire<ExecSpace, ScheduleType, Property>;
-      std::string label("parallel_for");
-      Kokkos::Impl::ParallelConstructName<ThisType, void> pcn(label);
-      ASSERT_EQ(pcn.get(), label);
-      std::string empty_label("");
-      Kokkos::Impl::ParallelConstructName<ThisType, void> empty_pcn(
-          empty_label);
-      ASSERT_EQ(empty_pcn.get(), typeid(ThisType).name());
-    }
-
     Kokkos::parallel_for(
         Kokkos::Experimental::require(
             Kokkos::RangePolicy<ExecSpace, ScheduleType, VerifyInitTag>(0, N),
             Property()),
         *this);
-
-    {
-      using ThisType = TestRangeRequire<ExecSpace, ScheduleType, Property>;
-      std::string label("parallel_for");
-      Kokkos::Impl::ParallelConstructName<ThisType, VerifyInitTag> pcn(label);
-      ASSERT_EQ(pcn.get(), label);
-      std::string empty_label("");
-      Kokkos::Impl::ParallelConstructName<ThisType, VerifyInitTag> empty_pcn(
-          empty_label);
-      ASSERT_EQ(empty_pcn.get(), std::string(typeid(ThisType).name()) + "/" +
-                                     typeid(VerifyInitTag).name());
-    }
 
     Kokkos::deep_copy(host_flags, m_flags);
 

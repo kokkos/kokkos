@@ -27,6 +27,7 @@
 
 // Arbitrary value to denote that we don't know yet what device to use.
 int Kokkos::Experimental::Impl::OpenACCInternal::m_acc_device_num = -1;
+int Kokkos::Experimental::Impl::OpenACCInternal::m_concurrency    = -1;
 
 Kokkos::Experimental::Impl::OpenACCInternal&
 Kokkos::Experimental::Impl::OpenACCInternal::singleton() {
@@ -83,3 +84,13 @@ uint32_t Kokkos::Experimental::Impl::OpenACCInternal::instance_id()
   return Kokkos::Tools::Experimental::Impl::idForInstance<OpenACC>(
       reinterpret_cast<uintptr_t>(this));
 }
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+int Kokkos::Experimental::OpenACC::concurrency() {
+  return Impl::OpenACCInternal::m_concurrency;
+}
+#else
+int Kokkos::Experimental::OpenACC::concurrency() const {
+  return Impl::OpenACCInternal::m_concurrency;
+}
+#endif
