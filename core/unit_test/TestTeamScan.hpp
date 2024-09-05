@@ -15,7 +15,6 @@
 //@HEADER
 
 #include <Kokkos_Core.hpp>
-#include <impl/Kokkos_Stacktrace.hpp>
 #include <cstdio>
 #include <cstdint>
 #include <sstream>
@@ -56,7 +55,7 @@ struct TestTeamScan {
 
   auto operator()(int32_t M_, int32_t N_) {
     std::stringstream ss;
-    ss << Kokkos::Impl::demangle(typeid(*this).name());
+    ss << Kokkos::TypeInfo<decltype(*this)>::name();
     ss << "(/*M=*/" << M_ << ", /*N=*/" << N_ << ")";
     std::string const test_id = ss.str();
 
@@ -174,7 +173,7 @@ struct TestTeamScanRetVal {
 
   auto operator()(int32_t M_, int32_t N_) {
     std::stringstream ss;
-    ss << Kokkos::Impl::demangle(typeid(*this).name());
+    ss << Kokkos::TypeInfo<decltype(*this)>::name();
     ss << "(/*M=*/" << M_ << ", /*N=*/" << N_ << ")";
     std::string const test_id = ss.str();
 
