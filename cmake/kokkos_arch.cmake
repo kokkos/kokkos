@@ -928,10 +928,8 @@ IF (KOKKOS_ENABLE_SYCL)
     COMPILER_SPECIFIC_FLAGS(
       DEFAULT -fsycl-targets=spir64
     )
-  ELSE()
-    IF(KOKKOS_ARCH_INTEL_GPU)
-      SET(SYCL_TARGET_FLAG -fsycl-targets=spir64_gen)
-    ENDIF()
+  ELSEIF(KOKKOS_ARCH_INTEL_GPU)
+    SET(SYCL_TARGET_FLAG -fsycl-targets=spir64_gen)
 
     IF(KOKKOS_ARCH_INTEL_GEN9)
      SET(SYCL_TARGET_BACKEND_FLAG -Xsycl-target-backend "-device gen9")
