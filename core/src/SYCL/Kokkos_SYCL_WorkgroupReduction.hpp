@@ -21,9 +21,56 @@
 
 namespace Kokkos::Impl::SYCLReduction {
 
+template <int N>
+struct TrivialWrapper {
+  std::byte array[N];
+};
+
+// shuffle down
+template <typename T>
+T shift_group_left(sycl::sub_group sg, T x,
+                   sycl::sub_group::linear_id_type delta) {
+  if constexpr (std::is_trivially_copyable_v<T>)
+    return sycl::shift_group_left(sg, x, delta);
+  else {
+    auto tmp = sycl::shift_group_left(
+        sg, reinterpret_cast<TrivialWrapper<sizeof(T)>&>(x), delta);
+    return reinterpret_cast<T&>(tmp);
+  }
+}
+
+// shuffle up
+template <typename T>
+T shift_group_right(sycl::sub_group sg, T x,
+                    sycl::sub_group::linear_id_type delta) {
+  if constexpr (std::is_trivially_copyable_v<T>)
+    return sycl::shift_group_right(sg, x, delta);
+  else {
+    auto tmp = sycl::shift_group_right(
+        sg, reinterpret_cast<TrivialWrapper<sizeof(T)>&>(x), delta);
+    return reinterpret_cast<T&>(tmp);
+  }
+}
+
+// shuffle
+template <typename T>
+T select_from_group(sycl::sub_group sg, T x,
+                    sycl::sub_group::id_type remote_local_id) {
+  if constexpr (std::is_trivially_copyable_v<T>)
+    return sycl::select_from_group(sg, x, remote_local_id);
+  else {
+    auto tmp = sycl::select_from_group(
+        sg, reinterpret_cast<TrivialWrapper<sizeof(T)>&>(x), remote_local_id);
+    return reinterpret_cast<T&>(tmp);
+  }
+}
+
+// FIXME_SYCL For some types, shuffle reductions are competitive with local
+// memory reductions but they are significantly slower for the value type used
+// in combined reductions with multiple double arguments.
 template <class ReducerType>
-inline constexpr bool use_shuffle_based_algorithm =
-    std::is_reference_v<typename ReducerType::reference_type>;
+inline constexpr bool use_shuffle_based_algorithm = false;
+// std::is_reference_v<typename ReducerType::reference_type>;
 
 template <typename ValueType, typename ReducerType, int dim>
 std::enable_if_t<!use_shuffle_based_algorithm<ReducerType>> workgroup_reduction(
@@ -116,7 +163,8 @@ std::enable_if_t<use_shuffle_based_algorithm<ReducerType>> workgroup_reduction(
 #if defined(KOKKOS_ARCH_INTEL_GPU) || defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
   auto shuffle_combine = [&](int stride) {
     if (stride < local_range) {
-      auto tmp = sg.shuffle_down(local_value, stride);
+      auto tmp = Kokkos::Impl::SYCLReduction::shift_group_left(sg, local_value,
+                                                               stride);
       if (stride < upper_stride_bound) final_reducer.join(&local_value, &tmp);
     }
   };
@@ -128,7 +176,8 @@ std::enable_if_t<use_shuffle_based_algorithm<ReducerType>> workgroup_reduction(
   KOKKOS_ASSERT(local_range <= 32);
 #else
   for (unsigned int stride = 1; stride < local_range; stride <<= 1) {
-    auto tmp = sg.shuffle_down(local_value, stride);
+    auto tmp =
+        Kokkos::Impl::SYCLReduction::shift_group_left(sg, local_value, stride);
     if (stride < upper_stride_bound) final_reducer.join(&local_value, &tmp);
   }
 #endif
@@ -164,7 +213,8 @@ std::enable_if_t<use_shuffle_based_algorithm<ReducerType>> workgroup_reduction(
 #if defined(KOKKOS_ARCH_INTEL_GPU) || defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
     auto shuffle_combine_sg = [&](int stride) {
       if (stride < local_range) {
-        auto tmp = sg.shuffle_down(sg_value, stride);
+        auto tmp =
+            Kokkos::Impl::SYCLReduction::shift_group_left(sg, sg_value, stride);
         if (id_in_sg + stride < n_active_subgroups)
           final_reducer.join(&sg_value, &tmp);
       }
@@ -177,7 +227,8 @@ std::enable_if_t<use_shuffle_based_algorithm<ReducerType>> workgroup_reduction(
     KOKKOS_ASSERT(local_range <= 32);
 #else
     for (unsigned int stride = 1; stride < local_range; stride <<= 1) {
-      auto tmp = sg.shuffle_down(sg_value, stride);
+      auto tmp =
+          Kokkos::Impl::SYCLReduction::shift_group_left(sg, sg_value, stride);
       if (id_in_sg + stride < n_active_subgroups)
         final_reducer.join(&sg_value, &tmp);
     }

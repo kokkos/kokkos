@@ -95,12 +95,12 @@ struct non_owning_variable_size_circular_buffer {
   non_owning_variable_size_circular_buffer(
       non_owning_variable_size_circular_buffer const&) = delete;
   non_owning_variable_size_circular_buffer(
-      non_owning_variable_size_circular_buffer&&)      = default;
-  non_owning_variable_size_circular_buffer& operator   =(
-      non_owning_variable_size_circular_buffer const&) = delete;
-  non_owning_variable_size_circular_buffer& operator   =(
       non_owning_variable_size_circular_buffer&&) = default;
-  ~non_owning_variable_size_circular_buffer()          = default;
+  non_owning_variable_size_circular_buffer& operator=(
+      non_owning_variable_size_circular_buffer const&) = delete;
+  non_owning_variable_size_circular_buffer& operator=(
+      non_owning_variable_size_circular_buffer&&) = default;
+  ~non_owning_variable_size_circular_buffer()     = default;
 
   KOKKOS_FORCEINLINE_FUNCTION
   constexpr size_type size() const noexcept { return m_size; }
@@ -138,7 +138,7 @@ struct ChaseLevDeque {
  public:
   template <class _ignore = void,
             class         = std::enable_if_t<
-                std::is_default_constructible<CircularBufferT>::value>>
+                std::is_default_constructible_v<CircularBufferT>>>
   ChaseLevDeque() : m_array() {}
 
   explicit ChaseLevDeque(CircularBufferT buffer) : m_array(std::move(buffer)) {}

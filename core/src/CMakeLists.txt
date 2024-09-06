@@ -26,14 +26,17 @@ IF (NOT desul_FOUND)
     SET(DESUL_ATOMICS_ENABLE_OPENMP ON) # not a typo Kokkos OpenMPTarget -> Desul OpenMP
   ENDIF()
   IF(KOKKOS_ENABLE_OPENACC)
-    SET(DESUL_ATOMICS_ENABLE_OPENACC ON)
+    # FIXME_OPENACC FIXME_CLACC - Below condition will be removed if Clacc can compile atomics.
+    IF(KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
+      SET(DESUL_ATOMICS_ENABLE_OPENACC ON)
+    ENDIF()
   ENDIF()
   CONFIGURE_FILE(
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/desul/Config.hpp.cmake.in
+    ${KOKKOS_SOURCE_DIR}/tpls/desul/Config.hpp.cmake.in
     ${CMAKE_CURRENT_BINARY_DIR}/desul/atomics/Config.hpp
   )
   KOKKOS_INCLUDE_DIRECTORIES(
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/desul/include
+    ${KOKKOS_SOURCE_DIR}/tpls/desul/include
   )
 ENDIF()
 
@@ -98,20 +101,20 @@ ENDIF()
 
 IF (NOT desul_FOUND)
   IF (KOKKOS_ENABLE_CUDA)
-    APPEND_GLOB(KOKKOS_CORE_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/desul/src/Lock_Array_CUDA.cpp)
+    APPEND_GLOB(KOKKOS_CORE_SRCS ${KOKKOS_SOURCE_DIR}/tpls/desul/src/Lock_Array_CUDA.cpp)
   ELSEIF (KOKKOS_ENABLE_HIP)
-    APPEND_GLOB(KOKKOS_CORE_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/desul/src/Lock_Array_HIP.cpp)
+    APPEND_GLOB(KOKKOS_CORE_SRCS ${KOKKOS_SOURCE_DIR}/tpls/desul/src/Lock_Array_HIP.cpp)
   ELSEIF (KOKKOS_ENABLE_SYCL)
-    APPEND_GLOB(KOKKOS_CORE_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/desul/src/Lock_Array_SYCL.cpp)
+    APPEND_GLOB(KOKKOS_CORE_SRCS ${KOKKOS_SOURCE_DIR}/tpls/desul/src/Lock_Array_SYCL.cpp)
   ENDIF()
-  APPEND_GLOB(KOKKOS_CORE_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/desul/include/desul/*.hpp)
-  APPEND_GLOB(KOKKOS_CORE_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/desul/include/desul/*/*.hpp)
-  APPEND_GLOB(KOKKOS_CORE_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/desul/include/desul/*/*/*.hpp)
-  APPEND_GLOB(KOKKOS_CORE_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/desul/include/*/*/*.inc*)
+  APPEND_GLOB(KOKKOS_CORE_HEADERS ${KOKKOS_SOURCE_DIR}/tpls/desul/include/desul/*.hpp)
+  APPEND_GLOB(KOKKOS_CORE_HEADERS ${KOKKOS_SOURCE_DIR}/tpls/desul/include/desul/*/*.hpp)
+  APPEND_GLOB(KOKKOS_CORE_HEADERS ${KOKKOS_SOURCE_DIR}/tpls/desul/include/desul/*/*/*.hpp)
+  APPEND_GLOB(KOKKOS_CORE_HEADERS ${KOKKOS_SOURCE_DIR}/tpls/desul/include/*/*/*.inc*)
   APPEND_GLOB(KOKKOS_CORE_HEADERS ${CMAKE_CURRENT_BINARY_DIR}/desul/*.hpp)
 
   INSTALL (DIRECTORY
-    "${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/desul/include/desul"
+    "${KOKKOS_SOURCE_DIR}/tpls/desul/include/desul"
     "${CMAKE_CURRENT_BINARY_DIR}/desul"
     DESTINATION ${KOKKOS_HEADER_DIR}
     FILES_MATCHING
@@ -141,7 +144,7 @@ KOKKOS_LIB_INCLUDE_DIRECTORIES(kokkoscore
 )
 IF (NOT desul_FOUND)
   KOKKOS_LIB_INCLUDE_DIRECTORIES(kokkoscore
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/desul/include
+    ${KOKKOS_SOURCE_DIR}/tpls/desul/include
   )
 ENDIF()
 
@@ -164,20 +167,20 @@ IF (Kokkos_ENABLE_IMPL_MDSPAN)
   else()
     KOKKOS_LIB_INCLUDE_DIRECTORIES(
       kokkoscore
-      ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/mdspan/include
+      ${KOKKOS_SOURCE_DIR}/tpls/mdspan/include
     )
 
-    APPEND_GLOB(KOKKOS_CORE_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/mdspan/include/experimental/__p0009_bits/*.hpp)
-    APPEND_GLOB(KOKKOS_CORE_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/mdspan/include/experimental/mdspan)
+    APPEND_GLOB(KOKKOS_CORE_HEADERS ${KOKKOS_SOURCE_DIR}/tpls/mdspan/include/experimental/__p0009_bits/*.hpp)
+    APPEND_GLOB(KOKKOS_CORE_HEADERS ${KOKKOS_SOURCE_DIR}/tpls/mdspan/include/experimental/mdspan)
 
     INSTALL (DIRECTORY
-      "${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/mdspan/include/"
+      "${KOKKOS_SOURCE_DIR}/tpls/mdspan/include/"
       DESTINATION ${KOKKOS_HEADER_DIR}
       FILES_MATCHING
       PATTERN "mdspan"
       PATTERN "*.hpp"
     )
-    MESSAGE(STATUS "Using internal mdspan directory ${CMAKE_CURRENT_SOURCE_DIR}/../../tpls/mdspan/include")
+    MESSAGE(STATUS "Using internal mdspan directory ${KOKKOS_SOURCE_DIR}/tpls/mdspan/include")
   endif()
 ENDIF()
 

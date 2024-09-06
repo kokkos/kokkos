@@ -60,8 +60,8 @@ struct rank_dynamic<Val, Args...> {
     static constexpr size_t ArgN##R = (V != KOKKOS_INVALID_INDEX ? V : 1);  \
     static constexpr size_t N##R    = (V != KOKKOS_INVALID_INDEX ? V : 1);  \
     KOKKOS_INLINE_FUNCTION explicit ViewDimension##R(size_t) {}             \
-    ViewDimension##R()                        = default;                    \
-    ViewDimension##R(const ViewDimension##R&) = default;                    \
+    ViewDimension##R()                                   = default;         \
+    ViewDimension##R(const ViewDimension##R&)            = default;         \
     ViewDimension##R& operator=(const ViewDimension##R&) = default;         \
   };                                                                        \
   template <size_t V, unsigned RD>                                          \
@@ -72,8 +72,8 @@ struct rank_dynamic<Val, Args...> {
   struct ViewDimension##R<0u, RD> {                                         \
     static constexpr size_t ArgN##R = 0;                                    \
     std::conditional_t<(RD < 3), size_t, unsigned> N##R;                    \
-    ViewDimension##R()                        = default;                    \
-    ViewDimension##R(const ViewDimension##R&) = default;                    \
+    ViewDimension##R()                                   = default;         \
+    ViewDimension##R(const ViewDimension##R&)            = default;         \
     ViewDimension##R& operator=(const ViewDimension##R&) = default;         \
     KOKKOS_INLINE_FUNCTION explicit ViewDimension##R(size_t V) : N##R(V) {} \
   };                                                                        \
@@ -149,8 +149,8 @@ struct KOKKOS_IMPL_ENFORCE_EMPTY_BASE_OPTIMIZATION ViewDimension
   static constexpr unsigned rank         = sizeof...(Vals);
   static constexpr unsigned rank_dynamic = Impl::rank_dynamic<Vals...>::value;
 
-  ViewDimension()                     = default;
-  ViewDimension(const ViewDimension&) = default;
+  ViewDimension()                                = default;
+  ViewDimension(const ViewDimension&)            = default;
   ViewDimension& operator=(const ViewDimension&) = default;
 
   KOKKOS_INLINE_FUNCTION
@@ -370,8 +370,7 @@ struct ViewDataAnalysis {
   // ValueType is opportunity for partial specialization.
   // Must match array analysis when this default template is used.
   static_assert(
-      std::is_same<ValueType,
-                   typename array_analysis::non_const_value_type>::value);
+      std::is_same_v<ValueType, typename array_analysis::non_const_value_type>);
 
  public:
   using specialize = void;  // No specialization

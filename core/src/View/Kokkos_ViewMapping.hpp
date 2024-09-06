@@ -17,6 +17,7 @@
 #ifndef KOKKOS_EXPERIMENTAL_VIEW_MAPPING_HPP
 #define KOKKOS_EXPERIMENTAL_VIEW_MAPPING_HPP
 
+#include <cstring>
 #include <type_traits>
 #include <initializer_list>
 
@@ -27,13 +28,14 @@
 #include <Kokkos_Extents.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_Traits.hpp>
-#include <impl/Kokkos_ViewTracker.hpp>
-#include <impl/Kokkos_ViewCtor.hpp>
-#include <impl/Kokkos_Atomic_View.hpp>
+#include <View/Kokkos_ViewTracker.hpp>
+#include <View/Kokkos_ViewCtor.hpp>
+#include <View/Kokkos_ViewAtomic.hpp>
 #include <impl/Kokkos_Tools.hpp>
 #include <impl/Kokkos_StringManipulation.hpp>
 #include <impl/Kokkos_ZeroMemset_fwd.hpp>
-#include <impl/Kokkos_ViewDataAnalysis.hpp>
+#include <View/Kokkos_ViewDataAnalysis.hpp>
+#include <View/Kokkos_ViewAlloc.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -64,23 +66,23 @@ namespace Impl {
 
 template <class T>
 struct is_integral_extent_type {
-  enum : bool { value = std::is_same<T, Kokkos::ALL_t>::value ? 1 : 0 };
+  enum : bool { value = std::is_same_v<T, Kokkos::ALL_t> ? 1 : 0 };
 };
 
 template <class iType>
 struct is_integral_extent_type<std::pair<iType, iType>> {
-  enum : bool { value = std::is_integral<iType>::value ? 1 : 0 };
+  enum : bool { value = std::is_integral_v<iType> ? 1 : 0 };
 };
 
 template <class iType>
 struct is_integral_extent_type<Kokkos::pair<iType, iType>> {
-  enum : bool { value = std::is_integral<iType>::value ? 1 : 0 };
+  enum : bool { value = std::is_integral_v<iType> ? 1 : 0 };
 };
 
 // Assuming '2 == initializer_list<iType>::size()'
 template <class iType>
 struct is_integral_extent_type<std::initializer_list<iType>> {
-  enum : bool { value = std::is_integral<iType>::value ? 1 : 0 };
+  enum : bool { value = std::is_integral_v<iType> ? 1 : 0 };
 };
 
 template <unsigned I, class... Args>
@@ -91,8 +93,7 @@ struct is_integral_extent {
 
   enum : bool { value = is_integral_extent_type<type>::value };
 
-  static_assert(value || std::is_integral<type>::value ||
-                    std::is_void<type>::value,
+  static_assert(value || std::is_integral_v<type> || std::is_void_v<type>,
                 "subview argument must be either integral or integral extent");
 };
 
@@ -110,16 +111,16 @@ struct SubviewLegalArgsCompileTime<Kokkos::LayoutLeft, Kokkos::LayoutLeft,
                                    RankDest, RankSrc, CurrentArg, Arg,
                                    SubViewArgs...> {
   enum {
-    value = (((CurrentArg == RankDest - 1) &&
-              (Kokkos::Impl::is_integral_extent_type<Arg>::value)) ||
-             ((CurrentArg >= RankDest) && (std::is_integral<Arg>::value)) ||
-             ((CurrentArg < RankDest) &&
-              (std::is_same<Arg, Kokkos::ALL_t>::value)) ||
-             ((CurrentArg == 0) &&
-              (Kokkos::Impl::is_integral_extent_type<Arg>::value))) &&
-            (SubviewLegalArgsCompileTime<Kokkos::LayoutLeft, Kokkos::LayoutLeft,
-                                         RankDest, RankSrc, CurrentArg + 1,
-                                         SubViewArgs...>::value)
+    value =
+        (((CurrentArg == RankDest - 1) &&
+          (Kokkos::Impl::is_integral_extent_type<Arg>::value)) ||
+         ((CurrentArg >= RankDest) && (std::is_integral_v<Arg>)) ||
+         ((CurrentArg < RankDest) && (std::is_same_v<Arg, Kokkos::ALL_t>)) ||
+         ((CurrentArg == 0) &&
+          (Kokkos::Impl::is_integral_extent_type<Arg>::value))) &&
+        (SubviewLegalArgsCompileTime<Kokkos::LayoutLeft, Kokkos::LayoutLeft,
+                                     RankDest, RankSrc, CurrentArg + 1,
+                                     SubViewArgs...>::value)
   };
 };
 
@@ -127,7 +128,7 @@ template <int RankDest, int RankSrc, int CurrentArg, class Arg>
 struct SubviewLegalArgsCompileTime<Kokkos::LayoutLeft, Kokkos::LayoutLeft,
                                    RankDest, RankSrc, CurrentArg, Arg> {
   enum {
-    value = ((CurrentArg == RankDest - 1) || (std::is_integral<Arg>::value)) &&
+    value = ((CurrentArg == RankDest - 1) || (std::is_integral_v<Arg>)) &&
             (CurrentArg == RankSrc - 1)
   };
 };
@@ -142,10 +143,9 @@ struct SubviewLegalArgsCompileTime<Kokkos::LayoutRight, Kokkos::LayoutRight,
   enum {
     value = (((CurrentArg == RankSrc - RankDest) &&
               (Kokkos::Impl::is_integral_extent_type<Arg>::value)) ||
-             ((CurrentArg < RankSrc - RankDest) &&
-              (std::is_integral<Arg>::value)) ||
+             ((CurrentArg < RankSrc - RankDest) && (std::is_integral_v<Arg>)) ||
              ((CurrentArg >= RankSrc - RankDest) &&
-              (std::is_same<Arg, Kokkos::ALL_t>::value))) &&
+              (std::is_same_v<Arg, Kokkos::ALL_t>))) &&
             (SubviewLegalArgsCompileTime<Kokkos::LayoutRight,
                                          Kokkos::LayoutRight, RankDest, RankSrc,
                                          CurrentArg + 1, SubViewArgs...>::value)
@@ -156,8 +156,8 @@ template <int RankDest, int RankSrc, int CurrentArg, class Arg>
 struct SubviewLegalArgsCompileTime<Kokkos::LayoutRight, Kokkos::LayoutRight,
                                    RankDest, RankSrc, CurrentArg, Arg> {
   enum {
-    value = ((CurrentArg == RankSrc - 1) &&
-             (std::is_same<Arg, Kokkos::ALL_t>::value))
+    value =
+        ((CurrentArg == RankSrc - 1) && (std::is_same_v<Arg, Kokkos::ALL_t>))
   };
 };
 
@@ -647,34 +647,60 @@ struct ViewOffset<
            m_dim.N5 * m_dim.N6;
   }
 
-  // Stride with [ rank ] value is the total length
+  // Fill the target unbounded array s with the stride.
+  // This method differs from stride() in that it does not write the total
+  // length to the last index of the array. Preconditions: s must be an array of
+  // dimension_type::rank elements
+  // FIXME: The version of clang-format in CI fails from maybe_unused
+  // clang-format off
+  template <typename iType>
+  KOKKOS_INLINE_FUNCTION iType
+  stride_fill([[maybe_unused]] iType* const s) const {
+    iType n = 1;
+    if constexpr (0 < dimension_type::rank) {
+      s[0] = n;
+      n *= m_dim.N0;
+    }
+    if constexpr (1 < dimension_type::rank) {
+      s[1] = n;
+      n *= m_dim.N1;
+    }
+    if constexpr (2 < dimension_type::rank) {
+      s[2] = n;
+      n *= m_dim.N2;
+    }
+    if constexpr (3 < dimension_type::rank) {
+      s[3] = n;
+      n *= m_dim.N3;
+    }
+    if constexpr (4 < dimension_type::rank) {
+      s[4] = n;
+      n *= m_dim.N4;
+    }
+    if constexpr (5 < dimension_type::rank) {
+      s[5] = n;
+      n *= m_dim.N5;
+    }
+    if constexpr (6 < dimension_type::rank) {
+      s[6] = n;
+      n *= m_dim.N6;
+    }
+    if constexpr (7 < dimension_type::rank) {
+      s[7] = n;
+      n *= m_dim.N7;
+    }
+    return n;
+  }
+  // clang-format on
+
+  // Fill the target unbounded array s with the stride and the total spanned
+  // size. This method differs from stride_fill() in that it writes the total
+  // spanned size to the last index of the array. Preconditions: s must be an
+  // array of dimension_type::rank + 1 elements Stride with [ rank ] value is
+  // the total length
   template <typename iType>
   KOKKOS_INLINE_FUNCTION void stride(iType* const s) const {
-    s[0] = 1;
-    if (0 < dimension_type::rank) {
-      s[1] = m_dim.N0;
-    }
-    if (1 < dimension_type::rank) {
-      s[2] = s[1] * m_dim.N1;
-    }
-    if (2 < dimension_type::rank) {
-      s[3] = s[2] * m_dim.N2;
-    }
-    if (3 < dimension_type::rank) {
-      s[4] = s[3] * m_dim.N3;
-    }
-    if (4 < dimension_type::rank) {
-      s[5] = s[4] * m_dim.N4;
-    }
-    if (5 < dimension_type::rank) {
-      s[6] = s[5] * m_dim.N5;
-    }
-    if (6 < dimension_type::rank) {
-      s[7] = s[6] * m_dim.N6;
-    }
-    if (7 < dimension_type::rank) {
-      s[8] = s[7] * m_dim.N7;
-    }
+    s[dimension_type::rank] = stride_fill(s);
   }
 
   //----------------------------------------
@@ -690,8 +716,8 @@ struct ViewOffset<
     return *this;
   }
 #else
-  ViewOffset()                  = default;
-  ViewOffset(const ViewOffset&) = default;
+  ViewOffset()                             = default;
+  ViewOffset(const ViewOffset&)            = default;
   ViewOffset& operator=(const ViewOffset&) = default;
 #endif
 
@@ -935,34 +961,59 @@ struct ViewOffset<
            m_dim.N6;
   }
 
-  // Stride with [ rank ] value is the total length
+  // Fill the target unbounded array s with the stride.
+  // This method differs from stride() in that it does not write the total
+  // length to the last index of the array. Preconditions: s must be an array of
+  // dimension_type::rank elements
+  // The version of clang-format in CI fails from maybe_unused
+  // clang-format off
+  template <typename iType>
+  KOKKOS_INLINE_FUNCTION iType
+  stride_fill([[maybe_unused]] iType* const s) const {
+    iType n = 1;
+    if constexpr (0 < dimension_type::rank) {
+      s[0] = n;
+      n *= m_stride;
+    }
+    if constexpr (1 < dimension_type::rank) {
+      s[1] = n;
+      n *= m_dim.N1;
+    }
+    if constexpr (2 < dimension_type::rank) {
+      s[2] = n;
+      n *= m_dim.N2;
+    }
+    if constexpr (3 < dimension_type::rank) {
+      s[3] = n;
+      n *= m_dim.N3;
+    }
+    if constexpr (4 < dimension_type::rank) {
+      s[4] = n;
+      n *= m_dim.N4;
+    }
+    if constexpr (5 < dimension_type::rank) {
+      s[5] = n;
+      n *= m_dim.N5;
+    }
+    if constexpr (6 < dimension_type::rank) {
+      s[6] = n;
+      n *= m_dim.N6;
+    }
+    if constexpr (7 < dimension_type::rank) {
+      s[7] = n;
+      n *= m_dim.N7;
+    }
+    return n;
+  }
+  // clang-format on
+
+  // Fill the target unbounded array s with the stride and the total spanned
+  // size. This method differs from stride_fill() in that it writes the total
+  // spanned size to the last index of the array. Preconditions: s must be an
+  // array of dimension_type::rank + 1 elements
   template <typename iType>
   KOKKOS_INLINE_FUNCTION void stride(iType* const s) const {
-    s[0] = 1;
-    if (0 < dimension_type::rank) {
-      s[1] = m_stride;
-    }
-    if (1 < dimension_type::rank) {
-      s[2] = s[1] * m_dim.N1;
-    }
-    if (2 < dimension_type::rank) {
-      s[3] = s[2] * m_dim.N2;
-    }
-    if (3 < dimension_type::rank) {
-      s[4] = s[3] * m_dim.N3;
-    }
-    if (4 < dimension_type::rank) {
-      s[5] = s[4] * m_dim.N4;
-    }
-    if (5 < dimension_type::rank) {
-      s[6] = s[5] * m_dim.N5;
-    }
-    if (6 < dimension_type::rank) {
-      s[7] = s[6] * m_dim.N6;
-    }
-    if (7 < dimension_type::rank) {
-      s[8] = s[7] * m_dim.N7;
-    }
+    s[dimension_type::rank] = stride_fill(s);
   }
 
   //----------------------------------------
@@ -1018,8 +1069,8 @@ struct ViewOffset<
   }
 #else
 
-  ViewOffset()                  = default;
-  ViewOffset(const ViewOffset&) = default;
+  ViewOffset()                             = default;
+  ViewOffset(const ViewOffset&)            = default;
   ViewOffset& operator=(const ViewOffset&) = default;
 #endif
 
@@ -1286,42 +1337,58 @@ struct ViewOffset<
            m_dim.N1;
   }
 
-  // Stride with [ rank ] value is the total length
+  // Fill the target unbounded array s with the stride.
+  // This method differs from stride() in that it does not write the total
+  // length to the last index of the array. Preconditions: s must be an array of
+  // dimension_type::rank elements
+  // The version of clang-format in CI fails from maybe_unused
+  // clang-format off
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION void stride(iType* const s) const {
+  KOKKOS_INLINE_FUNCTION iType
+  stride_fill([[maybe_unused]] iType* const s) const {
     size_type n = 1;
-    if (7 < dimension_type::rank) {
+    if constexpr (7 < dimension_type::rank) {
       s[7] = n;
       n *= m_dim.N7;
     }
-    if (6 < dimension_type::rank) {
+    if constexpr (6 < dimension_type::rank) {
       s[6] = n;
       n *= m_dim.N6;
     }
-    if (5 < dimension_type::rank) {
+    if constexpr (5 < dimension_type::rank) {
       s[5] = n;
       n *= m_dim.N5;
     }
-    if (4 < dimension_type::rank) {
+    if constexpr (4 < dimension_type::rank) {
       s[4] = n;
       n *= m_dim.N4;
     }
-    if (3 < dimension_type::rank) {
+    if constexpr (3 < dimension_type::rank) {
       s[3] = n;
       n *= m_dim.N3;
     }
-    if (2 < dimension_type::rank) {
+    if constexpr (2 < dimension_type::rank) {
       s[2] = n;
       n *= m_dim.N2;
     }
-    if (1 < dimension_type::rank) {
+    if constexpr (1 < dimension_type::rank) {
       s[1] = n;
       n *= m_dim.N1;
     }
-    if (0 < dimension_type::rank) {
+    if constexpr (0 < dimension_type::rank) {
       s[0] = n;
     }
-    s[dimension_type::rank] = n * m_dim.N0;
+    return n * m_dim.N0;
+  }
+  // clang-format on
+
+  // Fill the target unbounded array s with the stride and the total spanned
+  // size. This method differs from stride_fill() in that it writes the total
+  // spanned size to the last index of the array. Preconditions: s must be an
+  // array of dimension_type::rank + 1 elements
+  template <typename iType>
+  KOKKOS_INLINE_FUNCTION void stride(iType* const s) const {
+    s[dimension_type::rank] = stride_fill(s);
   }
 
   //----------------------------------------
@@ -1338,8 +1405,8 @@ struct ViewOffset<
   }
 #else
 
-  ViewOffset()                  = default;
-  ViewOffset(const ViewOffset&) = default;
+  ViewOffset()                             = default;
+  ViewOffset(const ViewOffset&)            = default;
   ViewOffset& operator=(const ViewOffset&) = default;
 #endif
 
@@ -1573,41 +1640,57 @@ struct ViewOffset<
     return m_stride;
   }
 
-  // Stride with [ rank ] value is the total length
+  // Fill the target unbounded array s with the stride.
+  // This method differs from stride() in that it does not write the total
+  // length to the last index of the array. Preconditions: s must be an array of
+  // dimension_type::rank elements
+  // The version of clang-format in CI fails from maybe_unused
+  // clang-format off
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION void stride(iType* const s) const {
+  KOKKOS_INLINE_FUNCTION iType
+  stride_fill([[maybe_unused]] iType* const s) const {
     size_type n = 1;
-    if (7 < dimension_type::rank) {
+    if constexpr (7 < dimension_type::rank) {
       s[7] = n;
       n *= m_dim.N7;
     }
-    if (6 < dimension_type::rank) {
+    if constexpr (6 < dimension_type::rank) {
       s[6] = n;
       n *= m_dim.N6;
     }
-    if (5 < dimension_type::rank) {
+    if constexpr (5 < dimension_type::rank) {
       s[5] = n;
       n *= m_dim.N5;
     }
-    if (4 < dimension_type::rank) {
+    if constexpr (4 < dimension_type::rank) {
       s[4] = n;
       n *= m_dim.N4;
     }
-    if (3 < dimension_type::rank) {
+    if constexpr (3 < dimension_type::rank) {
       s[3] = n;
       n *= m_dim.N3;
     }
-    if (2 < dimension_type::rank) {
+    if constexpr (2 < dimension_type::rank) {
       s[2] = n;
       n *= m_dim.N2;
     }
-    if (1 < dimension_type::rank) {
+    if constexpr (1 < dimension_type::rank) {
       s[1] = n;
     }
-    if (0 < dimension_type::rank) {
+    if constexpr (0 < dimension_type::rank) {
       s[0] = m_stride;
     }
-    s[dimension_type::rank] = m_stride * m_dim.N0;
+    return m_stride * m_dim.N0;
+  }
+  // clang-format on
+
+  // Fill the target unbounded array s with the stride and the total spanned
+  // size. This method differs from stride_fill() in that it writes the total
+  // spanned size to the last index of the array. Preconditions: s must be an
+  // array of dimension_type::rank + 1 elements
+  template <typename iType>
+  KOKKOS_INLINE_FUNCTION void stride(iType* const s) const {
+    s[dimension_type::rank] = stride_fill(s);
   }
 
   //----------------------------------------
@@ -1664,8 +1747,8 @@ struct ViewOffset<
   }
 #else
 
-  ViewOffset()                  = default;
-  ViewOffset(const ViewOffset&) = default;
+  ViewOffset()                             = default;
+  ViewOffset(const ViewOffset&)            = default;
   ViewOffset& operator=(const ViewOffset&) = default;
 #endif
 
@@ -1801,8 +1884,8 @@ struct ViewStride<0> {
   static constexpr size_t S0 = 0, S1 = 0, S2 = 0, S3 = 0, S4 = 0, S5 = 0,
                           S6 = 0, S7 = 0;
 
-  ViewStride()                  = default;
-  ViewStride(const ViewStride&) = default;
+  ViewStride()                             = default;
+  ViewStride(const ViewStride&)            = default;
   ViewStride& operator=(const ViewStride&) = default;
 
   KOKKOS_INLINE_FUNCTION
@@ -1816,8 +1899,8 @@ struct ViewStride<1> {
   static constexpr size_t S1 = 0, S2 = 0, S3 = 0, S4 = 0, S5 = 0, S6 = 0,
                           S7 = 0;
 
-  ViewStride()                  = default;
-  ViewStride(const ViewStride&) = default;
+  ViewStride()                             = default;
+  ViewStride(const ViewStride&)            = default;
   ViewStride& operator=(const ViewStride&) = default;
 
   KOKKOS_INLINE_FUNCTION
@@ -1831,8 +1914,8 @@ struct ViewStride<2> {
   size_t S0, S1;
   static constexpr size_t S2 = 0, S3 = 0, S4 = 0, S5 = 0, S6 = 0, S7 = 0;
 
-  ViewStride()                  = default;
-  ViewStride(const ViewStride&) = default;
+  ViewStride()                             = default;
+  ViewStride(const ViewStride&)            = default;
   ViewStride& operator=(const ViewStride&) = default;
 
   KOKKOS_INLINE_FUNCTION
@@ -1846,8 +1929,8 @@ struct ViewStride<3> {
   size_t S0, S1, S2;
   static constexpr size_t S3 = 0, S4 = 0, S5 = 0, S6 = 0, S7 = 0;
 
-  ViewStride()                  = default;
-  ViewStride(const ViewStride&) = default;
+  ViewStride()                             = default;
+  ViewStride(const ViewStride&)            = default;
   ViewStride& operator=(const ViewStride&) = default;
 
   KOKKOS_INLINE_FUNCTION
@@ -1861,8 +1944,8 @@ struct ViewStride<4> {
   size_t S0, S1, S2, S3;
   static constexpr size_t S4 = 0, S5 = 0, S6 = 0, S7 = 0;
 
-  ViewStride()                  = default;
-  ViewStride(const ViewStride&) = default;
+  ViewStride()                             = default;
+  ViewStride(const ViewStride&)            = default;
   ViewStride& operator=(const ViewStride&) = default;
 
   KOKKOS_INLINE_FUNCTION
@@ -1876,8 +1959,8 @@ struct ViewStride<5> {
   size_t S0, S1, S2, S3, S4;
   static constexpr size_t S5 = 0, S6 = 0, S7 = 0;
 
-  ViewStride()                  = default;
-  ViewStride(const ViewStride&) = default;
+  ViewStride()                             = default;
+  ViewStride(const ViewStride&)            = default;
   ViewStride& operator=(const ViewStride&) = default;
 
   KOKKOS_INLINE_FUNCTION
@@ -1891,8 +1974,8 @@ struct ViewStride<6> {
   size_t S0, S1, S2, S3, S4, S5;
   static constexpr size_t S6 = 0, S7 = 0;
 
-  ViewStride()                  = default;
-  ViewStride(const ViewStride&) = default;
+  ViewStride()                             = default;
+  ViewStride(const ViewStride&)            = default;
   ViewStride& operator=(const ViewStride&) = default;
 
   KOKKOS_INLINE_FUNCTION
@@ -1906,8 +1989,8 @@ struct ViewStride<7> {
   size_t S0, S1, S2, S3, S4, S5, S6;
   static constexpr size_t S7 = 0;
 
-  ViewStride()                  = default;
-  ViewStride(const ViewStride&) = default;
+  ViewStride()                             = default;
+  ViewStride(const ViewStride&)            = default;
   ViewStride& operator=(const ViewStride&) = default;
 
   KOKKOS_INLINE_FUNCTION
@@ -1920,8 +2003,8 @@ template <>
 struct ViewStride<8> {
   size_t S0, S1, S2, S3, S4, S5, S6, S7;
 
-  ViewStride()                  = default;
-  ViewStride(const ViewStride&) = default;
+  ViewStride()                             = default;
+  ViewStride(const ViewStride&)            = default;
   ViewStride& operator=(const ViewStride&) = default;
 
   KOKKOS_INLINE_FUNCTION
@@ -2133,34 +2216,50 @@ struct ViewOffset<Dimension, Kokkos::LayoutStride, void> {
     return m_stride.S7;
   }
 
-  // Stride with [ rank ] value is the total length
+  // Fill the target unbounded array s with the stride.
+  // This method differs from stride() in that it does not write the total
+  // length to the last index of the array. Preconditions: s must be an array of
+  // dimension_type::rank elements
+  // The version of clang-format in CI fails from maybe_unused
+  // clang-format off
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION void stride(iType* const s) const {
-    if (0 < dimension_type::rank) {
+  KOKKOS_INLINE_FUNCTION iType
+  stride_fill([[maybe_unused]] iType* const s) const {
+    if constexpr (0 < dimension_type::rank) {
       s[0] = m_stride.S0;
     }
-    if (1 < dimension_type::rank) {
+    if constexpr (1 < dimension_type::rank) {
       s[1] = m_stride.S1;
     }
-    if (2 < dimension_type::rank) {
+    if constexpr (2 < dimension_type::rank) {
       s[2] = m_stride.S2;
     }
-    if (3 < dimension_type::rank) {
+    if constexpr (3 < dimension_type::rank) {
       s[3] = m_stride.S3;
     }
-    if (4 < dimension_type::rank) {
+    if constexpr (4 < dimension_type::rank) {
       s[4] = m_stride.S4;
     }
-    if (5 < dimension_type::rank) {
+    if constexpr (5 < dimension_type::rank) {
       s[5] = m_stride.S5;
     }
-    if (6 < dimension_type::rank) {
+    if constexpr (6 < dimension_type::rank) {
       s[6] = m_stride.S6;
     }
-    if (7 < dimension_type::rank) {
+    if constexpr (7 < dimension_type::rank) {
       s[7] = m_stride.S7;
     }
-    s[dimension_type::rank] = span();
+    return span();
+  }
+  // clang-format on
+
+  // Fill the target unbounded array s with the stride and the total spanned
+  // size. This method differs from stride_fill() in that it writes the total
+  // spanned size to the last index of the array. Preconditions: s must be an
+  // array of dimension_type::rank + 1 elements
+  template <typename iType>
+  KOKKOS_INLINE_FUNCTION void stride(iType* const s) const {
+    s[dimension_type::rank] = stride_fill(s);
   }
 
   //----------------------------------------
@@ -2182,8 +2281,8 @@ struct ViewOffset<Dimension, Kokkos::LayoutStride, void> {
   }
 #else
 
-  ViewOffset()                  = default;
-  ViewOffset(const ViewOffset&) = default;
+  ViewOffset()                             = default;
+  ViewOffset(const ViewOffset&)            = default;
   ViewOffset& operator=(const ViewOffset&) = default;
 #endif
 
@@ -2297,9 +2396,9 @@ struct ViewDataHandle {
 template <class Traits>
 struct ViewDataHandle<
     Traits,
-    std::enable_if_t<(std::is_same<typename Traits::non_const_value_type,
-                                   typename Traits::value_type>::value &&
-                      std::is_void<typename Traits::specialize>::value &&
+    std::enable_if_t<(std::is_same_v<typename Traits::non_const_value_type,
+                                     typename Traits::value_type> &&
+                      std::is_void_v<typename Traits::specialize> &&
                       Traits::memory_traits::is_atomic)>> {
   using value_type  = typename Traits::value_type;
   using handle_type = typename Kokkos::Impl::AtomicViewDataHandle<Traits>;
@@ -2321,11 +2420,10 @@ struct ViewDataHandle<
 
 template <class Traits>
 struct ViewDataHandle<
-    Traits,
-    std::enable_if_t<(std::is_void<typename Traits::specialize>::value &&
-                      (!Traits::memory_traits::is_aligned) &&
-                      Traits::memory_traits::is_restrict &&
-                      (!Traits::memory_traits::is_atomic))>> {
+    Traits, std::enable_if_t<(std::is_void_v<typename Traits::specialize> &&
+                              (!Traits::memory_traits::is_aligned) &&
+                              Traits::memory_traits::is_restrict &&
+                              (!Traits::memory_traits::is_atomic))>> {
   using value_type  = typename Traits::value_type;
   using handle_type = typename Traits::value_type* KOKKOS_RESTRICT;
   using return_type = typename Traits::value_type& KOKKOS_RESTRICT;
@@ -2345,11 +2443,10 @@ struct ViewDataHandle<
 
 template <class Traits>
 struct ViewDataHandle<
-    Traits,
-    std::enable_if_t<(std::is_void<typename Traits::specialize>::value &&
-                      Traits::memory_traits::is_aligned &&
-                      (!Traits::memory_traits::is_restrict) &&
-                      (!Traits::memory_traits::is_atomic))>> {
+    Traits, std::enable_if_t<(std::is_void_v<typename Traits::specialize> &&
+                              Traits::memory_traits::is_aligned &&
+                              (!Traits::memory_traits::is_restrict) &&
+                              (!Traits::memory_traits::is_atomic))>> {
   using value_type = typename Traits::value_type;
   // typedef work-around for intel compilers error #3186: expected typedef
   // declaration
@@ -2384,11 +2481,10 @@ struct ViewDataHandle<
 
 template <class Traits>
 struct ViewDataHandle<
-    Traits,
-    std::enable_if_t<(std::is_void<typename Traits::specialize>::value &&
-                      Traits::memory_traits::is_aligned &&
-                      Traits::memory_traits::is_restrict &&
-                      (!Traits::memory_traits::is_atomic))>> {
+    Traits, std::enable_if_t<(std::is_void_v<typename Traits::specialize> &&
+                              Traits::memory_traits::is_aligned &&
+                              Traits::memory_traits::is_restrict &&
+                              (!Traits::memory_traits::is_atomic))>> {
   using value_type = typename Traits::value_type;
   // typedef work-around for intel compilers error #3186: expected typedef
   // declaration
@@ -2428,297 +2524,14 @@ struct ViewDataHandle<
 
 namespace Kokkos {
 namespace Impl {
-
-template <typename T>
-inline bool is_zero_byte(const T& t) {
-  using comparison_type = std::conditional_t<
-      sizeof(T) % sizeof(long long int) == 0, long long int,
-      std::conditional_t<
-          sizeof(T) % sizeof(long int) == 0, long int,
-          std::conditional_t<
-              sizeof(T) % sizeof(int) == 0, int,
-              std::conditional_t<sizeof(T) % sizeof(short int) == 0, short int,
-                                 char>>>>;
-  const auto* const ptr = reinterpret_cast<const comparison_type*>(&t);
-  for (std::size_t i = 0; i < sizeof(T) / sizeof(comparison_type); ++i)
-    if (ptr[i] != 0) return false;
-  return true;
-}
-
-//----------------------------------------------------------------------------
-
-/*
- *  The construction, assignment to default, and destruction
- *  are merged into a single functor.
- *  Primarily to work around an unresolved CUDA back-end bug
- *  that would lose the destruction cuda device function when
- *  called from the shared memory tracking destruction.
- *  Secondarily to have two fewer partial specializations.
- */
-template <class DeviceType, class ValueType,
-          bool IsScalar = std::is_scalar<ValueType>::value>
-struct ViewValueFunctor;
-
-template <class DeviceType, class ValueType>
-struct ViewValueFunctor<DeviceType, ValueType, false /* is_scalar */> {
-  using ExecSpace = typename DeviceType::execution_space;
-
-  struct DestroyTag {};
-  struct ConstructTag {};
-
-  ExecSpace space;
-  ValueType* ptr;
-  size_t n;
-  std::string name;
-  bool default_exec_space;
-
-  template <class _ValueType = ValueType>
-  KOKKOS_INLINE_FUNCTION
-      std::enable_if_t<std::is_default_constructible<_ValueType>::value>
-      operator()(ConstructTag const&, const size_t i) const {
-    new (ptr + i) ValueType();
-  }
-
-  KOKKOS_INLINE_FUNCTION void operator()(DestroyTag const&,
-                                         const size_t i) const {
-    (ptr + i)->~ValueType();
-  }
-
-  ViewValueFunctor()                        = default;
-  ViewValueFunctor(const ViewValueFunctor&) = default;
-  ViewValueFunctor& operator=(const ViewValueFunctor&) = default;
-
-  ViewValueFunctor(ExecSpace const& arg_space, ValueType* const arg_ptr,
-                   size_t const arg_n, std::string arg_name)
-      : space(arg_space),
-        ptr(arg_ptr),
-        n(arg_n),
-        name(std::move(arg_name)),
-        default_exec_space(false) {
-    functor_instantiate_workaround();
-  }
-
-  ViewValueFunctor(ValueType* const arg_ptr, size_t const arg_n,
-                   std::string arg_name)
-      : space(ExecSpace{}),
-        ptr(arg_ptr),
-        n(arg_n),
-        name(std::move(arg_name)),
-        default_exec_space(true) {
-    functor_instantiate_workaround();
-  }
-
-  template <typename Dummy = ValueType>
-  std::enable_if_t<std::is_trivial<Dummy>::value &&
-                   std::is_trivially_copy_assignable<ValueType>::value>
-  construct_dispatch() {
-    ValueType value{};
-// On A64FX memset seems to do the wrong thing with regards to first touch
-// leading to the significant performance issues
-#ifndef KOKKOS_ARCH_A64FX
-    if (Impl::is_zero_byte(value)) {
-      uint64_t kpID = 0;
-      if (Kokkos::Profiling::profileLibraryLoaded()) {
-        // We are not really using parallel_for here but using beginParallelFor
-        // instead of begin_parallel_for (and adding "via memset") is the best
-        // we can do to indicate that this is not supposed to be tunable (and
-        // doesn't really execute a parallel_for).
-        Kokkos::Profiling::beginParallelFor(
-            "Kokkos::View::initialization [" + name + "] via memset",
-            Kokkos::Profiling::Experimental::device_id(space), &kpID);
-      }
-      (void)ZeroMemset(
-          space, Kokkos::View<ValueType*, typename DeviceType::memory_space,
-                              Kokkos::MemoryTraits<Kokkos::Unmanaged>>(ptr, n));
-
-      if (Kokkos::Profiling::profileLibraryLoaded()) {
-        Kokkos::Profiling::endParallelFor(kpID);
-      }
-      if (default_exec_space)
-        space.fence("Kokkos::Impl::ViewValueFunctor: View init/destroy fence");
-    } else {
-#endif
-      parallel_for_implementation<ConstructTag>();
-#ifndef KOKKOS_ARCH_A64FX
-    }
-#endif
-  }
-
-  template <typename Dummy = ValueType>
-  std::enable_if_t<!(std::is_trivial<Dummy>::value &&
-                     std::is_trivially_copy_assignable<ValueType>::value)>
-  construct_dispatch() {
-    parallel_for_implementation<ConstructTag>();
-  }
-
-  template <typename Tag>
-  void parallel_for_implementation() {
-    using PolicyType =
-        Kokkos::RangePolicy<ExecSpace, Kokkos::IndexType<int64_t>, Tag>;
-    PolicyType policy(space, 0, n);
-    uint64_t kpID = 0;
-    if (Kokkos::Profiling::profileLibraryLoaded()) {
-      const std::string functor_name =
-          (std::is_same_v<Tag, DestroyTag>
-               ? "Kokkos::View::destruction [" + name + "]"
-               : "Kokkos::View::initialization [" + name + "]");
-      Kokkos::Profiling::beginParallelFor(
-          functor_name, Kokkos::Profiling::Experimental::device_id(space),
-          &kpID);
-    }
-
-#ifdef KOKKOS_ENABLE_CUDA
-    if (std::is_same<ExecSpace, Kokkos::Cuda>::value) {
-      Kokkos::Impl::cuda_prefetch_pointer(space, ptr, sizeof(ValueType) * n,
-                                          true);
-    }
-#endif
-    const Kokkos::Impl::ParallelFor<ViewValueFunctor, PolicyType> closure(
-        *this, policy);
-    closure.execute();
-    if (default_exec_space || std::is_same_v<Tag, DestroyTag>)
-      space.fence("Kokkos::Impl::ViewValueFunctor: View init/destroy fence");
-    if (Kokkos::Profiling::profileLibraryLoaded()) {
-      Kokkos::Profiling::endParallelFor(kpID);
-    }
-  }
-
-  void construct_shared_allocation() { construct_dispatch(); }
-
-  void destroy_shared_allocation() {
-    parallel_for_implementation<DestroyTag>();
-  }
-
-  // This function is to ensure that the functor with DestroyTag is instantiated
-  // This is a workaround to avoid "cudaErrorInvalidDeviceFunction" error later
-  // when the function is queried with cudaFuncGetAttributes
-  void functor_instantiate_workaround() {
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
-    defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENMPTARGET)
-    if (false) {
-      parallel_for_implementation<DestroyTag>();
-    }
-#endif
-  }
-};
-
-template <class DeviceType, class ValueType>
-struct ViewValueFunctor<DeviceType, ValueType, true /* is_scalar */> {
-  using ExecSpace  = typename DeviceType::execution_space;
-  using PolicyType = Kokkos::RangePolicy<ExecSpace, Kokkos::IndexType<int64_t>>;
-
-  ExecSpace space;
-  ValueType* ptr;
-  size_t n;
-  std::string name;
-  bool default_exec_space;
-
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const size_t i) const { ptr[i] = ValueType(); }
-
-  ViewValueFunctor()                        = default;
-  ViewValueFunctor(const ViewValueFunctor&) = default;
-  ViewValueFunctor& operator=(const ViewValueFunctor&) = default;
-
-  ViewValueFunctor(ExecSpace const& arg_space, ValueType* const arg_ptr,
-                   size_t const arg_n, std::string arg_name)
-      : space(arg_space),
-        ptr(arg_ptr),
-        n(arg_n),
-        name(std::move(arg_name)),
-        default_exec_space(false) {}
-
-  ViewValueFunctor(ValueType* const arg_ptr, size_t const arg_n,
-                   std::string arg_name)
-      : space(ExecSpace{}),
-        ptr(arg_ptr),
-        n(arg_n),
-        name(std::move(arg_name)),
-        default_exec_space(true) {}
-
-  template <typename Dummy = ValueType>
-  std::enable_if_t<std::is_trivial<Dummy>::value &&
-                   std::is_trivially_copy_assignable<Dummy>::value>
-  construct_shared_allocation() {
-    // Shortcut for zero initialization
-// On A64FX memset seems to do the wrong thing with regards to first touch
-// leading to the significant performance issues
-#ifndef KOKKOS_ARCH_A64FX
-    ValueType value{};
-    if (Impl::is_zero_byte(value)) {
-      uint64_t kpID = 0;
-      if (Kokkos::Profiling::profileLibraryLoaded()) {
-        // We are not really using parallel_for here but using beginParallelFor
-        // instead of begin_parallel_for (and adding "via memset") is the best
-        // we can do to indicate that this is not supposed to be tunable (and
-        // doesn't really execute a parallel_for).
-        Kokkos::Profiling::beginParallelFor(
-            "Kokkos::View::initialization [" + name + "] via memset",
-            Kokkos::Profiling::Experimental::device_id(space), &kpID);
-      }
-
-      (void)ZeroMemset(
-          space, Kokkos::View<ValueType*, typename DeviceType::memory_space,
-                              Kokkos::MemoryTraits<Kokkos::Unmanaged>>(ptr, n));
-
-      if (Kokkos::Profiling::profileLibraryLoaded()) {
-        Kokkos::Profiling::endParallelFor(kpID);
-      }
-      if (default_exec_space)
-        space.fence("Kokkos::Impl::ViewValueFunctor: View init/destroy fence");
-    } else {
-#endif
-      parallel_for_implementation();
-#ifndef KOKKOS_ARCH_A64FX
-    }
-#endif
-  }
-
-  template <typename Dummy = ValueType>
-  std::enable_if_t<!(std::is_trivial<Dummy>::value &&
-                     std::is_trivially_copy_assignable<Dummy>::value)>
-  construct_shared_allocation() {
-    parallel_for_implementation();
-  }
-
-  void parallel_for_implementation() {
-    PolicyType policy(0, n);
-    uint64_t kpID = 0;
-    if (Kokkos::Profiling::profileLibraryLoaded()) {
-      Kokkos::Profiling::beginParallelFor(
-          "Kokkos::View::initialization [" + name + "]",
-          Kokkos::Profiling::Experimental::device_id(space), &kpID);
-    }
-#ifdef KOKKOS_ENABLE_CUDA
-    if (std::is_same<ExecSpace, Kokkos::Cuda>::value) {
-      Kokkos::Impl::cuda_prefetch_pointer(space, ptr, sizeof(ValueType) * n,
-                                          true);
-    }
-#endif
-    const Kokkos::Impl::ParallelFor<ViewValueFunctor, PolicyType> closure(
-        *this, PolicyType(0, n));
-    closure.execute();
-    if (default_exec_space)
-      space.fence(
-          "Kokkos::Impl::ViewValueFunctor: Fence after setting values in "
-          "view");
-    if (Kokkos::Profiling::profileLibraryLoaded()) {
-      Kokkos::Profiling::endParallelFor(kpID);
-    }
-  }
-
-  void destroy_shared_allocation() {}
-};
-
 //----------------------------------------------------------------------------
 /** \brief  View mapping for non-specialized data type and standard layout */
 template <class Traits>
 class ViewMapping<
-    Traits,
-    std::enable_if_t<(
-        std::is_void<typename Traits::specialize>::value &&
-        ViewOffset<typename Traits::dimension, typename Traits::array_layout,
-                   void>::is_mapping_plugin::value)>> {
+    Traits, std::enable_if_t<(std::is_void_v<typename Traits::specialize> &&
+                              ViewOffset<typename Traits::dimension,
+                                         typename Traits::array_layout,
+                                         void>::is_mapping_plugin::value)>> {
  public:
   using offset_type = ViewOffset<typename Traits::dimension,
                                  typename Traits::array_layout, void>;
@@ -2814,9 +2627,22 @@ class ViewMapping<
     return m_impl_offset.stride_7();
   }
 
+  // Fill the target unbounded array s with the stride and the total spanned
+  // size. This method differs from stride_fill() in that it writes the total
+  // spanned size to the last index of the array. Preconditions: s must be an
+  // array of dimension_type::rank + 1 elements
   template <typename iType>
   KOKKOS_INLINE_FUNCTION void stride(iType* const s) const {
     m_impl_offset.stride(s);
+  }
+
+  // Fill the target unbounded array s with the stride.
+  // This method differs from stride() in that it does not write the total
+  // length to the last index of the array. Preconditions: s must be an array of
+  // dimension_type::rank elements
+  template <typename iType>
+  KOKKOS_INLINE_FUNCTION iType stride_fill(iType* const s) const {
+    return m_impl_offset.stride_fill(s);
   }
 
   //----------------------------------------
@@ -2848,28 +2674,26 @@ class ViewMapping<
   reference_type reference() const { return m_impl_handle[0]; }
 
   template <typename I0>
-  KOKKOS_FORCEINLINE_FUNCTION
-      std::enable_if_t<(std::is_integral<I0>::value &&
-                        // if layout is neither stride nor irregular,
-                        // then just use the handle directly
-                        !(std::is_same<typename Traits::array_layout,
-                                       Kokkos::LayoutStride>::value ||
-                          !is_regular::value)),
-                       reference_type>
-      reference(const I0& i0) const {
+  KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
+      (std::is_integral_v<I0> &&
+       // if layout is neither stride nor irregular,
+       // then just use the handle directly
+       !(std::is_same_v<typename Traits::array_layout, Kokkos::LayoutStride> ||
+         !is_regular::value)),
+      reference_type>
+  reference(const I0& i0) const {
     return m_impl_handle[i0];
   }
 
   template <typename I0>
-  KOKKOS_FORCEINLINE_FUNCTION
-      std::enable_if_t<(std::is_integral<I0>::value &&
-                        // if the layout is strided or irregular, then
-                        // we have to use the offset
-                        (std::is_same<typename Traits::array_layout,
-                                      Kokkos::LayoutStride>::value ||
-                         !is_regular::value)),
-                       reference_type>
-      reference(const I0& i0) const {
+  KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
+      (std::is_integral_v<I0> &&
+       // if the layout is strided or irregular, then
+       // we have to use the offset
+       (std::is_same_v<typename Traits::array_layout, Kokkos::LayoutStride> ||
+        !is_regular::value)),
+      reference_type>
+  reference(const I0& i0) const {
     return m_impl_handle[m_impl_offset(i0)];
   }
 
@@ -2948,7 +2772,7 @@ class ViewMapping<
   KOKKOS_DEFAULTED_FUNCTION ViewMapping& operator=(const ViewMapping&) =
       default;
 
-  KOKKOS_DEFAULTED_FUNCTION ViewMapping(ViewMapping&&) = default;
+  KOKKOS_DEFAULTED_FUNCTION ViewMapping(ViewMapping&&)            = default;
   KOKKOS_DEFAULTED_FUNCTION ViewMapping& operator=(ViewMapping&&) = default;
 
   //----------------------------------------
@@ -2993,10 +2817,12 @@ class ViewMapping<
     using memory_space    = typename Traits::memory_space;
     static_assert(
         SpaceAccessibility<execution_space, memory_space>::accessible);
-    using value_type = typename Traits::value_type;
-    using functor_type =
-        ViewValueFunctor<Kokkos::Device<execution_space, memory_space>,
-                         value_type>;
+    using device_type  = Kokkos::Device<execution_space, memory_space>;
+    using value_type   = typename Traits::value_type;
+    using functor_type = std::conditional_t<
+        alloc_prop::sequential_host_init,
+        ViewValueFunctorSequentialHostInit<device_type, value_type>,
+        ViewValueFunctor<device_type, value_type>>;
     using record_type =
         Kokkos::Impl::SharedAllocationRecord<memory_space, functor_type>;
 
@@ -3060,29 +2886,34 @@ template <class DstTraits, class SrcTraits>
 class ViewMapping<
     DstTraits, SrcTraits,
     std::enable_if_t<(
-        !(std::is_same<typename SrcTraits::array_layout, LayoutStride>::
-              value) &&  // Added to have a new specialization for SrcType of
-                         // LayoutStride
+        !(std::is_same_v<typename SrcTraits::array_layout,
+                         LayoutStride>)&&  // Added to have a new
+                                           // specialization for
+                                           // SrcType of
+                                           // LayoutStride
         // default mappings
-        std::is_void<typename DstTraits::specialize>::value &&
-        std::is_void<typename SrcTraits::specialize>::value &&
+        std::is_void_v<typename DstTraits::specialize> &&
+        std::is_void_v<typename SrcTraits::specialize> &&
         (
             // same layout
-            std::is_same<typename DstTraits::array_layout,
-                         typename SrcTraits::array_layout>::value ||
+            std::is_same_v<typename DstTraits::array_layout,
+                           typename SrcTraits::array_layout> ||
             // known layout
-            ((std::is_same<typename DstTraits::array_layout,
-                           Kokkos::LayoutLeft>::value ||
-              std::is_same<typename DstTraits::array_layout,
-                           Kokkos::LayoutRight>::value ||
-              std::is_same<typename DstTraits::array_layout,
-                           Kokkos::LayoutStride>::value) &&
-             (std::is_same<typename SrcTraits::array_layout,
-                           Kokkos::LayoutLeft>::value ||
-              std::is_same<typename SrcTraits::array_layout,
-                           Kokkos::LayoutRight>::value ||
-              std::is_same<typename SrcTraits::array_layout,
-                           Kokkos::LayoutStride>::value))))>> {
+            ((std::is_same_v<typename DstTraits::array_layout,
+                             Kokkos::LayoutLeft> ||
+              std::is_same_v<typename DstTraits::array_layout,
+                             Kokkos::LayoutRight> ||
+              std::is_same_v<
+                  typename DstTraits::array_layout,
+                  Kokkos::LayoutStride>)&&(std::is_same_v<typename SrcTraits::
+                                                              array_layout,
+                                                          Kokkos::LayoutLeft> ||
+                                           std::is_same_v<
+                                               typename SrcTraits::array_layout,
+                                               Kokkos::LayoutRight> ||
+                                           std::is_same_v<
+                                               typename SrcTraits::array_layout,
+                                               Kokkos::LayoutStride>))))>> {
  private:
   enum {
     is_assignable_space = Kokkos::Impl::MemorySpaceAccess<
@@ -3092,10 +2923,10 @@ class ViewMapping<
 
   enum {
     is_assignable_value_type =
-        std::is_same<typename DstTraits::value_type,
-                     typename SrcTraits::value_type>::value ||
-        std::is_same<typename DstTraits::value_type,
-                     typename SrcTraits::const_value_type>::value
+        std::is_same_v<typename DstTraits::value_type,
+                       typename SrcTraits::value_type> ||
+        std::is_same_v<typename DstTraits::value_type,
+                       typename SrcTraits::const_value_type>
   };
 
   enum {
@@ -3105,12 +2936,12 @@ class ViewMapping<
   };
 
   enum {
-    is_assignable_layout =
-        std::is_same<typename DstTraits::array_layout,
-                     typename SrcTraits::array_layout>::value ||
-        std::is_same<typename DstTraits::array_layout,
-                     Kokkos::LayoutStride>::value ||
-        (DstTraits::dimension::rank == 0) || (DstTraits::dimension::rank == 1)
+    is_assignable_layout = std::is_same_v<typename DstTraits::array_layout,
+                                          typename SrcTraits::array_layout> ||
+                           std::is_same_v<typename DstTraits::array_layout,
+                                          Kokkos::LayoutStride> ||
+                           (DstTraits::dimension::rank == 0) ||
+                           (DstTraits::dimension::rank == 1)
   };
 
  public:
@@ -3198,22 +3029,21 @@ class ViewMapping<
 template <class DstTraits, class SrcTraits>
 class ViewMapping<
     DstTraits, SrcTraits,
-    std::enable_if_t<(
-        std::is_same<typename SrcTraits::array_layout,
-                     Kokkos::LayoutStride>::value &&
-        std::is_void<typename DstTraits::specialize>::value &&
-        std::is_void<typename SrcTraits::specialize>::value &&
-        (
-            // same layout
-            std::is_same<typename DstTraits::array_layout,
-                         typename SrcTraits::array_layout>::value ||
-            // known layout
-            (std::is_same<typename DstTraits::array_layout,
-                          Kokkos::LayoutLeft>::value ||
-             std::is_same<typename DstTraits::array_layout,
-                          Kokkos::LayoutRight>::value ||
-             std::is_same<typename DstTraits::array_layout,
-                          Kokkos::LayoutStride>::value)))>> {
+    std::enable_if_t<(std::is_same_v<typename SrcTraits::array_layout,
+                                     Kokkos::LayoutStride> &&
+                      std::is_void_v<typename DstTraits::specialize> &&
+                      std::is_void_v<typename SrcTraits::specialize> &&
+                      (
+                          // same layout
+                          std::is_same_v<typename DstTraits::array_layout,
+                                         typename SrcTraits::array_layout> ||
+                          // known layout
+                          (std::is_same_v<typename DstTraits::array_layout,
+                                          Kokkos::LayoutLeft> ||
+                           std::is_same_v<typename DstTraits::array_layout,
+                                          Kokkos::LayoutRight> ||
+                           std::is_same_v<typename DstTraits::array_layout,
+                                          Kokkos::LayoutStride>)))>> {
  private:
   enum {
     is_assignable_space = Kokkos::Impl::MemorySpaceAccess<
@@ -3223,10 +3053,10 @@ class ViewMapping<
 
   enum {
     is_assignable_value_type =
-        std::is_same<typename DstTraits::value_type,
-                     typename SrcTraits::value_type>::value ||
-        std::is_same<typename DstTraits::value_type,
-                     typename SrcTraits::const_value_type>::value
+        std::is_same_v<typename DstTraits::value_type,
+                       typename SrcTraits::value_type> ||
+        std::is_same_v<typename DstTraits::value_type,
+                       typename SrcTraits::const_value_type>
   };
 
   enum {
@@ -3257,8 +3087,7 @@ class ViewMapping<
     bool assignable = true;
     src.stride(strides);
     size_t exp_stride = 1;
-    if (std::is_same<typename DstTraits::array_layout,
-                     Kokkos::LayoutLeft>::value) {
+    if (std::is_same_v<typename DstTraits::array_layout, Kokkos::LayoutLeft>) {
       for (int i = 0; i < (int)src.Rank; i++) {
         if (i > 0) exp_stride *= src.extent(i - 1);
         if (strides[i] != exp_stride) {
@@ -3266,8 +3095,8 @@ class ViewMapping<
           break;
         }
       }
-    } else if (std::is_same<typename DstTraits::array_layout,
-                            Kokkos::LayoutRight>::value) {
+    } else if (std::is_same_v<typename DstTraits::array_layout,
+                              Kokkos::LayoutRight>) {
       for (int i = 0; i < (int)src.Rank; i++) {
         if (i > 0) exp_stride *= src.extent(src.Rank - i);
         if (strides[src.Rank - 1 - i] != exp_stride) {
@@ -3360,16 +3189,16 @@ struct SubViewDataTypeImpl<void, ValueType, Kokkos::Experimental::Extents<>> {
 };
 
 /* for integral args, subview doesn't have that dimension */
-template <class ValueType, ptrdiff_t Ext, ptrdiff_t... Exts, class Integral,
+template <class ValueType, size_t Ext, size_t... Exts, class Integral,
           class... Args>
 struct SubViewDataTypeImpl<
-    std::enable_if_t<std::is_integral<std::decay_t<Integral>>::value>,
-    ValueType, Kokkos::Experimental::Extents<Ext, Exts...>, Integral, Args...>
+    std::enable_if_t<std::is_integral_v<std::decay_t<Integral>>>, ValueType,
+    Kokkos::Experimental::Extents<Ext, Exts...>, Integral, Args...>
     : SubViewDataTypeImpl<void, ValueType,
                           Kokkos::Experimental::Extents<Exts...>, Args...> {};
 
 /* for ALL slice, subview has the same dimension */
-template <class ValueType, ptrdiff_t Ext, ptrdiff_t... Exts, class... Args>
+template <class ValueType, size_t Ext, size_t... Exts, class... Args>
 struct SubViewDataTypeImpl<void, ValueType,
                            Kokkos::Experimental::Extents<Ext, Exts...>,
                            Kokkos::ALL_t, Args...>
@@ -3380,7 +3209,7 @@ struct SubViewDataTypeImpl<void, ValueType,
  * static sizes */
 /* Since we don't allow interleaving of dynamic and static extents, make all of
  * the dimensions to the left dynamic  */
-template <class ValueType, ptrdiff_t Ext, ptrdiff_t... Exts, class PairLike,
+template <class ValueType, size_t Ext, size_t... Exts, class PairLike,
           class... Args>
 struct SubViewDataTypeImpl<
     std::enable_if_t<is_pair_like<PairLike>::value>, ValueType,
@@ -3396,13 +3225,13 @@ struct SubViewDataType : SubViewDataTypeImpl<void, ValueType, Exts, Args...> {};
 
 template <class SrcTraits, class... Args>
 class ViewMapping<
-    std::enable_if_t<(std::is_void<typename SrcTraits::specialize>::value &&
-                      (std::is_same<typename SrcTraits::array_layout,
-                                    Kokkos::LayoutLeft>::value ||
-                       std::is_same<typename SrcTraits::array_layout,
-                                    Kokkos::LayoutRight>::value ||
-                       std::is_same<typename SrcTraits::array_layout,
-                                    Kokkos::LayoutStride>::value))>,
+    std::enable_if_t<(
+        std::is_void_v<typename SrcTraits::specialize> &&
+        (std::is_same_v<typename SrcTraits::array_layout, Kokkos::LayoutLeft> ||
+         std::is_same_v<typename SrcTraits::array_layout,
+                        Kokkos::LayoutRight> ||
+         std::is_same_v<typename SrcTraits::array_layout,
+                        Kokkos::LayoutStride>))>,
     SrcTraits, Args...> {
  private:
   static_assert(SrcTraits::rank == sizeof...(Args),
@@ -3458,14 +3287,14 @@ class ViewMapping<
        // OutputRank 1 or 2, InputLayout Left, Interval 0
        // because single stride one or second index has a stride.
        (rank <= 2 && R0 &&
-        std::is_same<typename SrcTraits::array_layout,
-                     Kokkos::LayoutLeft>::value)  // replace with input rank
+        std::is_same_v<typename SrcTraits::array_layout,
+                       Kokkos::LayoutLeft>)  // replace with input rank
        ||
        // OutputRank 1 or 2, InputLayout Right, Interval [InputRank-1]
        // because single stride one or second index has a stride.
        (rank <= 2 && R0_rev &&
-        std::is_same<typename SrcTraits::array_layout,
-                     Kokkos::LayoutRight>::value)  // replace input rank
+        std::is_same_v<typename SrcTraits::array_layout,
+                       Kokkos::LayoutRight>)  // replace input rank
        ),
       typename SrcTraits::array_layout, Kokkos::LayoutStride>;
 

@@ -127,7 +127,7 @@ struct TaskPolicyWithScheduler {
 
   KOKKOS_INLINE_FUNCTION
   static constexpr bool has_predecessor() noexcept {
-    return !std::is_same<PredecessorFuture, std::nullptr_t>::value;
+    return !std::is_same_v<PredecessorFuture, std::nullptr_t>;
   }
 
   KOKKOS_INLINE_FUNCTION

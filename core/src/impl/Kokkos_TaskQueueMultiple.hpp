@@ -178,11 +178,11 @@ class LeagueQueueCollection {
   int m_size = static_cast<int>(KOKKOS_INVALID_INDEX);
 
  public:
-  LeagueQueueCollection()                             = delete;
-  LeagueQueueCollection(LeagueQueueCollection const&) = delete;
-  LeagueQueueCollection(LeagueQueueCollection&&)      = delete;
+  LeagueQueueCollection()                                        = delete;
+  LeagueQueueCollection(LeagueQueueCollection const&)            = delete;
+  LeagueQueueCollection(LeagueQueueCollection&&)                 = delete;
   LeagueQueueCollection& operator=(LeagueQueueCollection const&) = delete;
-  LeagueQueueCollection& operator=(LeagueQueueCollection&&) = delete;
+  LeagueQueueCollection& operator=(LeagueQueueCollection&&)      = delete;
 
   ~LeagueQueueCollection() {
     // destroy only the initialized queues that we own

@@ -65,14 +65,18 @@ inline void host_check_all_reductions(const DataType (&args)[n]) {
 
 template <typename Abi, typename DataType>
 inline void host_check_reductions() {
-  constexpr size_t n = 11;
+  if constexpr (is_type_v<Kokkos::Experimental::simd<DataType, Abi>>) {
+    constexpr size_t n = 16;
 
-  if constexpr (std::is_signed_v<DataType>) {
-    DataType const args[n] = {1, 2, -1, 10, 0, 1, -2, 10, 0, 1, -2};
-    host_check_all_reductions<Abi>(args);
-  } else {
-    DataType const args[n] = {1, 2, 1, 10, 0, 1, 2, 10, 0, 1, 2};
-    host_check_all_reductions<Abi>(args);
+    if constexpr (std::is_signed_v<DataType>) {
+      DataType const args[n] = {1, 2, -1, 10,  0, 1,  -2,  10,
+                                0, 1, -2, -15, 5, 17, -22, 20};
+      host_check_all_reductions<Abi>(args);
+    } else {
+      DataType const args[n] = {1, 2, 1, 10, 0, 1,  2,  10,
+                                0, 1, 2, 15, 5, 17, 22, 20};
+      host_check_all_reductions<Abi>(args);
+    }
   }
 }
 
@@ -135,14 +139,18 @@ KOKKOS_INLINE_FUNCTION void device_check_all_reductions(
 
 template <typename Abi, typename DataType>
 KOKKOS_INLINE_FUNCTION void device_check_reductions() {
-  constexpr size_t n = 11;
+  if constexpr (is_type_v<Kokkos::Experimental::simd<DataType, Abi>>) {
+    constexpr size_t n = 16;
 
-  if constexpr (std::is_signed_v<DataType>) {
-    DataType const args[n] = {1, 2, -1, 10, 0, 1, -2, 10, 0, 1, -2};
-    device_check_all_reductions<Abi>(args);
-  } else {
-    DataType const args[n] = {1, 2, 1, 10, 0, 1, 2, 10, 0, 1, 2};
-    device_check_all_reductions<Abi>(args);
+    if constexpr (std::is_signed_v<DataType>) {
+      DataType const args[n] = {1, 2, -1, 10,  0, 1,  -2,  10,
+                                0, 1, -2, -15, 5, 17, -22, 20};
+      device_check_all_reductions<Abi>(args);
+    } else {
+      DataType const args[n] = {1, 2, 1, 10, 0, 1,  2,  10,
+                                0, 1, 2, 15, 5, 17, 22, 20};
+      device_check_all_reductions<Abi>(args);
+    }
   }
 }
 
@@ -173,6 +181,13 @@ TEST(simd, host_reductions) {
 
 TEST(simd, device_reductions) {
 #ifdef KOKKOS_ENABLE_OPENMPTARGET  // FIXME_OPENMPTARGET
+  GTEST_SKIP()
+      << "skipping because of a non-deterministic failure reporting: "
+         "Failure to synchronize stream (nil): Error in "
+         "cuStreamSynchronize: an illegal memory access was encountered";
+#endif
+#if defined(KOKKOS_ENABLE_OPENACC) && \
+    defined(KOKKOS_COMPILER_CLANG)  // FIXME_CLACC
   GTEST_SKIP()
       << "skipping because of a non-deterministic failure reporting: "
          "Failure to synchronize stream (nil): Error in "

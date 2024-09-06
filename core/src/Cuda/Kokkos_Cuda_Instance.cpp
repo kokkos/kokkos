@@ -26,10 +26,10 @@
 
 #include <Kokkos_Core.hpp>
 
-//#include <Cuda/Kokkos_Cuda_Error.hpp>
-//#include <Cuda/Kokkos_Cuda_BlockSize_Deduction.hpp>
-//#include <Cuda/Kokkos_Cuda_Instance.hpp>
-//#include <Cuda/Kokkos_Cuda_UniqueToken.hpp>
+// #include <Cuda/Kokkos_Cuda_Error.hpp>
+// #include <Cuda/Kokkos_Cuda_BlockSize_Deduction.hpp>
+// #include <Cuda/Kokkos_Cuda_Instance.hpp>
+// #include <Cuda/Kokkos_Cuda_UniqueToken.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_Tools.hpp>
 #include <impl/Kokkos_CheckedIntegerOps.hpp>
@@ -607,6 +607,22 @@ Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
 
   //----------------------------------
 
+#ifdef KOKKOS_ENABLE_IMPL_CUDA_UNIFIED_MEMORY
+  // Check if unified memory is available
+  int cuda_result;
+  cudaDeviceGetAttribute(&cuda_result, cudaDevAttrConcurrentManagedAccess,
+                         cuda_device_id);
+  if (cuda_result == 0) {
+    Kokkos::abort(
+        "Kokkos::Cuda::initialize ERROR: Unified memory is not available on "
+        "this device\n"
+        "Please recompile Kokkos with "
+        "-DKokkos_ENABLE_IMPL_CUDA_UNIFIED_MEMORY=OFF\n");
+  }
+#endif
+
+  //----------------------------------
+
   cudaStream_t singleton_stream;
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(cuda_device_id));
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamCreate(&singleton_stream));
@@ -693,17 +709,15 @@ void Cuda::print_configuration(std::ostream &os, bool /*verbose*/) const {
 #else
   os << "no\n";
 #endif
-  os << "  KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA: ";
-#ifdef KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
-  os << "yes\n";
-#else
-  os << "no\n";
-#endif
   os << "  KOKKOS_ENABLE_IMPL_CUDA_MALLOC_ASYNC: ";
 #ifdef KOKKOS_ENABLE_IMPL_CUDA_MALLOC_ASYNC
   os << "yes\n";
 #else
   os << "no\n";
+#endif
+#ifdef KOKKOS_ENABLE_IMPL_CUDA_UNIFIED_MEMORY
+  os << "  KOKKOS_ENABLE_IMPL_CUDA_UNIFIED_MEMORY: ";
+  os << "yes\n";
 #endif
 
   os << "\nCuda Runtime Configuration:\n";
@@ -736,6 +750,14 @@ namespace Impl {
 
 int g_cuda_space_factory_initialized =
     initialize_space_factory<Cuda>("150_Cuda");
+
+int CudaInternal::m_cudaArch = -1;
+cudaDeviceProp CudaInternal::m_deviceProp;
+std::set<int> CudaInternal::cuda_devices = {};
+std::map<int, unsigned long *> CudaInternal::constantMemHostStagingPerDevice =
+    {};
+std::map<int, cudaEvent_t> CudaInternal::constantMemReusablePerDevice = {};
+std::map<int, std::mutex> CudaInternal::constantMemMutexPerDevice     = {};
 
 }  // namespace Impl
 

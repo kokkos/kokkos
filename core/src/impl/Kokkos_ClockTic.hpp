@@ -56,7 +56,8 @@ KOKKOS_IMPL_DEVICE_FUNCTION inline uint64_t clock_tic_device() noexcept {
   // Return value of 64-bit hi-res clock register.
   return clock64();
 
-#elif defined(KOKKOS_ENABLE_SYCL) &&                       \
+// FIXME_SYCL We can only return something useful for Intel GPUs and with RDC
+#elif defined(KOKKOS_ENABLE_SYCL) &&                            \
     defined(KOKKOS_ENABLE_SYCL_RELOCATABLE_DEVICE_CODE) && \
     defined(KOKKOS_ARCH_INTEL_GPU) && defined(__SYCL_DEVICE_ONLY__)
 

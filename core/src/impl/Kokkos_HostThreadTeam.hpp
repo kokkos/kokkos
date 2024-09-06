@@ -106,7 +106,11 @@ class HostThreadTeamData {
 
  public:
   inline bool team_rendezvous() const noexcept {
-    int* ptr = reinterpret_cast<int*>(m_team_scratch + m_team_rendezvous);
+    // FIXME_OPENMP The tasking framework creates an instance with
+    // m_team_scratch == nullptr and m_team_rendezvous != 0:
+    int* ptr = m_team_scratch == nullptr
+                   ? nullptr
+                   : reinterpret_cast<int*>(m_team_scratch + m_team_rendezvous);
     HostBarrier::split_arrive(ptr, m_team_size, m_team_rendezvous_step);
     if (m_team_rank != 0) {
       HostBarrier::wait(ptr, m_team_size, m_team_rendezvous_step);
@@ -130,9 +134,13 @@ class HostThreadTeamData {
   }
 
   inline void team_rendezvous_release() const noexcept {
+    // FIXME_OPENMP The tasking framework creates an instance with
+    // m_team_scratch == nullptr and m_team_rendezvous != 0:
     HostBarrier::split_release(
-        reinterpret_cast<int*>(m_team_scratch + m_team_rendezvous), m_team_size,
-        m_team_rendezvous_step);
+        (m_team_scratch == nullptr)
+            ? nullptr
+            : reinterpret_cast<int*>(m_team_scratch + m_team_rendezvous),
+        m_team_size, m_team_rendezvous_step);
   }
 
   inline int pool_rendezvous() const noexcept {
@@ -271,6 +279,9 @@ class HostThreadTeamData {
   }
 
   int64_t* team_shared() const noexcept {
+    // FIXME_OPENMP The tasking framework creates an instance with
+    // m_team_scratch == nullptr and m_team_shared != 0
+    if (m_team_scratch == nullptr) return nullptr;
     return m_team_scratch + m_team_shared;
   }
 
@@ -400,8 +411,12 @@ class HostThreadTeamMember {
   int const m_league_size;
 
  public:
+  // FIXME_OPENMP The tasking framework creates an instance with
+  // m_team_scratch == nullptr and m_team_shared != 0:
   constexpr HostThreadTeamMember(HostThreadTeamData& arg_data) noexcept
-      : m_scratch(arg_data.team_shared(), arg_data.team_shared_bytes()),
+      : m_scratch(arg_data.team_shared(), (arg_data.team_shared() == nullptr)
+                                              ? 0
+                                              : arg_data.team_shared_bytes()),
         m_data(arg_data),
         m_league_rank(arg_data.m_league_rank),
         m_league_size(arg_data.m_league_size) {}
@@ -415,11 +430,11 @@ class HostThreadTeamMember {
         m_league_rank(arg_league_rank),
         m_league_size(arg_league_size) {}
 
-  ~HostThreadTeamMember()                           = default;
-  HostThreadTeamMember()                            = delete;
-  HostThreadTeamMember(HostThreadTeamMember&&)      = default;
-  HostThreadTeamMember(HostThreadTeamMember const&) = default;
-  HostThreadTeamMember& operator=(HostThreadTeamMember&&) = default;
+  ~HostThreadTeamMember()                                      = default;
+  HostThreadTeamMember()                                       = delete;
+  HostThreadTeamMember(HostThreadTeamMember&&)                 = default;
+  HostThreadTeamMember(HostThreadTeamMember const&)            = default;
+  HostThreadTeamMember& operator=(HostThreadTeamMember&&)      = default;
   HostThreadTeamMember& operator=(HostThreadTeamMember const&) = default;
 
   //----------------------------------------
@@ -466,9 +481,8 @@ class HostThreadTeamMember {
   //--------------------------------------------------------------------------
 
   template <typename T>
-  KOKKOS_INLINE_FUNCTION void team_broadcast(T& value,
-                                             const int source_team_rank) const
-      noexcept {
+  KOKKOS_INLINE_FUNCTION void team_broadcast(
+      T& value, const int source_team_rank) const noexcept {
     KOKKOS_IF_ON_HOST((if (1 < m_data.m_team_size) {
       T* const shared_value = (T*)m_data.team_reduce();
 
@@ -498,9 +512,8 @@ class HostThreadTeamMember {
   //--------------------------------------------------------------------------
 
   template <class Closure, typename T>
-  KOKKOS_INLINE_FUNCTION void team_broadcast(Closure const& f, T& value,
-                                             const int source_team_rank) const
-      noexcept {
+  KOKKOS_INLINE_FUNCTION void team_broadcast(
+      Closure const& f, T& value, const int source_team_rank) const noexcept {
     KOKKOS_IF_ON_HOST((
         T* const shared_value = (T*)m_data.team_reduce();
 
@@ -874,7 +887,7 @@ KOKKOS_INLINE_FUNCTION
   using ClosureValueType = typename Kokkos::Impl::FunctorAnalysis<
       Kokkos::Impl::FunctorPatternInterface::SCAN, void, Closure,
       void>::value_type;
-  static_assert(std::is_same<ClosureValueType, ValueType>::value,
+  static_assert(std::is_same_v<ClosureValueType, ValueType>,
                 "Non-matching value types of closure and return type");
 
   ValueType accum = ValueType();
@@ -926,7 +939,7 @@ KOKKOS_INLINE_FUNCTION
   using ClosureValueType = typename Kokkos::Impl::FunctorAnalysis<
       Kokkos::Impl::FunctorPatternInterface::SCAN, void, ClosureType,
       void>::value_type;
-  static_assert(std::is_same<ClosureValueType, ValueType>::value,
+  static_assert(std::is_same_v<ClosureValueType, ValueType>,
                 "Non-matching value types of closure and return type");
 
   ValueType scan_val = ValueType();

@@ -22,6 +22,7 @@
 #ifdef KOKKOS_ENABLE_SYCL
 
 #include <utility>
+#include <SYCL/Kokkos_SYCL_WorkgroupReduction.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -33,7 +34,7 @@ namespace Impl {
  */
 class SYCLTeamMember {
  public:
-  using execution_space      = Kokkos::Experimental::SYCL;
+  using execution_space      = Kokkos::SYCL;
   using scratch_memory_space = execution_space::scratch_memory_space;
   using team_handle          = SYCLTeamMember;
 
@@ -136,7 +137,8 @@ class SYCLTeamMember {
 #if defined(KOKKOS_ARCH_INTEL_GPU) || defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
     auto shuffle_combine = [&](int shift) {
       if (vector_range * shift < sub_group_range) {
-        const value_type tmp = sg.shuffle_down(value, vector_range * shift);
+        const value_type tmp = Kokkos::Impl::SYCLReduction::shift_group_left(
+            sg, value, vector_range * shift);
         if (team_rank_ + shift < team_size_) reducer.join(value, tmp);
       }
     };
@@ -149,11 +151,12 @@ class SYCLTeamMember {
 #else
     for (unsigned int shift = 1; vector_range * shift < sub_group_range;
          shift <<= 1) {
-      const value_type tmp = sg.shuffle_down(value, vector_range * shift);
+      auto tmp = Kokkos::Impl::SYCLReduction::shift_group_left(
+          sg, value, vector_range * shift);
       if (team_rank_ + shift < team_size_) reducer.join(value, tmp);
     }
 #endif
-    value = sg.shuffle(value, 0);
+    value = Kokkos::Impl::SYCLReduction::select_from_group(sg, value, 0);
 
     const int n_subgroups = sg.get_group_range()[0];
     if (n_subgroups == 1) {
@@ -220,7 +223,8 @@ class SYCLTeamMember {
     // First combine the values in the same subgroup
     for (unsigned int stride = 1; vector_range * stride < sub_group_range;
          stride <<= 1) {
-      auto tmp = sg.shuffle_up(value, vector_range * stride);
+      auto tmp = Kokkos::Impl::SYCLReduction::shift_group_right(
+          sg, value, vector_range * stride);
       if (id_in_sg >= vector_range * stride) value += tmp;
     }
 
@@ -246,7 +250,8 @@ class SYCLTeamMember {
               sub_group_range, n_active_subgroups - round * sub_group_range);
           auto local_value = base_data[idx];
           for (unsigned int stride = 1; stride < upper_bound; stride <<= 1) {
-            auto tmp = sg.shuffle_up(local_value, stride);
+            auto tmp = Kokkos::Impl::SYCLReduction::shift_group_right(
+                sg, local_value, stride);
             if (id_in_sg >= stride) {
               if (idx < n_active_subgroups)
                 local_value += tmp;
@@ -264,7 +269,8 @@ class SYCLTeamMember {
     }
     auto total = base_data[n_active_subgroups - 1];
 
-    const auto update = sg.shuffle_up(value, vector_range);
+    const auto update =
+        Kokkos::Impl::SYCLReduction::shift_group_right(sg, value, vector_range);
     Type intermediate = (group_id > 0 ? base_data[group_id - 1] : 0) +
                         (id_in_sg >= vector_range ? update : 0);
 
@@ -317,7 +323,7 @@ class SYCLTeamMember {
     typename ReducerType::value_type tmp2 = tmp;
 
     for (int i = grange1; (i >>= 1);) {
-      tmp2 = sg.shuffle_down(tmp, i);
+      tmp2 = Kokkos::Impl::SYCLReduction::shift_group_left(sg, tmp, i);
       if (static_cast<int>(tidx1) < i) {
         reducer.join(tmp, tmp2);
       }
@@ -328,8 +334,9 @@ class SYCLTeamMember {
     // because floating point summation is not associative
     // and thus different threads could have different results.
 
-    tmp2  = sg.shuffle(tmp, (sg.get_local_id() / grange1) * grange1);
-    value = tmp2;
+    tmp2 = Kokkos::Impl::SYCLReduction::select_from_group(
+        sg, tmp, (sg.get_local_id() / grange1) * grange1);
+    value               = tmp2;
     reducer.reference() = tmp2;
   }
 
@@ -836,7 +843,8 @@ parallel_scan(const Impl::ThreadVectorRangeBoundariesStruct<
     //  [t] += [t-4] if t >= 4
     //  ...
     for (int j = 1; j < static_cast<int>(grange1); j <<= 1) {
-      value_type tmp = sg.shuffle_up(val, j);
+      value_type tmp =
+          Kokkos::Impl::SYCLReduction::shift_group_right(sg, val, j);
       if (j <= static_cast<int>(tidx1)) {
         reducer.join(val, tmp);
       }
@@ -847,7 +855,8 @@ parallel_scan(const Impl::ThreadVectorRangeBoundariesStruct<
 
     // Update i's contribution into the val and add it to accum for next round
     if (i < loop_boundaries.end) closure(i, val, true);
-    accum = sg.shuffle(val, mask + vector_offset);
+    accum = Kokkos::Impl::SYCLReduction::select_from_group(
+        sg, val, mask + vector_offset);
   }
   reducer.reference() = accum;
 }
@@ -924,7 +933,8 @@ KOKKOS_INLINE_FUNCTION void single(
   const auto grange1          = item.get_local_range(1);
   const auto sg               = item.get_sub_group();
   if (item.get_local_id(1) == 0) lambda(val);
-  val = sg.shuffle(val, (sg.get_local_id() / grange1) * grange1);
+  val = Kokkos::Impl::SYCLReduction::select_from_group(
+      sg, val, (sg.get_local_id() / grange1) * grange1);
 }
 
 template <class FunctorType, class ValueType>

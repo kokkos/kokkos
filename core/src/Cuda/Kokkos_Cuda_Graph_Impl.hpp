@@ -51,7 +51,9 @@ struct GraphImpl<Kokkos::Cuda> {
 
   using node_details_t = GraphNodeBackendSpecificDetails<Kokkos::Cuda>;
 
-  void _instantiate_graph() {
+ public:
+  void instantiate() {
+    KOKKOS_EXPECTS(!m_graph_exec);
     constexpr size_t error_log_size = 256;
     cudaGraphNode_t error_node      = nullptr;
     char error_log[error_log_size];
@@ -60,10 +62,10 @@ struct GraphImpl<Kokkos::Cuda> {
              ->cuda_graph_instantiate_wrapper(&m_graph_exec, m_graph,
                                               &error_node, error_log,
                                               error_log_size)));
+    KOKKOS_ENSURES(m_graph_exec);
     // TODO @graphs print out errors
   }
 
- public:
   using root_node_impl_t =
       GraphNodeImpl<Kokkos::Cuda, Kokkos::Experimental::TypeErasedTag,
                     Kokkos::Experimental::TypeErasedTag>;
@@ -72,13 +74,13 @@ struct GraphImpl<Kokkos::Cuda> {
       GraphNodeImpl<Kokkos::Cuda, aggregate_kernel_impl_t,
                     Kokkos::Experimental::TypeErasedTag>;
 
-  // Not moveable or copyable; it spends its whole life as a shared_ptr in the
+  // Not movable or copyable; it spends its whole life as a shared_ptr in the
   // Graph object
-  GraphImpl()                 = delete;
-  GraphImpl(GraphImpl const&) = delete;
-  GraphImpl(GraphImpl&&)      = delete;
+  GraphImpl()                            = delete;
+  GraphImpl(GraphImpl const&)            = delete;
+  GraphImpl(GraphImpl&&)                 = delete;
   GraphImpl& operator=(GraphImpl const&) = delete;
-  GraphImpl& operator=(GraphImpl&&) = delete;
+  GraphImpl& operator=(GraphImpl&&)      = delete;
   ~GraphImpl() {
     // TODO @graphs we need to somehow indicate the need for a fence in the
     //              destructor of the GraphImpl object (so that we don't have to
@@ -115,12 +117,9 @@ struct GraphImpl<Kokkos::Cuda> {
 
   template <class NodeImpl>
   //  requires NodeImplPtr is a shared_ptr to specialization of GraphNodeImpl
-  //  Also requires that the kernel has the graph node tag in it's policy
+  //  Also requires that the kernel has the graph node tag in its policy
   void add_node(std::shared_ptr<NodeImpl> const& arg_node_ptr) {
-    static_assert(
-        NodeImpl::kernel_type::Policy::is_graph_kernel::value,
-        "Something has gone horribly wrong, but it's too complicated to "
-        "explain here.  Buy Daisy a coffee and she'll explain it to you.");
+    static_assert(NodeImpl::kernel_type::Policy::is_graph_kernel::value);
     KOKKOS_EXPECTS(bool(arg_node_ptr));
     // The Kernel launch from the execute() method has been shimmed to insert
     // the node into the graph
@@ -161,13 +160,13 @@ struct GraphImpl<Kokkos::Cuda> {
                                                    &cuda_node, 1)));
   }
 
-  void submit() {
+  void submit(const execution_space& exec) {
     if (!bool(m_graph_exec)) {
-      _instantiate_graph();
+      instantiate();
     }
     KOKKOS_IMPL_CUDA_SAFE_CALL(
-        (m_execution_space.impl_internal_space_instance()
-             ->cuda_graph_launch_wrapper(m_graph_exec)));
+        (exec.impl_internal_space_instance()->cuda_graph_launch_wrapper(
+            m_graph_exec)));
   }
 
   execution_space const& get_execution_space() const noexcept {

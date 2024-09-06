@@ -63,9 +63,14 @@ void check_distinctive([[maybe_unused]] ExecSpace exec1,
   }
 #endif
 #ifdef KOKKOS_ENABLE_SYCL
-  if constexpr (std::is_same_v<ExecSpace, Kokkos::Experimental::SYCL>) {
+  if constexpr (std::is_same_v<ExecSpace, Kokkos::SYCL>) {
     ASSERT_NE(*exec1.impl_internal_space_instance()->m_queue,
               *exec2.impl_internal_space_instance()->m_queue);
+  }
+#endif
+#ifdef KOKKOS_ENABLE_HPX
+  if constexpr (std::is_same_v<ExecSpace, Kokkos::Experimental::HPX>) {
+    ASSERT_NE(exec1.impl_instance_id(), exec2.impl_instance_id());
   }
 #endif
 }

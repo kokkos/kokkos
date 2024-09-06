@@ -76,13 +76,10 @@ namespace Kokkos::Impl {
 
 template <typename T>
 constexpr inline bool is_admissible_to_kokkos_sort_by_key =
-    ::Kokkos::is_view<T>::value&& T::rank() == 1 &&
-    (std::is_same<typename T::traits::array_layout,
-                  Kokkos::LayoutLeft>::value ||
-     std::is_same<typename T::traits::array_layout,
-                  Kokkos::LayoutRight>::value ||
-     std::is_same<typename T::traits::array_layout,
-                  Kokkos::LayoutStride>::value);
+    ::Kokkos::is_view<T>::value && T::rank() == 1 &&
+    (std::is_same_v<typename T::traits::array_layout, Kokkos::LayoutLeft> ||
+     std::is_same_v<typename T::traits::array_layout, Kokkos::LayoutRight> ||
+     std::is_same_v<typename T::traits::array_layout, Kokkos::LayoutStride>);
 
 template <class ViewType>
 KOKKOS_INLINE_FUNCTION constexpr void
@@ -144,7 +141,7 @@ void sort_by_key_rocthrust(
 
 #if defined(KOKKOS_ENABLE_ONEDPL)
 template <class Layout>
-inline constexpr bool sort_on_device_v<Kokkos::Experimental::SYCL, Layout> =
+inline constexpr bool sort_on_device_v<Kokkos::SYCL, Layout> =
     std::is_same_v<Layout, Kokkos::LayoutLeft> ||
     std::is_same_v<Layout, Kokkos::LayoutRight>;
 
@@ -152,7 +149,7 @@ inline constexpr bool sort_on_device_v<Kokkos::Experimental::SYCL, Layout> =
 template <class KeysDataType, class... KeysProperties, class ValuesDataType,
           class... ValuesProperties, class... MaybeComparator>
 void sort_by_key_onedpl(
-    const Kokkos::Experimental::SYCL& exec,
+    const Kokkos::SYCL& exec,
     const Kokkos::View<KeysDataType, KeysProperties...>& keys,
     const Kokkos::View<ValuesDataType, ValuesProperties...>& values,
     MaybeComparator&&... maybeComparator) {
@@ -176,7 +173,7 @@ template <typename ExecutionSpace, typename PermutationView, typename ViewType>
 void applyPermutation(const ExecutionSpace& space,
                       const PermutationView& permutation,
                       const ViewType& view) {
-  static_assert(std::is_integral<typename PermutationView::value_type>::value);
+  static_assert(std::is_integral_v<typename PermutationView::value_type>);
 
   auto view_copy = Kokkos::create_mirror(
       Kokkos::view_alloc(space, typename ExecutionSpace::memory_space{},
@@ -188,6 +185,33 @@ void applyPermutation(const ExecutionSpace& space,
       Kokkos::RangePolicy<ExecutionSpace>(space, 0, view.extent(0)),
       KOKKOS_LAMBDA(int i) { view(i) = view_copy(permutation(i)); });
 }
+
+// FIXME_NVCC: nvcc has trouble compiling lambdas inside a function with
+// variadic templates (sort_by_key_via_sort). Switch to using functors instead.
+template <typename Permute>
+struct IotaFunctor {
+  Permute _permute;
+  KOKKOS_FUNCTION void operator()(int i) const { _permute(i) = i; }
+};
+template <typename Keys>
+struct LessFunctor {
+  Keys _keys;
+  KOKKOS_FUNCTION bool operator()(int i, int j) const {
+    return _keys(i) < _keys(j);
+  }
+};
+
+// FIXME_NVCC+MSVC: We can't use a lambda instead of a functor which gave us
+// "For this host platform/dialect, an extended lambda cannot be defined inside
+// the 'if' or 'else' block of a constexpr if statement"
+template <typename Keys, typename Comparator>
+struct KeyComparisonFunctor {
+  Keys m_keys;
+  Comparator m_comparator;
+  KOKKOS_FUNCTION bool operator()(int i, int j) const {
+    return m_comparator(m_keys(i), m_keys(j));
+  }
+};
 
 template <class ExecutionSpace, class KeysDataType, class... KeysProperties,
           class ValuesDataType, class... ValuesProperties,
@@ -207,10 +231,9 @@ void sort_by_key_via_sort(
       n);
 
   // iota
-  Kokkos::parallel_for(
-      "Kokkos::sort_by_key_via_sort::iota",
-      Kokkos::RangePolicy<ExecutionSpace>(exec, 0, n),
-      KOKKOS_LAMBDA(int i) { permute(i) = i; });
+  Kokkos::parallel_for("Kokkos::sort_by_key_via_sort::iota",
+                       Kokkos::RangePolicy<ExecutionSpace>(exec, 0, n),
+                       IotaFunctor<decltype(permute)>{permute});
 
   using Layout =
       typename Kokkos::View<unsigned int*, ExecutionSpace>::array_layout;
@@ -228,16 +251,15 @@ void sort_by_key_via_sort(
     Kokkos::DefaultHostExecutionSpace host_exec;
 
     if constexpr (sizeof...(MaybeComparator) == 0) {
-      Kokkos::sort(
-          host_exec, host_permute,
-          KOKKOS_LAMBDA(int i, int j) { return host_keys(i) < host_keys(j); });
+      Kokkos::sort(host_exec, host_permute,
+                   LessFunctor<decltype(host_keys)>{host_keys});
     } else {
       auto keys_comparator =
           std::get<0>(std::tuple<MaybeComparator...>(maybeComparator...));
       Kokkos::sort(
-          host_exec, host_permute, KOKKOS_LAMBDA(int i, int j) {
-            return keys_comparator(host_keys(i), host_keys(j));
-          });
+          host_exec, host_permute,
+          KeyComparisonFunctor<decltype(host_keys), decltype(keys_comparator)>{
+              host_keys, keys_comparator});
     }
     host_exec.fence("Kokkos::Impl::sort_by_key_via_sort: after host sort");
     Kokkos::deep_copy(exec, permute, host_permute);
@@ -262,16 +284,14 @@ void sort_by_key_via_sort(
     }
 #else
     if constexpr (sizeof...(MaybeComparator) == 0) {
-      Kokkos::sort(
-          exec, permute,
-          KOKKOS_LAMBDA(int i, int j) { return keys(i) < keys(j); });
+      Kokkos::sort(exec, permute, LessFunctor<decltype(keys)>{keys});
     } else {
       auto keys_comparator =
           std::get<0>(std::tuple<MaybeComparator...>(maybeComparator...));
       Kokkos::sort(
-          exec, permute, KOKKOS_LAMBDA(int i, int j) {
-            return keys_comparator(keys(i), keys(j));
-          });
+          exec, permute,
+          KeyComparisonFunctor<decltype(keys), decltype(keys_comparator)>{
+              keys, keys_comparator});
     }
 #endif
   }
@@ -312,7 +332,7 @@ void sort_by_key_device_view_without_comparator(
 template <class KeysDataType, class... KeysProperties, class ValuesDataType,
           class... ValuesProperties>
 void sort_by_key_device_view_without_comparator(
-    const Kokkos::Experimental::SYCL& exec,
+    const Kokkos::SYCL& exec,
     const Kokkos::View<KeysDataType, KeysProperties...>& keys,
     const Kokkos::View<ValuesDataType, ValuesProperties...>& values) {
 #ifdef KOKKOS_ONEDPL_HAS_SORT_BY_KEY
@@ -369,7 +389,7 @@ void sort_by_key_device_view_with_comparator(
 template <class ComparatorType, class KeysDataType, class... KeysProperties,
           class ValuesDataType, class... ValuesProperties>
 void sort_by_key_device_view_with_comparator(
-    const Kokkos::Experimental::SYCL& exec,
+    const Kokkos::SYCL& exec,
     const Kokkos::View<KeysDataType, KeysProperties...>& keys,
     const Kokkos::View<ValuesDataType, ValuesProperties...>& values,
     const ComparatorType& comparator) {

@@ -91,6 +91,7 @@ void combine(Kokkos::InitializationSettings& out,
   KOKKOS_IMPL_COMBINE_SETTING(map_device_id_by);
   KOKKOS_IMPL_COMBINE_SETTING(device_id);
   KOKKOS_IMPL_COMBINE_SETTING(disable_warnings);
+  KOKKOS_IMPL_COMBINE_SETTING(print_configuration);
   KOKKOS_IMPL_COMBINE_SETTING(tune_internals);
   KOKKOS_IMPL_COMBINE_SETTING(tools_help);
   KOKKOS_IMPL_COMBINE_SETTING(tools_libs);
@@ -137,7 +138,7 @@ int get_device_count() {
   KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDeviceCount(&count));
   return count;
 #elif defined(KOKKOS_ENABLE_SYCL)
-  return Kokkos::Experimental::Impl::get_sycl_devices().size();
+  return Kokkos::Impl::get_sycl_devices().size();
 #elif defined(KOKKOS_ENABLE_OPENACC)
   return acc_get_num_devices(
       Kokkos::Experimental::Impl::OpenACC_Traits::dev_type);
@@ -182,7 +183,7 @@ std::vector<int> const& Kokkos::Impl::get_visible_devices() {
 #elif defined(KOKKOS_ENABLE_OPENMPTARGET)
   int device = omp_get_default_device();  // FIXME_OPENMPTARGET
 #elif defined(KOKKOS_ENABLE_SYCL)
-  int device = Experimental::Impl::SYCLInternal::m_syclDev;
+  int device = Impl::SYCLInternal::m_syclDev;
 #else
   int device = -1;
   return device;
@@ -610,8 +611,9 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
 #else
   declare_configuration_metadata("options", "KOKKOS_ENABLE_LIBDL", "no");
 #endif
+
   declare_configuration_metadata("architecture", "Default Device",
-                                 typeid(Kokkos::DefaultExecutionSpace).name());
+                                 Kokkos::DefaultExecutionSpace::name());
 
 #if defined(KOKKOS_ARCH_A64FX)
   declare_configuration_metadata("architecture", "CPU architecture", "A64FX");
@@ -664,6 +666,9 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
 #elif defined(KOKKOS_ARCH_RISCV_SG2042)
   declare_configuration_metadata("architecture", "CPU architecture",
                                  "SG2042 (RISC-V)")
+#elif defined(KOKKOS_ARCH_RISCV_RVA22V)
+  declare_configuration_metadata("architecture", "CPU architecture",
+                                 "RVA22V (RISC-V)")
 #else
   declare_configuration_metadata("architecture", "CPU architecture", "none");
 #endif
@@ -736,8 +741,8 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
       declare_configuration_metadata("architecture", "GPU architecture",
                                      "HOPPER90");
 #elif defined(KOKKOS_ARCH_AMD_GFX906)
-  declare_configuration_metadata("architecture", "GPU architecture",
-                                 "AMD_GFX906");
+      declare_configuration_metadata("architecture", "GPU architecture",
+                                     "AMD_GFX906");
 #elif defined(KOKKOS_ARCH_AMD_GFX908)
   declare_configuration_metadata("architecture", "GPU architecture",
                                  "AMD_GFX908");
@@ -750,6 +755,9 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
 #elif defined(KOKKOS_ARCH_AMD_GFX1100)
   declare_configuration_metadata("architecture", "GPU architecture",
                                  "AMD_GFX1100");
+#elif defined(KOKKOS_ARCH_AMD_GFX1103)
+  declare_configuration_metadata("architecture", "GPU architecture",
+                                 "AMD_GFX1103");
 
 #else
   declare_configuration_metadata("architecture", "GPU architecture", "none");
@@ -785,34 +793,18 @@ void initialize_internal(const Kokkos::InitializationSettings& settings) {
   post_initialize_internal(settings);
 }
 
-void pre_finalize_internal() {
-  typename decltype(finalize_hooks)::size_type numSuccessfulCalls = 0;
+// declared noexcept such that std::terminate is called if any of the registered
+// function throws
+void call_registered_finalize_hook_functions() noexcept {
   while (!finalize_hooks.empty()) {
-    auto f = finalize_hooks.top();
-    try {
-      f();
-    } catch (...) {
-      std::cerr << "Kokkos::finalize: A finalize hook (set via "
-                   "Kokkos::push_finalize_hook) threw an exception that it did "
-                   "not catch."
-                   "  Per std::atexit rules, this results in std::terminate.  "
-                   "This is "
-                   "finalize hook number "
-                << numSuccessfulCalls
-                << " (1-based indexing) "
-                   "out of "
-                << finalize_hooks.size()
-                << " to call.  Remember that "
-                   "Kokkos::finalize calls finalize hooks in reverse order "
-                   "from how they "
-                   "were pushed."
-                << std::endl;
-      std::terminate();
-    }
+    auto const& func = finalize_hooks.top();
+    func();
     finalize_hooks.pop();
-    ++numSuccessfulCalls;
   }
+}
 
+void pre_finalize_internal() {
+  call_registered_finalize_hook_functions();
   Kokkos::Profiling::finalize();
 }
 

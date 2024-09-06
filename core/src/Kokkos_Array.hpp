@@ -35,7 +35,7 @@ namespace Kokkos {
 
 #ifdef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
 namespace Impl {
-template <typename Integral, bool Signed = std::is_signed<Integral>::value>
+template <typename Integral, bool Signed = std::is_signed_v<Integral>>
 struct ArrayBoundsCheck;
 
 template <typename Integral>
@@ -133,6 +133,18 @@ struct Array {
     return &m_internal_implementation_private_member_data[0];
   }
 
+  friend KOKKOS_FUNCTION constexpr bool operator==(Array const& lhs,
+                                                   Array const& rhs) noexcept {
+    for (size_t i = 0; i != N; ++i)
+      if (lhs[i] != rhs[i]) return false;
+    return true;
+  }
+
+  friend KOKKOS_FUNCTION constexpr bool operator!=(Array const& lhs,
+                                                   Array const& rhs) noexcept {
+    return !(lhs == rhs);
+  }
+
  private:
   template <class U = T>
   friend KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<
@@ -183,18 +195,19 @@ struct Array<T, 0> {
     return *reinterpret_cast<const_pointer>(-1);
   }
 
-  KOKKOS_INLINE_FUNCTION pointer data() { return nullptr; }
-  KOKKOS_INLINE_FUNCTION const_pointer data() const { return nullptr; }
+  KOKKOS_INLINE_FUNCTION constexpr pointer data() { return nullptr; }
+  KOKKOS_INLINE_FUNCTION constexpr const_pointer data() const {
+    return nullptr;
+  }
 
-  KOKKOS_DEFAULTED_FUNCTION ~Array()            = default;
-  KOKKOS_DEFAULTED_FUNCTION Array()             = default;
-  KOKKOS_DEFAULTED_FUNCTION Array(const Array&) = default;
-  KOKKOS_DEFAULTED_FUNCTION Array& operator=(const Array&) = default;
-
-  // Some supported compilers are not sufficiently C++11 compliant
-  // for default move constructor and move assignment operator.
-  // Array( Array && ) = default ;
-  // Array & operator = ( Array && ) = default ;
+  friend KOKKOS_FUNCTION constexpr bool operator==(Array const&,
+                                                   Array const&) noexcept {
+    return true;
+  }
+  friend KOKKOS_FUNCTION constexpr bool operator!=(Array const&,
+                                                   Array const&) noexcept {
+    return false;
+  }
 
  private:
   friend KOKKOS_INLINE_FUNCTION constexpr void kokkos_swap(
@@ -354,7 +367,33 @@ struct KOKKOS_DEPRECATED
 #endif
 
 template <typename T, typename... Us>
-Array(T, Us...)->Array<T, 1 + sizeof...(Us)>;
+Array(T, Us...) -> Array<T, 1 + sizeof...(Us)>;
+
+namespace Impl {
+
+template <typename T, size_t N, size_t... I>
+KOKKOS_FUNCTION constexpr Array<std::remove_cv_t<T>, N> to_array_impl(
+    T (&a)[N], std::index_sequence<I...>) {
+  return {{a[I]...}};
+}
+
+template <typename T, size_t N, size_t... I>
+KOKKOS_FUNCTION constexpr Array<std::remove_cv_t<T>, N> to_array_impl(
+    T (&&a)[N], std::index_sequence<I...>) {
+  return {{std::move(a[I])...}};
+}
+
+}  // namespace Impl
+
+template <typename T, size_t N>
+KOKKOS_FUNCTION constexpr auto to_array(T (&a)[N]) {
+  return Impl::to_array_impl(a, std::make_index_sequence<N>{});
+}
+
+template <typename T, size_t N>
+KOKKOS_FUNCTION constexpr auto to_array(T (&&a)[N]) {
+  return Impl::to_array_impl(std::move(a), std::make_index_sequence<N>{});
+}
 
 }  // namespace Kokkos
 
@@ -365,6 +404,7 @@ struct std::tuple_size<Kokkos::Array<T, N>>
 
 template <std::size_t I, class T, std::size_t N>
 struct std::tuple_element<I, Kokkos::Array<T, N>> {
+  static_assert(I < N);
   using type = T;
 };
 
@@ -372,22 +412,52 @@ namespace Kokkos {
 
 template <std::size_t I, class T, std::size_t N>
 KOKKOS_FUNCTION constexpr T& get(Array<T, N>& a) noexcept {
+  static_assert(I < N);
   return a[I];
 }
 
 template <std::size_t I, class T, std::size_t N>
 KOKKOS_FUNCTION constexpr T const& get(Array<T, N> const& a) noexcept {
+  static_assert(I < N);
   return a[I];
 }
 
 template <std::size_t I, class T, std::size_t N>
 KOKKOS_FUNCTION constexpr T&& get(Array<T, N>&& a) noexcept {
+  static_assert(I < N);
   return std::move(a[I]);
 }
 
 template <std::size_t I, class T, std::size_t N>
 KOKKOS_FUNCTION constexpr T const&& get(Array<T, N> const&& a) noexcept {
+  static_assert(I < N);
   return std::move(a[I]);
+}
+
+}  // namespace Kokkos
+//</editor-fold>
+
+//<editor-fold desc="Support for range-based for loop">
+namespace Kokkos {
+
+template <class T, std::size_t N>
+KOKKOS_FUNCTION constexpr T const* begin(Array<T, N> const& a) noexcept {
+  return a.data();
+}
+
+template <class T, std::size_t N>
+KOKKOS_FUNCTION constexpr T* begin(Array<T, N>& a) noexcept {
+  return a.data();
+}
+
+template <class T, std::size_t N>
+KOKKOS_FUNCTION constexpr T const* end(Array<T, N> const& a) noexcept {
+  return a.data() + a.size();
+}
+
+template <class T, std::size_t N>
+KOKKOS_FUNCTION constexpr T* end(Array<T, N>& a) noexcept {
+  return a.data() + a.size();
 }
 
 }  // namespace Kokkos
