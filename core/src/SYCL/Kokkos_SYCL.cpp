@@ -99,6 +99,11 @@ void SYCL::print_configuration(std::ostream& os, bool verbose) const {
 #else
   os << "macro  KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED : undefined\n";
 #endif
+#ifdef KOKKOS_ENABLE_IMPL_SYCL_RELOCATABLE_DEVICE_CODE
+  os << "macro  KOKKOS_ENABLE_IMPL_SYCL_RELOCATABLE_DEVICE_CODE : defined\n";
+#else
+  os << "macro  KOKKOS_ENABLE_IMPL_SYCL_RELOCATABLE_DEVICE_CODE : undefined\n";
+#endif
 #ifdef SYCL_EXT_ONEAPI_DEVICE_GLOBAL
   os << "macro  SYCL_EXT_ONEAPI_DEVICE_GLOBAL : defined\n";
 #else
