@@ -59,9 +59,9 @@ static_assert(TypeInfo<FooAlias>::name() == "struct `anonymous-namespace'::Foo")
 static_assert(TypeInfo<Bar>::name()      == "enum `anonymous-namespace'::Bar");
 static_assert(TypeInfo<Baz>::name()      == "union `anonymous-namespace'::Baz");
 #ifndef KOKKOSCXX17
-static_assert(TypeInfo<Lambda>::name().starts_with("class `anonymous-namespace'::<lambda_");
+static_assert(TypeInfo<Lambda>::name().starts_with("class `anonymous-namespace'::<lambda_"));
 // underscore followed by some 32-bit hash that seems sensitive to the content of the current source code file
-static_assert(TypeInfo<Lambda>::name().ends_with(">");
+static_assert(TypeInfo<Lambda>::name().ends_with(">"));
 #endif
 #else
 #error how did I ended up here?
