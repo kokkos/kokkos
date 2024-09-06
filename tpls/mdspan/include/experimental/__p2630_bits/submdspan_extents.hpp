@@ -78,8 +78,6 @@ struct index_pair_like<std::array<IdxT, 2>, IndexType> {
   static constexpr bool value = std::is_convertible_v<IdxT, IndexType>;
 };
 
-// FIXME: we actually need to pass IndexType into all of these
-
 // first_of(slice): getting begin of slice specifier range
 MDSPAN_TEMPLATE_REQUIRES(
   class Integral,
