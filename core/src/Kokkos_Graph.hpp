@@ -86,10 +86,17 @@ struct [[nodiscard]] Graph {
     return m_impl_ptr->get_execution_space();
   }
 
-  void submit() const {
+  void instantiate() {
     KOKKOS_EXPECTS(bool(m_impl_ptr))
-    (*m_impl_ptr).submit();
+    (*m_impl_ptr).instantiate();
   }
+
+  void submit(const execution_space& exec) const {
+    KOKKOS_EXPECTS(bool(m_impl_ptr))
+    (*m_impl_ptr).submit(exec);
+  }
+
+  void submit() const { submit(get_execution_space()); }
 };
 
 // </editor-fold> end Graph }}}1

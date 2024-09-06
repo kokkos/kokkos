@@ -1373,7 +1373,7 @@
 **Closed issues:**
 
 - Silent error (Validate storage level arg to set_scratch_size) [\#3097](https://github.com/kokkos/kokkos/issues/3097)
-- Remove KOKKKOS\_ENABLE\_PROFILING Option [\#3095](https://github.com/kokkos/kokkos/issues/3095)
+- Remove KOKKOS\_ENABLE\_PROFILING Option [\#3095](https://github.com/kokkos/kokkos/issues/3095)
 - Cuda 11 -\> allow C++17 [\#3083](https://github.com/kokkos/kokkos/issues/3083)
 - In source build failure not explained [\#3081](https://github.com/kokkos/kokkos/issues/3081)
 - Allow naming of Views for initialization kernel [\#3070](https://github.com/kokkos/kokkos/issues/3070)

@@ -237,14 +237,14 @@ void run_test_graph4() {
   dx.row_map = typename dView::row_map_type(tmp_row_map.data(), numRows + 1);
   dx.entries = typename dView::entries_type(tmp_entries.data(), nnz);
 
-  ASSERT_TRUE((std::is_same<typename dView::row_map_type::memory_traits,
-                            Kokkos::MemoryUnmanaged>::value));
-  ASSERT_TRUE((std::is_same<typename dView::entries_type::memory_traits,
-                            Kokkos::MemoryUnmanaged>::value));
-  ASSERT_TRUE((std::is_same<typename hView::row_map_type::memory_traits,
-                            Kokkos::MemoryUnmanaged>::value));
-  ASSERT_TRUE((std::is_same<typename hView::entries_type::memory_traits,
-                            Kokkos::MemoryUnmanaged>::value));
+  ASSERT_TRUE((std::is_same_v<typename dView::row_map_type::memory_traits,
+                              Kokkos::MemoryUnmanaged>));
+  ASSERT_TRUE((std::is_same_v<typename dView::entries_type::memory_traits,
+                              Kokkos::MemoryUnmanaged>));
+  ASSERT_TRUE((std::is_same_v<typename hView::row_map_type::memory_traits,
+                              Kokkos::MemoryUnmanaged>));
+  ASSERT_TRUE((std::is_same_v<typename hView::entries_type::memory_traits,
+                              Kokkos::MemoryUnmanaged>));
 }
 
 } /* namespace TestStaticCrsGraph */

@@ -39,7 +39,7 @@ struct TestViewAPI<
   using view_type =
       Kokkos::View<data_type, layout_type, space_type, traits_type>;
   using alloc_layout_type =
-      std::conditional_t<std::is_same<layout_type, Kokkos::LayoutStride>::value,
+      std::conditional_t<std::is_same_v<layout_type, Kokkos::LayoutStride>,
                          Kokkos::LayoutLeft, layout_type>;
   using d_alloc_type = Kokkos::View<data_type, alloc_layout_type, space_type>;
   using h_alloc_type = typename Kokkos::View<data_type, alloc_layout_type,

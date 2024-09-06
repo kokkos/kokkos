@@ -173,7 +173,7 @@ void verify_data(ViewType1 data_view,  // contains data
       create_mirror_view_and_copy(Kokkos::HostSpace(), test_view_dc);
   if (test_view_h.extent(0) > 0) {
     for (std::size_t i = 0; i < test_view_h.extent(0); ++i) {
-      if (std::is_same<gold_view_value_type, int>::value) {
+      if (std::is_same_v<gold_view_value_type, int>) {
         ASSERT_EQ(gold_h(i), test_view_h(i));
       } else {
         const auto error = std::abs(gold_h(i) - test_view_h(i));

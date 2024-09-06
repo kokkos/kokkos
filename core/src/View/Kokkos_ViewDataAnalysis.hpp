@@ -370,8 +370,7 @@ struct ViewDataAnalysis {
   // ValueType is opportunity for partial specialization.
   // Must match array analysis when this default template is used.
   static_assert(
-      std::is_same<ValueType,
-                   typename array_analysis::non_const_value_type>::value);
+      std::is_same_v<ValueType, typename array_analysis::non_const_value_type>);
 
  public:
   using specialize = void;  // No specialization

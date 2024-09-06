@@ -615,7 +615,7 @@ template <class DeviceType>
 struct Random_UniqueIndex {
   using locks_view_type = View<int**, DeviceType>;
   KOKKOS_FUNCTION
-  static int get_state_idx(const locks_view_type) {
+  static int get_state_idx(const locks_view_type&) {
     KOKKOS_IF_ON_HOST(
         (return DeviceType::execution_space::impl_hardware_thread_id();))
 

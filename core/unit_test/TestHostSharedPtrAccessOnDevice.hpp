@@ -37,7 +37,7 @@ template <class SmartPtr>
 struct CheckAccessStoredPointerAndDereferenceOnDevice {
   SmartPtr m_device_ptr;
   using ElementType = typename SmartPtr::element_type;
-  static_assert(std::is_same<ElementType, Data>::value);
+  static_assert(std::is_same_v<ElementType, Data>);
 
   CheckAccessStoredPointerAndDereferenceOnDevice(SmartPtr device_ptr)
       : m_device_ptr(device_ptr) {
@@ -154,7 +154,7 @@ void host_shared_ptr_test_reference_counting() {
         static_cast<Foo*>(Kokkos::kokkos_malloc<DevMemSpace>(sizeof(Foo)));
     Kokkos::View<Foo, DevMemSpace> fp_d(fp_d_ptr);
     // If using UVM or on the CPU don't make an extra HostCopy
-    Foo* fp_h_ptr = std::is_same<DevMemSpace, HostMemSpace>::value
+    Foo* fp_h_ptr = std::is_same_v<DevMemSpace, HostMemSpace>
                         ? fp_d_ptr
                         : static_cast<Foo*>(
                               Kokkos::kokkos_malloc<HostMemSpace>(sizeof(Foo)));

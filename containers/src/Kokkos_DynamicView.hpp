@@ -250,7 +250,7 @@ class DynamicView : public Kokkos::ViewTraits<DataType, P...> {
 
   // It is assumed that the value_type is trivially copyable;
   // when this is not the case, potential problems can occur.
-  static_assert(std::is_void<typename traits::specialize>::value,
+  static_assert(std::is_void_v<typename traits::specialize>,
                 "DynamicView only implemented for non-specialized View type");
 
  private:
@@ -363,7 +363,7 @@ class DynamicView : public Kokkos::ViewTraits<DataType, P...> {
 
   enum {
     reference_type_is_lvalue_reference =
-        std::is_lvalue_reference<reference_type>::value
+        std::is_lvalue_reference_v<reference_type>
   };
 
   KOKKOS_INLINE_FUNCTION constexpr bool span_is_contiguous() const {
@@ -572,7 +572,7 @@ struct MirrorDynamicViewType {
   // Check whether it is the same memory space
   enum {
     is_same_memspace =
-        std::is_same<memory_space, typename src_view_type::memory_space>::value
+        std::is_same_v<memory_space, typename src_view_type::memory_space>
   };
   // The array_layout
   using array_layout = typename src_view_type::array_layout;
@@ -693,14 +693,14 @@ inline auto create_mirror_view(
     const Kokkos::Experimental::DynamicView<T, P...>& src,
     [[maybe_unused]] const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
   if constexpr (!Impl::ViewCtorProp<ViewCtorArgs...>::has_memory_space) {
-    if constexpr (std::is_same<typename Kokkos::Experimental::DynamicView<
-                                   T, P...>::memory_space,
-                               typename Kokkos::Experimental::DynamicView<
-                                   T, P...>::HostMirror::memory_space>::value &&
-                  std::is_same<typename Kokkos::Experimental::DynamicView<
-                                   T, P...>::data_type,
-                               typename Kokkos::Experimental::DynamicView<
-                                   T, P...>::HostMirror::data_type>::value) {
+    if constexpr (std::is_same_v<typename Kokkos::Experimental::DynamicView<
+                                     T, P...>::memory_space,
+                                 typename Kokkos::Experimental::DynamicView<
+                                     T, P...>::HostMirror::memory_space> &&
+                  std::is_same_v<typename Kokkos::Experimental::DynamicView<
+                                     T, P...>::data_type,
+                                 typename Kokkos::Experimental::DynamicView<
+                                     T, P...>::HostMirror::data_type>) {
       return
           typename Kokkos::Experimental::DynamicView<T, P...>::HostMirror(src);
     } else {
@@ -964,7 +964,7 @@ struct ViewCopy<Kokkos::Experimental::DynamicView<DP...>,
 // view_alloc
 template <class... ViewCtorArgs, class T, class... P,
           class Enable = std::enable_if_t<
-              std::is_void<typename ViewTraits<T, P...>::specialize>::value>>
+              std::is_void_v<typename ViewTraits<T, P...>::specialize>>>
 auto create_mirror_view_and_copy(
     [[maybe_unused]] const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
     const Kokkos::Experimental::DynamicView<T, P...>& src) {

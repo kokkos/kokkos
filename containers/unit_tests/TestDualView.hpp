@@ -520,58 +520,26 @@ namespace {
  * that we keep the semantics of UVM DualViews intact.
  */
 // modify if we have other UVM enabled backends
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_SYCL) || \
-    defined(KOKKOS_ENABLE_HIP)  // OR other UVM builds
-#define UVM_ENABLED_BUILD
-#endif
 
-#ifdef UVM_ENABLED_BUILD
-template <typename ExecSpace>
-struct UVMSpaceFor;
-#endif
-
-#ifdef KOKKOS_ENABLE_CUDA  // specific to CUDA
-template <>
-struct UVMSpaceFor<Kokkos::Cuda> {
-  using type = Kokkos::CudaUVMSpace;
-};
-#endif
-
-#ifdef KOKKOS_ENABLE_SYCL  // specific to SYCL
-template <>
-struct UVMSpaceFor<Kokkos::SYCL> {
-  using type = Kokkos::SYCLSharedUSMSpace;
-};
-#endif
-
-#ifdef KOKKOS_ENABLE_HIP  // specific to HIP
-template <>
-struct UVMSpaceFor<Kokkos::HIP> {
-  using type = Kokkos::HIPManagedSpace;
-};
-#endif
-
-#ifdef UVM_ENABLED_BUILD
-template <>
-struct UVMSpaceFor<Kokkos::DefaultHostExecutionSpace> {
-  using type = typename UVMSpaceFor<Kokkos::DefaultExecutionSpace>::type;
-};
+#ifdef KOKKOS_HAS_SHARED_SPACE
+template <typename ExecutionSpace>
+using TestSharedSpace = Kokkos::SharedSpace;
 #else
-template <typename ExecSpace>
-struct UVMSpaceFor {
-  using type = typename ExecSpace::memory_space;
-};
+template <typename ExecutionSpace>
+using TestSharedSpace = typename ExecutionSpace::memory_space;
 #endif
 
 using ExecSpace  = Kokkos::DefaultExecutionSpace;
-using MemSpace   = typename UVMSpaceFor<Kokkos::DefaultExecutionSpace>::type;
+using MemSpace   = TestSharedSpace<Kokkos::DefaultExecutionSpace>;
 using DeviceType = Kokkos::Device<ExecSpace, MemSpace>;
 
 using DualViewType = Kokkos::DualView<double*, Kokkos::LayoutLeft, DeviceType>;
-using d_device     = DeviceType;
-using h_device     = Kokkos::Device<
-    Kokkos::DefaultHostExecutionSpace,
-    typename UVMSpaceFor<Kokkos::DefaultHostExecutionSpace>::type>;
+using ConstDualViewType =
+    Kokkos::DualView<const double*, Kokkos::LayoutLeft, DeviceType>;
+using d_device = DeviceType;
+using h_device =
+    Kokkos::Device<Kokkos::DefaultHostExecutionSpace,
+                   TestSharedSpace<Kokkos::DefaultHostExecutionSpace>>;
 
 TEST(TEST_CATEGORY, dualview_device_correct_kokkos_device) {
   DualViewType dv("myView", 100);
@@ -635,12 +603,23 @@ TEST(TEST_CATEGORY,
      dualview_template_views_return_correct_executionspace_views) {
   DualViewType dv("myView", 100);
   dv.clear_sync_state();
-  using hvt = decltype(dv.view<typename Kokkos::DefaultHostExecutionSpace>());
-  using dvt = decltype(dv.view<typename Kokkos::DefaultExecutionSpace>());
+  using hvt = decltype(dv.view<Kokkos::DefaultHostExecutionSpace>());
+  using dvt = decltype(dv.view<Kokkos::DefaultExecutionSpace>());
   ASSERT_STREQ(Kokkos::DefaultExecutionSpace::name(),
                dvt::device_type::execution_space::name());
   ASSERT_STREQ(Kokkos::DefaultHostExecutionSpace::name(),
                hvt::device_type::execution_space::name());
+}
+
+TEST(TEST_CATEGORY,
+     dualview_template_views_return_correct_views_from_const_dual_view) {
+  DualViewType dv("myView", 100);
+  ConstDualViewType const_dv = dv;
+  dv.clear_sync_state();
+  ASSERT_EQ(dv.view<Kokkos::DefaultHostExecutionSpace>(),
+            const_dv.view<Kokkos::DefaultHostExecutionSpace>());
+  ASSERT_EQ(dv.view<Kokkos::DefaultExecutionSpace>(),
+            const_dv.view<Kokkos::DefaultExecutionSpace>());
 }
 
 }  // anonymous namespace

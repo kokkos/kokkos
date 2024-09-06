@@ -67,6 +67,7 @@ DECLARE_AND_CHECK_HOST_ARCH(ZEN               "AMD Zen architecture")
 DECLARE_AND_CHECK_HOST_ARCH(ZEN2              "AMD Zen2 architecture")
 DECLARE_AND_CHECK_HOST_ARCH(ZEN3              "AMD Zen3 architecture")
 DECLARE_AND_CHECK_HOST_ARCH(RISCV_SG2042      "SG2042 (RISC-V) CPUs")
+DECLARE_AND_CHECK_HOST_ARCH(RISCV_RVA22V      "RVA22V (RISC-V) CPUs")
 
 IF(Kokkos_ENABLE_CUDA OR Kokkos_ENABLE_OPENMPTARGET OR Kokkos_ENABLE_OPENACC OR Kokkos_ENABLE_SYCL)
   SET(KOKKOS_SHOW_CUDA_ARCHS ON)
@@ -389,6 +390,22 @@ IF (KOKKOS_ARCH_RISCV_SG2042)
   COMPILER_SPECIFIC_FLAGS(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
         DEFAULT -march=rv64imafdcv
+      )
+ENDIF()
+
+IF (KOKKOS_ARCH_RISCV_RVA22V)
+  IF(NOT
+  (KOKKOS_CXX_COMPILER_ID STREQUAL GNU
+    AND KOKKOS_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 12)
+  OR
+  (KOKKOS_CXX_COMPILER_ID STREQUAL Clang
+    AND KOKKOS_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 14)
+  )
+  MESSAGE(SEND_ERROR "Only gcc >= 12 and clang >= 14 support RISC-V.")
+  ENDIF()
+  COMPILER_SPECIFIC_FLAGS(
+    COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
+        DEFAULT -march=rv64imafdcv_sscofpmf_sstc_svpbmt_zicbom_zicboz_zicbop_zihintpause
       )
 ENDIF()
 
@@ -838,6 +855,9 @@ ENDIF()
 
 IF (KOKKOS_ENABLE_OPENACC)
   IF(KOKKOS_CUDA_ARCH_FLAG)
+    IF(KOKKOS_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE)
+      MESSAGE(FATAL_ERROR "If a GPU architecture is specified, Kokkos_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE option cannot be used. Disable the Kokkos_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE option.")
+    ENDIF()
     SET(CLANG_CUDA_ARCH ${KOKKOS_CUDA_ARCH_FLAG})
     STRING(REPLACE "sm_" "cc" NVHPC_CUDA_ARCH ${KOKKOS_CUDA_ARCH_FLAG})
     COMPILER_SPECIFIC_FLAGS(
@@ -845,15 +865,39 @@ IF (KOKKOS_ENABLE_OPENACC)
       Clang -Xopenmp-target=nvptx64-nvidia-cuda -march=${CLANG_CUDA_ARCH}
             -fopenmp-targets=nvptx64-nvidia-cuda
     )
+    IF(DEFINED ENV{CUDA_PATH})
+      COMPILER_SPECIFIC_LINK_OPTIONS(Clang -L$ENV{CUDA_PATH}/lib64)
+    ENDIF()
+    COMPILER_SPECIFIC_LIBS(
+      Clang -lcudart
+      NVHPC -cuda
+    )
   ELSEIF(KOKKOS_AMDGPU_ARCH_FLAG)
+    IF(KOKKOS_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE)
+      MESSAGE(FATAL_ERROR "If a GPU architecture is specified, Kokkos_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE option cannot be used. Disable the Kokkos_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE option.")
+    ENDIF()
     COMPILER_SPECIFIC_FLAGS(
       Clang -Xopenmp-target=amdgcn-amd-amdhsa -march=${KOKKOS_AMDGPU_ARCH_FLAG}
             -fopenmp-targets=amdgcn-amd-amdhsa
     )
-  ELSE()
+    IF(DEFINED ENV{ROCM_PATH})
+      COMPILER_SPECIFIC_FLAGS(Clang -I$ENV{ROCM_PATH}/include)
+      COMPILER_SPECIFIC_LINK_OPTIONS(Clang -L$ENV{ROCM_PATH}/lib)
+    ENDIF()
+    COMPILER_SPECIFIC_LIBS(Clang -lamdhip64)
+  ELSEIF(KOKKOS_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE)
+    # Compile for kernel execution on the host. In that case,
+    # memory is shared between the OpenACC space and the host space.
     COMPILER_SPECIFIC_FLAGS(
-      NVHPC -acc
+      NVHPC -acc=multicore
     )
+  ELSE()
+    # Automatic fallback mode; try to offload any available GPU, and fall back
+    # to the host CPU if no available GPU is found.
+    COMPILER_SPECIFIC_FLAGS(
+      NVHPC -acc=gpu,multicore
+    )
+    MESSAGE(STATUS "No OpenACC target device is specificed; the OpenACC backend will be executed in an automatic fallback mode.")
   ENDIF()
 ENDIF()
 

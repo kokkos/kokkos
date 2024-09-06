@@ -607,6 +607,18 @@ static constexpr bool kokkos_omp_on_host() { return false; }
   #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
   #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
 #endif
+
+#if defined(__NVCOMPILER)
+#define KOKKOS_IMPL_DISABLE_UNREACHABLE_WARNINGS_PUSH() \
+  _Pragma("diag_suppress code_is_unreachable")          \
+  _Pragma("diag_suppress initialization_not_reachable")
+#define KOKKOS_IMPL_DISABLE_UNREACHABLE_WARNINGS_POP() \
+  _Pragma("diag_default code_is_unreachable")          \
+  _Pragma("diag_default initialization_not_reachable")
+#else
+#define KOKKOS_IMPL_DISABLE_UNREACHABLE_WARNINGS_PUSH()
+#define KOKKOS_IMPL_DISABLE_UNREACHABLE_WARNINGS_POP()
+#endif
 // clang-format on
 
 #define KOKKOS_ATTRIBUTE_NODISCARD [[nodiscard]]

@@ -49,6 +49,7 @@ pipeline {
                               /opt/cmake/bin/cmake \
                                 -DCMAKE_CXX_COMPILER=nvc++ \
                                 -DCMAKE_CXX_STANDARD=17 \
+                                -DCMAKE_CXX_FLAGS=-Werror \
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
@@ -82,7 +83,7 @@ pipeline {
                                 -DCMAKE_BUILD_TYPE=RelWithDebInfo \
                                 -DCMAKE_CXX_COMPILER=nvc++ \
                                 -DCMAKE_CXX_STANDARD=17 \
-                                -DCMAKE_CXX_FLAGS="--diag_suppress=implicit_return_from_non_void_function" \
+                                -DCMAKE_CXX_FLAGS="-Werror --diag_suppress=implicit_return_from_non_void_function" \
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
@@ -461,6 +462,7 @@ pipeline {
                                 -DKokkos_ENABLE_CUDA=ON \
                                 -DKokkos_ENABLE_CUDA_LAMBDA=ON \
                                 -DKokkos_ENABLE_LIBDL=OFF \
+                                -DKokkos_ENABLE_OPENMP=ON \
                                 -DKokkos_ENABLE_IMPL_MDSPAN=OFF \
                                 -DKokkos_ENABLE_IMPL_CUDA_MALLOC_ASYNC=OFF \
                               .. && \

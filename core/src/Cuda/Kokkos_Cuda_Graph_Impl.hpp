@@ -51,7 +51,9 @@ struct GraphImpl<Kokkos::Cuda> {
 
   using node_details_t = GraphNodeBackendSpecificDetails<Kokkos::Cuda>;
 
-  void _instantiate_graph() {
+ public:
+  void instantiate() {
+    KOKKOS_EXPECTS(!m_graph_exec);
     constexpr size_t error_log_size = 256;
     cudaGraphNode_t error_node      = nullptr;
     char error_log[error_log_size];
@@ -60,10 +62,10 @@ struct GraphImpl<Kokkos::Cuda> {
              ->cuda_graph_instantiate_wrapper(&m_graph_exec, m_graph,
                                               &error_node, error_log,
                                               error_log_size)));
+    KOKKOS_ENSURES(m_graph_exec);
     // TODO @graphs print out errors
   }
 
- public:
   using root_node_impl_t =
       GraphNodeImpl<Kokkos::Cuda, Kokkos::Experimental::TypeErasedTag,
                     Kokkos::Experimental::TypeErasedTag>;
@@ -158,13 +160,13 @@ struct GraphImpl<Kokkos::Cuda> {
                                                    &cuda_node, 1)));
   }
 
-  void submit() {
+  void submit(const execution_space& exec) {
     if (!bool(m_graph_exec)) {
-      _instantiate_graph();
+      instantiate();
     }
     KOKKOS_IMPL_CUDA_SAFE_CALL(
-        (m_execution_space.impl_internal_space_instance()
-             ->cuda_graph_launch_wrapper(m_graph_exec)));
+        (exec.impl_internal_space_instance()->cuda_graph_launch_wrapper(
+            m_graph_exec)));
   }
 
   execution_space const& get_execution_space() const noexcept {

@@ -102,9 +102,8 @@ class TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::Serial, QueueType>> {
 
 template <class Scheduler>
 class TaskQueueSpecializationConstrained<
-    Scheduler,
-    std::enable_if_t<std::is_same<typename Scheduler::execution_space,
-                                  Kokkos::Serial>::value>> {
+    Scheduler, std::enable_if_t<std::is_same_v<
+                   typename Scheduler::execution_space, Kokkos::Serial>>> {
  public:
   // Note: Scheduler may be an incomplete type at class scope (but not inside
   // of the methods, obviously)
