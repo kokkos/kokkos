@@ -49,7 +49,7 @@ FUNCTION(KOKKOS_ADD_TEST)
   SET(TEST_NAME ${PACKAGE_NAME}_${TEST_NAME})
 
   # For compatibility with Trilinos testing, we support:
-  #  * `-D <fullTestName>_DISABLE=ON` 
+  #  * `-D <fullTestName>_DISABLE=ON`
   #  * `-D <fullTestName>_EXTRA_ARGS="<arg0>;<arg1>;<arg2>;..."`
   #  * `-D <fullTestName>_SET_RUN_SERIAL=ON`
   IF(${TEST_NAME}_DISABLE)
