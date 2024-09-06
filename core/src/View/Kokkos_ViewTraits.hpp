@@ -63,7 +63,6 @@ inline constexpr Kokkos::ALL_t ALL{};
 #pragma omp end declare target
 #endif
 
-
 namespace Impl {
 
 template <class DataType>
