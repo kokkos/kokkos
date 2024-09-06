@@ -36,15 +36,22 @@ struct GraphNodeKernelDefaultImpl {
   // TODO @graphs decide if this should use vtable or intrusive erasure via
   //      function pointers like in the rest of the graph interface
   virtual void execute_kernel() = 0;
+
+  GraphNodeKernelDefaultImpl() = default;
+
+  explicit GraphNodeKernelDefaultImpl(ExecutionSpace exec)
+      : m_execution_space(std::move(exec)) {}
+
+  ExecutionSpace m_execution_space;
 };
 
 // TODO Indicate that this kernel specialization is only for the Host somehow?
 template <class ExecutionSpace, class PolicyType, class Functor,
           class PatternTag, class... Args>
 class GraphNodeKernelImpl
-    : public PatternImplSpecializationFromTag<PatternTag, Functor, PolicyType,
-                                              Args..., ExecutionSpace>::type,
-      public GraphNodeKernelDefaultImpl<ExecutionSpace> {
+    : public GraphNodeKernelDefaultImpl<ExecutionSpace>,
+      public PatternImplSpecializationFromTag<PatternTag, Functor, PolicyType,
+                                              Args..., ExecutionSpace>::type {
  public:
   using base_t =
       typename PatternImplSpecializationFromTag<PatternTag, Functor, PolicyType,
@@ -61,9 +68,9 @@ class GraphNodeKernelImpl
   GraphNodeKernelImpl(std::string const &, ExecutionSpace const &,
                       Functor arg_functor, PolicyDeduced &&arg_policy,
                       ArgsDeduced &&...args)
-      : base_t(std::move(arg_functor), (PolicyDeduced &&)arg_policy,
-               (ArgsDeduced &&)args...),
-        execute_kernel_vtable_base_t() {}
+      : execute_kernel_vtable_base_t(arg_policy.space()),
+        base_t(std::move(arg_functor), (PolicyDeduced &&)arg_policy,
+               (ArgsDeduced &&)args...) {}
 
   // FIXME @graph Forward through the instance once that works in the backends
   template <class PolicyDeduced, class... ArgsDeduced>
@@ -71,7 +78,9 @@ class GraphNodeKernelImpl
                       PolicyDeduced &&arg_policy, ArgsDeduced &&...args)
       : GraphNodeKernelImpl("", ex, std::move(arg_functor),
                             (PolicyDeduced &&)arg_policy,
-                            (ArgsDeduced &&)args...) {}
+                            (ArgsDeduced &&)args...) {
+    // FIXME This constructor seem unused.
+  }
 
   void execute_kernel() final { this->base_t::execute(); }
 };
