@@ -35,24 +35,27 @@ union Baz {
 using Lambda = decltype(func);
 
 // clang-format off
-#if defined(__clang__)
-static_assert(TypeInfo<Foo>::name()      == "(anonymous namespace)::Foo");
-static_assert(TypeInfo<FooAlias>::name() == "(anonymous namespace)::Foo");
-static_assert(TypeInfo<Bar>::name()      == "(anonymous namespace)::Bar");
-static_assert(TypeInfo<Baz>::name()      == "(anonymous namespace)::Baz");
-static_assert(TypeInfo<Lambda>::name()   == "(anonymous namespace)::(lambda at "  __FILE__  ":33:30)");
-#elif defined(__EDG__)
+#if defined(__EDG__) || (defined(__NVCC__) && defined(__CUDA_ARCH__))
 static_assert(TypeInfo<Foo>::name()      == "<unnamed>::Foo");
 static_assert(TypeInfo<FooAlias>::name() == "<unnamed>::Foo");
 static_assert(TypeInfo<Bar>::name()      == "<unnamed>::Bar");
 static_assert(TypeInfo<Baz>::name()      == "<unnamed>::Baz");
 static_assert(TypeInfo<Lambda>::name()   == "lambda [](int)->void");
+#elif defined(__NVCC__) && !defined(__CUDA_ARCH__)
+// can't do much
+// it looks like that there is 1st an EDG pass and then a host pass and they cannot both agree on what the type info is
 #elif defined(__GNUC__)
 static_assert(TypeInfo<Foo>::name()      == "{anonymous}::Foo");
 static_assert(TypeInfo<FooAlias>::name() == "{anonymous}::Foo");
 static_assert(TypeInfo<Bar>::name()      == "{anonymous}::Bar");
 static_assert(TypeInfo<Baz>::name()      == "{anonymous}::Baz");
 static_assert(TypeInfo<Lambda>::name()   == "{anonymous}::<lambda(int)>");
+#elif defined(__clang__)
+static_assert(TypeInfo<Foo>::name()      == "(anonymous namespace)::Foo");
+static_assert(TypeInfo<FooAlias>::name() == "(anonymous namespace)::Foo");
+static_assert(TypeInfo<Bar>::name()      == "(anonymous namespace)::Bar");
+static_assert(TypeInfo<Baz>::name()      == "(anonymous namespace)::Baz");
+static_assert(TypeInfo<Lambda>::name()   == "(anonymous namespace)::(lambda at "  __FILE__  ":33:30)");
 #elif defined(_MSC_VER)
 static_assert(TypeInfo<Foo>::name()      == "struct `anonymous-namespace'::Foo");
 static_assert(TypeInfo<FooAlias>::name() == "struct `anonymous-namespace'::Foo");
