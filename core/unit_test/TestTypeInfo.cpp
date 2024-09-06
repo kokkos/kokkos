@@ -68,7 +68,4 @@ static_assert(TypeInfo<Lambda>::name().ends_with(">"));
 #endif
 // clang-format on
 
-using T = void;
-static_assert(!std::is_default_constructible_v<TypeInfo<T>>);
-
 }  // namespace

@@ -78,7 +78,6 @@ class TypeInfo {
   static constexpr std::string_view name() noexcept {
     return {value_.data(), value_.size()};
   }
-  TypeInfo() = delete;
 };
 
 }  // namespace Kokkos::Impl
@@ -91,7 +90,6 @@ template <class T>
 class TypeInfo {
  public:
   static constexpr std::string_view name() noexcept { return "not supported"; }
-  TypeInfo() = delete;
 };
 
 }  // namespace Kokkos::Impl
