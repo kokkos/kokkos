@@ -3,13 +3,15 @@
 ## [4.4.01](https://github.com/kokkos/kokkos/tree/4.4.01)
 [Full Changelog](https://github.com/kokkos/kokkos/compare/4.0.00...4.4.01)
 
-### Feature:
+### Features:
 * Introduce new SequentialHostInit view allocation property [\#7229](https://github.com/kokkos/kokkos/pull/7229)
 
-### CUDA:
+### Backend and Architecture Enhancements:
+
+#### CUDA:
 * Experimental support for unified memory mode (intended for Grace-Hopper etc.) [\#6823](https://github.com/kokkos/kokkos/pull/6823)
 
-### Bug Fix
+### Bug Fixes
 * OpenMP: Fix issue related to the visibility of an internal symbol with shared libraries that affected `ScatterView` in particular [\#7284](https://github.com/kokkos/kokkos/pull/7284)
 * Fix implicit copy assignment operators in few AVX2 masks being deleted [#7296](https://github.com/kokkos/kokkos/pull/7296)
 
