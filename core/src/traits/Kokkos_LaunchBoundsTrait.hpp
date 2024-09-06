@@ -86,6 +86,27 @@ struct SubGroupSizeTrait : TraitSpecificationBase<SubGroupSizeTrait> {
   };
 };
 
+struct RegisterFileSizeTrait : TraitSpecificationBase<RegisterFileSizeTrait> {
+  struct base_traits {
+    static constexpr bool registerfile_size_is_defaulted = true;
+    static constexpr int registerfile_size               = 0;
+
+    KOKKOS_IMPL_MSVC_NVCC_EBO_WORKAROUND
+  };
+  template <class RegisterFileSizeParam, class AnalyzeNextTrait>
+  struct mixin_matching_trait : AnalyzeNextTrait {
+    using base_t = AnalyzeNextTrait;
+    using base_t::base_t;
+
+    static constexpr bool registerfile_size_is_defaulted = false;
+
+    static_assert(base_t::registerfile_size_is_defaulted,
+                  "Kokkos Error: More than one subgroup size given");
+
+    static constexpr int registerfile_size = RegisterFileSizeParam::value;
+  };
+};
+
 // </editor-fold> end trait specification }}}1
 //==============================================================================
 
@@ -94,6 +115,10 @@ struct SubGroupSizeTrait : TraitSpecificationBase<SubGroupSizeTrait> {
 
 template <int size>
 struct PolicyTraitMatcher<SubGroupSizeTrait, SubGroupSize<size>>
+    : std::true_type {};
+
+template <int size>
+struct PolicyTraitMatcher<RegisterFileSizeTrait, RegisterFileSize<size>>
     : std::true_type {};
 
 // </editor-fold> end PolicyTraitMatcher specialization }}}1
