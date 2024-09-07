@@ -28,7 +28,7 @@ static_assert(false,
 #include <impl/Kokkos_AnalyzePolicy.hpp>
 #include <Kokkos_Concepts.hpp>
 #include <Kokkos_TypeInfo.hpp>
-#ifdef KOKKOS_COMPILER_INTEL
+#ifndef KOKKOS_ENABLE_IMPL_TYPEINFO
 #include <typeinfo>
 #endif
 #include <limits>
@@ -1228,7 +1228,7 @@ template <typename FunctorType, typename TagType>
 struct ParallelConstructName<FunctorType, TagType, true> {
   ParallelConstructName(std::string const& label) : label_ref(label) {
     if (label.empty()) {
-#ifndef KOKKOS_COMPILER_INTEL
+#ifdef KOKKOS_ENABLE_IMPL_TYPEINFO
       default_name =
           std::string(TypeInfo<std::remove_const_t<FunctorType>>::name()) +
           "/" + std::string(TypeInfo<TagType>::name());
@@ -1249,7 +1249,7 @@ template <typename FunctorType, typename TagType>
 struct ParallelConstructName<FunctorType, TagType, false> {
   ParallelConstructName(std::string const& label) : label_ref(label) {
     if (label.empty()) {
-#ifndef KOKKOS_COMPILER_INTEL
+#ifdef KOKKOS_ENABLE_IMPL_TYPEINFO
       default_name = TypeInfo<std::remove_const_t<FunctorType>>::name();
 #else
       default_name = typeid(FunctorType).name();
