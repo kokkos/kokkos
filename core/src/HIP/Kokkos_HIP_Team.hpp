@@ -289,11 +289,11 @@ class HIPTeamMember {
 #endif
   }
 
-  template <typename WrapperReducerType>
+  template <typename WrappedReducerType>
   KOKKOS_INLINE_FUNCTION static std::enable_if_t<
-      is_reducer<WrapperReducerType>::value>
-  impl_vector_reduce(WrapperReducerType const& wrapped_reducer,
-                     typename WrapperReducerType::value_type& value) {
+      is_reducer<WrappedReducerType>::value>
+  impl_vector_reduce(WrappedReducerType const& wrapped_reducer,
+                     typename WrappedReducerType::value_type& value) {
 #ifdef __HIP_DEVICE_COMPILE__
     if (blockDim.x == 1) return;
 

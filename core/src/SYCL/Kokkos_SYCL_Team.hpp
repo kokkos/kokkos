@@ -134,12 +134,12 @@ class SYCLTeamMember {
     reducer.reference() = value;
   }
 
-  template <typename WrapperReducerType>
-  KOKKOS_INLINE_FUNCTION std::enable_if_t<is_reducer<WrapperReducerType>::value>
+  template <typename WrappedReducerType>
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<is_reducer<WrappedReducerType>::value>
   impl_team_reduce(
-      WrapperReducerType const& wrapper_reducer,
-      typename WrapperReducerType::value_type& value) const noexcept {
-    using value_type = WrapperReducerType::value_type;
+      WrappedReducerType const& wrapped_reducer,
+      typename WrappedReducerType::value_type& value) const noexcept {
+    using value_type = typename WrappedReducerType::value_type;
 
     auto sg                       = m_item.get_sub_group();
     const auto sub_group_range    = sg.get_local_range()[0];
@@ -153,7 +153,7 @@ class SYCLTeamMember {
       if (vector_range * shift < sub_group_range) {
         const value_type tmp = Kokkos::Impl::SYCLReduction::shift_group_left(
             sg, value, vector_range * shift);
-        if (team_rank_ + shift < team_size_) wrapper_reducer.join(&value, &tmp);
+        if (team_rank_ + shift < team_size_) wrapped_reducer.join(&value, &tmp);
       }
     };
     shuffle_combine(1);
@@ -167,7 +167,7 @@ class SYCLTeamMember {
          shift <<= 1) {
       auto tmp = Kokkos::Impl::SYCLReduction::shift_group_left(
           sg, value, vector_range * shift);
-      if (team_rank_ + shift < team_size_) wrapper_reducer.join(&value, &tmp);
+      if (team_rank_ + shift < team_size_) wrapped_reducer.join(&value, &tmp);
     }
 #endif
     value = Kokkos::Impl::SYCLReduction::select_from_group(sg, value, 0);
@@ -200,14 +200,14 @@ class SYCLTeamMember {
     for (int start = step_width; start < n_subgroups; start += step_width) {
       if (id_in_sg == 0 && group_id >= start &&
           group_id < std::min(start + step_width, n_subgroups))
-        wrapper_reducer.join(&reduction_array[group_id - start], &value);
+        wrapped_reducer.join(&reduction_array[group_id - start], &value);
       sycl::group_barrier(m_item.get_group());
     }
 
     // Do the final reduction for all threads redundantly
     value = reduction_array[0];
     for (int i = 1; i < std::min(step_width, n_subgroups); ++i)
-      wrapper_reducer.join(&value, &reduction_array[i]);
+      wrapped_reducer.join(&value, &reduction_array[i]);
 
     // Make sure that every thread is done using the reduction array.
     sycl::group_barrier(m_item.get_group());
@@ -334,7 +334,7 @@ class SYCLTeamMember {
 
   template <typename WrappedReducerType>
   KOKKOS_INLINE_FUNCTION std::enable_if_t<is_reducer<WrappedReducerType>::value>
-  impl_vector_reduce(WrapperReducerType const& wrapped_reducer,
+  impl_vector_reduce(WrappedReducerType const& wrapped_reducer,
                      typename WrappedReducerType::value_type& value) const {
     const auto tidx1   = m_item.get_local_id(1);
     const auto grange1 = m_item.get_local_range(1);
