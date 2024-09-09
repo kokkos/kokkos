@@ -92,7 +92,7 @@ struct DynamicRank<0> {
 TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_dyn) {
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 
-#ifdef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECKS
+#ifndef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECKS
   GTEST_SKIP() << "only enforced when debug bound checks is enabled";
 #endif
 
@@ -120,7 +120,7 @@ struct StaticRank<0> {
 TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_stat) {
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 
-#ifdef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECKS
+#ifndef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECKS
   GTEST_SKIP() << "only enforced when debug bound checks is enabled";
 #endif
 
@@ -148,7 +148,7 @@ struct MixedRank<0> {
 TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_mix) {
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 
-#ifdef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECKS
+#ifndef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECKS
   GTEST_SKIP() << "only enforced when debug bound checks is enabled";
 #endif
 
@@ -179,7 +179,7 @@ TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_mix) {
 TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_static_extents) {
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 
-#ifdef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECKS
+#ifndef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECKS
   GTEST_SKIP() << "only enforced when debug bound checks is enabled";
 #endif
 
