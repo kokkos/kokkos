@@ -358,7 +358,7 @@
 #endif
 
 #if !defined(KOKKOS_IMPL_EXTERNAL_FUNCTION)
-#define KOKKOS_IMPL_EXTERNAL_FUNCTION
+#define KOKKOS_IMPL_EXTERNAL_FUNCTION KOKKOS_IMPL_FUNCTION
 #endif
 
 //----------------------------------------------------------------------------
