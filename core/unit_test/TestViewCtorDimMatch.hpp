@@ -205,5 +205,6 @@ TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_static_extents) {
 }
 
 #undef CHECK_DEATH
+#undef CHECK_DEATH_UNMANAGED
 #endif  // KOKKOS_ENABLE_OPENMPTARGET
 }  // namespace Test
