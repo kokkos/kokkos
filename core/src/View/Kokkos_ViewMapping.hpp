@@ -1762,6 +1762,43 @@ struct ViewOffset<
 
   /* Enable padding for trivial scalar types with non-zero trivial scalar size.
    */
+
+  template <unsigned TrivialScalarSize>
+  constexpr size_type compute_stride(const Kokkos::LayoutRight& arg_layout) {
+    return arg_layout.stride != KOKKOS_IMPL_CTOR_DEFAULT_ARG
+               ? arg_layout.stride
+               : Padding<TrivialScalarSize>::
+                     stride(/* 2 <= rank */
+                            m_dim.N1 *
+                            (dimension_type::rank == 2
+                                 ? size_t(1)
+                                 : m_dim.N2 *
+                                       (dimension_type::rank == 3
+                                            ? size_t(1)
+                                            : m_dim.N3 *
+                                                  (dimension_type::rank == 4
+                                                       ? size_t(1)
+                                                       : m_dim.N4 *
+                                                             (dimension_type::
+                                                                          rank ==
+                                                                      5
+                                                                  ? size_t(1)
+                                                                  : m_dim.N5 *
+                                                                        (dimension_type::
+                                                                                     rank ==
+                                                                                 6
+                                                                             ? size_t(
+                                                                                   1)
+                                                                             : m_dim.N6 *
+                                                                                   (dimension_type::
+                                                                                                rank ==
+                                                                                            7
+                                                                                        ? size_t(
+                                                                                              1)
+                                                                                        : m_dim
+                                                                                              .N7)))))));
+  }
+
   template <unsigned TrivialScalarSize>
   KOKKOS_INLINE_FUNCTION constexpr ViewOffset(
       std::integral_constant<unsigned, TrivialScalarSize> const&,
@@ -1770,40 +1807,7 @@ struct ViewOffset<
               arg_layout.dimension[2], arg_layout.dimension[3],
               arg_layout.dimension[4], arg_layout.dimension[5],
               arg_layout.dimension[6], arg_layout.dimension[7]),
-        m_stride(
-            arg_layout.stride != KOKKOS_IMPL_CTOR_DEFAULT_ARG
-                ? arg_layout.stride
-                : Padding<TrivialScalarSize>::
-                      stride(/* 2 <= rank */
-                             m_dim.N1 *
-                             (dimension_type::rank == 2
-                                  ? size_t(1)
-                                  : m_dim.N2 *
-                                        (dimension_type::rank == 3
-                                             ? size_t(1)
-                                             : m_dim.N3 *
-                                                   (dimension_type::rank == 4
-                                                        ? size_t(1)
-                                                        : m_dim.N4 *
-                                                              (dimension_type::
-                                                                           rank ==
-                                                                       5
-                                                                   ? size_t(1)
-                                                                   : m_dim.N5 *
-                                                                         (dimension_type::
-                                                                                      rank ==
-                                                                                  6
-                                                                              ? size_t(
-                                                                                    1)
-                                                                              : m_dim.N6 *
-                                                                                    (dimension_type::
-                                                                                                 rank ==
-                                                                                             7
-                                                                                         ? size_t(
-                                                                                               1)
-                                                                                         : m_dim
-                                                                                               .N7)))))))) {
-  }
+        m_stride(compute_stride<TrivialScalarSize>(arg_layout)) {}
 
   template <class DimRHS>
   KOKKOS_INLINE_FUNCTION constexpr ViewOffset(

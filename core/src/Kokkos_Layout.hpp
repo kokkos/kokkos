@@ -52,11 +52,9 @@ struct LayoutLeft {
   using array_layout = LayoutLeft;
 
   size_t dimension[ARRAY_LAYOUT_MAX_RANK];
-  // we don't have a constructor to set this directly
+  // we don't have a constructor to set the stride directly
   // but we will deprecate the class anyway (or at least using an instance of
-  // this class) so I believe its acceptable to not introduce a new ctor and
-  // simply set this value directly in the internal functions where we construct
-  // instances of LayoutLeft
+  // this class) when switching the internal implementation to use mdspan
   size_t stride;
 
   enum : bool { is_extent_constructible = true };
@@ -108,11 +106,9 @@ struct LayoutRight {
   using array_layout = LayoutRight;
 
   size_t dimension[ARRAY_LAYOUT_MAX_RANK];
-  // we don't have a constructor to set this directly
+  // we don't have a constructor to set the stride directly
   // but we will deprecate the class anyway (or at least using an instance of
-  // this class) so I believe its acceptable to not introduce a new ctor and
-  // simply set this value directly in the internal functions where we construct
-  // instances of LayoutLeft
+  // this class) when switching the internal implementation to use mdspan
   size_t stride;
 
   enum : bool { is_extent_constructible = true };
