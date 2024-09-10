@@ -16,6 +16,6 @@
 
 #include <Kokkos_Macros.hpp>
 
-KOKKOS_EXTERNAL_FUNCTION void count_even(const long i, long& lcount) {
+KOKKOS_RELOCATABLE_FUNCTION void count_even(const long i, long& lcount) {
   lcount += (i % 2) == 0;
 }

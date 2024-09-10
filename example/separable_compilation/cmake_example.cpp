@@ -19,7 +19,7 @@
 #include <cstdio>
 #include <iostream>
 
-KOKKOS_EXTERNAL_FUNCTION void count_even(const long i, long& lcount);
+KOKKOS_RELOCATABLE_FUNCTION void count_even(const long i, long& lcount);
 
 int main(int argc, char* argv[]) {
   Kokkos::initialize(argc, argv);
