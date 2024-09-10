@@ -281,6 +281,11 @@ class OffsetView : public View<DataType, Properties...> {
     return offset_operator(std::make_index_sequence<base_t::rank()>(),
                            indices...);
   }
+
+  template <class... OtherIndexTypes>
+  KOKKOS_FUNCTION constexpr typename base_t::reference_type access(
+      OtherIndexTypes... args) const = delete;
+
   //----------------------------------------
 
   //----------------------------------------
