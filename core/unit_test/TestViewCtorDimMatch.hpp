@@ -86,13 +86,23 @@ struct DynamicRank<0> {
   using type = int;
 };
 
+#ifdef KOKKOS_COMPILER_NVHPC
+#define VIEW_CTOR_TEST_UNREACHABLE() __builtin_unreachable()
+#else
+#define VIEW_CTOR_TEST_UNREACHABLE() static_assert(true)
+#endif
+
 // Skip test execution when KOKKOS_ENABLE_OPENMPTARGET is enabled until
 // Kokkos::abort() aborts properly on that backend
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
 TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_dyn) {
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 
-#ifdef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECKS
+#ifndef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECKS
+  GTEST_SKIP() << "only enforced when debug bound checks is enabled";
+  VIEW_CTOR_TEST_UNREACHABLE();
+#endif
+
   test_matching_arguments_rank<0, 0, DynamicRank>();  // dim = 0, dynamic = 0
   test_matching_arguments_rank<1, 1, DynamicRank>();  // dim = 1, dynamic = 1
   test_matching_arguments_rank<2, 2, DynamicRank>();  // dim = 2, dynamic = 2
@@ -102,7 +112,6 @@ TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_dyn) {
   test_matching_arguments_rank<6, 6, DynamicRank>();  // dim = 6, dynamic = 6
   test_matching_arguments_rank<7, 7, DynamicRank>();  // dim = 7, dynamic = 7
   test_matching_arguments_rank<8, 8, DynamicRank>();  // dim = 8, dynamic = 8
-#endif
 }
 
 template <int rank>
@@ -118,7 +127,11 @@ struct StaticRank<0> {
 TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_stat) {
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 
-#ifdef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECKS
+#ifndef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECKS
+  GTEST_SKIP() << "only enforced when debug bound checks is enabled";
+  VIEW_CTOR_TEST_UNREACHABLE();
+#endif
+
   test_matching_arguments_rank<0, 0, StaticRank>();  // dim = 0, dynamic = 0
   test_matching_arguments_rank<1, 0, StaticRank>();  // dim = 1, dynamic = 0
   test_matching_arguments_rank<2, 0, StaticRank>();  // dim = 2, dynamic = 0
@@ -128,7 +141,6 @@ TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_stat) {
   test_matching_arguments_rank<6, 0, StaticRank>();  // dim = 6, dynamic = 0
   test_matching_arguments_rank<7, 0, StaticRank>();  // dim = 7, dynamic = 0
   test_matching_arguments_rank<8, 0, StaticRank>();  // dim = 8, dynamic = 0
-#endif
 }
 
 template <int rank>
@@ -144,7 +156,11 @@ struct MixedRank<0> {
 TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_mix) {
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 
-#ifdef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECKS
+#ifndef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECKS
+  GTEST_SKIP() << "only enforced when debug bound checks is enabled";
+  VIEW_CTOR_TEST_UNREACHABLE();
+#endif
+
   test_matching_arguments_rank<0, 0, MixedRank>();  // dim = 0, dynamic = 0
   test_matching_arguments_rank<1, 0, MixedRank>();  // dim = 1, dynamic = 0
   test_matching_arguments_rank<2, 1, MixedRank>();  // dim = 2, dynamic = 1
@@ -154,7 +170,6 @@ TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_mix) {
   test_matching_arguments_rank<6, 5, MixedRank>();  // dim = 6, dynamic = 5
   test_matching_arguments_rank<7, 6, MixedRank>();  // dim = 7, dynamic = 6
   test_matching_arguments_rank<8, 7, MixedRank>();  // dim = 8, dynamic = 7
-#endif
 }
 
 #define CHECK_DEATH(EXPR)                                                     \
@@ -173,7 +188,11 @@ TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_mix) {
 TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_static_extents) {
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 
-#ifdef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECKS
+#ifndef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECKS
+  GTEST_SKIP() << "only enforced when debug bound checks is enabled";
+  VIEW_CTOR_TEST_UNREACHABLE();
+#endif
+
   // clang-format off
   CHECK_DEATH({ Kokkos::View<int[1]>                      v("v", 2); });
   CHECK_DEATH({ Kokkos::View<int[1][1]>                   v("v", 2, 1); });
@@ -193,9 +212,12 @@ TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_static_extents) {
   CHECK_DEATH_UNMANAGED({ Kokkos::View<int[1][1][1][1][1][1][1]>    v(nullptr, 2, 1, 1, 1, 1, 1, 1); });
   CHECK_DEATH_UNMANAGED({ Kokkos::View<int[1][1][1][1][1][1][1][1]> v(nullptr, 2, 1, 1, 1, 1, 1, 1, 1); });
   // clang-format on
-#endif
 }
 
 #undef CHECK_DEATH
+#undef CHECK_DEATH_UNMANAGED
 #endif  // KOKKOS_ENABLE_OPENMPTARGET
+
+#undef VIEW_CTOR_TEST_UNREACHABLE
+
 }  // namespace Test
