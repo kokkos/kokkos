@@ -86,6 +86,12 @@ struct DynamicRank<0> {
   using type = int;
 };
 
+#ifdef KOKKOS_COMPILER_NVHPC
+#define VIEW_CTOR_TEST_UNREACHABLE() __builtin_unreachable()
+#else
+#define VIEW_CTOR_TEST_UNREACHABLE() static_assert(true)
+#endif
+
 // Skip test execution when KOKKOS_ENABLE_OPENMPTARGET is enabled until
 // Kokkos::abort() aborts properly on that backend
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
@@ -94,6 +100,7 @@ TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_dyn) {
 
 #ifndef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECKS
   GTEST_SKIP() << "only enforced when debug bound checks is enabled";
+  VIEW_CTOR_TEST_UNREACHABLE();
 #endif
 
   test_matching_arguments_rank<0, 0, DynamicRank>();  // dim = 0, dynamic = 0
@@ -122,6 +129,7 @@ TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_stat) {
 
 #ifndef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECKS
   GTEST_SKIP() << "only enforced when debug bound checks is enabled";
+  VIEW_CTOR_TEST_UNREACHABLE();
 #endif
 
   test_matching_arguments_rank<0, 0, StaticRank>();  // dim = 0, dynamic = 0
@@ -150,6 +158,7 @@ TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_mix) {
 
 #ifndef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECKS
   GTEST_SKIP() << "only enforced when debug bound checks is enabled";
+  VIEW_CTOR_TEST_UNREACHABLE();
 #endif
 
   test_matching_arguments_rank<0, 0, MixedRank>();  // dim = 0, dynamic = 0
@@ -181,6 +190,7 @@ TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_static_extents) {
 
 #ifndef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECKS
   GTEST_SKIP() << "only enforced when debug bound checks is enabled";
+  VIEW_CTOR_TEST_UNREACHABLE();
 #endif
 
   // clang-format off
@@ -207,4 +217,7 @@ TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_static_extents) {
 #undef CHECK_DEATH
 #undef CHECK_DEATH_UNMANAGED
 #endif  // KOKKOS_ENABLE_OPENMPTARGET
+
+#undef VIEW_CTOR_TEST_UNREACHABLE
+
 }  // namespace Test
