@@ -195,11 +195,11 @@ void HIPInternal::initialize(hipStream_t stream) {
 
   // Allocate a staging buffer for constant mem in pinned host memory
   // and an event to avoid overwriting driver for previous kernel launches
-  if (not constantMemHostStaging[m_hipDev])
+  if (!constantMemHostStaging[m_hipDev])
     KOKKOS_IMPL_HIP_SAFE_CALL((hip_host_malloc_wrapper(
         reinterpret_cast<void **>(&constantMemHostStaging[m_hipDev]),
         Impl::HIPTraits::ConstantMemoryUsage)));
-  if (not constantMemReusable[m_hipDev])
+  if (!constantMemReusable[m_hipDev])
     KOKKOS_IMPL_HIP_SAFE_CALL(
         (hip_event_create_wrapper(&constantMemReusable[m_hipDev])));
 
