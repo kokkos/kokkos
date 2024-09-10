@@ -358,7 +358,7 @@
 #endif
 
 #if !defined(KOKKOS_IMPL_RELOCATABLE_FUNCTION)
-#define KOKKOS_IMPL_RELOCATABLE_FUNCTION KOKKOS_IMPL_FUNCTION
+#define KOKKOS_IMPL_RELOCATABLE_FUNCTION
 #endif
 
 //----------------------------------------------------------------------------
