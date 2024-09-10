@@ -489,14 +489,22 @@ class OffsetView : public View<DataType, Properties...> {
                              const E& ends_, subtraction_failure)
       : base_t(Kokkos::view_wrap(p),
                typename traits::array_layout(
-                   base_t::rank() > 0 ? at(ends_, 0) - at(begins_, 0) : 0,
-                   base_t::rank() > 1 ? at(ends_, 1) - at(begins_, 1) : 0,
-                   base_t::rank() > 2 ? at(ends_, 2) - at(begins_, 2) : 0,
-                   base_t::rank() > 3 ? at(ends_, 3) - at(begins_, 3) : 0,
-                   base_t::rank() > 4 ? at(ends_, 4) - at(begins_, 4) : 0,
-                   base_t::rank() > 5 ? at(ends_, 5) - at(begins_, 5) : 0,
-                   base_t::rank() > 6 ? at(ends_, 6) - at(begins_, 6) : 0,
-                   base_t::rank() > 7 ? at(ends_, 7) - at(begins_, 7) : 0)) {
+                   base_t::rank() > 0 ? at(ends_, 0) - at(begins_, 0)
+                                      : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                   base_t::rank() > 1 ? at(ends_, 1) - at(begins_, 1)
+                                      : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                   base_t::rank() > 2 ? at(ends_, 2) - at(begins_, 2)
+                                      : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                   base_t::rank() > 3 ? at(ends_, 3) - at(begins_, 3)
+                                      : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                   base_t::rank() > 4 ? at(ends_, 4) - at(begins_, 4)
+                                      : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                   base_t::rank() > 5 ? at(ends_, 5) - at(begins_, 5)
+                                      : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                   base_t::rank() > 6 ? at(ends_, 6) - at(begins_, 6)
+                                      : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                   base_t::rank() > 7 ? at(ends_, 7) - at(begins_, 7)
+                                      : KOKKOS_IMPL_CTOR_DEFAULT_ARG)) {
     for (size_t i = 0; i != m_begins.size(); ++i) {
       m_begins[i] = at(begins_, i);
     };
@@ -551,18 +559,34 @@ class OffsetView : public View<DataType, Properties...> {
       const std::pair<int64_t, int64_t> range7 = KOKKOS_INVALID_INDEX_RANGE
 
       )
-      : OffsetView(
-            Kokkos::Impl::ViewCtorProp<std::string>(arg_label),
-            typename traits::array_layout(range0.second - range0.first + 1,
-                                          range1.second - range1.first + 1,
-                                          range2.second - range2.first + 1,
-                                          range3.second - range3.first + 1,
-                                          range4.second - range4.first + 1,
-                                          range5.second - range5.first + 1,
-                                          range6.second - range6.first + 1,
-                                          range7.second - range7.first + 1),
-            {range0.first, range1.first, range2.first, range3.first,
-             range4.first, range5.first, range6.first, range7.first}) {}
+      : OffsetView(Kokkos::Impl::ViewCtorProp<std::string>(arg_label),
+                   typename traits::array_layout(
+                       range0.first == KOKKOS_INVALID_OFFSET
+                           ? KOKKOS_IMPL_CTOR_DEFAULT_ARG - 1
+                           : range0.second - range0.first + 1,
+                       range1.first == KOKKOS_INVALID_OFFSET
+                           ? KOKKOS_IMPL_CTOR_DEFAULT_ARG
+                           : range1.second - range1.first + 1,
+                       range2.first == KOKKOS_INVALID_OFFSET
+                           ? KOKKOS_IMPL_CTOR_DEFAULT_ARG
+                           : range2.second - range2.first + 1,
+                       range3.first == KOKKOS_INVALID_OFFSET
+                           ? KOKKOS_IMPL_CTOR_DEFAULT_ARG
+                           : range3.second - range3.first + 1,
+                       range4.first == KOKKOS_INVALID_OFFSET
+                           ? KOKKOS_IMPL_CTOR_DEFAULT_ARG
+                           : range4.second - range4.first + 1,
+                       range5.first == KOKKOS_INVALID_OFFSET
+                           ? KOKKOS_IMPL_CTOR_DEFAULT_ARG
+                           : range5.second - range5.first + 1,
+                       range6.first == KOKKOS_INVALID_OFFSET
+                           ? KOKKOS_IMPL_CTOR_DEFAULT_ARG
+                           : range6.second - range6.first + 1,
+                       range7.first == KOKKOS_INVALID_OFFSET
+                           ? KOKKOS_IMPL_CTOR_DEFAULT_ARG
+                           : range7.second - range7.first + 1),
+                   {range0.first, range1.first, range2.first, range3.first,
+                    range4.first, range5.first, range6.first, range7.first}) {}
 
   template <class... P>
   explicit OffsetView(
@@ -575,18 +599,34 @@ class OffsetView : public View<DataType, Properties...> {
       const std::pair<int64_t, int64_t> range5 = KOKKOS_INVALID_INDEX_RANGE,
       const std::pair<int64_t, int64_t> range6 = KOKKOS_INVALID_INDEX_RANGE,
       const std::pair<int64_t, int64_t> range7 = KOKKOS_INVALID_INDEX_RANGE)
-      : OffsetView(
-            arg_prop,
-            typename traits::array_layout(range0.second - range0.first + 1,
-                                          range1.second - range1.first + 1,
-                                          range2.second - range2.first + 1,
-                                          range3.second - range3.first + 1,
-                                          range4.second - range4.first + 1,
-                                          range5.second - range5.first + 1,
-                                          range6.second - range6.first + 1,
-                                          range7.second - range7.first + 1),
-            {range0.first, range1.first, range2.first, range3.first,
-             range4.first, range5.first, range6.first, range7.first}) {}
+      : OffsetView(arg_prop,
+                   typename traits::array_layout(
+                       range0.first == KOKKOS_INVALID_OFFSET
+                           ? KOKKOS_IMPL_CTOR_DEFAULT_ARG
+                           : range0.second - range0.first + 1,
+                       range1.first == KOKKOS_INVALID_OFFSET
+                           ? KOKKOS_IMPL_CTOR_DEFAULT_ARG
+                           : range1.second - range1.first + 1,
+                       range2.first == KOKKOS_INVALID_OFFSET
+                           ? KOKKOS_IMPL_CTOR_DEFAULT_ARG
+                           : range2.second - range2.first + 1,
+                       range3.first == KOKKOS_INVALID_OFFSET
+                           ? KOKKOS_IMPL_CTOR_DEFAULT_ARG
+                           : range3.second - range3.first + 1,
+                       range4.first == KOKKOS_INVALID_OFFSET
+                           ? KOKKOS_IMPL_CTOR_DEFAULT_ARG
+                           : range4.second - range4.first + 1,
+                       range5.first == KOKKOS_INVALID_OFFSET
+                           ? KOKKOS_IMPL_CTOR_DEFAULT_ARG
+                           : range5.second - range5.first + 1,
+                       range6.first == KOKKOS_INVALID_OFFSET
+                           ? KOKKOS_IMPL_CTOR_DEFAULT_ARG
+                           : range6.second - range6.first + 1,
+                       range7.first == KOKKOS_INVALID_OFFSET
+                           ? KOKKOS_IMPL_CTOR_DEFAULT_ARG
+                           : range7.second - range7.first + 1),
+                   {range0.first, range1.first, range2.first, range3.first,
+                    range4.first, range5.first, range6.first, range7.first}) {}
 
   template <class... P>
   explicit KOKKOS_FUNCTION OffsetView(
