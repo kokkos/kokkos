@@ -1878,7 +1878,7 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
 
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
        i += loop_boundaries.increment) {
-    lambda(i, reducer.reference());
+    lambda(i, value);
   }
 
   wrapped_reducer.final(&value);
