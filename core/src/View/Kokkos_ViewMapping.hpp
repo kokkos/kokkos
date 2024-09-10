@@ -863,14 +863,16 @@ struct ViewOffset<
   KOKKOS_INLINE_FUNCTION
   constexpr array_layout layout() const {
     constexpr auto r = dimension_type::rank;
-    return array_layout((r > 0 ? m_dim.N0 : KOKKOS_INVALID_INDEX),
-                        (r > 1 ? m_dim.N1 : KOKKOS_INVALID_INDEX),
-                        (r > 2 ? m_dim.N2 : KOKKOS_INVALID_INDEX),
-                        (r > 3 ? m_dim.N3 : KOKKOS_INVALID_INDEX),
-                        (r > 4 ? m_dim.N4 : KOKKOS_INVALID_INDEX),
-                        (r > 5 ? m_dim.N5 : KOKKOS_INVALID_INDEX),
-                        (r > 6 ? m_dim.N6 : KOKKOS_INVALID_INDEX),
-                        (r > 7 ? m_dim.N7 : KOKKOS_INVALID_INDEX));
+    array_layout l((r > 0 ? m_dim.N0 : KOKKOS_INVALID_INDEX),
+                   (r > 1 ? m_dim.N1 : KOKKOS_INVALID_INDEX),
+                   (r > 2 ? m_dim.N2 : KOKKOS_INVALID_INDEX),
+                   (r > 3 ? m_dim.N3 : KOKKOS_INVALID_INDEX),
+                   (r > 4 ? m_dim.N4 : KOKKOS_INVALID_INDEX),
+                   (r > 5 ? m_dim.N5 : KOKKOS_INVALID_INDEX),
+                   (r > 6 ? m_dim.N6 : KOKKOS_INVALID_INDEX),
+                   (r > 7 ? m_dim.N7 : KOKKOS_INVALID_INDEX));
+    l.stride = m_stride;
+    return l;
   }
 
   KOKKOS_INLINE_FUNCTION constexpr size_type dimension_0() const {
@@ -1064,7 +1066,11 @@ struct ViewOffset<
               arg_layout.dimension[2], arg_layout.dimension[3],
               arg_layout.dimension[4], arg_layout.dimension[5],
               arg_layout.dimension[6], arg_layout.dimension[7]),
-        m_stride(Padding<TrivialScalarSize>::stride(arg_layout.dimension[0])) {}
+        m_stride(
+            arg_layout.stride != KOKKOS_IMPL_CTOR_DEFAULT_ARG
+                ? arg_layout.stride
+                : Padding<TrivialScalarSize>::stride(arg_layout.dimension[0])) {
+  }
 
   template <class DimRHS>
   KOKKOS_INLINE_FUNCTION constexpr ViewOffset(
@@ -1543,14 +1549,16 @@ struct ViewOffset<
   KOKKOS_INLINE_FUNCTION
   constexpr array_layout layout() const {
     constexpr auto r = dimension_type::rank;
-    return array_layout((r > 0 ? m_dim.N0 : KOKKOS_INVALID_INDEX),
-                        (r > 1 ? m_dim.N1 : KOKKOS_INVALID_INDEX),
-                        (r > 2 ? m_dim.N2 : KOKKOS_INVALID_INDEX),
-                        (r > 3 ? m_dim.N3 : KOKKOS_INVALID_INDEX),
-                        (r > 4 ? m_dim.N4 : KOKKOS_INVALID_INDEX),
-                        (r > 5 ? m_dim.N5 : KOKKOS_INVALID_INDEX),
-                        (r > 6 ? m_dim.N6 : KOKKOS_INVALID_INDEX),
-                        (r > 7 ? m_dim.N7 : KOKKOS_INVALID_INDEX));
+    array_layout l((r > 0 ? m_dim.N0 : KOKKOS_INVALID_INDEX),
+                   (r > 1 ? m_dim.N1 : KOKKOS_INVALID_INDEX),
+                   (r > 2 ? m_dim.N2 : KOKKOS_INVALID_INDEX),
+                   (r > 3 ? m_dim.N3 : KOKKOS_INVALID_INDEX),
+                   (r > 4 ? m_dim.N4 : KOKKOS_INVALID_INDEX),
+                   (r > 5 ? m_dim.N5 : KOKKOS_INVALID_INDEX),
+                   (r > 6 ? m_dim.N6 : KOKKOS_INVALID_INDEX),
+                   (r > 7 ? m_dim.N7 : KOKKOS_INVALID_INDEX));
+    l.stride = m_stride;
+    return l;
   }
 
   KOKKOS_INLINE_FUNCTION constexpr size_type dimension_0() const {
@@ -1734,6 +1742,24 @@ struct ViewOffset<
 
   /* Enable padding for trivial scalar types with non-zero trivial scalar size.
    */
+
+ private:
+  template <unsigned TrivialScalarSize>
+  KOKKOS_FUNCTION constexpr size_type compute_stride(
+      const Kokkos::LayoutRight& arg_layout) {
+    if (arg_layout.stride != KOKKOS_IMPL_CTOR_DEFAULT_ARG)
+      return arg_layout.stride;
+    size_type value = m_dim.N1;
+    if constexpr (dimension_type::rank > 2) value *= m_dim.N2;
+    if constexpr (dimension_type::rank > 3) value *= m_dim.N3;
+    if constexpr (dimension_type::rank > 4) value *= m_dim.N4;
+    if constexpr (dimension_type::rank > 5) value *= m_dim.N5;
+    if constexpr (dimension_type::rank > 6) value *= m_dim.N6;
+    if constexpr (dimension_type::rank > 7) value *= m_dim.N7;
+    return Padding<TrivialScalarSize>::stride(value);
+  }
+
+ public:
   template <unsigned TrivialScalarSize>
   KOKKOS_INLINE_FUNCTION constexpr ViewOffset(
       std::integral_constant<unsigned, TrivialScalarSize> const&,
@@ -1742,37 +1768,7 @@ struct ViewOffset<
               arg_layout.dimension[2], arg_layout.dimension[3],
               arg_layout.dimension[4], arg_layout.dimension[5],
               arg_layout.dimension[6], arg_layout.dimension[7]),
-        m_stride(
-            Padding<TrivialScalarSize>::
-                stride(/* 2 <= rank */
-                       m_dim.N1 *
-                       (dimension_type::rank == 2
-                            ? size_t(1)
-                            : m_dim.N2 *
-                                  (dimension_type::rank == 3
-                                       ? size_t(1)
-                                       : m_dim.N3 *
-                                             (dimension_type::rank == 4
-                                                  ? size_t(1)
-                                                  : m_dim.N4 *
-                                                        (dimension_type::rank ==
-                                                                 5
-                                                             ? size_t(1)
-                                                             : m_dim.N5 *
-                                                                   (dimension_type::
-                                                                                rank ==
-                                                                            6
-                                                                        ? size_t(
-                                                                              1)
-                                                                        : m_dim.N6 *
-                                                                              (dimension_type::
-                                                                                           rank ==
-                                                                                       7
-                                                                                   ? size_t(
-                                                                                         1)
-                                                                                   : m_dim
-                                                                                         .N7)))))))) {
-  }
+        m_stride(compute_stride<TrivialScalarSize>(arg_layout)) {}
 
   template <class DimRHS>
   KOKKOS_INLINE_FUNCTION constexpr ViewOffset(
