@@ -16,7 +16,6 @@
 
 #include <Kokkos_Core.hpp>
 
-#include <cstdio>
 #include <iostream>
 
 KOKKOS_RELOCATABLE_FUNCTION void count_even(const long i, long& lcount);
@@ -24,32 +23,27 @@ KOKKOS_RELOCATABLE_FUNCTION void count_even(const long i, long& lcount);
 int main() {
   Kokkos::ScopeGuard scope_guard;
 
-  const long n = 10000;
+  for (int n = 10; n <= 100'000'000; n *= 10) {
+    Kokkos::Timer timer;
 
-  std::cout << "Number of even integers from 0 to " << n - 1 << '\n';
+    long count = 0;
+    // Compute the number of even integers from 0 to n-1, in parallel.
+    Kokkos::parallel_reduce(
+        n, KOKKOS_LAMBDA(const long i, long& lcount) { count_even(i, lcount); },
+        count);
 
-  Kokkos::Timer timer;
-  timer.reset();
+    double count_time_rdc = timer.seconds();
 
-  // Compute the number of even integers from 0 to n-1, in parallel.
-  long count = 0;
-  Kokkos::parallel_reduce(
-      n, KOKKOS_LAMBDA(const long i, long& lcount) { count_even(i, lcount); },
-      count);
+    timer.reset();
 
-  double count_time = timer.seconds();
-  std::cout << "Parallel: " << count << ", " << count_time << "s\n";
+    // Compute the number of even integers from 0 to n-1, in parallel.
+    Kokkos::parallel_reduce(
+        n,
+        KOKKOS_LAMBDA(const long i, long& lcount) { lcount += (i % 2) == 0; },
+        count);
 
-  timer.reset();
-
-  // Compare to a sequential loop.
-  long seq_count = 0;
-  for (long i = 0; i < n; ++i) {
-    seq_count += (i % 2) == 0;
+    double count_time_no_rdc = timer.seconds();
+    std::cout << std::scientific << n * 1. << ' ' << count_time_rdc
+              << "s (RDC) vs. " << count_time_no_rdc << "s (inline)\n";
   }
-
-  count_time = timer.seconds();
-  std::cout << "Sequential: " << seq_count << ", " << count_time << "s\n";
-
-  return (count == seq_count) ? 0 : -1;
 }
