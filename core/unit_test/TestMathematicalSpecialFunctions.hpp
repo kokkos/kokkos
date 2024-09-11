@@ -1712,10 +1712,10 @@ struct TestComplexBesselH1Function {
 
     // FIXME_HIP Disable the test when using ROCm 5.5, 5.6, and 6.2 due to a
     // known compiler bug
-#if !defined(KOKKOS_ENABLE_HIP) ||                              \
-    (!((HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR == 5)) && \
-     !((HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR == 6)) && \
-     !((HIP_VERSION_MAJOR == 6) && (HIP_VERSION_MINOR == 2)))
+#if !(defined(KOKKOS_ENABLE_HIP) &&                          \
+      ((HIP_VERSION_MAJOR == 5 && HIP_VERSION_MINOR == 5) || \
+       (HIP_VERSION_MAJOR == 5 && HIP_VERSION_MINOR == 6) || \
+       (HIP_VERSION_MAJOR == 6 && HIP_VERSION_MINOR == 2)))
     EXPECT_EQ(h_ref_ch10(0), h_ch10(0));
     int upper_limit_10 = N;
 // FIXME_SYCL Failing for Intel GPUs, 17 is the first failing test case
@@ -1911,10 +1911,10 @@ struct TestComplexBesselH2Function {
 
     // FIXME_HIP Disable the test when using ROCm 5.5, 5.6, and 6.2 due to a
     // known compiler bug
-#if !defined(KOKKOS_ENABLE_HIP) ||                              \
-    (!((HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR == 5)) && \
-     !((HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR == 6)) && \
-     !((HIP_VERSION_MAJOR == 6) && (HIP_VERSION_MINOR == 2)))
+#if !(defined(KOKKOS_ENABLE_HIP) ||                          \
+      ((HIP_VERSION_MAJOR == 5 && HIP_VERSION_MINOR == 5) || \
+       (HIP_VERSION_MAJOR == 5 && HIP_VERSION_MINOR == 6) || \
+       (HIP_VERSION_MAJOR == 6 && HIP_VERSION_MINOR == 2)))
     EXPECT_EQ(h_ref_ch20(0), h_ch20(0));
     int upper_limit_20 = N;
 // FIXME_SYCL Failing for Intel GPUs, 16 is the first failing test case
