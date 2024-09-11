@@ -171,7 +171,7 @@ parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
   using value_type           = typename wrapped_reducer_type::value_type;
 
   wrapped_reducer_type wrapped_reducer(lambda);
-  value_type tmp{};
+  value_type tmp;
   wrapped_reducer.init(&tmp);
 
   iType j_start =
@@ -199,7 +199,7 @@ parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
   using wrapped_reducer_type = typename functor_analysis_type::Reducer;
 
   wrapped_reducer_type wrapped_reducer(reducer);
-  value_type tmp{};
+  value_type tmp;
   wrapped_reducer.init(&tmp);
 
   iType j_start =
@@ -229,7 +229,7 @@ parallel_reduce(const Impl::ThreadVectorRangeBoundariesStruct<
   using value_type           = typename wrapped_reducer_type::value_type;
 
   wrapped_reducer_type wrapped_reducer(lambda);
-  value_type tmp{};
+  value_type tmp;
   wrapped_reducer.init(&tmp);
 
   iType j_start =
@@ -258,7 +258,7 @@ parallel_reduce(const Impl::ThreadVectorRangeBoundariesStruct<
   using wrapped_reducer_type = typename functor_analysis_type::Reducer;
 
   wrapped_reducer_type wrapped_reducer(reducer);
-  value_type tmp{};
+  value_type tmp;
   wrapped_reducer.init(&tmp);
 
   iType j_start =
@@ -289,7 +289,7 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
   using value_type           = typename wrapped_reducer_type::value_type;
 
   wrapped_reducer_type wrapped_reducer(lambda);
-  value_type tmp{};
+  value_type tmp;
   wrapped_reducer.init(&tmp);
 
   iType j_start =
@@ -334,7 +334,7 @@ parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
   using value_type           = typename wrapped_reducer_type::value_type;
 
   wrapped_reducer_type wrapped_reducer(lambda);
-  value_type tmp{};
+  value_type tmp;
   wrapped_reducer.init(&tmp);
 
   ValueType tmp = ValueType();
@@ -388,7 +388,7 @@ parallel_reduce(const Impl::ThreadVectorRangeBoundariesStruct<
   using value_type           = typename wrapped_reducer_type::value_type;
 
   wrapped_reducer_type wrapped_reducer(lambda);
-  value_type tmp{};
+  value_type tmp;
   wrapped_reducer.init(&tmp);
 
 #pragma acc loop vector reduction(+ : tmp)
@@ -442,7 +442,7 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
   using value_type           = typename wrapped_reducer_type::value_type;
 
   wrapped_reducer_type wrapped_reducer(lambda);
-  value_type tmp{};
+  value_type tmp;
   wrapped_reducer.init(&tmp);
 
 #pragma acc loop vector reduction(+ : tmp)
