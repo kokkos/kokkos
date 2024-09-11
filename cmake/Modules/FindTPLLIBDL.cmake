@@ -1,1 +1,8 @@
+# kokkos_create_imported_tpl errors out if a library location is specified
+# for an interface library
+SET(KOKKOS_LIBDL_LIBRARY ${LIBDL_LIBRARY})
+UNSET(LIBDL_LIBRARY CACHE)
 KOKKOS_FIND_IMPORTED(LIBDL HEADER dlfcn.h INTERFACE LIBRARIES ${CMAKE_DL_LIBS})
+IF(KOKKOS_LIBDL_LIBRARY)
+  SET(LIBDL_LIBRARY ${KOKKOS_LIBDL_LIBRARY} CACHE FILEPATH "Path to a library.")
+ENDIF()
