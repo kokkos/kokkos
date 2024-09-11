@@ -908,7 +908,7 @@ parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
   using value_type           = typename wrapped_reducer_type::value_type;
 
   wrapped_reducer_type wrapped_reducer(lambda);
-  value_type value{};
+  value_type value;
   wrapped_reducer.init(&value);
 
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
@@ -934,7 +934,7 @@ parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
   using wrapped_reducer_type = typename functor_analysis_type::Reducer;
 
   wrapped_reducer_type wrapped_reducer(reducer);
-  value_type value{};
+  value_type value;
   wrapped_reducer.init(&value);
 
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
@@ -987,7 +987,7 @@ parallel_reduce(const Impl::ThreadVectorRangeBoundariesStruct<
   using value_type           = typename wrapped_reducer_type::value_type;
 
   wrapped_reducer_type wrapped_reducer(lambda);
-  value_type value{};
+  value_type value;
   wrapped_reducer.init(&value);
 
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
@@ -1012,7 +1012,7 @@ parallel_reduce(const Impl::ThreadVectorRangeBoundariesStruct<
   using wrapped_reducer_type = typename functor_analysis_type::Reducer;
 
   wrapped_reducer_type wrapped_reducer(reducer);
-  value_type value{};
+  value_type value;
   wrapped_reducer.init(&value);
 
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;

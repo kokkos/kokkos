@@ -526,7 +526,7 @@ parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
            ReducerType, value_type>;
        using wrapped_reducer_type = typename functor_analysis_type::Reducer;
 
-       wrapped_reducer_type wrapped_reducer(reducer); value_type value{};
+       wrapped_reducer_type wrapped_reducer(reducer); value_type value;
        wrapped_reducer.init(&value);
 
        for (iType i = loop_boundaries.start + threadIdx.y;
@@ -604,7 +604,7 @@ parallel_reduce(const Impl::TeamVectorRangeBoundariesStruct<
            ReducerType, value_type>;
        using wrapped_reducer_type = typename functor_analysis_type::Reducer;
 
-       wrapped_reducer_type wrapped_reducer(reducer); value_type value{};
+       wrapped_reducer_type wrapped_reducer(reducer); value_type value;
        wrapped_reducer.init(&value);
 
        for (iType i =
@@ -641,7 +641,7 @@ parallel_reduce(const Impl::TeamVectorRangeBoundariesStruct<
        using wrapped_reducer_type = typename functor_analysis_type::Reducer;
        using value_type           = typename wrapped_reducer_type::value_type;
 
-       wrapped_reducer_type wrapped_reducer(closure); value_type value{};
+       wrapped_reducer_type wrapped_reducer(closure); value_type value;
        wrapped_reducer.init(&value);
 
        for (iType i =
@@ -707,7 +707,7 @@ parallel_reduce(Impl::ThreadVectorRangeBoundariesStruct<
           ReducerType, value_type>;
       using wrapped_reducer_type = typename functor_analysis_type::Reducer;
 
-      wrapped_reducer_type wrapped_reducer(reducer); value_type value{};
+      wrapped_reducer_type wrapped_reducer(reducer); value_type value;
       wrapped_reducer.init(&value);
 
       for (iType i = loop_boundaries.start + threadIdx.x;
@@ -754,7 +754,7 @@ parallel_reduce(Impl::ThreadVectorRangeBoundariesStruct<
       using wrapped_reducer_type = typename functor_analysis_type::Reducer;
       using value_type           = typename wrapped_reducer_type::value_type;
 
-      wrapped_reducer_type wrapped_reducer(closure); value_type value{};
+      wrapped_reducer_type wrapped_reducer(closure); value_type value;
       wrapped_reducer.init(&value);
 
       for (iType i = loop_boundaries.start + threadIdx.x;

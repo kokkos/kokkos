@@ -1794,7 +1794,7 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
   using value_type           = typename wrapped_reducer_type::value_type;
 
   wrapped_reducer_type wrapped_reducer(lambda);
-  value_type value{};
+  value_type value;
   wrapped_reducer.init(&value);
 
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
@@ -1845,7 +1845,7 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
   using value_type           = typename wrapped_reducer_type::value_type;
 
   wrapped_reducer_type wrapped_reducer(lambda);
-  value_type value{};
+  value_type value;
   wrapped_reducer.init(&value);
 
 #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
@@ -1873,7 +1873,7 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
   using wrapped_reducer_type = typename functor_analysis_type::Reducer;
 
   wrapped_reducer_type wrapped_reducer(reducer);
-  value_type value{};
+  value_type value;
   wrapped_reducer.init(&value);
 
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
@@ -1899,7 +1899,7 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
   using wrapped_reducer_type = typename functor_analysis_type::Reducer;
 
   wrapped_reducer_type wrapped_reducer(reducer);
-  value_type value{};
+  value_type value;
   wrapped_reducer.init(&value);
 
 #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP

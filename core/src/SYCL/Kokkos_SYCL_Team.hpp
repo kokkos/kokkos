@@ -563,7 +563,7 @@ parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
   using wrapped_reducer_type = typename functor_analysis_type::Reducer;
 
   wrapped_reducer_type wrapped_reducer(reducer);
-  value_type value{};
+  value_type value;
   wrapped_reducer.init(&value);
 
   for (iType i = loop_boundaries.start +
@@ -599,7 +599,7 @@ parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
   using value_type           = typename wrapped_reducer_type::value_type;
 
   wrapped_reducer_type wrapped_reducer(closure);
-  value_type value{};
+  value_type value;
   wrapped_reducer.init(&value);
 
   for (iType i = loop_boundaries.start +
@@ -707,7 +707,7 @@ parallel_reduce(const Impl::TeamVectorRangeBoundariesStruct<
   using wrapped_reducer_type = typename functor_analysis_type::Reducer;
 
   wrapped_reducer_type wrapped_reducer(reducer);
-  value_type value{};
+  value_type value;
   wrapped_reducer.init(&value);
 
   const iType tidx0 = loop_boundaries.member.item().get_local_id(0);
@@ -740,7 +740,7 @@ parallel_reduce(const Impl::TeamVectorRangeBoundariesStruct<
   using value_type           = typename wrapped_reducer_type::value_type;
 
   wrapped_reducer_type wrapped_reducer(closure);
-  value_type value{};
+  value_type value;
   wrapped_reducer.init(&value);
 
   const iType tidx0 = loop_boundaries.member.item().get_local_id(0);
@@ -815,7 +815,7 @@ parallel_reduce(Impl::ThreadVectorRangeBoundariesStruct<
   using wrapped_reducer_type = typename functor_analysis_type::Reducer;
 
   wrapped_reducer_type wrapped_reducer(reducer);
-  value_type value{};
+  value_type value;
   wrapped_reducer.init(&value);
 
   const iType tidx1   = loop_boundaries.member.item().get_local_id(1);
@@ -854,7 +854,7 @@ parallel_reduce(Impl::ThreadVectorRangeBoundariesStruct<
   using value_type           = typename wrapped_reducer_type::value_type;
 
   wrapped_reducer_type wrapped_reducer(closure);
-  value_type value{};
+  value_type value;
   wrapped_reducer.init(&value);
 
   const iType tidx1 = loop_boundaries.member.item().get_local_id(1);
