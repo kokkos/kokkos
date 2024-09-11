@@ -99,7 +99,9 @@ class OpenMP {
   ///
   /// This always returns false on OpenMP
   KOKKOS_DEPRECATED inline static bool is_asynchronous(
-      OpenMP const& = OpenMP()) noexcept;
+      OpenMP const& = OpenMP()) noexcept {
+    return false;
+  }
 #endif
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
@@ -156,12 +158,6 @@ inline int OpenMP::impl_thread_pool_rank() noexcept {
 
   KOKKOS_IF_ON_DEVICE((return -1;))
 }
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-inline bool OpenMP::is_asynchronous(OpenMP const& /*instance*/) noexcept {
-  return false;
-}
-#endif
 
 inline int OpenMP::impl_thread_pool_size(int depth) const {
   return depth < 2 ? impl_thread_pool_size() : 1;
