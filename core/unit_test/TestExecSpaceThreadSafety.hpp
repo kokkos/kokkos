@@ -19,6 +19,12 @@
 
 namespace {
 
+#ifdef KOKKOS_COMPILER_NVHPC
+#define THREAD_SAFETY_TEST_UNREACHABLE() __builtin_unreachable()
+#else
+#define THREAD_SAFETY_TEST_UNREACHABLE() static_assert(true)
+#endif
+
 #ifdef KOKKOS_ENABLE_OPENMP
 template <class Lambda1, class Lambda2>
 void run_threaded_test(const Lambda1 l1, const Lambda2 l2) {
@@ -81,6 +87,7 @@ TEST(TEST_CATEGORY, exec_space_thread_safety_range) {
   GTEST_SKIP()
       << "skipping OpenACC test since unsupported host-side atomics cause "
          "race conditions during shared allocation reference counting";
+  THREAD_SAFETY_TEST_UNREACHABLE();
 #endif
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
   if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenMPTarget>)
@@ -123,6 +130,7 @@ TEST(TEST_CATEGORY, exec_space_thread_safety_mdrange) {
   GTEST_SKIP()
       << "skipping OpenACC test since unsupported host-side atomics cause "
          "race conditions during shared allocation reference counting";
+  THREAD_SAFETY_TEST_UNREACHABLE();
 #endif
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
   if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenMPTarget>)
@@ -167,6 +175,7 @@ TEST(TEST_CATEGORY, exec_space_thread_safety_team_policy) {
   GTEST_SKIP()
       << "skipping OpenACC test since unsupported host-side atomics cause "
          "race conditions during shared allocation reference counting";
+  THREAD_SAFETY_TEST_UNREACHABLE();
 #endif
 // FIXME_OPENMPTARGET
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
@@ -211,6 +220,7 @@ TEST(TEST_CATEGORY, exec_space_thread_safety_range_reduce) {
   GTEST_SKIP()
       << "skipping OpenACC test since unsupported host-side atomics cause "
          "race conditions during shared allocation reference counting";
+  THREAD_SAFETY_TEST_UNREACHABLE();
 #endif
   run_exec_space_thread_safety_range_reduce();
 }
@@ -250,6 +260,7 @@ TEST(TEST_CATEGORY, exec_space_thread_safety_mdrange_reduce) {
   GTEST_SKIP()
       << "skipping OpenACC test since unsupported host-side atomics cause "
          "race conditions during shared allocation reference counting";
+  THREAD_SAFETY_TEST_UNREACHABLE();
 #endif
 // FIXME_INTEL
 #if defined(KOKKOS_COMPILER_INTEL) && defined(KOKKOS_ENABLE_OPENMP)
@@ -296,6 +307,7 @@ TEST(TEST_CATEGORY, exec_space_thread_safety_team_policy_reduce) {
   GTEST_SKIP()
       << "skipping OpenACC test since unsupported host-side atomics cause "
          "race conditions during shared allocation reference counting";
+  THREAD_SAFETY_TEST_UNREACHABLE();
 #endif
 // FIXME_OPENMPTARGET
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
@@ -347,6 +359,7 @@ TEST(TEST_CATEGORY, exec_space_thread_safety_range_scan) {
   GTEST_SKIP()
       << "skipping OpenACC test since unsupported host-side atomics cause "
          "race conditions during shared allocation reference counting";
+  THREAD_SAFETY_TEST_UNREACHABLE();
 #endif
   run_exec_space_thread_safety_range_scan();
 }
