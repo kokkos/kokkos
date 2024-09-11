@@ -19,7 +19,7 @@ include $(KOKKOS_PATH)/Makefile.kokkos
 build: $(EXE)
 
 test: $(EXE)
-	./$(EXE) 10
+	./$(EXE)
 
 $(EXE): $(OBJ) $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(KOKKOS_LDFLAGS) $(LDFLAGS) $(EXTRA_PATH) $(OBJ) $(KOKKOS_LIBS) -o $(EXE)

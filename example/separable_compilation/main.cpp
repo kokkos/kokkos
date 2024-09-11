@@ -21,19 +21,12 @@
 
 KOKKOS_RELOCATABLE_FUNCTION void count_even(const long i, long& lcount);
 
-int main(int argc, char* argv[]) {
-  Kokkos::initialize(argc, argv);
-  Kokkos::DefaultExecutionSpace().print_configuration(std::cout);
+int main() {
+  Kokkos::ScopeGuard scope_guard;
 
-  if (argc < 2) {
-    fprintf(stderr, "Usage: %s [<kokkos_options>] <size>\n", argv[0]);
-    Kokkos::finalize();
-    exit(1);
-  }
+  const long n = 10000;
 
-  const long n = strtol(argv[1], nullptr, 10);
-
-  printf("Number of even integers from 0 to %ld\n", n - 1);
+  std::cout << "Number of even integers from 0 to " << n - 1 << '\n';
 
   Kokkos::Timer timer;
   timer.reset();
@@ -45,7 +38,7 @@ int main(int argc, char* argv[]) {
       count);
 
   double count_time = timer.seconds();
-  printf("  Parallel: %ld    %10.6f\n", count, count_time);
+  std::cout << "Parallel: " << count << ", " << count_time << "s\n";
 
   timer.reset();
 
@@ -56,9 +49,7 @@ int main(int argc, char* argv[]) {
   }
 
   count_time = timer.seconds();
-  printf("Sequential: %ld    %10.6f\n", seq_count, count_time);
-
-  Kokkos::finalize();
+  std::cout << "Sequential: " << seq_count << ", " << count_time << "s\n";
 
   return (count == seq_count) ? 0 : -1;
 }
