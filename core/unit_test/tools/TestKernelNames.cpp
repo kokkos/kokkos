@@ -112,7 +112,7 @@ void test_kernel_name_parallel_reduce() {
 
     Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecutionSpace>(0, 1),
                             my_lambda, my_result);
-    #ifndef KOKKOS_COMPILER_MSVC
+#ifndef KOKKOS_COMPILER_MSVC
     ASSERT_NE(last_parallel_reduce.find(typeid_name(my_lambda)),
               std::string::npos)
         << last_parallel_reduce << " does not contain "
@@ -120,7 +120,7 @@ void test_kernel_name_parallel_reduce() {
                my_lambda);  // internally using Impl::CombinedFunctorReducer
                             // but the name should still include the lambda as
                             // template parameter
-    #endif
+#endif
 #ifndef KOKKOS_ENABLE_CXX17
     ASSERT_FALSE(last_parallel_reduce.starts_with("const "))
         << last_parallel_reduce << " is const-qualified";

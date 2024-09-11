@@ -32,8 +32,8 @@
 //     2021.2.0    | 2021             | 20210228
 // NVCC versions less than 11.3.0 segfault when that header is included
 // NVCC+MSVC doesn't work at all - it simply reports "T" inside type_name
-#if (!defined(KOKKOS_COMPILER_INTEL) ||            \
-     (__INTEL_COMPILER_BUILD_DATE >= 20210228)) && \
+#if (!defined(KOKKOS_COMPILER_INTEL) ||                                   \
+     (__INTEL_COMPILER_BUILD_DATE >= 20210228)) &&                        \
     (!defined(KOKKOS_COMPILER_NVCC) || (KOKKOS_COMPILER_NVCC >= 1130)) && \
     (!(defined(KOKKOS_COMPILER_NVCC) && defined(KOKKOS_COMPILER_MSVC)))
 
@@ -67,10 +67,10 @@ constexpr auto type_name() {
 #else
 #error bug
 #endif
-    constexpr auto beg = func.find(prefix) + prefix.size();
-    constexpr auto end = func.rfind(suffix);
-    static_assert(beg != std::string_view::npos);
-    static_assert(end != std::string_view::npos);
+  constexpr auto beg = func.find(prefix) + prefix.size();
+  constexpr auto end = func.rfind(suffix);
+  static_assert(beg != std::string_view::npos);
+  static_assert(end != std::string_view::npos);
   return to_array<end - beg>(func.substr(beg, end));
 }
 
