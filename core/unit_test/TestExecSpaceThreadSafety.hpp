@@ -78,10 +78,9 @@ void run_exec_space_thread_safety_range() {
 
 TEST(TEST_CATEGORY, exec_space_thread_safety_range) {
 #ifdef KOKKOS_ENABLE_OPENACC  // FIXME_OPENACC
-  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenACC>)
-    GTEST_SKIP()
-        << "skipping OpenACC test since unsupported host-side atomics cause "
-           "race conditions during shared allocation reference counting";
+  GTEST_SKIP()
+      << "skipping OpenACC test since unsupported host-side atomics cause "
+         "race conditions during shared allocation reference counting";
 #endif
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
   if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenMPTarget>)
@@ -121,10 +120,9 @@ void run_exec_space_thread_safety_mdrange() {
 
 TEST(TEST_CATEGORY, exec_space_thread_safety_mdrange) {
 #ifdef KOKKOS_ENABLE_OPENACC  // FIXME_OPENACC
-  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenACC>)
-    GTEST_SKIP()
-        << "skipping OpenACC test since unsupported host-side atomics cause "
-           "race conditions during shared allocation reference counting";
+  GTEST_SKIP()
+      << "skipping OpenACC test since unsupported host-side atomics cause "
+         "race conditions during shared allocation reference counting";
 #endif
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
   if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenMPTarget>)
@@ -166,10 +164,9 @@ void run_exec_space_thread_safety_team_policy() {
 
 TEST(TEST_CATEGORY, exec_space_thread_safety_team_policy) {
 #ifdef KOKKOS_ENABLE_OPENACC  // FIXME_OPENACC
-  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenACC>)
-    GTEST_SKIP()
-        << "skipping OpenACC test since unsupported host-side atomics cause "
-           "race conditions during shared allocation reference counting";
+  GTEST_SKIP()
+      << "skipping OpenACC test since unsupported host-side atomics cause "
+         "race conditions during shared allocation reference counting";
 #endif
 // FIXME_OPENMPTARGET
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
@@ -211,10 +208,9 @@ void run_exec_space_thread_safety_range_reduce() {
 
 TEST(TEST_CATEGORY, exec_space_thread_safety_range_reduce) {
 #ifdef KOKKOS_ENABLE_OPENACC  // FIXME_OPENACC
-  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenACC>)
-    GTEST_SKIP()
-        << "skipping OpenACC test since unsupported host-side atomics cause "
-           "race conditions during shared allocation reference counting";
+  GTEST_SKIP()
+      << "skipping OpenACC test since unsupported host-side atomics cause "
+         "race conditions during shared allocation reference counting";
 #endif
   run_exec_space_thread_safety_range_reduce();
 }
@@ -251,10 +247,9 @@ void run_exec_space_thread_safety_mdrange_reduce() {
 
 TEST(TEST_CATEGORY, exec_space_thread_safety_mdrange_reduce) {
 #ifdef KOKKOS_ENABLE_OPENACC  // FIXME_OPENACC
-  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenACC>)
-    GTEST_SKIP()
-        << "skipping OpenACC test since unsupported host-side atomics cause "
-           "race conditions during shared allocation reference counting";
+  GTEST_SKIP()
+      << "skipping OpenACC test since unsupported host-side atomics cause "
+         "race conditions during shared allocation reference counting";
 #endif
 // FIXME_INTEL
 #if defined(KOKKOS_COMPILER_INTEL) && defined(KOKKOS_ENABLE_OPENMP)
@@ -298,10 +293,9 @@ void run_exec_space_thread_safety_team_policy_reduce() {
 
 TEST(TEST_CATEGORY, exec_space_thread_safety_team_policy_reduce) {
 #ifdef KOKKOS_ENABLE_OPENACC  // FIXME_OPENACC
-  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenACC>)
-    GTEST_SKIP()
-        << "skipping OpenACC test since unsupported host-side atomics cause "
-           "race conditions during shared allocation reference counting";
+  GTEST_SKIP()
+      << "skipping OpenACC test since unsupported host-side atomics cause "
+         "race conditions during shared allocation reference counting";
 #endif
 // FIXME_OPENMPTARGET
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
@@ -350,10 +344,9 @@ void run_exec_space_thread_safety_range_scan() {
 
 TEST(TEST_CATEGORY, exec_space_thread_safety_range_scan) {
 #ifdef KOKKOS_ENABLE_OPENACC  // FIXME_OPENACC
-  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenACC>)
-    GTEST_SKIP()
-        << "skipping OpenACC test since unsupported host-side atomics cause "
-           "race conditions during shared allocation reference counting";
+  GTEST_SKIP()
+      << "skipping OpenACC test since unsupported host-side atomics cause "
+         "race conditions during shared allocation reference counting";
 #endif
   run_exec_space_thread_safety_range_scan();
 }
