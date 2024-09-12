@@ -1213,7 +1213,7 @@ ENDFOREACH()
 
 IF(KOKKOS_ENABLE_ATOMICS_BYPASS)
   IF(NOT _HOST_PARALLEL STREQUAL "NoTypeDefined" OR NOT _DEVICE_PARALLEL STREQUAL "NoTypeDefined")
-    MESSAGE(FATAL_ERROR "Not allowed to disable atomics (via -DKokkos_ENABLE_AROMICS_BYPASS=ON) if neither a host parallel nor a device backend is enabled!")
+    MESSAGE(FATAL_ERROR "Disabling atomics (via -DKokkos_ENABLE_ATOMICS_BYPASS=ON) is not allowed if a host parallel or a device backend is enabled!")
   ENDIF()
   IF(NOT KOKKOS_ENABLE_SERIAL)
     MESSAGE(FATAL_ERROR "Implementation bug")  # safeguard
