@@ -296,7 +296,8 @@ class View : public ViewTraits<DataType, Properties...> {
 
   // Typedefs from mdspan
   // using extents_type -> not applicable
-  using layout_type = typename traits::array_layout;
+  // Defining layout_type here made MSVC+CUDA fail
+  // using layout_type = typename traits::array_layout;
   // using accessor_type -> not applicable
   // using mapping_type -> not applicable
   using element_type = typename traits::value_type;

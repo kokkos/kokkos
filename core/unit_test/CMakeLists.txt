@@ -91,6 +91,7 @@ SET(COMPILE_ONLY_SOURCES
   TestVersionMacros.cpp
   TestViewRank.cpp
   TestViewTypeTraits.cpp
+  TestViewTypedefs.cpp
   TestTypeInfo.cpp
   TestTypeList.cpp
   TestMDRangePolicyCTAD.cpp
