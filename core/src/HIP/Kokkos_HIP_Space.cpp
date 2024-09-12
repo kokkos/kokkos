@@ -52,7 +52,7 @@ static std::atomic<bool> is_first_hip_managed_allocation(true);
 namespace Kokkos {
 
 HIPSpace::HIPSpace()
-    : m_device(HIP().hip_device()), m_stream(Kokkos::HIP().hip_stream()) {}
+    : m_device(HIP().hip_device()), m_stream(HIP().hip_stream()) {}
 
 HIPHostPinnedSpace::HIPHostPinnedSpace() {}
 
