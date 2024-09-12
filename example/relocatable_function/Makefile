@@ -1,12 +1,12 @@
 KOKKOS_PATH = ../..
 KOKKOS_SRC_PATH = ${KOKKOS_PATH}
-SRC = $(wildcard ${KOKKOS_SRC_PATH}/example/separable_compilation/*.cpp)
+SRC = $(wildcard ${KOKKOS_SRC_PATH}/example/relocatable_function/*.cpp)
 vpath %.cpp $(sort $(dir $(SRC)))
 
 default: build
 	echo "Start Build"
 
-EXE = Kokkos_example_separable_compilation
+EXE = Kokkos_example_relocatable_function
 
 LINK = ${CXX}
 
@@ -25,7 +25,7 @@ $(EXE): $(OBJ) $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(KOKKOS_LDFLAGS) $(LDFLAGS) $(EXTRA_PATH) $(OBJ) $(KOKKOS_LIBS) -o $(EXE)
 
 clean: kokkos-clean 
-	rm -f *.o Kokkos_example_separable_compilation
+	rm -f *.o Kokkos_example_relocatable_function
 
 # Compilation rules
 
