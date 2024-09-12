@@ -52,9 +52,6 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
   const auto& hipProp = Impl::HIPInternal::m_deviceProp;
   KOKKOS_IMPL_HIP_SAFE_CALL(hipSetDevice(hip_device_id));
 
-  // number of multiprocessors
-  Impl::HIPInternal::m_multiProcCount = hipProp.multiProcessorCount;
-
   //----------------------------------
   // Maximum number of warps,
   // at most one warp per thread in a warp for reduction.

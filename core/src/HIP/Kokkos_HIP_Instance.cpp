@@ -77,7 +77,8 @@ std::size_t scratch_count(const std::size_t size) {
 //----------------------------------------------------------------------------
 
 int HIPInternal::concurrency() {
-  static int const concurrency = m_maxThreadsPerSM * m_multiProcCount;
+  static int const concurrency =
+      m_maxThreadsPerSM * m_deviceProp.multiProcessorCount;
 
   return concurrency;
 }
@@ -254,7 +255,7 @@ Kokkos::HIP::size_type *HIPInternal::stage_functor_for_execution(
     m_scratchFunctorSize = size;
 
     m_scratchFunctor     = static_cast<size_type *>(device_mem_space.allocate(
-        "Kokkos::InternalScratchFunctor", m_scratchFunctorSize));
+            "Kokkos::InternalScratchFunctor", m_scratchFunctorSize));
     m_scratchFunctorHost = static_cast<size_type *>(host_mem_space.allocate(
         "Kokkos::InternalScratchFunctorHost", m_scratchFunctorSize));
   }
@@ -354,7 +355,6 @@ void HIPInternal::finalize() {
 }
 
 int HIPInternal::m_hipDev                                     = -1;
-unsigned HIPInternal::m_multiProcCount                        = 0;
 unsigned HIPInternal::m_maxWarpCount                          = 0;
 std::array<HIPInternal::size_type, 3> HIPInternal::m_maxBlock = {0, 0, 0};
 unsigned HIPInternal::m_maxWavesPerCU                         = 0;
@@ -372,7 +372,7 @@ std::mutex HIPInternal::constantMemMutex;
 //----------------------------------------------------------------------------
 
 Kokkos::HIP::size_type hip_internal_multiprocessor_count() {
-  return HIPInternal::singleton().m_multiProcCount;
+  return HIPInternal::singleton().m_deviceProp.multiProcessorCount;
 }
 
 Kokkos::HIP::size_type hip_internal_maximum_warp_count() {
