@@ -71,7 +71,6 @@ class HIPInternal {
   using size_type = ::Kokkos::HIP::size_type;
 
   static int m_hipDev;
-  static unsigned m_maxWarpCount;
   static std::array<size_type, 3> m_maxBlock;
   static unsigned m_maxWavesPerCU;
   static int m_shmemPerSM;

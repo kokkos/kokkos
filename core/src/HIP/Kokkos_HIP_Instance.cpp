@@ -178,8 +178,16 @@ void HIPInternal::initialize(hipStream_t stream) {
   // and scratch space for partial reduction values.
   // Allocate some initial space.  This will grow as needed.
   {
+    // Maximum number of warps,
+    // at most one warp per thread in a warp for reduction.
+    unsigned int maxWarpCount =
+        m_deviceProp.maxThreadsPerBlock / Impl::HIPTraits::WarpSize;
+    if (Impl::HIPTraits::WarpSize < maxWarpCount) {
+      maxWarpCount = Impl::HIPTraits::WarpSize;
+    }
+
     const unsigned reduce_block_count =
-        m_maxWarpCount * Impl::HIPTraits::WarpSize;
+        maxWarpCount * Impl::HIPTraits::WarpSize;
 
     (void)scratch_flags(reduce_block_count * 2 * sizeof(size_type));
     (void)scratch_space(reduce_block_count * 16 * sizeof(size_type));
@@ -355,7 +363,6 @@ void HIPInternal::finalize() {
 }
 
 int HIPInternal::m_hipDev                                     = -1;
-unsigned HIPInternal::m_maxWarpCount                          = 0;
 std::array<HIPInternal::size_type, 3> HIPInternal::m_maxBlock = {0, 0, 0};
 unsigned HIPInternal::m_maxWavesPerCU                         = 0;
 int HIPInternal::m_shmemPerSM                                 = 0;

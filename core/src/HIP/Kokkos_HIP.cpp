@@ -53,15 +53,6 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
   KOKKOS_IMPL_HIP_SAFE_CALL(hipSetDevice(hip_device_id));
 
   //----------------------------------
-  // Maximum number of warps,
-  // at most one warp per thread in a warp for reduction.
-  Impl::HIPInternal::m_maxWarpCount =
-      hipProp.maxThreadsPerBlock / Impl::HIPTraits::WarpSize;
-  if (Impl::HIPTraits::WarpSize < Impl::HIPInternal::m_maxWarpCount) {
-    Impl::HIPInternal::m_maxWarpCount = Impl::HIPTraits::WarpSize;
-  }
-
-  //----------------------------------
   // Maximum number of blocks
   Impl::HIPInternal::m_maxBlock[0] = hipProp.maxGridSize[0];
   Impl::HIPInternal::m_maxBlock[1] = hipProp.maxGridSize[1];
