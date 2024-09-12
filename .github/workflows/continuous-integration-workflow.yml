@@ -113,6 +113,7 @@ jobs:
           cmake -B builddir \
             -DCMAKE_INSTALL_PREFIX=/usr \
             ${{ matrix.clang-tidy }} \
+            -DBUILD_SHARED_LIBS=ON \
             -Ddesul_ROOT=/usr/desul-install/ \
             -DKokkos_ENABLE_DESUL_ATOMICS_EXTERNAL=ON \
             -DKokkos_ENABLE_HWLOC=ON \
