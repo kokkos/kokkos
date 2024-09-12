@@ -73,6 +73,11 @@ jobs:
             cmake_build_type: 'RelWithDebInfo'
             backend: 'THREADS'
             stdcxx: '23'
+          - distro: 'fedora:latest'
+            cxx: 'g++'
+            cmake_build_type: 'RelWithDebInfo'
+            backend: 'HPX'
+            stdcxx: '17'
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/kokkos/ci-containers/${{ matrix.distro }}
