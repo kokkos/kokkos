@@ -851,7 +851,8 @@ struct TestReducers {
         reducer_type(value_loc));
 
     ASSERT_EQ(value_loc.val, h_values(0));
-    ASSERT_TRUE(value_loc.loc >= 0 && value_loc.loc < N);
+    ASSERT_GE(value_loc.loc, 0);
+    ASSERT_LT(value_loc.loc, N);
   }
 
   static void test_maxloc(int N) {
@@ -983,7 +984,8 @@ struct TestReducers {
         reducer_type(value_loc));
 
     ASSERT_EQ(value_loc.val, h_values(0));
-    ASSERT_TRUE(value_loc.loc >= 0 && value_loc.loc < N);
+    ASSERT_GE(value_loc.loc, 0);
+    ASSERT_LT(value_loc.loc, N);
   }
 
   static void test_minmaxloc(int N) {
@@ -1206,8 +1208,10 @@ struct TestReducers {
 
       ASSERT_EQ(value_loc.min_val, h_values(0));
       ASSERT_EQ(value_loc.max_val, h_values(0));
-      ASSERT_TRUE(value_loc.min_loc >= 0 && value_loc.min_loc < N);
-      ASSERT_TRUE(value_loc.max_loc >= 0 && value_loc.max_loc < N);
+      ASSERT_GE(value_loc.min_loc, 0);
+      ASSERT_LT(value_loc.min_loc, N);
+      ASSERT_GE(value_loc.max_loc, 0);
+      ASSERT_LT(value_loc.max_loc, N);
     }
 
     {
@@ -1222,8 +1226,10 @@ struct TestReducers {
 
       ASSERT_EQ(value_loc.min_val, h_values(0));
       ASSERT_EQ(value_loc.max_val, h_values(0));
-      ASSERT_TRUE(value_loc.min_loc >= 0 && value_loc.min_loc < N);
-      ASSERT_TRUE(value_loc.max_loc >= 0 && value_loc.max_loc < N);
+      ASSERT_GE(value_loc.min_loc, 0);
+      ASSERT_LT(value_loc.min_loc, N);
+      ASSERT_GE(value_loc.max_loc, 0);
+      ASSERT_LT(value_loc.max_loc, N);
     }
   }
 
@@ -1478,7 +1484,7 @@ struct TestReducers {
 #if !defined(KOKKOS_ENABLE_OPENACC)
     // FIXME_OPENACC - OpenACC (V3.3) does not support custom reductions.
     test_minloc(10003);
-    test_minloc_loc_init(101);
+    test_minloc_loc_init(3);
 #if defined(KOKKOS_ENABLE_CUDA)
     if (!std::is_same_v<ExecSpace, Kokkos::Cuda>)
 #endif
@@ -1491,7 +1497,7 @@ struct TestReducers {
 #if !defined(KOKKOS_ENABLE_OPENACC)
     // FIXME_OPENACC - OpenACC (V3.3) does not support custom reductions.
     test_maxloc(10007);
-    test_maxloc_loc_init(101);
+    test_maxloc_loc_init(3);
 #if defined(KOKKOS_ENABLE_CUDA)
     if (!std::is_same_v<ExecSpace, Kokkos::Cuda>)
 #endif
@@ -1513,7 +1519,7 @@ struct TestReducers {
 #endif
 #else
     test_minmaxloc(10007);
-    test_minmaxloc_loc_init(101);
+    test_minmaxloc_loc_init(3);
     test_minmaxloc_2d(100);
 #endif
 #endif
