@@ -940,6 +940,7 @@ endif()
 
 SET(DEFAULT_DEVICE_SOURCES
   UnitTestMainInit.cpp
+  TestCStyleMemoryManagement.cpp
   TestInitializationSettings.cpp
   TestParseCmdLineArgsAndEnvVars.cpp
   TestSharedSpace.cpp
@@ -955,7 +956,6 @@ SET(DEFAULT_DEVICE_SOURCES
   default/TestDefaultDeviceType_a3.cpp
   default/TestDefaultDeviceType_b3.cpp
   default/TestDefaultDeviceType_c3.cpp
-  default/TestDefaultDeviceType_d.cpp
   default/TestDefaultDeviceTypeResize.cpp
   default/TestDefaultDeviceTypeViewAPI.cpp
 )
