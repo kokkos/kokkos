@@ -375,10 +375,6 @@ Kokkos::HIP::size_type hip_internal_multiprocessor_count() {
   return HIPInternal::singleton().m_deviceProp.multiProcessorCount;
 }
 
-Kokkos::HIP::size_type hip_internal_maximum_warp_count() {
-  return HIPInternal::singleton().m_maxWarpCount;
-}
-
 std::array<Kokkos::HIP::size_type, 3> hip_internal_maximum_grid_count() {
   return HIPInternal::singleton().m_maxBlock;
 }
