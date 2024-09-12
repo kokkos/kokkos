@@ -87,33 +87,33 @@ TEST_F(ctest_environment_DeathTest, invalid_rank) {
 TEST_F(ctest_environment_DeathTest, no_type_str) {
   EXPECT_DEATH(Kokkos::Impl::get_ctest_gpu(0),
                "Error: CTEST_RESOURCE_GROUP_0 is not specified. Raised by "
-               "Kokkos::Impl::get_ctest_gpu().");
+               "Kokkos::Impl::get_ctest_gpu\\(\\).");
 }
 
 TEST_F(ctest_environment_DeathTest, missing_type) {
   EXPECT_DEATH(
       Kokkos::Impl::get_ctest_gpu(1),
       "Error: device type 'gpus' not included in CTEST_RESOURCE_GROUP_1. "
-      "Raised by Kokkos::Impl::get_ctest_gpu().");
+      "Raised by Kokkos::Impl::get_ctest_gpu\\(\\).");
   EXPECT_DEATH(
       Kokkos::Impl::get_ctest_gpu(2),
       "Error: device type 'gpus' not included in CTEST_RESOURCE_GROUP_2. "
-      "Raised by Kokkos::Impl::get_ctest_gpu().");
+      "Raised by Kokkos::Impl::get_ctest_gpu\\(\\).");
 }
 
 TEST_F(ctest_environment_DeathTest, no_id_str) {
   EXPECT_DEATH(Kokkos::Impl::get_ctest_gpu(3),
                "Error: CTEST_RESOURCE_GROUP_3_GPUS is not specified. Raised by "
-               "Kokkos::Impl::get_ctest_gpu().");
+               "Kokkos::Impl::get_ctest_gpu\\(\\).");
 }
 
 TEST_F(ctest_environment_DeathTest, invalid_id_str) {
   EXPECT_DEATH(Kokkos::Impl::get_ctest_gpu(4),
                "Error: invalid value of CTEST_RESOURCE_GROUP_4_GPUS: 'id:2'. "
-               "Raised by Kokkos::Impl::get_ctest_gpu().");
+               "Raised by Kokkos::Impl::get_ctest_gpu\\(\\).");
   EXPECT_DEATH(Kokkos::Impl::get_ctest_gpu(5),
                "Error: invalid value of CTEST_RESOURCE_GROUP_5_GPUS: "
-               "'slots:1,id:2'. Raised by Kokkos::Impl::get_ctest_gpu().");
+               "'slots:1,id:2'. Raised by Kokkos::Impl::get_ctest_gpu\\(\\).");
 }
 
 TEST_F(ctest_environment, good) {
