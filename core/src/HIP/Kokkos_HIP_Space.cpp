@@ -86,13 +86,19 @@ void* HIPSpace::impl_allocate(const hipStream_t stream, const char* arg_label,
                               const bool stream_sync_only) const {
   void* ptr = nullptr;
 
-  KOKKOS_IMPL_HIP_SAFE_CALL(hipMallocAsync(&ptr, arg_alloc_size, stream));
+  auto const error_code = hipMallocAsync(&ptr, arg_alloc_size, stream);
   if (stream_sync_only) {
     KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamSynchronize(stream));
   } else {
     KOKKOS_IMPL_HIP_SAFE_CALL(hipDeviceSynchronize());
   }
 
+  if (error_code != hipSuccess) {
+    // This is the only way to clear the last error, which we should do here
+    // since we're turning it into an exception here
+    (void)hipGetLastError();
+    Kokkos::Impl::throw_bad_alloc(name(), arg_alloc_size, arg_label);
+  }
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     const Kokkos::Tools::SpaceHandle arg_handle =
         Kokkos::Tools::make_space_handle(name());
