@@ -362,12 +362,11 @@ void HIPInternal::finalize() {
   m_num_scratch_locks = 0;
 }
 
-int HIPInternal::m_hipDev                                     = -1;
-std::array<HIPInternal::size_type, 3> HIPInternal::m_maxBlock = {0, 0, 0};
-unsigned HIPInternal::m_maxWavesPerCU                         = 0;
-int HIPInternal::m_shmemPerSM                                 = 0;
-int HIPInternal::m_maxShmemPerBlock                           = 0;
-int HIPInternal::m_maxThreadsPerSM                            = 0;
+int HIPInternal::m_hipDev             = -1;
+unsigned HIPInternal::m_maxWavesPerCU = 0;
+int HIPInternal::m_shmemPerSM         = 0;
+int HIPInternal::m_maxShmemPerBlock   = 0;
+int HIPInternal::m_maxThreadsPerSM    = 0;
 
 hipDeviceProp_t HIPInternal::m_deviceProp;
 
@@ -380,10 +379,6 @@ std::mutex HIPInternal::constantMemMutex;
 
 Kokkos::HIP::size_type hip_internal_multiprocessor_count() {
   return HIPInternal::singleton().m_deviceProp.multiProcessorCount;
-}
-
-std::array<Kokkos::HIP::size_type, 3> hip_internal_maximum_grid_count() {
-  return HIPInternal::singleton().m_maxBlock;
 }
 
 Kokkos::HIP::size_type *hip_internal_scratch_space(const HIP &instance,

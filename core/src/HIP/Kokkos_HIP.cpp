@@ -52,12 +52,6 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
   const auto& hipProp = Impl::HIPInternal::m_deviceProp;
   KOKKOS_IMPL_HIP_SAFE_CALL(hipSetDevice(hip_device_id));
 
-  //----------------------------------
-  // Maximum number of blocks
-  Impl::HIPInternal::m_maxBlock[0] = hipProp.maxGridSize[0];
-  Impl::HIPInternal::m_maxBlock[1] = hipProp.maxGridSize[1];
-  Impl::HIPInternal::m_maxBlock[2] = hipProp.maxGridSize[2];
-
   // theoretically, we can get 40 WF's / CU, but only can sustain 32 see
   // https://github.com/ROCm-Developer-Tools/HIP/blob/a0b5dfd625d99af7e288629747b40dd057183173/vdi/hip_platform.cpp#L742
   Impl::HIPInternal::m_maxWavesPerCU = 32;
