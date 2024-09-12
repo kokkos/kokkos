@@ -291,6 +291,23 @@ class View : public ViewTraits<DataType, Properties...> {
   using uniform_runtime_const_nomemspace_type =
       typename Impl::ViewUniformType<View, 0>::runtime_const_nomemspace_type;
 
+  using reference_type = typename map_type::reference_type;
+  using pointer_type   = typename map_type::pointer_type;
+
+  // Typedefs from mdspan
+  // using extents_type -> not applicable
+  using layout_type = typename traits::array_layout;
+  // using accessor_type -> not applicable
+  // using mapping_type -> not applicable
+  using element_type = typename traits::value_type;
+  // using value_type -> conflicts with traits::value_type
+  using index_type = typename traits::memory_space::size_type;
+  // using size_type -> already from traits::size_type; where it is
+  // memory_space::size_type
+  using rank_type        = size_t;
+  using data_handle_type = pointer_type;
+  using reference        = reference_type;
+
   //----------------------------------------
   // Domain rank and extents
 
@@ -393,9 +410,6 @@ class View : public ViewTraits<DataType, Properties...> {
 
   //----------------------------------------
   // Range span is the span which contains all members.
-
-  using reference_type = typename map_type::reference_type;
-  using pointer_type   = typename map_type::pointer_type;
 
   enum {
     reference_type_is_lvalue_reference =
