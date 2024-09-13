@@ -164,15 +164,16 @@ struct B {  // round-trip conversion would not compile
 };
 
 TEST(TEST_CATEGORY, range_policy_one_way_convertible_bounds) {
-  using Policy = Kokkos::RangePolicy<>;
+  using Policy    = Kokkos::RangePolicy<>;
+  using IndexType = Policy::index_type;
 
-  static_assert(std::is_convertible_v<B, Policy::index_type>);
-  static_assert(!std::is_convertible_v<Policy::index_type, B>);
+  static_assert(std::is_convertible_v<B, IndexType>);
+  static_assert(!std::is_convertible_v<IndexType, B>);
 
   int const n = 1;
   Policy policy(0, B(&n));
-  EXPECT_EQ(policy.begin(), 0);
-  EXPECT_EQ(policy.end(), 1);
+  EXPECT_EQ(policy.begin(), static_cast<IndexType>(0));
+  EXPECT_EQ(policy.end(), static_cast<IndexType>(1));
 }
 
 TEST(TEST_CATEGORY, range_policy_check_sign_changes) {
