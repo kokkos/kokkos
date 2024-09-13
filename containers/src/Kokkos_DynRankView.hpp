@@ -385,8 +385,10 @@ struct is_dyn_rank_view<Kokkos::DynRankView<D, P...>> : public std::true_type {
 template <class T>
 inline constexpr bool is_dyn_rank_view_v = is_dyn_rank_view<T>::value;
 
+// Inherit privately from View, this way we don't import anything funky
+// for example the rank member vs the rank() function of DynRankView
 template <typename DataType, class... Properties>
-class DynRankView : public View<DataType*******, Properties...> {
+class DynRankView : private View<DataType*******, Properties...> {
   static_assert(!std::is_array_v<DataType> && !std::is_pointer_v<DataType>,
                 "Cannot template DynRankView with array or pointer datatype - "
                 "must be pod");
@@ -406,15 +408,41 @@ class DynRankView : public View<DataType*******, Properties...> {
 
   using view_type = View<DataType*******, Properties...>;
 
-  using traits = typename view_type::traits;
-
+  // typedefs from ViewTraits, overriden
   using data_type           = typename drvtraits::data_type;
   using const_data_type     = typename drvtraits::const_data_type;
   using non_const_data_type = typename drvtraits::non_const_data_type;
-  using index_type          = typename view_type::index_type;
-  using reference_type      = typename view_type::reference_type;
 
- public:
+  // typedefs from ViewTraits not overriden
+  using value_type           = typename view_type::value_type;
+  using const_value_type     = typename view_type::const_value_type;
+  using non_const_value_type = typename view_type::non_const_value_type;
+  using traits               = typename view_type::traits;
+  using array_layout         = typename view_type::array_layout;
+
+  using execution_space = typename view_type::execution_space;
+  using memory_space    = typename view_type::memory_space;
+  using device_type     = typename view_type::device_type;
+
+  using memory_traits     = typename view_type::memory_traits;
+  using host_mirror_space = typename view_type::host_mirror_space;
+  using size_type         = typename view_type::size_type;
+
+  using reference_type = typename view_type::reference_type;
+  using pointer_type   = typename view_type::pointer_type;
+
+  using scalar_array_type       = typename view_type::scalar_array_type;
+  using const_scalar_array_type = typename view_type::const_scalar_array_type;
+  using non_const_scalar_array_type =
+      typename view_type::non_const_scalar_array_type;
+  using specialize = typename view_type::specialize;
+
+  // typedefs in View for mdspan compatibility
+  using layout_type  = typename view_type::layout_type;
+  using index_type   = typename view_type::index_type;
+  using element_type = typename view_type::element_type;
+  using rank_type    = typename view_type::rank_type;
+
   KOKKOS_INLINE_FUNCTION
   view_type& DownCast() const { return (view_type&)(*this); }
   KOKKOS_FUNCTION
@@ -498,8 +526,27 @@ class DynRankView : public View<DataType*******, Properties...> {
 #endif
 
  public:
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_FUNCTION
   constexpr unsigned rank() const { return m_rank; }
+
+  using view_type::data;
+  using view_type::extent;
+  using view_type::extent_int;  // not tested
+  using view_type::is_allocated;
+  using view_type::label;
+  using view_type::size;
+  using view_type::span;
+  using view_type::span_is_contiguous;  // not tested
+  using view_type::stride;              // not tested
+  using view_type::stride_0;            // not tested
+  using view_type::stride_1;            // not tested
+  using view_type::stride_2;            // not tested
+  using view_type::stride_3;            // not tested
+  using view_type::stride_4;            // not tested
+  using view_type::stride_5;            // not tested
+  using view_type::stride_6;            // not tested
+  using view_type::stride_7;            // not tested
+  using view_type::use_count;
 
   KOKKOS_FUNCTION reference_type
   operator()(index_type i0 = 0, index_type i1 = 0, index_type i2 = 0,
@@ -536,8 +583,7 @@ class DynRankView : public View<DataType*******, Properties...> {
   // Make this conditionally explicit?
   template <class RT, class... RP>
   KOKKOS_INLINE_FUNCTION DynRankView(const DynRankView<RT, RP...>& rhs)
-      : view_type(rhs),
-        m_rank(rhs.m_rank) {}
+      : view_type(rhs), m_rank(rhs.m_rank) {}
 
   template <class RT, class... RP>
   KOKKOS_INLINE_FUNCTION DynRankView& operator=(
@@ -547,7 +593,8 @@ class DynRankView : public View<DataType*******, Properties...> {
     return *this;
   }
 
-#if 0 // TODO: this will later be swapped in depending on whether the new View impl is active
+#if 0  // TODO: this will later be swapped in depending on whether the new View
+       // impl is active
  private:
   template <class Ext>
   KOKKOS_FUNCTION typename view_type::extents_type create_rank7_extents(
@@ -582,33 +629,34 @@ class DynRankView : public View<DataType*******, Properties...> {
     return *this;
   }
 #else
-   template <class RT, class... RP>
-   KOKKOS_INLINE_FUNCTION DynRankView(const View<RT, RP...>& rhs, size_t new_rank) {
-     using SrcTraits = typename View<RT, RP...>::traits;
-     using Mapping =
-         Kokkos::Impl::ViewMapping<traits, SrcTraits,
-                                   Kokkos::Impl::ViewToDynRankViewTag>;
-     static_assert(Mapping::is_assignable,
-                   "Incompatible View to DynRankView copy assignment");
+  template <class RT, class... RP>
+  KOKKOS_INLINE_FUNCTION DynRankView(const View<RT, RP...>& rhs,
+                                     size_t new_rank) {
+    using SrcTraits = typename View<RT, RP...>::traits;
+    using Mapping =
+        Kokkos::Impl::ViewMapping<traits, SrcTraits,
+                                  Kokkos::Impl::ViewToDynRankViewTag>;
+    static_assert(Mapping::is_assignable,
+                  "Incompatible View to DynRankView copy assignment");
     if (new_rank > rhs.rank())
       Kokkos::abort(
           "Attempting to construct DynRankView from View and new rank, with "
           "the new rank being too large.");
-     Mapping::assign(*this, rhs);
-     m_rank = new_rank;
+    Mapping::assign(*this, rhs);
+    m_rank = new_rank;
   }
 
-   template <class RT, class... RP>
-   KOKKOS_INLINE_FUNCTION DynRankView& operator=(const View<RT, RP...>& rhs) {
-     using SrcTraits = typename View<RT, RP...>::traits;
-     using Mapping =
-         Kokkos::Impl::ViewMapping<traits, SrcTraits,
-                                   Kokkos::Impl::ViewToDynRankViewTag>;
-     static_assert(Mapping::is_assignable,
-                   "Incompatible View to DynRankView copy assignment");
-     Mapping::assign(*this, rhs);
-     m_rank = rhs.rank();
-     return *this;
+  template <class RT, class... RP>
+  KOKKOS_INLINE_FUNCTION DynRankView& operator=(const View<RT, RP...>& rhs) {
+    using SrcTraits = typename View<RT, RP...>::traits;
+    using Mapping =
+        Kokkos::Impl::ViewMapping<traits, SrcTraits,
+                                  Kokkos::Impl::ViewToDynRankViewTag>;
+    static_assert(Mapping::is_assignable,
+                  "Incompatible View to DynRankView copy assignment");
+    Mapping::assign(*this, rhs);
+    m_rank = rhs.rank();
+    return *this;
   }
 #endif
 
@@ -626,8 +674,8 @@ class DynRankView : public View<DataType*******, Properties...> {
   template <class... P>
   explicit inline DynRankView(const Kokkos::Impl::ViewCtorProp<P...>& arg_prop,
                               typename traits::array_layout const& arg_layout)
-      : view_type(arg_prop, drdtraits::createLayout(arg_layout)),m_rank(drdtraits::computeRank(arg_layout)) {
-  }
+      : view_type(arg_prop, drdtraits::createLayout(arg_layout)),
+        m_rank(drdtraits::computeRank(arg_layout)) {}
 
   //----------------------------------------
   // Constructor(s)
@@ -726,7 +774,7 @@ class DynRankView : public View<DataType*******, Properties...> {
            (arg_N4 != KOKKOS_INVALID_INDEX ? arg_N4 : 1) *
            (arg_N5 != KOKKOS_INVALID_INDEX ? arg_N5 : 1) *
            (arg_N6 != KOKKOS_INVALID_INDEX ? arg_N6 : 1);
-           (arg_N7 != KOKKOS_INVALID_INDEX ? arg_N7 : 1);
+    (arg_N7 != KOKKOS_INVALID_INDEX ? arg_N7 : 1);
   }
 
   explicit KOKKOS_INLINE_FUNCTION DynRankView(
@@ -735,9 +783,9 @@ class DynRankView : public View<DataType*******, Properties...> {
       : DynRankView(
             Kokkos::Impl::ViewCtorProp<typename view_type::pointer_type>(
                 reinterpret_cast<typename view_type::pointer_type>(
-                     arg_space.get_shmem(view_type::required_allocation_size(
-                         Impl::DynRankDimTraits<typename traits::specialize>::
-                             createLayout(arg_layout))))),
+                    arg_space.get_shmem(view_type::required_allocation_size(
+                        Impl::DynRankDimTraits<typename traits::specialize>::
+                            createLayout(arg_layout))))),
             arg_layout) {}
 
   explicit KOKKOS_INLINE_FUNCTION DynRankView(
@@ -752,18 +800,13 @@ class DynRankView : public View<DataType*******, Properties...> {
       const size_t arg_N7 = KOKKOS_INVALID_INDEX)
 
       : DynRankView(
-            Kokkos::Impl::ViewCtorProp<
-                typename view_type::
-                    pointer_type>(reinterpret_cast<
-                                  typename view_type::pointer_type>(
-                                    arg_space.get_shmem(view_type::required_allocation_size(
-                                        Impl::DynRankDimTraits<typename
-                                        traits::specialize>::
-                                            createLayout(typename
-                                            traits::array_layout(
-                                                arg_N0, arg_N1, arg_N2,
-                                                arg_N3, arg_N4, arg_N5,
-                                                arg_N6, arg_N7)))))),
+            Kokkos::Impl::ViewCtorProp<typename view_type::pointer_type>(
+                reinterpret_cast<typename view_type::pointer_type>(
+                    arg_space.get_shmem(view_type::required_allocation_size(
+                        Impl::DynRankDimTraits<typename traits::specialize>::
+                            createLayout(typename traits::array_layout(
+                                arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5,
+                                arg_N6, arg_N7)))))),
             typename traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3,
                                           arg_N4, arg_N5, arg_N6, arg_N7)) {}
 
@@ -790,7 +833,6 @@ class DynRankView : public View<DataType*******, Properties...> {
     }
     // control flow should never reach here
     return view_type::layout();
-    ;
   }
 };
 
