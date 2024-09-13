@@ -1233,6 +1233,127 @@ struct TestReducers {
     }
   }
 
+  static void test_minmaxfirstlastloc_loc_init(int N) {
+    using reducer_type       = Kokkos::MinMaxFirstLastLoc<Scalar, int>;
+    using reducer_value_type = typename reducer_type::value_type;
+
+    Kokkos::View<Scalar*, ExecSpace> values("Values", N);
+    auto h_values = Kokkos::create_mirror_view(values);
+
+    auto functor = KOKKOS_LAMBDA(const int i, reducer_value_type& update) {
+      auto x = values(i);
+      if (i % 2 == 0) return;
+      if (x <= update.min_val) {
+        update.min_val = x;
+        update.min_loc = i;
+      }
+      if (x >= update.max_val) {
+        update.max_val = x;
+        update.max_loc = i;
+      }
+    };
+
+    {
+      for (int i = 0; i < N; ++i) {
+        h_values(i) = Kokkos::reduction_identity<Scalar>::min();
+      }
+      Kokkos::deep_copy(values, h_values);
+
+      reducer_value_type value_loc{0, 0, -1, -1};
+
+      Kokkos::parallel_reduce(N, functor, reducer_type(value_loc));
+
+      ASSERT_EQ(value_loc.min_val, h_values(0));
+      ASSERT_EQ(value_loc.max_val, h_values(0));
+      ASSERT_GE(value_loc.min_loc, 0);
+      ASSERT_LT(value_loc.min_loc, N);
+      ASSERT_GE(value_loc.max_loc, 0);
+      ASSERT_LT(value_loc.max_loc, N);
+    }
+
+    {
+      for (int i = 0; i < N; ++i) {
+        h_values(i) = Kokkos::reduction_identity<Scalar>::max();
+      }
+      Kokkos::deep_copy(values, h_values);
+
+      reducer_value_type value_loc{0, 0, -1, -1};
+
+      Kokkos::parallel_reduce(N, functor, reducer_type(value_loc));
+
+      ASSERT_EQ(value_loc.min_val, h_values(0));
+      ASSERT_EQ(value_loc.max_val, h_values(0));
+      ASSERT_GE(value_loc.min_loc, 0);
+      ASSERT_LT(value_loc.min_loc, N);
+      ASSERT_GE(value_loc.max_loc, 0);
+      ASSERT_LT(value_loc.max_loc, N);
+    }
+  }
+
+  static void test_minfirstloc_loc_init(int N) {
+    using reducer_type       = Kokkos::MinFirstLoc<Scalar, int>;
+    using reducer_value_type = typename reducer_type::value_type;
+
+    Kokkos::View<Scalar*, ExecSpace> values("Values", N);
+    auto h_values = Kokkos::create_mirror_view(values);
+
+    for (int i = 0; i < N; ++i) {
+      h_values(i) = Kokkos::reduction_identity<Scalar>::min();
+    }
+    Kokkos::deep_copy(values, h_values);
+
+    reducer_value_type value_loc{0, -1};
+
+    Kokkos::parallel_reduce(
+        N,
+        KOKKOS_LAMBDA(const int i, reducer_value_type& update) {
+          auto x = values(i);
+          if (i % 2 == 0)
+            return;
+          else if (x <= update.val) {
+            update.val = x;
+            update.loc = i;
+          }
+        },
+        reducer_type(value_loc));
+
+    ASSERT_EQ(value_loc.val, h_values(0));
+    ASSERT_GE(value_loc.loc, 0);
+    ASSERT_LT(value_loc.loc, N);
+  }
+
+  static void test_maxfirstloc_loc_init(int N) {
+    using reducer_type       = Kokkos::MaxFirstLoc<Scalar, int>;
+    using reducer_value_type = typename reducer_type::value_type;
+
+    Kokkos::View<Scalar*, ExecSpace> values("Values", N);
+    auto h_values = Kokkos::create_mirror_view(values);
+
+    for (int i = 0; i < N; ++i) {
+      h_values(i) = Kokkos::reduction_identity<Scalar>::max();
+    }
+    Kokkos::deep_copy(values, h_values);
+
+    reducer_value_type value_loc{0, -1};
+
+    Kokkos::parallel_reduce(
+        N,
+        KOKKOS_LAMBDA(const int i, reducer_value_type& update) {
+          auto x = values(i);
+          if (i % 2 == 0)
+            return;
+          else if (x >= update.val) {
+            update.val = x;
+            update.loc = i;
+          }
+        },
+        reducer_type(value_loc));
+
+    ASSERT_EQ(value_loc.val, h_values(0));
+    ASSERT_GE(value_loc.loc, 0);
+    ASSERT_LT(value_loc.loc, N);
+  }
+
   static void test_BAnd(int N) {
     Kokkos::View<Scalar*, ExecSpace> values("Values", N);
     auto h_values         = Kokkos::create_mirror_view(values);
@@ -1521,6 +1642,10 @@ struct TestReducers {
     test_minmaxloc(10007);
     test_minmaxloc_loc_init(3);
     test_minmaxloc_2d(100);
+
+    test_minmaxfirstlastloc_loc_init(3);
+    test_minfirstloc_loc_init(3);
+    test_maxfirstloc_loc_init(3);
 #endif
 #endif
     test_BAnd(35);
