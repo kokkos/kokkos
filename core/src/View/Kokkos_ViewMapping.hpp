@@ -370,7 +370,7 @@ struct SubviewExtents {
          const int n = snprintf(buffer, LEN, "Kokkos::subview bounds error (");
          error(buffer + n, LEN - n, 0, 0, dim, args...);
 
-         Kokkos::Impl::throw_runtime_exception(std::string(buffer));))
+         Kokkos::abort(buffer);))
 
     KOKKOS_IF_ON_DEVICE(((void)dim;
                          Kokkos::abort("Kokkos::subview bounds error");

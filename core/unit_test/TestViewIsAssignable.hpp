@@ -16,6 +16,8 @@
 
 #include <Kokkos_Core.hpp>
 
+#include <gtest/gtest.h>
+
 namespace Test {
 namespace Impl {
 template <class ViewTypeDst, class ViewTypeSrc>
@@ -36,8 +38,7 @@ struct TestAssignability {
   static void try_assign(
       ViewTypeDst&, ViewTypeSrc&,
       std::enable_if_t<!MappingType::is_assignable>* = nullptr) {
-    Kokkos::Impl::throw_runtime_exception(
-        "TestAssignability::try_assign: Unexpected call path");
+    FAIL() << "TestAssignability::try_assign: Unexpected call path";
   }
 
   template <class... Dimensions>
@@ -50,7 +51,7 @@ struct TestAssignability {
     bool is_assignable = Kokkos::is_assignable(dst, src);
 
     if (sometimes) {
-      ASSERT_NO_THROW(try_assign<mapping_type>(dst, src));
+      try_assign<mapping_type>(dst, src);
     }
     ASSERT_EQ(always, is_always_assignable)
         << Kokkos::Impl::TypeInfo<ViewTypeSrc>::name() << " to "

@@ -645,8 +645,8 @@ TEST(TEST_CATEGORY, reduction_with_large_iteration_count) {
   const int64_t N = pow(2LL, 39LL) - pow(2LL, 8LL) + 1;
   Kokkos::RangePolicy<TEST_EXECSPACE, Kokkos::IndexType<int64_t>> p(0, N);
   double nu = 0;
-  EXPECT_NO_THROW(Kokkos::parallel_reduce(
-      "sample reduction", p, FunctorReductionWithLargeIterationCount(), nu));
+  Kokkos::parallel_reduce("sample reduction", p,
+                          FunctorReductionWithLargeIterationCount(), nu);
   ASSERT_DOUBLE_EQ(nu, double(N));
 }
 #endif
