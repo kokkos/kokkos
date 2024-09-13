@@ -83,8 +83,7 @@ TEST(TEST_CATEGORY, SortByKeyEmptyView) {
   Kokkos::View<int *, ExecutionSpace> keys("keys", 0);
   Kokkos::View<float *, ExecutionSpace> values("values", 0);
 
-  ASSERT_NO_THROW(
-      Kokkos::Experimental::sort_by_key(ExecutionSpace(), keys, values));
+  Kokkos::Experimental::sort_by_key(ExecutionSpace(), keys, values);
 }
 
 // Test #7036
@@ -95,8 +94,7 @@ TEST(TEST_CATEGORY, SortByKeyEmptyViewHost) {
   Kokkos::View<int *, ExecutionSpace> keys("keys", 0);
   Kokkos::View<float *, ExecutionSpace> values("values", 0);
 
-  ASSERT_NO_THROW(
-      Kokkos::Experimental::sort_by_key(ExecutionSpace(), keys, values));
+  Kokkos::Experimental::sort_by_key(ExecutionSpace(), keys, values);
 }
 
 TEST(TEST_CATEGORY, SortByKey) {
@@ -183,12 +181,10 @@ TEST(TEST_CATEGORY, SortByKeyStaticExtents) {
   Kokkos::View<int[10], ExecutionSpace> keys("keys");
 
   Kokkos::View<int[10], ExecutionSpace> values_static("values_static");
-  ASSERT_NO_THROW(
-      Kokkos::Experimental::sort_by_key(space, keys, values_static));
+  Kokkos::Experimental::sort_by_key(space, keys, values_static);
 
   Kokkos::View<int *, ExecutionSpace> values_dynamic("values_dynamic", 10);
-  ASSERT_NO_THROW(
-      Kokkos::Experimental::sort_by_key(space, keys, values_dynamic));
+  Kokkos::Experimental::sort_by_key(space, keys, values_dynamic);
 }
 
 template <typename ExecutionSpace, typename Keys, typename Values>

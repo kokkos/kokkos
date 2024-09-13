@@ -230,8 +230,8 @@ TEST(TEST_CATEGORY, SortEmptyView) {
   Kokkos::View<int*, ExecutionSpace> v("v", 0);
 
   // TODO check the synchronous behavior of the calls below
-  ASSERT_NO_THROW(Kokkos::sort(ExecutionSpace(), v));
-  ASSERT_NO_THROW(Kokkos::sort(v));
+  Kokkos::sort(ExecutionSpace(), v);
+  Kokkos::sort(v);
 }
 
 }  // namespace Test
