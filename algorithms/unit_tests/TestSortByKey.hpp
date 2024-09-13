@@ -83,6 +83,7 @@ TEST(TEST_CATEGORY, SortByKeyEmptyView) {
   Kokkos::View<int *, ExecutionSpace> keys("keys", 0);
   Kokkos::View<float *, ExecutionSpace> values("values", 0);
 
+  // checking that it does not throw
   Kokkos::Experimental::sort_by_key(ExecutionSpace(), keys, values);
 }
 
@@ -94,6 +95,7 @@ TEST(TEST_CATEGORY, SortByKeyEmptyViewHost) {
   Kokkos::View<int *, ExecutionSpace> keys("keys", 0);
   Kokkos::View<float *, ExecutionSpace> values("values", 0);
 
+  // checking that it does not throw
   Kokkos::Experimental::sort_by_key(ExecutionSpace(), keys, values);
 }
 
@@ -181,9 +183,11 @@ TEST(TEST_CATEGORY, SortByKeyStaticExtents) {
   Kokkos::View<int[10], ExecutionSpace> keys("keys");
 
   Kokkos::View<int[10], ExecutionSpace> values_static("values_static");
+  // checking that it does not throw
   Kokkos::Experimental::sort_by_key(space, keys, values_static);
 
   Kokkos::View<int *, ExecutionSpace> values_dynamic("values_dynamic", 10);
+  // checking that it does not throw
   Kokkos::Experimental::sort_by_key(space, keys, values_dynamic);
 }
 

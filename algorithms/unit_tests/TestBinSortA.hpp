@@ -246,7 +246,7 @@ TEST(TEST_CATEGORY, BinSortEmptyView) {
   // does not matter if we use int or something else
   Kokkos::View<int*, ExecutionSpace> v("v", 0);
 
-  // test all exposed public sort methods
+  // test all exposed public sort methods are callable and do not throw
   Sorter.sort(ExecutionSpace(), v, 0, 0);
   Sorter.sort(v, 0, 0);
   Sorter.sort(ExecutionSpace(), v);
@@ -263,7 +263,7 @@ TEST(TEST_CATEGORY, BinSortEmptyKeysView) {
   BinOp_t binOp(5, 0, 10);
   Kokkos::BinSort<KeyViewType, BinOp_t> Sorter(ExecutionSpace{}, kv, binOp);
 
-  Sorter.create_permute_vector(ExecutionSpace{});
+  Sorter.create_permute_vector(ExecutionSpace{});  // does not throw
 }
 
 // BinSort may delegate sorting within bins to std::sort when running on host
@@ -282,7 +282,7 @@ TEST(TEST_CATEGORY, BinSort_issue_7221) {
   Kokkos::BinSort<KeyViewType, BinOp_t> Sorter(ExecutionSpace{}, kv, binOp,
                                                /*sort_within_bins*/ true);
 
-  Sorter.create_permute_vector(ExecutionSpace{});
+  Sorter.create_permute_vector(ExecutionSpace{});  // does not throw
 }
 
 }  // namespace Test
