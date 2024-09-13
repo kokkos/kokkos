@@ -170,6 +170,7 @@ struct TEST_CATEGORY_FIXTURE_DEATH(graph)
 //      checks that submission instantiates if need be).
 //   2. Instantiating twice in a row is invalid.
 TEST_F(TEST_CATEGORY_FIXTURE_DEATH(graph), can_instantiate_only_once) {
+  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
   {
     bool checked_assertions = false;
     KOKKOS_ASSERT(checked_assertions = true);
