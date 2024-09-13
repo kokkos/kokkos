@@ -393,10 +393,8 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), zero_work_reduce) {
 // Ensure that an empty graph can be submitted.
 TEST_F(TEST_CATEGORY_FIXTURE(graph), empty_graph) {
   auto graph = Kokkos::Experimental::create_graph(ex, [](auto) {});
-  ASSERT_NO_THROW({
-    graph.instantiate();
-    graph.submit(ex);
-  });
+  graph.instantiate();
+  graph.submit(ex);
   ex.fence();
 }
 

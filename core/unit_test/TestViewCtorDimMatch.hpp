@@ -24,8 +24,10 @@ void test_matching_arguments_rank_helper(std::index_sequence<Is...>) {
   constexpr int nargs = sizeof...(Is);
   using view_type     = Kokkos::View<RankType>;
   if (nargs == rank || nargs == dynrank) {
-    EXPECT_NO_THROW({ view_type v("v", ((Is * 0) + 1)...); });
-    EXPECT_NO_THROW({ view_type v(nullptr, ((Is * 0) + 1)...); });
+    {
+      view_type v("v", ((Is * 0) + 1)...);
+    }
+    { view_type v(nullptr, ((Is * 0) + 1)...); }
   } else {
     ASSERT_DEATH(
         { view_type v("v", ((Is * 0) + 1)...); },
