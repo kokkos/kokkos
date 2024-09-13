@@ -1910,26 +1910,6 @@ struct MirrorDRViewType {
       std::conditional_t<is_same_memspace, src_view_type, dest_view_type>;
 };
 
-template <class Space, class T, class... P>
-struct MirrorDRVType {
-  // The incoming view_type
-  using src_view_type = typename Kokkos::DynRankView<T, P...>;
-  // The memory space for the mirror view
-  using memory_space = typename Space::memory_space;
-  // Check whether it is the same memory space
-  enum {
-    is_same_memspace =
-        std::is_same_v<memory_space, typename src_view_type::memory_space>
-  };
-  // The array_layout
-  using array_layout = typename src_view_type::array_layout;
-  // The data type (we probably want it non-const since otherwise we can't even
-  // deep_copy to it.
-  using data_type = typename src_view_type::non_const_data_type;
-  // The destination view type if it is not the same memory space
-  using view_type = Kokkos::DynRankView<data_type, array_layout, Space>;
-};
-
 }  // namespace Impl
 
 namespace Impl {
@@ -1946,9 +1926,9 @@ inline auto create_mirror(const DynRankView<T, P...>& src,
       arg_prop, std::string(src.label()).append("_mirror"));
 
   if constexpr (Impl::ViewCtorProp<ViewCtorArgs...>::has_memory_space) {
-    using dst_type = typename Impl::MirrorDRVType<
+    using dst_type = typename Impl::MirrorDRViewType<
         typename Impl::ViewCtorProp<ViewCtorArgs...>::memory_space, T,
-        P...>::view_type;
+        P...>::dest_view_type;
 
     return dst_type(prop_copy,
                     Impl::reconstructLayout(src.layout(), src.rank()));
