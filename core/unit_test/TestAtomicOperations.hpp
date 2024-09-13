@@ -353,21 +353,21 @@ bool atomic_op_test(T old_val, T update) {
       result);
   if ((result & 1) != 0)
     std::cerr << "atomic_" << Op::name() << " failed with type "
-              << typeid(T).name() << '\n';
+              << Kokkos::Impl::TypeInfo<T>::name() << '\n';
   if ((result & 2) != 0)
     std::cerr << "atomic_fetch_" << Op::name() << " failed with type "
-              << typeid(T).name() << '\n';
+              << Kokkos::Impl::TypeInfo<T>::name() << '\n';
   if ((result & 4) != 0)
     std::cerr << "atomic_" << Op::name() << "_fetch failed with type "
-              << typeid(T).name() << '\n';
+              << Kokkos::Impl::TypeInfo<T>::name() << '\n';
   if ((result & 8) != 0)
     std::cerr << "atomic_fetch_" << Op::name()
-              << " did not return old value with type " << typeid(T).name()
-              << '\n';
+              << " did not return old value with type "
+              << Kokkos::Impl::TypeInfo<T>::name() << '\n';
   if ((result & 16) != 0)
     std::cerr << "atomic_" << Op::name() << "_fetch"
-              << " did not return updated value with type " << typeid(T).name()
-              << '\n';
+              << " did not return updated value with type "
+              << Kokkos::Impl::TypeInfo<T>::name() << '\n';
 
   return result == 0;
 }
@@ -413,21 +413,21 @@ bool atomic_op_test_rel(T old_val, T update) {
       result);
   if ((result & 1) != 0)
     std::cerr << "atomic_" << Op::name() << " failed with type "
-              << typeid(T).name() << '\n';
+              << Kokkos::Impl::TypeInfo<T>::name() << '\n';
   if ((result & 2) != 0)
     std::cerr << "atomic_fetch_" << Op::name() << " failed with type "
-              << typeid(T).name() << '\n';
+              << Kokkos::Impl::TypeInfo<T>::name() << '\n';
   if ((result & 4) != 0)
     std::cerr << "atomic_" << Op::name() << "_fetch failed with type "
-              << typeid(T).name() << '\n';
+              << Kokkos::Impl::TypeInfo<T>::name() << '\n';
   if ((result & 8) != 0)
     std::cerr << "atomic_fetch_" << Op::name()
-              << " did not return old value with type " << typeid(T).name()
-              << '\n';
+              << " did not return old value with type "
+              << Kokkos::Impl::TypeInfo<T>::name() << '\n';
   if ((result & 16) != 0)
     std::cerr << "atomic_" << Op::name() << "_fetch"
-              << " did not return updated value with type " << typeid(T).name()
-              << '\n';
+              << " did not return updated value with type "
+              << Kokkos::Impl::TypeInfo<T>::name() << '\n';
 
   return result == 0;
 }
