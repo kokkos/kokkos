@@ -182,6 +182,8 @@ IF(NOT MSVC)
     GLOBAL_APPEND(KOKKOS_LINK_OPTIONS -DKOKKOS_DEPENDENCE)
 ENDIF()
 
+INCLUDE(${CMAKE_CURRENT_SOURCE_DIR}/cmake/kokkos_configure_trilinos.cmake)
+
 IF(Kokkos_ENABLE_TESTS)
   find_package(GTest QUIET)
 ENDIF()
@@ -198,8 +200,6 @@ INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_check_env.cmake)
 
 INCLUDE(${KOKKOS_SRC_PATH}/cmake/build_env_info.cmake)
 check_git_setup()
-
-INCLUDE(${CMAKE_CURRENT_SOURCE_DIR}/cmake/kokkos_configure_trilinos.cmake)
 
 # The build environment setup goes in the following steps
 # 1) Check all the enable options. This includes checking Kokkos_DEVICES
