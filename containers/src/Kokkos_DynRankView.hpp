@@ -438,7 +438,8 @@ class DynRankView : private View<DataType*******, Properties...> {
   using specialize = typename view_type::specialize;
 
   // typedefs in View for mdspan compatibility
-  using layout_type  = typename view_type::layout_type;
+  // cause issues with MSVC+CUDA
+  // using layout_type  = typename view_type::layout_type;
   using index_type   = typename view_type::index_type;
   using element_type = typename view_type::element_type;
   using rank_type    = typename view_type::rank_type;
@@ -875,7 +876,7 @@ KOKKOS_INLINE_FUNCTION auto subdynrankview(
                     (drv.rank() > 4 && !std::is_integral_v<SubArg4> ? 1 : 0) +
                     (drv.rank() > 5 && !std::is_integral_v<SubArg5> ? 1 : 0) +
                     (drv.rank() > 6 && !std::is_integral_v<SubArg6> ? 1 : 0);
-  return DynRankView<typename sub_t::value_type, typename sub_t::layout_type,
+  return DynRankView<typename sub_t::value_type, typename sub_t::array_layout,
                      typename sub_t::device_type,
                      typename sub_t::memory_traits>(sub, new_rank);
 }
