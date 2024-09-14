@@ -15,6 +15,7 @@
 //@HEADER
 
 #include <Kokkos_Core.hpp>
+#include <Kokkos_DynRankView.hpp>
 
 namespace {
 
@@ -53,15 +54,15 @@ constexpr bool test_view_typedefs_impl() {
   // inherited from ViewTraits
   // ========================
   static_assert(std::is_same_v<typename ViewType::data_type, DataType>);
-  static_assert(std::is_same_v<typename ViewType::const_data_type, typename  data_analysis<DataType>::const_data_type>);
-  static_assert(std::is_same_v<typename ViewType::non_const_data_type, typename  data_analysis<DataType>::non_const_data_type>);
+  static_assert(std::is_same_v<typename ViewType::const_data_type, typename data_analysis<DataType>::const_data_type>);
+  static_assert(std::is_same_v<typename ViewType::non_const_data_type, typename data_analysis<DataType>::non_const_data_type>);
   
   // these should be deprecated and for proper testing (I.e. where this is different from data_type)
   // we would need ensemble types which use the hidden View dimension facility of View (i.e. which make
-  // "specialize" not void
+  // "specialize" not void)
   static_assert(std::is_same_v<typename ViewType::scalar_array_type, DataType>);
-  static_assert(std::is_same_v<typename ViewType::const_scalar_array_type, typename  data_analysis<DataType>::const_data_type>);
-  static_assert(std::is_same_v<typename ViewType::non_const_scalar_array_type, typename  data_analysis<DataType>::non_const_data_type>);
+  static_assert(std::is_same_v<typename ViewType::const_scalar_array_type, typename data_analysis<DataType>::const_data_type>);
+  static_assert(std::is_same_v<typename ViewType::non_const_scalar_array_type, typename data_analysis<DataType>::non_const_data_type>);
   static_assert(std::is_same_v<typename ViewType::specialize, void>);
 
   // value_type definition conflicts with mdspan value_type
@@ -73,7 +74,7 @@ constexpr bool test_view_typedefs_impl() {
   static_assert(std::is_same_v<typename ViewType::array_layout, Layout>);
 
   // should be deprecated and is some complicated impl type
-  static_assert(!std::is_void_v<typename ViewType::dimension>);
+  // static_assert(!std::is_void_v<typename ViewType::dimension>);
 
   static_assert(std::is_same_v<typename ViewType::execution_space, typename Space::execution_space>);
   static_assert(std::is_same_v<typename ViewType::memory_space, typename Space::memory_space>);
@@ -92,23 +93,23 @@ constexpr bool test_view_typedefs_impl() {
   // =========================================
   static_assert(std::is_same_v<typename ViewType::traits, ViewTraitsType>);
   static_assert(std::is_same_v<typename ViewType::array_type,
-                               Kokkos::View<typename ViewType::scalar_array_type, typename ViewType::array_layout,
-                                            typename ViewType::device_type, typename ViewTraitsType::hooks_policy,
+                               Kokkos::DynRankView<typename ViewType::data_type, typename ViewType::array_layout,
+                                            typename ViewType::device_type, //typename ViewTraitsType::hooks_policy,
                                             typename ViewType::memory_traits>>);
   static_assert(std::is_same_v<typename ViewType::const_type,
-                               Kokkos::View<typename ViewType::const_data_type, typename ViewType::array_layout,
-                                            typename ViewType::device_type, typename ViewTraitsType::hooks_policy,
+                               Kokkos::DynRankView<typename ViewType::const_data_type, typename ViewType::array_layout,
+                                            typename ViewType::device_type, //typename ViewTraitsType::hooks_policy,
                                             typename ViewType::memory_traits>>);
   static_assert(std::is_same_v<typename ViewType::non_const_type,
-                               Kokkos::View<typename ViewType::non_const_data_type, typename ViewType::array_layout,
-                                            typename ViewType::device_type, typename ViewTraitsType::hooks_policy,
+                               Kokkos::DynRankView<typename ViewType::non_const_data_type, typename ViewType::array_layout,
+                                            typename ViewType::device_type, //typename ViewTraitsType::hooks_policy,
                                             typename ViewType::memory_traits>>);
-  static_assert(std::is_same_v<typename ViewType::host_mirror_type,
-                               Kokkos::View<typename ViewType::non_const_data_type, typename ViewType::array_layout,
-                                            Kokkos::Device<Kokkos::DefaultHostExecutionSpace,
-                                                           typename ViewType::host_mirror_space::memory_space>,
-                                            typename ViewTraitsType::hooks_policy>>);
+  static_assert(std::is_same_v<typename ViewType::HostMirror,
+                               Kokkos::DynRankView<typename ViewType::non_const_data_type, typename ViewType::array_layout,
+                                                   HostMirrorSpace
+                                                   /*, typename ViewTraitsType::hooks_policy*/>>);
 
+/*
   using uniform_layout_type = std::conditional_t<ViewType::rank()==0 || (ViewType::rank()==0 &&
                                                  std::is_same_v<Layout, Kokkos::LayoutRight>),
                                                  Kokkos::LayoutLeft, Layout>;
@@ -140,13 +141,14 @@ constexpr bool test_view_typedefs_impl() {
   static_assert(std::is_same_v<typename ViewType::uniform_runtime_const_nomemspace_type,
                                Kokkos::View<typename data_analysis<DataType>::runtime_const_data_type, uniform_layout_type,
                                             anonymous_device_type, Kokkos::MemoryTraits<0>>>);
-
+*/
 
   // ==================================
   // mdspan compatibility
   // ==================================
 
-  static_assert(std::is_same_v<typename ViewType::layout_type, Layout>);
+  // This typedef caused some weird issue with MSVC+NVCC
+  // static_assert(std::is_same_v<typename ViewType::layout_type, Layout>);
   // Not supported yet
   // static_assert(std::is_same_v<typename ViewType::extents_type, >);
   // static_assert(std::is_same_v<typename ViewType::mapping_type, >);
@@ -157,7 +159,6 @@ constexpr bool test_view_typedefs_impl() {
   static_assert(std::is_same_v<typename ViewType::value_type, ValueType>);
   // should be extents_type::index_type
   static_assert(std::is_same_v<typename ViewType::index_type, typename Space::memory_space::size_type>);
-  static_assert(std::is_same_v<typename ViewType::size_type, std::make_unsigned_t<typename ViewType::index_type>>);
   static_assert(std::is_same_v<typename ViewType::rank_type, size_t>);
 
   // should come from accessor_type
@@ -166,58 +167,92 @@ constexpr bool test_view_typedefs_impl() {
   return true;
 };
 
+// Helper function to unpack data type and other args from the View, and pass them on
 template<class T, class ... ViewArgs>
 struct ViewParams {};
 
 template<class L, class S, class M, class HostMirrorSpace, class ValueType, class ReferenceType, class T, class ... ViewArgs>
 constexpr bool test_view_typedefs(ViewParams<T, ViewArgs...>) {
-  return test_view_typedefs_impl<Kokkos::View<T, ViewArgs...>, Kokkos::ViewTraits<T, ViewArgs...>,
-                            T, L, S, M, HostMirrorSpace, ValueType, ReferenceType>();
+  return test_view_typedefs_impl<Kokkos::DynRankView<T, ViewArgs...>, Kokkos::ViewTraits<T*******, ViewArgs...>,
+                                 T, L, S, M, HostMirrorSpace, ValueType, ReferenceType>();
 }
 
 
-constexpr bool is_host_exec = Kokkos::Impl::MemorySpaceAccess<
-        Kokkos::DefaultExecutionSpace::memory_space,
-        Kokkos::HostSpace>::accessible;
+constexpr bool is_host_exec = std::is_same_v<Kokkos::DefaultExecutionSpace, Kokkos::DefaultHostExecutionSpace>;
 
-// These test take explicit template arguments for: LayoutType, Space, MemoryTraits, HostMirrorSpace, ValueType, ReferenceType
+#if defined(KOKKOS_ENABLE_CUDA_UVM) || defined(KOKKOS_ENABLE_IMPL_CUDA_UNIFIED_MEMORY) || defined(KOKKOS_ENABLE_IMPL_HIP_UNIFIED_MEMORY)
+constexpr bool has_unified = true;
+#else
+constexpr bool has_unified = false;
+#endif
+
+// The test take explicit template arguments for: LayoutType, Space, MemoryTraits, HostMirrorSpace, ValueType, ReferenceType
 // The ViewParams is just a type pack for the View template arguments
-static_assert(test_view_typedefs<
-                  Kokkos::DefaultExecutionSpace::array_layout,
-                  Kokkos::DefaultExecutionSpace, Kokkos::MemoryTraits<0>,
-                  std::conditional_t<is_host_exec, Kokkos::DefaultExecutionSpace, Kokkos::HostSpace>,
-                  int, int&>
-                  (ViewParams<int>{}));
-// WTF: HostMirrorSpace is different from the first one ....
-static_assert(test_view_typedefs<
-                  Kokkos::DefaultExecutionSpace::array_layout,
-                  Kokkos::DefaultExecutionSpace, Kokkos::MemoryTraits<0>,
-                  std::conditional_t<is_host_exec, Kokkos::HostSpace, Kokkos::HostSpace>,
-                  int, int&>
-                  (ViewParams<int, Kokkos::DefaultExecutionSpace>{}));
-static_assert(test_view_typedefs<
-                  Kokkos::LayoutRight,
-                  Kokkos::HostSpace, Kokkos::MemoryTraits<0>,
-                  Kokkos::HostSpace,
-                  float, float&>
-                  (ViewParams<float**, Kokkos::HostSpace>{}));
-static_assert(test_view_typedefs<
-                  Kokkos::LayoutLeft,
-                  Kokkos::DefaultExecutionSpace, Kokkos::MemoryTraits<0>,
-                  std::conditional_t<is_host_exec, Kokkos::DefaultExecutionSpace, Kokkos::HostSpace>,
-                  float, float&>
-                  (ViewParams<float*[3], Kokkos::LayoutLeft>{}));
-static_assert(test_view_typedefs<
-                  Kokkos::LayoutRight,
-                  Kokkos::Device<Kokkos::DefaultHostExecutionSpace, Kokkos::HostSpace>, Kokkos::MemoryTraits<0>,
-                  Kokkos::HostSpace,
-                  float, float&>
-                  (ViewParams<float[2][3], Kokkos::LayoutRight, Kokkos::Device<Kokkos::DefaultHostExecutionSpace, Kokkos::HostSpace>>{}));
-static_assert(test_view_typedefs<
-                  Kokkos::DefaultExecutionSpace::array_layout,
-                  Kokkos::DefaultExecutionSpace, Kokkos::MemoryTraits<Kokkos::Atomic>,
-                  std::conditional_t<is_host_exec, Kokkos::DefaultExecutionSpace, Kokkos::HostSpace>,
-                  int, Kokkos::Impl::AtomicDataElement<Kokkos::ViewTraits<int, Kokkos::MemoryTraits<Kokkos::Atomic>>>>
-                  (ViewParams<int, Kokkos::MemoryTraits<Kokkos::Atomic>>{}));
+
+// Kokkos::View<int>
+namespace TestInt {
+  using layout_type = Kokkos::DefaultExecutionSpace::array_layout;
+  using space = Kokkos::DefaultExecutionSpace;
+  using memory_traits = Kokkos::MemoryTraits<0>;
+  // HostMirrorSpace is a mess so: if the default exec is a host exec, that is it
+  using host_mirror_space = std::conditional_t<is_host_exec, Kokkos::DefaultExecutionSpace,
+  // otherwise if unified memory is not on its HostSpace
+                               std::conditional_t<!has_unified, Kokkos::HostSpace,
+  // otherwise its the following Device type
+                               Kokkos::Device<Kokkos::DefaultHostExecutionSpace, typename Kokkos::DefaultExecutionSpace::memory_space>>>;
+  static_assert(test_view_typedefs<layout_type, space, memory_traits, host_mirror_space, int, int&>(
+                     ViewParams<int>{}));
+}
+
+// Kokkos::View<int, DefaultExecutionSpace>
+namespace TestIntDefaultExecutionSpace {
+  using layout_type = Kokkos::DefaultExecutionSpace::array_layout;
+  using space = Kokkos::DefaultExecutionSpace;
+  using memory_traits = Kokkos::MemoryTraits<0>;
+  // HostMirrorSpace is a mess so: if the default exec is a host exec, it is HostSpace (note difference from View<int> ...)
+  using host_mirror_space = std::conditional_t<is_host_exec, Kokkos::HostSpace,
+  // otherwise if unified memory is not on its also HostSpace!
+                               std::conditional_t<!has_unified, Kokkos::HostSpace,
+  // otherwise its the following memory space ...
+                               Kokkos::DefaultExecutionSpace::memory_space>>;
+  static_assert(test_view_typedefs<layout_type, space, memory_traits, host_mirror_space, int, int&>(
+                     ViewParams<int, Kokkos::DefaultExecutionSpace>{}));
+}
+
+// Kokkos::View<const float, Kokkos::HostSpace>
+namespace TestFloatPPHostSpace {
+  using layout_type = Kokkos::LayoutRight;
+  using space = Kokkos::HostSpace;
+  using memory_traits = Kokkos::MemoryTraits<0>;
+  using host_mirror_space = Kokkos::HostSpace;
+  static_assert(test_view_typedefs<layout_type, space, memory_traits, host_mirror_space, const float, const float&>(
+                     ViewParams<const float, Kokkos::HostSpace>{}));
+}
+
+// Kokkos::View<float, Kokkos::Device<Kokkos::DefaultHostExecutionSpace, Kokkos::HostSpace>>
+namespace TestFloatPPDeviceDefaultHostExecHostSpace {
+  using layout_type = Kokkos::LayoutRight;
+  using space = Kokkos::Device<Kokkos::DefaultHostExecutionSpace, Kokkos::HostSpace>;
+  using memory_traits = Kokkos::MemoryTraits<0>;
+  using host_mirror_space = Kokkos::HostSpace;
+  static_assert(test_view_typedefs<layout_type, space, memory_traits, host_mirror_space, float, float&>(
+                     ViewParams<float, Kokkos::LayoutRight, Kokkos::Device<Kokkos::DefaultHostExecutionSpace, Kokkos::HostSpace>>{}));
+}
+
+// Kokkos::View<int, Kokkos::MemoryTraits<Kokkos::Atomic>>
+namespace TestIntAtomic {
+  using layout_type = Kokkos::DefaultExecutionSpace::array_layout;
+  using space = Kokkos::DefaultExecutionSpace;
+  using memory_traits = Kokkos::MemoryTraits<Kokkos::Atomic>;
+  // HostMirrorSpace is a mess so: if the default exec is a host exec, that is it
+  using host_mirror_space = std::conditional_t<is_host_exec, Kokkos::DefaultExecutionSpace,
+  // otherwise if unified memory is not on its HostSpace
+                               std::conditional_t<!has_unified, Kokkos::HostSpace,
+  // otherwise its the following Device type
+                               Kokkos::Device<Kokkos::DefaultHostExecutionSpace, typename Kokkos::DefaultExecutionSpace::memory_space>>>;
+  static_assert(test_view_typedefs<layout_type, space, memory_traits, host_mirror_space, int,
+                                   Kokkos::Impl::AtomicDataElement<Kokkos::ViewTraits<int*******, Kokkos::MemoryTraits<Kokkos::Atomic>>>>(
+                     ViewParams<int, Kokkos::MemoryTraits<Kokkos::Atomic>>{}));
+}
 // clang-format on
 }  // namespace

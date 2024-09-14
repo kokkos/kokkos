@@ -431,18 +431,19 @@ class DynRankView : private View<DataType*******, Properties...> {
   using reference_type = typename view_type::reference_type;
   using pointer_type   = typename view_type::pointer_type;
 
-  using scalar_array_type       = typename view_type::scalar_array_type;
-  using const_scalar_array_type = typename view_type::const_scalar_array_type;
-  using non_const_scalar_array_type =
-      typename view_type::non_const_scalar_array_type;
-  using specialize = typename view_type::specialize;
+  using scalar_array_type           = value_type;
+  using const_scalar_array_type     = const_value_type;
+  using non_const_scalar_array_type = non_const_value_type;
+  using specialize                  = typename view_type::specialize;
 
   // typedefs in View for mdspan compatibility
   // cause issues with MSVC+CUDA
   // using layout_type  = typename view_type::layout_type;
-  using index_type   = typename view_type::index_type;
-  using element_type = typename view_type::element_type;
-  using rank_type    = typename view_type::rank_type;
+  using index_type       = typename view_type::index_type;
+  using element_type     = typename view_type::element_type;
+  using rank_type        = typename view_type::rank_type;
+  using reference        = reference_type;
+  using data_handle_type = pointer_type;
 
   KOKKOS_INLINE_FUNCTION
   view_type& DownCast() const { return (view_type&)(*this); }
@@ -475,6 +476,7 @@ class DynRankView : private View<DataType*******, Properties...> {
                                  typename drvtraits::array_layout,
                                  typename drvtraits::host_mirror_space>;
 
+  using host_mirror_type = HostMirror;
   //----------------------------------------
   // Domain rank and extents
 
