@@ -22,6 +22,14 @@
 #include <OpenACC/Kokkos_OpenACC_ScheduleType.hpp>
 #include <Kokkos_Parallel.hpp>
 
+// FIXME_OPENACC FIXME_NVHPC NVHPC 24.5 generates very inefficient code for
+// gang(static:*)
+#ifdef KOKKOS_COMPILER_NVHPC
+#define KOKKOS_IMPL_OPENACC_PARALLEL_FOR_RANGE_GANG gang(static : 32)
+#else
+#define KOKKOS_IMPL_OPENACC_PARALLEL_FOR_RANGE_GANG gang(static : *)
+#endif
+
 namespace Kokkos::Experimental::Impl {
 template <class IndexType, class Functor>
 void OpenACCParallelForRangePolicy(Schedule<Static>, int chunk_size,
@@ -31,7 +39,7 @@ void OpenACCParallelForRangePolicy(Schedule<Static>, int chunk_size,
   // analysis)
   // NVC++-S-1067-Cannot determine bounds for array - functor
   auto const functor(afunctor);
-  if (chunk_size >= 1) {
+  if (chunk_size >= OpenACC_Traits::WarpSize) {
 // clang-format off
 #pragma acc parallel loop gang(static:chunk_size) vector copyin(functor) async(async_arg)
     // clang-format on
@@ -40,7 +48,7 @@ void OpenACCParallelForRangePolicy(Schedule<Static>, int chunk_size,
     }
   } else {
 // clang-format off
-#pragma acc parallel loop gang(static:*) vector copyin(functor) async(async_arg)
+#pragma acc parallel loop KOKKOS_IMPL_OPENACC_PARALLEL_FOR_RANGE_GANG vector copyin(functor) async(async_arg)
     // clang-format on
     for (auto i = begin; i < end; ++i) {
       functor(i);
@@ -56,7 +64,7 @@ void OpenACCParallelForRangePolicy(Schedule<Dynamic>, int chunk_size,
   // analysis)
   // NVC++-S-1067-Cannot determine bounds for array - functor
   auto const functor(afunctor);
-  if (chunk_size >= 1) {
+  if (chunk_size >= OpenACC_Traits::WarpSize) {
 // clang-format off
 #pragma acc parallel loop gang(static:chunk_size) vector copyin(functor) async(async_arg)
     // clang-format on

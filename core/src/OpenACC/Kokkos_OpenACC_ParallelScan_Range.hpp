@@ -73,7 +73,7 @@ class ParallelScanOpenACCBase {
   void OpenACCParallelScanRangePolicy(const IndexType begin,
                                       const IndexType end, IndexType chunk_size,
                                       const int async_arg) const {
-    if (chunk_size > 1) {
+    if (chunk_size >= Kokkos::Experimental::Impl::OpenACC_Traits::WarpSize) {
       if (!Impl::is_integral_power_of_two(chunk_size))
         Kokkos::abort(
             "RangePolicy blocking granularity must be power of two to be used "
