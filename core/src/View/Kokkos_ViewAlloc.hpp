@@ -262,12 +262,6 @@ Kokkos::Impl::SharedAllocationRecord<void, void>* make_shared_allocation_record(
   using record_type =
       Kokkos::Impl::SharedAllocationRecord<MemorySpace, functor_type>;
 
-  // If padding is allowed then pass in sizeof value type
-  // for padding computation.
-  using padding =
-      std::integral_constant<std::size_t,
-                             AllowPadding ? sizeof(ElementType) : 0>;
-
   static constexpr std::size_t align_mask   = 0x7;
   static constexpr std::size_t element_size = sizeof(ElementType);
 

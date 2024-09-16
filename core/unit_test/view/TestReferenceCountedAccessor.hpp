@@ -66,6 +66,7 @@ TEST(TEST_CATEGORY, RefCountedAcc_Ctors) {
       {
         acc_t acc;
         const_acc_t c_acc(acc);
+        (void) c_acc;
         static_assert(!std::is_constructible_v<acc_t, const_acc_t>);
 }
 // from default_accessor
@@ -75,6 +76,9 @@ TEST(TEST_CATEGORY, RefCountedAcc_Ctors) {
   acc_t acc(defacc);
   const_acc_t c_acc1(defacc);
   const_acc_t c_acc2(c_defacc);
+  (void)acc;
+  (void)c_acc1;
+  (void)c_acc2;
   static_assert(!std::is_constructible_v<acc_t, const_defacc_t>);
 }
 });
@@ -89,6 +93,9 @@ TEST(TEST_CATEGORY, RefCountedAcc_ConversionToDefaultAcc) {
         defacc_t defacc(acc);
         const_defacc_t c_defacc1(acc);
         const_defacc_t c_defacc2(c_acc);
+        (void)defacc;
+        (void)c_defacc1;
+        (void)c_defacc2;
         static_assert(!std::is_constructible_v<defacc_t, const_acc_t>);
       });
 }
