@@ -93,11 +93,16 @@ class OpenMP {
   void fence(std::string const& name =
                  "Kokkos::OpenMP::fence: Unnamed Instance Fence") const;
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   /// \brief Does the given instance return immediately after launching
   /// a parallel algorithm
   ///
   /// This always returns false on OpenMP
-  inline static bool is_asynchronous(OpenMP const& = OpenMP()) noexcept;
+  KOKKOS_DEPRECATED inline static bool is_asynchronous(
+      OpenMP const& = OpenMP()) noexcept {
+    return false;
+  }
+#endif
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   static int concurrency(OpenMP const& = OpenMP());
@@ -152,10 +157,6 @@ inline int OpenMP::impl_thread_pool_rank() noexcept {
   KOKKOS_IF_ON_HOST((return omp_get_thread_num();))
 
   KOKKOS_IF_ON_DEVICE((return -1;))
-}
-
-inline bool OpenMP::is_asynchronous(OpenMP const& /*instance*/) noexcept {
-  return false;
 }
 
 inline int OpenMP::impl_thread_pool_size(int depth) const {

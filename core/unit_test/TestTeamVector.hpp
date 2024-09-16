@@ -980,7 +980,7 @@ struct checkScan {
     const std::string label =
         (scan_type == ScanType::Inclusive ? std::string("inclusive")
                                           : std::string("exclusive")) +
-        "Scan" + typeid(Reducer).name();
+        "Scan" + std::string(Kokkos::Impl::TypeInfo<Reducer>::name());
     Kokkos::parallel_for(label, policy, *this);
     Kokkos::fence();
 

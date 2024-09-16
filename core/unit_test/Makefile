@@ -392,7 +392,6 @@ ifneq ($(KOKKOS_INTERNAL_COMPILER_HCC), 1)
   OBJ_DEFAULT += TestDefaultDeviceType_a1.o TestDefaultDeviceType_b1.o TestDefaultDeviceType_c1.o
   OBJ_DEFAULT += TestDefaultDeviceType_a2.o TestDefaultDeviceType_b2.o TestDefaultDeviceType_c2.o
   OBJ_DEFAULT += TestDefaultDeviceType_a3.o TestDefaultDeviceType_b3.o TestDefaultDeviceType_c3.o
-  OBJ_DEFAULT += TestDefaultDeviceType_d.o
 endif
 endif
 

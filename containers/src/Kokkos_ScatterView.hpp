@@ -532,31 +532,55 @@ void args_to_array(size_t* array, int pos, T dim0, Dims... dims) {
    subview where the index specified is the largest-stride one. */
 template <typename Layout, int rank, typename V, typename... Args>
 struct Slice {
-  using next       = Slice<Layout, rank - 1, V, Kokkos::ALL_t, Args...>;
-  using value_type = typename next::value_type;
-
-  static value_type get(V const& src, const size_t i, Args... args) {
+  using next = Slice<Layout, rank - 1, V, Kokkos::ALL_t, Args...>;
+  static auto get(V const& src, const size_t i, Args... args) {
     return next::get(src, i, Kokkos::ALL, args...);
   }
 };
 
 template <typename V, typename... Args>
 struct Slice<Kokkos::LayoutRight, 1, V, Args...> {
-  using value_type =
-      typename Kokkos::Impl::ViewMapping<void, V, const size_t, Args...>::type;
-  static value_type get(V const& src, const size_t i, Args... args) {
+  static auto get(V const& src, const size_t i, Args... args) {
     return Kokkos::subview(src, i, args...);
   }
 };
 
 template <typename V, typename... Args>
 struct Slice<Kokkos::LayoutLeft, 1, V, Args...> {
-  using value_type =
-      typename Kokkos::Impl::ViewMapping<void, V, Args..., const size_t>::type;
-  static value_type get(V const& src, const size_t i, Args... args) {
+  static auto get(V const& src, const size_t i, Args... args) {
     return Kokkos::subview(src, args..., i);
   }
 };
+
+#ifdef KOKKOS_ENABLE_IMPL_MDSPAN
+template <typename V, typename... Args>
+struct Slice<Kokkos::layout_right, 1, V, Args...> {
+  static auto get(V const& src, const size_t i, Args... args) {
+    return Kokkos::subview(src, i, args...);
+  }
+};
+
+template <typename V, typename... Args>
+struct Slice<Kokkos::layout_left, 1, V, Args...> {
+  static auto get(V const& src, const size_t i, Args... args) {
+    return Kokkos::subview(src, args..., i);
+  }
+};
+
+template <size_t Pad, typename V, typename... Args>
+struct Slice<Kokkos::Experimental::layout_right_padded<Pad>, 1, V, Args...> {
+  static auto get(V const& src, const size_t i, Args... args) {
+    return Kokkos::subview(src, i, args...);
+  }
+};
+
+template <size_t Pad, typename V, typename... Args>
+struct Slice<Kokkos::Experimental::layout_left_padded<Pad>, 1, V, Args...> {
+  static auto get(V const& src, const size_t i, Args... args) {
+    return Kokkos::subview(src, args..., i);
+  }
+};
+#endif
 
 template <typename ExecSpace, typename ValueType, typename Op>
 struct ReduceDuplicates;
@@ -1028,10 +1052,7 @@ class ScatterView<DataType, Kokkos::LayoutRight, DeviceType, Op,
         *this);
   }
 
-  typename Kokkos::Impl::Experimental::Slice<Kokkos::LayoutRight,
-                                             internal_view_type::rank,
-                                             internal_view_type>::value_type
-  subview() const {
+  auto subview() const {
     return Kokkos::Impl::Experimental::Slice<
         Kokkos::LayoutRight, internal_view_type::rank,
         internal_view_type>::get(internal_view, 0);
@@ -1310,10 +1331,7 @@ class ScatterView<DataType, Kokkos::LayoutLeft, DeviceType, Op,
         *this);
   }
 
-  typename Kokkos::Impl::Experimental::Slice<Kokkos::LayoutLeft,
-                                             internal_view_type::rank,
-                                             internal_view_type>::value_type
-  subview() const {
+  auto subview() const {
     return Kokkos::Impl::Experimental::Slice<
         Kokkos::LayoutLeft, internal_view_type::rank,
         internal_view_type>::get(internal_view, 0);

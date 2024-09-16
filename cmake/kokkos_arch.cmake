@@ -622,6 +622,12 @@ IF (KOKKOS_ENABLE_SYCL)
   COMPILER_SPECIFIC_OPTIONS(
     DEFAULT -fsycl-unnamed-lambda
   )
+  IF (NOT KOKKOS_ENABLE_IMPL_SYCL_RELOCATABLE_DEVICE_CODE)
+    IF(KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM AND KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 2023.1.0)
+      MESSAGE(FATAL_ERROR "Kokkos_ENABLE_IMPL_SYCL_RELOCATABLE_DEVICE_CODE=OFF requires oneAPI 2023.1.0 or later")
+    ENDIF()
+    COMPILER_SPECIFIC_OPTIONS(DEFAULT -fno-sycl-rdc)
+  ENDIF()
 ENDIF()
 
 # Check support for device_global variables
@@ -638,7 +644,7 @@ IF(KOKKOS_ENABLE_SYCL)
     SET(KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED ON)
     # Use the non-separable compilation implementation to support shared libraries as well.
     COMPILER_SPECIFIC_FLAGS(DEFAULT -DDESUL_SYCL_DEVICE_GLOBAL_SUPPORTED)
-  ELSEIF(NOT BUILD_SHARED_LIBS)
+  ELSEIF(NOT BUILD_SHARED_LIBS AND KOKKOS_ENABLE_IMPL_SYCL_RELOCATABLE_DEVICE_CODE)
     INCLUDE(CheckCXXSourceCompiles)
     CHECK_CXX_SOURCE_COMPILES("
       #include <sycl/sycl.hpp>
@@ -922,34 +928,28 @@ IF (KOKKOS_ENABLE_SYCL)
     COMPILER_SPECIFIC_FLAGS(
       DEFAULT -fsycl-targets=spir64
     )
-  ELSE()
-    COMPILER_SPECIFIC_OPTIONS(
-      DEFAULT -fsycl-targets=spir64_gen
-    )
+  ELSEIF(KOKKOS_ARCH_INTEL_GPU)
+    SET(SYCL_TARGET_FLAG -fsycl-targets=spir64_gen)
+
     IF(KOKKOS_ARCH_INTEL_GEN9)
-      COMPILER_SPECIFIC_LINK_OPTIONS(
-        DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device gen9"
-      )
+     SET(SYCL_TARGET_BACKEND_FLAG -Xsycl-target-backend "-device gen9")
     ELSEIF(KOKKOS_ARCH_INTEL_GEN11)
-      COMPILER_SPECIFIC_LINK_OPTIONS(
-        DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device gen11"
-      )
+      SET(SYCL_TARGET_BACKEND_FLAG -Xsycl-target-backend "-device gen11")
     ELSEIF(KOKKOS_ARCH_INTEL_GEN12LP)
-      COMPILER_SPECIFIC_LINK_OPTIONS(
-        DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device gen12lp"
-      )
+      SET(SYCL_TARGET_BACKEND_FLAG -Xsycl-target-backend "-device gen12lp")
     ELSEIF(KOKKOS_ARCH_INTEL_DG1)
-      COMPILER_SPECIFIC_LINK_OPTIONS(
-        DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device dg1"
-      )
+      SET(SYCL_TARGET_BACKEND_FLAG -Xsycl-target-backend "-device dg1")
     ELSEIF(KOKKOS_ARCH_INTEL_XEHP)
-      COMPILER_SPECIFIC_LINK_OPTIONS(
-        DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device 12.50.4"
-      )
+      SET(SYCL_TARGET_BACKEND_FLAG -Xsycl-target-backend "-device 12.50.4")
     ELSEIF(KOKKOS_ARCH_INTEL_PVC)
-      COMPILER_SPECIFIC_LINK_OPTIONS(
-        DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device 12.60.7"
-      )
+      SET(SYCL_TARGET_BACKEND_FLAG -Xsycl-target-backend "-device 12.60.7")
+    ENDIF()
+
+    IF(Kokkos_ENABLE_IMPL_SYCL_RELOCATABLE_DEVICE_CODE)
+      COMPILER_SPECIFIC_OPTIONS(DEFAULT ${SYCL_TARGET_FLAG})
+      COMPILER_SPECIFIC_LINK_OPTIONS(DEFAULT ${SYCL_TARGET_FLAG} ${SYCL_TARGET_BACKEND_FLAG})
+    ELSE()
+      COMPILER_SPECIFIC_OPTIONS(DEFAULT ${SYCL_TARGET_FLAG} ${SYCL_TARGET_BACKEND_FLAG})
     ENDIF()
   ENDIF()
 ENDIF()
@@ -1151,27 +1151,20 @@ FOREACH (_BACKEND Cuda OpenMPTarget HIP SYCL OpenACC)
     IF (${_BACKEND} STREQUAL "Cuda")
        IF(KOKKOS_ENABLE_CUDA_UVM)
           MESSAGE(DEPRECATION "Setting Kokkos_ENABLE_CUDA_UVM is deprecated - use the portable Kokkos::SharedSpace as an explicit memory space in your code instead")
-          IF(KOKKOS_ENABLE_DEPRECATED_CODE_4)
-            SET(_DEFAULT_DEVICE_MEMSPACE "Kokkos::${_BACKEND}UVMSpace")
-          ELSE()
+          IF(NOT KOKKOS_ENABLE_DEPRECATED_CODE_4)
             MESSAGE(FATAL_ERROR "Kokkos_ENABLE_DEPRECATED_CODE_4 must be set to use Kokkos_ENABLE_CUDA_UVM")
           ENDIF()
-       ELSE()
-          SET(_DEFAULT_DEVICE_MEMSPACE "Kokkos::${_BACKEND}Space")
        ENDIF()
        SET(_DEVICE_PARALLEL "Kokkos::${_BACKEND}")
-    ELSEIF(${_BACKEND} STREQUAL "HIP")
-       SET(_DEFAULT_DEVICE_MEMSPACE "Kokkos::${_BACKEND}Space")
+    ELSEIF(${_BACKEND} STREQUAL "HIP" OR ${_BACKEND} STREQUAL "SYCL")
        SET(_DEVICE_PARALLEL "Kokkos::${_BACKEND}")
     ELSE()
-       SET(_DEFAULT_DEVICE_MEMSPACE "Kokkos::Experimental::${_BACKEND}Space")
        SET(_DEVICE_PARALLEL "Kokkos::Experimental::${_BACKEND}")
     ENDIF()
   ENDIF()
 ENDFOREACH()
 IF(NOT _DEVICE_PARALLEL)
   SET(_DEVICE_PARALLEL "NoTypeDefined")
-  SET(_DEFAULT_DEVICE_MEMSPACE "NoTypeDefined")
 ENDIF()
 MESSAGE(STATUS "    Device Parallel: ${_DEVICE_PARALLEL}")
 
@@ -1220,7 +1213,7 @@ ENDFOREACH()
 
 IF(KOKKOS_ENABLE_ATOMICS_BYPASS)
   IF(NOT _HOST_PARALLEL STREQUAL "NoTypeDefined" OR NOT _DEVICE_PARALLEL STREQUAL "NoTypeDefined")
-    MESSAGE(FATAL_ERROR "Not allowed to disable atomics (via -DKokkos_ENABLE_AROMICS_BYPASS=ON) if neither a host parallel nor a device backend is enabled!")
+    MESSAGE(FATAL_ERROR "Disabling atomics (via -DKokkos_ENABLE_ATOMICS_BYPASS=ON) is not allowed if a host parallel or a device backend is enabled!")
   ENDIF()
   IF(NOT KOKKOS_ENABLE_SERIAL)
     MESSAGE(FATAL_ERROR "Implementation bug")  # safeguard
