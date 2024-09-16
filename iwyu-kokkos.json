@@ -51,6 +51,9 @@
     { "symbol": ["Kokkos::WithoutInitializing", "private", "<Kokkos_Core.hpp>", "public"] },
     { "symbol": ["Kokkos::Profiling::popRegion", "private", "<Kokkos_Core.hpp>", "public"] },
     { "symbol": ["Kokkos::Profiling::pushRegion", "private", "<Kokkos_Core.hpp>", "public"] },
+    { "symbol": ["Kokkos::LayoutLeft", "private", "<Kokkos_Core.hpp>", "public"] },
+    { "symbol": ["Kokkos::LayoutRight", "private", "<Kokkos_Core.hpp>", "public"] },
+    { "symbol": ["Kokkos::LayoutStride", "private", "<Kokkos_Core.hpp>", "public"] },
 
     { "symbol": ["Kokkos::BAnd", "private", "<Kokkos_Core.hpp>", "public"] },
     { "symbol": ["Kokkos::BOr", "private", "<Kokkos_Core.hpp>", "public"] },
@@ -96,10 +99,6 @@
     { "symbol": ["Kokkos::clamp", "private", "<Kokkos_Clamp.hpp>", "public"] },
 
     { "symbol": ["Kokkos::complex", "private", "<Kokkos_Complex.hpp>", "public"] },
-
-    { "symbol": ["Kokkos::LayoutLeft", "private", "<Kokkos_Layout.hpp>", "public"] },
-    { "symbol": ["Kokkos::LayoutRight", "private", "<Kokkos_Layout.hpp>", "public"] },
-    { "symbol": ["Kokkos::LayoutStride", "private", "<Kokkos_Layout.hpp>", "public"] },
 
     { "symbol": ["KOKKOS_DEFAULTED_FUNCTION", "private", "<Kokkos_Macros.hpp>", "public"] },
     { "symbol": ["KOKKOS_FORCEINLINE_FUNCTION", "private", "<Kokkos_Macros.hpp>", "public"] },
