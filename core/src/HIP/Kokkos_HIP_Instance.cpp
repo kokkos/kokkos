@@ -362,11 +362,10 @@ void HIPInternal::finalize() {
   m_num_scratch_locks = 0;
 }
 
-int HIPInternal::m_hipDev             = -1;
-unsigned HIPInternal::m_maxWavesPerCU = 0;
-int HIPInternal::m_shmemPerSM         = 0;
-int HIPInternal::m_maxShmemPerBlock   = 0;
-int HIPInternal::m_maxThreadsPerSM    = 0;
+int HIPInternal::m_hipDev           = -1;
+int HIPInternal::m_shmemPerSM       = 0;
+int HIPInternal::m_maxShmemPerBlock = 0;
+int HIPInternal::m_maxThreadsPerSM  = 0;
 
 hipDeviceProp_t HIPInternal::m_deviceProp;
 

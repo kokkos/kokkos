@@ -53,12 +53,17 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
   KOKKOS_IMPL_HIP_SAFE_CALL(hipSetDevice(hip_device_id));
 
   // theoretically, we can get 40 WF's / CU, but only can sustain 32 see
-  // https://github.com/ROCm-Developer-Tools/HIP/blob/a0b5dfd625d99af7e288629747b40dd057183173/vdi/hip_platform.cpp#L742
-  Impl::HIPInternal::m_maxWavesPerCU = 32;
-  Impl::HIPInternal::m_shmemPerSM    = hipProp.maxSharedMemoryPerMultiProcessor;
+  // https://github.com/ROCm/clr/blob/4d0b815d06751735e6a50fa46e913fdf85f751f0/hipamd/src/hip_platform.cpp#L362-L366
+#if defined(KOKKOS_ARCH_AMD_GFX1030) || defined(KOKKOS_ARCH_AMD_GFX1100) || \
+    defined(KOKKOS_ARCH_AMD_GFX1103)
+  const int maxWavesPerCU = 64;
+#else
+  const int maxWavesPerCU = 32;
+#endif
+  Impl::HIPInternal::m_shmemPerSM = hipProp.maxSharedMemoryPerMultiProcessor;
   Impl::HIPInternal::m_maxShmemPerBlock = hipProp.sharedMemPerBlock;
   Impl::HIPInternal::m_maxThreadsPerSM =
-      Impl::HIPInternal::m_maxWavesPerCU * Impl::HIPTraits::WarpSize;
+      maxWavesPerCU * Impl::HIPTraits::WarpSize;
 
   // Init the array for used for arbitrarily sized atomics
   desul::Impl::init_lock_arrays();  // FIXME
