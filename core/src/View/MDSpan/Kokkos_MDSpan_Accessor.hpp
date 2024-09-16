@@ -212,6 +212,334 @@ struct AtomicAccessorRelaxed {
   }
 };
 
+//=====================================================================
+//============= Reference Counted Accessor and DataHandle =============
+//=====================================================================
+
+template <class ElementType, class MemorySpace>
+class ReferenceCountedDataHandle {
+ public:
+  using value_type   = ElementType;
+  using pointer      = value_type*;
+  using reference    = value_type&;
+  using memory_space = MemorySpace;
+
+  KOKKOS_DEFAULTED_FUNCTION
+  ReferenceCountedDataHandle() = default;
+  explicit ReferenceCountedDataHandle(SharedAllocationRecord<void, void>* rec) {
+    m_tracker.assign_allocated_record_to_uninitialized(rec);
+    m_handle = static_cast<pointer>(get_record()->data());
+  }
+
+  KOKKOS_FUNCTION
+  ReferenceCountedDataHandle(const SharedAllocationTracker& tracker,
+                             pointer data_handle)
+      : m_tracker(tracker), m_handle(data_handle) {}
+
+  // unmanaged ctor
+  template <class OtherElementType,
+            class = std::enable_if_t<std::is_convertible_v<
+                OtherElementType (*)[], value_type (*)[]>>>
+  KOKKOS_FUNCTION ReferenceCountedDataHandle(OtherElementType* ptr)
+      : m_tracker(), m_handle(ptr) {}
+
+  // subview ctor
+  template <class OtherElementType,
+            class = std::enable_if_t<std::is_convertible_v<
+                OtherElementType (*)[], value_type (*)[]>>>
+  KOKKOS_FUNCTION ReferenceCountedDataHandle(
+      const ReferenceCountedDataHandle& other, OtherElementType* ptr)
+      : m_tracker(other.m_tracker), m_handle(ptr) {}
+
+  // converting ctor
+  template <class OtherElementType,
+            class = std::enable_if_t<std::is_convertible_v<
+                OtherElementType (*)[], value_type (*)[]>>>
+  KOKKOS_FUNCTION ReferenceCountedDataHandle(
+      const ReferenceCountedDataHandle<OtherElementType, memory_space>& other)
+      : m_tracker(other.m_tracker), m_handle(other.m_handle) {}
+
+  KOKKOS_DEFAULTED_FUNCTION
+  ReferenceCountedDataHandle(const ReferenceCountedDataHandle&) = default;
+  KOKKOS_DEFAULTED_FUNCTION
+  ReferenceCountedDataHandle(ReferenceCountedDataHandle&&) noexcept = default;
+  KOKKOS_DEFAULTED_FUNCTION
+  ReferenceCountedDataHandle& operator=(const ReferenceCountedDataHandle&) =
+      default;
+  KOKKOS_DEFAULTED_FUNCTION
+  ReferenceCountedDataHandle& operator=(ReferenceCountedDataHandle&&) = default;
+
+  KOKKOS_FUNCTION
+  pointer get() const noexcept { return m_handle; }
+  KOKKOS_FUNCTION
+  explicit operator pointer() const noexcept { return m_handle; }
+
+  bool has_record() const { return m_tracker.has_record(); }
+  auto* get_record() const { return m_tracker.get_record<memory_space>(); }
+  int use_count() const noexcept { return m_tracker.use_count(); }
+
+  std::string get_label() const { return m_tracker.get_label<memory_space>(); }
+  KOKKOS_FUNCTION
+  const SharedAllocationTracker& tracker() const noexcept { return m_tracker; }
+
+  KOKKOS_FUNCTION
+  friend bool operator==(const ReferenceCountedDataHandle& lhs,
+                         const value_type* rhs) {
+    return lhs.m_handle == rhs;
+  }
+
+  KOKKOS_FUNCTION
+  friend bool operator==(const value_type* lhs,
+                         const ReferenceCountedDataHandle& rhs) {
+    return lhs == rhs.m_handle;
+  }
+
+ private:
+  template <class OtherElementType, class OtherSpace>
+  friend class ReferenceCountedDataHandle;
+
+  template <class OtherElementType, class OtherSpace, class NestedAccessor>
+  friend class ReferenceCountedAccessor;
+
+  SharedAllocationTracker m_tracker;
+  pointer m_handle = nullptr;
+};
+
+template <class ElementType>
+class ReferenceCountedDataHandle<ElementType, AnonymousSpace> {
+ public:
+  using value_type   = ElementType;
+  using pointer      = value_type*;
+  using reference    = value_type&;
+  using memory_space = AnonymousSpace;
+
+  KOKKOS_DEFAULTED_FUNCTION
+  ReferenceCountedDataHandle() = default;
+  explicit ReferenceCountedDataHandle(SharedAllocationRecord<void, void>* rec) {
+    m_tracker.assign_allocated_record_to_uninitialized(rec);
+    m_handle = static_cast<pointer>(get_record()->data());
+  }
+
+  KOKKOS_FUNCTION
+  ReferenceCountedDataHandle(const SharedAllocationTracker& tracker,
+                             pointer data_handle)
+      : m_tracker(tracker), m_handle(data_handle) {}
+
+  template <class OtherElementType,
+            class = std::enable_if_t<std::is_convertible_v<
+                OtherElementType (*)[], value_type (*)[]>>>
+  KOKKOS_FUNCTION ReferenceCountedDataHandle(OtherElementType* ptr)
+      : m_tracker(), m_handle(ptr) {}
+
+  template <class OtherElementType,
+            class = std::enable_if_t<std::is_convertible_v<
+                OtherElementType (*)[], value_type (*)[]>>>
+  KOKKOS_FUNCTION ReferenceCountedDataHandle(
+      const ReferenceCountedDataHandle& other, OtherElementType* ptr)
+      : m_tracker(other.m_tracker), m_handle(ptr) {}
+
+  KOKKOS_DEFAULTED_FUNCTION
+  ReferenceCountedDataHandle(const ReferenceCountedDataHandle&) = default;
+  KOKKOS_DEFAULTED_FUNCTION
+  ReferenceCountedDataHandle(ReferenceCountedDataHandle&&) noexcept = default;
+  KOKKOS_DEFAULTED_FUNCTION
+  ReferenceCountedDataHandle& operator=(const ReferenceCountedDataHandle&) =
+      default;
+  KOKKOS_DEFAULTED_FUNCTION
+  ReferenceCountedDataHandle& operator=(ReferenceCountedDataHandle&&) = default;
+
+  template <class OtherElementType, class OtherSpace,
+            class = std::enable_if_t<std::is_convertible_v<
+                OtherElementType (*)[], value_type (*)[]>>>
+  KOKKOS_FUNCTION ReferenceCountedDataHandle(
+      const ReferenceCountedDataHandle<OtherElementType, OtherSpace>& other)
+      : m_tracker(other.m_tracker), m_handle(other.m_handle) {}
+
+  KOKKOS_FUNCTION
+  pointer get() const noexcept { return m_handle; }
+  KOKKOS_FUNCTION
+  explicit operator pointer() const noexcept { return m_handle; }
+
+  bool has_record() const { return m_tracker.has_record(); }
+  auto* get_record() const { return m_tracker.get_record<memory_space>(); }
+  int use_count() const noexcept { return m_tracker.use_count(); }
+
+  std::string get_label() const { return m_tracker.get_label<memory_space>(); }
+  KOKKOS_FUNCTION
+  const SharedAllocationTracker& tracker() const noexcept { return m_tracker; }
+
+  KOKKOS_FUNCTION
+  friend bool operator==(const ReferenceCountedDataHandle& lhs,
+                         const value_type* rhs) {
+    return lhs.m_handle == rhs;
+  }
+
+  KOKKOS_FUNCTION
+  friend bool operator==(const value_type* lhs,
+                         const ReferenceCountedDataHandle& rhs) {
+    return lhs == rhs.m_handle;
+  }
+
+ private:
+  template <class OtherElementType, class OtherSpace>
+  friend class ReferenceCountedDataHandle;
+
+  SharedAllocationTracker m_tracker;
+  pointer m_handle = nullptr;
+};
+
+template <class ElementType, class MemorySpace, class NestedAccessor>
+class ReferenceCountedAccessor;
+
+template <class Accessor>
+struct IsReferenceCountedAccessorImpl : std::false_type {};
+
+template <class ElementType, class MemorySpace, class NestedAccessor>
+struct IsReferenceCountedAccessorImpl<
+    ReferenceCountedAccessor<ElementType, MemorySpace, NestedAccessor>>
+    : std::true_type {};
+
+template <class ElementType, class MemorySpace, class NestedAccessor>
+class ReferenceCountedAccessor {
+ public:
+  using element_type     = ElementType;
+  using data_handle_type = ReferenceCountedDataHandle<ElementType, MemorySpace>;
+  using reference        = typename NestedAccessor::reference;
+  using offset_policy =
+      ReferenceCountedAccessor<ElementType, MemorySpace,
+                               typename NestedAccessor::offset_policy>;
+
+  KOKKOS_DEFAULTED_FUNCTION
+  constexpr ReferenceCountedAccessor() noexcept = default;
+
+  template <
+      class OtherElementType, class OtherNestedAccessor,
+      class = std::enable_if_t<
+          std::is_convertible_v<OtherElementType (*)[], element_type (*)[]> &&
+          std::is_constructible_v<NestedAccessor, OtherNestedAccessor>>>
+  KOKKOS_FUNCTION constexpr ReferenceCountedAccessor(
+      const ReferenceCountedAccessor<OtherElementType, MemorySpace,
+                                     OtherNestedAccessor>&) {}
+
+  template <class OtherElementType,
+            class = std::enable_if_t<std::is_convertible_v<
+                OtherElementType (*)[], element_type (*)[]>>>
+  KOKKOS_FUNCTION constexpr ReferenceCountedAccessor(
+      const default_accessor<OtherElementType>&) {}
+
+  template <class DstAccessor,
+            typename = std::enable_if_t<
+                !IsReferenceCountedAccessorImpl<DstAccessor>::value &&
+                std::is_convertible_v<NestedAccessor, DstAccessor>>>
+  KOKKOS_FUNCTION operator DstAccessor() const {
+    return m_nested_acc;
+  }
+
+  KOKKOS_FUNCTION
+  constexpr reference access(data_handle_type p, size_t i) const {
+    return m_nested_acc.access(p.get(), i);
+  }
+
+  KOKKOS_FUNCTION
+  constexpr data_handle_type offset(data_handle_type p, size_t i) const {
+    return data_handle_type(p, m_nested_acc.offset(p.get(), i));
+  }
+
+  KOKKOS_FUNCTION
+  constexpr auto nested_accessor() const { return m_nested_acc; }
+
+ private:
+#ifdef _MDSPAN_NO_UNIQUE_ADDRESS
+  _MDSPAN_NO_UNIQUE_ADDRESS
+#else
+  [[no_unique_address]]
+#endif
+  NestedAccessor m_nested_acc;
+};
+
+template <class ElementType, class NestedAccessor>
+class ReferenceCountedAccessor<ElementType, AnonymousSpace, NestedAccessor> {
+ public:
+  using element_type = ElementType;
+  using data_handle_type =
+      ReferenceCountedDataHandle<ElementType, AnonymousSpace>;
+  using reference = typename NestedAccessor::reference;
+  using offset_policy =
+      ReferenceCountedAccessor<ElementType, AnonymousSpace,
+                               typename NestedAccessor::offset_policy>;
+
+  KOKKOS_DEFAULTED_FUNCTION
+  constexpr ReferenceCountedAccessor() noexcept = default;
+
+  template <class OtherSpace, class OtherNestedAccessor,
+            class = std::enable_if_t<
+                std::is_constructible_v<NestedAccessor, OtherNestedAccessor>>>
+  KOKKOS_FUNCTION constexpr ReferenceCountedAccessor(
+      const ReferenceCountedAccessor<ElementType, OtherSpace,
+                                     OtherNestedAccessor>&) {}
+
+  template <
+      class OtherElementType, class OtherSpace, class OtherNestedAccessor,
+      class = std::enable_if_t<
+          std::is_convertible_v<OtherElementType (*)[], element_type (*)[]> &&
+          std::is_constructible_v<NestedAccessor, OtherNestedAccessor>>>
+  KOKKOS_FUNCTION constexpr ReferenceCountedAccessor(
+      const ReferenceCountedAccessor<OtherElementType, OtherSpace,
+                                     OtherNestedAccessor>&) {}
+
+  template <class OtherElementType,
+            class = std::enable_if_t<std::is_convertible_v<
+                OtherElementType (*)[], element_type (*)[]>>>
+  KOKKOS_FUNCTION constexpr ReferenceCountedAccessor(
+      const default_accessor<OtherElementType>&) {}
+
+  template <class DstAccessor,
+            typename = std::enable_if_t<
+                !IsReferenceCountedAccessorImpl<DstAccessor>::value &&
+                std::is_convertible_v<NestedAccessor, DstAccessor>>>
+  KOKKOS_FUNCTION operator DstAccessor() const {
+    return m_nested_acc;
+  }
+
+  KOKKOS_FUNCTION
+  constexpr reference access(data_handle_type p, size_t i) const {
+    return m_nested_acc.access(p.get(), i);
+  }
+
+  KOKKOS_FUNCTION
+  constexpr data_handle_type offset(data_handle_type p, size_t i) const {
+    return data_handle_type(p, m_nested_acc.offset(p.get(), i));
+  }
+
+  KOKKOS_FUNCTION
+  constexpr auto nested_accessor() const { return m_nested_acc; }
+
+ private:
+#ifdef _MDSPAN_NO_UNIQUE_ADDRESS
+  _MDSPAN_NO_UNIQUE_ADDRESS
+#else
+  [[no_unique_address]]
+#endif
+  NestedAccessor m_nested_acc;
+};
+
+template <class ElementType, class MemorySpace>
+using checked_reference_counted_accessor =
+    SpaceAwareAccessor<MemorySpace,
+                       ReferenceCountedAccessor<ElementType, MemorySpace,
+                                                default_accessor<ElementType>>>;
+
+template <class ElementType, class MemorySpace,
+          class MemoryScope = desul::MemoryScopeDevice>
+using checked_atomic_accessor_relaxed =
+    SpaceAwareAccessor<MemorySpace, AtomicAccessorRelaxed<ElementType>>;
+
+template <class ElementType, class MemorySpace,
+          class MemoryScope = desul::MemoryScopeDevice>
+using checked_reference_counted_atomic_accessor_relaxed = SpaceAwareAccessor<
+    MemorySpace, ReferenceCountedAccessor<ElementType, MemorySpace,
+                                          AtomicAccessorRelaxed<ElementType>>>;
+
 }  // namespace Impl
 }  // namespace Kokkos
 
