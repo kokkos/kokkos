@@ -363,7 +363,6 @@ void HIPInternal::finalize() {
 }
 
 int HIPInternal::m_hipDev           = -1;
-int HIPInternal::m_shmemPerSM       = 0;
 int HIPInternal::m_maxShmemPerBlock = 0;
 int HIPInternal::m_maxThreadsPerSM  = 0;
 

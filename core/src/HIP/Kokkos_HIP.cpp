@@ -60,7 +60,6 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
 #else
   const int maxWavesPerCU = 32;
 #endif
-  Impl::HIPInternal::m_shmemPerSM = hipProp.maxSharedMemoryPerMultiProcessor;
   Impl::HIPInternal::m_maxShmemPerBlock = hipProp.sharedMemPerBlock;
   Impl::HIPInternal::m_maxThreadsPerSM =
       maxWavesPerCU * Impl::HIPTraits::WarpSize;
