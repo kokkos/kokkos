@@ -63,7 +63,7 @@ KOKKOS_DEVICE_OPTION(HPX OFF HOST "Whether to build HPX backend (experimental)")
 KOKKOS_DEVICE_OPTION(OPENACC OFF DEVICE "Whether to build the OpenACC backend")
 IF (KOKKOS_ENABLE_OPENACC)
   COMPILER_SPECIFIC_FLAGS(
-    Clang -fopenacc -fopenacc-fake-async-wait
+    Clang -fopenacc -fopenacc-fake-async-wait -fopenacc-implicit-worker=vector
           -Wno-openacc-and-cxx -Wno-openmp-mapping -Wno-unknown-cuda-version
           -Wno-pass-failed
   )

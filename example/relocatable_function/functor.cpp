@@ -14,12 +14,8 @@
 //
 //@HEADER
 
-#include <TestSIMD_MathOps.hpp>
-#include <TestSIMD_MaskOps.hpp>
-#include <TestSIMD_Conversions.hpp>
-#include <TestSIMD_ShiftOps.hpp>
-#include <TestSIMD_Condition.hpp>
-#include <TestSIMD_GeneratorCtors.hpp>
-#include <TestSIMD_WhereExpressions.hpp>
-#include <TestSIMD_Reductions.hpp>
-#include <TestSIMD_Construction.hpp>
+#include <Kokkos_Macros.hpp>
+
+KOKKOS_RELOCATABLE_FUNCTION void count_even(const long i, long& lcount) {
+  lcount += (i % 2) == 0;
+}

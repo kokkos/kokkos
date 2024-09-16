@@ -27,7 +27,10 @@ static_assert(false,
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_AnalyzePolicy.hpp>
 #include <Kokkos_Concepts.hpp>
+#include <Kokkos_TypeInfo.hpp>
+#ifndef KOKKOS_ENABLE_IMPL_TYPEINFO
 #include <typeinfo>
+#endif
 #include <limits>
 
 //----------------------------------------------------------------------------
@@ -579,7 +582,7 @@ struct ScratchRequest {
   }
 };
 
-// Throws a runtime exception if level is not `0` or `1`
+// Causes abnormal program termination if level is not `0` or `1`
 void team_policy_check_valid_storage_level_argument(int level);
 
 /** \brief  Execution policy for parallel work over a league of teams of
@@ -1225,8 +1228,14 @@ template <typename FunctorType, typename TagType>
 struct ParallelConstructName<FunctorType, TagType, true> {
   ParallelConstructName(std::string const& label) : label_ref(label) {
     if (label.empty()) {
+#ifdef KOKKOS_ENABLE_IMPL_TYPEINFO
+      default_name =
+          std::string(TypeInfo<std::remove_const_t<FunctorType>>::name()) +
+          "/" + std::string(TypeInfo<TagType>::name());
+#else
       default_name = std::string(typeid(FunctorType).name()) + "/" +
                      typeid(TagType).name();
+#endif
     }
   }
   std::string const& get() {
@@ -1240,7 +1249,11 @@ template <typename FunctorType, typename TagType>
 struct ParallelConstructName<FunctorType, TagType, false> {
   ParallelConstructName(std::string const& label) : label_ref(label) {
     if (label.empty()) {
-      default_name = std::string(typeid(FunctorType).name());
+#ifdef KOKKOS_ENABLE_IMPL_TYPEINFO
+      default_name = TypeInfo<std::remove_const_t<FunctorType>>::name();
+#else
+      default_name = typeid(FunctorType).name();
+#endif
     }
   }
   std::string const& get() {

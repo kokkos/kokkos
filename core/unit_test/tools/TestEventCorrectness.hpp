@@ -739,8 +739,7 @@ TEST(kokkosp, get_events) {
     Kokkos::Tools::popRegion();
   });
   for (const auto& ptr : event_vector) {
-    auto ptr_as_begin = std::dynamic_pointer_cast<BeginParallelForEvent>(ptr);
-    ASSERT_EQ(ptr_as_begin, nullptr);
+    ASSERT_FALSE(is_a<BeginParallelForEvent>(ptr));
   }
 }
 }  // namespace Test

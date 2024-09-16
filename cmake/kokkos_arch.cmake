@@ -622,6 +622,17 @@ IF (KOKKOS_ENABLE_SYCL)
   COMPILER_SPECIFIC_OPTIONS(
     DEFAULT -fsycl-unnamed-lambda
   )
+  IF(KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM AND KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 2023.1.0)
+    # Before oneAPI 2023.1.0 the compiler didn't support -f[no-]sycl-rdc
+    # but allowed separate compilation by default.
+    IF(NOT KOKKOS_ENABLE_SYCL_RELOCATABLE_DEVICE_CODE)
+      MESSAGE(FATAL_ERROR "Kokkos_ENABLE_SYCL_RELOCATABLE_DEVICE_CODE=OFF requires oneAPI 2023.1.0 or later")
+    ENDIF()
+  ELSEIF(KOKKOS_ENABLE_SYCL_RELOCATABLE_DEVICE_CODE)
+    COMPILER_SPECIFIC_OPTIONS(DEFAULT -fsycl-rdc)
+  ELSE()
+    COMPILER_SPECIFIC_OPTIONS(DEFAULT -fno-sycl-rdc)
+  ENDIF()
 ENDIF()
 
 # Check support for device_global variables
@@ -638,7 +649,7 @@ IF(KOKKOS_ENABLE_SYCL)
     SET(KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED ON)
     # Use the non-separable compilation implementation to support shared libraries as well.
     COMPILER_SPECIFIC_FLAGS(DEFAULT -DDESUL_SYCL_DEVICE_GLOBAL_SUPPORTED)
-  ELSEIF(NOT BUILD_SHARED_LIBS)
+  ELSEIF(NOT BUILD_SHARED_LIBS AND KOKKOS_ENABLE_SYCL_RELOCATABLE_DEVICE_CODE)
     INCLUDE(CheckCXXSourceCompiles)
     CHECK_CXX_SOURCE_COMPILES("
       #include <sycl/sycl.hpp>
@@ -855,6 +866,9 @@ ENDIF()
 
 IF (KOKKOS_ENABLE_OPENACC)
   IF(KOKKOS_CUDA_ARCH_FLAG)
+    IF(KOKKOS_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE)
+      MESSAGE(FATAL_ERROR "If a GPU architecture is specified, Kokkos_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE option cannot be used. Disable the Kokkos_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE option.")
+    ENDIF()
     SET(CLANG_CUDA_ARCH ${KOKKOS_CUDA_ARCH_FLAG})
     STRING(REPLACE "sm_" "cc" NVHPC_CUDA_ARCH ${KOKKOS_CUDA_ARCH_FLAG})
     COMPILER_SPECIFIC_FLAGS(
@@ -862,15 +876,39 @@ IF (KOKKOS_ENABLE_OPENACC)
       Clang -Xopenmp-target=nvptx64-nvidia-cuda -march=${CLANG_CUDA_ARCH}
             -fopenmp-targets=nvptx64-nvidia-cuda
     )
+    IF(DEFINED ENV{CUDA_PATH})
+      COMPILER_SPECIFIC_LINK_OPTIONS(Clang -L$ENV{CUDA_PATH}/lib64)
+    ENDIF()
+    COMPILER_SPECIFIC_LIBS(
+      Clang -lcudart
+      NVHPC -cuda
+    )
   ELSEIF(KOKKOS_AMDGPU_ARCH_FLAG)
+    IF(KOKKOS_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE)
+      MESSAGE(FATAL_ERROR "If a GPU architecture is specified, Kokkos_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE option cannot be used. Disable the Kokkos_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE option.")
+    ENDIF()
     COMPILER_SPECIFIC_FLAGS(
       Clang -Xopenmp-target=amdgcn-amd-amdhsa -march=${KOKKOS_AMDGPU_ARCH_FLAG}
             -fopenmp-targets=amdgcn-amd-amdhsa
     )
-  ELSE()
+    IF(DEFINED ENV{ROCM_PATH})
+      COMPILER_SPECIFIC_FLAGS(Clang -I$ENV{ROCM_PATH}/include)
+      COMPILER_SPECIFIC_LINK_OPTIONS(Clang -L$ENV{ROCM_PATH}/lib)
+    ENDIF()
+    COMPILER_SPECIFIC_LIBS(Clang -lamdhip64)
+  ELSEIF(KOKKOS_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE)
+    # Compile for kernel execution on the host. In that case,
+    # memory is shared between the OpenACC space and the host space.
     COMPILER_SPECIFIC_FLAGS(
-      NVHPC -acc
+      NVHPC -acc=multicore
     )
+  ELSE()
+    # Automatic fallback mode; try to offload any available GPU, and fall back
+    # to the host CPU if no available GPU is found.
+    COMPILER_SPECIFIC_FLAGS(
+      NVHPC -acc=gpu,multicore
+    )
+    MESSAGE(STATUS "No OpenACC target device is specificed; the OpenACC backend will be executed in an automatic fallback mode.")
   ENDIF()
 ENDIF()
 
@@ -895,34 +933,28 @@ IF (KOKKOS_ENABLE_SYCL)
     COMPILER_SPECIFIC_FLAGS(
       DEFAULT -fsycl-targets=spir64
     )
-  ELSE()
-    COMPILER_SPECIFIC_OPTIONS(
-      DEFAULT -fsycl-targets=spir64_gen
-    )
+  ELSEIF(KOKKOS_ARCH_INTEL_GPU)
+    SET(SYCL_TARGET_FLAG -fsycl-targets=spir64_gen)
+
     IF(KOKKOS_ARCH_INTEL_GEN9)
-      COMPILER_SPECIFIC_LINK_OPTIONS(
-        DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device gen9"
-      )
+     SET(SYCL_TARGET_BACKEND_FLAG -Xsycl-target-backend "-device gen9")
     ELSEIF(KOKKOS_ARCH_INTEL_GEN11)
-      COMPILER_SPECIFIC_LINK_OPTIONS(
-        DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device gen11"
-      )
+      SET(SYCL_TARGET_BACKEND_FLAG -Xsycl-target-backend "-device gen11")
     ELSEIF(KOKKOS_ARCH_INTEL_GEN12LP)
-      COMPILER_SPECIFIC_LINK_OPTIONS(
-        DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device gen12lp"
-      )
+      SET(SYCL_TARGET_BACKEND_FLAG -Xsycl-target-backend "-device gen12lp")
     ELSEIF(KOKKOS_ARCH_INTEL_DG1)
-      COMPILER_SPECIFIC_LINK_OPTIONS(
-        DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device dg1"
-      )
+      SET(SYCL_TARGET_BACKEND_FLAG -Xsycl-target-backend "-device dg1")
     ELSEIF(KOKKOS_ARCH_INTEL_XEHP)
-      COMPILER_SPECIFIC_LINK_OPTIONS(
-        DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device 12.50.4"
-      )
+      SET(SYCL_TARGET_BACKEND_FLAG -Xsycl-target-backend "-device 12.50.4")
     ELSEIF(KOKKOS_ARCH_INTEL_PVC)
-      COMPILER_SPECIFIC_LINK_OPTIONS(
-        DEFAULT -fsycl-targets=spir64_gen -Xsycl-target-backend "-device 12.60.7"
-      )
+      SET(SYCL_TARGET_BACKEND_FLAG -Xsycl-target-backend "-device 12.60.7")
+    ENDIF()
+
+    IF(Kokkos_ENABLE_SYCL_RELOCATABLE_DEVICE_CODE)
+      COMPILER_SPECIFIC_OPTIONS(DEFAULT ${SYCL_TARGET_FLAG})
+      COMPILER_SPECIFIC_LINK_OPTIONS(DEFAULT ${SYCL_TARGET_FLAG} ${SYCL_TARGET_BACKEND_FLAG})
+    ELSE()
+      COMPILER_SPECIFIC_OPTIONS(DEFAULT ${SYCL_TARGET_FLAG} ${SYCL_TARGET_BACKEND_FLAG})
     ENDIF()
   ENDIF()
 ENDIF()
@@ -1124,27 +1156,20 @@ FOREACH (_BACKEND Cuda OpenMPTarget HIP SYCL OpenACC)
     IF (${_BACKEND} STREQUAL "Cuda")
        IF(KOKKOS_ENABLE_CUDA_UVM)
           MESSAGE(DEPRECATION "Setting Kokkos_ENABLE_CUDA_UVM is deprecated - use the portable Kokkos::SharedSpace as an explicit memory space in your code instead")
-          IF(KOKKOS_ENABLE_DEPRECATED_CODE_4)
-            SET(_DEFAULT_DEVICE_MEMSPACE "Kokkos::${_BACKEND}UVMSpace")
-          ELSE()
+          IF(NOT KOKKOS_ENABLE_DEPRECATED_CODE_4)
             MESSAGE(FATAL_ERROR "Kokkos_ENABLE_DEPRECATED_CODE_4 must be set to use Kokkos_ENABLE_CUDA_UVM")
           ENDIF()
-       ELSE()
-          SET(_DEFAULT_DEVICE_MEMSPACE "Kokkos::${_BACKEND}Space")
        ENDIF()
        SET(_DEVICE_PARALLEL "Kokkos::${_BACKEND}")
-    ELSEIF(${_BACKEND} STREQUAL "HIP")
-       SET(_DEFAULT_DEVICE_MEMSPACE "Kokkos::${_BACKEND}Space")
+    ELSEIF(${_BACKEND} STREQUAL "HIP" OR ${_BACKEND} STREQUAL "SYCL")
        SET(_DEVICE_PARALLEL "Kokkos::${_BACKEND}")
     ELSE()
-       SET(_DEFAULT_DEVICE_MEMSPACE "Kokkos::Experimental::${_BACKEND}Space")
        SET(_DEVICE_PARALLEL "Kokkos::Experimental::${_BACKEND}")
     ENDIF()
   ENDIF()
 ENDFOREACH()
 IF(NOT _DEVICE_PARALLEL)
   SET(_DEVICE_PARALLEL "NoTypeDefined")
-  SET(_DEFAULT_DEVICE_MEMSPACE "NoTypeDefined")
 ENDIF()
 MESSAGE(STATUS "    Device Parallel: ${_DEVICE_PARALLEL}")
 
@@ -1193,7 +1218,7 @@ ENDFOREACH()
 
 IF(KOKKOS_ENABLE_ATOMICS_BYPASS)
   IF(NOT _HOST_PARALLEL STREQUAL "NoTypeDefined" OR NOT _DEVICE_PARALLEL STREQUAL "NoTypeDefined")
-    MESSAGE(FATAL_ERROR "Not allowed to disable atomics (via -DKokkos_ENABLE_AROMICS_BYPASS=ON) if neither a host parallel nor a device backend is enabled!")
+    MESSAGE(FATAL_ERROR "Disabling atomics (via -DKokkos_ENABLE_ATOMICS_BYPASS=ON) is not allowed if a host parallel or a device backend is enabled!")
   ENDIF()
   IF(NOT KOKKOS_ENABLE_SERIAL)
     MESSAGE(FATAL_ERROR "Implementation bug")  # safeguard

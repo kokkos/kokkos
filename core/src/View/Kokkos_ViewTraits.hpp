@@ -32,6 +32,37 @@ static_assert(false,
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
+
+struct ALL_t {
+  KOKKOS_FUNCTION
+  constexpr const ALL_t& operator()() const { return *this; }
+
+  KOKKOS_FUNCTION
+  constexpr bool operator==(const ALL_t&) const { return true; }
+};
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+namespace Impl {
+// TODO This alias declaration forces us to fully qualify ALL_t inside the
+// Kokkos::Impl namespace to avoid deprecation warnings. Replace the
+// fully-qualified name when we remove Kokkos::Impl::ALL_t.
+using ALL_t KOKKOS_DEPRECATED_WITH_COMMENT("Use Kokkos::ALL_t instead!") =
+    Kokkos::ALL_t;
+}  // namespace Impl
+#endif
+
+// FIXME_OPENMPTARGET - The `declare target` is needed for the Intel GPUs with
+// the OpenMPTarget backend
+#if defined(KOKKOS_ENABLE_OPENMPTARGET) && defined(KOKKOS_COMPILER_INTEL_LLVM)
+#pragma omp declare target
+#endif
+
+inline constexpr Kokkos::ALL_t ALL{};
+
+#if defined(KOKKOS_ENABLE_OPENMPTARGET) && defined(KOKKOS_COMPILER_INTEL_LLVM)
+#pragma omp end declare target
+#endif
+
 namespace Impl {
 
 template <class DataType>

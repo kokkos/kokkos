@@ -26,7 +26,10 @@ IF (NOT desul_FOUND)
     SET(DESUL_ATOMICS_ENABLE_OPENMP ON) # not a typo Kokkos OpenMPTarget -> Desul OpenMP
   ENDIF()
   IF(KOKKOS_ENABLE_OPENACC)
-    SET(DESUL_ATOMICS_ENABLE_OPENACC ON)
+    # FIXME_OPENACC FIXME_CLACC - Below condition will be removed if Clacc can compile atomics.
+    IF(KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
+      SET(DESUL_ATOMICS_ENABLE_OPENACC ON)
+    ENDIF()
   ENDIF()
   CONFIGURE_FILE(
     ${KOKKOS_SOURCE_DIR}/tpls/desul/Config.hpp.cmake.in
