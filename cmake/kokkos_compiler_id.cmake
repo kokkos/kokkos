@@ -93,6 +93,11 @@ IF(Kokkos_ENABLE_HIP)
   MESSAGE(STATUS "Compiler Version: ${KOKKOS_CXX_COMPILER_VERSION}")
 ENDIF()
 
+# CrayClang is only available from cmake>=3.28.
+IF(KOKKOS_CXX_COMPILER_ID STREQUAL CrayClang)
+    SET(KOKKOS_CLANG_IS_CRAY TRUE)
+ENDIF()
+
 IF(KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
   # The Cray compiler reports as Clang to most versions of CMake
   EXECUTE_PROCESS(COMMAND ${CMAKE_CXX_COMPILER} --version

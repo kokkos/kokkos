@@ -805,7 +805,8 @@ ENDIF()
 IF (KOKKOS_ENABLE_OPENMP)
     IF(KOKKOS_CLANG_IS_CRAY)
       COMPILER_SPECIFIC_LINK_OPTIONS(
-        Clang -fopenmp
+          CrayClang -fopenmp # Needed for cmake>=3.28
+          Clang -fopenmp
       )
     ENDIF()
 ENDIF()
