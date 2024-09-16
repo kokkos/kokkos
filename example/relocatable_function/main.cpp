@@ -20,8 +20,8 @@
 
 KOKKOS_RELOCATABLE_FUNCTION void count_even(const long i, long& lcount);
 
-int main() {
-  Kokkos::ScopeGuard scope_guard;
+int main(int argc, char* argv[]) {
+  Kokkos::ScopeGuard scope_guard(argc, argv);
 
   for (int n = 10; n <= 100'000'000; n *= 10) {
     Kokkos::Timer timer;
