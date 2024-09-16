@@ -107,7 +107,7 @@ std::size_t fill_view(ViewType dest_view, const std::string& name,
   }
 
   else {
-    throw std::runtime_error("invalid choice");
+    Kokkos::abort("invalid choice");
   }
 
   Kokkos::deep_copy(aux_view, v_h);
@@ -202,7 +202,7 @@ void verify_data(const std::string& name, ViewTypeFrom view_from,
   }
 
   else {
-    throw std::runtime_error("invalid choice");
+    Kokkos::abort("invalid choice");
   }
 }
 
