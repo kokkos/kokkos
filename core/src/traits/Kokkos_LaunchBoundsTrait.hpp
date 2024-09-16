@@ -65,6 +65,8 @@ struct PolicyTraitMatcher<LaunchBoundsTrait, LaunchBounds<maxT, minB>>
 //==============================================================================
 // <editor-fold desc="trait specification"> {{{1
 
+#ifdef KOKKOS_ENABLE_SYCL
+
 struct SubGroupSizeTrait : TraitSpecificationBase<SubGroupSizeTrait> {
   struct base_traits {
     static constexpr bool subgroup_size_is_defaulted = true;
@@ -98,6 +100,8 @@ struct PolicyTraitMatcher<SubGroupSizeTrait, SubGroupSize<size>>
 
 // </editor-fold> end PolicyTraitMatcher specialization }}}1
 //==============================================================================
+
+#endif
 
 }  // end namespace Impl
 }  // end namespace Kokkos
