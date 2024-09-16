@@ -111,7 +111,7 @@ TEST(defaultdevicetype, shared_space) {
 #endif
 #if defined(KOKKOS_ENABLE_SYCL) &&      \
     (!defined(KOKKOS_ARCH_INTEL_GPU) || \
-     !defined(KOKKOS_ENABLE_IMPL_SYCL_RELOCATABLE_DEVICE_CODE))
+     !defined(KOKKOS_ENABLE_SYCL_RELOCATABLE_DEVICE_CODE))
   GTEST_SKIP() << "skipping because clock_tic is only defined for sycl+intel "
                   "gpu and with rdc support";
 #endif

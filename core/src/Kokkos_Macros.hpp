@@ -357,6 +357,21 @@
 #define KOKKOS_IMPL_DEVICE_FUNCTION
 #endif
 
+// FIXME_OPENACC FIXME_OPENMPTARGET
+// Move to setup files once there is more content
+// clang-format off
+#if defined(KOKKOS_ENABLE_OPENACC)
+#define KOKKOS_IMPL_RELOCATABLE_FUNCTION @"KOKKOS_RELOCATABLE_FUNCTION is not supported for the OpenACC backend"
+#endif
+#if defined(KOKKOS_ENABLE_OPENMPTARGET)
+#define KOKKOS_IMPL_RELOCATABLE_FUNCTION @"KOKKOS_RELOCATABLE_FUNCTION is not supported for the OpenMPTarget backend"
+#endif
+// clang-format on
+
+#if !defined(KOKKOS_IMPL_RELOCATABLE_FUNCTION)
+#define KOKKOS_IMPL_RELOCATABLE_FUNCTION
+#endif
+
 //----------------------------------------------------------------------------
 // Define final version of functions. This is so that clang tidy can find these
 // macros more easily
@@ -369,10 +384,14 @@
 #define KOKKOS_FORCEINLINE_FUNCTION \
   KOKKOS_IMPL_FORCEINLINE_FUNCTION  \
   __attribute__((annotate("KOKKOS_FORCEINLINE_FUNCTION")))
+#define KOKKOS_RELOCATABLE_FUNCTION \
+  KOKKOS_IMPL_RELOCATABLE_FUNCTION  \
+  __attribute__((annotate("KOKKOS_RELOCATABLE_FUNCTION")))
 #else
 #define KOKKOS_FUNCTION KOKKOS_IMPL_FUNCTION
 #define KOKKOS_INLINE_FUNCTION KOKKOS_IMPL_INLINE_FUNCTION
 #define KOKKOS_FORCEINLINE_FUNCTION KOKKOS_IMPL_FORCEINLINE_FUNCTION
+#define KOKKOS_RELOCATABLE_FUNCTION KOKKOS_IMPL_RELOCATABLE_FUNCTION
 #endif
 
 //----------------------------------------------------------------------------
