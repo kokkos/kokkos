@@ -785,8 +785,8 @@ class DynRankView : private View<DataType*******, Properties...> {
            (arg_N3 != KOKKOS_INVALID_INDEX ? arg_N3 : 1) *
            (arg_N4 != KOKKOS_INVALID_INDEX ? arg_N4 : 1) *
            (arg_N5 != KOKKOS_INVALID_INDEX ? arg_N5 : 1) *
-           (arg_N6 != KOKKOS_INVALID_INDEX ? arg_N6 : 1);
-    (arg_N7 != KOKKOS_INVALID_INDEX ? arg_N7 : 1);
+           (arg_N6 != KOKKOS_INVALID_INDEX ? arg_N6 : 1) *
+           (arg_N7 != KOKKOS_INVALID_INDEX ? arg_N7 : 1);
   }
 
   explicit KOKKOS_INLINE_FUNCTION DynRankView(
