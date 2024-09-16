@@ -263,7 +263,7 @@ Kokkos::HIP::size_type *HIPInternal::stage_functor_for_execution(
     m_scratchFunctorSize = size;
 
     m_scratchFunctor     = static_cast<size_type *>(device_mem_space.allocate(
-            "Kokkos::InternalScratchFunctor", m_scratchFunctorSize));
+        "Kokkos::InternalScratchFunctor", m_scratchFunctorSize));
     m_scratchFunctorHost = static_cast<size_type *>(host_mem_space.allocate(
         "Kokkos::InternalScratchFunctorHost", m_scratchFunctorSize));
   }
@@ -362,9 +362,8 @@ void HIPInternal::finalize() {
   m_num_scratch_locks = 0;
 }
 
-int HIPInternal::m_hipDev           = -1;
-int HIPInternal::m_maxShmemPerBlock = 0;
-int HIPInternal::m_maxThreadsPerSM  = 0;
+int HIPInternal::m_hipDev          = -1;
+int HIPInternal::m_maxThreadsPerSM = 0;
 
 hipDeviceProp_t HIPInternal::m_deviceProp;
 

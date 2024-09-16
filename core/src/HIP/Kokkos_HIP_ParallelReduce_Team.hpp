@@ -375,7 +375,8 @@ class ParallelReduce<CombinedFunctorReducerType,
     // Functor's reduce memory, team scan memory, and team shared memory depend
     // upon team size.
 
-    const int shmem_size_total = m_team_begin + m_shmem_begin + m_shmem_size;
+    const unsigned int shmem_size_total =
+        m_team_begin + m_shmem_begin + m_shmem_size;
 
     if (!Kokkos::Impl::is_integral_power_of_two(m_team_size) &&
         !UseShflReduction) {
@@ -383,7 +384,8 @@ class ParallelReduce<CombinedFunctorReducerType,
           std::string("Kokkos::Impl::ParallelReduce< HIP > bad team size"));
     }
 
-    if (internal_space_instance->m_maxShmemPerBlock < shmem_size_total) {
+    if (internal_space_instance->m_deviceProp.sharedMemPerBlock <
+        shmem_size_total) {
       Kokkos::Impl::throw_runtime_exception(
           std::string("Kokkos::Impl::ParallelReduce< HIP > requested too much "
                       "L0 scratch memory"));

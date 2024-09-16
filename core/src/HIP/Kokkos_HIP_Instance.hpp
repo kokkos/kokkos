@@ -70,7 +70,6 @@ class HIPInternal {
   using size_type = ::Kokkos::HIP::size_type;
 
   static int m_hipDev;
-  static int m_maxShmemPerBlock;
   static int m_maxThreadsPerSM;
 
   static hipDeviceProp_t m_deviceProp;

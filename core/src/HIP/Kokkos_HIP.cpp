@@ -49,7 +49,6 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
   Impl::HIPInternal::m_hipDev = hip_device_id;
   KOKKOS_IMPL_HIP_SAFE_CALL(
       hipGetDeviceProperties(&Impl::HIPInternal::m_deviceProp, hip_device_id));
-  const auto& hipProp = Impl::HIPInternal::m_deviceProp;
   KOKKOS_IMPL_HIP_SAFE_CALL(hipSetDevice(hip_device_id));
 
   // theoretically, we can get 40 WF's / CU, but only can sustain 32 see
@@ -60,7 +59,6 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
 #else
   const int maxWavesPerCU = 32;
 #endif
-  Impl::HIPInternal::m_maxShmemPerBlock = hipProp.sharedMemPerBlock;
   Impl::HIPInternal::m_maxThreadsPerSM =
       maxWavesPerCU * Impl::HIPTraits::WarpSize;
 
