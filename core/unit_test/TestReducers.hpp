@@ -838,7 +838,7 @@ struct TestReducers {
     reducer_value_type value_loc{0, -1};
 
     Kokkos::parallel_reduce(
-        N,
+        Kokkos::RangePolicy<ExecSpace>(0, N),
         KOKKOS_LAMBDA(const int i, reducer_value_type& update) {
           auto x = values(i);
           if (i % 2 == 0)
@@ -971,7 +971,7 @@ struct TestReducers {
     reducer_value_type value_loc{0, -1};
 
     Kokkos::parallel_reduce(
-        N,
+        Kokkos::RangePolicy<ExecSpace>(0, N),
         KOKKOS_LAMBDA(const int i, reducer_value_type& update) {
           auto x = values(i);
           if (i % 2 == 0)
@@ -1204,7 +1204,8 @@ struct TestReducers {
 
       reducer_value_type value_loc{0, 0, -1, -1};
 
-      Kokkos::parallel_reduce(N, functor, reducer_type(value_loc));
+      Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecSpace>(0, N), functor,
+                              reducer_type(value_loc));
 
       ASSERT_EQ(value_loc.min_val, h_values(0));
       ASSERT_EQ(value_loc.max_val, h_values(0));
@@ -1222,7 +1223,8 @@ struct TestReducers {
 
       reducer_value_type value_loc{0, 0, -1, -1};
 
-      Kokkos::parallel_reduce(N, functor, reducer_type(value_loc));
+      Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecSpace>(0, N), functor,
+                              reducer_type(value_loc));
 
       ASSERT_EQ(value_loc.min_val, h_values(0));
       ASSERT_EQ(value_loc.max_val, h_values(0));
@@ -1261,7 +1263,8 @@ struct TestReducers {
 
       reducer_value_type value_loc{0, 0, -1, -1};
 
-      Kokkos::parallel_reduce(N, functor, reducer_type(value_loc));
+      Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecSpace>(0, N), functor,
+                              reducer_type(value_loc));
 
       ASSERT_EQ(value_loc.min_val, h_values(0));
       ASSERT_EQ(value_loc.max_val, h_values(0));
@@ -1279,7 +1282,8 @@ struct TestReducers {
 
       reducer_value_type value_loc{0, 0, -1, -1};
 
-      Kokkos::parallel_reduce(N, functor, reducer_type(value_loc));
+      Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecSpace>(0, N), functor,
+                              reducer_type(value_loc));
 
       ASSERT_EQ(value_loc.min_val, h_values(0));
       ASSERT_EQ(value_loc.max_val, h_values(0));
@@ -1305,7 +1309,7 @@ struct TestReducers {
     reducer_value_type value_loc{0, -1};
 
     Kokkos::parallel_reduce(
-        N,
+        Kokkos::RangePolicy<ExecSpace>(0, N),
         KOKKOS_LAMBDA(const int i, reducer_value_type& update) {
           auto x = values(i);
           if (i % 2 == 0)
@@ -1337,7 +1341,7 @@ struct TestReducers {
     reducer_value_type value_loc{0, -1};
 
     Kokkos::parallel_reduce(
-        N,
+        Kokkos::RangePolicy<ExecSpace>(0, N),
         KOKKOS_LAMBDA(const int i, reducer_value_type& update) {
           auto x = values(i);
           if (i % 2 == 0)
@@ -1562,6 +1566,7 @@ struct TestReducers {
 #if !defined(KOKKOS_ENABLE_OPENACC)
     // FIXME_OPENACC - OpenACC (V3.3) does not support custom reductions.
     test_minloc(10003);
+    test_minloc_loc_init(3);
 // FIXME_OPENMPTARGET requires custom reductions.
 #if !defined(KOKKOS_ENABLE_OPENMPTARGET)
     test_minloc_2d(100);
@@ -1571,6 +1576,7 @@ struct TestReducers {
 #if !defined(KOKKOS_ENABLE_OPENACC)
     // FIXME_OPENACC - OpenACC (V3.3) does not support custom reductions.
     test_maxloc(10007);
+    test_maxloc_loc_init(3);
 // FIXME_OPENMPTARGET requires custom reductions.
 #if !defined(KOKKOS_ENABLE_OPENMPTARGET)
     test_maxloc_2d(100);
@@ -1590,7 +1596,12 @@ struct TestReducers {
 #endif
 #else
     test_minmaxloc(10007);
+    test_minmaxloc_loc_init(3);
     test_minmaxloc_2d(100);
+
+    test_minmaxfirstlastloc_loc_init(3);
+    test_minfirstloc_loc_init(3);
+    test_maxfirstloc_loc_init(3);
 #endif
 #endif
   }
