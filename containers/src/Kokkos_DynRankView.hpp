@@ -38,10 +38,19 @@ class DynRankView;  // forward declare
 
 namespace Impl {
 
+template <class T, size_t Rank>
+struct ViewDataTypeFromRank {
+  using type = typename ViewDataTypeFromRank<T, Rank - 1>::type*;
+};
+
+template <class T>
+struct ViewDataTypeFromRank<T, 0> {
+  using type = T;
+};
+
 template <unsigned N, typename T, typename... Args>
-KOKKOS_FUNCTION
-    View<typename DataTypeFromExtents<T, dextents<int, N>>::type, Args...>
-    as_view_of_rank_n(DynRankView<T, Args...> v);
+KOKKOS_FUNCTION View<typename ViewDataTypeFromRank<T, N>::type, Args...>
+as_view_of_rank_n(DynRankView<T, Args...> v);
 
 template <typename Specialize>
 struct DynRankDimTraits {
@@ -1061,9 +1070,8 @@ namespace Impl {
    underlying memory, to facilitate implementation of deep_copy() and
    other routines that are defined on View */
 template <unsigned N, typename T, typename... Args>
-KOKKOS_FUNCTION
-    View<typename DataTypeFromExtents<T, dextents<int, N>>::type, Args...>
-    as_view_of_rank_n(DynRankView<T, Args...> v) {
+KOKKOS_FUNCTION View<typename ViewDataTypeFromRank<T, N>::type, Args...>
+as_view_of_rank_n(DynRankView<T, Args...> v) {
   if (v.rank() != N) {
     KOKKOS_IF_ON_HOST(
         const std::string message =
