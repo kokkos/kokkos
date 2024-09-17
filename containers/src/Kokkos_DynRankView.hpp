@@ -454,13 +454,17 @@ class DynRankView : private View<DataType*******, Properties...> {
   using reference        = reference_type;
   using data_handle_type = pointer_type;
 
-  KOKKOS_INLINE_FUNCTION
-  view_type& DownCast() const { return (view_type&)(*this); }
   KOKKOS_FUNCTION
-  view_type to_view() const { return *this; }
+  view_type& DownCast() const { return (view_type&)(*this); }
 
-  KOKKOS_INLINE_FUNCTION
+  // FIXME: this function make NO sense, the above one already is marked const
+  // Maybe one would want to get back a view of const??
+  KOKKOS_FUNCTION
   const view_type& ConstDownCast() const { return (const view_type&)(*this); }
+
+  // FIXME: deprecate DownCast in favor of to_view
+  // KOKKOS_FUNCTION
+  // view_type to_view() const { return *this; }
 
   // Types below - at least the HostMirror requires the value_type, NOT the rank
   // 7 data_type of the traits
@@ -543,21 +547,21 @@ class DynRankView : private View<DataType*******, Properties...> {
 
   using view_type::data;
   using view_type::extent;
-  using view_type::extent_int;  // not tested
+  using view_type::extent_int;  // FIXME: not tested
   using view_type::is_allocated;
   using view_type::label;
   using view_type::size;
   using view_type::span;
-  using view_type::span_is_contiguous;  // not tested
-  using view_type::stride;              // not tested
-  using view_type::stride_0;            // not tested
-  using view_type::stride_1;            // not tested
-  using view_type::stride_2;            // not tested
-  using view_type::stride_3;            // not tested
-  using view_type::stride_4;            // not tested
-  using view_type::stride_5;            // not tested
-  using view_type::stride_6;            // not tested
-  using view_type::stride_7;            // not tested
+  using view_type::span_is_contiguous;  // FIXME: not tested
+  using view_type::stride;              // FIXME: not tested
+  using view_type::stride_0;            // FIXME: not tested
+  using view_type::stride_1;            // FIXME: not tested
+  using view_type::stride_2;            // FIXME: not tested
+  using view_type::stride_3;            // FIXME: not tested
+  using view_type::stride_4;            // FIXME: not tested
+  using view_type::stride_5;            // FIXME: not tested
+  using view_type::stride_6;            // FIXME: not tested
+  using view_type::stride_7;            // FIXME: not tested
   using view_type::use_count;
 
   KOKKOS_FUNCTION reference_type
@@ -582,24 +586,18 @@ class DynRankView : private View<DataType*******, Properties...> {
   KOKKOS_DEFAULTED_FUNCTION
   ~DynRankView() = default;
 
-  KOKKOS_DEFAULTED_FUNCTION DynRankView()                   = default;
-  KOKKOS_DEFAULTED_FUNCTION DynRankView(const DynRankView&) = default;
-  KOKKOS_DEFAULTED_FUNCTION DynRankView(DynRankView&&)      = default;
-  KOKKOS_DEFAULTED_FUNCTION DynRankView& operator=(const DynRankView&) =
-      default;
-  KOKKOS_DEFAULTED_FUNCTION DynRankView& operator=(DynRankView&&) = default;
+  KOKKOS_DEFAULTED_FUNCTION DynRankView() = default;
 
   //----------------------------------------
   // Compatible view copy constructor and assignment
   // may assign unmanaged from managed.
   // Make this conditionally explicit?
   template <class RT, class... RP>
-  KOKKOS_INLINE_FUNCTION DynRankView(const DynRankView<RT, RP...>& rhs)
+  KOKKOS_FUNCTION DynRankView(const DynRankView<RT, RP...>& rhs)
       : view_type(rhs), m_rank(rhs.m_rank) {}
 
   template <class RT, class... RP>
-  KOKKOS_INLINE_FUNCTION DynRankView& operator=(
-      const DynRankView<RT, RP...>& rhs) {
+  KOKKOS_FUNCTION DynRankView& operator=(const DynRankView<RT, RP...>& rhs) {
     view_type::operator=(rhs);
     m_rank = rhs.m_rank;
     return *this;
@@ -642,15 +640,14 @@ class DynRankView : private View<DataType*******, Properties...> {
   }
 #else
   template <class RT, class... RP>
-  KOKKOS_INLINE_FUNCTION DynRankView(const View<RT, RP...>& rhs,
-                                     size_t new_rank) {
+  KOKKOS_FUNCTION DynRankView(const View<RT, RP...>& rhs, size_t new_rank) {
     using SrcTraits = typename View<RT, RP...>::traits;
     using Mapping =
         Kokkos::Impl::ViewMapping<traits, SrcTraits,
                                   Kokkos::Impl::ViewToDynRankViewTag>;
     static_assert(Mapping::is_assignable,
                   "Incompatible View to DynRankView copy assignment");
-    if (new_rank > rhs.rank())
+    if (new_rank > View<RT, RP...>::rank())
       Kokkos::abort(
           "Attempting to construct DynRankView from View and new rank, with "
           "the new rank being too large.");
@@ -659,7 +656,7 @@ class DynRankView : private View<DataType*******, Properties...> {
   }
 
   template <class RT, class... RP>
-  KOKKOS_INLINE_FUNCTION DynRankView& operator=(const View<RT, RP...>& rhs) {
+  KOKKOS_FUNCTION DynRankView& operator=(const View<RT, RP...>& rhs) {
     using SrcTraits = typename View<RT, RP...>::traits;
     using Mapping =
         Kokkos::Impl::ViewMapping<traits, SrcTraits,
@@ -667,14 +664,14 @@ class DynRankView : private View<DataType*******, Properties...> {
     static_assert(Mapping::is_assignable,
                   "Incompatible View to DynRankView copy assignment");
     Mapping::assign(*this, rhs);
-    m_rank = rhs.rank();
+    m_rank = View<RT, RP...>::rank();
     return *this;
   }
 #endif
 
   template <class RT, class... RP>
-  KOKKOS_INLINE_FUNCTION DynRankView(const View<RT, RP...>& rhs)
-      : DynRankView(rhs, rhs.rank()) {}
+  KOKKOS_FUNCTION DynRankView(const View<RT, RP...>& rhs)
+      : DynRankView(rhs, View<RT, RP...>::rank()) {}
 
   //----------------------------------------
   // Allocation tracking properties
@@ -683,9 +680,23 @@ class DynRankView : private View<DataType*******, Properties...> {
   // Allocation according to allocation properties and array layout
   // unused arg_layout dimensions must be set to KOKKOS_INVALID_INDEX so that
   // rank deduction can properly take place
+  // We need two variants to avoid calling host function from host device
+  // function warnings
   template <class... P>
-  explicit inline DynRankView(const Kokkos::Impl::ViewCtorProp<P...>& arg_prop,
-                              typename traits::array_layout const& arg_layout)
+  explicit KOKKOS_FUNCTION DynRankView(
+      const Kokkos::Impl::ViewCtorProp<P...>& arg_prop,
+      std::enable_if_t<Kokkos::Impl::ViewCtorProp<P...>::has_pointer,
+                       typename traits::array_layout const&>
+          arg_layout)
+      : view_type(arg_prop, drdtraits::createLayout(arg_layout)),
+        m_rank(drdtraits::computeRank(arg_layout)) {}
+
+  template <class... P>
+  explicit DynRankView(
+      const Kokkos::Impl::ViewCtorProp<P...>& arg_prop,
+      std::enable_if_t<!Kokkos::Impl::ViewCtorProp<P...>::has_pointer,
+                       typename traits::array_layout const&>
+          arg_layout)
       : view_type(arg_prop, drdtraits::createLayout(arg_layout)),
         m_rank(drdtraits::computeRank(arg_layout)) {}
 
@@ -693,16 +704,38 @@ class DynRankView : private View<DataType*******, Properties...> {
   // Constructor(s)
 
   // Simple dimension-only layout
+  // We need two variants to avoid calling host function from host device
+  // function warnings
   template <class... P>
-  explicit inline DynRankView(const Kokkos::Impl::ViewCtorProp<P...>& arg_prop,
-                              const size_t arg_N0 = KOKKOS_INVALID_INDEX,
-                              const size_t arg_N1 = KOKKOS_INVALID_INDEX,
-                              const size_t arg_N2 = KOKKOS_INVALID_INDEX,
-                              const size_t arg_N3 = KOKKOS_INVALID_INDEX,
-                              const size_t arg_N4 = KOKKOS_INVALID_INDEX,
-                              const size_t arg_N5 = KOKKOS_INVALID_INDEX,
-                              const size_t arg_N6 = KOKKOS_INVALID_INDEX,
-                              const size_t arg_N7 = KOKKOS_INVALID_INDEX)
+  explicit KOKKOS_FUNCTION DynRankView(
+      const Kokkos::Impl::ViewCtorProp<P...>& arg_prop,
+      std::enable_if_t<Kokkos::Impl::ViewCtorProp<P...>::has_pointer,
+                       const size_t>
+          arg_N0          = KOKKOS_INVALID_INDEX,
+      const size_t arg_N1 = KOKKOS_INVALID_INDEX,
+      const size_t arg_N2 = KOKKOS_INVALID_INDEX,
+      const size_t arg_N3 = KOKKOS_INVALID_INDEX,
+      const size_t arg_N4 = KOKKOS_INVALID_INDEX,
+      const size_t arg_N5 = KOKKOS_INVALID_INDEX,
+      const size_t arg_N6 = KOKKOS_INVALID_INDEX,
+      const size_t arg_N7 = KOKKOS_INVALID_INDEX)
+      : DynRankView(arg_prop, typename traits::array_layout(
+                                  arg_N0, arg_N1, arg_N2, arg_N3, arg_N4,
+                                  arg_N5, arg_N6, arg_N7)) {}
+
+  template <class... P>
+  explicit DynRankView(
+      const Kokkos::Impl::ViewCtorProp<P...>& arg_prop,
+      std::enable_if_t<!Kokkos::Impl::ViewCtorProp<P...>::has_pointer,
+                       const size_t>
+          arg_N0          = KOKKOS_INVALID_INDEX,
+      const size_t arg_N1 = KOKKOS_INVALID_INDEX,
+      const size_t arg_N2 = KOKKOS_INVALID_INDEX,
+      const size_t arg_N3 = KOKKOS_INVALID_INDEX,
+      const size_t arg_N4 = KOKKOS_INVALID_INDEX,
+      const size_t arg_N5 = KOKKOS_INVALID_INDEX,
+      const size_t arg_N6 = KOKKOS_INVALID_INDEX,
+      const size_t arg_N7 = KOKKOS_INVALID_INDEX)
       : DynRankView(arg_prop, typename traits::array_layout(
                                   arg_N0, arg_N1, arg_N2, arg_N3, arg_N4,
                                   arg_N5, arg_N6, arg_N7)) {}
@@ -736,16 +769,18 @@ class DynRankView : private View<DataType*******, Properties...> {
 
   //----------------------------------------
   // Memory span required to wrap these dimensions.
-  /*
-    static constexpr size_t required_allocation_size(
-        const size_t arg_N0 = 0, const size_t arg_N1 = 0, const size_t arg_N2 =
-    0, const size_t arg_N3 = 0, const size_t arg_N4 = 0, const size_t arg_N5 =
-    0, const size_t arg_N6 = 0, const size_t arg_N7 = 0) { return
-    map_type::memory_span(typename traits::array_layout( arg_N0, arg_N1, arg_N2,
-    arg_N3, arg_N4, arg_N5, arg_N6, arg_N7));
-    }
-  */
-  explicit KOKKOS_INLINE_FUNCTION DynRankView(
+  // FIXME: this function needs to be tested
+  static constexpr size_t required_allocation_size(
+      const size_t arg_N0 = 1, const size_t arg_N1 = 1, const size_t arg_N2 = 1,
+      const size_t arg_N3 = 1, const size_t arg_N4 = 1, const size_t arg_N5 = 1,
+      const size_t arg_N6                  = 1,
+      [[maybe_unused]] const size_t arg_N7 = KOKKOS_INVALID_INDEX) {
+    // FIXME: check that arg_N7 is not set by user (in debug mode)
+    return view_type::required_allocation_size(arg_N0, arg_N1, arg_N2, arg_N3,
+                                               arg_N4, arg_N5, arg_N6);
+  }
+
+  explicit KOKKOS_FUNCTION DynRankView(
       typename view_type::pointer_type arg_ptr,
       const size_t arg_N0 = KOKKOS_INVALID_INDEX,
       const size_t arg_N1 = KOKKOS_INVALID_INDEX,
@@ -760,7 +795,7 @@ class DynRankView : private View<DataType*******, Properties...> {
                 arg_ptr),
             arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7) {}
 
-  explicit KOKKOS_INLINE_FUNCTION DynRankView(
+  explicit KOKKOS_FUNCTION DynRankView(
       typename view_type::pointer_type arg_ptr,
       typename traits::array_layout& arg_layout)
       : DynRankView(
@@ -789,7 +824,7 @@ class DynRankView : private View<DataType*******, Properties...> {
            (arg_N7 != KOKKOS_INVALID_INDEX ? arg_N7 : 1);
   }
 
-  explicit KOKKOS_INLINE_FUNCTION DynRankView(
+  explicit KOKKOS_FUNCTION DynRankView(
       const typename traits::execution_space::scratch_memory_space& arg_space,
       const typename traits::array_layout& arg_layout)
       : DynRankView(
@@ -800,7 +835,7 @@ class DynRankView : private View<DataType*******, Properties...> {
                             createLayout(arg_layout))))),
             arg_layout) {}
 
-  explicit KOKKOS_INLINE_FUNCTION DynRankView(
+  explicit KOKKOS_FUNCTION DynRankView(
       const typename traits::execution_space::scratch_memory_space& arg_space,
       const size_t arg_N0 = KOKKOS_INVALID_INDEX,
       const size_t arg_N1 = KOKKOS_INVALID_INDEX,
@@ -822,7 +857,7 @@ class DynRankView : private View<DataType*******, Properties...> {
             typename traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3,
                                           arg_N4, arg_N5, arg_N6, arg_N7)) {}
 
-  KOKKOS_INLINE_FUNCTION constexpr auto layout() const {
+  KOKKOS_FUNCTION constexpr auto layout() const {
     switch (rank()) {
       case 0: return Impl::as_view_of_rank_n<0>(*this).layout();
       case 1: return Impl::as_view_of_rank_n<1>(*this).layout();
@@ -849,8 +884,7 @@ class DynRankView : private View<DataType*******, Properties...> {
 };
 
 template <typename D, class... P>
-KOKKOS_INLINE_FUNCTION constexpr unsigned rank(
-    const DynRankView<D, P...>& DRV) {
+KOKKOS_FUNCTION constexpr unsigned rank(const DynRankView<D, P...>& DRV) {
   return DRV.rank();
 }  // needed for transition to common constexpr method in view and dynrankview
    // to return rank
