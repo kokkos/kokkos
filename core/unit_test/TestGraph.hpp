@@ -200,6 +200,11 @@ TEST_F(TEST_CATEGORY_FIXTURE_DEATH(graph), can_instantiate_only_once) {
 // one passed to the Kokkos::Graph constructor.
 TEST_F(TEST_CATEGORY_FIXTURE(graph),
        submit_onto_another_execution_space_instance) {
+#ifdef KOKKOS_ENABLE_OPENMP
+  if (Kokkos::OpenMP().concurrency() == 1)
+    GTEST_SKIP() << "test needs at least two OpenMP threads";
+#endif
+
   const auto execution_space_instances =
       Kokkos::Experimental::partition_space(ex, 1, 1);
 
@@ -441,6 +446,11 @@ FetchValuesAndContribute(ViewType, const size_t (&)[NumIndices],
 //  \ /         fence(exec_1)               enforce dependencies.
 //   D          D(exec_0)
 TEST_F(TEST_CATEGORY_FIXTURE(graph), diamond) {
+#ifdef KOKKOS_ENABLE_OPENMP
+  if (Kokkos::OpenMP().concurrency() < 4)
+    GTEST_SKIP() << "test needs at least 4 OpenMP threads";
+#endif
+
   const auto execution_space_instances =
       Kokkos::Experimental::partition_space(ex, 1, 1, 1, 1);
 
@@ -513,6 +523,11 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), diamond) {
 //                  fence(exec_1)
 //    F             F(exec_0)
 TEST_F(TEST_CATEGORY_FIXTURE(graph), end_of_submit_control_flow) {
+#ifdef KOKKOS_ENABLE_OPENMP
+  if (Kokkos::OpenMP().concurrency() < 4)
+    GTEST_SKIP() << "test needs at least 4 OpenMP threads";
+#endif
+
   const auto execution_space_instances =
       Kokkos::Experimental::partition_space(ex, 1, 1, 1, 1);
 

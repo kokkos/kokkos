@@ -171,6 +171,11 @@ void run_exec_space_thread_safety_team_policy() {
 }
 
 TEST(TEST_CATEGORY, exec_space_thread_safety_team_policy) {
+#ifdef KOKKOS_ENABLE_OPENMP  // FIXME_OPENMP
+  if (Kokkos::OpenMP().concurrency() == 1)
+    GTEST_SKIP() << "test needs at least two OpenMP threads";
+#endif
+
 #ifdef KOKKOS_ENABLE_OPENACC  // FIXME_OPENACC
   GTEST_SKIP()
       << "skipping OpenACC test since unsupported host-side atomics cause "
@@ -303,6 +308,11 @@ void run_exec_space_thread_safety_team_policy_reduce() {
 }
 
 TEST(TEST_CATEGORY, exec_space_thread_safety_team_policy_reduce) {
+#ifdef KOKKOS_ENABLE_OPENMP  // FIXME_OPENMP
+  if (Kokkos::OpenMP().concurrency() == 1)
+    GTEST_SKIP() << "test needs at least two OpenMP threads";
+#endif
+
 #ifdef KOKKOS_ENABLE_OPENACC  // FIXME_OPENACC
   GTEST_SKIP()
       << "skipping OpenACC test since unsupported host-side atomics cause "

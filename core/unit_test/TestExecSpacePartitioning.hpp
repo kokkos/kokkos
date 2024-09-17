@@ -79,6 +79,11 @@ void check_distinctive([[maybe_unused]] ExecSpace exec1,
 #ifdef KOKKOS_ENABLE_OPENMP
 template <class Lambda1, class Lambda2>
 void run_threaded_test(const Lambda1 l1, const Lambda2 l2) {
+#ifdef KOKKOS_ENABLE_OPENMP
+  if (Kokkos::OpenMP().concurrency() == 1)
+    GTEST_SKIP() << "test needs at least two OpenMP threads";
+#endif
+
 #pragma omp parallel num_threads(2)
   {
     if (omp_get_thread_num() == 0) l1();
@@ -126,6 +131,10 @@ void test_partitioning(std::vector<TEST_EXECSPACE>& instances) {
 }
 
 TEST(TEST_CATEGORY, partitioning_by_args) {
+#ifdef KOKKOS_ENABLE_OPENMP
+  if (Kokkos::OpenMP().concurrency() == 1)
+    GTEST_SKIP() << "test needs at least two OpenMP threads";
+#endif
   auto instances =
       Kokkos::Experimental::partition_space(TEST_EXECSPACE(), 1, 1);
   ASSERT_EQ(int(instances.size()), 2);
@@ -133,6 +142,10 @@ TEST(TEST_CATEGORY, partitioning_by_args) {
 }
 
 TEST(TEST_CATEGORY, partitioning_by_vector) {
+#ifdef KOKKOS_ENABLE_OPENMP
+  if (Kokkos::OpenMP().concurrency() == 1)
+    GTEST_SKIP() << "test needs at least two OpenMP threads";
+#endif
   // Make sure we can use a temporary as argument for weights
   auto instances = Kokkos::Experimental::partition_space(
       TEST_EXECSPACE(), std::vector<int> /*weights*/ {1, 1});
