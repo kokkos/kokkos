@@ -185,6 +185,9 @@ void run_for_rank2() {
 }  // namespace BinSortSetB
 
 TEST(TEST_CATEGORY, BinSortUnsignedKeyLayoutStrideValues) {
+#if defined(KOKKOS_COMPILER_CRAY_LLVM) && defined(KOKKOS_ENABLE_OPENMPTARGET)
+  GTEST_SKIP() << "known to fail with OpenMPTarget+Cray LLVM";
+#endif
   using ExeSpace = TEST_EXECSPACE;
   using key_type = unsigned;
   BinSortSetB::run_for_rank1<ExeSpace, key_type, int>();

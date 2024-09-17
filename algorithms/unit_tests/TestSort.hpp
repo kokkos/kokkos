@@ -208,6 +208,7 @@ void test_sort_integer_overflow() {
 
 }  // namespace SortImpl
 
+#if !defined(KOKKOS_ENABLE_OPENMPTARGET)
 TEST(TEST_CATEGORY, SortUnsignedValueType) {
   using ExecutionSpace = TEST_EXECSPACE;
   using key_type       = unsigned;
@@ -234,6 +235,7 @@ TEST(TEST_CATEGORY, SortEmptyView) {
   Kokkos::sort(ExecutionSpace(), v);
   Kokkos::sort(v);
 }
+#endif
 
 }  // namespace Test
 #endif

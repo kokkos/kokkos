@@ -123,7 +123,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     int max_active_teams = omp_get_max_teams();
 #else
     int max_active_teams =
-        std::min(m_policy.space().MAX_ACTIVE_THREADS / team_size, league_size);
+        std::min(m_policy.space().concurrency() / team_size, league_size);
 #endif
 
     // FIXME_OPENMPTARGET: Although the maximum number of teams is set using the

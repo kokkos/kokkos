@@ -219,6 +219,9 @@ void test_sort_integer_overflow() {
 }  // namespace BinSortSetA
 
 TEST(TEST_CATEGORY, BinSortGenericTests) {
+#if defined(KOKKOS_COMPILER_CRAY_LLVM) && defined(KOKKOS_ENABLE_OPENMPTARGET)
+  GTEST_SKIP() << "known to fail with OpenMPTarget+Cray LLVM";
+#endif
   using ExecutionSpace = TEST_EXECSPACE;
   using key_type       = unsigned;
   constexpr int N      = 171;

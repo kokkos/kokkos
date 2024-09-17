@@ -205,7 +205,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
     // architecture in the future.
     const int max_team_threads = 32;
     const int max_teams =
-        p.space().impl_internal_space_instance()->MAX_ACTIVE_THREADS /
+        p.space().impl_internal_space_instance()->concurrency() /
         max_team_threads;
     // Number of elements in the reduction
     const auto value_count = FunctorAnalysis::value_count(f.get_functor());
@@ -364,7 +364,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     int max_active_teams = omp_get_max_teams();
 #else
     int max_active_teams =
-        std::min(p.space().MAX_ACTIVE_THREADS / team_size, league_size);
+        std::min(p.space().concurrency() / team_size, league_size);
 #endif
 
     // If the league size is <=0, do not launch the kernel.
@@ -449,7 +449,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     int max_active_teams = omp_get_max_teams();
 #else
     int max_active_teams =
-        std::min(p.space().MAX_ACTIVE_THREADS / team_size, league_size);
+        std::min(p.space().concurrency() / team_size, league_size);
 #endif
 
     // If the league size is <=0, do not launch the kernel.
