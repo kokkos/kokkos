@@ -50,7 +50,10 @@ struct ViewDataTypeFromRank<T, 0> {
 
 template <unsigned N, typename T, typename... Args>
 KOKKOS_FUNCTION View<typename ViewDataTypeFromRank<T, N>::type, Args...>
-as_view_of_rank_n(DynRankView<T, Args...> v);
+as_view_of_rank_n(
+    DynRankView<T, Args...> v,
+    std::enable_if_t<std::is_same_v<typename ViewTraits<T, Args...>::specialize,
+                                    void>>* = nullptr);
 
 template <typename Specialize>
 struct DynRankDimTraits {
@@ -410,13 +413,15 @@ class DynRankView : private View<DataType*******, Properties...> {
 
   size_t m_rank{};
 
-  using drdtraits = Impl::DynRankDimTraits<void>;
-
  public:
   using drvtraits = ViewTraits<DataType, Properties...>;
 
   using view_type = View<DataType*******, Properties...>;
 
+ private:
+  using drdtraits = Impl::DynRankDimTraits<typename view_type::specialize>;
+
+ public:
   // typedefs from ViewTraits, overriden
   using data_type           = typename drvtraits::data_type;
   using const_data_type     = typename drvtraits::const_data_type;
@@ -548,6 +553,7 @@ class DynRankView : private View<DataType*******, Properties...> {
   using view_type::data;
   using view_type::extent;
   using view_type::extent_int;  // FIXME: not tested
+  using view_type::impl_map;    // FIXME: not tested
   using view_type::is_allocated;
   using view_type::label;
   using view_type::size;
@@ -688,8 +694,9 @@ class DynRankView : private View<DataType*******, Properties...> {
       std::enable_if_t<Kokkos::Impl::ViewCtorProp<P...>::has_pointer,
                        typename traits::array_layout const&>
           arg_layout)
-      : view_type(arg_prop, drdtraits::createLayout(arg_layout)),
-        m_rank(drdtraits::computeRank(arg_layout)) {}
+      : view_type(arg_prop, drdtraits::template createLayout<traits, P...>(
+                                arg_prop, arg_layout)),
+        m_rank(drdtraits::computeRank(arg_prop, arg_layout)) {}
 
   template <class... P>
   explicit DynRankView(
@@ -697,8 +704,9 @@ class DynRankView : private View<DataType*******, Properties...> {
       std::enable_if_t<!Kokkos::Impl::ViewCtorProp<P...>::has_pointer,
                        typename traits::array_layout const&>
           arg_layout)
-      : view_type(arg_prop, drdtraits::createLayout(arg_layout)),
-        m_rank(drdtraits::computeRank(arg_layout)) {}
+      : view_type(arg_prop, drdtraits::template createLayout<traits, P...>(
+                                arg_prop, arg_layout)),
+        m_rank(drdtraits::computeRank(arg_prop, arg_layout)) {}
 
   //----------------------------------------
   // Constructor(s)
@@ -921,9 +929,14 @@ KOKKOS_INLINE_FUNCTION auto subdynrankview(
                     (drv.rank() > 4 && !std::is_integral_v<SubArg4> ? 1 : 0) +
                     (drv.rank() > 5 && !std::is_integral_v<SubArg5> ? 1 : 0) +
                     (drv.rank() > 6 && !std::is_integral_v<SubArg6> ? 1 : 0);
-  return DynRankView<typename sub_t::value_type, typename sub_t::array_layout,
-                     typename sub_t::device_type,
-                     typename sub_t::memory_traits>(sub, new_rank);
+
+  using return_type =
+      DynRankView<typename sub_t::value_type, Kokkos::LayoutStride,
+                  typename sub_t::device_type, typename sub_t::memory_traits>;
+  return static_cast<return_type>(
+      DynRankView<typename sub_t::value_type, typename sub_t::array_layout,
+                  typename sub_t::device_type, typename sub_t::memory_traits>(
+          sub, new_rank));
 }
 template <class... DRVArgs, class SubArg0 = int, class SubArg1 = int,
           class SubArg2 = int, class SubArg3 = int, class SubArg4 = int,
@@ -1105,7 +1118,10 @@ namespace Impl {
    other routines that are defined on View */
 template <unsigned N, typename T, typename... Args>
 KOKKOS_FUNCTION View<typename ViewDataTypeFromRank<T, N>::type, Args...>
-as_view_of_rank_n(DynRankView<T, Args...> v) {
+as_view_of_rank_n(
+    DynRankView<T, Args...> v,
+    std::enable_if_t<
+        std::is_same_v<typename ViewTraits<T, Args...>::specialize, void>>*) {
   if (v.rank() != N) {
     KOKKOS_IF_ON_HOST(
         const std::string message =
