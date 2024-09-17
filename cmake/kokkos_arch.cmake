@@ -803,12 +803,9 @@ IF(KOKKOS_ARCH_INTEL_PVC)
 ENDIF()
 
 IF (KOKKOS_ENABLE_OPENMP)
-  IF(KOKKOS_CLANG_IS_CRAY)
     COMPILER_SPECIFIC_LINK_OPTIONS(
-        CrayClang -fopenmp # Needed for cmake>=3.28
-        Clang -fopenmp
+        CrayClang -fopenmp
     )
-  ENDIF()
 ENDIF()
 
 IF (KOKKOS_ENABLE_OPENMPTARGET)
