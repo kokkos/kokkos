@@ -236,12 +236,12 @@ struct OpenMPTargetReducerWrapper<MinLoc<Scalar, Index, Space>> {
   // Required
   KOKKOS_INLINE_FUNCTION
   static void join(value_type& dest, const value_type& src) {
-    if (src.val < dest.val) dest = src;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  static void join(volatile value_type& dest, const volatile value_type& src) {
-    if (src.val < dest.val) dest = src;
+    if (src.val < dest.val)
+      dest = src;
+    else if (src.val == dest.val &&
+             dest.loc == reduction_identity<index_type>::min()) {
+      dest.loc = src.loc;
+    }
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -263,12 +263,12 @@ struct OpenMPTargetReducerWrapper<MaxLoc<Scalar, Index, Space>> {
 
   KOKKOS_INLINE_FUNCTION
   static void join(value_type& dest, const value_type& src) {
-    if (src.val > dest.val) dest = src;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  static void join(volatile value_type& dest, const volatile value_type& src) {
-    if (src.val > dest.val) dest = src;
+    if (src.val > dest.val)
+      dest = src;
+    else if (src.val == dest.val &&
+             dest.loc == reduction_identity<index_type>::min()) {
+      dest.loc = src.loc;
+    }
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -331,21 +331,15 @@ struct OpenMPTargetReducerWrapper<MinMaxLoc<Scalar, Index, Space>> {
     if (src.min_val < dest.min_val) {
       dest.min_val = src.min_val;
       dest.min_loc = src.min_loc;
-    }
-    if (src.max_val > dest.max_val) {
-      dest.max_val = src.max_val;
-      dest.max_loc = src.max_loc;
-    }
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  static void join(volatile value_type& dest, const volatile value_type& src) {
-    if (src.min_val < dest.min_val) {
-      dest.min_val = src.min_val;
+    } else if (dest.min_val == src.min_val &&
+               dest.min_loc == reduction_identity<index_type>::min()) {
       dest.min_loc = src.min_loc;
     }
     if (src.max_val > dest.max_val) {
       dest.max_val = src.max_val;
+      dest.max_loc = src.max_loc;
+    } else if (dest.max_val == src.max_val &&
+               dest.max_loc == reduction_identity<index_type>::min()) {
       dest.max_loc = src.max_loc;
     }
   }
