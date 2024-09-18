@@ -259,16 +259,6 @@ class ReferenceCountedDataHandle {
       const ReferenceCountedDataHandle<OtherElementType, memory_space>& other)
       : m_tracker(other.m_tracker), m_handle(other.m_handle) {}
 
-  KOKKOS_DEFAULTED_FUNCTION
-  ReferenceCountedDataHandle(const ReferenceCountedDataHandle&) = default;
-  KOKKOS_DEFAULTED_FUNCTION
-  ReferenceCountedDataHandle(ReferenceCountedDataHandle&&) noexcept = default;
-  KOKKOS_DEFAULTED_FUNCTION
-  ReferenceCountedDataHandle& operator=(const ReferenceCountedDataHandle&) =
-      default;
-  KOKKOS_DEFAULTED_FUNCTION
-  ReferenceCountedDataHandle& operator=(ReferenceCountedDataHandle&&) = default;
-
   KOKKOS_FUNCTION
   pointer get() const noexcept { return m_handle; }
   KOKKOS_FUNCTION
@@ -337,16 +327,6 @@ class ReferenceCountedDataHandle<ElementType, AnonymousSpace> {
   KOKKOS_FUNCTION ReferenceCountedDataHandle(
       const ReferenceCountedDataHandle& other, OtherElementType* ptr)
       : m_tracker(other.m_tracker), m_handle(ptr) {}
-
-  KOKKOS_DEFAULTED_FUNCTION
-  ReferenceCountedDataHandle(const ReferenceCountedDataHandle&) = default;
-  KOKKOS_DEFAULTED_FUNCTION
-  ReferenceCountedDataHandle(ReferenceCountedDataHandle&&) noexcept = default;
-  KOKKOS_DEFAULTED_FUNCTION
-  ReferenceCountedDataHandle& operator=(const ReferenceCountedDataHandle&) =
-      default;
-  KOKKOS_DEFAULTED_FUNCTION
-  ReferenceCountedDataHandle& operator=(ReferenceCountedDataHandle&&) = default;
 
   template <class OtherElementType, class OtherSpace,
             class = std::enable_if_t<std::is_convertible_v<
