@@ -1195,7 +1195,10 @@ if(KOKKOS_ENABLE_OPENACC)
   else()
     # Automatic fallback mode; try to offload any available GPU, and fall back
     # to the host CPU if no available GPU is found.
-    compiler_specific_flags(NVHPC -acc=gpu,multicore)
+    compiler_specific_flags(
+      NVHPC -acc=gpu,multicore
+      Clang --offload-arch=native
+    )
     message(
       STATUS
         "No OpenACC target device is specified; the OpenACC backend will be executed in an automatic fallback mode."
