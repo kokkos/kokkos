@@ -580,14 +580,20 @@ struct MirrorDynamicViewType {
     is_same_memspace =
         std::is_same_v<memory_space, typename src_view_type::memory_space>
   };
+  // The layout type
+  using layout_type = typename src_view_type::layout_type;
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
   // The array_layout
-  using array_layout = typename src_view_type::array_layout;
+  using array_layout KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use layout_type instead.") = layout_type;
+#endif
+
   // The data type (we probably want it non-const since otherwise we can't even
   // deep_copy to it.)
   using data_type = typename src_view_type::non_const_data_type;
   // The destination view type if it is not the same memory space
   using dest_view_type =
-      Kokkos::Experimental::DynamicView<data_type, array_layout, Space>;
+      Kokkos::Experimental::DynamicView<data_type, layout_type, Space>;
   // If it is the same memory_space return the existing view_type
   // This will also keep the unmanaged trait if necessary
   using view_type =

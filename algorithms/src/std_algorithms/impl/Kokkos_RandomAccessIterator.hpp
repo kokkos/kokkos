@@ -40,11 +40,11 @@ class RandomAccessIterator<::Kokkos::View<DataType, Args...>> {
 #ifdef KOKKOS_ENABLE_IMPL_MDSPAN
       decltype(std::declval<view_type>().to_mdspan())::is_always_strided();
 #else
-      (std::is_same_v<typename view_type::traits::array_layout,
+      (std::is_same_v<typename view_type::traits::layout_type,
                       Kokkos::LayoutLeft> ||
-       std::is_same_v<typename view_type::traits::array_layout,
+       std::is_same_v<typename view_type::traits::layout_type,
                       Kokkos::LayoutRight> ||
-       std::is_same_v<typename view_type::traits::array_layout,
+       std::is_same_v<typename view_type::traits::layout_type,
                       Kokkos::LayoutStride>);
 #endif
 
@@ -185,9 +185,9 @@ class RandomAccessIterator<::Kokkos::View<DataType, Args...>> {
   pointer m_data;
   int m_stride;
   static constexpr bool is_always_contiguous =
-      (std::is_same_v<typename view_type::traits::array_layout,
+      (std::is_same_v<typename view_type::traits::layout_type,
                       Kokkos::LayoutLeft> ||
-       std::is_same_v<typename view_type::traits::array_layout,
+       std::is_same_v<typename view_type::traits::layout_type,
                       Kokkos::LayoutRight>);
 
   // Needed for the converting constructor accepting another iterator

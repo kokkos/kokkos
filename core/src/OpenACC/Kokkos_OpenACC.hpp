@@ -56,9 +56,13 @@ class OpenACC {
   using execution_space = OpenACC;
   using memory_space    = OpenACCSpace;
   using device_type     = Kokkos::Device<execution_space, memory_space>;
+  using layout_type     = LayoutLeft;
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
+  using array_layout KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use layout_type instead.") = layout_type;
+#endif
 
-  using array_layout = LayoutLeft;
-  using size_type    = memory_space::size_type;
+  using size_type = memory_space::size_type;
 
   using scratch_memory_space = ScratchMemorySpace<OpenACC>;
 

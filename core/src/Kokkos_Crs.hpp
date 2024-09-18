@@ -52,8 +52,13 @@ class Crs {
   using traits = ViewTraits<DataType*, Arg1Type, Arg2Type, void>;
 
  public:
-  using data_type       = DataType;
-  using array_layout    = typename traits::array_layout;
+  using data_type   = DataType;
+  using layout_type = typename traits::layout_type;
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
+  using array_layout KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use layout_type instead.") = layout_type;
+#endif
+
   using execution_space = typename traits::execution_space;
   using memory_space    = typename traits::memory_space;
   using device_type     = typename traits::device_type;
@@ -62,7 +67,7 @@ class Crs {
   using staticcrsgraph_type = Crs<DataType, Arg1Type, Arg2Type, SizeType>;
 
   using host_mirror_type =
-      Crs<DataType, array_layout, typename traits::host_mirror_space, SizeType>;
+      Crs<DataType, layout_type, typename traits::host_mirror_space, SizeType>;
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   /** \brief  Compatible host mirror view */
@@ -70,8 +75,8 @@ class Crs {
       "Use host_mirror_type instead.") = host_mirror_type;
 #endif
 
-  using row_map_type = View<size_type*, array_layout, device_type>;
-  using entries_type = View<DataType*, array_layout, device_type>;
+  using row_map_type = View<size_type*, layout_type, device_type>;
+  using entries_type = View<DataType*, layout_type, device_type>;
 
   row_map_type row_map;
   entries_type entries;

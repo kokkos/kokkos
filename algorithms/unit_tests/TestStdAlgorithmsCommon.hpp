@@ -285,7 +285,7 @@ void fill_views_inc(ViewType view, ViewHostType host_view) {
 }
 
 template <class ValueType, class ViewType>
-std::enable_if_t<!std::is_same_v<typename ViewType::traits::array_layout,
+std::enable_if_t<!std::is_same_v<typename ViewType::traits::layout_type,
                                  Kokkos::LayoutStride>>
 verify_values(ValueType expected, const ViewType view) {
   static_assert(std::is_same_v<ValueType, typename ViewType::value_type>,
@@ -297,7 +297,7 @@ verify_values(ValueType expected, const ViewType view) {
 }
 
 template <class ValueType, class ViewType>
-std::enable_if_t<std::is_same_v<typename ViewType::traits::array_layout,
+std::enable_if_t<std::is_same_v<typename ViewType::traits::layout_type,
                                 Kokkos::LayoutStride>>
 verify_values(ValueType expected, const ViewType view) {
   static_assert(std::is_same_v<ValueType, typename ViewType::value_type>,
@@ -317,7 +317,7 @@ verify_values(ValueType expected, const ViewType view) {
 }
 
 template <class ViewType1, class ViewType2>
-std::enable_if_t<!std::is_same_v<typename ViewType2::traits::array_layout,
+std::enable_if_t<!std::is_same_v<typename ViewType2::traits::layout_type,
                                  Kokkos::LayoutStride>>
 compare_views(ViewType1 expected, const ViewType2 actual) {
   static_assert(std::is_same_v<typename ViewType1::value_type,
@@ -334,7 +334,7 @@ compare_views(ViewType1 expected, const ViewType2 actual) {
 }
 
 template <class ViewType1, class ViewType2>
-std::enable_if_t<std::is_same_v<typename ViewType2::traits::array_layout,
+std::enable_if_t<std::is_same_v<typename ViewType2::traits::layout_type,
                                 Kokkos::LayoutStride>>
 compare_views(ViewType1 expected, const ViewType2 actual) {
   static_assert(std::is_same_v<typename ViewType1::value_type,

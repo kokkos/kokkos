@@ -145,10 +145,15 @@ class HPX {
   Kokkos::Impl::HostSharedPtr<instance_data> m_instance_data;
 
  public:
-  using execution_space      = HPX;
-  using memory_space         = HostSpace;
-  using device_type          = Kokkos::Device<execution_space, memory_space>;
-  using array_layout         = LayoutRight;
+  using execution_space = HPX;
+  using memory_space    = HostSpace;
+  using device_type     = Kokkos::Device<execution_space, memory_space>;
+  using layout_type     = LayoutRight;
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
+  using array_layout KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use layout_type instead.") = layout_type;
+#endif
+
   using size_type            = memory_space::size_type;
   using scratch_memory_space = ScratchMemorySpace<HPX>;
 

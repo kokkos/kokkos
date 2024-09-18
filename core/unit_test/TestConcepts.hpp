@@ -55,9 +55,17 @@ static_assert(!Kokkos::is_execution_space_v<ExecutionSpace &>);
 static_assert(Kokkos::ExecutionSpace<ExecutionSpace>);
 static_assert(!Kokkos::ExecutionSpace<ExecutionSpace &>);
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
 static_assert(Kokkos::is_array_layout_v<Kokkos::LayoutLeft>);
 static_assert(Kokkos::is_array_layout_v<Kokkos::LayoutRight>);
 static_assert(Kokkos::is_array_layout_v<Kokkos::LayoutStride>);
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
+#endif
+
+static_assert(Kokkos::is_layout_type_v<Kokkos::LayoutLeft>);
+static_assert(Kokkos::is_layout_type_v<Kokkos::LayoutRight>);
+static_assert(Kokkos::is_layout_type_v<Kokkos::LayoutStride>);
 
 static_assert(
     Kokkos::is_execution_policy_v<Kokkos::RangePolicy<ExecutionSpace>>);

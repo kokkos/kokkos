@@ -266,8 +266,12 @@ class StaticCrsGraph {
   using traits = ViewTraits<DataType*, Arg1Type, Arg2Type, Arg3Type>;
 
  public:
-  using data_type       = DataType;
-  using array_layout    = typename traits::array_layout;
+  using data_type   = DataType;
+  using layout_type = typename traits::layout_type;
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
+  using array_layout KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use layout_type instead.") = layout_type;
+#endif
   using execution_space = typename traits::execution_space;
   using device_type     = typename traits::device_type;
   using memory_traits   = typename traits::memory_traits;
@@ -276,9 +280,9 @@ class StaticCrsGraph {
   using staticcrsgraph_type =
       StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type, SizeType>;
 
-  using host_mirror_type = StaticCrsGraph<data_type, array_layout,
-                                          typename traits::host_mirror_space,
-                                          memory_traits, size_type>;
+  using host_mirror_type =
+      StaticCrsGraph<data_type, layout_type, typename traits::host_mirror_space,
+                     memory_traits, size_type>;
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   using HostMirror KOKKOS_DEPRECATED_WITH_COMMENT(
@@ -286,11 +290,11 @@ class StaticCrsGraph {
 #endif
 
   using row_map_type =
-      View<const size_type*, array_layout, device_type, memory_traits>;
+      View<const size_type*, layout_type, device_type, memory_traits>;
   using entries_type =
-      View<data_type*, array_layout, device_type, memory_traits>;
+      View<data_type*, layout_type, device_type, memory_traits>;
   using row_block_type =
-      View<const size_type*, array_layout, device_type, memory_traits>;
+      View<const size_type*, layout_type, device_type, memory_traits>;
 
   entries_type entries;
   row_map_type row_map;
@@ -360,11 +364,11 @@ class StaticCrsGraph {
    */
   void create_block_partitioning(size_type num_blocks,
                                  size_type fix_cost_per_row = 4) {
-    View<size_type*, array_layout, device_type> block_offsets(
+    View<size_type*, layout_type, device_type> block_offsets(
         "StatisCrsGraph::load_balance_offsets", num_blocks + 1);
 
     Impl::StaticCrsGraphBalancerFunctor<
-        row_map_type, View<size_type*, array_layout, device_type> >
+        row_map_type, View<size_type*, layout_type, device_type> >
         partitioner(row_map, block_offsets, fix_cost_per_row, num_blocks);
 
     Kokkos::parallel_for("Kokkos::StaticCrsGraph::create_block_partitioning",

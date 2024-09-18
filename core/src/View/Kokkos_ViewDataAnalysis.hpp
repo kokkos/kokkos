@@ -349,7 +349,7 @@ struct ViewArrayAnalysis<T*> {
       typename ViewDimensionJoin<dynamic_dimension, static_dimension>::type;
 };
 
-template <class DataType, class ArrayLayout, class ValueType>
+template <class DataType, class LayoutType, class ValueType>
 struct ViewDataAnalysis {
  private:
   using array_analysis = ViewArrayAnalysis<DataType>;

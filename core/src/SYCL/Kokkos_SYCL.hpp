@@ -43,8 +43,13 @@ class SYCL {
   using memory_space    = SYCLDeviceUSMSpace;
   using device_type     = Kokkos::Device<execution_space, memory_space>;
 
-  using array_layout = LayoutLeft;
-  using size_type    = memory_space::size_type;
+  using layout_type = LayoutLeft;
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
+  using array_layout KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use layout_type instead.") = layout_type;
+#endif
+
+  using size_type = memory_space::size_type;
 
   using scratch_memory_space = ScratchMemorySpace<SYCL>;
 

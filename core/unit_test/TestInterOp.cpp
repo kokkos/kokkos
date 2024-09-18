@@ -16,7 +16,7 @@ static_assert(
     std::is_same_v<
         Kokkos::Experimental::python_view_type_t<Kokkos::View<double*>>,
         Kokkos::View<double*,
-                     typename Kokkos::DefaultExecutionSpace::array_layout,
+                     typename Kokkos::DefaultExecutionSpace::layout_type,
                      typename Kokkos::DefaultExecutionSpace::memory_space>>,
     "Error! Unexpected python_view_type for: View");
 
@@ -25,7 +25,7 @@ static_assert(
     std::is_same_v<
         Kokkos::Experimental::python_view_type_t<Kokkos::DynRankView<double>>,
         Kokkos::DynRankView<
-            double, typename Kokkos::DefaultExecutionSpace::array_layout,
+            double, typename Kokkos::DefaultExecutionSpace::layout_type,
             typename Kokkos::DefaultExecutionSpace::memory_space>>,
     "Error! Unexpected python_view_type for: DynRankView");
 
@@ -35,7 +35,7 @@ static_assert(
         Kokkos::Experimental::python_view_type_t<
             Kokkos::View<double*, Kokkos::DefaultExecutionSpace>>,
         Kokkos::View<double*,
-                     typename Kokkos::DefaultExecutionSpace::array_layout,
+                     typename Kokkos::DefaultExecutionSpace::layout_type,
                      typename Kokkos::DefaultExecutionSpace::memory_space>>,
     "Error! Unexpected python_view_type for: View + Execution Space");
 
@@ -45,7 +45,7 @@ static_assert(
         Kokkos::Experimental::python_view_type_t<
             Kokkos::DynRankView<double, Kokkos::DefaultExecutionSpace>>,
         Kokkos::DynRankView<
-            double, typename Kokkos::DefaultExecutionSpace::array_layout,
+            double, typename Kokkos::DefaultExecutionSpace::layout_type,
             typename Kokkos::DefaultExecutionSpace::memory_space>>,
     "Error! Unexpected python_view_type for: DynRankView + Execution Space");
 

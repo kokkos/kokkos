@@ -17,7 +17,13 @@ static_assert(false,
 
 namespace Kokkos {
 
-enum { ARRAY_LAYOUT_MAX_RANK = 8 };
+enum { LAYOUT_TYPE_MAX_RANK = 8 };
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
+enum {
+  ARRAY_LAYOUT_MAX_RANK KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use LAYOUT_TYPE_MAX_RANK instead.") = LAYOUT_TYPE_MAX_RANK
+};
+#endif
 
 //----------------------------------------------------------------------------
 /// \struct LayoutLeft
@@ -35,10 +41,14 @@ enum { ARRAY_LAYOUT_MAX_RANK = 8 };
 /// a two-dimensional array, "layout left" is also called "column
 /// major."
 struct LayoutLeft {
-  //! Tag this class as a kokkos array layout
-  using array_layout = LayoutLeft;
+  //! Tag this class as a kokkos layout
+  using layout_type = LayoutLeft;
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
+  using array_layout KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use layout_type instead.") = layout_type;
+#endif
 
-  size_t dimension[ARRAY_LAYOUT_MAX_RANK];
+  size_t dimension[LAYOUT_TYPE_MAX_RANK];
   // we don't have a constructor to set the stride directly
   // but we will deprecate the class anyway (or at least using an instance of
   // this class) when switching the internal implementation to use mdspan
@@ -64,7 +74,7 @@ struct LayoutLeft {
         stride(KOKKOS_IMPL_CTOR_DEFAULT_ARG) {}
 
   friend bool operator==(const LayoutLeft& left, const LayoutLeft& right) {
-    for (unsigned int rank = 0; rank < ARRAY_LAYOUT_MAX_RANK; ++rank)
+    for (unsigned int rank = 0; rank < LAYOUT_TYPE_MAX_RANK; ++rank)
       if (left.dimension[rank] != right.dimension[rank]) return false;
     return true;
   }
@@ -90,9 +100,13 @@ struct LayoutLeft {
 /// two-dimensional array, "layout right" is also called "row major."
 struct LayoutRight {
   //! Tag this class as a kokkos array layout
-  using array_layout = LayoutRight;
+  using layout_type = LayoutRight;
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
+  using array_layout KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use layout_type instead.") = layout_type;
+#endif
 
-  size_t dimension[ARRAY_LAYOUT_MAX_RANK];
+  size_t dimension[LAYOUT_TYPE_MAX_RANK];
   // we don't have a constructor to set the stride directly
   // but we will deprecate the class anyway (or at least using an instance of
   // this class) when switching the internal implementation to use mdspan
@@ -118,7 +132,7 @@ struct LayoutRight {
         stride{KOKKOS_IMPL_CTOR_DEFAULT_ARG} {}
 
   friend bool operator==(const LayoutRight& left, const LayoutRight& right) {
-    for (unsigned int rank = 0; rank < ARRAY_LAYOUT_MAX_RANK; ++rank)
+    for (unsigned int rank = 0; rank < LAYOUT_TYPE_MAX_RANK; ++rank)
       if (left.dimension[rank] != right.dimension[rank]) return false;
     return true;
   }
@@ -133,11 +147,15 @@ struct LayoutRight {
 /// \brief  Memory layout tag indicated arbitrarily strided
 ///         multi-index mapping into contiguous memory.
 struct LayoutStride {
-  //! Tag this class as a kokkos array layout
-  using array_layout = LayoutStride;
+  //! Tag this class as a kokkos layout
+  using layout_type = LayoutStride;
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
+  using array_layout KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use layout_type instead.") = layout_type;
+#endif
 
-  size_t dimension[ARRAY_LAYOUT_MAX_RANK];
-  size_t stride[ARRAY_LAYOUT_MAX_RANK];
+  size_t dimension[LAYOUT_TYPE_MAX_RANK];
+  size_t stride[LAYOUT_TYPE_MAX_RANK];
 
   enum : bool { is_extent_constructible = false };
 
@@ -159,8 +177,8 @@ struct LayoutStride {
       iTypeDimen const* const dimen) {
     LayoutStride tmp;
     // Verify valid rank order:
-    int check_input = ARRAY_LAYOUT_MAX_RANK < rank ? 0 : int(1 << rank) - 1;
-    for (int r = 0; r < ARRAY_LAYOUT_MAX_RANK; ++r) {
+    int check_input = LAYOUT_TYPE_MAX_RANK < rank ? 0 : int(1 << rank) - 1;
+    for (int r = 0; r < LAYOUT_TYPE_MAX_RANK; ++r) {
       tmp.dimension[r] = KOKKOS_IMPL_CTOR_DEFAULT_ARG;
       tmp.stride[r]    = 0;
     }
@@ -192,7 +210,7 @@ struct LayoutStride {
         stride{S0, S1, S2, S3, S4, S5, S6, S7} {}
 
   friend bool operator==(const LayoutStride& left, const LayoutStride& right) {
-    for (unsigned int rank = 0; rank < ARRAY_LAYOUT_MAX_RANK; ++rank)
+    for (unsigned int rank = 0; rank < LAYOUT_TYPE_MAX_RANK; ++rank)
       if (left.dimension[rank] != right.dimension[rank] ||
           left.stride[rank] != right.stride[rank])
         return false;

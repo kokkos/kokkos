@@ -46,7 +46,7 @@ struct TestViewMappingSubview {
 
   static_assert(
       DLS1::rank == 1 &&
-          std::is_same_v<typename DLS1::array_layout, Kokkos::LayoutLeft>,
+          std::is_same_v<typename DLS1::layout_type, Kokkos::LayoutLeft>,
       "Subview layout error for rank 1 subview of left-most range of "
       "LayoutLeft");
 
@@ -55,7 +55,7 @@ struct TestViewMappingSubview {
 
   static_assert(
       DRS1::rank == 1 &&
-          std::is_same_v<typename DRS1::array_layout, Kokkos::LayoutRight>,
+          std::is_same_v<typename DRS1::layout_type, Kokkos::LayoutRight>,
       "Subview layout error for rank 1 subview of right-most range of "
       "LayoutRight");
 

@@ -28,9 +28,13 @@ class HIP {
   using execution_space = HIP;
   using memory_space    = HIPSpace;
   using device_type     = Kokkos::Device<execution_space, memory_space>;
+  using layout_type     = LayoutLeft;
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
+  using array_layout KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use layout_type instead.") = layout_type;
+#endif
 
-  using array_layout = LayoutLeft;
-  using size_type    = HIPSpace::size_type;
+  using size_type = HIPSpace::size_type;
 
   using scratch_memory_space = ScratchMemorySpace<HIP>;
 

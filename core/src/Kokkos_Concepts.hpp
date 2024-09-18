@@ -146,7 +146,10 @@ KOKKOS_IMPL_DEFINE_CONCEPT_AND_TRAIT_FROM_TYPEDEF(execution_space,
                                                   ExecutionSpace)
 KOKKOS_IMPL_DEFINE_CONCEPT_AND_TRAIT_FROM_TYPEDEF(execution_policy,
                                                   ExecutionPolicy)
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
 KOKKOS_IMPL_DEFINE_TRAIT_FROM_TYPEDEF(array_layout)
+#endif
+KOKKOS_IMPL_DEFINE_TRAIT_FROM_TYPEDEF(layout_type)
 KOKKOS_IMPL_DEFINE_CONCEPT_AND_TRAIT_FROM_TYPEDEF(reducer, Reducer)
 KOKKOS_IMPL_DEFINE_CONCEPT_AND_TRAIT_FROM_TYPEDEF(team_handle, TeamHandle)
 namespace Experimental {

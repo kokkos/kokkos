@@ -102,9 +102,13 @@ export {
   using ::Kokkos::InvalidType;
   using ::Kokkos::is_always_assignable;
   using ::Kokkos::is_always_assignable_v;
+  using ::Kokkos::is_assignable;
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
   using ::Kokkos::is_array_layout;
   using ::Kokkos::is_array_layout_v;
-  using ::Kokkos::is_assignable;
+#endif
+  using ::Kokkos::is_layout_type;
+  using ::Kokkos::is_layout_type_v;
   using ::Kokkos::is_memory_traits;
   using ::Kokkos::is_memory_traits_v;
   using ::Kokkos::is_view;

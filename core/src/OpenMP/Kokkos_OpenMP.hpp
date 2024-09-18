@@ -46,8 +46,13 @@ class OpenMP {
   using memory_space = HostSpace;
 
   //! This execution space preferred device_type
-  using device_type          = Kokkos::Device<execution_space, memory_space>;
-  using array_layout         = LayoutRight;
+  using device_type = Kokkos::Device<execution_space, memory_space>;
+  using layout_type = LayoutRight;
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
+  using array_layout KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use layout_type instead.") = layout_type;
+#endif
+
   using size_type            = memory_space::size_type;
   using scratch_memory_space = ScratchMemorySpace<OpenMP>;
 
