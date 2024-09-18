@@ -37,7 +37,12 @@ using data_handle_t =
     Kokkos::Impl::ReferenceCountedDataHandle<element_t, mem_t>;
 using const_data_handle_t =
     Kokkos::Impl::ReferenceCountedDataHandle<const element_t, mem_t>;
-;
+using data_handle_anonym_t =
+    Kokkos::Impl::ReferenceCountedDataHandle<element_t, Kokkos::AnonymousSpace>;
+using const_data_handle_anonym_t =
+    Kokkos::Impl::ReferenceCountedDataHandle<const element_t,
+                                             Kokkos::AnonymousSpace>;
+
 }  // namespace
 
 TEST(TEST_CATEGORY, RefCountedDataHandle_Typedefs) {
@@ -54,7 +59,8 @@ TEST(TEST_CATEGORY, RefCountedDataHandle_Typedefs) {
       });
 }
 
-TEST(TEST_CATEGORY, RefCountedDataHandle) {
+template <class DataHandleType, class ConstDataHandleType>
+void test_ref_counted_data_handle() {
   auto shared_alloc =
       Kokkos::Impl::make_shared_allocation_record<element_t, mem_t,
                                                   TEST_EXECSPACE>(
@@ -65,7 +71,7 @@ TEST(TEST_CATEGORY, RefCountedDataHandle) {
 
   element_t* ptr         = static_cast<element_t*>(shared_alloc->data());
   const element_t* c_ptr = ptr;
-  data_handle_t dh(shared_alloc);
+  DataHandleType dh(shared_alloc);
   ASSERT_EQ(dh.use_count(), 1);
   ASSERT_EQ(dh.get_label(), std::string("Test"));
   ASSERT_EQ(dh.get(), ptr);
@@ -76,17 +82,17 @@ TEST(TEST_CATEGORY, RefCountedDataHandle) {
     static_assert(!std::is_convertible_v<data_handle_t, element_t*>);
   }
   {
-    const_data_handle_t c_dh(dh);
+    ConstDataHandleType c_dh(dh);
     ASSERT_EQ(dh.use_count(), 2);
     ASSERT_EQ(c_dh.use_count(), 2);
   }
   ASSERT_EQ(dh.use_count(), 1);
 
-  data_handle_t um_dh(ptr);
+  DataHandleType um_dh(ptr);
   ASSERT_EQ(um_dh.get(), ptr);
   ASSERT_EQ(um_dh.has_record(), false);
 
-  data_handle_t dh_offset(dh, ptr + 5);
+  DataHandleType dh_offset(dh, ptr + 5);
   ASSERT_EQ(dh_offset.use_count(), 2);
   ASSERT_EQ(dh_offset.get(), ptr + 5);
   ASSERT_EQ(dh_offset.get_label(), std::string("Test"));
@@ -96,36 +102,53 @@ TEST(TEST_CATEGORY, RefCountedDataHandle) {
     ASSERT_EQ(ptr_tmp, ptr + 5);
   }
   Kokkos::View<int, TEST_EXECSPACE> errors("Errors");
+
+  // clang-format screws the following pieces up for some reason
+  // Tested with 16 and with 18 to the same effect
+  // clang-format off
   Kokkos::parallel_for(Kokkos::RangePolicy<TEST_EXECSPACE>(0, 1), KOKKOS_LAMBDA(int) {
+
     // default ctor and non-const to const
     {
-      data_handle_t dh2(dh);
+      DataHandleType dh2(dh);
       if(dh2.get() != ptr) errors() += 1;
-      const_data_handle_t c_dh2(dh);
-      const_data_handle_t c_dh3(c_dh2);
+      ConstDataHandleType c_dh2(dh);
+      ConstDataHandleType c_dh3(c_dh2);
       static_assert(!std::is_constructible_v<data_handle_t, const_data_handle_t>);
+    }
+
+    {
+      // ctor from pointer
+      DataHandleType dh2(ptr);
+      if (dh2.get() != ptr) errors() += 2;
+      ConstDataHandleType c_dh1(ptr);
+      if (c_dh1.get() != ptr) errors() += 4;
+      ConstDataHandleType c_dh2(c_ptr);
+      if (c_dh2.get() != ptr) errors() += 8;
+      static_assert(!std::is_constructible_v<data_handle_t, decltype(c_ptr)>);
+    }
+
+    // ctor for subviews
+    {
+      DataHandleType dh2(dh, ptr + 5);
+      if (dh2.get() != ptr + 5) errors() += 16;
+    }
+  });
+
+  int h_errors = 0;
+  Kokkos::deep_copy(h_errors, errors);
+  ASSERT_FALSE(h_errors & 1);
+  ASSERT_FALSE(h_errors & 2);
+  ASSERT_FALSE(h_errors & 4);
+  ASSERT_FALSE(h_errors & 8);
+  ASSERT_FALSE(h_errors & 16);
 }
-// ctor from pointer
-{
-  data_handle_t dh2(ptr);
-  if (dh2.get() != ptr) errors() += 2;
-  const_data_handle_t c_dh1(ptr);
-  if (c_dh1.get() != ptr) errors() += 4;
-  const_data_handle_t c_dh2(c_ptr);
-  if (c_dh2.get() != ptr) errors() += 8;
-  static_assert(!std::is_constructible_v<data_handle_t, decltype(c_ptr)>);
+// clang-format on
+
+TEST(TEST_CATEGORY, RefCountedDataHandle) {
+  test_ref_counted_data_handle<data_handle_t, const_data_handle_t>();
 }
-// ctor for subviews
-{
-  data_handle_t dh2(dh, ptr + 5);
-  if (dh2.get() != ptr + 5) errors() += 16;
-}
-});
-int h_errors = 0;
-Kokkos::deep_copy(h_errors, errors);
-ASSERT_FALSE(h_errors & 1);
-ASSERT_FALSE(h_errors & 2);
-ASSERT_FALSE(h_errors & 4);
-ASSERT_FALSE(h_errors & 8);
-ASSERT_FALSE(h_errors & 16);
+
+TEST(TEST_CATEGORY, RefCountedDataHandleAnonym) {
+  test_ref_counted_data_handle<data_handle_anonym_t, const_data_handle_anonym_t>();
 }

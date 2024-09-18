@@ -259,6 +259,16 @@ class ReferenceCountedDataHandle {
       const ReferenceCountedDataHandle<OtherElementType, memory_space>& other)
       : m_tracker(other.m_tracker), m_handle(other.m_handle) {}
 
+  template <class OtherElementType, class OtherSpace,
+            class = std::enable_if_t<
+	       std::is_convertible_v<OtherElementType (*)[], value_type (*)[]> &&
+	      !std::is_same_v<OtherSpace, AnonymousSpace> &&
+	       std::is_same_v<memory_space, AnonymousSpace>
+	       >>
+  KOKKOS_FUNCTION ReferenceCountedDataHandle(
+      const ReferenceCountedDataHandle<OtherElementType, OtherSpace>& other)
+      : m_tracker(other.m_tracker), m_handle(other.m_handle) {}
+
   KOKKOS_FUNCTION
   pointer get() const noexcept { return m_handle; }
   KOKKOS_FUNCTION
@@ -295,6 +305,7 @@ class ReferenceCountedDataHandle {
   pointer m_handle = nullptr;
 };
 
+/*
 template <class ElementType>
 class ReferenceCountedDataHandle<ElementType, AnonymousSpace> {
  public:
@@ -367,6 +378,7 @@ class ReferenceCountedDataHandle<ElementType, AnonymousSpace> {
   SharedAllocationTracker m_tracker;
   pointer m_handle = nullptr;
 };
+*/
 
 template <class ElementType, class MemorySpace, class NestedAccessor>
 class ReferenceCountedAccessor;
