@@ -907,6 +907,7 @@ IF (KOKKOS_ENABLE_OPENACC)
     # to the host CPU if no available GPU is found.
     COMPILER_SPECIFIC_FLAGS(
       NVHPC -acc=gpu,multicore
+      Clang --offload-arch=native
     )
     MESSAGE(STATUS "No OpenACC target device is specificed; the OpenACC backend will be executed in an automatic fallback mode.")
   ENDIF()
