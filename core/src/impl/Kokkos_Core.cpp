@@ -271,7 +271,7 @@ int Kokkos::Impl::get_ctest_gpu(int local_rank) {
     ss << "Error: local rank " << local_rank
        << " is outside the bounds of resource groups provided by CTest. Raised"
        << " by Kokkos::Impl::get_ctest_gpu().";
-    throw_runtime_exception(ss.str());
+    abort(ss.str().c_str());
   }
 
   // Get the resource types allocated to this resource group
@@ -284,7 +284,7 @@ int Kokkos::Impl::get_ctest_gpu(int local_rank) {
     std::ostringstream ss;
     ss << "Error: " << ctest_resource_group_name << " is not specified. Raised"
        << " by Kokkos::Impl::get_ctest_gpu().";
-    throw_runtime_exception(ss.str());
+    abort(ss.str().c_str());
   }
 
   // Look for the device type specified in CTEST_KOKKOS_DEVICE_TYPE
@@ -308,7 +308,7 @@ int Kokkos::Impl::get_ctest_gpu(int local_rank) {
     ss << "Error: device type '" << ctest_kokkos_device_type
        << "' not included in " << ctest_resource_group_name
        << ". Raised by Kokkos::Impl::get_ctest_gpu().";
-    throw_runtime_exception(ss.str());
+    abort(ss.str().c_str());
   }
 
   // Get the device ID
@@ -324,7 +324,7 @@ int Kokkos::Impl::get_ctest_gpu(int local_rank) {
     std::ostringstream ss;
     ss << "Error: " << ctest_resource_group_id_name
        << " is not specified. Raised by Kokkos::Impl::get_ctest_gpu().";
-    throw_runtime_exception(ss.str());
+    abort(ss.str().c_str());
   }
 
   auto const* comma = std::strchr(resource_str, ',');
@@ -332,7 +332,7 @@ int Kokkos::Impl::get_ctest_gpu(int local_rank) {
     std::ostringstream ss;
     ss << "Error: invalid value of " << ctest_resource_group_id_name << ": '"
        << resource_str << "'. Raised by Kokkos::Impl::get_ctest_gpu().";
-    throw_runtime_exception(ss.str());
+    abort(ss.str().c_str());
   }
 
   std::string id(resource_str + 3, comma - resource_str - 3);
@@ -979,7 +979,7 @@ void Kokkos::Impl::parse_environment_variables(
       Tools::Impl::parse_environment_variables(tools_init_arguments);
   if (init_result.result ==
       Tools::Impl::InitializationStatus::environment_argument_mismatch) {
-    Impl::throw_runtime_exception(init_result.error_message);
+    Kokkos::abort(init_result.error_message.c_str());
   }
   combine(settings, tools_init_arguments);
 

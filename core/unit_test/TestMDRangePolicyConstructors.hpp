@@ -121,6 +121,7 @@ TEST(TEST_CATEGORY_DEATH, policy_invalid_bounds) {
   // escape the parentheses in the regex to match the error message
   msg1 = std::regex_replace(msg1, std::regex("\\(|\\)"), "\\$&");
   (void)msg2;
+  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
   ASSERT_DEATH({ (void)Policy({100, 100}, {90, 90}); }, msg1);
 #else
   if (!Kokkos::show_warnings()) {

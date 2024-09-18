@@ -170,6 +170,7 @@ struct TEST_CATEGORY_FIXTURE_DEATH(graph)
 //      checks that submission instantiates if need be).
 //   2. Instantiating twice in a row is invalid.
 TEST_F(TEST_CATEGORY_FIXTURE_DEATH(graph), can_instantiate_only_once) {
+  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
   {
     bool checked_assertions = false;
     KOKKOS_ASSERT(checked_assertions = true);
@@ -392,10 +393,8 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), zero_work_reduce) {
 // Ensure that an empty graph can be submitted.
 TEST_F(TEST_CATEGORY_FIXTURE(graph), empty_graph) {
   auto graph = Kokkos::Experimental::create_graph(ex, [](auto) {});
-  ASSERT_NO_THROW({
-    graph.instantiate();
-    graph.submit(ex);
-  });
+  graph.instantiate();
+  graph.submit(ex);
   ex.fence();
 }
 
@@ -564,10 +563,16 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), end_of_submit_control_flow) {
   //      their policy if the defaulted graph implementation is used.
   graph.submit(exec_3);
 
+  // clang-format off
   Kokkos::parallel_for(
       policy_t(exec_3, 0, 1),
+#if defined(KOKKOS_COMPILER_GNU) && (1010 == KOKKOS_COMPILER_GNU)
+      // Workaround CTAD bug, see 7316.
+      FetchValuesAndContribute<decltype(data), index_F, 2>(data, {index_D(), index_E()}, index_F, value_F));
+#else
       FetchValuesAndContribute(data, {index_D(), index_E()}, index_F, value_F));
-
+#endif
+  // clang-format on
   view_h_t data_host(
       Kokkos::view_alloc(Kokkos::WithoutInitializing, "data - host"), 6);
 

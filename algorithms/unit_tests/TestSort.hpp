@@ -229,9 +229,10 @@ TEST(TEST_CATEGORY, SortEmptyView) {
   // does not matter if we use int or something else
   Kokkos::View<int*, ExecutionSpace> v("v", 0);
 
+  // checking that it does not throw
   // TODO check the synchronous behavior of the calls below
-  ASSERT_NO_THROW(Kokkos::sort(ExecutionSpace(), v));
-  ASSERT_NO_THROW(Kokkos::sort(v));
+  Kokkos::sort(ExecutionSpace(), v);
+  Kokkos::sort(v);
 }
 
 }  // namespace Test

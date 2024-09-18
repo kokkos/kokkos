@@ -24,11 +24,14 @@ namespace Impl {
 template <class ScalarType, int Rank>
 struct ViewScalarToDataType {
   using type = typename ViewScalarToDataType<ScalarType, Rank - 1>::type *;
+  using const_type =
+      typename ViewScalarToDataType<ScalarType, Rank - 1>::const_type *;
 };
 
 template <class ScalarType>
 struct ViewScalarToDataType<ScalarType, 0> {
-  using type = ScalarType;
+  using type       = ScalarType;
+  using const_type = const ScalarType;
 };
 
 template <class LayoutType, int Rank>
@@ -49,12 +52,13 @@ struct ViewUniformLayout<Kokkos::LayoutRight, 1> {
 template <class ViewType, int Traits>
 struct ViewUniformType {
   using data_type       = typename ViewType::data_type;
-  using const_data_type = std::add_const_t<typename ViewType::data_type>;
+  using const_data_type = typename ViewType::const_data_type;
   using runtime_data_type =
       typename ViewScalarToDataType<typename ViewType::value_type,
                                     ViewType::rank>::type;
-  using runtime_const_data_type = typename ViewScalarToDataType<
-      std::add_const_t<typename ViewType::value_type>, ViewType::rank>::type;
+  using runtime_const_data_type =
+      typename ViewScalarToDataType<typename ViewType::value_type,
+                                    ViewType::rank>::const_type;
 
   using array_layout =
       typename ViewUniformLayout<typename ViewType::array_layout,

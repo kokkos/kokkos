@@ -450,8 +450,8 @@ void Loop(int loop, int test) {
   T res       = LoopVariant<T, DeviceType>(loop, test);
   T resSerial = LoopVariantSerial<T>(loop, test);
 
-  ASSERT_EQ(res, resSerial) << "Loop<" << typeid(T).name() << ">(loop=" << loop
-                            << ",test=" << test << ")";
+  ASSERT_EQ(res, resSerial) << "Loop<" << Kokkos::Impl::TypeInfo<T>::name()
+                            << ">(loop=" << loop << ",test=" << test << ")";
 }
 
 TEST(TEST_CATEGORY, atomics) {

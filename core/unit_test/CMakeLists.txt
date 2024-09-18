@@ -91,6 +91,8 @@ SET(COMPILE_ONLY_SOURCES
   TestVersionMacros.cpp
   TestViewRank.cpp
   TestViewTypeTraits.cpp
+  TestViewTypedefs.cpp
+  TestTypeInfo.cpp
   TestTypeList.cpp
   TestMDRangePolicyCTAD.cpp
   TestTeamPolicyCTAD.cpp
@@ -102,6 +104,20 @@ SET(COMPILE_ONLY_SOURCES
 #testing if windows.h and Kokkos_Core.hpp can be included
 if(WIN32)
   LIST(APPEND COMPILE_ONLY_SOURCES TestWindowsInclude.cpp)
+endif()
+
+if(Kokkos_INSTALL_TESTING)  # FIXME Kokkos_ and KOKKOS_ variables are out of sync
+  if((Kokkos_CXX_COMPILER_ID STREQUAL "Intel" AND Kokkos_CXX_COMPILER_VERSION VERSION_LESS 2021.2.0)
+     OR (Kokkos_CXX_COMPILER_ID STREQUAL "NVIDIA" AND Kokkos_CXX_COMPILER_VERSION VERSION_LESS 11.3.0)
+     OR (Kokkos_CXX_COMPILER_ID STREQUAL "NVIDIA" AND Kokkos_CXX_HOST_COMPILER_ID STREQUAL "MSVC"))
+    LIST(REMOVE_ITEM COMPILE_ONLY_SOURCES TestTypeInfo.cpp)
+  endif()
+else()
+  if((KOKKOS_CXX_COMPILER_ID STREQUAL "Intel" AND KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 2021.2.0)
+     OR (KOKKOS_CXX_COMPILER_ID STREQUAL "NVIDIA" AND KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 11.3.0)
+     OR (KOKKOS_CXX_COMPILER_ID STREQUAL "NVIDIA" AND KOKKOS_CXX_HOST_COMPILER_ID STREQUAL "MSVC"))
+    LIST(REMOVE_ITEM COMPILE_ONLY_SOURCES TestTypeInfo.cpp)
+  endif()
 endif()
 
 #TestInterOp has a dependency on containers
@@ -940,6 +956,7 @@ endif()
 
 SET(DEFAULT_DEVICE_SOURCES
   UnitTestMainInit.cpp
+  TestCStyleMemoryManagement.cpp
   TestInitializationSettings.cpp
   TestParseCmdLineArgsAndEnvVars.cpp
   TestSharedSpace.cpp
@@ -955,7 +972,6 @@ SET(DEFAULT_DEVICE_SOURCES
   default/TestDefaultDeviceType_a3.cpp
   default/TestDefaultDeviceType_b3.cpp
   default/TestDefaultDeviceType_c3.cpp
-  default/TestDefaultDeviceType_d.cpp
   default/TestDefaultDeviceTypeResize.cpp
   default/TestDefaultDeviceTypeViewAPI.cpp
 )
@@ -981,7 +997,6 @@ if ((KOKKOS_ENABLE_OPENMPTARGET OR KOKKOS_ENABLE_OPENACC) AND KOKKOS_CXX_COMPILE
     default/TestDefaultDeviceType_a3.cpp
     default/TestDefaultDeviceType_b3.cpp
     default/TestDefaultDeviceType_c3.cpp
-    default/TestDefaultDeviceType_d.cpp
     default/TestDefaultDeviceTypeResize.cpp
     default/TestDefaultDeviceTypeViewAPI.cpp
   )
@@ -999,7 +1014,6 @@ if (KOKKOS_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
     default/TestDefaultDeviceType_a3.cpp
     default/TestDefaultDeviceType_b3.cpp
     default/TestDefaultDeviceType_c3.cpp
-    default/TestDefaultDeviceType_d.cpp
     default/TestDefaultDeviceTypeResize.cpp
     default/TestDefaultDeviceTypeViewAPI.cpp
   )

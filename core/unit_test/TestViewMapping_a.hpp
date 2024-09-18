@@ -643,9 +643,6 @@ void test_view_mapping() {
     static_assert(
         std::is_same_v<typename a_const_int_r3::non_const_scalar_array_type,
                        int** [4]>);
-
-    // std::cout << "typeid( const int**[4] ).name() = " << typeid( const
-    // int**[4] ).name() << std::endl;
   }
 
   //----------------------------------------

@@ -52,21 +52,19 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
     Policy policy = m_policy;
 
-    typename Policy::point_type unused;
     static_assert(1 < Policy::rank && Policy::rank < 7);
     static_assert(Policy::inner_direction == Iterate::Left ||
                   Policy::inner_direction == Iterate::Right);
 
     execute_tile<Policy::rank>(
-        unused, m_functor, policy,
+        m_functor, policy,
         std::integral_constant<Iterate, Policy::inner_direction>());
   }
 
   template <int Rank>
   inline std::enable_if_t<Rank == 2> execute_tile(
-      typename Policy::point_type offset, const FunctorAdapter& functor,
-      const Policy& policy, OpenMPTargetIterateRight) const {
-    (void)offset;
+      const FunctorAdapter& functor, const Policy& policy,
+      OpenMPTargetIterateRight) const {
     const Index begin_0 = policy.m_lower[0];
     const Index begin_1 = policy.m_lower[1];
 
@@ -82,9 +80,8 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
   template <int Rank>
   inline std::enable_if_t<Rank == 3> execute_tile(
-      typename Policy::point_type offset, const FunctorAdapter& functor,
-      const Policy& policy, OpenMPTargetIterateRight) const {
-    (void)offset;
+      const FunctorAdapter& functor, const Policy& policy,
+      OpenMPTargetIterateRight) const {
     const Index begin_0 = policy.m_lower[0];
     const Index begin_1 = policy.m_lower[1];
     const Index begin_2 = policy.m_lower[2];
@@ -105,9 +102,8 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
   template <int Rank>
   inline std::enable_if_t<Rank == 4> execute_tile(
-      typename Policy::point_type offset, const FunctorAdapter& functor,
-      const Policy& policy, OpenMPTargetIterateRight) const {
-    (void)offset;
+      const FunctorAdapter& functor, const Policy& policy,
+      OpenMPTargetIterateRight) const {
     const Index begin_0 = policy.m_lower[0];
     const Index begin_1 = policy.m_lower[1];
     const Index begin_2 = policy.m_lower[2];
@@ -132,9 +128,8 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
   template <int Rank>
   inline std::enable_if_t<Rank == 5> execute_tile(
-      typename Policy::point_type offset, const FunctorAdapter& functor,
-      const Policy& policy, OpenMPTargetIterateRight) const {
-    (void)offset;
+      const FunctorAdapter& functor, const Policy& policy,
+      OpenMPTargetIterateRight) const {
     const Index begin_0 = policy.m_lower[0];
     const Index begin_1 = policy.m_lower[1];
     const Index begin_2 = policy.m_lower[2];
@@ -163,9 +158,8 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
   template <int Rank>
   inline std::enable_if_t<Rank == 6> execute_tile(
-      typename Policy::point_type offset, const FunctorAdapter& functor,
-      const Policy& policy, OpenMPTargetIterateRight) const {
-    (void)offset;
+      const FunctorAdapter& functor, const Policy& policy,
+      OpenMPTargetIterateRight) const {
     const Index begin_0 = policy.m_lower[0];
     const Index begin_1 = policy.m_lower[1];
     const Index begin_2 = policy.m_lower[2];
@@ -200,9 +194,8 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
   template <int Rank>
   inline std::enable_if_t<Rank == 2> execute_tile(
-      typename Policy::point_type offset, const FunctorAdapter& functor,
-      const Policy& policy, OpenMPTargetIterateLeft) const {
-    (void)offset;
+      const FunctorAdapter& functor, const Policy& policy,
+      OpenMPTargetIterateLeft) const {
     const Index begin_0 = policy.m_lower[0];
     const Index begin_1 = policy.m_lower[1];
 
@@ -218,9 +211,8 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
   template <int Rank>
   inline std::enable_if_t<Rank == 3> execute_tile(
-      typename Policy::point_type offset, const FunctorAdapter& functor,
-      const Policy& policy, OpenMPTargetIterateLeft) const {
-    (void)offset;
+      const FunctorAdapter& functor, const Policy& policy,
+      OpenMPTargetIterateLeft) const {
     const Index begin_0 = policy.m_lower[0];
     const Index begin_1 = policy.m_lower[1];
     const Index begin_2 = policy.m_lower[2];
@@ -241,9 +233,8 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
   template <int Rank>
   inline std::enable_if_t<Rank == 4> execute_tile(
-      typename Policy::point_type offset, const FunctorAdapter& functor,
-      const Policy& policy, OpenMPTargetIterateLeft) const {
-    (void)offset;
+      const FunctorAdapter& functor, const Policy& policy,
+      OpenMPTargetIterateLeft) const {
     const Index begin_0 = policy.m_lower[0];
     const Index begin_1 = policy.m_lower[1];
     const Index begin_2 = policy.m_lower[2];
@@ -268,9 +259,8 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
   template <int Rank>
   inline std::enable_if_t<Rank == 5> execute_tile(
-      typename Policy::point_type offset, const FunctorAdapter& functor,
-      const Policy& policy, OpenMPTargetIterateLeft) const {
-    (void)offset;
+      const FunctorAdapter& functor, const Policy& policy,
+      OpenMPTargetIterateLeft) const {
     const Index begin_0 = policy.m_lower[0];
     const Index begin_1 = policy.m_lower[1];
     const Index begin_2 = policy.m_lower[2];
@@ -299,9 +289,8 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
   template <int Rank>
   inline std::enable_if_t<Rank == 6> execute_tile(
-      typename Policy::point_type offset, const FunctorAdapter& functor,
-      const Policy& policy, OpenMPTargetIterateLeft) const {
-    (void)offset;
+      const FunctorAdapter& functor, const Policy& policy,
+      OpenMPTargetIterateLeft) const {
     const Index begin_0 = policy.m_lower[0];
     const Index begin_1 = policy.m_lower[1];
     const Index begin_2 = policy.m_lower[2];

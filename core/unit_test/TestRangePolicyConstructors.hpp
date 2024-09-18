@@ -145,7 +145,7 @@ TEST(TEST_CATEGORY, range_policy_round_trip_conversion_fires) {
   ASSERT_DEATH((void)Policy(0, W(&n)), msg);
 #else
   ::testing::internal::CaptureStderr();
-  ASSERT_NO_THROW((void)Policy(0, W(&n)));
+  (void)Policy(0, W(&n));
   auto s = std::string(::testing::internal::GetCapturedStderr());
 #ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
   if (Kokkos::show_warnings()) {
@@ -164,13 +164,16 @@ struct B {  // round-trip conversion would not compile
 };
 
 TEST(TEST_CATEGORY, range_policy_one_way_convertible_bounds) {
-  using Policy = Kokkos::RangePolicy<>;
+  using Policy    = Kokkos::RangePolicy<>;
+  using IndexType = Policy::index_type;
 
-  static_assert(std::is_convertible_v<B, Policy::index_type>);
-  static_assert(!std::is_convertible_v<Policy::index_type, B>);
+  static_assert(std::is_convertible_v<B, IndexType>);
+  static_assert(!std::is_convertible_v<IndexType, B>);
 
   int const n = 1;
-  ASSERT_NO_THROW((void)Policy(0, B(&n)));
+  Policy policy(0, B(&n));
+  EXPECT_EQ(policy.begin(), static_cast<IndexType>(0));
+  EXPECT_EQ(policy.end(), static_cast<IndexType>(1));
 }
 
 TEST(TEST_CATEGORY, range_policy_check_sign_changes) {
@@ -193,7 +196,7 @@ TEST(TEST_CATEGORY, range_policy_check_sign_changes) {
   {
     ::testing::internal::CaptureStderr();
     std::int64_t n = std::numeric_limits<std::int64_t>::max();
-    ASSERT_NO_THROW((void)UInt32Policy(0, n));
+    (void)UInt32Policy(0, n);
     auto s = std::string(::testing::internal::GetCapturedStderr());
 #ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
     if (Kokkos::show_warnings()) {
@@ -204,7 +207,7 @@ TEST(TEST_CATEGORY, range_policy_check_sign_changes) {
   {
     ::testing::internal::CaptureStderr();
     std::int64_t n = std::numeric_limits<std::int64_t>::min();
-    ASSERT_NO_THROW((void)UInt32Policy(n, 0));
+    (void)UInt32Policy(n, 0);
     auto s = std::string(::testing::internal::GetCapturedStderr());
 #ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
     if (Kokkos::show_warnings()) {

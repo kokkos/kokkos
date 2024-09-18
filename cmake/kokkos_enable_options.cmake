@@ -58,8 +58,14 @@ KOKKOS_ENABLE_OPTION(IMPL_CUDA_UNIFIED_MEMORY OFF "Whether to leverage unified m
 KOKKOS_ENABLE_OPTION(DEPRECATED_CODE_4    ON "Whether code deprecated in major release 4 is available" )
 KOKKOS_ENABLE_OPTION(DEPRECATION_WARNINGS ON "Whether to emit deprecation warnings" )
 KOKKOS_ENABLE_OPTION(HIP_RELOCATABLE_DEVICE_CODE  OFF "Whether to enable relocatable device code (RDC) for HIP")
-KOKKOS_ENABLE_OPTION(IMPL_SYCL_RELOCATABLE_DEVICE_CODE  ON "Whether to enable relocatable device code (RDC) for SYCL")
-MARK_AS_ADVANCED(Kokkos_ENABLE_IMPL_SYCL_RELOCATABLE_DEVICE_CODE)
+
+# Disabling RDC is only available since oneAPI 2023.1.0
+IF(KOKKOS_ENABLE_SYCL AND KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM AND KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 2023.1.0)
+  SET(SYCL_RDC_DEFAULT ON)
+ELSE()
+  SET(SYCL_RDC_DEFAULT OFF)
+ENDIF()
+KOKKOS_ENABLE_OPTION(SYCL_RELOCATABLE_DEVICE_CODE  ${SYCL_RDC_DEFAULT} "Whether to enable relocatable device code (RDC) for SYCL")
 KOKKOS_ENABLE_OPTION(TESTS         OFF  "Whether to build the unit tests")
 KOKKOS_ENABLE_OPTION(BENCHMARKS    OFF  "Whether to build the benchmarks")
 KOKKOS_ENABLE_OPTION(EXAMPLES      OFF  "Whether to build the examples")
