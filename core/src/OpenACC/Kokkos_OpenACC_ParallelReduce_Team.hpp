@@ -151,8 +151,18 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
 #define KOKKOS_IMPL_ACC_REDUCE_TEAM_PRAGMA \
   vector vector_length(team_size* vector_length)
 #define KOKKOS_IMPL_ACC_REDUCE_TEAM_ITRS league_size* team_size* vector_length
-#define KOKKOS_IMPL_ACC_REDUCE_TEAM_LEAGUE_ID_INIT \
-  i / (team_size * vector_length)
+#ifdef KOKKOS_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE
+#define KOKKOS_IMPL_ACC_REDUCE_TEAM_MEMBER_INIT                          \
+  int league_rank = i / (team_size * vector_length);                     \
+  int team_rank   = i % (team_size * vector_length);                     \
+  typename Policy::member_type team(league_rank, league_size, team_rank, \
+                                    team_size, vector_length);
+#else
+#define KOKKOS_IMPL_ACC_REDUCE_TEAM_MEMBER_INIT                          \
+  int league_rank = i / (team_size * vector_length);                     \
+  typename Policy::member_type team(league_rank, league_size, team_size, \
+                                    vector_length);
+#endif
 
 namespace Kokkos {
 
@@ -258,7 +268,10 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
 #define KOKKOS_IMPL_ACC_REDUCE_TEAM_PRAGMA \
   num_workers(team_size) vector_length(vector_length)
 #define KOKKOS_IMPL_ACC_REDUCE_TEAM_ITRS league_size
-#define KOKKOS_IMPL_ACC_REDUCE_TEAM_LEAGUE_ID_INIT i
+#define KOKKOS_IMPL_ACC_REDUCE_TEAM_MEMBER_INIT                          \
+  int league_rank = i;                                                   \
+  typename Policy::member_type team(league_rank, league_size, team_size, \
+                                    vector_length);
 
 // FIXME_OPENACC: below implementation conforms to the OpenACC standard, but
 // the NVHPC compiler (V22.11) fails due to the lack of support for lambda
@@ -372,31 +385,29 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
 
 #endif /* #ifdef KOKKOS_ENABLE_OPENACC_COLLAPSE_HIERARCHICAL_CONSTRUCTS */
 
-#define KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_DISPATCH_SCHEDULE(REDUCER,     \
-                                                              OPERATOR)    \
-  namespace Kokkos::Experimental::Impl {                                   \
-  template <class Policy, class ValueType, class Functor>                  \
-  void OpenACCParallelReduceTeam##REDUCER(Policy const policy,             \
-                                          ValueType& aval,                 \
-                                          Functor const& afunctor,         \
-                                          int async_arg) {                 \
-    auto const functor       = afunctor;                                   \
-    auto val                 = aval;                                       \
-    auto const league_size   = policy.league_size();                       \
-    auto const team_size     = policy.team_size();                         \
-    auto const vector_length = policy.impl_vector_length();                \
+#define KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_DISPATCH_SCHEDULE(REDUCER,  \
+                                                              OPERATOR) \
+  namespace Kokkos::Experimental::Impl {                                \
+  template <class Policy, class ValueType, class Functor>               \
+  void OpenACCParallelReduceTeam##REDUCER(Policy const policy,          \
+                                          ValueType& aval,              \
+                                          Functor const& afunctor,      \
+                                          int async_arg) {              \
+    auto const functor       = afunctor;                                \
+    auto val                 = aval;                                    \
+    auto const league_size   = policy.league_size();                    \
+    auto const team_size     = policy.team_size();                      \
+    auto const vector_length = policy.impl_vector_length();             \
     /* clang-format off */ \
-    KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang num_gangs(league_size) KOKKOS_IMPL_ACC_REDUCE_TEAM_PRAGMA reduction(OPERATOR : val) copyin(functor) async(async_arg))                                               \
-    /* clang-format on */                                                  \
-    for (int i = 0; i < KOKKOS_IMPL_ACC_REDUCE_TEAM_ITRS; i++) {           \
-      int league_id = KOKKOS_IMPL_ACC_REDUCE_TEAM_LEAGUE_ID_INIT;          \
-      typename Policy::member_type team(league_id, league_size, team_size, \
-                                        vector_length);                    \
-      functor(team, val);                                                  \
-    }                                                                      \
-    acc_wait(async_arg);                                                   \
-    aval = val;                                                            \
-  }                                                                        \
+    KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang num_gangs(league_size) KOKKOS_IMPL_ACC_REDUCE_TEAM_PRAGMA reduction(OPERATOR : val) copyin(functor) async(async_arg))                                            \
+    /* clang-format on */                                               \
+    for (int i = 0; i < KOKKOS_IMPL_ACC_REDUCE_TEAM_ITRS; i++) {        \
+      KOKKOS_IMPL_ACC_REDUCE_TEAM_MEMBER_INIT                           \
+      functor(team, val);                                               \
+    }                                                                   \
+    acc_wait(async_arg);                                                \
+    aval = val;                                                         \
+  }                                                                     \
   }  // namespace Kokkos::Experimental::Impl
 
 #define KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_TEAM_HELPER(REDUCER, OPERATOR) \
@@ -445,6 +456,6 @@ KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_TEAM_HELPER(BOr, |);
 #undef KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_DISPATCH_SCHEDULE
 #undef KOKKOS_IMPL_ACC_REDUCE_TEAM_PRAGMA
 #undef KOKKOS_IMPL_ACC_REDUCE_TEAM_ITRS
-#undef KOKKOS_IMPL_ACC_REDUCE_TEAM_LEAGUE_ID_INIT
+#undef KOKKOS_IMPL_ACC_REDUCE_TEAM_MEMBER_INIT
 
 #endif /* #ifndef KOKKOS_OPENACC_PARALLEL_REDUCE_TEAM_HPP */
