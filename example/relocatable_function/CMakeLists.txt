@@ -6,4 +6,4 @@ KOKKOS_ADD_EXECUTABLE(
   SOURCES main.cpp functor.cpp
 )
 
-add_test(NAME Kokkos_RelocatableFunction COMMAND Kokkos_example_relocatable_function)
+add_test(NAME Kokkos_Example_RelocatableFunction COMMAND Kokkos_example_relocatable_function)
