@@ -267,7 +267,6 @@ class DynamicView : public Kokkos::ViewTraits<DataType, P...> {
 
  public:
   //----------------------------------------------------------------------
-
   /** \brief  Compatible view of array of scalar types */
   using array_type =
       DynamicView<typename traits::data_type, typename traits::device_type>;

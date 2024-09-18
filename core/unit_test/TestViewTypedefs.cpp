@@ -55,13 +55,15 @@ constexpr bool test_view_typedefs_impl() {
   static_assert(std::is_same_v<typename ViewType::data_type, DataType>);
   static_assert(std::is_same_v<typename ViewType::const_data_type, typename data_analysis<DataType>::const_data_type>);
   static_assert(std::is_same_v<typename ViewType::non_const_data_type, typename data_analysis<DataType>::non_const_data_type>);
-  
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   // FIXME: these should be deprecated and for proper testing (I.e. where this is different from data_type)
   // we would need ensemble types which use the hidden View dimension facility of View (i.e. which make
   // "specialize" not void)
   static_assert(std::is_same_v<typename ViewType::scalar_array_type, DataType>);
   static_assert(std::is_same_v<typename ViewType::const_scalar_array_type, typename data_analysis<DataType>::const_data_type>);
   static_assert(std::is_same_v<typename ViewType::non_const_scalar_array_type, typename data_analysis<DataType>::non_const_data_type>);
+#endif
 #ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
   static_assert(std::is_same_v<typename ViewType::specialize, void>);
 #endif
@@ -96,7 +98,7 @@ constexpr bool test_view_typedefs_impl() {
   // =========================================
   static_assert(std::is_same_v<typename ViewType::traits, ViewTraitsType>);
   static_assert(std::is_same_v<typename ViewType::array_type,
-                               Kokkos::View<typename ViewType::scalar_array_type, typename ViewType::array_layout,
+                               Kokkos::View<typename ViewType::data_type, typename ViewType::array_layout,
                                             typename ViewType::device_type, typename ViewTraitsType::hooks_policy,
                                             typename ViewType::memory_traits>>);
   static_assert(std::is_same_v<typename ViewType::const_type,
