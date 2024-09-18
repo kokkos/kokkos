@@ -422,15 +422,18 @@ struct ViewTraits {
   using const_data_type     = typename data_analysis::const_type;
   using non_const_data_type = typename data_analysis::non_const_type;
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   //------------------------------------
   // Compatible array of trivial type traits:
-
-  using scalar_array_type = typename data_analysis::scalar_array_type;
-  using const_scalar_array_type =
+  using scalar_array_type KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use data_type instead .") = typename data_analysis::type;
+  using const_scalar_array_type KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use const_data_type instead .") =
       typename data_analysis::const_scalar_array_type;
-  using non_const_scalar_array_type =
+  using non_const_scalar_array_type KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use non_const_data_type instead .") =
       typename data_analysis::non_const_scalar_array_type;
-
+#endif
   //------------------------------------
   // Value type traits:
 
@@ -464,9 +467,18 @@ struct ViewTraits {
 
   using size_type = typename MemorySpace::size_type;
 
-  enum { is_hostspace = std::is_same_v<MemorySpace, HostSpace> };
   enum { is_managed = MemoryTraits::is_unmanaged == 0 };
-  enum { is_random_access = MemoryTraits::is_random_access == 1 };
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  enum {
+    is_hostspace KOKKOS_DEPRECATED = std::is_same_v<MemorySpace, HostSpace>
+  };
+  enum {
+    is_random_access KOKKOS_DEPRECATED_WITH_COMMENT(
+        "Use memory_traits::is_random_access instead.") =
+        MemoryTraits::is_random_access == 1
+  };
+#endif
 
   //------------------------------------
 };

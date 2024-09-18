@@ -220,9 +220,8 @@ class OffsetView : public View<DataType, Properties...> {
   //----------------------------------------
   /** \brief  Compatible view of array of scalar types */
   using array_type =
-      OffsetView<typename traits::scalar_array_type,
-                 typename traits::array_layout, typename traits::device_type,
-                 typename traits::memory_traits>;
+      OffsetView<typename traits::data_type, typename traits::array_layout,
+                 typename traits::device_type, typename traits::memory_traits>;
 
   /** \brief  Compatible view of const data type */
   using const_type =
@@ -300,7 +299,7 @@ class OffsetView : public View<DataType, Properties...> {
   // interoperability with View
  private:
   using view_type =
-      View<typename traits::scalar_array_type, typename traits::array_layout,
+      View<typename traits::data_type, typename traits::array_layout,
            typename traits::device_type, typename traits::memory_traits>;
 
  public:

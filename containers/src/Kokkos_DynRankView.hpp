@@ -489,7 +489,7 @@ class DynRankView : private View<DataType*******, Properties...> {
 
   /** \brief  Compatible view of array of scalar types */
   using array_type = DynRankView<
-      typename drvtraits::scalar_array_type, typename drvtraits::array_layout,
+      typename drvtraits::data_type, typename drvtraits::array_layout,
       typename drvtraits::device_type, typename drvtraits::memory_traits>;
 
   /** \brief  Compatible view of const data type */
