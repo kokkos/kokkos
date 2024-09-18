@@ -449,10 +449,15 @@ class DynRankView : private View<DataType*******, Properties...> {
   using reference_type = typename view_type::reference_type;
   using pointer_type   = typename view_type::pointer_type;
 
-  using scalar_array_type           = value_type;
-  using const_scalar_array_type     = const_value_type;
-  using non_const_scalar_array_type = non_const_value_type;
-  using specialize                  = typename view_type::specialize;
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  using scalar_array_type KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use data_type instead .") = value_type;
+  using const_scalar_array_type KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use const_data_type instead .") = const_value_type;
+  using non_const_scalar_array_type KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use non_const_data_type instead .") = non_const_value_type;
+#endif
+  using specialize = typename view_type::specialize;
 
   // typedefs in View for mdspan compatibility
   // cause issues with MSVC+CUDA
@@ -480,7 +485,7 @@ class DynRankView : private View<DataType*******, Properties...> {
 
   /** \brief  Compatible view of array of scalar types */
   using array_type = DynRankView<
-      typename drvtraits::scalar_array_type, typename drvtraits::array_layout,
+      typename drvtraits::data_type, typename drvtraits::array_layout,
       typename drvtraits::device_type, typename drvtraits::memory_traits>;
 
   /** \brief  Compatible view of const data type */

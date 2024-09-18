@@ -246,9 +246,9 @@ class View : public ViewTraits<DataType, Properties...> {
 
  public:
   //----------------------------------------
-  /** \brief  Compatible view of array of scalar types */
+  /** \brief  Compatible view of array of data types */
   using array_type =
-      View<typename traits::scalar_array_type, typename traits::array_layout,
+      View<typename traits::data_type, typename traits::array_layout,
            typename traits::device_type, typename traits::hooks_policy,
            typename traits::memory_traits>;
 
@@ -1506,9 +1506,10 @@ struct CommonViewAllocProp;
 
 template <class ValueType>
 struct CommonViewAllocProp<void, ValueType> {
-  using value_type        = ValueType;
+  using value_type = ValueType;
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   using scalar_array_type = ValueType;
-
+#endif
   template <class... Views>
   KOKKOS_INLINE_FUNCTION CommonViewAllocProp(const Views&...) {}
 };
