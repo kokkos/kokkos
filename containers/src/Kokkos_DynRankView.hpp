@@ -108,6 +108,9 @@ struct DynRankDimTraits {
   }
 
   // Create the layout for the rank-7 view.
+  // Because the underlying View is rank-7, preserve "unspecified" for
+  // dimension 8.
+
   // Non-strided Layout
   template <typename Layout>
   KOKKOS_INLINE_FUNCTION static std::enable_if_t<
@@ -123,7 +126,7 @@ struct DynRankDimTraits {
         layout.dimension[4] != unspecified ? layout.dimension[4] : 1,
         layout.dimension[5] != unspecified ? layout.dimension[5] : 1,
         layout.dimension[6] != unspecified ? layout.dimension[6] : 1,
-        layout.dimension[7] != unspecified ? layout.dimension[7] : 1);
+        layout.dimension[7] != unspecified ? layout.dimension[7] : unspecified);
     new_layout.stride = layout.stride;
     return new_layout;
   }
@@ -133,22 +136,23 @@ struct DynRankDimTraits {
   KOKKOS_INLINE_FUNCTION static std::enable_if_t<
       (std::is_same_v<Layout, Kokkos::LayoutStride>), Layout>
   createLayout(const Layout& layout) {
-    return Layout(layout.dimension[0] != unspecified ? layout.dimension[0] : 1,
-                  layout.stride[0],
-                  layout.dimension[1] != unspecified ? layout.dimension[1] : 1,
-                  layout.stride[1],
-                  layout.dimension[2] != unspecified ? layout.dimension[2] : 1,
-                  layout.stride[2],
-                  layout.dimension[3] != unspecified ? layout.dimension[3] : 1,
-                  layout.stride[3],
-                  layout.dimension[4] != unspecified ? layout.dimension[4] : 1,
-                  layout.stride[4],
-                  layout.dimension[5] != unspecified ? layout.dimension[5] : 1,
-                  layout.stride[5],
-                  layout.dimension[6] != unspecified ? layout.dimension[6] : 1,
-                  layout.stride[6],
-                  layout.dimension[7] != unspecified ? layout.dimension[7] : 1,
-                  layout.stride[7]);
+    return Layout(
+        layout.dimension[0] != unspecified ? layout.dimension[0] : 1,
+        layout.stride[0],
+        layout.dimension[1] != unspecified ? layout.dimension[1] : 1,
+        layout.stride[1],
+        layout.dimension[2] != unspecified ? layout.dimension[2] : 1,
+        layout.stride[2],
+        layout.dimension[3] != unspecified ? layout.dimension[3] : 1,
+        layout.stride[3],
+        layout.dimension[4] != unspecified ? layout.dimension[4] : 1,
+        layout.stride[4],
+        layout.dimension[5] != unspecified ? layout.dimension[5] : 1,
+        layout.stride[5],
+        layout.dimension[6] != unspecified ? layout.dimension[6] : 1,
+        layout.stride[6],
+        layout.dimension[7] != unspecified ? layout.dimension[7] : unspecified,
+        layout.stride[7]);
   }
 
   // Extra overload to match that for specialize types
