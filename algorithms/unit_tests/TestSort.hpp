@@ -208,8 +208,10 @@ void test_sort_integer_overflow() {
 
 }  // namespace SortImpl
 
-#if !defined(KOKKOS_ENABLE_OPENMPTARGET)
 TEST(TEST_CATEGORY, SortUnsignedValueType) {
+#if defined(KOKKOS_COMPILER_CRAY_LLVM) && defined(KOKKOS_ENABLE_OPENMPTARGET)
+  GTEST_SKIP() << "known to fail with OpenMPTarget+Cray LLVM";
+#endif
   using ExecutionSpace = TEST_EXECSPACE;
   using key_type       = unsigned;
   constexpr int N      = 171;
@@ -225,6 +227,9 @@ TEST(TEST_CATEGORY, SortUnsignedValueType) {
 }
 
 TEST(TEST_CATEGORY, SortEmptyView) {
+#if defined(KOKKOS_COMPILER_CRAY_LLVM) && defined(KOKKOS_ENABLE_OPENMPTARGET)
+  GTEST_SKIP() << "known to fail with OpenMPTarget+Cray LLVM";
+#endif
   using ExecutionSpace = TEST_EXECSPACE;
 
   // does not matter if we use int or something else
@@ -235,7 +240,6 @@ TEST(TEST_CATEGORY, SortEmptyView) {
   Kokkos::sort(ExecutionSpace(), v);
   Kokkos::sort(v);
 }
-#endif
 
 }  // namespace Test
 #endif
