@@ -3,10 +3,7 @@ name: "CodeQL"
 on:
   push:
     branches: [ "master", "develop", "release-*" ]
-  pull_request:
-    branches: [ "develop" ]
-
-permissions: read-all
+  workflow_call:
 
 jobs:
   analyze:
