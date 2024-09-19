@@ -1,0 +1,52 @@
+name: basic-test
+
+on:
+  push:
+    branches:
+      - develop
+  pull_request:
+    paths-ignore:
+    - '**/*.md'
+    types: [ opened, reopened, synchronize ]
+
+concurrency:
+  group: ${ {github.event_name }}-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{github.event_name == 'pull_request'}}
+
+permissions: read-all
+
+jobs:
+  gcc-serial-cpp17:: 
+    name: gcc-openmp-cpp17
+    runs-on: [ubuntu-latest]
+
+    steps:
+      - name: checkout code
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        with:
+          path: kokkos
+
+      - name: configure kokkos
+        run: |
+          mkdir -p kokkos/{build,install}
+          cd kokkos/build
+          cmake \
+            -GNinja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_INSTALL_PREFIX=$PWD/../install \
+            -DCMAKE_CXX_COMPILER=clang++ \
+            -DCMAKE_CXX_FLAGS="-Werror" \
+            -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+            -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
+            -DKokkos_ENABLE_EXAMPLES=ON \
+            -DKokkos_ENABLE_SERIAL=ON \
+            -DKokkos_ENABLE_TESTS=ON \
+            ..
+
+      - name: build_and_install_kokkos
+        working-directory: kokkos/build
+        run: ninja -j4 install
+
+      - name: test_kokkos
+        working-directory: kokkos/build
+        run: ctest --timeout 2000 -j2 --output-on-failure

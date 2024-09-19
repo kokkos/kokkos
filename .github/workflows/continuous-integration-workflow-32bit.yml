@@ -4,10 +4,7 @@ on:
   push:
     branches:
       - develop
-  pull_request:
-    paths-ignore:
-    - '**/*.md'
-    types: [ opened, reopened, synchronize ]
+  workflow_call
 
 permissions: read-all
 

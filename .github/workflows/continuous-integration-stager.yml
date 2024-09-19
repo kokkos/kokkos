@@ -1,0 +1,45 @@
+name: staged-continuous-integration
+
+on:
+  push:
+    branches:
+      - develop
+  workflow_call
+
+concurrency:
+  group: ${ {github.event_name }}-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{github.event_name == 'pull_request'}}
+
+permissions: read-all
+
+jobs:
+  # pre-stage
+  clang-format-check:
+    uses: ./.github/workflows/clang-format-check.yml
+
+  codeql:
+    uses: ./.github/workflows/codeql.yml
+
+  initial-check:
+    uses: ./.github/workflows/continuous-integration-workflow-snifftest.yml  
+
+  # primary testing
+  windows-cuda:
+    needs: [initial-check, codeql, clang-format-check]
+    uses: ./.github/workflows/windows.yml
+
+  standard-linux:
+    needs: [initial-check, codeql, clang-format-check]
+    uses: ./.github/workflows/continuous-integration-workflow.yml  
+
+  hpx-linux:
+    needs: [initial-check, codeql, clang-format-check]
+    uses: ./.github/workflows/continuous-integration-workflow-hpx.yml  
+
+  32bit-linux:
+    needs: [initial-check, codeql, clang-format-check]
+    uses: ./.github/workflows/continuous-integration-workflow-32bit.yml
+
+  osx:
+    needs: [initial-check, codeql, clang-format-check]
+    uses: ./.github/workflows/osx.yml 
