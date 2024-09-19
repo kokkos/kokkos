@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - develop
-  workflow_call
+  workflow_call:
 
 permissions: read-all
 

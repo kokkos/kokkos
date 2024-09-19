@@ -1,7 +1,7 @@
 name: github-windows
 
 on:
-  workflow_call
+  workflow_call:
 
 concurrency:
   group: ${ {github.event_name }}-${{ github.workflow }}-${{ github.ref }}

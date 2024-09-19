@@ -4,10 +4,7 @@ on:
   push:
     branches:
       - develop
-  pull_request:
-    paths-ignore:
-    - '**/*.md'
-    types: [ opened, reopened, synchronize ]
+  workflow_call:
 
 concurrency:
   group: ${ {github.event_name }}-${{ github.workflow }}-${{ github.ref }}
@@ -16,7 +13,7 @@ concurrency:
 permissions: read-all
 
 jobs:
-  gcc-serial-cpp17:: 
+  gcc-serial-cpp17: 
     name: gcc-openmp-cpp17
     runs-on: [ubuntu-latest]
 

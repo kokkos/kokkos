@@ -4,7 +4,10 @@ on:
   push:
     branches:
       - develop
-  workflow_call
+  pull_request:
+    paths-ignore:
+    - '**/*.md'
+    types: [ opened, reopened, synchronize ]
 
 concurrency:
   group: ${ {github.event_name }}-${{ github.workflow }}-${{ github.ref }}
