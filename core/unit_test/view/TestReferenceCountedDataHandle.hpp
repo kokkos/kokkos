@@ -45,7 +45,7 @@ using const_data_handle_anonym_t =
 
 }  // namespace
 
-TEST(TEST_CATEGORY, RefCountedDataHandle_Typedefs) {
+void test_ref_counted_data_handle_typedefs() {
   Kokkos::parallel_for(
       Kokkos::RangePolicy<TEST_EXECSPACE>(0, 1), KOKKOS_LAMBDA(int) {
         static_assert(
@@ -57,6 +57,10 @@ TEST(TEST_CATEGORY, RefCountedDataHandle_Typedefs) {
         static_assert(
             std::is_same_v<typename data_handle_t::memory_space, mem_t>);
       });
+}
+
+TEST(TEST_CATEGORY, RefCountedDataHandle_Typedefs) {
+  test_ref_counted_data_handle_typedefs();
 }
 
 template <class DataHandleType, class ConstDataHandleType>

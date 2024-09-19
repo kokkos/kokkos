@@ -391,7 +391,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
       # Write to a temporary intermediate file and call configure_file to avoid
       # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
       file(WRITE ${dir}/dummy.cpp
-          "#include <Test${TagHostAccessible}_Category.hpp>\n"
+          "#include <Test${Tag}_Category.hpp>\n"
           "#include <view/Test${Name}.hpp>\n"
       )
       configure_file(${dir}/dummy.cpp ${file})

@@ -43,7 +43,7 @@ using data_handle_t       = typename acc_t::data_handle_type;
 using const_data_handle_t = typename const_acc_t::data_handle_type;
 }  // namespace
 
-TEST(TEST_CATEGORY, RefCountedAcc_Typedefs) {
+void test_refcountedacc_typedefs() {
   Kokkos::parallel_for(
       Kokkos::RangePolicy<TEST_EXECSPACE>(0, 1), KOKKOS_LAMBDA(int) {
         static_assert(std::is_same_v<typename acc_t::element_type, element_t>);
@@ -60,7 +60,11 @@ TEST(TEST_CATEGORY, RefCountedAcc_Typedefs) {
       });
 }
 
-TEST(TEST_CATEGORY, RefCountedAcc_Ctors) {
+TEST(TEST_CATEGORY, RefCountedAcc_Typedefs) {
+  test_refcountedacc_typedefs();
+}
+
+void test_refcountedacc_ctors() {
   Kokkos::parallel_for(Kokkos::RangePolicy<TEST_EXECSPACE>(0, 1), KOKKOS_LAMBDA(int) {
       // default ctor and non-const to const
       {
@@ -84,7 +88,11 @@ TEST(TEST_CATEGORY, RefCountedAcc_Ctors) {
 });
 }
 
-TEST(TEST_CATEGORY, RefCountedAcc_ConversionToDefaultAcc) {
+TEST(TEST_CATEGORY, RefCountedAcc_Ctors) {
+  test_refcountedacc_ctors();
+}
+
+void test_refcountedacc_conversion_to_default_acc() {
   Kokkos::parallel_for(
       Kokkos::RangePolicy<TEST_EXECSPACE>(0, 1), KOKKOS_LAMBDA(int) {
         // default ctor and non-const to const
@@ -100,7 +108,11 @@ TEST(TEST_CATEGORY, RefCountedAcc_ConversionToDefaultAcc) {
       });
 }
 
-TEST(TEST_CATEGORY, RefCountedAcc_Access) {
+TEST(TEST_CATEGORY, RefCountedAcc_ConversionToDefaultAcc) {
+  test_refcountedacc_conversion_to_default_acc();
+}
+
+void test_refcountedacc_access() {
   element_t* ptr =
       (element_t*)Kokkos::kokkos_malloc<TEST_EXECSPACE::memory_space>(
           100 * sizeof(element_t));
@@ -122,4 +134,8 @@ TEST(TEST_CATEGORY, RefCountedAcc_Access) {
   ASSERT_FALSE(h_errors & 1);
   ASSERT_FALSE(h_errors & 2);
   Kokkos::kokkos_free(ptr);
+}
+
+TEST(TEST_CATEGORY, RefCountedAcc_Access) {
+  test_refcountedacc_access();
 }
