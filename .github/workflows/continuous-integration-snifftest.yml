@@ -41,8 +41,8 @@ jobs:
 
       - name: build_and_install_kokkos
         working-directory: kokkos/build
-        run: make -j2 install
+        run: make -j4 install
 
       - name: test_kokkos
         working-directory: kokkos/build
-        run: ctest --timeout 2000 -j1 --output-on-failure
+        run: ctest --timeout 2000 -j2 --output-on-failure

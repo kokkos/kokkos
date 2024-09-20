@@ -20,7 +20,12 @@ jobs:
   clang-format-check:
     uses: ./.github/workflows/clang-format-check.yml
 
+  initial-check:
+    uses: ./.github/workflows/continuous-integration-snifftest.yml
+
+  # primary testing
   codeql:
+    needs: [initial-check, clang-format-check]
     # need to set manual permissions since it requires security-events write
     # but then we have to set everything else manually to read since the
     # default is overwritten
@@ -30,33 +35,28 @@ jobs:
       # only required for workflows in private repositories
       actions: read
       contents: read
-
     uses: ./.github/workflows/codeql.yml
 
-  initial-check:
-    uses: ./.github/workflows/continuous-integration-snifftest.yml
-
-  # primary testing
   windows-cuda:
-    needs: [initial-check, codeql, clang-format-check]
+    needs: [initial-check, clang-format-check]
     uses: ./.github/workflows/continuous-integration-windows.yml
 
   standard-linux:
-    needs: [initial-check, codeql, clang-format-check]
+    needs: [initial-check, clang-format-check]
     uses: ./.github/workflows/continuous-integration-linux.yml
 
   hpx-linux:
-    needs: [initial-check, codeql, clang-format-check]
+    needs: [initial-check, clang-format-check]
     uses: ./.github/workflows/continuous-integration-linux-hpx.yml
 
   linux-32bit:
-    needs: [initial-check, codeql, clang-format-check]
+    needs: [initial-check, clang-format-check]
     uses: ./.github/workflows/continuous-integration-linux-32bit.yml
 
   osx:
-    needs: [initial-check, codeql, clang-format-check]
+    needs: [initial-check, clang-format-check]
     uses: ./.github/workflows/continuous-integration-osx.yml
 
   performance-test:
-    needs: [initial-check, codeql, clang-format-check]
+    needs: [initial-check, clang-format-check]
     uses: ./.github/workflows/performance-benchmark.yml
