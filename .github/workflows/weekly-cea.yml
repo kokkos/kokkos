@@ -7,6 +7,9 @@ on:
 
 jobs:
   build_and_test:
+    env:
+      build_jobs: 20
+
     strategy:
       matrix:
         build_type:
@@ -39,7 +42,7 @@ jobs:
       - name: Build
         run: |
           module load ${{ matrix.backend.modules }}
-          cmake --build build --parallel 20
+          cmake --build build --parallel $build_jobs
 
       - name: Test
         run: |
