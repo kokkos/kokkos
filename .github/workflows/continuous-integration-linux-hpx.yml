@@ -1,9 +1,6 @@
 name: github-Linux-hpx
 
 on:
-  push:
-    branches:
-      - develop
   workflow_call:
 
 concurrency:

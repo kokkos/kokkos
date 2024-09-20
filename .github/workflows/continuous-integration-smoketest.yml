@@ -1,9 +1,6 @@
 name: basic-test
 
 on:
-  push:
-    branches:
-      - develop
   workflow_call:
 
 concurrency:

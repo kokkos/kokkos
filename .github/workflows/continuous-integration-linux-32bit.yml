@@ -1,9 +1,6 @@
 name: github-Linux-32bit
 
 on:
-  push:
-    branches:
-      - develop
   workflow_call:
 
 permissions: read-all
