@@ -13,8 +13,8 @@ concurrency:
 permissions: read-all
 
 jobs:
-  gcc-serial-cpp17: 
-    name: gcc-openmp-cpp17
+  gcc-smoketest:
+    name: gcc-smoketest
     runs-on: [ubuntu-latest]
 
     steps:

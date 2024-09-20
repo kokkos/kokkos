@@ -21,7 +21,7 @@ jobs:
     uses: ./.github/workflows/clang-format-check.yml
 
   initial-check:
-    uses: ./.github/workflows/continuous-integration-snifftest.yml
+    uses: ./.github/workflows/continuous-integration-smoketest.yml
 
   # primary testing
   codeql:
