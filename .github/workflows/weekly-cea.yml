@@ -22,8 +22,7 @@ jobs:
     runs-on: ${{ matrix.backend.runner }}
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Configure
         run: |
