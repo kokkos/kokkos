@@ -31,6 +31,8 @@ jobs:
           cmake -B build \
             -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
             -DCMAKE_CXX_STANDARD=17 \
+            -DCMAKE_CXX_FLAGS=-Werror \
+            -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
             ${{ matrix.backend.flags }}
