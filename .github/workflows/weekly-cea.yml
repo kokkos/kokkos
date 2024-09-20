@@ -14,9 +14,8 @@ jobs:
           - Debug
         backend:
           - name: cuda-a100
-            flags:
-              cmake: -DKokkos_ENABLE_CUDA=ON -DKokkos_ARCH_AMPERE80=ON
-              module: gcc/11.2.0/gcc-4.8.5 cuda/12.2.1/gcc-11.2.0 cmake/3.28.3/gcc-11.2.0
+            flags: -DKokkos_ENABLE_CUDA=ON -DKokkos_ARCH_AMPERE80=ON
+            modules: gcc/11.2.0/gcc-4.8.5 cuda/12.2.1/gcc-11.2.0 cmake/3.28.3/gcc-11.2.0
             queue: gpua100
             runner: [self-hosted, cuda]
 
@@ -28,21 +27,21 @@ jobs:
 
       - name: Configure
         run: |
-          module load ${{ matrix.backend.flags.module }}
+          module load ${{ matrix.backend.modules }}
           cmake -B build \
             -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
             -DCMAKE_CXX_STANDARD=17 \
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
-            ${{ matrix.backend.flags.cmake }}
+            ${{ matrix.backend.flags }}
 
       - name: Build
         run: |
-          module load ${{ matrix.backend.flags.module }}
+          module load ${{ matrix.backend.modules }}
           cmake --build build --parallel 20
 
       - name: Test
         run: |
-          module load ${{ matrix.backend.flags.module }}
+          module load ${{ matrix.backend.modules }}
           srun --nodes=1 --time=01:00:00 -p ${{ matrix.backend.queue }} --gres=gpu:1 \
           ctest --test-dir build --output-on-failure
