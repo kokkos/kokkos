@@ -542,6 +542,7 @@ void test_duplicate_stream() {
 }  // namespace AlgoRandomImpl
 
 TEST(TEST_CATEGORY, Random_XorShift64) {
+  // FIXME_OPENMPTARGET - causes ICE with CrayClang compiler
 #if defined(KOKKOS_COMPILER_CRAY_LLVM) && defined(KOKKOS_ENABLE_OPENMPTARGET)
   GTEST_SKIP() << "known to fail with OpenMPTarget+Cray LLVM";
 #endif
@@ -566,6 +567,7 @@ TEST(TEST_CATEGORY, Random_XorShift64) {
 
 TEST(TEST_CATEGORY, Random_XorShift1024_0) {
   using ExecutionSpace = TEST_EXECSPACE;
+  // FIXME_OPENMPTARGET - causes ICE with CrayClang compiler
 #if defined(KOKKOS_COMPILER_CRAY_LLVM) && defined(KOKKOS_ENABLE_OPENMPTARGET)
   GTEST_SKIP() << "known to fail with OpenMPTarget+Cray LLVM";
 #endif
