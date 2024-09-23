@@ -28,6 +28,9 @@ namespace {
 #ifdef KOKKOS_ENABLE_OPENMP
 template <class Lambda1, class Lambda2>
 void run_threaded_test(const Lambda1 l1, const Lambda2 l2) {
+  if (omp_get_max_threads() == 1)
+    GTEST_SKIP() << "insufficient number of supported concurrent threads";
+
 #pragma omp parallel num_threads(2)
   {
     if (omp_get_thread_num() == 0) l1();
@@ -171,11 +174,6 @@ void run_exec_space_thread_safety_team_policy() {
 }
 
 TEST(TEST_CATEGORY, exec_space_thread_safety_team_policy) {
-#ifdef KOKKOS_ENABLE_OPENMP  // FIXME_OPENMP
-  if (Kokkos::OpenMP().concurrency() == 1)
-    GTEST_SKIP() << "test needs at least two OpenMP threads";
-#endif
-
 #ifdef KOKKOS_ENABLE_OPENACC  // FIXME_OPENACC
   GTEST_SKIP()
       << "skipping OpenACC test since unsupported host-side atomics cause "
@@ -308,11 +306,6 @@ void run_exec_space_thread_safety_team_policy_reduce() {
 }
 
 TEST(TEST_CATEGORY, exec_space_thread_safety_team_policy_reduce) {
-#ifdef KOKKOS_ENABLE_OPENMP  // FIXME_OPENMP
-  if (Kokkos::OpenMP().concurrency() == 1)
-    GTEST_SKIP() << "test needs at least two OpenMP threads";
-#endif
-
 #ifdef KOKKOS_ENABLE_OPENACC  // FIXME_OPENACC
   GTEST_SKIP()
       << "skipping OpenACC test since unsupported host-side atomics cause "
