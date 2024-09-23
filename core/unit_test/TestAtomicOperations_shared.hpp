@@ -19,8 +19,7 @@
 namespace Test {
 
 // FIXME_SYCL This doesn't work yet for SYCL+CUDA
-#if !defined(KOKKOS_ENABLE_OPENMPTARGET) || !defined(KOKKOS_ENABLE_SYCL) || \
-    defined(KOKKOS_ARCH_INTEL_GPU)
+#if !defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ARCH_INTEL_GPU)
 template <typename ExecutionSpace>
 struct TestSharedAtomicsFunctor {
   Kokkos::View<int, typename ExecutionSpace::memory_space> m_view;
@@ -41,6 +40,10 @@ struct TestSharedAtomicsFunctor {
 };
 
 TEST(TEST_CATEGORY, atomic_shared) {
+  // FIXME_OPENMPTARGET - causes ICE with CrayClang compiler
+#if defined(KOKKOS_COMPILER_CRAY_LLVM) && defined(KOKKOS_ENABLE_OPENMPTARGET)
+  GTEST_SKIP() << "known to fail with OpenMPTarget+Cray LLVM";
+#endif
   TEST_EXECSPACE exec;
   Kokkos::View<int, typename TEST_EXECSPACE::memory_space> view("ref_value");
   auto team_size =
