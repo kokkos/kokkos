@@ -419,7 +419,7 @@ class ParallelReduce<CombinedFunctorReducerType,
                                    team_shared_size, thread_local_size);
 
     if (execute_in_serial(m_policy.space())) {
-      HostThreadTeamData& data = *(m_instance->get_thread_data());
+      HostThreadTeamData& data = *(m_instance->get_thread_data(0));
       pointer_type ptr =
           m_result_ptr ? m_result_ptr : pointer_type(data.pool_reduce_local());
       reference_type update       = reducer.init(ptr);
