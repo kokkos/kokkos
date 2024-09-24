@@ -30,7 +30,9 @@ static_assert(false,
 #include <Kokkos_HostSpace.hpp>
 #include <Kokkos_ScratchSpace.hpp>
 #include <Kokkos_Parallel.hpp>
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 #include <Kokkos_TaskScheduler.hpp>
+#endif
 #include <Kokkos_Layout.hpp>
 #include <impl/Kokkos_HostSharedPtr.hpp>
 #include <impl/Kokkos_Profiling_Interface.hpp>
@@ -203,7 +205,9 @@ struct MemorySpaceAccess<Kokkos::OpenMP::memory_space,
 
 #include <OpenMP/Kokkos_OpenMP_Instance.hpp>
 #include <OpenMP/Kokkos_OpenMP_Team.hpp>
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 #include <OpenMP/Kokkos_OpenMP_Task.hpp>
+#endif
 
 #include <KokkosExp_MDRangePolicy.hpp>
 /*--------------------------------------------------------------------------*/

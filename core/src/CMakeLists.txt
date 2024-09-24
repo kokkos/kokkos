@@ -54,6 +54,9 @@ endif()
 
 if(KOKKOS_ENABLE_OPENMP)
   append_glob(KOKKOS_CORE_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/OpenMP/*.cpp)
+  if(NOT Kokkos_ENABLE_DEPRECATED_CODE_4)
+    list(REMOVE_ITEM KOKKOS_CORE_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/OpenMP/Kokkos_OpenMP_Task.cpp)
+  endif()
   append_glob(KOKKOS_CORE_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/OpenMP/*.hpp)
 endif()
 
@@ -84,6 +87,9 @@ endif()
 
 if(KOKKOS_ENABLE_SERIAL)
   append_glob(KOKKOS_CORE_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/Serial/*.cpp)
+  if(NOT Kokkos_ENABLE_DEPRECATED_CODE_4)
+    list(REMOVE_ITEM KOKKOS_CORE_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/Serial/Kokkos_Serial_Task.cpp)
+  endif()
   append_glob(KOKKOS_CORE_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/Serial/*.hpp)
 endif()
 

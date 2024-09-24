@@ -34,7 +34,9 @@ static_assert(false,
 #include <mutex>
 #include <thread>
 #include <Kokkos_Core_fwd.hpp>
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 #include <Kokkos_TaskScheduler.hpp>
+#endif
 #include <Kokkos_Layout.hpp>
 #include <Kokkos_HostSpace.hpp>
 #include <Kokkos_ScratchSpace.hpp>
@@ -284,7 +286,9 @@ std::vector<Serial> partition_space(const Serial&,
 #include <Serial/Kokkos_Serial_Parallel_Range.hpp>
 #include <Serial/Kokkos_Serial_Parallel_MDRange.hpp>
 #include <Serial/Kokkos_Serial_Parallel_Team.hpp>
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 #include <Serial/Kokkos_Serial_Task.hpp>
+#endif
 #include <Serial/Kokkos_Serial_UniqueToken.hpp>
 
 #endif  // defined( KOKKOS_ENABLE_SERIAL )

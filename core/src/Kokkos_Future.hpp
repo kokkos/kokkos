@@ -14,11 +14,17 @@
 //
 //@HEADER
 
-#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #include <Kokkos_Macros.hpp>
+
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 static_assert(false,
               "Including non-public Kokkos header files is not allowed.");
 #endif
+
+#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_4
+#error "The tasking framework is deprecated"
+#endif
+
 #ifndef KOKKOS_FUTURE_HPP
 #define KOKKOS_FUTURE_HPP
 
@@ -47,7 +53,8 @@ namespace Kokkos {
 // TODO @tasking @cleanup Make this the "normal" class template and make the old
 // code the specialization
 template <typename ValueType, typename ExecutionSpace, typename QueueType>
-class BasicFuture<ValueType, SimpleTaskScheduler<ExecutionSpace, QueueType>> {
+class KOKKOS_DEPRECATED
+    BasicFuture<ValueType, SimpleTaskScheduler<ExecutionSpace, QueueType>> {
  public:
   using value_type      = ValueType;
   using execution_space = ExecutionSpace;
@@ -244,7 +251,7 @@ class BasicFuture<ValueType, SimpleTaskScheduler<ExecutionSpace, QueueType>> {
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename ValueType, typename Scheduler>
-class BasicFuture {
+class KOKKOS_DEPRECATED BasicFuture {
  private:
   template <typename, typename>
   friend class BasicTaskScheduler;
@@ -413,10 +420,10 @@ class BasicFuture {
 
 // Is a Future with the given execution space
 template <typename, typename ExecSpace = void>
-struct is_future : public std::false_type {};
+struct KOKKOS_DEPRECATED is_future : public std::false_type {};
 
 template <typename ValueType, typename Scheduler, typename ExecSpace>
-struct is_future<BasicFuture<ValueType, Scheduler>, ExecSpace>
+struct KOKKOS_DEPRECATED is_future<BasicFuture<ValueType, Scheduler>, ExecSpace>
     : std::bool_constant<
           std::is_same_v<ExecSpace, typename Scheduler::execution_space> ||
           std::is_void_v<ExecSpace>> {};
@@ -463,7 +470,8 @@ class ResolveFutureArgOrder {
  *
  */
 template <class Arg1 = void, class Arg2 = void>
-using Future = typename Impl::ResolveFutureArgOrder<Arg1, Arg2>::type;
+using Future KOKKOS_DEPRECATED =
+    typename Impl::ResolveFutureArgOrder<Arg1, Arg2>::type;
 
 }  // namespace Kokkos
 

@@ -14,11 +14,17 @@
 //
 //@HEADER
 
-#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #include <Kokkos_Macros.hpp>
+
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 static_assert(false,
               "Including non-public Kokkos header files is not allowed.");
 #endif
+
+#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_4
+#error "The tasking framework is deprecated"
+#endif
+
 #ifndef KOKKOS_TASKSCHEDULER_HPP
 #define KOKKOS_TASKSCHEDULER_HPP
 
@@ -54,7 +60,7 @@ class TaskExec;
 }  // end namespace Impl
 
 template <class ExecSpace, class QueueType>
-class BasicTaskScheduler : public Impl::TaskSchedulerBase {
+class KOKKOS_DEPRECATED BasicTaskScheduler : public Impl::TaskSchedulerBase {
  public:
   using scheduler_type      = BasicTaskScheduler;
   using execution_space     = ExecSpace;
@@ -494,8 +500,8 @@ namespace Kokkos {
 // Construct a TaskTeam execution policy
 
 template <class T, class Scheduler>
-Impl::TaskPolicyWithPredecessor<Impl::TaskType::TaskTeam,
-                                Kokkos::BasicFuture<T, Scheduler>>
+KOKKOS_DEPRECATED Impl::TaskPolicyWithPredecessor<
+    Impl::TaskType::TaskTeam, Kokkos::BasicFuture<T, Scheduler>>
     KOKKOS_INLINE_FUNCTION
     TaskTeam(Kokkos::BasicFuture<T, Scheduler> arg_future,
              TaskPriority arg_priority = TaskPriority::Regular) {
@@ -503,7 +509,8 @@ Impl::TaskPolicyWithPredecessor<Impl::TaskType::TaskTeam,
 }
 
 template <class Scheduler>
-Impl::TaskPolicyWithScheduler<Impl::TaskType::TaskTeam, Scheduler>
+KOKKOS_DEPRECATED Impl::TaskPolicyWithScheduler<Impl::TaskType::TaskTeam,
+                                                Scheduler>
     KOKKOS_INLINE_FUNCTION TaskTeam(
         Scheduler arg_scheduler,
         std::enable_if_t<Kokkos::is_scheduler<Scheduler>::value, TaskPriority>
@@ -512,8 +519,8 @@ Impl::TaskPolicyWithScheduler<Impl::TaskType::TaskTeam, Scheduler>
 }
 
 template <class Scheduler, class PredecessorFuture>
-Impl::TaskPolicyWithScheduler<Kokkos::Impl::TaskType::TaskTeam, Scheduler,
-                              PredecessorFuture>
+KOKKOS_DEPRECATED Impl::TaskPolicyWithScheduler<
+    Kokkos::Impl::TaskType::TaskTeam, Scheduler, PredecessorFuture>
     KOKKOS_INLINE_FUNCTION
     TaskTeam(Scheduler arg_scheduler, PredecessorFuture arg_future,
              std::enable_if_t<Kokkos::is_scheduler<Scheduler>::value &&

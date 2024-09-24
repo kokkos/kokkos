@@ -33,7 +33,9 @@ static_assert(false,
 #include <OpenMPTarget/Kokkos_OpenMPTargetSpace.hpp>
 #include <Kokkos_ScratchSpace.hpp>
 #include <Kokkos_Parallel.hpp>
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 #include <Kokkos_TaskScheduler.hpp>
+#endif
 #include <Kokkos_Layout.hpp>
 #include <impl/Kokkos_Profiling_Interface.hpp>
 #include <impl/Kokkos_InitializationSettings.hpp>
@@ -148,7 +150,9 @@ struct DeviceTypeTraits<::Kokkos::Experimental::OpenMPTarget> {
 #include <OpenMPTarget/Kokkos_OpenMPTarget_Parallel.hpp>
 #include <OpenMPTarget/Kokkos_OpenMPTarget_ParallelFor_MDRange.hpp>
 #include <OpenMPTarget/Kokkos_OpenMPTarget_ParallelReduce_MDRange.hpp>
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 #include <OpenMPTarget/Kokkos_OpenMPTarget_Task.hpp>
+#endif
 
 /*--------------------------------------------------------------------------*/
 
