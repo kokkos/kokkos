@@ -23,6 +23,8 @@
 #include <SYCL/Kokkos_SYCL_TeamPolicy.hpp>
 #include <SYCL/Kokkos_SYCL_WorkgroupReduction.hpp>
 
+#include <sycl/ext/intel/experimental/grf_size_properties.hpp>
+
 #include <sstream>
 #include <vector>
 
@@ -354,11 +356,35 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
         cgh.depends_on(memcpy_event);
 #endif
 
+#ifdef SYCL_EXT_ONEAPI_KERNEL_PROPERTIES
+        auto get_properties = [&]() {
+          namespace syclex           = sycl::ext::oneapi::experimental;
+          namespace intelex          = sycl::ext::intel::experimental;
+          auto registerfile_property = Kokkos::Impl::if_c<
+              (Policy::registerfile_size > 0),
+              intelex::grf_size_key::value_t<Policy::registerfile_size>,
+              intelex::grf_size_automatic_key::value_t>::
+              select(intelex::grf_size<Policy::registerfile_size>,
+                     intelex::grf_size_automatic);
+          if constexpr (Policy::subgroup_size > 0)
+            return syclex::properties{
+                syclex::sub_group_size<Policy::subgroup_size>,
+                registerfile_property};
+          else
+            return syclex::properties{registerfile_property};
+        };
+        cgh.parallel_for(
+            sycl::nd_range<2>(
+                sycl::range<2>(m_team_size, n_wgroups * m_vector_size),
+                sycl::range<2>(m_team_size, m_vector_size)),
+            get_properties(), reduction_lambda);
+#else
         cgh.parallel_for(
             sycl::nd_range<2>(
                 sycl::range<2>(m_team_size, n_wgroups * m_vector_size),
                 sycl::range<2>(m_team_size, m_vector_size)),
             reduction_lambda);
+#endif
       };
 #ifdef SYCL_EXT_ONEAPI_GRAPH
       if constexpr (Policy::is_graph_kernel::value) {

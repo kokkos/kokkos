@@ -22,6 +22,9 @@
 #include <Kokkos_BitManipulation.hpp>
 #include <Kokkos_Parallel_Reduce.hpp>
 #include <SYCL/Kokkos_SYCL_WorkgroupReduction.hpp>
+
+#include <sycl/ext/intel/experimental/grf_size_properties.hpp>
+
 #include <vector>
 
 template <class CombinedFunctorReducerType, class... Traits>
@@ -322,9 +325,31 @@ class Kokkos::Impl::ParallelReduce<
         auto reduction_lambda = reduction_lambda_factory(
             local_mem, num_teams_done, results_ptr, values_per_thread);
 
+#if defined(__INTEL_LLVM_COMPILER) && __INTEL_LLVM_COMPILER >= 20230100
+        auto get_properties = [&]() {
+          namespace syclex           = sycl::ext::oneapi::experimental;
+          namespace intelex          = sycl::ext::intel::experimental;
+          auto registerfile_property = Kokkos::Impl::if_c<
+              (Policy::registerfile_size > 0),
+              intelex::grf_size_key::value_t<Policy::registerfile_size>,
+              intelex::grf_size_automatic_key::value_t>::
+              select(intelex::grf_size<Policy::registerfile_size>,
+                     intelex::grf_size_automatic);
+          if constexpr (Policy::subgroup_size > 0)
+            return syclex::properties{
+                syclex::sub_group_size<Policy::subgroup_size>,
+                registerfile_property};
+          else
+            return syclex::properties{registerfile_property};
+        };
+        cgh.parallel_for(
+            sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
+            get_properties(), reduction_lambda);
+#else
         cgh.parallel_for(
             sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
             reduction_lambda);
+#endif
       };
 
 #ifdef SYCL_EXT_ONEAPI_GRAPH
