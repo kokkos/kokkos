@@ -123,6 +123,7 @@ bool compute_gold(const std::string& name) {
     return false;
   } else {
     Kokkos::abort("invalid choice");
+    return false;  // unreachable
   }
 }
 

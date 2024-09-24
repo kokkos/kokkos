@@ -124,6 +124,7 @@ auto compute_gold(ViewType view, const std::string& name) {
     return KE::begin(view) + 156;
   } else {
     Kokkos::abort("invalid choice");
+    return KE::end(view);  // unreachable
   }
 }
 
