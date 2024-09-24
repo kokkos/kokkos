@@ -907,7 +907,7 @@ class simd<double, simd_abi::avx2_fixed_size<4>> {
       _mm256_sqrt_pd(static_cast<__m256d>(a)));
 }
 
-#ifdef __INTEL_COMPILER
+#ifdef KOKKOS_HAVE_INTEL_SVML
 
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     Experimental::simd<double, Experimental::simd_abi::avx2_fixed_size<4>>
@@ -1155,7 +1155,7 @@ copysign(
       _mm_sqrt_ps(static_cast<__m128>(a)));
 }
 
-#ifdef __INTEL_COMPILER
+#ifdef KOKKOS_HAVE_INTEL_SVML
 
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     Experimental::simd<float, Experimental::simd_abi::avx2_fixed_size<4>>
