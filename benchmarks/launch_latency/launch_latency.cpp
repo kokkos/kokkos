@@ -265,7 +265,7 @@ int main(int argc, char* argv[]) {
       } else {
         std::stringstream ss;
         ss << "unexpected argument \"" << arg << "\" at position " << i;
-        Kokkoa::abort(ss.str().c_str());
+        Kokkos::abort(ss.str().c_str());
       }
     }
 
