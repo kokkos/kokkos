@@ -84,7 +84,7 @@ void fill_view(ViewType dest_view, const std::string& name) {
   }
 
   else {
-    Kokkos::abort("invalid choice");
+    FAIL() << "invalid choice";
   }
 
   Kokkos::deep_copy(aux_view, v_h);
@@ -153,7 +153,7 @@ void verify_data(const std::string& name, ViewType1 test_view,
   }
 
   else {
-    Kokkos::abort("invalid choice");
+    FAIL() << "invalid choice";
   }
 }
 

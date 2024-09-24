@@ -154,7 +154,7 @@ void fill_view(ViewType dest_view, ValueType value, std::size_t count,
   }
 
   else {
-    Kokkos::abort("Kokkos: test: search_n: this should not happen");
+    FAIL() << "Kokkos: test: search_n: this should not happen";
   }
 
   Kokkos::deep_copy(aux_view, v_h);
