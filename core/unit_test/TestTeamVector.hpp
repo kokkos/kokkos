@@ -22,6 +22,93 @@
 #include <cstdint>
 #include <cinttypes>
 #include <TestNonTrivialScalarTypes.hpp>
+#include "Kokkos_Macros.hpp"
+#include "Kokkos_ReductionIdentity.hpp"
+
+namespace TestTeamVector {
+
+struct SumNotEqualToValueInit {
+  KOKKOS_DEFAULTED_FUNCTION
+  constexpr SumNotEqualToValueInit() = default;
+
+  KOKKOS_FUNCTION
+  constexpr SumNotEqualToValueInit(int i_) : i{i_} {}
+
+  KOKKOS_FUNCTION constexpr SumNotEqualToValueInit &operator=(int i_) {
+    i = i_;
+    return *this;
+  }
+
+  KOKKOS_FUNCTION
+  friend constexpr SumNotEqualToValueInit &operator+=(
+      SumNotEqualToValueInit &lhs, int i_) {
+    lhs.i += i_;
+    return lhs;
+  }
+  KOKKOS_FUNCTION
+  friend constexpr SumNotEqualToValueInit &operator+=(
+      SumNotEqualToValueInit &lhs, SumNotEqualToValueInit const &rhs) {
+    return lhs += rhs.i;
+  }
+
+  KOKKOS_FUNCTION
+  friend constexpr SumNotEqualToValueInit &operator*=(
+      SumNotEqualToValueInit &lhs, int i_) {
+    lhs.i *= i_;
+    return lhs;
+  }
+  KOKKOS_FUNCTION
+  friend constexpr SumNotEqualToValueInit &operator*=(
+      SumNotEqualToValueInit &lhs, SumNotEqualToValueInit const &rhs) {
+    return lhs *= rhs.i;
+  }
+
+  KOKKOS_FUNCTION friend constexpr bool operator==(
+      SumNotEqualToValueInit const &lhs, SumNotEqualToValueInit const &rhs) {
+    return lhs.i == rhs.i;
+  }
+  KOKKOS_FUNCTION friend constexpr bool operator!=(
+      SumNotEqualToValueInit const &lhs, SumNotEqualToValueInit const &rhs) {
+    return !(lhs == rhs);
+  }
+
+  KOKKOS_FUNCTION friend constexpr bool operator==(
+      SumNotEqualToValueInit const &lhs, int i_) {
+    return lhs.i == i_;
+  }
+  KOKKOS_FUNCTION friend constexpr bool operator!=(
+      SumNotEqualToValueInit const &lhs, int i_) {
+    return !(lhs == i_);
+  }
+
+  KOKKOS_FUNCTION friend constexpr bool operator==(
+      int i_, SumNotEqualToValueInit const &rhs) {
+    return i_ == rhs.i;
+  }
+  KOKKOS_FUNCTION friend constexpr bool operator!=(
+      int i_, SumNotEqualToValueInit const &rhs) {
+    return !(i_ == rhs);
+  }
+
+  KOKKOS_FUNCTION constexpr int get() const { return i; }
+  KOKKOS_FUNCTION constexpr operator int() const { return get(); }
+
+  int i = 2;
+};
+
+}  // namespace TestTeamVector
+
+template <>
+struct Kokkos::reduction_identity<TestTeamVector::SumNotEqualToValueInit> {
+  using value_type = TestTeamVector::SumNotEqualToValueInit;
+
+  KOKKOS_FUNCTION constexpr static value_type sum() { return value_type{0}; }
+  KOKKOS_FUNCTION constexpr static value_type prod() { return value_type{1}; }
+};
+
+static_assert(
+    Kokkos::reduction_identity<TestTeamVector::SumNotEqualToValueInit>::sum() !=
+    TestTeamVector::SumNotEqualToValueInit{});
 
 namespace TestTeamVector {
 
@@ -590,7 +677,42 @@ struct functor_vec_scan {
       val += i;
 
       if (final) {
-        Scalar test = 0;
+        auto test = Kokkos::reduction_identity<Scalar>::sum();
+        for (int k = 0; k <= i; k++) test += k;
+
+        if (test != val) {
+          Kokkos::printf("FAILED vector_par_scan %i %i %lf %lf\n",
+                         team.league_rank(), team.team_rank(),
+                         static_cast<double>(test), static_cast<double>(val));
+
+          flag() = 1;
+        }
+      }
+    });
+  }
+};
+
+// Tests specifically that reduction_identity<Scalar>::sum() is
+// used inside parallel_scan
+template <typename Scalar, class ExecutionSpace>
+struct functor_vec_scan_sum {
+  using policy_type     = Kokkos::TeamPolicy<ExecutionSpace>;
+  using execution_space = ExecutionSpace;
+
+  Kokkos::View<int, Kokkos::LayoutLeft, ExecutionSpace> flag;
+  functor_vec_scan_sum(
+      Kokkos::View<int, Kokkos::LayoutLeft, ExecutionSpace> flag_)
+      : flag(flag_) {}
+
+  KOKKOS_FUNCTION
+  void operator()(typename policy_type::member_type team) const {
+    Kokkos::parallel_scan(Kokkos::ThreadVectorRange(team, 13), [&](int i,
+                                                                   Scalar &val,
+                                                                   bool final) {
+      val += i;
+
+      if (final) {
+        Scalar test = Kokkos::reduction_identity<Scalar>::sum();
         for (int k = 0; k <= i; k++) test += k;
 
         if (test != val) {
@@ -621,7 +743,7 @@ struct functor_vec_scan_ret_val {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(typename policy_type::member_type team) const {
-    Scalar return_val;
+    auto return_val = Kokkos::reduction_identity<Scalar>::sum();
     int upper_bound = 13;
 
     Kokkos::parallel_scan(
@@ -630,7 +752,7 @@ struct functor_vec_scan_ret_val {
           val += i;
 
           if (final) {
-            Scalar test = 0;
+            auto test = Kokkos::reduction_identity<Scalar>::sum();
             for (int k = 0; k <= i; k++) test += k;
 
             if (test != val) {
@@ -739,6 +861,10 @@ bool test_scalar(int nteams, int team_size, int test) {
         Kokkos::TeamPolicy<ExecutionSpace>(nteams, team_size, 8),
         functor_vec_scan_ret_val<Scalar, ExecutionSpace>(d_flag, team_size));
 #endif
+  } else if (test == 13) {
+    Kokkos::parallel_for(
+        Kokkos::TeamPolicy<ExecutionSpace>(nteams, team_size, 8),
+        functor_vec_scan_sum<Scalar, ExecutionSpace>(d_flag));
   }
 
   Kokkos::deep_copy(h_flag, d_flag);
@@ -771,6 +897,51 @@ bool Test(int test) {
                          317, team_size, test);
   passed = passed && test_scalar<Test::array_reduce<double, 3>, ExecutionSpace>(
                          317, team_size, test);
+
+  return passed;
+}
+
+template <class ExecutionSpace>
+bool TestParallelScanUsesSum() {
+  bool passed = true;
+// With SYCL 33*8 exceeds the maximum work group size
+#ifdef KOKKOS_ENABLE_SYCL
+  int team_size = 31;
+#else
+  int team_size = 33;
+#endif
+  int const concurrency = ExecutionSpace().concurrency();
+  if (team_size > concurrency) team_size = concurrency;
+#if 0
+  passed = passed && test_scalar<SumNotEqualToValueInit, ExecutionSpace>(
+                         317, team_size, 0);
+#endif
+  passed = passed && test_scalar<SumNotEqualToValueInit, ExecutionSpace>(
+                         317, team_size, 1);
+  passed = passed && test_scalar<SumNotEqualToValueInit, ExecutionSpace>(
+                         317, team_size, 2);
+  passed = passed && test_scalar<SumNotEqualToValueInit, ExecutionSpace>(
+                         317, team_size, 3);
+  passed = passed && test_scalar<SumNotEqualToValueInit, ExecutionSpace>(
+                         317, team_size, 5);
+  passed = passed && test_scalar<SumNotEqualToValueInit, ExecutionSpace>(
+                         317, team_size, 6);
+  passed = passed && test_scalar<SumNotEqualToValueInit, ExecutionSpace>(
+                         317, team_size, 7);
+  passed = passed && test_scalar<SumNotEqualToValueInit, ExecutionSpace>(
+                         317, team_size, 8);
+  passed = passed && test_scalar<SumNotEqualToValueInit, ExecutionSpace>(
+                         317, team_size, 9);
+  passed = passed && test_scalar<SumNotEqualToValueInit, ExecutionSpace>(
+                         317, team_size, 10);
+#if 0
+  passed = passed && test_scalar<SumNotEqualToValueInit, ExecutionSpace>(
+                         317, team_size, 11);
+#endif
+  passed = passed && test_scalar<SumNotEqualToValueInit, ExecutionSpace>(
+                         317, team_size, 12);
+  passed = passed && test_scalar<SumNotEqualToValueInit, ExecutionSpace>(
+                         317, team_size, 13);
 
   return passed;
 }
@@ -1026,6 +1197,9 @@ TEST(TEST_CATEGORY, team_vector) {
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(10)));
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(11)));
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(12)));
+  ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(13)));
+
+  ASSERT_TRUE((TestTeamVector::TestParallelScanUsesSum<TEST_EXECSPACE>()));
 }
 
 TEST(TEST_CATEGORY, triple_nested_parallelism) {

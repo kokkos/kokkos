@@ -258,8 +258,10 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
         iType, Impl::TaskExec<Kokkos::Experimental::OpenMPTarget> >&
         loop_boundaries,
     const Lambda& lambda) {
-  ValueType accum = 0;
-  ValueType val, local_total;
+  ValueType accum;
+  Impl::reduction_identity_sum_or_value_initialize(accum);
+  ValueType val;
+  Impl::reduction_identity_sum_or_value_initialize(val);
   ValueType* shared = (ValueType*)loop_boundaries.thread.team_shared();
   int team_size     = loop_boundaries.thread.team_size();
   int team_rank =
@@ -268,7 +270,8 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
   // Intra-member scan
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
        i += loop_boundaries.increment) {
-    local_total = 0;
+    ValueType local_total;
+    Impl::reduction_identity_sum_or_value_initialize(local_total);
     lambda(i, local_total, false);
     val = accum;
     lambda(i, val, true);
@@ -283,7 +286,8 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
     for (iType i = 1; i < team_size; i += 1) {
       shared[i] += shared[i - 1];
     }
-    accum = 0;  // Member 0 set accum to 0 in preparation for inter-member scan
+    // Member 0 set accum to sum identity in preparation for inter-member scan
+    Impl::reduction_identity_sum_or_value_initialize(accum);
   }
 
   loop_boundaries.thread.team_barrier();
@@ -294,7 +298,8 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
   }
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
        i += loop_boundaries.increment) {
-    local_total = 0;
+    ValueType local_total;
+    Impl::reduction_identity_sum_or_value_initialize(local_total);
     lambda(i, local_total, false);
     val = accum;
     lambda(i, val, true);

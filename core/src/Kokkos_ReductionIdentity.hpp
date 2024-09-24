@@ -22,8 +22,10 @@
 #endif
 
 #include <Kokkos_Macros.hpp>
+#include "Kokkos_DetectionIdiom.hpp"
 #include <cfloat>
 #include <climits>
+#include <type_traits>
 
 namespace Kokkos {
 
@@ -388,6 +390,35 @@ struct reduction_identity<long double> {
   constexpr static long double max() { return -LDBL_MAX; }
   constexpr static long double min() { return LDBL_MAX; }
 };
+
+namespace Impl {
+template <typename T>
+using reduction_identity_sum_t = decltype(reduction_identity<T>::sum());
+
+template <typename T>
+KOKKOS_FUNCTION constexpr T reduction_identity_sum_or_value_initialize() {
+  if constexpr (Kokkos::is_detected_convertible_v<T, reduction_identity_sum_t,
+                                                  T>)
+    return reduction_identity<T>::sum();
+  else if constexpr (Kokkos::is_detected_v<reduction_identity_sum_t, T>)
+    static_assert(Kokkos::is_detected_v<reduction_identity_sum_t, T>,
+                  "Incorrect return type for reduction_identity<T>::sum(); "
+                  "should be convertible to T");
+  else if constexpr (std::is_default_constructible_v<T>)
+    return T{};
+  else
+    static_assert(std::is_default_constructible_v<T>,
+                  "Kokkos::reduction_identity<T>::sum() is not defined nor is "
+                  "T default constructible");
+}
+
+template <typename T>
+KOKKOS_FUNCTION constexpr T& reduction_identity_sum_or_value_initialize(T& t) {
+  t = reduction_identity_sum_or_value_initialize<T>();
+  return t;
+}
+
+}  // namespace Impl
 
 }  // namespace Kokkos
 

@@ -26,6 +26,7 @@
 
 #include <limits>     // std::numeric_limits
 #include <algorithm>  // std::max
+#include <Kokkos_ReductionIdentity.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -890,7 +891,8 @@ KOKKOS_INLINE_FUNCTION
   static_assert(std::is_same_v<ClosureValueType, ValueType>,
                 "Non-matching value types of closure and return type");
 
-  ValueType accum = ValueType();
+  ValueType accum;
+  Impl::reduction_identity_sum_or_value_initialize(accum);
 
   // Intra-member scan
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
@@ -925,6 +927,7 @@ KOKKOS_INLINE_FUNCTION
       void>::value_type;
 
   ValueType scan_val;
+  Impl::reduction_identity_sum_or_value_initialize(scan_val);
   parallel_scan(loop_boundaries, closure, scan_val);
 }
 
@@ -942,7 +945,8 @@ KOKKOS_INLINE_FUNCTION
   static_assert(std::is_same_v<ClosureValueType, ValueType>,
                 "Non-matching value types of closure and return type");
 
-  ValueType scan_val = ValueType();
+  ValueType scan_val;
+  Impl::reduction_identity_sum_or_value_initialize(scan_val);
 
 #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
 #pragma ivdep
@@ -966,6 +970,7 @@ KOKKOS_INLINE_FUNCTION
       Impl::FunctorPatternInterface::SCAN, void, ClosureType, void>::value_type;
 
   ValueType scan_val;
+  Impl::reduction_identity_sum_or_value_initialize(scan_val);
   parallel_scan(loop_boundaries, closure, scan_val);
 }
 

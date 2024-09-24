@@ -27,6 +27,7 @@
 #include <Kokkos_Atomic.hpp>
 #include <Threads/Kokkos_Threads_Spinwait.hpp>
 #include <Threads/Kokkos_Threads_State.hpp>
+#include <Kokkos_ReductionIdentity.hpp>
 
 //----------------------------------------------------------------------------
 
@@ -985,7 +986,8 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
   static_assert(std::is_same_v<closure_value_type, ValueType>,
                 "Non-matching value types of closure and return type");
 
-  auto scan_val = ValueType{};
+  ValueType scan_val;
+  Impl::reduction_identity_sum_or_value_initialize(scan_val);
 
   // Intra-member scan
 #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
@@ -1024,6 +1026,7 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
       void>::value_type;
 
   value_type scan_val;
+  Impl::reduction_identity_sum_or_value_initialize(scan_val);
   parallel_scan(loop_bounds, lambda, scan_val);
 }
 
@@ -1052,7 +1055,8 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
   static_assert(std::is_same_v<closure_value_type, ValueType>,
                 "Non-matching value types of closure and return type");
 
-  ValueType scan_val = ValueType();
+  ValueType scan_val;
+  Impl::reduction_identity_sum_or_value_initialize(scan_val);
 
 #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
 #pragma ivdep
@@ -1076,6 +1080,7 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
                                      void>::value_type;
 
   value_type scan_val;
+  Impl::reduction_identity_sum_or_value_initialize(scan_val);
   parallel_scan(loop_boundaries, lambda, scan_val);
 }
 

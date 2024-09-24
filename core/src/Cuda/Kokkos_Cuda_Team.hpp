@@ -707,18 +707,20 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
   const auto team_size = member.team_size();
   const auto team_rank = member.team_rank();
   const auto nchunk    = (end - start + team_size - 1) / team_size;
-  ValueType accum      = 0;
+  ValueType accum;
+  Impl::reduction_identity_sum_or_value_initialize(accum);
   // each team has to process one or more chunks of the prefix scan
   for (iType i = 0; i < nchunk; ++i) {
     auto ii = start + i * team_size + team_rank;
     // local accumulation for this chunk
-    ValueType local_accum = 0;
+    ValueType local_accum;
+    Impl::reduction_identity_sum_or_value_initialize(local_accum);
     // user updates value with prefix value
     if (ii < loop_bounds.end) lambda(ii, local_accum, false);
     // perform team scan
     local_accum = member.team_scan(local_accum);
     // add this blocks accum to total accumulation
-    auto val = accum + local_accum;
+    ValueType val = accum + local_accum;
     // user updates their data with total accumulation
     if (ii < loop_bounds.end) lambda(ii, val, true);
     // the last value needs to be propogated to next chunk
@@ -748,6 +750,7 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
       void>::value_type;
 
   value_type dummy;
+  Impl::reduction_identity_sum_or_value_initialize(dummy);
   parallel_scan(loop_bounds, lambda, dummy);
 }
 
@@ -863,6 +866,7 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
       Kokkos::Impl::FunctorPatternInterface::SCAN, void, Closure,
       void>::value_type;
   value_type dummy;
+  Impl::reduction_identity_sum_or_value_initialize(dummy);
   parallel_scan(loop_boundaries, closure, Kokkos::Sum<value_type>(dummy));
 }
 
@@ -887,6 +891,7 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
                 "Non-matching value types of closure and return type");
 
   ValueType accum;
+  Impl::reduction_identity_sum_or_value_initialize(accum);
   parallel_scan(loop_boundaries, closure, Kokkos::Sum<ValueType>(accum));
 
   return_val = accum;

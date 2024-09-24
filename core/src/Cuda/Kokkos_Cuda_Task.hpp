@@ -18,6 +18,7 @@
 #define KOKKOS_IMPL_CUDA_TASK_HPP
 
 #include <Kokkos_Macros.hpp>
+#include <Kokkos_ReductionIdentity.hpp>
 #if defined(KOKKOS_ENABLE_TASKDAG)
 
 //----------------------------------------------------------------------------
@@ -1063,12 +1064,14 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
     const iType bound = loop_boundaries.end + loop_boundaries.start;
     const int lane    = threadIdx.y * blockDim.x;
 
-    value_type accum = 0;
-    value_type val, y, local_total;
+    value_type accum;
+    Impl::reduction_identity_sum_or_value_initialize(accum);
+    value_type val;
+    Impl::reduction_identity_sum_or_value_initialize(val);
 
     for (iType i = loop_boundaries.start; i < bound;
          i += loop_boundaries.increment) {
-      val = 0;
+      Impl::reduction_identity_sum_or_value_initialize(val);
       if (i < loop_boundaries.end) closure(i, val, false);
 
       // intra-blockDim.y exclusive scan on 'val'
@@ -1077,21 +1080,21 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
       // INCLUSIVE scan
       for (int offset = blockDim.x; offset < Impl::CudaTraits::WarpSize;
            offset <<= 1) {
-        y = Kokkos::shfl_up(val, offset, Impl::CudaTraits::WarpSize);
+        value_type y = Kokkos::shfl_up(val, offset, Impl::CudaTraits::WarpSize);
         if (lane >= offset) {
           val += y;
         }
       }
 
       // pass accum to all threads
-      local_total = shfl_warp_broadcast<value_type>(
+      value_type local_total = shfl_warp_broadcast<value_type>(
           val, threadIdx.x + Impl::CudaTraits::WarpSize - blockDim.x,
           Impl::CudaTraits::WarpSize);
 
       // make EXCLUSIVE scan by shifting values over one
       val = Kokkos::shfl_up(val, blockDim.x, Impl::CudaTraits::WarpSize);
       if (threadIdx.y == 0) {
-        val = 0;
+        Impl::reduction_identity_sum_or_value_initialize(val);
       }
 
       val += accum;
@@ -1099,7 +1102,8 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
       accum += local_total;
     }
   } else {
-    value_type accum = 0;
+    value_type accum;
+    Impl::reduction_identity_sum_or_value_initialize(accum);
     for (iType i = loop_boundaries.start; i < loop_boundaries.end;
          i += loop_boundaries.increment) {
       closure(i, accum, true);
@@ -1128,12 +1132,14 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
     // make sure all threads perform all loop iterations
     const iType bound = loop_boundaries.end + loop_boundaries.start;
 
-    value_type accum = 0;
-    value_type val, y, local_total;
+    value_type accum;
+    Impl::reduction_identity_sum_or_value_initialize(accum);
+    value_type val;
+    Impl::reduction_identity_sum_or_value_initialize(val);
 
     for (iType i = loop_boundaries.start; i < bound;
          i += loop_boundaries.increment) {
-      val = 0;
+      Impl::reduction_identity_sum_or_value_initialize(val);
       if (i < loop_boundaries.end) closure(i, val, false);
 
       // intra-blockDim.x exclusive scan on 'val'
@@ -1141,20 +1147,20 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
 
       // INCLUSIVE scan
       for (int offset = 1; offset < blockDim.x; offset <<= 1) {
-        y = Kokkos::shfl_up(val, offset, blockDim.x);
+        value_type y = Kokkos::shfl_up(val, offset, blockDim.x);
         if (threadIdx.x >= offset) {
           val += y;
         }
       }
 
       // pass accum to all threads
-      local_total =
+      value_type local_total =
           shfl_warp_broadcast<value_type>(val, blockDim.x - 1, blockDim.x);
 
       // make EXCLUSIVE scan by shifting values over one
       val = Kokkos::shfl_up(val, 1, blockDim.x);
       if (threadIdx.x == 0) {
-        val = 0;
+        Impl::reduction_identity_sum_or_value_initialize(val);
       }
 
       val += accum;
@@ -1162,7 +1168,8 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
       accum += local_total;
     }
   } else {
-    value_type accum = 0;
+    value_type accum;
+    Impl::reduction_identity_sum_or_value_initialize(accum);
     for (iType i = loop_boundaries.start; i < loop_boundaries.end;
          i += loop_boundaries.increment) {
       closure(i, accum, true);
