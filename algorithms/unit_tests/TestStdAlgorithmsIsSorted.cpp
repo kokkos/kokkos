@@ -122,7 +122,7 @@ bool compute_gold(const std::string& name) {
   } else if (name == "large-b") {
     return false;
   } else {
-    FAIL() << "invalid choice";
+    Kokkos::abort("invalid choice");
   }
 }
 

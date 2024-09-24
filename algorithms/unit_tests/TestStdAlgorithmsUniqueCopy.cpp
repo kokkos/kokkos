@@ -146,7 +146,7 @@ std::size_t fill_view(ViewType dest_view, const std::string& name) {
   }
 
   else {
-    FAIL() << "invalid choice";
+    Kokkos::abort("invalid choice");
   }
 
   Kokkos::deep_copy(aux_view, v_h);

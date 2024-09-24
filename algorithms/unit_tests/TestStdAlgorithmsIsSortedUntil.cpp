@@ -123,7 +123,7 @@ auto compute_gold(ViewType view, const std::string& name) {
   } else if (name == "large-b") {
     return KE::begin(view) + 156;
   } else {
-    FAIL() << "invalid choice";
+    Kokkos::abort("invalid choice");
   }
 }
 
