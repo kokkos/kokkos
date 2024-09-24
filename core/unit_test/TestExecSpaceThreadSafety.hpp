@@ -28,7 +28,7 @@ namespace {
 #ifdef KOKKOS_ENABLE_OPENMP
 template <class Lambda1, class Lambda2>
 void run_threaded_test(const Lambda1 l1, const Lambda2 l2) {
-  if (omp_get_max_threads() == 1)
+  if (omp_get_max_threads() < 2)
     GTEST_SKIP() << "insufficient number of supported concurrent threads";
 
 #pragma omp parallel num_threads(2)

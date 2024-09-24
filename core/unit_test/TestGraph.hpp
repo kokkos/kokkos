@@ -201,7 +201,7 @@ TEST_F(TEST_CATEGORY_FIXTURE_DEATH(graph), can_instantiate_only_once) {
 TEST_F(TEST_CATEGORY_FIXTURE(graph),
        submit_onto_another_execution_space_instance) {
 #ifdef KOKKOS_ENABLE_OPENMP  // FIXME_OPENMP partition_space
-  if (ex.concurrency() == 1)
+  if (ex.concurrency() < 2)
     GTEST_SKIP() << "insufficient number of supported concurrent threads";
 #endif
 
