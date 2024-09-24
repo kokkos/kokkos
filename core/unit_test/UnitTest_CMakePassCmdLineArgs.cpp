@@ -22,7 +22,7 @@ int main(int argc, char* argv[]) {
   if (argc != 4 || std::string(argv[1]) != "one" ||
       std::string(argv[2]) != "2" || std::string(argv[3]) != "THREE") {
     std::cerr << "must be called as `<exe> one 2 THREE`\n";
-    std::exit(EXIT_FAILURE);
+    return EXIT_FAILURE;
   }
   return EXIT_SUCCESS;
 }
