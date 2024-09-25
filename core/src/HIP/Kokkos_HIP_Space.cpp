@@ -80,18 +80,23 @@ void* HIPSpace::allocate(const char* arg_label, const size_t arg_alloc_size,
                        false);
 }
 
-void* HIPSpace::impl_allocate(const hipStream_t stream, const char* arg_label,
+void* HIPSpace::impl_allocate([[maybe_unused]] const hipStream_t stream,
+                              const char* arg_label,
                               const size_t arg_alloc_size,
                               const size_t arg_logical_size,
                               const bool stream_sync_only) const {
   void* ptr = nullptr;
 
+#ifdef KOKKOS_ENABLE_IMPL_HIP_MALLOC_ASYNC
   auto const error_code = hipMallocAsync(&ptr, arg_alloc_size, stream);
   if (stream_sync_only) {
     KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamSynchronize(stream));
   } else {
     KOKKOS_IMPL_HIP_SAFE_CALL(hipDeviceSynchronize());
   }
+#else
+  auto const error_code = hipMalloc(&ptr, arg_alloc_size);
+#endif
 
   if (error_code != hipSuccess) {
     // This is the only way to clear the last error, which we should do here
