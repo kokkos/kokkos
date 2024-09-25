@@ -926,6 +926,7 @@ if(Kokkos_ENABLE_SYCL)
       sycl/TestSYCL_TeamScratchStreams.cpp
       ${SYCL_SOURCES3}
       sycl/TestSYCL_Spaces.cpp
+      sycl/TestSYCL_SubgroupSize.cpp
   )
 
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
