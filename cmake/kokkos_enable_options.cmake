@@ -43,15 +43,9 @@ ELSE()
 ENDIF()
 KOKKOS_ENABLE_OPTION(CUDA_LAMBDA ${CUDA_LAMBDA_DEFAULT} "Whether to allow lambda expressions on the device with NVCC **DEPRECATED**")
 
-# May be used to disable our use of CudaMallocAsync.  It had caused issues in
-# the past when UCX was used as MPI communication layer.  We expect it is
-# resolved but we keep the option around a bit longer to be safe.
-IF(KOKKOS_ENABLE_CUDA)
-  SET(CUDA_MALLOC_ASYNC_DEFAULT ON)
-ELSE()
-  SET(CUDA_MALLOC_ASYNC_DEFAULT OFF)
-ENDIF()
-KOKKOS_ENABLE_OPTION(IMPL_CUDA_MALLOC_ASYNC ${CUDA_MALLOC_ASYNC_DEFAULT}  "Whether to enable CudaMallocAsync (requires CUDA Toolkit 11.2)")
+# As of 09/2024, cudaMallocAsync causes issues with ICP and older version of UCX
+# as MPI communication layer.
+KOKKOS_ENABLE_OPTION(IMPL_CUDA_MALLOC_ASYNC OFF  "Whether to enable CudaMallocAsync (requires CUDA Toolkit 11.2)")
 KOKKOS_ENABLE_OPTION(IMPL_NVHPC_AS_DEVICE_COMPILER OFF "Whether to allow nvc++ as Cuda device compiler")
 KOKKOS_ENABLE_OPTION(IMPL_CUDA_UNIFIED_MEMORY OFF "Whether to leverage unified memory architectures for CUDA")
 
