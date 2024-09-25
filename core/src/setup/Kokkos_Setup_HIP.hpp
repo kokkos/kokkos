@@ -43,6 +43,11 @@
 #endif
 // clang-format on
 
+// The implementation of hipGraph in ROCm 5.2 is bugged, so we cannot use it.
+#if !((HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR == 2))
+#define KOKKOS_IMPL_HIP_NATIVE_GRAPH
+#endif
+
 #endif  // #if defined( KOKKOS_ENABLE_HIP )
 
 #endif
