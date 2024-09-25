@@ -221,7 +221,15 @@ TEST(TEST_CATEGORY, deep_copy_zero_memset) {
   listen_tool_events(Config::DisableAll(), Config::EnableKernels());
   Kokkos::View<int*, TEST_EXECSPACE> bla("bla", 8);
 
+  // for MI300A with unified memory, ZeroMemset uses a parallel for
   auto success =
+#if defined(KOKKOS_ENABLE_IMPL_HIP_UNIFIED_MEMORY) && \
+    defined(KOKKOS_ARCH_AMD_GFX942)
+      validate_existence([&]() { Kokkos::deep_copy(bla, 0); },
+                         [&](EndParallelForEvent) {
+                           return MatchDiagnostic{true, {"Found end event"}};
+                         });
+#else
       validate_absence([&]() { Kokkos::deep_copy(bla, 0); },
                        [&](BeginParallelForEvent) {
                          return MatchDiagnostic{true, {"Found begin event"}};
@@ -229,6 +237,7 @@ TEST(TEST_CATEGORY, deep_copy_zero_memset) {
                        [&](EndParallelForEvent) {
                          return MatchDiagnostic{true, {"Found end event"}};
                        });
+#endif
   ASSERT_TRUE(success);
   listen_tool_events(Config::DisableAll());
 }
