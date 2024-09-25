@@ -154,5 +154,81 @@ TEST(TEST_CATEGORY, RefCountedDataHandle) {
 }
 
 TEST(TEST_CATEGORY, RefCountedDataHandleAnonym) {
-  test_ref_counted_data_handle<data_handle_anonym_t, const_data_handle_anonym_t>();
+  test_ref_counted_data_handle<data_handle_anonym_t,
+                               const_data_handle_anonym_t>();
+}
+
+template <class T>
+KOKKOS_FUNCTION void unused_variable_sink(T) {}
+
+void test_ref_counted_data_handle_conversion() {
+  auto shared_alloc1 =
+      Kokkos::Impl::make_shared_allocation_record<element_t, mem_t,
+                                                  TEST_EXECSPACE>(
+          100, "Test1", mem_t(), nullptr,
+          std::integral_constant<bool, false>(),   // padding
+          std::integral_constant<bool, true>(),    // init
+          std::integral_constant<bool, false>());  // sequential_host_init
+
+  element_t* ptr1         = static_cast<element_t*>(shared_alloc1->data());
+  const element_t* c_ptr1 = ptr1;
+  unused_variable_sink(c_ptr1);
+
+  data_handle_t dh(shared_alloc1);
+  ASSERT_EQ(dh.use_count(), 1);
+  ASSERT_EQ(dh.get_label(), std::string("Test1"));
+  ASSERT_EQ(dh.get(), ptr1);
+  ASSERT_EQ(dh.has_record(), true);
+
+  auto shared_alloc2 =
+      Kokkos::Impl::make_shared_allocation_record<element_t, mem_t,
+                                                  TEST_EXECSPACE>(
+          100, "Test2", mem_t(), nullptr,
+          std::integral_constant<bool, false>(),   // padding
+          std::integral_constant<bool, true>(),    // init
+          std::integral_constant<bool, false>());  // sequential_host_init
+
+  element_t* ptr2         = static_cast<element_t*>(shared_alloc2->data());
+  const element_t* c_ptr2 = ptr2;
+  unused_variable_sink(c_ptr2);
+
+  data_handle_anonym_t dha(shared_alloc2);
+  ASSERT_EQ(dha.use_count(), 1);
+  ASSERT_EQ(dha.get_label(), std::string("Test2"));
+  ASSERT_EQ(dha.get(), ptr2);
+  ASSERT_EQ(dha.has_record(), true);
+
+  {
+    data_handle_anonym_t dha2(dh);
+    ASSERT_EQ(dha2.use_count(), 2);
+    ASSERT_EQ(dha2.get_label(), std::string("Test1"));
+    ASSERT_EQ(dha2.get(), ptr1);
+    ASSERT_EQ(dha2.has_record(), true);
+
+    data_handle_t dh2(dha);
+    ASSERT_EQ(dh2.use_count(), 2);
+    ASSERT_EQ(dh2.get_label(), std::string("Test2"));
+    ASSERT_EQ(dh2.get(), ptr2);
+    ASSERT_EQ(dh2.has_record(), true);
+
+    dha2 = dh2;
+    ASSERT_EQ(dha2.use_count(), 3);
+    ASSERT_EQ(dha2.get_label(), std::string("Test2"));
+    ASSERT_EQ(dha2.get(), ptr2);
+    ASSERT_EQ(dha2.has_record(), true);
+  }
+
+  ASSERT_EQ(dh.use_count(), 1);
+  ASSERT_EQ(dh.get_label(), std::string("Test1"));
+  ASSERT_EQ(dh.get(), ptr1);
+  ASSERT_EQ(dh.has_record(), true);
+
+  ASSERT_EQ(dha.use_count(), 1);
+  ASSERT_EQ(dha.get_label(), std::string("Test2"));
+  ASSERT_EQ(dha.get(), ptr2);
+  ASSERT_EQ(dha.has_record(), true);
+}
+
+TEST(TEST_CATEGORY, RefCountedDataHandleConversion) {
+  test_ref_counted_data_handle_conversion();
 }

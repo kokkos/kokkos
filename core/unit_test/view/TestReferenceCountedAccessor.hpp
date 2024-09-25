@@ -60,9 +60,10 @@ void test_refcountedacc_typedefs() {
       });
 }
 
-TEST(TEST_CATEGORY, RefCountedAcc_Typedefs) {
-  test_refcountedacc_typedefs();
-}
+TEST(TEST_CATEGORY, RefCountedAcc_Typedefs) { test_refcountedacc_typedefs(); }
+
+template <class T>
+KOKKOS_FUNCTION void unused_variable_sink(T) {}
 
 void test_refcountedacc_ctors() {
   Kokkos::parallel_for(Kokkos::RangePolicy<TEST_EXECSPACE>(0, 1), KOKKOS_LAMBDA(int) {
@@ -70,8 +71,9 @@ void test_refcountedacc_ctors() {
       {
         acc_t acc;
         const_acc_t c_acc(acc);
-        (void) c_acc;
-        static_assert(!std::is_constructible_v<acc_t, const_acc_t>);
+	static_assert(!std::is_constructible_v<acc_t, const_acc_t>);
+
+	unused_variable_sink(c_acc);
 }
 // from default_accessor
 {
@@ -80,17 +82,16 @@ void test_refcountedacc_ctors() {
   acc_t acc(defacc);
   const_acc_t c_acc1(defacc);
   const_acc_t c_acc2(c_defacc);
-  (void)acc;
-  (void)c_acc1;
-  (void)c_acc2;
   static_assert(!std::is_constructible_v<acc_t, const_defacc_t>);
+
+  unused_variable_sink(acc);
+  unused_variable_sink(c_acc1);
+  unused_variable_sink(c_acc2);
 }
 });
 }
 
-TEST(TEST_CATEGORY, RefCountedAcc_Ctors) {
-  test_refcountedacc_ctors();
-}
+TEST(TEST_CATEGORY, RefCountedAcc_Ctors) { test_refcountedacc_ctors(); }
 
 void test_refcountedacc_conversion_to_default_acc() {
   Kokkos::parallel_for(
@@ -136,6 +137,35 @@ void test_refcountedacc_access() {
   Kokkos::kokkos_free(ptr);
 }
 
-TEST(TEST_CATEGORY, RefCountedAcc_Access) {
-  test_refcountedacc_access();
+TEST(TEST_CATEGORY, RefCountedAcc_Access) { test_refcountedacc_access(); }
+
+void test_refcountedacc_conversion() {
+  Kokkos::parallel_for(
+      Kokkos::RangePolicy<TEST_EXECSPACE>(0, 1), KOKKOS_LAMBDA(int) {
+        using acc_anonym_t = Kokkos::Impl::ReferenceCountedAccessor<
+            element_t, Kokkos::AnonymousSpace, defacc_t>;
+        using const_acc_anonym_t = Kokkos::Impl::ReferenceCountedAccessor<
+            const element_t, Kokkos::AnonymousSpace, const_defacc_t>;
+        acc_t acc;
+        const_acc_t c_acc(acc);
+        acc_anonym_t acc_anonym(acc);
+        const_acc_anonym_t c_acc_anonym(acc);
+        acc   = acc_anonym;
+        c_acc = acc_anonym;
+        static_assert(!std::is_constructible_v<acc_t, const_acc_t>);
+        static_assert(!std::is_constructible_v<acc_anonym_t, const_acc_t>);
+        static_assert(
+            !std::is_constructible_v<acc_anonym_t, const_acc_anonym_t>);
+        static_assert(
+            !std::is_constructible_v<
+                Kokkos::Impl::ReferenceCountedAccessor<double, mem_t, defacc_t>,
+                acc_t>);
+
+        unused_variable_sink(c_acc);
+        unused_variable_sink(c_acc_anonym);
+      });
+}
+
+TEST(TEST_CATEGORY, RefCountedAcc_Conversion) {
+  test_refcountedacc_conversion();
 }
