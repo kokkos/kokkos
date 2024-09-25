@@ -7,14 +7,6 @@ FUNCTION(KOKKOS_ADD_BENCHMARK_DIRECTORY DIR_NAME)
     RETURN()
   ENDIF()
 
-  IF(KOKKOS_HAS_TRILINOS)
-    message(
-      STATUS
-      "Benchmarks are not supported when building as part of Trilinos"
-    )
-    RETURN()
-  ENDIF()
-
   ADD_SUBDIRECTORY(${DIR_NAME})
 ENDFUNCTION()
 

@@ -1,8 +1,5 @@
 ########################## NOTES ###############################################
 #  List the options for configuring kokkos using CMake method of doing it.
-#  These options then get mapped onto KOKKOS_SETTINGS environment variable by
-#  kokkos_settings.cmake.  It is separate to allow other packages to override
-#  these variables (e.g., TriBITS).
 
 ########################## AVAILABLE OPTIONS ###################################
 # Use lists for documentation, verification, and programming convenience
@@ -32,16 +29,8 @@ KOKKOS_ENABLE_OPTION(CUDA_LDG_INTRINSIC   OFF "Whether to use CUDA LDG intrinsic
 # In contrast to other CUDA-dependent, options CUDA_LAMBDA is ON by default.
 # That is problematic when CUDA is not enabled because this not only yields a
 # bogus warning, but also exports the Kokkos_ENABLE_CUDA_LAMBDA variable and
-# sets it to ON. This if-clause is a crutch that delays the refactoring of the
-# way we declare all options until after we get rid of TriBITS.
-IF (Trilinos_ENABLE_Kokkos AND TPL_ENABLE_CUDA)
-   SET(CUDA_LAMBDA_DEFAULT ON)
-ELSEIF (KOKKOS_ENABLE_CUDA)
-   SET(CUDA_LAMBDA_DEFAULT ON)
-ELSE()
-   SET(CUDA_LAMBDA_DEFAULT OFF)
-ENDIF()
-KOKKOS_ENABLE_OPTION(CUDA_LAMBDA ${CUDA_LAMBDA_DEFAULT} "Whether to allow lambda expressions on the device with NVCC **DEPRECATED**")
+# sets it to ON.
+KOKKOS_ENABLE_OPTION(CUDA_LAMBDA ${KOKKOS_ENABLE_CUDA} "Whether to allow lambda expressions on the device with NVCC **DEPRECATED**")
 
 # As of 09/2024, cudaMallocAsync causes issues with ICP and older version of UCX
 # as MPI communication layer.
@@ -97,12 +86,7 @@ mark_as_advanced(Kokkos_ENABLE_IMPL_MDSPAN)
 mark_as_advanced(Kokkos_ENABLE_MDSPAN_EXTERNAL)
 mark_as_advanced(Kokkos_ENABLE_IMPL_SKIP_COMPILER_MDSPAN)
 
-IF (Trilinos_ENABLE_Kokkos)
-  SET(COMPLEX_ALIGN_DEFAULT OFF)
-ELSE()
-  SET(COMPLEX_ALIGN_DEFAULT ON)
-ENDIF()
-KOKKOS_ENABLE_OPTION(COMPLEX_ALIGN ${COMPLEX_ALIGN_DEFAULT}  "Whether to align Kokkos::complex to 2*alignof(RealType)")
+KOKKOS_ENABLE_OPTION(COMPLEX_ALIGN ON "Whether to align Kokkos::complex to 2*alignof(RealType)")
 
 IF (KOKKOS_ENABLE_TESTS)
   SET(HEADER_SELF_CONTAINMENT_TESTS_DEFAULT ON)
