@@ -393,7 +393,7 @@ class OffsetView : public View<DataType, Properties...> {
       message +=
           "ends.size() "
           "(" +
-          std::to_string(begins.size()) +
+          std::to_string(ends.size()) +
           ")"
           " != Rank "
           "(" +
