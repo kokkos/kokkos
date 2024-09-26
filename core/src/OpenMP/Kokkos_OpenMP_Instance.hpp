@@ -53,8 +53,7 @@ struct OpenMPTraits {
 
 class OpenMPInternal {
  private:
-  OpenMPInternal(int arg_pool_size)
-      : m_pool_size{arg_pool_size}, m_level{omp_get_level()}, m_pool() {
+  OpenMPInternal(int arg_pool_size) : m_pool_size{arg_pool_size}, m_pool() {
     // guard pushing to all_instances
     {
       std::scoped_lock lock(all_instances_mutex);
@@ -69,7 +68,6 @@ class OpenMPInternal {
   bool m_initialized = false;
 
   int m_pool_size;
-  int m_level;
 
   HostThreadTeamData* m_pool[OpenMPTraits::MAX_THREAD_COUNT];
 
@@ -98,8 +96,7 @@ class OpenMPInternal {
 #else
     bool is_nested = static_cast<bool>(omp_get_nested());
 #endif
-    return (get_level() < omp_get_level() &&
-            !(is_nested && (omp_get_level() == 1)));
+    return (0 < omp_get_level() && !(is_nested && (omp_get_level() == 1)));
   }
 
   HostThreadTeamData* get_thread_data() const noexcept {
@@ -109,8 +106,6 @@ class OpenMPInternal {
   HostThreadTeamData* get_thread_data(int i) const noexcept {
     return m_pool[i];
   }
-
-  int get_level() const { return m_level; }
 
   bool is_initialized() const { return m_initialized; }
 
