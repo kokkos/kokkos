@@ -449,15 +449,17 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
     KOKKOS_EXPECTS(!graph_node);
 
     if (!Impl::is_empty_launch(grid, block)) {
-      auto *driver_ptr = Impl::allocate_driver_storage_for_kernel(driver);
+      auto *driver_ptr = Impl::allocate_driver_storage_for_kernel(
+          HIP(hip_instance->m_stream, ManageStream::no), driver);
 
       // Unlike in the non-graph case, we can get away with doing an async copy
       // here because the `DriverType` instance is held in the GraphNodeImpl
       // which is guaranteed to be alive until the graph instance itself is
       // destroyed, where there should be a fence ensuring that the allocation
       // associated with this kernel on the device side isn't deleted.
-      hipMemcpyAsync(driver_ptr, &driver, sizeof(DriverType), hipMemcpyDefault,
-                     hip_instance->m_stream);
+      KOKKOS_IMPL_HIP_SAFE_CALL(
+          hipMemcpyAsync(driver_ptr, &driver, sizeof(DriverType),
+                         hipMemcpyDefault, hip_instance->m_stream));
 
       void const *args[] = {&driver_ptr};
 
