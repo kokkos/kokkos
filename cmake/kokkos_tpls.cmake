@@ -37,6 +37,15 @@ ELSE()
 ENDIF()
 KOKKOS_TPL_OPTION(ROCM    ${ROCM_DEFAULT})
 KOKKOS_TPL_OPTION(ROCTHRUST ${ROCTHRUST_DEFAULT})
+if(Kokkos_ENABLE_ROCTHRUST)
+  include(CheckCXXSourceCompiles)
+  check_cxx_source_compiles("
+    #include <ios>
+    static_assert(_GLIBCXX_RELEASE < 9);
+    "
+    Kokkos_ENABLE_IMPL_SKIP_NO_RTTI_FLAG
+  )
+endif()
 
 IF(KOKKOS_ENABLE_SYCL)
   SET(ONEDPL_DEFAULT ON)
