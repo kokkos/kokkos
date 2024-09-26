@@ -1289,6 +1289,12 @@ KOKKOS_ADD_EXECUTABLE(
   SOURCES UnitTest_CMakeTriBITSCompatibility.cpp
 )
 
+KOKKOS_ADD_TEST(
+  NAME CoreUnitTest_CMakeTriBITSCompatibilityWillFail
+  EXE CoreUnitTest_CMakeTriBITSCompatibility
+)
+set_property(TEST Kokkos_CoreUnitTest_CMakeTriBITSCompatibilityWillFail PROPERTY WILL_FAIL TRUE)
+
 SET(Kokkos_CoreUnitTest_CMakeTriBITSCompatibilityDisable_DISABLE ON)
 KOKKOS_ADD_TEST(
   NAME CoreUnitTest_CMakeTriBITSCompatibilityDisable
