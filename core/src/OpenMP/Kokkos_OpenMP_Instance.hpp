@@ -92,7 +92,15 @@ class OpenMPInternal {
                           size_t team_shared_bytes, size_t thread_local_bytes);
 
   HostThreadTeamData* get_thread_data() const noexcept {
-    return m_pool[m_level == omp_get_level() ? 0 : omp_get_thread_num()];
+#if (!defined(KOKKOS_COMPILER_GNU) || KOKKOS_COMPILER_GNU >= 1110) && \
+    _OPENMP >= 201511
+    bool is_nested = omp_get_max_active_levels() > 1;
+#else
+    bool is_nested = static_cast<bool>(omp_get_nested());
+#endif
+    bool execute_in_serial = (get_level() < omp_get_level() &&
+                              !(is_nested && (omp_get_level() == 1)));
+    return m_pool[execute_in_serial ? 0 : omp_get_thread_num()];
   }
 
   HostThreadTeamData* get_thread_data(int i) const noexcept {

@@ -98,7 +98,7 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
           m_result_ptr
               ? m_result_ptr
               : pointer_type(
-                    m_instance->get_thread_data(0)->pool_reduce_local());
+                    m_instance->get_thread_data()->pool_reduce_local());
 
       reference_type update = reducer.init(ptr);
 
@@ -234,7 +234,7 @@ class ParallelReduce<CombinedFunctorReducerType,
           m_result_ptr
               ? m_result_ptr
               : pointer_type(
-                    m_instance->get_thread_data(0)->pool_reduce_local());
+                    m_instance->get_thread_data()->pool_reduce_local());
 
       reference_type update = reducer.init(ptr);
 
