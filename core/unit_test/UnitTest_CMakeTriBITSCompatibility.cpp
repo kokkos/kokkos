@@ -31,4 +31,3 @@ int main(int argc, char* argv[]) {
                "`--kokkos-test-tribits-compatibility` as command line argument";
   return EXIT_FAILURE;
 }
-
