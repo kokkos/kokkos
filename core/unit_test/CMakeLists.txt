@@ -383,20 +383,22 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
     endforeach()
 
     set(${Tag}_VIEWSUPPORT)
-    foreach(Name
-      ReferenceCountedAccessor
-      ReferenceCountedDataHandle
-      )
-      set(file ${dir}/Test${Tag}_View_${Name}.cpp)
-      # Write to a temporary intermediate file and call configure_file to avoid
-      # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
-      file(WRITE ${dir}/dummy.cpp
-          "#include <Test${Tag}_Category.hpp>\n"
-          "#include <view/Test${Name}.hpp>\n"
-      )
-      configure_file(${dir}/dummy.cpp ${file})
-      list(APPEND ${Tag}_VIEWSUPPORT ${file})
-    endforeach()
+    IF (Kokkos_ENABLE_IMPL_MDSPAN)
+      foreach(Name
+        ReferenceCountedAccessor
+        ReferenceCountedDataHandle
+        )
+        set(file ${dir}/Test${Tag}_View_${Name}.cpp)
+        # Write to a temporary intermediate file and call configure_file to avoid
+        # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
+        file(WRITE ${dir}/dummy.cpp
+            "#include <Test${Tag}_Category.hpp>\n"
+            "#include <view/Test${Name}.hpp>\n"
+        )
+        configure_file(${dir}/dummy.cpp ${file})
+        list(APPEND ${Tag}_VIEWSUPPORT ${file})
+      endforeach()
+    endif()
 
     SET(${Tag}_SOURCES1 ${${Tag}_SOURCES1A} ${${Tag}_SOURCES1B})
     SET(${Tag}_SOURCES2 ${${Tag}_SOURCES2A} ${${Tag}_SOURCES2B} ${${Tag}_SOURCES2C} ${${Tag}_SOURCES2D})

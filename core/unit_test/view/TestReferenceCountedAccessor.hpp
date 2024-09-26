@@ -114,9 +114,9 @@ TEST(TEST_CATEGORY, RefCountedAcc_ConversionToDefaultAcc) {
 }
 
 void test_refcountedacc_access() {
-  element_t* ptr =
-      (element_t*)Kokkos::kokkos_malloc<TEST_EXECSPACE::memory_space>(
-          100 * sizeof(element_t));
+  element_t* ptr = static_cast<element_t*>(
+      Kokkos::kokkos_malloc<TEST_EXECSPACE::memory_space>(100 *
+                                                          sizeof(element_t)));
   // Gonna use unmanaged data handles here (i.e. not actually referfence
   // counted)
   data_handle_t dh(ptr);
