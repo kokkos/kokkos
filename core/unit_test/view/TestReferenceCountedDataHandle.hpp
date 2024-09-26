@@ -50,7 +50,6 @@ void test_ref_counted_data_handle() {
       Kokkos::Impl::make_shared_allocation_record<element_t, mem_t,
                                                   TEST_EXECSPACE>(
           100, "Test", mem_t(), nullptr,
-          std::integral_constant<bool, false>(),   // padding
           std::integral_constant<bool, true>(),    // init
           std::integral_constant<bool, false>());  // sequential_host_init
 
@@ -147,7 +146,6 @@ void test_ref_counted_data_handle_conversion() {
       Kokkos::Impl::make_shared_allocation_record<element_t, mem_t,
                                                   TEST_EXECSPACE>(
           100, "Test1", mem_t(), nullptr,
-          std::integral_constant<bool, false>(),   // padding
           std::integral_constant<bool, true>(),    // init
           std::integral_constant<bool, false>());  // sequential_host_init
 
@@ -165,7 +163,6 @@ void test_ref_counted_data_handle_conversion() {
       Kokkos::Impl::make_shared_allocation_record<element_t, mem_t,
                                                   TEST_EXECSPACE>(
           100, "Test2", mem_t(), nullptr,
-          std::integral_constant<bool, false>(),   // padding
           std::integral_constant<bool, true>(),    // init
           std::integral_constant<bool, false>());  // sequential_host_init
 

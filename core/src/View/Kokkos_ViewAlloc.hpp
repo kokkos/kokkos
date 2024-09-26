@@ -243,11 +243,10 @@ struct ViewValueFunctorSequentialHostInit {
 };
 
 template <class ElementType, class MemorySpace, class ExecutionSpace,
-          bool AllowPadding, bool Initialize, bool SequentialInit>
+          bool Initialize, bool SequentialInit>
 Kokkos::Impl::SharedAllocationRecord<void, void>* make_shared_allocation_record(
     const size_t& required_span_size, std::string_view label,
     const MemorySpace& memory_space, const ExecutionSpace* exec_space,
-    std::integral_constant<bool, AllowPadding>,
     std::integral_constant<bool, Initialize>,
     std::integral_constant<bool, SequentialInit>) {
   static_assert(SpaceAccessibility<ExecutionSpace, MemorySpace>::accessible);
