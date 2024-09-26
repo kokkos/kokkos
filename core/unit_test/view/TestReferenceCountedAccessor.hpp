@@ -119,7 +119,7 @@ void test_refcountedacc_access() {
   Kokkos::deep_copy(h_errors, errors);
   ASSERT_FALSE(h_errors & 1);
   ASSERT_FALSE(h_errors & 2);
-  Kokkos::kokkos_free(ptr);
+  Kokkos::kokkos_free<TEST_EXECSPACE>(ptr);
 }
 
 TEST(TEST_CATEGORY, RefCountedAcc_Access) { test_refcountedacc_access(); }
