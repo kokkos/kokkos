@@ -1284,6 +1284,29 @@ KOKKOS_ADD_EXECUTABLE_AND_TEST(
   ARGS "one 2 THREE"
 )
 
+KOKKOS_ADD_EXECUTABLE(
+  CoreUnitTest_CMakeTriBITSCompatibility
+  SOURCES UnitTest_CMakeTriBITSCompatibility.cpp
+)
+
+SET(Kokkos_CoreUnitTest_CMakeTriBITSCompatibilityDisable_DISABLE ON)
+KOKKOS_ADD_TEST(
+  NAME CoreUnitTest_CMakeTriBITSCompatibilityDisable
+  EXE CoreUnitTest_CMakeTriBITSCompatibility
+)
+
+SET(Kokkos_CoreUnitTest_CMakeTriBITSCompatibilityExtraArgs_EXTRA_ARGS "--kokkos-test-tribits-compatibility=1")
+KOKKOS_ADD_TEST(
+  NAME CoreUnitTest_CMakeTriBITSCompatibilityExtraArgs
+  EXE CoreUnitTest_CMakeTriBITSCompatibility
+)
+
+SET(Kokkos_CoreUnitTest_CMakeTriBITSCompatibilityEnvironment_ENVIRONMENT "KOKKOS_TEST_TRIBITS_COMPATIBILITY=1")
+KOKKOS_ADD_TEST(
+  NAME CoreUnitTest_CMakeTriBITSCompatibilityEnvironment
+  EXE CoreUnitTest_CMakeTriBITSCompatibility
+)
+
 SET_SOURCE_FILES_PROPERTIES(UnitTest_DeviceAndThreads.cpp PROPERTIES LANGUAGE ${KOKKOS_COMPILE_LANGUAGE})
 add_executable(Kokkos_CoreUnitTest_DeviceAndThreads UnitTest_DeviceAndThreads.cpp)
 target_link_libraries(Kokkos_CoreUnitTest_DeviceAndThreads Kokkos::kokkoscore)
