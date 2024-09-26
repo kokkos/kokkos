@@ -247,10 +247,9 @@ template <class ElementType, class MemorySpace, class ExecutionSpace,
 Kokkos::Impl::SharedAllocationRecord<void, void>* make_shared_allocation_record(
     const size_t& required_span_size, std::string_view label,
     const MemorySpace& memory_space, const ExecutionSpace* exec_space,
-    [[maybe_unused]] std::integral_constant<bool, AllowPadding> allow_padding,
-    [[maybe_unused]] std::integral_constant<bool, Initialize> initialize,
-    [[maybe_unused]] std::integral_constant<bool, SequentialInit>
-        sequential_init) {
+    std::integral_constant<bool, AllowPadding>,
+    std::integral_constant<bool, Initialize>,
+    std::integral_constant<bool, SequentialInit>) {
   static_assert(SpaceAccessibility<ExecutionSpace, MemorySpace>::accessible);
 
   // Use this for constructing and destroying the view

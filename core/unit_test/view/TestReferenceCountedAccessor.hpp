@@ -18,17 +18,6 @@
 
 #include <gtest/gtest.h>
 
-/*
-template <class ElementType, class MemorySpace, class NestedAccessor>
-class ReferenceCountedAccessor {
- public:
-  using element_type     = ElementType;
-  using data_handle_type = ReferenceCountedDataHandle<ElementType, MemorySpace>;
-  using reference        = typename NestedAccessor::reference;
-  using offset_policy    = ReferenceCountedAccessor;
-}
-*/
-
 namespace {
 using element_t      = float;
 using mem_t          = typename TEST_EXECSPACE::memory_space;
@@ -44,20 +33,16 @@ using const_data_handle_t = typename const_acc_t::data_handle_type;
 }  // namespace
 
 void test_refcountedacc_typedefs() {
-  Kokkos::parallel_for(
-      Kokkos::RangePolicy<TEST_EXECSPACE>(0, 1), KOKKOS_LAMBDA(int) {
-        static_assert(std::is_same_v<typename acc_t::element_type, element_t>);
-        static_assert(
-            std::is_same_v<
+  static_assert(std::is_same_v<typename acc_t::element_type, element_t>);
+  static_assert(std::is_same_v<
                 typename acc_t::data_handle_type,
                 Kokkos::Impl::ReferenceCountedDataHandle<element_t, mem_t>>);
-        static_assert(std::is_same_v<typename acc_t::reference,
-                                     typename defacc_t::reference>);
-        static_assert(std::is_same_v<
-                      typename acc_t::offset_policy,
-                      Kokkos::Impl::ReferenceCountedAccessor<
-                          element_t, mem_t, typename defacc_t::offset_policy>>);
-      });
+  static_assert(
+      std::is_same_v<typename acc_t::reference, typename defacc_t::reference>);
+  static_assert(
+      std::is_same_v<typename acc_t::offset_policy,
+                     Kokkos::Impl::ReferenceCountedAccessor<
+                         element_t, mem_t, typename defacc_t::offset_policy>>);
 }
 
 TEST(TEST_CATEGORY, RefCountedAcc_Typedefs) { test_refcountedacc_typedefs(); }

@@ -18,18 +18,6 @@
 
 #include <gtest/gtest.h>
 
-/*
-template <class ElementType, class MemorySpace>
-class ReferenceCountedDataHandle {
- public:
-  using value_type   = ElementType;
-  using pointer      = value_type*;
-  using reference    = value_type&;
-  using memory_space = MemorySpace;
-  ...
-}
-*/
-
 namespace {
 using element_t = float;
 using mem_t     = typename TEST_EXECSPACE::memory_space;
@@ -46,17 +34,10 @@ using const_data_handle_anonym_t =
 }  // namespace
 
 void test_ref_counted_data_handle_typedefs() {
-  Kokkos::parallel_for(
-      Kokkos::RangePolicy<TEST_EXECSPACE>(0, 1), KOKKOS_LAMBDA(int) {
-        static_assert(
-            std::is_same_v<typename data_handle_t::value_type, element_t>);
-        static_assert(
-            std::is_same_v<typename data_handle_t::pointer, element_t*>);
-        static_assert(
-            std::is_same_v<typename data_handle_t::reference, element_t&>);
-        static_assert(
-            std::is_same_v<typename data_handle_t::memory_space, mem_t>);
-      });
+  static_assert(std::is_same_v<typename data_handle_t::value_type, element_t>);
+  static_assert(std::is_same_v<typename data_handle_t::pointer, element_t*>);
+  static_assert(std::is_same_v<typename data_handle_t::reference, element_t&>);
+  static_assert(std::is_same_v<typename data_handle_t::memory_space, mem_t>);
 }
 
 TEST(TEST_CATEGORY, RefCountedDataHandle_Typedefs) {
