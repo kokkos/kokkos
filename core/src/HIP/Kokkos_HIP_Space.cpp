@@ -80,11 +80,10 @@ void* HIPSpace::allocate(const char* arg_label, const size_t arg_alloc_size,
                        false);
 }
 
-void* HIPSpace::impl_allocate([[maybe_unused]] const hipStream_t stream,
-                              const char* arg_label,
-                              const size_t arg_alloc_size,
-                              const size_t arg_logical_size,
-                              const bool stream_sync_only) const {
+void* HIPSpace::impl_allocate(
+    [[maybe_unused]] const hipStream_t stream, const char* arg_label,
+    const size_t arg_alloc_size, const size_t arg_logical_size,
+    [[maybe_unused]] const bool stream_sync_only) const {
   void* ptr = nullptr;
 
 #ifdef KOKKOS_ENABLE_IMPL_HIP_MALLOC_ASYNC
@@ -246,7 +245,12 @@ void HIPSpace::impl_deallocate(
     Kokkos::Profiling::deallocateData(arg_handle, arg_label, arg_alloc_ptr,
                                       reported_size);
   }
+#ifdef KOKKOS_ENABLE_IMPL_HIP_MALLOC_ASYNC
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipFreeAsync(arg_alloc_ptr, m_stream));
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipDeviceSynchronize());
+#else
   KOKKOS_IMPL_HIP_SAFE_CALL(hipFree(arg_alloc_ptr));
+#endif
 }
 
 void HIPHostPinnedSpace::deallocate(void* const arg_alloc_ptr,
