@@ -86,6 +86,8 @@ mark_as_advanced(Kokkos_ENABLE_IMPL_MDSPAN)
 mark_as_advanced(Kokkos_ENABLE_MDSPAN_EXTERNAL)
 mark_as_advanced(Kokkos_ENABLE_IMPL_SKIP_COMPILER_MDSPAN)
 
+KOKKOS_ENABLE_OPTION(NO_EXCEPTIONS OFF BOOL "Whether to ban the use of exceptions")
+
 KOKKOS_ENABLE_OPTION(COMPLEX_ALIGN ON "Whether to align Kokkos::complex to 2*alignof(RealType)")
 
 IF (KOKKOS_ENABLE_TESTS)

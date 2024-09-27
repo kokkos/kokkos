@@ -26,7 +26,11 @@
 #include <impl/Kokkos_Error.hpp>
 
 void Kokkos::Impl::throw_runtime_exception(const std::string &msg) {
+#ifdef KOKKOS_ENABLE_NO_EXCEPTIONS
+  abort(msg.c_str());
+#else
   throw std::runtime_error(msg);
+#endif
 }
 
 void Kokkos::Impl::throw_bad_alloc(std::string_view memory_space_name,
@@ -35,7 +39,11 @@ void Kokkos::Impl::throw_bad_alloc(std::string_view memory_space_name,
   ss << "Kokkos ERROR: " << memory_space_name
      << " memory space failed to allocate " << human_memory_size(size)
      << " (label=\"" << label << "\").";
+#ifdef KOKKOS_ENABLE_NO_EXCEPTIONS
+  abort(ss.str().c_str());
+#else
   throw std::runtime_error(ss.str());
+#endif
 }
 
 void Kokkos::Impl::log_warning(const std::string &msg) {

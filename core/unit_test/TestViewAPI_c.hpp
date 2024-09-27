@@ -19,7 +19,9 @@
 namespace Test {
 
 TEST(TEST_CATEGORY, view_api_c) {
+#ifndef KOKKOS_ENABLE_NO_EXCEPTIONS
   TestViewAPI<double, TEST_EXECSPACE>::run_test_refcount_exception();
+#endif
   TestViewAPI<double, TEST_EXECSPACE>::run_test_deep_copy_empty();
   TestViewAPI<double, TEST_EXECSPACE>::run_test_view_operator_b();
 }

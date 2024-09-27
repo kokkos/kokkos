@@ -108,10 +108,14 @@ struct ReduceViewSizeLimitTester {
       auto functor = ArrayReduceFunctor(matrix);
 
       if (sumInitShmemSize < expectedInitShmemLimit) {
-        EXPECT_NO_THROW(Kokkos::parallel_reduce(policy, functor, sum));
+        Kokkos::parallel_reduce(policy, functor, sum);  // does not throw
       } else {
+#ifdef KOKKOS_ENABLE_NO_EXCEPTIONS
+        GTEST_SKIP() << "not supported when no exceptions is enabled"
+#else
         EXPECT_THROW(Kokkos::parallel_reduce(policy, functor, sum),
                      std::runtime_error);
+#endif
       }
     }
   }
@@ -133,10 +137,14 @@ struct ReduceViewSizeLimitTester {
       auto functor = MDArrayReduceFunctor(matrix);
 
       if (sumInitShmemSize < expectedInitShmemLimit) {
-        EXPECT_NO_THROW(Kokkos::parallel_reduce(policy, functor, sum));
+        Kokkos::parallel_reduce(policy, functor, sum);  // does not throw
       } else {
+#ifdef KOKKOS_ENABLE_NO_EXCEPTIONS
+        GTEST_SKIP() << "not supported when no exceptions is enabled"
+#else
         EXPECT_THROW(Kokkos::parallel_reduce(policy, functor, sum),
                      std::runtime_error);
+#endif
       }
     }
   }
