@@ -41,7 +41,10 @@ if(Kokkos_ENABLE_ROCTHRUST)
   include(CheckCXXSourceCompiles)
   check_cxx_source_compiles("
     #include <ios>
-    static_assert(_GLIBCXX_RELEASE < 9);
+    int main() {
+      static_assert(_GLIBCXX_RELEASE < 9);
+      return 0;
+    }
     "
     Kokkos_ENABLE_IMPL_SKIP_NO_RTTI_FLAG
   )
