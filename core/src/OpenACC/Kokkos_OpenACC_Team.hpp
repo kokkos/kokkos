@@ -147,12 +147,10 @@ class OpenACCTeamMember {
         m_vector_length(vector_length) {
 #ifdef KOKKOS_COMPILER_NVHPC
     m_team_rank = __pgi_vectoridx();
-#else
-#ifdef KOKKOS_COMPILER_CLANG
+#elif defined(KOKKOS_COMPILER_CLANG)
     m_team_rank = omp_get_thread_num();
 #else
     m_team_rank = 0;
-#endif
 #endif
   }
 
