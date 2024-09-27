@@ -111,7 +111,7 @@ struct ReduceViewSizeLimitTester {
         Kokkos::parallel_reduce(policy, functor, sum);  // does not throw
       } else {
 #ifdef KOKKOS_ENABLE_NO_EXCEPTIONS
-        GTEST_SKIP() << "not supported when no exceptions is enabled"
+        GTEST_SKIP() << "not supported when no exceptions is enabled";
 #else
         EXPECT_THROW(Kokkos::parallel_reduce(policy, functor, sum),
                      std::runtime_error);
@@ -140,7 +140,7 @@ struct ReduceViewSizeLimitTester {
         Kokkos::parallel_reduce(policy, functor, sum);  // does not throw
       } else {
 #ifdef KOKKOS_ENABLE_NO_EXCEPTIONS
-        GTEST_SKIP() << "not supported when no exceptions is enabled"
+        GTEST_SKIP() << "not supported when no exceptions is enabled";
 #else
         EXPECT_THROW(Kokkos::parallel_reduce(policy, functor, sum),
                      std::runtime_error);
