@@ -310,7 +310,7 @@ struct EventBase {
 
 template <class Derived>
 struct UniquelyIdentifiableEventType : public EventBase {
-  uintptr_t kind() const { return event_type_uid<Derived>(); }
+  uintptr_t kind() const override { return event_type_uid<Derived>(); }
 };
 
 /**
