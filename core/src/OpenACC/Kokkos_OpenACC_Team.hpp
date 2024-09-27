@@ -137,6 +137,8 @@ class OpenACCTeamMember {
   // FIXME_OPENACC - 512(16*32) bytes at the begining of the scratch space
   // for each league is saved for reduction. It should actually be based on the
   // ValueType of the reduction variable.
+#if !defined(KOKKOS_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE) || \
+    !defined(KOKKOS_ENABLE_OPENACC_COLLAPSE_HIERARCHICAL_CONSTRUCTS)
   OpenACCTeamMember(const int league_rank, const int league_size,
                     const int team_size,
                     const int vector_length)  // const TeamPolicyInternal<
@@ -153,7 +155,7 @@ class OpenACCTeamMember {
     m_team_rank = 0;
 #endif
   }
-
+#else
   OpenACCTeamMember(const int league_rank, const int league_size,
                     const int team_rank, const int team_size,
                     const int vector_length)
@@ -162,6 +164,7 @@ class OpenACCTeamMember {
         m_team_rank(team_rank),
         m_team_size(team_size),
         m_vector_length(vector_length) {}
+#endif
 
   static int team_reduce_size() { return TEAM_REDUCE_SIZE; }
 };
