@@ -386,7 +386,7 @@ void test_nested_sort_by_key(unsigned int N, KeyType minKey, KeyType maxKey,
 }  // namespace NestedSortImpl
 
 TEST(TEST_CATEGORY, NestedSort) {
-  // FIXME_OPENMPTARGET - causes ICE with CrayClang compiler
+  // FIXME_OPENMPTARGET - causes runtime failure with CrayClang compiler
 #if defined(KOKKOS_COMPILER_CRAY_LLVM) && defined(KOKKOS_ENABLE_OPENMPTARGET)
   GTEST_SKIP() << "known to fail with OpenMPTarget+Cray LLVM";
 #endif
@@ -399,7 +399,7 @@ TEST(TEST_CATEGORY, NestedSort) {
 }
 
 TEST(TEST_CATEGORY, NestedSortByKey) {
-  // FIXME_OPENMPTARGET - causes ICE with CrayClang compiler
+  // FIXME_OPENMPTARGET - causes runtime failure with CrayClang compiler
 #if defined(KOKKOS_COMPILER_CRAY_LLVM) && defined(KOKKOS_ENABLE_OPENMPTARGET)
   GTEST_SKIP() << "known to fail with OpenMPTarget+Cray LLVM";
 #endif

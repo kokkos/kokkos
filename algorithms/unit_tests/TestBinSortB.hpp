@@ -185,7 +185,7 @@ void run_for_rank2() {
 }  // namespace BinSortSetB
 
 TEST(TEST_CATEGORY, BinSortUnsignedKeyLayoutStrideValues) {
-  // FIXME_OPENMPTARGET - causes ICE with CrayClang compiler
+  // FIXME_OPENMPTARGET - causes runtime failure with CrayClang compiler
 #if defined(KOKKOS_COMPILER_CRAY_LLVM) && defined(KOKKOS_ENABLE_OPENMPTARGET)
   GTEST_SKIP() << "known to fail with OpenMPTarget+Cray LLVM";
 #endif

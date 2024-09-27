@@ -200,7 +200,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
 
     const auto size = end - begin;
 
-    // FIXME_OPENMPTARGET: The team size and MAX_ACTIVE_THREADS are currently
+    // FIXME_OPENMPTARGET: The team size and concurrency are currently
     // based on NVIDIA-V100 and should be modifid to be based on the
     // architecture in the future.
     const int max_team_threads = 32;

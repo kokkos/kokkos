@@ -209,7 +209,7 @@ void test_sort_integer_overflow() {
 }  // namespace SortImpl
 
 TEST(TEST_CATEGORY, SortUnsignedValueType) {
-  // FIXME_OPENMPTARGET - causes ICE with CrayClang compiler
+  // FIXME_OPENMPTARGET - causes runtime failure with CrayClang compiler
 #if defined(KOKKOS_COMPILER_CRAY_LLVM) && defined(KOKKOS_ENABLE_OPENMPTARGET)
   GTEST_SKIP() << "known to fail with OpenMPTarget+Cray LLVM";
 #endif
@@ -228,7 +228,7 @@ TEST(TEST_CATEGORY, SortUnsignedValueType) {
 }
 
 TEST(TEST_CATEGORY, SortEmptyView) {
-  // FIXME_OPENMPTARGET - causes ICE with CrayClang compiler
+  // FIXME_OPENMPTARGET - causes runtime failure with CrayClang compiler
 #if defined(KOKKOS_COMPILER_CRAY_LLVM) && defined(KOKKOS_ENABLE_OPENMPTARGET)
   GTEST_SKIP() << "known to fail with OpenMPTarget+Cray LLVM";
 #endif

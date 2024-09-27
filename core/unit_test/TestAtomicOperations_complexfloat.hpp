@@ -20,7 +20,7 @@ using namespace TestAtomicOperations;
 
 namespace Test {
 TEST(TEST_CATEGORY, atomic_operations_complexfloat) {
-  // FIXME_OPENMPTARGET - causes ICE with CrayClang compiler
+  // FIXME_OPENMPTARGET - causes runtime failure with CrayClang compiler
 #if defined(KOKKOS_COMPILER_CRAY_LLVM) && defined(KOKKOS_ENABLE_OPENMPTARGET)
   GTEST_SKIP() << "known to fail with OpenMPTarget+Cray LLVM";
 #endif
