@@ -101,6 +101,7 @@ IF(KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
                   OUTPUT_STRIP_TRAILING_WHITESPACE)
   IF (INTERNAL_HAVE_CRAY_COMPILER) #not actually Clang
     SET(KOKKOS_CLANG_IS_CRAY TRUE)
+    SET(KOKKOS_CXX_COMPILER_ID CrayClang)
   ENDIF()
   # The clang based Intel compiler reports as Clang to most versions of CMake
   EXECUTE_PROCESS(COMMAND ${CMAKE_CXX_COMPILER} --version
