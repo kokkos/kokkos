@@ -1,4 +1,3 @@
-
 function(kokkos_set_cray_flags full_standard int_standard)
   string(TOLOWER ${full_standard} FULL_LC_STANDARD)
   string(TOLOWER ${int_standard} INT_LC_STANDARD)
