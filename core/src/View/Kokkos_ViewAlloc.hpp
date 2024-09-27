@@ -26,6 +26,7 @@ static_assert(false,
 #include <cstring>
 #include <type_traits>
 #include <string>
+#include <optional>
 
 #include <impl/Kokkos_Tools.hpp>
 #include <Kokkos_Core_fwd.hpp>
@@ -246,9 +247,9 @@ template <class ElementType, class MemorySpace, class ExecutionSpace,
           bool Initialize, bool SequentialInit>
 Kokkos::Impl::SharedAllocationRecord<void, void>* make_shared_allocation_record(
     const size_t& required_span_size, std::string_view label,
-    const MemorySpace& memory_space, const ExecutionSpace* exec_space,
-    std::integral_constant<bool, Initialize>,
-    std::integral_constant<bool, SequentialInit>) {
+    const MemorySpace& memory_space,
+    const std::optional<ExecutionSpace> exec_space,
+    std::bool_constant<Initialize>, std::bool_constant<SequentialInit>) {
   static_assert(SpaceAccessibility<ExecutionSpace, MemorySpace>::accessible);
 
   // Use this for constructing and destroying the view
@@ -260,13 +261,14 @@ Kokkos::Impl::SharedAllocationRecord<void, void>* make_shared_allocation_record(
   using record_type =
       Kokkos::Impl::SharedAllocationRecord<MemorySpace, functor_type>;
 
-  static constexpr std::size_t align_mask   = 0x7;
-  static constexpr std::size_t element_size = sizeof(ElementType);
+  /* Force alignment of allocations on on 8 byte boundaries even for
+   * element types smaller than 8 bytes */
+  static constexpr std::size_t align_mask = 0x7;
 
   // Calculate the total size of the memory, in bytes, and make sure it is
   // byte-aligned
   const std::size_t alloc_size =
-      (required_span_size * element_size + align_mask) & ~align_mask;
+      (required_span_size * sizeof(ElementType) + align_mask) & ~align_mask;
 
   auto* record =
       exec_space

@@ -33,15 +33,11 @@ using const_data_handle_anonym_t =
 
 }  // namespace
 
-void test_ref_counted_data_handle_typedefs() {
-  static_assert(std::is_same_v<typename data_handle_t::value_type, element_t>);
-  static_assert(std::is_same_v<typename data_handle_t::pointer, element_t*>);
-  static_assert(std::is_same_v<typename data_handle_t::reference, element_t&>);
-  static_assert(std::is_same_v<typename data_handle_t::memory_space, mem_t>);
-}
-
 TEST(TEST_CATEGORY, RefCountedDataHandle_Typedefs) {
-  test_ref_counted_data_handle_typedefs();
+  static_assert(std::is_same_v<data_handle_t::value_type, element_t>);
+  static_assert(std::is_same_v<data_handle_t::pointer, element_t*>);
+  static_assert(std::is_same_v<data_handle_t::reference, element_t&>);
+  static_assert(std::is_same_v<data_handle_t::memory_space, mem_t>);
 }
 
 template <class DataHandleType, class ConstDataHandleType>
@@ -49,9 +45,9 @@ void test_ref_counted_data_handle() {
   auto shared_alloc =
       Kokkos::Impl::make_shared_allocation_record<element_t, mem_t,
                                                   TEST_EXECSPACE>(
-          100, "Test", mem_t(), nullptr,
-          std::integral_constant<bool, true>(),    // init
-          std::integral_constant<bool, false>());  // sequential_host_init
+          100, "Test", mem_t(), std::optional<TEST_EXECSPACE>(std::nullopt),
+          std::bool_constant<true>(),    // init
+          std::bool_constant<false>());  // sequential_host_init
 
   element_t* ptr         = static_cast<element_t*>(shared_alloc->data());
   const element_t* c_ptr = ptr;
@@ -145,9 +141,9 @@ void test_ref_counted_data_handle_conversion() {
   auto shared_alloc1 =
       Kokkos::Impl::make_shared_allocation_record<element_t, mem_t,
                                                   TEST_EXECSPACE>(
-          100, "Test1", mem_t(), nullptr,
-          std::integral_constant<bool, true>(),    // init
-          std::integral_constant<bool, false>());  // sequential_host_init
+          100, "Test1", mem_t(), std::optional<TEST_EXECSPACE>(std::nullopt),
+          std::bool_constant<true>(),    // init
+          std::bool_constant<false>());  // sequential_host_init
 
   element_t* ptr1         = static_cast<element_t*>(shared_alloc1->data());
   const element_t* c_ptr1 = ptr1;
@@ -162,9 +158,9 @@ void test_ref_counted_data_handle_conversion() {
   auto shared_alloc2 =
       Kokkos::Impl::make_shared_allocation_record<element_t, mem_t,
                                                   TEST_EXECSPACE>(
-          100, "Test2", mem_t(), nullptr,
-          std::integral_constant<bool, true>(),    // init
-          std::integral_constant<bool, false>());  // sequential_host_init
+          100, "Test2", mem_t(), std::optional<TEST_EXECSPACE>(std::nullopt),
+          std::bool_constant<true>(),    // init
+          std::bool_constant<false>());  // sequential_host_init
 
   element_t* ptr2         = static_cast<element_t*>(shared_alloc2->data());
   const element_t* c_ptr2 = ptr2;

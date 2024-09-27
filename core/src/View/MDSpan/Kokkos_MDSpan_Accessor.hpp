@@ -309,10 +309,10 @@ template <class ElementType, class MemorySpace, class NestedAccessor>
 class ReferenceCountedAccessor;
 
 template <class Accessor>
-struct IsReferenceCountedAccessorImpl : std::false_type {};
+struct IsReferenceCountedAccessor : std::false_type {};
 
 template <class ElementType, class MemorySpace, class NestedAccessor>
-struct IsReferenceCountedAccessorImpl<
+struct IsReferenceCountedAccessor<
     ReferenceCountedAccessor<ElementType, MemorySpace, NestedAccessor>>
     : std::true_type {};
 
@@ -358,7 +358,7 @@ class ReferenceCountedAccessor {
 
   template <class DstAccessor,
             typename = std::enable_if_t<
-                !IsReferenceCountedAccessorImpl<DstAccessor>::value &&
+                !IsReferenceCountedAccessor<DstAccessor>::value &&
                 std::is_convertible_v<NestedAccessor, DstAccessor>>>
   KOKKOS_FUNCTION operator DstAccessor() const {
     return m_nested_acc;
@@ -385,23 +385,6 @@ class ReferenceCountedAccessor {
 #endif
   NestedAccessor m_nested_acc;
 };
-
-template <class ElementType, class MemorySpace>
-using checked_reference_counted_accessor =
-    SpaceAwareAccessor<MemorySpace,
-                       ReferenceCountedAccessor<ElementType, MemorySpace,
-                                                default_accessor<ElementType>>>;
-
-template <class ElementType, class MemorySpace,
-          class MemoryScope = desul::MemoryScopeDevice>
-using checked_atomic_accessor_relaxed =
-    SpaceAwareAccessor<MemorySpace, AtomicAccessorRelaxed<ElementType>>;
-
-template <class ElementType, class MemorySpace,
-          class MemoryScope = desul::MemoryScopeDevice>
-using checked_reference_counted_atomic_accessor_relaxed = SpaceAwareAccessor<
-    MemorySpace, ReferenceCountedAccessor<ElementType, MemorySpace,
-                                          AtomicAccessorRelaxed<ElementType>>>;
 
 }  // namespace Impl
 }  // namespace Kokkos

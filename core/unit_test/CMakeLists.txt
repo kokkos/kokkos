@@ -382,6 +382,8 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
       list(APPEND ${Tag}_SOURCES2D ${file})
     endforeach()
 
+    # ViewSupport should eventually contain the new implementation
+    # detail tests for the mdspan based View
     set(${Tag}_VIEWSUPPORT)
     IF (Kokkos_ENABLE_IMPL_MDSPAN)
       foreach(Name
@@ -398,6 +400,12 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
         configure_file(${dir}/dummy.cpp ${file})
         list(APPEND ${Tag}_VIEWSUPPORT ${file})
       endforeach()
+      KOKKOS_ADD_EXECUTABLE_AND_TEST(
+        CoreUnitTest_${Tag}_ViewSupport
+        SOURCES
+        UnitTestMainInit.cpp
+        ${${Tag}_VIEWSUPPORT}
+      )
     endif()
 
     SET(${Tag}_SOURCES1 ${${Tag}_SOURCES1A} ${${Tag}_SOURCES1B})
@@ -724,12 +732,6 @@ if(Kokkos_ENABLE_SERIAL)
     UnitTestMainInit.cpp
     ${Serial_SOURCES2}
   )
-  KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    CoreUnitTest_Serial_ViewSupport
-    SOURCES
-    UnitTestMainInit.cpp
-    ${Serial_VIEWSUPPORT}
-  )
 endif()
 
 if(Kokkos_ENABLE_THREADS)
@@ -737,12 +739,6 @@ if(Kokkos_ENABLE_THREADS)
     CoreUnitTest_Threads
     SOURCES ${Threads_SOURCES}
     UnitTestMainInit.cpp
-  )
-  KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    CoreUnitTest_Threads_ViewSupport
-    SOURCES
-    UnitTestMainInit.cpp
-    ${Threads_VIEWSUPPORT}
   )
 endif()
 
@@ -763,12 +759,6 @@ if (Kokkos_ENABLE_OPENMP)
       UnitTestMain.cpp
       openmp/TestOpenMP_InterOp.cpp
   )
-  KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    CoreUnitTest_OpenMP_ViewSupport
-    SOURCES
-    UnitTestMainInit.cpp
-    ${OpenMP_VIEWSUPPORT}
-  )
 endif()
 
 if(Kokkos_ENABLE_HPX)
@@ -778,12 +768,6 @@ if(Kokkos_ENABLE_HPX)
       UnitTestMainInit.cpp
       ${HPX_SOURCES}
       hpx/TestHPX_Task.cpp
-  )
-  KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    CoreUnitTest_HPX_ViewSupport
-    SOURCES
-    UnitTestMainInit.cpp
-    ${HPX_VIEWSUPPORT}
   )
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     CoreUnitTest_HPXInterOp
@@ -817,12 +801,6 @@ if(Kokkos_ENABLE_OPENMPTARGET)
     SOURCES
     UnitTestMainInit.cpp
     ${OpenMPTarget_SOURCES}
-  )
-  KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    CoreUnitTest_OpenMPTarget_ViewSupport
-    SOURCES
-    UnitTestMainInit.cpp
-    ${OpenMPTarget_VIEWSUPPORT}
   )
 endif()
 
@@ -860,12 +838,6 @@ if(Kokkos_ENABLE_CUDA)
       ${Cuda_SOURCES3}
       cuda/TestCuda_Spaces.cpp
       ${Cuda_SOURCES_SHAREDSPACE}
-    )
-    KOKKOS_ADD_EXECUTABLE_AND_TEST(
-      CoreUnitTest_Cuda_ViewSupport
-      SOURCES
-      UnitTestMainInit.cpp
-      ${Cuda_VIEWSUPPORT}
     )
 
     KOKKOS_ADD_EXECUTABLE_AND_TEST(
@@ -908,12 +880,6 @@ if(Kokkos_ENABLE_HIP)
       hip/TestHIP_TeamScratchStreams.cpp
       hip/TestHIP_AsyncLauncher.cpp
       hip/TestHIP_BlocksizeDeduction.cpp
-  )
-  KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    CoreUnitTest_HIP_ViewSupport
-    SOURCES
-    UnitTestMainInit.cpp
-    ${HIP_VIEWSUPPORT}
   )
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     CoreUnitTest_HIPInterOpInit
@@ -985,12 +951,6 @@ if(Kokkos_ENABLE_SYCL)
       sycl/TestSYCL_TeamScratchStreams.cpp
       ${SYCL_SOURCES3}
       sycl/TestSYCL_Spaces.cpp
-  )
-  KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    CoreUnitTest_SYCL_ViewSupport
-    SOURCES
-    UnitTestMainInit.cpp
-    ${SYCL_VIEWSUPPORT}
   )
 
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
