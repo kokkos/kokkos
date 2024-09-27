@@ -37,15 +37,6 @@ ELSE()
 ENDIF()
 KOKKOS_TPL_OPTION(ROCM    ${ROCM_DEFAULT})
 KOKKOS_TPL_OPTION(ROCTHRUST ${ROCTHRUST_DEFAULT})
-if(Kokkos_ENABLE_ROCTHRUST)
-  include(CheckCXXSourceCompiles)
-  check_cxx_source_compiles("
-    #include <ios>
-    static_assert(_GLIBCXX_RELEASE < 9);
-    "
-    Kokkos_ENABLE_IMPL_SKIP_NO_RTTI_FLAG
-  )
-endif()
 
 IF(KOKKOS_ENABLE_SYCL)
   SET(ONEDPL_DEFAULT ON)
@@ -91,6 +82,17 @@ ENDIF()
 KOKKOS_IMPORT_TPL(ONEDPL INTERFACE)
 KOKKOS_IMPORT_TPL(LIBQUADMATH)
 KOKKOS_IMPORT_TPL(ROCTHRUST)
+
+if(Kokkos_ENABLE_ROCTHRUST)
+  include(CheckCXXSourceCompiles)
+  check_cxx_source_compiles("
+    #include <ios>
+    static_assert(_GLIBCXX_RELEASE < 9);
+    "
+    LINK_LIBRARIES roc::rocthrust
+    Kokkos_ENABLE_IMPL_SKIP_NO_RTTI_FLAG
+  )
+endif()
 
 IF (Kokkos_ENABLE_DESUL_ATOMICS_EXTERNAL)
   find_package(desul REQUIRED COMPONENTS atomics)
