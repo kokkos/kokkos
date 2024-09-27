@@ -25,9 +25,18 @@
 #include <Kokkos_Core.hpp>  // show_warnings
 #include <impl/Kokkos_Error.hpp>
 
+#ifndef KOKKOS_COMPILER_MSVC
+#define KOKKOS_IMPL_BUILTIN_UNREACHABLE() __builtin_unreachable()
+#else
+#define KOKKOS_IMPL_BUILTIN_UNREACHABLE() \
+  do {                                    \
+  } while (false)
+#endif
+
 void Kokkos::Impl::throw_runtime_exception(const std::string &msg) {
 #ifdef KOKKOS_ENABLE_NO_EXCEPTIONS
   abort(msg.c_str());
+  KOKKOS_IMPL_BUILTIN_UNREACHABLE();
 #else
   throw std::runtime_error(msg);
 #endif
@@ -41,6 +50,7 @@ void Kokkos::Impl::throw_bad_alloc(std::string_view memory_space_name,
      << " (label=\"" << label << "\").";
 #ifdef KOKKOS_ENABLE_NO_EXCEPTIONS
   abort(ss.str().c_str());
+  KOKKOS_IMPL_BUILTIN_UNREACHABLE();
 #else
   throw std::runtime_error(ss.str());
 #endif
