@@ -353,7 +353,8 @@ void test_offsetview_unmanaged_construction_death() {
         offset_view_type(&s, {0}, {-1}),
         "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView"
         ".*"
-        "must be non-negative");
+        "\\(ends\\[0\\] \\(-1\\) - begins\\[0\\] \\(0\\)\\) must be "
+        "non-negative");
   }
 
   {
@@ -365,16 +366,20 @@ void test_offsetview_unmanaged_construction_death() {
         offset_view_type(&s, {-1}, {0x7fffffffffffffffl}),
         "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView"
         ".*"
+        "\\(ends\\[0\\] \\(9223372036854775807\\) - begins\\[0\\] \\(-1\\)\\) "
         "overflows");
     ASSERT_DEATH(
         offset_view_type(&s, {-0x7fffffffffffffffl - 1}, {0x7fffffffffffffffl}),
         "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView"
         ".*"
+        "\\(ends\\[0\\] \\(9223372036854775807\\) - begins\\[0\\] "
+        "\\(-9223372036854775808\\)\\) "
         "overflows");
     ASSERT_DEATH(
         offset_view_type(&s, {-0x7fffffffffffffffl - 1}, {0}),
         "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView"
         ".*"
+        "\\(ends\\[0\\] \\(0\\) - begins\\[0\\] \\(-9223372036854775808\\)\\) "
         "overflows");
   }
 
@@ -385,29 +390,53 @@ void test_offsetview_unmanaged_construction_death() {
     // of OffsetView
     ASSERT_DEATH(
         offset_view_type(&s, {0}, {1}),
-        "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView");
+        "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView"
+        ".*"
+        "begins\\.size\\(\\) \\(1\\) != Rank \\(2\\)"
+        ".*"
+        "ends\\.size\\(\\) \\(1\\) != Rank \\(2\\)");
     ASSERT_DEATH(
         offset_view_type(&s, {0}, {1, 1}),
-        "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView");
+        "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView"
+        ".*"
+        "begins\\.size\\(\\) \\(1\\) != Rank \\(2\\)");
     ASSERT_DEATH(
         offset_view_type(&s, {0}, {1, 1, 1}),
-        "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView");
+        "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView"
+        ".*"
+        "begins\\.size\\(\\) \\(1\\) != Rank \\(2\\)"
+        ".*"
+        "ends\\.size\\(\\) \\(3\\) != Rank \\(2\\)");
     ASSERT_DEATH(
         offset_view_type(&s, {0, 0}, {1}),
-        "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView");
+        "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView"
+        ".*"
+        "ends\\.size\\(\\) \\(1\\) != Rank \\(2\\)");
     (void)offset_view_type(&s, {0, 0}, {1, 1});
     ASSERT_DEATH(
         offset_view_type(&s, {0, 0}, {1, 1, 1}),
-        "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView");
+        "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView"
+        ".*"
+        "ends\\.size\\(\\) \\(3\\) != Rank \\(2\\)");
     ASSERT_DEATH(
         offset_view_type(&s, {0, 0, 0}, {1}),
-        "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView");
+        "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView"
+        ".*"
+        "begins\\.size\\(\\) \\(3\\) != Rank \\(2\\)"
+        ".*"
+        "ends\\.size\\(\\) \\(1\\) != Rank \\(2\\)");
     ASSERT_DEATH(
         offset_view_type(&s, {0, 0, 0}, {1, 1}),
-        "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView");
+        "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView"
+        ".*"
+        "begins\\.size\\(\\) \\(3\\) != Rank \\(2\\)");
     ASSERT_DEATH(
         offset_view_type(&s, {0, 0, 0}, {1, 1, 1}),
-        "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView");
+        "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView"
+        ".*"
+        "begins\\.size\\(\\) \\(3\\) != Rank \\(2\\)"
+        ".*"
+        "ends\\.size\\(\\) \\(3\\) != Rank \\(2\\)");
   }
 }
 
