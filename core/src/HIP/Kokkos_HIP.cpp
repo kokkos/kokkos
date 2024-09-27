@@ -53,7 +53,7 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
 
   // Check that we are running on the expected architecture
   if (std::string arch_name = Impl::HIPInternal::m_deviceProp.gcnArchName;
-      arch_name != KOKKOS_ARCH_AMD_GPU) {
+      arch_name.find(KOKKOS_ARCH_AMD_GPU) != 0) {
     std::string error_message =
         "Kokkos::HIP::initialize ERROR: running kernels compiled for " +
         std::string(KOKKOS_ARCH_AMD_GPU) + " on " + arch_name + " device.\n";
