@@ -1379,7 +1379,7 @@ inline auto create_mirror(const DynRankView<T, P...>& src,
   if constexpr (Impl::ViewCtorProp<ViewCtorArgs...>::has_memory_space) {
     using dst_type = typename Impl::MirrorDRViewType<
         typename Impl::ViewCtorProp<ViewCtorArgs...>::memory_space, T,
-        P...>::view_type;
+        P...>::dest_view_type;
     return dst_type(prop_copy,
                     Impl::reconstructLayout(src.layout(), src.rank()));
   } else {
