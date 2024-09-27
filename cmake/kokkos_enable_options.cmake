@@ -1,8 +1,5 @@
 ########################## NOTES ###############################################
 #  List the options for configuring kokkos using CMake method of doing it.
-#  These options then get mapped onto KOKKOS_SETTINGS environment variable by
-#  kokkos_settings.cmake.  It is separate to allow other packages to override
-#  these variables (e.g., TriBITS).
 
 ########################## AVAILABLE OPTIONS ###################################
 # Use lists for documentation, verification, and programming convenience
@@ -32,34 +29,26 @@ KOKKOS_ENABLE_OPTION(CUDA_LDG_INTRINSIC   OFF "Whether to use CUDA LDG intrinsic
 # In contrast to other CUDA-dependent, options CUDA_LAMBDA is ON by default.
 # That is problematic when CUDA is not enabled because this not only yields a
 # bogus warning, but also exports the Kokkos_ENABLE_CUDA_LAMBDA variable and
-# sets it to ON. This if-clause is a crutch that delays the refactoring of the
-# way we declare all options until after we get rid of TriBITS.
-IF (Trilinos_ENABLE_Kokkos AND TPL_ENABLE_CUDA)
-   SET(CUDA_LAMBDA_DEFAULT ON)
-ELSEIF (KOKKOS_ENABLE_CUDA)
-   SET(CUDA_LAMBDA_DEFAULT ON)
-ELSE()
-   SET(CUDA_LAMBDA_DEFAULT OFF)
-ENDIF()
-KOKKOS_ENABLE_OPTION(CUDA_LAMBDA ${CUDA_LAMBDA_DEFAULT} "Whether to allow lambda expressions on the device with NVCC **DEPRECATED**")
+# sets it to ON.
+KOKKOS_ENABLE_OPTION(CUDA_LAMBDA ${KOKKOS_ENABLE_CUDA} "Whether to allow lambda expressions on the device with NVCC **DEPRECATED**")
 
-# May be used to disable our use of CudaMallocAsync.  It had caused issues in
-# the past when UCX was used as MPI communication layer.  We expect it is
-# resolved but we keep the option around a bit longer to be safe.
-IF(KOKKOS_ENABLE_CUDA)
-  SET(CUDA_MALLOC_ASYNC_DEFAULT ON)
-ELSE()
-  SET(CUDA_MALLOC_ASYNC_DEFAULT OFF)
-ENDIF()
-KOKKOS_ENABLE_OPTION(IMPL_CUDA_MALLOC_ASYNC ${CUDA_MALLOC_ASYNC_DEFAULT}  "Whether to enable CudaMallocAsync (requires CUDA Toolkit 11.2)")
+# As of 09/2024, cudaMallocAsync causes issues with ICP and older version of UCX
+# as MPI communication layer.
+KOKKOS_ENABLE_OPTION(IMPL_CUDA_MALLOC_ASYNC OFF  "Whether to enable CudaMallocAsync (requires CUDA Toolkit 11.2)")
 KOKKOS_ENABLE_OPTION(IMPL_NVHPC_AS_DEVICE_COMPILER OFF "Whether to allow nvc++ as Cuda device compiler")
 KOKKOS_ENABLE_OPTION(IMPL_CUDA_UNIFIED_MEMORY OFF "Whether to leverage unified memory architectures for CUDA")
 
 KOKKOS_ENABLE_OPTION(DEPRECATED_CODE_4    ON "Whether code deprecated in major release 4 is available" )
 KOKKOS_ENABLE_OPTION(DEPRECATION_WARNINGS ON "Whether to emit deprecation warnings" )
 KOKKOS_ENABLE_OPTION(HIP_RELOCATABLE_DEVICE_CODE  OFF "Whether to enable relocatable device code (RDC) for HIP")
-KOKKOS_ENABLE_OPTION(IMPL_SYCL_RELOCATABLE_DEVICE_CODE  ON "Whether to enable relocatable device code (RDC) for SYCL")
-MARK_AS_ADVANCED(Kokkos_ENABLE_IMPL_SYCL_RELOCATABLE_DEVICE_CODE)
+
+# Disabling RDC only works properly since oneAPI 2024.1.0
+IF(KOKKOS_ENABLE_SYCL AND KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM AND KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 2024.1.0)
+  SET(SYCL_RDC_DEFAULT ON)
+ELSE()
+  SET(SYCL_RDC_DEFAULT OFF)
+ENDIF()
+KOKKOS_ENABLE_OPTION(SYCL_RELOCATABLE_DEVICE_CODE  ${SYCL_RDC_DEFAULT} "Whether to enable relocatable device code (RDC) for SYCL")
 KOKKOS_ENABLE_OPTION(TESTS         OFF  "Whether to build the unit tests")
 KOKKOS_ENABLE_OPTION(BENCHMARKS    OFF  "Whether to build the benchmarks")
 KOKKOS_ENABLE_OPTION(EXAMPLES      OFF  "Whether to build the examples")
@@ -97,12 +86,7 @@ mark_as_advanced(Kokkos_ENABLE_IMPL_MDSPAN)
 mark_as_advanced(Kokkos_ENABLE_MDSPAN_EXTERNAL)
 mark_as_advanced(Kokkos_ENABLE_IMPL_SKIP_COMPILER_MDSPAN)
 
-IF (Trilinos_ENABLE_Kokkos)
-  SET(COMPLEX_ALIGN_DEFAULT OFF)
-ELSE()
-  SET(COMPLEX_ALIGN_DEFAULT ON)
-ENDIF()
-KOKKOS_ENABLE_OPTION(COMPLEX_ALIGN ${COMPLEX_ALIGN_DEFAULT}  "Whether to align Kokkos::complex to 2*alignof(RealType)")
+KOKKOS_ENABLE_OPTION(COMPLEX_ALIGN ON "Whether to align Kokkos::complex to 2*alignof(RealType)")
 
 IF (KOKKOS_ENABLE_TESTS)
   SET(HEADER_SELF_CONTAINMENT_TESTS_DEFAULT ON)

@@ -979,7 +979,7 @@ void Kokkos::Impl::parse_environment_variables(
       Tools::Impl::parse_environment_variables(tools_init_arguments);
   if (init_result.result ==
       Tools::Impl::InitializationStatus::environment_argument_mismatch) {
-    Impl::throw_runtime_exception(init_result.error_message);
+    Kokkos::abort(init_result.error_message.c_str());
   }
   combine(settings, tools_init_arguments);
 

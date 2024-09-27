@@ -582,7 +582,7 @@ struct ScratchRequest {
   }
 };
 
-// Throws a runtime exception if level is not `0` or `1`
+// Causes abnormal program termination if level is not `0` or `1`
 void team_policy_check_valid_storage_level_argument(int level);
 
 /** \brief  Execution policy for parallel work over a league of teams of

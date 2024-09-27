@@ -370,7 +370,7 @@ struct SubviewExtents {
          const int n = snprintf(buffer, LEN, "Kokkos::subview bounds error (");
          error(buffer + n, LEN - n, 0, 0, dim, args...);
 
-         Kokkos::Impl::throw_runtime_exception(std::string(buffer));))
+         Kokkos::abort(buffer);))
 
     KOKKOS_IF_ON_DEVICE(((void)dim;
                          Kokkos::abort("Kokkos::subview bounds error");
@@ -871,7 +871,8 @@ struct ViewOffset<
                    (r > 5 ? m_dim.N5 : KOKKOS_INVALID_INDEX),
                    (r > 6 ? m_dim.N6 : KOKKOS_INVALID_INDEX),
                    (r > 7 ? m_dim.N7 : KOKKOS_INVALID_INDEX));
-    l.stride = m_stride;
+    // Without span_is_contiguous Sacado hidden dimensions get messed up
+    l.stride = span_is_contiguous() ? KOKKOS_IMPL_CTOR_DEFAULT_ARG : m_stride;
     return l;
   }
 
@@ -1557,7 +1558,8 @@ struct ViewOffset<
                    (r > 5 ? m_dim.N5 : KOKKOS_INVALID_INDEX),
                    (r > 6 ? m_dim.N6 : KOKKOS_INVALID_INDEX),
                    (r > 7 ? m_dim.N7 : KOKKOS_INVALID_INDEX));
-    l.stride = m_stride;
+    // Without span_is_contiguous Sacado hidden dimensions get messed up
+    l.stride = span_is_contiguous() ? KOKKOS_IMPL_CTOR_DEFAULT_ARG : m_stride;
     return l;
   }
 

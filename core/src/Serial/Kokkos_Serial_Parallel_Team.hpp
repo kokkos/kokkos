@@ -247,10 +247,16 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     const size_t thread_local_size = 0;  // Never shrinks
 
     auto* internal_instance = m_policy.space().impl_internal_space_instance();
+
+    // caused a possibly codegen-related slowdown, especially in GCC 9-11
+    // with KOKKOS_ARCH_NATIVE
+    // https://github.com/kokkos/kokkos/issues/7268
+#ifndef KOKKOS_ENABLE_ATOMICS_BYPASS
     // Make sure kernels are running sequentially even when using multiple
     // threads, lock resize_thread_team_data
     std::lock_guard<std::mutex> instance_lock(
         internal_instance->m_instance_mutex);
+#endif
 
     internal_instance->resize_thread_team_data(
         pool_reduce_size, team_reduce_size, team_shared_size,
@@ -321,10 +327,16 @@ class ParallelReduce<CombinedFunctorReducerType,
     const size_t thread_local_size = 0;  // Never shrinks
 
     auto* internal_instance = m_policy.space().impl_internal_space_instance();
+
+    // caused a possibly codegen-related slowdown, especially in GCC 9-11
+    // with KOKKOS_ARCH_NATIVE
+    // https://github.com/kokkos/kokkos/issues/7268
+#ifndef KOKKOS_ENABLE_ATOMICS_BYPASS
     // Make sure kernels are running sequentially even when using multiple
     // threads, lock resize_thread_team_data
     std::lock_guard<std::mutex> instance_lock(
         internal_instance->m_instance_mutex);
+#endif
 
     internal_instance->resize_thread_team_data(
         pool_reduce_size, team_reduce_size, team_shared_size,

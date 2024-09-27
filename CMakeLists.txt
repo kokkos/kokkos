@@ -5,10 +5,6 @@ if( "${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}" )
   message( FATAL_ERROR "FATAL: In-source builds are not allowed. You should create a separate directory for build files and delete CMakeCache.txt." )
 endif()
 
-if (COMMAND TRIBITS_PACKAGE)
-  TRIBITS_PACKAGE(Kokkos)
-endif()
-
 # We want to determine if options are given with the wrong case
 # In order to detect which arguments are given to compare against
 # the list of valid arguments, at the beginning here we need to
@@ -32,14 +28,9 @@ SET(KOKKOS_SRC_PATH      ${Kokkos_SOURCE_DIR})
 SET(KOKKOS_PATH          ${Kokkos_SOURCE_DIR})
 SET(KOKKOS_TOP_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR})
 
-# Is this a build as part of Trilinos?
-IF(COMMAND TRIBITS_PACKAGE_DECL)
-  SET(KOKKOS_HAS_TRILINOS ON)
-ELSE()
-  SET(KOKKOS_HAS_TRILINOS OFF)
-  SET(PACKAGE_NAME Kokkos)
-  SET(PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
-ENDIF()
+SET(PACKAGE_NAME Kokkos)
+SET(PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+
 # Is this build a subdirectory of another project
 GET_DIRECTORY_PROPERTY(HAS_PARENT PARENT_DIRECTORY)
 
@@ -72,7 +63,6 @@ ENDFUNCTION()
 
 LIST(APPEND CMAKE_MODULE_PATH cmake/Modules)
 
-IF(NOT KOKKOS_HAS_TRILINOS)
   set(CMAKE_DISABLE_SOURCE_CHANGES ON)
   set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
@@ -128,9 +118,6 @@ IF(NOT KOKKOS_HAS_TRILINOS)
           FORCE)
     ENDIF()
   ENDIF()
-ELSE()
-  SET(KOKKOS_COMPILE_LANGUAGE CXX)
-ENDIF()
 
 IF (NOT CMAKE_SIZEOF_VOID_P)
   STRING(FIND ${CMAKE_CXX_COMPILER} nvcc_wrapper FIND_IDX)
@@ -195,7 +182,9 @@ IF(NOT MSVC)
     GLOBAL_APPEND(KOKKOS_LINK_OPTIONS -DKOKKOS_DEPENDENCE)
 ENDIF()
 
-IF(Kokkos_ENABLE_TESTS AND NOT KOKKOS_HAS_TRILINOS)
+INCLUDE(${CMAKE_CURRENT_SOURCE_DIR}/cmake/kokkos_configure_trilinos.cmake)
+
+IF(Kokkos_ENABLE_TESTS)
   find_package(GTest QUIET)
 ENDIF()
 
@@ -209,13 +198,8 @@ INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_tribits.cmake)
 # to allow platform-specific checks
 INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_check_env.cmake)
 
-IF(NOT KOKKOS_HAS_TRILINOS)
-  # This does not work in Trilinos and we simply don't care
-  # to fix it for Trilinos
-  # Gather information about the runtime environment
-  INCLUDE(${KOKKOS_SRC_PATH}/cmake/build_env_info.cmake)
-  check_git_setup()
-ENDIF()
+INCLUDE(${KOKKOS_SRC_PATH}/cmake/build_env_info.cmake)
+check_git_setup()
 
 # The build environment setup goes in the following steps
 # 1) Check all the enable options. This includes checking Kokkos_DEVICES
@@ -234,11 +218,7 @@ OPTION(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 SET(KOKKOS_COMPONENT_LIBRARIES kokkoscore kokkoscontainers kokkosalgorithms kokkossimd)
 SET_PROPERTY(GLOBAL PROPERTY KOKKOS_INT_LIBRARIES kokkos ${KOKKOS_COMPONENT_LIBRARIES})
 
-IF (KOKKOS_HAS_TRILINOS)
-  SET(TRILINOS_INCDIR ${${PROJECT_NAME}_INSTALL_INCLUDE_DIR})
-  SET(KOKKOS_HEADER_DIR ${TRILINOS_INCDIR})
-  SET(KOKKOS_IS_SUBDIRECTORY TRUE)
-ELSEIF(HAS_PARENT)
+IF(HAS_PARENT)
   SET(KOKKOS_HEADER_DIR "include/kokkos")
   SET(KOKKOS_IS_SUBDIRECTORY TRUE)
 ELSE()
@@ -250,48 +230,6 @@ ENDIF()
 #
 # A) Forward declare the package so that certain options are also defined for
 # subpackages
-
-## This restores the old behavior of ProjectCompilerPostConfig.cmake
-# We must do this before KOKKOS_PACKAGE_DECL
-IF (KOKKOS_HAS_TRILINOS)
-  # Overwrite the old flags at the top-level
-  # Because Tribits doesn't use lists, it uses spaces for the list of CXX flags
-  # we have to match the annoying behavior, also we have to preserve quotes
-  # which needs another workaround.
-  SET(KOKKOS_COMPILE_OPTIONS_TMP)
-  IF (KOKKOS_ENABLE_HIP)
-    LIST(APPEND KOKKOS_COMPILE_OPTIONS ${KOKKOS_AMDGPU_OPTIONS})
-  ENDIF()
-  FOREACH(OPTION ${KOKKOS_COMPILE_OPTIONS})
-    STRING(FIND "${OPTION}" " " OPTION_HAS_WHITESPACE)
-    IF(OPTION_HAS_WHITESPACE EQUAL -1)
-      LIST(APPEND KOKKOS_COMPILE_OPTIONS_TMP "${OPTION}")
-    ELSE()
-      LIST(APPEND KOKKOS_COMPILE_OPTIONS_TMP "\"${OPTION}\"")
-    ENDIF()
-  ENDFOREACH()
-  STRING(REPLACE ";" " " KOKKOSCORE_COMPILE_OPTIONS "${KOKKOS_COMPILE_OPTIONS_TMP}")
-  LIST(APPEND KOKKOS_ALL_COMPILE_OPTIONS ${KOKKOS_COMPILE_OPTIONS})
-  IF (KOKKOS_ENABLE_CUDA)
-    LIST(APPEND KOKKOS_ALL_COMPILE_OPTIONS ${KOKKOS_CUDA_OPTIONS})
-  ENDIF()
-  FOREACH(XCOMP_FLAG ${KOKKOS_XCOMPILER_OPTIONS})
-    SET(KOKKOSCORE_XCOMPILER_OPTIONS "${KOKKOSCORE_XCOMPILER_OPTIONS} -Xcompiler ${XCOMP_FLAG}")
-    LIST(APPEND KOKKOS_ALL_COMPILE_OPTIONS -Xcompiler ${XCOMP_FLAG})
-  ENDFOREACH()
-  IF (KOKKOS_ENABLE_CUDA)
-    STRING(REPLACE ";" " " KOKKOSCORE_CUDA_OPTIONS    "${KOKKOS_CUDA_OPTIONS}")
-    FOREACH(CUDAFE_FLAG ${KOKKOS_CUDAFE_OPTIONS})
-      SET(KOKKOSCORE_CUDAFE_OPTIONS "${KOKKOSCORE_CUDAFE_OPTIONS} -Xcudafe ${CUDAFE_FLAG}")
-      LIST(APPEND KOKKOS_ALL_COMPILE_OPTIONS -Xcudafe ${CUDAFE_FLAG})
-    ENDFOREACH()
-  ENDIF()
-  #These flags get set up in KOKKOS_PACKAGE_DECL, which means they
-  #must be configured before KOKKOS_PACKAGE_DECL
-  SET(KOKKOS_ALL_COMPILE_OPTIONS
-    $<$<COMPILE_LANGUAGE:CXX>:${KOKKOS_ALL_COMPILE_OPTIONS}>)
-ENDIF()
-
 
 #------------------------------------------------------------------------------
 #
@@ -305,10 +243,9 @@ KOKKOS_PROCESS_SUBPACKAGES()
 # E) If Kokkos itself is enabled, process the Kokkos package
 #
 
-KOKKOS_PACKAGE_POSTPROCESS()
 KOKKOS_CONFIGURE_CORE()
 
-IF (NOT KOKKOS_HAS_TRILINOS AND NOT Kokkos_INSTALL_TESTING)
+IF (NOT Kokkos_INSTALL_TESTING)
   ADD_LIBRARY(kokkos INTERFACE)
   #Make sure in-tree projects can reference this as Kokkos::
   #to match the installed target names

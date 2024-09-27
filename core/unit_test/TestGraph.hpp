@@ -19,6 +19,8 @@
 
 #include <gtest/gtest.h>
 
+#include <tools/include/ToolTestingUtilities.hpp>
+
 namespace Test {
 
 template <class ExecSpace, class ValueType>
@@ -200,6 +202,11 @@ TEST_F(TEST_CATEGORY_FIXTURE_DEATH(graph), can_instantiate_only_once) {
 // one passed to the Kokkos::Graph constructor.
 TEST_F(TEST_CATEGORY_FIXTURE(graph),
        submit_onto_another_execution_space_instance) {
+#ifdef KOKKOS_ENABLE_OPENMP  // FIXME_OPENMP partition_space
+  if (ex.concurrency() < 2)
+    GTEST_SKIP() << "insufficient number of supported concurrent threads";
+#endif
+
   const auto execution_space_instances =
       Kokkos::Experimental::partition_space(ex, 1, 1);
 
@@ -393,11 +400,114 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), zero_work_reduce) {
 // Ensure that an empty graph can be submitted.
 TEST_F(TEST_CATEGORY_FIXTURE(graph), empty_graph) {
   auto graph = Kokkos::Experimental::create_graph(ex, [](auto) {});
-  ASSERT_NO_THROW({
-    graph.instantiate();
-    graph.submit(ex);
-  });
+  graph.instantiate();
+  graph.submit(ex);
   ex.fence();
+}
+
+template <typename ViewType>
+struct ForceGlobalLaunchFunctor {
+ public:
+  static constexpr size_t count =
+#if defined(KOKKOS_ENABLE_CUDA)
+      Kokkos::Impl::CudaTraits::ConstantMemoryUsage +
+#elif defined(KOKKOS_ENABLE_HIP)
+      Kokkos::Impl::HIPTraits::ConstantMemoryUsage +
+#endif
+      1;
+
+  ViewType data;
+
+  ForceGlobalLaunchFunctor(ViewType data_) : data(std::move(data_)) {}
+
+  template <typename T>
+  KOKKOS_FUNCTION void operator()(const T) const {
+    ++data();
+  }
+
+ private:
+  std::byte unused[count] = {};
+};
+
+// Ensure that "global memory launch" path works.
+TEST_F(TEST_CATEGORY_FIXTURE(graph), force_global_launch) {
+#if defined(KOKKOS_ENABLE_CUDA)
+  if constexpr (!std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>) {
+#elif defined(KOKKOS_ENABLE_HIP) && defined(KOKKOS_IMPL_HIP_NATIVE_GRAPH)
+  if constexpr (!std::is_same_v<TEST_EXECSPACE, Kokkos::HIP>) {
+#endif
+    GTEST_SKIP() << "This execution space does not support global launch.";
+
+#if defined(KOKKOS_ENABLE_CUDA) || \
+    (defined(KOKKOS_ENABLE_HIP) && defined(KOKKOS_IMPL_HIP_NATIVE_GRAPH))
+  }
+  using value_t   = int;
+  using view_t    = Kokkos::View<value_t, TEST_EXECSPACE,
+                              Kokkos::MemoryTraits<Kokkos::Atomic>>;
+  using functor_t = ForceGlobalLaunchFunctor<view_t>;
+
+  const std::string kernel_name = "Let's make it a huge kernel";
+  const std::string alloc_label =
+      kernel_name + " - GraphNodeKernel global memory functor storage";
+
+  view_t data(Kokkos::view_alloc("witness", ex));
+
+  using namespace Kokkos::Test::Tools;
+  listen_tool_events(Config::DisableAll(), Config::EnableAllocs());
+
+  std::optional<Kokkos::Experimental::Graph<TEST_EXECSPACE>> graph;
+
+  const void* ptr   = nullptr;
+  uint64_t ptr_size = 0;
+
+  ASSERT_TRUE(validate_existence(
+      [&]() {
+        graph = Kokkos::Experimental::create_graph(ex, [&](const auto& root) {
+          auto node = root.then_parallel_for(
+              kernel_name,
+              Kokkos::Experimental::require(
+                  Kokkos::RangePolicy<TEST_EXECSPACE>(0, functor_t::count),
+                  Kokkos::Experimental::WorkItemProperty::HintHeavyWeight),
+              functor_t(data));
+        });
+      },
+      [&](AllocateDataEvent alloc) {
+        if (alloc.name != alloc_label)
+          return MatchDiagnostic{
+              false, {"Allocation name mismatch (got " + alloc.name + ')'}};
+        if (alloc.size < functor_t::count)
+          return MatchDiagnostic{
+              false,
+              {"Allocation size mismatch (expected at least " +
+               std::to_string(functor_t::count) + " but got " +
+               std::to_string(alloc.size) + ')'}};
+        ptr      = alloc.ptr;
+        ptr_size = alloc.size;
+        return MatchDiagnostic{true};
+      }));
+
+  graph->instantiate();
+
+  // Fencing the default execution space instance, as the node policy
+  // was created without giving an instance (it used the default one).
+  TEST_EXECSPACE{}.fence(
+      "Ensure that kernel dispatch to global memory is finished "
+      "before submission.");
+
+  graph->submit(ex);
+  ASSERT_TRUE(contains(ex, data, functor_t::count));
+
+  ASSERT_TRUE(validate_event_set(
+      [&]() { graph.~optional(); },
+      [&](DeallocateDataEvent dealloc) {
+        if (dealloc.name == alloc_label && dealloc.ptr == ptr &&
+            dealloc.size == ptr_size)
+          return MatchDiagnostic{true};
+        return MatchDiagnostic{
+            false, {"Either the name or pointer or size did not match"}};
+      }));
+
+#endif
 }
 
 template <typename ViewType, size_t TargetIndex, size_t NumIndices = 0>
@@ -443,6 +553,11 @@ FetchValuesAndContribute(ViewType, const size_t (&)[NumIndices],
 //  \ /         fence(exec_1)               enforce dependencies.
 //   D          D(exec_0)
 TEST_F(TEST_CATEGORY_FIXTURE(graph), diamond) {
+#ifdef KOKKOS_ENABLE_OPENMP  // FIXME_OPENMP partition_space
+  if (ex.concurrency() < 4)
+    GTEST_SKIP() << "test needs at least 4 OpenMP threads";
+#endif
+
   const auto execution_space_instances =
       Kokkos::Experimental::partition_space(ex, 1, 1, 1, 1);
 
@@ -515,6 +630,11 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), diamond) {
 //                  fence(exec_1)
 //    F             F(exec_0)
 TEST_F(TEST_CATEGORY_FIXTURE(graph), end_of_submit_control_flow) {
+#ifdef KOKKOS_ENABLE_OPENMP  // FIXME_OPENMP partition_space
+  if (ex.concurrency() < 4)
+    GTEST_SKIP() << "insufficient number of supported concurrent threads";
+#endif
+
   const auto execution_space_instances =
       Kokkos::Experimental::partition_space(ex, 1, 1, 1, 1);
 

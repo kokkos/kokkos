@@ -123,6 +123,7 @@ pipeline {
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_BENCHMARKS=ON \
                                 -DKokkos_ENABLE_SYCL=ON \
+                                -DKokkos_ENABLE_SYCL_RELOCATABLE_DEVICE_CODE=ON \
                                 -DKokkos_ENABLE_UNSUPPORTED_ARCHS=ON \
                                 -DCMAKE_CXX_STANDARD=17 \
                               .. && \
@@ -464,7 +465,7 @@ pipeline {
                                 -DKokkos_ENABLE_LIBDL=OFF \
                                 -DKokkos_ENABLE_OPENMP=ON \
                                 -DKokkos_ENABLE_IMPL_MDSPAN=OFF \
-                                -DKokkos_ENABLE_IMPL_CUDA_MALLOC_ASYNC=OFF \
+                                -DKokkos_ENABLE_IMPL_CUDA_MALLOC_ASYNC=ON \
                               .. && \
                               make -j8 && ctest --verbose && \
                               cd ../example/build_cmake_in_tree && \
