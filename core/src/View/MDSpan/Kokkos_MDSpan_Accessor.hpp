@@ -226,6 +226,8 @@ class ReferenceCountedDataHandle {
 
   KOKKOS_DEFAULTED_FUNCTION
   ReferenceCountedDataHandle() = default;
+
+  // this only ever works on host
   explicit ReferenceCountedDataHandle(SharedAllocationRecord<void, void>* rec) {
     m_tracker.assign_allocated_record_to_uninitialized(rec);
     m_handle = static_cast<pointer>(get_record()->data());
