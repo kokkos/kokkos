@@ -388,6 +388,23 @@ class ReferenceCountedAccessor {
   NestedAccessor m_nested_acc;
 };
 
+template <class ElementType, class MemorySpace>
+using checked_reference_counted_accessor =
+    SpaceAwareAccessor<MemorySpace,
+                       ReferenceCountedAccessor<ElementType, MemorySpace,
+                                                default_accessor<ElementType>>>;
+
+template <class ElementType, class MemorySpace,
+          class MemoryScope = desul::MemoryScopeDevice>
+using checked_atomic_accessor_relaxed =
+    SpaceAwareAccessor<MemorySpace, AtomicAccessorRelaxed<ElementType>>;
+
+template <class ElementType, class MemorySpace,
+          class MemoryScope = desul::MemoryScopeDevice>
+using checked_reference_counted_atomic_accessor_relaxed = SpaceAwareAccessor<
+    MemorySpace, ReferenceCountedAccessor<ElementType, MemorySpace,
+                                          AtomicAccessorRelaxed<ElementType>>>;
+
 }  // namespace Impl
 }  // namespace Kokkos
 
