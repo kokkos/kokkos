@@ -74,7 +74,6 @@ void test_offsetview_construction() {
   ASSERT_EQ(ov.extent(0), 5u);
   ASSERT_EQ(ov.extent(1), 5u);
 
-#if defined(KOKKOS_ENABLE_CUDA_LAMBDA) || !defined(KOKKOS_ENABLE_CUDA)
   {
     Kokkos::Experimental::OffsetView<Scalar*, Device> offsetV1("OneDOffsetView",
                                                                range0);
@@ -156,7 +155,6 @@ void test_offsetview_construction() {
   }
 
   ASSERT_EQ(OVResult, answer) << "Bad data found in OffsetView";
-#endif
 
   {
     offset_view_type ovCopy(ov);
@@ -191,7 +189,6 @@ void test_offsetview_construction() {
     range3_type rangePolicy3DZero(point3_type{{0, 0, 0}},
                                   point3_type{{extent0, extent1, extent2}});
 
-#if defined(KOKKOS_ENABLE_CUDA_LAMBDA) || !defined(KOKKOS_ENABLE_CUDA)
     int view3DSum = 0;
     Kokkos::parallel_reduce(
         rangePolicy3DZero,
@@ -214,7 +211,6 @@ void test_offsetview_construction() {
 
     ASSERT_EQ(view3DSum, offsetView3DSum)
         << "construction of OffsetView from View and begins array broken.";
-#endif
   }
   view_type viewFromOV = ov.view();
 
@@ -239,7 +235,6 @@ void test_offsetview_construction() {
     view_type aView("aView", ov.extent(0), ov.extent(1));
     Kokkos::deep_copy(aView, ov);
 
-#if defined(KOKKOS_ENABLE_CUDA_LAMBDA) || !defined(KOKKOS_ENABLE_CUDA)
     int sum = 0;
     Kokkos::parallel_reduce(
         rangePolicy2D,
@@ -249,7 +244,6 @@ void test_offsetview_construction() {
         sum);
 
     ASSERT_EQ(sum, 0) << "deep_copy(view, offsetView) broken.";
-#endif
   }
 
   {  // test view to  offsetview deep copy
@@ -258,7 +252,6 @@ void test_offsetview_construction() {
     Kokkos::deep_copy(aView, 99);
     Kokkos::deep_copy(ov, aView);
 
-#if defined(KOKKOS_ENABLE_CUDA_LAMBDA) || !defined(KOKKOS_ENABLE_CUDA)
     int sum = 0;
     Kokkos::parallel_reduce(
         rangePolicy2D,
@@ -268,7 +261,6 @@ void test_offsetview_construction() {
         sum);
 
     ASSERT_EQ(sum, 0) << "deep_copy(offsetView, view) broken.";
-#endif
   }
 }
 
@@ -521,7 +513,6 @@ void test_offsetview_subview() {
       ASSERT_EQ(offsetSubview.begin(1), 0);
       ASSERT_EQ(offsetSubview.end(1), 9);
 
-#if defined(KOKKOS_ENABLE_CUDA_LAMBDA) || !defined(KOKKOS_ENABLE_CUDA)
       using range_type = Kokkos::MDRangePolicy<Device, Kokkos::Rank<2>,
                                                Kokkos::IndexType<int> >;
       using point_type = typename range_type::point_type;
@@ -547,7 +538,6 @@ void test_offsetview_subview() {
           sum);
 
       ASSERT_EQ(sum, 6 * (e0 - b0) * (e1 - b1));
-#endif
     }
 
     // slice 2
@@ -644,7 +634,6 @@ void test_offsetview_subview() {
   }
 }
 
-#if defined(KOKKOS_ENABLE_CUDA_LAMBDA) || !defined(KOKKOS_ENABLE_CUDA)
 template <class InputIt, class T, class BinaryOperation>
 KOKKOS_INLINE_FUNCTION T std_accumulate(InputIt first, InputIt last, T init,
                                         BinaryOperation op) {
@@ -748,7 +737,6 @@ void test_offsetview_offsets_rank3() {
 
   ASSERT_EQ(0, errors);
 }
-#endif
 
 TEST(TEST_CATEGORY, offsetview_construction) {
   test_offsetview_construction<int, TEST_EXECSPACE>();
@@ -767,7 +755,6 @@ TEST(TEST_CATEGORY, offsetview_subview) {
   test_offsetview_subview<int, TEST_EXECSPACE>();
 }
 
-#if defined(KOKKOS_ENABLE_CUDA_LAMBDA) || !defined(KOKKOS_ENABLE_CUDA)
 TEST(TEST_CATEGORY, offsetview_offsets_rank1) {
   test_offsetview_offsets_rank1<TEST_EXECSPACE>();
 }
@@ -779,7 +766,6 @@ TEST(TEST_CATEGORY, offsetview_offsets_rank2) {
 TEST(TEST_CATEGORY, offsetview_offsets_rank3) {
   test_offsetview_offsets_rank3<TEST_EXECSPACE>();
 }
-#endif
 
 }  // namespace Test
 
