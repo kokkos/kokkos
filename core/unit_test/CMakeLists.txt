@@ -87,6 +87,7 @@ set(COMPILE_ONLY_SOURCES
     TestVersionMacros.cpp
     TestViewRank.cpp
     TestViewTypeTraits.cpp
+    TestViewTypedefs.cpp
     TestTypeInfo.cpp
     TestTypeList.cpp
     TestMDRangePolicyCTAD.cpp
@@ -117,10 +118,6 @@ else()
   endif()
 endif()
 
-#TestInterOp has a dependency on containers
-if(KOKKOS_HAS_TRILINOS)
-  list(REMOVE_ITEM COMPILE_ONLY_SOURCES TestInterOp.cpp)
-endif()
 if(Kokkos_ENABLE_OPENMPTARGET)
   list(REMOVE_ITEM COMPILE_ONLY_SOURCES TestNestedReducerCTAD.cpp)
 endif()
@@ -341,6 +338,10 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
       list(APPEND ${Tag}_SOURCES2D ${file})
     endforeach()
 
+    set(${Tag}_SOURCES1 ${${Tag}_SOURCES1A} ${${Tag}_SOURCES1B})
+    set(${Tag}_SOURCES2 ${${Tag}_SOURCES2A} ${${Tag}_SOURCES2B} ${${Tag}_SOURCES2C} ${${Tag}_SOURCES2D})
+    set(${Tag}_SOURCES ${${Tag}_SOURCES1} ${${Tag}_SOURCES2})
+
     # ViewSupport should eventually contain the new implementation
     # detail tests for the mdspan based View
     set(${Tag}_VIEWSUPPORT)
@@ -355,10 +356,6 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
       endforeach()
       kokkos_add_executable_and_test(CoreUnitTest_${Tag}_ViewSupport SOURCES UnitTestMainInit.cpp ${${Tag}_VIEWSUPPORT})
     endif()
-
-    set(${Tag}_SOURCES1 ${${Tag}_SOURCES1A} ${${Tag}_SOURCES1B})
-    set(${Tag}_SOURCES2 ${${Tag}_SOURCES2A} ${${Tag}_SOURCES2B} ${${Tag}_SOURCES2C} ${${Tag}_SOURCES2D})
-    set(${Tag}_SOURCES ${${Tag}_SOURCES1} ${${Tag}_SOURCES2})
   endif()
 endforeach()
 
@@ -1008,23 +1005,21 @@ if(KOKKOS_ENABLE_LIBDL)
     "kokkosp_init_library::kokkosp_parse_args:4:Kokkos_ProfilingAllCalls:-c:test:delimit::.*::kokkosp_allocate_data:${MEMSPACE_REGEX}:source:${ADDRESS_REGEX}:40::kokkosp_begin_parallel_for:Kokkos::View::initialization [[]source] via memset:[0-9]+:0::kokkosp_end_parallel_for:0::kokkosp_allocate_data:${MEMSPACE_REGEX}:destination:${ADDRESS_REGEX}:40::kokkosp_begin_parallel_for:Kokkos::View::initialization [[]destination] via memset:[0-9]+:0::kokkosp_end_parallel_for:0::kokkosp_begin_deep_copy:${MEMSPACE_REGEX}:destination:${ADDRESS_REGEX}:${MEMSPACE_REGEX}:source:${ADDRESS_REGEX}:40::.*kokkosp_end_deep_copy::kokkosp_begin_parallel_for:parallel_for:${SIZE_REGEX}:0::kokkosp_end_parallel_for:0::kokkosp_begin_parallel_reduce:parallel_reduce:${SIZE_REGEX}:1${SKIP_SCRATCH_INITIALIZATION_REGEX}::kokkosp_end_parallel_reduce:1::kokkosp_begin_parallel_scan:parallel_scan:${SIZE_REGEX}:2::kokkosp_end_parallel_scan:2::kokkosp_push_profile_region:push_region::kokkosp_pop_profile_region::kokkosp_create_profile_section:created_section:3::kokkosp_start_profile_section:3::kokkosp_stop_profile_section:3::kokkosp_destroy_profile_section:3::kokkosp_profile_event:profiling_event::kokkosp_declare_metadata:dogs:good::kokkosp_deallocate_data:${MEMSPACE_REGEX}:destination:${ADDRESS_REGEX}:40::kokkosp_deallocate_data:${MEMSPACE_REGEX}:source:${ADDRESS_REGEX}:40::kokkosp_finalize_library::"
   )
 endif() #KOKKOS_ENABLE_LIBDL
-if(NOT KOKKOS_HAS_TRILINOS)
-  kokkos_add_test_executable(
-    StackTraceTestExec
-    SOURCES
-    TestStackTrace.cpp
-    TestStackTrace_f0.cpp
-    TestStackTrace_f1.cpp
-    TestStackTrace_f2.cpp
-    TestStackTrace_f3.cpp
-    TestStackTrace_f4.cpp
-  )
-  # We need -rdynamic on GNU platforms for the stacktrace functionality
-  # to work correctly with shared libraries
-  kokkos_set_exe_property(StackTraceTestExec ENABLE_EXPORTS ON)
+kokkos_add_test_executable(
+  StackTraceTestExec
+  SOURCES
+  TestStackTrace.cpp
+  TestStackTrace_f0.cpp
+  TestStackTrace_f1.cpp
+  TestStackTrace_f2.cpp
+  TestStackTrace_f3.cpp
+  TestStackTrace_f4.cpp
+)
+# We need -rdynamic on GNU platforms for the stacktrace functionality
+# to work correctly with shared libraries
+kokkos_set_exe_property(StackTraceTestExec ENABLE_EXPORTS ON)
 
-  kokkos_add_test(NAME CoreUnitTest_StackTraceTest EXE StackTraceTestExec FAIL_REGULAR_EXPRESSION "FAILED")
-endif()
+kokkos_add_test(NAME CoreUnitTest_StackTraceTest EXE StackTraceTestExec FAIL_REGULAR_EXPRESSION "FAILED")
 
 if(KOKKOS_ENABLE_HWLOC)
   kokkos_add_executable_and_test(CoreUnitTest_HWLOC SOURCES UnitTestMain.cpp TestHWLOC.cpp)
@@ -1087,29 +1082,40 @@ kokkos_add_executable_and_test(
   CoreUnitTest_CMakePassCmdLineArgs SOURCES UnitTest_CMakePassCmdLineArgs.cpp ARGS "one 2 THREE"
 )
 
-# This test is not properly set up to run within Trilinos
-if(NOT KOKKOS_HAS_TRILINOS)
-  set_source_files_properties(UnitTest_DeviceAndThreads.cpp PROPERTIES LANGUAGE ${KOKKOS_COMPILE_LANGUAGE})
-  add_executable(Kokkos_CoreUnitTest_DeviceAndThreads UnitTest_DeviceAndThreads.cpp)
-  target_link_libraries(Kokkos_CoreUnitTest_DeviceAndThreads Kokkos::kokkoscore)
-  find_package(Python3 COMPONENTS Interpreter)
-  if(Python3_Interpreter_FOUND AND Python3_VERSION VERSION_GREATER_EQUAL 3.7)
-    if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.20)
-      set(USE_SOURCE_PERMISSIONS_WHEN_SUPPORTED USE_SOURCE_PERMISSIONS)
-    endif()
-    file(
-      GENERATE
-      OUTPUT $<TARGET_FILE_DIR:Kokkos_CoreUnitTest_DeviceAndThreads>/TestDeviceAndThreads.py
-      INPUT TestDeviceAndThreads.py
-      ${USE_SOURCE_PERMISSIONS_WHEN_SUPPORTED}
-    )
-    add_test(NAME Kokkos_CoreUnitTest_DeviceAndThreads
-             COMMAND ${Python3_EXECUTABLE}
-                     $<TARGET_FILE_DIR:Kokkos_CoreUnitTest_DeviceAndThreads>/TestDeviceAndThreads.py -v
-    )
+kokkos_add_executable(CoreUnitTest_CMakeTriBITSCompatibility SOURCES UnitTest_CMakeTriBITSCompatibility.cpp)
+
+kokkos_add_test(NAME CoreUnitTest_CMakeTriBITSCompatibilityWillFail EXE CoreUnitTest_CMakeTriBITSCompatibility)
+set_property(TEST Kokkos_CoreUnitTest_CMakeTriBITSCompatibilityWillFail PROPERTY WILL_FAIL TRUE)
+
+set(Kokkos_CoreUnitTest_CMakeTriBITSCompatibilityDisable_DISABLE ON)
+kokkos_add_test(NAME CoreUnitTest_CMakeTriBITSCompatibilityDisable EXE CoreUnitTest_CMakeTriBITSCompatibility)
+
+set(Kokkos_CoreUnitTest_CMakeTriBITSCompatibilityExtraArgs_EXTRA_ARGS "--kokkos-test-tribits-compatibility=1")
+kokkos_add_test(NAME CoreUnitTest_CMakeTriBITSCompatibilityExtraArgs EXE CoreUnitTest_CMakeTriBITSCompatibility)
+
+set(Kokkos_CoreUnitTest_CMakeTriBITSCompatibilityEnvironment_ENVIRONMENT "KOKKOS_TEST_TRIBITS_COMPATIBILITY=1")
+kokkos_add_test(NAME CoreUnitTest_CMakeTriBITSCompatibilityEnvironment EXE CoreUnitTest_CMakeTriBITSCompatibility)
+
+set_source_files_properties(UnitTest_DeviceAndThreads.cpp PROPERTIES LANGUAGE ${KOKKOS_COMPILE_LANGUAGE})
+add_executable(Kokkos_CoreUnitTest_DeviceAndThreads UnitTest_DeviceAndThreads.cpp)
+target_link_libraries(Kokkos_CoreUnitTest_DeviceAndThreads Kokkos::kokkoscore)
+find_package(Python3 COMPONENTS Interpreter)
+if(Python3_Interpreter_FOUND AND Python3_VERSION VERSION_GREATER_EQUAL 3.7)
+  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.20)
+    set(USE_SOURCE_PERMISSIONS_WHEN_SUPPORTED USE_SOURCE_PERMISSIONS)
   endif()
+  file(
+    GENERATE
+    OUTPUT $<TARGET_FILE_DIR:Kokkos_CoreUnitTest_DeviceAndThreads>/TestDeviceAndThreads.py
+    INPUT TestDeviceAndThreads.py
+    ${USE_SOURCE_PERMISSIONS_WHEN_SUPPORTED}
+  )
+  add_test(NAME Kokkos_CoreUnitTest_DeviceAndThreads
+           COMMAND ${Python3_EXECUTABLE}
+                   $<TARGET_FILE_DIR:Kokkos_CoreUnitTest_DeviceAndThreads>/TestDeviceAndThreads.py -v
+  )
 endif()
 
-if(KOKKOS_ENABLE_HEADER_SELF_CONTAINMENT_TESTS AND NOT KOKKOS_HAS_TRILINOS AND NOT WIN32)
+if(KOKKOS_ENABLE_HEADER_SELF_CONTAINMENT_TESTS AND NOT WIN32)
   add_subdirectory(headers_self_contained)
 endif()
