@@ -180,7 +180,7 @@ create_graph(Closure&& arg_closure) {
 #include <Cuda/Kokkos_Cuda_Graph_Impl.hpp>
 #if defined(KOKKOS_ENABLE_HIP)
 // The implementation of hipGraph in ROCm 5.2 is bugged, so we cannot use it.
-#if !((HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR == 2))
+#if defined(KOKKOS_IMPL_HIP_NATIVE_GRAPH)
 #include <HIP/Kokkos_HIP_Graph_Impl.hpp>
 #endif
 #endif

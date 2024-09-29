@@ -16,13 +16,18 @@
 
 #include <cstdlib>
 #include <iostream>
-#include <string>
+#include <string_view>
 
 int main(int argc, char* argv[]) {
-  if (argc != 4 || std::string(argv[1]) != "one" ||
-      std::string(argv[2]) != "2" || std::string(argv[3]) != "THREE") {
-    std::cerr << "must be called as `<exe> one 2 THREE`\n";
-    return EXIT_FAILURE;
+  if (std::getenv("KOKKOS_TEST_TRIBITS_COMPATIBILITY")) {
+    return EXIT_SUCCESS;
   }
-  return EXIT_SUCCESS;
+  if (argc == 2 && std::string_view(argv[1]).find(
+                       "--kokkos-test-tribits-compatibility") == 0) {
+    return EXIT_SUCCESS;
+  }
+  std::cerr << "must be called with `KOKKOS_TEST_TRIBITS_COMPATIBILITY` "
+               "environment variable set or pass "
+               "`--kokkos-test-tribits-compatibility` as command line argument";
+  return EXIT_FAILURE;
 }

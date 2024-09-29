@@ -166,7 +166,7 @@ constexpr bool test_view_typedefs_impl() {
   static_assert(std::is_same_v<typename ViewType::data_handle_type, typename ViewType::pointer_type>);
   static_assert(std::is_same_v<typename ViewType::reference, typename ViewType::reference_type>);
   return true;
-};
+}
 
 // Helper function to unpack data type and other args from the View, and pass them on
 template<class T, class ... ViewArgs>
