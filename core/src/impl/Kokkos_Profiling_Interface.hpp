@@ -103,6 +103,17 @@ inline uint32_t device_id(ExecutionSpace const& space) noexcept {
 }
 }  // namespace Experimental
 }  // namespace Tools
+
+namespace Impl {
+inline uint32_t int_for_synchronization_reason(
+    Kokkos::Tools::Experimental::SpecialSynchronizationCases reason) {
+  switch (reason) {
+    case GlobalDeviceSynchronization: return 0;
+    case DeepCopyResourceSynchronization: return 0x00ffffff;
+  }
+  return 0;
+}
+}  // namespace Impl
 }  // end namespace Kokkos
 
 #if defined(KOKKOS_ENABLE_LIBDL)
