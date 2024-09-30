@@ -101,10 +101,7 @@ inline uint32_t device_id(ExecutionSpace const& space) noexcept {
           << num_instance_bits) +
          space.impl_instance_id();
 }
-}  // namespace Experimental
-}  // namespace Tools
 
-namespace Impl {
 inline uint32_t int_for_synchronization_reason(
     Kokkos::Tools::Experimental::SpecialSynchronizationCases reason) {
   switch (reason) {
@@ -113,7 +110,8 @@ inline uint32_t int_for_synchronization_reason(
   }
   return 0;
 }
-}  // namespace Impl
+}  // namespace Experimental
+}  // namespace Tools
 }  // end namespace Kokkos
 
 #if defined(KOKKOS_ENABLE_LIBDL)
