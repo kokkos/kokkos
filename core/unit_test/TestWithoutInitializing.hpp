@@ -225,10 +225,15 @@ TEST(TEST_CATEGORY, deep_copy_zero_memset) {
   auto success =
 #if defined(KOKKOS_ENABLE_IMPL_HIP_UNIFIED_MEMORY) && \
     defined(KOKKOS_ARCH_AMD_GFX942)
-      validate_existence([&]() { Kokkos::deep_copy(bla, 0); },
-                         [&](EndParallelForEvent) {
-                           return MatchDiagnostic{true, {"Found end event"}};
-                         });
+      validate_existence(
+          [&]() { Kokkos::deep_copy(bla, 0); },
+          [&](BeginParallelForEvent e) {
+            const bool found =
+                (e.descriptor().find("Kokkos::ZeroMemset via parallel_for") !=
+                 std::string::npos);
+            return MatchDiagnostic{found,
+                                   {"Found expected parallel_for label"}};
+          });
 #else
       validate_absence([&]() { Kokkos::deep_copy(bla, 0); },
                        [&](BeginParallelForEvent) {
