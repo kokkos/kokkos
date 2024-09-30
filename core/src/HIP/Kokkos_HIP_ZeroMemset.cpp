@@ -27,7 +27,7 @@ namespace Impl {
 // alternative to hipMemsetAsync, which sets the first `cnt` bytes of `dst` to 0
 void zero_with_hip_kernel(const HIP& exec_space, void* dst, size_t cnt) {
   Kokkos::parallel_for(
-      "zero_with_hip_kernel",
+      "Kokkos::ZeroMemset via parallel_for",
       Kokkos::RangePolicy<Kokkos::HIP>(exec_space, 0, cnt),
       KOKKOS_LAMBDA(size_t i) { static_cast<char*>(dst)[i] = 0; });
 }
