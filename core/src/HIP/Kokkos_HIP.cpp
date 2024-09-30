@@ -49,34 +49,24 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
   Impl::HIPInternal::m_hipDev = hip_device_id;
   KOKKOS_IMPL_HIP_SAFE_CALL(
       hipGetDeviceProperties(&Impl::HIPInternal::m_deviceProp, hip_device_id));
-  const auto& hipProp = Impl::HIPInternal::m_deviceProp;
   KOKKOS_IMPL_HIP_SAFE_CALL(hipSetDevice(hip_device_id));
 
-  // number of multiprocessors
-  Impl::HIPInternal::m_multiProcCount = hipProp.multiProcessorCount;
-
-  //----------------------------------
-  // Maximum number of warps,
-  // at most one warp per thread in a warp for reduction.
-  Impl::HIPInternal::m_maxWarpCount =
-      hipProp.maxThreadsPerBlock / Impl::HIPTraits::WarpSize;
-  if (Impl::HIPTraits::WarpSize < Impl::HIPInternal::m_maxWarpCount) {
-    Impl::HIPInternal::m_maxWarpCount = Impl::HIPTraits::WarpSize;
+  // Check that we are running on the expected architecture
+  if (std::string arch_name = Impl::HIPInternal::m_deviceProp.gcnArchName;
+      arch_name.find(KOKKOS_ARCH_AMD_GPU) != 0) {
+    std::string error_message =
+        "Kokkos::HIP::initialize ERROR: running kernels compiled for " +
+        std::string(KOKKOS_ARCH_AMD_GPU) + " on " + arch_name + " device.\n";
+    Kokkos::abort(error_message.c_str());
   }
 
-  //----------------------------------
-  // Maximum number of blocks
-  Impl::HIPInternal::m_maxBlock[0] = hipProp.maxGridSize[0];
-  Impl::HIPInternal::m_maxBlock[1] = hipProp.maxGridSize[1];
-  Impl::HIPInternal::m_maxBlock[2] = hipProp.maxGridSize[2];
-
-  // theoretically, we can get 40 WF's / CU, but only can sustain 32 see
-  // https://github.com/ROCm-Developer-Tools/HIP/blob/a0b5dfd625d99af7e288629747b40dd057183173/vdi/hip_platform.cpp#L742
-  Impl::HIPInternal::m_maxWavesPerCU = 32;
-  Impl::HIPInternal::m_shmemPerSM    = hipProp.maxSharedMemoryPerMultiProcessor;
-  Impl::HIPInternal::m_maxShmemPerBlock = hipProp.sharedMemPerBlock;
+  // theoretically on GFX 9XX GPUs, we can get 40 WF's / CU, but only can
+  // sustain 32 see
+  // https://github.com/ROCm/clr/blob/4d0b815d06751735e6a50fa46e913fdf85f751f0/hipamd/src/hip_platform.cpp#L362-L366
+  const int maxWavesPerCU =
+      Impl::HIPInternal::m_deviceProp.major <= 9 ? 32 : 64;
   Impl::HIPInternal::m_maxThreadsPerSM =
-      Impl::HIPInternal::m_maxWavesPerCU * Impl::HIPTraits::WarpSize;
+      maxWavesPerCU * Impl::HIPTraits::WarpSize;
 
   // Init the array for used for arbitrarily sized atomics
   desul::Impl::init_lock_arrays();  // FIXME

@@ -251,20 +251,6 @@ struct TestDynamicView {
           new_result_sum);
 
       ASSERT_EQ(new_result_sum, (value_type)(da_size * (da_size - 1) / 2));
-
-      // Try to deep_copy device_dynamic_view directly to/from host.
-      // host-to-device currently fails to compile because DP and SP are
-      // swapped in the deep_copy implementation.
-      // Once that's fixed, both deep_copy's will fail at runtime because the
-      // destination execution space cannot access the source memory space.
-      // Check if the memory spaces are different before testing the deep_copy.
-      if (!Kokkos::SpaceAccessibility<Kokkos::HostSpace,
-                                      memory_space>::accessible) {
-        ASSERT_THROW(Kokkos::deep_copy(host_view, device_dynamic_view),
-                     std::runtime_error);
-        ASSERT_THROW(Kokkos::deep_copy(device_dynamic_view, host_view),
-                     std::runtime_error);
-      }
     }
   }
 };

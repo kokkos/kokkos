@@ -149,8 +149,9 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>, HIP> {
                   static_cast<std::int64_t>(m_league_size))));
     }
 
-    int const shmem_size_total = m_shmem_begin + m_shmem_size;
-    if (internal_space_instance->m_maxShmemPerBlock < shmem_size_total) {
+    unsigned int const shmem_size_total = m_shmem_begin + m_shmem_size;
+    if (internal_space_instance->m_deviceProp.sharedMemPerBlock <
+        shmem_size_total) {
       Kokkos::Impl::throw_runtime_exception(std::string(
           "Kokkos::Impl::ParallelFor< HIP > insufficient shared memory"));
     }

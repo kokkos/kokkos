@@ -122,7 +122,7 @@ KOKKOS_INLINE_FUNCTION void offsetview_verify_operator_bounds(
                                             label.c_str());
          offsetview_error_operator_bounds<0>(buffer + n, LEN - n, map, begins,
                                              args...);
-         Kokkos::Impl::throw_runtime_exception(std::string(buffer));))
+         Kokkos::abort(buffer);))
 
     KOKKOS_IF_ON_DEVICE(
         (Kokkos::abort("OffsetView bounds error"); (void)tracker;))
@@ -393,7 +393,7 @@ class OffsetView : public View<DataType, Properties...> {
       message +=
           "ends.size() "
           "(" +
-          std::to_string(begins.size()) +
+          std::to_string(ends.size()) +
           ")"
           " != Rank "
           "(" +
@@ -439,7 +439,7 @@ class OffsetView : public View<DataType, Properties...> {
       message =
           "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView\n" +
           message;
-      Kokkos::Impl::throw_runtime_exception(message);
+      Kokkos::abort(message.c_str());
     }
 
     return subtraction_failure::none;

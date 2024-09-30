@@ -491,7 +491,10 @@ struct CudaParallelLaunchKernelInvoker<
             cuda_instance->m_deviceProp, block_size, shmem, desired_occupancy);
       }
 
-      auto* driver_ptr = Impl::allocate_driver_storage_for_kernel(driver);
+      auto* driver_ptr = Impl::allocate_driver_storage_for_kernel(
+          CudaSpace::impl_create(cuda_instance->m_cudaDev,
+                                 cuda_instance->m_stream),
+          driver);
 
       // Unlike in the non-graph case, we can get away with doing an async copy
       // here because the `DriverType` instance is held in the GraphNodeImpl
