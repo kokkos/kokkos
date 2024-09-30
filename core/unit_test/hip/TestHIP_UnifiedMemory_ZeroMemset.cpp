@@ -28,14 +28,10 @@ TEST(hip, unified_memory_zero_memset) {
 #endif
 
   constexpr size_t N = 1024 * 1024;  // size doesn't matter
-  int* ptr           = new int[N];
-  Kokkos::View<int*, Kokkos::HIPSpace> a(ptr, N);
+  std::vector<int> v(N, 1);          // initialize to non-zero
+  Kokkos::View<int*, Kokkos::HIPSpace> a(v.data(), N);
 
-  // initialize a to something non-zero
-  Kokkos::parallel_for(
-      N, KOKKOS_LAMBDA(int i) { a[i] = 1; });
-
-  // try the deep copy (this is where the error actually occured)
+  // zero with deep_copy (this is where the error occurs)
   Kokkos::deep_copy(a, 0);
 
   // see if it was zeroed
