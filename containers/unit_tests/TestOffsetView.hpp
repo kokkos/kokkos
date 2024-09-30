@@ -336,46 +336,131 @@ void test_offsetview_unmanaged_construction() {
     ASSERT_EQ(bb, ib);
     ASSERT_EQ(bb, ii);
   }
+}
+
+template <typename Scalar, typename Device>
+void test_offsetview_unmanaged_construction_death() {
+  // Preallocated memory (Only need a valid address for this test)
+  Scalar s;
+
+  // Regular expression syntax on Windows is a pain. `.` does not match `\n`.
+  // Feel free to make it work if you have time to spare.
+#ifdef _WIN32
+#define SKIP_REGEX_ON_WINDOWS(REGEX) ""
+#else
+#define SKIP_REGEX_ON_WINDOWS(REGEX) REGEX
+#endif
 
   {
     using offset_view_type = Kokkos::Experimental::OffsetView<Scalar*, Device>;
 
     // Range calculations must be positive
-    ASSERT_NO_THROW(offset_view_type(&s, {0}, {1}));
-    ASSERT_NO_THROW(offset_view_type(&s, {0}, {0}));
-    ASSERT_THROW(offset_view_type(&s, {0}, {-1}), std::runtime_error);
+    (void)offset_view_type(&s, {0}, {1});
+    (void)offset_view_type(&s, {0}, {0});
+    ASSERT_DEATH(
+        offset_view_type(&s, {0}, {-1}),
+        SKIP_REGEX_ON_WINDOWS(
+            "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView"
+            ".*"
+            "\\(ends\\[0\\] \\(-1\\) - begins\\[0\\] \\(0\\)\\) must be "
+            "non-negative"));
   }
 
   {
     using offset_view_type = Kokkos::Experimental::OffsetView<Scalar*, Device>;
 
     // Range calculations must not overflow
-    ASSERT_NO_THROW(offset_view_type(&s, {0}, {0x7fffffffffffffffl}));
-    ASSERT_THROW(offset_view_type(&s, {-1}, {0x7fffffffffffffffl}),
-                 std::runtime_error);
-    ASSERT_THROW(
+    (void)offset_view_type(&s, {0}, {0x7fffffffffffffffl});
+    ASSERT_DEATH(
+        offset_view_type(&s, {-1}, {0x7fffffffffffffffl}),
+        SKIP_REGEX_ON_WINDOWS(
+            "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView"
+            ".*"
+            "\\(ends\\[0\\] \\(9223372036854775807\\) - begins\\[0\\] "
+            "\\(-1\\)\\) "
+            "overflows"));
+    ASSERT_DEATH(
         offset_view_type(&s, {-0x7fffffffffffffffl - 1}, {0x7fffffffffffffffl}),
-        std::runtime_error);
-    ASSERT_THROW(offset_view_type(&s, {-0x7fffffffffffffffl - 1}, {0}),
-                 std::runtime_error);
+        SKIP_REGEX_ON_WINDOWS(
+            "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView"
+            ".*"
+            "\\(ends\\[0\\] \\(9223372036854775807\\) - begins\\[0\\] "
+            "\\(-9223372036854775808\\)\\) "
+            "overflows"));
+    ASSERT_DEATH(
+        offset_view_type(&s, {-0x7fffffffffffffffl - 1}, {0}),
+        SKIP_REGEX_ON_WINDOWS(
+            "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView"
+            ".*"
+            "\\(ends\\[0\\] \\(0\\) - begins\\[0\\] "
+            "\\(-9223372036854775808\\)\\) "
+            "overflows"));
   }
 
   {
     using offset_view_type = Kokkos::Experimental::OffsetView<Scalar**, Device>;
 
-    // Should throw when the rank of begins and/or ends doesn't match that of
-    // OffsetView
-    ASSERT_THROW(offset_view_type(&s, {0}, {1}), std::runtime_error);
-    ASSERT_THROW(offset_view_type(&s, {0}, {1, 1}), std::runtime_error);
-    ASSERT_THROW(offset_view_type(&s, {0}, {1, 1, 1}), std::runtime_error);
-    ASSERT_THROW(offset_view_type(&s, {0, 0}, {1}), std::runtime_error);
-    ASSERT_NO_THROW(offset_view_type(&s, {0, 0}, {1, 1}));
-    ASSERT_THROW(offset_view_type(&s, {0, 0}, {1, 1, 1}), std::runtime_error);
-    ASSERT_THROW(offset_view_type(&s, {0, 0, 0}, {1}), std::runtime_error);
-    ASSERT_THROW(offset_view_type(&s, {0, 0, 0}, {1, 1}), std::runtime_error);
-    ASSERT_THROW(offset_view_type(&s, {0, 0, 0}, {1, 1, 1}),
-                 std::runtime_error);
+    // Should throw when the rank of begins and/or ends doesn't match that
+    // of OffsetView
+    ASSERT_DEATH(
+        offset_view_type(&s, {0}, {1}),
+        SKIP_REGEX_ON_WINDOWS(
+            "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView"
+            ".*"
+            "begins\\.size\\(\\) \\(1\\) != Rank \\(2\\)"
+            ".*"
+            "ends\\.size\\(\\) \\(1\\) != Rank \\(2\\)"));
+    ASSERT_DEATH(
+        offset_view_type(&s, {0}, {1, 1}),
+        SKIP_REGEX_ON_WINDOWS(
+            "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView"
+            ".*"
+            "begins\\.size\\(\\) \\(1\\) != Rank \\(2\\)"));
+    ASSERT_DEATH(
+        offset_view_type(&s, {0}, {1, 1, 1}),
+        SKIP_REGEX_ON_WINDOWS(
+            "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView"
+            ".*"
+            "begins\\.size\\(\\) \\(1\\) != Rank \\(2\\)"
+            ".*"
+            "ends\\.size\\(\\) \\(3\\) != Rank \\(2\\)"));
+    ASSERT_DEATH(
+        offset_view_type(&s, {0, 0}, {1}),
+        SKIP_REGEX_ON_WINDOWS(
+            "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView"
+            ".*"
+            "ends\\.size\\(\\) \\(1\\) != Rank \\(2\\)"));
+    (void)offset_view_type(&s, {0, 0}, {1, 1});
+    ASSERT_DEATH(
+        offset_view_type(&s, {0, 0}, {1, 1, 1}),
+        SKIP_REGEX_ON_WINDOWS(
+            "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView"
+            ".*"
+            "ends\\.size\\(\\) \\(3\\) != Rank \\(2\\)"));
+    ASSERT_DEATH(
+        offset_view_type(&s, {0, 0, 0}, {1}),
+        SKIP_REGEX_ON_WINDOWS(
+            "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView"
+            ".*"
+            "begins\\.size\\(\\) \\(3\\) != Rank \\(2\\)"
+            ".*"
+            "ends\\.size\\(\\) \\(1\\) != Rank \\(2\\)"));
+    ASSERT_DEATH(
+        offset_view_type(&s, {0, 0, 0}, {1, 1}),
+        SKIP_REGEX_ON_WINDOWS(
+            "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView"
+            ".*"
+            "begins\\.size\\(\\) \\(3\\) != Rank \\(2\\)"));
+    ASSERT_DEATH(
+        offset_view_type(&s, {0, 0, 0}, {1, 1, 1}),
+        SKIP_REGEX_ON_WINDOWS(
+            "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView"
+            ".*"
+            "begins\\.size\\(\\) \\(3\\) != Rank \\(2\\)"
+            ".*"
+            "ends\\.size\\(\\) \\(3\\) != Rank \\(2\\)"));
   }
+#undef SKIP_REGEX_ON_WINDOWS
 }
 
 template <typename Scalar, typename Device>
@@ -671,6 +756,11 @@ TEST(TEST_CATEGORY, offsetview_construction) {
 
 TEST(TEST_CATEGORY, offsetview_unmanaged_construction) {
   test_offsetview_unmanaged_construction<int, TEST_EXECSPACE>();
+}
+
+TEST(TEST_CATEGORY_DEATH, offsetview_unmanaged_construction) {
+  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+  test_offsetview_unmanaged_construction_death<int, TEST_EXECSPACE>();
 }
 
 TEST(TEST_CATEGORY, offsetview_subview) {
