@@ -733,8 +733,8 @@ if(Kokkos_ENABLE_CUDA)
 endif()
 
 if(Kokkos_ENABLE_HIP)
-  if (Kokkos_ENABLE_IMPL_HIP_UNIFIED_MEMORY)
-    SET(HIP_UNIFIED_MEMORY_SOURCES hip/TestHIP_UnifiedMemory_ZeroMemset.cpp)
+  if(Kokkos_ENABLE_IMPL_HIP_UNIFIED_MEMORY)
+    set(HIP_UNIFIED_MEMORY_SOURCES hip/TestHIP_UnifiedMemory_ZeroMemset.cpp)
   endif()
   kokkos_add_executable_and_test(
     CoreUnitTest_HIP
