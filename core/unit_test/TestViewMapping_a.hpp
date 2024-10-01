@@ -1009,9 +1009,9 @@ void test_view_mapping() {
     ASSERT_EQ(a.use_count(), 1);
     ASSERT_EQ(b.use_count(), 0);
 
-#if !defined(KOKKOS_ENABLE_CUDA) || !defined(KOKKOS_ENABLE_CUDA_LAMBDA)
-    // Cannot launch host lambda when CUDA lambda is enabled.
-
+// FIXME_NVCC For some reason, the use count is higher (but still constant) when
+// using nvcc. Replacing the lambda with a functor doesn't show this behavior.
+#if !(defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_COMPILER_NVCC))
     using host_exec_space =
         typename Kokkos::Impl::HostMirror<Space>::Space::execution_space;
 
@@ -1032,7 +1032,7 @@ void test_view_mapping() {
         },
         errors);
     ASSERT_EQ(errors, 0);
-#endif  // #if !defined( KOKKOS_ENABLE_CUDA_LAMBDA )
+#endif
   }
 }
 

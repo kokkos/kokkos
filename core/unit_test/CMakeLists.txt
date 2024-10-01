@@ -341,6 +341,21 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
     set(${Tag}_SOURCES1 ${${Tag}_SOURCES1A} ${${Tag}_SOURCES1B})
     set(${Tag}_SOURCES2 ${${Tag}_SOURCES2A} ${${Tag}_SOURCES2B} ${${Tag}_SOURCES2C} ${${Tag}_SOURCES2D})
     set(${Tag}_SOURCES ${${Tag}_SOURCES1} ${${Tag}_SOURCES2})
+
+    # ViewSupport should eventually contain the new implementation
+    # detail tests for the mdspan based View
+    set(${Tag}_VIEWSUPPORT)
+    if(Kokkos_ENABLE_IMPL_MDSPAN)
+      foreach(Name ReferenceCountedAccessor ReferenceCountedDataHandle)
+        set(file ${dir}/Test${Tag}_View_${Name}.cpp)
+        # Write to a temporary intermediate file and call configure_file to avoid
+        # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
+        file(WRITE ${dir}/dummy.cpp "#include <Test${Tag}_Category.hpp>\n" "#include <view/Test${Name}.hpp>\n")
+        configure_file(${dir}/dummy.cpp ${file})
+        list(APPEND ${Tag}_VIEWSUPPORT ${file})
+      endforeach()
+      kokkos_add_executable_and_test(CoreUnitTest_${Tag}_ViewSupport SOURCES UnitTestMainInit.cpp ${${Tag}_VIEWSUPPORT})
+    endif()
   endif()
 endforeach()
 
@@ -733,6 +748,9 @@ if(Kokkos_ENABLE_CUDA)
 endif()
 
 if(Kokkos_ENABLE_HIP)
+  if(Kokkos_ENABLE_IMPL_HIP_UNIFIED_MEMORY)
+    set(HIP_UNIFIED_MEMORY_SOURCES hip/TestHIP_UnifiedMemory_ZeroMemset.cpp)
+  endif()
   kokkos_add_executable_and_test(
     CoreUnitTest_HIP
     SOURCES
@@ -744,6 +762,7 @@ if(Kokkos_ENABLE_HIP)
     hip/TestHIP_TeamScratchStreams.cpp
     hip/TestHIP_AsyncLauncher.cpp
     hip/TestHIP_BlocksizeDeduction.cpp
+    ${HIP_UNIFIED_MEMORY_SOURCES}
   )
   kokkos_add_executable_and_test(CoreUnitTest_HIPInterOpInit SOURCES UnitTestMain.cpp hip/TestHIP_InterOp_Init.cpp)
   kokkos_add_executable_and_test(

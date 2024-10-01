@@ -201,15 +201,6 @@ void profile_fence_event(const std::string& name, DirectFenceIDHandle devIDTag,
   Kokkos::Tools::endFence(handle);
 }
 
-inline uint32_t int_for_synchronization_reason(
-    Kokkos::Tools::Experimental::SpecialSynchronizationCases reason) {
-  switch (reason) {
-    case GlobalDeviceSynchronization: return 0;
-    case DeepCopyResourceSynchronization: return 0x00ffffff;
-  }
-  return 0;
-}
-
 template <typename Space, typename FencingFunctor>
 void profile_fence_event(
     const std::string& name,
