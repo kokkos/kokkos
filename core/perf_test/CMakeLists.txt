@@ -16,9 +16,11 @@ if(KOKKOS_ENABLE_TESTS)
 
   kokkos_include_directories(REQUIRED_DURING_INSTALLATION_TESTING ${CMAKE_CURRENT_SOURCE_DIR})
 
-  if(NOT Kokkos_ENABLE_OPENMPTARGET)
-    # FIXME OPENMPTARGET needs tasking
-    kokkos_add_executable_and_test(PerformanceTest_TaskDag SOURCES test_taskdag.cpp CATEGORIES PERFORMANCE)
+  if(Kokkos_ENABLE_DEPRECATED_CODE_4 AND NOT Kokkos_ENABLE_DEPRECATION_WARNINGS)
+    if(NOT Kokkos_ENABLE_OPENMPTARGET)
+      # FIXME OPENMPTARGET needs tasking
+      kokkos_add_executable_and_test(PerformanceTest_TaskDag SOURCES test_taskdag.cpp CATEGORIES PERFORMANCE)
+    endif()
   endif()
 endif()
 
