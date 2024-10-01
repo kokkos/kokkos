@@ -510,16 +510,31 @@ class BasicView {
   }
 #else
   // C++17 variant of operator()
+
+  // Some weird unexplained issue in compiling the SFINAE version with CUDA/MSVC
+  // So we just use post factor check here with static_assert
+#if defined(KOKKOS_ENABLE_CUDA) && defined(_WIN32)
+  template <class... OtherIndexTypes>
+  KOKKOS_FUNCTION constexpr reference operator()(
+      OtherIndexTypes... indices) const {
+    static_assert((std::is_convertible_v<OtherIndexTypes, index_type> && ...));
+    static_assert(
+        (std::is_nothrow_constructible_v<index_type, OtherIndexTypes> && ...));
+    static_assert((sizeof...(OtherIndexTypes)) == rank());
+    return acc.access(ptr, map(static_cast<index_type>(std::move(indices))...));
+  }
+#else
   template <class... OtherIndexTypes>
   KOKKOS_FUNCTION constexpr std::enable_if_t<
-      (std::is_convertible_v<OtherIndexTypes, index_type> && ...) &&
-          (std::is_nothrow_constructible_v<index_type, OtherIndexTypes> &&
-           ...) &&
-          (sizeof...(OtherIndexTypes) == rank()),
+      ((std::is_convertible_v<OtherIndexTypes, index_type> && ...)) &&
+          ((std::is_nothrow_constructible_v<index_type, OtherIndexTypes> &&
+            ...)) &&
+          ((sizeof...(OtherIndexTypes)) == rank()),
       reference>
   operator()(OtherIndexTypes... indices) const {
     return acc.access(ptr, map(static_cast<index_type>(std::move(indices))...));
   }
+#endif
 #endif
 
  private:
