@@ -49,6 +49,9 @@ append_glob(KOKKOS_CORE_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/impl/*.hpp)
 
 if(KOKKOS_ENABLE_CUDA)
   append_glob(KOKKOS_CORE_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/Cuda/*.cpp)
+  if(NOT Kokkos_ENABLE_DEPRECATED_CODE_4)
+    list(REMOVE_ITEM KOKKOS_CORE_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/Cuda/Kokkos_Cuda_Task.cpp)
+  endif()
   append_glob(KOKKOS_CORE_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/Cuda/*.hpp)
 endif()
 
