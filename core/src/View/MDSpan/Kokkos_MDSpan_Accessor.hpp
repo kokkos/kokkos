@@ -389,19 +389,19 @@ class ReferenceCountedAccessor {
 };
 
 template <class ElementType, class MemorySpace>
-using checked_reference_counted_accessor =
+using CheckedReferenceCountedAccessor =
     SpaceAwareAccessor<MemorySpace,
                        ReferenceCountedAccessor<ElementType, MemorySpace,
                                                 default_accessor<ElementType>>>;
 
 template <class ElementType, class MemorySpace,
           class MemoryScope = desul::MemoryScopeDevice>
-using checked_atomic_accessor_relaxed =
+using CheckedRelaxedAtomicAccessor =
     SpaceAwareAccessor<MemorySpace, AtomicAccessorRelaxed<ElementType>>;
 
 template <class ElementType, class MemorySpace,
           class MemoryScope = desul::MemoryScopeDevice>
-using checked_reference_counted_atomic_accessor_relaxed = SpaceAwareAccessor<
+using CheckedReferenceCountedRelaxedAtomicAccessor = SpaceAwareAccessor<
     MemorySpace, ReferenceCountedAccessor<ElementType, MemorySpace,
                                           AtomicAccessorRelaxed<ElementType>>>;
 

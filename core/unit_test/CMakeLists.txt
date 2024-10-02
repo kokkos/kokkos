@@ -98,6 +98,10 @@ set(COMPILE_ONLY_SOURCES
     view/TestExtentsDatatypeConversion.cpp
 )
 
+if(NOT Kokkos_ENABLE_IMPL_MDSPAN)
+  list(REMOVE_ITEM COMPILE_ONLY_SOURCES view/TestBasicViewMDSpanConversion.cpp)
+endif()
+
 #testing if windows.h and Kokkos_Core.hpp can be included
 if(WIN32)
   list(APPEND COMPILE_ONLY_SOURCES TestWindowsInclude.cpp)

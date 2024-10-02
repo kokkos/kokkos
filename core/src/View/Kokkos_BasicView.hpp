@@ -21,7 +21,6 @@ static_assert(false,
 
 #ifndef KOKKOS_BASIC_VIEW_HPP
 #define KOKKOS_BASIC_VIEW_HPP
-#include <type_traits>
 #include <Kokkos_Macros.hpp>
 #include <impl/Kokkos_Utilities.hpp>
 #include <impl/Kokkos_SharedAlloc.hpp>
@@ -31,13 +30,16 @@ static_assert(false,
 #include <View/MDSpan/Kokkos_MDSpan_Header.hpp>
 #include <View/MDSpan/Kokkos_MDSpan_Accessor.hpp>
 #include <View/MDSpan/Kokkos_MDSpan_Layout.hpp>
+
 #include <optional>
+#include <type_traits>
 
 #define KOKKOS_IMPL_NO_UNIQUE_ADDRESS _MDSPAN_NO_UNIQUE_ADDRESS
 namespace Kokkos {
 
 namespace Impl {
-constexpr inline struct subview_ctor_tag_t {
+constexpr inline struct SubViewCtorTag {
+  explicit SubViewCtorTag() = default;
 } subview_ctor_tag;
 
 template <class T>
@@ -119,7 +121,7 @@ class BasicView {
     return extents_type::static_extent(r);
   }
   KOKKOS_FUNCTION constexpr index_type extent(rank_type r) const noexcept {
-    return map.extents().extent(r);
+    return m_map.extents().extent(r);
   };
 
  protected:
@@ -127,7 +129,7 @@ class BasicView {
   // mode) enabled in Kokkos::View 4.4
   template <class OtherMapping>
   KOKKOS_FUNCTION static constexpr void check_basic_view_constructibility(
-      const OtherMapping &rhs) {
+      [[maybe_unused]] const OtherMapping &rhs) {
     using src_t          = typename OtherMapping::layout_type;
     using dst_t          = layout_type;
     constexpr size_t rnk = mdspan_type::rank();
@@ -194,11 +196,13 @@ class BasicView {
   KOKKOS_DEFAULTED_FUNCTION constexpr BasicView() = default;
 
   KOKKOS_FUNCTION constexpr BasicView(const mdspan_type &other)
-      : ptr(other.data_handle()), map(other.mapping()), acc(other.accessor()){};
+      : m_ptr(other.data_handle()),
+        m_map(other.mapping()),
+        m_acc(other.accessor()){};
   KOKKOS_FUNCTION constexpr BasicView(mdspan_type &&other)
-      : ptr(std::move(other.data_handle())),
-        map(std::move(other.mapping())),
-        acc(std::move(other.accessor())){};
+      : m_ptr(std::move(other.data_handle())),
+        m_map(std::move(other.mapping())),
+        m_acc(std::move(other.accessor())){};
 
   template <class... OtherIndexTypes>
   //    requires(std::is_constructible_v<mdspan_type, data_handle_type,
@@ -209,9 +213,9 @@ class BasicView {
                        data_handle_type>
           p,
       OtherIndexTypes... exts)
-      : ptr(std::move(p)),
-        map(extents_type(static_cast<index_type>(std::move(exts))...)),
-        acc{} {}
+      : m_ptr(std::move(p)),
+        m_map(extents_type(static_cast<index_type>(std::move(exts))...)),
+        m_acc{} {}
 
   template <class OtherIndexType, size_t Size>
   // When doing C++20 we should switch to this, the conditional explicit we
@@ -226,7 +230,7 @@ class BasicView {
           data_handle_type>
           p,
       const Array<OtherIndexType, Size> &exts)
-      : ptr(std::move(p)), map(extents_type(exts)), acc{} {}
+      : m_ptr(std::move(p)), m_map(extents_type(exts)), m_acc{} {}
 
   KOKKOS_FUNCTION constexpr BasicView(data_handle_type p,
                                       const extents_type &exts)
@@ -235,7 +239,7 @@ class BasicView {
     requires(std::is_default_constructible_v<accessor_type> &&
              std::is_constructible_v<mapping_type, const extents_type &>)
 #endif
-      : ptr(std::move(p)), map(exts), acc{} {
+      : m_ptr(std::move(p)), m_map(exts), m_acc{} {
   }
 
   KOKKOS_FUNCTION constexpr BasicView(data_handle_type p, const mapping_type &m)
@@ -243,12 +247,12 @@ class BasicView {
 #ifndef KOKKOS_ENABLE_CXX17
     requires(std::is_default_constructible_v<accessor_type>)
 #endif
-      : ptr(std::move(p)), map(m), acc{} {
+      : m_ptr(std::move(p)), m_map(m), m_acc{} {
   }
 
   KOKKOS_FUNCTION constexpr BasicView(data_handle_type p, const mapping_type &m,
                                       const accessor_type &a)
-      : ptr(std::move(p)), map(m), acc(a) {}
+      : m_ptr(std::move(p)), m_map(m), m_acc(a) {}
 
   template <class OtherT, class OtherE, class OtherL, class OtherA>
 //    requires(std::is_constructible_v<mdspan_type,
@@ -268,7 +272,7 @@ class BasicView {
                         mdspan_type, typename BasicView<OtherT, OtherE, OtherL,
                                                         OtherA>::mdspan_type>,
                     void *> = nullptr)
-      : ptr(other.ptr), map(other.map), acc(other.acc) {
+      : m_ptr(other.m_ptr), m_map(other.m_map), m_acc(other.m_acc) {
     // Kokkos View precondition checks happen in release builds
     check_basic_view_constructibility(other.mapping());
 
@@ -295,7 +299,9 @@ class BasicView {
                     std::is_constructible_v<
                         mdspan_type, mdspan<OtherT, OtherE, OtherL, OtherA>>,
                     void *> = nullptr)
-      : ptr(other.data_handle()), map(other.mapping()), acc(other.accessor()) {
+      : m_ptr(other.data_handle()),
+        m_map(other.mapping()),
+        m_acc(other.accessor()) {
     // Kokkos View precondition checks happen in release builds
     check_basic_view_constructibility(other.mapping());
 
@@ -378,7 +384,7 @@ class BasicView {
   template <class OtherElementType, class OtherExtents, class OtherLayoutPolicy,
             class OtherAccessorPolicy, class... SliceSpecifiers>
   KOKKOS_INLINE_FUNCTION BasicView(
-      Impl::subview_ctor_tag_t,
+      Impl::SubViewCtorTag,
       const BasicView<OtherElementType, OtherExtents, OtherLayoutPolicy,
                       OtherAccessorPolicy> &src_view,
       SliceSpecifiers... slices)
@@ -398,7 +404,7 @@ class BasicView {
   KOKKOS_INLINE_FUNCTION constexpr
   operator mdspan<OtherElementType, OtherExtents, OtherLayoutPolicy,
                   OtherAccessor>() const {
-    return mdspan_type(ptr, map, acc);
+    return mdspan_type(m_ptr, m_map, m_acc);
   }
 
   // Here we use an overload instead of a default parameter as a workaround
@@ -433,7 +439,7 @@ class BasicView {
         mapping(), other_accessor);
   }
 
-  KOKKOS_FUNCTION void assign_data(element_type *ptr_) { ptr = ptr_; }
+  KOKKOS_FUNCTION void assign_data(element_type *ptr) { m_ptr = ptr; }
 
   // ========================= mdspan =================================
 
@@ -450,7 +456,8 @@ class BasicView {
              (sizeof...(OtherIndexTypes) == rank()))
   KOKKOS_FUNCTION constexpr reference operator[](
       OtherIndexTypes... indices) const {
-    return acc.access(ptr, map(static_cast<index_type>(std::move(indices))...));
+    return m_acc.access(m_ptr,
+                        m_map(static_cast<index_type>(std::move(indices))...));
   }
 
   template <class OtherIndexType>
@@ -459,9 +466,10 @@ class BasicView {
         std::is_nothrow_constructible_v<index_type, const OtherIndexType &>)
   KOKKOS_FUNCTION constexpr reference operator[](
       const Array<OtherIndexType, rank()> &indices) const {
-    return acc.access(ptr, [&]<size_t... Idxs>(std::index_sequence<Idxs...>) {
-      return map(indices[Idxs]...);
-    }(std::make_index_sequence<rank()>()));
+    return m_acc.access(m_ptr,
+                        [&]<size_t... Idxs>(std::index_sequence<Idxs...>) {
+                          return m_map(indices[Idxs]...);
+                        }(std::make_index_sequence<rank()>()));
   }
 
   template <class OtherIndexType>
@@ -470,9 +478,10 @@ class BasicView {
         std::is_nothrow_constructible_v<index_type, const OtherIndexType &>)
   KOKKOS_FUNCTION constexpr reference operator[](
       std::span<OtherIndexType, rank()> indices) const {
-    return acc.access(ptr, [&]<size_t... Idxs>(std::index_sequence<Idxs...>) {
-      return map(indices[Idxs]...);
-    }(std::make_index_sequence<rank()>()));
+    return m_acc.access(m_ptr,
+                        [&]<size_t... Idxs>(std::index_sequence<Idxs...>) {
+                          return m_map(indices[Idxs]...);
+                        }(std::make_index_sequence<rank()>()));
   }
 #endif
 
@@ -484,7 +493,8 @@ class BasicView {
              (sizeof...(OtherIndexTypes) == rank()))
   KOKKOS_FUNCTION constexpr reference operator()(
       OtherIndexTypes... indices) const {
-    return acc.access(ptr, map(static_cast<index_type>(std::move(indices))...));
+    return m_acc.access(m_ptr,
+                        m_map(static_cast<index_type>(std::move(indices))...));
   }
 
   template <class OtherIndexType>
@@ -493,9 +503,10 @@ class BasicView {
         std::is_nothrow_constructible_v<index_type, const OtherIndexType &>)
   KOKKOS_FUNCTION constexpr reference operator()(
       const Array<OtherIndexType, rank()> &indices) const {
-    return acc.access(ptr, [&]<size_t... Idxs>(std::index_sequence<Idxs...>) {
-      return map(indices[Idxs]...);
-    }(std::make_index_sequence<rank()>()));
+    return m_acc.access(m_ptr,
+                        [&]<size_t... Idxs>(std::index_sequence<Idxs...>) {
+                          return m_map(indices[Idxs]...);
+                        }(std::make_index_sequence<rank()>()));
   }
 
   template <class OtherIndexType>
@@ -504,9 +515,10 @@ class BasicView {
         std::is_nothrow_constructible_v<index_type, const OtherIndexType &>)
   KOKKOS_FUNCTION constexpr reference operator()(
       std::span<OtherIndexType, rank()> indices) const {
-    return acc.access(ptr, [&]<size_t... Idxs>(std::index_sequence<Idxs...>) {
-      return map(indices[Idxs]...);
-    }(std::make_index_sequence<rank()>()));
+    return m_acc.access(m_ptr,
+                        [&]<size_t... Idxs>(std::index_sequence<Idxs...>) {
+                          return m_map(indices[Idxs]...);
+                        }(std::make_index_sequence<rank()>()));
   }
 #else
   // C++17 variant of operator()
@@ -521,7 +533,8 @@ class BasicView {
     static_assert(
         (std::is_nothrow_constructible_v<index_type, OtherIndexTypes> && ...));
     static_assert((sizeof...(OtherIndexTypes)) == rank());
-    return acc.access(ptr, map(static_cast<index_type>(std::move(indices))...));
+    return m_acc.access(m_ptr,
+                        m_map(static_cast<index_type>(std::move(indices))...));
   }
 #else
   template <class... OtherIndexTypes>
@@ -532,7 +545,8 @@ class BasicView {
           ((sizeof...(OtherIndexTypes)) == rank()),
       reference>
   operator()(OtherIndexTypes... indices) const {
-    return acc.access(ptr, map(static_cast<index_type>(std::move(indices))...));
+    return m_acc.access(m_ptr,
+                        m_map(static_cast<index_type>(std::move(indices))...));
   }
 #endif
 #endif
@@ -544,11 +558,11 @@ class BasicView {
       std::index_sequence<Idxs...>) const noexcept {
     // Note we restrict data_handle to be convertible to element_type* for now.
     // This is also different from mdspan: mdspan can NOT be legally in a state
-    // where ptr is nullptr and the product of extents is non-zero
+    // where m_ptr is nullptr and the product of extents is non-zero
     // The default constructor of mdspan is constrained to dynamic_rank > 0
     // For View we do not have that constraint today
     if (data_handle() == nullptr) return 0u;
-    return ((static_cast<size_type>(map.extents().extent(Idxs))) * ... *
+    return ((static_cast<size_type>(m_map.extents().extent(Idxs))) * ... *
             size_type(1));
   }
 
@@ -564,12 +578,12 @@ class BasicView {
       std::index_sequence<Idxs...>) const noexcept {
     // Note we restrict data_handle to be convertible to element_type* for now.
     // This is also different from mdspan: mdspan can NOT be legally in a state
-    // where ptr is nullptr and the product of extents is non-zero
+    // where m_ptr is nullptr and the product of extents is non-zero
     // The default constructor of mdspan is constrained to dynamic_rank > 0
     // For View we do not have that constraint today
     if (data_handle() == nullptr) return true;
     return (rank() > 0) &&
-           ((map.extents().extent(Idxs) == index_type(0)) || ... || false);
+           ((m_map.extents().extent(Idxs) == index_type(0)) || ... || false);
   }
 
  public:
@@ -579,23 +593,23 @@ class BasicView {
 
   KOKKOS_FUNCTION friend constexpr void swap(BasicView &x,
                                              BasicView &y) noexcept {
-    kokkos_swap(x.ptr, y.ptr);
-    kokkos_swap(x.map, y.map);
-    kokkos_swap(x.acc, y.acc);
+    kokkos_swap(x.m_ptr, y.m_ptr);
+    kokkos_swap(x.m_map, y.m_map);
+    kokkos_swap(x.m_acc, y.m_acc);
   }
 
   KOKKOS_FUNCTION constexpr const extents_type &extents() const noexcept {
-    return map.extents();
+    return m_map.extents();
   };
   KOKKOS_FUNCTION constexpr const data_handle_type &data_handle()
       const noexcept {
-    return ptr;
+    return m_ptr;
   };
   KOKKOS_FUNCTION constexpr const mapping_type &mapping() const noexcept {
-    return map;
+    return m_map;
   };
   KOKKOS_FUNCTION constexpr const accessor_type &accessor() const noexcept {
-    return acc;
+    return m_acc;
   };
 
   KOKKOS_FUNCTION static constexpr bool is_always_unique() noexcept {
@@ -608,26 +622,28 @@ class BasicView {
     return mapping_type::is_always_strided();
   };
 
-  KOKKOS_FUNCTION constexpr bool is_unique() const { return map.is_unique(); };
+  KOKKOS_FUNCTION constexpr bool is_unique() const {
+    return m_map.is_unique();
+  };
   KOKKOS_FUNCTION constexpr bool is_exhaustive() const {
-    return map.is_exhaustive();
+    return m_map.is_exhaustive();
   };
   KOKKOS_FUNCTION constexpr bool is_strided() const {
-    return map.is_strided();
+    return m_map.is_strided();
   };
   KOKKOS_FUNCTION constexpr index_type stride(rank_type r) const {
-    return map.stride(r);
+    return m_map.stride(r);
   };
 
  protected:
 #ifndef __NVCC__
-  KOKKOS_IMPL_NO_UNIQUE_ADDRESS data_handle_type ptr{};
-  KOKKOS_IMPL_NO_UNIQUE_ADDRESS mapping_type map{};
-  KOKKOS_IMPL_NO_UNIQUE_ADDRESS accessor_type acc{};
+  KOKKOS_IMPL_NO_UNIQUE_ADDRESS data_handle_type m_ptr{};
+  KOKKOS_IMPL_NO_UNIQUE_ADDRESS mapping_type m_map{};
+  KOKKOS_IMPL_NO_UNIQUE_ADDRESS accessor_type m_acc{};
 #else
-  data_handle_type ptr{};
-  mapping_type map{};
-  accessor_type acc{};
+  data_handle_type m_ptr{};
+  mapping_type m_map{};
+  accessor_type m_acc{};
 #endif
 
   template <class, class, class, class>
