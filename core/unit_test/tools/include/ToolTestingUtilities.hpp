@@ -972,7 +972,8 @@ static uint64_t last_kernel_id;
 static uint32_t last_section_id;
 
 /** Subscribes to all of the requested callbacks */
-static void set_tool_events_impl(const ToolValidatorConfiguration& config) {
+static inline void set_tool_events_impl(
+    const ToolValidatorConfiguration& config) {
   Kokkos::Tools::Experimental::pause_tools();  // remove all events
   if (config.profiling.kernels) {
     Kokkos::Tools::Experimental::set_begin_parallel_for_callback(

@@ -637,6 +637,10 @@ struct FunctorReductionWithLargeIterationCount {
 };
 
 TEST(TEST_CATEGORY, reduction_with_large_iteration_count) {
+  // FIXME_OPENMPTARGET - causes runtime failure with CrayClang compiler
+#if defined(KOKKOS_COMPILER_CRAY_LLVM) && defined(KOKKOS_ENABLE_OPENMPTARGET)
+  GTEST_SKIP() << "known to fail with OpenMPTarget+Cray LLVM";
+#endif
   if constexpr (std::is_same_v<typename TEST_EXECSPACE::memory_space,
                                Kokkos::HostSpace>) {
     GTEST_SKIP() << "Disabling for host backends";

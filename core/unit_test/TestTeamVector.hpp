@@ -782,7 +782,6 @@ namespace Test {
 // Computes y^T*A*x
 // ( modified from kokkos-tutorials/GTC2016/Exercises/ThreeLevelPar )
 
-#if (!defined(KOKKOS_ENABLE_CUDA)) || defined(KOKKOS_ENABLE_CUDA_LAMBDA)
 template <typename ScalarType, class DeviceType>
 class TestTripleNestedReduce {
  public:
@@ -881,21 +880,6 @@ class TestTripleNestedReduce {
     ASSERT_EQ(solution, result);
   }
 };
-
-#else  // #if ( ! defined( KOKKOS_ENABLE_CUDA ) ) || defined(
-       // KOKKOS_ENABLE_CUDA_LAMBDA )
-
-template <typename ScalarType, class DeviceType>
-class TestTripleNestedReduce {
- public:
-  using execution_space = DeviceType;
-  using size_type       = typename execution_space::size_type;
-
-  TestTripleNestedReduce(const size_type &, const size_type, const size_type &,
-                         const size_type) {}
-};
-
-#endif
 
 namespace VectorScanReducer {
 enum class ScanType : bool { Inclusive, Exclusive };
