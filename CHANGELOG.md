@@ -83,7 +83,7 @@
 
 ### Bug Fixes
 * Do not return a copy of the input functor in `Experimental::for_each` [\#6910](https://github.com/kokkos/kokkos/pull/6910)
-* Introduce KOKKOS_DEDUCTION_GUIDE macro to allow user-defined deduction guide in device code for clang compiler [\#6954](https://github.com/kokkos/kokkos/pull/6954)
+* Introduce KOKKOS_DEDUCTION_GUIDE macro to allow for portable user-defined deduction guides [\#6954](https://github.com/kokkos/kokkos/pull/6954)
 * Fix `realloc` on views of non-default constructible element types [\#6993](https://github.com/kokkos/kokkos/pull/6993)
 * Fix undefined behavior in `View` initialization or fill with zeros [\#7014](https://github.com/kokkos/kokkos/pull/7014)
 * Fix `sort_by_key` on host execution spaces when building with NVCC [\#7059](https://github.com/kokkos/kokkos/pull/7059)
