@@ -348,8 +348,8 @@ class BasicView {
         arg_mapping.required_span_size(),
         Impl::get_property<Impl::LabelTag>(prop_copy),
         Impl::get_property<Impl::MemorySpaceTag>(prop_copy),
-        has_exec ? std::optional{Impl::get_property<Impl::ExecutionSpaceTag>(
-                       prop_copy)}
+        has_exec ? std::optional<execution_space>{Impl::get_property<
+                       Impl::ExecutionSpaceTag>(prop_copy)}
                  : std::optional<execution_space>{std::nullopt},
         std::integral_constant<bool, alloc_prop::initialize>(),
         std::integral_constant<bool, alloc_prop::sequential_host_init>()));
