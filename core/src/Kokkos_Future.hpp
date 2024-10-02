@@ -47,6 +47,9 @@ static_assert(false,
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
+// We allow using deprecated classes in this file
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
+
 namespace Kokkos {
 
 // For now, hack this in as a partial specialization
@@ -474,6 +477,8 @@ using Future KOKKOS_DEPRECATED =
     typename Impl::ResolveFutureArgOrder<Arg1, Arg2>::type;
 
 }  // namespace Kokkos
+
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

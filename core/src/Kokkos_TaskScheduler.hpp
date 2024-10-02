@@ -50,6 +50,9 @@ static_assert(false,
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
+// We allow using deprecated classes in this file
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
+
 namespace Kokkos {
 
 namespace Impl {
@@ -670,6 +673,8 @@ inline void wait(BasicTaskScheduler<ExecSpace, QueueType> const& scheduler) {
 }
 
 }  // namespace Kokkos
+
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
