@@ -31,6 +31,7 @@ namespace Impl {
 template <typename ValueType, typename MemorySpace>
 struct SYCLUSMHandle{
   mutable std::conditional_t<std::is_same_v<MemorySpace, Kokkos::SYCL::scratch_memory_space_l0>, sycl::local_ptr<ValueType>, Impl::sycl_device_ptr<ValueType>> m_ptr;
+  static constexpr sycl::access::address_space address_space =  std::is_same_v<MemorySpace, Kokkos::SYCL::scratch_memory_space_l0> ? sycl::access::address_space::local_space : sycl::access::address_space::global_space;
 
   template <typename iType>
   KOKKOS_FORCEINLINE_FUNCTION ValueType& operator()(const iType& i) const {
@@ -54,7 +55,13 @@ struct SYCLUSMHandle{
 	{}
 
   KOKKOS_FUNCTION
-  SYCLUSMHandle(const SYCLUSMHandle& arg_handle, size_t offset) : m_ptr(arg_handle.m_ptr + offset) {if(!m_ptr) Kokkos::abort("nullptr");}
+  SYCLUSMHandle(const SYCLUSMHandle& arg_handle, size_t offset) : m_ptr(
+#ifdef SYCL_EXT_ONEAPI_ADDRESS_CAST
+		  sycl::ext::oneapi::experimental::static_address_cast<AddressSpace, ValueType, decorated::yes>(arg_handle.m_ptr + offset)
+#else		  
+		  arg_handle.m_ptr + offset
+#endif
+		  ) {}
 
   SYCLUSMHandle& operator=(ValueType* const arg_ptr) { return *this = SYCLUSMHandle(arg_ptr); }
 };
