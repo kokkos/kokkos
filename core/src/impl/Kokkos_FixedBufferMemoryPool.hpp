@@ -103,7 +103,7 @@ class FixedBlockSizeMemoryPool
   KOKKOS_DEFAULTED_FUNCTION FixedBlockSizeMemoryPool(
       FixedBlockSizeMemoryPool&&) = default;
   KOKKOS_DEFAULTED_FUNCTION FixedBlockSizeMemoryPool(
-      FixedBlockSizeMemoryPool const&)                        = default;
+      FixedBlockSizeMemoryPool const&) = default;
   KOKKOS_DEFAULTED_FUNCTION FixedBlockSizeMemoryPool& operator=(
       FixedBlockSizeMemoryPool&&) = default;
   KOKKOS_DEFAULTED_FUNCTION FixedBlockSizeMemoryPool& operator=(

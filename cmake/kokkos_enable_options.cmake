@@ -1,8 +1,5 @@
 ########################## NOTES ###############################################
 #  List the options for configuring kokkos using CMake method of doing it.
-#  These options then get mapped onto KOKKOS_SETTINGS environment variable by
-#  kokkos_settings.cmake.  It is separate to allow other packages to override
-#  these variables (e.g., TriBITS).
 
 ########################## AVAILABLE OPTIONS ###################################
 # Use lists for documentation, verification, and programming convenience
@@ -32,25 +29,26 @@ KOKKOS_ENABLE_OPTION(CUDA_LDG_INTRINSIC   OFF "Whether to use CUDA LDG intrinsic
 # In contrast to other CUDA-dependent, options CUDA_LAMBDA is ON by default.
 # That is problematic when CUDA is not enabled because this not only yields a
 # bogus warning, but also exports the Kokkos_ENABLE_CUDA_LAMBDA variable and
-# sets it to ON. This if-clause is a crutch that delays the refactoring of the
-# way we declare all options until after we get rid of TriBITS.
-IF (Trilinos_ENABLE_Kokkos AND TPL_ENABLE_CUDA)
-   SET(CUDA_LAMBDA_DEFAULT ON)
-ELSEIF (KOKKOS_ENABLE_CUDA)
-   SET(CUDA_LAMBDA_DEFAULT ON)
-ELSE()
-   SET(CUDA_LAMBDA_DEFAULT OFF)
-ENDIF()
-KOKKOS_ENABLE_OPTION(CUDA_LAMBDA ${CUDA_LAMBDA_DEFAULT} "Whether to allow lambda expressions on the device with NVCC **DEPRECATED**")
+# sets it to ON.
+KOKKOS_ENABLE_OPTION(CUDA_LAMBDA ${KOKKOS_ENABLE_CUDA} "Whether to allow lambda expressions on the device with NVCC **DEPRECATED**")
 
-# May be used to disable our use of CudaMallocAsync.  It had caused issues in
-# the past when UCX was used as MPI communication layer.  We expect it is
-# resolved but we keep the option around a bit longer to be safe.
-KOKKOS_ENABLE_OPTION(IMPL_CUDA_MALLOC_ASYNC ON  "Whether to enable CudaMallocAsync (requires CUDA Toolkit 11.2)")
+# As of 09/2024, cudaMallocAsync causes issues with ICP and older version of UCX
+# as MPI communication layer.
+KOKKOS_ENABLE_OPTION(IMPL_CUDA_MALLOC_ASYNC OFF  "Whether to enable CudaMallocAsync (requires CUDA Toolkit 11.2)")
 KOKKOS_ENABLE_OPTION(IMPL_NVHPC_AS_DEVICE_COMPILER OFF "Whether to allow nvc++ as Cuda device compiler")
+KOKKOS_ENABLE_OPTION(IMPL_CUDA_UNIFIED_MEMORY OFF "Whether to leverage unified memory architectures for CUDA")
+
 KOKKOS_ENABLE_OPTION(DEPRECATED_CODE_4    ON "Whether code deprecated in major release 4 is available" )
 KOKKOS_ENABLE_OPTION(DEPRECATION_WARNINGS ON "Whether to emit deprecation warnings" )
 KOKKOS_ENABLE_OPTION(HIP_RELOCATABLE_DEVICE_CODE  OFF "Whether to enable relocatable device code (RDC) for HIP")
+
+# Disabling RDC is only available since oneAPI 2023.1.0
+IF(KOKKOS_ENABLE_SYCL AND KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM AND KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 2023.1.0)
+  SET(SYCL_RDC_DEFAULT ON)
+ELSE()
+  SET(SYCL_RDC_DEFAULT OFF)
+ENDIF()
+KOKKOS_ENABLE_OPTION(SYCL_RELOCATABLE_DEVICE_CODE  ${SYCL_RDC_DEFAULT} "Whether to enable relocatable device code (RDC) for SYCL")
 KOKKOS_ENABLE_OPTION(TESTS         OFF  "Whether to build the unit tests")
 KOKKOS_ENABLE_OPTION(BENCHMARKS    OFF  "Whether to build the benchmarks")
 KOKKOS_ENABLE_OPTION(EXAMPLES      OFF  "Whether to build the examples")
@@ -70,24 +68,25 @@ KOKKOS_ENABLE_OPTION(TUNING               OFF "Whether to create bindings for tu
 KOKKOS_ENABLE_OPTION(AGGRESSIVE_VECTORIZATION OFF "Whether to aggressively vectorize loops")
 KOKKOS_ENABLE_OPTION(COMPILE_AS_CMAKE_LANGUAGE OFF "Whether to use native cmake language support")
 KOKKOS_ENABLE_OPTION(HIP_MULTIPLE_KERNEL_INSTANTIATIONS OFF "Whether multiple kernels are instantiated at compile time - improve performance but increase compile time")
+KOKKOS_ENABLE_OPTION(IMPL_HIP_UNIFIED_MEMORY OFF "Whether to leverage unified memory architectures for HIP")
+KOKKOS_ENABLE_OPTION(OPENACC_FORCE_HOST_AS_DEVICE OFF "Whether to force to use host as a target device for OpenACC")
 
 # This option will go away eventually, but allows fallback to old implementation when needed.
 KOKKOS_ENABLE_OPTION(DESUL_ATOMICS_EXTERNAL OFF "Whether to use an external desul installation")
 KOKKOS_ENABLE_OPTION(ATOMICS_BYPASS OFF "**NOT RECOMMENDED** Whether to make atomics non-atomic for non-threaded MPI-only use cases")
+KOKKOS_ENABLE_OPTION(IMPL_REF_COUNT_BRANCH_UNLIKELY ON "Whether to use the C++20 `[[unlikely]]` attribute in the view reference counting")
+mark_as_advanced(Kokkos_ENABLE_IMPL_REF_COUNT_BRANCH_UNLIKELY)
+KOKKOS_ENABLE_OPTION(IMPL_VIEW_OF_VIEWS_DESTRUCTOR_PRECONDITION_VIOLATION_WORKAROUND OFF "Whether to enable a workaround for invalid use of View of Views that causes program hang on destruction.")
+mark_as_advanced(Kokkos_ENABLE_IMPL_VIEW_OF_VIEWS_DESTRUCTOR_PRECONDITION_VIOLATION_WORKAROUND)
 
-KOKKOS_ENABLE_OPTION(IMPL_MDSPAN OFF "Whether to enable experimental mdspan support")
+KOKKOS_ENABLE_OPTION(IMPL_MDSPAN ON "Whether to enable experimental mdspan support")
 KOKKOS_ENABLE_OPTION(MDSPAN_EXTERNAL OFF BOOL "Whether to use an external version of mdspan")
 KOKKOS_ENABLE_OPTION(IMPL_SKIP_COMPILER_MDSPAN ON BOOL "Whether to use an internal version of mdspan even if the compiler supports mdspan")
 mark_as_advanced(Kokkos_ENABLE_IMPL_MDSPAN)
 mark_as_advanced(Kokkos_ENABLE_MDSPAN_EXTERNAL)
 mark_as_advanced(Kokkos_ENABLE_IMPL_SKIP_COMPILER_MDSPAN)
 
-IF (Trilinos_ENABLE_Kokkos)
-  SET(COMPLEX_ALIGN_DEFAULT OFF)
-ELSE()
-  SET(COMPLEX_ALIGN_DEFAULT ON)
-ENDIF()
-KOKKOS_ENABLE_OPTION(COMPLEX_ALIGN ${COMPLEX_ALIGN_DEFAULT}  "Whether to align Kokkos::complex to 2*alignof(RealType)")
+KOKKOS_ENABLE_OPTION(COMPLEX_ALIGN ON "Whether to align Kokkos::complex to 2*alignof(RealType)")
 
 IF (KOKKOS_ENABLE_TESTS)
   SET(HEADER_SELF_CONTAINMENT_TESTS_DEFAULT ON)
@@ -130,9 +129,10 @@ FUNCTION(check_device_specific_options)
   ENDIF()
 ENDFUNCTION()
 
-CHECK_DEVICE_SPECIFIC_OPTIONS(DEVICE CUDA OPTIONS CUDA_UVM CUDA_RELOCATABLE_DEVICE_CODE CUDA_LAMBDA CUDA_CONSTEXPR CUDA_LDG_INTRINSIC)
-CHECK_DEVICE_SPECIFIC_OPTIONS(DEVICE HIP OPTIONS HIP_RELOCATABLE_DEVICE_CODE)
+CHECK_DEVICE_SPECIFIC_OPTIONS(DEVICE CUDA OPTIONS CUDA_UVM CUDA_RELOCATABLE_DEVICE_CODE CUDA_LAMBDA CUDA_CONSTEXPR CUDA_LDG_INTRINSIC IMPL_CUDA_MALLOC_ASYNC IMPL_CUDA_UNIFIED_MEMORY)
+CHECK_DEVICE_SPECIFIC_OPTIONS(DEVICE HIP OPTIONS HIP_RELOCATABLE_DEVICE_CODE HIP_MULTIPLE_KERNEL_INSTANTIATIONS IMPL_HIP_UNIFIED_MEMORY)
 CHECK_DEVICE_SPECIFIC_OPTIONS(DEVICE HPX OPTIONS IMPL_HPX_ASYNC_DISPATCH)
+CHECK_DEVICE_SPECIFIC_OPTIONS(DEVICE OPENACC OPTIONS OPENACC_FORCE_HOST_AS_DEVICE)
 
 # Needed due to change from deprecated name to new header define name
 IF (KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION)

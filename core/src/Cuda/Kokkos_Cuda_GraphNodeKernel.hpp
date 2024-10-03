@@ -65,15 +65,15 @@ class GraphNodeKernelImpl<Kokkos::Cuda, PolicyType, Functor, PatternTag,
                       PolicyDeduced&& arg_policy, ArgsDeduced&&... args)
       // This is super ugly, but it works for now and is the most minimal change
       // to the codebase for now...
-      : base_t(std::move(arg_functor), (PolicyDeduced &&) arg_policy,
-               (ArgsDeduced &&) args...) {}
+      : base_t(std::move(arg_functor), (PolicyDeduced&&)arg_policy,
+               (ArgsDeduced&&)args...) {}
 
   // FIXME @graph Forward through the instance once that works in the backends
   template <class PolicyDeduced>
   GraphNodeKernelImpl(Kokkos::Cuda const& ex, Functor arg_functor,
                       PolicyDeduced&& arg_policy)
       : GraphNodeKernelImpl("", ex, std::move(arg_functor),
-                            (PolicyDeduced &&) arg_policy) {}
+                            (PolicyDeduced&&)arg_policy) {}
 
   ~GraphNodeKernelImpl() {
     if (m_driver_storage) {

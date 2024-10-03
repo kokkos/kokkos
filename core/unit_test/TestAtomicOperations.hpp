@@ -16,6 +16,7 @@
 
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Pair.hpp>
+#include <iostream>
 
 namespace TestAtomicOperations {
 
@@ -351,19 +352,22 @@ bool atomic_op_test(T old_val, T update) {
       },
       result);
   if ((result & 1) != 0)
-    printf("atomic_%s failed with type %s\n", Op::name(), typeid(T).name());
+    std::cerr << "atomic_" << Op::name() << " failed with type "
+              << Kokkos::Impl::TypeInfo<T>::name() << '\n';
   if ((result & 2) != 0)
-    printf("atomic_fetch_%s failed with type %s\n", Op::name(),
-           typeid(T).name());
+    std::cerr << "atomic_fetch_" << Op::name() << " failed with type "
+              << Kokkos::Impl::TypeInfo<T>::name() << '\n';
   if ((result & 4) != 0)
-    printf("atomic_%s_fetch failed with type %s\n", Op::name(),
-           typeid(T).name());
+    std::cerr << "atomic_" << Op::name() << "_fetch failed with type "
+              << Kokkos::Impl::TypeInfo<T>::name() << '\n';
   if ((result & 8) != 0)
-    printf("atomic_fetch_%s did not return old value with type %s\n",
-           Op::name(), typeid(T).name());
+    std::cerr << "atomic_fetch_" << Op::name()
+              << " did not return old value with type "
+              << Kokkos::Impl::TypeInfo<T>::name() << '\n';
   if ((result & 16) != 0)
-    printf("atomic_%s_fetch did not return updated value with type %s\n",
-           Op::name(), typeid(T).name());
+    std::cerr << "atomic_" << Op::name() << "_fetch"
+              << " did not return updated value with type "
+              << Kokkos::Impl::TypeInfo<T>::name() << '\n';
 
   return result == 0;
 }
@@ -408,19 +412,22 @@ bool atomic_op_test_rel(T old_val, T update) {
       },
       result);
   if ((result & 1) != 0)
-    printf("atomic_%s failed with type %s\n", Op::name(), typeid(T).name());
+    std::cerr << "atomic_" << Op::name() << " failed with type "
+              << Kokkos::Impl::TypeInfo<T>::name() << '\n';
   if ((result & 2) != 0)
-    printf("atomic_fetch_%s failed with type %s\n", Op::name(),
-           typeid(T).name());
+    std::cerr << "atomic_fetch_" << Op::name() << " failed with type "
+              << Kokkos::Impl::TypeInfo<T>::name() << '\n';
   if ((result & 4) != 0)
-    printf("atomic_%s_fetch failed with type %s\n", Op::name(),
-           typeid(T).name());
+    std::cerr << "atomic_" << Op::name() << "_fetch failed with type "
+              << Kokkos::Impl::TypeInfo<T>::name() << '\n';
   if ((result & 8) != 0)
-    printf("atomic_fetch_%s did not return old value with type %s\n",
-           Op::name(), typeid(T).name());
+    std::cerr << "atomic_fetch_" << Op::name()
+              << " did not return old value with type "
+              << Kokkos::Impl::TypeInfo<T>::name() << '\n';
   if ((result & 16) != 0)
-    printf("atomic_%s_fetch did not return updated value with type %s\n",
-           Op::name(), typeid(T).name());
+    std::cerr << "atomic_" << Op::name() << "_fetch"
+              << " did not return updated value with type "
+              << Kokkos::Impl::TypeInfo<T>::name() << '\n';
 
   return result == 0;
 }
@@ -459,9 +466,11 @@ bool AtomicOperationsTestIntegralType(int old_val_in, int update_in, int test) {
     case 12: return true;
 #else
     case 11:
-      return update_in >= 0 ? atomic_op_test<LShiftAtomicTest, T, ExecSpace>(
-                                  old_val, update)
-                            : true;
+      return (std::make_signed_t<T>(update_in) >= 0 &&
+              std::make_signed_t<T>(old_val) >= 0)
+                 ? atomic_op_test<LShiftAtomicTest, T, ExecSpace>(old_val,
+                                                                  update)
+                 : true;
     case 12:
       return update_in >= 0 ? atomic_op_test<RShiftAtomicTest, T, ExecSpace>(
                                   old_val, update)

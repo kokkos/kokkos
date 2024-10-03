@@ -57,9 +57,9 @@ extern template class TaskQueue<Kokkos::Experimental::OpenMPTarget>;
 template <>
 class TaskExec<Kokkos::Experimental::OpenMPTarget> {
  private:
-  TaskExec(TaskExec&&)      = delete;
-  TaskExec(TaskExec const&) = delete;
-  TaskExec& operator=(TaskExec&&) = delete;
+  TaskExec(TaskExec&&)                 = delete;
+  TaskExec(TaskExec const&)            = delete;
+  TaskExec& operator=(TaskExec&&)      = delete;
   TaskExec& operator=(TaskExec const&) = delete;
 
   using PoolExec = Kokkos::Impl::OpenMPTargetExec;

@@ -589,7 +589,7 @@ TEST(TEST_CATEGORY, Multi_streams) {
 #endif
 
 #if defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
-  if constexpr (std::is_same_v<ExecutionSpace, Kokkos::Experimental::SYCL>) {
+  if constexpr (std::is_same_v<ExecutionSpace, Kokkos::SYCL>) {
     GTEST_SKIP() << "Failing on NVIDIA GPUs";  // FIXME_SYCL
   }
 #endif

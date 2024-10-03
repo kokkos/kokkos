@@ -37,16 +37,7 @@ FUNCTION(kokkos_deprecated_list SUFFIX PREFIX)
         STRING(APPEND ERROR_MSG "\n  -DKokkos_${PREFIX}_${ENTRY_UC}=ON")
       ENDFOREACH()
       STRING(APPEND ERROR_MSG "\nRemove CMakeCache.txt and re-run. For a list of valid options, refer to BUILD.md or even look at CMakeCache.txt (before deleting it).")
-      IF (KOKKOS_HAS_TRILINOS)
-        MESSAGE(WARNING ${ERROR_MSG})
-        FOREACH(entry ${optlist})
-          STRING(TOUPPER ${entry} ENTRY_UC)
-          SET(${CAMEL_NAME}_${ENTRY_UC} ON CACHE BOOL "Deprecated Trilinos translation")
-        ENDFOREACH()
-        UNSET(${opt} CACHE)
-      ELSE()
-        MESSAGE(SEND_ERROR ${ERROR_MSG})
-      ENDIF()
+      MESSAGE(SEND_ERROR ${ERROR_MSG})
     ENDIF()
   ENDFOREACH()
 ENDFUNCTION()
@@ -65,25 +56,12 @@ FUNCTION(kokkos_option CAMEL_SUFFIX DEFAULT TYPE DOCSTRING)
   # Make sure this appears in the cache with the appropriate DOCSTRING
   SET(${CAMEL_NAME} ${DEFAULT} CACHE ${TYPE} ${DOCSTRING})
 
-  IF (KOKKOS_HAS_TRILINOS)
-    IF (NOT CAMEL_NAME IN_LIST Kokkos_OPTIONS_NOT_TO_EXPORT)
-      TRIBITS_PKG_EXPORT_CACHE_VAR(${CAMEL_NAME})
-    ENDIF()
-  ENDIF()
-
   #I don't love doing it this way because it's N^2 in number options, but c'est la vie
   FOREACH(opt ${KOKKOS_GIVEN_VARIABLES})
     STRING(TOUPPER ${opt} OPT_UC)
     IF ("${OPT_UC}" STREQUAL "${UC_NAME}")
       IF (NOT "${opt}" STREQUAL "${CAMEL_NAME}")
-        IF (KOKKOS_HAS_TRILINOS)
-          #Allow this for now if Trilinos... we need to bootstrap our way to integration
-          MESSAGE(WARNING "Deprecated option ${opt} found - please change spelling to ${CAMEL_NAME}")
-          SET(${CAMEL_NAME} "${${opt}}" CACHE ${TYPE} ${DOCSTRING} FORCE)
-          UNSET(${opt} CACHE)
-        ELSE()
           MESSAGE(FATAL_ERROR "Matching option found for ${CAMEL_NAME} with the wrong case ${opt}. Please delete your CMakeCache.txt and change option to -D${CAMEL_NAME}=${${opt}}. This is now enforced to avoid hard-to-debug CMake cache inconsistencies.")
-        ENDIF()
       ENDIF()
     ENDIF()
   ENDFOREACH()
@@ -115,14 +93,7 @@ FUNCTION(kokkos_dependent_option CAMEL_SUFFIX DOCSTRING DEFAULT DEPENDENCY FORCE
     STRING(TOUPPER ${opt} OPT_UC)
     IF ("${OPT_UC}" STREQUAL "${UC_NAME}")
       IF (NOT "${opt}" STREQUAL "${CAMEL_NAME}")
-        IF (KOKKOS_HAS_TRILINOS)
-          #Allow this for now if Trilinos... we need to bootstrap our way to integration
-          MESSAGE(WARNING "Deprecated option ${opt} found - please change spelling to ${CAMEL_NAME}")
-          SET(${CAMEL_NAME} "${${opt}}" CACHE ${TYPE} ${DOCSTRING} FORCE)
-          UNSET(${opt} CACHE)
-        ELSE()
           MESSAGE(FATAL_ERROR "Matching option found for ${CAMEL_NAME} with the wrong case ${opt}. Please delete your CMakeCache.txt and change option to -D${CAMEL_NAME}=${${opt}}. This is now enforced to avoid hard-to-debug CMake cache inconsistencies.")
-        ENDIF()
       ENDIF()
     ENDIF()
   ENDFOREACH()
@@ -193,7 +164,6 @@ MACRO(kokkos_export_cmake_tpl NAME)
 ENDMACRO()
 
 MACRO(kokkos_export_imported_tpl NAME)
-  IF (NOT KOKKOS_HAS_TRILINOS)
     GET_TARGET_PROPERTY(LIB_IMPORTED ${NAME} IMPORTED)
     IF (NOT LIB_IMPORTED)
       # This is not an imported target
@@ -245,7 +215,6 @@ MACRO(kokkos_export_imported_tpl NAME)
       KOKKOS_APPEND_CONFIG_LINE(")")
       KOKKOS_APPEND_CONFIG_LINE("ENDIF()")
     ENDIF()
-  ENDIF()
 ENDMACRO()
 
 
@@ -271,11 +240,6 @@ ENDMACRO()
 #
 #     If specified, this TPL will build an INTERFACE library rather than an
 #     IMPORTED target
-IF (KOKKOS_HAS_TRILINOS)
-MACRO(kokkos_import_tpl NAME)
-  #do nothing
-ENDMACRO()
-ELSE()
 MACRO(kokkos_import_tpl NAME)
   CMAKE_PARSE_ARGUMENTS(TPL
    "NO_EXPORT;INTERFACE"
@@ -304,7 +268,6 @@ MACRO(kokkos_import_tpl NAME)
     LIST(APPEND KOKKOS_ENABLED_TPLS ${NAME})
   ENDIF()
 ENDMACRO(kokkos_import_tpl)
-ENDIF()
 
 MACRO(kokkos_import_cmake_tpl MODULE_NAME)
   kokkos_import_tpl(${MODULE_NAME} ${ARGN} NO_EXPORT)
@@ -375,10 +338,7 @@ MACRO(kokkos_create_imported_tpl NAME)
    "LINK_LIBRARIES;INCLUDES;COMPILE_DEFINITIONS;COMPILE_OPTIONS;LINK_OPTIONS"
    ${ARGN})
 
-
-  IF (KOKKOS_HAS_TRILINOS)
-    #TODO: we need to set a bunch of cache variables here
-  ELSEIF (TPL_INTERFACE)
+  IF (TPL_INTERFACE)
     ADD_LIBRARY(${NAME} INTERFACE)
     #Give this an importy-looking name
     ADD_LIBRARY(Kokkos::${NAME} ALIAS ${NAME})
@@ -709,7 +669,12 @@ MACRO(kokkos_find_imported NAME)
   ENDIF()
 
   IF (NOT TPL_LIBRARY_SUFFIXES)
-    SET(TPL_LIBRARY_SUFFIXES lib lib64)
+    SET(TPL_LIBRARY_SUFFIXES lib)
+    IF(KOKKOS_IMPL_32BIT)
+      LIST(APPEND TPL_LIBRARY_SUFFIXES lib32)
+    ELSE()
+      LIST(APPEND TPL_LIBRARY_SUFFIXES lib64)
+    ENDIF()
   ENDIF()
 
   SET(${NAME}_INCLUDE_DIRS)
@@ -820,9 +785,6 @@ FUNCTION(kokkos_link_tpl TARGET)
    ${ARGN})
   #the name of the TPL
   SET(TPL ${TPL_UNPARSED_ARGUMENTS})
-  IF (KOKKOS_HAS_TRILINOS)
-    #Do nothing, they will have already been linked
-  ELSE()
     IF (NOT TPL_IMPORTED_NAME)
       SET(TPL_IMPORTED_NAME Kokkos::${TPL})
     ENDIF()
@@ -837,7 +799,6 @@ FUNCTION(kokkos_link_tpl TARGET)
         TARGET_LINK_LIBRARIES(${TARGET} ${TPL_IMPORTED_NAME})
       ENDIF()
     ENDIF()
-  ENDIF()
 ENDFUNCTION()
 
 FUNCTION(COMPILER_SPECIFIC_OPTIONS_HELPER)

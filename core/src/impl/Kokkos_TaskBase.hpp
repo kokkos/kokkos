@@ -133,9 +133,9 @@ class TaskBase {
   int16_t m_task_type;  ///< Type of task
   int16_t m_priority;   ///< Priority of runnable task
 
-  TaskBase(TaskBase&&)      = delete;
-  TaskBase(const TaskBase&) = delete;
-  TaskBase& operator=(TaskBase&&) = delete;
+  TaskBase(TaskBase&&)                 = delete;
+  TaskBase(const TaskBase&)            = delete;
+  TaskBase& operator=(TaskBase&&)      = delete;
   TaskBase& operator=(const TaskBase&) = delete;
 
   KOKKOS_DEFAULTED_FUNCTION ~TaskBase() = default;
@@ -246,10 +246,10 @@ namespace Impl {
 template <class Scheduler, typename ResultType, class FunctorType>
 class Task : public TaskBase, public FunctorType {
  public:
-  Task()            = delete;
-  Task(Task&&)      = delete;
-  Task(const Task&) = delete;
-  Task& operator=(Task&&) = delete;
+  Task()                       = delete;
+  Task(Task&&)                 = delete;
+  Task(const Task&)            = delete;
+  Task& operator=(Task&&)      = delete;
   Task& operator=(const Task&) = delete;
 
   using root_type    = TaskBase;

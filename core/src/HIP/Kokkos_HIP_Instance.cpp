@@ -77,7 +77,8 @@ std::size_t scratch_count(const std::size_t size) {
 //----------------------------------------------------------------------------
 
 int HIPInternal::concurrency() {
-  static int const concurrency = m_maxThreadsPerSM * m_multiProcCount;
+  static int const concurrency =
+      m_maxThreadsPerSM * m_deviceProp.multiProcessorCount;
 
   return concurrency;
 }
@@ -177,8 +178,16 @@ void HIPInternal::initialize(hipStream_t stream) {
   // and scratch space for partial reduction values.
   // Allocate some initial space.  This will grow as needed.
   {
+    // Maximum number of warps,
+    // at most one warp per thread in a warp for reduction.
+    unsigned int maxWarpCount =
+        m_deviceProp.maxThreadsPerBlock / Impl::HIPTraits::WarpSize;
+    if (Impl::HIPTraits::WarpSize < maxWarpCount) {
+      maxWarpCount = Impl::HIPTraits::WarpSize;
+    }
+
     const unsigned reduce_block_count =
-        m_maxWarpCount * Impl::HIPTraits::WarpSize;
+        maxWarpCount * Impl::HIPTraits::WarpSize;
 
     (void)scratch_flags(reduce_block_count * 2 * sizeof(size_type));
     (void)scratch_space(reduce_block_count * 16 * sizeof(size_type));
@@ -353,18 +362,20 @@ void HIPInternal::finalize() {
   m_num_scratch_locks = 0;
 }
 
+int HIPInternal::m_hipDev          = -1;
+int HIPInternal::m_maxThreadsPerSM = 0;
+
+hipDeviceProp_t HIPInternal::m_deviceProp;
+
+std::mutex HIPInternal::scratchFunctorMutex;
+unsigned long *HIPInternal::constantMemHostStaging = nullptr;
+hipEvent_t HIPInternal::constantMemReusable        = nullptr;
+std::mutex HIPInternal::constantMemMutex;
+
 //----------------------------------------------------------------------------
 
 Kokkos::HIP::size_type hip_internal_multiprocessor_count() {
-  return HIPInternal::singleton().m_multiProcCount;
-}
-
-Kokkos::HIP::size_type hip_internal_maximum_warp_count() {
-  return HIPInternal::singleton().m_maxWarpCount;
-}
-
-std::array<Kokkos::HIP::size_type, 3> hip_internal_maximum_grid_count() {
-  return HIPInternal::singleton().m_maxBlock;
+  return HIPInternal::singleton().m_deviceProp.multiProcessorCount;
 }
 
 Kokkos::HIP::size_type *hip_internal_scratch_space(const HIP &instance,

@@ -155,8 +155,8 @@ class ThreadsExecTeamMember {
 
     KOKKOS_IF_ON_HOST((
         // Make sure there is enough scratch space:
-        using type = typename if_c<sizeof(ValueType) < TEAM_REDUCE_SIZE,
-                                   ValueType, void>::type;
+        using type = std::conditional_t<sizeof(ValueType) < TEAM_REDUCE_SIZE,
+                                        ValueType, void>;
 
         if (m_team_base) {
           type* const local_value = ((type*)m_team_base[0]->scratch_memory());
@@ -176,8 +176,8 @@ class ThreadsExecTeamMember {
 
     KOKKOS_IF_ON_HOST((
         // Make sure there is enough scratch space:
-        using type = typename if_c<sizeof(ValueType) < TEAM_REDUCE_SIZE,
-                                   ValueType, void>::type;
+        using type = std::conditional_t<sizeof(ValueType) < TEAM_REDUCE_SIZE,
+                                        ValueType, void>;
         f(value); if (m_team_base) {
           type* const local_value = ((type*)m_team_base[0]->scratch_memory());
           memory_fence();
@@ -198,9 +198,7 @@ class ThreadsExecTeamMember {
     KOKKOS_IF_ON_HOST((
         // Make sure there is enough scratch space:
         using type =
-            typename if_c<sizeof(Type) < TEAM_REDUCE_SIZE, Type, void>::type;
-
-        if (m_instance == nullptr) return value;
+            std::conditional_t<sizeof(Type) < TEAM_REDUCE_SIZE, Type, void>;
 
         if (team_rank() != team_size() - 1) *
             ((volatile type*)m_instance->scratch_memory()) = value;
@@ -238,10 +236,8 @@ class ThreadsExecTeamMember {
     KOKKOS_IF_ON_HOST((
         using value_type = typename ReducerType::value_type;
         // Make sure there is enough scratch space:
-        using type = typename if_c<sizeof(value_type) < TEAM_REDUCE_SIZE,
-                                   value_type, void>::type;
-
-        if (m_instance == nullptr) return;
+        using type = std::conditional_t<sizeof(value_type) < TEAM_REDUCE_SIZE,
+                                        value_type, void>;
 
         type* const local_value = ((type*)m_instance->scratch_memory());
 
@@ -294,10 +290,8 @@ class ThreadsExecTeamMember {
     KOKKOS_IF_ON_DEVICE(((void)global_accum; return value;))
 
     KOKKOS_IF_ON_HOST((  // Make sure there is enough scratch space:
-        using type = typename if_c<sizeof(ArgType) < TEAM_REDUCE_SIZE, ArgType,
-                                   void>::type;
-
-        if (m_instance == nullptr) return type(0);
+        using type = std::conditional_t<sizeof(ArgType) < TEAM_REDUCE_SIZE,
+                                        ArgType, void>;
 
         volatile type* const work_value = ((type*)m_instance->scratch_memory());
 
@@ -370,6 +364,7 @@ class ThreadsExecTeamMember {
         m_chunk_size(team.chunk_size()),
         m_league_chunk_end(0),
         m_team_alloc(team.team_alloc()) {
+    KOKKOS_ASSERT(m_instance != nullptr);
     if (team.league_size()) {
       // Execution is using device-team interface:
 
@@ -1066,7 +1061,7 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
       typename Impl::FunctorAnalysis<Impl::FunctorPatternInterface::SCAN,
                                      TeamPolicy<Threads>, FunctorType,
                                      void>::value_type;
-  static_assert(std::is_same<closure_value_type, ValueType>::value,
+  static_assert(std::is_same_v<closure_value_type, ValueType>,
                 "Non-matching value types of closure and return type");
 
   ValueType scan_val = ValueType();
