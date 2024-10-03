@@ -57,6 +57,7 @@
 * SIMD: Allow flexible vector width for 32 bit types [\#6802](https://github.com/kokkos/kokkos/pull/6802)
 * Updates for `Kokkos::Array`: add `kokkos_swap(Array<T, N>)` specialization [\#6943](https://github.com/kokkos/kokkos/pull/6943), add `Kokkos::to_array` [\#6375](https://github.com/kokkos/kokkos/pull/6375),  make `Kokkos::Array` equality-comparable [\#7148](https://github.com/kokkos/kokkos/pull/7148)
 * Structured binding support for `Kokkos::complex` [\#7040](https://github.com/kokkos/kokkos/pull/7040)
+* Introduce `KOKKOS_DEDUCTION_GUIDE` macro to allow for portable user-defined deduction guides [\#6954](https://github.com/kokkos/kokkos/pull/6954)
 
 ### Build System Changes
 * Do not require OpenMP support for languages other than CXX [\#6965](https://github.com/kokkos/kokkos/pull/6965)
@@ -83,7 +84,6 @@
 
 ### Bug Fixes
 * Do not return a copy of the input functor in `Experimental::for_each` [\#6910](https://github.com/kokkos/kokkos/pull/6910)
-* Introduce `KOKKOS_DEDUCTION_GUIDE` macro to allow for portable user-defined deduction guides [\#6954](https://github.com/kokkos/kokkos/pull/6954)
 * Fix `realloc` on views of non-default constructible element types [\#6993](https://github.com/kokkos/kokkos/pull/6993)
 * Fix undefined behavior in `View` initialization or fill with zeros [\#7014](https://github.com/kokkos/kokkos/pull/7014)
 * Fix `sort_by_key` on host execution spaces when building with NVCC [\#7059](https://github.com/kokkos/kokkos/pull/7059)
