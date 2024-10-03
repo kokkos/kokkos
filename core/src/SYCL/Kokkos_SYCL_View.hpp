@@ -17,7 +17,7 @@
 #ifndef KOKKOS_EXPERIMENTAL_SYCL_VIEW_HPP
 #define KOKKOS_EXPERIMENTAL_SYCL_VIEW_HPP
 
-#include <impl/Kokkos_ViewMapping.hpp>
+#include <View/Kokkos_ViewMapping.hpp>
 
 // Prior to oneAPI 2023.1.0, this gives
 //
@@ -30,7 +30,7 @@ namespace Impl {
 
 template <typename ValueType, typename MemorySpace>
 struct SYCLUSMHandle{
-  mutable std::conditional_t<std::is_same_v<MemorySpace, Kokkos::Experimental::SYCL::scratch_memory_space_l0>, sycl::local_ptr<ValueType>, sycl::device_ptr<ValueType>> m_ptr;
+  mutable std::conditional_t<std::is_same_v<MemorySpace, Kokkos::SYCL::scratch_memory_space_l0>, sycl::local_ptr<ValueType>, Impl::sycl_device_ptr<ValueType>> m_ptr;
 
   template <typename iType>
   KOKKOS_FORCEINLINE_FUNCTION ValueType& operator()(const iType& i) const {
@@ -69,10 +69,10 @@ struct ViewDataHandle<
         !Traits::memory_traits::is_restrict &&
         !Traits::memory_traits::is_atomic && (
          std::is_same_v<typename Traits::memory_space,
-                        Kokkos::Experimental::SYCL::scratch_memory_space_l0>
+                        Kokkos::SYCL::scratch_memory_space_l0>
 			||
 	 std::is_same_v<typename Traits::memory_space,
-	                Kokkos::Experimental::SYCL::scratch_memory_space_l1>
+	                Kokkos::SYCL::scratch_memory_space_l1>
 			)>> {
 		//private:
   using value_type   = typename Traits::value_type;

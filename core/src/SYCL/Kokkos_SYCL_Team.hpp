@@ -365,7 +365,7 @@ class SYCLTeamMember {
       : m_team_reduce(shared),
         m_team_shared(static_cast<sycl::local_ptr<char>>(shared) + shared_begin,
                       shared_size,
-                      static_cast<sycl::device_ptr<char>>(scratch_level_1_ptr),
+                      static_cast<Impl::sycl_device_ptr<char>>(scratch_level_1_ptr),
                       scratch_level_1_size),
         m_team_reduce_size(shared_begin),
         m_item(item),

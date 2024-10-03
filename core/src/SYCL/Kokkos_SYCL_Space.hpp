@@ -291,8 +291,8 @@ struct MemorySpaceAccess<
 
 template <typename PointerType>
 struct MemorySpaceAccess<
-    Kokkos::Experimental::SYCLDeviceUSMSpace,
-    Kokkos::ScratchMemorySpaceBase<Kokkos::Experimental::SYCL, PointerType>> {
+    Kokkos::SYCLDeviceUSMSpace,
+    Kokkos::ScratchMemorySpaceBase<Kokkos::SYCL, PointerType>> {
   enum : bool { assignable = false };
   enum : bool { accessible = true };
   enum : bool { deepcopy = false };
@@ -300,8 +300,8 @@ struct MemorySpaceAccess<
 /*
 template <typename LocalPointerType, typename GlobalPointerType, typename PointerType>
 struct MemorySpaceAccess<
-    Kokkos::ScratchMemorySpace<Kokkos::Experimental::SYCL, LocalPointerType, GlobalPointerType>,
-    Kokkos::ScratchMemorySpaceBase<Kokkos::Experimental::SYCL, PointerType>> {
+    Kokkos::ScratchMemorySpace<Kokkos::SYCL, LocalPointerType, GlobalPointerType>,
+    Kokkos::ScratchMemorySpaceBase<Kokkos::SYCL, PointerType>> {
   enum : bool { assignable = true };
   enum : bool { accessible = true };
   enum : bool { deepcopy = false };
