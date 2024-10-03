@@ -67,7 +67,7 @@ namespace Impl {
 template <class ViewType>
 struct GetOffsetViewTypeFromViewType {
   using type =
-      OffsetView<typename ViewType::data_type, typename ViewType::array_layout,
+      OffsetView<typename ViewType::data_type, typename ViewType::layout_type,
                  typename ViewType::device_type,
                  typename ViewType::memory_traits>;
 };
@@ -224,29 +224,28 @@ class OffsetView : public View<DataType, Properties...> {
   using array_type KOKKOS_DEPRECATED_WITH_COMMENT(
       "Use Kokkos_OffsetView::type insted.") =
       OffsetView<typename traits::scalar_array_type,
-                 typename traits::array_layout, typename traits::device_type,
+                 typename traits::layout_type, typename traits::device_type,
                  typename traits::memory_traits>;
 #endif
   /** \brief  Compatible view of data type */
   using type =
-      OffsetView<typename traits::data_type, typename traits::array_layout,
+      OffsetView<typename traits::data_type, typename traits::layout_type,
                  typename traits::device_type, typename traits::memory_traits>;
 
   /** \brief  Compatible view of const data type */
   using const_type =
-      OffsetView<typename traits::const_data_type,
-                 typename traits::array_layout, typename traits::device_type,
-                 typename traits::memory_traits>;
+      OffsetView<typename traits::const_data_type, typename traits::layout_type,
+                 typename traits::device_type, typename traits::memory_traits>;
 
   /** \brief  Compatible view of non-const data type */
   using non_const_type =
       OffsetView<typename traits::non_const_data_type,
-                 typename traits::array_layout, typename traits::device_type,
+                 typename traits::layout_type, typename traits::device_type,
                  typename traits::memory_traits>;
 
   /** \brief  Compatible HostMirror view */
   using HostMirror = OffsetView<typename traits::non_const_data_type,
-                                typename traits::array_layout,
+                                typename traits::layout_type,
                                 typename traits::host_mirror_space>;
 
   template <size_t... I, class... OtherIndexTypes>
@@ -308,7 +307,7 @@ class OffsetView : public View<DataType, Properties...> {
   // interoperability with View
  private:
   using view_type =
-      View<typename traits::data_type, typename traits::array_layout,
+      View<typename traits::data_type, typename traits::layout_type,
            typename traits::device_type, typename traits::memory_traits>;
 
  public:
@@ -501,7 +500,7 @@ class OffsetView : public View<DataType, Properties...> {
   KOKKOS_FUNCTION OffsetView(const pointer_type& p, const B& begins_,
                              const E& ends_, subtraction_failure)
       : base_t(Kokkos::view_wrap(p),
-               typename traits::array_layout(
+               typename traits::layout_type(
                    base_t::rank() > 0 ? at(ends_, 0) - at(begins_, 0)
                                       : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
                    base_t::rank() > 1 ? at(ends_, 1) - at(begins_, 1)
@@ -573,7 +572,7 @@ class OffsetView : public View<DataType, Properties...> {
 
       )
       : OffsetView(Kokkos::Impl::ViewCtorProp<std::string>(arg_label),
-                   typename traits::array_layout(
+                   typename traits::layout_type(
                        range0.first == KOKKOS_INVALID_OFFSET
                            ? KOKKOS_IMPL_CTOR_DEFAULT_ARG - 1
                            : range0.second - range0.first + 1,
@@ -613,7 +612,7 @@ class OffsetView : public View<DataType, Properties...> {
       const std::pair<int64_t, int64_t> range6 = KOKKOS_INVALID_INDEX_RANGE,
       const std::pair<int64_t, int64_t> range7 = KOKKOS_INVALID_INDEX_RANGE)
       : OffsetView(arg_prop,
-                   typename traits::array_layout(
+                   typename traits::layout_type(
                        range0.first == KOKKOS_INVALID_OFFSET
                            ? KOKKOS_IMPL_CTOR_DEFAULT_ARG
                            : range0.second - range0.first + 1,
@@ -645,7 +644,7 @@ class OffsetView : public View<DataType, Properties...> {
   explicit KOKKOS_FUNCTION OffsetView(
       const Kokkos::Impl::ViewCtorProp<P...>& arg_prop,
       std::enable_if_t<Kokkos::Impl::ViewCtorProp<P...>::has_pointer,
-                       typename traits::array_layout> const& arg_layout,
+                       typename traits::layout_type> const& arg_layout,
       const index_list_type minIndices)
       : base_t(arg_prop, arg_layout) {
     KOKKOS_IF_ON_HOST((Kokkos::Experimental::Impl::runtime_check_rank_host(
@@ -669,7 +668,7 @@ class OffsetView : public View<DataType, Properties...> {
   explicit OffsetView(
       const Kokkos::Impl::ViewCtorProp<P...>& arg_prop,
       std::enable_if_t<!Kokkos::Impl::ViewCtorProp<P...>::has_pointer,
-                       typename traits::array_layout> const& arg_layout,
+                       typename traits::layout_type> const& arg_layout,
       const index_list_type minIndices)
       : base_t(arg_prop, arg_layout) {
     for (size_t i = 0; i < base_t::rank(); ++i)
@@ -1149,8 +1148,8 @@ KOKKOS_INLINE_FUNCTION bool operator==(const OffsetView<LT, LP...>& lhs,
 
   return std::is_same_v<typename lhs_traits::const_value_type,
                         typename rhs_traits::const_value_type> &&
-         std::is_same_v<typename lhs_traits::array_layout,
-                        typename rhs_traits::array_layout> &&
+         std::is_same_v<typename lhs_traits::layout_type,
+                        typename rhs_traits::layout_type> &&
          std::is_same_v<typename lhs_traits::memory_space,
                         typename rhs_traits::memory_space> &&
          unsigned(lhs_traits::rank) == unsigned(rhs_traits::rank) &&
@@ -1180,8 +1179,8 @@ KOKKOS_INLINE_FUNCTION bool operator==(const View<LT, LP...>& lhs,
 
   return std::is_same_v<typename lhs_traits::const_value_type,
                         typename rhs_traits::const_value_type> &&
-         std::is_same_v<typename lhs_traits::array_layout,
-                        typename rhs_traits::array_layout> &&
+         std::is_same_v<typename lhs_traits::layout_type,
+                        typename rhs_traits::layout_type> &&
          std::is_same_v<typename lhs_traits::memory_space,
                         typename rhs_traits::memory_space> &&
          unsigned(lhs_traits::rank) == unsigned(rhs_traits::rank) &&
@@ -1278,14 +1277,21 @@ struct MirrorOffsetViewType {
     is_same_memspace =
         std::is_same_v<memory_space, typename src_view_type::memory_space>
   };
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   // The array_layout
-  using array_layout = typename src_view_type::array_layout;
+  using array_layout KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use layout_type instead.") = typename src_view_type::array_layout;
+#endif
+  // The layout type
+  using layout_type = typename src_view_type::layout_type;
+
   // The data type (we probably want it non-const since otherwise we can't even
   // deep_copy to it.)
   using data_type = typename src_view_type::non_const_data_type;
   // The destination view type if it is not the same memory space
   using dest_view_type =
-      Kokkos::Experimental::OffsetView<data_type, array_layout, Space>;
+      Kokkos::Experimental::OffsetView<data_type, layout_type, Space>;
   // If it is the same memory_space return the existing view_type
   // This will also keep the unmanaged trait if necessary
   using view_type =

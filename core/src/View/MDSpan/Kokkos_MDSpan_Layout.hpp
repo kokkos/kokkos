@@ -50,26 +50,26 @@ template <size_t Pad>
 struct IsLayoutLeftPadded<Experimental::layout_left_padded<Pad>>
     : std::true_type {};
 
-template <class ArrayLayout>
-struct LayoutFromArrayLayout;
+template <class LayoutType>
+struct LayoutFromLayoutType;
 
 template <>
-struct LayoutFromArrayLayout<LayoutLeft> {
+struct LayoutFromLayoutType<LayoutLeft> {
   using type = Experimental::layout_left_padded<dynamic_extent>;
 };
 
 template <>
-struct LayoutFromArrayLayout<LayoutRight> {
+struct LayoutFromLayoutType<LayoutRight> {
   using type = Experimental::layout_right_padded<dynamic_extent>;
 };
 
 template <>
-struct LayoutFromArrayLayout<LayoutStride> {
+struct LayoutFromLayoutType<LayoutStride> {
   using type = layout_stride;
 };
 
-template <class ArrayLayout, class MDSpanType>
-KOKKOS_INLINE_FUNCTION auto array_layout_from_mapping(
+template <class LayoutType, class MDSpanType>
+KOKKOS_INLINE_FUNCTION auto layout_type_from_mapping(
     const typename MDSpanType::mapping_type &mapping) {
   using mapping_type = typename MDSpanType::mapping_type;
   using extents_type = typename mapping_type::extents_type;
@@ -77,10 +77,10 @@ KOKKOS_INLINE_FUNCTION auto array_layout_from_mapping(
   constexpr auto rank = extents_type::rank();
   const auto &ext     = mapping.extents();
 
-  static_assert(rank <= ARRAY_LAYOUT_MAX_RANK,
+  static_assert(rank <= LAYOUT_TYPE_MAX_RANK,
                 "Unsupported rank for mdspan (must be <= 8)");
 
-  if constexpr (std::is_same_v<ArrayLayout, LayoutStride>) {
+  if constexpr (std::is_same_v<LayoutType, LayoutStride>) {
     return Kokkos::LayoutStride{
         rank > 0 ? ext.extent(0) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
         rank > 0 ? mapping.stride(0) : 0,
@@ -100,14 +100,14 @@ KOKKOS_INLINE_FUNCTION auto array_layout_from_mapping(
         rank > 7 ? mapping.stride(7) : 0,
     };
   } else {
-    ArrayLayout layout{rank > 0 ? ext.extent(0) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                       rank > 1 ? ext.extent(1) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                       rank > 2 ? ext.extent(2) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                       rank > 3 ? ext.extent(3) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                       rank > 4 ? ext.extent(4) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                       rank > 5 ? ext.extent(5) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                       rank > 6 ? ext.extent(6) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                       rank > 7 ? ext.extent(7) : KOKKOS_IMPL_CTOR_DEFAULT_ARG};
+    LayoutType layout{rank > 0 ? ext.extent(0) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                      rank > 1 ? ext.extent(1) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                      rank > 2 ? ext.extent(2) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                      rank > 3 ? ext.extent(3) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                      rank > 4 ? ext.extent(4) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                      rank > 5 ? ext.extent(5) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                      rank > 6 ? ext.extent(6) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                      rank > 7 ? ext.extent(7) : KOKKOS_IMPL_CTOR_DEFAULT_ARG};
 
     if constexpr (rank > 1 &&
                   std::is_same_v<typename mapping_type::layout_type,
@@ -131,9 +131,9 @@ KOKKOS_INLINE_FUNCTION auto array_layout_from_mapping(
   }
 }
 
-template <class MappingType, class ArrayLayout, size_t... Idx>
-KOKKOS_INLINE_FUNCTION auto mapping_from_array_layout_impl(
-    ArrayLayout layout, std::index_sequence<Idx...>) {
+template <class MappingType, class LayoutType, size_t... Idx>
+KOKKOS_INLINE_FUNCTION auto mapping_from_layout_type_impl(
+    LayoutType layout, std::index_sequence<Idx...>) {
   using index_type   = typename MappingType::index_type;
   using extents_type = typename MappingType::extents_type;
   if constexpr (std::is_same_v<typename MappingType::layout_type,
@@ -155,7 +155,7 @@ KOKKOS_INLINE_FUNCTION auto mapping_from_array_layout_impl(
 // transition their code and avoid breaking changes
 #ifdef KOKKOS_ENABLE_IMPL_CHECK_POSSIBLY_BREAKING_LAYOUTS
       KOKKOS_IF_ON_HOST(
-          (if constexpr (std::is_same_v<ArrayLayout, LayoutRight> &&
+          (if constexpr (std::is_same_v<LayoutType, LayoutRight> &&
                          extents_type::rank() > 2) {
             if (layout.stride != KOKKOS_IMPL_CTOR_DEFAULT_ARG) {
               std::cerr
@@ -185,7 +185,7 @@ KOKKOS_INLINE_FUNCTION auto mapping_from_array_layout_impl(
 }
 
 template <class MappingType, size_t... Idx>
-KOKKOS_INLINE_FUNCTION auto mapping_from_array_layout_impl(
+KOKKOS_INLINE_FUNCTION auto mapping_from_layout_type_impl(
     LayoutStride layout, std::index_sequence<Idx...>) {
   static_assert(
       std::is_same_v<typename MappingType::layout_type, layout_stride>);
@@ -202,14 +202,14 @@ KOKKOS_INLINE_FUNCTION auto mapping_from_array_layout_impl(
 
 // specialization for rank 0 to avoid empty array
 template <class MappingType>
-KOKKOS_INLINE_FUNCTION auto mapping_from_array_layout_impl(
+KOKKOS_INLINE_FUNCTION auto mapping_from_layout_type_impl(
     LayoutStride, std::index_sequence<>) {
   return MappingType{};
 }
 
-template <class MappingType, class ArrayLayout>
-KOKKOS_INLINE_FUNCTION auto mapping_from_array_layout(ArrayLayout layout) {
-  return mapping_from_array_layout_impl<MappingType>(
+template <class MappingType, class LayoutType>
+KOKKOS_INLINE_FUNCTION auto mapping_from_layout_type(LayoutType layout) {
+  return mapping_from_layout_type_impl<MappingType>(
       layout, std::make_index_sequence<MappingType::extents_type::rank()>());
 }
 

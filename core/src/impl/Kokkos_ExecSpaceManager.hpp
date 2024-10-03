@@ -33,7 +33,7 @@ using public_member_types_t = std::enable_if_t<
     Kokkos::is_execution_space_v<typename T::execution_space> &&
     Kokkos::is_memory_space_v<typename T::memory_space> &&
     Kokkos::is_device_v<typename T::device_type> &&
-    Kokkos::is_array_layout_v<typename T::array_layout> &&
+    Kokkos::is_layout_type_v<typename T::layout_type> &&
     std::is_integral_v<typename T::size_type> &&
     Kokkos::is_memory_space_v<typename T::scratch_memory_space>>;
 

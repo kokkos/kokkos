@@ -52,8 +52,12 @@ class Threads {
   //! This execution space preferred device_type
   using device_type = Kokkos::Device<execution_space, memory_space>;
 
-  using array_layout = Kokkos::LayoutRight;
-  using size_type    = memory_space::size_type;
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  using array_layout KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use layout_type instead.") = LayoutRight;
+#endif
+  using layout_type = LayoutRight;
+  using size_type   = memory_space::size_type;
 
   using scratch_memory_space = ScratchMemorySpace<Threads>;
 

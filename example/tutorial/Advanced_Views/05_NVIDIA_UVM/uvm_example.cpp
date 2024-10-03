@@ -37,7 +37,7 @@ struct localsum {
   // Get the view types on the particular device the functor is instantiated for
   idx_type::const_type idx;
   view_type dest;
-  Kokkos::View<view_type::const_data_type, view_type::array_layout,
+  Kokkos::View<view_type::const_data_type, view_type::layout_type,
                view_type::device_type, Kokkos::MemoryRandomAccess>
       src;
 
