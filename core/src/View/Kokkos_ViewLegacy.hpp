@@ -1279,11 +1279,14 @@ class View : public ViewTraits<DataType, Properties...> {
                      map_type::memory_span(arg_layout),
                      scratch_value_alignment))),
              arg_layout) {
-               static_assert(Impl::MemorySpaceAccess<typename traits::memory_space, Kokkos::ScratchMemorySpaceBase<typename traits::execution_space,
+    static_assert(
+        Impl::MemorySpaceAccess<
+            typename traits::memory_space,
+            Kokkos::ScratchMemorySpaceBase<typename traits::execution_space,
                                            PointerType>>::assignable);
-      }
+  }
 
- template <typename PointerType>
+  template <typename PointerType>
   explicit KOKKOS_INLINE_FUNCTION View(
       const Kokkos::ScratchMemorySpaceBase<typename traits::execution_space,
                                            PointerType>& arg_space,
@@ -1306,7 +1309,10 @@ class View : public ViewTraits<DataType, Properties...> {
     static_assert(traits::array_layout::is_extent_constructible,
                   "Layout is not constructible from extent arguments. Use "
                   "overload taking a layout object instead.");
-    static_assert(Impl::MemorySpaceAccess<typename traits::memory_space, Kokkos::ScratchMemorySpaceBase<typename traits::execution_space,
+    static_assert(
+        Impl::MemorySpaceAccess<
+            typename traits::memory_space,
+            Kokkos::ScratchMemorySpaceBase<typename traits::execution_space,
                                            PointerType>>::assignable);
   }
 

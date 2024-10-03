@@ -41,7 +41,7 @@ struct ThreadScratch {
     scratch_t v_S =
         scratch_t(team.template thread_scratch<scratch_level>(), sY);
     sycl::global_ptr<size_t> v_S_ptr = v_S.data();
-    //Kokkos::printf("%p\n", v_S_ptr.get());
+    // Kokkos::printf("%p\n", v_S_ptr.get());
     int n = team.league_rank();
 
     v_S[0] = 0;
@@ -53,18 +53,16 @@ struct ThreadScratch {
 
     int scratchSize = scratch_t::shmem_size(sY);
     // So this works with deprecated code enabled:
-    policy_t policy =
-        policy_t(pN, 1, 1)
-            .set_scratch_size(scratch_level, Kokkos::PerThread(scratchSize));
+    policy_t policy = policy_t(pN, 1, 1).set_scratch_size(
+        scratch_level, Kokkos::PerThread(scratchSize));
 
     int max_team_size = policy.team_size_max(*this, Kokkos::ParallelForTag());
     v                 = data_t("Matrix", pN, max_team_size);
 
-    Kokkos::parallel_for(
-        "Test12a_ThreadScratch",
-        policy_t(pN, 1)
-            .set_scratch_size(scratch_level, Kokkos::PerThread(scratchSize)),
-        *this);
+    Kokkos::parallel_for("Test12a_ThreadScratch",
+                         policy_t(pN, 1).set_scratch_size(
+                             scratch_level, Kokkos::PerThread(scratchSize)),
+                         *this);
   }
 };
 

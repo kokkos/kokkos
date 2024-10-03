@@ -29,9 +29,15 @@ namespace Kokkos {
 namespace Impl {
 
 template <typename ValueType, typename MemorySpace>
-struct SYCLUSMHandle{
-  mutable std::conditional_t<std::is_same_v<MemorySpace, Kokkos::SYCL::scratch_memory_space_l0>, sycl::local_ptr<ValueType>, Impl::sycl_device_ptr<ValueType>> m_ptr;
-  static constexpr sycl::access::address_space address_space =  std::is_same_v<MemorySpace, Kokkos::SYCL::scratch_memory_space_l0> ? sycl::access::address_space::local_space : sycl::access::address_space::global_space;
+struct SYCLUSMHandle {
+  mutable std::conditional_t<
+      std::is_same_v<MemorySpace, Kokkos::SYCL::scratch_memory_space_l0>,
+      sycl::local_ptr<ValueType>, Impl::sycl_device_ptr<ValueType>>
+      m_ptr;
+  static constexpr sycl::access::address_space address_space =
+      std::is_same_v<MemorySpace, Kokkos::SYCL::scratch_memory_space_l0>
+          ? sycl::access::address_space::local_space
+          : sycl::access::address_space::global_space;
 
   template <typename iType>
   KOKKOS_FORCEINLINE_FUNCTION ValueType& operator()(const iType& i) const {
@@ -50,54 +56,54 @@ struct SYCLUSMHandle{
   SYCLUSMHandle() = default;
 
   KOKKOS_FUNCTION
-  explicit SYCLUSMHandle(ValueType* const arg_ptr) :
-    m_ptr (arg_ptr)
-	{}
+  explicit SYCLUSMHandle(ValueType* const arg_ptr) : m_ptr(arg_ptr) {}
 
   KOKKOS_FUNCTION
-  SYCLUSMHandle(const SYCLUSMHandle& arg_handle, size_t offset) : m_ptr(
+  SYCLUSMHandle(const SYCLUSMHandle& arg_handle, size_t offset)
+      : m_ptr(
 #ifdef SYCL_EXT_ONEAPI_ADDRESS_CAST
-		  sycl::ext::oneapi::experimental::static_address_cast<AddressSpace, ValueType, decorated::yes>(arg_handle.m_ptr + offset)
-#else		  
-		  arg_handle.m_ptr + offset
+            sycl::ext::oneapi::experimental::static_address_cast<
+                AddressSpace, ValueType, decorated::yes>(arg_handle.m_ptr +
+                                                         offset)
+#else
+            arg_handle.m_ptr + offset
 #endif
-		  ) {}
+        ) {
+  }
 
-  SYCLUSMHandle& operator=(ValueType* const arg_ptr) { return *this = SYCLUSMHandle(arg_ptr); }
+  SYCLUSMHandle& operator=(ValueType* const arg_ptr) {
+    return *this = SYCLUSMHandle(arg_ptr);
+  }
 };
-
 
 template <class Traits>
 struct ViewDataHandle<
     Traits,
-    std::enable_if_t<
-        std::is_void<typename Traits::specialize>::value &&
-        !Traits::memory_traits::is_aligned &&
-        !Traits::memory_traits::is_restrict &&
-        !Traits::memory_traits::is_atomic && (
-         std::is_same_v<typename Traits::memory_space,
-                        Kokkos::SYCL::scratch_memory_space_l0>
-			||
-	 std::is_same_v<typename Traits::memory_space,
-	                Kokkos::SYCL::scratch_memory_space_l1>
-			)>> {
-		//private:
+    std::enable_if_t<std::is_void<typename Traits::specialize>::value &&
+                     !Traits::memory_traits::is_aligned &&
+                     !Traits::memory_traits::is_restrict &&
+                     !Traits::memory_traits::is_atomic &&
+                     (std::is_same_v<typename Traits::memory_space,
+                                     Kokkos::SYCL::scratch_memory_space_l0> ||
+                      std::is_same_v<typename Traits::memory_space,
+                                     Kokkos::SYCL::scratch_memory_space_l1>)>> {
+  // private:
   using value_type   = typename Traits::value_type;
   using memory_space = typename Traits::memory_space;
-  using handle_type = SYCLUSMHandle<value_type,memory_space>;
-  using return_type = typename Traits::value_type&;
-  using track_type  = Kokkos::Impl::SharedAllocationTracker;
+  using handle_type  = SYCLUSMHandle<value_type, memory_space>;
+  using return_type  = typename Traits::value_type&;
+  using track_type   = Kokkos::Impl::SharedAllocationTracker;
 
-		public:
+ public:
   KOKKOS_INLINE_FUNCTION
   static handle_type assign(value_type* const arg_data_ptr,
                             track_type const& /*arg_tracker*/) {
     return handle_type(arg_data_ptr);
   }
 
- KOKKOS_INLINE_FUNCTION
+  KOKKOS_INLINE_FUNCTION
   static handle_type assign(value_type* const arg_data_ptr, size_t offset) {
-    return handle_type(arg_data_ptr+offset);
+    return handle_type(arg_data_ptr + offset);
   }
 
   KOKKOS_INLINE_FUNCTION

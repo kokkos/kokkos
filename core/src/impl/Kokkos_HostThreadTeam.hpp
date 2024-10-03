@@ -398,9 +398,11 @@ class HostThreadTeamData {
 template <class HostExecSpace>
 class HostThreadTeamMember {
  public:
-  using scratch_memory_space    = typename HostExecSpace::scratch_memory_space;
-  using scratch_memory_space_l0 = typename HostExecSpace::scratch_memory_space_l0;
-  using scratch_memory_space_l1 = typename HostExecSpace::scratch_memory_space_l1;
+  using scratch_memory_space = typename HostExecSpace::scratch_memory_space;
+  using scratch_memory_space_l0 =
+      typename HostExecSpace::scratch_memory_space_l0;
+  using scratch_memory_space_l1 =
+      typename HostExecSpace::scratch_memory_space_l1;
 
   using execution_space         = HostExecSpace;
   using thread_team_member      = HostThreadTeamMember;

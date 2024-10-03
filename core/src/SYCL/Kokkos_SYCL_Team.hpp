@@ -34,11 +34,11 @@ namespace Impl {
  */
 class SYCLTeamMember {
  public:
-  using execution_space      = Kokkos::SYCL;
-  using scratch_memory_space = execution_space::scratch_memory_space;
+  using execution_space         = Kokkos::SYCL;
+  using scratch_memory_space    = execution_space::scratch_memory_space;
   using scratch_memory_space_l0 = execution_space::scratch_memory_space_l0;
   using scratch_memory_space_l1 = execution_space::scratch_memory_space_l1;
-  using team_handle          = SYCLTeamMember;
+  using team_handle             = SYCLTeamMember;
 
  private:
   mutable sycl::local_ptr<void> m_team_reduce;
@@ -363,10 +363,11 @@ class SYCLTeamMember {
                  const sycl::nd_item<2> item, const int arg_league_rank,
                  const int arg_league_size)
       : m_team_reduce(shared),
-        m_team_shared(static_cast<sycl::local_ptr<char>>(shared) + shared_begin,
-                      shared_size,
-                      static_cast<Impl::sycl_device_ptr<char>>(scratch_level_1_ptr),
-                      scratch_level_1_size),
+        m_team_shared(
+            static_cast<sycl::local_ptr<char>>(shared) + shared_begin,
+            shared_size,
+            static_cast<Impl::sycl_device_ptr<char>>(scratch_level_1_ptr),
+            scratch_level_1_size),
         m_team_reduce_size(shared_begin),
         m_item(item),
         m_league_rank(arg_league_rank),
