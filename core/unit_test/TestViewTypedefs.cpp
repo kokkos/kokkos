@@ -94,7 +94,13 @@ constexpr bool test_view_typedefs_impl() {
   // in Legacy View: some helper View variants
   // =========================================
   static_assert(std::is_same_v<typename ViewType::traits, ViewTraitsType>);
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   static_assert(std::is_same_v<typename ViewType::array_type,
+                               Kokkos::View<typename ViewType::scalar_array_type, typename ViewType::array_layout,
+                                            typename ViewType::device_type, typename ViewTraitsType::hooks_policy,
+                                            typename ViewType::memory_traits>>);
+#endif
+  static_assert(std::is_same_v<typename ViewType::type,
                                Kokkos::View<typename ViewType::data_type, typename ViewType::array_layout,
                                             typename ViewType::device_type, typename ViewTraitsType::hooks_policy,
                                             typename ViewType::memory_traits>>);

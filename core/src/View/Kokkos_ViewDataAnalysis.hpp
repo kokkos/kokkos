@@ -388,12 +388,12 @@ struct ViewDataAnalysis {
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   // Generate "flattened" multidimensional array specification type.
-  using scalar_array_type KOKKOS_DEPRECATED_WITH_COMMENT("Use type instead .") =
+  using scalar_array_type KOKKOS_DEPRECATED_WITH_COMMENT("Use type instead.") =
       type;
   using const_scalar_array_type KOKKOS_DEPRECATED_WITH_COMMENT(
-      "Use const_type instead .") = const_type;
+      "Use const_type instead.") = const_type;
   using non_const_scalar_array_type KOKKOS_DEPRECATED_WITH_COMMENT(
-      "Use non_const_type instead .") = non_const_type;
+      "Use non_const_type instead.") = non_const_type;
 #endif
 };
 
