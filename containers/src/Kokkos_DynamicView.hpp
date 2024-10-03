@@ -269,8 +269,7 @@ class DynamicView : public Kokkos::ViewTraits<DataType, P...> {
 //----------------------------------------------------------------------
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   /** \brief  Compatible view of array of scalar types */
-  using array_type KOKKOS_DEPRECATED_WITH_COMMENT(
-      "Use Kokkos_DynamicView::type insted.") =
+  using array_type KOKKOS_DEPRECATED_WITH_COMMENT("Use type instead.") =
       DynamicView<typename traits::scalar_array_type,
                   typename traits::device_type>;
 #endif

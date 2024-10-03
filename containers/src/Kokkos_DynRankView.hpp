@@ -493,8 +493,7 @@ class DynRankView : private View<DataType*******, Properties...> {
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   /** \brief  Compatible view of array of scalar types */
-  using array_type KOKKOS_DEPRECATED_WITH_COMMENT(
-      "Use Kokkos_DynRankView::type insted.") =
+  using array_type KOKKOS_DEPRECATED_WITH_COMMENT("Use type instead.") =
       DynRankView<
           typename drvtraits::data_type, typename drvtraits::array_layout,
           typename drvtraits::device_type, typename drvtraits::memory_traits>;
