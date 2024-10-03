@@ -150,9 +150,6 @@ struct DeviceTypeTraits<::Kokkos::Experimental::OpenMPTarget> {
 #include <OpenMPTarget/Kokkos_OpenMPTarget_Parallel.hpp>
 #include <OpenMPTarget/Kokkos_OpenMPTarget_ParallelFor_MDRange.hpp>
 #include <OpenMPTarget/Kokkos_OpenMPTarget_ParallelReduce_MDRange.hpp>
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-#include <OpenMPTarget/Kokkos_OpenMPTarget_Task.hpp>
-#endif
 
 /*--------------------------------------------------------------------------*/
 
