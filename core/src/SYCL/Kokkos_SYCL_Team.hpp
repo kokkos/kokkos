@@ -283,8 +283,8 @@ class SYCLTeamMember {
 
     const auto update =
         Kokkos::Impl::SYCLReduction::shift_group_right(sg, value, vector_range);
-    Type intermediate = (group_id > 0 ? base_data[group_id - 1] : 0) +
-                        (id_in_sg >= vector_range ? update : 0);
+    Type intermediate = (group_id > 0 ? base_data[group_id - 1] : Type{0}) +
+                        (id_in_sg >= vector_range ? update : Type{0});
 
     if (global_accum) {
       if (id_in_sg == sub_group_range - 1 &&
