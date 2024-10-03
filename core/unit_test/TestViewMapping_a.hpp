@@ -669,11 +669,13 @@ void test_view_mapping() {
     ASSERT_TRUE((std::is_same_v<typename T::non_const_data_type, int*>));
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+    KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
     ASSERT_TRUE((std::is_same_v<typename T::scalar_array_type, int*>));
     ASSERT_TRUE(
         (std::is_same_v<typename T::const_scalar_array_type, const int*>));
     ASSERT_TRUE(
         (std::is_same_v<typename T::non_const_scalar_array_type, int*>));
+    KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
 #endif
 
     ASSERT_TRUE((std::is_same_v<typename T::value_type, int>));
@@ -691,11 +693,13 @@ void test_view_mapping() {
     ASSERT_TRUE((std::is_same_v<typename C::non_const_data_type, int*>));
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+    KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
     ASSERT_TRUE((std::is_same_v<typename C::scalar_array_type, const int*>));
     ASSERT_TRUE(
         (std::is_same_v<typename C::const_scalar_array_type, const int*>));
     ASSERT_TRUE(
         (std::is_same_v<typename C::non_const_scalar_array_type, int*>));
+    KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
 #endif
 
     ASSERT_TRUE((std::is_same_v<typename C::value_type, const int>));
@@ -741,11 +745,13 @@ void test_view_mapping() {
     ASSERT_TRUE((std::is_same_v<typename T::non_const_data_type, int*>));
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+    KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
     ASSERT_TRUE((std::is_same_v<typename T::scalar_array_type, int*>));
     ASSERT_TRUE(
         (std::is_same_v<typename T::const_scalar_array_type, const int*>));
     ASSERT_TRUE(
         (std::is_same_v<typename T::non_const_scalar_array_type, int*>));
+    KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
 #endif
 
     ASSERT_TRUE((std::is_same_v<typename T::value_type, int>));

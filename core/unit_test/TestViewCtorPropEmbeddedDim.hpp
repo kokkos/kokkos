@@ -77,10 +77,12 @@ struct TestViewCtorProp_EmbeddedDim {
         ASSERT_EQ((std::is_same_v<CommonViewValueType, double>), true);
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+        KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
         ASSERT_EQ((std::is_same_v<
                       typename decltype(view_alloc_arg)::scalar_array_type,
                       CommonViewValueType>),
                   true);
+        KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
 #endif
 #if 0
       // debug output
