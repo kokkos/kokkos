@@ -454,11 +454,11 @@ class DynRankView : private View<DataType*******, Properties...> {
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   using scalar_array_type KOKKOS_DEPRECATED_WITH_COMMENT(
-      "Use data_type instead .") = value_type;
+      "Use value_type instead.") = value_type;
   using const_scalar_array_type KOKKOS_DEPRECATED_WITH_COMMENT(
-      "Use const_data_type instead .") = const_value_type;
+      "Use const_value_type instead.") = const_value_type;
   using non_const_scalar_array_type KOKKOS_DEPRECATED_WITH_COMMENT(
-      "Use non_const_data_type instead .") = non_const_value_type;
+      "Use non_const_value_type instead.") = non_const_value_type;
 #endif
 #ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
@@ -492,8 +492,15 @@ class DynRankView : private View<DataType*******, Properties...> {
   // Types below - at least the HostMirror requires the value_type, NOT the rank
   // 7 data_type of the traits
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   /** \brief  Compatible view of array of scalar types */
-  using array_type = DynRankView<
+  using array_type KOKKOS_DEPRECATED_WITH_COMMENT("Use type instead.") =
+      DynRankView<
+          typename drvtraits::data_type, typename drvtraits::array_layout,
+          typename drvtraits::device_type, typename drvtraits::memory_traits>;
+#endif
+  /** \brief  Compatible view of data type */
+  using type = DynRankView<
       typename drvtraits::data_type, typename drvtraits::array_layout,
       typename drvtraits::device_type, typename drvtraits::memory_traits>;
 

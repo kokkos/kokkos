@@ -675,11 +675,21 @@ void test_view_mapping() {
     static_assert(std::is_same_v<typename C::non_const_data_type, int*>);
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+<<<<<<< HEAD
     static_assert(std::is_same_v<typename C::scalar_array_type, const int*>);
     static_assert(
         std::is_same_v<typename C::const_scalar_array_type, const int*>);
     static_assert(
         std::is_same_v<typename C::non_const_scalar_array_type, int*>);
+=======
+    KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
+    ASSERT_TRUE((std::is_same_v<typename T::scalar_array_type, int*>));
+    ASSERT_TRUE(
+        (std::is_same_v<typename T::const_scalar_array_type, const int*>));
+    ASSERT_TRUE(
+        (std::is_same_v<typename T::non_const_scalar_array_type, int*>));
+    KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
+>>>>>>> 6501d34f7 (Address reviewer comments)
 #endif
     static_assert(std::is_same_v<typename C::value_type, const int>);
     static_assert(std::is_same_v<typename C::const_value_type, const int>);
@@ -740,11 +750,21 @@ void test_view_mapping() {
     static_assert(std::is_same_v<typename T::non_const_data_type, int*>);
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+<<<<<<< HEAD
     static_assert(std::is_same_v<typename T::scalar_array_type, int*>);
     static_assert(
         std::is_same_v<typename T::const_scalar_array_type, const int*>);
     static_assert(
         std::is_same_v<typename T::non_const_scalar_array_type, int*>);
+=======
+    KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
+    ASSERT_TRUE((std::is_same_v<typename T::scalar_array_type, int*>));
+    ASSERT_TRUE(
+        (std::is_same_v<typename T::const_scalar_array_type, const int*>));
+    ASSERT_TRUE(
+        (std::is_same_v<typename T::non_const_scalar_array_type, int*>));
+    KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
+>>>>>>> 6501d34f7 (Address reviewer comments)
 #endif
 
     static_assert(std::is_same_v<typename T::value_type, int>);

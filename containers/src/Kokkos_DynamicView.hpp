@@ -266,11 +266,16 @@ class DynamicView : public Kokkos::ViewTraits<DataType, P...> {
   unsigned m_chunk_size;  // 2 << (m_chunk_shift - 1)
 
  public:
-  //----------------------------------------------------------------------
+//----------------------------------------------------------------------
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   /** \brief  Compatible view of array of scalar types */
-  using array_type =
+  using array_type KOKKOS_DEPRECATED_WITH_COMMENT("Use type instead.") =
+      DynamicView<typename traits::scalar_array_type,
+                  typename traits::device_type>;
+#endif
+  /** \brief  Compatible view of data type */
+  using type =
       DynamicView<typename traits::data_type, typename traits::device_type>;
-
   /** \brief  Compatible view of const data type */
   using const_type = DynamicView<typename traits::const_data_type,
                                  typename traits::device_type>;
@@ -286,9 +291,9 @@ class DynamicView : public Kokkos::ViewTraits<DataType, P...> {
   using uniform_device =
       Kokkos::Device<typename traits::device_type::execution_space,
                      Kokkos::AnonymousSpace>;
-  using uniform_type               = array_type;
+  using uniform_type               = type;
   using uniform_const_type         = const_type;
-  using uniform_runtime_type       = array_type;
+  using uniform_runtime_type       = type;
   using uniform_runtime_const_type = const_type;
   using uniform_nomemspace_type =
       DynamicView<typename traits::data_type, uniform_device>;
