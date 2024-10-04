@@ -81,7 +81,7 @@ struct functor_team_for {
         }
 
         if (test != value) {
-          Kokkos::printf("FAILED team_parallel_for %i %i %lf %lf\n",
+          Kokkos::printf("FAILED team_parallel_for league_rank: %i, team_rank: %i, test: %lf, value %lf\n",
                          team.league_rank(), team.team_rank(),
                          static_cast<double>(test), static_cast<double>(value));
           flag() = 1;

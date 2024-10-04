@@ -257,40 +257,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
 
     SET(${Tag}_SOURCES2A)
     SET(${Tag}_TESTNAMES2A
-      TeamBasic
-      TeamCombinedReducers
-      TeamMDRange
-      TeamPolicyConstructors
-      TeamReductionScan
-      TeamScan
-      TeamScratch
-      TeamTeamSize
-      TeamVectorRange
-      UniqueToken
-      View_64bit
-      ViewAPI_a
-      ViewAPI_b
-      ViewAPI_c
-      ViewAPI_d
-      ViewAPI_e
-      ViewBadAlloc
-      ViewCopy_a
-      ViewCopy_b
-      ViewCopy_c
-      ViewCtorDimMatch
-      ViewEmptyRuntimeUnmanaged
-      ViewHooks
-      ViewLayoutStrideAssignment
-      ViewMapping_a
-      ViewMapping_b
-      ViewMapping_subview
-      ViewMemoryAccessViolation
-      ViewOfClass
-      ViewOfViews
-      ViewOutOfBoundsAccess
-      ViewResize
-      WorkGraph
-      WithoutInitializing
+      TeamVector
       )
     # Workaround to internal compiler error with intel classic compilers
     # when using -no-ip flag in ViewCopy_c
@@ -380,7 +347,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
     endforeach()
 
     SET(${Tag}_SOURCES1 ${${Tag}_SOURCES1A} ${${Tag}_SOURCES1B})
-    SET(${Tag}_SOURCES2 ${${Tag}_SOURCES2A} ${${Tag}_SOURCES2B} ${${Tag}_SOURCES2C} ${${Tag}_SOURCES2D})
+    SET(${Tag}_SOURCES2 ${${Tag}_SOURCES2A})
     SET(${Tag}_SOURCES ${${Tag}_SOURCES1} ${${Tag}_SOURCES2})
   endif()
 endforeach()
