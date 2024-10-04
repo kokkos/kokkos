@@ -48,12 +48,13 @@
 #error "__AVX__ must be defined for KOKKOS_ARCH_AVX"
 #endif
 
-// FIXME_CRAY_LLVM - For some reason CrayClang needs bitwise comparison here to
-// correctly evaluate the AVX2 flag.
+// FIXME_CRAY_LLVM - For some reason CrayClang does not correctly evaluate the
+// `__AVX2__` macro at this location even when the compiler supports it on the
+// given architecture. Avoiding this check for the (architecture, compiler)
+// combination for now. The code would fail if the macro is unavailable although
+// the error message might not be clean in the case.
 #if defined(KOKKOS_ARCH_AVX2)
 #if !defined(__AVX2__) && !defined(KOKKOS_COMPILER_CRAY_LLVM)
-#error "__AVX2__ must be defined for KOKKOS_ARCH_AVX2"
-#elif defined(KOKKOS_COMPILER_CRAY_LLVM) && (__AVX2__ & 0x0)
 #error "__AVX2__ must be defined for KOKKOS_ARCH_AVX2"
 #endif
 #include <Kokkos_SIMD_AVX2.hpp>
