@@ -454,6 +454,16 @@ struct MemorySpaceAccess<Kokkos::CudaHostPinnedSpace, Kokkos::CudaUVMSpace> {
   enum : bool { deepcopy = true };
 };
 
+template <typename PointerType>
+struct MemorySpaceAccess<
+    Kokkos::CudaSpace,
+    Kokkos::ScratchMemorySpaceBase<Kokkos::Cuda, PointerType>> {
+  enum : bool { assignable = false };
+  enum : bool { accessible = true };
+  enum : bool { deepcopy = false };
+};
+
+
 //----------------------------------------
 
 }  // namespace Impl

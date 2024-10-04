@@ -174,6 +174,9 @@ inline int cuda_deduce_block_size(bool early_termination,
     if (early_termination && opt_block_size != 0) break;
   }
 
+  if (opt_block_size <= 0)
+          Kokkos::abort("No valid block size found! Possibly, too much shared scratch memory requested!");
+
   return opt_block_size;
 }
 

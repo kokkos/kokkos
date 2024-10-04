@@ -31,11 +31,17 @@ static_assert(false,
 
 namespace Kokkos {
 
-template <typename ExecSpace, typename PointerType>
+struct L0Tag{};
+
+struct L1Tag{};
+
+template <typename ExecSpace, typename Tag>
 class ScratchMemorySpaceBase {
   static_assert(
       is_execution_space<ExecSpace>::value,
       "Instantiating ScratchMemorySpaceBase on non-execution-space type.");
+
+  using PointerType = char*;
 
  public:
   // Minimal overalignment used by view scratch allocations
@@ -50,7 +56,7 @@ class ScratchMemorySpaceBase {
 
  public:
   //! Tag this class as a memory space
-  using memory_space    = ScratchMemorySpaceBase<ExecSpace, PointerType>;
+  using memory_space    = ScratchMemorySpaceBase<ExecSpace, Tag>;
   using execution_space = ExecSpace;
   //! This execution space preferred device_type
   using device_type = Kokkos::Device<execution_space, memory_space>;
@@ -126,12 +132,14 @@ class ScratchMemorySpaceBase {
   }
 };
 
-template <typename ExecSpace, typename PointerTypeL0 = char*,
-          typename PointerTypeL1 = char*>
+template <typename ExecSpace>
 class ScratchMemorySpace {
-  ScratchMemorySpaceBase<ExecSpace, PointerTypeL0> m_scratch_L0;
-  ScratchMemorySpaceBase<ExecSpace, PointerTypeL1> m_scratch_L1;
+  ScratchMemorySpaceBase<ExecSpace, L0Tag> m_scratch_L0;
+  ScratchMemorySpaceBase<ExecSpace, L1Tag> m_scratch_L1;
   mutable int m_default_level = 0;
+
+  using PointerTypeL0 = char*;
+  using PointerTypeL1 = char*;
 
  public:
   // Minimal overalignment used by view scratch allocations
