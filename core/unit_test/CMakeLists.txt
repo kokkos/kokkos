@@ -5,13 +5,11 @@
 if(NOT GTest_FOUND) # fallback to internal gtest
   set(GTEST_SOURCE_DIR ${Kokkos_SOURCE_DIR}/tpls/gtest)
 
-  #need here for tribits
-  kokkos_include_directories(${GTEST_SOURCE_DIR})
   kokkos_add_test_library(
     kokkos_gtest HEADERS ${GTEST_SOURCE_DIR}/gtest/gtest.h SOURCES ${GTEST_SOURCE_DIR}/gtest/gtest-all.cc
   )
 
-  target_include_directories(kokkos_gtest PUBLIC ${GTEST_SOURCE_DIR})
+  target_include_directories(kokkos_gtest SYSTEM PUBLIC ${GTEST_SOURCE_DIR})
   if((NOT (Kokkos_ENABLE_CUDA AND WIN32)) AND (NOT ("${KOKKOS_CXX_COMPILER_ID}" STREQUAL "Fujitsu")))
     target_compile_features(kokkos_gtest PUBLIC cxx_std_14)
   endif()

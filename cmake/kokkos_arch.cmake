@@ -147,6 +147,7 @@ if(KOKKOS_ENABLE_COMPILER_WARNINGS)
       "-Wsign-compare"
       "-Wtype-limits"
       "-Wuninitialized"
+      "-Wsuggest-override"
   )
 
   # NOTE KOKKOS_ prefixed variable (all uppercase) is not set yet because TPLs are processed after ARCH

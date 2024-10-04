@@ -82,7 +82,7 @@ class GraphNodeKernelImpl
     // FIXME This constructor seem unused.
   }
 
-  void execute_kernel() final { this->base_t::execute(); }
+  void execute_kernel() override final { this->base_t::execute(); }
 };
 
 // </editor-fold> end GraphNodeKernelImpl }}}1
@@ -97,7 +97,7 @@ struct GraphNodeAggregateKernelDefaultImpl
     using is_graph_kernel = std::true_type;
   };
   using graph_kernel = GraphNodeAggregateKernelDefaultImpl;
-  void execute_kernel() final {}
+  void execute_kernel() override final {}
 };
 
 }  // end namespace Impl
