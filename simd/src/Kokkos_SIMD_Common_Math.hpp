@@ -65,11 +65,9 @@ hmax(const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> const& x) {
 template <
     typename T, typename Abi,
     std::enable_if_t<!std::is_same_v<Abi, simd_abi::scalar>, bool> = false>
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-reduce_min(const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> const& x) {
-  auto const& v = x.impl_get_value();
-  auto const& m = x.impl_get_mask();
-  auto result   = Kokkos::reduction_identity<T>::min();
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr T reduce_min(
+    simd<T, Abi> const& v, typename simd<T, Abi>::mask_type const& m) {
+  auto result = Kokkos::reduction_identity<T>::min();
   for (std::size_t i = 0; i < v.size(); ++i) {
     if (m[i]) result = Kokkos::min(result, v[i]);
   }
@@ -79,11 +77,9 @@ reduce_min(const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> const& x) {
 template <
     class T, class Abi,
     std::enable_if_t<!std::is_same_v<Abi, simd_abi::scalar>, bool> = false>
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-reduce_max(const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> const& x) {
-  auto const& v = x.impl_get_value();
-  auto const& m = x.impl_get_mask();
-  auto result   = Kokkos::reduction_identity<T>::max();
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr T reduce_max(
+    simd<T, Abi> const& v, typename simd<T, Abi>::mask_type const& m) {
+  auto result = Kokkos::reduction_identity<T>::max();
   for (std::size_t i = 0; i < v.size(); ++i) {
     if (m[i]) result = Kokkos::max(result, v[i]);
   }
@@ -93,25 +89,17 @@ reduce_max(const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> const& x) {
 template <
     class T, class Abi, class BinaryOperation = std::plus<>,
     std::enable_if_t<!std::is_same_v<Abi, simd_abi::scalar>, bool> = false>
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-reduce(const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> const& x,
-       BinaryOperation op = {}) {
-  auto const& v = x.impl_get_value();
-  auto const& m = x.impl_get_mask();
-  auto result   = v[0];
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr T reduce(
+    simd<T, Abi> const& v, typename simd<T, Abi>::mask_type const& m,
+    T identity, BinaryOperation op = {}) {
+  if (none_of(m)) {
+    return identity;
+  }
+  auto result = v[0];
   for (std::size_t i = 1; i < v.size(); ++i) {
     if (m[i]) result = op(result, v[i]);
   }
   return result;
-}
-
-template <
-    class T, class Abi,
-    std::enable_if_t<!std::is_same_v<Abi, simd_abi::scalar>, bool> = false>
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-reduce(const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> const& x, T,
-       std::plus<>) {
-  return reduce(x, std::plus<>());
 }
 
 }  // namespace Experimental

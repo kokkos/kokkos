@@ -36,11 +36,16 @@ inline void host_check_reduction_one_loader(ReductionOp reduce_op,
     if (!loaded_arg) continue;
 
     mask_type mask(false);
+    T identity    = 12;
+    auto expected = reduce_op.on_host_serial(arg, identity, mask);
+    auto computed = reduce_op.on_host(arg, identity, mask);
+    gtest_checker().equality(expected, computed);
+
     for (std::size_t j = 0; j < n; ++j) {
       mask[j] = true;
     }
-    auto expected = reduce_op.on_host_serial(arg, mask);
-    auto computed = reduce_op.on_host(arg, mask);
+    expected = reduce_op.on_host_serial(arg, identity, mask);
+    computed = reduce_op.on_host(arg, identity, mask);
 
     gtest_checker().equality(expected, computed);
   }
@@ -57,11 +62,6 @@ inline void host_check_reduction_all_loaders(ReductionOp reduce_op,
 
 template <typename Abi, typename DataType, size_t n>
 inline void host_check_all_reductions(const DataType (&args)[n]) {
-  host_check_reduction_all_loaders<Abi>(reduce_where_expr<std::plus<>>(), n,
-                                        args);
-  host_check_reduction_all_loaders<Abi>(reduce_where_expr<std::multiplies<>>(),
-                                        n, args);
-
   host_check_reduction_all_loaders<Abi>(reduce_min(), n, args);
   host_check_reduction_all_loaders<Abi>(reduce_max(), n, args);
   host_check_reduction_all_loaders<Abi>(reduce<std::plus<>>(), n, args);
@@ -114,11 +114,16 @@ KOKKOS_INLINE_FUNCTION void device_check_reduction_one_loader(
     if (!loaded_arg) continue;
 
     mask_type mask(false);
+    T identity    = 12;
+    auto expected = reduce_op.on_device_serial(arg, identity, mask);
+    auto computed = reduce_op.on_device(arg, identity, mask);
+    kokkos_checker().equality(expected, computed);
+
     for (std::size_t j = 0; j < n; ++j) {
       mask[j] = true;
     }
-    auto expected = reduce_op.on_device_serial(arg, mask);
-    auto computed = reduce_op.on_device(arg, mask);
+    expected = reduce_op.on_device_serial(arg, identity, mask);
+    computed = reduce_op.on_device(arg, identity, mask);
 
     kokkos_checker().equality(expected, computed);
   }
@@ -136,11 +141,6 @@ KOKKOS_INLINE_FUNCTION void device_check_reduction_all_loaders(
 template <typename Abi, typename DataType, size_t n>
 KOKKOS_INLINE_FUNCTION void device_check_all_reductions(
     const DataType (&args)[n]) {
-  device_check_reduction_all_loaders<Abi>(reduce_where_expr<std::plus<>>(), n,
-                                          args);
-  device_check_reduction_all_loaders<Abi>(
-      reduce_where_expr<std::multiplies<>>(), n, args);
-
   device_check_reduction_all_loaders<Abi>(reduce_min(), n, args);
   device_check_reduction_all_loaders<Abi>(reduce_max(), n, args);
   device_check_reduction_all_loaders<Abi>(reduce<std::plus<>>(), n, args);

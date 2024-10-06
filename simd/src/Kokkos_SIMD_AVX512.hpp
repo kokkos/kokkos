@@ -3237,19 +3237,25 @@ class where_expression<simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>>,
     hmax(const_where_expression<
          simd_mask<std::int32_t, simd_abi::avx512_fixed_size<8>>,
          simd<std::int32_t, simd_abi::avx512_fixed_size<8>>> const& x) {
+  if (none_of(x.impl_get_mask())) {
+    return Kokkos::reduction_identity<std::int32_t>::max();
+  }
   return _mm512_mask_reduce_max_epi32(
       static_cast<__mmask8>(x.impl_get_mask()),
       _mm512_castsi256_si512(static_cast<__m256i>(x.impl_get_value())));
 }
 #endif
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int32_t reduce_max(
-    const_where_expression<
-        simd_mask<std::int32_t, simd_abi::avx512_fixed_size<8>>,
-        simd<std::int32_t, simd_abi::avx512_fixed_size<8>>> const& x) {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr std::int32_t
+reduce_max(
+    simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& v,
+    simd_mask<std::int32_t, simd_abi::avx512_fixed_size<8>> const& m) noexcept {
+  if (none_of(m)) {
+    return Kokkos::reduction_identity<std::int32_t>::max();
+  }
   return _mm512_mask_reduce_max_epi32(
-      static_cast<__mmask8>(x.impl_get_mask()),
-      _mm512_castsi256_si512(static_cast<__m256i>(x.impl_get_value())));
+      static_cast<__mmask8>(m),
+      _mm512_castsi256_si512(static_cast<__m256i>(v)));
 }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
@@ -3258,35 +3264,47 @@ class where_expression<simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>>,
     hmin(const_where_expression<
          simd_mask<std::int32_t, simd_abi::avx512_fixed_size<8>>,
          simd<std::int32_t, simd_abi::avx512_fixed_size<8>>> const& x) {
+  if (none_of(x.impl_get_mask())) {
+    return Kokkos::reduction_identity<std::int32_t>::min();
+  }
   return _mm512_mask_reduce_min_epi32(
       static_cast<__mmask8>(x.impl_get_mask()),
       _mm512_castsi256_si512(static_cast<__m256i>(x.impl_get_value())));
 }
 #endif
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int32_t reduce_min(
-    const_where_expression<
-        simd_mask<std::int32_t, simd_abi::avx512_fixed_size<8>>,
-        simd<std::int32_t, simd_abi::avx512_fixed_size<8>>> const& x) {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr std::int32_t
+reduce_min(
+    simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& v,
+    simd_mask<std::int32_t, simd_abi::avx512_fixed_size<8>> const& m) noexcept {
+  if (none_of(m)) {
+    return Kokkos::reduction_identity<std::int32_t>::min();
+  }
   return _mm512_mask_reduce_min_epi32(
-      static_cast<__mmask8>(x.impl_get_mask()),
-      _mm512_castsi256_si512(static_cast<__m256i>(x.impl_get_value())));
+      static_cast<__mmask8>(m),
+      _mm512_castsi256_si512(static_cast<__m256i>(v)));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int32_t reduce_max(
-    const_where_expression<
-        simd_mask<std::int32_t, simd_abi::avx512_fixed_size<16>>,
-        simd<std::int32_t, simd_abi::avx512_fixed_size<16>>> const& x) {
-  return _mm512_mask_reduce_max_epi32(static_cast<__mmask16>(x.impl_get_mask()),
-                                      static_cast<__m512i>(x.impl_get_value()));
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr std::int32_t
+reduce_max(simd<std::int32_t, simd_abi::avx512_fixed_size<16>> const& v,
+           simd_mask<std::int32_t, simd_abi::avx512_fixed_size<16>> const&
+               m) noexcept {
+  if (none_of(m)) {
+    return Kokkos::reduction_identity<std::int32_t>::max();
+  }
+  return _mm512_mask_reduce_max_epi32(static_cast<__mmask16>(m),
+                                      static_cast<__m512i>(v));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int32_t reduce_min(
-    const_where_expression<
-        simd_mask<std::int32_t, simd_abi::avx512_fixed_size<16>>,
-        simd<std::int32_t, simd_abi::avx512_fixed_size<16>>> const& x) {
-  return _mm512_mask_reduce_min_epi32(static_cast<__mmask16>(x.impl_get_mask()),
-                                      static_cast<__m512i>(x.impl_get_value()));
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr std::int32_t
+reduce_min(simd<std::int32_t, simd_abi::avx512_fixed_size<16>> const& v,
+           simd_mask<std::int32_t, simd_abi::avx512_fixed_size<16>> const&
+               m) noexcept {
+  if (none_of(m)) {
+    return Kokkos::reduction_identity<std::int32_t>::min();
+  }
+  return _mm512_mask_reduce_min_epi32(static_cast<__mmask16>(m),
+                                      static_cast<__m512i>(v));
 }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
@@ -3295,19 +3313,25 @@ class where_expression<simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>>,
     hmax(const_where_expression<
          simd_mask<std::uint32_t, simd_abi::avx512_fixed_size<8>>,
          simd<std::uint32_t, simd_abi::avx512_fixed_size<8>>> const& x) {
+  if (none_of(x.impl_get_mask())) {
+    return Kokkos::reduction_identity<std::uint32_t>::max();
+  }
   return _mm512_mask_reduce_max_epu32(
       static_cast<__mmask8>(x.impl_get_mask()),
       _mm512_castsi256_si512(static_cast<__m256i>(x.impl_get_value())));
 }
 #endif
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::uint32_t reduce_max(
-    const_where_expression<
-        simd_mask<std::uint32_t, simd_abi::avx512_fixed_size<8>>,
-        simd<std::uint32_t, simd_abi::avx512_fixed_size<8>>> const& x) {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr std::uint32_t
+reduce_max(simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> const& v,
+           simd_mask<std::uint32_t, simd_abi::avx512_fixed_size<8>> const&
+               m) noexcept {
+  if (none_of(m)) {
+    return Kokkos::reduction_identity<std::uint32_t>::max();
+  }
   return _mm512_mask_reduce_max_epu32(
-      static_cast<__mmask8>(x.impl_get_mask()),
-      _mm512_castsi256_si512(static_cast<__m256i>(x.impl_get_value())));
+      static_cast<__mmask8>(m),
+      _mm512_castsi256_si512(static_cast<__m256i>(v)));
 }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
@@ -3316,35 +3340,47 @@ class where_expression<simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>>,
     hmin(const_where_expression<
          simd_mask<std::uint32_t, simd_abi::avx512_fixed_size<8>>,
          simd<std::uint32_t, simd_abi::avx512_fixed_size<8>>> const& x) {
+  if (none_of(x.impl_get_mask())) {
+    return Kokkos::reduction_identity<std::uint32_t>::min();
+  }
   return _mm512_mask_reduce_min_epu32(
       static_cast<__mmask8>(x.impl_get_mask()),
       _mm512_castsi256_si512(static_cast<__m256i>(x.impl_get_value())));
 }
 #endif
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::uint32_t reduce_min(
-    const_where_expression<
-        simd_mask<std::uint32_t, simd_abi::avx512_fixed_size<8>>,
-        simd<std::uint32_t, simd_abi::avx512_fixed_size<8>>> const& x) {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr std::uint32_t
+reduce_min(simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> const& v,
+           simd_mask<std::uint32_t, simd_abi::avx512_fixed_size<8>> const&
+               m) noexcept {
+  if (none_of(m)) {
+    return Kokkos::reduction_identity<std::uint32_t>::min();
+  }
   return _mm512_mask_reduce_min_epu32(
-      static_cast<__mmask8>(x.impl_get_mask()),
-      _mm512_castsi256_si512(static_cast<__m256i>(x.impl_get_value())));
+      static_cast<__mmask8>(m),
+      _mm512_castsi256_si512(static_cast<__m256i>(v)));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::uint32_t reduce_max(
-    const_where_expression<
-        simd_mask<std::uint32_t, simd_abi::avx512_fixed_size<16>>,
-        simd<std::uint32_t, simd_abi::avx512_fixed_size<16>>> const& x) {
-  return _mm512_mask_reduce_max_epu32(static_cast<__mmask16>(x.impl_get_mask()),
-                                      static_cast<__m512i>(x.impl_get_value()));
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr std::uint32_t
+reduce_max(simd<std::uint32_t, simd_abi::avx512_fixed_size<16>> const& v,
+           simd_mask<std::uint32_t, simd_abi::avx512_fixed_size<16>> const&
+               m) noexcept {
+  if (none_of(m)) {
+    return Kokkos::reduction_identity<std::uint32_t>::max();
+  }
+  return _mm512_mask_reduce_max_epu32(static_cast<__mmask16>(m),
+                                      static_cast<__m512i>(v));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::uint32_t reduce_min(
-    const_where_expression<
-        simd_mask<std::uint32_t, simd_abi::avx512_fixed_size<16>>,
-        simd<std::uint32_t, simd_abi::avx512_fixed_size<16>>> const& x) {
-  return _mm512_mask_reduce_min_epu32(static_cast<__mmask16>(x.impl_get_mask()),
-                                      static_cast<__m512i>(x.impl_get_value()));
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr std::uint32_t
+reduce_min(simd<std::uint32_t, simd_abi::avx512_fixed_size<16>> const& v,
+           simd_mask<std::uint32_t, simd_abi::avx512_fixed_size<16>> const&
+               m) noexcept {
+  if (none_of(m)) {
+    return Kokkos::reduction_identity<std::uint32_t>::min();
+  }
+  return _mm512_mask_reduce_min_epu32(static_cast<__mmask16>(m),
+                                      static_cast<__m512i>(v));
 }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
@@ -3353,17 +3389,23 @@ class where_expression<simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>>,
     hmax(const_where_expression<
          simd_mask<std::int64_t, simd_abi::avx512_fixed_size<8>>,
          simd<std::int64_t, simd_abi::avx512_fixed_size<8>>> const& x) {
+  if (none_of(x.impl_get_mask())) {
+    return Kokkos::reduction_identity<std::int64_t>::max();
+  }
   return _mm512_mask_reduce_max_epi64(static_cast<__mmask8>(x.impl_get_mask()),
                                       static_cast<__m512i>(x.impl_get_value()));
 }
 #endif
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int64_t reduce_max(
-    const_where_expression<
-        simd_mask<std::int64_t, simd_abi::avx512_fixed_size<8>>,
-        simd<std::int64_t, simd_abi::avx512_fixed_size<8>>> const& x) {
-  return _mm512_mask_reduce_max_epi64(static_cast<__mmask8>(x.impl_get_mask()),
-                                      static_cast<__m512i>(x.impl_get_value()));
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr std::int64_t
+reduce_max(
+    simd<std::int64_t, simd_abi::avx512_fixed_size<8>> const& v,
+    simd_mask<std::int64_t, simd_abi::avx512_fixed_size<8>> const& m) noexcept {
+  if (none_of(m)) {
+    return Kokkos::reduction_identity<std::int64_t>::max();
+  }
+  return _mm512_mask_reduce_max_epi64(static_cast<__mmask8>(m),
+                                      static_cast<__m512i>(v));
 }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
@@ -3372,17 +3414,23 @@ class where_expression<simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>>,
     hmin(const_where_expression<
          simd_mask<std::int64_t, simd_abi::avx512_fixed_size<8>>,
          simd<std::int64_t, simd_abi::avx512_fixed_size<8>>> const& x) {
+  if (none_of(x.impl_get_mask())) {
+    return Kokkos::reduction_identity<std::int64_t>::min();
+  }
   return _mm512_mask_reduce_min_epi64(static_cast<__mmask8>(x.impl_get_mask()),
                                       static_cast<__m512i>(x.impl_get_value()));
 }
 #endif
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int64_t reduce_min(
-    const_where_expression<
-        simd_mask<std::int64_t, simd_abi::avx512_fixed_size<8>>,
-        simd<std::int64_t, simd_abi::avx512_fixed_size<8>>> const& x) {
-  return _mm512_mask_reduce_min_epi64(static_cast<__mmask8>(x.impl_get_mask()),
-                                      static_cast<__m512i>(x.impl_get_value()));
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr std::int64_t
+reduce_min(
+    simd<std::int64_t, simd_abi::avx512_fixed_size<8>> const& v,
+    simd_mask<std::int64_t, simd_abi::avx512_fixed_size<8>> const& m) noexcept {
+  if (none_of(m)) {
+    return Kokkos::reduction_identity<std::int64_t>::min();
+  }
+  return _mm512_mask_reduce_min_epi64(static_cast<__mmask8>(m),
+                                      static_cast<__m512i>(v));
 }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
@@ -3391,17 +3439,23 @@ class where_expression<simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>>,
     hmax(const_where_expression<
          simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>>,
          simd<std::uint64_t, simd_abi::avx512_fixed_size<8>>> const& x) {
+  if (none_of(x.impl_get_mask())) {
+    return Kokkos::reduction_identity<std::uint64_t>::max();
+  }
   return _mm512_mask_reduce_max_epu64(static_cast<__mmask8>(x.impl_get_mask()),
                                       static_cast<__m512i>(x.impl_get_value()));
 }
 #endif
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::uint64_t reduce_max(
-    const_where_expression<
-        simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>>,
-        simd<std::uint64_t, simd_abi::avx512_fixed_size<8>>> const& x) {
-  return _mm512_mask_reduce_max_epu64(static_cast<__mmask8>(x.impl_get_mask()),
-                                      static_cast<__m512i>(x.impl_get_value()));
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr std::uint64_t
+reduce_max(simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> const& v,
+           simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>> const&
+               m) noexcept {
+  if (none_of(m)) {
+    return Kokkos::reduction_identity<std::uint64_t>::max();
+  }
+  return _mm512_mask_reduce_max_epu64(static_cast<__mmask8>(m),
+                                      static_cast<__m512i>(v));
 }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
@@ -3410,17 +3464,23 @@ class where_expression<simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>>,
     hmin(const_where_expression<
          simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>>,
          simd<std::uint64_t, simd_abi::avx512_fixed_size<8>>> const& x) {
+  if (none_of(x.impl_get_mask())) {
+    return Kokkos::reduction_identity<std::uint64_t>::min();
+  }
   return _mm512_mask_reduce_min_epu64(static_cast<__mmask8>(x.impl_get_mask()),
                                       static_cast<__m512i>(x.impl_get_value()));
 }
 #endif
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::uint64_t reduce_min(
-    const_where_expression<
-        simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>>,
-        simd<std::uint64_t, simd_abi::avx512_fixed_size<8>>> const& x) {
-  return _mm512_mask_reduce_min_epu64(static_cast<__mmask8>(x.impl_get_mask()),
-                                      static_cast<__m512i>(x.impl_get_value()));
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr std::uint64_t
+reduce_min(simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> const& v,
+           simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>> const&
+               m) noexcept {
+  if (none_of(m)) {
+    return Kokkos::reduction_identity<std::uint64_t>::min();
+  }
+  return _mm512_mask_reduce_min_epu64(static_cast<__mmask8>(m),
+                                      static_cast<__m512i>(v));
 }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
@@ -3428,17 +3488,22 @@ class where_expression<simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>>,
 hmax(const_where_expression<simd_mask<double, simd_abi::avx512_fixed_size<8>>,
                             simd<double, simd_abi::avx512_fixed_size<8>>> const&
          x) {
+  if (none_of(x.impl_get_mask())) {
+    return Kokkos::reduction_identity<double>::max();
+  }
   return _mm512_mask_reduce_max_pd(static_cast<__mmask8>(x.impl_get_mask()),
                                    static_cast<__m512d>(x.impl_get_value()));
 }
 #endif
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION double reduce_max(
-    const_where_expression<simd_mask<double, simd_abi::avx512_fixed_size<8>>,
-                           simd<double, simd_abi::avx512_fixed_size<8>>> const&
-        x) {
-  return _mm512_mask_reduce_max_pd(static_cast<__mmask8>(x.impl_get_mask()),
-                                   static_cast<__m512d>(x.impl_get_value()));
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr double reduce_max(
+    simd<double, simd_abi::avx512_fixed_size<8>> const& v,
+    simd_mask<double, simd_abi::avx512_fixed_size<8>> const& m) noexcept {
+  if (none_of(m)) {
+    return Kokkos::reduction_identity<double>::max();
+  }
+  return _mm512_mask_reduce_max_pd(static_cast<__mmask8>(m),
+                                   static_cast<__m512d>(v));
 }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
@@ -3446,17 +3511,22 @@ hmax(const_where_expression<simd_mask<double, simd_abi::avx512_fixed_size<8>>,
 hmin(const_where_expression<simd_mask<double, simd_abi::avx512_fixed_size<8>>,
                             simd<double, simd_abi::avx512_fixed_size<8>>> const&
          x) {
+  if (none_of(x.impl_get_mask())) {
+    return Kokkos::reduction_identity<double>::min();
+  }
   return _mm512_mask_reduce_min_pd(static_cast<__mmask8>(x.impl_get_mask()),
                                    static_cast<__m512d>(x.impl_get_value()));
 }
 #endif
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION double reduce_min(
-    const_where_expression<simd_mask<double, simd_abi::avx512_fixed_size<8>>,
-                           simd<double, simd_abi::avx512_fixed_size<8>>> const&
-        x) {
-  return _mm512_mask_reduce_min_pd(static_cast<__mmask8>(x.impl_get_mask()),
-                                   static_cast<__m512d>(x.impl_get_value()));
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr double reduce_min(
+    simd<double, simd_abi::avx512_fixed_size<8>> const& v,
+    simd_mask<double, simd_abi::avx512_fixed_size<8>> const& m) noexcept {
+  if (none_of(m)) {
+    return Kokkos::reduction_identity<double>::min();
+  }
+  return _mm512_mask_reduce_min_pd(static_cast<__mmask8>(m),
+                                   static_cast<__m512d>(v));
 }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
@@ -3464,19 +3534,23 @@ hmin(const_where_expression<simd_mask<double, simd_abi::avx512_fixed_size<8>>,
 hmax(const_where_expression<simd_mask<float, simd_abi::avx512_fixed_size<8>>,
                             simd<float, simd_abi::avx512_fixed_size<8>>> const&
          x) {
+  if (none_of(x.impl_get_mask())) {
+    return Kokkos::reduction_identity<float>::max();
+  }
   return _mm512_mask_reduce_max_ps(
       static_cast<__mmask8>(x.impl_get_mask()),
       _mm512_castps256_ps512(static_cast<__m256>(x.impl_get_value())));
 }
 #endif
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION float reduce_max(
-    const_where_expression<simd_mask<float, simd_abi::avx512_fixed_size<8>>,
-                           simd<float, simd_abi::avx512_fixed_size<8>>> const&
-        x) {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr float reduce_max(
+    simd<float, simd_abi::avx512_fixed_size<8>> const& v,
+    simd_mask<float, simd_abi::avx512_fixed_size<8>> m) noexcept {
+  if (none_of(m)) {
+    return Kokkos::reduction_identity<float>::max();
+  }
   return _mm512_mask_reduce_max_ps(
-      static_cast<__mmask8>(x.impl_get_mask()),
-      _mm512_castps256_ps512(static_cast<__m256>(x.impl_get_value())));
+      static_cast<__mmask8>(m), _mm512_castps256_ps512(static_cast<__m256>(v)));
 }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
@@ -3484,91 +3558,110 @@ hmax(const_where_expression<simd_mask<float, simd_abi::avx512_fixed_size<8>>,
 hmin(const_where_expression<simd_mask<float, simd_abi::avx512_fixed_size<8>>,
                             simd<float, simd_abi::avx512_fixed_size<8>>> const&
          x) {
+  if (none_of(x.impl_get_mask())) {
+    return Kokkos::reduction_identity<float>::min();
+  }
   return _mm512_mask_reduce_min_ps(
       static_cast<__mmask8>(x.impl_get_mask()),
       _mm512_castps256_ps512(static_cast<__m256>(x.impl_get_value())));
 }
 #endif
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION float reduce_min(
-    const_where_expression<simd_mask<float, simd_abi::avx512_fixed_size<8>>,
-                           simd<float, simd_abi::avx512_fixed_size<8>>> const&
-        x) {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr float reduce_min(
+    simd<float, simd_abi::avx512_fixed_size<8>> const& v,
+    simd_mask<float, simd_abi::avx512_fixed_size<8>> const& m) noexcept {
+  if (none_of(m)) {
+    return Kokkos::reduction_identity<float>::min();
+  }
   return _mm512_mask_reduce_min_ps(
-      static_cast<__mmask8>(x.impl_get_mask()),
-      _mm512_castps256_ps512(static_cast<__m256>(x.impl_get_value())));
+      static_cast<__mmask8>(m), _mm512_castps256_ps512(static_cast<__m256>(v)));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION float reduce_max(
-    const_where_expression<simd_mask<float, simd_abi::avx512_fixed_size<16>>,
-                           simd<float, simd_abi::avx512_fixed_size<16>>> const&
-        x) {
-  return _mm512_mask_reduce_max_ps(static_cast<__mmask16>(x.impl_get_mask()),
-                                   static_cast<__m512>(x.impl_get_value()));
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr float reduce_max(
+    simd<float, simd_abi::avx512_fixed_size<16>> const& v,
+    simd_mask<float, simd_abi::avx512_fixed_size<16>> m) noexcept {
+  if (none_of(m)) {
+    return Kokkos::reduction_identity<float>::max();
+  }
+  return _mm512_mask_reduce_max_ps(static_cast<__mmask16>(m),
+                                   static_cast<__m512>(v));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION float reduce_min(
-    const_where_expression<simd_mask<float, simd_abi::avx512_fixed_size<16>>,
-                           simd<float, simd_abi::avx512_fixed_size<16>>> const&
-        x) {
-  return _mm512_mask_reduce_min_ps(static_cast<__mmask16>(x.impl_get_mask()),
-                                   static_cast<__m512>(x.impl_get_value()));
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr float reduce_min(
+    simd<float, simd_abi::avx512_fixed_size<16>> const& v,
+    simd_mask<float, simd_abi::avx512_fixed_size<16>> const& m) noexcept {
+  if (none_of(m)) {
+    return Kokkos::reduction_identity<float>::min();
+  }
+  return _mm512_mask_reduce_min_ps(static_cast<__mmask16>(m),
+                                   static_cast<__m512>(v));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int32_t reduce(
-    const_where_expression<
-        simd_mask<std::int32_t, simd_abi::avx512_fixed_size<8>>,
-        simd<std::int32_t, simd_abi::avx512_fixed_size<8>>> const& x,
-    std::int32_t, std::plus<>) {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr std::int32_t
+reduce(simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& v,
+       simd_mask<std::int32_t, simd_abi::avx512_fixed_size<8>> const& m,
+       std::int32_t identity, std::plus<>) noexcept {
+  if (none_of(m)) {
+    return identity;
+  }
   return _mm512_mask_reduce_add_epi32(
-      static_cast<__mmask8>(x.impl_get_mask()),
-      _mm512_castsi256_si512(static_cast<__m256i>(x.impl_get_value())));
+      static_cast<__mmask8>(m),
+      _mm512_castsi256_si512(static_cast<__m256i>(v)));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int32_t reduce(
-    const_where_expression<
-        simd_mask<std::int32_t, simd_abi::avx512_fixed_size<16>>,
-        simd<std::int32_t, simd_abi::avx512_fixed_size<16>>> const& x,
-    std::int32_t, std::plus<>) {
-  return _mm512_mask_reduce_add_epi32(static_cast<__mmask16>(x.impl_get_mask()),
-                                      static_cast<__m512i>(x.impl_get_value()));
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr std::int32_t
+reduce(simd<std::int32_t, simd_abi::avx512_fixed_size<16>> const& v,
+       simd_mask<std::int32_t, simd_abi::avx512_fixed_size<16>> const& m,
+       std::int32_t identity, std::plus<>) noexcept {
+  if (none_of(m)) {
+    return identity;
+  }
+  return _mm512_mask_reduce_add_epi32(static_cast<__mmask16>(m),
+                                      static_cast<__m512i>(v));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int64_t reduce(
-    const_where_expression<
-        simd_mask<std::int64_t, simd_abi::avx512_fixed_size<8>>,
-        simd<std::int64_t, simd_abi::avx512_fixed_size<8>>> const& x,
-    std::int64_t, std::plus<>) {
-  return _mm512_mask_reduce_add_epi64(static_cast<__mmask8>(x.impl_get_mask()),
-                                      static_cast<__m512i>(x.impl_get_value()));
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr std::int64_t
+reduce(simd<std::int64_t, simd_abi::avx512_fixed_size<8>> const& v,
+       simd_mask<std::int64_t, simd_abi::avx512_fixed_size<8>> const& m,
+       std::int64_t identity, std::plus<>) noexcept {
+  if (none_of(m)) {
+    return identity;
+  }
+  return _mm512_mask_reduce_add_epi64(static_cast<__mmask8>(m),
+                                      static_cast<__m512i>(v));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION double reduce(
-    const_where_expression<simd_mask<double, simd_abi::avx512_fixed_size<8>>,
-                           simd<double, simd_abi::avx512_fixed_size<8>>> const&
-        x,
-    double, std::plus<>) {
-  return _mm512_mask_reduce_add_pd(static_cast<__mmask8>(x.impl_get_mask()),
-                                   static_cast<__m512d>(x.impl_get_value()));
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr double reduce(
+    simd<double, simd_abi::avx512_fixed_size<8>> const& v,
+    simd_mask<double, simd_abi::avx512_fixed_size<8>> const& m, double identity,
+    std::plus<>) noexcept {
+  if (none_of(m)) {
+    return identity;
+  }
+  return _mm512_mask_reduce_add_pd(static_cast<__mmask8>(m),
+                                   static_cast<__m512d>(v));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION float reduce(
-    const_where_expression<simd_mask<float, simd_abi::avx512_fixed_size<8>>,
-                           simd<float, simd_abi::avx512_fixed_size<8>>> const&
-        x,
-    float, std::plus<>) {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr float reduce(
+    simd<float, simd_abi::avx512_fixed_size<8>> const& v,
+    simd_mask<float, simd_abi::avx512_fixed_size<8>> const& m, float identity,
+    std::plus<>) noexcept {
+  if (none_of(m)) {
+    return identity;
+  }
   return _mm512_mask_reduce_add_ps(
-      static_cast<__mmask8>(x.impl_get_mask()),
-      _mm512_castps256_ps512(static_cast<__m256>(x.impl_get_value())));
+      static_cast<__mmask8>(m), _mm512_castps256_ps512(static_cast<__m256>(v)));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION float reduce(
-    const_where_expression<simd_mask<float, simd_abi::avx512_fixed_size<16>>,
-                           simd<float, simd_abi::avx512_fixed_size<16>>> const&
-        x,
-    float, std::plus<>) {
-  return _mm512_mask_reduce_add_ps(static_cast<__mmask16>(x.impl_get_mask()),
-                                   static_cast<__m512>(x.impl_get_value()));
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr float reduce(
+    simd<float, simd_abi::avx512_fixed_size<16>> const& v,
+    simd_mask<float, simd_abi::avx512_fixed_size<16>> const& m, float identity,
+    std::plus<>) noexcept {
+  if (none_of(m)) {
+    return identity;
+  }
+  return _mm512_mask_reduce_add_ps(static_cast<__mmask16>(m),
+                                   static_cast<__m512>(v));
 }
 
 }  // namespace Experimental

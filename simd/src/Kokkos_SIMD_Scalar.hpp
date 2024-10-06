@@ -348,51 +348,55 @@ KOKKOS_FORCEINLINE_FUNCTION simd<T, simd_abi::scalar> condition(
 }
 
 template <class T, class BinaryOperation>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION T
-reduce(Experimental::simd<T, Experimental::simd_abi::scalar> const& x,
-       BinaryOperation binary_op) {
-  auto v = where(true, x);
-  return reduce(v, T(0), binary_op);
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION constexpr T reduce(
+    Experimental::simd<T, Experimental::simd_abi::scalar> const& x,
+    Experimental::simd_mask<T, Experimental::simd_abi::scalar> const& mask,
+    T identity, BinaryOperation) noexcept {
+  if (!mask) return identity;
+  return x[0];
 }
 
 template <class T, class BinaryOperation>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION T
-reduce(Experimental::simd<T, Experimental::simd_abi::scalar> const& x,
-       Experimental::simd_mask<T, Experimental::simd_abi::scalar> const& mask,
-       BinaryOperation binary_op) {
-  if (!mask) return T(0);
-  auto v = where(mask, x);
-  return reduce(v, T(0), binary_op);
-}
-
-template <class T>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION T
-reduce_min(Experimental::simd<T, Experimental::simd_abi::scalar> const& x) {
-  auto v = where(true, x);
-  return reduce_min(v);
-}
-
-template <class T>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION T reduce_min(
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION constexpr T reduce(
     Experimental::simd<T, Experimental::simd_abi::scalar> const& x,
-    Experimental::simd_mask<T, Experimental::simd_abi::scalar> const& mask) {
-  auto v = where(mask, x);
-  return reduce_min(v);
+    BinaryOperation binary_op) noexcept {
+  return reduce(
+      x, Experimental::simd<T, Experimental::simd_abi::scalar>::mask_type(true),
+      T(0), binary_op);
 }
 
 template <class T>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION T
-reduce_max(Experimental::simd<T, Experimental::simd_abi::scalar> const& x) {
-  auto v = where(true, x);
-  return reduce_max(v);
-}
-
-template <class T>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION T reduce_max(
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION constexpr T reduce_min(
     Experimental::simd<T, Experimental::simd_abi::scalar> const& x,
-    Experimental::simd_mask<T, Experimental::simd_abi::scalar> const& mask) {
-  auto v = where(mask, x);
-  return reduce_max(v);
+    Experimental::simd_mask<T, Experimental::simd_abi::scalar> const&
+        mask) noexcept {
+  if (!mask) return Kokkos::reduction_identity<T>::min();
+  return x[0];
+}
+
+template <class T>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION constexpr T reduce_min(
+    Experimental::simd<T, Experimental::simd_abi::scalar> const& x) noexcept {
+  return reduce_min(
+      x,
+      Experimental::simd<T, Experimental::simd_abi::scalar>::mask_type(true));
+}
+
+template <class T>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION constexpr T reduce_max(
+    Experimental::simd<T, Experimental::simd_abi::scalar> const& x,
+    Experimental::simd_mask<T, Experimental::simd_abi::scalar> const&
+        mask) noexcept {
+  if (!mask) return Kokkos::reduction_identity<T>::max();
+  return x[0];
+}
+
+template <class T>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION constexpr T reduce_max(
+    Experimental::simd<T, Experimental::simd_abi::scalar> const& x) noexcept {
+  return reduce_max(
+      x,
+      Experimental::simd<T, Experimental::simd_abi::scalar>::mask_type(true));
 }
 
 template <class T>
@@ -512,24 +516,6 @@ template <class T>
 [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION bool none_of(
     simd_mask<T, Kokkos::Experimental::simd_abi::scalar> const& a) {
   return a == simd_mask<T, Kokkos::Experimental::simd_abi::scalar>(false);
-}
-
-template <class T, class BinaryOperation>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION T
-reduce(const_where_expression<simd_mask<T, simd_abi::scalar>,
-                              simd<T, simd_abi::scalar>> const& x,
-       T identity_element, BinaryOperation) {
-  return static_cast<bool>(x.impl_get_mask())
-             ? static_cast<T>(x.impl_get_value())
-             : identity_element;
-}
-
-template <class T, class BinaryOperation>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION T
-reduce(const_where_expression<simd_mask<T, simd_abi::scalar>,
-                              simd<T, simd_abi::scalar>> const& x,
-       BinaryOperation op) {
-  return reduce(x, T(0), op);
 }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
