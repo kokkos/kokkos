@@ -355,71 +355,11 @@ template <class T, class Abi, class BinaryOperation = std::plus<>>
   return reduce(x, simd<T, Abi>::mask_type(true), T(0), binary_op);
 }
 
-// template <class T, class Abi, class BinaryOperation>
-// [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr T reduce(
-//     const simd<T, Abi>& x, const typename simd<T, Abi>::mask_type& mask,
-//     T identity_element, BinaryOperation binary_op) {
-//   if (none_of(mask)) return identity_element;
-//   return reduce(x, mask, identity_element, binary_op);
-// }
-
-// template <
-//     class T, class Abi,
-//     std::enable_if_t<!std::is_same_v<Abi, simd_abi::scalar>, bool> = false>
-// [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr T reduce(
-//     const simd<T, Abi>& x, const typename simd<T, Abi>::mask_type& mask,
-//     std::plus<> binary_op = {}) noexcept {
-//   return reduce(x, mask, T(0), binary_op);
-// }
-
-// template <
-//     class T, class Abi,
-//     std::enable_if_t<!std::is_same_v<Abi, simd_abi::scalar>, bool> = false>
-// [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr T reduce(
-//     const simd<T, Abi>& x, const typename simd<T, Abi>::mask_type& mask,
-//     std::multiplies<> binary_op) noexcept {
-//   return reduce(x, mask, T(0), binary_op);
-// }
-
-// template <
-//     class T, class Abi,
-//     std::enable_if_t<!std::is_same_v<Abi, simd_abi::scalar>, bool> = false>
-// [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr T reduce(
-//     const simd<T, Abi>& x, const typename simd<T, Abi>::mask_type& mask,
-//     std::bit_and<> binary_op) noexcept {
-//   return reduce(x, mask, 0, binary_op);
-// }
-
-// template <
-//     class T, class Abi,
-//     std::enable_if_t<!std::is_same_v<Abi, simd_abi::scalar>, bool> = false>
-// [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr T reduce(
-//     const simd<T, Abi>& x, const typename simd<T, Abi>::mask_type& mask,
-//     std::bit_or<> binary_op) noexcept {
-//   return reduce(x, mask, 0, binary_op);
-// }
-
-// template <
-//     class T, class Abi,
-//     std::enable_if_t<!std::is_same_v<Abi, simd_abi::scalar>, bool> = false>
-// [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr T reduce(
-//     const simd<T, Abi>& x, const typename simd<T, Abi>::mask_type& mask,
-//     std::bit_xor<> binary_op) noexcept {
-//   return reduce(x, mask, 0, binary_op);
-// }
-
 template <class T, class Abi>
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr T reduce_min(
     const simd<T, Abi>& x) noexcept {
   return reduce_min(x, simd<T, Abi>::mask_type(true));
 }
-
-// template <class T, class Abi>
-// [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr T reduce_min(
-//     const simd<T, Abi>& x,
-//     const typename simd<T, Abi>::mask_type& mask) noexcept {
-//   return reduce_min(x, mask);
-// }
 
 template <class T, class Abi>
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr T reduce_max(
@@ -427,13 +367,6 @@ template <class T, class Abi>
   auto v = where(true, x);
   return reduce_max(x, simd<T, Abi>::mask_type(true));
 }
-
-// template <class T, class Abi>
-// [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr T reduce_max(
-//     const simd<T, Abi>& x,
-//     const typename simd<T, Abi>::mask_type& mask) noexcept {
-//   return reduce_max(x, mask);
-// }
 
 }  // namespace Experimental
 }  // namespace Kokkos
