@@ -116,7 +116,11 @@ function(KOKKOS_ADD_EXECUTABLE_AND_TEST ROOT_NAME)
       target_compile_options(${PACKAGE_NAME}_${ROOT_NAME} PRIVATE "-fno-rtti")
     endif()
   endif()
-  if(KOKKOS_ENABLE_NO_EXCEPTIONS AND NOT KOKKOS_CXX_COMPILER_ID STREQUAL "NVIDIA")
+  # Kokkos_INSTALL_TESTING has Kokkos_CXX_COMPILER_ID instead of KOKKOS_CXX_COMPILER_ID,
+  # compilation fails for MSVC+Cuda when passing compilation flags to disable exceptions,
+  # thrust uses exceptions that cause compilation to fail with nvcc,
+  # clang+Cuda ignores exceptions when using -fno-exceptions
+  if(NOT Kokkos_INSTALL_TESTING AND KOKKOS_ENABLE_NO_EXCEPTIONS AND NOT KOKKOS_CXX_COMPILER_ID STREQUAL "NVIDIA")
     if(MSVC)
       target_compile_options(${PACKAGE_NAME}_${ROOT_NAME} PRIVATE "/EHs-c- /D_HAS_EXCEPTIONS=0")
     else()
