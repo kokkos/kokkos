@@ -108,9 +108,9 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
             (size_t)thread_scratch_size(0) + sizeof(double));
     int max_block_size = block_size / impl_vector_length();
     if (max_block_size <= 0)
-      Kokkos::Impl::throw_runtime_exception(std::string(
+      Kokkos::Impl::throw_runtime_exception(
           "Kokkos::Impl::ParallelFor<Cuda, TeamPolicy> could not find a "
-          "valid execution configuration."));
+          "valid execution configuration.");
     return max_block_size;
   }
 
@@ -128,9 +128,9 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
     int max_block_size = internal_team_size_max<closure_type>(f);
 
     if (max_block_size <= 0)
-      Kokkos::Impl::throw_runtime_exception(std::string(
+      Kokkos::Impl::throw_runtime_exception(
           "Kokkos::Impl::ParallelReduce<Cuda, TeamPolicy> could not find a "
-          "valid execution configuration."));
+          "valid execution configuration.");
     return max_block_size;
   }
 
@@ -144,9 +144,9 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
     int max_block_size = internal_team_size_max<closure_type>(f);
 
     if (max_block_size <= 0)
-      Kokkos::Impl::throw_runtime_exception(std::string(
+      Kokkos::Impl::throw_runtime_exception(
           "Kokkos::Impl::ParallelReduce<Cuda, TeamPolicy> could not find a "
-          "valid execution configuration."));
+          "valid execution configuration.");
     return max_block_size;
   }
 
@@ -167,9 +167,9 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
 
     int recommended_block_size = block_size / impl_vector_length();
     if (recommended_block_size <= 0)
-      Kokkos::Impl::throw_runtime_exception(std::string(
+      Kokkos::Impl::throw_runtime_exception(
           "Kokkos::Impl::ParallelFor<Cuda, TeamPolicy> could not find a "
-          "valid execution configuration."));
+          "valid execution configuration.");
     return recommended_block_size;
   }
 
@@ -188,9 +188,9 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
         internal_team_size_recommended<closure_type>(f);
 
     if (recommended_block_size <= 0)
-      Kokkos::Impl::throw_runtime_exception(std::string(
+      Kokkos::Impl::throw_runtime_exception(
           "Kokkos::Impl::ParallelReduce<Cuda, TeamPolicy> could not find a "
-          "valid execution configuration."));
+          "valid execution configuration.");
     return recommended_block_size;
   }
 
@@ -205,9 +205,9 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
         internal_team_size_recommended<closure_type>(f);
 
     if (recommended_block_size <= 0)
-      Kokkos::Impl::throw_runtime_exception(std::string(
+      Kokkos::Impl::throw_runtime_exception(
           "Kokkos::Impl::ParallelReduce<Cuda, TeamPolicy> could not find a "
-          "valid execution configuration."));
+          "valid execution configuration.");
     return recommended_block_size;
   }
 
