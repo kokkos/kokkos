@@ -20,13 +20,20 @@
 #include <Kokkos_Macros.hpp>
 #if defined(KOKKOS_ENABLE_CUDA)
 
+#include <cuda/std/version>
+
+// FIXME_CUDA <cuda/annotated_ptr> couldn't be included in multiple compilation units (https://github.com/NVIDIA/libcudacxx/issues/270)
+#if defined(_LIBCUDACXX_CUDA_API_VERSION) && _LIBCUDACXX_CUDA_API_VERSION >= 1008001
 #include <cuda/annotated_ptr>
+#endif
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
 namespace Impl {
+
+#if defined(_LIBCUDACXX_CUDA_API_VERSION) && _LIBCUDACXX_CUDA_API_VERSION >= 1008001
 
 template <typename ValueType, typename MemorySpace>
 struct CudaAnnotatedHandleHandle {
@@ -102,6 +109,8 @@ struct ViewDataHandle<
     return handle_type(arg_data_ptr, offset);
   }
 };
+
+#endif
 
 template <typename ValueType, typename AliasType>
 struct CudaLDGFetch {

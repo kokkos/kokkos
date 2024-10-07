@@ -463,6 +463,14 @@ struct MemorySpaceAccess<
   enum : bool { deepcopy = false };
 };
 
+template <typename PointerType>
+struct MemorySpaceAccess<Kokkos::ScratchMemorySpace<Kokkos::Cuda>,
+	                 Kokkos::ScratchMemorySpaceBase<Kokkos::Cuda, PointerType>> {
+  enum : bool { assignable = true };
+  enum : bool { accessible = false };
+  enum : bool { deepcopy = false };
+};
+
 
 //----------------------------------------
 
