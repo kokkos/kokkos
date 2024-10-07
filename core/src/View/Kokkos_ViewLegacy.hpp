@@ -1277,10 +1277,9 @@ class View : public ViewTraits<DataType, Properties...> {
       const Kokkos::ScratchMemorySpaceBase<typename traits::execution_space,
                                            PointerType>& arg_space,
       const typename traits::array_layout& arg_layout)
-      : View(Impl::ViewCtorProp<pointer_type>(
-                 static_cast<pointer_type>(arg_space.get_shmem_aligned(
-                     map_type::memory_span(arg_layout),
-                     scratch_value_alignment))),
+      : View(Impl::ViewCtorProp<pointer_type>(static_cast<pointer_type>(
+                 arg_space.get_shmem_aligned(map_type::memory_span(arg_layout),
+                                             scratch_value_alignment))),
              arg_layout) {
     static_assert(
         Impl::MemorySpaceAccess<

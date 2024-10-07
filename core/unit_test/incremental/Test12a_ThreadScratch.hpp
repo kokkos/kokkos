@@ -30,12 +30,9 @@ struct ThreadScratch {
   using team_t   = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
   using data_t   = Kokkos::View<size_t **, ExecSpace>;
 
-  using scratch_t = Kokkos::View<
-      size_t *,
-      typename ExecSpace::
-          scratch_memory_space_l1 
-      ,
-      Kokkos::MemoryTraits<Kokkos::Unmanaged> >;
+  using scratch_t =
+      Kokkos::View<size_t *, typename ExecSpace::scratch_memory_space_l1,
+                   Kokkos::MemoryTraits<Kokkos::Unmanaged> >;
 
   int sX, sY;
   data_t v;
@@ -64,8 +61,7 @@ struct ThreadScratch {
     });
     team.team_barrier();
 
-    for (int i = 0; i < sY; ++i)
-      v(n, team.team_rank()) += v_S(i);
+    for (int i = 0; i < sY; ++i) v(n, team.team_rank()) += v_S(i);
   }
 
   void run(const int pN, const int sX_, const int sY_) {

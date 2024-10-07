@@ -459,22 +459,21 @@ struct MemorySpaceAccess<Kokkos::CudaHostPinnedSpace, Kokkos::CudaUVMSpace> {
 };
 
 template <typename PointerType>
-struct MemorySpaceAccess<
-    Kokkos::CudaSpace,
-    Kokkos::ScratchMemorySpaceBase<Kokkos::Cuda, PointerType>> {
+struct MemorySpaceAccess<Kokkos::CudaSpace, Kokkos::ScratchMemorySpaceBase<
+                                                Kokkos::Cuda, PointerType>> {
   enum : bool { assignable = false };
   enum : bool { accessible = true };
   enum : bool { deepcopy = false };
 };
 
 template <typename PointerType>
-struct MemorySpaceAccess<Kokkos::ScratchMemorySpace<Kokkos::Cuda>,
-	                 Kokkos::ScratchMemorySpaceBase<Kokkos::Cuda, PointerType>> {
+struct MemorySpaceAccess<
+    Kokkos::ScratchMemorySpace<Kokkos::Cuda>,
+    Kokkos::ScratchMemorySpaceBase<Kokkos::Cuda, PointerType>> {
   enum : bool { assignable = true };
   enum : bool { accessible = false };
   enum : bool { deepcopy = false };
 };
-
 
 //----------------------------------------
 

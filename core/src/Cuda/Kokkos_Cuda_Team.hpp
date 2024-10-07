@@ -71,11 +71,11 @@ struct CudaJoinFunctor {
  */
 class CudaTeamMember {
  public:
-  using execution_space      = Kokkos::Cuda;
-  using scratch_memory_space = execution_space::scratch_memory_space;
+  using execution_space         = Kokkos::Cuda;
+  using scratch_memory_space    = execution_space::scratch_memory_space;
   using scratch_memory_space_l0 = execution_space::scratch_memory_space_l0;
   using scratch_memory_space_l1 = execution_space::scratch_memory_space_l1;
-  using team_handle          = CudaTeamMember;
+  using team_handle             = CudaTeamMember;
 
  private:
   mutable void* m_team_reduce;
@@ -91,8 +91,7 @@ class CudaTeamMember {
   }
 
   template <int Level>
-  KOKKOS_INLINE_FUNCTION const auto&
-  team_scratch() const {
+  KOKKOS_INLINE_FUNCTION const auto& team_scratch() const {
     return m_team_shared.set_team_thread_mode<Level>(1, 0);
   }
 
@@ -103,8 +102,7 @@ class CudaTeamMember {
   }
 
   template <int Level>
-  KOKKOS_INLINE_FUNCTION const auto&
-  thread_scratch() const {
+  KOKKOS_INLINE_FUNCTION const auto& thread_scratch() const {
     return m_team_shared.set_team_thread_mode<Level>(team_size(), team_rank());
   }
 

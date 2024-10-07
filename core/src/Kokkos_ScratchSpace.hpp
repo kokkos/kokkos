@@ -31,9 +31,9 @@ static_assert(false,
 
 namespace Kokkos {
 
-struct L0Tag{};
+struct L0Tag {};
 
-struct L1Tag{};
+struct L1Tag {};
 
 template <typename ExecSpace, typename Tag>
 class ScratchMemorySpaceBase {

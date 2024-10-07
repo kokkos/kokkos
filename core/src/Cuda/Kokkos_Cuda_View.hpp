@@ -22,8 +22,10 @@
 
 #include <cuda/std/version>
 
-// FIXME_CUDA <cuda/annotated_ptr> couldn't be included in multiple compilation units (https://github.com/NVIDIA/libcudacxx/issues/270)
-#if defined(_LIBCUDACXX_CUDA_API_VERSION) && _LIBCUDACXX_CUDA_API_VERSION >= 1008001
+// FIXME_CUDA <cuda/annotated_ptr> couldn't be included in multiple compilation
+// units (https://github.com/NVIDIA/libcudacxx/issues/270)
+#if defined(_LIBCUDACXX_CUDA_API_VERSION) && \
+    _LIBCUDACXX_CUDA_API_VERSION >= 1008001
 #include <cuda/annotated_ptr>
 #endif
 
@@ -33,13 +35,15 @@
 namespace Kokkos {
 namespace Impl {
 
-#if defined(_LIBCUDACXX_CUDA_API_VERSION) && _LIBCUDACXX_CUDA_API_VERSION >= 1008001
+#if defined(_LIBCUDACXX_CUDA_API_VERSION) && \
+    _LIBCUDACXX_CUDA_API_VERSION >= 1008001
 
 template <typename ValueType, typename MemorySpace>
 struct CudaAnnotatedHandleHandle {
   mutable std::conditional_t<
       std::is_same_v<MemorySpace, Kokkos::Cuda::scratch_memory_space_l0>,
-      cuda::annotated_ptr<ValueType, cuda::access_property::shared>, cuda::annotated_ptr<ValueType, cuda::access_property::persisting>>
+      cuda::annotated_ptr<ValueType, cuda::access_property::shared>,
+      cuda::annotated_ptr<ValueType, cuda::access_property::persisting>>
       m_ptr;
 
   template <typename iType>
@@ -59,13 +63,13 @@ struct CudaAnnotatedHandleHandle {
   CudaAnnotatedHandleHandle() = default;
 
   KOKKOS_FUNCTION
-  explicit CudaAnnotatedHandleHandle(ValueType* const arg_ptr) : m_ptr(arg_ptr) {
-}
+  explicit CudaAnnotatedHandleHandle(ValueType* const arg_ptr)
+      : m_ptr(arg_ptr) {}
 
   KOKKOS_FUNCTION
-  CudaAnnotatedHandleHandle(const CudaAnnotatedHandleHandle& arg_handle, size_t offset)
-      : m_ptr(arg_handle.m_ptr.get() + offset) {
-      }
+  CudaAnnotatedHandleHandle(const CudaAnnotatedHandleHandle& arg_handle,
+                            size_t offset)
+      : m_ptr(arg_handle.m_ptr.get() + offset) {}
 
   CudaAnnotatedHandleHandle& operator=(ValueType* const arg_ptr) {
     return *this = CudaAnnotatedHandleHandle(arg_ptr);

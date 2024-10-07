@@ -121,10 +121,8 @@ class Cuda {
   //!
   using scratch_memory_space = ScratchMemorySpace<Cuda>;
 
-  using scratch_memory_space_l0 =
-      ScratchMemorySpaceBase<Cuda, L0Tag>;
-  using scratch_memory_space_l1 =
-      ScratchMemorySpaceBase<Cuda, L1Tag>;
+  using scratch_memory_space_l0 = ScratchMemorySpaceBase<Cuda, L0Tag>;
+  using scratch_memory_space_l1 = ScratchMemorySpaceBase<Cuda, L1Tag>;
 
   //@}
   //--------------------------------------------------

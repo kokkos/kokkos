@@ -35,7 +35,8 @@ struct functor_team_for {
   functor_team_for(Kokkos::View<int, Kokkos::LayoutLeft, ExecutionSpace> flag_)
       : flag(flag_) {}
 
-  // FIXE_CUDA For some reason, the for-loop in the single construct is optimized away if we use l0 here.
+  // FIXE_CUDA For some reason, the for-loop in the single construct is
+  // optimized away if we use l0 here.
 #ifdef KOKKOS_ENABLE_CUDA
   using shmem_space = typename ExecutionSpace::scratch_memory_space;
 #else
@@ -759,7 +760,7 @@ bool Test(int test) {
 #ifdef KOKKOS_ENABLE_SYCL
   int team_size = 31;
 #else
-  int team_size = 33;
+  int team_size     = 33;
 #endif
   int const concurrency = ExecutionSpace().concurrency();
   if (team_size > concurrency) team_size = concurrency;
