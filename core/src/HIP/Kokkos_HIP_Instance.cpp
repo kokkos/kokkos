@@ -98,6 +98,13 @@ void HIPInternal::print_configuration(std::ostream &s) const {
     << "undefined\n";
 #endif
 
+  s << "macro KOKKOS_ENABLE_IMPL_HIP_MALLOC_ASYNC: ";
+#ifdef KOKKOS_ENABLE_IMPL_HIP_MALLOC_ASYNC
+  s << "yes\n";
+#else
+  s << "no\n";
+#endif
+
   for (int i : get_visible_devices()) {
     hipDeviceProp_t hipProp;
     KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDeviceProperties(&hipProp, i));
