@@ -749,6 +749,10 @@ if(Kokkos_ENABLE_CUDA)
   kokkos_add_executable_and_test(
     CoreUnitTest_CudaInterOpStreamsMultiGPU SOURCES UnitTestMainInit.cpp cuda/TestCuda_InterOp_StreamsMultiGPU.cpp
   )
+
+  kokkos_add_executable_and_test(
+    CoreUnitTest_CudaInterOpGraph SOURCES UnitTestMainInit.cpp cuda/TestCuda_InterOp_Graph.cpp
+  )
 endif()
 
 if(Kokkos_ENABLE_HIP)
@@ -771,6 +775,10 @@ if(Kokkos_ENABLE_HIP)
   kokkos_add_executable_and_test(CoreUnitTest_HIPInterOpInit SOURCES UnitTestMain.cpp hip/TestHIP_InterOp_Init.cpp)
   kokkos_add_executable_and_test(
     CoreUnitTest_HIPInterOpStreams SOURCES UnitTestMain.cpp hip/TestHIP_InterOp_Streams.cpp
+  )
+
+  kokkos_add_executable_and_test(
+    CoreUnitTest_HIPInterOpGraph SOURCES UnitTestMainInit.cpp hip/TestHIP_InterOp_Graph.cpp
   )
 endif()
 
@@ -810,6 +818,12 @@ if(Kokkos_ENABLE_SYCL)
   kokkos_add_executable_and_test(
     CoreUnitTest_SYCLInterOpStreamsMultiGPU SOURCES UnitTestMainInit.cpp sycl/TestSYCL_InterOp_StreamsMultiGPU.cpp
   )
+
+  if(KOKKOS_IMPL_HAVE_SYCL_EXT_ONEAPI_GRAPH)
+    kokkos_add_executable_and_test(
+      CoreUnitTest_SYCLInterOpGraph SOURCES UnitTestMainInit.cpp sycl/TestSYCL_InterOp_Graph.cpp
+    )
+  endif()
 endif()
 
 set(DEFAULT_DEVICE_SOURCES
