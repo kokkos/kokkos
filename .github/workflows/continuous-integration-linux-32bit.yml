@@ -6,7 +6,7 @@ on:
 permissions: read-all
 
 concurrency:
-  group: ${ {github.event_name }}-${{ github.workflow }}-${{ github.ref }}-cilnx32
+  group: ${ {github.event_name }}-${{ github.workflow }}-${{ github.ref }}-linux-x86
   cancel-in-progress: ${{github.event_name == 'pull_request'}}
 
 jobs:

@@ -4,7 +4,7 @@ on:
   workflow_call:
 
 concurrency:
-  group: ${ {github.event_name }}-${{ github.workflow }}-${{ github.ref }}-ciwnds
+  group: ${ {github.event_name }}-${{ github.workflow }}-${{ github.ref }}-win-x64
   cancel-in-progress: ${{github.event_name == 'pull_request'}}
 
 permissions: read-all
