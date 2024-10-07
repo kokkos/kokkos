@@ -42,7 +42,7 @@ struct functor_team_for {
   using shmem_space = typename ExecutionSpace::scratch_memory_space_l0;
 #endif
   using shared_int =
-      Kokkos::View<Scalar *, shmem_space/*, Kokkos::MemoryUnmanaged*/>;
+      Kokkos::View<Scalar *, shmem_space, Kokkos::MemoryUnmanaged>;
   unsigned team_shmem_size(int team_size) const {
     return shared_int::shmem_size(team_size * 13);
   }
@@ -66,7 +66,6 @@ struct functor_team_for {
       Kokkos::parallel_for(Kokkos::TeamThreadRange(team, 131), [&](int i) {
         values(team.team_rank()) +=
             i - team.league_rank() + team.league_size() + team.team_size();
-//	              Kokkos::printf("init: %lf\n", static_cast<double>(values(team.team_rank())));
       });
 
       // Wait for all memory to be written.
@@ -82,26 +81,14 @@ struct functor_team_for {
               i - team.league_rank() + team.league_size() + team.team_size();
         }
 
-        Kokkos::printf("team_size: %d\n", static_cast<int>(team.team_size()));
-
-	//Kokkos::abort("dummy");
-        //value += values(0);
-        //value += values(1);
-
-        const int team_size = static_cast<int>(team.team_size());
-
-	const int my_team_size = 2;
-        for (int i = 0; i < team_size; ++i) {
+        for (int i = 0; i < team.team_size(); ++i) {
           value += values(i);
-	  Kokkos::printf("%lf\n", static_cast<double>(values(i)));
-	  //Kokkos::abort("in loop\n");
         }
 
         if (test != value) {
-          Kokkos::printf("FAILED team_parallel_for league_rank: %i, team_rank: %i, test: %lf, value %lf\n",
+          Kokkos::printf("FAILED team_parallel_for %i %i %lf %lf\n",
                          team.league_rank(), team.team_rank(),
                          static_cast<double>(test), static_cast<double>(value));
-	  Kokkos::abort("bla");
           flag() = 1;
         }
       });
@@ -702,7 +689,7 @@ bool test_scalar(int nteams, int team_size, int test) {
   h_flag() = 0;
   Kokkos::deep_copy(d_flag, h_flag);
 
-/*  if (test == 0) {
+  if (test == 0) {
     Kokkos::parallel_for(
         std::string("A"),
         Kokkos::TeamPolicy<ExecutionSpace>(nteams, team_size, 8),
@@ -723,10 +710,10 @@ bool test_scalar(int nteams, int team_size, int test) {
     Kokkos::parallel_for(
         "B", Kokkos::TeamPolicy<ExecutionSpace>(nteams, team_size, 8),
         functor_vec_single<Scalar, ExecutionSpace>(d_flag, 0, 13));
-  } else*/ if (test == 5) {
+  } else if (test == 5) {
     Kokkos::parallel_for(Kokkos::TeamPolicy<ExecutionSpace>(nteams, team_size),
                          functor_team_for<Scalar, ExecutionSpace>(d_flag));
-  } /* else if (test == 6) {
+  } else if (test == 6) {
     Kokkos::parallel_for(Kokkos::TeamPolicy<ExecutionSpace>(nteams, team_size),
                          functor_team_reduce<Scalar, ExecutionSpace>(d_flag));
   } else if (test == 7) {
@@ -757,7 +744,7 @@ bool test_scalar(int nteams, int team_size, int test) {
         Kokkos::TeamPolicy<ExecutionSpace>(nteams, team_size, 8),
         functor_vec_scan_ret_val<Scalar, ExecutionSpace>(d_flag, team_size));
 #endif
-  }*/
+  }
 
   Kokkos::deep_copy(h_flag, d_flag);
 
@@ -772,24 +759,24 @@ bool Test(int test) {
 #ifdef KOKKOS_ENABLE_SYCL
   int team_size = 31;
 #else
-  int team_size = 2;
+  int team_size = 33;
 #endif
   int const concurrency = ExecutionSpace().concurrency();
   if (team_size > concurrency) team_size = concurrency;
-  passed = passed && test_scalar<int, ExecutionSpace>(1, team_size, test);
- /* passed = passed &&
-           test_scalar<long long int, ExecutionSpace>(1, team_size, test);
-  passed = passed && test_scalar<float, ExecutionSpace>(1, team_size, test);
-  passed = passed && test_scalar<double, ExecutionSpace>(1, team_size, test);
+  passed = passed && test_scalar<int, ExecutionSpace>(317, team_size, test);
   passed = passed &&
-           test_scalar<Test::my_complex, ExecutionSpace>(1, team_size, test);
+           test_scalar<long long int, ExecutionSpace>(317, team_size, test);
+  passed = passed && test_scalar<float, ExecutionSpace>(317, team_size, test);
+  passed = passed && test_scalar<double, ExecutionSpace>(317, team_size, test);
+  passed = passed &&
+           test_scalar<Test::my_complex, ExecutionSpace>(317, team_size, test);
   passed = passed && test_scalar<Test::array_reduce<double, 1>, ExecutionSpace>(
-                         1, team_size, test);
+                         317, team_size, test);
   passed = passed && test_scalar<Test::array_reduce<float, 1>, ExecutionSpace>(
-                         1, team_size, test);
+                         317, team_size, test);
   passed = passed && test_scalar<Test::array_reduce<double, 3>, ExecutionSpace>(
-                         1, team_size, test);
-*/
+                         317, team_size, test);
+
   return passed;
 }
 
@@ -1031,19 +1018,80 @@ struct checkScan {
 }  // namespace VectorScanReducer
 
 TEST(TEST_CATEGORY, team_vector) {
- /* ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(0)));
+  ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(0)));
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(1)));
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(2)));
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(3)));
-  ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(4)));*/
+  ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(4)));
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(5)));
-/*  ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(6)));
+  ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(6)));
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(7)));
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(8)));
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(9)));
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(10)));
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(11)));
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(12)));
-*/}
+}
+
+TEST(TEST_CATEGORY, triple_nested_parallelism) {
+// With KOKKOS_ENABLE_DEBUG enabled, the functor uses too many registers to run
+// with a team size of 32 on GPUs, 16 is the max possible (at least on a K80
+// GPU) See https://github.com/kokkos/kokkos/issues/1513
+// For Intel GPUs, the requested workgroup size is just too large here.
+#if defined(KOKKOS_ENABLE_DEBUG) && defined(KOKKOS_ENABLE_CUDA)
+  if (!std::is_same<TEST_EXECSPACE, Kokkos::Cuda>::value)
+#elif defined(KOKKOS_ENABLE_SYCL)
+  if (!std::is_same<TEST_EXECSPACE, Kokkos::SYCL>::value)
+#endif
+  {
+    TestTripleNestedReduce<double, TEST_EXECSPACE>(8192, 2048, 32, 32);
+    TestTripleNestedReduce<double, TEST_EXECSPACE>(8192, 2048, 32, 16);
+  }
+#if defined(KOKKOS_ENABLE_SYCL)
+  if (!std::is_same<TEST_EXECSPACE, Kokkos::SYCL>::value)
+#endif
+  {
+    TestTripleNestedReduce<double, TEST_EXECSPACE>(8192, 2048, 16, 33);
+    TestTripleNestedReduce<double, TEST_EXECSPACE>(8192, 2048, 16, 19);
+  }
+  TestTripleNestedReduce<double, TEST_EXECSPACE>(8192, 2048, 16, 16);
+  TestTripleNestedReduce<double, TEST_EXECSPACE>(8192, 2048, 7, 16);
+}
+
+TEST(TEST_CATEGORY, parallel_scan_with_reducers) {
+  using T = double;
+  using namespace VectorScanReducer;
+
+  constexpr int n              = 1000000;
+  constexpr int n_vector_range = 100;
+
+#ifdef KOKKOS_IMPL_32BIT
+  GTEST_SKIP() << "Failing KOKKOS_IMPL_32BIT";  // FIXME_32BIT
+#endif
+
+  checkScan<TEST_EXECSPACE, ScanType::Exclusive, n, n_vector_range,
+            Kokkos::Prod<T, TEST_EXECSPACE>>()
+      .run();
+  checkScan<TEST_EXECSPACE, ScanType::Inclusive, n, n_vector_range,
+            Kokkos::Prod<T, TEST_EXECSPACE>>()
+      .run();
+
+  checkScan<TEST_EXECSPACE, ScanType::Exclusive, n, n_vector_range,
+            Kokkos::Max<T, TEST_EXECSPACE>>()
+      .run();
+  checkScan<TEST_EXECSPACE, ScanType::Inclusive, n, n_vector_range,
+            Kokkos::Max<T, TEST_EXECSPACE>>()
+      .run();
+
+  checkScan<TEST_EXECSPACE, ScanType::Exclusive, n, n_vector_range,
+            Kokkos::Min<T, TEST_EXECSPACE>>()
+      .run();
+  checkScan<TEST_EXECSPACE, ScanType::Inclusive, n, n_vector_range,
+            Kokkos::Min<T, TEST_EXECSPACE>>()
+      .run();
+
+  (void)n;
+  (void)n_vector_range;
+}
 
 }  // namespace Test

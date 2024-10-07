@@ -25,7 +25,6 @@
 #include <cstdio>
 #include <cstdint>
 
-#include <iostream>
 #include <utility>
 #include <Kokkos_Parallel.hpp>
 
@@ -107,12 +106,7 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
             (size_t)impl_vector_length(),
             (size_t)team_scratch_size(0) + 2 * sizeof(double),
             (size_t)thread_scratch_size(0) + sizeof(double));
-int max_block_size = block_size / impl_vector_length();  
-if (max_block_size <=0)
-    Kokkos::Impl::throw_runtime_exception(
-          std::string("Kokkos::Impl::ParallelFor<Cuda, TeamPolicy> could not find a "
-                      "valid execution configuration."));
-    return max_block_size;
+    return block_size / impl_vector_length();
   }
 
   template <class FunctorType>
@@ -125,14 +119,7 @@ if (max_block_size <=0)
         CombinedFunctorReducer<FunctorType,
                                typename functor_analysis_type::Reducer>,
         TeamPolicy<Properties...>, Kokkos::Cuda>;
-
-int max_block_size = internal_team_size_max<closure_type>(f);
-
-    if (max_block_size <=0)
-    Kokkos::Impl::throw_runtime_exception(
-          std::string("Kokkos::Impl::ParallelReduce<Cuda, TeamPolicy> could not find a "
-                      "valid execution configuration."));
-    return max_block_size;
+    return internal_team_size_max<closure_type>(f);
   }
 
   template <class FunctorType, class ReducerType>
@@ -141,14 +128,7 @@ int max_block_size = internal_team_size_max<closure_type>(f);
     using closure_type =
         Impl::ParallelReduce<CombinedFunctorReducer<FunctorType, ReducerType>,
                              TeamPolicy<Properties...>, Kokkos::Cuda>;
-
-int max_block_size = internal_team_size_max<closure_type>(f);
-
-    if (max_block_size <=0)
-    Kokkos::Impl::throw_runtime_exception(
-          std::string("Kokkos::Impl::ParallelReduce<Cuda, TeamPolicy> could not find a "
-                      "valid execution configuration."));
-    return max_block_size;
+    return internal_team_size_max<closure_type>(f);
   }
 
   template <class FunctorType>
@@ -165,13 +145,7 @@ int max_block_size = internal_team_size_max<closure_type>(f);
             (size_t)impl_vector_length(),
             (size_t)team_scratch_size(0) + 2 * sizeof(double),
             (size_t)thread_scratch_size(0) + sizeof(double));
-  
-  int recommended_block_size = block_size / impl_vector_length();
-if (recommended_block_size <=0)
-    Kokkos::Impl::throw_runtime_exception(
-          std::string("Kokkos::Impl::ParallelFor<Cuda, TeamPolicy> could not find a "
-                      "valid execution configuration."));
-    return recommended_block_size;
+    return block_size / impl_vector_length();
   }
 
   template <class FunctorType>
@@ -184,14 +158,7 @@ if (recommended_block_size <=0)
         CombinedFunctorReducer<FunctorType,
                                typename functor_analysis_type::Reducer>,
         TeamPolicy<Properties...>, Kokkos::Cuda>;
-
-    int recommended_block_size = internal_team_size_recommended<closure_type>(f);
-
-    if (recommended_block_size <=0)
-    Kokkos::Impl::throw_runtime_exception(
-          std::string("Kokkos::Impl::ParallelReduce<Cuda, TeamPolicy> could not find a "
-                      "valid execution configuration."));
-    return recommended_block_size;
+    return internal_team_size_recommended<closure_type>(f);
   }
 
   template <class FunctorType, class ReducerType>
@@ -200,14 +167,7 @@ if (recommended_block_size <=0)
     using closure_type =
         Impl::ParallelReduce<CombinedFunctorReducer<FunctorType, ReducerType>,
                              TeamPolicy<Properties...>, Kokkos::Cuda>;
-   
-    int recommended_block_size = internal_team_size_recommended<closure_type>(f);
-    
-    if (recommended_block_size <=0)
-    Kokkos::Impl::throw_runtime_exception(
-          std::string("Kokkos::Impl::ParallelReduce<Cuda, TeamPolicy> could not find a "
-                      "valid execution configuration."));
-    return recommended_block_size;
+    return internal_team_size_recommended<closure_type>(f);
   }
 
   inline static int vector_length_max() { return Impl::CudaTraits::WarpSize; }
@@ -555,9 +515,6 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   }
 
   inline void execute() const {
-
-if (m_team_size <= 0) Kokkos::abort("bla");
-
     const int64_t shmem_size_total = m_shmem_begin + m_shmem_size;
     dim3 grid(int(m_league_size), 1, 1);
     const dim3 block(int(m_vector_size), int(m_team_size), 1);
@@ -582,22 +539,9 @@ if (m_team_size <= 0) Kokkos::abort("bla");
         m_vector_size(arg_policy.impl_vector_length()) {
     auto internal_space_instance =
         m_policy.space().impl_internal_space_instance();
-
-        std::cout << "-2 m_team_size: " << m_team_size << std::endl;
-
-    if (m_team_size < 0) {
-      m_team_size = arg_policy.team_size_recommended(
+    m_team_size = m_team_size >= 0 ? m_team_size
+                                   : arg_policy.team_size_recommended(
                                          arg_functor, ParallelForTag());
-      std::cout << "-1 m_team_size: " << m_team_size << std::endl;
-
-      if (m_team_size <=0)
-	        Kokkos::Impl::throw_runtime_exception(
-          std::string("Kokkos::Impl::ParallelFor<Cuda, TeamPolicy> could not find a "
-                      "valid execution configuration."));
-    }
-
-    std::cout << "0 m_team_size: " << m_team_size << std::endl;
-
 
     m_shmem_begin = (sizeof(double) * (m_team_size + 2));
     m_shmem_size =
@@ -607,8 +551,6 @@ if (m_team_size <= 0) Kokkos::abort("bla");
     m_scratch_size[1]   = m_policy.scratch_size(1, m_team_size);
     m_scratch_locks     = internal_space_instance->m_scratch_locks;
     m_num_scratch_locks = internal_space_instance->m_num_scratch_locks;
-
-    std::cout << "1 m_team_size: " << m_team_size << std::endl;
 
     // Functor's reduce memory, team scan memory, and team shared memory depend
     // upon team size.
@@ -626,8 +568,6 @@ if (m_team_size <= 0) Kokkos::abort("bla");
                   static_cast<std::int64_t>(m_league_size))));
     }
 
-    std::cout << "2: m_team_size: " << m_team_size << std::endl;
-
     const int maxShmemPerBlock =
         m_policy.space().cuda_device_prop().sharedMemPerBlock;
     const int shmem_size_total = m_shmem_begin + m_shmem_size;
@@ -641,10 +581,6 @@ if (m_team_size <= 0) Kokkos::abort("bla");
       Kokkos::Impl::throw_runtime_exception(std::string(
           "Kokkos::Impl::ParallelFor< Cuda > requested too large team size."));
     }
-
-
-    std::cout << "m_team_size: " << m_team_size << std::endl;
-
   }
 
   ~ParallelFor() {
@@ -871,9 +807,6 @@ class ParallelReduce<CombinedFunctorReducerType,
   }
 
   inline void execute() {
-
-if (m_team_size <= 0) Kokkos::abort("bla");
-
     const bool is_empty_range  = m_league_size == 0 || m_team_size == 0;
     const bool need_device_set = ReducerType::has_init_member_function() ||
                                  ReducerType::has_final_member_function() ||
@@ -963,16 +896,11 @@ if (m_team_size <= 0) Kokkos::abort("bla");
         m_vector_size(arg_policy.impl_vector_length()) {
     auto internal_space_instance =
         m_policy.space().impl_internal_space_instance();
-   if (m_team_size < 0) {
-      m_team_size = arg_policy.team_size_recommended(
-       arg_functor_reducer.get_functor(),
+    m_team_size = m_team_size >= 0 ? m_team_size
+                                   : arg_policy.team_size_recommended(
+                                         arg_functor_reducer.get_functor(),
                                          arg_functor_reducer.get_reducer(),
-                                         ParallelReduceTag());                   
-      if (m_team_size <=0)
-                Kokkos::Impl::throw_runtime_exception(
-          std::string("Kokkos::Impl::ParallelFor<Cuda, TeamPolicy> could not find a "
-                      "valid execution configuration."));
-    }
+                                         ParallelReduceTag());
 
     m_team_begin =
         UseShflReduction

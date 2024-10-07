@@ -47,6 +47,10 @@ extern "C" void kokkos_impl_cuda_set_pin_uvm_to_host(bool);
 /*--------------------------------------------------------------------------*/
 
 namespace Kokkos {
+
+template <typename ExecSpace>
+class ScratchMemorySpace;
+
 namespace Impl {
 
 template <typename T>

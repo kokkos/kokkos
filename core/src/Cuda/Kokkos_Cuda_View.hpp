@@ -60,13 +60,11 @@ struct CudaAnnotatedHandleHandle {
 
   KOKKOS_FUNCTION
   explicit CudaAnnotatedHandleHandle(ValueType* const arg_ptr) : m_ptr(arg_ptr) {
-  if (m_ptr.get() == nullptr) Kokkos::abort("bla");
 }
 
   KOKKOS_FUNCTION
   CudaAnnotatedHandleHandle(const CudaAnnotatedHandleHandle& arg_handle, size_t offset)
       : m_ptr(arg_handle.m_ptr.get() + offset) {
-  if (m_ptr.get() == nullptr) Kokkos::abort("bla");
       }
 
   CudaAnnotatedHandleHandle& operator=(ValueType* const arg_ptr) {
