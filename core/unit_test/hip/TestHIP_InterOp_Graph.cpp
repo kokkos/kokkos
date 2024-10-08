@@ -71,6 +71,10 @@ TEST(TEST_CATEGORY, graph_promises_on_native_objects) {
 TEST(TEST_CATEGORY, graph_instantiate_and_debug_dot_print) {
 #if !defined(KOKKOS_IMPL_HIP_NATIVE_GRAPH)
   GTEST_SKIP() << "This test will not work without native graph support";
+#elif KOKKOS_COMPILER_GNU < 910
+  GTEST_SKIP() << "'filesystem' is not fully supported prior to GCC 9.1.0.";
+#elif KOKKOS_COMPILER_CLANG < 1100
+  GTEST_SKIP() << "'filesystem' is not fully supported prior to LLVM 11.";
 #else
   using view_t = Kokkos::View<int, Kokkos::HIP>;
 
