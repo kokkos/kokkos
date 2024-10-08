@@ -280,11 +280,10 @@ struct MemorySpaceAccess<Kokkos::SYCLHostUSMSpace, Kokkos::SYCLSharedUSMSpace> {
   enum : bool { deepcopy = true };
 };
 
-template <typename LocalPointerType, typename GlobalPointerType>
+template <>
 struct MemorySpaceAccess<
     Kokkos::SYCLDeviceUSMSpace,
-    Kokkos::ScratchMemorySpace<Kokkos::SYCL, LocalPointerType,
-                               GlobalPointerType>> {
+    Kokkos::ScratchMemorySpace<Kokkos::SYCL>> {
   enum : bool { assignable = false };
   enum : bool { accessible = true };
   enum : bool { deepcopy = false };
@@ -298,15 +297,14 @@ struct MemorySpaceAccess<
   enum : bool { accessible = true };
   enum : bool { deepcopy = false };
 };
-/*
-template <typename LocalPointerType, typename GlobalPointerType, typename
-PointerType> struct MemorySpaceAccess< Kokkos::ScratchMemorySpace<Kokkos::SYCL,
-LocalPointerType, GlobalPointerType>,
+
+template <typename
+PointerType> struct MemorySpaceAccess< Kokkos::ScratchMemorySpace<Kokkos::SYCL>,
     Kokkos::ScratchMemorySpaceBase<Kokkos::SYCL, PointerType>> {
   enum : bool { assignable = true };
-  enum : bool { accessible = true };
+  enum : bool { accessible = false };
   enum : bool { deepcopy = false };
-};*/
+};
 
 }  // namespace Impl
 
