@@ -97,6 +97,10 @@ TEST_F(TEST_CATEGORY_FIXTURE(GraphInterOp), count_nodes) {
 TEST_F(TEST_CATEGORY_FIXTURE(GraphInterOp), debug_dot_print) {
 #if CUDA_VERSION < 11600
   GTEST_SKIP() << "Export a graph to DOT requires Cuda 11.6.";
+#elif KOKKOS_COMPILER_GNU < 910
+  GTEST_SKIP() << "'filesystem' is not fully supported prior to GCC 9.1.0.";
+#elif KOKKOS_COMPILER_CLANG < 1100
+  GTEST_SKIP() << "'filesystem' is not fully supported prior to LLVM 11.";
 #else
   graph->instantiate();
 
