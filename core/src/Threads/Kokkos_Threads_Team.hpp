@@ -45,9 +45,11 @@ class ThreadsExecTeamMember {
   enum { TEAM_REDUCE_SIZE = 512 };
 
  public:
-  using execution_space      = Kokkos::Threads;
-  using scratch_memory_space = execution_space::scratch_memory_space;
-  using team_handle          = ThreadsExecTeamMember;
+  using execution_space         = Kokkos::Threads;
+  using scratch_memory_space    = execution_space::scratch_memory_space;
+  using scratch_memory_space_l0 = execution_space::scratch_memory_space_l0;
+  using scratch_memory_space_l1 = execution_space::scratch_memory_space_l1;
+  using team_handle             = ThreadsExecTeamMember;
 
  private:
   using space = execution_space::scratch_memory_space;

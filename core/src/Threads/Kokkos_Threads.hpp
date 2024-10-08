@@ -56,8 +56,8 @@ class Threads {
   using size_type    = memory_space::size_type;
 
   using scratch_memory_space    = ScratchMemorySpace<Threads>;
-  using scratch_memory_space_l0 = ScratchMemorySpaceBase<Threads, L0Tag>;
-  using scratch_memory_space_l1 = ScratchMemorySpaceBase<Threads, L0Tag>;
+  using scratch_memory_space_l0 = ScratchMemorySpace<Threads>;
+  using scratch_memory_space_l1 = ScratchMemorySpace<Threads>;
 
   //@}
   /*------------------------------------------------------------------------*/
