@@ -234,7 +234,9 @@ TEST(TEST_CATEGORY, SortByKeyWithStrides) {
   ASSERT_EQ(sort_fails, 0u);
 }
 
-TEST(TEST_CATEGORY, SortByKeyKeysLargerThanValues) {
+TEST(TEST_CATEGORY_DEATH, SortByKeyKeysLargerThanValues) {
+  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+
   using ExecutionSpace = TEST_EXECSPACE;
 
   // does not matter if we use int or something else
