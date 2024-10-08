@@ -53,14 +53,16 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
       hipGetDeviceProperties(&Impl::HIPInternal::m_deviceProp, hip_device_id));
   KOKKOS_IMPL_HIP_SAFE_CALL(hipSetDevice(hip_device_id));
 
-  // Check that we are running on the expected architecture
+  // Check that we are running on the expected architecture. We print a warning
+  // instead of erroring out because AMD does not guarantee that gcnArchName
+  // will always contain the gfx flag.
   if (Kokkos::show_warnings()) {
-    if (std::string arch_name = Impl::HIPInternal::m_deviceProp.gcnArchName;
+    if (std::string_view arch_name =
+            Impl::HIPInternal::m_deviceProp.gcnArchName;
         arch_name.find(KOKKOS_ARCH_AMD_GPU) != 0) {
       std::cerr
-          << "Kokkos::HIP::initialize WARNING: running kernels compiled for " +
-                 std::string(KOKKOS_ARCH_AMD_GPU) + " on " + arch_name +
-                 " device.\n";
+          << "Kokkos::HIP::initialize WARNING: running kernels compiled for "
+          << KOKKOS_ARCH_AMD_GPU << " on " << arch_name << " device.\n";
     }
   }
 
