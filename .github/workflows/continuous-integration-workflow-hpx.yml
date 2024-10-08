@@ -38,7 +38,7 @@ jobs:
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
           repository: STELLAR-GROUP/hpx
-          ref: v1.9.0
+          ref: v1.10.0
           path: hpx
       - uses: actions/cache@2cdf405574d6ef1f33a1d12acccd3ae82f47b3f2 # v4.1.0
         id:   cache-hpx
