@@ -21,6 +21,7 @@
 #include "extents.hpp"
 #include "trait_backports.hpp"
 #include "compressed_pair.hpp"
+#include "utility.hpp"
 
 namespace MDSPAN_IMPL_STANDARD_NAMESPACE {
 template <
@@ -351,6 +352,7 @@ public:
 
   MDSPAN_INLINE_FUNCTION constexpr const extents_type& extents() const noexcept { return __mapping_ref().extents(); };
   MDSPAN_INLINE_FUNCTION constexpr const data_handle_type& data_handle() const noexcept { return __ptr_ref(); };
+  MDSPAN_INLINE_FUNCTION constexpr data_handle_type& data_handle(mdspan_non_standard_tag) noexcept { return __ptr_ref(); };
   MDSPAN_INLINE_FUNCTION constexpr const mapping_type& mapping() const noexcept { return __mapping_ref(); };
   MDSPAN_INLINE_FUNCTION constexpr const accessor_type& accessor() const noexcept { return __accessor_ref(); };
 

@@ -77,12 +77,12 @@ struct integral_constant {
 
   MDSPAN_INLINE_FUNCTION_DEFAULTED
   constexpr integral_constant() = default;
-
+ 
   // These interop functions work, because other than the value_type operator
-  // everything of std::integral_constant works on device (defaulted functions)
+  // everything of std::integral_constant works on device (defaulted functions)  
   MDSPAN_FUNCTION
   constexpr integral_constant(std::integral_constant<T,v>) {};
-
+  
   MDSPAN_FUNCTION constexpr operator std::integral_constant<T,v>() const noexcept {
     return std::integral_constant<T,v>{};
   }
