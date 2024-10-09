@@ -1,6 +1,7 @@
 name: clang-format check
 
-on: [push, pull_request]
+on:
+  workflow_call:
 
 permissions: read-all
 

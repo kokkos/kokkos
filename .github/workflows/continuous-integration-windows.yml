@@ -1,11 +1,10 @@
 name: github-windows
 
 on:
-  push:
-  pull_request:
+  workflow_call:
 
 concurrency:
-  group: ${ {github.event_name }}-${{ github.workflow }}-${{ github.ref }}
+  group: ${ {github.event_name }}-${{ github.workflow }}-${{ github.ref }}-win-x64
   cancel-in-progress: ${{github.event_name == 'pull_request'}}
 
 permissions: read-all

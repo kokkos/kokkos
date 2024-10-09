@@ -1,18 +1,12 @@
 name: github-Linux-32bit
 
 on:
-  push:
-    branches:
-      - develop
-  pull_request:
-    paths-ignore:
-    - '**/*.md'
-    types: [ opened, reopened, synchronize ]
+  workflow_call:
 
 permissions: read-all
 
 concurrency:
-  group: ${ {github.event_name }}-${{ github.workflow }}-${{ github.ref }}
+  group: ${ {github.event_name }}-${{ github.workflow }}-${{ github.ref }}-linux-x86
   cancel-in-progress: ${{github.event_name == 'pull_request'}}
 
 jobs:

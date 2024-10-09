@@ -1,16 +1,10 @@
 name: github-Linux
 
 on:
-  push:
-    branches:
-      - develop
-  pull_request:
-    paths-ignore:
-    - '**/*.md'
-    types: [ opened, reopened, synchronize ]
+  workflow_call:
 
 concurrency:
-  group: ${ {github.event_name }}-${{ github.workflow }}-${{ github.ref }}
+  group: ${ {github.event_name }}-${{ github.workflow }}-${{ github.ref }}-linux-x64
   cancel-in-progress: ${{github.event_name == 'pull_request'}}
 
 permissions: read-all
