@@ -24,6 +24,9 @@
 #include <iostream>
 #include <cmath>
 
+// We allow using deprecated classes in this file
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
+
 //==============================================================================
 // <editor-fold desc="TestFib"> {{{1
 
@@ -784,6 +787,8 @@ struct TestMultipleDependence {
 };
 
 }  // namespace TestTaskScheduler
+
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
 
 //----------------------------------------------------------------------------
 
