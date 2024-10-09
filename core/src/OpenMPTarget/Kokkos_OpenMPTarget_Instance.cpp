@@ -114,8 +114,6 @@ void OpenMPTargetInternal::impl_finalize() {
 void OpenMPTargetInternal::impl_initialize() {
   m_is_initialized = true;
 
-  MAX_ACTIVE_THREADS = concurrency();
-
   // FIXME_OPENMPTARGET:  Only fix the number of teams for NVIDIA architectures
   // from Pascal and upwards.
   // FIXME_OPENMPTARGTE: Cray compiler did not yet implement omp_set_num_teams.
@@ -178,8 +176,8 @@ void OpenMPTargetInternal::resize_scratch(int64_t team_size,
   // Maximum active teams possible.
   // The number should not exceed the maximum in-flight teams possible or the
   // league_size.
-  int max_active_teams = std::min(
-      OpenMPTargetInternal::MAX_ACTIVE_THREADS / team_size, league_size);
+  int max_active_teams =
+      std::min(OpenMPTargetInternal::concurrency() / team_size, league_size);
 
   // max_active_teams is the number of active teams on the given hardware.
   // We set the number of teams to be twice the number of max_active_teams for

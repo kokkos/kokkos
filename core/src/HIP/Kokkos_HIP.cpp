@@ -27,6 +27,8 @@
 
 #include <hip/hip_runtime_api.h>
 
+#include <iostream>
+
 namespace Kokkos {
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
@@ -50,6 +52,20 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
   KOKKOS_IMPL_HIP_SAFE_CALL(
       hipGetDeviceProperties(&Impl::HIPInternal::m_deviceProp, hip_device_id));
   KOKKOS_IMPL_HIP_SAFE_CALL(hipSetDevice(hip_device_id));
+
+  // Check that we are running on the expected architecture. We print a warning
+  // instead of erroring out because AMD does not guarantee that gcnArchName
+  // will always contain the gfx flag.
+  if (Kokkos::show_warnings()) {
+    if (std::string_view arch_name =
+            Impl::HIPInternal::m_deviceProp.gcnArchName;
+        arch_name.find(KOKKOS_ARCH_AMD_GPU) != 0) {
+      std::cerr
+          << "Kokkos::HIP::initialize WARNING: running kernels compiled for "
+          << KOKKOS_ARCH_AMD_GPU << " on " << arch_name << " device.\n";
+    }
+  }
+
   // theoretically on GFX 9XX GPUs, we can get 40 WF's / CU, but only can
   // sustain 32 see
   // https://github.com/ROCm/clr/blob/4d0b815d06751735e6a50fa46e913fdf85f751f0/hipamd/src/hip_platform.cpp#L362-L366

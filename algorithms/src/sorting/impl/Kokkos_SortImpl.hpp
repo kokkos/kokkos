@@ -34,6 +34,7 @@
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wshadow"
+#pragma GCC diagnostic ignored "-Wsuggest-override"
 
 #if defined(KOKKOS_COMPILER_CLANG)
 // Some versions of Clang fail to compile Thrust, failing with errors like

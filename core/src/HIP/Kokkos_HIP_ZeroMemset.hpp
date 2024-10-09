@@ -23,11 +23,22 @@
 namespace Kokkos {
 namespace Impl {
 
+// hipMemsetAsync sets the first `cnt` bytes of `dst` to the provided value
+void zero_with_hip_kernel(const HIP& exec_space, void* dst, size_t cnt);
+
 template <>
 struct ZeroMemset<HIP> {
   ZeroMemset(const HIP& exec_space, void* dst, size_t cnt) {
+    // in ROCm <= 6.2.0, hipMemsetAsync on a host-allocated pointer
+    // returns an invalid value error, but accessing the data via a
+    // GPU kernel works.
+#if defined(KOKKOS_ENABLE_IMPL_HIP_UNIFIED_MEMORY) && \
+    defined(KOKKOS_ARCH_AMD_GFX942)
+    zero_with_hip_kernel(exec_space, dst, cnt);
+#else
     KOKKOS_IMPL_HIP_SAFE_CALL(
         hipMemsetAsync(dst, 0, cnt, exec_space.hip_stream()));
+#endif
   }
 };
 

@@ -53,12 +53,6 @@ class OpenMPTargetInternal {
 
   static OpenMPTargetInternal* impl_singleton();
 
-  // FIXME_OPENMPTARGET - Currently the maximum number of
-  // teams possible is calculated based on NVIDIA's Volta GPU. In
-  // future this value should be based on the chosen architecture for the
-  // OpenMPTarget backend.
-  int MAX_ACTIVE_THREADS = 0;
-
   static void verify_is_process(const char* const);
   static void verify_initialized(const char* const);
 

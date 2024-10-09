@@ -1,0 +1,18 @@
+name: cmake-format check
+
+on:
+  workflow_call:
+
+permissions: read-all
+
+jobs:
+  cmake-formatting-check:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+    - name: cmake-format lint action
+      uses: puneetmatharu/cmake-format-lint-action@efbb497b2a8badd2c9dc638faaf8ef4a9aa71bc8 # v1.0.4
+      with:
+        args: --config-files .cmake-format.py --in-place
+    - name: check
+      run: git diff --exit-code

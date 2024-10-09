@@ -34,7 +34,7 @@ int unsetenv(const char *name) { return _putenv_s(name, ""); }
 
 class ctest_environment : public ::testing::Test {
  protected:
-  void SetUp();
+  void SetUp() override;
 };
 
 void ctest_environment::SetUp() {

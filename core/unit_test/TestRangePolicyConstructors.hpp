@@ -75,6 +75,8 @@ TEST(TEST_CATEGORY, range_policy_runtime_parameters) {
 }
 
 TEST(TEST_CATEGORY_DEATH, range_policy_invalid_bounds) {
+  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+
   using Policy    = Kokkos::RangePolicy<TEST_EXECSPACE>;
   using ChunkSize = Kokkos::ChunkSize;
 
@@ -131,7 +133,9 @@ struct W {  // round-trip conversion check for narrowing should "fire"
   int val_;
 };
 
-TEST(TEST_CATEGORY, range_policy_round_trip_conversion_fires) {
+TEST(TEST_CATEGORY_DEATH, range_policy_round_trip_conversion_fires) {
+  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+
   using Policy = Kokkos::RangePolicy<>;
 
   static_assert(std::is_convertible_v<W, Policy::index_type>);
@@ -176,7 +180,9 @@ TEST(TEST_CATEGORY, range_policy_one_way_convertible_bounds) {
   EXPECT_EQ(policy.end(), static_cast<IndexType>(1));
 }
 
-TEST(TEST_CATEGORY, range_policy_check_sign_changes) {
+TEST(TEST_CATEGORY_DEATH, range_policy_check_sign_changes) {
+  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+
   using UInt32Policy =
       Kokkos::RangePolicy<TEST_EXECSPACE, Kokkos::IndexType<std::uint32_t>>;
 

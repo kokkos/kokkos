@@ -122,7 +122,7 @@ KOKKOS_INLINE_FUNCTION void offsetview_verify_operator_bounds(
                                             label.c_str());
          offsetview_error_operator_bounds<0>(buffer + n, LEN - n, map, begins,
                                              args...);
-         Kokkos::Impl::throw_runtime_exception(std::string(buffer));))
+         Kokkos::abort(buffer);))
 
     KOKKOS_IF_ON_DEVICE(
         (Kokkos::abort("OffsetView bounds error"); (void)tracker;))
@@ -393,7 +393,7 @@ class OffsetView : public View<DataType, Properties...> {
       message +=
           "ends.size() "
           "(" +
-          std::to_string(begins.size()) +
+          std::to_string(ends.size()) +
           ")"
           " != Rank "
           "(" +
@@ -439,7 +439,7 @@ class OffsetView : public View<DataType, Properties...> {
       message =
           "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView\n" +
           message;
-      Kokkos::Impl::throw_runtime_exception(message);
+      Kokkos::abort(message.c_str());
     }
 
     return subtraction_failure::none;
@@ -1284,27 +1284,6 @@ struct MirrorOffsetViewType {
       std::conditional_t<is_same_memspace, src_view_type, dest_view_type>;
 };
 
-template <class Space, class T, class... P>
-struct MirrorOffsetType {
-  // The incoming view_type
-  using src_view_type = typename Kokkos::Experimental::OffsetView<T, P...>;
-  // The memory space for the mirror view
-  using memory_space = typename Space::memory_space;
-  // Check whether it is the same memory space
-  enum {
-    is_same_memspace =
-        std::is_same_v<memory_space, typename src_view_type::memory_space>
-  };
-  // The array_layout
-  using array_layout = typename src_view_type::array_layout;
-  // The data type (we probably want it non-const since otherwise we can't even
-  // deep_copy to it.)
-  using data_type = typename src_view_type::non_const_data_type;
-  // The destination view type if it is not the same memory space
-  using view_type =
-      Kokkos::Experimental::OffsetView<data_type, array_layout, Space>;
-};
-
 }  // namespace Impl
 
 namespace Impl {
@@ -1323,10 +1302,12 @@ inline auto create_mirror(const Kokkos::Experimental::OffsetView<T, P...>& src,
     auto prop_copy = Impl::with_properties_if_unset(
         arg_prop, std::string(src.label()).append("_mirror"));
 
-    return typename Kokkos::Impl::MirrorOffsetType<Space, T, P...>::view_type(
-        prop_copy, src.layout(),
-        {src.begin(0), src.begin(1), src.begin(2), src.begin(3), src.begin(4),
-         src.begin(5), src.begin(6), src.begin(7)});
+    return typename Kokkos::Impl::MirrorOffsetViewType<
+        Space, T, P...>::dest_view_type(prop_copy, src.layout(),
+                                        {src.begin(0), src.begin(1),
+                                         src.begin(2), src.begin(3),
+                                         src.begin(4), src.begin(5),
+                                         src.begin(6), src.begin(7)});
   } else {
     return typename Kokkos::Experimental::OffsetView<T, P...>::HostMirror(
         Kokkos::create_mirror(arg_prop, src.view()), src.begins());

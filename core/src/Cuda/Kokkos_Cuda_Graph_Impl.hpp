@@ -51,6 +51,11 @@ struct GraphImpl<Kokkos::Cuda> {
 
   using node_details_t = GraphNodeBackendSpecificDetails<Kokkos::Cuda>;
 
+  // Store drivers for the kernel nodes that launch in global memory.
+  // This is required as lifetime of drivers must be bounded to this instance's
+  // lifetime.
+  std::vector<std::shared_ptr<void>> m_driver_storage;
+
  public:
   void instantiate() {
     KOKKOS_EXPECTS(!m_graph_exec);
@@ -131,6 +136,8 @@ struct GraphImpl<Kokkos::Cuda> {
     kernel.set_cuda_graph_node_ptr(&cuda_node);
     kernel.execute();
     KOKKOS_ENSURES(bool(cuda_node));
+    if (std::shared_ptr<void> tmp = kernel.get_driver_storage())
+      m_driver_storage.push_back(std::move(tmp));
   }
 
   template <class NodeImplPtr, class PredecessorRef>
@@ -199,6 +206,9 @@ struct GraphImpl<Kokkos::Cuda> {
         m_execution_space, _graph_node_kernel_ctor_tag{},
         aggregate_kernel_impl_t{});
   }
+
+  cudaGraph_t cuda_graph() { return m_graph; }
+  cudaGraphExec_t cuda_graph_exec() { return m_graph_exec; }
 };
 
 }  // end namespace Impl

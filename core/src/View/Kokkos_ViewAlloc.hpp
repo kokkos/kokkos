@@ -26,6 +26,7 @@ static_assert(false,
 #include <cstring>
 #include <type_traits>
 #include <string>
+#include <optional>
 
 #include <impl/Kokkos_Tools.hpp>
 #include <Kokkos_Core_fwd.hpp>
@@ -241,6 +242,63 @@ struct ViewValueFunctorSequentialHostInit {
     }
   }
 };
+
+template <class ElementType, class MemorySpace, class ExecutionSpace,
+          bool Initialize, bool SequentialInit>
+Kokkos::Impl::SharedAllocationRecord<void, void>* make_shared_allocation_record(
+    const size_t& required_span_size, std::string_view label,
+    const MemorySpace& memory_space,
+    const std::optional<ExecutionSpace> exec_space,
+    std::bool_constant<Initialize>, std::bool_constant<SequentialInit>) {
+  static_assert(SpaceAccessibility<ExecutionSpace, MemorySpace>::accessible);
+
+  // Use this for constructing and destroying the view
+  using device_type  = Kokkos::Device<ExecutionSpace, MemorySpace>;
+  using functor_type = std::conditional_t<
+      SequentialInit,
+      ViewValueFunctorSequentialHostInit<device_type, ElementType>,
+      ViewValueFunctor<device_type, ElementType>>;
+  using record_type =
+      Kokkos::Impl::SharedAllocationRecord<MemorySpace, functor_type>;
+
+  /* Force alignment of allocations on on 8 byte boundaries even for
+   * element types smaller than 8 bytes */
+  static constexpr std::size_t align_mask = 0x7;
+
+  // Calculate the total size of the memory, in bytes, and make sure it is
+  // byte-aligned
+  const std::size_t alloc_size =
+      (required_span_size * sizeof(ElementType) + align_mask) & ~align_mask;
+
+  auto* record =
+      exec_space
+          ? record_type::allocate(*exec_space, memory_space, std::string{label},
+                                  alloc_size)
+          : record_type::allocate(memory_space, std::string{label}, alloc_size);
+
+  auto ptr = static_cast<ElementType*>(record->data());
+
+  auto functor =
+      exec_space ? functor_type(*exec_space, ptr, required_span_size,
+                                std::string{label})
+                 : functor_type(ptr, required_span_size, std::string{label});
+
+  //  Only initialize if the allocation is non-zero.
+  //  May be zero if one of the dimensions is zero.
+  if constexpr (Initialize) {
+    if (alloc_size) {
+      // Assume destruction is only required when construction is requested.
+      // The ViewValueFunctor has both value construction and destruction
+      // operators.
+      record->m_destroy = std::move(functor);
+
+      // Construct values
+      record->m_destroy.construct_shared_allocation();
+    }
+  }
+
+  return record;
+}
 
 }  // namespace Kokkos::Impl
 
