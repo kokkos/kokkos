@@ -29,8 +29,7 @@
 #define KOKKOS_IMPL_BUILTIN_UNREACHABLE() __builtin_unreachable()
 #else
 #define KOKKOS_IMPL_BUILTIN_UNREACHABLE() \
-  do {                                    \
-  } while (false)
+  static_assert(true, "no-op to require trailing semicolon")
 #endif
 
 void Kokkos::Impl::throw_runtime_exception(const std::string &msg) {
