@@ -40,7 +40,7 @@ namespace Kokkos {
 namespace Impl {
 constexpr inline struct SubViewCtorTag {
   explicit SubViewCtorTag() = default;
-} subview_ctor_tag;
+} subview_ctor_tag{};
 
 template <class T>
 struct KokkosSliceToMDSpanSliceImpl {
