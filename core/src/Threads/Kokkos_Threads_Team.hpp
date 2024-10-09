@@ -45,9 +45,11 @@ class ThreadsExecTeamMember {
   enum { TEAM_REDUCE_SIZE = 512 };
 
  public:
-  using execution_space      = Kokkos::Threads;
-  using scratch_memory_space = execution_space::scratch_memory_space;
-  using team_handle          = ThreadsExecTeamMember;
+  using execution_space         = Kokkos::Threads;
+  using scratch_memory_space    = execution_space::scratch_memory_space;
+  using scratch_memory_space_l0 = execution_space::scratch_memory_space_l0;
+  using scratch_memory_space_l1 = execution_space::scratch_memory_space_l1;
+  using team_handle             = ThreadsExecTeamMember;
 
  private:
   using space = execution_space::scratch_memory_space;
@@ -116,9 +118,21 @@ class ThreadsExecTeamMember {
     return m_team_shared.set_team_thread_mode(0, 1, 0);
   }
 
+  template <int Level>
+  KOKKOS_INLINE_FUNCTION const execution_space::scratch_memory_space&
+  team_scratch() const {
+    return m_team_shared.set_team_thread_mode(0, 1, 0);
+  }
+
   KOKKOS_INLINE_FUNCTION
   const execution_space::scratch_memory_space& team_scratch(int) const {
     return m_team_shared.set_team_thread_mode(0, 1, 0);
+  }
+
+  template <int Level>
+  KOKKOS_INLINE_FUNCTION const execution_space::scratch_memory_space&
+  thread_scratch() const {
+    return m_team_shared.set_team_thread_mode(0, team_size(), team_rank());
   }
 
   KOKKOS_INLINE_FUNCTION

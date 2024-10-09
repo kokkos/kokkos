@@ -138,6 +138,9 @@ namespace Kokkos {
 
 namespace Kokkos {
 
+template <class ExecutionSpace, class PointerType>
+class ScratchMemorySpaceBase;
+
 template <class T1, class T2>
 struct is_always_assignable_impl;
 
@@ -1269,6 +1272,52 @@ class View : public ViewTraits<DataType, Properties...> {
     return map_type::memory_span(arg_layout) + scratch_value_alignment;
   }
 
+  template <typename PointerType>
+  explicit KOKKOS_INLINE_FUNCTION View(
+      const Kokkos::ScratchMemorySpaceBase<typename traits::execution_space,
+                                           PointerType>& arg_space,
+      const typename traits::array_layout& arg_layout)
+      : View(Impl::ViewCtorProp<pointer_type>(static_cast<pointer_type>(
+                 arg_space.get_shmem_aligned(map_type::memory_span(arg_layout),
+                                             scratch_value_alignment))),
+             arg_layout) {
+    static_assert(
+        Impl::MemorySpaceAccess<
+            typename traits::memory_space,
+            Kokkos::ScratchMemorySpaceBase<typename traits::execution_space,
+                                           PointerType>>::assignable);
+  }
+
+  template <typename PointerType>
+  explicit KOKKOS_INLINE_FUNCTION View(
+      const Kokkos::ScratchMemorySpaceBase<typename traits::execution_space,
+                                           PointerType>& arg_space,
+      const size_t arg_N0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      const size_t arg_N1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      const size_t arg_N2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      const size_t arg_N3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      const size_t arg_N4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      const size_t arg_N5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      const size_t arg_N6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG)
+      : View(Impl::ViewCtorProp<pointer_type>(
+                 static_cast<pointer_type>(arg_space.get_shmem_aligned(
+                     map_type::memory_span(typename traits::array_layout(
+                         arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6,
+                         arg_N7)),
+                     scratch_value_alignment))),
+             typename traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3,
+                                           arg_N4, arg_N5, arg_N6, arg_N7)) {
+    static_assert(traits::array_layout::is_extent_constructible,
+                  "Layout is not constructible from extent arguments. Use "
+                  "overload taking a layout object instead.");
+    static_assert(
+        Impl::MemorySpaceAccess<
+            typename traits::memory_space,
+            Kokkos::ScratchMemorySpaceBase<typename traits::execution_space,
+                                           PointerType>>::assignable);
+  }
+
   explicit KOKKOS_INLINE_FUNCTION View(
       const typename traits::execution_space::scratch_memory_space& arg_space,
       const typename traits::array_layout& arg_layout)
@@ -1288,7 +1337,7 @@ class View : public ViewTraits<DataType, Properties...> {
       const size_t arg_N6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
       const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG)
       : View(Impl::ViewCtorProp<pointer_type>(
-                 reinterpret_cast<pointer_type>(arg_space.get_shmem_aligned(
+                 static_cast<pointer_type>(arg_space.get_shmem_aligned(
                      map_type::memory_span(typename traits::array_layout(
                          arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6,
                          arg_N7)),

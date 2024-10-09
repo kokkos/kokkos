@@ -157,12 +157,14 @@ class HPX {
   Kokkos::Impl::HostSharedPtr<instance_data> m_instance_data;
 
  public:
-  using execution_space      = HPX;
-  using memory_space         = HostSpace;
-  using device_type          = Kokkos::Device<execution_space, memory_space>;
-  using array_layout         = LayoutRight;
-  using size_type            = memory_space::size_type;
-  using scratch_memory_space = ScratchMemorySpace<HPX>;
+  using execution_space         = HPX;
+  using memory_space            = HostSpace;
+  using device_type             = Kokkos::Device<execution_space, memory_space>;
+  using array_layout            = LayoutRight;
+  using size_type               = memory_space::size_type;
+  using scratch_memory_space    = ScratchMemorySpace<HPX>;
+  using scratch_memory_space_l0 = ScratchMemorySpace<HPX>;
+  using scratch_memory_space_l1 = ScratchMemorySpace<HPX>;
 
   HPX()
       : m_instance_data(Kokkos::Impl::HostSharedPtr<instance_data>(
@@ -617,10 +619,11 @@ namespace Impl {
 
 struct HPXTeamMember {
  public:
-  using execution_space = Kokkos::Experimental::HPX;
-  using scratch_memory_space =
-      Kokkos::ScratchMemorySpace<Kokkos::Experimental::HPX>;
-  using team_handle = HPXTeamMember;
+  using execution_space         = Kokkos::Experimental::HPX;
+  using scratch_memory_space    = execution_space::scratch_memory_space;
+  using scratch_memory_space_l0 = execution_space::scratch_memory_space_l0;
+  using scratch_memory_space_l1 = execution_space::scratch_memory_space_l1;
+  using team_handle             = HPXTeamMember;
 
  private:
   scratch_memory_space m_team_shared;
@@ -636,9 +639,21 @@ struct HPXTeamMember {
     return m_team_shared.set_team_thread_mode(0, 1, 0);
   }
 
+  template <int Level>
+  KOKKOS_INLINE_FUNCTION const execution_space::scratch_memory_space &
+  team_scratch() const {
+    return team_scratch(Level);
+  }
+
   KOKKOS_INLINE_FUNCTION
   const execution_space::scratch_memory_space &team_scratch(const int) const {
     return m_team_shared.set_team_thread_mode(0, 1, 0);
+  }
+
+  template <int Level>
+  KOKKOS_INLINE_FUNCTION const execution_space::scratch_memory_space &
+  thread_scratch() const {
+    return thread_scratch(Level);
   }
 
   KOKKOS_INLINE_FUNCTION

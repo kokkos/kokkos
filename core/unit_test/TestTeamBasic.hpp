@@ -171,11 +171,12 @@ struct LargeTeamScratchFunctor {
 
   KOKKOS_FUNCTION void operator()(const team_member& member) const {
     double* team_shared = static_cast<double*>(
-        member.team_scratch(/*level*/ 1).get_shmem(m_per_team_bytes));
+        member.template team_scratch</*level*/ 1>().get_shmem(
+            m_per_team_bytes));
     if (team_shared == nullptr)
       Kokkos::abort("Couldn't allocate required size!\n");
     double* team_shared_1 = static_cast<double*>(
-        member.team_scratch(/*level*/ 1).get_shmem(sizeof(double)));
+        member.template team_scratch</*level*/ 1>().get_shmem(sizeof(double)));
     if (team_shared_1 != nullptr)
       Kokkos::abort("Allocated more memory than requested!\n");
   }

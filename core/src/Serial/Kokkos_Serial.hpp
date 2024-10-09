@@ -110,7 +110,9 @@ class Serial {
   using array_layout = LayoutRight;
 
   /// \brief  Scratch memory space
-  using scratch_memory_space = ScratchMemorySpace<Kokkos::Serial>;
+  using scratch_memory_space    = ScratchMemorySpace<Kokkos::Serial>;
+  using scratch_memory_space_l0 = ScratchMemorySpace<Kokkos::Serial>;
+  using scratch_memory_space_l1 = ScratchMemorySpace<Kokkos::Serial>;
 
   //@}
 
