@@ -22,7 +22,6 @@
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_Graph_fwd.hpp>
 
-#include <impl/Kokkos_SimpleTaskScheduler.hpp>  // ExecutionSpaceInstanceStorage
 #include <impl/Kokkos_GraphImpl.hpp>
 #include <impl/Kokkos_GraphNodeCustomization.hpp>
 

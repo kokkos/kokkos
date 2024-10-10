@@ -32,6 +32,9 @@ int main() { return 0; }
 
 #include <Kokkos_Timer.hpp>
 
+// We allow using deprecated classes in this file
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
+
 using ExecSpace = Kokkos::DefaultExecutionSpace;
 
 inline long eval_fib(long n) {
@@ -222,5 +225,7 @@ int main(int argc, char* argv[]) {
 
   return 0;
 }
+
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
 
 #endif
