@@ -788,8 +788,6 @@ struct TestMultipleDependence {
 
 }  // namespace TestTaskScheduler
 
-KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
-
 //----------------------------------------------------------------------------
 
 #define KOKKOS_PP_CAT_IMPL(x, y) x##y
@@ -872,6 +870,8 @@ KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
 
 #undef KOKKOS_TEST_WITH_SUFFIX
 #undef KOKKOS_PP_CAT_IMPL
+
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
 
 #endif  // #if defined( KOKKOS_ENABLE_TASKDAG )
 #endif  // #ifndef KOKKOS_UNITTEST_TASKSCHEDULER_HPP
