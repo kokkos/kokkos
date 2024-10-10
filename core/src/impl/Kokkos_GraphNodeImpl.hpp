@@ -22,9 +22,6 @@
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_Graph_fwd.hpp>
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-#include <impl/Kokkos_SimpleTaskScheduler.hpp>  // ExecutionSpaceInstanceStorage
-#endif
 #include <impl/Kokkos_GraphImpl.hpp>
 #include <impl/Kokkos_GraphNodeCustomization.hpp>
 
