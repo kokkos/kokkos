@@ -423,8 +423,11 @@ class DynRankView : private View<DataType*******, Properties...> {
   using view_type = View<DataType*******, Properties...>;
 
  private:
-  using drdtraits = Impl::DynRankDimTraits<typename view_type::specialize>;
-
+#ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
+  using drdtraits = Impl::DynRankDimTraits<void>;
+#else
+  using drdtraits  = Impl::DynRankDimTraits<typename view_type::specialize>;
+#endif
  public:
   // typedefs from ViewTraits, overriden
   using data_type           = typename drvtraits::data_type;
@@ -452,7 +455,11 @@ class DynRankView : private View<DataType*******, Properties...> {
   using scalar_array_type           = value_type;
   using const_scalar_array_type     = const_value_type;
   using non_const_scalar_array_type = non_const_value_type;
-  using specialize                  = typename view_type::specialize;
+#ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
+  using specialize = void;
+#else
+  using specialize = typename view_type::specialize;
+#endif
 
   // typedefs in View for mdspan compatibility
   // cause issues with MSVC+CUDA
@@ -641,8 +648,9 @@ class DynRankView : private View<DataType*******, Properties...> {
     return *this;
   }
 
-#if 0  // TODO: this will later be swapped in depending on whether the new View
-       // impl is active
+#ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
+  // TODO: this will later be swapped in depending on whether the new View
+  // impl is active
  private:
   template <class Ext>
   KOKKOS_FUNCTION typename view_type::extents_type create_rank7_extents(
