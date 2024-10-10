@@ -34,9 +34,6 @@ static_assert(false,
 #include <mutex>
 #include <thread>
 #include <Kokkos_Core_fwd.hpp>
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-#include <Kokkos_TaskScheduler.hpp>
-#endif
 #include <Kokkos_Layout.hpp>
 #include <Kokkos_HostSpace.hpp>
 #include <Kokkos_ScratchSpace.hpp>

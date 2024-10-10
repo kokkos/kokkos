@@ -33,9 +33,6 @@ static_assert(false,
 #include <OpenMPTarget/Kokkos_OpenMPTargetSpace.hpp>
 #include <Kokkos_ScratchSpace.hpp>
 #include <Kokkos_Parallel.hpp>
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-#include <Kokkos_TaskScheduler.hpp>
-#endif
 #include <Kokkos_Layout.hpp>
 #include <impl/Kokkos_Profiling_Interface.hpp>
 #include <impl/Kokkos_InitializationSettings.hpp>

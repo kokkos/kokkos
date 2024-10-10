@@ -32,16 +32,10 @@ static_assert(false,
 #include <Kokkos_MemoryTraits.hpp>
 #include <Kokkos_Parallel.hpp>
 #include <Kokkos_ScratchSpace.hpp>
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-#include <Kokkos_TaskScheduler.hpp>
-#endif
 #include <impl/Kokkos_ConcurrentBitset.hpp>
 #include <impl/Kokkos_FunctorAnalysis.hpp>
 #include <impl/Kokkos_HostSharedPtr.hpp>
 #include <impl/Kokkos_Tools.hpp>
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-#include <impl/Kokkos_TaskQueue.hpp>
-#endif
 #include <impl/Kokkos_InitializationSettings.hpp>
 
 #include <KokkosExp_MDRangePolicy.hpp>
