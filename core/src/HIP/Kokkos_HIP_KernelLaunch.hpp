@@ -188,13 +188,21 @@ struct HIPParallelLaunchKernelFuncData {
     return hip_func_attributes.localSizeBytes;
   }
 
-  static hipFuncAttributes get_hip_func_attributes(void const *kernel_func) {
-    static hipFuncAttributes attr = [=]() {
+  // These functions need to be templated on DriverType and LaunchBounds
+  // so that the static bool is unique for each type combo
+  // KernelFuncPtr does not necessarily contain that type information.
+  static hipFuncAttributes get_hip_func_attributes(const int hip_device,
+                                                   void const *kernel_func) {
+    // Only call hipFuncGetAttributes once for each unique kernel
+    // and device by leveraging static variable initialization rules
+    static std::map<int, hipFuncAttributes> func_attr;
+    if (func_attr.find(hip_device) == func_attr.end()) {
       hipFuncAttributes attr;
+      KOKKOS_IMPL_HIP_SAFE_CALL(hipSetDevice(hip_device));
       KOKKOS_IMPL_HIP_SAFE_CALL(hipFuncGetAttributes(&attr, kernel_func));
-      return attr;
-    }();
-    return attr;
+      func_attr.emplace(hip_device, attr);
+    }
+    return func_attr[hip_device];
   }
 };
 
@@ -228,13 +236,13 @@ struct HIPParallelLaunchKernelFunc<
 
   static constexpr auto default_launchbounds() { return false; }
 
-  static auto get_scratch_size() {
-    return funcdata_t::get_scratch_size(get_hip_func_attributes());
+  static auto get_scratch_size(const int hip_device) {
+    return funcdata_t::get_scratch_size(get_hip_func_attributes(hip_device));
   }
 
-  static hipFuncAttributes get_hip_func_attributes() {
+  static hipFuncAttributes get_hip_func_attributes(const int hip_device) {
     return funcdata_t::get_hip_func_attributes(
-        reinterpret_cast<void const *>(get_kernel_func()));
+        hip_device, reinterpret_cast<void const *>(get_kernel_func()));
   }
 };
 
@@ -252,13 +260,13 @@ struct HIPParallelLaunchKernelFunc<DriverType, Kokkos::LaunchBounds<0, 0>,
 
   static constexpr auto default_launchbounds() { return true; }
 
-  static auto get_scratch_size() {
-    return funcdata_t::get_scratch_size(get_hip_func_attributes());
+  static auto get_scratch_size(const int hip_device) {
+    return funcdata_t::get_scratch_size(get_hip_func_attributes(hip_device));
   }
 
-  static hipFuncAttributes get_hip_func_attributes() {
+  static hipFuncAttributes get_hip_func_attributes(const int hip_device) {
     return funcdata_t::get_hip_func_attributes(
-        reinterpret_cast<void const *>(get_kernel_func()));
+        hip_device, reinterpret_cast<void const *>(get_kernel_func()));
   }
 };
 
@@ -278,13 +286,13 @@ struct HIPParallelLaunchKernelFunc<
 
   static constexpr auto default_launchbounds() { return false; }
 
-  static auto get_scratch_size() {
-    return funcdata_t::get_scratch_size(get_hip_func_attributes());
+  static auto get_scratch_size(const int hip_device) {
+    return funcdata_t::get_scratch_size(get_hip_func_attributes(hip_device));
   }
 
-  static hipFuncAttributes get_hip_func_attributes() {
+  static hipFuncAttributes get_hip_func_attributes(const int hip_device) {
     return funcdata_t::get_hip_func_attributes(
-        reinterpret_cast<void const *>(get_kernel_func()));
+        hip_device, reinterpret_cast<void const *>(get_kernel_func()));
   }
 };
 
@@ -300,13 +308,13 @@ struct HIPParallelLaunchKernelFunc<DriverType, Kokkos::LaunchBounds<0, 0>,
 
   static constexpr auto default_launchbounds() { return true; }
 
-  static auto get_scratch_size() {
-    return funcdata_t::get_scratch_size(get_hip_func_attributes());
+  static auto get_scratch_size(const int hip_device) {
+    return funcdata_t::get_scratch_size(get_hip_func_attributes(hip_device));
   }
 
-  static hipFuncAttributes get_hip_func_attributes() {
+  static hipFuncAttributes get_hip_func_attributes(const int hip_device) {
     return funcdata_t::get_hip_func_attributes(
-        reinterpret_cast<void const *>(get_kernel_func()));
+        hip_device, reinterpret_cast<void const *>(get_kernel_func()));
   }
 };
 
@@ -326,13 +334,13 @@ struct HIPParallelLaunchKernelFunc<
 
   static constexpr auto default_launchbounds() { return false; }
 
-  static auto get_scratch_size() {
-    return funcdata_t::get_scratch_size(get_hip_func_attributes());
+  static auto get_scratch_size(const int hip_device) {
+    return funcdata_t::get_scratch_size(get_hip_func_attributes(hip_device));
   }
 
-  static hipFuncAttributes get_hip_func_attributes() {
+  static hipFuncAttributes get_hip_func_attributes(const int hip_device) {
     return funcdata_t::get_hip_func_attributes(
-        reinterpret_cast<void const *>(get_kernel_func()));
+        hip_device, reinterpret_cast<void const *>(get_kernel_func()));
   }
 };
 
@@ -347,13 +355,13 @@ struct HIPParallelLaunchKernelFunc<DriverType, Kokkos::LaunchBounds<0, 0>,
   }
   static constexpr auto default_launchbounds() { return true; }
 
-  static auto get_scratch_size() {
-    return funcdata_t::get_scratch_size(get_hip_func_attributes());
+  static auto get_scratch_size(const int hip_device) {
+    return funcdata_t::get_scratch_size(get_hip_func_attributes(hip_device));
   }
 
-  static hipFuncAttributes get_hip_func_attributes() {
+  static hipFuncAttributes get_hip_func_attributes(const int hip_device) {
     return funcdata_t::get_hip_func_attributes(
-        reinterpret_cast<void const *>(get_kernel_func()));
+        hip_device, reinterpret_cast<void const *>(get_kernel_func()));
   }
 };
 
@@ -376,14 +384,15 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
   static void invoke_kernel(DriverType const &driver, dim3 const &grid,
                             dim3 const &block, int shmem,
                             HIPInternal const *hip_instance) {
-    (base_t::get_kernel_func())<<<grid, block, shmem, hip_instance->m_stream>>>(
+    (base_t::
+         get_kernel_func())<<<grid, block, shmem, hip_instance->get_stream()>>>(
         driver);
   }
 
 #ifdef KOKKOS_IMPL_HIP_NATIVE_GRAPH
   static void create_parallel_launch_graph_node(
       DriverType const &driver, dim3 const &grid, dim3 const &block, int shmem,
-      HIPInternal const * /*hip_instance*/) {
+      HIPInternal const *hip_instance) {
     auto const &graph = get_hip_graph_from_kernel(driver);
     KOKKOS_EXPECTS(graph);
     auto &graph_node = get_hip_graph_node_from_kernel(driver);
@@ -402,15 +411,16 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
       params.kernelParams   = (void **)args;
       params.extra          = nullptr;
 
-      KOKKOS_IMPL_HIP_SAFE_CALL(hipGraphAddKernelNode(
-          &graph_node, graph, /* dependencies = */ nullptr,
-          /* numDependencies = */ 0, &params));
+      KOKKOS_IMPL_HIP_SAFE_CALL(
+          (hip_instance->hip_graph_add_kernel_node_wrapper(
+              &graph_node, graph, /* dependencies = */ nullptr,
+              /* numDependencies = */ 0, &params)));
     } else {
       // We still need an empty node for the dependency structure
-      KOKKOS_IMPL_HIP_SAFE_CALL(
-          hipGraphAddEmptyNode(&graph_node, graph,
-                               /* dependencies = */ nullptr,
-                               /* numDependencies = */ 0));
+      KOKKOS_IMPL_HIP_SAFE_CALL((hip_instance->hip_graph_add_empty_node_wrapper(
+          &graph_node, graph,
+          /* dependencies = */ nullptr,
+          /* numDependencies = */ 0)));
     }
     KOKKOS_ENSURES(graph_node);
   }
@@ -434,7 +444,8 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
     DriverType *driver_ptr = reinterpret_cast<DriverType *>(
         hip_instance->stage_functor_for_execution(
             reinterpret_cast<void const *>(&driver), sizeof(DriverType)));
-    (base_t::get_kernel_func())<<<grid, block, shmem, hip_instance->m_stream>>>(
+    (base_t::
+         get_kernel_func())<<<grid, block, shmem, hip_instance->get_stream()>>>(
         driver_ptr);
   }
 
@@ -450,16 +461,15 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
 
     if (!Impl::is_empty_launch(grid, block)) {
       auto *driver_ptr = Impl::allocate_driver_storage_for_kernel(
-          HIP(hip_instance->m_stream, ManageStream::no), driver);
+          HIP(hip_instance->get_stream(), ManageStream::no), driver);
 
       // Unlike in the non-graph case, we can get away with doing an async copy
       // here because the `DriverType` instance is held in the GraphNodeImpl
       // which is guaranteed to be alive until the graph instance itself is
       // destroyed, where there should be a fence ensuring that the allocation
       // associated with this kernel on the device side isn't deleted.
-      KOKKOS_IMPL_HIP_SAFE_CALL(
-          hipMemcpyAsync(driver_ptr, &driver, sizeof(DriverType),
-                         hipMemcpyDefault, hip_instance->m_stream));
+      KOKKOS_IMPL_HIP_SAFE_CALL((hip_instance->hip_memcpy_async_wrapper(
+          driver_ptr, &driver, sizeof(DriverType), hipMemcpyDefault)));
 
       void const *args[] = {&driver_ptr};
 
@@ -472,15 +482,16 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
       params.kernelParams   = (void **)args;
       params.extra          = nullptr;
 
-      KOKKOS_IMPL_HIP_SAFE_CALL(hipGraphAddKernelNode(
-          &graph_node, graph, /* dependencies = */ nullptr,
-          /* numDependencies = */ 0, &params));
+      KOKKOS_IMPL_HIP_SAFE_CALL(
+          (hip_instance->hip_graph_add_kernel_node_wrapper(
+              &graph_node, graph, /* dependencies = */ nullptr,
+              /* numDependencies = */ 0, &params)));
     } else {
       // We still need an empty node for the dependency structure
-      KOKKOS_IMPL_HIP_SAFE_CALL(
-          hipGraphAddEmptyNode(&graph_node, graph,
-                               /* dependencies = */ nullptr,
-                               /* numDependencies = */ 0));
+      KOKKOS_IMPL_HIP_SAFE_CALL((hip_instance->hip_graph_add_empty_node_wrapper(
+          &graph_node, graph,
+          /* dependencies = */ nullptr,
+          /* numDependencies = */ 0)));
     }
     KOKKOS_ENSURES(bool(graph_node))
   }
@@ -503,28 +514,29 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
   static void invoke_kernel(DriverType const &driver, dim3 const &grid,
                             dim3 const &block, int shmem,
                             HIPInternal const *hip_instance) {
+    const auto hip_device = hip_instance->m_hipDev;
     // Wait until the previous kernel that uses the constant buffer is done
-    std::lock_guard<std::mutex> lock(HIPInternal::constantMemMutex);
-    KOKKOS_IMPL_HIP_SAFE_CALL(
-        hipEventSynchronize(HIPInternal::constantMemReusable));
+    std::lock_guard<std::mutex> lock(HIPInternal::constantMemMutex[hip_device]);
+    KOKKOS_IMPL_HIP_SAFE_CALL((hip_instance->hip_event_synchronize_wrapper(
+        HIPInternal::constantMemReusable[hip_device])));
 
     // Copy functor (synchronously) to staging buffer in pinned host memory
-    unsigned long *staging = hip_instance->constantMemHostStaging;
+    unsigned long *staging = hip_instance->constantMemHostStaging[hip_device];
     std::memcpy(static_cast<void *>(staging),
                 static_cast<const void *>(&driver), sizeof(DriverType));
 
     // Copy functor asynchronously from there to constant memory on the device
-    KOKKOS_IMPL_HIP_SAFE_CALL(hipMemcpyToSymbolAsync(
+    KOKKOS_IMPL_HIP_SAFE_CALL(hip_instance->hip_memcpy_to_symbol_async_wrapper(
         HIP_SYMBOL(kokkos_impl_hip_constant_memory_buffer), staging,
-        sizeof(DriverType), 0, hipMemcpyHostToDevice, hip_instance->m_stream));
+        sizeof(DriverType), 0, hipMemcpyHostToDevice));
 
     // Invoke the driver function on the device
-    (base_t::
-         get_kernel_func())<<<grid, block, shmem, hip_instance->m_stream>>>();
+    (base_t::get_kernel_func())<<<grid, block, shmem,
+                                  hip_instance->get_stream()>>>();
 
     // Record an event that says when the constant buffer can be reused
-    KOKKOS_IMPL_HIP_SAFE_CALL(hipEventRecord(HIPInternal::constantMemReusable,
-                                             hip_instance->m_stream));
+    KOKKOS_IMPL_HIP_SAFE_CALL((hip_instance->hip_event_record_wrapper(
+        HIPInternal::constantMemReusable[hip_device])));
   }
 };
 
