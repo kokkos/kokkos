@@ -888,4 +888,6 @@ TEST(TEST_CATEGORY_DEATH, view_layoutstride_left_to_layoutright_assignment) {
 
 }  // namespace Test
 
+#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
 #include <TestIrregularLayout.hpp>
+#endif

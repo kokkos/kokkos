@@ -198,6 +198,11 @@ class TestAtomicViewAPI {
 
     dView4_unmanaged unmanaged_dx = dx;
     ASSERT_EQ(dx.use_count(), 2);
+#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
+    ASSERT_EQ(unmanaged_dx.use_count(), 2);
+#else
+    ASSERT_EQ(unmanaged_dx.use_count(), 0);
+#endif
 
     az = ax;
     ASSERT_EQ(dx.use_count(), 3);
