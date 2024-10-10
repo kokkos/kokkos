@@ -25,6 +25,8 @@
 
 #include <HPX/Kokkos_HPX.hpp>
 
+#include <impl/Kokkos_TaskTeamMember.hpp>
+
 #include <hpx/execution.hpp>
 #include <hpx/future.hpp>
 

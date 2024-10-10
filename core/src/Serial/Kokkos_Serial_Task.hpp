@@ -25,6 +25,7 @@
 #include <Serial/Kokkos_Serial.hpp>
 #include <impl/Kokkos_HostThreadTeam.hpp>
 #include <impl/Kokkos_TaskQueue.hpp>
+#include <impl/Kokkos_TaskTeamMember.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

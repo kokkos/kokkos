@@ -26,6 +26,8 @@
 #include <impl/Kokkos_HostThreadTeam.hpp>
 #include <OpenMP/Kokkos_OpenMP.hpp>
 
+#include <impl/Kokkos_TaskTeamMember.hpp>
+
 #include <type_traits>
 #include <cassert>
 
