@@ -80,6 +80,15 @@ TEST(TEST_CATEGORY, graph_instantiate_and_debug_dot_print) {
 
   ASSERT_EQ(graph.native_graph().get_nodes().size(), 2u);
 
+#if defined(_GLIBCXX_RELEASE) && _GLIBCXX_RELEASE < 9
+  GTEST_SKIP()
+      << "The GNU C++ Library (libstdc++) versions less than 9.1 "
+         "require linking with `-lstdc++fs` when using std::filesystem";
+#elif defined(_LIBCPP_VERSION) && _LIBCPP_VERSION < 110000
+  GTEST_SKIP()
+      << "The LLVM C++ Standard Library (libc++) versions less than "
+         "11 require linking with `-lc++fs` when using std::filesystem";
+#else
   const auto dot = std::filesystem::temp_directory_path() / "sycl_graph.dot";
 
   graph.native_graph().print_graph(dot, true);
@@ -99,6 +108,7 @@ TEST(TEST_CATEGORY, graph_instantiate_and_debug_dot_print) {
   ASSERT_TRUE(std::regex_search(buffer.str(), std::regex(expected)))
       << "Could not find expected signature regex " << std::quoted(expected)
       << " in " << dot;
+#endif
 }
 
 }  // namespace

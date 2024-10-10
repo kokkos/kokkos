@@ -72,11 +72,13 @@ TEST(TEST_CATEGORY, graph_instantiate_and_debug_dot_print) {
 #if !defined(KOKKOS_IMPL_HIP_NATIVE_GRAPH)
   GTEST_SKIP() << "This test will not work without native graph support";
 #elif defined(_GLIBCXX_RELEASE) && _GLIBCXX_RELEASE < 9
-  GTEST_SKIP() << "The GNU C++ Library (libstdc++) versions less than 9.1 "
-                  "require linking with `-lstdc++fs`";
+  GTEST_SKIP()
+      << "The GNU C++ Library (libstdc++) versions less than 9.1 "
+         "require linking with `-lstdc++fs` when using std::filesystem";
 #elif defined(_LIBCPP_VERSION) && _LIBCPP_VERSION < 110000
-  GTEST_SKIP() << "The LLVM C++ Standard Library (libc++) versions less than "
-                  "11 require linking with `-lc++fs`";
+  GTEST_SKIP()
+      << "The LLVM C++ Standard Library (libc++) versions less than "
+         "11 require linking with `-lc++fs` when using std::filesystem";
 #else
   using view_t = Kokkos::View<int, Kokkos::HIP>;
 
