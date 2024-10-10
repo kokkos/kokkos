@@ -88,8 +88,12 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
       policy.impl_set_vector_length(1);
     }
     if (policy.team_size() < 0) {
-      policy.impl_set_team_size(
-          policy.team_size_recommended(m_functor, ParallelForTag{}));
+      int team_size = policy.team_size_recommended(m_functor, ParallelForTag{});
+      if (team_size <= 0)
+        Kokkos::Impl::throw_runtime_exception(
+            "Kokkos::Impl::ParallelFor<Threads, TeamPolicy> could not find a "
+            "valid execution configuration.");
+      policy.impl_set_team_size(team_size);
     }
     return policy;
   }

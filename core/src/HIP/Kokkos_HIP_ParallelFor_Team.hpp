@@ -120,9 +120,14 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>, HIP> {
         m_vector_size(arg_policy.impl_vector_length()) {
     auto internal_space_instance =
         m_policy.space().impl_internal_space_instance();
-    m_team_size = m_team_size >= 0 ? m_team_size
-                                   : arg_policy.team_size_recommended(
-                                         arg_functor, ParallelForTag());
+    if (m_team_size < 0) {
+      m_team_size =
+          arg_policy.team_size_recommended(arg_functor, ParallelForTag());
+      if (m_team_size <= 0)
+        Kokkos::Impl::throw_runtime_exception(
+            "Kokkos::Impl::ParallelFor<HIP, TeamPolicy> could not find a "
+            "valid execution configuration.");
+    }
 
     m_shmem_begin = (sizeof(double) * (m_team_size + 2));
     m_shmem_size =

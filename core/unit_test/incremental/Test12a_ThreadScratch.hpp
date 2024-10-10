@@ -75,7 +75,8 @@ struct ThreadScratch {
             .set_scratch_size(scratch_level, Kokkos::PerThread(scratchSize));
 
     int max_team_size = policy.team_size_max(*this, Kokkos::ParallelForTag());
-    v                 = data_t("Matrix", pN, max_team_size);
+    ASSERT_GT(max_team_size, 0);
+    v = data_t("Matrix", pN, max_team_size);
 
     Kokkos::parallel_for(
         "Test12a_ThreadScratch",

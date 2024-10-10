@@ -539,9 +539,14 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
         m_vector_size(arg_policy.impl_vector_length()) {
     auto internal_space_instance =
         m_policy.space().impl_internal_space_instance();
-    m_team_size = m_team_size >= 0 ? m_team_size
-                                   : arg_policy.team_size_recommended(
-                                         arg_functor, ParallelForTag());
+    if (m_team_size < 0) {
+      m_team_size =
+          arg_policy.team_size_recommended(arg_functor, ParallelForTag());
+      if (m_team_size <= 0)
+        Kokkos::Impl::throw_runtime_exception(
+            "Kokkos::Impl::ParallelFor<Cuda, TeamPolicy> could not find a "
+            "valid execution configuration.");
+    }
 
     m_shmem_begin = (sizeof(double) * (m_team_size + 2));
     m_shmem_size =
@@ -896,11 +901,16 @@ class ParallelReduce<CombinedFunctorReducerType,
         m_vector_size(arg_policy.impl_vector_length()) {
     auto internal_space_instance =
         m_policy.space().impl_internal_space_instance();
-    m_team_size = m_team_size >= 0 ? m_team_size
-                                   : arg_policy.team_size_recommended(
-                                         arg_functor_reducer.get_functor(),
-                                         arg_functor_reducer.get_reducer(),
-                                         ParallelReduceTag());
+
+    if (m_team_size < 0) {
+      m_team_size = arg_policy.team_size_recommended(
+          arg_functor_reducer.get_functor(), arg_functor_reducer.get_reducer(),
+          ParallelReduceTag());
+      if (m_team_size <= 0)
+        Kokkos::Impl::throw_runtime_exception(
+            "Kokkos::Impl::ParallelReduce<Cuda, TeamPolicy> could not find a "
+            "valid execution configuration.");
+    }
 
     m_team_begin =
         UseShflReduction
