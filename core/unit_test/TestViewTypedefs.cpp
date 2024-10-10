@@ -62,7 +62,9 @@ constexpr bool test_view_typedefs_impl() {
   static_assert(std::is_same_v<typename ViewType::scalar_array_type, DataType>);
   static_assert(std::is_same_v<typename ViewType::const_scalar_array_type, typename data_analysis<DataType>::const_data_type>);
   static_assert(std::is_same_v<typename ViewType::non_const_scalar_array_type, typename data_analysis<DataType>::non_const_data_type>);
+#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
   static_assert(std::is_same_v<typename ViewType::specialize, void>);
+#endif
 
   // FIXME: value_type definition conflicts with mdspan value_type
   static_assert(std::is_same_v<typename ViewType::value_type, ValueType>);
@@ -73,7 +75,9 @@ constexpr bool test_view_typedefs_impl() {
   static_assert(std::is_same_v<typename ViewType::array_layout, Layout>);
 
   // FIXME: should be deprecated and is some complicated impl type
+#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
   static_assert(!std::is_void_v<typename ViewType::dimension>);
+#endif
 
   static_assert(std::is_same_v<typename ViewType::execution_space, typename Space::execution_space>);
   static_assert(std::is_same_v<typename ViewType::memory_space, typename Space::memory_space>);
@@ -163,7 +167,9 @@ constexpr bool test_view_typedefs_impl() {
   static_assert(std::is_same_v<typename ViewType::rank_type, size_t>);
 
   // FIXME: should come from accessor_type
+#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
   static_assert(std::is_same_v<typename ViewType::data_handle_type, typename ViewType::pointer_type>);
+#endif
   static_assert(std::is_same_v<typename ViewType::reference, typename ViewType::reference_type>);
   return true;
 }
@@ -267,7 +273,12 @@ namespace TestIntAtomic {
   // otherwise its the following Device type
                                Kokkos::Device<Kokkos::DefaultHostExecutionSpace, typename Kokkos::DefaultExecutionSpace::memory_space>>>;
   static_assert(test_view_typedefs<layout_type, space, memory_traits, host_mirror_space, int,
-                                   Kokkos::Impl::AtomicDataElement<Kokkos::ViewTraits<int, Kokkos::MemoryTraits<Kokkos::Atomic>>>>(
+#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
+		  Kokkos::Impl::AtomicDataElement<Kokkos::ViewTraits<int, Kokkos::MemoryTraits<Kokkos::Atomic>>>
+#else
+		  desul::AtomicRef<int, desul::MemoryOrderRelaxed, desul::MemoryScopeDevice>
+#endif
+		  >(
                      ViewParams<int, Kokkos::MemoryTraits<Kokkos::Atomic>>{}));
 }
 // clang-format on
