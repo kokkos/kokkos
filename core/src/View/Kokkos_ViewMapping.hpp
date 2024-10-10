@@ -3351,6 +3351,7 @@ KOKKOS_FUNCTION bool within_range(Map const& map,
   return (((std::size_t)indices < map.extent(Enumerate)) && ...);
 }
 
+#ifndef KOKKOS_ENABLE_IMPL_MDSPAN
 template <class... Indices>
 KOKKOS_FUNCTION constexpr char* append_formatted_multidimensional_index(
     char* dest, Indices... indices) {
@@ -3368,6 +3369,7 @@ KOKKOS_FUNCTION constexpr char* append_formatted_multidimensional_index(
   d[strlen(d) - 1] = ']';  // overwrite trailing comma
   return dest;
 }
+#endif
 
 template <class Map, class... Indices, std::size_t... Enumerate>
 KOKKOS_FUNCTION void print_extents(char* dest, Map const& map,

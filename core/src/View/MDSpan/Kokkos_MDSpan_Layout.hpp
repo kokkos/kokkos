@@ -31,6 +31,22 @@ static_assert(false,
 
 namespace Kokkos::Impl {
 
+// We do have implementation detail versions of these in our mdspan impl
+// However they are not part of the public standard interface
+template <class T>
+struct is_layout_right_padded : public std::false_type {};
+
+template <size_t Pad>
+struct is_layout_right_padded<Kokkos::Experimental::layout_right_padded<Pad>>
+    : public std::true_type {};
+
+template <class T>
+struct is_layout_left_padded : public std::false_type {};
+
+template <size_t Pad>
+struct is_layout_left_padded<Kokkos::Experimental::layout_left_padded<Pad>>
+    : public std::true_type {};
+
 template <class ArrayLayout>
 struct LayoutFromArrayLayout;
 
@@ -142,6 +158,7 @@ KOKKOS_INLINE_FUNCTION auto mapping_from_array_layout_impl(
         if (product_of_dimensions != layout.stride)
           Kokkos::abort(
               "Invalid conversion from LayoutRight to layout_right_padded");
+        return MappingType();
       } else {
         return MappingType{
             extents_type{
@@ -152,6 +169,7 @@ KOKKOS_INLINE_FUNCTION auto mapping_from_array_layout_impl(
     }
   }
 }
+
 template <class MappingType, size_t... Idx>
 KOKKOS_INLINE_FUNCTION auto mapping_from_array_layout_impl(
     LayoutStride layout, std::index_sequence<Idx...>) {
@@ -214,6 +232,85 @@ KOKKOS_INLINE_FUNCTION auto mapping_from_view_mapping(const VM &view_mapping) {
 #ifdef KOKKOS_COMPILER_INTEL
   __builtin_unreachable();
 #endif
+}
+
+template <unsigned ScalarSize>
+struct Padding {
+  static constexpr unsigned div =
+      ScalarSize == 0 ? 0 : MEMORY_ALIGNMENT / ScalarSize;
+  static constexpr unsigned mod =
+      ScalarSize == 0 ? 0 : Kokkos::Impl::MEMORY_ALIGNMENT % ScalarSize;
+
+  // If memory alignment is a multiple of the trivial scalar size then attempt
+  // to align.
+  static constexpr unsigned align  = ScalarSize != 0 && mod == 0 ? div : 0;
+  static constexpr unsigned div_ok = (div != 0) ? div : 1;
+
+  KOKKOS_INLINE_FUNCTION
+  static constexpr size_t stride(size_t const N) {
+    return ((align != 0) &&
+            ((static_cast<int>(Kokkos::Impl::MEMORY_ALIGNMENT_THRESHOLD) *
+              static_cast<int>(align)) < N) &&
+            ((N % div_ok) != 0))
+               ? N + align - (N % div_ok)
+               : N;
+  }
+};
+
+template <class MappingType, size_t ScalarSize, class ViewCtorProperties,
+          class... Sizes>
+KOKKOS_INLINE_FUNCTION auto mapping_from_ctor_and_sizes(
+    const ViewCtorProperties &, const Sizes... args) {
+  using layout_t = typename MappingType::layout_type;
+  using ext_t    = typename MappingType::extents_type;
+  ext_t ext{args...};
+  constexpr bool padded = ViewCtorProperties::allow_padding;
+  if constexpr (is_layout_left_padded<layout_t>::value && padded &&
+                ext_t::rank() > 1) {
+    return MappingType(ext, Padding<ScalarSize>::stride(ext.extent(0)));
+  } else if constexpr (is_layout_right_padded<layout_t>::value && padded &&
+                       ext_t::rank() > 1) {
+    return MappingType(
+        ext, Padding<ScalarSize>::stride(ext.extent(ext_t::rank() - 1)));
+  } else {
+    return MappingType(ext);
+  }
+}
+
+template <class MappingType, size_t ScalarSize, class ViewCtorProperties>
+KOKKOS_INLINE_FUNCTION auto mapping_from_ctor_and_8sizes(
+    const ViewCtorProperties &arg_prop, const size_t arg_N0,
+    const size_t arg_N1, const size_t arg_N2, const size_t arg_N3,
+    const size_t arg_N4, const size_t arg_N5, const size_t arg_N6,
+    const size_t arg_N7) {
+  if constexpr (MappingType::extents_type::rank() == 0) {
+    return mapping_from_ctor_and_sizes<MappingType, ScalarSize>(arg_prop);
+  } else if constexpr (MappingType::extents_type::rank() == 1) {
+    return mapping_from_ctor_and_sizes<MappingType, ScalarSize>(arg_prop,
+                                                                arg_N0);
+  } else if constexpr (MappingType::extents_type::rank() == 2) {
+    return mapping_from_ctor_and_sizes<MappingType, ScalarSize>(arg_prop,
+                                                                arg_N0, arg_N1);
+  } else if constexpr (MappingType::extents_type::rank() == 3) {
+    return mapping_from_ctor_and_sizes<MappingType, ScalarSize>(
+        arg_prop, arg_N0, arg_N1, arg_N2);
+  } else if constexpr (MappingType::extents_type::rank() == 4) {
+    return mapping_from_ctor_and_sizes<MappingType, ScalarSize>(
+        arg_prop, arg_N0, arg_N1, arg_N2, arg_N3);
+  } else if constexpr (MappingType::extents_type::rank() == 5) {
+    return mapping_from_ctor_and_sizes<MappingType, ScalarSize>(
+        arg_prop, arg_N0, arg_N1, arg_N2, arg_N3, arg_N4);
+  } else if constexpr (MappingType::extents_type::rank() == 6) {
+    return mapping_from_ctor_and_sizes<MappingType, ScalarSize>(
+        arg_prop, arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5);
+  } else if constexpr (MappingType::extents_type::rank() == 7) {
+    return mapping_from_ctor_and_sizes<MappingType, ScalarSize>(
+        arg_prop, arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6);
+  } else if constexpr (MappingType::extents_type::rank() == 8) {
+    return mapping_from_ctor_and_sizes<MappingType, ScalarSize>(
+        arg_prop, arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6,
+        arg_N7);
+  }
 }
 
 }  // namespace Kokkos::Impl
