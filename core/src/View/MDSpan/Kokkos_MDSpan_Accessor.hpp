@@ -265,8 +265,8 @@ class ReferenceCountedDataHandle {
       class OtherElementType, class OtherSpace,
       class = std::enable_if_t<
           std::is_convertible_v<OtherElementType (*)[], value_type (*)[]> &&
-          (std::is_same_v<OtherSpace, AnonymousSpace> ||
-           std::is_same_v<memory_space, AnonymousSpace>)>>
+          SpaceAccessibility<memory_space,
+                             typename OtherSpace::memory_space>::assignable>>
   KOKKOS_FUNCTION ReferenceCountedDataHandle(
       const ReferenceCountedDataHandle<OtherElementType, OtherSpace>& other)
       : m_tracker(other.m_tracker), m_handle(other.m_handle) {}
@@ -360,9 +360,9 @@ class ReferenceCountedAccessor {
       class OtherElementType, class OtherSpace, class OtherNestedAccessor,
       class = std::enable_if_t<
           std::is_convertible_v<OtherElementType (*)[], element_type (*)[]> &&
-          (std::is_same_v<OtherSpace, AnonymousSpace> ||
-           std::is_same_v<memory_space, AnonymousSpace>)&&std::
-              is_constructible_v<NestedAccessor, OtherNestedAccessor>>>
+          SpaceAccessibility<memory_space,
+                             typename OtherSpace::memory_space>::assignable &&
+          std::is_constructible_v<NestedAccessor, OtherNestedAccessor>>>
   KOKKOS_FUNCTION constexpr ReferenceCountedAccessor(
       const ReferenceCountedAccessor<OtherElementType, OtherSpace,
                                      OtherNestedAccessor>&) {}
