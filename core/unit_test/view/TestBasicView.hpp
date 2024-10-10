@@ -147,9 +147,6 @@ TEST(TEST_CATEGORY, basic_view_mapping_ctor_right) {
       Kokkos::extents<std::size_t, 2, 3>(), 9);
 }
 
-// There seems to be some hard to track down issue.
-// See: https://github.com/kokkos/kokkos/pull/7385#issuecomment-2392528089
-#ifndef KOKKOS_ENABLE_OPENACC
 template <class ViewType>
 struct MDRangeTestFunctor {
   ViewType view;
@@ -263,6 +260,5 @@ TEST(TEST_CATEGORY, basic_view_atomic_accessor) {
   test_atomic_accessor<Kokkos::complex<double>>();
 #endif
 }
-#endif
 
 }  // namespace
