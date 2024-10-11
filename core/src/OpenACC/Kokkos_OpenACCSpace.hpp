@@ -70,12 +70,11 @@ class OpenACCSpace {
 
  private:
   template <typename ExecutionSpace>
-  void* impl_allocate(const ExecutionSpace& exec_space, const char* arg_label,
+  void* impl_allocate(const ExecutionSpace&, const char* arg_label,
                       const size_t arg_alloc_size,
                       const size_t arg_logical_size = 0,
                       const Kokkos::Tools::SpaceHandle arg_handle =
                           Kokkos::Tools::make_space_handle(name())) const {
-    (void)exec_space;
     return impl_allocate(arg_label, arg_alloc_size, arg_logical_size,
                          arg_handle);
   }
