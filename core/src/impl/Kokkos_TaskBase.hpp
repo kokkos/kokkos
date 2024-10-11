@@ -20,6 +20,11 @@
 #define KOKKOS_IMPL_TASKBASE_HPP
 
 #include <Kokkos_Macros.hpp>
+
+#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_4
+#error "The tasking framework is deprecated"
+#endif
+
 #if defined(KOKKOS_ENABLE_TASKDAG)
 
 #include <Kokkos_TaskScheduler_fwd.hpp>
@@ -32,6 +37,9 @@
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
+
+// We allow using deprecated classes in this file
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
 
 namespace Kokkos {
 namespace Impl {
@@ -312,6 +320,8 @@ class Task : public TaskBase, public FunctorType {
 
 } /* namespace Impl */
 } /* namespace Kokkos */
+
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

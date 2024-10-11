@@ -25,9 +25,13 @@
 #include <Serial/Kokkos_Serial.hpp>
 #include <impl/Kokkos_HostThreadTeam.hpp>
 #include <impl/Kokkos_TaskQueue.hpp>
+#include <impl/Kokkos_TaskTeamMember.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
+
+// We allow using deprecated classes in this file
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
 
 namespace Kokkos {
 namespace Impl {
@@ -213,6 +217,8 @@ extern template class TaskQueue<Kokkos::Serial,
 
 }  // namespace Impl
 }  // namespace Kokkos
+
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

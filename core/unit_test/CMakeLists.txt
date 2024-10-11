@@ -675,8 +675,14 @@ if(KOKKOS_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
 endif()
 
 if(Kokkos_ENABLE_SERIAL)
+  if(Kokkos_ENABLE_DEPRECATED_CODE_4)
+    set(Serial_EXTRA_SOURCES serial/TestSerial_Task.cpp)
+  else()
+    set(Serial_EXTRA_SOURCES)
+  endif()
+
   kokkos_add_executable_and_test(
-    CoreUnitTest_Serial1 SOURCES UnitTestMainInit.cpp ${Serial_SOURCES1} serial/TestSerial_Task.cpp
+    CoreUnitTest_Serial1 SOURCES UnitTestMainInit.cpp ${Serial_SOURCES1} ${Serial_EXTRA_SOURCES}
   )
   kokkos_add_executable_and_test(CoreUnitTest_Serial2 SOURCES UnitTestMainInit.cpp ${Serial_SOURCES2})
 endif()
@@ -686,7 +692,11 @@ if(Kokkos_ENABLE_THREADS)
 endif()
 
 if(Kokkos_ENABLE_OPENMP)
-  set(OpenMP_EXTRA_SOURCES openmp/TestOpenMP_Task.cpp)
+  if(Kokkos_ENABLE_DEPRECATED_CODE_4)
+    set(OpenMP_EXTRA_SOURCES openmp/TestOpenMP_Task.cpp)
+  else()
+    set(OpenMP_EXTRA_SOURCES)
+  endif()
   kokkos_add_executable_and_test(
     CoreUnitTest_OpenMP SOURCES UnitTestMainInit.cpp ${OpenMP_SOURCES} ${OpenMP_EXTRA_SOURCES}
   )
@@ -694,7 +704,13 @@ if(Kokkos_ENABLE_OPENMP)
 endif()
 
 if(Kokkos_ENABLE_HPX)
-  kokkos_add_executable_and_test(CoreUnitTest_HPX SOURCES UnitTestMainInit.cpp ${HPX_SOURCES} hpx/TestHPX_Task.cpp)
+  if(Kokkos_ENABLE_DEPRECATED_CODE_4)
+    set(HPX_EXTRA_SOURCES hpx/TestHPX_Task.cpp)
+  else()
+    set(HPX_EXTRA_SOURCES)
+  endif()
+
+  kokkos_add_executable_and_test(CoreUnitTest_HPX SOURCES UnitTestMainInit.cpp ${HPX_SOURCES} ${HPX_EXTRA_SOURCES})
   kokkos_add_executable_and_test(CoreUnitTest_HPXInterOp SOURCES UnitTestMain.cpp hpx/TestHPX_InterOp.cpp)
   kokkos_add_executable_and_test(
     CoreUnitTest_HPX_IndependentInstances
@@ -726,11 +742,17 @@ if(Kokkos_ENABLE_CUDA)
 
   kokkos_add_executable_and_test(CoreUnitTest_Cuda2 SOURCES UnitTestMainInit.cpp ${Cuda_SOURCES2})
 
+  if(Kokkos_ENABLE_DEPRECATED_CODE_4)
+    set(Cuda_EXTRA_SOURCES cuda/TestCuda_Task.cpp)
+  else()
+    set(Cuda_EXTRA_SOURCES)
+  endif()
+
   kokkos_add_executable_and_test(
     CoreUnitTest_Cuda3
     SOURCES
     UnitTestMainInit.cpp
-    cuda/TestCuda_Task.cpp
+    ${Cuda_EXTRA_SOURCES}
     cuda/TestCuda_TeamScratchStreams.cpp
     ${Cuda_SOURCES3}
     cuda/TestCuda_Spaces.cpp
@@ -798,13 +820,7 @@ if(Kokkos_ENABLE_SYCL)
   kokkos_add_executable_and_test(CoreUnitTest_SYCL2D SOURCES UnitTestMainInit.cpp ${SYCL_SOURCES2D})
 
   kokkos_add_executable_and_test(
-    CoreUnitTest_SYCL3
-    SOURCES
-    UnitTestMainInit.cpp
-    # FIXME_SYCL
-    sycl/TestSYCL_Task.cpp
-    sycl/TestSYCL_TeamScratchStreams.cpp
-    ${SYCL_SOURCES3}
+    CoreUnitTest_SYCL3 SOURCES UnitTestMainInit.cpp sycl/TestSYCL_TeamScratchStreams.cpp ${SYCL_SOURCES3}
     sycl/TestSYCL_Spaces.cpp
   )
 

@@ -26,11 +26,16 @@
 #include <impl/Kokkos_HostThreadTeam.hpp>
 #include <OpenMP/Kokkos_OpenMP.hpp>
 
+#include <impl/Kokkos_TaskTeamMember.hpp>
+
 #include <type_traits>
 #include <cassert>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
+
+// We allow using deprecated classes in this file
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
 
 namespace Kokkos {
 namespace Impl {
@@ -359,6 +364,8 @@ extern template class TaskQueue<Kokkos::OpenMP,
 
 }  // namespace Impl
 }  // namespace Kokkos
+
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
