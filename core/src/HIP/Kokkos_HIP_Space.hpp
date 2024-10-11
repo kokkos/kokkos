@@ -375,6 +375,24 @@ struct MemorySpaceAccess<HIPManagedSpace, HIPHostPinnedSpace> {
   enum : bool { deepcopy = true };
 };
 
+template <typename PointerType>
+struct MemorySpaceAccess<
+    Kokkos::HIPSpace,
+    Kokkos::ScratchMemorySpaceBase<Kokkos::HIP, PointerType>> {
+  enum : bool { assignable = false };
+  enum : bool { accessible = true };
+  enum : bool { deepcopy = false };
+};
+
+template <typename PointerType>
+struct MemorySpaceAccess<
+    Kokkos::ScratchMemorySpace<Kokkos::HIP>,
+    Kokkos::ScratchMemorySpaceBase<Kokkos::HIP, PointerType>> {
+  enum : bool { assignable = true };
+  enum : bool { accessible = false };
+  enum : bool { deepcopy = false };
+};
+
 }  // namespace Impl
 }  // namespace Kokkos
 
