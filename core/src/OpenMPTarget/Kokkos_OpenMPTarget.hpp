@@ -64,6 +64,8 @@ class OpenMPTarget {
   using size_type    = memory_space::size_type;
 
   using scratch_memory_space = ScratchMemorySpace<OpenMPTarget>;
+  using scratch_memory_space_l0 = ScratchMemorySpaceBase<OpenMPTarget, L0Tag>;
+  using scratch_memory_space_l1 = ScratchMemorySpaceBase<OpenMPTarget, L1Tag>;
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   KOKKOS_DEPRECATED inline static bool in_parallel() {
@@ -125,6 +127,25 @@ struct MemorySpaceAccess<
   enum : bool { accessible = true };
   enum : bool { deepcopy = false };
 };
+
+template <typename PointerType>
+struct MemorySpaceAccess<
+    Kokkos::Experimental::OpenMPTargetSpace,
+    Kokkos::ScratchMemorySpaceBase<Kokkos::Experimental::OpenMPTarget, PointerType>> {
+  enum : bool { assignable = false };
+  enum : bool { accessible = true };
+  enum : bool { deepcopy = false };
+};
+
+template <typename PointerType>
+struct MemorySpaceAccess<
+    Kokkos::ScratchMemorySpace<Kokkos::Experimental::OpenMPTarget>,
+    Kokkos::ScratchMemorySpaceBase<Kokkos::Experimental::OpenMPTarget, PointerType>> {
+  enum : bool { assignable = true };
+  enum : bool { accessible = false };
+  enum : bool { deepcopy = false };
+};
+
 }  // namespace Impl
 
 namespace Tools {
