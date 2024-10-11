@@ -556,6 +556,7 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 // If compiling with CUDA, we must use relocatable device code to enable the
 // task policy.
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 #if defined(KOKKOS_ENABLE_CUDA)
 #if defined(KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE)
 #define KOKKOS_ENABLE_TASKDAG
@@ -564,6 +565,7 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 #elif !defined(KOKKOS_ENABLE_HIP) && !defined(KOKKOS_ENABLE_SYCL) && \
     !defined(KOKKOS_ENABLE_OPENMPTARGET)
 #define KOKKOS_ENABLE_TASKDAG
+#endif
 #endif
 
 #if defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_ENABLE_DEPRECATED_CODE_4)
