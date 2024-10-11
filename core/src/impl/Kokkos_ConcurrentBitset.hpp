@@ -118,7 +118,7 @@ struct concurrent_bitset {
     const uint32_t state_bit_used = state & state_used_mask;
 
     if (state_error || (bit_bound <= state_bit_used)) {
-      Kokkos::atomic_fetch_add(const_cast<uint32_t *>(buffer), -1);
+      Kokkos::atomic_fetch_sub(const_cast<uint32_t *>(buffer), 1);
       return state_error ? type(-2, -2) : type(-1, -1);
     }
 
@@ -203,7 +203,7 @@ struct concurrent_bitset {
     const uint32_t state_bit_used = state & state_used_mask;
 
     if (state_error || (bit_bound <= state_bit_used)) {
-      Kokkos::atomic_fetch_add(const_cast<uint32_t *>(buffer), -1);
+      Kokkos::atomic_fetch_sub(const_cast<uint32_t *>(buffer), 1);
       return state_error ? type(-2, -2) : type(-1, -1);
     }
 
@@ -275,7 +275,7 @@ struct concurrent_bitset {
     Kokkos::memory_fence();
 
     const int count =
-        Kokkos::atomic_fetch_add(const_cast<uint32_t *>(buffer), -1);
+        Kokkos::atomic_fetch_sub(const_cast<uint32_t *>(buffer), 1);
 
     // Flush the store-release
     Kokkos::memory_fence();
@@ -312,7 +312,7 @@ struct concurrent_bitset {
     Kokkos::memory_fence();
 
     const int count =
-        Kokkos::atomic_fetch_add(const_cast<uint32_t *>(buffer), -1);
+        Kokkos::atomic_fetch_sub(const_cast<uint32_t *>(buffer), 1);
 
     return (count & state_used_mask) - 1;
   }
