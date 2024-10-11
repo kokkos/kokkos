@@ -55,7 +55,9 @@ class Threads {
   using array_layout = Kokkos::LayoutRight;
   using size_type    = memory_space::size_type;
 
-  using scratch_memory_space = ScratchMemorySpace<Threads>;
+  using scratch_memory_space    = ScratchMemorySpace<Threads>;
+  using scratch_memory_space_l0 = ScratchMemorySpace<Threads>;
+  using scratch_memory_space_l1 = ScratchMemorySpace<Threads>;
 
   //@}
   /*------------------------------------------------------------------------*/

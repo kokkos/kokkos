@@ -34,9 +34,11 @@ namespace Impl {
  */
 class SYCLTeamMember {
  public:
-  using execution_space      = Kokkos::SYCL;
-  using scratch_memory_space = execution_space::scratch_memory_space;
-  using team_handle          = SYCLTeamMember;
+  using execution_space         = Kokkos::SYCL;
+  using scratch_memory_space    = execution_space::scratch_memory_space;
+  using scratch_memory_space_l0 = execution_space::scratch_memory_space_l0;
+  using scratch_memory_space_l1 = execution_space::scratch_memory_space_l1;
+  using team_handle             = SYCLTeamMember;
 
  private:
   mutable sycl::local_ptr<void> m_team_reduce;
@@ -48,14 +50,24 @@ class SYCLTeamMember {
 
  public:
   KOKKOS_INLINE_FUNCTION
-  const execution_space::scratch_memory_space& team_shmem() const {
-    return m_team_shared.set_team_thread_mode(0, 1, 0);
+  const scratch_memory_space_l0& team_shmem() const {
+    return m_team_shared.set_team_thread_mode<0>(1, 0);
+  }
+
+  template <int Level>
+  KOKKOS_INLINE_FUNCTION auto& team_scratch() const {
+    return m_team_shared.set_team_thread_mode<Level>(1, 0);
   }
 
   KOKKOS_INLINE_FUNCTION
   const execution_space::scratch_memory_space& team_scratch(
       const int level) const {
     return m_team_shared.set_team_thread_mode(level, 1, 0);
+  }
+
+  template <int Level>
+  KOKKOS_INLINE_FUNCTION auto& thread_scratch() const {
+    return m_team_shared.set_team_thread_mode<Level>(team_size(), team_rank());
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -375,8 +387,11 @@ class SYCLTeamMember {
                  const sycl::nd_item<2> item, const int arg_league_rank,
                  const int arg_league_size)
       : m_team_reduce(shared),
-        m_team_shared(static_cast<sycl::local_ptr<char>>(shared) + shared_begin,
-                      shared_size, scratch_level_1_ptr, scratch_level_1_size),
+        m_team_shared(
+            static_cast<sycl::local_ptr<char>>(shared) + shared_begin,
+            shared_size,
+            static_cast<Impl::sycl_device_ptr<char>>(scratch_level_1_ptr),
+            scratch_level_1_size),
         m_team_reduce_size(shared_begin),
         m_item(item),
         m_league_rank(arg_league_rank),
