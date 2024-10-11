@@ -13,8 +13,11 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //@HEADER
+
 #include <gtest/gtest.h>
+
 #include <Kokkos_Core.hpp>
+#include <impl/Kokkos_ClockTic.hpp>
 
 #if defined(_WIN32)
 #include <windows.h>

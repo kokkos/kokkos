@@ -18,6 +18,7 @@
 #define KOKKOS_THREADS_UNIQUETOKEN_HPP
 
 #include <Kokkos_UniqueToken.hpp>
+#include <impl/Kokkos_ClockTic.hpp>
 
 namespace Kokkos {
 namespace Experimental {

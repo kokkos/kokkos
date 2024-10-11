@@ -32,6 +32,7 @@ static_assert(false,
 #include <Kokkos_MemoryTraits.hpp>
 #include <Kokkos_Parallel.hpp>
 #include <Kokkos_ScratchSpace.hpp>
+#include <impl/Kokkos_ClockTic.hpp>
 #include <impl/Kokkos_ConcurrentBitset.hpp>
 #include <impl/Kokkos_FunctorAnalysis.hpp>
 #include <impl/Kokkos_HostSharedPtr.hpp>

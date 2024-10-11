@@ -18,6 +18,7 @@
 #define KOKKOS_OPENMP_UNIQUE_TOKEN_HPP
 
 #include <Kokkos_UniqueToken.hpp>
+#include <impl/Kokkos_ClockTic.hpp>
 
 namespace Kokkos::Experimental {
 template <>
