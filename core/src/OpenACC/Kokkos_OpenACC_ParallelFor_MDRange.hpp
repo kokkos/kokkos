@@ -41,7 +41,7 @@ void OpenACCParallelForMDRangePolicy(OpenACCCollapse, OpenACCIterateLeft,
 // clang-format off
 #pragma acc parallel loop gang vector copyin(functor) async(async_arg)
   // clang-format on
-  for (auto m = 0; m < nIter; ++m) {
+  for (decltype(nIter) m = 0; m < nIter; ++m) {
     auto i1 = m / dim0 + begin1;
     auto i0 = m % dim0 + begin0;
     functor(i0, i1);
@@ -75,7 +75,7 @@ void OpenACCParallelForMDRangePolicy(OpenACCCollapse, OpenACCIterateRight,
 // clang-format off
 #pragma acc parallel loop gang vector copyin(functor) async(async_arg)
   // clang-format on
-  for (auto m = 0; m < nIter; ++m) {
+  for (decltype(nIter) m = 0; m < nIter; ++m) {
     auto i0 = m / dim1 + begin0;
     auto i1 = m % dim1 + begin1;
     functor(i0, i1);
@@ -158,7 +158,7 @@ void OpenACCParallelForMDRangePolicy(OpenACCCollapse, OpenACCIterateLeft,
 // clang-format off
 #pragma acc parallel loop gang vector copyin(functor) async(async_arg)
   // clang-format on
-  for (auto m = 0; m < nIter; ++m) {
+  for (decltype(nIter) m = 0; m < nIter; ++m) {
     auto tmp1 = dim1 * dim0;
     auto i2   = m / tmp1 + begin2;
     auto tmp2 = m % tmp1;
@@ -200,7 +200,7 @@ void OpenACCParallelForMDRangePolicy(OpenACCCollapse, OpenACCIterateRight,
 // clang-format off
 #pragma acc parallel loop gang vector copyin(functor) async(async_arg)
   // clang-format on
-  for (auto m = 0; m < nIter; ++m) {
+  for (decltype(nIter) m = 0; m < nIter; ++m) {
     auto tmp1 = dim2 * dim1;
     auto i0   = m / tmp1 + begin0;
     auto tmp2 = m % tmp1;
@@ -301,7 +301,7 @@ void OpenACCParallelForMDRangePolicy(OpenACCCollapse, OpenACCIterateLeft,
 // clang-format off
 #pragma acc parallel loop gang vector copyin(functor) async(async_arg)
   // clang-format on
-  for (auto m = 0; m < nIter; ++m) {
+  for (decltype(nIter) m = 0; m < nIter; ++m) {
     auto tmp1 = dim2 * dim1 * dim0;
     auto i3   = m / tmp1 + begin3;
     auto tmp2 = m % tmp1;
@@ -351,7 +351,7 @@ void OpenACCParallelForMDRangePolicy(OpenACCCollapse, OpenACCIterateRight,
 // clang-format off
 #pragma acc parallel loop gang vector copyin(functor) async(async_arg)
   // clang-format on
-  for (auto m = 0; m < nIter; ++m) {
+  for (decltype(nIter) m = 0; m < nIter; ++m) {
     auto tmp1 = dim3 * dim2 * dim1;
     auto i0   = m / tmp1 + begin0;
     auto tmp2 = m % tmp1;
@@ -470,7 +470,7 @@ void OpenACCParallelForMDRangePolicy(OpenACCCollapse, OpenACCIterateLeft,
 // clang-format off
 #pragma acc parallel loop gang vector copyin(functor) async(async_arg)
   // clang-format on
-  for (auto m = 0; m < nIter; ++m) {
+  for (decltype(nIter) m = 0; m < nIter; ++m) {
     auto tmp1 = dim3 * dim2 * dim1 * dim0;
     auto i4   = m / tmp1 + begin4;
     auto tmp2 = m % tmp1;
@@ -528,7 +528,7 @@ void OpenACCParallelForMDRangePolicy(OpenACCCollapse, OpenACCIterateRight,
 // clang-format off
 #pragma acc parallel loop gang vector copyin(functor) async(async_arg)
   // clang-format on
-  for (auto m = 0; m < nIter; ++m) {
+  for (decltype(nIter) m = 0; m < nIter; ++m) {
     auto tmp1 = dim4 * dim3 * dim2 * dim1;
     auto i0   = m / tmp1 + begin0;
     auto tmp2 = m % tmp1;
@@ -665,7 +665,7 @@ void OpenACCParallelForMDRangePolicy(OpenACCCollapse, OpenACCIterateLeft,
 // clang-format off
 #pragma acc parallel loop gang vector copyin(functor) async(async_arg)
   // clang-format on
-  for (auto m = 0; m < nIter; ++m) {
+  for (decltype(nIter) m = 0; m < nIter; ++m) {
     auto tmp1 = dim4 * dim3 * dim2 * dim1 * dim0;
     auto i5   = m / tmp1 + begin5;
     auto tmp2 = m % tmp1;
@@ -731,7 +731,7 @@ void OpenACCParallelForMDRangePolicy(OpenACCCollapse, OpenACCIterateRight,
 // clang-format off
 #pragma acc parallel loop gang vector copyin(functor) async(async_arg)
   // clang-format on
-  for (auto m = 0; m < nIter; ++m) {
+  for (decltype(nIter) m = 0; m < nIter; ++m) {
     auto tmp1 = dim5 * dim4 * dim3 * dim2 * dim1;
     auto i0   = m / tmp1 + begin0;
     auto tmp2 = m % tmp1;
