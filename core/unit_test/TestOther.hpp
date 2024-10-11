@@ -16,7 +16,10 @@
 
 #ifndef KOKKOS_TEST_OTHER_HPP
 #define KOKKOS_TEST_OTHER_HPP
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 #include <TestMemoryPool.hpp>
+#endif
 #include <TestCXX11.hpp>
 
 #include <TestViewCtorPropEmbeddedDim.hpp>

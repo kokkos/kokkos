@@ -60,7 +60,7 @@ void _print_memory_pool_state(std::ostream &s, uint32_t const *sb_state_ptr,
 }  // end namespace Impl
 
 template <typename DeviceType>
-class MemoryPool {
+class KOKKOS_DEPRECATED MemoryPool {
  private:
   using CB = Kokkos::Impl::concurrent_bitset;
 
