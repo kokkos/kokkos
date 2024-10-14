@@ -276,7 +276,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     if ((arg_policy.scratch_size(0) +
          FunctorTeamShmemSize<FunctorType>::value(arg_functor,
                                                   arg_policy.team_size())) >
-        TeamPolicy<Kokkos::Serial>::scratch_size_max(0)) {
+        static_cast<size_t>(TeamPolicy<Kokkos::Serial>::scratch_size_max(0))) {
       std::stringstream error;
       error << "Requested too much scratch memory on level 0. Requested: "
             << arg_policy.scratch_size(0) +
@@ -286,7 +286,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
       Kokkos::abort(error.str().c_str());
     }
     if (arg_policy.scratch_size(1) >
-        TeamPolicy<Kokkos::Serial>::scratch_size_max(1)) {
+        static_cast<size_t>(TeamPolicy<Kokkos::Serial>::scratch_size_max(1))) {
       std::stringstream error;
       error << "Requested too much scratch memory on level 1. Requested: "
             << arg_policy.scratch_size(1)
@@ -398,7 +398,7 @@ class ParallelReduce<CombinedFunctorReducerType,
     if ((arg_policy.scratch_size(0) +
          FunctorTeamShmemSize<FunctorType>::value(
              m_functor_reducer.get_functor(), arg_policy.team_size())) >
-        TeamPolicy<Kokkos::Serial>::scratch_size_max(0)) {
+        static_cast<size_t>(TeamPolicy<Kokkos::Serial>::scratch_size_max(0))) {
       std::stringstream error;
       error << "Requested too much scratch memory on level 0. Requested: "
             << arg_policy.scratch_size(0) +
@@ -408,7 +408,7 @@ class ParallelReduce<CombinedFunctorReducerType,
       Kokkos::abort(error.str().c_str());
     }
     if (arg_policy.scratch_size(1) >
-        TeamPolicy<Kokkos::Serial>::scratch_size_max(1)) {
+        static_cast<size_t>(TeamPolicy<Kokkos::Serial>::scratch_size_max(1))) {
       std::stringstream error;
       error << "Requested too much scratch memory on level 1. Requested: "
             << arg_policy.scratch_size(1)
