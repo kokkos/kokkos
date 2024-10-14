@@ -163,6 +163,11 @@ if(KOKKOS_ENABLE_COMPILER_WARNINGS)
     endif()
   endif()
 
+  # ICPC doesn't support -Wsuggest-override
+  if(KOKKOS_CXX_COMPILER_ID STREQUAL Intel)
+    list(REMOVE_ITEM COMMON_WARNINGS "-Wsuggest-override")
+  endif()
+
   if(KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
     list(APPEND COMMON_WARNINGS "-Wimplicit-fallthrough")
   endif()
