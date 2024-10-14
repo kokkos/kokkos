@@ -368,7 +368,7 @@ class HostThreadTeamData {
     int const num  = (m_work_end + m_work_chunk - 1) / m_work_chunk;
     int const part = (num + m_league_size - 1) / m_league_size;
 
-    m_work_range.first  = part * m_league_rank;
+    m_work_range.first  = static_cast<int64_t>(part) * m_league_rank;
     m_work_range.second = m_work_range.first + part;
 
     // Steal from next team, round robin
@@ -394,7 +394,7 @@ class HostThreadTeamData {
     const int i = get_work_stealing();
 
     if (0 <= i) {
-      x.first  = m_work_chunk * i;
+      x.first  = static_cast<int64_t>(m_work_chunk) * i;
       x.second = x.first + m_work_chunk < m_work_end ? x.first + m_work_chunk
                                                      : m_work_end;
     }
