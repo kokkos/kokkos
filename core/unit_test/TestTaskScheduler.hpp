@@ -24,8 +24,10 @@
 #include <iostream>
 #include <cmath>
 
+#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
 // We allow using deprecated classes in this file
 KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
+#endif
 
 //==============================================================================
 // <editor-fold desc="TestFib"> {{{1
@@ -829,7 +831,9 @@ struct TestMultipleDependence {
 #undef KOKKOS_TEST_WITH_SUFFIX
 #undef KOKKOS_PP_CAT_IMPL
 
+#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
 KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
+#endif
 
 #endif  // #if defined( KOKKOS_ENABLE_TASKDAG )
 #endif  // #ifndef KOKKOS_UNITTEST_TASKSCHEDULER_HPP

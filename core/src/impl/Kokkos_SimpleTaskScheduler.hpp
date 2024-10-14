@@ -40,8 +40,10 @@
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
+#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
 // We allow using deprecated classes in this file
 KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
+#endif
 
 namespace Kokkos {
 
@@ -461,7 +463,9 @@ inline void wait(SimpleTaskScheduler<ExecSpace, QueueType> const& scheduler) {
 
 }  // namespace Kokkos
 
+#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
 KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
+#endif
 
 //----------------------------------------------------------------------------
 //---------------------------------------------------------------------------#endif

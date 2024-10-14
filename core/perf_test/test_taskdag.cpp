@@ -226,6 +226,8 @@ int main(int argc, char* argv[]) {
   return 0;
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
 KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
+#endif
 
 #endif
