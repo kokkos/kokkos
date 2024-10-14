@@ -1624,6 +1624,12 @@ $(DESUL_CONFIG_HEADER):
 
 KOKKOS_CPP_DEPENDS := $(DESUL_CONFIG_HEADER) KokkosCore_config.h $(KOKKOS_HEADERS)
 
+# Tasking is deprecated
+ifeq ($(KOKKOS_INTERNAL_DISABLE_DEPRECATED_CODE), 1)
+  TMP_KOKKOS_SRC := $(KOKKOS_SRC)
+  KOKKOS_SRC = $(patsubst %Task.cpp,, $(TMP_KOKKOS_SRC))
+endif
+
 KOKKOS_OBJ = $(KOKKOS_SRC:.cpp=.o)
 KOKKOS_OBJ_LINK = $(notdir $(KOKKOS_OBJ))
 
