@@ -403,7 +403,7 @@ class ThreadsInternal {
   static void start(void (*)(ThreadsInternal &, const void *), const void *);
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  KOKKOS_DEPRECATED static int in_parallel();
+  static int in_parallel();
 #endif
   static void fence();
   static void fence(const std::string &);
