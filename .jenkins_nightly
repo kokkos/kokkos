@@ -93,7 +93,6 @@ pipeline {
                             -DKokkos_ENABLE_EXAMPLES=ON \
                             -DKokkos_ENABLE_TESTS=ON \
                             -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
-                            -DKokkos_ENABLE_DEPRECATION_WARNINGS=ON \
                             -DKokkos_ENABLE_SERIAL=ON \
                           .. && \
                           make -j8 && ctest --verbose
@@ -125,7 +124,6 @@ pipeline {
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
-                                -DKokkos_ENABLE_DEPRECATION_WARNINGS=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_BENCHMARKS=ON \
                                 -DKokkos_ENABLE_HIP=ON \
