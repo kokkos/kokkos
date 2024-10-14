@@ -271,7 +271,29 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
         m_policy(arg_policy),
         m_league(arg_policy.league_size()),
         m_shared(arg_policy.scratch_size(0) + arg_policy.scratch_size(1) +
-                 FunctorTeamShmemSize<FunctorType>::value(arg_functor, 1)) {}
+                 FunctorTeamShmemSize<FunctorType>::value(
+                     arg_functor, m_policy.team_size())) {
+    if ((arg_policy.scratch_size(0) +
+         FunctorTeamShmemSize<FunctorType>::value(arg_functor,
+                                                  arg_policy.team_size())) >
+        TeamPolicy<Kokkos::Serial>::scratch_size_max(0)) {
+      std::stringstream error;
+      error << "Requested too much scratch memory on level 0. Requested: "
+            << arg_policy.scratch_size(0) +
+                   FunctorTeamShmemSize<FunctorType>::value(
+                       arg_functor, arg_policy.team_size())
+            << ", Maximum: " << TeamPolicy<Kokkos::Serial>::scratch_size_max(0);
+      Kokkos::abort(error.str().c_str());
+    }
+    if (arg_policy.scratch_size(1) >
+        TeamPolicy<Kokkos::Serial>::scratch_size_max(1)) {
+      std::stringstream error;
+      error << "Requested too much scratch memory on level 1. Requested: "
+            << arg_policy.scratch_size(1)
+            << ", Maximum: " << TeamPolicy<Kokkos::Serial>::scratch_size_max(1);
+      Kokkos::abort(error.str().c_str());
+    }
+  }
 };
 
 /*--------------------------------------------------------------------------*/
@@ -364,7 +386,7 @@ class ParallelReduce<CombinedFunctorReducerType,
         m_result_ptr(arg_result.data()),
         m_shared(arg_policy.scratch_size(0) + arg_policy.scratch_size(1) +
                  FunctorTeamShmemSize<FunctorType>::value(
-                     m_functor_reducer.get_functor(), 1)) {
+                     m_functor_reducer.get_functor(), m_policy.team_size())) {
     static_assert(Kokkos::is_view<ViewType>::value,
                   "Reduction result on Kokkos::Serial must be a Kokkos::View");
 
@@ -373,6 +395,26 @@ class ParallelReduce<CombinedFunctorReducerType,
                                         Kokkos::HostSpace>::accessible,
         "Kokkos::Serial reduce result must be a View accessible from "
         "HostSpace");
+    if ((arg_policy.scratch_size(0) +
+         FunctorTeamShmemSize<FunctorType>::value(
+             m_functor_reducer.get_functor(), arg_policy.team_size())) >
+        TeamPolicy<Kokkos::Serial>::scratch_size_max(0)) {
+      std::stringstream error;
+      error << "Requested too much scratch memory on level 0. Requested: "
+            << arg_policy.scratch_size(0) +
+                   FunctorTeamShmemSize<FunctorType>::value(
+                       m_functor_reducer.get_functor(), arg_policy.team_size())
+            << ", Maximum: " << TeamPolicy<Kokkos::Serial>::scratch_size_max(0);
+      Kokkos::abort(error.str().c_str());
+    }
+    if (arg_policy.scratch_size(1) >
+        TeamPolicy<Kokkos::Serial>::scratch_size_max(1)) {
+      std::stringstream error;
+      error << "Requested too much scratch memory on level 1. Requested: "
+            << arg_policy.scratch_size(1)
+            << ", Maximum: " << TeamPolicy<Kokkos::Serial>::scratch_size_max(1);
+      Kokkos::abort(error.str().c_str());
+    }
   }
 };
 
