@@ -75,7 +75,8 @@ class OpenMPTargetSpace {
  public:
   //! Tag this class as a kokkos memory space
   using memory_space = OpenMPTargetSpace;
-  using size_type    = unsigned;
+  using index_type   = unsigned;
+  using size_type    = index_type;
 
   /// \typedef execution_space
   /// \brief Default execution space for this memory space.
