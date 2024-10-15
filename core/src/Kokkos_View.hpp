@@ -19,17 +19,18 @@
 static_assert(false,
               "Including non-public Kokkos header files is not allowed.");
 #endif
-#include <Kokkos_Macros.hpp>
-#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
-#include <View/Kokkos_ViewLegacy.hpp>
-#ifdef KOKKOS_ENABLE_IMPL_MDSPAN && !defined(KOKKOS_COMPILER_INTEL)
-#include <View/Kokkos_BasicView.hpp>
-#endif
-#else
+
 #ifndef KOKKOS_VIEW_HPP
 #define KOKKOS_VIEW_HPP
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_IMPL_MDSPAN && !defined(KOKKOS_COMPILER_INTEL)
 #include <View/Kokkos_BasicView.hpp>
+#endif
+#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
+#include <View/Kokkos_ViewLegacy.hpp>
+#else
+
 #include <View/Kokkos_ViewTraits.hpp>
 #include <Kokkos_MemoryTraits.hpp>
 
@@ -258,6 +259,8 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
                                                     size_t>
   stride(iType r) const {
     // base class doesn't have constraint
+  // FIXME: Eventually we need to deprecate this behavior and just use
+  // BasicView implementation
     return base_t::stride(r);
   }
 
@@ -272,10 +275,8 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   //----------------------------------------
   // Range span is the span which contains all members.
 
-  enum {
-    reference_type_is_lvalue_reference =
-        std::is_lvalue_reference_v<reference_type>
-  };
+  static constexpr auto reference_type_is_lvalue_reference =
+      std::is_lvalue_reference_v<reference_type>;
 
   KOKKOS_INLINE_FUNCTION constexpr size_t span() const {
     return base_t::mapping().required_span_size();
@@ -456,8 +457,6 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
     check_access_member_function_valid_args(extra...);
     return base_t::operator()(i0, i1, i2, i3, i4, i5, i6, i7);
   }
-
-#undef KOKKOS_IMPL_VIEW_OPERATOR_VERIFY
 
   //----------------------------------------
   // Standard destructor, constructors, and assignment operators
@@ -672,7 +671,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
       : View(Kokkos::view_wrap(pointer_type(nullptr)), args...) {}
 #endif
 
-  // Constructor which allows always 8 sizes should be deprecated
+  // FIXME: Constructor which allows always 8 sizes should be deprecated
   template <class... P>
   explicit inline View(
       const Impl::ViewCtorProp<P...>& arg_prop,
@@ -817,7 +816,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
       const typename traits::execution_space::scratch_memory_space& arg_space,
       const typename traits::array_layout& arg_layout)
       : View(Impl::ViewCtorProp<pointer_type>(
-                 reinterpret_cast<pointer_type>(arg_space.get_shmem_aligned(
+                 static_cast<pointer_type>(arg_space.get_shmem_aligned(
                      base_t::map_type::memory_span(arg_layout),
                      scratch_value_alignment))),
              arg_layout) {}
@@ -833,7 +832,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
       const size_t arg_N6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
       const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG)
       : View(Impl::ViewCtorProp<pointer_type>(
-                 reinterpret_cast<pointer_type>(arg_space.get_shmem_aligned(
+                 static_cast<pointer_type>(arg_space.get_shmem_aligned(
                      required_allocation_size(typename traits::array_layout(
                          arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6,
                          arg_N7)),
@@ -899,7 +898,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
 
   KOKKOS_FUNCTION
   constexpr typename base_t::index_type extent(size_t r) const noexcept {
-    // casting to int to avoid warning for pointeless comparison of unsigned
+    // casting to int to avoid warning for pointless comparison of unsigned
     // with 0
     if (static_cast<int>(r) >= static_cast<int>(base_t::extents_type::rank()))
       return 1;
@@ -907,7 +906,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   }
   KOKKOS_FUNCTION
   static constexpr size_t static_extent(size_t r) noexcept {
-    // casting to int to avoid warning for pointeless comparison of unsigned
+    // casting to int to avoid warning for pointless comparison of unsigned
     // with 0
     if (static_cast<int>(r) >= static_cast<int>(base_t::extents_type::rank()))
       return 1;
@@ -1037,5 +1036,5 @@ KOKKOS_INLINE_FUNCTION bool operator!=(const View<LT, LP...>& lhs,
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-#endif /* #ifndef KOKKOS_VIEW_HPP */
 #endif /* KOKKOS_ENABLE_IMPL_VIEW_LEGACY */
+#endif /* #ifndef KOKKOS_VIEW_HPP */

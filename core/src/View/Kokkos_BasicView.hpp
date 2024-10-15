@@ -643,6 +643,8 @@ class BasicView {
 #endif
 #endif
 
+#undef KOKKOS_IMPL_BASICVIEW_OPERATOR_VERIFY
+
  private:
   // FIXME_CXX20: could use inline templated lambda in C++20 mode inside size()
   template <size_t... Idxs>
