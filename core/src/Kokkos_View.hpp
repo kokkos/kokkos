@@ -156,7 +156,6 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
 
   // typedefs originally from ViewTraits
   using traits               = ViewTraits<DataType, Properties...>;
-  using value_type           = typename traits::value_type;
   using const_value_type     = typename traits::const_value_type;
   using non_const_value_type = typename traits::non_const_value_type;
   using data_type            = DataType;
@@ -167,13 +166,19 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   using device_type          = typename traits::device_type;
   using execution_space      = typename traits::execution_space;
   using memory_space         = typename traits::memory_space;
-  using pointer_type         = typename traits::value_type*;
   using memory_traits        = typename traits::memory_traits;
   using host_mirror_space    = typename traits::host_mirror_space;
   using index_type           = typename traits::memory_space::size_type;
 
+  // aliases from BasicView
+  using value_type = typename base_t::value_type;
+
   // FIXME: Should be unsigned
-  using size_type = typename memory_space::size_type;
+  // FIXME: these are overriden so that their types are identical when using
+  // BasicView or Legacy we will need to obtain these from base_t in the future
+  // and deprecate old behavior
+  using size_type    = typename memory_space::size_type;
+  using pointer_type = typename traits::value_type*;
 
   using scalar_array_type       = typename traits::scalar_array_type;
   using const_scalar_array_type = typename traits::const_scalar_array_type;
@@ -185,35 +190,35 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   using reference_type = typename base_t::reference;
 
   //----------------------------------------
-  /** \brief  Compatible view of array of scalar types */
+  // Compatible view of array of scalar types
   using array_type =
       View<typename traits::scalar_array_type, typename traits::array_layout,
            typename traits::device_type, typename traits::hooks_policy,
            typename traits::memory_traits>;
 
-  /** \brief  Compatible view of const data type */
+  // Compatible view of const data type
   using const_type =
       View<typename traits::const_data_type, typename traits::array_layout,
            typename traits::device_type, typename traits::hooks_policy,
            typename traits::memory_traits>;
 
-  /** \brief  Compatible view of non-const data type */
+  // Compatible view of non-const data type
   using non_const_type =
       View<typename traits::non_const_data_type, typename traits::array_layout,
            typename traits::device_type, typename traits::hooks_policy,
            typename traits::memory_traits>;
 
-  /** \brief  Compatible HostMirror view */
+  // Compatible HostMirror view 
   using host_mirror_type =
       View<typename traits::non_const_data_type, typename traits::array_layout,
            Device<DefaultHostExecutionSpace,
                   typename traits::host_mirror_space::memory_space>,
            typename traits::hooks_policy>;
 
-  /** \brief  Compatible HostMirror view */
+  // Compatible HostMirror view
   using HostMirror = host_mirror_type;
 
-  /** \brief Unified types */
+  // Unified types
   using uniform_type = typename Impl::ViewUniformType<View, 0>::type;
   using uniform_const_type =
       typename Impl::ViewUniformType<View, 0>::const_type;
