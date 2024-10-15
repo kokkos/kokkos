@@ -30,21 +30,20 @@ static_assert(false,
 // nested mapping. This file provides interoperability helpers.
 
 namespace Kokkos::Impl {
-
 // We do have implementation detail versions of these in our mdspan impl
 // However they are not part of the public standard interface
 template <class T>
-struct is_layout_right_padded : public std::false_type {};
+struct IsLayoutRightPadded : public std::false_type {};
 
 template <size_t Pad>
-struct is_layout_right_padded<Kokkos::Experimental::layout_right_padded<Pad>>
+struct IsLayoutRightPadded<Kokkos::Experimental::layout_right_padded<Pad>>
     : public std::true_type {};
 
 template <class T>
-struct is_layout_left_padded : public std::false_type {};
+struct IsLayoutLeftPadded : public std::false_type {};
 
 template <size_t Pad>
-struct is_layout_left_padded<Kokkos::Experimental::layout_left_padded<Pad>>
+struct IsLayoutLeftPadded<Kokkos::Experimental::layout_left_padded<Pad>>
     : public std::true_type {};
 
 template <class ArrayLayout>
@@ -265,10 +264,10 @@ KOKKOS_INLINE_FUNCTION auto mapping_from_ctor_and_sizes(
   using ext_t    = typename MappingType::extents_type;
   ext_t ext{args...};
   constexpr bool padded = ViewCtorProperties::allow_padding;
-  if constexpr (is_layout_left_padded<layout_t>::value && padded &&
+  if constexpr (IsLayoutLeftPadded<layout_t>::value && padded &&
                 ext_t::rank() > 1) {
     return MappingType(ext, Padding<ScalarSize>::stride(ext.extent(0)));
-  } else if constexpr (is_layout_right_padded<layout_t>::value && padded &&
+  } else if constexpr (IsLayoutRightPadded<layout_t>::value && padded &&
                        ext_t::rank() > 1) {
     return MappingType(
         ext, Padding<ScalarSize>::stride(ext.extent(ext_t::rank() - 1)));
@@ -312,7 +311,6 @@ KOKKOS_INLINE_FUNCTION auto mapping_from_ctor_and_8sizes(
         arg_N7);
   }
 }
-
 }  // namespace Kokkos::Impl
 
 #endif  // KOKKOS_EXPERIMENTAL_MDSPAN_LAYOUT_HPP
