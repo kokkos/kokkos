@@ -226,6 +226,7 @@ class BasicView {
   using mapping_type     = typename mdspan_type::mapping_type;
   using element_type     = typename mdspan_type::element_type;
   using value_type       = typename mdspan_type::value_type;
+   // FIXME: backwards compatibility, should be changed to the same as mdspan index_type
   using index_type       = typename mdspan_type::size_type;
   using size_type        = typename mdspan_type::size_type;
   using rank_type        = typename mdspan_type::rank_type;
@@ -262,7 +263,7 @@ class BasicView {
     using dst_t          = layout_type;
     constexpr size_t rnk = mdspan_type::rank();
     if constexpr (!std::is_same_v<src_t, dst_t>) {
-      if constexpr (Impl::is_layout_left_padded<dst_t>::value) {
+      if constexpr (Impl::IsLayoutLeftPadded<dst_t>::value) {
         if constexpr (std::is_same_v<src_t, layout_stride>) {
           index_type stride = 1;
           for (size_t r = 0; r < rnk; r++) {
@@ -273,7 +274,7 @@ class BasicView {
           }
         }
       }
-      if constexpr (Impl::is_layout_right_padded<dst_t>::value) {
+      if constexpr (Impl::IsLayoutRightPadded<dst_t>::value) {
         if constexpr (std::is_same_v<src_t, layout_stride>) {
           index_type stride = 1;
           if constexpr (rnk > 0) {
@@ -295,7 +296,7 @@ class BasicView {
               Kokkos::abort("View assignment must have compatible layouts");
             stride *= rhs.extents().extent(r);
           }
-        } else if constexpr (Impl::is_layout_left_padded<src_t>::value &&
+        } else if constexpr (Impl::IsLayoutLeftPadded<src_t>::value &&
                              rnk > 1) {
           if (rhs.stride(1) != rhs.extents().extent(0))
             Kokkos::abort("View assignment must have compatible layouts");
@@ -311,7 +312,7 @@ class BasicView {
               stride *= rhs.extents().extent(r - 1);
             }
           }
-        } else if constexpr (Impl::is_layout_right_padded<src_t>::value &&
+        } else if constexpr (Impl::IsLayoutRightPadded<src_t>::value &&
                              rnk > 1) {
           if (rhs.stride(rnk - 2) != rhs.extents().extent(rnk - 1))
             Kokkos::abort("View assignment must have compatible layouts");
