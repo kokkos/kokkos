@@ -113,7 +113,28 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
         m_policy(fix_policy(arg_policy)),
         m_shared(m_policy.scratch_size(0) + m_policy.scratch_size(1) +
                  FunctorTeamShmemSize<FunctorType>::value(
-                     arg_functor, m_policy.team_size())) {}
+                     arg_functor, m_policy.team_size())) {
+    if ((arg_policy.scratch_size(0, m_policy.team_size()) +
+         FunctorTeamShmemSize<FunctorType>::value(m_functor,
+                                                  arg_policy.team_size())) >
+        static_cast<size_t>(m_policy.scratch_size_max(0))) {
+      std::stringstream error;
+      error << "Requested too much scratch memory on level 0. Requested: "
+            << arg_policy.scratch_size(0, m_policy.team_size()) +
+                   FunctorTeamShmemSize<FunctorType>::value(
+                       m_functor, arg_policy.team_size())
+            << ", Maximum: " << m_policy.scratch_size_max(0);
+      Kokkos::abort(error.str().c_str());
+    }
+    if (arg_policy.scratch_size(1, m_policy.team_size()) >
+        static_cast<size_t>(m_policy.scratch_size_max(1))) {
+      std::stringstream error;
+      error << "Requested too much scratch memory on level 1. Requested: "
+            << arg_policy.scratch_size(1, m_policy.team_size())
+            << ", Maximum: " << m_policy.scratch_size_max(1);
+      Kokkos::abort(error.str().c_str());
+    }
+  }
 };
 
 }  // namespace Impl
