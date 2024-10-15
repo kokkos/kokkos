@@ -48,11 +48,8 @@ std::array<TEST_EXECSPACE, 2> get_execution_spaces(
   TEST_EXECSPACE exec0(streams_and_devices.streams[0]);
   TEST_EXECSPACE exec1(streams_and_devices.streams[1]);
 
-  // Must return void to use ASSERT_EQ
-  [&]() {
-    ASSERT_EQ(exec0.hip_device(), streams_and_devices.devices[0]);
-    ASSERT_EQ(exec1.hip_device(), streams_and_devices.devices[1]);
-  }();
+  EXPECT_EQ(exec0.hip_device(), streams_and_devices.devices[0]);
+  EXPECT_EQ(exec1.hip_device(), streams_and_devices.devices[1]);
 
   return {exec0, exec1};
 }
