@@ -133,11 +133,6 @@ KOKKOS_INLINE_FUNCTION void view_verify_operator_bounds(
           strncat(err, tracker.template get_label<void>().c_str(), 128);
         } else { strcat(err, "**UNMANAGED**"); })
     KOKKOS_IF_ON_DEVICE([&] {
-      // Check #1: is there a SharedAllocationRecord?  (we won't use it, but
-      // if its not there then there isn't a corresponding
-      // SharedAllocationHeader containing a label).  This check should cover
-      // the case of Views that don't have the Unmanaged trait but were
-      // initialized by pointer.
       if (!tracker.has_record()) {
         strcat(err, "**UNMANAGED**");
         return;
@@ -484,24 +479,22 @@ class BasicView {
           "execution space");
     }
     if constexpr (has_exec) {
-      using prop_exec_space_t = std::remove_cv_t<std::remove_reference_t<
-          decltype(Impl::get_property<Impl::ExecutionSpaceTag>(prop_copy))>>;
       return data_handle_type(Impl::make_shared_allocation_record<ElementType>(
           arg_mapping.required_span_size(),
           Impl::get_property<Impl::LabelTag>(prop_copy),
           Impl::get_property<Impl::MemorySpaceTag>(prop_copy),
-          std::optional<prop_exec_space_t>{
-              Impl::get_property<Impl::ExecutionSpaceTag>(prop_copy)},
-          std::integral_constant<bool, alloc_prop::initialize>(),
-          std::integral_constant<bool, alloc_prop::sequential_host_init>()));
+          std::make_optional(
+              Impl::get_property<Impl::ExecutionSpaceTag>(prop_copy)),
+          std::bool_constant<alloc_prop::initialize>(),
+          std::bool_constant<alloc_prop::sequential_host_init>()));
     } else {
       return data_handle_type(Impl::make_shared_allocation_record<ElementType>(
           arg_mapping.required_span_size(),
           Impl::get_property<Impl::LabelTag>(prop_copy),
           Impl::get_property<Impl::MemorySpaceTag>(prop_copy),
-          std::optional<execution_space>{std::nullopt},
-          std::integral_constant<bool, alloc_prop::initialize>(),
-          std::integral_constant<bool, alloc_prop::sequential_host_init>()));
+          std::optional<execution_space>{},
+          std::bool_constant<alloc_prop::initialize>(),
+          std::bool_constant<alloc_prop::sequential_host_init>()));
     }
   }
 
@@ -667,7 +660,7 @@ class BasicView {
 
  public:
   KOKKOS_FUNCTION constexpr size_type size() const noexcept {
-    return size_impl(std::make_integer_sequence<size_t, rank()>());
+    return size_impl(std::make_index_sequence<rank()>());
   }
 
  private:
