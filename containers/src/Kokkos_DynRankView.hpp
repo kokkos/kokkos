@@ -456,7 +456,7 @@ class DynRankView : private View<DataType*******, Properties...> {
   using const_scalar_array_type     = const_value_type;
   using non_const_scalar_array_type = non_const_value_type;
 #ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
-  using specialize = void;
+  using specialize KOKKOS_DEPRECATED = void;
 #else
   using specialize = typename view_type::specialize;
 #endif
@@ -649,8 +649,6 @@ class DynRankView : private View<DataType*******, Properties...> {
   }
 
 #ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
-  // TODO: this will later be swapped in depending on whether the new View
-  // impl is active
  private:
   template <class Ext>
   KOKKOS_FUNCTION typename view_type::extents_type create_rank7_extents(
