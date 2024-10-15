@@ -538,7 +538,7 @@ class BasicView {
 
  public:
   KOKKOS_FUNCTION constexpr size_type size() const noexcept {
-    return size_impl(std::make_integer_sequence<size_t, rank()>());
+    return size_impl(std::make_index_sequence<rank()>());
   }
 
  private:
