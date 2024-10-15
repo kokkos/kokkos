@@ -1173,42 +1173,42 @@ endif
 # Figure out the architecture flag for ROCm.
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX906), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GFX906")
-  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU \"gfx906\"")
   KOKKOS_INTERNAL_AMD_ARCH_FLAG := --offload-arch=gfx906
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX908), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GFX908")
-  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU \"gfx908\"")
   KOKKOS_INTERNAL_AMD_ARCH_FLAG := --offload-arch=gfx908
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX90A), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GFX90A")
-  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU \"gfx90A\"")
   KOKKOS_INTERNAL_AMD_ARCH_FLAG := --offload-arch=gfx90a
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX940), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GFX940")
-  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU \"gfx940\"")
   KOKKOS_INTERNAL_AMD_ARCH_FLAG := --offload-arch=gfx940
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX942), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GFX942")
-  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU \"gfx942\"")
   KOKKOS_INTERNAL_AMD_ARCH_FLAG := --offload-arch=gfx942
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX1030), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GFX1030")
-  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU \"gfx1030\"")
   KOKKOS_INTERNAL_AMD_ARCH_FLAG := --offload-arch=gfx1030
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX1100), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GFX1100")
-  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU \"gfx1100\"")
   KOKKOS_INTERNAL_AMD_ARCH_FLAG := --offload-arch=gfx1100
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX1103), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GFX1103")
-  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU \"gfx1103\"")
   KOKKOS_INTERNAL_AMD_ARCH_FLAG := --offload-arch=gfx1103
 endif
 
