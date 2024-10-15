@@ -313,7 +313,12 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
 
   KOKKOS_INLINE_FUNCTION
   const Kokkos::Impl::SharedAllocationTracker& impl_track() const {
-    return base_t::data_handle().tracker();
+    if constexpr ( traits::is_managed )
+    {
+      return base_t::data_handle().tracker();
+    } else {
+      return {};
+    }
   }
   //----------------------------------------
   // Operators always provided by View
