@@ -257,9 +257,11 @@ namespace TestIntAtomic {
 #else
   using expected_ref_type = desul::AtomicRef<int, desul::MemoryOrderRelaxed, desul::MemoryScopeDevice>;
 #endif
-  static_assert(test_view_typedefs<layout_type, space, memory_traits, host_mirror_space, int,
-				   expected_ref_type>(
-                     ViewParams<int, Kokkos::MemoryTraits<Kokkos::Atomic>>{}));
+// clang-format on
+  static_assert(test_view_typedefs<layout_type, space, memory_traits,
+                                   host_mirror_space, int, expected_ref_type>(
+      ViewParams<int, Kokkos::MemoryTraits<Kokkos::Atomic>>{}));
+  // clang-format off
 }
 // clang-format on
 }  // namespace
