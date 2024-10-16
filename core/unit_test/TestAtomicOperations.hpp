@@ -216,9 +216,15 @@ struct NandAtomicTest {
   template <class T>
   KOKKOS_FUNCTION static auto atomic_op(T* ptr_op, T* ptr_fetch_op,
                                         T* ptr_op_fetch, T update) {
+#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
+    KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
+#endif
     Kokkos::atomic_nand(ptr_op, update);
     T old_val = Kokkos::atomic_fetch_nand(ptr_fetch_op, update);
     T new_val = Kokkos::atomic_nand_fetch(ptr_op_fetch, update);
+#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
+    KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
+#endif
     return Kokkos::pair<T, T>(old_val, new_val);
   }
   template <class T>
