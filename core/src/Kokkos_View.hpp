@@ -208,7 +208,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
            typename traits::device_type, typename traits::hooks_policy,
            typename traits::memory_traits>;
 
-  // Compatible HostMirror view 
+  // Compatible HostMirror view
   using host_mirror_type =
       View<typename traits::non_const_data_type, typename traits::array_layout,
            Device<DefaultHostExecutionSpace,
@@ -264,8 +264,8 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
                                                     size_t>
   stride(iType r) const {
     // base class doesn't have constraint
-  // FIXME: Eventually we need to deprecate this behavior and just use
-  // BasicView implementation
+    // FIXME: Eventually we need to deprecate this behavior and just use
+    // BasicView implementation
     return base_t::stride(r);
   }
 
@@ -313,8 +313,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
 
   KOKKOS_INLINE_FUNCTION
   const Kokkos::Impl::SharedAllocationTracker& impl_track() const {
-    if constexpr ( traits::is_managed )
-    {
+    if constexpr (traits::is_managed) {
       return base_t::data_handle().tracker();
     } else {
       return {};
