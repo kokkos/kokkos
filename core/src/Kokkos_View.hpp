@@ -316,7 +316,8 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
     if constexpr (traits::is_managed) {
       return base_t::data_handle().tracker();
     } else {
-      return {};
+      static const Kokkos::Impl::SharedAllocationTracker empty_tracker = {};
+      return empty_tracker;
     }
   }
   //----------------------------------------
