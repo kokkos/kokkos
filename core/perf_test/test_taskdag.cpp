@@ -32,8 +32,10 @@ int main() { return 0; }
 
 #include <Kokkos_Timer.hpp>
 
+#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
 // We allow using deprecated classes in this file
 KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
+#endif
 
 using ExecSpace = Kokkos::DefaultExecutionSpace;
 
@@ -226,6 +228,8 @@ int main(int argc, char* argv[]) {
   return 0;
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
 KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
+#endif
 
 #endif

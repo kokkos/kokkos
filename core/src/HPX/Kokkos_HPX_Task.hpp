@@ -35,8 +35,10 @@
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
+#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
 // We allow using deprecated classes in this file
 KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
+#endif
 
 namespace Kokkos {
 namespace Impl {
@@ -261,7 +263,9 @@ extern template class TaskQueue<
 }  // namespace Impl
 }  // namespace Kokkos
 
+#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
 KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
+#endif
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

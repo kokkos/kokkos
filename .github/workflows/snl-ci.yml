@@ -38,7 +38,6 @@ jobs:
             -DCMAKE_CXX_EXTENSIONS=OFF \
             -DBUILD_SHARED_LIBS=OFF \
             -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
-            -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
             -DKokkos_ENABLE_BENCHMARKS=ON \

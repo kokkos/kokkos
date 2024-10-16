@@ -55,7 +55,6 @@ pipeline {
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
-                                -DKokkos_ENABLE_DEPRECATION_WARNINGS=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_BENCHMARKS=ON \
                                 -DKokkos_ENABLE_OPENMP=ON \
@@ -88,7 +87,6 @@ pipeline {
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
-                                -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_BENCHMARKS=ON \
                                 -DKokkos_ENABLE_HIP=ON \
@@ -137,7 +135,7 @@ pipeline {
                                 -DKokkos_ENABLE_CUDA_UVM=ON \
                                 -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
-                                -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
+                                \
                                 -DCMAKE_INSTALL_PREFIX=${PWD}/../install \
                               .. && \
                               make -j8 install && \
@@ -261,7 +259,6 @@ pipeline {
                                 -DKokkos_ARCH_AMPERE80=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
-                                -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
                                 -DKokkos_ENABLE_EXAMPLES=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_BENCHMARKS=ON \
@@ -387,7 +384,6 @@ pipeline {
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
-                                -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_BENCHMARKS=ON \
                                 -DKokkos_ENABLE_TUNING=ON \
@@ -425,7 +421,6 @@ pipeline {
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
-                                -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_BENCHMARKS=ON \
                                 -DKokkos_ENABLE_CUDA=ON \

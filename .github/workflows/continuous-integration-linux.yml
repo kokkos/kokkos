@@ -24,13 +24,13 @@ jobs:
         include:
           - distro: 'ubuntu:intel'
             cxx: 'icpc'
-            cxx_extra_flags: '-diag-disable=177,10441'
+            cxx_extra_flags: '-diag-disable=177,1478,1786,10441'
             cmake_build_type: 'Release'
             backend: 'OPENMP'
             stdcxx: '17'
           - distro: 'ubuntu:intel'
             cxx: 'icpc'
-            cxx_extra_flags: '-diag-disable=177,10441'
+            cxx_extra_flags: '-diag-disable=177,1478,1786,10441'
             cmake_build_type: 'Debug'
             backend: 'OPENMP'
             stdcxx: '17'
@@ -116,7 +116,6 @@ jobs:
             -DKokkos_ENABLE_BENCHMARKS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
             -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
-            -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
             -DCMAKE_CXX_FLAGS="-Werror ${{ matrix.cxx_extra_flags }}" \
             -DCMAKE_CXX_STANDARD="${{ matrix.stdcxx }}" \
