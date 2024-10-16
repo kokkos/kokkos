@@ -74,7 +74,7 @@ KOKKOS_INLINE_FUNCTION void store_fence()  { desul::atomic_thread_fence(desul::M
 // load/store
 template<class T> KOKKOS_FUNCTION Impl::enable_if_atomic_t<T,    T> atomic_load (T const* ptr)                              { return desul::atomic_load (const_cast<std::remove_volatile_t<T>*>(ptr),      desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
 template<class T> KOKKOS_FUNCTION Impl::enable_if_atomic_t<T, void> atomic_store(T* ptr, Impl::not_deduced_atomic_t<T> val) { return desul::atomic_store(const_cast<std::remove_volatile_t<T>*>(ptr), val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
-template<class T> KOKKOS_FUNCTION Impl::enable_if_atomic_t<T, void> atomic_assign(T* ptr, Impl::not_deduced_atomic_t<T> val) { atomic_store(ptr, val); }
+template<class T> KOKKOS_DEPRECATED_WITH_COMMENT("Use atomic_store() instead!") KOKKOS_FUNCTION Impl::enable_if_atomic_t<T, void> atomic_assign(T* ptr, Impl::not_deduced_atomic_t<T> val) { atomic_store(ptr, val); }
 
 // atomic_fetch_op
 template<class T> KOKKOS_FUNCTION Impl::enable_if_atomic_t<T, T> atomic_fetch_add(T* ptr, Impl::not_deduced_atomic_t<T> val) { return desul::atomic_fetch_add(const_cast<std::remove_volatile_t<T>*>(ptr), val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
