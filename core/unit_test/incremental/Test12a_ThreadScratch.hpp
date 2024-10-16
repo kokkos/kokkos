@@ -87,8 +87,8 @@ struct ThreadScratch {
     Kokkos::fence();
     auto v_H = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), v);
 
-    size_t check   = 0;
-    const size_t s = pN * sX * sY;
+    int check   = 0;
+    const int s = pN * sX * sY;
     for (int n = 0; n < pN; ++n)
       for (int m = 0; m < max_team_size; ++m) {
         check += v_H(n, m);
