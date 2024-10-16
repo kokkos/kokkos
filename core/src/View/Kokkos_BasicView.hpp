@@ -104,13 +104,14 @@ class BasicView {
  public:
   using mdspan_type =
       mdspan<ElementType, Extents, LayoutPolicy, AccessorPolicy>;
-  using extents_type     = typename mdspan_type::extents_type;
-  using layout_type      = typename mdspan_type::layout_type;
-  using accessor_type    = typename mdspan_type::accessor_type;
-  using mapping_type     = typename mdspan_type::mapping_type;
-  using element_type     = typename mdspan_type::element_type;
-  using value_type       = typename mdspan_type::value_type;
-   // FIXME: backwards compatibility, should be changed to the same as mdspan index_type
+  using extents_type  = typename mdspan_type::extents_type;
+  using layout_type   = typename mdspan_type::layout_type;
+  using accessor_type = typename mdspan_type::accessor_type;
+  using mapping_type  = typename mdspan_type::mapping_type;
+  using element_type  = typename mdspan_type::element_type;
+  using value_type    = typename mdspan_type::value_type;
+  // FIXME: backwards compatibility, should be changed to the same as mdspan
+  // index_type
   using index_type       = typename mdspan_type::size_type;
   using size_type        = typename mdspan_type::size_type;
   using rank_type        = typename mdspan_type::rank_type;
