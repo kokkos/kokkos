@@ -171,13 +171,13 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   using index_type           = typename traits::memory_space::size_type;
 
   // aliases from BasicView
-  using value_type = typename base_t::value_type;
 
   // FIXME: Should be unsigned
   // FIXME: these are overriden so that their types are identical when using
   // BasicView or Legacy we will need to obtain these from base_t in the future
   // and deprecate old behavior
   using size_type    = typename memory_space::size_type;
+  using value_type   = typename traits::value_type;
   using pointer_type = typename traits::value_type*;
 
   using scalar_array_type       = typename traits::scalar_array_type;
