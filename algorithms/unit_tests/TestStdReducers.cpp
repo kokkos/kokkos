@@ -72,7 +72,7 @@ auto create_host_view_with_reduction_order_indices(
     result(8) = 7;
     result(9) = 5;
   } else {
-    throw std::runtime_error("test: Invalid enum");
+    Kokkos::abort("test: Invalid enum");
   }
 
   return result;

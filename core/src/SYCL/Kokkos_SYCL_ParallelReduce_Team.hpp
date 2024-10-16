@@ -455,11 +455,16 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
         m_league_size(arg_policy.league_size()),
         m_team_size(arg_policy.team_size()),
         m_vector_size(arg_policy.impl_vector_length()) {
-    // FIXME_SYCL optimize
-    if (m_team_size < 0)
+    if (m_team_size < 0) {
       m_team_size = m_policy.team_size_recommended(
           m_functor_reducer.get_functor(), m_functor_reducer.get_reducer(),
           ParallelReduceTag{});
+      if (m_team_size <= 0)
+        Kokkos::Impl::throw_runtime_exception(
+            "Kokkos::Impl::ParallelReduce<SYCL, TeamPolicy> could not find a "
+            "valid execution configuration.");
+    }
+
     // Must be a power of two greater than two, get the one not bigger than the
     // requested one.
     if ((m_team_size & m_team_size - 1) || m_team_size < 2) {

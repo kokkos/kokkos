@@ -113,7 +113,7 @@ struct ViewCtorProp<std::enable_if_t<is_view_label<Label>::value>, Label> {
   using type = std::string;
 
   ViewCtorProp(const type &arg) : value(arg) {}
-  ViewCtorProp(type &&arg) : value(arg) {}
+  ViewCtorProp(type &&arg) : value(std::move(arg)) {}
 
   type value;
 };
@@ -213,11 +213,16 @@ struct ViewCtorProp : public ViewCtorProp<void, P>... {
   using execution_space = typename var_execution_space::type;
   using pointer_type    = typename var_pointer::type;
 
-  /*  Copy from a matching argument list.
-   *  Requires  std::is_same< P , ViewCtorProp< void , Args >::value ...
-   */
-  template <typename... Args>
-  inline ViewCtorProp(Args const &...args) : ViewCtorProp<void, P>(args)... {}
+  // Construct from a matching argument list.
+  //
+  // Note that if P is empty, this constructor is the default constructor.
+  // On the other hand, if P is not empty, the constraint implies that
+  // there is no default constructor.
+  template <typename... Args,
+            typename = std::enable_if_t<std::conjunction_v<
+                std::is_constructible<view_ctor_prop_base<P>, Args &&>...>>>
+  ViewCtorProp(Args &&...args)
+      : ViewCtorProp<void, P>(std::forward<Args>(args))... {}
 
   template <typename... Args>
   KOKKOS_FUNCTION ViewCtorProp(pointer_type arg0, Args const &...args)
@@ -454,15 +459,14 @@ inline constexpr Kokkos::Impl::AllowPadding_t AllowPadding{};
  * alignment
  */
 template <class... Args>
-inline Impl::ViewCtorProp<typename Impl::ViewCtorProp<void, Args>::type...>
-view_alloc(Args const &...args) {
-  using return_type =
-      Impl::ViewCtorProp<typename Impl::ViewCtorProp<void, Args>::type...>;
+auto view_alloc(Args &&...args) {
+  using return_type = Impl::ViewCtorProp<typename Impl::ViewCtorProp<
+      void, Kokkos::Impl::remove_cvref_t<Args>>::type...>;
 
   static_assert(!return_type::has_pointer,
                 "Cannot give pointer-to-memory for view allocation");
 
-  return return_type(args...);
+  return return_type(std::forward<Args>(args)...);
 }
 
 template <class... Args>

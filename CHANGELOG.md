@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## [4.4.01](https://github.com/kokkos/kokkos/tree/4.4.01)
+[Full Changelog](https://github.com/kokkos/kokkos/compare/4.0.00...4.4.01)
+
+### Features:
+* Introduce new SequentialHostInit view allocation property [\#7229](https://github.com/kokkos/kokkos/pull/7229)
+
+### Backend and Architecture Enhancements:
+
+#### CUDA:
+* Experimental support for unified memory mode (intended for Grace-Hopper etc.) [\#6823](https://github.com/kokkos/kokkos/pull/6823)
+
+### Bug Fixes
+* OpenMP: Fix issue related to the visibility of an internal symbol with shared libraries that affected `ScatterView` in particular [\#7284](https://github.com/kokkos/kokkos/pull/7284)
+* Fix implicit copy assignment operators in few AVX2 masks being deleted [#7296](https://github.com/kokkos/kokkos/pull/7296)
+
 ## [4.4.00](https://github.com/kokkos/kokkos/tree/4.4.00)
 [Full Changelog](https://github.com/kokkos/kokkos/compare/4.3.01...4.4.00)
 
@@ -42,6 +57,7 @@
 * SIMD: Allow flexible vector width for 32 bit types [\#6802](https://github.com/kokkos/kokkos/pull/6802)
 * Updates for `Kokkos::Array`: add `kokkos_swap(Array<T, N>)` specialization [\#6943](https://github.com/kokkos/kokkos/pull/6943), add `Kokkos::to_array` [\#6375](https://github.com/kokkos/kokkos/pull/6375),  make `Kokkos::Array` equality-comparable [\#7148](https://github.com/kokkos/kokkos/pull/7148)
 * Structured binding support for `Kokkos::complex` [\#7040](https://github.com/kokkos/kokkos/pull/7040)
+* Introduce `KOKKOS_DEDUCTION_GUIDE` macro to allow for portable user-defined deduction guides [\#6954](https://github.com/kokkos/kokkos/pull/6954)
 
 ### Build System Changes
 * Do not require OpenMP support for languages other than CXX [\#6965](https://github.com/kokkos/kokkos/pull/6965)

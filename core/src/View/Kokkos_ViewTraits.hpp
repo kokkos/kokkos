@@ -27,6 +27,10 @@ static_assert(false,
 #include <Kokkos_MemoryTraits.hpp>
 #include <Kokkos_ExecPolicy.hpp>
 #include <View/Hooks/Kokkos_ViewHooks.hpp>
+#ifdef KOKKOS_ENABLE_IMPL_MDSPAN
+#include <View/MDSpan/Kokkos_MDSpan_Layout.hpp>
+#include <View/MDSpan/Kokkos_MDSpan_Accessor.hpp>
+#endif
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
