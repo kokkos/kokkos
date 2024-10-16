@@ -275,14 +275,29 @@ class DualView : public ViewTraits<DataType, Properties...> {
            const size_t n5                   = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
            const size_t n6                   = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
            const size_t n7                   = KOKKOS_IMPL_CTOR_DEFAULT_ARG)
-      : modified_flags(t_modified_flags("DualView::modified_flags")),
-        d_view(arg_prop, n0, n1, n2, n3, n4, n5, n6, n7) {
-    // without UVM, host View mirrors
-    if constexpr (Kokkos::Impl::has_type<Impl::WithoutInitializing_t,
-                                         P...>::value)
-      h_view = Kokkos::create_mirror_view(Kokkos::WithoutInitializing, d_view);
-    else
-      h_view = Kokkos::create_mirror_view(d_view);
+      : modified_flags(t_modified_flags("DualView::modified_flags")) {
+    if constexpr (Impl::ViewCtorProp<P...>::sequential_host_init) {
+      h_view = t_host(arg_prop, n0, n1, n2, n3, n4, n5, n6, n7);
+      static_assert(Impl::ViewCtorProp<P...>::initialize,
+                    "DualView: Kokkos::SequentialHostInit isn't compatible "
+                    "with Kokkos::WithoutInitializing!");
+      static_assert(!Impl::ViewCtorProp<P...>::has_execution_space,
+                    "DualView: Kokkos::SequentialHostInit isn't compatible "
+                    "with providing an execution space instance!");
+
+      d_view =
+          Kokkos::create_mirror_view(typename traits::memory_space{}, h_view);
+    } else {
+      d_view = t_dev(arg_prop, n0, n1, n2, n3, n4, n5, n6, n7);
+
+      // without UVM, host View mirrors
+      if constexpr (Kokkos::Impl::has_type<Impl::WithoutInitializing_t,
+                                           P...>::value)
+        h_view =
+            Kokkos::create_mirror_view(Kokkos::WithoutInitializing, d_view);
+      else
+        h_view = Kokkos::create_mirror_view(d_view);
+    }
   }
 
   //! Copy constructor (shallow copy)
@@ -1046,9 +1061,11 @@ class DualView : public ViewTraits<DataType, Properties...> {
       }
     };
 
-    constexpr bool has_execution_space = alloc_prop_input::has_execution_space;
-
-    if constexpr (has_execution_space) {
+    if constexpr (alloc_prop_input::sequential_host_init) {
+      sync<typename t_host::memory_space>();
+      resize_on_host(arg_prop);
+      return;
+    } else if constexpr (alloc_prop_input::has_execution_space) {
       using ExecSpace = typename alloc_prop_input::execution_space;
       const auto& exec_space =
           Impl::get_property<Impl::ExecutionSpaceTag>(arg_prop);
