@@ -272,19 +272,18 @@ namespace TestIntAtomic {
                                std::conditional_t<!has_unified_mem_space, Kokkos::HostSpace,
   // otherwise its the following Device type
                                Kokkos::Device<Kokkos::DefaultHostExecutionSpace, typename Kokkos::DefaultExecutionSpace::memory_space>>>;
-  // clang-format on
-  static_assert(
-      test_view_typedefs<
-          layout_type, space, memory_traits, host_mirror_space, int,
+// clang-format on
+static_assert(test_view_typedefs<
+              layout_type, space, memory_traits, host_mirror_space, int,
 #ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
-          Kokkos::Impl::AtomicDataElement<
-              Kokkos::ViewTraits<int, Kokkos::MemoryTraits<Kokkos::Atomic>>>
+              Kokkos::Impl::AtomicDataElement<
+                  Kokkos::ViewTraits<int, Kokkos::MemoryTraits<Kokkos::Atomic>>>
 #else
-          desul::AtomicRef<int, desul::MemoryOrderRelaxed,
-                           desul::MemoryScopeDevice>
+              desul::AtomicRef<int, desul::MemoryOrderRelaxed,
+                               desul::MemoryScopeDevice>
 #endif
-          >(ViewParams<int, Kokkos::MemoryTraits<Kokkos::Atomic>>{}));
-  // clang-format off
+              >(ViewParams<int, Kokkos::MemoryTraits<Kokkos::Atomic>>{}));
+// clang-format off
 }
 // clang-format on
 }  // namespace
