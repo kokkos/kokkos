@@ -165,7 +165,7 @@ struct ChaseLevDeque {
 #ifdef _WIN32
         Kokkos::memory_fence();
         bool const success =
-            Kokkos::atomic_compare_exchange_strong(&m_top, t, t + 1);
+            (t == Kokkos::atomic_compare_exchange(&m_top, t, t + 1));
         Kokkos::memory_fence();
         if (!success) {
           return_value = nullptr;
@@ -226,7 +226,7 @@ struct ChaseLevDeque {
 #ifdef _WIN32
       Kokkos::memory_fence();
       bool const success =
-          Kokkos::atomic_compare_exchange_strong(&m_top, t, t + 1);
+          (t == Kokkos::atomic_compare_exchange(&m_top, t, t + 1));
       Kokkos::memory_fence();
       if (!success) {
         return_value = nullptr;
