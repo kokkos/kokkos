@@ -126,8 +126,8 @@ template<class T> KOKKOS_FUNCTION Impl::enable_if_atomic_t<T, void> atomic_lshif
 template<class T> KOKKOS_FUNCTION Impl::enable_if_atomic_t<T, void> atomic_rshift(T* ptr, Impl::not_deduced_atomic_t<T> val) { (void)desul::atomic_fetch_rshift(const_cast<std::remove_volatile_t<T>*>(ptr), val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
 template<class T> KOKKOS_FUNCTION Impl::enable_if_atomic_t<T, void> atomic_inc(T* ptr) { desul::atomic_inc(const_cast<std::remove_volatile_t<T>*>(ptr), desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
 template<class T> KOKKOS_FUNCTION Impl::enable_if_atomic_t<T, void> atomic_dec(T* ptr) { desul::atomic_dec(const_cast<std::remove_volatile_t<T>*>(ptr), desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
-template<class T> KOKKOS_FUNCTION Impl::enable_if_atomic_t<T, void> atomic_increment(T* ptr) { atomic_inc(ptr); }
-template<class T> KOKKOS_FUNCTION Impl::enable_if_atomic_t<T, void> atomic_decrement(T* ptr) { atomic_dec(ptr); }
+template<class T> KOKKOS_DEPRECATED_WITH_COMMENT("Use atomic_inc() instead!") KOKKOS_FUNCTION Impl::enable_if_atomic_t<T, void> atomic_increment(T* ptr) { atomic_inc(ptr); }
+template<class T> KOKKOS_DEPRECATED_WITH_COMMENT("Use atomic_dec() instead!") KOKKOS_FUNCTION Impl::enable_if_atomic_t<T, void> atomic_decrement(T* ptr) { atomic_dec(ptr); }
 
 // exchange
 template<class T> KOKKOS_FUNCTION Impl::enable_if_atomic_t<T, T> atomic_exchange        (T* ptr, Impl::not_deduced_atomic_t<T> val)                                             { return desul::atomic_exchange        (const_cast<std::remove_volatile_t<T>*>(ptr), val,               desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }

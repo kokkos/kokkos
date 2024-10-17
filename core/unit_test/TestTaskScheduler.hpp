@@ -195,7 +195,7 @@ struct TestTaskDependence {
 
       Kokkos::respawn(this, f);
     } else if (1 == m_count) {
-      Kokkos::atomic_increment(&m_accum());
+      Kokkos::atomic_inc(&m_accum());
     }
   }
 
