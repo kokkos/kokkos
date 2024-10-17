@@ -76,7 +76,9 @@ KOKKOS_INLINE_FUNCTION void store_fence()  { desul::atomic_thread_fence(desul::M
 // load/store
 template<class T> KOKKOS_FUNCTION Impl::enable_if_atomic_t<T,    T> atomic_load (T const* ptr)                              { return desul::atomic_load (const_cast<std::remove_volatile_t<T>*>(ptr),      desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
 template<class T> KOKKOS_FUNCTION Impl::enable_if_atomic_t<T, void> atomic_store(T* ptr, Impl::not_deduced_atomic_t<T> val) { return desul::atomic_store(const_cast<std::remove_volatile_t<T>*>(ptr), val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 template<class T> KOKKOS_DEPRECATED_WITH_COMMENT("Use atomic_store() instead!") KOKKOS_FUNCTION Impl::enable_if_atomic_t<T, void> atomic_assign(T* ptr, Impl::not_deduced_atomic_t<T> val) { atomic_store(ptr, val); }
+#endif
 
 // atomic_fetch_op
 template<class T> KOKKOS_FUNCTION Impl::enable_if_atomic_t<T, T> atomic_fetch_add(T* ptr, Impl::not_deduced_atomic_t<T> val) { return desul::atomic_fetch_add(const_cast<std::remove_volatile_t<T>*>(ptr), val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
@@ -128,13 +130,17 @@ template<class T> KOKKOS_FUNCTION Impl::enable_if_atomic_t<T, void> atomic_lshif
 template<class T> KOKKOS_FUNCTION Impl::enable_if_atomic_t<T, void> atomic_rshift(T* ptr, Impl::not_deduced_atomic_t<T> val) { (void)desul::atomic_fetch_rshift(const_cast<std::remove_volatile_t<T>*>(ptr), val, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
 template<class T> KOKKOS_FUNCTION Impl::enable_if_atomic_t<T, void> atomic_inc(T* ptr) { desul::atomic_inc(const_cast<std::remove_volatile_t<T>*>(ptr), desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
 template<class T> KOKKOS_FUNCTION Impl::enable_if_atomic_t<T, void> atomic_dec(T* ptr) { desul::atomic_dec(const_cast<std::remove_volatile_t<T>*>(ptr), desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 template<class T> KOKKOS_DEPRECATED_WITH_COMMENT("Use atomic_inc() instead!") KOKKOS_FUNCTION Impl::enable_if_atomic_t<T, void> atomic_increment(T* ptr) { atomic_inc(ptr); }
 template<class T> KOKKOS_DEPRECATED_WITH_COMMENT("Use atomic_dec() instead!") KOKKOS_FUNCTION Impl::enable_if_atomic_t<T, void> atomic_decrement(T* ptr) { atomic_dec(ptr); }
+#endif
 
 // exchange
 template<class T> KOKKOS_FUNCTION Impl::enable_if_atomic_t<T, T> atomic_exchange        (T* ptr, Impl::not_deduced_atomic_t<T> val)                                             { return desul::atomic_exchange        (const_cast<std::remove_volatile_t<T>*>(ptr), val,               desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
 template<class T> KOKKOS_FUNCTION Impl::enable_if_atomic_t<T, T> atomic_compare_exchange(T* ptr, Impl::not_deduced_atomic_t<T> expected, Impl::not_deduced_atomic_t<T> desired) { return desul::atomic_compare_exchange(const_cast<std::remove_volatile_t<T>*>(ptr), expected, desired, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 template<class T> KOKKOS_DEPRECATED_WITH_COMMENT("Use atomic_compare_exchange() instead!") KOKKOS_FUNCTION Impl::enable_if_atomic_t<T, bool> atomic_compare_exchange_strong(T* const ptr, Impl::not_deduced_atomic_t<T> expected, Impl::not_deduced_atomic_t<T> desired) { return expected == atomic_compare_excahnge(ptr, expected, desired); }
+#endif
 
 // clang-format on
 }  // namespace Kokkos
