@@ -279,11 +279,11 @@ class DualView : public ViewTraits<DataType, Properties...> {
     if constexpr (Impl::ViewCtorProp<P...>::sequential_host_init) {
       h_view = t_host(arg_prop, n0, n1, n2, n3, n4, n5, n6, n7);
       static_assert(Impl::ViewCtorProp<P...>::initialize,
-                    "DualView: Kokkos::SequentialHostInit isn't compatible "
-                    "with Kokkos::WithoutInitializing!");
+                    "DualView: SequentialHostInit isn't compatible with "
+                    "WithoutInitializing!");
       static_assert(!Impl::ViewCtorProp<P...>::has_execution_space,
-                    "DualView: Kokkos::SequentialHostInit isn't compatible "
-                    "with providing an execution space instance!");
+                    "DualView: SequentialHostInit isn't compatible with "
+                    "providing an execution space instance!");
 
       d_view = Kokkos::create_mirror_view_and_copy(
           typename traits::memory_space{}, h_view);
@@ -1063,11 +1063,11 @@ class DualView : public ViewTraits<DataType, Properties...> {
 
     if constexpr (alloc_prop_input::sequential_host_init) {
       static_assert(alloc_prop_input::initialize,
-                    "DualView: Kokkos::SequentialHostInit isn't compatible "
-                    "with Kokkos::WithoutInitializing!");
+                    "DualView: SequentialHostInit isn't compatible with "
+                    "WithoutInitializing!");
       static_assert(!alloc_prop_input::has_execution_space,
-                    "DualView: Kokkos::SequentialHostInit isn't compatible "
-                    "with providing an execution space instance!");
+                    "DualView: SequentialHostInit isn't compatible with "
+                    "providing an execution space instance!");
 
       if (sizeMismatch) {
         sync<typename t_host::memory_space>();
