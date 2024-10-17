@@ -29,9 +29,11 @@ static_assert(false,
 
 namespace Kokkos {
 
-// FIXME: These functions don't have any use/test in unit tests ...
-// ==========================================================
-inline const char* atomic_query_version() { return "KOKKOS_DESUL_ATOMICS"; }
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+KOKKOS_DEPRECATED inline const char* atomic_query_version() {
+  return "KOKKOS_DESUL_ATOMICS";
+}
+#endif
 
 #if defined(KOKKOS_COMPILER_GNU) && !defined(__PGIC__) && \
     !defined(__CUDA_ARCH__)
