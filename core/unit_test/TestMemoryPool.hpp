@@ -19,6 +19,8 @@
 
 #include <Kokkos_Core.hpp>
 
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
+
 namespace TestMemoryPool {
 
 template <typename MemSpace = Kokkos::HostSpace>
@@ -524,6 +526,8 @@ void test_memory_pool_huge() {
 //----------------------------------------------------------------------------
 
 }  // namespace TestMemoryPool
+
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
 
 namespace Test {
 

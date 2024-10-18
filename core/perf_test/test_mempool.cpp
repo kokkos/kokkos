@@ -30,6 +30,8 @@
 using ExecSpace   = Kokkos::DefaultExecutionSpace;
 using MemorySpace = Kokkos::DefaultExecutionSpace::memory_space;
 
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
+
 using MemoryPool = Kokkos::MemoryPool<ExecSpace>;
 
 struct TestFunctor {
