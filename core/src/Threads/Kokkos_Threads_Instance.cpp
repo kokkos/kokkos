@@ -493,7 +493,7 @@ void ThreadsInternal::initialize(int thread_count_arg) {
                          ? Kokkos::hwloc::get_available_numa_count() *
                                Kokkos::hwloc::get_available_cores_per_numa() *
                                Kokkos::hwloc::get_available_threads_per_core()
-                         : 1;
+                         : std::thread::hardware_concurrency();
     }
 
     const bool allow_asynchronous_threadpool = false;
