@@ -1337,6 +1337,7 @@ class TestViewAPI {
     ASSERT_EQ(dz.data(), nullptr);
   }
 
+#ifndef KOKKOS_ENABLE_NO_EXCEPTIONS
   struct test_refcount_poison_copy_functor {
     using view_type = Kokkos::View<double *>;
     explicit test_refcount_poison_copy_functor(view_type v) : view(v) {}
@@ -1370,6 +1371,7 @@ class TestViewAPI {
     ASSERT_EQ(original.use_count(), 2);
     ASSERT_EQ(copy.use_count(), 2);
   }
+#endif
 
   static void run_test_deep_copy_empty() {
     // Check Deep Copy of LayoutLeft to LayoutRight
