@@ -275,14 +275,29 @@ class DualView : public ViewTraits<DataType, Properties...> {
            const size_t n5                   = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
            const size_t n6                   = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
            const size_t n7                   = KOKKOS_IMPL_CTOR_DEFAULT_ARG)
-      : modified_flags(t_modified_flags("DualView::modified_flags")),
-        d_view(arg_prop, n0, n1, n2, n3, n4, n5, n6, n7) {
-    // without UVM, host View mirrors
-    if constexpr (Kokkos::Impl::has_type<Impl::WithoutInitializing_t,
-                                         P...>::value)
-      h_view = Kokkos::create_mirror_view(Kokkos::WithoutInitializing, d_view);
-    else
-      h_view = Kokkos::create_mirror_view(d_view);
+      : modified_flags(t_modified_flags("DualView::modified_flags")) {
+    if constexpr (Impl::ViewCtorProp<P...>::sequential_host_init) {
+      h_view = t_host(arg_prop, n0, n1, n2, n3, n4, n5, n6, n7);
+      static_assert(Impl::ViewCtorProp<P...>::initialize,
+                    "DualView: SequentialHostInit isn't compatible with "
+                    "WithoutInitializing!");
+      static_assert(!Impl::ViewCtorProp<P...>::has_execution_space,
+                    "DualView: SequentialHostInit isn't compatible with "
+                    "providing an execution space instance!");
+
+      d_view = Kokkos::create_mirror_view_and_copy(
+          typename traits::memory_space{}, h_view);
+    } else {
+      d_view = t_dev(arg_prop, n0, n1, n2, n3, n4, n5, n6, n7);
+
+      // without UVM, host View mirrors
+      if constexpr (Kokkos::Impl::has_type<Impl::WithoutInitializing_t,
+                                           P...>::value)
+        h_view =
+            Kokkos::create_mirror_view(Kokkos::WithoutInitializing, d_view);
+      else
+        h_view = Kokkos::create_mirror_view(d_view);
+    }
   }
 
   //! Copy constructor (shallow copy)
@@ -1046,9 +1061,24 @@ class DualView : public ViewTraits<DataType, Properties...> {
       }
     };
 
-    constexpr bool has_execution_space = alloc_prop_input::has_execution_space;
+    if constexpr (alloc_prop_input::sequential_host_init) {
+      static_assert(alloc_prop_input::initialize,
+                    "DualView: SequentialHostInit isn't compatible with "
+                    "WithoutInitializing!");
+      static_assert(!alloc_prop_input::has_execution_space,
+                    "DualView: SequentialHostInit isn't compatible with "
+                    "providing an execution space instance!");
 
-    if constexpr (has_execution_space) {
+      if (sizeMismatch) {
+        sync<typename t_host::memory_space>();
+        ::Kokkos::resize(arg_prop, h_view, n0, n1, n2, n3, n4, n5, n6, n7);
+        resync_device(Kokkos::view_alloc(Kokkos::WithoutInitializing));
+
+        /* Mark Host copy as modified */
+        ++modified_flags(0);
+      }
+      return;
+    } else if constexpr (alloc_prop_input::has_execution_space) {
       using ExecSpace = typename alloc_prop_input::execution_space;
       const auto& exec_space =
           Impl::get_property<Impl::ExecutionSpaceTag>(arg_prop);
