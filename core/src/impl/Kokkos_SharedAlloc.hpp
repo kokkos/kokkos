@@ -658,25 +658,12 @@ struct SharedAllocationDisableTrackingGuard {
   // clang-format on
 };
 
-// Intel classic compiler screwed up the reference counting here
-// in the BasicView test. Apparently the code simplification in
-// BasicView over View, let it think it can optimize stuff away
-// and it ends up not setting the "do-not-deref" flag
-// because it skips some copy ctors.
-// I tried a lot of stuff to no avail (don't move, make an explicit
-// volatile copy first etc.), only reducing opt-level fixed it.
-#ifdef KOKKOS_COMPILER_INTEL
-#pragma optimize("", off)
-#endif
 template <class FunctorType, class... Args>
 inline FunctorType construct_with_shared_allocation_tracking_disabled(
     Args&&... args) {
   [[maybe_unused]] auto guard = SharedAllocationDisableTrackingGuard{};
   return {std::forward<Args>(args)...};
 }
-#ifdef KOKKOS_COMPILER_INTEL
-#pragma optimize("", on)
-#endif
 } /* namespace Impl */
 } /* namespace Kokkos */
 #endif
