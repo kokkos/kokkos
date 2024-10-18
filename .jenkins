@@ -454,7 +454,7 @@ pipeline {
                                 -DCMAKE_BUILD_TYPE=Debug \
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
                                 -DCMAKE_CXX_COMPILER=$WORKSPACE/bin/nvcc_wrapper \
-                                -DCMAKE_CXX_FLAGS="-Werror -Werror all-warnings -Xcudafe --diag_suppress=20208" \
+                                -DCMAKE_CXX_FLAGS="-Werror -Werror all-warnings" \
                                 -DCMAKE_CXX_STANDARD=17 \
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
@@ -495,7 +495,7 @@ pipeline {
                         sh '''rm -rf build && mkdir -p build && cd build && \
                               ../gnu_generate_makefile.bash \
                                 --with-options=compiler_warnings \
-                                --cxxflags="-Werror -Werror all-warnings -Xcudafe --diag_suppress=20208" \
+                                --cxxflags="-Werror -Werror all-warnings" \
                                 --cxxstandard=c++17 \
                                 --with-cuda \
                                 --with-cuda-options=enable_lambda \

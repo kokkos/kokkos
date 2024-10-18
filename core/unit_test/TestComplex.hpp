@@ -14,8 +14,7 @@
 //
 //@HEADER
 
-#include <Kokkos_Core.hpp>
-#include <sstream>
+#include <Kokkos_Macros.hpp>
 
 // Suppress "'long double' is treated as 'double' in device code"
 #ifdef KOKKOS_COMPILER_NVCC
@@ -29,6 +28,9 @@
 #endif
 #endif
 #endif
+
+#include <Kokkos_Core.hpp>
+#include <sstream>
 
 namespace {
 template <typename... Ts>

@@ -14,12 +14,7 @@
 //
 //@HEADER
 
-#include <gtest/gtest.h>
-
-#include <Kokkos_Core.hpp>
-#include <type_traits>
-#include <limits>
-#include "Kokkos_NumericTraits.hpp"
+#include <Kokkos_Macros.hpp>
 
 // Suppress "'long double' is treated as 'double' in device code"
 #ifdef KOKKOS_COMPILER_NVCC
@@ -33,6 +28,13 @@
 #endif
 #endif
 #endif
+
+#include <gtest/gtest.h>
+
+#include <Kokkos_Core.hpp>
+#include <type_traits>
+#include <limits>
+#include "Kokkos_NumericTraits.hpp"
 
 struct extrema {
 #define DEFINE_EXTREMA(T, m, M)                 \
