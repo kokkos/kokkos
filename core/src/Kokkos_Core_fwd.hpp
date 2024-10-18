@@ -284,7 +284,7 @@ template <class DstSpace, class SrcSpace,
           class Enable         = void>
 struct DeepCopy;
 
-template <class ViewType, class Layout = typename ViewType::array_layout,
+template <class ViewType, class Layout = typename ViewType::layout_type,
           class ExecSpace = typename ViewType::execution_space,
           int Rank = ViewType::rank, typename iType = int64_t>
 struct ViewFill;

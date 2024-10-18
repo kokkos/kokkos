@@ -597,52 +597,49 @@ void test_view_mapping() {
     static_assert(std::is_void_v<typename a_const_int_r1::specialize>);
     static_assert(std::is_same_v<typename a_const_int_r1::dimension,
                                  Kokkos::Impl::ViewDimension<0> >);
-
     static_assert(std::is_same_v<typename a_const_int_r1::type, const int*>);
-    static_assert(
-        std::is_same_v<typename a_const_int_r1::value_type, const int>);
-
-    static_assert(
-        std::is_same_v<typename a_const_int_r1::scalar_array_type, const int*>);
     static_assert(
         std::is_same_v<typename a_const_int_r1::const_type, const int*>);
     static_assert(
+        std::is_same_v<typename a_const_int_r1::non_const_type, int*>);
+    static_assert(
+        std::is_same_v<typename a_const_int_r1::value_type, const int>);
+    static_assert(
         std::is_same_v<typename a_const_int_r1::const_value_type, const int>);
+    static_assert(
+        std::is_same_v<typename a_const_int_r1::non_const_value_type, int>);
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+    static_assert(
+        std::is_same_v<typename a_const_int_r1::scalar_array_type, const int*>);
     static_assert(
         std::is_same_v<typename a_const_int_r1::const_scalar_array_type,
                        const int*>);
-    static_assert(
-        std::is_same_v<typename a_const_int_r1::non_const_type, int*>);
-    static_assert(
-        std::is_same_v<typename a_const_int_r1::non_const_value_type, int>);
+#endif
 
     using a_const_int_r3 = ViewDataAnalysis<const int** [4], void>;
 
     static_assert(std::is_void_v<typename a_const_int_r3::specialize>);
-
     static_assert(std::is_same_v<typename a_const_int_r3::dimension,
                                  Kokkos::Impl::ViewDimension<0, 0, 4> >);
-
     static_assert(
         std::is_same_v<typename a_const_int_r3::type, const int** [4]>);
     static_assert(
-        std::is_same_v<typename a_const_int_r3::value_type, const int>);
-    static_assert(std::is_same_v<typename a_const_int_r3::scalar_array_type,
-                                 const int** [4]>);
-    static_assert(
         std::is_same_v<typename a_const_int_r3::const_type, const int** [4]>);
-    static_assert(
-        std::is_same_v<typename a_const_int_r3::const_value_type, const int>);
-    static_assert(
-        std::is_same_v<typename a_const_int_r3::const_scalar_array_type,
-                       const int** [4]>);
     static_assert(
         std::is_same_v<typename a_const_int_r3::non_const_type, int** [4]>);
     static_assert(
-        std::is_same_v<typename a_const_int_r3::non_const_value_type, int>);
+        std::is_same_v<typename a_const_int_r3::value_type, const int>);
     static_assert(
-        std::is_same_v<typename a_const_int_r3::non_const_scalar_array_type,
-                       int** [4]>);
+        std::is_same_v<typename a_const_int_r3::const_value_type, const int>);
+    static_assert(
+        std::is_same_v<typename a_const_int_r3::non_const_value_type, int>);
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+    static_assert(std::is_same_v<typename a_const_int_r3::scalar_array_type,
+                                 const int** [4]>);
+    static_assert(
+        std::is_same_v<typename a_const_int_r3::const_scalar_array_type,
+                       const int** [4]>);
+#endif
   }
 
   //----------------------------------------
@@ -671,11 +668,13 @@ void test_view_mapping() {
     ASSERT_TRUE((std::is_same_v<typename T::const_data_type, const int*>));
     ASSERT_TRUE((std::is_same_v<typename T::non_const_data_type, int*>));
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
     ASSERT_TRUE((std::is_same_v<typename T::scalar_array_type, int*>));
     ASSERT_TRUE(
         (std::is_same_v<typename T::const_scalar_array_type, const int*>));
     ASSERT_TRUE(
         (std::is_same_v<typename T::non_const_scalar_array_type, int*>));
+#endif
 
     ASSERT_TRUE((std::is_same_v<typename T::value_type, int>));
     ASSERT_TRUE((std::is_same_v<typename T::const_value_type, const int>));
@@ -691,11 +690,13 @@ void test_view_mapping() {
     ASSERT_TRUE((std::is_same_v<typename C::const_data_type, const int*>));
     ASSERT_TRUE((std::is_same_v<typename C::non_const_data_type, int*>));
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
     ASSERT_TRUE((std::is_same_v<typename C::scalar_array_type, const int*>));
     ASSERT_TRUE(
         (std::is_same_v<typename C::const_scalar_array_type, const int*>));
     ASSERT_TRUE(
         (std::is_same_v<typename C::non_const_scalar_array_type, int*>));
+#endif
 
     ASSERT_TRUE((std::is_same_v<typename C::value_type, const int>));
     ASSERT_TRUE((std::is_same_v<typename C::const_value_type, const int>));
@@ -739,11 +740,13 @@ void test_view_mapping() {
     ASSERT_TRUE((std::is_same_v<typename T::const_data_type, const int*>));
     ASSERT_TRUE((std::is_same_v<typename T::non_const_data_type, int*>));
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
     ASSERT_TRUE((std::is_same_v<typename T::scalar_array_type, int*>));
     ASSERT_TRUE(
         (std::is_same_v<typename T::const_scalar_array_type, const int*>));
     ASSERT_TRUE(
         (std::is_same_v<typename T::non_const_scalar_array_type, int*>));
+#endif
 
     ASSERT_TRUE((std::is_same_v<typename T::value_type, int>));
     ASSERT_TRUE((std::is_same_v<typename T::const_value_type, const int>));
@@ -849,7 +852,7 @@ void test_view_mapping() {
   {
     using V           = Kokkos::View<int**, Space>;
     using M           = typename V::HostMirror;
-    using layout_type = typename Kokkos::View<int**, Space>::array_layout;
+    using layout_type = typename Kokkos::View<int**, Space>::layout_type;
 
     constexpr size_t N0 = 10;
     constexpr size_t N1 = 11;
@@ -924,7 +927,7 @@ void test_view_mapping() {
     using V = Kokkos::View<int**, Kokkos::LayoutStride, Space>;
     using M = typename V::HostMirror;
     using layout_type =
-        typename Kokkos::View<int**, Kokkos::LayoutStride, Space>::array_layout;
+        typename Kokkos::View<int**, Kokkos::LayoutStride, Space>::layout_type;
 
     constexpr size_t N0 = 10;
     constexpr size_t N1 = 11;
@@ -1108,10 +1111,10 @@ struct TestViewMapOperator {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(size_t i, int64_t& error_count) const {
-    if (std::is_same<typename ViewType::array_layout,
+    if (std::is_same<typename ViewType::layout_type,
                      Kokkos::LayoutLeft>::value) {
       test_left(i, error_count);
-    } else if (std::is_same<typename ViewType::array_layout,
+    } else if (std::is_same<typename ViewType::layout_type,
                             Kokkos::LayoutRight>::value) {
       test_right(i, error_count);
     }
