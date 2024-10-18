@@ -3,7 +3,15 @@ NVIDIA-GH200:
   tags: [nvidia-gh200]
   image: masterleinad/kokkos-nvcc:12.6.1
   script:
-    - cmake -B build -DKokkos_ENABLE_CUDA=ON -DKokkos_ARCH_HOPPER90=ON -DKokkos_ENABLE_IMPL_CUDA_UNIFIED_MEMORY=ON -DKokkos_ENABLE_TESTS=ON
+    - cmake
+      -B build
+      -DCMAKE_CXX_COMPILER=`pwd`/bin/nvcc_wrapper
+      -DCMAKE_CXX_FLAGS="-Werror all-warnings -Werror"
+      -DKokkos_ARCH_HOPPER90=ON
+      -DKokkos_ENABLE_CUDA=ON
+      -DKokkos_ENABLE_COMPILER_WARNINGS=ON
+      -DKokkos_ENABLE_IMPL_CUDA_UNIFIED_MEMORY=ON
+      -DKokkos_ENABLE_TESTS=ON
     - cmake --build build -j48
     - cd build
     - ctest -V
