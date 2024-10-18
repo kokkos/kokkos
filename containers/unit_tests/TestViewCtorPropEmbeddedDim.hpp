@@ -82,7 +82,7 @@ struct TestViewCtorProp_EmbeddedDim {
 #if 0
       // debug output
       for ( size_t i = 0; i < N0*N1; ++i ) {
-        printf(" Output check: hcv1(%d) = %lf\n ", i, hcv1(i) );
+        printf(" Output check: hcv1(%zu) = %lf\n ", i, hcv1(i) );
       }
 
       printf( " Common value type view: %s \n", typeid( CVT() ).name() );
