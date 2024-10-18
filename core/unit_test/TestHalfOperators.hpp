@@ -419,7 +419,7 @@ struct Functor_TestHalfOperators {
     float tmp_s_lhs;
     half_impl_type half_tmp;
 
-    // Initialze output views to catch missing test invocations
+    // Initialize output views to catch missing test invocations
     for (int i = 0; i < N_OP_TESTS_BATCH_0; ++i) {
       actual_lhs(i)   = 1;
       expected_lhs(i) = -1;
@@ -594,7 +594,7 @@ struct Functor_TestHalfOperators {
     float tmp_s_lhs;
     half_impl_type half_tmp;
 
-    // Initialze output views to catch missing test invocations
+    // Initialize output views to catch missing test invocations
     for (int i = N_OP_TESTS_BATCH_0 + 1; i < N_OP_TESTS_BATCH_1; ++i) {
       actual_lhs(i)   = 1;
       expected_lhs(i) = -1;
@@ -664,7 +664,7 @@ struct Functor_TestHalfOperators {
     float tmp_s_lhs;
     half_impl_type half_tmp;
 
-    // Initialze output views to catch missing test invocations
+    // Initialize output views to catch missing test invocations
     for (int i = N_OP_TESTS_BATCH_1 + 1; i < N_OP_TESTS_BATCH_2; ++i) {
       actual_lhs(i)   = 1;
       expected_lhs(i) = -1;
@@ -734,7 +734,7 @@ struct Functor_TestHalfOperators {
     float tmp_s_lhs;
     half_impl_type half_tmp;
 
-    // Initialze output views to catch missing test invocations
+    // Initialize output views to catch missing test invocations
     for (int i = N_OP_TESTS_BATCH_2 + 1; i < N_OP_TESTS_BATCH_3; ++i) {
       actual_lhs(i)   = 1;
       expected_lhs(i) = -1;
@@ -804,7 +804,7 @@ struct Functor_TestHalfOperators {
     float tmp_s_lhs;
     half_impl_type half_tmp;
 
-    // Initialze output views to catch missing test invocations
+    // Initialize output views to catch missing test invocations
     for (int i = N_OP_TESTS_BATCH_3 + 1; i < N_OP_TESTS_BATCH_4; ++i) {
       actual_lhs(i)   = 1;
       expected_lhs(i) = -1;
@@ -888,7 +888,7 @@ struct Functor_TestHalfOperators {
     float tmp_s_lhs;
     half_impl_type half_tmp;
 
-    // Initialze output views to catch missing test invocations
+    // Initialize output views to catch missing test invocations
     for (int i = N_OP_TESTS_BATCH_4 + 1; i < N_OP_TESTS; ++i) {
       actual_lhs(i)   = 1;
       expected_lhs(i) = -1;
