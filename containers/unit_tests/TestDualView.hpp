@@ -634,7 +634,7 @@ class S {
 };
 
 template <typename V>
-void test_sequential_host_init() {
+auto test_sequential_host_init() {
   Kokkos::DualView<V*, TEST_EXECSPACE> dv_v(
       Kokkos::view_alloc("myView", Kokkos::SequentialHostInit), 3u);
 
@@ -646,13 +646,16 @@ void test_sequential_host_init() {
   dv_v.modify_host();
   dv_v.sync_device();
 
-  dv_v.resize(Kokkos::view_alloc(Kokkos::SequentialHostInit), 2u);
-  ASSERT_EQ(dv_v.d_view.size(), 2u);
-  ASSERT_EQ(dv_v.h_view.size(), 2u);
+  return dv_v;
 }
 
 TEST(TEST_CATEGORY, dualview_sequential_host_init) {
-  test_sequential_host_init<Kokkos::View<double*, TEST_EXECSPACE>>();
+  auto dv_v =
+      test_sequential_host_init<Kokkos::View<double*, TEST_EXECSPACE>>();
+  dv_v.resize(Kokkos::view_alloc(Kokkos::SequentialHostInit), 2u);
+  ASSERT_EQ(dv_v.d_view.size(), 2u);
+  ASSERT_EQ(dv_v.h_view.size(), 2u);
+
   test_sequential_host_init<S<Kokkos::View<double*, TEST_EXECSPACE>>>();
 }
 }  // anonymous namespace
