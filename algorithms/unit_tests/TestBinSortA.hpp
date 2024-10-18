@@ -77,7 +77,7 @@ struct sum3D {
 };
 
 template <class ExecutionSpace, typename KeyType>
-void test_3D_sort_impl(unsigned int n) {
+void test_3D_sort_impl(size_t n) {
   using KeyViewType = Kokkos::View<KeyType* [3], ExecutionSpace>;
 
   KeyViewType keys("Keys", n * n * n);

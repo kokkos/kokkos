@@ -279,7 +279,7 @@ class ReduceTeamFunctor {
     const int thread_size = ind.team_size() * ind.league_size();
     const int chunk       = (nwork + thread_size - 1) / thread_size;
 
-    size_type iwork           = chunk * thread_rank;
+    size_type iwork           = static_cast<size_type>(chunk) * thread_rank;
     const size_type iwork_end = iwork + chunk < nwork ? iwork + chunk : nwork;
 
     for (; iwork < iwork_end; ++iwork) {
@@ -465,8 +465,9 @@ class ScanTeamFunctor {
   void operator()(const typename policy_type::member_type ind,
                   value_type &error) const {
     if (0 == ind.league_rank() && 0 == ind.team_rank()) {
-      const int64_t thread_count = ind.league_size() * ind.team_size();
-      total()                    = (thread_count * (thread_count + 1)) / 2;
+      const int64_t thread_count =
+          static_cast<int64_t>(ind.league_size()) * ind.team_size();
+      total() = (thread_count * (thread_count + 1)) / 2;
     }
 
     // Team max:
