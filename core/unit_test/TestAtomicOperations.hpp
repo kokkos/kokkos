@@ -152,8 +152,7 @@ struct ModAtomicTest {
   template <class T>
   KOKKOS_FUNCTION static auto atomic_op(T* ptr_op, T* ptr_fetch_op,
                                         T* ptr_op_fetch, T update) {
-    // Kokkos::atomic_mod(ptr_op, update);
-    (void)Kokkos::atomic_fetch_mod(ptr_op, update);
+    Kokkos::atomic_mod(ptr_op, update);
     T old_val = Kokkos::atomic_fetch_mod(ptr_fetch_op, update);
     T new_val = Kokkos::atomic_mod_fetch(ptr_op_fetch, update);
     return Kokkos::pair<T, T>(old_val, new_val);
@@ -201,8 +200,7 @@ struct XorAtomicTest {
   template <class T>
   KOKKOS_FUNCTION static auto atomic_op(T* ptr_op, T* ptr_fetch_op,
                                         T* ptr_op_fetch, T update) {
-    // Kokkos::atomic_xor(ptr_op, update);
-    (void)Kokkos::atomic_fetch_xor(ptr_op, update);
+    Kokkos::atomic_xor(ptr_op, update);
     T old_val = Kokkos::atomic_fetch_xor(ptr_fetch_op, update);
     T new_val = Kokkos::atomic_xor_fetch(ptr_op_fetch, update);
     return Kokkos::pair<T, T>(old_val, new_val);
@@ -218,8 +216,7 @@ struct NandAtomicTest {
   template <class T>
   KOKKOS_FUNCTION static auto atomic_op(T* ptr_op, T* ptr_fetch_op,
                                         T* ptr_op_fetch, T update) {
-    // Kokkos::atomic_nand(ptr_op, update);
-    (void)Kokkos::atomic_fetch_nand(ptr_op, update);
+    Kokkos::atomic_nand(ptr_op, update);
     T old_val = Kokkos::atomic_fetch_nand(ptr_fetch_op, update);
     T new_val = Kokkos::atomic_nand_fetch(ptr_op_fetch, update);
     return Kokkos::pair<T, T>(old_val, new_val);
@@ -235,8 +232,7 @@ struct LShiftAtomicTest {
   template <class T>
   KOKKOS_FUNCTION static auto atomic_op(T* ptr_op, T* ptr_fetch_op,
                                         T* ptr_op_fetch, T update) {
-    // Kokkos::atomic_lshift(ptr_op, update);
-    (void)Kokkos::atomic_fetch_lshift(ptr_op, update);
+    Kokkos::atomic_lshift(ptr_op, update);
     T old_val = Kokkos::atomic_fetch_lshift(ptr_fetch_op, update);
     T new_val = Kokkos::atomic_lshift_fetch(ptr_op_fetch, update);
     return Kokkos::pair<T, T>(old_val, new_val);
@@ -252,8 +248,7 @@ struct RShiftAtomicTest {
   template <class T>
   KOKKOS_FUNCTION static auto atomic_op(T* ptr_op, T* ptr_fetch_op,
                                         T* ptr_op_fetch, T update) {
-    // Kokkos::atomic_rshift(ptr_op, update); not implemented
-    (void)Kokkos::atomic_fetch_rshift(ptr_op, update);
+    Kokkos::atomic_rshift(ptr_op, update);
     T old_val = Kokkos::atomic_fetch_rshift(ptr_fetch_op, update);
     T new_val = Kokkos::atomic_rshift_fetch(ptr_op_fetch, update);
     return Kokkos::pair<T, T>(old_val, new_val);
