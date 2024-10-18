@@ -6,7 +6,7 @@ NVIDIA-GH200:
     - cmake
       -B build
       -DCMAKE_CXX_COMPILER=`pwd`/bin/nvcc_wrapper
-      -DCMAKE_CXX_FLAGS="-Werror all-warnings -Werror"
+      -DCMAKE_CXX_FLAGS="-Werror=all-warnings -Werror"
       -DKokkos_ARCH_HOPPER90=ON
       -DKokkos_ENABLE_CUDA=ON
       -DKokkos_ENABLE_COMPILER_WARNINGS=ON
