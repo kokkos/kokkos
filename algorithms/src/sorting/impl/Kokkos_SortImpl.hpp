@@ -269,29 +269,19 @@ void copy_to_host_run_stdsort_copy_back(
     KE::copy(exec, view, view_dc);
 
     // run sort on the mirror of view_dc
-    auto mv_h = create_mirror_view_and_copy(Kokkos::HostSpace(), view_dc);
-    if (view.span_is_contiguous()) {
-      std::sort(mv_h.data(), mv_h.data() + mv_h.size(),
-                std::forward<MaybeComparator>(maybeComparator)...);
-    } else {
-      auto first = KE::begin(mv_h);
-      auto last  = KE::end(mv_h);
-      std::sort(first, last, std::forward<MaybeComparator>(maybeComparator)...);
-    }
+    auto mv_h  = create_mirror_view_and_copy(Kokkos::HostSpace(), view_dc);
+    auto first = KE::begin(mv_h);
+    auto last  = KE::end(mv_h);
+    std::sort(first, last, std::forward<MaybeComparator>(maybeComparator)...);
     Kokkos::deep_copy(exec, view_dc, mv_h);
 
     // copy back to argument view
     KE::copy(exec, KE::cbegin(view_dc), KE::cend(view_dc), KE::begin(view));
   } else {
     auto view_h = create_mirror_view_and_copy(Kokkos::HostSpace(), view);
-    if (view.span_is_contiguous()) {
-      std::sort(view_h.data(), view_h.data() + view_h.size(),
-                std::forward<MaybeComparator>(maybeComparator)...);
-    } else {
-      auto first = KE::begin(view_h);
-      auto last  = KE::end(view_h);
-      std::sort(first, last, std::forward<MaybeComparator>(maybeComparator)...);
-    }
+    auto first  = KE::begin(view_h);
+    auto last   = KE::end(view_h);
+    std::sort(first, last, std::forward<MaybeComparator>(maybeComparator)...);
     Kokkos::deep_copy(exec, view, view_h);
   }
 }
