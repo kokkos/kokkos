@@ -132,6 +132,27 @@ class ParallelReduce<CombinedFunctorReducerType,
                                         Kokkos::HostSpace>::accessible,
         "Kokkos::Threads reduce result must be a View accessible from "
         "HostSpace");
+
+    if ((arg_policy.scratch_size(0, m_policy.team_size()) +
+         FunctorTeamShmemSize<FunctorType>::value(
+             m_functor_reducer.get_functor(), arg_policy.team_size())) >
+        static_cast<size_t>(m_policy.scratch_size_max(0))) {
+      std::stringstream error;
+      error << "Requested too much scratch memory on level 0. Requested: "
+            << arg_policy.scratch_size(0, m_policy.team_size()) +
+                   FunctorTeamShmemSize<FunctorType>::value(
+                       m_functor_reducer.get_functor(), arg_policy.team_size())
+            << ", Maximum: " << m_policy.scratch_size_max(0);
+      Kokkos::abort(error.str().c_str());
+    }
+    if (arg_policy.scratch_size(1, m_policy.team_size()) >
+        static_cast<size_t>(m_policy.scratch_size_max(1))) {
+      std::stringstream error;
+      error << "Requested too much scratch memory on level 1. Requested: "
+            << arg_policy.scratch_size(1, m_policy.team_size())
+            << ", Maximum: " << m_policy.scratch_size_max(1);
+      Kokkos::abort(error.str().c_str());
+    }
   }
 };
 

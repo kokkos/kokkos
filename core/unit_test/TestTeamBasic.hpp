@@ -197,7 +197,9 @@ TEST(TEST_CATEGORY, large_team_scratch_size) {
   const size_t per_team_extent = 502795560;
 #endif
 
-  const size_t per_team_bytes = per_team_extent * sizeof(double);
+  const size_t per_team_bytes = std::min<size_t>(
+      Kokkos::TeamPolicy<TEST_EXECSPACE>::scratch_size_max(level),
+      per_team_extent * sizeof(double));
 
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
   Kokkos::TeamPolicy<TEST_EXECSPACE> policy(
@@ -213,6 +215,50 @@ TEST(TEST_CATEGORY, large_team_scratch_size) {
   Kokkos::parallel_for(policy,
                        LargeTeamScratchFunctor<TEST_EXECSPACE>{per_team_bytes});
   Kokkos::fence();
+}
+
+TEST(TEST_CATEGORY_DEATH, exceed_max_team_scratch_size_0) {
+  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+
+  const int level = 0;
+  Kokkos::TeamPolicy<TEST_EXECSPACE> policy(1, 1);
+  auto dummy_functor =
+      KOKKOS_LAMBDA(Kokkos::TeamPolicy<TEST_EXECSPACE>::member_type){};
+  auto max_scratch_size = policy.scratch_size_max(level);
+  ASSERT_DEATH(
+      Kokkos::parallel_for(
+          policy.set_scratch_size(level, Kokkos::PerTeam(max_scratch_size + 1)),
+          dummy_functor),
+      "");
+}
+
+TEST(TEST_CATEGORY_DEATH, exceed_max_team_scratch_size_1) {
+  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+
+  const int level = 1;
+  Kokkos::TeamPolicy<TEST_EXECSPACE> policy(1, 1);
+  auto dummy_functor =
+      KOKKOS_LAMBDA(Kokkos::TeamPolicy<TEST_EXECSPACE>::member_type){};
+  auto max_scratch_size = policy.scratch_size_max(level);
+  ASSERT_DEATH(
+      Kokkos::parallel_for(
+          policy.set_scratch_size(level, Kokkos::PerTeam(max_scratch_size + 1)),
+          dummy_functor),
+      "");
+}
+
+TEST(TEST_CATEGORY_DEATH, exceed_max_team_size) {
+  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+
+  Kokkos::TeamPolicy<TEST_EXECSPACE> policy(1, 1);
+  auto dummy_functor =
+      KOKKOS_LAMBDA(Kokkos::TeamPolicy<TEST_EXECSPACE>::member_type){};
+  auto max_team_size =
+      policy.team_size_max(dummy_functor, Kokkos::ParallelForTag{});
+  ASSERT_DEATH(Kokkos::parallel_for(
+                   Kokkos::TeamPolicy<TEST_EXECSPACE>(1, max_team_size + 1),
+                   dummy_functor);
+               , "");
 }
 
 TEST(TEST_CATEGORY, team_broadcast_long) {
