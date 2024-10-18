@@ -406,16 +406,17 @@ struct Functor_TestHalfOperators {
   }
   // END: Binary Arithmetic test helpers
 
+#if !defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
+  using half_impl_type = typename half_type::impl_type;
+#else
+  using half_impl_type = half_type;
+#endif  // !defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
+
   KOKKOS_FUNCTION
   void operator()(Batch0, int) const {
     half_type tmp_lhs, tmp2_lhs, *tmp_ptr;
     double tmp_d_lhs;
     float tmp_s_lhs;
-#if !defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
-    using half_impl_type = typename half_type::impl_type;
-#else
-    using half_impl_type = half_type;
-#endif  // !defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
     half_impl_type half_tmp;
 
     // Initialze output views to catch missing test invocations
@@ -591,11 +592,6 @@ struct Functor_TestHalfOperators {
     half_type tmp_lhs, tmp2_lhs, *tmp_ptr;
     double tmp_d_lhs;
     float tmp_s_lhs;
-#if !defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
-    using half_impl_type = typename half_type::impl_type;
-#else
-    using half_impl_type = half_type;
-#endif  // !defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
     half_impl_type half_tmp;
 
     // Initialze output views to catch missing test invocations
@@ -666,11 +662,6 @@ struct Functor_TestHalfOperators {
     half_type tmp_lhs, tmp2_lhs, *tmp_ptr;
     double tmp_d_lhs;
     float tmp_s_lhs;
-#if !defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
-    using half_impl_type = typename half_type::impl_type;
-#else
-    using half_impl_type = half_type;
-#endif  // !defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
     half_impl_type half_tmp;
 
     // Initialze output views to catch missing test invocations
@@ -741,11 +732,6 @@ struct Functor_TestHalfOperators {
     half_type tmp_lhs, tmp2_lhs, *tmp_ptr;
     double tmp_d_lhs;
     float tmp_s_lhs;
-#if !defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
-    using half_impl_type = typename half_type::impl_type;
-#else
-    using half_impl_type = half_type;
-#endif  // !defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
     half_impl_type half_tmp;
 
     // Initialze output views to catch missing test invocations
@@ -816,11 +802,6 @@ struct Functor_TestHalfOperators {
     half_type tmp_lhs, tmp2_lhs, *tmp_ptr;
     double tmp_d_lhs;
     float tmp_s_lhs;
-#if !defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
-    using half_impl_type = typename half_type::impl_type;
-#else
-    using half_impl_type = half_type;
-#endif  // !defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
     half_impl_type half_tmp;
 
     // Initialze output views to catch missing test invocations
@@ -905,11 +886,6 @@ struct Functor_TestHalfOperators {
     half_type tmp_lhs, tmp2_lhs, *tmp_ptr;
     double tmp_d_lhs;
     float tmp_s_lhs;
-#if !defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
-    using half_impl_type = typename half_type::impl_type;
-#else
-    using half_impl_type = half_type;
-#endif  // !defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
     half_impl_type half_tmp;
 
     // Initialze output views to catch missing test invocations
