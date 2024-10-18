@@ -48,7 +48,7 @@ struct TestViewCtorProp_EmbeddedDim {
     void operator()(const int i) const { v(i) = i; }
   };
 
-  static void test_vcpt(const int N0, const int N1) {
+  static void test_vcpt(const size_t N0, const size_t N1) {
     // Create two views to test
     {
       using VIT = typename TestViewCtorProp_EmbeddedDim::ViewIntType;
@@ -81,7 +81,7 @@ struct TestViewCtorProp_EmbeddedDim {
         ASSERT_EQ((std::is_same_v<CommonViewValueType, double>), true);
 #if 0
       // debug output
-      for ( int i = 0; i < N0*N1; ++i ) {
+      for ( size_t i = 0; i < N0*N1; ++i ) {
         printf(" Output check: hcv1(%d) = %lf\n ", i, hcv1(i) );
       }
 
