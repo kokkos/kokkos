@@ -36,17 +36,29 @@ struct ViewScalarToDataType<ScalarType, 0> {
 
 template <class LayoutType, int Rank>
 struct ViewUniformLayout {
-  using array_layout = LayoutType;
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  using array_layout KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use layout_type instead.") = LayoutType;
+#endif
+  using layout_type = LayoutType;
 };
 
 template <class LayoutType>
 struct ViewUniformLayout<LayoutType, 0> {
-  using array_layout = Kokkos::LayoutLeft;
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  using array_layout KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use layout_type instead.") = Kokkos::LayoutLeft;
+#endif
+  using layout_type = Kokkos::LayoutLeft;
 };
 
 template <>
 struct ViewUniformLayout<Kokkos::LayoutRight, 1> {
-  using array_layout = Kokkos::LayoutLeft;
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  using array_layout KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use layout_type instead.") = Kokkos::LayoutRight;
+#endif
+  using layout_type = Kokkos::LayoutRight;
 };
 
 template <class ViewType, int Traits>
@@ -60,35 +72,38 @@ struct ViewUniformType {
       typename ViewScalarToDataType<typename ViewType::value_type,
                                     ViewType::rank>::const_type;
 
-  using array_layout =
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  using array_layout KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use layout_type instead.") =
       typename ViewUniformLayout<typename ViewType::array_layout,
                                  ViewType::rank>::array_layout;
-
+#endif
+  using layout_type = typename ViewUniformLayout<typename ViewType::layout_type,
+                                                 ViewType::rank>::layout_type;
   using device_type = typename ViewType::device_type;
   using anonymous_device_type =
       typename Kokkos::Device<typename device_type::execution_space,
                               Kokkos::AnonymousSpace>;
 
   using memory_traits = typename Kokkos::MemoryTraits<Traits>;
-  using type =
-      Kokkos::View<data_type, array_layout, device_type, memory_traits>;
+  using type = Kokkos::View<data_type, layout_type, device_type, memory_traits>;
   using const_type =
-      Kokkos::View<const_data_type, array_layout, device_type, memory_traits>;
+      Kokkos::View<const_data_type, layout_type, device_type, memory_traits>;
   using runtime_type =
-      Kokkos::View<runtime_data_type, array_layout, device_type, memory_traits>;
-  using runtime_const_type = Kokkos::View<runtime_const_data_type, array_layout,
+      Kokkos::View<runtime_data_type, layout_type, device_type, memory_traits>;
+  using runtime_const_type = Kokkos::View<runtime_const_data_type, layout_type,
                                           device_type, memory_traits>;
 
-  using nomemspace_type = Kokkos::View<data_type, array_layout,
+  using nomemspace_type = Kokkos::View<data_type, layout_type,
                                        anonymous_device_type, memory_traits>;
   using const_nomemspace_type =
-      Kokkos::View<const_data_type, array_layout, anonymous_device_type,
+      Kokkos::View<const_data_type, layout_type, anonymous_device_type,
                    memory_traits>;
   using runtime_nomemspace_type =
-      Kokkos::View<runtime_data_type, array_layout, anonymous_device_type,
+      Kokkos::View<runtime_data_type, layout_type, anonymous_device_type,
                    memory_traits>;
   using runtime_const_nomemspace_type =
-      Kokkos::View<runtime_const_data_type, array_layout, anonymous_device_type,
+      Kokkos::View<runtime_const_data_type, layout_type, anonymous_device_type,
                    memory_traits>;
 };
 }  // namespace Impl

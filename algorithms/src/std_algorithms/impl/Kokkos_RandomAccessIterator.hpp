@@ -42,11 +42,11 @@ class RandomAccessIterator< ::Kokkos::View<DataType, Args...> > {
   using reference         = typename view_type::reference_type;
 
   static_assert(view_type::rank == 1 &&
-                    (std::is_same_v<typename view_type::traits::array_layout,
+                    (std::is_same_v<typename view_type::traits::layout_type,
                                     Kokkos::LayoutLeft> ||
-                     std::is_same_v<typename view_type::traits::array_layout,
+                     std::is_same_v<typename view_type::traits::layout_type,
                                     Kokkos::LayoutRight> ||
-                     std::is_same_v<typename view_type::traits::array_layout,
+                     std::is_same_v<typename view_type::traits::layout_type,
                                     Kokkos::LayoutStride>),
                 "RandomAccessIterator only supports 1D Views with LayoutLeft, "
                 "LayoutRight, LayoutStride.");

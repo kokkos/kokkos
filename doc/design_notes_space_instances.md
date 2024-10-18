@@ -54,7 +54,7 @@ public:
   using execution_space = ExecutionSpace;
   using memory_space = ...;
   using device_type = Kokkos::Device<execution_space, memory_space>;
-  using array_layout = ...;
+  using layout_type = ...;
   using size_type = ...;
   using scratch_memory_space = ...;
 

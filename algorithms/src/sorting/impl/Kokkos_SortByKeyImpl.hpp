@@ -78,9 +78,9 @@ namespace Kokkos::Impl {
 template <typename T>
 constexpr inline bool is_admissible_to_kokkos_sort_by_key =
     ::Kokkos::is_view<T>::value && T::rank() == 1 &&
-    (std::is_same_v<typename T::traits::array_layout, Kokkos::LayoutLeft> ||
-     std::is_same_v<typename T::traits::array_layout, Kokkos::LayoutRight> ||
-     std::is_same_v<typename T::traits::array_layout, Kokkos::LayoutStride>);
+    (std::is_same_v<typename T::traits::layout_type, Kokkos::LayoutLeft> ||
+     std::is_same_v<typename T::traits::layout_type, Kokkos::LayoutRight> ||
+     std::is_same_v<typename T::traits::layout_type, Kokkos::LayoutStride>);
 
 template <class ViewType>
 KOKKOS_INLINE_FUNCTION constexpr void
@@ -237,7 +237,7 @@ void sort_by_key_via_sort(
                        IotaFunctor<decltype(permute)>{permute});
 
   using Layout =
-      typename Kokkos::View<unsigned int*, ExecutionSpace>::array_layout;
+      typename Kokkos::View<unsigned int*, ExecutionSpace>::layout_type;
   if constexpr (!sort_on_device_v<ExecutionSpace, Layout>) {
     auto host_keys = Kokkos::create_mirror_view(
         Kokkos::view_alloc(Kokkos::HostSpace{}, Kokkos::WithoutInitializing),
