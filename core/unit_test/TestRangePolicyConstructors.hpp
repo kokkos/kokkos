@@ -234,7 +234,7 @@ TEST(TEST_CATEGORY_DEATH, range_policy_implicitly_converted_bounds) {
       "Kokkos::RangePolicy bound type error: an unsafe implicit conversion is "
       "performed on a bound (), which may not preserve its original value.\n";
 
-  auto get_error_msg = [](auto str, auto val) {
+  [[maybe_unused]] auto get_error_msg = [](auto str, auto val) {
     return str.insert(str.find("(") + 1, std::to_string(val).c_str());
   };
 #ifndef KOKKOS_ENABLE_DEPRECATED_CODE_4
