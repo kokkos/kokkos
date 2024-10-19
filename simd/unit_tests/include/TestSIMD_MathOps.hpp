@@ -24,7 +24,7 @@ template <class Abi, class Loader, class BinaryOp, class T>
 void host_check_math_op_one_loader(BinaryOp binary_op, std::size_t n,
                                    T const* first_args, T const* second_args) {
   Loader loader;
-  using simd_type             = Kokkos::Experimental::simd<T, Abi>;
+  using simd_type             = Kokkos::Experimental::basic_simd<T, Abi>;
   constexpr std::size_t width = simd_type::size();
   for (std::size_t i = 0; i < n; i += width) {
     std::size_t const nremaining = n - i;
@@ -53,7 +53,7 @@ template <class Abi, class Loader, class UnaryOp, class T>
 void host_check_math_op_one_loader(UnaryOp unary_op, std::size_t n,
                                    T const* args) {
   Loader loader;
-  using simd_type             = Kokkos::Experimental::simd<T, Abi>;
+  using simd_type             = Kokkos::Experimental::basic_simd<T, Abi>;
   constexpr std::size_t width = simd_type::size();
   for (std::size_t i = 0; i < n; i += width) {
     std::size_t const nremaining = n - i;
@@ -114,16 +114,17 @@ inline void host_check_all_math_ops(const DataType (&first_args)[n],
 
 template <typename Abi, typename DataType>
 inline void host_check_abi_size() {
-  using simd_type = Kokkos::Experimental::simd<DataType, Abi>;
+  using simd_type = Kokkos::Experimental::basic_simd<DataType, Abi>;
   using mask_type = typename simd_type::mask_type;
   static_assert(simd_type::size() == mask_type::size());
 }
 
 template <typename Abi, typename DataType>
 inline void host_check_math_ops() {
-  if constexpr (is_type_v<Kokkos::Experimental::simd<DataType, Abi>>) {
+  if constexpr (is_type_v<Kokkos::Experimental::basic_simd<DataType, Abi>>) {
     constexpr size_t alignment =
-        Kokkos::Experimental::simd<DataType, Abi>::size() * sizeof(DataType);
+        Kokkos::Experimental::basic_simd<DataType, Abi>::size() *
+        sizeof(DataType);
 
     host_check_abi_size<Abi, DataType>();
 
@@ -171,7 +172,7 @@ KOKKOS_INLINE_FUNCTION void device_check_math_op_one_loader(
     BinaryOp binary_op, std::size_t n, T const* first_args,
     T const* second_args) {
   Loader loader;
-  using simd_type             = Kokkos::Experimental::simd<T, Abi>;
+  using simd_type             = Kokkos::Experimental::basic_simd<T, Abi>;
   constexpr std::size_t width = simd_type::size();
   for (std::size_t i = 0; i < n; i += width) {
     std::size_t const nremaining = n - i;
@@ -199,7 +200,7 @@ KOKKOS_INLINE_FUNCTION void device_check_math_op_one_loader(UnaryOp unary_op,
                                                             std::size_t n,
                                                             T const* args) {
   Loader loader;
-  using simd_type             = Kokkos::Experimental::simd<T, Abi>;
+  using simd_type             = Kokkos::Experimental::basic_simd<T, Abi>;
   constexpr std::size_t width = simd_type::size();
   for (std::size_t i = 0; i < n; i += width) {
     std::size_t const nremaining = n - i;
@@ -249,14 +250,14 @@ KOKKOS_INLINE_FUNCTION void device_check_all_math_ops(
 
 template <typename Abi, typename DataType>
 KOKKOS_INLINE_FUNCTION void device_check_abi_size() {
-  using simd_type = Kokkos::Experimental::simd<DataType, Abi>;
+  using simd_type = Kokkos::Experimental::basic_simd<DataType, Abi>;
   using mask_type = typename simd_type::mask_type;
   static_assert(simd_type::size() == mask_type::size());
 }
 
 template <typename Abi, typename DataType>
 KOKKOS_INLINE_FUNCTION void device_check_math_ops() {
-  if constexpr (is_type_v<Kokkos::Experimental::simd<DataType, Abi>>) {
+  if constexpr (is_type_v<Kokkos::Experimental::basic_simd<DataType, Abi>>) {
     device_check_abi_size<Abi, DataType>();
 
     if constexpr (!std::is_integral_v<DataType>) {

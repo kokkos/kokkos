@@ -24,7 +24,7 @@ template <typename Abi, typename Loader, typename ShiftOp, typename DataType>
 inline void host_check_shift_on_one_loader(ShiftOp shift_op,
                                            DataType test_vals[],
                                            DataType shift_by[], std::size_t n) {
-  using simd_type             = Kokkos::Experimental::simd<DataType, Abi>;
+  using simd_type             = Kokkos::Experimental::basic_simd<DataType, Abi>;
   constexpr std::size_t width = simd_type::size();
   Loader loader;
 
@@ -53,8 +53,8 @@ inline void host_check_shift_on_one_loader(ShiftOp shift_op,
 template <typename Abi, typename Loader, typename ShiftOp, typename DataType>
 inline void host_check_shift_by_lanes_on_one_loader(
     ShiftOp shift_op, DataType test_vals[],
-    Kokkos::Experimental::simd<DataType, Abi>& shift_by) {
-  using simd_type             = Kokkos::Experimental::simd<DataType, Abi>;
+    Kokkos::Experimental::basic_simd<DataType, Abi>& shift_by) {
+  using simd_type             = Kokkos::Experimental::basic_simd<DataType, Abi>;
   constexpr std::size_t width = simd_type::size();
   Loader loader;
 
@@ -88,7 +88,7 @@ inline void host_check_shift_op_all_loaders(ShiftOp shift_op,
   host_check_shift_on_one_loader<Abi, load_vector_aligned>(shift_op, test_vals,
                                                            shift_by, n);
 
-  Kokkos::Experimental::simd<DataType, Abi> shift_by_lanes;
+  Kokkos::Experimental::basic_simd<DataType, Abi> shift_by_lanes;
   shift_by_lanes.copy_from(shift_by, Kokkos::Experimental::simd_flag_default);
 
   host_check_shift_by_lanes_on_one_loader<Abi, load_element_aligned>(
@@ -103,13 +103,14 @@ inline void host_check_shift_op_all_loaders(ShiftOp shift_op,
 
 template <typename Abi, typename DataType>
 inline void host_check_shift_ops() {
-  if constexpr (is_type_v<Kokkos::Experimental::simd<DataType, Abi>>) {
+  if constexpr (is_type_v<Kokkos::Experimental::basic_simd<DataType, Abi>>) {
     if constexpr (std::is_integral_v<DataType>) {
-      using simd_type             = Kokkos::Experimental::simd<DataType, Abi>;
-      constexpr std::size_t width = simd_type::size();
+      using simd_type = Kokkos::Experimental::basic_simd<DataType, Abi>;
+      constexpr std::size_t width     = simd_type::size();
       constexpr std::size_t num_cases = 16;
       constexpr size_t alignment =
-          Kokkos::Experimental::simd<DataType, Abi>::size() * sizeof(DataType);
+          Kokkos::Experimental::basic_simd<DataType, Abi>::size() *
+          sizeof(DataType);
 
       DataType max = std::numeric_limits<DataType>::max();
 
@@ -153,7 +154,7 @@ template <typename Abi, typename Loader, typename ShiftOp, typename DataType>
 KOKKOS_INLINE_FUNCTION void device_check_shift_on_one_loader(
     ShiftOp shift_op, DataType test_vals[], DataType shift_by[],
     std::size_t n) {
-  using simd_type             = Kokkos::Experimental::simd<DataType, Abi>;
+  using simd_type             = Kokkos::Experimental::basic_simd<DataType, Abi>;
   constexpr std::size_t width = simd_type::size();
   Loader loader;
 
@@ -180,8 +181,8 @@ KOKKOS_INLINE_FUNCTION void device_check_shift_on_one_loader(
 template <typename Abi, typename Loader, typename ShiftOp, typename DataType>
 KOKKOS_INLINE_FUNCTION void device_check_shift_by_lanes_on_one_loader(
     ShiftOp shift_op, DataType test_vals[],
-    Kokkos::Experimental::simd<DataType, Abi>& shift_by) {
-  using simd_type             = Kokkos::Experimental::simd<DataType, Abi>;
+    Kokkos::Experimental::basic_simd<DataType, Abi>& shift_by) {
+  using simd_type             = Kokkos::Experimental::basic_simd<DataType, Abi>;
   constexpr std::size_t width = simd_type::size();
   Loader loader;
   simd_type simd_vals;
@@ -210,7 +211,7 @@ KOKKOS_INLINE_FUNCTION void device_check_shift_op_all_loaders(
   device_check_shift_on_one_loader<Abi, load_vector_aligned>(
       shift_op, test_vals, shift_by, n);
 
-  Kokkos::Experimental::simd<DataType, Abi> shift_by_lanes;
+  Kokkos::Experimental::basic_simd<DataType, Abi> shift_by_lanes;
   shift_by_lanes.copy_from(shift_by, Kokkos::Experimental::simd_flag_default);
 
   device_check_shift_by_lanes_on_one_loader<Abi, load_element_aligned>(
@@ -225,10 +226,10 @@ KOKKOS_INLINE_FUNCTION void device_check_shift_op_all_loaders(
 
 template <typename Abi, typename DataType>
 KOKKOS_INLINE_FUNCTION void device_check_shift_ops() {
-  if constexpr (is_type_v<Kokkos::Experimental::simd<DataType, Abi>>) {
+  if constexpr (is_type_v<Kokkos::Experimental::basic_simd<DataType, Abi>>) {
     if constexpr (std::is_integral_v<DataType>) {
-      using simd_type             = Kokkos::Experimental::simd<DataType, Abi>;
-      constexpr std::size_t width = simd_type::size();
+      using simd_type = Kokkos::Experimental::basic_simd<DataType, Abi>;
+      constexpr std::size_t width     = simd_type::size();
       constexpr std::size_t num_cases = 16;
 
       DataType max = Kokkos::reduction_identity<DataType>::max();

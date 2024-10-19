@@ -170,9 +170,9 @@ using native = ForSpace<Kokkos::DefaultExecutionSpace>;
 }  // namespace simd_abi
 
 template <class T>
-using native_simd = simd<T, simd_abi::native<T>>;
+using native_simd = basic_simd<T, simd_abi::native<T>>;
 template <class T>
-using native_simd_mask = simd_mask<T, simd_abi::native<T>>;
+using native_simd_mask = basic_simd_mask<T, simd_abi::native<T>>;
 
 namespace Impl {
 
