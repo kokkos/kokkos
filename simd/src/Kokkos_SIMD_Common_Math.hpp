@@ -29,14 +29,6 @@ class basic_simd;
 template <class T, class Abi>
 class basic_simd_mask;
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-template <class T, class Abi>
-using simd KOKKOS_DEPRECATED = basic_simd<T, Abi>;
-
-template <class T, class Abi>
-using simd_mask KOKKOS_DEPRECATED = basic_simd_mask<T, Abi>;
-#endif
-
 template <class M, class T>
 class const_where_expression;
 
