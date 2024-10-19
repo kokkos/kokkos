@@ -75,7 +75,7 @@ jobs:
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
           repository: desul/desul
-          ref: 779d0441a778c7088a36d38c4cbf8df3cfa182cc
+          ref: 22931326247c9333cc909628004d75ee5de99fa2
           path: desul
       - name: Install desul
         working-directory: desul
