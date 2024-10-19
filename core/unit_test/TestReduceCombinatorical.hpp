@@ -414,10 +414,14 @@ struct TestReduceCombinatoricalInstantiation {
 #endif
   }
 
+  struct AddIndexToSum {
+    KOKKOS_FUNCTION
+    void operator()(const int i, double& lsum) const { lsum += i; }
+  };
+
   template <class... Args>
   static void AddLambdaRange(int N, void*, Args... args) {
-    AddReturnArgument(
-        N, args..., KOKKOS_LAMBDA(const int& i, double& lsum) { lsum += i; });
+    AddReturnArgument(N, args..., AddIndexToSum{});
   }
 
   template <class... Args>
