@@ -265,6 +265,58 @@ T CASLoopSerial(int loop) {
 }
 
 //----------------------------------------------
+//--------------atomic_compare_exchange_strong--
+//----------------------------------------------
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
+#endif
+template <class T, class DEVICE_TYPE>
+struct DeprecatedCASFunctor {
+  using execution_space = DEVICE_TYPE;
+  using type            = Kokkos::View<T, execution_space>;
+
+  type data;
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(int) const {
+    T newval, assumed;
+
+    do {
+      assumed = Kokkos::volatile_load(&data());
+      newval  = assumed + (T)1;
+    } while (!Kokkos::atomic_compare_exchange_strong(&data(), assumed, newval));
+  }
+};
+#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
+#endif
+
+template <class T, class execution_space>
+T DeprecatedCASLoop(int loop) {
+  struct ZeroFunctor<T, execution_space> f_zero;
+  typename ZeroFunctor<T, execution_space>::type data("Data");
+  typename ZeroFunctor<T, execution_space>::h_type h_data("HData");
+
+  f_zero.data = data;
+  Kokkos::parallel_for(1, f_zero);
+  execution_space().fence();
+
+  struct DeprecatedCASFunctor<T, execution_space> f_cas;
+  f_cas.data = data;
+  Kokkos::parallel_for(loop, f_cas);
+  execution_space().fence();
+
+  Kokkos::deep_copy(h_data, data);
+  T val = h_data();
+
+  return val;
+}
+
+#endif
+
+//----------------------------------------------
 //--------------atomic_exchange-----------------
 //----------------------------------------------
 
@@ -363,6 +415,9 @@ T LoopVariant(int loop, int test) {
     case 1: return AddLoop<T, DeviceType>(loop);
     case 2: return CASLoop<T, DeviceType>(loop);
     case 3: return ExchLoop<T, DeviceType>(loop);
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+    case 4: return DeprecatedCASLoop<T, DeviceType>(loop);
+#endif
   }
 
   Kokkos::abort("unreachable");
@@ -375,6 +430,9 @@ T LoopVariantSerial(int loop, int test) {
     case 1: return AddLoopSerial<T>(loop);
     case 2: return CASLoopSerial<T>(loop);
     case 3: return ExchLoopSerial<T>(loop);
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+    case 4: return CASLoopSerial<T>(loop);
+#endif
   }
 
   Kokkos::abort("unreachable");
@@ -396,30 +454,51 @@ TEST(TEST_CATEGORY, atomics) {
   Loop<int, TEST_EXECSPACE>(loop_count, 1);
   Loop<int, TEST_EXECSPACE>(loop_count, 2);
   Loop<int, TEST_EXECSPACE>(loop_count, 3);
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  Loop<int, TEST_EXECSPACE>(loop_count, 4);
+#endif
 
   Loop<unsigned int, TEST_EXECSPACE>(loop_count, 1);
   Loop<unsigned int, TEST_EXECSPACE>(loop_count, 2);
   Loop<unsigned int, TEST_EXECSPACE>(loop_count, 3);
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  Loop<unsigned int, TEST_EXECSPACE>(loop_count, 4);
+#endif
 
   Loop<long int, TEST_EXECSPACE>(loop_count, 1);
   Loop<long int, TEST_EXECSPACE>(loop_count, 2);
   Loop<long int, TEST_EXECSPACE>(loop_count, 3);
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  Loop<long int, TEST_EXECSPACE>(loop_count, 4);
+#endif
 
   Loop<unsigned long int, TEST_EXECSPACE>(loop_count, 1);
   Loop<unsigned long int, TEST_EXECSPACE>(loop_count, 2);
   Loop<unsigned long int, TEST_EXECSPACE>(loop_count, 3);
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  Loop<unsigned long int, TEST_EXECSPACE>(loop_count, 4);
+#endif
 
   Loop<long long int, TEST_EXECSPACE>(loop_count, 1);
   Loop<long long int, TEST_EXECSPACE>(loop_count, 2);
   Loop<long long int, TEST_EXECSPACE>(loop_count, 3);
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  Loop<long long int, TEST_EXECSPACE>(loop_count, 4);
+#endif
 
   Loop<double, TEST_EXECSPACE>(loop_count, 1);
   Loop<double, TEST_EXECSPACE>(loop_count, 2);
   Loop<double, TEST_EXECSPACE>(loop_count, 3);
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  Loop<double, TEST_EXECSPACE>(loop_count, 4);
+#endif
 
   Loop<float, TEST_EXECSPACE>(100, 1);
   Loop<float, TEST_EXECSPACE>(100, 2);
   Loop<float, TEST_EXECSPACE>(100, 3);
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  Loop<float, TEST_EXECSPACE>(100, 4);
+#endif
 
   // FIXME_OPENMPTARGET
   // FIXME_OPENACC: atomic operations on composite types are not supported.
@@ -427,10 +506,16 @@ TEST(TEST_CATEGORY, atomics) {
   Loop<Kokkos::complex<float>, TEST_EXECSPACE>(1, 1);
   Loop<Kokkos::complex<float>, TEST_EXECSPACE>(1, 2);
   Loop<Kokkos::complex<float>, TEST_EXECSPACE>(1, 3);
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  Loop<Kokkos::complex<float>, TEST_EXECSPACE>(1, 4);
+#endif
 
   Loop<Kokkos::complex<float>, TEST_EXECSPACE>(100, 1);
   Loop<Kokkos::complex<float>, TEST_EXECSPACE>(100, 2);
   Loop<Kokkos::complex<float>, TEST_EXECSPACE>(100, 3);
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  Loop<Kokkos::complex<float>, TEST_EXECSPACE>(100, 4);
+#endif
 
 // FIXME_SYCL Replace macro by SYCL_EXT_ONEAPI_DEVICE_GLOBAL or remove
 // condition alltogether when possible.
@@ -441,16 +526,25 @@ TEST(TEST_CATEGORY, atomics) {
   Loop<Kokkos::complex<double>, TEST_EXECSPACE>(1, 1);
   Loop<Kokkos::complex<double>, TEST_EXECSPACE>(1, 2);
   Loop<Kokkos::complex<double>, TEST_EXECSPACE>(1, 3);
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  Loop<Kokkos::complex<double>, TEST_EXECSPACE>(1, 4);
+#endif
 
   Loop<Kokkos::complex<double>, TEST_EXECSPACE>(100, 1);
   Loop<Kokkos::complex<double>, TEST_EXECSPACE>(100, 2);
   Loop<Kokkos::complex<double>, TEST_EXECSPACE>(100, 3);
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  Loop<Kokkos::complex<double>, TEST_EXECSPACE>(100, 4);
+#endif
 
 // WORKAROUND MSVC
 #ifndef _WIN32
   Loop<SuperScalar<4>, TEST_EXECSPACE>(100, 1);
   Loop<SuperScalar<4>, TEST_EXECSPACE>(100, 2);
   Loop<SuperScalar<4>, TEST_EXECSPACE>(100, 3);
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  Loop<SuperScalar<4>, TEST_EXECSPACE>(100, 4);
+#endif
 #endif
 #endif
 }
