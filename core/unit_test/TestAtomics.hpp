@@ -157,17 +157,6 @@ struct AddFunctor {
   void operator()(int) const { Kokkos::atomic_fetch_add(&data(), (T)1); }
 };
 
-template <class T, class DEVICE_TYPE>
-struct AddFunctorReduce {
-  using execution_space = DEVICE_TYPE;
-  using type            = Kokkos::View<T, execution_space>;
-
-  type data;
-
-  KOKKOS_INLINE_FUNCTION
-  void operator()(int, int&) const { Kokkos::atomic_fetch_add(&data(), (T)1); }
-};
-
 template <class T, class execution_space>
 T AddLoop(int loop) {
   struct ZeroFunctor<T, execution_space> f_zero;
@@ -187,12 +176,6 @@ T AddLoop(int loop) {
 
   Kokkos::deep_copy(h_data, data);
   T val = h_data();
-
-  struct AddFunctorReduce<T, execution_space> f_add_red;
-  f_add_red.data = data;
-  int dummy_result;
-  Kokkos::parallel_reduce(loop, f_add_red, dummy_result);
-  execution_space().fence();
 
   return val;
 }
@@ -236,26 +219,6 @@ struct CASFunctor {
   }
 };
 
-template <class T, class DEVICE_TYPE>
-struct CASFunctorReduce {
-  using execution_space = DEVICE_TYPE;
-  using type            = Kokkos::View<T, execution_space>;
-
-  type data;
-
-  KOKKOS_INLINE_FUNCTION
-  void operator()(int, int&) const {
-    T old = data();
-    T newval, assumed;
-
-    do {
-      assumed = old;
-      newval  = assumed + (T)1;
-      old     = Kokkos::atomic_compare_exchange(&data(), assumed, newval);
-    } while (old != assumed);
-  }
-};
-
 template <class T, class execution_space>
 T CASLoop(int loop) {
   struct ZeroFunctor<T, execution_space> f_zero;
@@ -273,12 +236,6 @@ T CASLoop(int loop) {
 
   Kokkos::deep_copy(h_data, data);
   T val = h_data();
-
-  struct CASFunctorReduce<T, execution_space> f_cas_red;
-  f_cas_red.data = data;
-  int dummy_result;
-  Kokkos::parallel_reduce(loop, f_cas_red, dummy_result);
-  execution_space().fence();
 
   return val;
 }
@@ -325,20 +282,6 @@ struct ExchFunctor {
   }
 };
 
-template <class T, class DEVICE_TYPE>
-struct ExchFunctorReduce {
-  using execution_space = DEVICE_TYPE;
-  using type            = Kokkos::View<T, execution_space>;
-
-  type data, data2;
-
-  KOKKOS_INLINE_FUNCTION
-  void operator()(int i, int&) const {
-    T old = Kokkos::atomic_exchange(&data(), (T)i);
-    Kokkos::atomic_fetch_add(&data2(), old);
-  }
-};
-
 template <class T, class execution_space>
 T ExchLoop(int loop) {
   struct ZeroFunctor<T, execution_space> f_zero;
@@ -365,13 +308,6 @@ T ExchLoop(int loop) {
   Kokkos::deep_copy(h_data, data);
   Kokkos::deep_copy(h_data2, data2);
   T val = h_data() + h_data2();
-
-  struct ExchFunctorReduce<T, execution_space> f_exch_red;
-  f_exch_red.data  = data;
-  f_exch_red.data2 = data2;
-  int dummy_result;
-  Kokkos::parallel_reduce(loop, f_exch_red, dummy_result);
-  execution_space().fence();
 
   return val;
 }
