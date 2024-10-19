@@ -414,10 +414,9 @@ struct Functor_TestHalfOperators {
 
   KOKKOS_FUNCTION
   void operator()(Batch0, int) const {
-    half_type tmp_lhs, tmp2_lhs, *tmp_ptr;
+    half_type tmp_lhs, tmp2_lhs;
     double tmp_d_lhs;
     float tmp_s_lhs;
-    half_impl_type half_tmp;
 
     // Initialize output views to catch missing test invocations
     for (int i = 0; i < N_OP_TESTS_BATCH_0; ++i) {
@@ -589,11 +588,6 @@ struct Functor_TestHalfOperators {
 
   KOKKOS_FUNCTION
   void operator()(Batch1, int) const {
-    half_type tmp_lhs, tmp2_lhs, *tmp_ptr;
-    double tmp_d_lhs;
-    float tmp_s_lhs;
-    half_impl_type half_tmp;
-
     // Initialize output views to catch missing test invocations
     for (int i = N_OP_TESTS_BATCH_0 + 1; i < N_OP_TESTS_BATCH_1; ++i) {
       actual_lhs(i)   = 1;
@@ -659,11 +653,6 @@ struct Functor_TestHalfOperators {
 
   KOKKOS_FUNCTION
   void operator()(Batch2, int) const {
-    half_type tmp_lhs, tmp2_lhs, *tmp_ptr;
-    double tmp_d_lhs;
-    float tmp_s_lhs;
-    half_impl_type half_tmp;
-
     // Initialize output views to catch missing test invocations
     for (int i = N_OP_TESTS_BATCH_1 + 1; i < N_OP_TESTS_BATCH_2; ++i) {
       actual_lhs(i)   = 1;
@@ -729,11 +718,6 @@ struct Functor_TestHalfOperators {
 
   KOKKOS_FUNCTION
   void operator()(Batch3, int) const {
-    half_type tmp_lhs, tmp2_lhs, *tmp_ptr;
-    double tmp_d_lhs;
-    float tmp_s_lhs;
-    half_impl_type half_tmp;
-
     // Initialize output views to catch missing test invocations
     for (int i = N_OP_TESTS_BATCH_2 + 1; i < N_OP_TESTS_BATCH_3; ++i) {
       actual_lhs(i)   = 1;
@@ -799,11 +783,6 @@ struct Functor_TestHalfOperators {
 
   KOKKOS_FUNCTION
   void operator()(Batch4, int) const {
-    half_type tmp_lhs, tmp2_lhs, *tmp_ptr;
-    double tmp_d_lhs;
-    float tmp_s_lhs;
-    half_impl_type half_tmp;
-
     // Initialize output views to catch missing test invocations
     for (int i = N_OP_TESTS_BATCH_3 + 1; i < N_OP_TESTS_BATCH_4; ++i) {
       actual_lhs(i)   = 1;
@@ -884,8 +863,6 @@ struct Functor_TestHalfOperators {
   KOKKOS_FUNCTION
   void operator()(Batch5, int) const {
     half_type tmp_lhs, tmp2_lhs, *tmp_ptr;
-    double tmp_d_lhs;
-    float tmp_s_lhs;
     half_impl_type half_tmp;
 
     // Initialize output views to catch missing test invocations
