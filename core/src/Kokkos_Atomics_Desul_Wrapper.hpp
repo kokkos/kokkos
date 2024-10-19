@@ -139,7 +139,7 @@ template<class T> KOKKOS_DEPRECATED_WITH_COMMENT("Use atomic_dec() instead!") KO
 template<class T> KOKKOS_FUNCTION Impl::enable_if_atomic_t<T, T> atomic_exchange        (T* ptr, Impl::not_deduced_atomic_t<T> val)                                             { return desul::atomic_exchange        (const_cast<std::remove_volatile_t<T>*>(ptr), val,               desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
 template<class T> KOKKOS_FUNCTION Impl::enable_if_atomic_t<T, T> atomic_compare_exchange(T* ptr, Impl::not_deduced_atomic_t<T> expected, Impl::not_deduced_atomic_t<T> desired) { return desul::atomic_compare_exchange(const_cast<std::remove_volatile_t<T>*>(ptr), expected, desired, desul::MemoryOrderRelaxed(), KOKKOS_DESUL_MEM_SCOPE); }
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-template<class T> KOKKOS_DEPRECATED_WITH_COMMENT("Use atomic_compare_exchange() instead!") KOKKOS_FUNCTION Impl::enable_if_atomic_t<T, bool> atomic_compare_exchange_strong(T* const ptr, Impl::not_deduced_atomic_t<T> expected, Impl::not_deduced_atomic_t<T> desired) { return expected == atomic_compare_exchange(ptr, expected, desired); }
+template<class T> KOKKOS_DEPRECATED_WITH_COMMENT("Use atomic_compare_exchange() instead!") KOKKOS_FUNCTION Impl::enable_if_atomic_t<T, bool> atomic_compare_exchange_strong(T* ptr, Impl::not_deduced_atomic_t<T> expected, Impl::not_deduced_atomic_t<T> desired) { return expected == atomic_compare_exchange(ptr, expected, desired); }
 #endif
 
 // clang-format on
