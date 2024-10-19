@@ -507,7 +507,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), force_global_launch) {
   ASSERT_TRUE(contains(ex, data, functor_t::count));
 
   ASSERT_TRUE(validate_event_set(
-      [&]() { graph.~optional(); },
+      [&]() { graph.reset(); },
       [&](DeallocateDataEvent dealloc) {
         if (dealloc.name == alloc_label && dealloc.ptr == ptr &&
             dealloc.size == ptr_size)
