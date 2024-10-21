@@ -234,8 +234,8 @@ void test_atomic_accessor() {
       Kokkos::Impl::BV::BasicView<T, extents_type, layout_type, accessor_type>;
   using um_accessor_type = Kokkos::Impl::CheckedRelaxedAtomicAccessor<
       T, typename ExecutionSpace::memory_space>;
-  using um_view_type =
-      Kokkos::Impl::BV::BasicView<T, extents_type, layout_type, um_accessor_type>;
+  using um_view_type = Kokkos::Impl::BV::BasicView<T, extents_type, layout_type,
+                                                   um_accessor_type>;
 
   extents_type extents{};
   auto view = view_type("test_view", extents);

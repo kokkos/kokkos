@@ -96,7 +96,8 @@ transform_kokkos_slice_to_mdspan_slice(const T &s) {
   return KokkosSliceToMDSpanSliceImpl<T>::transform(s);
 }
 
-namespace BV { // This is used to prevent View from ADL-finding the Impl namespace
+namespace BV {  // This is used to prevent View from ADL-finding the Impl
+                // namespace
 template <class ElementType, class Extents, class LayoutPolicy,
           class AccessorPolicy>
 class BasicView {
