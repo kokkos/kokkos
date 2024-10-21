@@ -110,6 +110,21 @@ struct TestStruct {
   Kokkos::DefaultExecutionSpace exe_space;
   std::string const label = "trivial";
 
+#ifndef KOKKOS_ENABLE_CXX17
+  static_assert(
+      std::random_access_iterator<
+          Kokkos::Experimental::Impl::RandomAccessIterator<Kokkos::View<T *>>>);
+  static_assert(std::random_access_iterator<
+                Kokkos::Experimental::Impl::RandomAccessIterator<
+                    Kokkos::View<const T *>>>);
+  static_assert(std::random_access_iterator<
+                Kokkos::Experimental::Impl::RandomAccessIterator<
+                    const Kokkos::View<T *>>>);
+  static_assert(std::random_access_iterator<
+                Kokkos::Experimental::Impl::RandomAccessIterator<
+                    const Kokkos::View<const T *>>>);
+#endif
+
 //
 // just iterators
 //
