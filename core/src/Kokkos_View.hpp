@@ -27,7 +27,7 @@ static_assert(false,
 #if defined(KOKKOS_ENABLE_IMPL_MDSPAN) && !defined(KOKKOS_COMPILER_INTEL)
 #include <View/Kokkos_BasicView.hpp>
 #endif
-#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
+#if defined(KOKKOS_ENABLE_IMPL_VIEW_LEGACY) || defined(KOKKOS_COMPILER_INTEL)
 #include <View/Kokkos_ViewLegacy.hpp>
 #else
 
