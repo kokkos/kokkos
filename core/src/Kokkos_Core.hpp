@@ -55,7 +55,9 @@
 #include <Kokkos_NumericTraits.hpp>
 #include <Kokkos_BitManipulation.hpp>
 #include <Kokkos_Swap.hpp>
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 #include <Kokkos_MemoryPool.hpp>
+#endif
 #include <Kokkos_Array.hpp>
 #include <Kokkos_View.hpp>
 #include <Kokkos_Vectorization.hpp>
