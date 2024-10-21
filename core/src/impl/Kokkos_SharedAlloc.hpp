@@ -556,6 +556,7 @@ union SharedAllocationTracker {
 
   KOKKOS_FORCEINLINE_FUNCTION
   SharedAllocationTracker& operator=(SharedAllocationTracker&& rhs) {
+    if (&rhs == this) return *this;
     auto swap_tmp     = m_record_bits;
     m_record_bits     = rhs.m_record_bits;
     rhs.m_record_bits = swap_tmp;
@@ -579,6 +580,7 @@ union SharedAllocationTracker {
         KOKKOS_FORCEINLINE_FUNCTION SharedAllocationTracker
         &
         operator=(const SharedAllocationTracker& rhs) {
+    if (&rhs == this) return *this;
     // If this is tracking then must decrement
     KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT
     m_record_bits = KOKKOS_IMPL_SHARED_ALLOCATION_CARRY_RECORD_BITS(rhs, true);

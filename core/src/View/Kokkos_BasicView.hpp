@@ -25,6 +25,7 @@ static_assert(false,
 #include <impl/Kokkos_Utilities.hpp>
 #include <impl/Kokkos_SharedAlloc.hpp>
 #include <View/Kokkos_ViewAlloc.hpp>
+#include <View/Kokkos_ViewChecking.hpp>
 #include <View/Kokkos_ViewCtor.hpp>
 #include <View/Kokkos_ViewTraits.hpp>
 #include <View/MDSpan/Kokkos_MDSpan_Header.hpp>
@@ -34,7 +35,34 @@ static_assert(false,
 #include <optional>
 #include <type_traits>
 
-// FIXME: we need to make this work for not using our mdspan impl
+#if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
+
+#define KOKKOS_IMPL_BASICVIEW_OPERATOR_VERIFY(...)                             \
+  if constexpr (Impl::IsReferenceCountedDataHandle<data_handle_type>::value) { \
+    Kokkos::Impl::runtime_check_memory_access_violation<memory_space>(         \
+        m_ptr.tracker());                                                      \
+    Kokkos::Impl::view_verify_operator_bounds(                                 \
+        m_ptr.tracker(), m_map.extents(), m_ptr.get(), __VA_ARGS__);           \
+  } else {                                                                     \
+    Kokkos::Impl::runtime_check_memory_access_violation<memory_space>(         \
+        Kokkos::Impl::SharedAllocationTracker());                              \
+    Kokkos::Impl::view_verify_operator_bounds(                                 \
+        Kokkos::Impl::SharedAllocationTracker(), m_map.extents(), m_ptr,       \
+        __VA_ARGS__);                                                          \
+  }
+
+#else
+
+#define KOKKOS_IMPL_BASICVIEW_OPERATOR_VERIFY(...)                             \
+  if constexpr (Impl::IsReferenceCountedDataHandle<data_handle_type>::value) { \
+    Kokkos::Impl::runtime_check_memory_access_violation<memory_space>(         \
+        m_ptr.tracker());                                                      \
+  } else {                                                                     \
+    Kokkos::Impl::runtime_check_memory_access_violation<memory_space>(         \
+        Kokkos::Impl::SharedAllocationTracker());                              \
+  }
+#endif
+
 #define KOKKOS_IMPL_NO_UNIQUE_ADDRESS _MDSPAN_NO_UNIQUE_ADDRESS
 namespace Kokkos::Impl {
 
@@ -68,35 +96,23 @@ transform_kokkos_slice_to_mdspan_slice(const T &s) {
   return KokkosSliceToMDSpanSliceImpl<T>::transform(s);
 }
 
-// We do have implementation detail versions of these in our mdspan impl
-// However they are not part of the public standard interface
-template <class T>
-struct is_layout_right_padded : public std::false_type {};
-
-template <size_t Pad>
-struct is_layout_right_padded<Kokkos::Experimental::layout_right_padded<Pad>>
-    : public std::true_type {};
-
-template <class T>
-struct is_layout_left_padded : public std::false_type {};
-
-template <size_t Pad>
-struct is_layout_left_padded<Kokkos::Experimental::layout_left_padded<Pad>>
-    : public std::true_type {};
-
+namespace BV {  // This is used to prevent View from ADL-finding the Impl
+                // namespace
 template <class ElementType, class Extents, class LayoutPolicy,
           class AccessorPolicy>
 class BasicView {
  public:
   using mdspan_type =
       mdspan<ElementType, Extents, LayoutPolicy, AccessorPolicy>;
-  using extents_type     = typename mdspan_type::extents_type;
-  using layout_type      = typename mdspan_type::layout_type;
-  using accessor_type    = typename mdspan_type::accessor_type;
-  using mapping_type     = typename mdspan_type::mapping_type;
-  using element_type     = typename mdspan_type::element_type;
-  using value_type       = typename mdspan_type::value_type;
-  using index_type       = typename mdspan_type::index_type;
+  using extents_type  = typename mdspan_type::extents_type;
+  using layout_type   = typename mdspan_type::layout_type;
+  using accessor_type = typename mdspan_type::accessor_type;
+  using mapping_type  = typename mdspan_type::mapping_type;
+  using element_type  = typename mdspan_type::element_type;
+  using value_type    = typename mdspan_type::value_type;
+  // FIXME: backwards compatibility, should be changed to the same as mdspan
+  // index_type
+  using index_type       = typename mdspan_type::size_type;
   using size_type        = typename mdspan_type::size_type;
   using rank_type        = typename mdspan_type::rank_type;
   using data_handle_type = typename mdspan_type::data_handle_type;
@@ -132,7 +148,7 @@ class BasicView {
     using dst_t          = layout_type;
     constexpr size_t rnk = mdspan_type::rank();
     if constexpr (!std::is_same_v<src_t, dst_t>) {
-      if constexpr (Impl::is_layout_left_padded<dst_t>::value) {
+      if constexpr (Impl::IsLayoutLeftPadded<dst_t>::value) {
         if constexpr (std::is_same_v<src_t, layout_stride>) {
           index_type stride = 1;
           for (size_t r = 0; r < rnk; r++) {
@@ -143,7 +159,7 @@ class BasicView {
           }
         }
       }
-      if constexpr (Impl::is_layout_right_padded<dst_t>::value) {
+      if constexpr (Impl::IsLayoutRightPadded<dst_t>::value) {
         if constexpr (std::is_same_v<src_t, layout_stride>) {
           index_type stride = 1;
           if constexpr (rnk > 0) {
@@ -165,7 +181,7 @@ class BasicView {
               Kokkos::abort("View assignment must have compatible layouts");
             stride *= rhs.extents().extent(r);
           }
-        } else if constexpr (Impl::is_layout_left_padded<src_t>::value &&
+        } else if constexpr (Impl::IsLayoutLeftPadded<src_t>::value &&
                              rnk > 1) {
           if (rhs.stride(1) != rhs.extents().extent(0))
             Kokkos::abort("View assignment must have compatible layouts");
@@ -181,7 +197,7 @@ class BasicView {
               stride *= rhs.extents().extent(r - 1);
             }
           }
-        } else if constexpr (Impl::is_layout_right_padded<src_t>::value &&
+        } else if constexpr (Impl::IsLayoutRightPadded<src_t>::value &&
                              rnk > 1) {
           if (rhs.stride(rnk - 2) != rhs.extents().extent(rnk - 1))
             Kokkos::abort("View assignment must have compatible layouts");
@@ -348,15 +364,24 @@ class BasicView {
           "Constructing View and initializing data with uninitialized "
           "execution space");
     }
-    return data_handle_type(Impl::make_shared_allocation_record<ElementType>(
-        arg_mapping.required_span_size(),
-        Impl::get_property<Impl::LabelTag>(prop_copy),
-        Impl::get_property<Impl::MemorySpaceTag>(prop_copy),
-        has_exec ? std::optional<execution_space>{Impl::get_property<
-                       Impl::ExecutionSpaceTag>(prop_copy)}
-                 : std::optional<execution_space>{std::nullopt},
-        std::integral_constant<bool, alloc_prop::initialize>(),
-        std::integral_constant<bool, alloc_prop::sequential_host_init>()));
+    if constexpr (has_exec) {
+      return data_handle_type(Impl::make_shared_allocation_record<ElementType>(
+          arg_mapping.required_span_size(),
+          Impl::get_property<Impl::LabelTag>(prop_copy),
+          Impl::get_property<Impl::MemorySpaceTag>(prop_copy),
+          std::make_optional(
+              Impl::get_property<Impl::ExecutionSpaceTag>(prop_copy)),
+          std::bool_constant<alloc_prop::initialize>(),
+          std::bool_constant<alloc_prop::sequential_host_init>()));
+    } else {
+      return data_handle_type(Impl::make_shared_allocation_record<ElementType>(
+          arg_mapping.required_span_size(),
+          Impl::get_property<Impl::LabelTag>(prop_copy),
+          Impl::get_property<Impl::MemorySpaceTag>(prop_copy),
+          std::optional<execution_space>{},
+          std::bool_constant<alloc_prop::initialize>(),
+          std::bool_constant<alloc_prop::sequential_host_init>()));
+    }
   }
 
  public:
@@ -457,30 +482,6 @@ class BasicView {
     return m_acc.access(m_ptr,
                         m_map(static_cast<index_type>(std::move(indices))...));
   }
-
-  template <class OtherIndexType>
-    requires(
-        std::is_convertible_v<const OtherIndexType &, index_type> &&
-        std::is_nothrow_constructible_v<index_type, const OtherIndexType &>)
-  KOKKOS_FUNCTION constexpr reference operator[](
-      const Array<OtherIndexType, rank()> &indices) const {
-    return m_acc.access(m_ptr,
-                        [&]<size_t... Idxs>(std::index_sequence<Idxs...>) {
-                          return m_map(indices[Idxs]...);
-                        }(std::make_index_sequence<rank()>()));
-  }
-
-  template <class OtherIndexType>
-    requires(
-        std::is_convertible_v<const OtherIndexType &, index_type> &&
-        std::is_nothrow_constructible_v<index_type, const OtherIndexType &>)
-  KOKKOS_FUNCTION constexpr reference operator[](
-      std::span<OtherIndexType, rank()> indices) const {
-    return m_acc.access(m_ptr,
-                        [&]<size_t... Idxs>(std::index_sequence<Idxs...>) {
-                          return m_map(indices[Idxs]...);
-                        }(std::make_index_sequence<rank()>()));
-  }
 #endif
 
   // C++20 operator()
@@ -491,32 +492,9 @@ class BasicView {
              (sizeof...(OtherIndexTypes) == rank()))
   KOKKOS_FUNCTION constexpr reference operator()(
       OtherIndexTypes... indices) const {
+    KOKKOS_IMPL_BASICVIEW_OPERATOR_VERIFY(m_map, indices...);
     return m_acc.access(m_ptr,
                         m_map(static_cast<index_type>(std::move(indices))...));
-  }
-
-  template <class OtherIndexType>
-    requires(
-        std::is_convertible_v<const OtherIndexType &, index_type> &&
-        std::is_nothrow_constructible_v<index_type, const OtherIndexType &>)
-  KOKKOS_FUNCTION constexpr reference operator()(
-      const Array<OtherIndexType, rank()> &indices) const {
-    return m_acc.access(m_ptr,
-                        [&]<size_t... Idxs>(std::index_sequence<Idxs...>) {
-                          return m_map(indices[Idxs]...);
-                        }(std::make_index_sequence<rank()>()));
-  }
-
-  template <class OtherIndexType>
-    requires(
-        std::is_convertible_v<const OtherIndexType &, index_type> &&
-        std::is_nothrow_constructible_v<index_type, const OtherIndexType &>)
-  KOKKOS_FUNCTION constexpr reference operator()(
-      std::span<OtherIndexType, rank()> indices) const {
-    return m_acc.access(m_ptr,
-                        [&]<size_t... Idxs>(std::index_sequence<Idxs...>) {
-                          return m_map(indices[Idxs]...);
-                        }(std::make_index_sequence<rank()>()));
   }
 #else
   // C++17 variant of operator()
@@ -531,6 +509,7 @@ class BasicView {
     static_assert(
         (std::is_nothrow_constructible_v<index_type, OtherIndexTypes> && ...));
     static_assert((sizeof...(OtherIndexTypes)) == rank());
+    KOKKOS_IMPL_BASICVIEW_OPERATOR_VERIFY(indices...)
     return m_acc.access(m_ptr,
                         m_map(static_cast<index_type>(std::move(indices))...));
   }
@@ -543,11 +522,14 @@ class BasicView {
           ((sizeof...(OtherIndexTypes)) == rank()),
       reference>
   operator()(OtherIndexTypes... indices) const {
+    KOKKOS_IMPL_BASICVIEW_OPERATOR_VERIFY(indices...)
     return m_acc.access(m_ptr,
                         m_map(static_cast<index_type>(std::move(indices))...));
   }
 #endif
 #endif
+
+#undef KOKKOS_IMPL_BASICVIEW_OPERATOR_VERIFY
 
  private:
   // FIXME_CXX20: could use inline templated lambda in C++20 mode inside size()
@@ -647,6 +629,7 @@ class BasicView {
   template <class, class, class, class>
   friend class BasicView;
 };
+}  // namespace BV
 }  // namespace Kokkos::Impl
 
 #endif
