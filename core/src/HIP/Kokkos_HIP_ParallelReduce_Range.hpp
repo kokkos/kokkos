@@ -232,9 +232,21 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
     if ((nwork > 0) || need_device_set) {
       const int block_size = local_block_size(m_functor_reducer.get_functor());
       if (block_size == 0) {
+        const unsigned int shared_memory_required =
+            hip_single_inter_block_reduce_scan_shmem<false, WorkTag,
+                                                     value_type>(
+                m_functor_reducer.get_functor(), HIPTraits::WarpSize);
+        const unsigned int shared_memory_available =
+            m_policy.space()
+                .impl_internal_space_instance()
+                ->m_deviceProp.maxSharedMemoryPerMultiProcessor;
         Kokkos::Impl::throw_runtime_exception(
             std::string("Kokkos::Impl::ParallelReduce< HIP > could not find a "
-                        "valid execution configuration."));
+                        "valid execution configuration: your kernel requires " +
+                        std::to_string(shared_memory_required) +
+                        " bytes of shared memory per block but only " +
+                        std::to_string(shared_memory_available) +
+                        " bytes per block are available."));
       }
 
       // REQUIRED ( 1 , N , 1 )
