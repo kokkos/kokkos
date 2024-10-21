@@ -258,6 +258,17 @@ class ParallelScanSYCLBase {
 
     desul::ensure_sycl_lock_arrays_on_device(q);
 
+#ifdef SYCL_EXT_ONEAPI_KERNEL_PROPERTIES
+    auto get_properties = [&]() {
+      if constexpr (Policy::subgroup_size > 0)
+        return sycl::ext::oneapi::experimental::properties{
+            sycl::ext::oneapi::experimental::sub_group_size<
+                Policy::subgroup_size>};
+      else
+        return sycl::ext::oneapi::experimental::properties{};
+    };
+#endif
+
     auto perform_work_group_scans = q.submit([&](sycl::handler& cgh) {
       sycl::local_accessor<unsigned int> num_teams_done(1, cgh);
 
@@ -314,8 +325,14 @@ class ParallelScanSYCLBase {
 
       auto scan_lambda = scan_lambda_factory(local_mem, num_teams_done,
                                              global_mem, group_results);
+
+#ifdef SYCL_EXT_ONEAPI_KERNEL_PROPERTIES
+      cgh.parallel_for(sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
+                       get_properties(), scan_lambda);
+#else
       cgh.parallel_for(sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
                        scan_lambda);
+#endif
     });
 
     // Write results to global memory
@@ -330,30 +347,35 @@ class ParallelScanSYCLBase {
       cgh.depends_on(perform_work_group_scans);
 #endif
 
-      cgh.parallel_for(
-          sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
-          [=](sycl::nd_item<1> item) {
-            const index_type global_id = item.get_global_linear_id();
-            const CombinedFunctorReducer<
-                FunctorType, typename Analysis::Reducer>& functor_reducer =
-                functor_wrapper.get_functor();
-            const FunctorType& functor = functor_reducer.get_functor();
-            const typename Analysis::Reducer& reducer =
-                functor_reducer.get_reducer();
+      auto lambda = [=](sycl::nd_item<1> item) {
+        const index_type global_id = item.get_global_linear_id();
+        const CombinedFunctorReducer<FunctorType, typename Analysis::Reducer>&
+            functor_reducer        = functor_wrapper.get_functor();
+        const FunctorType& functor = functor_reducer.get_functor();
+        const typename Analysis::Reducer& reducer =
+            functor_reducer.get_reducer();
 
-            if (global_id < size) {
-              value_type update = global_mem[global_id];
+        if (global_id < size) {
+          value_type update = global_mem[global_id];
 
-              reducer.join(&update, &group_results[item.get_group_linear_id()]);
+          reducer.join(&update, &group_results[item.get_group_linear_id()]);
 
-              if constexpr (std::is_void<WorkTag>::value)
-                functor(global_id + begin, update, true);
-              else
-                functor(WorkTag(), global_id + begin, update, true);
+          if constexpr (std::is_void<WorkTag>::value)
+            functor(global_id + begin, update, true);
+          else
+            functor(WorkTag(), global_id + begin, update, true);
 
-              if (global_id == size - 1) *result_ptr = update;
-            }
-          });
+          if (global_id == size - 1) *result_ptr = update;
+        }
+      };
+
+#ifdef SYCL_EXT_ONEAPI_KERNEL_PROPERTIES
+      cgh.parallel_for(sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
+                       get_properties(), lambda);
+#else
+      cgh.parallel_for(sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
+                       lambda);
+#endif
     });
 #ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
     q.ext_oneapi_submit_barrier(
