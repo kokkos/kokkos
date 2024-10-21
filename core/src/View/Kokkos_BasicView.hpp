@@ -96,8 +96,6 @@ transform_kokkos_slice_to_mdspan_slice(const T &s) {
   return KokkosSliceToMDSpanSliceImpl<T>::transform(s);
 }
 
-}  // namespace Impl
-
 template <class ElementType, class Extents, class LayoutPolicy,
           class AccessorPolicy>
 class BasicView {
