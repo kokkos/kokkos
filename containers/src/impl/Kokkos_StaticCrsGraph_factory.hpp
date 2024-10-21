@@ -88,9 +88,10 @@ inline typename StaticCrsGraphType::staticcrsgraph_type create_staticcrsgraph(
     const std::string& label, const std::vector<InputSizeType>& input) {
   using output_type  = StaticCrsGraphType;
   using entries_type = typename output_type::entries_type;
-  using work_type    = View<
-      typename output_type::size_type[], typename output_type::array_layout,
-      typename output_type::device_type, typename output_type::memory_traits>;
+  using work_type =
+      View<typename output_type::size_type[], typename output_type::layout_type,
+           typename output_type::device_type,
+           typename output_type::memory_traits>;
 
   output_type output;
 
@@ -129,9 +130,10 @@ inline typename StaticCrsGraphType::staticcrsgraph_type create_staticcrsgraph(
 
   static_assert(entries_type::rank == 1, "Graph entries view must be rank one");
 
-  using work_type = View<
-      typename output_type::size_type[], typename output_type::array_layout,
-      typename output_type::device_type, typename output_type::memory_traits>;
+  using work_type =
+      View<typename output_type::size_type[], typename output_type::layout_type,
+           typename output_type::device_type,
+           typename output_type::memory_traits>;
 
   output_type output;
 

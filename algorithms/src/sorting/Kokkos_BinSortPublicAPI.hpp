@@ -59,7 +59,7 @@ class BinSort {
     using src_view_type = std::conditional_t<
         Kokkos::is_view<SrcViewType>::value,
         Kokkos::View<typename SrcViewType::const_data_type,
-                     typename SrcViewType::array_layout,
+                     typename SrcViewType::layout_type,
                      typename SrcViewType::device_type
 #if !defined(KOKKOS_COMPILER_NVHPC) || (KOKKOS_COMPILER_NVHPC >= 230700)
                      ,
@@ -117,7 +117,7 @@ class BinSort {
   using const_rnd_key_view_type = std::conditional_t<
       Kokkos::is_view<KeyViewType>::value,
       Kokkos::View<typename KeyViewType::const_data_type,
-                   typename KeyViewType::array_layout,
+                   typename KeyViewType::layout_type,
                    typename KeyViewType::device_type,
                    Kokkos::MemoryTraits<Kokkos::RandomAccess> >,
       const_key_view_type>;
