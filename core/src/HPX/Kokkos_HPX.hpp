@@ -787,8 +787,11 @@ class TeamPolicyInternal<Kokkos::Experimental::HPX, Properties...>
     m_league_size           = league_size_request;
     const int max_team_size = 1;  // TODO: Can't use team_size_max(...) because
                                   // it requires a functor as argument.
-    m_team_size =
-        team_size_request > max_team_size ? max_team_size : team_size_request;
+
+    if (team_size_request > max_team_size)
+      Kokkos::abort("Kokkos::abort: Requested Team Size is too large!");
+
+    m_team_size = team_size_request;
 
     if (m_chunk_size > 0) {
       if (!Impl::is_integral_power_of_two(m_chunk_size))
