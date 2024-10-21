@@ -278,10 +278,11 @@ KOKKOS_INLINE_FUNCTION auto mapping_from_ctor_and_sizes(
 
 template <class MappingType, size_t ScalarSize, class ViewCtorProperties>
 KOKKOS_INLINE_FUNCTION auto mapping_from_ctor_and_8sizes(
-    const ViewCtorProperties &arg_prop, const size_t arg_N0,
-    const size_t arg_N1, const size_t arg_N2, const size_t arg_N3,
-    const size_t arg_N4, const size_t arg_N5, const size_t arg_N6,
-    const size_t arg_N7) {
+    const ViewCtorProperties &arg_prop, [[maybe_unused]] const size_t arg_N0,
+    [[maybe_unused]] const size_t arg_N1, [[maybe_unused]] const size_t arg_N2,
+    [[maybe_unused]] const size_t arg_N3, [[maybe_unused]] const size_t arg_N4,
+    [[maybe_unused]] const size_t arg_N5, [[maybe_unused]] const size_t arg_N6,
+    [[maybe_unused]] const size_t arg_N7) {
   if constexpr (MappingType::extents_type::rank() == 0) {
     return mapping_from_ctor_and_sizes<MappingType, ScalarSize>(arg_prop);
   } else if constexpr (MappingType::extents_type::rank() == 1) {
