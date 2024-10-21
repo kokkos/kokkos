@@ -114,7 +114,7 @@ struct BasicViewFromTraits {
   using accessor_type      = typename mdspan_view_traits::accessor_type;
 
   using type =
-      BasicView<element_type, extents_type, layout_type, accessor_type>;
+      BV::BasicView<element_type, extents_type, layout_type, accessor_type>;
 };
 }  // namespace Impl
 
