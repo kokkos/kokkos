@@ -224,8 +224,8 @@ using native_simd_mask KOKKOS_DEPRECATED =
     basic_simd_mask<T, simd_abi::native<T>>;
 
 template <class T, class Abi>
-using simd KOKKOS_DEPRECATED_WITH_COMMENT("Temporarily use Impl::simd<T> instead") =
-    basic_simd<T, Abi>;
+using simd KOKKOS_DEPRECATED_WITH_COMMENT(
+    "Temporarily use Impl::simd<T> instead") = basic_simd<T, Abi>;
 
 template <class T, class Abi>
 using simd_mask KOKKOS_DEPRECATED_WITH_COMMENT(
