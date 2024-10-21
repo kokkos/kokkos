@@ -61,10 +61,17 @@ void test_view_of_views_default() {
   vov(0, 0) = a;
   vov(1, 0) = a;
   vov(0, 1) = b;
+
 #ifndef KOKKOS_ENABLE_IMPL_VIEW_OF_VIEWS_DESTRUCTOR_PRECONDITION_VIOLATION_WORKAROUND
   vov(0, 0) = V();
   vov(1, 0) = V();
   vov(0, 1) = V();
+#endif
+
+  Kokkos::realloc(vov, 1, 1);
+  vov(0, 0) = a;
+#ifndef KOKKOS_ENABLE_IMPL_VIEW_OF_VIEWS_DESTRUCTOR_PRECONDITION_VIOLATION_WORKAROUND
+  vov(0, 0) = V();
 #endif
 }
 
@@ -79,12 +86,21 @@ void test_view_of_views_without_initializing() {
   new (&vov(0, 0)) V(a);
   new (&vov(1, 0)) V(a);
   new (&vov(0, 1)) V(b);
+
 #ifndef KOKKOS_ENABLE_IMPL_VIEW_OF_VIEWS_DESTRUCTOR_PRECONDITION_VIOLATION_WORKAROUND
   vov(0, 0).~V();
   vov(1, 0).~V();
   vov(0, 1).~V();
 #else
   // leaks memory
+#endif
+
+  Kokkos::realloc(Kokkos::view_alloc(Kokkos::WithoutInitializing), vov, 1, 1);
+  new (&vov(0, 0)) V(a);
+#ifndef KOKKOS_ENABLE_IMPL_VIEW_OF_VIEWS_DESTRUCTOR_PRECONDITION_VIOLATION_WORKAROUND
+  vov(0, 0).~V();
+#else
+// leaks memory
 #endif
 }
 
@@ -99,6 +115,9 @@ void test_view_of_views_sequential_host_init() {
   vov(0, 0) = a;
   vov(1, 0) = a;
   vov(0, 1) = b;
+
+  Kokkos::realloc(Kokkos::view_alloc(Kokkos::SequentialHostInit), vov, 1, 1);
+  vov(0, 0) = a;
 }
 
 TEST(TEST_CATEGORY, view_of_views_default) {
