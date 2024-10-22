@@ -604,9 +604,11 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 // clang-format off
 #if defined(__NVCOMPILER)
   #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH() \
-    _Pragma("diag_suppress 1216")
+    _Pragma("diag_suppress 1216") \
+    _Pragma("diag_suppress deprecated_entity_with_custom_message")
   #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP() \
-    _Pragma("diag_default 1216")
+    _Pragma("diag_default 1216") \
+    _Pragma("diag_suppress deprecated_entity_with_custom_message")
 #elif defined(__EDG__)
   #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH() \
     _Pragma("warning push")                              \
