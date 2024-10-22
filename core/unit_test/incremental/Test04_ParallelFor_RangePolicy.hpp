@@ -50,7 +50,7 @@ struct TestParallel_For {
   // Check if the array values are updated correctly.
   void correctness_check(value_type *data) {
     for (int i = 0; i < num_elements; ++i) {
-      ASSERT_EQ((i + 2) * value, data[i])
+      ASSERT_EQ((i + 1) * value, data[i])
           << "Values in index " << i << " are incorrect";
     }
   }
