@@ -95,7 +95,7 @@ pipeline {
                             -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
                             -DKokkos_ENABLE_SERIAL=ON \
                           .. && \
-                          make -j8 && ctest -T Test --verbose
+                          make -j8 && ctest --no-compress-output -T Test --verbose
                           '''
                     }
                     post {
@@ -133,7 +133,7 @@ pipeline {
                                 -DKokkos_ENABLE_BENCHMARKS=ON \
                                 -DKokkos_ENABLE_HIP=ON \
                               .. && \
-                              make -j8 && ctest -T Test --verbose'''
+                              make -j8 && ctest --no-compress-output -T Test --verbose'''
                     }
                     post {
                         always {
