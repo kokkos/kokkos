@@ -286,15 +286,9 @@ struct DeprecatedAssignAtomicTest {
   KOKKOS_FUNCTION static auto atomic_op(T* ptr_op, T* ptr_fetch_op,
                                         T* ptr_op_fetch, T update) {
     T old_val = Kokkos::atomic_load(ptr_op);
-#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
-    KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
-#endif
     Kokkos::atomic_assign(ptr_op, update);
     Kokkos::atomic_assign(ptr_op_fetch, update);
     Kokkos::atomic_assign(ptr_fetch_op, update);
-#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
-    KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
-#endif
     return Kokkos::pair<T, T>(old_val, update);
   }
   template <class T>
@@ -308,13 +302,7 @@ struct DeprecatedIncrementAtomicTest {
   template <class T>
   KOKKOS_FUNCTION static auto atomic_op(T* ptr_op, T* ptr_fetch_op,
                                         T* ptr_op_fetch, T) {
-#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
-    KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
-#endif
     Kokkos::atomic_increment(ptr_op);
-#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
-    KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
-#endif
     T old_val = Kokkos::atomic_fetch_inc(ptr_fetch_op);
     T new_val = Kokkos::atomic_inc_fetch(ptr_op_fetch);
     return Kokkos::pair<T, T>(old_val, new_val);
@@ -330,13 +318,7 @@ struct DeprecatedDecrementAtomicTest {
   template <class T>
   KOKKOS_FUNCTION static auto atomic_op(T* ptr_op, T* ptr_fetch_op,
                                         T* ptr_op_fetch, T) {
-#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
-    KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
-#endif
     Kokkos::atomic_decrement(ptr_op);
-#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
-    KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
-#endif
     T old_val = Kokkos::atomic_fetch_dec(ptr_fetch_op);
     T new_val = Kokkos::atomic_dec_fetch(ptr_op_fetch);
     return Kokkos::pair<T, T>(old_val, new_val);
