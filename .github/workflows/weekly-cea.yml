@@ -5,11 +5,6 @@ on:
     - cron: "0 2 * * 6" # every Saturday at 2am UTC
   workflow_dispatch:
 
-  # FIXME remove before merging
-  pull_request:
-    branches:
-      - develop
-
 jobs:
   build_and_test:
     env:
