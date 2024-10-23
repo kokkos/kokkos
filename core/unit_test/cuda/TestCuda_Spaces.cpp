@@ -307,7 +307,7 @@ struct TestViewCudaTexture {
 #ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
     EXPECT_TRUE((std::is_same_v<typename T::reference_type, const double>));
 #else
-    EXPECT_TRUE((std::is_same_v<typename T::reference_type, double &>));
+    EXPECT_TRUE((std::is_same_v<typename T::reference_type, const double &>));
 #endif
 
     EXPECT_TRUE(V::reference_type_is_lvalue_reference);  // An ordinary view.
