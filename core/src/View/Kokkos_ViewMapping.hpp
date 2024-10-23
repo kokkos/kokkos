@@ -1602,8 +1602,8 @@ struct ViewOffset<
   }
 
   KOKKOS_INLINE_FUNCTION constexpr bool span_is_contiguous() const {
-    return m_stride == m_dim.N7 * m_dim.N6 * m_dim.N5 * m_dim.N4 * m_dim.N3 *
-                           m_dim.N2 * m_dim.N1;
+    return m_stride == static_cast<size_type>(m_dim.N7) * m_dim.N6 * m_dim.N5 *
+                           m_dim.N4 * m_dim.N3 * m_dim.N2 * m_dim.N1;
   }
 
   /* Strides of dimensions */
@@ -1612,19 +1612,21 @@ struct ViewOffset<
     return m_dim.N7;
   }
   KOKKOS_INLINE_FUNCTION constexpr size_type stride_5() const {
-    return m_dim.N7 * m_dim.N6;
+    return static_cast<size_type>(m_dim.N7) * m_dim.N6;
   }
   KOKKOS_INLINE_FUNCTION constexpr size_type stride_4() const {
-    return m_dim.N7 * m_dim.N6 * m_dim.N5;
+    return static_cast<size_type>(m_dim.N7) * m_dim.N6 * m_dim.N5;
   }
   KOKKOS_INLINE_FUNCTION constexpr size_type stride_3() const {
-    return m_dim.N7 * m_dim.N6 * m_dim.N5 * m_dim.N4;
+    return static_cast<size_type>(m_dim.N7) * m_dim.N6 * m_dim.N5 * m_dim.N4;
   }
   KOKKOS_INLINE_FUNCTION constexpr size_type stride_2() const {
-    return m_dim.N7 * m_dim.N6 * m_dim.N5 * m_dim.N4 * m_dim.N3;
+    return static_cast<size_type>(m_dim.N7) * m_dim.N6 * m_dim.N5 * m_dim.N4 *
+           m_dim.N3;
   }
   KOKKOS_INLINE_FUNCTION constexpr size_type stride_1() const {
-    return m_dim.N7 * m_dim.N6 * m_dim.N5 * m_dim.N4 * m_dim.N3 * m_dim.N2;
+    return static_cast<size_type>(m_dim.N7) * m_dim.N6 * m_dim.N5 * m_dim.N4 *
+           m_dim.N3 * m_dim.N2;
   }
   KOKKOS_INLINE_FUNCTION constexpr size_type stride_0() const {
     return m_stride;

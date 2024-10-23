@@ -329,32 +329,41 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), when_all_cycle) {
   //----------------------------------------
 }
 
-// This test is disabled because we don't currently support copying to host,
+// This test requires that the graph execution space can access
+// the host memoy space because we don't currently support copying to host,
 // even asynchronously. We _may_ want to do that eventually?
-TEST_F(TEST_CATEGORY_FIXTURE(graph), DISABLED_repeat_chain) {
-  auto graph = Kokkos::Experimental::create_graph(
-      ex, [&, count_host = count_host](auto root) {
-        //----------------------------------------
-        root.then_parallel_for(1, set_functor{count, 0})
-            .then_parallel_for(1, count_functor{count, bugs, 0, 0})
-            .then_parallel_for(1, count_functor{count, bugs, 1, 1})
-            .then_parallel_reduce(1, set_result_functor{count}, count_host)
-            .then_parallel_reduce(
-                1, set_result_functor{bugs},
-                Kokkos::Sum<int, Kokkos::HostSpace>{bugs_host});
-        //----------------------------------------
-      });
+TEST_F(TEST_CATEGORY_FIXTURE(graph), repeat_chain) {
+  constexpr bool result_not_accessible_by_exec = !Kokkos::SpaceAccessibility<
+      TEST_EXECSPACE, decltype(bugs_host)::memory_space>::accessible;
 
-  //----------------------------------------
-  constexpr int repeats = 10;
+  if constexpr (result_not_accessible_by_exec) {
+    GTEST_SKIP() << "The graph requires the reduction targets like 'bugs_host' "
+                    "to be accessible by the execution space.";
+  } else {
+    auto graph = Kokkos::Experimental::create_graph(
+        ex, [&, count_host = count_host](auto root) {
+          //----------------------------------------
+          root.then_parallel_for(1, set_functor{count, 0})
+              .then_parallel_for(1, count_functor{count, bugs, 0, 0})
+              .then_parallel_for(1, count_functor{count, bugs, 1, 1})
+              .then_parallel_reduce(1, set_result_functor{count}, count_host)
+              .then_parallel_reduce(
+                  1, set_result_functor{bugs},
+                  Kokkos::Sum<int, Kokkos::HostSpace>{bugs_host});
+          //----------------------------------------
+        });
 
-  for (int i = 0; i < repeats; ++i) {
-    graph.submit();
-    ex.fence();
-    EXPECT_EQ(2, count_host());
-    EXPECT_EQ(0, bugs_host());
+    //----------------------------------------
+    constexpr int repeats = 10;
+
+    for (int i = 0; i < repeats; ++i) {
+      graph.submit();
+      ex.fence();
+      EXPECT_EQ(2, count_host());
+      EXPECT_EQ(0, bugs_host());
+    }
+    //----------------------------------------
   }
-  //----------------------------------------
 }
 
 TEST_F(TEST_CATEGORY_FIXTURE(graph), zero_work_reduce) {
@@ -498,7 +507,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), force_global_launch) {
   ASSERT_TRUE(contains(ex, data, functor_t::count));
 
   ASSERT_TRUE(validate_event_set(
-      [&]() { graph.~optional(); },
+      [&]() { graph.reset(); },
       [&](DeallocateDataEvent dealloc) {
         if (dealloc.name == alloc_label && dealloc.ptr == ptr &&
             dealloc.size == ptr_size)
@@ -507,7 +516,18 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), force_global_launch) {
             false, {"Either the name or pointer or size did not match"}};
       }));
 
+  listen_tool_events(Config::DisableAll());
 #endif
+}
+
+// Ensure that an empty graph on the default host execution space
+// can be submitted.
+TEST_F(TEST_CATEGORY_FIXTURE(graph), empty_graph_default_host_exec) {
+  auto graph =
+      Kokkos::Experimental::create_graph(Kokkos::DefaultHostExecutionSpace{});
+  graph.instantiate();
+  graph.submit();
+  graph.get_execution_space().fence();
 }
 
 template <typename ViewType, size_t TargetIndex, size_t NumIndices = 0>

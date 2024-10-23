@@ -5,13 +5,11 @@
 if(NOT GTest_FOUND) # fallback to internal gtest
   set(GTEST_SOURCE_DIR ${Kokkos_SOURCE_DIR}/tpls/gtest)
 
-  #need here for tribits
-  kokkos_include_directories(${GTEST_SOURCE_DIR})
   kokkos_add_test_library(
     kokkos_gtest HEADERS ${GTEST_SOURCE_DIR}/gtest/gtest.h SOURCES ${GTEST_SOURCE_DIR}/gtest/gtest-all.cc
   )
 
-  target_include_directories(kokkos_gtest PUBLIC ${GTEST_SOURCE_DIR})
+  target_include_directories(kokkos_gtest SYSTEM PUBLIC ${GTEST_SOURCE_DIR})
   if((NOT (Kokkos_ENABLE_CUDA AND WIN32)) AND (NOT ("${KOKKOS_CXX_COMPILER_ID}" STREQUAL "Fujitsu")))
     target_compile_features(kokkos_gtest PUBLIC cxx_std_14)
   endif()
@@ -94,8 +92,13 @@ set(COMPILE_ONLY_SOURCES
     TestTeamPolicyCTAD.cpp
     TestTeamMDRangePolicyCTAD.cpp
     TestNestedReducerCTAD.cpp
+    view/TestBasicViewMDSpanConversion.cpp
     view/TestExtentsDatatypeConversion.cpp
 )
+
+if(NOT Kokkos_ENABLE_IMPL_MDSPAN OR KOKKOS_CXX_COMPILER_ID STREQUAL "Intel")
+  list(REMOVE_ITEM COMPILE_ONLY_SOURCES view/TestBasicViewMDSpanConversion.cpp)
+endif()
 
 #testing if windows.h and Kokkos_Core.hpp can be included
 if(WIN32)
@@ -261,6 +264,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
         ViewCopy_b
         ViewCopy_c
         ViewCtorDimMatch
+        ViewCtorProp
         ViewEmptyRuntimeUnmanaged
         ViewHooks
         ViewLayoutStrideAssignment
@@ -346,7 +350,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
     # detail tests for the mdspan based View
     set(${Tag}_VIEWSUPPORT)
     if(Kokkos_ENABLE_IMPL_MDSPAN)
-      foreach(Name ReferenceCountedAccessor ReferenceCountedDataHandle)
+      foreach(Name BasicView ReferenceCountedAccessor ReferenceCountedDataHandle)
         set(file ${dir}/Test${Tag}_View_${Name}.cpp)
         # Write to a temporary intermediate file and call configure_file to avoid
         # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
@@ -354,6 +358,9 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
         configure_file(${dir}/dummy.cpp ${file})
         list(APPEND ${Tag}_VIEWSUPPORT ${file})
       endforeach()
+      if(KOKKOS_CXX_COMPILER_ID STREQUAL "Intel")
+        list(REMOVE_ITEM ${Tag}_VIEWSUPPORT ${dir}/Test${Tag}_View_BasicView.cpp)
+      endif()
       kokkos_add_executable_and_test(CoreUnitTest_${Tag}_ViewSupport SOURCES UnitTestMainInit.cpp ${${Tag}_VIEWSUPPORT})
     endif()
   endif()
@@ -671,8 +678,14 @@ if(KOKKOS_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
 endif()
 
 if(Kokkos_ENABLE_SERIAL)
+  if(Kokkos_ENABLE_DEPRECATED_CODE_4)
+    set(Serial_EXTRA_SOURCES serial/TestSerial_Task.cpp)
+  else()
+    set(Serial_EXTRA_SOURCES)
+  endif()
+
   kokkos_add_executable_and_test(
-    CoreUnitTest_Serial1 SOURCES UnitTestMainInit.cpp ${Serial_SOURCES1} serial/TestSerial_Task.cpp
+    CoreUnitTest_Serial1 SOURCES UnitTestMainInit.cpp ${Serial_SOURCES1} ${Serial_EXTRA_SOURCES}
   )
   kokkos_add_executable_and_test(CoreUnitTest_Serial2 SOURCES UnitTestMainInit.cpp ${Serial_SOURCES2})
 endif()
@@ -682,7 +695,11 @@ if(Kokkos_ENABLE_THREADS)
 endif()
 
 if(Kokkos_ENABLE_OPENMP)
-  set(OpenMP_EXTRA_SOURCES openmp/TestOpenMP_Task.cpp)
+  if(Kokkos_ENABLE_DEPRECATED_CODE_4)
+    set(OpenMP_EXTRA_SOURCES openmp/TestOpenMP_Task.cpp)
+  else()
+    set(OpenMP_EXTRA_SOURCES)
+  endif()
   kokkos_add_executable_and_test(
     CoreUnitTest_OpenMP SOURCES UnitTestMainInit.cpp ${OpenMP_SOURCES} ${OpenMP_EXTRA_SOURCES}
   )
@@ -690,7 +707,13 @@ if(Kokkos_ENABLE_OPENMP)
 endif()
 
 if(Kokkos_ENABLE_HPX)
-  kokkos_add_executable_and_test(CoreUnitTest_HPX SOURCES UnitTestMainInit.cpp ${HPX_SOURCES} hpx/TestHPX_Task.cpp)
+  if(Kokkos_ENABLE_DEPRECATED_CODE_4)
+    set(HPX_EXTRA_SOURCES hpx/TestHPX_Task.cpp)
+  else()
+    set(HPX_EXTRA_SOURCES)
+  endif()
+
+  kokkos_add_executable_and_test(CoreUnitTest_HPX SOURCES UnitTestMainInit.cpp ${HPX_SOURCES} ${HPX_EXTRA_SOURCES})
   kokkos_add_executable_and_test(CoreUnitTest_HPXInterOp SOURCES UnitTestMain.cpp hpx/TestHPX_InterOp.cpp)
   kokkos_add_executable_and_test(
     CoreUnitTest_HPX_IndependentInstances
@@ -722,11 +745,17 @@ if(Kokkos_ENABLE_CUDA)
 
   kokkos_add_executable_and_test(CoreUnitTest_Cuda2 SOURCES UnitTestMainInit.cpp ${Cuda_SOURCES2})
 
+  if(Kokkos_ENABLE_DEPRECATED_CODE_4)
+    set(Cuda_EXTRA_SOURCES cuda/TestCuda_Task.cpp)
+  else()
+    set(Cuda_EXTRA_SOURCES)
+  endif()
+
   kokkos_add_executable_and_test(
     CoreUnitTest_Cuda3
     SOURCES
     UnitTestMainInit.cpp
-    cuda/TestCuda_Task.cpp
+    ${Cuda_EXTRA_SOURCES}
     cuda/TestCuda_TeamScratchStreams.cpp
     ${Cuda_SOURCES3}
     cuda/TestCuda_Spaces.cpp
@@ -744,6 +773,10 @@ if(Kokkos_ENABLE_CUDA)
   )
   kokkos_add_executable_and_test(
     CoreUnitTest_CudaInterOpStreamsMultiGPU SOURCES UnitTestMainInit.cpp cuda/TestCuda_InterOp_StreamsMultiGPU.cpp
+  )
+
+  kokkos_add_executable_and_test(
+    CoreUnitTest_CudaInterOpGraph SOURCES UnitTestMainInit.cpp cuda/TestCuda_InterOp_Graph.cpp
   )
 endif()
 
@@ -768,6 +801,10 @@ if(Kokkos_ENABLE_HIP)
   kokkos_add_executable_and_test(
     CoreUnitTest_HIPInterOpStreams SOURCES UnitTestMain.cpp hip/TestHIP_InterOp_Streams.cpp
   )
+
+  kokkos_add_executable_and_test(
+    CoreUnitTest_HIPInterOpGraph SOURCES UnitTestMainInit.cpp hip/TestHIP_InterOp_Graph.cpp
+  )
 endif()
 
 if(Kokkos_ENABLE_SYCL)
@@ -786,13 +823,7 @@ if(Kokkos_ENABLE_SYCL)
   kokkos_add_executable_and_test(CoreUnitTest_SYCL2D SOURCES UnitTestMainInit.cpp ${SYCL_SOURCES2D})
 
   kokkos_add_executable_and_test(
-    CoreUnitTest_SYCL3
-    SOURCES
-    UnitTestMainInit.cpp
-    # FIXME_SYCL
-    sycl/TestSYCL_Task.cpp
-    sycl/TestSYCL_TeamScratchStreams.cpp
-    ${SYCL_SOURCES3}
+    CoreUnitTest_SYCL3 SOURCES UnitTestMainInit.cpp sycl/TestSYCL_TeamScratchStreams.cpp ${SYCL_SOURCES3}
     sycl/TestSYCL_Spaces.cpp
   )
 
@@ -806,6 +837,12 @@ if(Kokkos_ENABLE_SYCL)
   kokkos_add_executable_and_test(
     CoreUnitTest_SYCLInterOpStreamsMultiGPU SOURCES UnitTestMainInit.cpp sycl/TestSYCL_InterOp_StreamsMultiGPU.cpp
   )
+
+  if(KOKKOS_IMPL_HAVE_SYCL_EXT_ONEAPI_GRAPH)
+    kokkos_add_executable_and_test(
+      CoreUnitTest_SYCLInterOpGraph SOURCES UnitTestMainInit.cpp sycl/TestSYCL_InterOp_Graph.cpp
+    )
+  endif()
 endif()
 
 set(DEFAULT_DEVICE_SOURCES

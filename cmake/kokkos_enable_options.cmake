@@ -77,6 +77,7 @@ kokkos_enable_option(
   "Whether multiple kernels are instantiated at compile time - improve performance but increase compile time"
 )
 kokkos_enable_option(IMPL_HIP_UNIFIED_MEMORY OFF "Whether to leverage unified memory architectures for HIP")
+kokkos_enable_option(IMPL_HIP_MALLOC_ASYNC OFF "Whether to enable hipMallocAsync")
 kokkos_enable_option(OPENACC_FORCE_HOST_AS_DEVICE OFF "Whether to force to use host as a target device for OpenACC")
 
 # This option will go away eventually, but allows fallback to old implementation when needed.
@@ -167,7 +168,13 @@ check_device_specific_options(
   IMPL_CUDA_UNIFIED_MEMORY
 )
 check_device_specific_options(
-  DEVICE HIP OPTIONS HIP_RELOCATABLE_DEVICE_CODE HIP_MULTIPLE_KERNEL_INSTANTIATIONS IMPL_HIP_UNIFIED_MEMORY
+  DEVICE
+  HIP
+  OPTIONS
+  HIP_RELOCATABLE_DEVICE_CODE
+  HIP_MULTIPLE_KERNEL_INSTANTIATIONS
+  IMPL_HIP_UNIFIED_MEMORY
+  IMPL_HIP_MALLOC_ASYNC
 )
 check_device_specific_options(DEVICE HPX OPTIONS IMPL_HPX_ASYNC_DISPATCH)
 check_device_specific_options(DEVICE OPENACC OPTIONS OPENACC_FORCE_HOST_AS_DEVICE)

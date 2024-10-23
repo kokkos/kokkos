@@ -75,7 +75,8 @@ struct ThreadScratch {
             .set_scratch_size(scratch_level, Kokkos::PerThread(scratchSize));
 
     int max_team_size = policy.team_size_max(*this, Kokkos::ParallelForTag());
-    v                 = data_t("Matrix", pN, max_team_size);
+    ASSERT_GT(max_team_size, 0);
+    v = data_t("Matrix", pN, max_team_size);
 
     Kokkos::parallel_for(
         "Test12a_ThreadScratch",
@@ -87,7 +88,7 @@ struct ThreadScratch {
     auto v_H = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), v);
 
     size_t check   = 0;
-    const size_t s = pN * sX * sY;
+    const size_t s = static_cast<size_t>(pN) * sX * sY;
     for (int n = 0; n < pN; ++n)
       for (int m = 0; m < max_team_size; ++m) {
         check += v_H(n, m);

@@ -14,14 +14,11 @@
 //
 //@HEADER
 
-#include <gtest/gtest.h>
-
-#include <Kokkos_Core.hpp>
-#include <type_traits>
-#include <limits>
-#include "Kokkos_NumericTraits.hpp"
+#include <Kokkos_Macros.hpp>
 
 // Suppress "'long double' is treated as 'double' in device code"
+// The suppression needs to happen before Kokkos_NumericTraits.hpp is included
+// to be effective
 #ifdef KOKKOS_COMPILER_NVCC
 #ifdef __NVCC_DIAG_PRAGMA_SUPPORT__
 #pragma nv_diagnostic push
@@ -29,10 +26,16 @@
 #else
 #ifdef __CUDA_ARCH__
 #pragma diagnostic push
-#pragma diag_suppress 20208
+#pragma diag_suppress 3245
 #endif
 #endif
 #endif
+
+#include <gtest/gtest.h>
+
+#include <Kokkos_Core.hpp>
+#include <type_traits>
+#include <limits>
 
 struct extrema {
 #define DEFINE_EXTREMA(T, m, M)                 \

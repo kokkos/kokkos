@@ -106,11 +106,15 @@ class HostThreadTeamData {
 
  public:
   inline bool team_rendezvous() const noexcept {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
     // FIXME_OPENMP The tasking framework creates an instance with
     // m_team_scratch == nullptr and m_team_rendezvous != 0:
     int* ptr = m_team_scratch == nullptr
                    ? nullptr
                    : reinterpret_cast<int*>(m_team_scratch + m_team_rendezvous);
+#else
+    int* ptr = reinterpret_cast<int*>(m_team_scratch + m_team_rendezvous);
+#endif
     HostBarrier::split_arrive(ptr, m_team_size, m_team_rendezvous_step);
     if (m_team_rank != 0) {
       HostBarrier::wait(ptr, m_team_size, m_team_rendezvous_step);
@@ -134,12 +138,16 @@ class HostThreadTeamData {
   }
 
   inline void team_rendezvous_release() const noexcept {
-    // FIXME_OPENMP The tasking framework creates an instance with
-    // m_team_scratch == nullptr and m_team_rendezvous != 0:
     HostBarrier::split_release(
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+        // FIXME_OPENMP The tasking framework creates an instance with
+        // m_team_scratch == nullptr and m_team_rendezvous != 0:
         (m_team_scratch == nullptr)
             ? nullptr
             : reinterpret_cast<int*>(m_team_scratch + m_team_rendezvous),
+#else
+        reinterpret_cast<int*>(m_team_scratch + m_team_rendezvous),
+#endif
         m_team_size, m_team_rendezvous_step);
   }
 
@@ -279,9 +287,11 @@ class HostThreadTeamData {
   }
 
   int64_t* team_shared() const noexcept {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
     // FIXME_OPENMP The tasking framework creates an instance with
     // m_team_scratch == nullptr and m_team_shared != 0
     if (m_team_scratch == nullptr) return nullptr;
+#endif
     return m_team_scratch + m_team_shared;
   }
 
@@ -358,7 +368,7 @@ class HostThreadTeamData {
     int const num  = (m_work_end + m_work_chunk - 1) / m_work_chunk;
     int const part = (num + m_league_size - 1) / m_league_size;
 
-    m_work_range.first  = part * m_league_rank;
+    m_work_range.first  = static_cast<int64_t>(part) * m_league_rank;
     m_work_range.second = m_work_range.first + part;
 
     // Steal from next team, round robin
@@ -384,7 +394,7 @@ class HostThreadTeamData {
     const int i = get_work_stealing();
 
     if (0 <= i) {
-      x.first  = m_work_chunk * i;
+      x.first  = static_cast<int64_t>(m_work_chunk) * i;
       x.second = x.first + m_work_chunk < m_work_end ? x.first + m_work_chunk
                                                      : m_work_end;
     }
@@ -411,15 +421,22 @@ class HostThreadTeamMember {
   int const m_league_size;
 
  public:
-  // FIXME_OPENMP The tasking framework creates an instance with
-  // m_team_scratch == nullptr and m_team_shared != 0:
   constexpr HostThreadTeamMember(HostThreadTeamData& arg_data) noexcept
-      : m_scratch(arg_data.team_shared(), (arg_data.team_shared() == nullptr)
-                                              ? 0
-                                              : arg_data.team_shared_bytes()),
+      : m_scratch(
+            arg_data.team_shared(),
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+            // FIXME_OPENMP The tasking framework creates an instance with
+            // m_team_scratch == nullptr and m_team_shared != 0:
+            (arg_data.team_shared() == nullptr) ? 0
+                                                : arg_data.team_shared_bytes()
+#else
+            arg_data.team_shared_bytes()
+#endif
+                ),
         m_data(arg_data),
         m_league_rank(arg_data.m_league_rank),
-        m_league_size(arg_data.m_league_size) {}
+        m_league_size(arg_data.m_league_size) {
+  }
 
   constexpr HostThreadTeamMember(HostThreadTeamData& arg_data,
                                  int const arg_league_rank,

@@ -206,6 +206,9 @@ struct GraphImpl<Kokkos::Cuda> {
         m_execution_space, _graph_node_kernel_ctor_tag{},
         aggregate_kernel_impl_t{});
   }
+
+  cudaGraph_t cuda_graph() { return m_graph; }
+  cudaGraphExec_t cuda_graph_exec() { return m_graph_exec; }
 };
 
 }  // end namespace Impl

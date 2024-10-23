@@ -358,6 +358,23 @@ class GraphNodeRef {
                       Kokkos::is_reducer<return_type_remove_cvref>::value,
                   "Output argument to parallel reduce in a graph must be a "
                   "View or a Reducer");
+
+    if constexpr (Kokkos::is_reducer_v<return_type_remove_cvref>) {
+      static_assert(
+          Kokkos::SpaceAccessibility<
+              ExecutionSpace, typename return_type_remove_cvref::
+                                  result_view_type::memory_space>::accessible,
+          "The reduction target must be accessible by the graph execution "
+          "space.");
+    } else {
+      static_assert(
+          Kokkos::SpaceAccessibility<
+              ExecutionSpace,
+              typename return_type_remove_cvref::memory_space>::accessible,
+          "The reduction target must be accessible by the graph execution "
+          "space.");
+    }
+
     using return_type =
         // Yes, you do really have to do this...
         std::conditional_t<Kokkos::is_reducer<return_type_remove_cvref>::value,

@@ -580,9 +580,37 @@ class DynRankView : private View<DataType*******, Properties...> {
              index_type i6 = 0) const {
     return view_type::operator()(i0, i1, i2, i3, i4, i5, i6);
   }
+
+// This is an accomodation for Phalanx, that is usint the operator[] to access
+// all elements in a linear fashion even when the rank is not 1
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   KOKKOS_FUNCTION reference_type operator[](index_type i0) const {
+    if constexpr (std::is_same_v<typename drvtraits::value_type,
+                                 typename drvtraits::scalar_array_type>) {
+      return view_type::data()[i0];
+    } else {
+      const size_t dim_scalar = view_type::impl_map().dimension_scalar();
+      const size_t bytes      = view_type::span() / dim_scalar;
+
+      using tmp_view_type =
+          Kokkos::View<DataType*, typename traits::array_layout,
+                       typename traits::device_type,
+                       Kokkos::MemoryTraits<traits::memory_traits::impl_value |
+                                            unsigned(Kokkos::Unmanaged)>>;
+      tmp_view_type rankone_view(view_type::data(), bytes, dim_scalar);
+      return rankone_view(i0);
+    }
+  }
+#else
+  KOKKOS_FUNCTION reference_type operator[](index_type i0) const {
+#ifdef KOKKOS_ENABLE_DEBUG
+    if (rank() != 1u)
+      Kokkos::abort("DynRankView operator[] can only be used for rank-1");
+#endif
     return view_type::operator()(i0, 0, 0, 0, 0, 0, 0);
   }
+#endif
+
   KOKKOS_FUNCTION reference_type access(index_type i0 = 0, index_type i1 = 0,
                                         index_type i2 = 0, index_type i3 = 0,
                                         index_type i4 = 0, index_type i5 = 0,
@@ -1361,26 +1389,6 @@ struct MirrorDRViewType {
       std::conditional_t<is_same_memspace, src_view_type, dest_view_type>;
 };
 
-template <class Space, class T, class... P>
-struct MirrorDRVType {
-  // The incoming view_type
-  using src_view_type = typename Kokkos::DynRankView<T, P...>;
-  // The memory space for the mirror view
-  using memory_space = typename Space::memory_space;
-  // Check whether it is the same memory space
-  enum {
-    is_same_memspace =
-        std::is_same_v<memory_space, typename src_view_type::memory_space>
-  };
-  // The array_layout
-  using array_layout = typename src_view_type::array_layout;
-  // The data type (we probably want it non-const since otherwise we can't even
-  // deep_copy to it.
-  using data_type = typename src_view_type::non_const_data_type;
-  // The destination view type if it is not the same memory space
-  using view_type = Kokkos::DynRankView<data_type, array_layout, Space>;
-};
-
 }  // namespace Impl
 
 namespace Impl {
@@ -1397,9 +1405,9 @@ inline auto create_mirror(const DynRankView<T, P...>& src,
       arg_prop, std::string(src.label()).append("_mirror"));
 
   if constexpr (Impl::ViewCtorProp<ViewCtorArgs...>::has_memory_space) {
-    using dst_type = typename Impl::MirrorDRVType<
+    using dst_type = typename Impl::MirrorDRViewType<
         typename Impl::ViewCtorProp<ViewCtorArgs...>::memory_space, T,
-        P...>::view_type;
+        P...>::dest_view_type;
     return dst_type(prop_copy,
                     Impl::reconstructLayout(src.layout(), src.rank()));
   } else {

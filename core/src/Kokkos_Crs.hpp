@@ -148,7 +148,7 @@ class GetCrsTransposeCounts {
 
  public:
   KOKKOS_INLINE_FUNCTION
-  void operator()(index_type i) const { atomic_increment(&out[in.entries(i)]); }
+  void operator()(index_type i) const { atomic_inc(&out[in.entries(i)]); }
   GetCrsTransposeCounts(InCrs const& arg_in, OutCounts const& arg_out)
       : in(arg_in), out(arg_out) {
     using policy_type  = RangePolicy<index_type, execution_space>;
