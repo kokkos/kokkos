@@ -270,7 +270,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   }
 
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION void stride(iType* const s) const {
+  KOKKOS_INLINE_FUNCTION void stride([[maybe_unused]] iType* const s) const {
     if constexpr (rank() > 0) {
       for (size_t r = 0; r < rank(); r++) s[r] = base_t::stride(r);
       s[rank()] = s[rank() - 1] * base_t::extent(rank() - 1);
