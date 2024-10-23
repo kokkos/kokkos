@@ -305,7 +305,7 @@ struct TestViewCudaTexture {
     EXPECT_TRUE(
         (std::is_same<typename T::reference_type, const double>::value));
 #else
-    EXPECT_TRUE((std::is_same<typename T::reference_type, double &>::value));
+    EXPECT_TRUE((std::is_same<typename T::reference_type, const double &>::value));
 #endif
 
     EXPECT_TRUE(V::reference_type_is_lvalue_reference);  // An ordinary view.
