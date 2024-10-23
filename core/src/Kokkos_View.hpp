@@ -24,10 +24,10 @@ static_assert(false,
 #define KOKKOS_VIEW_HPP
 
 #include <Kokkos_Macros.hpp>
-#if defined(KOKKOS_ENABLE_IMPL_MDSPAN) && !defined(KOKKOS_COMPILER_INTEL)
+#ifdef KOKKOS_ENABLE_IMPL_MDSPAN
 #include <View/Kokkos_BasicView.hpp>
 #endif
-#if defined(KOKKOS_ENABLE_IMPL_VIEW_LEGACY) || defined(KOKKOS_COMPILER_INTEL)
+#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
 #include <View/Kokkos_ViewLegacy.hpp>
 #else
 
