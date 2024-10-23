@@ -66,12 +66,17 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
     }
   }
 
-  // Print a warning if the user did not select the APU architecture when using
-  // a MI300A
+  // Print a warning if the user did not select the right GFX942 architecture
 #ifdef KOKKOS_ARCH_AMD_GFX942
   if ((Kokkos::show_warnings()) && (hipProp.integrated == 1)) {
     std::cerr << "Kokkos::HIP::initialize WARNING: running kernels for MI300X "
                  "(discrete GPU) on a MI300A (APU).\n";
+  }
+#endif
+#ifdef KOKKOS_ARCH_AMD_GFX942_APU
+  if ((Kokkos::show_warnings()) && (hipProp.integrated == 0)) {
+    std::cerr << "Kokkos::HIP::initialize WARNING: running kernels for MI300A "
+                 "(APU) on a MI300X (discrete GPU).\n";
   }
 #endif
 
@@ -150,10 +155,6 @@ void HIP::print_configuration(std::ostream& os, bool /*verbose*/) const {
   os << "yes\n";
 #else
   os << "no\n";
-#endif
-#ifdef KOKKOS_ENABLE_IMPL_HIP_UNIFIED_MEMORY
-  os << "  KOKKOS_ENABLE_IMPL_HIP_UNIFIED_MEMORY: ";
-  os << "yes\n";
 #endif
 
   os << "\nRuntime Configuration:\n";
