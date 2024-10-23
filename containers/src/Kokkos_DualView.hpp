@@ -1072,10 +1072,8 @@ class DualView : public ViewTraits<DataType, Properties...> {
       if (sizeMismatch) {
         sync<typename t_host::memory_space>();
         ::Kokkos::resize(arg_prop, h_view, n0, n1, n2, n3, n4, n5, n6, n7);
-        resync_device(Kokkos::view_alloc(Kokkos::WithoutInitializing));
-
-        /* Mark Host copy as modified */
-        ++modified_flags(0);
+        d_view =
+            create_mirror_view_and_copy(typename t_dev::memory_space(), h_view);
       }
       return;
     } else if constexpr (alloc_prop_input::has_execution_space) {
