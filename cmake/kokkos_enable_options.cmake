@@ -94,10 +94,15 @@ kokkos_enable_option(
 )
 mark_as_advanced(Kokkos_ENABLE_IMPL_VIEW_OF_VIEWS_DESTRUCTOR_PRECONDITION_VIOLATION_WORKAROUND)
 
-kokkos_enable_option(IMPL_MDSPAN ON "Whether to enable experimental mdspan support")
-kokkos_enable_option(MDSPAN_EXTERNAL OFF BOOL "Whether to use an external version of mdspan")
+if(KOKKOS_CXX_COMPILER_ID STREQUAL Intel)
+  set(MDSPAN_DEFAULT OFF)
+else()
+  set(MDSPAN_DEFAULT ON)
+endif()
+kokkos_enable_option(IMPL_MDSPAN ${MDSPAN_DEFAULT} "Whether to enable experimental mdspan support")
+kokkos_enable_option(MDSPAN_EXTERNAL OFF "Whether to use an external version of mdspan")
 kokkos_enable_option(
-  IMPL_SKIP_COMPILER_MDSPAN ON BOOL "Whether to use an internal version of mdspan even if the compiler supports mdspan"
+  IMPL_SKIP_COMPILER_MDSPAN ON "Whether to use an internal version of mdspan even if the compiler supports mdspan"
 )
 kokkos_enable_option(
   IMPL_CHECK_POSSIBLY_BREAKING_LAYOUTS
@@ -108,6 +113,9 @@ mark_as_advanced(Kokkos_ENABLE_IMPL_MDSPAN)
 mark_as_advanced(Kokkos_ENABLE_MDSPAN_EXTERNAL)
 mark_as_advanced(Kokkos_ENABLE_IMPL_SKIP_COMPILER_MDSPAN)
 mark_as_advanced(IMPL_CHECK_POSSIBLY_BREAKING_LAYOUTS)
+if(KOKKOS_CXX_COMPILER_ID STREQUAL Intel AND Kokkos_ENABLE_IMPL_MDSPAN)
+  message(FATAL_ERROR "Kokkos MDSpan does not support the Intel Classic compiler")
+endif()
 
 if(Kokkos_ENABLE_IMPL_MDSPAN)
   set(VIEW_LEGACY_DEFAULT OFF)
