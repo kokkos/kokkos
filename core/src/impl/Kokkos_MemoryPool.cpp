@@ -18,6 +18,11 @@
 #define KOKKOS_IMPL_PUBLIC_INCLUDE
 #endif
 
+#include <Kokkos_Macros.hpp>
+#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_4
+#error "the memory pool is deprecated why are we compiling this source file"
+#endif
+
 #include <impl/Kokkos_Error.hpp>
 
 #include <ostream>
