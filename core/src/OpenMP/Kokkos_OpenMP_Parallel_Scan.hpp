@@ -84,7 +84,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
       typename Analysis::Reducer final_reducer(m_functor);
 
       reference_type update = final_reducer.init(
-          pointer_type(m_instance->get_thread_data(0)->pool_reduce_local()));
+          pointer_type(m_instance->get_thread_data()->pool_reduce_local()));
 
       ParallelScan::template exec_range<WorkTag>(m_functor, m_policy.begin(),
                                                  m_policy.end(), update, true);
@@ -210,7 +210,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
       typename Analysis::Reducer final_reducer(m_functor);
 
       reference_type update = final_reducer.init(
-          pointer_type(m_instance->get_thread_data(0)->pool_reduce_local()));
+          pointer_type(m_instance->get_thread_data()->pool_reduce_local()));
 
       this->template exec_range<WorkTag>(m_functor, m_policy.begin(),
                                          m_policy.end(), update, true);
