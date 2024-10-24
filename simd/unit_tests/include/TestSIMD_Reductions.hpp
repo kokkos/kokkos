@@ -31,7 +31,7 @@ inline void host_check_reduction_one_loader(ReductionOp reduce_op,
   for (std::size_t i = 0; i < n; i += width) {
     std::size_t const nremaining = n - i;
     std::size_t const nlanes     = Kokkos::min(nremaining, width);
-    simd_type arg;
+    simd_type arg(zero_init<simd_type>());
     bool const loaded_arg = loader.host_load(args + i, nlanes, arg);
     if (!loaded_arg) continue;
 
@@ -109,7 +109,7 @@ KOKKOS_INLINE_FUNCTION void device_check_reduction_one_loader(
   for (std::size_t i = 0; i < n; i += width) {
     std::size_t const nremaining = n - i;
     std::size_t const nlanes     = Kokkos::min(nremaining, width);
-    simd_type arg;
+    simd_type arg(zero_init<simd_type>());
     bool const loaded_arg = loader.device_load(args + i, nlanes, arg);
     if (!loaded_arg) continue;
 

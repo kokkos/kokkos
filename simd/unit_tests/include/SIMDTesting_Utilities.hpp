@@ -191,4 +191,27 @@ constexpr bool is_type_v = false;
 template <typename T>
 constexpr bool is_type_v<T, decltype(void(sizeof(T)))> = true;
 
+// Zero initializing each simd lane to avoid gcc's uninitialized variable
+// warnings on default constructed simd variables.
+// Using a for-loop to initialize:
+//
+// SIMDType a;
+// for(int i=0; i<SIMDType::size(); ++i)
+//   a[i] = 0;
+// return a;
+//
+// does not seem to suppress gcc's warnings.
+
+template <class SIMDType, size_t... Args>
+KOKKOS_INLINE_FUNCTION SIMDType zero_init(std::index_sequence<Args...>) {
+  SIMDType a;
+  ((a[Args] = 0) && ...);
+  return a;
+}
+
+template <class SIMDType>
+KOKKOS_INLINE_FUNCTION SIMDType zero_init() {
+  return zero_init<SIMDType>(std::make_index_sequence<SIMDType::size()>());
+}
+
 #endif

@@ -37,10 +37,10 @@ inline void host_check_gen_ctor() {
       expected[i] = (init_mask[i]) ? init[i] * 9 : init[i];
     }
 
-    simd_type rhs;
+    simd_type rhs(zero_init<simd_type>());
     rhs.copy_from(init, Kokkos::Experimental::simd_flag_default);
 
-    simd_type blend;
+    simd_type blend(zero_init<simd_type>());
     blend.copy_from(expected, Kokkos::Experimental::simd_flag_default);
 
 #if !(defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_COMPILER_MSVC))
@@ -100,7 +100,7 @@ KOKKOS_INLINE_FUNCTION void device_check_gen_ctor() {
     }
 
     simd_type basic(KOKKOS_LAMBDA(std::size_t i) { return init[i]; });
-    simd_type rhs;
+    simd_type rhs(zero_init<simd_type>());
     rhs.copy_from(init, Kokkos::Experimental::simd_flag_default);
     device_check_equality(basic, rhs, lanes);
 
@@ -108,7 +108,7 @@ KOKKOS_INLINE_FUNCTION void device_check_gen_ctor() {
     simd_type result(
         KOKKOS_LAMBDA(std::size_t i) { return (mask[i]) ? lhs[i] : rhs[i]; });
 
-    simd_type blend;
+    simd_type blend(zero_init<simd_type>());
     blend.copy_from(expected, Kokkos::Experimental::simd_flag_default);
     device_check_equality(result, blend, lanes);
   }
