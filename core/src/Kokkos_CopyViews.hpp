@@ -561,19 +561,19 @@ void view_copy(const ExecutionSpace& space, const DstType& dst,
     int64_t strides[DstType::rank + 1];
     dst.stride(strides);
     Kokkos::Iterate iterate;
-    if (std::is_same_v<typename DstType::array_layout, Kokkos::LayoutRight>) {
+    if (std::is_same_v<typename DstType::layout_type, Kokkos::LayoutRight>) {
       iterate = Kokkos::Iterate::Right;
-    } else if (std::is_same_v<typename DstType::array_layout,
+    } else if (std::is_same_v<typename DstType::layout_type,
                               Kokkos::LayoutLeft>) {
       iterate = Kokkos::Iterate::Left;
-    } else if (std::is_same_v<typename DstType::array_layout,
+    } else if (std::is_same_v<typename DstType::layout_type,
                               Kokkos::LayoutStride>) {
       if (strides[0] > strides[DstType::rank - 1])
         iterate = Kokkos::Iterate::Right;
       else
         iterate = Kokkos::Iterate::Left;
     } else {
-      if (std::is_same_v<typename DstType::execution_space::array_layout,
+      if (std::is_same_v<typename DstType::execution_space::layout_type,
                          Kokkos::LayoutRight>)
         iterate = Kokkos::Iterate::Right;
       else
@@ -648,19 +648,19 @@ void view_copy(const DstType& dst, const SrcType& src) {
   int64_t strides[DstType::rank + 1];
   dst.stride(strides);
   Kokkos::Iterate iterate;
-  if (std::is_same_v<typename DstType::array_layout, Kokkos::LayoutRight>) {
+  if (std::is_same_v<typename DstType::layout_type, Kokkos::LayoutRight>) {
     iterate = Kokkos::Iterate::Right;
-  } else if (std::is_same_v<typename DstType::array_layout,
+  } else if (std::is_same_v<typename DstType::layout_type,
                             Kokkos::LayoutLeft>) {
     iterate = Kokkos::Iterate::Left;
-  } else if (std::is_same_v<typename DstType::array_layout,
+  } else if (std::is_same_v<typename DstType::layout_type,
                             Kokkos::LayoutStride>) {
     if (strides[0] > strides[DstType::rank - 1])
       iterate = Kokkos::Iterate::Right;
     else
       iterate = Kokkos::Iterate::Left;
   } else {
-    if (std::is_same_v<typename DstType::execution_space::array_layout,
+    if (std::is_same_v<typename DstType::execution_space::layout_type,
                        Kokkos::LayoutRight>)
       iterate = Kokkos::Iterate::Right;
     else
@@ -1475,19 +1475,19 @@ inline void deep_copy(
   int64_t strides[ViewType::rank + 1];
   dst.stride(strides);
   Kokkos::Iterate iterate;
-  if (std::is_same_v<typename ViewType::array_layout, Kokkos::LayoutRight>) {
+  if (std::is_same_v<typename ViewType::layout_type, Kokkos::LayoutRight>) {
     iterate = Kokkos::Iterate::Right;
-  } else if (std::is_same_v<typename ViewType::array_layout,
+  } else if (std::is_same_v<typename ViewType::layout_type,
                             Kokkos::LayoutLeft>) {
     iterate = Kokkos::Iterate::Left;
-  } else if (std::is_same_v<typename ViewType::array_layout,
+  } else if (std::is_same_v<typename ViewType::layout_type,
                             Kokkos::LayoutStride>) {
     if (strides[0] > strides[ViewType::rank > 0 ? ViewType::rank - 1 : 0])
       iterate = Kokkos::Iterate::Right;
     else
       iterate = Kokkos::Iterate::Left;
   } else {
-    if (std::is_same_v<typename ViewType::execution_space::array_layout,
+    if (std::is_same_v<typename ViewType::execution_space::layout_type,
                        Kokkos::LayoutRight>)
       iterate = Kokkos::Iterate::Right;
     else
@@ -1766,8 +1766,8 @@ inline void deep_copy(
 
   if (std::is_same_v<typename dst_type::value_type,
                      typename src_type::non_const_value_type> &&
-      (std::is_same_v<typename dst_type::array_layout,
-                      typename src_type::array_layout> ||
+      (std::is_same_v<typename dst_type::layout_type,
+                      typename src_type::layout_type> ||
        (dst_type::rank == 1 && src_type::rank == 1)) &&
       dst.span_is_contiguous() && src.span_is_contiguous() &&
       ((dst_type::rank < 1) || (dst.stride_0() == src.stride_0())) &&
@@ -2586,19 +2586,19 @@ inline void deep_copy(
     int64_t strides[ViewType::rank + 1];
     dst.stride(strides);
     Kokkos::Iterate iterate;
-    if (std::is_same_v<typename ViewType::array_layout, Kokkos::LayoutRight>) {
+    if (std::is_same_v<typename ViewType::layout_type, Kokkos::LayoutRight>) {
       iterate = Kokkos::Iterate::Right;
-    } else if (std::is_same_v<typename ViewType::array_layout,
+    } else if (std::is_same_v<typename ViewType::layout_type,
                               Kokkos::LayoutLeft>) {
       iterate = Kokkos::Iterate::Left;
-    } else if (std::is_same_v<typename ViewType::array_layout,
+    } else if (std::is_same_v<typename ViewType::layout_type,
                               Kokkos::LayoutStride>) {
       if (strides[0] > strides[ViewType::rank > 0 ? ViewType::rank - 1 : 0])
         iterate = Kokkos::Iterate::Right;
       else
         iterate = Kokkos::Iterate::Left;
     } else {
-      if (std::is_same_v<typename ViewType::execution_space::array_layout,
+      if (std::is_same_v<typename ViewType::execution_space::layout_type,
                          Kokkos::LayoutRight>)
         iterate = Kokkos::Iterate::Right;
       else
@@ -2669,7 +2669,7 @@ inline void deep_copy(
           View<DT, DP...>::rank == 0,
           typename View<DT, DP...>::uniform_runtime_type,
           typename View<DT, DP...>::uniform_runtime_nomemspace_type>;
-      Kokkos::Impl::ViewFill<ViewTypeUniform, typename dst_traits::array_layout,
+      Kokkos::Impl::ViewFill<ViewTypeUniform, typename dst_traits::layout_type,
                              fill_exec_space>(dst, value, fill_exec_space());
     }
     fill_exec_space().fence(
@@ -2915,8 +2915,8 @@ inline void deep_copy(
 
   if (std::is_same_v<typename dst_type::value_type,
                      typename src_type::non_const_value_type> &&
-      (std::is_same_v<typename dst_type::array_layout,
-                      typename src_type::array_layout> ||
+      (std::is_same_v<typename dst_type::layout_type,
+                      typename src_type::layout_type> ||
        (dst_type::rank == 1 && src_type::rank == 1)) &&
       dst.span_is_contiguous() && src.span_is_contiguous() &&
       ((dst_type::rank < 1) || (dst.stride_0() == src.stride_0())) &&
@@ -2986,9 +2986,9 @@ bool size_mismatch(const ViewType& view, unsigned int max_extent,
  * indices. */
 template <class T, class... P, class... ViewCtorArgs>
 inline std::enable_if_t<
-    std::is_same_v<typename Kokkos::View<T, P...>::array_layout,
+    std::is_same_v<typename Kokkos::View<T, P...>::layout_type,
                    Kokkos::LayoutLeft> ||
-    std::is_same_v<typename Kokkos::View<T, P...>::array_layout,
+    std::is_same_v<typename Kokkos::View<T, P...>::layout_type,
                    Kokkos::LayoutRight>>
 impl_resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
             Kokkos::View<T, P...>& v, const size_t n0, const size_t n1,
@@ -3039,9 +3039,9 @@ impl_resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
 
 template <class T, class... P, class... ViewCtorArgs>
 inline std::enable_if_t<
-    std::is_same_v<typename Kokkos::View<T, P...>::array_layout,
+    std::is_same_v<typename Kokkos::View<T, P...>::layout_type,
                    Kokkos::LayoutLeft> ||
-    std::is_same_v<typename Kokkos::View<T, P...>::array_layout,
+    std::is_same_v<typename Kokkos::View<T, P...>::layout_type,
                    Kokkos::LayoutRight>>
 resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
        Kokkos::View<T, P...>& v, const size_t n0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
@@ -3057,9 +3057,9 @@ resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
 
 template <class T, class... P>
 inline std::enable_if_t<
-    std::is_same_v<typename Kokkos::View<T, P...>::array_layout,
+    std::is_same_v<typename Kokkos::View<T, P...>::layout_type,
                    Kokkos::LayoutLeft> ||
-    std::is_same_v<typename Kokkos::View<T, P...>::array_layout,
+    std::is_same_v<typename Kokkos::View<T, P...>::layout_type,
                    Kokkos::LayoutRight>>
 resize(Kokkos::View<T, P...>& v, const size_t n0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
        const size_t n1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
@@ -3076,9 +3076,9 @@ template <class I, class T, class... P>
 inline std::enable_if_t<
     (Impl::is_view_ctor_property<I>::value ||
      Kokkos::is_execution_space<I>::value) &&
-    (std::is_same_v<typename Kokkos::View<T, P...>::array_layout,
+    (std::is_same_v<typename Kokkos::View<T, P...>::layout_type,
                     Kokkos::LayoutLeft> ||
-     std::is_same_v<typename Kokkos::View<T, P...>::array_layout,
+     std::is_same_v<typename Kokkos::View<T, P...>::layout_type,
                     Kokkos::LayoutRight>)>
 resize(const I& arg_prop, Kokkos::View<T, P...>& v,
        const size_t n0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
@@ -3094,15 +3094,15 @@ resize(const I& arg_prop, Kokkos::View<T, P...>& v,
 
 template <class T, class... P, class... ViewCtorArgs>
 inline std::enable_if_t<
-    std::is_same_v<typename Kokkos::View<T, P...>::array_layout,
+    std::is_same_v<typename Kokkos::View<T, P...>::layout_type,
                    Kokkos::LayoutLeft> ||
-    std::is_same_v<typename Kokkos::View<T, P...>::array_layout,
+    std::is_same_v<typename Kokkos::View<T, P...>::layout_type,
                    Kokkos::LayoutRight> ||
-    std::is_same_v<typename Kokkos::View<T, P...>::array_layout,
+    std::is_same_v<typename Kokkos::View<T, P...>::layout_type,
                    Kokkos::LayoutStride>>
 impl_resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
             Kokkos::View<T, P...>& v,
-            const typename Kokkos::View<T, P...>::array_layout& layout) {
+            const typename Kokkos::View<T, P...>::layout_type& layout) {
   using view_type        = Kokkos::View<T, P...>;
   using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
 
@@ -3140,15 +3140,15 @@ impl_resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
 // the same as the existing one.
 template <class T, class... P, class... ViewCtorArgs>
 inline std::enable_if_t<
-    !(std::is_same_v<typename Kokkos::View<T, P...>::array_layout,
+    !(std::is_same_v<typename Kokkos::View<T, P...>::layout_type,
                      Kokkos::LayoutLeft> ||
-      std::is_same_v<typename Kokkos::View<T, P...>::array_layout,
+      std::is_same_v<typename Kokkos::View<T, P...>::layout_type,
                      Kokkos::LayoutRight> ||
-      std::is_same_v<typename Kokkos::View<T, P...>::array_layout,
+      std::is_same_v<typename Kokkos::View<T, P...>::layout_type,
                      Kokkos::LayoutStride>)>
 impl_resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
             Kokkos::View<T, P...>& v,
-            const typename Kokkos::View<T, P...>::array_layout& layout) {
+            const typename Kokkos::View<T, P...>::layout_type& layout) {
   using view_type        = Kokkos::View<T, P...>;
   using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
 
@@ -3182,7 +3182,7 @@ impl_resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
 template <class T, class... P, class... ViewCtorArgs>
 inline void resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
                    Kokkos::View<T, P...>& v,
-                   const typename Kokkos::View<T, P...>::array_layout& layout) {
+                   const typename Kokkos::View<T, P...>::layout_type& layout) {
   impl_resize(arg_prop, v, layout);
 }
 
@@ -3190,28 +3190,28 @@ template <class I, class T, class... P>
 inline std::enable_if_t<Impl::is_view_ctor_property<I>::value ||
                         Kokkos::is_execution_space<I>::value>
 resize(const I& arg_prop, Kokkos::View<T, P...>& v,
-       const typename Kokkos::View<T, P...>::array_layout& layout) {
+       const typename Kokkos::View<T, P...>::layout_type& layout) {
   impl_resize(arg_prop, v, layout);
 }
 
 template <class ExecutionSpace, class T, class... P>
 inline void resize(const ExecutionSpace& exec_space, Kokkos::View<T, P...>& v,
-                   const typename Kokkos::View<T, P...>::array_layout& layout) {
+                   const typename Kokkos::View<T, P...>::layout_type& layout) {
   impl_resize(Impl::ViewCtorProp<>(), exec_space, v, layout);
 }
 
 template <class T, class... P>
 inline void resize(Kokkos::View<T, P...>& v,
-                   const typename Kokkos::View<T, P...>::array_layout& layout) {
+                   const typename Kokkos::View<T, P...>::layout_type& layout) {
   impl_resize(Impl::ViewCtorProp<>{}, v, layout);
 }
 
 /** \brief  Resize a view with discarding old data. */
 template <class T, class... P, class... ViewCtorArgs>
 inline std::enable_if_t<
-    std::is_same_v<typename Kokkos::View<T, P...>::array_layout,
+    std::is_same_v<typename Kokkos::View<T, P...>::layout_type,
                    Kokkos::LayoutLeft> ||
-    std::is_same_v<typename Kokkos::View<T, P...>::array_layout,
+    std::is_same_v<typename Kokkos::View<T, P...>::layout_type,
                    Kokkos::LayoutRight>>
 impl_realloc(Kokkos::View<T, P...>& v, const size_t n0, const size_t n1,
              const size_t n2, const size_t n3, const size_t n4, const size_t n5,
@@ -3255,9 +3255,9 @@ impl_realloc(Kokkos::View<T, P...>& v, const size_t n0, const size_t n1,
 
 template <class T, class... P, class... ViewCtorArgs>
 inline std::enable_if_t<
-    std::is_same_v<typename Kokkos::View<T, P...>::array_layout,
+    std::is_same_v<typename Kokkos::View<T, P...>::layout_type,
                    Kokkos::LayoutLeft> ||
-    std::is_same_v<typename Kokkos::View<T, P...>::array_layout,
+    std::is_same_v<typename Kokkos::View<T, P...>::layout_type,
                    Kokkos::LayoutRight>>
 realloc(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
         Kokkos::View<T, P...>& v,
@@ -3274,9 +3274,9 @@ realloc(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
 
 template <class T, class... P>
 inline std::enable_if_t<
-    std::is_same_v<typename Kokkos::View<T, P...>::array_layout,
+    std::is_same_v<typename Kokkos::View<T, P...>::layout_type,
                    Kokkos::LayoutLeft> ||
-    std::is_same_v<typename Kokkos::View<T, P...>::array_layout,
+    std::is_same_v<typename Kokkos::View<T, P...>::layout_type,
                    Kokkos::LayoutRight>>
 realloc(Kokkos::View<T, P...>& v,
         const size_t n0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
@@ -3293,9 +3293,9 @@ realloc(Kokkos::View<T, P...>& v,
 template <class I, class T, class... P>
 inline std::enable_if_t<
     Impl::is_view_ctor_property<I>::value &&
-    (std::is_same_v<typename Kokkos::View<T, P...>::array_layout,
+    (std::is_same_v<typename Kokkos::View<T, P...>::layout_type,
                     Kokkos::LayoutLeft> ||
-     std::is_same_v<typename Kokkos::View<T, P...>::array_layout,
+     std::is_same_v<typename Kokkos::View<T, P...>::layout_type,
                     Kokkos::LayoutRight>)>
 realloc(const I& arg_prop, Kokkos::View<T, P...>& v,
         const size_t n0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
@@ -3311,14 +3311,14 @@ realloc(const I& arg_prop, Kokkos::View<T, P...>& v,
 
 template <class T, class... P, class... ViewCtorArgs>
 inline std::enable_if_t<
-    std::is_same_v<typename Kokkos::View<T, P...>::array_layout,
+    std::is_same_v<typename Kokkos::View<T, P...>::layout_type,
                    Kokkos::LayoutLeft> ||
-    std::is_same_v<typename Kokkos::View<T, P...>::array_layout,
+    std::is_same_v<typename Kokkos::View<T, P...>::layout_type,
                    Kokkos::LayoutRight> ||
-    std::is_same_v<typename Kokkos::View<T, P...>::array_layout,
+    std::is_same_v<typename Kokkos::View<T, P...>::layout_type,
                    Kokkos::LayoutStride>>
 impl_realloc(Kokkos::View<T, P...>& v,
-             const typename Kokkos::View<T, P...>::array_layout& layout,
+             const typename Kokkos::View<T, P...>::layout_type& layout,
              const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
   using view_type        = Kokkos::View<T, P...>;
   using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
@@ -3356,14 +3356,14 @@ impl_realloc(Kokkos::View<T, P...>& v,
 // the same as the existing one.
 template <class T, class... P, class... ViewCtorArgs>
 inline std::enable_if_t<
-    !(std::is_same_v<typename Kokkos::View<T, P...>::array_layout,
+    !(std::is_same_v<typename Kokkos::View<T, P...>::layout_type,
                      Kokkos::LayoutLeft> ||
-      std::is_same_v<typename Kokkos::View<T, P...>::array_layout,
+      std::is_same_v<typename Kokkos::View<T, P...>::layout_type,
                      Kokkos::LayoutRight> ||
-      std::is_same_v<typename Kokkos::View<T, P...>::array_layout,
+      std::is_same_v<typename Kokkos::View<T, P...>::layout_type,
                      Kokkos::LayoutStride>)>
 impl_realloc(Kokkos::View<T, P...>& v,
-             const typename Kokkos::View<T, P...>::array_layout& layout,
+             const typename Kokkos::View<T, P...>::layout_type& layout,
              const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
   using view_type        = Kokkos::View<T, P...>;
   using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
@@ -3387,24 +3387,22 @@ impl_realloc(Kokkos::View<T, P...>& v,
 }
 
 template <class T, class... P, class... ViewCtorArgs>
-inline void realloc(
-    const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
-    Kokkos::View<T, P...>& v,
-    const typename Kokkos::View<T, P...>::array_layout& layout) {
+inline void realloc(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
+                    Kokkos::View<T, P...>& v,
+                    const typename Kokkos::View<T, P...>::layout_type& layout) {
   impl_realloc(v, layout, arg_prop);
 }
 
 template <class I, class T, class... P>
 inline std::enable_if_t<Impl::is_view_ctor_property<I>::value> realloc(
     const I& arg_prop, Kokkos::View<T, P...>& v,
-    const typename Kokkos::View<T, P...>::array_layout& layout) {
+    const typename Kokkos::View<T, P...>::layout_type& layout) {
   impl_realloc(v, layout, Kokkos::view_alloc(arg_prop));
 }
 
 template <class T, class... P>
-inline void realloc(
-    Kokkos::View<T, P...>& v,
-    const typename Kokkos::View<T, P...>::array_layout& layout) {
+inline void realloc(Kokkos::View<T, P...>& v,
+                    const typename Kokkos::View<T, P...>::layout_type& layout) {
   impl_realloc(v, layout, Impl::ViewCtorProp<>{});
 }
 
@@ -3428,13 +3426,19 @@ struct MirrorViewType {
     is_same_memspace =
         std::is_same_v<memory_space, typename src_view_type::memory_space>
   };
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   // The array_layout
-  using array_layout = typename src_view_type::array_layout;
+  using array_layout KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use layout_type instead.") = typename src_view_type::array_layout;
+#endif
+  // The layout type
+  using layout_type = typename src_view_type::layout_type;
   // The data type (we probably want it non-const since otherwise we can't even
   // deep_copy to it.
   using data_type = typename src_view_type::non_const_data_type;
   // The destination view type if it is not the same memory space
-  using dest_view_type = Kokkos::View<data_type, array_layout, Space>;
+  using dest_view_type = Kokkos::View<data_type, layout_type, Space>;
   // If it is the same memory_space return the existsing view_type
   // This will also keep the unmanaged trait if necessary
   using view_type =

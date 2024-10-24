@@ -158,12 +158,12 @@ struct DynRankDimTraits {
   // Extra overload to match that for specialize types
   template <typename Traits, typename... P>
   KOKKOS_INLINE_FUNCTION static std::enable_if_t<
-      (std::is_same_v<typename Traits::array_layout, Kokkos::LayoutRight> ||
-       std::is_same_v<typename Traits::array_layout, Kokkos::LayoutLeft> ||
-       std::is_same_v<typename Traits::array_layout, Kokkos::LayoutStride>),
-      typename Traits::array_layout>
+      (std::is_same_v<typename Traits::layout_type, Kokkos::LayoutRight> ||
+       std::is_same_v<typename Traits::layout_type, Kokkos::LayoutLeft> ||
+       std::is_same_v<typename Traits::layout_type, Kokkos::LayoutStride>),
+      typename Traits::layout_type>
   createLayout(const Kokkos::Impl::ViewCtorProp<P...>& /* prop */,
-               const typename Traits::array_layout& layout) {
+               const typename Traits::layout_type& layout) {
     return createLayout(layout);
   }
 
@@ -309,22 +309,22 @@ class ViewMapping<
                         typename SrcTraits::memory_space> &&
          std::is_void_v<typename DstTraits::specialize> &&
          std::is_void_v<typename SrcTraits::specialize> &&
-         (std::is_same_v<typename DstTraits::array_layout,
-                         typename SrcTraits::array_layout> ||
-          ((std::is_same_v<typename DstTraits::array_layout,
+         (std::is_same_v<typename DstTraits::layout_type,
+                         typename SrcTraits::layout_type> ||
+          ((std::is_same_v<typename DstTraits::layout_type,
                            Kokkos::LayoutLeft> ||
-            std::is_same_v<typename DstTraits::array_layout,
+            std::is_same_v<typename DstTraits::layout_type,
                            Kokkos::LayoutRight> ||
             std::is_same_v<
-                typename DstTraits::array_layout,
+                typename DstTraits::layout_type,
                 Kokkos::LayoutStride>)&&(std::is_same_v<typename SrcTraits::
-                                                            array_layout,
+                                                            layout_type,
                                                         Kokkos::LayoutLeft> ||
                                          std::is_same_v<
-                                             typename SrcTraits::array_layout,
+                                             typename SrcTraits::layout_type,
                                              Kokkos::LayoutRight> ||
                                          std::is_same_v<
-                                             typename SrcTraits::array_layout,
+                                             typename SrcTraits::layout_type,
                                              Kokkos::LayoutStride>)))),
         Kokkos::Impl::ViewToDynRankViewTag>> {
  private:
@@ -338,9 +338,9 @@ class ViewMapping<
 
   enum {
     is_assignable_layout =
-        std::is_same_v<typename DstTraits::array_layout,
-                       typename SrcTraits::array_layout> ||
-        std::is_same_v<typename DstTraits::array_layout, Kokkos::LayoutStride>
+        std::is_same_v<typename DstTraits::layout_type,
+                       typename SrcTraits::layout_type> ||
+        std::is_same_v<typename DstTraits::layout_type, Kokkos::LayoutStride>
   };
 
  public:
@@ -436,7 +436,11 @@ class DynRankView : private View<DataType*******, Properties...> {
   using const_value_type     = typename view_type::const_value_type;
   using non_const_value_type = typename view_type::non_const_value_type;
   using traits               = typename view_type::traits;
-  using array_layout         = typename view_type::array_layout;
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  using array_layout KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use layout_type instead.") = typename view_type::array_layout;
+#endif
+  using layout_type = typename view_type::layout_type;
 
   using execution_space = typename view_type::execution_space;
   using memory_space    = typename view_type::memory_space;
@@ -478,24 +482,31 @@ class DynRankView : private View<DataType*******, Properties...> {
   // Types below - at least the HostMirror requires the value_type, NOT the rank
   // 7 data_type of the traits
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   /** \brief  Compatible view of array of scalar types */
-  using array_type = DynRankView<
-      typename drvtraits::scalar_array_type, typename drvtraits::array_layout,
+  using array_type KOKKOS_DEPRECATED_WITH_COMMENT("Use type insted.") =
+      DynRankView<
+          typename drvtraits::data_type, typename drvtraits::array_layout,
+          typename drvtraits::device_type, typename drvtraits::memory_traits>;
+#endif
+  /** \brief  Compatible view of data type */
+  using type = DynRankView<
+      typename drvtraits::data_type, typename drvtraits::layout_type,
       typename drvtraits::device_type, typename drvtraits::memory_traits>;
 
   /** \brief  Compatible view of const data type */
   using const_type = DynRankView<
-      typename drvtraits::const_data_type, typename drvtraits::array_layout,
+      typename drvtraits::const_data_type, typename drvtraits::layout_type,
       typename drvtraits::device_type, typename drvtraits::memory_traits>;
 
   /** \brief  Compatible view of non-const data type */
   using non_const_type = DynRankView<
-      typename drvtraits::non_const_data_type, typename drvtraits::array_layout,
+      typename drvtraits::non_const_data_type, typename drvtraits::layout_type,
       typename drvtraits::device_type, typename drvtraits::memory_traits>;
 
   /** \brief  Compatible HostMirror view */
   using HostMirror = DynRankView<typename drvtraits::non_const_data_type,
-                                 typename drvtraits::array_layout,
+                                 typename drvtraits::layout_type,
                                  typename drvtraits::host_mirror_space>;
 
   using host_mirror_type = HostMirror;
@@ -515,13 +526,13 @@ class DynRankView : private View<DataType*******, Properties...> {
  private:
   enum {
     is_layout_left =
-        std::is_same_v<typename traits::array_layout, Kokkos::LayoutLeft>,
+        std::is_same_v<typename traits::layout_type, Kokkos::LayoutLeft>,
 
     is_layout_right =
-        std::is_same_v<typename traits::array_layout, Kokkos::LayoutRight>,
+        std::is_same_v<typename traits::layout_type, Kokkos::LayoutRight>,
 
     is_layout_stride =
-        std::is_same_v<typename traits::array_layout, Kokkos::LayoutStride>,
+        std::is_same_v<typename traits::layout_type, Kokkos::LayoutStride>,
 
     is_default_map = std::is_void_v<typename traits::specialize> &&
                      (is_layout_left || is_layout_right || is_layout_stride)
@@ -724,7 +735,7 @@ class DynRankView : private View<DataType*******, Properties...> {
   explicit KOKKOS_FUNCTION DynRankView(
       const Kokkos::Impl::ViewCtorProp<P...>& arg_prop,
       std::enable_if_t<Kokkos::Impl::ViewCtorProp<P...>::has_pointer,
-                       typename traits::array_layout const&>
+                       typename traits::layout_type const&>
           arg_layout)
       : view_type(arg_prop, drdtraits::template createLayout<traits, P...>(
                                 arg_prop, arg_layout)),
@@ -734,7 +745,7 @@ class DynRankView : private View<DataType*******, Properties...> {
   explicit DynRankView(
       const Kokkos::Impl::ViewCtorProp<P...>& arg_prop,
       std::enable_if_t<!Kokkos::Impl::ViewCtorProp<P...>::has_pointer,
-                       typename traits::array_layout const&>
+                       typename traits::layout_type const&>
           arg_layout)
       : view_type(arg_prop, drdtraits::template createLayout<traits, P...>(
                                 arg_prop, arg_layout)),
@@ -759,7 +770,7 @@ class DynRankView : private View<DataType*******, Properties...> {
       const size_t arg_N5 = KOKKOS_INVALID_INDEX,
       const size_t arg_N6 = KOKKOS_INVALID_INDEX,
       const size_t arg_N7 = KOKKOS_INVALID_INDEX)
-      : DynRankView(arg_prop, typename traits::array_layout(
+      : DynRankView(arg_prop, typename traits::layout_type(
                                   arg_N0, arg_N1, arg_N2, arg_N3, arg_N4,
                                   arg_N5, arg_N6, arg_N7)) {}
 
@@ -776,7 +787,7 @@ class DynRankView : private View<DataType*******, Properties...> {
       const size_t arg_N5 = KOKKOS_INVALID_INDEX,
       const size_t arg_N6 = KOKKOS_INVALID_INDEX,
       const size_t arg_N7 = KOKKOS_INVALID_INDEX)
-      : DynRankView(arg_prop, typename traits::array_layout(
+      : DynRankView(arg_prop, typename traits::layout_type(
                                   arg_N0, arg_N1, arg_N2, arg_N3, arg_N4,
                                   arg_N5, arg_N6, arg_N7)) {}
 
@@ -785,7 +796,7 @@ class DynRankView : private View<DataType*******, Properties...> {
   explicit inline DynRankView(
       const Label& arg_label,
       std::enable_if_t<Kokkos::Impl::is_view_label<Label>::value,
-                       typename traits::array_layout> const& arg_layout)
+                       typename traits::layout_type> const& arg_layout)
       : DynRankView(Kokkos::Impl::ViewCtorProp<std::string>(arg_label),
                     arg_layout) {}
 
@@ -804,8 +815,8 @@ class DynRankView : private View<DataType*******, Properties...> {
       const size_t arg_N7 = KOKKOS_INVALID_INDEX)
       : DynRankView(
             Kokkos::Impl::ViewCtorProp<std::string>(arg_label),
-            typename traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3,
-                                          arg_N4, arg_N5, arg_N6, arg_N7)) {}
+            typename traits::layout_type(arg_N0, arg_N1, arg_N2, arg_N3, arg_N4,
+                                         arg_N5, arg_N6, arg_N7)) {}
 
   //----------------------------------------
   // Memory span required to wrap these dimensions.
@@ -835,9 +846,8 @@ class DynRankView : private View<DataType*******, Properties...> {
                 arg_ptr),
             arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7) {}
 
-  explicit KOKKOS_FUNCTION DynRankView(
-      typename view_type::pointer_type arg_ptr,
-      typename traits::array_layout& arg_layout)
+  explicit KOKKOS_FUNCTION DynRankView(typename view_type::pointer_type arg_ptr,
+                                       typename traits::layout_type& arg_layout)
       : DynRankView(
             Kokkos::Impl::ViewCtorProp<typename view_type::pointer_type>(
                 arg_ptr),
@@ -866,7 +876,7 @@ class DynRankView : private View<DataType*******, Properties...> {
 
   explicit KOKKOS_FUNCTION DynRankView(
       const typename traits::execution_space::scratch_memory_space& arg_space,
-      const typename traits::array_layout& arg_layout)
+      const typename traits::layout_type& arg_layout)
       : DynRankView(
             Kokkos::Impl::ViewCtorProp<typename view_type::pointer_type>(
                 reinterpret_cast<typename view_type::pointer_type>(
@@ -891,11 +901,11 @@ class DynRankView : private View<DataType*******, Properties...> {
                 reinterpret_cast<typename view_type::pointer_type>(
                     arg_space.get_shmem(view_type::required_allocation_size(
                         Impl::DynRankDimTraits<typename traits::specialize>::
-                            createLayout(typename traits::array_layout(
+                            createLayout(typename traits::layout_type(
                                 arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5,
                                 arg_N6, arg_N7)))))),
-            typename traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3,
-                                          arg_N4, arg_N5, arg_N6, arg_N7)) {}
+            typename traits::layout_type(arg_N0, arg_N1, arg_N2, arg_N3, arg_N4,
+                                         arg_N5, arg_N6, arg_N7)) {}
 
   KOKKOS_FUNCTION constexpr auto layout() const {
     switch (rank()) {
@@ -966,7 +976,7 @@ KOKKOS_INLINE_FUNCTION auto subdynrankview(
       DynRankView<typename sub_t::value_type, Kokkos::LayoutStride,
                   typename sub_t::device_type, typename sub_t::memory_traits>;
   return static_cast<return_type>(
-      DynRankView<typename sub_t::value_type, typename sub_t::array_layout,
+      DynRankView<typename sub_t::value_type, typename sub_t::layout_type,
                   typename sub_t::device_type, typename sub_t::memory_traits>(
           sub, new_rank));
 }
@@ -995,8 +1005,8 @@ KOKKOS_INLINE_FUNCTION bool operator==(const DynRankView<LT, LP...>& lhs,
 
   return std::is_same_v<typename lhs_traits::const_value_type,
                         typename rhs_traits::const_value_type> &&
-         std::is_same_v<typename lhs_traits::array_layout,
-                        typename rhs_traits::array_layout> &&
+         std::is_same_v<typename lhs_traits::layout_type,
+                        typename rhs_traits::layout_type> &&
          std::is_same_v<typename lhs_traits::memory_space,
                         typename rhs_traits::memory_space> &&
          lhs.rank() == rhs.rank() && lhs.data() == rhs.data() &&
@@ -1376,13 +1386,20 @@ struct MirrorDRViewType {
     is_same_memspace =
         std::is_same_v<memory_space, typename src_view_type::memory_space>
   };
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   // The array_layout
-  using array_layout = typename src_view_type::array_layout;
+  using array_layout KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use layout_type instead.") = typename src_view_type::array_layout;
+#endif
+  // The layout type
+  using layout_type = typename src_view_type::layout_type;
+
   // The data type (we probably want it non-const since otherwise we can't even
   // deep_copy to it.
   using data_type = typename src_view_type::non_const_data_type;
   // The destination view type if it is not the same memory space
-  using dest_view_type = Kokkos::DynRankView<data_type, array_layout, Space>;
+  using dest_view_type = Kokkos::DynRankView<data_type, layout_type, Space>;
   // If it is the same memory_space return the existsing view_type
   // This will also keep the unmanaged trait if necessary
   using view_type =

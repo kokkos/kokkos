@@ -151,7 +151,10 @@ KOKKOS_IMPL_IS_CONCEPT(memory_space)
 KOKKOS_IMPL_IS_CONCEPT(memory_traits)
 KOKKOS_IMPL_IS_CONCEPT(execution_space)
 KOKKOS_IMPL_IS_CONCEPT(execution_policy)
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 KOKKOS_IMPL_IS_CONCEPT(array_layout)
+#endif
+KOKKOS_IMPL_IS_CONCEPT(layout_type)
 KOKKOS_IMPL_IS_CONCEPT(reducer)
 KOKKOS_IMPL_IS_CONCEPT(team_handle)
 namespace Experimental {

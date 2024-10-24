@@ -59,15 +59,13 @@ struct localsum {
   // the const version of the first template parameter of the View.
   // For example, the const_data_type version of double** is const
   // double**.
-  Kokkos::View<idx_type::const_data_type, idx_type::array_layout, memory_space>
+  Kokkos::View<idx_type::const_data_type, idx_type::layout_type, memory_space>
       idx;
   // "scalar_array_type" is an alias in ViewTraits (and DualView) which is the
   // array version of the value(s) stored in the View.
-  Kokkos::View<view_type::scalar_array_type, view_type::array_layout,
-               memory_space>
-      dest;
-  Kokkos::View<view_type::const_data_type, view_type::array_layout,
-               memory_space, Kokkos::MemoryRandomAccess>
+  Kokkos::View<view_type::data_type, view_type::layout_type, memory_space> dest;
+  Kokkos::View<view_type::const_data_type, view_type::layout_type, memory_space,
+               Kokkos::MemoryRandomAccess>
       src;
 
   // Constructor takes DualViews, synchronizes them to the device,

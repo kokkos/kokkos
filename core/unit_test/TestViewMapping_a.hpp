@@ -849,7 +849,7 @@ void test_view_mapping() {
   {
     using V           = Kokkos::View<int**, Space>;
     using M           = typename V::HostMirror;
-    using layout_type = typename Kokkos::View<int**, Space>::array_layout;
+    using layout_type = typename Kokkos::View<int**, Space>::layout_type;
 
     constexpr size_t N0 = 10;
     constexpr size_t N1 = 11;
@@ -924,7 +924,7 @@ void test_view_mapping() {
     using V = Kokkos::View<int**, Kokkos::LayoutStride, Space>;
     using M = typename V::HostMirror;
     using layout_type =
-        typename Kokkos::View<int**, Kokkos::LayoutStride, Space>::array_layout;
+        typename Kokkos::View<int**, Kokkos::LayoutStride, Space>::layout_type;
 
     constexpr size_t N0 = 10;
     constexpr size_t N1 = 11;
@@ -1108,10 +1108,10 @@ struct TestViewMapOperator {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(size_t i, int64_t& error_count) const {
-    if (std::is_same<typename ViewType::array_layout,
+    if (std::is_same<typename ViewType::layout_type,
                      Kokkos::LayoutLeft>::value) {
       test_left(i, error_count);
-    } else if (std::is_same<typename ViewType::array_layout,
+    } else if (std::is_same<typename ViewType::layout_type,
                             Kokkos::LayoutRight>::value) {
       test_right(i, error_count);
     }
