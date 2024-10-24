@@ -659,9 +659,11 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   explicit View(decltype(nullptr), Args... args)
       : View(Kokkos::view_wrap(pointer_type(nullptr)), args...) {}
 #else
+  // FIXME: The std::is_null_pointer_v<P> condition is to workaround a GCC8 bug in
+  // overload resolution
   template <
       class P, class... Args,
-      std::enable_if_t<std::is_convertible_v<P, pointer_type>, size_t> = 0ul>
+      std::enable_if_t<!std::is_null_pointer_v<P> && std::is_convertible_v<P, pointer_type>, size_t> = 0ul>
   KOKKOS_FUNCTION View(P ptr_, Args... args)
       : View(Kokkos::view_wrap(static_cast<pointer_type>(ptr_)), args...) {}
 
