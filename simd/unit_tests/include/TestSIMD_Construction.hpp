@@ -30,7 +30,8 @@ inline void host_test_simd_traits() {
   static_assert(std::is_nothrow_move_assignable_v<simd_type>);
   static_assert(std::is_nothrow_move_constructible_v<simd_type>);
 
-  simd_type default_simd, result;
+  simd_type default_simd(zero_init<simd_type>()),
+      result(zero_init<simd_type>());
   simd_type test_simd(KOKKOS_LAMBDA(std::size_t i) { return (i % 2 == 0); });
   simd_type copy_simd(test_simd);
   simd_type move_simd(std::move(copy_simd));
@@ -83,7 +84,8 @@ template <typename Abi, typename DataType>
 KOKKOS_INLINE_FUNCTION void device_test_simd_traits() {
   using simd_type = Kokkos::Experimental::simd<DataType, Abi>;
 
-  simd_type default_simd, result;
+  simd_type default_simd(zero_init<simd_type>()),
+      result(zero_init<simd_type>());
   simd_type test_simd(KOKKOS_LAMBDA(std::size_t i) { return (i % 2 == 0); });
   simd_type copy_simd(test_simd);
   simd_type move_simd(std::move(copy_simd));

@@ -32,14 +32,14 @@ void host_check_math_op_one_loader(BinaryOp binary_op, std::size_t n,
     if ((std::is_same_v<BinaryOp, divides> ||
          std::is_same_v<BinaryOp, divides_eq>)&&nremaining < width)
       continue;
-    simd_type first_arg;
+    simd_type first_arg(zero_init<simd_type>());
     bool const loaded_first_arg =
         loader.host_load(first_args + i, nlanes, first_arg);
-    simd_type second_arg;
+    simd_type second_arg(zero_init<simd_type>());
     bool const loaded_second_arg =
         loader.host_load(second_args + i, nlanes, second_arg);
     if (!(loaded_first_arg && loaded_second_arg)) continue;
-    simd_type expected_result;
+    simd_type expected_result(zero_init<simd_type>());
     // gcc 8.4.0 warns if using nlanes as upper bound about first_arg and/or
     // second_arg being uninitialized
     for (std::size_t lane = 0; lane < simd_type::size(); ++lane) {
@@ -62,11 +62,12 @@ void host_check_math_op_one_loader(UnaryOp unary_op, std::size_t n,
   for (std::size_t i = 0; i < n; i += width) {
     std::size_t const nremaining = n - i;
     std::size_t const nlanes     = Kokkos::min(nremaining, width);
-    simd_type arg;
+    simd_type arg(zero_init<simd_type>());
     bool const loaded_arg = loader.host_load(args + i, nlanes, arg);
     if (!loaded_arg) continue;
 
-    decltype(unary_op.on_host(arg)) expected_result;
+    using unary_op_result_type = decltype(unary_op.on_host(arg));
+    unary_op_result_type expected_result(zero_init<unary_op_result_type>());
     for (std::size_t lane = 0; lane < simd_type::size(); ++lane) {
       if (lane < nlanes) {
         if constexpr (std::is_same_v<UnaryOp, cbrt_op> ||
@@ -187,14 +188,14 @@ KOKKOS_INLINE_FUNCTION void device_check_math_op_one_loader(
     if ((std::is_same_v<BinaryOp, divides> ||
          std::is_same_v<BinaryOp, divides_eq>)&&nremaining < width)
       continue;
-    simd_type first_arg;
+    simd_type first_arg(zero_init<simd_type>());
     bool const loaded_first_arg =
         loader.device_load(first_args + i, nlanes, first_arg);
-    simd_type second_arg;
+    simd_type second_arg(zero_init<simd_type>());
     bool const loaded_second_arg =
         loader.device_load(second_args + i, nlanes, second_arg);
     if (!(loaded_first_arg && loaded_second_arg)) continue;
-    simd_type expected_result;
+    simd_type expected_result(zero_init<simd_type>());
     for (std::size_t lane = 0; lane < nlanes; ++lane) {
       expected_result[lane] =
           binary_op.on_device(first_arg[lane], second_arg[lane]);
@@ -216,12 +217,13 @@ KOKKOS_INLINE_FUNCTION void device_check_math_op_one_loader(UnaryOp unary_op,
   for (std::size_t i = 0; i < n; i += width) {
     std::size_t const nremaining = n - i;
     std::size_t const nlanes     = Kokkos::min(nremaining, width);
-    simd_type arg;
+    simd_type arg(zero_init<simd_type>());
     bool const loaded_arg = loader.device_load(args + i, nlanes, arg);
     if (!loaded_arg) continue;
     auto computed_result = unary_op.on_device(arg);
 
-    decltype(computed_result) expected_result;
+    using unary_op_result_type = decltype(computed_result);
+    unary_op_result_type expected_result(zero_init<unary_op_result_type>());;
     for (std::size_t lane = 0; lane < nlanes; ++lane) {
       expected_result[lane] = unary_op.on_device_serial(arg[lane]);
     }
