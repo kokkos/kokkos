@@ -23,10 +23,6 @@ namespace Kokkos {
 
 namespace Experimental {
 
-namespace simd_abi {
-class scalar;
-}
-
 template <class T, class Abi>
 class simd;
 
@@ -36,9 +32,8 @@ class simd_mask;
 template <class M, class T>
 class const_where_expression;
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 template <typename T, typename Abi>
-[[nodiscard]] KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
 hmin(const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> const& x) {
   auto const& v = x.impl_get_value();
   auto const& m = x.impl_get_mask();
@@ -50,7 +45,7 @@ hmin(const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> const& x) {
 }
 
 template <class T, class Abi>
-[[nodiscard]] KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
 hmax(const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> const& x) {
   auto const& v = x.impl_get_value();
   auto const& m = x.impl_get_mask();
@@ -60,44 +55,16 @@ hmax(const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> const& x) {
   }
   return result;
 }
-#endif
 
-template <
-    typename T, typename Abi,
-    std::enable_if_t<!std::is_same_v<Abi, simd_abi::scalar>, bool> = false>
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr T reduce_min(
-    simd<T, Abi> const& v, typename simd<T, Abi>::mask_type const& m) {
-  auto result = Kokkos::reduction_identity<T>::min();
+template <class T, class Abi>
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
+reduce(const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> const& x, T,
+       std::plus<>) {
+  auto const& v = x.impl_get_value();
+  auto const& m = x.impl_get_mask();
+  auto result   = Kokkos::reduction_identity<T>::sum();
   for (std::size_t i = 0; i < v.size(); ++i) {
-    if (m[i]) result = Kokkos::min(result, v[i]);
-  }
-  return result;
-}
-
-template <
-    class T, class Abi,
-    std::enable_if_t<!std::is_same_v<Abi, simd_abi::scalar>, bool> = false>
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr T reduce_max(
-    simd<T, Abi> const& v, typename simd<T, Abi>::mask_type const& m) {
-  auto result = Kokkos::reduction_identity<T>::max();
-  for (std::size_t i = 0; i < v.size(); ++i) {
-    if (m[i]) result = Kokkos::max(result, v[i]);
-  }
-  return result;
-}
-
-template <
-    class T, class Abi, class BinaryOperation = std::plus<>,
-    std::enable_if_t<!std::is_same_v<Abi, simd_abi::scalar>, bool> = false>
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr T reduce(
-    simd<T, Abi> const& v, typename simd<T, Abi>::mask_type const& m,
-    T identity, BinaryOperation op = {}) {
-  if (none_of(m)) {
-    return identity;
-  }
-  auto result = v[0];
-  for (std::size_t i = 1; i < v.size(); ++i) {
-    if (m[i]) result = op(result, v[i]);
+    if (m[i]) result += v[i];
   }
   return result;
 }
