@@ -95,8 +95,13 @@ pipeline {
                             -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
                             -DKokkos_ENABLE_SERIAL=ON \
                           .. && \
-                          make -j8 && ctest --verbose
+                          make -j8 && ctest --no-compress-output -T Test --verbose
                           '''
+                    }
+                    post {
+                        always {
+                            xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                        }
                     }
                 }
                 stage('HIP-ROCM-6.2') {
@@ -128,11 +133,12 @@ pipeline {
                                 -DKokkos_ENABLE_BENCHMARKS=ON \
                                 -DKokkos_ENABLE_HIP=ON \
                               .. && \
-                              make -j8 && ctest --verbose'''
+                              make -j8 && ctest --no-compress-output -T Test --verbose'''
                     }
                     post {
                         always {
                             sh 'ccache --show-stats'
+                            xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
                         }
                     }
                 }
