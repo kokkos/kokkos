@@ -144,8 +144,8 @@ class BasicView {
   template <class OtherMapping>
   KOKKOS_FUNCTION static constexpr void check_basic_view_constructibility(
       [[maybe_unused]] const OtherMapping &rhs) {
-    using src_t          = typename OtherMapping::layout_type;
-    using dst_t          = layout_type;
+    using src_t                           = typename OtherMapping::layout_type;
+    using dst_t                           = layout_type;
     [[maybe_unused]] constexpr size_t rnk = mdspan_type::rank();
     if constexpr (!std::is_same_v<src_t, dst_t>) {
       if constexpr (Impl::IsLayoutLeftPadded<dst_t>::value) {
