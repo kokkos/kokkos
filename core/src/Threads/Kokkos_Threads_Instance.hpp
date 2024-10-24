@@ -225,7 +225,7 @@ class ThreadsInternal {
     //  to inactive triggers another thread to exit a spinwait
     //  and read the 'reduce_memory'.
     //  Must 'memory_fence()' to guarantee that storing the update to
-    //  'reduce_memory()' will complete before storing the the update to
+    //  'reduce_memory()' will complete before storing the update to
     //  'm_pool_state'.
 
     memory_fence();
