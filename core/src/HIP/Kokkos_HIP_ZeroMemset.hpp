@@ -32,7 +32,7 @@ struct ZeroMemset<HIP> {
     // in ROCm <= 6.2.0, hipMemsetAsync on a host-allocated pointer
     // returns an invalid value error, but accessing the data via a
     // GPU kernel works.
-#if defined(KOKKOS_ENABLE_IMPL_HIP_UNIFIED_MEMORY)
+#if defined(KOKKOS_IMPL_HIP_UNIFIED_MEMORY)
     zero_with_hip_kernel(exec_space, dst, cnt);
 #else
     KOKKOS_IMPL_HIP_SAFE_CALL(

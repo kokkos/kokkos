@@ -1279,10 +1279,6 @@ foreach(ARCH IN LISTS SUPPORTED_AMD_ARCHS)
   endif()
 endforeach()
 
-if(KOKKOS_ARCH_AMD_GFX942_APU)
-  set(KOKKOS_ENABLE_IMPL_HIP_UNIFIED_MEMORY ON)
-endif()
-
 #CMake verbose is kind of pointless
 #Let's just always print things
 message(STATUS "Built-in Execution Spaces:")
