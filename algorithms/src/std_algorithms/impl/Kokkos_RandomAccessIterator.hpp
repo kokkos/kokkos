@@ -54,17 +54,18 @@ class RandomAccessIterator< ::Kokkos::View<DataType, Args...> > {
   KOKKOS_DEFAULTED_FUNCTION RandomAccessIterator() = default;
 
   explicit KOKKOS_FUNCTION RandomAccessIterator(const view_type view)
-      : m_view(view) {}
+      : m_data(view.data()), m_stride(view.stride_0()) {}
   explicit KOKKOS_FUNCTION RandomAccessIterator(const view_type view,
                                                 ptrdiff_t current_index)
-      : m_view(view), m_current_index(current_index) {}
+      : m_data(view.data() + current_index * view.stride_0()),
+        m_stride(view.stride_0()) {}
 
 #ifndef KOKKOS_ENABLE_CXX17  // C++20 and beyond
   template <class OtherViewType>
     requires(std::is_constructible_v<view_type, OtherViewType>)
   KOKKOS_FUNCTION explicit(!std::is_convertible_v<OtherViewType, view_type>)
       RandomAccessIterator(const RandomAccessIterator<OtherViewType>& other)
-      : m_view(other.m_view), m_current_index(other.m_current_index) {}
+      : m_data(other.m_data), m_stride(other.m_stride) {}
 #else
   template <
       class OtherViewType,
@@ -73,19 +74,22 @@ class RandomAccessIterator< ::Kokkos::View<DataType, Args...> > {
                        int> = 0>
   KOKKOS_FUNCTION explicit RandomAccessIterator(
       const RandomAccessIterator<OtherViewType>& other)
-      : m_view(other.m_view), m_current_index(other.m_current_index) {}
+      : m_data(other.m_data), m_stride(other.m_stride) {}
 
   template <class OtherViewType,
             std::enable_if_t<std::is_convertible_v<OtherViewType, view_type>,
                              int> = 0>
   KOKKOS_FUNCTION RandomAccessIterator(
       const RandomAccessIterator<OtherViewType>& other)
-      : m_view(other.m_view), m_current_index(other.m_current_index) {}
+      : m_data(other.m_data), m_stride(other.m_stride) {}
 #endif
 
   KOKKOS_FUNCTION
   iterator_type& operator++() {
-    ++m_current_index;
+    if constexpr (is_always_contiguous)
+      m_data++;
+    else
+      m_data += m_stride;
     return *this;
   }
 
@@ -98,7 +102,10 @@ class RandomAccessIterator< ::Kokkos::View<DataType, Args...> > {
 
   KOKKOS_FUNCTION
   iterator_type& operator--() {
-    --m_current_index;
+    if constexpr (is_always_contiguous)
+      m_data--;
+    else
+      m_data -= m_stride;
     return *this;
   }
 
@@ -111,77 +118,87 @@ class RandomAccessIterator< ::Kokkos::View<DataType, Args...> > {
 
   KOKKOS_FUNCTION
   reference operator[](difference_type n) const {
-    return m_view(m_current_index + n);
+    if constexpr (is_always_contiguous)
+      return *(m_data + n);
+    else
+      return *(m_data + n * m_stride);
   }
 
   KOKKOS_FUNCTION
   iterator_type& operator+=(difference_type n) {
-    m_current_index += n;
+    if constexpr (is_always_contiguous)
+      m_data += n;
+    else
+      m_data += n * m_stride;
     return *this;
   }
 
   KOKKOS_FUNCTION
   iterator_type& operator-=(difference_type n) {
-    m_current_index -= n;
+    if constexpr (is_always_contiguous)
+      m_data -= n;
+    else
+      m_data -= n * m_stride;
     return *this;
   }
 
   KOKKOS_FUNCTION
   iterator_type operator+(difference_type n) const {
-    return iterator_type(m_view, m_current_index + n);
+    auto it = *this;
+    it += n;
+    return it;
   }
 
   KOKKOS_FUNCTION
   iterator_type operator-(difference_type n) const {
-    return iterator_type(m_view, m_current_index - n);
+    auto it = *this;
+    it -= n;
+    return it;
   }
 
   KOKKOS_FUNCTION
   difference_type operator-(iterator_type it) const {
-    return m_current_index - it.m_current_index;
+    if constexpr (is_always_contiguous)
+      return m_data - it.m_data;
+    else
+      return (m_data - it.m_data) / m_stride;
   }
 
   KOKKOS_FUNCTION
-  bool operator==(iterator_type other) const {
-    return m_current_index == other.m_current_index &&
-           m_view.data() == other.m_view.data();
-  }
+  bool operator==(iterator_type other) const { return m_data == other.m_data; }
 
   KOKKOS_FUNCTION
-  bool operator!=(iterator_type other) const {
-    return m_current_index != other.m_current_index ||
-           m_view.data() != other.m_view.data();
-  }
+  bool operator!=(iterator_type other) const { return m_data != other.m_data; }
 
   KOKKOS_FUNCTION
-  bool operator<(iterator_type other) const {
-    return m_current_index < other.m_current_index;
-  }
+  bool operator<(iterator_type other) const { return m_data < other.m_data; }
 
   KOKKOS_FUNCTION
-  bool operator<=(iterator_type other) const {
-    return m_current_index <= other.m_current_index;
-  }
+  bool operator<=(iterator_type other) const { return m_data <= other.m_data; }
 
   KOKKOS_FUNCTION
-  bool operator>(iterator_type other) const {
-    return m_current_index > other.m_current_index;
-  }
+  bool operator>(iterator_type other) const { return m_data > other.m_data; }
 
   KOKKOS_FUNCTION
-  bool operator>=(iterator_type other) const {
-    return m_current_index >= other.m_current_index;
-  }
+  bool operator>=(iterator_type other) const { return m_data >= other.m_data; }
 
   KOKKOS_FUNCTION
-  reference operator*() const { return m_view(m_current_index); }
+  reference operator*() const { return *m_data; }
 
   KOKKOS_FUNCTION
-  view_type view() const { return m_view; }
+  pointer data() const { return m_data; }
+
+  KOKKOS_FUNCTION
+  int stride() const { return m_stride; }
 
  private:
-  view_type m_view;
-  ptrdiff_t m_current_index = 0;
+  pointer m_data;
+  int m_stride;
+  static constexpr bool is_always_contiguous =
+      (std::is_same_v<typename view_type::traits::array_layout,
+                      Kokkos::LayoutLeft> ||
+       std::is_same_v<typename view_type::traits::array_layout,
+                      Kokkos::LayoutRight>);
 
   // Needed for the converting constructor accepting another iterator
   template <class>
