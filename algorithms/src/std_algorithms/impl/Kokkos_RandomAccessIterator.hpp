@@ -36,7 +36,7 @@ class RandomAccessIterator< ::Kokkos::View<DataType, Args...> > {
   using iterator_type = RandomAccessIterator<view_type>;
 
   using iterator_category = std::random_access_iterator_tag;
-  using value_type        = typename view_type::value_type;
+  using value_type        = typename view_type::non_const_value_type;
   using difference_type   = ptrdiff_t;
   using pointer           = typename view_type::pointer_type;
   using reference         = typename view_type::reference_type;

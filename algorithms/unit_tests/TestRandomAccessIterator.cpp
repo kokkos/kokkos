@@ -264,6 +264,46 @@ TEST_F(random_access_iterator_test, traits_helpers) {
   static_assert(KE::Impl::are_iterators_v<T1_t, T2_t, T3_t>);
   static_assert(KE::Impl::are_random_access_iterators_v<T1_t, T2_t, T3_t>);
   static_assert(!KE::Impl::are_iterators_v<int, T2_t, T3_t>);
+
+  auto first_s  = KE::begin(m_static_view);
+  auto cfirst_s = KE::cbegin(m_static_view);
+
+  auto first_d  = KE::begin(m_dynamic_view);
+  auto cfirst_d = KE::cbegin(m_dynamic_view);
+
+  auto first_st  = KE::begin(m_strided_view);
+  auto cfirst_st = KE::cbegin(m_strided_view);
+
+  auto last_s  = KE::end(m_static_view);
+  auto clast_s = KE::cend(m_static_view);
+
+  auto last_d  = KE::end(m_dynamic_view);
+  auto clast_d = KE::cend(m_dynamic_view);
+
+  auto last_st  = KE::end(m_strided_view);
+  auto clast_st = KE::cend(m_strided_view);
+
+  static_assert(std::is_same_v<decltype(first_s)::value_type, value_type>);
+  static_assert(std::is_same_v<decltype(first_d)::value_type, value_type>);
+  static_assert(std::is_same_v<decltype(first_st)::value_type, value_type>);
+
+  static_assert(std::is_same_v<decltype(last_s)::value_type, value_type>);
+  static_assert(std::is_same_v<decltype(last_d)::value_type, value_type>);
+  static_assert(std::is_same_v<decltype(last_st)::value_type, value_type>);
+
+  static_assert(std::is_same_v<decltype(first_s)::value_type, 
+                               decltype(cfirst_s)::value_type>);
+  static_assert(std::is_same_v<decltype(first_d)::value_type, 
+                               decltype(cfirst_d)::value_type>);
+  static_assert(std::is_same_v<decltype(first_st)::value_type, 
+                               decltype(cfirst_st)::value_type>);
+
+  static_assert(std::is_same_v<decltype(last_s)::value_type, 
+                               decltype(clast_s)::value_type>);
+  static_assert(std::is_same_v<decltype(last_d)::value_type, 
+                               decltype(clast_d)::value_type>);
+  static_assert(std::is_same_v<decltype(last_st)::value_type, 
+                               decltype(clast_st)::value_type>);
 }
 
 }  // namespace stdalgos
