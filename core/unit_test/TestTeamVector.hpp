@@ -756,8 +756,14 @@ bool Test(int test) {
 #else
   int team_size = 33;
 #endif
-  int const concurrency = ExecutionSpace().concurrency();
-  if (team_size > concurrency) team_size = concurrency;
+  // Can't use concurrency here since some backends have a maximum team size
+  // that is smaller (and smaller than 33).
+  int const team_size_max =
+      Kokkos::TeamPolicy<ExecutionSpace>(1, 1).team_size_max(
+          KOKKOS_LAMBDA(
+              typename Kokkos::TeamPolicy<ExecutionSpace>::member_type, int){},
+          Kokkos::ParallelForTag{});
+  if (team_size > team_size_max) team_size = team_size_max;
   passed = passed && test_scalar<int, ExecutionSpace>(317, team_size, test);
   passed = passed &&
            test_scalar<long long int, ExecutionSpace>(317, team_size, test);
@@ -794,11 +800,14 @@ class TestTripleNestedReduce {
     run_test(nrows, ncols, team_size, vector_length);
   }
 
-  void run_test(const size_type &nrows, const size_type &ncols,
-                size_type team_size, const size_type &vector_length) {
-    auto const concurrency =
-        static_cast<size_type>(execution_space().concurrency());
-    if (team_size > concurrency) team_size = concurrency;
+  void run_test(const size_type &nrows, const size_type &ncols, int team_size,
+                const size_type &vector_length) {
+    int const max_team_size =
+        Kokkos::TeamPolicy<execution_space>(1, 1).team_size_max(
+            KOKKOS_LAMBDA(
+                typename Kokkos::TeamPolicy<execution_space>::member_type){},
+            Kokkos::ParallelForTag{});
+    if (team_size > max_team_size) team_size = max_team_size;
 
 #ifdef KOKKOS_ENABLE_HPX
     team_size = 1;
