@@ -23,7 +23,7 @@ namespace Test {
 // called on host-allocated buffers. The fix was in PR 7380 to use a
 // parallel_for to zero memory
 TEST(hip, unified_memory_zero_memset) {
-#if !defined(KOKKOS_ENABLE_IMPL_HIP_UNIFIED_MEMORY)
+#if !defined(KOKKOS_IMPL_HIP_UNIFIED_MEMORY)
 #error this test should only be run with HIP unified memory enabled
 #endif
 

@@ -14,19 +14,25 @@
 //
 //@HEADER
 
-#ifndef KOKKOS_HIP_SHARED_ALLOCATION_RECORD_HPP
-#define KOKKOS_HIP_SHARED_ALLOCATION_RECORD_HPP
+#include <iostream>
+#include <hip/hip_runtime_api.h>
 
-#include <HIP/Kokkos_HIP_Space.hpp>
-#include <impl/Kokkos_SharedAlloc.hpp>
+int main() {
+  hipDeviceProp_t hipProp;
+  hipError_t error = hipGetDeviceProperties(&hipProp, 0);
 
-#if defined(KOKKOS_IMPL_HIP_UNIFIED_MEMORY)
-KOKKOS_IMPL_SHARED_ALLOCATION_SPECIALIZATION(Kokkos::HIPSpace);
-#else
-KOKKOS_IMPL_HOST_INACCESSIBLE_SHARED_ALLOCATION_SPECIALIZATION(
-    Kokkos::HIPSpace);
-#endif
-KOKKOS_IMPL_SHARED_ALLOCATION_SPECIALIZATION(Kokkos::HIPHostPinnedSpace);
-KOKKOS_IMPL_SHARED_ALLOCATION_SPECIALIZATION(Kokkos::HIPManagedSpace);
+  if (error != hipSuccess) {
+    std::cout << hipGetErrorString(error) << '\n';
+    return error;
+  }
 
-#endif
+  if (hipProp.integrated == 1) {
+    // We detected an APU
+    std::cout << "ON";
+  } else {
+    // We detected a discrete GPU
+    std::cout << "OFF";
+  }
+
+  return 0;
+}
