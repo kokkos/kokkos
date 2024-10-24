@@ -852,6 +852,7 @@ set(DEFAULT_DEVICE_SOURCES
     TestParseCmdLineArgsAndEnvVars.cpp
     TestSharedSpace.cpp
     TestSharedHostPinnedSpace.cpp
+    TestViewMemorySpaceViolation.cpp
     TestCompilerMacros.cpp
     default/TestDefaultDeviceType.cpp
     default/TestDefaultDeviceType_a1.cpp

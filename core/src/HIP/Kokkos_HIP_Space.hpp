@@ -375,7 +375,26 @@ struct MemorySpaceAccess<HIPManagedSpace, HIPHostPinnedSpace> {
   enum : bool { deepcopy = true };
 };
 
+template <typename MemorySpace>
+void runtime_check_memory_space(const void* ptr, const MemorySpace&);
+
 }  // namespace Impl
 }  // namespace Kokkos
+
+template <>
+void Kokkos::Impl::runtime_check_memory_space<Kokkos::HIPHostPinnedSpace>(
+    const void* ptr, const Kokkos::HIPHostPinnedSpace&);
+
+template <>
+void Kokkos::Impl::runtime_check_memory_space<Kokkos::HIPManagedSpace>(
+    const void* ptr, const Kokkos::HIPManagedSpace&);
+
+template <>
+void Kokkos::Impl::runtime_check_memory_space<Kokkos::HIPSpace>(
+    const void* ptr, const Kokkos::HIPSpace&);
+
+template <>
+void Kokkos::Impl::runtime_check_memory_space<Kokkos::HostSpace>(
+    const void* ptr, const Kokkos::HostSpace&);
 
 #endif /* #define KOKKOS_HIPSPACE_HPP */

@@ -97,6 +97,9 @@ constexpr KOKKOS_INLINE_FUNCTION std::size_t count_valid_integers(
          (i6 != KOKKOS_INVALID_INDEX) + (i7 != KOKKOS_INVALID_INDEX);
 }
 
+template <class MemorySpace>
+void runtime_check_memory_space(const void*, const MemorySpace&) {}
+
 // FIXME Ideally, we would not instantiate this function for every possible View
 // type. We should be able to only pass "extent" when we use mdspan.
 template <typename View>

@@ -465,6 +465,48 @@ void cuda_prefetch_pointer(const Cuda &space, const void *ptr, size_t bytes,
 }
 
 }  // namespace Impl
+
+template <>
+void Kokkos::Impl::runtime_check_memory_space<Kokkos::CudaHostPinnedSpace>(
+    const void *ptr, const Kokkos::CudaHostPinnedSpace &) {
+  cudaPointerAttributes attributes;
+  cudaError_t error = cudaPointerGetAttributes(&attributes, ptr);
+  if (error != cudaSuccess || attributes.type != cudaMemoryTypeHost)
+    Kokkos::abort(
+        "Requested CudaHostPinnedSpace but pointer isn't allocated in that "
+        "space!");
+}
+
+template <>
+void Kokkos::Impl::runtime_check_memory_space<Kokkos::CudaUVMSpace>(
+    const void *ptr, const Kokkos::CudaUVMSpace &) {
+  cudaPointerAttributes attributes;
+  cudaError_t error = cudaPointerGetAttributes(&attributes, ptr);
+  if (error != cudaSuccess || attributes.type != cudaMemoryTypeManaged)
+    Kokkos::abort(
+        "Requested CudaUVMSpace but pointer isn't allocated in that space!");
+}
+
+template <>
+void Kokkos::Impl::runtime_check_memory_space<Kokkos::CudaSpace>(
+    const void *ptr, const Kokkos::CudaSpace &) {
+  cudaPointerAttributes attributes;
+  cudaError_t error = cudaPointerGetAttributes(&attributes, ptr);
+  if (error != cudaSuccess || attributes.type != cudaMemoryTypeDevice)
+    Kokkos::abort(
+        "Requested CudaSpace but pointer isn't allocated in that space!");
+}
+
+template <>
+void Kokkos::Impl::runtime_check_memory_space<Kokkos::HostSpace>(
+    const void *ptr, const Kokkos::HostSpace &) {
+  cudaPointerAttributes attributes;
+  cudaError_t error = cudaPointerGetAttributes(&attributes, ptr);
+  if (error != cudaSuccess || attributes.type != cudaMemoryTypeUnregistered)
+    Kokkos::abort(
+        "Requested HostSpace but pointer isn't allocated in that space!");
+}
+
 }  // namespace Kokkos
 
 //==============================================================================
