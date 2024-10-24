@@ -571,20 +571,37 @@ TEST(TEST_CATEGORY, mdrange_combined_reduce) {
   constexpr uint64_t nw = 1000;
 
   uint64_t nsum = (nw / 2) * (nw + 1);
+  {
+    int64_t result1 = 0;
+    int64_t result2 = 0;
+    int64_t result3 = 0;
 
-  int64_t result1 = 0;
-  int64_t result2 = 0;
-  int64_t result3 = 0;
+    Kokkos::parallel_reduce(
+        "int_combined_reduce_mdrange",
+        Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<3>>({{0, 0, 0}},
+                                                               {{nw, 1, 1}}),
+        functor_type(nw), result1, result2, result3);
 
-  Kokkos::parallel_reduce(
-      "int_combined_reduce_mdrange",
-      Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<3>>({{0, 0, 0}},
-                                                             {{nw, 1, 1}}),
-      functor_type(nw), result1, result2, result3);
+    ASSERT_EQ(nw, uint64_t(result1));
+    ASSERT_EQ(nsum, uint64_t(result2));
+    ASSERT_EQ(nsum, uint64_t(result3));
+  }
+  {
+    int64_t result1 = 0;
+    int64_t result2 = 0;
+    int64_t result3 = 0;
 
-  ASSERT_EQ(nw, uint64_t(result1));
-  ASSERT_EQ(nsum, uint64_t(result2));
-  ASSERT_EQ(nsum, uint64_t(result3));
+    Kokkos::parallel_reduce(
+        "int_combined_reduce_mdrange",
+        Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<3>,
+                              Kokkos::Schedule<Kokkos::Dynamic>>({{0, 0, 0}},
+                                                                 {{nw, 1, 1}}),
+        functor_type(nw), result1, result2, result3);
+
+    ASSERT_EQ(nw, uint64_t(result1));
+    ASSERT_EQ(nsum, uint64_t(result2));
+    ASSERT_EQ(nsum, uint64_t(result3));
+  }
 }
 
 TEST(TEST_CATEGORY, int_combined_reduce_mixed) {
