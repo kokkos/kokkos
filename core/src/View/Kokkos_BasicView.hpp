@@ -146,7 +146,7 @@ class BasicView {
       [[maybe_unused]] const OtherMapping &rhs) {
     using src_t          = typename OtherMapping::layout_type;
     using dst_t          = layout_type;
-    constexpr size_t rnk = mdspan_type::rank();
+    [[maybe_unused]] constexpr size_t rnk = mdspan_type::rank();
     if constexpr (!std::is_same_v<src_t, dst_t>) {
       if constexpr (Impl::IsLayoutLeftPadded<dst_t>::value) {
         if constexpr (std::is_same_v<src_t, layout_stride>) {
