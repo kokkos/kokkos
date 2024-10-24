@@ -148,6 +148,7 @@ TEST(TEST_CATEGORY, view_copy_tests) {
       ASSERT_TRUE(run_check(s_a, 6));
     }
   } else {
+#ifndef KOKKOS_ENABLE_NO_EXCEPTIONS  // FIXME
     // These copies won't succeed, but they should each throw
     // an exception whose message contains the view labels,
     // and the names of the views' memory spaces.
@@ -181,6 +182,7 @@ TEST(TEST_CATEGORY, view_copy_tests) {
     ASSERT_NE(msg.find(hs_a.label()), std::string::npos);
     ASSERT_NE(msg.find(memory_space().name()), std::string::npos);
     ASSERT_NE(msg.find(mirror_memory_space().name()), std::string::npos);
+#endif
   }
 
   // Contiguous copies
