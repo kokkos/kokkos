@@ -62,6 +62,7 @@ std::string_view get_memory_space_name(sycl::usm::alloc allocation_kind) {
     case sycl::usm::alloc::host: return Kokkos::SYCLHostUSMSpace::name();
     case sycl::usm::alloc::device: return Kokkos::SYCLDeviceUSMSpace::name();
     case sycl::usm::alloc::shared: return Kokkos::SYCLSharedUSMSpace::name();
+    case sycl::usm::alloc::unknown: return "sycl::usm::alloc::unknown";
     default:
       Kokkos::abort("bug: unknown sycl allocation type");
       return "unreachable";
@@ -69,6 +70,54 @@ std::string_view get_memory_space_name(sycl::usm::alloc allocation_kind) {
 }
 
 }  // namespace
+
+template <>
+void Kokkos::Impl::runtime_check_memory_space<Kokkos::SYCLHostUSMSpace>(
+    const void* ptr, const Kokkos::SYCLHostUSMSpace& space) {
+  auto detected_usm_alloc =
+      sycl::get_pointer_type(ptr, space.impl_get_queue().get_context());
+  if (detected_usm_alloc != sycl::usm::alloc::host)
+    Kokkos::abort((std::string("Requested SYCLHostUSMSpace but detected "
+                               "pointer allocation type ") +
+                   std::string(get_memory_space_name(detected_usm_alloc)))
+                      .c_str());
+}
+
+template <>
+void Kokkos::Impl::runtime_check_memory_space<Kokkos::SYCLSharedUSMSpace>(
+    const void* ptr, const Kokkos::SYCLSharedUSMSpace& space) {
+  auto detected_usm_alloc =
+      sycl::get_pointer_type(ptr, space.impl_get_queue().get_context());
+  if (detected_usm_alloc != sycl::usm::alloc::shared)
+    Kokkos::abort((std::string("Requested SYCLSharedUSMSpace but detected "
+                               "pointer allocation type ") +
+                   std::string(get_memory_space_name(detected_usm_alloc)))
+                      .c_str());
+}
+
+template <>
+void Kokkos::Impl::runtime_check_memory_space<Kokkos::SYCLDeviceUSMSpace>(
+    const void* ptr, const Kokkos::SYCLDeviceUSMSpace& space) {
+  auto detected_usm_alloc =
+      sycl::get_pointer_type(ptr, space.impl_get_queue().get_context());
+  if (detected_usm_alloc != sycl::usm::alloc::device)
+    Kokkos::abort((std::string("Requested SYCLDeviceUSMSpace but detected "
+                               "pointer allocation type ") +
+                   std::string(get_memory_space_name(detected_usm_alloc)))
+                      .c_str());
+}
+
+template <>
+void Kokkos::Impl::runtime_check_memory_space<Kokkos::HostSpace>(
+    const void* ptr, const Kokkos::HostSpace& space) {
+  auto detected_usm_alloc = sycl::get_pointer_type(
+      ptr, Kokkos::SYCLDeviceUSMSpace().impl_get_queue().get_context());
+  if (detected_usm_alloc != sycl::usm::alloc::unknown)
+    Kokkos::abort((std::string("Requested HostSpace but detected "
+                               "pointer allocation type ") +
+                   std::string(get_memory_space_name(detected_usm_alloc)))
+                      .c_str());
+}
 
 namespace Kokkos {
 
