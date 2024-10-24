@@ -608,7 +608,7 @@ layout_stride::mapping<Extents>::submdspan_mapping_impl(
     (defined(__NVCC__) &&                                                      \
      (__CUDACC_VER_MAJOR__ * 100 + __CUDACC_VER_MINOR__ * 10) < 1120)
                       MDSPAN_IMPL_STANDARD_NAMESPACE::detail::tuple<decltype(detail::stride_of(slices))...>(
-                          detail::stride_of(slices)...).values)),
+                          detail::stride_of(slices)...)).values),
 #else
                       MDSPAN_IMPL_STANDARD_NAMESPACE::detail::tuple(detail::stride_of(slices)...)).values),
 #endif
