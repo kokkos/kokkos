@@ -68,13 +68,15 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
 
   // Print a warning if the user did not select the right GFX942 architecture
 #ifdef KOKKOS_ARCH_AMD_GFX942
-  if ((Kokkos::show_warnings()) && (hipProp.integrated == 1)) {
+  if ((Kokkos::show_warnings()) &&
+      (Impl::HIPInternal::m_deviceProp.integrated == 1)) {
     std::cerr << "Kokkos::HIP::initialize WARNING: running kernels for MI300X "
                  "(discrete GPU) on a MI300A (APU).\n";
   }
 #endif
 #ifdef KOKKOS_ARCH_AMD_GFX942_APU
-  if ((Kokkos::show_warnings()) && (hipProp.integrated == 0)) {
+  if ((Kokkos::show_warnings()) &&
+      (Impl::HIPInternal::m_deviceProp.integrated == 0)) {
     std::cerr << "Kokkos::HIP::initialize WARNING: running kernels for MI300A "
                  "(APU) on a MI300X (discrete GPU).\n";
   }
