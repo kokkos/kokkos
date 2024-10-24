@@ -42,6 +42,7 @@ static_assert(false,
 // LLVM/Clacc compiler does not need this.
 #ifndef KOKKOS_COMPILER_CLANG
 #define KOKKOS_ENABLE_OPENACC_COLLAPSE_HIERARCHICAL_CONSTRUCTS
+#define KOKKOS_ENABLE_OPENACC_COLLAPSE_MDRANGE_LOOPS
 #endif
 
 namespace Kokkos::Experimental::Impl {
