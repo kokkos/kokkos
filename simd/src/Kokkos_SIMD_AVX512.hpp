@@ -30,6 +30,18 @@
     "Kokkos_SIMD_AVX512.hpp must be included before Kokkos_SIMD_Common_Math.hpp!"
 #endif
 
+// FIXME: Some intrinsics we are using are not marked constexpr in GCC
+// prior to some version. 8.5 fails 9.5 works.
+#ifdef KOKKOS_COMPILER_GNU
+#if KOKKOS_COMPILER_GNU < 950
+#define KOKKOS_IMPL_SIMD_CONSTEXPR
+#endif
+#endif
+
+#ifndef KOKKOS_IMPL_SIMD_CONSTEXPR
+#define KOKKOS_IMPL_SIMD_CONSTEXPR constexpr
+#endif
+
 namespace Kokkos {
 namespace Experimental {
 
@@ -3246,10 +3258,11 @@ class where_expression<simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>>,
 }
 #endif
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr std::int32_t
-reduce_max(
-    simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& v,
-    simd_mask<std::int32_t, simd_abi::avx512_fixed_size<8>> const& m) noexcept {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION KOKKOS_IMPL_SIMD_CONSTEXPR
+    std::int32_t
+    reduce_max(simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& v,
+               simd_mask<std::int32_t, simd_abi::avx512_fixed_size<8>> const&
+                   m) noexcept {
   if (none_of(m)) {
     return Kokkos::reduction_identity<std::int32_t>::max();
   }
@@ -3273,10 +3286,11 @@ reduce_max(
 }
 #endif
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr std::int32_t
-reduce_min(
-    simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& v,
-    simd_mask<std::int32_t, simd_abi::avx512_fixed_size<8>> const& m) noexcept {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION KOKKOS_IMPL_SIMD_CONSTEXPR
+    std::int32_t
+    reduce_min(simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& v,
+               simd_mask<std::int32_t, simd_abi::avx512_fixed_size<8>> const&
+                   m) noexcept {
   if (none_of(m)) {
     return Kokkos::reduction_identity<std::int32_t>::min();
   }
@@ -3285,10 +3299,11 @@ reduce_min(
       _mm512_castsi256_si512(static_cast<__m256i>(v)));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr std::int32_t
-reduce_max(simd<std::int32_t, simd_abi::avx512_fixed_size<16>> const& v,
-           simd_mask<std::int32_t, simd_abi::avx512_fixed_size<16>> const&
-               m) noexcept {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION KOKKOS_IMPL_SIMD_CONSTEXPR
+    std::int32_t
+    reduce_max(simd<std::int32_t, simd_abi::avx512_fixed_size<16>> const& v,
+               simd_mask<std::int32_t, simd_abi::avx512_fixed_size<16>> const&
+                   m) noexcept {
   if (none_of(m)) {
     return Kokkos::reduction_identity<std::int32_t>::max();
   }
@@ -3296,10 +3311,11 @@ reduce_max(simd<std::int32_t, simd_abi::avx512_fixed_size<16>> const& v,
                                       static_cast<__m512i>(v));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr std::int32_t
-reduce_min(simd<std::int32_t, simd_abi::avx512_fixed_size<16>> const& v,
-           simd_mask<std::int32_t, simd_abi::avx512_fixed_size<16>> const&
-               m) noexcept {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION KOKKOS_IMPL_SIMD_CONSTEXPR
+    std::int32_t
+    reduce_min(simd<std::int32_t, simd_abi::avx512_fixed_size<16>> const& v,
+               simd_mask<std::int32_t, simd_abi::avx512_fixed_size<16>> const&
+                   m) noexcept {
   if (none_of(m)) {
     return Kokkos::reduction_identity<std::int32_t>::min();
   }
@@ -3322,10 +3338,11 @@ reduce_min(simd<std::int32_t, simd_abi::avx512_fixed_size<16>> const& v,
 }
 #endif
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr std::uint32_t
-reduce_max(simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> const& v,
-           simd_mask<std::uint32_t, simd_abi::avx512_fixed_size<8>> const&
-               m) noexcept {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION KOKKOS_IMPL_SIMD_CONSTEXPR
+    std::uint32_t
+    reduce_max(simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> const& v,
+               simd_mask<std::uint32_t, simd_abi::avx512_fixed_size<8>> const&
+                   m) noexcept {
   if (none_of(m)) {
     return Kokkos::reduction_identity<std::uint32_t>::max();
   }
@@ -3349,10 +3366,11 @@ reduce_max(simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> const& v,
 }
 #endif
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr std::uint32_t
-reduce_min(simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> const& v,
-           simd_mask<std::uint32_t, simd_abi::avx512_fixed_size<8>> const&
-               m) noexcept {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION KOKKOS_IMPL_SIMD_CONSTEXPR
+    std::uint32_t
+    reduce_min(simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> const& v,
+               simd_mask<std::uint32_t, simd_abi::avx512_fixed_size<8>> const&
+                   m) noexcept {
   if (none_of(m)) {
     return Kokkos::reduction_identity<std::uint32_t>::min();
   }
@@ -3361,10 +3379,11 @@ reduce_min(simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> const& v,
       _mm512_castsi256_si512(static_cast<__m256i>(v)));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr std::uint32_t
-reduce_max(simd<std::uint32_t, simd_abi::avx512_fixed_size<16>> const& v,
-           simd_mask<std::uint32_t, simd_abi::avx512_fixed_size<16>> const&
-               m) noexcept {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION KOKKOS_IMPL_SIMD_CONSTEXPR
+    std::uint32_t
+    reduce_max(simd<std::uint32_t, simd_abi::avx512_fixed_size<16>> const& v,
+               simd_mask<std::uint32_t, simd_abi::avx512_fixed_size<16>> const&
+                   m) noexcept {
   if (none_of(m)) {
     return Kokkos::reduction_identity<std::uint32_t>::max();
   }
@@ -3372,10 +3391,11 @@ reduce_max(simd<std::uint32_t, simd_abi::avx512_fixed_size<16>> const& v,
                                       static_cast<__m512i>(v));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr std::uint32_t
-reduce_min(simd<std::uint32_t, simd_abi::avx512_fixed_size<16>> const& v,
-           simd_mask<std::uint32_t, simd_abi::avx512_fixed_size<16>> const&
-               m) noexcept {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION KOKKOS_IMPL_SIMD_CONSTEXPR
+    std::uint32_t
+    reduce_min(simd<std::uint32_t, simd_abi::avx512_fixed_size<16>> const& v,
+               simd_mask<std::uint32_t, simd_abi::avx512_fixed_size<16>> const&
+                   m) noexcept {
   if (none_of(m)) {
     return Kokkos::reduction_identity<std::uint32_t>::min();
   }
@@ -3397,10 +3417,11 @@ reduce_min(simd<std::uint32_t, simd_abi::avx512_fixed_size<16>> const& v,
 }
 #endif
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr std::int64_t
-reduce_max(
-    simd<std::int64_t, simd_abi::avx512_fixed_size<8>> const& v,
-    simd_mask<std::int64_t, simd_abi::avx512_fixed_size<8>> const& m) noexcept {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION KOKKOS_IMPL_SIMD_CONSTEXPR
+    std::int64_t
+    reduce_max(simd<std::int64_t, simd_abi::avx512_fixed_size<8>> const& v,
+               simd_mask<std::int64_t, simd_abi::avx512_fixed_size<8>> const&
+                   m) noexcept {
   if (none_of(m)) {
     return Kokkos::reduction_identity<std::int64_t>::max();
   }
@@ -3422,10 +3443,11 @@ reduce_max(
 }
 #endif
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr std::int64_t
-reduce_min(
-    simd<std::int64_t, simd_abi::avx512_fixed_size<8>> const& v,
-    simd_mask<std::int64_t, simd_abi::avx512_fixed_size<8>> const& m) noexcept {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION KOKKOS_IMPL_SIMD_CONSTEXPR
+    std::int64_t
+    reduce_min(simd<std::int64_t, simd_abi::avx512_fixed_size<8>> const& v,
+               simd_mask<std::int64_t, simd_abi::avx512_fixed_size<8>> const&
+                   m) noexcept {
   if (none_of(m)) {
     return Kokkos::reduction_identity<std::int64_t>::min();
   }
@@ -3447,10 +3469,11 @@ reduce_min(
 }
 #endif
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr std::uint64_t
-reduce_max(simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> const& v,
-           simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>> const&
-               m) noexcept {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION KOKKOS_IMPL_SIMD_CONSTEXPR
+    std::uint64_t
+    reduce_max(simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> const& v,
+               simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>> const&
+                   m) noexcept {
   if (none_of(m)) {
     return Kokkos::reduction_identity<std::uint64_t>::max();
   }
@@ -3472,10 +3495,11 @@ reduce_max(simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> const& v,
 }
 #endif
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr std::uint64_t
-reduce_min(simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> const& v,
-           simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>> const&
-               m) noexcept {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION KOKKOS_IMPL_SIMD_CONSTEXPR
+    std::uint64_t
+    reduce_min(simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> const& v,
+               simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>> const&
+                   m) noexcept {
   if (none_of(m)) {
     return Kokkos::reduction_identity<std::uint64_t>::min();
   }
@@ -3496,9 +3520,11 @@ hmax(const_where_expression<simd_mask<double, simd_abi::avx512_fixed_size<8>>,
 }
 #endif
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr double reduce_max(
-    simd<double, simd_abi::avx512_fixed_size<8>> const& v,
-    simd_mask<double, simd_abi::avx512_fixed_size<8>> const& m) noexcept {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+    KOKKOS_IMPL_SIMD_CONSTEXPR double
+    reduce_max(
+        simd<double, simd_abi::avx512_fixed_size<8>> const& v,
+        simd_mask<double, simd_abi::avx512_fixed_size<8>> const& m) noexcept {
   if (none_of(m)) {
     return Kokkos::reduction_identity<double>::max();
   }
@@ -3519,9 +3545,11 @@ hmin(const_where_expression<simd_mask<double, simd_abi::avx512_fixed_size<8>>,
 }
 #endif
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr double reduce_min(
-    simd<double, simd_abi::avx512_fixed_size<8>> const& v,
-    simd_mask<double, simd_abi::avx512_fixed_size<8>> const& m) noexcept {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+    KOKKOS_IMPL_SIMD_CONSTEXPR double
+    reduce_min(
+        simd<double, simd_abi::avx512_fixed_size<8>> const& v,
+        simd_mask<double, simd_abi::avx512_fixed_size<8>> const& m) noexcept {
   if (none_of(m)) {
     return Kokkos::reduction_identity<double>::min();
   }
@@ -3543,9 +3571,10 @@ hmax(const_where_expression<simd_mask<float, simd_abi::avx512_fixed_size<8>>,
 }
 #endif
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr float reduce_max(
-    simd<float, simd_abi::avx512_fixed_size<8>> const& v,
-    simd_mask<float, simd_abi::avx512_fixed_size<8>> m) noexcept {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+    KOKKOS_IMPL_SIMD_CONSTEXPR float
+    reduce_max(simd<float, simd_abi::avx512_fixed_size<8>> const& v,
+               simd_mask<float, simd_abi::avx512_fixed_size<8>> m) noexcept {
   if (none_of(m)) {
     return Kokkos::reduction_identity<float>::max();
   }
@@ -3567,9 +3596,11 @@ hmin(const_where_expression<simd_mask<float, simd_abi::avx512_fixed_size<8>>,
 }
 #endif
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr float reduce_min(
-    simd<float, simd_abi::avx512_fixed_size<8>> const& v,
-    simd_mask<float, simd_abi::avx512_fixed_size<8>> const& m) noexcept {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+    KOKKOS_IMPL_SIMD_CONSTEXPR float
+    reduce_min(
+        simd<float, simd_abi::avx512_fixed_size<8>> const& v,
+        simd_mask<float, simd_abi::avx512_fixed_size<8>> const& m) noexcept {
   if (none_of(m)) {
     return Kokkos::reduction_identity<float>::min();
   }
@@ -3577,9 +3608,10 @@ hmin(const_where_expression<simd_mask<float, simd_abi::avx512_fixed_size<8>>,
       static_cast<__mmask8>(m), _mm512_castps256_ps512(static_cast<__m256>(v)));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr float reduce_max(
-    simd<float, simd_abi::avx512_fixed_size<16>> const& v,
-    simd_mask<float, simd_abi::avx512_fixed_size<16>> m) noexcept {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+    KOKKOS_IMPL_SIMD_CONSTEXPR float
+    reduce_max(simd<float, simd_abi::avx512_fixed_size<16>> const& v,
+               simd_mask<float, simd_abi::avx512_fixed_size<16>> m) noexcept {
   if (none_of(m)) {
     return Kokkos::reduction_identity<float>::max();
   }
@@ -3587,9 +3619,11 @@ hmin(const_where_expression<simd_mask<float, simd_abi::avx512_fixed_size<8>>,
                                    static_cast<__m512>(v));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr float reduce_min(
-    simd<float, simd_abi::avx512_fixed_size<16>> const& v,
-    simd_mask<float, simd_abi::avx512_fixed_size<16>> const& m) noexcept {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+    KOKKOS_IMPL_SIMD_CONSTEXPR float
+    reduce_min(
+        simd<float, simd_abi::avx512_fixed_size<16>> const& v,
+        simd_mask<float, simd_abi::avx512_fixed_size<16>> const& m) noexcept {
   if (none_of(m)) {
     return Kokkos::reduction_identity<float>::min();
   }
@@ -3597,10 +3631,11 @@ hmin(const_where_expression<simd_mask<float, simd_abi::avx512_fixed_size<8>>,
                                    static_cast<__m512>(v));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr std::int32_t
-reduce(simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& v,
-       simd_mask<std::int32_t, simd_abi::avx512_fixed_size<8>> const& m,
-       std::int32_t identity, std::plus<>) noexcept {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION KOKKOS_IMPL_SIMD_CONSTEXPR
+    std::int32_t
+    reduce(simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& v,
+           simd_mask<std::int32_t, simd_abi::avx512_fixed_size<8>> const& m,
+           std::int32_t identity, std::plus<>) noexcept {
   if (none_of(m)) {
     return identity;
   }
@@ -3609,10 +3644,11 @@ reduce(simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& v,
       _mm512_castsi256_si512(static_cast<__m256i>(v)));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr std::int32_t
-reduce(simd<std::int32_t, simd_abi::avx512_fixed_size<16>> const& v,
-       simd_mask<std::int32_t, simd_abi::avx512_fixed_size<16>> const& m,
-       std::int32_t identity, std::plus<>) noexcept {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION KOKKOS_IMPL_SIMD_CONSTEXPR
+    std::int32_t
+    reduce(simd<std::int32_t, simd_abi::avx512_fixed_size<16>> const& v,
+           simd_mask<std::int32_t, simd_abi::avx512_fixed_size<16>> const& m,
+           std::int32_t identity, std::plus<>) noexcept {
   if (none_of(m)) {
     return identity;
   }
@@ -3620,10 +3656,11 @@ reduce(simd<std::int32_t, simd_abi::avx512_fixed_size<16>> const& v,
                                       static_cast<__m512i>(v));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr std::int64_t
-reduce(simd<std::int64_t, simd_abi::avx512_fixed_size<8>> const& v,
-       simd_mask<std::int64_t, simd_abi::avx512_fixed_size<8>> const& m,
-       std::int64_t identity, std::plus<>) noexcept {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION KOKKOS_IMPL_SIMD_CONSTEXPR
+    std::int64_t
+    reduce(simd<std::int64_t, simd_abi::avx512_fixed_size<8>> const& v,
+           simd_mask<std::int64_t, simd_abi::avx512_fixed_size<8>> const& m,
+           std::int64_t identity, std::plus<>) noexcept {
   if (none_of(m)) {
     return identity;
   }
@@ -3631,10 +3668,11 @@ reduce(simd<std::int64_t, simd_abi::avx512_fixed_size<8>> const& v,
                                       static_cast<__m512i>(v));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr double reduce(
-    simd<double, simd_abi::avx512_fixed_size<8>> const& v,
-    simd_mask<double, simd_abi::avx512_fixed_size<8>> const& m, double identity,
-    std::plus<>) noexcept {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+    KOKKOS_IMPL_SIMD_CONSTEXPR double
+    reduce(simd<double, simd_abi::avx512_fixed_size<8>> const& v,
+           simd_mask<double, simd_abi::avx512_fixed_size<8>> const& m,
+           double identity, std::plus<>) noexcept {
   if (none_of(m)) {
     return identity;
   }
@@ -3642,10 +3680,11 @@ reduce(simd<std::int64_t, simd_abi::avx512_fixed_size<8>> const& v,
                                    static_cast<__m512d>(v));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr float reduce(
-    simd<float, simd_abi::avx512_fixed_size<8>> const& v,
-    simd_mask<float, simd_abi::avx512_fixed_size<8>> const& m, float identity,
-    std::plus<>) noexcept {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+    KOKKOS_IMPL_SIMD_CONSTEXPR float
+    reduce(simd<float, simd_abi::avx512_fixed_size<8>> const& v,
+           simd_mask<float, simd_abi::avx512_fixed_size<8>> const& m,
+           float identity, std::plus<>) noexcept {
   if (none_of(m)) {
     return identity;
   }
@@ -3653,10 +3692,11 @@ reduce(simd<std::int64_t, simd_abi::avx512_fixed_size<8>> const& v,
       static_cast<__mmask8>(m), _mm512_castps256_ps512(static_cast<__m256>(v)));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr float reduce(
-    simd<float, simd_abi::avx512_fixed_size<16>> const& v,
-    simd_mask<float, simd_abi::avx512_fixed_size<16>> const& m, float identity,
-    std::plus<>) noexcept {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+    KOKKOS_IMPL_SIMD_CONSTEXPR float
+    reduce(simd<float, simd_abi::avx512_fixed_size<16>> const& v,
+           simd_mask<float, simd_abi::avx512_fixed_size<16>> const& m,
+           float identity, std::plus<>) noexcept {
   if (none_of(m)) {
     return identity;
   }
