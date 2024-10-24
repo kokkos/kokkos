@@ -313,7 +313,7 @@ void Kokkos::Impl::runtime_check_memory_space<Kokkos::HIPHostPinnedSpace>(
     const void* ptr, const Kokkos::HIPHostPinnedSpace&) {
   hipPointerAttribute_t attributes;
   hipError_t error = hipPointerGetAttributes(&attributes, ptr);
-  if (error == hipErrorInvalidValue || attributes.type != hipMemoryTypeHost)
+  if (error != hipSuccess || attributes.type != hipMemoryTypeHost)
     Kokkos::abort(
         "Requested HIPHostPinnedSpace but pointer isn't "
         "allocated in that space!");
@@ -324,7 +324,7 @@ void Kokkos::Impl::runtime_check_memory_space<Kokkos::HIPManagedSpace>(
     const void* ptr, const Kokkos::HIPManagedSpace&) {
   hipPointerAttribute_t attributes;
   hipError_t error = hipPointerGetAttributes(&attributes, ptr);
-  if (error == hipErrorInvalidValue || attributes.type != hipMemoryTypeManaged)
+  if (error != hipSuccess || attributes.type != hipMemoryTypeManaged)
     Kokkos::abort(
         "Requested HIPManagedSpace but pointer isn't "
         "allocated in that space!");
@@ -335,7 +335,7 @@ void Kokkos::Impl::runtime_check_memory_space<Kokkos::HIPSpace>(
     const void* ptr, const Kokkos::HIPSpace&) {
   hipPointerAttribute_t attributes;
   hipError_t error = hipPointerGetAttributes(&attributes, ptr);
-  if (error == hipErrorInvalidValue || attributes.type != hipMemoryTypeDevice)
+  if (error != hipSuccess || attributes.type != hipMemoryTypeDevice)
     Kokkos::abort(
         "Requested HIPSpace but pointer isn't allocated in "
         "that space!");
@@ -346,7 +346,11 @@ void Kokkos::Impl::runtime_check_memory_space<Kokkos::HostSpace>(
     const void* ptr, const Kokkos::HostSpace&) {
   hipPointerAttribute_t attributes;
   hipError_t error = hipPointerGetAttributes(&attributes, ptr);
-  if (error != hipErrorInvalidValue)
+#if HIP_VERSION_MAJOR >= 6
+  if (error != hipSuccess || attributes.type != hipMemoryTypeUnregistered)
+#else
+  if (error == hipSuccess)
+#endif
     Kokkos::abort(
         "Requested HostSpace but pointer isn't allocated in "
         "that space!");
