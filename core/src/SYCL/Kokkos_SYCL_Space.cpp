@@ -109,7 +109,7 @@ void Kokkos::Impl::runtime_check_memory_space<Kokkos::SYCLDeviceUSMSpace>(
 
 template <>
 void Kokkos::Impl::runtime_check_memory_space<Kokkos::HostSpace>(
-    const void* ptr, const Kokkos::HostSpace& space) {
+    const void* ptr, const Kokkos::HostSpace&) {
   auto detected_usm_alloc = sycl::get_pointer_type(
       ptr, Kokkos::SYCLDeviceUSMSpace().impl_get_queue().get_context());
   if (detected_usm_alloc != sycl::usm::alloc::unknown)
