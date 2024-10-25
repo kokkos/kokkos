@@ -326,7 +326,7 @@ void Kokkos::Impl::runtime_check_memory_space<Kokkos::HIPHostPinnedSpace>(
 
 template <>
 void Kokkos::Impl::runtime_check_memory_space<Kokkos::HIPManagedSpace>(
-    const void* ptr, const Kokkos::HIPManagedSpace& space) {
+    const void* ptr, const Kokkos::HIPManagedSpace&) {
   int hasPageableMemory = 0;  // false by default
   KOKKOS_IMPL_HIP_SAFE_CALL(hipDeviceGetAttribute(
       &hasPageableMemory, hipDeviceAttributePageableMemoryAccess,
