@@ -29,13 +29,13 @@ inline void host_check_shift_on_one_loader(ShiftOp shift_op,
   Loader loader;
 
   for (std::size_t i = 0; i < n; ++i) {
-    simd_type simd_vals;
+    simd_type simd_vals(zero_init<simd_type>());
     bool const loaded_arg = loader.host_load(test_vals, width, simd_vals);
     if (!loaded_arg) {
       continue;
     }
 
-    simd_type expected_result;
+    simd_type expected_result(zero_init<simd_type>());
 
     for (std::size_t lane = 0; lane < width; ++lane) {
       DataType value = simd_vals[lane];
@@ -57,11 +57,11 @@ inline void host_check_shift_by_lanes_on_one_loader(
   constexpr std::size_t width = simd_type::size();
   Loader loader;
 
-  simd_type simd_vals;
+  simd_type simd_vals(zero_init<simd_type>());
   bool const loaded_arg = loader.host_load(test_vals, width, simd_vals);
   ASSERT_TRUE(loaded_arg);
 
-  simd_type expected_result;
+  simd_type expected_result(zero_init<simd_type>());
 
   for (std::size_t lane = 0; lane < width; ++lane) {
     DataType value = simd_vals[lane];
@@ -163,13 +163,13 @@ KOKKOS_INLINE_FUNCTION void device_check_shift_on_one_loader(
   Loader loader;
 
   for (std::size_t i = 0; i < n; ++i) {
-    simd_type simd_vals;
+    simd_type simd_vals(zero_init<simd_type>());
     bool const loaded_arg = loader.device_load(test_vals, width, simd_vals);
     if (!loaded_arg) {
       continue;
     }
 
-    simd_type expected_result;
+    simd_type expected_result(zero_init<simd_type>());
 
     for (std::size_t lane = 0; lane < width; ++lane) {
       DataType value = simd_vals[lane];
@@ -189,10 +189,10 @@ KOKKOS_INLINE_FUNCTION void device_check_shift_by_lanes_on_one_loader(
   using simd_type             = Kokkos::Experimental::simd<DataType, Abi>;
   constexpr std::size_t width = simd_type::size();
   Loader loader;
-  simd_type simd_vals;
+  simd_type simd_vals(zero_init<simd_type>());
   loader.device_load(test_vals, width, simd_vals);
 
-  simd_type expected_result;
+  simd_type expected_result(zero_init<simd_type>());
 
   for (std::size_t lane = 0; lane < width; ++lane) {
     DataType value = simd_vals[lane];
