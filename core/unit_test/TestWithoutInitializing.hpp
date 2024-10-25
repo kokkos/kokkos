@@ -223,7 +223,7 @@ TEST(TEST_CATEGORY, deep_copy_zero_memset) {
 
   // for MI300A with unified memory, ZeroMemset uses a parallel for
   auto success =
-#if defined(KOKKOS_IMPL_HIP_UNIFIED_MEMORY) && defined(KOKKOS_ARCH_AMD_GFX942)
+#if defined(KOKKOS_IMPL_HIP_UNIFIED_MEMORY)
       validate_existence(
           [&]() { Kokkos::deep_copy(bla, 0); },
           [&](BeginParallelForEvent e) {

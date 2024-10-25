@@ -24,7 +24,8 @@ namespace Test {
 // parallel_for to zero memory
 TEST(hip, unified_memory_zero_memset) {
 #if !defined(KOKKOS_IMPL_HIP_UNIFIED_MEMORY)
-#error this test should only be run with HIP unified memory enabled
+  GTEST_SKIP()
+      << "this test should only be run with HIP unified memory enabled";
 #endif
 
   constexpr size_t N = 1024 * 1024;  // size doesn't matter

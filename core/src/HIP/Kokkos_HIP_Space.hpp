@@ -65,7 +65,7 @@ class HIPSpace {
   ~HIPSpace()                              = default;
 
   /**\brief  Allocate untracked memory in the hip space */
-#ifdef KOKKOS_ENABLE_HIP_UNIFIED_MEMORY
+#ifdef KOKKOS_IMPL_HIP_UNIFIED_MEMORY
   template <typename ExecutionSpace>
   void* allocate(const ExecutionSpace&, const size_t arg_alloc_size) const {
     return allocate(arg_alloc_size);
