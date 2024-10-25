@@ -348,7 +348,7 @@ KOKKOS_FORCEINLINE_FUNCTION simd<T, simd_abi::scalar> condition(
 }
 
 template <class T, class BinaryOperation>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION constexpr T reduce(
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION T reduce(
     Experimental::simd<T, Experimental::simd_abi::scalar> const& x,
     Experimental::simd_mask<T, Experimental::simd_abi::scalar> const& mask,
     T identity, BinaryOperation) noexcept {
@@ -357,7 +357,7 @@ template <class T, class BinaryOperation>
 }
 
 template <class T, class BinaryOperation>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION constexpr T reduce(
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION T reduce(
     Experimental::simd<T, Experimental::simd_abi::scalar> const& x,
     BinaryOperation binary_op) noexcept {
   return reduce(
@@ -366,7 +366,7 @@ template <class T, class BinaryOperation>
 }
 
 template <class T>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION constexpr T reduce_min(
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION T reduce_min(
     Experimental::simd<T, Experimental::simd_abi::scalar> const& x,
     Experimental::simd_mask<T, Experimental::simd_abi::scalar> const&
         mask) noexcept {
@@ -375,7 +375,7 @@ template <class T>
 }
 
 template <class T>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION constexpr T reduce_min(
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION T reduce_min(
     Experimental::simd<T, Experimental::simd_abi::scalar> const& x) noexcept {
   return reduce_min(
       x,
@@ -383,7 +383,7 @@ template <class T>
 }
 
 template <class T>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION constexpr T reduce_max(
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION T reduce_max(
     Experimental::simd<T, Experimental::simd_abi::scalar> const& x,
     Experimental::simd_mask<T, Experimental::simd_abi::scalar> const&
         mask) noexcept {
@@ -392,7 +392,7 @@ template <class T>
 }
 
 template <class T>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION constexpr T reduce_max(
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION T reduce_max(
     Experimental::simd<T, Experimental::simd_abi::scalar> const& x) noexcept {
   return reduce_max(
       x,

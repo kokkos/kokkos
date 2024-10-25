@@ -65,8 +65,8 @@ hmax(const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> const& x) {
 template <
     typename T, typename Abi,
     std::enable_if_t<!std::is_same_v<Abi, simd_abi::scalar>, bool> = false>
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr T reduce_min(
-    simd<T, Abi> const& v, typename simd<T, Abi>::mask_type const& m) {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
+reduce_min(simd<T, Abi> const& v, typename simd<T, Abi>::mask_type const& m) {
   auto result = Kokkos::reduction_identity<T>::min();
   for (std::size_t i = 0; i < v.size(); ++i) {
     if (m[i]) result = Kokkos::min(result, v[i]);
@@ -77,8 +77,8 @@ template <
 template <
     class T, class Abi,
     std::enable_if_t<!std::is_same_v<Abi, simd_abi::scalar>, bool> = false>
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr T reduce_max(
-    simd<T, Abi> const& v, typename simd<T, Abi>::mask_type const& m) {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
+reduce_max(simd<T, Abi> const& v, typename simd<T, Abi>::mask_type const& m) {
   auto result = Kokkos::reduction_identity<T>::max();
   for (std::size_t i = 0; i < v.size(); ++i) {
     if (m[i]) result = Kokkos::max(result, v[i]);
@@ -89,9 +89,9 @@ template <
 template <
     class T, class Abi, class BinaryOperation = std::plus<>,
     std::enable_if_t<!std::is_same_v<Abi, simd_abi::scalar>, bool> = false>
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr T reduce(
-    simd<T, Abi> const& v, typename simd<T, Abi>::mask_type const& m,
-    T identity, BinaryOperation op = {}) {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
+reduce(simd<T, Abi> const& v, typename simd<T, Abi>::mask_type const& m,
+       T identity, BinaryOperation op = {}) {
   if (none_of(m)) {
     return identity;
   }
