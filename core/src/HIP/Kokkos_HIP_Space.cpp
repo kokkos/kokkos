@@ -313,7 +313,12 @@ void Kokkos::Impl::runtime_check_memory_space<Kokkos::HIPHostPinnedSpace>(
     const void* ptr, const Kokkos::HIPHostPinnedSpace&) {
   hipPointerAttribute_t attributes;
   hipError_t error = hipPointerGetAttributes(&attributes, ptr);
-  if (error != hipSuccess || attributes.type != hipMemoryTypeHost)
+#if HIP_VERSION_MAJOR == 5 && HIP_VERSION_MINOR < 5
+  auto type = attributes.memoryType;
+#else 
+  auto type = attributes.type;
+#endif
+  if (error != hipSuccess || type != hipMemoryTypeHost)
     Kokkos::abort(
         "Requested HIPHostPinnedSpace but pointer isn't "
         "allocated in that space!");
@@ -321,10 +326,22 @@ void Kokkos::Impl::runtime_check_memory_space<Kokkos::HIPHostPinnedSpace>(
 
 template <>
 void Kokkos::Impl::runtime_check_memory_space<Kokkos::HIPManagedSpace>(
-    const void* ptr, const Kokkos::HIPManagedSpace&) {
-  hipPointerAttribute_t attributes;
+    const void* ptr, const Kokkos::HIPManagedSpace& space) {
+ int hasPageableMemory = 0;  // false by default
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipDeviceGetAttribute(
+      &hasPageableMemory, hipDeviceAttributePageableMemoryAccess, HIP{}.hip_device()));
+ if (!hasPageableMemory)
+	return; 
+       
+	hipPointerAttribute_t attributes;
   hipError_t error = hipPointerGetAttributes(&attributes, ptr);
-  if (error != hipSuccess || attributes.type != hipMemoryTypeManaged)
+#if HIP_VERSION_MAJOR == 5 && HIP_VERSION_MINOR < 5
+  auto type = attributes.memoryType;
+#else
+  auto type = attributes.type;
+#endif
+  std::cout << "type: " << type << std::endl;
+  if (error != hipSuccess || type != hipMemoryTypeManaged)
     Kokkos::abort(
         "Requested HIPManagedSpace but pointer isn't "
         "allocated in that space!");
@@ -335,7 +352,12 @@ void Kokkos::Impl::runtime_check_memory_space<Kokkos::HIPSpace>(
     const void* ptr, const Kokkos::HIPSpace&) {
   hipPointerAttribute_t attributes;
   hipError_t error = hipPointerGetAttributes(&attributes, ptr);
-  if (error != hipSuccess || attributes.type != hipMemoryTypeDevice)
+#if HIP_VERSION_MAJOR == 5 && HIP_VERSION_MINOR < 5
+  auto type = attributes.memoryType;
+#else
+  auto type = attributes.type;
+#endif
+  if (error != hipSuccess || type != hipMemoryTypeDevice)
     Kokkos::abort(
         "Requested HIPSpace but pointer isn't allocated in "
         "that space!");
@@ -349,7 +371,7 @@ void Kokkos::Impl::runtime_check_memory_space<Kokkos::HostSpace>(
 #if HIP_VERSION_MAJOR >= 6
   if (error != hipSuccess || attributes.type != hipMemoryTypeUnregistered)
 #else
-  if (error == hipSuccess)
+  if (error != hipErrorInvalidValue)
 #endif
     Kokkos::abort(
         "Requested HostSpace but pointer isn't allocated in "
