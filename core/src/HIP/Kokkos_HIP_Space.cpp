@@ -315,7 +315,7 @@ void Kokkos::Impl::runtime_check_memory_space<Kokkos::HIPHostPinnedSpace>(
   hipError_t error = hipPointerGetAttributes(&attributes, ptr);
 #if HIP_VERSION_MAJOR == 5 && HIP_VERSION_MINOR < 5
   auto type = attributes.memoryType;
-#else 
+#else
   auto type = attributes.type;
 #endif
   if (error != hipSuccess || type != hipMemoryTypeHost)
@@ -327,13 +327,13 @@ void Kokkos::Impl::runtime_check_memory_space<Kokkos::HIPHostPinnedSpace>(
 template <>
 void Kokkos::Impl::runtime_check_memory_space<Kokkos::HIPManagedSpace>(
     const void* ptr, const Kokkos::HIPManagedSpace& space) {
- int hasPageableMemory = 0;  // false by default
+  int hasPageableMemory = 0;  // false by default
   KOKKOS_IMPL_HIP_SAFE_CALL(hipDeviceGetAttribute(
-      &hasPageableMemory, hipDeviceAttributePageableMemoryAccess, HIP{}.hip_device()));
- if (!hasPageableMemory)
-	return; 
-       
-	hipPointerAttribute_t attributes;
+      &hasPageableMemory, hipDeviceAttributePageableMemoryAccess,
+      HIP{}.hip_device()));
+  if (!hasPageableMemory) return;
+
+  hipPointerAttribute_t attributes;
   hipError_t error = hipPointerGetAttributes(&attributes, ptr);
 #if HIP_VERSION_MAJOR == 5 && HIP_VERSION_MINOR < 5
   auto type = attributes.memoryType;
