@@ -23,8 +23,9 @@
 TEST(defaultdevicetype_DeathTest, view_memory_space_violation) {
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 
-#if !(defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
-      defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_ENABLE_DEBUG))
+#if !((defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
+       defined(KOKKOS_ENABLE_SYCL)) &&                              \
+      defined(KOKKOS_ENABLE_DEBUG))
   GTEST_SKIP() << "memory space violation only detected for Cuda, HIP, or SYCL "
                   "with Kokkos_ENABLE_DEBUG";
 #endif
