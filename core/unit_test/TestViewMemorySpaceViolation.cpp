@@ -28,7 +28,7 @@ TEST(defaultdevicetype_DeathTest, view_memory_space_violation) {
       defined(KOKKOS_ENABLE_DEBUG))
   GTEST_SKIP() << "memory space violation only detected for Cuda, HIP, or SYCL "
                   "with Kokkos_ENABLE_DEBUG";
-#endif
+#else
 
   auto create_host_view = [](auto view) {
     Kokkos::View<int*, Kokkos::HostSpace> host_unmanaged(view.data(),
@@ -116,5 +116,6 @@ if(has_real_shared_space)
 #endif
     create_hostpinned_view(hostpinned_space_view);
   }
+#endif
 #endif
 }
