@@ -73,10 +73,10 @@ class Crs {
   using size_type       = SizeType;
 
   using staticcrsgraph_type = Crs<DataType, Arg1Type, Arg2Type, SizeType>;
-  using HostMirror =
-      Crs<DataType, array_layout, typename traits::host_mirror_space, SizeType>;
-  using row_map_type = View<size_type*, array_layout, device_type>;
-  using entries_type = View<DataType*, array_layout, device_type>;
+  using host_mirror_type    = Crs<DataType, array_layout,
+                               typename traits::host_mirror_device, SizeType>;
+  using row_map_type        = View<size_type*, array_layout, device_type>;
+  using entries_type        = View<DataType*, array_layout, device_type>;
 
   row_map_type row_map;
   entries_type entries;

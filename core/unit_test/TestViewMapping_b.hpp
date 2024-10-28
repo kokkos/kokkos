@@ -76,7 +76,7 @@ struct TestViewMappingAtomic {
 
     ASSERT_EQ(0, error_count);
 
-    typename T_atom::HostMirror x_host = Kokkos::create_mirror_view(x);
+    typename T_atom::host_mirror_type x_host = Kokkos::create_mirror_view(x);
     Kokkos::deep_copy(x_host, x);
 
     error_count = -1;

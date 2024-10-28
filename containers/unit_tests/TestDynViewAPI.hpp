@@ -673,8 +673,6 @@ class TestDynViewAPI {
   using View6 = Kokkos::View<T******, device>;
   using View7 = Kokkos::View<T*******, device>;
 
-  using host_view_space = typename View0::host_mirror_space;
-
   static void run_tests() {
     run_test_resize_realloc<false>();
     run_test_resize_realloc<true>();
@@ -731,7 +729,7 @@ class TestDynViewAPI {
 
   static void run_test_mirror() {
     using view_type   = Kokkos::DynRankView<int, host_drv_space>;
-    using mirror_type = typename view_type::HostMirror;
+    using mirror_type = typename view_type::host_mirror_type;
     view_type a("a");
     mirror_type am = Kokkos::create_mirror_view(a);
     mirror_type ax = Kokkos::create_mirror(a);
@@ -1117,8 +1115,9 @@ class TestDynViewAPI {
   }
 
   static void run_test_scalar() {
-    using hView0 = typename dView0::HostMirror;  // HostMirror of DynRankView is
-                                                 // a DynRankView
+    using hView0 =
+        typename dView0::host_mirror_type;  // host_mirror_type of DynRankView
+                                            // is a DynRankView
 
     dView0 dx, dy;
     hView0 hx, hy;
@@ -1216,7 +1215,7 @@ class TestDynViewAPI {
     // usual "(void)" marker to avoid compiler warnings for unused
     // variables.
 
-    using hView0 = typename dView0::HostMirror;
+    using hView0 = typename dView0::host_mirror_type;
 
     {
       hView0 thing;

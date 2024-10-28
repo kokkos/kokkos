@@ -28,7 +28,7 @@
 
 using StreamDeviceArray =
     Kokkos::View<double*, Kokkos::MemoryTraits<Kokkos::Restrict>>;
-using StreamHostArray = typename StreamDeviceArray::HostMirror;
+using StreamHostArray = typename StreamDeviceArray::host_mirror_type;
 
 using StreamIndex = int;
 using Policy      = Kokkos::RangePolicy<Kokkos::IndexType<StreamIndex>>;

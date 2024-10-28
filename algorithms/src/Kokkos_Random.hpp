@@ -922,13 +922,14 @@ class Random_XorShift64_Pool {
     state_ = state_data_type("Kokkos::Random_XorShift64::state", num_states_,
                              padding_);
 
-    typename state_data_type::HostMirror h_state =
+    typename state_data_type::host_mirror_type h_state =
         Kokkos::create_mirror_view(Kokkos::WithoutInitializing, state_);
-    typename locks_type::HostMirror h_lock =
+    typename locks_type::host_mirror_type h_lock =
         Kokkos::create_mirror_view(Kokkos::WithoutInitializing, locks_);
 
-    // Execute on the HostMirror's default execution space.
-    Random_XorShift64<typename state_data_type::HostMirror::execution_space>
+    // Execute on the host_mirror_type's default execution space.
+    Random_XorShift64<
+        typename state_data_type::host_mirror_type::execution_space>
         gen(seed, 0);
     for (int i = 0; i < 17; i++) gen.rand();
     for (int i = 0; i < num_states_; i++) {
@@ -1169,15 +1170,16 @@ class Random_XorShift1024_Pool {
     state_ = state_data_type("Kokkos::Random_XorShift1024::state", num_states_);
     p_ = int_view_type("Kokkos::Random_XorShift1024::p", num_states_, padding_);
 
-    typename state_data_type::HostMirror h_state =
+    typename state_data_type::host_mirror_type h_state =
         Kokkos::create_mirror_view(Kokkos::WithoutInitializing, state_);
-    typename locks_type::HostMirror h_lock =
+    typename locks_type::host_mirror_type h_lock =
         Kokkos::create_mirror_view(Kokkos::WithoutInitializing, locks_);
-    typename int_view_type::HostMirror h_p =
+    typename int_view_type::host_mirror_type h_p =
         Kokkos::create_mirror_view(Kokkos::WithoutInitializing, p_);
 
-    // Execute on the HostMirror's default execution space.
-    Random_XorShift64<typename state_data_type::HostMirror::execution_space>
+    // Execute on the host_mirror_type's default execution space.
+    Random_XorShift64<
+        typename state_data_type::host_mirror_type::execution_space>
         gen(seed, 0);
     for (int i = 0; i < 17; i++) gen.rand();
     for (int i = 0; i < num_states_; i++) {

@@ -2916,7 +2916,7 @@ inline auto create_mirror(const Kokkos::View<T, P...>& src,
         typename Impl::MirrorViewType<memory_space, T, P...>::dest_view_type;
     return dst_type(prop_copy, src.layout());
   } else {
-    using dst_type = typename View<T, P...>::HostMirror;
+    using dst_type = typename View<T, P...>::host_mirror_type;
     return dst_type(prop_copy, src.layout());
   }
 #if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
@@ -3045,13 +3045,13 @@ inline auto create_mirror_view(
     [[maybe_unused]] const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
   if constexpr (!Impl::ViewCtorProp<ViewCtorArgs...>::has_memory_space) {
     if constexpr (std::is_same_v<typename Kokkos::View<T, P...>::memory_space,
+                                 typename Kokkos::View<T, P...>::
+                                     host_mirror_type::memory_space> &&
+                  std::is_same_v<typename Kokkos::View<T, P...>::data_type,
                                  typename Kokkos::View<
-                                     T, P...>::HostMirror::memory_space> &&
-                  std::is_same_v<
-                      typename Kokkos::View<T, P...>::data_type,
-                      typename Kokkos::View<T, P...>::HostMirror::data_type>) {
+                                     T, P...>::host_mirror_type::data_type>) {
       check_view_ctor_args_create_mirror<ViewCtorArgs...>();
-      return typename Kokkos::View<T, P...>::HostMirror(src);
+      return typename Kokkos::View<T, P...>::host_mirror_type(src);
     } else {
       return Kokkos::Impl::choose_create_mirror(src, arg_prop);
     }

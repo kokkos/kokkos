@@ -356,8 +356,8 @@ struct functor_teamvector_reduce_reducer {
 template <typename Scalar, class ExecutionSpace>
 bool test_scalar(int nteams, int team_size, int test) {
   Kokkos::View<int, Kokkos::LayoutLeft, ExecutionSpace> d_flag("flag");
-  typename Kokkos::View<int, Kokkos::LayoutLeft, ExecutionSpace>::HostMirror
-      h_flag("h_flag");
+  typename Kokkos::View<int, Kokkos::LayoutLeft,
+                        ExecutionSpace>::host_mirror_type h_flag("h_flag");
   h_flag() = 0;
   Kokkos::deep_copy(d_flag, h_flag);
 

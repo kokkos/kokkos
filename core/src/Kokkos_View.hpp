@@ -165,7 +165,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   using execution_space      = typename traits::execution_space;
   using memory_space         = typename traits::memory_space;
   using memory_traits        = typename traits::memory_traits;
-  using host_mirror_space    = typename traits::host_mirror_space;
+  using host_mirror_device   = typename traits::host_mirror_device;
   using typename base_t::index_type;
 
   // aliases from BasicView
@@ -210,7 +210,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   using host_mirror_type =
       View<typename traits::non_const_data_type, typename traits::array_layout,
            Device<DefaultHostExecutionSpace,
-                  typename traits::host_mirror_space::memory_space>,
+                  typename traits::host_mirror_device::memory_space>,
            typename traits::hooks_policy>;
 
   // Compatible HostMirror view
