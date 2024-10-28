@@ -125,6 +125,8 @@ void test_view_out_of_bounds_access() {
   TestViewOutOfBoundAccess(make_view<V6>(lbl), exec_space, prefix + ".*" + lbl);
   TestViewOutOfBoundAccess(make_view<V7>(lbl), exec_space, prefix + ".*" + lbl);
   TestViewOutOfBoundAccess(make_view<V8>(lbl), exec_space, prefix + ".*" + lbl);
+  // We check the memory space for unmanaged Views when configuring with Kokkos_ENABLE_DEBUG
+#ifndef KOKKOS_ENABLE_DEBUG
   int* const ptr = nullptr;
   TestViewOutOfBoundAccess(make_view<V1>(ptr), exec_space, prefix + ".*UNMANAGED");
   TestViewOutOfBoundAccess(make_view<V2>(ptr), exec_space, prefix + ".*UNMANAGED");
@@ -134,6 +136,7 @@ void test_view_out_of_bounds_access() {
   TestViewOutOfBoundAccess(make_view<V6>(ptr), exec_space, prefix + ".*UNMANAGED");
   TestViewOutOfBoundAccess(make_view<V7>(ptr), exec_space, prefix + ".*UNMANAGED");
   TestViewOutOfBoundAccess(make_view<V8>(ptr), exec_space, prefix + ".*UNMANAGED");
+#endif
   // clang-format on
 }
 
