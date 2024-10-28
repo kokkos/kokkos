@@ -1065,14 +1065,13 @@ class View : public ViewTraits<DataType, Properties...> {
         "type");
 
 #ifdef KOKKOS_ENABLE_DEBUG
-    KOKKOS_IF_ON_HOST(
-        (
-	 if (span() > 0) {
-	 auto prop_copy = Impl::with_properties_if_unset(
-             arg_prop, typename traits::memory_space{});
-         Impl::runtime_check_memory_space(
-             Impl::get_property<Impl::PointerTag>(prop_copy),
-             Impl::get_property<Impl::MemorySpaceTag>(prop_copy));}))
+    KOKKOS_IF_ON_HOST((if (span() > 0) {
+      auto prop_copy = Impl::with_properties_if_unset(
+          arg_prop, typename traits::memory_space{});
+      Impl::runtime_check_memory_space(
+          Impl::get_property<Impl::PointerTag>(prop_copy),
+          Impl::get_property<Impl::MemorySpaceTag>(prop_copy));
+    }))
 #endif
 
 #ifdef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
@@ -1139,12 +1138,13 @@ class View : public ViewTraits<DataType, Properties...> {
                   "overload taking a layout object instead.");
 
 #ifdef KOKKOS_ENABLE_DEBUG
-    KOKKOS_IF_ON_HOST(
-        ( if (span()> 0) { auto prop_copy = Impl::with_properties_if_unset(
-             arg_prop, typename traits::memory_space{});
-         Impl::runtime_check_memory_space(
-             Impl::get_property<Impl::PointerTag>(prop_copy),
-             Impl::get_property<Impl::MemorySpaceTag>(prop_copy));}))
+    KOKKOS_IF_ON_HOST((if (span() > 0) {
+      auto prop_copy = Impl::with_properties_if_unset(
+          arg_prop, typename traits::memory_space{});
+      Impl::runtime_check_memory_space(
+          Impl::get_property<Impl::PointerTag>(prop_copy),
+          Impl::get_property<Impl::MemorySpaceTag>(prop_copy));
+    }))
 #endif
   }
 

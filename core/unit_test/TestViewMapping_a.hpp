@@ -647,7 +647,7 @@ void test_view_mapping() {
 
   //----------------------------------------
 
-      if (std::is_same_v<typename Space::memory_space, Kokkos::HostSpace>) {
+  if (std::is_same_v<typename Space::memory_space, Kokkos::HostSpace>) {
     constexpr int N = 10;
 
     using T = Kokkos::View<int*, Space>;
@@ -672,17 +672,17 @@ void test_view_mapping() {
     static_assert(std::is_same_v<typename T::non_const_data_type, int*>);
 
     static_assert(std::is_same_v<typename T::scalar_array_type, int*>);
-    static_assert
-        (std::is_same_v<typename T::const_scalar_array_type, const int*>);
-    static_assert
-        (std::is_same_v<typename T::non_const_scalar_array_type, int*>);
+    static_assert(
+        std::is_same_v<typename T::const_scalar_array_type, const int*>);
+    static_assert(
+        std::is_same_v<typename T::non_const_scalar_array_type, int*>);
 
     static_assert(std::is_same_v<typename T::value_type, int>);
     static_assert(std::is_same_v<typename T::const_value_type, const int>);
     static_assert(std::is_same_v<typename T::non_const_value_type, int>);
 
-    static_assert(std::is_same_v<typename T::memory_space,
-                                typename Space::memory_space>);
+    static_assert(
+        std::is_same_v<typename T::memory_space, typename Space::memory_space>);
     static_assert(std::is_same_v<typename T::reference_type, int&>);
 
     static_assert(T::rank == size_t(1));
@@ -692,17 +692,17 @@ void test_view_mapping() {
     static_assert(std::is_same_v<typename C::non_const_data_type, int*>);
 
     static_assert(std::is_same_v<typename C::scalar_array_type, const int*>);
-    static_assert
-        (std::is_same_v<typename C::const_scalar_array_type, const int*>);
-    static_assert
-        (std::is_same_v<typename C::non_const_scalar_array_type, int*>);
+    static_assert(
+        std::is_same_v<typename C::const_scalar_array_type, const int*>);
+    static_assert(
+        std::is_same_v<typename C::non_const_scalar_array_type, int*>);
 
     static_assert(std::is_same_v<typename C::value_type, const int>);
     static_assert(std::is_same_v<typename C::const_value_type, const int>);
     static_assert(std::is_same_v<typename C::non_const_value_type, int>);
 
-    static_assert(std::is_same_v<typename C::memory_space,
-                                typename Space::memory_space>);
+    static_assert(
+        std::is_same_v<typename C::memory_space, typename Space::memory_space>);
     static_assert(std::is_same_v<typename C::reference_type, const int&>);
 
     static_assert(C::rank == size_t(1));
@@ -740,17 +740,17 @@ void test_view_mapping() {
     static_assert(std::is_same_v<typename T::non_const_data_type, int*>);
 
     static_assert(std::is_same_v<typename T::scalar_array_type, int*>);
-    static_assert
-        (std::is_same_v<typename T::const_scalar_array_type, const int*>);
-    static_assert
-        (std::is_same_v<typename T::non_const_scalar_array_type, int*>);
+    static_assert(
+        std::is_same_v<typename T::const_scalar_array_type, const int*>);
+    static_assert(
+        std::is_same_v<typename T::non_const_scalar_array_type, int*>);
 
     static_assert(std::is_same_v<typename T::value_type, int>);
     static_assert(std::is_same_v<typename T::const_value_type, const int>);
     static_assert(std::is_same_v<typename T::non_const_value_type, int>);
 
-    static_assert(std::is_same_v<typename T::memory_space,
-                                typename Space::memory_space>);
+    static_assert(
+        std::is_same_v<typename T::memory_space, typename Space::memory_space>);
     static_assert(std::is_same_v<typename T::reference_type, int&>);
     static_assert(T::rank == size_t(1));
 

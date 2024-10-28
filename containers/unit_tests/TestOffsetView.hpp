@@ -271,13 +271,14 @@ void test_offsetview_construction() {
 template <typename Scalar, typename Device>
 void test_offsetview_unmanaged_construction() {
   // Preallocated memory (Only need a valid address for this test)
-	Kokkos::View<Scalar, Device> s("s");
+  Kokkos::View<Scalar, Device> s("s");
 
   {
     // Constructing an OffsetView directly around our preallocated memory
     Kokkos::Array<int64_t, 1> begins1{{2}};
     Kokkos::Array<int64_t, 1> ends1{{3}};
-    Kokkos::Experimental::OffsetView<Scalar*, Device> ov1(s.data(), begins1, ends1);
+    Kokkos::Experimental::OffsetView<Scalar*, Device> ov1(s.data(), begins1,
+                                                          ends1);
 
     // Constructing an OffsetView around an unmanaged View of our preallocated
     // memory
@@ -292,7 +293,8 @@ void test_offsetview_unmanaged_construction() {
   {
     Kokkos::Array<int64_t, 2> begins2{{-2, -7}};
     Kokkos::Array<int64_t, 2> ends2{{5, -3}};
-    Kokkos::Experimental::OffsetView<Scalar**, Device> ov2(s.data(), begins2, ends2);
+    Kokkos::Experimental::OffsetView<Scalar**, Device> ov2(s.data(), begins2,
+                                                           ends2);
 
     Kokkos::View<Scalar**, Device> v2(s.data(), ends2[0] - begins2[0],
                                       ends2[1] - begins2[1]);
@@ -323,7 +325,8 @@ void test_offsetview_unmanaged_construction() {
     Kokkos::Array<int64_t, 1> begins{{-3}};
     Kokkos::Array<int64_t, 1> ends{{2}};
 
-    Kokkos::Experimental::OffsetView<Scalar*, Device> bb(s.data(), begins, ends);
+    Kokkos::Experimental::OffsetView<Scalar*, Device> bb(s.data(), begins,
+                                                         ends);
     Kokkos::Experimental::OffsetView<Scalar*, Device> bi(s.data(), begins, {2});
     Kokkos::Experimental::OffsetView<Scalar*, Device> ib(s.data(), {-3}, ends);
     Kokkos::Experimental::OffsetView<Scalar*, Device> ii(s.data(), {-3}, {2});
@@ -376,7 +379,8 @@ void test_offsetview_unmanaged_construction_death() {
             "\\(-1\\)\\) "
             "overflows"));
     ASSERT_DEATH(
-        offset_view_type(s.data(), {-0x7fffffffffffffffl - 1}, {0x7fffffffffffffffl}),
+        offset_view_type(s.data(), {-0x7fffffffffffffffl - 1},
+                         {0x7fffffffffffffffl}),
         SKIP_REGEX_ON_WINDOWS(
             "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView"
             ".*"
