@@ -492,7 +492,7 @@ class BasicView {
              (sizeof...(OtherIndexTypes) == rank()))
   KOKKOS_FUNCTION constexpr reference operator()(
       OtherIndexTypes... indices) const {
-    KOKKOS_IMPL_BASICVIEW_OPERATOR_VERIFY(m_map, indices...);
+    KOKKOS_IMPL_BASICVIEW_OPERATOR_VERIFY(indices...);
     return m_acc.access(m_ptr,
                         m_map(static_cast<index_type>(std::move(indices))...));
   }
