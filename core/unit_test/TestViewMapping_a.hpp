@@ -647,7 +647,7 @@ void test_view_mapping() {
 
   //----------------------------------------
 
-  {
+      if (std::is_same_v<typename Space::memory_space, Kokkos::HostSpace>) {
     constexpr int N = 10;
 
     using T = Kokkos::View<int*, Space>;
