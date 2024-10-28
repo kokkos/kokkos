@@ -385,9 +385,11 @@ template <>
 void Kokkos::Impl::runtime_check_memory_space<Kokkos::HIPHostPinnedSpace>(
     const void* ptr, const Kokkos::HIPHostPinnedSpace&);
 
+#if !(HIP_VERSION_MAJOR == 5 && HIP_VERSION_MINOR < 3)
 template <>
 void Kokkos::Impl::runtime_check_memory_space<Kokkos::HIPManagedSpace>(
     const void* ptr, const Kokkos::HIPManagedSpace&);
+#endif
 
 template <>
 void Kokkos::Impl::runtime_check_memory_space<Kokkos::HIPSpace>(

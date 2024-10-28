@@ -324,6 +324,7 @@ void Kokkos::Impl::runtime_check_memory_space<Kokkos::HIPHostPinnedSpace>(
         "allocated in that space!");
 }
 
+#if !(HIP_VERSION_MAJOR == 5 && HIP_VERSION_MINOR < 3)
 template <>
 void Kokkos::Impl::runtime_check_memory_space<Kokkos::HIPManagedSpace>(
     const void* ptr, const Kokkos::HIPManagedSpace&) {
@@ -346,6 +347,7 @@ void Kokkos::Impl::runtime_check_memory_space<Kokkos::HIPManagedSpace>(
         "Requested HIPManagedSpace but pointer isn't "
         "allocated in that space!");
 }
+#endif
 
 template <>
 void Kokkos::Impl::runtime_check_memory_space<Kokkos::HIPSpace>(
