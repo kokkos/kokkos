@@ -81,7 +81,7 @@ TEST(std_algorithms, is_admissible_to_std_algorithms) {
                strided_view_3d_t>::value);
 }
 
-TEST(std_algorithms, expect_no_overlap) {
+TEST(std_algorithms_DeathTest, expect_no_overlap) {
   namespace KE     = Kokkos::Experimental;
   using value_type = double;
 
@@ -104,6 +104,8 @@ TEST(std_algorithms, expect_no_overlap) {
 
 // Overlapping because iterators are identical
 #if defined(KOKKOS_ENABLE_DEBUG)
+  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+
   auto first_s = KE::begin(static_view_1d);
   auto last_s  = first_s + extent0;
   EXPECT_DEATH({ KE::Impl::expect_no_overlap(first_s, last_s, first_s); },
