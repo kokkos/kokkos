@@ -342,15 +342,19 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), repeat_chain) {
   } else {
     auto graph = Kokkos::Experimental::create_graph(
         ex, [&, count_host = count_host](auto root) {
-          //----------------------------------------
-          root.then_parallel_for(1, set_functor{count, 0})
-              .then_parallel_for(1, count_functor{count, bugs, 0, 0})
-              .then_parallel_for(1, count_functor{count, bugs, 1, 1})
-              .then_parallel_reduce(1, set_result_functor{count}, count_host)
-              .then_parallel_reduce(
-                  1, set_result_functor{bugs},
-                  Kokkos::Sum<int, Kokkos::HostSpace>{bugs_host});
-          //----------------------------------------
+          // FIXME_CLANG Recent clang versions would still trigger a similar
+          // static_assert without the additional if constexpr
+          if constexpr (!result_not_accessible_by_exec) {
+            //----------------------------------------
+            root.then_parallel_for(1, set_functor{count, 0})
+                .then_parallel_for(1, count_functor{count, bugs, 0, 0})
+                .then_parallel_for(1, count_functor{count, bugs, 1, 1})
+                .then_parallel_reduce(1, set_result_functor{count}, count_host)
+                .then_parallel_reduce(
+                    1, set_result_functor{bugs},
+                    Kokkos::Sum<int, Kokkos::HostSpace>{bugs_host});
+            //----------------------------------------
+          }
         });
 
     //----------------------------------------
