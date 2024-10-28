@@ -31,8 +31,8 @@ void impl_test_local_deepcopy_teampolicy_rank_1(const int N) {
   ViewType B("B", N, N, N, N, N, N, N, N);
 
   // Create host mirrors of device views.
-  typename ViewType::HostMirror h_A = Kokkos::create_mirror_view(A);
-  typename ViewType::HostMirror h_B = Kokkos::create_mirror_view(B);
+  typename ViewType::host_mirror_type h_A = Kokkos::create_mirror_view(A);
+  typename ViewType::host_mirror_type h_B = Kokkos::create_mirror_view(B);
 
   // Initialize A matrix.
   auto subA =
@@ -93,8 +93,8 @@ void impl_test_local_deepcopy_teampolicy_rank_2(const int N) {
   ViewType B("B", N, N, N, N, N, N, N, N);
 
   // Create host mirrors of device views.
-  typename ViewType::HostMirror h_A = Kokkos::create_mirror_view(A);
-  typename ViewType::HostMirror h_B = Kokkos::create_mirror_view(B);
+  typename ViewType::host_mirror_type h_A = Kokkos::create_mirror_view(A);
+  typename ViewType::host_mirror_type h_B = Kokkos::create_mirror_view(B);
 
   // Initialize A matrix.
   auto subA = Kokkos::subview(A, 1, 1, 1, 1, 1, Kokkos::ALL(), Kokkos::ALL(),
@@ -158,8 +158,8 @@ void impl_test_local_deepcopy_teampolicy_rank_3(const int N) {
   ViewType B("B", N, N, N, N, N, N, N, N);
 
   // Create host mirrors of device views.
-  typename ViewType::HostMirror h_A = Kokkos::create_mirror_view(A);
-  typename ViewType::HostMirror h_B = Kokkos::create_mirror_view(B);
+  typename ViewType::host_mirror_type h_A = Kokkos::create_mirror_view(A);
+  typename ViewType::host_mirror_type h_B = Kokkos::create_mirror_view(B);
 
   // Initialize A matrix.
   auto subA = Kokkos::subview(A, 1, 1, 1, 1, Kokkos::ALL(), Kokkos::ALL(),
@@ -223,8 +223,8 @@ void impl_test_local_deepcopy_teampolicy_rank_4(const int N) {
   ViewType B("B", N, N, N, N, N, N, N, N);
 
   // Create host mirrors of device views.
-  typename ViewType::HostMirror h_A = Kokkos::create_mirror_view(A);
-  typename ViewType::HostMirror h_B = Kokkos::create_mirror_view(B);
+  typename ViewType::host_mirror_type h_A = Kokkos::create_mirror_view(A);
+  typename ViewType::host_mirror_type h_B = Kokkos::create_mirror_view(B);
 
   // Initialize A matrix.
   auto subA = Kokkos::subview(A, 1, 1, 1, Kokkos::ALL(), Kokkos::ALL(),
@@ -291,8 +291,8 @@ void impl_test_local_deepcopy_teampolicy_rank_5(const int N) {
   ViewType B("B", N, N, N, N, N, N, N, N);
 
   // Create host mirrors of device views.
-  typename ViewType::HostMirror h_A = Kokkos::create_mirror_view(A);
-  typename ViewType::HostMirror h_B = Kokkos::create_mirror_view(B);
+  typename ViewType::host_mirror_type h_A = Kokkos::create_mirror_view(A);
+  typename ViewType::host_mirror_type h_B = Kokkos::create_mirror_view(B);
 
   // Initialize A matrix.
   auto subA =
@@ -360,8 +360,8 @@ void impl_test_local_deepcopy_teampolicy_rank_6(const int N) {
   ViewType B("B", N, N, N, N, N, N, N, N);
 
   // Create host mirrors of device views.
-  typename ViewType::HostMirror h_A = Kokkos::create_mirror_view(A);
-  typename ViewType::HostMirror h_B = Kokkos::create_mirror_view(B);
+  typename ViewType::host_mirror_type h_A = Kokkos::create_mirror_view(A);
+  typename ViewType::host_mirror_type h_B = Kokkos::create_mirror_view(B);
 
   // Initialize A matrix.
   auto subA = Kokkos::subview(A, 1, Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(),
@@ -429,8 +429,8 @@ void impl_test_local_deepcopy_teampolicy_rank_7(const int N) {
   ViewType B("B", N, N, N, N, N, N, N, N);
 
   // Create host mirrors of device views.
-  typename ViewType::HostMirror h_A = Kokkos::create_mirror_view(A);
-  typename ViewType::HostMirror h_B = Kokkos::create_mirror_view(B);
+  typename ViewType::host_mirror_type h_A = Kokkos::create_mirror_view(A);
+  typename ViewType::host_mirror_type h_B = Kokkos::create_mirror_view(B);
 
   // Initialize A matrix.
   Kokkos::deep_copy(A, 10.0);
@@ -495,8 +495,8 @@ void impl_test_local_deepcopy_rangepolicy_rank_1(const int N) {
   ViewType B("B", N, N, N, N, N, N, N, N);
 
   // Create host mirrors of device views.
-  typename ViewType::HostMirror h_A = Kokkos::create_mirror_view(A);
-  typename ViewType::HostMirror h_B = Kokkos::create_mirror_view(B);
+  typename ViewType::host_mirror_type h_A = Kokkos::create_mirror_view(A);
+  typename ViewType::host_mirror_type h_B = Kokkos::create_mirror_view(B);
 
   // Initialize A matrix.
   auto subA =
@@ -550,8 +550,8 @@ void impl_test_local_deepcopy_rangepolicy_rank_2(const int N) {
   ViewType B("B", N, N, N, N, N, N, N, N);
 
   // Create host mirrors of device views.
-  typename ViewType::HostMirror h_A = Kokkos::create_mirror_view(A);
-  typename ViewType::HostMirror h_B = Kokkos::create_mirror_view(B);
+  typename ViewType::host_mirror_type h_A = Kokkos::create_mirror_view(A);
+  typename ViewType::host_mirror_type h_B = Kokkos::create_mirror_view(B);
 
   // Initialize A matrix.
   auto subA = Kokkos::subview(A, 1, 1, 1, 1, 1, Kokkos::ALL(), Kokkos::ALL(),
@@ -608,8 +608,8 @@ void impl_test_local_deepcopy_rangepolicy_rank_3(const int N) {
   ViewType B("B", N, N, N, N, N, N, N, N);
 
   // Create host mirrors of device views.
-  typename ViewType::HostMirror h_A = Kokkos::create_mirror_view(A);
-  typename ViewType::HostMirror h_B = Kokkos::create_mirror_view(B);
+  typename ViewType::host_mirror_type h_A = Kokkos::create_mirror_view(A);
+  typename ViewType::host_mirror_type h_B = Kokkos::create_mirror_view(B);
 
   // Initialize A matrix.
   auto subA = Kokkos::subview(A, 1, 1, 1, 1, Kokkos::ALL(), Kokkos::ALL(),
@@ -666,8 +666,8 @@ void impl_test_local_deepcopy_rangepolicy_rank_4(const int N) {
   ViewType B("B", N, N, N, N, N, N, N, N);
 
   // Create host mirrors of device views.
-  typename ViewType::HostMirror h_A = Kokkos::create_mirror_view(A);
-  typename ViewType::HostMirror h_B = Kokkos::create_mirror_view(B);
+  typename ViewType::host_mirror_type h_A = Kokkos::create_mirror_view(A);
+  typename ViewType::host_mirror_type h_B = Kokkos::create_mirror_view(B);
 
   // Initialize A matrix.
   auto subA = Kokkos::subview(A, 1, 1, 1, Kokkos::ALL(), Kokkos::ALL(),
@@ -727,8 +727,8 @@ void impl_test_local_deepcopy_rangepolicy_rank_5(const int N) {
   ViewType B("B", N, N, N, N, N, N, N, N);
 
   // Create host mirrors of device views.
-  typename ViewType::HostMirror h_A = Kokkos::create_mirror_view(A);
-  typename ViewType::HostMirror h_B = Kokkos::create_mirror_view(B);
+  typename ViewType::host_mirror_type h_A = Kokkos::create_mirror_view(A);
+  typename ViewType::host_mirror_type h_B = Kokkos::create_mirror_view(B);
 
   // Initialize A matrix.
   auto subA =
@@ -789,8 +789,8 @@ void impl_test_local_deepcopy_rangepolicy_rank_6(const int N) {
   ViewType B("B", N, N, N, N, N, N, N, N);
 
   // Create host mirrors of device views.
-  typename ViewType::HostMirror h_A = Kokkos::create_mirror_view(A);
-  typename ViewType::HostMirror h_B = Kokkos::create_mirror_view(B);
+  typename ViewType::host_mirror_type h_A = Kokkos::create_mirror_view(A);
+  typename ViewType::host_mirror_type h_B = Kokkos::create_mirror_view(B);
 
   // Initialize A matrix.
   auto subA = Kokkos::subview(A, 1, Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(),
@@ -851,8 +851,8 @@ void impl_test_local_deepcopy_rangepolicy_rank_7(const int N) {
   ViewType B("B", N, N, N, N, N, N, N, N);
 
   // Create host mirrors of device views.
-  typename ViewType::HostMirror h_A = Kokkos::create_mirror_view(A);
-  typename ViewType::HostMirror h_B = Kokkos::create_mirror_view(B);
+  typename ViewType::host_mirror_type h_A = Kokkos::create_mirror_view(A);
+  typename ViewType::host_mirror_type h_B = Kokkos::create_mirror_view(B);
 
   // Initialize A matrix.
   Kokkos::deep_copy(A, 10.0);

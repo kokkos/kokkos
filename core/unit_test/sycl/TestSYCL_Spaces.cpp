@@ -158,13 +158,15 @@ TEST(sycl, space_access) {
                                  Kokkos::SYCLHostUSMSpace>::accessible);
 
   static_assert(
-      std::is_same<Kokkos::Impl::HostMirror<Kokkos::SYCLDeviceUSMSpace>::Space,
-                   Kokkos::HostSpace>::value);
+      std::is_same<
+          Kokkos::Impl::host_mirror_type<Kokkos::SYCLDeviceUSMSpace>::Space,
+          Kokkos::HostSpace>::value);
 
   static_assert(
-      std::is_same<Kokkos::Impl::HostMirror<Kokkos::SYCLSharedUSMSpace>::Space,
-                   Kokkos::Device<Kokkos::HostSpace::execution_space,
-                                  Kokkos::SYCLSharedUSMSpace>>::value);
+      std::is_same<
+          Kokkos::Impl::host_mirror_type<Kokkos::SYCLSharedUSMSpace>::Space,
+          Kokkos::Device<Kokkos::HostSpace::execution_space,
+                         Kokkos::SYCLSharedUSMSpace>>::value);
 
   static_assert(Kokkos::Impl::MemorySpaceAccess<Kokkos::SYCLHostUSMSpace,
                                                 Kokkos::HostSpace>::accessible);
@@ -173,9 +175,9 @@ TEST(sycl, space_access) {
       Kokkos::Impl::MemorySpaceAccess<Kokkos::HostSpace,
                                       Kokkos::SYCLHostUSMSpace>::accessible);
 
-  static_assert(
-      std::is_same<Kokkos::Impl::HostMirror<Kokkos::SYCLHostUSMSpace>::Space,
-                   Kokkos::SYCLHostUSMSpace>::value);
+  static_assert(std::is_same<
+                Kokkos::Impl::host_mirror_type<Kokkos::SYCLHostUSMSpace>::Space,
+                Kokkos::SYCLHostUSMSpace>::value);
 
   static_assert(
       std::is_same<Kokkos::Device<Kokkos::HostSpace::execution_space,
@@ -183,20 +185,22 @@ TEST(sycl, space_access) {
                    Kokkos::Device<Kokkos::HostSpace::execution_space,
                                   Kokkos::SYCLSharedUSMSpace>>::value);
 
+  static_assert(Kokkos::SpaceAccessibility<
+                Kokkos::Impl::host_mirror_type<Kokkos::SYCL>::Space,
+                Kokkos::HostSpace>::accessible);
+
   static_assert(
-      Kokkos::SpaceAccessibility<Kokkos::Impl::HostMirror<Kokkos::SYCL>::Space,
-                                 Kokkos::HostSpace>::accessible);
+      Kokkos::SpaceAccessibility<
+          Kokkos::Impl::host_mirror_type<Kokkos::SYCLDeviceUSMSpace>::Space,
+          Kokkos::HostSpace>::accessible);
+
+  static_assert(
+      Kokkos::SpaceAccessibility<
+          Kokkos::Impl::host_mirror_type<Kokkos::SYCLSharedUSMSpace>::Space,
+          Kokkos::HostSpace>::accessible);
 
   static_assert(Kokkos::SpaceAccessibility<
-                Kokkos::Impl::HostMirror<Kokkos::SYCLDeviceUSMSpace>::Space,
-                Kokkos::HostSpace>::accessible);
-
-  static_assert(Kokkos::SpaceAccessibility<
-                Kokkos::Impl::HostMirror<Kokkos::SYCLSharedUSMSpace>::Space,
-                Kokkos::HostSpace>::accessible);
-
-  static_assert(Kokkos::SpaceAccessibility<
-                Kokkos::Impl::HostMirror<Kokkos::SYCLHostUSMSpace>::Space,
+                Kokkos::Impl::host_mirror_type<Kokkos::SYCLHostUSMSpace>::Space,
                 Kokkos::HostSpace>::accessible);
 }
 

@@ -174,34 +174,37 @@ TEST(hip, space_access) {
   static_assert(std::is_same<Kokkos::Impl::HostMirror<Kokkos::HIPSpace>::Space,
                              Kokkos::HostSpace>::value);
 #else
-  static_assert(std::is_same<Kokkos::Impl::HostMirror<Kokkos::HIPSpace>::Space,
-                             Kokkos::Device<Kokkos::HostSpace::execution_space,
-                                            Kokkos::HIPSpace>>::value);
+  static_assert(
+      std::is_same<Kokkos::Impl::host_mirror_type<Kokkos::HIPSpace>::Space,
+                   Kokkos::Device<Kokkos::HostSpace::execution_space,
+                                  Kokkos::HIPSpace>>::value);
 #endif
 
   static_assert(
-      std::is_same<Kokkos::Impl::HostMirror<Kokkos::HIPHostPinnedSpace>::Space,
-                   Kokkos::HIPHostPinnedSpace>::value);
+      std::is_same<
+          Kokkos::Impl::host_mirror_type<Kokkos::HIPHostPinnedSpace>::Space,
+          Kokkos::HIPHostPinnedSpace>::value);
 
-  static_assert(
-      std::is_same<Kokkos::Impl::HostMirror<Kokkos::HIPManagedSpace>::Space,
-                   Kokkos::Device<Kokkos::HostSpace::execution_space,
-                                  Kokkos::HIPManagedSpace>>::value);
-
-  static_assert(
-      Kokkos::SpaceAccessibility<Kokkos::Impl::HostMirror<Kokkos::HIP>::Space,
-                                 Kokkos::HostSpace>::accessible);
+  static_assert(std::is_same<
+                Kokkos::Impl::host_mirror_type<Kokkos::HIPManagedSpace>::Space,
+                Kokkos::Device<Kokkos::HostSpace::execution_space,
+                               Kokkos::HIPManagedSpace>>::value);
 
   static_assert(Kokkos::SpaceAccessibility<
-                Kokkos::Impl::HostMirror<Kokkos::HIPSpace>::Space,
+                Kokkos::Impl::host_mirror_type<Kokkos::HIP>::Space,
                 Kokkos::HostSpace>::accessible);
 
   static_assert(Kokkos::SpaceAccessibility<
-                Kokkos::Impl::HostMirror<Kokkos::HIPHostPinnedSpace>::Space,
+                Kokkos::Impl::host_mirror_type<Kokkos::HIPSpace>::Space,
                 Kokkos::HostSpace>::accessible);
 
+  static_assert(
+      Kokkos::SpaceAccessibility<
+          Kokkos::Impl::host_mirror_type<Kokkos::HIPHostPinnedSpace>::Space,
+          Kokkos::HostSpace>::accessible);
+
   static_assert(Kokkos::SpaceAccessibility<
-                Kokkos::Impl::HostMirror<Kokkos::HIPManagedSpace>::Space,
+                Kokkos::Impl::host_mirror_type<Kokkos::HIPManagedSpace>::Space,
                 Kokkos::HostSpace>::accessible);
 }
 

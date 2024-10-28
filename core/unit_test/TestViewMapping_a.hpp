@@ -848,7 +848,7 @@ void test_view_mapping() {
 
   {
     using V           = Kokkos::View<int**, Space>;
-    using M           = typename V::HostMirror;
+    using M           = typename V::host_mirror_type;
     using layout_type = typename Kokkos::View<int**, Space>::array_layout;
 
     constexpr size_t N0 = 10;
@@ -922,7 +922,7 @@ void test_view_mapping() {
 
   {
     using V = Kokkos::View<int**, Kokkos::LayoutStride, Space>;
-    using M = typename V::HostMirror;
+    using M = typename V::host_mirror_type;
     using layout_type =
         typename Kokkos::View<int**, Kokkos::LayoutStride, Space>::array_layout;
 
@@ -1013,7 +1013,7 @@ void test_view_mapping() {
 // using nvcc. Replacing the lambda with a functor doesn't show this behavior.
 #if !(defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_COMPILER_NVCC))
     using host_exec_space =
-        typename Kokkos::Impl::HostMirror<Space>::Space::execution_space;
+        typename Kokkos::Impl::HostMirror<Space>::execution_space;
 
     int errors = 0;
     Kokkos::parallel_reduce(

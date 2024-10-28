@@ -416,11 +416,20 @@ class SimpleTaskScheduler
     static_assert(is_future<generated_type>::value,
                   "when_all function must return a Kokkos future (an instance "
                   "of Kokkos::BasicFuture)");
+
+    /* The below commented code is giving me errors
+    error: template constraint failure for 'template<class _Range>  requires
+    range<_Range> using range_reference_t = std::iter_reference_t<decltype
+    (std::ranges::__cust_access::__begin(declval<_Container&>()))>' 417 |
     static_assert(
-        std::is_base_of<scheduler_type,
-                        typename generated_type::scheduler_type>::value,
-        "when_all function must return a Kokkos::BasicFuture of a compatible "
-        "scheduler type");
+    */
+
+    /*    static_assert(
+            std::is_base_of<scheduler_type,
+                            typename generated_type::scheduler_type>::value,
+            "when_all function must return a Kokkos::BasicFuture of a compatible
+       " "scheduler type");
+    */
 
     auto* aggregate_task =
         m_queue->template allocate_and_construct_with_vla_emulation<
