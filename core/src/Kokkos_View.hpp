@@ -673,8 +673,9 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   // Special function to be preferred over the above for string literals
   // when pointer type is char*
   // The typename P = pointer_type is a workaround for an nvcc 11.0 bug
-  // where the compiler performs substitution earlier when the class is instantiated
-  // instead of at function instantiation and therefore errors out on these enable_ifs
+  // where the compiler performs substitution earlier when the class is
+  // instantiated instead of at function instantiation and therefore errors out
+  // on these enable_ifs
   template <class L, class... Args, typename P = pointer_type,
             std::enable_if_t<(std::is_same_v<P, char*> &&
                               std::is_same_v<const char*, L>),
