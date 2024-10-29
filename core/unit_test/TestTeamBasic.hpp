@@ -259,10 +259,10 @@ void test_exceed_max_team_size() {
       KOKKOS_LAMBDA(Kokkos::TeamPolicy<TEST_EXECSPACE>::member_type){};
   auto max_team_size =
       policy.team_size_max(dummy_functor, Kokkos::ParallelForTag{});
-  ASSERT_DEATH(Kokkos::parallel_for(
+  ASSERT_THROW(Kokkos::parallel_for(
                    Kokkos::TeamPolicy<TEST_EXECSPACE>(1, max_team_size + 1),
                    dummy_functor);
-               , "");
+              , std::runtime_error);
 }
 
 TEST(TEST_CATEGORY_DEATH, exceed_max_team_size) {
