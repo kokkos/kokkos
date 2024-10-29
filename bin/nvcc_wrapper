@@ -500,6 +500,9 @@ do
     xlinker_args="$xlinker_args -Xlinker ${1:4:${#1}}"
     host_linker_args="$host_linker_args ${1:4:${#1}}"
     ;;
+  #Ignore options passed to host assembler, as nvcc has no forwarding option
+  -Wa,*)
+    ;;
   #Handle object files: -x cu applies to all input files, so give them to linker, except if only linking
   *.a|*.so|*.o|*.obj)
     object_files="$object_files $1"
