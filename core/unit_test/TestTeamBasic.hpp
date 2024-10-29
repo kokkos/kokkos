@@ -217,10 +217,26 @@ TEST(TEST_CATEGORY, large_team_scratch_size) {
   Kokkos::fence();
 }
 
+void test_exceed_max_team_scratch_size_0() {
+  const int level = 0;
+  Kokkos::TeamPolicy<TEST_EXECSPACE> policy(1, 1);
+  auto dummy_functor =
+      KOKKOS_LAMBDA(Kokkos::TeamPolicy<TEST_EXECSPACE>::member_type){};
+  auto max_scratch_size = policy.scratch_size_max(level);
+  ASSERT_DEATH(
+      Kokkos::parallel_for(
+          policy.set_scratch_size(level, Kokkos::PerTeam(max_scratch_size + 1)),
+          dummy_functor),
+      "");
+}
+
 TEST(TEST_CATEGORY_DEATH, exceed_max_team_scratch_size_0) {
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+  test_exceed_max_team_scratch_size_0();
+}
 
-  const int level = 0;
+void test_exceed_max_team_scratch_size_1() {
+  const int level = 1;
   Kokkos::TeamPolicy<TEST_EXECSPACE> policy(1, 1);
   auto dummy_functor =
       KOKKOS_LAMBDA(Kokkos::TeamPolicy<TEST_EXECSPACE>::member_type){};
@@ -234,22 +250,10 @@ TEST(TEST_CATEGORY_DEATH, exceed_max_team_scratch_size_0) {
 
 TEST(TEST_CATEGORY_DEATH, exceed_max_team_scratch_size_1) {
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-
-  const int level = 1;
-  Kokkos::TeamPolicy<TEST_EXECSPACE> policy(1, 1);
-  auto dummy_functor =
-      KOKKOS_LAMBDA(Kokkos::TeamPolicy<TEST_EXECSPACE>::member_type){};
-  auto max_scratch_size = policy.scratch_size_max(level);
-  ASSERT_DEATH(
-      Kokkos::parallel_for(
-          policy.set_scratch_size(level, Kokkos::PerTeam(max_scratch_size + 1)),
-          dummy_functor),
-      "");
+  test_exceed_max_team_scratch_size_1();
 }
 
-TEST(TEST_CATEGORY_DEATH, exceed_max_team_size) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-
+void test_exceed_max_team_size() {
   Kokkos::TeamPolicy<TEST_EXECSPACE> policy(1, 1);
   auto dummy_functor =
       KOKKOS_LAMBDA(Kokkos::TeamPolicy<TEST_EXECSPACE>::member_type){};
@@ -259,6 +263,11 @@ TEST(TEST_CATEGORY_DEATH, exceed_max_team_size) {
                    Kokkos::TeamPolicy<TEST_EXECSPACE>(1, max_team_size + 1),
                    dummy_functor);
                , "");
+}
+
+TEST(TEST_CATEGORY_DEATH, exceed_max_team_size) {
+  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+  test_exceed_max_team_size();
 }
 
 TEST(TEST_CATEGORY, team_broadcast_long) {
