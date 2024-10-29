@@ -44,6 +44,12 @@
                                Kokkos::CudaSpace>)                       \
     GTEST_SKIP() << "skipping since unified memory requires additional " \
                     "fences";
+#elif defined(KOKKOS_IMPL_HIP_UNIFIED_MEMORY)
+#define GTEST_SKIP_IF_UNIFIED_MEMORY_SPACE                               \
+  if constexpr (std::is_same_v<typename TEST_EXECSPACE::memory_space,    \
+                               Kokkos::HIPSpace>)                        \
+    GTEST_SKIP() << "skipping since unified memory requires additional " \
+                    "fences";
 #else
 #define GTEST_SKIP_IF_UNIFIED_MEMORY_SPACE
 #endif

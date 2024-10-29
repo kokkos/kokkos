@@ -222,26 +222,29 @@ TEST(TEST_CATEGORY, deep_copy_zero_memset) {
   Kokkos::View<int*, TEST_EXECSPACE> bla("bla", 8);
 
   // for MI300A with unified memory, ZeroMemset uses a parallel for
-  auto success =
-#if defined(KOKKOS_IMPL_HIP_UNIFIED_MEMORY)
-      validate_existence(
-          [&]() { Kokkos::deep_copy(bla, 0); },
-          [&](BeginParallelForEvent e) {
-            const bool found =
-                (e.descriptor().find("Kokkos::ZeroMemset via parallel_for") !=
-                 std::string::npos);
-            return MatchDiagnostic{found,
-                                   {"Found expected parallel_for label"}};
-          });
-#else
-      validate_absence([&]() { Kokkos::deep_copy(bla, 0); },
-                       [&](BeginParallelForEvent) {
-                         return MatchDiagnostic{true, {"Found begin event"}};
-                       },
-                       [&](EndParallelForEvent) {
-                         return MatchDiagnostic{true, {"Found end event"}};
-                       });
+  auto success = false;
+#ifdef KOKKOS_IMPL_HIP_UNIFIED_MEMORY
+  if constexpr (!std::is_same_v<TEST_EXECSPACE::memory_space,
+                                Kokkos::HostSpace>)
+    success = validate_existence(
+        [&]() { Kokkos::deep_copy(bla, 0); },
+        [&](BeginParallelForEvent e) {
+          const bool found =
+              (e.descriptor().find("Kokkos::ZeroMemset via parallel_for") !=
+               std::string::npos);
+          return MatchDiagnostic{found, {"Found expected parallel_for label"}};
+        });
+  else
 #endif
+    success =
+        validate_absence([&]() { Kokkos::deep_copy(bla, 0); },
+                         [&](BeginParallelForEvent) {
+                           return MatchDiagnostic{true, {"Found begin event"}};
+                         },
+                         [&](EndParallelForEvent) {
+                           return MatchDiagnostic{true, {"Found end event"}};
+                         });
+
   ASSERT_TRUE(success);
   listen_tool_events(Config::DisableAll());
 }
