@@ -761,7 +761,7 @@ bool Test(int test) {
   int const team_size_max =
       Kokkos::TeamPolicy<ExecutionSpace>(1, 1).team_size_max(
           KOKKOS_LAMBDA(
-              typename Kokkos::TeamPolicy<ExecutionSpace>::member_type, int){},
+              typename Kokkos::TeamPolicy<ExecutionSpace>::member_type){},
           Kokkos::ParallelForTag{});
   if (team_size > team_size_max) team_size = team_size_max;
   passed = passed && test_scalar<int, ExecutionSpace>(317, team_size, test);
