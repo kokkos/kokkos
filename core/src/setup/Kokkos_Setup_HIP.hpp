@@ -48,6 +48,10 @@
 #define KOKKOS_IMPL_HIP_NATIVE_GRAPH
 #endif
 
+#ifdef KOKKOS_ARCH_AMD_GFX942_APU
+#define KOKKOS_IMPL_HIP_UNIFIED_MEMORY
+#endif
+
 #endif  // #if defined( KOKKOS_ENABLE_HIP )
 
 #endif

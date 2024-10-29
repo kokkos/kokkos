@@ -407,12 +407,12 @@ sort_device_view_with_comparator(
   // and then copies data back. Potentially, this can later be changed
   // with a better solution like our own quicksort on device or similar.
 
-  using ViewType = Kokkos::View<DataType, Properties...>;
-  using MemSpace = typename ViewType::memory_space;
 // Note with HIP unified memory this code path is still the right thing to do
 // if we end up here when RocThrust is not enabled.
 // The create_mirror_view_and_copy will do the right thing (no copy).
-#ifndef KOKKOS_ENABLE_IMPL_HIP_UNIFIED_MEMORY
+#ifndef KOKKOS_IMPL_HIP_UNIFIED_MEMORY
+  using ViewType = Kokkos::View<DataType, Properties...>;
+  using MemSpace = typename ViewType::memory_space;
   static_assert(!SpaceAccessibility<HostSpace, MemSpace>::accessible,
                 "Impl::sort_device_view_with_comparator: should not be called "
                 "on a view that is already accessible on the host");
