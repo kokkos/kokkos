@@ -218,8 +218,7 @@ class BasicView {
         m_map(std::move(other.mapping())),
         m_acc(std::move(other.accessor())){};
 
-public:
-
+ public:
   template <class OtherIndexType, size_t Size>
   // When doing C++20 we should switch to this, the conditional explicit we
   // can't do in 17
