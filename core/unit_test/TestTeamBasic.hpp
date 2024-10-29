@@ -222,12 +222,15 @@ void test_exceed_max_team_scratch_size_0() {
   Kokkos::TeamPolicy<TEST_EXECSPACE> policy(1, 1);
   auto dummy_functor =
       KOKKOS_LAMBDA(Kokkos::TeamPolicy<TEST_EXECSPACE>::member_type){};
+  auto max_team_size =
+      policy.team_size_max(dummy_functor, Kokkos::ParallelForTag{});
+  policy.impl_set_team_size(max_team_size);
   auto max_scratch_size = policy.scratch_size_max(level);
-  ASSERT_DEATH(
+  ASSERT_THROW(
       Kokkos::parallel_for(
           policy.set_scratch_size(level, Kokkos::PerTeam(max_scratch_size + 1)),
           dummy_functor),
-      "");
+      std::runtime_error);
 }
 
 TEST(TEST_CATEGORY_DEATH, exceed_max_team_scratch_size_0) {
@@ -240,12 +243,15 @@ void test_exceed_max_team_scratch_size_1() {
   Kokkos::TeamPolicy<TEST_EXECSPACE> policy(1, 1);
   auto dummy_functor =
       KOKKOS_LAMBDA(Kokkos::TeamPolicy<TEST_EXECSPACE>::member_type){};
+  auto max_team_size =
+      policy.team_size_max(dummy_functor, Kokkos::ParallelForTag{});
+  policy.impl_set_team_size(max_team_size);
   auto max_scratch_size = policy.scratch_size_max(level);
-  ASSERT_DEATH(
+   ASSERT_THROW(
       Kokkos::parallel_for(
           policy.set_scratch_size(level, Kokkos::PerTeam(max_scratch_size + 1)),
           dummy_functor),
-      "");
+      std::runtime_error);
 }
 
 TEST(TEST_CATEGORY_DEATH, exceed_max_team_scratch_size_1) {

@@ -155,10 +155,16 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>, HIP> {
     }
 
     unsigned int const shmem_size_total = m_shmem_begin + m_shmem_size;
+ 
     if (internal_space_instance->m_deviceProp.sharedMemPerBlock <
         shmem_size_total) {
       Kokkos::Impl::throw_runtime_exception(std::string(
-          "Kokkos::Impl::ParallelFor< HIP > insufficient shared memory"));
+          "Kokkos::Impl::ParallelFor< HIP > insufficient level 0 scratch memory"));
+    }
+
+    if (m_scratch_size[1] > m_policy.scratch_size_max(1)) {
+      Kokkos::Impl::throw_runtime_exception(std::string(
+          "Kokkos::Impl::ParallelFor< HIP > insufficient level 1 scratch memory"));
     }
 
     size_t max_size = arg_policy.team_size_max(arg_functor, ParallelForTag());
