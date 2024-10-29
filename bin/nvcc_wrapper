@@ -500,8 +500,19 @@ do
     xlinker_args="$xlinker_args -Xlinker ${1:4:${#1}}"
     host_linker_args="$host_linker_args ${1:4:${#1}}"
     ;;
-  #Ignore options passed to host assembler, as nvcc has no forwarding option
+  #Handle host assembler options
   -Wa,*)
+    #To pass the -Wa options to the host compiler via -Xcompiler it is necessary
+    #to use '\\,' for each comma in the options. As users might already add escapes
+    #to the comma by themselves, the escapes are first removed and then only the
+    #required number of \ are added back.
+    xcompiler_args_wa=$(echo -e "$1" | sed -E 's/\\\+,/,/g' | sed -E 's/,/\\\\\\\,/g')
+    if [ $first_xcompiler_arg -eq 1 ]; then
+      xcompiler_args="$xcompiler_args_wa"
+      first_xcompiler_arg=0
+    else
+      xcompiler_args="$xcompiler_args,$xcompiler_args_wa"
+    fi
     ;;
   #Handle object files: -x cu applies to all input files, so give them to linker, except if only linking
   *.a|*.so|*.o|*.obj)
