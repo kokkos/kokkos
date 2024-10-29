@@ -112,7 +112,7 @@ void spinwait_while_equal(ThreadState const volatile& flag,
                           ThreadState const value) {
   Kokkos::store_fence();
   uint32_t i = 0;
-  while (value == flag) {
+  while (value == Kokkos::atomic_load(&flag)) {
     host_thread_yield(++i, WaitMode::ACTIVE);
   }
   Kokkos::load_fence();

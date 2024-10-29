@@ -220,7 +220,7 @@ int HostThreadTeamData::get_work_stealing() noexcept {
 
       // Attempt from beginning failed, try to steal from end of neighbor
 
-      pair_int_t volatile *steal_range = &(pool[m_steal_rank]->m_work_range);
+      pair_int_t *steal_range = &(pool[m_steal_rank]->m_work_range);
 
       for (int attempt = true; attempt;) {
         // Query and attempt to update steal_work_range
@@ -264,12 +264,12 @@ int HostThreadTeamData::get_work_stealing() noexcept {
 
     if (1 < m_team_size) {
       // Must share the work index
-      *reinterpret_cast<int volatile *>(team_reduce()) = w.first;
+      Kokkos::atomic_store(team_reduce(), w.first);
 
       team_rendezvous_release();
     }
   } else if (1 < m_team_size) {
-    w.first = *reinterpret_cast<int volatile *>(team_reduce());
+    w.first = Kokkos::atomic_load(team_reduce());
   }
 
   // May exit because successfully stole work and w is good.

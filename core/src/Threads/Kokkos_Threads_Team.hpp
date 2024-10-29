@@ -188,8 +188,8 @@ class ThreadsExecTeamMember {
         using type =
             std::conditional_t<sizeof(Type) < TEAM_REDUCE_SIZE, Type, void>;
 
-        if (team_rank() != team_size() - 1) *
-            ((volatile type*)m_instance->scratch_memory()) = value;
+        if (team_rank() != team_size() - 1)
+            Kokkos::atomic_store(m_instance->scratch_memory(), value);
 
         memory_fence();
 
@@ -294,9 +294,9 @@ class ThreadsExecTeamMember {
         using type = std::conditional_t<sizeof(ArgType) < TEAM_REDUCE_SIZE,
                                         ArgType, void>;
 
-        volatile type* const work_value = ((type*)m_instance->scratch_memory());
+        type* const work_value = ((type*)m_instance->scratch_memory());
 
-        *work_value = value;
+        Kokkos::atomic_store(work_value, value);
 
         memory_fence();
 
@@ -331,7 +331,7 @@ class ThreadsExecTeamMember {
 
         team_fan_out();
 
-        return *work_value;))
+        return Kokkos::atomic_load(work_value);))
   }
 
   /** \brief  Intra-team exclusive prefix sum with team_rank() ordering.

@@ -129,7 +129,7 @@ class ThreadsInternal {
     // Make sure there is enough scratch space:
     const int rev_rank = m_pool_size - (m_pool_rank + 1);
 
-    *static_cast<volatile int *>(reduce_memory()) = value;
+    Kokkos::atomic_store(static_cast<int *>(reduce_memory()), value);
 
     memory_fence();
 
@@ -150,12 +150,13 @@ class ThreadsInternal {
       int accum = 0;
 
       for (int rank = 0; rank < m_pool_size; ++rank) {
-        accum +=
-            *static_cast<volatile int *>(get_thread(rank)->reduce_memory());
+        accum += Kokkos::atomic_load(
+            static_cast<int *>(get_thread(rank)->reduce_memory()));
       }
 
       for (int rank = 0; rank < m_pool_size; ++rank) {
-        *static_cast<volatile int *>(get_thread(rank)->reduce_memory()) = accum;
+        Kokkos::atomic_store(
+            static_cast<int *>(get_thread(rank)->reduce_memory()), accum);
       }
 
       memory_fence();
@@ -165,7 +166,7 @@ class ThreadsInternal {
       }
     }
 
-    return *static_cast<volatile int *>(reduce_memory());
+    return Kokkos::atomic_load(static_cast<int *>(reduce_memory()));
   }
 
   inline void barrier() {

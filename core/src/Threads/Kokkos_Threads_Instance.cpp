@@ -110,8 +110,11 @@ void ThreadsInternal::driver() {
 
   ThreadsInternal this_thread;
 
-  while (this_thread.m_pool_state == ThreadState::Active) {
-    (*s_current_function)(this_thread, s_current_function_arg);
+  while (Kokkos::atomic_load(&this_thread.m_pool_state) ==
+         ThreadState::Active) {
+    auto current_function = Kokkos::atomic_load(&s_current_function);
+    (*current_function)(this_thread,
+                        Kokkos::atomic_load(&s_current_function_arg));
 
     // Deactivate thread and wait for reactivation
     this_thread.m_pool_state = ThreadState::Inactive;
@@ -261,14 +264,15 @@ void ThreadsInternal::fence(const std::string &name) {
 
 // Wait for root thread to become inactive
 void ThreadsInternal::internal_fence() {
+  memory_fence();
   if (s_thread_pool_size[0]) {
     // Wait for the root thread to complete:
     Impl::spinwait_while_equal(s_threads_exec[0]->m_pool_state,
                                ThreadState::Active);
   }
 
-  s_current_function     = nullptr;
-  s_current_function_arg = nullptr;
+  Kokkos::atomic_store(&s_current_function, nullptr);
+  Kokkos::atomic_store(&s_current_function_arg, nullptr);
 
   // Make sure function and arguments are cleared before
   // potentially re-activating threads with a subsequent launch.
@@ -285,17 +289,15 @@ void ThreadsInternal::start(void (*func)(ThreadsInternal &, const void *),
         std::string("ThreadsInternal::start() FAILED : already executing"));
   }
 
-  s_current_function     = func;
-  s_current_function_arg = arg;
-
-  // Make sure function and arguments are written before activating threads.
-  memory_fence();
+  Kokkos::atomic_store(&s_current_function, func);
+  Kokkos::atomic_store(&s_current_function_arg, arg);
 
   // Activate threads. The spawned threads will start working on
   // s_current_function. The root thread is only set to active, we still need to
   // call s_current_function.
+  Kokkos::memory_fence();
   for (int i = s_thread_pool_size[0]; 0 < i--;) {
-    s_threads_exec[i]->m_pool_state = ThreadState::Active;
+    Kokkos::atomic_store(&s_threads_exec[i]->m_pool_state, ThreadState::Active);
   }
 
   if (s_threads_process.m_pool_size) {
@@ -322,8 +324,9 @@ void ThreadsInternal::execute_resize_scratch_in_serial() {
     }
   }
 
-  s_current_function     = &first_touch_allocate_thread_private_scratch;
-  s_current_function_arg = &s_threads_process;
+  Kokkos::atomic_store(&s_current_function,
+                       &first_touch_allocate_thread_private_scratch);
+  Kokkos::atomic_store(&s_current_function_arg, &s_threads_process);
 
   // Make sure function and arguments are written before activating threads.
   memory_fence();
@@ -331,20 +334,21 @@ void ThreadsInternal::execute_resize_scratch_in_serial() {
   for (unsigned i = s_thread_pool_size[0]; begin < i;) {
     ThreadsInternal &th = *s_threads_exec[--i];
 
-    th.m_pool_state = ThreadState::Active;
+    Kokkos::atomic_store(&th.m_pool_state, ThreadState::Active);
 
     wait_yield(th.m_pool_state, ThreadState::Active);
   }
 
   if (s_threads_process.m_pool_base) {
     deallocate_scratch_memory(s_threads_process);
-    s_threads_process.m_pool_state = ThreadState::Active;
+    Kokkos::atomic_store(&s_threads_process.m_pool_state, ThreadState::Active);
     first_touch_allocate_thread_private_scratch(s_threads_process, nullptr);
-    s_threads_process.m_pool_state = ThreadState::Inactive;
+    Kokkos::atomic_store(&s_threads_process.m_pool_state,
+                         ThreadState::Inactive);
   }
 
-  s_current_function_arg = nullptr;
-  s_current_function     = nullptr;
+  Kokkos::atomic_store(&s_current_function_arg, nullptr);
+  Kokkos::atomic_store(&s_current_function, nullptr);
 
   // Make sure function and arguments are cleared before proceeding.
   memory_fence();
@@ -512,17 +516,20 @@ void ThreadsInternal::initialize(int thread_count_arg) {
     s_thread_pool_size[0] = thread_count;
     s_thread_pool_size[1] = s_thread_pool_size[0] / use_numa_count;
     s_thread_pool_size[2] = s_thread_pool_size[1] / use_cores_per_numa;
-    s_current_function =
-        &execute_function_noop;  // Initialization work function
+    Kokkos::atomic_store(
+        &s_current_function,
+        &execute_function_noop);  // Initialization work function
 
     for (unsigned ith = 1; ith < thread_count; ++ith) {
-      s_threads_process.m_pool_state = ThreadState::Inactive;
+      Kokkos::atomic_store(&s_threads_process.m_pool_state,
+                           ThreadState::Inactive);
 
       // If hwloc available then spawned thread will
       // choose its own entry in 's_threads_coord'
       // otherwise specify the entry.
-      s_current_function_arg =
-          reinterpret_cast<void *>(hwloc_can_bind ? ~0u : ith);
+      Kokkos::atomic_store(
+          &s_current_function_arg,
+          reinterpret_cast<void *>(hwloc_can_bind ? ~0u : ith));
 
       // Make sure all outstanding memory writes are complete
       // before spawning the new thread.
@@ -551,9 +558,10 @@ void ThreadsInternal::initialize(int thread_count_arg) {
       }
     }
 
-    s_current_function             = nullptr;
-    s_current_function_arg         = nullptr;
-    s_threads_process.m_pool_state = ThreadState::Inactive;
+    Kokkos::atomic_store(&s_current_function, nullptr);
+    Kokkos::atomic_store(&s_current_function_arg, nullptr);
+    Kokkos::atomic_store(&s_threads_process.m_pool_state,
+                         ThreadState::Inactive);
 
     memory_fence();
 
