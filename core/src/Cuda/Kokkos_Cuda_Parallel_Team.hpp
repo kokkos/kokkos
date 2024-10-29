@@ -582,6 +582,11 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
           "Kokkos::Impl::ParallelFor< Cuda > insufficient shared memory"));
     }
 
+    if (m_scratch_size[1] > m_policy.scratch_size_max(1)) {
+      Kokkos::Impl::throw_runtime_exception(std::string(
+          "Kokkos::Impl::ParallelFor< Cuda > insufficient level 1 scratch memory"));
+    }
+
     if (m_team_size > arg_policy.team_size_max(arg_functor, ParallelForTag())) {
       Kokkos::Impl::throw_runtime_exception(std::string(
           "Kokkos::Impl::ParallelFor< Cuda > requested too large team size."));
@@ -970,6 +975,11 @@ class ParallelReduce<CombinedFunctorReducerType,
       Kokkos::Impl::throw_runtime_exception(
           std::string("Kokkos::Impl::ParallelReduce< Cuda > requested too much "
                       "L0 scratch memory"));
+    }
+
+    if (m_scratch_size[1] > m_policy.scratch_size_max(1)) {
+      Kokkos::Impl::throw_runtime_exception(std::string(
+          "Kokkos::Impl::ParallelFor< Cuda > requested too much L1 scratch memory"));
     }
 
     if (int(m_team_size) >
