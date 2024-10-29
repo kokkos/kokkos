@@ -218,18 +218,7 @@ class BasicView {
         m_map(std::move(other.mapping())),
         m_acc(std::move(other.accessor())){};
 
-  template <class... OtherIndexTypes>
-  //    requires(std::is_constructible_v<mdspan_type, data_handle_type,
-  //                                     OtherIndexTypes...>)
-  KOKKOS_FUNCTION explicit constexpr BasicView(
-      std::enable_if_t<std::is_constructible_v<mdspan_type, data_handle_type,
-                                               OtherIndexTypes...>,
-                       data_handle_type>
-          p,
-      OtherIndexTypes... exts)
-      : m_ptr(std::move(p)),
-        m_map(extents_type(static_cast<index_type>(std::move(exts))...)),
-        m_acc{} {}
+public:
 
   template <class OtherIndexType, size_t Size>
   // When doing C++20 we should switch to this, the conditional explicit we

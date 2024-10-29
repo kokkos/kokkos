@@ -82,10 +82,22 @@ template <class IndexType, std::size_t... Extents, class... Indices,
 KOKKOS_FUNCTION bool within_range(
     Kokkos::extents<IndexType, Extents...> const &exts,
     std::index_sequence<Enumerate...>, Indices... indices) {
+  // FIXME[CUDA11]: This is written so weirdly to avoid warnings with CUDA 11
+  // Without the workaround this could just be written as:
+  // return ((indices < exts.extent(Enumerate)) && ...) &&
+  //     ((std::is_unsigned_v<decltype(indices)> ||
+  //       (indices >= static_cast<decltype(indices)>(0))) &&
+  //      ...);
+  [[maybe_unused]] auto check_index_min = [](auto idx) {
+    if constexpr (!std::is_unsigned_v<decltype(idx)>) {
+      return idx >= static_cast<decltype(idx)>(0);
+    }
+
+    return true;
+  };
+
   return ((indices < exts.extent(Enumerate)) && ...) &&
-         ((std::is_unsigned_v<decltype(indices)> ||
-           (indices >= static_cast<decltype(indices)>(0))) &&
-          ...);
+         (check_index_min(indices) && ...);
 }
 
 template <class... Indices>
