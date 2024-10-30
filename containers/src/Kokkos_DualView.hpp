@@ -942,12 +942,21 @@ class DualView : public ViewTraits<DataType, Properties...> {
         Impl::size_mismatch(h_view, h_view.rank_dynamic, new_extents);
 
     if (sizeMismatch) {
-      ::Kokkos::realloc(arg_prop, d_view, n0, n1, n2, n3, n4, n5, n6, n7);
-      if constexpr (alloc_prop_input::initialize) {
-        h_view = create_mirror_view(typename t_host::memory_space(), d_view);
+      if constexpr (alloc_prop_input::sequential_host_init) {
+        static_assert(alloc_prop_input::initialize,
+                      "DualView: SequentialHostInit isn't compatible with "
+                      "WithoutInitializing!");
+        ::Kokkos::realloc(arg_prop, h_view, n0, n1, n2, n3, n4, n5, n6, n7);
+        d_view =
+            create_mirror_view_and_copy(typename t_dev::memory_space(), h_view);
       } else {
-        h_view = create_mirror_view(Kokkos::WithoutInitializing,
-                                    typename t_host::memory_space(), d_view);
+        ::Kokkos::realloc(arg_prop, d_view, n0, n1, n2, n3, n4, n5, n6, n7);
+        if constexpr (alloc_prop_input::initialize) {
+          h_view = create_mirror_view(typename t_host::memory_space(), d_view);
+        } else {
+          h_view = create_mirror_view(Kokkos::WithoutInitializing,
+                                      typename t_host::memory_space(), d_view);
+        }
       }
     } else if constexpr (alloc_prop_input::initialize) {
       if constexpr (alloc_prop_input::has_execution_space) {
