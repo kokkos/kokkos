@@ -340,18 +340,26 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), repeat_chain) {
     GTEST_SKIP() << "The graph requires the reduction targets like 'bugs_host' "
                     "to be accessible by the execution space.";
   } else {
-    auto graph = Kokkos::Experimental::create_graph(
-        ex, [&, count_host = count_host](auto root) {
-          //----------------------------------------
-          root.then_parallel_for(1, set_functor{count, 0})
-              .then_parallel_for(1, count_functor{count, bugs, 0, 0})
-              .then_parallel_for(1, count_functor{count, bugs, 1, 1})
-              .then_parallel_reduce(1, set_result_functor{count}, count_host)
-              .then_parallel_reduce(
-                  1, set_result_functor{bugs},
-                  Kokkos::Sum<int, Kokkos::HostSpace>{bugs_host});
-          //----------------------------------------
-        });
+    auto graph = Kokkos::Experimental::create_graph(ex, [&, count_host =
+                                                                count_host](
+                                                            auto root) {
+      // FIXME_CLANG Recent clang versions would still trigger a similar
+      // static_assert without the additional if constexpr
+      constexpr bool result_not_accessible_by_exec_copy =
+          !Kokkos::SpaceAccessibility<
+              TEST_EXECSPACE, decltype(bugs_host)::memory_space>::accessible;
+      if constexpr (!result_not_accessible_by_exec_copy) {
+        //----------------------------------------
+        root.then_parallel_for(1, set_functor{count, 0})
+            .then_parallel_for(1, count_functor{count, bugs, 0, 0})
+            .then_parallel_for(1, count_functor{count, bugs, 1, 1})
+            .then_parallel_reduce(1, set_result_functor{count}, count_host)
+            .then_parallel_reduce(
+                1, set_result_functor{bugs},
+                Kokkos::Sum<int, Kokkos::HostSpace>{bugs_host});
+        //----------------------------------------
+      }
+    });
 
     //----------------------------------------
     constexpr int repeats = 10;
