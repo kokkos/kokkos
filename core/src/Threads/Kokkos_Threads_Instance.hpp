@@ -60,7 +60,7 @@ class ThreadsInternal {
   int m_pool_rank_rev;
   int m_pool_size;
   int m_pool_fan_size;
-  ThreadState volatile m_pool_state;  ///< State for global synchronizations
+  std::atomic<ThreadState> m_pool_state;  ///< State for global synchronizations
 
   // Members for dynamic scheduling
   // Which thread am I stealing from currently
@@ -96,7 +96,7 @@ class ThreadsInternal {
     return reinterpret_cast<unsigned char *>(m_scratch) + m_scratch_reduce_end;
   }
 
-  KOKKOS_INLINE_FUNCTION ThreadState volatile &state() { return m_pool_state; }
+  KOKKOS_INLINE_FUNCTION auto &state() { return m_pool_state; }
   KOKKOS_INLINE_FUNCTION ThreadsInternal *const *pool_base() const {
     return m_pool_base;
   }
