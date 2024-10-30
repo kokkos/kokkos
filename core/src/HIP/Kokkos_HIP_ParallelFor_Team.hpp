@@ -163,7 +163,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>, HIP> {
                       "scratch memory"));
     }
 
-    if (m_scratch_size[1] > m_policy.scratch_size_max(1)) {
+    if (m_scratch_size[1] > static_cast<size_t>(m_policy.scratch_size_max(1))) {
       Kokkos::Impl::throw_runtime_exception(
           std::string("Kokkos::Impl::ParallelFor< HIP > insufficient level 1 "
                       "scratch memory"));

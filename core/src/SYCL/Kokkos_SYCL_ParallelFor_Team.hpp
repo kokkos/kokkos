@@ -191,7 +191,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
       Kokkos::Impl::throw_runtime_exception(out.str());
     }
 
-    if (m_scratch_size[1] > m_policy.scratch_size_max(1)) {
+    if (m_scratch_size[1] > static_cast<size_t>(m_policy.scratch_size_max(1))) {
       Kokkos::Impl::throw_runtime_exception(
           std::string("Kokkos::Impl::ParallelFor<SYCL> insufficient level 1 "
                       "scratch memory"));
