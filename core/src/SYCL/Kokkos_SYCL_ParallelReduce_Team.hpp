@@ -477,8 +477,9 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
     }
 
     if (m_scratch_size[1] > m_policy.scratch_size_max(1)) {
-      Kokkos::Impl::throw_runtime_exception(std::string(
-          "Kokkos::Impl::ParallelFor<SYCL> insufficient level 1 scratch memory"));
+      Kokkos::Impl::throw_runtime_exception(
+          std::string("Kokkos::Impl::ParallelFor<SYCL> insufficient level 1 "
+                      "scratch memory"));
     }
 
     if (m_team_size > m_policy.team_size_max(m_functor_reducer.get_functor(),

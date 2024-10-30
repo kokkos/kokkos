@@ -247,7 +247,7 @@ void test_exceed_max_team_scratch_size_1() {
       policy.team_size_max(dummy_functor, Kokkos::ParallelForTag{});
   policy.impl_set_team_size(max_team_size);
   auto max_scratch_size = policy.scratch_size_max(level);
-   ASSERT_THROW(
+  ASSERT_THROW(
       Kokkos::parallel_for(
           policy.set_scratch_size(level, Kokkos::PerTeam(max_scratch_size + 1)),
           dummy_functor),
@@ -268,7 +268,7 @@ void test_exceed_max_team_size() {
   ASSERT_THROW(Kokkos::parallel_for(
                    Kokkos::TeamPolicy<TEST_EXECSPACE>(1, max_team_size + 1),
                    dummy_functor);
-              , std::runtime_error);
+               , std::runtime_error);
 }
 
 TEST(TEST_CATEGORY_DEATH, exceed_max_team_size) {
