@@ -67,8 +67,8 @@ std::pair<unsigned, unsigned>
 
 int s_thread_pool_size[3] = {0, 0, 0};
 
-void (*volatile s_current_function)(ThreadsInternal &, const void *);
-const void *volatile s_current_function_arg = nullptr;
+void (*s_current_function)(ThreadsInternal &, const void *);
+const void *s_current_function_arg = nullptr;
 
 inline unsigned fan_size(const unsigned rank, const unsigned size) {
   const unsigned rank_rev = size - (rank + 1);
@@ -79,8 +79,8 @@ inline unsigned fan_size(const unsigned rank, const unsigned size) {
   return count;
 }
 
-void wait_yield(volatile ThreadState &flag, const ThreadState value) {
-  while (value == flag) {
+void wait_yield(ThreadState &flag, const ThreadState value) {
+  while (value == Kokkos::atomic_load(&flag)) {
     std::this_thread::yield();
   }
 }
@@ -548,9 +548,7 @@ void ThreadsInternal::initialize(int thread_count_arg) {
     // Wait for all spawned threads to deactivate before zeroing the function.
 
     for (unsigned ith = 1; ith < thread_count; ++ith) {
-      // Try to protect against cache coherency failure by casting to volatile.
-      ThreadsInternal *const th =
-          ((ThreadsInternal *volatile *)s_threads_exec)[ith];
+      ThreadsInternal *const th = Kokkos::atomic_load(&(s_threads_exec[ith]));
       if (th) {
         wait_yield(th->m_pool_state, ThreadState::Active);
       } else {

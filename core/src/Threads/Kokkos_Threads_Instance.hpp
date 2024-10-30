@@ -60,7 +60,7 @@ class ThreadsInternal {
   int m_pool_rank_rev;
   int m_pool_size;
   int m_pool_fan_size;
-  ThreadState volatile m_pool_state;  ///< State for global synchronizations
+  ThreadState m_pool_state;  ///< State for global synchronizations
 
   // Members for dynamic scheduling
   // Which thread am I stealing from currently
@@ -96,7 +96,7 @@ class ThreadsInternal {
     return reinterpret_cast<unsigned char *>(m_scratch) + m_scratch_reduce_end;
   }
 
-  KOKKOS_INLINE_FUNCTION ThreadState volatile &state() { return m_pool_state; }
+  KOKKOS_INLINE_FUNCTION ThreadState &state() { return m_pool_state; }
   KOKKOS_INLINE_FUNCTION ThreadsInternal *const *pool_base() const {
     return m_pool_base;
   }
@@ -141,7 +141,7 @@ class ThreadsInternal {
     }
 
     if (rev_rank) {
-      m_pool_state = ThreadState::Rendezvous;
+      Kokkos::atomic_store(&m_pool_state, ThreadState::Rendezvous);
       // Wait: Rendezvous -> Active
       spinwait_while_equal(m_pool_state, ThreadState::Rendezvous);
     } else {
@@ -162,7 +162,8 @@ class ThreadsInternal {
       memory_fence();
 
       for (int rank = 0; rank < m_pool_size; ++rank) {
-        get_thread(rank)->m_pool_state = ThreadState::Active;
+        Kokkos::atomic_store(&(get_thread(rank)->m_pool_state),
+                             ThreadState::Active);
       }
     }
 
@@ -183,7 +184,7 @@ class ThreadsInternal {
     }
 
     if (rev_rank) {
-      m_pool_state = ThreadState::Rendezvous;
+      Kokkos::atomic_store(&m_pool_state, ThreadState::Rendezvous);
       // Wait: Rendezvous -> Active
       spinwait_while_equal(m_pool_state, ThreadState::Rendezvous);
     } else {
@@ -192,7 +193,8 @@ class ThreadsInternal {
       memory_fence();
 
       for (int rank = 0; rank < m_pool_size; ++rank) {
-        get_thread(rank)->m_pool_state = ThreadState::Active;
+        Kokkos::atomic_store(&(get_thread(rank)->m_pool_state),
+                             ThreadState::Active);
       }
     }
   }
@@ -274,7 +276,7 @@ class ThreadsInternal {
 
     if (rev_rank) {
       // Set: Active -> ReductionAvailable
-      m_pool_state = ThreadState::ReductionAvailable;
+      Kokkos::atomic_store(&m_pool_state, ThreadState::ReductionAvailable);
 
       // Wait for contributing threads' scan value to be available.
       if ((1 << m_pool_fan_size) < (m_pool_rank + 1)) {
@@ -290,7 +292,7 @@ class ThreadsInternal {
 
       // This thread has completed inclusive scan
       // Set: ReductionAvailable -> ScanAvailable
-      m_pool_state = ThreadState::ScanAvailable;
+      Kokkos::atomic_store(&m_pool_state, ThreadState::ScanAvailable);
 
       // Wait for all threads to complete inclusive scan
       // Wait: ScanAvailable -> Rendezvous
@@ -304,7 +306,7 @@ class ThreadsInternal {
       // Wait: ReductionAvailable -> ScanAvailable
       spinwait_while_equal(fan.m_pool_state, ThreadState::ReductionAvailable);
       // Set: ScanAvailable -> Rendezvous
-      fan.m_pool_state = ThreadState::Rendezvous;
+      Kokkos::atomic_store(&fan.m_pool_state, ThreadState::Rendezvous);
     }
 
     // All threads have completed the inclusive scan.
@@ -336,13 +338,14 @@ class ThreadsInternal {
     }
     if (rev_rank) {
       // Set: ScanAvailable -> ScanCompleted
-      m_pool_state = ThreadState::ScanCompleted;
+      Kokkos::atomic_store(&m_pool_state, ThreadState::ScanCompleted);
       // Wait: ScanCompleted -> Active
       spinwait_while_equal(m_pool_state, ThreadState::ScanCompleted);
     }
     // Set: ScanCompleted -> Active
     for (int i = 0; i < m_pool_fan_size; ++i) {
-      m_pool_base[rev_rank + (1 << i)]->m_pool_state = ThreadState::Active;
+      Kokkos::atomic_store(&(m_pool_base[rev_rank + (1 << i)]->m_pool_state),
+                           ThreadState::Active);
     }
   }
 
@@ -368,7 +371,7 @@ class ThreadsInternal {
     }
 
     if (rev_rank) {
-      m_pool_state = ThreadState::Rendezvous;
+      Kokkos::atomic_store(&m_pool_state, ThreadState::Rendezvous);
       // Wait: Rendezvous -> Active
       spinwait_while_equal(m_pool_state, ThreadState::Rendezvous);
     } else {
@@ -392,7 +395,8 @@ class ThreadsInternal {
     }
 
     for (int i = 0; i < m_pool_fan_size; ++i) {
-      m_pool_base[rev_rank + (1 << i)]->m_pool_state = ThreadState::Active;
+      Kokkos::atomic_store(&(m_pool_base[rev_rank + (1 << i)]->m_pool_state),
+                           ThreadState::Active);
     }
   }
 

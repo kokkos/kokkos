@@ -28,7 +28,7 @@ class UniqueToken<Threads, UniqueTokenScope::Instance> {
   using buffer_type = Kokkos::View<uint32_t *, Kokkos::HostSpace>;
   int m_count;
   buffer_type m_buffer_view;
-  uint32_t volatile *m_buffer;
+  uint32_t *m_buffer;
 
  public:
   using execution_space = Threads;
