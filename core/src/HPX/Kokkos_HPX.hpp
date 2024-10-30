@@ -789,7 +789,8 @@ class TeamPolicyInternal<Kokkos::Experimental::HPX, Properties...>
                                   // it requires a functor as argument.
 
     if (team_size_request > max_team_size)
-      Kokkos::abort("Kokkos::abort: Requested Team Size is too large!");
+      Kokkos::Impl::throw_runtime_exception(
+          "Kokkos::abort: Requested Team Size is too large!");
 
     m_team_size = team_size_request;
 

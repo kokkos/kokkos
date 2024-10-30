@@ -539,7 +539,7 @@ class ParallelReduce<CombinedFunctorReducerType,
                    FunctorTeamShmemSize<FunctorType>::value(
                        m_functor_reducer.get_functor(), arg_policy.team_size())
             << ", Maximum: " << TeamPolicy<Kokkos::OpenMP>::scratch_size_max(0);
-      Kokkos::abort(error.str().c_str());
+      Kokkos::Impl::throw_runtime_exception(error.str().c_str());
     }
     if (arg_policy.scratch_size(1) >
         static_cast<size_t>(TeamPolicy<Kokkos::OpenMP>::scratch_size_max(1))) {
@@ -547,7 +547,7 @@ class ParallelReduce<CombinedFunctorReducerType,
       error << "Requested too much scratch memory on level 1. Requested: "
             << arg_policy.scratch_size(1)
             << ", Maximum: " << TeamPolicy<Kokkos::OpenMP>::scratch_size_max(1);
-      Kokkos::abort(error.str().c_str());
+      Kokkos::Impl::throw_runtime_exception(error.str().c_str());
     }
   }
 };

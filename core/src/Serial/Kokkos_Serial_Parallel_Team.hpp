@@ -123,7 +123,8 @@ class TeamPolicyInternal<Kokkos::Serial, Properties...>
         m_chunk_size(32),
         m_space(space) {
     if (team_size_request > 1)
-      Kokkos::abort("Kokkos::abort: Requested Team Size is too large!");
+      Kokkos::Impl::throw_runtime_exception(
+          "Kokkos::abort: Requested Team Size is too large!");
   }
 
   TeamPolicyInternal(const execution_space& space, int league_size_request,
@@ -283,7 +284,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
                    FunctorTeamShmemSize<FunctorType>::value(
                        arg_functor, arg_policy.team_size())
             << ", Maximum: " << TeamPolicy<Kokkos::Serial>::scratch_size_max(0);
-      Kokkos::abort(error.str().c_str());
+      Kokkos::Impl::throw_runtime_exception(error.str().c_str());
     }
     if (arg_policy.scratch_size(1) >
         static_cast<size_t>(TeamPolicy<Kokkos::Serial>::scratch_size_max(1))) {
@@ -291,7 +292,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
       error << "Requested too much scratch memory on level 1. Requested: "
             << arg_policy.scratch_size(1)
             << ", Maximum: " << TeamPolicy<Kokkos::Serial>::scratch_size_max(1);
-      Kokkos::abort(error.str().c_str());
+      Kokkos::Impl::throw_runtime_exception(error.str().c_str());
     }
   }
 };
@@ -405,7 +406,7 @@ class ParallelReduce<CombinedFunctorReducerType,
                    FunctorTeamShmemSize<FunctorType>::value(
                        m_functor_reducer.get_functor(), arg_policy.team_size())
             << ", Maximum: " << TeamPolicy<Kokkos::Serial>::scratch_size_max(0);
-      Kokkos::abort(error.str().c_str());
+      Kokkos::Impl::throw_runtime_exception(error.str().c_str());
     }
     if (arg_policy.scratch_size(1) >
         static_cast<size_t>(TeamPolicy<Kokkos::Serial>::scratch_size_max(1))) {
@@ -413,7 +414,7 @@ class ParallelReduce<CombinedFunctorReducerType,
       error << "Requested too much scratch memory on level 1. Requested: "
             << arg_policy.scratch_size(1)
             << ", Maximum: " << TeamPolicy<Kokkos::Serial>::scratch_size_max(1);
-      Kokkos::abort(error.str().c_str());
+      Kokkos::Impl::throw_runtime_exception(error.str().c_str());
     }
   }
 };
